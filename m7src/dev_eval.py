@@ -1,0 +1,108 @@
+"""Dev-suite evaluation: candidate tables and the pinned reference rows.
+
+Macro = equal weight per component (instructions-m7.md). Per-query vectors are returned so
+every dev comparison can be paired-bootstrapped with the same machinery as the final run.
+"""
+import json
+
+import numpy as np
+import torch
+
+import devsuite
+from _paths import WORK
+from evalkit import macro, score
+from table import Preproc
+from teacher import QUERY_PREFIX, encode_cached
+
+DEVRES = WORK / "devres"
+DEVRES.mkdir(parents=True, exist_ok=True)
+CHUNK = {"hotpotqa": 400_000}
+
+
+def doc_vecs(comp):
+    doc_ids, doc_texts, q_ids, q_texts, qrels = devsuite.load(comp)
+    dv = encode_cached(f"dev-{comp}-docs", doc_texts, prefix="", dtype=torch.float16, verbose=False)
+    return doc_ids, doc_texts, q_ids, q_texts, qrels, dv
+
+
+def eval_query_vecs(comp, qv):
+    doc_ids, _, q_ids, _, qrels, dv = doc_vecs(comp)
+    return score(qv, q_ids, dv, doc_ids, qrels, chunk=CHUNK.get(comp, 200_000))
+
+
+def eval_table(model, pre: Preproc, components=None, tok=None):
+    out = {}
+    for c in (components or devsuite.COMPONENTS):
+        _, _, _, q_texts, _, _ = doc_vecs(c)
+        out[c] = eval_query_vecs(c, model.encode(q_texts, pre, tok=tok))
+    return out
+
+
+# ---- reference rows ------------------------------------------------------------------
+
+def ref_bge_base(comp, prefix=True):
+    _, _, _, q_texts, _, _ = doc_vecs(comp)
+    qv = encode_cached(f"dev-{comp}-queries-{'pfx' if prefix else 'nopfx'}", q_texts,
+                       prefix=QUERY_PREFIX if prefix else "", dtype=torch.float16, verbose=False)
+    return eval_query_vecs(comp, np.asarray(qv, dtype=np.float32))
+
+
+def ref_bm25(comp):
+    import Stemmer
+    import bm25s
+    from evalkit import per_query_ndcg
+    doc_ids, doc_texts, q_ids, q_texts, qrels, _ = doc_vecs(comp)
+    st = Stemmer.Stemmer("english")
+    r = bm25s.BM25(method="lucene", k1=1.2, b=0.75)
+    r.index(bm25s.tokenize(doc_texts, stopwords="en", stemmer=st, show_progress=False), show_progress=False)
+    ids, sc = r.retrieve(bm25s.tokenize(q_texts, stopwords="en", stemmer=st, show_progress=False),
+                         k=min(1000, len(doc_ids)), show_progress=False)
+    run = {qid: {doc_ids[d]: float(s) for d, s in zip(ids[qi], sc[qi]) if doc_ids[d] != qid}
+           for qi, qid in enumerate(q_ids)}
+    return per_query_ndcg(run, qrels)
+
+
+def ref_potion(comp):
+    from model2vec import StaticModel
+    doc_ids, doc_texts, q_ids, q_texts, qrels, _ = doc_vecs(comp)
+    m = StaticModel.from_pretrained("minishlab/potion-retrieval-32M")
+    nrm = lambda v: v / np.maximum(np.linalg.norm(v, axis=1, keepdims=True), 1e-12)
+    dv = nrm(m.encode(doc_texts, show_progress_bar=False).astype(np.float32))
+    qv = nrm(m.encode(q_texts, show_progress_bar=False).astype(np.float32))
+    return score(qv, q_ids, dv, doc_ids, qrels, chunk=CHUNK.get(comp, 200_000))
+
+
+REFS = {"bm25": ref_bm25, "potion-retrieval-32M": ref_potion,
+        "bge-base-symmetric": lambda c: ref_bge_base(c, True),
+        "bge-base-symmetric-nopfx": lambda c: ref_bge_base(c, False)}
+
+
+def reference_rows(components=None, names=None, cache=True):
+    """Computed once, cached to work/devres/refs.json (per-query vectors kept for pairing)."""
+    p = DEVRES / "refs.json"
+    blob = json.loads(p.read_text()) if p.exists() else {}
+    for name in (names or REFS):
+        for c in (components or devsuite.COMPONENTS):
+            if name in blob and c in blob[name]:
+                continue
+            pq = REFS[name](c)
+            blob.setdefault(name, {})[c] = {k: round(v, 6) for k, v in pq.items()}
+            print(f"  ref {name}/{c}: {np.mean(list(pq.values())):.4f}", flush=True)
+            if cache:
+                p.write_text(json.dumps(blob))
+    return blob
+
+
+def report(per_component, label=""):
+    m, means = macro(per_component)
+    print(f"{label:34s} macro {m:.4f}  " +
+          "  ".join(f"{k.replace('cqadup-','cqa-')}={v:.4f}" for k, v in means.items()), flush=True)
+    return m, means
+
+
+if __name__ == "__main__":
+    import sys
+    comps = sys.argv[1:] or None
+    blob = reference_rows(components=comps)
+    for name, per in blob.items():
+        report({c: v for c, v in per.items() if comps is None or c in comps}, f"[ref] {name}")
