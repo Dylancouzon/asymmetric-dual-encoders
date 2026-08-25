@@ -1,0 +1,9 @@
+{
+ "n_docs_sampled": 5000,
+ "nnz_mean": 232.8098,
+ "nnz_p50": 221.0,
+ "nnz_p95": 337.0,
+ "bytes_per_doc_at_6B_per_posting": 1396.8588,
+ "index_mb_extrapolated_fiqa_57638": 80.5,
+ "index_mb_extrapolated_per_million_docs": 1396.9
+}

@@ -1,0 +1,96 @@
+{
+ "BAAI__bge-small-en-v1.5": {
+  "SciFact": 0.71273,
+  "NFCorpus": 0.34264,
+  "ArguAna": 0.60348,
+  "SCIDOCS": 0.20518,
+  "FIQA2018": 0.40343,
+  "TRECCOVID": 0.75525
+ },
+ "intfloat__e5-small-v2": {
+  "ArguAna": 0.41794,
+  "SCIDOCS": 0.17714,
+  "SciFact": 0.68854,
+  "NFCorpus": 0.32449,
+  "FIQA2018": 0.37433999999999995,
+  "TRECCOVID": 0.74373
+ },
+ "sentence-transformers__all-MiniLM-L6-v2": {
+  "SciFact": 0.64508,
+  "NFCorpus": 0.31594,
+  "FIQA2018": 0.36867,
+  "ArguAna": 0.50167,
+  "SCIDOCS": 0.21641,
+  "TRECCOVID": 0.47232
+ },
+ "thenlper__gte-small": {
+  "SciFact": 0.72701,
+  "NFCorpus": 0.34769,
+  "FIQA2018": 0.39353,
+  "ArguAna": 0.55441,
+  "SCIDOCS": 0.21382,
+  "TRECCOVID": 0.6652900000000002
+ },
+ "Snowflake__snowflake-arctic-embed-xs": {
+  "SciFact": 0.64512,
+  "NFCorpus": 0.30885,
+  "FIQA2018": 0.34523,
+  "ArguAna": 0.52081,
+  "SCIDOCS": 0.18355,
+  "TRECCOVID": 0.79431
+ },
+ "Snowflake__snowflake-arctic-embed-s": {
+  "SciFact": 0.6992100000000001,
+  "NFCorpus": 0.32536000000000004,
+  "FIQA2018": 0.39682,
+  "ArguAna": 0.56874,
+  "SCIDOCS": 0.1942,
+  "TRECCOVID": 0.81388
+ },
+ "ibm-granite__granite-embedding-small-english-r2": {
+  "SciFact": 0.75494,
+  "NFCorpus": 0.37144,
+  "FIQA2018": 0.40808,
+  "ArguAna": 0.54398,
+  "SCIDOCS": 0.24059,
+  "TRECCOVID": 0.64666
+ },
+ "minishlab__potion-base-8M": {
+  "SciFact": 0.5064,
+  "NFCorpus": 0.24267,
+  "FIQA2018": 0.16619,
+  "ArguAna": 0.41966000000000003,
+  "SCIDOCS": 0.12386999999999998,
+  "TRECCOVID": 0.45747
+ },
+ "minishlab__potion-retrieval-32M": {
+  "FIQA2018": 0.18761,
+  "ArguAna": 0.44878,
+  "SCIDOCS": 0.13693,
+  "TRECCOVID": 0.4469
+ },
+ "sentence-transformers__static-retrieval-mrl-en-v1": {
+  "SciFact": 0.59348,
+  "NFCorpus": 0.30045,
+  "FIQA2018": 0.19986,
+  "ArguAna": 0.4441,
+  "SCIDOCS": 0.13223,
+  "TRECCOVID": 0.44603
+ },
+ "Snowflake__snowflake-arctic-embed-m-v1.5": {
+  "SciFact": 0.71838,
+  "NFCorpus": 0.36241,
+  "ArguAna": 0.5953,
+  "SCIDOCS": 0.2149,
+  "FIQA2018": 0.42396,
+  "TRECCOVID": 0.84634
+ },
+ "MongoDB__mdbr-leaf-ir": {
+  "SciFact": 0.70558,
+  "NFCorpus": 0.36534,
+  "FIQA2018": 0.3917,
+  "ArguAna": 0.59384,
+  "SCIDOCS": 0.19772,
+  "TRECCOVID": 0.81966
+ }
+}

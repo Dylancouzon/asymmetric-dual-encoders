@@ -1,3 +1,10 @@
+# Local-only heavy data: encode caches, Edge shards, alt venv, scraper cache.
+# These never travel via git; the M7 session re-derives doc encodes on its own GPU.
+artifacts/
+edge_data/
+.venv-os/
+.firecrawl/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

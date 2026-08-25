@@ -1,0 +1,123 @@
+{
+ "_note": "Frozen 2026-08-25. Final-run loader must verify corpus hashes against a fresh HF download and read queries/qrels ONLY from results/frozen_eval/. Comparator pairing is invalid if any hash mismatches.",
+ "versions": {
+  "datasets": "5.0.1",
+  "pytrec_eval": "0.5.10"
+ },
+ "datasets": {
+  "scifact": {
+   "n_docs": 5183,
+   "n_queries": 300,
+   "corpus_ids_sha256": "910fa704be1169078067c56977e2444b34c7db4dbe19a12df254d5946fa9fbba",
+   "corpus_text_sha256": "cf7245417cb5b9065881c2e1e81bf4d9d369b6e0129a5026bb1cc53b78b2c9a6",
+   "qids_sha256": "aced760fd6c5091518755adba6360fa780305249610ff2acf24e966fb3ae901b",
+   "qrels_sha256": "761f6ed18a576ca11917af57e4f9dbe210cfa0b3452ec0652d3de520862ba8e4",
+   "comparator_vectors_sha256": {
+    "opensearch-doc-v3-gte": "24e37ae538fb1d56172161f77217e991e831865133e8c829d99173c7125cb319",
+    "lr-dense-pertask": "fd80374466c969b9db071b645a1e53b8d9536d882cb56d76c77c6cd5580276a8",
+    "lr-dense-websearch": "064dbc5a1e7c2c6f04102adffcab8a3ddb12ae71ad5db3c592ae8494c273ede4",
+    "bm25": "9033443e17a883c9f59dca459d0aa100f234da899661f79b13e99db17d20a62d",
+    "potion-retrieval-32M": "8ac9a29fda46267e0445dcf11eea98a2237d88de8f9321c2eeea4742551d56e1",
+    "bge-small-en-v1.5": "a7c1ab866db1bc3799dfef08578e4defde0c460195788cb1f4d371a82b57357b",
+    "leaf-ir-asym": "da719c13b050d14999cdeac82ac020cf841c99dc496896b9a1514157f1ea819c",
+    "mdbr-leaf-ir": "246a1ba832d96d6b286ff212606c613990e25c8f44aba71543a20324dff3a384",
+    "arctic-embed-m-v1.5": "cba8e03ac5846b6e8a1cb44f9585837675f3b4a86f7512721aa822509c403a87"
+   }
+  },
+  "nfcorpus": {
+   "n_docs": 3633,
+   "n_queries": 323,
+   "corpus_ids_sha256": "2f9ca958559d5ba358844c0d30b53645228718399dcaa1fe12fcbf794cea78ec",
+   "corpus_text_sha256": "af11001664bb29a846a9d7ad30660b2dc24f2eff27ace0382ff0c808ec34df52",
+   "qids_sha256": "65e030c5ab306874b104b418151ae297e166fd53529c77310715c22cd85659f8",
+   "qrels_sha256": "82500aebbeae24627d001be227273d47f1369cc9942e9a2b2a6b019ba5acfb13",
+   "comparator_vectors_sha256": {
+    "opensearch-doc-v3-gte": "e63ca56d9f84d5f568ac9a1ad785adf1fd45759c8cff78c3db6700cc0f7e98ec",
+    "lr-dense-pertask": "9f8ffa7612c722276803ebb8d86fa3539e12c6d2ecabc84cfc99c1e068750613",
+    "lr-dense-websearch": "4319a3e6f4307206cbb9f471b274476f3be06f1ff28df511abfb9ab7220266e2",
+    "bm25": "663bc6caaa1c5a74d31b51542acbb5eb4173cf8f1db968815a5335298a063304",
+    "potion-retrieval-32M": "4690bdff8fd9fa9276a93fa2ef3ca61e85db6980f23be40a431ab45c2bd36c22",
+    "bge-small-en-v1.5": "35489ebb48708b070967a0c566798014b40425f2629a8bc7c6442f1e6fc2f445",
+    "leaf-ir-asym": "3b338f5ac011990696351f7a78b1f308f684344e3263a520198c2b6997342d0c",
+    "mdbr-leaf-ir": "6b04042b32fe69c71d0b1c3252d6c7408373a609164b5248419ecc9ac1b2d705",
+    "arctic-embed-m-v1.5": "bed582ccca3df5fd4f5d7fc9ee63e06c1123481973fe30cf6148a608a8124185"
+   }
+  },
+  "fiqa": {
+   "n_docs": 57638,
+   "n_queries": 648,
+   "corpus_ids_sha256": "9edadfd39a8a05da1789d2e1172878d2714177c2a86eb8d091f54d98eb334857",
+   "corpus_text_sha256": "ad73601b3132ea1338276b0313d95401878592e2aecb49f1c84a0f5bdd8c5759",
+   "qids_sha256": "5645c050862d8273c9780d380c5f423c63014ee66c4d254b059500924eb67275",
+   "qrels_sha256": "7a10dc54ca4fc4c9c8e746f44aeb4be8581ca3737724b8f56cb151971a1c1102",
+   "comparator_vectors_sha256": {
+    "opensearch-doc-v3-gte": "54f71d5f8057ec120806f00d6f9c74341eae064dd58075612012d7f4477bee54",
+    "lr-dense-pertask": "633a72e613c667f1f3c1cffff17596d149e0173e117c40e75ed27a67eb7c6baf",
+    "lr-dense-websearch": "a5ed0de7f3ec9a9a87b158e23561dcb22987b1116d8f3b7f9b5e7ad26298e434",
+    "bm25": "f9050bf34192bfb5b48c4da993e4ebcc295ca79e35c12c1310b62bc8d26066fa",
+    "potion-retrieval-32M": "31392a7c7401a49a580fdf67e6cac98139b5fd2a670d581b977a2c2caa6db202",
+    "bge-small-en-v1.5": "2bfb17f9c497e0d143afce69f86d5cd14d4312d6f150eb55e542edddb65626d3",
+    "leaf-ir-asym": "c5da8f57bc83a9960850ed14aec9a63a03ab2e30020e2778df333fd0a1232fa8",
+    "mdbr-leaf-ir": "3b124875df3ec580bc2587608fe19d7a9a7986207bdf37c24c3089bf050335ab",
+    "arctic-embed-m-v1.5": "4da13e41194de7d8e9e5bf4059a57032b046b127241dd650bf929d199b17283b"
+   }
+  },
+  "arguana": {
+   "n_docs": 8674,
+   "n_queries": 1406,
+   "corpus_ids_sha256": "66b46bf3b2a8193cd52a06ff6d550ad7bffdaddcf8f332ae1c6df9855150171f",
+   "corpus_text_sha256": "da6d695267d2f410eca0e0ef4de0f24192aa5a72fd6b6a3a4f1bc990554f77c3",
+   "qids_sha256": "40c24a7062343c7dc4d78cc88e61a2e0dee09ca5999ee522859500a4c823b344",
+   "qrels_sha256": "40ab4b80360df4e9d315c3958337880b40c4fba005c9dd52bb6557b15229c846",
+   "comparator_vectors_sha256": {
+    "opensearch-doc-v3-gte": "c56b923b7f79502c2f258aafa2041df53b1b6b7cbeefdb66a049fe5465d57ad7",
+    "lr-dense-pertask": "b4b7cf99fcbf5d925770f354dca19639acc0c3de6ec3e1d2b9e556216f978443",
+    "lr-dense-websearch": "0b963c09d1449caf9bb90dc8f1387cae962096c6524c82ec47fa36c87209b8b5",
+    "bm25": "d30f50f00b9644a76bb924ce7889c4afbdd8392182ef64c1a4af0255b100051e",
+    "potion-retrieval-32M": "fe13a2d3511d4fa8cc374f95682cb046e4201a11f6b0a16c22c6df257e7500a7",
+    "bge-small-en-v1.5": "0bed30bda9363f46e7ce13bf5bf44272463236ade729fe92917a3b17fc436ad1",
+    "leaf-ir-asym": "4f4b22b6cdf760d99decd0d9aa6afd98b2360391eb250eb64ce677eafb2ec8ea",
+    "mdbr-leaf-ir": "6365f268c4441cf5426e0019ba5c07318181b3ec840d2d86b538fb6471a12897",
+    "arctic-embed-m-v1.5": "07e826ebe670870715de629834823e801cfe388589c7ac9b3a9156e8cbf43cba"
+   }
+  },
+  "scidocs": {
+   "n_docs": 25657,
+   "n_queries": 1000,
+   "corpus_ids_sha256": "33f848303b9ba1d231f744f07d6bc4f2b5c4da59d4c367a227c5cc9125b771bb",
+   "corpus_text_sha256": "8dc17d709d3e649fc21b4e6bec3d695e23a03af3748be6929c117e9881ca2740",
+   "qids_sha256": "ffc496889a9cad3257bf35eb591f846cb3c8cc23918a945d38c6f8a66fbe06d2",
+   "qrels_sha256": "955643da95a5ef8070e1db05fd2305f5c8d7f409f314eb097a64f6a81fa3f582",
+   "comparator_vectors_sha256": {
+    "opensearch-doc-v3-gte": "f95014899e7caf9afbdf256d8b87acd03c3d69ed7f01c9d88883213aaeed639a",
+    "lr-dense-pertask": "e4d182a685c6e0b41bccaf24e556b1fa1a2ef550ccdc060a5942d4ff7c2f3eab",
+    "lr-dense-websearch": "3d9cbdcd5e2e13d9bec7f40dc617ac3be9ddb54959e6690534612ab7bc020a51",
+    "bm25": "368773159582cb0cb0ad632ed8bd120ebbee73346a218d805a8a7745c269390c",
+    "potion-retrieval-32M": "bcdacdbe6eb0a645f496cc8d09548c0e389800d73f57dfc04a2b1ef78286c6b4",
+    "bge-small-en-v1.5": "a7984d90c8b5993833a92d05bee3cada436f9afdffa781e901b990c8c1b5abc5",
+    "leaf-ir-asym": "546b4ffa8b91f1fb9095d7fcecf9af85ce5256166f436507f7ddb7def16f7eae",
+    "mdbr-leaf-ir": "87c03ad0952e5d795e59ea9ef5884fcb16195c9e0a67cf14b7f255f4f716b252",
+    "arctic-embed-m-v1.5": "315a2340c5acfc1e5f047f17f9d84dff3fe14dc6a825baaea94e7547c4f1bb93"
+   }
+  },
+  "trec-covid": {
+   "n_docs": 171332,
+   "n_queries": 50,
+   "corpus_ids_sha256": "ab45c2bef152b2c6920a0b730f12f2c57412a68d9eed404aa99099c2fa919bf2",
+   "corpus_text_sha256": "15138560e8417562842066171f42bd9413ec23591e62f0a2546bc2a2d826891e",
+   "qids_sha256": "6fdebab6a967d08b6d70d57fde969fdc54efe477561f53c21ee515d8ea27a370",
+   "qrels_sha256": "1da45f39647408faa81545bb9f25e07e8643ea048ab06ba62bb7369962565268",
+   "comparator_vectors_sha256": {
+    "opensearch-doc-v3-gte": "58095c375fa80484e79d84000694b5a92634a37b6a7908cfdd84601b00966630",
+    "lr-dense-pertask": "51380ee57e011bcf431f57384a267cfd0e2f65ccd225125a0d5afdf11ec2e544",
+    "lr-dense-websearch": "58b6c6ac8abe20a07a157a261a0f2297b2726daae461e49c3db42eed8e340721",
+    "bm25": "b2b13108a8afd74cbfe3454cecf021c5c8afbb5903a89f6a3917c8471b683860",
+    "potion-retrieval-32M": "0f856c28425880a7d9a06b8a4e216aaa58816f3f10017b08bba14008f87a47cc",
+    "bge-small-en-v1.5": "fe038449337f74fd24bd7ca156fee1657868deda6727043c0a8e88c881e22b10",
+    "leaf-ir-asym": "9124f6b5116df53580fce87b887683fc1d668a12ca834c79ef6f617dcd5d12e3",
+    "mdbr-leaf-ir": "66c13fe8b6a0b9a65ea07495efc17eb0086fdefd23dd84abe20d8f5e41b70a19",
+    "arctic-embed-m-v1.5": "f8979a78dd0ae5138062db606c47745cb72a4439b3d59fe55f2a50e408800299"
+   }
+  }
+ }
+}

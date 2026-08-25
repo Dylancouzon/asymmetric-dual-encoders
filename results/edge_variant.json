@@ -1,0 +1,25 @@
+{
+ "ef=default": {
+  "ndcg@10": 0.3887,
+  "recall@100": 0.6857,
+  "total_ms_p50": 0.79
+ },
+ "ef=128": {
+  "ndcg@10": 0.3952,
+  "recall@100": 0.6935,
+  "total_ms_p50": 0.81
+ },
+ "ef=256": {
+  "ndcg@10": 0.4023,
+  "recall@100": 0.7107,
+  "total_ms_p50": 1.04
+ },
+ "ef=512": {
+  "ndcg@10": 0.405,
+  "recall@100": 0.7119,
+  "total_ms_p50": 1.42
+ },
+ "table_shard_mb": 1820.6,
+ "docs_shard_mb": 754.0,
+ "exact_ndcg@10": 0.4099
+}

@@ -1,0 +1,20 @@
+{
+ "tokenizer_load_s": 0.673,
+ "shards_load_s": 0.24,
+ "shards_load_note": "warm OS page cache; true cold start (fresh download) is bounded by bundle size / bandwidth",
+ "lookup_ms_p50": 0.42,
+ "search_ms_p50": 0.48,
+ "total_ms_p50": 0.9,
+ "edge_metrics": {
+  "ndcg@10": 0.3917817558602728,
+  "recall@100": 0.6937933380063009,
+  "n_queries": 648
+ },
+ "exact_metrics": {
+  "ndcg@10": 0.40985436855539903,
+  "recall@100": 0.7221768586351919,
+  "n_queries": 648
+ },
+ "table_shard_mb": 2286.5,
+ "docs_shard_mb": 931.1
+}

@@ -1,0 +1,170 @@
+{
+ "lr-dense-websearch vs bge-small-en-v1.5": {
+  "delta": -0.0722,
+  "ci95": [
+   -0.0878,
+   -0.0566
+  ],
+  "p": "<0.0002"
+ },
+ "lr-dense-websearch vs granite-small-r2": {
+  "delta": -0.0625,
+  "ci95": [
+   -0.079,
+   -0.0469
+  ],
+  "p": "<0.0002"
+ },
+ "lr-dense-websearch vs potion-retrieval-32M": {
+  "delta": 0.0719,
+  "ci95": [
+   0.0522,
+   0.092
+  ],
+  "p": "<0.0002"
+ },
+ "lr-dense-websearch vs static-retrieval-mrl-en-v1": {
+  "delta": 0.0793,
+  "ci95": [
+   0.0602,
+   0.099
+  ],
+  "p": "<0.0002"
+ },
+ "lr-dense-websearch vs all-MiniLM-L6-v2": {
+  "delta": 0.0119,
+  "ci95": [
+   -0.0051,
+   0.0292
+  ],
+  "p": "0.1816"
+ },
+ "lr-dense-websearch vs e5-small-v2": {
+  "delta": -0.0221,
+  "ci95": [
+   -0.0371,
+   -0.0077
+  ],
+  "p": "0.0032"
+ },
+ "lr-dense-websearch vs bm25": {
+  "delta": 0.0146,
+  "ci95": [
+   -0.0013,
+   0.03
+  ],
+  "p": "0.0704"
+ },
+ "lr-dense-websearch vs leaf-ir-asym": {
+  "delta": -0.0835,
+  "ci95": [
+   -0.0983,
+   -0.0696
+  ],
+  "p": "<0.0002"
+ },
+ "lr-dense-pertask vs lr-dense-websearch": {
+  "delta": 0.0263,
+  "ci95": [
+   0.0202,
+   0.0324
+  ],
+  "p": "<0.0002"
+ },
+ "lr-hybrid-websearch vs lr-dense-websearch": {
+  "delta": 0.0275,
+  "ci95": [
+   0.0208,
+   0.0343
+  ],
+  "p": "<0.0002"
+ },
+ "lr-hybrid-pertask vs lr-dense-pertask": {
+  "delta": 0.0138,
+  "ci95": [
+   0.0079,
+   0.0199
+  ],
+  "p": "<0.0002"
+ },
+ "opensearch-doc-v3-gte vs lr-hybrid-pertask": {
+  "delta": 0.0148,
+  "ci95": [
+   0.0021,
+   0.0275
+  ],
+  "p": "0.0222"
+ },
+ "opensearch-doc-v3-gte vs lr-hybrid-websearch": {
+  "delta": 0.0274,
+  "ci95": [
+   0.0152,
+   0.0403
+  ],
+  "p": "<0.0002"
+ },
+ "opensearch-doc-v3-gte vs bm25": {
+  "delta": 0.0694,
+  "ci95": [
+   0.057,
+   0.0816
+  ],
+  "p": "<0.0002"
+ },
+ "opensearch-doc-v3-gte vs bge-small-en-v1.5": {
+  "delta": -0.0174,
+  "ci95": [
+   -0.0278,
+   -0.0069
+  ],
+  "p": "0.0006"
+ },
+ "opensearch-doc-v3-gte vs gte-small": {
+  "delta": 0.003,
+  "ci95": [
+   -0.0102,
+   0.0163
+  ],
+  "p": "0.6556"
+ },
+ "leaf-ir-asym vs mdbr-leaf-ir": {
+  "delta": 0.0032,
+  "ci95": [
+   -0.0019,
+   0.0083
+  ],
+  "p": "0.2210"
+ },
+ "leaf-ir-asym vs arctic-embed-m-v1.5": {
+  "delta": -0.0109,
+  "ci95": [
+   -0.0154,
+   -0.0068
+  ],
+  "p": "<0.0002"
+ },
+ "leaf-ir-asym vs bge-small-en-v1.5": {
+  "delta": 0.0113,
+  "ci95": [
+   0.0023,
+   0.0201
+  ],
+  "p": "0.0158"
+ },
+ "leaf-ir-asym vs arctic-embed-s": {
+  "delta": 0.0162,
+  "ci95": [
+   0.0064,
+   0.0254
+  ],
+  "p": "0.0008"
+ },
+ "granite-small-r2 vs bge-small-en-v1.5": {
+  "delta": -0.0097,
+  "ci95": [
+   -0.0221,
+   0.0023
+  ],
+  "p": "0.1136"
+ }
+}

@@ -1,0 +1,78 @@
+{
+ "all-MiniLM-L6-v2": {
+  "latency_ms": 2.48,
+  "load_s": 1.23,
+  "params_m": 22.7,
+  "weights_fp16_mb": 45.4,
+  "weights_fp32_mb": 90.9
+ },
+ "arctic-embed-s": {
+  "latency_ms": 4.65,
+  "load_s": 1.53,
+  "params_m": 33.2,
+  "weights_fp16_mb": 66.4,
+  "weights_fp32_mb": 132.8
+ },
+ "bge-small-en-v1.5": {
+  "latency_ms": 4.61,
+  "load_s": 1.31,
+  "params_m": 33.4,
+  "weights_fp16_mb": 66.7,
+  "weights_fp32_mb": 133.4
+ },
+ "granite-small-r2": {
+  "latency_ms": 4.87,
+  "load_s": 1.63,
+  "params_m": 47.7,
+  "weights_fp16_mb": 95.3,
+  "weights_fp32_mb": 190.6
+ },
+ "gte-small": {
+  "latency_ms": 4.6,
+  "load_s": 1.37,
+  "params_m": 33.4,
+  "weights_fp16_mb": 66.7,
+  "weights_fp32_mb": 133.4
+ },
+ "lightretriever-lookup": {
+  "disk_mb": 465.9,
+  "latency_ms": 0.023,
+  "load_s": 0.7
+ },
+ "lightretriever-lookup-int8": {
+  "disk_mb": 233.6
+ },
+ "mdbr-leaf-ir": {
+  "latency_ms": 2.52,
+  "load_s": 1.71,
+  "params_m": 22.9,
+  "weights_fp16_mb": 45.7,
+  "weights_fp32_mb": 91.4
+ },
+ "opensearch-query-side": {
+  "disk_mb": 0.9,
+  "latency_ms": 0.018,
+  "load_s": 0.42
+ },
+ "potion-base-8M": {
+  "latency_ms": 0.22,
+  "load_s": 0.47,
+  "params_m": 7.6,
+  "weights_fp16_mb": 15.1,
+  "weights_fp32_mb": 30.2
+ },
+ "potion-retrieval-32M": {
+  "latency_ms": 0.23,
+  "load_s": 0.59,
+  "params_m": 32.3,
+  "weights_fp16_mb": 64.6,
+  "weights_fp32_mb": 129.2
+ },
+ "static-retrieval-mrl-en-v1": {
+  "latency_ms": 0.16,
+  "load_s": 0.91,
+  "params_m": 31.3,
+  "weights_fp16_mb": 62.5,
+  "weights_fp32_mb": 125.0
+ }
+}
