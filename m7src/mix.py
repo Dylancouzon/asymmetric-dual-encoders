@@ -35,16 +35,32 @@ def split_pairs(sources=None):
     return tr, ho
 
 
-def query_texts(sources=None, include_querytext=True, train_only=True):
-    """All query strings usable for objective B (distillation), TRAIN partition only by default."""
+def query_texts(sources=None, include_querytext=True, train_only=True, decontaminated=True):
+    """Query strings usable for objective B (distillation).
+
+    decontaminated=True is the default and the only setting any reported number may use: it
+    restricts to the pairs and query-text rows that survived fingerprint decontamination.
+    """
+    from _paths import WORK as _W
     out = []
     tr, ho = split_pairs(sources)
+    if decontaminated and train_only:
+        keep = json.loads((_W / "decontam" / "kept.json").read_text())
+        allow = {k: set(v) for k, v in keep.items()}
+        tr = [p for p in tr if p[1] in allow.get(p[0], set())]
     out += [q for _, _, q, _, _ in (tr if train_only else tr + ho)]
     if include_querytext:
+        kq = None
+        if decontaminated and train_only:
+            p = _W / "decontam" / "kept_querytext.json"
+            kq = json.loads(p.read_text()) if p.exists() else None
         for s in QUERYTEXT_SOURCES:
             p = TRAIN / "querytext" / f"{s}.json"
             if not p.exists():
                 continue
             qs = json.loads(p.read_text())
-            out += [q for i, q in enumerate(qs) if not heldout(s, str(i)) or not train_only]
+            if kq is not None and s in kq:
+                out += [qs[i] for i in kq[s]]
+            else:
+                out += [q for i, q in enumerate(qs) if not heldout(s, str(i)) or not train_only]
     return out
