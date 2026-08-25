@@ -61,7 +61,23 @@ def solve_ridge(X, Y, W0, lam):
     return np.ascontiguousarray(W, dtype=np.float32)
 
 
-def main(n_queries=400_000, init_kind="teacher", pre=None, target_prefix=True,
+def overlap_at_10(model, pre, tok, components):
+    """Retrieval agreement with the teacher: mean |top-10 student ∩ top-10 teacher| / 10.
+    Reported separately from embedding agreement (train_cos), as the mandate requires."""
+    from evalkit import topk_ids_scores
+    out = {}
+    for c in components:
+        doc_ids, _, q_ids, q_texts, _, dv = dev_eval.doc_vecs(c)
+        tqv = np.asarray(encode_cached(f"dev-{c}-queries-pfx", q_texts, prefix=QUERY_PREFIX,
+                                       dtype=torch.float16, verbose=False), dtype=np.float32)
+        chunk = dev_eval.CHUNK.get(c, 200_000)
+        a = topk_ids_scores(model.encode(q_texts, pre, tok=tok), dv, doc_ids, k=10, chunk=chunk, qids=q_ids)
+        b = topk_ids_scores(tqv, dv, doc_ids, k=10, chunk=chunk, qids=q_ids)
+        out[c] = float(np.mean([len(set(a[q]) & set(b[q])) / 10.0 for q in q_ids]))
+    return out
+
+
+def main(n_queries=1_000_000, init_kind="teacher", pre=None, target_prefix=True,
          components=("nq-250k", "cqadup-programmers", "cqadup-physics")):
     pre = pre or NO_PREFIX
     tok = get_tokenizer()
@@ -81,6 +97,7 @@ def main(n_queries=400_000, init_kind="teacher", pre=None, target_prefix=True,
     X = bag_matrix(tok, qs, pre, V)
     cov = float((X.getnnz(axis=0) > 0).mean())
     print(f"  bag matrix {X.shape} nnz={X.nnz:,} | vocab coverage on TRAIN queries {cov:.3f}", flush=True)
+    ov = None
     W0 = get_init(init_kind, pre, vocab=V)
 
     results = {}
@@ -92,9 +109,11 @@ def main(n_queries=400_000, init_kind="teacher", pre=None, target_prefix=True,
         cos = float((fit * Y).sum(1).mean())
         m = QueryTable(W, learned_weights=False).to("cuda").eval()
         per = dev_eval.eval_table(m, pre, components=list(components), tok=tok)
-        macro, means = dev_eval.report(per, f"  lam={lam:<7g} train-cos={cos:.4f}")
+        ov = overlap_at_10(m, pre, tok, list(components))
+        macro, means = dev_eval.report(
+            per, f"  lam={lam:<7g} train-cos={cos:.4f} ov@10={np.mean(list(ov.values())):.3f}")
         results[str(lam)] = {"train_cos": cos, "macro": macro, "per_component": means,
-                            "solve_s": round(time.time() - t0, 1)}
+                            "overlap_at_10": ov, "solve_s": round(time.time() - t0, 1)}
         np.save(OUT / f"ridge-{init_kind}-{pre.fingerprint()}-lam{lam}.npy", W)
         del m, W, fit
         torch.cuda.empty_cache()
