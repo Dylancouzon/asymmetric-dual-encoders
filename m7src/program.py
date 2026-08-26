@@ -64,6 +64,18 @@ def phase4_mandatory(base):
     return out
 
 
+def phase35_coverage(base):
+    """Vocabulary-coverage distillation. A VOCABULARY mitigation for the pre-registered domain
+    gap, not a domain one -- it supplies no in-domain documents and no relevance structure.
+    Selected on dev like everything else; dev is Wikipedia + StackExchange, so it can only
+    speak to whether broader token coverage helps at all, not to the six."""
+    return grid("p35", base, {
+        "none": {"b_pseudo_queries": 0},
+        "500k": {"b_pseudo_queries": 500_000, "steps_b": 8000},
+        "2m": {"b_pseudo_queries": 2_000_000, "steps_b": 16000},
+    })
+
+
 def phase5_fever(base):
     """Does FEVER-train earn its place? If not, dropping it buys a clean untouched-final row."""
     return grid("p5", base, {"with-fever": {"sources": ALL_SOURCES},

@@ -60,6 +60,8 @@ class Cfg:
     eval_components: tuple = ("nq-250k", "cqadup-programmers", "cqadup-physics")
     seed: int = 0
     b_query_sources_all: bool = True    # include nq-open/triviaqa query text in B
+    b_pseudo_queries: int = 0           # vocabulary-coverage distillation (see m7src/pseudoq.py)
+    b_pseudo_frac: float = 0.5          # share of each B batch drawn from pseudo-queries
 
 
 # ---- data ----------------------------------------------------------------------------
@@ -193,6 +195,32 @@ def run(cfg: Cfg, log=print):
                                   dtype=torch.float16, verbose=True), dtype=np.float32)
     ids_all = tokenize(tok, q_texts, pre)
 
+    # objective-B-only extras: query text with no positives (nq-open, TriviaQA) and
+    # pseudo-queries for vocabulary coverage. Both feed the cosine term, never the KL term.
+    b_texts, b_tq = [], None
+    if cfg.objective in ("B", "C"):
+        extra = []
+        if cfg.b_query_sources_all:
+            from mix import QUERYTEXT_SOURCES
+            import json as _json
+            kq_p = WORK / "decontam" / "kept_querytext.json"
+            kq = _json.loads(kq_p.read_text()) if kq_p.exists() else {}
+            for src in QUERYTEXT_SOURCES:
+                fp = WORK / "train" / "querytext" / f"{src}.json"
+                if fp.exists() and src in kq:
+                    qs = _json.loads(fp.read_text())
+                    extra += [qs[i] for i in kq[src]]
+        if cfg.b_pseudo_queries:
+            import pseudoq
+            extra += pseudoq.build(cfg.b_pseudo_queries)
+        if extra:
+            b_texts = extra
+            b_tq = np.asarray(encode_cached(f"bextra-{len(b_texts)}", b_texts, prefix=QUERY_PREFIX,
+                                            dtype=torch.float16, verbose=True), dtype=np.float32)
+            log(f"  objective-B extra query text: {len(b_texts):,} "
+                f"(query-text-only sources + {cfg.b_pseudo_queries:,} pseudo-queries)")
+    b_ids_all = tokenize(tok, b_texts, pre) if b_texts else []
+
     hard = None
     if cfg.hard_neg_k:
         hard = mine_hard_negatives(f"{cfg.preproc}-{len(q_texts)}", tq, pool_vecs,
@@ -229,6 +257,15 @@ def run(cfg: Cfg, log=print):
         return model(f, o, l)
 
     def step_b(idx):
+        # optional pseudo-query / query-text-only part: cosine only, no positive to rank against
+        n_ps = int(len(idx) * cfg.b_pseudo_frac) if b_texts else 0
+        extra_loss = torch.zeros((), device="cuda")
+        if n_ps:
+            j = rng.integers(0, len(b_texts), n_ps)
+            f2, o2, l2 = ragged([b_ids_all[k] for k in j], "cuda")
+            qv2 = model(f2, o2, l2)
+            extra_loss = (1.0 - (qv2 * torch.from_numpy(b_tq[j]).cuda()).sum(1)).mean()
+            idx = idx[:max(1, len(idx) - n_ps)]
         qv = batch_of(idx)
         t = torch.from_numpy(tq[idx]).cuda()
         cand = None
@@ -247,7 +284,9 @@ def run(cfg: Cfg, log=print):
                 dist = bank.index_select(0, sel).float().view(len(idx), k - 1, model.dim)
             cand = torch.cat([pos_v.unsqueeze(1), dist], 1)
         loss, cos, kl = distill(qv, t, cand, cfg.temp, cfg.cos_weight, cfg.kl_weight)
-        return loss, {"cos": cos, "kl": kl}
+        if n_ps:
+            loss = loss + cfg.cos_weight * extra_loss
+        return loss, {"cos": cos, "kl": kl, "cos_extra": round(float(extra_loss), 4)}
 
     def step_a(idx):
         qv = batch_of(idx)
@@ -282,7 +321,7 @@ def run(cfg: Cfg, log=print):
             idx = rng.integers(0, len(q_texts), cfg.batch)
             loss, extra = stepfn(idx)
             rows = np.unique(np.concatenate([ids_all[i] for i in idx]))
-            ri = torch.from_numpy(rows).cuda()
+            ri = torch.from_numpy(rows).cuda()   # rows touched by the pair part of the batch
             if cfg.reg_init > 0:
                 # low-update rows stay pulled toward init: the penalty is scaled by 1/(1+updates)
                 scale = 1.0 / (1.0 + updates[ri])
