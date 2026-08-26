@@ -53,12 +53,31 @@ def solve_ridge(X, Y, W0, lam):
     per lambda and factored in place (assume_a='pos', overwrite_a) to avoid a second copy --
     the M4 session lost a machine to a peak-RAM surprise, so peak here is one Gram, not two."""
     import scipy.linalg as sla
-    G = (X.T @ X).toarray().astype(np.float64)
+    Gs = X.T @ X
+    # (i,j) is nonzero only when tokens i and j co-occur in some query, so this stays far from
+    # the 931M-entry dense worst case -- but check, because densifying a dense-ish sparse Gram
+    # would need ~19 GB on a 25 GB box.
+    print(f"    gram nnz={Gs.nnz:,} ({Gs.nnz/ (X.shape[1]**2):.3%} dense, "
+          f"{Gs.nnz*12/1e9:.2f} GB sparse -> {X.shape[1]**2*8/1e9:.2f} GB dense fp64)", flush=True)
+    G = Gs.toarray().astype(np.float64)
+    del Gs
     rhs = (X.T @ Y).astype(np.float64) + lam * W0.astype(np.float64)
     G[np.diag_indices_from(G)] += lam
     W = sla.solve(G, rhs, assume_a="pos", overwrite_a=True, overwrite_b=True)
     del G, rhs
     return np.ascontiguousarray(W, dtype=np.float32)
+
+
+def chunked_train_cos(X, W, Y, chunk=50_000):
+    """Mean cosine between the fitted bag vector and the teacher target, without materializing
+    a (n_queries x 768) float64 product."""
+    tot, n = 0.0, X.shape[0]
+    Xf = X.astype(np.float32)
+    for lo in range(0, n, chunk):
+        f = (Xf[lo:lo + chunk] @ W).astype(np.float32)
+        f /= np.maximum(np.linalg.norm(f, axis=1, keepdims=True), 1e-12)
+        tot += float((f * Y[lo:lo + chunk]).sum())
+    return tot / n
 
 
 def overlap_at_10(model, pre, tok, components):
@@ -104,9 +123,7 @@ def main(n_queries=1_000_000, init_kind="teacher", pre=None, target_prefix=True,
     for lam in LAMBDAS:
         t0 = time.time()
         W = solve_ridge(X, Y, W0, lam)
-        fit = X @ W
-        fit /= np.maximum(np.linalg.norm(fit, axis=1, keepdims=True), 1e-12)
-        cos = float((fit * Y).sum(1).mean())
+        cos = chunked_train_cos(X, W, Y)
         m = QueryTable(W, learned_weights=False).to("cuda").eval()
         per = dev_eval.eval_table(m, pre, components=list(components), tok=tok)
         ov = overlap_at_10(m, pre, tok, list(components))
