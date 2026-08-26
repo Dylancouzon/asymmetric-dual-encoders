@@ -13,8 +13,16 @@ Method, per candidate:
   * Y: that candidate's own TRAIN query vectors (queries only -- no documents, no pool).
   * W0: that candidate's teacher-init rows, as the ridge's regularisation anchor.
   * solve the same closed form Stage 0 uses, for a small lambda grid.
-  * score on DEV: cosine agreement to the teacher's own dev query vectors (primary -- high SNR, no
-    qrels, no coverage cliff) and retrieval nDCG@10 on the two CQADupStack components (secondary).
+  * score on DEV: retrieval nDCG@10 on the two CQADupStack components (THE criterion -- it is what
+    ships) and cosine agreement to the teacher's own dev query vectors (diagnostic only).
+
+    Cosine agreement was originally designated the primary metric, for signal-to-noise, and the runs
+    refuted that: it is not monotone with retrieval in lambda (within a candidate, raising lambda
+    raises cosine and lowers nDCG) and it mis-ranks candidates (e5-large-v2 has the HIGHEST cosine
+    agreement at 0.90 and a mid-pack retrieval ratio of 0.63). Imitating a teacher's query vector in
+    cosine is not the same as reproducing its ranking. That divergence is also independent evidence
+    for the Codex finding that the closed-form ridge is not an upper bound on RETRIEVAL: its
+    objective and the metric part company.
 
 Fit on TRAIN, measured on dev, so no arm is scored on what it fitted. This is a CLOSED-FORM ranking:
 phase 2 showed training moves a table, so a candidate that wins here is favoured, not crowned.
