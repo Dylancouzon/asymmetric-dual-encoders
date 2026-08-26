@@ -281,7 +281,15 @@ teacher-swap boundary. Dispositions, honestly labelled:
   averages within dataset first; add-one p, valid at any n), Holm now consumes only these;
   `paired` renamed its tail mass to `boot_tail` so it can't be mistaken again. Type-I error
   verified by simulation on the real frozen vectors with label-swap nulls:
-  `results/m7_signflip_calibration.json` (S=1000, 3-pair Holm family).
+  `results/m7_signflip_calibration.json` (S=1000, 3-pair Holm family). **Tier rule amended
+  same day (review #2 B5 + M8), pre-registered before the final run: a tier win requires BOTH the
+  Holm-corrected sign-flip rejection AND the paired-bootstrap CI resolved above zero** — the
+  mandate's tier text is written in CIs, the sign-flip carries multiplicity, the conjunction
+  satisfies both; the sign-flip leg's weak-null (asymmetric, centered) type-I is measured in
+  `results/m7_signflip_weaknull.json`. Cross-check evidence for the frozen pairing beyond BM25:
+  `results/m7_perquery_crosscheck.json` — 10/10 M4-cache-derived paired CIs reproduced from
+  perquery.json to ≤4e-4 across all nine systems (CI width is pairing-sensitive, so this is the
+  independent check M-perquery's hash freeze could not be).
 - B5 **FIXED 2026-08-26**: `fusion.bm25_run`/`fusion._to_run` is the one builder (drop `s <= 0`
   padding + self-hits — the selection semantics, which the padding-free function should be);
   `select_fusion` wraps it with the raw-array cache (existing caches stay valid), `final_run`'s

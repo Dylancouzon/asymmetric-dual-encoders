@@ -52,7 +52,7 @@ decontamination — all logged in `LEDGER.md` before any number they affect. Det
 
 ## Standing constraints
 
-Six-set claim primary (Dylan 2026-08-26); clean-4 robustness bars precomputed
+Six-set claim primary (Dylan 2026-08-26); no-disclosed-overlap-4 robustness bars precomputed
 (`results/m7_bars_clean4.json`); stella's ArguAna/FiQA2018 exposure labelled at the dataset row.
 Sequential GPU jobs, 18 GB RAM ceiling, smoke before long runs, commit+push after every experiment.
 
