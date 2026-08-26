@@ -16,7 +16,7 @@ from teacher import QUERY_PREFIX, encode_cached
 
 DEVRES = WORK / "devres"
 DEVRES.mkdir(parents=True, exist_ok=True)
-CHUNK = {"hotpotqa": 400_000}
+CHUNK = {"hotpotqa": 250_000}
 
 
 def doc_vecs(comp):

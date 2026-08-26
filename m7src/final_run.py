@@ -125,11 +125,11 @@ def score_set(ds, kind, table_path, pre, fusion_spec, encode_dtype=torch.float32
     for variant in ("fp16", "int8"):
         m = load_table(table_path, variant=variant)
         runs[f"{variant}-table"] = topk_ids_scores(m.encode(q_texts, pre), dv, doc_ids,
-                                                  chunk=chunk, qids=q_ids)
+                                                  k=1000, chunk=chunk, qids=q_ids)
         del m
         torch.cuda.empty_cache()
     runs["bm25"] = bm25_run(doc_ids, doc_texts, q_ids, q_texts)
-    runs["teacher-symmetric"] = topk_ids_scores(tqv, dv, doc_ids, chunk=chunk, qids=q_ids)
+    runs["teacher-symmetric"] = topk_ids_scores(tqv, dv, doc_ids, k=1000, chunk=chunk, qids=q_ids)
     if fusion_spec:
         runs["fusion"] = fusion.apply_frozen(fusion_spec, runs["int8-table"], runs["bm25"])
     for k, r in runs.items():
