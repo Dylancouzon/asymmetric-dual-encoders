@@ -1,0 +1,21 @@
+{
+ "_note": "Whether the pre-registered contrastive kill criterion may fire, computed from committed screen results and each run's own cfg. A kill needs a qualifying arm (lr <= 1e-4, warmup, mined hard negatives) AND every arm failing the bar.",
+ "bar": 0.4548,
+ "kill_requires": {
+  "lr_at_most": 0.0001,
+  "warmup": true,
+  "hard_negatives": true
+ },
+ "scores": {
+  "p2s-start": 0.4548216552132978,
+  "p2s-sane-1e5": 0.45837934704799305,
+  "p2s-sane-5e5": 0.46255393804154227,
+  "p2s-sane-1e4": 0.46525262643633086,
+  "p2s-old-lr-3e3": 0.45464365093647885,
+  "p2s-sane-randneg": 0.4659097070861553
+ },
+ "kill_allowed": false,
+ "reason": "the kill criterion may not be invoked: 4 arm(s) beat the 0.4548 bar -- p2s-sane-1e4=0.4653, p2s-sane-1e5=0.4584, p2s-sane-5e5=0.4626, p2s-sane-randneg=0.4659",
+ "best_arm": "p2s-sane-randneg",
+ "best_score": 0.4659097070861553
+}

@@ -1,0 +1,453 @@
+{
+ "_note": "Paired bootstrap over the phase-2 screen's arms, re-scored from the saved tables on the three proxy dev components. The screen itself reported point macros only, and the arms are ~0.01 apart. Holm is applied over the family of arm-vs-start tests. Dev-only: not a gate input, the six are unread.",
+ "components": [
+  "nq-250k",
+  "cqadup-programmers",
+  "cqadup-physics"
+ ],
+ "macros": {
+  "p2s-start": 0.4548,
+  "p2s-sane-1e5": 0.4584,
+  "p2s-sane-5e5": 0.4625,
+  "p2s-sane-1e4": 0.4652,
+  "p2s-old-lr-3e3": 0.4547,
+  "p2s-sane-randneg": 0.4659
+ },
+ "vs_start": {
+  "p2s-sane-1e5": {
+   "delta": 0.0036,
+   "ci95": [
+    0.0022,
+    0.005
+   ],
+   "p": 0.0,
+   "p_str": "<0.0001",
+   "alternative": "greater",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": 0.0022,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": 0.0035,
+     "ci95": [
+      0.0012,
+      0.0061
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": 0.0047,
+     "ci95": [
+      0.0021,
+      0.0075
+     ]
+    },
+    "nq-250k": {
+     "n": 3452,
+     "delta": 0.0025,
+     "ci95": [
+      0.0003,
+      0.0047
+     ]
+    }
+   },
+   "resolved": true
+  },
+  "p2s-sane-5e5": {
+   "delta": 0.0077,
+   "ci95": [
+    0.005,
+    0.0105
+   ],
+   "p": 0.0,
+   "p_str": "<0.0001",
+   "alternative": "greater",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": 0.005,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": 0.0079,
+     "ci95": [
+      0.0035,
+      0.0124
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": 0.0146,
+     "ci95": [
+      0.0091,
+      0.0205
+     ]
+    },
+    "nq-250k": {
+     "n": 3452,
+     "delta": 0.0005,
+     "ci95": [
+      -0.0036,
+      0.0046
+     ]
+    }
+   },
+   "resolved": true
+  },
+  "p2s-sane-1e4": {
+   "delta": 0.0104,
+   "ci95": [
+    0.0069,
+    0.0139
+   ],
+   "p": 0.0,
+   "p_str": "<0.0001",
+   "alternative": "greater",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": 0.0069,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": 0.0093,
+     "ci95": [
+      0.004,
+      0.0146
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": 0.022,
+     "ci95": [
+      0.0147,
+      0.0294
+     ]
+    },
+    "nq-250k": {
+     "n": 3452,
+     "delta": 0.0,
+     "ci95": [
+      -0.0049,
+      0.005
+     ]
+    }
+   },
+   "resolved": true
+  },
+  "p2s-old-lr-3e3": {
+   "delta": -0.0002,
+   "ci95": [
+    -0.0062,
+    0.0059
+   ],
+   "p": 0.5235,
+   "p_str": "0.5235",
+   "alternative": "greater",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": -0.0062,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": -0.0067,
+     "ci95": [
+      -0.0177,
+      0.0039
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": 0.0191,
+     "ci95": [
+      0.0069,
+      0.0314
+     ]
+    },
+    "nq-250k": {
+     "n": 3452,
+     "delta": -0.0129,
+     "ci95": [
+      -0.0202,
+      -0.0056
+     ]
+    }
+   },
+   "resolved": false
+  },
+  "p2s-sane-randneg": {
+   "delta": 0.0111,
+   "ci95": [
+    0.0084,
+    0.0139
+   ],
+   "p": 0.0,
+   "p_str": "<0.0001",
+   "alternative": "greater",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": 0.0084,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": 0.0095,
+     "ci95": [
+      0.005,
+      0.0143
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": 0.0176,
+     "ci95": [
+      0.012,
+      0.0234
+     ]
+    },
+    "nq-250k": {
+     "n": 3452,
+     "delta": 0.0061,
+     "ci95": [
+      0.0023,
+      0.0099
+     ]
+    }
+   },
+   "resolved": true
+  }
+ },
+ "holm_over_vs_start": {
+  "p2s-sane-1e5": {
+   "p": 0.0,
+   "threshold": 0.005,
+   "reject": true,
+   "rank": 1
+  },
+  "p2s-sane-5e5": {
+   "p": 0.0,
+   "threshold": 0.00625,
+   "reject": true,
+   "rank": 2
+  },
+  "p2s-sane-1e4": {
+   "p": 0.0,
+   "threshold": 0.008333333333333333,
+   "reject": true,
+   "rank": 3
+  },
+  "p2s-sane-randneg": {
+   "p": 0.0,
+   "threshold": 0.0125,
+   "reject": true,
+   "rank": 4
+  },
+  "p2s-old-lr-3e3": {
+   "p": 0.5235,
+   "threshold": 0.025,
+   "reject": false,
+   "rank": 5
+  }
+ },
+ "best_arm": "p2s-sane-randneg",
+ "best_vs_others": {
+  "p2s-start": {
+   "delta": 0.0111,
+   "ci95": [
+    0.0084,
+    0.0139
+   ],
+   "p": 0.0,
+   "p_str": "<0.0001",
+   "alternative": "two-sided",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": null,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": 0.0095,
+     "ci95": [
+      0.005,
+      0.0143
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": 0.0176,
+     "ci95": [
+      0.012,
+      0.0234
+     ]
+    },
+    "nq-250k": {
+     "n": 3452,
+     "delta": 0.0061,
+     "ci95": [
+      0.0023,
+      0.0099
+     ]
+    }
+   },
+   "resolved": true
+  },
+  "p2s-sane-1e5": {
+   "delta": 0.0075,
+   "ci95": [
+    0.0051,
+    0.0099
+   ],
+   "p": 0.0,
+   "p_str": "<0.0001",
+   "alternative": "two-sided",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": null,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": 0.006,
+     "ci95": [
+      0.002,
+      0.0101
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": 0.0129,
+     "ci95": [
+      0.0079,
+      0.018
+     ]
+    },
+    "nq-250k": {
+     "n": 3452,
+     "delta": 0.0036,
+     "ci95": [
+      0.0006,
+      0.0067
+     ]
+    }
+   },
+   "resolved": true
+  },
+  "p2s-sane-5e5": {
+   "delta": 0.0034,
+   "ci95": [
+    0.0019,
+    0.0049
+   ],
+   "p": 0.0002,
+   "p_str": "0.0002",
+   "alternative": "two-sided",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": null,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": 0.0016,
+     "ci95": [
+      -0.0006,
+      0.0039
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": 0.0029,
+     "ci95": [
+      -0.0001,
+      0.0061
+     ]
+    },
+    "nq-250k": {
+     "n": 3452,
+     "delta": 0.0056,
+     "ci95": [
+      0.0034,
+      0.0079
+     ]
+    }
+   },
+   "resolved": true
+  },
+  "p2s-sane-1e4": {
+   "delta": 0.0007,
+   "ci95": [
+    -0.0013,
+    0.0027
+   ],
+   "p": 0.5248,
+   "p_str": "0.5248",
+   "alternative": "two-sided",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": null,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": 0.0003,
+     "ci95": [
+      -0.0025,
+      0.0031
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": -0.0044,
+     "ci95": [
+      -0.0086,
+      -0.0001
+     ]
+    },
+    "nq-250k": {
+     "n": 3452,
+     "delta": 0.0061,
+     "ci95": [
+      0.0029,
+      0.0093
+     ]
+    }
+   },
+   "resolved": false
+  },
+  "p2s-old-lr-3e3": {
+   "delta": 0.0113,
+   "ci95": [
+    0.006,
+    0.0166
+   ],
+   "p": 0.0,
+   "p_str": "<0.0001",
+   "alternative": "two-sided",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": null,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": 0.0163,
+     "ci95": [
+      0.0067,
+      0.0261
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": -0.0016,
+     "ci95": [
+      -0.0122,
+      0.009
+     ]
+    },
+    "nq-250k": {
+     "n": 3452,
+     "delta": 0.0191,
+     "ci95": [
+      0.0127,
+      0.0254
+     ]
+    }
+   },
+   "resolved": true
+  }
+ }
+}

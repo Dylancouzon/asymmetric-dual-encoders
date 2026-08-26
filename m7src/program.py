@@ -10,7 +10,7 @@ GPU must not be shared, per the OOM incident in m7/LEDGER.md.
 import json
 from dataclasses import replace
 
-from _paths import REPO
+from _paths import REPO, WORK
 from sweep import grid, one
 from train import Cfg
 
@@ -38,19 +38,64 @@ CONTRASTIVE_KILL_BAR = 0.4548
 KILL_REQUIRES = {"lr_at_most": 1e-4, "warmup": True, "hard_negatives": True}
 
 
-def may_invoke_contrastive_kill(runs):
-    """Enforce KILL_REQUIRES rather than trusting a comment. `runs` maps run_id -> Cfg-like dict.
+def may_invoke_contrastive_kill(runs, scores=None, bar=CONTRASTIVE_KILL_BAR):
+    """Enforce KILL_REQUIRES against COMMITTED RESULTS, not against a comment.
 
-    Returns (allowed, reason). A future session must call this before recording a kill; the review
-    that added it found the criterion was documented and enforced nowhere.
+    `runs` maps run_id -> Cfg-like dict; `scores` maps run_id -> dev macro (None = unknown/failed).
+
+    Codex's review found the first version enforced only that a qualifying CONFIGURATION existed --
+    not what it scored, and not whether some other arm had already cleared the bar. Both are now
+    conditions: a kill requires a qualifying arm AND that every arm, qualifying or not, failed the
+    bar. An avenue where any arm beats the bar is not dead, whatever the qualifying arm did.
     """
-    ok = [r for r, c in runs.items()
-          if c.get("lr", 1) <= KILL_REQUIRES["lr_at_most"]
-          and c.get("warmup_steps", 0) > 0 and c.get("hard_neg_k", 0) > 0]
-    if not ok:
+    scores = scores or {}
+    qualifying = [r for r, c in runs.items()
+                  if c.get("lr", 1) <= KILL_REQUIRES["lr_at_most"]
+                  and c.get("warmup_steps", 0) > 0 and c.get("hard_neg_k", 0) > 0]
+    if not qualifying:
         return False, ("no arm has run at lr <= 1e-4 WITH warmup and mined hard negatives, so the "
                        "avenue is not yet diagnosed and the kill criterion may not be invoked")
-    return True, f"qualifying arms: {sorted(ok)}"
+    missing = [r for r in qualifying if scores.get(r) is None]
+    if missing:
+        return False, f"qualifying arms have no committed score: {sorted(missing)}"
+    # A zero-step arm IS the bar (it re-scores the checkpoint the bar was set from), so it must not
+    # count as an arm that "beat" it -- it exceeded 0.4548 only by the rounding in the bar itself.
+    # Tolerance for the same reason: the bar is a rounded number.
+    def trained(r):
+        c = runs.get(r, {})
+        return (c.get("steps_a", 0) + c.get("steps_b", 0)) > 0
+    passed = {r: v for r, v in scores.items()
+              if v is not None and v > bar + 1e-4 and trained(r)}
+    if passed:
+        return False, (f"the kill criterion may not be invoked: {len(passed)} arm(s) beat the "
+                       f"{bar} bar -- " + ", ".join(f"{r}={v:.4f}" for r, v in sorted(passed.items())))
+    return True, (f"qualifying arms {sorted(qualifying)} all failed the {bar} bar, and no other arm "
+                  f"passed it either")
+
+
+def contrastive_verdict(screen_name="phase2_screen"):
+    """Read the screen's committed results and the runs' own cfgs, and record the verdict.
+
+    Exists so the kill decision is a function of files on disk rather than of a session's memory of
+    what it saw. Writes results/m7_contrastive_verdict.json.
+    """
+    scores = json.loads((REPO / "results" / f"m7_program_{screen_name}.json").read_text())
+    runs = {}
+    for rid in scores:
+        f = WORK / "runs" / f"{rid}.json"
+        runs[rid] = json.loads(f.read_text())["cfg"] if f.exists() else {}
+    allowed, reason = may_invoke_contrastive_kill(runs, scores)
+    best = max((r for r in scores if scores[r] is not None), key=lambda r: scores[r], default=None)
+    out = {"_note": "Whether the pre-registered contrastive kill criterion may fire, computed from "
+                    "committed screen results and each run's own cfg. A kill needs a qualifying arm "
+                    "(lr <= 1e-4, warmup, mined hard negatives) AND every arm failing the bar.",
+           "bar": CONTRASTIVE_KILL_BAR, "kill_requires": KILL_REQUIRES,
+           "scores": scores, "kill_allowed": allowed, "reason": reason,
+           "best_arm": best, "best_score": scores.get(best)}
+    (REPO / "results" / "m7_contrastive_verdict.json").write_text(json.dumps(out, indent=1))
+    print(json.dumps({k: out[k] for k in ("kill_allowed", "reason", "best_arm", "best_score")},
+                     indent=1))
+    return out
 
 ALL_SOURCES = ("hotpotqa-train", "fever-train", "squad-train", "esci-us", "mrtydi-en")
 NO_FEVER = tuple(s for s in ALL_SOURCES if s != "fever-train")
@@ -106,6 +151,26 @@ def phase2_screen(base):
         "old-lr-3e3":    arm(3e-3),          # phase 1's lr, now WITH warmup and hard negatives
         "sane-randneg":  arm(5e-5, hard_neg_k=0),   # the mandate's premise, at a published lr
     })
+
+
+def phase2_screen_ext(base):
+    """Where does the learning rate turn over?
+
+    The screen left the story open at both ends: 1e-4 was the BEST arm and the top of the published
+    range, so the trend was still rising where the evidence stopped, while 3e-3 was flat. Somewhere
+    between them the objective stops helping and starts destroying, and "we simply never pushed the
+    lr far enough" is otherwise an unanswered objection to reading 1e-4 as the answer.
+
+    Same fixed checkpoint, same everything else, and hard_neg_k=0 -- the screen resolved that mined
+    negatives HURT at matched lr (+0.0034 for random-only, CI [0.0019, 0.0049]), so the extension
+    varies one thing.
+    """
+    def arm(lr):
+        return {"objective": "A", "init": "run:p1-objB", "steps_b": 0, "steps_a": 2000,
+                "eval_every": 250, "hard_neg_k": 0, "lr": lr, "lr_weights": lr * 10,
+                "warmup_steps": 200, "lr_schedule": "warmup_linear"}
+
+    return grid("p2x", base, {"rn-3e4": arm(3e-4), "rn-1e3": arm(1e-3), "rn-3e3": arm(3e-3)})
 
 
 def phase2_negatives(base):

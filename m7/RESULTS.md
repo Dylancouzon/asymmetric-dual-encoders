@@ -44,3 +44,47 @@ row on the held-out slices, whose corpora are pool row indices carrying no docum
 | p2s-sane-1e4 | `work/runs/p2s-sane-1e4.json` | — | FAILED — RuntimeError: shape '[256, 31, 768]' is invalid for input of size 3145728 |
 | p2s-warmup-only | `work/runs/p2s-warmup-only.json` | — | FAILED — RuntimeError: shape '[256, 31, 768]' is invalid for input of size 3145728 |
 | p2s-start | `work/runs/p2s-start.json` | 0.4548 | ok |
+| p2s-start | `work/runs/p2s-start.json` | 0.4548 | ok |
+| p2s-sane-1e5 | `work/runs/p2s-sane-1e5.json` | 0.4584 | ok |
+| p2s-sane-5e5 | `work/runs/p2s-sane-5e5.json` | 0.4626 | ok |
+| p2s-sane-1e4 | `work/runs/p2s-sane-1e4.json` | 0.4653 | ok |
+| p2s-old-lr-3e3 | `work/runs/p2s-old-lr-3e3.json` | 0.4546 | ok |
+| p2s-sane-randneg | `work/runs/p2s-sane-randneg.json` | 0.4659 | ok |
+| p2x-rn-3e4 | `work/runs/p2x-rn-3e4.json` | 0.4649 | ok |
+
+## Phase-2 screen, 2026-08-26 — the contrastive objective is NOT broken
+
+All arms objective A only, 2,000 steps, from the SAME `p1-objB` checkpoint (see the redesign note in
+`LEDGER.md`). CIs and Holm: `results/m7_phase2_screen_cis.json`. Verdict file:
+`results/m7_contrastive_verdict.json` — **kill criterion may not fire**, four arms beat the 0.4548
+bar CI-resolved.
+
+| arm | proxy macro-3 | vs start | verdict |
+|---|---|---|---|
+| `p2s-start` (0 steps) | 0.4548 | — | reproduces the checkpoint exactly; pins the baseline in-harness |
+| `p2s-sane-1e5` | 0.4584 | +0.0036 [0.0022, 0.0050] | resolved |
+| `p2s-sane-5e5` | 0.4626 | +0.0077 [0.0050, 0.0105] | resolved |
+| `p2s-sane-1e4` | 0.4653 | +0.0104 [0.0069, 0.0139] | resolved |
+| `p2s-old-lr-3e3` | 0.4546 | -0.0002 [-0.0062, 0.0059] | **flat, unresolved — with warmup AND mined negatives** |
+| `p2s-sane-randneg` | 0.4659 | +0.0111 [0.0084, 0.0139] | resolved; best arm |
+
+Three findings, and two of them overturn entries above:
+
+1. **Phase 1's "the contrastive objective is broken" was a learning-rate artifact.** At published
+   rates the same objective *improves* a good table, monotonically in lr from 1e-5 to 1e-4. At phase
+   1's 3e-3 it is flat even with warmup and mined hard negatives — so the lr, not the objective, is
+   what phase 1 measured. The diagnosis that named lr the "leading untested hypothesis" is now
+   tested and confirmed.
+2. **Mined hard negatives HURT**, at matched lr with one variable changed: random-only beats
+   teacher-mined by +0.0034 [0.0019, 0.0049], resolved. This contradicts the ledger's "scale without
+   hardness wasted the objective" and restores the mandate's premise that large cheap negative pools
+   are the thing to exploit. `fn_masked_frac` is 0.0051, so the false-negative filter is not what
+   removes the benefit — STATUS predicted it would "bite far harder" with mined negatives; it does not.
+3. **The magnitudes are small**: the best arm is +0.0111 on the proxy over a checkpoint whose own
+   projection to the six is ~0.41. A real, resolved, cheap gain, and not a tier-changer on its own.
+
+Caveat on selection: `p2x-rn-3e4` peaks at step 500 (0.4661) and declines by step 1000, so an arm's
+final-step macro is not its best-step macro. Any config taken forward must fix the step budget as
+part of the config, or select on best-eval consistently across arms and say so.
+
+| p2x-rn-1e3 | `work/runs/p2x-rn-1e3.json` | 0.4629 | ok |
