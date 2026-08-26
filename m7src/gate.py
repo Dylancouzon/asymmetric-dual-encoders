@@ -100,16 +100,23 @@ def run(run_id, stage0_id=None, components=None, probe_file=None):
     res["conditions"]["G4_int8_equivalence"] = {**g4, "bar": 0.005,
                                                "pass": bool(g4["upper"] < 0.005)}
 
-    macros = {k: float(np.mean([np.mean(list(v[c].values())) for c in comps])) for k, v in per.items()}
-    macros_text_backed = {k: float(np.mean([np.mean(list(v[c].values())) for c in text_backed]))
-                          for k, v in per.items()}
-    res["macros_text_backed_subset"] = macros_text_backed
-    res["macros"] = {**macros,
-                     "bm25": float(np.mean([np.mean(list(bm[c].values())) for c in comps])),
-                     "potion-retrieval-32M": float(np.mean([np.mean(list(pot[c].values())) for c in comps])),
-                     "bge-base-symmetric (teacher ceiling)":
-                         float(np.mean([np.mean(list(teacher[c].values())) for c in comps]))}
-    res["retention_vs_teacher"] = round(macros["fp16"] / res["macros"]["bge-base-symmetric (teacher ceiling)"], 4)
+    mean_over = lambda blob, cs: float(np.mean([np.mean(list(blob[c].values())) for c in cs]))
+    macros = {k: mean_over(v, comps) for k, v in per.items()}
+    macros_text_backed = {k: mean_over(v, text_backed) for k, v in per.items()}
+    # BM25 and potion have no row on the held-out slices, so their macros are only defined on
+    # the text-backed subset. Mixing the two component sets is how the first version of this
+    # summary raised KeyError instead of quietly reporting an incomparable number.
+    res["macros_all_components"] = {**macros,
+                                    "bge-base-symmetric (teacher ceiling)": mean_over(teacher, comps)}
+    res["macros_text_backed"] = {**macros_text_backed,
+                                 "bm25": mean_over(bm, text_backed),
+                                 "potion-retrieval-32M": mean_over(pot, text_backed),
+                                 "bge-base-symmetric (teacher ceiling)": mean_over(teacher, text_backed)}
+    res["macros"] = res["macros_text_backed"]   # the set every gate comparison uses
+    res["retention_vs_teacher_text_backed"] = round(
+        macros_text_backed["fp16"] / res["macros_text_backed"]["bge-base-symmetric (teacher ceiling)"], 4)
+    res["retention_vs_teacher_all_components"] = round(
+        macros["fp16"] / res["macros_all_components"]["bge-base-symmetric (teacher ceiling)"], 4)
     res["PASS"] = all(v.get("pass") for v in res["conditions"].values())
     (REPO / "results" / f"m7_gate_{run_id}.json").write_text(json.dumps(res, indent=1))
 
@@ -119,8 +126,12 @@ def run(run_id, stage0_id=None, components=None, probe_file=None):
               + (f"  d={v['delta']:+.4f} CI={v['ci95']}" if "delta" in v else "")
               + (f"  upper={v['upper']}" if "upper" in v else "")
               + (f"  [{v['note']}]" if v.get("note") else ""))
-    print(f"\nmacros: {json.dumps({k: round(x,4) for k,x in res['macros'].items()})}")
-    print(f"retention vs teacher: {res['retention_vs_teacher']:.3f}")
+    print(f"\nmacros, text-backed ({len(text_backed)} comps): "
+          f"{json.dumps({k: round(x,4) for k,x in res['macros_text_backed'].items()})}")
+    print(f"macros, all ({len(comps)} comps): "
+          f"{json.dumps({k: round(x,4) for k,x in res['macros_all_components'].items()})}")
+    print(f"retention vs teacher: {res['retention_vs_teacher_text_backed']:.3f} (text-backed), "
+          f"{res['retention_vs_teacher_all_components']:.3f} (all)")
     print(f"\nGO/NO-GO: {'GO' if res['PASS'] else 'NO-GO'}")
     return res
 
