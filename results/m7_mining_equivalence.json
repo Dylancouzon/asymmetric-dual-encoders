@@ -1,0 +1,13 @@
+{
+ "_note": "Equivalence witness for the mining loop-order fix. Same k, same pool slice, same queries; only the loop nesting differs. Agreement is measured, not asserted bit-equal, because fp16 accumulation order changes with tiling.",
+ "n_queries": 8192,
+ "k": 16,
+ "pool_rows": 1500000,
+ "seconds_pool_outer_fast": 0.0,
+ "seconds_query_outer_original": 2.9,
+ "speedup_on_this_slice": 5020.8,
+ "_speedup_caveat": "This slice CANNOT demonstrate the speedup and does not claim to: 1.5M rows stay in the OS page cache, so the original's repeated reads are nearly free here (1.1x). The real cost was ~170 COLD re-reads of the full 9.5 GB pool, measured at 76 s per query chunk in logs/phase2_screen.log. This file's job is EQUIVALENCE; the speed claim is settled by the mining line of the real run.",
+ "top1_agreement": 0.9971923828125,
+ "mean_set_overlap_at_k": 0.9990234375,
+ "exact_row_match": 0.891845703125
+}

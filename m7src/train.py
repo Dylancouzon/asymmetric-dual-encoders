@@ -153,7 +153,14 @@ def mine_bm25_negatives(name, q_texts, src_of, store_of, index, k, exclude):
 @torch.no_grad()
 def mine_hard_negatives(name, q_vecs, pool_vecs, k, exclude, q_chunk=2048, d_chunk=500_000):
     """Teacher-mined negatives: top-k pool docs per query by the teacher's own query vector,
-    minus that query's positives. Frozen doc vectors make this a few minutes for the whole set.
+    minus that query's positives.
+
+    LOOP ORDER IS THE WHOLE COST. The first version put queries outside and the pool inside, so
+    the 9.5 GB pool was read from the memmap and uploaded to the GPU once PER QUERY CHUNK: 171
+    chunks x 9.5 GB = 1.6 TB of traffic, measured at 76 s per chunk = 3.6 hours, for a function
+    whose docstring promised a few minutes. The arithmetic is identical either way, so the pool
+    goes on the outside and is touched exactly once. All query vectors fit in VRAM (349,934 x 768
+    fp16 = 537 MB), which is what makes the inversion possible.
 
     The cache key hashes the query vectors and the pool shape, not just a name and a length: a
     name-and-count key silently reuses a stale mining result when the mix changes but the count
@@ -164,9 +171,56 @@ def mine_hard_negatives(name, q_vecs, pool_vecs, k, exclude, q_chunk=2048, d_chu
     p = WORK / "runs" / f"hardneg-{name}-k{k}-{sig}.npy"
     if p.exists():
         return np.load(p)
+    n_q = len(q_vecs)
+    over = k + max((len(e) for e in exclude), default=0) + 4
+    qg = torch.from_numpy(np.ascontiguousarray(q_vecs)).cuda().half()
+    best_s = torch.full((n_q, over), float("-inf"), device="cuda")
+    best_i = torch.zeros((n_q, over), dtype=torch.int64, device="cuda")
+    t0 = time.time()
+    for dlo in range(0, len(pool_vecs), d_chunk):
+        d = torch.from_numpy(np.ascontiguousarray(pool_vecs[dlo:dlo + d_chunk])).cuda()
+        for qlo in range(0, n_q, q_chunk):
+            qhi = min(qlo + q_chunk, n_q)
+            s = (qg[qlo:qhi] @ d.T).float()          # q_chunk x d_chunk, the peak allocation
+            kk = min(over, s.shape[1])
+            cs, ci = torch.topk(s, kk, dim=1)
+            del s
+            cat_s = torch.cat([best_s[qlo:qhi], cs], 1)
+            cat_i = torch.cat([best_i[qlo:qhi], ci + dlo], 1)
+            ts, o = torch.topk(cat_s, over, dim=1)
+            best_s[qlo:qhi], best_i[qlo:qhi] = ts, torch.gather(cat_i, 1, o)
+        del d
+        torch.cuda.empty_cache()
+        print(f"    mine pool {min(dlo + d_chunk, len(pool_vecs))}/{len(pool_vecs)} "
+              f"({time.time()-t0:.0f}s)", flush=True)
+    cand = best_i.cpu().numpy()
+    del qg, best_s, best_i
+    torch.cuda.empty_cache()
+    out = np.zeros((n_q, k), dtype=np.int64)
+    for r in range(n_q):
+        ex = set(exclude[r])
+        picked = [c for c in cand[r] if c not in ex][:k]
+        while len(picked) < k:
+            picked.append(picked[-1] if picked else 0)
+        out[r] = picked
+    np.save(p, out)
+    return out
+
+
+@torch.no_grad()
+def _mine_hard_negatives_qouter(name, q_vecs, pool_vecs, k, exclude, q_chunk=2048,
+                                d_chunk=500_000, cache=False):
+    """The original query-outer implementation, kept ONLY as the reference for the equivalence
+    test in scripts/check_mining.py. Do not call it in a run: it re-reads the whole pool per query
+    chunk. It is here because "I made it 30x faster" is a claim that needs a witness."""
+    import hashlib as _h
+    sig = _h.sha256(np.ascontiguousarray(q_vecs[::997]).tobytes()
+                    + str((len(q_vecs), pool_vecs.shape, k)).encode()).hexdigest()[:12]
+    p = WORK / "runs" / f"hardneg-qouter-{name}-k{k}-{sig}.npy"
+    if cache and p.exists():
+        return np.load(p)
     out = np.zeros((len(q_vecs), k), dtype=np.int64)
     over = k + max((len(e) for e in exclude), default=0) + 4
-    t0 = time.time()
     for lo in range(0, len(q_vecs), q_chunk):
         hi = min(lo + q_chunk, len(q_vecs))
         q = torch.from_numpy(np.ascontiguousarray(q_vecs[lo:hi])).cuda().half()
@@ -191,9 +245,8 @@ def mine_hard_negatives(name, q_vecs, pool_vecs, k, exclude, q_chunk=2048, d_chu
             while len(picked) < k:
                 picked.append(picked[-1] if picked else 0)
             out[lo + r] = picked
-        if (lo // q_chunk) % 20 == 0:
-            print(f"    mine {hi}/{len(q_vecs)} ({time.time()-t0:.0f}s)", flush=True)
-    np.save(p, out)
+    if cache:
+        np.save(p, out)
     return out
 
 
