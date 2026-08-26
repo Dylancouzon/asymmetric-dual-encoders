@@ -1,0 +1,36 @@
+{
+ "S": 1000,
+ "R": 10000,
+ "alpha": 0.025,
+ "pairs": [
+  "lr-dense-pertask vs bm25",
+  "opensearch-doc-v3-gte vs lr-dense-pertask",
+  "bge-small-en-v1.5 vs opensearch-doc-v3-gte"
+ ],
+ "fwer_holm": 0.013,
+ "binomial_se_at_alpha": 0.0049,
+ "fwer_ok": true,
+ "per_test_rate_at_alpha": [
+  0.02,
+  0.027,
+  0.017
+ ],
+ "p_deciles": [
+  0.098,
+  0.204,
+  0.31,
+  0.402,
+  0.499,
+  0.601,
+  0.699,
+  0.799,
+  0.897
+ ],
+ "power_sanity_lrdense_vs_bm25": {
+  "p": 9.999000099990002e-05,
+  "p_str": "<1.0e-04",
+  "delta": 0.0408,
+  "at_floor": true
+ },
+ "seconds": 885.1
+}
