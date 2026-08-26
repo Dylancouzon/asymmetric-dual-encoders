@@ -139,11 +139,19 @@ def mine_hard_negatives(name, q_vecs, pool_vecs, k, exclude, q_chunk=2048, d_chu
 
 # ---- losses --------------------------------------------------------------------------
 
-def infonce(qv, pos_v, neg_v, temp, teacher_q=None, teacher_pos=None, fn_margin=0.0):
+def infonce(qv, pos_v, neg_v, temp, teacher_q=None, teacher_pos=None, fn_margin=0.0,
+            neg_pool_idx=None, pos_pool_idx=None):
     """qv (B,d) student; pos_v (B,d); neg_v (N,d) shared bank sample (+ optional per-query hard
-    negatives folded in by the caller). False negatives are masked by teacher-score margin."""
+    negatives folded in by the caller). False negatives are masked by teacher-score margin.
+
+    The query's own positive can be drawn into the shared bank sample; that is a bug, not the
+    false-negative phenomenon the fn_margin ablation studies, so it is masked unconditionally by
+    pool index whatever fn_margin is set to."""
     s_pos = (qv * pos_v).sum(1, keepdim=True) / temp
     s_neg = (qv @ neg_v.T) / temp
+    if neg_pool_idx is not None and pos_pool_idx is not None:
+        s_neg = s_neg.masked_fill(neg_pool_idx.unsqueeze(0) == pos_pool_idx.unsqueeze(1),
+                                  float("-inf"))
     if fn_margin > 0 and teacher_q is not None:
         with torch.no_grad():
             t_neg = teacher_q @ neg_v.T
@@ -245,8 +253,10 @@ def run(cfg: Cfg, log=print):
         qv = batch_of(idx)
         p_i = np.array([pos_idx[i][rng.integers(len(pos_idx[i]))] for i in idx])
         pos_v = torch.from_numpy(np.ascontiguousarray(pool_vecs[p_i])).cuda().float()
-        sel = torch.from_numpy(rng.integers(0, nb, cfg.n_neg)).cuda()
+        sel_np = rng.integers(0, nb, cfg.n_neg)
+        sel = torch.from_numpy(sel_np).cuda()
         neg = bank.index_select(0, sel).float()
+        neg_pool = bank_ids[sel_np]
         extra = []
         if hard is not None:
             extra.append(hard[idx].ravel())
@@ -256,9 +266,12 @@ def run(cfg: Cfg, log=print):
         if extra:
             e = np.unique(np.concatenate(extra))
             neg = torch.cat([neg, torch.from_numpy(np.ascontiguousarray(pool_vecs[e])).cuda().float()])
+            neg_pool = np.concatenate([neg_pool, e])
         t = torch.from_numpy(tq[idx]).cuda()
         tp = torch.from_numpy(np.ascontiguousarray(pool_vecs[p_i])).cuda().float()
-        loss = infonce(qv, pos_v, neg, cfg.temp, t, tp, cfg.fn_margin)
+        loss = infonce(qv, pos_v, neg, cfg.temp, t, tp, cfg.fn_margin,
+                       neg_pool_idx=torch.from_numpy(neg_pool).cuda(),
+                       pos_pool_idx=torch.from_numpy(p_i).cuda())
         return loss, {"n_neg": neg.shape[0]}
 
     def train_phase(tag, steps, stepfn):
