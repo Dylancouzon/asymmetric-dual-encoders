@@ -46,7 +46,20 @@ Encode throughput: 891 texts/s fp16 (2.4x fp32, cosine-identical) → `results/m
 
 ## Open blockers
 
-None. Nothing needed from Dylan yet; the HF release go is the only pending item and is far off.
+None blocking. Two things for Dylan to know, neither urgent:
+
+1. **`qdrant-edge` is not installable from PyPI on this box** (`uv pip install qdrant-edge` →
+   not found). M5's Edge prototype ran on the Mac, so it came from an internal index or a local
+   wheel. Needed only for the last deliverable (the Edge demo running our table). If no wheel
+   turns up, the fallback is `qdrant-client` in local mode — same two-collection architecture and
+   real HNSW, but not the Edge shard format, and the report would say so. `qdrant-client 1.19.0`
+   is installed as that fallback. **Ask: is there a wheel or index URL for qdrant-edge?**
+2. **WSL is configured with ~25 GB of the host's 32 GB**, leaving Windows ~6 GB.
+   `setup-windows.md` suggested starting at 20 GB. Higher is useful here, but it is why the
+   concurrent-job OOM took the whole distro down rather than one process. Jobs are now strictly
+   sequential and peak is budgeted under ~18 GB, so no change is needed.
+
+The HF release go remains Dylan's and is still far off.
 
 ## Notes for the next session
 
