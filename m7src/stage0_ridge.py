@@ -24,7 +24,7 @@ import torch
 import dev_eval
 import mix
 from _paths import WORK
-from init_table import get_init
+from init_table import get_init, spec_tag
 from table import NO_PREFIX, WITH_PREFIX, Preproc, QueryTable, get_tokenizer, tokenize
 from teacher import QUERY_PREFIX, encode_cached
 
@@ -122,7 +122,9 @@ def main(n_queries=1_000_000, init_kind="teacher", pre=None, target_prefix=True,
     results = {}
     for lam in LAMBDAS:
         t0 = time.time()
-        wp = OUT / f"ridge-{init_kind}-{pre.fingerprint()}-lam{lam}.npy"
+        # spec_tag in the path: a stale same-named table from another teacher is a
+        # wrong-dim crash at best and a silent wrong-teacher reuse at worst (init_table lesson).
+        wp = OUT / f"ridge-{spec_tag()}-{init_kind}-{pre.fingerprint()}-lam{lam}.npy"
         if wp.exists():
             print(f"  lam={lam:<7g} reusing the solved table on disk", flush=True)
             W = np.load(wp)
@@ -139,7 +141,7 @@ def main(n_queries=1_000_000, init_kind="teacher", pre=None, target_prefix=True,
         np.save(wp, W)
         del m, W
         torch.cuda.empty_cache()
-    (OUT / f"ridge-{init_kind}-{pre.fingerprint()}.json").write_text(json.dumps(
+    (OUT / f"ridge-{spec_tag()}-{init_kind}-{pre.fingerprint()}.json").write_text(json.dumps(
         {"n_queries": len(qs), "init": init_kind, "preproc": pre.fingerprint(),
          "target_prefix": target_prefix, "vocab_coverage_train_queries": cov,
          "results": results}, indent=1))
