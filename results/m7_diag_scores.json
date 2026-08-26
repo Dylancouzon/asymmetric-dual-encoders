@@ -1,0 +1,74 @@
+{
+ "n_queries": 2000,
+ "n_random_negatives": 32768,
+ "positive_scores": {
+  "mean": 0.6797001361846924,
+  "p5": 0.5240792632102966,
+  "p50": 0.691193163394928,
+  "p95": 0.8001646995544434
+ },
+ "random_negative_scores": {
+  "mean": 0.28541693091392517,
+  "p50": 0.2843751609325409,
+  "p99": 0.4343644678592682,
+  "p99.9": 0.4994591772556305,
+  "max": 0.8285706639289856
+ },
+ "random_negatives_outscoring_the_positive": {
+  "mean_count_per_query": 32.6515,
+  "frac_queries_with_at_least_one": 0.159,
+  "note": "if this is near zero the negatives are trivially separable (mechanism 1)"
+ },
+ "softmax_mass_by_temperature": {
+  "0.005": {
+   "top1_mass": 0.830564558506012,
+   "top10_mass": 0.9979860782623291,
+   "top100_mass": 0.9999964833259583,
+   "effective_negatives": 1.5467729568481445
+  },
+  "0.01": {
+   "top1_mass": 0.6491007208824158,
+   "top10_mass": 0.9496816396713257,
+   "top100_mass": 0.9962000846862793,
+   "effective_negatives": 3.022693634033203
+  },
+  "0.02": {
+   "top1_mass": 0.3032307028770447,
+   "top10_mass": 0.5826244950294495,
+   "top100_mass": 0.8018566370010376,
+   "effective_negatives": 28.929574966430664
+  },
+  "0.05": {
+   "top1_mass": 0.00841004028916359,
+   "top10_mass": 0.029475277289748192,
+   "top100_mass": 0.09605905413627625,
+   "effective_negatives": 5305.31298828125
+  },
+  "0.1": {
+   "top1_mass": 0.0005332233267836273,
+   "top10_mass": 0.003297140123322606,
+   "top100_mass": 0.01920614019036293,
+   "effective_negatives": 22978.181640625
+  }
+ },
+ "softmax_note": "effective_negatives is the inverse participation ratio: how many negatives actually receive gradient. If it is single digits at tau=0.02, the objective is chasing the anisotropy tail (mechanism 2)",
+ "fn_margin_filter": {
+  "0.0": {
+   "frac_removed_overall": 0.0,
+   "frac_removed_in_top100": 0.0
+  },
+  "0.01": {
+   "frac_removed_overall": 0.00133709716796875,
+   "frac_removed_in_top100": 0.0366
+  },
+  "0.02": {
+   "frac_removed_overall": 0.0017591705322265625,
+   "frac_removed_in_top100": 0.04332
+  },
+  "0.05": {
+   "frac_removed_overall": 0.0035579986572265624,
+   "frac_removed_in_top100": 0.073905
+  }
+ },
+ "fn_margin_note": "frac_removed_in_top100 is the one that matters: the filter is meant to drop false negatives, but if it removes most of the hardest negatives it leaves an uninformative pool (mechanism 3)"
+}
