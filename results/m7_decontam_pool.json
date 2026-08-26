@@ -1,0 +1,64 @@
+{
+ "_note": "B2 fix: pool rows banned as negatives/KL candidates. Ban rule and the short-query limitation are in m7src/decontam_pool.py's docstring. devq hits are measured and disclosed, never banned.",
+ "params": {
+  "ngram": 8,
+  "sketch": 32,
+  "dup_share": 8
+ },
+ "pool_rows": 6169142,
+ "banned_rows": 4413,
+ "per_store": {
+  "esci-prod": {
+   "sixdoc_exact": 0,
+   "sixdoc_near": 1,
+   "sixq": 22,
+   "untq": 4,
+   "devq_measured": 31,
+   "rows": 808389,
+   "seconds": 422.1
+  },
+  "fever-pos": {
+   "sixdoc_exact": 0,
+   "sixdoc_near": 3,
+   "sixq": 20,
+   "untq": 234,
+   "devq_measured": 475,
+   "rows": 12549,
+   "seconds": 6.4
+  },
+  "hotpotqa-corpus": {
+   "sixdoc_exact": 0,
+   "sixdoc_near": 108,
+   "sixq": 718,
+   "untq": 3128,
+   "devq_measured": 28123,
+   "rows": 5233329,
+   "seconds": 1301.6
+  },
+  "mrtydi-docs": {
+   "sixdoc_exact": 0,
+   "sixdoc_near": 4,
+   "sixq": 57,
+   "untq": 80,
+   "devq_measured": 226,
+   "rows": 95984,
+   "seconds": 29.2
+  },
+  "squad-ctx": {
+   "sixdoc_exact": 0,
+   "sixdoc_near": 3,
+   "sixq": 20,
+   "untq": 14,
+   "devq_measured": 24,
+   "rows": 18891,
+   "seconds": 6.3
+  }
+ },
+ "enforcement": [
+  "train.py bank_ids filter",
+  "mine_hard_negatives cand filter + sig",
+  "mine_bm25_negatives picked filter + sig",
+  "build_arrays hn_idx filter"
+ ],
+ "seconds_total": 1854.9
+}
