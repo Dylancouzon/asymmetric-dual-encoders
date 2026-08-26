@@ -17,6 +17,12 @@ from train import Cfg
 BASE = Cfg(objective="C", init="teacher", preproc="noprefix", learned_weights=True,
            steps_b=4000, steps_a=8000, batch=512, n_neg=32768, temp=0.02, lr=3e-3,
            hard_neg_k=0, reg_init=1e-3)
+# Kill criterion, set BEFORE running phase 2 so it cannot be moved afterwards: if no arm of the
+# phase-2 screen beats p1-objB's 0.4548 dev proxy, contrastive training is closed as an avenue and
+# the program pivots to vocabulary-coverage distillation (phase35) plus fusion. Distillation
+# already passed the gate; grinding a broken objective past a clean negative is how budgets die.
+CONTRASTIVE_KILL_BAR = 0.4548
+
 ALL_SOURCES = ("hotpotqa-train", "fever-train", "squad-train", "esci-us", "mrtydi-en")
 NO_FEVER = tuple(s for s in ALL_SOURCES if s != "fever-train")
 
@@ -28,6 +34,33 @@ def phase1_objective():
         "objA": {"objective": "A", "steps_b": 0, "steps_a": 12000},
         "objC": {"objective": "C"},
     })
+
+
+def phase2_screen(base):
+    """The CHEAP DECISIVE SCREEN, to run before any wide negatives sweep.
+
+    The phase-1 collapse leaves three suspects (fn_margin deleting the hardest negatives; tau
+    concentrating softmax mass on bge's anisotropy tail; Adam lr on a weak signal). A negatives-only
+    sweep with all three held at their suspect values could "conclude" that negatives do not help
+    when temperature or the filter was the killer. So screen the knobs jointly and briefly,
+    starting from the B checkpoint rather than the teacher init.
+
+    One arm is the single most informative run in the program: teacher-mined-16, fn_margin=0,
+    tau=0.05, lr=1e-3, 2k steps from B. If that still degrades a 0.4449 table, contrastive
+    training against a frozen tower is structurally hostile and the wide ablation is a formality.
+    """
+    out = {}
+    for tag, over in {
+        "decisive":      {"hard_neg_k": 16, "fn_margin": 0.0, "temp": 0.05, "lr": 1e-3},
+        "fnmargin-only": {"hard_neg_k": 16, "fn_margin": 0.0},
+        "temp-only":     {"hard_neg_k": 16, "temp": 0.05},
+        "lr-only":       {"hard_neg_k": 16, "lr": 3e-4},
+        "hard-only":     {"hard_neg_k": 16},
+        "baseline":      {"hard_neg_k": 0},
+    }.items():
+        out.update(grid("p2s", base, {tag: {"objective": "C", "steps_b": 4000, "steps_a": 2000,
+                                            "eval_every": 1000, **over}}))
+    return out
 
 
 def phase2_negatives(base):

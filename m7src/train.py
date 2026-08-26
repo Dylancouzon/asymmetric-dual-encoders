@@ -194,7 +194,7 @@ def mine_hard_negatives(name, q_vecs, pool_vecs, k, exclude, q_chunk=2048, d_chu
 # ---- losses --------------------------------------------------------------------------
 
 def infonce(qv, pos_v, neg_v, temp, teacher_q=None, teacher_pos=None, fn_margin=0.0,
-            neg_pool_idx=None, pos_pool_idx=None):
+            neg_pool_idx=None, pos_pool_idx=None, all_pos_idx=None, stats=None):
     """qv (B,d) student; pos_v (B,d); neg_v (N,d) shared bank sample (+ optional per-query hard
     negatives folded in by the caller). False negatives are masked by teacher-score margin.
 
@@ -204,13 +204,25 @@ def infonce(qv, pos_v, neg_v, temp, teacher_q=None, teacher_pos=None, fn_margin=
     s_pos = (qv * pos_v).sum(1, keepdim=True) / temp
     s_neg = (qv @ neg_v.T) / temp
     if neg_pool_idx is not None and pos_pool_idx is not None:
-        s_neg = s_neg.masked_fill(neg_pool_idx.unsqueeze(0) == pos_pool_idx.unsqueeze(1),
-                                  float("-inf"))
+        same = neg_pool_idx.unsqueeze(0) == pos_pool_idx.unsqueeze(1)
+        if all_pos_idx is not None:
+            # every positive of this query, not only the sampled one. ESCI averages ~13.5
+            # positives per query, so the siblings were reaching the denominator guarded only by
+            # the fn_margin filter -- which the fn_margin=0 ablation arm switches off, confounding
+            # its own reading.
+            # all_pos_idx is (B, max_pos), -1 padded; pool indices are >= 0 so padding never
+            # matches. (B, max_pos, 1) == (1, 1, N) -> (B, max_pos, N), any over the positives.
+            same = same | (all_pos_idx.unsqueeze(2) == neg_pool_idx.view(1, 1, -1)).any(1)
+        s_neg = s_neg.masked_fill(same, float("-inf"))
     if fn_margin > 0 and teacher_q is not None:
         with torch.no_grad():
             t_neg = teacher_q @ neg_v.T
             t_pos = (teacher_q * teacher_pos).sum(1, keepdim=True)
             mask = t_neg > (t_pos - fn_margin)
+        if stats is not None:
+            # MAJOR-3: the post-mask negative count was unobserved for the whole phase-1 grid,
+            # and the filter is the leading suspect for the contrastive collapse.
+            stats["fn_masked_frac"] = round(float(mask.float().mean()), 4)
         s_neg = s_neg.masked_fill(mask, float("-inf"))
     logits = torch.cat([s_pos, s_neg], 1)
     return F.cross_entropy(logits, torch.zeros(len(qv), dtype=torch.long, device=qv.device))
@@ -381,10 +393,17 @@ def run(cfg: Cfg, log=print):
             neg_pool = np.concatenate([neg_pool, e])
         t = torch.from_numpy(tq[idx]).cuda()
         tp = torch.from_numpy(np.ascontiguousarray(pool_vecs[p_i])).cuda().float()
+        mx = max(len(pos_idx[i]) for i in idx)
+        allpos = np.full((len(idx), mx), -1, dtype=np.int64)
+        for r, i in enumerate(idx):
+            allpos[r, :len(pos_idx[i])] = pos_idx[i]
+        st = {}
         loss = infonce(qv, pos_v, neg, cfg.temp, t, tp, cfg.fn_margin,
                        neg_pool_idx=torch.from_numpy(neg_pool).cuda(),
-                       pos_pool_idx=torch.from_numpy(p_i).cuda())
-        return loss, {"n_neg": neg.shape[0]}, [ids_all[i] for i in idx]
+                       pos_pool_idx=torch.from_numpy(p_i).cuda(),
+                       all_pos_idx=torch.from_numpy(allpos).cuda(),
+                       stats=st)
+        return loss, {"n_neg": neg.shape[0], **st}, [ids_all[i] for i in idx]
 
     def train_phase(tag, steps, stepfn):
         if steps <= 0:
@@ -416,6 +435,12 @@ def run(cfg: Cfg, log=print):
     if cfg.objective in ("B", "C"):
         train_phase("B", cfg.steps_b, step_b)
     if cfg.objective in ("A", "C"):
+        if cfg.objective == "C" and cfg.reg_init > 0:
+            # re-anchor: during C's A-phase the penalty must pull toward the B checkpoint, not
+            # toward the teacher init -- which the ridge sweep showed is itself a poor table
+            # (~0.20 at lambda=10), so anchoring there actively drags C away from its own gains.
+            W0 = model.rows.detach().clone()
+            log("  [C] re-anchored the reg_init penalty to the B-phase checkpoint")
         train_phase("A", cfg.steps_a, step_a)
 
     cov = {"rows_updated": int((updates > 0).sum()), "vocab": V,
