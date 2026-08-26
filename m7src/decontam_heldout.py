@@ -58,8 +58,17 @@ for src, qids in kept.items():
     print(f"  {src}: {len(qids):,} -> {len(keep):,} (removed {removed.get(src,0):,})")
 
 (OUT / "kept.json").write_text(json.dumps(out))
+res_p = REPO / "results" / "m7_decontam_heldout.json"
 summary = {"held_out_protected_queries": len(prot), "removed_per_source": removed,
            "removed_total": sum(removed.values()),
            "kept_total": sum(len(v) for v in out.values())}
-(REPO / "results" / "m7_decontam_heldout.json").write_text(json.dumps(summary, indent=1))
+# idempotent re-run: the removals are already applied, so this pass legitimately removes nothing.
+# Preserve the pass that actually did the work rather than overwriting it with zeros.
+if res_p.exists() and summary["removed_total"] == 0:
+    prior = json.loads(res_p.read_text())
+    if prior.get("removed_total", 0) > 0:
+        summary = {**prior, "kept_total": summary["kept_total"],
+                   "note": "counts are from the first pass; a later re-run removed 0 because the "
+                           "removals were already applied and the held-out query set is unchanged"}
+res_p.write_text(json.dumps(summary, indent=1))
 print(json.dumps(summary, indent=1))

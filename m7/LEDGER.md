@@ -257,3 +257,31 @@ and FEVER turns out to contain many near-identical claims about the same entity,
 straddled the split. Without this pass the heldout-train dev component would have been scoring a
 model on paraphrases of its own training queries, and every dev-based selection decision built on
 it would have been inflated.
+
+### R3 sweeps completed (the two the first run missed)
+
+- **nq-250k (dev)**: 406 exact + 3,942 near of 856,515 TRAIN positives — 0.46%.
+- **FEVER (untouched-final)**: 47,289 exact + 96,573 near — **11.3%**. Expected in direction
+  (fever-pos is drawn from this corpus by construction) but the rate covers all TRAIN positives,
+  so hotpotqa/squad/mrtydi Wikipedia documents contribute to it too.
+
+All five protected corpora are now measured: six 3e-05 · cqadupstack-dev ~0 · nq-250k-dev 0.46% ·
+DBpedia-entity 9.32% · FEVER 11.3%. The two untouched-final sets are the two most overlapped —
+which is the finding, not a coincidence: both are Wikipedia, and so is most of TRAIN.
+
+### The held-out slices were rebuilt against the full pool (2026-08-26)
+
+The first construction gave each slice ~200K documents: all held-out positives plus random
+distractors. The teacher then scored **0.8383** on heldout-train and **0.9915** on heldout-longq,
+and its dev macro rose from 0.6106 (four components) to 0.7120 (six). Both slices were
+near-saturated — a random distractor drawn from 6M documents is almost never confusable with the
+true positive — so neither could discriminate between candidates, and under equal per-component
+weighting they would have made the go/no-go gate easier to pass for no methodological reason.
+
+Rebuilt with the **entire 6,169,142-document pool** as the corpus. That makes each slice as hard
+as a real 6M-document retrieval task, adds no teacher-derived bias (mining hard distractors with
+the teacher would bias the component toward the teacher's own ranking, which is the thing being
+measured), and is cheaper: the document vectors are the pool memmap itself, so nothing is copied.
+
+heldout-longq remains n=55 and is reported with its CI width attached, the same treatment
+TREC-COVID's n=50 gets in the M4 matrix.

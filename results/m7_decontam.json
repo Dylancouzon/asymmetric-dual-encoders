@@ -55,7 +55,21 @@
    "near_dup_rate": 0.09322
   },
   "hotpotqa-dev": "100% by construction: hotpotqa-corpus IS the dev corpus",
-  "fever-untouched": "fever-pos is drawn from the untouched FEVER corpus"
+  "fever-untouched": {
+   "protected_docs_scanned": 5416568,
+   "train_docs_exact_dup": 47289,
+   "train_docs_near_dup": 96573,
+   "train_docs_total": 856515,
+   "near_dup_rate": 0.113
+  },
+  "nq-250k-dev": {
+   "protected_docs_scanned": 250000,
+   "train_docs_exact_dup": 406,
+   "train_docs_near_dup": 3942,
+   "train_docs_total": 856515,
+   "near_dup_rate": 0.0046
+  },
+  "fever-untouched-note": "fever-pos is drawn from this corpus by construction; the rate above also covers the hotpotqa/squad/mrtydi Wikipedia positives against it"
  },
  "protected_queries": {
   "six": 3727,
@@ -73,5 +87,6 @@
   "R2": "remove on positive-document overlap with the six",
   "R3": "measure and disclose document overlap with dev and untouched-final; see the module docstring and m7/LEDGER.md for why removal there would delete the sources rather than decontaminate them"
  },
- "seconds": 1122.4
+ "seconds": 1122.4,
+ "R3_extra_sweep_seconds": 1358.7
 }

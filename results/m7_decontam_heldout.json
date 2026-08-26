@@ -8,5 +8,6 @@
   "mrtydi-en": 1
  },
  "removed_total": 2211,
- "kept_total": 349934
+ "kept_total": 349934,
+ "note": "counts are from the first pass; a later re-run removed 0 because the removals were already applied and the held-out query set is unchanged"
 }
