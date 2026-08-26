@@ -3,8 +3,28 @@
 Supersedes `m7-teacher-shortlist.md` (built under the strict rule, marked STALE). Four parallel
 Sonnet sweeps. **Every size number was read from the model's own `config.json`, never from prose.**
 
+> **\* Correction (Fable review, 2026-08-26): `config.json`'s `vocab_size` is not the tokenizer's.**
+> All five candidates ship a **byte-identical `vocab.txt`** (sha256 `07eced375cec144d`, **30,522**
+> lines, stock bert-base-uncased WordPiece). gte-large, gte-base and stella report 30,528 only
+> because the embedding matrix is padded to a multiple of 64; this table originally quoted the
+> padded figure. **The released table is 30,522 × dim for every candidate**, and allocating 30,528
+> would ship 6 dead rows. The consequence that matters for the harness: **a teacher swap does not
+> change tokenization**, so row indexing, the decontamination fingerprints and the frozen
+> preprocessing rule all survive it — only the vectors change.
+
 Filters applied: licence permits commercial release of derived weights · vendor tier per CLAUDE.md
 · vocab ≤ ~50K and dim ≤ 1024 (the artifact is vocab × dim) · runs fp16 on a 10 GB RTX 3080.
+
+> **CORRECTION, 2026-08-26 (post-review).** The vocab column below is `config.json`'s
+> `vocab_size`, which is the **padded embedding-matrix width, not the tokenizer size**. All five
+> BERT-WordPiece candidates (bge-base, bge-large, gte-large, stella, arctic-embed-l) ship a
+> **byte-identical `vocab.txt`** — sha256 `07eced375cec144d`, 30,522 lines — and gte-large and
+> stella merely pad to 30,528 (a multiple of 64). **The released table is 30,522 × dim for every
+> one of them**, so the int8 column is right but the vocab column overstates two rows by 6.
+> Pinned in `m7src/test_encoders.py`, which now checks each Spec against the real tokenizer.
+> A useful consequence: **a teacher swap among these does not change tokenization**, so row
+> indexing, the decontamination fingerprints and the frozen preprocessing rule all survive it —
+> only the vectors change.
 
 Scores are **MTEB v1 English Retrieval (15-task BEIR average)** — the only scale
 `results/m7_calibration.json` is fitted on. MTEB v2 / MTEB(eng,v2) numbers are several points
@@ -14,13 +34,13 @@ higher and are *not* interchangeable; where only v2 exists it is labelled.
 
 | model | MTEB v1 Ret | vocab | dim | params | licence | vendor tier | int8 table |
 |---|---|---|---|---|---|---|---|
-| NovaSearch/stella_en_400M_v5 | **58.97** | 30,528 | 1024 | 435M | MIT | **clean** | 31.3 MB |
-| Alibaba-NLP/gte-large-en-v1.5 | **57.91** | 30,528 | 1024 | 434M | Apache-2.0 | justify (Alibaba) | 31.3 MB |
+| NovaSearch/stella_en_400M_v5 | **58.97** | 30,522\* | 1024 | 435M | MIT | **clean** | 31.3 MB |
+| Alibaba-NLP/gte-large-en-v1.5 | **57.91** | 30,522\* | 1024 | 434M | Apache-2.0 | justify (Alibaba) | 31.3 MB |
 | Snowflake/snowflake-arctic-embed-l | 55.98 | 30,522 | 1024 | 335M | Apache-2.0 | justify-max (Snowflake) | 31.3 MB |
 | Alibaba-NLP/gte-modernbert-base | 55.33 | 50,368 | 768 | 149M | Apache-2.0 | justify (Alibaba) | 38.7 MB |
 | Snowflake/snowflake-arctic-embed-m-v1.5 | 55.14 | 30,522 | 768 | 109M | Apache-2.0 | justify-max | 23.4 MB |
 | BAAI/bge-large-en-v1.5 | 54.29 | 30,522 | 1024 | 335M | MIT | clean | 31.3 MB |
-| Alibaba-NLP/gte-base-en-v1.5 | 54.09 | 30,528 | 768 | 137M | Apache-2.0 | justify (Alibaba) | 23.4 MB |
+| Alibaba-NLP/gte-base-en-v1.5 | 54.09 | 30,522* | 768 | 137M | Apache-2.0 | justify (Alibaba) | 23.4 MB |
 | BAAI/bge-base-en-v1.5 *(current)* | 53.25 | 30,522 | 768 | 109M | MIT | clean | 23.4 MB |
 | ibm-granite/granite-embedding-english-r2 | 53.10 | 50,368 | 768 | 149M | Apache-2.0 | justify (IBM) | 38.7 MB |
 
@@ -31,8 +51,11 @@ For the record if it ever matters: Cortex Search's *documented default* embeddin
 `snowflake-arctic-embed-m-v1.5`, which is as close to core business as this tier gets.
 
 **granite-embedding-english-r2 ties the current teacher** (53.10 vs 53.25) on our anchor scale and
-so is not an upgrade, despite leading on MTEB v2 Retrieval (56.4). Its 50,368 vocab is also 368
-over the line. Dead as a teacher.
+so is not an upgrade, despite leading on MTEB v2 Retrieval (56.4). **Dead on quality alone** — an
+earlier version of this file also dinged it for a 50,368 vocab while listing `gte-modernbert-base`
+with the *identical* 50,368 ModernBERT vocab as a survivor. That was inconsistent; 50,368 is a real
+tokenizer size for both, it is 0.7% over a "~50K" guideline, and it disqualifies neither. Neither is
+a quality upgrade, which is the reason both are out.
 
 ## Disqualified, with the reason (so nobody re-derives these)
 
@@ -67,6 +90,8 @@ to weights that were never published. Neither is a teacher swap; both would be t
   reaches **56.37 MTEB v1 Retrieval** — a documented existence proof on a clean small backbone —
   but no fine-tuned checkpoint is on the Hub.
 
+\* `config.json` says 30,528; the tokenizer is 30,522. See the correction above.
+
 ## Live caveats on the two front-runners
 
 - **stella: ArguAna and FiQA2018 are recorded as in-domain training data** (MTEB registry
@@ -83,6 +108,11 @@ to weights that were never published. Neither is a teacher swap; both would be t
   `Alibaba-NLP/gte-large-en-v1.5`. NovaSearch is a 3-person community org with no product, so the
   *releasing* party is clean — but the weights are a derivative of the #2 candidate. Under the
   relaxed rule Alibaba is admissible anyway, so this is no longer a blocker either way.
+- **stella needs its post-pooling Dense head.** Its `modules.json` is
+  Transformer → Pooling(**mean**) → `2_Dense_1024`, and that Dense is 1024→1024 **with bias**
+  (Identity activation). Encoding with plain mean pooling omits a trained affine map and is
+  therefore a *different model* from the one that scored 58.97 — the same loader-mismatch class as
+  the M2 potion blocker. Handled by `Spec.post_dense`; verified at the pinned revision.
 - **gte-large-en-v1.5** needs `trust_remote_code=True`; `unpad_inputs` and
   `use_memory_efficient_attention` both default to **false**, so it runs on plain sdpa and
   **xformers is an optional accelerator, not a dependency**. Needs `transformers>=4.41`. Ships fp32.
