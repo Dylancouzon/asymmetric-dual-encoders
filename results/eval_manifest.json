@@ -119,5 +119,69 @@
     "arctic-embed-m-v1.5": "f8979a78dd0ae5138062db606c47745cb72a4439b3d59fe55f2a50e408800299"
    }
   }
+ },
+ "m7_dev": {
+  "nq-250k": {
+   "n_docs": 250000,
+   "n_queries": 3452,
+   "corpus_ids_sha256": "f6260541f6ecf2c6820aa0504f15c7f2040582fd58b92ed0ab64e78b1ff7669f",
+   "corpus_text_sha256": "66610615ce015dc75f04e485cc3e98e87da4123fe3fb4b1ff99b27a88440aa68",
+   "qids_sha256": "89a8ed94aeecf8d0d7d6bfc3ebe529f2e54b32f20e354b0a7ba89971cf3b239c",
+   "qrels_sha256": "42de04c520ff132fca2a72b2c432348b4a73adde3c1d1d98cca9552636cd7927",
+   "construction": "BEIR NQ: all qrels-positive docs + rng(seed=0) distractors to 250000"
+  },
+  "hotpotqa": {
+   "n_docs": 5233329,
+   "n_queries": 7405,
+   "corpus_ids_sha256": "be799419ebc5b1589229a161083f93aa7d3871ba0afe7c42c896a0ce1fb7c853",
+   "corpus_text_sha256": "8e805db3af5d1f1a9e1f2529922e75300ff9a3b369809ab80f31b79b1224564a",
+   "qids_sha256": "18e7c61d7e8f2b9db18a913e7d582c056bff6f8713b80afa16b75e48e94a6231",
+   "qrels_sha256": "015a30eef019f894e070718f097130b152d192b244c88750f9141df6dcd21b5c",
+   "construction": "BEIR HotpotQA test split, full corpus"
+  },
+  "cqadup-programmers": {
+   "n_docs": 32176,
+   "n_queries": 876,
+   "corpus_ids_sha256": "434006e6a174b7f7508af49dd89b4ecbdcf92fdec01a253bb7fe23c78723c43e",
+   "corpus_text_sha256": "d7c33d881e5728565ff0b8d42f6da88cd89a8362a6b05ffd5d8b2064bd0f61ed",
+   "qids_sha256": "910ba91e5f5256ba65788b9a51f0aeffff3ebc1b9e17e34e2a2e2859655f2e01",
+   "qrels_sha256": "5e088f09a6cc533ca71bc15992e9c7bf33582b1dc1530300906b863e6d352efc",
+   "construction": "mteb/cqadupstack-programmers, full corpus + test qrels"
+  },
+  "cqadup-physics": {
+   "n_docs": 38316,
+   "n_queries": 1039,
+   "corpus_ids_sha256": "2354a8d4c7207a6ff443d8437e4e76470e5d3c46bf2eb317011a526e684fb5bf",
+   "corpus_text_sha256": "856f16df56c9515c7d6acd7e2bc2e4585dbd74c1da80ea1f2264deea6d2d892d",
+   "qids_sha256": "4c44ec7cf4f961b4c2c44cd1615679302d0979aca17ce09d80bf7e6e8a990fb9",
+   "qrels_sha256": "bfdc3429822a1f3308943510393b91c57c0650acb71d603d33146448e4e60236",
+   "construction": "mteb/cqadupstack-physics, full corpus + test qrels"
+  }
+ },
+ "m7_untouched_final": {
+  "fever": {
+   "n_docs": 5416568,
+   "n_queries": 6666,
+   "corpus_ids_sha256": "ef7c3d7d6d006bb31a43f095df0fbd01006085eb951993becfd3d94470195d67",
+   "corpus_text_sha256": "2c71339c8c31179ddb1443e171d83af82658820d0885cf4803a9b42c452a672a",
+   "qids_sha256": "472ef3c5b868e704c69fb356ffcd7cc7aab7669b5607bc7934e586f94c20c27c",
+   "qrels_sha256": "dbaa21877bdffe89dc4489234c4a15b59c2e05d7b2ff80fc836b9405e7391161",
+   "construction": "BeIR/fever test split, full corpus"
+  },
+  "dbpedia-entity": {
+   "n_docs": 4635922,
+   "n_queries": 400,
+   "corpus_ids_sha256": "61a2b1b2489498ace1a4e1fc6924d8a5b62504da339428586420d6330f6d4c7f",
+   "corpus_text_sha256": "6c00ad5874b71ce4299b5ab8c93d7288b59cbdd60178d7b8c94a3e8f52459765",
+   "qids_sha256": "04598aafe14ee78964752627a3d8b6fc06c662092312999f3d6d171d4a8e7387",
+   "qrels_sha256": "39e0bafdcd8622ac684cede60c84a1ada6eec41840a349fac0a65f8070f2fa2e",
+   "construction": "BeIR/dbpedia-entity test split, full corpus"
+  }
+ },
+ "m7_notes": {
+  "partitions": "datasets = KNOWN-TEST (the six); m7_dev = DEV; m7_untouched_final = UNTOUCHED-FINAL",
+  "climate_fever": "DROPPED from UNTOUCHED-FINAL: no affirmative license at any primary source (see m7/LEDGER.md). The partition therefore holds two sets, not three.",
+  "fever_caveat": "BEIR FEVER is scored as untouched-final but is IN-DOMAIN if fever-train pairs stay in the training mix (same corpus, disjoint queries). Labeled in the report; DBpedia-entity is the clean generalization probe.",
+  "frozen_eval_is_authoritative": "the final scorer reads queries/qrels only from results/frozen_eval/ after verifying corpus hashes against a fresh HF download"
  }
 }
