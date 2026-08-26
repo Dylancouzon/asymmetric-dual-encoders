@@ -15,27 +15,47 @@ import torch
 
 from _paths import WORK
 from table import Preproc, get_tokenizer
-from teacher import load_teacher
+from teacher import load_post_dense, load_teacher, pool_project_normalize
 
 INIT = WORK / "init"
 INIT.mkdir(parents=True, exist_ok=True)
 
 
+def spec_tag():
+    """Encoder identity for a cache path. work/init/ was keyed on kind + preprocessing only, so a
+    1024-d arctic run would have loaded bge-base's 768-d rows -- or, on a same-width swap, silently
+    trained against another teacher's geometry with every shape check passing."""
+    sp = encoders.active()
+    return f"{sp.name}-{(sp.revision or 'norev')[:8]}"
+
+
 @torch.no_grad()
 def teacher_rows(pre: Preproc, batch=512, device="cuda"):
+    """Each vocab token forwarded through the frozen teacher in a query-shaped context.
+
+    Pooling and the post-pooling Dense come from the registry via pool_project_normalize. This
+    function used to take last_hidden_state[:, 0] unconditionally and size itself from
+    config.hidden_size, so for a mean-pooled teacher it built the table's rows with a DIFFERENT
+    read-out from the one that encodes the documents those rows get scored against.
+    """
+    sp = encoders.active()
     tok = get_tokenizer()
     _, model = load_teacher(dtype=torch.float32, device=device)
+    dense = load_post_dense(sp, device)
     V = tok.vocab_size
     pre_ids = tok(pre.prefix, add_special_tokens=False)["input_ids"] if pre.prefix else []
     cls, sep = tok.cls_token_id, tok.sep_token_id
-    out = np.empty((V, model.config.hidden_size), dtype=np.float32)
+    out = np.empty((V, sp.dim), dtype=np.float32)
     for lo in range(0, V, batch):
         hi = min(lo + batch, V)
         seqs = [[cls] + pre_ids + [t] + [sep] for t in range(lo, hi)]
         ids = torch.tensor(seqs, dtype=torch.long, device=device)
         att = torch.ones_like(ids)
-        h = model(input_ids=ids, attention_mask=att).last_hidden_state[:, 0]
-        out[lo:hi] = torch.nn.functional.normalize(h.float(), dim=-1).cpu().numpy()
+        h = model(input_ids=ids, attention_mask=att).last_hidden_state
+        v = pool_project_normalize(h, att, sp.pooling, dense)
+        if v.shape[1] != sp.dim:
+            raise AssertionError(f"{sp.name}: init rows are {v.shape[1]}-d but Spec.dim is {sp.dim}")
+        out[lo:hi] = v.cpu().numpy()
     return out
 
 
@@ -50,7 +70,10 @@ def random_rows(vocab, dim, seed=0):
 
 def get_init(kind, pre: Preproc, vocab=None, dim=None):
     """Cached: work/init/<kind>[-<preproc fingerprint>].npy"""
-    name = f"{kind}-{pre.fingerprint()}" if kind == "teacher" else kind
+    # Every init depends on the encoder, including `input_emb` (its embedding matrix) and `random`
+    # (its width), so the tag is unconditional rather than "only for the teacher init".
+    name = f"{spec_tag()}-{kind}-{pre.fingerprint()}" if kind == "teacher" \
+        else f"{spec_tag()}-{kind}"
     p = INIT / f"{name}.npy"
     if p.exists():
         return np.load(p)

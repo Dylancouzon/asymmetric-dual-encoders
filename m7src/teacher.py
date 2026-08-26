@@ -98,16 +98,19 @@ def release_teacher(model_id=TEACHER, revision=TEACHER_REV, dtype=torch.float32,
         torch.cuda.empty_cache()
 
 
-@torch.no_grad()
-def encode_batch(tok, model, texts, max_length=512, device="cuda", pooling="cls", dense=None):
-    """Pool per the encoder's own convention, apply its post-pooling Dense if it has one, then
-    L2 normalize. Returned fp32 on CPU."""
-    b = tok(texts, padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
-    h = model(**b).last_hidden_state
+def pool_project_normalize(h, attention_mask, pooling, dense):
+    """The ONE implementation of "hidden states -> embedding": pool by the encoder's convention,
+    apply its post-pooling Dense if it has one, L2 normalize. Returns a fp32 CUDA tensor.
+
+    It is a named function because it had started to exist in three places -- encode_batch,
+    teacher_probe (deleted) and init_table.teacher_rows, which hardcoded CLS and dropped the Dense
+    entirely. A table whose ROWS are built with different pooling from the DOCUMENTS they are
+    scored against is wrong in a way no shape check catches.
+    """
     if pooling == "cls":
         v = h[:, 0]
     elif pooling == "mean":
-        m = b["attention_mask"].unsqueeze(-1).to(h.dtype)
+        m = attention_mask.unsqueeze(-1).to(h.dtype)
         v = (h * m).sum(1) / m.sum(1).clamp(min=1e-6)
     else:
         raise ValueError(f"unknown pooling {pooling!r}")
@@ -115,7 +118,15 @@ def encode_batch(tok, model, texts, max_length=512, device="cuda", pooling="cls"
     if dense is not None:
         W, bias = dense
         v = v @ W.T + (0.0 if bias is None else bias)
-    return torch.nn.functional.normalize(v, dim=-1).cpu().numpy()
+    return torch.nn.functional.normalize(v, dim=-1)
+
+
+@torch.no_grad()
+def encode_batch(tok, model, texts, max_length=512, device="cuda", pooling="cls", dense=None):
+    """Tokenize, forward, pool/project/normalize. Returned fp32 on CPU."""
+    b = tok(texts, padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
+    h = model(**b).last_hidden_state
+    return pool_project_normalize(h, b["attention_mask"], pooling, dense).cpu().numpy()
 
 
 def _order_by_length(tok, texts, max_length):

@@ -16,8 +16,10 @@ refusing to start on any mismatch.
 """
 import hashlib
 import json
+import os
 from pathlib import Path
 
+import encoders
 from _paths import REPO, WORK
 
 FREEZE = REPO / "m7" / "FREEZE.json"
@@ -50,6 +52,12 @@ def write(run_id, fusion_spec, released_system, dev_macro=None, notes=None):
         "learned_weights": meta.get("learned_weights"),
         "teacher": meta.get("teacher"),
         "teacher_revision": meta.get("teacher_revision"),
+        # The FULL encoder identity, not just repo+revision. Every field here changes the vectors
+        # the table is scored against, and load_and_verify refuses if the running process's active
+        # encoder differs on any of them. Codex gate 2026-08-26, BLOCKER 4: a stella table could be
+        # evaluated against default bge-base with every existing hash guard passing, because
+        # M7_ENCODER selects the encoder from the environment and nothing compared it to the freeze.
+        "encoder_spec": encoder_fingerprint(),
         "fusion": fusion_spec,
         "released_system": released_system,
         "dev_macro_at_freeze": dev_macro,
@@ -61,6 +69,25 @@ def write(run_id, fusion_spec, released_system, dev_macro=None, notes=None):
     FREEZE.write_text(json.dumps(blob, indent=1))
     print(json.dumps(blob, indent=1))
     return blob
+
+
+def encoder_fingerprint(spec=None):
+    """Every field of the active Spec that changes the vectors. Compared field by field at final-run
+    time so a mismatch names the field rather than just failing a hash."""
+    sp = spec or encoders.active()
+    return {"name": sp.name, "repo": sp.repo, "revision": sp.revision, "dim": sp.dim,
+            "pooling": sp.pooling, "post_dense": sp.post_dense,
+            "query_prefix": sp.query_prefix, "doc_prefix": sp.doc_prefix,
+            "max_length": sp.max_length, "tokenizer_id": sp.tokenizer_id,
+            "vocab": sp.vocab, "cls_id": sp.cls_id,
+            "config_kwargs": dict(sorted(sp.config_kwargs.items()))}
+
+
+def encoder_drift(frozen_spec, spec=None):
+    """{field: (frozen, live)} for every Spec field that disagrees. Separated from load_and_verify
+    so it is testable without a FREEZE.json (test_freeze_guard.py)."""
+    live = encoder_fingerprint(spec)
+    return {k: (frozen_spec.get(k), live.get(k)) for k in live if frozen_spec.get(k) != live.get(k)}
 
 
 def load_and_verify():
@@ -93,6 +120,17 @@ def load_and_verify():
                       ("results/perquery.json", "perquery_sha256")):
         if sha256_file(REPO / name) != b[key]:
             problems.append(f"{name} changed after the freeze")
+    # The teacher the artifact was frozen with must be the teacher this process is running.
+    frozen_spec = b.get("encoder_spec")
+    if frozen_spec is None:
+        problems.append("FREEZE.json predates encoder_spec: rewrite the freeze with the current "
+                        "freeze.write() so the teacher identity is bound to the artifact")
+    else:
+        drift = encoder_drift(frozen_spec)
+        if drift:
+            problems.append("active encoder differs from the frozen one (M7_ENCODER is "
+                            f"{os.environ.get('M7_ENCODER', '<unset>')!r}): "
+                            + "; ".join(f"{k}: frozen={a!r} live={b2!r}" for k, (a, b2) in drift.items()))
     if b["released_system"] == "fusion" and not b.get("fusion"):
         problems.append("released_system is 'fusion' but no fusion spec is frozen")
     if problems:
