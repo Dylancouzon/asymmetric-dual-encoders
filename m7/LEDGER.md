@@ -285,3 +285,50 @@ measured), and is cheaper: the document vectors are the pool memmap itself, so n
 
 heldout-longq remains n=55 and is reported with its CI width attached, the same treatment
 TREC-COVID's n=50 gets in the M4 matrix.
+
+## Stage 0.1 — closed-form representation compatibility (2026-08-26)
+
+`m7src/stage0_ridge.py`, `results/m7_stage0_ridge.json`. The MSE-optimal flat-weight
+bag-of-tokens approximation of the frozen teacher's query encoder, from one ridge solve per
+lambda (30,522² fp64 Cholesky, ~9.5 TFLOP each). This is the **global optimum of flat-weight
+distillation under squared loss**, so no training run can beat it at that objective — which is
+what makes it a clean answer to the mandate's central structural question rather than one more
+data point.
+
+Fitted on **571,329 decontaminated TRAIN queries**; bag matrix 8,205,703 nnz; Gram 1.8% dense;
+**vocabulary coverage on TRAIN queries 0.895** (so ~3,200 of 30,522 rows never receive an update
+and fall to the unseen-row policy).
+
+| lambda | train cos | overlap@10 | proxy macro-3 |
+|---|---|---|---|
+| 1e-4 | 0.9117 | 0.485 | 0.4534 |
+| 1e-3 | 0.9117 | 0.487 | 0.4535 |
+| **1e-2** | **0.9110** | **0.490** | **0.4542** |
+| 1e-1 | 0.9044 | 0.464 | 0.4367 |
+| 1 | 0.8724 | 0.351 | 0.3604 |
+
+Proxy references on the same three components: teacher 0.5722 · BM25 0.4083 · potion 0.3525.
+
+**Verdict: the structural bet holds.** A frozen, off-the-shelf bge-base document space *is*
+additively predictable from query tokens — cosine 0.9110 with the teacher's own query vectors,
+half its top-10 recovered, and BM25 beaten by 4.6 points with flat weights and zero gradient
+steps. The mandate's stated worry (LightRetriever's table works because its document tower was
+co-trained to be additively predictable; a frozen tower was never optimised for that) does not
+bite hard enough to kill the approach.
+
+Three qualifications the report must carry:
+
+1. **Retention is 79%, not 95%.** The honest headline is not "lookup tables match transformers"
+   but "a frozen off-the-shelf document space is additively predictable enough from query tokens
+   to beat BM25 at zero query compute". The flat table sits between BM25 and the teacher, nearer
+   BM25.
+2. **The optimum is interior and lambda barely matters below it** (0.4534 → 0.4542 across three
+   orders of magnitude, then falling). The binding constraint is therefore *representational*,
+   not statistical: more data or better regularisation will not move this. Only a more expressive
+   query function (learned per-token weights) or a better-aligned objective (contrastive) can.
+3. **Per-component retention is very uneven, and unevenly in the wrong direction.** nq-250k
+   0.7285/0.8198 = 89%; cqadup-programmers 0.2724/0.4240 = **64%**. StackExchange-style question
+   retrieval is the closest analogue in dev to FiQA's domain, and it is where the bag-of-tokens
+   approximation is weakest. That makes FiQA the six-set row most at risk — and FiQA is also
+   where BM25 is unusually weak (0.2532), so the dense and fusion stories pull opposite ways
+   there. Flagged now, before any six-set number exists.
