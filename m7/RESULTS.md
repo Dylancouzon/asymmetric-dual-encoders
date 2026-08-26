@@ -16,3 +16,5 @@ row on the held-out slices, whose corpora are pool row indices carrying no docum
 
 | run id | config | dev metric (proxy macro-3) | verdict |
 |---|---|---|---|
+| p1-objB | `work/runs/p1-objB.json` | 0.4548 | ok |
+| p1-objB | `work/runs/p1-objB.json` | 0.4548 | ok — objective B (distillation, 8k steps). Matches the closed-form flat bound (0.4542) to +0.0006, so learned per-token weights + the KL ranking term buy nothing over flat MSE distillation. Confirms no optimisation pathology. Coverage 27,314/30,522 rows (89.5%), median 262 updates/row. |
