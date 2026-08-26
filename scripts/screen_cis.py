@@ -55,10 +55,10 @@ def main(arms=None):
         del model
         torch.cuda.empty_cache()
 
-    ref = per_arm["p2s-start"]
+    ref = per_arm[arms[0]]   # the zero-step pin arm is FIRST on argv / in ARMS by convention
     vs_start, pvals = {}, {}
     for rid in arms:
-        if rid == "p2s-start":
+        if rid == arms[0]:
             continue
         r = boot.paired(per_arm[rid], ref, alternative="greater")
         r["signflip"] = boot.signflip(per_arm[rid], ref, alternative="greater", strict=True)
@@ -69,7 +69,7 @@ def main(arms=None):
               f"{'RESOLVED' if r['resolved'] else 'UNRESOLVED'}", flush=True)
 
     holm = boot.holm(pvals, alpha=0.025) if hasattr(boot, "holm") else None
-    best = max((k for k in arms if k != "p2s-start"),
+    best = max((k for k in arms if k != arms[0]),
                key=lambda k: np.mean([np.mean(list(per_arm[k][c].values())) for c in COMPONENTS]))
     vs_best = {}
     for rid in arms:
