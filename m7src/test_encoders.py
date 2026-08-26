@@ -38,9 +38,13 @@ def main():
         print(f"  {name:20s} {s.repo:38s} {s.pooling:4s} dim {s.dim:5d} "
               f"vocab {s.vocab} int8 {s.vocab*s.dim/1e6:.1f} MB")
 
-    print("\ndefault encoder is the M7 teacher (so nothing changes unless M7_ENCODER is set):")
-    a = encoders.active()
-    check(a.repo == "BAAI/bge-base-en-v1.5", f"active repo is bge-base, got {a.repo}")
+    # These are properties of the DEFAULT spec, not of whatever M7_ENCODER happens to select.
+    # Checking encoders.active() made this gate fail spuriously the moment it ran under another
+    # encoder -- which is exactly when a swap most needs the cache keys verified.
+    print(f"\nactive encoder is {encoders.active().name!r}; the DEFAULT must still be the M7 teacher "
+          f"(so nothing changes unless M7_ENCODER is set):")
+    a = encoders.get(encoders.DEFAULT)
+    check(a.repo == "BAAI/bge-base-en-v1.5", f"default repo is bge-base, got {a.repo}")
     check(a.pooling == "cls" and a.pooling_key == "cls-l2",
           f"bge pooling_key is the legacy literal 'cls-l2', got {a.pooling_key!r}")
     check(a.tokenizer_id == "bert-wordpiece-30522",

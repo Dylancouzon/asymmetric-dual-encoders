@@ -1,0 +1,64 @@
+{
+ "_note": "Every frozen comparator's macro on the six and on the four datasets with no known stella training exposure (ArguAna and FiQA2018 are on its registry list). Pure arithmetic over results/perquery.json, which is a committed M4 artifact -- no new six-set access, and no candidate of ours is scored here. Registered BEFORE the stella encodes so both sets of bars exist in advance: the SIX-set claim is primary per Dylan 2026-08-26; the clean-4 numbers are a robustness check, and promoting them to headline later must be labelled a POST-HOC restriction.",
+ "six": [
+  "scifact",
+  "nfcorpus",
+  "fiqa",
+  "arguana",
+  "scidocs",
+  "trec-covid"
+ ],
+ "clean4": [
+  "scifact",
+  "nfcorpus",
+  "scidocs",
+  "trec-covid"
+ ],
+ "systems": {
+  "arctic-embed-m-v1.5": {
+   "six": 0.5264,
+   "clean4": 0.5348,
+   "clean4_minus_six": 0.0084
+  },
+  "bge-small-en-v1.5": {
+   "six": 0.5042,
+   "clean4": 0.5046,
+   "clean4_minus_six": 0.0004
+  },
+  "bm25": {
+   "six": 0.4174,
+   "clean4": 0.4409,
+   "clean4_minus_six": 0.0235
+  },
+  "leaf-ir-asym": {
+   "six": 0.5155,
+   "clean4": 0.5233,
+   "clean4_minus_six": 0.0078
+  },
+  "lr-dense-pertask": {
+   "six": 0.4583,
+   "clean4": 0.4541,
+   "clean4_minus_six": -0.0042
+  },
+  "lr-dense-websearch": {
+   "six": 0.432,
+   "clean4": 0.4305,
+   "clean4_minus_six": -0.0015
+  },
+  "mdbr-leaf-ir": {
+   "six": 0.5123,
+   "clean4": 0.5221,
+   "clean4_minus_six": 0.0098
+  },
+  "opensearch-doc-v3-gte": {
+   "six": 0.4868,
+   "clean4": 0.4974,
+   "clean4_minus_six": 0.0106
+  },
+  "potion-retrieval-32M": {
+   "six": 0.3601,
+   "clean4": 0.381,
+   "clean4_minus_six": 0.0209
+  }
+ }
+}
