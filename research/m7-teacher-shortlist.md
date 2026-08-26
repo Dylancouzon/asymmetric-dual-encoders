@@ -1,3 +1,11 @@
+> **STALE as of 2026-08-26.** This shortlist was built under the strict vendor rule (no vendor
+> with any competing vector-search product). Dylan relaxed that rule: vendors whose vector offering
+> is far from their main business are now admissible with heavy justification — see the "Vendor
+> rule, relaxed" section in CLAUDE.md for the operationalised tiers. Candidates dismissed below on
+> *vendor* grounds alone (Alibaba gte/Qwen3, Microsoft e5, IBM granite, Snowflake arctic) may now
+> be viable. The licence rule and the vocab x dim size arithmetic still bind unchanged.
+> Re-run this sweep before committing to a teacher.
+
 # M7 teacher document-encoder shortlist (2026-08-25, Sonnet web sweep, specs verified on HF cards)
 
 Decision made with Dylan 2026-08-25: **default teacher BAAI/bge-base-en-v1.5**; the executing session may swap to a measurably better teacher that passes both hard constraints (permissive license, vendor ships no competing vector search product). Vocab size is a first-class criterion: the released lookup table is vocab × dim.

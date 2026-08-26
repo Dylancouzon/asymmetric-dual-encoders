@@ -97,6 +97,37 @@ Corollary: a pre-registered kill criterion (e.g. the phase-2 contrastive bar) ex
 *grinding a diagnosed dead end*, not to license abandoning an undiagnosed one. Kill the avenue
 after you understand why it failed, never before.
 
+### Vendor rule, relaxed (Dylan, 2026-08-26)
+
+The original rule — no component from any vendor shipping a competing vector-search product —
+disqualified almost every strong encoder and was costing us real quality. **Relaxed: a vendor whose
+vector-search offering is far from their main business is acceptable if the choice is heavily
+justified in the report.** Direct competitors stay out.
+
+Operationalised so a future session does not have to guess:
+
+- **OUT — vector search *is* the business:** Pinecone, Weaviate, Zilliz/Milvus, Chroma, Vespa,
+  Nomic (Atlas), Mixedbread, Jina (and Elastic), MongoDB (Atlas Vector Search is a flagship push;
+  also Voyage AI, which MongoDB acquired), Cohere (Embed/Rerank is core product). And obviously
+  nothing where we would be shipping a competitor's model as a *component* of a Qdrant release.
+- **OK WITH JUSTIFICATION — vector search is one service among hundreds:** Alibaba (gte, Qwen3-Embedding
+  — OpenSearch Vector Search Edition / AnalyticDB), Microsoft (e5 — Azure AI Search), IBM (granite —
+  watsonx managed Milvus), Google (Vertex AI Vector Search; note Gemma terms still fail the
+  *licence* rule independently). **Snowflake (arctic-embed) needs the strongest justification of
+  this group** — Cortex Search is built directly on Arctic Embed, so it is the closest of these to
+  core business.
+- **CLEAN — no vector product at all:** BAAI, NovaSearch, NVIDIA, Salesforce, academic labs,
+  individual/community releases (e.g. intfloat).
+
+Unchanged and non-negotiable: the **licence** must permit commercial release of derived weights
+(no Gemma terms, no CC-BY-NC), and **table size still binds** — the released artifact is
+vocab x dim, so a 250K-vocab model is disqualified on arithmetic regardless of vendor
+(250,002 x 1024 fp16 = 512 MB, larger than the 466 MB LightRetriever table we exist to beat).
+Practical filter: **vocab <= ~50K and dim <= 1024, or MRL-truncatable**.
+
+`research/m7-teacher-shortlist.md` was written under the strict rule and is therefore STALE — it
+excluded candidates that are now admissible. Re-run that sweep before committing to a teacher.
+
 ### Past decisions are revisitable (Dylan, 2026-08-26)
 
 **"If we need to revisit any past decisions to make this better, I'm open for it. Achieving our
