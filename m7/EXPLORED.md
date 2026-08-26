@@ -22,6 +22,15 @@ Check this before starting anything new. One row per avenue; detail lives in the
 
 ## Reopened, do not treat as closed
 
+- **doc2query-style document expansion — DEMOTED, NOT CLOSED (review 2026-08-26).** Weller et al.
+  (arXiv 2309.08541) find expansion gain anti-correlates with **retriever strength**, and it is
+  cited here to close the avenue. But our *doc encoder* is strong (harmed regime) while our
+  *end-to-end system* scores in BM25's class (dev 0.4795 vs 0.4525 — the helped regime), and no
+  cited source covers a frozen-strong-doc-tower + bag-of-tokens-query architecture. Which "strength"
+  governs is exactly the untested question. Close it on cost if at all, not on the literature. The
+  cheapest test is one re-encode of the two CQADupStack dev components (~70K docs), the same price
+  as the teacher probe.
+
 - **"no clean untouched-final member is available."** The 10 unused CQADupStack subforums carry the
   same ADCS-2015 CC BY-SA evidence as the two in dev, are non-Wikipedia, and R3 measured their
   TRAIN-positive overlap at ~0 (vs 9.32% DBpedia, 11.3% FEVER). Adding one or two before the freeze

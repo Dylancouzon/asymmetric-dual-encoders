@@ -70,6 +70,26 @@ def main():
     check(encoders.get("stella-400M-v5").pooling_key == "mean-l2",
           "stella's pooling_key says mean-l2")
 
+    print("\nSpec.cls_id must match the real tokenizer (skipped where not cached offline):")
+    import os
+    os.environ.setdefault("HF_HUB_OFFLINE", "1")
+    from transformers import AutoTokenizer
+    for name, sp in sorted(encoders.REGISTRY.items()):
+        try:
+            kw = {"trust_remote_code": True} if sp.trust_remote_code else {}
+            tk = AutoTokenizer.from_pretrained(sp.repo, revision=sp.revision, **kw)
+        except Exception:
+            print(f"  skip {name} (tokenizer not cached locally)")
+            continue
+        check(tk.cls_token_id == sp.cls_id,
+              f"{name} cls_id {sp.cls_id} == tokenizer {tk.cls_token_id}")
+        check(tk.vocab_size == sp.vocab or len(tk) == sp.vocab,
+              f"{name} vocab {sp.vocab} == tokenizer {tk.vocab_size}/{len(tk)}")
+
+    print("\nevery Spec must be revision-pinned:")
+    check(all(s.revision for s in encoders.REGISTRY.values()),
+          "no unpinned revisions in the registry")
+
     print("\nan unregistered repo must be refused, not silently defaulted:")
     try:
         encoders.by_repo("some/unregistered-model")

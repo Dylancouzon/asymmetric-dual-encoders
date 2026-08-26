@@ -40,11 +40,9 @@ CANDS = ("bge-base-en-v1.5", "bge-large-en-v1.5", "gte-large-en-v1.5", "stella-4
          "arctic-embed-l")
 
 
-def pool(h, mask, mode):
-    if mode == "cls":
-        return h[:, 0]
-    m = mask.unsqueeze(-1).to(h.dtype)
-    return (h * m).sum(1) / m.sum(1).clamp(min=1e-6)
+# Pooling AND the post-pooling Dense both come from teacher.py, so the probe cannot drift from
+# the encoder the rest of the pipeline uses.
+from teacher import encode_batch, load_post_dense
 
 
 @torch.no_grad()
@@ -58,6 +56,7 @@ def encode(spec, texts, prefix, tag):
     tok = AutoTokenizer.from_pretrained(spec.repo, revision=spec.revision, **kw)
     model = AutoModel.from_pretrained(spec.repo, revision=spec.revision, dtype=torch.float16,
                                       **kw).cuda().eval()
+    dense = load_post_dense(spec, "cuda")
     full = [prefix + t for t in texts]
     lens = [len(tok(t, add_special_tokens=True, truncation=True,
                     max_length=maxlen)["input_ids"]) for t in full]
@@ -68,11 +67,8 @@ def encode(spec, texts, prefix, tag):
     while i < len(order):
         n = max(1, min(256, budget // max(lens[order[i]], 1)))
         idx = order[i:i + n]
-        b = tok([full[j] for j in idx], padding=True, truncation=True, max_length=maxlen,
-                return_tensors="pt").to("cuda")
-        h = model(**b).last_hidden_state
-        v = F.normalize(pool(h, b["attention_mask"], spec.pooling).float(), dim=-1)
-        out[idx] = v.cpu().numpy().astype(np.float16)
+        out[idx] = encode_batch(tok, model, [full[j] for j in idx], maxlen, "cuda",
+                                pooling=spec.pooling, dense=dense).astype(np.float16)
         i += n
     del model
     torch.cuda.empty_cache()

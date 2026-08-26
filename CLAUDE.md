@@ -88,8 +88,12 @@ honestly. Honest pessimism arrived at lazily is still lazy.
    real numbers extracted. Cheap, fast, and it has twice overturned a conclusion here.
 4. **A capability claim has been checked algebraically before being believed or dismissed.** Some
    "obvious" fixes are provably no-ops (a doc-side linear map reparametrises the table;
-   document centering cannot change ranking at all) and some "exotic" ones are real (query-side
-   centering is NOT absorbable into the table, so it is genuine new capacity). Do the algebra.
+   document centering cannot change ranking at all). Do the algebra — and note the example
+   originally given here was itself wrong: query-side centering *was* claimed to be genuine new
+   capacity, and `results/m7_absorb_check.json` later disproved it to machine precision
+   (`mean(W-mu) = mean(W)-mu`, so it is absorbable, as are whitening, top-PC removal and any
+   per-token scalar weight). Only n-gram rows and multiplicity-dependent pooling add capacity.
+   The lesson stands; this file had the sign of it backwards for a day.
 5. **The negative result is reported with what would change it** — the specific measurement,
    component, or bound that would flip the verdict.
 

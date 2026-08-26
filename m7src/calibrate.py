@@ -43,29 +43,52 @@ RETENTION_TODAY = 0.7853
 BARS = {"bm25": 0.4174, "tier2_release": 0.4583, "tier1_aim": 0.4868}
 
 
+# t(0.975, df) for the small dfs this fit can have. Hardcoded so the module needs no scipy.
+T975 = {5: 2.571, 6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262, 10: 2.228}
+
+
 def fit(rows):
     M = np.array([m for _, m, _ in rows])
     O = np.array([o for _, _, o in rows])
     ratios = O / (M / 100)
     a, b = np.polyfit(M, O, 1)
     resid = O - (a * M + b)
+    n = len(rows)
+    # Regression sigma uses n-2 (two fitted parameters), NOT ddof=1. An earlier version quoted
+    # +-2 * resid.std(ddof=1) and called it a CI. That was wrong three times over: wrong dof, 2sd
+    # is not 95% at n=9 (t(7)=2.365), and it omitted the prediction-interval widening term, which
+    # matters most exactly where we use it -- extrapolating past the fit range.
+    sigma = float(np.sqrt((resid ** 2).sum() / (n - 2)))
     return {
+        "sigma_regression": sigma, "df": n - 2, "t975": T975.get(n - 2, 1.96),
+        "mteb_mean": float(M.mean()), "Sxx": float(((M - M.mean()) ** 2).sum()),
         "n": len(rows), "mteb_range": [float(M.min()), float(M.max())],
         "ratio": {"mean": float(ratios.mean()), "sd": float(ratios.std(ddof=1)),
                   "min": float(ratios.min()), "max": float(ratios.max())},
         "affine": {"slope": float(a), "intercept": float(b),
                    "pearson_r": float(np.corrcoef(M, O)[0, 1]),
-                   "resid_sd": float(resid.std(ddof=1)),
+                   "resid_sd_ddof1_DEPRECATED": float(resid.std(ddof=1)),
                    "max_abs_resid": float(np.abs(resid).max())},
         "per_model": {n: {"mteb": m, "our6": o, "ratio": float(o / (m / 100)),
                           "affine_resid": float(o - (a * m + b))} for (n, m, o) in rows},
     }
 
 
+def pred_interval(tx, mteb):
+    """95% PREDICTION interval half-width for ONE new model's six-set score at this MTEB value.
+
+    Prediction, not confidence: the interval is on a single new model, so it must carry the
+    model-to-model residual (the leading 1.0), not only uncertainty in the fitted line. The
+    widening term is what punishes extrapolation -- stella sits 3.8 MTEB beyond the fit range.
+    """
+    n = tx["n"]
+    w = np.sqrt(1.0 + 1.0 / n + (mteb - tx["mteb_mean"]) ** 2 / tx["Sxx"])
+    return float(tx["t975"] * tx["sigma_regression"] * w)
+
+
 def main():
     tx, st = fit(TRANSFORMERS), fit(STATICS)
     a, b = tx["affine"]["slope"], tx["affine"]["intercept"]
-    sd = tx["affine"]["resid_sd"]
     hi_anchor = 0.5042 / 51.68  # the single-point anchor the prior projection used
 
     # Verified 2026-08-26 by four parallel sweeps. Every row PASSES the hard filters
@@ -92,17 +115,19 @@ def main():
                "table_mb_fp16": round(vocab * dim * 2 / 1e6, 1),
                "table_mb_int8": round(vocab * dim / 1e6, 1),
                "six_est_affine": round(six, 4),
+               "pred_interval_95_halfwidth": round(pred_interval(tx, mteb), 4),
+               "extrapolating_beyond_fit": bool(mteb > tx["mteb_range"][1]),
                "six_est_ratio_mean": round(tx["ratio"]["mean"] * mteb / 100, 4),
                "six_est_bge_small_anchor_PRIOR_METHOD": round(hi_anchor * mteb, 4),
                "extrapolation_beyond_fit_range": round(mteb - tx["mteb_range"][1], 2),
                "at_retention": {}}
+        hw = pred_interval(tx, mteb)
         for r in (RETENTION_TODAY, 0.82, 0.85, 0.88, 0.91):
             v = six * r
-            # +-2 resid sd on the teacher estimate, scaled by retention
-            lo, hi = (six - 2 * sd) * r, (six + 2 * sd) * r
+            lo, hi = (six - hw) * r, (six + hw) * r
             row["at_retention"][f"{r:.4f}"] = {
-                "point": round(v, 4), "ci_from_calibration_resid": [round(lo, 4), round(hi, 4)],
-                "clears": {k: bool(lo > bar) for k, bar in BARS.items()},
+                "point": round(v, 4), "pi95_teacher_only": [round(lo, 4), round(hi, 4)],
+                "clears_lower_bound": {k: bool(lo > bar) for k, bar in BARS.items()},
                 "point_clears": {k: bool(v > bar) for k, bar in BARS.items()}}
         cands[name] = row
 
@@ -122,7 +147,10 @@ def main():
     print(f"  ratio  mean {tx['ratio']['mean']:.4f} sd {tx['ratio']['sd']:.4f} "
           f"range [{tx['ratio']['min']:.4f},{tx['ratio']['max']:.4f}]  <- NOT tight")
     print(f"  affine slope {a:.5f} intercept {b:+.4f} r {tx['affine']['pearson_r']:.4f} "
-          f"resid sd {sd:.4f}")
+          f"sigma {tx['sigma_regression']:.5f} (df {tx['df']}, t {tx['t975']})")
+    for m in (53.25, 55.14, 57.91, 58.97):
+        print(f"    95% PI half-width at MTEB {m}: +-{pred_interval(tx, m):.4f}"
+              f"{'   <- EXTRAPOLATION' if m > tx['mteb_range'][1] else ''}")
     print(f"  statics (other harness) ratio mean {st['ratio']['mean']:.4f}\n")
     print(f"{'candidate':30s} {'MTEB':>5s} {'six':>6s} {'int8MB':>7s} {'tier':>22s} | "
           + " ".join(f"x{r:.0%}".rjust(7) for r in (RETENTION_TODAY, 0.85, 0.88, 0.91)))
@@ -133,12 +161,13 @@ def main():
               f"{r['table_mb_int8']:7.1f} {r['vendor_tier']:>22s} | {cells}")
     print(f"\nbars: bm25 {BARS['bm25']}  tier2 {BARS['tier2_release']}  "
           f"tier1 {BARS['tier1_aim']}")
-    for n in cands:
-        for r in ("0.8500", "0.8800"):
+    for n in ("stella_en_400M_v5", "gte-large-en-v1.5", "bge-base-en-v1.5 (current)"):
+        for r in ("0.8500", "0.8800", "0.9100"):
             c = cands[n]["at_retention"][r]
-            print(f"  {n:28s} x{r[:4]}: {c['point']:.4f} "
-                  f"CI{c['ci_from_calibration_resid']} tier1 point={c['point_clears']['tier1_aim']} "
-                  f"lower={c['clears']['tier1_aim']}")
+            print(f"  {n:28s} x{r[:4]}: {c['point']:.4f} PI{c['pi95_teacher_only']} | tier1 "
+                  f"point={str(c['point_clears']['tier1_aim']):5s} "
+                  f"lower={str(c['clears_lower_bound']['tier1_aim']):5s} | tier2 "
+                  f"lower={c['clears_lower_bound']['tier2_release']}")
     print("wrote results/m7_calibration.json")
 
 

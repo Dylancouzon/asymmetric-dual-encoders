@@ -7,6 +7,11 @@
  },
  "retention_today_text_backed": 0.7853,
  "transformers_fit": {
+  "sigma_regression": 0.01095716440741721,
+  "df": 7,
+  "t975": 2.365,
+  "mteb_mean": 50.42777777777778,
+  "Sxx": 110.96615555555549,
   "n": 9,
   "mteb_range": [
    41.95,
@@ -22,7 +27,7 @@
    "slope": 0.008387360150051763,
    "intercept": 0.06159962176655662,
    "pearson_r": 0.9501601614665046,
-   "resid_sd": 0.01024948878577728,
+   "resid_sd_ddof1_DEPRECATED": 0.01024948878577728,
    "max_abs_resid": 0.01881576352509501
   },
   "per_model": {
@@ -83,6 +88,11 @@
   }
  },
  "statics_fit_separate_harness": {
+  "sigma_regression": 0.0044903737300436555,
+  "df": 1,
+  "t975": 1.96,
+  "mteb_mean": 33.70666666666667,
+  "Sxx": 10.120066666666682,
   "n": 3,
   "mteb_range": [
    31.11,
@@ -98,7 +108,7 @@
    "slope": 0.009559554943643302,
    "intercept": 0.021812601366263125,
    "pearson_r": 0.9892738287346817,
-   "resid_sd": 0.0031751737145758003,
+   "resid_sd_ddof1_DEPRECATED": 0.0031751737145758003,
    "max_abs_resid": 0.0032190466465965573
   },
   "per_model": {
@@ -133,18 +143,20 @@
    "table_mb_fp16": 62.5,
    "table_mb_int8": 31.3,
    "six_est_affine": 0.5562,
+   "pred_interval_95_halfwidth": 0.0345,
+   "extrapolating_beyond_fit": true,
    "six_est_ratio_mean": 0.5671,
    "six_est_bge_small_anchor_PRIOR_METHOD": 0.5753,
    "extrapolation_beyond_fit_range": 3.83,
    "at_retention": {
     "0.7853": {
      "point": 0.4368,
-     "ci_from_calibration_resid": [
-      0.4207,
-      0.4529
+     "pi95_teacher_only": [
+      0.4097,
+      0.4638
      ],
-     "clears": {
-      "bm25": true,
+     "clears_lower_bound": {
+      "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
      },
@@ -156,11 +168,11 @@
     },
     "0.8200": {
      "point": 0.4561,
-     "ci_from_calibration_resid": [
-      0.4393,
-      0.4729
+     "pi95_teacher_only": [
+      0.4278,
+      0.4843
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -173,11 +185,11 @@
     },
     "0.8500": {
      "point": 0.4728,
-     "ci_from_calibration_resid": [
-      0.4553,
-      0.4902
+     "pi95_teacher_only": [
+      0.4435,
+      0.5021
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -190,11 +202,11 @@
     },
     "0.8800": {
      "point": 0.4895,
-     "ci_from_calibration_resid": [
-      0.4714,
-      0.5075
+     "pi95_teacher_only": [
+      0.4591,
+      0.5198
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": true,
       "tier1_aim": false
@@ -207,14 +219,14 @@
     },
     "0.9100": {
      "point": 0.5061,
-     "ci_from_calibration_resid": [
-      0.4875,
-      0.5248
+     "pi95_teacher_only": [
+      0.4748,
+      0.5375
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": true,
-      "tier1_aim": true
+      "tier1_aim": false
      },
      "point_clears": {
       "bm25": true,
@@ -234,17 +246,19 @@
    "table_mb_fp16": 62.5,
    "table_mb_int8": 31.3,
    "six_est_affine": 0.5473,
+   "pred_interval_95_halfwidth": 0.0329,
+   "extrapolating_beyond_fit": true,
    "six_est_ratio_mean": 0.5569,
    "six_est_bge_small_anchor_PRIOR_METHOD": 0.565,
    "extrapolation_beyond_fit_range": 2.77,
    "at_retention": {
     "0.7853": {
      "point": 0.4298,
-     "ci_from_calibration_resid": [
-      0.4137,
-      0.4459
+     "pi95_teacher_only": [
+      0.4039,
+      0.4557
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
@@ -257,11 +271,11 @@
     },
     "0.8200": {
      "point": 0.4488,
-     "ci_from_calibration_resid": [
-      0.432,
-      0.4656
+     "pi95_teacher_only": [
+      0.4218,
+      0.4758
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -274,11 +288,11 @@
     },
     "0.8500": {
      "point": 0.4652,
-     "ci_from_calibration_resid": [
-      0.4478,
-      0.4826
+     "pi95_teacher_only": [
+      0.4372,
+      0.4932
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -291,13 +305,13 @@
     },
     "0.8800": {
      "point": 0.4816,
-     "ci_from_calibration_resid": [
-      0.4636,
-      0.4997
+     "pi95_teacher_only": [
+      0.4526,
+      0.5106
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
-      "tier2_release": true,
+      "tier2_release": false,
       "tier1_aim": false
      },
      "point_clears": {
@@ -308,11 +322,11 @@
     },
     "0.9100": {
      "point": 0.4981,
-     "ci_from_calibration_resid": [
-      0.4794,
-      0.5167
+     "pi95_teacher_only": [
+      0.4681,
+      0.528
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": true,
       "tier1_aim": false
@@ -335,17 +349,19 @@
    "table_mb_fp16": 62.5,
    "table_mb_int8": 31.3,
    "six_est_affine": 0.5311,
+   "pred_interval_95_halfwidth": 0.0305,
+   "extrapolating_beyond_fit": true,
    "six_est_ratio_mean": 0.5383,
    "six_est_bge_small_anchor_PRIOR_METHOD": 0.5462,
    "extrapolation_beyond_fit_range": 0.84,
    "at_retention": {
     "0.7853": {
      "point": 0.4171,
-     "ci_from_calibration_resid": [
-      0.401,
-      0.4332
+     "pi95_teacher_only": [
+      0.3931,
+      0.4411
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
@@ -358,12 +374,12 @@
     },
     "0.8200": {
      "point": 0.4355,
-     "ci_from_calibration_resid": [
-      0.4187,
-      0.4523
+     "pi95_teacher_only": [
+      0.4105,
+      0.4606
      ],
-     "clears": {
-      "bm25": true,
+     "clears_lower_bound": {
+      "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
      },
@@ -375,11 +391,11 @@
     },
     "0.8500": {
      "point": 0.4515,
-     "ci_from_calibration_resid": [
-      0.434,
-      0.4689
+     "pi95_teacher_only": [
+      0.4255,
+      0.4774
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -392,11 +408,11 @@
     },
     "0.8800": {
      "point": 0.4674,
-     "ci_from_calibration_resid": [
-      0.4494,
-      0.4854
+     "pi95_teacher_only": [
+      0.4405,
+      0.4943
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -409,13 +425,13 @@
     },
     "0.9100": {
      "point": 0.4833,
-     "ci_from_calibration_resid": [
-      0.4647,
-      0.502
+     "pi95_teacher_only": [
+      0.4555,
+      0.5111
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
-      "tier2_release": true,
+      "tier2_release": false,
       "tier1_aim": false
      },
      "point_clears": {
@@ -436,17 +452,19 @@
    "table_mb_fp16": 77.4,
    "table_mb_int8": 38.7,
    "six_est_affine": 0.5257,
+   "pred_interval_95_halfwidth": 0.0299,
+   "extrapolating_beyond_fit": true,
    "six_est_ratio_mean": 0.5321,
    "six_est_bge_small_anchor_PRIOR_METHOD": 0.5398,
    "extrapolation_beyond_fit_range": 0.19,
    "at_retention": {
     "0.7853": {
      "point": 0.4128,
-     "ci_from_calibration_resid": [
-      0.3967,
-      0.4289
+     "pi95_teacher_only": [
+      0.3894,
+      0.4363
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
@@ -459,11 +477,11 @@
     },
     "0.8200": {
      "point": 0.4311,
-     "ci_from_calibration_resid": [
-      0.4142,
-      0.4479
+     "pi95_teacher_only": [
+      0.4066,
+      0.4555
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
@@ -476,11 +494,11 @@
     },
     "0.8500": {
      "point": 0.4468,
-     "ci_from_calibration_resid": [
-      0.4294,
-      0.4642
+     "pi95_teacher_only": [
+      0.4214,
+      0.4722
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -493,11 +511,11 @@
     },
     "0.8800": {
      "point": 0.4626,
-     "ci_from_calibration_resid": [
-      0.4446,
-      0.4806
+     "pi95_teacher_only": [
+      0.4363,
+      0.4889
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -510,13 +528,13 @@
     },
     "0.9100": {
      "point": 0.4784,
-     "ci_from_calibration_resid": [
-      0.4597,
-      0.497
+     "pi95_teacher_only": [
+      0.4512,
+      0.5055
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
-      "tier2_release": true,
+      "tier2_release": false,
       "tier1_aim": false
      },
      "point_clears": {
@@ -537,17 +555,19 @@
    "table_mb_fp16": 46.9,
    "table_mb_int8": 23.4,
    "six_est_affine": 0.5241,
+   "pred_interval_95_halfwidth": 0.0297,
+   "extrapolating_beyond_fit": false,
    "six_est_ratio_mean": 0.5302,
    "six_est_bge_small_anchor_PRIOR_METHOD": 0.538,
    "extrapolation_beyond_fit_range": 0.0,
    "at_retention": {
     "0.7853": {
      "point": 0.4116,
-     "ci_from_calibration_resid": [
-      0.3955,
-      0.4277
+     "pi95_teacher_only": [
+      0.3883,
+      0.4349
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
@@ -560,11 +580,11 @@
     },
     "0.8200": {
      "point": 0.4297,
-     "ci_from_calibration_resid": [
-      0.4129,
-      0.4466
+     "pi95_teacher_only": [
+      0.4054,
+      0.4541
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
@@ -577,11 +597,11 @@
     },
     "0.8500": {
      "point": 0.4455,
-     "ci_from_calibration_resid": [
-      0.428,
-      0.4629
+     "pi95_teacher_only": [
+      0.4202,
+      0.4707
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -594,11 +614,11 @@
     },
     "0.8800": {
      "point": 0.4612,
-     "ci_from_calibration_resid": [
-      0.4432,
-      0.4792
+     "pi95_teacher_only": [
+      0.4351,
+      0.4873
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -611,11 +631,11 @@
     },
     "0.9100": {
      "point": 0.4769,
-     "ci_from_calibration_resid": [
-      0.4583,
-      0.4956
+     "pi95_teacher_only": [
+      0.4499,
+      0.5039
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -638,17 +658,19 @@
    "table_mb_fp16": 62.5,
    "table_mb_int8": 31.3,
    "six_est_affine": 0.5169,
+   "pred_interval_95_halfwidth": 0.0289,
+   "extrapolating_beyond_fit": false,
    "six_est_ratio_mean": 0.5221,
    "six_est_bge_small_anchor_PRIOR_METHOD": 0.5297,
    "extrapolation_beyond_fit_range": -0.85,
    "at_retention": {
     "0.7853": {
      "point": 0.406,
-     "ci_from_calibration_resid": [
-      0.3899,
-      0.4221
+     "pi95_teacher_only": [
+      0.3832,
+      0.4287
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
@@ -661,11 +683,11 @@
     },
     "0.8200": {
      "point": 0.4239,
-     "ci_from_calibration_resid": [
-      0.4071,
-      0.4407
+     "pi95_teacher_only": [
+      0.4002,
+      0.4476
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
@@ -678,12 +700,12 @@
     },
     "0.8500": {
      "point": 0.4394,
-     "ci_from_calibration_resid": [
-      0.422,
-      0.4568
+     "pi95_teacher_only": [
+      0.4148,
+      0.464
      ],
-     "clears": {
-      "bm25": true,
+     "clears_lower_bound": {
+      "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
      },
@@ -695,11 +717,11 @@
     },
     "0.8800": {
      "point": 0.4549,
-     "ci_from_calibration_resid": [
-      0.4369,
-      0.473
+     "pi95_teacher_only": [
+      0.4295,
+      0.4804
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -712,11 +734,11 @@
     },
     "0.9100": {
      "point": 0.4704,
-     "ci_from_calibration_resid": [
-      0.4518,
-      0.4891
+     "pi95_teacher_only": [
+      0.4441,
+      0.4967
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -739,17 +761,19 @@
    "table_mb_fp16": 46.9,
    "table_mb_int8": 23.4,
    "six_est_affine": 0.5153,
+   "pred_interval_95_halfwidth": 0.0288,
+   "extrapolating_beyond_fit": false,
    "six_est_ratio_mean": 0.5201,
    "six_est_bge_small_anchor_PRIOR_METHOD": 0.5277,
    "extrapolation_beyond_fit_range": -1.05,
    "at_retention": {
     "0.7853": {
      "point": 0.4046,
-     "ci_from_calibration_resid": [
-      0.3885,
-      0.4207
+     "pi95_teacher_only": [
+      0.3821,
+      0.4272
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
@@ -762,11 +786,11 @@
     },
     "0.8200": {
      "point": 0.4225,
-     "ci_from_calibration_resid": [
-      0.4057,
-      0.4393
+     "pi95_teacher_only": [
+      0.3989,
+      0.4461
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
@@ -779,12 +803,12 @@
     },
     "0.8500": {
      "point": 0.438,
-     "ci_from_calibration_resid": [
-      0.4206,
-      0.4554
+     "pi95_teacher_only": [
+      0.4135,
+      0.4624
      ],
-     "clears": {
-      "bm25": true,
+     "clears_lower_bound": {
+      "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
      },
@@ -796,11 +820,11 @@
     },
     "0.8800": {
      "point": 0.4534,
-     "ci_from_calibration_resid": [
-      0.4354,
-      0.4715
+     "pi95_teacher_only": [
+      0.4281,
+      0.4788
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -813,11 +837,11 @@
     },
     "0.9100": {
      "point": 0.4689,
-     "ci_from_calibration_resid": [
-      0.4502,
-      0.4876
+     "pi95_teacher_only": [
+      0.4427,
+      0.4951
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -840,17 +864,19 @@
    "table_mb_fp16": 46.9,
    "table_mb_int8": 23.4,
    "six_est_affine": 0.5082,
+   "pred_interval_95_halfwidth": 0.0282,
+   "extrapolating_beyond_fit": false,
    "six_est_ratio_mean": 0.5121,
    "six_est_bge_small_anchor_PRIOR_METHOD": 0.5195,
    "extrapolation_beyond_fit_range": -1.89,
    "at_retention": {
     "0.7853": {
      "point": 0.3991,
-     "ci_from_calibration_resid": [
-      0.383,
-      0.4152
+     "pi95_teacher_only": [
+      0.377,
+      0.4212
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
@@ -863,11 +889,11 @@
     },
     "0.8200": {
      "point": 0.4167,
-     "ci_from_calibration_resid": [
-      0.3999,
-      0.4336
+     "pi95_teacher_only": [
+      0.3936,
+      0.4399
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
@@ -880,11 +906,11 @@
     },
     "0.8500": {
      "point": 0.432,
-     "ci_from_calibration_resid": [
-      0.4146,
-      0.4494
+     "pi95_teacher_only": [
+      0.408,
+      0.4559
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
@@ -897,11 +923,11 @@
     },
     "0.8800": {
      "point": 0.4472,
-     "ci_from_calibration_resid": [
-      0.4292,
-      0.4653
+     "pi95_teacher_only": [
+      0.4224,
+      0.472
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -914,11 +940,11 @@
     },
     "0.9100": {
      "point": 0.4625,
-     "ci_from_calibration_resid": [
-      0.4438,
-      0.4811
+     "pi95_teacher_only": [
+      0.4368,
+      0.4881
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -941,17 +967,19 @@
    "table_mb_fp16": 77.4,
    "table_mb_int8": 38.7,
    "six_est_affine": 0.507,
+   "pred_interval_95_halfwidth": 0.0281,
+   "extrapolating_beyond_fit": false,
    "six_est_ratio_mean": 0.5106,
    "six_est_bge_small_anchor_PRIOR_METHOD": 0.5181,
    "extrapolation_beyond_fit_range": -2.04,
    "at_retention": {
     "0.7853": {
      "point": 0.3981,
-     "ci_from_calibration_resid": [
-      0.382,
-      0.4142
+     "pi95_teacher_only": [
+      0.3761,
+      0.4202
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
@@ -964,11 +992,11 @@
     },
     "0.8200": {
      "point": 0.4157,
-     "ci_from_calibration_resid": [
-      0.3989,
-      0.4325
+     "pi95_teacher_only": [
+      0.3927,
+      0.4388
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
@@ -981,11 +1009,11 @@
     },
     "0.8500": {
      "point": 0.4309,
-     "ci_from_calibration_resid": [
-      0.4135,
-      0.4483
+     "pi95_teacher_only": [
+      0.407,
+      0.4548
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
@@ -998,11 +1026,11 @@
     },
     "0.8800": {
      "point": 0.4461,
-     "ci_from_calibration_resid": [
-      0.4281,
-      0.4642
+     "pi95_teacher_only": [
+      0.4214,
+      0.4709
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
@@ -1015,11 +1043,11 @@
     },
     "0.9100": {
      "point": 0.4613,
-     "ci_from_calibration_resid": [
-      0.4427,
-      0.48
+     "pi95_teacher_only": [
+      0.4358,
+      0.4869
      ],
-     "clears": {
+     "clears_lower_bound": {
       "bm25": true,
       "tier2_release": false,
       "tier1_aim": false

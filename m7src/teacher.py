@@ -40,6 +40,33 @@ def sha_texts(texts):
 
 
 _CACHE = {}
+_DENSE = {}
+
+
+def load_post_dense(spec, device="cuda"):
+    """Load the post-pooling Dense module a Spec declares, or None.
+
+    stella's published pipeline is Transformer -> Pooling(mean) -> Dense_1024 -> normalize. Encoding
+    without that Dense yields a different model from the one its MTEB score describes, so this is
+    not optional polish -- it is loader fidelity, the same failure class as the M6 gate's BLOCKER 1.
+    """
+    if not spec.post_dense:
+        return None
+    key = (spec.repo, spec.revision, spec.post_dense, device)
+    if key not in _DENSE:
+        from huggingface_hub import hf_hub_download
+        from safetensors.torch import load_file
+        cfg = json.loads(Path(hf_hub_download(spec.repo, f"{spec.post_dense}/config.json",
+                                              revision=spec.revision)).read_text())
+        if cfg.get("activation_function", "").rsplit(".", 1)[-1] not in ("Identity",):
+            raise NotImplementedError(f"{spec.name} Dense uses a non-identity activation "
+                                      f"{cfg['activation_function']!r}; add it before encoding")
+        w = load_file(hf_hub_download(spec.repo, f"{spec.post_dense}/model.safetensors",
+                                      revision=spec.revision))
+        W = w["linear.weight"].to(device).float()
+        b = w.get("linear.bias")
+        _DENSE[key] = (W, None if b is None else b.to(device).float())
+    return _DENSE[key]
 
 
 def load_teacher(model_id=TEACHER, revision=TEACHER_REV, dtype=torch.float32, device="cuda"):
@@ -56,8 +83,9 @@ def load_teacher(model_id=TEACHER, revision=TEACHER_REV, dtype=torch.float32, de
 
 
 @torch.no_grad()
-def encode_batch(tok, model, texts, max_length=512, device="cuda", pooling="cls"):
-    """Pool per the encoder's own convention, then L2 normalize. Returned fp32 on CPU."""
+def encode_batch(tok, model, texts, max_length=512, device="cuda", pooling="cls", dense=None):
+    """Pool per the encoder's own convention, apply its post-pooling Dense if it has one, then
+    L2 normalize. Returned fp32 on CPU."""
     b = tok(texts, padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
     h = model(**b).last_hidden_state
     if pooling == "cls":
@@ -67,7 +95,11 @@ def encode_batch(tok, model, texts, max_length=512, device="cuda", pooling="cls"
         v = (h * m).sum(1) / m.sum(1).clamp(min=1e-6)
     else:
         raise ValueError(f"unknown pooling {pooling!r}")
-    return torch.nn.functional.normalize(v.float(), dim=-1).cpu().numpy()
+    v = v.float()
+    if dense is not None:
+        W, bias = dense
+        v = v @ W.T + (0.0 if bias is None else bias)
+    return torch.nn.functional.normalize(v, dim=-1).cpu().numpy()
 
 
 def _order_by_length(tok, texts, max_length):
@@ -82,9 +114,16 @@ def encode(texts, prefix="", max_length=512, batch_tokens=16384, model_id=TEACHE
            revision=TEACHER_REV, dtype=torch.float32, device="cuda", verbose=False):
     """Length-bucketed dynamic batching; returns (N, dim) fp32 normalized in input order."""
     tok, model = load_teacher(model_id, revision, dtype, device)
-    pooling = encoders.by_repo(model_id).pooling
+    spec = encoders.by_repo(model_id)
+    pooling, dense = spec.pooling, load_post_dense(spec, device)
     order, n_tok = _order_by_length(tok, [prefix + t for t in texts], max_length)
-    dim = model.config.hidden_size
+    # The output width is the Dense's out_features when there is one, NOT the backbone's hidden
+    # size. They coincide for stella's square 1024->1024 head, but an MRL head (e.g. 1024->256)
+    # would silently write 256 values into 1024-wide rows.
+    dim = model.config.hidden_size if dense is None else int(dense[0].shape[0])
+    if dim != spec.dim:
+        raise AssertionError(f"{spec.name}: encode width {dim} != Spec.dim {spec.dim}; the "
+                             f"registry and the loaded modules disagree")
     out = np.empty((len(texts), dim), dtype=np.float32)
     i, t0, done = 0, time.time(), 0
     while i < len(order):
@@ -97,7 +136,7 @@ def encode(texts, prefix="", max_length=512, batch_tokens=16384, model_id=TEACHE
             longest, j = L, j + 1
         idx = order[i:j]
         out[idx] = encode_batch(tok, model, [prefix + texts[k] for k in idx], max_length, device,
-                                pooling=pooling)
+                                pooling=pooling, dense=dense)
         done += len(idx)
         if verbose and (done % 20000 < len(idx)):
             print(f"    {done}/{len(texts)} @ {done/(time.time()-t0):.0f} texts/s", flush=True)
@@ -118,7 +157,13 @@ def cache_key(name, prefix, max_length, model_id, revision, corpus_sha, dtype):
                        "revision": revision, "pooling": spec.pooling_key,
                        "corpus_sha256": corpus_sha,
                        "encode_dtype": DT[dtype], "store_dtype": "fp16",
-                       "tokenizer": spec.tokenizer_id}, sort_keys=True)
+                       "tokenizer": spec.tokenizer_id,
+                       # Added CONDITIONALLY so bge-base's blob stays byte-identical and the ~22 GB
+                       # of existing encodes remain valid. post_dense also covers a future MRL
+                       # truncation, since that is a different Dense directory and hence a
+                       # different output dimension -- which is what would otherwise collide.
+                       **({"post_dense": spec.post_dense} if spec.post_dense else {})},
+                      sort_keys=True)
     return f"{name}-{DT[dtype]}-{hashlib.sha256(blob.encode()).hexdigest()[:12]}", blob
 
 

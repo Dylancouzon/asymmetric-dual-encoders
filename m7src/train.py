@@ -510,5 +510,12 @@ def run(cfg: Cfg, log=print):
     (RUNS / f"{cfg.run_id}.json").write_text(json.dumps(
         {"cfg": asdict(cfg), "history": hist, "final_macro": final, "coverage": cov,
          "n_train_pairs": len(q_texts)}, indent=1))
+    # work/ is gitignored, so the collapse evidence the phase-2 screen exists to produce would not
+    # survive a box wipe. Commit the small part: the per-eval curve and its collapse diagnostics.
+    from _paths import REPO
+    (REPO / "results" / f"m7_run_{cfg.run_id}.json").write_text(json.dumps(
+        {"run_id": cfg.run_id, "cfg": asdict(cfg), "final_macro": final, "coverage": cov,
+         "history": [{k: h[k] for k in ("step", "phase", "macro", "collapse") if k in h}
+                     for h in hist]}, indent=1))
     log(f"  [{cfg.run_id}] coverage {json.dumps(cov)}")
     return final, model, hist

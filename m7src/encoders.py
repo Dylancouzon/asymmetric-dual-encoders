@@ -31,12 +31,29 @@ class Spec:
     doc_prefix: str = ""
     trust_remote_code: bool = False
     max_length: int = 512
+    # Sentence-transformers modules applied AFTER pooling and BEFORE L2 normalize. stella's
+    # published pipeline is Transformer -> Pooling(mean) -> Dense_1024 (1024->1024, bias,
+    # identity), per its modules.json. Omitting it encodes a DIFFERENT model from the one whose
+    # MTEB 58.97 justified shortlisting it -- the same class of loader mismatch that was BLOCKER 1
+    # of the M6 gate. None means "pooling output is the embedding".
+    post_dense: str | None = None
     # The identity string that goes into the encode cache key. It must change whenever the token
     # ids would change, and must NOT change for bge-base or existing caches are orphaned.
+    # All five registered candidates ship a BYTE-IDENTICAL vocab.txt (sha256 07eced375cec144d,
+    # 30,522 lines -- stock bert-base-uncased WordPiece), verified 2026-08-26, so they legitimately
+    # share this string. Consequence worth knowing: a teacher swap does NOT change tokenization, so
+    # row indexing, the decontamination fingerprints and the frozen preprocessing rule all survive
+    # it -- only the vectors change.
     tokenizer_id: str = "bert-wordpiece-30522"
-    # Row id used for the degenerate-empty-query fallback. bge/BERT [CLS] is 101; verified
-    # against the tokenizer by test_encoders.py rather than trusted.
+    # Row id used for the degenerate-empty-query fallback. bge/BERT [CLS] is 101.
+    # NOTE: table.py still hardcodes CLS_ID=101 and does NOT read this field yet -- see the
+    # harness section of m7/CODEMAP.md. test_encoders.py checks it against the real tokenizer
+    # only for models whose tokenizer is already cached locally.
     cls_id: int = 101
+    # Rows in the released table = TOKENIZER size, not config.json's vocab_size. gte-large and
+    # stella report 30528 in config.json -- that is the embedding matrix padded to a multiple of 64
+    # for tensor cores, and allocating it would ship 6 dead rows. The shortlist quoted the padded
+    # figure; the artifact is 30,522 x dim for every candidate.
     vocab: int = 30522
     notes: str = ""
 
@@ -56,34 +73,48 @@ REGISTRY = {
         revision="a5beb1e3e68b9ab74eb54cfd186867f64f240e1a",
         dim=768, pooling="cls", query_prefix=BGE_PREFIX),
     "bge-large-en-v1.5": Spec(
-        name="bge-large-en-v1.5", repo="BAAI/bge-large-en-v1.5", revision=None,
+        name="bge-large-en-v1.5", repo="BAAI/bge-large-en-v1.5",
+        revision="d4aa6901d3a41ba39fb536a557fa166f842b0e09",
         dim=1024, pooling="cls", query_prefix=BGE_PREFIX),
     # Alibaba, admissible with justification under CLAUDE.md's relaxed vendor rule.
     # Custom "NewModel" architecture: needs remote code. unpad_inputs and
     # use_memory_efficient_attention both default to false in its config, so plain sdpa works and
     # xformers is an optional accelerator, not a dependency.
     "gte-large-en-v1.5": Spec(
-        name="gte-large-en-v1.5", repo="Alibaba-NLP/gte-large-en-v1.5", revision=None,
+        name="gte-large-en-v1.5", repo="Alibaba-NLP/gte-large-en-v1.5",
+        revision="104333d6af6f97649377c2afbde10a7704870c7b",
         dim=1024, pooling="cls", query_prefix="", trust_remote_code=True,
-        tokenizer_id="bert-wordpiece-30528", vocab=30528,
         notes="no prompt convention; ships fp32"),
     # MEAN pooling, and an instruction-style query prompt. This is the spec that the old
     # CLS-hardcoded teacher.py could not have run correctly.
     "stella-400M-v5": Spec(
-        name="stella-400M-v5", repo="NovaSearch/stella_en_400M_v5", revision=None,
-        dim=1024, pooling="mean", trust_remote_code=True,
+        name="stella-400M-v5", repo="NovaSearch/stella_en_400M_v5",
+        revision="ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+        dim=1024, pooling="mean", trust_remote_code=True, post_dense="2_Dense_1024",
         query_prefix="Instruct: Given a web search query, retrieve relevant passages that "
                      "answer the query.\nQuery: ",
-        tokenizer_id="bert-wordpiece-30528", vocab=30528,
         notes="MRL heads at 256/768/1024+; ArguAna and FiQA2018 are on its recorded training "
               "list, which is 2 of our 6 eval datasets -- must be labelled if used"),
     "arctic-embed-l": Spec(
-        name="arctic-embed-l", repo="Snowflake/snowflake-arctic-embed-l", revision=None,
+        name="arctic-embed-l", repo="Snowflake/snowflake-arctic-embed-l",
+        revision="d8fb21ca8d905d2832ee8b96c894d3298964346b",
         dim=1024, pooling="cls", query_prefix=BGE_PREFIX,
         notes="vendor tier justify-max; kept for completeness, dominated on quality"),
 }
 
 DEFAULT = "bge-base-en-v1.5"
+
+
+def _assert_pinned():
+    """Every Spec must carry a revision. An unpinned repo makes the encode cache key ambiguous --
+    a silent upstream bump would reuse stale vectors under the same key -- and would have the probe
+    that decides our most expensive choice run unpinned remote code."""
+    loose = [n for n, s in REGISTRY.items() if not s.revision]
+    if loose:
+        raise AssertionError(f"unpinned encoder revisions: {loose}")
+
+
+_assert_pinned()
 
 
 def active():

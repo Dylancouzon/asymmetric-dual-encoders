@@ -37,6 +37,21 @@ CONTRASTIVE_KILL_BAR = 0.4548
 #   (<= 1e-4) WITH warmup and mined hard negatives, and that arm has failed the bar.
 KILL_REQUIRES = {"lr_at_most": 1e-4, "warmup": True, "hard_negatives": True}
 
+
+def may_invoke_contrastive_kill(runs):
+    """Enforce KILL_REQUIRES rather than trusting a comment. `runs` maps run_id -> Cfg-like dict.
+
+    Returns (allowed, reason). A future session must call this before recording a kill; the review
+    that added it found the criterion was documented and enforced nowhere.
+    """
+    ok = [r for r, c in runs.items()
+          if c.get("lr", 1) <= KILL_REQUIRES["lr_at_most"]
+          and c.get("warmup_steps", 0) > 0 and c.get("hard_neg_k", 0) > 0]
+    if not ok:
+        return False, ("no arm has run at lr <= 1e-4 WITH warmup and mined hard negatives, so the "
+                       "avenue is not yet diagnosed and the kill criterion may not be invoked")
+    return True, f"qualifying arms: {sorted(ok)}"
+
 ALL_SOURCES = ("hotpotqa-train", "fever-train", "squad-train", "esci-us", "mrtydi-en")
 NO_FEVER = tuple(s for s in ALL_SOURCES if s != "fever-train")
 
