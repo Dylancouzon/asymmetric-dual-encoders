@@ -173,6 +173,30 @@ def phase2_screen_ext(base):
     return grid("p2x", base, {"rn-3e4": arm(3e-4), "rn-1e3": arm(1e-3), "rn-3e3": arm(3e-3)})
 
 
+def stella_confirm(base):
+    """ONE confirmation of the phase-2 result under the stella teacher, not a re-sweep: the
+    5e-5..3e-4 band and hard_neg_k=0 were established on bge-base from a fixed B checkpoint;
+    three arms + a zero-step pin check that the finding transfers. Pre-registered in LEDGER
+    (2026-08-26): eval every 500 steps, best-eval selection uniformly across arms, and the winner
+    is re-run at its best step so the selected step count is part of the frozen config.
+    """
+    b = one("s1-objB", base, objective="B", steps_b=8000, steps_a=0)
+    if b is None:
+        return None
+
+    def arm(lr):
+        return {"objective": "A", "init": "run:s1-objB", "steps_b": 0, "steps_a": 2000,
+                "eval_every": 500, "hard_neg_k": 0, "lr": lr, "lr_weights": lr * 10,
+                "warmup_steps": 200, "lr_schedule": "warmup_linear"}
+
+    return grid("s2", base, {
+        "start":  {**arm(5e-5), "steps_a": 0, "eval_every": 1},   # pins the s1-objB point in-harness
+        "rn-5e5": arm(5e-5),
+        "rn-1e4": arm(1e-4),
+        "rn-3e4": arm(3e-4),
+    })
+
+
 def phase2_negatives(base):
     """The mandated negatives ablation: BM25-mined vs teacher-mined vs mixed, against the
     random-bank baseline. Objective A collapsed with random-only negatives (p1-objA declined
