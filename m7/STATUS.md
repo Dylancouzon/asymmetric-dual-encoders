@@ -1,72 +1,77 @@
 # M7 status
 
-**Stage:** data pipeline complete and reviewed → Stage 0 (representation compatibility) next
+**Stage:** Stage 0 complete · **go/no-go gate = GO** · next is phase 2 (negatives)
 **Updated:** 2026-08-26
 
-## Machine
+## Headline
 
-RTX 3080, **10 GB VRAM** (not 12) · 25 GB RAM (peak budget 18 GB) · 16 cores · ext4 · nvcc 12.6
-→ torch 2.8.0+cu126. Teacher **BAAI/bge-base-en-v1.5 @ a5beb1e3e68b9ab74eb54cfd186867f64f240e1a**.
-Encode 891 texts/s fp16 (2.4× fp32, cosine-identical). Qdrant v1.19 server binary + `qdrant-edge-py`
-0.8.0 both available, so the ANN sweep and the real Edge shard demo can both run.
+A **pure-distillation lookup table, with no contrastive training at all**, retains **78.5%** of
+its 109M-parameter bge-base teacher and beats BM25 by **+2.70 nDCG** on the dev suite at zero
+query compute, shipping as a **23.4 MB int8** artifact whose quantisation is measurably free.
+The mandate's central structural question — whether a *frozen, off-the-shelf* document space is
+additively predictable from query tokens the way LightRetriever's co-trained one is — is answered
+yes, first by a closed-form solve and then reproduced by gradient training.
 
-## Where things stand
+## Gate: GO (`results/m7_gate_p1-objB.json`)
 
-**Green.** Harness re-validated on this box (bge-small ArguAna 0.6038, SciFact 0.7127, bm25 FiQA
-0.2532 — all inside 0.003). All six datasets hash-match the frozen manifest. Conformance suite
-30/30 including the real save→load→encode path. Dev + untouched-final assets pinned into the
-manifest. Frozen doc-vector pool: 6,169,142 × 768 fp16 = 9.48 GB.
+| condition | result |
+|---|---|
+| G1 Stage-0 table > potion (0.3801) | **PASS** d=+0.0994 CI=[0.0910,0.1078] p<1e-4 |
+| G2 capacity probe > BM25 | **PASS** d=+0.5917 — trivially; see the caveat in LEDGER |
+| G3 candidate > BM25 (0.4525) | **PASS** d=+0.0270 CI=[0.0188,0.0353] p<1e-4 |
+| G4 int8 equivalence (bar 0.005) | **PASS** upper=0.00053 |
 
-**Training mix, after all decontamination passes: 349,934 pairs** (hotpotqa · fever · squad ·
-esci · mrtydi) plus 221,395 query-text-only rows for objective B. Full provenance, rights and
-counts in `results/m7_field_table.md`.
+Dev macros, text-backed 4 components: candidate fp16/int8 **0.4795** · BM25 0.4525 ·
+potion 0.3801 · teacher ceiling 0.6106.
 
-## Dev reference rows (`work/devres/refs.json`)
+## Objective grid (dev proxy macro-3)
 
-| system | nq-250k | hotpotqa | cqa-prog | cqa-phys | macro-4 |
-|---|---|---|---|---|---|
-| bge-base symmetric, prefixed — **teacher ceiling** | 0.8198 | 0.7258 | 0.4240 | 0.4727 | **0.6106** |
-| bge-base symmetric, bare | 0.7982 | 0.7182 | 0.4020 | 0.4608 | 0.5948 |
-| **bm25 — the gate bar (G3)** | 0.5804 | 0.5851 | 0.2975 | 0.3471 | **0.4525** |
-| **potion-retrieval-32M — the Stage-0 bar (G1)** | 0.5479 | 0.4630 | 0.2261 | 0.2835 | **0.3801** |
+| config | result |
+|---|---|
+| closed-form flat ridge (lambda=1e-2) | 0.4542 — provable optimum of flat MSE distillation |
+| **p1-objB** distillation 8k | **0.4548** ← best; the gated candidate |
+| p1-objC B(4k)→A(8k) | 0.3721 — the contrastive phase cost 7.3 points |
+| p1-objA contrastive 12k | 0.3248 — monotone decline from 0.3532 |
 
-The table needs ~74% teacher retention to clear BM25 on dev.
+**Contrastive as configured is destructive, from two different initialisations.** The stated
+mechanism ("random negatives trivially separable") does not survive the author's own arithmetic
+(loss ~3.4 at tau=0.02, not ~0) and is being re-diagnosed by measurement, not ablation —
+`m7src/diag_scores.py` measures score geometry, softmax mass concentration per temperature, and
+what fraction of the *hardest* negatives the `fn_margin` filter removes. **Run it first next
+session.**
 
-## Three findings that shape the report
+## Findings that constrain the report
 
-1. **The untouched-final partition has no clean member.** Climate-FEVER was dropped (no
-   affirmative licence at any primary source). BEIR FEVER shares its corpus with fever-train by
-   construction. And DBpedia-entity — the intended clean probe — turns out to have **9.32%**
-   document overlap with our training positives, because DBpedia abstracts are Wikipedia lead
-   paragraphs and so are HotpotQA's documents. Both rows get their overlap rate attached; neither
-   is presented as an uncontaminated generalisation number.
-2. **Dev cannot validate long queries.** Held-out query length is p50 = 13 WordPiece tokens,
-   p90 = 24; only 55 of 7,325 reach ≥64. ArguAna's are ~250. So the ArguAna row is an
-   extrapolation, the learned-weight "long-query hypothesis" is untestable here, and no approved
-   source fixes it (args.me is ArguAna's own source family).
-3. **Document-side domain transfer is unmitigable, as pre-registered.** Every in-domain candidate
-   for the six is on the contamination map. The one available lever is vocabulary-coverage
-   distillation on pseudo-queries (objective B needs no labels), built and labelled as a
-   vocabulary mitigation only.
+1. **The untouched-final partition has no clean member.** Climate-FEVER dropped (no affirmative
+   licence at any primary source); BEIR FEVER shares its corpus with fever-train by construction
+   (11.3% TRAIN-positive overlap); DBpedia-entity — the intended clean probe — has **9.32%**.
+   Structural: DBpedia abstracts and HotpotQA documents are both Wikipedia lead paragraphs.
+2. **Dev cannot validate long queries.** Held-out length p50=13 WordPiece tokens, p90=24; only
+   **55** of 7,325 reach the mandated >=64. ArguAna's are ~250. The ArguAna row will be an
+   extrapolation and the learned-weight "long-query hypothesis" is untestable here.
+3. **Learned per-token weights buy +0.0006** over the flat closed form (no CI attached yet).
+4. **FiQA is the six-set row most at risk**: the ridge table retains only 64% of the teacher on
+   cqadup-programmers vs 89% on nq-250k, and StackExchange-style retrieval is the nearest dev
+   analogue to FiQA. FiQA is also where BM25 is weakest, so dense and fusion pull opposite ways.
+5. **A mandate premise is wrong here.** "Frozen doc vectors make very large negative pools nearly
+   free — exploit that first": scale without hardness wasted the contrastive objective.
 
-## Running
+## Not a crash
 
-`run_stage0c.sh` step 4/5 — the two R3 sweeps the first decontamination run missed (nq-250k dev,
-FEVER untouched). Then dev reference rows for the held-out components.
+The 2026-08-26 reboot was **Windows Update** (Event 1074, TrustedInstaller, "Operating System:
+Upgrade", 05:52), a clean shutdown with no Event 41/6008/bugcheck. Gate finished 03:03; box idle
+~3 h before the reboot. Nothing lost. **Host action for Dylan: stop Windows Update rebooting
+mid-run** (active hours / pause / "no auto-restart with logged on users").
 
-## Next
+## Next, in order
 
-`run_stage0b.sh`: ridge probe → capacity probe → objective grid A/B/C → go/no-go gate.
+1. `m7src/diag_scores.py` — identify the contrastive failure by measurement.
+2. `m7src/ridge_full_eval.py` — never ran; gives the closed-form table a full-suite,
+   CI'd number comparable to the gate bars. Cheap (no solve).
+3. Phase 2 negatives ablation (`program.phase2_negatives`) — load-bearing, not tuning.
+4. Phases 3-5, fusion selection on dev, freeze (`m7src/freeze.py` → `m7/FREEZE.json`), final run.
+5. Re-run the novelty freshness check before the report ships (mandate requirement).
 
-## Open items for Dylan
+## Open for Dylan
 
-Nothing blocking. The HF release go remains yours. WSL holds ~25 GB of the host's 32 GB, which is
-why one concurrent-job OOM took the whole distro down; jobs are strictly sequential now.
-
-## Reviews run
-
-Fable adversarial review of the protocol code, **before any candidate number existed** —
-3 BLOCKER / 6 MAJOR / 10 MINOR, all blockers and majors actioned. Detail in `LEDGER.md`. The
-blockers were: tier decisions pairing against a re-run BM25 instead of the frozen vectors; the
-freeze pinning code but not the table bytes, preprocessing or fusion; and a silent
-undecontaminated path in objective B (fixing it removed 368 overlapping queries).
+Nothing blocking. HF release go stays yours. Host-side Windows Update setting above.
