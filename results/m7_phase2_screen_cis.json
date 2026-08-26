@@ -710,5 +710,6 @@
    },
    "resolved": true
   }
- }
+ },
+ "_stats_note": "The 'p' fields here are pre-B3 bootstrap tail masses, NOT p-values, and the holm_over_vs_start block is therefore not a valid FWER control (review #2 MINOR 23). The resolved/CI fields stand. Exploratory only; recompute via scripts/screen_cis.py (sign-flip) if these arms' significance is ever load-bearing."
 }

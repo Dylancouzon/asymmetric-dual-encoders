@@ -33,9 +33,22 @@ decontamination — all logged in `LEDGER.md` before any number they affect. Det
 3. **Phase-2 confirm on stella:** A-only arms from s1-objB, lr {5e-5, 1e-4, 3e-4}, `hard_neg_k=0`,
    `eval_every=500`; **best-eval selection, re-run winner at its best step** (pre-registered in
    LEDGER). One confirmation, not a re-sweep.
-4. **Fusion re-selection** with the fixed builder on the final stella checkpoint, then freeze.
-5. Codex 5.6-sol adversarial review of today's work: launched this session (read-only, no compute);
-   findings will be actioned + ledgered.
+4. **Capacity levers, BEFORE freeze (review #2 MAJOR 24 — the confirmed contrastive gain is
+   ~0.011 against a ~0.047 bar gap; only capacity can bridge it):** n-gram rows (top-K frequent
+   bigrams as extra table rows, closed-form-distilled first), the pseudo-query coverage phase
+   (`program.py`, unused), and the reopened cheap doc2query test (EXPLORED.md). Run in that order,
+   kill on evidence, log every arm.
+5. **Mandatory ablations before freeze** (`instructions-m7.md`; review #2 BLOCKER 7): three inits,
+   two prefix variants, flat vs learned weights, int8 (release shape) — then **capacity probe
+   re-run under stella** (G2 refuses the bge probe now), fusion re-selection (grid now includes
+   convex0), released-table ANN sweep + costs, freeze, single final run.
+6. Codex review #2 landed (24 findings, `research/m7-codex-review-2026-08-26b.md`): every
+   BLOCKER + the mechanical MAJORs fixed same-day (bank OOB crash, release path wired into
+   gate/freeze, probe-teacher guard, containment decontam, tier rule = Holm(sign-flip) AND CI,
+   clean-4 in the final scorer, retry guard). Evidence added: significance cross-check
+   (10/10 M4-era CIs reproduced from perquery.json — pairing verified for ALL systems), weak-null
+   sign-flip simulation. Judgement items (teacher family-exposure read, capacity levers) are in
+   the run order above.
 
 ## Standing constraints
 
