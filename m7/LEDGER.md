@@ -332,3 +332,26 @@ Three qualifications the report must carry:
    approximation is weakest. That makes FiQA the six-set row most at risk — and FiQA is also
    where BM25 is unusually weak (0.2532), so the dense and fusion stories pull opposite ways
    there. Flagged now, before any six-set number exists.
+
+## Stage 0.2 — capacity probe: passes, but the bar never binds
+
+First component: **nq-250k 0.9999** against the BM25 dev row of 0.5804.
+
+That is total memorisation, and it should be read as such. The table has 23.4M parameters and the
+component has 3,452 dev queries; each query carries ~13 distinctive tokens, so encoding the
+query→positive mapping row by row is trivially within capacity. The probe therefore measures
+*capacity*, not representation compatibility, and its pre-registered bar was never going to bind
+for an architecture of this size.
+
+This is not a criticism of the mandate's design — the probe is explicitly a **falsification**
+test ("if even unlimited overfitting on dev cannot beat BM25 on dev, the frozen-tower tax is
+structural → negative-result path"), so it is meant to be easy to pass and informative only when
+it fails. A near-perfect score is what a healthy architecture looks like here.
+
+**Consequence for the report: the load-bearing Stage-0 evidence is the ridge probe, not this.**
+The ridge table generalises — fitted on 571,329 TRAIN queries, evaluated on held-out dev
+components — and clears BM25 by 4.6 points at 79% teacher retention. The capacity probe clears
+BM25 by 42 points on queries it was trained on. Only the first is evidence about the
+architecture's usefulness; the second is evidence only against the specific hypothesis that the
+frozen tower makes good retrieval *inexpressible*. Both are reported, labelled that way, and the
+probe keeps its "diagnostic, gate-ineligible for tier decisions" framing.
