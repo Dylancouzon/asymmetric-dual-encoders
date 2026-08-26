@@ -226,17 +226,24 @@ Two results that narrow the search (proved, not researched):
 **Fable, pre-results, protocol code only** (2026-08-26, deliberately before any candidate number
 existed): 3 BLOCKER / 6 MAJOR / 10 MINOR, all blockers and majors actioned.
 
-| finding | fix |
-|---|---|
-| B1 tier decisions paired against a **re-run** BM25 instead of the frozen per-query vectors | comparator side is always `boot.from_perquery_json`; aborts if a frozen vector is missing |
-| B2 freeze pinned code but not the table bytes, preprocessing, or fusion (table lives under gitignored `work/`) | `m7/FREEZE.json` + `m7src/freeze.py` pin table sha256, metadata hash, preproc fingerprint, fusion spec, manifest hashes; `final_run.py` takes no recipe argument |
-| B3 `decontam_querytext.py` couldn't run, and `mix.query_texts` **silently fell back to unfiltered text** | ported to the shared `decontam.query_hits`; both it and `pseudoq` now raise. Recovered the 213+155 removals |
-| M1 `--infra-retry` laundered anything; its precondition was unsatisfiable | parses the prior `FINAL-RUN-BEGIN` marker, requires same table hash and a diff touching only the ledger |
-| M2 gate silently used 3 of 6 dev components (dropping HotpotQA, where BM25 is strongest) | defaults to `dev_eval.dev_components()`, asserts reference coverage, prints the text-backed subset |
-| M3 R3 never swept nq-250k or FEVER | both added; `decontam_r3_extra.py` produced them without repeating the 30-min run |
-| M4 `BENCH_DATASETS` could silently redefine "the six" | `final_run` asserts the list equals the six |
-| M5 fallback documented as "the [CLS] row" but used `rows[0]` = **[PAD]**, and the test compared it to itself | explicit `CLS_ID=101`, non-circular assertion, real round-trip test (was zero coverage) |
-| M6 fusion selected at depth 100, applied at depth 1000 | one `fusion.DEPTH=1000` for both |
+B1 tier decisions paired against a **re-run** BM25 instead of the frozen vectors · B2 freeze
+pinned code but not the table bytes / preprocessing / fusion · B3 `decontam_querytext` couldn't
+run and `mix.query_texts` **silently fell back to unfiltered text** (fixing it recovered 368
+overlapping queries) · M1 `--infra-retry` laundered anything and its precondition was
+unsatisfiable · M2 gate silently used 3 of 6 dev components · M3 R3 never swept nq-250k or FEVER ·
+M4 `BENCH_DATASETS` could redefine "the six" · M5 the degenerate-query fallback used `rows[0]` =
+**[PAD]** while documenting "[CLS]", and its test compared the fallback to itself · M6 fusion
+selected at depth 100, applied at depth 1000. All fixed; see `git log` and the modules.
+
+**Fable, post-results, results + plan** (2026-08-26): 1 BLOCKER / 6 MAJOR / 4 MINOR.
+BLOCKER — the GO headline omitted that the win is one component wide (corrected above).
+MAJOR — only the *sampled* positive was masked from negatives (ESCI averages ~13.5/query, and the
+`fn_margin=0` arm would have confounded its own reading); the fn-mask rate was never logged, so the
+leading collapse suspect ran unobserved all grid; objective C's regulariser anchored to the teacher
+init rather than the B checkpoint; phase 2's arms all inherited the suspect tau/lr/fn_margin;
+"two independent ways" was one estimator family with two optimizers; two remedies dismissed too
+fast (see EXPLORED). All actioned. Also flagged: `train_cos` is an in-sample residual and lost its
+qualifier in prose; the +0.0006 learned-weights claim has no CI and is confounded.
 
 Verified sound by that review: the paired bootstrap (genuinely paired, within-dataset resampling,
 correct one-sided inversion), Holm step-down, `upper_bound_one_sided`'s tail and argument order,
