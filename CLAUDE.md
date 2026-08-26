@@ -97,6 +97,27 @@ Corollary: a pre-registered kill criterion (e.g. the phase-2 contrastive bar) ex
 *grinding a diagnosed dead end*, not to license abandoning an undiagnosed one. Kill the avenue
 after you understand why it failed, never before.
 
+### Past decisions are revisitable (Dylan, 2026-08-26)
+
+**"If we need to revisit any past decisions to make this better, I'm open for it. Achieving our
+goal supersedes anything else."** So do not treat an earlier choice as settled just because it is
+written down — including choices in `instructions-m7.md` and in the decision log below. Anything
+in this list is fair game to reopen with evidence and Dylan's sign-off: the teacher, the
+architecture, the objective, the data mix, the tier definitions and their comparators, the
+milestone scope, the release target, and even structural premises like "frozen off-the-shelf
+document tower" or "no transformer at query time" if a better system lies the other side of them.
+Bring the arithmetic and the trade-off, not just the idea.
+
+**The one class of exception, and why it is not an exception to the goal.** The evaluation
+protocol — partitions, decontamination, the frozen comparator vectors, the single final run,
+pre-registered statistics — exists to make a good number *believable*. Relaxing it after seeing
+results does not achieve the goal, it destroys the thing the goal is for: an unbelievable 0.50 is
+worth less than a defensible 0.46. So protocol changes are allowed, but only **before** the
+numbers they would affect are observed, and only written down with the reasoning. Never
+retroactively, never silently. Same rule for the licensing and vendor constraints: they are
+commercial reality, so reopening them is Dylan's call and needs an explicit answer, not an
+inference.
+
 ## Verification gates (Dylan, 2026-08-24)
 
 Results dictate Qdrant engineering decisions: correct, not decimal-precise; blind spots stated openly.
