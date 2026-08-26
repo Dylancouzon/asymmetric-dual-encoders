@@ -215,7 +215,8 @@ Results dictate Qdrant engineering decisions: correct, not decimal-precise; blin
   `results/m7_learnability_report.json`. The entry below records what was decided and why, and is
   kept because the failure mode — selecting a teacher on the tower instead of on the table — is the
   lesson.
-- **Teacher for M7 is `Snowflake/snowflake-arctic-embed-l` (Dylan, 2026-08-26).** Chosen on
+- **[SUPERSEDED THE SAME DAY — see the entry above; the teacher is stella_en_400M_v5.]**
+  **Teacher for M7 was `Snowflake/snowflake-arctic-embed-l` (Dylan, 2026-08-26).** Chosen on
   measurement, not projection: best of five candidates on the two CQADupStack dev components
   (+0.0447 [0.0339, 0.0557] over bge-base; arctic > stella +0.0125 [0.0008, 0.0241] raw, which
   would NOT survive multiplicity over the ten pairs, so the top is arctic ~= stella), Apache-2.0,

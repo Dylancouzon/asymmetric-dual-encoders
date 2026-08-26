@@ -65,10 +65,18 @@ def guard(freeze_hash, infra_retry, branch, fz):
     # same shell would silently redefine "the six" and the macro computed over it.
     if list(DATASETS) != SIX:
         problems.append(f"DATASETS is {list(DATASETS)}, not the six (check BENCH_DATASETS)")
-    if sh("git", "status", "--porcelain"):
+    # The scorer itself appends to the ledger and the access trail, so a crashed attempt leaves
+    # those two files changed. An infra retry must tolerate exactly that and nothing else
+    # (review #2 MAJOR 20: the old guard could never pass after any post-BEGIN crash).
+    ALLOWED_DRIFT = {"m7/LEDGER.md", "m7/SIX_ACCESS.log"}
+    dirty = [l[3:].strip() for l in sh("git", "status", "--porcelain").splitlines() if l]
+    stray_dirty = [d for d in dirty if d not in ALLOWED_DRIFT]
+    if stray_dirty:
+        problems.append(f"working tree is not clean beyond the scorer's own files: {stray_dirty}")
+    if dirty and not infra_retry:
         problems.append("working tree is not clean")
     head = sh("git", "rev-parse", "HEAD")
-    if head != freeze_hash:
+    if head != freeze_hash and not infra_retry:
         problems.append(f"HEAD {head[:12]} != freeze commit {freeze_hash[:12]}")
     remote = sh("git", "ls-remote", "origin", f"refs/heads/{branch}").split("\t")[0]
     if remote != freeze_hash:
@@ -87,7 +95,7 @@ def guard(freeze_hash, infra_retry, branch, fz):
                 problems.append("--infra-retry with a different table than the aborted run")
             # only the ledger may have changed since the aborted run's freeze commit
             changed = [l for l in sh("git", "diff", "--name-only", f"{pf}..HEAD").splitlines() if l]
-            stray = [c for c in changed if c != "m7/LEDGER.md"]
+            stray = [c for c in changed if c not in ALLOWED_DRIFT]
             if stray:
                 problems.append("--infra-retry is for infrastructure only, but these files changed "
                                 f"since the aborted run's freeze commit: {stray}. A code change "
@@ -203,13 +211,35 @@ def main():
         conf[name] = r
         pvals[name] = t["p"]
     decisions = boot.holm(pvals, alpha=ALPHA)
+    # Tier rule (pre-registered, review #2 BLOCKER 5 + MAJOR 8): a tier win requires BOTH the
+    # Holm-corrected sign-flip rejection AND the paired-bootstrap CI resolved above zero. The
+    # mandate's tier text is written in CIs; the sign-flip carries the multiplicity control; the
+    # conjunction satisfies both and is conservative under either's failure mode.
+    for name in CONFIRMATORY:
+        h = decisions[name]
+        h["reject_holm_signflip"] = h["reject"]
+        h["ci_resolved"] = bool(conf[name]["ci95"][0] > 0)
+        h["reject"] = bool(h["reject_holm_signflip"] and h["ci_resolved"])
 
-    print("\n=== confirmatory (one-sided, Holm, family alpha=0.025) ===")
+    print("\n=== confirmatory (one-sided; tier = Holm(sign-flip) AND CI>0, alpha=0.025) ===")
     for name in CONFIRMATORY:
         d, h = conf[name], decisions[name]
         print(f"  {'REJECT H0' if h['reject'] else 'not resolved'}  {name}: d={d['delta']:+.4f} "
               f"CI={d['ci95']} p={d['signflip']['p_str']} (sign-flip) "
-              f"thr={h['threshold']:.4f}")
+              f"thr={h['threshold']:.4f} ci_resolved={h['ci_resolved']}")
+
+    # Pre-registered clean-4 robustness (teacher-exposure restriction): same comparisons on the
+    # four datasets with no disclosed teacher benchmark overlap. Labeled, never a tier decision.
+    CLEAN4 = {"scifact", "nfcorpus", "scidocs", "trec-covid"}
+    robustness = {}
+    for name, (a_name, b_name) in CONFIRMATORY.items():
+        A4 = {ds: v for ds, v in by_sys[a_name].items() if ds in CLEAN4}
+        B4 = boot.from_perquery_json(pq, b_name, CLEAN4)
+        rr = boot.paired(A4, B4, alternative="greater")
+        rr["signflip"] = boot.signflip(A4, B4, alternative="greater", strict=True)
+        robustness[name] = rr
+        print(f"  [clean-4 robustness] {name}: d={rr['delta']:+.4f} CI={rr['ci95']} "
+              f"p={rr['signflip']['p_str']}")
 
     print("\n=== untouched-final (scored after the six; no recipe change after this point) ===")
     unt = {ds: score_set(ds, "untouched", table_path, pre, spec) for ds in UNTOUCHED}
@@ -222,6 +252,9 @@ def main():
             "untouched_final": {ds: {s: {q: round(x, 6) for q, x in v.items()}
                                      for s, v in unt[ds].items()} for ds in UNTOUCHED},
             "confirmatory": conf, "holm": decisions, "alpha": ALPHA,
+            "clean4_robustness": {"_note": "pre-registered exposure-restricted robustness "
+                                  "(no disclosed teacher benchmark overlap); NOT a tier decision",
+                                  **robustness},
             "seconds": round(time.time() - t0, 1)}
     (REPO / "results" / "m7_final_run.json").write_text(json.dumps(blob, indent=1))
     tiers = [k for k, v in decisions.items() if v["reject"]]

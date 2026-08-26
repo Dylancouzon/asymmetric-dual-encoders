@@ -75,10 +75,11 @@ def signflip(a, b, R=100_000, seed=SEED, alternative="greater", strict=True):
     else:
         p = (1 + int((np.abs(t) >= abs(t_obs)).sum())) / (1 + R)
     return {"delta": round(t_obs, 4), "p": float(p),
-            "p_str": f"<{1/(1+R):.1e}" if p == 1 / (1 + R) else f"{p:.5f}",
+            "p_str": (f"{p:.2e} (MC floor 1/(R+1))" if p == 1 / (1 + R) else f"{p:.5f}"),
             "R": R, "seed": seed, "alternative": alternative,
             "method": "paired sign-flip randomization, macro-structured",
-            "per_dataset_n": {ds: int(v.size) for ds, v in d.items()}}
+            "per_dataset_n": {ds: int(v.size) for ds, v in d.items()},
+            "per_dataset_nonzero": {ds: int((v != 0).sum()) for ds, v in d.items()}}
 
 
 def paired(a, b, B=B, seed=SEED, alternative="two-sided"):

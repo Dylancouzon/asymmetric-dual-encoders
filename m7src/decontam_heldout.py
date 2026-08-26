@@ -12,7 +12,7 @@ import numpy as np
 
 import heldout
 from _paths import REPO, WORK
-from decontam import OUT, all_grams, exact_u64
+from decontam import OUT, contains_short, exact_u64, norm_words, query_grams, short_whole_index
 
 prot = []
 for c in heldout.COMPONENTS:
@@ -27,8 +27,10 @@ if not prot:
     raise SystemExit(0)
 
 q_ex = set(int(exact_u64(q)) for q in prot)
-q_gram = np.unique(np.concatenate([all_grams(q) for q in prot]))
-print(f"index: {len(q_ex):,} exact, {q_gram.size:,} 8-grams")
+q_gram = np.unique(np.concatenate([query_grams(q) for q in prot]))
+q_whole = short_whole_index(prot)
+print(f"index: {len(q_ex):,} exact, {q_gram.size:,} grams, "
+      f"{sum(a.size for a in q_whole.values()):,} short whole-hashes")
 
 
 def shares(g):
@@ -50,7 +52,8 @@ for src, qids in kept.items():
         q = text_of.get((src, qid))
         if q is None:
             continue
-        if int(exact_u64(q)) in q_ex or shares(all_grams(q)):
+        if (int(exact_u64(q)) in q_ex or shares(query_grams(q))
+                or contains_short(norm_words(q), q_whole)):
             removed[src] = removed.get(src, 0) + 1
         else:
             keep.append(qid)

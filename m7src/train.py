@@ -93,10 +93,17 @@ def build_arrays(cfg, index):
     for p in pairs:
         by_src.setdefault(p[0], []).append(p)
     _, _bset, _ = banned_rows()
+    n_banned_pos = 0
     for src in srcs:
         st = store_of[src]
         for _, qid, query, posd, hneg in by_src[src]:
             ps = [j for j in (index.get(st, d) for d in posd) if j is not None]
+            # review #2 MAJOR 10: a banned row must not enter the loss as a POSITIVE either --
+            # dropping the row (and the pair, if nothing remains) extends R2 to the new classes.
+            kept_ps = [j for j in ps if j not in _bset]
+            if len(kept_ps) < len(ps):
+                n_banned_pos += len(ps) - len(kept_ps)
+            ps = kept_ps
             if not ps:
                 continue
             q_texts.append(query)
@@ -106,6 +113,8 @@ def build_arrays(cfg, index):
                           if cfg.use_provided_hardneg else [])
             src_id.append(sid[src])
         index.drop(st)
+    if n_banned_pos:
+        print(f"  build_arrays: dropped {n_banned_pos} banned positives (B2 mask)", flush=True)
     return q_texts, pos_idx, hn_idx, np.array(src_id, dtype=np.int32), srcs
 
 
@@ -122,14 +131,27 @@ def banned_rows():
         p = WORK / "decontam" / "banned_pool_rows.npy"
         if not p.exists():
             raise FileNotFoundError(f"{p} missing -- run m7src/decontam_pool.py first (Codex B2)")
+        mp = p.with_suffix(".meta.json")
+        if not mp.exists():
+            raise FileNotFoundError(f"{mp} missing -- the mask must carry the pool identity it "
+                                    "was computed against (review #2 MAJOR 11)")
+        import json as _json
+        pool_meta = _json.loads((WORK / "pool" / "meta.json").read_text())
+        mask_meta = _json.loads(mp.read_text())
+        if mask_meta["pool_id_sha256"] != pool_meta["id_sha256"]:
+            raise AssertionError("banned_pool_rows was computed against a different pool "
+                                 "(id_sha256 mismatch) -- re-run decontam_pool.py")
         arr = np.load(p)
         _BANNED = (arr, set(arr.tolist()), _h.sha256(arr.tobytes()).hexdigest()[:8])
     return _BANNED
 
 
-def clean_fallback_row(bset, start=0):
+def clean_fallback_row(bset, start=0, also_avoid=()):
+    """First row from `start` that is neither banned nor in `also_avoid` (a query's own
+    positives -- review #2 MAJOR 12: a fallback that only dodges the ban can hand a query its
+    positive back as a hard negative)."""
     r = start
-    while r in bset:
+    while r in bset or r in also_avoid:
         r += 1
     return r
 
@@ -144,7 +166,9 @@ def mine_bm25_negatives(name, q_texts, src_of, store_of, index, k, exclude, bann
     """
     import hashlib as _h
     _, _bset, _bdig = banned_rows() if banned is None else banned
-    sig = _h.sha256(("|".join(q_texts[::997])).encode()).hexdigest()[:12] + "-b" + _bdig
+    ex_sig = _h.sha256(b"".join(np.asarray(sorted(e), dtype=np.int64).tobytes()
+                                for e in exclude)).hexdigest()[:8]
+    sig = _h.sha256(("|".join(q_texts)).encode()).hexdigest()[:12] + "-x" + ex_sig + "-b" + _bdig
     p = WORK / "runs" / f"hardneg-bm25-{name}-k{k}-{sig}.npy"
     if p.exists():
         return np.load(p)
@@ -173,7 +197,7 @@ def mine_bm25_negatives(name, q_texts, src_of, store_of, index, k, exclude, bann
             picked = [base + int(d) for d in got[j]
                       if base + int(d) not in ex and base + int(d) not in _bset][:k]
             while len(picked) < k:
-                picked.append(picked[-1] if picked else clean_fallback_row(_bset, base))
+                picked.append(picked[-1] if picked else clean_fallback_row(_bset, base, ex))
             out[i] = picked
         index.drop(store)
     np.save(p, out)
@@ -202,9 +226,11 @@ def mine_hard_negatives(name, q_vecs, pool_vecs, k, exclude, q_chunk=2048, d_chu
     scripts/check_mining.py) must inject its own, typically the empty mask."""
     import hashlib as _h
     _, _bset, _bdig = banned_rows() if banned is None else banned
-    sig = _h.sha256(np.ascontiguousarray(q_vecs[::997]).tobytes()
+    ex_sig = _h.sha256(b"".join(np.asarray(sorted(e), dtype=np.int64).tobytes()
+                                for e in exclude)).hexdigest()[:8]
+    sig = _h.sha256(np.ascontiguousarray(q_vecs).tobytes()
                     + str((len(q_vecs), pool_vecs.shape, k)).encode()).hexdigest()[:12] \
-        + "-b" + _bdig
+        + "-x" + ex_sig + "-b" + _bdig
     p = WORK / "runs" / f"hardneg-{name}-k{k}-{sig}.npy"
     if p.exists():
         return np.load(p)
@@ -238,7 +264,7 @@ def mine_hard_negatives(name, q_vecs, pool_vecs, k, exclude, q_chunk=2048, d_chu
         ex = set(exclude[r])
         picked = [c for c in cand[r] if c not in ex and c not in _bset][:k]
         while len(picked) < k:
-            picked.append(picked[-1] if picked else clean_fallback_row(_bset))
+            picked.append(picked[-1] if picked else clean_fallback_row(_bset, 0, ex))
         out[r] = picked
     np.save(p, out)
     return out
@@ -414,7 +440,8 @@ def run(cfg: Cfg, log=print):
         _hit = _barr[_i] == bank_ids
         bank_ids = bank_ids[~_hit]
         log(f"  bank: dropped {int(_hit.sum())} banned pool rows (Codex B2 mask)")
-    bank = torch.from_numpy(np.ascontiguousarray(pool_vecs[bank_ids])).cuda()
+    nb = len(bank_ids)   # review #2 BLOCKER 1: every sampler draws [0, nb); a stale nb after the
+    bank = torch.from_numpy(np.ascontiguousarray(pool_vecs[bank_ids])).cuda()   # filter is OOB
     log(f"  negative bank {tuple(bank.shape)} ({bank.numel()*2/1e9:.2f} GB VRAM)")
 
     W0 = torch.from_numpy(get_init(cfg.init, pre, vocab=V)).cuda()

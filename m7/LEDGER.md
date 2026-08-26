@@ -117,7 +117,9 @@ post-hoc. Same ADCS-2015 CC BY-SA evidence as the dev components; R3 measured cq
 TRAIN-positive overlap at ~0. Required before freeze: TRAIN↔android/english decontamination pass
 with counts logged here, then `freeze_m7_assets.py` pins them. Caveat to label: same *family* as
 two dev components, so "development-informed at family level", still the only non-Wikipedia,
-near-zero-overlap members of the partition.
+near-zero-overlap members of the partition. **Scope (review #2 MAJOR 18): these rows measure
+within-family transfer to unseen subforums, not untouched cross-family generalization — the
+report must present them as that, never as a repaired generalization claim.**
 
 Held-out slice rule: mod-50 applied at **query** granularity, not pair — strictly stronger than
 the mandate's literal wording (per-pair holdout would leave a held-out query's text in TRAIN via
@@ -229,13 +231,24 @@ The live plan is `m7/STATUS.md`.
   is the sanctioned dev-stage selection. **If the checkpoint changes, the fusion must be
   re-selected** — a parameter frozen on one checkpoint is not valid for another.
 
-## Phase-2 selection rule (pre-registered 2026-08-26, before any stella training arm)
+## Phase-2 selection rule (pre-registered 2026-08-26, before any stella training arm; amended
+same day per review #2 MAJOR 13, still before any arm ran)
 
 The screen showed an arm's final-step macro is not its best-step macro (`p2x-rn-3e4` peaks at
-step 500). Rule for every arm from here on: **evaluate every 500 steps, select on best-eval,
-uniformly across arms, and the selected step count becomes part of the frozen config.** Dev-stage
-selection is sanctioned; the point of this entry is that the rule is fixed before the stella
-confirmation arms run, so no arm can be read both ways after the fact.
+step 500). Rule for every arm from here on: **evaluate every 500 steps on the in-training proxy
+(macro-3); each arm's step count is chosen at its best proxy eval, implemented by re-running the
+arm to that step (re-runs are deterministic — the zero-step arm reproduced 0.4548 exactly). The
+cross-arm winner and every gate/selection decision are then judged on the FULL pinned dev suite**
+via gate.py/dev_eval — the proxy picks a step, never a winner. Fixed before any stella arm runs.
+
+## Teacher-swap de-risk read (pre-registered 2026-08-26, review #2 MAJOR 14)
+
+Stella discloses StackExchange-family training, and the learnability ranking was measured on two
+CQADupStack (StackExchange) components — so the advantage could be family-specific. Before any
+training spend on stella: read the closed-form ridge's per-component rows (tonight's swap step 7)
+on **nq-250k and hotpotqa (Wikipedia, non-StackExchange)** against the committed bge rows in
+`results/m7_stage0_ridge.json`. If stella's table does not also lead off-StackExchange, the swap
+goes back to Dylan with that number before anything else runs.
 
 ## Codex gate, 2026-08-26 (gpt-5.6-sol, read-only, high effort) — 6 BLOCKER / 9 MAJOR / 2 MINOR
 
@@ -287,7 +300,12 @@ teacher-swap boundary. Dispositions, honestly labelled:
   report must say so rather than claim enforcement. **Partial fix 2026-08-26: `load_beir` now
   appends every six/untouched-final load to `m7/SIX_ACCESS.log` (an audit trail, not a lock;
   starts today — prior accesses are the entries in this ledger). The concession still goes in
-  the report.**
+  the report.** **Deviation #3, same day, self-reported:** `validate_perquery.py --bm25` read all
+  six qrels to independently recompute BM25 per-query nDCG (M-perquery evidence; matched
+  3,727/3,727). Outside the two authorized classes by the letter — class (a) names three cells.
+  No candidate was scored and every value recomputed was already committed in `perquery.json`,
+  but review #2 B6 is right that disclosure does not authorize it retroactively: the report must
+  enumerate all three deviations and drop any 'exactly two accesses' claim. All trail-logged.
 - M-calibration **the prose PI half-widths disagree with the JSON** (recomputation gives 0.02818 /
   0.03294 / 0.03446 vs the 0.024 / 0.030 / 0.035 in STATUS), and **"bge-base cannot clear Tier 2 at
   any retention" is false** — its teacher-only lower bound clears above ~0.955 retention. Also, the
@@ -364,8 +382,11 @@ four-set primary claim needs its own bars computed the same way, from the same f
 
 **Teacher is `NovaSearch/stella_en_400M_v5 @ ffeb2b7e`**, chosen on the distilled-table criterion
 (+0.0365 [0.0249, 0.0481] over bge-base, `results/m7_learnability_report.json`). Dylan ruled the
-**six-set claim stays primary**; the four datasets with no recorded stella exposure (SciFact,
-NFCorpus, SCIDOCS, TREC-COVID) are a pre-registered robustness number. Both bar sets were
+**six-set claim stays primary**; the four datasets with **no disclosed direct benchmark overlap** (SciFact,
+NFCorpus, SCIDOCS, TREC-COVID) are a pre-registered robustness number — 'no disclosed overlap'
+is the defensible label, NOT 'clean': absence from a community-maintained registry is not
+evidence of absence, and stella's disclosed arXiv/BioRxiv training is source-family exposure for
+the scientific sets (review #2 MAJOR 16). Both bar sets were
 precomputed from the frozen per-query vectors BEFORE any stella encode
 (`results/m7_bars_clean4.json`); promoting clean-4 to headline later is legal only if labelled
 post-hoc. ArguAna/FiQA2018 exposure must be labelled at the dataset row. All new work keys on

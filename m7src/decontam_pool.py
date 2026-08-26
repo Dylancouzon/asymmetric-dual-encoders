@@ -33,8 +33,9 @@ import time
 import numpy as np
 
 from _paths import REPO, WORK
-from decontam import (Inverted, exact_u64, ngram_hashes, norm_words,
-                      protected_queries, query_grams, stream_six_docs, DUP_SHARE)
+from decontam import (Inverted, contains_short, exact_u64, ngram_hashes, norm_words,
+                      protected_queries, query_grams, short_whole_index, stream_six_docs,
+                      DUP_SHARE)
 from hashing import sha_stream_list
 
 OUT = WORK / "decontam"
@@ -50,7 +51,7 @@ def _query_index(texts):
     ex = set(int(exact_u64(t)) for t in texts)
     gr = (np.unique(np.concatenate([query_grams(t) for t in texts]))
           if texts else np.zeros(0, np.uint64))
-    return ex, gr
+    return ex, gr, short_whole_index(texts)
 
 
 def _in_sorted(sorted_arr, vals):
@@ -125,12 +126,14 @@ def run(limit_per_store=None):
                         c["sixdoc_near"] += 1
                         bad = True
             for cls, key in (("six", "sixq"), ("untouched-final", "untq")):
-                ex, gr = q_idx[cls]
-                if int(k) in ex or _in_sorted(gr, g):
+                ex, gr, whole = q_idx[cls]
+                # gram share, or a protected 4-7-word query VERBATIM inside this row (review #2
+                # BLOCKER 4: rolling k-grams vs the query's whole-hash, same polynomial)
+                if int(k) in ex or _in_sorted(gr, g) or contains_short(w, whole):
                     c[key] += 1
                     bad = True
-            ex, gr = q_idx["dev"]
-            if int(k) in ex or _in_sorted(gr, g):
+            ex, gr, whole = q_idx["dev"]
+            if int(k) in ex or _in_sorted(gr, g) or contains_short(w, whole):
                 c["devq_measured"] += 1        # disclosed, not banned -- see module docstring
             if bad:
                 banned.append(row)
@@ -142,6 +145,10 @@ def run(limit_per_store=None):
 
     banned = np.array(sorted(banned), dtype=np.int64)
     np.save(OUT / "banned_pool_rows.npy", banned)
+    # bind the mask to the pool identity it was computed against (review #2 MAJOR 11)
+    (OUT / "banned_pool_rows.meta.json").write_text(json.dumps(
+        {"pool_id_sha256": meta["id_sha256"], "n_banned": int(banned.size),
+         "rules": "sixdoc exact/near + six/untouched query grams + short-query containment"}))
     report = {
         "_note": "B2 fix: pool rows banned as negatives/KL candidates. Ban rule and the "
                  "short-query limitation are in m7src/decontam_pool.py's docstring. devq hits "

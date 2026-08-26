@@ -223,7 +223,26 @@ def save_release(path, model: QueryTable, pre: Preproc, meta=None, device="cuda"
         raise AssertionError(f"folded release deviates from the live model: max abs {dev}")
     save_table(path, folded, pre, meta={**(meta or {}), "weights_folded": True,
                                         "fold_max_abs_dev": dev})
+    # review #2 BLOCKER 2 addendum: verify the SERIALIZED artifact, not just the in-memory fold
+    reloaded = load_table(path, variant="fp16", device=device)
+    dev_ser = float(np.abs(folded.encode(fixture, pre) - reloaded.encode(fixture, pre)).max())
+    if dev_ser > 5e-3:
+        raise AssertionError(f"serialized fp16 release deviates from the fold: max abs {dev_ser}")
     return dev
+
+
+def ensure_release(npz_path, device="cuda"):
+    """The released (weights-folded) sibling of a training checkpoint, created on demand and
+    cached next to it. Everything that judges or freezes 'the released artifact' -- G4, freeze,
+    the final run -- must go through this, never the raw training npz (review #2 BLOCKER 2)."""
+    npz_path = Path(npz_path)
+    rel = npz_path.with_name(npz_path.stem + ".release.npz")
+    if rel.exists() and rel.stat().st_mtime >= npz_path.stat().st_mtime:
+        return rel
+    meta = read_meta(npz_path)
+    m = load_table(npz_path, variant="fp16", device=device)
+    save_release(rel, m, Preproc(**meta["preproc"]), meta={"source": npz_path.name}, device=device)
+    return rel
 
 
 def load_table(path, variant="fp16", device="cuda"):

@@ -17,7 +17,7 @@ import numpy as np
 import boot
 import dev_eval
 from _paths import REPO, WORK
-from table import NO_PREFIX, WITH_PREFIX, load_table
+from table import NO_PREFIX, WITH_PREFIX, ensure_release, load_table
 
 RUNS = WORK / "runs"
 PRE = {"noprefix": NO_PREFIX, "prefix": WITH_PREFIX}
@@ -35,9 +35,12 @@ def evaluate_checkpoint(run_id, components):
     """-> (per-component per-query dicts for fp16 and int8 variants, config)"""
     meta = json.loads((RUNS / f"{run_id}.meta.json").read_text())
     pre = PRE[meta["preproc"]["prefix"] and "prefix" or "noprefix"]
+    # Judge the RELEASE shape (weights folded into rows), not the training checkpoint: the
+    # gate's claims are about the artifact that ships (review #2 BLOCKER 2).
+    src = ensure_release(RUNS / f"{run_id}.npz")
     out = {}
     for variant in ("fp16", "int8"):
-        m = load_table(RUNS / f"{run_id}.npz", variant=variant)
+        m = load_table(src, variant=variant)
         out[variant] = dev_eval.eval_table(m, pre, components=list(components))
         mac, means = dev_eval.report(out[variant], f"  [{run_id}] {variant}")
         del m
@@ -91,8 +94,19 @@ def run(run_id, stage0_id=None, components=None, probe_file=None):
     pf = probe_file or (REPO / "results" / "m7_capacity_probe_noprefix.json")
     if pf.exists():
         pr = json.loads(pf.read_text())
-        res["conditions"]["G2_capacity_probe"] = {"pass": bool(pr["passed"]),
-                                                 "macro": pr["macro"], "vs_bm25": pr["vs_bm25_dev"]}
+        import encoders
+        probe_enc = pr.get("encoder")
+        if probe_enc != encoders.active().name:
+            # review #2 BLOCKER 3: a probe from another teacher (or a pre-tagging probe with no
+            # encoder field) must not satisfy G2 for this one.
+            res["conditions"]["G2_capacity_probe"] = {
+                "pass": False, "note": f"probe encoder {probe_enc!r} != active "
+                f"{encoders.active().name!r} -- re-run capacity_probe.py under this teacher"}
+        else:
+            res["conditions"]["G2_capacity_probe"] = {"pass": bool(pr["passed"]),
+                                                     "macro": pr["macro"],
+                                                     "vs_bm25": pr["vs_bm25_dev"],
+                                                     "encoder": probe_enc}
     else:
         res["conditions"]["G2_capacity_probe"] = {"pass": False, "note": "probe not run"}
 

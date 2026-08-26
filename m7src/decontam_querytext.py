@@ -21,7 +21,7 @@ SOURCES = ["nqopen", "triviaqa"]
 
 
 def main():
-    q_ex, q_gram, counts = protected_query_index()
+    q_ex, q_gram, q_whole, counts = protected_query_index()
     print(f"protected queries: {counts}; index {len(q_ex):,} exact, "
           f"{q_gram.size:,} 8-grams", flush=True)
 
@@ -34,7 +34,7 @@ def main():
         train_idx = [i for i in range(len(qs)) if not heldout(s, str(i))]
         keep, drop = [], {"exact": 0, "near": 0}
         for i in train_idx:
-            h = query_hits(qs[i], q_ex, q_gram)
+            h = query_hits(qs[i], q_ex, q_gram, q_whole)
             if h:
                 drop[h] += 1
             else:
@@ -52,7 +52,7 @@ def main():
             qs = json.loads(f.read_text())
             keep, drop = [], {"exact": 0, "near": 0}
             for i, q in enumerate(qs):
-                h = query_hits(q, q_ex, q_gram)
+                h = query_hits(q, q_ex, q_gram, q_whole)
                 if h:
                     drop[h] += 1
                 else:

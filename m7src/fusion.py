@@ -24,8 +24,13 @@ def rrf(runs, k=60, weights=None):
     return out
 
 
-def convex(runs, w, eps=1e-9):
-    """Per-query min-max normalize each run, then a convex combination. w applies to runs[0]."""
+def convex(runs, w, eps=1e-9, floor_zero=False):
+    """Per-query min-max normalize each run, then a convex combination. w applies to runs[0].
+
+    floor_zero anchors each query's min at 0 (the absent-document baseline) instead of the
+    minimum returned score: with padding gone, a query with ONE BM25 hit otherwise normalizes
+    that hit to 0 -- indistinguishable from no lexical evidence (review #2 MAJOR 19). Both
+    variants are in the dev selection grid; the frozen spec records which won."""
     ws = [w, 1.0 - w] if len(runs) == 2 else [1.0 / len(runs)] * len(runs)
     out = {}
     for run, wi in zip(runs, ws):
@@ -34,7 +39,7 @@ def convex(runs, w, eps=1e-9):
             if not docs:      # a query with zero positive-score matches contributes nothing
                 continue      # (padding used to hide this case; test_fusion_paths.py covers it)
             v = np.fromiter(docs.values(), dtype=np.float64, count=len(docs))
-            lo, hi = v.min(), v.max()
+            lo, hi = (0.0, float(v.max())) if floor_zero else (float(v.min()), float(v.max()))
             for d, s in docs.items():
                 o[d] = o.get(d, 0.0) + wi * (s - lo) / (hi - lo + eps)
     return out
@@ -105,10 +110,19 @@ def select_on_dev(dense_runs, bm25_runs, qrels_by_comp, report=print):
         report(f"  fusion convex w={w:<4} dev macro {m:.4f}")
         if m > best[0]:
             best = (m, "convex", w, per)
+    for w in CONVEX_W:
+        m, per = macro({c: convex([dense_runs[c], bm25_runs[c]], w=w, floor_zero=True)
+                        for c in comps})
+        grid.append({"family": "convex0", "param": w, "macro": m})
+        report(f"  fusion convex0 w={w:<4} dev macro {m:.4f}")
+        if m > best[0]:
+            best = (m, "convex0", w, per)
     report(f"  -> frozen fusion: {best[1]} param={best[2]} dev macro {best[0]:.4f}")
     return {"family": best[1], "param": best[2], "dev_macro": best[0], "grid": grid}, best[3]
 
 
 def apply_frozen(spec, dense_run, bm25_run):
-    return (rrf([dense_run, bm25_run], k=spec["param"]) if spec["family"] == "rrf"
-            else convex([dense_run, bm25_run], w=spec["param"]))
+    if spec["family"] == "rrf":
+        return rrf([dense_run, bm25_run], k=spec["param"])
+    return convex([dense_run, bm25_run], w=spec["param"],
+                  floor_zero=(spec["family"] == "convex0"))

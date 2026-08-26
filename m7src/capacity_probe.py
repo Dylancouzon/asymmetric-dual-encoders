@@ -106,7 +106,8 @@ def main(pre_name="noprefix", steps=6000):
                     "Train and eval queries are identical by design.",
            "preproc": pre_name, "macro": m, "per_component": means, "budgets": budgets,
            "vs_bm25_dev": r, "bar": "overfit table must CI-resolve above the BM25 dev row",
-           "passed": passed}
+           "passed": passed,
+           "encoder": __import__("encoders").active().name}
     (REPO / "results" / f"m7_capacity_probe_{pre_name}.json").write_text(json.dumps(out, indent=1))
     print(f"\nprobe macro {m:.4f} vs bm25 macro "
           f"{np.mean([np.mean(list(bm[c].values())) for c in COMPONENTS]):.4f}: "

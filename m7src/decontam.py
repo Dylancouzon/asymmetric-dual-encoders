@@ -115,6 +115,45 @@ def query_grams(text):
     return np.unique(np.concatenate([ngram_hashes(w), short_grams(w)]))
 
 
+def rolling_kgrams(words, k):
+    """Rolling word-k-gram hashes, same polynomial as ngram_hashes -- so a k-word text's
+    whole-hash equals a k-gram window over the same words inside any longer text."""
+    if len(words) < k:
+        return np.zeros(0, dtype=np.uint64)
+    wh = np.fromiter((_wh(w) for w in words), dtype=np.uint64, count=len(words))
+    n = len(wh) - k + 1
+    acc = np.zeros(n, dtype=np.uint64)
+    for j in range(k):
+        acc += wh[j:j + n] * (_BASE ** np.uint64(j))
+    return acc
+
+
+def short_whole_index(texts):
+    """{k: sorted array of whole-hashes} over the 4-7-word texts. With rolling_kgrams this makes
+    'protected short query appears VERBATIM inside a longer text' detectable (review #2 BLOCKER 4:
+    the 4-gram short-short fix still missed a 5-word query embedded in a 20-word document).
+    1-3-word queries stay exact-whole-text only, disclosed: banning every text that merely
+    contains a 2-word entity name would remove topical overlap, not leaked content."""
+    idx = {}
+    for t in texts:
+        w = norm_words(t)
+        if SHORT_NGRAM <= len(w) < NGRAM:
+            idx.setdefault(len(w), []).append(ngram_hashes(w)[0])
+    return {k: np.unique(np.asarray(v, dtype=np.uint64)) for k, v in idx.items()}
+
+
+def contains_short(words, whole_idx):
+    """True if any protected short query occurs verbatim (word-level) inside `words`."""
+    for k, arr in whole_idx.items():
+        g = rolling_kgrams(words, k)
+        if g.size == 0:
+            continue
+        i = np.minimum(np.searchsorted(arr, g, "left"), arr.size - 1)
+        if bool((arr[i] == g).any()):
+            return True
+    return False
+
+
 def sketch(text):
     return np.unique(ngram_hashes(norm_words(text)))[:SKETCH]
 
@@ -233,10 +272,10 @@ def protected_query_index():
     prot = [q for v in pq.values() for q in v]
     q_ex = set(int(exact_u64(q)) for q in prot)
     q_gram = np.unique(np.concatenate([query_grams(q) for q in prot]))
-    return q_ex, q_gram, {k: len(v) for k, v in pq.items()}
+    return q_ex, q_gram, short_whole_index(prot), {k: len(v) for k, v in pq.items()}
 
 
-def query_hits(text, q_ex, q_gram):
+def query_hits(text, q_ex, q_gram, q_whole=None):
     """R1 test for one candidate TRAIN query. -> 'exact' | 'near' | None.
 
     searchsorted, not np.isin: isin re-sorts q_gram on every call, which turned a 353K-pair scan
@@ -244,10 +283,13 @@ def query_hits(text, q_ex, q_gram):
     if int(exact_u64(text)) in q_ex:
         return "exact"
     g = query_grams(text)
-    if g.size == 0 or q_gram.size == 0:
-        return None
-    i = np.minimum(np.searchsorted(q_gram, g, "left"), q_gram.size - 1)
-    return "near" if bool((q_gram[i] == g).any()) else None
+    if g.size and q_gram.size:
+        i = np.minimum(np.searchsorted(q_gram, g, "left"), q_gram.size - 1)
+        if bool((q_gram[i] == g).any()):
+            return "near"
+    if q_whole and contains_short(norm_words(text), q_whole):
+        return "contains"
+    return None
 
 
 # ---- runner --------------------------------------------------------------------------
@@ -264,6 +306,7 @@ def run():
     print(f"[R1] protected queries: " + ", ".join(f"{k} {len(v):,}" for k, v in pq.items()), flush=True)
     q_ex = set(int(exact_u64(q)) for q in prot_q)
     q_gram = np.unique(np.concatenate([query_grams(q) for q in prot_q]))  # sorted by np.unique
+    q_whole = short_whole_index(prot_q)
     print(f"  query index: {len(q_ex):,} exact, {q_gram.size:,} 8-grams ({time.time()-t0:.0f}s)", flush=True)
 
     def shares_gram(g):
@@ -284,7 +327,7 @@ def run():
             r1[src] = r1.get(src, {"exact": 0, "near": 0})
             r1[src]["exact"] += 1
             continue
-        if shares_gram(query_grams(query)):
+        if shares_gram(query_grams(query)) or contains_short(norm_words(query), q_whole):
             r1[src] = r1.get(src, {"exact": 0, "near": 0})
             r1[src]["near"] += 1
             continue

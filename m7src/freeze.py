@@ -34,8 +34,11 @@ def sha256_file(p):
 
 
 def write(run_id, fusion_spec, released_system, dev_macro=None, notes=None):
-    npz = WORK / "runs" / f"{run_id}.npz"
-    meta_p = WORK / "runs" / f"{run_id}.meta.json"
+    # Freeze the RELEASE artifact (weights folded), never the raw training checkpoint: the tier
+    # claims are about what ships (review #2 BLOCKER 2). ensure_release is idempotent.
+    from table import ensure_release
+    npz = ensure_release(WORK / "runs" / f"{run_id}.npz")
+    meta_p = npz.with_name(npz.stem + ".meta.json")
     meta = json.loads(meta_p.read_text())
     pre = meta["preproc"]
     blob = {
@@ -43,7 +46,8 @@ def write(run_id, fusion_spec, released_system, dev_macro=None, notes=None):
                  "the released-system choice from here, never from the command line, and "
                  "recomputes table_sha256 before scoring anything.",
         "run_id": run_id,
-        "table_relpath": f"work/runs/{run_id}.npz",
+        "table_relpath": f"work/runs/{npz.name}",
+        "training_checkpoint_sha256": sha256_file(WORK / "runs" / f"{run_id}.npz"),
         "table_sha256": sha256_file(npz),
         "table_meta_sha256": sha256_file(meta_p),
         "table_bytes": npz.stat().st_size,
