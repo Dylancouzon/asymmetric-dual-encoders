@@ -17,7 +17,7 @@ Adding an encoder: add a Spec. If it needs a different pooling or tokenizer, say
 special-case it at a call site.
 """
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
@@ -37,6 +37,15 @@ class Spec:
     # MTEB 58.97 justified shortlisting it -- the same class of loader mismatch that was BLOCKER 1
     # of the M6 gate. None means "pooling output is the embedding".
     post_dense: str | None = None
+    # Extra kwargs that must land on the model CONFIG (not on from_pretrained -- transformers 4.57
+    # forwards unknown from_pretrained kwargs into the model __init__ and raises). stella cannot be
+    # instantiated without these: its config ships unpad_inputs=true and
+    # use_memory_efficient_attention=true, whose remote code asserts "please install xformers".
+    # Its card documents setting both False as the no-xformers path, which also puts stella on the
+    # same attention kernel gte-large already uses (both False in its own config), so the teacher
+    # probe compares candidates through one kernel rather than two. Feeds the encode cache key
+    # conditionally -- see teacher.cache_key.
+    config_kwargs: dict = field(default_factory=dict)
     # The identity string that goes into the encode cache key. It must change whenever the token
     # ids would change, and must NOT change for bge-base or existing caches are orphaned.
     # All five registered candidates ship a BYTE-IDENTICAL vocab.txt (sha256 07eced375cec144d,
@@ -78,8 +87,10 @@ REGISTRY = {
         dim=1024, pooling="cls", query_prefix=BGE_PREFIX),
     # Alibaba, admissible with justification under CLAUDE.md's relaxed vendor rule.
     # Custom "NewModel" architecture: needs remote code. unpad_inputs and
-    # use_memory_efficient_attention both default to false in its config, so plain sdpa works and
-    # xformers is an optional accelerator, not a dependency.
+    # use_memory_efficient_attention are both false in ITS config, so plain sdpa works and xformers
+    # is an optional accelerator here. That is a property of this checkpoint's config, not of the
+    # architecture: stella ships the same code with both flags true and will not load without
+    # config_kwargs.
     "gte-large-en-v1.5": Spec(
         name="gte-large-en-v1.5", repo="Alibaba-NLP/gte-large-en-v1.5",
         revision="104333d6af6f97649377c2afbde10a7704870c7b",
@@ -91,6 +102,7 @@ REGISTRY = {
         name="stella-400M-v5", repo="NovaSearch/stella_en_400M_v5",
         revision="ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
         dim=1024, pooling="mean", trust_remote_code=True, post_dense="2_Dense_1024",
+        config_kwargs={"use_memory_efficient_attention": False, "unpad_inputs": False},
         query_prefix="Instruct: Given a web search query, retrieve relevant passages that "
                      "answer the query.\nQuery: ",
         notes="MRL heads at 256/768/1024+; ArguAna and FiQA2018 are on its recorded training "

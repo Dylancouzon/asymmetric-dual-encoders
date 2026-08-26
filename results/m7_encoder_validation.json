@@ -9,6 +9,14 @@
   "bge-base-en-v1.5": {
    "status": "pass",
    "dim": 768,
+   "spec_fingerprint": {
+    "repo": "BAAI/bge-base-en-v1.5",
+    "revision": "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a",
+    "pooling": "cls",
+    "post_dense": null,
+    "max_length": 512,
+    "config_kwargs": {}
+   },
    "min_cosine_vs_sentence_transformers": 0.9999999857009441,
    "max_abs_pairwise_sim_delta": 1.7545016695041937e-07,
    "pooling": "cls",
@@ -18,6 +26,14 @@
   "bge-large-en-v1.5": {
    "status": "pass",
    "dim": 1024,
+   "spec_fingerprint": {
+    "repo": "BAAI/bge-large-en-v1.5",
+    "revision": "d4aa6901d3a41ba39fb536a557fa166f842b0e09",
+    "pooling": "cls",
+    "post_dense": null,
+    "max_length": 512,
+    "config_kwargs": {}
+   },
    "min_cosine_vs_sentence_transformers": 0.999999959819327,
    "max_abs_pairwise_sim_delta": 1.7343846447914757e-07,
    "pooling": "cls",
@@ -27,6 +43,14 @@
   "gte-large-en-v1.5": {
    "status": "pass",
    "dim": 1024,
+   "spec_fingerprint": {
+    "repo": "Alibaba-NLP/gte-large-en-v1.5",
+    "revision": "104333d6af6f97649377c2afbde10a7704870c7b",
+    "pooling": "cls",
+    "post_dense": null,
+    "max_length": 512,
+    "config_kwargs": {}
+   },
    "min_cosine_vs_sentence_transformers": 0.9999998805141537,
    "max_abs_pairwise_sim_delta": 0.0,
    "pooling": "cls",
@@ -36,6 +60,17 @@
   "stella-400M-v5": {
    "status": "pass",
    "dim": 1024,
+   "spec_fingerprint": {
+    "repo": "NovaSearch/stella_en_400M_v5",
+    "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+    "pooling": "mean",
+    "post_dense": "2_Dense_1024",
+    "max_length": 512,
+    "config_kwargs": {
+     "unpad_inputs": false,
+     "use_memory_efficient_attention": false
+    }
+   },
    "min_cosine_vs_sentence_transformers": 0.9999998173346217,
    "max_abs_pairwise_sim_delta": 0.0,
    "pooling": "mean",
@@ -45,6 +80,14 @@
   "arctic-embed-l": {
    "status": "pass",
    "dim": 1024,
+   "spec_fingerprint": {
+    "repo": "Snowflake/snowflake-arctic-embed-l",
+    "revision": "d8fb21ca8d905d2832ee8b96c894d3298964346b",
+    "pooling": "cls",
+    "post_dense": null,
+    "max_length": 512,
+    "config_kwargs": {}
+   },
    "min_cosine_vs_sentence_transformers": 0.999999962080333,
    "max_abs_pairwise_sim_delta": 1.7193665258208313e-07,
    "pooling": "cls",

@@ -171,7 +171,12 @@ def cache_key(name, prefix, max_length, model_id, revision, corpus_sha, dtype):
                        # of existing encodes remain valid. post_dense also covers a future MRL
                        # truncation, since that is a different Dense directory and hence a
                        # different output dimension -- which is what would otherwise collide.
-                       **({"post_dense": spec.post_dense} if spec.post_dense else {})},
+                       **({"post_dense": spec.post_dense} if spec.post_dense else {}),
+                       # Also conditional, same reason. These change the attention kernel, so two
+                       # encodes that differ only here are not interchangeable -- e.g. dropping the
+                       # overrides after installing xformers must not silently reuse these vectors.
+                       **({"config_kwargs": dict(sorted(spec.config_kwargs.items()))}
+                          if spec.config_kwargs else {})},
                       sort_keys=True)
     return f"{name}-{DT[dtype]}-{hashlib.sha256(blob.encode()).hexdigest()[:12]}", blob
 

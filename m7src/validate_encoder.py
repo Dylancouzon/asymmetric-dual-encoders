@@ -66,6 +66,15 @@ def ours(spec, texts):
     return np.asarray(v, dtype=np.float64)
 
 
+def fingerprint(spec):
+    """The loader-identity fields. Stored per entry so a merged record cannot claim a pass for a
+    Spec that has since changed -- the whole point of this file is that a silently different loader
+    decides the teacher."""
+    return {"repo": spec.repo, "revision": spec.revision, "pooling": spec.pooling,
+            "post_dense": spec.post_dense, "max_length": spec.max_length,
+            "config_kwargs": dict(sorted(spec.config_kwargs.items()))}
+
+
 def main(names):
     out, failed = {}, []
     for name in names:
@@ -92,6 +101,7 @@ def main(names):
         print(f"  pairwise sim  max|delta| {dp:.2e}  (bar {PAIRWISE_BAR:.0e})   "
               f"{'PASS' if ok else 'FAIL'}")
         out[name] = {"status": "pass" if ok else "fail", "dim": int(a.shape[1]),
+                     "spec_fingerprint": fingerprint(spec),
                      "min_cosine_vs_sentence_transformers": float(cos.min()),
                      "max_abs_pairwise_sim_delta": float(dp),
                      "pooling": spec.pooling, "post_dense": spec.post_dense,
@@ -99,7 +109,21 @@ def main(names):
         if not ok:
             failed.append(name)
 
-    (REPO / "results" / "m7_encoder_validation.json").write_text(json.dumps(
+    # MERGE, do not overwrite: this script is usually run for one new Spec, and a plain overwrite
+    # silently erased the other four encoders' pass records. Entries whose loader identity no
+    # longer matches the registry are dropped rather than carried, so a changed Spec reads as
+    # unvalidated instead of as a stale pass.
+    path = REPO / "results" / "m7_encoder_validation.json"
+    prior = json.loads(path.read_text())["results"] if path.exists() else {}
+    for k, v in prior.items():
+        if k in out or k not in encoders.REGISTRY:
+            continue
+        if v.get("spec_fingerprint") == fingerprint(encoders.get(k)):
+            out[k] = v
+        else:
+            print(f"  dropped stale record for {k}: its Spec changed since it was validated")
+    out = {k: out[k] for k in encoders.REGISTRY if k in out}
+    path.write_text(json.dumps(
         {"_note": "Our teacher.encode path vs sentence-transformers, which implements each repo's "
                   "own modules.json. Both fp32, so this isolates loader fidelity from dtype. The "
                   "load-bearing number is the PAIRWISE similarity delta, since ranking consumes "
