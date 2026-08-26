@@ -200,18 +200,28 @@ def run():
     prot_q = [q for v in pq.values() for q in v]
     print(f"[R1] protected queries: " + ", ".join(f"{k} {len(v):,}" for k, v in pq.items()), flush=True)
     q_ex = set(int(exact_u64(q)) for q in prot_q)
-    q_gram = np.unique(np.concatenate([all_grams(q) for q in prot_q]))
+    q_gram = np.unique(np.concatenate([all_grams(q) for q in prot_q]))   # sorted by np.unique
     print(f"  query index: {len(q_ex):,} exact, {q_gram.size:,} 8-grams ({time.time()-t0:.0f}s)", flush=True)
+
+    def shares_gram(g):
+        """searchsorted, not np.isin: isin re-sorts the 345K-gram array on every call, which
+        turned this 353K-pair scan into hours."""
+        if g.size == 0:
+            return False
+        i = np.searchsorted(q_gram, g, "left")
+        i = np.minimum(i, q_gram.size - 1)
+        return bool((q_gram[i] == g).any())
 
     r1 = {}
     survive = []
-    for src, qid, query, pos, hneg in tr:
+    for n, (src, qid, query, pos, hneg) in enumerate(tr):
+        if n and n % 100_000 == 0:
+            print(f"    R1 {n:,}/{len(tr):,} ({time.time()-t0:.0f}s)", flush=True)
         if int(exact_u64(query)) in q_ex:
             r1[src] = r1.get(src, {"exact": 0, "near": 0})
             r1[src]["exact"] += 1
             continue
-        g = all_grams(query)
-        if g.size and np.isin(g, q_gram, assume_unique=True).any():
+        if shares_gram(all_grams(query)):
             r1[src] = r1.get(src, {"exact": 0, "near": 0})
             r1[src]["near"] += 1
             continue
