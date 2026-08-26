@@ -31,12 +31,17 @@ def phase1_objective():
 
 
 def phase2_negatives(base):
-    """BM25-mined negatives are added by phase2b once the BM25 mining cache exists."""
+    """The mandated negatives ablation: BM25-mined vs teacher-mined vs mixed, against the
+    random-bank baseline. Objective A collapsed with random-only negatives (p1-objA declined
+    monotonically to 0.3366), so this is the load-bearing phase, not a tuning sweep."""
     return grid("p2", base, {
         "bank": {"hard_neg_k": 0},
-        "mined16": {"hard_neg_k": 16},
-        "mined32": {"hard_neg_k": 32},
-        "mined16-nofn": {"hard_neg_k": 16, "fn_margin": 0.0},
+        "teacher16": {"hard_neg_k": 16, "hard_neg_source": "teacher"},
+        "teacher32": {"hard_neg_k": 32, "hard_neg_source": "teacher"},
+        "bm2516": {"hard_neg_k": 16, "hard_neg_source": "bm25"},
+        "mixed32": {"hard_neg_k": 32, "hard_neg_source": "mixed"},
+        "teacher16-nofn": {"hard_neg_k": 16, "hard_neg_source": "teacher", "fn_margin": 0.0},
+        "teacher16-noreg": {"hard_neg_k": 16, "hard_neg_source": "teacher", "reg_init": 0.0},
     })
 
 

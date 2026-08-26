@@ -47,7 +47,8 @@ class Cfg:
     batch: int = 512
     n_neg: int = 32768
     temp: float = 0.02
-    hard_neg_k: int = 0                 # teacher-mined hard negatives per query (0 = bank only)
+    hard_neg_k: int = 0                 # mined hard negatives per query (0 = random bank only)
+    hard_neg_source: str = "teacher"    # teacher | bm25 | mixed -- the mandated negatives ablation
     use_provided_hardneg: bool = True   # ESCI Irrelevant + Mr.TyDi negatives
     fn_margin: float = 0.02             # false-negative filter: drop negs with teacher score > pos - margin
     kl_weight: float = 1.0
@@ -97,6 +98,50 @@ def build_arrays(cfg, index):
             src_id.append(sid[src])
         index.drop(st)
     return q_texts, pos_idx, hn_idx, np.array(src_id, dtype=np.int32), srcs
+
+
+def mine_bm25_negatives(name, q_texts, src_of, store_of, index, k, exclude):
+    """BM25-mined hard negatives, the lexical arm of the mandated negatives ablation.
+
+    Mined WITHIN each query's own doc store rather than across the whole pool: a negative is only
+    informative if it was a plausible candidate, and an ESCI product retrieved for a Wikipedia
+    question is not. Each store is indexed once (hotpotqa-corpus is 5.23M documents, so this is
+    the expensive part) and the result is cached.
+    """
+    import hashlib as _h
+    sig = _h.sha256(("|".join(q_texts[::997])).encode()).hexdigest()[:12]
+    p = WORK / "runs" / f"hardneg-bm25-{name}-k{k}-{sig}.npy"
+    if p.exists():
+        return np.load(p)
+    import Stemmer
+    import bm25s
+    out = np.zeros((len(q_texts), k), dtype=np.int64)
+    by_store = {}
+    for i, src in enumerate(src_of):
+        by_store.setdefault(store_of[src], []).append(i)
+    st = Stemmer.Stemmer("english")
+    for store, rows in by_store.items():
+        ids, texts = mix.load_store(store)
+        print(f"  bm25 mining {store}: {len(texts):,} docs, {len(rows):,} queries", flush=True)
+        r = bm25s.BM25(method="lucene", k1=1.2, b=0.75)
+        r.index(bm25s.tokenize(texts, stopwords="en", stemmer=st, show_progress=False),
+                show_progress=False)
+        del texts
+        over = k + max((len(exclude[i]) for i in rows), default=0) + 4
+        qt = bm25s.tokenize([q_texts[i] for i in rows], stopwords="en", stemmer=st,
+                            show_progress=False)
+        got, _ = r.retrieve(qt, k=min(over, len(ids)), show_progress=False)
+        del r
+        base = index.spans[store][0]
+        for j, i in enumerate(rows):
+            ex = set(exclude[i])
+            picked = [base + int(d) for d in got[j] if base + int(d) not in ex][:k]
+            while len(picked) < k:
+                picked.append(picked[-1] if picked else base)
+            out[i] = picked
+        index.drop(store)
+    np.save(p, out)
+    return out
 
 
 @torch.no_grad()
@@ -238,9 +283,19 @@ def run(cfg: Cfg, log=print):
 
     hard = None
     if cfg.hard_neg_k:
-        hard = mine_hard_negatives(f"{cfg.preproc}-{len(q_texts)}", tq, pool_vecs,
-                                   cfg.hard_neg_k, pos_idx)
-        log(f"  teacher-mined hard negatives {hard.shape}")
+        k = cfg.hard_neg_k
+        tag = f"{cfg.preproc}-{len(q_texts)}"
+        store_of = {s: mix.load_source(s)["docstore"] for s in srcs}
+        src_of = [srcs[i] for i in src_id]
+        parts = []
+        if cfg.hard_neg_source in ("teacher", "mixed"):
+            kk = k // 2 if cfg.hard_neg_source == "mixed" else k
+            parts.append(mine_hard_negatives(tag, tq, pool_vecs, kk, pos_idx)[:, :kk])
+        if cfg.hard_neg_source in ("bm25", "mixed"):
+            kk = k - (k // 2) if cfg.hard_neg_source == "mixed" else k
+            parts.append(mine_bm25_negatives(tag, q_texts, src_of, store_of, index, kk, pos_idx))
+        hard = np.concatenate(parts, axis=1) if len(parts) > 1 else parts[0]
+        log(f"  {cfg.hard_neg_source}-mined hard negatives {hard.shape}")
 
     # negative bank: fixed deterministic sample, VRAM-resident fp16
     nb = min(cfg.bank_size, len(pool_vecs))
