@@ -77,6 +77,23 @@
    "post_dense": "2_Dense_1024",
    "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20"
   },
+  "e5-large-v2": {
+   "status": "pass",
+   "dim": 1024,
+   "spec_fingerprint": {
+    "repo": "intfloat/e5-large-v2",
+    "revision": "f169b11e22de13617baa190a028a32f3493550b6",
+    "pooling": "mean",
+    "post_dense": null,
+    "max_length": 512,
+    "config_kwargs": {}
+   },
+   "min_cosine_vs_sentence_transformers": 0.999999967353162,
+   "max_abs_pairwise_sim_delta": 1.7162027132755497e-07,
+   "pooling": "mean",
+   "post_dense": null,
+   "revision": "f169b11e22de13617baa190a028a32f3493550b6"
+  },
   "arctic-embed-l": {
    "status": "pass",
    "dim": 1024,

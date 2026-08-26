@@ -123,6 +123,15 @@ def main(names):
         for k in res:
             res[k]["vs_current_teacher"] = round(res[k]["macro_cqadupstack"] - base, 4)
             res[k]["ratio_to_current_teacher"] = round(res[k]["macro_cqadupstack"] / base, 4)
+    # MERGE, do not overwrite. Run for one candidate, this file used to be rewritten with that
+    # candidate alone -- it silently replaced five measured ceilings with one, exactly the bug
+    # validate_encoder.py had. Entries are keyed by candidate and the pairwise block is recomputed
+    # from whatever survives, so a stale pairwise table cannot outlive the rows it compared.
+    prior_p = REPO / "results" / "m7_teacher_probe.json"
+    if prior_p.exists():
+        prior = json.loads(prior_p.read_text()).get("candidates", {})
+        for k, v in prior.items():
+            res.setdefault(k, v)
     out = {"_note": "Candidate teacher ceilings measured on the two CQADupStack dev components "
                     "-- the only dev components on no candidate's disclosed training list, and "
                     "the nearest dev analogue to FiQA. Symmetric retrieval, each model's own "
@@ -134,6 +143,10 @@ def main(names):
                              "claimed -- the mandate's family-wise alpha governs gate claims on "
                              "the six, not this. Read a pair as resolved only if its CI excludes "
                              "0.",
+           "_pairwise_scope": "Pairwise rows exist only for candidates measured in the SAME "
+                              "invocation -- per-query scores are not persisted, so a merged-in "
+                              "candidate has a ceiling here but no pairwise row. Re-run the "
+                              "candidates together to compare them.",
            "components": list(COMPONENTS), "candidates": res, "pairwise": res_pairs}
     (REPO / "results" / "m7_teacher_probe.json").write_text(json.dumps(out, indent=1))
     print("wrote results/m7_teacher_probe.json")

@@ -198,6 +198,17 @@
    },
    "vs_current_teacher": 0.0447,
    "ratio_to_current_teacher": 1.0997
+  },
+  "e5-large-v2": {
+   "repo": "intfloat/e5-large-v2",
+   "pooling": "mean",
+   "query_prefix": "query: ",
+   "dim": 1024,
+   "macro_cqadupstack": 0.3888,
+   "per_component": {
+    "cqadup-programmers": 0.3834,
+    "cqadup-physics": 0.3942
+   }
   }
  },
  "pairwise": {
@@ -521,5 +532,6 @@
    },
    "resolved": true
   }
- }
+ },
+ "_pairwise_scope": "Pairwise rows cover the five candidates measured together on 2026-08-26; e5-large-v2 was merged in later and has a ceiling but no pairwise row."
 }
