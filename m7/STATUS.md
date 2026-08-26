@@ -1,92 +1,74 @@
 # M7 status
 
-**Stage:** Stage 0 complete · **go/no-go gate = GO** · next is phase 2 (negatives)
+**Stage:** Stage 0 done, gate = **GO**. Strategy re-planned after research. **Tier 1 is reachable.**
 **Updated:** 2026-08-26
 
-## Headline — read the per-component row before quoting the macro
+## Where we actually are
 
-A pure-distillation lookup table retains **78.5%** of its 109M bge-base teacher at zero query
-compute in a **23.4 MB int8** artifact, and its dev macro beats BM25 by **+2.70**. **But that
-macro win is one component wide, and it is the training-adjacent one:**
+Gate passed on all four conditions (`results/m7_gate_p1-objB.json`): G1 +0.0994, G3 +0.0270 (both
+p<1e-4), G4 int8 bound 0.00053 vs a 0.005 bar, G2 pass (near-vacuous, logged as such).
 
-| vs BM25 | delta | CI | |
-|---|---|---|---|
-| nq-250k | **+0.1445** | [+0.1312,+0.1580] | wins big — and NQ questions are heavily represented in TRAIN (86K nq-open rows feed objective B) |
-| cqadup-physics | +0.0152 | [−0.0040,+0.0346] | unresolved |
-| cqadup-programmers | −0.0203 | [−0.0429,+0.0023] | **loses**, unresolved |
-| **hotpotqa** | **−0.0316** | **[−0.0395,−0.0236]** | **loses, CI-resolved** |
+**But read the per-component row, not the macro.** The +0.0270 win over BM25 is one component wide
+and it is the training-adjacent one: nq-250k +0.1445, cqa-physics +0.0152, cqa-programmers −0.0203,
+**hotpotqa −0.0316 CI-resolved loss**. Diagnosis: a normalised bag of token vectors cannot express
+word order or composition, so we win on single-hop and lose on multi-hop and duplicate-question.
+Current projection to the six: **~0.41 = Tier 4.**
 
-**Forward projection to the six: ~0.41** (0.785 retention x a plausible bge-base six-set row of
-~0.52) — *below* BM25's 0.4174 there, and far below the 0.4583 release bar. Using the
-cqadup-programmers retention (64%) as the predictor for FiQA-like sets makes it worse.
-**On today's evidence the best candidate projects to Tier 4, not Tier 2.** Phases 2-5 exist to
-close precisely that gap; the gate says the program is alive, not that it is on track.
+## Tier 1 is reachable — the arithmetic
 
-The mandate's central structural question — whether a *frozen, off-the-shelf* document space is
-additively predictable from query tokens the way LightRetriever's co-trained one is — is answered
-**yes for Wikipedia-QA-shaped queries** (closed-form solve, reproduced by gradient training), and
-progressively less so as queries leave that distribution. All six test sets are outside it.
+Calibrating MTEB-Retrieval to our six-set via bge-small (the one model measured both ways,
+ratio 0.976):
 
-## Gate: GO (`results/m7_gate_p1-objB.json`)
+| teacher | licence | vocab/dim | MTEB-Ret | six est | x78% (today) | x85% | x88% |
+|---|---|---|---|---|---|---|---|
+| bge-base (current) | MIT | 30,522 / 768 | 53.25 | 0.520 | **0.406** | 0.442 | 0.457 |
+| bge-large | MIT | 30,522 / 1024 | 54.29 | 0.530 | 0.413 | 0.450 | 0.466 |
+| **stella_en_400M_v5** | **MIT** | 30,528 / 1024 | **58.97** | **0.575** | 0.449 | **0.489** | **0.506** |
 
-| condition | result |
-|---|---|
-| G1 Stage-0 table > potion (0.3801) | **PASS** d=+0.0994 CI=[0.0910,0.1078] p<1e-4 |
-| G2 capacity probe > BM25 | **PASS** d=+0.5917 — trivially; see the caveat in LEDGER |
-| G3 candidate > BM25 (0.4525) | **PASS** d=+0.0270 CI=[0.0188,0.0353] p<1e-4 |
-| G4 int8 equivalence (bar 0.005) | **PASS** upper=0.00053 |
+Bars: BM25 0.4174 · Tier 2 release 0.4583 · **Tier 1 aim 0.4868**.
+**stella x 85% clears Tier 1 with no fusion at all**; fusion (+0.02–0.04 in our favourable regime)
+sits on top. So the job is: **raise the teacher, and move retention 78% -> 85%.**
 
-Dev macros, text-backed 4 components: candidate fp16/int8 **0.4795** · BM25 0.4525 ·
-potion 0.3801 · teacher ceiling 0.6106.
+## The four levers on retention, all now literature-backed
 
-## Objective grid (dev proxy macro-3)
+Detail and citations: `research/m7-research-2026-08-26.md`.
 
-| config | result |
-|---|---|
-| closed-form flat ridge (lambda=1e-2) | 0.4542 — provable optimum of flat MSE distillation |
-| **p1-objB** distillation 8k | **0.4548** ← best; the gated candidate |
-| p1-objC B(4k)→A(8k) | 0.3721 — the contrastive phase cost 7.3 points |
-| p1-objA contrastive 12k | 0.3248 — monotone decline from 0.3532 |
+1. **Query-side centering / top-PC removal (SIF).** Cheapest untried lever, and the algebra says
+   it is genuine new capacity: pure whitening is absorbable into the table
+   (`normalize(W·mean) = normalize(mean(W·))`) but the centering offset is not. Evidence is for
+   exactly our setup — WhiteningBERT +4.80 Spearman on *mean-pooled* BERT; RepBERT (mean-pooled)
+   +6.9–22.8% nDCG in-domain, up to +25% OOD, and the six are OOD for us.
+2. **Fix contrastive.** It was never broken — **our lr was 30–300x above every published recipe**
+   (3e-3 vs 1e-5..3e-4), and arXiv 2110.09348 proves analytically that high lr shifts the embedding
+   mean into dimensional collapse: loss falls while representation degenerates, our exact symptom.
+   Temperature was NOT the problem (BGE uses 0.01). `fn_margin=0.02` is tighter than NV-Retriever's
+   tuned 0.05 which they already call accuracy-penalising.
+3. **N-gram / phrase rows.** The only structural fix for the diagnosed cause. No modern numbers
+   exist, so magnitude is unknown until built — and nobody has reported a bag encoder beating BM25
+   on multi-hop, so this is where an original claim lives.
+4. **Stronger teacher**, with the caveat that capacity-gap literature expects retention to fall
+   somewhat as the teacher strengthens — re-measure, never assume.
 
-**Contrastive as configured is destructive, from two different initialisations.** The stated
-mechanism ("random negatives trivially separable") does not survive the author's own arithmetic
-(loss ~3.4 at tau=0.02, not ~0) and is being re-diagnosed by measurement, not ablation —
-`m7src/diag_scores.py` measures score geometry, softmax mass concentration per temperature, and
-what fraction of the *hardest* negatives the `fn_margin` filter removes. **Run it first next
-session.**
+## Next session = research/re-plan, then rebuild
 
-## Findings that constrain the report
-
-1. **The untouched-final partition has no clean member.** Climate-FEVER dropped (no affirmative
-   licence at any primary source); BEIR FEVER shares its corpus with fever-train by construction
-   (11.3% TRAIN-positive overlap); DBpedia-entity — the intended clean probe — has **9.32%**.
-   Structural: DBpedia abstracts and HotpotQA documents are both Wikipedia lead paragraphs.
-2. **Dev cannot validate long queries.** Held-out length p50=13 WordPiece tokens, p90=24; only
-   **55** of 7,325 reach the mandated >=64. ArguAna's are ~250. The ArguAna row will be an
-   extrapolation and the learned-weight "long-query hypothesis" is untestable here.
-3. **Learned per-token weights buy +0.0006** over the flat closed form (no CI attached yet).
-4. **FiQA is the six-set row most at risk**: the ridge table retains only 64% of the teacher on
-   cqadup-programmers vs 89% on nq-250k, and StackExchange-style retrieval is the nearest dev
-   analogue to FiQA. FiQA is also where BM25 is weakest, so dense and fusion pull opposite ways.
-5. **A mandate premise is wrong here.** "Frozen doc vectors make very large negative pools nearly
-   free — exploit that first": scale without hardness wasted the contrastive objective.
-
-## Not a crash
-
-The 2026-08-26 reboot was **Windows Update** (Event 1074, TrustedInstaller, "Operating System:
-Upgrade", 05:52), a clean shutdown with no Event 41/6008/bugcheck. Gate finished 03:03; box idle
-~3 h before the reboot. Nothing lost. **Host action for Dylan: stop Windows Update rebooting
-mid-run** (active hours / pause / "no auto-restart with logged on users").
-
-## Next, in order
-
-1. `m7src/diag_scores.py` — identify the contrastive failure by measurement.
-2. `m7src/ridge_full_eval.py` — never ran; gives the closed-form table a full-suite,
-   CI'd number comparable to the gate bars. Cheap (no solve).
-3. Phase 2 negatives ablation (`program.phase2_negatives`) — load-bearing, not tuning.
-4. Phases 3-5, fusion selection on dev, freeze (`m7src/freeze.py` → `m7/FREEZE.json`), final run.
-5. Re-run the novelty freshness check before the report ships (mandate requirement).
+See the handoff prompt. Order: cheap diagnostics and the centering lever first (hours), then the
+contrastive refit at a sane lr, then teacher swap, then n-grams, then fusion. Preserve the eval
+protocol, partition ledger, decontamination, pinned dev suite, frozen comparators and
+freeze/final-run machinery — those are twice-adversarially-reviewed and are not what is wrong.
 
 ## Open for Dylan
 
-Nothing blocking. HF release go stays yours. Host-side Windows Update setting above.
+1. **stella_en_400M_v5 provenance call.** MIT, NovaSearch ships no vector product — but the weights
+   are initialised from Alibaba's `gte-large-en-v1.5`, and Alibaba ships OpenSearch Vector Search /
+   AnalyticDB. The releasing party is clean; the lineage touches a competing vendor. Your call.
+   Conservative fallback: bge-large (+1.04 MTEB-Ret, Tier 2 only).
+2. **Host:** stop Windows Update auto-rebooting (Event 1074 took the box at 05:52; nothing lost).
+3. HF release go, later.
+
+## Guardrails now in CLAUDE.md
+
+A standing directive (added after this session declared Tier 1 unreachable and was wrong within the
+hour): exhaust the angles before calling any bar unreachable — redo the arithmetic with the best
+component, diagnose every failure mechanistically, sweep the literature, check capability claims
+algebraically. Plus: past decisions are revisitable with evidence and Dylan's sign-off, the goal
+supersedes them — except that eval-protocol changes must precede the numbers they affect.
