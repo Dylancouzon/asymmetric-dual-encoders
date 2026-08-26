@@ -7,7 +7,11 @@
 set -u
 cd /home/dylan/asymetric-dual-encoders
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-while pgrep -f "[t]eacher_learnability.py" >/dev/null; do sleep 15; done
+# Anchored to a PYTHON cmdline. `pgrep -f "[t]eacher_learnability.py"` matched the shell that
+# WROTE this script -- the heredoc text is in that shell's own cmdline -- so the loop never ended
+# and the job sat idle. The bracket trick only hides the pattern from itself, not from every other
+# process carrying the same string. ^[^ ]*python excludes /bin/bash cmdlines.
+while pgrep -f "^[^ ]*python[0-9.]* -u scripts/teacher_learnability" >/dev/null; do sleep 15; done
 
 for enc in arctic-embed-l stella-400M-v5; do
   echo "=========== ext $enc lam 1e-4  $(date -Is) ==========="
