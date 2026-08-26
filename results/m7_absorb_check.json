@@ -1,0 +1,51 @@
+{
+ "_note": "Absorbability of query-side transforms into a freely-parameterised vocab x dim table under normalize(weighted mean of rows). ABSORBABLE means the transform adds NO capacity a trained table lacks -- it can still help as a prior/initialisation, but it cannot raise the architecture's ceiling. This CORRECTS research/m7-research-2026-08-26.md, which classed query-side centering and top-PC removal as 'genuine new capacity'. They are not: mean_t(W_t - mu) = mean_t(W_t) - mu exactly, for every token multiset.",
+ "setup": {
+  "vocab": 500,
+  "dim": 64,
+  "n_queries": 200,
+  "queries": "ragged multisets with repeats and a shared prefix token"
+ },
+ "checks": {
+  "centering: normalize(mean - mu)": {
+   "max_abs_diff": 1.6653345369377348e-16,
+   "absorbable": true,
+   "reconstruction": "W' = W - mu (subtract mu from EVERY row)"
+  },
+  "whitening: normalize(A @ mean)": {
+   "max_abs_diff": 3.3306690738754696e-16,
+   "absorbable": true,
+   "reconstruction": "W' = W A^T"
+  },
+  "SIF post-proc: normalize(P @ (mean - mu))": {
+   "max_abs_diff": 3.3306690738754696e-16,
+   "absorbable": true,
+   "reconstruction": "W' = (W - mu) P^T"
+  },
+  "per-token weights: normalize(sum c_t W_t / sum c_t)": {
+   "max_abs_diff": 9.309220061481938e-14,
+   "absorbable": true,
+   "reconstruction": "W' = c_t * W_t (scale each row by its own weight)"
+  },
+  "full SIF (weights + centering + PC removal)": {
+   "max_abs_diff": 2.8199664825478976e-14,
+   "absorbable": true,
+   "reconstruction": "W' = c_t (W_t - mu) P^T"
+  },
+  "count saturation (unique-tokens-only)": {
+   "max_abs_diff_vs_plain_mean": 0.1291857019482507,
+   "absorbable": false,
+   "reconstruction": "IMPOSSIBLE: the correction depends on each query's multiplicity vector, and a row is shared across all queries"
+  },
+  "length scaling (1/sqrt|T| instead of 1/|T|)": {
+   "max_abs_diff_vs_plain_mean": 1.7091883464104285e-13,
+   "absorbable": true,
+   "reconstruction": "VACUOUS: any positive scalar function of |T| is removed by the final L2 normalization, so it is a no-op, not a lever"
+  },
+  "n-gram / phrase rows": {
+   "absorbable": false,
+   "reconstruction": "NOT absorbable: two queries with the same token multiset in a different order get IDENTICAL unigram-bag vectors, so no choice of unigram rows can separate them. An n-gram row can."
+  }
+ },
+ "consequence": "Of the levers in the plan, only n-gram/phrase rows and multiplicity-dependent pooling (count saturation) add capacity. Centering, whitening, top-PC removal, IDF and SIF weighting are all re-parameterisations -- and per-token weighting is ALREADY in the architecture (QueryTable.learned_weights), so p1-objB could in principle have learned the SIF weighting itself."
+}
