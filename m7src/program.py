@@ -66,44 +66,46 @@ def phase1_objective():
 
 
 def phase2_screen(base):
-    """The CHEAP DECISIVE SCREEN, to run before any wide negatives sweep.
+    """The CHEAP DECISIVE SCREEN: does the CONTRASTIVE PHASE degrade a good table, and does the
+    learning rate explain it?
 
-    Two of the three original suspects are now dead by measurement, not ablation
-    (results/m7_diag_scores.json): fn_margin=0.02 removes only 4.3% of the top-100 hardest
-    negatives, and random negatives are not trivially separable. Temperature is kept LOW on
-    purpose -- 0.01-0.02 is the published norm (BGE uses 0.01) and Wang & Liu (arXiv 2012.09740)
-    argue low temperature makes the loss more hardness-aware, so re-tuning it would spend budget
-    on the one knob the literature says to leave alone.
+    REDESIGNED 2026-08-26, mid-screen, after seeing the first arm's B-phase curve and BEFORE any
+    arm's A-phase result -- so this is not a change made to chase an outcome. The original design
+    ran objective C (B then A) per arm at a matched step budget across a 60x lr range. That does not
+    isolate the learning rate, because the B phase is also run at that lr: at 5e-5 B reaches 0.2731
+    after 4,000 steps and is still climbing steeply, where 3e-3 reaches 0.4449 at the same count.
+    Every arm would therefore enter its contrastive phase from a different table, and an A-phase
+    delta would be confounded with how far B got. Codex's review of the plan reached the same
+    conclusion independently.
 
-    That leaves the learning rate, and the screen is now built around it: three arms across the
-    published range with warmup, plus one-variable controls that make a pass or a fail
-    attributable (old lr WITH warmup; correct lr WITHOUT hard negatives; phase-1 verbatim).
-    Every arm starts from the B checkpoint, not the teacher init. Evals every 500 steps, and each
-    one now logs the collapse diagnostics, so a degenerating representation is observed rather
-    than inferred from the dev curve.
+    So: every arm is objective A ONLY, initialised from the SAME p1-objB checkpoint (dev 0.4548,
+    rows and trained token weights both restored), and the arms vary the contrastive learning rate.
+    That is the quantity the kill criterion is about, and phase 1 already established what happens
+    at lr 3e-3 from this exact starting table -- p1-objC degraded it monotonically to 0.3721.
+
+    Cheaper as well as cleaner: no arm re-runs the B phase, so each is 2,000 steps rather than
+    6,000, and the mined negatives are already cached.
     """
-    # Warmup + a published lr, and lr_weights kept at 10x the row lr rather than a fixed 1e-2
-    # (at lr=5e-5 the old default would have been 200x the row lr).
-    def sane(lr, **kw):
-        return {"hard_neg_k": 16, "hard_neg_source": "teacher", "fn_margin": 0.05,
-                "lr": lr, "lr_weights": lr * 10, "warmup_steps": 500,
+    CKPT = "run:p1-objB"
+
+    def arm(lr, **kw):
+        return {"objective": "A", "init": CKPT, "steps_b": 0, "steps_a": 2000, "eval_every": 250,
+                "hard_neg_k": 16, "hard_neg_source": "teacher", "fn_margin": 0.05,
+                "lr": lr, "lr_weights": lr * 10, "warmup_steps": 200,
                 "lr_schedule": "warmup_linear", **kw}
 
-    out = {}
-    for tag, over in {
-        # the decisive arm: a published lr, warmup, teacher-mined negatives, NV-Retriever's tuned
-        # 0.05 margin. If this still degrades a 0.4449 table, the avenue is diagnosed and dead.
-        "sane-5e5":      sane(5e-5),
-        "sane-1e5":      sane(1e-5),          # NV-Retriever / DAFT's exact value
-        "sane-1e4":      sane(1e-4),          # top of the published range
-        # one-variable controls, so a pass or fail is attributable
-        "warmup-only":   sane(3e-3),          # old lr WITH warmup: does warmup alone rescue it?
-        "sane-randneg":  sane(5e-5, hard_neg_k=0),   # the mandate's premise, at the correct lr
-        "baseline":      {"hard_neg_k": 0},    # phase-1 config verbatim, for the reference curve
-    }.items():
-        out.update(grid("p2s", base, {tag: {"objective": "C", "steps_b": 4000, "steps_a": 2000,
-                                            "eval_every": 500, **over}}))
-    return out
+    return grid("p2s", base, {
+        # step 0 with no training: pins the starting point in THIS harness, so every arm's delta is
+        # measured against a number produced by the same code path rather than against a ledger row.
+        "start":         arm(5e-5, steps_a=0, eval_every=1),
+        # the decisive arms: published frozen-tower learning rates, with warmup and mined negatives
+        "sane-1e5":      arm(1e-5),          # NV-Retriever / DAFT's exact value
+        "sane-5e5":      arm(5e-5),
+        "sane-1e4":      arm(1e-4),          # top of the published range; satisfies KILL_REQUIRES
+        # controls, one variable each
+        "old-lr-3e3":    arm(3e-3),          # phase 1's lr, now WITH warmup and hard negatives
+        "sane-randneg":  arm(5e-5, hard_neg_k=0),   # the mandate's premise, at a published lr
+    })
 
 
 def phase2_negatives(base):

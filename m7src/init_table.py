@@ -64,6 +64,18 @@ def input_emb_rows(device="cuda"):
     return model.get_input_embeddings().weight.detach().float().cpu().numpy().copy()
 
 
+def run_token_weights(rid):
+    """The trained per-token weights saved alongside a run's rows, or None if it had none.
+
+    A checkpoint init that restored rows but re-derived the weights from IDF would not be the
+    system whose dev score is being used as the starting point -- the weights are part of the
+    table, and p1-objB's learned ones are measurably IDF-LIKE but not IDF.
+    """
+    z = np.load(WORK / "runs" / f"{rid}.npz")
+    w = z["token_weights"]
+    return None if w.size == 0 else w.astype(np.float32)
+
+
 def random_rows(vocab, dim, seed=0):
     return np.random.default_rng(seed).normal(0, 1 / np.sqrt(dim), (vocab, dim)).astype(np.float32)
 
@@ -75,6 +87,30 @@ def get_init(kind, pre: Preproc, vocab=None, dim=None):
     name = f"{spec_tag()}-{kind}-{pre.fingerprint()}" if kind == "teacher" \
         else f"{spec_tag()}-{kind}"
     p = INIT / f"{name}.npy"
+    # "run:<run_id>" starts from a previously trained table instead of an init. It exists so the
+    # contrastive phase can be tested from a FIXED starting table: comparing objective-C arms at a
+    # matched step budget across a 60x learning-rate range compares tables that reached completely
+    # different quality in the B phase (0.2731 at lr 5e-5 vs 0.4449 at 3e-3, both at 4k steps), so
+    # any A-phase delta is confounded with how far B got. Not cached under work/init -- the table
+    # it names is already on disk, and copying it would just risk the two diverging.
+    if kind.startswith("run:"):
+        rid = kind.split(":", 1)[1]
+        npz = WORK / "runs" / f"{rid}.npz"
+        if not npz.exists():
+            raise FileNotFoundError(f"init 'run:{rid}' needs {npz}, which does not exist")
+        z = np.load(npz)
+        # rows_fp16 is what the artifact actually stores, so the A phase starts from the table that
+        # would ship, not from an fp32 shadow of it. The difference is far below the dev resolution.
+        rows = z["rows_fp16"].astype(np.float32)
+        meta = json.loads((WORK / "runs" / f"{rid}.meta.json").read_text())
+        if meta.get("preproc_fingerprint") not in (None, pre.fingerprint()):
+            raise AssertionError(
+                f"init 'run:{rid}' was trained under preprocessing "
+                f"{meta['preproc_fingerprint']} but this run uses {pre.fingerprint()}")
+        if meta.get("teacher") not in (None, encoders.active().repo):
+            raise AssertionError(f"init 'run:{rid}' was trained against {meta['teacher']} but the "
+                                 f"active encoder is {encoders.active().repo}")
+        return rows
     if p.exists():
         return np.load(p)
     if kind == "teacher":

@@ -23,6 +23,7 @@ import mix
 import pool as poolmod
 from _paths import WORK
 from decontam import OUT as DECON
+import init_table
 from init_table import get_init, idf_weights
 from table import NO_PREFIX, WITH_PREFIX, Preproc, QueryTable, get_tokenizer, ragged, tokenize
 from teacher import QUERY_PREFIX, encode_cached
@@ -375,7 +376,20 @@ def run(cfg: Cfg, log=print):
     log(f"  negative bank {tuple(bank.shape)} ({bank.numel()*2/1e9:.2f} GB VRAM)")
 
     W0 = torch.from_numpy(get_init(cfg.init, pre, vocab=V)).cuda()
-    w0w = idf_weights() if (cfg.learned_weights and cfg.idf_init_weights) else None
+    # A "run:<id>" init restores the trained TOKEN WEIGHTS too. Restoring rows but re-deriving
+    # weights from IDF would start from a system that is not the one whose dev score is being used
+    # as the baseline -- p1-objB's learned weights are IDF-LIKE (spearman -0.44 vs update count)
+    # but they are not IDF, and the weights are as much part of the table as the rows.
+    if cfg.init.startswith("run:") and cfg.learned_weights:
+        w0w = init_table.run_token_weights(cfg.init.split(":", 1)[1])
+        if w0w is None:
+            w0w = idf_weights() if cfg.idf_init_weights else None
+            log(f"  init {cfg.init} carries no token weights; falling back to "
+                f"{'IDF' if cfg.idf_init_weights else 'uniform'}")
+        else:
+            log(f"  init {cfg.init}: restored rows AND {len(w0w)} trained token weights")
+    else:
+        w0w = idf_weights() if (cfg.learned_weights and cfg.idf_init_weights) else None
     model = QueryTable(W0.cpu().numpy(), weight_init=w0w, learned_weights=cfg.learned_weights).cuda()
     updates = torch.zeros(V, device="cuda")
     opt = torch.optim.Adam([
