@@ -208,15 +208,23 @@ def run(cfg: Cfg, log=print):
     if cfg.objective in ("B", "C"):
         extra = []
         if cfg.b_query_sources_all:
-            from mix import QUERYTEXT_SOURCES
             import json as _json
+
+            from mix import QUERYTEXT_SOURCES
             kq_p = WORK / "decontam" / "kept_querytext.json"
-            kq = _json.loads(kq_p.read_text()) if kq_p.exists() else {}
+            if not kq_p.exists():
+                raise RuntimeError(f"{kq_p} missing: run decontam_querytext.py. Silently "
+                                   "training without the query-text sources is not a fallback.")
+            kq = _json.loads(kq_p.read_text())
             for src in QUERYTEXT_SOURCES:
                 fp = WORK / "train" / "querytext" / f"{src}.json"
-                if fp.exists() and src in kq:
-                    qs = _json.loads(fp.read_text())
-                    extra += [qs[i] for i in kq[src]]
+                if not fp.exists():
+                    continue
+                if src not in kq:
+                    raise RuntimeError(f"kept_querytext.json has no entry for {src}: re-run "
+                                       "decontam_querytext.py")
+                qs = _json.loads(fp.read_text())
+                extra += [qs[i] for i in kq[src]]
         if cfg.b_pseudo_queries:
             import pseudoq
             extra += pseudoq.build_decontaminated(cfg.b_pseudo_queries)
@@ -267,12 +275,14 @@ def run(cfg: Cfg, log=print):
         # optional pseudo-query / query-text-only part: cosine only, no positive to rank against
         n_ps = int(len(idx) * cfg.b_pseudo_frac) if b_texts else 0
         extra_loss = torch.zeros((), device="cuda")
+        touched = []
         if n_ps:
             j = rng.integers(0, len(b_texts), n_ps)
             f2, o2, l2 = ragged([b_ids_all[k] for k in j], "cuda")
             qv2 = model(f2, o2, l2)
             extra_loss = (1.0 - (qv2 * torch.from_numpy(b_tq[j]).cuda()).sum(1)).mean()
             idx = idx[:max(1, len(idx) - n_ps)]
+            touched = [b_ids_all[k] for k in j]
         qv = batch_of(idx)
         t = torch.from_numpy(tq[idx]).cuda()
         cand = None
@@ -293,7 +303,8 @@ def run(cfg: Cfg, log=print):
         loss, cos, kl = distill(qv, t, cand, cfg.temp, cfg.cos_weight, cfg.kl_weight)
         if n_ps:
             loss = loss + cfg.cos_weight * extra_loss
-        return loss, {"cos": cos, "kl": kl, "cos_extra": round(float(extra_loss), 4)}
+        return loss, {"cos": cos, "kl": kl, "cos_extra": round(float(extra_loss), 4)}, \
+            [ids_all[i] for i in idx] + touched
 
     def step_a(idx):
         qv = batch_of(idx)
@@ -318,7 +329,7 @@ def run(cfg: Cfg, log=print):
         loss = infonce(qv, pos_v, neg, cfg.temp, t, tp, cfg.fn_margin,
                        neg_pool_idx=torch.from_numpy(neg_pool).cuda(),
                        pos_pool_idx=torch.from_numpy(p_i).cuda())
-        return loss, {"n_neg": neg.shape[0]}
+        return loss, {"n_neg": neg.shape[0]}, [ids_all[i] for i in idx]
 
     def train_phase(tag, steps, stepfn):
         if steps <= 0:
@@ -326,8 +337,11 @@ def run(cfg: Cfg, log=print):
         t0 = time.time()
         for s in range(1, steps + 1):
             idx = rng.integers(0, len(q_texts), cfg.batch)
-            loss, extra = stepfn(idx)
-            rows = np.unique(np.concatenate([ids_all[i] for i in idx]))
+            loss, extra, used = stepfn(idx)
+            # the rows actually touched this step, pseudo-queries included: `updates` is a
+            # reported coverage metric and the scale of the pull-toward-init penalty, so it must
+            # not be derived from the pre-truncation batch
+            rows = np.unique(np.concatenate([np.asarray(u, dtype=np.int64) for u in used]))
             ri = torch.from_numpy(rows).cuda()   # rows touched by the pair part of the batch
             if cfg.reg_init > 0:
                 # low-update rows stay pulled toward init: the penalty is scaled by 1/(1+updates)
