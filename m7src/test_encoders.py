@@ -53,8 +53,17 @@ def main():
     inv = {v: k for k, v in DT.items()}
     for d in dirs:
         m = json.loads((d / "meta.json").read_text())
+        # Resolve the Spec from the meta's own POOLING, not from the repo: one repo can carry two
+        # Specs (arctic CLS and arctic mean), and this replay runs under whichever encoder happens
+        # to be active. The meta records what the encode actually was.
+        cands = [sp for sp in encoders.specs_for_repo(m["model"])
+                 if sp.pooling_key == m["pooling"]]
+        if len(cands) != 1:
+            check(False, f"{d.name}: meta pooling {m['pooling']!r} matches {len(cands)} Specs for "
+                         f"{m['model']} -- cannot replay unambiguously")
+            continue
         key, _ = cache_key(m["name"], m["prefix"], m["max_length"], m["model"], m["revision"],
-                           m["corpus_sha256"], inv[m["encode_dtype"]])
+                           m["corpus_sha256"], inv[m["encode_dtype"]], spec=cands[0])
         check(key == d.name, f"{d.name}" if key == d.name else
               f"{d.name} -> recomputed {key} (KEY DRIFT: existing encode would be orphaned)")
 
@@ -89,6 +98,23 @@ def main():
     print("\nevery Spec must be revision-pinned:")
     check(all(s.revision for s in encoders.REGISTRY.values()),
           "no unpinned revisions in the registry")
+
+    print("\ntwo Specs sharing one repo must not be resolved by registry order:")
+    shared = [r for r in {sp.repo for sp in encoders.REGISTRY.values()}
+              if len(encoders.specs_for_repo(r)) > 1]
+    for r in shared:
+        names = [sp.name for sp in encoders.specs_for_repo(r)]
+        if encoders.active().repo == r:
+            check(encoders.by_repo(r) is encoders.active(),
+                  f"{r}: the ACTIVE spec wins ({encoders.active().name} of {names})")
+        else:
+            try:
+                encoders.by_repo(r)
+                check(False, f"{r} is ambiguous ({names}) and by_repo did NOT raise")
+            except KeyError:
+                check(True, f"{r} is ambiguous ({names}) and by_repo raises")
+    if not shared:
+        print("  (no repo is shared by two Specs right now)")
 
     print("\nan unregistered repo must be refused, not silently defaulted:")
     try:

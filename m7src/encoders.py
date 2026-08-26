@@ -107,6 +107,35 @@ REGISTRY = {
                      "answer the query.\nQuery: ",
         notes="MRL heads at 256/768/1024+; ArguAna and FiQA2018 are on its recorded training "
               "list, which is 2 of our 6 eval datasets -- must be labelled if used"),
+    # MEAN-POOLED, and the reason they are here: the learnability probe found that a teacher's
+    # approximability by a bag-of-token-vectors tracks its POOLING, not its size or its MTEB score
+    # (stella, mean, ratio 0.715 > bge-base, CLS, 0.686 > arctic-l, CLS, 0.526 > gte-large, CLS,
+    # 0.431). Mean pooling IS an average over token positions, which is the operation a lookup table
+    # performs, so the hypothesis has a mechanism. e5 is the strongest permissive mean-pooled English
+    # family at our vocab and dim: MIT, intfloat is a clean vendor, 30,522 BERT WordPiece.
+    # e5 REQUIRES its "query: " / "passage: " prefixes; omitting them is a known large regression.
+    "e5-large-v2": Spec(
+        name="e5-large-v2", repo="intfloat/e5-large-v2",
+        revision="f169b11e22de13617baa190a028a32f3493550b6",
+        dim=1024, pooling="mean", query_prefix="query: ", doc_prefix="passage: ",
+        notes="mean-pooled; tests whether pooling explains approximability"),
+    "e5-base-v2": Spec(
+        name="e5-base-v2", repo="intfloat/e5-base-v2",
+        revision="f52bf8ec8c7124536f0efb74aca902b2995e5bcd",
+        dim=768, pooling="mean", query_prefix="query: ", doc_prefix="passage: ",
+        notes="mean-pooled 768-d control for e5-large-v2"),
+    # DELIBERATELY OFF-SPEC: arctic-embed-l read out with MEAN pooling instead of its published CLS.
+    # It separates "mean pooling makes a teacher approximable" from "stella is simply good": if the
+    # best-ceiling tower becomes approximable when read out as a mean, the two are separable and we
+    # can have both. The doc tower is ours to define, so an off-spec read-out is legitimate as long
+    # as queries and documents use the SAME one -- but its quality is NOT the published model's, and
+    # validate_encoder.py will and should FAIL it against sentence-transformers, which implements the
+    # published CLS pipeline. Do not "fix" that failure.
+    "arctic-embed-l-mean": Spec(
+        name="arctic-embed-l-mean", repo="Snowflake/snowflake-arctic-embed-l",
+        revision="d8fb21ca8d905d2832ee8b96c894d3298964346b",
+        dim=1024, pooling="mean", query_prefix=BGE_PREFIX,
+        notes="off-spec mean read-out of a CLS-trained tower; expected to fail ST validation"),
     "arctic-embed-l": Spec(
         name="arctic-embed-l", repo="Snowflake/snowflake-arctic-embed-l",
         revision="d8fb21ca8d905d2832ee8b96c894d3298964346b",
@@ -141,15 +170,34 @@ def get(name):
     return REGISTRY[name]
 
 
-BY_REPO = {s.repo: s for s in REGISTRY.values()}
+def specs_for_repo(repo):
+    return [s for s in REGISTRY.values() if s.repo == repo]
 
 
 def by_repo(repo):
     """Resolve a spec from a HF repo id. The encode cache key is handed a model_id rather than a
     spec name, and it must not guess pooling or tokenizer identity -- guessing is how two encoders
-    that produce different vectors end up sharing one cache key."""
-    if repo not in BY_REPO:
+    that produce different vectors end up sharing one cache key.
+
+    A repo can map to MORE THAN ONE Spec: `arctic-embed-l` and `arctic-embed-l-mean` are the same
+    weights read out two ways. So the ACTIVE encoder wins whenever its repo matches -- a process
+    running one of them must resolve its own repo to itself -- and an ambiguous repo with no active
+    match RAISES rather than picking by dict order. Silently picking would write CLS vectors under a
+    cache key that claims mean pooling, which is precisely the collision test_encoders.py exists to
+    prevent and which it cannot see (it replays keys written before the variant existed)."""
+    act = active()
+    if act.repo == repo:
+        return act
+    matches = specs_for_repo(repo)
+    if len(matches) == 1:
+        return matches[0]
+    if not matches:
         raise KeyError(f"repo {repo!r} is not in the encoder registry. Add a Spec for it rather "
                        f"than passing it through: the cache key needs its pooling and tokenizer "
                        f"identity, and defaulting those silently mislabels encodes.")
-    return BY_REPO[repo]
+    raise KeyError(f"repo {repo!r} maps to several Specs ({[m.name for m in matches]}) and none is "
+                   f"the active encoder. Set M7_ENCODER to the one you mean -- resolving this by "
+                   f"registry order would mislabel the encode.")
+
+
+BY_REPO = {s.repo: s for s in REGISTRY.values()}   # kept for readers that only need a repo listing

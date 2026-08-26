@@ -174,12 +174,15 @@ def encode(texts, prefix="", max_length=512, batch_tokens=16384, model_id=TEACHE
 DT = {torch.float32: "fp32", torch.float16: "fp16", torch.bfloat16: "bf16"}
 
 
-def cache_key(name, prefix, max_length, model_id, revision, corpus_sha, dtype):
+def cache_key(name, prefix, max_length, model_id, revision, corpus_sha, dtype, spec=None):
     # The key must change whenever the vectors would, so POOLING and the tokenizer identity come
     # from the registry rather than being asserted as bge's literals. The pre-registry version
     # hardcoded "cls-l2"/"bert-wordpiece-30522", so a mean-pooled encode would have been stored
     # under a key claiming CLS. For bge-base the resulting blob is unchanged.
-    spec = encoders.by_repo(model_id)
+    # `spec` is passed explicitly only by test_encoders, which replays keys for encodes made by
+    # OTHER encoders and resolves each one's Spec from its own meta.json. Everything else resolves
+    # from the repo, where the active encoder disambiguates a shared repo.
+    spec = spec or encoders.by_repo(model_id)
     blob = json.dumps({"name": name, "prefix": prefix, "max_length": max_length, "model": model_id,
                        "revision": revision, "pooling": spec.pooling_key,
                        "corpus_sha256": corpus_sha,
