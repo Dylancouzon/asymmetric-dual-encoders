@@ -1,102 +1,75 @@
 # M7 status
 
-**Stage:** Stage 0 done, gate GO. Two research rounds + a Fable adversarial review done 2026-08-26
-(1 BLOCKER / 8 MAJOR / 7 MINOR, all actioned). **No training restarted — next session is compute.**
-Detail: `research/m7-research-2026-08-26b.md`, `research/m7-teacher-shortlist-2026-08-26.md`,
-`EXPLORED.md`, `results/m7_*.json`.
+**Stage:** teacher decided and validated; phase-2 answered; arctic-embed-l encodes started.
+Next session is compute. Detail: `m7/RESULTS.md` (runs), `m7/LEDGER.md` (protocol + the Codex
+gate's open list), `m7/EXPLORED.md` (closed and reopened avenues), `results/m7_*.json` (numbers).
 
-## Run these first, in this order
+## Run these next, in this order
 
-1. **All five encoders are loader-validated** (`results/m7_encoder_validation.json`): every one
-   agrees with sentence-transformers at min cosine ≥0.9999998 and max pairwise similarity Δ ≤1.8e-07.
-   `m7src/validate_encoder.py` must pass for any *new* Spec before the probe or a corpus encode.
-   It exists because review caught stella's post-pooling Dense head missing from its Spec — the M2
-   potion loader blocker again. Two operational findings came out of it: **stella does not load
-   without `use_memory_efficient_attention=False, unpad_inputs=False`** (an earlier note called
-   xformers merely optional — wrong), and those go on the *config*, not `from_pretrained`.
-2. `m7src/teacher_probe.py` — picks stella vs gte-large on measurement. ~70K docs/candidate.
-3. Phase-2 screen (`program.phase2_screen`) — the decisive contrastive test at a published lr.
-4. Doc-side instruction test (§below), count saturation, then the teacher swap.
+1. **Teacher learnability probe — do this BEFORE the 6.17M-doc pool encode.** The teacher was
+   picked on *symmetric ceiling*; what determines the shipped system is how well a bag-of-tokens
+   table approximates that teacher (Codex M-probe). The two CQADupStack dev components are already
+   encoded for all five candidates (`work/teacherprobe/`, plus arctic in the pipeline's own cache),
+   so fitting the closed-form flat table per candidate and ranking the *student* is cheap. It is
+   also the tie-break for the tension below.
+2. `encode_dev.py nq-250k hotpotqa` then `pool.py` under `M7_ENCODER=arctic-embed-l` — the long
+   job (~3 h; 6.17M docs at 1024-d). Gates already passed for arctic: `validate_encoder.py`,
+   `test_encoders.py`, `test_init_rows.py` (min cosine 0.99999986).
+3. Re-run `stage0_ridge` + `gate.py` under arctic. Its refs file is separate
+   (`work/devres/refs-arctic-embed-l.json`), so nothing mixes teachers.
+4. Then the non-absorbable retention levers, cheapest first: count saturation, doc-side instruction.
+   `phase2_negatives` is **demoted** — mined hard negatives lose to random at matched lr.
 
-## Bars, with honest intervals
+## The bars, and the tension in the teacher choice
 
-`results/m7_calibration.json` now carries a real 95% **prediction** interval (regression sigma on
-n−2 df, t(7), and the extrapolation widening term). The old ±2·resid_sd band understated the
-half-width at stella by ~68%. **Consequence: no candidate clears Tier 1 CI-resolved on the dense
-arm at any plausible retention**; stella clears Tier 2 lower-bound at ≥0.88 retention, gte-large at
-≥0.91.
+`results/m7_bars_after_swap.json` (arithmetic only). Retention today is **0.7853**; arctic needs
+**0.863** for Tier 2 and **0.824** for Tier 1 fused, i.e. +7.8 and +3.9 retention points. Stella
+would need 0.824 / 0.787 — *less*, because it projects higher on the six.
 
-| teacher | six est | 95% PI | Tier 2 lower-bound clears | Tier 1 lower-bound clears |
-|---|---|---|---|---|
-| bge-base (current) | 0.5082 | ±0.024 | no, at any retention | no |
-| gte-large-en-v1.5 | 0.5473 | ±0.030 | at ≥0.91 | no |
-| stella_en_400M_v5 | 0.5562 | ±0.035 | at ≥0.88 | no |
+So the two signals disagree: **measured** on our own dev components arctic is the best of five
+(+0.0447 [0.0339, 0.0557] over bge-base; +0.0125 [0.0008, 0.0241] over stella, which would not
+survive multiplicity over the ten pairs) and it is the only candidate disclosing **zero overlap with
+our six**, where stella lists ArguAna and FiQA2018. **Projected**, stella maps ~0.025 higher onto the
+six. The projection is known to mis-order — arctic has the lowest MTEB v1 of the three 1024-d
+candidates and the highest measured macro, and bge-large ties bge-base across a 1-point MTEB gap —
+so it is a scale, not a ranking. Run (1) before spending three hours on the loser.
 
-Two caveats the interval does **not** contain, both pushing the same way: it carries no uncertainty
-from the retention factor, and **0.7853 is itself optimistic** — it is dev-macro retention whose
-only CI-resolved win is nq-250k, the training-adjacent component, while per-component retention runs
-64% (cqadup-programmers) to 89% (nq-250k) and the six lean toward the 64% end. Also, stella's
-registry lists **ArguAna and FiQA2018** — 2/6 of our target suite but only 2/15 of the MTEB
-predictor — so the affine fit cannot express that upward bias.
+Corrections Codex forced on the previous version of this file: the PI half-widths are **0.02818 /
+0.03294 / 0.03446** (bge-base / gte-large / stella), not 0.024/0.030/0.035; **"bge-base cannot clear
+Tier 2 at any retention" was false** — its teacher-only lower bound clears above ~0.955; and
+multiplying a dev-macro retention by projected teacher PI endpoints does not compose the two
+uncertainties, because the table macro is `mean_i(r_i x teacher_i)`.
 
-## Fusion: measured, real, and narrower than first reported
+## What phase 2 settled
 
-`results/m7_fusion_report_p1-objB.json` (dev, convex w=0.5, depth 1000, in-sample over a 12-point
-grid): **dense 0.4795 · BM25 0.4525 · fused 0.5520 (+0.0725)**. All four components gain,
-CI-resolved. But **+0.1418 of it is hotpotqa**, and the six contain no multi-hop component. The
-hotpotqa-free mean is **+0.049**, which is the defensible transfer estimate:
+`results/m7_phase2_screen_cis.json`, all arms from one fixed p1-objB checkpoint:
 
-| | bar | dense needed | retention on bge-base | on gte-large |
-|---|---|---|---|---|
-| Tier 1 (fused, +0.049) | 0.4868 | 0.4374 | **86.1%** | **79.9%** |
-| Tier 2 (dense alone) | 0.4583 | 0.4583 | 90.2% | 83.7% |
+- **The contrastive objective was never broken — phase 1 measured its learning rate.** At 5e-5 to
+  3e-4 it *improves* the table, CI-resolved; those three arms are mutually unresolved, so the
+  optimum is a **band, not a point**. At 1e-3 the gain shrinks; at 3e-3 (phase 1's lr) it is
+  negative and unresolved. The kill criterion may not fire and `contrastive_verdict()` records that
+  as a file, not a memory.
+- **Mined hard negatives HURT** at matched lr: random-only +0.0034 [0.0019, 0.0049]. The mandate's
+  "exploit the cheap enormous negative pool" premise is restored; the ledger's "scale without
+  hardness wasted the objective" is withdrawn. `fn_masked_frac` is 0.0051, so the false-negative
+  filter is not the mechanism — this file previously predicted it would "bite far harder", and it
+  does not.
+- **The gain is small**: +0.0111 proxy macro, against the +3.9 to +7.8 retention points the bars
+  need. Real, cheap, and not a tier-changer alone.
+- An arm's final-step macro is **not** its best-step macro (3e-4 peaks at step 500). Fix the step
+  budget in the config or select on best-eval consistently, and say which.
 
-So Tier 1 is still the easier bar, but **not "already there" for gte-large** — 79.9% is above
-today's 78.5%. An earlier version of this file said otherwise off the additive +0.0725; withdrawn.
-Also unexamined: six-set BM25 (0.4174) is weaker than dev BM25 (0.4525), and weakest exactly on
-FiQA, the row fusion is meant to rescue.
+## Still open from the Codex gate (full list + dispositions in `LEDGER.md`)
 
-## What is real on retention
-
-- **Centering / whitening / top-PC removal / SIF weighting add NO capacity** — absorbable
-  (`m7_absorb_check.json`, machine precision at fp32/fp16; the released **int8** artifact could
-  differ slightly since absorbing μ changes per-row absmax, and G4's 0.005 bar would catch it).
-  Demoted to an init experiment. p1-objB's learned weights already *are* IDF-like.
-- **Count saturation** — promoted. Non-absorbable, ~free; BM25, SPLADE and NUMEN converge on it.
-- **A document-side instruction** — cheap and *unpublished* for these families. Non-linear on the
-  doc side, so not absorbable. NB: doc2query-style expansion is **demoted, not closed** — see
-  EXPLORED for why the cited evidence does not reach our regime.
-- **N-grams — demoted.** Sent2Vec's own ablation: bigrams help supervised classification, not
-  unsupervised similarity, and it reports no retrieval numbers.
-- **Contrastive: lr is the leading untested hypothesis, not a diagnosis.** Two named suspects are
-  *bounded small* (`m7_diag_scores.json`: fn_margin removes 4.3% of the top-100 hardest; 84% of
-  queries have no random negative outscoring the positive) — but measured in the **teacher's**
-  geometry, not the student's, and the suspect list never included Adam-on-sparse-rows dynamics or
-  cross-query row interference. The decisive test is the phase-2 `sane-5e5` vs `warmup-only` arms.
-  Watch `fn_masked_frac`: at margin 0.05 with *mined* negatives the filter will bite far harder.
-- The proxy-3 near-tie with the closed-form flat table **did not replicate** on the full suite:
-  **+0.0205, CI [0.0142, 0.0274], p<1e-4** (`m7_ridge_vs_trained.json`, both tables scored in one
-  process, same components and preprocessing; int8 agrees at +0.0204). The gap is real. The cause
-  is not attributed — objective, weights and optimizer all differ, and the ridge λ was selected on
-  the proxy, so this refutes "training buys nothing over closed-form flat distillation", **not**
-  "learned weights buy nothing". p4-weights remains the clean test.
-
-## The strategic note, properly hedged
-
-A 2-layer distilled query tower reportedly retains **92.5%** on a frozen doc tower (arXiv 2306.11550,
-4-layer 96.2%). That is retention *of its own teacher on its own BEIR selection* — not comparable
-denominators to our 78.5%, and second-hand. **Verify what the 92.5% is a percentage of before
-letting it steer effort.** If it holds, it clears Tier 1 dense-only at ~0.1–0.5 ms, and it is
-exactly M8's mandate — which would make M7 the zero-transformer cost-frontier point rather than the
-quality winner. Directionally important, numerically unverified.
-
-DeepMind's arXiv 2508.21038 bounds realizable top-k subsets by embedding dimension. It is a
-**citation that our ceiling is a known class of limitation**, not a theorem about our table — our
-own teacher does not share the hotpotqa deficit (0.667 dev).
+Four blockers, none of which stop the encodes, all of which stop a *claim*: decontamination indexed
+only the 855K positives while training touches the whole 6.17M-doc pool; the bootstrap p-values are
+percentile tails, so Holm controls nothing; the frozen fusion function differs between dev selection
+and final scoring; and the two-access rule is already breached (`bench_throughput` read FiQA qrels),
+now logged.
 
 ## Open for Dylan
 
-1. **Nothing is blocking.** The stella-provenance call resolves without you.
-2. **Host:** stop Windows Update auto-rebooting (Event 1074 took the box at 05:52; nothing lost).
-3. Later: HF release go; and a view on shipping a teacher whose training data is undisclosed and
-   whose registry lists 2 of our 6 eval sets, if stella wins the probe.
+1. **Nothing is blocking.** The teacher ruling is made and logged.
+2. **Host:** Windows Update rebooted the box mid-morning once already.
+3. Later: HF release go. If (1) reverses the teacher choice, that comes back to you — it would mean
+   shipping a teacher trained on 2 of our 6 eval sets, which is a credibility call, not a technical one.

@@ -88,3 +88,4 @@ final-step macro is not its best-step macro. Any config taken forward must fix t
 part of the config, or select on best-eval consistently across arms and say so.
 
 | p2x-rn-1e3 | `work/runs/p2x-rn-1e3.json` | 0.4629 | ok |
+| p2x-rn-3e3 | `work/runs/p2x-rn-3e3.json` | 0.4521 | ok |
