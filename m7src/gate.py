@@ -44,13 +44,28 @@ def evaluate_checkpoint(run_id, components):
     return out, meta
 
 
-def run(run_id, stage0_id=None, components=("nq-250k", "cqadup-programmers", "cqadup-physics"),
-        probe_file=None):
+def run(run_id, stage0_id=None, components=None, probe_file=None):
+    """components defaults to the PINNED dev suite. The gate's dev macro is "equal weight per
+    component" over that suite -- silently dropping HotpotQA and the held-out slices (as an
+    earlier default did) would have changed which side of the BM25 bar the candidate lands on,
+    since BM25 is strongest on HotpotQA."""
     R = refs()
-    comps = list(components)
+    comps = list(components) if components else dev_eval.dev_components()
     pot = restrict(R["potion-retrieval-32M"], comps)
     bm = restrict(R["bm25"], comps)
     teacher = restrict(R["bge-base-symmetric"], comps)
+    # BM25 and potion have no row on the held-out slices (their corpora are pool row indices and
+    # carry no document text). That restriction is disclosed, but it must be explicit here rather
+    # than silently absorbed by boot._align's dataset intersection.
+    text_backed = [c for c in comps if not c.startswith("heldout-")]
+    for label, blob, need in (("potion", pot, text_backed), ("bm25", bm, text_backed),
+                              ("teacher", teacher, comps)):
+        missing = [c for c in need if c not in blob]
+        if missing:
+            raise SystemExit(f"GATE ABORTED: reference row '{label}' missing components {missing}; "
+                             "run dev_eval.py first")
+    print(f"[gate] dev components: {comps}")
+    print(f"[gate] BM25/potion comparisons run on the text-backed subset: {text_backed}")
 
     per, meta = evaluate_checkpoint(run_id, comps)
     cand = per["fp16"]
@@ -59,11 +74,16 @@ def run(run_id, stage0_id=None, components=("nq-250k", "cqadup-programmers", "cq
 
     if stage0_id:
         s0, _ = evaluate_checkpoint(stage0_id, comps)
-        g1 = boot.paired(s0["fp16"], pot, alternative="greater")
+        g1 = boot.paired(restrict(s0["fp16"], text_backed), pot, alternative="greater")
     else:
-        g1 = boot.paired(cand, pot, alternative="greater")
-    res["conditions"]["G1_stage0_above_potion"] = {**g1, "pass": bool(g1["ci95"][0] > 0),
-                                                   "checkpoint": stage0_id or run_id}
+        # G1 is defined on the Stage-0 distilled table; substituting the candidate is a weaker
+        # test, so it is called out on the printed line, not just recorded in the JSON.
+        g1 = boot.paired(restrict(cand, text_backed), pot, alternative="greater")
+    res["conditions"]["G1_stage0_above_potion"] = {
+        **g1, "pass": bool(g1["ci95"][0] > 0), "checkpoint": stage0_id or run_id,
+        "note": ("Stage-0 distilled table" if stage0_id else
+                 "SUBSTITUTED the candidate for the Stage-0 table (weaker test)"),
+        "components": text_backed}
 
     pf = probe_file or (REPO / "results" / "m7_capacity_probe_noprefix.json")
     if pf.exists():
@@ -73,7 +93,7 @@ def run(run_id, stage0_id=None, components=("nq-250k", "cqadup-programmers", "cq
     else:
         res["conditions"]["G2_capacity_probe"] = {"pass": False, "note": "probe not run"}
 
-    g3 = boot.paired(cand, bm, alternative="greater")
+    g3 = boot.paired(restrict(cand, text_backed), bm, alternative="greater")
     res["conditions"]["G3_candidate_above_bm25"] = {**g3, "pass": bool(g3["ci95"][0] > 0)}
 
     g4 = boot.upper_bound_one_sided(per["fp16"], per["int8"])
@@ -81,6 +101,9 @@ def run(run_id, stage0_id=None, components=("nq-250k", "cqadup-programmers", "cq
                                                "pass": bool(g4["upper"] < 0.005)}
 
     macros = {k: float(np.mean([np.mean(list(v[c].values())) for c in comps])) for k, v in per.items()}
+    macros_text_backed = {k: float(np.mean([np.mean(list(v[c].values())) for c in text_backed]))
+                          for k, v in per.items()}
+    res["macros_text_backed_subset"] = macros_text_backed
     res["macros"] = {**macros,
                      "bm25": float(np.mean([np.mean(list(bm[c].values())) for c in comps])),
                      "potion-retrieval-32M": float(np.mean([np.mean(list(pot[c].values())) for c in comps])),
@@ -94,7 +117,8 @@ def run(run_id, stage0_id=None, components=("nq-250k", "cqadup-programmers", "cq
     for k, v in res["conditions"].items():
         print(f"{'PASS' if v.get('pass') else 'FAIL'}  {k}"
               + (f"  d={v['delta']:+.4f} CI={v['ci95']}" if "delta" in v else "")
-              + (f"  upper={v['upper']}" if "upper" in v else ""))
+              + (f"  upper={v['upper']}" if "upper" in v else "")
+              + (f"  [{v['note']}]" if v.get("note") else ""))
     print(f"\nmacros: {json.dumps({k: round(x,4) for k,x in res['macros'].items()})}")
     print(f"retention vs teacher: {res['retention_vs_teacher']:.3f}")
     print(f"\nGO/NO-GO: {'GO' if res['PASS'] else 'NO-GO'}")

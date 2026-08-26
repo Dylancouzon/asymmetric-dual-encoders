@@ -162,6 +162,12 @@ def stream_cqa_dev_docs():
         yield from doc_texts
 
 
+def stream_dev_component_docs(comp):
+    import devsuite
+    _, doc_texts, *_ = devsuite.load(comp)
+    yield from doc_texts
+
+
 def protected_queries():
     """The six (from the vendored frozen_eval text), dev, and untouched-final query strings."""
     import os
@@ -185,6 +191,31 @@ def protected_queries():
         unt += [t for i, t in zip(list(q["_id"]), list(q["text"])) if str(i) in keep]
     qs["untouched-final"] = unt
     return qs
+
+
+def protected_query_index():
+    """(exact-key set, sorted 8-gram array) over every protected query: the six + dev +
+    untouched-final. Shared by decontam.run, decontam_querytext, decontam_heldout and pseudoq so
+    rule R1 has exactly one implementation."""
+    pq = protected_queries()
+    prot = [q for v in pq.values() for q in v]
+    q_ex = set(int(exact_u64(q)) for q in prot)
+    q_gram = np.unique(np.concatenate([all_grams(q) for q in prot]))
+    return q_ex, q_gram, {k: len(v) for k, v in pq.items()}
+
+
+def query_hits(text, q_ex, q_gram):
+    """R1 test for one candidate TRAIN query. -> 'exact' | 'near' | None.
+
+    searchsorted, not np.isin: isin re-sorts q_gram on every call, which turned a 353K-pair scan
+    into hours (see m7/CODEMAP.md)."""
+    if int(exact_u64(text)) in q_ex:
+        return "exact"
+    g = all_grams(text)
+    if g.size == 0 or q_gram.size == 0:
+        return None
+    i = np.minimum(np.searchsorted(q_gram, g, "left"), q_gram.size - 1)
+    return "near" if bool((q_gram[i] == g).any()) else None
 
 
 # ---- runner --------------------------------------------------------------------------
@@ -283,7 +314,9 @@ def run():
 
     six_res, six_hit = sweep("six", stream_six_docs(), 272_117)
     cqa_res, _ = sweep("cqadupstack-dev", stream_cqa_dev_docs(), 70_492)
+    nq_res, _ = sweep("nq-250k-dev", stream_dev_component_docs("nq-250k"), 250_000)
     dbp_res, _ = sweep("dbpedia-untouched", stream_beir_docs("dbpedia-entity"), 4_635_922)
+    fev_res, _ = sweep("fever-untouched", stream_beir_docs("fever"), 5_416_568)
 
     # --- R2 removal (the six only); R3 is disclosure --------------------------------------
     bad = {keys[i] for i in np.nonzero(six_hit)[0]}
@@ -303,9 +336,10 @@ def run():
         "R2_six_doc_removals": r2, "R2_total": sum(r2.values()),
         "R3_disclosed_overlap": {"six (also the R2 removal basis)": six_res,
                                  "cqadupstack-dev": cqa_res,
+                                 "nq-250k-dev": nq_res,
                                  "dbpedia-entity-untouched": dbp_res,
-                                 "hotpotqa-dev": "100% by construction: hotpotqa-corpus IS the dev corpus",
-                                 "fever-untouched": "fever-pos is drawn from the untouched FEVER corpus"},
+                                 "fever-untouched": fev_res,
+                                 "hotpotqa-dev": "100% by construction: hotpotqa-corpus IS the dev corpus"},
         "protected_queries": {k: len(v) for k, v in pq.items()},
         "params": {"ngram": NGRAM, "sketch": SKETCH, "dup_share": DUP_SHARE,
                    "hash": "blake2b-64 word hashes, polynomial rolling n-gram, bottom-k sketch"},

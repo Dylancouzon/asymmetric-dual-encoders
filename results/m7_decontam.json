@@ -1,0 +1,77 @@
+{
+ "n_train_pairs_in": 353519,
+ "n_train_pairs_kept": 352145,
+ "R1_query_removals": {
+  "hotpotqa-train": {
+   "exact": 0,
+   "near": 1103
+  },
+  "fever-train": {
+   "exact": 2,
+   "near": 162
+  },
+  "squad-train": {
+   "exact": 0,
+   "near": 42
+  },
+  "esci-us": {
+   "exact": 17,
+   "near": 0
+  },
+  "mrtydi-en": {
+   "exact": 1,
+   "near": 2
+  }
+ },
+ "R1_total": 1329,
+ "R2_six_doc_removals": {
+  "hotpotqa-train": 25,
+  "fever-train": 3,
+  "squad-train": 15,
+  "esci-us": 1,
+  "mrtydi-en": 1
+ },
+ "R2_total": 45,
+ "R3_disclosed_overlap": {
+  "six (also the R2 removal basis)": {
+   "protected_docs_scanned": 272117,
+   "train_docs_exact_dup": 0,
+   "train_docs_near_dup": 23,
+   "train_docs_total": 855324,
+   "near_dup_rate": 3e-05
+  },
+  "cqadupstack-dev": {
+   "protected_docs_scanned": 70492,
+   "train_docs_exact_dup": 0,
+   "train_docs_near_dup": 1,
+   "train_docs_total": 855324,
+   "near_dup_rate": 0.0
+  },
+  "dbpedia-entity-untouched": {
+   "protected_docs_scanned": 4635922,
+   "train_docs_exact_dup": 15523,
+   "train_docs_near_dup": 79595,
+   "train_docs_total": 855324,
+   "near_dup_rate": 0.09322
+  },
+  "hotpotqa-dev": "100% by construction: hotpotqa-corpus IS the dev corpus",
+  "fever-untouched": "fever-pos is drawn from the untouched FEVER corpus"
+ },
+ "protected_queries": {
+  "six": 3727,
+  "dev": 12772,
+  "untouched-final": 7066
+ },
+ "params": {
+  "ngram": 8,
+  "sketch": 32,
+  "dup_share": 8,
+  "hash": "blake2b-64 word hashes, polynomial rolling n-gram, bottom-k sketch"
+ },
+ "rules": {
+  "R1": "remove on query overlap (all partitions)",
+  "R2": "remove on positive-document overlap with the six",
+  "R3": "measure and disclose document overlap with dev and untouched-final; see the module docstring and m7/LEDGER.md for why removal there would delete the sources rather than decontaminate them"
+ },
+ "seconds": 1122.4
+}

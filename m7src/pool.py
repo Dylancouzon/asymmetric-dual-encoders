@@ -18,6 +18,7 @@ import torch
 
 import mix
 from _paths import WORK
+from hashing import sha_stream_list
 from teacher import encode_cached
 
 POOL = WORK / "pool"
@@ -71,14 +72,19 @@ def build(dim=DIM):
     stores = sorted({mix.load_source(s)["docstore"] for s in mix.available_sources()})
     if vec_p.exists() and meta_p.exists():
         meta = json.loads(meta_p.read_text())
-        if meta["stores"] == stores and vec_p.stat().st_size == meta["n"] * dim * 2:
+        fresh = {s: sha_stream_list(mix.load_store(s)[0]) for s in stores}
+        if (meta["stores"] == stores and vec_p.stat().st_size == meta["n"] * dim * 2
+                and meta.get("id_sha256") == fresh):
             return (PoolIndex(meta["spans"]),
                     np.memmap(vec_p, dtype=np.float16, mode="r", shape=(meta["n"], dim)), meta)
+        print("  pool cache is stale (store contents changed); rebuilding", flush=True)
 
-    counts = {}
+    counts, id_sha = {}, {}
     for s in stores:
         ids, _ = mix.load_store(s)
         counts[s] = len(ids)
+        id_sha[s] = sha_stream_list(ids)   # content, not just count: a changed store with the
+                                           # same doc count would otherwise reuse stale vectors
     total = sum(counts.values())
     spans, off = {}, 0
     for s in stores:
@@ -101,7 +107,8 @@ def build(dim=DIM):
     mm.flush()
     del mm
     tmp.rename(vec_p)
-    meta = {"n": total, "dim": dim, "stores": stores, "spans": spans, "counts": counts}
+    meta = {"n": total, "dim": dim, "stores": stores, "spans": spans, "counts": counts,
+            "id_sha256": id_sha}
     meta_p.write_text(json.dumps(meta, indent=1))
     return (PoolIndex(spans),
             np.memmap(vec_p, dtype=np.float16, mode="r", shape=(total, dim)), meta)

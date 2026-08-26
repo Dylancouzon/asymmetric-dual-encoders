@@ -102,8 +102,15 @@ def build_arrays(cfg, index):
 @torch.no_grad()
 def mine_hard_negatives(name, q_vecs, pool_vecs, k, exclude, q_chunk=2048, d_chunk=500_000):
     """Teacher-mined negatives: top-k pool docs per query by the teacher's own query vector,
-    minus that query's positives. Frozen doc vectors make this a few minutes for the whole set."""
-    p = WORK / "runs" / f"hardneg-{name}-k{k}.npy"
+    minus that query's positives. Frozen doc vectors make this a few minutes for the whole set.
+
+    The cache key hashes the query vectors and the pool shape, not just a name and a length: a
+    name-and-count key silently reuses a stale mining result when the mix changes but the count
+    does not."""
+    import hashlib as _h
+    sig = _h.sha256(np.ascontiguousarray(q_vecs[::997]).tobytes()
+                    + str((len(q_vecs), pool_vecs.shape, k)).encode()).hexdigest()[:12]
+    p = WORK / "runs" / f"hardneg-{name}-k{k}-{sig}.npy"
     if p.exists():
         return np.load(p)
     out = np.zeros((len(q_vecs), k), dtype=np.int64)
@@ -212,7 +219,7 @@ def run(cfg: Cfg, log=print):
                     extra += [qs[i] for i in kq[src]]
         if cfg.b_pseudo_queries:
             import pseudoq
-            extra += pseudoq.build(cfg.b_pseudo_queries)
+            extra += pseudoq.build_decontaminated(cfg.b_pseudo_queries)
         if extra:
             b_texts = extra
             b_tq = np.asarray(encode_cached(f"bextra-{len(b_texts)}", b_texts, prefix=QUERY_PREFIX,

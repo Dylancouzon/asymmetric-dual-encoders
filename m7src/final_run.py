@@ -19,6 +19,7 @@ Everything else this script prints is exploratory and labeled as such.
 """
 import argparse
 import json
+import re
 import subprocess
 import sys
 import time
@@ -32,14 +33,14 @@ import fusion
 from _paths import REPO
 from core import DATASETS, load_beir
 from evalkit import per_query_ndcg, topk_ids_scores
-from table import NO_PREFIX, WITH_PREFIX, load_table
+import freeze
+from table import Preproc, load_table
 from teacher import QUERY_PREFIX, encode_cached
 
 LEDGER = REPO / "m7" / "LEDGER.md"
 FROZEN = REPO / "results" / "frozen_eval"
 MANIFEST = REPO / "results" / "eval_manifest.json"
 UNTOUCHED = ["fever", "dbpedia-entity"]
-PRE = {"noprefix": NO_PREFIX, "prefix": WITH_PREFIX}
 CONFIRMATORY = {"C1_int8_table_gt_lr_dense_pertask": ("int8-table", "lr-dense-pertask"),
                 "C2_int8_table_gt_bm25": ("int8-table", "bm25"),
                 "C3_released_system_gt_opensearch": ("released-system", "opensearch-doc-v3-gte")}
@@ -55,8 +56,15 @@ def ledger(line):
         f.write(line.rstrip() + "\n")
 
 
-def guard(freeze_hash, infra_retry, branch):
+SIX = ["scifact", "nfcorpus", "fiqa", "arguana", "scidocs", "trec-covid"]
+
+
+def guard(freeze_hash, infra_retry, branch, fz):
     problems = []
+    # BENCH_DATASETS is an env var with an M2-era five-dataset default; a stale export in the
+    # same shell would silently redefine "the six" and the macro computed over it.
+    if list(DATASETS) != SIX:
+        problems.append(f"DATASETS is {list(DATASETS)}, not the six (check BENCH_DATASETS)")
     if sh("git", "status", "--porcelain"):
         problems.append("working tree is not clean")
     head = sh("git", "rev-parse", "HEAD")
@@ -65,10 +73,26 @@ def guard(freeze_hash, infra_retry, branch):
     remote = sh("git", "ls-remote", "origin", f"refs/heads/{branch}").split("\t")[0]
     if remote != freeze_hash:
         problems.append(f"freeze commit is not pushed: origin/{branch} is {remote[:12]}")
-    prior = "FINAL-RUN" in LEDGER.read_text()
-    if prior and not infra_retry:
+    text = LEDGER.read_text()
+    prior_hashes = re.findall(r"FINAL-RUN-BEGIN freeze=([0-9a-f]{40}) table=([0-9a-f]{64})", text)
+    if prior_hashes and not infra_retry:
         problems.append("m7/LEDGER.md already holds a final-run entry; a code fix requires a NEW "
                         "pushed freeze commit, and no later run may be relabeled as final")
+    if infra_retry:
+        if not prior_hashes:
+            problems.append("--infra-retry with no prior FINAL-RUN entry in the ledger")
+        else:
+            pf, pt = prior_hashes[-1]
+            if pt != fz["table_sha256"]:
+                problems.append("--infra-retry with a different table than the aborted run")
+            # only the ledger may have changed since the aborted run's freeze commit
+            changed = [l for l in sh("git", "diff", "--name-only", f"{pf}..HEAD").splitlines() if l]
+            stray = [c for c in changed if c != "m7/LEDGER.md"]
+            if stray:
+                problems.append("--infra-retry is for infrastructure only, but these files changed "
+                                f"since the aborted run's freeze commit: {stray}. A code change "
+                                "requires a new pushed freeze commit with the diff and its "
+                                "classification.")
     if problems:
         print("FINAL RUN REFUSED:\n  - " + "\n  - ".join(problems))
         sys.exit(2)
@@ -109,7 +133,7 @@ def bm25_run(doc_ids, doc_texts, q_ids, q_texts):
     r = bm25s.BM25(method="lucene", k1=1.2, b=0.75)
     r.index(bm25s.tokenize(doc_texts, stopwords="en", stemmer=st, show_progress=False), show_progress=False)
     ids, sc = r.retrieve(bm25s.tokenize(q_texts, stopwords="en", stemmer=st, show_progress=False),
-                         k=min(1000, len(doc_ids)), show_progress=False)
+                         k=min(fusion.DEPTH, len(doc_ids)), show_progress=False)
     return {qid: {doc_ids[d]: float(s) for d, s in zip(ids[qi], sc[qi]) if doc_ids[d] != qid}
             for qi, qid in enumerate(q_ids)}
 
@@ -125,11 +149,11 @@ def score_set(ds, kind, table_path, pre, fusion_spec, encode_dtype=torch.float32
     for variant in ("fp16", "int8"):
         m = load_table(table_path, variant=variant)
         runs[f"{variant}-table"] = topk_ids_scores(m.encode(q_texts, pre), dv, doc_ids,
-                                                  k=1000, chunk=chunk, qids=q_ids)
+                                                  k=fusion.DEPTH, chunk=chunk, qids=q_ids)
         del m
         torch.cuda.empty_cache()
     runs["bm25"] = bm25_run(doc_ids, doc_texts, q_ids, q_texts)
-    runs["teacher-symmetric"] = topk_ids_scores(tqv, dv, doc_ids, k=1000, chunk=chunk, qids=q_ids)
+    runs["teacher-symmetric"] = topk_ids_scores(tqv, dv, doc_ids, k=fusion.DEPTH, chunk=chunk, qids=q_ids)
     if fusion_spec:
         runs["fusion"] = fusion.apply_frozen(fusion_spec, runs["int8-table"], runs["bm25"])
     for k, r in runs.items():
@@ -141,24 +165,28 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--freeze-hash", required=True)
     ap.add_argument("--branch", default="m7-query-encoder")
-    ap.add_argument("--table", required=True, help="path to the released table .npz")
-    ap.add_argument("--preproc", required=True, choices=["noprefix", "prefix"])
-    ap.add_argument("--fusion", default="", help='JSON, e.g. {"family":"rrf","param":60}')
-    ap.add_argument("--released-system", default="int8-table", choices=["int8-table", "fusion"],
-                    help="which system the Tier-1 claim is judged on; fusion must be labeled")
     ap.add_argument("--infra-retry", action="store_true")
     a = ap.parse_args()
 
-    head = guard(a.freeze_hash, a.infra_retry, a.branch)
-    spec = json.loads(a.fusion) if a.fusion else None
-    pre = PRE[a.preproc]
+    # everything decisive comes from the committed freeze manifest, not the command line
+    fz = freeze.load_and_verify()
+    spec = fz["fusion"]
+    pre = Preproc(**fz["preproc"])
+    if pre.fingerprint() != fz["preproc_fingerprint"]:
+        raise SystemExit("FINAL RUN REFUSED: preproc fingerprint does not match its own fields")
+    table_path = REPO / fz["table_relpath"]
+
+    head = guard(a.freeze_hash, a.infra_retry, a.branch, fz)
     t0 = time.time()
     ledger(f"\n### FINAL-RUN {datetime.now(timezone.utc).isoformat()}\n"
-           f"- freeze commit `{head}` (pushed to origin/{a.branch}), table `{a.table}`, "
-           f"preproc `{a.preproc}`, fusion `{a.fusion or 'none'}`, released system "
-           f"`{a.released_system}`{', INFRA-RETRY' if a.infra_retry else ''}.")
+           f"- FINAL-RUN-BEGIN freeze={head} table={fz['table_sha256']}\n"
+           f"- pushed to origin/{a.branch}; table `{fz['table_relpath']}` "
+           f"({fz['table_bytes']} bytes), preproc `{fz['preproc']}` "
+           f"(fingerprint {fz['preproc_fingerprint']}), fusion `{json.dumps(spec)}`, "
+           f"released system `{fz['released_system']}`"
+           f"{', INFRA-RETRY' if a.infra_retry else ''}.")
 
-    six = {ds: score_set(ds, "six", REPO / a.table, pre, spec) for ds in DATASETS}
+    six = {ds: score_set(ds, "six", table_path, pre, spec) for ds in DATASETS}
     print("\n=== the six (KNOWN-TEST, development-informed) ===")
     systems = sorted({k for v in six.values() for k in v})
     by_sys = {s: {ds: six[ds][s] for ds in DATASETS if s in six[ds]} for s in systems}
@@ -168,11 +196,16 @@ def main():
               " ".join(f"{d}={means[d]:.4f}" for d in DATASETS))
 
     pq = json.load(open(REPO / "results" / "perquery.json"))
-    by_sys["released-system"] = by_sys["fusion" if a.released_system == "fusion" else "int8-table"]
+    by_sys["released-system"] = by_sys["fusion" if fz["released_system"] == "fusion" else "int8-table"]
     conf, pvals = {}, {}
     for name, (a_name, b_name) in CONFIRMATORY.items():
         A = by_sys[a_name]
-        B = by_sys.get(b_name) or boot.from_perquery_json(pq, b_name, set(DATASETS))
+        # ALWAYS the frozen per-query comparator vectors, never a locally recomputed row: the
+        # mandate says "never re-run a comparator system". A fresh BM25 run exists in by_sys for
+        # the fusion input and as an exploratory row, and must not be used here.
+        B = boot.from_perquery_json(pq, b_name, set(DATASETS))
+        if not B:
+            raise SystemExit(f"FINAL RUN ABORTED: no frozen per-query vectors for {b_name}")
         r = boot.paired(A, B, alternative="greater")
         conf[name] = r
         pvals[name] = r["p"]
@@ -185,12 +218,11 @@ def main():
               f"CI={d['ci95']} p={d['p_str']} thr={h['threshold']:.4f}")
 
     print("\n=== untouched-final (scored after the six; no recipe change after this point) ===")
-    unt = {ds: score_set(ds, "untouched", REPO / a.table, pre, spec) for ds in UNTOUCHED}
+    unt = {ds: score_set(ds, "untouched", table_path, pre, spec) for ds in UNTOUCHED}
     for ds in UNTOUCHED:
         print(f"  {ds}: " + " ".join(f"{s}={np.mean(list(v.values())):.4f}" for s, v in unt[ds].items()))
 
-    blob = {"freeze_commit": head, "table": a.table, "preproc": a.preproc, "fusion": spec,
-            "released_system": a.released_system, "infra_retry": bool(a.infra_retry),
+    blob = {"freeze_commit": head, "freeze": fz, "infra_retry": bool(a.infra_retry),
             "six": {s: {ds: {q: round(x, 6) for q, x in v.items()} for ds, v in by_sys[s].items()}
                     for s in systems},
             "untouched_final": {ds: {s: {q: round(x, 6) for q, x in v.items()}

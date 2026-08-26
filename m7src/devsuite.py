@@ -52,8 +52,9 @@ def _mteb_cqa(sub):
     queries = load_dataset(f"mteb/cqadupstack-{sub}", "queries")["queries"]
     qrels = {}
     for r in load_dataset(f"mteb/cqadupstack-{sub}", "default", split="test"):
-        if int(r["score"]) > 0 or True:
-            qrels.setdefault(str(r["query-id"]), {})[str(r["corpus-id"])] = int(r["score"])
+        # every row in both subsets is score 1 (verified), so no filter is applied and the
+        # component hashes in results/m7_dev_manifest.json stay valid
+        qrels.setdefault(str(r["query-id"]), {})[str(r["corpus-id"])] = int(r["score"])
     doc_ids = [str(x) for x in corpus["_id"]]
     doc_texts = [doc_text(r) for r in corpus]
     q_ids, q_texts = [], []

@@ -9,6 +9,7 @@ is a hard error, not a silent fix.
 import hashlib
 import json
 from dataclasses import asdict, dataclass
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -19,6 +20,11 @@ from transformers import AutoTokenizer
 from teacher import QUERY_PREFIX, TEACHER, TEACHER_REV
 
 EPS = 1e-6
+# The bge/BERT WordPiece [CLS] id. Row 0 is [PAD], NOT [CLS] -- an earlier version of the
+# degenerate-query fallback documented itself as "the [CLS] row" while actually using row 0, and
+# the conformance test compared encode("") against fallback_vector() itself, so the circularity
+# hid the mismatch. The model card states this id.
+CLS_ID = 101
 
 
 @dataclass(frozen=True)
@@ -65,8 +71,9 @@ def ragged(ids_list, device="cpu"):
 class QueryTable(nn.Module):
     """vocab x dim rows + optional positive bounded per-token scalar weights (softplus)."""
 
-    def __init__(self, rows_init, weight_init=None, learned_weights=True):
+    def __init__(self, rows_init, weight_init=None, learned_weights=True, fallback_id=CLS_ID):
         super().__init__()
+        self.fallback_id = int(fallback_id)
         self.rows = nn.Parameter(torch.as_tensor(rows_init, dtype=torch.float32).clone())
         self.learned_weights = learned_weights
         v = self.rows.shape[0]
@@ -105,9 +112,9 @@ class QueryTable(nn.Module):
         return out
 
     def fallback_vector(self):
-        """Deterministic behavior for empty queries / near-zero-norm sums: the [CLS] row,
-        L2-normalized; e_0 if that row is itself degenerate."""
-        r = self.rows[0]
+        """Deterministic behavior for empty queries / near-zero-norm sums: the [CLS] row
+        (id 101 in this vocab), L2-normalized; e_0 if that row is itself degenerate."""
+        r = self.rows[min(self.fallback_id, self.rows.shape[0] - 1)]
         n = r.norm()
         e0 = torch.zeros(self.dim, device=self.rows.device, dtype=self.rows.dtype)
         e0[0] = 1.0
@@ -197,3 +204,8 @@ def load_table(path, variant="fp16", device="cuda"):
     w = z["token_weights"]
     m = QueryTable(rows, weight_init=(w if w.size else None), learned_weights=bool(w.size))
     return m.to(device).eval()
+
+
+def read_meta(path):
+    """The table's own recipe. final_run reads preprocessing from here, never from a CLI flag."""
+    return json.loads((Path(path).parent / (Path(path).stem + ".meta.json")).read_text())

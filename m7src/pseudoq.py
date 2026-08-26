@@ -68,6 +68,19 @@ def targets(texts, tag):
                                     dtype=torch.float16, verbose=True), dtype=np.float32)
 
 
+def build_decontaminated(n, seed=SEED):
+    """The R1-filtered pool. Pseudo-queries are spans of TRAIN documents and are TRAIN queries
+    under the mandate's "all partitions" wording, so they go through rule R1 like every other
+    training query. Raises rather than falling back to the unfiltered pool."""
+    qs = build(n, seed=seed)
+    kept = OUT / f"kept-pseudoq-{n}-{seed}.json"
+    if not kept.exists():
+        raise RuntimeError(f"{kept} missing: run decontam_querytext.py after building the "
+                           f"pseudo-query pool. Pseudo-queries are never used unfiltered.")
+    idx = json.loads(kept.read_text())
+    return [qs[i] for i in idx]
+
+
 if __name__ == "__main__":
     import sys
     n = int(sys.argv[1]) if len(sys.argv) > 1 else 1_000_000

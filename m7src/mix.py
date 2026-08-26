@@ -51,22 +51,31 @@ def query_texts(sources=None, include_querytext=True, train_only=True, decontami
     out = []
     tr, ho = split_pairs(sources)
     if decontaminated and train_only:
-        keep = json.loads((_W / "decontam" / "kept.json").read_text())
-        allow = {k: set(v) for k, v in keep.items()}
+        kp = _W / "decontam" / "kept.json"
+        if not kp.exists():
+            raise RuntimeError(f"{kp} missing: run decontam.py before any training or probe. "
+                               "This never falls back to undecontaminated text.")
+        allow = {k: set(v) for k, v in json.loads(kp.read_text()).items()}
         tr = [p for p in tr if p[1] in allow.get(p[0], set())]
     out += [q for _, _, q, _, _ in (tr if train_only else tr + ho)]
     if include_querytext:
         kq = None
         if decontaminated and train_only:
             p = _W / "decontam" / "kept_querytext.json"
-            kq = json.loads(p.read_text()) if p.exists() else None
+            if not p.exists():
+                raise RuntimeError(f"{p} missing: run decontam_querytext.py before using "
+                                   "query-text-only sources. No silent fallback.")
+            kq = json.loads(p.read_text())
         for s in QUERYTEXT_SOURCES:
             p = TRAIN / "querytext" / f"{s}.json"
             if not p.exists():
                 continue
             qs = json.loads(p.read_text())
-            if kq is not None and s in kq:
+            if kq is None:
+                out += [q for i, q in enumerate(qs) if not heldout(s, str(i)) or not train_only]
+            elif s in kq:
                 out += [qs[i] for i in kq[s]]
             else:
-                out += [q for i, q in enumerate(qs) if not heldout(s, str(i)) or not train_only]
+                raise RuntimeError(f"kept_querytext.json has no entry for {s}: re-run "
+                                   "decontam_querytext.py")
     return out

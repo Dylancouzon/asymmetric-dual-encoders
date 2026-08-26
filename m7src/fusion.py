@@ -6,6 +6,11 @@ a single (family, parameter) pair applies to every dataset.
 """
 import numpy as np
 
+# RRF and min-max convex fusion are both depth-sensitive: ranks beyond the retrieval cut simply
+# do not exist to be fused. So dev selection and final application must retrieve to the SAME
+# depth, or the parameter frozen on dev is applied to a different function at test time.
+DEPTH = 1000
+
 
 def rrf(runs, k=60, weights=None):
     """Reciprocal rank fusion. runs: list of {qid: {docid: score}}."""
@@ -40,7 +45,8 @@ CONVEX_W = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 def select_on_dev(dense_runs, bm25_runs, qrels_by_comp, report=print):
     """Grid-search both families on the dev macro; returns the single winning (family, param).
 
-    dense_runs/bm25_runs: {component: run dict}. Selection happens here and nowhere else.
+    dense_runs/bm25_runs: {component: run dict}, both retrieved to DEPTH. Selection happens here
+    and nowhere else, and the winner is written into m7/FREEZE.json before any test access.
     """
     from evalkit import per_query_ndcg
     comps = sorted(dense_runs)

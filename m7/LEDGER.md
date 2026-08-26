@@ -120,3 +120,97 @@ of the naive reading of "removal counts logged":
   and OpenSearch doc-v3-gte both trained on MS MARCO; bge-small on a large web mix), so the
   comparison stays like-for-like. The report states the measured overlap rates and labels BEIR
   FEVER as in-domain; DBpedia-entity is the clean generalization probe.
+
+## Decontamination results (2026-08-26)
+
+`results/m7_decontam.json`. 353,519 TRAIN pairs in → **352,145 kept**.
+
+- **R1 (query overlap, removed)**: 1,329 pairs. hotpotqa-train 1,103 near / 0 exact ·
+  fever-train 162 near / 2 exact · squad-train 42 near · esci-us 17 exact · mrtydi-en 3.
+- **R1 on the query-text-only sources** (`results/m7_decontam_querytext.json`): nq-open 213
+  removed of 86,112 (2 exact, 211 near) · TriviaQA 155 of 135,651 (10 exact, 145 near).
+- **R2 (positive-document overlap with the six, removed)**: 45 pairs, from 23 of 855,324 unique
+  TRAIN positive documents — a near-dup rate of **3e-05** against the six's 272,117 documents,
+  0 exact duplicates. The source-level contamination map was already doing the work; the
+  fingerprint pass confirms it rather than rescuing it.
+- **R3 (measured, disclosed, not removed)**: CQADupStack dev 1 document. **DBpedia-entity
+  (untouched-final): 15,523 exact + 79,595 near-duplicate TRAIN positives, a rate of 9.32%.**
+
+### The DBpedia finding changes the report's framing
+
+DBpedia-entity was the intended *clean* generalization probe — the one untouched-final set with
+no training data drawn from it. It is not clean: 9.3% of our training positives near-duplicate
+one of its documents. The cause is structural, not a mistake in the mix — DBpedia abstracts are
+Wikipedia lead paragraphs, and so are HotpotQA's documents and SQuAD's contexts.
+
+Consequence, to be stated plainly in the report: **after Climate-FEVER was dropped for licensing,
+the untouched-final partition has no clean member.** BEIR FEVER shares its corpus with
+fever-train by construction; DBpedia-entity has 9.3% document overlap. Both rows are reported
+with their overlap rate attached, and neither is presented as an uncontaminated generalization
+number. The mandate anticipated this ("if the untouched partition empties, the report says so");
+what actually happened is weaker than empty and needs saying in those terms.
+
+## Adversarial review of the protocol code (Fable, 2026-08-26, pre-results)
+
+Run deliberately **before any candidate number existed**, so no finding could be weighed against
+a result worth keeping. 3 BLOCKER / 6 MAJOR / 10 MINOR. All blockers and majors actioned:
+
+- **B1 — tier decisions pairing against a re-run comparator.** `final_run.py` put a freshly
+  computed BM25 row into the same dict the confirmatory loop read, so C2 (int8 table vs BM25)
+  would have paired against BM25 recomputed on this box instead of the frozen per-query vector,
+  violating "never re-run a comparator system". Fixed: the comparator side is now always
+  `boot.from_perquery_json`, and it aborts if a frozen vector is missing. The fresh BM25 run
+  remains, used only as a fusion input and an exploratory row.
+- **B2 — the freeze pinned code but none of the decisive inputs.** The table lives under the
+  gitignored `work/`, and preprocessing, fusion and the released-system choice were command-line
+  flags applied after the freeze. Fixed: `m7/FREEZE.json` (new, `m7src/freeze.py`) pins the
+  table's sha256 and byte size, its metadata hash, the preprocessing fingerprint, the dev-selected
+  fusion spec, the released-system choice, and the dev/eval/perquery manifest hashes.
+  `final_run.py` now reads all of it from that committed file, recomputes the table hash, and
+  takes no recipe argument at all.
+- **B3 — a silent undecontaminated training path.** `decontam_querytext.py` still imported
+  helpers the memory rewrite had deleted, so it could not run; and `mix.query_texts` *silently
+  fell back to unfiltered text* when its kept-file was absent. Fixed: script ported to the shared
+  `decontam.query_hits`, and both `mix.query_texts` and `pseudoq.build_decontaminated` now raise
+  rather than fall back. This one had teeth — it recovered the 213 + 155 removals above.
+- **M1 — `--infra-retry` laundered anything, and its own precondition was unsatisfiable** (the
+  run appends to the ledger before scoring, so a retry always faces a dirty tree). Fixed: retry
+  now parses the prior `FINAL-RUN-BEGIN freeze=… table=…` marker, requires the same table hash,
+  and requires `git diff prior..HEAD` to touch nothing but `m7/LEDGER.md`.
+- **M2 — the gate silently used 3 of the pinned dev components**, dropping HotpotQA (where BM25
+  is strongest) and both held-out slices, which could flip G3. Fixed: the gate defaults to
+  `dev_eval.dev_components()`, asserts the reference rows cover every component, and prints the
+  text-backed subset that BM25/potion comparisons necessarily run on.
+- **M3 — R3 did not measure two of the corpora it claimed to.** nq-250k (dev) and FEVER
+  (untouched-final) were never swept. Fixed in `decontam.py`; `decontam_r3_extra.py` produces the
+  two missing rows without repeating the completed 30-minute run.
+- **M4 — `BENCH_DATASETS` could silently redefine "the six"** (its default is the M2-era five).
+  Fixed: `final_run` asserts the list equals the six before anything else.
+- **M5 — conformance theatre.** The degenerate-query fallback was documented and advertised as
+  "the [CLS] row" but used `rows[0]`, which is **[PAD]**; the test compared the fallback against
+  itself, so the false claim would have shipped in the model card. And the released
+  save→load→encode path had zero assertions. Fixed: explicit `CLS_ID = 101`, a non-circular test
+  against `tok.cls_token_id`, and a real round-trip test (fp16 max|Δ| 1.1e-04, int8 2.8e-03,
+  weights and update counts preserved). Suite is now 30 checks, all passing.
+- **M6 — fusion selected at depth 100 on dev, applied at depth 1000 at final.** Both RRF and
+  min-max convex fusion are depth-sensitive, so the frozen parameter would have been applied to a
+  different function. Fixed: one `fusion.DEPTH = 1000` used by both.
+
+Minors actioned: structured ledger marker instead of a substring match; pseudo-queries now pass
+R1; content-hashed cache keys for hard-negative mining and the doc pool (a name-and-count key
+would reuse stale vectors); dead `or True` in the CQADupStack loader removed (verified inert —
+all qrels are score 1); argv validated before any test access; `decontam_*` scripts wrapped in
+`main()` so importing them cannot execute a memory-heavy job.
+
+Held open and disclosed rather than fixed: R1's near-duplicate test degenerates to exact match
+for queries under 8 words (most NQ/FEVER-style questions), and `heldout-train` is a
+seen-document/unseen-query slice (SQuAD gives ~5 questions per context), so it rewards
+document-anchored memorization during dev selection. Both go in the report.
+
+The reviewer independently verified as sound: the paired bootstrap (genuinely paired, within-
+dataset resampling, correct one-sided inversion, p=0 reported as a bound), Holm's step-down,
+`upper_bound_one_sided`'s tail and argument order for the int8 gate, int8 quantization including
+the zero-row case, self-hit removal parity between dense and BM25 paths, `encode_cached`'s
+content-hashed keys and atomic shard writes, that `train.py` reads no dev or test qrels anywhere,
+and that both logged narrowings (R3 measure-not-remove; mod-50 at query granularity) are
+correctly reasoned — the second strictly stronger than the mandate's literal wording.

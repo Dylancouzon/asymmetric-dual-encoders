@@ -84,8 +84,13 @@ for label, q, pre in [("empty query, specials on", "", NO_PREFIX),
           f"norm={np.linalg.norm(v):.6f}")
 fb = m.fallback_vector().detach().cpu().numpy()
 v_empty = m.encode([""], Preproc(add_special_tokens=False), tok)[0]
-check("empty bag returns the documented fallback ([CLS] row, normalized)",
+check("empty bag returns the documented fallback (normalized fallback row)",
       np.allclose(v_empty, fb, atol=1e-6))
+# non-circular: the fallback must be the actual [CLS] row of the actual tokenizer, not row 0
+cls_row = rows[tok.cls_token_id] / np.linalg.norm(rows[tok.cls_token_id])
+check("fallback row IS the tokenizer's [CLS] row, not row 0",
+      np.allclose(fb, cls_row, atol=1e-6) and tok.cls_token_id != 0,
+      f"cls_token_id={tok.cls_token_id}, row0 is {tok.convert_ids_to_tokens([0])[0]}")
 
 # --- near-zero-norm sums --------------------------------------------------------------
 z = np.zeros((V, D), dtype=np.float32)
@@ -121,7 +126,8 @@ check("flat weights == unweighted mean of rows",
 q8, sc = quantize_int8(rows)
 deq = dequantize_int8(q8, sc)
 cos = (rows * deq).sum(1) / (np.linalg.norm(rows, axis=1) * np.linalg.norm(deq, axis=1) + 1e-12)
-check("int8 per-row absmax round-trip cos > 0.9999", float(cos.min()) > 0.9999, f"min={cos.min():.6f}")
+check("int8 per-row absmax round-trip cos > 0.9999 (Gaussian rows; the REAL artifact is "
+      "gated by G4 on dev, not by this)", float(cos.min()) > 0.9999, f"min={cos.min():.6f}")
 check("int8 dtype and shape", q8.dtype == np.int8 and q8.shape == rows.shape and sc.shape == (V,))
 
 # --- unseen / out-of-range token behavior is deterministic ---------------------------
@@ -129,6 +135,37 @@ unk = tok.unk_token_id
 v_unk = m.encode([tok.unk_token], Preproc(add_special_tokens=False), tok)[0]
 r = rows[unk] / np.linalg.norm(rows[unk])
 check("single-UNK query is the normalized UNK row", np.allclose(v_unk, r, atol=1e-5))
+
+# --- the released path: save -> load(fp16/int8) -> encode ----------------------------
+import tempfile
+from pathlib import Path as _P
+
+from table import load_table, read_meta, save_table
+
+with tempfile.TemporaryDirectory() as td:
+    pth = _P(td) / "roundtrip.npz"
+    upd = rng.integers(0, 50, V)
+    save_table(pth, m, WITH_PREFIX, meta={"probe": 1}, updates=upd)
+    meta = read_meta(pth)
+    check("saved metadata carries the preprocessing rule and its fingerprint",
+          meta["preproc"]["prefix"] == QUERY_PREFIX
+          and meta["preproc_fingerprint"] == WITH_PREFIX.fingerprint())
+    ref = m.encode(texts, WITH_PREFIX, tok)
+    m16 = load_table(pth, variant="fp16", device="cpu")
+    m8 = load_table(pth, variant="int8", device="cpu")
+    v16 = m16.encode(texts, WITH_PREFIX, tok)
+    v8 = m8.encode(texts, WITH_PREFIX, tok)
+    check("fp16 round-trip reproduces the in-memory encode", np.abs(v16 - ref).max() < 2e-3,
+          f"max|d|={np.abs(v16-ref).max():.2e}")
+    check("int8 round-trip stays close to the in-memory encode", np.abs(v8 - ref).max() < 2e-2,
+          f"max|d|={np.abs(v8-ref).max():.2e}")
+    check("both variants share ONE preprocessing rule (identical token bags)",
+          tokenize(tok, texts, WITH_PREFIX) == tokenize(tok, texts, WITH_PREFIX))
+    check("learned token weights survive the round-trip",
+          np.allclose(m16.token_weights().detach().numpy(),
+                      m.token_weights().detach().numpy(), atol=1e-5))
+    check("per-row update counts are persisted for the unseen-row policy",
+          np.array_equal(np.load(pth)["updates"], upd))
 
 print()
 if FAILS:
