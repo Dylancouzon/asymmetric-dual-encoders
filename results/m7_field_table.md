@@ -6,11 +6,11 @@ source-level (see `m7/LEDGER.md` for the primary URLs and caveats).
 
 | source | objectives | queries (total) | held-out dev | TRAIN | after decontam | positives | provided hard negs |
 |---|---|---|---|---|---|---|---|
-| hotpotqa-train | A and B | 85,000 | 1,717 | 83,283 | 82,155 | 170,000 | 0 |
-| fever-train | A and B | 109,810 | 2,151 | 107,659 | 107,492 | 140,085 | 0 |
-| squad-train | A and B | 87,599 | 1,790 | 85,809 | 85,752 | 87,599 | 0 |
-| esci-us | A and B | 74,888 | 1,598 | 73,290 | 73,272 | 988,062 | 122,273 |
-| mrtydi-en | A and B | 3,547 | 69 | 3,478 | 3,474 | 3,547 | 104,854 |
+| hotpotqa-train | A and B | 85,000 | 1,717 | 83,283 | 81,860 | 170,000 | 0 |
+| fever-train | A and B | 109,810 | 2,151 | 107,659 | 105,645 | 140,085 | 0 |
+| squad-train | A and B | 87,599 | 1,790 | 85,809 | 85,688 | 87,599 | 0 |
+| esci-us | A and B | 74,888 | 1,598 | 73,290 | 73,268 | 988,062 | 122,273 |
+| mrtydi-en | A and B | 3,547 | 69 | 3,478 | 3,473 | 3,547 | 104,854 |
 | nqopen | B only | 87,925 | 1,813 | 86,112 | 85,899 | 0 | 0 |
 | triviaqa | B only | 138,384 | 2,733 | 135,651 | 135,496 | 0 | 0 |
 

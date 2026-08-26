@@ -214,3 +214,34 @@ the zero-row case, self-hit removal parity between dense and BM25 paths, `encode
 content-hashed keys and atomic shard writes, that `train.py` reads no dev or test qrels anywhere,
 and that both logged narrowings (R3 measure-not-remove; mod-50 at query granularity) are
 correctly reasoned — the second strictly stronger than the mandate's literal wording.
+
+## Held-out dev slices, and a finding about query length (2026-08-26)
+
+Built from the frozen pool: every held-out positive plus rng(0) distractors to ~200K docs.
+
+| component | docs | queries |
+|---|---|---|
+| heldout-train | 199,227 | 7,325 (esci 1,598 · fever 2,151 · hotpotqa 1,717 · squad 1,790 · mrtydi 69) |
+| heldout-longq | 199,999 | **55** |
+
+**The training mix contains essentially no long queries.** Held-out query length is p50 = 13
+WordPiece tokens, p90 = 24, max = 111. Only 55 of 7,325 reach the mandated ≥64-token threshold,
+and 54 of those 55 come from HotpotQA.
+
+This matters well beyond the slice being small. ArguAna's queries average 193 words — roughly
+250+ tokens, an order of magnitude past anything in TRAIN. So:
+
+- **The long-query slice cannot validate long-query behaviour.** n=55 gives a CI far too wide to
+  resolve anything, exactly as TREC-COVID's n=50 does in the M4 matrix. It is kept (the mandate
+  pins it) and weighted equally as specified, with its n and CI width reported next to it.
+- **The mandate's "long-query hypothesis" for learned per-token weights and length normalisation
+  is untestable on this dev suite.** That ablation will be run and reported, but its result
+  speaks to 13-token queries, not to 250-token ones.
+- **The ArguAna row in the final matrix is an extrapolation, not a validated prediction.** M1
+  already flagged ArguAna as the stress case for bag-of-tokens query encoders; we now know we
+  have no dev signal on it whatsoever. The report says so rather than letting the six-set average
+  imply the coverage was there.
+
+No approved source fixes this: long argumentative queries live in args.me / idebate, which is
+ArguAna's own source family and excluded by the contamination map. Same structural wall as the
+document-side domain gap.

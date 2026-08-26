@@ -1,0 +1,12 @@
+{
+ "held_out_protected_queries": 7380,
+ "removed_per_source": {
+  "hotpotqa-train": 295,
+  "fever-train": 1847,
+  "squad-train": 64,
+  "esci-us": 4,
+  "mrtydi-en": 1
+ },
+ "removed_total": 2211,
+ "kept_total": 349934
+}
