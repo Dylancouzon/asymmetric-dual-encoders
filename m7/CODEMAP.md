@@ -45,7 +45,9 @@ what it does. Nothing here is restated from `LEDGER.md` (protocol) or `EXPLORED.
 
 **The artifact**
 - `table.py` — the released lookup table: `Preproc` (the one frozen query rule), `QueryTable`,
-  int8 symmetric per-row absmax, save/load, `apply_unseen_policy`.
+  int8 symmetric per-row absmax, save/load, `apply_unseen_policy`. `save_release` folds learned
+  weights into rows (exact) — the shape G4 gates and HF ships; `save_table` stays unfolded for
+  training resume.
 - `test_conformance.py` — the mandated pre-training gate, 24 checks. Run it after touching `table.py`.
 - `costs.py` — the three cost numbers (query asset / doc index / hydration).
 
@@ -56,6 +58,10 @@ what it does. Nothing here is restated from `LEDGER.md` (protocol) or `EXPLORED.
 - `pseudoq.py` — pseudo-queries for **vocabulary**-coverage distillation (not domain coverage).
 - `decontam.py` / `decontam_querytext.py` / `decontam_heldout.py` — fingerprint decontamination.
   The index is built over the TRAIN side and protected corpora are streamed against it.
+  `query_grams` adds word-4-grams for 4-7-word queries (query paths only; doc fingerprints
+  untouched). NOTE: `run()` has its own inline R1 matcher besides `query_hits` — change BOTH.
+- `decontam_pool.py` — the B2 pass: all 6.17M pool rows vs the six's docs and the protected
+  queries; writes `banned_pool_rows.npy`, which `train.py` REFUSES to run without.
 - `devsuite.py` / `heldout.py` — the pinned dev components. `dev_eval.dev_components()` is the
   authoritative list.
 
@@ -68,8 +74,12 @@ what it does. Nothing here is restated from `LEDGER.md` (protocol) or `EXPLORED.
 - `dev_eval.py` — dev macro + the pinned reference rows (cached in `work/devres/refs.json`).
 - `stage0_ridge.py` — closed-form MSE-optimal flat table; the structural upper bound.
 - `capacity_probe.py` — deliberate overfit on dev. **Diagnostic, gate-ineligible.**
-- `boot.py` — paired bootstrap, one-sided tests, Holm. `gate.py` — the go/no-go gate.
-- `fusion.py` — one fusion family, selected on dev, frozen before any test access.
+- `boot.py` — `signflip` is THE p-value (Holm consumes only these); `paired` gives intervals,
+  its tail mass is labelled `boot_tail` because it is not a p-value. `_align(strict=True)` on
+  every confirmatory path. `test_signflip_calibration.py` is the type-I evidence. `gate.py` —
+  the go/no-go gate.
+- `fusion.py` — one fusion family; `fusion.bm25_run` is the ONE BM25 builder for anything fused
+  (`test_fusion_paths.py` guards the re-fork).
   `select_fusion.py` runs that selection; `fusion_report.py` decomposes the gain per component,
   because a fusion macro can be one component wide exactly as the G3 win was.
 
@@ -153,7 +163,10 @@ version (`git log -p m7/LEDGER.md`), and the file states when it was compacted.
    session and once for this one. Anchor to the interpreter:
    `pgrep -f "^[^ ]*python[0-9.]* -u scripts/foo.py"`. Same trap in reverse: a driver that `exec`s
    python no longer has its own script name in any cmdline, so waiting on the SCRIPT name reports
-   "not running" while it runs.
+   "not running" while it runs. And a third form, hit twice on 2026-08-26: a compound command that
+   BOTH kills by pattern AND relaunches carries the plain path in its own cmdline, so the pkill
+   kills its own shell before the relaunch line runs (exit 144, nothing restarted). Kill and
+   relaunch in separate commands.
 5. **`np.isin` re-sorts its second argument on every call.** Use a pre-sorted array plus
    `np.searchsorted`. This turned a 2-second scan into hours.
 6. **Never call a JSON loader inside a hot loop.** `mix.load_source` was re-parsing 16 MB once
