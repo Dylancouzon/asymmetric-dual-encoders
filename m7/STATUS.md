@@ -1,6 +1,6 @@
 # M7 status
 
-**Stage:** bring-up complete → Stage 0 (representation compatibility) in flight
+**Stage:** data pipeline complete → Stage 0 (representation compatibility) next
 **Updated:** 2026-08-25
 
 ## Machine
@@ -25,6 +25,21 @@ Encode throughput: 891 texts/s fp16 (2.4x fp32, cosine-identical) → `results/m
 - **Conformance suite passes 24/24** (`m7src/test_conformance.py`) — the mandated gate before
   the first training run: special tokens, padding, multiplicity, truncation, empty/degenerate
   queries, byte-for-byte prefix, double-application refusal, batch invariance, int8 round-trip.
+
+## Decontamination results (`results/m7_decontam.json`)
+
+353,519 TRAIN pairs → **352,145 kept**. R1 (query overlap) removed 1,329; R2 (positive document
+matches one of the six) removed 45, from just 23 of 855,324 unique positives — a 3e-05 rate, so
+the source-level contamination map was already doing the work. Query-text-only sources: nq-open
+−213, TriviaQA −155.
+
+**R3 finding that changes the report's framing.** DBpedia-entity was the intended clean
+generalization probe. It is not clean: **9.32%** of TRAIN positives near-duplicate one of its
+documents (15,523 exact + 79,595 near). The cause is structural — DBpedia abstracts are Wikipedia
+lead paragraphs, and so are HotpotQA's documents and SQuAD's contexts. Combined with
+Climate-FEVER being dropped for licensing and BEIR FEVER sharing its corpus with fever-train,
+**the untouched-final partition now has no clean member.** Both rows will be reported with their
+overlap rate attached and neither presented as an uncontaminated generalization number.
 
 ## Running
 
