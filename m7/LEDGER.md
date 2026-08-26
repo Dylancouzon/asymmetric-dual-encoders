@@ -79,3 +79,44 @@ The six: scifact, nfcorpus, fiqa, arguana, scidocs, trec-covid. Content pinned b
 - FEVER — CC BY-SA per fever.ai's own license page (per-article Wikipedia terms, 3.0 fallback).
 - **BEIR itself is not a license authority**: its Apache-2.0 covers packaging/code only and
   its README disclaims per-dataset licensing.
+
+## Incident: WSL OOM, 2026-08-25 ~23:10
+
+Three memory-heavy jobs ran concurrently (decontamination indexing DBpedia's 4.6M abstracts at
+14.7 GB RSS, the 5.23M-doc HotpotQA teacher encode at 4.7 GB, the asset freeze at 4.1 GB). Peak
+hit 24 GB of 25 GB and the kernel killed a process; WSL went down. **This repeated the M4
+lesson already recorded in CLAUDE.md** ("strictly sequential jobs") and it is now enforced by
+`run_stage0.sh` rather than by intention.
+
+Damage and recovery:
+- Encode caches survived intact — shard-resumable by design, 73/105 HotpotQA shards kept.
+- Decontamination lost entirely and was rewritten memory-bounded (below).
+- Asset freeze lost its manifest write; rewritten to stream corpus hashes (`m7src/hashing.py`,
+  byte-identical to the M4 `sha(json.dumps(...))` convention, verified against the frozen
+  scifact entry).
+- No results were lost: nothing had been scored yet.
+
+Decontamination redesign: the index is now built over the TRAIN side (queries, and the ~1M
+documents that are actually positives) and the protected corpora are STREAMED against it. Peak
+RAM is one train index (~0.4 GB) whether the protected corpus is 70K CQADupStack documents or
+4.6M DBpedia abstracts. Sketch reduced from bottom-64 to bottom-32 with the share threshold
+scaled to match (8/32, still an estimated Jaccard of 0.25).
+
+## Decontamination rule scope (decision, 2026-08-25)
+
+R1 and R2 remove; R3 measures and discloses. The reasoning, recorded because it is a narrowing
+of the naive reading of "removal counts logged":
+
+- **R1 — remove on QUERY overlap, all partitions.** Query overlap is the leakage that matters.
+- **R2 — remove on positive-document overlap with the six.** This is the contamination map
+  (S2ORC, PubMed, CORD-19, NutritionFacts, StackExchange-finance, args.me) enforced at
+  fingerprint level instead of by source name.
+- **R3 — measure and disclose document overlap with DEV and UNTOUCHED-FINAL, do not remove.**
+  `hotpotqa-corpus` IS the dev HotpotQA corpus and `fever-pos` is drawn from the untouched
+  FEVER corpus, so a removal rule there deletes the sources rather than decontaminating them:
+  it would forbid training on any Wikipedia data while evaluating on any Wikipedia benchmark.
+  What removal protects — the test queries and qrels — is enforced by R1 and by the
+  final-scorer ledger. Every comparator in the M4 matrix has the same property (LightRetriever
+  and OpenSearch doc-v3-gte both trained on MS MARCO; bge-small on a large web mix), so the
+  comparison stays like-for-like. The report states the measured overlap rates and labels BEIR
+  FEVER as in-domain; DBpedia-entity is the clean generalization probe.

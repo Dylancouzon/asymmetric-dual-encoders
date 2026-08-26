@@ -175,8 +175,8 @@ def run(cfg: Cfg, log=print):
     q_texts, pos_idx, hn_idx, src_id, srcs = build_arrays(cfg, index)
     log(f"  train pairs {len(q_texts):,} over sources {srcs}")
 
-    tq = np.asarray(encode_cached(f"trainq-{cfg.run_id if False else 'all'}-{len(q_texts)}", q_texts,
-                                  prefix=QUERY_PREFIX, dtype=torch.float16, verbose=True), dtype=np.float32)
+    tq = np.asarray(encode_cached(f"trainq-{len(q_texts)}", q_texts, prefix=QUERY_PREFIX,
+                                  dtype=torch.float16, verbose=True), dtype=np.float32)
     ids_all = tokenize(tok, q_texts, pre)
 
     hard = None
@@ -220,11 +220,18 @@ def run(cfg: Cfg, log=print):
         cand = None
         if cfg.kl_weight > 0:
             k = cfg.kl_k
-            ci = np.stack([np.concatenate([np.array(pos_idx[i][:1]),
-                                           (hard[i][:k - 1] if hard is not None
-                                            else bank_ids[rng.integers(0, nb, k - 1)])]) for i in idx])
-            cand = torch.from_numpy(np.ascontiguousarray(pool_vecs[ci.ravel()])).cuda().float() \
-                        .view(len(idx), -1, model.dim)
+            # the candidate set is the query's own positive plus k-1 distractors. Distractors come
+            # from the VRAM bank (or the teacher-mined hard negatives), never from random memmap
+            # reads: 512 x 31 random reads per step would make the pool the bottleneck.
+            p_i = np.array([pos_idx[i][0] for i in idx])
+            pos_v = torch.from_numpy(np.ascontiguousarray(pool_vecs[p_i])).cuda().float()
+            if hard is not None:
+                d = torch.from_numpy(np.ascontiguousarray(pool_vecs[hard[idx][:, :k - 1].ravel()]))
+                dist = d.cuda().float().view(len(idx), k - 1, model.dim)
+            else:
+                sel = torch.from_numpy(rng.integers(0, nb, len(idx) * (k - 1))).cuda()
+                dist = bank.index_select(0, sel).float().view(len(idx), k - 1, model.dim)
+            cand = torch.cat([pos_v.unsqueeze(1), dist], 1)
         loss, cos, kl = distill(qv, t, cand, cfg.temp, cfg.cos_weight, cfg.kl_weight)
         return loss, {"cos": cos, "kl": kl}
 
@@ -255,17 +262,17 @@ def run(cfg: Cfg, log=print):
         for s in range(1, steps + 1):
             idx = rng.integers(0, len(q_texts), cfg.batch)
             loss, extra = stepfn(idx)
+            rows = np.unique(np.concatenate([ids_all[i] for i in idx]))
+            ri = torch.from_numpy(rows).cuda()
             if cfg.reg_init > 0:
-                rows = np.unique(np.concatenate([ids_all[i] for i in idx]))
-                ri = torch.from_numpy(rows).cuda()
+                # low-update rows stay pulled toward init: the penalty is scaled by 1/(1+updates)
                 scale = 1.0 / (1.0 + updates[ri])
                 loss = loss + cfg.reg_init * (scale * (model.rows[ri] - W0[ri]).pow(2).sum(1)).mean()
             opt.zero_grad(set_to_none=True)
             loss.backward()
             opt.step()
             with torch.no_grad():
-                rows = np.unique(np.concatenate([ids_all[i] for i in idx]))
-                updates[torch.from_numpy(rows).cuda()] += 1
+                updates[ri] += 1
             if s % 500 == 0:
                 log(f"  [{cfg.run_id}] {tag} {s}/{steps} loss {float(loss):.4f} "
                     f"{extra} {(time.time()-t0)/s*1000:.0f} ms/step")

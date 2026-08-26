@@ -18,7 +18,6 @@ Confirmatory decisions are exactly three, one-sided, Holm step-down at family al
 Everything else this script prints is exploratory and labeled as such.
 """
 import argparse
-import hashlib
 import json
 import subprocess
 import sys
@@ -87,8 +86,9 @@ def verify_and_load(ds, kind):
         from core import doc_text
         corpus = load_dataset(f"BeIR/{ds}", "corpus")["corpus"]
         doc_ids, doc_texts = [str(x) for x in corpus["_id"]], [doc_text(r) for r in corpus]
-    sha = lambda o: hashlib.sha256(json.dumps(o, sort_keys=True).encode()).hexdigest()
-    for field, got in (("corpus_ids_sha256", sha(doc_ids)), ("corpus_text_sha256", sha(doc_texts)),
+    from hashing import sha_stream_list
+    for field, got in (("corpus_ids_sha256", sha_stream_list(doc_ids)),
+                       ("corpus_text_sha256", sha_stream_list(doc_texts)),
                        ("n_docs", len(doc_ids))):
         if man[field] != got:
             print(f"FINAL RUN ABORTED: {ds}.{field} mismatch vs the frozen manifest")

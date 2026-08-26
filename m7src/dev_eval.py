@@ -62,13 +62,19 @@ def ref_bm25(comp):
     return per_query_ndcg(run, qrels)
 
 
-def ref_potion(comp):
+def ref_potion(comp, chunk_docs=250_000):
+    """Chunked into a preallocated fp16 buffer: the 5.23M-doc HotpotQA component would be
+    10.7 GB as one fp32 array, and this box has 25 GB total."""
     from model2vec import StaticModel
     doc_ids, doc_texts, q_ids, q_texts, qrels, _ = doc_vecs(comp)
     m = StaticModel.from_pretrained("minishlab/potion-retrieval-32M")
     nrm = lambda v: v / np.maximum(np.linalg.norm(v, axis=1, keepdims=True), 1e-12)
-    dv = nrm(m.encode(doc_texts, show_progress_bar=False).astype(np.float32))
     qv = nrm(m.encode(q_texts, show_progress_bar=False).astype(np.float32))
+    dim = qv.shape[1]
+    dv = np.empty((len(doc_texts), dim), dtype=np.float16)
+    for lo in range(0, len(doc_texts), chunk_docs):
+        hi = min(lo + chunk_docs, len(doc_texts))
+        dv[lo:hi] = nrm(m.encode(doc_texts[lo:hi], show_progress_bar=False).astype(np.float32))
     return score(qv, q_ids, dv, doc_ids, qrels, chunk=CHUNK.get(comp, 200_000))
 
 

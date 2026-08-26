@@ -4,7 +4,6 @@ and vendor their queries+qrels into results/frozen_eval/ (the final scorer's onl
 Run at kickoff, before any candidate result exists. Committing untouched-final qrels is not
 reading them: the final scorer is the sole reader and logs every access to m7/LEDGER.md.
 """
-import hashlib
 import json
 
 from datasets import load_dataset
@@ -12,17 +11,14 @@ from datasets import load_dataset
 import devsuite
 from _paths import REPO
 from core import doc_text
+from hashing import sha, sha_stream_list
 
 FROZEN = REPO / "results" / "frozen_eval"
 MANIFEST = REPO / "results" / "eval_manifest.json"
 UNTOUCHED = ["fever", "dbpedia-entity"]   # climate-fever dropped: no affirmative license
 
 
-def sha(obj):
-    return hashlib.sha256(json.dumps(obj, sort_keys=True).encode()).hexdigest()
-
-
-def beir_test(ds):
+def beir_test_labels(ds):
     qrels = {}
     for r in load_dataset(f"BeIR/{ds}-qrels", split="test"):
         qrels.setdefault(str(r["query-id"]), {})[str(r["corpus-id"])] = int(r["score"])
@@ -32,15 +28,28 @@ def beir_test(ds):
         if str(i) in qrels:
             q_ids.append(str(i))
             q_texts.append(t)
+    return q_ids, q_texts, qrels
+
+
+def corpus_hashes_streamed(ds):
+    """Hashes the corpus without materializing it: FEVER (5.4M) and DBpedia (4.6M) as Python
+    string lists plus a json.dumps copy would be ~8 GB each, and this box has 25 GB total."""
     corpus = load_dataset(f"BeIR/{ds}", "corpus")["corpus"]
-    return [str(x) for x in corpus["_id"]], [doc_text(r) for r in corpus], q_ids, q_texts, qrels
+    n = len(corpus)
+    ids_sha = sha_stream_list(str(x) for x in corpus["_id"])
+    text_sha = sha_stream_list(doc_text(r) for r in corpus)
+    return n, ids_sha, text_sha
+
+
+def entry_streamed(n_docs, ids_sha, text_sha, q_ids, qrels, construction):
+    return {"n_docs": n_docs, "n_queries": len(q_ids), "corpus_ids_sha256": ids_sha,
+            "corpus_text_sha256": text_sha, "qids_sha256": sha(sorted(q_ids)),
+            "qrels_sha256": sha(qrels), "construction": construction}
 
 
 def entry(doc_ids, doc_texts, q_ids, q_texts, qrels, construction):
-    return {"n_docs": len(doc_ids), "n_queries": len(q_ids),
-            "corpus_ids_sha256": sha(doc_ids), "corpus_text_sha256": sha(doc_texts),
-            "qids_sha256": sha(sorted(q_ids)), "qrels_sha256": sha(qrels),
-            "construction": construction}
+    return entry_streamed(len(doc_ids), sha_stream_list(doc_ids), sha_stream_list(doc_texts),
+                          q_ids, qrels, construction)
 
 
 man = json.loads(MANIFEST.read_text())
@@ -65,12 +74,13 @@ for c in devsuite.COMPONENTS:
     print(f"dev {c:20s} {len(doc_ids):>9,} docs {len(q_ids):>6,} queries", flush=True)
 
 for ds in UNTOUCHED:
-    doc_ids, doc_texts, q_ids, q_texts, qrels = beir_test(ds)
+    q_ids, q_texts, qrels = beir_test_labels(ds)
     (FROZEN / f"untouched-{ds}.json").write_text(json.dumps({"queries": dict(zip(q_ids, q_texts)),
                                                             "qrels": qrels}))
-    man["m7_untouched_final"][ds] = entry(doc_ids, doc_texts, q_ids, q_texts, qrels,
-                                         f"BeIR/{ds} test split, full corpus")
-    print(f"untouched {ds:15s} {len(doc_ids):>9,} docs {len(q_ids):>6,} queries", flush=True)
+    n, ids_sha, text_sha = corpus_hashes_streamed(ds)
+    man["m7_untouched_final"][ds] = entry_streamed(n, ids_sha, text_sha, q_ids, qrels,
+                                                  f"BeIR/{ds} test split, full corpus")
+    print(f"untouched {ds:15s} {n:>9,} docs {len(q_ids):>6,} queries", flush=True)
 
 MANIFEST.write_text(json.dumps(man, indent=1))
 print("extended results/eval_manifest.json with m7_dev and m7_untouched_final")
