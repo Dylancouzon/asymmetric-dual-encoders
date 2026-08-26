@@ -116,5 +116,29 @@ def encode_cached(name, texts, prefix="", max_length=512, model_id=TEACHER, revi
                    dtype=dtype, device=device, verbose=verbose)
         np.save(p.with_suffix(".tmp.npy"), v.astype(np.float16))
         p.with_suffix(".tmp.npy").rename(p)
+    return _combined(d, n_shards, len(texts))
+
+
+def _combined(d, n_shards, n_rows):
+    """Return the encode as a read-only memmap over one contiguous file.
+
+    np.concatenate over the shards would materialize the whole encode in RAM -- 8 GB for the
+    5.23M-doc HotpotQA dev component, on every call. The shards stay as the resumable unit; this
+    is a one-time stitch, and the combined file is what every reader mmaps afterwards.
+    """
     parts = [np.load(d / f"shard_{s:05d}.npy", mmap_mode="r") for s in range(n_shards)]
-    return np.concatenate(parts, axis=0) if len(parts) > 1 else np.asarray(parts[0])
+    if n_shards == 1:
+        return parts[0]
+    dim = parts[0].shape[1]
+    comb = d / "combined.f16"
+    if not comb.exists() or comb.stat().st_size != n_rows * dim * 2:
+        tmp = d / "combined.tmp"
+        mm = np.memmap(tmp, dtype=np.float16, mode="w+", shape=(n_rows, dim))
+        off = 0
+        for p in parts:
+            mm[off:off + len(p)] = p
+            off += len(p)
+        mm.flush()
+        del mm
+        tmp.rename(comb)
+    return np.memmap(comb, dtype=np.float16, mode="r", shape=(n_rows, dim))
