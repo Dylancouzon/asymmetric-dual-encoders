@@ -88,5 +88,5 @@
   "R3": "measure and disclose document overlap with dev and untouched-final; see the module docstring and m7/LEDGER.md for why removal there would delete the sources rather than decontaminate them"
  },
  "seconds": 1122.4,
- "R3_extra_sweep_seconds": 1358.7
+ "R3_extra_sweep_seconds": 1364.8
 }
