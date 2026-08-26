@@ -70,6 +70,27 @@ what it does. Nothing here is restated from `LEDGER.md` (protocol) or `EXPLORED.
 - `freeze_m7_assets.py` — pins dev + untouched-final into the manifest and `frozen_eval/`.
 - `field_table.py` — the objective-by-dataset field table (counts read, never hand-copied).
 
+## Log size policy (this is a long project; context is the scarce resource)
+
+Budgets, checked with `for f in m7/*.md; do echo $f $(( $(wc -c < $f) / 4 )); done`:
+
+| file | budget | rule |
+|---|---|---|
+| `STATUS.md` | ~1.2K tokens | one screen. Rewritten, never appended. The only file always read. |
+| `CODEMAP.md` | ~1.5K | grows only when a module is added or a pitfall is earned. |
+| `RESULTS.md` | ~1.5K | one row per run. If it outgrows that, keep the verdict column and move detail to the run JSON. |
+| `EXPLORED.md` | ~1K | one row per closed avenue. |
+| `LEDGER.md` | **~4K, hard** | at 4K, compact again: keep every protocol fact verbatim, cut settled justification to one line. |
+
+**The rule that keeps it small: never restate a number that a `results/m7_*.json` already holds.**
+Put the finding and its consequence in the ledger; point at the JSON for per-component values,
+per-step curves and reference rows. LEDGER.md reached 7.4K tokens by session two because this was
+not being followed; compacting to 3.8K lost nothing that was not recoverable from
+`results/` or `work/devres/refs.json`.
+
+Compaction is safe despite the ledger being append-only in spirit: git preserves every prior
+version (`git log -p m7/LEDGER.md`), and the file states when it was compacted.
+
 ## Pitfalls that already cost time
 
 1. **Never `git add -A` without checking `.gitignore`.** One did, committed the multi-GB encode
