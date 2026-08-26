@@ -31,11 +31,47 @@ def convex(runs, w, eps=1e-9):
     for run, wi in zip(runs, ws):
         for qid, docs in run.items():
             o = out.setdefault(qid, {})
+            if not docs:      # a query with zero positive-score matches contributes nothing
+                continue      # (padding used to hide this case; test_fusion_paths.py covers it)
             v = np.fromiter(docs.values(), dtype=np.float64, count=len(docs))
             lo, hi = v.min(), v.max()
             for d, s in docs.items():
                 o[d] = o.get(d, 0.0) + wi * (s - lo) / (hi - lo + eps)
     return out
+
+
+def _to_run(ids, sc, doc_ids, q_ids):
+    """Raw bm25s (ids, scores) arrays -> run dict. THE one conversion for anything that gets
+    fused, shared by the cached, fresh, selection, and final paths so they cannot diverge.
+
+    The `s > 0` filter and the self-hit drop are PART OF the frozen fusion function: bm25s pads
+    to k with zero-score rows whenever a query matches fewer than DEPTH docs (guaranteed on the
+    small six corpora), padding drags convex's per-query min-max `lo` to 0 and hands RRF rank
+    mass to docs BM25 never retrieved. Codex B5: selection dropped the padding and the final run
+    kept it, so the Tier-1 system would not have been the function selected on dev."""
+    return {q_ids[i]: {doc_ids[int(d)]: float(s) for d, s in zip(ids[i], sc[i])
+                       if s > 0 and doc_ids[int(d)] != q_ids[i]}
+            for i in range(len(q_ids))}
+
+
+def bm25_run(doc_ids, doc_texts, q_ids, q_texts, cache_path=None):
+    """BM25 at DEPTH (bm25s-lucene defaults, frozen). Optional raw-array cache: indexing
+    HotpotQA's 5.23M documents is the single most expensive repeated step on this box."""
+    if cache_path is not None and cache_path.exists():
+        z = np.load(cache_path, allow_pickle=False)
+        return _to_run(z["ids"], z["scores"], doc_ids, q_ids)
+    import Stemmer
+    import bm25s
+    st = Stemmer.Stemmer("english")
+    r = bm25s.BM25(method="lucene", k1=1.2, b=0.75)
+    r.index(bm25s.tokenize(doc_texts, stopwords="en", stemmer=st, show_progress=False),
+            show_progress=False)
+    ids, sc = r.retrieve(bm25s.tokenize(q_texts, stopwords="en", stemmer=st, show_progress=False),
+                         k=min(DEPTH, len(doc_ids)), show_progress=False)
+    ids, sc = ids.astype(np.int32), sc.astype(np.float32)
+    if cache_path is not None:
+        np.savez_compressed(cache_path, ids=ids, scores=sc)
+    return _to_run(ids, sc, doc_ids, q_ids)
 
 
 RRF_K = [10, 20, 30, 60, 100]

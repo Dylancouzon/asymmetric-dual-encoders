@@ -126,18 +126,6 @@ def verify_and_load(ds, kind):
     return doc_ids, doc_texts, q_ids, [froz["queries"][q] for q in q_ids], froz["qrels"]
 
 
-def bm25_run(doc_ids, doc_texts, q_ids, q_texts):
-    import Stemmer
-    import bm25s
-    st = Stemmer.Stemmer("english")
-    r = bm25s.BM25(method="lucene", k1=1.2, b=0.75)
-    r.index(bm25s.tokenize(doc_texts, stopwords="en", stemmer=st, show_progress=False), show_progress=False)
-    ids, sc = r.retrieve(bm25s.tokenize(q_texts, stopwords="en", stemmer=st, show_progress=False),
-                         k=min(fusion.DEPTH, len(doc_ids)), show_progress=False)
-    return {qid: {doc_ids[d]: float(s) for d, s in zip(ids[qi], sc[qi]) if doc_ids[d] != qid}
-            for qi, qid in enumerate(q_ids)}
-
-
 def score_set(ds, kind, table_path, pre, fusion_spec, encode_dtype=torch.float32):
     doc_ids, doc_texts, q_ids, q_texts, qrels = verify_and_load(ds, kind)
     dv = encode_cached(f"final-{kind}-{ds}-docs", doc_texts, prefix="", dtype=encode_dtype)
@@ -152,7 +140,7 @@ def score_set(ds, kind, table_path, pre, fusion_spec, encode_dtype=torch.float32
                                                   k=fusion.DEPTH, chunk=chunk, qids=q_ids)
         del m
         torch.cuda.empty_cache()
-    runs["bm25"] = bm25_run(doc_ids, doc_texts, q_ids, q_texts)
+    runs["bm25"] = fusion.bm25_run(doc_ids, doc_texts, q_ids, q_texts)  # the shared builder, B5
     runs["teacher-symmetric"] = topk_ids_scores(tqv, dv, doc_ids, k=fusion.DEPTH, chunk=chunk, qids=q_ids)
     if fusion_spec:
         runs["fusion"] = fusion.apply_frozen(fusion_spec, runs["int8-table"], runs["bm25"])
@@ -206,16 +194,19 @@ def main():
         B = boot.from_perquery_json(pq, b_name, set(DATASETS))
         if not B:
             raise SystemExit(f"FINAL RUN ABORTED: no frozen per-query vectors for {b_name}")
-        r = boot.paired(A, B, alternative="greater")
+        r = boot.paired(A, B, alternative="greater")            # intervals only (B3)
+        t = boot.signflip(A, B, alternative="greater", strict=True)  # THE p-value (B3)
+        r["signflip"] = t
         conf[name] = r
-        pvals[name] = r["p"]
+        pvals[name] = t["p"]
     decisions = boot.holm(pvals, alpha=ALPHA)
 
     print("\n=== confirmatory (one-sided, Holm, family alpha=0.025) ===")
     for name in CONFIRMATORY:
         d, h = conf[name], decisions[name]
         print(f"  {'REJECT H0' if h['reject'] else 'not resolved'}  {name}: d={d['delta']:+.4f} "
-              f"CI={d['ci95']} p={d['p_str']} thr={h['threshold']:.4f}")
+              f"CI={d['ci95']} p={d['signflip']['p_str']} (sign-flip) "
+              f"thr={h['threshold']:.4f}")
 
     print("\n=== untouched-final (scored after the six; no recipe change after this point) ===")
     unt = {ds: score_set(ds, "untouched", table_path, pre, spec) for ds in UNTOUCHED}

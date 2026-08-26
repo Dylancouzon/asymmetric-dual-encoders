@@ -26,30 +26,11 @@ CACHE.mkdir(parents=True, exist_ok=True)
 
 
 def bm25_run_cached(comp):
-    """BM25 at fusion.DEPTH. Cached: indexing HotpotQA's 5.23M documents is the single most
-    expensive repeated step on this box."""
-    p = CACHE / f"bm25-{comp}-d{fusion.DEPTH}.npz"
+    """Thin wrapper over fusion.bm25_run -- the one shared builder (Codex B5) -- adding the
+    per-component raw-array cache. Existing caches store raw ids/scores, so they stay valid."""
     doc_ids, doc_texts, q_ids, q_texts, qrels, _ = dev_eval.doc_vecs(comp)
-    if p.exists():
-        z = np.load(p, allow_pickle=False)
-        ids, sc = z["ids"], z["scores"]
-        return {q_ids[i]: {doc_ids[int(d)]: float(s) for d, s in zip(ids[i], sc[i]) if s > 0
-                           and doc_ids[int(d)] != q_ids[i]} for i in range(len(q_ids))}
-    import Stemmer
-    import bm25s
-    st = Stemmer.Stemmer("english")
-    r = bm25s.BM25(method="lucene", k1=1.2, b=0.75)
-    r.index(bm25s.tokenize(doc_texts, stopwords="en", stemmer=st, show_progress=False),
-            show_progress=False)
-    ids, sc = r.retrieve(bm25s.tokenize(q_texts, stopwords="en", stemmer=st, show_progress=False),
-                         k=min(fusion.DEPTH, len(doc_ids)), show_progress=False)
-    np.savez_compressed(p, ids=ids.astype(np.int32), scores=sc.astype(np.float32))
-    # The `s > 0` filter MUST match the cache-read path above. It did not: the fresh build let
-    # zero-score padding rows into the run, which shifts every min-max normalisation's `lo`, so
-    # selection and application scored two different functions. Measured impact was <5e-4, but a
-    # frozen fusion parameter is only frozen if the function it was frozen against is fixed.
-    return {q_ids[i]: {doc_ids[int(d)]: float(s) for d, s in zip(ids[i], sc[i]) if s > 0
-                       and doc_ids[int(d)] != q_ids[i]} for i in range(len(q_ids))}
+    return fusion.bm25_run(doc_ids, doc_texts, q_ids, q_texts,
+                           cache_path=CACHE / f"bm25-{comp}-d{fusion.DEPTH}.npz")
 
 
 def dense_run(comp, model, pre):
