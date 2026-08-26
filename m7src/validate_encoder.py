@@ -96,11 +96,23 @@ def main(names):
             continue
         cos = (a * b).sum(1)
         dp = np.abs(a @ a.T - b @ b.T).max()
-        ok = bool(cos.min() >= COS_BAR and dp <= PAIRWISE_BAR)
+        agrees = bool(cos.min() >= COS_BAR and dp <= PAIRWISE_BAR)
+        # A Spec may declare that it deliberately departs from the published pipeline. Then
+        # AGREEMENT is the failure: it would mean the departure never took effect.
+        if spec.expect_st_mismatch:
+            ok = not agrees
+            if agrees:
+                print("  FAIL this Spec declares expect_st_mismatch but MATCHES "
+                      "sentence-transformers -- the intended departure did not take effect")
+        else:
+            ok = agrees
         print(f"  per-vector cosine  min {cos.min():.8f}  (bar {COS_BAR})")
         print(f"  pairwise sim  max|delta| {dp:.2e}  (bar {PAIRWISE_BAR:.0e})   "
               f"{'PASS' if ok else 'FAIL'}")
-        out[name] = {"status": "pass" if ok else "fail", "dim": int(a.shape[1]),
+        status = ("expected-mismatch" if (ok and spec.expect_st_mismatch)
+                  else "pass" if ok else "fail")
+        out[name] = {"status": status, "dim": int(a.shape[1]),
+                     "expect_st_mismatch": spec.expect_st_mismatch,
                      "spec_fingerprint": fingerprint(spec),
                      "min_cosine_vs_sentence_transformers": float(cos.min()),
                      "max_abs_pairwise_sim_delta": float(dp),

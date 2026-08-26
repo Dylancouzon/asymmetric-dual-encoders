@@ -46,6 +46,13 @@ class Spec:
     # probe compares candidates through one kernel rather than two. Feeds the encode cache key
     # conditionally -- see teacher.cache_key.
     config_kwargs: dict = field(default_factory=dict)
+    # Set when the Spec DELIBERATELY departs from the repo's published sentence-transformers
+    # pipeline, so validate_encoder.py records "expected-mismatch" instead of "fail". Only
+    # arctic-embed-l-mean uses it: a mean read-out of a CLS-trained tower, run as a controlled
+    # experiment. Without this a future session reads a red FAIL and "fixes" the experiment away.
+    # It is NOT a licence to silence a real loader bug -- the mismatch has to be the point of the
+    # Spec, stated in `notes`.
+    expect_st_mismatch: bool = False
     # The identity string that goes into the encode cache key. It must change whenever the token
     # ids would change, and must NOT change for bge-base or existing caches are orphaned.
     # All five registered candidates ship a BYTE-IDENTICAL vocab.txt (sha256 07eced375cec144d,
@@ -134,8 +141,9 @@ REGISTRY = {
     "arctic-embed-l-mean": Spec(
         name="arctic-embed-l-mean", repo="Snowflake/snowflake-arctic-embed-l",
         revision="d8fb21ca8d905d2832ee8b96c894d3298964346b",
-        dim=1024, pooling="mean", query_prefix=BGE_PREFIX,
-        notes="off-spec mean read-out of a CLS-trained tower; expected to fail ST validation"),
+        dim=1024, pooling="mean", query_prefix=BGE_PREFIX, expect_st_mismatch=True,
+        notes="off-spec mean read-out of a CLS-trained tower; ST validation mismatch is EXPECTED "
+              "(measured 8.1e-02 pairwise) and is the experiment, not a bug"),
     "arctic-embed-l": Spec(
         name="arctic-embed-l", repo="Snowflake/snowflake-arctic-embed-l",
         revision="d8fb21ca8d905d2832ee8b96c894d3298964346b",
