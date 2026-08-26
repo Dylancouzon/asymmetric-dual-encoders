@@ -104,6 +104,20 @@ def main(names):
             print(f"  {k:20s} vs bge-base: d={r['delta']:+.4f} CI={r['ci95']} p={r['p_str']} "
                   f"{'RESOLVED' if r['resolved'] else 'UNRESOLVED'}")
 
+    # ALL PAIRS, not just vs the incumbent. The probe exists because the MTEB->six projection
+    # cannot order the front-runners, and it turned out not to order them the way MTEB does either
+    # (arctic-embed-l has the LOWEST MTEB v1 of the three 1024-d candidates and the highest measured
+    # macro here), so "which candidate wins" needs its own interval rather than two deltas against
+    # a third model differenced by eye.
+    ordered = [k for k in names if k in per_all]
+    res_pairs = {}
+    for i, a in enumerate(ordered):
+        for b in ordered[i + 1:]:
+            r = boot.paired(per_all[a], per_all[b], alternative="two-sided")
+            res_pairs[f"{a}__vs__{b}"] = r
+            print(f"  {a:20s} vs {b:20s} d={r['delta']:+.4f} CI={r['ci95']} p={r['p_str']} "
+                  f"{'RESOLVED' if r['resolved'] else 'UNRESOLVED'}", flush=True)
+
     base = res.get("bge-base-en-v1.5", {}).get("macro_cqadupstack")
     if base:
         for k in res:
@@ -115,7 +129,12 @@ def main(names):
                     "pooling and prompt, fp16, our harness. A SELECTION diagnostic on dev: not "
                     "a gate input, and the six-set is never read. Use this to rank teachers "
                     "instead of the loose MTEB->six map in results/m7_calibration.json.",
-           "components": list(COMPONENTS), "candidates": res}
+           "_pairwise_note": "All-pairs two-sided paired bootstrap over the same per-query scores. "
+                             "A SELECTION diagnostic, so no Holm correction is applied and none is "
+                             "claimed -- the mandate's family-wise alpha governs gate claims on "
+                             "the six, not this. Read a pair as resolved only if its CI excludes "
+                             "0.",
+           "components": list(COMPONENTS), "candidates": res, "pairwise": res_pairs}
     (REPO / "results" / "m7_teacher_probe.json").write_text(json.dumps(out, indent=1))
     print("wrote results/m7_teacher_probe.json")
 
