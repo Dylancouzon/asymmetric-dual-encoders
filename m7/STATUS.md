@@ -1,74 +1,91 @@
 # M7 status
 
-**Stage:** Stage 0 done, gate = **GO**. Strategy re-planned after research. **Tier 1 is reachable.**
+**Stage:** Stage 0 done, gate GO. Research session 2026-08-26 done: teacher chosen by measurement,
+retention plan re-ranked, four prior claims corrected. **No training has restarted yet.**
 **Updated:** 2026-08-26
 
-## Where we actually are
+## The one thing that changed the plan
 
-Gate passed on all four conditions (`results/m7_gate_p1-objB.json`): G1 +0.0994, G3 +0.0270 (both
-p<1e-4), G4 int8 bound 0.00053 vs a 0.005 bar, G2 pass (near-vacuous, logged as such).
+Last status said "stella × 85% clears Tier 1 with no fusion at all". **Withdrawn.** It projected
+from a *single* calibration model (bge-small, ratio 0.976) — the 3rd-highest of the nine we have
+measured both ways, so every teacher estimate was biased high. Refit on all nine
+(`results/m7_calibration.json`): ratio spread 0.926–1.001, affine r=0.950, **residual sd 0.0102**.
 
-**But read the per-component row, not the macro.** The +0.0270 win over BM25 is one component wide
-and it is the training-adjacent one: nq-250k +0.1445, cqa-physics +0.0152, cqa-programmers −0.0203,
-**hotpotqa −0.0316 CI-resolved loss**. Diagnosis: a normalised bag of token vectors cannot express
-word order or composition, so we win on single-hop and lose on multi-hop and duplicate-question.
-Current projection to the six: **~0.41 = Tier 4.**
+Also separated, because the mandate does and the last status did not: **Tier 2 (release bar 0.4583)
+must be cleared by the dense int8 table alone; only Tier 1 (0.4868) may use fusion.** Retention
+needed, against today's **78.5%**:
 
-## Tier 1 is reachable — the arithmetic
+| teacher | six est | Tier 2, dense only | Tier 1, with fusion |
+|---|---|---|---|
+| bge-base (current) | 0.5082 | 90.2% (+11.7) | misses at any plausible retention |
+| gte-large-en-v1.5 | 0.5473 | 83.7% (+5.2) | clears at ~88% |
+| **stella_en_400M_v5** | **0.5562** | **82.4% (+3.9)** | **clears at ~85%** |
 
-Calibrating MTEB-Retrieval to our six-set via bge-small (the one model measured both ways,
-ratio 0.976):
+**So a teacher swap is required for the release bar itself, not just for the stretch aim.** That is
+the headline change. Tier 1 is still reachable — but as teacher × retention × fusion, not by any
+one of them.
 
-| teacher | licence | vocab/dim | MTEB-Ret | six est | x78% (today) | x85% | x88% |
-|---|---|---|---|---|---|---|---|
-| bge-base (current) | MIT | 30,522 / 768 | 53.25 | 0.520 | **0.406** | 0.442 | 0.457 |
-| bge-large | MIT | 30,522 / 1024 | 54.29 | 0.530 | 0.413 | 0.450 | 0.466 |
-| **stella_en_400M_v5** | **MIT** | 30,528 / 1024 | **58.97** | **0.575** | 0.449 | **0.489** | **0.506** |
+## Teacher: shortlist re-run, decided by measurement not projection
 
-Bars: BM25 0.4174 · Tier 2 release 0.4583 · **Tier 1 aim 0.4868**.
-**stella x 85% clears Tier 1 with no fusion at all**; fusion (+0.02–0.04 in our favourable regime)
-sits on top. So the job is: **raise the teacher, and move retention 78% -> 85%.**
+`research/m7-teacher-shortlist-2026-08-26.md`. Two front-runners pass licence + vendor + vocab ≤50K
++ dim ≤1024 + a 10 GB 3080: **stella_en_400M_v5** (58.97, MIT, vendor CLEAN — NovaSearch is a
+3-person org with no product) and **gte-large-en-v1.5** (57.91, Apache, Alibaba = admissible with
+justification). Their 1.06-MTEB gap is *inside* the calibration residual, so
+`m7src/teacher_probe.py` ranks them by measured ceiling on the two CQADupStack dev components — the
+only dev components on no candidate's disclosed training list. Closed: the **Snowflake tier is
+moot** (best model 2 points back, so Dylan never rules on it), **Qwen3-0.6B is dominated** (not a
+vocab casualty), and the 2025–26 discovery sweep found **nothing new**.
 
-## The four levers on retention, all now literature-backed
+**Live risk on stella:** MTEB's registry records ArguAna and FiQA2018 as its in-domain training
+data — 2 of our 6 final eval datasets, and our comparators carry no such flag. Community metadata,
+not an author disclosure. If stella wins the probe this must be labelled at the dataset row.
 
-Detail and citations: `research/m7-research-2026-08-26.md`.
+## Retention: what is real, after the algebra
 
-1. **Query-side centering / top-PC removal (SIF).** Cheapest untried lever, and the algebra says
-   it is genuine new capacity: pure whitening is absorbable into the table
-   (`normalize(W·mean) = normalize(mean(W·))`) but the centering offset is not. Evidence is for
-   exactly our setup — WhiteningBERT +4.80 Spearman on *mean-pooled* BERT; RepBERT (mean-pooled)
-   +6.9–22.8% nDCG in-domain, up to +25% OOD, and the six are OOD for us.
-2. **Fix contrastive.** It was never broken — **our lr was 30–300x above every published recipe**
-   (3e-3 vs 1e-5..3e-4), and arXiv 2110.09348 proves analytically that high lr shifts the embedding
-   mean into dimensional collapse: loss falls while representation degenerates, our exact symptom.
-   Temperature was NOT the problem (BGE uses 0.01). `fn_margin=0.02` is tighter than NV-Retriever's
-   tuned 0.05 which they already call accuracy-penalising.
-3. **N-gram / phrase rows.** The only structural fix for the diagnosed cause. No modern numbers
-   exist, so magnitude is unknown until built — and nobody has reported a bag encoder beating BM25
-   on multi-hop, so this is where an original claim lives.
-4. **Stronger teacher**, with the caveat that capacity-gap literature expects retention to fall
-   somewhat as the teacher strengthens — re-measure, never assume.
+`results/m7_absorb_check.json` settles it to machine precision, and it re-ranks the plan:
 
-## Next session = research/re-plan, then rebuild
+- **Centering / whitening / top-PC removal / SIF weighting add NO capacity** — all absorbable into
+  the table (`mean(W−mu) = mean(W)−mu`; a per-token scalar by scaling that row). Last status had
+  this as the top lever *because* it was "genuine new capacity". It is not, and p1-objB's learned
+  weights **already are** IDF-like (spearman −0.44 vs row update count, [CLS]/[SEP] down to 0.61×
+  median). Demoted to a cheap initialisation experiment.
+- **N-gram / phrase rows are the only structurally new lever** on the old list — and where an
+  original claim lives (nobody has published a bag encoder beating BM25 on multi-hop).
+- **New lever nobody listed:** multiplicity-dependent pooling (count saturation). Not absorbable,
+  costs nothing, untried.
+- **A no-op, so nobody wastes a run:** length scaling (1/√|T|), removed by the final L2 normalize.
+- **Contrastive is diagnosed, not dead.** Two of three suspects died *by measurement*
+  (`results/m7_diag_scores.json`): fn_margin=0.02 removes only 4.3% of the top-100 hardest
+  negatives; random negatives are not separable. Only ~29 of 32,768 negatives carry gradient at
+  τ=0.02, so negative *quality* dominates pool size. The lr is the survivor — 3e-3 against a
+  published 1e-5–3e-4 — and the one with an analytic mechanism (arXiv 2110.09348). train.py now has
+  warmup and collapse diagnostics; the phase-2 screen was rebuilt around the lr, and its kill
+  criterion can no longer fire on a misconfigured arm.
+- Also refuted: "learned weights buy nothing" was a proxy-3 artifact — on the full suite the
+  trained table beats the closed-form flat optimum by **+0.021**.
 
-See the handoff prompt. Order: cheap diagnostics and the centering lever first (hours), then the
-contrastive refit at a sane lr, then teacher swap, then n-grams, then fusion. Preserve the eval
-protocol, partition ledger, decontamination, pinned dev suite, frozen comparators and
-freeze/final-run machinery — those are twice-adversarially-reviewed and are not what is wrong.
+## Order of work
+
+1. **Fusion (dense + BM25) measured on dev** — in flight. Our profile is ideally complementary
+   (we beat BM25 on NQ by +0.145 and lose HotpotQA by −0.032), and it decides whether Tier 1 needs
+   anything beyond teacher + retention. Sets the Tier-1 candidate.
+2. **Teacher probe** — minutes, no GPU-hours. Picks stella vs gte-large on a measured number.
+3. **Contrastive refit at a published lr**, warmup, teacher-mined hard negatives from the frozen
+   index (permanently valid — our tower never moves). The main retention lever with real evidence.
+4. **Count saturation** — near-zero cost, genuinely new capacity.
+5. **Teacher swap + corpus re-encode** (~4× compute, 1024d storage). Deliberately *after* 3–4:
+   capacity-gap literature expects retention to *fall* as the teacher strengthens, so measure it on
+   the cheap teacher first. The re-encode is the costliest step and should happen once.
+6. **N-grams** — days, unknown magnitude, and it adds parameters when our problem is
+   generalisation: the capacity probe hits ~1.0, so the frozen-tower tax is a *generalisation* gap,
+   not an expressivity limit. Needs a bounded frequency-selected phrase vocabulary, priced.
 
 ## Open for Dylan
 
-1. **stella_en_400M_v5 provenance call.** MIT, NovaSearch ships no vector product — but the weights
-   are initialised from Alibaba's `gte-large-en-v1.5`, and Alibaba ships OpenSearch Vector Search /
-   AnalyticDB. The releasing party is clean; the lineage touches a competing vendor. Your call.
-   Conservative fallback: bge-large (+1.04 MTEB-Ret, Tier 2 only).
-2. **Host:** stop Windows Update auto-rebooting (Event 1074 took the box at 05:52; nothing lost).
-3. HF release go, later.
-
-## Guardrails now in CLAUDE.md
-
-A standing directive (added after this session declared Tier 1 unreachable and was wrong within the
-hour): exhaust the angles before calling any bar unreachable — redo the arithmetic with the best
-component, diagnose every failure mechanistically, sweep the literature, check capability claims
-algebraically. Plus: past decisions are revisitable with evidence and Dylan's sign-off, the goal
-supersedes them — except that eval-protocol changes must precede the numbers they affect.
+1. **Nothing is blocking.** The stella-provenance call from last status is resolved without you:
+   NovaSearch ships no vector product, and Alibaba (stella's lineage, and gte-large itself) is
+   admissible under the relaxed rule.
+2. **Host:** stop Windows Update auto-rebooting (Event 1074 took the box at 05:52 on 2026-08-26;
+   nothing lost).
+3. HF release go, later. Plus: if stella wins the probe, you may want a view on shipping a teacher
+   whose training data is undisclosed and whose registry lists 2 of our 6 eval sets.
