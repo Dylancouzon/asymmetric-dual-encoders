@@ -1,0 +1,145 @@
+{
+ "_note": "Trained table vs the closed-form MSE-optimal FLAT table, same components, same preprocessing, one process, paired bootstrap. CONFOUNDED BY DESIGN: flat+MSE+closed-form vs learned-weights+IDF+KL+SGD differs in three ways at once, and the ridge lambda was selected on the 3-component proxy so this 'flat optimum' is proxy-optimal, not suite-optimal. Settles whether the gap is real; does NOT attribute it to learned weights. The controlled test is program.phase4_mandatory's p4-weights.",
+ "run_id": "p1-objB",
+ "preproc": "noprefix",
+ "ridge_lambda": "0.01",
+ "components": [
+  "nq-250k",
+  "hotpotqa",
+  "cqadup-programmers",
+  "cqadup-physics",
+  "heldout-train",
+  "heldout-longq"
+ ],
+ "ridge_macro": 0.5181,
+ "trained_macro_fp16": 0.5387,
+ "trained_minus_ridge_fp16": {
+  "delta": 0.0205,
+  "ci95": [
+   0.0142,
+   0.0274
+  ],
+  "p": 0.0,
+  "p_str": "<0.0001",
+  "alternative": "greater",
+  "B": 10000,
+  "seed": 0,
+  "one_sided_lower_2.5": 0.0142,
+  "per_dataset": {
+   "cqadup-physics": {
+    "n": 1039,
+    "delta": 0.0006,
+    "ci95": [
+     -0.0084,
+     0.0098
+    ]
+   },
+   "cqadup-programmers": {
+    "n": 876,
+    "delta": 0.0049,
+    "ci95": [
+     -0.0053,
+     0.0154
+    ]
+   },
+   "heldout-longq": {
+    "n": 55,
+    "delta": 0.0736,
+    "ci95": [
+     0.0395,
+     0.1118
+    ]
+   },
+   "heldout-train": {
+    "n": 7325,
+    "delta": 0.0179,
+    "ci95": [
+     0.0145,
+     0.0215
+    ]
+   },
+   "hotpotqa": {
+    "n": 7405,
+    "delta": 0.0298,
+    "ci95": [
+     0.0262,
+     0.0334
+    ]
+   },
+   "nq-250k": {
+    "n": 3452,
+    "delta": -0.0036,
+    "ci95": [
+     -0.0084,
+     0.0012
+    ]
+   }
+  },
+  "resolved": true
+ },
+ "trained_macro_int8": 0.5385,
+ "trained_minus_ridge_int8": {
+  "delta": 0.0204,
+  "ci95": [
+   0.014,
+   0.0272
+  ],
+  "p": 0.0,
+  "p_str": "<0.0001",
+  "alternative": "greater",
+  "B": 10000,
+  "seed": 0,
+  "one_sided_lower_2.5": 0.014,
+  "per_dataset": {
+   "cqadup-physics": {
+    "n": 1039,
+    "delta": 0.0006,
+    "ci95": [
+     -0.0084,
+     0.0096
+    ]
+   },
+   "cqadup-programmers": {
+    "n": 876,
+    "delta": 0.0048,
+    "ci95": [
+     -0.0054,
+     0.0153
+    ]
+   },
+   "heldout-longq": {
+    "n": 55,
+    "delta": 0.0725,
+    "ci95": [
+     0.0385,
+     0.111
+    ]
+   },
+   "heldout-train": {
+    "n": 7325,
+    "delta": 0.0181,
+    "ci95": [
+     0.0146,
+     0.0217
+    ]
+   },
+   "hotpotqa": {
+    "n": 7405,
+    "delta": 0.0299,
+    "ci95": [
+     0.0263,
+     0.0336
+    ]
+   },
+   "nq-250k": {
+    "n": 3452,
+    "delta": -0.0035,
+    "ci95": [
+     -0.0083,
+     0.0012
+    ]
+   }
+  },
+  "resolved": true
+ }
+}

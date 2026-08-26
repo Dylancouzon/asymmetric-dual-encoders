@@ -1,0 +1,19 @@
+{
+ "_note": "Our teacher.encode path vs sentence-transformers, which implements each repo's own modules.json. Both fp32, so this isolates loader fidelity from dtype. The load-bearing number is the PAIRWISE similarity delta, since ranking consumes similarities, not vectors -- a shared affine map can keep cosines high while moving rankings. Any new Spec must pass before entering teacher_probe.py or a corpus encode. Bars: min cosine >= 0.9999, max|pairwise delta| <= 1e-3.",
+ "bars": {
+  "min_cosine": 0.9999,
+  "max_pairwise_delta": 0.001
+ },
+ "n_texts": 8,
+ "results": {
+  "bge-base-en-v1.5": {
+   "status": "pass",
+   "dim": 768,
+   "min_cosine_vs_sentence_transformers": 0.9999999857009441,
+   "max_abs_pairwise_sim_delta": 1.7545016695041937e-07,
+   "pooling": "cls",
+   "post_dense": null,
+   "revision": "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a"
+  }
+ }
+}
