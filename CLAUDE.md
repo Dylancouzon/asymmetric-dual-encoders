@@ -65,6 +65,38 @@ Findings and dispositions:
 - MINOR 8/9/10 (p=0 as bound, cost definitions, LEAF wording): adopted.
 - Ship-scope per Codex: all comparative claims scoped to "the six named datasets"; no generalization to production workloads, million-scale, filtered search, or non-English.
 
+## Standing directive: push for the best model, not a model (Dylan, 2026-08-26)
+
+Added after a session declared a target "unreachable" and was wrong within the hour. **We do not
+want A model. We want the best one obtainable under the constraints.** Being first to say "this
+projects to a negative result" is not rigour — rigour is exhausting the angles and *then* reporting
+honestly. Honest pessimism arrived at lazily is still lazy.
+
+**Before writing that any bar is unreachable, all of these must be true and shown:**
+
+1. **The arithmetic has been redone with the best available component**, not the current one. The
+   2026-08-26 case: "Tier 1 unreachable" assumed the current teacher. Swapping in a stronger
+   permissive teacher (stella_en_400M_v5, MTEB-Ret 58.97 vs bge-base 53.25) moved the projection
+   from 0.406 to 0.489 and cleared the bar outright. Quality is usually a *product* of factors —
+   check every factor before declaring the product capped.
+2. **Every failing component has been diagnosed, not just observed.** Same day: contrastive
+   training was called "broken" when the learning rate was 30-300x above every published recipe
+   and the literature has an analytic result (arXiv 2110.09348) for precisely that symptom. A
+   failure you cannot explain mechanistically is not evidence about the method — it is evidence
+   about your configuration.
+3. **The literature has been swept for the specific failure**, in parallel subagents, with the
+   real numbers extracted. Cheap, fast, and it has twice overturned a conclusion here.
+4. **A capability claim has been checked algebraically before being believed or dismissed.** Some
+   "obvious" fixes are provably no-ops (a doc-side linear map reparametrises the table;
+   document centering cannot change ranking at all) and some "exotic" ones are real (query-side
+   centering is NOT absorbable into the table, so it is genuine new capacity). Do the algebra.
+5. **The negative result is reported with what would change it** — the specific measurement,
+   component, or bound that would flip the verdict.
+
+Corollary: a pre-registered kill criterion (e.g. the phase-2 contrastive bar) exists to stop
+*grinding a diagnosed dead end*, not to license abandoning an undiagnosed one. Kill the avenue
+after you understand why it failed, never before.
+
 ## Verification gates (Dylan, 2026-08-24)
 
 Results dictate Qdrant engineering decisions: correct, not decimal-precise; blind spots stated openly.
