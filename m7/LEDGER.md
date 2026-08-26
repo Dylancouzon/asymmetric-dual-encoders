@@ -216,6 +216,26 @@ candidate number existed) 3 BLOCKER / 6 MAJOR / 10 MINOR, and **post-results on 
 1 BLOCKER / 6 MAJOR / 4 MINOR. Every finding is actioned; the full lists are in
 `git log -p m7/LEDGER.md` at commits deb5648 and earlier. Only what is still live is kept here.
 
+**Third review — Fable, research session** (2026-08-26): 2 BLOCKER / 8 MAJOR / 7 MINOR, all
+actioned. The two blockers were both *instrument* failures, not result failures. (1) The stella
+encode path omitted its published post-pooling Dense head, so the probe that decides our most
+expensive choice would have ranked a model that is not stella — the M2 potion loader mismatch
+again; fixed via `Spec.post_dense`, and `validate_encoder.py` now validates any new Spec against
+sentence-transformers on the **pairwise similarity matrix** rather than trusting it. (2) The
+calibration quoted ±2·resid_sd as a "CI" using n−1 dof, no t quantile and no extrapolation term,
+understating the half-width at stella by 68% and producing one wrong clearance verdict; it now
+carries a real prediction interval, and **no candidate clears Tier 1 CI-resolved on the dense arm**.
+Majors of record: the fusion macro's +0.1418 hotpotqa share has no six-set analogue (transfer
+estimate is +0.049, not +0.0725); retention 0.7853 is itself optimistic, being lifted by the one
+component whose queries are in TRAIN; four of five Specs were unpinned, two with
+`trust_remote_code`; `bm25_run_cached` filtered zero scores on one code path only, so "the frozen
+fusion spec" depended on cache state; `KILL_REQUIRES` was documented and enforced nowhere (now
+`may_invoke_contrastive_kill`); collapse diagnostics were written only to gitignored paths.
+Also caught by the new tests rather than by review: `config.json`'s `vocab_size` is the padded
+embedding width, so the table is **30,522 × dim** for every candidate, and all five ship a
+byte-identical vocab.txt — a teacher swap therefore does not change tokenization, and row indexing,
+decontamination fingerprints and the frozen preprocessing rule all survive it.
+
 **Verified sound, do not re-litigate:** the paired bootstrap (genuinely paired, within-dataset
 resampling, correct one-sided inversion), Holm step-down, `upper_bound_one_sided`'s tail and
 argument order, int8 quantisation incl. the zero-row case, self-hit removal parity across dense and

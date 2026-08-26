@@ -25,6 +25,7 @@ import torch
 import torch.nn.functional as F
 from transformers import AutoModel, AutoTokenizer
 
+import boot
 import dev_eval
 import encoders
 from _paths import REPO, WORK
@@ -77,7 +78,7 @@ def encode(spec, texts, prefix, tag):
 
 
 def main(names):
-    res = {}
+    res, per_all = {}, {}
     for name in names:
         spec = encoders.get(name)
         per_comp = {}
@@ -90,6 +91,7 @@ def main(names):
             pq = per_query_ndcg(run, qrels)
             per_comp[c] = pq
             print(f"  {name:20s} {c:20s} nDCG@10 {np.mean(list(pq.values())):.4f}", flush=True)
+        per_all[name] = per_comp
         macro = float(np.mean([np.mean(list(per_comp[c].values())) for c in COMPONENTS]))
         res[name] = {"repo": spec.repo, "pooling": spec.pooling,
                      "query_prefix": spec.query_prefix, "dim": int(dv.shape[1]),
@@ -97,6 +99,19 @@ def main(names):
                      "per_component": {c: round(float(np.mean(list(per_comp[c].values()))), 4)
                                        for c in COMPONENTS}}
         print(f"{name:20s} MACRO {macro:.4f}\n", flush=True)
+
+    # Point macros over ~1.9K queries cannot rank candidates any better than the projection this
+    # probe replaces, so every candidate is paired-bootstrapped against the current teacher. A
+    # candidate that does not CI-resolve above bge-base has not earned a corpus re-encode.
+    if "bge-base-en-v1.5" in per_all:
+        ref = per_all["bge-base-en-v1.5"]
+        for k in res:
+            if k == "bge-base-en-v1.5":
+                continue
+            r = boot.paired(per_all[k], ref, alternative="greater")
+            res[k]["vs_current_teacher_boot"] = r
+            print(f"  {k:20s} vs bge-base: d={r['delta']:+.4f} CI={r['ci95']} p={r['p_str']} "
+                  f"{'RESOLVED' if r['resolved'] else 'UNRESOLVED'}")
 
     base = res.get("bge-base-en-v1.5", {}).get("macro_cqadupstack")
     if base:

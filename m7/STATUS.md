@@ -7,11 +7,12 @@ Detail: `research/m7-research-2026-08-26b.md`, `research/m7-teacher-shortlist-20
 
 ## Run these first, in this order
 
-1. **`m7src/validate_encoder.py` does not exist yet — write it and run it before the probe.**
-   Every new `Spec` needs the M2/M4 loader-validation step: encode the model card's own example and
-   reproduce its printed similarities. This session added stella's post-pooling Dense head only
-   after review caught that it was missing; the loader is now *plausible*, not *validated*, and a
-   bad loader would silently decide the teacher.
+1. **`m7src/validate_encoder.py` — run it for any new Spec before the probe or a corpus encode.**
+   It compares our `teacher.encode` against sentence-transformers (which implements each repo's own
+   `modules.json`), fp32 both sides, scoring the **pairwise similarity matrix** because that is what
+   ranking consumes. bge-base passes at max pairwise Δ 1.75e-07. This exists because review caught
+   that stella's post-pooling Dense head was missing from the Spec — a bad loader would silently
+   decide the teacher, which is the M2 potion blocker all over again.
 2. `m7src/teacher_probe.py` — picks stella vs gte-large on measurement. ~70K docs/candidate.
 3. Phase-2 screen (`program.phase2_screen`) — the decisive contrastive test at a published lr.
 4. Doc-side instruction test (§below), count saturation, then the teacher swap.
@@ -72,10 +73,12 @@ FiQA, the row fusion is meant to rescue.
   geometry, not the student's, and the suspect list never included Adam-on-sparse-rows dynamics or
   cross-query row interference. The decisive test is the phase-2 `sane-5e5` vs `warmup-only` arms.
   Watch `fn_masked_frac`: at margin 0.05 with *mined* negatives the filter will bite far harder.
-- The proxy-3 near-tie with the closed-form flat table **did not replicate** on the full suite
-  (+0.021) — but that is uncontrolled (objective, weights and optimizer all differ) and has no CI,
-  so it refutes "training buys nothing over closed-form flat distillation", **not** "learned weights
-  buy nothing". p4-weights remains the clean test.
+- The proxy-3 near-tie with the closed-form flat table **did not replicate** on the full suite:
+  **+0.0205, CI [0.0142, 0.0274], p<1e-4** (`m7_ridge_vs_trained.json`, both tables scored in one
+  process, same components and preprocessing; int8 agrees at +0.0204). The gap is real. The cause
+  is not attributed — objective, weights and optimizer all differ, and the ridge λ was selected on
+  the proxy, so this refutes "training buys nothing over closed-form flat distillation", **not**
+  "learned weights buy nothing". p4-weights remains the clean test.
 
 ## The strategic note, properly hedged
 
