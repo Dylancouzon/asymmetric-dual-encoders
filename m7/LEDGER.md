@@ -103,7 +103,7 @@ Results, 2026-08-26 strengthened rules (`results/m7_decontam.json`, `..._queryte
   the 8-gram rule alone). Without this pass, `heldout-train` would score models on paraphrases of
   their own training queries.
 - Pool negatives (Codex B2 + B4): **7,190 of 6,169,142 pool rows banned** (six-doc near-dups 119,
-  six-query hits 1,868, untouched-query hits 5,218; dev-query hits measured only). The mask
+  six-query hits 1,868, untouched-query hits 5,214 (class counts overlap; the banned set is 7,190 unique rows); dev-query hits measured only). The mask
   carries the pool id-sha it was computed against; `train.py` verifies it and refuses stale
   masks. `work/decontam/banned_pool_rows.npy`; per-store counts in `results/m7_decontam_pool.json`.
 - R3 overlap: six 3e-05 · cqadupstack-dev ~0 · **cqadupstack-untouched (android+english) 1 doc
