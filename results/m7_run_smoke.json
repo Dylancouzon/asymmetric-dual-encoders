@@ -1,0 +1,60 @@
+{
+ "run_id": "smoke",
+ "cfg": {
+  "run_id": "smoke",
+  "objective": "C",
+  "init": "teacher",
+  "preproc": "noprefix",
+  "learned_weights": true,
+  "idf_init_weights": true,
+  "lr": 5e-05,
+  "lr_weights": 0.0005,
+  "warmup_steps": 500,
+  "lr_schedule": "warmup_linear",
+  "steps_b": 60,
+  "steps_a": 30,
+  "batch": 512,
+  "n_neg": 32768,
+  "temp": 0.02,
+  "hard_neg_k": 16,
+  "hard_neg_source": "teacher",
+  "use_provided_hardneg": true,
+  "fn_margin": 0.05,
+  "kl_weight": 1.0,
+  "kl_k": 32,
+  "cos_weight": 1.0,
+  "reg_init": 0.001,
+  "bank_size": 2000000,
+  "sources": [],
+  "eval_every": 1000000000,
+  "eval_components": [
+   "nq-250k",
+   "cqadup-programmers",
+   "cqadup-physics"
+  ],
+  "seed": 0,
+  "b_query_sources_all": true,
+  "b_pseudo_queries": 0,
+  "b_pseudo_frac": 0.5
+ },
+ "final_macro": 0.00613475998299215,
+ "coverage": {
+  "rows_updated": 21694,
+  "vocab": 30522,
+  "rows_updated_frac": 0.7107659578323364,
+  "median_updates_of_touched": 4.0
+ },
+ "history": [
+  {
+   "step": 90,
+   "phase": "final",
+   "macro": 0.00613475998299215,
+   "collapse": {
+    "mean_pairwise_cos": 0.9538,
+    "effective_rank": 21.84,
+    "dim": 768,
+    "uniformity": -0.1836
+   }
+  }
+ ]
+}

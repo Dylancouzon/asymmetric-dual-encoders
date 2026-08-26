@@ -1,0 +1,60 @@
+{
+ "run_id": "p2s-start",
+ "cfg": {
+  "run_id": "p2s-start",
+  "objective": "A",
+  "init": "run:p1-objB",
+  "preproc": "noprefix",
+  "learned_weights": true,
+  "idf_init_weights": true,
+  "lr": 5e-05,
+  "lr_weights": 0.0005,
+  "warmup_steps": 200,
+  "lr_schedule": "warmup_linear",
+  "steps_b": 0,
+  "steps_a": 0,
+  "batch": 512,
+  "n_neg": 32768,
+  "temp": 0.02,
+  "hard_neg_k": 16,
+  "hard_neg_source": "teacher",
+  "use_provided_hardneg": true,
+  "fn_margin": 0.05,
+  "kl_weight": 1.0,
+  "kl_k": 32,
+  "cos_weight": 1.0,
+  "reg_init": 0.001,
+  "bank_size": 2000000,
+  "sources": [],
+  "eval_every": 1,
+  "eval_components": [
+   "nq-250k",
+   "cqadup-programmers",
+   "cqadup-physics"
+  ],
+  "seed": 0,
+  "b_query_sources_all": true,
+  "b_pseudo_queries": 0,
+  "b_pseudo_frac": 0.5
+ },
+ "final_macro": 0.4548216552132978,
+ "coverage": {
+  "rows_updated": 0,
+  "vocab": 30522,
+  "rows_updated_frac": 0.0,
+  "median_updates_of_touched": 0.0
+ },
+ "history": [
+  {
+   "step": 0,
+   "phase": "final",
+   "macro": 0.4548216552132978,
+   "collapse": {
+    "mean_pairwise_cos": 0.3416,
+    "effective_rank": 270.39,
+    "dim": 768,
+    "uniformity": -2.5984
+   }
+  }
+ ]
+}
