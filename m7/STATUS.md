@@ -50,10 +50,12 @@ None blocking. Two things for Dylan to know, neither urgent:
 
 1. **`qdrant-edge` is not installable from PyPI on this box** (`uv pip install qdrant-edge` →
    not found). M5's Edge prototype ran on the Mac, so it came from an internal index or a local
-   wheel. Needed only for the last deliverable (the Edge demo running our table). If no wheel
-   turns up, the fallback is `qdrant-client` in local mode — same two-collection architecture and
-   real HNSW, but not the Edge shard format, and the report would say so. `qdrant-client 1.19.0`
-   is installed as that fallback. **Ask: is there a wheel or index URL for qdrant-edge?**
+   wheel. Needed only for the last deliverable (the Edge demo running our table).
+   **Ask: is there a wheel or index URL for qdrant-edge?** Not blocking: the standalone Qdrant
+   v1.19.0 server binary is installed at `~/qdrant-bin/qdrant` (no Docker needed — Docker
+   Desktop's WSL integration is off for this distro, and it turned out not to matter), which
+   gives real HNSW for the ANN sweep and can host the two-collection architecture. Only the Edge
+   *shard format* would be missing, and the report would say so.
 2. **WSL is configured with ~25 GB of the host's 32 GB**, leaving Windows ~6 GB.
    `setup-windows.md` suggested starting at 20 GB. Higher is useful here, but it is why the
    concurrent-job OOM took the whole distro down rather than one process. Jobs are now strictly
