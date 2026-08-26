@@ -1,81 +1,69 @@
 # M7 status
 
-**Stage:** teacher decided and validated; phase-2 answered; arctic-embed-l encodes started.
-Next session is compute. Detail: `m7/RESULTS.md` (runs), `m7/LEDGER.md` (protocol + the Codex
-gate's open list), `m7/EXPLORED.md` (closed and reopened avenues), `results/m7_*.json` (numbers).
+**Stage:** teacher swapped to **stella_en_400M_v5** (Dylan, 2026-08-26, on the learnability probe);
+its 6.17M-doc encode is running (~3.5 h, `logs/stella_swap.log`). Phase 2 answered. Next session:
+finish the swap, then the four Codex blockers. Detail in `m7/RESULTS.md` (runs), `m7/LEDGER.md`
+(protocol + the Codex gate's open list), `m7/EXPLORED.md` (closed avenues), `results/m7_*.json`.
 
 ## Run these next, in this order
 
-1. **Teacher learnability probe — do this BEFORE the 6.17M-doc pool encode.** The teacher was
-   picked on *symmetric ceiling*; what determines the shipped system is how well a bag-of-tokens
-   table approximates that teacher (Codex M-probe), and that is the tie-break for the tension below.
-   Design, so it need not be re-derived: it needs **no documents and no qrels** — targets are the
-   candidate's own **query** vectors, so encode the TRAIN query texts (349,934, ~11 min per
-   candidate at ~535 texts/s) with arctic and stella, fit `stage0_ridge`'s closed form per candidate
-   against those targets, then report (a) **cosine agreement to the teacher's query vector on the
-   dev components' queries** as the primary metric, high-SNR and coverage-symmetric, and (b)
-   retrieval nDCG on the two CQADupStack components, whose docs are already encoded for both. Fit on
-   TRAIN, measure on dev: no optimism, real coverage. Paired-bootstrap the arctic-vs-stella
-   difference. **A cheap closed-form ranking, not a trained one** — say so, since the released table
-   is trained and phase 2 showed training moves it.
-2. `encode_dev.py nq-250k hotpotqa` then `pool.py` under `M7_ENCODER=arctic-embed-l` — the long
-   job (~3 h; 6.17M docs at 1024-d). Gates already passed for arctic: `validate_encoder.py`,
-   `test_encoders.py`, `test_init_rows.py` (min cosine 0.99999986).
-3. Re-run `stage0_ridge` + `gate.py` under arctic. Its refs file is separate
-   (`work/devres/refs-arctic-embed-l.json`), so nothing mixes teachers.
-4. Then the non-absorbable retention levers, cheapest first: count saturation, doc-side instruction.
-   `phase2_negatives` is **demoted** — mined hard negatives lose to random at matched lr.
+1. **Check `logs/stella_swap.log` finished** (`run_stella_swap.sh` is idempotent; re-run it to
+   resume — every step is cached). It does: cache-key gate → init-row gate → dev encodes
+   (nq-250k, hotpotqa) → 6.17M-doc pool → teacher reference rows → closed-form ridge on the full
+   dev suite. That last number is the first real read on stella's retention.
+2. **`gate.py` under `M7_ENCODER=stella-400M-v5`** — its refs file is separate
+   (`work/devres/refs-stella-400M-v5.json`, BM25/potion rows copied since they are
+   teacher-independent), so no comparison can mix teachers.
+3. **Re-run the phase-2 winner under stella**: objective A from a stella-distilled B checkpoint, lr
+   in the 5e-5…3e-4 band, `hard_neg_k=0`. Everything about that band was established on bge-base and
+   needs one confirmation, not a re-sweep.
+4. **Then the four Codex blockers** (below). They block claims, not compute, and nothing confirmatory
+   can be reported until they are fixed.
 
-## The bars, and the tension in the teacher choice
+## Why stella, and what it cost
 
-`results/m7_bars_after_swap.json` (arithmetic only). Retention today is **0.7853**; arctic needs
-**0.863** for Tier 2 and **0.824** for Tier 1 fused, i.e. +7.8 and +3.9 retention points. Stella
-would need 0.824 / 0.787 — *less*, because it projects higher on the six.
+`results/m7_learnability_report.json`: eight candidates ranked by the **closed-form table distilled
+from each**, fitted on 349,934 TRAIN query vectors, scored against each teacher's own documents.
+Every row CI-resolved against the incumbent; only stella beats it (**+0.0365 [0.0249, 0.0481]**).
 
-So the two signals disagree: **measured** on our own dev components arctic is the best of five
-(+0.0447 [0.0339, 0.0557] over bge-base; +0.0125 [0.0008, 0.0241] over stella, which would not
-survive multiplicity over the ten pairs) and it is the only candidate disclosing **zero overlap with
-our six**, where stella lists ArguAna and FiQA2018. **Projected**, stella maps ~0.025 higher onto the
-six. The projection is known to mis-order — arctic has the lowest MTEB v1 of the three 1024-d
-candidates and the highest measured macro, and bge-large ties bge-base across a 1-point MTEB gap —
-so it is a scale, not a ranking. Run (1) before spending three hours on the loser.
+**Spearman(teacher ceiling, distilled table) = 0.000.** arctic-embed-l has the best ceiling of the
+eight and a table **0.0480 below the incumbent** — it was approved that morning on a symmetric probe,
+and swapping to it would have shipped a worse system after a 3-hour encode. Two mechanisms were
+tested and refuted: pooling (`arctic-embed-l-mean`, same weights and dim, ratio 0.526 → 0.472) and
+cosine agreement as a proxy (rises with lambda while nDCG falls; mis-ranks candidates). **Stella's
+advantage is unexplained**, so there is no attribute on which to search further candidates.
 
-Corrections Codex forced on the previous version of this file: the PI half-widths are **0.02818 /
-0.03294 / 0.03446** (bge-base / gte-large / stella), not 0.024/0.030/0.035; **"bge-base cannot clear
-Tier 2 at any retention" was false** — its teacher-only lower bound clears above ~0.955; and
-multiplying a dev-macro retention by projected teacher PI endpoints does not compose the two
-uncertainties, because the table macro is `mean_i(r_i x teacher_i)`.
+Cost: stella discloses **ArguAna and FiQA2018** — 2 of the 6 confirmatory datasets. Dylan's call is
+the **six-set claim as primary**, with the four clean datasets (SciFact, NFCorpus, SCIDOCS,
+TREC-COVID) as a robustness number. Both bars are precomputed in `results/m7_bars_clean4.json`, and
+the restriction is not a soft option: Tier 2 gets easier (0.4583 → 0.4541), Tier 1 harder
+(0.4868 → 0.4974). Promoting the four-set to headline later is legitimate **but must be labelled
+post-hoc** — see `LEDGER.md`.
 
 ## What phase 2 settled
 
 `results/m7_phase2_screen_cis.json`, all arms from one fixed p1-objB checkpoint:
 
-- **The contrastive objective was never broken — phase 1 measured its learning rate.** At 5e-5 to
-  3e-4 it *improves* the table, CI-resolved; those three arms are mutually unresolved, so the
-  optimum is a **band, not a point**. At 1e-3 the gain shrinks; at 3e-3 (phase 1's lr) it is
-  negative and unresolved. The kill criterion may not fire and `contrastive_verdict()` records that
-  as a file, not a memory.
-- **Mined hard negatives HURT** at matched lr: random-only +0.0034 [0.0019, 0.0049]. The mandate's
-  "exploit the cheap enormous negative pool" premise is restored; the ledger's "scale without
-  hardness wasted the objective" is withdrawn. `fn_masked_frac` is 0.0051, so the false-negative
-  filter is not the mechanism — this file previously predicted it would "bite far harder", and it
-  does not.
-- **The gain is small**: +0.0111 proxy macro, against the +3.9 to +7.8 retention points the bars
-  need. Real, cheap, and not a tier-changer alone.
-- An arm's final-step macro is **not** its best-step macro (3e-4 peaks at step 500). Fix the step
-  budget in the config or select on best-eval consistently, and say which.
+- **The contrastive objective was never broken — phase 1 measured its learning rate.** 5e-5 to 3e-4
+  all improve the table, CI-resolved and mutually unresolved, so the optimum is a **band**. 1e-3
+  still helps; 3e-3 (phase 1's lr) is negative. `contrastive_verdict()` records that the kill
+  criterion may not fire.
+- **Mined hard negatives HURT** at matched lr: random-only +0.0034 [0.0019, 0.0049]. `phase2_negatives`
+  is demoted. `fn_masked_frac` is 0.0051, so the false-negative filter is not the mechanism.
+- **The gain is small**: +0.0111 proxy macro, against the retention points the bars need. An arm's
+  final-step macro is not its best-step macro (3e-4 peaks at step 500) — fix the step budget in the
+  config or select on best-eval consistently, and say which.
 
 ## Still open from the Codex gate (full list + dispositions in `LEDGER.md`)
 
-Four blockers, none of which stop the encodes, all of which stop a *claim*: decontamination indexed
-only the 855K positives while training touches the whole 6.17M-doc pool; the bootstrap p-values are
-percentile tails, so Holm controls nothing; the frozen fusion function differs between dev selection
-and final scoring; and the two-access rule is already breached (`bench_throughput` read FiQA qrels),
-now logged.
+Four blockers, none stopping compute, all stopping a *claim*: decontamination indexed only the 855K
+positives while training touches all 6.17M pool docs; the bootstrap p-values are percentile tails, so
+Holm controls nothing over them; the frozen fusion function differs between dev selection and final
+scoring; and the two-access rule is already breached (`bench_throughput` read FiQA qrels), now logged.
 
 ## Open for Dylan
 
-1. **Nothing is blocking.** The teacher ruling is made and logged.
-2. **Host:** Windows Update rebooted the box mid-morning once already.
-3. Later: HF release go. If (1) reverses the teacher choice, that comes back to you — it would mean
-   shipping a teacher trained on 2 of our 6 eval sets, which is a credibility call, not a technical one.
+1. **Nothing is blocking.** The teacher ruling is made and logged; the encode is running.
+2. **Host:** Windows Update rebooted the box mid-morning once already — a 3.5 h encode is exposed.
+3. Later: HF release go, and a view on shipping a teacher whose training data covers 2 of the 6 eval
+   sets (the four-set robustness number is the technical answer; the presentation is a judgement).
