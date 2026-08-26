@@ -9,7 +9,7 @@
   "queries_total": 85000,
   "queries_heldout_dev": 1717,
   "queries_train": 83283,
-  "queries_after_decontam": 81807,
+  "queries_after_decontam": 81780,
   "positives_total": 170000,
   "provided_hard_negatives": 0
  },
@@ -23,7 +23,7 @@
   "queries_total": 109810,
   "queries_heldout_dev": 2151,
   "queries_train": 107659,
-  "queries_after_decontam": 101401,
+  "queries_after_decontam": 97708,
   "positives_total": 140085,
   "provided_hard_negatives": 0
  },
@@ -37,7 +37,7 @@
   "queries_total": 87599,
   "queries_heldout_dev": 1790,
   "queries_train": 85809,
-  "queries_after_decontam": 85470,
+  "queries_after_decontam": 84956,
   "positives_total": 87599,
   "provided_hard_negatives": 0
  },
@@ -51,7 +51,7 @@
   "queries_total": 74888,
   "queries_heldout_dev": 1598,
   "queries_train": 73290,
-  "queries_after_decontam": 73266,
+  "queries_after_decontam": 73096,
   "positives_total": 988062,
   "provided_hard_negatives": 122273
  },
@@ -65,7 +65,7 @@
   "queries_total": 3547,
   "queries_heldout_dev": 69,
   "queries_train": 3478,
-  "queries_after_decontam": 3428,
+  "queries_after_decontam": 3310,
   "positives_total": 3547,
   "provided_hard_negatives": 104854
  },
@@ -79,7 +79,7 @@
   "queries_total": 87925,
   "queries_heldout_dev": 1813,
   "queries_train": 86112,
-  "queries_after_decontam": 85895,
+  "queries_after_decontam": 85871,
   "positives_total": 0,
   "provided_hard_negatives": 0
  },
@@ -93,7 +93,7 @@
   "queries_total": 138384,
   "queries_heldout_dev": 2733,
   "queries_train": 135651,
-  "queries_after_decontam": 134784,
+  "queries_after_decontam": 134761,
   "positives_total": 0,
   "provided_hard_negatives": 0
  }

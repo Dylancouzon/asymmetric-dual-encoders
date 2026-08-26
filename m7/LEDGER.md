@@ -40,9 +40,10 @@ pointed at, never restated.
 ## Partitions
 
 **TRAIN** — approved sources only (`research/m7-data-licensing.md`). Count after all
-decontamination under the strengthened 2026-08-26 rules: **345,372 pairs** + 220,679
-query-text-only rows for objective B (was 349,934 + 221,395 under the pre-4-gram rules; every
-number produced from the old mix is dev-exploratory and predates the swap). Per-source fields,
+decontamination under the final 2026-08-26 rules (4-grams for short queries + verbatim
+containment of short protected queries, review #2 B4): **340,850 pairs** + 220,632
+query-text-only rows for objective B (was 349,934 + 221,395 under the 8-gram-only rules; every
+number produced from an older mix is dev-exploratory and predates the swap). Per-source fields,
 rights, positive construction and counts: `results/m7_field_table.md`.
 
 **DEV** (pinned; hashes in `results/m7_dev_manifest.json`, frozen before any candidate result):
@@ -92,16 +93,19 @@ peak RAM is ~0.4 GB regardless of corpus size.
 
 Results, 2026-08-26 strengthened rules (`results/m7_decontam.json`, `..._querytext.json`,
 `..._heldout.json`, `..._pool.json`):
-- R1: **5,911 pairs** (1,329 under the 8-gram-only rule; the word-4-gram short-query rule and the
-  android/english protected queries added the rest). Plus nq-open −217, TriviaQA −867.
+- R1: **5,931 pairs** (1,329 under the 8-gram-only rule; word-4-grams for short queries, verbatim
+  containment, and the android/english protected queries added the rest). Plus nq-open −241,
+  TriviaQA −890 (containment drops labelled separately in the JSON).
 - R2: 45 pairs, from 23 of ~855K unique positives — **3e-05** against the six. The source-level
   map was already doing the work.
-- TRAIN↔held-out: **2,191 further pairs** (fever-train 1,827 — near-identical claims straddling
-  the mod-50 split). Without this pass, `heldout-train` would have scored models on paraphrases
-  of their own training queries.
-- Pool negatives (Codex B2): **4,413 of 6,169,142 pool rows banned** (six-doc near-dups 119,
-  six-query gram hits 837, untouched-query hits 3,460; dev-query hits measured only).
-  `work/decontam/banned_pool_rows.npy`; enforcement points in `results/m7_decontam_pool.json`.
+- TRAIN↔held-out: **6,693 further pairs** (fever-train 5,518 — short FEVER claims contained
+  verbatim inside longer train claims straddled the mod-50 split; 1,827 of these were caught by
+  the 8-gram rule alone). Without this pass, `heldout-train` would score models on paraphrases of
+  their own training queries.
+- Pool negatives (Codex B2 + B4): **7,190 of 6,169,142 pool rows banned** (six-doc near-dups 119,
+  six-query hits 1,868, untouched-query hits 5,218; dev-query hits measured only). The mask
+  carries the pool id-sha it was computed against; `train.py` verifies it and refuses stale
+  masks. `work/decontam/banned_pool_rows.npy`; per-store counts in `results/m7_decontam_pool.json`.
 - R3 overlap: six 3e-05 · cqadupstack-dev ~0 · **cqadupstack-untouched (android+english) 1 doc
   of 854,921 (~0)** · nq-250k-dev 0.46% · **DBpedia-entity 9.32%** · **FEVER 11.3%**. The two
   Wikipedia members remain the most overlapped; the repair gives the partition two near-zero

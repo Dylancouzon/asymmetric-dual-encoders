@@ -6,52 +6,52 @@
   "dup_share": 8
  },
  "pool_rows": 6169142,
- "banned_rows": 4413,
+ "banned_rows": 7190,
  "per_store": {
   "esci-prod": {
    "sixdoc_exact": 0,
    "sixdoc_near": 1,
-   "sixq": 22,
-   "untq": 4,
+   "sixq": 72,
+   "untq": 25,
    "devq_measured": 31,
    "rows": 808389,
-   "seconds": 422.1
+   "seconds": 1029.9
   },
   "fever-pos": {
    "sixdoc_exact": 0,
    "sixdoc_near": 3,
-   "sixq": 20,
-   "untq": 234,
+   "sixq": 23,
+   "untq": 254,
    "devq_measured": 475,
    "rows": 12549,
-   "seconds": 6.4
+   "seconds": 16.5
   },
   "hotpotqa-corpus": {
    "sixdoc_exact": 0,
    "sixdoc_near": 108,
-   "sixq": 718,
-   "untq": 3128,
-   "devq_measured": 28123,
+   "sixq": 1677,
+   "untq": 4759,
+   "devq_measured": 28137,
    "rows": 5233329,
-   "seconds": 1301.6
+   "seconds": 3121.9
   },
   "mrtydi-docs": {
    "sixdoc_exact": 0,
    "sixdoc_near": 4,
-   "sixq": 57,
-   "untq": 80,
-   "devq_measured": 226,
+   "sixq": 71,
+   "untq": 152,
+   "devq_measured": 228,
    "rows": 95984,
-   "seconds": 29.2
+   "seconds": 77.0
   },
   "squad-ctx": {
    "sixdoc_exact": 0,
    "sixdoc_near": 3,
-   "sixq": 20,
-   "untq": 14,
-   "devq_measured": 24,
+   "sixq": 25,
+   "untq": 24,
+   "devq_measured": 25,
    "rows": 18891,
-   "seconds": 6.3
+   "seconds": 16.2
   }
  },
  "enforcement": [
@@ -60,5 +60,5 @@
   "mine_bm25_negatives picked filter + sig",
   "build_arrays hn_idx filter"
  ],
- "seconds_total": 1854.9
+ "seconds_total": 4338.8
 }
