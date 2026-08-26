@@ -78,16 +78,22 @@ def build_arrays(cfg, index):
     q_texts, pos_idx, hn_idx, src_id = [], [], [], []
     srcs = sorted({p[0] for p in pairs})
     sid = {s: i for i, s in enumerate(srcs)}
-    for src, qid, query, posd, hneg in pairs:
+    # grouped by source so at most one store's id map is resident at a time
+    by_src = {}
+    for p in pairs:
+        by_src.setdefault(p[0], []).append(p)
+    for src in srcs:
         st = store_of[src]
-        ps = [index[(st, d)] for d in posd if (st, d) in index]
-        if not ps:
-            continue
-        q_texts.append(query)
-        pos_idx.append(ps)
-        hn_idx.append([index[(st, d)] for d in hneg if (st, d) in index]
-                      if cfg.use_provided_hardneg else [])
-        src_id.append(sid[src])
+        for _, qid, query, posd, hneg in by_src[src]:
+            ps = [j for j in (index.get(st, d) for d in posd) if j is not None]
+            if not ps:
+                continue
+            q_texts.append(query)
+            pos_idx.append(ps)
+            hn_idx.append([j for j in (index.get(st, d) for d in hneg) if j is not None]
+                          if cfg.use_provided_hardneg else [])
+            src_id.append(sid[src])
+        index.drop(st)
     return q_texts, pos_idx, hn_idx, np.array(src_id, dtype=np.int32), srcs
 
 
