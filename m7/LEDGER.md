@@ -284,3 +284,23 @@ untrained teacher-init table sits at mean pairwise cos 0.954 / effective rank 21
 the 0.4548 table sits at 0.342 / 270.4. A session watching those numbers mid-training will otherwise
 read the starting geometry as a collapse, as this one did for an hour.
 
+## Teacher selection criterion changed, 2026-08-26 (logged BEFORE any six-set access)
+
+The teacher was to be chosen by measured **symmetric ceiling** (`m7_teacher_probe.json`). That
+criterion is now refuted: Spearman(ceiling, distilled-table) = 0.000 over eight candidates, and
+arctic-embed-l — approved on the ceiling — produces a table 0.0480 BELOW the incumbent's,
+CI-resolved. **The criterion is now the closed-form distilled table's dev score**
+(`m7_learnability_report.json`), which is the artifact that ships. Dev-only; the six stay unread.
+
+Consequence: **Dylan's arctic-embed-l ruling is withdrawn on evidence, not overruled** — the
+question goes back to him because the only candidate that beats the incumbent is stella, whose
+disclosed training data includes ArguAna and FiQA2018, 2 of the 6 confirmatory datasets.
+
+If stella is chosen, the option pre-registered here (and legal only because it is written before any
+six-set number is observed): make the **primary** comparison the four datasets with no known teacher
+exposure — SciFact, NFCorpus, SCIDOCS, TREC-COVID — recomputing every comparator on the same four
+from the frozen per-query vectors in `results/perquery.json`, and report the six-set number as
+secondary with the exposure labelled at the dataset row. Codex's M-stella-ship says labelling alone
+does not remove the bias, and this is the answer to it. The tier bars are defined on the six, so a
+four-set primary claim needs its own bars computed the same way, from the same frozen vectors.
+

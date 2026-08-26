@@ -94,6 +94,40 @@
    "post_dense": null,
    "revision": "f169b11e22de13617baa190a028a32f3493550b6"
   },
+  "e5-base-v2": {
+   "status": "pass",
+   "dim": 768,
+   "spec_fingerprint": {
+    "repo": "intfloat/e5-base-v2",
+    "revision": "f52bf8ec8c7124536f0efb74aca902b2995e5bcd",
+    "pooling": "mean",
+    "post_dense": null,
+    "max_length": 512,
+    "config_kwargs": {}
+   },
+   "min_cosine_vs_sentence_transformers": 0.999999981059475,
+   "max_abs_pairwise_sim_delta": 1.7401421570362174e-07,
+   "pooling": "mean",
+   "post_dense": null,
+   "revision": "f52bf8ec8c7124536f0efb74aca902b2995e5bcd"
+  },
+  "arctic-embed-l-mean": {
+   "status": "fail",
+   "dim": 1024,
+   "spec_fingerprint": {
+    "repo": "Snowflake/snowflake-arctic-embed-l",
+    "revision": "d8fb21ca8d905d2832ee8b96c894d3298964346b",
+    "pooling": "mean",
+    "post_dense": null,
+    "max_length": 512,
+    "config_kwargs": {}
+   },
+   "min_cosine_vs_sentence_transformers": 0.9734320760868691,
+   "max_abs_pairwise_sim_delta": 0.08111499874021122,
+   "pooling": "mean",
+   "post_dense": null,
+   "revision": "d8fb21ca8d905d2832ee8b96c894d3298964346b"
+  },
   "arctic-embed-l": {
    "status": "pass",
    "dim": 1024,

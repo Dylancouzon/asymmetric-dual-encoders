@@ -1,11 +1,34 @@
 {
  "_note": "Candidate teacher ceilings measured on the two CQADupStack dev components -- the only dev components on no candidate's disclosed training list, and the nearest dev analogue to FiQA. Symmetric retrieval, each model's own pooling and prompt, fp16, our harness. A SELECTION diagnostic on dev: not a gate input, and the six-set is never read. Use this to rank teachers instead of the loose MTEB->six map in results/m7_calibration.json.",
  "_pairwise_note": "All-pairs two-sided paired bootstrap over the same per-query scores. A SELECTION diagnostic, so no Holm correction is applied and none is claimed -- the mandate's family-wise alpha governs gate claims on the six, not this. Read a pair as resolved only if its CI excludes 0.",
+ "_pairwise_scope": "Pairwise rows exist only for candidates measured in the SAME invocation -- per-query scores are not persisted, so a merged-in candidate has a ceiling here but no pairwise row. Re-run the candidates together to compare them.",
  "components": [
   "cqadup-programmers",
   "cqadup-physics"
  ],
  "candidates": {
+  "arctic-embed-l-mean": {
+   "repo": "Snowflake/snowflake-arctic-embed-l",
+   "pooling": "mean",
+   "query_prefix": "Represent this sentence for searching relevant passages: ",
+   "dim": 1024,
+   "macro_cqadupstack": 0.4684,
+   "per_component": {
+    "cqadup-programmers": 0.4491,
+    "cqadup-physics": 0.4877
+   }
+  },
+  "e5-base-v2": {
+   "repo": "intfloat/e5-base-v2",
+   "pooling": "mean",
+   "query_prefix": "query: ",
+   "dim": 768,
+   "macro_cqadupstack": 0.3928,
+   "per_component": {
+    "cqadup-programmers": 0.3746,
+    "cqadup-physics": 0.4109
+   }
+  },
   "bge-base-en-v1.5": {
    "repo": "BAAI/bge-base-en-v1.5",
    "pooling": "cls",
@@ -211,327 +234,5 @@
    }
   }
  },
- "pairwise": {
-  "bge-base-en-v1.5__vs__bge-large-en-v1.5": {
-   "delta": -0.0002,
-   "ci95": [
-    -0.0096,
-    0.0092
-   ],
-   "p": 0.9568,
-   "p_str": "0.9568",
-   "alternative": "two-sided",
-   "B": 10000,
-   "seed": 0,
-   "one_sided_lower_2.5": null,
-   "per_dataset": {
-    "cqadup-physics": {
-     "n": 1039,
-     "delta": 0.0025,
-     "ci95": [
-      -0.0099,
-      0.015
-     ]
-    },
-    "cqadup-programmers": {
-     "n": 876,
-     "delta": -0.003,
-     "ci95": [
-      -0.017,
-      0.011
-     ]
-    }
-   },
-   "resolved": false
-  },
-  "bge-base-en-v1.5__vs__gte-large-en-v1.5": {
-   "delta": -0.0227,
-   "ci95": [
-    -0.0338,
-    -0.0117
-   ],
-   "p": 0.0004,
-   "p_str": "0.0004",
-   "alternative": "two-sided",
-   "B": 10000,
-   "seed": 0,
-   "one_sided_lower_2.5": null,
-   "per_dataset": {
-    "cqadup-physics": {
-     "n": 1039,
-     "delta": -0.0372,
-     "ci95": [
-      -0.0527,
-      -0.0217
-     ]
-    },
-    "cqadup-programmers": {
-     "n": 876,
-     "delta": -0.0081,
-     "ci95": [
-      -0.0241,
-      0.0077
-     ]
-    }
-   },
-   "resolved": true
-  },
-  "bge-base-en-v1.5__vs__stella-400M-v5": {
-   "delta": -0.0322,
-   "ci95": [
-    -0.043,
-    -0.0213
-   ],
-   "p": 0.0,
-   "p_str": "<0.0001",
-   "alternative": "two-sided",
-   "B": 10000,
-   "seed": 0,
-   "one_sided_lower_2.5": null,
-   "per_dataset": {
-    "cqadup-physics": {
-     "n": 1039,
-     "delta": -0.0204,
-     "ci95": [
-      -0.0351,
-      -0.0055
-     ]
-    },
-    "cqadup-programmers": {
-     "n": 876,
-     "delta": -0.044,
-     "ci95": [
-      -0.06,
-      -0.0281
-     ]
-    }
-   },
-   "resolved": true
-  },
-  "bge-base-en-v1.5__vs__arctic-embed-l": {
-   "delta": -0.0447,
-   "ci95": [
-    -0.0557,
-    -0.0339
-   ],
-   "p": 0.0,
-   "p_str": "<0.0001",
-   "alternative": "two-sided",
-   "B": 10000,
-   "seed": 0,
-   "one_sided_lower_2.5": null,
-   "per_dataset": {
-    "cqadup-physics": {
-     "n": 1039,
-     "delta": -0.0426,
-     "ci95": [
-      -0.0561,
-      -0.0287
-     ]
-    },
-    "cqadup-programmers": {
-     "n": 876,
-     "delta": -0.0469,
-     "ci95": [
-      -0.0642,
-      -0.0298
-     ]
-    }
-   },
-   "resolved": true
-  },
-  "bge-large-en-v1.5__vs__gte-large-en-v1.5": {
-   "delta": -0.0224,
-   "ci95": [
-    -0.0336,
-    -0.0113
-   ],
-   "p": 0.0002,
-   "p_str": "0.0002",
-   "alternative": "two-sided",
-   "B": 10000,
-   "seed": 0,
-   "one_sided_lower_2.5": null,
-   "per_dataset": {
-    "cqadup-physics": {
-     "n": 1039,
-     "delta": -0.0397,
-     "ci95": [
-      -0.0547,
-      -0.0245
-     ]
-    },
-    "cqadup-programmers": {
-     "n": 876,
-     "delta": -0.0052,
-     "ci95": [
-      -0.0217,
-      0.0107
-     ]
-    }
-   },
-   "resolved": true
-  },
-  "bge-large-en-v1.5__vs__stella-400M-v5": {
-   "delta": -0.032,
-   "ci95": [
-    -0.043,
-    -0.0208
-   ],
-   "p": 0.0,
-   "p_str": "<0.0001",
-   "alternative": "two-sided",
-   "B": 10000,
-   "seed": 0,
-   "one_sided_lower_2.5": null,
-   "per_dataset": {
-    "cqadup-physics": {
-     "n": 1039,
-     "delta": -0.0229,
-     "ci95": [
-      -0.0375,
-      -0.008
-     ]
-    },
-    "cqadup-programmers": {
-     "n": 876,
-     "delta": -0.041,
-     "ci95": [
-      -0.0579,
-      -0.0245
-     ]
-    }
-   },
-   "resolved": true
-  },
-  "bge-large-en-v1.5__vs__arctic-embed-l": {
-   "delta": -0.0445,
-   "ci95": [
-    -0.0557,
-    -0.0334
-   ],
-   "p": 0.0,
-   "p_str": "<0.0001",
-   "alternative": "two-sided",
-   "B": 10000,
-   "seed": 0,
-   "one_sided_lower_2.5": null,
-   "per_dataset": {
-    "cqadup-physics": {
-     "n": 1039,
-     "delta": -0.0451,
-     "ci95": [
-      -0.0596,
-      -0.0304
-     ]
-    },
-    "cqadup-programmers": {
-     "n": 876,
-     "delta": -0.0439,
-     "ci95": [
-      -0.0612,
-      -0.027
-     ]
-    }
-   },
-   "resolved": true
-  },
-  "gte-large-en-v1.5__vs__stella-400M-v5": {
-   "delta": -0.0095,
-   "ci95": [
-    -0.0202,
-    0.0011
-   ],
-   "p": 0.078,
-   "p_str": "0.0780",
-   "alternative": "two-sided",
-   "B": 10000,
-   "seed": 0,
-   "one_sided_lower_2.5": null,
-   "per_dataset": {
-    "cqadup-physics": {
-     "n": 1039,
-     "delta": 0.0168,
-     "ci95": [
-      0.0024,
-      0.0314
-     ]
-    },
-    "cqadup-programmers": {
-     "n": 876,
-     "delta": -0.0359,
-     "ci95": [
-      -0.0512,
-      -0.0204
-     ]
-    }
-   },
-   "resolved": false
-  },
-  "gte-large-en-v1.5__vs__arctic-embed-l": {
-   "delta": -0.0221,
-   "ci95": [
-    -0.034,
-    -0.0102
-   ],
-   "p": 0.0,
-   "p_str": "<0.0001",
-   "alternative": "two-sided",
-   "B": 10000,
-   "seed": 0,
-   "one_sided_lower_2.5": null,
-   "per_dataset": {
-    "cqadup-physics": {
-     "n": 1039,
-     "delta": -0.0054,
-     "ci95": [
-      -0.0209,
-      0.01
-     ]
-    },
-    "cqadup-programmers": {
-     "n": 876,
-     "delta": -0.0387,
-     "ci95": [
-      -0.0568,
-      -0.0209
-     ]
-    }
-   },
-   "resolved": true
-  },
-  "stella-400M-v5__vs__arctic-embed-l": {
-   "delta": -0.0125,
-   "ci95": [
-    -0.0241,
-    -0.0008
-   ],
-   "p": 0.034,
-   "p_str": "0.0340",
-   "alternative": "two-sided",
-   "B": 10000,
-   "seed": 0,
-   "one_sided_lower_2.5": null,
-   "per_dataset": {
-    "cqadup-physics": {
-     "n": 1039,
-     "delta": -0.0222,
-     "ci95": [
-      -0.0369,
-      -0.0077
-     ]
-    },
-    "cqadup-programmers": {
-     "n": 876,
-     "delta": -0.0029,
-     "ci95": [
-      -0.0211,
-      0.015
-     ]
-    }
-   },
-   "resolved": true
-  }
- },
- "_pairwise_scope": "Pairwise rows cover the five candidates measured together on 2026-08-26; e5-large-v2 was merged in later and has a ceiling but no pairwise row."
+ "pairwise": {}
 }

@@ -89,3 +89,42 @@ part of the config, or select on best-eval consistently across arms and say so.
 
 | p2x-rn-1e3 | `work/runs/p2x-rn-1e3.json` | 0.4629 | ok |
 | p2x-rn-3e3 | `work/runs/p2x-rn-3e3.json` | 0.4521 | ok |
+
+## Teacher learnability, 2026-08-26 — the teacher we approved is worse than the one we have
+
+`results/m7_learnability_report.json`. Per candidate: a closed-form flat table ridge-fitted on
+349,934 TRAIN query vectors, scored on the two CQADupStack dev components against **that teacher's
+own documents**. Bootstrapped against the incumbent's table; every row is CI-resolved.
+
+| teacher | pooling | dim | ceiling | **table** | ratio | vs incumbent |
+|---|---|---|---|---|---|---|
+| stella-400M-v5 | mean | 1024 | 0.4806 | **0.3439** | 0.716 | **+0.0365 [0.0249, 0.0481]** |
+| bge-base-en-v1.5 (incumbent) | cls | 768 | 0.4484 | 0.3074 | 0.686 | — |
+| bge-large-en-v1.5 | cls | 1024 | 0.4486 | 0.2751 | 0.613 | −0.0324 [−0.0433, −0.0214] |
+| e5-base-v2 | mean | 768 | 0.3928 | 0.2645 | 0.673 | −0.0429 [−0.0557, −0.0301] |
+| arctic-embed-l | cls | 1024 | **0.4931** | 0.2594 | 0.526 | −0.0480 [−0.0608, −0.0349] |
+| e5-large-v2 | mean | 1024 | 0.3888 | 0.2441 | 0.628 | −0.0634 [−0.0773, −0.0493] |
+| arctic-embed-l-mean | mean | 1024 | 0.4684 | 0.2210 | 0.472 | −0.0864 [−0.1002, −0.0723] |
+| gte-large-en-v1.5 | cls | 1024 | 0.4711 | 0.2033 | 0.432 | −0.1041 [−0.1180, −0.0905] |
+
+1. **Ceiling does not predict what ships.** Spearman(ceiling, table) = **0.000** across the eight
+   (n=8, so: no evidence of a relationship, not proof of none); ceiling vs *ratio* is −0.286. The
+   best ceiling in the table is fifth on the metric that matters. **arctic-embed-l, approved on the
+   morning's symmetric probe, is −0.0480 BELOW the incumbent** — swapping to it would have shipped a
+   worse system after a 3-hour re-encode. Only stella beats bge-base.
+2. **Pooling is not the mechanism.** `arctic-embed-l-mean` is the same weights and dim read out as a
+   mean instead of CLS: ratio falls 0.526 → 0.472. Mean pooling made it *worse*. The hypothesis that
+   mean-pooled towers are more approximable (from stella's 0.716) does not survive its own controlled
+   test, and e5 — mean-pooled — sits below CLS bge-base. **Stella's advantage is unexplained**, so
+   there is no rule to search other candidates on.
+3. **Cosine agreement is not the metric.** It rises with lambda while nDCG falls, and it mis-ranks
+   candidates: e5-large-v2 imitates its teacher best (0.90) and ranks sixth of eight on retrieval.
+   Also independent evidence for the Codex finding that the ridge bounds its own penalised-MSE
+   objective and not retrieval.
+4. Within a family, **lower dim is more approximable**: bge-base 0.686 > bge-large 0.613, e5-base
+   0.673 > e5-large 0.628. Stella (1024) breaks the pattern, unexplained as above.
+
+Caveats: closed-form and flat, so it ranks candidates rather than predicting final scores (training
+moves a table — `m7_ridge_vs_trained.json`); two components of one dataset family; and dev-only, the
+six unread.
+

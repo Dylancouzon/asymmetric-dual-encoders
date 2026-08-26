@@ -205,6 +205,16 @@ Results dictate Qdrant engineering decisions: correct, not decimal-precise; blin
 
 ## Key decisions (log)
 
+- **WITHDRAWN THE SAME DAY, on evidence: `arctic-embed-l` is worse than the teacher we already
+  have.** Ranked by the closed-form table distilled from it — the artifact that ships — arctic is
+  −0.0480 [−0.0608, −0.0349] below bge-base, and a teacher's own retrieval quality turns out not to
+  predict its distilled table at all (Spearman 0.000 over eight candidates). Only
+  **stella_en_400M_v5** beats the incumbent (+0.0365 [0.0249, 0.0481]). The teacher question is back
+  with Dylan because stella's disclosed training data covers 2 of our 6 eval datasets;
+  `m7/LEDGER.md` pre-registers a four-dataset primary comparison as the answer to that.
+  `results/m7_learnability_report.json`. The entry below records what was decided and why, and is
+  kept because the failure mode — selecting a teacher on the tower instead of on the table — is the
+  lesson.
 - **Teacher for M7 is `Snowflake/snowflake-arctic-embed-l` (Dylan, 2026-08-26).** Chosen on
   measurement, not projection: best of five candidates on the two CQADupStack dev components
   (+0.0447 [0.0339, 0.0557] over bge-base; arctic > stella +0.0125 [0.0008, 0.0241] raw, which
