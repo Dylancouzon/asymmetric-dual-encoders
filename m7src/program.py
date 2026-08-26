@@ -22,6 +22,20 @@ BASE = Cfg(objective="C", init="teacher", preproc="noprefix", learned_weights=Tr
 # the program pivots to vocabulary-coverage distillation (phase35) plus fusion. Distillation
 # already passed the gate; grinding a broken objective past a clean negative is how budgets die.
 CONTRASTIVE_KILL_BAR = 0.4548
+# RESTATED 2026-08-26, before the screen ran, because the arms it was to be judged on were
+# themselves misconfigured. The bar is unchanged; what changed is which arms may trip it.
+# Phase 1 collapsed at lr=3e-3 with no warmup -- 10-300x above every published frozen-tower recipe
+# (NV-Retriever 1e-5, DAFT 1e-5, BGE/E5/GTE 1e-5..5e-5) -- and arXiv 2110.09348 gives an analytic
+# mechanism for exactly that symptom. The two competing suspects are now dead by measurement
+# (results/m7_diag_scores.json: fn_margin=0.02 removes only 4.3% of the top-100 hardest negatives;
+# random negatives are not separable). The screen as originally written had its "decisive" arm at
+# lr=1e-3 and its lr arm at 3e-4, i.e. still above the published range -- so it could have tripped
+# the kill bar on a configuration we already believe is broken. CLAUDE.md's standing directive is
+# explicit that a kill criterion exists to stop grinding a DIAGNOSED dead end, never to license
+# abandoning an undiagnosed one. So:
+#   the kill criterion may only be invoked once at least one arm has run at a published lr
+#   (<= 1e-4) WITH warmup and mined hard negatives, and that arm has failed the bar.
+KILL_REQUIRES = {"lr_at_most": 1e-4, "warmup": True, "hard_negatives": True}
 
 ALL_SOURCES = ("hotpotqa-train", "fever-train", "squad-train", "esci-us", "mrtydi-en")
 NO_FEVER = tuple(s for s in ALL_SOURCES if s != "fever-train")
@@ -39,27 +53,41 @@ def phase1_objective():
 def phase2_screen(base):
     """The CHEAP DECISIVE SCREEN, to run before any wide negatives sweep.
 
-    The phase-1 collapse leaves three suspects (fn_margin deleting the hardest negatives; tau
-    concentrating softmax mass on bge's anisotropy tail; Adam lr on a weak signal). A negatives-only
-    sweep with all three held at their suspect values could "conclude" that negatives do not help
-    when temperature or the filter was the killer. So screen the knobs jointly and briefly,
-    starting from the B checkpoint rather than the teacher init.
+    Two of the three original suspects are now dead by measurement, not ablation
+    (results/m7_diag_scores.json): fn_margin=0.02 removes only 4.3% of the top-100 hardest
+    negatives, and random negatives are not trivially separable. Temperature is kept LOW on
+    purpose -- 0.01-0.02 is the published norm (BGE uses 0.01) and Wang & Liu (arXiv 2012.09740)
+    argue low temperature makes the loss more hardness-aware, so re-tuning it would spend budget
+    on the one knob the literature says to leave alone.
 
-    One arm is the single most informative run in the program: teacher-mined-16, fn_margin=0,
-    tau=0.05, lr=1e-3, 2k steps from B. If that still degrades a 0.4449 table, contrastive
-    training against a frozen tower is structurally hostile and the wide ablation is a formality.
+    That leaves the learning rate, and the screen is now built around it: three arms across the
+    published range with warmup, plus one-variable controls that make a pass or a fail
+    attributable (old lr WITH warmup; correct lr WITHOUT hard negatives; phase-1 verbatim).
+    Every arm starts from the B checkpoint, not the teacher init. Evals every 500 steps, and each
+    one now logs the collapse diagnostics, so a degenerating representation is observed rather
+    than inferred from the dev curve.
     """
+    # Warmup + a published lr, and lr_weights kept at 10x the row lr rather than a fixed 1e-2
+    # (at lr=5e-5 the old default would have been 200x the row lr).
+    def sane(lr, **kw):
+        return {"hard_neg_k": 16, "hard_neg_source": "teacher", "fn_margin": 0.05,
+                "lr": lr, "lr_weights": lr * 10, "warmup_steps": 500,
+                "lr_schedule": "warmup_linear", **kw}
+
     out = {}
     for tag, over in {
-        "decisive":      {"hard_neg_k": 16, "fn_margin": 0.0, "temp": 0.05, "lr": 1e-3},
-        "fnmargin-only": {"hard_neg_k": 16, "fn_margin": 0.0},
-        "temp-only":     {"hard_neg_k": 16, "temp": 0.05},
-        "lr-only":       {"hard_neg_k": 16, "lr": 3e-4},
-        "hard-only":     {"hard_neg_k": 16},
-        "baseline":      {"hard_neg_k": 0},
+        # the decisive arm: a published lr, warmup, teacher-mined negatives, NV-Retriever's tuned
+        # 0.05 margin. If this still degrades a 0.4449 table, the avenue is diagnosed and dead.
+        "sane-5e5":      sane(5e-5),
+        "sane-1e5":      sane(1e-5),          # NV-Retriever / DAFT's exact value
+        "sane-1e4":      sane(1e-4),          # top of the published range
+        # one-variable controls, so a pass or fail is attributable
+        "warmup-only":   sane(3e-3),          # old lr WITH warmup: does warmup alone rescue it?
+        "sane-randneg":  sane(5e-5, hard_neg_k=0),   # the mandate's premise, at the correct lr
+        "baseline":      {"hard_neg_k": 0},    # phase-1 config verbatim, for the reference curve
     }.items():
         out.update(grid("p2s", base, {tag: {"objective": "C", "steps_b": 4000, "steps_a": 2000,
-                                            "eval_every": 1000, **over}}))
+                                            "eval_every": 500, **over}}))
     return out
 
 

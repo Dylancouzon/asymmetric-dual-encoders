@@ -40,8 +40,14 @@ class Cfg:
     preproc: str = "noprefix"           # noprefix | prefix
     learned_weights: bool = True
     idf_init_weights: bool = True
-    lr: float = 3e-3
-    lr_weights: float = 1e-2
+    lr: float = 3e-3                    # NOTE: 3e-3 is 10-300x above every published frozen-tower
+    lr_weights: float = 1e-2            # recipe (NV-Retriever 1e-5, BGE/E5/GTE 1e-5..5e-5) and is
+                                        # the surviving explanation for the phase-1 contrastive
+                                        # collapse (results/m7_diag_scores.json + arXiv 2110.09348).
+                                        # Kept as the default ONLY so phase-1 runs stay
+                                        # reproducible; new arms must set it explicitly.
+    warmup_steps: int = 0               # linear ramp, applied per phase (B and A each warm up)
+    lr_schedule: str = "constant"       # constant | warmup_constant | warmup_linear
     steps_b: int = 4000
     steps_a: int = 8000
     batch: int = 512
@@ -325,12 +331,43 @@ def run(cfg: Cfg, log=print):
     ])
 
     hist = []
+    # A fixed query sample for the collapse diagnostics, drawn once so the numbers are comparable
+    # across steps and across runs.
+    diag_idx = np.random.default_rng(12345).choice(len(ids_all),
+                                                   size=min(2048, len(ids_all)), replace=False)
+
+    @torch.no_grad()
+    def collapse_stats():
+        """Is the representation degenerating? Loss can fall while this goes bad -- that is the
+        documented failure mode of a too-high lr (arXiv 2110.09348), so it must be observed and
+        not inferred from the dev curve."""
+        model.eval()
+        f, o, l = ragged([ids_all[i] for i in diag_idx], "cuda")
+        q = model(f, o, l).float()
+        model.train()
+        g = q @ q.T
+        n = g.shape[0]
+        off = (g.sum() - g.diagonal().sum()) / (n * (n - 1))
+        sv = torch.linalg.svdvals(q)
+        # participation ratio of the singular values: how many directions the batch really uses
+        eff_rank = (sv.sum() ** 2) / (sv ** 2).sum()
+        # Wang & Isola uniformity, on the unit sphere; more negative = better spread
+        sq = torch.cdist(q, q).pow(2)
+        iu = torch.triu_indices(n, n, offset=1, device=q.device)
+        unif = torch.log(torch.exp(-2.0 * sq[iu[0], iu[1]]).mean())
+        return {"mean_pairwise_cos": round(float(off), 4),      # -> 1.0 means collapse
+                "effective_rank": round(float(eff_rank), 2),    # -> 1.0 means one direction
+                "dim": int(q.shape[1]),
+                "uniformity": round(float(unif), 4)}
 
     def dev(tag, step):
         model.eval()
         per = dev_eval.eval_table(model, pre, components=list(cfg.eval_components), tok=tok)
         m, means = dev_eval.report(per, f"  [{cfg.run_id}] {tag} step {step}")
-        hist.append({"step": step, "phase": tag, "macro": m, "per_component": means})
+        cs = collapse_stats()
+        log(f"  [{cfg.run_id}] {tag} step {step} collapse: {json.dumps(cs)}")
+        hist.append({"step": step, "phase": tag, "macro": m, "per_component": means,
+                     "collapse": cs})
         model.train()
         return m
 
@@ -405,11 +442,29 @@ def run(cfg: Cfg, log=print):
                        stats=st)
         return loss, {"n_neg": neg.shape[0], **st}, [ids_all[i] for i in idx]
 
+    base_lrs = [g["lr"] for g in opt.param_groups]
+
+    def set_lr(step, steps):
+        """Linear warmup (then constant or linear decay), applied per phase: objective C's A-phase
+        needs its own ramp, since that is where the collapse happened."""
+        if cfg.lr_schedule == "constant":
+            return
+        w = max(1, cfg.warmup_steps)
+        f = min(1.0, step / w)
+        if cfg.lr_schedule == "warmup_linear" and step > w:
+            f = max(0.1, 1.0 - (step - w) / max(1, steps - w))
+        for g, b in zip(opt.param_groups, base_lrs):
+            g["lr"] = b * f
+
     def train_phase(tag, steps, stepfn):
         if steps <= 0:
             return
         t0 = time.time()
+        if cfg.lr_schedule != "constant":
+            log(f"  [{cfg.run_id}] {tag} lr {cfg.lr:g} schedule {cfg.lr_schedule} "
+                f"warmup {cfg.warmup_steps}")
         for s in range(1, steps + 1):
+            set_lr(s, steps)
             idx = rng.integers(0, len(q_texts), cfg.batch)
             loss, extra, used = stepfn(idx)
             # the rows actually touched this step, pseudo-queries included: `updates` is a
