@@ -153,12 +153,55 @@ retroactively, never silently. Same rule for the licensing and vendor constraint
 commercial reality, so reopening them is Dylan's call and needs an explicit answer, not an
 inference.
 
+## Long runs must be watched, not launched and hoped for (Dylan, 2026-08-26)
+
+Added after a session lost most of a day to jobs that were running but wrong. Four failures in one
+morning: a probe that thrashed the allocator for 50 minutes per component, a mining pass costing
+3.6 hours instead of 3 minutes, four screen arms crashing on one shape error, and a pool whose
+width check would have silently overwritten 9.5 GB. Every one was visible within two minutes of
+starting, and none announced itself.
+
+**Before launching anything that runs longer than ~10 minutes:**
+
+1. **Smoke the code path first.** `sweep.smoke(base, over)` runs an arm at 90 steps. Prefer a path
+   with no execution history — that is where the bug is. A grid's arms share code, so
+   `sweep.grid(..., fail_fast=True)` (the default) stops at the first arm that *raises*; an OOM
+   does not trip it, being a real per-arm resource result.
+2. **Arm a monitor with the failure signatures, not just the success line.** Silence is not
+   success: grep an alternation covering `Traceback|Error|FAILED|OOM|Killed|assert` alongside the
+   progress marker. A monitor that only matches the happy path is indistinguishable from a
+   crashloop.
+3. **Read the first progress line and sanity-check the RATE against an estimate** before walking
+   away. "mine 2048/349934 (76s)" is a three-hour job stated in the units of a fast one. Two
+   minutes of arithmetic at launch is worth hours later.
+4. **Watch the machine, not only the log.** 100% GPU utilisation with ~1% memory-bandwidth
+   utilisation and low power draw means allocator thrash or launch-bound tiny kernels, not work.
+   `/proc/<pid>/stat` utime against elapsed says whether a "GPU job" is actually burning one CPU
+   core; per-thread CPU time says whether it is Python or a kernel. `py-spy` needs
+   `kernel.yama.ptrace_scope=0`, which needs root on this box — so these cheaper signals matter.
+5. **Never trust a docstring's cost estimate.** Both "a few minutes for the whole set" claims in
+   `train.py` were wrong by two orders of magnitude, in the same file, on the same day.
+
+## Durable knowledge goes in the repo, not in the assistant's memory (Dylan, 2026-08-26)
+
+The point of this repo is a reusable harness, so anything a future session would need belongs in a
+file it will read: protocol in `m7/LEDGER.md`, dead ends in `m7/EXPLORED.md`, module facts and
+pitfalls in `m7/CODEMAP.md`, standing directives here. Assistant memory is for *Dylan-and-workflow*
+facts only (how he wants sessions run, what tooling exists on the box), and anything in it that
+would help a future session must be mirrored into one of those files. A lesson that lives only in a
+memory file is lost to every session that does not happen to recall it.
+
 ## Verification gates (Dylan, 2026-08-24)
 
 Results dictate Qdrant engineering decisions: correct, not decimal-precise; blind spots stated openly.
 - M2 gate: adversarial Opus review of methodology + code + M2 numbers → `research/verification-m2.md`. (running)
 - Pre-report gate: Codex second opinion on the full result set + report draft, briefed for pushback; findings reported verbatim.
 - Significance: paired bootstrap on key system pairs before the report; deltas within noise get labeled as such.
+- **Codex CLI is installed on the box** (`/usr/local/bin/codex`, 0.149.1). Dylan 2026-08-26: use
+  **gpt-5.6-sol sparingly, for adversarial reviews at milestones** — not routine work. Invoke it
+  read-only and with high reasoning effort, since the default profile here is effort `none`:
+  `codex exec -s read-only -m gpt-5.6-sol -c model_reasoning_effort="high" - < brief.md`. Read-only
+  matters: a previous review committed to the files the session was editing.
 
 ## Key decisions (log)
 

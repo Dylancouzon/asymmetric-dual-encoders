@@ -150,5 +150,20 @@ version (`git log -p m7/LEDGER.md`), and the file states when it was compacted.
    `np.searchsorted`. This turned a 2-second scan into hours.
 5. **Never call a JSON loader inside a hot loop.** `mix.load_source` was re-parsing 16 MB once
    per training pair (352,190 times) and the step never finished. It is memoized now.
-6. **Nothing may materialize a whole corpus.** Encodes are memmapped, the pool is chunked, the
+6. **Loop order decides the cost of anything that touches the pool.** `mine_hard_negatives` had
+   queries outside and the 9.5 GB pool inside, so the pool was re-read once per query chunk: 171
+   passes, 1.6 TB, 3.6 hours instead of 165 seconds. All query vectors fit in VRAM (537 MB), so the
+   big thing goes outside. `scripts/check_mining.py` is the equivalence witness for that change.
+7. **Batch budgets must be computed from the LONGEST sequence in the batch**, not the shortest —
+   the tokenizer pads to the longest. `teacher.encode` gets this right; `teacher_probe.py` forked
+   the rule, got it wrong, and thrashed the allocator for 50 minutes per component on a 1024-d
+   model. Do not fork the harness's batching, loader, or pooling: call it.
+8. **A config knob that is not in the encode cache key is a silent stale-vector bug.** `pooling`,
+   `post_dense` and `config_kwargs` all feed it now, conditionally, so bge-base's existing blob
+   stays byte-identical. `test_encoders.py` replays all 24 keys.
+9. **Any width assumption must come from the registry.** `pool.py` had `DIM = 768` and validated
+   its cache on `size == n*dim*2`, so a 1024-d teacher would have failed that check and rebuilt —
+   overwriting a 9.5 GB pool from a read-only call site. Vectors are now per-encoder and a mismatch
+   raises.
+10. **Nothing may materialize a whole corpus.** Encodes are memmapped, the pool is chunked, the
    score matrix is tiled, and hashes are streamed. Assume 18 GB is the peak-RAM budget.

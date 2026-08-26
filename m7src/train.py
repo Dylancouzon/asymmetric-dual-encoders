@@ -450,12 +450,24 @@ def run(cfg: Cfg, log=print):
             # reads: 512 x 31 random reads per step would make the pool the bottleneck.
             p_i = np.array([pos_idx[i][0] for i in idx])
             pos_v = torch.from_numpy(np.ascontiguousarray(pool_vecs[p_i])).cuda().float()
+            # hard_neg_k need not equal kl_k - 1. It usually does not: the screen mines 16 while
+            # kl_k is 32, and `hard[idx][:, :k-1]` then yielded 16 columns reshaped as 31, which
+            # crashed every hard-negative arm of the phase-2 screen -- i.e. every arm that could
+            # satisfy the kill criterion. The candidate-set SIZE is held at kl_k for all arms and
+            # only its COMPOSITION varies with hard_neg_k; sizing it from whatever mining returned
+            # would confound "hard negatives help" with "the KL set got smaller".
+            def _bank_rows(n_per_q):
+                sel = torch.from_numpy(rng.integers(0, nb, len(idx) * n_per_q)).cuda()
+                return bank.index_select(0, sel).float().view(len(idx), n_per_q, model.dim)
+
             if hard is not None:
-                d = torch.from_numpy(np.ascontiguousarray(pool_vecs[hard[idx][:, :k - 1].ravel()]))
-                dist = d.cuda().float().view(len(idx), k - 1, model.dim)
+                hk = min(k - 1, hard.shape[1])
+                d = torch.from_numpy(np.ascontiguousarray(pool_vecs[hard[idx][:, :hk].ravel()]))
+                dist = d.cuda().float().view(len(idx), hk, model.dim)
+                if hk < k - 1:
+                    dist = torch.cat([dist, _bank_rows(k - 1 - hk)], 1)
             else:
-                sel = torch.from_numpy(rng.integers(0, nb, len(idx) * (k - 1))).cuda()
-                dist = bank.index_select(0, sel).float().view(len(idx), k - 1, model.dim)
+                dist = _bank_rows(k - 1)
             cand = torch.cat([pos_v.unsqueeze(1), dist], 1)
         loss, cos, kl = distill(qv, t, cand, cfg.temp, cfg.cos_weight, cfg.kl_weight)
         if n_ps:

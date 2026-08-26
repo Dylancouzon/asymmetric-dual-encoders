@@ -39,3 +39,7 @@ row on the held-out slices, whose corpora are pool row indices carrying no docum
   closed-form vs learned-weights+IDF+KL+SGD changes three things at once). The controlled ablation
   is `program.phase4_mandatory` p4-weights and has not run. Do not treat "ship the flat table" as
   decided.
+| p2s-sane-5e5 | `work/runs/p2s-sane-5e5.json` | — | FAILED — RuntimeError: shape '[256, 31, 768]' is invalid for input of size 3145728 |
+| p2s-sane-1e5 | `work/runs/p2s-sane-1e5.json` | — | FAILED — RuntimeError: shape '[256, 31, 768]' is invalid for input of size 3145728 |
+| p2s-sane-1e4 | `work/runs/p2s-sane-1e4.json` | — | FAILED — RuntimeError: shape '[256, 31, 768]' is invalid for input of size 3145728 |
+| p2s-warmup-only | `work/runs/p2s-warmup-only.json` | — | FAILED — RuntimeError: shape '[256, 31, 768]' is invalid for input of size 3145728 |
