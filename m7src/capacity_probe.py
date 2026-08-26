@@ -90,7 +90,7 @@ def probe_component(comp, pre, steps=6000, batch=256, n_neg=32768, temp=0.02, lr
 
 def main(pre_name="noprefix", steps=6000):
     pre = {"noprefix": NO_PREFIX, "prefix": WITH_PREFIX}[pre_name]
-    refs = json.loads((dev_eval.DEVRES / "refs.json").read_text())
+    refs = json.loads(dev_eval.refs_path().read_text())
     per, budgets = {}, {}
     for c in COMPONENTS:
         pq, b = probe_component(c, pre, steps=steps)

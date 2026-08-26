@@ -5,6 +5,7 @@ every dev comparison can be paired-bootstrapped with the same machinery as the f
 """
 import json
 
+import encoders
 import numpy as np
 import torch
 
@@ -112,14 +113,34 @@ def ref_potion(comp, chunk_docs=250_000):
     return score(qv, q_ids, dv, doc_ids, qrels, chunk=CHUNK.get(comp, 200_000))
 
 
+# The teacher rows are named for whichever encoder is active. "bge-base-symmetric" stays spelled
+# that way when bge-base IS the active encoder, so every committed number and every reader of
+# refs.json keeps working; a different teacher gets its own key AND its own file.
+def _teacher_ref_names():
+    sp = encoders.active()
+    stem = "bge-base" if sp.name == encoders.DEFAULT else sp.name
+    return f"{stem}-symmetric", f"{stem}-symmetric-nopfx"
+
+
+_T_PFX, _T_NOPFX = _teacher_ref_names()
 REFS = {"bm25": ref_bm25, "potion-retrieval-32M": ref_potion,
-        "bge-base-symmetric": lambda c: ref_bge_base(c, True),
-        "bge-base-symmetric-nopfx": lambda c: ref_bge_base(c, False)}
+        _T_PFX: lambda c: ref_bge_base(c, True),
+        _T_NOPFX: lambda c: ref_bge_base(c, False)}
+TEACHER_REF = _T_PFX
+
+
+def refs_path():
+    """One refs file per encoder. The teacher reference row is the DENOMINATOR of every retention
+    number and the G1/G3 comparison's opponent, and a single shared refs.json would have served
+    bge-base's rows to an arctic run under a key that reads 'bge-base-symmetric' -- silently mixing
+    two teachers inside one gate. bge-base keeps the original path so committed results still load."""
+    sp = encoders.active()
+    return DEVRES / ("refs.json" if sp.name == encoders.DEFAULT else f"refs-{sp.name}.json")
 
 
 def reference_rows(components=None, names=None, cache=True):
-    """Computed once, cached to work/devres/refs.json (per-query vectors kept for pairing)."""
-    p = DEVRES / "refs.json"
+    """Computed once, cached to work/devres/refs*.json (per-query vectors kept for pairing)."""
+    p = refs_path()
     blob = json.loads(p.read_text()) if p.exists() else {}
     for name in (names or REFS):
         for c in (components or dev_components()):

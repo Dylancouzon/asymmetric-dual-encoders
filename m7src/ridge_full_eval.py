@@ -32,7 +32,7 @@ def main(init="teacher", pre_name="noprefix"):
     per = dev_eval.eval_table(m, pre, components=comps)
     macro, means = dev_eval.report(per, "[ridge] closed-form flat table")
 
-    refs = json.loads((dev_eval.DEVRES / "refs.json").read_text())
+    refs = json.loads(dev_eval.refs_path().read_text())
     text_backed = [c for c in comps if not c.startswith("heldout-")]
     out = {"_note": "Closed-form MSE-optimal flat-weight bag-of-tokens table: the global optimum "
                     "of flat distillation under squared loss, so no training run can beat it at "
@@ -45,7 +45,7 @@ def main(init="teacher", pre_name="noprefix"):
            "dev_macro_full_suite": macro, "per_component": means,
            "components": comps, "text_backed_components": text_backed}
 
-    for name in ("bm25", "potion-retrieval-32M", "bge-base-symmetric"):
+    for name in ("bm25", "potion-retrieval-32M", dev_eval.TEACHER_REF):
         R = {c: refs[name][c] for c in refs[name] if c in comps}
         sub = [c for c in R]
         r = boot.paired({c: per[c] for c in sub}, R, alternative="greater")

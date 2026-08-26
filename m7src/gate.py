@@ -24,7 +24,7 @@ PRE = {"noprefix": NO_PREFIX, "prefix": WITH_PREFIX}
 
 
 def refs():
-    return json.loads((dev_eval.DEVRES / "refs.json").read_text())
+    return json.loads(dev_eval.refs_path().read_text())
 
 
 def restrict(per, comps):
@@ -53,7 +53,10 @@ def run(run_id, stage0_id=None, components=None, probe_file=None):
     comps = list(components) if components else dev_eval.dev_components()
     pot = restrict(R["potion-retrieval-32M"], comps)
     bm = restrict(R["bm25"], comps)
-    teacher = restrict(R["bge-base-symmetric"], comps)
+    # dev_eval.TEACHER_REF, not the literal: under a different teacher the key is that teacher's,
+    # and a KeyError here would be the good outcome -- silently gating against the previous
+    # teacher's rows would not be.
+    teacher = restrict(R[dev_eval.TEACHER_REF], comps)
     # BM25 and potion have no row on the held-out slices (their corpora are pool row indices and
     # carry no document text). That restriction is disclosed, but it must be explicit here rather
     # than silently absorbed by boot._align's dataset intersection.
