@@ -26,34 +26,18 @@ import torch.nn.functional as F
 from transformers import AutoModel, AutoTokenizer
 
 import dev_eval
-import devsuite
+import encoders
 from _paths import REPO, WORK
 from evalkit import per_query_ndcg, topk_ids_scores
 
 COMPONENTS = ("cqadup-programmers", "cqadup-physics")
 OUT = WORK / "teacherprobe"
 OUT.mkdir(parents=True, exist_ok=True)
-
-# name -> (repo, revision, pooling, query_prefix, doc_prefix, trust_remote_code, max_len)
-# Pooling and prompt come from each model card; getting either wrong understates the model, so
-# they are stated per candidate rather than inherited from the bge convention.
-CANDS = {
-    "bge-base-en-v1.5": (
-        "BAAI/bge-base-en-v1.5", "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a", "cls",
-        "Represent this sentence for searching relevant passages: ", "", False, 512),
-    "bge-large-en-v1.5": (
-        "BAAI/bge-large-en-v1.5", None, "cls",
-        "Represent this sentence for searching relevant passages: ", "", False, 512),
-    "gte-large-en-v1.5": (
-        "Alibaba-NLP/gte-large-en-v1.5", None, "cls", "", "", True, 512),
-    "stella_en_400M_v5": (
-        "NovaSearch/stella_en_400M_v5", None, "mean",
-        "Instruct: Given a web search query, retrieve relevant passages that answer the query.\n"
-        "Query: ", "", True, 512),
-    "arctic-embed-l": (
-        "Snowflake/snowflake-arctic-embed-l", None, "cls",
-        "Represent this sentence for searching relevant passages: ", "", False, 512),
-}
+# Candidates come from the shared registry in encoders.py -- pooling and prompt live in ONE place.
+# An earlier version of this file kept its own copy of that table, which is how a comparison ends
+# up silently running a mean-pooled model with CLS pooling.
+CANDS = ("bge-base-en-v1.5", "bge-large-en-v1.5", "gte-large-en-v1.5", "stella-400M-v5",
+         "arctic-embed-l")
 
 
 def pool(h, mask, mode):
@@ -64,15 +48,15 @@ def pool(h, mask, mode):
 
 
 @torch.no_grad()
-def encode(name, texts, prefix, tag):
+def encode(spec, texts, prefix, tag):
     """Length-bucketed fp16 encode. Cached per (candidate, tag) so reruns are free."""
-    repo, rev, mode, _, _, trc, maxlen = CANDS[name]
-    p = OUT / f"{name}-{tag}.npy"
+    maxlen = spec.max_length
+    p = OUT / f"{spec.name}-{tag}.npy"
     if p.exists():
         return np.load(p)
-    kw = {"trust_remote_code": True} if trc else {}
-    tok = AutoTokenizer.from_pretrained(repo, revision=rev, **kw)
-    model = AutoModel.from_pretrained(repo, revision=rev, dtype=torch.float16,
+    kw = {"trust_remote_code": True} if spec.trust_remote_code else {}
+    tok = AutoTokenizer.from_pretrained(spec.repo, revision=spec.revision, **kw)
+    model = AutoModel.from_pretrained(spec.repo, revision=spec.revision, dtype=torch.float16,
                                       **kw).cuda().eval()
     full = [prefix + t for t in texts]
     lens = [len(tok(t, add_special_tokens=True, truncation=True,
@@ -87,7 +71,7 @@ def encode(name, texts, prefix, tag):
         b = tok([full[j] for j in idx], padding=True, truncation=True, max_length=maxlen,
                 return_tensors="pt").to("cuda")
         h = model(**b).last_hidden_state
-        v = F.normalize(pool(h, b["attention_mask"], mode).float(), dim=-1)
+        v = F.normalize(pool(h, b["attention_mask"], spec.pooling).float(), dim=-1)
         out[idx] = v.cpu().numpy().astype(np.float16)
         i += n
     del model
@@ -99,19 +83,20 @@ def encode(name, texts, prefix, tag):
 def main(names):
     res = {}
     for name in names:
-        repo, rev, mode, qpfx, dpfx, trc, _ = CANDS[name]
+        spec = encoders.get(name)
         per_comp = {}
         for c in COMPONENTS:
             doc_ids, doc_texts, q_ids, q_texts, qrels, _ = dev_eval.doc_vecs(c)
-            dv = encode(name, doc_texts, dpfx, f"{c}-docs")
-            qv = encode(name, q_texts, qpfx, f"{c}-q")
+            dv = encode(spec, doc_texts, spec.doc_prefix, f"{c}-docs")
+            qv = encode(spec, q_texts, spec.query_prefix, f"{c}-q")
             run = topk_ids_scores(torch.from_numpy(qv.astype(np.float32)), dv, doc_ids,
                                  k=10, chunk=250_000, qids=q_ids)
             pq = per_query_ndcg(run, qrels)
             per_comp[c] = pq
             print(f"  {name:20s} {c:20s} nDCG@10 {np.mean(list(pq.values())):.4f}", flush=True)
         macro = float(np.mean([np.mean(list(per_comp[c].values())) for c in COMPONENTS]))
-        res[name] = {"repo": repo, "pooling": mode, "query_prefix": qpfx, "dim": int(dv.shape[1]),
+        res[name] = {"repo": spec.repo, "pooling": spec.pooling,
+                     "query_prefix": spec.query_prefix, "dim": int(dv.shape[1]),
                      "macro_cqadupstack": round(macro, 4),
                      "per_component": {c: round(float(np.mean(list(per_comp[c].values()))), 4)
                                        for c in COMPONENTS}}
