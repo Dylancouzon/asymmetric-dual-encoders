@@ -4,13 +4,14 @@ The load-bearing record: partitions, licence evidence, every six-set access, dec
 counts, gate results, freeze record, incidents. Detail lives in `results/m7_*.json` and is
 pointed at, never restated.
 
-> **Compacted twice on 2026-08-26**, after the gate and again after the research session. Every
-> protocol-required fact is kept verbatim; settled justification was cut to one line each and the
-> review finding-lists to their counts. Full narrative in `git log -p m7/LEDGER.md` and the results
-> JSONs. It sits at ~4.5K tokens against CODEMAP's ~4K budget: what remains is protocol facts and
-> live constraints, and cutting further would break the "keep every protocol fact verbatim" rule
-> that the budget exists to serve. Next compaction should retire whole sections as milestones
-> close, not shave prose.
+> **Compacted three times on 2026-08-26** — after the gate, after the research session, and after
+> the Codex gate. Every protocol-required fact is kept verbatim; settled justification is one line
+> each and review finding-lists are counts plus dispositions. It sits at ~5.1K tokens against a ~4K
+> budget, and the honest reason is that two whole sections are live rather than settled: the Codex
+> gate's OPEN list is a to-do list, and Stage 0 / the GO correction still carry the projection the
+> current plan is trying to beat. **Next compaction: retire the Stage-0 and GO sections once the
+> arctic-teacher numbers replace them, not by shaving prose.** Full narrative in
+> `git log -p m7/LEDGER.md`.
 
 ## Environment
 
@@ -106,32 +107,30 @@ gives ~5 questions per context), so it rewards document-anchored memorisation du
 
 ## Stage 0
 
-**0.1 closed-form ridge** (`results/m7_stage0_ridge.json`, full suite run 2026-08-26) — the global
-optimum of flat distillation under squared loss. 571,329 TRAIN queries, vocab coverage **0.895**,
-best λ=1e-2. `train_cos` 0.9110 is an IN-SAMPLE residual, not held-out agreement; overlap@10 0.490
-(teacher 0.5722) is the honest figure and says half the teacher's top-10 is not recovered. The λ
-curve has an **interior** optimum, so the binding constraint is *representational*, not
-statistical; at λ=10 the rows barely move and score ~0.20, so **the teacher-derived init alone is a
-poor table**, useful only as a regularisation anchor.
+**0.1 closed-form ridge** (`results/m7_stage0_ridge.json`, full suite): the global optimum of flat
+distillation under squared loss. 571,329 TRAIN queries, vocab coverage 0.895, best lambda=1e-2 —
+an **interior** optimum, so the binding constraint is representational, not statistical. `train_cos`
+0.9110 is in-sample; the honest figure is overlap@10 **0.490** vs teacher 0.5722, i.e. half the
+teacher's top-10 is not recovered. At lambda=10 the rows barely move and score ~0.20, so the
+teacher-derived init alone is a poor table, useful only as a regularisation anchor. **Codex 2026-08-26:
+"structural upper bound" is unearned — it bounds that penalised-MSE problem, not objective B or
+retrieval.**
 
-**0.2 capacity probe** — PASS at ~1.0000, d=+0.5917. **Near-vacuous**: 23.4M parameters against
-~3,500 dev queries makes memorisation trivial, so it falsifies only the hypothesis that good
-retrieval is *inexpressible* here — which it does, decisively: the frozen-tower tax is a
-**generalisation** gap, not an expressivity limit. The load-bearing Stage-0 evidence is the ridge
-probe, which generalises.
+**0.2 capacity probe** — PASS at ~1.0000, d=+0.5917, and **near-vacuous**: 23.4M parameters against
+~3,500 dev queries. It falsifies only "good retrieval is inexpressible here", which it does
+decisively: the frozen-tower tax is a **generalisation** gap, not an expressivity limit. The
+load-bearing Stage-0 evidence is the ridge probe.
 
-**Objective grid**: distillation works, contrastive is destructive from two initialisations, and
-`reg_init` is exonerated. Numbers and curves in `m7/RESULTS.md`.
-**Mechanism narrowed by measurement, 2026-08-26** (`results/m7_diag_scores.json`): both named suspects are
-**bounded small**, not merely doubted — but measured in the *teacher's* score geometry, not the
-student's, and the suspect list never included Adam-on-sparse-rows dynamics or cross-query row
-interference. So the learning rate (3e-3 vs a published 1e-5–3e-4) is the **leading untested
-hypothesis**, not a diagnosis; the phase-2 `sane-5e5` vs `warmup-only` arms are the test.
+**Objective grid** (curves in `m7/RESULTS.md`): distillation works; contrastive was destructive from
+two initialisations; `reg_init` exonerated. Both named suspects are bounded small
+(`results/m7_diag_scores.json`) but were measured in the *teacher's* score geometry, and the suspect
+list never included Adam-on-sparse-rows dynamics or cross-query row interference. The learning rate
+was the leading untested hypothesis; the phase-2 screen is its test.
 
 **This contradicts a mandate premise** — `instructions-m7.md` says large negative pools are nearly
-free, "exploit that first". Scale without hardness wasted the objective. Phase 2 was expanded to
-the mandate's full comparison (BM25-mined / teacher-mined / mixed) and the BM25 arm built
-(`train.mine_bm25_negatives`, mined within each query's own doc store).
+free, "exploit that first". Scale without hardness wasted the objective, so phase 2 carries the
+mandate's full BM25-mined / teacher-mined / mixed comparison (`train.mine_bm25_negatives`, mined
+within each query's own doc store).
 
 ## GO/NO-GO GATE: **GO** (2026-08-26 03:03)
 
@@ -165,83 +164,14 @@ existed; gating a knowingly-inferior checkpoint would be a false negative, so `p
 gated and both are reported. Selecting on dev is within the protocol — the gate is a dev-stage
 decision.
 
-## Strategy pivot: stop, research, re-plan for Tier 1 (Dylan's call, 2026-08-26)
+## Strategy pivot (Dylan, 2026-08-26)
 
-Trigger: the corrected projection puts the best candidate at ~0.41 on the six (Tier 4). Direction:
-research properly, revise the plan, aim for Tier 1, restart the model work if needed. **The plan
-lives in `m7/STATUS.md`.** Preserved across any model-side restart, and not what is wrong: the eval
-protocol, partition ledger, decontamination, pinned dev suite, frozen comparator vectors,
-freeze/final-run machinery, both adversarial reviews. Only architecture and training recipe change.
-
-Decision record: **Tier 1 is not reachable by the dense table on the current teacher alone.**
-Recomputed 2026-08-26 against the nine-model calibration (`results/m7_calibration.json`), the
-retention Tier 1 would demand is 95.8% on bge-base, 94.2% on bge-large, 88.9% on gte-large,
-87.5% on stella — so a teacher swap is necessary and still not sufficient. Tier 1 needs
-teacher x retention x fusion. Live arithmetic in STATUS.
-
-Algebra that narrows the search (proved, not researched; `results/m7_absorb_check.json`):
-a doc-side linear map is a no-op (`q.(Ad) = (A^T q).d`); document centering cannot change ranking
-at all; and **query-side centering, whitening, top-PC removal and any per-token scalar weight are
-all absorbable into the table** (`mean(W-mu) = mean(W)-mu`), so none of them adds capacity. Only
-n-gram rows and multiplicity-dependent pooling do.
-
-## Other findings that constrain the report
-
-- **Dev cannot validate long queries.** Held-out p50=13 WordPiece tokens, p90=24, 55 of 7,325 at
-  ≥64; ArguAna's are ~250. The ArguAna row is an extrapolation and keeps its n and CI width
-  attached, as TREC-COVID's n=50 does in M4. No approved source fixes it (args.me is ArguAna's own
-  family).
-- **The learned-weights-buy-nothing claim is REFUTED.** +0.0006 was a proxy-3 artifact: on the full
-  pinned suite the trained table beats the closed-form flat optimum by **+0.021**. The weights are
-  also interpretable — spearman −0.44 vs row update count (IDF-like), [CLS]/[SEP] learned down to
-  0.61x median. Not a controlled ablation (three things differ); p4-weights remains the clean test.
-- **FiQA is the six-set row most at risk**: ridge retains 64% of the teacher on
-  cqadup-programmers vs 89% on nq-250k, and StackExchange-style retrieval is the nearest dev
-  analogue. FiQA is also where BM25 is weakest, so dense and fusion pull opposite ways.
-- **int8 is quality-free** on two checkpoints (upper bound 0.00053 vs a 0.005 bar), replicating
-  M3's LightRetriever finding for our own table. Released query asset **23.4 MB int8**.
-- **Held-out slices were rebuilt** against the full 6.17M pool: with ~200K random distractors the
-  teacher scored 0.8383/0.9915 and the slices could not discriminate, inflating its dev macro from
-  0.6106 to 0.7120. Mining hard distractors with the teacher was rejected as biasing the component
-  toward the teacher's own ranking — the thing being measured.
-
-## Reviews
-
-Two Fable reviews, 2026-08-26: **pre-results on protocol code only** (deliberately before any
-candidate number existed) 3 BLOCKER / 6 MAJOR / 10 MINOR, and **post-results on results + plan**
-1 BLOCKER / 6 MAJOR / 4 MINOR. Every finding is actioned; the full lists are in
-`git log -p m7/LEDGER.md` at commits deb5648 and earlier. Only what is still live is kept here.
-
-**Third review — Fable, research session** (2026-08-26): 2 BLOCKER / 8 MAJOR / 7 MINOR, all
-actioned. The two blockers were both *instrument* failures, not result failures. (1) The stella
-encode path omitted its published post-pooling Dense head, so the probe that decides our most
-expensive choice would have ranked a model that is not stella — the M2 potion loader mismatch
-again; fixed via `Spec.post_dense`, and `validate_encoder.py` now validates any new Spec against
-sentence-transformers on the **pairwise similarity matrix** rather than trusting it. (2) The
-calibration quoted ±2·resid_sd as a "CI" using n−1 dof, no t quantile and no extrapolation term,
-understating the half-width at stella by 68% and producing one wrong clearance verdict; it now
-carries a real prediction interval, and **no candidate clears Tier 1 CI-resolved on the dense arm**.
-Majors of record: the fusion macro's +0.1418 hotpotqa share has no six-set analogue (transfer
-estimate is +0.049, not +0.0725); retention 0.7853 is itself optimistic, being lifted by the one
-component whose queries are in TRAIN; four of five Specs were unpinned, two with
-`trust_remote_code`; `bm25_run_cached` filtered zero scores on one code path only, so "the frozen
-fusion spec" depended on cache state; `KILL_REQUIRES` was documented and enforced nowhere (now
-`may_invoke_contrastive_kill`); collapse diagnostics were written only to gitignored paths.
-Also caught by the new tests rather than by review: `config.json`'s `vocab_size` is the padded
-embedding width, so the table is **30,522 × dim** for every candidate, and all five ship a
-byte-identical vocab.txt — a teacher swap therefore does not change tokenization, and row indexing,
-decontamination fingerprints and the frozen preprocessing rule all survive it.
-
-**Verified sound, do not re-litigate:** the paired bootstrap (genuinely paired, within-dataset
-resampling, correct one-sided inversion), Holm step-down, `upper_bound_one_sided`'s tail and
-argument order, int8 quantisation incl. the zero-row case, self-hit removal parity across dense and
-BM25 paths, `encode_cached`'s content-hashed keys and atomic shard writes, that `train.py` reads no
-dev/test qrels anywhere, and both logged narrowings (R3 measure-not-remove; mod-50 at query
-granularity).
-
-**Held open and disclosed rather than fixed:** R1's near-dup test degenerates to exact match for
-queries under 8 words (most NQ/FEVER-style questions); `heldout-train` is seen-document; only the
-*sampled* positive is masked from negatives (ESCI averages ~13.5/query).
+Trigger: the corrected projection put the best candidate at ~0.41 on the six (Tier 4). Direction:
+research properly, revise the plan, aim for Tier 1, restart the model work if needed. What is
+explicitly NOT what went wrong, and survives any model-side restart: the eval protocol, this
+partition ledger, decontamination, the pinned dev suite, the frozen comparator vectors, the
+freeze/final-run machinery, and every review finding. Only architecture and training recipe change.
+The live plan is `m7/STATUS.md`.
 
 ## Incidents
 
@@ -279,3 +209,78 @@ queries under 8 words (most NQ/FEVER-style questions); `heldout-train` is seen-d
   application alike, fitted against the **int8** table because that is the released artifact. This
   is the sanctioned dev-stage selection. **If the checkpoint changes, the fusion must be
   re-selected** — a parameter frozen on one checkpoint is not valid for another.
+
+## Codex gate, 2026-08-26 (gpt-5.6-sol, read-only, high effort) — 6 BLOCKER / 9 MAJOR / 2 MINOR
+
+Full text: `research/m7-codex-gate-2026-08-26.md`. Its own "fix before any more compute" was the
+teacher-swap boundary. Dispositions, honestly labelled:
+
+**FIXED this session** (detail in `git log`, verbatim findings in
+`research/m7-codex-gate-2026-08-26.md`)
+- B1 teacher-swap boundary: pool width/identity, init-cache keying, and `teacher_rows`' hardcoded
+  CLS read-out — all three would have crossed the arctic swap silently. `test_init_rows.py` is the
+  standing check.
+- B4 final scoring not bound to the frozen teacher: `FREEZE.json` now carries the full Spec
+  fingerprint, `load_and_verify` refuses per field, `test_freeze_guard.py` covers the
+  same-repo/different-pooling case no hash can catch.
+- M-screen: the screen could not isolate the lr; redesigned to A-only arms from one checkpoint.
+
+**OPEN, and each one blocks a specific later step, not the current compute**
+- B2 **decontamination covers positives only (~855K docs) while training touches the full 6.17M-doc
+  pool** as random/mined/KL negatives. "TRAIN↔KNOWN-TEST decontaminated" is therefore false for the
+  actual training surface. Blocks the release claim, not the teacher swap. Fix = fingerprint every
+  pool row eligible as a negative against the six, then mask matches from bank, mining and KL sets.
+- B3 **the bootstrap p-values are percentile tail probabilities, not null-distribution p-values**, so
+  Holm does not control family error over them. Blocks every confirmatory claim. Fix = paired
+  label-swap randomisation test for the macro statistic, type-I error verified by simulation, with
+  percentile/BCa intervals kept for *intervals* only.
+- B5 **the frozen fusion function differs between dev selection and final scoring** (selection drops
+  BM25 `score <= 0`, final keeps them; convex fusion min-max normalises over what is returned, so
+  the minimum and every normalised score move). The Tier-1 system would not be the function selected
+  on dev. Fix = one shared run builder, asserted byte-identical across cached/uncached/selection/
+  final paths.
+- B6 **the "two six-set accesses" rule is already breached**: `bench_throughput.py` called
+  `load_beir("fiqa")`, which parses FiQA test qrels, and that was neither logged harness validation
+  nor the final run. Recorded here as the required ledger entry. The rule is convention-based, not
+  enforced — any script can read committed plaintext qrels without `final_run.py` noticing — and the
+  report must say so rather than claim enforcement.
+- M-calibration **the prose PI half-widths disagree with the JSON** (recomputation gives 0.02818 /
+  0.03294 / 0.03446 vs the 0.024 / 0.030 / 0.035 in STATUS), and **"bge-base cannot clear Tier 2 at
+  any retention" is false** — its teacher-only lower bound clears above ~0.955 retention. Also, the
+  table macro is `mean_i(r_i x teacher_i)`, not `dev_ratio x mean_i(teacher_i)`, so multiplying a
+  dev-macro retention by projected teacher PI endpoints does not compose the two uncertainties.
+- M-probe **the probe ranks symmetric tower quality, not table learnability**, on two subforums of
+  one family, taking the max of five candidates with no selection correction (winner's curse). The
+  proper form is a cheap closed-form table per candidate, ranked on held-out dev. Our arctic choice
+  additionally rests on contamination evidence, which is independent of this critique.
+- M-probe-cache **probe cache files are keyed on name+tag only** — no revision, corpus hash, prompt,
+  pooling, Dense, dtype, or remote-code commit — so a pre-Dense-fix stella cache would be reused.
+  Also true that `trust_remote_code` weights revisions do not pin the remote code.
+- M-perquery **`validate_perquery.py` validates each vector's MEAN**, so a permutation of scores
+  across qids passes while destroying the pairing every CI depends on; `boot._align` intersects
+  silently and nDCG drops missing queries. Blocks trust in the frozen comparators.
+- M-decontam-short **the 8-word fingerprint rule degenerates to normalised exact match for short
+  queries**, which is the dominant NQ/FEVER regime and exactly where the dev win is training-adjacent.
+- M-ridge **"structural upper bound" is unearned**: the ridge solves penalised unnormalised MSE at a
+  dev-selected lambda, while objective B is normalised cosine + KL and the endpoint is retrieval.
+  Claim must be restricted to that MSE problem.
+- M-stella-ship, MINOR-int8-weights (the released int8 artifact still multiplies an unbounded fp32
+  weight vector; fold weights into rows before quantisation and re-run G4), MINOR-doc-transform
+  (the absorbability algebra omits re-normalisation): recorded, not yet actioned.
+
+## Phase-2 screen redesign, 2026-08-26 (logged before any arm's A-phase result was read)
+
+The screen's arms were objective C at a matched step budget across a 60x lr range, which cannot
+isolate the contrastive lr because the B phase runs at that same lr and is nowhere near converged at
+the low end (B reaches 0.2731 at 4k steps at lr 5e-5 vs 0.4449 at 3e-3). Arms are now **objective A
+only from one fixed p1-objB checkpoint** (init `run:p1-objB`, restoring rows from `rows_fp16` and the
+trained token weights), varying only the contrastive lr, with a zero-step arm pinning the start.
+That zero-step arm reproduces **0.4548 exactly**, so the checkpoint path is faithful.
+`CONTRASTIVE_KILL_BAR` and `KILL_REQUIRES` are unchanged and still satisfied by the 1e-5/5e-5/1e-4
+arms. Codex reached the same conclusion about the old design independently.
+
+Also recorded: the **collapse diagnostics must be read against the init, not against zero.** The
+untrained teacher-init table sits at mean pairwise cos 0.954 / effective rank 21.8 and dev 0.0061;
+the 0.4548 table sits at 0.342 / 270.4. A session watching those numbers mid-training will otherwise
+read the starting geometry as a collapse, as this one did for an hour.
+

@@ -205,6 +205,17 @@ Results dictate Qdrant engineering decisions: correct, not decimal-precise; blin
 
 ## Key decisions (log)
 
+- **Teacher for M7 is `Snowflake/snowflake-arctic-embed-l` (Dylan, 2026-08-26).** Chosen on
+  measurement, not projection: best of five candidates on the two CQADupStack dev components
+  (+0.0447 [0.0339, 0.0557] over bge-base; arctic > stella +0.0125 [0.0008, 0.0241] raw, which
+  would NOT survive multiplicity over the ten pairs, so the top is arctic ~= stella), Apache-2.0,
+  and the only candidate whose MTEB registry entry discloses **zero overlap with our six** — stella
+  lists ArguAna and FiQA2018, 2 of the 6. Dylan ruled on the vendor question explicitly, because the
+  released table only works against its teacher's document vectors, so the doc side of a Qdrant
+  release would be Snowflake's model. `results/m7_teacher_probe.json`,
+  `results/m7_teacher_contamination.json`. The projection that had ranked stella first is not merely
+  imprecise on this evidence, it is wrongly ordered.
+
 - BEIR subset: SciFact, NFCorpus, FiQA-2018, ArguAna, SciDocs (100,785 docs total; all appear in LightRetriever's tables and on MTEB → like-for-like comparison possible).
 - Harness: hand-rolled — HF `datasets` (BeIR/* repos) + `pytrec-eval-terrier` + numpy brute force. `beir`/`mteb` packages skipped (their value is model wrappers we don't use). Title+text join: `(title + " " + text).strip()`. Python 3.12 venv, torch 2.13 MPS.
 - LightRetriever config: `lightretriever/lightretriever-qwen2.5-1.5b` (ungated, 3.1 GB bf16, fits 24 GB RAM). Paper BEIR-15: dense 48.9 / sparse 47.3 / hybrid 52.1. MPS gotchas: use `sdpa` not flash-attn, explicit bf16, no autocast.
