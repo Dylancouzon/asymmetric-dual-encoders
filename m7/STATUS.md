@@ -8,10 +8,16 @@ gate's open list), `m7/EXPLORED.md` (closed and reopened avenues), `results/m7_*
 
 1. **Teacher learnability probe — do this BEFORE the 6.17M-doc pool encode.** The teacher was
    picked on *symmetric ceiling*; what determines the shipped system is how well a bag-of-tokens
-   table approximates that teacher (Codex M-probe). The two CQADupStack dev components are already
-   encoded for all five candidates (`work/teacherprobe/`, plus arctic in the pipeline's own cache),
-   so fitting the closed-form flat table per candidate and ranking the *student* is cheap. It is
-   also the tie-break for the tension below.
+   table approximates that teacher (Codex M-probe), and that is the tie-break for the tension below.
+   Design, so it need not be re-derived: it needs **no documents and no qrels** — targets are the
+   candidate's own **query** vectors, so encode the TRAIN query texts (349,934, ~11 min per
+   candidate at ~535 texts/s) with arctic and stella, fit `stage0_ridge`'s closed form per candidate
+   against those targets, then report (a) **cosine agreement to the teacher's query vector on the
+   dev components' queries** as the primary metric, high-SNR and coverage-symmetric, and (b)
+   retrieval nDCG on the two CQADupStack components, whose docs are already encoded for both. Fit on
+   TRAIN, measure on dev: no optimism, real coverage. Paired-bootstrap the arctic-vs-stella
+   difference. **A cheap closed-form ranking, not a trained one** — say so, since the released table
+   is trained and phase 2 showed training moves it.
 2. `encode_dev.py nq-250k hotpotqa` then `pool.py` under `M7_ENCODER=arctic-embed-l` — the long
    job (~3 h; 6.17M docs at 1024-d). Gates already passed for arctic: `validate_encoder.py`,
    `test_encoders.py`, `test_init_rows.py` (min cosine 0.99999986).
