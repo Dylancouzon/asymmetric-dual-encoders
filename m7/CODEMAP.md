@@ -114,7 +114,7 @@ Budgets, checked with `for f in m7/*.md; do echo $f $(( $(wc -c < $f) / 4 )); do
 | file | budget | rule |
 |---|---|---|
 | `STATUS.md` | ~1.2K tokens | one screen. Rewritten, never appended. The only file always read. |
-| `CODEMAP.md` | ~1.5K | grows only when a module is added or a pitfall is earned. |
+| `CODEMAP.md` | ~2.5K | grows only when a module is added or a pitfall is earned. Raised from 1.5K on 2026-08-26: six modules landed and the harness section was added, and this file is what stops a future session reading 35 modules. |
 | `RESULTS.md` | ~1.5K | one row per run. If it outgrows that, keep the verdict column and move detail to the run JSON. |
 | `EXPLORED.md` | ~1K | one row per closed avenue. |
 | `LEDGER.md` | **~4K, hard** | at 4K, compact again: keep every protocol fact verbatim, cut settled justification to one line. |
