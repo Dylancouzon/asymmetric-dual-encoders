@@ -9,6 +9,8 @@
 import json
 
 import numpy as np
+
+import encoders
 import torch
 
 from _paths import WORK
@@ -46,7 +48,7 @@ def random_rows(vocab, dim, seed=0):
     return np.random.default_rng(seed).normal(0, 1 / np.sqrt(dim), (vocab, dim)).astype(np.float32)
 
 
-def get_init(kind, pre: Preproc, vocab=None, dim=768):
+def get_init(kind, pre: Preproc, vocab=None, dim=None):
     """Cached: work/init/<kind>[-<preproc fingerprint>].npy"""
     name = f"{kind}-{pre.fingerprint()}" if kind == "teacher" else kind
     p = INIT / f"{name}.npy"
@@ -57,7 +59,8 @@ def get_init(kind, pre: Preproc, vocab=None, dim=768):
     elif kind == "input_emb":
         r = input_emb_rows()
     elif kind == "random":
-        r = random_rows(vocab or get_tokenizer().vocab_size, dim)
+        r = random_rows(vocab or get_tokenizer().vocab_size,
+                        encoders.active().dim if dim is None else dim)
     else:
         raise KeyError(kind)
     np.save(p, r.astype(np.float32))

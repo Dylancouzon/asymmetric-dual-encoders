@@ -13,6 +13,7 @@ import time
 import numpy as np
 import torch
 
+import encoders
 from _paths import REPO, WORK
 from table import Preproc, get_tokenizer, load_table
 from teacher import TEACHER
@@ -31,7 +32,8 @@ def timed(fn, n=200, warmup=20):
     return statistics.median(ts)
 
 
-def table_costs(npz_path, pre: Preproc, dim=768):
+def table_costs(npz_path, pre: Preproc, dim=None):
+    dim = encoders.active().dim if dim is None else dim
     z = np.load(npz_path)
     V = z["rows_fp16"].shape[0]
     has_w = z["token_weights"].size > 0
@@ -60,12 +62,14 @@ def table_costs(npz_path, pre: Preproc, dim=768):
             "vocab": int(V), "dim": int(dim), "learned_weights": bool(has_w)}
 
 
-def doc_index_costs(dim=768):
+def doc_index_costs(dim=None):
+    dim = encoders.active().dim if dim is None else dim
     """Bytes per 1M documents, so the table's index cost sits next to the comparators'."""
     per = lambda d, b: round(1_000_000 * d * b / 1e9, 2)
-    return {"teacher_768d_fp16_gb_per_1m": per(dim, 2),
-            "teacher_768d_fp32_gb_per_1m": per(dim, 4),
-            "teacher_768d_int8_gb_per_1m": per(dim, 1),
+    return {"dim": dim,
+            f"teacher_{dim}d_fp16_gb_per_1m": per(dim, 2),
+            f"teacher_{dim}d_fp32_gb_per_1m": per(dim, 4),
+            f"teacher_{dim}d_int8_gb_per_1m": per(dim, 1),
             "reference_lightretriever_1536d_fp16_gb_per_1m": per(1536, 2),
             "reference_bge_small_384d_fp16_gb_per_1m": per(384, 2),
             "reference_opensearch_sparse_gb_per_1m": 1.4,

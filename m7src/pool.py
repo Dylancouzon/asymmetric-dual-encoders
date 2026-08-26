@@ -16,15 +16,26 @@ import json
 import numpy as np
 import torch
 
+import encoders
 import mix
 from _paths import WORK
 from hashing import sha_stream_list
 from teacher import encode_cached
 
+SPEC = encoders.active()
 POOL = WORK / "pool"
 POOL.mkdir(parents=True, exist_ok=True)
 STORE_CACHE_NAME = {"hotpotqa-corpus": "dev-hotpotqa-docs"}  # reuse the dev encode
-DIM = 768
+# Width comes from the registry, not a literal. The pool used to be `DIM = 768`, and its validity
+# check is (size == n * dim * 2), so simply pointing the pipeline at a 1024-d teacher would have
+# failed that check and SILENTLY REBUILT the pool -- overwriting a 9.5 GB artifact that costs hours
+# to re-encode, in a process that was only meant to read it.
+DIM = SPEC.dim
+# Vectors are per-encoder; the ids-*.json files are not (doc ids do not depend on the encoder).
+# bge-base deliberately keeps the flat legacy layout: the existing pool was built there, it is
+# 9.5 GB, and a running job holds an open memmap on it. Everything else gets a subdirectory.
+VEC_DIR = POOL if SPEC.name == encoders.DEFAULT else POOL / SPEC.name
+VEC_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class PoolIndex:
@@ -79,11 +90,19 @@ def store_vecs(store):
 
 def build(dim=DIM):
     """-> (PoolIndex, memmap (N,dim) fp16, meta). Cached on disk."""
-    vec_p, meta_p = POOL / "vecs.f16", POOL / "meta.json"
+    vec_p, meta_p = VEC_DIR / "vecs.f16", VEC_DIR / "meta.json"
     stores = sorted({mix.load_source(s)["docstore"] for s in mix.available_sources()})
     if vec_p.exists() and meta_p.exists():
         meta = json.loads(meta_p.read_text())
         fresh = {s: sha_stream_list(store_ids(s)) for s in stores}
+        # An encoder mismatch is an ERROR, not a cache miss: reaching here with someone else's
+        # vectors means the layout guarantee above has been broken, and rebuilding on top would
+        # destroy the other encoder's pool rather than report the problem.
+        if meta.get("encoder", encoders.DEFAULT) != SPEC.name:
+            raise AssertionError(
+                f"{vec_p} holds vectors for {meta.get('encoder')!r} but the active encoder is "
+                f"{SPEC.name!r}. Refusing to overwrite it -- point M7_ENCODER at the right model, "
+                f"or delete that directory deliberately.")
         if (meta["stores"] == stores and vec_p.stat().st_size == meta["n"] * dim * 2
                 and meta.get("id_sha256") == fresh):
             return (PoolIndex(meta["spans"]),
@@ -118,7 +137,9 @@ def build(dim=DIM):
     mm.flush()
     del mm
     tmp.rename(vec_p)
-    meta = {"n": total, "dim": dim, "stores": stores, "spans": spans, "counts": counts,
+    meta = {"n": total, "dim": dim, "encoder": SPEC.name, "encoder_repo": SPEC.repo,
+            "encoder_revision": SPEC.revision,
+            "stores": stores, "spans": spans, "counts": counts,
             "id_sha256": id_sha}
     meta_p.write_text(json.dumps(meta, indent=1))
     return (PoolIndex(spans),
