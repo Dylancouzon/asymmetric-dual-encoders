@@ -12,6 +12,13 @@
 # One process, arms in sequence: the GPU must not be shared (m7/LEDGER.md OOM incident).
 set -euo pipefail
 cd "$(dirname "$0")/m7src"
+# 10 GB of VRAM, and this screen's A phase allocates a 3 GB negative bank plus score tiles of
+# several different shapes plus eval buffers. Without expandable segments the caching allocator
+# fragments, WSL's driver starts failing to make allocations resident (dmesg: dxgkio_make_resident
+# -12), allocations spill to host memory, and the run degrades to 100% GPU utilisation at ~0%
+# memory bandwidth -- it looks busy and makes no progress. Numerics are unaffected; every arm runs
+# with it, so arms stay comparable.
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 exec ../.venv/bin/python -u -c "
 import program, sweep
 # The representative arm is a hard-negative one: that is the path with no execution history.
