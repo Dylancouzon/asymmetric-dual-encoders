@@ -85,6 +85,11 @@ what it does. Nothing here is restated from `LEDGER.md` (protocol) or `EXPLORED.
 - `diag_scores.py` — the contrastive score geometry: positive/negative distributions, softmax mass
   per temperature, and what the `fn_margin` filter actually removes.
 - `ridge_full_eval.py` — the Stage-0.1 closed-form bound on the full pinned suite, not the proxy.
+- `ridge_vs_trained.py` — scores the closed-form flat table and a trained one in ONE process and
+  paired-bootstraps the gap. Use it instead of differencing two runs' macros.
+- `validate_encoder.py` — **mandatory for any new `Spec`** before the probe or a corpus encode.
+  Compares `teacher.encode` against sentence-transformers on the pairwise similarity matrix. The
+  reason it exists: stella's Spec initially omitted its published post-pooling Dense head.
 
 **Final and demo**
 - `final_run.py` — the one-shot final run. Refuses to start unless the tree is clean, HEAD equals
@@ -103,9 +108,16 @@ edit `teacher.py`. To run it with a **different query-side technique**, the surf
 (the artifact and its one preprocessing rule) plus `train.py`'s `Cfg`; `program.py` holds the
 phased plan and `sweep.py` records every run including failures.
 
-Two things that must move together whenever the encoder changes: anything that assumes **dim 768**,
-and `table.py`'s `CLS_ID` (101 is bge/BERT's; a different tokenizer has a different id). Everything
-that assumes the *teacher* is bge-base now goes through the registry instead.
+Adding an encoder, in order: write the `Spec` (pooling, prompt, `post_dense`, `config_kwargs`,
+revision pinned — `_assert_pinned` enforces that) → `test_encoders.py` → **`validate_encoder.py`**
+→ only then `teacher_probe.py` or an encode. Skipping the validator is how a comparison silently
+runs the wrong model.
+
+Two things that must move with the encoder: anything assuming **dim 768**, and `table.py`'s
+`CLS_ID` (101 is bge/BERT's — all five current candidates share a byte-identical 30,522-token
+WordPiece vocab, so a swap among *them* changes no token ids, but a different tokenizer would).
+Also note pinning weights does not pin `trust_remote_code` code, which comes from a separate repo
+at HEAD.
 
 ## Log size policy (this is a long project; context is the scarce resource)
 

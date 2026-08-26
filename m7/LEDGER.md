@@ -120,17 +120,13 @@ retrieval is *inexpressible* here — which it does, decisively: the frozen-towe
 **generalisation** gap, not an expressivity limit. The load-bearing Stage-0 evidence is the ridge
 probe, which generalises.
 
-**Objective grid** (dev proxy macro-3): p1-objB distillation 0.4548 · p1-objC 0.3721 · p1-objA
-0.3248. Detail in `m7/RESULTS.md`. **Contrastive InfoNCE with random negatives is destructive**
-from two initialisations (monotone decline over 12k steps, and −7.3 over 8k steps from a healthy
-checkpoint). `reg_init` tested and exonerated (weakest where C degraded fastest).
-**Mechanism resolved by measurement, 2026-08-26** (`results/m7_diag_scores.json`): the two leading
-suspects are dead — `fn_margin=0.02` removes only 4.3% of the top-100 hardest negatives, and random
-negatives are not separable (32.7 per query outscore the positive). At τ=0.02 just ~29 of 32,768
-negatives carry gradient, so negative *quality* dominates pool size. The surviving explanation is
-the learning rate: ours was 3e-3 against a published 1e-5–3e-4, and arXiv 2110.09348 gives an
-analytic collapse mechanism for exactly that symptom. Diagnosis is now by elimination plus theory,
-not assertion.
+**Objective grid**: distillation works, contrastive is destructive from two initialisations, and
+`reg_init` is exonerated. Numbers and curves in `m7/RESULTS.md`.
+**Mechanism narrowed by measurement, 2026-08-26** (`results/m7_diag_scores.json`): both named suspects are
+**bounded small**, not merely doubted — but measured in the *teacher's* score geometry, not the
+student's, and the suspect list never included Adam-on-sparse-rows dynamics or cross-query row
+interference. So the learning rate (3e-3 vs a published 1e-5–3e-4) is the **leading untested
+hypothesis**, not a diagnosis; the phase-2 `sane-5e5` vs `warmup-only` arms are the test.
 
 **This contradicts a mandate premise** — `instructions-m7.md` says large negative pools are nearly
 free, "exploit that first". Scale without hardness wasted the objective. Phase 2 was expanded to
