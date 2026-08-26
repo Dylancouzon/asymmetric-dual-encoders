@@ -36,11 +36,15 @@ from _paths import REPO, WORK
 
 CANDIDATES = ["arctic-embed-l", "stella-400M-v5"]
 COMPONENTS = ("cqadup-programmers", "cqadup-physics")
-LAMBDAS = [1e-3, 1e-2, 1e-1]
+# 1e-4 is here because the first run's best lambda was 1e-3, the grid's own lower EDGE: if one
+# candidate's optimum sits inside the grid and another's sits below it, the comparison is biased
+# against the second. Overridable on argv so a rerun can extend rather than redo (the per-lambda
+# results are merged into the existing JSON).
+LAMBDAS = [1e-4, 1e-3, 1e-2, 1e-1]
 TRAINQ = WORK / "trainq_texts.json"
 
 
-def run_candidate(name, X, q_texts):
+def run_candidate(name, X, q_texts, lambdas=None):
     """Imported inside the function: every module that reads the registry must be imported AFTER
     M7_ENCODER is set, and this script runs one candidate per subprocess for exactly that reason."""
     import dev_eval
@@ -55,7 +59,7 @@ def run_candidate(name, X, q_texts):
                                  dtype=torch.float16, verbose=False), dtype=np.float32)
     W0 = get_init("teacher", pre)
     out = {"dim": int(Y.shape[1]), "n_train_queries": int(Y.shape[0]), "lambdas": {}}
-    for lam in LAMBDAS:
+    for lam in (lambdas or LAMBDAS):
         t0 = time.time()
         W = sr.solve_ridge(X, Y, W0, lam)
         model = QueryTable(W, weight_init=None, learned_weights=False).cuda()
@@ -92,12 +96,19 @@ def main():
     import stage0_ridge as sr
 
     name = encoders.active().name
+    lambdas = [float(a) for a in sys.argv[1:]] or LAMBDAS
     q_texts = json.loads(TRAINQ.read_text())
     print(f"{name}: building the shared bag matrix over {len(q_texts):,} TRAIN queries", flush=True)
     tok = get_tokenizer()
     X = sr.bag_matrix(tok, q_texts, Preproc(), tok.vocab_size)
-    res = run_candidate(name, X, q_texts)
+    res = run_candidate(name, X, q_texts, lambdas)
     p = REPO / "results" / f"m7_learnability_{name}.json"
+    if p.exists():          # keep lambdas already computed; an extension run must not redo them
+        prior = json.loads(p.read_text()).get("lambdas", {})
+        prior.update(res["lambdas"])
+        res["lambdas"] = dict(sorted(prior.items(), key=lambda kv: float(kv[0])))
+        res["best_lambda"] = max(res["lambdas"],
+                                 key=lambda k: res["lambdas"][k]["dev_macro_2"])
     p.write_text(json.dumps({"_note": "Closed-form table learnability for one teacher candidate: "
                                       "ridge-fit on TRAIN query vectors, scored on dev. See the "
                                       "module docstring. Fit on TRAIN, measured on dev.",
