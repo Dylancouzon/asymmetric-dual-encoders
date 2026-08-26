@@ -230,9 +230,13 @@ def run():
           f"{len(survive):,} survive ({time.time()-t0:.0f}s)", flush=True)
 
     # --- index the TRAIN positive documents (the direction that bounds memory) ------------
+    store_of = {s: mix.load_source(s)["docstore"] for s in mix.available_sources()}
     stores, doc_key, doc_text_of = {}, {}, {}
-    for src, qid, pos in survive:
-        st = mix.load_source(src)["docstore"]
+    for n, (src, qid, pos) in enumerate(survive):
+        if n and n % 100_000 == 0:
+            print(f"    collecting positives {n:,}/{len(survive):,} "
+                  f"({len(doc_key):,} unique docs, {time.time()-t0:.0f}s)", flush=True)
+        st = store_of[src]
         if st not in stores:
             ids, texts = mix.load_store(st)
             stores[st] = dict(zip(ids, texts))
@@ -243,8 +247,12 @@ def run():
                 doc_text_of[(st, d)] = t
     keys = list(doc_key)
     print(f"[index] {len(keys):,} unique TRAIN positive documents ({time.time()-t0:.0f}s)", flush=True)
-    sk = [sketch(doc_text_of[k]) for k in keys]
-    ex = [exact_u64(doc_text_of[k]) for k in keys]
+    sk, ex = [], []
+    for n, k in enumerate(keys):
+        if n and n % 200_000 == 0:
+            print(f"    sketching {n:,}/{len(keys):,} ({time.time()-t0:.0f}s)", flush=True)
+        sk.append(sketch(doc_text_of[k]))
+        ex.append(exact_u64(doc_text_of[k]))
     inv = Inverted(sk, ex)
     del sk, ex, doc_text_of, stores
     print(f"  inverted index {inv.h.size:,} sketch hashes, {inv.nbytes/1e9:.2f} GB "
@@ -281,7 +289,7 @@ def run():
     bad = {keys[i] for i in np.nonzero(six_hit)[0]}
     r2, kept = {}, {}
     for src, qid, pos in survive:
-        st = mix.load_source(src)["docstore"]
+        st = store_of[src]
         if any((st, d) in bad for d in pos):
             r2[src] = r2.get(src, 0) + 1
             continue

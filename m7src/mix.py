@@ -1,5 +1,6 @@
 """Loader over the built training mix. Splits TRAIN vs the held-out dev slices."""
 import json
+from functools import lru_cache
 
 import numpy as np
 
@@ -11,7 +12,12 @@ PAIR_SOURCES = ["hotpotqa-train", "fever-train", "squad-train", "esci-us", "mrty
 QUERYTEXT_SOURCES = ["nqopen", "triviaqa"]
 
 
+@lru_cache(maxsize=None)
 def load_source(name):
+    """Memoized: these files are 2-21 MB of JSON and callers reach for them inside loops.
+    An un-memoized version re-parsed a 16 MB file once per training pair in decontam.py --
+    352,190 times -- and the step never finished. Bounded: five sources, ~63 MB of JSON.
+    load_store is deliberately NOT cached; hotpotqa-corpus alone is 5.23M strings."""
     return json.loads((TRAIN / "sources" / f"{name}.json").read_text())
 
 
