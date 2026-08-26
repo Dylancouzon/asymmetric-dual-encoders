@@ -16,7 +16,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoConfig, AutoModel, AutoTokenizer
 
 import encoders
 from _paths import WORK
@@ -72,10 +72,19 @@ def load_post_dense(spec, device="cuda"):
 def load_teacher(model_id=TEACHER, revision=TEACHER_REV, dtype=torch.float32, device="cuda"):
     key = (model_id, revision, str(dtype), device)
     if key not in _CACHE:
-        kw = {"trust_remote_code": True} if encoders.by_repo(model_id).trust_remote_code else {}
+        sp = encoders.by_repo(model_id)
+        kw = {"trust_remote_code": True} if sp.trust_remote_code else {}
         tok = AutoTokenizer.from_pretrained(model_id, revision=revision, **kw)
-        model = AutoModel.from_pretrained(model_id, revision=revision, dtype=dtype,
-                                          **kw).to(device).eval()
+        # config_kwargs belong on the CONFIG, not on from_pretrained: transformers 4.57 forwards
+        # unknown from_pretrained kwargs straight to the model's __init__, which raises.
+        if sp.config_kwargs:
+            cfg = AutoConfig.from_pretrained(model_id, revision=revision, **kw,
+                                             **sp.config_kwargs)
+            model = AutoModel.from_pretrained(model_id, revision=revision, config=cfg,
+                                              dtype=dtype, **kw).to(device).eval()
+        else:
+            model = AutoModel.from_pretrained(model_id, revision=revision, dtype=dtype,
+                                              **kw).to(device).eval()
         for p in model.parameters():
             p.requires_grad_(False)
         _CACHE[key] = (tok, model)

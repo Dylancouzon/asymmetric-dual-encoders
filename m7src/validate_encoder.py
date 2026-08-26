@@ -48,6 +48,8 @@ PAIRWISE_BAR = 1e-3       # max abs difference in the similarity matrix -- the r
 def st_encode(spec, texts):
     from sentence_transformers import SentenceTransformer
     kw = {"trust_remote_code": True} if spec.trust_remote_code else {}
+    if spec.config_kwargs:
+        kw["config_kwargs"] = dict(spec.config_kwargs)
     m = SentenceTransformer(spec.repo, revision=spec.revision, device="cuda",
                             model_kwargs={"dtype": torch.float32}, **kw)
     v = m.encode(texts, normalize_embeddings=True, batch_size=8, show_progress_bar=False)

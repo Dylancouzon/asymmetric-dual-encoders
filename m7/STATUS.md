@@ -7,12 +7,13 @@ Detail: `research/m7-research-2026-08-26b.md`, `research/m7-teacher-shortlist-20
 
 ## Run these first, in this order
 
-1. **`m7src/validate_encoder.py` — run it for any new Spec before the probe or a corpus encode.**
-   It compares our `teacher.encode` against sentence-transformers (which implements each repo's own
-   `modules.json`), fp32 both sides, scoring the **pairwise similarity matrix** because that is what
-   ranking consumes. bge-base passes at max pairwise Δ 1.75e-07. This exists because review caught
-   that stella's post-pooling Dense head was missing from the Spec — a bad loader would silently
-   decide the teacher, which is the M2 potion blocker all over again.
+1. **All five encoders are loader-validated** (`results/m7_encoder_validation.json`): every one
+   agrees with sentence-transformers at min cosine ≥0.9999998 and max pairwise similarity Δ ≤1.8e-07.
+   `m7src/validate_encoder.py` must pass for any *new* Spec before the probe or a corpus encode.
+   It exists because review caught stella's post-pooling Dense head missing from its Spec — the M2
+   potion loader blocker again. Two operational findings came out of it: **stella does not load
+   without `use_memory_efficient_attention=False, unpad_inputs=False`** (an earlier note called
+   xformers merely optional — wrong), and those go on the *config*, not `from_pretrained`.
 2. `m7src/teacher_probe.py` — picks stella vs gte-large on measurement. ~70K docs/candidate.
 3. Phase-2 screen (`program.phase2_screen`) — the decisive contrastive test at a published lr.
 4. Doc-side instruction test (§below), count saturation, then the teacher swap.
