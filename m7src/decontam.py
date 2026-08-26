@@ -88,6 +88,33 @@ def ngram_hashes(words):
     return acc
 
 
+SHORT_NGRAM = 4
+
+
+def short_grams(words):
+    """Word-4-grams for short texts (4 <= len < 8): the M-decontam-short fix. The 8-gram rule
+    degenerates to normalized exact match below 8 words -- the dominant NQ/FEVER query regime --
+    so short queries get rolling 4-grams ON THE QUERY PATHS ONLY (R1 and the pool pass's
+    query-leak check). Document fingerprints for >= 8-word texts are untouched, so R2/R3/pool
+    doc-vs-doc results stay bit-identical. Adopted 2026-08-26 on a measured dry run: >= 1 shared
+    4-gram removes 5,126 of 571,329 TRAIN queries (0.9%%) -- conservative, affordable."""
+    if not (SHORT_NGRAM <= len(words) < NGRAM):
+        return np.zeros(0, dtype=np.uint64)
+    wh = np.fromiter((_wh(w) for w in words), dtype=np.uint64, count=len(words))
+    n = len(wh) - SHORT_NGRAM + 1
+    acc = np.zeros(n, dtype=np.uint64)
+    for j in range(SHORT_NGRAM):
+        acc += wh[j:j + n] * (_BASE ** np.uint64(j))
+    return np.unique(acc)
+
+
+def query_grams(text):
+    """All grams a QUERY contributes on the R1 path: 8-grams (or the whole-text hash) plus the
+    short-text 4-grams. Query-side only; never use for documents."""
+    w = norm_words(text)
+    return np.unique(np.concatenate([ngram_hashes(w), short_grams(w)]))
+
+
 def sketch(text):
     return np.unique(ngram_hashes(norm_words(text)))[:SKETCH]
 
@@ -200,7 +227,7 @@ def protected_query_index():
     pq = protected_queries()
     prot = [q for v in pq.values() for q in v]
     q_ex = set(int(exact_u64(q)) for q in prot)
-    q_gram = np.unique(np.concatenate([all_grams(q) for q in prot]))
+    q_gram = np.unique(np.concatenate([query_grams(q) for q in prot]))
     return q_ex, q_gram, {k: len(v) for k, v in pq.items()}
 
 
@@ -211,7 +238,7 @@ def query_hits(text, q_ex, q_gram):
     into hours (see m7/CODEMAP.md)."""
     if int(exact_u64(text)) in q_ex:
         return "exact"
-    g = all_grams(text)
+    g = query_grams(text)
     if g.size == 0 or q_gram.size == 0:
         return None
     i = np.minimum(np.searchsorted(q_gram, g, "left"), q_gram.size - 1)
@@ -231,7 +258,7 @@ def run():
     prot_q = [q for v in pq.values() for q in v]
     print(f"[R1] protected queries: " + ", ".join(f"{k} {len(v):,}" for k, v in pq.items()), flush=True)
     q_ex = set(int(exact_u64(q)) for q in prot_q)
-    q_gram = np.unique(np.concatenate([all_grams(q) for q in prot_q]))   # sorted by np.unique
+    q_gram = np.unique(np.concatenate([query_grams(q) for q in prot_q]))  # sorted by np.unique
     print(f"  query index: {len(q_ex):,} exact, {q_gram.size:,} 8-grams ({time.time()-t0:.0f}s)", flush=True)
 
     def shares_gram(g):
@@ -252,7 +279,7 @@ def run():
             r1[src] = r1.get(src, {"exact": 0, "near": 0})
             r1[src]["exact"] += 1
             continue
-        if shares_gram(all_grams(query)):
+        if shares_gram(query_grams(query)):
             r1[src] = r1.get(src, {"exact": 0, "near": 0})
             r1[src]["near"] += 1
             continue
