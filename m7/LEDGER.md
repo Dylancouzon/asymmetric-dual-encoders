@@ -19,7 +19,9 @@ pointed at, never restated.
 - Stack: Python 3.12.14, torch 2.8.0+cu126, transformers 4.57.6, datasets 5.0.1,
   pytrec-eval-terrier 0.5.10, qdrant-edge-py 0.8.0, Qdrant server v1.19.0. Lock:
   `m7/requirements.lock.txt`.
-- Teacher: **BAAI/bge-base-en-v1.5 @ a5beb1e3e68b9ab74eb54cfd186867f64f240e1a**.
+- Teacher: **NovaSearch/stella_en_400M_v5 @ ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20**
+  (swapped 2026-08-26 from BAAI/bge-base-en-v1.5 @ a5beb1e3e68b9ab74eb54cfd186867f64f240e1a —
+  see 'Teacher ruling' below; bge-base artifacts remain only as the incumbent baseline).
 - Doc-encode dtype: **fp16 for dev + training, fp32 compute for the final run; fp16 at rest
   everywhere**, matching the M4 convention the frozen comparators were produced under. Evidence:
   cosine 1.000000 vs fp32 on 10K docs, |Δ nDCG| ≤ 3e-4 on both CQADupStack components.
@@ -99,6 +101,15 @@ Results (`results/m7_decontam.json`, `..._querytext.json`, `..._heldout.json`):
 
 **Consequence: the untouched-final partition has no clean member.** Both rows are reported with
 their overlap rate attached; neither is presented as an uncontaminated generalisation number.
+
+**Untouched-final repair (pre-registered 2026-08-26, before freeze, no candidate numbers exist):**
+add two unused CQADupStack subforums to UNTOUCHED-FINAL — **android and english**, chosen by a rule
+fixed here (alphabetically first two outside dev's programmers/physics) so the pick cannot be
+post-hoc. Same ADCS-2015 CC BY-SA evidence as the dev components; R3 measured cqadupstack
+TRAIN-positive overlap at ~0. Required before freeze: TRAIN↔android/english decontamination pass
+with counts logged here, then `freeze_m7_assets.py` pins them. Caveat to label: same *family* as
+two dev components, so "development-informed at family level", still the only non-Wikipedia,
+near-zero-overlap members of the partition.
 
 Held-out slice rule: mod-50 applied at **query** granularity, not pair — strictly stronger than
 the mandate's literal wording (per-pair holdout would leave a held-out query's text in TRAIN via
@@ -210,6 +221,14 @@ The live plan is `m7/STATUS.md`.
   is the sanctioned dev-stage selection. **If the checkpoint changes, the fusion must be
   re-selected** — a parameter frozen on one checkpoint is not valid for another.
 
+## Phase-2 selection rule (pre-registered 2026-08-26, before any stella training arm)
+
+The screen showed an arm's final-step macro is not its best-step macro (`p2x-rn-3e4` peaks at
+step 500). Rule for every arm from here on: **evaluate every 500 steps, select on best-eval,
+uniformly across arms, and the selected step count becomes part of the frozen config.** Dev-stage
+selection is sanctioned; the point of this entry is that the rule is fixed before the stella
+confirmation arms run, so no arm can be read both ways after the fact.
+
 ## Codex gate, 2026-08-26 (gpt-5.6-sol, read-only, high effort) — 6 BLOCKER / 9 MAJOR / 2 MINOR
 
 Full text: `research/m7-codex-gate-2026-08-26.md`. Its own "fix before any more compute" was the
@@ -226,24 +245,41 @@ teacher-swap boundary. Dispositions, honestly labelled:
 - M-screen: the screen could not isolate the lr; redesigned to A-only arms from one checkpoint.
 
 **OPEN, and each one blocks a specific later step, not the current compute**
-- B2 **decontamination covers positives only (~855K docs) while training touches the full 6.17M-doc
-  pool** as random/mined/KL negatives. "TRAIN↔KNOWN-TEST decontaminated" is therefore false for the
-  actual training surface. Blocks the release claim, not the teacher swap. Fix = fingerprint every
-  pool row eligible as a negative against the six, then mask matches from bank, mining and KL sets.
-- B3 **the bootstrap p-values are percentile tail probabilities, not null-distribution p-values**, so
-  Holm does not control family error over them. Blocks every confirmatory claim. Fix = paired
-  label-swap randomisation test for the macro statistic, type-I error verified by simulation, with
-  percentile/BCa intervals kept for *intervals* only.
-- B5 **the frozen fusion function differs between dev selection and final scoring** (selection drops
-  BM25 `score <= 0`, final keeps them; convex fusion min-max normalises over what is returned, so
-  the minimum and every normalised score move). The Tier-1 system would not be the function selected
-  on dev. Fix = one shared run builder, asserted byte-identical across cached/uncached/selection/
-  final paths.
+- B2 **FIX RUNNING 2026-08-26**: `decontam_pool.py` fingerprints all 6,169,142 pool rows against
+  the six's documents (R2 rule) AND the six + untouched-final queries (>= 1 shared query-gram —
+  R1's rule; a test query's text entering the loss as a negative is query leakage). Dev-query hits
+  measured, not banned (heldout-* queries overlap the pool by construction). Output
+  `results/m7_decontam_pool.json` + `work/decontam/banned_pool_rows.npy`; `train.py` REFUSES to
+  run without the mask and enforces it at the bank, both miners (cache sigs carry the mask digest,
+  so pre-mask mining can never be reused), and dataset-provided hard negatives; the KL set draws
+  only from those, so it is clean by construction. `scripts/check_mining.py` injects an empty mask
+  (synthetic pool: global rows do not apply).
+- B3 **FIXED 2026-08-26, before any confirmatory number exists** (`results/m7_final_run.json`
+  does not exist; gate decisions were CI-based, and the one committed Holm output is exploratory).
+  `boot.signflip` is a paired sign-flip randomisation test on the macro (flips within query,
+  averages within dataset first; add-one p, valid at any n), Holm now consumes only these;
+  `paired` renamed its tail mass to `boot_tail` so it can't be mistaken again. Type-I error
+  verified by simulation on the real frozen vectors with label-swap nulls:
+  `results/m7_signflip_calibration.json` (S=1000, 3-pair Holm family).
+- B5 **FIXED 2026-08-26**: `fusion.bm25_run`/`fusion._to_run` is the one builder (drop `s <= 0`
+  padding + self-hits — the selection semantics, which the padding-free function should be);
+  `select_fusion` wraps it with the raw-array cache (existing caches stay valid), `final_run`'s
+  local copy deleted. `test_fusion_paths.py` asserts byte-identical runs across cached/uncached/
+  selection/final and guards against a re-fork; it also exposed and fixed a real crash: `convex`
+  had no defined behaviour for a query with zero positive BM25 matches (padding used to hide it).
+  No committed number used the divergent pair (the final run never executed; every committed fused
+  number is selection-side). The p1-objB fusion files (`results/m7_fusion_p1-objB.json`,
+  `..._report_p1-objB.json`) were selected with the pre-B5 builder AND a bge-era checkpoint —
+  superseded twice over; fusion must be re-selected on the stella checkpoint with the fixed builder
+  before FREEZE.json is written.
 - B6 **the "two six-set accesses" rule is already breached**: `bench_throughput.py` called
   `load_beir("fiqa")`, which parses FiQA test qrels, and that was neither logged harness validation
   nor the final run. Recorded here as the required ledger entry. The rule is convention-based, not
   enforced — any script can read committed plaintext qrels without `final_run.py` noticing — and the
-  report must say so rather than claim enforcement.
+  report must say so rather than claim enforcement. **Partial fix 2026-08-26: `load_beir` now
+  appends every six/untouched-final load to `m7/SIX_ACCESS.log` (an audit trail, not a lock;
+  starts today — prior accesses are the entries in this ledger). The concession still goes in
+  the report.**
 - M-calibration **the prose PI half-widths disagree with the JSON** (recomputation gives 0.02818 /
   0.03294 / 0.03446 vs the 0.024 / 0.030 / 0.035 in STATUS), and **"bge-base cannot clear Tier 2 at
   any retention" is false** — its teacher-only lower bound clears above ~0.955 retention. Also, the
@@ -256,11 +292,16 @@ teacher-swap boundary. Dispositions, honestly labelled:
 - M-probe-cache **probe cache files are keyed on name+tag only** — no revision, corpus hash, prompt,
   pooling, Dense, dtype, or remote-code commit — so a pre-Dense-fix stella cache would be reused.
   Also true that `trust_remote_code` weights revisions do not pin the remote code.
-- M-perquery **`validate_perquery.py` validates each vector's MEAN**, so a permutation of scores
-  across qids passes while destroying the pairing every CI depends on; `boot._align` intersects
-  silently and nDCG drops missing queries. Blocks trust in the frozen comparators.
-- M-decontam-short **the 8-word fingerprint rule degenerates to normalised exact match for short
-  queries**, which is the dominant NQ/FEVER regime and exactly where the dev win is training-adjacent.
+- M-perquery **FIXED 2026-08-26**: `validate_perquery.py` now checks structure (sorted/unique
+  qids, vector lengths), per-qid pairing hashes frozen in `results/perquery.sha256.json`, and —
+  decisively — an independent full BM25 per-qid recompute from `frozen_eval/` matched the frozen
+  vectors **3,727/3,727 across all six** (logged class-(a) access, `m7/SIX_ACCESS.log`).
+  `boot._align(strict=True)` now refuses silent qid/dataset shrinkage; confirmatory paths use it.
+- M-decontam-short **FIXED 2026-08-26** (logged before the stella confirmatory arms): queries of
+  4-7 words emit rolling word-4-grams on the R1 and pool-pass query paths (`decontam.query_grams`);
+  >= 8-word and document fingerprints bit-identical. Dry-run sized first: removes 5,126 of 571,329
+  TRAIN queries (0.9%). R1/querytext/heldout re-run under the new rule; downstream trainq/mining
+  caches invalidate via their content-hashed keys.
 - M-ridge **"structural upper bound" is unearned**: the ridge solves penalised unnormalised MSE at a
   dev-selected lambda, while objective B is normalised cosine + KL and the endpoint is retrieval.
   Claim must be restricted to that MSE problem.
@@ -303,4 +344,16 @@ from the frozen per-query vectors in `results/perquery.json`, and report the six
 secondary with the exposure labelled at the dataset row. Codex's M-stella-ship says labelling alone
 does not remove the bias, and this is the answer to it. The tier bars are defined on the six, so a
 four-set primary claim needs its own bars computed the same way, from the same frozen vectors.
+
+## Teacher ruling (Dylan, 2026-08-26 — logged before any six-set access)
+
+**Teacher is `NovaSearch/stella_en_400M_v5 @ ffeb2b7e`**, chosen on the distilled-table criterion
+(+0.0365 [0.0249, 0.0481] over bge-base, `results/m7_learnability_report.json`). Dylan ruled the
+**six-set claim stays primary**; the four datasets with no recorded stella exposure (SciFact,
+NFCorpus, SCIDOCS, TREC-COVID) are a pre-registered robustness number. Both bar sets were
+precomputed from the frozen per-query vectors BEFORE any stella encode
+(`results/m7_bars_clean4.json`); promoting clean-4 to headline later is legal only if labelled
+post-hoc. ArguAna/FiQA2018 exposure must be labelled at the dataset row. All new work keys on
+`M7_ENCODER=stella-400M-v5` with a separate refs file (`work/devres/refs-stella-400M-v5.json`;
+BM25/potion rows copied, teacher-independent) so no comparison can mix teachers.
 

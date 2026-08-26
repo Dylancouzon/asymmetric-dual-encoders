@@ -114,11 +114,11 @@ REGISTRY = {
                      "answer the query.\nQuery: ",
         notes="MRL heads at 256/768/1024+; ArguAna and FiQA2018 are on its recorded training "
               "list, which is 2 of our 6 eval datasets -- must be labelled if used"),
-    # MEAN-POOLED, and the reason they are here: the learnability probe found that a teacher's
-    # approximability by a bag-of-token-vectors tracks its POOLING, not its size or its MTEB score
-    # (stella, mean, ratio 0.715 > bge-base, CLS, 0.686 > arctic-l, CLS, 0.526 > gte-large, CLS,
-    # 0.431). Mean pooling IS an average over token positions, which is the operation a lookup table
-    # performs, so the hypothesis has a mechanism. e5 is the strongest permissive mean-pooled English
+    # MEAN-POOLED candidates. They were added to test the hypothesis that approximability tracks
+    # pooling — REFUTED by the arctic-embed-l-mean control (same weights, mean read-out: ratio
+    # 0.526 -> 0.472, i.e. worse) and by e5 (mean) sitting below CLS bge-base. Stella's
+    # approximability advantage is unexplained; see EXPLORED.md before searching candidates on any
+    # pooling-based rule. e5 is the strongest permissive mean-pooled English
     # family at our vocab and dim: MIT, intfloat is a clean vendor, 30,522 BERT WordPiece.
     # e5 REQUIRES its "query: " / "passage: " prefixes; omitting them is a known large regression.
     "e5-large-v2": Spec(
