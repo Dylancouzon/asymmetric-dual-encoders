@@ -32,7 +32,7 @@ def main():
             continue
         qs = json.loads(p.read_text())
         train_idx = [i for i in range(len(qs)) if not heldout(s, str(i))]
-        keep, drop = [], {"exact": 0, "near": 0}
+        keep, drop = [], {"exact": 0, "near": 0, "contains": 0}
         for i in train_idx:
             h = query_hits(qs[i], q_ex, q_gram, q_whole)
             if h:
@@ -50,7 +50,7 @@ def main():
     if ps_dir.exists():
         for f in sorted(ps_dir.glob("pseudoq-*.json")):
             qs = json.loads(f.read_text())
-            keep, drop = [], {"exact": 0, "near": 0}
+            keep, drop = [], {"exact": 0, "near": 0, "contains": 0}
             for i, q in enumerate(qs):
                 h = query_hits(q, q_ex, q_gram, q_whole)
                 if h:
