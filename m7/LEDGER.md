@@ -245,3 +245,15 @@ This matters well beyond the slice being small. ArguAna's queries average 193 wo
 No approved source fixes this: long argumentative queries live in args.me / idebate, which is
 ArguAna's own source family and excluded by the contamination map. Same structural wall as the
 document-side domain gap.
+
+### TRAIN ↔ held-out decontamination outcome
+
+`results/m7_decontam_heldout.json`: **2,211 further pairs removed**, leaving **349,934** TRAIN
+pairs. By source: fever-train 1,847 · hotpotqa-train 295 · squad-train 64 · esci-us 4 · mrtydi-en 1.
+
+This pass was not in the naive reading of the mandate and it earned its place. The mod-50 rule
+guarantees held-out queries are *exactly* disjoint from TRAIN, not near-duplicate-disjoint —
+and FEVER turns out to contain many near-identical claims about the same entity, so 1,847 of them
+straddled the split. Without this pass the heldout-train dev component would have been scoring a
+model on paraphrases of its own training queries, and every dev-based selection decision built on
+it would have been inflated.
