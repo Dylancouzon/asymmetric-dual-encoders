@@ -39,44 +39,30 @@ CANDS = ("bge-base-en-v1.5", "bge-large-en-v1.5", "gte-large-en-v1.5", "stella-4
          "arctic-embed-l")
 
 
-# Pooling AND the post-pooling Dense both come from teacher.py, so the probe cannot drift from
-# the encoder the rest of the pipeline uses.
-from teacher import encode_batch, load_post_dense, load_teacher, release_teacher
+# The loader, the pooling, the post-pooling Dense AND the batching all come from teacher.py, so
+# the probe cannot drift from the encoder the rest of the pipeline uses.
+import teacher
+from teacher import release_teacher
 
 
-@torch.no_grad()
 def encode(spec, texts, prefix, tag):
-    """Length-bucketed fp16 encode. Cached per (candidate, tag) so reruns are free."""
-    maxlen = spec.max_length
+    """fp16 encode via teacher.encode, cached per (candidate, tag) so reruns are free.
+
+    This used to reimplement teacher.encode's length-bucketed batching, and got it wrong: it sized
+    each batch from the SHORTEST sequence in it while the tokenizer pads to the LONGEST, so a batch
+    starting at 96 tokens could take the 256 cap and pad to 512 -- 131K tokens against a 24,576
+    budget. bge-base absorbed it; bge-large (1024-d) sat on the 10 GB ceiling and the allocator
+    thrashed, turning a ~2-minute component into 50+ minutes at 100% GPU "utilization" and 1%
+    memory bandwidth. Do not fork the harness's batching; call it.
+    """
     p = OUT / f"{spec.name}-{tag}.npy"
     if p.exists():
         return np.load(p)
-    # Load through teacher.load_teacher, not a second from_pretrained call: it is the only place
-    # that knows a Spec's config_kwargs, and stella does not load without them at all. A private
-    # loader here is how the probe would have ranked a candidate it could not even instantiate --
-    # or, worse, one it instantiated differently from the rest of the pipeline.
-    tok, model = load_teacher(spec.repo, spec.revision, torch.float16, "cuda")
-    dense = load_post_dense(spec, "cuda")
-    full = [prefix + t for t in texts]
-    lens = [len(tok(t, add_special_tokens=True, truncation=True,
-                    max_length=maxlen)["input_ids"]) for t in full]
-    order = np.argsort(np.array(lens), kind="stable")
-    # The Spec's dim, not the backbone's hidden size: with a post-pooling Dense the output width
-    # is the Dense's. They coincide for stella's square 1024->1024 head, but an MRL head would
-    # silently write 256 values into 1024-wide rows.
-    dim = spec.dim if dense is None else int(dense[0].shape[0])
-    if dim != spec.dim:
-        raise AssertionError(f"{spec.name}: encode width {dim} != Spec.dim {spec.dim}")
-    out = np.empty((len(full), dim), dtype=np.float16)
-    i, budget = 0, 24576  # tokens per batch; keeps a 435M model well inside 10 GB
-    while i < len(order):
-        n = max(1, min(256, budget // max(lens[order[i]], 1)))
-        idx = order[i:i + n]
-        out[idx] = encode_batch(tok, model, [full[j] for j in idx], maxlen, "cuda",
-                                pooling=spec.pooling, dense=dense).astype(np.float16)
-        i += n
-    np.save(p, out)
-    return out
+    v = teacher.encode(texts, prefix=prefix, max_length=spec.max_length, batch_tokens=16384,
+                       model_id=spec.repo, revision=spec.revision, dtype=torch.float16,
+                       device="cuda", verbose=True).astype(np.float16)
+    np.save(p, v)
+    return v
 
 
 def main(names):
