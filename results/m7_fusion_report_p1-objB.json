@@ -1,0 +1,181 @@
+{
+ "_note": "Per-component decomposition of the dev fusion gain for the frozen spec in results/m7_fusion_<run>.json. The macro alone cannot tell a broad gain from a one-component gain, and the six-set has no NQ-like component, so transfer depends on the breadth of this table -- especially the CQADupStack rows, the nearest dev analogue to FiQA. Dev only.",
+ "run_id": "p1-objB",
+ "spec": {
+  "family": "convex",
+  "param": 0.5,
+  "depth": 1000
+ },
+ "per_component": {
+  "nq-250k": {
+   "dense": 0.725,
+   "bm25": 0.5804,
+   "fused": 0.7561
+  },
+  "hotpotqa": {
+   "dense": 0.5537,
+   "bm25": 0.5851,
+   "fused": 0.6955
+  },
+  "cqadup-programmers": {
+   "dense": 0.2772,
+   "bm25": 0.2975,
+   "fused": 0.3499
+  },
+  "cqadup-physics": {
+   "dense": 0.3622,
+   "bm25": 0.3471,
+   "fused": 0.4064
+  }
+ },
+ "macro": {
+  "dense": 0.4795,
+  "bm25": 0.4525,
+  "fused": 0.552
+ },
+ "macro_gain_fused_over_dense": 0.0725,
+ "fused_vs_dense": {
+  "delta": 0.0725,
+  "ci95": [
+   0.0665,
+   0.0784
+  ],
+  "p": 0.0,
+  "p_str": "<0.0001",
+  "alternative": "greater",
+  "B": 10000,
+  "seed": 0,
+  "one_sided_lower_2.5": 0.0665,
+  "per_dataset": {
+   "cqadup-physics": {
+    "n": 1039,
+    "delta": 0.0441,
+    "ci95": [
+     0.0305,
+     0.0578
+    ]
+   },
+   "cqadup-programmers": {
+    "n": 876,
+    "delta": 0.0728,
+    "ci95": [
+     0.0567,
+     0.0891
+    ]
+   },
+   "hotpotqa": {
+    "n": 7405,
+    "delta": 0.1418,
+    "ci95": [
+     0.1364,
+     0.1472
+    ]
+   },
+   "nq-250k": {
+    "n": 3452,
+    "delta": 0.0312,
+    "ci95": [
+     0.0222,
+     0.0402
+    ]
+   }
+  },
+  "resolved": true
+ },
+ "fused_vs_bm25": {
+  "delta": 0.0995,
+  "ci95": [
+   0.0942,
+   0.1046
+  ],
+  "p": 0.0,
+  "p_str": "<0.0001",
+  "alternative": "greater",
+  "B": 10000,
+  "seed": 0,
+  "one_sided_lower_2.5": 0.0942,
+  "per_dataset": {
+   "cqadup-physics": {
+    "n": 1039,
+    "delta": 0.0593,
+    "ci95": [
+     0.0475,
+     0.0712
+    ]
+   },
+   "cqadup-programmers": {
+    "n": 876,
+    "delta": 0.0524,
+    "ci95": [
+     0.0384,
+     0.0663
+    ]
+   },
+   "hotpotqa": {
+    "n": 7405,
+    "delta": 0.1103,
+    "ci95": [
+     0.1055,
+     0.1154
+    ]
+   },
+   "nq-250k": {
+    "n": 3452,
+    "delta": 0.1758,
+    "ci95": [
+     0.1667,
+     0.1849
+    ]
+   }
+  },
+  "resolved": true
+ },
+ "dense_vs_bm25": {
+  "delta": 0.027,
+  "ci95": [
+   0.0188,
+   0.0353
+  ],
+  "p": 0.0,
+  "p_str": "<0.0001",
+  "alternative": "greater",
+  "B": 10000,
+  "seed": 0,
+  "one_sided_lower_2.5": 0.0188,
+  "per_dataset": {
+   "cqadup-physics": {
+    "n": 1039,
+    "delta": 0.0152,
+    "ci95": [
+     -0.004,
+     0.0346
+    ]
+   },
+   "cqadup-programmers": {
+    "n": 876,
+    "delta": -0.0203,
+    "ci95": [
+     -0.0429,
+     0.0022
+    ]
+   },
+   "hotpotqa": {
+    "n": 7405,
+    "delta": -0.0314,
+    "ci95": [
+     -0.0393,
+     -0.0234
+    ]
+   },
+   "nq-250k": {
+    "n": 3452,
+    "delta": 0.1446,
+    "ci95": [
+     0.1312,
+     0.158
+    ]
+   }
+  },
+  "resolved": true
+ }
+}

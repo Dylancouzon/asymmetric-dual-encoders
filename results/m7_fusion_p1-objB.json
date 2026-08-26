@@ -1,0 +1,75 @@
+{
+ "family": "convex",
+ "param": 0.5,
+ "dev_macro": 0.551980017979043,
+ "grid": [
+  {
+   "family": "rrf",
+   "param": 10,
+   "macro": 0.539288126887324
+  },
+  {
+   "family": "rrf",
+   "param": 20,
+   "macro": 0.5373255621335402
+  },
+  {
+   "family": "rrf",
+   "param": 30,
+   "macro": 0.5359952821052547
+  },
+  {
+   "family": "rrf",
+   "param": 60,
+   "macro": 0.5298265805881679
+  },
+  {
+   "family": "rrf",
+   "param": 100,
+   "macro": 0.5263402172033403
+  },
+  {
+   "family": "convex",
+   "param": 0.3,
+   "macro": 0.5231869686193292
+  },
+  {
+   "family": "convex",
+   "param": 0.4,
+   "macro": 0.5402039047051255
+  },
+  {
+   "family": "convex",
+   "param": 0.5,
+   "macro": 0.551980017979043
+  },
+  {
+   "family": "convex",
+   "param": 0.6,
+   "macro": 0.5504706686572685
+  },
+  {
+   "family": "convex",
+   "param": 0.7,
+   "macro": 0.5413459167982453
+  },
+  {
+   "family": "convex",
+   "param": 0.8,
+   "macro": 0.5246343004918046
+  },
+  {
+   "family": "convex",
+   "param": 0.9,
+   "macro": 0.5025444483719568
+  }
+ ],
+ "depth": 1000,
+ "components": [
+  "nq-250k",
+  "hotpotqa",
+  "cqadup-programmers",
+  "cqadup-physics"
+ ],
+ "fitted_against": "int8 table (the released artifact)"
+}
