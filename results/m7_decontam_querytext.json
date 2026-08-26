@@ -4,20 +4,20 @@
    "n_total": 87925,
    "n_heldout": 1813,
    "n_train": 86112,
-   "n_kept": 85899,
+   "n_kept": 85895,
    "dropped": {
     "exact": 2,
-    "near": 211
+    "near": 215
    }
   },
   "triviaqa": {
    "n_total": 138384,
    "n_heldout": 2733,
    "n_train": 135651,
-   "n_kept": 135496,
+   "n_kept": 134784,
    "dropped": {
     "exact": 10,
-    "near": 145
+    "near": 857
    }
   }
  },
@@ -25,6 +25,6 @@
  "protected_query_counts": {
   "six": 3727,
   "dev": 12772,
-  "untouched-final": 7066
+  "untouched-final": 9335
  }
 }

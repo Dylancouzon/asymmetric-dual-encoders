@@ -1,29 +1,29 @@
 {
  "n_train_pairs_in": 353519,
- "n_train_pairs_kept": 352145,
+ "n_train_pairs_kept": 347563,
  "R1_query_removals": {
   "hotpotqa-train": {
    "exact": 0,
-   "near": 1103
+   "near": 1156
   },
   "fever-train": {
    "exact": 2,
-   "near": 162
+   "near": 4426
   },
   "squad-train": {
    "exact": 0,
-   "near": 42
+   "near": 260
   },
   "esci-us": {
-   "exact": 17,
-   "near": 0
+   "exact": 18,
+   "near": 1
   },
   "mrtydi-en": {
    "exact": 1,
-   "near": 2
+   "near": 47
   }
  },
- "R1_total": 1329,
+ "R1_total": 5911,
  "R2_six_doc_removals": {
   "hotpotqa-train": 25,
   "fever-train": 3,
@@ -37,44 +37,50 @@
    "protected_docs_scanned": 272117,
    "train_docs_exact_dup": 0,
    "train_docs_near_dup": 23,
-   "train_docs_total": 855324,
+   "train_docs_total": 854921,
    "near_dup_rate": 3e-05
   },
   "cqadupstack-dev": {
    "protected_docs_scanned": 70492,
    "train_docs_exact_dup": 0,
    "train_docs_near_dup": 1,
-   "train_docs_total": 855324,
+   "train_docs_total": 854921,
    "near_dup_rate": 0.0
-  },
-  "dbpedia-entity-untouched": {
-   "protected_docs_scanned": 4635922,
-   "train_docs_exact_dup": 15523,
-   "train_docs_near_dup": 79595,
-   "train_docs_total": 855324,
-   "near_dup_rate": 0.09322
-  },
-  "hotpotqa-dev": "100% by construction: hotpotqa-corpus IS the dev corpus",
-  "fever-untouched": {
-   "protected_docs_scanned": 5416568,
-   "train_docs_exact_dup": 47289,
-   "train_docs_near_dup": 96573,
-   "train_docs_total": 856515,
-   "near_dup_rate": 0.113
   },
   "nq-250k-dev": {
    "protected_docs_scanned": 250000,
-   "train_docs_exact_dup": 406,
-   "train_docs_near_dup": 3942,
-   "train_docs_total": 856515,
-   "near_dup_rate": 0.0046
+   "train_docs_exact_dup": 404,
+   "train_docs_near_dup": 3919,
+   "train_docs_total": 854921,
+   "near_dup_rate": 0.00458
   },
-  "fever-untouched-note": "fever-pos is drawn from this corpus by construction; the rate above also covers the hotpotqa/squad/mrtydi Wikipedia positives against it"
+  "dbpedia-entity-untouched": {
+   "protected_docs_scanned": 4635922,
+   "train_docs_exact_dup": 15474,
+   "train_docs_near_dup": 79356,
+   "train_docs_total": 854921,
+   "near_dup_rate": 0.09299
+  },
+  "fever-untouched": {
+   "protected_docs_scanned": 5416568,
+   "train_docs_exact_dup": 46534,
+   "train_docs_near_dup": 95355,
+   "train_docs_total": 854921,
+   "near_dup_rate": 0.11179
+  },
+  "cqadupstack-untouched (android+english)": {
+   "protected_docs_scanned": 63219,
+   "train_docs_exact_dup": 0,
+   "train_docs_near_dup": 1,
+   "train_docs_total": 854921,
+   "near_dup_rate": 0.0
+  },
+  "hotpotqa-dev": "100% by construction: hotpotqa-corpus IS the dev corpus"
  },
  "protected_queries": {
   "six": 3727,
   "dev": 12772,
-  "untouched-final": 7066
+  "untouched-final": 9335
  },
  "params": {
   "ngram": 8,
@@ -87,6 +93,5 @@
   "R2": "remove on positive-document overlap with the six",
   "R3": "measure and disclose document overlap with dev and untouched-final; see the module docstring and m7/LEDGER.md for why removal there would delete the sources rather than decontaminate them"
  },
- "seconds": 1122.4,
- "R3_extra_sweep_seconds": 1364.8
+ "seconds": 2650.9
 }

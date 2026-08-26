@@ -1,69 +1,51 @@
 # M7 status
 
-**Stage:** teacher swapped to **stella_en_400M_v5** (Dylan, 2026-08-26, on the learnability probe);
-its 6.17M-doc encode is running (~3.5 h, `logs/stella_swap.log`). Phase 2 answered. Next session:
-finish the swap, then the four Codex blockers. Detail in `m7/RESULTS.md` (runs), `m7/LEDGER.md`
-(protocol + the Codex gate's open list), `m7/EXPLORED.md` (closed avenues), `results/m7_*.json`.
+**Stage:** stella swap encode RUNNING (`logs/stella_swap.log`, hotpotqa ~1/3 done ~17:30; realistic
+finish ~20:00–20:30, then pool → teacher refs → closed-form ridge, all in the same idempotent
+driver). Meanwhile this session closed **every open Codex-gate finding** and tightened
+decontamination — all logged in `LEDGER.md` before any number they affect. Detail:
+`m7/RESULTS.md` (runs), `m7/LEDGER.md` (protocol), `m7/EXPLORED.md`, `results/m7_*.json`.
 
-## Run these next, in this order
+## Closed today (dispositions + evidence in LEDGER)
 
-1. **Check `logs/stella_swap.log` finished** (`run_stella_swap.sh` is idempotent; re-run it to
-   resume — every step is cached). It does: cache-key gate → init-row gate → dev encodes
-   (nq-250k, hotpotqa) → 6.17M-doc pool → teacher reference rows → closed-form ridge on the full
-   dev suite. That last number is the first real read on stella's retention.
-2. **`gate.py` under `M7_ENCODER=stella-400M-v5`** — its refs file is separate
-   (`work/devres/refs-stella-400M-v5.json`, BM25/potion rows copied since they are
-   teacher-independent), so no comparison can mix teachers.
-3. **Re-run the phase-2 winner under stella**: objective A from a stella-distilled B checkpoint, lr
-   in the 5e-5…3e-4 band, `hard_neg_k=0`. Everything about that band was established on bge-base and
-   needs one confirmation, not a re-sweep.
-4. **Then the four Codex blockers** (below). They block claims, not compute, and nothing confirmatory
-   can be reported until they are fixed.
+- **B2** pool-negatives decontamination: 4,413 of 6.17M rows banned; `train.py` refuses to run
+  unmasked; miners' cache sigs carry the mask digest. `results/m7_decontam_pool.json`.
+- **B3** sign-flip randomization p-values (`boot.signflip`), Holm consumes only these; type-I
+  verified on real vectors, FWER 0.013 at α=0.025. `results/m7_signflip_calibration.json`.
+- **B5** one shared BM25 builder (`fusion.bm25_run`) + `test_fusion_paths.py`; found and fixed a
+  real crash (convex on empty runs). p1-objB fusion selection superseded — re-select on stella.
+- **B6** `load_beir` writes `m7/SIX_ACCESS.log` (audit, not a lock; concession still goes in report).
+- **M-perquery** per-qid hashes frozen + independent BM25 recompute matched 3,727/3,727.
+- **M-decontam-short** word-4-grams for 4–7-word queries; R1 family re-run: TRAIN now
+  **345,372 pairs** + 220,679 querytext rows. **MINOR-int8-weights** `table.save_release` folds
+  weights into rows (exact); G4 gates that shape from now on.
+- **Untouched-final repair:** cqadup-android/english added pre-freeze by a deterministic rule;
+  measured TRAIN overlap ~0 (vs FEVER 11.3%, DBpedia 9.32%). Wired into decontam/freeze/final_run.
+- Ridge cache paths now encoder-tagged (a stale 768-d bge table would have crashed tonight's step 7).
 
-## Why stella, and what it cost
+## Run next, in order
 
-`results/m7_learnability_report.json`: eight candidates ranked by the **closed-form table distilled
-from each**, fitted on 349,934 TRAIN query vectors, scored against each teacher's own documents.
-Every row CI-resolved against the incumbent; only stella beats it (**+0.0365 [0.0249, 0.0481]**).
+1. **Wait for `run_stella_swap.sh` to finish** (idempotent; re-run to resume). The ridge number at
+   the end is the first real read on stella retention. Then commit `results/m7_stage0_*` under the
+   new tagged name.
+2. **Stella objective-B checkpoint** (`s1-objB`: p1-objB's cfg under `M7_ENCODER=stella-400M-v5`;
+   trainq re-encode happens automatically — kept.json changed). Then `gate.py s1-objB`.
+3. **Phase-2 confirm on stella:** A-only arms from s1-objB, lr {5e-5, 1e-4, 3e-4}, `hard_neg_k=0`,
+   `eval_every=500`; **best-eval selection, re-run winner at its best step** (pre-registered in
+   LEDGER). One confirmation, not a re-sweep.
+4. **Fusion re-selection** with the fixed builder on the final stella checkpoint, then freeze.
+5. Codex 5.6-sol adversarial review of today's work: launched this session (read-only, no compute);
+   findings will be actioned + ledgered.
 
-**Spearman(teacher ceiling, distilled table) = 0.000.** arctic-embed-l has the best ceiling of the
-eight and a table **0.0480 below the incumbent** — it was approved that morning on a symmetric probe,
-and swapping to it would have shipped a worse system after a 3-hour encode. Two mechanisms were
-tested and refuted: pooling (`arctic-embed-l-mean`, same weights and dim, ratio 0.526 → 0.472) and
-cosine agreement as a proxy (rises with lambda while nDCG falls; mis-ranks candidates). **Stella's
-advantage is unexplained**, so there is no attribute on which to search further candidates.
+## Standing constraints
 
-Cost: stella discloses **ArguAna and FiQA2018** — 2 of the 6 confirmatory datasets. Dylan's call is
-the **six-set claim as primary**, with the four clean datasets (SciFact, NFCorpus, SCIDOCS,
-TREC-COVID) as a robustness number. Both bars are precomputed in `results/m7_bars_clean4.json`, and
-the restriction is not a soft option: Tier 2 gets easier (0.4583 → 0.4541), Tier 1 harder
-(0.4868 → 0.4974). Promoting the four-set to headline later is legitimate **but must be labelled
-post-hoc** — see `LEDGER.md`.
-
-## What phase 2 settled
-
-`results/m7_phase2_screen_cis.json`, all arms from one fixed p1-objB checkpoint:
-
-- **The contrastive objective was never broken — phase 1 measured its learning rate.** 5e-5 to 3e-4
-  all improve the table, CI-resolved and mutually unresolved, so the optimum is a **band**. 1e-3
-  still helps; 3e-3 (phase 1's lr) is negative. `contrastive_verdict()` records that the kill
-  criterion may not fire.
-- **Mined hard negatives HURT** at matched lr: random-only +0.0034 [0.0019, 0.0049]. `phase2_negatives`
-  is demoted. `fn_masked_frac` is 0.0051, so the false-negative filter is not the mechanism.
-- **The gain is small**: +0.0111 proxy macro, against the retention points the bars need. An arm's
-  final-step macro is not its best-step macro (3e-4 peaks at step 500) — fix the step budget in the
-  config or select on best-eval consistently, and say which.
-
-## Still open from the Codex gate (full list + dispositions in `LEDGER.md`)
-
-Four blockers, none stopping compute, all stopping a *claim*: decontamination indexed only the 855K
-positives while training touches all 6.17M pool docs; the bootstrap p-values are percentile tails, so
-Holm controls nothing over them; the frozen fusion function differs between dev selection and final
-scoring; and the two-access rule is already breached (`bench_throughput` read FiQA qrels), now logged.
+Six-set claim primary (Dylan 2026-08-26); clean-4 robustness bars precomputed
+(`results/m7_bars_clean4.json`); stella's ArguAna/FiQA2018 exposure labelled at the dataset row.
+Sequential GPU jobs, 18 GB RAM ceiling, smoke before long runs, commit+push after every experiment.
 
 ## Open for Dylan
 
-1. **Nothing is blocking.** The teacher ruling is made and logged; the encode is running.
-2. **Host:** Windows Update rebooted the box mid-morning once already — a 3.5 h encode is exposed.
-3. Later: HF release go, and a view on shipping a teacher whose training data covers 2 of the 6 eval
-   sets (the four-set robustness number is the technical answer; the presentation is a judgement).
+1. Nothing blocking. Encode + fixes running/landed; confirmation chain queues on the GPU tonight.
+2. Host: Windows Update reboots remain the biggest risk to long encodes (one already this morning).
+3. Later: HF release go; the stella-exposure presentation question is answered by the pre-registered
+   clean-4 robustness bars.
