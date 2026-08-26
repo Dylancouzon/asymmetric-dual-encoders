@@ -40,7 +40,7 @@ from teacher import QUERY_PREFIX, encode_cached
 LEDGER = REPO / "m7" / "LEDGER.md"
 FROZEN = REPO / "results" / "frozen_eval"
 MANIFEST = REPO / "results" / "eval_manifest.json"
-UNTOUCHED = ["fever", "dbpedia-entity"]
+UNTOUCHED = ["fever", "dbpedia-entity", "cqadup-android", "cqadup-english"]
 CONFIRMATORY = {"C1_int8_table_gt_lr_dense_pertask": ("int8-table", "lr-dense-pertask"),
                 "C2_int8_table_gt_bm25": ("int8-table", "bm25"),
                 "C3_released_system_gt_opensearch": ("released-system", "opensearch-doc-v3-gte")}
@@ -105,6 +105,9 @@ def verify_and_load(ds, kind):
     man = json.loads(MANIFEST.read_text())[key][ds]
     if kind == "six":
         doc_ids, doc_texts, *_ = load_beir(ds)
+    elif ds.startswith("cqadup-"):
+        import devsuite
+        doc_ids, doc_texts, *_ = devsuite.load(ds)
     else:
         from datasets import load_dataset
         from core import doc_text

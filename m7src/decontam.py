@@ -216,6 +216,11 @@ def protected_queries():
         keep = {str(r["query-id"]) for r in load_dataset(f"BeIR/{ds}-qrels", split="test")}
         q = load_dataset(f"BeIR/{ds}", "queries")["queries"]
         unt += [t for i, t in zip(list(q["_id"]), list(q["text"])) if str(i) in keep]
+    # untouched-final repair (LEDGER 2026-08-26): two unused CQADupStack subforums, chosen by a
+    # rule fixed before any candidate number (alphabetically first two outside dev's pair).
+    import devsuite
+    for c in ("cqadup-android", "cqadup-english"):
+        unt += devsuite.load(c)[3]
     qs["untouched-final"] = unt
     return qs
 
@@ -345,6 +350,12 @@ def run():
     dbp_res, _ = sweep("dbpedia-untouched", stream_beir_docs("dbpedia-entity"), 4_635_922)
     fev_res, _ = sweep("fever-untouched", stream_beir_docs("fever"), 5_416_568)
 
+    def stream_cqa_untouched_docs():
+        import devsuite
+        for c in ("cqadup-android", "cqadup-english"):
+            yield from devsuite.load(c)[1]
+    cqa_unt_res, _ = sweep("cqadupstack-untouched", stream_cqa_untouched_docs())
+
     # --- R2 removal (the six only); R3 is disclosure --------------------------------------
     bad = {keys[i] for i in np.nonzero(six_hit)[0]}
     r2, kept = {}, {}
@@ -366,6 +377,7 @@ def run():
                                  "nq-250k-dev": nq_res,
                                  "dbpedia-entity-untouched": dbp_res,
                                  "fever-untouched": fev_res,
+                                 "cqadupstack-untouched (android+english)": cqa_unt_res,
                                  "hotpotqa-dev": "100% by construction: hotpotqa-corpus IS the dev corpus"},
         "protected_queries": {k: len(v) for k, v in pq.items()},
         "params": {"ngram": NGRAM, "sketch": SKETCH, "dup_share": DUP_SHARE,

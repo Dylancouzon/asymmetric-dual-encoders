@@ -16,6 +16,11 @@ from hashing import sha, sha_stream_list
 FROZEN = REPO / "results" / "frozen_eval"
 MANIFEST = REPO / "results" / "eval_manifest.json"
 UNTOUCHED = ["fever", "dbpedia-entity"]   # climate-fever dropped: no affirmative license
+# untouched-final repair (LEDGER 2026-08-26, pre-freeze): the partition's two Wikipedia members
+# carry 9-11%% TRAIN doc overlap, so two unused CQADupStack subforums -- picked by a rule fixed in
+# the ledger (alphabetically first two outside dev's programmers/physics) -- are its only
+# near-zero-overlap, non-Wikipedia members. Development-informed at FAMILY level; labelled.
+UNTOUCHED_CQA = ["cqadup-android", "cqadup-english"]
 
 
 def beir_test_labels(ds):
@@ -81,6 +86,21 @@ for ds in UNTOUCHED:
     man["m7_untouched_final"][ds] = entry_streamed(n, ids_sha, text_sha, q_ids, qrels,
                                                   f"BeIR/{ds} test split, full corpus")
     print(f"untouched {ds:15s} {n:>9,} docs {len(q_ids):>6,} queries", flush=True)
+
+for c in UNTOUCHED_CQA:
+    doc_ids, doc_texts, q_ids, q_texts, qrels = devsuite.load(c)
+    (FROZEN / f"untouched-{c}.json").write_text(json.dumps({"queries": dict(zip(q_ids, q_texts)),
+                                                            "qrels": qrels}))
+    man["m7_untouched_final"][c] = entry(doc_ids, doc_texts, q_ids, q_texts, qrels,
+                                         f"mteb/cqadupstack-{c.split('-',1)[1]}, full corpus + "
+                                         "test qrels; added pre-freeze per LEDGER "
+                                         "untouched-final repair 2026-08-26")
+    print(f"untouched {c:15s} {len(doc_ids):>9,} docs {len(q_ids):>6,} queries", flush=True)
+
+man["m7_notes"]["untouched_final_repair"] = (
+    "cqadup-android and cqadup-english added 2026-08-26 before freeze: the only near-zero-overlap "
+    "non-Wikipedia members (R3: fever 11.3%%, dbpedia 9.32%%, cqadupstack ~0). Same family as two "
+    "dev components -- development-informed at family level, labelled at the row.")
 
 MANIFEST.write_text(json.dumps(man, indent=1))
 print("extended results/eval_manifest.json with m7_dev and m7_untouched_final")
