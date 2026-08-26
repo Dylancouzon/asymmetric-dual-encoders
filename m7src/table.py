@@ -197,6 +197,35 @@ def save_table(path, model: QueryTable, pre: Preproc, meta=None, updates=None, r
          "learned_weights": bool(w is not None), **(meta or {})}, indent=1, sort_keys=True))
 
 
+def save_release(path, model: QueryTable, pre: Preproc, meta=None, device="cuda"):
+    """The RELEASE export (Codex MINOR-int8-weights): learned per-token weights are FOLDED into
+    the rows, so the shipped int8 artifact is self-contained -- no fp32 weight vector multiplies
+    the quantized rows at query time. Folding is exact for retrieval: per-row absmax int8 codes
+    are scale-invariant (the scale just multiplies by w), and the weight-sum division in forward
+    is a per-query positive scalar, absorbed by the final L2 normalize. Training checkpoints keep
+    save_table's unfolded shape (a folded table cannot resume training).
+
+    Self-verifying: encodes a fixture through the live model and the loaded artifact and refuses
+    to write on max-abs deviation > 5e-3 (fp16 storage of folded rows is the only difference).
+    G4 int8-equivalence must be measured on THIS artifact, not the training checkpoint."""
+    w = model.token_weights()
+    rows = model.rows.detach().float().cpu().numpy()
+    if w is not None:
+        rows = w.detach().float().cpu().numpy()[:, None] * rows
+    folded = QueryTable(rows, learned_weights=False,
+                        fallback_id=model.fallback_id).to(device).eval()
+    fixture = ["what is a lookup table", "protein folding market impact",
+               "argue both sides of a covid tax", "zzzqx", ""]
+    a = model.encode(fixture, pre)
+    b = folded.encode(fixture, pre)
+    dev = float(np.abs(a - b).max())
+    if dev > 5e-3:
+        raise AssertionError(f"folded release deviates from the live model: max abs {dev}")
+    save_table(path, folded, pre, meta={**(meta or {}), "weights_folded": True,
+                                        "fold_max_abs_dev": dev})
+    return dev
+
+
 def load_table(path, variant="fp16", device="cuda"):
     z = np.load(path)
     rows = z["rows_fp16"].astype(np.float32) if variant == "fp16" else \

@@ -305,9 +305,16 @@ teacher-swap boundary. Dispositions, honestly labelled:
 - M-ridge **"structural upper bound" is unearned**: the ridge solves penalised unnormalised MSE at a
   dev-selected lambda, while objective B is normalised cosine + KL and the endpoint is retrieval.
   Claim must be restricted to that MSE problem.
-- M-stella-ship, MINOR-int8-weights (the released int8 artifact still multiplies an unbounded fp32
-  weight vector; fold weights into rows before quantisation and re-run G4), MINOR-doc-transform
-  (the absorbability algebra omits re-normalisation): recorded, not yet actioned.
+- MINOR-int8-weights **FIXED 2026-08-26**: `table.save_release` folds learned weights into the
+  rows (exact: per-row absmax codes are scale-invariant; the weight-sum division is a per-query
+  scalar absorbed by the final normalize), self-verifies on a fixture before writing, and is the
+  shape G4 must gate from now on. Training checkpoints keep the unfolded `save_table` shape.
+- M-stella-ship: answered by the pre-registered clean-4 bars (`results/m7_bars_clean4.json`) +
+  Dylan's six-primary ruling with row-level exposure labels (see Teacher ruling).
+- M-calibration: the criticized prose died with the projection itself (withdrawn, see protocol
+  decisions); the composition rule — the macro is `mean_i(r_i x teacher_i)`, never
+  `ratio x mean_i(teacher_i)` — binds any future projection. MINOR-doc-transform: report-wording
+  item, still queued for the report.
 
 ## Phase-2 screen redesign, 2026-08-26 (logged before any arm's A-phase result was read)
 
