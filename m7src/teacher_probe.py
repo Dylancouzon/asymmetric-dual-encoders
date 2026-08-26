@@ -101,7 +101,7 @@ def main(names):
                 continue
             r = boot.paired(per_all[k], ref, alternative="greater")
             res[k]["vs_current_teacher_boot"] = r
-            print(f"  {k:20s} vs bge-base: d={r['delta']:+.4f} CI={r['ci95']} p={r['p_str']} "
+            print(f"  {k:20s} vs bge-base: d={r['delta']:+.4f} CI={r['ci95']} boot-tail={r['boot_tail_str']} "
                   f"{'RESOLVED' if r['resolved'] else 'UNRESOLVED'}")
 
     # ALL PAIRS, not just vs the incumbent. The probe exists because the MTEB->six projection
@@ -115,7 +115,7 @@ def main(names):
         for b in ordered[i + 1:]:
             r = boot.paired(per_all[a], per_all[b], alternative="two-sided")
             res_pairs[f"{a}__vs__{b}"] = r
-            print(f"  {a:20s} vs {b:20s} d={r['delta']:+.4f} CI={r['ci95']} p={r['p_str']} "
+            print(f"  {a:20s} vs {b:20s} d={r['delta']:+.4f} CI={r['ci95']} boot-tail={r['boot_tail_str']} "
                   f"{'RESOLVED' if r['resolved'] else 'UNRESOLVED'}", flush=True)
 
     base = res.get("bge-base-en-v1.5", {}).get("macro_cqadupstack")

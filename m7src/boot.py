@@ -1,4 +1,8 @@
-"""Pre-registered paired bootstrap (instructions-m7.md).
+"""Pre-registered paired statistics (instructions-m7.md + Codex B3 fix, 2026-08-26).
+
+Division of labor: `paired` gives the delta and percentile INTERVALS; `signflip` gives the
+P-VALUE (paired sign-flip randomization). The bootstrap tail mass `paired` used to call "p" is a
+CI-inversion heuristic, not P(T >= t_obs | H0), so Holm over it controlled nothing (Codex B3).
 
 Paired on per-query vectors; resample queries WITHIN each dataset; recompute the macro per
 replicate; B=10,000; fixed logged seed; per-dataset CIs alongside the macro.
@@ -14,8 +18,20 @@ B = 10_000
 SEED = 0
 
 
-def _align(a, b):
-    """-> {dataset: (arr_a, arr_b)} over the intersection of datasets, aligned by sorted qid."""
+def _align(a, b, strict=False):
+    """-> {dataset: (arr_a, arr_b)} over the intersection of datasets, aligned by sorted qid.
+
+    strict=True refuses any silent shrinkage: a confirmatory comparison must never quietly drop
+    a dataset or a query, because nDCG over the intersection is a different statistic than the
+    pre-registered one (Codex M-perquery). Exploratory callers keep the permissive default."""
+    if strict:
+        if set(a) != set(b):
+            raise ValueError(f"dataset sets differ: only-a={sorted(set(a)-set(b))} "
+                             f"only-b={sorted(set(b)-set(a))}")
+        for ds in a:
+            if set(a[ds]) != set(b[ds]):
+                raise ValueError(f"{ds}: qid sets differ (a-only {len(set(a[ds])-set(b[ds]))}, "
+                                 f"b-only {len(set(b[ds])-set(a[ds]))})")
     out = {}
     for ds in sorted(set(a) & set(b)):
         qs = sorted(set(a[ds]) & set(b[ds]))
@@ -24,6 +40,45 @@ def _align(a, b):
         out[ds] = (np.array([a[ds][q] for q in qs], dtype=np.float64),
                    np.array([b[ds][q] for q in qs], dtype=np.float64))
     return out
+
+
+def signflip(a, b, R=100_000, seed=SEED, alternative="greater", strict=True):
+    """Paired sign-flip randomization test on the macro delta (a - b). THE p-value for any
+    confirmatory decision; `paired` supplies intervals only (its tail mass is not a p-value —
+    Codex B3, and Holm controls nothing over an invalid p).
+
+    Null: a and b exchangeable per query, so each per-query difference is symmetric about 0.
+    Each query's sign flips independently; the macro is recomputed per replicate as the mean of
+    per-dataset means — flipped diffs average within their dataset first, never pooled, because
+    the pre-registered statistic weights a TREC-COVID query ~13x a FiQA query.
+    p = (1 + #{T_r >= T_obs}) / (1 + R): a valid p-value for any n (P(p<=α|H0) <= α), so Holm
+    step-down over these controls family error. Min attainable p = 1/(R+1) — report as a bound.
+    """
+    pairs = _align(a, b, strict=strict)
+    if not pairs:
+        raise ValueError("no overlapping datasets/queries")
+    d = {ds: da - db for ds, (da, db) in pairs.items()}
+    k = len(d)
+    t_obs = sum(float(v.mean()) for v in d.values()) / k
+    rng = np.random.default_rng(seed)
+    t = np.zeros(R)
+    chunk = 10_000                     # caps the sign matrix at ~10k x n_ds doubles (~120 MB max)
+    for ds, v in d.items():
+        for a0 in range(0, R, chunk):
+            b0 = min(a0 + chunk, R)
+            signs = rng.integers(0, 2, size=(b0 - a0, v.size)) * 2 - 1
+            t[a0:b0] += (signs * v).mean(1) / k
+    if alternative == "greater":
+        p = (1 + int((t >= t_obs).sum())) / (1 + R)
+    elif alternative == "less":
+        p = (1 + int((t <= t_obs).sum())) / (1 + R)
+    else:
+        p = (1 + int((np.abs(t) >= abs(t_obs)).sum())) / (1 + R)
+    return {"delta": round(t_obs, 4), "p": float(p),
+            "p_str": f"<{1/(1+R):.1e}" if p == 1 / (1 + R) else f"{p:.5f}",
+            "R": R, "seed": seed, "alternative": alternative,
+            "method": "paired sign-flip randomization, macro-structured",
+            "per_dataset_n": {ds: int(v.size) for ds, v in d.items()}}
 
 
 def paired(a, b, B=B, seed=SEED, alternative="two-sided"):
@@ -56,7 +111,8 @@ def paired(a, b, B=B, seed=SEED, alternative="two-sided"):
         p = 2 * float(min((deltas < 0).mean(), (deltas > 0).mean()))
         one_sided_lo = None
     return {"delta": round(base, 4), "ci95": [round(float(lo), 4), round(float(hi), 4)],
-            "p": p, "p_str": (f"<{1/B}" if p == 0 else f"{p:.4f}"),
+            "boot_tail": p, "boot_tail_str": (f"<{1/B}" if p == 0 else f"{p:.4f}"),
+            "_boot_tail_note": "bootstrap tail mass, NOT a p-value; use signflip() for p",
             "alternative": alternative, "B": B, "seed": seed,
             "one_sided_lower_2.5": None if one_sided_lo is None else round(one_sided_lo, 4),
             "per_dataset": per,

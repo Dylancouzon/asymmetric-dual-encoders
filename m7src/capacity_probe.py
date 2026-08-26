@@ -110,7 +110,7 @@ def main(pre_name="noprefix", steps=6000):
     (REPO / "results" / f"m7_capacity_probe_{pre_name}.json").write_text(json.dumps(out, indent=1))
     print(f"\nprobe macro {m:.4f} vs bm25 macro "
           f"{np.mean([np.mean(list(bm[c].values())) for c in COMPONENTS]):.4f}: "
-          f"d={r['delta']:+.4f} CI={r['ci95']} p={r['p_str']} -> {'PASS' if passed else 'FAIL'}", flush=True)
+          f"d={r['delta']:+.4f} CI={r['ci95']} boot-tail={r['boot_tail_str']} -> {'PASS' if passed else 'FAIL'}", flush=True)
     return out
 
 

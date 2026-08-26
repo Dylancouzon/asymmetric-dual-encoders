@@ -130,7 +130,7 @@ def run(run_id, stage0_id=None, components=None, probe_file=None):
         bits = [f"d={v['delta']:+.4f}" if "delta" in v else "",
                 f"CI={v['ci95']}" if "ci95" in v else "",
                 f"upper={v['upper']} (bar {v.get('bar')})" if "upper" in v else "",
-                f"p={v['p_str']}" if "p_str" in v else "",
+                f"boot-tail={v['boot_tail_str']}" if "boot_tail_str" in v else "",
                 f"[{v['note']}]" if v.get("note") else ""]
         print(f"{'PASS' if v.get('pass') else 'FAIL'}  {k}  " + "  ".join(b for b in bits if b))
     print(f"\nmacros, text-backed ({len(text_backed)} comps): "

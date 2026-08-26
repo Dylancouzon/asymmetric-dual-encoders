@@ -50,7 +50,7 @@ def main(run_id="p1-objB", init="teacher", pre_name="noprefix"):
         mt, _ = dev_eval.report(per_t, f"[{run_id}] trained ({variant})")
         del m
         r = boot.paired(per_t, per_r, alternative="greater")
-        print(f"  trained({variant}) - ridge: d={r['delta']:+.4f} CI={r['ci95']} p={r['p_str']} "
+        print(f"  trained({variant}) - ridge: d={r['delta']:+.4f} CI={r['ci95']} boot-tail={r['boot_tail_str']} "
               f"{'RESOLVED' if r['resolved'] else 'UNRESOLVED'}")
         if variant == "fp16":
             out = {"_note": "Trained table vs the closed-form MSE-optimal FLAT table, same "

@@ -65,7 +65,7 @@ def main(run_id="p1-objB"):
         B = {c: per[c][b] for c in comps}
         r = boot.paired(A, B, alternative="greater")
         out[f"{a}_vs_{b}"] = r
-        print(f"  {a:6s} vs {b:6s}: d={r['delta']:+.4f} CI={r['ci95']} p={r['p_str']} "
+        print(f"  {a:6s} vs {b:6s}: d={r['delta']:+.4f} CI={r['ci95']} boot-tail={r['boot_tail_str']} "
               f"{'RESOLVED' if r['resolved'] else 'unresolved'}")
         for c, pd in r.get("per_dataset", {}).items():
             print(f"      {c:22s} {pd['delta']:+.4f} {pd['ci95']}")

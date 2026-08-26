@@ -61,9 +61,11 @@ def main(arms=None):
         if rid == "p2s-start":
             continue
         r = boot.paired(per_arm[rid], ref, alternative="greater")
+        r["signflip"] = boot.signflip(per_arm[rid], ref, alternative="greater", strict=True)
         vs_start[rid] = r
-        pvals[rid] = r["p"]
-        print(f"  {rid:20s} vs start: d={r['delta']:+.4f} CI={r['ci95']} p={r['p_str']} "
+        pvals[rid] = r["signflip"]["p"]
+        print(f"  {rid:20s} vs start: d={r['delta']:+.4f} CI={r['ci95']} "
+              f"p={r['signflip']['p_str']} (sign-flip) "
               f"{'RESOLVED' if r['resolved'] else 'UNRESOLVED'}", flush=True)
 
     holm = boot.holm(pvals, alpha=0.025) if hasattr(boot, "holm") else None
@@ -75,7 +77,7 @@ def main(arms=None):
             continue
         r = boot.paired(per_arm[best], per_arm[rid], alternative="two-sided")
         vs_best[rid] = r
-        print(f"  {best} vs {rid:20s} d={r['delta']:+.4f} CI={r['ci95']} p={r['p_str']} "
+        print(f"  {best} vs {rid:20s} d={r['delta']:+.4f} CI={r['ci95']} boot-tail={r['boot_tail_str']} "
               f"{'RESOLVED' if r['resolved'] else 'UNRESOLVED'}", flush=True)
 
     out = {"_note": "Paired bootstrap over the phase-2 screen's arms, re-scored from the saved "

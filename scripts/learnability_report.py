@@ -57,7 +57,7 @@ def main():
             print(f"  {enc:22s} table {rows[enc]['table_macro_2']:.4f}  "
                   f"ceiling {rows[enc]['teacher_ceiling_2']}  "
                   f"ratio {rows[enc]['ratio_table_over_ceiling']}  |  vs incumbent "
-                  f"d={r['delta']:+.4f} CI={r['ci95']} p={r['p_str']} "
+                  f"d={r['delta']:+.4f} CI={r['ci95']} boot-tail={r['boot_tail_str']} "
                   f"{'RESOLVED' if r['resolved'] else 'UNRESOLVED'}")
     out = {"_note": "Teacher candidates ranked by the score of the CLOSED-FORM table fitted against "
                     "them, not by their own symmetric ceiling. Fitted on TRAIN query vectors, "

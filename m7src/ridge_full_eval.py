@@ -52,7 +52,7 @@ def main(init="teacher", pre_name="noprefix"):
         ref_macro = float(np.mean([np.mean(list(R[c].values())) for c in sub]))
         out[f"vs_{name}"] = {**r, "components": sub, "ref_macro": round(ref_macro, 4)}
         print(f"  vs {name:24s} ({len(sub)} comps, ref {ref_macro:.4f}): "
-              f"d={r['delta']:+.4f} CI={r['ci95']} p={r['p_str']} "
+              f"d={r['delta']:+.4f} CI={r['ci95']} boot-tail={r['boot_tail_str']} "
               f"{'RESOLVED' if r['resolved'] else 'unresolved'}")
     ceil = out["vs_bge-base-symmetric"]["ref_macro"]
     out["retention_vs_teacher"] = round(macro / ceil, 4)
