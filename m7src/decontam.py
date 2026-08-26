@@ -76,10 +76,11 @@ def ngram_hashes(words):
         return np.zeros(0, dtype=np.uint64)
     wh = np.fromiter((_wh(w) for w in words), dtype=np.uint64, count=len(words))
     if len(wh) < NGRAM:
-        h = np.uint64(0)
-        for i, x in enumerate(wh):
-            h = h + x * (_BASE ** np.uint64(i))
-        return np.array([h], dtype=np.uint64)
+        # same modular sum as the array path, done as one vectorized reduction: the scalar loop
+        # produced identical values but emitted a uint64-overflow RuntimeWarning per call, and the
+        # wraparound is deliberate
+        pw = _BASE ** np.arange(len(wh), dtype=np.uint64)
+        return np.array([(wh * pw).sum(dtype=np.uint64)], dtype=np.uint64)
     n = len(wh) - NGRAM + 1
     acc = np.zeros(n, dtype=np.uint64)
     for j in range(NGRAM):
