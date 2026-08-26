@@ -22,8 +22,6 @@ import sys
 
 import numpy as np
 import torch
-import torch.nn.functional as F
-from transformers import AutoModel, AutoTokenizer
 
 import boot
 import dev_eval
@@ -43,7 +41,7 @@ CANDS = ("bge-base-en-v1.5", "bge-large-en-v1.5", "gte-large-en-v1.5", "stella-4
 
 # Pooling AND the post-pooling Dense both come from teacher.py, so the probe cannot drift from
 # the encoder the rest of the pipeline uses.
-from teacher import encode_batch, load_post_dense
+from teacher import encode_batch, load_post_dense, load_teacher, release_teacher
 
 
 @torch.no_grad()
@@ -53,16 +51,22 @@ def encode(spec, texts, prefix, tag):
     p = OUT / f"{spec.name}-{tag}.npy"
     if p.exists():
         return np.load(p)
-    kw = {"trust_remote_code": True} if spec.trust_remote_code else {}
-    tok = AutoTokenizer.from_pretrained(spec.repo, revision=spec.revision, **kw)
-    model = AutoModel.from_pretrained(spec.repo, revision=spec.revision, dtype=torch.float16,
-                                      **kw).cuda().eval()
+    # Load through teacher.load_teacher, not a second from_pretrained call: it is the only place
+    # that knows a Spec's config_kwargs, and stella does not load without them at all. A private
+    # loader here is how the probe would have ranked a candidate it could not even instantiate --
+    # or, worse, one it instantiated differently from the rest of the pipeline.
+    tok, model = load_teacher(spec.repo, spec.revision, torch.float16, "cuda")
     dense = load_post_dense(spec, "cuda")
     full = [prefix + t for t in texts]
     lens = [len(tok(t, add_special_tokens=True, truncation=True,
                     max_length=maxlen)["input_ids"]) for t in full]
     order = np.argsort(np.array(lens), kind="stable")
-    dim = model.config.hidden_size
+    # The Spec's dim, not the backbone's hidden size: with a post-pooling Dense the output width
+    # is the Dense's. They coincide for stella's square 1024->1024 head, but an MRL head would
+    # silently write 256 values into 1024-wide rows.
+    dim = spec.dim if dense is None else int(dense[0].shape[0])
+    if dim != spec.dim:
+        raise AssertionError(f"{spec.name}: encode width {dim} != Spec.dim {spec.dim}")
     out = np.empty((len(full), dim), dtype=np.float16)
     i, budget = 0, 24576  # tokens per batch; keeps a 435M model well inside 10 GB
     while i < len(order):
@@ -71,8 +75,6 @@ def encode(spec, texts, prefix, tag):
         out[idx] = encode_batch(tok, model, [full[j] for j in idx], maxlen, "cuda",
                                 pooling=spec.pooling, dense=dense).astype(np.float16)
         i += n
-    del model
-    torch.cuda.empty_cache()
     np.save(p, out)
     return out
 
@@ -91,6 +93,9 @@ def main(names):
             pq = per_query_ndcg(run, qrels)
             per_comp[c] = pq
             print(f"  {name:20s} {c:20s} nDCG@10 {np.mean(list(pq.values())):.4f}", flush=True)
+        # Drop this candidate's weights before loading the next one. load_teacher memoizes, which
+        # is right for a single-encoder pipeline and wrong for a loop over five 400M-1.3B models.
+        release_teacher(spec.repo, spec.revision, torch.float16, "cuda")
         per_all[name] = per_comp
         macro = float(np.mean([np.mean(list(per_comp[c].values())) for c in COMPONENTS]))
         res[name] = {"repo": spec.repo, "pooling": spec.pooling,

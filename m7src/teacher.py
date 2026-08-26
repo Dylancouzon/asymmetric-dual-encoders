@@ -91,6 +91,13 @@ def load_teacher(model_id=TEACHER, revision=TEACHER_REV, dtype=torch.float32, de
     return _CACHE[key]
 
 
+def release_teacher(model_id=TEACHER, revision=TEACHER_REV, dtype=torch.float32, device="cuda"):
+    """Evict one memoized model and free its VRAM. load_teacher's cache is right for a pipeline
+    that uses one encoder and wrong for a loop over five of them (teacher_probe)."""
+    if _CACHE.pop((model_id, revision, str(dtype), device), None) is not None:
+        torch.cuda.empty_cache()
+
+
 @torch.no_grad()
 def encode_batch(tok, model, texts, max_length=512, device="cuda", pooling="cls", dense=None):
     """Pool per the encoder's own convention, apply its post-pooling Dense if it has one, then
