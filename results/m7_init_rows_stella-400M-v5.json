@@ -1,0 +1,13 @@
+{
+ "_note": "Init rows vs the production encode path on tokens whose text round-trips to [CLS] tok [SEP]. Guards the read-out (pooling + post-pooling Dense + width) that init_table.teacher_rows used to hardcode as CLS.",
+ "encoder": "stella-400M-v5",
+ "spec_tag": "stella-400M-v5-ffeb2b7e",
+ "pooling": "mean",
+ "post_dense": "2_Dense_1024",
+ "dim": 1024,
+ "n_tokens_compared": 256,
+ "min_cosine": 0.9999998843804161,
+ "mean_cosine": 1.0000000027783473,
+ "bar": 0.999,
+ "status": "pass"
+}
