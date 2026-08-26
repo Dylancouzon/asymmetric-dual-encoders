@@ -1,0 +1,34 @@
+{
+ "S": 1000,
+ "R": 2000,
+ "_note": "weak-null (centered, asymmetric) type-I of the sign-flip leg alone; the tier decision is the conjunction with the bootstrap CI",
+ "pairs": {
+  "lr-dense-pertask vs bm25": {
+   "per_dataset_skew_of_centered_diffs": {
+    "arguana": 0.08,
+    "fiqa": 0.52,
+    "nfcorpus": -0.4,
+    "scidocs": 0.29,
+    "scifact": -0.43,
+    "trec-covid": -0.46
+   },
+   "P(p<=0.025)": 0.038,
+   "P(p<=0.05)": 0.067,
+   "P(p<=0.00833)": 0.013
+  },
+  "opensearch-doc-v3-gte vs lr-dense-pertask": {
+   "per_dataset_skew_of_centered_diffs": {
+    "arguana": 0.11,
+    "fiqa": 0.34,
+    "nfcorpus": 1.4,
+    "scidocs": -0.01,
+    "scifact": 1.03,
+    "trec-covid": 0.4
+   },
+   "P(p<=0.025)": 0.023,
+   "P(p<=0.05)": 0.042,
+   "P(p<=0.00833)": 0.008
+  }
+ },
+ "seconds": 103.0
+}
