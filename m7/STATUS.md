@@ -28,21 +28,36 @@ Encode throughput: 891 texts/s fp16 (2.4x fp32, cosine-identical) → `results/m
 
 ## Running
 
-- Teacher encode of the dev HotpotQA corpus (5.23M docs), shard ~50/105.
-- Fingerprint decontamination (TRAIN ↔ six / dev / untouched-final), indexing the six's 272,117 docs.
-- Dev reference rows. So far: bm25 nq-250k 0.5804 · potion-32M nq-250k 0.5479 (a 250K-doc
-  subsample is an easier corpus than full BEIR NQ — dev numbers are not comparable to BEIR rows).
+`./run_stage0.sh` — **strictly sequential**, 7 steps, log in `logs/stage0.log`:
+1. dev corpus encodes (resuming; HotpotQA shard ~97/105) 2. asset freeze 3. decontamination
+4. query-text decontamination 5. frozen doc-vector pool (~6.2M vectors, 9.5 GB fp16)
+6. dev reference rows on all four components 7. Stage-0 ridge probe.
+
+Dev reference rows so far (three fast components; a 250K-doc NQ subsample is an easier corpus
+than full BEIR NQ, so dev numbers are not comparable to BEIR rows):
+
+| system | nq-250k | cqa-prog | cqa-phys | macro-3 |
+|---|---|---|---|---|
+| bge-base symmetric, prefixed (teacher ceiling) | 0.8198 | 0.4240 | 0.4727 | **0.5722** |
+| bge-base symmetric, bare | 0.7982 | 0.4020 | 0.4608 | 0.5537 |
+| bm25 | 0.5804 | 0.2975 | 0.3471 | **0.4083** |
+| potion-retrieval-32M | 0.5479 | 0.2261 | 0.2835 | **0.3525** |
+
+So the table has to hold ~71% of the teacher to clear BM25 on dev, and ~62% to clear potion.
 
 ## Next step
 
-1. Finish decontamination; log removal counts.
-2. Build the frozen doc-vector pool (~6.2M vectors, 9.5 GB fp16); hotpotqa reuses the dev encode.
-3. **Stage 0.1** — closed-form ridge table (`m7src/stage0_ridge.py`): the MSE-optimal
-   flat-weight bag-of-tokens approximation of the teacher's query encoder. One linear solve,
-   and an exact upper bound on what flat distillation can reach. This is the cheapest possible
-   answer to the central structural question.
-4. **Stage 0.2** — gradient-trained distilled table (objective B), then the capacity probe.
-5. Go/no-go gate on dev.
+1. **Stage 0.1** — closed-form ridge table (`m7src/stage0_ridge.py`): the MSE-optimal
+   flat-weight bag-of-tokens approximation of the teacher's query encoder, from one linear
+   solve. It is an exact upper bound on what flat distillation can reach, so it is the cheapest
+   possible answer to the central structural question.
+2. **Stage 0.2** — gradient-trained distilled table (objective B), then the capacity probe.
+3. Go/no-go gate on dev, then the phased program in `m7src/program.py`.
+
+Everything downstream is already written and imports clean: training (objectives A/B/C),
+bootstrap + Holm, fusion, gate, sweep driver, costs, ANN sweep on real HNSW, the
+two-collection edge demo, and the guarded final-run script — the last written *before* any
+candidate result exists, so its freeze rules cannot have been shaped by the numbers.
 
 ## Open blockers
 
