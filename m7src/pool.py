@@ -35,11 +35,12 @@ class PoolIndex:
         self._maps = {}
 
     def _map(self, store):
+        """Doc-id -> local row. Reads a cached ids-only file: mix.load_store also returns the
+        texts, and hotpotqa-corpus's 5.23M strings are ~4 GB that every training run would pay
+        for nothing."""
         m = self._maps.get(store)
         if m is None:
-            ids, _ = mix.load_store(store)
-            m = {d: i for i, d in enumerate(ids)}
-            self._maps[store] = m
+            self._maps[store] = m = {d: i for i, d in enumerate(store_ids(store))}
         return m
 
     def get(self, store, docid):
@@ -59,6 +60,16 @@ class PoolIndex:
         return v
 
 
+def store_ids(store):
+    """Cached ids-only view of a doc store."""
+    p = POOL / f"ids-{store}.json"
+    if not p.exists():
+        ids, _ = mix.load_store(store)
+        p.write_text(json.dumps(ids))
+        return ids
+    return json.loads(p.read_text())
+
+
 def store_vecs(store):
     ids, texts = mix.load_store(store)
     v = encode_cached(STORE_CACHE_NAME.get(store, f"train-{store}"), texts, prefix="",
@@ -72,7 +83,7 @@ def build(dim=DIM):
     stores = sorted({mix.load_source(s)["docstore"] for s in mix.available_sources()})
     if vec_p.exists() and meta_p.exists():
         meta = json.loads(meta_p.read_text())
-        fresh = {s: sha_stream_list(mix.load_store(s)[0]) for s in stores}
+        fresh = {s: sha_stream_list(store_ids(s)) for s in stores}
         if (meta["stores"] == stores and vec_p.stat().st_size == meta["n"] * dim * 2
                 and meta.get("id_sha256") == fresh):
             return (PoolIndex(meta["spans"]),
@@ -81,7 +92,7 @@ def build(dim=DIM):
 
     counts, id_sha = {}, {}
     for s in stores:
-        ids, _ = mix.load_store(s)
+        ids = store_ids(s)
         counts[s] = len(ids)
         id_sha[s] = sha_stream_list(ids)   # content, not just count: a changed store with the
                                            # same doc count would otherwise reuse stale vectors

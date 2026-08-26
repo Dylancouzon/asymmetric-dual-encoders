@@ -122,7 +122,12 @@ def main(n_queries=1_000_000, init_kind="teacher", pre=None, target_prefix=True,
     results = {}
     for lam in LAMBDAS:
         t0 = time.time()
-        W = solve_ridge(X, Y, W0, lam)
+        wp = OUT / f"ridge-{init_kind}-{pre.fingerprint()}-lam{lam}.npy"
+        if wp.exists():
+            print(f"  lam={lam:<7g} reusing the solved table on disk", flush=True)
+            W = np.load(wp)
+        else:
+            W = solve_ridge(X, Y, W0, lam)
         cos = chunked_train_cos(X, W, Y)
         m = QueryTable(W, learned_weights=False).to("cuda").eval()
         per = dev_eval.eval_table(m, pre, components=list(components), tok=tok)
@@ -131,8 +136,8 @@ def main(n_queries=1_000_000, init_kind="teacher", pre=None, target_prefix=True,
             per, f"  lam={lam:<7g} train-cos={cos:.4f} ov@10={np.mean(list(ov.values())):.3f}")
         results[str(lam)] = {"train_cos": cos, "macro": macro, "per_component": means,
                             "overlap_at_10": ov, "solve_s": round(time.time() - t0, 1)}
-        np.save(OUT / f"ridge-{init_kind}-{pre.fingerprint()}-lam{lam}.npy", W)
-        del m, W, fit
+        np.save(wp, W)
+        del m, W
         torch.cuda.empty_cache()
     (OUT / f"ridge-{init_kind}-{pre.fingerprint()}.json").write_text(json.dumps(
         {"n_queries": len(qs), "init": init_kind, "preproc": pre.fingerprint(),
