@@ -22,3 +22,20 @@ row on the held-out slices, whose corpora are pool row indices carrying no docum
 | p1-objA | `work/runs/p1-objA.json` | 0.3248 | ok |
 | p1-objC | `work/runs/p1-objC.json` | 0.3721 | ok |
 | p1-objC | `work/runs/p1-objC.json` | **0.3721** | ok — B(4k) reached 0.4449, reproducing p1-objB step-for-step, then the 8k contrastive phase degraded it monotonically to 0.3721 (−7.3 points): 0.4105 / 0.4011 / 0.3838 / 0.3721. Confirms the contrastive objective is broken independent of initialisation, and exonerates `reg_init` (weakest at the high update counts where this run degraded fastest). Coverage 27,312/30,522 (89.5%). |
+
+### Corrections (append-only; the rows above are left as written)
+
+- **p1-objA's "Cause:" above is REFUTED.** "Random negatives trivially separable" predicts stasis
+  (near-zero loss, near-zero gradient), not monotone decline — and the log shows loss falling
+  0.51 -> 0.13 over 12k steps *while* dev fell at every eval, i.e. the objective was being
+  successfully optimised and what it optimised is anti-correlated with retrieval. Commit 6e01793
+  called the mechanism "confirmed"; it was asserted, never tested. Leading suspects now, in order:
+  (i) `fn_margin=0.02` deleting the hardest negatives in a compressed score space, leaving a
+  gradient that is mostly "pull every query toward its positive" = a pull toward the corpus mean
+  direction; (ii) tau=0.02 concentrating softmax mass on the anisotropy tail; (iii) Adam at
+  lr 3e-3 taking full-size steps on that weak signal. `m7src/diag_scores.py` measures all three.
+  Note the post-mask negative count was never logged, so suspect (i) ran unobserved all grid.
+- **p1-objB's "+0.0006 over the closed form" has no CI** and the comparison is confounded (flat+MSE+
+  closed-form vs learned-weights+IDF+KL+SGD changes three things at once). The controlled ablation
+  is `program.phase4_mandatory` p4-weights and has not run. Do not treat "ship the flat table" as
+  decided.

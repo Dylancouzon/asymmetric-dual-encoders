@@ -3,14 +3,29 @@
 **Stage:** Stage 0 complete · **go/no-go gate = GO** · next is phase 2 (negatives)
 **Updated:** 2026-08-26
 
-## Headline
+## Headline — read the per-component row before quoting the macro
 
-A **pure-distillation lookup table, with no contrastive training at all**, retains **78.5%** of
-its 109M-parameter bge-base teacher and beats BM25 by **+2.70 nDCG** on the dev suite at zero
-query compute, shipping as a **23.4 MB int8** artifact whose quantisation is measurably free.
+A pure-distillation lookup table retains **78.5%** of its 109M bge-base teacher at zero query
+compute in a **23.4 MB int8** artifact, and its dev macro beats BM25 by **+2.70**. **But that
+macro win is one component wide, and it is the training-adjacent one:**
+
+| vs BM25 | delta | CI | |
+|---|---|---|---|
+| nq-250k | **+0.1445** | [+0.1312,+0.1580] | wins big — and NQ questions are heavily represented in TRAIN (86K nq-open rows feed objective B) |
+| cqadup-physics | +0.0152 | [−0.0040,+0.0346] | unresolved |
+| cqadup-programmers | −0.0203 | [−0.0429,+0.0023] | **loses**, unresolved |
+| **hotpotqa** | **−0.0316** | **[−0.0395,−0.0236]** | **loses, CI-resolved** |
+
+**Forward projection to the six: ~0.41** (0.785 retention x a plausible bge-base six-set row of
+~0.52) — *below* BM25's 0.4174 there, and far below the 0.4583 release bar. Using the
+cqadup-programmers retention (64%) as the predictor for FiQA-like sets makes it worse.
+**On today's evidence the best candidate projects to Tier 4, not Tier 2.** Phases 2-5 exist to
+close precisely that gap; the gate says the program is alive, not that it is on track.
+
 The mandate's central structural question — whether a *frozen, off-the-shelf* document space is
 additively predictable from query tokens the way LightRetriever's co-trained one is — is answered
-yes, first by a closed-form solve and then reproduced by gradient training.
+**yes for Wikipedia-QA-shaped queries** (closed-form solve, reproduced by gradient training), and
+progressively less so as queries leave that distribution. All six test sets are outside it.
 
 ## Gate: GO (`results/m7_gate_p1-objB.json`)
 

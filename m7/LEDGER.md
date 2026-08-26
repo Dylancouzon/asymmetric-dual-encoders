@@ -103,7 +103,10 @@ gives ~5 questions per context), so it rewards document-anchored memorisation du
 
 ## Stage 0
 
-**0.1 closed-form ridge** (`results/m7_stage0_ridge.json` pending a full-suite re-eval): the
+**0.1 closed-form ridge** (`train_cos` below is an IN-SAMPLE fit residual over the 571,329
+fitting queries, not a held-out agreement figure; in bge's anisotropic space it also needs a
+baseline to be interpretable — overlap@10 is the honest agreement number and says half the
+teacher's top-10 is not recovered) (`results/m7_stage0_ridge.json` pending a full-suite re-eval): the
 MSE-optimal flat-weight bag-of-tokens approximation of the teacher's query encoder — the global
 optimum of flat distillation under squared loss. Fitted on 571,329 TRAIN queries; vocab coverage
 **0.895**. Best λ=1e-2: **0.4542** dev proxy macro-3, train cos 0.9110, overlap@10 0.490 (vs
@@ -148,6 +151,31 @@ comparison (BM25-mined / teacher-mined / mixed) and the BM25 arm built
 Text-backed macros: candidate fp16/int8 **0.4795** · BM25 0.4525 · potion 0.3801 · teacher 0.6106.
 **Retention 0.7853** text-backed / 0.8073 all six — agreeing with the ridge probe's 79% from a
 different method. `p1-objC` fails G3 (d=−0.0383) as expected.
+
+### The GO is one component wide (correction, 2026-08-26, post-review)
+
+G3's per-dataset breakdown, which was in the committed JSON from the start and in none of the
+prose until an adversarial review flagged it:
+
+| vs BM25 | delta | CI95 | n |
+|---|---|---|---|
+| nq-250k | **+0.1445** | [+0.1312,+0.1580] | 3,452 |
+| cqadup-physics | +0.0152 | [−0.0040,+0.0346] | 1,039 |
+| cqadup-programmers | −0.0203 | [−0.0429,+0.0023] | 876 |
+| **hotpotqa** | **−0.0316** | **[−0.0395,−0.0236]** | 7,405 |
+
+The +0.0270 macro is carried entirely by nq-250k — the component whose query distribution is most
+represented in TRAIN (86K nq-open rows feed objective B, guarded only by an R1 near-dup test that
+degenerates to exact match under 8 words). The candidate **loses to BM25 CI-resolved on
+HotpotQA** and directionally on cqadup-programmers, i.e. it wins on the in-distribution component
+and loses on the ones most like the six.
+
+**Projection to the six: ~0.41** = 0.785 text-backed retention x a plausible bge-base six-set row
+of ~0.52 (bge-small measured 0.5042). That is below BM25's 0.4174 on the six and far below the
+0.4583 release bar; substituting the 64% cqadup retention for FiQA-like sets lowers it further.
+**On today's evidence the best candidate projects to Tier 4.** The gate answers "is the program
+alive" (yes); it does not support "on track", and nothing in the record claimed otherwise before
+this entry, which is the omission.
 
 **Checkpoint substitution, logged in advance:** the driver named `p1-objC` before any result
 existed; gating a knowingly-inferior checkpoint would be a false negative, so `p1-objB` was also
