@@ -92,6 +92,7 @@ def build_arrays(cfg, index):
     by_src = {}
     for p in pairs:
         by_src.setdefault(p[0], []).append(p)
+    _, _bset, _ = banned_rows()
     for src in srcs:
         st = store_of[src]
         for _, qid, query, posd, hneg in by_src[src]:
@@ -100,14 +101,40 @@ def build_arrays(cfg, index):
                 continue
             q_texts.append(query)
             pos_idx.append(ps)
-            hn_idx.append([j for j in (index.get(st, d) for d in hneg) if j is not None]
+            hn_idx.append([j for j in (index.get(st, d) for d in hneg)
+                           if j is not None and j not in _bset]
                           if cfg.use_provided_hardneg else [])
             src_id.append(sid[src])
         index.drop(st)
     return q_texts, pos_idx, hn_idx, np.array(src_id, dtype=np.int32), srcs
 
 
-def mine_bm25_negatives(name, q_texts, src_of, store_of, index, k, exclude):
+_BANNED = None
+
+
+def banned_rows():
+    """(sorted int64 array, python set, digest) of pool rows banned as negatives -- the Codex B2
+    mask, produced by decontam_pool.py. Loaded once. REFUSES to run if the artifact is missing:
+    an empty mask must be the measured result of the pool pass, never a missing file."""
+    global _BANNED
+    if _BANNED is None:
+        import hashlib as _h
+        p = WORK / "decontam" / "banned_pool_rows.npy"
+        if not p.exists():
+            raise FileNotFoundError(f"{p} missing -- run m7src/decontam_pool.py first (Codex B2)")
+        arr = np.load(p)
+        _BANNED = (arr, set(arr.tolist()), _h.sha256(arr.tobytes()).hexdigest()[:8])
+    return _BANNED
+
+
+def clean_fallback_row(bset, start=0):
+    r = start
+    while r in bset:
+        r += 1
+    return r
+
+
+def mine_bm25_negatives(name, q_texts, src_of, store_of, index, k, exclude, banned=None):
     """BM25-mined hard negatives, the lexical arm of the mandated negatives ablation.
 
     Mined WITHIN each query's own doc store rather than across the whole pool: a negative is only
@@ -116,7 +143,8 @@ def mine_bm25_negatives(name, q_texts, src_of, store_of, index, k, exclude):
     the expensive part) and the result is cached.
     """
     import hashlib as _h
-    sig = _h.sha256(("|".join(q_texts[::997])).encode()).hexdigest()[:12]
+    _, _bset, _bdig = banned_rows() if banned is None else banned
+    sig = _h.sha256(("|".join(q_texts[::997])).encode()).hexdigest()[:12] + "-b" + _bdig
     p = WORK / "runs" / f"hardneg-bm25-{name}-k{k}-{sig}.npy"
     if p.exists():
         return np.load(p)
@@ -142,9 +170,10 @@ def mine_bm25_negatives(name, q_texts, src_of, store_of, index, k, exclude):
         base = index.spans[store][0]
         for j, i in enumerate(rows):
             ex = set(exclude[i])
-            picked = [base + int(d) for d in got[j] if base + int(d) not in ex][:k]
+            picked = [base + int(d) for d in got[j]
+                      if base + int(d) not in ex and base + int(d) not in _bset][:k]
             while len(picked) < k:
-                picked.append(picked[-1] if picked else base)
+                picked.append(picked[-1] if picked else clean_fallback_row(_bset, base))
             out[i] = picked
         index.drop(store)
     np.save(p, out)
@@ -152,7 +181,8 @@ def mine_bm25_negatives(name, q_texts, src_of, store_of, index, k, exclude):
 
 
 @torch.no_grad()
-def mine_hard_negatives(name, q_vecs, pool_vecs, k, exclude, q_chunk=2048, d_chunk=500_000):
+def mine_hard_negatives(name, q_vecs, pool_vecs, k, exclude, q_chunk=2048, d_chunk=500_000,
+                        banned=None):
     """Teacher-mined negatives: top-k pool docs per query by the teacher's own query vector,
     minus that query's positives.
 
@@ -165,10 +195,16 @@ def mine_hard_negatives(name, q_vecs, pool_vecs, k, exclude, q_chunk=2048, d_chu
 
     The cache key hashes the query vectors and the pool shape, not just a name and a length: a
     name-and-count key silently reuses a stale mining result when the mix changes but the count
-    does not."""
+    does not. It also carries the B2 banned-mask digest, so pre-mask caches can never be reused.
+
+    `banned` is (sorted_array, set, digest) in the SAME row space as pool_vecs. Default None loads
+    the real pool mask -- only correct when pool_vecs is the real pool; a synthetic pool (e.g.
+    scripts/check_mining.py) must inject its own, typically the empty mask."""
     import hashlib as _h
+    _, _bset, _bdig = banned_rows() if banned is None else banned
     sig = _h.sha256(np.ascontiguousarray(q_vecs[::997]).tobytes()
-                    + str((len(q_vecs), pool_vecs.shape, k)).encode()).hexdigest()[:12]
+                    + str((len(q_vecs), pool_vecs.shape, k)).encode()).hexdigest()[:12] \
+        + "-b" + _bdig
     p = WORK / "runs" / f"hardneg-{name}-k{k}-{sig}.npy"
     if p.exists():
         return np.load(p)
@@ -200,9 +236,9 @@ def mine_hard_negatives(name, q_vecs, pool_vecs, k, exclude, q_chunk=2048, d_chu
     out = np.zeros((n_q, k), dtype=np.int64)
     for r in range(n_q):
         ex = set(exclude[r])
-        picked = [c for c in cand[r] if c not in ex][:k]
+        picked = [c for c in cand[r] if c not in ex and c not in _bset][:k]
         while len(picked) < k:
-            picked.append(picked[-1] if picked else 0)
+            picked.append(picked[-1] if picked else clean_fallback_row(_bset))
         out[r] = picked
     np.save(p, out)
     return out
@@ -372,6 +408,12 @@ def run(cfg: Cfg, log=print):
     # negative bank: fixed deterministic sample, VRAM-resident fp16
     nb = min(cfg.bank_size, len(pool_vecs))
     bank_ids = np.sort(rng.choice(len(pool_vecs), size=nb, replace=False))
+    _barr, _, _ = banned_rows()
+    if _barr.size:
+        _i = np.minimum(np.searchsorted(_barr, bank_ids), _barr.size - 1)
+        _hit = _barr[_i] == bank_ids
+        bank_ids = bank_ids[~_hit]
+        log(f"  bank: dropped {int(_hit.sum())} banned pool rows (Codex B2 mask)")
     bank = torch.from_numpy(np.ascontiguousarray(pool_vecs[bank_ids])).cuda()
     log(f"  negative bank {tuple(bank.shape)} ({bank.numel()*2/1e9:.2f} GB VRAM)")
 

@@ -36,7 +36,8 @@ def main():
     exclude = [[] for _ in range(N_Q)]
 
     t0 = time.time()
-    fast = train.mine_hard_negatives("checkfast", q, sub, K, exclude)
+    empty_mask = (np.zeros(0, np.int64), set(), "none")  # synthetic pool: global B2 rows do not apply
+    fast = train.mine_hard_negatives("checkfast", q, sub, K, exclude, banned=empty_mask)
     t_fast = time.time() - t0
     t0 = time.time()
     slow = train._mine_hard_negatives_qouter("checkslow", q, sub, K, exclude)
