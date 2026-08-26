@@ -355,3 +355,38 @@ BM25 by 42 points on queries it was trained on. Only the first is evidence about
 architecture's usefulness; the second is evidence only against the specific hypothesis that the
 frozen tower makes good retrieval *inexpressible*. Both are reported, labelled that way, and the
 probe keeps its "diagnostic, gate-ineligible for tier decisions" framing.
+
+## Objective grid (phase 1) and a finding about negative pools (2026-08-26)
+
+| config | dev proxy macro-3 | |
+|---|---|---|
+| closed-form flat ridge | 0.4542 | provable optimum of flat MSE distillation |
+| **p1-objB** distillation, 8k steps | **0.4548** | matches the bound to +0.0006 |
+| p1-objA contrastive, random negatives, 12k steps | 0.3248 | monotone collapse from 0.3532 |
+| p1-objC B(4k) → A(8k) | 0.4449 after B, **0.4105 after 2k A steps** | A degrades a healthy checkpoint |
+
+**Distillation is capped at ~0.455**, established two independent ways (closed-form solve and
+gradient training). Learned per-token weights and the KL ranking term buy +0.0006 over flat MSE.
+
+**Contrastive InfoNCE with random-only negatives is actively harmful, not merely weak.** It
+declines monotonically from the teacher init (0.3532 → 0.3248 over 12k steps) *and* drags a
+healthy 0.4449 checkpoint down to 0.4105 in 2k steps. Mechanism: with `hard_neg_k=0` all 32,768
+negatives per step are random draws from a 6.17M-document pool, and against a frozen document
+space those are trivially separable — the loss falls while carrying almost no fine-grained ranking
+signal, so the table drifts. `reg_init` was the first suspect and is exonerated: it is weakest at
+high update counts, which is exactly where the C run degraded fastest.
+
+**This contradicts a premise in the mandate.** `instructions-m7.md` says "Frozen doc vectors make
+very large negative pools nearly free — exploit that first." Scale without hardness turns out to
+be the wrong lever: few-and-hard beats many-and-easy here, and exploiting cheap scale first
+actively wasted the contrastive objective. The negatives ablation is therefore load-bearing rather
+than a tuning sweep, and phase 2 was expanded to cover the mandate's full comparison
+(BM25-mined / teacher-mined / mixed) plus the `fn_margin=0` and `reg_init=0` diagnostics. The
+BM25 arm was built at this point (`train.mine_bm25_negatives`), mined within each query's own doc
+store — a negative is only informative if it was a plausible candidate.
+
+**Gate checkpoint:** the driver named `p1-objC` as the gate candidate before any result existed.
+C is now known to be inferior to B, and gating on a knowingly-inferior checkpoint would be a
+false negative, so the gate is additionally run on `p1-objB` and both are reported. Selecting the
+checkpoint on dev is within the protocol — the gate is a dev-stage decision and all selection
+happens on dev — but the substitution is logged rather than made silently.
