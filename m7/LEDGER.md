@@ -182,6 +182,46 @@ existed; gating a knowingly-inferior checkpoint would be a false negative, so `p
 gated and both are reported. Selecting on dev is within the protocol — the gate is a dev-stage
 decision.
 
+## Strategy pivot: stop, research, re-plan for Tier 1 (Dylan's call, 2026-08-26)
+
+Trigger: the corrected projection puts the current best candidate at ~0.41 on the six, i.e.
+Tier 4. Dylan's direction: do not grind phase 2 forward; research the literature properly, revise
+the plan, aim for Tier 1, and be willing to restart the model work.
+
+Arithmetic that frames the target (quality = teacher six-set row x retention):
+
+| teacher | x78% (today) | x85% | x88% | x94% |
+|---|---|---|---|---|
+| bge-base ~0.520 | **0.406** | 0.442 | 0.458 | 0.489 |
+| bge-large ~0.535 | 0.417 | 0.455 | 0.471 | 0.503 |
+
+- Tier 2 (0.4583) needs ~88% retention on bge-base or ~86% on bge-large.
+- **Tier 1 (0.4868) is unreachable by the dense table alone** — ~94% on bge-base or ~91% on
+  bge-large, neither plausible for a bag encoder. Tier 1 therefore requires
+  **better teacher x retention 85-88% x fusion** (fusion is explicitly permitted for Tier 1 and
+  must be labelled). With a realistic +0.03 fusion gain: bge-large x 85% -> ~0.485 (at the line),
+  x 88% -> ~0.501 (clears it).
+
+What is NOT invalidated by a model-side restart, and must be preserved: the eval protocol, the
+partition ledger, decontamination, the pinned dev suite, the frozen comparator vectors, the
+freeze/final-run machinery, and both adversarial reviews. Those are the expensive, twice-reviewed
+assets. Only the architecture and training recipe change.
+
+Two analyses that narrow the search before any literature arrives:
+- **A doc-side linear map (whitening/adapter) is nearly a no-op here.** `q.(Ad) = (A^T q).d`, and
+  `A^T normalize(mean(rows))` differs from `normalize(mean(A^T rows))` only through the
+  normalisation — so it is a reparametrisation of the table we already optimise, not new capacity.
+- **Centering documents changes nothing**: `q.(d-mu) = q.d - q.mu` is a per-query constant, so
+  ranking is invariant. (Centering the QUERY side does change ranking — that one is actionable.)
+
+So the real gaps are what a normalised bag of token vectors *cannot express*: word order and
+composition, token interaction, length behaviour beyond a scalar. That is consistent with the
+observed pattern — we beat BM25 on single-hop NQ and lose on multi-hop HotpotQA and
+duplicate-question CQADupStack. Candidate levers, to be priced by the research: richer pooling
+(dimension-wise max / top-k / log-sum-exp), n-gram or phrase rows, an MRL dimension/row-count
+trade (256-d buys ~3x the rows at equal bytes), a stronger same-vendor teacher (bge-large, same
+30,522 vocab), our own inference-free sparse arm, and fusion.
+
 ## Other findings that constrain the report
 
 - **Dev cannot validate long queries.** Held-out length p50=13 WordPiece tokens, p90=24, only 55
