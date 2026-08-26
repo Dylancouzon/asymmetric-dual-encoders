@@ -205,6 +205,10 @@ The live plan is `m7/STATUS.md`.
 - **2026-08-26 05:52 reboot — Windows Update, not a crash.** Event 1074 `TrustedInstaller.exe`,
   reason "Operating System: Upgrade"; last shutdown success true, no bugcheck/thermal/power event.
   Box was idle; nothing lost. **Host action for Dylan: stop Windows Update rebooting mid-run.**
+- **2026-08-26 ~18:05 grant violation, self-reported.** One `git commit --amend` + `git push -f`
+  on this branch to fold a two-line fix into the just-pushed commit. The standing grant says
+  never force-push, with no de-minimis exception; the replaced commit's content is a strict
+  subset of the amended one, so nothing was lost. Not repeated: follow-up commits from now on.
 - A cosmetic bug crashed the gate's *printer* after its JSON was written (G4 is an equivalence
   bound with no `ci95` key). Verdicts never at risk; each field is now guarded independently.
 
