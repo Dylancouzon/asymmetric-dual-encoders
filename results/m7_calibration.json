@@ -123,18 +123,227 @@
   }
  },
  "candidates": {
-  "bge-base-en-v1.5 (current)": {
-   "mteb_v1_retrieval": 53.25,
-   "six_est_affine": 0.5082,
-   "six_est_ratio_mean": 0.5121,
-   "six_est_bge_small_anchor_PRIOR_METHOD": 0.5195,
-   "extrapolation_beyond_fit_range": -1.89,
+  "stella_en_400M_v5": {
+   "mteb_v1_retrieval": 58.97,
+   "vocab": 30528,
+   "dim": 1024,
+   "params_m": 435,
+   "licence": "MIT",
+   "vendor_tier": "clean",
+   "table_mb_fp16": 62.5,
+   "table_mb_int8": 31.3,
+   "six_est_affine": 0.5562,
+   "six_est_ratio_mean": 0.5671,
+   "six_est_bge_small_anchor_PRIOR_METHOD": 0.5753,
+   "extrapolation_beyond_fit_range": 3.83,
    "at_retention": {
     "0.7853": {
-     "point": 0.3991,
+     "point": 0.4368,
      "ci_from_calibration_resid": [
-      0.383,
-      0.4152
+      0.4207,
+      0.4529
+     ],
+     "clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8200": {
+     "point": 0.4561,
+     "ci_from_calibration_resid": [
+      0.4393,
+      0.4729
+     ],
+     "clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8500": {
+     "point": 0.4728,
+     "ci_from_calibration_resid": [
+      0.4553,
+      0.4902
+     ],
+     "clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    },
+    "0.8800": {
+     "point": 0.4895,
+     "ci_from_calibration_resid": [
+      0.4714,
+      0.5075
+     ],
+     "clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": true
+     }
+    },
+    "0.9100": {
+     "point": 0.5061,
+     "ci_from_calibration_resid": [
+      0.4875,
+      0.5248
+     ],
+     "clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": true
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": true
+     }
+    }
+   }
+  },
+  "gte-large-en-v1.5": {
+   "mteb_v1_retrieval": 57.91,
+   "vocab": 30528,
+   "dim": 1024,
+   "params_m": 434,
+   "licence": "Apache-2.0",
+   "vendor_tier": "justify-alibaba",
+   "table_mb_fp16": 62.5,
+   "table_mb_int8": 31.3,
+   "six_est_affine": 0.5473,
+   "six_est_ratio_mean": 0.5569,
+   "six_est_bge_small_anchor_PRIOR_METHOD": 0.565,
+   "extrapolation_beyond_fit_range": 2.77,
+   "at_retention": {
+    "0.7853": {
+     "point": 0.4298,
+     "ci_from_calibration_resid": [
+      0.4137,
+      0.4459
+     ],
+     "clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8200": {
+     "point": 0.4488,
+     "ci_from_calibration_resid": [
+      0.432,
+      0.4656
+     ],
+     "clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8500": {
+     "point": 0.4652,
+     "ci_from_calibration_resid": [
+      0.4478,
+      0.4826
+     ],
+     "clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    },
+    "0.8800": {
+     "point": 0.4816,
+     "ci_from_calibration_resid": [
+      0.4636,
+      0.4997
+     ],
+     "clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    },
+    "0.9100": {
+     "point": 0.4981,
+     "ci_from_calibration_resid": [
+      0.4794,
+      0.5167
+     ],
+     "clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": true
+     }
+    }
+   }
+  },
+  "arctic-embed-l": {
+   "mteb_v1_retrieval": 55.98,
+   "vocab": 30522,
+   "dim": 1024,
+   "params_m": 335,
+   "licence": "Apache-2.0",
+   "vendor_tier": "justify-snowflake-max",
+   "table_mb_fp16": 62.5,
+   "table_mb_int8": 31.3,
+   "six_est_affine": 0.5311,
+   "six_est_ratio_mean": 0.5383,
+   "six_est_bge_small_anchor_PRIOR_METHOD": 0.5462,
+   "extrapolation_beyond_fit_range": 0.84,
+   "at_retention": {
+    "0.7853": {
+     "point": 0.4171,
+     "ci_from_calibration_resid": [
+      0.401,
+      0.4332
      ],
      "clears": {
       "bm25": false,
@@ -148,30 +357,30 @@
      }
     },
     "0.8200": {
-     "point": 0.4167,
+     "point": 0.4355,
      "ci_from_calibration_resid": [
-      0.3999,
-      0.4336
+      0.4187,
+      0.4523
      ],
      "clears": {
-      "bm25": false,
+      "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
      },
      "point_clears": {
-      "bm25": false,
+      "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
      }
     },
     "0.8500": {
-     "point": 0.432,
+     "point": 0.4515,
      "ci_from_calibration_resid": [
-      0.4146,
-      0.4494
+      0.434,
+      0.4689
      ],
      "clears": {
-      "bm25": false,
+      "bm25": true,
       "tier2_release": false,
       "tier1_aim": false
      },
@@ -182,10 +391,94 @@
      }
     },
     "0.8800": {
-     "point": 0.4472,
+     "point": 0.4674,
      "ci_from_calibration_resid": [
-      0.4292,
-      0.4653
+      0.4494,
+      0.4854
+     ],
+     "clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    },
+    "0.9100": {
+     "point": 0.4833,
+     "ci_from_calibration_resid": [
+      0.4647,
+      0.502
+     ],
+     "clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    }
+   }
+  },
+  "gte-modernbert-base": {
+   "mteb_v1_retrieval": 55.33,
+   "vocab": 50368,
+   "dim": 768,
+   "params_m": 149,
+   "licence": "Apache-2.0",
+   "vendor_tier": "justify-alibaba",
+   "table_mb_fp16": 77.4,
+   "table_mb_int8": 38.7,
+   "six_est_affine": 0.5257,
+   "six_est_ratio_mean": 0.5321,
+   "six_est_bge_small_anchor_PRIOR_METHOD": 0.5398,
+   "extrapolation_beyond_fit_range": 0.19,
+   "at_retention": {
+    "0.7853": {
+     "point": 0.4128,
+     "ci_from_calibration_resid": [
+      0.3967,
+      0.4289
+     ],
+     "clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8200": {
+     "point": 0.4311,
+     "ci_from_calibration_resid": [
+      0.4142,
+      0.4479
+     ],
+     "clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8500": {
+     "point": 0.4468,
+     "ci_from_calibration_resid": [
+      0.4294,
+      0.4642
      ],
      "clears": {
       "bm25": true,
@@ -198,11 +491,129 @@
       "tier1_aim": false
      }
     },
-    "0.9100": {
-     "point": 0.4625,
+    "0.8800": {
+     "point": 0.4626,
      "ci_from_calibration_resid": [
-      0.4438,
-      0.4811
+      0.4446,
+      0.4806
+     ],
+     "clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    },
+    "0.9100": {
+     "point": 0.4784,
+     "ci_from_calibration_resid": [
+      0.4597,
+      0.497
+     ],
+     "clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    }
+   }
+  },
+  "arctic-embed-m-v1.5": {
+   "mteb_v1_retrieval": 55.14,
+   "vocab": 30522,
+   "dim": 768,
+   "params_m": 109,
+   "licence": "Apache-2.0",
+   "vendor_tier": "justify-snowflake-max",
+   "table_mb_fp16": 46.9,
+   "table_mb_int8": 23.4,
+   "six_est_affine": 0.5241,
+   "six_est_ratio_mean": 0.5302,
+   "six_est_bge_small_anchor_PRIOR_METHOD": 0.538,
+   "extrapolation_beyond_fit_range": 0.0,
+   "at_retention": {
+    "0.7853": {
+     "point": 0.4116,
+     "ci_from_calibration_resid": [
+      0.3955,
+      0.4277
+     ],
+     "clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8200": {
+     "point": 0.4297,
+     "ci_from_calibration_resid": [
+      0.4129,
+      0.4466
+     ],
+     "clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8500": {
+     "point": 0.4455,
+     "ci_from_calibration_resid": [
+      0.428,
+      0.4629
+     ],
+     "clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8800": {
+     "point": 0.4612,
+     "ci_from_calibration_resid": [
+      0.4432,
+      0.4792
+     ],
+     "clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    },
+    "0.9100": {
+     "point": 0.4769,
+     "ci_from_calibration_resid": [
+      0.4583,
+      0.4956
      ],
      "clears": {
       "bm25": true,
@@ -219,6 +630,13 @@
   },
   "bge-large-en-v1.5": {
    "mteb_v1_retrieval": 54.29,
+   "vocab": 30522,
+   "dim": 1024,
+   "params_m": 335,
+   "licence": "MIT",
+   "vendor_tier": "clean",
+   "table_mb_fp16": 62.5,
+   "table_mb_int8": 31.3,
    "six_est_affine": 0.5169,
    "six_est_ratio_mean": 0.5221,
    "six_est_bge_small_anchor_PRIOR_METHOD": 0.5297,
@@ -313,6 +731,13 @@
   },
   "gte-base-en-v1.5": {
    "mteb_v1_retrieval": 54.09,
+   "vocab": 30528,
+   "dim": 768,
+   "params_m": 137,
+   "licence": "Apache-2.0",
+   "vendor_tier": "justify-alibaba",
+   "table_mb_fp16": 46.9,
+   "table_mb_int8": 23.4,
    "six_est_affine": 0.5153,
    "six_est_ratio_mean": 0.5201,
    "six_est_bge_small_anchor_PRIOR_METHOD": 0.5277,
@@ -405,18 +830,59 @@
     }
    }
   },
-  "gte-large-en-v1.5": {
-   "mteb_v1_retrieval": 57.0,
-   "six_est_affine": 0.5397,
-   "six_est_ratio_mean": 0.5481,
-   "six_est_bge_small_anchor_PRIOR_METHOD": 0.5561,
-   "extrapolation_beyond_fit_range": 1.86,
+  "bge-base-en-v1.5 (current)": {
+   "mteb_v1_retrieval": 53.25,
+   "vocab": 30522,
+   "dim": 768,
+   "params_m": 109,
+   "licence": "MIT",
+   "vendor_tier": "clean",
+   "table_mb_fp16": 46.9,
+   "table_mb_int8": 23.4,
+   "six_est_affine": 0.5082,
+   "six_est_ratio_mean": 0.5121,
+   "six_est_bge_small_anchor_PRIOR_METHOD": 0.5195,
+   "extrapolation_beyond_fit_range": -1.89,
    "at_retention": {
     "0.7853": {
-     "point": 0.4238,
+     "point": 0.3991,
      "ci_from_calibration_resid": [
-      0.4077,
-      0.4399
+      0.383,
+      0.4152
+     ],
+     "clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8200": {
+     "point": 0.4167,
+     "ci_from_calibration_resid": [
+      0.3999,
+      0.4336
+     ],
+     "clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8500": {
+     "point": 0.432,
+     "ci_from_calibration_resid": [
+      0.4146,
+      0.4494
      ],
      "clears": {
       "bm25": false,
@@ -429,45 +895,11 @@
       "tier1_aim": false
      }
     },
-    "0.8200": {
-     "point": 0.4425,
-     "ci_from_calibration_resid": [
-      0.4257,
-      0.4593
-     ],
-     "clears": {
-      "bm25": true,
-      "tier2_release": false,
-      "tier1_aim": false
-     },
-     "point_clears": {
-      "bm25": true,
-      "tier2_release": false,
-      "tier1_aim": false
-     }
-    },
-    "0.8500": {
-     "point": 0.4587,
-     "ci_from_calibration_resid": [
-      0.4413,
-      0.4762
-     ],
-     "clears": {
-      "bm25": true,
-      "tier2_release": false,
-      "tier1_aim": false
-     },
-     "point_clears": {
-      "bm25": true,
-      "tier2_release": true,
-      "tier1_aim": false
-     }
-    },
     "0.8800": {
-     "point": 0.4749,
+     "point": 0.4472,
      "ci_from_calibration_resid": [
-      0.4569,
-      0.493
+      0.4292,
+      0.4653
      ],
      "clears": {
       "bm25": true,
@@ -476,75 +908,116 @@
      },
      "point_clears": {
       "bm25": true,
-      "tier2_release": true,
+      "tier2_release": false,
       "tier1_aim": false
      }
     },
     "0.9100": {
-     "point": 0.4911,
+     "point": 0.4625,
      "ci_from_calibration_resid": [
-      0.4725,
-      0.5098
+      0.4438,
+      0.4811
      ],
      "clears": {
       "bm25": true,
-      "tier2_release": true,
+      "tier2_release": false,
       "tier1_aim": false
      },
      "point_clears": {
       "bm25": true,
       "tier2_release": true,
-      "tier1_aim": true
+      "tier1_aim": false
      }
     }
    }
   },
-  "stella_en_400M_v5": {
-   "mteb_v1_retrieval": 58.97,
-   "six_est_affine": 0.5562,
-   "six_est_ratio_mean": 0.5671,
-   "six_est_bge_small_anchor_PRIOR_METHOD": 0.5753,
-   "extrapolation_beyond_fit_range": 3.83,
+  "granite-embedding-english-r2": {
+   "mteb_v1_retrieval": 53.1,
+   "vocab": 50368,
+   "dim": 768,
+   "params_m": 149,
+   "licence": "Apache-2.0",
+   "vendor_tier": "justify-ibm",
+   "table_mb_fp16": 77.4,
+   "table_mb_int8": 38.7,
+   "six_est_affine": 0.507,
+   "six_est_ratio_mean": 0.5106,
+   "six_est_bge_small_anchor_PRIOR_METHOD": 0.5181,
+   "extrapolation_beyond_fit_range": -2.04,
    "at_retention": {
     "0.7853": {
-     "point": 0.4368,
+     "point": 0.3981,
      "ci_from_calibration_resid": [
-      0.4207,
-      0.4529
+      0.382,
+      0.4142
      ],
      "clears": {
-      "bm25": true,
+      "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
      },
      "point_clears": {
-      "bm25": true,
+      "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
      }
     },
     "0.8200": {
-     "point": 0.4561,
+     "point": 0.4157,
      "ci_from_calibration_resid": [
-      0.4393,
-      0.4729
+      0.3989,
+      0.4325
      ],
      "clears": {
-      "bm25": true,
+      "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
      },
      "point_clears": {
-      "bm25": true,
+      "bm25": false,
       "tier2_release": false,
       "tier1_aim": false
      }
     },
     "0.8500": {
-     "point": 0.4728,
+     "point": 0.4309,
      "ci_from_calibration_resid": [
-      0.4553,
-      0.4902
+      0.4135,
+      0.4483
+     ],
+     "clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8800": {
+     "point": 0.4461,
+     "ci_from_calibration_resid": [
+      0.4281,
+      0.4642
+     ],
+     "clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.9100": {
+     "point": 0.4613,
+     "ci_from_calibration_resid": [
+      0.4427,
+      0.48
      ],
      "clears": {
       "bm25": true,
@@ -555,40 +1028,6 @@
       "bm25": true,
       "tier2_release": true,
       "tier1_aim": false
-     }
-    },
-    "0.8800": {
-     "point": 0.4895,
-     "ci_from_calibration_resid": [
-      0.4714,
-      0.5075
-     ],
-     "clears": {
-      "bm25": true,
-      "tier2_release": true,
-      "tier1_aim": false
-     },
-     "point_clears": {
-      "bm25": true,
-      "tier2_release": true,
-      "tier1_aim": true
-     }
-    },
-    "0.9100": {
-     "point": 0.5061,
-     "ci_from_calibration_resid": [
-      0.4875,
-      0.5248
-     ],
-     "clears": {
-      "bm25": true,
-      "tier2_release": true,
-      "tier1_aim": true
-     },
-     "point_clears": {
-      "bm25": true,
-      "tier2_release": true,
-      "tier1_aim": true
      }
     }
    }

@@ -5,6 +5,8 @@
 > *vendor* grounds alone (Alibaba gte/Qwen3, Microsoft e5, IBM granite, Snowflake arctic) may now
 > be viable. The licence rule and the vocab x dim size arithmetic still bind unchanged.
 > Re-run this sweep before committing to a teacher.
+>
+> **DONE — see `m7-teacher-shortlist-2026-08-26.md`, which supersedes this file.** Kept only for the 2026-08-25 audit trail; do not use its rankings.
 
 # M7 teacher document-encoder shortlist (2026-08-25, Sonnet web sweep, specs verified on HF cards)
 

@@ -68,12 +68,30 @@ def main():
     sd = tx["affine"]["resid_sd"]
     hi_anchor = 0.5042 / 51.68  # the single-point anchor the prior projection used
 
+    # Verified 2026-08-26 by four parallel sweeps. Every row PASSES the hard filters
+    # (licence permits commercial derived weights; vocab <= ~50K; dim <= 1024; runs on a 10 GB
+    # 3080). MTEB figures are MTEB v1 English Retrieval (15-task BEIR avg) -- the only scale our
+    # nine-model fit is valid on. Vendor tier per CLAUDE.md's relaxed rule.
+    CANDIDATES = [
+        # name, MTEB v1 Ret, vocab, dim, params M, licence, vendor tier
+        ("stella_en_400M_v5", 58.97, 30528, 1024, 435, "MIT", "clean"),
+        ("gte-large-en-v1.5", 57.91, 30528, 1024, 434, "Apache-2.0", "justify-alibaba"),
+        ("arctic-embed-l", 55.98, 30522, 1024, 335, "Apache-2.0", "justify-snowflake-max"),
+        ("gte-modernbert-base", 55.33, 50368, 768, 149, "Apache-2.0", "justify-alibaba"),
+        ("arctic-embed-m-v1.5", 55.14, 30522, 768, 109, "Apache-2.0", "justify-snowflake-max"),
+        ("bge-large-en-v1.5", 54.29, 30522, 1024, 335, "MIT", "clean"),
+        ("gte-base-en-v1.5", 54.09, 30528, 768, 137, "Apache-2.0", "justify-alibaba"),
+        ("bge-base-en-v1.5 (current)", 53.25, 30522, 768, 109, "MIT", "clean"),
+        ("granite-embedding-english-r2", 53.10, 50368, 768, 149, "Apache-2.0", "justify-ibm"),
+    ]
     cands = {}
-    for name, mteb in [("bge-base-en-v1.5 (current)", 53.25), ("bge-large-en-v1.5", 54.29),
-                       ("gte-base-en-v1.5", 54.09), ("gte-large-en-v1.5", 57.0),
-                       ("stella_en_400M_v5", 58.97)]:
+    for name, mteb, vocab, dim, prm, lic, tier in CANDIDATES:
         six = a * mteb + b
-        row = {"mteb_v1_retrieval": mteb, "six_est_affine": round(six, 4),
+        row = {"mteb_v1_retrieval": mteb, "vocab": vocab, "dim": dim, "params_m": prm,
+               "licence": lic, "vendor_tier": tier,
+               "table_mb_fp16": round(vocab * dim * 2 / 1e6, 1),
+               "table_mb_int8": round(vocab * dim / 1e6, 1),
+               "six_est_affine": round(six, 4),
                "six_est_ratio_mean": round(tx["ratio"]["mean"] * mteb / 100, 4),
                "six_est_bge_small_anchor_PRIOR_METHOD": round(hi_anchor * mteb, 4),
                "extrapolation_beyond_fit_range": round(mteb - tx["mteb_range"][1], 2),
@@ -106,12 +124,13 @@ def main():
     print(f"  affine slope {a:.5f} intercept {b:+.4f} r {tx['affine']['pearson_r']:.4f} "
           f"resid sd {sd:.4f}")
     print(f"  statics (other harness) ratio mean {st['ratio']['mean']:.4f}\n")
-    print(f"{'candidate':28s} {'MTEB':>5s} {'six':>6s} | "
+    print(f"{'candidate':30s} {'MTEB':>5s} {'six':>6s} {'int8MB':>7s} {'tier':>22s} | "
           + " ".join(f"x{r:.0%}".rjust(7) for r in (RETENTION_TODAY, 0.85, 0.88, 0.91)))
     for n, r in cands.items():
         cells = " ".join(f"{r['at_retention'][f'{x:.4f}']['point']:7.4f}"
                          for x in (RETENTION_TODAY, 0.85, 0.88, 0.91))
-        print(f"{n:28s} {r['mteb_v1_retrieval']:5.2f} {r['six_est_affine']:6.4f} | {cells}")
+        print(f"{n:30s} {r['mteb_v1_retrieval']:5.2f} {r['six_est_affine']:6.4f} "
+              f"{r['table_mb_int8']:7.1f} {r['vendor_tier']:>22s} | {cells}")
     print(f"\nbars: bm25 {BARS['bm25']}  tier2 {BARS['tier2_release']}  "
           f"tier1 {BARS['tier1_aim']}")
     for n in cands:
