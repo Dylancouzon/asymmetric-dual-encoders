@@ -122,10 +122,14 @@ def run(run_id, stage0_id=None, components=None, probe_file=None):
 
     print()
     for k, v in res["conditions"].items():
-        print(f"{'PASS' if v.get('pass') else 'FAIL'}  {k}"
-              + (f"  d={v['delta']:+.4f} CI={v['ci95']}" if "delta" in v else "")
-              + (f"  upper={v['upper']}" if "upper" in v else "")
-              + (f"  [{v['note']}]" if v.get("note") else ""))
+        # G4 is an equivalence bound, not a paired CI, so it has no ci95 key: guard each field
+        # independently rather than assuming the shapes match.
+        bits = [f"d={v['delta']:+.4f}" if "delta" in v else "",
+                f"CI={v['ci95']}" if "ci95" in v else "",
+                f"upper={v['upper']} (bar {v.get('bar')})" if "upper" in v else "",
+                f"p={v['p_str']}" if "p_str" in v else "",
+                f"[{v['note']}]" if v.get("note") else ""]
+        print(f"{'PASS' if v.get('pass') else 'FAIL'}  {k}  " + "  ".join(b for b in bits if b))
     print(f"\nmacros, text-backed ({len(text_backed)} comps): "
           f"{json.dumps({k: round(x,4) for k,x in res['macros_text_backed'].items()})}")
     print(f"macros, all ({len(comps)} comps): "

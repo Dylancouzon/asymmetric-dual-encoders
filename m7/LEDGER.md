@@ -390,3 +390,51 @@ C is now known to be inferior to B, and gating on a knowingly-inferior checkpoin
 false negative, so the gate is additionally run on `p1-objB` and both are reported. Selecting the
 checkpoint on dev is within the protocol — the gate is a dev-stage decision and all selection
 happens on dev — but the substitution is logged rather than made silently.
+
+## GO/NO-GO GATE: **GO** (2026-08-26 03:03)
+
+`results/m7_gate_p1-objB.json` (and `..._p1-objC.json` for the originally-named candidate).
+Judged on the full pinned six-component dev suite; BM25 and potion comparisons on the four
+text-backed components, as the gate prints.
+
+| condition | judged on | result |
+|---|---|---|
+| G1 Stage-0 distilled table > potion-retrieval-32M | p1-objB | **PASS** d=+0.0994 CI=[0.0910,0.1078] p<1e-4 |
+| G2 capacity probe > BM25 | overfit table | **PASS** d=+0.5917 (trivially — see the caveat above) |
+| G3 candidate > BM25 | p1-objB | **PASS** d=+0.0270 CI=[0.0188,0.0353] p<1e-4 |
+| G4 int8 equivalence, 97.5% upper bound of (fp16−int8) < 0.005 | p1-objB | **PASS** d=+0.0001, upper=0.00053 |
+
+Dev macros, text-backed: candidate fp16 **0.4795** · int8 **0.4795** · BM25 0.4525 ·
+potion 0.3801 · teacher ceiling 0.6106. **Teacher retention 0.7853** (text-backed), 0.8073 (all
+six). The retention figure agrees with the closed-form ridge probe's 79% from a different method.
+
+`p1-objC` fails G3 as expected (d=−0.0383, its contrastive phase having cost 7.3 points), which
+is why the checkpoint substitution was logged in advance. Both JSONs are committed.
+
+**So: full program, not the negative-result path.** The headline available today is that a
+**pure-distillation lookup table with no contrastive training at all retains 78.5% of its 109M
+teacher and beats BM25 by 2.7 points on dev at zero query compute, in a 23.4 MB int8 artifact**
+whose quantisation is measurably free (upper bound 0.00053 against a 0.005 bar).
+
+A cosmetic bug crashed the gate's *printer* after the JSON was written (G4 has no `ci95` key and
+the print loop assumed the shapes matched). Verdicts were never at risk — the JSON is written
+before printing — and the print loop now guards each field independently.
+
+## The 2026-08-26 reboot was Windows Update, not a crash
+
+Reported as a crash; it was not. Windows Event 1074 at 05:52:34 records
+`C:\Windows\servicing\TrustedInstaller.exe` initiating a restart on behalf of
+`NT AUTHORITY\SYSTEM`, reason **"Operating System: Upgrade"**, with a second reboot at 05:53.
+Kernel-Boot Event 20 reports the last shutdown's success status as **true**. There is **no**
+Kernel-Power Event 41, **no** Event 6008 unexpected-shutdown, **no** bugcheck (1001), and no
+thermal or power event; the only such pair in the log is from 8/9 and unrelated. GPU idle and
+healthy afterwards (48 °C, 78 W of a 320 W limit).
+
+Timeline: the gate completed 03:03 → machine idle → Windows Update reboot 05:52. No compute of
+ours was running for nearly three hours before it. **Nothing was lost** — all three checkpoints,
+the 22 GB encode cache, the 8.9 GB pool and every results file are intact, with no partial
+writes, which is what the shard-resumable/atomic-rename design was for.
+
+**Action for Dylan (host side):** stop Windows Update rebooting mid-run — set active hours, pause
+updates, or the "No auto-restart with logged on users" policy. That is the only thing so far that
+actually threatens an unattended overnight session on this box.
