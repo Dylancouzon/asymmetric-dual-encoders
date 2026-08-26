@@ -146,13 +146,43 @@ def dequantize_int8(q, scale):
     return q.astype(np.float32) * scale[:, None]
 
 
-def save_table(path, model: QueryTable, pre: Preproc, meta=None):
-    rows = model.rows.detach().float().cpu().numpy()
+def apply_unseen_policy(rows, updates, policy, init_rows=None, min_updates=1):
+    """What a row that training never (or barely) touched should contain.
+
+    The six are scientific, biomedical, financial and argumentative; the training mix is
+    Wikipedia and e-commerce. Rarely-updated rows are therefore exactly the rows the six are
+    most likely to hit, and leaving them at a differently-scaled init makes those queries land
+    in a different regime from trained ones. Policies are compared on dev.
+      init             leave at initialization (the default the mandate names)
+      mean_of_trained  replace with the mean of the trained rows (same regime, no information)
+      zero             contribute nothing to the bag
+    """
+    rows = np.array(rows, dtype=np.float32, copy=True)
+    cold = np.asarray(updates) < min_updates
+    if policy == "init":
+        if init_rows is not None:
+            rows[cold] = np.asarray(init_rows, dtype=np.float32)[cold]
+    elif policy == "mean_of_trained":
+        warm = ~cold
+        if warm.any():
+            rows[cold] = rows[warm].mean(0)
+    elif policy == "zero":
+        rows[cold] = 0.0
+    else:
+        raise KeyError(policy)
+    return rows, int(cold.sum())
+
+
+def save_table(path, model: QueryTable, pre: Preproc, meta=None, updates=None, rows_override=None):
+    rows = (np.asarray(rows_override, dtype=np.float32) if rows_override is not None
+            else model.rows.detach().float().cpu().numpy())
     w = model.token_weights()
     w = None if w is None else w.detach().float().cpu().numpy()
     q, scale = quantize_int8(rows)
     np.savez(path, rows_fp16=rows.astype(np.float16), rows_int8=q, int8_scale=scale,
-             token_weights=(np.zeros(0, dtype=np.float32) if w is None else w))
+             token_weights=(np.zeros(0, dtype=np.float32) if w is None else w),
+             updates=(np.zeros(0, dtype=np.int64) if updates is None
+                      else np.asarray(updates, dtype=np.int64)))
     (path.parent / (path.stem + ".meta.json")).write_text(json.dumps(
         {"preproc": asdict(pre), "preproc_fingerprint": pre.fingerprint(),
          "teacher": TEACHER, "teacher_revision": TEACHER_REV,

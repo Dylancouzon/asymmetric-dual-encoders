@@ -289,8 +289,10 @@ def run(cfg: Cfg, log=print):
            "median_updates_of_touched": float(updates[updates > 0].median()) if (updates > 0).any() else 0.0}
     final = dev("final", cfg.steps_b + cfg.steps_a)
     from table import save_table
-    save_table(RUNS / f"{cfg.run_id}.npz", model, pre,
+    upd = updates.detach().cpu().numpy()
+    save_table(RUNS / f"{cfg.run_id}.npz", model, pre, updates=upd,
                meta={"cfg": asdict(cfg), "dev_macro": final, "coverage": cov})
+    np.save(RUNS / f"{cfg.run_id}.init.npy", W0.detach().cpu().numpy().astype(np.float16))
     (RUNS / f"{cfg.run_id}.json").write_text(json.dumps(
         {"cfg": asdict(cfg), "history": hist, "final_macro": final, "coverage": cov,
          "n_train_pairs": len(q_texts)}, indent=1))
