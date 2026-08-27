@@ -464,3 +464,18 @@ MS MARCO is excluded from the clean stack, so this is DIAGNOSTIC ONLY under the 
 rule: an unresolved or negative result closes the EXPLORED row on evidence; a resolved positive
 escalates to Dylan for a clean-generator ruling and a separately pre-registered shippable run —
 it does not adopt anything by itself.
+
+## Capacity lever #1: adoption FAILED per the pre-registered bar, 2026-08-27
+
+`results/m7_bigram_residual_k10000.json`: aug vs winner −0.0301 [−0.0357, −0.0247], signflip
+p=1.0, worse on every component (hotpotqa −0.0601, heldout-train −0.0886); int8 same. The
+baseline reproduces the gate's full-suite winner macro exactly (0.5987), so the eval path is
+faithful. Diagnosis, not just observation: a λ sweep (0.1 / 1 / 10, proxy-3) shrinks the harm
+monotonically toward zero from below and never crosses positive — the residual fit is
+structurally wrong, not under-regularized. Mechanism: closed-form fitting's only supervision is
+the teacher target; the winner already beats every teacher-MSE solution (its A-phase deviations
+from the teacher ARE the gains), so any teacher-ward correction partially undoes them. The
+probe's +0.0143 was real but frame-bound: it exists only where the base table is itself
+teacher-MSE. CLOSED for closed-form integration. The one escalation — joint retrain with bigram
+features in the forward (B then A, table.py surgery, full re-selection) — stays open and
+requires its own pre-registration before any of its numbers are read.

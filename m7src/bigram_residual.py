@@ -76,7 +76,7 @@ def stats(per_a, per_b, alternative="greater"):
 FIT = WORK / "runs" / "bigram_residual_fit.npz"
 
 
-def main(k, lam=0.01, smoke=False):
+def main(k, lam=0.01, smoke=False, proxy=False):
     t0 = time.time()
     tok = get_tokenizer()
     V = tok.vocab_size
@@ -91,7 +91,7 @@ def main(k, lam=0.01, smoke=False):
         qs = [qs[i] for i in rng.choice(len(qs), size=20000, replace=False)]
     print(f"bigram residual fit: K={k} lam={lam} on {len(qs):,} TRAIN queries, "
           f"winner={WINNER.name}", flush=True)
-    if FIT.exists() and not smoke:
+    if FIT.exists() and not smoke and lam == 0.01:
         z = np.load(FIT, allow_pickle=True)
         assert int(z["k"]) == k and float(z["lam"]) == lam, dict(k=int(z["k"]), lam=float(z["lam"]))
         Wb, s = z["wb"].astype(np.float32), float(z["s"])
@@ -116,7 +116,7 @@ def main(k, lam=0.01, smoke=False):
         assert info == 0, info
         Wb = Wb.astype(np.float32)
         del G, rhs, Xb, U, Y
-        if not smoke:
+        if not smoke and lam == 0.01:
             np.savez(FIT, wb=Wb, s=s, k=k, lam=lam, bigrams=np.array(list(bmap), dtype=np.int64))
         print(f"  fitted K={k} bigram rows, global scale s={s:.4f} ({time.time()-t0:.0f}s), "
               f"rss {rss_gb():.1f} GB", flush=True)
@@ -126,7 +126,7 @@ def main(k, lam=0.01, smoke=False):
     # The shipped shape: relative scale between blocks is what matters; fold s into the
     # unigram block (rows are where absorbable scalars go).
     Waug = np.vstack([s * Wu, Wb])
-    comps = ["nq-250k", "cqadup-programmers", "cqadup-physics"] if smoke \
+    comps = ["nq-250k", "cqadup-programmers", "cqadup-physics"] if (smoke or proxy) \
         else dev_eval.dev_components()
     per = eval_variants(
         {"winner": (Wu, {}), "aug": (Waug, bmap),
@@ -152,8 +152,9 @@ def main(k, lam=0.01, smoke=False):
            "_protocol": "pre-registered in m7/LEDGER.md 2026-08-27: adopt iff signflip p<0.05 "
                         "AND paired CI>0 on the full pinned dev suite, release shape; int8 "
                         "independently CI>0 vs int8 winner; lam fixed at 0.01"}
-    if smoke:
-        out["_smoke"] = "20k-query subsample, proxy components only — NOT an adoption number"
+    if smoke or proxy:
+        out["_smoke"] = ("20k-query subsample, " if smoke else "full-query fit, ") + \
+            "proxy components only — NOT an adoption number"
         print(json.dumps(out, indent=1), flush=True)
         return
     (REPO / "results" / f"m7_bigram_residual_k{k}.json").write_text(json.dumps(out, indent=1))
@@ -162,4 +163,5 @@ def main(k, lam=0.01, smoke=False):
 
 if __name__ == "__main__":
     main(k=int(sys.argv[1]), lam=float(sys.argv[2]) if len(sys.argv) > 2 else 0.01,
-         smoke=len(sys.argv) > 3 and sys.argv[3] == "--smoke")
+         smoke=len(sys.argv) > 3 and sys.argv[3] == "--smoke",
+         proxy=len(sys.argv) > 3 and sys.argv[3] == "--proxy")

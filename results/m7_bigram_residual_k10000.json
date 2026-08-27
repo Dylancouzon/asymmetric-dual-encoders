@@ -1,0 +1,68 @@
+{
+ "k": 10000,
+ "lam": 0.01,
+ "n_queries": 561482,
+ "winner": "s2w-1e3-s1000.release.npz",
+ "global_scale_s": 0.537376,
+ "macro_winner": 0.5987,
+ "macro_winner_plus_bigrams": 0.5686,
+ "macro_winner_int8": 0.5986,
+ "macro_winner_plus_bigrams_int8": 0.5687,
+ "per_component_macro": {
+  "nq-250k": {
+   "winner": 0.8015,
+   "aug": 0.7953
+  },
+  "hotpotqa": {
+   "winner": 0.5788,
+   "aug": 0.5187
+  },
+  "cqadup-programmers": {
+   "winner": 0.3291,
+   "aug": 0.3193
+  },
+  "cqadup-physics": {
+   "winner": 0.385,
+   "aug": 0.3838
+  },
+  "heldout-train": {
+   "winner": 0.6184,
+   "aug": 0.5298
+  },
+  "heldout-longq": {
+   "winner": 0.8792,
+   "aug": 0.8646
+  }
+ },
+ "aug_vs_winner": {
+  "delta": -0.0301,
+  "ci95": [
+   -0.0357,
+   -0.0247
+  ],
+  "resolved": true,
+  "signflip_p": 1.0,
+  "signflip_p_str": "1.00000"
+ },
+ "aug_vs_winner_int8": {
+  "delta": -0.0299,
+  "ci95": [
+   -0.0355,
+   -0.0245
+  ],
+  "resolved": true,
+  "signflip_p": 1.0,
+  "signflip_p_str": "1.00000"
+ },
+ "artifact_cost_mb_fp16": 20.5,
+ "components": [
+  "nq-250k",
+  "hotpotqa",
+  "cqadup-programmers",
+  "cqadup-physics",
+  "heldout-train",
+  "heldout-longq"
+ ],
+ "seconds": 371.8,
+ "_protocol": "pre-registered in m7/LEDGER.md 2026-08-27: adopt iff signflip p<0.05 AND paired CI>0 on the full pinned dev suite, release shape; int8 independently CI>0 vs int8 winner; lam fixed at 0.01"
+}

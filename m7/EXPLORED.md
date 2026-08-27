@@ -48,3 +48,4 @@ Check this before starting anything new. One row per avenue; detail lives in the
   queries in the six's forms "including long counter-arguments". Note the 55-query slice is 54/55
   HotpotQA, so it tests long *multi-hop Wikipedia*, not long *argumentative* — n is not its only
   problem. (`LEDGER.md`)
+| bigram rows, closed-form onto the trained winner | CLOSED 2026-08-27: −0.0301 resolved on the full suite; λ-sweep proves structural (teacher-ward correction undoes A-phase gains). Joint-retrain escalation stays open, needs own pre-registration. `results/m7_bigram_residual_k10000.json` |
