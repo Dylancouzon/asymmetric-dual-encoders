@@ -258,6 +258,16 @@ on **nq-250k and hotpotqa (Wikipedia, non-StackExchange)** against the committed
 `results/m7_stage0_ridge.json`. If stella's table does not also lead off-StackExchange, the swap
 goes back to Dylan with that number before anything else runs.
 
+## Phase-2 stella confirmation + labeled extension (2026-08-26 20:45, logged before the extension ran)
+
+The three pre-registered arms confirm the band transfers: start 0.4903, 5e-5 0.4993, 1e-4 0.5035,
+3e-4 0.5049 (best-eval 0.5050 @ step 1500) — monotone in lr, no arm declines, best arm at the
+band's top edge and still rising there. That is the same open-at-the-top shape the bge p2x
+extension existed to close, so ONE labeled exploratory arm at lr 1e-3 runs next (logged here
+first). Selection stays the pre-registered procedure: per-arm step on best proxy eval, cross-arm
+winner judged on the FULL dev suite, winner re-run to its selected step. bge precedent: 1e-3
+still helped, 3e-3 was flat.
+
 ## Codex gate, 2026-08-26 (gpt-5.6-sol, read-only, high effort) — 6 BLOCKER / 9 MAJOR / 2 MINOR
 
 Full text: `research/m7-codex-gate-2026-08-26.md`. Its own "fix before any more compute" was the
