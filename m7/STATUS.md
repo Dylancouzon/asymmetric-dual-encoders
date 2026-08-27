@@ -1,64 +1,47 @@
 # M7 status
 
-**Stage:** stella swap encode RUNNING (`logs/stella_swap.log`, hotpotqa ~1/3 done ~17:30; realistic
-finish ~20:00–20:30, then pool → teacher refs → closed-form ridge, all in the same idempotent
-driver). Meanwhile this session closed **every open Codex-gate finding** and tightened
-decontamination — all logged in `LEDGER.md` before any number they affect. Detail:
-`m7/RESULTS.md` (runs), `m7/LEDGER.md` (protocol), `m7/EXPLORED.md`, `results/m7_*.json`.
+**Stage: stella candidate selected and gated — GO (2026-08-26 21:03).** In one evening: teacher
+swap landed, all Codex review #2 findings fixed/evidenced/ledgered, decontamination strengthened
+twice (4-grams + containment; TRAIN 340,850 pairs; 7,190 pool rows banned as negatives), the
+phase-2 band confirmed under stella with a labeled edge extension, and the winner
+**`s2w-1e3-s1000`** (A @ lr 1e-3, 1,000 steps from `s1-objB`) gated on the RELEASE-shape
+artifact: **all four PASS**, G3 vs BM25 +0.0711 [0.0629, 0.0792] with a broad win (hotpotqa
+near-tie, not the bge candidate's resolved loss). **Retention 0.8245 text-backed / 0.8903
+all-six** (bge candidate: 0.785/0.807). Details: `m7/RESULTS.md`, `m7/LEDGER.md`,
+`results/m7_gate_s2w-1e3-s1000.json`, `results/m7_stella_winner.json`.
 
-## Closed today (dispositions + evidence in LEDGER)
+## Run next, in order (all pre-freeze; review #2 B7/M24 bind this ordering)
 
-- **B2** pool-negatives decontamination: 4,413 of 6.17M rows banned; `train.py` refuses to run
-  unmasked; miners' cache sigs carry the mask digest. `results/m7_decontam_pool.json`.
-- **B3** sign-flip randomization p-values (`boot.signflip`), Holm consumes only these; type-I
-  verified on real vectors, FWER 0.013 at α=0.025. `results/m7_signflip_calibration.json`.
-- **B5** one shared BM25 builder (`fusion.bm25_run`) + `test_fusion_paths.py`; found and fixed a
-  real crash (convex on empty runs). p1-objB fusion selection superseded — re-select on stella.
-- **B6** `load_beir` writes `m7/SIX_ACCESS.log` (audit, not a lock; concession still goes in report).
-- **M-perquery** per-qid hashes frozen + independent BM25 recompute matched 3,727/3,727.
-- **M-decontam-short** word-4-grams for 4–7-word queries; R1 family re-run: TRAIN now
-  **345,372 pairs** + 220,679 querytext rows. **MINOR-int8-weights** `table.save_release` folds
-  weights into rows (exact); G4 gates that shape from now on.
-- **Untouched-final repair:** cqadup-android/english added pre-freeze by a deterministic rule;
-  measured TRAIN overlap ~0 (vs FEVER 11.3%, DBpedia 9.32%). Wired into decontam/freeze/final_run.
-- Ridge cache paths now encoder-tagged (a stale 768-d bge table would have crashed tonight's step 7).
+1. **Capacity levers** — the only known bridge from here to the bars: (a) n-gram rows (top-K
+   frequent bigrams as extra table rows, closed-form-distilled first — genuinely new capacity per
+   `m7_absorb_check`); (b) the pseudo-query coverage phase (`program.py`, unused); (c) the cheap
+   doc2query test (EXPLORED.md reopened row). Kill each on evidence; log every arm.
+2. **Mandatory ablations** (`instructions-m7.md`): three inits, two prefix variants, flat vs
+   learned weights, int8 re-report — all on the release shape.
+3. **Fusion re-selection** on the final checkpoint with the fixed builder (grid now includes
+   convex0), then released-table ANN sweep + costs.
+4. **Freeze** (`freeze.py` now pins the release artifact + training-checkpoint sha) → the single
+   final run (tier rule: Holm(sign-flip) AND CI>0; clean-4 robustness computed in-scorer).
 
-## Run next, in order
+## Honesty rails for the projection question
 
-1. **Wait for `run_stella_swap.sh` to finish** (idempotent; re-run to resume). The ridge number at
-   the end is the first real read on stella retention. Then commit `results/m7_stage0_*` under the
-   new tagged name.
-2. **Stella objective-B checkpoint** (`s1-objB`: p1-objB's cfg under `M7_ENCODER=stella-400M-v5`;
-   trainq re-encode happens automatically — kept.json changed). Then `gate.py s1-objB`.
-3. **Phase-2 confirm on stella:** A-only arms from s1-objB, lr {5e-5, 1e-4, 3e-4}, `hard_neg_k=0`,
-   `eval_every=500`; **best-eval selection, re-run winner at its best step** (pre-registered in
-   LEDGER). One confirmation, not a re-sweep.
-4. **Capacity levers, BEFORE freeze (review #2 MAJOR 24 — the confirmed contrastive gain is
-   ~0.011 against a ~0.047 bar gap; only capacity can bridge it):** n-gram rows (top-K frequent
-   bigrams as extra table rows, closed-form-distilled first), the pseudo-query coverage phase
-   (`program.py`, unused), and the reopened cheap doc2query test (EXPLORED.md). Run in that order,
-   kill on evidence, log every arm.
-5. **Mandatory ablations before freeze** (`instructions-m7.md`; review #2 BLOCKER 7): three inits,
-   two prefix variants, flat vs learned weights, int8 (release shape) — then **capacity probe
-   re-run under stella** (G2 refuses the bge probe now), fusion re-selection (grid now includes
-   convex0), released-table ANN sweep + costs, freeze, single final run.
-6. Codex review #2 landed (24 findings, `research/m7-codex-review-2026-08-26b.md`): every
-   BLOCKER + the mechanical MAJORs fixed same-day (bank OOB crash, release path wired into
-   gate/freeze, probe-teacher guard, containment decontam, tier rule = Holm(sign-flip) AND CI,
-   clean-4 in the final scorer, retry guard). Evidence added: significance cross-check
-   (10/10 M4-era CIs reproduced from perquery.json — pairing verified for ALL systems), weak-null
-   sign-flip simulation. Judgement items (teacher family-exposure read, capacity levers) are in
-   the run order above.
+No six-set projection is quoted for the candidate: the single-anchor projection was withdrawn,
+and the composition rule (per-dataset products, never ratio x mean) is in LEDGER. What is known:
+retention improved 0.807 → 0.890 all-six and the teacher ceiling rose; whether that clears
+0.4583 (release) or 0.4868 (Tier 1) is decided only by the final run, after the capacity levers.
 
-## Standing constraints
+## Session ops notes (2026-08-26 evening)
 
-Six-set claim primary (Dylan 2026-08-26); no-disclosed-overlap-4 robustness bars precomputed
-(`results/m7_bars_clean4.json`); stella's ArguAna/FiQA2018 exposure labelled at the dataset row.
-Sequential GPU jobs, 18 GB RAM ceiling, smoke before long runs, commit+push after every experiment.
+Codex review #2: 7 BLOCKER / 15 MAJOR / 2 MINOR — every code-level finding fixed same-day
+(`research/m7-codex-review-2026-08-26b.md`, dispositions in LEDGER); one crash bug (bank-mask
+OOB) would have killed tonight's training. A-phase re-runs are nondeterministic by ~0.0007 proxy
+(CUDA atomics) — the saved artifact is what is judged and ships. One grant violation
+(amend+force-push) self-reported in LEDGER incidents.
 
 ## Open for Dylan
 
-1. Nothing blocking. Encode + fixes running/landed; confirmation chain queues on the GPU tonight.
-2. Host: Windows Update reboots remain the biggest risk to long encodes (one already this morning).
-3. Later: HF release go; the stella-exposure presentation question is answered by the pre-registered
-   clean-4 robustness bars.
+1. Nothing blocking. The GO is real and broad-based this time; capacity levers queue next.
+2. Review #2 items needing your eye eventually: the third six-set access deviation (my `--bm25`
+   pairing check — conceded in LEDGER, report will enumerate all three); android/english are
+   labeled within-family transfer, not untouched generalization.
+3. Host: Windows Update reboots remain the top operational risk.
