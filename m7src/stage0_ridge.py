@@ -59,11 +59,17 @@ def solve_ridge(X, Y, W0, lam):
     # would need ~19 GB on a 25 GB box.
     print(f"    gram nnz={Gs.nnz:,} ({Gs.nnz/ (X.shape[1]**2):.3%} dense, "
           f"{Gs.nnz*12/1e9:.2f} GB sparse -> {X.shape[1]**2*8/1e9:.2f} GB dense fp64)", flush=True)
-    G = Gs.toarray().astype(np.float64)
+    # Gs.data is already float64, so toarray() IS the dense fp64 Gram; an .astype() here made a
+    # second 13 GB copy and took the WSL VM down at K=10,000 (2026-08-26). One copy, ever.
+    G = Gs.toarray()
+    assert G.dtype == np.float64, G.dtype
     del Gs
     rhs = (X.T @ Y).astype(np.float64) + lam * W0.astype(np.float64)
     G[np.diag_indices_from(G)] += lam
-    W = sla.solve(G, rhs, assume_a="pos", overwrite_a=True, overwrite_b=True)
+    # LAPACK wants Fortran order; a C-ordered G would be copied wholesale despite overwrite_a.
+    # G is symmetric, so the F-contiguous transpose VIEW is the same matrix — no copy, truly
+    # factored in place.
+    W = sla.solve(G.T, rhs, assume_a="pos", overwrite_a=True, overwrite_b=True)
     del G, rhs
     return np.ascontiguousarray(W, dtype=np.float32)
 

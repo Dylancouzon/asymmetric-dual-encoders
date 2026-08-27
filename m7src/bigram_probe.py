@@ -85,9 +85,12 @@ def main(k=5000, lam=0.01, n_queries=None):
     V = tok.vocab_size
     pre = NO_PREFIX
     avail_gb = int(open("/proc/meminfo").readlines()[2].split()[1]) / 1e6
-    need_gb = (V + k) ** 2 * 8 / 1e9
-    if need_gb > avail_gb - 3:
-        raise SystemExit(f"REFUSED: K={k} needs a {need_gb:.1f} GB Gram, only "
+    # True peak after the solve_ridge one-copy fix: the dense Gram, plus ~4 GB for the fp32
+    # targets (n x 1024), the sparse bag, and the fp64 rhs. Before that fix the Gram was copied
+    # twice more and K=10,000 killed the VM despite passing the old Gram-only check.
+    need_gb = (V + k) ** 2 * 8 / 1e9 + 4
+    if need_gb > avail_gb - 2:
+        raise SystemExit(f"REFUSED: K={k} peaks at ~{need_gb:.1f} GB, only "
                          f"{avail_gb:.1f} GB available")
     qs = mix.query_texts(train_only=True)
     if n_queries and len(qs) > n_queries:
