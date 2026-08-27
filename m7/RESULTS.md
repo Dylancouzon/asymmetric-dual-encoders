@@ -164,3 +164,13 @@ Arms from `s1-objB` (B 8k, 0.4903 — 0.007 UNDER the closed form, unlike bge wh
 gate conditions PASS; G3 vs BM25 +0.0711 [0.0629, 0.0792] with the win broad across components
 (hotpotqa near-tie instead of the bge candidate's resolved loss). Retention 0.8245 text-backed /
 0.8903 all-6. `results/m7_gate_s2w-1e3-s1000.json`, probe re-run under stella.
+
+## Capacity lever #1: bigram rows, 2026-08-27
+
+Closed-form probe ladder (ridge table, proxy-3, `results/m7_bigram_probe_k*.json`): K=500
+−0.0005 unresolved · K=5000 +0.0101 [0.0073, 0.0128] · K=10000 +0.0143 [0.0111, 0.0174] for
+20.5 MB fp16. K=20000 refused on RAM arithmetic — the ladder tops out at 10000, which goes
+forward. (The 2026-08-26 WSL crash was two hidden Gram copies in `solve_ridge`; fixed, smoke
+reproduces the committed K=500 numbers exactly.) Adoption is decided by `bigram_residual.py`
+per the LEDGER pre-registration: residual fit on the frozen winner rows, full pinned dev
+suite, release shape, signflip p<0.05 AND paired CI>0, int8 independently.

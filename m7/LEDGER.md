@@ -453,3 +453,14 @@ ridge-table — not the shipped candidate. Adoption is decided as follows, writt
 - **If adopted**: `table.py` grows the n-gram map (shipped with the artifact, sha-pinned by
   `freeze.py`), `test_conformance.py` is extended before any re-gate, and the mandatory ablations
   run on the augmented release shape.
+
+## Capacity lever #3 (doc2query): diagnostic protocol, 2026-08-27 (logged before any number)
+
+Per the EXPLORED.md demoted-not-closed row: two CQADupStack dev components, N=5 sampled queries
+per doc APPENDED (truncation confound falls on the treatment, not the content), re-encoded with
+the frozen teacher, scored with the same winner-table query vectors, paired two-sided
+(signflip + CI). `doc2query_probe.py`. The only available generators are MS MARCO-trained and
+MS MARCO is excluded from the clean stack, so this is DIAGNOSTIC ONLY under the pre-registered
+rule: an unresolved or negative result closes the EXPLORED row on evidence; a resolved positive
+escalates to Dylan for a clean-generator ruling and a separately pre-registered shippable run —
+it does not adopt anything by itself.
