@@ -124,16 +124,16 @@ def run(run_id, stage0_id=None, components=None, probe_file=None):
     # the text-backed subset. Mixing the two component sets is how the first version of this
     # summary raised KeyError instead of quietly reporting an incomparable number.
     res["macros_all_components"] = {**macros,
-                                    "bge-base-symmetric (teacher ceiling)": mean_over(teacher, comps)}
+                                    f"{dev_eval.TEACHER_REF} (teacher ceiling)": mean_over(teacher, comps)}
     res["macros_text_backed"] = {**macros_text_backed,
                                  "bm25": mean_over(bm, text_backed),
                                  "potion-retrieval-32M": mean_over(pot, text_backed),
-                                 "bge-base-symmetric (teacher ceiling)": mean_over(teacher, text_backed)}
+                                 f"{dev_eval.TEACHER_REF} (teacher ceiling)": mean_over(teacher, text_backed)}
     res["macros"] = res["macros_text_backed"]   # the set every gate comparison uses
     res["retention_vs_teacher_text_backed"] = round(
-        macros_text_backed["fp16"] / res["macros_text_backed"]["bge-base-symmetric (teacher ceiling)"], 4)
+        macros_text_backed["fp16"] / res["macros_text_backed"][f"{dev_eval.TEACHER_REF} (teacher ceiling)"], 4)
     res["retention_vs_teacher_all_components"] = round(
-        macros["fp16"] / res["macros_all_components"]["bge-base-symmetric (teacher ceiling)"], 4)
+        macros["fp16"] / res["macros_all_components"][f"{dev_eval.TEACHER_REF} (teacher ceiling)"], 4)
     res["PASS"] = all(v.get("pass") for v in res["conditions"].values())
     (REPO / "results" / f"m7_gate_{run_id}.json").write_text(json.dumps(res, indent=1))
 

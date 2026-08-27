@@ -189,6 +189,17 @@ existed; gating a knowingly-inferior checkpoint would be a false negative, so `p
 gated and both are reported. Selecting on dev is within the protocol — the gate is a dev-stage
 decision.
 
+## GO/NO-GO GATE #2, stella candidate: **GO** (2026-08-26 21:03)
+
+`results/m7_gate_s2w-1e3-s1000.json`, judged on the RELEASE-shape artifact (weights folded).
+All four PASS: G1 +0.1159; G2 stella capacity probe (rerun, encoder-tagged,
+`m7_capacity_probe_noprefix.json`); G3 vs BM25 **+0.0711 [0.0629, 0.0792]** — and unlike the
+first GO this is not one component wide: the candidate leads on 3 of 4 text-backed components
+and hotpotqa is a near-tie (0.5788 vs 0.5851), not a resolved loss; G4 int8 upper bound 0.00014.
+Retention vs stella teacher: 0.8245 text-backed / 0.8903 all six. The candidate's projection to
+the six is NOT recomputed here (the withdrawn-projection rules stand); the tier question is
+decided only by the final run, and the capacity levers still run first per STATUS.
+
 ## Strategy pivot (Dylan, 2026-08-26)
 
 Trigger: the corrected projection put the best candidate at ~0.41 on the six (Tier 4). Direction:

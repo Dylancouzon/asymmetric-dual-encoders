@@ -157,3 +157,10 @@ Arms from `s1-objB` (B 8k, 0.4903 — 0.007 UNDER the closed form, unlike bge wh
 **Cross-arm winner on the FULL suite (per the amended rule): `s2w-1e3-s1000` 0.5987 vs
 `s2w-3e4-s1500` 0.5907** — the proxy tie hid a real full-suite gap. Retention vs teacher
 (0.6724): **0.890** (bge candidate: 0.807). `results/m7_stella_winner.json`.
+
+## Gate #2, 2026-08-26 21:03 — GO on the release artifact
+
+`s2w-1e3-s1000` (A @ lr 1e-3, 1,000 steps from `s1-objB`, hard_neg_k=0, release shape): all four
+gate conditions PASS; G3 vs BM25 +0.0711 [0.0629, 0.0792] with the win broad across components
+(hotpotqa near-tie instead of the bge candidate's resolved loss). Retention 0.8245 text-backed /
+0.8903 all-6. `results/m7_gate_s2w-1e3-s1000.json`, probe re-run under stella.

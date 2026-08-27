@@ -1,0 +1,199 @@
+{
+ "run_id": "s2w-1e3-s1000",
+ "components": [
+  "nq-250k",
+  "hotpotqa",
+  "cqadup-programmers",
+  "cqadup-physics",
+  "heldout-train",
+  "heldout-longq"
+ ],
+ "conditions": {
+  "G1_stage0_above_potion": {
+   "delta": 0.1159,
+   "ci95": [
+    0.1074,
+    0.1244
+   ],
+   "boot_tail": 0.0,
+   "boot_tail_str": "<0.0001",
+   "_boot_tail_note": "bootstrap tail mass, NOT a p-value; use signflip() for p",
+   "alternative": "greater",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": 0.1074,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": 0.0938,
+     "ci95": [
+      0.0738,
+      0.1139
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": 0.0804,
+     "ci95": [
+      0.0587,
+      0.1025
+     ]
+    },
+    "hotpotqa": {
+     "n": 7405,
+     "delta": 0.0499,
+     "ci95": [
+      0.0422,
+      0.0575
+     ]
+    },
+    "nq-250k": {
+     "n": 3452,
+     "delta": 0.2393,
+     "ci95": [
+      0.2261,
+      0.2522
+     ]
+    }
+   },
+   "resolved": true,
+   "pass": true,
+   "checkpoint": "s1-objB",
+   "note": "Stage-0 distilled table",
+   "components": [
+    "nq-250k",
+    "hotpotqa",
+    "cqadup-programmers",
+    "cqadup-physics"
+   ]
+  },
+  "G2_capacity_probe": {
+   "pass": true,
+   "macro": 0.9999922480483922,
+   "vs_bm25": {
+    "delta": 0.5917,
+    "ci95": [
+     0.5793,
+     0.6045
+    ],
+    "boot_tail": 0.0,
+    "boot_tail_str": "<0.0001",
+    "_boot_tail_note": "bootstrap tail mass, NOT a p-value; use signflip() for p",
+    "alternative": "greater",
+    "B": 10000,
+    "seed": 0,
+    "one_sided_lower_2.5": 0.5793,
+    "per_dataset": {
+     "cqadup-physics": {
+      "n": 1039,
+      "delta": 0.6529,
+      "ci95": [
+       0.629,
+       0.6774
+      ]
+     },
+     "cqadup-programmers": {
+      "n": 876,
+      "delta": 0.7025,
+      "ci95": [
+       0.6763,
+       0.7285
+      ]
+     },
+     "nq-250k": {
+      "n": 3452,
+      "delta": 0.4196,
+      "ci95": [
+       0.4066,
+       0.4327
+      ]
+     }
+    },
+    "resolved": true
+   },
+   "encoder": "stella-400M-v5"
+  },
+  "G3_candidate_above_bm25": {
+   "delta": 0.0711,
+   "ci95": [
+    0.0629,
+    0.0792
+   ],
+   "boot_tail": 0.0,
+   "boot_tail_str": "<0.0001",
+   "_boot_tail_note": "bootstrap tail mass, NOT a p-value; use signflip() for p",
+   "alternative": "greater",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": 0.0629,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": 0.0379,
+     "ci95": [
+      0.0186,
+      0.0573
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": 0.0316,
+     "ci95": [
+      0.0091,
+      0.0534
+     ]
+    },
+    "hotpotqa": {
+     "n": 7405,
+     "delta": -0.0063,
+     "ci95": [
+      -0.014,
+      0.0015
+     ]
+    },
+    "nq-250k": {
+     "n": 3452,
+     "delta": 0.2212,
+     "ci95": [
+      0.2081,
+      0.2341
+     ]
+    }
+   },
+   "resolved": true,
+   "pass": true
+  },
+  "G4_int8_equivalence": {
+   "delta": 2e-05,
+   "upper": 0.00014,
+   "level": 0.975,
+   "B": 10000,
+   "seed": 0,
+   "bar": 0.005,
+   "pass": true
+  }
+ },
+ "macros_all_components": {
+  "fp16": 0.5986835136091793,
+  "int8": 0.598664147633094,
+  "stella-400M-v5-symmetric (teacher ceiling)": 0.6724183982907442
+ },
+ "macros_text_backed": {
+  "fp16": 0.5236101598608216,
+  "int8": 0.5236183801527798,
+  "bm25": 0.4525142408892109,
+  "potion-retrieval-32M": 0.38012926744982994,
+  "stella-400M-v5-symmetric (teacher ceiling)": 0.6350347771103328
+ },
+ "macros": {
+  "fp16": 0.5236101598608216,
+  "int8": 0.5236183801527798,
+  "bm25": 0.4525142408892109,
+  "potion-retrieval-32M": 0.38012926744982994,
+  "stella-400M-v5-symmetric (teacher ceiling)": 0.6350347771103328
+ },
+ "retention_vs_teacher_text_backed": 0.8245,
+ "retention_vs_teacher_all_components": 0.8903,
+ "PASS": true,
+ "_label_note": "teacher-ceiling row relabelled 2026-08-26: the value was always stella's (keyed via dev_eval.TEACHER_REF); the printed name was hardcoded bge prose, fixed in gate.py the same evening"
+}
