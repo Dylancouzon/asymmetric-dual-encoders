@@ -49,3 +49,4 @@ Check this before starting anything new. One row per avenue; detail lives in the
   HotpotQA, so it tests long *multi-hop Wikipedia*, not long *argumentative* — n is not its only
   problem. (`LEDGER.md`)
 | bigram rows, closed-form onto the trained winner | CLOSED 2026-08-27: −0.0301 resolved on the full suite; λ-sweep proves structural (teacher-ward correction undoes A-phase gains). Joint-retrain escalation stays open, needs own pre-registration. `results/m7_bigram_residual_k10000.json` |
+| doc2query expansion (reopened row) | CLOSED 2026-08-27 per pre-registered rule: +0.0054 [−0.0007, +0.0114] p=0.085 at N=5/doc — positive-leaning, unresolved at the cheap-test price. Revival needs a clean generator (Dylan) + bigger N. `results/m7_doc2query_probe.json` |

@@ -1,0 +1,27 @@
+{
+ "generator": "BeIR/query-gen-msmarco-t5-base-v1",
+ "n_queries_per_doc": 5,
+ "winner": "s2w-1e3-s1000.release.npz",
+ "per_component": {
+  "cqadup-programmers": {
+   "orig": 0.3291,
+   "d2q": 0.3345
+  },
+  "cqadup-physics": {
+   "orig": 0.385,
+   "d2q": 0.3903
+  }
+ },
+ "_label": "DIAGNOSTIC ONLY \u2014 MS MARCO-trained generator, excluded from the clean stack; nothing here ships. Positive resolution escalates to Dylan for a clean-generator ruling, not to adoption.",
+ "d2q_minus_orig": {
+  "delta": 0.0054,
+  "ci95": [
+   -0.0007,
+   0.0114
+  ],
+  "resolved": false,
+  "signflip_p": 0.08460915390846091,
+  "signflip_p_str": "0.08461"
+ },
+ "seconds": 2533.7
+}

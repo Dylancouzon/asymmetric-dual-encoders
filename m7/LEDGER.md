@@ -493,3 +493,14 @@ coverage mix. **Ordering rule: 500k runs first; 2m runs only if
 without spending the 2m arm. Adoption bar identical to lever #1: full pinned dev suite, release
 shape, signflip p<0.05 AND paired CI>0 vs `s2w-1e3-s1000`, int8 independently. Every arm goes
 to RESULTS.md whatever it says.
+
+## Capacity lever #3 (doc2query): closed per the pre-registered rule, 2026-08-27
+
+`results/m7_doc2query_probe.json`: +0.0054 [−0.0007, +0.0114], signflip p=0.085, positive on
+both components but UNRESOLVED — the pre-registered rule (unresolved or negative closes the
+row) binds, and it was set before the number was seen. Honest shape of the result: this is the
+weakest form of the treatment (N=5 sampled queries/doc, T5-base; docTTTTTquery ships 40/doc),
+so the diagnostic does NOT rule the mechanism out — it rules out adopting it at the cheap-test
+price. Revival cost, if ever wanted: a commercially clean generator (Dylan's licensing ruling
+required — every available one is MS MARCO-trained) plus a larger sample budget plus doc-side
+re-encode of every corpus. Parked, not disproved.
