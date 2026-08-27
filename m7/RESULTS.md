@@ -138,3 +138,22 @@ pre-registered family-exposure read PASSES: the stella table's advantage on Wiki
 (+0.063) exceeds its advantage on the StackExchange components (+0.047/+0.020), so the
 learnability ranking was not StackExchange-specific. Confirmation chain (s1-objB → lr band) is
 running; every number above is dev-exploratory.
+| s1-objB | `work/runs/s1-objB.json` | 0.4903 | ok |
+| s2-start | `work/runs/s2-start.json` | 0.4903 | ok |
+| s2-rn-5e5 | `work/runs/s2-rn-5e5.json` | 0.4993 | ok |
+| s2-rn-1e4 | `work/runs/s2-rn-1e4.json` | 0.5035 | ok |
+| s2-rn-3e4 | `work/runs/s2-rn-3e4.json` | 0.5049 | ok |
+| s2x-rn-1e3 | `work/runs/s2x-rn-1e3.json` | 0.5051 | ok |
+| s2w-3e4-s1500 | `work/runs/s2w-3e4-s1500.json` | 0.5051 | ok |
+| s2w-1e3-s1000 | `work/runs/s2w-1e3-s1000.json` | 0.5052 | ok |
+
+## Stella confirmation, 2026-08-26 20:45–21:10 — band confirmed, edge extended, winner selected
+
+Arms from `s1-objB` (B 8k, 0.4903 — 0.007 UNDER the closed form, unlike bge which matched it):
+5e-5 0.4993 · 1e-4 0.5035 · 3e-4 0.5049 (best 0.5050@1500) · labeled extension 1e-3 0.5051
+(best 0.5059@1000, peak-and-turn — the lr curve's top is now bracketed). All monotone vs start;
+`hard_neg_k=0` throughout. Best-step re-runs differ from their originals by ~0.0007 proxy
+(CUDA-atomics nondeterminism in the A phase; the saved artifact is what is judged and ships).
+**Cross-arm winner on the FULL suite (per the amended rule): `s2w-1e3-s1000` 0.5987 vs
+`s2w-3e4-s1500` 0.5907** — the proxy tie hid a real full-suite gap. Retention vs teacher
+(0.6724): **0.890** (bge candidate: 0.807). `results/m7_stella_winner.json`.

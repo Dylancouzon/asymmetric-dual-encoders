@@ -1,0 +1,104 @@
+{
+ "run_id": "s1-objB",
+ "cfg": {
+  "run_id": "s1-objB",
+  "objective": "B",
+  "init": "teacher",
+  "preproc": "noprefix",
+  "learned_weights": true,
+  "idf_init_weights": true,
+  "lr": 0.003,
+  "lr_weights": 0.01,
+  "warmup_steps": 0,
+  "lr_schedule": "constant",
+  "steps_b": 8000,
+  "steps_a": 0,
+  "batch": 512,
+  "n_neg": 32768,
+  "temp": 0.02,
+  "hard_neg_k": 0,
+  "hard_neg_source": "teacher",
+  "use_provided_hardneg": true,
+  "fn_margin": 0.02,
+  "kl_weight": 1.0,
+  "kl_k": 32,
+  "cos_weight": 1.0,
+  "reg_init": 0.001,
+  "bank_size": 2000000,
+  "sources": [],
+  "eval_every": 2000,
+  "eval_components": [
+   "nq-250k",
+   "cqadup-programmers",
+   "cqadup-physics"
+  ],
+  "seed": 0,
+  "b_query_sources_all": true,
+  "b_pseudo_queries": 0,
+  "b_pseudo_frac": 0.5
+ },
+ "final_macro": 0.490316172095884,
+ "coverage": {
+  "rows_updated": 27307,
+  "vocab": 30522,
+  "rows_updated_frac": 0.8946661353111267,
+  "median_updates_of_touched": 266.0
+ },
+ "history": [
+  {
+   "step": 2000,
+   "phase": "B",
+   "macro": 0.4824267246916167,
+   "collapse": {
+    "mean_pairwise_cos": 0.295,
+    "effective_rank": 444.77,
+    "dim": 1024,
+    "uniformity": -2.7899
+   }
+  },
+  {
+   "step": 4000,
+   "phase": "B",
+   "macro": 0.48628080191178696,
+   "collapse": {
+    "mean_pairwise_cos": 0.2855,
+    "effective_rank": 451.14,
+    "dim": 1024,
+    "uniformity": -2.8286
+   }
+  },
+  {
+   "step": 6000,
+   "phase": "B",
+   "macro": 0.48778114569317904,
+   "collapse": {
+    "mean_pairwise_cos": 0.2783,
+    "effective_rank": 456.05,
+    "dim": 1024,
+    "uniformity": -2.8584
+   }
+  },
+  {
+   "step": 8000,
+   "phase": "B",
+   "macro": 0.490316172095884,
+   "collapse": {
+    "mean_pairwise_cos": 0.279,
+    "effective_rank": 455.77,
+    "dim": 1024,
+    "uniformity": -2.8568
+   }
+  },
+  {
+   "step": 8000,
+   "phase": "final",
+   "macro": 0.490316172095884,
+   "collapse": {
+    "mean_pairwise_cos": 0.279,
+    "effective_rank": 455.77,
+    "dim": 1024,
+    "uniformity": -2.8568
+   }
+  }
+ ]
+}
