@@ -65,8 +65,12 @@ def smoke(base, over, steps_b=60, steps_a=30):
     it is a code check, not an experiment, and its dev number is meaningless at 90 steps.
     """
     cfg = replace(base, run_id="smoke", **over)
-    cfg = replace(cfg, steps_b=min(cfg.steps_b, steps_b), steps_a=min(cfg.steps_a, steps_a),
-                  eval_every=10 ** 9)
+    # A smoke must exercise every phase the OBJECTIVE has, regardless of the base's step counts:
+    # min(steps_a, 30) on a steps_a=0 base silently skipped the A phase of an objective-C smoke
+    # (2026-08-26), which is precisely the unexecuted-path bug this function exists to catch.
+    sb = steps_b if cfg.objective in ("B", "C") else 0
+    sa = steps_a if cfg.objective in ("A", "C") else 0
+    cfg = replace(cfg, steps_b=sb, steps_a=sa, eval_every=10 ** 9)
     print(f"\n{'='*80}\nSMOKE {json.dumps(over)}\n{'='*80}", flush=True)
     dev, model, _ = run(cfg)
     del model
