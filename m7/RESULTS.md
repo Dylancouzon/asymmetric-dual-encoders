@@ -128,3 +128,13 @@ Caveats: closed-form and flat, so it ranks candidates rather than predicting fin
 moves a table — `m7_ridge_vs_trained.json`); two components of one dataset family; and dev-only, the
 six unread.
 
+
+## Teacher swap landed, 2026-08-26 20:27 — stella closed-form table beats bge's best TRAINED arm
+
+`results/m7_stage0_ridge_stella.json`, fitted on the final 340,850-pair + querytext TRAIN set.
+Proxy-3 macro **0.4973** at lam=0.01 (bge closed-form 0.4542; bge best trained arm 0.4659). Teacher
+proxy ceiling 0.6151 → retention 0.808 (bge 0.794): both factors of the product improved. The
+pre-registered family-exposure read PASSES: the stella table's advantage on Wikipedia nq-250k
+(+0.063) exceeds its advantage on the StackExchange components (+0.047/+0.020), so the
+learnability ranking was not StackExchange-specific. Confirmation chain (s1-objB → lr band) is
+running; every number above is dev-exploratory.
