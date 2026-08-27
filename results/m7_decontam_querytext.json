@@ -23,7 +23,26 @@
    }
   }
  },
- "pseudo_query_pools": {},
+ "pseudo_query_pools": {
+  "pseudoq-2000000-0.json": {
+   "n": 924704,
+   "n_kept": 923590,
+   "dropped": {
+    "exact": 0,
+    "near": 998,
+    "contains": 116
+   }
+  },
+  "pseudoq-500000-0.json": {
+   "n": 324704,
+   "n_kept": 324156,
+   "dropped": {
+    "exact": 0,
+    "near": 480,
+    "contains": 68
+   }
+  }
+ },
  "protected_query_counts": {
   "six": 3727,
   "dev": 12772,
