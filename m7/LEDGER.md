@@ -430,3 +430,26 @@ post-hoc. ArguAna/FiQA2018 exposure must be labelled at the dataset row. All new
 `M7_ENCODER=stella-400M-v5` with a separate refs file (`work/devres/refs-stella-400M-v5.json`;
 BM25/potion rows copied, teacher-independent) so no comparison can mix teachers.
 
+
+## Capacity lever #1 (bigram rows): adoption protocol, 2026-08-27 (logged BEFORE any full-suite bigram number)
+
+The probe evidence (`m7_bigram_probe_k*.json`, +0.0101 resolved at K=5000) is proxy-3, closed-form,
+ridge-table — not the shipped candidate. Adoption is decided as follows, written down first:
+
+- **Candidate construction**: the winner release table (`s2w-1e3-s1000.release`) with its unigram
+  rows FROZEN, plus K bigram rows fitted closed-form by residual ridge on the TRAIN queries:
+  one global scalar `s = argmin ||Y - s*Xu@Wu||^2` absorbs the trained table's scale (a global
+  scalar is absorbable, per `m7_absorb_check`), then `Wb = (Xb'Xb + lam*I)^-1 Xb'(Y - s*Xu@Wu)`.
+  `lam = 0.01` carried from the probe, not tuned. Bigram vocabulary = top-K TRAIN-frequency
+  adjacent WordPiece pairs, specials excluded — same rule as the probe.
+- **K is selected on the probe ladder only** (500 / 5000 / 10000, proxy-3 marginal gain per MB),
+  before the full-suite run; exactly one K goes forward.
+- **Adoption bar** (full pinned dev suite, six components, release shape, paired vs the identical
+  winner WITHOUT bigram rows): adopt iff signflip p < 0.05 AND the paired-bootstrap CI resolves
+  above zero. The int8 candidate must independently clear the same CI>0 against the int8 winner.
+- **If it fails**: the lever is closed with the probe-vs-trained discrepancy recorded (capacity
+  the ridge table lacked but training already absorbed). A JOINT retrain with bigram features is
+  the only escalation and needs its own pre-registration before any of its numbers are read.
+- **If adopted**: `table.py` grows the n-gram map (shipped with the artifact, sha-pinned by
+  `freeze.py`), `test_conformance.py` is extended before any re-gate, and the mandatory ablations
+  run on the augmented release shape.
