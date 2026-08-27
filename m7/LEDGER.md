@@ -485,9 +485,10 @@ requires its own pre-registration before any of its numbers are read.
 Arms follow `program.py` phase35 as written: `p35-500k` (b_pseudo_queries=500,000, steps_b=8000,
 b_pseudo_frac=0.5) and `p35-2m` (2,000,000, steps_b=16,000), both through the R1 decontam pass
 first (`decontam_querytext.py` over the pools; `build_decontaminated` raises without it). Each
-arm = objective B re-run with the pseudo-query mix, then the A phase at the confirmed band
-recipe (lr 1e-3, hard_neg_k=0, step picked by the every-500 proxy rule, cap 1500) so the only
-change vs the winner is the coverage mix. **Ordering rule: 500k runs first; 2m runs only if
+arm = objective B re-run with the pseudo-query mix, then the A phase EXACTLY mirroring the winner arm (lr 1e-3, hard_neg_k=0, steps_a 2000,
+eval_every 500, best-step re-run — amended from 'cap 1500' before any arm ran, to make the
+arm identical to how the winner was selected) so the only change vs the winner is the
+coverage mix. **Ordering rule: 500k runs first; 2m runs only if
 500k's full-suite result is not resolved BELOW the winner** — a resolved loss kills the lever
 without spending the 2m arm. Adoption bar identical to lever #1: full pinned dev suite, release
 shape, signflip p<0.05 AND paired CI>0 vs `s2w-1e3-s1000`, int8 independently. Every arm goes
