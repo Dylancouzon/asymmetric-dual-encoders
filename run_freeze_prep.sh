@@ -29,10 +29,10 @@ $PY -u m7src/select_fusion.py "$RUN_ID" >> "$LOG" 2>&1
 # 2. ANN behaviour on real HNSW, and the three cost numbers. The ANN sweep reads the query rule
 #    from the artifact's own metadata, so it exercises the adopted pooling rule.
 step "ann sweep"
-$PY -u m7src/ann_sweep.py "work/runs/${RUN_ID}.release.npz" >> "$LOG" 2>&1 || \
+$PY -u m7src/ann_sweep.py "${RUN_ID}.release" >> "$LOG" 2>&1 || \
   echo "ann sweep failed (non-fatal for the gate)" >> "$LOG"
 step "costs"
-$PY -u m7src/costs.py "$RUN_ID" >> "$LOG" 2>&1 || echo "costs failed" >> "$LOG"
+$PY -u m7src/costs.py "${RUN_ID}.release" >> "$LOG" 2>&1 || echo "costs failed" >> "$LOG"
 
 # 3. The gate, as a mechanical eligibility audit: pinned six verified including the pool's bytes,
 #    released QueryTable path, strict alignment, dependence-aware int8 bound, unrounded per-query

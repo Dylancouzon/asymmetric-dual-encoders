@@ -76,9 +76,13 @@ def doc_index_costs(dim=None):
             "note": "M5/M4 rows: LR 3.07, opensearch 1.4, bge-small 0.77, leaf/arctic-m 1.54 GB/1M"}
 
 
-def main(npz_path, preproc="noprefix"):
-    from table import NO_PREFIX, WITH_PREFIX
-    pre = {"noprefix": NO_PREFIX, "prefix": WITH_PREFIX}[preproc]
+def main(npz_path, preproc=None):
+    """`preproc` is read from the artifact's own metadata. A name-keyed lookup would time the
+    query path under the DEFAULT pooling rule rather than the one the artifact declares, and the
+    query-side latency number is the whole point of this file."""
+    from table import Preproc, read_meta
+    pre = Preproc(**read_meta(npz_path)["preproc"])
+    print(f"  costs measured under the artifact's own rule: {pre}", flush=True)
     out = {"teacher": TEACHER, "table": str(npz_path),
            "query_side": table_costs(npz_path, pre), "doc_index": doc_index_costs()}
     (REPO / "results" / "m7_costs.json").write_text(json.dumps(out, indent=1))
@@ -88,4 +92,4 @@ def main(npz_path, preproc="noprefix"):
 
 if __name__ == "__main__":
     import sys
-    main(WORK / "runs" / f"{sys.argv[1]}.npz", sys.argv[2] if len(sys.argv) > 2 else "noprefix")
+    main(WORK / "runs" / f"{sys.argv[1]}.npz")
