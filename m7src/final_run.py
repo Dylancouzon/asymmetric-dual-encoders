@@ -500,6 +500,13 @@ def main():
                     help="score ONLY the non-confirmatory untouched-final tail, appending to an "
                          "existing results/m7_final_run.json. For resuming after a crash in that "
                          "stage; it never re-scores the six.")
+    # The untouched-final four are RESERVED for M8 (registered 2026-08-28 before any six-set
+    # number, instructions-m8.md): the default run scores the six ONLY and never opens an
+    # untouched payload. Scoring the tail is Dylan's explicit override and burns the sets for M8.
+    ap.add_argument("--run-untouched-tail", action="store_true",
+                    help="OVERRIDE the M8 reservation and score the untouched-final tail after "
+                         "the six (10.1M docs, tens of hours). Once scored they are "
+                         "development-visible and no longer fresh for M8.")
     a = ap.parse_args()
 
     # One process at a time, from the first moment (BLOCKER 3): the guard is read-only, so two
@@ -552,7 +559,13 @@ def main():
     # Preflight LAST among the checks, and only for the kinds this invocation will score: it is
     # the one check that opens frozen payloads, so everything that can refuse for free runs first
     # (BLOCKER 5), and a --untouched-only resume never opens a six-set payload (BLOCKER 4).
-    preflight(kinds=("untouched",) if a.untouched_only else ("six", "untouched"))
+    if a.untouched_only:
+        kinds = ("untouched",)
+    elif a.run_untouched_tail:
+        kinds = ("six", "untouched")
+    else:
+        kinds = ("six",)    # the tail is reserved for M8; its payloads are not even opened
+    preflight(kinds=kinds)
     if a.untouched_only:
         ledger(f"\n- {datetime.now(timezone.utc).isoformat()} — untouched-final RESUME "
                f"(--untouched-only) on freeze={head}; the six are not re-scored.")
@@ -690,9 +703,11 @@ def main():
     # The digest binds the six and the tier decisions, so a later --untouched-only resume can prove
     # the confirmatory block it is appending to has not been edited.
     six_digest = sha({"six": blob["six"], "confirmatory": conf, "holm": decisions})
+    tail_note = ("the non-confirmatory untouched-final tail follows." if a.run_untouched_tail
+                 else "the untouched-final tail is reserved for M8 and is not run.")
     ledger(f"- FINAL-RUN complete in {blob['seconds']:.0f}s (the six and all three confirmatory "
            f"decisions). Confirmatory rejections: {tiers or 'none'}. Results in "
-           "`results/m7_final_run.json`; the non-confirmatory untouched-final tail follows.\n"
+           f"`results/m7_final_run.json`; {tail_note}\n"
            f"- FINAL-RUN-SIX-SHA256 {six_digest}")
     # THE DURABLE SPENT RECEIPT (pre-freeze review 2026-08-28, BLOCKER 2): the result file is
     # untracked and the ledger is editable, so an annotated tag pushed to origin is the record
@@ -707,8 +722,7 @@ def main():
         print(f"[final_run] WARNING: could not push the spent receipt `{SPENT_TAG}` to origin "
               f"({(push.stderr or '').strip()}). Push it manually; until then only the local tag, "
               "the result file and the ledger mark the access as spent.")
-    print("\nwrote results/m7_final_run.json (the six and all three confirmatory decisions; "
-          "untouched-final follows)")
+    print("\nwrote results/m7_final_run.json (the six and all three confirmatory decisions)")
 
     # Pre-registered clean-4 robustness (teacher-exposure restriction). Runs AFTER the persist,
     # so a failure here costs a labelled robustness block, not the result -- and a crash between
@@ -716,7 +730,12 @@ def main():
     # per-query values (pre-freeze review 2026-08-28, MAJOR 7).
     blob["clean4_robustness"] = clean4_block(by_sys, pq)
     write_atomic(out, json.dumps(blob, indent=1))
-    return untouched_stage(blob, out, table_path, pre, spec, t0, tiers_from=decisions)
+    if a.run_untouched_tail:
+        return untouched_stage(blob, out, table_path, pre, spec, t0, tiers_from=decisions)
+    ledger("- untouched-final tail SKIPPED: the four sets stay un-scored, reserved as M8's "
+           "confirmatory evaluation (instructions-m8.md, registered 2026-08-28 pre-run). "
+           "`--run-untouched-tail` or `--untouched-only` would burn them; neither was used.")
+    print("\nuntouched-final tail skipped (reserved for M8). The run is complete.")
 
 
 CLEAN4 = {"scifact", "nfcorpus", "scidocs", "trec-covid"}

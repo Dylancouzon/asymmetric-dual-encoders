@@ -1,0 +1,323 @@
+{
+ "_note": "Written before the freeze commit. final_run.py reads preprocessing, fusion and the released-system choice from here, never from the command line, and recomputes table_sha256 before scoring anything.",
+ "run_id": "p35w-2m-s2500",
+ "training_lineage": [
+  "p35b-2m",
+  "p35w-2m-s2500"
+ ],
+ "training_lineage_record_sha256": {
+  "p35b-2m": "cfe6ffd08b8f4b10ade7f148395faece2a45e6db79a2f5c3455bb88adcabbde5",
+  "p35w-2m-s2500": "90625dff7d21a26ecff40d9dace67d1bae0a613671bca161603bd8bb0a1a383d"
+ },
+ "release_licence_check": "no non-commercial training source in the lineage (freeze.assert_releasable); the sha256 of every run record inspected is above, because those records are gitignored and mutable",
+ "table_relpath": "work/runs/p35w-2m-s2500.release.npz",
+ "training_checkpoint_sha256": "0f544275cbce0c22763d4cacad7078fb7e6107459a7ec5453501449e0444a204",
+ "table_sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
+ "table_meta_sha256": "14f117b82c4bb7268a1d15302774a77130019a3c59bce677d3386d9fc6ddd4a9",
+ "table_bytes": 93886950,
+ "preproc": {
+  "add_special_tokens": true,
+  "max_length": 512,
+  "pool_mode": "sqrt",
+  "prefix": ""
+ },
+ "preproc_fingerprint": "adb24fb2e8cad66f",
+ "learned_weights": false,
+ "teacher": "NovaSearch/stella_en_400M_v5",
+ "teacher_revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+ "encoder_spec": {
+  "name": "stella-400M-v5",
+  "repo": "NovaSearch/stella_en_400M_v5",
+  "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+  "dim": 1024,
+  "pooling": "mean",
+  "post_dense": "2_Dense_1024",
+  "query_prefix": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
+  "doc_prefix": "",
+  "max_length": 512,
+  "tokenizer_id": "bert-wordpiece-30522",
+  "vocab": 30522,
+  "cls_id": 101,
+  "config_kwargs": {
+   "unpad_inputs": false,
+   "use_memory_efficient_attention": false
+  }
+ },
+ "teacher_code_pin_sha256": "05fe5673acff38116b8b49544455102219a87b32b1b4925c6c50bce4cf5a0fe1",
+ "teacher_code_verified": true,
+ "fusion": {
+  "family": "convex0",
+  "param": 0.8,
+  "dev_macro": 0.5726634997854769,
+  "grid": [
+   {
+    "family": "rrf",
+    "param": 10,
+    "macro": 0.5503908577456825
+   },
+   {
+    "family": "rrf",
+    "param": 20,
+    "macro": 0.5452580748218175
+   },
+   {
+    "family": "rrf",
+    "param": 30,
+    "macro": 0.5405313652272438
+   },
+   {
+    "family": "rrf",
+    "param": 60,
+    "macro": 0.5352198934971255
+   },
+   {
+    "family": "rrf",
+    "param": 100,
+    "macro": 0.5324084846345483
+   },
+   {
+    "family": "convex",
+    "param": 0.3,
+    "macro": 0.5233128077108252
+   },
+   {
+    "family": "convex",
+    "param": 0.4,
+    "macro": 0.5419764918829417
+   },
+   {
+    "family": "convex",
+    "param": 0.5,
+    "macro": 0.5580906212049205
+   },
+   {
+    "family": "convex",
+    "param": 0.6,
+    "macro": 0.5672398864593071
+   },
+   {
+    "family": "convex",
+    "param": 0.7,
+    "macro": 0.5690879625923013
+   },
+   {
+    "family": "convex",
+    "param": 0.8,
+    "macro": 0.56381917889561
+   },
+   {
+    "family": "convex",
+    "param": 0.9,
+    "macro": 0.552368259413916
+   },
+   {
+    "family": "convex",
+    "param": 1.0,
+    "macro": 0.5370239716990969
+   },
+   {
+    "family": "convex0",
+    "param": 0.3,
+    "macro": 0.5122299698890617
+   },
+   {
+    "family": "convex0",
+    "param": 0.4,
+    "macro": 0.5283414880892416
+   },
+   {
+    "family": "convex0",
+    "param": 0.5,
+    "macro": 0.5440449673826204
+   },
+   {
+    "family": "convex0",
+    "param": 0.6,
+    "macro": 0.5588419945090596
+   },
+   {
+    "family": "convex0",
+    "param": 0.7,
+    "macro": 0.5690484253647831
+   },
+   {
+    "family": "convex0",
+    "param": 0.8,
+    "macro": 0.5726634997854769
+   },
+   {
+    "family": "convex0",
+    "param": 0.9,
+    "macro": 0.5648000119512614
+   },
+   {
+    "family": "convex0",
+    "param": 1.0,
+    "macro": 0.5370239716990969
+   }
+  ],
+  "n_tied_at_best": 1,
+  "depth": 1000,
+  "components": [
+   "nq-250k",
+   "hotpotqa",
+   "cqadup-programmers",
+   "cqadup-physics"
+  ],
+  "fitted_against": "int8 table (the released artifact)",
+  "selected_on": {
+   "run_id": "p35w-2m-s2500",
+   "table_relpath": "work/runs/p35w-2m-s2500.release.npz",
+   "table_sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
+   "table_meta_sha256": "14f117b82c4bb7268a1d15302774a77130019a3c59bce677d3386d9fc6ddd4a9",
+   "preproc": {
+    "add_special_tokens": true,
+    "max_length": 512,
+    "pool_mode": "sqrt",
+    "prefix": ""
+   },
+   "preproc_fingerprint": "adb24fb2e8cad66f",
+   "encoder_spec": {
+    "name": "stella-400M-v5",
+    "repo": "NovaSearch/stella_en_400M_v5",
+    "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+    "dim": 1024,
+    "pooling": "mean",
+    "post_dense": "2_Dense_1024",
+    "query_prefix": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
+    "doc_prefix": "",
+    "max_length": 512,
+    "tokenizer_id": "bert-wordpiece-30522",
+    "vocab": 30522,
+    "cls_id": 101,
+    "config_kwargs": {
+     "unpad_inputs": false,
+     "use_memory_efficient_attention": false
+    }
+   },
+   "dev_manifest_sha256": "4f991015db4407080ed9c8d1d2a85541d34b1e676aa593e510296eedca77e2ea",
+   "bm25_run_keys": {
+    "nq-250k": {
+     "format": 2,
+     "n_docs": 250000,
+     "n_queries": 3452,
+     "depth": 1000,
+     "doc_ids_sha256": "f6260541f6ecf2c6820aa0504f15c7f2040582fd58b92ed0ab64e78b1ff7669f",
+     "doc_texts_sha256": "66610615ce015dc75f04e485cc3e98e87da4123fe3fb4b1ff99b27a88440aa68",
+     "q_ids_sha256": "b60f6446b0df2bcc66c7107b04ec396d814f7ffc6749ff50f7e922aec521ce7d",
+     "q_texts_sha256": "ca06f6da6ae3b67cf4345172e49e72dca5fdcb2c30ab853ee36b9e1e06be0c42",
+     "config": {
+      "impl": "bm25s",
+      "method": "lucene",
+      "k1": 1.2,
+      "b": 0.75,
+      "stopwords": "en",
+      "stemmer": "english-snowball-PyStemmer",
+      "drop_zero_scores": true,
+      "drop_self_hits": true
+     },
+     "versions": {
+      "bm25s": "0.3.11",
+      "PyStemmer": "3.1.0"
+     }
+    },
+    "hotpotqa": {
+     "format": 2,
+     "n_docs": 5233329,
+     "n_queries": 7405,
+     "depth": 1000,
+     "doc_ids_sha256": "be799419ebc5b1589229a161083f93aa7d3871ba0afe7c42c896a0ce1fb7c853",
+     "doc_texts_sha256": "8e805db3af5d1f1a9e1f2529922e75300ff9a3b369809ab80f31b79b1224564a",
+     "q_ids_sha256": "4d171f8d6c9b67d7a7edd01fd14dcc842d8ed42a0054b7ea32e87e728327141a",
+     "q_texts_sha256": "93fb20608cef262d3b49d79c547f84e85bc662bbd3ad33eab6de7c76becf4917",
+     "config": {
+      "impl": "bm25s",
+      "method": "lucene",
+      "k1": 1.2,
+      "b": 0.75,
+      "stopwords": "en",
+      "stemmer": "english-snowball-PyStemmer",
+      "drop_zero_scores": true,
+      "drop_self_hits": true
+     },
+     "versions": {
+      "bm25s": "0.3.11",
+      "PyStemmer": "3.1.0"
+     }
+    },
+    "cqadup-programmers": {
+     "format": 2,
+     "n_docs": 32176,
+     "n_queries": 876,
+     "depth": 1000,
+     "doc_ids_sha256": "434006e6a174b7f7508af49dd89b4ecbdcf92fdec01a253bb7fe23c78723c43e",
+     "doc_texts_sha256": "d7c33d881e5728565ff0b8d42f6da88cd89a8362a6b05ffd5d8b2064bd0f61ed",
+     "q_ids_sha256": "dea3ba46ae199c754e8b5c3b29cd10915715f27c3ac77c62b3f512e8882c9eac",
+     "q_texts_sha256": "ebe7419d5236c9848cc938dcff6503412fe8beb1755202b25f27c2ce49288480",
+     "config": {
+      "impl": "bm25s",
+      "method": "lucene",
+      "k1": 1.2,
+      "b": 0.75,
+      "stopwords": "en",
+      "stemmer": "english-snowball-PyStemmer",
+      "drop_zero_scores": true,
+      "drop_self_hits": true
+     },
+     "versions": {
+      "bm25s": "0.3.11",
+      "PyStemmer": "3.1.0"
+     }
+    },
+    "cqadup-physics": {
+     "format": 2,
+     "n_docs": 38316,
+     "n_queries": 1039,
+     "depth": 1000,
+     "doc_ids_sha256": "2354a8d4c7207a6ff443d8437e4e76470e5d3c46bf2eb317011a526e684fb5bf",
+     "doc_texts_sha256": "856f16df56c9515c7d6acd7e2bc2e4585dbd74c1da80ea1f2264deea6d2d892d",
+     "q_ids_sha256": "6e49607cbd18cc75a78957b2c8839b7065bd7e7575e53358a75b7d1e67065866",
+     "q_texts_sha256": "ebda96fdd5d838911d41112c2610c904a5c0021a65da6aee3d8a7749a0635e60",
+     "config": {
+      "impl": "bm25s",
+      "method": "lucene",
+      "k1": 1.2,
+      "b": 0.75,
+      "stopwords": "en",
+      "stemmer": "english-snowball-PyStemmer",
+      "drop_zero_scores": true,
+      "drop_self_hits": true
+     },
+     "versions": {
+      "bm25s": "0.3.11",
+      "PyStemmer": "3.1.0"
+     }
+    }
+   }
+  },
+  "released_system": "fusion"
+ },
+ "fusion_spec_relpath": "work/runs/p35w-2m-s2500.fusion.json",
+ "released_system": "fusion",
+ "released_system_derivation": "derived from the dev selection: family=convex0 param=0.8; the convex grid contains the dense-only endpoint w=1.0, so whether the released system fuses is decided by the same mechanical selection as the parameter",
+ "gate": {
+  "path": "m7_gate_p35w-2m-s2500.json",
+  "PASS": true,
+  "artifact": {
+   "release": "p35w-2m-s2500.release.npz",
+   "sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
+   "meta_sha256": "14f117b82c4bb7268a1d15302774a77130019a3c59bce677d3386d9fc6ddd4a9"
+  },
+  "conditions": {
+   "G1_stage0_above_potion": true,
+   "G2_capacity_probe": true,
+   "G3_candidate_above_bm25": true,
+   "G4_int8_equivalence": true
+  }
+ },
+ "dev_macro_at_freeze": 0.6153,
+ "dev_manifest_sha256": "4f991015db4407080ed9c8d1d2a85541d34b1e676aa593e510296eedca77e2ea",
+ "eval_manifest_sha256": "051107d34a3b23134f2df0c61e61b2cd6c1a1a4b68250421ecfb77909afdad77",
+ "perquery_sha256": "6b18e3dd74fd308b087d4e652c0999c9d6a2e729c78edb73f000f9b7a25fda7e",
+ "notes": "Frozen 2026-08-28 on Dylan's explicit go after the fifth adversarial review (all findings actioned), the clean-commit gate rerun (GO, identical numbers), and the FWER ruling (option c). Untouched-final tail reserved for M8."
+}
