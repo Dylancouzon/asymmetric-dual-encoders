@@ -229,6 +229,39 @@ defensible-but-arbitrary recipe choice moves the dev macro. If it says the sprea
 step-rule finding above weakens and the report says so; if it says the spread is comparable to the
 adopted effects, the report leads with that. Either way no artifact changes.
 
+**RESULT (`m7_compare_full_stepspread.json`, matched `mean` pooling throughout). The report leads
+with this.** Within-arm, changing only the A-phase step count:
+
+| arm | 2500 steps | proxy-selected steps | Δ macro | Δ out-of-domain |
+|---|---|---|---|---|
+| `teacher16` | 0.6225 | 0.6176 (1500) | **+0.0049** | +0.0001 |
+| `bm2516` | 0.6125 | 0.6097 (1500) | **+0.0027** | −0.0010 |
+| `mixed32` | 0.6224 | 0.6146 (1000) | **+0.0078** | −0.0023 |
+| | | | mean **0.0052** | mean 0.0011 |
+
+**A parameter nobody would report in a paper moves the dev macro by 0.0027–0.0078. Every effect
+this project has adopted or adjudicated is inside that band:** lever #4 `sqrt` +0.0040, lever #2's
+three chained adoptions +0.0065/+0.0038/+0.0023, the simplification −0.0048, the negatives arms
++0.0023 to +0.0112. The CIs are not wrong — they are query-sampling intervals and they answer that
+question correctly — but there is **no recipe-replication term anywhere in this repo**, because
+training is deterministic and there is nothing to resample. A reader who wants "would another
+equally-defensible recipe agree" has been given an interval that does not address it.
+
+**The negatives outcome is NOT IDENTIFIED, and this says so plainly.** At 2500 steps with matched
+pooling, `teacher16` (+0.0112) and `mixed32` (+0.0111) both clear the bar comfortably; at their
+proxy-selected steps neither does. The conclusion flips on the nuisance parameter, not on the
+negatives. The closure stands — it was reached under the rule in force — but the honest claim is
+"the dev suite cannot separate the negatives source from the step count", not "mined negatives do
+not help".
+
+**And the finding that makes the closure robust anyway.** Across all seven artifacts in this pass
+the macro spans 0.6097–0.6225, a range of **0.0128**, while the out-of-domain subset spans
+0.3648–0.3688, a range of **0.0040** — and no arm differs from the baseline's 0.3657 by more than
++0.0031. **Whichever step count you choose, the out-of-domain effect of mined negatives is zero.**
+The entire late-stage lever programme — negatives, step counts, pooling — moved the in-distribution
+components and left the only components analogous to the six untouched. The single exception all
+day is the *failed* simplification, which moved out-of-domain by −0.0045 and was rejected for it.
+
 **AMENDMENT, and its limits.** For decisions whose numbers do not yet exist, an arm is run at the
 **same `steps_a` as the artifact it is being compared against**, and per-arm proxy step selection
 is not used. Reason: at this resolution the proxy peak is noise (measured above), and in a matched
