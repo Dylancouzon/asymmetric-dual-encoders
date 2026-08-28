@@ -524,3 +524,10 @@ The 2m A-arm's proxy curve is still rising at the pre-registered 2000-step cap (
 `p35a-2m-1e3-x4000` (steps_a 4000, eval_every 500, same recipe, same init `run:p35b-2m`), runs
 only if the 2m arm wins the cross-arm full-suite pick; step selected by the same every-500 rule;
 the expectation being bracketed is a peak-and-turn. No further extension without a new entry.
+
+## Lever #2 cross-arm pick: the 2m arm, 2026-08-27
+
+`results/m7_compare_p35a-2m-1e3_vs_p35w-500k-s1500.json`: +0.0038 [0.0007, 0.0072] signflip
+p=0.009, int8 +0.0039 p=0.007. **Candidate: `p35a-2m-1e3`** (B 16k with the 923,590-span mix →
+A @ 1e-3, best step = cap 2000), full-suite dev macro 0.6090. Total lever-#2 gain over
+`s2w-1e3-s1000`: +0.0103. The pre-registered x4000 extension now runs (2m won the pick).
