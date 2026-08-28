@@ -50,25 +50,36 @@ confirmatory datasets are out-of-domain, so the last figure is the honest one.
   digit" read a *rounded* CI, which this ledger's own statistics rule forbids — the real figure is
   4.47e-06; and the headline retention 0.926 was the reverted candidate's, not the shipping one's.
 
-## Running
+## Closed today, all of them before the freeze
 
-- **Lever #7, long-span distillation** — the only lever aimed at a named weakness of a
-  confirmatory dataset (ArguAna). Realised dose recorded before it trains: pool +0.14% vs the
-  short pool (so the one-knob design holds) but only **31.9% long**, and **67.8% of the long spans
-  are Amazon product text**. A null therefore closes *this dose and composition*, not the idea.
-  ~2 h of teacher encode at 55 texts/s through the esci block.
-- **Adversarial review gate** — Codex freeze-gate pass, plus an over-fitting/over-engineering pass
-  that has already returned (2 BLOCKER / 6 MAJOR; the two Q6 catches above are its).
-- **Teacher probes** on `arctic-embed-m-v1.5` and `gte-base-en-v1.5`, moved to Dylan's M5 Mac on
-  branch `m7-teacher-probe-mac`. `gte-modernbert-base` and `granite-r2` are closed on arithmetic:
-  the fp64 Gram at V=50,368 is 20.3 GB.
+- **Lever #7, long-span distillation — CLOSED without training its arm.** Its gating probe drew a
+  fresh document sample per length bucket, so its "length effect" was a document-population
+  effect. Re-measured as nested prefixes of the same documents, agreement is **flat from 16 to 256
+  words**. The lever's own pre-registration makes that probe the pre-condition for spending a
+  training chain, so the chain was not bought — the arm was already running, 7 of 23 encode shards
+  done, when the review exposed the confound.
+- **Teacher re-examination — NO SWAP.** `arctic-embed-m-v1.5` 0.3002 and `gte-base-en-v1.5` 0.2741
+  against stella's 0.3439, both CI-resolved below, both below even bge-base. Run on the M5 Mac,
+  which also reproduced the incumbent row to **7e-4** — the criterion is hardware-robust.
+- **Both adversarial reviews returned and are actioned.** Codex (2 BLOCKER / 6 MAJOR / 2 MINOR)
+  and an over-fitting/over-engineering pass (2 BLOCKER / 6 MAJOR / 5 MINOR). Between them they
+  caught: a rounded CI read as exact in `final_run.py` — the one irreversible decision; `gate.py`
+  passing the wrong Stage-0 checkpoint and returning 0 on NO-GO; `freeze.assert_releasable`
+  failing open; the tier rule's CI leg never being simultaneous; a retention figure belonging to
+  the reverted candidate; unpinned training-data revisions; and a test suite that had been failing
+  since the teacher swap with nothing running it.
 
 ## Queued, in order
 
-1. Action every review finding.
-2. Lever #7 verdict → if adopted, lever #4 re-adjudicates on the new artifact.
-3. `./run_freeze_prep.sh <run_id>` (fusion re-selection → ANN → costs → gate), then stop.
-4. Post-freeze, pre-registered: teacher re-examination consequences, then the clean-stack tax.
+1. `RECIPE.md` still owes `fn_margin` / `use_provided_hardneg`, a fusion section, and the
+   environment/dataset pin list — it claims to be clone-to-artifact and is not yet.
+2. Vendor or pin the teacher's `trust_remote_code` (Codex MAJOR): the doc side of every
+   third-party reproduction depends on code that is not pinned by the weights revision.
+3. **`LEDGER.md` is at ~21K tokens against its own 4K hard budget** and must be compacted before
+   the freeze commit — keep every protocol fact and every pre-registered rule, cut settled
+   justification to one line, and lean on `FINDINGS.md` for anything transferable.
+4. `./run_freeze_prep.sh p35w-2m-s2500` (fusion re-selection → ANN → costs → gate), then stop.
+5. Post-freeze, pre-registered: the clean-stack tax. The teacher task is done.
 
 **The final run is NOT scheduled.** It is the one-shot confirmatory access to the six, and the
 freeze and that run are Dylan's calls.
