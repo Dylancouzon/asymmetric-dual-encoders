@@ -2,9 +2,24 @@
 
 Question: is "a dense token→vector lookup table trained end to end against a frozen, off-the-shelf small document encoder" published?
 
-**Verdict: not published as of 2026-08-25.** Re-check before the M7 report ships.
+Two distinguishing axes; a candidate has to fail one of them to leave the claim standing. **(a)** the document tower is frozen and off-the-shelf — not co-trained, not a checkpoint then trained further. **(b)** the query-side rows are **dense vectors** read from a trained lookup table — not scalar term weights, not sparse lexical scores, not a live transformer or a per-query optimization.
 
-## Directly on-target
+**Verdict, re-swept 2026-08-28 before the freeze: still no published construction matching both axes — but the field moved closer, and the defensible phrasing is "we found none", not "this is unprecedented."** The re-sweep ran a freshness pass *and* a deliberate falsification pass (nine adversarial query families, listed below). It found one construction that clears axis (a) outright and misses (b) on the representation, not on the ambition.
+
+## Re-sweep 2026-08-28 — what changed
+
+- **KAHM — Kernel Affine Hull Machines, arXiv 2605.02950** (v1 2026-05-01, v2 2026-06-06). **The nearest miss, and absent from the 2026-08-25 file.** Axis (a) passes outright and is the paper's stated premise: "once a strong teacher representation space and corpus index are fixed, repeated neural query encoding can be replaced by a substantially lighter and analytically explicit estimator." Axis (b) fails on two independent grounds — the query is "a noisy mixture of semantic prototypes weighted by posterior cluster probabilities", a mixture over a shared prototype bank rather than per-token dense rows, and the method is explicitly **"backpropagation-free"**, the reverse of trained end to end. It is also not O(1) at query time: it evaluates geometric quantities and forms a weighted mixture per query. **Any future re-check starts with this paper's citations.**
+- **ERA / Efficient Retrieval Adapter, arXiv 2604.03403** (v2 **2026-08-26**, inside the freshness window). Axis (a) passes — "No Parameter Access: ERA requires no access to the base embedding model parameters". Axis (b) fails: the query path is a full strong embedder forward pass (up to Qwen3-Embedding-8B) plus a linear adapter. Opposite optimization target — index reuse across embedder upgrades, not cheap queries.
+- **LightRetriever is now v5 (2026-01-30), accepted at ICLR 2026 and KDD 2026.** The old file knew only v2. v5's full text was re-read specifically for a frozen-doc-tower ablation added in a later revision: there is none, so axis (a) still fails and now on the current version. Checkpoints (Llama-3.1-8b, 3.2-1b/3b, Qwen2.5-1.5b/3b/7b) and a finetune-data dataset are released.
+- **LEAF has a paper**, which the old file was missing: **arXiv 2509.12539, ACL 2026**, plus a new sibling `MongoDB/mdbr-leaf-mt` (23M transformer student distilled from mxbai-embed-large-v1). Still a transformer forward pass per query — axis (b) fails as the existing LEAF rows do. **Relevant to M8**, whose comparators are LEAF models.
+- **No OpenSearch doc-v4.** v3 is still current and its query side is still "a tokenizer and a weight look-up table" producing **scalar** weights — the same axis-(b) failure as before.
+- **DistilVDR** re-verified: frozen teacher (axis (a) passes), 70M transformer student (axis (b) fails), different modality.
+
+**Falsification pass, no on-target hits.** Searched as distinct queries: embedding-bag retrieval; bag-of-token-embeddings retriever; token-embedding-lookup query encoder with a frozen doc encoder; training-free query encoder; amortized query encoding; precomputed query embeddings; linear query encoder over a frozen document encoder; static query embeddings for asymmetric retrieval; industry blog posts and model cards. What surfaced instead: ColBERT-style contextualized bags (full transformer per query), VPRF (averages retrieved-document embeddings, nothing trained), search adapters (ERA's family), Test-Time Compute for Frozen Embedding Models (arXiv 2605.11374 — an LLM writes a program per query, the *opposite* of near-zero query compute), TTT-Embed (arXiv 2608.12569 — a per-query optimization loop with no training phase at all).
+
+**Not re-fetched 2026-08-28** (2023 papers, low volatility): arXiv 2306.11550 and arXiv 2304.01016. Both were transformer-student on the 2026-08-25 read, and nothing suggests axis (b) has changed.
+
+## Directly on-target (as of 2026-08-25)
 
 - **LightRetriever** — arXiv 2505.12260 (May 2025, v2). https://arxiv.org/abs/2505.12260 · https://github.com/caskcsg/lightretriever. Trains a token→embedding lookup table end to end; query = tokenize, lookup, average. But the document tower is the same LLM, co-trained in the same run — not a frozen, pre-existing off-the-shelf small encoder.
 - **Li-LSR** — arXiv 2505.01452 (April 2025). https://arxiv.org/abs/2505.01452. Full text read to close the caveat:

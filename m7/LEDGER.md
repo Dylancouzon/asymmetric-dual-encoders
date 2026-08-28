@@ -402,7 +402,15 @@ a reason to prefer the null.
   proxy: teacher16 0.5125, bm2516 0.5131, mixed32 0.5131 vs bank 0.5106): the largest full-suite
   fp16 macro; if two fall within the ~0.0007 replay noise band, prefer the arm with FEWER negatives
   and a SINGLE mining source — cheaper to mine, cheaper to reproduce, simpler to describe, and
-  nothing about the extra negatives earned its place. If none is promoted, the avenue is
+  nothing about the extra negatives earned its place.
+  **Third level, added 2026-08-28 before the corrected arms' full-suite numbers exist, because the
+  second level cannot separate `teacher16` from `bm2516` — both are k=16 and single-source, and
+  the step-rule correction moved them close on the proxy (0.5126 vs 0.5138).** If parsimony ties,
+  prefer the **teacher-mined** arm: mining with the teacher is a by-product of a document encode
+  this system performs anyway, whereas the BM25 arm requires standing up and pinning a second
+  retrieval system over the training corpus for the sole purpose of reproducing the recipe. That
+  is a reproducibility cost a third party pays, and it is the same criterion the simplification
+  work is being done under. If none is promoted, the avenue is
   **closed with a mechanism check attached**: score the k=16 mined set against qrels to measure the
   actual false-negative rate, which converts "mined negatives hurt" from observed into diagnosed.
   A promoted winner changes the candidate, which re-triggers fusion re-selection and re-adjudicates
