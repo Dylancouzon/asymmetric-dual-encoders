@@ -335,12 +335,26 @@ P4N_ARMS = {
 # a point estimate. Full rationale, including why `input_emb` rather than `random`, is in
 # LEDGER.md "Recipe simplification". `steps_a` is left at the base recipe's value here and the
 # step-selection rule is applied to the arm's own proxy curve afterwards, like any other arm.
+#
+# Three A-leg variants share ONE B leg, because `hard_neg_k` is 0 in the B recipe and the
+# negatives only enter the A phase. EXACTLY ONE of them is run: whichever matches the negatives
+# source the step-rule-corrected comparison selects, so the simplification is measured against a
+# like-for-like unsimplified arm. This is NOT a search over negatives -- that decision is made
+# independently, on the unsimplified arms, under its own pre-registered bar and tie-break. Listing
+# all three here before that decision is known is what keeps it from becoming one.
 P5S_ARMS = {
     "simple": {"b": {"init": "input_emb", "b_pseudo_queries": 500_000,
                      "idf_init_weights": False, "reg_init": 0.0},
                "a": {"idf_init_weights": False, "reg_init": 0.0,
                      "hard_neg_k": 16, "hard_neg_source": "teacher"}},
 }
+for _name, _k, _src in (("bm25", 16, "bm25"), ("mixed", 32, "mixed")):
+    # A-only: they name `p5s-simple-b` as their init rather than carrying a B leg of their own,
+    # so switching the negatives source costs ~5 minutes instead of a second 16,000-step B phase.
+    P5S_ARMS[f"simple-{_name}"] = {
+        "init": "run:p5s-simple-b",
+        "a": {**P5S_ARMS["simple"]["a"], "hard_neg_k": _k, "hard_neg_source": _src},
+    }
 ARMS = {"p4": P4_ARMS, "p4x": P4X_ARMS, "p4e": P4E_ARMS, "p4n": P4N_ARMS, "p5s": P5S_ARMS}
 
 

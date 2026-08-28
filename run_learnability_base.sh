@@ -21,9 +21,10 @@ LOG=logs/learnability_base.log
 exec >> "$LOG" 2>&1
 echo "=========== learnability (base-sized candidates) $(date -Is) ==========="
 
-# Anchored to a python cmdline, never a script name: `pgrep -f "teacher_learnability"` matches the
-# shell that wrote this file, because the pattern is in that shell's own cmdline (CODEMAP 4).
-while pgrep -f "^[^ ]*python[0-9.]* -u \(scripts\|m7src\)/" >/dev/null; do sleep 15; done
+# No wait loop: launch this under `flock -n /tmp/m7.gpu.lock`, which is the one mechanism that
+# actually serialises GPU work here. The older drivers polled `pgrep` instead, and CODEMAP 4
+# records two ways that goes wrong -- a pattern matching the shell that wrote it, and a driver
+# that execs python leaving no script name in any cmdline.
 
 for enc in arctic-embed-m-v1.5 gte-base-en-v1.5; do
   echo "=========== $enc validate  $(date -Is) ==========="
