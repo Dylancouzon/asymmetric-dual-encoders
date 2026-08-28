@@ -704,7 +704,32 @@ init arms land within noise), the teacher IS the document space — the highest-
 
 **The probes are dev-only** (closed-form tables, two CQADupStack components, no six-set access) and
 are legal at any time. `scripts/learnability_report.py` pairs each candidate against `INCUMBENT`,
-currently bge-base; re-point it at stella before reading these.
+re-pointed at stella on 2026-08-28 (the bge-incumbent report is archived under its own name).
+
+**TWO CANDIDATES ARE BLOCKED ON ARITHMETIC, and the note that said otherwise was wrong.**
+`EXPLORED.md` recorded that "granite's 50,368² Gram is ~10.2 GB and chunks into RAM". That figure
+is **fp32; `stage0_ridge.solve_ridge` builds the Gram in float64**, which for V=50,368 is
+**20.3 GB** — above this box's 18 GB peak budget and above a 24 GB machine outright. So
+`granite-embedding-english-r2` and `gte-modernbert-base` (both ModernBERT, 50,368-vocab, 768-d)
+cannot be probed without changing the solver's numerics, and changing them would break
+comparability with every candidate already measured. **Closed on arithmetic, not on merit.**
+Their table would also be *larger* than stella's, not smaller: 50,368 x 768 int8 = **38.7 MB**
+against stella's 30,522 x 1024 int8 = **31.3 MB**. That inverts the tie-break's assumption that a
+768-d teacher buys a smaller artifact — true for a 30,522-vocab one (23.4 MB), false at 50,368.
+
+**RUNNING THE PROBES ON A SECOND MACHINE (2026-08-28, Dylan's M5 Mac, 24 GB).** The two registered
+candidates are 30,522-vocab, so their fp64 Gram is 7.5 GB and fits. Rules, fixed before any number:
+1. **The Mac must also produce a `stella-400M-v5` row.** The probe is a *paired* comparison against
+   the incumbent's table, and the incumbent's committed row was produced on CUDA. A Mac stella row
+   makes the ranking internally self-consistent, and its agreement with the CUDA row is a
+   cross-platform replication check we do not otherwise have. Report both.
+2. **Any Mac winner is re-probed on the RTX box before it can move anything.** A swap costs an
+   8–12 h pool re-encode and re-adjudicates levers #4/#5/#6, fusion, gate and freeze; that is not
+   a decision to take on numbers from an unvalidated second toolchain.
+3. `validate_encoder.py` must pass on the Mac for each Spec before any encode, per CODEMAP. It
+   exists because stella's Spec once silently omitted its published Dense head.
+4. Work lands on branch **`m7-teacher-probe-mac`**, merged here. Two machines pushing one branch
+   collide, and this ledger already records a force-push grant violation.
 
 **Swap bar, fixed here before the numbers.** A candidate replaces stella only if ALL hold:
 1. its closed-form table beats stella's, CI-resolved, on the probe components;
