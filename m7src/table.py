@@ -68,6 +68,56 @@ def tokenize(tok, texts, pre: Preproc):
     return enc["input_ids"]
 
 
+class RaggedIds:
+    """Token ids for a very large text set, held flat instead of as a list of Python lists.
+
+    `tokenize` returns list-of-lists, which costs ~36 bytes per token (a 28-byte int object plus
+    an 8-byte pointer; token ids are mostly above the small-int cache). That is fine for the
+    338K TRAIN queries. It is NOT fine for the objective-B extra text: capacity lever #7's 2M
+    length-mixed pseudo-query pool averages ~145 wordpieces, which is 290M ids = **10.4 GB of
+    host RAM** before the 4.1 GB of pseudo-query targets, the pool pages or anything else loads,
+    on a box with an 18 GB peak budget. Flat int32 plus offsets is the same data at ~1.2 GB.
+
+    Indexing returns exactly the list a caller would have got from `tokenize`, so every call site
+    is unchanged and the batches are identical.
+    """
+
+    __slots__ = ("_flat", "_off")
+
+    def __init__(self, flat, off):
+        self._flat, self._off = flat, off
+
+    def __len__(self):
+        return len(self._off) - 1
+
+    def __getitem__(self, i):
+        return self._flat[self._off[i]:self._off[i + 1]].tolist()
+
+
+def tokenize_ragged(tok, texts, pre: Preproc, chunk=100_000, verbose=False):
+    """`tokenize` -> `RaggedIds`, tokenizing in chunks so the list-of-lists never exists whole.
+
+    Building a RaggedIds from `tokenize(...)`'s output would materialize the very thing this
+    exists to avoid, so the chunking is load-bearing rather than cosmetic: peak is one chunk.
+    """
+    import numpy as _np
+    parts, lens = [], []
+    for lo in range(0, len(texts), chunk):
+        ids = tokenize(tok, texts[lo:lo + chunk], pre)
+        lens.append(_np.fromiter((len(x) for x in ids), dtype=_np.int64, count=len(ids)))
+        parts.append(_np.fromiter((i for x in ids for i in x), dtype=_np.int32,
+                                  count=int(lens[-1].sum())))
+        del ids
+        if verbose:
+            print(f"    tokenize_ragged {min(lo + chunk, len(texts)):,}/{len(texts):,}", flush=True)
+    if not parts:
+        return RaggedIds(_np.zeros(0, dtype=_np.int32), _np.zeros(1, dtype=_np.int64))
+    all_lens = _np.concatenate(lens)
+    off = _np.zeros(len(all_lens) + 1, dtype=_np.int64)
+    _np.cumsum(all_lens, out=off[1:])
+    return RaggedIds(_np.concatenate(parts), off)
+
+
 def ragged(ids_list, device="cpu"):
     """-> (flat_ids int64, offsets int64) for F.embedding_bag; no padding is ever introduced."""
     lens = [len(x) for x in ids_list]

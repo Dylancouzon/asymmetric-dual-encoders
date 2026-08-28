@@ -26,7 +26,7 @@ from decontam import OUT as DECON
 import init_table
 from init_table import get_init, idf_weights
 from table import NO_PREFIX, WITH_PREFIX, Preproc, QueryTable, get_tokenizer, \
-    occurrence_weights, ragged, tokenize
+    occurrence_weights, ragged, tokenize, tokenize_ragged
 from teacher import QUERY_PREFIX, encode_cached
 
 RUNS = WORK / "runs"
@@ -442,7 +442,13 @@ def run(cfg: Cfg, log=print):
             log(f"  objective-B extra query text: {len(b_texts):,} "
                 f"(query-text-only sources + {cfg.b_pseudo_queries:,} "
                 f"{cfg.b_pseudo_kind} pseudo-queries)")
-    b_ids_all = tokenize(tok, b_texts, pre) if b_texts else []
+    # Flat int32, not list-of-lists: lever #7's 2M length-mixed pool is 290M ids, which is
+    # 10.4 GB as Python lists against an 18 GB peak budget (table.RaggedIds). Identical batches.
+    b_ids_all = tokenize_ragged(tok, b_texts, pre, verbose=True) if b_texts else []
+    n_bextra = len(b_ids_all)
+    # the texts are only needed for their COUNT after this, and at the mixed pool they are
+    # another ~1.5 GB of strings
+    del b_texts
 
     hard = None
     if cfg.hard_neg_k:
@@ -561,11 +567,11 @@ def run(cfg: Cfg, log=print):
 
     def step_b(idx):
         # optional pseudo-query / query-text-only part: cosine only, no positive to rank against
-        n_ps = int(len(idx) * cfg.b_pseudo_frac) if b_texts else 0
+        n_ps = int(len(idx) * cfg.b_pseudo_frac) if n_bextra else 0
         extra_loss = torch.zeros((), device="cuda")
         touched = []
         if n_ps:
-            j = rng.integers(0, len(b_texts), n_ps)
+            j = rng.integers(0, n_bextra, n_ps)
             qv2 = _fwd([b_ids_all[k] for k in j])
             extra_loss = (1.0 - (qv2 * torch.from_numpy(b_tq[j]).cuda()).sum(1)).mean()
             idx = idx[:max(1, len(idx) - n_ps)]
