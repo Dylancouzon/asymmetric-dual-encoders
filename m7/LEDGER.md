@@ -247,6 +247,14 @@ question correctly — but there is **no recipe-replication term anywhere in thi
 training is deterministic and there is nothing to resample. A reader who wants "would another
 equally-defensible recipe agree" has been given an interval that does not address it.
 
+**What this does NOT weaken, stated so the finding is not over-applied.** The three confirmatory
+comparisons in the final run are made with the recipe already fixed, against frozen comparator
+per-query vectors, on datasets never used for selection. There, query sampling *is* the whole
+uncertainty and the interval answers exactly the right question. The perturbation band bears on
+**dev SELECTION claims** — "this lever helped", "this arm beat that one" — and on how much
+confidence the dev macro can lend to a prediction about the six. It does not deflate the tier
+comparisons.
+
 **The negatives outcome is NOT IDENTIFIED, and this says so plainly.** At 2500 steps with matched
 pooling, `teacher16` (+0.0112) and `mixed32` (+0.0111) both clear the bar comfortably; at their
 proxy-selected steps neither does. The conclusion flips on the nuisance parameter, not on the
