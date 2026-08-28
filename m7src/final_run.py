@@ -34,6 +34,7 @@ from _paths import REPO
 from core import DATASETS, load_beir
 from evalkit import per_query_ndcg, topk_ids_scores
 import freeze
+from hashing import sha
 from table import Preproc, load_table
 from teacher import QUERY_PREFIX, encode_cached
 
@@ -160,6 +161,77 @@ def score_set(ds, kind, table_path, pre, fusion_spec, encode_dtype=torch.float32
     return out
 
 
+def preflight():
+    """Everything static that must hold, checked BEFORE the six are touched.
+
+    Exists because the failure it prevents is the worst one available: `UNTOUCHED` named four
+    datasets while the manifest and `frozen_eval/` held two, so this script would have scored the
+    six -- consuming the ONE confirmatory access -- computed the tier decisions, scored two
+    untouched sets, then died on a KeyError and written NOTHING. The access would have been spent
+    and no result produced. Found by the pre-freeze Codex review, 2026-08-28.
+
+    So: every manifest key, every frozen payload, every required field, for all ten datasets,
+    before `FINAL-RUN-BEGIN`. A missing asset must cost a second, not the deliverable.
+    """
+    man = json.loads(MANIFEST.read_text())
+    need = {"six": ("datasets", DATASETS, lambda d: f"{d}.json"),
+            "untouched": ("m7_untouched_final", UNTOUCHED, lambda d: f"untouched-{d}.json")}
+    fields = ("n_docs", "n_queries", "corpus_ids_sha256", "corpus_text_sha256",
+              "qids_sha256", "qrels_sha256")
+    problems = []
+    for kind, (key, names, fname) in need.items():
+        sect = man.get(key) or {}
+        for ds in names:
+            if ds not in sect:
+                problems.append(f"{kind} `{ds}`: no `{key}` entry in eval_manifest.json")
+                continue
+            missing = [f for f in fields if f not in sect[ds]]
+            if missing:
+                problems.append(f"{kind} `{ds}`: manifest entry lacks {missing}")
+            fp = FROZEN / fname(ds)
+            if not fp.exists():
+                problems.append(f"{kind} `{ds}`: {fp.relative_to(REPO)} missing")
+                continue
+            try:
+                froz = json.loads(fp.read_text())
+            except Exception as e:
+                problems.append(f"{kind} `{ds}`: {fp.name} unreadable ({type(e).__name__})")
+                continue
+            if not isinstance(froz.get("queries"), dict) or not froz["queries"]:
+                problems.append(f"{kind} `{ds}`: {fp.name} has no `queries` mapping")
+            if not isinstance(froz.get("qrels"), dict) or not froz["qrels"]:
+                problems.append(f"{kind} `{ds}`: {fp.name} has no `qrels` mapping")
+            # the payload the scorer actually reads must match the hashes the manifest pins.
+            # verify_and_load checks the CORPUS only; queries and qrels were never verified, so
+            # changed query text with unchanged qids would have scored silently (Codex MAJOR 3).
+            if isinstance(froz.get("queries"), dict) and isinstance(froz.get("qrels"), dict):
+                for field, got in (("qids_sha256", sha(sorted(froz["queries"]))),
+                                   ("qrels_sha256", sha(froz["qrels"]))):
+                    if sect[ds].get(field) != got:
+                        problems.append(f"{kind} `{ds}`: {fp.name} {field} mismatch vs the "
+                                        f"frozen manifest")
+    pq = REPO / "results" / "perquery.json"
+    if not pq.exists():
+        problems.append("results/perquery.json missing: the frozen comparator vectors")
+    else:
+        blob = json.loads(pq.read_text())
+        for _, (a_name, b_name) in CONFIRMATORY.items():
+            for sysname in (a_name, b_name):
+                if sysname in ("int8-table", "released-system"):
+                    continue      # produced by this run, not read from the frozen file
+                for ds in DATASETS:
+                    if sysname not in blob["datasets"].get(ds, {}).get("systems", {}):
+                        problems.append(f"perquery.json: comparator `{sysname}` has no row for "
+                                        f"`{ds}`")
+                        break
+    if problems:
+        print("FINAL RUN REFUSED by preflight (the six were NOT touched):\n  - "
+              + "\n  - ".join(problems))
+        sys.exit(4)
+    print(f"preflight OK: {len(DATASETS)} six + {len(UNTOUCHED)} untouched, manifest entries, "
+          f"frozen payloads and comparator rows all present and hash-matched")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--freeze-hash", required=True)
@@ -175,6 +247,7 @@ def main():
         raise SystemExit("FINAL RUN REFUSED: preproc fingerprint does not match its own fields")
     table_path = REPO / fz["table_relpath"]
 
+    preflight()                    # static checks first: a missing asset costs a second, not the run
     head = guard(a.freeze_hash, a.infra_retry, a.branch, fz)
     t0 = time.time()
     ledger(f"\n### FINAL-RUN {datetime.now(timezone.utc).isoformat()}\n"

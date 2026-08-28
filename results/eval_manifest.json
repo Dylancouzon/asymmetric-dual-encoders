@@ -176,12 +176,31 @@
    "qids_sha256": "04598aafe14ee78964752627a3d8b6fc06c662092312999f3d6d171d4a8e7387",
    "qrels_sha256": "39e0bafdcd8622ac684cede60c84a1ada6eec41840a349fac0a65f8070f2fa2e",
    "construction": "BeIR/dbpedia-entity test split, full corpus"
+  },
+  "cqadup-android": {
+   "n_docs": 22998,
+   "n_queries": 699,
+   "corpus_ids_sha256": "32cfeae242c5df45b3a97697d11a99f2bd62ef740a163d5be7e24c7cfe16d0a8",
+   "corpus_text_sha256": "34cc0fd784977a143aaa52979d2266699cf1b8f909fdef5769d2b69218e8984d",
+   "qids_sha256": "3c9f39c0b5ca8a44772909ad05e5d2f595395417f74300f0b28925d7d3f32411",
+   "qrels_sha256": "e60d549e62ba811c2e342b9ea88729d0c001b4e952220995da15716c800606ac",
+   "construction": "mteb/cqadupstack-android, full corpus + test qrels; added pre-freeze per LEDGER untouched-final repair 2026-08-26"
+  },
+  "cqadup-english": {
+   "n_docs": 40221,
+   "n_queries": 1570,
+   "corpus_ids_sha256": "148a215ce6abb5e608996fc1acf5f71229fe3a9921ba1e63211520f7fdf9ccec",
+   "corpus_text_sha256": "d1fa6b7d80052ed2bbd806aa7c204f98a79420ccd4997389083934ac1c132159",
+   "qids_sha256": "d1761a9f61ec28030661cdfc6a5e5c913788e4901801726a53e9c7fb81d0fc2e",
+   "qrels_sha256": "51e44a87232fade6f55bd2506fdc6748bc4fa61ccc05b48a14d44e5f55e8d48a",
+   "construction": "mteb/cqadupstack-english, full corpus + test qrels; added pre-freeze per LEDGER untouched-final repair 2026-08-26"
   }
  },
  "m7_notes": {
   "partitions": "datasets = KNOWN-TEST (the six); m7_dev = DEV; m7_untouched_final = UNTOUCHED-FINAL",
   "climate_fever": "DROPPED from UNTOUCHED-FINAL: no affirmative license at any primary source (see m7/LEDGER.md). The partition therefore holds two sets, not three.",
   "fever_caveat": "BEIR FEVER is scored as untouched-final but is IN-DOMAIN if fever-train pairs stay in the training mix (same corpus, disjoint queries). Labeled in the report; DBpedia-entity is the clean generalization probe.",
-  "frozen_eval_is_authoritative": "the final scorer reads queries/qrels only from results/frozen_eval/ after verifying corpus hashes against a fresh HF download"
+  "frozen_eval_is_authoritative": "the final scorer reads queries/qrels only from results/frozen_eval/ after verifying corpus hashes against a fresh HF download",
+  "untouched_final_repair": "cqadup-android and cqadup-english added 2026-08-26 before freeze: the only near-zero-overlap non-Wikipedia members (R3: fever 11.3%%, dbpedia 9.32%%, cqadupstack ~0). Same family as two dev components -- development-informed at family level, labelled at the row."
  }
 }
