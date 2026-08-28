@@ -863,6 +863,59 @@ labelled "in-distribution only" and is not offered as evidence of six-set improv
 not change the adoption bar — changing a bar after seeing results is what the protocol forbids —
 it adds a mandatory disclosure alongside it.
 
+## RULE COMPLIANCE, AUDITED RATHER THAN DISCOVERED (2026-08-28)
+
+The step-selection rule was found unapplied **by accident**, while re-reading the ledger for
+another reason, after it had already governed four arms and a promoted adoption. The pre-freeze
+review's M5 named the real problem: compliance here is discovered, not audited, and a project
+whose entire claim rests on pre-registration cannot leave that to luck. `m7src/rule_audit.py`
+now checks every mechanically-checkable rule against every arm family it binds
+(`m7_rule_audit.json`).
+
+Result: **no outstanding violations.** What it found on the way is worth keeping:
+
+- **Two documented exemptions, listed rather than silently applied.** The `p5s` family is exempt
+  from step selection by the amendment fixed before its numbers existed; a `p35w-*` arm is exempt
+  because it IS the peak re-run of a longer sibling, and "run long, find the peak, re-run once"
+  does not recurse. An exemption is a claim, so each one names the text that grants it.
+- **Every `p4n` arm differs from the candidate behaviourally on the negatives knobs ONLY** — the
+  one-knob design held, confirmed mechanically rather than asserted.
+- **Bookkeeping drift is real and now visible**: `init_preproc`, `pool_mode` and `b_pseudo_kind`
+  were added to `Cfg` at different times, so arms in the same family have non-identical *recorded*
+  configs while being behaviourally identical. Harmless, but it is the kind of difference that
+  looks like evidence of something later, and adding a defaulted field mid-family is worth
+  avoiding.
+- **Four rules are NOT mechanically checkable and are listed as such, not as passes** —
+  pre-registration ordering (git commit order), Holm family membership (a prose judgement),
+  six-set access (convention, not enforced), and dev pinning (enforced at runtime elsewhere). An
+  audit that scored the unverifiable green would convert an open question into a reassuring row.
+
+## REPORT FRAMING — binding, fixed 2026-08-28 BEFORE the final run
+
+From the pre-freeze over-fitting review (`research/m7-overfit-review-2026-08-28.md`, BLOCKER 2).
+Written into the protocol rather than left as advice, because the temptation it guards against
+only arrives once the six-set number is on the screen.
+
+1. **The lever programme may NOT be presented as having improved the released system.** The
+   review's arithmetic: post-gate dev gain +0.0166; per-look noise σ≈0.003; four banked
+   best-of-k adoptions give an expected winner's curse of ~+0.014 if every effect were null;
+   matched controls attribute only ~+0.005, all inside the perturbation band; out-of-domain
+   movement ~0.000. **Expected six-set transfer of the entire post-gate search: 0.000 ± 0.005.**
+   The report leads with the matched-control attribution (`m7_compare_full_postabl.json`) and the
+   perturbation band — **never with the chained +0.0126**.
+2. **A release-bar miss is a publishable outcome, and this is written down before the number
+   exists.** The review's projections span 0.425–0.509 against a 0.4583 release bar, i.e. they
+   straddle it. The report is drafted so that "we did not clear the bar" is a finding about how
+   much quality a zero-compute query side retains, not a failure to be re-run away from. Nothing
+   about the system may change after the six-set number is seen.
+3. **What survives**: the tier comparisons themselves. They are measured on the six directly,
+   with the recipe fixed beforehand and against frozen comparator vectors, so dev-suite reuse
+   contaminates the *selection* and not the *measurement*. The cost of over-fitting here is a
+   worse true recipe, not a biased final number — say exactly that, and do not over-apply the
+   caveat to the tier claims.
+4. **Quote the artifacts, not this file**, for dev reuse (`m7_dev_reuse_count.json`) and retention
+   (`m7_retention_<run_id>.json`) — both have already gone stale once in prose.
+
 ## Fusion
 
 One family, one parameter, no per-dataset weights or routing, `fusion.DEPTH`=1000 for selection
