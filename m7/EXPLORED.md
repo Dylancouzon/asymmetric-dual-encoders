@@ -29,6 +29,10 @@ the bar it must clear. **Audited against that bar on 2026-08-27** (full table:
 | capacity lever #5, update-count row shrinkage | No `tau` adopted: nothing cleared the pre-registered bar. | `m7_lever5_shrinkage.json` |
 | capacity lever #6, training through the `sqrt` pooling rule | Arm (a) +0.0011, p=0.051 fp16 / 0.073 int8, CI straddling zero — fails its own bar, so arm (b) never ran. Moot besides: `sqrt` is no longer the served rule. | `m7_compare_full_lever6.json` |
 
+| **mined hard negatives (teacher / BM25 / mixed)** — the mandate's ablation, now actually run | **CLOSED 2026-08-28.** Under the step-selection correction none of the three arms clears the bar (+0.0023 p=0.107 · −0.0007 · −0.0056 resolved LOSS), the out-of-domain subset spans 0.3658–0.3688 across every arm *including the baseline*, and the mechanism is diagnosed: the apparent +0.0072 is `heldout-train` +0.0297 and `hotpotqa` +0.0187, i.e. a seen-document slice and a component whose train split is a TRAIN source, while `heldout-longq` gets worse for every arm. Sharpens memorisation, does nothing out of domain. | `m7_negatives_decision.json`, `m7_compare_full_steprule.json` |
+| the pre-registered false-negative-rate check on the mined set | **VACUOUS, not run.** `mine_hard_negatives` takes the query's positives as `exclude`, so the rate against known qrels is 0 by construction. The real hazard is *unlabelled* positives, which qrels cannot reveal. Recorded because a pre-registered check that is a no-op is itself a finding. | `train.mine_hard_negatives` docstring |
+| **per-arm proxy step selection**, as an instrument | **Failed on its own evidence.** The proxy peak did not reproduce on re-run (0.5130 → 0.5126), and the proxy ranked three arms exactly backwards from the full suite. Amended for future decisions to "match the baseline's step count"; explicitly NOT retroactive. | `LEDGER.md` step-rule section |
+
 ## Reopened or under-diagnosed — do NOT treat as closed
 
 Findings of the 2026-08-27 audit against the standing directive (17 of 26 closes SOUND, 4
