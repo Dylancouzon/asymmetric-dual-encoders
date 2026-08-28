@@ -18,8 +18,16 @@ here is restated from `LEDGER.md` (protocol) or `EXPLORED.md` (dead ends).
 | `run_stage0c.sh` | held-out dev slices (need the pool) → TRAIN↔held-out decontam → reference rows |
 | `run_stage0b.sh` | ridge probe → capacity probe → objective grid → go/no-go gate |
 | `run_ablations.sh` | chain smoke → attribution controls → 7 mandatory chains → negatives → exploratory |
+| `run_freeze_prep.sh` | fusion re-selection → ANN sweep → costs → gate. Stops before `freeze.write`. |
+| `run_tests.sh` | all eleven committed suites; nonzero exit if any fails |
 
 **Strictly sequential, one GPU/memory job at a time**, enforced by the drivers and by `flock`.
+
+**These six are the whole driver set.** 22 one-shot launchers for closed phases (the teacher-probe
+sweeps, the phase-2 screen, the stella swap, levers 2 and 7, the negatives re-decide, the
+simplification, the step-spread) were deleted 2026-08-28 once their avenues closed. The recipes live
+in `program.py`, a single leg runs with `run_arm.py`, and `git log` has every launcher — a shell
+wrapper for a decided question is not knowledge a future session needs.
 
 ## Modules
 
