@@ -101,7 +101,10 @@ def main(pre_name="noprefix", steps=6000):
     m, means = dev_eval.report(per, "[probe] overfit table")
     bm = {c: refs["bm25"][c] for c in COMPONENTS}
     r = boot.paired(per, bm, alternative="greater")
-    passed = bool(r["ci95"][0] > 0)
+    # ci95_raw, not the rounded display field. The committed probe's lower bound is 0.5793 so
+    # this cannot flip its outcome, but it is the third instance of the same forbidden read
+    # found in one day (Codex one-shot-path review, MINOR 1), and gate.py trusts this boolean.
+    passed = bool(r.get("ci95_raw", r["ci95"])[0] > 0)
     out = {"_note": "DIAGNOSTIC ONLY -- categorically ineligible for any gate (instructions-m7.md). "
                     "Train and eval queries are identical by design.",
            "preproc": pre_name, "macro": m, "per_component": means, "budgets": budgets,

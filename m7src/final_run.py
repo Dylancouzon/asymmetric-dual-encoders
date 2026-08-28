@@ -52,6 +52,11 @@ def sh(*a):
     return subprocess.run(a, capture_output=True, text=True, cwd=REPO).stdout.strip()
 
 
+def sh_raw(*a):
+    """`sh` without the strip. Column-oriented git output loses its first field to `.strip()`."""
+    return subprocess.run(a, capture_output=True, text=True, cwd=REPO).stdout
+
+
 def ledger(line):
     with open(LEDGER, "a") as f:
         f.write(line.rstrip() + "\n")
@@ -73,7 +78,12 @@ def guard(freeze_hash, infra_retry, branch, fz):
     # those two files changed. An infra retry must tolerate exactly that and nothing else
     # (review #2 MAJOR 20: the old guard could never pass after any post-BEGIN crash).
     ALLOWED_DRIFT = {"m7/LEDGER.md", "m7/SIX_ACCESS.log"}
-    dirty = [l[3:].strip() for l in sh("git", "status", "--porcelain").splitlines() if l]
+    # `git status --porcelain` is "XY PATH" with XY exactly two columns, so the path starts at 3 --
+    # but `sh` strips the whole output, which eats the leading space of the FIRST line when its
+    # status is " M". That silently truncated the first dirty path ("m7/LEDGER.md" -> "7/LEDGER.md"),
+    # so ALLOWED_DRIFT never matched it and a legitimate --infra-retry would have been refused for
+    # the very file the retry is allowed to touch. Split without stripping the leading column.
+    dirty = [l[3:].strip() for l in sh_raw("git", "status", "--porcelain").splitlines() if l.strip()]
     stray_dirty = [d for d in dirty if d not in ALLOWED_DRIFT]
     if stray_dirty:
         problems.append(f"working tree is not clean beyond the scorer's own files: {stray_dirty}")
@@ -305,7 +315,11 @@ def main():
         B = boot.from_perquery_json(pq, b_name, set(DATASETS))
         if not B:
             raise SystemExit(f"FINAL RUN ABORTED: no frozen per-query vectors for {b_name}")
-        r = boot.paired(A, B, alternative="greater")            # intervals only (B3)
+        # strict=True: the registered rule is strict alignment on EVERY confirmatory path.
+        # The sign-flip call below is strict and would abort first, so nothing could have
+        # shrunk silently -- but relying on a neighbouring call for a guarantee is how the
+        # guarantee gets lost when the calls are reordered.
+        r = boot.paired(A, B, alternative="greater", strict=True)   # intervals only (B3)
         t = boot.signflip(A, B, alternative="greater", strict=True)  # THE p-value (B3)
         r["signflip"] = t
         conf[name] = r
@@ -353,7 +367,7 @@ def main():
     for name, (a_name, b_name) in CONFIRMATORY.items():
         A4 = {ds: v for ds, v in by_sys[a_name].items() if ds in CLEAN4}
         B4 = boot.from_perquery_json(pq, b_name, CLEAN4)
-        rr = boot.paired(A4, B4, alternative="greater")
+        rr = boot.paired(A4, B4, alternative="greater", strict=True)
         rr["signflip"] = boot.signflip(A4, B4, alternative="greater", strict=True)
         robustness[name] = rr
         print(f"  [clean-4 robustness] {name}: d={rr['delta']:+.4f} CI={rr['ci95']} "
