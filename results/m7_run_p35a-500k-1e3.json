@@ -1,0 +1,104 @@
+{
+ "run_id": "p35a-500k-1e3",
+ "cfg": {
+  "run_id": "p35a-500k-1e3",
+  "objective": "A",
+  "init": "run:p35b-500k",
+  "preproc": "noprefix",
+  "learned_weights": true,
+  "idf_init_weights": true,
+  "lr": 0.001,
+  "lr_weights": 0.01,
+  "warmup_steps": 200,
+  "lr_schedule": "warmup_linear",
+  "steps_b": 0,
+  "steps_a": 2000,
+  "batch": 512,
+  "n_neg": 32768,
+  "temp": 0.02,
+  "hard_neg_k": 0,
+  "hard_neg_source": "teacher",
+  "use_provided_hardneg": true,
+  "fn_margin": 0.02,
+  "kl_weight": 1.0,
+  "kl_k": 32,
+  "cos_weight": 1.0,
+  "reg_init": 0.001,
+  "bank_size": 2000000,
+  "sources": [],
+  "eval_every": 500,
+  "eval_components": [
+   "nq-250k",
+   "cqadup-programmers",
+   "cqadup-physics"
+  ],
+  "seed": 0,
+  "b_query_sources_all": true,
+  "b_pseudo_queries": 0,
+  "b_pseudo_frac": 0.5
+ },
+ "final_macro": 0.5077234762909665,
+ "coverage": {
+  "rows_updated": 26744,
+  "vocab": 30522,
+  "rows_updated_frac": 0.8762204051017761,
+  "median_updates_of_touched": 65.0
+ },
+ "history": [
+  {
+   "step": 500,
+   "phase": "A",
+   "macro": 0.5060690776269811,
+   "collapse": {
+    "mean_pairwise_cos": 0.1682,
+    "effective_rank": 502.49,
+    "dim": 1024,
+    "uniformity": -3.2643
+   }
+  },
+  {
+   "step": 1000,
+   "phase": "A",
+   "macro": 0.5076408764817149,
+   "collapse": {
+    "mean_pairwise_cos": 0.1287,
+    "effective_rank": 527.73,
+    "dim": 1024,
+    "uniformity": -3.427
+   }
+  },
+  {
+   "step": 1500,
+   "phase": "A",
+   "macro": 0.5080323242462635,
+   "collapse": {
+    "mean_pairwise_cos": 0.1119,
+    "effective_rank": 538.28,
+    "dim": 1024,
+    "uniformity": -3.4946
+   }
+  },
+  {
+   "step": 2000,
+   "phase": "A",
+   "macro": 0.5077234762909665,
+   "collapse": {
+    "mean_pairwise_cos": 0.1074,
+    "effective_rank": 542.37,
+    "dim": 1024,
+    "uniformity": -3.5149
+   }
+  },
+  {
+   "step": 2000,
+   "phase": "final",
+   "macro": 0.5077234762909665,
+   "collapse": {
+    "mean_pairwise_cos": 0.1074,
+    "effective_rank": 542.36,
+    "dim": 1024,
+    "uniformity": -3.5149
+   }
+  }
+ ]
+}

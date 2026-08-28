@@ -14,6 +14,6 @@
  },
  "artifact_cost_mb_fp16": 1.0,
  "encoder": "stella-400M-v5-ffeb2b7e",
- "seconds": 226.9,
+ "seconds": 92.2,
  "_note": "closed-form capacity probe; the unigram comparator is the SAME solve's unigram block (isolates the bigram rows' contribution at eval); compare also against the committed unigram-only ridge macro in results/m7_stage0_ridge_stella.json"
 }

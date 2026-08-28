@@ -67,9 +67,15 @@ def solve_ridge(X, Y, W0, lam):
     rhs = (X.T @ Y).astype(np.float64) + lam * W0.astype(np.float64)
     G[np.diag_indices_from(G)] += lam
     # LAPACK wants Fortran order; a C-ordered G would be copied wholesale despite overwrite_a.
-    # G is symmetric, so the F-contiguous transpose VIEW is the same matrix — no copy, truly
-    # factored in place.
-    W = sla.solve(G.T, rhs, assume_a="pos", overwrite_a=True, overwrite_b=True)
+    # G is symmetric, so the F-contiguous transpose VIEW is the same matrix — no copy. And
+    # scipy >= 1.15 rewrote sla.solve onto batched C machinery that allocates its own copies
+    # and ignores overwrite_a (MemoryError at K=10,000 on 23 GB free, 2026-08-27), so call the
+    # raw LAPACK posv wrapper, which truly factors in place.
+    posv, = sla.get_lapack_funcs(("posv",), (G, rhs))
+    _, W, info = posv(G.T, np.asfortranarray(rhs), lower=1,
+                      overwrite_a=True, overwrite_b=True)
+    if info != 0:
+        raise np.linalg.LinAlgError(f"posv failed: info={info}")
     del G, rhs
     return np.ascontiguousarray(W, dtype=np.float32)
 
