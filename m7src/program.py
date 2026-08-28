@@ -255,12 +255,25 @@ def ablation_recipe():
     arms). And an ablation whose "unchanged" baseline drifts from the candidate by a
     transcription slip measures the slip, not the ablated variable. ABLATION_B/ABLATION_A below
     are the expected values and are asserted against what is read.
+
+    **`M7_RECIPE_FROM` overrides which artifact is read.** The dev-audit survivor was the right
+    source while the lever chain ended at the candidate; it no longer does -- the negatives arm
+    and the simplification each moved the candidate past it. A lever that has to isolate one knob
+    must build on whatever recipe is current, and hardcoding the survivor would silently measure
+    that knob PLUS every change made since. Set it to the current candidate's run id.
     """
-    p = REPO / "results" / "m7_dev_audit_full.json"
-    if not p.exists():
-        raise SystemExit("run dev_audit.py first: the ablation chains must reproduce the recipe of "
-                         "whichever artifact survives the dependence recompute")
-    surv = json.loads(p.read_text())["surviving_candidate"]
+    import os
+    over = os.environ.get("M7_RECIPE_FROM")
+    if over:
+        surv = over
+        print(f"[recipe] M7_RECIPE_FROM={surv}: deriving the base recipe from that artifact, not "
+              f"from the dev-audit survivor", flush=True)
+    else:
+        p = REPO / "results" / "m7_dev_audit_full.json"
+        if not p.exists():
+            raise SystemExit("run dev_audit.py first, or set M7_RECIPE_FROM: an arm must reproduce "
+                             "the recipe of the artifact it is varying one knob against")
+        surv = json.loads(p.read_text())["surviving_candidate"]
     a_cfg = json.loads((WORK / "runs" / f"{surv}.json").read_text())["cfg"]
     init = a_cfg.get("init", "")
     if not init.startswith("run:"):
@@ -355,7 +368,17 @@ for _name, _k, _src in (("bm25", 16, "bm25"), ("mixed", 32, "mixed")):
         "init": "run:p5s-simple-b",
         "a": {**P5S_ARMS["simple"]["a"], "hard_neg_k": _k, "hard_neg_source": _src},
     }
-ARMS = {"p4": P4_ARMS, "p4x": P4X_ARMS, "p4e": P4E_ARMS, "p4n": P4N_ARMS, "p5s": P5S_ARMS}
+# Capacity lever #7: ONE knob, `b_pseudo_kind`, against whatever recipe is current. Deliberately
+# not a copy of the simplification arm's overrides: run it with `M7_RECIPE_FROM=<candidate>` and
+# the base comes from that artifact's own config, so the arm is "the candidate plus long spans"
+# whichever way the simplification test and the negatives tie-break went. Copying the overrides
+# here would silently measure the span distribution PLUS every difference between this file's
+# snapshot and the artifact.
+P7_ARMS = {
+    "longspan": {"b": {"b_pseudo_kind": "mixed"}},
+}
+ARMS = {"p4": P4_ARMS, "p4x": P4X_ARMS, "p4e": P4E_ARMS, "p4n": P4N_ARMS,
+        "p5s": P5S_ARMS, "p7": P7_ARMS}
 
 
 def phase4_mandatory(base):
