@@ -27,8 +27,15 @@ here is restated from `LEDGER.md` (protocol) or `EXPLORED.md` (dead ends).
 the one place that knows how to run each candidate tower**; select with `M7_ENCODER`, add a `Spec`
 rather than special-casing at a call site · `teacher.py` the frozen teacher; `encode_cached` is
 shard-resumable and returns a **memmap**, its key covers model/revision/dtype/tokenizer/pooling/
-prefix/length/corpus · `test_encoders.py` replays every cache key and requires the directory name
-back unchanged · `hashing.py` streaming `sha` equivalents · `evalkit.py` chunked GPU brute force,
+prefix/length/corpus. The key binds the INPUTS; `<cache>/shards.json` binds the OUTPUT BYTES —
+every shard is hashed on write, `combined.f16` records the shard hashes it was stitched from, and
+`encode_cached(..., verify=True)` re-hashes and **aborts** rather than reuse anything it cannot
+authenticate (the final run passes it; dev does not, and pays nothing). `teacher.PROVENANCE[name]`
+is what the run consumed · `teacher_code.py` pins the sha256 of the 14 files that change what the
+teacher computes, vendors its `trust_remote_code` modules into `vendor/`, and asserts the
+`auto_map` is same-repo · `test_encoders.py` replays every cache key and requires the directory
+name back unchanged · `test_encode_cache.py` the shard-integrity refusals, with a stubbed encoder
+so it needs no GPU · `hashing.py` streaming `sha` equivalents · `evalkit.py` chunked GPU brute force,
 tiled on **both** axes (`topk_arrays` / `run_from_arrays` split out so many query blocks can share
 one corpus pass) · `multieval.py` scores N query-side variants with ONE pass per **corpus** (the
 two held-out components share the pool), plus `rank_compare` for path equivalence.
@@ -55,9 +62,14 @@ run an arm as TWO runs (B, then a fresh A from that checkpoint) and `smoke_chain
 artifact's own config · `dev_eval.py` dev macro + pinned reference rows · `stage0_ridge.py`
 closed-form flat table · `capacity_probe.py` **diagnostic, gate-ineligible** · `boot.py`
 `signflip` is THE p-value, `signflip_dep`/`paired_dep` handle the nested components, `both_ways`
-reports all three bootstraps · `gate.py` the eligibility audit · `fusion.py` one family, one
-builder (`test_fusion_paths.py` guards the re-fork); `select_fusion.py` fits against the RELEASE
-artifact.
+reports all three bootstraps · `tier_rule_calibration.py` replays the FULL three-leg tier rule under
+a weak null with the three comparisons sharing one query resample — the familywise rate, measured
+rather than bounded · `gate.py` the eligibility audit · `fusion.py` one family, one builder
+(`test_fusion_paths.py` guards the re-fork), BM25 caches content-keyed on ordered ids/texts, depth,
+parameters and library versions · `select_fusion.py` fits against the RELEASE artifact and stamps
+the spec with everything the freeze re-derives · `freeze.py` LOADS that spec itself, requires a
+PASSing gate for the same table bytes, and DERIVES `released_system` from the winning grid point
+(`test_freeze_binding.py` is the 28 refusals that must happen).
 
 **Diagnostics** (each answers one question the plan was assuming) — `calibrate.py` MTEB→six
 (residual sd 0.0102; larger than the gap between top teacher candidates) · `absorb_check.py` which
@@ -89,9 +101,17 @@ rows training never touched (`apply_unseen_policy` is defined and never called) 
 which transforms are absorbable, now including the doc-side map in both the renormalized and
 un-renormalized cases.
 
-**Final and demo** — `final_run.py` refuses unless the tree is clean, HEAD equals the freeze
-commit, that commit is pushed, and no prior final-run entry exists · `ann_sweep.py` real HNSW ·
-`edge_demo.py` the two-collection architecture · `freeze_m7_assets.py` pins dev + untouched-final.
+**Final and demo** — `final_run.py` refuses unless the tree is clean, HEAD equals the freeze commit,
+that commit is pushed **and marked by the immutable `m7-freeze` tag**, and no prior final-run entry
+exists. It scores the six, writes the result and appends the completion marker BEFORE the
+untouched-final tail, which is **10.1M documents, 37x the six** and used to run before anything was
+on disk; `--untouched-only` resumes that tail and can never re-score the six · `ann_sweep.py` real
+HNSW · `edge_demo.py` the two-collection architecture · `freeze_m7_assets.py` pins dev +
+untouched-final (**run it with a section argument, never bare, and never import it — import
+executes it**).
+
+`./run_tests.sh` runs all ten suites and is the only thing that does; a suite nobody runs is
+documentation, which is how `test_freeze_guard.py` stayed broken for two days after the teacher swap.
 
 ## Reusing this repo as a harness
 
@@ -112,8 +132,14 @@ mixed-device bug rather than a crash.
 Adding an encoder, in order: write the `Spec` (pooling, prompt, `post_dense`, `config_kwargs`,
 revision pinned) → `test_encoders.py` → **`validate_encoder.py`** → only then a probe or an encode.
 Skipping the validator is how a comparison silently runs the wrong model. Two things that must
-move with the encoder: anything assuming **dim 768**, and `table.py`'s `CLS_ID`. Pinning weights
-does not pin `trust_remote_code` code, which comes from a separate repo at HEAD.
+move with the encoder: anything assuming **dim 768**, and `table.py`'s `CLS_ID`.
+**`trust_remote_code`**: a pinned `revision` DOES pin the remote modules when the model's `auto_map`
+is same-repo (stella's is), but it does NOT when the auto_map is cross-repo (`other/repo--module`),
+which resolves at that repo's `main`. `teacher_code.verify()` asserts which case you are in, hashes
+the whole snapshot against `m7_teacher_code_pin.json`, and requires a byte-identical vendored copy
+under `vendor/`. Run `teacher_code.py --write` when adding an encoder that needs remote code. (An
+earlier version of this line said flatly that pinning weights does not pin the code, which is only
+half the story and was the wrong half for the teacher we ship.)
 
 ## Log size policy (context is the scarce resource)
 
@@ -178,6 +204,13 @@ Compaction is safe — git preserves every prior version, and each file says whe
     first (short), then the pseudo pool ordered BY STORE, and `esci-prod` supplies 68% of the long
     spans. Extrapolating the first shards gave 36 minutes for a ~2-hour job. A pool with
     non-uniform composition has no single rate — find the slowest block and estimate from there.
-18. **`rchar` is 0 while a memmap gather runs** — mmap access is page faults, not read syscalls.
+18. **A cache whose payload is POSITIONS is not keyed by its filename.** The BM25 caches stored
+    integer doc positions and scores; `_to_run` re-attaches whatever id lists the caller passes, so
+    any same-shaped corpus was silently accepted. If a cached artifact is meaningless without the
+    list it indexes into, that list's hash belongs in the key. Same class as pitfall 9.
+19. **`boot._align_ids` sorts qids as STRINGS.** A test fixture using `q0…q10` permutes the arrays
+    relative to their source order, so a shared random-draw matrix indexes different rows and a
+    correct reimplementation looks wrong. Zero-pad synthetic qids (`f"q{i:07d}"`).
+20. **`rchar` is 0 while a memmap gather runs** — mmap access is page faults, not read syscalls.
     Do not read "zero I/O + 100% of one core" as a hang; check RSS and `free` instead. And never
     materialize a whole gather on the host when the destination is a GPU tensor: fill it in chunks.
