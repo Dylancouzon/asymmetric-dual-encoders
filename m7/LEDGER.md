@@ -421,6 +421,13 @@ a reason to prefer the null.
   steps together. The valid statement is "adaptive dev search selected a better dev artifact";
   the matched no-pseudo and 500k-at-B16k controls (`phase4_attribution`) are what would license
   more.
+  **AND, measured 2026-08-28: each of the three decisions is INSIDE the recipe-perturbation band**
+  (0.0027–0.0078 from a step count alone; see the step-rule section). +0.0065, +0.0038 and +0.0023
+  are individually indistinguishable from what a nuisance parameter does. The **cumulative**
+  +0.0126 is outside the band, so "this chain of adaptive dev search found a better dev artifact"
+  survives; "each of these three decisions identified a real effect" does not, and the report must
+  not claim it. Note the third of the three decisions *is* a step extension, so the perturbation
+  band and that decision are measuring the same thing.
 - **#3 doc2query — CLOSED at the cheap-test price, not disproved** (`m7_doc2query_probe.json`:
   +0.0054 [−0.0007,+0.0114], p=0.085, positive on both components but unresolved; the rule that
   unresolved closes the row was fixed before the number). This is the weakest form of the
@@ -433,6 +440,12 @@ a reason to prefer the null.
   binary +0.0030 and cap2 +0.0016 do not clear. `m7_lever4_pooling_p35w-2m-s2500.json`. Honest shape: the
   CI lower bounds are barely above zero — this is a real but small effect that cleared a bar fixed
   before it was seen, and it is selection evidence like everything else on dev.
+  **How to describe it after 2026-08-28, and the adoption still stands**: +0.0040 is inside the
+  recipe-perturbation band (0.0027–0.0078), and the rule **failed to replicate** on the next
+  artifact it was tried on. It keeps the adoption because the bar was pre-registered and it cleared
+  it, and because the change is **free** — identical rows, identical int8 codes, no query-time
+  cost. Report it as a free rule that cleared its bar on one artifact, never as a demonstrated
+  quality gain.
   **RE-ADJUDICATED ON THE NEW CANDIDATE 2026-08-28, AND IT DOES NOT SURVIVE.** The negatives
   pre-registration says a promoted arm re-triggers this adjudication, and `adopt_pool_mode.py`
   refuses any run id the committed lever-4 artifact does not name, so the interlock forced it.
