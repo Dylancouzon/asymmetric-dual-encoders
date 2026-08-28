@@ -755,6 +755,85 @@ If a new teacher is pursued **after** the final run, it is a NEW milestone with 
 pre-registration and its own confirmatory design, and M7's reported result is neither retroactively
 edited nor replaced by it.
 
+**RESULTS FROM THE SECOND MACHINE (2026-08-28, M5 Mac, MPS).** Both candidates are closed on the
+adopted criterion. Neither comes near the incumbent, so the tie-break clause on six-set overlap and
+dimension never applies, and no swap is proposed.
+
+| candidate | dim | best lambda | table macro-2 | vs Mac stella | resolved |
+|---|---|---|---|---|---|
+| stella-400M-v5 (Mac replication) | 1024 | 1e-2 | **0.3443** | — | — |
+| arctic-embed-m-v1.5 | 768 | 1e-3 | 0.3002 | -0.0441 [-0.0567, -0.0313] | yes |
+| gte-base-en-v1.5 | 768 | 1e-2 | 0.2741 | -0.0702 [-0.0835, -0.0567] | yes |
+
+Both best lambdas are interior to the grid, so neither optimum is clipped. Full lambda curves:
+arctic-m 0.2986 / 0.3002 / 0.2980 / 0.2463 and gte-base 0.2685 / 0.2709 / 0.2741 / 0.2500 over
+1e-4..1e-1. Per-candidate files `results/m7_learnability_{arctic-embed-m-v1.5,gte-base-en-v1.5}.json`;
+the all-Mac ranking with every CI is `results/m7_learnability_report_mac.json`.
+
+**The within-family prediction that put these two on the list was right in direction and wrong in
+size.** Base does out-approximate large in both families here — arctic-m 0.3002 over arctic-l
+0.2594, gte-base 0.2741 over gte-large 0.2033, the worst of the original eight — which is the same
+pattern as bge-base 0.3074 over bge-large 0.2751 and e5-base over e5-large. The lift is +0.04 to
++0.07 and the gap to stella was +0.08. Worth recording as a bound for any future candidate: within
+a family, dropping from large to base buys under 0.07 on this probe, so a family whose large
+variant sits below ~0.28 cannot reach stella by shrinking.
+
+**Cross-platform replication (rule 1), the reason the stella row was mandatory.** Same four
+lambdas, same argmax, all four within 7e-4:
+
+| lambda | CUDA (committed) | MPS | delta |
+|---|---|---|---|
+| 1e-4 | 0.3407 | 0.3400 | -0.0007 |
+| 1e-3 | 0.3430 | 0.3426 | -0.0004 |
+| 1e-2 | 0.3439 | 0.3443 | +0.0004 |
+| 1e-1 | 0.3248 | 0.3244 | -0.0004 |
+
+Nothing exceeds the 1e-3 flag threshold. Paired on per-query values at the shared best lambda,
+MPS - CUDA is **+0.0004 [-0.0003, +0.0012], UNRESOLVED** — no detectable platform effect.
+The mechanism is visible per query: 97.9% and 97.8% of queries are bit-identical across the two
+platforms, and every disagreement is exactly +-0.3691, which is 1 - 1/log2(3), i.e. a rank-1
+against rank-2 swap of two near-tied documents on a single-relevant-doc query. So the platforms
+differ only in tie-breaking, not in the fit. Toolchain: Python 3.12.13 arm64, torch 2.8.0 (MPS),
+transformers 4.57.6, scipy 1.18.1, numpy 2.3.5, sentence-transformers 5.7.0 — the lock's versions
+with only torch's build swapped. `aten::_embedding_bag` has no MPS kernel and falls back to CPU, so
+the table's query encode ran on CPU here; that is the most likely source of the tie-break
+differences.
+
+The Mac stella row is kept as `results/m7_learnability_stella-400M-v5_mac.json`. The committed
+CUDA file and the fixed-name report are restored to their pre-run contents, so the RTX box's
+artifacts are untouched.
+
+**Comparability, verified rather than assumed.** The TRAIN query list arrived by transfer and
+verified against its manifest (349,934 queries, sha256 1610f4f4...). The two dev components were
+rebuilt from HF here and all four hashes match `results/m7_dev_manifest.json` — nothing checked this
+before, and a different HF snapshot would have made every Mac row incomparable in silence
+(`scripts/verify_dev_hashes.py`, now a hard gate in the driver). The shared bag matrix reports
+gram nnz=12,936,008 (1.389% dense); it depends only on the tokenizer and the query list, so it is a
+third independent check that the fit used the same X. All three Specs pass `validate_encoder.py` on
+MPS: arctic-m min cosine 0.99999997 / pairwise 1.8e-07, gte-base 0.99999989 / 0.0, stella
+0.99999990 / 0.0.
+
+**Three harness defects found, all of which would have produced or hidden a wrong answer:**
+1. The probe path was CUDA-hardcoded end to end and could not run on a second machine at all.
+   Ported through one resolver (`_paths.DEVICE` / `_paths.empty_cache()`), not site by site.
+2. `scripts/learnability_report.py` globs `m7_learnability_*.json` and therefore reads its OWN
+   output and the archived `_bge-incumbent` report, which carry no `encoder` key: **the script
+   raised KeyError on every run after the first one that wrote a report, on any machine.** Fixed by
+   skipping non-candidate files, and `*_mac.json` with them — those carry a real encoder key and
+   would have replaced a row depending on sort order, mixing two toolchains inside one ranking.
+3. `teacher_learnability.main` merges new lambdas into an existing per-candidate file, so this run
+   silently overwrote the committed CUDA stella values in place. Recoverable only from git. A future
+   second-machine run must copy the affected file off and restore it, as this one did.
+
+**Caveat on the `_mac` report's other rows.** Its eight older candidates keep their CUDA table
+scores, but their CIs are now paired against the MPS stella row, so those rows are cross-platform.
+The committed report on the RTX box stays authoritative for them. The two rows this probe exists to
+produce, and the replication row, are same-platform throughout.
+
+**Still outstanding before anything here can move the teacher:** nothing, because nothing won. Had
+one won, rule 2 (re-probe on the RTX box), swap-bar clause 2 (the off-family read on nq-250k and
+hotpotqa, whose data this machine does not have) and Dylan's sign-off would all still be pending.
+
 ### 1. The clean-stack tax
 
 **Question.** Every comparator we benchmark against trained on MS MARCO — bge/C-Pack, Arctic-Embed
