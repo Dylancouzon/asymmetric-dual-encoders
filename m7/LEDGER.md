@@ -251,6 +251,20 @@ training list — 2 of the 6 — and must be labelled at the dataset row.** All 
   **This settles whether a length gap exists at all**, and it is the pre-condition for spending a
   training chain on long-span distillation. No qrels, no six-set access, no adoption attached.
 
+- **Negatives ablation — decision rule pre-registered 2026-08-28, before any arm's result.** The
+  mandate ordered a BM25-mined / teacher-mined / mixed comparison; it never ran, and `hard_neg_k=0`
+  entered the shipping recipe on one bge-era pair at lr 5e-5 (see `EXPLORED.md`). `phase4_negatives`
+  runs four A-only arms from the candidate's own B checkpoint at its own A recipe, so `bank` IS the
+  candidate and is the control. **Rule**: an arm is promoted to a full-suite comparison only if its
+  proxy macro exceeds `bank`'s; the promoted arm then faces the same bar as every lever
+  (dependence-preserving signflip p<0.05 AND raw paired CI>0, fp16 and int8, vs the candidate), and
+  if more than one is promoted, Holm across them at alpha=0.05. If none is promoted, the avenue is
+  **closed with a mechanism check attached**: score the k=16 mined set against qrels to measure the
+  actual false-negative rate, which converts "mined negatives hurt" from observed into diagnosed.
+  A promoted winner changes the candidate, which re-triggers fusion re-selection and re-adjudicates
+  lever #4 on the new artifact — that consequence is stated here so it cannot be discovered later
+  as a reason to prefer the null.
+
 **Absorbable, therefore not capacity** (`m7_absorb_check.json`): query-side centering, whitening,
 top-PC removal, any per-token scalar weight, any doc-side linear map. Only n-gram rows and
 multiplicity-dependent pooling add anything — which is why #4 could work at all.
