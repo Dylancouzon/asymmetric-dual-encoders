@@ -27,7 +27,7 @@ import torch
 
 import encoders
 import teacher
-from _paths import REPO
+from _paths import DEVICE, REPO, empty_cache
 
 # Deliberately mixed: short/long, question/statement, near-duplicates (to stress the pairwise
 # matrix), and repeated tokens (to exercise multiplicity handling).
@@ -50,19 +50,19 @@ def st_encode(spec, texts):
     kw = {"trust_remote_code": True} if spec.trust_remote_code else {}
     if spec.config_kwargs:
         kw["config_kwargs"] = dict(spec.config_kwargs)
-    m = SentenceTransformer(spec.repo, revision=spec.revision, device="cuda",
+    m = SentenceTransformer(spec.repo, revision=spec.revision, device=DEVICE,
                             model_kwargs={"dtype": torch.float32}, **kw)
     v = m.encode(texts, normalize_embeddings=True, batch_size=8, show_progress_bar=False)
     del m
-    torch.cuda.empty_cache()
+    empty_cache()
     return np.asarray(v, dtype=np.float64)
 
 
 def ours(spec, texts):
     v = teacher.encode(texts, prefix="", max_length=spec.max_length, model_id=spec.repo,
-                       revision=spec.revision, dtype=torch.float32, device="cuda")
+                       revision=spec.revision, dtype=torch.float32, device=DEVICE)
     teacher._CACHE.clear()
-    torch.cuda.empty_cache()
+    empty_cache()
     return np.asarray(v, dtype=np.float64)
 
 

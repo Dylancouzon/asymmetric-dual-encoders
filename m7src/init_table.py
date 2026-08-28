@@ -13,7 +13,7 @@ import numpy as np
 import encoders
 import torch
 
-from _paths import WORK
+from _paths import DEVICE, WORK
 from table import Preproc, get_tokenizer
 from teacher import load_post_dense, load_teacher, pool_project_normalize
 
@@ -30,7 +30,7 @@ def spec_tag():
 
 
 @torch.no_grad()
-def teacher_rows(pre: Preproc, batch=512, device="cuda"):
+def teacher_rows(pre: Preproc, batch=512, device=DEVICE):
     """Each vocab token forwarded through the frozen teacher in a query-shaped context.
 
     Pooling and the post-pooling Dense come from the registry via pool_project_normalize. This
@@ -59,7 +59,7 @@ def teacher_rows(pre: Preproc, batch=512, device="cuda"):
     return out
 
 
-def input_emb_rows(device="cuda"):
+def input_emb_rows(device=DEVICE):
     """Sliced to the TOKENIZER's vocabulary, not the embedding matrix's row count.
 
     stella's input embeddings are padded to 30,528 rows while the tokenizer has 30,522 (the
