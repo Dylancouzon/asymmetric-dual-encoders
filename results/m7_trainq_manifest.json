@@ -1,8 +1,23 @@
 {
- "_what": "provenance pin for work/trainq_texts.json, the TRAIN query list every teacher-learnability probe is fitted on. It is gitignored and expensive to re-derive (it needs the 6.17M-row pool index and the decontamination outputs), so it was an UNPINNED input to the most consequential comparison left. Now it is checked on load, on every machine.",
+ "_what": "provenance pin for work/trainq_texts.json, the query list every teacher-learnability probe is FITTED on. NOT the shipping recipe's training set -- see `_not_the_training_set`.",
  "n_queries": 349934,
  "sha256": "1610f4f47e3d37ddfe81a4b524a30c421cd2ffa742e2b59a6456bf1f66838e2e",
  "bytes": 21842246,
  "produced_by": "scripts/encode_trainq.py dump, on the RTX box, from the pool index + decontaminated pair list",
- "note": "a second machine restores it from transfer/trainq_texts.json.gz (side branch only) and verifies against this hash; the list is identical or the probe refuses."
+ "note": "a second machine restores it from transfer/trainq_texts.json.gz (side branch only) and verifies against this hash; the list is identical or the probe refuses.",
+ "_not_the_training_set": {
+  "trainq_queries": 349934,
+  "kept_pairs_now": 340850,
+  "candidate_actually_trained_on": 338076,
+  "explanation": "dumped 2026-08-26, before a later decontamination pass; it is a STALE SUPERSET. The current mix is 340,850 pairs, and the candidate trained on 338,076 after build_arrays dropped pairs whose every positive was B2-banned. The RELEASED model trained on the clean 338,076 -- this list is used only by the closed-form teacher probes.",
+  "r1_hits_in_this_list": {
+   "total": 4582,
+   "frac": 0.013094,
+   "exact": 1,
+   "near": 4561,
+   "contains": 20
+  },
+  "consequence": "1.31% of the probe's fit set overlaps the protected-query index (six + dev + untouched-final), so the closed-form tables were fitted on some queries that R1 later removed. Every candidate shares the identical fit set, so the contamination inflates all of them equally: the probe's RANKING -- which is all it is used for, and all its own artifact claims -- is unaffected, while its ABSOLUTE ratios are inflated and may not be quoted as clean. Disclosed rather than repaired because regenerating would break comparability with every committed row; a teacher SWAP would re-run the widened read on a regenerated list.",
+  "found_by": "pre-freeze Codex review, BLOCKER 'teacher probes are pinned to a non-shipping training population'; the R1 count measured 2026-08-28 in response."
+ }
 }

@@ -790,6 +790,26 @@ ranking also rests on two components of one dataset family, with no selection co
 stella's advantage remains unexplained. Since the init turned out to be irrelevant (all three
 init arms land within noise), the teacher IS the document space — the highest-leverage choice left.
 
+**THE PROBES' FIT SET IS A STALE SUPERSET, AND 1.31% OF IT OVERLAPS PROTECTED QUERIES.**
+Disclosed 2026-08-28 after the pre-freeze Codex review found the population mismatch; the R1 count
+was measured in response. `work/trainq_texts.json` holds **349,934** queries, dumped 2026-08-26
+before a later decontamination pass. `kept_pairs()` is now **340,850**, and the candidate trained
+on **338,076** after B2-banned positives were dropped. Running the current protected-query index
+over the probe list finds **4,582 R1 hits (1.31%)** — 1 exact, 4,561 near, 20 contains.
+
+Three things follow, and the third is why this is disclosed rather than repaired.
+1. **The RELEASED model is unaffected.** `train.run` reads the current `kept.json`; the shipped
+   candidate trained on the clean 338,076. The contamination is confined to the closed-form
+   teacher probes.
+2. **The probe's absolute ratios are inflated and may not be quoted as clean.** Some tables were
+   fitted on queries that overlap the very dev components they are scored on.
+3. **The RANKING is unaffected, which is all the probe is used for.** Every candidate shares the
+   identical fit set, so a shared contamination shifts all of them together — and
+   `m7_learnability_report.json` already states it "ranks candidates rather than predicting
+   scores". Regenerating the list would break comparability with every committed row for no gain
+   in the only quantity the criterion consumes. **If a teacher swap is actually pursued**, the
+   swap bar's off-family read on nq-250k and hotpotqa is run on a regenerated, clean list.
+
 **The probes are dev-only** (closed-form tables, two CQADupStack components, no six-set access) and
 are legal at any time. `scripts/learnability_report.py` pairs each candidate against `INCUMBENT`,
 re-pointed at stella on 2026-08-28 (the bge-incumbent report is archived under its own name).
