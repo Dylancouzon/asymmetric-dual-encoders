@@ -531,3 +531,13 @@ the expectation being bracketed is a peak-and-turn. No further extension without
 p=0.009, int8 +0.0039 p=0.007. **Candidate: `p35a-2m-1e3`** (B 16k with the 923,590-span mix →
 A @ 1e-3, best step = cap 2000), full-suite dev macro 0.6090. Total lever-#2 gain over
 `s2w-1e3-s1000`: +0.0103. The pre-registered x4000 extension now runs (2m won the pick).
+
+## Lever #2 final: candidate `p35w-2m-s2500`, 2026-08-27
+
+The labeled extension bracketed the peak (0.5119@2500, plateau after); the s2500 re-run beats
+the 2000-step artifact +0.0023 [0.0012, 0.0035] signflip p=2e-5 (int8 identical) —
+`results/m7_compare_p35w-2m-s2500_vs_p35a-2m-1e3.json`. **Candidate: `p35w-2m-s2500`**
+(B 16k + 923,590-span mix → A @ 1e-3 s2500), full-suite dev macro 0.6113. Lever #2 total:
++0.0126 over `s2w-1e3-s1000`. The steps edge is closed (plateau observed); no further extension.
+Ablations, fusion re-selection, gate re-run and freeze all key on this run id. A Codex
+read-only review (Dylan-requested) runs before the ablation spend.

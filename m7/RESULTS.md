@@ -180,3 +180,4 @@ suite, release shape, signflip p<0.05 AND paired CI>0, int8 independently.
 | p35b-2m | `work/runs/p35b-2m.json` | 0.4981 | ok |
 | p35a-2m-1e3 | `work/runs/p35a-2m-1e3.json` | 0.5109 | ok |
 | p35a-2m-1e3-x4000 | `work/runs/p35a-2m-1e3-x4000.json` | 0.5115 | ok |
+| p35w-2m-s2500 | `work/runs/p35w-2m-s2500.json` | 0.5106 | ok |
