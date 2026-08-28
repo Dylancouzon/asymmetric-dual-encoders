@@ -88,6 +88,32 @@ def main():
         check("the rebuilt legacy cache now carries a key",
               "key" in np.load(legacy, allow_pickle=False).files)
 
+    # ---- ties must go to the SIMPLER system, not to whichever point was scanned first ---
+    # The dense-only endpoint is the LAST convex point, so a running `best` with strict `>` could
+    # never displace an equal earlier one and the release would be called "fused" on a parameter
+    # with no dev benefit (Codex review #4, "Grid ties").
+    flat_dense = {"q0": {"d0": 0.9, "d1": 0.8, "d2": 0.7}}
+    flat_bm25 = {"q0": {"d9": 0.5}}                       # irrelevant doc: cannot change the top
+    qr = {"q0": {"d0": 2, "d1": 1}}
+    spec_t, _ = fusion.select_on_dev({"c": flat_dense}, {"c": flat_bm25}, {"c": qr},
+                                     report=lambda *_: None)
+    check("a tie is resolved to the dense-only endpoint",
+          fusion.is_dense_only(spec_t), f"{spec_t['family']} param={spec_t['param']}")
+    check("the tie count is recorded", spec_t.get("n_tied_at_best", 0) >= 2,
+          str(spec_t.get("n_tied_at_best")))
+    check("the grid is complete", len(spec_t["grid"]) == len(fusion.RRF_K) + 2 * len(fusion.CONVEX_W))
+    check("the winner is an argmax of its own grid",
+          spec_t["dev_macro"] == max(r["macro"] for r in spec_t["grid"]))
+
+    # and a real preference for fusing must still win
+    dense2 = {"q0": {"d0": 0.9, "d1": 0.1}}
+    bm25_2 = {"q0": {"d1": 5.0}}
+    qr2 = {"q0": {"d1": 2}}
+    spec_f, _ = fusion.select_on_dev({"c": dense2}, {"c": bm25_2}, {"c": qr2},
+                                     report=lambda *_: None)
+    check("a genuine fusion gain still beats dense-only", not fusion.is_dense_only(spec_f),
+          f"{spec_f['family']} param={spec_f['param']}")
+
     # ---- an unknown fusion family must be fatal, never a silent convex ------------------
     try:
         fusion.apply_frozen({"family": "convexx", "param": 0.5}, {}, {})

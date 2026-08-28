@@ -76,18 +76,22 @@ def _to_run(ids, sc, doc_ids, q_ids):
 def _pkg_versions():
     """Versions of the two packages that define the BM25 function, without importing either --
     `importlib.metadata` reads the installed distribution metadata, so the cache-hit path stays
-    cheap."""
+    cheap. A MISSING version is fatal, not `None`: two source or editable installs with no
+    distribution metadata would otherwise produce equal keys and share each other's caches."""
     from importlib.metadata import PackageNotFoundError, version
     out = {}
     for p in ("bm25s", "PyStemmer"):
         try:
             out[p] = version(p)
-        except PackageNotFoundError:      # pragma: no cover -- both are in requirements.lock.txt
-            out[p] = None
+        except PackageNotFoundError:
+            raise SystemExit(
+                f"BM25 REFUSED: no installed distribution metadata for {p!r}, so the lexical "
+                "function cannot be pinned into the cache key. Install it as a distribution "
+                "(see m7/requirements.lock.txt) rather than from a bare source tree.")
     return out
 
 
-def cache_key(doc_ids, doc_texts, q_ids, q_texts, depth=DEPTH):
+def cache_key(doc_ids, doc_texts, q_ids, q_texts):
     """The identity of a cached BM25 run: its exact inputs, depth, parameters and library versions.
 
     The caches used to be keyed by PATHNAME alone and held nothing but integer doc positions and
@@ -98,8 +102,16 @@ def cache_key(doc_ids, doc_texts, q_ids, q_texts, depth=DEPTH):
     was not being checked (Codex one-shot-path review 2026-08-28, MAJOR 2).
     """
     from hashing import sha_stream_list
+    # Sequences, not iterators. A generator would be CONSUMED here and then handed on empty to
+    # the tokenizer; and `depth` is not a parameter because retrieval always uses the module-level
+    # DEPTH, so accepting one only lets the key mislabel the cache (Codex review #4, fusion-cache).
+    for name, seq in (("doc_ids", doc_ids), ("doc_texts", doc_texts),
+                      ("q_ids", q_ids), ("q_texts", q_texts)):
+        if not hasattr(seq, "__len__") or not hasattr(seq, "__getitem__"):
+            raise TypeError(f"fusion.cache_key needs a re-iterable sequence for {name}, got "
+                            f"{type(seq).__name__}")
     return {"format": CACHE_FORMAT,
-            "n_docs": len(doc_ids), "n_queries": len(q_ids), "depth": int(depth),
+            "n_docs": len(doc_ids), "n_queries": len(q_ids), "depth": int(DEPTH),
             "doc_ids_sha256": sha_stream_list(doc_ids),
             "doc_texts_sha256": sha_stream_list(doc_texts),
             "q_ids_sha256": sha_stream_list(q_ids),
@@ -108,30 +120,46 @@ def cache_key(doc_ids, doc_texts, q_ids, q_texts, depth=DEPTH):
 
 
 def _read_cache(cache_path, key):
-    """-> (ids, scores) if the cache is provably the run `key` describes, else (None, reason)."""
-    z = np.load(cache_path, allow_pickle=False)
-    if "key" not in z.files:
-        return None, "written before content keying (no `key` array); it cannot be validated"
-    got = json.loads(bytes(z["key"]).decode())
+    """-> (ids, scores) if the cache is provably the run `key` describes, else (None, reason).
+
+    An unreadable or truncated file is a REASON, not an exception: a cache killed mid-write must
+    be rebuilt like any other unvalidatable one, not crash the run (Codex review #4)."""
+    try:
+        z = np.load(cache_path, allow_pickle=False)
+        if "key" not in z.files:
+            return None, "written before content keying (no `key` array); it cannot be validated"
+        got = json.loads(bytes(z["key"]).decode())
+        ids, sc = z["ids"], z["scores"]
+    except Exception as e:
+        return None, f"unreadable ({type(e).__name__}: {e}); treating as unvalidatable"
     if got != key:
         differ = sorted(k for k in set(got) | set(key) if got.get(k) != key.get(k))
         return None, f"key mismatch on {differ}"
-    if z["ids"].shape[0] != key["n_queries"]:      # the key is a claim; the arrays are the fact
-        return None, f"row count {z['ids'].shape[0]} != {key['n_queries']} queries"
-    return (z["ids"], z["scores"]), None
+    # The key is a CLAIM; the arrays are the fact. Check both axes, that they agree, and that
+    # every stored position is in range for the corpus the key names.
+    want_k = min(key["depth"], key["n_docs"])
+    if ids.shape != sc.shape:
+        return None, f"ids {ids.shape} and scores {sc.shape} disagree"
+    if ids.shape != (key["n_queries"], want_k):
+        return None, f"shape {ids.shape} != ({key['n_queries']}, {want_k})"
+    if ids.size and (int(ids.min()) < 0 or int(ids.max()) >= key["n_docs"]):
+        return None, f"doc positions out of range for {key['n_docs']} documents"
+    return (ids, sc), None
 
 
-def bm25_run(doc_ids, doc_texts, q_ids, q_texts, cache_path=None, key=None):
+def bm25_run(doc_ids, doc_texts, q_ids, q_texts, cache_path=None):
     """BM25 at DEPTH (bm25s-lucene defaults, frozen). Optional raw-array cache: indexing
     HotpotQA's 5.23M documents is the single most expensive repeated step on this box.
 
     The cache is CONTENT-keyed (see `cache_key`). An unvalidatable cache is rebuilt, loudly and
     never silently reused: correctness of the frozen fusion parameter is worth half an hour of
-    CPU, and a stale cache is exactly the failure that cannot be seen in the output. `key` lets a
-    caller that already computed it (to record as provenance) avoid re-hashing 5.23M documents.
+    CPU, and a stale cache is exactly the failure that cannot be seen in the output.
+
+    The key is always computed HERE, from the arguments actually used. An earlier version let the
+    caller pass one in to avoid re-hashing 5.23M documents; that put the cache's identity in the
+    caller's hands, which is the hole this keying exists to close (Codex review #4).
     """
-    if cache_path is not None and key is None:
-        key = cache_key(doc_ids, doc_texts, q_ids, q_texts)
+    key = cache_key(doc_ids, doc_texts, q_ids, q_texts) if cache_path is not None else None
     if cache_path is not None and cache_path.exists():
         arrays, why = _read_cache(cache_path, key)
         if arrays is not None:
@@ -147,9 +175,12 @@ def bm25_run(doc_ids, doc_texts, q_ids, q_texts, cache_path=None, key=None):
                          k=min(DEPTH, len(doc_ids)), show_progress=False)
     ids, sc = ids.astype(np.int32), sc.astype(np.float32)
     if cache_path is not None:
-        np.savez_compressed(cache_path, ids=ids, scores=sc,
+        # Atomic: an interrupted write must leave the old cache or nothing, never a half file.
+        tmp = cache_path.with_suffix(cache_path.suffix + ".tmp.npz")
+        np.savez_compressed(tmp, ids=ids, scores=sc,
                             key=np.frombuffer(json.dumps(key, sort_keys=True).encode(),
                                               dtype=np.uint8))
+        tmp.replace(cache_path)
     return _to_run(ids, sc, doc_ids, q_ids)
 
 
@@ -174,29 +205,37 @@ def select_on_dev(dense_runs, bm25_runs, qrels_by_comp, report=print):
         per = {c: per_query_ndcg(fused[c], qrels_by_comp[c]) for c in comps}
         return float(np.mean([np.mean(list(per[c].values())) for c in comps])), per
 
-    best = None
-    grid = []
-    for k in RRF_K:
-        m, per = macro({c: rrf([dense_runs[c], bm25_runs[c]], k=k) for c in comps})
-        grid.append({"family": "rrf", "param": k, "macro": m})
-        report(f"  fusion rrf k={k:<4} dev macro {m:.4f}")
-        if best is None or m > best[0]:
-            best = (m, "rrf", k, per)
-    for w in CONVEX_W:
-        m, per = macro({c: convex([dense_runs[c], bm25_runs[c]], w=w) for c in comps})
-        grid.append({"family": "convex", "param": w, "macro": m})
-        report(f"  fusion convex w={w:<4} dev macro {m:.4f}")
-        if m > best[0]:
-            best = (m, "convex", w, per)
-    for w in CONVEX_W:
-        m, per = macro({c: convex([dense_runs[c], bm25_runs[c]], w=w, floor_zero=True)
-                        for c in comps})
-        grid.append({"family": "convex0", "param": w, "macro": m})
-        report(f"  fusion convex0 w={w:<4} dev macro {m:.4f}")
-        if m > best[0]:
-            best = (m, "convex0", w, per)
-    report(f"  -> frozen fusion: {best[1]} param={best[2]} dev macro {best[0]:.4f}")
-    return {"family": best[1], "param": best[2], "dev_macro": best[0], "grid": grid}, best[3]
+    grid, pers = [], {}
+    for fam, params, kw in (("rrf", RRF_K, {}), ("convex", CONVEX_W, {}),
+                            ("convex0", CONVEX_W, {"floor_zero": True})):
+        for p in params:
+            fused = ({c: rrf([dense_runs[c], bm25_runs[c]], k=p) for c in comps} if fam == "rrf"
+                     else {c: convex([dense_runs[c], bm25_runs[c]], w=p, **kw) for c in comps})
+            m, per = macro(fused)
+            grid.append({"family": fam, "param": p, "macro": m})
+            pers[(fam, p)] = per
+            report(f"  fusion {fam} {'k' if fam == 'rrf' else 'w'}={p:<5} dev macro {m:.4f}")
+
+    # TIE POLICY, fixed 2026-08-28 BEFORE this selection was run on the shipping candidate, and
+    # therefore before its numbers exist. A running `best` with strict `>` scanned RRF first, then
+    # convex from w=0.3 upward, so the dense-only endpoint w=1.0 -- which is the LAST convex point
+    # -- could never displace an equal earlier one. Ties therefore silently favoured the more
+    # complex system, and the release could have been called "fused" on a parameter with no dev
+    # benefit at all. On an exact tie the SIMPLER system now wins: dense-only first, then the
+    # first point in grid order (deterministic). This implements the intent already recorded for
+    # w=1.0 -- that whether we fuse at all is decided by the same mechanical selection as the
+    # parameter -- rather than changing it (Codex review #4, "Grid ties").
+    best = max(grid, key=lambda r: (r["macro"], is_dense_only(r)))
+    tied = [r for r in grid if r["macro"] == best["macro"]]
+    if len(tied) > 1:
+        report(f"  {len(tied)} grid points tie at {best['macro']:.6f}; tie policy takes "
+               f"{'the dense-only endpoint' if is_dense_only(best) else 'the first in grid order'}")
+    report(f"  -> frozen fusion: {best['family']} param={best['param']} "
+           f"dev macro {best['macro']:.4f}"
+           + ("  [DENSE-ONLY: the released system does not fuse]" if is_dense_only(best) else ""))
+    return ({"family": best["family"], "param": best["param"], "dev_macro": best["macro"],
+             "grid": grid, "n_tied_at_best": len(tied)},
+            pers[(best["family"], best["param"])])
 
 
 def is_dense_only(spec):

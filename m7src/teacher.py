@@ -260,6 +260,14 @@ def encode_cached(name, texts, prefix="", max_length=512, model_id=TEACHER, revi
         sid = f"{s:05d}"
         if p.exists():
             rec = man["shards"].get(sid)
+            if rec is not None and rec.get("shard_size") not in (None, SHARD):
+                # SHARD is not in the cache key, so changing it re-slices the same corpus into
+                # different files. Treat a layout change as a stale cache rather than stitching a
+                # prefix of the old shards (Codex review #4, MAJOR 10).
+                raise SystemExit(
+                    f"ENCODE CACHE REFUSED: {d} was written with SHARD={rec['shard_size']} but "
+                    f"this process uses SHARD={SHARD}. The shard layout is not part of the cache "
+                    "key; delete the cache directory and re-encode.")
             if rec is None:
                 man["shards"][sid] = {"bytes": p.stat().st_size, "sha256": sha_file(p),
                                       "trusted_on_first_use": True}
@@ -285,8 +293,14 @@ def encode_cached(name, texts, prefix="", max_length=512, model_id=TEACHER, revi
         np.save(p.with_suffix(".tmp.npy"), v.astype(np.float16))
         p.with_suffix(".tmp.npy").rename(p)
         man["shards"][sid] = {"bytes": p.stat().st_size, "sha256": sha_file(p),
+                              "rows": int(hi - lo), "shard_size": SHARD,
                               "trusted_on_first_use": False}
         written.append(sid)
+        # Persist after EVERY shard. Writing the manifest only at the end meant a crash partway
+        # through a long encode left hundreds of shards with no records, which the next
+        # verify=True call adopts as trust-on-first-use and then refuses -- turning a resumable
+        # job into a full re-encode (Codex review #4, MAJOR 10).
+        _write_shard_manifest(d, man)
     if verify and tofu:
         raise SystemExit(
             f"ENCODE CACHE REFUSED: {len(tofu)} of {n_shards} shards under {d} predate hash "
@@ -358,10 +372,19 @@ def _combined(d, n_shards, n_rows, man=None, verify=False):
         mm = np.memmap(tmp, dtype=np.float16, mode="w+", shape=(n_rows, dim))
         off = 0
         for p in parts:
+            if p.shape[1] != dim:
+                raise SystemExit(f"ENCODE CACHE REFUSED: shard width {p.shape[1]} != {dim} in {d}")
             mm[off:off + len(p)] = p
             off += len(p)
         mm.flush()
         del mm
+        if off != n_rows:
+            # A stitch that covered only part of the file used to be written anyway, hashed, and
+            # then pass every later verification with an unwritten zero tail
+            # (Codex review #4, MAJOR 10).
+            tmp.unlink(missing_ok=True)
+            raise SystemExit(f"ENCODE CACHE REFUSED: shards under {d} supply {off} rows, not "
+                             f"{n_rows}; delete the cache directory and re-encode.")
         tmp.rename(comb)
         man["combined"] = {"n_rows": n_rows, "dim": int(dim), "bytes": comb.stat().st_size,
                            "from_shard_sha256": src, "sha256": sha_file(comb),

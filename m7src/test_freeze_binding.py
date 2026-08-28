@@ -7,8 +7,17 @@ artifact A could be frozen with artifact B, undetected, and applied in the singl
 `released_system` was also a free string: anything other than the exact word "fusion" silently
 meant dense, and an unknown fusion family silently meant convex.
 
-Every check below is a refusal that must happen. Run after touching freeze.py, select_fusion.py
-or fusion.py.
+Every check below is a refusal that must happen -- plus one check that a COMPLETE, consistent
+freeze verifies, so the guards cannot pass by failing closed on everything.
+
+KNOWN GAP, stated rather than papered over: this exercises `load_selected_fusion`,
+`assert_gate_passed` and `load_and_verify` directly, not `freeze.write` end to end. `write` also
+calls `ensure_release`, `assert_releasable` and `teacher_code.verify`, which need a real table, a
+real run record and a real HF snapshot; a fixture faithful enough to be worth having is a larger
+piece of work than the coverage it would add. The TOCTOU window `write` used to have is closed by
+hashing once and re-checking at the end, and that re-check is not covered here.
+
+Run after touching freeze.py, select_fusion.py or fusion.py.
 
     ../.venv/bin/python test_freeze_binding.py
 """
@@ -63,8 +72,20 @@ class Fixture:
         self.write_spec()
         self.write_gate()
 
+    def bm25_key(self, **over):
+        k = {"format": fusion.CACHE_FORMAT, "n_docs": 10, "n_queries": 3,
+             "depth": fusion.DEPTH, "doc_ids_sha256": "a" * 64, "doc_texts_sha256": "b" * 64,
+             "q_ids_sha256": "c" * 64, "q_texts_sha256": "d" * 64,
+             "config": fusion.BM25_CONFIG, "versions": fusion._pkg_versions()}
+        k.update(over)
+        return k
+
     def spec(self, **over):
-        s = {"family": "convex", "param": 0.5, "dev_macro": 0.55, "grid": [],
+        s = {"family": "convex", "param": 0.5, "dev_macro": 0.55,
+             "grid": [{"family": "rrf", "param": 60, "macro": 0.51},
+                      {"family": "convex", "param": 0.5, "macro": 0.55},
+                      {"family": "convex", "param": 1.0, "macro": 0.49},
+                      {"family": "convex0", "param": 0.6, "macro": 0.52}],
              "depth": fusion.DEPTH, "components": ["nq-250k"],
              "fitted_against": "int8 table (the released artifact)",
              "selected_on": {
@@ -77,7 +98,7 @@ class Fixture:
                  "encoder_spec": freeze.encoder_fingerprint(),
                  "dev_manifest_sha256": freeze.sha256_file(
                      self.repo / "results" / "m7_dev_manifest.json"),
-                 "bm25_run_keys": {}},
+                 "bm25_run_keys": {"nq-250k": self.bm25_key()}},
              "released_system": "fusion"}
         s.update(over)
         return s
@@ -99,10 +120,12 @@ class Fixture:
         (self.repo / "results" / f"m7_gate_{RID}.json").write_text(json.dumps(g))
 
     def load(self):
-        return freeze.load_selected_fusion(RID, self.npz, self.meta_p, self.meta)
+        return freeze.load_selected_fusion(RID, freeze.sha256_file(self.npz),
+                                           freeze.sha256_file(self.meta_p), self.meta)
 
     def gate(self):
-        return freeze.assert_gate_passed(RID, self.npz, self.meta_p)
+        return freeze.assert_gate_passed(RID, freeze.sha256_file(self.npz),
+                                         freeze.sha256_file(self.meta_p))
 
 
 def main():
@@ -154,6 +177,29 @@ def main():
             fx.write_spec(fx.spec(), publish=fx.spec(param=0.7))
             refuses("a hand-edited committed copy is refused", fx.load, "differs")
 
+            # the frozen point must be the argmax of the grid the selection actually searched
+            fx.write_spec(fx.spec(param=0.6, dev_macro=0.55))
+            refuses("a point that is not the grid's argmax is refused", fx.load, "argmax")
+            fx.write_spec(fx.spec(grid=[]))
+            refuses("a spec with no grid is refused", fx.load, "grid")
+            fx.write_spec(fx.spec(dev_macro=0.99))
+            refuses("a dev_macro that is not the grid's best is refused", fx.load, "dev_macro")
+
+            # the BM25 runs the parameter was fitted against must still be the same function
+            sel2 = fx.spec()["selected_on"]
+            fx.write_spec(fx.spec(selected_on={**sel2, "bm25_run_keys": {}}))
+            refuses("an empty bm25_run_keys block is refused", fx.load, "bm25_run_keys")
+            fx.write_spec(fx.spec(selected_on={
+                **sel2, "bm25_run_keys": {"nq-250k": fx.bm25_key(versions={"bm25s": "0.0.0"})}}))
+            refuses("a bm25s version change since selection is refused", fx.load,
+                    "lexical function has changed")
+            fx.write_spec(fx.spec(selected_on={
+                **sel2, "bm25_run_keys": {"nq-250k": fx.bm25_key(config={"k1": 9.9})}}))
+            refuses("changed BM25 parameters are refused", fx.load, "parameters")
+            fx.write_spec(fx.spec(selected_on={
+                **sel2, "bm25_run_keys": {"other-comp": fx.bm25_key()}}))
+            refuses("bm25 keys for the wrong components are refused", fx.load, "cover")
+
             fx.write_spec()
             (fx.repo / "results" / f"m7_fusion_{RID}.json").unlink()
             refuses("a missing committed copy is refused", fx.load, "missing")
@@ -163,6 +209,16 @@ def main():
             check("a PASSing gate on this artifact is accepted", fx.gate()["PASS"] is True)
             fx.write_gate(PASS=False, conditions={"G3": {"pass": False}})
             refuses("a NO-GO gate is refused", fx.gate, "NO-GO")
+            # "false" is a non-empty string and used to be truthy
+            fx.write_gate(PASS="false")
+            refuses("a stringy PASS is refused", fx.gate, "NO-GO")
+            # a summary flag cannot carry a failing condition through
+            fx.write_gate(PASS=True, conditions={"G1": {"pass": True}, "G3": {"pass": False}})
+            refuses("PASS=true with a failing condition is refused", fx.gate, "not passing")
+            fx.write_gate(conditions={})
+            refuses("a gate with no conditions is refused", fx.gate, "no conditions")
+            fx.write_gate(artifact="not-a-dict")
+            refuses("a malformed artifact block is refused, not crashed on", fx.gate, "artifact")
             fx.write_gate(artifact={"release": "x.npz", "sha256": "0" * 64,
                                     "meta_sha256": freeze.sha256_file(fx.meta_p)})
             refuses("a gate run on a different table is refused", fx.gate, "different table")
@@ -184,15 +240,60 @@ def main():
             check("the enum has exactly the two members final_run dispatches on",
                   tuple(freeze.RELEASED_SYSTEMS) == ("dense", "fusion"))
 
-            print("\nload_and_verify rejects a non-enum released_system")
+            print("\nload_and_verify on a COMPLETE fixture, then one mutation at a time")
+            # The earlier version of this block used a manifest with a missing table and bogus
+            # hashes, so it only proved that one error message mentioned the enum -- not that a
+            # valid freeze passes and that the mutation is the ONLY thing that breaks it.
             fz = fx.repo / "FREEZE-fixture.json"
-            fz.write_text(json.dumps({"table_relpath": "work/runs/nope.npz",
-                                      "released_system": "Fusion", "fusion": fx.spec(),
-                                      "dev_manifest_sha256": "x", "eval_manifest_sha256": "x",
-                                      "perquery_sha256": "x"}))
             freeze.FREEZE = fz
+            sp = freeze.encoder_fingerprint()
+            fx.meta.update({"teacher": sp["repo"], "teacher_revision": sp["revision"],
+                            "dim": sp["dim"]})
+            fx.meta_p.write_text(json.dumps(fx.meta))
+            fx.write_spec()
+            good = {
+                "run_id": RID,
+                "table_relpath": f"work/runs/{fx.npz.name}",
+                "table_sha256": freeze.sha256_file(fx.npz),
+                "table_meta_sha256": freeze.sha256_file(fx.meta_p),
+                "table_bytes": fx.npz.stat().st_size,
+                "preproc": fx.meta["preproc"],
+                "preproc_fingerprint": fx.meta["preproc_fingerprint"],
+                "teacher": sp["repo"], "teacher_revision": sp["revision"],
+                "encoder_spec": sp,
+                "fusion": fx.spec(), "released_system": "fusion",
+                "dev_manifest_sha256": freeze.sha256_file(
+                    fx.repo / "results" / "m7_dev_manifest.json"),
+                "eval_manifest_sha256": freeze.sha256_file(
+                    fx.repo / "results" / "eval_manifest.json"),
+                "perquery_sha256": freeze.sha256_file(fx.repo / "results" / "perquery.json"),
+            }
+
+            def verify_with(**over):
+                fz.write_text(json.dumps({**good, **over}))
+                return freeze.load_and_verify()
+
+            try:
+                verify_with()
+                check("a complete, consistent freeze VERIFIES", True)
+            except SystemExit as e:
+                check("a complete, consistent freeze VERIFIES", False, str(e)[:400])
+
             refuses("released_system 'Fusion' is not silently read as dense",
-                    freeze.load_and_verify, "'Fusion' is not one of")
+                    lambda: verify_with(released_system="Fusion"), "'Fusion' is not one of")
+            refuses("released_system must agree with the selection's grid point",
+                    lambda: verify_with(released_system="dense"), "but the frozen selection")
+            refuses("an edited fusion param is caught against the selection file",
+                    lambda: verify_with(fusion=fx.spec(param=0.6)), "differs from")
+            refuses("a changed preproc fingerprint is caught",
+                    lambda: verify_with(preproc_fingerprint="0" * 16), "preprocessing fingerprint")
+            refuses("a changed table hash is caught",
+                    lambda: verify_with(table_sha256="0" * 64), "not the frozen artifact")
+            refuses("a different frozen encoder is caught",
+                    lambda: verify_with(encoder_spec=dict(sp, pooling="__sentinel__")),
+                    "active encoder differs")
+            refuses("a changed dev manifest is caught",
+                    lambda: verify_with(dev_manifest_sha256="0" * 64), "changed after the freeze")
         finally:
             freeze.REPO, freeze.WORK, freeze.FREEZE = orig
 

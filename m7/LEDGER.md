@@ -81,6 +81,15 @@ another, so every dev comparison uses the dependence-preserving statistics below
 
 **KNOWN-TEST** — the six, development-informed. Pinned by `results/eval_manifest.json` +
 `results/frozen_eval/`.
+**QUERY TEXT WAS NOT PINNED UNTIL 2026-08-28, disclosed.** The manifest carried `qids_sha256` and
+`qrels_sha256` but no hash of the query TEXT, so editing a query's text while leaving its key and
+the qrels alone passed every final-run check and would have been encoded and scored — and a comment
+in `final_run.preflight` claimed otherwise. `qtexts_sha256` now covers it, for the six and for
+untouched-final. It was **computed from the already-committed `results/frozen_eval/` payloads**
+(whose `qids_sha256` was re-verified at the same time), not re-derived from a fresh download: it
+pins them going forward and inherits git history's assurance about how they got there. Regenerating
+via `scripts/freeze_eval_assets.py` would be a six-set access, and that script now emits the field
+so the two cannot diverge.
 
 **UNTOUCHED-FINAL** — BEIR FEVER, DBpedia-entity, plus CQADupStack **android** and **english**
 (added 2026-08-26 pre-freeze by a rule fixed before the pick: alphabetically first two outside
@@ -605,6 +614,15 @@ builder (`test_fusion_paths.py` guards the re-fork); the zero-score-padding drop
 drop are **part of the frozen function**, not harness details. **If the checkpoint changes the
 fusion must be re-selected** — every fusion file predating the current candidate is superseded.
 
+**TIE POLICY, fixed 2026-08-28 BEFORE this selection ran on the shipping candidate, i.e. before its
+numbers exist.** The grid was scanned with a running `best` and a strict `>`: RRF first, then convex
+from w=0.3 upward, then convex0. The dense-only endpoint w=1.0 is the LAST convex point, so it could
+never displace an equal earlier one — **ties silently favoured the more complex system**, and the
+release could have been labelled "fused" on a parameter with no dev benefit at all. On an exact tie
+the **simpler** system now wins: dense-only first, then the first point in grid order
+(deterministic). This implements the intent already recorded for adding w=1.0 rather than changing
+it, and the number of tied points is written into the spec.
+
 Fixes logged before the re-selection ran: (1) `select_fusion` goes through `ensure_release` — it was
 fitting against the training npz, whose int8 codes come from un-folded rows; (2) the convex grid
 gains **w=1.0, the dense-only endpoint**, so whether the released system fuses at all is decided by
@@ -636,6 +654,21 @@ ids/texts, depth, parameters and library versions.
   macro exactly (0.5987) plus the λ-sweep diagnosis. Refit under the new keying before reopening.
 - **doc2query** expansions hashed with their generation recipe; generation is sampled, so the hashes
   are the only reproducible pin.
+- **The one-shot path, hardened 2026-08-28** (fourth adversarial review, 6 BLOCKER / 11 MAJOR, all
+  actioned; `research/m7-codex-onepath2-2026-08-28.md`). The ones with protocol consequences:
+  the freeze tag is **peeled** (`refs/tags/X^{}`) — an annotated tag, which is exactly what the
+  documented `git tag -a` procedure creates, resolves to the tag OBJECT, so the guard could never
+  have matched it and **the final run could not have started at all**; the access counts as SPENT
+  when the RESULT FILE holds a `six` block, not when the ledger says so, because the ledger is a
+  text file an operator can edit; `--infra-retry` was off by one and allowed two retries where the
+  docstring promised one, and it now also requires the same commit; the confirmatory result is
+  written **atomically** and before the clean-4 block and the tail, so nothing after the tier
+  decisions can destroy or wedge it; the table is **snapshotted** after verification, since
+  `load_and_verify` hashed it once and `score_set` reopened it by path for every dataset; the guard
+  now runs **before** `preflight`, which had been parsing all six frozen payloads on every refused
+  invocation; a `--untouched-only` resume must show a ledger-recorded digest of the confirmatory
+  block, and merges rather than replaces the encode provenance. `test_final_guard.py` covers the
+  guard, which had no tests at all.
 
 ## THE CLEAN-STACK TAX — pre-registered, runs AFTER the final run
 
@@ -673,7 +706,8 @@ no change to the released system whatever it says.
 `m7-codex-review-2026-08-27b.md` (3/5/6, on the repair) · `m7-code-review-2026-08-28.md` (1/4/6) ·
 `m7-closed-avenue-audit-2026-08-27.md` (17 SOUND / 4 under-diagnosed / 4 premature) ·
 `m7-lever-sweep-2026-08-27.md` · `m7-overfit-review-2026-08-28.md` (2/6/5) ·
-`m7-codex-onepath-2026-08-28.md` (3/5/2, the one-shot path).
+`m7-codex-onepath-2026-08-28.md` (3/5/2, the one-shot path) ·
+`m7-codex-onepath2-2026-08-28.md` (**6/11**, the one-shot path again, after those fixes).
 
 All findings implemented; those with standing protocol consequences are folded in above. Worth naming
 because they were caught before they produced a number: the ablation driver could reuse a B artifact

@@ -35,8 +35,11 @@ def bm25_run_cached(comp):
     against those is rebuilt, not reused."""
     doc_ids, doc_texts, q_ids, q_texts, qrels, _ = dev_eval.doc_vecs(comp)
     path = CACHE / f"bm25-{comp}-d{fusion.DEPTH}.npz"
-    key = fusion.cache_key(doc_ids, doc_texts, q_ids, q_texts)
-    return fusion.bm25_run(doc_ids, doc_texts, q_ids, q_texts, cache_path=path, key=key), key
+    run = fusion.bm25_run(doc_ids, doc_texts, q_ids, q_texts, cache_path=path)
+    # Recomputed here for the provenance record rather than handed to `bm25_run`: the cache's
+    # identity must be derived inside the builder from the arguments it actually used, never
+    # supplied by the caller (Codex review #4).
+    return run, fusion.cache_key(doc_ids, doc_texts, q_ids, q_texts)
 
 
 def dense_run(comp, model, pre):

@@ -19,6 +19,7 @@ Everything else this script prints is exploratory and labeled as such.
 """
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -64,9 +65,49 @@ def ledger(line):
 
 
 FREEZE_TAG = "m7-freeze"
-# One aborted attempt may be retried; a second is an infrastructure problem, not a run.
-MAX_INFRA_RETRIES = 2
+# The number of FINAL-RUN-BEGIN entries the ledger may hold. The first is the run itself, the
+# second is its one permitted infrastructure retry. `n_begin > MAX` let a THIRD through, because
+# the second retry saw n_begin == 2 and `2 > 2` is false -- three readings where the docstring
+# promised two (Codex review #4, BLOCKER 2).
+MAX_BEGINS = 2
 SIX = ["scifact", "nfcorpus", "fiqa", "arguana", "scidocs", "trec-covid"]
+OUT = REPO / "results" / "m7_final_run.json"
+
+
+def write_atomic(path, text):
+    """Write, fsync, rename. `write_text` truncates first, so a kill or a full disk mid-write
+    destroys the sole confirmatory result and leaves a file no mode can parse (Codex review #4,
+    BLOCKER 1)."""
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with open(tmp, "w") as f:
+        f.write(text)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)
+    d = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(d)
+    finally:
+        os.close(d)
+
+
+def six_already_scored(fz):
+    """-> (spent, why). The one-shot access is SPENT the moment a result file holding a `six`
+    block for this frozen table exists, whatever the ledger says. The ledger is a text file the
+    operator can edit; this is the artifact itself, and `--infra-retry` must not get past it
+    (Codex review #4, BLOCKER 3)."""
+    if not OUT.exists():
+        return False, ""
+    try:
+        blob = json.loads(OUT.read_text())
+    except json.JSONDecodeError:
+        return True, (f"{OUT.name} exists but is unparseable. A confirmatory run has already "
+                      "written there; recover it from git or from the crash, do not rerun.")
+    if not blob.get("six"):
+        return False, ""
+    same = (blob.get("freeze") or {}).get("table_sha256") == fz["table_sha256"]
+    return True, (f"{OUT.name} already holds scored `six` results for "
+                  + ("this frozen table" if same else "a DIFFERENT table"))
 
 
 def guard(freeze_hash, infra_retry, branch, fz, untouched_only=False):
@@ -93,7 +134,9 @@ def guard(freeze_hash, infra_retry, branch, fz, untouched_only=False):
     stray_dirty = [d for d in dirty if d not in ALLOWED_DRIFT]
     if stray_dirty:
         problems.append(f"working tree is not clean beyond the scorer's own files: {stray_dirty}")
-    if dirty and not infra_retry:
+    # A first run demands a spotless tree. A retry and a tail-resume are both expected to find the
+    # scorer's own files modified, and `stray_dirty` above already refuses anything else.
+    if dirty and not (infra_retry or untouched_only):
         problems.append("working tree is not clean")
     head = sh("git", "rev-parse", "HEAD")
     if head != freeze_hash and not infra_retry:
@@ -104,7 +147,21 @@ def guard(freeze_hash, infra_retry, branch, fz, untouched_only=False):
     # The freeze commit is resolved from an immutable pushed TAG, not taken on the caller's word.
     # `--freeze-hash` was the only identification of "the reviewed freeze commit", so any clean
     # pushed HEAD could be declared one (Codex one-shot-path review, BLOCKER 3).
-    tagged = sh("git", "ls-remote", "origin", f"refs/tags/{FREEZE_TAG}").split("\t")[0]
+    #
+    # PEEL THE TAG. For an ANNOTATED tag -- which is exactly what the documented procedure
+    # `git tag -a m7-freeze ...` creates -- `refs/tags/X` names the tag OBJECT, not the commit,
+    # so comparing it with a commit hash could never match and the final run could never have
+    # started. `refs/tags/X^{}` is the peeled commit and exists only for annotated tags, so query
+    # both and prefer the peeled one (Codex review #4, BLOCKER 6).
+    tag_refs = {}
+    for line in sh_raw("git", "ls-remote", "origin", f"refs/tags/{FREEZE_TAG}",
+                       f"refs/tags/{FREEZE_TAG}^{{}}").splitlines():
+        if "\t" in line:
+            h, ref = line.split("\t", 1)
+            tag_refs[ref.strip()] = h.strip()
+    tagged = (tag_refs.get(f"refs/tags/{FREEZE_TAG}^{{}}")      # annotated: the peeled commit
+              or tag_refs.get(f"refs/tags/{FREEZE_TAG}")        # lightweight: the commit itself
+              or "")
     if not tagged:
         problems.append(f"no pushed tag `{FREEZE_TAG}`: the freeze commit must be marked by an "
                         f"immutable pushed tag, not asserted on the command line. "
@@ -123,28 +180,53 @@ def guard(freeze_hash, infra_retry, branch, fz, untouched_only=False):
         problems.append(f"m7/LEDGER.md records {n_complete} COMPLETED final run(s). There is "
                         "exactly one confirmatory access and it has been spent; a further run is "
                         "a NEW milestone with its own pre-registration, never a retry.")
+    # THE ARTIFACT, NOT THE LEDGER, IS WHAT SAYS THE ACCESS IS SPENT. The ledger is a text file
+    # the operator can edit; deleting one "FINAL-RUN complete in" line and passing --infra-retry
+    # used to buy a second scoring of the six (Codex review #4, BLOCKER 3).
+    spent, why = six_already_scored(fz)
+    if spent and not untouched_only:
+        problems.append(f"the confirmatory access is SPENT: {why}. A further run is a NEW milestone "
+                        "with its own pre-registration, never a retry. To finish the "
+                        "non-confirmatory tail, use --untouched-only.")
     if untouched_only:
         # This mode may only ADD the non-confirmatory tail to a result that already exists. It
-        # must never be a way to re-score the six.
+        # must never be a way to re-score the six -- and it keys on the RESULT FILE, not on the
+        # ledger marker, so a crash between the result write and the marker append does not wedge
+        # the run in a state no mode accepts (Codex review #4, BLOCKER 1).
         if infra_retry:
             problems.append("--untouched-only and --infra-retry are mutually exclusive")
-        out = REPO / "results" / "m7_final_run.json"
-        if not out.exists():
+        if not OUT.exists():
             problems.append("--untouched-only with no results/m7_final_run.json: the six have not "
                             "been scored, and this mode never scores them")
         else:
-            prior = json.loads(out.read_text())
+            try:
+                prior = json.loads(OUT.read_text())
+            except json.JSONDecodeError as e:
+                prior = {}
+                problems.append(f"--untouched-only: {OUT.name} is unparseable ({e}); recover the "
+                                "confirmatory result before appending anything to it")
             if not prior.get("six"):
                 problems.append("--untouched-only: results/m7_final_run.json holds no `six` block")
             if (prior.get("freeze") or {}).get("table_sha256") != fz["table_sha256"]:
                 problems.append("--untouched-only: the existing result was produced with a "
                                 "different table than the one now frozen")
-        if not n_complete:
-            problems.append("--untouched-only before any completed final run; run the six first")
-    if infra_retry and n_begin > MAX_INFRA_RETRIES:
-        problems.append(f"--infra-retry already used {n_begin - 1} time(s); the cap is "
-                        f"{MAX_INFRA_RETRIES - 1}. Repeated infrastructure failure is a reason to "
-                        "fix the infrastructure, not to keep drawing from the six.")
+            # The six's scores and the tier decisions in that file must be the ones the ledger
+            # recorded when they were written. Without this, a caller could edit the confirmatory
+            # numbers and have --untouched-only rewrite them as an apparently resumed result.
+            digest = sha({"six": prior.get("six"), "confirmatory": prior.get("confirmatory"),
+                          "holm": prior.get("holm")})
+            recorded = re.findall(r"FINAL-RUN-SIX-SHA256 ([0-9a-f]{64})", text)
+            if not recorded:
+                problems.append("--untouched-only: the ledger records no FINAL-RUN-SIX-SHA256 for "
+                                "the confirmatory block, so it cannot be shown unedited")
+            elif digest != recorded[-1]:
+                problems.append(f"--untouched-only: the confirmatory block in {OUT.name} does not "
+                                f"match the digest the ledger recorded when it was written "
+                                f"({digest[:12]} vs {recorded[-1][:12]}). It has been edited.")
+    if infra_retry and n_begin >= MAX_BEGINS:
+        problems.append(f"the ledger already holds {n_begin} FINAL-RUN-BEGIN entries and the cap is "
+                        f"{MAX_BEGINS}. Repeated infrastructure failure is a reason to fix the "
+                        "infrastructure, not to keep drawing from the six.")
     if prior_hashes and not (infra_retry or untouched_only):
         problems.append("m7/LEDGER.md already holds a final-run entry; a code fix requires a NEW "
                         "pushed freeze commit, and no later run may be relabeled as final")
@@ -155,6 +237,15 @@ def guard(freeze_hash, infra_retry, branch, fz, untouched_only=False):
             pf, pt = prior_hashes[-1]
             if pt != fz["table_sha256"]:
                 problems.append("--infra-retry with a different table than the aborted run")
+            # The retry must be the SAME COMMIT, not merely a tree that differs only in allowed
+            # paths -- an empty commit, or one touching only the ledger, used to pass (Codex
+            # review #4, MAJOR 7).
+            if pf != freeze_hash:
+                problems.append(f"--infra-retry names freeze commit {freeze_hash[:12]} but the "
+                                f"aborted run began at {pf[:12]}; a retry is the same commit")
+            if pf != head:
+                problems.append(f"--infra-retry: HEAD {head[:12]} is not the aborted run's freeze "
+                                f"commit {pf[:12]}")
             # only the ledger may have changed since the aborted run's freeze commit
             changed = [l for l in sh("git", "diff", "--name-only", f"{pf}..HEAD").splitlines() if l]
             stray = [c for c in changed if c not in ALLOWED_DRIFT]
@@ -272,9 +363,17 @@ def preflight():
             # verify_and_load checks the CORPUS only; queries and qrels were never verified, so
             # changed query text with unchanged qids would have scored silently (Codex MAJOR 3).
             if isinstance(froz.get("queries"), dict) and isinstance(froz.get("qrels"), dict):
+                # qtexts_sha256 binds the QUERY TEXT. Without it the previous comment here was
+                # false: changing a value in `queries` while leaving its key and the qrels alone
+                # passed every check and was then encoded and scored (Codex review #4, MAJOR 1).
                 for field, got in (("qids_sha256", sha(sorted(froz["queries"]))),
+                                   ("qtexts_sha256",
+                                    sha([froz["queries"][q] for q in sorted(froz["queries"])])),
                                    ("qrels_sha256", sha(froz["qrels"]))):
-                    if sect[ds].get(field) != got:
+                    if field not in sect[ds]:
+                        problems.append(f"{kind} `{ds}`: the manifest has no `{field}`; regenerate "
+                                        "it with scripts/freeze_eval_assets.py before freezing")
+                    elif sect[ds][field] != got:
                         problems.append(f"{kind} `{ds}`: {fp.name} {field} mismatch vs the "
                                         f"frozen manifest")
     pq = REPO / "results" / "perquery.json"
@@ -287,10 +386,29 @@ def preflight():
                 if sysname in ("int8-table", "released-system"):
                     continue      # produced by this run, not read from the frozen file
                 for ds in DATASETS:
-                    if sysname not in blob["datasets"].get(ds, {}).get("systems", {}):
+                    d = blob["datasets"].get(ds, {})
+                    row = d.get("systems", {}).get(sysname)
+                    if row is None:
                         problems.append(f"perquery.json: comparator `{sysname}` has no row for "
                                         f"`{ds}`")
-                        break
+                        continue
+                    # Presence was all that was checked, so a row one qid short passed preflight
+                    # and then aborted `strict=True` AFTER the six had been scored -- spending the
+                    # access for nothing (Codex review #4, MAJOR 6).
+                    qids = d.get("qids") or []
+                    if len(row) != len(qids):
+                        problems.append(f"perquery.json: `{sysname}`/`{ds}` has {len(row)} values "
+                                        f"for {len(qids)} qids")
+                    if len(set(qids)) != len(qids):
+                        problems.append(f"perquery.json: `{ds}` has duplicate qids")
+                    froz_p = FROZEN / f"{ds}.json"
+                    if froz_p.exists():
+                        want = set(json.loads(froz_p.read_text()).get("queries") or {})
+                        if want and set(qids) != want:
+                            problems.append(
+                                f"perquery.json: `{ds}` qids do not match the frozen payload "
+                                f"({len(set(qids) - want)} extra, {len(want - set(qids))} missing) "
+                                "-- strict alignment would abort after the six were scored")
     if problems:
         print("FINAL RUN REFUSED by preflight (the six were NOT touched):\n  - "
               + "\n  - ".join(problems))
@@ -318,10 +436,39 @@ def main():
         raise SystemExit("FINAL RUN REFUSED: preproc fingerprint does not match its own fields")
     table_path = REPO / fz["table_relpath"]
 
-    preflight()                    # static checks first: a missing asset costs a second, not the run
+    # GUARD FIRST, then preflight. `preflight` opens and parses all six frozen query/qrels
+    # payloads, so with the old ordering every refused invocation -- including every
+    # --untouched-only resume -- read the confirmatory labels before the one-shot check ran. It is
+    # not a second scoring pass, but if "access" means reading confirmatory labels then it was one
+    # (Codex review #4, BLOCKER 5). Guard is git commands and one JSON parse: cheap. preflight
+    # still runs before FINAL-RUN-BEGIN, so a missing asset still costs a second, not the run.
     head = guard(a.freeze_hash, a.infra_retry, a.branch, fz, untouched_only=a.untouched_only)
+    preflight()
+    # The teacher's remote code was verified when the freeze was WRITTEN; the snapshot is mutable
+    # and lives outside git, so re-verify it here, before any protected data is touched
+    # (Codex review #4, MAJOR 9).
+    import teacher_code
+    code_ok, code_problems = teacher_code.verify()
+    if not code_ok:
+        raise SystemExit("FINAL RUN REFUSED: the teacher's pinned files no longer match "
+                         "results/m7_teacher_code_pin.json:\n  - " + "\n  - ".join(code_problems))
     t0 = time.time()
-    out = REPO / "results" / "m7_final_run.json"
+    out = OUT
+    # IMMUTABLE SNAPSHOT OF THE TABLE. `load_and_verify` hashes it once, then `score_set` reopens
+    # it by pathname for every variant and every dataset. Another process calling `ensure_release`
+    # in between could substitute a different table -- and because work/ is gitignored the
+    # clean-tree guard sees nothing, so the result would record the frozen hash beside another
+    # table's scores, or even mix two tables across datasets (Codex review #4, BLOCKER 4).
+    import shutil
+    snap = REPO / "work" / "runs" / f".final-run-snapshot-{fz['table_sha256'][:16]}.npz"
+    shutil.copy2(table_path, snap)
+    got = freeze.sha256_file(snap)
+    if got != fz["table_sha256"]:
+        raise SystemExit(f"FINAL RUN REFUSED: the table changed between verification and snapshot "
+                         f"({got[:12]} vs frozen {fz['table_sha256'][:12]})")
+    shutil.copy2(table_path.parent / (table_path.stem + ".meta.json"),
+                 snap.parent / (snap.stem + ".meta.json"))
+    table_path = snap
     if a.untouched_only:
         ledger(f"\n- {datetime.now(timezone.utc).isoformat()} — untouched-final RESUME "
                f"(--untouched-only) on freeze={head}; the six are not re-scored.")
@@ -412,8 +559,36 @@ def main():
               f"CI={d['ci95']} p={d['signflip']['p_str']} (sign-flip) "
               f"thr={h['threshold']:.4f} ci_resolved={h['ci_resolved']}")
 
+    blob = {"freeze_commit": head, "freeze": fz, "infra_retry": bool(a.infra_retry),
+            "six": {s: {ds: {q: round(x, 6) for q, x in v.items()} for ds, v in by_sys[s].items()}
+                    for s in systems},
+            "untouched_final": None,
+            "confirmatory": conf, "holm": decisions, "alpha": ALPHA,
+            # Which cache bytes produced these vectors: shard hashes for every encode consumed,
+            # so the document side of a one-shot number is auditable after the fact.
+            "encode_provenance": dict(teacher.PROVENANCE),
+            "clean4_robustness": None,
+            "seconds": round(time.time() - t0, 1)}
+    # PERSIST THE CONFIRMATORY RESULT BEFORE ANYTHING ELSE CAN FAIL. The tail encodes 10.1M
+    # documents, and even the clean-4 robustness block below is more work after all six have been
+    # scored and every tier decision made. An OOM or a bad comparator row there would have spent
+    # the access and left no result (Codex review #4, BLOCKER 1 and MAJOR 6). Atomic write: a
+    # truncating `write_text` on the sole confirmatory file is not recoverable.
+    write_atomic(out, json.dumps(blob, indent=1))
+    tiers = [k for k, v in decisions.items() if v["reject"]]
+    # The digest binds the six and the tier decisions, so a later --untouched-only resume can prove
+    # the confirmatory block it is appending to has not been edited.
+    six_digest = sha({"six": blob["six"], "confirmatory": conf, "holm": decisions})
+    ledger(f"- FINAL-RUN complete in {blob['seconds']:.0f}s (the six and all three confirmatory "
+           f"decisions). Confirmatory rejections: {tiers or 'none'}. Results in "
+           "`results/m7_final_run.json`; the non-confirmatory untouched-final tail follows.\n"
+           f"- FINAL-RUN-SIX-SHA256 {six_digest}")
+    print("\nwrote results/m7_final_run.json (the six and all three confirmatory decisions; "
+          "untouched-final follows)")
+
     # Pre-registered clean-4 robustness (teacher-exposure restriction): same comparisons on the
     # four datasets with no disclosed teacher benchmark overlap. Labeled, never a tier decision.
+    # Runs AFTER the persist, so a failure here costs a labelled robustness block, not the result.
     CLEAN4 = {"scifact", "nfcorpus", "scidocs", "trec-covid"}
     robustness = {}
     for name, (a_name, b_name) in CONFIRMATORY.items():
@@ -424,35 +599,10 @@ def main():
         robustness[name] = rr
         print(f"  [clean-4 robustness] {name}: d={rr['delta']:+.4f} CI={rr['ci95']} "
               f"p={rr['signflip']['p_str']}")
-
-    blob = {"freeze_commit": head, "freeze": fz, "infra_retry": bool(a.infra_retry),
-            "six": {s: {ds: {q: round(x, 6) for q, x in v.items()} for ds, v in by_sys[s].items()}
-                    for s in systems},
-            "untouched_final": None,
-            "confirmatory": conf, "holm": decisions, "alpha": ALPHA,
-            # Which cache bytes produced these vectors: shard hashes for every encode consumed,
-            # so the document side of a one-shot number is auditable after the fact.
-            "encode_provenance": dict(teacher.PROVENANCE),
-            "clean4_robustness": {"_note": "pre-registered exposure-restricted robustness "
-                                  "(no disclosed teacher benchmark overlap); NOT a tier decision",
-                                  **robustness},
-            "seconds": round(time.time() - t0, 1)}
-    # PERSIST THE CONFIRMATORY RESULT BEFORE THE LONG TAIL. untouched-final encodes 10.1M
-    # documents -- 37x the six -- so it is tens of hours and ~21 GB of new vectors, and it used to
-    # run BEFORE anything was written to disk. A crash there (disk, OOM, a Windows Update reboot)
-    # would have spent the one confirmatory access and left no result, which is the same failure
-    # `preflight` exists to prevent, arriving from the other end of the script.
-    out = REPO / "results" / "m7_final_run.json"
-    out.write_text(json.dumps(blob, indent=1))
-    tiers = [k for k, v in decisions.items() if v["reject"]]
-    # "FINAL-RUN complete in" is the marker `guard` counts: the CONFIRMATORY access is spent here,
-    # before the non-confirmatory tail runs, so no later invocation can re-roll the six even if
-    # the tail crashes. Resuming the tail needs --untouched-only, which never re-scores them.
-    ledger(f"- FINAL-RUN complete in {blob['seconds']:.0f}s (the six and all three confirmatory "
-           f"decisions). Confirmatory rejections: {tiers or 'none'}. Results in "
-           "`results/m7_final_run.json`; the non-confirmatory untouched-final tail follows.")
-    print("\nwrote results/m7_final_run.json (the six and all three confirmatory decisions; "
-          "untouched-final follows)")
+    blob["clean4_robustness"] = {"_note": "pre-registered exposure-restricted robustness "
+                                 "(no disclosed teacher benchmark overlap); NOT a tier decision",
+                                 **robustness}
+    write_atomic(out, json.dumps(blob, indent=1))
     return untouched_stage(blob, out, table_path, pre, spec, t0, tiers_from=decisions)
 
 
@@ -479,9 +629,14 @@ def untouched_stage(blob, out, table_path, pre, spec, t0, tiers_from=None):
         unt[ds] = {s: {q: round(x, 6) for q, x in v.items()} for s, v in scored.items()}
         # rewrite after each set, so a crash costs one dataset rather than the whole tail
         blob["untouched_final"] = unt
-        blob["encode_provenance"] = dict(teacher.PROVENANCE)
+        # MERGE, never replace. In a resumed `--untouched-only` process `teacher.PROVENANCE` starts
+        # empty and holds only tail encodes, so assigning it would erase every six-set document and
+        # query cache hash -- exactly the audit trail this field exists for (Codex review #4,
+        # MAJOR 8).
+        blob["encode_provenance"] = {**(blob.get("encode_provenance") or {}),
+                                     **dict(teacher.PROVENANCE)}
         blob["seconds"] = round(time.time() - t0, 1)
-        out.write_text(json.dumps(blob, indent=1))
+        write_atomic(out, json.dumps(blob, indent=1))
     tiers = [k for k, v in (tiers_from or {}).items() if v.get("reject")]
     ledger(f"- untouched-final done ({len(unt)}/{len(UNTOUCHED)} sets). Confirmatory rejections "
            f"stand at {tiers or 'none'}. `results/m7_final_run.json` updated.")

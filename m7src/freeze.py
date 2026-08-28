@@ -75,7 +75,11 @@ def assert_releasable(run_id):
         init = str(c.get("init", ""))
         if init.startswith("run:"):
             chain.append(init.split(":", 1)[1])
-    return sorted(seen)
+    # Return the hash of every record inspected, not just the ids. The guard reads gitignored,
+    # mutable `work/runs/<id>.json` files, and the freeze recorded only which ids it walked -- so
+    # nothing pinned WHAT it read, and a replaced record could have made a contaminated lineage
+    # look clean after the fact (Codex review #4, MAJOR 11).
+    return {rid: sha256_file(WORK / "runs" / f"{rid}.json") for rid in sorted(seen)}
 
 
 def assert_encoder_matches_artifact(meta, where):
@@ -107,7 +111,7 @@ def assert_encoder_matches_artifact(meta, where):
 RELEASED_SYSTEMS = ("dense", "fusion")
 
 
-def load_selected_fusion(run_id, npz, meta_p, meta):
+def load_selected_fusion(run_id, table_sha, meta_sha, meta):
     """Read the fusion spec from the SELECTION's own output and prove it describes this artifact.
 
     `write` used to take whatever spec its caller passed, and `select_fusion` recorded nothing
@@ -131,8 +135,8 @@ def load_selected_fusion(run_id, npz, meta_p, meta):
                         f"select_fusion.py {run_id}.")
     else:
         want = {"run_id": run_id,
-                "table_sha256": sha256_file(npz),
-                "table_meta_sha256": sha256_file(meta_p),
+                "table_sha256": table_sha,
+                "table_meta_sha256": meta_sha,
                 "preproc_fingerprint": meta["preproc_fingerprint"],
                 "dev_manifest_sha256": sha256_file(REPO / "results" / "m7_dev_manifest.json")}
         for k, v in want.items():
@@ -152,6 +156,57 @@ def load_selected_fusion(run_id, npz, meta_p, meta):
     if spec.get("depth") != fusion.DEPTH:
         problems.append(f"fusion was selected at depth {spec.get('depth')} but the final run "
                         f"retrieves to {fusion.DEPTH}; both families are depth-sensitive")
+    # The recorded BM25 run keys were written and never read, so a bm25s/PyStemmer upgrade between
+    # selection and freeze went unnoticed: the parameter was fitted under one lexical function and
+    # applied under another (Codex review #4, MAJOR 2). The full content keys cannot be re-derived
+    # here without loading the dev corpora, but the parts that make the FUNCTION are checked, and
+    # an empty block is now refused rather than normalised.
+    keys = (sel or {}).get("bm25_run_keys")
+    comps = spec.get("components") or []
+    if not isinstance(keys, dict) or not keys:
+        problems.append("the fusion spec records no `bm25_run_keys`; re-run select_fusion.py so "
+                        "the lexical runs the parameter was fitted against are pinned")
+    else:
+        if sorted(keys) != sorted(comps):
+            problems.append(f"bm25_run_keys cover {sorted(keys)} but the selection ran on "
+                            f"{sorted(comps)}")
+        live_v, live_c = fusion._pkg_versions(), fusion.BM25_CONFIG
+        for c, k in keys.items():
+            if not isinstance(k, dict):
+                problems.append(f"bm25_run_keys[{c}] is not a key object")
+                continue
+            if k.get("config") != live_c:
+                problems.append(f"bm25_run_keys[{c}] was built with BM25 parameters "
+                                f"{k.get('config')} but this environment has {live_c}")
+            if k.get("versions") != live_v:
+                problems.append(f"bm25_run_keys[{c}] was built with {k.get('versions')} but this "
+                                f"environment has {live_v}; the lexical function has changed since "
+                                "the parameter was selected")
+            if k.get("depth") != fusion.DEPTH:
+                problems.append(f"bm25_run_keys[{c}] was built at depth {k.get('depth')}")
+    # The frozen (family, param) must be the argmax of the grid the selection actually searched --
+    # not merely a well-formed pair. Without this, editing the spec (or FREEZE.json) to any other
+    # grid point passed every check (Codex review #4, MAJOR 3).
+    grid = spec.get("grid") or []
+    if not grid:
+        problems.append("the fusion spec records no `grid`, so its winner cannot be checked")
+    else:
+        try:
+            best = max(grid, key=lambda r: (float(r["macro"]), 0))
+        except (KeyError, TypeError, ValueError):
+            best = None
+            problems.append("the fusion spec's `grid` is malformed")
+        if best is not None:
+            top = [r for r in grid if float(r["macro"]) == float(best["macro"])]
+            if not any(r["family"] == spec.get("family") and r["param"] == spec.get("param")
+                       for r in top):
+                problems.append(
+                    f"the frozen point ({spec.get('family')}, {spec.get('param')}) is not the "
+                    f"argmax of its own grid; the best row is ({best['family']}, {best['param']}) "
+                    f"at macro {best['macro']}")
+            if spec.get("dev_macro") is not None and \
+                    abs(float(spec["dev_macro"]) - float(best["macro"])) > 1e-12:
+                problems.append("the spec's dev_macro is not the grid's best macro")
     # The committed copy is what a reviewer reads; it must be the same object as the one frozen.
     pub = REPO / "results" / f"m7_fusion_{run_id}.json"
     if not pub.exists():
@@ -164,33 +219,53 @@ def load_selected_fusion(run_id, npz, meta_p, meta):
     return spec
 
 
-def assert_gate_passed(run_id, npz, meta_p):
+def assert_gate_passed(run_id, table_sha, meta_sha):
     """The freeze must be preceded by a PASSing gate ON THIS ARTIFACT.
 
     `gate.py` writes the artifact's hashes into its result; nothing consulted them, so a freeze
-    could follow a gate run on a different (or an older) table, or no gate at all."""
+    could follow a gate run on a different (or an older) table, or no gate at all. Takes the
+    hashes rather than the paths so the caller can hash the bytes ONCE -- re-hashing here and
+    again while building the manifest left a window in which the table could be replaced between
+    the two (Codex review #4, MAJOR 4)."""
     p = REPO / "results" / f"m7_gate_{run_id}.json"
     if not p.exists():
         raise SystemExit(f"FREEZE REFUSED: no gate result at {p.relative_to(REPO)}. The gate is "
                          "the mechanical eligibility audit that must precede the freeze "
                          "(run_freeze_prep.sh step 3).")
     g = json.loads(p.read_text())
-    art = g.get("artifact") or {}
+    art = g.get("artifact")
     problems = []
-    if not g.get("PASS"):
-        failed = [k for k, v in (g.get("conditions") or {}).items() if not v.get("pass")]
-        problems.append(f"the gate for {run_id} is NO-GO (failed: {failed or 'unknown'})")
-    if art.get("sha256") != sha256_file(npz):
+    # `is True`, not truthiness: `"PASS": "false"` is a non-empty string and used to pass. And the
+    # summary flag is not enough on its own -- every condition must independently say `pass: true`,
+    # so a hand-set or stale summary cannot carry a failing condition through
+    # (Codex review #4, MAJOR 5).
+    conds = g.get("conditions") or {}
+    if g.get("PASS") is not True:
+        failed = [k for k, v in conds.items() if v.get("pass") is not True]
+        problems.append(f"the gate for {run_id} is NO-GO (PASS={g.get('PASS')!r}; "
+                        f"failed: {failed or 'unknown'})")
+    if not conds:
+        problems.append("the gate result records no conditions")
+    else:
+        bad = [k for k, v in conds.items() if not isinstance(v, dict) or v.get("pass") is not True]
+        if bad:
+            problems.append(f"gate conditions not passing: {bad}")
+    if not isinstance(art, dict):
+        problems.append(f"the gate result has no `artifact` block (got {type(art).__name__})")
+        art = {}
+    if art.get("sha256") != table_sha:
         problems.append("the gate ran on a different table than the one being frozen "
-                        f"(gate {str(art.get('sha256'))[:16]!r} vs {sha256_file(npz)[:16]!r})")
-    if art.get("meta_sha256") != sha256_file(meta_p):
+                        f"(gate {str(art.get('sha256'))[:16]!r} vs {table_sha[:16]!r})")
+    if art.get("meta_sha256") != meta_sha:
         problems.append("the gate ran against different table metadata than the one being frozen")
     if g.get("run_id") != run_id:
         problems.append(f"gate file names run_id {g.get('run_id')!r}, not {run_id!r}")
     if problems:
         raise SystemExit("FREEZE REFUSED:\n  - " + "\n  - ".join(problems))
-    return {"path": p.name, "PASS": True,
-            "conditions": {k: bool(v.get("pass")) for k, v in (g.get("conditions") or {}).items()}}
+    # Keep the gate's own artifact hashes in the record. Discarding them hid the case where the
+    # gate, the selection and the frozen bytes were not all the same object.
+    return {"path": p.name, "PASS": True, "artifact": art,
+            "conditions": {k: bool(v.get("pass")) for k, v in conds.items()}}
 
 
 def write(run_id, released_system=None, dev_macro=None, notes=None):
@@ -217,8 +292,15 @@ def write(run_id, released_system=None, dev_macro=None, notes=None):
     if not code_ok:
         raise SystemExit("FREEZE REFUSED: the teacher's pinned files do not match "
                          "results/m7_teacher_code_pin.json:\n  - " + "\n  - ".join(code_problems))
-    gate_evidence = assert_gate_passed(run_id, npz, meta_p)
-    fusion_spec = load_selected_fusion(run_id, npz, meta_p, meta)
+    # Hash the bytes ONCE and use that hash everywhere below. Verifying the gate and the selection
+    # against a fresh hash, then re-hashing while building the manifest, left a window in which the
+    # release could be replaced: the freeze would then carry gate evidence and a fusion spec for A
+    # beside table hashes for B, and `load_and_verify` accepts B when A and B share preprocessing
+    # and encoder -- as two checkpoints normally do (Codex review #4, MAJOR 4).
+    table_sha, meta_sha = sha256_file(npz), sha256_file(meta_p)
+    table_bytes = npz.stat().st_size
+    gate_evidence = assert_gate_passed(run_id, table_sha, meta_sha)
+    fusion_spec = load_selected_fusion(run_id, table_sha, meta_sha, meta)
     derived = "dense" if fusion.is_dense_only(fusion_spec) else "fusion"
     if released_system is not None and released_system != derived:
         raise SystemExit(
@@ -235,14 +317,17 @@ def write(run_id, released_system=None, dev_macro=None, notes=None):
                  "the released-system choice from here, never from the command line, and "
                  "recomputes table_sha256 before scoring anything.",
         "run_id": run_id,
-        "training_lineage": lineage,
+        "training_lineage": sorted(lineage),
+        "training_lineage_record_sha256": lineage,
         "release_licence_check": "no non-commercial training source in the lineage "
-                                 "(freeze.assert_releasable)",
+                                 "(freeze.assert_releasable); the sha256 of every run record "
+                                 "inspected is above, because those records are gitignored and "
+                                 "mutable",
         "table_relpath": f"work/runs/{npz.name}",
         "training_checkpoint_sha256": sha256_file(WORK / "runs" / f"{run_id}.npz"),
-        "table_sha256": sha256_file(npz),
-        "table_meta_sha256": sha256_file(meta_p),
-        "table_bytes": npz.stat().st_size,
+        "table_sha256": table_sha,
+        "table_meta_sha256": meta_sha,
+        "table_bytes": table_bytes,
         "preproc": pre,
         "preproc_fingerprint": meta["preproc_fingerprint"],
         "learned_weights": meta.get("learned_weights"),
@@ -272,6 +357,11 @@ def write(run_id, released_system=None, dev_macro=None, notes=None):
         "perquery_sha256": sha256_file(REPO / "results" / "perquery.json"),
         "notes": notes or "",
     }
+    # Close the window from the other side too: if the release moved while this function ran, the
+    # gate evidence and the fusion binding above describe bytes that are no longer there.
+    if sha256_file(npz) != table_sha or sha256_file(meta_p) != meta_sha:
+        raise SystemExit("FREEZE REFUSED: the release artifact changed while the freeze was being "
+                         "written. Nothing was frozen; re-run the gate and the fusion selection.")
     FREEZE.write_text(json.dumps(blob, indent=1))
     print(json.dumps(blob, indent=1))
     return blob
@@ -370,6 +460,37 @@ def load_and_verify():
         if derived != rs:
             problems.append(f"released_system is {rs!r} but the frozen selection "
                             f"({spec.get('family')} param={spec.get('param')}) is {derived!r}")
+    # RE-BIND TO THE SELECTION ITSELF. Everything above reads FREEZE.json, which is a committed
+    # text file: editing `fusion.param` and `released_system` consistently after `freeze.write`
+    # passed every check, so "the released system is decided by the dev grid" was false at
+    # final-run time (Codex review #4, MAJOR 3). Compare against the selection's own output and
+    # against the grid it searched.
+    if spec:
+        sel_p = WORK / "runs" / f"{b.get('run_id')}.fusion.json"
+        if not sel_p.exists():
+            problems.append(f"the fusion selection {sel_p} is gone, so FREEZE.json's fusion block "
+                            "cannot be shown to be the one that was selected")
+        elif json.loads(sel_p.read_text()) != spec:
+            problems.append(f"FREEZE.json's fusion block differs from {sel_p.name}; it has been "
+                            "edited since the selection ran")
+        grid = spec.get("grid") or []
+        if grid:
+            best = max(grid, key=lambda r: float(r["macro"]))
+            top = [r for r in grid if float(r["macro"]) == float(best["macro"])]
+            if not any(r["family"] == spec.get("family") and r["param"] == spec.get("param")
+                       for r in top):
+                problems.append(f"the frozen fusion point ({spec.get('family')}, "
+                                f"{spec.get('param')}) is not the argmax of its own grid")
+        else:
+            problems.append("the frozen fusion spec records no grid")
+    # The teacher's remote code is re-verified by final_run before any protected access; here we
+    # only check the pin file itself has not been swapped since the freeze.
+    pin = REPO / "results" / "m7_teacher_code_pin.json"
+    if b.get("teacher_code_pin_sha256"):
+        if not pin.exists():
+            problems.append("results/m7_teacher_code_pin.json is missing")
+        elif sha256_file(pin) != b["teacher_code_pin_sha256"]:
+            problems.append("results/m7_teacher_code_pin.json changed after the freeze")
     if problems:
         raise SystemExit("FINAL RUN REFUSED:\n  - " + "\n  - ".join(problems))
     return b

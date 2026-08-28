@@ -42,6 +42,10 @@ for ds in DATASETS:
         "corpus_ids_sha256": sha(doc_ids),
         "corpus_text_sha256": sha(doc_texts),
         "qids_sha256": sha(sorted(q_ids)),
+        # The manifest pinned qids and qrels but not the query TEXT, so editing a query's text
+        # while leaving its key alone passed every final-run check and was scored
+        # (Codex review #4, MAJOR 1). Ordered by sorted qid, matching final_run.preflight.
+        "qtexts_sha256": sha([dict(zip(q_ids, q_texts))[q] for q in sorted(q_ids)]),
         "qrels_sha256": sha(qrels),
         "comparator_vectors_sha256": {n: sha(v) for n, v in pq["datasets"][ds]["systems"].items()},
     }

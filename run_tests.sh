@@ -12,8 +12,8 @@ export M7_ENCODER=${M7_ENCODER:-stella-400M-v5} PYTHONPATH=m7src
 PY=.venv/bin/python
 rc=0
 for t in test_conformance test_encoders test_encode_cache test_dep_stats test_freeze_guard \
-         test_freeze_binding test_fusion_paths test_init_rows test_signflip_calibration \
-         test_signflip_weaknull; do
+         test_freeze_binding test_final_guard test_fusion_paths test_init_rows \
+         test_signflip_calibration test_signflip_weaknull; do
   f="m7src/${t}.py"
   [ -f "$f" ] || { echo "SKIP  $t (missing)"; continue; }
   out=$($PY -u "$f" 2>&1); code=$?
