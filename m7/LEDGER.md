@@ -516,3 +516,11 @@ standing protocol: the fusion parameter frozen on any earlier checkpoint is inva
 re-selection, mandatory ablations, gate re-run and freeze all key on this candidate (or on the
 2m arm's, which now runs per the ordering rule — cross-arm pick on the full suite, same as the
 winner selection).
+
+## Lever #2, 2m arm: labeled steps extension, 2026-08-27 (logged before the extension runs)
+
+The 2m A-arm's proxy curve is still rising at the pre-registered 2000-step cap (0.5082 / 0.5092
+/ 0.5103 / 0.5109). Mirroring the lr-band edge-extension precedent: ONE labeled extension arm,
+`p35a-2m-1e3-x4000` (steps_a 4000, eval_every 500, same recipe, same init `run:p35b-2m`), runs
+only if the 2m arm wins the cross-arm full-suite pick; step selected by the same every-500 rule;
+the expectation being bracketed is a peak-and-turn. No further extension without a new entry.
