@@ -149,6 +149,27 @@ REGISTRY = {
         revision="d8fb21ca8d905d2832ee8b96c894d3298964346b",
         dim=1024, pooling="cls", query_prefix=BGE_PREFIX,
         notes="vendor tier justify-max; kept for completeness, dominated on quality"),
+    # BASE-SIZED candidates, added 2026-08-28. Both were dismissed by the 2026-08-26 teacher sweep
+    # on MTEB v1 ordering -- the criterion this project then REFUTED (Spearman(ceiling, table) =
+    # 0.000) -- and neither has ever been run through the adopted table criterion. The project's
+    # own within-family finding (bge-base 0.686 > bge-large 0.613, e5-base > e5-large) predicts
+    # base variants out-approximate the larger siblings that WERE probed, and gte-large's table
+    # was the worst of eight while gte-base was never tried. 768-d also means a SMALLER released
+    # artifact than stella's 1024-d, and neither carries stella's ArguAna/FiQA2018 exposure.
+    "arctic-embed-m-v1.5": Spec(
+        name="arctic-embed-m-v1.5", repo="Snowflake/snowflake-arctic-embed-m-v1.5",
+        revision="e58a8f756156a1293d763f17e3aae643474e9b8a",
+        dim=768, pooling="cls", query_prefix=BGE_PREFIX,
+        notes="Apache-2.0, BertModel, 30,522 vocab -- the existing solver and CLS_ID run "
+              "unchanged. Snowflake needs the strongest vendor justification of the admissible "
+              "group (Cortex Search is built on Arctic Embed); it is also LEAF's teacher and the "
+              "best group-A system on our six"),
+    "gte-base-en-v1.5": Spec(
+        name="gte-base-en-v1.5", repo="Alibaba-NLP/gte-base-en-v1.5",
+        revision="a829fd0e060bb84554da0dfd354d0de0f7712b7f",
+        dim=768, pooling="cls", query_prefix="", trust_remote_code=True,
+        notes="no prompt convention, like its large sibling; 768-d control for gte-large, whose "
+              "table was the worst of the eight probed"),
 }
 
 DEFAULT = "bge-base-en-v1.5"
