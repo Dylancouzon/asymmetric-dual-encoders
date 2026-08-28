@@ -49,14 +49,44 @@ def groups(components):
     return out
 
 
-def eval_makers(makers, components=None, k=100, verbose=True, max_docs=None):
+def rank_compare(bi_a, bs_a, bi_b, bs_b, cut=10):
+    """How two retrieval paths differ in what they RETURN, not only in what they score.
+
+    Identical per-query nDCG proves the historical statistics are unchanged; it does not prove the
+    rankings match, because top-10 membership can change entirely among non-relevant documents and
+    leave nDCG untouched (Codex review #3b MAJOR 4). This reports ordered top-`cut` changes, set
+    changes at `cut` and at full depth, and the largest score deviation over documents both paths
+    retrieved."""
+    n = bi_a.shape[0]
+    ord_changed = int((bi_a[:, :cut] != bi_b[:, :cut]).any(1).sum())
+    set_cut = sum(1 for i in range(n) if set(bi_a[i, :cut]) != set(bi_b[i, :cut]))
+    set_full = sum(1 for i in range(n) if set(bi_a[i]) != set(bi_b[i]))
+    worst = 0.0
+    for i in range(n):
+        m_a = dict(zip(bi_a[i].tolist(), bs_a[i].tolist()))
+        for j, s in zip(bi_b[i].tolist(), bs_b[i].tolist()):
+            if j in m_a:
+                worst = max(worst, abs(m_a[j] - s))
+    return {"n": n, f"changed_ordered_top{cut}": ord_changed,
+            f"changed_top{cut}_set": set_cut, "changed_topk_set": set_full,
+            "max_score_dev_matched_docs": float(worst)}
+
+
+def eval_makers(makers, components=None, k=100, verbose=True, max_docs=None, pair_checks=()):
     """-> {tag: {comp: {qid: ndcg}}} with unrounded per-query values.
 
     `max_docs` truncates every corpus, which makes the nDCG values meaningless but exercises the
     real code path cheaply -- the only honest way to smoke a component whose corpus is 6.17M rows.
-    Callers must label any result produced with it."""
+    Callers must label any result produced with it.
+
+    `pair_checks` is a list of (tag_a, tag_b): both are compared with `rank_compare` inside the
+    same pass, since the top-k arrays are gone once the pass ends."""
+    if k < 11:
+        raise ValueError(f"k={k}: nDCG@10 needs at least 11 retrieved documents, because one "
+                         "self-hit may be dropped from every run")
     comps = list(components or dev_eval.dev_components())
     per = {tag: {} for tag in makers}
+    ranks = {}
     for key, gcomps in groups(comps).items():
         blocks = []          # [tag, comp, q_ids, qrels, start, n]
         total = 0
@@ -92,14 +122,28 @@ def eval_makers(makers, components=None, k=100, verbose=True, max_docs=None):
                   f"query rows over {len(doc_ids):,} docs, rss {rss_gb():.1f} GB", flush=True)
         bi, bs = topk_arrays(Q, dv, k=k, chunk=dev_eval.CHUNK.get(gcomps[0], 200_000))
         del Q
+        span = {(tag, comp): (start, n) for tag, comp, _, _, start, n in blocks}
         for tag, comp, q_ids, qrels, start, n in blocks:
+            if len(set(q_ids)) != len(q_ids):
+                raise AssertionError(f"{comp}: duplicate qids")
             run = run_from_arrays(bi[start:start + n], bs[start:start + n], doc_ids, q_ids)
-            per[tag][comp] = per_query_ndcg(run, qrels)
-            del run
+            nd = per_query_ndcg(run, qrels)
+            # pytrec_eval silently drops a query with no qrels entry, so equality here is what
+            # proves the component was scored whole (Codex review #3b MINOR).
+            if set(nd) != set(q_ids):
+                raise AssertionError(f"{tag}/{comp}: scored {len(nd)} of {len(q_ids)} queries "
+                                     f"(missing {sorted(set(q_ids) - set(nd))[:5]})")
+            per[tag][comp] = nd
+            del run, nd
+        for ta, tb in pair_checks:
+            for c in gcomps:
+                (sa, na), (sb, nb) = span[(ta, c)], span[(tb, c)]
+                ranks.setdefault(f"{ta}|vs|{tb}", {})[c] = rank_compare(
+                    bi[sa:sa + na], bs[sa:sa + na], bi[sb:sb + nb], bs[sb:sb + nb])
         del bi, bs
         if verbose:
             print(f"  [{key}] scored, rss {rss_gb():.1f} GB", flush=True)
-    return per
+    return (per, ranks) if pair_checks else per
 
 
 def macro(per_comp):

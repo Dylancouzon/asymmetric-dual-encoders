@@ -151,7 +151,12 @@ POOL_MODES = ("mean", "binary", "cap2", "sqrt")
 def occurrence_weights(ids_list, mode, device="cpu"):
     """Per-occurrence weights so a token appearing c times contributes TOTAL weight f(c):
     mean f(c)=c (the current released rule) | binary 1 | cap2 min(2,c) | sqrt sqrt(c).
-    The weighted-mean denominator is the same sum, so length normalization is unchanged."""
+
+    Counts are over POST-TRUNCATION WordPiece ids and include the special tokens, i.e. exactly
+    what `tokenize` emits. The weighted-mean denominator is the matching sum -- note that the
+    denominator itself cancels under the final L2 normalize (it is a positive per-query scalar);
+    it matters only for the near-degenerate fallback threshold, and for keeping the intermediate
+    in the same range as the released rule."""
     if mode not in POOL_MODES:
         raise KeyError(f"unknown pool mode {mode!r}; known {POOL_MODES}")
     if mode == "mean":

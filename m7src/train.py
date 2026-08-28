@@ -38,7 +38,14 @@ class Cfg:
     run_id: str = "dev"
     objective: str = "C"                # A | B | C
     init: str = "teacher"               # teacher | input_emb | random
-    preproc: str = "noprefix"           # noprefix | prefix
+    preproc: str = "noprefix"           # noprefix | prefix -- RUNTIME query tokenization
+    init_preproc: str = ""              # "" = same as preproc. The context the `teacher` init
+                                        # forwards each vocab token in, separated from the runtime
+                                        # rule because the mandate makes fixed runtime-prefix
+                                        # variants MANDATORY and prefix-conditioned ROWS
+                                        # exploratory (Codex review #3 BLOCKER 3): changing
+                                        # `preproc` alone moved both at once, so that arm was not
+                                        # the mandated ablation.
     learned_weights: bool = True
     idf_init_weights: bool = True
     lr: float = 3e-3                    # NOTE: 3e-3 is 10-300x above every published frozen-tower
@@ -368,6 +375,7 @@ def run(cfg: Cfg, log=print):
     torch.manual_seed(cfg.seed)
     rng = np.random.default_rng(cfg.seed)
     pre = PRE[cfg.preproc]
+    init_pre = PRE[cfg.init_preproc or cfg.preproc]
     tok = get_tokenizer()
     V = tok.vocab_size
 
@@ -444,7 +452,10 @@ def run(cfg: Cfg, log=print):
     bank = torch.from_numpy(np.ascontiguousarray(pool_vecs[bank_ids])).cuda()   # filter is OOB
     log(f"  negative bank {tuple(bank.shape)} ({bank.numel()*2/1e9:.2f} GB VRAM)")
 
-    W0 = torch.from_numpy(get_init(cfg.init, pre, vocab=V)).cuda()
+    W0 = torch.from_numpy(get_init(cfg.init, init_pre, vocab=V, runtime_pre=pre)).cuda()
+    if cfg.init_preproc and cfg.init_preproc != cfg.preproc:
+        log(f"  init rows built under preprocessing {cfg.init_preproc!r}; runtime tokenization "
+            f"uses {cfg.preproc!r} (mandated runtime-prefix ablation)")
     # A "run:<id>" init restores the trained TOKEN WEIGHTS too. Restoring rows but re-deriving
     # weights from IDF would start from a system that is not the one whose dev score is being used
     # as the baseline -- p1-objB's learned weights are IDF-LIKE (spearman -0.44 vs update count)

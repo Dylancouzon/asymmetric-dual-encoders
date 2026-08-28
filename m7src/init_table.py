@@ -60,8 +60,22 @@ def teacher_rows(pre: Preproc, batch=512, device="cuda"):
 
 
 def input_emb_rows(device="cuda"):
+    """Sliced to the TOKENIZER's vocabulary, not the embedding matrix's row count.
+
+    stella's input embeddings are padded to 30,528 rows while the tokenizer has 30,522 (the
+    registry documents this). Unsliced, this arm would train and ship a 30,528-row artifact while
+    every coverage number, the released table shape and the other arms said 30,522 -- an ablation
+    that differs from its comparators in two ways instead of one (Codex review #3 MAJOR 4)."""
     _, model = load_teacher(dtype=torch.float32, device=device)
-    return model.get_input_embeddings().weight.detach().float().cpu().numpy().copy()
+    w = model.get_input_embeddings().weight.detach().float().cpu().numpy()
+    V = get_tokenizer().vocab_size
+    if w.shape[0] < V:
+        raise AssertionError(f"input embeddings have {w.shape[0]} rows, fewer than the "
+                             f"tokenizer's {V}")
+    if w.shape[0] != V:
+        print(f"  input_emb init: slicing {w.shape[0]} embedding rows to the tokenizer's {V}",
+              flush=True)
+    return w[:V].copy()
 
 
 def run_token_weights(rid):
@@ -80,8 +94,14 @@ def random_rows(vocab, dim, seed=0):
     return np.random.default_rng(seed).normal(0, 1 / np.sqrt(dim), (vocab, dim)).astype(np.float32)
 
 
-def get_init(kind, pre: Preproc, vocab=None, dim=None):
-    """Cached: work/init/<kind>[-<preproc fingerprint>].npy"""
+def get_init(kind, pre: Preproc, vocab=None, dim=None, runtime_pre: Preproc = None):
+    """Cached: work/init/<kind>[-<preproc fingerprint>].npy
+
+    `pre` is the context the TEACHER init forwards each vocab token in. `runtime_pre` is the rule
+    the trained table will be queried under, and defaults to `pre`; they differ only in the
+    mandated runtime-prefix ablation, where the rows must stay identical while runtime
+    tokenization changes. A "run:" init is validated against `runtime_pre`, because what must
+    match a checkpoint is how it is QUERIED, not how its rows were seeded."""
     # Every init depends on the encoder, including `input_emb` (its embedding matrix) and `random`
     # (its width), so the tag is unconditional rather than "only for the teacher init".
     name = f"{spec_tag()}-{kind}-{pre.fingerprint()}" if kind == "teacher" \
@@ -103,10 +123,11 @@ def get_init(kind, pre: Preproc, vocab=None, dim=None):
         # would ship, not from an fp32 shadow of it. The difference is far below the dev resolution.
         rows = z["rows_fp16"].astype(np.float32)
         meta = json.loads((WORK / "runs" / f"{rid}.meta.json").read_text())
-        if meta.get("preproc_fingerprint") not in (None, pre.fingerprint()):
+        rt = runtime_pre or pre
+        if meta.get("preproc_fingerprint") not in (None, rt.fingerprint()):
             raise AssertionError(
                 f"init 'run:{rid}' was trained under preprocessing "
-                f"{meta['preproc_fingerprint']} but this run uses {pre.fingerprint()}")
+                f"{meta['preproc_fingerprint']} but this run uses {rt.fingerprint()}")
         if meta.get("teacher") not in (None, encoders.active().repo):
             raise AssertionError(f"init 'run:{rid}' was trained against {meta['teacher']} but the "
                                  f"active encoder is {encoders.active().repo}")

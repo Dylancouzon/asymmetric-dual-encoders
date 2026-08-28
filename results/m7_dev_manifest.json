@@ -34,5 +34,123 @@
   "qids_sha256": "4c44ec7cf4f961b4c2c44cd1615679302d0979aca17ce09d80bf7e6e8a990fb9",
   "qrels_sha256": "bfdc3429822a1f3308943510393b91c57c0650acb71d603d33146448e4e60236",
   "construction": "mteb/cqadupstack-physics, full corpus + test qrels"
+ },
+ "heldout-train": {
+  "n_docs": 6169142,
+  "n_queries": 7325,
+  "corpus": "full-pool",
+  "qids_ordered_sha256": "dfb68b581ae1ed9f0f8fc70621b8b299d60367542565f1e7b32d17efbd200955",
+  "qids_sha256": "7ba970963c1683d4ee8afebcf0708e1f10aa59abef18d1148b10e8a916d4eeed",
+  "qtexts_ordered_sha256": "ea2c8da5b7abb6d0aea1e096e6b7e37552babfe115ca33fd531b78daf7cc5c85",
+  "qrels_sha256": "04a72bb5e0bf41efca9ee182555ecc2aed063e1c97216f64122afd4c17d469ec",
+  "n_tokens_sha256": "87d5041a8c114a941c23e3e7ab73038b5ab04e5d10864f303f2f71102fb6d212",
+  "by_source": {
+   "esci-us": 1598,
+   "fever-train": 2151,
+   "hotpotqa-train": 1717,
+   "mrtydi-en": 69,
+   "squad-train": 1790
+  },
+  "json_sha256": "9d2cbd6ef45ac43342df173426b21a22f182cf70d5f19c71a5bf144896b0caab",
+  "construction": "held-out training slice: sha256(qid) mod 50 == 0 at QUERY granularity (m7src/trainmix.heldout), corpus = the entire frozen doc pool, qrels = pool row indices."
+ },
+ "heldout-longq": {
+  "n_docs": 6169142,
+  "n_queries": 55,
+  "corpus": "full-pool",
+  "qids_ordered_sha256": "5c4a6119461f2fc2a7a1a71baab3145adf3305601f5b280ca9e129fc4ede4904",
+  "qids_sha256": "1f027b0e52a3415a7910e8f1eee4901236a4a7bf0673ea4bcccb5bc7b9fb17d9",
+  "qtexts_ordered_sha256": "1e7235a705aaa2c06589174a2f910882f524e6fd333bac496d591a92a7ab39e5",
+  "qrels_sha256": "4f61af5ae3d9dad9cc1c4d6c468934e6c8da7417eb167ffcfcf1e148d9e9ae51",
+  "n_tokens_sha256": "62138793aba34fed26a333f413db4b5cd87de04b081d7eef009cee5bbb285c8f",
+  "by_source": {
+   "fever-train": 1,
+   "hotpotqa-train": 54
+  },
+  "json_sha256": "7227b24dba4336b31ad565223c08bdf5c011871f6fab90dc6cc5d20009932251",
+  "construction": "held-out training slice: sha256(qid) mod 50 == 0 at QUERY granularity (m7src/trainmix.heldout), corpus = the entire frozen doc pool, qrels = pool row indices; restricted to queries of >= 64 WordPiece tokens. SUBSET of heldout-train: the same 55 qids with identical corpus and qrels, hence identical per-query nDCG -- the dependence the macro must account for (boot.signflip_dep/paired_dep)."
+ },
+ "_pinned": {
+  "components": [
+   "nq-250k",
+   "hotpotqa",
+   "cqadup-programmers",
+   "cqadup-physics",
+   "heldout-train",
+   "heldout-longq"
+  ],
+  "n_components": 6,
+  "macro": "equal weight per component (instructions-m7.md)",
+  "abort_on_missing": "dev_eval.dev_components() raises if any of these is unavailable or hash-mismatched; it must never silently shrink the suite",
+  "pool": {
+   "n": 6169142,
+   "dim": 1024,
+   "encoder": "stella-400M-v5",
+   "encoder_repo": "NovaSearch/stella_en_400M_v5",
+   "encoder_revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+   "stores": [
+    "esci-prod",
+    "fever-pos",
+    "hotpotqa-corpus",
+    "mrtydi-docs",
+    "squad-ctx"
+   ],
+   "spans": {
+    "esci-prod": [
+     0,
+     808389
+    ],
+    "fever-pos": [
+     808389,
+     820938
+    ],
+    "hotpotqa-corpus": [
+     820938,
+     6054267
+    ],
+    "mrtydi-docs": [
+     6054267,
+     6150251
+    ],
+    "squad-ctx": [
+     6150251,
+     6169142
+    ]
+   },
+   "counts": {
+    "esci-prod": 808389,
+    "fever-pos": 12549,
+    "hotpotqa-corpus": 5233329,
+    "mrtydi-docs": 95984,
+    "squad-ctx": 18891
+   },
+   "store_id_sha256": {
+    "esci-prod": "4de2384a2b39f49733e7aa19efcc6655dbbc9965c609373a0e9903a439b4638f",
+    "fever-pos": "7f11d4186c8ed1f6661bc0df497ac2e20dc3ec833922fb9d58511aa1c369bf73",
+    "hotpotqa-corpus": "be799419ebc5b1589229a161083f93aa7d3871ba0afe7c42c896a0ce1fb7c853",
+    "mrtydi-docs": "31aa0fc7673eddd75100c4cc32be0b8a074afd33c2796676265aec0d575830fb",
+    "squad-ctx": "b5f3e48f22f1b9cb8c1ef0c48f5f4a2b7fe3793dd7aebfb86c06afa127126e9a"
+   },
+   "vectors_path": "pool/stella-400M-v5/vecs.f16",
+   "vectors_bytes": 12634402816,
+   "vectors_sha256": "ddae0d7fa620e7b0f0ca9d698dc434c9553cd9dbcc3301b1b47ac67d0bf59fda"
+  },
+  "active_encoder": {
+   "name": "stella-400M-v5",
+   "repo": "NovaSearch/stella_en_400M_v5",
+   "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+   "dim": 1024,
+   "pooling": "mean"
+  },
+  "nested_components": {
+   "heldout-longq": {
+    "subset_of": "heldout-train",
+    "n_shared_qids": 55,
+    "shared_qids_sha256": "1f027b0e52a3415a7910e8f1eee4901236a4a7bf0673ea4bcccb5bc7b9fb17d9",
+    "verified": "subset membership, identical query text / n_tokens / qrels on every shared qid, same corpus, and exactly the >= 64-token queries (freeze_heldout.assert_structure)"
+   }
+  },
+  "pinned_at": "2026-08-27T22:58:44",
+  "disclosure": "LATE PIN: the two held-out components were deterministically defined but not cryptographically pinned before the lever selections that used them (Codex review #3 BLOCKER 2). The four text-backed components were pinned before any candidate result. Report must say so."
  }
 }

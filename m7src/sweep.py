@@ -80,6 +80,66 @@ def smoke(base, over, steps_b=60, steps_a=30):
     return dev
 
 
+def chain(name, base, b_over, a_over, skip_b_if_exists=True):
+    """One ablation arm as TWO separate runs: a B run, then a fresh A run initialized from that
+    exact B artifact. Returns the A run's dev macro (None if either leg failed).
+
+    This is not a convenience wrapper -- it is the only way to reproduce the winning recipe
+    (Codex review #3 BLOCKER 4). A single objective-C run carries ONE learning rate, ONE schedule,
+    and one Adam state with cumulative update counts across both phases, whereas the winner is
+    B at 3e-3 constant followed by A at 1e-3 warmup-linear with a fresh optimizer and a reset
+    update counter (which also rescales the 1/(1+updates) init penalty). An objective-C "full
+    chain" would therefore differ from the candidate in four ways that have nothing to do with
+    the variable the arm is meant to isolate.
+
+    `skip_b_if_exists` reuses a B artifact that is already on disk -- arms that do not vary the B
+    phase share one, and re-running it would spend an hour to reproduce it up to CUDA
+    nondeterminism. The reuse is by run id, so a B arm and its variants can never collide.
+    """
+    bid, aid = f"{name}-b", f"{name}-a"
+    if skip_b_if_exists and (WORK / "runs" / f"{bid}.npz").exists():
+        print(f"[{name}] reusing existing B artifact {bid}", flush=True)
+    else:
+        if one(bid, base, **b_over) is None:
+            print(f"[{name}] B leg failed; A leg skipped", flush=True)
+            return None
+    return one(aid, base, init=f"run:{bid}", **a_over)
+
+
+def chains(name, base, arms, b_base, a_base, fail_fast=True):
+    """arms: {suffix: {"b": {...}, "a": {...}, "share_b": <suffix or None>}}.
+
+    `share_b` points an arm at another arm's B artifact when the arm varies only the A phase --
+    the honest alternative to silently re-running an identical B leg.
+    """
+    out = {}
+    for suffix, spec in arms.items():
+        rid = f"{name}-{suffix}"
+        b_over = {**b_base, **spec.get("b", {})}
+        a_over = {**a_base, **spec.get("a", {})}
+        share = spec.get("share_b")
+        print(f"\n{'='*80}\n{rid}: B {json.dumps(spec.get('b', {}))} | "
+              f"A {json.dumps(spec.get('a', {}))}"
+              f"{f' | shares B with {share}' if share else ''}\n{'='*80}", flush=True)
+        if share:
+            bid = f"{name}-{share}-b"
+            if not (WORK / "runs" / f"{bid}.npz").exists():
+                print(f"[{rid}] SKIPPED: shared B artifact {bid} does not exist", flush=True)
+                out[rid] = None
+                continue
+            out[rid] = one(f"{rid}-a", base, init=f"run:{bid}", **a_over)
+        else:
+            out[rid] = chain(rid, base, b_over, a_over)
+        if out[rid] is None and last_status() == "FAILED":
+            if fail_fast:
+                print(f"\n[{name}] STOPPING: {rid} raised and the remaining arms share its code "
+                      f"path.", flush=True)
+                break
+    print(f"\n[{name}] " + "  ".join(f"{k}={'—' if v is None else f'{v:.4f}'}"
+                                     for k, v in out.items()), flush=True)
+    return out
+
+
 def grid(name, base, variants, fail_fast=True):
     """variants: {suffix: {field: value}}. Runs them in order, returns {run_id: dev macro}.
 

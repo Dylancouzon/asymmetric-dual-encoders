@@ -94,20 +94,62 @@ def _build():
 _VERIFIED = False
 
 
-def verify_pinned():
+def _verify_pool(pin, pool_bytes=True):
+    """The held-out corpora ARE the pool vector file plus the store layout that indexes it."""
+    if not pin:
+        return
+    import hashlib
+
+    import encoders
+    _, vecs, meta = poolmod.build()
+    # left: the key in the pinned manifest, right: the key pool.build() writes
+    for pin_key, meta_key in (("n", "n"), ("dim", "dim"), ("encoder", "encoder"),
+                              ("encoder_revision", "encoder_revision"), ("stores", "stores"),
+                              ("spans", "spans"), ("counts", "counts"),
+                              ("store_id_sha256", "id_sha256")):
+        if pin_key in pin and meta.get(meta_key) != pin[pin_key]:
+            raise SystemExit(f"PINNED pool identity changed: {meta_key} is {meta.get(meta_key)!r}, "
+                             f"manifest says {pin[pin_key]!r}")
+    sp = encoders.active()
+    if pin.get("encoder") != sp.name:
+        raise SystemExit(f"pinned pool was built with encoder {pin.get('encoder')!r} but the "
+                         f"active encoder is {sp.name!r}")
+    p = poolmod.VEC_DIR / "vecs.f16"
+    if p.stat().st_size != pin.get("vectors_bytes"):
+        raise SystemExit(f"PINNED pool vector file is {p.stat().st_size} bytes, manifest says "
+                         f"{pin.get('vectors_bytes')}")
+    if pool_bytes and pin.get("vectors_sha256"):
+        h = hashlib.sha256()
+        with open(p, "rb") as f:
+            for b in iter(lambda: f.read(1 << 22), b""):
+                h.update(b)
+        if h.hexdigest() != pin["vectors_sha256"]:
+            raise SystemExit("PINNED pool vectors changed: same size, different content. Every "
+                             "held-out dev number is scored against these vectors.")
+
+
+def verify_pinned(pool_bytes=False):
     """Refuse to serve a held-out component whose bytes differ from the pinned manifest.
 
     These two JSONs are DERIVED from the training mix and the doc pool, so without this a changed
     mix, a reordered pool or a regenerated file would move the dev macro while every hash
-    `freeze.py` checks stayed valid (Codex review #3 BLOCKER 2). Checked once per process."""
+    `freeze.py` checks stayed valid (Codex review #3 BLOCKER 2). The CORPUS is checked too: both
+    components' documents are the pool vector file, so pinning only the query-side JSONs would
+    leave the larger half of each component unbound (review #3b BLOCKER 1). Once per process.
+
+    `pool_bytes` adds the 12.6 GB content hash. It defaults OFF because every training eval calls
+    this, and ON is what an authoritative run (the dev audit, the gate, the final run) must pass.
+    The memo records WHICH level ran, so a cheap check early in a process cannot satisfy a later
+    request for the full one."""
     global _VERIFIED
-    if _VERIFIED:
+    if _VERIFIED == "full" or (_VERIFIED == "cheap" and not pool_bytes):
         return
     import hashlib
 
     from _paths import REPO
     man_p = REPO / "results" / "m7_dev_manifest.json"
     man = json.loads(man_p.read_text()) if man_p.exists() else {}
+    _verify_pool(man.get("_pinned", {}).get("pool"), pool_bytes)
     for name in COMPONENTS:
         want = (man.get(name) or {}).get("json_sha256")
         if not want:
@@ -121,7 +163,7 @@ def verify_pinned():
                 f"PINNED dev component {name} changed: {p} hashes {got[:16]}..., manifest says "
                 f"{want[:16]}.... A dev component may not change under a selection. Restore it, "
                 f"or re-pin deliberately with freeze_heldout.py and disclose it in m7/LEDGER.md.")
-    _VERIFIED = True
+    _VERIFIED = "full" if pool_bytes else "cheap"
 
 
 def load(name):

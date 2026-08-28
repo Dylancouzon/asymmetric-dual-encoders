@@ -75,6 +75,45 @@ def heldout_entry(name):
     }
 
 
+def assert_structure():
+    """Prove the properties the manifest would otherwise merely record (Codex review #3b B1).
+
+    Recording `n_shared_qids` next to a claim of nesting is not the same as checking the nesting,
+    and a component pair that silently stopped nesting would make the dependence-preserving
+    statistics wrong in the direction of over-confidence -- the exact failure being repaired."""
+    tr = json.loads((heldout.HELD / "heldout-train.json").read_text())
+    lq = json.loads((heldout.HELD / "heldout-longq.json").read_text())
+    for name, b in (("heldout-train", tr), ("heldout-longq", lq)):
+        n = len(b["q_ids"])
+        if len(set(b["q_ids"])) != n:
+            raise SystemExit(f"{name}: duplicate qids")
+        if not (len(b["q_texts"]) == len(b["n_tokens"]) == n):
+            raise SystemExit(f"{name}: q_ids/q_texts/n_tokens lengths disagree")
+        if set(b["qrels"]) != set(b["q_ids"]):
+            raise SystemExit(f"{name}: qrels keys do not match q_ids")
+        if not all(b["qrels"][q] for q in b["q_ids"]):
+            raise SystemExit(f"{name}: some query has no positive")
+    if not set(lq["q_ids"]) <= set(tr["q_ids"]):
+        raise SystemExit("heldout-longq is not a subset of heldout-train; the nesting the "
+                         "dependence-preserving statistics assume does not hold")
+    if lq["n_docs"] != tr["n_docs"]:
+        raise SystemExit("the two held-out components address different corpora")
+    t_text = dict(zip(tr["q_ids"], tr["q_texts"]))
+    t_tok = dict(zip(tr["q_ids"], tr["n_tokens"]))
+    for q, txt, ntk in zip(lq["q_ids"], lq["q_texts"], lq["n_tokens"]):
+        if t_text[q] != txt or t_tok[q] != ntk or tr["qrels"][q] != lq["qrels"][q]:
+            raise SystemExit(f"shared qid {q} differs between the two held-out components")
+    if any(n < heldout.LONG_TOKENS for n in lq["n_tokens"]):
+        raise SystemExit(f"heldout-longq contains a query under {heldout.LONG_TOKENS} tokens")
+    n_long = sum(1 for n in tr["n_tokens"] if n >= heldout.LONG_TOKENS)
+    if n_long != len(lq["q_ids"]):
+        raise SystemExit(f"heldout-longq has {len(lq['q_ids'])} queries but heldout-train has "
+                         f"{n_long} at >= {heldout.LONG_TOKENS} tokens")
+    print(f"  structure OK: {len(tr['q_ids']):,} held-out queries, {len(lq['q_ids'])} of them long "
+          f"and byte-identical in both components", flush=True)
+    return sorted(lq["q_ids"])
+
+
 def main(pool_hash=True):
     t0 = time.time()
     spec = encoders.active()
@@ -83,6 +122,12 @@ def main(pool_hash=True):
         if c not in man:
             raise SystemExit(f"dev manifest is missing text-backed component {c}; run devsuite.py")
 
+    if not pool_hash:
+        raise SystemExit(
+            "refusing to write an authoritative pin without the pool-vector hash: the corpus of "
+            "both held-out components IS that file, so a pin that does not bind its bytes pins "
+            "nothing that matters (Codex review #3b BLOCKER 1). Use --dry-run to inspect.")
+    nested = assert_structure()
     _, pool_vecs, pmeta = poolmod.build()
     vec_p = poolmod.VEC_DIR / "vecs.f16"
     pool_id = {"n": pmeta["n"], "dim": pmeta["dim"], "encoder": pmeta["encoder"],
@@ -108,9 +153,6 @@ def main(pool_hash=True):
         print(f"dev {name:16s} {e['n_docs']:>9,} docs {e['n_queries']:>6,} queries  "
               f"json {e['json_sha256'][:16]}", flush=True)
 
-    lq = json.loads((heldout.HELD / "heldout-longq.json").read_text())
-    tr = json.loads((heldout.HELD / "heldout-train.json").read_text())
-    nested = sorted(set(lq["q_ids"]) & set(tr["q_ids"]))
     man["_pinned"] = {
         "components": COMPONENTS,
         "n_components": len(COMPONENTS),
@@ -120,9 +162,12 @@ def main(pool_hash=True):
         "pool": pool_id,
         "active_encoder": {"name": spec.name, "repo": spec.repo, "revision": spec.revision,
                            "dim": spec.dim, "pooling": spec.pooling},
-        "nested_components": {"heldout-longq": {"subset_of": "heldout-train",
-                                                "n_shared_qids": len(nested),
-                                                "shared_qids_sha256": sha(nested)}},
+        "nested_components": {"heldout-longq": {
+            "subset_of": "heldout-train", "n_shared_qids": len(nested),
+            "shared_qids_sha256": sha(nested),
+            "verified": "subset membership, identical query text / n_tokens / qrels on every "
+                        "shared qid, same corpus, and exactly the >= 64-token queries "
+                        "(freeze_heldout.assert_structure)"}},
         "pinned_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "disclosure": "LATE PIN: the two held-out components were deterministically defined but "
                       "not cryptographically pinned before the lever selections that used them "
@@ -135,4 +180,9 @@ def main(pool_hash=True):
 
 
 if __name__ == "__main__":
-    main(pool_hash="--no-pool-hash" not in sys.argv)
+    if "--dry-run" in sys.argv:
+        assert_structure()
+        for n in heldout.COMPONENTS:
+            print(json.dumps({n: heldout_entry(n)}, indent=1))
+    else:
+        main(pool_hash="--no-pool-hash" not in sys.argv)

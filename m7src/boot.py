@@ -117,7 +117,11 @@ def paired(a, b, B=B, seed=SEED, alternative="two-sided"):
     else:
         p = 2 * float(min((deltas < 0).mean(), (deltas > 0).mean()))
         one_sided_lo = None
+    # ci95 is ROUNDED FOR DISPLAY. Never decide on it: a true lower endpoint of +4e-5 rounds to
+    # 0.0000 and would read as unresolved (Codex review #3b MAJOR 2). `ci95_raw`/`delta_raw` are
+    # what an adoption bar must compare against.
     return {"delta": round(base, 4), "ci95": [round(float(lo), 4), round(float(hi), 4)],
+            "delta_raw": float(base), "ci95_raw": [float(lo), float(hi)],
             "boot_tail": p, "boot_tail_str": (f"<{1/B}" if p == 0 else f"{p:.4f}"),
             "_boot_tail_note": "bootstrap tail mass, NOT a p-value; use signflip() for p",
             "alternative": alternative, "B": B, "seed": seed,
@@ -240,9 +244,19 @@ def signflip_dep(a, b, R=100_000, seed=SEED, alternative="greater", strict=True,
 
 
 def paired_dep(a, b, B=B, seed=SEED, alternative="two-sided", unit_of=unit_key, strict=False,
-               chunk=1000):
+               chunk=1000, share=True):
     """`paired` with a STRATIFIED bootstrap: resample units once per stratum and reuse that draw
-    in every component the stratum feeds, so a shared query moves together everywhere it counts."""
+    in every component the stratum feeds, so a shared query moves together everywhere it counts.
+
+    Two things change at once versus `paired`, and the report must separate them (Codex review
+    #3b MAJOR 1). (i) CONDITIONING: stratifying heldout-train into long/non-long and holding both
+    stratum sizes fixed estimates a conditional variance -- the ordinary bootstrap lets the
+    long-query fraction fluctuate, this one always draws exactly 55 long and 7,270 non-long.
+    That is defensible because the suite and its component sizes are frozen, but it is not the
+    dependence fix. (ii) DEPENDENCE: reusing one draw across every component a stratum feeds.
+    `share=False` gives the middle term -- fixed strata, independent draws -- so
+    ordinary -> share=False isolates the conditioning and share=False -> share=True isolates the
+    covariance."""
     aligned = _align_ids(a, b, strict=strict)
     if not aligned:
         raise ValueError("no overlapping datasets/queries")
@@ -261,7 +275,8 @@ def paired_dep(a, b, B=B, seed=SEED, alternative="two-sided", unit_of=unit_key, 
             for ds, idx in s["idx"].items():
                 _, x, y = aligned[ds]
                 dv = (x - y)[idx]
-                sums[ds] += dv[draw].sum(1)
+                d_ = draw if share else rng.integers(0, s["n"], size=(m, s["n"]))
+                sums[ds] += dv[d_].sum(1)
         for ds in aligned:
             per_rep[ds][a0:a0 + m] = sums[ds] / n_ds[ds]
         deltas[a0:a0 + m] = sum(sums[ds] / n_ds[ds] for ds in aligned) / k
@@ -270,7 +285,9 @@ def paired_dep(a, b, B=B, seed=SEED, alternative="two-sided", unit_of=unit_key, 
     for ds, (_, x, y) in aligned.items():
         dlo, dhi = np.percentile(per_rep[ds], [2.5, 97.5])
         per[ds] = {"n": int(n_ds[ds]), "delta": round(float(x.mean() - y.mean()), 4),
-                   "ci95": [round(float(dlo), 4), round(float(dhi), 4)]}
+                   "ci95": [round(float(dlo), 4), round(float(dhi), 4)],
+                   "delta_raw": float(x.mean() - y.mean()),
+                   "ci95_raw": [float(dlo), float(dhi)]}
     if alternative == "greater":
         tail = float((deltas <= 0).mean())
     elif alternative == "less":
@@ -278,19 +295,29 @@ def paired_dep(a, b, B=B, seed=SEED, alternative="two-sided", unit_of=unit_key, 
     else:
         tail = 2 * float(min((deltas < 0).mean(), (deltas > 0).mean()))
     return {"delta": round(base, 4), "ci95": [round(float(lo), 4), round(float(hi), 4)],
+            "delta_raw": float(base), "ci95_raw": [float(lo), float(hi)],
             "boot_tail": tail, "_boot_tail_note": "bootstrap tail mass, NOT a p-value",
             "alternative": alternative, "B": B, "seed": seed,
             "one_sided_lower_2.5": round(float(np.percentile(deltas, 2.5)), 4),
-            "method": "stratified paired bootstrap over shared-query units",
+            "method": ("stratified paired bootstrap, shared draw across components"
+                       if share else
+                       "stratified paired bootstrap, INDEPENDENT draws (conditioning only, "
+                       "not the dependence fix)"),
+            "shared_draw": bool(share),
             "strata": [{"components": list(s["sig"]), "n_units": s["n"]} for s in st],
             "per_dataset": per, "resolved": bool(lo > 0 or hi < 0)}
 
 
 def both_ways(a, b, alternative="greater"):
-    """The side-by-side the review asks for: ordinary (dependence-blind) and dependence-preserving.
-    Dev comparisons are SELECTION evidence either way (review #3 MAJOR 1)."""
+    """The side-by-side the review asks for, in three bootstrap steps so the two effects separate:
+    ordinary -> `stratified_independent` isolates CONDITIONING on fixed stratum sizes;
+    `stratified_independent` -> `dependence_preserving` isolates the shared-query COVARIANCE.
+    Dev comparisons are SELECTION evidence in every column (review #3 MAJOR 1)."""
     return {"ordinary": {"paired": paired(a, b, alternative="two-sided"),
                          "signflip": signflip(a, b, alternative=alternative)},
+            "stratified_independent": {
+                "paired": paired_dep(a, b, alternative="two-sided", share=False),
+                "_note": "fixed stratum sizes, independent draws: the conditioning step only"},
             "dependence_preserving": {"paired": paired_dep(a, b, alternative="two-sided"),
                                       "signflip": signflip_dep(a, b, alternative=alternative)},
             "_note": "exploratory selection evidence; the only confirmatory comparisons are the "

@@ -27,19 +27,23 @@ def _mk(n, delta, sd, seed, prefix="q"):
 
 
 def test_reduction_without_sharing():
-    a1, b1 = _mk(400, 0.01, 0.05, 1, "x")
-    a2, b2 = _mk(300, 0.02, 0.05, 2, "y")
+    """NEAR-NULL fixture on purpose: with a large effect both p-values sit at the Monte-Carlo
+    floor and 'they agree' is vacuous -- it would pass for many broken implementations
+    (Codex review #3b MINOR). The effect here is sized so p lands in the interesting middle."""
+    a1, b1 = _mk(400, 0.004, 0.09, 1, "x")
+    a2, b2 = _mk(300, 0.002, 0.09, 2, "y")
     A = {"ds1": a1, "ds2": a2}
     B = {"ds1": b1, "ds2": b2}
     o, d = boot.paired(A, B), boot.paired_dep(A, B)
     assert o["delta"] == d["delta"], (o["delta"], d["delta"])
-    wo = o["ci95"][1] - o["ci95"][0]
-    wd = d["ci95"][1] - d["ci95"][0]
+    wo = o["ci95_raw"][1] - o["ci95_raw"][0]
+    wd = d["ci95_raw"][1] - d["ci95_raw"][0]
     assert abs(wo - wd) < 0.05 * wo, (wo, wd)
     so, sd_ = boot.signflip(A, B), boot.signflip_dep(A, B)
+    assert 0.05 < so["p"] < 0.95, f"fixture is not near-null (p={so['p']}); the test is vacuous"
     assert abs(so["p"] - sd_["p"]) < 0.01, (so["p"], sd_["p"])
     assert sd_["shared_units"] == 0
-    print(f"1. reduction: ci width ordinary {wo:.5f} vs dep {wd:.5f}; "
+    print(f"1. reduction (near-null): ci width ordinary {wo:.5f} vs dep {wd:.5f}; "
           f"p {so['p']:.4f} vs {sd_['p']:.4f}  OK")
 
 
@@ -66,6 +70,28 @@ def test_full_duplication():
           f"(too narrow by {wd/wo:.2f}x); p ordinary {so['p']:.5f} < dep {sd_['p']:.5f}  OK")
 
 
+def test_full_duplication_production_names():
+    """The same limit case through the PRODUCTION `unit_key`, i.e. with the real component names,
+    so the test covers the function the audit actually calls rather than a stand-in lambda.
+    Compares the dependent sign-flip to a single-component reference instead of only asserting
+    that it is larger than the dependence-blind one (Codex review #3b MINOR)."""
+    a1, b1 = _mk(200, 0.006, 0.09, 7, "heldout:")
+    A = {"heldout-train": a1, "heldout-longq": dict(a1)}
+    B = {"heldout-train": b1, "heldout-longq": dict(b1)}
+    one_p = boot.signflip({"heldout-train": a1}, {"heldout-train": b1})["p"]
+    dep_p = boot.signflip_dep(A, B)["p"]
+    ord_p = boot.signflip(A, B)["p"]
+    one_ci = boot.paired({"heldout-train": a1}, {"heldout-train": b1})["ci95_raw"]
+    dep_ci = boot.paired_dep(A, B)["ci95_raw"]
+    # duplicating a component changes neither the macro nor its null once dependence is respected
+    assert abs(dep_p - one_p) < 0.01, (dep_p, one_p)
+    assert dep_p > ord_p, (dep_p, ord_p)
+    w1, wd = one_ci[1] - one_ci[0], dep_ci[1] - dep_ci[0]
+    assert abs(wd - w1) < 0.05 * w1, (wd, w1)
+    print(f"2b. production unit_key, full duplication: p one-component {one_p:.4f} == dep "
+          f"{dep_p:.4f} (ordinary {ord_p:.4f}); ci {w1:.5f} vs {wd:.5f}  OK")
+
+
 def test_determinism():
     a1, b1 = _mk(150, 0.01, 0.05, 4)
     A, B = {"d": a1}, {"d": b1}
@@ -85,16 +111,20 @@ def test_realistic_nesting():
     A["heldout-longq"] = {q: A["heldout-train"][q] for q in long_ids}
     B["heldout-longq"] = {q: B["heldout-train"][q] for q in long_ids}
     o, d = boot.paired(A, B), boot.paired_dep(A, B)
+    mid = boot.paired_dep(A, B, share=False)
     so, sd_ = boot.signflip(A, B), boot.signflip_dep(A, B)
     assert sd_["shared_units"] == 55, sd_["shared_units"]
     assert {tuple(s["components"]) for s in sd_["strata"]} >= {("heldout-longq", "heldout-train")}
-    print(f"4. realistic nesting: delta {o['delta']} | ci ordinary {o['ci95']} dep {d['ci95']} | "
+    assert mid["shared_draw"] is False and d["shared_draw"] is True
+    print(f"4. realistic nesting: delta {o['delta']} | ci ordinary {o['ci95']} -> "
+          f"fixed-strata {mid['ci95']} -> +shared draw {d['ci95']} | "
           f"p ordinary {so['p']:.5f} dep {sd_['p']:.5f}  OK")
 
 
 if __name__ == "__main__":
     test_reduction_without_sharing()
     test_full_duplication()
+    test_full_duplication_production_names()
     test_determinism()
     test_realistic_nesting()
     print("dep-stats checks passed")

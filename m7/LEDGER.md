@@ -544,12 +544,24 @@ one without sharing and matches a single-component bootstrap under full duplicat
 dependence-blind interval is 1.43x too narrow). Both are reported side by side.
 
 **Decision rule, fixed now:** each of the three decisions (500k adoption, 2m cross-arm pick,
-s2500 extension) stands only if the DEPENDENCE-PRESERVING statistics still meet its original bar
-(signflip p<0.05 AND paired CI>0, int8 independently). Any decision that fails reverts to its
-baseline, and the candidate becomes the last artifact whose chain survives — `p35a-2m-1e3` if
+s2500 extension) stands only if the DEPENDENCE-PRESERVING statistics meet a **newly standardized
+survival bar**: signflip p<0.05 AND paired CI (raw endpoints, never the rounded display value)
+above zero, in fp16 **and** int8. That is deliberately stricter than the history — lever #1's
+registration asked for int8 CI only, and the 2m pick and the s2500 extension never prospectively
+fixed an adoption threshold at all — so it is labelled as a new conservative audit, not as
+"re-checking the original bar". Any decision that fails reverts to its baseline, and the candidate
+becomes the last artifact whose chain survives, walking forward and stopping at the first failure
+(a later comparison establishes nothing about an earlier surviving baseline): `p35a-2m-1e3` if
 only s2500 fails, `p35w-500k-s1500` if the 2m pick also fails, `s2w-1e3-s1000` if all three do.
 Recomputation runs through the RELEASE `QueryTable` path (not the matrix shortcut), and stores
 unrounded per-query values so any later reader can redo this arithmetic (review #3 MAJOR 6).
+
+"Before the numbers" here means before the RECOMPUTED numbers; the original lever outcomes were
+already observed and are what prompted the recompute. Three bootstraps are reported, because the
+repair changes two things at once (review #3b MAJOR 1): ordinary → fixed-stratum-with-independent-
+draws isolates the effect of CONDITIONING on exactly 55 long / 7,270 non-long queries, and
+fixed-stratum-independent → shared-draw isolates the shared-query COVARIANCE. The dependence-
+preserving column is the one the bar is read from.
 
 **Status of every dev p-value (review #3 MAJOR 1, accepted):** SELECTION evidence, not
 confirmation. The three frozen-test comparisons in the final run are the only confirmatory
@@ -565,14 +577,25 @@ extra rows, zero extra bytes and no retraining — the cheapest genuine capacity
 
 - **Family, fixed here, three arms**: `binary` (each distinct token contributes once), `cap2`
   (occurrences capped at 2), `sqrt` (a token seen c times contributes total weight sqrt(c)).
-  Baseline `mean` is the current released rule (count-proportional). All keep the weighted-mean
-  denominator, so length normalization is unchanged.
-- **Evaluated on the frozen candidate table** as an eval-only change, full pinned dev suite,
-  release shape, fp16 and int8, through `QueryTable`.
-- **Adoption bar**: signflip p<0.05 AND paired CI>0 vs the identical table under `mean`, int8
-  independently, **under the dependence-preserving statistics**, with Holm at alpha=0.05 across
-  the three arms' p-values. Exactly one mode may go forward — the largest dev macro among those
-  clearing the bar. Everything is exploratory selection evidence, as above.
+  Baseline `mean` is the current released rule (count-proportional). Counts are over
+  post-truncation WordPiece ids **including specials**. The weighted-mean denominator moves with
+  the weights; it cancels under the final L2 normalize, so it affects only the near-degenerate
+  fallback threshold.
+- **Evaluated as an eval-only change**, full pinned dev suite, release shape, fp16 and int8,
+  through `QueryTable`. Arms run for **every artifact in the decision chain** in the same corpus
+  pass, but **only the artifact that survives the dependence recompute is adjudicated** — which
+  one that is is not known when this is written, and probing a table the audit then rejects would
+  answer the wrong question (review #3b BLOCKER 2). The others are reported as descriptive.
+- **Adoption bar**: under the dependence-preserving statistics, the arm must clear Holm at
+  alpha=0.05 **within its own precision's three-arm family** AND have a raw paired-CI lower bound
+  above zero — in fp16 **and** in int8, which is what "int8 independently" means here (review #3b
+  BLOCKER 3). Exactly one mode may go forward: the largest fp16 dev macro among those clearing the
+  bar. Everything is exploratory selection evidence, as above.
+- **Disclosure**: a truncated-corpus smoke of this code path was observed before this entry was
+  finalized (200K-doc truncation, 2-3 components — values meaningless by construction, e.g.
+  baseline 0.1247 vs binary 0.1248). The family above is unchanged from its first registration;
+  it is recorded because a later amendment would otherwise be indistinguishable from one made
+  after seeing a signal.
 - **If adopted**: `Preproc` grows a `pool_mode` field (frozen with the artifact and stated on the
   model card), `test_conformance.py` is extended before any re-gate, and the mandatory ablations
   and fusion re-selection run on the new shape. **If it fails**: closed in `EXPLORED.md` with the
