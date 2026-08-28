@@ -313,6 +313,36 @@ to an adopted effect instead.
 individually-inert components interact. Backing off component-by-component until something passes
 would be adaptive dev search, and is forbidden here.
 
+**OUTCOME 2026-08-28: IT FAILS. The measured recipe ships unchanged.**
+`m7_simplify_decision.json`, `m7_compare_full_simplify.json`. `p5s-simple-nohn-a` scores **0.6105**
+against the baseline's 0.6153: delta **−0.0048**, raw CI **[−0.0102, +0.0007]** fp16 and
+[−0.0102, +0.0007] int8, so the lower bound sits below the −0.0040 margin in both precisions and
+non-inferiority is not demonstrated. **And it is not an in-distribution artefact**: the
+out-of-domain subset drops 0.3672 → **0.3627**, one of the few genuine out-of-domain movements
+measured all day. Per-component the loss is broad — hotpotqa −0.0061, heldout-longq −0.0200,
+both CQADupStack components down — with only nq-250k up (+0.0053).
+
+So four changes that are each inert on the proxy are, jointly, a real loss. The teacher-context
+init, IDF weight seeding, `reg_init` and the 2M pseudo-query pool stay in the released recipe, and
+the 30,522 forward passes stay with them. **No ladder was run**: the bar was fixed before the
+number and component-by-component back-off is what it forbids.
+
+Recorded alongside, labelled and NOT eligible: `p5s-simple-a` — the same simplifications *plus*
+teacher-mined negatives — scores 0.6229, +0.0077 resolved. It differs from the candidate on two
+axes at once, its negatives axis is a closed avenue, and its out-of-domain subset is 0.3679 against
+the baseline's 0.3672, i.e. the gain is once again in-distribution. It changes nothing and is kept
+so the record is not selectively pruned.
+
+**Follow-up, pre-registered here as DIAGNOSTIC before its numbers exist.** Which of the four
+components carries the loss is unknown, and the seven mandatory ablations have only ever been
+scored on the three-component **proxy** — the instrument that today failed to reproduce its own
+peak and inverted the full-suite ordering of three arms. Their artifacts are all on disk, so one
+corpus pass scores them on the full pinned suite with **no new training**. It **cannot change the
+released recipe**, which is already decided by the failed test above; it exists so the mandate's
+ablation table is reported on the suite every decision actually uses, and so "individually-inert
+components interact" is a measurement rather than a phrase. Baseline served at `mean` to match the
+arms, which all trained mean-pooled.
+
 **Disclosure**: reported with the out-of-domain subset, per the biased-estimator rule below.
 **Consequence if accepted**: the simplified artifact becomes the candidate, so lever #4 is
 re-adjudicated on it and fusion is selected on it. Stated now so it cannot later be discovered as

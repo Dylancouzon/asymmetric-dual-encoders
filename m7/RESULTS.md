@@ -115,3 +115,4 @@ StackExchange components (+0.047/+0.020), so the ranking was not StackExchange-s
 | p4n-mixed32-s1000-a | `work/runs/p4n-mixed32-s1000-a.json` | 0.5149 | ok |
 | p5s-simple-b | `work/runs/p5s-simple-b.json` | 0.4970 | ok |
 | p5s-simple-a | `work/runs/p5s-simple-a.json` | 0.5139 | ok |
+| p5s-simple-nohn-a | `work/runs/p5s-simple-nohn-a.json` | 0.5106 | ok |
