@@ -153,7 +153,7 @@ half the story and was the wrong half for the teacher we ship.)
 | `CODEMAP.md` | ~2.5K | grows only when a module is added or a pitfall is earned. |
 | `RESULTS.md` | ~1.5K | one row per run; detail belongs in the run JSON. |
 | `EXPLORED.md` | ~1K | one row per closed avenue. |
-| `LEDGER.md` | **~14K, and the old 4K was not reachable** | keep every protocol fact and every pre-registered bar; cut settled justification to one line. The 2026-08-28 compaction went to ~12K, and an audit then found **nine** bars, disclosures and counts that had gone with the prose. Compacting further is a deliberate retirement of a bar, not a tidy-up — say which one and why. |
+| `LEDGER.md` | **no target** (Dylan, 2026-08-28: the old 4K is outdated) | keep every protocol fact and every pre-registered bar; cut settled justification to one line. Compact when it gets unwieldy, and audit the result — the 2026-08-28 pass dropped **nine** bars and disclosures with the prose. Removing a bar is a deliberate retirement: say which one and why. |
 
 **The rule that keeps it small: never restate a number that a `results/m7_*.json` already holds.**
 Compaction is safe — git preserves every prior version, and each file says when it was compacted.

@@ -4,24 +4,17 @@ The load-bearing record: partitions, licence evidence, every six-set access, dec
 counts, **every pre-registered decision rule**, gate results, freeze record, incidents. Detail
 lives in `results/m7_*.json` and is pointed at, never restated.
 
-> **Compacted 2026-08-28 (fifth time): 20.9K tokens → 13.7K, measured.** (An earlier version of
-> this line said "→ ~7K". That was estimated from line count and never measured; the real figure
-> is above. Do not restate a size you have not run `wc -c` on.) Every protocol fact and every
+> **Compacted 2026-08-28 (fifth time), 20.9K tokens → 13.7K.** Every protocol fact and every
 > pre-registered rule is kept, in full where it still binds. What was cut is *justification of
 > settled outcomes*: each closed avenue is one line plus its artifact. Transferable lessons live in
 > `FINDINGS.md`, dead ends in `EXPLORED.md`, module pitfalls in `CODEMAP.md`, narrative in
 > `git log -p m7/LEDGER.md`.
 >
-> **The 4K budget is not reachable and the budget is wrong, not this file.** A first pass did reach
-> ~12K by cutting harder, and a subagent audit of old-vs-new then found nine pre-registered bars,
-> disclosures and counts that had gone with the prose — including a `~0.005` instrument-resolution
-> hedge whose loss turned three surviving sentences into claims the old file explicitly forbade.
-> They are restored above, which is most of the difference between 12K and 13.7K. Two thirds of
-> what remains is bars for avenues that are reopenable (#1 joint retrain, #3 doc2query revival, #4
-> re-adjudication on the shipping artifact, #7 revival price, the teacher swap bar) plus the
-> one-access rule. Cutting further trades protocol safety for context, and the audit measured what
-> that trade costs. **If this must shrink, retire a bar deliberately and say so — do not compact it
-> away.**
+> **There is no size target — keeping the bars wins.** A harder pass reached ~12K, and an audit of
+> old-vs-new then found nine pre-registered bars, disclosures and counts that had gone with the
+> prose, including a `~0.005` instrument-resolution hedge whose loss turned three surviving
+> sentences into claims the old file explicitly forbade. **If this must shrink, retire a bar
+> deliberately and say which one — do not compact it away.**
 
 ## Environment
 
