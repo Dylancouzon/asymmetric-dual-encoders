@@ -174,3 +174,5 @@ forward. (The 2026-08-26 WSL crash was two hidden Gram copies in `solve_ridge`; 
 reproduces the committed K=500 numbers exactly.) Adoption is decided by `bigram_residual.py`
 per the LEDGER pre-registration: residual fit on the frozen winner rows, full pinned dev
 suite, release shape, signflip p<0.05 AND paired CI>0, int8 independently.
+| p35b-500k | `work/runs/p35b-500k.json` | 0.4934 | ok |
+| p35a-500k-1e3 | `work/runs/p35a-500k-1e3.json` | 0.5077 | ok |
