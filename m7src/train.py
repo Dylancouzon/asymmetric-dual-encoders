@@ -78,6 +78,9 @@ class Cfg:
     b_query_sources_all: bool = True    # include nq-open/triviaqa query text in B
     b_pseudo_queries: int = 0           # vocabulary-coverage distillation (see m7src/pseudoq.py)
     b_pseudo_frac: float = 0.5          # share of each B batch drawn from pseudo-queries
+    b_pseudo_kind: str = "short"        # pseudoq.KINDS. "mixed" is capacity lever #7: half the
+                                        # usual <=32-word spans, half 64-320-word ones. "short"
+                                        # reproduces every prior run.
     pool_mode: str = "mean"             # count saturation, applied in the TRAINING forward too
                                         # (table.POOL_MODES). "mean" reproduces every prior run.
 
@@ -429,13 +432,16 @@ def run(cfg: Cfg, log=print):
                 extra += [qs[i] for i in kq[src]]
         if cfg.b_pseudo_queries:
             import pseudoq
-            extra += pseudoq.build_decontaminated(cfg.b_pseudo_queries)
+            extra += pseudoq.build_decontaminated(cfg.b_pseudo_queries, kind=cfg.b_pseudo_kind)
         if extra:
             b_texts = extra
+            # `encode_cached`'s key carries sha_texts(texts), so a different pseudo-query kind of
+            # the same size cannot collide with a cached encode even though the label matches.
             b_tq = np.asarray(encode_cached(f"bextra-{len(b_texts)}", b_texts, prefix=QUERY_PREFIX,
                                             dtype=torch.float16, verbose=True), dtype=np.float32)
             log(f"  objective-B extra query text: {len(b_texts):,} "
-                f"(query-text-only sources + {cfg.b_pseudo_queries:,} pseudo-queries)")
+                f"(query-text-only sources + {cfg.b_pseudo_queries:,} "
+                f"{cfg.b_pseudo_kind} pseudo-queries)")
     b_ids_all = tokenize(tok, b_texts, pre) if b_texts else []
 
     hard = None
