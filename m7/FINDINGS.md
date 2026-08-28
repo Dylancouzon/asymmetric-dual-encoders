@@ -13,8 +13,9 @@ number lands.
 ## On choosing a teacher
 
 1. **Select a teacher on the distilled artifact, never on the teacher's own retrieval quality.**
-   Spearman(teacher's symmetric ceiling, its distilled table's score) = **0.000** over ten
-   candidates; the best-ceiling teacher ranks fifth on the thing that ships. A teacher approved on
+   Spearman(teacher's symmetric ceiling, its distilled table's score) = **0.000** over the eight
+   candidates the correlation was computed on (ten rows exist now, two added later); the
+   best-ceiling teacher ranks fifth on the thing that ships. A teacher approved on
    the ceiling produced a table 0.0480 *below* the incumbent's and was withdrawn the same day.
    `m7_learnability_report.json`, `m7_teacher_probe.json`.
 2. **Within a family, the base model out-approximates the large one — every time, by +0.04 to
@@ -74,8 +75,9 @@ number lands.
 13. **Mined hard negatives sharpened memorization, not retrieval.** The apparent +0.0072 was
     `heldout-train` +0.0297 and `hotpotqa` +0.0187 — a seen-document/unseen-query slice and a
     component whose train split is a training source — while the out-of-domain components moved
-    −0.0009 and +0.0013. A gain concentrated on the components closest to training is a signature,
-    not a result.
+    −0.0009 and +0.0013, i.e. **nothing detectable at that instrument's ~0.005 per-arm resolution**,
+    which is not the same claim as zero. A gain concentrated on the components closest to training
+    is a signature, not a result.
 14. **Count the dev reuse and publish the number.** Ours: **58 trained arms, 322 in-training
     evaluations, 90 eval-only variants**, with multiplicity control applied inside named families
     only. "We were careful" is not checkable; a count is. `m7_dev_reuse_count.json`.

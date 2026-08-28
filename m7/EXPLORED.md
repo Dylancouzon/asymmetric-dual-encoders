@@ -2,8 +2,8 @@
 
 Check this before starting anything new. One row per avenue; detail lives in the cited artifact.
 A row here is a *claim that further work is not worth it*, and CLAUDE.md's standing directive sets
-the bar it must clear. **Audited against that bar on 2026-08-27** (full table:
-`git show` the scratchpad audit summarised in the reopened section below).
+the bar it must clear. **Audited against that bar on 2026-08-27**; the full table is
+`research/m7-closed-avenue-audit-2026-08-27.md`, summarised in the reopened section below.
 
 | avenue | why killed | evidence |
 |---|---|---|
@@ -30,7 +30,7 @@ the bar it must clear. **Audited against that bar on 2026-08-27** (full table:
 | capacity lever #6, training through the `sqrt` pooling rule | Arm (a) +0.0011, p=0.051 fp16 / 0.073 int8, CI straddling zero — fails its own bar, so arm (b) never ran, per its own pre-registered falsifier. (An earlier version of this row added "moot besides: `sqrt` is no longer the served rule" — that was written while `p4n-teacher16-a` was the candidate; the negatives revert put `p35w-2m-s2500` back, where `sqrt` **is** the served rule. The lever still fails on its own bar.) | `m7_compare_full_lever6.json` |
 | capacity lever #7, long-span distillation | Closed **without training the arm**: its own pre-registration made the length probe the pre-condition, and the corrected probe (nested prefixes of the same documents, so length is the only thing that varies) is **flat from 16 to 256 words**. The first probe's "length effect" was a document-population confound. | `LEDGER.md` lever #7 |
 
-| **mined hard negatives (teacher / BM25 / mixed)** — the mandate's ablation, now actually run | **CLOSED 2026-08-28.** Under the step-selection correction none of the three arms clears the bar (+0.0023 p=0.107 · −0.0007 · −0.0056 resolved LOSS), the out-of-domain subset spans 0.3658–0.3688 across every arm *including the baseline*, and the mechanism is diagnosed: the apparent +0.0072 is `heldout-train` +0.0297 and `hotpotqa` +0.0187, i.e. a seen-document slice and a component whose train split is a TRAIN source, while `heldout-longq` gets worse for every arm. Sharpens memorisation, does nothing out of domain. | `m7_negatives_decision.json`, `m7_compare_full_steprule.json` |
+| **mined hard negatives (teacher / BM25 / mixed)** — the mandate's ablation, now actually run | **CLOSED 2026-08-28.** Under the step-selection correction none of the three arms clears the bar (+0.0023 p=0.107 · −0.0007 · −0.0056 resolved LOSS), the out-of-domain subset spans 0.3658–0.3688 across every arm *including the baseline*, and the mechanism is diagnosed: the apparent +0.0072 is `heldout-train` +0.0297 and `hotpotqa` +0.0187, i.e. a seen-document slice and a component whose train split is a TRAIN source, while `heldout-longq` gets worse for every arm. Sharpens memorisation; **out of domain nothing is detectable, which at this instrument's ~0.005 per-arm resolution is not the same as zero**. | `m7_negatives_decision.json`, `m7_compare_full_steprule.json` |
 | the pre-registered false-negative-rate check on the mined set | **VACUOUS, not run.** `mine_hard_negatives` takes the query's positives as `exclude`, so the rate against known qrels is 0 by construction. The real hazard is *unlabelled* positives, which qrels cannot reveal. Recorded because a pre-registered check that is a no-op is itself a finding. | `train.mine_hard_negatives` docstring |
 | **per-arm proxy step selection**, as an instrument | **Failed on its own evidence.** The proxy peak did not reproduce on re-run (0.5130 → 0.5126), and the proxy ranked three arms exactly backwards from the full suite. Amended for future decisions to "match the baseline's step count"; explicitly NOT retroactive. | `LEDGER.md` step-rule section |
 

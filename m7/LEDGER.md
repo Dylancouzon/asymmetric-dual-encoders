@@ -52,8 +52,8 @@ class. (3) `validate_perquery.py --bm25` read all six qrels to recompute BM25 pe
 
 **TRAIN** — approved sources only (`research/m7-data-licensing.md`). After all decontamination:
 **340,850 pairs** + 220,632 query-text-only rows for objective B; the candidate trained on
-**338,076** after B2-banned positives were dropped. Any number from an older mix predates the
-teacher swap. Per-source fields, rights, positive construction and counts: `m7_field_table.md`.
+**338,076** after B2-banned positives were dropped. Any number from an older mix is
+dev-exploratory and predates the teacher swap. Per-source fields, rights, positive construction and counts: `m7_field_table.md`.
 
 **DEV** — six components, all hash-pinned in `results/m7_dev_manifest.json`:
 nq-250k 250,000 docs/3,452 q · hotpotqa 5,233,329/7,405 · cqadup-programmers 32,176/876 ·
@@ -212,7 +212,16 @@ above this box's budget, and their tables would be *larger* than stella's (38.7 
 large variant scores below ~0.28 cannot reach stella by shrinking — that closes the shortlist by
 arithmetic rather than exhaustion.
 
-**Cross-platform replication (rule 1 of the second-machine protocol) PASSES**: the Mac's stella row
+**SECOND-MACHINE PROTOCOL, still in force for any future run on Dylan's Mac.** (1) The second
+machine must also produce a row for the **incumbent**, so the paired comparison is internally
+consistent and its agreement with the CUDA row is a replication check. (2) **Any Mac winner is
+re-probed on the RTX box before it can move anything** — a swap costs an 8–12 h pool re-encode and
+re-adjudicates levers #4/#5/#6, fusion, gate and freeze, which is not a decision to take on numbers
+from an unvalidated second toolchain. (3) `validate_encoder.py` must pass on the Mac for each Spec
+before any encode. (4) Work lands on branch **`m7-teacher-probe-mac`** and is merged here; two
+machines pushing one branch collide, and this ledger already records a force-push grant violation.
+
+**Cross-platform replication (rule 1) PASSES**: the Mac's stella row
 reproduces the CUDA row to **7e-4 across all four λ**, same argmax — two orders of magnitude below
 the effects being resolved. Comparability verified not assumed: transferred TRAIN list against its
 sha256, both dev components against every hash in `m7_dev_manifest.json`
@@ -222,9 +231,15 @@ matrix. Two harness defects the second machine exposed, both affecting this box,
 first), and `teacher_learnability.main` MERGES λ into an existing per-candidate file, so a
 second-machine run overwrites committed values in place — copy the file off first.
 
+**The teacher probes are DEV-ONLY and legal at any time**: closed-form tables, two CQADupStack
+components, no six-set access. `scripts/learnability_report.py` pairs each candidate against
+`INCUMBENT` (re-pointed at stella 2026-08-28; the bge-incumbent report is archived under its own
+name).
+
 **THE PROBES' FIT SET IS A STALE SUPERSET, disclosed not repaired.** `work/trainq_texts.json` holds
 **349,934** queries dumped 2026-08-26, before a later decontamination pass; `kept_pairs()` is now
-340,850. The current protected-query index finds **4,582 R1 hits (1.31%)** in it. (i) The RELEASED
+340,850. The current protected-query index finds **4,582 R1 hits (1.31%)** in it — 1 exact, 4,561
+near, 20 contains. (i) The RELEASED
 model is unaffected — `train.run` reads the current `kept.json`. (ii) The probe's absolute ratios
 are inflated and **may not be quoted as clean**. (iii) The RANKING, which is all the criterion
 consumes, is unaffected: every candidate shares the identical fit set. If a swap is ever pursued,
@@ -233,9 +248,15 @@ its off-family read runs on a regenerated, clean list.
 ## Training-recipe selection rules (pre-registered)
 
 - **Step selection**: evaluate every 500 steps on the in-training proxy (macro-3); an arm's step
-  count is its best proxy eval, implemented by **re-running to that step**. The cross-arm winner and
-  every gate/selection decision are judged on the FULL pinned dev suite — the proxy picks a step,
-  never a winner.
+  count is its best proxy eval, implemented by **re-running to that step**. Re-running is
+  load-bearing, not a formality: `lr_schedule="warmup_linear"` decays over `steps_a`, so the
+  step-1500 checkpoint of a 2500-step run is **not** a 1500-step run. The cross-arm winner and every
+  gate/selection decision are judged on the FULL pinned dev suite — the proxy picks a step, never a
+  winner. **And the full-suite number does not get a vote**: if a corrected arm scores *lower* on
+  the full suite than its uncorrected version, the corrected one still ships, because preferring the
+  other at that point is selection on a number already seen. Superseded full-suite numbers stay in
+  `m7_compare_full_postabl.json` and **are reported as the deviation they were**. This clause was
+  written for exactly the case that then occurred, and applied against our own interest.
   **AMENDMENT (2026-08-28, for decisions whose numbers do not yet exist, and NOT retroactive):** an
   arm is run at the **same `steps_a` as the artifact it is compared against**, and per-arm proxy
   step selection is not used. Reason: the proxy peak is noise at this resolution, and in a matched
@@ -262,6 +283,7 @@ explicitly unable to change any adoption (`m7_compare_full_stepspread.json`):
 | `teacher16` | 0.6225 | 0.6176 (1500) | **+0.0049** | +0.0001 |
 | `bm2516` | 0.6125 | 0.6097 (1500) | **+0.0027** | −0.0010 |
 | `mixed32` | 0.6224 | 0.6146 (1000) | **+0.0078** | −0.0023 |
+| | | | mean **0.0052** | mean 0.0011 |
 
 **A parameter nobody would report moves the dev macro by 0.0027–0.0078, and every effect this
 project has adopted or adjudicated is inside that band** (lever #4 +0.0040, lever #2's
@@ -311,10 +333,14 @@ noise (~5e-6) is far too small to calibrate a band from.
 as adaptive dev search.
 **OUTCOME** (`m7_simplify_decision.json`, `m7_compare_full_simplify.json`): 0.6105 vs 0.6153, delta
 **−0.0048**, raw CI **[−0.0102, +0.0007]** in both precisions — below the margin, non-inferiority
-not demonstrated. Not an in-distribution artefact: out-of-domain 0.3672 → **0.3627**. **No ladder was
-run.** Recorded alongside and NOT eligible: `p5s-simple-a` (same simplifications *plus* teacher-mined
-negatives) scores 0.6229; it differs on two axes, its negatives axis is closed, and its gain is again
-in-distribution.
+not demonstrated. Not an in-distribution artefact: out-of-domain 0.3672 → **0.3627**, one of the few
+genuine out-of-domain movements measured all day. Per-component the loss is broad — hotpotqa
+−0.0061, heldout-longq −0.0200, both CQADupStack components down — with only nq-250k up (+0.0053).
+**No ladder was run.** Recorded alongside and NOT eligible: `p5s-simple-a` (same simplifications
+*plus* teacher-mined negatives) scores 0.6229, **+0.0077 resolved**; it differs on two axes, its
+negatives axis is closed, and its out-of-domain 0.3679 against the baseline's 0.3672 says the gain
+is again in-distribution. Its proxy curve (peak 0.5140 at step 1000) was explicitly **not** used to
+choose a step.
 *Why it failed is NOT established.* Main effects sum to ≈ +0.0015 against a joint −0.0048 — a gap the
 size of the perturbation band, so interaction and one unlucky draw are not separable. The earlier
 "individually-inert components interact" wording is withdrawn as overclaimed.
@@ -339,8 +365,10 @@ size of the perturbation band, so interaction and one unlucky draw are not separ
 3. **No arm clears Holm over the family of eight** (smallest p 0.0124 against 0.00625 at rank 1), so
    the single-knob evidence licenses **no** recipe change — which is what makes shipping the recipe
    unchanged principled rather than merely the default.
-4. The out-of-domain subset spans **0.0009** across all eight arms. Even `flat` buys 0.0062 of macro
-   and 0.0001 of out-of-domain.
+4. The out-of-domain subset spans **0.0009** across all eight arms — below the instrument's ~0.005
+   per-arm resolution by enough to be worth stating as a span rather than as a null (see the
+   resolution note under "biased estimator"). Even `flat` buys 0.0062 of macro and 0.0001 of
+   out-of-domain.
 
 ### Negatives ablation — OUTCOME: avenue CLOSED, candidate reverts to `p35w-2m-s2500`
 
@@ -348,10 +376,13 @@ size of the perturbation band, so interaction and one unlucky draw are not separ
 the candidate and is the control. An arm is promoted to a full-suite comparison only if its proxy
 macro exceeds `bank`'s; a promoted arm then faces the standard lever bar (dependence-preserving
 signflip p<0.05 AND raw paired CI>0, fp16 **and** int8, vs the candidate), Holm across promoted arms
-at α=0.05. **Tie-break** among survivors: largest full-suite fp16 macro; then fewer negatives and a
-single mining source; then the **teacher-mined** arm, because mining with the teacher is a by-product
-of an encode this system performs anyway whereas BM25 needs a second retrieval system stood up and
-pinned purely to reproduce the recipe. A promoted winner re-triggers fusion re-selection and
+at α=0.05. **Tie-break** among survivors: (1) largest full-suite fp16 macro; (2) **if two fall within
+the ~0.0007 replay noise band**, fewer negatives and a single mining source; (3) if parsimony ties,
+the **teacher-mined** arm, because mining with the teacher is a by-product of an encode this system
+performs anyway whereas BM25 needs a second retrieval system stood up and pinned purely to reproduce
+the recipe. *(Level 2's 0.0007 band has **no provenance** — unlike the simplification's δ=0.0040,
+which is anchored to the smallest effect this project has adopted. Recorded as the weakness it is;
+it never had to fire.)* A promoted winner re-triggers fusion re-selection and
 re-adjudicates lever #4.
 **OUTCOME** (`m7_negatives_decision.json`, `m7_compare_full_steprule.json`), fp16 vs the candidate,
 each artifact under its own frozen rule:
@@ -365,8 +396,9 @@ each artifact under its own frozen rule:
 | baseline `p35w-2m-s2500` | 2500 | 0.6153 | — | — | 0.3673 |
 
 Three independent reasons, and they agree: **the rule** (zero survivors under Holm); **the
-disclosure** (out-of-domain spans 0.3658–0.3688 across every arm including the baseline); **the
-mechanism, diagnosed** (the +0.0072 is `heldout-train` +0.0297 and `hotpotqa` +0.0187 — a
+disclosure** (out-of-domain spans 0.3658–0.3688 across every arm including the baseline — a range
+of 0.0030, i.e. **unresolved at this instrument's ~0.005**, which is "nothing detectable on a narrow
+proxy", never "zero"); **the mechanism, diagnosed** (the +0.0072 is `heldout-train` +0.0297 and `hotpotqa` +0.0187 — a
 seen-document slice and a component whose train split is a TRAIN source — while `heldout-longq` gets
 worse for every arm). The revert costs macro 0.6225 → 0.6153 and out-of-domain 0.3674 → 0.3673.
 **The pre-registered mechanism check was VACUOUS**: `mine_hard_negatives` excludes the query's own
@@ -379,12 +411,15 @@ a finding; the mechanism above discharges the requirement.
 - **Stage 0** (retired, superseded): the closed-form ridge is the global optimum of *penalised flat
   MSE only* — "structural upper bound" was unearned; honest figure overlap@10 0.490 vs teacher
   0.5722. The capacity probe PASSES but is near-vacuous (23.4M parameters vs ~3,500 dev queries) and
-  is **gate-ineligible as evidence of anything but expressibility**.
-- **GO #1** (retired, bge-era): passed, but the win was one component wide and projected to Tier 4.
-  The lesson kept: never report a macro without its per-component breakdown.
+  is **gate-ineligible as evidence of anything but expressibility**. `m7_stage0_ridge.json`,
+  `m7_capacity_probe_noprefix.json`.
+- **GO #1** (retired, bge-era): passed, but its **+0.0270** was carried **entirely by nq-250k, with
+  a CI-resolved LOSS to BM25 on HotpotQA**, and it projected to Tier 4. That omission — reporting a
+  macro without its per-component breakdown — is the lesson kept.
 - **GO #2, stella candidate `s2w-1e3-s1000`, 2026-08-26**: all four PASS on the RELEASE-shape
-  artifact; G3 vs BM25 **+0.0711 [0.0629, 0.0792]**, broad across components; G4 int8 upper bound
-  0.00014. `m7_gate_s2w-1e3-s1000.json`.
+  artifact; G3 vs BM25 **+0.0711 [0.0629, 0.0792]**, broad across components (**hotpotqa a near-tie,
+  not a loss**); G4 int8 upper bound 0.00014. Retention **0.8245 text-backed / 0.8903 all six**.
+  `m7_gate_s2w-1e3-s1000.json`.
 - **The gate's role**: a MECHANICAL ELIGIBILITY AUDIT run after all selection — frozen artifact
   through `QueryTable`, encoder/table/component hashes verified, abort on any missing component or
   qid, unrounded per-query dumps, dependence-aware int8 bound. It cannot repair adaptive dev reuse
@@ -399,7 +434,8 @@ Outcomes; bars and mechanisms in `EXPLORED.md` and the cited artifacts.
 - **#1 bigram rows — FAILED** (`m7_bigram_residual_k10000.json`: −0.0301 [−0.0357,−0.0247], worse on
   every component). Diagnosed: a λ sweep shrinks the harm monotonically toward zero from below and
   never crosses positive, because closed-form fitting's only supervision is the teacher target while
-  the winner already beats every teacher-MSE solution. CLOSED for closed-form integration; **a joint
+  the winner already beats every teacher-MSE solution. (The probe's +0.0143 was real but
+  frame-bound.) CLOSED for closed-form integration; **a joint
   retrain with bigram features in the forward stays open and needs its own pre-registration.**
 - **#2 pseudo-query coverage — ADOPTED**, three chained decisions (500k → 2m → s2500), total
   **+0.0126** over `s2w-1e3-s1000`, all three re-judged 2026-08-28 under a newly standardized,
@@ -410,7 +446,9 @@ Outcomes; bars and mechanisms in `EXPLORED.md` and the cited artifacts.
   exhaust, so "2m" is **924,704** spans and "500k" is **324,704** — a **2.85x** ratio, not 4x.
   `b_pseudo_queries=2000000` still reproduces it exactly, so no artifact or comparison changes.
   **The causal claim is NOT established** (the sequence moved pool size, B steps and A steps
-  together); the valid statement is "adaptive dev search selected a better dev artifact". **And each
+  together); the valid statement is "adaptive dev search selected a better dev artifact", and what
+  would license more is the matched no-pseudo and 500k-at-B16k controls (`program.phase4_attribution`,
+  rows `p4x-nopseudo-*` / `p4x-pseudo500k-*` in `RESULTS.md`). **And each
   of the three is inside the recipe-perturbation band** — the cumulative +0.0126 is outside it, so
   the chain survives, the individual claims do not, and the report must not make them.
 - **#3 doc2query — CLOSED at the cheap-test price, not disproved** (+0.0054 [−0.0007,+0.0114],
@@ -432,23 +470,53 @@ Outcomes; bars and mechanisms in `EXPLORED.md` and the cited artifacts.
   unchanged). `adopt_pool_mode.py` is the only sanctioned way to make the edit and refuses unless the
   committed lever-4 result adopted that mode **for that run id**. Ablation chains still train and
   self-evaluate under `mean` — a documented inconsistency, not a hidden one.
-- **#5 update-count row shrinkage — FAILED** its bar (`m7_lever5_shrinkage.json`). Form:
-  `row_i = a_i·A_i + (1−a_i)·B_i`, `a_i = u_i/(u_i+tau)`, `tau ∈ {1,10,100}`, `tau=0` the baseline.
+- **#5 update-count row shrinkage — FAILED** its bar (`m7_lever5_shrinkage.json`,
+  `m7src/lever5_shrinkage.py`). Not a capacity claim:
+  `row_i = a_i·A_i + (1−a_i)·B_i`, `a_i = u_i/(u_i+tau)`, A the candidate's rows, B its
+  B-checkpoint's, u the stored A-phase update counts; `tau ∈ {1,10,100}` with `tau=0` the baseline,
+  asserted to reproduce the released rows. **Adoption bar identical in form to #4.** Rationale: the
+  A phase's update to a rarely-seen row is dominated by cross-query interference, and rare rows are
+  exactly the ones the six hit.
 - **#6 train-through pooling — FAILED** at arm (a) (+0.0011, p=0.051/0.073, CI straddling zero), so
-  arm (b) never ran (`m7_compare_full_lever6.json`). The falsifier was pre-registered: if (a) is not
-  a win, training through the rule is closed and the eval-only adoption stands alone.
+  arm (b) — a full B16k→A chain at `pool_mode=sqrt` — never ran (`m7_compare_full_lever6.json`).
+  The falsifier was pre-registered: if (a) is not a win, training through the rule is closed and the
+  eval-only adoption stands alone. **Why it was worth trying**: lever #4 measured `sqrt` on a table
+  *trained for mean pooling*, which understates what multiplicity-dependent pooling can do, and the
+  strongest inference-free system we must beat (OpenSearch doc-v3-gte, arXiv 2411.04403) uses
+  **binary presence × IDF** on its query side, i.e. it trains through the saturation. Bar: identical
+  in form to #4/#5, against the adopted `sqrt`-served candidate, not the `mean`-served one.
 - **#7 long-span distillation — CLOSED without training its arm**, on the gating probe's own
   pre-condition. Algebra first (standing directive #4): the served function
   `normalize(Σ w_i v_i / Σ w_i)` has no length term, so long-span training adds **no capacity** — it
   changes which W the objective selects. The gating probe's FIRST version drew a fresh document
   sample per length bucket, confounding length with document population; **corrected** as nested
-  prefixes of the same documents, agreement is **flat from 16 to 256 words** (overlap@10 0.3057 →
-  0.3087) and the only step is 8→16. Pre-condition not met, chain not bought — the arm was already
+  prefixes of the same documents, agreement is **flat from 16 to 256 words** and if anything rises:
+  overlap@10 0.3337 / 0.3057 / 0.3023 / 0.3043 / 0.3067 / 0.3087 and cosine 0.7530 / 0.7290 / 0.7240
+  / 0.7277 / 0.7264 / 0.7179 at 8 / 16 / 32 / 64 / 128 / 256 words. The only step is 8→16, and an
+  8-word prefix of a ≥256-word document is a different object from a query. Limitation: the
+  corrected population is long documents only, so this measures length sensitivity *within* long
+  documents. Pre-condition not met, chain not bought — the arm was already
   running (7 of 23 encode shards) when the review exposed the confound.
-  Priced for anyone who revives it: the long-span teacher encode runs at **55 texts/s** through the
-  esci block against 1,500/s on short prefixes — ~4 h before a single training step. The realised
-  dose would have been **31.9% long** (not the 50% designed) and **67.8% of the long spans Amazon
-  product text**, so a null would have closed *this dose*, not the idea.
+  **Its bars, kept because they are what a revival must clear.** Primary: re-run `longspan_probe.py`
+  at the same seed (hence the same spans) and compare the arm against the candidate on the **pooled
+  128- and 256-word buckets**, paired per span — adopt only on signflip p<0.05 AND raw paired CI>0
+  on overlap@10. Guardrail, **able to veto on its own**: the full pinned dev suite must be
+  non-inferior at δ = 0.0040, fp16 **and** int8. Noted before the arm and **deliberately not
+  changed**: δ = 0.0040 sits *inside* the measured recipe-perturbation band, so this guardrail can
+  veto on noise. **Loosening a margin after measuring that it might bite is tuning**, and for a
+  guardrail on a system about to freeze, rejecting a real improvement is the safe error while
+  accepting a real regression is not — and inventing a friendlier new bar at that stage is the same
+  tuning in the other direction. That stance is general, not specific to this lever.
+  **Priced for anyone who revives it**: the long-span teacher encode runs at **55 texts/s** through
+  the esci block against 1,500/s on short prefixes — 32 min per 50,000-text shard, ~4 h for the
+  1,144,808-text objective-B set, before a single training step. The realised dose would have been
+  **31.9% long** (not the 50% designed) and **67.8% of the long spans Amazon product text** (then
+  hotpotqa 13.3%, mrtydi 12.9%, squad 3.3%, fever 2.7%), so a null would have closed *this dose*,
+  not the idea. The pool was **925,985** spans against the short pool's 924,704 — **+0.14%**, so the
+  one-knob design held and the lever really was only the span distribution. **Decontamination count,
+  logged like every other source's: R1 removed 1,809 of 925,985 (0.195%)** against the short pool's
+  0.120% — long spans carry more word-8-grams and so match the protected-query index ~1.6x as often,
+  as predicted. The partial encode cache is left at `work/enc/bextra-1144808-*` (7 of 23 shards).
   **What is NOT established**: that the table handles ArguAna well. Agreement is not relevance;
   ArguAna remains an unmeasured extrapolation until the final run, and the report states the gap.
 
@@ -469,6 +537,16 @@ The negatives adoption's +0.0105 all-six decomposed as heldout-train +0.0305 (48
 +0.0226 (35.8%), heldout-longq +0.0039 (6.2%) — **90% on the three in-distribution components** —
 against cqadup-physics +0.0036, nq-250k +0.0024, cqadup-programmers +0.0002. `heldout-train` is a
 seen-document/unseen-query slice where the table already **beats its teacher** (1.079).
+
+**THE OUT-OF-DOMAIN SUBSET'S RESOLUTION IS ~0.005, AND EVERY NULL BELOW MUST BE READ THROUGH IT.**
+At n=1,915 on a StackExchange-only proxy, a per-arm out-of-domain difference below about **0.005**
+is unresolved. So "the out-of-domain effect of mined negatives is zero" is a claim the instrument
+**cannot make**; "nothing detectable, on a narrow proxy" is what the data supports, and that is the
+wording every such disclosure must use. Two places where a *span* is nonetheless worth stating,
+because an eight- or seven-arm span that tight is below the per-arm resolution by enough to mean
+something: the eight mandated ablations span **0.0009**, and the seven step-spread artifacts span
+**0.3648–0.3688** (0.0040) with no arm more than **+0.0031** from the baseline's 0.3657 — against a
+macro that spans 0.0128 over the same artifacts.
 
 **Forward-looking rule, pre-registered before the next adoption's numbers:** every adoption reports
 the six-component macro **AND the out-of-domain subset** (cqadup-programmers + cqadup-physics). An
@@ -540,7 +618,7 @@ ids/texts, depth, parameters and library versions.
   the evaluator source hashes and git HEAD.
 - **Matrix shortcut vs released `QueryTable`, measured** (`m7_dev_audit_full.json`): max
   |query-vector| deviation 5.96e-08, per-query nDCG deviation **exactly 0**, 2 of 161,216 queries
-  with a changed ordered top-10, max matched-doc score deviation 3.58e-07. Every earlier lever number
+  with a changed ordered top-10, 6 changed top-100 sets, max matched-doc score deviation 3.58e-07. Every earlier lever number
   came from the matrix path; the gate and final run use `QueryTable`.
 - **Encode cache** (2026-08-28): every shard is hashed into `<cache>/shards.json` and the stitched
   `combined.f16` records the shard hashes it was built from. `final_run` encodes with `verify=True`,
