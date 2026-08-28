@@ -108,6 +108,47 @@ def main():
                           "unigram rows can separate them. An n-gram row can."}
     print(f"  {'n-gram / phrase rows':44s} NOT absorbable (adds features unigrams cannot express)")
 
+    # 9 DOC-side linear map. m7/LEDGER.md listed this as absorbable with no check behind it, and
+    # the claim is only half true. Ranking by q.(M d) equals ranking by (M^T q).d, so absorbing M
+    # into the rows is exact -- but ONLY if the mapped document is not renormalized. This system
+    # retrieves on L2-normalized document vectors, so the served score is q.(M d / |M d|), and the
+    # per-document factor 1/|M d| varies with d and cannot be moved to the query side at all.
+    rng2 = np.random.default_rng(7)
+    docs = norm(rng2.normal(size=(300, D)))
+    M = rng2.normal(size=(D, D)) / np.sqrt(D)
+    # docs are ROWS here, so a mapped document is `docs @ M.T` and the score is
+    # plain @ (docs @ M.T).T = plain @ M @ docs.T -- the query-side equivalent is `plain @ M`,
+    # NOT `plain @ M.T`. Writing the transpose the wrong way round made this check report rank
+    # agreement 0.000 for a case the algebra says is exact, which is the whole reason it is a
+    # numerical check and not a paragraph.
+    absorbed = norm(plain @ M)                        # query side carries the map, docs untouched
+    s_absorbed = absorbed @ docs.T
+    s_unnorm = plain @ (docs @ M.T).T                 # doc side carries M, NO renormalization
+    s_renorm = plain @ norm(docs @ M.T).T             # doc side carries M, WITH renormalization
+
+    def rank_agree(a, b):
+        return float(np.mean([np.array_equal(np.argsort(-x), np.argsort(-y))
+                              for x, y in zip(a, b)]))
+
+    checks["doc-side linear map, documents NOT renormalized"] = {
+        "rank_agreement_with_query_side_absorption": rank_agree(s_unnorm, s_absorbed),
+        "absorbable": rank_agree(s_unnorm, s_absorbed) == 1.0,
+        "reconstruction": "W' = W M. q.(M d) = (M^T q).d exactly, and the query-side L2 "
+                          "normalize is a per-query positive scalar that cannot change a ranking."}
+    ag = rank_agree(s_renorm, s_absorbed)
+    checks["doc-side linear map, documents RENORMALIZED (what this system does)"] = {
+        "rank_agreement_with_query_side_absorption": ag,
+        "absorbable": ag == 1.0,
+        "reconstruction": "NOT absorbable: the served score is q.(M d / |M d|) and the factor "
+                          "1/|M d| is per-DOCUMENT, so no change to the shared table reproduces "
+                          "it. Retrieval here runs on L2-normalized document vectors, so this is "
+                          "the case that applies. It is still not a lever we can pull -- changing "
+                          "the document map means re-encoding the corpus with a different "
+                          "teacher -- but 'absorbable' was the wrong reason to dismiss it."}
+    print(f"  {'doc-side map, docs NOT renormalized':44s} rank agreement "
+          f"{rank_agree(s_unnorm, s_absorbed):.3f}  absorbable")
+    print(f"  {'doc-side map, docs RENORMALIZED':44s} rank agreement {ag:.3f}  NOT absorbable")
+
     out = {"_note": "Absorbability of query-side transforms into a freely-parameterised "
                     "vocab x dim table under normalize(weighted mean of rows). ABSORBABLE means "
                     "the transform adds NO capacity a trained table lacks -- it can still help "

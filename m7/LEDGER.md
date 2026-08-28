@@ -430,8 +430,20 @@ a reason to prefer the null.
   as a reason to prefer the null.
 
 **Absorbable, therefore not capacity** (`m7_absorb_check.json`): query-side centering, whitening,
-top-PC removal, any per-token scalar weight, any doc-side linear map. Only n-gram rows and
-multiplicity-dependent pooling add anything — which is why #4 could work at all.
+top-PC removal, any per-token scalar weight. Only n-gram rows and multiplicity-dependent pooling
+add anything — which is why #4 could work at all.
+
+**CORRECTED 2026-08-28, and it closes the last review's open MINOR-doc-transform item.** This list
+also said "any doc-side linear map", on prose with no check behind it, and that is **half wrong**.
+`q·(Md) = (Mᵀq)·d`, so a doc-side map is absorbable into the rows exactly — *provided the mapped
+document is not renormalized*. This system retrieves on **L2-normalized** document vectors, so the
+served score is `q·(Md/|Md|)` and the per-document factor `1/|Md|` cannot be moved to a table
+shared by every query: rank agreement with the absorbed form is **1.000 without renormalization
+and 0.000 with it**. Practically it changes nothing we can do — altering the document map means
+re-encoding the corpus with a different teacher, which is the teacher question, not a lever — but
+"absorbable" was the wrong reason to have dismissed it, and the ledger should not carry an
+unchecked algebra claim into a freeze. (The check itself first reported 1.000/0.000 *reversed*, on
+a transposed `M`; that is precisely why it is a numerical check and not a paragraph.)
 
 ## FINAL M7 TASKS (pre-registered 2026-08-28, Dylan approved, before any number)
 

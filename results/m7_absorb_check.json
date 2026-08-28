@@ -45,6 +45,16 @@
   "n-gram / phrase rows": {
    "absorbable": false,
    "reconstruction": "NOT absorbable: two queries with the same token multiset in a different order get IDENTICAL unigram-bag vectors, so no choice of unigram rows can separate them. An n-gram row can."
+  },
+  "doc-side linear map, documents NOT renormalized": {
+   "rank_agreement_with_query_side_absorption": 1.0,
+   "absorbable": true,
+   "reconstruction": "W' = W M. q.(M d) = (M^T q).d exactly, and the query-side L2 normalize is a per-query positive scalar that cannot change a ranking."
+  },
+  "doc-side linear map, documents RENORMALIZED (what this system does)": {
+   "rank_agreement_with_query_side_absorption": 0.0,
+   "absorbable": false,
+   "reconstruction": "NOT absorbable: the served score is q.(M d / |M d|) and the factor 1/|M d| is per-DOCUMENT, so no change to the shared table reproduces it. Retrieval here runs on L2-normalized document vectors, so this is the case that applies. It is still not a lever we can pull -- changing the document map means re-encoding the corpus with a different teacher -- but 'absorbable' was the wrong reason to dismiss it."
   }
  },
  "consequence": "Of the levers in the plan, only n-gram/phrase rows and multiplicity-dependent pooling (count saturation) add capacity. Centering, whitening, top-PC removal, IDF and SIF weighting are all re-parameterisations -- and per-token weighting is ALREADY in the architecture (QueryTable.learned_weights), so p1-objB could in principle have learned the SIF weighting itself."
