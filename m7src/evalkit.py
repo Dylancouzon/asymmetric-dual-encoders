@@ -11,8 +11,13 @@ import torch
 NEG = -3.4e38
 
 
-def topk_ids_scores(q_vecs, doc_vecs, doc_ids, k=100, chunk=250_000, device="cuda", qids=None,
-                    budget_bytes=1 << 30):
+def topk_arrays(q_vecs, doc_vecs, k=100, chunk=250_000, device="cuda", budget_bytes=1 << 30):
+    """(best_idx, best_score) over the corpus, one read of `doc_vecs` per chunk.
+
+    Split out of topk_ids_scores so several query blocks that share a corpus -- the same table in
+    fp16 and int8, the released path and the matrix shortcut, or two dev components whose corpus
+    IS the 6.17M-row pool -- can be stacked into one call. The doc read, not the matmul, is what a
+    memmapped corpus costs, so stacking N blocks turns N passes into one."""
     nq, nd = len(q_vecs), len(doc_vecs)
     k_eff = min(k, nd)
     qtile = max(1, min(nq, budget_bytes // (4 * min(chunk, nd))))
@@ -37,11 +42,23 @@ def topk_ids_scores(q_vecs, doc_vecs, doc_ids, k=100, chunk=250_000, device="cud
     bi, bs = best_i.cpu().numpy(), best_s.cpu().numpy()
     del q, best_s, best_i
     torch.cuda.empty_cache()
+    return bi, bs
+
+
+def run_from_arrays(bi, bs, doc_ids, qids):
+    """Self-hits are dropped here exactly as before: a doc whose id equals the query's."""
     run = {}
     for qi, qid in enumerate(qids):
         run[qid] = {doc_ids[int(j)]: float(bs[qi, r]) for r, j in enumerate(bi[qi])
                     if bs[qi, r] > NEG and doc_ids[int(j)] != qid}
     return run
+
+
+def topk_ids_scores(q_vecs, doc_vecs, doc_ids, k=100, chunk=250_000, device="cuda", qids=None,
+                    budget_bytes=1 << 30):
+    bi, bs = topk_arrays(q_vecs, doc_vecs, k=k, chunk=chunk, device=device,
+                         budget_bytes=budget_bytes)
+    return run_from_arrays(bi, bs, doc_ids, qids)
 
 
 def per_query_ndcg(run, qrels, cut=10):

@@ -138,6 +138,60 @@ def _bag_index(offsets, lens):
     return torch.repeat_interleave(torch.arange(len(lens), device=lens.device), lens)
 
 
+# ---- count saturation (capacity lever #4, protocol in m7/LEDGER.md 2026-08-27) -----------
+#
+# `absorb_check` proves multiplicity-dependent pooling is one of only two query-side transforms
+# that are NOT absorbable into the rows, so this is real capacity and costs no bytes. It is a
+# PROBE for now: `Preproc` deliberately does not carry the mode, because adding a field would
+# change the frozen preprocessing fingerprint of every table already on disk. If a mode is
+# adopted, Preproc grows `pool_mode` and the artifacts are re-saved with it.
+POOL_MODES = ("mean", "binary", "cap2", "sqrt")
+
+
+def occurrence_weights(ids_list, mode, device="cpu"):
+    """Per-occurrence weights so a token appearing c times contributes TOTAL weight f(c):
+    mean f(c)=c (the current released rule) | binary 1 | cap2 min(2,c) | sqrt sqrt(c).
+    The weighted-mean denominator is the same sum, so length normalization is unchanged."""
+    if mode not in POOL_MODES:
+        raise KeyError(f"unknown pool mode {mode!r}; known {POOL_MODES}")
+    if mode == "mean":
+        return torch.ones(sum(len(x) for x in ids_list), dtype=torch.float32, device=device)
+    ws = []
+    for ids in ids_list:
+        _, inv, c = np.unique(np.asarray(ids, dtype=np.int64), return_inverse=True,
+                             return_counts=True)
+        cc = c[inv].astype(np.float32)
+        ws.append({"binary": 1.0 / cc, "cap2": np.minimum(2.0, cc) / cc,
+                   "sqrt": np.sqrt(cc) / cc}[mode])
+    flat = np.concatenate(ws) if ws else np.zeros(0, dtype=np.float32)
+    return torch.from_numpy(flat.astype(np.float32)).to(device)
+
+
+@torch.no_grad()
+def encode_pooled(model: QueryTable, texts, pre: Preproc, mode="mean", tok=None, batch=1024,
+                  device=None):
+    """`QueryTable.encode` with a count-saturation rule applied on top of the table's own
+    per-token weights. mode='mean' reproduces `forward` (asserted in the probe's smoke)."""
+    tok = tok or get_tokenizer()
+    device = device or model.rows.device
+    base_w = model.token_weights()
+    out = np.empty((len(texts), model.dim), dtype=np.float32)
+    for lo in range(0, len(texts), batch):
+        ids = tokenize(tok, texts[lo:lo + batch], pre)
+        flat, off, lens = ragged(ids, device)
+        psw = occurrence_weights(ids, mode, device=device)
+        if base_w is not None:
+            psw = psw * base_w[flat]
+        s = F.embedding_bag(flat, model.rows, off, mode="sum", per_sample_weights=psw)
+        denom = torch.zeros_like(s[:, 0]).index_add_(0, _bag_index(off, lens), psw)
+        mean = s / denom.clamp_min(EPS).unsqueeze(1)
+        norm = mean.norm(dim=1, keepdim=True)
+        fb = model.fallback_vector().to(mean.dtype)
+        out[lo:lo + batch] = torch.where(norm > EPS, mean / norm.clamp_min(EPS),
+                                         fb.expand_as(mean)).float().cpu().numpy()
+    return out
+
+
 # ---- released artifact: quantization + (de)serialization -------------------------------
 
 def quantize_int8(rows):

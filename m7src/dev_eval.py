@@ -10,7 +10,7 @@ import numpy as np
 import torch
 
 import devsuite
-from _paths import WORK
+from _paths import REPO, WORK
 from evalkit import macro, score
 from table import Preproc
 from teacher import QUERY_PREFIX, encode_cached
@@ -20,16 +20,41 @@ DEVRES.mkdir(parents=True, exist_ok=True)
 CHUNK = {"hotpotqa": 250_000}
 
 
+_PIN = None
+
+
+def pin():
+    """The pinned dev suite record from results/m7_dev_manifest.json, or {} before it was written."""
+    global _PIN
+    if _PIN is None:
+        p = REPO / "results" / "m7_dev_manifest.json"
+        _PIN = (json.loads(p.read_text()).get("_pinned") or {}) if p.exists() else {}
+    return _PIN
+
+
 def dev_components():
-    """The pinned dev suite: the four text-backed components plus whichever held-out training
-    slices exist. heldout-longq is absent if the training mix has no queries that long -- which
-    is itself a reportable fact about the mix, not a silent omission."""
+    """The pinned dev suite. Once `_pinned.components` exists in the manifest it is AUTHORITATIVE
+    and a missing or hash-mismatched component is a hard error (Codex review #3 BLOCKER 2).
+
+    The version this replaces appended `heldout-*` according to whether their JSON happened to
+    exist, so deleting a derived file -- or regenerating it from a changed mix or pool -- would
+    quietly change the selection statistic while every hash `freeze.py` checks stayed valid."""
     import heldout
-    out = list(devsuite.COMPONENTS)
-    for c in heldout.COMPONENTS:
-        if (WORK / "dev" / f"{c}.json").exists():
-            out.append(c)
-    return out
+    names = pin().get("components")
+    if not names:
+        out = list(devsuite.COMPONENTS)
+        for c in heldout.COMPONENTS:
+            if (WORK / "dev" / f"{c}.json").exists():
+                out.append(c)
+        return out
+    missing = [c for c in names if c.startswith("heldout-")
+               and not (WORK / "dev" / f"{c}.json").exists()]
+    if missing:
+        raise SystemExit(f"PINNED dev components missing: {missing}. The dev suite may not shrink "
+                         "silently -- rebuild them (run_stage0c.sh) and verify the hashes, or "
+                         "re-pin deliberately with freeze_heldout.py.")
+    heldout.verify_pinned()
+    return list(names)
 
 
 _HELD_CACHE = {}

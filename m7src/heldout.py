@@ -34,6 +34,21 @@ LONG_TOKENS = 64
 COMPONENTS = ["heldout-train", "heldout-longq"]
 
 
+def _warn_if_pinned(name):
+    """A rebuild that reproduces the pinned bytes is fine and common (the build is deterministic);
+    one that does NOT is a protocol event, so say so loudly at the moment it happens rather than
+    leaving it to whoever next calls verify_pinned()."""
+    import hashlib
+
+    from _paths import REPO
+    man_p = REPO / "results" / "m7_dev_manifest.json"
+    want = (json.loads(man_p.read_text()).get(name) or {}).get("json_sha256") \
+        if man_p.exists() else None
+    if want and hashlib.sha256((HELD / f"{name}.json").read_bytes()).hexdigest() != want:
+        print(f"  !! {name} REBUILT WITH DIFFERENT BYTES than the pinned manifest -- every dev "
+              f"number computed before this point used a different component", flush=True)
+
+
 def _build():
     index, pool_vecs, meta = poolmod.build()
     tok = get_tokenizer()
@@ -69,10 +84,44 @@ def _build():
                 "by_source": {s: sum(1 for r in sel if r["src"] == s)
                               for s in sorted({r["src"] for r in sel})}}
         (HELD / f"{name}.json").write_text(json.dumps(blob))
+        _warn_if_pinned(name)
         print(f"  {name}: corpus = the full pool ({pool_n:,} docs), {len(sel):,} queries, "
               f"sources {blob['by_source']}", flush=True)
         out[name] = blob
     return out
+
+
+_VERIFIED = False
+
+
+def verify_pinned():
+    """Refuse to serve a held-out component whose bytes differ from the pinned manifest.
+
+    These two JSONs are DERIVED from the training mix and the doc pool, so without this a changed
+    mix, a reordered pool or a regenerated file would move the dev macro while every hash
+    `freeze.py` checks stayed valid (Codex review #3 BLOCKER 2). Checked once per process."""
+    global _VERIFIED
+    if _VERIFIED:
+        return
+    import hashlib
+
+    from _paths import REPO
+    man_p = REPO / "results" / "m7_dev_manifest.json"
+    man = json.loads(man_p.read_text()) if man_p.exists() else {}
+    for name in COMPONENTS:
+        want = (man.get(name) or {}).get("json_sha256")
+        if not want:
+            continue                                   # not pinned yet: freeze_heldout.py does that
+        p = HELD / f"{name}.json"
+        if not p.exists():
+            raise SystemExit(f"pinned dev component {name} is missing ({p})")
+        got = hashlib.sha256(p.read_bytes()).hexdigest()
+        if got != want:
+            raise SystemExit(
+                f"PINNED dev component {name} changed: {p} hashes {got[:16]}..., manifest says "
+                f"{want[:16]}.... A dev component may not change under a selection. Restore it, "
+                f"or re-pin deliberately with freeze_heldout.py and disclose it in m7/LEDGER.md.")
+    _VERIFIED = True
 
 
 def load(name):
@@ -81,15 +130,31 @@ def load(name):
         _build()
     if not p.exists():
         return None
+    verify_pinned()
     b = json.loads(p.read_text())
-    doc_ids = [str(i) for i in range(b["n_docs"])]
-    return doc_ids, None, b["q_ids"], b["q_texts"], b["qrels"], None
+    return pool_doc_ids(b["n_docs"]), None, b["q_ids"], b["q_texts"], b["qrels"], None
+
+
+_DOC_IDS = {}
+_POOL_VECS = None
+
+
+def pool_doc_ids(n):
+    """ONE shared list of pool row ids. Both held-out components address the same 6.17M-row pool,
+    and a per-component copy is ~400 MB of Python strings each -- and, worse, makes two callers
+    that are looking at the identical corpus unable to prove it (multieval's shared-pass check)."""
+    if n not in _DOC_IDS:
+        _DOC_IDS[n] = [str(i) for i in range(n)]
+    return _DOC_IDS[n]
 
 
 def doc_vectors(name):
-    """The pool memmap itself: the corpus IS the pool, so nothing is copied."""
-    _, pool_vecs, _ = poolmod.build()
-    return pool_vecs
+    """The pool memmap itself: the corpus IS the pool, so nothing is copied. Memoized so every
+    held-out component gets the SAME memmap object, not an equal one."""
+    global _POOL_VECS
+    if _POOL_VECS is None:
+        _, _POOL_VECS, _ = poolmod.build()
+    return _POOL_VECS
 
 
 if __name__ == "__main__":
