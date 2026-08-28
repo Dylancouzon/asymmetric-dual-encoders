@@ -293,7 +293,21 @@ a reason to prefer the null.
   binary +0.0030 and cap2 +0.0016 do not clear. `m7_lever4_pooling_full.json`. Honest shape: the
   CI lower bounds are barely above zero — this is a real but small effect that cleared a bar fixed
   before it was seen, and it is selection evidence like everything else on dev.
-  **Consequence**: `Preproc.pool_mode` is now part of the frozen query rule (fingerprint
+  **RE-ADJUDICATED ON THE NEW CANDIDATE 2026-08-28, AND IT DOES NOT SURVIVE.** The negatives
+  pre-registration says a promoted arm re-triggers this adjudication, and `adopt_pool_mode.py`
+  refuses any run id the committed lever-4 artifact does not name, so the interlock forced it.
+  On `p4n-teacher16-a` (`lever4_readjudicate.py`, `m7_lever4_pooling_full.json`; the
+  `p35w-2m-s2500` adjudication is archived at `m7_lever4_pooling_p35w-2m-s2500.json`) **no arm
+  passes**: `sqrt` +0.0033 raw, CI [−0.00099, +0.00732], p=0.063 fp16 / 0.067 int8, Holm rank 2
+  against a 0.025 threshold; `cap2` p=0.044 at rank 1 against 0.0167; `binary` p=0.269. So
+  **`pool_mode` stays `mean` on this candidate** and its honest full-suite dev macro is **0.6225,
+  not the 0.6258 the sqrt arm shows** — that number is now an unadopted arm, not the system.
+  Nothing about the rule changed; the effect shrank on a table trained with mined negatives, which
+  is consistent with the A phase having already bought part of what saturation was buying. The
+  outcome is *less* favourable than the first adjudication, so re-running it is not a second bite
+  at the apple. Lever 4 must be adjudicated once more on whatever artifact finally ships.
+  **Consequence of the FIRST adoption, retained for `p35w-2m-s2500` only**: `Preproc.pool_mode`
+  is part of the frozen query rule (fingerprint
   `4f7978fa7f69b559` → `adb24fb2e8cad66f` for the candidate; the field is excluded from the hash
   when it is "mean", so every earlier artifact's fingerprint is unchanged). Rows, int8 codes and
   query-time cost are **identical** — this buys quality for no bytes. `adopt_pool_mode.py` is the

@@ -314,8 +314,34 @@ P4N_ARMS = {
     "teacher16": {"a": {"hard_neg_k": 16, "hard_neg_source": "teacher"}, "init": "@candidate_b"},
     "bm2516":    {"a": {"hard_neg_k": 16, "hard_neg_source": "bm25"}, "init": "@candidate_b"},
     "mixed32":   {"a": {"hard_neg_k": 32, "hard_neg_source": "mixed"}, "init": "@candidate_b"},
+    # STEP-RULE CORRECTIONS. The four arms above were promoted and full-suite-compared at the
+    # inherited steps_a=2500, but the pre-registered rule is that an arm's step count is its best
+    # proxy eval, "implemented by re-running to that step". Their proxy curves peak at 1500, 1500
+    # and 1000; `bank`'s peaks at 2500, so the control needs no correction and has no entry here.
+    # `warmup_linear` decays over steps_a, so these are genuinely different runs and not prefixes
+    # of the 2500-step ones. Pre-registered in LEDGER.md, "The step-selection rule was NOT applied
+    # to the negatives arms" -- including the part that says the proxy picks the step and the
+    # full-suite number does not get a vote.
+    "teacher16-s1500": {"a": {"hard_neg_k": 16, "hard_neg_source": "teacher", "steps_a": 1500},
+                        "init": "@candidate_b"},
+    "bm2516-s1500":    {"a": {"hard_neg_k": 16, "hard_neg_source": "bm25", "steps_a": 1500},
+                        "init": "@candidate_b"},
+    "mixed32-s1000":   {"a": {"hard_neg_k": 32, "hard_neg_source": "mixed", "steps_a": 1000},
+                        "init": "@candidate_b"},
 }
-ARMS = {"p4": P4_ARMS, "p4x": P4X_ARMS, "p4e": P4E_ARMS, "p4n": P4N_ARMS}
+# The recipe SIMPLIFICATION arm: every ablation-inert component of the shipping recipe removed at
+# once. One arm, no ladder of fallbacks -- backing off component by component until something
+# passes would be adaptive dev search. Tested for non-inferiority at margin 0.0040, not adopted on
+# a point estimate. Full rationale, including why `input_emb` rather than `random`, is in
+# LEDGER.md "Recipe simplification". `steps_a` is left at the base recipe's value here and the
+# step-selection rule is applied to the arm's own proxy curve afterwards, like any other arm.
+P5S_ARMS = {
+    "simple": {"b": {"init": "input_emb", "b_pseudo_queries": 500_000,
+                     "idf_init_weights": False, "reg_init": 0.0},
+               "a": {"idf_init_weights": False, "reg_init": 0.0,
+                     "hard_neg_k": 16, "hard_neg_source": "teacher"}},
+}
+ARMS = {"p4": P4_ARMS, "p4x": P4X_ARMS, "p4e": P4E_ARMS, "p4n": P4N_ARMS, "p5s": P5S_ARMS}
 
 
 def phase4_mandatory(base):

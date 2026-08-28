@@ -23,7 +23,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "m7src"))
 import boot
 from _paths import REPO
 
-INCUMBENT = "bge-base-en-v1.5"
+# The incumbent is whatever teacher the project is currently committed to, because every row here
+# is read as "does this candidate beat what we ship". It was bge-base until the 2026-08-26 swap;
+# leaving it there after the swap would have reported each new candidate against a teacher no
+# committed number uses. LEDGER.md's teacher re-examination says to re-point it before reading the
+# base-sized probes. The bge-incumbent report is archived at
+# results/m7_learnability_report_bge-incumbent.json; `incumbent` is recorded in the output, so a
+# reader never has to infer which pairing produced a delta. Override on argv for a one-off.
+INCUMBENT = sys.argv[1] if len(sys.argv) > 1 else "stella-400M-v5"
 COMPONENTS = ("cqadup-programmers", "cqadup-physics")
 
 
