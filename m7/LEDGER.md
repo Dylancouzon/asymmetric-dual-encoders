@@ -445,6 +445,22 @@ a finding; the mechanism above discharges the requirement.
   artifact; G3 vs BM25 **+0.0711 [0.0629, 0.0792]**, broad across components (**hotpotqa a near-tie,
   not a loss**); G4 int8 upper bound 0.00014. Retention **0.8245 text-backed / 0.8903 all six**.
   `m7_gate_s2w-1e3-s1000.json`.
+- **GATE, shipping candidate `p35w-2m-s2500`, 2026-08-28: GO, all four PASS**
+  (`m7_gate_p35w-2m-s2500.json`, artifact sha `a7007b1a`). G1 Stage-0 (`s1-objB`) vs potion
+  +0.1159 [0.1074, 0.1244] · G2 capacity probe pass · G3 vs BM25 **+0.0845 [0.0764, 0.0926]** ·
+  G4 int8 upper bound 0.00013 against a 0.005 bar. Retention 0.846 text-backed / 0.915 all six;
+  teacher ceiling 0.635 / 0.6724. **G3 is broad, not one component wide** — the check GO #1 failed:
+  nq-250k +0.2206, cqadup-physics +0.0487, cqadup-programmers +0.0412, hotpotqa +0.0276, every one
+  CI-resolved above zero, including both out-of-domain components.
+  **Three defects the gate run exposed, all fixed before the rerun** — and the first two would have
+  produced a plausible wrong G1 rather than a crash if the two teachers had shared a width:
+  (i) `run_freeze_prep.sh` passed **`p1-objB`**, the BGE-era Stage-0 table, where G1 needs the
+  stella-era **`s1-objB`** that GO #2 used; the wrong id arrived as the fix for an earlier argv bug.
+  (ii) `save_table` stamps the AMBIENT `M7_ENCODER` as `teacher`, so `ensure_release` on the bge
+  checkpoint under stella wrote a release meta claiming `teacher: stella` on 768-d bge rows.
+  `ensure_release` now inherits the source checkpoint's teacher and REFUSES to build a release for
+  another teacher's table. (iii) the gate never checked the teacher of the checkpoints it scored,
+  though `select_fusion` and `freeze.write` both do; it does now.
 - **The gate's role**: a MECHANICAL ELIGIBILITY AUDIT run after all selection — frozen artifact
   through `QueryTable`, encoder/table/component hashes verified, abort on any missing component or
   qid, unrounded per-query dumps, dependence-aware int8 bound. It cannot repair adaptive dev reuse
@@ -624,6 +640,11 @@ application alike, fitted against the **int8 release** artifact. `fusion.bm25_ru
 builder (`test_fusion_paths.py` guards the re-fork); the zero-score-padding drop and the self-hit
 drop are **part of the frozen function**, not harness details. **If the checkpoint changes the
 fusion must be re-selected** — every fusion file predating the current candidate is superseded.
+
+**OUTCOME 2026-08-28, `p35w-2m-s2500`** (`m7_fusion_p35w-2m-s2500.json`): **`convex0` w=0.8**, dev
+macro (text-backed) **0.5727**, against the int8 table alone at 0.5370 and BM25 alone at 0.4525.
+`released_system` derives to **fusion**: the dense-only endpoint scores 0.5370, so fusing wins by
++0.0357 outright and the tie policy below never had to fire (`n_tied_at_best` = 1).
 
 **TIE POLICY, fixed 2026-08-28 BEFORE this selection ran on the shipping candidate, i.e. before its
 numbers exist.** The grid was scanned with a running `best` and a strict `>`: RRF first, then convex

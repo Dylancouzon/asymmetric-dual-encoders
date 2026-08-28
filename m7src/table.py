@@ -370,8 +370,25 @@ def ensure_release(npz_path, device="cuda"):
     if rel.exists() and rel.stat().st_mtime >= npz_path.stat().st_mtime:
         return rel
     meta = read_meta(npz_path)
+    # THE RELEASE MUST INHERIT THE SOURCE CHECKPOINT'S TEACHER, and building one for another
+    # teacher's table is refused outright. `save_table` stamps the AMBIENT M7_ENCODER, so calling
+    # this on a bge-era checkpoint under stella produced `p1-objB.release.meta.json` claiming
+    # `teacher: stella` on 768-d bge rows -- a release artifact whose metadata lied about which
+    # document space it belongs to. Found 2026-08-28 when the gate crashed on the shape; with a
+    # same-dim pair it would have produced a plausible wrong number instead.
+    src_teacher = (meta.get("teacher"), meta.get("teacher_revision"))
+    if src_teacher != (None, None) and src_teacher != (TEACHER, TEACHER_REV):
+        raise SystemExit(
+            f"RELEASE REFUSED: {npz_path.name} was distilled from {src_teacher[0]}@"
+            f"{str(src_teacher[1])[:12]} but M7_ENCODER selects {TEACHER}@{str(TEACHER_REV)[:12]}. "
+            "A table is only valid against its own teacher's document vectors; set M7_ENCODER to "
+            "that teacher, or use a checkpoint from this one.")
     m = load_table(npz_path, variant="fp16", device=device)
-    save_release(rel, m, Preproc(**meta["preproc"]), meta={"source": npz_path.name}, device=device)
+    save_release(rel, m, Preproc(**meta["preproc"]),
+                 # carried from the SOURCE, not from the environment
+                 meta={"source": npz_path.name, "teacher": meta.get("teacher", TEACHER),
+                       "teacher_revision": meta.get("teacher_revision", TEACHER_REV)},
+                 device=device)
     return rel
 
 

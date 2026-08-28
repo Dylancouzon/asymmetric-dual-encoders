@@ -43,10 +43,13 @@ $PY -u m7src/costs.py "${RUN_ID}.release" >> "$LOG" 2>&1 || echo "costs failed" 
 #    released QueryTable path, strict alignment, dependence-aware int8 bound, unrounded per-query
 #    dumps, plus the exploratory audit against the pre-lever winner.
 step "gate (eligibility audit)"
-# p1-objB is the Stage-0 distilled table G1 is DEFINED on. It used to be omitted, and the
-# argv bug then fed `s2w-1e3-s1000` in as stage0_id; both are fixed, and the gate now
-# exits nonzero on NO-GO so `set -e` stops here instead of continuing toward the freeze.
-$PY -u m7src/gate.py "$RUN_ID" p1-objB --audit-vs s2w-1e3-s1000 >> "$LOG" 2>&1
+# s1-objB is the STELLA-era Stage-0 distilled table G1 is defined on, and is what GO #2 used.
+# This line said `p1-objB` -- the BGE-era one -- which is a 768-d table from a document space
+# this project left on 2026-08-26. It got here as the fix for an earlier argv bug that fed
+# `s2w-1e3-s1000` in as stage0_id: the omission was corrected with the wrong id. The gate now
+# also refuses any checkpoint whose teacher is not the active encoder, and exits nonzero on
+# NO-GO so `set -e` stops here instead of continuing toward the freeze.
+$PY -u m7src/gate.py "$RUN_ID" s1-objB --audit-vs s2w-1e3-s1000 >> "$LOG" 2>&1
 
 echo "=========== freeze prep done $(date -Is) ===========" >> "$LOG"
 echo "NEXT, BY HAND: review results/m7_gate_${RUN_ID}.json, then" >> "$LOG"

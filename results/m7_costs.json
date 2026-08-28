@@ -1,0 +1,36 @@
+{
+ "teacher": "NovaSearch/stella_en_400M_v5",
+ "table": "/home/dylan/asymetric-dual-encoders/work/runs/p35w-2m-s2500.release.npz",
+ "query_side": {
+  "sizes_mb": {
+   "rows_fp16_mb": 62.51,
+   "rows_int8_mb": 31.25,
+   "int8_scale_mb": 0.1221,
+   "token_weights_mb": 0.0,
+   "tokenizer_mb": 0.47,
+   "query_asset_int8_mb": 31.84,
+   "query_asset_fp16_mb": 62.98
+  },
+  "cpu_latency_ms_batch1": {
+   "fp16": 0.3773,
+   "int8": 0.3795
+  },
+  "hydration_s": {
+   "fp16": 0.256,
+   "int8": 0.224
+  },
+  "vocab": 30522,
+  "dim": 1024,
+  "learned_weights": false
+ },
+ "doc_index": {
+  "dim": 1024,
+  "teacher_1024d_fp16_gb_per_1m": 2.05,
+  "teacher_1024d_fp32_gb_per_1m": 4.1,
+  "teacher_1024d_int8_gb_per_1m": 1.02,
+  "reference_lightretriever_1536d_fp16_gb_per_1m": 3.07,
+  "reference_bge_small_384d_fp16_gb_per_1m": 0.77,
+  "reference_opensearch_sparse_gb_per_1m": 1.4,
+  "note": "M5/M4 rows: LR 3.07, opensearch 1.4, bge-small 0.77, leaf/arctic-m 1.54 GB/1M"
+ }
+}

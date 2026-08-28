@@ -47,6 +47,13 @@ def evaluate_checkpoint(run_id, components):
     # from the prefix alone, so it would have served a `pool_mode=sqrt` table under `mean`.
     src = ensure_release(RUNS / f"{run_id}.npz")
     meta = read_meta(src)
+    # Every checkpoint this gate scores must belong to the ACTIVE teacher's document space. The
+    # gate had no such check, so it happily loaded a bge-era Stage-0 table under stella; the only
+    # reason that failed loudly is that 768 != 1024 at the matmul. Two checkpoints of the same
+    # width from different teachers would have produced a plausible wrong G1
+    # (found 2026-08-28, run_freeze_prep step 3).
+    import freeze
+    freeze.assert_encoder_matches_artifact(meta, f"GATE ({run_id})")
     pre = Preproc(**meta["preproc"])
     out = {}
     for variant in ("fp16", "int8"):
