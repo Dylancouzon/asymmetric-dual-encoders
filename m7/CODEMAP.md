@@ -69,7 +69,23 @@ stella's Spec initially omitted its published Dense head).
 
 **Audits and levers** — `dev_audit.py` one full-suite pass producing the dependence-preserving
 lever recompute, matrix-vs-`QueryTable` equivalence, the per-query dump and the lever-4 arms ·
-`bigram_residual.py` (#1) · `doc2query_probe.py` (#3) · `lever5_shrinkage.py` (#5).
+`bigram_residual.py` (#1) · `doc2query_probe.py` (#3) · `lever5_shrinkage.py` (#5) ·
+`lever4_readjudicate.py` re-runs the pooling family on a NAMED artifact (dev_audit derives it from
+a hard-coded chain that no longer ends at the candidate) · `longspan_probe.py` is the length
+diagnostic with one run id and lever #7's primary bar with two.
+
+**Decision executors** — a pre-registered rule a session can re-read in its own favour is not a
+pre-registration, so the rules that pick things now run as code: `negatives_decide.py` (promotion,
+bar, Holm, three tie-break levels) · `simplify_decide.py` (non-inferiority at −0.0040). Both read
+the committed comparison artifact and write their own.
+
+**Honesty instruments** — each answers a question a reviewer will ask, with a number instead of a
+paragraph. `dev_reuse.py` counts adaptive dev reuse (53 arms / 299 in-training evals / 74
+eval-only variants) · `retention.py` retention on three nested component groups with BM25 on the
+same rows, because all-six and out-of-domain differ by 0.93 vs 0.76 · `cold_rows.py` what ships in
+rows training never touched (`apply_unseen_policy` is defined and never called) · `absorb_check.py`
+which transforms are absorbable, now including the doc-side map in both the renormalized and
+un-renormalized cases.
 
 **Final and demo** — `final_run.py` refuses unless the tree is clean, HEAD equals the freeze
 commit, that commit is pushed, and no prior final-run entry exists · `ann_sweep.py` real HNSW ·
@@ -135,6 +151,15 @@ Compaction is safe — git preserves every prior version, and each file says whe
     accumulates every memoized cache here (`mix.load_source`, `heldout._DOC_IDS`,
     `dev_eval._HELD_CACHE`, encode memmaps), so each arm starts from more memory than the last and
     the third one thrashes. `run_arm.py` runs exactly one leg and exits.
-15. **`rchar` is 0 while a memmap gather runs** — mmap access is page faults, not read syscalls.
+15. **An arm's base recipe must come from the artifact it is varying against, not from a
+    snapshot.** `program.ablation_recipe()` read the dev-audit survivor, which stopped being the
+    candidate once the negatives arm and the simplification moved past it. `M7_RECIPE_FROM=<run_id>`
+    overrides it. An arm that copies overrides out of this file measures its knob PLUS every
+    change made since the copy.
+16. **The update counter is NOT restored from a `run:` init.** `updates < 1` on an A-only arm
+    means "the A phase missed this row", not "training never touched it" — the never-trained set
+    is the intersection with the B checkpoint's. Reading it the other way overstated the untouched
+    rows by more than 2x (3,750 vs 1,743) in a pre-registration.
+17. **`rchar` is 0 while a memmap gather runs** — mmap access is page faults, not read syscalls.
     Do not read "zero I/O + 100% of one core" as a hang; check RSS and `free` instead. And never
     materialize a whole gather on the host when the destination is a GPU tensor: fill it in chunks.
