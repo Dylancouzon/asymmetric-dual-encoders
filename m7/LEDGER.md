@@ -100,6 +100,12 @@ within-family transfer to unseen subforums, never "untouched generalization".
 **Cost, measured 2026-08-28**: these four are **10,115,709 documents**, 37x the six's 272,117 —
 tens of hours of teacher encode and ~21 GB of vectors. The six's confirmatory result is therefore
 written to disk, and the ledger's completion marker appended, BEFORE this stage runs.
+**RESERVED FOR M8, registered 2026-08-28 before any M7 six-set number** (Dylan renumbered the
+milestones the same day: M8 is now the learnings v2): the default is that M7's final run SKIPS
+this tail, keeping the four sets un-scored as M8's confirmatory evaluation
+(`instructions-m8.md`). Dylan may override before the tail would run; scoring them makes them
+development-visible and burns them for M8. Skipping costs M7 nothing confirmatory — this stage
+was always descriptive-only, and the pins and disclosures above stay valid either way.
 
 ### Source-level licence evidence (eval-use standard)
 - **NQ** CC BY-SA 3.0 — first-party but **not on the live README**: merged PR #11 (2019-06-10,
@@ -168,22 +174,26 @@ questions per context), so it rewards document-anchored memorisation during dev 
 - **Every dev p-value and CI is SELECTION evidence.** The only confirmatory claims are the three
   frozen-test comparisons in the final run. No text may say a lever was "statistically confirmed".
 
-### The familywise question — OPEN, Dylan's call, and it must close before the freeze
+### The familywise question — CLOSED 2026-08-28, Dylan's ruling: option (c)
 
-The pre-freeze one-shot review (MAJOR 5) held that the ledger's "family bounded at 0.025" claim was
-unearned: `signflip` is exact under the SHARP null (per-query exchangeability), not the weak null
-the report means (macro mean ≤ 0), and three marginal procedures each measured at 0.013 union-bound
-the family to **0.039**. The union bound is what is available without measurement, so the rule was
-measured instead (above). **The claim "the family is bounded at 0.025" is withdrawn either way**:
-the measured range is 0.020–0.028.
+Background: the pre-freeze one-shot review (MAJOR 5) held that the ledger's "family bounded at
+0.025" claim was unearned: `signflip` is exact under the SHARP null (per-query exchangeability),
+not the weak null the report means (macro mean ≤ 0), and three marginal procedures each measured
+at 0.013 union-bound the family to **0.039**. The rule was measured instead (above): 0.0198 and
+0.0283 across two stand-ins. Options and arithmetic: `research/m7-fwer-decision-2026-08-28.md`.
 
-Dylan's options, with the arithmetic, are in `research/m7-fwer-decision-2026-08-28.md`: (a) narrow
-the stated null, (b) a studentized leg — measured, buys nothing, not recommended, (c) keep the rule
-and report the measured rate, (d) tighten leg 3's level until the measurement lands ≤ 0.025 and
-record the calibration that chose it. (d) is strictly harder and legal ONLY before a confirmatory
-number exists; it also makes the release bar harder to clear, which is why it is his call.
-**No rule may change once a confirmatory number exists, so this closes before the freeze or not at
-all.**
+**Ruling: keep all three legs exactly as registered; `final_run.py`'s statistics untouched.** The
+claim "the family is bounded at 0.025" is **withdrawn permanently**. The report's binding wording,
+tightened per the 2026-08-28 pre-freeze review (its BLOCKER 8: the calibration centers each
+dataset separately — one narrow sub-null, not the composite weak null — and uses one shared
+stand-in vector against all three comparators where the real family is dense/dense/fusion, which
+overstates the shared-candidate dependence): *sharp-null Holm validity is exact under per-query
+exchangeability; under two empirical weak-null constructions the complete three-leg rule rejected
+at 0.0198 and 0.0283 against a nominal 0.025 (`m7_tier_rule_calibration.json`, S=4,000); these
+simulations are sensitivity evidence, not a demonstration of uniform weak-null FWER control; a
+union bound over marginal legs alone would say 0.039.* The nominal 0.025 may never be quoted
+without this alongside. Ruled while option (d) — tightening leg 3 — was still legal; (d) becomes
+illegal the moment a confirmatory number exists, so this is not reopenable.
 
 ## Teacher selection (2026-08-26, logged before any six-set access)
 
@@ -632,6 +642,10 @@ advice, because the temptation only arrives once the six-set number is on the sc
    322 in-training dev evaluations, 90 eval-only variants) and retention
    (`m7_retention_p35w-2m-s2500.json`: 0.915 all-six, 0.846 text-backed, **0.764 out-of-domain**,
    where BM25 scores 0.3223). Both have already gone stale once in prose.
+5. **No numerical fusion-transfer forecast** (fifth review, MAJOR 4): neither the dev macro's
+   +0.036 nor the CQADupStack pair's +0.024..0.031 may be quoted as an expectation for the six —
+   they are post-selection component effects. The pair is qualitative evidence only; see the
+   Fusion section.
 
 ## Fusion
 
@@ -661,8 +675,28 @@ and it is NOT one component wide — but its shape matters more than its size:
 macro have no analogue among the six: there is no multi-hop Wikipedia set, and no NQ-like set (where
 fusion does nothing anyway). The components that DO have an analogue — the CQADupStack pair, the
 nearest dev stand-in for FiQA and the only out-of-domain members — gain **+0.024 to +0.031**, both
-resolved. So the defensible expectation for the six is the smaller figure, and the report must say
-so rather than quote the dev macro's +0.036. Stated here before the six are scored.
+resolved. **AMENDED per the 2026-08-28 pre-freeze review (MAJOR 4), before the six are scored: no
+numerical transfer forecast may be made at all.** Those two numbers are post-selection component
+effects, not an estimate over new datasets — if fusion transferred only to FiQA, the six-macro
+contribution would be ~0.004–0.005, fully compatible with this evidence. The report may use the
+CQADupStack pair only as qualitative evidence that the fusion gain is not exclusively Wikipedia-
+shaped, and must not quote +0.036 or +0.024..0.031 as an expectation for the six.
+
+**Decomposition re-run on the RELEASE artifact 2026-08-28** (review MAJOR 2: `fusion_report.py` had
+loaded the raw training npz, whose int8 codes are quantized from un-folded rows). Every number
+reproduces within ±0.0001 (fused−dense +0.0356 [0.0314, 0.0399]; physics +0.0238→+0.0239), so the
+committed decomposition did describe what ships; the script now binds to the spec's own
+`table_sha256` so the two can never diverge again.
+
+**Fusion's status in the final run, registered before any six-set number: DESCRIPTIVE.** The three
+confirmatory comparisons are C1/C2/C3 exactly as registered — fusion-vs-dense on the six is NOT a
+fourth hypothesis, gets no multiplicity budget, and is reported as a labelled descriptive row only.
+No neighbouring fusion weight may be selected, reported as preferable, or used in any claim after
+the six are seen; the frozen `w=0.8` is the released parameter whatever the six say (its dev margin
+over w=0.7 is 0.0036, unmeasured for stability — reported as "observed dev argmax", never "stable
+optimum"). The only fixed subgroups reported from the final run are the pre-registered clean-4, the
+per-dataset rows, and this descriptive fusion-vs-dense split; no other subset may be constructed
+after the numbers exist.
 
 **TIE POLICY, fixed 2026-08-28 BEFORE this selection ran on the shipping candidate, i.e. before its
 numbers exist.** The grid was scanned with a running `best` and a strict `>`: RRF first, then convex
@@ -757,7 +791,41 @@ no change to the released system whatever it says.
 `m7-closed-avenue-audit-2026-08-27.md` (17 SOUND / 4 under-diagnosed / 4 premature) ·
 `m7-lever-sweep-2026-08-27.md` · `m7-overfit-review-2026-08-28.md` (2/6/5) ·
 `m7-codex-onepath-2026-08-28.md` (3/5/2, the one-shot path) ·
-`m7-codex-onepath2-2026-08-28.md` (**6/11**, the one-shot path again, after those fixes).
+`m7-codex-onepath2-2026-08-28.md` (**6/11**, the one-shot path again, after those fixes) ·
+`m7-codex-prefreeze-2026-08-28.md` (**8 BLOCKER / 9 MAJOR / 2 MINOR**, verdict STOP, the fifth
+pass — post-gate, pre-freeze, on Dylan's "anything else before we freeze?").
+
+**The fifth review's findings, all actioned 2026-08-28 before the freeze.** The ones with protocol
+consequences: the final run now verifies the installed **bm25s/PyStemmer versions and BM25 config
+against the fusion spec's own cache keys** (a package upgrade between freeze and final run would
+have silently changed the fused system C3 judges); the one-shot access gets a **durable spent
+receipt** — an annotated `m7-six-spent` tag pushed to origin the moment the confirmatory block is
+on disk — so deleting the untracked result file and trimming the ledger no longer resurrects the
+shot; an **exclusive pid lock** stops two concurrent launches both passing the read-only guard; a
+`--untouched-only` resume **never opens a six-set payload** (preflight now takes the kinds it may
+verify), and preflight's payload-hash reads are themselves logged to `m7/SIX_ACCESS.log` with an
+honest refusal message ("nothing was scored", not "not touched"); teacher-code verification and
+the table snapshot run **before** any payload read; a crash between the confirmatory write and the
+clean-4 block is recoverable — the resume **recomputes clean-4 from the stored per-query values**,
+which are now persisted as **raw floats** (rounding to 1e-6 made a close decision unreproducible
+from the artifact); the six's corpora load **corpus-only** (`load_beir` was downloading and parsing
+fresh test qrels, discarded but making the "labels from frozen_eval only" claim false);
+`assert_gate_passed` now requires the **exact registered condition set, the pinned component list,
+a real Stage-0 checkpoint for G1, the per-query dump's bytes, and a clean committed evaluator
+identity** (a diagnostic subset run used to overwrite the official gate file and would have been
+accepted); gate subset runs now write `*.DIAGNOSTIC.json`; `load_and_verify` **re-runs
+`assert_releasable` and `assert_gate_passed`** rather than trusting FREEZE.json's recorded verdicts
+(a hand-authored freeze with valid hashes could bypass both); `assert_releasable` reads each run
+record's bytes once and hashes those same bytes (TOCTOU); `gate.py` and `fusion.py` joined
+`EVALUATOR_SOURCES`. Declined, with reasons: a hashed outcome-contingent report skeleton (the
+REPORT FRAMING section already binds the wording that matters; the rest is ceremony for an
+internal report) and a full installed-environment freeze beyond the BM25 pair (the teacher code
+pin, encoder spec, encode-cache hashes and conformance suite already bind what changes vectors;
+BM25 was the one function that could drift silently). The review also independently chose option
+(c) on the familywise question, and its wording is what the ruling above adopts. The GO gate is
+re-run from a clean commit because the 2026-08-28 GO recorded `m7src_dirty: true` (MAJOR 1) — its
+conditions were true but its code identity was not provenance-clean; the rerun's result supersedes
+it.
 
 All findings implemented; those with standing protocol consequences are folded in above. Worth naming
 because they were caught before they produced a number: the ablation driver could reuse a B artifact

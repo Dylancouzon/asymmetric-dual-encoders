@@ -27,11 +27,14 @@ def check(name, cond, detail=""):
 
 class Git:
     """Stub of the two git shells `guard` uses. `annotated` decides whether the pushed tag is an
-    annotated object (peeled ref present) or a lightweight one."""
+    annotated object (peeled ref present) or a lightweight one. `spent` / `spent_local` model the
+    m7-six-spent receipt on origin / in local tags."""
 
-    def __init__(self, dirty=(), head=HEAD, remote=HEAD, tag=HEAD, annotated=True, diff=()):
+    def __init__(self, dirty=(), head=HEAD, remote=HEAD, tag=HEAD, annotated=True, diff=(),
+                 spent=False, spent_local=False):
         self.dirty, self.head, self.remote = list(dirty), head, remote
         self.tag, self.annotated, self.diff = tag, annotated, list(diff)
+        self.spent, self.spent_local = spent, spent_local
 
     def raw(self, *a):
         if a[:2] == ("git", "status"):
@@ -39,7 +42,10 @@ class Git:
         if a[:2] == ("git", "ls-remote"):
             out = ""
             for ref in a[3:]:
-                if ref.endswith("^{}"):
+                if F.SPENT_TAG in ref:      # the spent receipt is a different tag namespace
+                    if self.spent:
+                        out += f"{'9' * 40}\t{ref}\n"
+                elif ref.endswith("^{}"):
                     if self.annotated and self.tag:
                         out += f"{self.tag}\trefs/tags/{F.FREEZE_TAG}^{{}}\n"
                 elif ref.startswith("refs/tags/") and self.tag:
@@ -54,6 +60,8 @@ class Git:
             return self.head
         if a[:3] == ("git", "diff", "--name-only"):
             return "\n".join(self.diff)
+        if a[:3] == ("git", "tag", "-l"):
+            return F.SPENT_TAG if self.spent_local and a[3] == F.SPENT_TAG else ""
         return self.raw(*a).strip()
 
 
@@ -178,6 +186,44 @@ def main():
                                 result=full, untouched_only=True, infra_retry=True)
             check("--untouched-only and --infra-retry together are refused",
                   not ok and "mutually exclusive" in msg, msg)
+
+            print("\nthe spent receipt (the tag survives a deleted result and an edited ledger)")
+            ok, msg = run_guard(td, Git(spent=True))
+            check("a pushed spent tag refuses a plain run", not ok and F.SPENT_TAG in msg, msg)
+            # the exact BLOCKER-2 attack: result deleted, COMPLETE line trimmed, --infra-retry --
+            # the receipt on origin still refuses it
+            ok, msg = run_guard(td, Git(dirty=["m7/LEDGER.md"], spent=True), ledger_text=BEGIN,
+                                infra_retry=True)
+            check("deleting the result + trimming the ledger does not beat the receipt",
+                  not ok and F.SPENT_TAG in msg, msg)
+            ok, msg = run_guard(td, Git(spent_local=True))
+            check("a local-only spent tag refuses too", not ok and F.SPENT_TAG in msg, msg)
+            digest2 = F.sha({"six": spent["six"], "confirmatory": None, "holm": None})
+            ok, msg = run_guard(td, Git(dirty=["results/m7_final_run.json"], spent=True),
+                                ledger_text=BEGIN + DONE + f"- FINAL-RUN-SIX-SHA256 {digest2}\n",
+                                result=dict(spent, confirmatory=None, holm=None),
+                                untouched_only=True)
+            check("--untouched-only still works after the receipt exists", ok, msg)
+
+            print("\nthe exclusive lock")
+            F.LOCK = Path(td) / ".final-run.lock"
+            F.LOCK.unlink(missing_ok=True)
+            F.acquire_lock()
+            check("the lock is created", F.LOCK.exists())
+            import os as _os
+            F.LOCK.write_text(f"{_os.getpid()}\n")     # a LIVE pid holds it
+            try:
+                F.acquire_lock()
+                check("a live holder refuses a second process", False)
+            except SystemExit as e:
+                check("a live holder refuses a second process", "holds" in str(e))
+            F.LOCK.write_text("999999999\n")            # a dead pid: stale, self-clears
+            try:
+                F.acquire_lock()
+                check("a stale lock (dead pid) self-clears", F.LOCK.exists())
+            except SystemExit as e:
+                check("a stale lock (dead pid) self-clears", False, str(e))
+            F.LOCK.unlink(missing_ok=True)
 
             print("\nmiscellaneous refusals")
             ok, msg = run_guard(td, Git(dirty=["m7src/train.py"]))

@@ -21,18 +21,29 @@ import numpy as np
 
 import boot
 import dev_eval
+import freeze
 import fusion
 from _paths import REPO
 from evalkit import per_query_ndcg
 from select_fusion import bm25_run_and_key, dense_run
-from table import Preproc, load_table, read_meta
+from table import Preproc, ensure_release, load_table, read_meta
 from _paths import WORK
 
 
 def main(run_id):
     spec = json.loads((REPO / "results" / f"m7_fusion_{run_id}.json").read_text())
-    npz = WORK / "runs" / f"{run_id}.npz"
-    pre = Preproc(**read_meta(npz)["preproc"])
+    # The RELEASE artifact, exactly as select_fusion fitted it -- this first shipped reading the
+    # raw training npz, whose int8 codes are quantized from un-folded rows, so the committed
+    # p35w-2m-s2500 decomposition described an artifact nobody ships (Codex pre-freeze review
+    # 2026-08-28, MAJOR 2). Bind to the spec's own hash so the two can never diverge again.
+    npz = ensure_release(WORK / "runs" / f"{run_id}.npz")
+    assert read_meta(npz).get("weights_folded"), f"{npz} is not a release-shape artifact"
+    got = freeze.sha256_file(npz)
+    want = spec["selected_on"]["table_sha256"]
+    assert got == want, f"release table {npz} sha {got} != fusion spec's {want}"
+    pre = Preproc(**spec["selected_on"]["preproc"])
+    assert pre.fingerprint() == spec["selected_on"]["preproc_fingerprint"], \
+        "fusion spec's preproc does not reproduce its own fingerprint"
     comps = spec["components"]
     model = load_table(npz, variant="int8")
 

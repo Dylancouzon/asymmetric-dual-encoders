@@ -1,7 +1,14 @@
 # The tier rule's familywise error claim — a decision for Dylan
 
-**Status: OPEN. It must close BEFORE the freeze**, because it is a registered rule and a registered
-rule may only move before its numbers exist. Nothing else is blocked by it.
+**Status: CLOSED 2026-08-28 — Dylan ruled option (c)**: keep the rule exactly as registered,
+report the measured rates (0.0198 / 0.0283 vs nominal 0.025) as sensitivity evidence rather than
+demonstrated control, `final_run.py`'s statistics untouched. Ruled while (d) was still legal; the
+same-day Codex pre-freeze review independently chose (c) and identified two limitations of the
+calibration itself (per-dataset centering = a narrow sub-null; a single shared stand-in vector
+where the real family is dense/dense/fusion), which the binding wording now discloses. The binding
+wording lives in `m7/LEDGER.md` § "The familywise question"; the rest of this memo is the record
+of the options as they stood. (Its §4(a) "0.019–0.025" range predates the S=4,000 rerun; the
+superseding numbers are 0.0198–0.0283.)
 
 Written 2026-08-28 in response to the pre-freeze one-shot-path review
 (`research/m7-codex-onepath-2026-08-28.md`, MAJOR 5), which said the ledger's "family bounded at

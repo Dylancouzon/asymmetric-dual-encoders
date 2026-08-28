@@ -106,6 +106,11 @@ def run(run_id, stage0_id=None, components=None, probe_file=None, audit_vs=None,
         s0, _ = evaluate_checkpoint(stage0_id, comps)
         g1 = boot.paired(restrict(s0["fp16"], text_backed), pot, alternative="greater",
                          strict=True)
+        # Bind the Stage-0 BYTES, not just its id: the wrong-id defect (p1-objB where s1-objB was
+        # needed) was caught by a width mismatch, which two same-width tables would not have.
+        s0_rel = ensure_release(RUNS / f"{stage0_id}.npz")
+        import dev_audit as _da
+        g1["stage0_sha256"] = _da.sha_file(s0_rel)
     else:
         # G1 is defined on the Stage-0 distilled table; substituting the candidate is a weaker
         # test, so it is called out on the printed line, not just recorded in the JSON.
@@ -185,7 +190,10 @@ def run(run_id, stage0_id=None, components=None, probe_file=None, audit_vs=None,
     # Unrounded per-query scores for both precisions, so any later reader can redo every number
     # here without re-running the GPU pass (review #3's gate spec).
     import gzip
-    dpath = REPO / "results" / f"m7_gate_perquery_{run_id}.json.gz"
+    # a subset run gets its own dump file too, for the same reason as the result file below
+    _diag_tag = (".DIAGNOSTIC" if components is not None
+                 and list(components) != dev_eval.dev_components() else "")
+    dpath = REPO / "results" / f"m7_gate_perquery_{run_id}{_diag_tag}.json.gz"
     raw = json.dumps({"run_id": run_id, "components": comps,
                       "per_query": {v: {c: {q: float(x) for q, x in d.items()}
                                         for c, d in blob.items()}
@@ -204,7 +212,13 @@ def run(run_id, stage0_id=None, components=None, probe_file=None, audit_vs=None,
     res["_role"] = ("mechanical eligibility audit after all selection; it cannot repair adaptive "
                     "dev reuse and is not evidence of generalization. Freeze immediately after.")
     res["PASS"] = all(v.get("pass") for v in res["conditions"].values())
-    (REPO / "results" / f"m7_gate_{run_id}.json").write_text(json.dumps(res, indent=1))
+    # A subset run must NEVER overwrite the official gate file: it used to, so a diagnostic run
+    # after a GO would have replaced the evidence `freeze.write` consumes -- and the old
+    # `assert_gate_passed` would have accepted it (Codex pre-freeze review 2026-08-28, BLOCKER 6).
+    diagnostic = components is not None and list(components) != dev_eval.dev_components()
+    res["diagnostic_subset"] = diagnostic
+    out_name = f"m7_gate_{run_id}.DIAGNOSTIC.json" if diagnostic else f"m7_gate_{run_id}.json"
+    (REPO / "results" / out_name).write_text(json.dumps(res, indent=1))
 
     print()
     for k, v in res["conditions"].items():

@@ -1,7 +1,9 @@
 # M7 status
 
-**Stage: freeze prep DONE, gate is GO. Everything on the assistant's queue is closed. Three
-decisions are yours, and the first one blocks the freeze.**
+**Stage: freeze prep DONE, gate is GO, the familywise question is CLOSED (option c, 2026-08-28),
+and the fifth adversarial review (8 BLOCKER / 9 MAJOR — verdict STOP) is fully actioned. The gate
+is being re-run from a clean commit (its GO had `m7src_dirty: true`); once it reproduces, nothing
+blocks the freeze. Two decisions are yours.**
 
 Candidate **`p35w-2m-s2500`**, served at `pool_mode=sqrt`. Full pinned dev macro **0.6153**,
 out-of-domain subset **0.3672** — both dev SELECTION numbers, not evidence about the six.
@@ -23,36 +25,51 @@ out-of-domain ones.
 **Fusion** (`results/m7_fusion_p35w-2m-s2500.json`): `convex0` **w=0.8**, dev macro (text-backed)
 **0.5727** against the int8 table alone at 0.5370 and BM25 alone at 0.4525. So `released_system`
 derives mechanically to **fusion**, by +0.036 over the dense-only endpoint, with no tie.
-**But read the breakdown before expecting +0.036 on the six** (`m7_fusion_report_*.json`): the gain
-is hotpotqa +0.0865, cqadup-programmers +0.0312, cqadup-physics +0.0238, and nq-250k **+0.0008,
-unresolved**. The two components carrying the dev macro have no analogue among the six; the two that
-do — the CQADupStack pair — gain +0.024 to +0.031. The smaller figure is the defensible expectation.
+**But no number from that decomposition is a forecast for the six** (`m7_fusion_report_*.json`,
+re-run 2026-08-28 on the release artifact): the gain is hotpotqa +0.0865, cqadup-programmers
++0.0312, cqadup-physics +0.0239, and nq-250k **+0.0008, unresolved**. The two components carrying
+the dev macro have no analogue among the six; the CQADupStack pair says only, qualitatively, that
+the gain is not exclusively Wikipedia-shaped. Per the fifth review (MAJOR 4) the report may not
+quote +0.036 — or any number — as an expected six-set transfer.
 
 ## Open for Dylan, in this order
 
-1. **The familywise question — it BLOCKS the freeze**, because it changes a registered rule and a
-   rule may only move before its numbers exist. `research/m7-fwer-decision-2026-08-28.md` has the
-   arithmetic and four options. Measured: the three-leg tier rule's weak-null familywise rate is
-   **0.0198 and 0.0283** across two stand-ins against a nominal 0.025 — so the review's 0.039 union
-   bound is loose, but the rule is mildly anti-conservative on the closer stand-in. A weak-null-valid
-   studentized leg measures 0.0203/0.0278, i.e. buys nothing. I lean weakly to option (d), tightening
-   the simultaneous leg until the measurement lands ≤0.025 — it costs power on a bar the projections
-   already straddle, which is why it is your call and not mine.
-2. **The freeze.** `freeze.write('p35w-2m-s2500')` — the fusion spec and `released_system` are NOT
+*(Closed 2026-08-28: the familywise question — Dylan ruled option (c), keep the rule as
+registered and report the measured rates 0.0198/0.0283 vs nominal 0.025. `final_run.py`
+untouched. See LEDGER § "The familywise question".)*
+
+1. **The freeze.** `freeze.write('p35w-2m-s2500')` — the fusion spec and `released_system` are NOT
    arguments; it loads the selection and the gate result itself and refuses on any mismatch. Then
    commit, and **push the tag**: `git tag -a m7-freeze -m "..." <commit> && git push origin m7-freeze`.
-3. **The final run.** One shot. `final_run.py --freeze-hash <commit>`.
+2. **The final run.** One shot. `final_run.py --freeze-hash <commit>`.
 
-**Budget you should know before scheduling 3.** The six are ~40–60 min. The non-confirmatory
-`untouched-final` tail is **10,115,709 documents, 37x the six** — tens of hours and ~21 GB. The
-confirmatory result and all three tier decisions are written to disk *before* that stage starts, and
-`--untouched-only` resumes it independently, so it can be deferred or skipped without touching the
-tier claims.
+**Budget you should know before scheduling 2.** The six are ~40–60 min. The non-confirmatory
+`untouched-final` tail (10.1M docs, tens of hours, ~21 GB) is now **RESERVED FOR M8 by default**
+(registered 2026-08-28, before any six-set number): the final run skips it, keeping FEVER /
+DBpedia / cqadup-android / english un-scored as the v2's confirmatory sets. Override is yours,
+before it would run; scoring them burns them for M8.
 
 Also still yours: the doc2query licensing ruling (a revival needs a commercially clean generator),
-and the HF release go.
+and the HF release go. Milestones renumbered per your call: **M8 = the learnings v2**
+(`instructions-m8.md`, new), **M9 = the LEAF-style distilled tower** (`instructions-m9.md`,
+updated for the stella inheritance and the dead tokenizer rationale).
 
-## What closed on 2026-08-28
+## The fifth review (2026-08-28, post-gate pre-freeze): STOP, then all findings actioned
+
+`research/m7-codex-prefreeze-2026-08-28.md`, dispositions in LEDGER § Reviews and audits. The
+short version: the one-shot path had eight remaining BLOCKER paths — a BM25 package upgrade would
+have silently changed the fused system C3 judges; deleting the untracked result file plus a ledger
+trim resurrected the one shot; two concurrent launches could both score; a `--untouched-only`
+resume read all six frozen payloads; a diagnostic gate subset overwrote the official GO file and
+would have been accepted at freeze; a hand-authored FREEZE.json bypassed the gate and licence
+guards entirely. All fixed, all covered by new tests (guard suite + freeze-binding suite). The
+fusion decomposition was re-run on the actual RELEASE artifact (it had read the training npz):
+every number reproduces within ±0.0001. Registered before any six-set number: fusion-vs-dense on
+the six is DESCRIPTIVE, no numerical fusion-transfer forecast may be quoted, and the only
+subgroups reported are clean-4 + per-dataset rows + the fusion split. The review also
+independently picked option (c) on the familywise question, matching Dylan's ruling.
+
+## What closed earlier on 2026-08-28
 
 Two adversarial reviews on the one-shot path (3/5/2 then **6/11**), all findings actioned. The one
 that mattered: **the freeze tag was never peeled**, so `git tag -a` — the procedure this file

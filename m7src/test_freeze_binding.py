@@ -69,6 +69,10 @@ class Fixture:
         self.meta_p.write_text(json.dumps(self.meta))
         for f in ("m7_dev_manifest.json", "eval_manifest.json", "perquery.json"):
             (self.repo / "results" / f).write_text('{"fixture": true}')
+        # a clean-lineage run record, so load_and_verify's assert_releasable re-check has
+        # something real to walk (pre-freeze review BLOCKER 7)
+        (self.work / "runs" / f"{RID}.json").write_text(
+            json.dumps({"cfg": {"sources": ["nq"], "init": ""}}))
         self.write_spec()
         self.write_gate()
 
@@ -110,9 +114,24 @@ class Fixture:
             json.dumps(publish if publish is not None else s))
 
     def write_gate(self, **over):
+        # the full hardened schema (pre-freeze review BLOCKER 6): exact condition set, pinned
+        # components, a real Stage-0 for G1, a hash-bound per-query dump, clean code identity
+        import dev_eval
+        dump_p = self.repo / "results" / f"m7_gate_perquery_{RID}.json.gz"
+        if not dump_p.exists():
+            dump_p.write_bytes(b"fixture per-query dump bytes")
         g = {"run_id": RID, "PASS": True,
-             "conditions": {"G1": {"pass": True}, "G2": {"pass": True},
-                            "G3": {"pass": True}, "G4": {"pass": True}},
+             "components": dev_eval.dev_components(),
+             "diagnostic_subset": False,
+             "conditions": {"G1_stage0_above_potion": {"pass": True,
+                                                       "checkpoint": "stage0-fixture",
+                                                       "note": "Stage-0 distilled table"},
+                            "G2_capacity_probe": {"pass": True},
+                            "G3_candidate_above_bm25": {"pass": True},
+                            "G4_int8_equivalence": {"pass": True}},
+             "per_query_dump": {"path": dump_p.name, "payload_sha256": "0" * 64,
+                                "file_sha256": freeze.sha256_file(dump_p)},
+             "code_identity": {"git_head": "f" * 40, "m7src_dirty": False},
              "artifact": {"release": self.npz.name,
                           "sha256": freeze.sha256_file(self.npz),
                           "meta_sha256": freeze.sha256_file(self.meta_p)}}
@@ -226,7 +245,33 @@ def main():
             refuses("a gate file naming another run id is refused", fx.gate, "run_id")
             (fx.repo / "results" / f"m7_gate_{RID}.json").unlink()
             refuses("a missing gate result is refused", fx.gate, "no gate result")
+
+            print("\ngate schema hardening (pre-freeze review BLOCKER 6)")
+            fx.write_gate(conditions={"G1": {"pass": True}, "G2": {"pass": True},
+                                      "G3": {"pass": True}, "G4": {"pass": True}})
+            refuses("the old short condition names are refused", fx.gate, "registered set")
+            fx.write_gate(components=["nq-250k", "cqadup-physics"])
+            refuses("a subset component list is refused", fx.gate, "pinned dev suite")
+            fx.write_gate(diagnostic_subset=True)
+            refuses("a diagnostic-subset gate is refused", fx.gate, "diagnostic_subset")
+            full = json.loads((fx.repo / "results" / f"m7_gate_{RID}.json").read_text())
+            g1sub = dict(full["conditions"])
+            g1sub["G1_stage0_above_potion"] = {"pass": True, "checkpoint": RID,
+                                               "note": "SUBSTITUTED the candidate (weaker test)"}
+            fx.write_gate(diagnostic_subset=False, conditions=g1sub)
+            refuses("a substituted G1 is refused", fx.gate, "Stage-0")
             fx.write_gate()
+            dump_p = fx.repo / "results" / f"m7_gate_perquery_{RID}.json.gz"
+            dump_p.write_bytes(b"tampered after the gate recorded its hash")
+            refuses("a tampered per-query dump is refused", fx.gate, "replaced or edited")
+            dump_p.unlink()
+            fx.write_gate()     # recreates the dump and re-records its hash
+            fx.write_gate(code_identity={"git_head": "f" * 40, "m7src_dirty": True})
+            refuses("a gate run from a dirty tree is refused", fx.gate, "DIRTY")
+            fx.write_gate(code_identity={})
+            refuses("a gate with no code identity is refused", fx.gate, "code identity")
+            fx.write_gate()
+            check("the hardened schema ACCEPTS a complete, clean gate", fx.gate()["PASS"] is True)
 
             print("\nreleased_system is derived, not asserted")
             check("convex w=1.0 is the dense-only endpoint",
@@ -251,6 +296,7 @@ def main():
                             "dim": sp["dim"]})
             fx.meta_p.write_text(json.dumps(fx.meta))
             fx.write_spec()
+            fx.write_gate()     # the meta hash changed above; the gate must describe THIS meta
             good = {
                 "run_id": RID,
                 "table_relpath": f"work/runs/{fx.npz.name}",
@@ -262,6 +308,8 @@ def main():
                 "teacher": sp["repo"], "teacher_revision": sp["revision"],
                 "encoder_spec": sp,
                 "fusion": fx.spec(), "released_system": "fusion",
+                # load_and_verify re-runs assert_releasable and compares (BLOCKER 7)
+                "training_lineage_record_sha256": freeze.assert_releasable(RID),
                 "dev_manifest_sha256": freeze.sha256_file(
                     fx.repo / "results" / "m7_dev_manifest.json"),
                 "eval_manifest_sha256": freeze.sha256_file(

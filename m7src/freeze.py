@@ -49,12 +49,11 @@ def assert_releasable(run_id):
     # "no non-commercial data" -- that is precisely how the research-only variant would slip
     # through. Resolve it against what is on disk now, and say so: this reflects the CURRENT mix,
     # which is the conservative direction (a source added later still trips the guard).
-    chain, seen = [run_id], set()
+    chain, hashes = [run_id], {}
     while chain:                       # a checkpoint init inherits its parent's training sources
         rid = chain.pop()
-        if rid in seen:
+        if rid in hashes:
             continue
-        seen.add(rid)
         p = WORK / "runs" / f"{rid}.json"
         if not p.exists():
             # NOT `continue`. The manifest this guard writes asserts "no non-commercial training
@@ -64,7 +63,13 @@ def assert_releasable(run_id):
                 f"FREEZE REFUSED: {run_id}'s lineage includes {rid}, whose run record {p} is "
                 "missing, so the training sources of that ancestor cannot be established. The "
                 "releasability claim is unprovable, not satisfied.")
-        c = json.loads(p.read_text())["cfg"]
+        # Read the bytes ONCE, hash THOSE bytes, parse THOSE bytes. The first version validated
+        # `p.read_text()` and then hashed the file again afterwards, so a record replaced between
+        # the two reads was validated as one content and recorded under another's hash (Codex
+        # pre-freeze review 2026-08-28, MAJOR 6).
+        raw = p.read_bytes()
+        hashes[rid] = hashlib.sha256(raw).hexdigest()
+        c = json.loads(raw)["cfg"]
         srcs = [str(s).lower() for s in (c.get("sources") or mix.available_sources())]
         bad = [s for s in srcs if any(n in s for n in NON_COMMERCIAL_SOURCES)]
         if bad:
@@ -75,11 +80,10 @@ def assert_releasable(run_id):
         init = str(c.get("init", ""))
         if init.startswith("run:"):
             chain.append(init.split(":", 1)[1])
-    # Return the hash of every record inspected, not just the ids. The guard reads gitignored,
-    # mutable `work/runs/<id>.json` files, and the freeze recorded only which ids it walked -- so
-    # nothing pinned WHAT it read, and a replaced record could have made a contaminated lineage
-    # look clean after the fact (Codex review #4, MAJOR 11).
-    return {rid: sha256_file(WORK / "runs" / f"{rid}.json") for rid in sorted(seen)}
+    # The hash of every record inspected, not just the ids: the guard reads gitignored, mutable
+    # `work/runs/<id>.json` files, and the freeze recorded only which ids it walked -- so nothing
+    # pinned WHAT it read (Codex review #4, MAJOR 11).
+    return {rid: hashes[rid] for rid in sorted(hashes)}
 
 
 def assert_encoder_matches_artifact(meta, where):
@@ -219,6 +223,10 @@ def load_selected_fusion(run_id, table_sha, meta_sha, meta):
     return spec
 
 
+REQUIRED_GATE_CONDITIONS = ("G1_stage0_above_potion", "G2_capacity_probe",
+                            "G3_candidate_above_bm25", "G4_int8_equivalence")
+
+
 def assert_gate_passed(run_id, table_sha, meta_sha):
     """The freeze must be preceded by a PASSing gate ON THIS ARTIFACT.
 
@@ -226,7 +234,13 @@ def assert_gate_passed(run_id, table_sha, meta_sha):
     could follow a gate run on a different (or an older) table, or no gate at all. Takes the
     hashes rather than the paths so the caller can hash the bytes ONCE -- re-hashing here and
     again while building the manifest left a window in which the table could be replaced between
-    the two (Codex review #4, MAJOR 4)."""
+    the two (Codex review #4, MAJOR 4).
+
+    Hardened per the 2026-08-28 pre-freeze review (BLOCKER 6): a nonempty all-true condition
+    mapping was ALL this required, so a diagnostic subset run -- which overwrote the official gate
+    file -- or a hand-edited one-condition file was accepted as GO. Now the exact registered
+    condition set, the pinned component list, a real (non-substituted) Stage-0 for G1, the
+    per-query dump's bytes, and a clean committed evaluator identity are all required."""
     p = REPO / "results" / f"m7_gate_{run_id}.json"
     if not p.exists():
         raise SystemExit(f"FREEZE REFUSED: no gate result at {p.relative_to(REPO)}. The gate is "
@@ -235,6 +249,34 @@ def assert_gate_passed(run_id, table_sha, meta_sha):
     g = json.loads(p.read_text())
     art = g.get("artifact")
     problems = []
+    if set(g.get("conditions") or {}) != set(REQUIRED_GATE_CONDITIONS):
+        problems.append(f"gate conditions are {sorted(g.get('conditions') or {})}, not the "
+                        f"registered set {sorted(REQUIRED_GATE_CONDITIONS)}")
+    if g.get("diagnostic_subset"):
+        problems.append("the gate result is marked diagnostic_subset; a freeze needs the full "
+                        "pinned suite")
+    import dev_eval
+    pinned = dev_eval.dev_components()
+    if g.get("components") != pinned:
+        problems.append(f"the gate ran on components {g.get('components')}, not the pinned dev "
+                        f"suite {pinned}")
+    g1 = (g.get("conditions") or {}).get("G1_stage0_above_potion") or {}
+    if g1.get("checkpoint") in (None, run_id) or "SUBSTITUTED" in str(g1.get("note", "")):
+        problems.append("G1 was not judged on a real Stage-0 checkpoint (substituted or missing); "
+                        "the registered gate defines G1 on the Stage-0 distilled table")
+    dump = g.get("per_query_dump") or {}
+    dp = REPO / "results" / str(dump.get("path", ""))
+    if not dump or not dp.exists():
+        problems.append("the gate's unrounded per-query dump is missing")
+    elif sha256_file(dp) != dump.get("file_sha256"):
+        problems.append(f"the gate's per-query dump {dp.name} does not match the hash the gate "
+                        "recorded; it has been replaced or edited")
+    ci = g.get("code_identity") or {}
+    if not ci.get("git_head"):
+        problems.append("the gate records no code identity (git_head)")
+    if ci.get("m7src_dirty") is not False:
+        problems.append("the gate ran from a DIRTY m7src tree (code_identity.m7src_dirty is not "
+                        "false); re-run it from a clean commit so its code identity is real")
     # `is True`, not truthiness: `"PASS": "false"` is a non-empty string and used to pass. And the
     # summary flag is not enough on its own -- every condition must independently say `pass: true`,
     # so a hand-set or stale summary cannot carry a failing condition through
@@ -483,6 +525,27 @@ def load_and_verify():
                                 f"{spec.get('param')}) is not the argmax of its own grid")
         else:
             problems.append("the frozen fusion spec records no grid")
+        # THE LEXICAL FUNCTION MUST BE THE ONE THE PARAMETER WAS SELECTED UNDER. The final run
+        # builds BM25 uncached, and nothing compared the installed bm25s/PyStemmer to the versions
+        # the selection's cache keys recorded -- so a package upgrade between freeze and final run
+        # silently changed the fused system, i.e. C3 would judge a function never selected on dev
+        # (Codex pre-freeze review 2026-08-28, BLOCKER 1).
+        sel_keys = (spec.get("selected_on") or {}).get("bm25_run_keys") or {}
+        if not sel_keys:
+            problems.append("the frozen fusion spec records no bm25_run_keys, so the lexical "
+                            "function it was fitted against cannot be re-verified")
+        else:
+            live_v = _fusion._pkg_versions()
+            for comp, k in sorted(sel_keys.items()):
+                if k.get("versions") != live_v:
+                    problems.append(f"BM25 package drift since the fusion selection ({comp}: "
+                                    f"selected under {k.get('versions')}, running {live_v}); the "
+                                    "fused system would not be the function selected on dev")
+                    break
+                if k.get("config") != _fusion.BM25_CONFIG:
+                    problems.append(f"BM25 config drift since the fusion selection ({comp}: "
+                                    f"{k.get('config')} vs live {_fusion.BM25_CONFIG})")
+                    break
     # The teacher's remote code is re-verified by final_run before any protected access; here we
     # only check the pin file itself has not been swapped since the freeze.
     pin = REPO / "results" / "m7_teacher_code_pin.json"
@@ -491,6 +554,24 @@ def load_and_verify():
             problems.append("results/m7_teacher_code_pin.json is missing")
         elif sha256_file(pin) != b["teacher_code_pin_sha256"]:
             problems.append("results/m7_teacher_code_pin.json changed after the freeze")
+    # RE-RUN THE PREDICATES, do not trust their recorded verdicts. FREEZE.json is a committed
+    # text file: a hand-authored or edited one carrying valid table/fusion/manifest hashes but no
+    # real gate or licence evidence passed everything above, so the final run could bypass
+    # `freeze.write`'s two protections entirely (Codex pre-freeze review 2026-08-28, BLOCKER 7).
+    # Both predicates read committed or content-hashed evidence and raise with their own reasons.
+    if not problems:
+        try:
+            lineage = assert_releasable(b["run_id"])
+        except SystemExit as e:
+            problems.append(f"releasability re-check failed: {e}")
+        else:
+            if lineage != b.get("training_lineage_record_sha256"):
+                problems.append("the training-lineage run records no longer match the hashes "
+                                "frozen in FREEZE.json")
+        try:
+            assert_gate_passed(b["run_id"], b["table_sha256"], b["table_meta_sha256"])
+        except SystemExit as e:
+            problems.append(f"gate re-check failed: {e}")
     if problems:
         raise SystemExit("FINAL RUN REFUSED:\n  - " + "\n  - ".join(problems))
     return b

@@ -65,7 +65,10 @@ def load_release(run_id, device="cuda"):
 
 
 EVALUATOR_SOURCES = ["boot.py", "multieval.py", "evalkit.py", "table.py", "dev_eval.py",
-                     "heldout.py", "dev_audit.py", "devsuite.py", "pool.py", "encoders.py"]
+                     "heldout.py", "dev_audit.py", "devsuite.py", "pool.py", "encoders.py",
+                     # absent from the GO gate's identity, so the file that computed the verdict
+                     # was the one file not pinned by it (Codex pre-freeze review, MAJOR 1)
+                     "gate.py", "fusion.py"]
 
 
 def code_identity():

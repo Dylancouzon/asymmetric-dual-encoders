@@ -108,8 +108,8 @@ We need 82–88%. Priced against our calibration, a 92.5%-retention query tower 
 six with the *current* teacher (clears the 0.4583 release bar) and 0.506 with gte-large (clears the
 0.4868 Tier-1 aim **dense-only, before any fusion**). Cost: ~0.1–0.5 ms vs our 0.023 ms.
 
-**This is M8's mandate** (`instructions-m8.md`: a LEAF-style distilled small query tower). So the
-literature says M8 will likely clear M7's bars comfortably. That reframes M7 honestly: **M7's
+**This is M9's mandate** (renumbered from M8 on 2026-08-28; now `instructions-m9.md`: a LEAF-style distilled small query tower). So the
+literature says M9 will likely clear M7's bars comfortably. That reframes M7 honestly: **M7's
 contribution is the zero-transformer point on the cost frontier, not the quality winner.** Worth
 saying out loud before we over-invest in closing a gap that the next milestone closes by design.
 
