@@ -112,7 +112,10 @@ def eval_makers(makers, components=None, k=100, verbose=True, max_docs=None, pai
                 raise AssertionError(f"{tag}/{comp}: maker returned {qv.shape[0]} rows, want {n}")
             if Q is None:
                 dim = qv.shape[1]
-                Q = np.empty((total, dim), dtype=np.float32)
+                # NaN-filled, not empty: every block must be written before scoring, and an
+                # off-by-one in the offsets then surfaces as a NaN rather than as stale memory
+                # that scores plausibly.
+                Q = np.full((total, dim), np.nan, dtype=np.float32)
             Q[start:start + n] = qv
             del qv
         if max_docs is not None and len(doc_ids) > max_docs:
@@ -120,6 +123,9 @@ def eval_makers(makers, components=None, k=100, verbose=True, max_docs=None, pai
         if verbose:
             print(f"  [{key}] {len(gcomps)} component(s) x {len(makers)} variants = {total:,} "
                   f"query rows over {len(doc_ids):,} docs, rss {rss_gb():.1f} GB", flush=True)
+        if not np.isfinite(Q).all():
+            raise AssertionError(f"[{key}] {int((~np.isfinite(Q)).any(1).sum())} query rows were "
+                                 "never written; the block offsets do not cover the matrix")
         bi, bs = topk_arrays(Q, dv, k=k, chunk=dev_eval.CHUNK.get(gcomps[0], 200_000))
         del Q
         span = {(tag, comp): (start, n) for tag, comp, _, _, start, n in blocks}

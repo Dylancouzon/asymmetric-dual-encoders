@@ -165,6 +165,17 @@ def chains(name, base, arms, b_base, a_base, fail_fast=True):
                 print(f"[{rid}] SKIPPED: shared B artifact {bid} does not exist", flush=True)
                 out[rid] = None
                 continue
+            # Same guard as `chain`: a shared B is only shareable if it was trained under the
+            # settings this arm assumes. Sharing the wrong B is a silently mislabelled ablation.
+            _prev = json.loads((WORK / "runs" / f"{bid}.json").read_text())["cfg"]
+            _want = replace(base, run_id=bid, **{**b_base, **arms[share].get("b", {})})
+            _drift = {k: (_prev.get(k), getattr(_want, k)) for k in asdict(_want)
+                      if k != "run_id" and _prev.get(k) != getattr(_want, k)
+                      and not (isinstance(getattr(_want, k), (list, tuple))
+                               and list(_prev.get(k) or []) == list(getattr(_want, k) or []))}
+            if _drift:
+                raise ValueError(f"{rid} shares B artifact {bid}, which was trained with different "
+                                 f"settings {_drift}")
             out[rid] = one(f"{rid}-a", base, init=f"run:{bid}", **a_over)
         else:
             out[rid] = chain(rid, base, b_over, a_over)
