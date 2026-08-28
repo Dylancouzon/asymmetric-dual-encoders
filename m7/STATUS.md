@@ -38,6 +38,14 @@ dev number is SELECTION evidence**; only the three frozen-test comparisons are c
 6. Then: fusion re-selection on the candidate → ANN sweep + costs → gate as a mechanical
    eligibility audit → freeze.
 
+7. **THE VERY LAST M7 TASK — the clean-stack tax** (Dylan approved 2026-08-28, pre-registered in
+   `LEDGER.md`). One arm: the frozen final recipe plus decontaminated MS MARCO, everything else
+   identical, to measure what excluding non-commercial training data costs. Runs ONLY after the
+   final run and the freeze, so it cannot inform any decision already made. The artifact is
+   research-only and never released — `freeze.assert_releasable` refuses any lineage containing an
+   msmarco source, and it resolves `sources: []` against the live mix so an empty list cannot slip
+   through.
+
 **The final run is NOT scheduled.** It is the one-shot confirmatory access to the six and the
 recipe is still moving; it waits for Dylan.
 

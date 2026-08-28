@@ -33,10 +33,50 @@ def sha256_file(p):
     return h.hexdigest()
 
 
+NON_COMMERCIAL_SOURCES = ("msmarco", "ms-marco", "ms_marco")
+
+
+def assert_releasable(run_id):
+    """Refuse to freeze an artifact trained on data that cannot be released commercially.
+
+    MS MARCO is "non-commercial research purposes only" and is permanently excluded from the
+    RELEASE stack (m7/LEDGER.md). The final M7 task deliberately trains ONE variant on it to
+    measure what the exclusion costs, and that variant must never reach a freeze, a fusion, or an
+    upload. Enforced here rather than by intention, because the two artifacts are otherwise
+    indistinguishable on disk and the mistake would be irreversible once published."""
+    import mix
+    # `sources: []` in a Cfg means "every available source", so an empty list must NOT read as
+    # "no non-commercial data" -- that is precisely how the research-only variant would slip
+    # through. Resolve it against what is on disk now, and say so: this reflects the CURRENT mix,
+    # which is the conservative direction (a source added later still trips the guard).
+    chain, seen = [run_id], set()
+    while chain:                       # a checkpoint init inherits its parent's training sources
+        rid = chain.pop()
+        if rid in seen:
+            continue
+        seen.add(rid)
+        p = WORK / "runs" / f"{rid}.json"
+        if not p.exists():
+            continue
+        c = json.loads(p.read_text())["cfg"]
+        srcs = [str(s).lower() for s in (c.get("sources") or mix.available_sources())]
+        bad = [s for s in srcs if any(n in s for n in NON_COMMERCIAL_SOURCES)]
+        if bad:
+            raise SystemExit(
+                f"FREEZE REFUSED: {run_id} inherits non-commercially-licensed training data "
+                f"{bad} via {rid}. MS MARCO is research-only; it may not enter a released "
+                f"artifact (m7/LEDGER.md, 'the clean-stack tax').")
+        init = str(c.get("init", ""))
+        if init.startswith("run:"):
+            chain.append(init.split(":", 1)[1])
+    return sorted(seen)
+
+
 def write(run_id, fusion_spec, released_system, dev_macro=None, notes=None):
     # Freeze the RELEASE artifact (weights folded), never the raw training checkpoint: the tier
     # claims are about what ships (review #2 BLOCKER 2). ensure_release is idempotent.
     from table import ensure_release
+    lineage = assert_releasable(run_id)
     npz = ensure_release(WORK / "runs" / f"{run_id}.npz")
     meta_p = npz.with_name(npz.stem + ".meta.json")
     meta = json.loads(meta_p.read_text())
@@ -46,6 +86,9 @@ def write(run_id, fusion_spec, released_system, dev_macro=None, notes=None):
                  "the released-system choice from here, never from the command line, and "
                  "recomputes table_sha256 before scoring anything.",
         "run_id": run_id,
+        "training_lineage": lineage,
+        "release_licence_check": "no non-commercial training source in the lineage "
+                                 "(freeze.assert_releasable)",
         "table_relpath": f"work/runs/{npz.name}",
         "training_checkpoint_sha256": sha256_file(WORK / "runs" / f"{run_id}.npz"),
         "table_sha256": sha256_file(npz),

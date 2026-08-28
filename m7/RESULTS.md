@@ -89,3 +89,7 @@ StackExchange components (+0.047/+0.020), so the ranking was not StackExchange-s
 | p4x-nopseudo-a | `work/runs/p4x-nopseudo-a.json` | 0.5072 | ok |
 | p4x-pseudo500k-b | `work/runs/p4x-pseudo500k-b.json` | 0.4970 | ok |
 | p4x-pseudo500k-a | `work/runs/p4x-pseudo500k-a.json` | 0.5098 | ok |
+| p4-base-b | `work/runs/p4-base-b.json` | 0.4981 | ok |
+| p4-base-a | `work/runs/p4-base-a.json` | 0.5106 | ok |
+| p4-input-emb-b | `work/runs/p4-input-emb-b.json` | 0.4977 | ok |
+| p4-input-emb-a | `work/runs/p4-input-emb-a.json` | 0.5113 | ok |

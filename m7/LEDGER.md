@@ -269,6 +269,39 @@ training list — 2 of the 6 — and must be labelled at the dataset row.** All 
 top-PC removal, any per-token scalar weight, any doc-side linear map. Only n-gram rows and
 multiplicity-dependent pooling add anything — which is why #4 could work at all.
 
+## FINAL M7 TASK: the clean-stack tax (pre-registered 2026-08-28, Dylan approved, before any number)
+
+**Question.** Every comparator we benchmark against trained on MS MARCO — bge/C-Pack, Arctic-Embed
+2.0's prior English data, LEAF, SPLADE, OpenSearch doc-v3, LightRetriever. We excluded it because
+its terms say "non-commercial research purposes only" and the deliverable is an Apache-2.0 model
+(IBM Granite is the precedent). Nobody publishes what that exclusion costs. This measures it.
+
+**Licensing position, explicit.** MS MARCO stays excluded from the RELEASE stack, permanently. This
+one variant is a non-commercial research measurement, which is what the licence permits. It is
+**never released, never uploaded, never fused into, and never compared as a tier claim.** Required
+guard before the arm runs: `freeze.write` and `final_run` must REFUSE any artifact whose training
+sources include an msmarco source, so the quarantine is enforced by code and not by intention.
+
+**When.** Only after the final run has executed and `m7/FREEZE.json` is immutable. That ordering is
+the point: development is over, so a post-hoc measurement cannot inform any decision that has
+already been made. Running it earlier would contaminate the confirmatory claim.
+
+**Design.** ONE arm, not a sweep — a sweep would be development. Take the FROZEN final recipe
+exactly as shipped and add decontaminated MS MARCO to the training mix, changing nothing else.
+MS MARCO goes through the identical R1/R2 decontamination and pool-ban passes as every other
+source; counts logged here like any other. Report the resulting pair count.
+
+**Confound, stated up front:** adding a source on top moves volume AND source quality together, so
+the primary number is the real-world quantity ("what the exclusion costs"), not an isolated claim
+about MS MARCO's per-pair value. If compute permits, ONE labelled secondary arm size-matched to the
+clean mix separates the two; it is optional and its absence is not a gap in the primary claim.
+
+**Scoring and the six.** Dev suite as usual, plus a post-hoc, explicitly NON-CONFIRMATORY six-set
+access using the frozen eval assets. That access is logged in `m7/SIX_ACCESS.log` and enumerated in
+the report's deviation list alongside the other three. It supports one descriptive sentence —
+"excluding non-commercial training data costs X nDCG on these six datasets" — and no tier claim, no
+selection, and no change to the released system whatever it says.
+
 ## Fusion
 
 One family, one parameter, no per-dataset weights or routing, `fusion.DEPTH`=1000 for selection
