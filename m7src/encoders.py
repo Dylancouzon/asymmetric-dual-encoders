@@ -169,7 +169,11 @@ REGISTRY = {
         revision="a829fd0e060bb84554da0dfd354d0de0f7712b7f",
         dim=768, pooling="cls", query_prefix="", trust_remote_code=True,
         notes="no prompt convention, like its large sibling; 768-d control for gte-large, whose "
-              "table was the worst of the eight probed"),
+              "table was the worst of the eight probed. Its config says vocab_size 30528, which "
+              "is embedding PADDING: the tokenizer is the same 30,522-entry BERT vocab as "
+              "bge/stella/arctic, verified byte-identical by an ordered-vocab hash, with "
+              "cls_token_id 101. So the shared bag matrix and table.CLS_ID hold unchanged -- do "
+              "not 'fix' the table width to 30528, or 6 rows would ship that nothing can emit"),
 }
 
 DEFAULT = "bge-base-en-v1.5"
