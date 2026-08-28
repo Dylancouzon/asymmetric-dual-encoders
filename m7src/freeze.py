@@ -78,6 +78,32 @@ def assert_releasable(run_id):
     return sorted(seen)
 
 
+def assert_encoder_matches_artifact(meta, where):
+    """The table's own `teacher` must be the encoder this process is running.
+
+    `encoder_spec` is read from the AMBIENT environment (`M7_ENCODER`) while `teacher` comes from
+    the artifact's metadata, and nothing compared them. `run_freeze_prep.sh` exports the encoder
+    only inside its own child shell, so a `freeze.write(...)` from an ordinary shell records
+    `teacher: stella` beside `encoder_spec: bge-base` -- and a final run in that same shell then
+    passes `encoder_drift` (frozen bge == live bge) while serving stella's table against bge
+    documents. With bge the dimensions differ and it crashes; with any other 1024-d encoder
+    (arctic-l, bge-large, e5-large) it produces a plausible wrong number instead.
+    Codex one-shot-path review 2026-08-28, BLOCKER 1.
+    """
+    sp = encoders.active()
+    want = (meta.get("teacher"), meta.get("teacher_revision"))
+    got = (sp.repo, sp.revision)
+    if want != got and want != (None, None):
+        raise SystemExit(
+            f"{where} REFUSED: the artifact was built with teacher {want[0]}@{str(want[1])[:12]} "
+            f"but the active encoder is {sp.name} = {got[0]}@{str(got[1])[:12]} "
+            f"(M7_ENCODER={os.environ.get('M7_ENCODER', '<unset>')!r}). Set M7_ENCODER to the "
+            "encoder the table was distilled from; a table is only valid against its own "
+            "teacher's document vectors.")
+    if meta.get("dim") is not None and int(meta["dim"]) != int(sp.dim):
+        raise SystemExit(f"{where} REFUSED: table dim {meta['dim']} != active encoder dim {sp.dim}")
+
+
 def write(run_id, fusion_spec, released_system, dev_macro=None, notes=None):
     # Freeze the RELEASE artifact (weights folded), never the raw training checkpoint: the tier
     # claims are about what ships (review #2 BLOCKER 2). ensure_release is idempotent.
@@ -86,6 +112,7 @@ def write(run_id, fusion_spec, released_system, dev_macro=None, notes=None):
     npz = ensure_release(WORK / "runs" / f"{run_id}.npz")
     meta_p = npz.with_name(npz.stem + ".meta.json")
     meta = json.loads(meta_p.read_text())
+    assert_encoder_matches_artifact(meta, "FREEZE")
     pre = meta["preproc"]
     blob = {
         "_note": "Written before the freeze commit. final_run.py reads preprocessing, fusion and "
@@ -166,6 +193,17 @@ def load_and_verify():
         problems.append("table metadata sha256 mismatch")
     else:
         meta = json.loads(meta_p.read_text())
+        # catches a freeze written under the wrong ambient encoder: `teacher` came from the
+        # artifact and `encoder_spec` from the environment, and they were never compared.
+        for f, k in (("teacher", "teacher"), ("teacher_revision", "teacher_revision")):
+            if meta.get(f) != b.get(k):
+                problems.append(f"the table's {f} ({meta.get(f)}) disagrees with FREEZE.json "
+                                f"({b.get(k)})")
+        fs = b.get("encoder_spec") or {}
+        if fs.get("repo") and meta.get("teacher") and fs["repo"] != meta["teacher"]:
+            problems.append(f"FREEZE.json binds encoder {fs['repo']} but the frozen table was "
+                            f"distilled from {meta['teacher']} -- the freeze was written with the "
+                            "wrong M7_ENCODER")
         if meta["preproc_fingerprint"] != b["preproc_fingerprint"]:
             problems.append("the table's own preprocessing fingerprint disagrees with FREEZE.json")
     for name, key in (("results/m7_dev_manifest.json", "dev_manifest_sha256"),
