@@ -42,7 +42,7 @@ lives in `results/m7_*.json` and is pointed at, never restated.
   matched. Frozen comparator pairing is valid.
 - Conformance **42/42** (`test_conformance.py`), incl. the real save→load→encode path and the
   pooling rule. `test_encoders.py`: 115 encode-cache keys replayed, 0 failures. `run_tests.sh`
-  runs all ten suites; a suite nobody runs is documentation.
+  runs all eleven suites; a suite nobody runs is documentation.
 
 **SIX-SET ACCESSES — the complete list.** The "exactly two accesses" claim is dropped; the rule is
 convention-based, not enforced (any script can read committed qrels), and `load_beir` appends to
@@ -155,7 +155,10 @@ questions per context), so it rewards document-anchored memorisation during dev 
 - **Type-I evidence.** Sharp-null Holm FWER 0.013 at α=0.025 (`m7_signflip_calibration.json`).
   Weak null, sign-flip leg alone (`m7_signflip_weaknull.json`): 0.038 and 0.023 at nominal 0.025,
   **0.013 and 0.008** at 0.008333. Weak null, **the whole three-leg rule over the whole family**
-  (`m7_tier_rule_calibration.json`, 2026-08-28): see "The familywise question" below.
+  (`m7_tier_rule_calibration.json`, S=4,000, SE 0.0025): **0.0198** and **0.0283** against a nominal
+  0.025 — so the union bound's 0.039 is loose, but the rule is mildly ANTI-CONSERVATIVE on the
+  closer stand-in. A weak-null-valid studentized sign-flip leg gives 0.0203/0.0278, i.e. no
+  improvement: what binds is the bootstrap interval's coverage, not the sign-flip. See below.
 - **Nesting** (`signflip_dep`/`paired_dep`, `test_dep_stats.py`): one shared sign per underlying
   qid; stratified bootstrap resampling each membership stratum once and reusing the draw in every
   component it feeds. Reported three ways so the effects separate: ordinary →
@@ -170,9 +173,17 @@ questions per context), so it rewards document-anchored memorisation during dev 
 The pre-freeze one-shot review (MAJOR 5) held that the ledger's "family bounded at 0.025" claim was
 unearned: `signflip` is exact under the SHARP null (per-query exchangeability), not the weak null
 the report means (macro mean ≤ 0), and three marginal procedures each measured at 0.013 union-bound
-the family to **0.039**. The union bound is what is available without measurement. It was then
-measured — see `research/m7-fwer-decision-2026-08-28.md` for the options and the arithmetic. **No
-rule may change once a confirmatory number exists**, so this closes before the freeze or not at all.
+the family to **0.039**. The union bound is what is available without measurement, so the rule was
+measured instead (above). **The claim "the family is bounded at 0.025" is withdrawn either way**:
+the measured range is 0.020–0.028.
+
+Dylan's options, with the arithmetic, are in `research/m7-fwer-decision-2026-08-28.md`: (a) narrow
+the stated null, (b) a studentized leg — measured, buys nothing, not recommended, (c) keep the rule
+and report the measured rate, (d) tighten leg 3's level until the measurement lands ≤ 0.025 and
+record the calibration that chose it. (d) is strictly harder and legal ONLY before a confirmatory
+number exists; it also makes the release bar harder to clear, which is why it is his call.
+**No rule may change once a confirmatory number exists, so this closes before the freeze or not at
+all.**
 
 ## Teacher selection (2026-08-26, logged before any six-set access)
 

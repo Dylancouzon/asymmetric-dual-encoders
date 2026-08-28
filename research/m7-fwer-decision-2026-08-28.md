@@ -71,29 +71,32 @@ not an approximation at all, since `boot` seeds every call with SEED = 0 and the
 reuses the same draws too. A self-check asserts the vectorized legs reproduce `boot.signflip` and
 `boot.paired` exactly before any simulation runs.
 
-**Result, S = 1,000 (binomial SE ≈ 0.005):**
+**Result, S = 4,000 (binomial SE ≈ 0.0025). This supersedes an earlier S = 1,000 pass, which gave
+0.019 and 0.025 — the same picture, one stand-in lower.**
 
-| | family-wise rejection rate | per-comparison conjunction |
-|---|---|---|
-| stand-in `bge-small-en-v1.5` | **0.019** | 0.012 · 0.006 · 0.006 |
-| stand-in `lr-dense-websearch` | **0.025** | 0.007 · 0.010 · 0.012 |
+| | family-wise rejection rate | 95% interval | per-comparison conjunction |
+|---|---|---|---|
+| stand-in `bge-small-en-v1.5` | **0.0198** | [0.015, 0.025] | 0.0088 · 0.0077 · 0.0070 |
+| stand-in `lr-dense-websearch` | **0.0283** | [0.023, 0.033] | 0.0125 · 0.0085 · 0.0115 |
 
-Per-leg family rates, for the record: Holm(sign-flip) 0.021 / 0.029, the plain CI>0 leg 0.063 /
-0.079, the Bonferroni lower-bound leg 0.022 / 0.026.
+Per-leg family rates: Holm(sign-flip) 0.021 / 0.0305, the plain CI>0 leg 0.062 / 0.0818, the
+Bonferroni lower-bound leg 0.0227 / 0.0305.
 
-**A higher-precision run at S = 4,000 (SE ≈ 0.0025) is in flight; these numbers are the S = 1,000
-ones and will be superseded, not contradicted, by it.**
+Three things this settles, and the second is not what I expected.
 
-Three things this settles.
-
-* **The rule is not running at 0.039.** It runs at **0.019–0.025** against a nominal 0.025. The
-  union bound was loose by roughly a factor of two, and the reason is measurable: the individual
-  conjunctions are 0.006–0.012, and their union is far below their sum because the three comparisons
-  share a query sample.
-* **It is not conservative either.** One stand-in lands exactly on 0.025. The rule is approximately
-  correctly sized under a realistic weak null, not comfortably inside it.
-* **The plain 2.5% CI leg is the loose one** (0.063 / 0.079 at family level, ≈ 0.03 per comparison).
-  Legs 1 and 3 — both operating at 0.008333 — are what actually binds. Leg 3 was worth adding.
+* **The rule is not running at 0.039.** It runs at **0.020–0.028** against a nominal 0.025. The
+  union bound was loose by roughly a third to a half, and the reason is measurable: the individual
+  conjunctions are 0.007–0.013, and their union is well below their sum because the three
+  comparisons share a query sample.
+* **It is mildly ANTI-CONSERVATIVE on the closer stand-in.** `lr-dense-websearch` — the
+  zero-query-compute lookup table, architecturally the nearer analogue to ours — measures
+  **0.0283**, above the nominal 0.025, with an interval of [0.023, 0.033] that does not exclude
+  0.025 but is centred above it. At S = 1,000 this pair read 0.025 and I wrote that the rule was
+  "approximately correctly sized". At four times the precision it is approximately correctly sized
+  on one stand-in and about 13% over on the other.
+* **The plain 2.5% CI leg is the loose one** (0.06–0.08 at family level). Legs 1 and 3 — both
+  operating at 0.008333 — are what binds, and both measure ~0.0305 family-wide on the worse
+  stand-in against a 0.025 nominal.
 
 ## 4. The options
 
@@ -117,47 +120,68 @@ The standard fix is a **studentized** sign-flip (Janssen 1997): flip signs on `m
 than on `mean(d)`, which is asymptotically valid under the weak null.
 
 **It was measured in the same run, on the same simulations.** Substituting the studentized leg gives
-a familywise rate of **0.020 / 0.023** against the current rule's 0.019 / 0.025 — inside the
-Monte-Carlo error of each other. Per-comparison the two agree to ≤ 0.002 everywhere.
+**0.0203 / 0.0278** against the current rule's 0.0198 / 0.0283 — inside the Monte-Carlo error of
+each other, and it does not fix the over-rejection either. Per-comparison the two agree to ≤ 0.002
+everywhere.
 
 - **Cost**: a new statistic on the one-shot path, a new implementation to test, and a registered rule
   changed days before the freeze.
 - **Benefit**: measurably **none** at our data shapes. The theoretical guarantee is nicer; the
-  realized error rate is the same.
+  realized error rate is identical, because what is binding here is not the sign-flip's weak-null
+  validity but the bootstrap interval's coverage.
 - **Verdict**: I do not recommend it. Changing the decisive leg of an irreversible decision for a
-  guarantee that buys 0.002 of measured error rate is motion, not rigour.
+  guarantee that buys 0.0005 of measured error rate is motion, not rigour.
 
 ### (c) State the measured rate, and keep the rule
 
 Keep all three legs exactly as registered, and replace the ledger's unearned sentence — "the rule
 bounds the family at 0.025" — with the measurement: *under the sharp null the Holm family-wise rate
 is 0.013 (`m7_signflip_calibration.json`); under a realistic weak null the whole three-leg rule
-measures 0.019–0.025 against a nominal 0.025 (`m7_tier_rule_calibration.json`); a union bound over
-the marginal legs alone would say 0.039, and the measured rate is lower because the three
-comparisons share a query sample.*
+measures 0.020–0.028 against a nominal 0.025 (`m7_tier_rule_calibration.json`); a union bound over
+the marginal legs alone would say 0.039.*
 
-- **Cost**: none to the procedure. The report carries one more paragraph and one more artifact.
-- **Benefit**: the strongest honest claim available, with its own falsification attached, and it
-  answers the reviewer's objection with a number instead of an argument.
-- **Note**: (c) *is* (a) plus the measurement. They are not exclusive; (c) is how I would write (a).
+- **Cost**: the honest sentence now has to say "approximately 0.025, and up to 0.028 on the closer
+  stand-in", i.e. the rule is **not** demonstrated to control the family at 0.025.
+- **Benefit**: nothing moves, and the claim is exactly as strong as the evidence.
 
-## 5. What I recommend, and why
+### (d) Tighten the simultaneous leg until the measurement lands at or below 0.025
 
-**(c).** The reviewer's objection was that a claim was made without evidence. The right response to
-that is evidence, not a different procedure. The evidence says the rule is approximately correctly
-sized on our actual data shapes, and that the alternative procedure would not change the outcome.
+Lower leg 3's level below α/3 = 0.008333 until the measured weak-null familywise rate is ≤ 0.025 on
+**both** stand-ins, and record the calibration that chose it. Leg 3's per-comparison actual is
+~0.0123 at a nominal 0.00833 on the worse stand-in, so the correction needed is roughly a third —
+but that is arithmetic to be measured, not guessed, and the sweep is queued behind freeze prep.
 
-Concretely, if you agree, I will:
+- **Cost**: real, and it is the reason this is your call rather than mine. A stricter leg makes the
+  release bar and the Tier-1 aim **harder to clear**, on a system whose projections already straddle
+  the release bar. We may fail a tier we would otherwise have passed.
+- **Benefit**: the rule then demonstrably controls what the report says it controls.
+- **Legality**: this is the same move, in the same direction, as adding leg 3 this morning — strictly
+  harder, fixed before any confirmatory number exists. **It is legal today and illegal the moment
+  the final run happens.** That asymmetry is the whole reason to decide now.
 
-1. replace the ledger's familywise sentence with the measured rates, both nulls, both artifacts;
-2. state in the report that the p-value is exact under the sharp null, that the confirmatory claim
-   is about the weak null, and that the gap was measured rather than assumed;
-3. leave `final_run.py` untouched.
+## 5. What I recommend, and why — REVISED after S = 4,000
 
-**What would change my recommendation**: if the S = 4,000 run comes back materially above 0.025 —
-say 0.032 or higher, which S = 1,000 cannot exclude — then the rule is genuinely anti-conservative
-and (b) becomes worth its cost, or leg 3 moves to a stricter level. I will report that number either
-way before anything is written into the ledger.
+At S = 1,000 I recommended (c) and wrote that I would change my mind "if the S = 4,000 run comes back
+materially above 0.025". It came back at **0.0283** on the closer stand-in. That is above nominal,
+though not by the 0.032 I named, and its interval still contains 0.025. So this is the middle case I
+did not plan for, and I will not pretend the threshold I set decides it.
+
+**I lean to (d), weakly.** The reasoning: the project's own standard is that an unbelievable 0.50 is
+worth less than a defensible 0.46, and (d) is the only option that lets the report say the family is
+controlled at 0.025 without an asterisk. (b) is measurably useless. (c) is defensible but leaves a
+claim of "approximately correct" attached to the single irreversible number in the project.
+
+**The case against (d), stated fairly**: 0.0283 is one stand-in, one null construction, and its
+interval includes the nominal level; tightening costs power on a bar we may be near; and "tighten
+until the number looks right" is uncomfortably close to tuning even when the direction is
+conservative. If you prefer (c), it is a defensible choice and I will write it up without hedging.
+
+Either way I will: replace the ledger's familywise sentence with the measured rates; state in the
+report that the p-value is exact under the sharp null while the claim is about the weak null, and
+that the gap was measured rather than assumed; and — under (c) — leave `final_run.py` untouched.
+
+**Tell me which, and if (d), I will run the level sweep and bring you the level before anything is
+registered.**
 
 ## 6. The honest caveats on the measurement itself
 
