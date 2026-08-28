@@ -1,13 +1,13 @@
 # M7 status
 
-**Stage: mandatory ablations running (2026-08-28 early). Candidate `p35w-2m-s2500`, served with
-`pool_mode=sqrt`, full-suite dev macro 0.6153.**
+**Stage: all ablations and levers closed (2026-08-28 08:07). Candidate `p4n-teacher16-a` served at
+`pool_mode=sqrt`, full-suite dev macro 0.6258.** Nothing is running.
 
-Two Codex reviews actioned in full (`research/m7-codex-review-2026-08-27.md` and `-27b.md`), plus
-an audit of every closed avenue against CLAUDE.md's standing directive. Accepted reframe: **every
-dev number is SELECTION evidence**; only the three frozen-test comparisons are confirmatory.
+Progression: gate#2 0.5987 -> lever#2 0.6113 -> +sqrt pooling 0.6153 -> +teacher-mined negatives
+0.6258. Retention 0.931 all-six but **0.857 text-backed**, and CQADupStack retention is still
+0.72/0.81 — see the biased-estimator warning in `LEDGER.md` before believing any of it transfers.
 
-## Settled tonight
+## Settled
 
 - **The three lever-#2 decisions STAND** under dependence-preserving statistics, against a newly
   standardized survival bar (signflip p<0.05 AND raw paired CI>0, fp16 **and** int8):

@@ -353,6 +353,39 @@ the report's deviation list alongside the other three. It supports one descripti
 "excluding non-commercial training data costs X nDCG on these six datasets" — and no tier claim, no
 selection, and no change to the released system whatever it says.
 
+## THE DEV MACRO IS A BIASED ESTIMATOR OF SIX-SET IMPROVEMENT (2026-08-28)
+
+Recorded because it changes how every gain in this ledger should be read, and because the project
+already made this exact mistake once (GO gate #1's +0.0270 was carried entirely by nq-250k).
+
+The negatives adoption (+0.0105 all-six, `m7_compare_full_postabl.json`) decomposes as:
+
+| component | delta | share | in the TRAIN mix? |
+|---|---|---|---|
+| heldout-train | +0.0305 | 48.3% | **YES — it IS the train mix** |
+| hotpotqa | +0.0226 | 35.8% | **YES — hotpotqa-train is a source** |
+| heldout-longq | +0.0039 | 6.2% | **YES — subset of heldout-train** |
+| cqadup-physics | +0.0036 | 5.7% | no |
+| nq-250k | +0.0024 | 3.8% | no |
+| cqadup-programmers | +0.0002 | 0.3% | no |
+
+**90% of the gain lands on the three in-distribution components.** The two CQADupStack components
+— the only out-of-domain members, and the nearest analogue to the six — moved +0.0002 and +0.0036,
+i.e. nothing. `heldout-train` is additionally a *seen-document/unseen-query* slice that rewards
+document-anchored memorisation, and the table already **beats its teacher** there (1.079).
+
+**Consequence:** four of six dev components are Wikipedia/train-adjacent, so the dev macro
+systematically over-rewards in-distribution improvement. Adoptions that clear the bar may not
+transfer. The negatives arm met its pre-registered bar and is therefore adopted per protocol, but
+the report must state this concentration and must NOT claim it transfers to the six.
+
+**Forward-looking rule, pre-registered here before the next adoption's numbers exist:** every
+adoption from now on reports the six-component macro AND the **out-of-domain subset**
+(cqadup-programmers + cqadup-physics). An adoption whose gain is concentrated in-distribution is
+labelled "in-distribution only" and is not offered as evidence of six-set improvement. This does
+not change the adoption bar — changing a bar after seeing results is what the protocol forbids —
+it adds a mandatory disclosure alongside it.
+
 ## Fusion
 
 One family, one parameter, no per-dataset weights or routing, `fusion.DEPTH`=1000 for selection
