@@ -1,65 +1,61 @@
 # M7 status
 
-**Stage: all ablations and levers closed (2026-08-28 08:07). Candidate `p4n-teacher16-a` served at
-`pool_mode=sqrt`, full-suite dev macro 0.6258.** Nothing is running.
+**Stage: pre-freeze cleanup. Levers closed; the candidate's honest full-suite dev macro is
+0.6225, not the 0.6258 that has been quoted** — count-saturation pooling failed its own bar when
+re-adjudicated on the negatives candidate, so `pool_mode` is back to `mean` and the sqrt number is
+an unadopted arm. Two pre-registered corrections are running (2026-08-28).
 
-Progression: gate#2 0.5987 -> lever#2 0.6113 -> +sqrt pooling 0.6153 -> +teacher-mined negatives
-0.6258. Retention 0.931 all-six but **0.857 text-backed**, and CQADupStack retention is still
-0.72/0.81 — see the biased-estimator warning in `LEDGER.md` before believing any of it transfers.
+Read `LEDGER.md` § "THE DEV MACRO IS A BIASED ESTIMATOR" before believing any dev gain transfers:
+four of six dev components are Wikipedia/train-adjacent, and 90% of the negatives gain landed on
+the three in-distribution ones. `results/m7_dev_reuse_count.json` now counts the reuse: **53
+trained arms, 299 in-training dev evaluations, 74 eval-only variants**, with Holm applied inside
+named families only.
 
 ## Settled
 
-- **The three lever-#2 decisions STAND** under dependence-preserving statistics, against a newly
-  standardized survival bar (signflip p<0.05 AND raw paired CI>0, fp16 **and** int8):
-  +0.0065 / +0.0038 / +0.0023, all resolved. `results/m7_dev_audit_full.json`.
-- **The matrix shortcut and the released `QueryTable` path are equivalent**: per-query nDCG
-  deviation exactly 0, 2 of 161,216 queries with a changed ordered top-10.
-- **Capacity lever #4 ADOPTED: `sqrt` count saturation** — Holm rank 1 in both precisions,
-  +0.0040 fp16 / +0.0039 int8, positive on all six components, for **zero extra bytes and zero
-  query-time cost**. `Preproc.pool_mode` is now part of the frozen rule; conformance is 42/42.
-- **All six dev components are hash-pinned**, pool bytes included; the audit and gate refuse to run
-  unpinned. Late pin for the two held-out ones, disclosed in `LEDGER.md`.
+- **Lever #4 (pooling) does NOT survive on the new candidate**: sqrt +0.0033, CI [−0.0010,
+  +0.0073], p=0.063/0.067, nothing clears Holm. Pre-registered as a consequence of the negatives
+  adoption, and the outcome is worse than the first adjudication, so it is not a second bite.
+  `m7_lever4_pooling_full.json`; the earlier adjudication is archived under its own name.
+- **Lever #5 (row shrinkage) — no arm adopted.** **Lever #6 (train-through pooling) arm (a) —
+  fails**: +0.0011, p=0.051 fp16 / 0.073 int8. Both closed per their pre-registered bars.
+- **Long-span probe**: a gap at the endpoints (overlap@10 0.3443 at 8 words → 0.2997 at 256), but
+  not a clean trend — the 64-word bucket sits above the 8-word one. Enough to license lever #7.
+- **Novelty re-swept 2026-08-28.** Claim stands; phrasing weakened to "we found none". New nearest
+  miss **KAHM** (arXiv 2605.02950) clears the frozen-doc axis and misses the dense-rows one.
+  LightRetriever is v5/ICLR+KDD 2026; LEAF's paper (arXiv 2509.12539) now cited — matters for M8.
 
-## Run next, in this order
+## In flight
 
-1. Finish `./run_ablations.sh`: 2 attribution controls → 7 mandatory chains → the **negatives
-   ablation the mandate ordered and that never ran** → 1 exploratory chain. Every arm lands in
-   `RESULTS.md` whatever it says.
-2. **Lever #6 arm (a)**: A-phase only from the candidate's B checkpoint at `pool_mode=sqrt`
-   (~5 min). Smoke `sweep.smoke_chain` first — the training forward now takes pooling weights and
-   that path has never executed. Arm (b) only if (a) wins.
-3. `longspan_probe.py` — does teacher agreement fall with query length? Decides whether a
-   long-span distillation chain is worth buying. No qrels, ~10 min.
-4. `lever5_shrinkage.py` — pre-registered, eval-only, ~45 min.
-5. Teacher learnability probe on `arctic-embed-m-v1.5` and `gte-base-en-v1.5` (registered Specs,
-   `validate_encoder.py` first). Both 768-d with no disclosed six-set overlap, so a win there would
-   shrink the artifact AND remove stella's ArguAna/FiQA2018 disclosure problem. Measurement only —
-   a swap is Dylan's call and costs a full re-encode.
-6. Then: fusion re-selection on the candidate → ANN sweep + costs → gate as a mechanical
-   eligibility audit → freeze.
+1. **Step-selection rule was never applied to the negatives arms** — self-reported. teacher16 and
+   bm2516 peak on the proxy at 1500, mixed32 at 1000, and `warmup_linear` decays over `steps_a`,
+   so those are real re-runs. All three re-run; the negatives comparison and its tie-break are
+   re-decided on the corrected artifacts. **The proxy picks the step; the full-suite number gets
+   no vote, including when the corrected arm scores lower.**
+2. **Recipe simplification**, pre-registered as an equivalence test, not a quality lever: drop the
+   teacher-context init (30,522 forward passes), IDF weight seeding, `reg_init`, and 2M→500k
+   pseudo-queries — all four ablation-inert — and accept only on non-inferiority at δ=0.0040,
+   fp16 and int8. One arm, no fallback ladder. If it fails, the measured recipe ships.
 
-7. **TEACHER RE-EXAMINATION, BEFORE THE FREEZE** (pre-registered in `LEDGER.md`). The probes in
-   step 5 may justify swapping the teacher and retraining from scratch. If so it happens **before**
-   the freeze and the final run — a teacher is a dev-stage decision, and choosing one after seeing
-   six-set results, or running the final run twice and reporting the better, is selection on test
-   data. Swap bar, tie-break and the full cost (~8-12 h re-encode; levers #4/#5/#6 re-adjudicated)
-   are all fixed in the ledger. After the final run, a new teacher is a NEW milestone, not an edit
-   to M7's claim.
-8. **THE VERY LAST M7 TASK — the clean-stack tax** (Dylan approved 2026-08-28, pre-registered in
-   `LEDGER.md`). One arm: the frozen final recipe plus decontaminated MS MARCO, everything else
-   identical, to measure what excluding non-commercial training data costs. Runs ONLY after the
-   final run and the freeze, so it cannot inform any decision already made. The artifact is
-   research-only and never released — `freeze.assert_releasable` refuses any lineage containing an
-   msmarco source, and it resolves `sources: []` against the live mix so an empty list cannot slip
-   through.
+## Queued, in order
 
-**The final run is NOT scheduled.** It is the one-shot confirmatory access to the six and the
-recipe is still moving; it waits for Dylan.
+3. **Teacher probes** on `arctic-embed-m-v1.5` and `gte-base-en-v1.5` (`run_learnability_base.sh`,
+   `validate_encoder.py` first). Both 768-d with no disclosed six-set overlap, so a win shrinks the
+   artifact AND removes stella's ArguAna/FiQA2018 exposure. A swap is Dylan's call, costs an
+   ~8–12 h re-encode, and **must happen before the freeze or become a new milestone**.
+4. **Lever #7, long-span distillation** — pre-registered, the only lever aimed at a named weakness
+   of a confirmatory dataset (ArguAna) rather than at the dev macro. Primary bar is the length
+   probe; the dev suite is a veto, not the instrument.
+5. **Adversarial review gate** — Codex plus a reviewer briefed on over-fitting and over-engineering.
+   The last moment a finding can change the system.
+6. `./run_freeze_prep.sh <run_id>` → then stop. Freeze and the final run are Dylan's calls.
+7. Post-freeze, pre-registered: teacher re-examination consequences, then the clean-stack tax
+   (MS MARCO research-only variant, refused by `freeze.assert_releasable`).
+
+**The final run is NOT scheduled.** It is the one-shot confirmatory access to the six.
 
 ## Open for Dylan
 
 1. Nothing blocking.
-2. doc2query revival (licensing ruling on a clean generator) remains yours. The audit notes it was
-   closed at 1/8 the published dose with a positive-leaning p=0.085; an N=20 rerun is still
-   diagnostic and needs no ruling.
+2. doc2query revival (licensing ruling on a clean generator) remains yours.
 3. Windows Update reboots remain the top operational risk.
