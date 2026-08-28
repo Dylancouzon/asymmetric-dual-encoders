@@ -57,6 +57,9 @@ def ledger(line):
         f.write(line.rstrip() + "\n")
 
 
+FREEZE_TAG = "m7-freeze"
+# One aborted attempt may be retried; a second is an infrastructure problem, not a run.
+MAX_INFRA_RETRIES = 2
 SIX = ["scifact", "nfcorpus", "fiqa", "arguana", "scidocs", "trec-covid"]
 
 
@@ -82,8 +85,32 @@ def guard(freeze_hash, infra_retry, branch, fz):
     remote = sh("git", "ls-remote", "origin", f"refs/heads/{branch}").split("\t")[0]
     if remote != freeze_hash:
         problems.append(f"freeze commit is not pushed: origin/{branch} is {remote[:12]}")
+    # The freeze commit is resolved from an immutable pushed TAG, not taken on the caller's word.
+    # `--freeze-hash` was the only identification of "the reviewed freeze commit", so any clean
+    # pushed HEAD could be declared one (Codex one-shot-path review, BLOCKER 3).
+    tagged = sh("git", "ls-remote", "origin", f"refs/tags/{FREEZE_TAG}").split("\t")[0]
+    if not tagged:
+        problems.append(f"no pushed tag `{FREEZE_TAG}`: the freeze commit must be marked by an "
+                        f"immutable pushed tag, not asserted on the command line. "
+                        f"`git tag -a {FREEZE_TAG} -m ... <commit> && git push origin {FREEZE_TAG}`")
+    elif tagged != freeze_hash:
+        problems.append(f"--freeze-hash {freeze_hash[:12]} != the pushed tag `{FREEZE_TAG}` "
+                        f"({tagged[:12]}); the tag is authoritative")
+
     text = LEDGER.read_text()
     prior_hashes = re.findall(r"FINAL-RUN-BEGIN freeze=([0-9a-f]{40}) table=([0-9a-f]{64})", text)
+    n_complete = len(re.findall(r"FINAL-RUN complete in", text))
+    n_begin = len(prior_hashes)
+    if n_complete:
+        # A COMPLETE run is the one shot. Retry existed for an aborted run; it did not check
+        # whether the prior run had finished, so a completed result could be re-rolled forever.
+        problems.append(f"m7/LEDGER.md records {n_complete} COMPLETED final run(s). There is "
+                        "exactly one confirmatory access and it has been spent; a further run is "
+                        "a NEW milestone with its own pre-registration, never a retry.")
+    if infra_retry and n_begin > MAX_INFRA_RETRIES:
+        problems.append(f"--infra-retry already used {n_begin - 1} time(s); the cap is "
+                        f"{MAX_INFRA_RETRIES - 1}. Repeated infrastructure failure is a reason to "
+                        "fix the infrastructure, not to keep drawing from the six.")
     if prior_hashes and not infra_retry:
         problems.append("m7/LEDGER.md already holds a final-run entry; a code fix requires a NEW "
                         "pushed freeze commit, and no later run may be relabeled as final")
