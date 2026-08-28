@@ -350,9 +350,10 @@ traded against it. Training here is deterministic — `p4-base-a` and `p4n-bank-
 digits — so there is no replay noise to calibrate a band from, which is why the margin is anchored
 to an adopted effect instead.
 
-**If it fails**, the measured recipe ships unchanged and the failure is reported as evidence that
-individually-inert components interact. Backing off component-by-component until something passes
-would be adaptive dev search, and is forbidden here.
+**If it fails**, the measured recipe ships unchanged. Backing off component-by-component until
+something passes would be adaptive dev search, and is forbidden here. (The original wording said
+the failure would be "evidence that individually-inert components interact"; that is withdrawn as
+overclaimed — see the correction under the ablation table below.)
 
 **OUTCOME 2026-08-28: IT FAILS. The measured recipe ships unchanged.**
 `m7_simplify_decision.json`, `m7_compare_full_simplify.json`. `p5s-simple-nohn-a` scores **0.6105**
@@ -373,6 +374,47 @@ teacher-mined negatives — scores 0.6229, +0.0077 resolved. It differs from the
 axes at once, its negatives axis is a closed avenue, and its out-of-domain subset is 0.3679 against
 the baseline's 0.3672, i.e. the gain is once again in-distribution. It changes nothing and is kept
 so the record is not selectively pruned.
+
+**THE MANDATED ABLATIONS, ON THE FULL SUITE AT LAST** (`m7_compare_full_ablations.json`, matched
+`mean` pooling, no new training). They had only ever been reported on the three-component proxy.
+
+| arm | macro | Δ | raw CI | OOD |
+|---|---|---|---|---|
+| `p4-base-a` (replay) | 0.6113 | **+0.0000** | **[0.0000, 0.0000]** | 0.3657 |
+| `p4-uniform-w-a` (no IDF seeding) | 0.6126 | +0.0013 | [+0.0001, +0.0030] p=0.0124 | 0.3659 |
+| `p4-input-emb-a` | 0.6117 | +0.0004 | [−0.0001, +0.0010] | 0.3662 |
+| `p4-random-a` | 0.6115 | +0.0002 | [−0.0006, +0.0009] | 0.3658 |
+| `p4-reg0-a` | 0.6113 | −0.0000 | [−0.0001, +0.0001] | 0.3657 |
+| `p4-prefix-a` | 0.6094 | −0.0019 | [−0.0037, −0.0004] | 0.3653 |
+| `p4e-prefix-init-a` | 0.6094 | −0.0019 | [−0.0037, −0.0004] | 0.3657 |
+| `p4-flat-a` (no learned weights) | 0.6051 | **−0.0062** | [−0.0094, −0.0032] | 0.3658 |
+| baseline | 0.6113 | — | — | 0.3657 |
+
+Four things this settles.
+
+1. **Training is deterministic to the last digit.** The replay reproduces the baseline with a raw
+   CI of exactly [0.0000, 0.0000]. Every "noise" statement in this ledger is therefore about the
+   *eval* and about recipe perturbation, never about run-to-run variance — there is none.
+2. **Learned per-token weights are the one component that clearly earns its place** (−0.0062 to
+   remove, CI excluding zero). A query **prefix hurts**, −0.0019 either as runtime-only or with
+   prefix-conditioned rows — and the two are identical to four decimals, so the exploratory
+   prefix-init arm adds nothing over the mandatory one.
+3. **No arm clears Holm over the family.** The smallest p is `uniform-w`'s 0.0124 against a
+   0.00625 threshold at rank 1 of 8. So the single-knob evidence licenses **no** recipe change,
+   which is what makes shipping the recipe unchanged principled rather than merely the default —
+   including keeping IDF seeding, which the point estimate mildly disfavours.
+4. **The out-of-domain subset spans 0.3653–0.3662 across all eight arms** — a range of **0.0009**.
+   The entire mandated ablation programme moves the components analogous to the six by nothing.
+   Even `flat`, the one component that clearly earns its macro, buys 0.0062 of macro and
+   **0.0001** of out-of-domain.
+
+**CORRECTION to the simplification entry above.** It says the failure is "evidence that
+individually-inert components interact". That is **overclaimed** and is withdrawn. Main effects on
+the same instrument sum to about +0.0015 (input_emb +0.0004, uniform-w +0.0013, reg0 −0.0000,
+pseudo-500k ≈ −0.0002) against a joint −0.0048, a gap of −0.0063 — the same size as the
+recipe-perturbation band. Interaction and "one draw from a 0.005-wide distribution" are not
+separable here. The correct statement is that the joint arm **failed a pre-registered
+non-inferiority bar and the recipe therefore ships unchanged**; why it failed is not established.
 
 **Follow-up, pre-registered here as DIAGNOSTIC before its numbers exist.** Which of the four
 components carries the loss is unknown, and the seven mandatory ablations have only ever been
