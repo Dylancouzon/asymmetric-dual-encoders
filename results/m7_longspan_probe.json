@@ -1,0 +1,75 @@
+{
+ "run_id": "p35w-2m-s2500",
+ "encoder": "stella-400M-v5",
+ "source": "cqadup-physics",
+ "seed": 0,
+ "pool_docs": 6169142,
+ "preproc": {
+  "pool_mode": "sqrt"
+ },
+ "per_bucket": {
+  "8": {
+   "n_spans": 300,
+   "mean_wordpieces": 12.3,
+   "overlap@10_mean": 0.3443333333333333,
+   "overlap@10_sd": 0.23438121843602477,
+   "cosine_to_teacher_mean": 0.7525491118431091
+  },
+  "16": {
+   "n_spans": 300,
+   "mean_wordpieces": 23.3,
+   "overlap@10_mean": 0.3436666666666666,
+   "overlap@10_sd": 0.22962263728899976,
+   "cosine_to_teacher_mean": 0.7372056245803833
+  },
+  "32": {
+   "n_spans": 300,
+   "mean_wordpieces": 49.4,
+   "overlap@10_mean": 0.328,
+   "overlap@10_sd": 0.2123267921546093,
+   "cosine_to_teacher_mean": 0.7320061326026917
+  },
+  "64": {
+   "n_spans": 300,
+   "mean_wordpieces": 100.6,
+   "overlap@10_mean": 0.35300000000000004,
+   "overlap@10_sd": 0.23414596587029496,
+   "cosine_to_teacher_mean": 0.73459792137146
+  },
+  "128": {
+   "n_spans": 300,
+   "mean_wordpieces": 211.2,
+   "overlap@10_mean": 0.30666666666666664,
+   "overlap@10_sd": 0.21406125810669765,
+   "cosine_to_teacher_mean": 0.7222685813903809
+  },
+  "256": {
+   "n_spans": 300,
+   "mean_wordpieces": 404.0,
+   "overlap@10_mean": 0.2996666666666667,
+   "overlap@10_sd": 0.2123673442148978,
+   "cosine_to_teacher_mean": 0.7094923853874207
+  }
+ },
+ "gap_overlap@10_short_minus_long": 0.04466666666666663,
+ "gap_cosine_short_minus_long": 0.04305672645568848,
+ "code_identity": {
+  "git_head": "59246ea50d98471f56a582809831ecae39e96c41",
+  "m7src_dirty": false,
+  "source_sha256": {
+   "boot.py": "ef41292e0c6be395d6674618123c1685537ee5615e8e4706ca24ace72bf732fc",
+   "multieval.py": "9759ecafacbacf7fdb7d13f2ef84ff534523eec8210c9f6541236bad19a5e643",
+   "evalkit.py": "7598cfc28e7853b2d5ba306c76b0c36274692a05425e39a389b11f1c1c9c3ba9",
+   "table.py": "a6fe2750543551174de811a391ceac68f4aa01e8454210bb7d8ef8ad2a507ad6",
+   "dev_eval.py": "e5f702536c8af6a7bfb64cbe8770a45f81201866b4b175d4dd129c398737caa1",
+   "heldout.py": "18df62aa0c019490a03a00aa8a58947a24991314dc660d32e886fd4519658161",
+   "dev_audit.py": "af2805edf87cafb2bf96d999c71c57b3faf44f850621d15ae3f5c6bdc1a15f0b",
+   "devsuite.py": "3ae8141ac4b3f9bb8d64c29e026403b314a7f4295dfa9979888959e5f9050f7f",
+   "pool.py": "c72e7b8e7aa8a8d5365c696860f640d077b46712379e518fde50433b209a3ca8",
+   "encoders.py": "41189a8a9e828617ad6a555201a8d5238e9dea9becc587c72486d24d073fcc0e"
+  }
+ },
+ "_what": "teacher-agreement vs query length. Diagnostic only: no qrels are read, no adoption is attached, and agreement is not quality \u2014 a table could disagree with its teacher and be better. It sizes a gap; it does not price a fix.",
+ "_protocol": "m7/LEDGER.md, pre-registered 2026-08-28 before any number",
+ "seconds": 21.2
+}
