@@ -1,0 +1,8 @@
+{
+ "_what": "provenance pin for work/trainq_texts.json, the TRAIN query list every teacher-learnability probe is fitted on. It is gitignored and expensive to re-derive (it needs the 6.17M-row pool index and the decontamination outputs), so it was an UNPINNED input to the most consequential comparison left. Now it is checked on load, on every machine.",
+ "n_queries": 349934,
+ "sha256": "1610f4f47e3d37ddfe81a4b524a30c421cd2ffa742e2b59a6456bf1f66838e2e",
+ "bytes": 21842246,
+ "produced_by": "scripts/encode_trainq.py dump, on the RTX box, from the pool index + decontaminated pair list",
+ "note": "a second machine restores it from transfer/trainq_texts.json.gz (side branch only) and verifies against this hash; the list is identical or the probe refuses."
+}

@@ -105,7 +105,11 @@ def main():
 
     name = encoders.active().name
     lambdas = [float(a) for a in sys.argv[1:]] or LAMBDAS
-    q_texts = json.loads(TRAINQ.read_text())
+    # verified against results/m7_trainq_manifest.json: a probe fitted on a silently
+    # different TRAIN query set is not comparable to the committed incumbent row, and on a
+    # second machine the list arrives by transfer rather than by re-derivation.
+    import encode_trainq
+    q_texts = encode_trainq.load_texts()
     print(f"{name}: building the shared bag matrix over {len(q_texts):,} TRAIN queries", flush=True)
     tok = get_tokenizer()
     X = sr.bag_matrix(tok, q_texts, Preproc(), tok.vocab_size)
