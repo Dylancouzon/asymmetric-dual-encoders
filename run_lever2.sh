@@ -6,6 +6,10 @@
 # they are selection decisions, not compute.
 set -u
 cd /home/dylan/asymetric-dual-encoders
+# One instance ever: a harness-killed launch left an orphan that raced a relaunch into the SAME
+# run files (two p35b-500k trainings 19s apart, 2026-08-27). flock, not pgrep — see CODEMAP #4.
+exec 9> /tmp/run_lever2.lock
+flock -n 9 || { echo "another run_lever2.sh holds the lock; refusing"; exit 1; }
 export M7_ENCODER=stella-400M-v5
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 echo "waiting for the doc2query probe to finish $(date -Is)"
