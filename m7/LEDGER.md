@@ -532,6 +532,52 @@ p=0.009, int8 +0.0039 p=0.007. **Candidate: `p35a-2m-1e3`** (B 16k with the 923,
 A @ 1e-3, best step = cap 2000), full-suite dev macro 0.6090. Total lever-#2 gain over
 `s2w-1e3-s1000`: +0.0103. The pre-registered x4000 extension now runs (2m won the pick).
 
+## Dependence recompute of the three lever decisions: rule, 2026-08-27 (logged BEFORE the numbers)
+
+Codex review #3 BLOCKER 1: `heldout-longq` is a 55-query SUBSET of `heldout-train` (identical
+qids, corpus and qrels — per-query nDCG matches to 0.0), yet `boot.signflip`/`boot.paired` give
+those queries independent signs and independent draws in the two components. All three lever
+comparisons are therefore recomputed with `boot.signflip_dep`/`boot.paired_dep` (one shared sign
+per underlying qid; stratified bootstrap resampling each stratum once and reusing the draw in
+every component it feeds — `m7src/test_dep_stats.py` shows the machinery reduces to the ordinary
+one without sharing and matches a single-component bootstrap under full duplication, where the
+dependence-blind interval is 1.43x too narrow). Both are reported side by side.
+
+**Decision rule, fixed now:** each of the three decisions (500k adoption, 2m cross-arm pick,
+s2500 extension) stands only if the DEPENDENCE-PRESERVING statistics still meet its original bar
+(signflip p<0.05 AND paired CI>0, int8 independently). Any decision that fails reverts to its
+baseline, and the candidate becomes the last artifact whose chain survives — `p35a-2m-1e3` if
+only s2500 fails, `p35w-500k-s1500` if the 2m pick also fails, `s2w-1e3-s1000` if all three do.
+Recomputation runs through the RELEASE `QueryTable` path (not the matrix shortcut), and stores
+unrounded per-query values so any later reader can redo this arithmetic (review #3 MAJOR 6).
+
+**Status of every dev p-value (review #3 MAJOR 1, accepted):** SELECTION evidence, not
+confirmation. The three frozen-test comparisons in the final run are the only confirmatory
+claims. No text may say pseudo-query coverage was "statistically confirmed"; the defensible
+statement is that adaptive dev search selected a better dev artifact, with the matched
+no-pseudo control quantifying how much of it the coverage change explains.
+
+## Capacity lever #4 (count saturation): protocol, 2026-08-27 (logged BEFORE any number)
+
+`m7_absorb_check.json` proves multiplicity-dependent pooling is the one query-side transform
+besides n-gram rows that is NOT absorbable into the table, and it is untested. It costs zero
+extra rows, zero extra bytes and no retraining — the cheapest genuine capacity left.
+
+- **Family, fixed here, three arms**: `binary` (each distinct token contributes once), `cap2`
+  (occurrences capped at 2), `sqrt` (a token seen c times contributes total weight sqrt(c)).
+  Baseline `mean` is the current released rule (count-proportional). All keep the weighted-mean
+  denominator, so length normalization is unchanged.
+- **Evaluated on the frozen candidate table** as an eval-only change, full pinned dev suite,
+  release shape, fp16 and int8, through `QueryTable`.
+- **Adoption bar**: signflip p<0.05 AND paired CI>0 vs the identical table under `mean`, int8
+  independently, **under the dependence-preserving statistics**, with Holm at alpha=0.05 across
+  the three arms' p-values. Exactly one mode may go forward — the largest dev macro among those
+  clearing the bar. Everything is exploratory selection evidence, as above.
+- **If adopted**: `Preproc` grows a `pool_mode` field (frozen with the artifact and stated on the
+  model card), `test_conformance.py` is extended before any re-gate, and the mandatory ablations
+  and fusion re-selection run on the new shape. **If it fails**: closed in `EXPLORED.md` with the
+  per-arm deltas, and the released rule stays count-proportional.
+
 ## Lever #2 final: candidate `p35w-2m-s2500`, 2026-08-27
 
 The labeled extension bracketed the peak (0.5119@2500, plateau after); the s2500 re-run beats

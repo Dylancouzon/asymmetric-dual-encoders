@@ -18,8 +18,8 @@ B = 10_000
 SEED = 0
 
 
-def _align(a, b, strict=False):
-    """-> {dataset: (arr_a, arr_b)} over the intersection of datasets, aligned by sorted qid.
+def _align_ids(a, b, strict=False):
+    """-> {dataset: (qids, arr_a, arr_b)} over the intersection of datasets, aligned by sorted qid.
 
     strict=True refuses any silent shrinkage: a confirmatory comparison must never quietly drop
     a dataset or a query, because nDCG over the intersection is a different statistic than the
@@ -37,9 +37,15 @@ def _align(a, b, strict=False):
         qs = sorted(set(a[ds]) & set(b[ds]))
         if not qs:
             continue
-        out[ds] = (np.array([a[ds][q] for q in qs], dtype=np.float64),
+        out[ds] = (qs, np.array([a[ds][q] for q in qs], dtype=np.float64),
                    np.array([b[ds][q] for q in qs], dtype=np.float64))
     return out
+
+
+def _align(a, b, strict=False):
+    """The dependence-blind view: {dataset: (arr_a, arr_b)}. Kept byte-identical in behaviour
+    because every committed number was produced through it."""
+    return {ds: (x, y) for ds, (_, x, y) in _align_ids(a, b, strict=strict).items()}
 
 
 def signflip(a, b, R=100_000, seed=SEED, alternative="greater", strict=True):
@@ -149,6 +155,146 @@ def holm(pvals, alpha=0.025):
             still = False
         out[name] = {"p": pvals[name], "threshold": thr, "reject": bool(rej), "rank": i + 1}
     return out
+
+
+# ---- dependence-preserving variants (Codex review #3 BLOCKER 1, 2026-08-27) ---------------
+#
+# `heldout-longq` is literally a subset of `heldout-train` (m7src/heldout.py): the same 55 queries,
+# the same corpus, the same qrels, hence bit-identical per-query nDCG (verified: max |diff| = 0.0).
+# The macro weights them 1/6 as a component AND 55/7325 inside another component, so they are two
+# observations of ONE underlying query. `signflip`/`paired` above give them independent signs and
+# independent bootstrap draws, which discards that covariance. These variants do not change the
+# statistic (the macro is defined with equal component weights and is unchanged); they change only
+# its null/resampling distribution, i.e. the p-value and the interval.
+
+def unit_key(ds, qid):
+    """Which underlying query a (component, qid) observation is OF. Held-out components share one
+    query space by construction; every other component is its own."""
+    return ("heldout", qid) if ds.startswith("heldout-") else (ds, qid)
+
+
+def strata(aligned, unit_of=unit_key):
+    """Partition units by which components they appear in; that signature IS the stratum.
+
+    Returns [{sig, n, idx: {ds: positions}}]. A unit appears at most once per component, so a
+    stratum's units index each of its components with one aligned position array. With no shared
+    units this degenerates to one stratum per component and every method below reduces to the
+    dependence-blind one (up to RNG stream)."""
+    pos = {}
+    for ds, (qids, _, _) in aligned.items():
+        for i, q in enumerate(qids):
+            d = pos.setdefault(unit_of(ds, q), {})
+            if ds in d:
+                raise ValueError(f"duplicate qid {q!r} within component {ds}")
+            d[ds] = i
+    groups = {}
+    for u, d in pos.items():
+        groups.setdefault(tuple(sorted(d)), []).append(u)
+    out = []
+    for sig in sorted(groups):
+        units = sorted(groups[sig], key=str)
+        out.append({"sig": sig, "n": len(units),
+                    "idx": {ds: np.array([pos[u][ds] for u in units], dtype=np.int64) for ds in sig}})
+    return out
+
+
+def _macro_of(pairs_or_diff, k):
+    return sum(float(v.mean()) for v in pairs_or_diff.values()) / k
+
+
+def signflip_dep(a, b, R=100_000, seed=SEED, alternative="greater", strict=True,
+                 unit_of=unit_key, chunk=2000):
+    """`signflip` with ONE shared sign per underlying query, applied in every component that
+    query appears in. Same observed statistic, dependence-preserving null."""
+    aligned = _align_ids(a, b, strict=strict)
+    if not aligned:
+        raise ValueError("no overlapping datasets/queries")
+    d = {ds: (x - y) for ds, (_, x, y) in aligned.items()}
+    k = len(d)
+    n_ds = {ds: v.size for ds, v in d.items()}
+    t_obs = _macro_of(d, k)
+    st = strata(aligned, unit_of)
+    rng = np.random.default_rng(seed)
+    t = np.zeros(R)
+    for a0 in range(0, R, chunk):
+        m = min(chunk, R - a0)
+        sums = {ds: np.zeros(m) for ds in d}
+        for s in st:
+            signs = rng.integers(0, 2, size=(m, s["n"])).astype(np.int8) * 2 - 1
+            for ds, idx in s["idx"].items():
+                sums[ds] += (signs * d[ds][idx]).sum(1)
+        t[a0:a0 + m] = sum(sums[ds] / n_ds[ds] for ds in d) / k
+    if alternative == "greater":
+        p = (1 + int((t >= t_obs).sum())) / (1 + R)
+    elif alternative == "less":
+        p = (1 + int((t <= t_obs).sum())) / (1 + R)
+    else:
+        p = (1 + int((np.abs(t) >= abs(t_obs)).sum())) / (1 + R)
+    return {"delta": round(t_obs, 4), "p": float(p),
+            "p_str": (f"{p:.2e} (MC floor 1/(R+1))" if p == 1 / (1 + R) else f"{p:.5f}"),
+            "R": R, "seed": seed, "alternative": alternative,
+            "method": "paired sign-flip randomization, macro-structured, one sign per shared query",
+            "strata": [{"components": list(s["sig"]), "n_units": s["n"]} for s in st],
+            "shared_units": sum(s["n"] for s in st if len(s["sig"]) > 1),
+            "per_dataset_n": {ds: int(v.size) for ds, v in d.items()}}
+
+
+def paired_dep(a, b, B=B, seed=SEED, alternative="two-sided", unit_of=unit_key, strict=False,
+               chunk=1000):
+    """`paired` with a STRATIFIED bootstrap: resample units once per stratum and reuse that draw
+    in every component the stratum feeds, so a shared query moves together everywhere it counts."""
+    aligned = _align_ids(a, b, strict=strict)
+    if not aligned:
+        raise ValueError("no overlapping datasets/queries")
+    k = len(aligned)
+    n_ds = {ds: x.size for ds, (_, x, _) in aligned.items()}
+    base = sum(float(x.mean() - y.mean()) for _, x, y in aligned.values()) / k
+    st = strata(aligned, unit_of)
+    rng = np.random.default_rng(seed)
+    deltas = np.zeros(B)
+    per_rep = {ds: np.zeros(B) for ds in aligned}
+    for a0 in range(0, B, chunk):
+        m = min(chunk, B - a0)
+        sums = {ds: np.zeros(m) for ds in aligned}
+        for s in st:
+            draw = rng.integers(0, s["n"], size=(m, s["n"]))
+            for ds, idx in s["idx"].items():
+                _, x, y = aligned[ds]
+                dv = (x - y)[idx]
+                sums[ds] += dv[draw].sum(1)
+        for ds in aligned:
+            per_rep[ds][a0:a0 + m] = sums[ds] / n_ds[ds]
+        deltas[a0:a0 + m] = sum(sums[ds] / n_ds[ds] for ds in aligned) / k
+    lo, hi = np.percentile(deltas, [2.5, 97.5])
+    per = {}
+    for ds, (_, x, y) in aligned.items():
+        dlo, dhi = np.percentile(per_rep[ds], [2.5, 97.5])
+        per[ds] = {"n": int(n_ds[ds]), "delta": round(float(x.mean() - y.mean()), 4),
+                   "ci95": [round(float(dlo), 4), round(float(dhi), 4)]}
+    if alternative == "greater":
+        tail = float((deltas <= 0).mean())
+    elif alternative == "less":
+        tail = float((deltas >= 0).mean())
+    else:
+        tail = 2 * float(min((deltas < 0).mean(), (deltas > 0).mean()))
+    return {"delta": round(base, 4), "ci95": [round(float(lo), 4), round(float(hi), 4)],
+            "boot_tail": tail, "_boot_tail_note": "bootstrap tail mass, NOT a p-value",
+            "alternative": alternative, "B": B, "seed": seed,
+            "one_sided_lower_2.5": round(float(np.percentile(deltas, 2.5)), 4),
+            "method": "stratified paired bootstrap over shared-query units",
+            "strata": [{"components": list(s["sig"]), "n_units": s["n"]} for s in st],
+            "per_dataset": per, "resolved": bool(lo > 0 or hi < 0)}
+
+
+def both_ways(a, b, alternative="greater"):
+    """The side-by-side the review asks for: ordinary (dependence-blind) and dependence-preserving.
+    Dev comparisons are SELECTION evidence either way (review #3 MAJOR 1)."""
+    return {"ordinary": {"paired": paired(a, b, alternative="two-sided"),
+                         "signflip": signflip(a, b, alternative=alternative)},
+            "dependence_preserving": {"paired": paired_dep(a, b, alternative="two-sided"),
+                                      "signflip": signflip_dep(a, b, alternative=alternative)},
+            "_note": "exploratory selection evidence; the only confirmatory comparisons are the "
+                     "three frozen-test ones in the final run"}
 
 
 def from_perquery_json(blob, system, datasets=None):
