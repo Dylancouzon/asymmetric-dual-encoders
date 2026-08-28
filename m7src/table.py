@@ -107,11 +107,16 @@ class QueryTable(nn.Module):
             return None
         return F.softplus(self.w_raw)
 
-    def forward(self, flat_ids, offsets, lens):
+    def forward(self, flat_ids, offsets, lens, extra_psw=None):
         """Weighted mean over token occurrences, then L2 normalize. Length-normalized by
-        construction (divide by the weight sum), so long queries are not down-weighted."""
+        construction (divide by the weight sum), so long queries are not down-weighted.
+
+        `extra_psw` multiplies the learned per-token weights occurrence-by-occurrence. It is how a
+        count-saturation rule reaches the TRAINING forward, so a table can be trained under the
+        same pooling rule it will be served under."""
         w = self.token_weights()
-        psw = None if w is None else w[flat_ids]
+        psw = extra_psw if w is None else (w[flat_ids] if extra_psw is None
+                                           else w[flat_ids] * extra_psw)
         s = F.embedding_bag(flat_ids, self.rows, offsets, mode="sum", per_sample_weights=psw)
         denom = (lens.to(s.dtype) if psw is None
                  else torch.zeros_like(s[:, 0]).index_add_(0, _bag_index(offsets, lens), psw))

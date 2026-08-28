@@ -25,7 +25,8 @@ from _paths import WORK
 from decontam import OUT as DECON
 import init_table
 from init_table import get_init, idf_weights
-from table import NO_PREFIX, WITH_PREFIX, Preproc, QueryTable, get_tokenizer, ragged, tokenize
+from table import NO_PREFIX, WITH_PREFIX, Preproc, QueryTable, get_tokenizer, \
+    occurrence_weights, ragged, tokenize
 from teacher import QUERY_PREFIX, encode_cached
 
 RUNS = WORK / "runs"
@@ -77,6 +78,8 @@ class Cfg:
     b_query_sources_all: bool = True    # include nq-open/triviaqa query text in B
     b_pseudo_queries: int = 0           # vocabulary-coverage distillation (see m7src/pseudoq.py)
     b_pseudo_frac: float = 0.5          # share of each B batch drawn from pseudo-queries
+    pool_mode: str = "mean"             # count saturation, applied in the TRAINING forward too
+                                        # (table.POOL_MODES). "mean" reproduces every prior run.
 
 
 # ---- data ----------------------------------------------------------------------------
@@ -374,8 +377,12 @@ def distill(qv, teacher_q, cand_v, temp, cos_w, kl_w):
 def run(cfg: Cfg, log=print):
     torch.manual_seed(cfg.seed)
     rng = np.random.default_rng(cfg.seed)
-    pre = PRE[cfg.preproc]
-    init_pre = PRE[cfg.init_preproc or cfg.preproc]
+    from dataclasses import replace as _replace
+    # The pooling rule is part of the frozen preprocessing, so it must reach BOTH the training
+    # forward and every eval in this run -- a table trained under `mean` and served under `sqrt`
+    # is the eval-only probe (lever #4), not the trained system (lever #6).
+    pre = _replace(PRE[cfg.preproc], pool_mode=cfg.pool_mode)
+    init_pre = _replace(PRE[cfg.init_preproc or cfg.preproc], pool_mode=cfg.pool_mode)
     tok = get_tokenizer()
     V = tok.vocab_size
 
@@ -489,8 +496,7 @@ def run(cfg: Cfg, log=print):
         documented failure mode of a too-high lr (arXiv 2110.09348), so it must be observed and
         not inferred from the dev curve."""
         model.eval()
-        f, o, l = ragged([ids_all[i] for i in diag_idx], "cuda")
-        q = model(f, o, l).float()
+        q = _fwd([ids_all[i] for i in diag_idx]).float()
         model.train()
         g = q @ q.T
         n = g.shape[0]
@@ -518,9 +524,16 @@ def run(cfg: Cfg, log=print):
         model.train()
         return m
 
+    def _fwd(id_lists):
+        """One place that turns token-id lists into query vectors during training, so the pooling
+        rule cannot reach two of the three call sites and miss the third."""
+        f, o, l = ragged(id_lists, "cuda")
+        psw = None if cfg.pool_mode == "mean" else occurrence_weights(id_lists, cfg.pool_mode,
+                                                                     device="cuda")
+        return model(f, o, l, extra_psw=psw)
+
     def batch_of(idx):
-        f, o, l = ragged([ids_all[i] for i in idx], "cuda")
-        return model(f, o, l)
+        return _fwd([ids_all[i] for i in idx])
 
     def step_b(idx):
         # optional pseudo-query / query-text-only part: cosine only, no positive to rank against
@@ -529,8 +542,7 @@ def run(cfg: Cfg, log=print):
         touched = []
         if n_ps:
             j = rng.integers(0, len(b_texts), n_ps)
-            f2, o2, l2 = ragged([b_ids_all[k] for k in j], "cuda")
-            qv2 = model(f2, o2, l2)
+            qv2 = _fwd([b_ids_all[k] for k in j])
             extra_loss = (1.0 - (qv2 * torch.from_numpy(b_tq[j]).cuda()).sum(1)).mean()
             idx = idx[:max(1, len(idx) - n_ps)]
             touched = [b_ids_all[k] for k in j]

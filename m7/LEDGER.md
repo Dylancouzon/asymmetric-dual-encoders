@@ -230,6 +230,27 @@ training list — 2 of the 6 — and must be labelled at the dataset row.** All 
   A phase's update to a rarely-seen row is dominated by cross-query interference, and rare rows
   are exactly the ones the six hit. `m7src/lever5_shrinkage.py`.
 
+- **#6 train-through pooling — pre-registered 2026-08-28, before any number.** Lever #4 measured
+  `sqrt` on a table *trained for mean pooling*, which understates what multiplicity-dependent
+  pooling can do; the strongest inference-free system we must beat (OpenSearch doc-v3-gte,
+  arXiv 2411.04403) uses **binary presence x IDF** on its query side, i.e. it trains through the
+  saturation. `Cfg.pool_mode` now reaches the training forward and every eval in the run.
+  **Two arms, in this order, each stopping the next if it fails**: (a) A-phase only from the
+  candidate's existing B checkpoint at `pool_mode=sqrt`, same A recipe otherwise (~5 min); (b)
+  only if (a) beats the lever-#4 eval-only table, a full B16k→A chain at `pool_mode=sqrt`.
+  Bar: identical in form to #4/#5 — dependence-preserving signflip p<0.05 AND raw paired CI>0 in
+  fp16 and int8, against the adopted `sqrt`-served candidate (NOT against the `mean`-served one;
+  the eval-only gain is already banked). Falsifier for the whole lever: if (a) is a resolved loss,
+  training through the rule is closed and the eval-only adoption stands alone.
+- **Long-span teacher-agreement probe — pre-registered 2026-08-28, diagnostic, reads no qrels.**
+  `pseudoq._span` caps pseudo-queries at the first sentence and 32 words, and real TRAIN queries
+  sit at p50=13 WordPiece, so the table has never been trained on what a mean of 150-300 rows
+  should look like — while ArguAna, 1 of the 6 confirmatory sets, has ~250-word queries and is the
+  architecture's pre-identified worst case. Measure the CURRENT candidate's agreement with the
+  teacher (cosine + overlap@10 against the pool) on held-out document spans bucketed by length.
+  **This settles whether a length gap exists at all**, and it is the pre-condition for spending a
+  training chain on long-span distillation. No qrels, no six-set access, no adoption attached.
+
 **Absorbable, therefore not capacity** (`m7_absorb_check.json`): query-side centering, whitening,
 top-PC removal, any per-token scalar weight, any doc-side linear map. Only n-gram rows and
 multiplicity-dependent pooling add anything — which is why #4 could work at all.
