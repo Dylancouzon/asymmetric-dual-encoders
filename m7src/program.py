@@ -278,6 +278,46 @@ def ablation_recipe():
     return surv, b, a
 
 
+# Arm definitions as DATA, so a driver can run exactly one arm in its own process.
+#
+# Why that matters, learned at 00:05 on 2026-08-28: running every arm inside ONE python process
+# accumulated the module-level caches this repo memoizes on purpose (`mix.load_source`,
+# `heldout._DOC_IDS`, `dev_eval._HELD_CACHE`, the encode memmaps) on top of each arm's own
+# ~4 GB of pseudo-query targets and ~4 GB negative bank. The first two chains fit; the third
+# reached 24.7 GB RSS on a 25 GB box and sat burning one core with zero disk I/O -- the thrash
+# signature from the LEDGER's OOM incident. A fresh process per arm gives every arm the same
+# starting memory, which is also what makes the arms comparable.
+P4_ARMS = {
+    "base":      {},
+    "input-emb": {"b": {"init": "input_emb"}},
+    "random":    {"b": {"init": "random"}},
+    # RUNTIME prefix only: the teacher rows stay the no-prefix ones in both legs, so the arm
+    # varies query tokenization and nothing else (review #3 BLOCKER 3). Prefix-CONDITIONED rows
+    # are a separate, exploratory arm below.
+    "prefix":    {"b": {"preproc": "prefix", "init_preproc": "noprefix"},
+                  "a": {"preproc": "prefix", "init_preproc": "noprefix"}},
+    "flat":      {"b": {"learned_weights": False}, "a": {"learned_weights": False}},
+    "uniform-w": {"b": {"idf_init_weights": False}, "a": {"idf_init_weights": False}},
+    "reg0":      {"b": {"reg_init": 0.0}, "a": {"reg_init": 0.0}},
+}
+P4X_ARMS = {
+    "nopseudo":   {"b": {"b_pseudo_queries": 0}},
+    "pseudo500k": {"b": {"b_pseudo_queries": 500_000}},
+}
+P4E_ARMS = {
+    "prefix-init": {"b": {"preproc": "prefix", "init_preproc": "prefix"},
+                    "a": {"preproc": "prefix", "init_preproc": "prefix"}},
+}
+# A-only arms from the CANDIDATE's own B checkpoint: "@candidate_b" is resolved at run time.
+P4N_ARMS = {
+    "bank":      {"a": {"hard_neg_k": 0}, "init": "@candidate_b"},
+    "teacher16": {"a": {"hard_neg_k": 16, "hard_neg_source": "teacher"}, "init": "@candidate_b"},
+    "bm2516":    {"a": {"hard_neg_k": 16, "hard_neg_source": "bm25"}, "init": "@candidate_b"},
+    "mixed32":   {"a": {"hard_neg_k": 32, "hard_neg_source": "mixed"}, "init": "@candidate_b"},
+}
+ARMS = {"p4": P4_ARMS, "p4x": P4X_ARMS, "p4e": P4E_ARMS, "p4n": P4N_ARMS}
+
+
 def phase4_mandatory(base):
     """The ablations the mandate requires reported whatever they say -- seven chains, one variable
     each, every one a B run plus a fresh A run.
