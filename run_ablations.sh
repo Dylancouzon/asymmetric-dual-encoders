@@ -15,6 +15,21 @@ LOG=logs/ablations.log
 
 echo "=========== ablations $(date -Is) ===========" >> "$LOG"
 
+# Smoke the two-run chain path first, and smoke it on the arm with NO execution history: the
+# runtime-prefix arm, where `init_preproc` makes the runtime tokenization differ from the rule the
+# teacher rows were built under. A grid's arms share code, so one crash here is nine crashes later.
+$PY -u - >> "$LOG" 2>&1 <<'EOF'
+import program, sweep
+surv, b, a = program.ablation_recipe()
+sweep.smoke_chain(program.BASE,
+                  {**b, "preproc": "prefix", "init_preproc": "noprefix"},
+                  {**a, "preproc": "prefix", "init_preproc": "noprefix"})
+EOF
+if ! tail -40 "$LOG" | grep -q "SMOKE CHAIN ok"; then
+  echo "SMOKE FAILED -- not launching the ablations. See $LOG" | tee -a "$LOG"
+  exit 1
+fi
+
 # The attribution controls run FIRST: they are what the report's causal claim depends on, and if
 # the night is cut short the mandatory ablations are the ones that can be described as pending.
 $PY -u - >> "$LOG" 2>&1 <<'EOF'

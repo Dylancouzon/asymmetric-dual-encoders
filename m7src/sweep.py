@@ -80,6 +80,31 @@ def smoke(base, over, steps_b=60, steps_a=30):
     return dev
 
 
+def smoke_chain(base, b_over, a_over, steps_b=60, steps_a=30):
+    """Prove the TWO-RUN chain path before a night of them: a tiny B run, then a fresh A run that
+    actually loads that B artifact. The B->A handoff is the part with no execution history --
+    `init="run:<id>"` has to find the checkpoint, match its preprocessing fingerprint and its
+    teacher, and restore its token weights -- and it is now also the path where `init_preproc`
+    lets the runtime rule differ from the rule the rows were built under. Not written to
+    RESULTS.md; the numbers are meaningless at 90 steps."""
+    bid, aid = "smoke-chain-b", "smoke-chain-a"
+    print(f"\n{'='*80}\nSMOKE CHAIN B {json.dumps(b_over)}\n{'='*80}", flush=True)
+    cfg_b = replace(base, run_id=bid, **{**b_over, "steps_b": steps_b, "steps_a": 0,
+                                         "eval_every": 10 ** 9})
+    devb, mb, _ = run(cfg_b)
+    del mb
+    torch.cuda.empty_cache()
+    print(f"\n{'='*80}\nSMOKE CHAIN A {json.dumps(a_over)}\n{'='*80}", flush=True)
+    cfg_a = replace(base, run_id=aid, init=f"run:{bid}",
+                    **{**a_over, "steps_b": 0, "steps_a": steps_a, "eval_every": 10 ** 9})
+    deva, ma, _ = run(cfg_a)
+    del ma
+    torch.cuda.empty_cache()
+    print(f"SMOKE CHAIN ok (B {devb:.4f} at {steps_b} steps -> A {deva:.4f} at {steps_a} steps "
+          f"-- not results)", flush=True)
+    return devb, deva
+
+
 def chain(name, base, b_over, a_over, skip_b_if_exists=True):
     """One ablation arm as TWO separate runs: a B run, then a fresh A run initialized from that
     exact B artifact. Returns the A run's dev macro (None if either leg failed).
