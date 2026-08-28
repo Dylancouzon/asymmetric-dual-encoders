@@ -1,190 +1,133 @@
 # M7 code map
 
-Read `STATUS.md` first. This file exists so a future session can resume without reading 20
-modules. Details live in the modules' own docstrings — every one states why it exists, not just
-what it does. Nothing here is restated from `LEDGER.md` (protocol) or `EXPLORED.md` (dead ends).
+Read `STATUS.md` first. This file exists so a future session can resume without reading 40
+modules. Details live in the modules' own docstrings — every one states why it exists. Nothing
+here is restated from `LEDGER.md` (protocol) or `EXPLORED.md` (dead ends).
 
 ## Layout
 
 - `m7src/` — all M7 code. `bench/` and `scripts/` are the reused M1–M6 harness; do not fork them.
 - `work/` — gitignored heavy data: encode caches, doc pool, tables, runs, dev caches.
-- `logs/` — gitignored driver logs (`stage0.log`, `stage0b.log`, `stage0c.log`).
-- `results/m7_*.json` — every committed M7 artifact. Small, machine-readable, safe to read.
+- `logs/` — gitignored driver logs. `results/m7_*.json` — every committed M7 artifact.
 
-## Drivers (run these, in order; each is idempotent and takes an optional first-step number)
+## Drivers (in order; each is idempotent, takes an optional first-step number)
 
 | driver | steps |
 |---|---|
-| `run_stage0.sh` | dev encodes → asset freeze → decontamination → query-text decontam → field table → doc pool → dev reference rows |
-| `run_stage0c.sh` | held-out dev slices (need the pool) → TRAIN↔held-out decontam → reference rows again |
+| `run_stage0.sh` | dev encodes → asset freeze → decontamination → field table → doc pool → dev reference rows |
+| `run_stage0c.sh` | held-out dev slices (need the pool) → TRAIN↔held-out decontam → reference rows |
 | `run_stage0b.sh` | ridge probe → capacity probe → objective grid → go/no-go gate |
+| `run_ablations.sh` | chain smoke → attribution controls → 7 mandatory chains → negatives → exploratory |
 
-**Strictly sequential, one GPU/memory job at a time.** Enforced by the drivers, not by intention
-— see the OOM incident in `LEDGER.md`.
+**Strictly sequential, one GPU/memory job at a time**, enforced by the drivers and by `flock`.
 
 ## Modules
 
-**Foundation**
-- `_paths.py` — repo/work paths, puts `bench/` on `sys.path`, pins the six datasets.
-- `encoders.py` — **the encoder registry: the one place that knows how to run each candidate
-  tower** (repo, revision, dim, pooling, query/doc prompt, remote-code, tokenizer identity, vocab).
-  Select with `M7_ENCODER`; default is the M7 teacher. Add a `Spec` rather than special-casing a
-  model at a call site.
-- `teacher.py` — the frozen teacher, whichever `encoders.active()` returns. `encode_cached()` is
-  the workhorse: shard-resumable, cache key covers (model, revision, dtype, tokenizer identity,
-  **pooling**, prefix, max length, corpus hash), returns a **memmap** over a stitched
-  `combined.f16`.
-- `test_encoders.py` — replays every `work/enc/*/meta.json` through the current `cache_key()` and
-  requires the directory name back unchanged. Run it after touching `encoders.py` or `teacher.py`;
-  a key drift orphans ~22 GB of encodes, and a key *collision* between two encoders that produce
-  different vectors is worse.
-- `hashing.py` — streaming equivalents of the M4 `sha(json.dumps(...))` convention, byte-identical,
-  for corpora too large to serialize whole.
-- `evalkit.py` — chunked GPU brute force + per-query nDCG. Tiles the score matrix on **both** axes
-  under a byte budget.
+**Foundation** — `_paths.py` (paths, `sys.path`, the six datasets) · `encoders.py` **the registry:
+the one place that knows how to run each candidate tower**; select with `M7_ENCODER`, add a `Spec`
+rather than special-casing at a call site · `teacher.py` the frozen teacher; `encode_cached` is
+shard-resumable and returns a **memmap**, its key covers model/revision/dtype/tokenizer/pooling/
+prefix/length/corpus · `test_encoders.py` replays every cache key and requires the directory name
+back unchanged · `hashing.py` streaming `sha` equivalents · `evalkit.py` chunked GPU brute force,
+tiled on **both** axes (`topk_arrays` / `run_from_arrays` split out so many query blocks can share
+one corpus pass) · `multieval.py` scores N query-side variants with ONE pass per **corpus** (the
+two held-out components share the pool), plus `rank_compare` for path equivalence.
 
-**The artifact**
-- `table.py` — the released lookup table: `Preproc` (the one frozen query rule), `QueryTable`,
-  int8 symmetric per-row absmax, save/load, `apply_unseen_policy`. `save_release` folds learned
-  weights into rows (exact) — the shape G4 gates and HF ships; `save_table` stays unfolded for
-  training resume.
-- `test_conformance.py` — the mandated pre-training gate, 24 checks. Run it after touching `table.py`.
-- `costs.py` — the three cost numbers (query asset / doc index / hydration).
+**The artifact** — `table.py`: `Preproc` (the one frozen query rule, now including `pool_mode`),
+`QueryTable`, int8 per-row absmax, `apply_unseen_policy`, `occurrence_weights`/`encode_pooled`
+(count saturation), `save_release` folds learned weights into rows (exact) — the shape G4 gates and
+HF ships; `save_table` stays unfolded for training resume. `adopt_pool_mode.py` is the only
+sanctioned way to change the served pooling rule. `test_conformance.py` 42 checks — run after any
+`table.py` edit. `costs.py` the three cost numbers.
 
-**Data**
-- `trainmix.py` — builds the TRAIN mix from approved sources only. Owns the `heldout()` rule.
-- `mix.py` — loader over the built mix. `load_source` is memoized on purpose (see `LEDGER.md`).
-- `pool.py` — the frozen doc-vector pool, one fp16 memmap; `PoolIndex` is per-store and lazy.
-- `pseudoq.py` — pseudo-queries for **vocabulary**-coverage distillation (not domain coverage).
-- `decontam.py` / `decontam_querytext.py` / `decontam_heldout.py` — fingerprint decontamination.
-  The index is built over the TRAIN side and protected corpora are streamed against it.
-  `query_grams` adds word-4-grams for 4-7-word queries (query paths only; doc fingerprints
-  untouched). NOTE: `run()` has its own inline R1 matcher besides `query_hits` — change BOTH.
-- `decontam_pool.py` — the B2 pass: all 6.17M pool rows vs the six's docs and the protected
-  queries; writes `banned_pool_rows.npy`, which `train.py` REFUSES to run without.
-- `devsuite.py` / `heldout.py` — the pinned dev components. `dev_eval.dev_components()` is the
-  authoritative list.
+**Data** — `trainmix.py` (TRAIN mix, owns `heldout()`) · `mix.py` (memoized loader) · `pool.py`
+(one fp16 memmap; `PoolIndex` per-store and lazy) · `pseudoq.py` (vocabulary-coverage
+pseudo-queries; spans are first-sentence, ≤32 words) · `decontam*.py` (fingerprint decontamination;
+`decontam.run()` has its own inline R1 matcher besides `query_grams` — change BOTH) ·
+`decontam_pool.py` writes `banned_pool_rows.npy`, which `train.py` REFUSES to run without ·
+`devsuite.py`/`heldout.py` the pinned components; `freeze_heldout.py` pins the held-out pair and
+the pool's bytes, `heldout.verify_pinned()` enforces it.
 
-**Training and selection**
-- `train.py` — objectives A (InfoNCE) / B (distillation) / C (B then A). `Cfg` is the whole
-  experiment surface.
-- `sweep.py` — runs configs and appends every run to `RESULTS.md`, including OOM and failures.
-- `program.py` — the phased plan (objective → negatives → hyperparams → mandatory ablations →
-  coverage → FEVER in/out).
-- `dev_eval.py` — dev macro + the pinned reference rows (cached in `work/devres/refs.json`).
-- `stage0_ridge.py` — closed-form MSE-optimal flat table; the structural upper bound.
-- `capacity_probe.py` — deliberate overfit on dev. **Diagnostic, gate-ineligible.**
-- `boot.py` — `signflip` is THE p-value (Holm consumes only these); `paired` gives intervals,
-  its tail mass is labelled `boot_tail` because it is not a p-value. `_align(strict=True)` on
-  every confirmatory path. `test_signflip_calibration.py` is the type-I evidence. `gate.py` —
-  the go/no-go gate.
-- `fusion.py` — one fusion family; `fusion.bm25_run` is the ONE BM25 builder for anything fused
-  (`test_fusion_paths.py` guards the re-fork).
-  `select_fusion.py` runs that selection; `fusion_report.py` decomposes the gain per component,
-  because a fusion macro can be one component wide exactly as the G3 win was.
+**Training and selection** — `train.py` objectives A/B/C; `Cfg` is the whole experiment surface ·
+`sweep.py` runs configs and appends every run to `RESULTS.md` including failures; `chain`/`chains`
+run an arm as TWO runs (B, then a fresh A from that checkpoint) and `smoke_chain` proves that path
+· `program.py` the phased plan; `ablation_recipe()` derives the chain recipe from the surviving
+artifact's own config · `dev_eval.py` dev macro + pinned reference rows · `stage0_ridge.py`
+closed-form flat table · `capacity_probe.py` **diagnostic, gate-ineligible** · `boot.py`
+`signflip` is THE p-value, `signflip_dep`/`paired_dep` handle the nested components, `both_ways`
+reports all three bootstraps · `gate.py` the eligibility audit · `fusion.py` one family, one
+builder (`test_fusion_paths.py` guards the re-fork); `select_fusion.py` fits against the RELEASE
+artifact.
 
-**Diagnostics (cheap, and each answers one question the plan was assuming)**
-- `calibrate.py` — fits MTEB v1 Retrieval → our six-set on the nine models we measured ourselves.
-  Pure arithmetic over committed numbers; reads no eval data. Use it before quoting any teacher
-  projection, and note its residual sd (0.0102) is larger than the gap between the top candidates.
-- `absorb_check.py` — which query-side transforms are absorbable into the table (centering,
-  whitening, top-PC removal, per-token weights: all of them) and which add capacity (n-grams,
-  multiplicity-dependent pooling). Settles a lever's *theoretical* case in seconds.
-- `teacher_probe.py` — ranks candidate teachers by measured ceiling on the two CQADupStack dev
-  components, since the projection cannot separate them. Reads the shared registry.
-- `diag_scores.py` — the contrastive score geometry: positive/negative distributions, softmax mass
-  per temperature, and what the `fn_margin` filter actually removes.
-- `ridge_full_eval.py` — the Stage-0.1 closed-form bound on the full pinned suite, not the proxy.
-- `ridge_vs_trained.py` — scores the closed-form flat table and a trained one in ONE process and
-  paired-bootstraps the gap. Use it instead of differencing two runs' macros.
-- `validate_encoder.py` — **mandatory for any new `Spec`** before the probe or a corpus encode.
-  Compares `teacher.encode` against sentence-transformers on the pairwise similarity matrix. The
-  reason it exists: stella's Spec initially omitted its published post-pooling Dense head.
+**Diagnostics** (each answers one question the plan was assuming) — `calibrate.py` MTEB→six
+(residual sd 0.0102; larger than the gap between top teacher candidates) · `absorb_check.py` which
+query-side transforms are absorbable · `teacher_probe.py` symmetric ceiling (**refuted as a
+selection criterion**) · `scripts/teacher_learnability.py` + `scripts/learnability_report.py` the
+adopted criterion · `diag_scores.py` contrastive score geometry · `ridge_full_eval.py`,
+`ridge_vs_trained.py` · `validate_encoder.py` **mandatory for any new `Spec`** (it exists because
+stella's Spec initially omitted its published Dense head).
 
-**Final and demo**
-- `final_run.py` — the one-shot final run. Refuses to start unless the tree is clean, HEAD equals
-  the freeze commit, that commit is pushed, and the ledger holds no prior final-run entry.
-- `ann_sweep.py` — ANN behaviour on real HNSW via the standalone Qdrant binary.
-- `edge_demo.py` — the two-collection architecture running our table.
-- `freeze_m7_assets.py` — pins dev + untouched-final into the manifest and `frozen_eval/`.
-- `field_table.py` — the objective-by-dataset field table (counts read, never hand-copied).
+**Audits and levers** — `dev_audit.py` one full-suite pass producing the dependence-preserving
+lever recompute, matrix-vs-`QueryTable` equivalence, the per-query dump and the lever-4 arms ·
+`bigram_residual.py` (#1) · `doc2query_probe.py` (#3) · `lever5_shrinkage.py` (#5).
+
+**Final and demo** — `final_run.py` refuses unless the tree is clean, HEAD equals the freeze
+commit, that commit is pushed, and no prior final-run entry exists · `ann_sweep.py` real HNSW ·
+`edge_demo.py` the two-collection architecture · `freeze_m7_assets.py` pins dev + untouched-final.
 
 ## Reusing this repo as a harness
 
 The eval protocol, partitions, decontamination, bootstrap/Holm statistics, freeze and final-run
-machinery are the reusable part and have been through two adversarial reviews. To run the same
-question against a **different model**, add a `Spec` to `encoders.py` and set `M7_ENCODER` — do not
-edit `teacher.py`. To run it with a **different query-side technique**, the surface is `table.py`
-(the artifact and its one preprocessing rule) plus `train.py`'s `Cfg`; `program.py` holds the
-phased plan and `sweep.py` records every run including failures.
+machinery are the reusable part and have been through three adversarial reviews. Different
+**model**: add a `Spec` and set `M7_ENCODER` — do not edit `teacher.py`. Different **query-side
+technique**: the surface is `table.py` plus `train.py`'s `Cfg`.
 
 Adding an encoder, in order: write the `Spec` (pooling, prompt, `post_dense`, `config_kwargs`,
-revision pinned — `_assert_pinned` enforces that) → `test_encoders.py` → **`validate_encoder.py`**
-→ only then `teacher_probe.py` or an encode. Skipping the validator is how a comparison silently
-runs the wrong model.
+revision pinned) → `test_encoders.py` → **`validate_encoder.py`** → only then a probe or an encode.
+Skipping the validator is how a comparison silently runs the wrong model. Two things that must
+move with the encoder: anything assuming **dim 768**, and `table.py`'s `CLS_ID`. Pinning weights
+does not pin `trust_remote_code` code, which comes from a separate repo at HEAD.
 
-Two things that must move with the encoder: anything assuming **dim 768**, and `table.py`'s
-`CLS_ID` (101 is bge/BERT's — all five current candidates share a byte-identical 30,522-token
-WordPiece vocab, so a swap among *them* changes no token ids, but a different tokenizer would).
-Also note pinning weights does not pin `trust_remote_code` code, which comes from a separate repo
-at HEAD.
+## Log size policy (context is the scarce resource)
 
-## Log size policy (this is a long project; context is the scarce resource)
-
-Budgets, checked with `for f in m7/*.md; do echo $f $(( $(wc -c < $f) / 4 )); done`:
+`for f in m7/*.md; do echo $f $(( $(wc -c < $f) / 4 )); done`
 
 | file | budget | rule |
 |---|---|---|
-| `STATUS.md` | ~1.2K tokens | one screen. Rewritten, never appended. The only file always read. |
-| `CODEMAP.md` | ~2.5K | grows only when a module is added or a pitfall is earned. Raised from 1.5K on 2026-08-26: six modules landed and the harness section was added, and this file is what stops a future session reading 35 modules. |
-| `RESULTS.md` | ~1.5K | one row per run. If it outgrows that, keep the verdict column and move detail to the run JSON. |
+| `STATUS.md` | ~1.2K | one screen. Rewritten, never appended. The only file always read. |
+| `CODEMAP.md` | ~2.5K | grows only when a module is added or a pitfall is earned. |
+| `RESULTS.md` | ~1.5K | one row per run; detail belongs in the run JSON. |
 | `EXPLORED.md` | ~1K | one row per closed avenue. |
-| `LEDGER.md` | **~4K, hard** | at 4K, compact again: keep every protocol fact verbatim, cut settled justification to one line. |
+| `LEDGER.md` | ~4K, hard | at 4K, compact again: keep every protocol fact, cut settled justification to one line. |
 
 **The rule that keeps it small: never restate a number that a `results/m7_*.json` already holds.**
-Put the finding and its consequence in the ledger; point at the JSON for per-component values,
-per-step curves and reference rows. LEDGER.md reached 7.4K tokens by session two because this was
-not being followed; compacting to 3.8K lost nothing that was not recoverable from
-`results/` or `work/devres/refs.json`.
-
-Compaction is safe despite the ledger being append-only in spirit: git preserves every prior
-version (`git log -p m7/LEDGER.md`), and the file states when it was compacted.
+Compaction is safe — git preserves every prior version, and each file says when it was compacted.
 
 ## Pitfalls that already cost time
 
 1. **Never `git add -A` without checking `.gitignore`.** One did, committed the multi-GB encode
-   cache, and `git push` hung. History was cleaned; `work/` and `logs/` are ignored now.
+   cache, and `git push` hung.
 2. **Subagents must be told to write only to the scratchpad.** One dumped files into `m7src/`.
 3. **Run one memory-heavy job at a time.** Three at once took the WSL distro down.
-4. **A `pgrep -f` wait loop matches every process carrying the string, including the shell that
-   WROTE the script.** The `[t]` bracket trick hides the pattern from the pgrep itself and from
-   nothing else: a heredoc that writes `foo.py` puts that text in its shell's cmdline, so
-   `until ! pgrep -f "[f]oo.py"` never exits. Cost an idle GPU twice in one day, once for a prior
-   session and once for this one. Anchor to the interpreter:
-   `pgrep -f "^[^ ]*python[0-9.]* -u scripts/foo.py"`. Same trap in reverse: a driver that `exec`s
-   python no longer has its own script name in any cmdline, so waiting on the SCRIPT name reports
-   "not running" while it runs. And a third form, hit twice on 2026-08-26: a compound command that
-   BOTH kills by pattern AND relaunches carries the plain path in its own cmdline, so the pkill
-   kills its own shell before the relaunch line runs (exit 144, nothing restarted). Kill and
-   relaunch in separate commands.
-5. **`np.isin` re-sorts its second argument on every call.** Use a pre-sorted array plus
-   `np.searchsorted`. This turned a 2-second scan into hours.
-6. **Never call a JSON loader inside a hot loop.** `mix.load_source` was re-parsing 16 MB once
-   per training pair (352,190 times) and the step never finished. It is memoized now.
-7. **Loop order decides the cost of anything that touches the pool.** `mine_hard_negatives` had
-   queries outside and the 9.5 GB pool inside, so the pool was re-read once per query chunk: 171
-   passes, 1.6 TB, 3.6 hours instead of 165 seconds. All query vectors fit in VRAM (537 MB), so the
-   big thing goes outside. `scripts/check_mining.py` is the equivalence witness for that change.
-8. **Batch budgets must be computed from the LONGEST sequence in the batch**, not the shortest —
-   the tokenizer pads to the longest. `teacher.encode` gets this right; `teacher_probe.py` forked
-   the rule, got it wrong, and thrashed the allocator for 50 minutes per component on a 1024-d
-   model. Do not fork the harness's batching, loader, or pooling: call it.
-9. **A config knob that is not in the encode cache key is a silent stale-vector bug.** `pooling`,
-   `post_dense` and `config_kwargs` all feed it now, conditionally, so bge-base's existing blob
-   stays byte-identical. `test_encoders.py` replays all 24 keys.
-10. **Any width assumption must come from the registry.** `pool.py` had `DIM = 768` and validated
-   its cache on `size == n*dim*2`, so a 1024-d teacher would have failed that check and rebuilt —
-   overwriting a 9.5 GB pool from a read-only call site. Vectors are now per-encoder and a mismatch
-   raises.
-11. **Nothing may materialize a whole corpus.** Encodes are memmapped, the pool is chunked, the
-   score matrix is tiled, and hashes are streamed. Assume 18 GB is the peak-RAM budget.
+4. **`pgrep -f` matches the shell that wrote the pattern.** Anchor to the interpreter
+   (`pgrep -f "^[^ ]*python[0-9.]* -u scripts/foo.py"`). A driver that `exec`s python has no
+   script name in any cmdline. And a compound command that BOTH kills by pattern AND relaunches
+   kills its own shell first (exit 144) — kill and relaunch in separate commands. Cost time four
+   times, most recently 2026-08-28.
+5. **`np.isin` re-sorts its second argument every call.** Pre-sorted array + `np.searchsorted`.
+6. **Never call a JSON loader inside a hot loop** (`mix.load_source` re-parsed 16 MB per pair).
+   Same class: `dev_eval.doc_vecs` re-parses its corpus cache on EVERY call — HotpotQA's is 5.23M
+   documents and peaks ~14 GB, so memoize the query texts if that is all you need.
+7. **Loop order decides the cost of anything touching the pool.** Queries outside, the 9.5 GB pool
+   inside = 1.6 TB of reads and 3.6 hours instead of 165 seconds.
+8. **Batch budgets must come from the LONGEST sequence in the batch.** Do not fork the harness's
+   batching, loader or pooling: call it.
+9. **A config knob not in the encode cache key is a silent stale-vector bug.**
+10. **Any width assumption must come from the registry.** `pool.py` had `DIM = 768` and would have
+    rebuilt — overwriting a 9.5 GB pool — from a read-only call site.
+11. **Nothing may materialize a whole corpus.** Assume 18 GB peak RAM.
+12. **Smoke the path with NO execution history, not a convenient one.** A smoke over two small
+    text components missed the shared-pool path and cost a 35-minute run; `multieval` now takes
+    `max_docs` so a 6.17M-row corpus can be smoked cheaply.
+13. **Object identity is not corpus identity.** Two callers can hold equal-but-distinct doc-id
+    lists for the same corpus; compare content (and memoize the shared one) instead.

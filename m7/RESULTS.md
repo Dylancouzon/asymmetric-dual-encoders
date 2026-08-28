@@ -85,3 +85,4 @@ components of one dataset family; dev-only.
 trained arm 0.4659); teacher proxy ceiling 0.6151 → retention 0.808. The pre-registered
 family-exposure read PASSES — the advantage on Wikipedia nq-250k (+0.063) exceeds that on the two
 StackExchange components (+0.047/+0.020), so the ranking was not StackExchange-specific.
+| p4x-nopseudo-b | `work/runs/p4x-nopseudo-b.json` | 0.4938 | ok |
