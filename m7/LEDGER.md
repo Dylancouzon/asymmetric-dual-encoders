@@ -614,6 +614,12 @@ a reason to prefer the null.
   * long spans p50 **101** words, p95 **234** — the ArguAna bracket is reached at the top end;
   * **67.8% of the long spans come from `esci-prod`** (Amazon product text), then hotpotqa 13.3%,
     mrtydi 12.9%, squad 3.3%, fever 2.7%.
+  * R1 removed **1,809 of 925,985 (0.195%)** against the short pool's 0.120% — long spans carry
+    more word-8-grams and so match the protected-query index ~1.6x as often, as predicted.
+  * Cost, for the record: the teacher encode of the 1,144,808-text objective-B set runs at
+    1,500 texts/s on the short prefix and **55 texts/s** through the esci long-span block, so the
+    arm costs ~2 h of encode before a step of training. Priced here because a lever this
+    under-dosed would not be worth that price a second time.
 
   So the treatment being tested is "a third of the pool is long, and two thirds of the long part
   is e-commerce product prose". ArguAna is counter-argument text. **A null result therefore does

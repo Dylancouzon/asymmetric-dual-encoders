@@ -161,6 +161,11 @@ Compaction is safe — git preserves every prior version, and each file says whe
     means "the A phase missed this row", not "training never touched it" — the never-trained set
     is the intersection with the B checkpoint's. Reading it the other way overstated the untouched
     rows by more than 2x (3,750 vs 1,743) in a pre-registration.
-17. **`rchar` is 0 while a memmap gather runs** — mmap access is page faults, not read syscalls.
+17. **Take the rate check IN the slow region, not on the first batches.** Lever #7's teacher
+    encode ran at 1,511 → 1,368 → 802 → **55 texts/s**: the objective-B text set is querytext
+    first (short), then the pseudo pool ordered BY STORE, and `esci-prod` supplies 68% of the long
+    spans. Extrapolating the first shards gave 36 minutes for a ~2-hour job. A pool with
+    non-uniform composition has no single rate — find the slowest block and estimate from there.
+18. **`rchar` is 0 while a memmap gather runs** — mmap access is page faults, not read syscalls.
     Do not read "zero I/O + 100% of one core" as a hang; check RSS and `free` instead. And never
     materialize a whole gather on the host when the destination is a GPU tensor: fill it in chunks.
