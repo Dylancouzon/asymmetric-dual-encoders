@@ -39,11 +39,9 @@ def main():
     rows, per_query = {}, {}
     for p in sorted((REPO / "results").glob("m7_learnability_*.json")):
         d = json.loads(p.read_text())
-        # The glob sees its OWN output and the archived report, neither of which is a candidate row
-        # -- so this script raised KeyError('encoder') on every run after the first one that wrote a
-        # report. It also sees the second-machine copies (`*_mac.json`), which DO carry an encoder
-        # key and would replace that encoder's row or not depending on sort order, silently mixing
-        # two toolchains inside one ranking.
+        # The glob sees its OWN output and the archived report (no `encoder` key -- this raised
+        # KeyError on every run after the first), and the second-machine `*_mac.json` copies, which
+        # DO carry one and would replace a CUDA row depending on sort order.
         if "encoder" not in d or p.stem.endswith("_mac"):
             continue
         enc = d["encoder"]

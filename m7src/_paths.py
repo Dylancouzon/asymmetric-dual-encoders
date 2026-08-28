@@ -13,10 +13,8 @@ M7 = REPO / "m7"
 WORK = REPO / "work"          # gitignored: encode caches, tables, checkpoints
 WORK.mkdir(exist_ok=True)
 
-# The accelerator this process runs on. Every module used to hardcode "cuda" as a default argument,
-# so the teacher-learnability probe could not run at all on the second machine the ledger sends it
-# to. One resolver, so a mixed-device bug (rows on mps, query block on cpu) cannot be introduced by
-# porting one call site and missing its neighbour. M7_DEVICE overrides for a CPU fallback run.
+# The accelerator this process runs on. One resolver, because porting `device="cuda"` defaults one
+# call site at a time gives a mixed-device bug rather than a crash. M7_DEVICE overrides.
 DEVICE = os.environ.get("M7_DEVICE") or (
     "cuda" if torch.cuda.is_available()
     else "mps" if torch.backends.mps.is_available()
@@ -24,9 +22,7 @@ DEVICE = os.environ.get("M7_DEVICE") or (
 
 
 def empty_cache():
-    """Release cached accelerator memory, whichever accelerator this is. `torch.cuda.empty_cache()`
-    is a silent no-op on a CUDA-less build in some versions and an AssertionError in others, and the
-    peak-RAM incidents in CLAUDE.md are the reason these calls exist at all."""
+    """Release cached accelerator memory, whichever accelerator this is."""
     if DEVICE == "cuda":
         torch.cuda.empty_cache()
     elif DEVICE == "mps":

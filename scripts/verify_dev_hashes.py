@@ -1,9 +1,8 @@
 """Do the dev components this machine built match the pinned ones? Refuse the probe if not.
 
-The teacher-learnability probe scores every candidate on cqadup-programmers and cqadup-physics and
-is compared against a stella row produced on another machine. If HF serves a different corpus,
-query set or qrels here, the two rows are not comparable and nothing in the probe path would say
-so -- `devsuite.load` caches whatever it downloads and no hash is checked on the way in.
+`devsuite.load` caches whatever HF serves and checks no hash on the way in, so a probe run on a
+second machine could be scored on different queries or qrels than the row it is compared against,
+silently.
 
     PYTHONPATH=m7src python scripts/verify_dev_hashes.py cqadup-programmers cqadup-physics
 """

@@ -10,11 +10,10 @@
 # float64, so V=50,368 needs 20.3 GB and does not fit in 24 GB. See the ledger.
 #
 # Prerequisites, checked below rather than assumed:
-#   * a venv with the repo's requirements (torch with MPS, transformers, scipy, datasets). PY
-#     overrides which one; the default matches the lock except for torch's build.
-#   * the TRAIN query list, either as work/trainq_texts.json or as the gzipped transfer copy this
-#     branch ships. `encode_trainq.load_texts` restores it and verifies its sha256 either way.
-# Everything else (dev corpora, encodes) is derived here from HF.
+#   * a venv with the repo's requirements. PY overrides which one; .venv-mac matches the lock except
+#     for torch's build.
+#   * the TRAIN query list, as work/trainq_texts.json or as the gzipped transfer copy this branch
+#     ships. `encode_trainq.load_texts` restores it and verifies its sha256 either way.
 set -uo pipefail
 cd "$(dirname "$0")"
 export PYTORCH_ENABLE_MPS_FALLBACK=1
@@ -33,8 +32,7 @@ if [ ! -f work/trainq_texts.json ] && [ ! -f transfer/trainq_texts.json.gz ]; th
   exit 1
 fi
 
-# Nothing else records the environment for these artifacts, and the stella row is a cross-platform
-# replication check whose only meaning is against a stated toolchain.
+# The stella row is a cross-platform replication check, so the toolchain has to be on the record.
 echo "=========== environment  $(date -Is) ===========" >> "$LOG"
 $PY -c "import platform, torch, transformers, scipy, numpy, sentence_transformers as st; \
 print(f'python {platform.python_version()} {platform.machine()} | torch {torch.__version__} ' \
@@ -42,8 +40,8 @@ print(f'python {platform.python_version()} {platform.machine()} | torch {torch._
       f'scipy {scipy.__version__} | numpy {numpy.__version__} | sentence-transformers {st.__version__}')" \
     2>&1 | tee -a "$LOG"
 
-# The two dev components carry the probe's queries and qrels. A different HF snapshot here would
-# make every Mac row incomparable to the committed stella row, silently.
+# A different HF snapshot of the two dev components would make every Mac row incomparable to the
+# committed stella row, silently.
 echo "=========== dev component hashes  $(date -Is) ===========" >> "$LOG"
 PYTHONPATH=m7src $PY -u scripts/verify_dev_hashes.py cqadup-programmers cqadup-physics 2>&1 | tee -a "$LOG" \
     || { echo "ABORT: dev components do not match the pin" | tee -a "$LOG"; exit 1; }
