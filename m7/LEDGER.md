@@ -269,7 +269,53 @@ training list — 2 of the 6 — and must be labelled at the dataset row.** All 
 top-PC removal, any per-token scalar weight, any doc-side linear map. Only n-gram rows and
 multiplicity-dependent pooling add anything — which is why #4 could work at all.
 
-## FINAL M7 TASK: the clean-stack tax (pre-registered 2026-08-28, Dylan approved, before any number)
+## FINAL M7 TASKS (pre-registered 2026-08-28, Dylan approved, before any number)
+
+Two, in this order. The teacher question is settled BEFORE the freeze; the clean-stack tax runs
+after the final run. That ordering is not cosmetic — see the one-access rule below.
+
+### 0. Teacher re-examination, and the rule for a full retrain
+
+**Why it is open.** The teacher criterion was changed once on evidence (Spearman(ceiling, table) =
+0.000). That refutation was applied to the rows a reviewer named and NOT propagated: three
+shortlist survivors — `arctic-embed-m-v1.5`, `gte-base-en-v1.5`, `gte-modernbert-base` — were
+dismissed on MTEB ordering, the very criterion we refuted, and were never run through the adopted
+one. Our own within-family finding (lower dim is more approximable: bge-base 0.686 > bge-large
+0.613, e5-base > e5-large) actively predicts they beat the larger siblings we DID probe;
+`gte-large`'s table was the worst of eight while `gte-base` was never tried. The eight-candidate
+ranking also rests on two components of one dataset family, with no selection correction, and
+stella's advantage remains unexplained. Since the init turned out to be irrelevant (all three
+init arms land within noise), the teacher IS the document space — the highest-leverage choice left.
+
+**The probes are dev-only** (closed-form tables, two CQADupStack components, no six-set access) and
+are legal at any time. `scripts/learnability_report.py` pairs each candidate against `INCUMBENT`,
+currently bge-base; re-point it at stella before reading these.
+
+**Swap bar, fixed here before the numbers.** A candidate replaces stella only if ALL hold:
+1. its closed-form table beats stella's, CI-resolved, on the probe components;
+2. a widened read on **nq-250k and hotpotqa** (off-family, Wikipedia) does not reverse the sign —
+   the same de-risk read the stella swap itself had to pass;
+3. Dylan signs off, because it costs a re-encode day and the vendor/licence question is his.
+
+**Tie-break, also fixed before the numbers:** if two candidates are within noise, prefer the one
+with (a) no disclosed overlap with the six and (b) the smaller dimension. Both are real benefits
+independent of quality — a 768-d teacher means a 23 MB artifact instead of 31 MB, and removes
+stella's ArguAna/FiQA2018 exposure, which is the report's worst disclosure liability.
+
+**Consequences of a swap, written down now so they cannot later be discovered as reasons to avoid
+it:** re-encode the 6.17M-doc pool, the dev corpora and the TRAIN query targets (~8-12 h);
+**levers #4, #5 and #6 must be re-adjudicated** on the new table, since all were adopted against
+stella's; fusion re-selected; gate re-run; freeze rewritten. Retraining itself is ~20 minutes.
+
+**THE ONE-ACCESS RULE — the part that matters.** Exactly one confirmatory six-set access remains.
+A teacher swap is a DEV-stage decision and must therefore happen **before** the freeze and before
+the final run. Deciding a teacher after seeing six-set results, or running the final run twice and
+reporting whichever scored better, is selection on test data and would destroy the claim outright.
+If a new teacher is pursued **after** the final run, it is a NEW milestone with its own
+pre-registration and its own confirmatory design, and M7's reported result is neither retroactively
+edited nor replaced by it.
+
+### 1. The clean-stack tax
 
 **Question.** Every comparator we benchmark against trained on MS MARCO — bge/C-Pack, Arctic-Embed
 2.0's prior English data, LEAF, SPLADE, OpenSearch doc-v3, LightRetriever. We excluded it because
@@ -286,8 +332,8 @@ sources include an msmarco source, so the quarantine is enforced by code and not
 the point: development is over, so a post-hoc measurement cannot inform any decision that has
 already been made. Running it earlier would contaminate the confirmatory claim.
 
-**Design.** ONE arm, not a sweep — a sweep would be development. Take the FROZEN final recipe
-exactly as shipped and add decontaminated MS MARCO to the training mix, changing nothing else.
+**Design.** ONE arm, not a sweep — a sweep would be development. Take whatever recipe is FROZEN
+at that point (a teacher swap under task 0 changes which that is), exactly as shipped, and add decontaminated MS MARCO to the training mix, changing nothing else.
 MS MARCO goes through the identical R1/R2 decontamination and pool-ban passes as every other
 source; counts logged here like any other. Report the resulting pair count.
 

@@ -93,3 +93,5 @@ StackExchange components (+0.047/+0.020), so the ranking was not StackExchange-s
 | p4-base-a | `work/runs/p4-base-a.json` | 0.5106 | ok |
 | p4-input-emb-b | `work/runs/p4-input-emb-b.json` | 0.4977 | ok |
 | p4-input-emb-a | `work/runs/p4-input-emb-a.json` | 0.5113 | ok |
+| p4-random-b | `work/runs/p4-random-b.json` | 0.4986 | ok |
+| p4-random-a | `work/runs/p4-random-a.json` | 0.5112 | ok |

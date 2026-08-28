@@ -38,7 +38,14 @@ dev number is SELECTION evidence**; only the three frozen-test comparisons are c
 6. Then: fusion re-selection on the candidate → ANN sweep + costs → gate as a mechanical
    eligibility audit → freeze.
 
-7. **THE VERY LAST M7 TASK — the clean-stack tax** (Dylan approved 2026-08-28, pre-registered in
+7. **TEACHER RE-EXAMINATION, BEFORE THE FREEZE** (pre-registered in `LEDGER.md`). The probes in
+   step 5 may justify swapping the teacher and retraining from scratch. If so it happens **before**
+   the freeze and the final run — a teacher is a dev-stage decision, and choosing one after seeing
+   six-set results, or running the final run twice and reporting the better, is selection on test
+   data. Swap bar, tie-break and the full cost (~8-12 h re-encode; levers #4/#5/#6 re-adjudicated)
+   are all fixed in the ledger. After the final run, a new teacher is a NEW milestone, not an edit
+   to M7's claim.
+8. **THE VERY LAST M7 TASK — the clean-stack tax** (Dylan approved 2026-08-28, pre-registered in
    `LEDGER.md`). One arm: the frozen final recipe plus decontaminated MS MARCO, everything else
    identical, to measure what excluding non-commercial training data costs. Runs ONLY after the
    final run and the freeze, so it cannot inform any decision already made. The artifact is
