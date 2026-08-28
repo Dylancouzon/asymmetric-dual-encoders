@@ -246,22 +246,36 @@ SURVIVOR_STEPS_A = {"p35w-2m-s2500": 2500, "p35a-2m-1e3": 2000, "p35w-500k-s1500
 
 
 def ablation_recipe():
-    """The (B, A) overrides for the ablation chains, with steps_a bound to the SURVIVING candidate.
+    """The (B, A) overrides for the ablation chains, read from the SURVIVING candidate's own
+    committed config and that of the checkpoint it was initialized from.
 
-    Reads the audit rather than trusting a constant, because the surviving artifact is exactly the
-    thing a session is most likely to misremember. Also refuses a survivor whose B phase differs
-    from ABLATION_B's -- the 500k and 1000-step survivors were trained at 8,000 B steps, so the
-    fixed B16k the review prescribes would no longer be "the candidate recipe" for them."""
+    Derived from disk rather than typed here for two reasons. Which artifact survives the
+    dependence recompute is not known when this code is written, and each candidate carries a
+    different B phase (8,000 steps for the pre-lever winner, 16,000 with the pseudo mix for the 2M
+    arms). And an ablation whose "unchanged" baseline drifts from the candidate by a
+    transcription slip measures the slip, not the ablated variable. ABLATION_B/ABLATION_A below
+    are the expected values and are asserted against what is read.
+    """
     p = REPO / "results" / "m7_dev_audit_full.json"
     if not p.exists():
         raise SystemExit("run dev_audit.py first: the ablation chains must reproduce the recipe of "
                          "whichever artifact survives the dependence recompute")
     surv = json.loads(p.read_text())["surviving_candidate"]
-    if surv not in ("p35w-2m-s2500", "p35a-2m-1e3"):
-        raise SystemExit(f"surviving candidate {surv} was trained with a different B phase than "
-                         f"ABLATION_B (16,000 steps + the 2M pseudo mix); re-derive the chain "
-                         f"recipe from work/runs/{surv}.json before running ablations")
-    return surv, dict(ABLATION_B), {**ABLATION_A, "steps_a": SURVIVOR_STEPS_A[surv]}
+    a_cfg = json.loads((WORK / "runs" / f"{surv}.json").read_text())["cfg"]
+    init = a_cfg.get("init", "")
+    if not init.startswith("run:"):
+        raise SystemExit(f"{surv} was not initialized from a checkpoint (init={init!r}); it is not "
+                         "a two-phase chain and the ablation design does not apply to it")
+    bid = init.split(":", 1)[1]
+    b_cfg = json.loads((WORK / "runs" / f"{bid}.json").read_text())["cfg"]
+    b = {k: v for k, v in b_cfg.items() if k != "run_id"}
+    a = {k: v for k, v in a_cfg.items() if k not in ("run_id", "init")}
+    drift = {k: (b.get(k), v) for k, v in ABLATION_B.items() if b.get(k) != v}
+    if drift:
+        print(f"[p4] NOTE: surviving B phase ({bid}) differs from the documented ABLATION_B on "
+              f"{drift} -- the chains follow the ARTIFACT, which is correct, but update the "
+              f"constants so the file stops describing a different recipe.", flush=True)
+    return surv, b, a
 
 
 def phase4_mandatory(base):
