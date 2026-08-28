@@ -111,6 +111,7 @@ does not pin `trust_remote_code` code, which comes from a separate repo at HEAD.
 | file | budget | rule |
 |---|---|---|
 | `STATUS.md` | ~1.2K | one screen. Rewritten, never appended. The only file always read. |
+| `RECIPE.md` | ~1.5K | the released recipe end to end, for a third party. Rewritten when the recipe changes, which after the freeze is never. |
 | `CODEMAP.md` | ~2.5K | grows only when a module is added or a pitfall is earned. |
 | `RESULTS.md` | ~1.5K | one row per run; detail belongs in the run JSON. |
 | `EXPLORED.md` | ~1K | one row per closed avenue. |
