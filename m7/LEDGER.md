@@ -397,14 +397,15 @@ a reason to prefer the null.
   Holm α=0.05 within each precision's three-arm family plus raw CI>0 in both. Only `sqrt` passes:
   Holm rank 1 at p=0.0113 (fp16) / 0.0128 (int8) against a 0.0167 threshold, +0.0040
   [0.0002,0.0074] fp16 and +0.0039 [0.0001,0.0074] int8, **positive on all six components**.
-  binary +0.0030 and cap2 +0.0016 do not clear. `m7_lever4_pooling_full.json`. Honest shape: the
+  binary +0.0030 and cap2 +0.0016 do not clear. `m7_lever4_pooling_p35w-2m-s2500.json`. Honest shape: the
   CI lower bounds are barely above zero — this is a real but small effect that cleared a bar fixed
   before it was seen, and it is selection evidence like everything else on dev.
   **RE-ADJUDICATED ON THE NEW CANDIDATE 2026-08-28, AND IT DOES NOT SURVIVE.** The negatives
   pre-registration says a promoted arm re-triggers this adjudication, and `adopt_pool_mode.py`
   refuses any run id the committed lever-4 artifact does not name, so the interlock forced it.
-  On `p4n-teacher16-a` (`lever4_readjudicate.py`, `m7_lever4_pooling_full.json`; the
-  `p35w-2m-s2500` adjudication is archived at `m7_lever4_pooling_p35w-2m-s2500.json`) **no arm
+  On `p4n-teacher16-a` (`lever4_readjudicate.py`, `m7_lever4_pooling_p4n-teacher16-a.json`; the
+  shipping artifact's own adjudication is `m7_lever4_pooling_p35w-2m-s2500.json` -- one file per
+  run id, because a fixed `..._full.json` re-pointed the moment lever 4 was re-adjudicated) **no arm
   passes**: `sqrt` +0.0033 raw, CI [−0.00099, +0.00732], p=0.063 fp16 / 0.067 int8, Holm rank 2
   against a 0.025 threshold; `cap2` p=0.044 at rank 1 against 0.0167; `binary` p=0.269. So
   **`pool_mode` stays `mean` on this candidate** and its honest full-suite dev macro is **0.6225,

@@ -148,7 +148,12 @@ def main(run_id, smoke=False):
     out["code_identity"] = dev_audit.code_identity()
     out["seconds"] = round(time.time() - t0, 1)
 
-    name = "m7_lever4_pooling_smoke.json" if smoke else "m7_lever4_pooling_full.json"
+    # Named for the artifact it adjudicates, never "full". A fixed filename meaning "the current
+    # candidate" silently re-points when the candidate changes: on 2026-08-28 the shipping
+    # artifact's own metadata cited `m7_lever4_pooling_full.json` as the evidence for its adopted
+    # rule, while that file had come to hold a DIFFERENT artifact's failed adjudication. A reader
+    # following the pointer would have found evidence contradicting the adoption.
+    name = f"m7_lever4_pooling_{run_id}{'_smoke' if smoke else ''}.json"
     (REPO / "results" / name).write_text(json.dumps(out, indent=1))
 
     print(f"\nbaseline (mean) {out['baseline_macro_fp16']:.4f} fp16 / "

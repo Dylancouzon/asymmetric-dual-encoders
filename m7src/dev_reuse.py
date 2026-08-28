@@ -51,7 +51,7 @@ def main():
 
     # Eval-only variants, read from the committed comparison artifacts rather than listed here.
     evalonly, sources = {}, []
-    for name in ("m7_dev_audit_full.json", "m7_lever4_pooling_full.json",
+    for name in ("m7_dev_audit_full.json", "m7_lever4_pooling_p4n-teacher16-a.json",
                  "m7_lever4_pooling_p35w-2m-s2500.json", "m7_lever5_shrinkage.json",
                  "m7_compare_full_postabl.json", "m7_compare_full_lever6.json",
                  "m7_compare_full_steprule.json", "m7_compare_full_simplify.json",

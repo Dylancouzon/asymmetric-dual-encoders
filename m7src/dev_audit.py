@@ -340,7 +340,12 @@ def main(smoke=False, lever4=True):
     name = f"m7_dev_audit_{tag}.json"
     (REPO / "results" / name).write_text(json.dumps(out, indent=1))
     if lever4_out:
-        (REPO / "results" / f"m7_lever4_pooling_{tag}.json").write_text(json.dumps(lever4_out, indent=1))
+        # Named for the artifact adjudicated, matching `adopt_pool_mode.evidence_path`. A fixed
+        # `..._full.json` re-points as soon as lever 4 is re-adjudicated on a different candidate,
+        # and on 2026-08-28 it did, leaving the shipping artifact citing another artifact's failed
+        # adjudication as the evidence for its own adopted rule.
+        (REPO / "results" / f"m7_lever4_pooling_{surviving}{'_smoke' if smoke else ''}.json"
+         ).write_text(json.dumps(lever4_out, indent=1))
     print(json.dumps({k: v for k, v in out.items()
                       if k in ("lever_verdicts", "surviving_candidate", "seconds")}, indent=1))
     for a, b in zip(CHAIN[1:], CHAIN[:-1]):

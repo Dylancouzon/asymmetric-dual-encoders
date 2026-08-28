@@ -1,24 +1,28 @@
 {
  "_what": "DEV reuse, counted from the artifacts rather than recalled. Written for the pre-freeze review's question: how many adaptive decisions has the dev suite absorbed?",
  "_scope": "Dev only. The six confirmatory datasets have the three accesses m7/LEDGER.md enumerates, none a model comparison; the final run is the fourth.",
- "trained_arms": 53,
- "in_training_dev_evaluations": 299,
+ "trained_arms": 58,
+ "in_training_dev_evaluations": 322,
  "eval_only_variants_by_artifact": {
   "m7_dev_audit_full.json": 40,
-  "m7_lever4_pooling_full.json": 6,
+  "m7_lever4_pooling_p4n-teacher16-a.json": 6,
   "m7_lever4_pooling_p35w-2m-s2500.json": 6,
   "m7_lever5_shrinkage.json": 6,
   "m7_compare_full_postabl.json": 12,
-  "m7_compare_full_lever6.json": 4
+  "m7_compare_full_lever6.json": 4,
+  "m7_compare_full_steprule.json": 10,
+  "m7_compare_full_simplify.json": 6
  },
- "eval_only_variants_total": 74,
+ "eval_only_variants_total": 90,
  "sources_read": [
   "m7_dev_audit_full.json",
-  "m7_lever4_pooling_full.json",
+  "m7_lever4_pooling_p4n-teacher16-a.json",
   "m7_lever4_pooling_p35w-2m-s2500.json",
   "m7_lever5_shrinkage.json",
   "m7_compare_full_postabl.json",
-  "m7_compare_full_lever6.json"
+  "m7_compare_full_lever6.json",
+  "m7_compare_full_steprule.json",
+  "m7_compare_full_simplify.json"
  ],
  "per_arm": {
   "p1-objA": {
@@ -169,9 +173,17 @@
    "in_training_evals": 5,
    "final_proxy_macro": 0.5131333249650127
   },
+  "p4n-bm2516-s1500-a": {
+   "in_training_evals": 3,
+   "final_proxy_macro": 0.5137809109552077
+  },
   "p4n-mixed32-a": {
    "in_training_evals": 5,
    "final_proxy_macro": 0.5130717908239798
+  },
+  "p4n-mixed32-s1000-a": {
+   "in_training_evals": 2,
+   "final_proxy_macro": 0.5148529993812591
   },
   "p4n-teacher16-a": {
    "in_training_evals": 5,
@@ -200,6 +212,18 @@
   "p4x-pseudo500k-b": {
    "in_training_evals": 8,
    "final_proxy_macro": 0.49696627567734436
+  },
+  "p5s-simple-a": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.5139213011849353
+  },
+  "p5s-simple-b": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.49695926613462243
+  },
+  "p5s-simple-nohn-a": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.5105682944545374
   },
   "s1-objB": {
    "in_training_evals": 4,

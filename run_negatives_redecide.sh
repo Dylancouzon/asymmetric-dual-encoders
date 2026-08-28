@@ -9,7 +9,7 @@
 #
 # Baseline is `p35w-2m-s2500` -- the candidate the negatives bar was written against -- served
 # under its own frozen rule (sqrt, adopted for that artifact only). The corrected arms are served
-# under theirs (mean; lever #4 does not survive on them, see m7_lever4_pooling_full.json). Each
+# under theirs (mean; lever #4 does not survive on them, see m7_lever4_pooling_p4n-teacher16-a.json). Each
 # artifact under its own rule is the like-for-like comparison, because that is what would ship.
 #
 # `p4n-teacher16-a` is included so the step-rule correction's own effect is visible rather than
