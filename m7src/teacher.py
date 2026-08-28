@@ -19,7 +19,7 @@ import torch
 from transformers import AutoConfig, AutoModel, AutoTokenizer
 
 import encoders
-from _paths import WORK
+from _paths import DEVICE, WORK, empty_cache
 
 SPEC = encoders.active()
 # Module-level names kept so the dozen existing call sites need no change.
@@ -43,7 +43,7 @@ _CACHE = {}
 _DENSE = {}
 
 
-def load_post_dense(spec, device="cuda"):
+def load_post_dense(spec, device=DEVICE):
     """Load the post-pooling Dense module a Spec declares, or None.
 
     stella's published pipeline is Transformer -> Pooling(mean) -> Dense_1024 -> normalize. Encoding
@@ -69,7 +69,7 @@ def load_post_dense(spec, device="cuda"):
     return _DENSE[key]
 
 
-def load_teacher(model_id=TEACHER, revision=TEACHER_REV, dtype=torch.float32, device="cuda"):
+def load_teacher(model_id=TEACHER, revision=TEACHER_REV, dtype=torch.float32, device=DEVICE):
     key = (model_id, revision, str(dtype), device)
     if key not in _CACHE:
         sp = encoders.by_repo(model_id)
@@ -91,11 +91,11 @@ def load_teacher(model_id=TEACHER, revision=TEACHER_REV, dtype=torch.float32, de
     return _CACHE[key]
 
 
-def release_teacher(model_id=TEACHER, revision=TEACHER_REV, dtype=torch.float32, device="cuda"):
+def release_teacher(model_id=TEACHER, revision=TEACHER_REV, dtype=torch.float32, device=DEVICE):
     """Evict one memoized model and free its VRAM. load_teacher's cache is right for a pipeline
     that uses one encoder and wrong for a loop over five of them (teacher_probe)."""
     if _CACHE.pop((model_id, revision, str(dtype), device), None) is not None:
-        torch.cuda.empty_cache()
+        empty_cache()
 
 
 def pool_project_normalize(h, attention_mask, pooling, dense):
@@ -122,7 +122,7 @@ def pool_project_normalize(h, attention_mask, pooling, dense):
 
 
 @torch.no_grad()
-def encode_batch(tok, model, texts, max_length=512, device="cuda", pooling="cls", dense=None):
+def encode_batch(tok, model, texts, max_length=512, device=DEVICE, pooling="cls", dense=None):
     """Tokenize, forward, pool/project/normalize. Returned fp32 on CPU."""
     b = tok(texts, padding=True, truncation=True, max_length=max_length, return_tensors="pt").to(device)
     h = model(**b).last_hidden_state
@@ -138,7 +138,7 @@ def _order_by_length(tok, texts, max_length):
 
 @torch.no_grad()
 def encode(texts, prefix="", max_length=512, batch_tokens=16384, model_id=TEACHER,
-           revision=TEACHER_REV, dtype=torch.float32, device="cuda", verbose=False):
+           revision=TEACHER_REV, dtype=torch.float32, device=DEVICE, verbose=False):
     """Length-bucketed dynamic batching; returns (N, dim) fp32 normalized in input order."""
     tok, model = load_teacher(model_id, revision, dtype, device)
     spec = encoders.by_repo(model_id)
@@ -203,7 +203,7 @@ def cache_key(name, prefix, max_length, model_id, revision, corpus_sha, dtype, s
 
 
 def encode_cached(name, texts, prefix="", max_length=512, model_id=TEACHER, revision=TEACHER_REV,
-                  batch_tokens=32768, device="cuda", verbose=True, dtype=torch.float16):
+                  batch_tokens=32768, device=DEVICE, verbose=True, dtype=torch.float16):
     """Shard-resumable cached encode. Returns (N, dim) fp16 memmap-backed array."""
     key, blob = cache_key(name, prefix, max_length, model_id, revision, sha_texts(texts), dtype)
     d = ENC / key

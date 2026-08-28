@@ -40,7 +40,7 @@ import torch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "m7src"))
 
 import boot
-from _paths import REPO, WORK
+from _paths import DEVICE, REPO, WORK, empty_cache
 
 CANDIDATES = ["arctic-embed-l", "stella-400M-v5"]
 COMPONENTS = ("cqadup-programmers", "cqadup-physics")
@@ -70,7 +70,7 @@ def run_candidate(name, X, q_texts, lambdas=None):
     for lam in (lambdas or LAMBDAS):
         t0 = time.time()
         W = sr.solve_ridge(X, Y, W0, lam)
-        model = QueryTable(W, weight_init=None, learned_weights=False).cuda()
+        model = QueryTable(W, weight_init=None, learned_weights=False).to(DEVICE)
         pq = dev_eval.eval_table(model, pre, components=COMPONENTS, tok=tok)
         macro = float(np.mean([np.mean(list(pq[c].values())) for c in COMPONENTS]))
         # cosine agreement on DEV queries: the table's bag vector vs the teacher's own query vector
@@ -92,7 +92,7 @@ def run_candidate(name, X, q_texts, lambdas=None):
         print(f"  {name} lam={lam:g}: dev_macro_2 {macro:.4f}  cos {np.mean(list(cos.values())):.4f}"
               f"  ({time.time()-t0:.0f}s)", flush=True)
         del model, W
-        torch.cuda.empty_cache()
+        empty_cache()
     best = max(out["lambdas"], key=lambda k: out["lambdas"][k]["dev_macro_2"])
     out["best_lambda"] = best
     return out

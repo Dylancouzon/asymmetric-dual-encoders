@@ -839,6 +839,47 @@ candidates are 30,522-vocab, so their fp64 Gram is 7.5 GB and fits. Rules, fixed
 4. Work lands on branch **`m7-teacher-probe-mac`**, merged here. Two machines pushing one branch
    collide, and this ledger already records a force-push grant violation.
 
+**OUTCOME 2026-08-28: NO SWAP. The teacher question is CLOSED before the freeze, as the
+one-access rule requires.** Both registered candidates lose CI-resolved on the adopted criterion,
+run on Dylan's M5 Mac (`m7_learnability_report_mac.json`; the RTX box's own report, regenerated
+from the CUDA rows, gives the same ordering):
+
+| candidate | dim | best λ | table macro-2 | vs stella |
+|---|---|---|---|---|
+| **stella-400M-v5** (incumbent) | 1024 | 1e-2 | **0.3439** | — |
+| bge-base-en-v1.5 (prior teacher) | 768 | 1e-2 | 0.3074 | −0.0368 [−0.0485, −0.0253] |
+| `arctic-embed-m-v1.5` | 768 | 1e-3 | 0.3002 | **−0.0441 [−0.0567, −0.0313]** |
+| `gte-base-en-v1.5` | 768 | 1e-2 | 0.2741 | **−0.0702 [−0.0835, −0.0567]** |
+
+Both best λ are interior, so neither optimum is clipped, and both sit below even the teacher
+stella replaced. Swap-bar condition 1 fails for both, so conditions 2 and 3 and the
+overlap/dimension tie-break never arise — and the report's ArguAna/FiQA2018 disclosure liability
+stays, because nothing cheaper was available to remove it.
+
+**The cross-platform replication check (rule 1) passes, and it is worth more than the candidates
+were.** The Mac's own stella row reproduces the CUDA row to **7e-4 across all four λ**
+(0.3400/0.3426/0.3443/0.3244 against 0.3407/0.3430/0.3439/0.3248), same argmax — two orders of
+magnitude below the effects being resolved. The closed-form criterion is hardware-robust, and the
+cross-machine pairing this run depended on is validated rather than assumed. Comparability was
+also verified, not assumed: the transferred TRAIN list against its sha256, both dev components
+against every hash in `m7_dev_manifest.json` (`scripts/verify_dev_hashes.py`, now a hard gate —
+nothing checked this before), and gram nnz as a fingerprint of the shared bag matrix.
+
+**Reusable bound, from the ten rows now measured.** Base out-approximates large in every family
+(arctic-m 0.3002 > arctic-l 0.2594; gte-base 0.2741 > gte-large 0.2033; bge-base > bge-large;
+e5-base > e5-large) but only by +0.04 to +0.07. **A family whose large variant scores below ~0.28
+here cannot reach stella by shrinking, and is not worth probing.** That closes the remaining
+shortlist by arithmetic rather than by exhaustion.
+
+**Two harness defects the second machine exposed, both of which affect THIS box:**
+1. `scripts/learnability_report.py` globbed its own output and the archived report, raising
+   `KeyError('encoder')` — **broken on every run after the first that wrote a report, on any
+   machine.** Fixed; it also now skips `*_mac.json`, which carry a real encoder key and would
+   otherwise replace a CUDA row depending on sort order.
+2. `teacher_learnability.main` MERGES λ into an existing per-candidate file, so a second-machine
+   run overwrites committed values in place, recoverable only from git. The CUDA stella row was
+   checked and is intact. Any future second-machine run copies the affected file off first.
+
 **Swap bar, fixed here before the numbers.** A candidate replaces stella only if ALL hold:
 1. its closed-form table beats stella's, CI-resolved, on the probe components;
 2. a widened read on **nq-250k and hotpotqa** (off-family, Wikipedia) does not reverse the sign —

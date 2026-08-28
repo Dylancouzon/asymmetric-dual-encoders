@@ -8,10 +8,12 @@ import numpy as np
 import pytrec_eval
 import torch
 
+from _paths import DEVICE, empty_cache
+
 NEG = -3.4e38
 
 
-def topk_arrays(q_vecs, doc_vecs, k=100, chunk=250_000, device="cuda", budget_bytes=1 << 30):
+def topk_arrays(q_vecs, doc_vecs, k=100, chunk=250_000, device=DEVICE, budget_bytes=1 << 30):
     """(best_idx, best_score) over the corpus, one read of `doc_vecs` per chunk.
 
     Split out of topk_ids_scores so several query blocks that share a corpus -- the same table in
@@ -41,7 +43,7 @@ def topk_arrays(q_vecs, doc_vecs, k=100, chunk=250_000, device="cuda", budget_by
         del d
     bi, bs = best_i.cpu().numpy(), best_s.cpu().numpy()
     del q, best_s, best_i
-    torch.cuda.empty_cache()
+    empty_cache()
     return bi, bs
 
 
@@ -54,7 +56,7 @@ def run_from_arrays(bi, bs, doc_ids, qids):
     return run
 
 
-def topk_ids_scores(q_vecs, doc_vecs, doc_ids, k=100, chunk=250_000, device="cuda", qids=None,
+def topk_ids_scores(q_vecs, doc_vecs, doc_ids, k=100, chunk=250_000, device=DEVICE, qids=None,
                     budget_bytes=1 << 30):
     bi, bs = topk_arrays(q_vecs, doc_vecs, k=k, chunk=chunk, device=device,
                          budget_bytes=budget_bytes)

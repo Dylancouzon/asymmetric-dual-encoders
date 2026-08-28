@@ -39,6 +39,11 @@ def main():
     rows, per_query = {}, {}
     for p in sorted((REPO / "results").glob("m7_learnability_*.json")):
         d = json.loads(p.read_text())
+        # The glob sees its OWN output and the archived report (no `encoder` key -- this raised
+        # KeyError on every run after the first), and the second-machine `*_mac.json` copies, which
+        # DO carry one and would replace a CUDA row depending on sort order.
+        if "encoder" not in d or p.stem.endswith("_mac"):
+            continue
         enc = d["encoder"]
         best = d["best_lambda"]
         b = d["lambdas"][best]
