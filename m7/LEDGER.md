@@ -543,7 +543,15 @@ a reason to prefer the null.
 
   **Guardrail, and it can veto on its own.** The full pinned dev suite must be non-inferior at the
   same δ = 0.0040 margin as the simplification, fp16 and int8: raw paired CI lower bound > −0.0040
-  against the candidate. A long-span gain bought with a short-query loss is not an improvement for
+  against the candidate.
+  **Noted 2026-08-28, and deliberately NOT changed**: δ = 0.0040 now sits *inside* the measured
+  recipe-perturbation band (0.0027–0.0078), so this guardrail can veto on noise. It stays as
+  pre-registered. Loosening a margin after measuring that it might bite is tuning, and for a
+  guardrail on a system about to freeze, rejecting a real improvement is the safe error and
+  accepting a real regression is not. The out-of-domain subset — which is three times more stable
+  across recipes (range 0.0040 against the macro's 0.0128) — is reported alongside as required,
+  but is NOT promoted to a bar here: inventing a new bar at this stage is the same tuning in the
+  other direction. A long-span gain bought with a short-query loss is not an improvement for
   a system whose confirmatory set is mostly short-query. Adoption needs **both**; the out-of-domain
   subset is reported alongside, per the biased-estimator rule.
 
