@@ -461,7 +461,13 @@ a reason to prefer the null.
   probe's +0.0143 was real but frame-bound. CLOSED for closed-form integration; a joint retrain
   with bigram features in the forward stays open and needs its own pre-registration.
 - **#2 pseudo-query coverage — ADOPTED**, three chained decisions (500k adoption → 2m cross-arm
-  pick → s2500 step extension), total **+0.0126** dev macro over `s2w-1e3-s1000`. All three were
+  pick → s2500 step extension), total **+0.0126** dev macro over `s2w-1e3-s1000`.
+  **THE DOSES ARE MISNAMED THROUGHOUT, corrected 2026-08-28.** `pseudoq.build(n)` draws `n//5 + 1`
+  per doc store and three of the five exhaust, so the pool saturates at ~925K however large `n`
+  is. The "2m" arm is **924,704** spans and the "500k" arm is **324,704** — a **2.85x** ratio, not
+  4x, and the "2,000,000 pseudo-queries" in every prior description of this recipe is the
+  *request*, not the pool. `b_pseudo_queries=2000000` still reproduces it exactly, so nothing
+  about the artifact or any comparison changes; the numbers in the write-up were wrong. All three were
   re-judged on 2026-08-28 under the dependence-preserving statistics against a newly standardized
   survival bar (signflip p<0.05 AND raw paired CI>0, fp16 **and** int8 — stricter than the
   history, so it is a conservative audit, not "the original bar") and **all three STAND**:
@@ -596,6 +602,24 @@ a reason to prefer the null.
   other direction. A long-span gain bought with a short-query loss is not an improvement for
   a system whose confirmatory set is mostly short-query. Adoption needs **both**; the out-of-domain
   subset is reported alongside, per the biased-estimator rule.
+
+  **THE REALIZED DOSE, measured before the arm trained and recorded here so a null is read
+  correctly.** `pseudoq.build` draws `n//5 + 1` per doc store and three of the five stores exhaust,
+  so the pool tops out well below what is asked for and the long half cannot reach 50%:
+
+  * pool **925,985** spans against the short pool's **924,704** — **+0.14%**, so the one-knob
+    design holds and the lever really is only the span distribution;
+  * **31.9% long** (295,125 spans ≥ 64 words), not the 50% the design intended, because
+    HotpotQA paragraphs and FEVER claims are mostly too short to yield a 64-word window;
+  * long spans p50 **101** words, p95 **234** — the ArguAna bracket is reached at the top end;
+  * **67.8% of the long spans come from `esci-prod`** (Amazon product text), then hotpotqa 13.3%,
+    mrtydi 12.9%, squad 3.3%, fever 2.7%.
+
+  So the treatment being tested is "a third of the pool is long, and two thirds of the long part
+  is e-commerce product prose". ArguAna is counter-argument text. **A null result therefore does
+  not close long-span distillation in general** — it closes *this dose, with this composition*,
+  the same way lever #3 was closed at 1/8 the published doc2query dose and labelled that way.
+  Stated before the numbers so it cannot be produced afterwards as an excuse.
 
   **Falsifier.** If the primary bar fails, long-span distillation is CLOSED with its mechanism
   attached: the length gap is then not caused by the training span distribution, and ArguAna's

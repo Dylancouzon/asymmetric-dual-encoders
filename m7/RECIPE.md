@@ -52,7 +52,9 @@ taught over far more vocabulary than the real queries cover.
 init                 teacher-context rows: each vocab token forwarded through the teacher
                      inside a query context (30,522 forward passes). NOT the input embedding
                      matrix, and NOT random -- see below.
-b_pseudo_queries     2,000,000   vocabulary-coverage pseudo-queries, R1-filtered
+b_pseudo_queries     2000000     the REQUEST. The pool saturates at 924,704 spans: build()
+                                 draws n//5+1 per doc store and three of five exhaust. Set the
+                                 request, not the realised count -- it reproduces exactly.
 b_pseudo_frac        0.5         share of each batch drawn from them
 learned_weights      True        per-token scalar, seeded from IDF (idf_init_weights=True)
 reg_init             1e-3        pull toward init, scaled by 1/(1 + row update count)
@@ -86,7 +88,7 @@ something passes is adaptive dev search.
 | component | the cheaper alternative that fails | cost of the four together |
 |---|---|---|
 | teacher-context init | `input_emb` (no forward passes) | |
-| 2,000,000 pseudo-queries | 500,000 | −0.0048 dev macro |
+| 924,704-span pseudo pool (request 2m) | 324,704 (request 500k) | −0.0048 dev macro |
 | IDF-seeded token weights | uniform | −0.0045 out-of-domain |
 | `reg_init` 1e-3 | 0.0 | |
 

@@ -78,7 +78,15 @@ def path(n, seed=SEED, kind="short"):
 
 
 def build(n, stores=None, seed=SEED, kind="short"):
-    """Deterministic sample of n pseudo-queries, spread evenly over the doc stores.
+    """Deterministic sample of UP TO n pseudo-queries, spread evenly over the doc stores.
+
+    **`n` is a REQUEST, not the pool size, and the gap is large.** Each store is asked for
+    `n//len(stores) + 1`, and three of the five exhaust: at n=2,000,000 the realised pool is
+    924,704 (esci-prod and hotpotqa-corpus fill their 400,001 quota; fever-pos gives 12,484,
+    squad-ctx 18,844, mrtydi-docs 94,655). At n=500,000 it is 324,704. So the "2m" and "500k"
+    arms are a 2.85x dose ratio, not 4x, and every write-up that called them 2,000,000 and
+    500,000 was quoting the request. Passing the same `n` still reproduces the same pool exactly,
+    so this is a naming error and not a reproducibility one -- but state the realised count.
 
     kind="short": first-sentence spans capped at 32 words -- the historical behaviour.
     kind="mixed": half those, half long sentence-aligned spans (lever #7). Half and half rather
