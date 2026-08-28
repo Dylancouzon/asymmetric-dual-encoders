@@ -104,6 +104,41 @@ v = mz.encode(["apple banana"], Preproc(add_special_tokens=False), tok)[0]
 check("cancelling bag (near-zero-norm sum) -> fallback, unit norm",
       abs(np.linalg.norm(v) - 1) < 1e-5 and np.allclose(v, mz.fallback_vector().detach().cpu().numpy(), atol=1e-6))
 
+# --- count saturation (capacity lever #4): the pooling rule lives in Preproc ----------
+from table import POOL_MODES, encode_pooled, occurrence_weights
+
+rep = "apple apple apple banana"          # counts 3 and 1, before specials
+ids_rep = tokenize(tok, [rep], Preproc(add_special_tokens=False))[0]
+for mode, want in (("mean", [3.0, 1.0]), ("binary", [1.0, 1.0]),
+                   ("cap2", [2.0, 1.0]), ("sqrt", [3.0 ** 0.5, 1.0])):
+    psw = occurrence_weights([ids_rep], mode).numpy()
+    tot = {t: float(psw[[i for i, x in enumerate(ids_rep) if x == t]].sum())
+           for t in dict.fromkeys(ids_rep)}
+    check(f"pool mode {mode}: a token seen c times contributes f(c)",
+          np.allclose(sorted(tot.values(), reverse=True), want, atol=1e-6),
+          f"{tot} want {want}")
+
+check("pool_mode='mean' reproduces the original forward bit-for-bit",
+      m.encode(texts, NO_PREFIX, tok).tobytes()
+      == encode_pooled(m, texts, NO_PREFIX, mode="mean", tok=tok).tobytes())
+sq = Preproc(pool_mode="sqrt")
+check("Preproc routes encode through the declared pool mode",
+      np.allclose(m.encode(texts, sq, tok), encode_pooled(m, texts, sq, mode="sqrt", tok=tok)))
+check("a non-default pool mode changes the query vectors",
+      not np.allclose(m.encode(texts, NO_PREFIX, tok), m.encode(texts, sq, tok), atol=1e-6))
+check("pool_mode='mean' keeps every pre-existing preproc fingerprint byte-identical",
+      Preproc().fingerprint() == Preproc(pool_mode="mean").fingerprint()
+      and Preproc().fingerprint() != sq.fingerprint())
+check("every declared pool mode is implemented and unit-norm",
+      all(abs(np.linalg.norm(m.encode(["apple apple banana"], Preproc(pool_mode=md), tok)[0]) - 1)
+          < 1e-5 for md in POOL_MODES))
+# a query with no repeated token must be identical under every mode -- the rule may only act on
+# multiplicity, which is what makes it non-absorbable in the first place
+uniq = ["quantum chromodynamics lattice"]
+check("no repeated token -> every pool mode agrees",
+      all(np.allclose(m.encode(uniq, Preproc(pool_mode=md), tok)[0],
+                      m.encode(uniq, NO_PREFIX, tok)[0], atol=1e-6) for md in POOL_MODES))
+
 # --- determinism ----------------------------------------------------------------------
 v1 = m.encode(texts, WITH_PREFIX, tok)
 v2 = m.encode(texts, WITH_PREFIX, tok)

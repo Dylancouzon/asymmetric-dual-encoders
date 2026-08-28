@@ -320,6 +320,27 @@ def phase4_attribution(base):
     }, b, a)
 
 
+def phase4_negatives(base):
+    """The mandated negatives ablation -- BM25-mined vs teacher-mined vs mixed vs the random bank
+    -- which `phase2_negatives` was written for and which NEVER RAN.
+
+    `hard_neg_k=0` has been hard-coded into every arm since the phase-2 screen on the strength of
+    a single bge-era pair at lr 5e-5 (+0.0034 for random-only). That is one point, under a
+    different teacher, at a learning rate 20x below the one that ships, with no mechanism -- and
+    it was never written down as a closed avenue, so it never faced the bar every other closure
+    here had to clear. These arms vary ONLY the negatives, from the surviving candidate's own B
+    checkpoint at its own A recipe, so `bank` is the candidate itself and is the control.
+    """
+    surv, b, a = ablation_recipe()
+    bid = json.loads((WORK / "runs" / f"{surv}.json").read_text())["cfg"]["init"]
+    return grid("p4n", base, {
+        "bank":      {**a, "init": bid, "hard_neg_k": 0},
+        "teacher16": {**a, "init": bid, "hard_neg_k": 16, "hard_neg_source": "teacher"},
+        "bm2516":    {**a, "init": bid, "hard_neg_k": 16, "hard_neg_source": "bm25"},
+        "mixed32":   {**a, "init": bid, "hard_neg_k": 32, "hard_neg_source": "mixed"},
+    })
+
+
 def phase4_exploratory(base):
     """Prefix-CONDITIONED teacher rows, i.e. every vocab token embedded inside the query prefix.
     The mandate calls this exploratory, so it is labelled and separate from the mandatory prefix

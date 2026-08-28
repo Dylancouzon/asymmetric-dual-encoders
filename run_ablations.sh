@@ -47,10 +47,15 @@ program.save("phase4_attribution", res)
 res2 = program.phase4_mandatory(program.BASE)
 program.save("phase4_mandatory", res2)
 
+# The mandated negatives ablation, which phase2_negatives was written for and never ran.
+res4 = program.phase4_negatives(program.BASE)
+program.save("phase4_negatives", res4)
+
 res3 = program.phase4_exploratory(program.BASE)
 program.save("phase4_exploratory", res3)
 
-print(json.dumps({"attribution": res, "mandatory": res2, "exploratory": res3}, indent=1), flush=True)
+print(json.dumps({"attribution": res, "mandatory": res2, "negatives": res4,
+                  "exploratory": res3}, indent=1), flush=True)
 EOF
 
 echo "=========== ablations done $(date -Is) ===========" >> "$LOG"

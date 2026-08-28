@@ -29,13 +29,23 @@ CLS_ID = 101
 
 @dataclass(frozen=True)
 class Preproc:
-    """The frozen query-preprocessing rule. `prefix` has exactly two mandated values."""
+    """The frozen query-preprocessing rule. `prefix` has exactly two mandated values.
+
+    `pool_mode` is how a token's multiplicity enters the bag (see POOL_MODES below). It is part of
+    the rule, not of the weights: the same table serves any mode, and the mode costs nothing at
+    query time. Adopted for the release via capacity lever #4 (m7/LEDGER.md 2026-08-28)."""
     prefix: str = ""
     add_special_tokens: bool = True
     max_length: int = 512
+    pool_mode: str = "mean"
 
     def fingerprint(self):
-        return hashlib.sha256(json.dumps(asdict(self), sort_keys=True).encode()).hexdigest()[:16]
+        d = asdict(self)
+        # Included only when it is not the original default, so every artifact and every committed
+        # `preproc_fingerprint` written before this field existed still hashes to the same value.
+        if d["pool_mode"] == "mean":
+            d.pop("pool_mode")
+        return hashlib.sha256(json.dumps(d, sort_keys=True).encode()).hexdigest()[:16]
 
 
 NO_PREFIX = Preproc(prefix="")
@@ -123,6 +133,12 @@ class QueryTable(nn.Module):
 
     @torch.no_grad()
     def encode(self, texts, pre: Preproc, tok=None, batch=1024, device=None):
+        """THE query path. It honours `pre.pool_mode`, so every caller -- dev eval, the gate,
+        fusion selection, the final run, the Edge demo -- serves the same rule the artifact's own
+        metadata declares, rather than each deciding for itself."""
+        if pre.pool_mode != "mean":
+            return encode_pooled(self, texts, pre, mode=pre.pool_mode, tok=tok, batch=batch,
+                                 device=device)
         tok = tok or get_tokenizer()
         device = device or self.rows.device
         out = np.empty((len(texts), self.dim), dtype=np.float32)
