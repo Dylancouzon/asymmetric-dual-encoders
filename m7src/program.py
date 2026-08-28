@@ -361,6 +361,12 @@ P5S_ARMS = {
                "a": {"idf_init_weights": False, "reg_init": 0.0,
                      "hard_neg_k": 16, "hard_neg_source": "teacher"}},
 }
+# THE ARM THAT FACES THE BAR, after the negatives avenue closed on 2026-08-28. The baseline is
+# `p35w-2m-s2500`, which trains with no mined negatives, so the simplification of it must too --
+# `p5s-simple` (k=16) is now a simplification of a recipe that is not the candidate, and is kept
+# as a labelled off-baseline arm rather than deleted. Same B leg, so this costs one A phase.
+P5S_ARMS["simple-nohn"] = {"init": "run:p5s-simple-b",
+                           "a": {"idf_init_weights": False, "reg_init": 0.0, "hard_neg_k": 0}}
 for _name, _k, _src in (("bm25", 16, "bm25"), ("mixed", 32, "mixed")):
     # A-only: they name `p5s-simple-b` as their init rather than carrying a B leg of their own,
     # so switching the negatives source costs ~5 minutes instead of a second 16,000-step B phase.

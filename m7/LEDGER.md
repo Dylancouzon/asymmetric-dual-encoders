@@ -190,6 +190,41 @@ point would be selection on a number we had already looked at, which is the exac
 rule exists to prevent. The superseded 2500-step full-suite numbers stay in
 `m7_compare_full_postabl.json` and are reported as the deviation they were.
 
+**WHAT HAPPENED, and it is the clause above being honoured against our own interest.** Every
+corrected arm scored lower, none cleared the bar, and the negatives adoption fell — see the
+outcome table under "Negatives ablation". The clause was written for exactly this and is applied
+as written.
+
+**THE STEP-SELECTION RULE ITSELF FAILED HERE, and the evidence is worth more than the arms were.**
+
+  * **The proxy peak did not reproduce.** `teacher16`'s 2500-step run peaked at step 1500 with
+    0.51300; re-running to 1500 gave **0.51262**. The peak was noise in the eval, not a property
+    of the arm — which is precisely what "re-run to that step" was supposed to protect against and
+    instead demonstrated.
+  * **The proxy inverted the full suite.** Proxy ranks `mixed32` 0.5149 > `bm2516` 0.5138 >
+    `teacher16` 0.5126. The full suite ranks them **exactly backwards**: 0.6146 > 0.6097 vs
+    0.6176. Three arms is a weak n, but a perfect inversion is not evidence the instrument works.
+  * **A step count is a nuisance parameter and it moved the dev macro by 0.0049** (`teacher16`
+    0.6225 at 2500 vs 0.6176 at 1500, matched pooling). That is **larger than lever #4's adopted
+    effect (+0.0040)** and comparable to the negatives effect being adjudicated.
+
+  The consequence for how every interval in this project is read: **all of them are query-sampling
+  CIs. None contains a recipe-replication variance term** — training is deterministic, so there is
+  no replication to sample. A change nobody would bother reporting moves the macro by more than
+  the effects the bars are resolving. The bars are not wrong, but they answer "would another
+  sample of queries agree", not "would another equally-defensible recipe agree", and only the
+  second question is the one a reader cares about.
+
+**AMENDMENT, and its limits.** For decisions whose numbers do not yet exist, an arm is run at the
+**same `steps_a` as the artifact it is being compared against**, and per-arm proxy step selection
+is not used. Reason: at this resolution the proxy peak is noise (measured above), and in a matched
+ablation varying the step count varies a second thing, which the negatives design explicitly
+forbade ("vary ONLY the negatives"). **This amendment is NOT retroactive.** It does not revive the
+negatives adoption, and it may not be cited to prefer `p4n-teacher16-a`: that decision was taken
+under the rule in force when the arms ran, and changing a rule after seeing which version pays is
+the thing this ledger exists to prevent. It is recorded here immediately below the outcome so the
+ordering cannot be misread later.
+
 ### Recipe simplification — an EQUIVALENCE test, pre-registered before any number
 
 **Why.** The ablations say four components of the shipping recipe are inert, and shipping inert
@@ -229,7 +264,23 @@ probably also have been safe; `input_emb` stands as the more defensible default 
 the reasoning that selected it was stronger than the evidence supported and is recorded here
 corrected rather than quietly repaired.
 
-**The A-phase step count follows the step-selection rule**, like any other arm.
+**AMENDED 2026-08-28, before any full-suite number for any simplification arm exists.** Two
+changes, both forced by the negatives closure earlier the same day:
+
+  * **The baseline is `p35w-2m-s2500`**, not a negatives arm — the negatives avenue closed, so the
+    artifact the simplification must reproduce is the one that ships.
+  * **`hard_neg_k` is therefore 0**, matching that baseline. The arm already trained
+    (`p5s-simple-a`, k=16 teacher-mined) is now testing a simplification of a recipe that is not
+    the candidate; it is kept and reported as a labelled off-baseline arm, and the arm that faces
+    the bar is `p5s-simple-nohn-a`. Both share the same B leg, so this costs one A phase.
+  * **The A-phase step count is FIXED at the baseline's 2500**, superseding this section's
+    original "follows the step-selection rule". The equivalence test asks whether four removals
+    reproduce a number; selecting a fifth parameter on a proxy that today peaked at a step which
+    did not reproduce, and that inverted the full-suite ordering of three arms, would vary a fifth
+    thing and would do it with a broken instrument. This is the general amendment recorded under
+    the step-rule section, applied here; it is legal because no simplification arm has a
+    full-suite number yet, and `p5s-simple-a`'s proxy curve (peak 0.5140 at step 1000) is
+    explicitly NOT being used to choose.
 
 **The test.** Full pinned dev suite, released `QueryTable` path, at the pool mode lever #4 adopts,
 against the corrected negatives candidate. **Non-inferiority, not a two-sided band**: accept iff
@@ -425,6 +476,45 @@ a reason to prefer the null.
   work is being done under. If none is promoted, the avenue is
   **closed with a mechanism check attached**: score the k=16 mined set against qrels to measure the
   actual false-negative rate, which converts "mined negatives hurt" from observed into diagnosed.
+  **OUTCOME 2026-08-28: the avenue is CLOSED. No arm survives, and the candidate reverts to
+  `p35w-2m-s2500`.** `m7_negatives_decision.json`, `m7_compare_full_steprule.json`. Full-suite
+  fp16 against the candidate, each artifact under its own frozen rule:
+
+  | arm | steps | macro | delta | p | OOD subset |
+  |---|---|---|---|---|---|
+  | `p4n-teacher16-a` (uncorrected, descriptive) | 2500 | 0.6225 | +0.0072 [+0.0029,+0.0118] | 1e-4 | 0.3674 |
+  | `p4n-teacher16-s1500-a` | 1500 | 0.6176 | +0.0023 [−0.0013,+0.0058] | 0.107 | 0.3673 |
+  | `p4n-mixed32-s1000-a` | 1000 | 0.6146 | −0.0007 [−0.0042,+0.0025] | 0.641 | 0.3688 |
+  | `p4n-bm2516-s1500-a` | 1500 | 0.6097 | −0.0056 [−0.0087,−0.0025] | 1.000 | 0.3658 |
+  | baseline `p35w-2m-s2500` | 2500 | 0.6153 | — | — | 0.3673 |
+
+  Three independent reasons, and they agree:
+  1. **The rule.** Under the step-selection correction fixed in writing this morning, the arms are
+     the corrected ones and **none clears the bar** (Holm family of three, zero survivors).
+  2. **The disclosure.** The out-of-domain subset spans **0.3658–0.3688 across every arm including
+     the baseline** — a range of 0.0030, i.e. nothing. On the only dev components that are not in
+     the TRAIN mix or its Wikipedia family, the entire negatives question is a wash. Per the
+     biased-estimator rule an in-distribution-only gain is not offered as evidence of six-set
+     improvement, and here there is not even an out-of-domain gain to disclose.
+  3. **The mechanism, diagnosed rather than observed.** The +0.0072 the uncorrected arm shows is
+     `heldout-train` **+0.0297** and `hotpotqa` **+0.0187** — a seen-document/unseen-query slice of
+     the training data, and a component whose train split is a TRAIN source. `cqadup-programmers`
+     −0.0009 and `cqadup-physics` +0.0013. `heldout-longq` gets **worse for every single arm**
+     (−0.007 to −0.019). Mined negatives sharpen document-anchored memorisation and do nothing
+     out of domain. That is the signature the biased-estimator section was written to catch.
+
+  **What the revert costs, stated so it is not hidden: nothing where it matters.** The macro drops
+  0.6225 → 0.6153, and the out-of-domain subset goes 0.3674 → 0.3673.
+
+  **The pre-registered mechanism check is VACUOUS, and that is worth recording.** It said to
+  "score the k=16 mined set against qrels to measure the actual false-negative rate".
+  `train.mine_hard_negatives` takes the query's positives as `exclude` and mines "top-k pool docs
+  per query by the teacher's own query vector, **minus that query's positives**" — so the rate
+  against known qrels is **0 by construction** and the check could never have returned anything
+  else. The real hazard is *unlabelled* positives, which qrels cannot reveal by definition. A
+  pre-registered check that is a no-op is still a finding; the mechanism above is what actually
+  discharges the requirement.
+
   A promoted winner changes the candidate, which re-triggers fusion re-selection and re-adjudicates
   lever #4 on the new artifact — that consequence is stated here so it cannot be discovered later
   as a reason to prefer the null.

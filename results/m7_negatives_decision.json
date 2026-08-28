@@ -1,0 +1,179 @@
+{
+ "_what": "the pre-registered negatives rule, executed on the step-rule-corrected arms",
+ "_protocol": "m7/LEDGER.md 'Negatives ablation' (bar, Holm, three tie-break levels) and 'The step-selection rule was NOT applied to the negatives arms'",
+ "_status": "exploratory dev SELECTION evidence; the only confirmatory comparisons are the three frozen-test ones in the final run",
+ "_ood_disclosure": "ood_macro_fp16 covers cqadup-programmers and cqadup-physics, the only dev components outside the TRAIN mix and its Wikipedia family. Mandatory disclosure per LEDGER.md; it does not enter the bar.",
+ "compare_artifact": "m7_compare_full_steprule.json",
+ "baseline": "p35w-2m-s2500",
+ "control": "p4n-bank-a",
+ "control_proxy_macro": 0.5105689103506673,
+ "arms": {
+  "p4n-teacher16-a": {
+   "run_id": "p4n-teacher16-a",
+   "arm": "teacher16",
+   "proxy_macro": 0.5124603664212498,
+   "promoted_on_proxy": true,
+   "macro_fp16": 0.6224881043945555,
+   "macro_int8": 0.6226054632267485,
+   "ood_macro_fp16": 0.36741180216865,
+   "per_component_fp16": {
+    "nq-250k": 0.8025574949264493,
+    "hotpotqa": 0.6314000331342594,
+    "cqadup-programmers": 0.33783214360048025,
+    "cqadup-physics": 0.3969914607368198,
+    "heldout-train": 0.6613678320187719,
+    "heldout-longq": 0.9047796619505523
+   },
+   "p_fp16": 9.99990000099999e-05,
+   "p_int8": 8.99991000089999e-05,
+   "ci95_raw_fp16": [
+    0.00290865990664451,
+    0.011800442635658746
+   ],
+   "ci95_raw_int8": [
+    0.0029889097020264943,
+    0.011872000025326112
+   ],
+   "delta_raw_fp16": 0.007207328058482519,
+   "bar_before_holm": true
+  },
+  "p4n-teacher16-s1500-a": {
+   "run_id": "p4n-teacher16-s1500-a",
+   "arm": "teacher16",
+   "proxy_macro": 0.5126205433165426,
+   "promoted_on_proxy": true,
+   "macro_fp16": 0.6175683992462134,
+   "macro_int8": 0.6176983987884411,
+   "ood_macro_fp16": 0.3673118123430714,
+   "per_component_fp16": {
+    "nq-250k": 0.8028786068725294,
+    "hotpotqa": 0.6199459644678338,
+    "cqadup-programmers": 0.33980020904452024,
+    "cqadup-physics": 0.3948234156416226,
+    "heldout-train": 0.65201432433073,
+    "heldout-longq": 0.8959478751200446
+   },
+   "p_fp16": 0.1070789292107079,
+   "p_int8": 0.0972490275097249,
+   "ci95_raw_fp16": [
+    -0.0013335520502183577,
+    0.005782290366936104
+   ],
+   "ci95_raw_int8": [
+    -0.0012065077877199298,
+    0.005876783500128083
+   ],
+   "delta_raw_fp16": 0.0022876229101404986,
+   "bar_before_holm": false
+  },
+  "p4n-bm2516-s1500-a": {
+   "run_id": "p4n-bm2516-s1500-a",
+   "arm": "bm2516",
+   "proxy_macro": 0.5137809109552077,
+   "promoted_on_proxy": true,
+   "macro_fp16": 0.6097297615303334,
+   "macro_int8": 0.6096641818022451,
+   "ood_macro_fp16": 0.3658119233461733,
+   "per_component_fp16": {
+    "nq-250k": 0.8097130154555856,
+    "hotpotqa": 0.6141404738055654,
+    "cqadup-programmers": 0.3354373035724804,
+    "cqadup-physics": 0.3961865431198662,
+    "heldout-train": 0.6053841877302125,
+    "heldout-longq": 0.8975170454982903
+   },
+   "p_fp16": 0.999970000299997,
+   "p_int8": 1.0,
+   "ci95_raw_fp16": [
+    -0.008689943077381032,
+    -0.0025174794201786635
+   ],
+   "ci95_raw_int8": [
+    -0.008777952849250774,
+    -0.002612935104501953
+   ],
+   "delta_raw_fp16": -0.005551014805739672,
+   "bar_before_holm": false
+  },
+  "p4n-mixed32-s1000-a": {
+   "run_id": "p4n-mixed32-s1000-a",
+   "arm": "mixed32",
+   "proxy_macro": 0.5148529993812591,
+   "promoted_on_proxy": true,
+   "macro_fp16": 0.6146172929389858,
+   "macro_int8": 0.6146589318243733,
+   "ood_macro_fp16": 0.36877269609840235,
+   "per_component_fp16": {
+    "nq-250k": 0.8070195635234393,
+    "hotpotqa": 0.6126384271448918,
+    "cqadup-programmers": 0.3386494572399093,
+    "cqadup-physics": 0.39889593495689535,
+    "heldout-train": 0.6374968055067506,
+    "heldout-longq": 0.8930035692620283
+   },
+   "p_fp16": 0.6407035929640703,
+   "p_int8": 0.6394436055639443,
+   "ci95_raw_fp16": [
+    -0.004168320334752772,
+    0.0025434287269672368
+   ],
+   "ci95_raw_int8": [
+    -0.004149266212494468,
+    0.002534722254429619
+   ],
+   "delta_raw_fp16": -0.0006634833970871612,
+   "bar_before_holm": false
+  }
+ },
+ "holm_family": [
+  "p4n-teacher16-s1500-a",
+  "p4n-bm2516-s1500-a",
+  "p4n-mixed32-s1000-a"
+ ],
+ "holm_alpha0.05_per_precision": {
+  "fp16": {
+   "p4n-teacher16-s1500-a": {
+    "p": 0.1070789292107079,
+    "threshold": 0.016666666666666666,
+    "reject": false,
+    "rank": 1
+   },
+   "p4n-mixed32-s1000-a": {
+    "p": 0.6407035929640703,
+    "threshold": 0.025,
+    "reject": false,
+    "rank": 2
+   },
+   "p4n-bm2516-s1500-a": {
+    "p": 0.999970000299997,
+    "threshold": 0.05,
+    "reject": false,
+    "rank": 3
+   }
+  },
+  "int8": {
+   "p4n-teacher16-s1500-a": {
+    "p": 0.0972490275097249,
+    "threshold": 0.016666666666666666,
+    "reject": false,
+    "rank": 1
+   },
+   "p4n-mixed32-s1000-a": {
+    "p": 0.6394436055639443,
+    "threshold": 0.025,
+    "reject": false,
+    "rank": 2
+   },
+   "p4n-bm2516-s1500-a": {
+    "p": 1.0,
+    "threshold": 0.05,
+    "reject": false,
+    "rank": 3
+   }
+  }
+ },
+ "survivors": [],
+ "winner": null,
+ "tie_break_reason": null,
+ "baseline_macro_fp16": 0.6152807763360729
+}
