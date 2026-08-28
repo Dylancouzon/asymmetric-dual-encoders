@@ -80,8 +80,8 @@ bar, Holm, three tie-break levels) · `simplify_decide.py` (non-inferiority at �
 the committed comparison artifact and write their own.
 
 **Honesty instruments** — each answers a question a reviewer will ask, with a number instead of a
-paragraph. `dev_reuse.py` counts adaptive dev reuse (53 arms / 299 in-training evals / 74
-eval-only variants) · `retention.py` retention on three nested component groups with BM25 on the
+paragraph. `dev_reuse.py` counts adaptive dev reuse (58 arms / 322 in-training evals / 90
+eval-only variants as of 2026-08-28 -- quote the JSON, not this line, which goes stale) · `retention.py` retention on three nested component groups with BM25 on the
 same rows, because all-six and out-of-domain differ by 0.93 vs 0.76 · `cold_rows.py` what ships in
 rows training never touched (`apply_unseen_policy` is defined and never called) · `absorb_check.py`
 which transforms are absorbable, now including the doc-side map in both the renormalized and

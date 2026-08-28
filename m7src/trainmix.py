@@ -20,7 +20,40 @@ import json
 import sys
 from collections import defaultdict
 
-from datasets import load_dataset
+from datasets import load_dataset as _load_dataset
+
+# --- revision pinning ------------------------------------------------------------------------
+# These were bare `load_dataset` calls, i.e. an UNPINNED training input behind a pinned model: the
+# mix was reproducible only for as long as every upstream repo stayed still. Found by the
+# pre-freeze review (M1). The pins are the revisions this box's hub cache actually built the
+# committed mix from, so they are honest rather than aspirational.
+_REVS = None
+
+
+def _rev(repo):
+    """The pinned revision for a dataset repo. Raises rather than silently falling back: a pin
+    that degrades to HEAD when its manifest is missing is worse than no pin, because it reads as
+    reproducible."""
+    global _REVS
+    if _REVS is None:
+        import json as _json
+        from _paths import REPO as _R
+        f = _R / "results" / "m7_trainmix_revisions.json"
+        if not f.exists():
+            raise SystemExit(f"{f} missing: the TRAIN mix may not be rebuilt unpinned.")
+        _REVS = _json.loads(f.read_text())["datasets"]
+    if repo not in _REVS:
+        raise SystemExit(f"no pinned revision for {repo!r} in results/m7_trainmix_revisions.json. "
+                         "Add it (from the hub cache) before rebuilding the mix.")
+    return _REVS[repo]
+
+
+def load_dataset(path, *a, **kw):
+    """`datasets.load_dataset` with the revision pinned from the manifest, for hub repos."""
+    if "/" in path and "revision" not in kw:
+        kw["revision"] = _rev(path)
+    return _load_dataset(path, *a, **kw)
+
 
 from _paths import WORK
 from core import doc_text
@@ -119,7 +152,10 @@ def build_esci():
 
 
 def build_mrtydi():
-    url = "hf://datasets/castorini/mr-tydi@refs%2Fconvert%2Fparquet/english/train/0000.parquet"
+    # the auto-converted parquet BRANCH, pinned to its commit rather than to the moving branch
+    # ref -- `@refs%2Fconvert%2Fparquet` tracks whatever that branch points at today.
+    url = (f"hf://datasets/castorini/mr-tydi@"
+           f"{_rev('castorini/mr-tydi@refs/convert/parquet')}/english/train/0000.parquet")
     d = load_dataset("parquet", data_files={"train": url}, split="train")
     store, pairs = {}, []
     for r in d:

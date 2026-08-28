@@ -1,0 +1,17 @@
+{
+ "_what": "HF dataset repo revisions the TRAIN mix was actually built from, read from this box's hub cache. `trainmix.py` made bare `load_dataset` calls, so the mix was reproducible only for as long as every upstream repo stayed still -- an unpinned training input behind a pinned model. Found by the pre-freeze over-fitting review (M1).",
+ "_how": "cache refs/main (or refs/refs/convert/parquet for the mr-tydi parquet branch) under ~/.cache/huggingface/hub. Recorded WITHOUT re-downloading: these are the bytes the committed artifacts were built from, which is the only revision that can be honest.",
+ "_note": "castorini/mr-tydi is loaded through its auto-converted parquet BRANCH, so its pin is that branch's commit, not main's.",
+ "datasets": {
+  "rajpurkar/squad": "7b6d24c440a36b6815f21b70d25016731768db1f",
+  "tasksource/esci": "8113b17a5d4099e20243282c926f1bc1a08a4d13",
+  "google-research-datasets/nq_open": "5dd9790a83002ad084ddeb7c420dc716852c6f28",
+  "mandarjoshi/trivia_qa": "0f7faf33a3908546c6fd5b73a660e0f8ff173c2f",
+  "BeIR/hotpotqa": "a7e8bab212f5a89f9be1bc9b654aa6dfa317f32b",
+  "BeIR/hotpotqa-qrels": "b15429e9244c8ec966985d7778427c3b1543b314",
+  "BeIR/fever": "426aea4d30c65c041f093ae072e25fb5a0e64659",
+  "BeIR/fever-qrels": "64cd0e4ef9b63a88ac8e69d1133a2f649acd4745",
+  "castorini/mr-tydi@refs/convert/parquet": "22131bd5c4fa7d2e818716d02115c3ecf4f6b5bd",
+  "castorini/mr-tydi (main, for reference)": "1d43c80218d06d0ef80f5b172ccabd848b948bc1"
+ }
+}

@@ -200,7 +200,8 @@ def stella_confirm(base):
 def phase2_negatives(base):
     """The mandated negatives ablation: BM25-mined vs teacher-mined vs mixed, against the
     random-bank baseline. Objective A collapsed with random-only negatives (p1-objA declined
-    monotonically to 0.3366), so this is the load-bearing phase, not a tuning sweep."""
+    monotonically to 0.3248 -- RESULTS.md and the run JSON agree on 0.3248; this docstring said
+    0.3366 until 2026-08-28), so this is the load-bearing phase, not a tuning sweep."""
     return grid("p2", base, {
         "bank": {"hard_neg_k": 0},
         "teacher16": {"hard_neg_k": 16, "hard_neg_source": "teacher"},

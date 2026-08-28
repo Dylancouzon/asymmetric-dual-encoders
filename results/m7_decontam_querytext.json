@@ -41,6 +41,15 @@
     "near": 480,
     "contains": 68
    }
+  },
+  "pseudoq-mixed2000000-0.json": {
+   "n": 925985,
+   "n_kept": 924176,
+   "dropped": {
+    "exact": 0,
+    "near": 1631,
+    "contains": 178
+   }
   }
  },
  "protected_query_counts": {

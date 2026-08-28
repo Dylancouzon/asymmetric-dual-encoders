@@ -265,7 +265,7 @@ not help".
 **And the finding that makes the closure robust anyway.** Across all seven artifacts in this pass
 the macro spans 0.6097–0.6225, a range of **0.0128**, while the out-of-domain subset spans
 0.3648–0.3688, a range of **0.0040** — and no arm differs from the baseline's 0.3657 by more than
-+0.0031. **Whichever step count you choose, the out-of-domain effect of mined negatives is zero.**
++0.0031. **Whichever step count you choose, the out-of-domain effect of mined negatives is unresolved below ~0.005** — the per-arm resolution at n=1,915 on a StackExchange-only proxy. "Zero" would be a claim the instrument cannot make; "nothing detectable, on a narrow proxy" is what the data supports.
 The entire late-stage lever programme — negatives, step counts, pooling — moved the in-distribution
 components and left the only components analogous to the six untouched. The single exception all
 day is the *failed* simplification, which moved out-of-domain by −0.0045 and was rejected for it.
@@ -410,7 +410,9 @@ Four things this settles.
    which is what makes shipping the recipe unchanged principled rather than merely the default —
    including keeping IDF seeding, which the point estimate mildly disfavours.
 4. **The out-of-domain subset spans 0.3653–0.3662 across all eight arms** — a range of **0.0009**.
-   The entire mandated ablation programme moves the components analogous to the six by nothing.
+   The entire mandated ablation programme leaves them inside a **0.0009** span — and unlike the
+   single-arm comparisons, an eight-arm span that tight is below the instrument's ~0.005
+   per-arm resolution by enough to be worth stating as a span rather than as a null.
    Even `flat`, the one component that clearly earns its macro, buys 0.0062 of macro and
    **0.0001** of out-of-domain.
 
@@ -622,10 +624,14 @@ a reason to prefer the null.
     mrtydi 12.9%, squad 3.3%, fever 2.7%.
   * R1 removed **1,809 of 925,985 (0.195%)** against the short pool's 0.120% — long spans carry
     more word-8-grams and so match the protected-query index ~1.6x as often, as predicted.
-  * Cost, for the record: the teacher encode of the 1,144,808-text objective-B set runs at
-    1,500 texts/s on the short prefix and **55 texts/s** through the esci long-span block, so the
-    arm costs ~2 h of encode before a step of training. Priced here because a lever this
-    under-dosed would not be worth that price a second time.
+  * Cost, for the record, and it is the dominant fact about this lever: the teacher encode of the
+    1,144,808-text objective-B set runs at 1,500 texts/s on the short prefix and **55 texts/s**
+    through the esci long-span block — **32 minutes per 50,000-text shard**, so ~4 h of encode
+    before a single training step, against ~10 min for the equivalent short-pool arm. The batching
+    is length-bucketed and correct (no padding pathology); it is simply what 400-token sequences
+    through a 435M-parameter teacher cost. Priced here because **a lever this under-dosed is not
+    worth this price a second time**, and because a future session weighing the same trade should
+    see the number rather than rediscover it.
 
   So the treatment being tested is "a third of the pool is long, and two thirds of the long part
   is e-commerce product prose". ArguAna is counter-argument text. **A null result therefore does
