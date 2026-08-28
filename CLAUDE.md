@@ -197,11 +197,21 @@ Results dictate Qdrant engineering decisions: correct, not decimal-precise; blin
 - M2 gate: adversarial Opus review of methodology + code + M2 numbers → `research/verification-m2.md`. (running)
 - Pre-report gate: Codex second opinion on the full result set + report draft, briefed for pushback; findings reported verbatim.
 - Significance: paired bootstrap on key system pairs before the report; deltas within noise get labeled as such.
-- **Codex CLI is installed on the box** (`/usr/local/bin/codex`, 0.149.1). Dylan 2026-08-26: use
-  **gpt-5.6-sol sparingly, for adversarial reviews at milestones** — not routine work. Invoke it
-  read-only and with high reasoning effort, since the default profile here is effort `none`:
+- **Codex CLI is installed on the box** (`/usr/local/bin/codex`, 0.149.1). Invoke it read-only and
+  with high reasoning effort, since the default profile here is effort `none`:
   `codex exec -s read-only -m gpt-5.6-sol -c model_reasoning_effort="high" - < brief.md`. Read-only
   matters: a previous review committed to the files the session was editing.
+- **STANDING GRANT, Dylan 2026-08-28 — supersedes the earlier "sparingly, at milestones only".**
+  *"Feel free to do adversarial reviews with Fable and Codex as much as needed. Use them to push
+  you to get the best result possible. They've proven valuable every time."* So reviews are a
+  **routine instrument, not a milestone ceremony**: brief one whenever a decision is about to
+  become expensive or irreversible, whenever a document is about to become permanent, and whenever
+  a result is surprising enough that you want it attacked before you believe it. The 2026-08-28
+  record is why — between them the two reviews caught a rounded CI endpoint in `final_run.py` (the
+  one irreversible decision in the project), a gate that returned 0 on NO-GO, a release guard that
+  failed open, a confounded diagnostic that had licensed a four-hour lever, and a retention figure
+  belonging to a reverted candidate. **Brief them adversarially**: give them the numbers, name what
+  you believe, and ask them to break it. A review told "confirm this" returns nothing.
 
 ## Key decisions (log)
 
