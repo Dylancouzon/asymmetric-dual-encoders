@@ -100,6 +100,15 @@ machinery are the reusable part and have been through three adversarial reviews.
 **model**: add a `Spec` and set `M7_ENCODER` — do not edit `teacher.py`. Different **query-side
 technique**: the surface is `table.py` plus `train.py`'s `Cfg`.
 
+**Device portability is PARTIAL, and knowing which half matters.** `_paths.DEVICE` (override
+`M7_DEVICE`) plus `_paths.empty_cache()` is the one resolver; the **probe and eval path** —
+`evalkit`, `teacher`, `init_table`, `validate_encoder`, `teacher_learnability` — goes through it
+and runs on MPS, which is how the second-machine teacher probe ran at all. The **training path and
+most diagnostics still hardcode `device="cuda"` / `.cuda()`** (~60 call sites). On this box both
+resolve to cuda so nothing differs; on other hardware the harness runs probes and evaluation, not
+training. Port all of it or none of it if that changes — one call site at a time gives a
+mixed-device bug rather than a crash.
+
 Adding an encoder, in order: write the `Spec` (pooling, prompt, `post_dense`, `config_kwargs`,
 revision pinned) → `test_encoders.py` → **`validate_encoder.py`** → only then a probe or an encode.
 Skipping the validator is how a comparison silently runs the wrong model. Two things that must
