@@ -12,7 +12,8 @@ this is its continuous form.
 
 with A the surviving candidate's rows, B the rows of the checkpoint it was initialized from, and
 u_i the A-phase update count the candidate's npz already stores. tau in {1, 10, 100}; tau = 0 is
-the baseline and must reproduce the released artifact exactly (asserted).
+the baseline; it reconstructs the released artifact up to one fp16 rounding, which
+is asserted and reported.
 
 Usage: lever5_shrinkage.py [--smoke]
 """
@@ -37,8 +38,14 @@ TAUS = (1.0, 10.0, 100.0)
 
 
 def folded(rows, weights):
-    """Exactly `save_release`'s fold: multiply each row by its token weight, then the artifact is
-    self-contained and its int8 codes come from the folded rows."""
+    """`save_release`'s fold: multiply each row by its token weight, so the artifact is
+    self-contained and its int8 codes come from the folded rows.
+
+    NOT bit-identical to the released file, and it cannot be: `save_release` computes
+    fp16(w * rows_fp32) while the checkpoint on disk only keeps rows_fp16, so the best available
+    reconstruction is w * fp16(rows). The difference is one fp16 rounding. This matters only for
+    interpreting the tau=0 arm against the released macro; every comparison BELOW is tau=t against
+    tau=0 computed the same way, so the rounding cancels out of the lever's own statistics."""
     return rows if weights is None or weights.size == 0 else weights[:, None] * rows
 
 
@@ -82,14 +89,16 @@ def main(smoke=False):
             r = dequantize_int8(*quantize_int8(r))
         return QueryTable(r, learned_weights=False).to(dev).eval()
 
-    # tau = 0 is the baseline and must BE the released artifact, not merely resemble it.
+    # tau = 0 must reconstruct the released artifact up to one fp16 rounding (see `folded`).
+    # 5e-3 is save_release's own fixture tolerance; anything above that is a rule mismatch, not
+    # rounding, and would mean the arms are being compared against the wrong baseline.
     base16 = table_for(A, "fp16")
     ref = load_table(rel, variant="fp16", device=dev)
-    d = float((base16.rows - ref.rows).abs().max())
-    if d > 1e-3:
-        raise SystemExit(f"the tau=0 reconstruction deviates from the released table by {d}; the "
-                         "fold rule here does not match save_release")
-    print(f"  tau=0 reconstruction matches the released rows to {d:.2e}", flush=True)
+    row_dev = float((base16.rows - ref.rows).abs().max())
+    if row_dev > 5e-3:
+        raise SystemExit(f"the tau=0 reconstruction deviates from the released table by {row_dev}; "
+                         "the fold rule here does not match save_release")
+    print(f"  tau=0 reconstruction matches the released rows to {row_dev:.2e}", flush=True)
 
     models = {"tau0|fp16": base16, "tau0|int8": table_for(A, "int8")}
     frac = {}
@@ -119,6 +128,7 @@ def main(smoke=False):
     out = {"candidate": surv, "b_checkpoint": bid, "components": comps,
            "encoder": asdict(spec), "preproc": asdict(pre),
            "rows_never_updated": int((u == 0).sum()), "n_rows": int(len(u)),
+           "tau0_row_dev_vs_released": row_dev,
            "alpha_summary": {str(k): v for k, v in frac.items()},
            "baseline_macro_fp16": multieval.macro(per["tau0|fp16"]),
            "arms": {t: {"macro_fp16": multieval.macro(per[f"tau{t}|fp16"]),
