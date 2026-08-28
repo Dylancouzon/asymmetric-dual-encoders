@@ -110,3 +110,6 @@ StackExchange components (+0.047/+0.020), so the ranking was not StackExchange-s
 | p4e-prefix-init-b | `work/runs/p4e-prefix-init-b.json` | 0.4975 | ok |
 | p4e-prefix-init-a | `work/runs/p4e-prefix-init-a.json` | 0.5105 | ok |
 | p4p-sqrt-a | `work/runs/p4p-sqrt-a.json` | 0.5111 | ok |
+| p4n-teacher16-s1500-a | `work/runs/p4n-teacher16-s1500-a.json` | 0.5126 | ok |
+| p4n-bm2516-s1500-a | `work/runs/p4n-bm2516-s1500-a.json` | 0.5138 | ok |
+| p4n-mixed32-s1000-a | `work/runs/p4n-mixed32-s1000-a.json` | 0.5149 | ok |

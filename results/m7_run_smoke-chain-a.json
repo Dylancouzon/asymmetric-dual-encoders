@@ -7,7 +7,7 @@
   "preproc": "noprefix",
   "init_preproc": "",
   "learned_weights": true,
-  "idf_init_weights": true,
+  "idf_init_weights": false,
   "lr": 0.001,
   "lr_weights": 0.01,
   "warmup_steps": 200,
@@ -17,14 +17,14 @@
   "batch": 512,
   "n_neg": 32768,
   "temp": 0.02,
-  "hard_neg_k": 0,
+  "hard_neg_k": 16,
   "hard_neg_source": "teacher",
   "use_provided_hardneg": true,
   "fn_margin": 0.02,
   "kl_weight": 1.0,
   "kl_k": 32,
   "cos_weight": 1.0,
-  "reg_init": 0.001,
+  "reg_init": 0.0,
   "bank_size": 2000000,
   "sources": [],
   "eval_every": 1000000000,
@@ -37,9 +37,9 @@
   "b_query_sources_all": true,
   "b_pseudo_queries": 0,
   "b_pseudo_frac": 0.5,
-  "pool_mode": "sqrt"
+  "pool_mode": "mean"
  },
- "final_macro": 0.31993690212075104,
+ "final_macro": 0.08355675023369036,
  "coverage": {
   "rows_updated": 16044,
   "vocab": 30522,
@@ -50,12 +50,12 @@
   {
    "step": 30,
    "phase": "final",
-   "macro": 0.31993690212075104,
+   "macro": 0.08355675023369036,
    "collapse": {
-    "mean_pairwise_cos": 0.7151,
-    "effective_rank": 154.96,
+    "mean_pairwise_cos": 0.4875,
+    "effective_rank": 294.62,
     "dim": 1024,
-    "uniformity": -1.1018
+    "uniformity": -1.9385
    }
   }
  ]
