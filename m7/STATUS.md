@@ -75,6 +75,8 @@ freeze and that run are Dylan's calls.
 
 ## Open for Dylan
 
-1. Nothing blocking.
+1. **Nothing blocking *you*** — but the recipe is NOT frozen yet and `p35w-2m-s2500` is still a
+   provisional candidate. The queue above has to close first; the freeze and the final run are
+   yours to call after it does.
 2. doc2query revival (licensing ruling on a clean generator) remains yours.
 3. Windows Update reboots remain the top operational risk.

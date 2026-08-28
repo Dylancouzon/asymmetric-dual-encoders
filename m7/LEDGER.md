@@ -594,7 +594,10 @@ a reason to prefer the null.
   long documents* — which is the right population for "does the table degrade as a query gets
   longer?", and narrower than the corpus.
 
-- **#7 long-span distillation — pre-registered 2026-08-28, before any number.** The only lever
+- **#7 long-span distillation — pre-registered 2026-08-28, before any LEVER-ARM result.**
+  (Precise wording, per the Codex review: the gating diagnostic's numbers went into the same
+  commit as this protocol, so "before any number" overstated it. No bar was rewritten after
+  seeing its own bar-facing result.) The only lever
   aimed at a named weakness of a *confirmatory* dataset (ArguAna, ~250-word queries, the
   architecture's pre-identified worst case) rather than at the dev macro.
 

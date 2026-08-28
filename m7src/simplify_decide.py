@@ -6,9 +6,9 @@ in fp16 AND int8. Non-inferiority, not a two-sided band -- the question is wheth
 than the margin can be ruled out, so a win is an acceptance too.
 
 The margin is anchored to the smallest effect this project has actually adopted (lever #4 `sqrt`,
-+0.0040 fp16, before it was un-adopted on the new candidate). Training here is deterministic --
-`p4-base-a` and `p4n-bank-a` agree to sixteen digits -- so there is no replay noise to calibrate a
-band from, which is why an adopted effect is the anchor instead.
++0.0040 fp16, before it was un-adopted on the new candidate). Replay noise is ~5e-6 on the dev
+macro (the ablation replay's raw delta is 4.47e-06 -- reproducible, not bit-identical), far too
+small to calibrate a band from, which is why an adopted effect is the anchor instead.
 
 This is a reproducibility and over-engineering fix, NOT a quality lever, and the script prints it
 that way: a win here is not evidence the simplification improves anything, only that the removed
@@ -26,7 +26,9 @@ MARGIN = 0.0040
 
 REMOVED = {
     "init=teacher -> input_emb": "30,522 teacher forward passes to build the init rows",
-    "b_pseudo_queries 2,000,000 -> 500,000": "4x less pseudo-query generation and teacher encoding",
+    "b_pseudo_queries request 2m -> 500k": "2.85x less pseudo-query generation and teacher "
+                                           "encoding -- the REALISED pools are 924,704 and "
+                                           "324,704 spans, not 2m and 500k; build() saturates",
     "idf_init_weights True -> False": "an IDF pass over the training queries",
     "reg_init 1e-3 -> 0.0": "a penalty term and the W0 anchor it needs",
 }
@@ -73,8 +75,11 @@ def main(tag, simple_key, base_key=None):
         "accepted": accept,
         "consequence": ("the simplified artifact is the candidate; lever #4 is re-adjudicated on "
                         "it and fusion is selected on it" if accept else
-                        "the measured recipe ships unchanged, and the failure is reported as "
-                        "evidence that individually-inert components interact"),
+                        "the measured recipe ships unchanged. WHY it failed is NOT established: "
+                        "single-knob main effects sum to about +0.0015 against this joint "
+                        "-0.0048, a gap the size of the recipe-perturbation band, so interaction "
+                        "and one unlucky draw are not separable. Do not report this as evidence "
+                        "that inert components interact."),
     }
     (REPO / "results" / "m7_simplify_decision.json").write_text(json.dumps(out, indent=1))
     print(f"{simple_key} vs {base_key}, margin -{MARGIN}")
