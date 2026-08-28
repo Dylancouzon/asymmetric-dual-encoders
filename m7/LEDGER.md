@@ -119,6 +119,17 @@ questions per context), so it rewards document-anchored memorisation during dev 
   `m7_signflip_weaknull.json`. `_align(strict=True)` on every confirmatory path.
 - **Tier rule**: a tier win requires BOTH the Holm-corrected sign-flip rejection AND the paired CI
   resolved above zero, one-sided, family α=0.025 over the three final comparisons.
+  **STRENGTHENED 2026-08-28, before any confirmatory number exists, on the pre-freeze Codex
+  review's familywise finding.** Two gaps in the rule as written: `signflip` is exact under the
+  SHARP null (per-query exchangeability), not the weak null the report means (macro mean ≤ 0) —
+  `m7_signflip_weaknull.json` measures 0.038 actual at nominal 0.025 on the worse pair — and three
+  separate one-sided 2.5% intervals are **not** a family-wise 2.5%, so the CI leg was never
+  simultaneous. Added third condition: the **raw one-sided lower bound at the Bonferroni level
+  α/3 = 0.008333 must exceed zero**, computed from the same bootstrap draws
+  (`boot.paired` → `one_sided_lower_raw`). At that level the same weak-null simulation measures
+  **0.013 and 0.008** actual, i.e. near nominal. The rule is now strictly harder to clear than
+  before; a bar may only move before its numbers, and this one moved in the conservative
+  direction. `final_run.py` requires all three legs.
 - **Nesting** (`signflip_dep`/`paired_dep`, `test_dep_stats.py`): one shared sign per underlying
   qid; stratified bootstrap resampling each membership stratum once and reusing the draw in every
   component it feeds. Reported three ways so the effects separate: ordinary →

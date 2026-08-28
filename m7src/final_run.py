@@ -215,6 +215,7 @@ def main():
     # Holm-corrected sign-flip rejection AND the paired-bootstrap CI resolved above zero. The
     # mandate's tier text is written in CIs; the sign-flip carries the multiplicity control; the
     # conjunction satisfies both and is conservative under either's failure mode.
+    n_fam = len(CONFIRMATORY)
     for name in CONFIRMATORY:
         h = decisions[name]
         h["reject_holm_signflip"] = h["reject"]
@@ -223,9 +224,22 @@ def main():
         # on the ONE-SHOT run. boot.py and m7/LEDGER.md both state the raw-endpoint rule;
         # this line broke it, in the single place where it is irreversible.
         h["ci_resolved"] = bool(conf[name]["ci95_raw"][0] > 0)
-        h["reject"] = bool(h["reject_holm_signflip"] and h["ci_resolved"])
+        # SIMULTANEOUS bound, added 2026-08-28 before any confirmatory number existed. Three
+        # separate one-sided 2.5% intervals are not a family-wise 2.5%, and the sign-flip leg is
+        # exact only under the SHARP null -- the repo's own weak-null simulation rejects at 0.038
+        # for a nominal 0.025 on the worst pair. Bonferroni over the family puts each bound at
+        # 0.025/3 = 0.8333%, where that same simulation measures 0.013 and 0.008. Strictly harder
+        # than the previous rule, and fixed before the numbers, which is the only time a bar may
+        # move.
+        lb = (conf[name].get("one_sided_lower_raw") or {}).get("0.8333")
+        h["bonferroni_level"] = round(ALPHA / n_fam, 6)
+        h["one_sided_lower_bonferroni"] = lb
+        h["ci_resolved_simultaneous"] = bool(lb is not None and lb > 0)
+        h["reject"] = bool(h["reject_holm_signflip"] and h["ci_resolved"]
+                           and h["ci_resolved_simultaneous"])
 
-    print("\n=== confirmatory (one-sided; tier = Holm(sign-flip) AND CI>0, alpha=0.025) ===")
+    print(f"\n=== confirmatory (one-sided; tier = Holm(sign-flip) AND CI>0 AND simultaneous "
+          f"Bonferroni lower bound at {ALPHA}/{n_fam} > 0) ===")
     for name in CONFIRMATORY:
         d, h = conf[name], decisions[name]
         print(f"  {'REJECT H0' if h['reject'] else 'not resolved'}  {name}: d={d['delta']:+.4f} "

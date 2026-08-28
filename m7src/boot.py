@@ -115,12 +115,18 @@ def paired(a, b, B=B, seed=SEED, alternative="two-sided", strict=False):
     if alternative == "greater":       # H1: a > b
         p = float((deltas <= 0).mean())
         one_sided_lo = float(np.percentile(deltas, 2.5))
+        # Simultaneous bounds need a level below 2.5%: three separate one-sided 2.5% intervals do
+        # NOT give a family-wise 2.5%. Bonferroni over the three confirmatory comparisons is
+        # 0.025/3 = 0.8333%. Computed from the same draws, raw and unrounded, because a decision
+        # may never read a rounded endpoint (Codex review, MAJOR: Holm familywise validity).
+        one_sided_lo_raw = {f"{lv}": float(np.percentile(deltas, lv))
+                            for lv in (2.5, 0.8333)}
     elif alternative == "less":
         p = float((deltas >= 0).mean())
-        one_sided_lo = None
+        one_sided_lo, one_sided_lo_raw = None, None
     else:
         p = 2 * float(min((deltas < 0).mean(), (deltas > 0).mean()))
-        one_sided_lo = None
+        one_sided_lo, one_sided_lo_raw = None, None
     # ci95 is ROUNDED FOR DISPLAY. Never decide on it: a true lower endpoint of +4e-5 rounds to
     # 0.0000 and would read as unresolved (Codex review #3b MAJOR 2). `ci95_raw`/`delta_raw` are
     # what an adoption bar must compare against.
@@ -130,6 +136,7 @@ def paired(a, b, B=B, seed=SEED, alternative="two-sided", strict=False):
             "_boot_tail_note": "bootstrap tail mass, NOT a p-value; use signflip() for p",
             "alternative": alternative, "B": B, "seed": seed,
             "one_sided_lower_2.5": None if one_sided_lo is None else round(one_sided_lo, 4),
+            "one_sided_lower_raw": one_sided_lo_raw,
             "per_dataset": per,
             "resolved": bool(lo > 0 or hi < 0)}
 
