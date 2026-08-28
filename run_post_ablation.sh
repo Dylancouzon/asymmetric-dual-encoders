@@ -21,9 +21,14 @@ step () { echo -e "\n----------- $1 $(date -Is) -----------" >> "$LOG"; }
 
 # 1. Attribution, full suite. All three artifacts served under the ADOPTED sqrt rule so the
 #    comparison is like-for-like and matches what ships; all three were trained mean-pooled.
-step "attribution (full suite)"
-$PY -u m7src/compare_full.py attrib p35w-2m-s2500 \
-    p4x-nopseudo-a:sqrt p4x-pseudo500k-a:sqrt >> "$LOG" 2>&1
+# Attribution controls AND the promoted negatives arms in ONE corpus pass -- they share the
+# baseline and the suite, and a second pass over the 6.17M-row pool buys nothing. The attribution
+# arms are DESCRIPTIVE (they decompose lever #2's gain); the negatives arms face the pre-registered
+# bar with Holm across them.
+step "attribution + negatives (full suite, one pass)"
+$PY -u m7src/compare_full.py postabl p35w-2m-s2500 \
+    p4x-nopseudo-a:sqrt p4x-pseudo500k-a:sqrt \
+    p4n-teacher16-a:sqrt p4n-bm2516-a:sqrt p4n-mixed32-a:sqrt >> "$LOG" 2>&1
 
 # 2. Lever #6 arm (a): A-phase only, through the sqrt rule, from the candidate's own B checkpoint.
 step "lever 6 smoke"

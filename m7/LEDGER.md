@@ -258,7 +258,12 @@ training list — 2 of the 6 — and must be labelled at the dataset row.** All 
   candidate and is the control. **Rule**: an arm is promoted to a full-suite comparison only if its
   proxy macro exceeds `bank`'s; the promoted arm then faces the same bar as every lever
   (dependence-preserving signflip p<0.05 AND raw paired CI>0, fp16 and int8, vs the candidate), and
-  if more than one is promoted, Holm across them at alpha=0.05. If none is promoted, the avenue is
+  if more than one is promoted, Holm across them at alpha=0.05. **Tie-break among survivors, fixed
+  2026-08-28 before any full-suite negatives number exists** (three arms were promoted on the
+  proxy: teacher16 0.5125, bm2516 0.5131, mixed32 0.5131 vs bank 0.5106): the largest full-suite
+  fp16 macro; if two fall within the ~0.0007 replay noise band, prefer the arm with FEWER negatives
+  and a SINGLE mining source — cheaper to mine, cheaper to reproduce, simpler to describe, and
+  nothing about the extra negatives earned its place. If none is promoted, the avenue is
   **closed with a mechanism check attached**: score the k=16 mined set against qrels to measure the
   actual false-negative rate, which converts "mined negatives hurt" from observed into diagnosed.
   A promoted winner changes the candidate, which re-triggers fusion re-selection and re-adjudicates
