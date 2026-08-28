@@ -215,6 +215,20 @@ as written.
   sample of queries agree", not "would another equally-defensible recipe agree", and only the
   second question is the one a reader cares about.
 
+**RECIPE-PERTURBATION SPREAD — pre-registered 2026-08-28 as DIAGNOSTIC, before its numbers.**
+The 0.0049 above is one measurement, and it is about to be load-bearing in the report, so it gets
+measured properly instead of generalised from. One extra corpus pass scores the three negatives
+arms at BOTH their step counts under **matched `mean` pooling** — the 2500-step versions have only
+ever been scored `sqrt`-served, so the existing pair is confounded by the pooling rule. That gives
+three within-arm deltas from a nuisance parameter, against which every adopted effect in this
+ledger can be read.
+
+**It cannot change any adoption**, and that is fixed here before the numbers: the negatives avenue
+is closed, the arms are already decided, and this pass exists only to put a number on how much a
+defensible-but-arbitrary recipe choice moves the dev macro. If it says the spread is small, the
+step-rule finding above weakens and the report says so; if it says the spread is comparable to the
+adopted effects, the report leads with that. Either way no artifact changes.
+
 **AMENDMENT, and its limits.** For decisions whose numbers do not yet exist, an arm is run at the
 **same `steps_a` as the artifact it is being compared against**, and per-arm proxy step selection
 is not used. Reason: at this resolution the proxy peak is noise (measured above), and in a matched
