@@ -34,11 +34,33 @@ N_Q = 5
 D2Q = WORK / "d2q"
 
 
+def recipe(max_in=256, max_out=48, batch=64):
+    """Everything that changes what `generate` writes. Bound into a sidecar next to the JSONL so a
+    resumed or reused file cannot silently mix two recipes (Codex review #3 MAJOR 7): the resume
+    check was a line count against a name carrying only component and N."""
+    import transformers
+    return {"generator": GEN_ID, "n_queries_per_doc": N_Q, "max_in": max_in, "max_out": max_out,
+            "batch": batch, "do_sample": True, "top_k": 10, "seed_rule": "torch.manual_seed(lo)",
+            "transformers": transformers.__version__}
+
+
+def sha_file(p):
+    import hashlib
+    return hashlib.sha256(open(p, "rb").read()).hexdigest()
+
+
 def generate(comp, doc_texts, batch=64, max_in=256, max_out=48):
     """Shard-resumable sampling generation; one JSONL line per doc, in corpus order."""
     from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
     D2Q.mkdir(parents=True, exist_ok=True)
     p = D2Q / f"{comp}-n{N_Q}.jsonl"
+    rp = D2Q / f"{comp}-n{N_Q}.recipe.json"
+    rec = recipe(max_in, max_out, batch)
+    if rp.exists() and json.loads(rp.read_text()) != rec:
+        raise SystemExit(f"{p} was generated under a different recipe:\n"
+                         f"  on disk {rp.read_text()}\n  now     {json.dumps(rec)}\n"
+                         "Delete it and regenerate; a mixed-recipe expansion is not a diagnostic.")
+    rp.write_text(json.dumps(rec, sort_keys=True))
     done = sum(1 for _ in open(p)) if p.exists() else 0
     if done >= len(doc_texts):
         return [json.loads(l) for l in open(p)]
@@ -67,6 +89,9 @@ def main():
     t0 = time.time()
     m = load_table(WINNER, variant="fp16", device="cuda")
     out = {"generator": GEN_ID, "n_queries_per_doc": N_Q, "winner": WINNER.name,
+           "recipe": recipe(),
+           "expansion_sha256": {c: sha_file(D2Q / f"{c}-n{N_Q}.jsonl")
+                                for c in COMPONENTS if (D2Q / f"{c}-n{N_Q}.jsonl").exists()},
            "per_component": {}, "_label": "DIAGNOSTIC ONLY — MS MARCO-trained generator, "
            "excluded from the clean stack; nothing here ships. Positive resolution escalates "
            "to Dylan for a clean-generator ruling, not to adoption."}

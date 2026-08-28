@@ -73,7 +73,46 @@ def stats(per_a, per_b, alternative="greater"):
             "signflip_p": sf["p"], "signflip_p_str": sf["p_str"]}
 
 
-FIT = WORK / "runs" / "bigram_residual_fit.npz"
+def fit_provenance(k, lam, winner, qs, pre):
+    """Everything the fitted bigram rows depend on. A single global `bigram_residual_fit.npz`
+    keyed on (K, lam) let a fit made against different winner bytes, a different teacher, or a
+    different TRAIN query set be scored against the CURRENT baseline -- which would still
+    reproduce the baseline macro exactly and so look correct while falsely killing the lever
+    (Codex review #3 MAJOR 5)."""
+    import encoders
+    sp = encoders.active()
+    return {"k": int(k), "lam": float(lam), "winner": winner.name,
+            "winner_sha256": _sha_file(winner),
+            "encoder": sp.name, "encoder_revision": sp.revision,
+            "preproc_fingerprint": pre.fingerprint(),
+            "n_train_queries": len(qs), "train_queries_sha256": _sha_list(qs)}
+
+
+def _sha_file(p, chunk=1 << 22):
+    import hashlib
+    h = hashlib.sha256()
+    with open(p, "rb") as f:
+        for b in iter(lambda: f.read(chunk), b""):
+            h.update(b)
+    return h.hexdigest()
+
+
+def _sha_list(xs):
+    import hashlib
+    h = hashlib.sha256()
+    for x in xs:                       # ORDER matters: the design matrix is built in this order
+        h.update(x.encode())
+        h.update(b"\0")
+    return h.hexdigest()
+
+
+def fit_path(prov):
+    import hashlib
+    tag = hashlib.sha256(json.dumps(prov, sort_keys=True).encode()).hexdigest()[:16]
+    return WORK / "runs" / f"bigram_residual_fit-{tag}.npz"
+
+
+FIT = WORK / "runs" / "bigram_residual_fit.npz"   # legacy, unkeyed; kept only so it can be found
 
 
 def main(k, lam=0.01, smoke=False, proxy=False):
@@ -91,12 +130,13 @@ def main(k, lam=0.01, smoke=False, proxy=False):
         qs = [qs[i] for i in rng.choice(len(qs), size=20000, replace=False)]
     print(f"bigram residual fit: K={k} lam={lam} on {len(qs):,} TRAIN queries, "
           f"winner={WINNER.name}", flush=True)
-    if FIT.exists() and not smoke and lam == 0.01:
-        z = np.load(FIT, allow_pickle=True)
-        assert int(z["k"]) == k and float(z["lam"]) == lam, dict(k=int(z["k"]), lam=float(z["lam"]))
+    prov = fit_provenance(k, lam, WINNER, qs, pre)
+    fit_p = fit_path(prov)
+    if fit_p.exists() and not smoke:
+        z = np.load(fit_p, allow_pickle=True)
         Wb, s = z["wb"].astype(np.float32), float(z["s"])
         bmap = {tuple(bg): j for j, bg in enumerate(z["bigrams"])}
-        print(f"  fit loaded from {FIT.name}: K={k} s={s:.4f}", flush=True)
+        print(f"  fit loaded from {fit_p.name} (provenance-addressed): K={k} s={s:.4f}", flush=True)
     else:
         bigrams = top_bigrams(tok, qs, pre, k)
         bmap = {bg: j for j, bg in enumerate(bigrams)}
@@ -116,8 +156,10 @@ def main(k, lam=0.01, smoke=False, proxy=False):
         assert info == 0, info
         Wb = Wb.astype(np.float32)
         del G, rhs, Xb, U, Y
-        if not smoke and lam == 0.01:
-            np.savez(FIT, wb=Wb, s=s, k=k, lam=lam, bigrams=np.array(list(bmap), dtype=np.int64))
+        if not smoke:
+            np.savez(fit_p, wb=Wb, s=s, k=k, lam=lam,
+                     bigrams=np.array(list(bmap), dtype=np.int64),
+                     provenance=json.dumps(prov, sort_keys=True))
         print(f"  fitted K={k} bigram rows, global scale s={s:.4f} ({time.time()-t0:.0f}s), "
               f"rss {rss_gb():.1f} GB", flush=True)
     n_train = len(qs)
@@ -137,6 +179,7 @@ def main(k, lam=0.01, smoke=False, proxy=False):
     per_base8, per_aug8 = per["winner-int8"], per["aug-int8"]
 
     out = {"k": k, "lam": lam, "n_queries": n_train, "winner": WINNER.name,
+           "fit_provenance": prov, "fit_artifact": fit_p.name,
            "global_scale_s": round(s, 6),
            "macro_winner": round(macro(per_base), 4),
            "macro_winner_plus_bigrams": round(macro(per_aug), 4),

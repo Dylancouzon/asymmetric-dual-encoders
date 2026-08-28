@@ -11,7 +11,7 @@ import json
 from dataclasses import replace
 
 from _paths import REPO, WORK
-from sweep import grid, one
+from sweep import chain, chains, grid, one
 from train import Cfg
 
 BASE = Cfg(objective="C", init="teacher", preproc="noprefix", learned_weights=True,
@@ -221,19 +221,100 @@ def phase3_hparams(base):
     })
 
 
+# ---- the mandatory ablations, rebuilt after Codex review #3 ----------------------------------
+#
+# The recipe every chain reproduces, taken from the winning runs' own cfgs (work/runs/*.json):
+# objective B at 3e-3 constant for 16,000 steps with the pseudo-query mix, then a SEPARATE
+# objective-A run from that exact checkpoint at 1e-3 warmup-linear. It has to be two runs: one
+# objective-C Cfg carries one learning rate, one schedule, and one Adam state whose cumulative
+# update counts also rescale the 1/(1+updates) init penalty, so a C-shaped "full chain" would
+# differ from the candidate in four ways unrelated to the arm's variable (review #3 BLOCKER 4).
+ABLATION_B = {"objective": "B", "init": "teacher", "preproc": "noprefix", "learned_weights": True,
+              "idf_init_weights": True, "lr": 3e-3, "lr_weights": 1e-2, "warmup_steps": 0,
+              "lr_schedule": "constant", "steps_b": 16000, "steps_a": 0, "batch": 512,
+              "n_neg": 32768, "temp": 0.02, "hard_neg_k": 0, "fn_margin": 0.02, "kl_weight": 1.0,
+              "kl_k": 32, "cos_weight": 1.0, "reg_init": 1e-3, "bank_size": 2_000_000,
+              "eval_every": 2000, "b_query_sources_all": True, "b_pseudo_queries": 2_000_000,
+              "b_pseudo_frac": 0.5}
+ABLATION_A = {"objective": "A", "preproc": "noprefix", "steps_b": 0, "steps_a": 2500, "lr": 1e-3,
+              "lr_weights": 1e-2, "warmup_steps": 200, "lr_schedule": "warmup_linear",
+              "hard_neg_k": 0, "eval_every": 500, "b_pseudo_queries": 0, "reg_init": 1e-3}
+# steps_a per surviving candidate: p35w-2m-s2500 -> 2500, p35a-2m-1e3 -> 2000. Which one survives
+# is decided by the dependence recompute (results/m7_dev_audit_full.json), never by choosing here.
+SURVIVOR_STEPS_A = {"p35w-2m-s2500": 2500, "p35a-2m-1e3": 2000, "p35w-500k-s1500": 1500,
+                    "s2w-1e3-s1000": 1000}
+
+
+def ablation_recipe():
+    """The (B, A) overrides for the ablation chains, with steps_a bound to the SURVIVING candidate.
+
+    Reads the audit rather than trusting a constant, because the surviving artifact is exactly the
+    thing a session is most likely to misremember. Also refuses a survivor whose B phase differs
+    from ABLATION_B's -- the 500k and 1000-step survivors were trained at 8,000 B steps, so the
+    fixed B16k the review prescribes would no longer be "the candidate recipe" for them."""
+    p = REPO / "results" / "m7_dev_audit_full.json"
+    if not p.exists():
+        raise SystemExit("run dev_audit.py first: the ablation chains must reproduce the recipe of "
+                         "whichever artifact survives the dependence recompute")
+    surv = json.loads(p.read_text())["surviving_candidate"]
+    if surv not in ("p35w-2m-s2500", "p35a-2m-1e3"):
+        raise SystemExit(f"surviving candidate {surv} was trained with a different B phase than "
+                         f"ABLATION_B (16,000 steps + the 2M pseudo mix); re-derive the chain "
+                         f"recipe from work/runs/{surv}.json before running ablations")
+    return surv, dict(ABLATION_B), {**ABLATION_A, "steps_a": SURVIVOR_STEPS_A[surv]}
+
+
 def phase4_mandatory(base):
-    """The ablations the mandate requires reported whatever they say."""
-    out = {}
-    out.update(grid("p4-init", base, {"teacher": {"init": "teacher"},
-                                      "input_emb": {"init": "input_emb"},
-                                      "random": {"init": "random"}}))
-    out.update(grid("p4-prefix", base, {"noprefix": {"preproc": "noprefix"},
-                                        "prefix": {"preproc": "prefix"}}))
-    out.update(grid("p4-weights", base, {"learned": {"learned_weights": True},
-                                         "flat": {"learned_weights": False},
-                                         "learned-noidf": {"idf_init_weights": False}}))
-    out.update(grid("p4-reg", base, {"reg0": {"reg_init": 0.0}, "reg1e-2": {"reg_init": 1e-2}}))
-    return out
+    """The ablations the mandate requires reported whatever they say -- seven chains, one variable
+    each, every one a B run plus a fresh A run.
+
+    `base` is the replay: it is both the nondeterminism estimate and the regularization-ON control
+    at 1e-3, which is why there is no separate reg arm on that side (review #3 MINOR: the old grid
+    ran the identical baseline three times under three names, and its "reg on/off" control was
+    0 vs 1e-2 while the winner uses 1e-3).
+    """
+    surv, b, a = ablation_recipe()
+    print(f"[p4] chains reproduce {surv}: B {b['steps_b']} steps -> A {a['steps_a']} steps",
+          flush=True)
+    return chains("p4", base, {
+        "base":      {},
+        "input-emb": {"b": {"init": "input_emb"}},
+        "random":    {"b": {"init": "random"}},
+        # RUNTIME prefix only: the teacher rows stay the no-prefix ones in both legs, so the arm
+        # varies query tokenization and nothing else (review #3 BLOCKER 3). Prefix-CONDITIONED
+        # rows are a separate, exploratory arm below.
+        "prefix":    {"b": {"preproc": "prefix", "init_preproc": "noprefix"},
+                      "a": {"preproc": "prefix", "init_preproc": "noprefix"}},
+        "flat":      {"b": {"learned_weights": False}, "a": {"learned_weights": False}},
+        "uniform-w": {"b": {"idf_init_weights": False}, "a": {"idf_init_weights": False}},
+        "reg0":      {"b": {"reg_init": 0.0}, "a": {"reg_init": 0.0}},
+    }, b, a)
+
+
+def phase4_attribution(base):
+    """Can the +0.0126 be attributed to pseudo-query COVERAGE at all?
+
+    It cannot, from the search record alone: the sequence changed the pseudo pool size AND the B
+    step count AND the A step count together (review #3 MAJOR 2). These two matched controls hold
+    everything else at the surviving recipe and move only the pseudo-query pool, so `nopseudo` is
+    the attribution control and `pseudo500k` is the dose control.
+    """
+    surv, b, a = ablation_recipe()
+    return chains("p4x", base, {
+        "nopseudo":   {"b": {"b_pseudo_queries": 0}},
+        "pseudo500k": {"b": {"b_pseudo_queries": 500_000}},
+    }, b, a)
+
+
+def phase4_exploratory(base):
+    """Prefix-CONDITIONED teacher rows, i.e. every vocab token embedded inside the query prefix.
+    The mandate calls this exploratory, so it is labelled and separate from the mandatory prefix
+    arm, which shares the no-prefix rows."""
+    surv, b, a = ablation_recipe()
+    return chains("p4e", base, {
+        "prefix-init": {"b": {"preproc": "prefix", "init_preproc": "prefix"},
+                        "a": {"preproc": "prefix", "init_preproc": "prefix"}},
+    }, b, a)
 
 
 def phase35_coverage(base):

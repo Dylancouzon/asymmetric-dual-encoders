@@ -5,6 +5,11 @@ pinned dev suite with signflip + paired CI, fp16 and int8 independently. This do
 two run ids, through ensure_release (never the raw training npz — review #2 BLOCKER 2) and the
 verified matrix eval path (reproduces the gate winner macro exactly).
 
+SUPERSEDED for the chain comparisons by `dev_audit.py`, which scores through the released
+`QueryTable` path rather than the matrix shortcut, keeps unrounded per-query values, and reports
+the dependence-preserving statistics the nested held-out components require. Kept for ad-hoc
+two-way comparisons; anything decision-bearing should go through the audit.
+
 Usage: compare_release.py <candidate_run_id> [baseline_run_id=s2w-1e3-s1000]
 """
 import json
@@ -39,7 +44,12 @@ def main(cand, base="s2w-1e3-s1000"):
          "cand-int8": (dequantize_int8(*quantize_int8(Wc)), {}),
          "base-int8": (dequantize_int8(*quantize_int8(Wb)), {})},
         tok, pre_c, V, comps)
+    import encoders
+    sp = encoders.active()
     out = {"candidate": cand, "baseline": base, "components": comps,
+           # M7_ENCODER defaults to bge-base when unset, so a comparison that does not record
+           # which encoder produced it cannot prove it used the right caches (review #3 MINOR).
+           "encoder": {"name": sp.name, "repo": sp.repo, "revision": sp.revision, "dim": sp.dim},
            "macro": {t: round(macro(p), 4) for t, p in per.items()},
            "per_component_macro": {
                c: {t: round(float(np.mean(list(per[t][c].values()))), 4) for t in per}
