@@ -123,7 +123,20 @@ def chain(name, base, b_over, a_over, skip_b_if_exists=True):
     """
     bid, aid = f"{name}-b", f"{name}-a"
     if skip_b_if_exists and (WORK / "runs" / f"{bid}.npz").exists():
-        print(f"[{name}] reusing existing B artifact {bid}", flush=True)
+        # Reuse only if that artifact was trained under the overrides this arm asks for. Without
+        # this, editing an arm's B definition and re-running silently produces an ablation that is
+        # not the ablation it claims to be -- the worst failure mode this driver has, because the
+        # number looks fine.
+        prev = json.loads((WORK / "runs" / f"{bid}.json").read_text())["cfg"]
+        want = replace(base, run_id=bid, **b_over)
+        drift = {k: (prev.get(k), getattr(want, k)) for k in asdict(want)
+                 if k != "run_id" and prev.get(k) != getattr(want, k)
+                 and not (isinstance(getattr(want, k), (list, tuple))
+                          and list(prev.get(k) or []) == list(getattr(want, k) or []))}
+        if drift:
+            raise ValueError(f"{bid} exists but was trained with different settings {drift}; "
+                             f"delete work/runs/{bid}.* to retrain, or fix the arm")
+        print(f"[{name}] reusing existing B artifact {bid} (config verified)", flush=True)
     else:
         if one(bid, base, **b_over) is None:
             print(f"[{name}] B leg failed; A leg skipped", flush=True)
