@@ -121,8 +121,12 @@ def sweep(components=("cqadup-physics", "nq-250k"), table_npz=None, preproc="nop
           out="m7_ann_sweep.json"):
     import dev_eval
     from evalkit import score
-    from table import NO_PREFIX, WITH_PREFIX, load_table
-    pre = {"noprefix": NO_PREFIX, "prefix": WITH_PREFIX}[preproc]
+    from table import NO_PREFIX, WITH_PREFIX, Preproc, load_table, read_meta
+    # The artifact's OWN metadata is the authority on how it is queried; a name-keyed lookup
+    # silently serves the default pooling rule to a table whose frozen rule is something else.
+    pre = (Preproc(**read_meta(table_npz)["preproc"]) if table_npz
+           else {"noprefix": NO_PREFIX, "prefix": WITH_PREFIX}[preproc])
+    print(f"  ann sweep query rule: {pre}", flush=True)
     results = {}
     with Server() as client:
         for comp in components:

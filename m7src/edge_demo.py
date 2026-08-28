@@ -44,8 +44,14 @@ def build_token_collection(client, name, rows, batch=4096):
             ids=list(range(lo, hi)), vectors=rows[lo:hi].astype(np.float32).tolist()))
 
 
-def encode_via_qdrant(client, token_coll, ids_list, weights, dim):
-    """The edge query path, with the rows fetched from Qdrant rather than a local array."""
+def encode_via_qdrant(client, token_coll, ids_list, weights, dim, pool_mode="mean"):
+    """The edge query path, with the rows fetched from Qdrant rather than a local array.
+
+    `pool_mode` must match the artifact's frozen rule. The demo asserts this path against
+    `QueryTable.encode`, so a mismatch would surface as a large deviation rather than silently --
+    but the demo exists to show the REAL query path, so it implements the rule rather than
+    relying on that alarm."""
+    from table import occurrence_weights
     out = np.zeros((len(ids_list), dim), dtype=np.float32)
     for i, ids in enumerate(ids_list):
         uniq = sorted(set(ids))
@@ -54,8 +60,9 @@ def encode_via_qdrant(client, token_coll, ids_list, weights, dim):
         vec = {p.id: np.asarray(p.vector, dtype=np.float32) for p in pts}
         num = np.zeros(dim, dtype=np.float32)
         den = 0.0
-        for t in ids:                                  # multiplicity kept, as in the frozen rule
-            w = 1.0 if weights is None else float(weights[t])
+        sat = occurrence_weights([ids], pool_mode).numpy()
+        for k, t in enumerate(ids):                    # multiplicity handled by the frozen rule
+            w = (1.0 if weights is None else float(weights[t])) * float(sat[k])
             num += w * vec[t]
             den += w
         v = num / max(den, 1e-6)
@@ -65,8 +72,11 @@ def encode_via_qdrant(client, token_coll, ids_list, weights, dim):
 
 
 def run(run_id, preproc="noprefix", component="cqadup-physics", ef=512, n_timed=100):
-    pre = PRE[preproc]
     npz = WORK / "runs" / f"{run_id}.npz"
+    # The artifact's own metadata is the authority on how it is queried, including the pooling
+    # rule; a name-keyed lookup would demo a different system from the one that ships.
+    from table import Preproc, read_meta
+    pre = Preproc(**read_meta(npz)["preproc"])
     z = np.load(npz)
     rows = z["rows_int8"].astype(np.float32) * z["int8_scale"][:, None]
     w = z["token_weights"]
@@ -88,7 +98,8 @@ def run(run_id, preproc="noprefix", component="cqadup-physics", ef=512, n_timed=
         out["token_collection_build_s"] = round(time.time() - t0, 2)
         out["doc_collection_build_s"] = ann_sweep.index(client, "docs", dv, dv.shape[1])
 
-        qv = encode_via_qdrant(client, "token_table", ids_list, weights, rows.shape[1])
+        qv = encode_via_qdrant(client, "token_table", ids_list, weights, rows.shape[1],
+                               pool_mode=pre.pool_mode)
         out["max_abs_diff_vs_local_encode"] = float(np.abs(qv - local_qv).max())
 
         lat_lookup, lat_search, lat_total = [], [], []
@@ -96,7 +107,8 @@ def run(run_id, preproc="noprefix", component="cqadup-physics", ef=512, n_timed=
         params = models.SearchParams(hnsw_ef=ef)
         for i in range(min(n_timed, len(q_texts))):
             t = time.perf_counter()
-            v = encode_via_qdrant(client, "token_table", [ids_list[i]], weights, rows.shape[1])[0]
+            v = encode_via_qdrant(client, "token_table", [ids_list[i]], weights,
+                                  rows.shape[1], pool_mode=pre.pool_mode)[0]
             t1 = time.perf_counter()
             client.query_points(collection_name="docs", query=v.tolist(), limit=10,
                                 params=params, with_payload=False)
