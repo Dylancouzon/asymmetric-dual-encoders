@@ -456,7 +456,17 @@ def run(cfg: Cfg, log=print):
         bank_ids = bank_ids[~_hit]
         log(f"  bank: dropped {int(_hit.sum())} banned pool rows (Codex B2 mask)")
     nb = len(bank_ids)   # review #2 BLOCKER 1: every sampler draws [0, nb); a stale nb after the
-    bank = torch.from_numpy(np.ascontiguousarray(pool_vecs[bank_ids])).cuda()   # filter is OOB
+                                                                                # filter is OOB
+    # Gathered in CHUNKS straight into the destination GPU tensor. The one-liner this replaces --
+    # `torch.from_numpy(np.ascontiguousarray(pool_vecs[bank_ids])).cuda()` -- materialized the
+    # whole 2M x 1024 fp16 bank (4.1 GB) on the HOST first, on top of the pseudo-query targets
+    # (another 4.1 GB at the 2M mix) and the pool pages the gather faults in. That combination
+    # reached 24.7 GB RSS on a 25 GB box and thrashed with the GPU idle (2026-08-28). Identical
+    # result, ~4 GB lower peak: bank_ids is sorted, so the chunks are sequential in the memmap.
+    bank = torch.empty((nb, pool_vecs.shape[1]), dtype=torch.float16, device="cuda")
+    for lo in range(0, nb, 250_000):
+        hi = min(lo + 250_000, nb)
+        bank[lo:hi] = torch.from_numpy(np.ascontiguousarray(pool_vecs[bank_ids[lo:hi]])).cuda()
     log(f"  negative bank {tuple(bank.shape)} ({bank.numel()*2/1e9:.2f} GB VRAM)")
 
     W0 = torch.from_numpy(get_init(cfg.init, init_pre, vocab=V, runtime_pre=pre)).cuda()
