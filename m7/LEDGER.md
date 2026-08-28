@@ -342,6 +342,53 @@ a reason to prefer the null.
   teacher (cosine + overlap@10 against the pool) on held-out document spans bucketed by length.
   **This settles whether a length gap exists at all**, and it is the pre-condition for spending a
   training chain on long-span distillation. No qrels, no six-set access, no adoption attached.
+  **RESULT** (`m7_longspan_probe.json`): a gap exists at the endpoints and is not a clean trend.
+  overlap@10 0.3443 at 8 words → 0.2997 at 256 (gap 0.0447), but the 64-word bucket (0.3530) sits
+  *above* the 8-word one, so only the endpoints separate; cosine to the teacher is closer to
+  monotone, 0.7525 → 0.7095. Enough to license lever #7, stated with the non-monotonicity attached.
+
+- **#7 long-span distillation — pre-registered 2026-08-28, before any number.** The only lever
+  aimed at a named weakness of a *confirmatory* dataset (ArguAna, ~250-word queries, the
+  architecture's pre-identified worst case) rather than at the dev macro.
+
+  **What it can and cannot be, algebraically, checked before believing it** (standing directive
+  #4). The served function is `normalize(Σ w_i v_i / Σ w_i)` — nothing in it depends on length, so
+  long-span training adds **no capacity**: it changes which W the objective selects, not the
+  function class. It belongs with the data/prior changes, not with n-gram rows and
+  multiplicity-dependent pooling. That is a real effect — the fitted solution depends on the input
+  distribution — but the claim must be stated as "a better estimator for long inputs", never as
+  "the table can now represent long queries".
+
+  **And it has a built-in trade-off**: fitting more mass on long bags can only move short-query
+  behaviour, and four of six dev components are short-query. The dev macro is therefore the wrong
+  primary instrument for this lever, and is used below only as a guardrail.
+
+  **One arm.** B phase with a length-MIXED pseudo-query pool at the shipping recipe's total count:
+  half the existing first-sentence ≤32-word spans, half long spans — contiguous multi-sentence
+  windows from a random start in the same TRAIN doc stores, word budget drawn uniformly from
+  64–320 to bracket ArguAna's ~250, same deterministic seed, same sampler. A phase unchanged.
+  **Mixed rather than all-long, fixed here**: the probe found a gap, not that short spans are
+  useless, and replacing them would trade a measured strength for an unmeasured one.
+  Long spans are TRAIN queries under the mandate's "all partitions" wording and go through R1 and
+  `decontam_querytext.py` identically; a long span carries more 8-grams and so matches more often,
+  so the kept/removed counts are logged here like every other source's.
+
+  **Primary bar — the probe, not the dev macro.** Re-run `longspan_probe.py` with the same seed
+  and therefore the same spans, and compare the arm against the current candidate on the pooled
+  **128- and 256-word buckets**, paired per span: adopt only on signflip p<0.05 AND raw paired
+  CI > 0 on overlap@10. Same form as every other bar here, and paired on identical spans, so no
+  effect-size threshold has to be invented.
+
+  **Guardrail, and it can veto on its own.** The full pinned dev suite must be non-inferior at the
+  same δ = 0.0040 margin as the simplification, fp16 and int8: raw paired CI lower bound > −0.0040
+  against the candidate. A long-span gain bought with a short-query loss is not an improvement for
+  a system whose confirmatory set is mostly short-query. Adoption needs **both**; the out-of-domain
+  subset is reported alongside, per the biased-estimator rule.
+
+  **Falsifier.** If the primary bar fails, long-span distillation is CLOSED with its mechanism
+  attached: the length gap is then not caused by the training span distribution, and ArguAna's
+  weakness is reported as a measured, unmitigated architectural limit rather than as an untried
+  idea. Either way the report states the gap and what was spent on it.
 
 - **Negatives ablation — decision rule pre-registered 2026-08-28, before any arm's result.** The
   mandate ordered a BM25-mined / teacher-mined / mixed comparison; it never ran, and `hard_neg_k=0`
