@@ -1,0 +1,238 @@
+{
+ "_what": "DEV reuse, counted from the artifacts rather than recalled. Written for the pre-freeze review's question: how many adaptive decisions has the dev suite absorbed?",
+ "_scope": "Dev only. The six confirmatory datasets have the three accesses m7/LEDGER.md enumerates, none a model comparison; the final run is the fourth.",
+ "trained_arms": 53,
+ "in_training_dev_evaluations": 299,
+ "eval_only_variants_by_artifact": {
+  "m7_dev_audit_full.json": 40,
+  "m7_lever4_pooling_full.json": 6,
+  "m7_lever4_pooling_p35w-2m-s2500.json": 6,
+  "m7_lever5_shrinkage.json": 6,
+  "m7_compare_full_postabl.json": 12,
+  "m7_compare_full_lever6.json": 4
+ },
+ "eval_only_variants_total": 74,
+ "sources_read": [
+  "m7_dev_audit_full.json",
+  "m7_lever4_pooling_full.json",
+  "m7_lever4_pooling_p35w-2m-s2500.json",
+  "m7_lever5_shrinkage.json",
+  "m7_compare_full_postabl.json",
+  "m7_compare_full_lever6.json"
+ ],
+ "per_arm": {
+  "p1-objA": {
+   "in_training_evals": 6,
+   "final_proxy_macro": 0.3248177320506055
+  },
+  "p1-objB": {
+   "in_training_evals": 4,
+   "final_proxy_macro": 0.4548216552132978
+  },
+  "p1-objC": {
+   "in_training_evals": 6,
+   "final_proxy_macro": 0.37208907330889235
+  },
+  "p2s-old-lr-3e3": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.45464365093647885
+  },
+  "p2s-sane-1e4": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.46525262643633086
+  },
+  "p2s-sane-1e5": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.45837934704799305
+  },
+  "p2s-sane-5e5": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.46255393804154227
+  },
+  "p2s-sane-randneg": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.4659097070861553
+  },
+  "p2s-start": {
+   "in_training_evals": 0,
+   "final_proxy_macro": 0.4548216552132978
+  },
+  "p2x-rn-1e3": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.4629229376192974
+  },
+  "p2x-rn-3e3": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.4520964785819452
+  },
+  "p2x-rn-3e4": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.46489073582201423
+  },
+  "p35a-2m-1e3-x4000": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.5114862017389408
+  },
+  "p35a-2m-1e3": {
+   "in_training_evals": 4,
+   "final_proxy_macro": 0.5108583568536041
+  },
+  "p35a-500k-1e3": {
+   "in_training_evals": 4,
+   "final_proxy_macro": 0.5077234762909665
+  },
+  "p35b-2m": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.49809937501369633
+  },
+  "p35b-500k": {
+   "in_training_evals": 4,
+   "final_proxy_macro": 0.4933546498034454
+  },
+  "p35w-2m-s2500": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.5105689103506673
+  },
+  "p35w-500k-s1500": {
+   "in_training_evals": 3,
+   "final_proxy_macro": 0.5074861319125651
+  },
+  "p4-base-a": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.5105689103506673
+  },
+  "p4-base-b": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.4981040060310597
+  },
+  "p4-flat-a": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.509077174900476
+  },
+  "p4-flat-b": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.49995722314707397
+  },
+  "p4-input-emb-a": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.5113344155665184
+  },
+  "p4-input-emb-b": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.49766437679564035
+  },
+  "p4-prefix-a": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.510420213400545
+  },
+  "p4-prefix-b": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.497566541913159
+  },
+  "p4-random-a": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.5112054091568031
+  },
+  "p4-random-b": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.49855857295861855
+  },
+  "p4-reg0-a": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.5105722663817975
+  },
+  "p4-reg0-b": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.49808796515424386
+  },
+  "p4-uniform-w-a": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.5115398649155187
+  },
+  "p4-uniform-w-b": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.49817602977042635
+  },
+  "p4e-prefix-init-a": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.5104585437085346
+  },
+  "p4e-prefix-init-b": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.49748241772155705
+  },
+  "p4n-bank-a": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.5105689103506673
+  },
+  "p4n-bm2516-a": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.5131333249650127
+  },
+  "p4n-mixed32-a": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.5130717908239798
+  },
+  "p4n-teacher16-a": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.5124603664212498
+  },
+  "p4n-teacher16-s1500-a": {
+   "in_training_evals": 3,
+   "final_proxy_macro": 0.5126205433165426
+  },
+  "p4p-sqrt-a": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.5111125506825124
+  },
+  "p4x-nopseudo-a": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.5071712088323703
+  },
+  "p4x-nopseudo-b": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.493753689657547
+  },
+  "p4x-pseudo500k-a": {
+   "in_training_evals": 5,
+   "final_proxy_macro": 0.509795525683653
+  },
+  "p4x-pseudo500k-b": {
+   "in_training_evals": 8,
+   "final_proxy_macro": 0.49696627567734436
+  },
+  "s1-objB": {
+   "in_training_evals": 4,
+   "final_proxy_macro": 0.490316172095884
+  },
+  "s2-rn-1e4": {
+   "in_training_evals": 4,
+   "final_proxy_macro": 0.5035390586019663
+  },
+  "s2-rn-3e4": {
+   "in_training_evals": 4,
+   "final_proxy_macro": 0.5048950498453458
+  },
+  "s2-rn-5e5": {
+   "in_training_evals": 4,
+   "final_proxy_macro": 0.4992796068885239
+  },
+  "s2-start": {
+   "in_training_evals": 0,
+   "final_proxy_macro": 0.49033955206085905
+  },
+  "s2w-1e3-s1000": {
+   "in_training_evals": 2,
+   "final_proxy_macro": 0.505187282062383
+  },
+  "s2w-3e4-s1500": {
+   "in_training_evals": 3,
+   "final_proxy_macro": 0.505141201375189
+  },
+  "s2x-rn-1e3": {
+   "in_training_evals": 4,
+   "final_proxy_macro": 0.5050943058730274
+  }
+ },
+ "_caveat": "These are counts of LOOKS, not of independent hypotheses -- many arms share a checkpoint or differ in one knob, and the pre-registered bars applied Holm only within a named family. No multiplicity correction spans the whole search, and none is claimed. The number is here so the report states the scale of adaptive dev reuse instead of implying it was small."
+}
