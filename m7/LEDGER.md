@@ -163,6 +163,84 @@ training list — 2 of the 6 — and must be labelled at the dataset row.** All 
   objective-C arms at a matched budget cannot isolate the contrastive lr; logged before any
   A-phase result was read. Collapse diagnostics must be read against the init, not against zero.
 
+### The step-selection rule was NOT applied to the negatives arms — correcting it (2026-08-28)
+
+Self-reported, before any number for the corrected arms exists. The four `p4n` arms were all
+promoted and full-suite-compared at the inherited `steps_a=2500`, but the rule above says an arm's
+step count is its **best proxy eval**. Their proxy curves peak elsewhere:
+
+| arm | best proxy step | best | at 2500 |
+|---|---|---|---|
+| `p4n-bank-a` (control) | 2500 | 0.51057 | 0.51057 — unchanged |
+| `p4n-teacher16-a` | **1500** | 0.51300 | 0.51246 |
+| `p4n-bm2516-a` | **1500** | 0.51327 | 0.51313 |
+| `p4n-mixed32-a` | **1000** | 0.51389 | 0.51307 |
+
+`lr_schedule="warmup_linear"` decays over `steps_a`, so the step-1500 checkpoint of a 2500-step run
+is **not** a 1500-step run — the rule's "implemented by re-running to that step" is load-bearing
+here, not a formality. Re-running is ~5 min per arm.
+
+**Fixed before the re-runs.** (1) All three non-control arms are re-run at their own best proxy
+step; the control keeps 2500 because that IS its best. (2) All three still exceed the control on
+the proxy, so all three stay promoted and the negatives comparison and its parsimony tie-break are
+re-decided on the corrected artifacts, under the unchanged bar. (3) **The proxy picks the step and
+the full-suite number does not get a vote**: if a corrected arm scores *lower* on the full dev
+suite than its 2500-step version, the corrected one still ships. Preferring the 2500 one at that
+point would be selection on a number we had already looked at, which is the exact failure this
+rule exists to prevent. The superseded 2500-step full-suite numbers stay in
+`m7_compare_full_postabl.json` and are reported as the deviation they were.
+
+### Recipe simplification — an EQUIVALENCE test, pre-registered before any number
+
+**Why.** The ablations say four components of the shipping recipe are inert, and shipping inert
+complexity is a reproducibility cost a third party pays and we do not. This is an over-engineering
+fix, **not a quality lever**: the claim being tested is "the simple recipe reproduces the number",
+and the honest default when that is not demonstrated is to keep the recipe we measured.
+
+**The one simplified recipe** (four changes at once, one arm, no ladder of fallbacks):
+
+| component | shipping | simplified | ablation evidence (proxy macro-3) |
+|---|---|---|---|
+| `init` | `teacher` — 30,522 teacher forward passes | `input_emb` | `p4-input-emb-a` 0.5113 vs base 0.5106 |
+| `b_pseudo_queries` | 2,000,000 | 500,000 | `p4x-pseudo500k-a:sqrt` −0.0002 full suite, unresolved |
+| `idf_init_weights` | `True` | `False` | `p4-uniform-w-a` 0.5115 vs 0.5106 |
+| `reg_init` | 1e-3 | 0.0 | `p4-reg0-a` 0.5106 ≡ base |
+
+**Deliberately NOT changed, with reasons, so the omissions are not read as oversights.**
+`learned_weights` stays on — `p4-flat-a` 0.5091 is the one ablation that moved *down*.
+`preproc` is already prefix-free; the prefix arm ADDS a prefix, so there is nothing to remove.
+`steps_b` stays 16,000 — the 500k dose was tested at 16,000 steps and cutting steps is untested.
+**`input_emb` and not `random`, though both are inert on the proxy**: 3,750 of 30,522 rows are
+never updated by training and nothing rewrites them on the save path
+(`table.apply_unseen_policy` exists but is not called), so the init IS what a rare or
+out-of-domain token contributes at query time — and rare rows are exactly what the six hit.
+`random` would ship 3,750 rows of noise into that regime for no gain; `input_emb` removes the
+expense (the forward passes) without removing the meaning.
+
+**The A-phase step count follows the step-selection rule**, like any other arm.
+
+**The test.** Full pinned dev suite, released `QueryTable` path, at the pool mode lever #4 adopts,
+against the corrected negatives candidate. **Non-inferiority, not a two-sided band**: accept iff
+the dependence-preserving **raw** paired 95% CI lower bound for (simple − complex) is
+**> −0.0040**, in fp16 **and** int8. A win is an acceptance too — the test asks only whether a
+loss larger than the margin can be ruled out.
+
+**Margin provenance, because the "~0.0007 replay noise band" in the negatives tie-break has none:**
+δ = 0.0040 is the smallest effect this project has actually adopted (lever #4 `sqrt`, +0.0040 fp16).
+A simplification whose cost cannot be resolved below the smallest gain we have banked cannot be
+traded against it. Training here is deterministic — `p4-base-a` and `p4n-bank-a` agree to 16
+digits — so there is no replay noise to calibrate a band from, which is why the margin is anchored
+to an adopted effect instead.
+
+**If it fails**, the measured recipe ships unchanged and the failure is reported as evidence that
+individually-inert components interact. Backing off component-by-component until something passes
+would be adaptive dev search, and is forbidden here.
+
+**Disclosure**: reported with the out-of-domain subset, per the biased-estimator rule below.
+**Consequence if accepted**: the simplified artifact becomes the candidate, so lever #4 is
+re-adjudicated on it and fusion is selected on it. Stated now so it cannot later be discovered as
+a reason to prefer the null.
+
 ## Gates and outcomes
 
 - **Stage 0** (retired, superseded): the closed-form ridge is the global optimum of *penalised
