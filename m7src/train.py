@@ -191,11 +191,19 @@ def mine_bm25_negatives(name, q_texts, src_of, store_of, index, k, exclude, bann
     st = Stemmer.Stemmer("english")
     for store, rows in by_store.items():
         ids, texts = mix.load_store(store)
-        print(f"  bm25 mining {store}: {len(texts):,} docs, {len(rows):,} queries", flush=True)
-        r = bm25s.BM25(method="lucene", k1=1.2, b=0.75)
-        r.index(bm25s.tokenize(texts, stopwords="en", stemmer=st, show_progress=False),
-                show_progress=False)
+        print(f"  bm25 mining {store}: {len(texts):,} docs, {len(rows):,} queries, "
+              f"rss {int(open('/proc/self/status').read().split('VmRSS:')[1].split()[0])/1e6:.1f} GB",
+              flush=True)
+        # Tokenize, then FREE THE TEXTS, then index. The original order passed the tokenizer's
+        # output straight into index(), so 5.23M HotpotQA document strings (~2 GB), their
+        # tokenized form, and the index under construction were all alive at once -- inside a
+        # process already holding the pseudo-query targets and the pool's faulted pages. Same
+        # class of bug as the negative-bank gather (see the 2026-08-28 incident).
+        tok_corpus = bm25s.tokenize(texts, stopwords="en", stemmer=st, show_progress=False)
         del texts
+        r = bm25s.BM25(method="lucene", k1=1.2, b=0.75)
+        r.index(tok_corpus, show_progress=False)
+        del tok_corpus
         over = k + max((len(exclude[i]) for i in rows), default=0) + 4
         qt = bm25s.tokenize([q_texts[i] for i in rows], stopwords="en", stemmer=st,
                             show_progress=False)
