@@ -66,6 +66,7 @@
     }
    },
    "resolved": true,
+   "stage0_sha256": "d13a993852da4c8fc2f2b37998c013dfa4e13fa74417d079864f6f4614a4a9ff",
    "pass": true,
    "checkpoint": "s1-objB",
    "note": "Stage-0 distilled table",
@@ -1181,8 +1182,8 @@
   "pinned_at": "2026-08-27T22:58:44"
  },
  "code_identity": {
-  "git_head": "7f0467ed95e456101b508bc3f8389675f420b846",
-  "m7src_dirty": true,
+  "git_head": "31d85872b0033c2cb3b3f4ecb47a31bcef0ca5b3",
+  "m7src_dirty": false,
   "source_sha256": {
    "boot.py": "a845a22a3ce10acf89877a1a521e66654d343c0fb003261e64ee1adc54a3c23c",
    "multieval.py": "9759ecafacbacf7fdb7d13f2ef84ff534523eec8210c9f6541236bad19a5e643",
@@ -1190,12 +1191,15 @@
    "table.py": "56b815d3161f793757973dc2d724f2ba7a302a62dcbe6140c264a0f09b34819a",
    "dev_eval.py": "e5f702536c8af6a7bfb64cbe8770a45f81201866b4b175d4dd129c398737caa1",
    "heldout.py": "18df62aa0c019490a03a00aa8a58947a24991314dc660d32e886fd4519658161",
-   "dev_audit.py": "44cdd9de9be6e01fb9e4695e7ef5ffdb48336eed6a8409df521a2b43c80aec81",
+   "dev_audit.py": "1b914cbb368553e96186b2261a55897dbf37a79304aa94262cf71c9043c658c3",
    "devsuite.py": "3ae8141ac4b3f9bb8d64c29e026403b314a7f4295dfa9979888959e5f9050f7f",
    "pool.py": "c72e7b8e7aa8a8d5365c696860f640d077b46712379e518fde50433b209a3ca8",
-   "encoders.py": "9479e9eda650b0c1db4b6375b656776982abd4fc55560b8145bf7f08638055d6"
+   "encoders.py": "9479e9eda650b0c1db4b6375b656776982abd4fc55560b8145bf7f08638055d6",
+   "gate.py": "33ec963c36e9860cee64a15a4f99a6b5bfcd1359b4bef66d5230423f439c631c",
+   "fusion.py": "db686aebdc01af614d163e2aa8f64f068161bd6e404cbf7c50cb50d7a85b210d"
   }
  },
  "_role": "mechanical eligibility audit after all selection; it cannot repair adaptive dev reuse and is not evidence of generalization. Freeze immediately after.",
- "PASS": true
+ "PASS": true,
+ "diagnostic_subset": false
 }

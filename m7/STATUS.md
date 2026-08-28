@@ -1,8 +1,9 @@
 # M7 status
 
-**Stage: freeze prep DONE, gate is GO, the familywise question is CLOSED (option c, 2026-08-28),
-and the fifth adversarial review (8 BLOCKER / 9 MAJOR — verdict STOP) is fully actioned. The gate
-is being re-run from a clean commit (its GO had `m7src_dirty: true`); once it reproduces, nothing
+**Stage: FREEZE-READY. The familywise question is CLOSED (option c), the fifth adversarial review
+(8 BLOCKER / 9 MAJOR — verdict STOP) is fully actioned, and the gate re-ran GO from clean commit
+`31d8587` with every number identical (G1 +0.1159 · G3 +0.0845 · G4 0.00013 · retention
+0.846/0.915). All three freeze predicates were dry-run against the rerun gate and pass. Nothing
 blocks the freeze. Two decisions are yours.**
 
 Candidate **`p35w-2m-s2500`**, served at `pool_mode=sqrt`. Full pinned dev macro **0.6153**,
