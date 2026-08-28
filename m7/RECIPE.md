@@ -76,14 +76,20 @@ Export with `table.save_release`, which folds the learned weights into the rows 
 int8 artifact is self-contained. Training checkpoints keep the unfolded shape; a folded table
 cannot resume training.
 
-## Four things that look removable and are not
+## Four things a joint test could not remove
 
-The simplification test (`m7/LEDGER.md`, "Recipe simplification") removed all four at once, each
-individually inert on the three-component proxy, and measured **−0.0048** on the full dev suite
-with a raw CI of [−0.0102, +0.0007] — non-inferiority at a −0.0040 margin **not** demonstrated, in
-both precisions. The out-of-domain subset fell 0.3672 → 0.3627, so this is not an in-distribution
-artefact. They stay, and no component-by-component back-off was run, because backing off until
-something passes is adaptive dev search.
+Careful with the claim here. The simplification test (`m7/LEDGER.md`, "Recipe simplification")
+removed all four at once and measured **−0.0048** on the full dev suite, raw CI [−0.0102, +0.0007]
+— non-inferiority at a −0.0040 margin **not demonstrated**, in both precisions, with the
+out-of-domain subset falling 0.3672 → 0.3627. So they stay.
+
+But **why** they stay is not established. Single-knob full-suite ablations put the main effects at
+about +0.0015 in total, against a joint −0.0048 — a gap the same size as the recipe-perturbation
+band, so interaction and one unlucky draw are not separable. And **no single-knob arm clears Holm
+over the family of eight**, so the ablations license no change either. The honest statement is
+that a pre-registered joint test failed and nothing licenses removing any component individually
+— not that each component is earning its keep. Backing off one at a time until something passed
+would have been adaptive dev search.
 
 | component | the cheaper alternative that fails | cost of the four together |
 |---|---|---|
@@ -110,7 +116,8 @@ something passes is adaptive dev search.
 
 Four of the six dev components are Wikipedia or train-adjacent, and every confirmatory dataset is
 out-of-domain, so the macro is the least predictive figure available. Retention against the teacher
-is **0.926 on the dev macro and 0.764 on the out-of-domain pair**, where BM25 scores 0.3223. The
+is **0.915 on the dev macro, 0.846 text-backed and 0.764 on the out-of-domain pair**, where BM25
+scores 0.3223 (`m7_retention_p35w-2m-s2500.json`). The
 suite has absorbed **53+ trained arms and ~300 in-training evaluations** with Holm applied inside
 named families only. And every interval here is a **query-sampling** interval: training is
 deterministic, so no CI in this repo contains a recipe-replication term, while a nuisance step

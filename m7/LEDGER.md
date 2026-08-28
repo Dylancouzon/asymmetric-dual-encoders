@@ -346,9 +346,9 @@ loss larger than the margin can be ruled out.
 **Margin provenance, because the "~0.0007 replay noise band" in the negatives tie-break has none:**
 δ = 0.0040 is the smallest effect this project has actually adopted (lever #4 `sqrt`, +0.0040 fp16).
 A simplification whose cost cannot be resolved below the smallest gain we have banked cannot be
-traded against it. Training here is deterministic — `p4-base-a` and `p4n-bank-a` agree to 16
-digits — so there is no replay noise to calibrate a band from, which is why the margin is anchored
-to an adopted effect instead.
+traded against it. Replay noise is ~5e-6 on the dev macro (measured — the ablation
+replay's raw delta is 4.47e-06; the same-config re-run is reproducible, not bit-identical), far
+too small to calibrate a band from, which is why the margin is anchored to an adopted effect.
 
 **If it fails**, the measured recipe ships unchanged. Backing off component-by-component until
 something passes would be adaptive dev search, and is forbidden here. (The original wording said
@@ -392,9 +392,15 @@ so the record is not selectively pruned.
 
 Four things this settles.
 
-1. **Training is deterministic to the last digit.** The replay reproduces the baseline with a raw
-   CI of exactly [0.0000, 0.0000]. Every "noise" statement in this ledger is therefore about the
-   *eval* and about recipe perturbation, never about run-to-run variance — there is none.
+1. **Training is reproducible to ~5e-6 on the dev macro — NOT bit-identical, and the first
+   version of this line said otherwise by reading the ROUNDED value.** The replay's raw delta is
+   **4.47e-06**, raw CI **[0.0, 1.34e-05]**; the *display* fields round both to 0.0000, and this
+   ledger's own statistics section says decisions read raw endpoints, never the rounded display
+   value. Caught by the pre-freeze review, in the file that states the rule. The substance is
+   unchanged — 5e-6 of run-to-run noise against a 0.0027–0.0078 recipe-perturbation band means
+   the band is a property of the RECIPE choice and not of re-running — but "deterministic to the
+   last digit" was false and the correct figure is 4.5e-6. (Small GPU-reduction nondeterminism
+   explains it: the same config, re-run, gives an almost-but-not-exactly identical table.)
 2. **Learned per-token weights are the one component that clearly earns its place** (−0.0062 to
    remove, CI excluding zero). A query **prefix hurts**, −0.0019 either as runtime-only or with
    prefix-conditioned rows — and the two are identical to four decimals, so the exploratory

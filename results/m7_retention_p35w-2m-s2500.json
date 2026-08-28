@@ -1,0 +1,57 @@
+{
+ "_what": "retention against the frozen teacher, and the floor, on three nested component groups. The all-six figure is the flattering one; the out-of-domain pair is the nearest analogue to the confirmatory six.",
+ "_status": "exploratory dev evidence; not a prediction of the six",
+ "artifact": "p35w-2m-s2500",
+ "compare_artifact": "m7_compare_full_steprule.json",
+ "teacher_row": "stella-400M-v5-symmetric",
+ "groups": {
+  "all_six": {
+   "components": [
+    "nq-250k",
+    "hotpotqa",
+    "cqadup-programmers",
+    "cqadup-physics",
+    "heldout-train",
+    "heldout-longq"
+   ],
+   "system": 0.6152807763360729,
+   "bm25": null,
+   "potion-retrieval-32M": null,
+   "stella-400M-v5-symmetric": 0.6724183982907442,
+   "stella-400M-v5-symmetric-nopfx": 0.6130828651129835,
+   "retention_vs_teacher": 0.9150266826429609,
+   "delta_vs_bm25": null,
+   "delta_vs_potion-retrieval-32M": null
+  },
+  "text_backed": {
+   "components": [
+    "nq-250k",
+    "hotpotqa",
+    "cqadup-programmers",
+    "cqadup-physics"
+   ],
+   "system": 0.5370320973125421,
+   "bm25": 0.4525142408892109,
+   "potion-retrieval-32M": 0.38012926744982994,
+   "stella-400M-v5-symmetric": 0.6350347771103328,
+   "stella-400M-v5-symmetric-nopfx": 0.5691060657644179,
+   "retention_vs_teacher": 0.8456735231986146,
+   "delta_vs_bm25": 0.0845178564233312,
+   "delta_vs_potion-retrieval-32M": 0.15690282986271215
+  },
+  "out_of_domain": {
+   "components": [
+    "cqadup-programmers",
+    "cqadup-physics"
+   ],
+   "system": 0.3672423408152648,
+   "bm25": 0.3222868950782496,
+   "potion-retrieval-32M": 0.2548065880841255,
+   "stella-400M-v5-symmetric": 0.4806125661358832,
+   "stella-400M-v5-symmetric-nopfx": 0.4673087123392048,
+   "retention_vs_teacher": 0.7641130646414157,
+   "delta_vs_bm25": 0.04495544573701521,
+   "delta_vs_potion-retrieval-32M": 0.11243575273113932
+  }
+ }
+}
