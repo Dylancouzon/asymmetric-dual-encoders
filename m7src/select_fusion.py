@@ -28,8 +28,13 @@ CACHE = WORK / "fusionruns"
 CACHE.mkdir(parents=True, exist_ok=True)
 
 
-def bm25_run_cached(comp):
-    """Thin wrapper over fusion.bm25_run -- the one shared builder (Codex B5) -- adding the
+def bm25_run_and_key(comp):
+    """-> (run, cache_key). NAMED for its return shape on purpose: it used to be
+    `bm25_run_cached` returning just the run, and adding the key turned every existing caller into
+    a silent tuple bug that surfaced deep inside `fusion.convex` as
+    `'tuple' object has no attribute 'items'`. A changed return shape should break at the name.
+
+    Thin wrapper over fusion.bm25_run -- the one shared builder (Codex B5) -- adding the
     per-component raw-array cache. The cache is content-keyed on the ordered doc ids/texts, query
     ids/texts, depth, BM25 parameters and library versions; a cache that cannot be validated
     against those is rebuilt, not reused."""
@@ -69,7 +74,7 @@ def main(run_id):
     dense, bm25, qrels, bm25_keys = {}, {}, {}, {}
     for c in comps:
         dense[c] = dense_run(c, model, pre)
-        bm25[c], bm25_keys[c] = bm25_run_cached(c)
+        bm25[c], bm25_keys[c] = bm25_run_and_key(c)
         qrels[c] = dev_eval.doc_vecs(c)[4]
         print(f"  runs built for {c}", flush=True)
     del model

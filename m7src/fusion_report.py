@@ -24,7 +24,7 @@ import dev_eval
 import fusion
 from _paths import REPO
 from evalkit import per_query_ndcg
-from select_fusion import bm25_run_cached, dense_run
+from select_fusion import bm25_run_and_key, dense_run
 from table import Preproc, load_table, read_meta
 from _paths import WORK
 
@@ -39,7 +39,7 @@ def main(run_id):
     per = {}
     for c in comps:
         d = dense_run(c, model, pre)
-        b = bm25_run_cached(c)
+        b, _ = bm25_run_and_key(c)
         qrels = dev_eval.doc_vecs(c)[4]
         f = fusion.apply_frozen(spec, d, b)
         per[c] = {"dense": per_query_ndcg(d, qrels), "bm25": per_query_ndcg(b, qrels),

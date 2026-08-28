@@ -646,6 +646,24 @@ macro (text-backed) **0.5727**, against the int8 table alone at 0.5370 and BM25 
 `released_system` derives to **fusion**: the dense-only endpoint scores 0.5370, so fusing wins by
 +0.0357 outright and the tie policy below never had to fire (`n_tied_at_best` = 1).
 
+**PER-COMPONENT, because a macro without one hides how narrow it is**
+(`m7_fusion_report_p35w-2m-s2500.json`). fused − dense = **+0.0356 [0.0314, 0.0398]**, resolved,
+and it is NOT one component wide — but its shape matters more than its size:
+
+| component | dense | bm25 | fused | fused − dense |
+|---|---|---|---|---|
+| hotpotqa | 0.6128 | 0.5851 | 0.6993 | **+0.0865** |
+| cqadup-programmers | 0.3389 | 0.2975 | 0.3701 | +0.0312 [0.0193, 0.0434] |
+| cqadup-physics | 0.3958 | 0.3471 | 0.4195 | +0.0238 [0.0140, 0.0334] |
+| nq-250k | 0.8007 | 0.5804 | 0.8016 | **+0.0008 [−0.0049, +0.0065] — unresolved** |
+
+**Read this against the six before believing +0.036 transfers.** The two components carrying the
+macro have no analogue among the six: there is no multi-hop Wikipedia set, and no NQ-like set (where
+fusion does nothing anyway). The components that DO have an analogue — the CQADupStack pair, the
+nearest dev stand-in for FiQA and the only out-of-domain members — gain **+0.024 to +0.031**, both
+resolved. So the defensible expectation for the six is the smaller figure, and the report must say
+so rather than quote the dev macro's +0.036. Stated here before the six are scored.
+
 **TIE POLICY, fixed 2026-08-28 BEFORE this selection ran on the shipping candidate, i.e. before its
 numbers exist.** The grid was scanned with a running `best` and a strict `>`: RRF first, then convex
 from w=0.3 upward, then convex0. The dense-only endpoint w=1.0 is the LAST convex point, so it could
