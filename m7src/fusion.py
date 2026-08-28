@@ -80,7 +80,11 @@ def bm25_run(doc_ids, doc_texts, q_ids, q_texts, cache_path=None):
 
 
 RRF_K = [10, 20, 30, 60, 100]
-CONVEX_W = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+# 1.0 is the DENSE-ONLY endpoint, i.e. "do not fuse". It belongs in the grid so that whether the
+# released system fuses at all is decided by the same mechanical selection as the parameter,
+# rather than by a later judgement call comparing two separately reported macros. Added
+# 2026-08-28, before the fusion re-selection on the post-lever candidate (m7/LEDGER.md).
+CONVEX_W = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
 
 def select_on_dev(dense_runs, bm25_runs, qrels_by_comp, report=print):

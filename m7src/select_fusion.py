@@ -19,7 +19,7 @@ import dev_eval
 import fusion
 from _paths import REPO, WORK
 from evalkit import topk_ids_scores
-from table import Preproc, load_table, read_meta
+from table import Preproc, ensure_release, load_table, read_meta
 
 CACHE = WORK / "fusionruns"
 CACHE.mkdir(parents=True, exist_ok=True)
@@ -40,8 +40,13 @@ def dense_run(comp, model, pre):
 
 
 def main(run_id):
-    npz = WORK / "runs" / f"{run_id}.npz"
+    # The RELEASE artifact, not the training checkpoint: `save_release` folds the learned token
+    # weights into the rows BEFORE quantizing, so the training npz's int8 codes are quantized from
+    # differently-scaled rows. Fitting a fusion parameter against those would fit it to a table
+    # that does not ship (review #2 BLOCKER 2, missed here until 2026-08-28).
+    npz = ensure_release(WORK / "runs" / f"{run_id}.npz")
     meta = read_meta(npz)
+    assert meta.get("weights_folded"), f"{npz} is not a release-shape artifact"
     pre = Preproc(**meta["preproc"])
     comps = [c for c in dev_eval.dev_components() if not c.startswith("heldout-")]
     print(f"fusion selection on the text-backed dev components: {comps} at depth {fusion.DEPTH}")

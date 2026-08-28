@@ -601,6 +601,39 @@ extra rows, zero extra bytes and no retraining — the cheapest genuine capacity
   and fusion re-selection run on the new shape. **If it fails**: closed in `EXPLORED.md` with the
   per-arm deltas, and the released rule stays count-proportional.
 
+## Fusion re-selection: two protocol fixes, 2026-08-28 (logged BEFORE the re-selection runs)
+
+Fusion must be re-selected because the checkpoint changed (standing rule). Two changes, both
+written before any number on the new candidate exists:
+
+1. **`select_fusion` now fits against the RELEASE artifact** (`ensure_release`), not the training
+   npz. `save_release` folds the learned token weights into the rows BEFORE quantizing, so the
+   training checkpoint's int8 codes come from differently-scaled rows: the previous selection was
+   fitted to a table that does not ship. Review #2 BLOCKER 2 said exactly this about gate/freeze/
+   final paths and this call site was missed until now.
+2. **The convex grid gains w=1.0, the dense-only endpoint.** Whether the released system fuses at
+   all is then decided by the same mechanical selection as the parameter, instead of by a later
+   judgement call comparing two separately printed macros. One family, one parameter, unchanged.
+
+## Provenance repairs, 2026-08-28 (review #3 MAJOR 5 / MAJOR 7 / MINOR)
+
+- **Bigram fit** (`bigram_residual.py`): the fit cache was one global file keyed on (K, lam), so a
+  stale fit could be scored against the correct current baseline, reproduce the baseline macro
+  exactly, and falsely kill the lever. It is now content-addressed on winner bytes, encoder
+  identity, preprocessing and the TRAIN query set's ordered hash, and the result records that
+  provenance. The COMMITTED k=10000 adoption artifact predates this and is therefore not
+  provenance-bound; what supports it is that its baseline reproduced the gate winner's full-suite
+  macro exactly (0.5987) and that the λ sweep moved the harm monotonically toward zero from below.
+  Anyone reopening the lever should refit under the new keying rather than trust that artifact.
+- **doc2query** (`results/m7_doc2query_probe.json`): expansion JSONLs now hashed and their
+  generation recipe recorded, both retroactively in the committed result and as a sidecar the
+  generator checks on resume. Evidence they were written entirely under the current recipe:
+  `work/d2q/` was created after the module existed and both files were written in that same
+  session, with line counts equal to their corpora. The generation is sampled, so the hashes are
+  the only reproducible pin.
+- **`compare_release.py`** records the active encoder fingerprint, and its docstring now points at
+  `dev_audit.py` for anything decision-bearing.
+
 ## Lever #2 final: candidate `p35w-2m-s2500`, 2026-08-27
 
 The labeled extension bracketed the peak (0.5119@2500, plateau after); the s2500 re-run beats
