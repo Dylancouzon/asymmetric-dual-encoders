@@ -176,3 +176,4 @@ per the LEDGER pre-registration: residual fit on the frozen winner rows, full pi
 suite, release shape, signflip p<0.05 AND paired CI>0, int8 independently.
 | p35b-500k | `work/runs/p35b-500k.json` | 0.4934 | ok |
 | p35a-500k-1e3 | `work/runs/p35a-500k-1e3.json` | 0.5077 | ok |
+| p35w-500k-s1500 | `work/runs/p35w-500k-s1500.json` | 0.5075 | ok |

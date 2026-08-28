@@ -504,3 +504,15 @@ so the diagnostic does NOT rule the mechanism out — it rules out adopting it a
 price. Revival cost, if ever wanted: a commercially clean generator (Dylan's licensing ruling
 required — every available one is MS MARCO-trained) plus a larger sample budget plus doc-side
 re-encode of every corpus. Parked, not disproved.
+
+## Capacity lever #2: 500k arm ADOPTED per the pre-registered bar, 2026-08-27
+
+`results/m7_compare_p35w-500k-s1500_vs_s2w-1e3-s1000.json`: fp16 +0.0065 [0.0027, 0.0104]
+signflip p=2.1e-4; int8 independently +0.0066 [0.0027, 0.0105] p=1.6e-4 — both conditions met.
+Broad (5/6 components positive; nq-250k −0.0015). **The candidate is now `p35w-500k-s1500`**
+(B 8k with the 324,156-span decontaminated pseudo mix → A @ 1e-3, best step 1500 by the
+every-500 proxy rule), full-suite dev macro 0.6052, retention 0.900. Consequences per the
+standing protocol: the fusion parameter frozen on any earlier checkpoint is invalid; fusion
+re-selection, mandatory ablations, gate re-run and freeze all key on this candidate (or on the
+2m arm's, which now runs per the ordering rule — cross-arm pick on the full suite, same as the
+winner selection).
