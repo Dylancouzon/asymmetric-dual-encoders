@@ -124,10 +124,23 @@ def get_init(kind, pre: Preproc, vocab=None, dim=None, runtime_pre: Preproc = No
         rows = z["rows_fp16"].astype(np.float32)
         meta = json.loads((WORK / "runs" / f"{rid}.meta.json").read_text())
         rt = runtime_pre or pre
-        if meta.get("preproc_fingerprint") not in (None, rt.fingerprint()):
+        # The POOLING rule is deliberately exempt from this compatibility check. Rows are rows: a
+        # checkpoint trained under one pooling rule is a legitimate starting point for training
+        # under another, and doing exactly that is capacity lever #6. Everything else -- prefix,
+        # specials, truncation -- still has to match, because those change which token ids the
+        # rows are ever asked to represent. The transition is logged rather than refused.
+        from dataclasses import replace as _replace
+        stored = dict(meta.get("preproc") or {})
+        stored_mode = stored.pop("pool_mode", "mean")
+        stored_fp = Preproc(**stored).fingerprint() if stored else meta.get("preproc_fingerprint")
+        want_fp = _replace(rt, pool_mode="mean").fingerprint()
+        if stored_fp not in (None, want_fp):
             raise AssertionError(
-                f"init 'run:{rid}' was trained under preprocessing "
-                f"{meta['preproc_fingerprint']} but this run uses {rt.fingerprint()}")
+                f"init 'run:{rid}' was trained under preprocessing {stored_fp} but this run uses "
+                f"{want_fp} (pooling excluded from the comparison)")
+        if stored_mode != rt.pool_mode:
+            print(f"  init 'run:{rid}': B trained under pool_mode={stored_mode!r}, this run trains "
+                  f"under {rt.pool_mode!r} -- deliberate (capacity lever #6)", flush=True)
         if meta.get("teacher") not in (None, encoders.active().repo):
             raise AssertionError(f"init 'run:{rid}' was trained against {meta['teacher']} but the "
                                  f"active encoder is {encoders.active().repo}")

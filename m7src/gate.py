@@ -97,13 +97,15 @@ def run(run_id, stage0_id=None, components=None, probe_file=None, audit_vs=None,
 
     if stage0_id:
         s0, _ = evaluate_checkpoint(stage0_id, comps)
-        g1 = boot.paired(restrict(s0["fp16"], text_backed), pot, alternative="greater")
+        g1 = boot.paired(restrict(s0["fp16"], text_backed), pot, alternative="greater",
+                         strict=True)
     else:
         # G1 is defined on the Stage-0 distilled table; substituting the candidate is a weaker
         # test, so it is called out on the printed line, not just recorded in the JSON.
-        g1 = boot.paired(restrict(cand, text_backed), pot, alternative="greater")
+        g1 = boot.paired(restrict(cand, text_backed), pot, alternative="greater",
+                         strict=True)
     res["conditions"]["G1_stage0_above_potion"] = {
-        **g1, "pass": bool(g1["ci95"][0] > 0), "checkpoint": stage0_id or run_id,
+        **g1, "pass": bool(g1["ci95_raw"][0] > 0), "checkpoint": stage0_id or run_id,
         "note": ("Stage-0 distilled table" if stage0_id else
                  "SUBSTITUTED the candidate for the Stage-0 table (weaker test)"),
         "components": text_backed}
@@ -129,7 +131,7 @@ def run(run_id, stage0_id=None, components=None, probe_file=None, audit_vs=None,
 
     # strict=True: a confirmatory-shaped comparison must abort on a missing qid rather than
     # silently score the intersection (Codex M-perquery; review #3's "abort on any missing qid").
-    g3 = boot.paired(restrict(cand, text_backed), bm, alternative="greater")
+    g3 = boot.paired(restrict(cand, text_backed), bm, alternative="greater", strict=True)
     g3_sf = boot.signflip(restrict(cand, text_backed), bm, alternative="greater", strict=True)
     res["conditions"]["G3_candidate_above_bm25"] = {
         **g3, "signflip_p": g3_sf["p"], "signflip_p_str": g3_sf["p_str"],
@@ -138,8 +140,8 @@ def run(run_id, stage0_id=None, components=None, probe_file=None, audit_vs=None,
 
     # The held-out components are nested, so the equivalence bound gets the dependence-preserving
     # resampling; the dependence-blind one is kept beside it for comparison (review #3).
-    g4 = boot.upper_bound_one_sided(per["fp16"], per["int8"], dep=True)
-    g4_blind = boot.upper_bound_one_sided(per["fp16"], per["int8"])
+    g4 = boot.upper_bound_one_sided(per["fp16"], per["int8"], dep=True, strict=True)
+    g4_blind = boot.upper_bound_one_sided(per["fp16"], per["int8"], strict=True)
     res["conditions"]["G4_int8_equivalence"] = {
         **g4, "bar": 0.005, "pass": bool(g4["upper_raw"] < 0.005),
         "dependence_blind": g4_blind}

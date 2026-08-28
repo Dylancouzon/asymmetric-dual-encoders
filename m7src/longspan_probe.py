@@ -70,6 +70,14 @@ def main(run_id=None, smoke=False):
     per_bucket = PER_BUCKET if not smoke else 25
     sp = {n: spans(doc_texts, n, per_bucket, rng) for n in BUCKETS}
     del doc_texts
+    # Every downstream slice uses FIXED offsets, so a short bucket would shift every later
+    # bucket's slices and pair one bucket's teacher rows with another's table rows -- which would
+    # depress agreement most in the long buckets and fabricate exactly the falling curve this
+    # probe exists to detect.
+    underfilled = {n: len(sp[n]) for n in BUCKETS if len(sp[n]) != per_bucket}
+    if underfilled:
+        raise SystemExit(f"{SOURCE} cannot supply {per_bucket} spans for buckets {underfilled}; "
+                         "lower PER_BUCKET or pick a longer-document source")
     n_tok = {n: float(np.mean([len(tok(s, truncation=True, max_length=512)["input_ids"])
                                for s in sp[n]])) for n in BUCKETS}
 

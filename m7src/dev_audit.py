@@ -126,7 +126,12 @@ def main(smoke=False, lever4=True):
     pre = None
     for rid in CHAIN:
         rel, meta, m16, m8 = load_release(rid, device=dev)
-        p = Preproc(**meta["preproc"])
+        # Deliberately served at pool_mode="mean" regardless of what each artifact now declares.
+        # This audit reproduces the lever CHAIN's numbers, and every one of them was produced
+        # under mean pooling; the sqrt rule was adopted afterwards, on the survivor only, by
+        # capacity lever #4. Serving the chain under mixed rules would compare two different
+        # things and would also make this script un-re-runnable after that adoption.
+        p = Preproc(**{**meta["preproc"], "pool_mode": "mean"})
         if pre is None:
             pre = p
         elif p != pre:

@@ -100,6 +100,14 @@ def main(smoke=False):
                          "the fold rule here does not match save_release")
     print(f"  tau=0 reconstruction matches the released rows to {row_dev:.2e}", flush=True)
 
+    # tau=0 int8 is checked against the artifact's OWN stored codes, which is what ships. The
+    # arms must all be built the same way (re-quantized from the blended rows), so the released
+    # codes are used as a CHECK on the baseline rather than as the baseline itself.
+    stored8 = np.load(rel)["rows_int8"]
+    mine8, _ = quantize_int8(folded(A, w))
+    code_dev = int(np.abs(stored8.astype(np.int16) - mine8.astype(np.int16)).max())
+    print(f"  tau=0 int8 codes differ from the released artifact by at most {code_dev} step(s)",
+          flush=True)
     models = {"tau0|fp16": base16, "tau0|int8": table_for(A, "int8")}
     frac = {}
     for tau in TAUS:
@@ -128,7 +136,7 @@ def main(smoke=False):
     out = {"candidate": surv, "b_checkpoint": bid, "components": comps,
            "encoder": asdict(spec), "preproc": asdict(pre),
            "rows_never_updated": int((u == 0).sum()), "n_rows": int(len(u)),
-           "tau0_row_dev_vs_released": row_dev,
+           "tau0_row_dev_vs_released": row_dev, "tau0_int8_code_dev_vs_released": code_dev,
            "alpha_summary": {str(k): v for k, v in frac.items()},
            "baseline_macro_fp16": multieval.macro(per["tau0|fp16"]),
            "arms": {t: {"macro_fp16": multieval.macro(per[f"tau{t}|fp16"]),
@@ -138,7 +146,13 @@ def main(smoke=False):
            "holm_alpha0.05_per_precision": holm_by_q, "passing": passing, "adopted": best,
            "pin_evidence": pin, "code_identity": dev_audit.code_identity(),
            "_protocol": "m7/LEDGER.md 'Capacity lever #5', pre-registered 2026-08-28 before any "
-                        "number; shrinkage estimator, not a capacity claim",
+                        "number; shrinkage estimator, not a capacity claim. FOLDING CHOICE, "
+                        "recorded before the numbers: the blend is computed on UNFOLDED rows and "
+                        "then folded with the CANDIDATE's token weights, so a shrunk row is "
+                        "served as w_A[i]*B_i, not as B's own served row w_B[i]*B_i. At u_i=0 the "
+                        "two coincide (Adam never moves an untouched row's weight either), which "
+                        "is the limit the rationale is about; for small u_i>0 it is a definitional "
+                        "choice and this is where it is pinned.",
            "_status": "exploratory dev selection evidence (review #3 MAJOR 1)",
            "seconds": round(time.time() - t0, 1)}
     name = f"m7_lever5_shrinkage{'_smoke' if smoke else ''}.json"

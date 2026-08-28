@@ -88,9 +88,13 @@ def signflip(a, b, R=100_000, seed=SEED, alternative="greater", strict=True):
             "per_dataset_nonzero": {ds: int((v != 0).sum()) for ds, v in d.items()}}
 
 
-def paired(a, b, B=B, seed=SEED, alternative="two-sided"):
-    """a, b: {dataset: {qid: score}}. Returns the macro delta (a-b), 95% CI, p, per-dataset rows."""
-    pairs = _align(a, b)
+def paired(a, b, B=B, seed=SEED, alternative="two-sided", strict=False):
+    """a, b: {dataset: {qid: score}}. Returns the macro delta (a-b), 95% CI, p, per-dataset rows.
+
+    `strict=True` refuses to silently score the intersection -- the ledger requires it on every
+    confirmatory path, and a gate condition is confirmatory-shaped even though it is a dev
+    decision."""
+    pairs = _align(a, b, strict=strict)
     if not pairs:
         raise ValueError("no overlapping datasets/queries")
     rng = np.random.default_rng(seed)
@@ -130,7 +134,8 @@ def paired(a, b, B=B, seed=SEED, alternative="two-sided"):
             "resolved": bool(lo > 0 or hi < 0)}
 
 
-def upper_bound_one_sided(a, b, B=B, seed=SEED, level=0.975, dep=False, unit_of=None):
+def upper_bound_one_sided(a, b, B=B, seed=SEED, level=0.975, dep=False, unit_of=None,
+                          strict=False):
     """One-sided upper bound on the macro (a - b). Used by the int8-equivalence dev gate:
     the 97.5% upper bound of (fp16 - int8) must be below 0.005.
 
@@ -138,7 +143,7 @@ def upper_bound_one_sided(a, b, B=B, seed=SEED, level=0.975, dep=False, unit_of=
     needs because the two held-out components are nested (review #3: "recheck int8 equivalence
     with dependence-preserving handling of the nested held-out components")."""
     if dep:
-        r = paired_dep(a, b, B=B, seed=seed, alternative="two-sided",
+        r = paired_dep(a, b, B=B, seed=seed, alternative="two-sided", strict=strict,
                        unit_of=unit_of or unit_key)   # unit_key is defined below in this module
         # paired_dep already reports the percentile interval; the equivalence bound is its upper
         # endpoint at `level`, which for the default 0.975 is exactly ci95's upper end.
@@ -148,7 +153,7 @@ def upper_bound_one_sided(a, b, B=B, seed=SEED, level=0.975, dep=False, unit_of=
                 "delta_raw": r["delta_raw"], "upper_raw": r["ci95_raw"][1],
                 "level": level, "B": B, "seed": seed, "method": r["method"],
                 "strata": r["strata"]}
-    pairs = _align(a, b)
+    pairs = _align(a, b, strict=strict)
     rng = np.random.default_rng(seed)
     k = len(pairs)
     deltas = np.zeros(B)
@@ -292,6 +297,9 @@ def paired_dep(a, b, B=B, seed=SEED, alternative="two-sided", unit_of=unit_key, 
             for ds, idx in s["idx"].items():
                 _, x, y = aligned[ds]
                 dv = (x - y)[idx]
+                # share=False deliberately DISCARDS `draw` and redraws per component:
+                # that is the whole difference between the two variants. The wasted
+                # draw keeps the two RNG streams aligned; do not 'optimize' it away.
                 d_ = draw if share else rng.integers(0, s["n"], size=(m, s["n"]))
                 sums[ds] += dv[d_].sum(1)
         for ds in aligned:

@@ -42,6 +42,10 @@ def load(run_id, pool_mode=None, device="cuda"):
 
 def main(tag, baseline, candidates, smoke=False):
     t0 = time.time()
+    if tag in ("full", "smoke"):
+        raise SystemExit(f"tag {tag!r} collides with dev_audit's artifact names; pick another")
+    if smoke:
+        tag = f"{tag}_smoke"
     device = "cuda" if torch.cuda.is_available() else "cpu"
     tok = get_tokenizer()
     spec = encoders.active()
@@ -67,9 +71,11 @@ def main(tag, baseline, candidates, smoke=False):
     base_key = names[0]
     out = {"_what": "full pinned dev suite, released QueryTable path, each artifact under its own "
                     "frozen preprocessing rule",
-           "_status": "exploratory dev SELECTION evidence; only the three frozen-test comparisons "
-                      "are confirmatory (review #3 MAJOR 1)",
+           "_status": ("SMOKE: corpora truncated, every number here is MEANINGLESS" if smoke else
+                       "exploratory dev SELECTION evidence; only the three frozen-test "
+                       "comparisons are confirmatory (review #3 MAJOR 1)"),
            "encoder": asdict(spec), "components": comps, "baseline": base_key,
+           "smoke": bool(smoke), "max_docs": 200_000 if smoke else None,
            "artifacts": loaded,
            "macros_unrounded": {t: multieval.macro(p) for t, p in per.items()},
            "per_component_unrounded": {t: multieval.means(p) for t, p in per.items()},

@@ -126,9 +126,28 @@ check("Preproc routes encode through the declared pool mode",
       np.allclose(m.encode(texts, sq, tok), encode_pooled(m, texts, sq, mode="sqrt", tok=tok)))
 check("a non-default pool mode changes the query vectors",
       not np.allclose(m.encode(texts, NO_PREFIX, tok), m.encode(texts, sq, tok), atol=1e-6))
+# A LITERAL, not a self-comparison: every preproc_fingerprint already written to disk is this
+# value, so the check has to fail if the hash drifts for any reason, including both sides drifting
+# together (Codex code-review #2, under-tested item 3).
 check("pool_mode='mean' keeps every pre-existing preproc fingerprint byte-identical",
-      Preproc().fingerprint() == Preproc(pool_mode="mean").fingerprint()
-      and Preproc().fingerprint() != sq.fingerprint())
+      Preproc().fingerprint() == "4f7978fa7f69b559"
+      and Preproc(pool_mode="mean").fingerprint() == "4f7978fa7f69b559"
+      and Preproc(**{"prefix": "", "add_special_tokens": True, "max_length": 512}).fingerprint()
+      == "4f7978fa7f69b559"
+      and Preproc().fingerprint() != sq.fingerprint(),
+      f"{Preproc().fingerprint()} / {sq.fingerprint()}")
+
+# The TRAINING forward must agree with the serving path under every pooling rule -- capacity
+# lever #6 trains through `forward(extra_psw=...)` while everything else serves via encode_pooled.
+from table import ragged as _ragged
+for md in POOL_MODES:
+    _ids = tokenize(tok, texts, Preproc(pool_mode=md))
+    _f, _o, _l = _ragged(_ids, "cpu")
+    _psw = occurrence_weights(_ids, md)
+    _train = m(_f, _o, _l, extra_psw=(None if md == "mean" else _psw)).detach().numpy()
+    check(f"training forward == serving path under pool mode {md}",
+          np.allclose(_train, encode_pooled(m, texts, Preproc(pool_mode=md), mode=md, tok=tok),
+                      atol=1e-6))
 check("every declared pool mode is implemented and unit-norm",
       all(abs(np.linalg.norm(m.encode(["apple apple banana"], Preproc(pool_mode=md), tok)[0]) - 1)
           < 1e-5 for md in POOL_MODES))
