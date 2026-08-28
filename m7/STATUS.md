@@ -69,17 +69,41 @@ confirmatory datasets are out-of-domain, so the last figure is the honest one.
   the reverted candidate; unpinned training-data revisions; and a test suite that had been failing
   since the teacher swap with nothing running it.
 
-## Queued, in order
+## Queued, in order — and the first two BLOCK freeze prep
 
-1. `RECIPE.md` still owes `fn_margin` / `use_provided_hardneg`, a fusion section, and the
-   environment/dataset pin list — it claims to be clone-to-artifact and is not yet.
-2. Vendor or pin the teacher's `trust_remote_code` (Codex MAJOR): the doc side of every
-   third-party reproduction depends on code that is not pinned by the weights revision.
-3. **`LEDGER.md` is at ~21K tokens against its own 4K hard budget** and must be compacted before
-   the freeze commit — keep every protocol fact and every pre-registered rule, cut settled
-   justification to one line, and lean on `FINDINGS.md` for anything transferable.
-4. `./run_freeze_prep.sh p35w-2m-s2500` (fusion re-selection → ANN → costs → gate), then stop.
-5. Post-freeze, pre-registered: the clean-stack tax. The teacher task is done.
+A third adversarial review (`research/m7-codex-onepath-2026-08-28.md`, targeted at the one-shot
+path only) returned **3 BLOCKER / 5 MAJOR / 2 MINOR**. All three BLOCKERs and both MINORs are
+fixed; four MAJORs remain and their order is forced by what each one touches.
+
+1. **MAJOR 1 — bind fusion to the artifact it was selected on.** `select_fusion` writes no run id,
+   table hash or preproc fingerprint into the spec, and `freeze.write` accepts whatever spec the
+   caller passes without consulting the selected file or the gate result. So a spec fitted on
+   artifact A can be frozen with artifact B undetected. `released_system` is also not an enum:
+   anything other than exactly `"fusion"` is silently treated as dense, and an unknown fusion
+   family is silently treated as convex. **Must land BEFORE `run_freeze_prep.sh`, because step 1
+   of that script IS the fusion selection.**
+2. **MAJOR 2 — the BM25 cache is keyed by pathname only.** The cached files hold integer positions
+   and scores, with no corpus/query hash, BM25 config or version, so a compatible-shaped but
+   different corpus selects a parameter on one lexical run and applies it to another. Also blocks
+   freeze prep, same reason.
+3. **MAJOR 5 — the weak-null familywise claim.** My Bonferroni fix this morning does not deliver
+   what it claimed: three marginal procedures each running at 0.013 bound the family to **0.039**,
+   not 0.025. Two honest options — define the inferential claim as the sharp/exchangeability null
+   actually tested, or replace the decisive leg with a weak-null-valid studentized or simultaneous
+   procedure and calibrate it. **Must be settled BEFORE the freeze**, since it changes a registered
+   rule, and a registered rule may only move before its numbers exist.
+4. **MAJOR 4 — final document vectors come from mutable, unverified gitignored cache bytes.**
+   `encode_cached` trusts an existing shard, and `combined.f16` is trusted on byte size alone.
+   Needs hashes anchored in the freeze, or a verified rebuild. **Before the final run.**
+5. `RECIPE.md` owes `fn_margin`, `use_provided_hardneg`, a fusion section and the env/dataset pins.
+6. Vendor or pin the teacher's `trust_remote_code`.
+7. **`LEDGER.md` is ~21K tokens against its own 4K budget** — compact before the freeze commit.
+8. `./run_freeze_prep.sh p35w-2m-s2500`, then stop.
+9. Post-freeze, pre-registered: the clean-stack tax.
+
+**The freeze commit now needs a pushed tag.** `final_run.py` resolves the freeze commit from an
+immutable `m7-freeze` tag rather than from `--freeze-hash`, so the freeze procedure is:
+`git tag -a m7-freeze -m "..." <commit> && git push origin m7-freeze`.
 
 **The final run is NOT scheduled.** It is the one-shot confirmatory access to the six, and the
 freeze and that run are Dylan's calls.
