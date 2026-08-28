@@ -202,17 +202,80 @@ def cache_key(name, prefix, max_length, model_id, revision, corpus_sha, dtype, s
     return f"{name}-{DT[dtype]}-{hashlib.sha256(blob.encode()).hexdigest()[:12]}", blob
 
 
+# Per-call encode provenance, keyed by the caller's `name`. The cache lives under a gitignored
+# work/ tree whose bytes nothing verified: `encode_cached` skipped any shard that merely EXISTED
+# and `_combined` trusted `combined.f16` on its byte SIZE alone, so the document vectors behind a
+# confirmatory number came from mutable, unauthenticated files (Codex one-shot-path review
+# 2026-08-28, MAJOR 4). The cache KEY binds the inputs; this binds the OUTPUT bytes, and the final
+# run records what it consumed. Read it after an `encode_cached` call.
+PROVENANCE = {}
+
+
+def sha_file(p, chunk=1 << 22):
+    h = hashlib.sha256()
+    with open(p, "rb") as f:
+        for b in iter(lambda: f.read(chunk), b""):
+            h.update(b)
+    return h.hexdigest()
+
+
+def _read_shard_manifest(d):
+    p = d / "shards.json"
+    if p.exists():
+        try:
+            return json.loads(p.read_text())
+        except json.JSONDecodeError:
+            pass
+    return {"shards": {}}
+
+
+def _write_shard_manifest(d, man):
+    p = d / "shards.json"
+    tmp = p.with_suffix(".tmp")
+    tmp.write_text(json.dumps(man, indent=1, sort_keys=True))
+    tmp.rename(p)
+
+
 def encode_cached(name, texts, prefix="", max_length=512, model_id=TEACHER, revision=TEACHER_REV,
-                  batch_tokens=32768, device=DEVICE, verbose=True, dtype=torch.float16):
-    """Shard-resumable cached encode. Returns (N, dim) fp16 memmap-backed array."""
+                  batch_tokens=32768, device=DEVICE, verbose=True, dtype=torch.float16,
+                  verify=False):
+    """Shard-resumable cached encode. Returns (N, dim) fp16 memmap-backed array.
+
+    Every shard this function writes is hashed into `<cache>/shards.json`, and the summary lands
+    in `PROVENANCE[name]`. `verify=True` re-hashes every pre-existing shard and the stitched
+    `combined.f16` before returning, and ABORTS on a mismatch rather than re-encoding: on the
+    one-shot path a cache whose bytes changed under us is a fact to surface, not to paper over.
+    A shard that predates the manifest is recorded trust-on-first-use and reported as such --
+    never counted as verified.
+    """
     key, blob = cache_key(name, prefix, max_length, model_id, revision, sha_texts(texts), dtype)
     d = ENC / key
     d.mkdir(parents=True, exist_ok=True)
     (d / "meta.json").write_text(blob)
     n_shards = (len(texts) + SHARD - 1) // SHARD
+    man = _read_shard_manifest(d)
+    tofu, verified, written = [], [], []
     for s in range(n_shards):
         p = d / f"shard_{s:05d}.npy"
+        sid = f"{s:05d}"
         if p.exists():
+            rec = man["shards"].get(sid)
+            if rec is None:
+                man["shards"][sid] = {"bytes": p.stat().st_size, "sha256": sha_file(p),
+                                      "trusted_on_first_use": True}
+                tofu.append(sid)
+            elif rec.get("trusted_on_first_use"):
+                tofu.append(sid)
+            elif verify:
+                got = sha_file(p)
+                if got != rec["sha256"]:
+                    raise SystemExit(
+                        f"ENCODE CACHE REFUSED: {p} does not match the hash recorded when it was "
+                        f"written ({got[:12]} vs {rec['sha256'][:12]}). The cache is gitignored "
+                        "and mutable; delete the shard (and combined.f16) to force a re-encode, "
+                        "and do not reuse this cache for a confirmatory number until you know why "
+                        "it changed.")
+                verified.append(sid)
             continue
         lo, hi = s * SHARD, min((s + 1) * SHARD, len(texts))
         if verbose:
@@ -221,22 +284,76 @@ def encode_cached(name, texts, prefix="", max_length=512, model_id=TEACHER, revi
                    dtype=dtype, device=device, verbose=verbose)
         np.save(p.with_suffix(".tmp.npy"), v.astype(np.float16))
         p.with_suffix(".tmp.npy").rename(p)
-    return _combined(d, n_shards, len(texts))
+        man["shards"][sid] = {"bytes": p.stat().st_size, "sha256": sha_file(p),
+                              "trusted_on_first_use": False}
+        written.append(sid)
+    if verify and tofu:
+        raise SystemExit(
+            f"ENCODE CACHE REFUSED: {len(tofu)} of {n_shards} shards under {d} predate hash "
+            "recording, so their bytes cannot be authenticated -- and this call asked for "
+            "verification. Delete the cache directory and re-encode; a confirmatory number may "
+            "not rest on bytes nothing ever checked.")
+    out = _combined(d, n_shards, len(texts), man, verify=verify)
+    _write_shard_manifest(d, man)
+    PROVENANCE[name] = {
+        "cache_key": key, "n_shards": n_shards, "n_rows": len(texts),
+        "shards_written_now": len(written), "shards_verified": len(verified),
+        "shards_trusted_on_first_use": len(tofu), "verify_requested": bool(verify),
+        "shard_sha256": {sid: man["shards"][sid]["sha256"] for sid in sorted(man["shards"])
+                         if int(sid) < n_shards},
+        "combined_sha256": man.get("combined", {}).get("sha256"),
+        "_note": ("every shard behind these vectors was written or re-hashed by this process"
+                  if verify and not tofu else
+                  "shards marked trust-on-first-use predate hash recording and are NOT verified"
+                  if tofu else "shard hashes recorded; not re-verified this call"),
+    }
+    return out
 
 
-def _combined(d, n_shards, n_rows):
+def _combined(d, n_shards, n_rows, man=None, verify=False):
     """Return the encode as a read-only memmap over one contiguous file.
 
     np.concatenate over the shards would materialize the whole encode in RAM -- 8 GB for the
     5.23M-doc HotpotQA dev component, on every call. The shards stay as the resumable unit; this
     is a one-time stitch, and the combined file is what every reader mmaps afterwards.
+
+    The stitch used to be accepted on byte SIZE alone, which cannot tell one 10.7 GB file from
+    another. It is now rebuilt whenever the shard hashes it was built from have changed, and
+    re-hashed under `verify`.
     """
     parts = [np.load(d / f"shard_{s:05d}.npy", mmap_mode="r") for s in range(n_shards)]
     if n_shards == 1:
         return parts[0]
     dim = parts[0].shape[1]
     comb = d / "combined.f16"
-    if not comb.exists() or comb.stat().st_size != n_rows * dim * 2:
+    man = man if man is not None else _read_shard_manifest(d)
+    src = [man["shards"][f"{s:05d}"]["sha256"] for s in range(n_shards)
+           if f"{s:05d}" in man["shards"]]
+    rec = man.get("combined") or {}
+    if comb.exists() and comb.stat().st_size == n_rows * dim * 2 and not rec:
+        # A stitch that predates hash recording. Adopt it trust-on-first-use rather than
+        # rebuilding every pre-existing cache in the tree (10.7 GB for HotpotQA alone) -- and
+        # LABEL it, so `verify` below refuses it instead of treating it as authenticated.
+        rec = man["combined"] = {"n_rows": n_rows, "dim": int(dim),
+                                 "bytes": comb.stat().st_size, "from_shard_sha256": src,
+                                 "sha256": sha_file(comb), "trusted_on_first_use": True}
+    stale = (not comb.exists()
+             or comb.stat().st_size != n_rows * dim * 2
+             or rec.get("from_shard_sha256") != src
+             or rec.get("n_rows") != n_rows)
+    if not stale and verify:
+        if rec.get("trusted_on_first_use"):
+            raise SystemExit(
+                f"ENCODE CACHE REFUSED: {comb} predates hash recording, so it cannot be shown to "
+                "be the stitch of these shards -- and this call asked for verification. Delete it "
+                "to force a verified rebuild.")
+        got = sha_file(comb)
+        if got != rec.get("sha256"):
+            raise SystemExit(
+                f"ENCODE CACHE REFUSED: {comb} does not match the hash recorded when it was "
+                f"stitched ({got[:12]} vs {str(rec.get('sha256'))[:12]}). Delete it to force a "
+                "rebuild from the shards.")
+    if stale:
         tmp = d / "combined.tmp"
         mm = np.memmap(tmp, dtype=np.float16, mode="w+", shape=(n_rows, dim))
         off = 0
@@ -246,4 +363,7 @@ def _combined(d, n_shards, n_rows):
         mm.flush()
         del mm
         tmp.rename(comb)
+        man["combined"] = {"n_rows": n_rows, "dim": int(dim), "bytes": comb.stat().st_size,
+                           "from_shard_sha256": src, "sha256": sha_file(comb),
+                           "trusted_on_first_use": False}
     return np.memmap(comb, dtype=np.float16, mode="r", shape=(n_rows, dim))

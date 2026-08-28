@@ -51,6 +51,53 @@ def main():
         check("uncached path == cached path, byte-identical",
               json.dumps(fresh, sort_keys=True) == json.dumps(nocache, sort_keys=True))
 
+        # ---- the cache is keyed on CONTENT, not on the pathname -------------------------
+        # Codex one-shot-path review 2026-08-28, MAJOR 2: the cached arrays are integer doc
+        # POSITIONS; `_to_run` re-attaches whatever id lists the caller passes, so a corpus of
+        # the same shape used to be accepted silently and a parameter selected on one lexical
+        # run applied to another.
+        check("the cache stores its key", "key" in np.load(cp, allow_pickle=False).files)
+
+        other_texts = list(doc_texts)
+        other_texts[0] = "tax tax tax argue argue market"      # same shape, different corpus
+        other = fusion.bm25_run(doc_ids, other_texts, q_ids, q_texts, cache_path=cp)
+        check("a different corpus of the same shape does NOT reuse the cache",
+              json.dumps(other, sort_keys=True) != json.dumps(fresh, sort_keys=True))
+        check("the rebuilt run equals the uncached run on the new corpus",
+              json.dumps(other, sort_keys=True) ==
+              json.dumps(fusion.bm25_run(doc_ids, other_texts, q_ids, q_texts), sort_keys=True))
+
+        for label, kw in (("doc ids", {"doc_ids": [f"x{i}" for i in range(30)]}),
+                          ("query texts", {"q_texts": q_texts[:-1] + ["protein market"]}),
+                          ("query ids", {"q_ids": [f"z{i}" for i in range(5)]})):
+            args = {"doc_ids": doc_ids, "doc_texts": doc_texts, "q_ids": q_ids, "q_texts": q_texts}
+            args.update(kw)
+            k = fusion.cache_key(args["doc_ids"], args["doc_texts"], args["q_ids"], args["q_texts"])
+            check(f"changing the {label} changes the cache key",
+                  k != fusion.cache_key(doc_ids, doc_texts, q_ids, q_texts))
+
+        # a keyless cache -- everything written before 2026-08-28 -- must be rebuilt, not trusted
+        legacy = Path(td) / "bm25-legacy.npz"
+        z = np.load(cp, allow_pickle=False)
+        np.savez_compressed(legacy, ids=z["ids"], scores=z["scores"])
+        _, why = fusion._read_cache(legacy, fusion.cache_key(doc_ids, other_texts, q_ids, q_texts))
+        check("a keyless legacy cache is rejected", why is not None and "key" in why, str(why))
+        relegacy = fusion.bm25_run(doc_ids, doc_texts, q_ids, q_texts, cache_path=legacy)
+        check("a keyless legacy cache is rebuilt correctly",
+              json.dumps(relegacy, sort_keys=True) == json.dumps(fresh, sort_keys=True))
+        check("the rebuilt legacy cache now carries a key",
+              "key" in np.load(legacy, allow_pickle=False).files)
+
+    # ---- an unknown fusion family must be fatal, never a silent convex ------------------
+    try:
+        fusion.apply_frozen({"family": "convexx", "param": 0.5}, {}, {})
+        check("apply_frozen refuses an unknown family", False, "it returned instead of raising")
+    except SystemExit as e:
+        check("apply_frozen refuses an unknown family", "convexx" in str(e))
+    check("every family in FAMILIES is applicable",
+          all(fusion.apply_frozen({"family": f, "param": 0.5 if f != "rrf" else 60},
+                                  {"q": {"d": 1.0}}, {"q": {"d": 2.0}}) for f in fusion.FAMILIES))
+
     check("no zero/negative score survives (padding dropped)",
           all(s > 0 for docs in fresh.values() for s in docs.values()))
     check("no-match query yields an empty run entry, not padding", fresh["q3"] == {})

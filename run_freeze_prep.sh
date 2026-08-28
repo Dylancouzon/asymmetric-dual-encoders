@@ -22,7 +22,12 @@ step () { echo -e "\n----------- $1 $(date -Is) -----------" >> "$LOG"; }
 
 # 1. Fusion re-selection. Fitted against the RELEASE int8 artifact, at DEPTH=1000, on the four
 #    text-backed components (BM25 has no run on the held-out slices). The convex grid now carries
-#    w=1.0, the dense-only endpoint, so "do not fuse" can win the same selection.
+#    w=1.0, the dense-only endpoint, so "do not fuse" can win the same selection -- and
+#    `released_system` is DERIVED from which point wins, not chosen later at freeze time.
+#    The spec records the artifact hashes, preproc fingerprint, encoder identity and the BM25
+#    cache keys it was fitted against; freeze.write re-derives all of them and refuses a mismatch.
+#    The BM25 caches are content-keyed as of 2026-08-28, so any cache written before that is
+#    rebuilt here (~30 min, dominated by HotpotQA's 5.23M documents).
 step "fusion re-selection"
 $PY -u m7src/select_fusion.py "$RUN_ID" >> "$LOG" 2>&1
 
@@ -44,5 +49,7 @@ step "gate (eligibility audit)"
 $PY -u m7src/gate.py "$RUN_ID" p1-objB --audit-vs s2w-1e3-s1000 >> "$LOG" 2>&1
 
 echo "=========== freeze prep done $(date -Is) ===========" >> "$LOG"
-echo "NEXT, BY HAND: review results/m7_gate_${RUN_ID}.json, then freeze.write(...) + commit," >> "$LOG"
+echo "NEXT, BY HAND: review results/m7_gate_${RUN_ID}.json, then" >> "$LOG"
+echo "  freeze.write('${RUN_ID}')  -- it loads the fusion selection and the gate result itself;" >> "$LOG"
+echo "  the fusion spec and released_system are NOT arguments -- then commit + push the tag," >> "$LOG"
 echo "then the single final run. Both are Dylan's calls." >> "$LOG"

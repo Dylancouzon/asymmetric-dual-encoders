@@ -61,7 +61,21 @@ reg_init             1e-3        pull toward init, scaled by 1/(1 + row update c
 lr 3e-3 (rows) / 1e-2 (weights), constant · batch 512 · seed 0
 kl_weight 1.0, kl_k 32 · cos_weight 1.0 · temp 0.02 · n_neg 32,768 · bank_size 2,000,000
 hard_neg_k           0           mined negatives are a CLOSED avenue, see below
+fn_margin            0.02        false-negative filter: an in-batch/bank negative whose TEACHER
+                                 score exceeds (positive's teacher score - 0.02) is masked out
+                                 of the InfoNCE denominator. Non-zero in the shipping loss, and
+                                 it is NOT what the mined-negatives arms varied. Measured cost:
+                                 it removes 4.3% of the top-100 hardest negatives
+                                 (`results/m7_diag_scores.json`).
+use_provided_hardneg True        the DATASET-supplied negatives -- ESCI "Irrelevant" rows and
+                                 Mr. TyDi's own negatives -- are used. Distinct from `hard_neg_k`
+                                 (which mines them with the teacher) and unaffected by that
+                                 avenue's closure.
 ```
+
+Both of the last two are `train.Cfg` defaults (`m7src/train.py`), which is exactly why they were
+missing from the first version of this file: a default is easy to reproduce and easy to forget to
+write down. Anything else not named here is a `Cfg` default too.
 
 ## Phase A — 2,500 steps from that checkpoint
 
@@ -98,6 +112,43 @@ would have been adaptive dev search.
 | IDF-seeded token weights | uniform | −0.0045 out-of-domain |
 | `reg_init` 1e-3 | 0.0 | |
 
+## Fusion with BM25 — one family, one parameter, selected on dev
+
+The released system may be the dense table alone or the table fused with BM25; **which one is not a
+judgement call**. `select_fusion.py` grid-searches both families on the four text-backed dev
+components at `fusion.DEPTH = 1000` against the **int8 release** artifact, and the convex grid
+contains **w = 1.0, the dense-only endpoint**, so "do not fuse" competes in the same mechanical
+selection as the parameter. `freeze.write` derives `released_system` from which point wins.
+
+| | |
+|---|---|
+| families searched | `rrf` (k ∈ 10, 20, 30, 60, 100) · `convex` and `convex0` (w ∈ 0.3 … 1.0) |
+| depth | 1000, for selection **and** application — both families are depth-sensitive |
+| BM25 | `bm25s` lucene, k1 = 1.2, b = 0.75, English stopwords, Snowball stemmer |
+| run construction | zero-score padding dropped, self-hits (`doc_id == qid`) dropped — part of the frozen function, not a detail of the harness |
+| fitted against | the int8 table, because that is what ships |
+| selected on | the four text-backed dev components; BM25 has no run on the held-out slices, whose corpora are pool row indices with no document text |
+
+The spec is written to `results/m7_fusion_<run_id>.json` with the artifact hashes, preprocessing
+fingerprint, encoder identity and the BM25 run keys it was fitted against; the freeze re-derives all
+of them and refuses a spec that was fitted on a different artifact. **A changed checkpoint
+invalidates the fusion parameter** — re-select, never carry it over.
+
+## Environment and data pins
+
+| | |
+|---|---|
+| Python / torch / transformers | 3.12.14 · 2.8.0+cu126 · 4.57.6 (full lock: `m7/requirements.lock.txt`) |
+| datasets · pytrec-eval-terrier · qdrant-edge-py | 5.0.1 · 0.5.10 · 0.8.0 |
+| GPU | RTX 3080, 10 GB VRAM; 25 GB host RAM, 18 GB peak budget |
+| teacher revision | `ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20`, loaded with `trust_remote_code` |
+| training dataset revisions | every HF repo pinned in `results/m7_trainmix_revisions.json`; `trainmix.load` raises rather than fall back to `main` |
+| dev suite | hash-pinned in `results/m7_dev_manifest.json`; `dev_eval.dev_components()` aborts on any drift |
+| eval assets | `results/eval_manifest.json` + `results/frozen_eval/` (vendored queries and qrels) |
+
+Determinism: training is reproducible to **~5e-6** on the dev macro, not bit-identical — same
+config, re-run, gives an almost-identical table (small GPU-reduction nondeterminism).
+
 ## Closed avenues, so they are not re-attempted
 
 `m7/EXPLORED.md` is the full list. The ones a reimplementer would most likely try:
@@ -117,8 +168,10 @@ would have been adaptive dev search.
 Four of the six dev components are Wikipedia or train-adjacent, and every confirmatory dataset is
 out-of-domain, so the macro is the least predictive figure available. Retention against the teacher
 is **0.915 on the dev macro, 0.846 text-backed and 0.764 on the out-of-domain pair**, where BM25
-scores 0.3223 (`m7_retention_p35w-2m-s2500.json`). The
-suite has absorbed **53+ trained arms and ~300 in-training evaluations** with Holm applied inside
-named families only. And every interval here is a **query-sampling** interval: training is
+scores 0.3223 (`m7_retention_p35w-2m-s2500.json`). The suite has absorbed **58 trained arms, 322
+in-training dev evaluations and 90 eval-only variants** (`m7_dev_reuse_count.json` — quote the
+artifact, not this line; the earlier "53+ / ~300" here was a recollection and was already stale)
+with Holm applied inside named families only. And every interval here is a **query-sampling**
+interval: training is
 deterministic, so no CI in this repo contains a recipe-replication term, while a nuisance step
 count was measured moving the dev macro by 0.0049 — more than the largest adopted lever effect.

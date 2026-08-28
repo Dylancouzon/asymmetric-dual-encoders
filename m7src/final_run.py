@@ -36,6 +36,7 @@ from evalkit import per_query_ndcg, topk_ids_scores
 import freeze
 from hashing import sha
 from table import Preproc, load_table
+import teacher
 from teacher import QUERY_PREFIX, encode_cached
 
 LEDGER = REPO / "m7" / "LEDGER.md"
@@ -68,7 +69,10 @@ MAX_INFRA_RETRIES = 2
 SIX = ["scifact", "nfcorpus", "fiqa", "arguana", "scidocs", "trec-covid"]
 
 
-def guard(freeze_hash, infra_retry, branch, fz):
+def guard(freeze_hash, infra_retry, branch, fz, untouched_only=False):
+    """`untouched_only` resumes the non-confirmatory tail after the six are already scored and on
+    disk. It is the ONLY way past the completed-run refusal, it refuses unless the six's results
+    are present for this exact frozen table, and it never re-scores them."""
     problems = []
     # BENCH_DATASETS is an env var with an M2-era five-dataset default; a stale export in the
     # same shell would silently redefine "the six" and the macro computed over it.
@@ -78,6 +82,8 @@ def guard(freeze_hash, infra_retry, branch, fz):
     # those two files changed. An infra retry must tolerate exactly that and nothing else
     # (review #2 MAJOR 20: the old guard could never pass after any post-BEGIN crash).
     ALLOWED_DRIFT = {"m7/LEDGER.md", "m7/SIX_ACCESS.log"}
+    if untouched_only:      # the six's results are already written and are necessarily dirty
+        ALLOWED_DRIFT = ALLOWED_DRIFT | {"results/m7_final_run.json"}
     # `git status --porcelain` is "XY PATH" with XY exactly two columns, so the path starts at 3 --
     # but `sh` strips the whole output, which eats the leading space of the FIRST line when its
     # status is " M". That silently truncated the first dirty path ("m7/LEDGER.md" -> "7/LEDGER.md"),
@@ -111,17 +117,35 @@ def guard(freeze_hash, infra_retry, branch, fz):
     prior_hashes = re.findall(r"FINAL-RUN-BEGIN freeze=([0-9a-f]{40}) table=([0-9a-f]{64})", text)
     n_complete = len(re.findall(r"FINAL-RUN complete in", text))
     n_begin = len(prior_hashes)
-    if n_complete:
+    if n_complete and not untouched_only:
         # A COMPLETE run is the one shot. Retry existed for an aborted run; it did not check
         # whether the prior run had finished, so a completed result could be re-rolled forever.
         problems.append(f"m7/LEDGER.md records {n_complete} COMPLETED final run(s). There is "
                         "exactly one confirmatory access and it has been spent; a further run is "
                         "a NEW milestone with its own pre-registration, never a retry.")
+    if untouched_only:
+        # This mode may only ADD the non-confirmatory tail to a result that already exists. It
+        # must never be a way to re-score the six.
+        if infra_retry:
+            problems.append("--untouched-only and --infra-retry are mutually exclusive")
+        out = REPO / "results" / "m7_final_run.json"
+        if not out.exists():
+            problems.append("--untouched-only with no results/m7_final_run.json: the six have not "
+                            "been scored, and this mode never scores them")
+        else:
+            prior = json.loads(out.read_text())
+            if not prior.get("six"):
+                problems.append("--untouched-only: results/m7_final_run.json holds no `six` block")
+            if (prior.get("freeze") or {}).get("table_sha256") != fz["table_sha256"]:
+                problems.append("--untouched-only: the existing result was produced with a "
+                                "different table than the one now frozen")
+        if not n_complete:
+            problems.append("--untouched-only before any completed final run; run the six first")
     if infra_retry and n_begin > MAX_INFRA_RETRIES:
         problems.append(f"--infra-retry already used {n_begin - 1} time(s); the cap is "
                         f"{MAX_INFRA_RETRIES - 1}. Repeated infrastructure failure is a reason to "
                         "fix the infrastructure, not to keep drawing from the six.")
-    if prior_hashes and not infra_retry:
+    if prior_hashes and not (infra_retry or untouched_only):
         problems.append("m7/LEDGER.md already holds a final-run entry; a code fix requires a NEW "
                         "pushed freeze commit, and no later run may be relabeled as final")
     if infra_retry:
@@ -177,10 +201,16 @@ def verify_and_load(ds, kind):
 
 def score_set(ds, kind, table_path, pre, fusion_spec, encode_dtype=torch.float32):
     doc_ids, doc_texts, q_ids, q_texts, qrels = verify_and_load(ds, kind)
-    dv = encode_cached(f"final-{kind}-{ds}-docs", doc_texts, prefix="", dtype=encode_dtype)
+    # verify=True: the document vectors behind a confirmatory number must come from bytes this
+    # process wrote or re-hashed. The cache lives under a gitignored, mutable work/ tree, and
+    # `encode_cached` used to skip any shard that merely existed while `combined.f16` was accepted
+    # on byte size alone (Codex one-shot-path review 2026-08-28, MAJOR 4). A cache that cannot be
+    # authenticated now aborts and names the directory to delete, rather than being reused.
+    dv = encode_cached(f"final-{kind}-{ds}-docs", doc_texts, prefix="", dtype=encode_dtype,
+                       verify=True)
     tag = "six" if kind == "six" else "unt"
     tqv = np.asarray(encode_cached(f"final-{tag}-{ds}-q-pfx", q_texts, prefix=QUERY_PREFIX,
-                                   dtype=encode_dtype), dtype=np.float32)
+                                   dtype=encode_dtype, verify=True), dtype=np.float32)
     chunk = 200_000
     out, runs = {}, {}
     for variant in ("fp16", "int8"):
@@ -274,6 +304,10 @@ def main():
     ap.add_argument("--freeze-hash", required=True)
     ap.add_argument("--branch", default="m7-query-encoder")
     ap.add_argument("--infra-retry", action="store_true")
+    ap.add_argument("--untouched-only", action="store_true",
+                    help="score ONLY the non-confirmatory untouched-final tail, appending to an "
+                         "existing results/m7_final_run.json. For resuming after a crash in that "
+                         "stage; it never re-scores the six.")
     a = ap.parse_args()
 
     # everything decisive comes from the committed freeze manifest, not the command line
@@ -285,8 +319,15 @@ def main():
     table_path = REPO / fz["table_relpath"]
 
     preflight()                    # static checks first: a missing asset costs a second, not the run
-    head = guard(a.freeze_hash, a.infra_retry, a.branch, fz)
+    head = guard(a.freeze_hash, a.infra_retry, a.branch, fz, untouched_only=a.untouched_only)
     t0 = time.time()
+    out = REPO / "results" / "m7_final_run.json"
+    if a.untouched_only:
+        ledger(f"\n- {datetime.now(timezone.utc).isoformat()} — untouched-final RESUME "
+               f"(--untouched-only) on freeze={head}; the six are not re-scored.")
+        prior = json.loads(out.read_text())
+        return untouched_stage(prior, out, table_path, pre, spec, t0,
+                               tiers_from=prior.get("holm", {}))
     ledger(f"\n### FINAL-RUN {datetime.now(timezone.utc).isoformat()}\n"
            f"- FINAL-RUN-BEGIN freeze={head} table={fz['table_sha256']}\n"
            f"- pushed to origin/{a.branch}; table `{fz['table_relpath']}` "
@@ -305,7 +346,18 @@ def main():
               " ".join(f"{d}={means[d]:.4f}" for d in DATASETS))
 
     pq = json.load(open(REPO / "results" / "perquery.json"))
-    by_sys["released-system"] = by_sys["fusion" if fz["released_system"] == "fusion" else "int8-table"]
+    # Explicit dispatch, not `"fusion" if x == "fusion" else dense`: that spelling made every
+    # value other than the exact string "fusion" mean DENSE, so a typo in the freeze would have
+    # silently judged C3 on the wrong system. `load_and_verify` validates the enum; this refuses
+    # again rather than trusting a neighbouring check on the one irreversible path.
+    rs = fz["released_system"]
+    if rs == "fusion":
+        by_sys["released-system"] = by_sys["fusion"]
+    elif rs == "dense":
+        by_sys["released-system"] = by_sys["int8-table"]
+    else:
+        raise SystemExit(f"FINAL RUN ABORTED: released_system {rs!r} is not one of "
+                         f"{freeze.RELEASED_SYSTEMS}")
     conf, pvals = {}, {}
     for name, (a_name, b_name) in CONFIRMATORY.items():
         A = by_sys[a_name]
@@ -373,25 +425,66 @@ def main():
         print(f"  [clean-4 robustness] {name}: d={rr['delta']:+.4f} CI={rr['ci95']} "
               f"p={rr['signflip']['p_str']}")
 
-    print("\n=== untouched-final (scored after the six; no recipe change after this point) ===")
-    unt = {ds: score_set(ds, "untouched", table_path, pre, spec) for ds in UNTOUCHED}
-    for ds in UNTOUCHED:
-        print(f"  {ds}: " + " ".join(f"{s}={np.mean(list(v.values())):.4f}" for s, v in unt[ds].items()))
-
     blob = {"freeze_commit": head, "freeze": fz, "infra_retry": bool(a.infra_retry),
             "six": {s: {ds: {q: round(x, 6) for q, x in v.items()} for ds, v in by_sys[s].items()}
                     for s in systems},
-            "untouched_final": {ds: {s: {q: round(x, 6) for q, x in v.items()}
-                                     for s, v in unt[ds].items()} for ds in UNTOUCHED},
+            "untouched_final": None,
             "confirmatory": conf, "holm": decisions, "alpha": ALPHA,
+            # Which cache bytes produced these vectors: shard hashes for every encode consumed,
+            # so the document side of a one-shot number is auditable after the fact.
+            "encode_provenance": dict(teacher.PROVENANCE),
             "clean4_robustness": {"_note": "pre-registered exposure-restricted robustness "
                                   "(no disclosed teacher benchmark overlap); NOT a tier decision",
                                   **robustness},
             "seconds": round(time.time() - t0, 1)}
-    (REPO / "results" / "m7_final_run.json").write_text(json.dumps(blob, indent=1))
+    # PERSIST THE CONFIRMATORY RESULT BEFORE THE LONG TAIL. untouched-final encodes 10.1M
+    # documents -- 37x the six -- so it is tens of hours and ~21 GB of new vectors, and it used to
+    # run BEFORE anything was written to disk. A crash there (disk, OOM, a Windows Update reboot)
+    # would have spent the one confirmatory access and left no result, which is the same failure
+    # `preflight` exists to prevent, arriving from the other end of the script.
+    out = REPO / "results" / "m7_final_run.json"
+    out.write_text(json.dumps(blob, indent=1))
     tiers = [k for k, v in decisions.items() if v["reject"]]
-    ledger(f"- FINAL-RUN complete in {blob['seconds']:.0f}s. Confirmatory rejections: "
-           f"{tiers or 'none'}. Results in `results/m7_final_run.json`.")
+    # "FINAL-RUN complete in" is the marker `guard` counts: the CONFIRMATORY access is spent here,
+    # before the non-confirmatory tail runs, so no later invocation can re-roll the six even if
+    # the tail crashes. Resuming the tail needs --untouched-only, which never re-scores them.
+    ledger(f"- FINAL-RUN complete in {blob['seconds']:.0f}s (the six and all three confirmatory "
+           f"decisions). Confirmatory rejections: {tiers or 'none'}. Results in "
+           "`results/m7_final_run.json`; the non-confirmatory untouched-final tail follows.")
+    print("\nwrote results/m7_final_run.json (the six and all three confirmatory decisions; "
+          "untouched-final follows)")
+    return untouched_stage(blob, out, table_path, pre, spec, t0, tiers_from=decisions)
+
+
+def untouched_stage(blob, out, table_path, pre, spec, t0, tiers_from=None):
+    """The non-confirmatory tail. Separated so it can be resumed with --untouched-only after a
+    crash without going anywhere near the six.
+
+    It encodes 10.1M documents -- 37x the six -- so it is hours, not minutes, and it used to run
+    BEFORE anything was written to disk. A crash here (disk, OOM, a Windows Update reboot) would
+    have spent the one confirmatory access and left no result at all, the same failure `preflight`
+    exists to prevent, arriving from the other end of the script.
+    """
+    man = json.loads(MANIFEST.read_text())["m7_untouched_final"]
+    todo = [d for d in UNTOUCHED if d not in (blob.get("untouched_final") or {})]
+    print("\n=== untouched-final (scored after the six; no recipe change after this point) ===")
+    print(f"  {sum(man[d]['n_docs'] for d in todo):,} documents to encode across {len(todo)} set(s); "
+          "hours, not minutes. The confirmatory result is already on disk and does not depend on "
+          "this stage completing.")
+    unt = dict(blob.get("untouched_final") or {})
+    for ds in todo:
+        scored = score_set(ds, "untouched", table_path, pre, spec)
+        print(f"  {ds}: " + " ".join(f"{s}={np.mean(list(v.values())):.4f}"
+                                     for s, v in scored.items()))
+        unt[ds] = {s: {q: round(x, 6) for q, x in v.items()} for s, v in scored.items()}
+        # rewrite after each set, so a crash costs one dataset rather than the whole tail
+        blob["untouched_final"] = unt
+        blob["encode_provenance"] = dict(teacher.PROVENANCE)
+        blob["seconds"] = round(time.time() - t0, 1)
+        out.write_text(json.dumps(blob, indent=1))
+    tiers = [k for k, v in (tiers_from or {}).items() if v.get("reject")]
+    ledger(f"- untouched-final done ({len(unt)}/{len(UNTOUCHED)} sets). Confirmatory rejections "
+           f"stand at {tiers or 'none'}. `results/m7_final_run.json` updated.")
     print("\nwrote results/m7_final_run.json")
 
 

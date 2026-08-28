@@ -4,12 +4,26 @@ One family only, picked on dev; every parameter (including BM25's, at bm25s-luce
 frozen on dev before any test access. No per-dataset weights, normalization, or routing --
 a single (family, parameter) pair applies to every dataset.
 """
+import json
+
 import numpy as np
 
 # RRF and min-max convex fusion are both depth-sensitive: ranks beyond the retrieval cut simply
 # do not exist to be fused. So dev selection and final application must retrieve to the SAME
 # depth, or the parameter frozen on dev is applied to a different function at test time.
 DEPTH = 1000
+
+# The complete family list. `apply_frozen` used to fall through to convex for anything that was
+# not "rrf", so a typo or a future family name in the frozen spec would have been applied as
+# convex-with-that-param in the one-shot run (Codex one-shot-path review 2026-08-28, MAJOR 1).
+FAMILIES = ("rrf", "convex", "convex0")
+
+# Everything about the BM25 function that a cached run depends on. Part of the cache key, so a
+# parameter change invalidates every cache instead of being silently inherited.
+BM25_CONFIG = {"impl": "bm25s", "method": "lucene", "k1": 1.2, "b": 0.75,
+               "stopwords": "en", "stemmer": "english-snowball-PyStemmer",
+               "drop_zero_scores": True, "drop_self_hits": True}
+CACHE_FORMAT = 2         # 1 == the keyless caches written before 2026-08-28
 
 
 def rrf(runs, k=60, weights=None):
@@ -59,12 +73,70 @@ def _to_run(ids, sc, doc_ids, q_ids):
             for i in range(len(q_ids))}
 
 
-def bm25_run(doc_ids, doc_texts, q_ids, q_texts, cache_path=None):
+def _pkg_versions():
+    """Versions of the two packages that define the BM25 function, without importing either --
+    `importlib.metadata` reads the installed distribution metadata, so the cache-hit path stays
+    cheap."""
+    from importlib.metadata import PackageNotFoundError, version
+    out = {}
+    for p in ("bm25s", "PyStemmer"):
+        try:
+            out[p] = version(p)
+        except PackageNotFoundError:      # pragma: no cover -- both are in requirements.lock.txt
+            out[p] = None
+    return out
+
+
+def cache_key(doc_ids, doc_texts, q_ids, q_texts, depth=DEPTH):
+    """The identity of a cached BM25 run: its exact inputs, depth, parameters and library versions.
+
+    The caches used to be keyed by PATHNAME alone and held nothing but integer doc positions and
+    scores. `_to_run` then re-attaches whatever `doc_ids`/`q_ids` the caller passes, so a corpus of
+    the same shape -- a re-pinned dev component, a different subforum, a regenerated pool slice --
+    would have been silently accepted, and a fusion parameter selected on one lexical run applied
+    to another. Positions are meaningless without the list they index into, which is exactly what
+    was not being checked (Codex one-shot-path review 2026-08-28, MAJOR 2).
+    """
+    from hashing import sha_stream_list
+    return {"format": CACHE_FORMAT,
+            "n_docs": len(doc_ids), "n_queries": len(q_ids), "depth": int(depth),
+            "doc_ids_sha256": sha_stream_list(doc_ids),
+            "doc_texts_sha256": sha_stream_list(doc_texts),
+            "q_ids_sha256": sha_stream_list(q_ids),
+            "q_texts_sha256": sha_stream_list(q_texts),
+            "config": BM25_CONFIG, "versions": _pkg_versions()}
+
+
+def _read_cache(cache_path, key):
+    """-> (ids, scores) if the cache is provably the run `key` describes, else (None, reason)."""
+    z = np.load(cache_path, allow_pickle=False)
+    if "key" not in z.files:
+        return None, "written before content keying (no `key` array); it cannot be validated"
+    got = json.loads(bytes(z["key"]).decode())
+    if got != key:
+        differ = sorted(k for k in set(got) | set(key) if got.get(k) != key.get(k))
+        return None, f"key mismatch on {differ}"
+    if z["ids"].shape[0] != key["n_queries"]:      # the key is a claim; the arrays are the fact
+        return None, f"row count {z['ids'].shape[0]} != {key['n_queries']} queries"
+    return (z["ids"], z["scores"]), None
+
+
+def bm25_run(doc_ids, doc_texts, q_ids, q_texts, cache_path=None, key=None):
     """BM25 at DEPTH (bm25s-lucene defaults, frozen). Optional raw-array cache: indexing
-    HotpotQA's 5.23M documents is the single most expensive repeated step on this box."""
+    HotpotQA's 5.23M documents is the single most expensive repeated step on this box.
+
+    The cache is CONTENT-keyed (see `cache_key`). An unvalidatable cache is rebuilt, loudly and
+    never silently reused: correctness of the frozen fusion parameter is worth half an hour of
+    CPU, and a stale cache is exactly the failure that cannot be seen in the output. `key` lets a
+    caller that already computed it (to record as provenance) avoid re-hashing 5.23M documents.
+    """
+    if cache_path is not None and key is None:
+        key = cache_key(doc_ids, doc_texts, q_ids, q_texts)
     if cache_path is not None and cache_path.exists():
-        z = np.load(cache_path, allow_pickle=False)
-        return _to_run(z["ids"], z["scores"], doc_ids, q_ids)
+        arrays, why = _read_cache(cache_path, key)
+        if arrays is not None:
+            return _to_run(arrays[0], arrays[1], doc_ids, q_ids)
+        print(f"[fusion] REBUILDING BM25 cache {cache_path.name}: {why}", flush=True)
     import Stemmer
     import bm25s
     st = Stemmer.Stemmer("english")
@@ -75,7 +147,9 @@ def bm25_run(doc_ids, doc_texts, q_ids, q_texts, cache_path=None):
                          k=min(DEPTH, len(doc_ids)), show_progress=False)
     ids, sc = ids.astype(np.int32), sc.astype(np.float32)
     if cache_path is not None:
-        np.savez_compressed(cache_path, ids=ids, scores=sc)
+        np.savez_compressed(cache_path, ids=ids, scores=sc,
+                            key=np.frombuffer(json.dumps(key, sort_keys=True).encode(),
+                                              dtype=np.uint8))
     return _to_run(ids, sc, doc_ids, q_ids)
 
 
@@ -125,8 +199,23 @@ def select_on_dev(dense_runs, bm25_runs, qrels_by_comp, report=print):
     return {"family": best[1], "param": best[2], "dev_macro": best[0], "grid": grid}, best[3]
 
 
+def is_dense_only(spec):
+    """True iff the selected point in the grid IS the dense-only endpoint.
+
+    `CONVEX_W` carries w=1.0 precisely so that "do not fuse" can win the same mechanical
+    selection as the parameter (m7/LEDGER.md, Fusion). This function is how that decision is
+    read back out, so `released_system` is derived from the selection rather than asserted on a
+    freeze command line. RRF always mixes both runs, so it is never dense-only.
+    """
+    return spec["family"] in ("convex", "convex0") and float(spec["param"]) == 1.0
+
+
 def apply_frozen(spec, dense_run, bm25_run):
-    if spec["family"] == "rrf":
+    fam = spec["family"]
+    if fam not in FAMILIES:
+        # Was a silent fall-through to convex. In the one-shot run that would have applied a
+        # different function than the one the spec names, with nothing in the output to show it.
+        raise SystemExit(f"FUSION REFUSED: unknown fusion family {fam!r}; known: {FAMILIES}")
+    if fam == "rrf":
         return rrf([dense_run, bm25_run], k=spec["param"])
-    return convex([dense_run, bm25_run], w=spec["param"],
-                  floor_zero=(spec["family"] == "convex0"))
+    return convex([dense_run, bm25_run], w=spec["param"], floor_zero=(fam == "convex0"))
