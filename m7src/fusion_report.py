@@ -1,9 +1,11 @@
 """Where does the fusion gain come from? Per-component, with CIs.
 
-select_fusion.py reports only the dev MACRO, and the macro jumped 0.4795 -> 0.5520 (+0.0725) --
-far more than the +0.020..0.030 the M4 LightRetriever hybrid precedent suggested. A macro that
-large could be one component wide, exactly as the G3 win over BM25 turned out to be, so it must
-not be believed until the per-component breakdown is on the record.
+`select_fusion.py` reports only the dev MACRO, and this ledger's most-repeated lesson is that a
+macro without its per-component breakdown hides how narrow it is -- GO gate #1's +0.0270 was
+carried entirely by nq-250k, with a CI-resolved LOSS to BM25 on HotpotQA. On the bge-era candidate
+the fusion macro jumped 0.4795 -> 0.5520, far more than the +0.020..0.030 the M4 LightRetriever
+hybrid precedent suggested, which is exactly the shape that has to be broken down before it is
+believed.
 
 This matters for transfer: the six-set contains no NQ-like component at all, so a gain
 concentrated on nq-250k would NOT carry over, while a gain that is broad -- and especially one
@@ -27,7 +29,7 @@ from table import Preproc, load_table, read_meta
 from _paths import WORK
 
 
-def main(run_id="p1-objB"):
+def main(run_id):
     spec = json.loads((REPO / "results" / f"m7_fusion_{run_id}.json").read_text())
     npz = WORK / "runs" / f"{run_id}.npz"
     pre = Preproc(**read_meta(npz)["preproc"])
@@ -75,4 +77,11 @@ def main(run_id="p1-objB"):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "p1-objB")
+    # The run id is REQUIRED. It used to default to `p1-objB`, a retired bge-era checkpoint, so
+    # running this bare would have reported a per-component breakdown of the wrong artifact under
+    # the current candidate's name -- the same class of mistake as an evidence file named for
+    # "the current candidate" (m7/FINDINGS.md, entry 18).
+    if len(sys.argv) < 2:
+        raise SystemExit("usage: fusion_report.py <run_id>   (no default: it would silently "
+                         "report on a retired checkpoint)")
+    main(sys.argv[1])
