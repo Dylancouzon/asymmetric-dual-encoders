@@ -53,7 +53,7 @@ ALPHA = 0.025
 # smoke run writes to its own file so it can never be mistaken for the calibration.
 import os
 SMOKE = bool(os.environ.get("M7_TIER_SMOKE"))
-S = 4 if SMOKE else 1000    # simulations; binomial SE at p=0.02 is 0.0044
+S = 4 if SMOKE else int(os.environ.get("M7_TIER_S", 1000))   # SE at p=0.025 is 0.0049 at S=1000
 R = 200 if SMOKE else 2_000     # sign-flip replicates per test (as in test_signflip_weaknull.py)
 B = 500 if SMOKE else 10_000    # bootstrap replicates per test (as in boot.B, the real rule)
 LEVELS = (2.5, 100 * ALPHA / len(COMPARATORS))     # 2.5% and the Bonferroni 0.8333%
