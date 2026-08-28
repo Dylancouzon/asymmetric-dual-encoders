@@ -131,3 +131,10 @@ Compaction is safe — git preserves every prior version, and each file says whe
     `max_docs` so a 6.17M-row corpus can be smoked cheaply.
 13. **Object identity is not corpus identity.** Two callers can hold equal-but-distinct doc-id
     lists for the same corpus; compare content (and memoize the shared one) instead.
+14. **One process per training arm.** A driver that runs a night of arms in one process
+    accumulates every memoized cache here (`mix.load_source`, `heldout._DOC_IDS`,
+    `dev_eval._HELD_CACHE`, encode memmaps), so each arm starts from more memory than the last and
+    the third one thrashes. `run_arm.py` runs exactly one leg and exits.
+15. **`rchar` is 0 while a memmap gather runs** — mmap access is page faults, not read syscalls.
+    Do not read "zero I/O + 100% of one core" as a hang; check RSS and `free` instead. And never
+    materialize a whole gather on the host when the destination is a GPU tensor: fill it in chunks.

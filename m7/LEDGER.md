@@ -333,3 +333,15 @@ the MINOR-doc-transform wording item.
 - **2026-08-27 wasted run**: a 35-minute dev pass died at the pool because the smoke covered only
   the two small text components — the untested path was the shared-corpus one. Smokes now include
   a held-out component with a truncated corpus.
+- **2026-08-28 00:0x ablation memory thrash, caught before it took the box down.** The third chain
+  of the night sat at 24.7 GB RSS on a 25 GB box, GPU idle at 1%, burning one core with no disk
+  I/O — the OOM signature. TWO causes, both fixed: (i) the driver ran every arm in ONE python
+  process, accumulating this repo's deliberately memoized caches across arms, so each arm started
+  from more memory than the last; the driver now runs **one process per leg**, which also makes
+  the arms comparable. (ii) `pool_vecs[bank_ids]` materialized the whole 2M x 1024 fp16 negative
+  bank (4.1 GB) on the HOST before `.cuda()`, on top of the 2M pseudo-query targets (another
+  4.1 GB); it is now gathered in 250K-row chunks straight into the destination VRAM tensor —
+  verified bit-identical to the one-shot gather before relaunching. Note for the next reader:
+  `rchar` stays at 0 during that gather because memmap access is page faults, not read syscalls,
+  so "zero I/O" there is not evidence of a hang. Nothing was lost (the driver skips completed
+  arms); the attribution controls had already finished.
