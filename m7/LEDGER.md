@@ -210,12 +210,24 @@ and the honest default when that is not demonstrated is to keep the recipe we me
 `learned_weights` stays on — `p4-flat-a` 0.5091 is the one ablation that moved *down*.
 `preproc` is already prefix-free; the prefix arm ADDS a prefix, so there is nothing to remove.
 `steps_b` stays 16,000 — the 500k dose was tested at 16,000 steps and cutting steps is untested.
-**`input_emb` and not `random`, though both are inert on the proxy**: 3,750 of 30,522 rows are
-never updated by training and nothing rewrites them on the save path
-(`table.apply_unseen_policy` exists but is not called), so the init IS what a rare or
-out-of-domain token contributes at query time — and rare rows are exactly what the six hit.
-`random` would ship 3,750 rows of noise into that regime for no gain; `input_emb` removes the
-expense (the forward passes) without removing the meaning.
+**`input_emb` and not `random`, though both are inert on the proxy**: rows that training never
+touches ship at their initialization — nothing rewrites them on the save path
+(`table.apply_unseen_policy` exists but is never called) — so the init IS what a rare or
+out-of-domain token contributes at query time, and rare rows are exactly what the six hit.
+`input_emb` removes the expense (the forward passes) without removing the meaning.
+
+**CORRECTION, measured after this was written** (`cold_rows.py`,
+`m7_cold_rows_p4n-teacher16-a.json`): the "3,750 untouched rows" this argument was first written
+with is **wrong by more than 2x, in the direction that overstated the risk**. `updates` is not
+restored from a `run:` init, so 3,750 is the count the *A phase* did not touch; intersecting with
+the B checkpoint's gives **1,743 never trained by either phase (5.71%), of which 994 are
+`[unusedN]` placeholders the tokenizer can never emit** and 749 are reachable pieces —
+overwhelmingly `##`-prefixed punctuation continuations and non-Latin characters. Their median bag
+contribution `|w·row|` is **0.143x** a trained row's, i.e. an untrained token is nearly ignored
+rather than steering the query. So the init choice is genuinely low-stakes and `random` would
+probably also have been safe; `input_emb` stands as the more defensible default at zero cost, but
+the reasoning that selected it was stronger than the evidence supported and is recorded here
+corrected rather than quietly repaired.
 
 **The A-phase step count follows the step-selection rule**, like any other arm.
 
