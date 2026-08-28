@@ -25,7 +25,7 @@ import numpy as np
 import boot
 import dev_eval
 from _paths import REPO, WORK
-from table import NO_PREFIX, WITH_PREFIX, ensure_release, load_table
+from table import NO_PREFIX, WITH_PREFIX, Preproc, ensure_release, load_table, read_meta
 
 RUNS = WORK / "runs"
 PRE = {"noprefix": NO_PREFIX, "prefix": WITH_PREFIX}
@@ -41,11 +41,13 @@ def restrict(per, comps):
 
 def evaluate_checkpoint(run_id, components):
     """-> (per-component per-query dicts for fp16 and int8 variants, config)"""
-    meta = json.loads((RUNS / f"{run_id}.meta.json").read_text())
-    pre = PRE[meta["preproc"]["prefix"] and "prefix" or "noprefix"]
     # Judge the RELEASE shape (weights folded into rows), not the training checkpoint: the
-    # gate's claims are about the artifact that ships (review #2 BLOCKER 2).
+    # gate's claims are about the artifact that ships (review #2 BLOCKER 2). And read the query
+    # rule from THAT artifact's metadata -- the previous name-keyed lookup reconstructed a Preproc
+    # from the prefix alone, so it would have served a `pool_mode=sqrt` table under `mean`.
     src = ensure_release(RUNS / f"{run_id}.npz")
+    meta = read_meta(src)
+    pre = Preproc(**meta["preproc"])
     out = {}
     for variant in ("fp16", "int8"):
         m = load_table(src, variant=variant)
