@@ -221,6 +221,18 @@ def run(run_id, stage0_id=None, components=None, probe_file=None, audit_vs=None,
 
 if __name__ == "__main__":
     # gate.py <run_id> [stage0_id] [--audit-vs <run_id>]
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    av = sys.argv[sys.argv.index("--audit-vs") + 1] if "--audit-vs" in sys.argv else None
-    run(args[0], args[1] if len(args) > 1 else None, audit_vs=av)
+    #
+    # The value FOLLOWING --audit-vs must be consumed with it. The previous parser stripped only
+    # strings starting with "--", so `gate.py <run> --audit-vs s2w-1e3-s1000` silently passed
+    # s2w-1e3-s1000 as positional arg 2 -- i.e. as `stage0_id` -- and G1 was then computed on that
+    # run instead of the real Stage-0 checkpoint. Found by the pre-freeze Codex review.
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("run_id")
+    ap.add_argument("stage0_id", nargs="?", default=None)
+    ap.add_argument("--audit-vs", dest="audit_vs", default=None)
+    a = ap.parse_args()
+    res = run(a.run_id, a.stage0_id, audit_vs=a.audit_vs)
+    # A failing gate must STOP a driver. It printed NO-GO and returned 0, so `set -e` sailed past
+    # it into the freeze -- the one place a silent pass is unrecoverable.
+    sys.exit(0 if res.get("PASS") else 1)

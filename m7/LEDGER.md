@@ -560,10 +560,28 @@ a reason to prefer the null.
   teacher (cosine + overlap@10 against the pool) on held-out document spans bucketed by length.
   **This settles whether a length gap exists at all**, and it is the pre-condition for spending a
   training chain on long-span distillation. No qrels, no six-set access, no adoption attached.
-  **RESULT** (`m7_longspan_probe.json`): a gap exists at the endpoints and is not a clean trend.
-  overlap@10 0.3443 at 8 words → 0.2997 at 256 (gap 0.0447), but the 64-word bucket (0.3530) sits
-  *above* the 8-word one, so only the endpoints separate; cosine to the teacher is closer to
-  monotone, 0.7525 → 0.7095. Enough to license lever #7, stated with the non-monotonicity attached.
+  **RESULT, FIRST VERSION — WITHDRAWN. The probe did not measure length.** It reported overlap@10
+  0.3443 at 8 words → 0.2997 at 256 and that was read as licensing lever #7. The pre-freeze Codex
+  review found the confound: `spans()` drew a **fresh document permutation per bucket** and kept
+  only documents long enough for *that* bucket, so the 8-word and 256-word buckets differed in
+  length **and in document population** — while the docstring claimed "any trend across buckets is
+  a property of length alone". The endpoint difference does not identify a length effect.
+
+  **RESULT, CORRECTED** (`nested_spans`: one document sample eligible for the longest bucket,
+  every bucket a prefix of those same documents, so length is the only thing that varies and the
+  document is the resampling unit in every bucket):
+
+  | words | 8 | 16 | 32 | 64 | 128 | 256 |
+  |---|---|---|---|---|---|---|
+  | overlap@10 | 0.3337 | 0.3057 | 0.3023 | 0.3043 | 0.3067 | **0.3087** |
+  | cosine | 0.7530 | 0.7290 | 0.7240 | 0.7277 | 0.7264 | 0.7179 |
+
+  **From 16 to 256 words the curve is FLAT, and if anything rises** (0.3057 → 0.3087). The only
+  step is 8→16 words, and an 8-word prefix of a ≥256-word document is a different object from a
+  query. The 0.0447 "fall" was the document-population confound, not length. Limitation, stated:
+  the corrected population is long documents only, so this measures length sensitivity *within
+  long documents* — which is the right population for "does the table degrade as a query gets
+  longer?", and narrower than the corpus.
 
 - **#7 long-span distillation — pre-registered 2026-08-28, before any number.** The only lever
   aimed at a named weakness of a *confirmatory* dataset (ArguAna, ~250-word queries, the
@@ -643,6 +661,23 @@ a reason to prefer the null.
   attached: the length gap is then not caused by the training span distribution, and ArguAna's
   weakness is reported as a measured, unmitigated architectural limit rather than as an untried
   idea. Either way the report states the gap and what was spent on it.
+
+  **OUTCOME 2026-08-28: LEVER #7 IS CLOSED WITHOUT TRAINING THE ARM, on the corrected probe.**
+  This section's own pre-registration says the probe "settles whether a length gap exists at all,
+  and it is the pre-condition for spending a training chain", and that "a flat curve says there is
+  no length gap to close and kills the lever before it costs a training chain". The corrected
+  curve is flat from 16 words to 256. **The pre-condition is not met, so the chain is not bought.**
+
+  This is the pre-registration working, not a budget decision: the arm was already running and 7 of
+  23 encode shards were done when the review exposed the confound. The remaining ~4 h of teacher
+  encode was stopped *because the diagnostic that gated the lever turned out not to measure what it
+  claimed*, and the corrected diagnostic then answered the gating question in 35 seconds.
+
+  **What this does NOT establish**: that the table handles ArguAna well. It says teacher AGREEMENT
+  does not degrade with length within long documents — agreement is not relevance quality, and
+  ArguAna remains an unmeasured extrapolation until the final run. The realised dose facts above
+  (31.9% long, 67.8% Amazon product text) stand as a record of what an arm would have tested; the
+  partial encode cache is left in `work/enc/bextra-1144808-*` should anyone revive it.
 
 - **Negatives ablation — decision rule pre-registered 2026-08-28, before any arm's result.** The
   mandate ordered a BM25-mined / teacher-mined / mixed comparison; it never ran, and `hard_neg_k=0`

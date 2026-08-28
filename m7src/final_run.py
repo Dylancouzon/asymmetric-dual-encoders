@@ -218,7 +218,11 @@ def main():
     for name in CONFIRMATORY:
         h = decisions[name]
         h["reject_holm_signflip"] = h["reject"]
-        h["ci_resolved"] = bool(conf[name]["ci95"][0] > 0)
+        # ci95_raw, NEVER ci95: the display field is rounded to four decimals, so a true
+        # lower endpoint of +4e-5 reads as 0.0000 and a resolved tier becomes "unresolved"
+        # on the ONE-SHOT run. boot.py and m7/LEDGER.md both state the raw-endpoint rule;
+        # this line broke it, in the single place where it is irreversible.
+        h["ci_resolved"] = bool(conf[name]["ci95_raw"][0] > 0)
         h["reject"] = bool(h["reject_holm_signflip"] and h["ci_resolved"])
 
     print("\n=== confirmatory (one-sided; tier = Holm(sign-flip) AND CI>0, alpha=0.025) ===")

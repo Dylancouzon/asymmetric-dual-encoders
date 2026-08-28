@@ -8,16 +8,25 @@ ArguAna, one of the six confirmatory datasets, has ~250-word queries and has bee
 architecture's predicted worst case since M1. EXPLORED.md recorded "dev cannot test long-query
 behaviour"; that is false for teacher-agreement metrics, which need no relevance labels.
 
-Method: take document text, cut spans at several word lengths, and for each span compare what the
-TABLE retrieves from the frozen pool against what the TEACHER retrieves from the same pool.
-Agreement is overlap@10 plus the cosine between the two query vectors. Both systems see the same
-spans and the same corpus, so any trend across buckets is a property of length alone.
+Method: sample documents long enough for the LONGEST bucket, cut every bucket as a prefix of those
+same documents, and for each span compare what the TABLE retrieves from the frozen pool against
+what the TEACHER retrieves from the same pool. Agreement is overlap@10 plus the cosine between the
+two query vectors.
+
+The nesting is what makes the trend attributable to length. The first version of this probe drew a
+fresh document sample per bucket, so its buckets differed in length AND in document population
+while the docstring claimed "length alone" -- the 2026-08-28 numbers below are from that version
+and do not identify a length effect. Cost of the fix: the population is now long documents only,
+so this measures length sensitivity *within long documents*.
 
 Reading it: a flat curve says there is no length gap to close and kills the long-span distillation
 lever before it costs a training chain. A falling curve says the gap is real and sizes it.
 
-RESULT (2026-08-28): a gap at the endpoints, 0.3443 at 8 words to 0.2997 at 256, but not a clean
-trend -- the 64-word bucket sits above the 8-word one. Enough to license lever #7.
+RESULT (2026-08-28, CORRECTED probe): overlap@10 is 0.3337 at 8 words and 0.3057 / 0.3023 / 0.3043
+/ 0.3067 / 0.3087 at 16 / 32 / 64 / 128 / 256 -- FLAT from 16 words up, and slightly rising. The
+first version's 0.3443 -> 0.2997 "fall" was the document-population confound described above.
+Capacity lever #7 was CLOSED on this, without training its arm: this probe is its pre-condition
+and the pre-condition is not met.
 
 SECOND ROLE, added with lever #7: with more than one run id this becomes the lever's PRIMARY
 adjudication instrument, pre-registered in m7/LEDGER.md before any arm ran. Every table sees the
@@ -60,19 +69,33 @@ SEED = 0
 LEVER7_BUCKETS = (128, 256)
 
 
-def spans(texts, n_words, count, rng):
-    """First `n_words` words of documents long enough to supply them, sampled deterministically.
+def nested_spans(texts, buckets, count, rng):
+    """ONE document sample, and every bucket is a PREFIX of the same documents.
 
-    Returns (doc_index, text) pairs, not bare text: the SAME document can supply a span in several
-    buckets, so the document index is the resampling unit any paired comparison across buckets has
-    to group by. Returning only the strings made that dependence invisible.
+    The previous version drew a fresh permutation per bucket and kept documents long enough for
+    THAT bucket, so the 8-word and 256-word buckets differed in length *and* in which documents
+    they came from -- and the probe's docstring nonetheless claimed "any trend across buckets is a
+    property of length alone". It was not: the endpoint difference it reported confounded length
+    with document population, and that probe is what licensed capacity lever #7. Found by the
+    pre-freeze Codex review.
+
+    Sampling documents eligible for the LONGEST bucket once, and cutting every shorter bucket from
+    those same documents, makes length the only thing that varies and makes the document the
+    resampling unit in every bucket. It also narrows the population to long documents, which is a
+    real limitation and is reported rather than hidden: this measures length sensitivity *within
+    long documents*, not across the corpus.
     """
-    out, order = [], rng.permutation(len(texts))
+    longest = max(buckets)
+    out, order = {n: [] for n in buckets}, rng.permutation(len(texts))
+    picked = 0
     for i in order:
-        w = texts[i].split()
-        if len(w) >= n_words:
-            out.append((int(i), " ".join(w[:n_words])))
-        if len(out) == count:
+        w = texts[int(i)].split()
+        if len(w) < longest:
+            continue
+        for n in buckets:
+            out[n].append((int(i), " ".join(w[:n])))
+        picked += 1
+        if picked == count:
             break
     return out
 
@@ -103,16 +126,19 @@ def main(run_ids=None, smoke=False):
     # The rng is consumed bucket by bucket in BUCKETS order, so the spans depend only on SEED and
     # PER_BUCKET -- never on how many run ids were passed. That is what makes a lever arm's probe
     # comparable to the candidate's, and what lets a rerun reuse the teacher encode cache.
-    sp = {n: spans(doc_texts, n, per_bucket, rng) for n in BUCKETS}
+    sp = nested_spans(doc_texts, BUCKETS, per_bucket, rng)
     del doc_texts
     # Every downstream slice uses FIXED offsets, so a short bucket would shift every later
     # bucket's slices and pair one bucket's teacher rows with another's table rows -- which would
     # depress agreement most in the long buckets and fabricate exactly the falling curve this
-    # probe exists to detect.
+    # probe exists to detect. With nested spans every bucket is filled by construction or none is.
     underfilled = {n: len(sp[n]) for n in BUCKETS if len(sp[n]) != per_bucket}
     if underfilled:
-        raise SystemExit(f"{SOURCE} cannot supply {per_bucket} spans for buckets {underfilled}; "
-                         "lower PER_BUCKET or pick a longer-document source")
+        raise SystemExit(f"{SOURCE} cannot supply {per_bucket} documents of >= {max(BUCKETS)} "
+                         f"words (buckets {underfilled}); lower PER_BUCKET or pick a "
+                         "longer-document source")
+    assert len({tuple(d for d, _ in sp[n]) for n in BUCKETS}) == 1, \
+        "nested spans must come from the same documents in the same order in every bucket"
     texts = {n: [t for _, t in sp[n]] for n in BUCKETS}
     docidx = {n: [i for i, _ in sp[n]] for n in BUCKETS}
     n_tok = {n: float(np.mean([len(tok(s, truncation=True, max_length=512)["input_ids"])

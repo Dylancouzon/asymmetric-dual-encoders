@@ -57,7 +57,13 @@ def assert_releasable(run_id):
         seen.add(rid)
         p = WORK / "runs" / f"{rid}.json"
         if not p.exists():
-            continue
+            # NOT `continue`. The manifest this guard writes asserts "no non-commercial training
+            # source in the lineage"; with an ancestor's record missing, that assurance is
+            # unsupported. Failing open let the freeze record a claim it could not prove.
+            raise SystemExit(
+                f"FREEZE REFUSED: {run_id}'s lineage includes {rid}, whose run record {p} is "
+                "missing, so the training sources of that ancestor cannot be established. The "
+                "releasability claim is unprovable, not satisfied.")
         c = json.loads(p.read_text())["cfg"]
         srcs = [str(s).lower() for s in (c.get("sources") or mix.available_sources())]
         bad = [s for s in srcs if any(n in s for n in NON_COMMERCIAL_SOURCES)]
