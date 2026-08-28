@@ -8,6 +8,14 @@ Four conditions from instructions-m7.md:
   G4  int8 equivalence: one-sided 97.5% upper bound of (fp16 - int8) below 0.005 on the dev macro
 
 Pass -> full program. Fail -> negative-result report, stop. Report to Dylan either way.
+
+WHAT THIS GATE IS, after Codex review #3. It cannot repair adaptive dev reuse -- the candidate was
+selected on this same dev suite, so a gate run on it is not independent evidence. Its defensible
+role is a MECHANICAL ELIGIBILITY AUDIT after all selection is finished: the exact frozen release
+artifact, through the released `QueryTable` path, with the encoder fingerprint, table hashes and
+all six pinned component hashes verified, aborting on any missing component or qid, dumping
+unrounded per-query fp16 and int8 scores, and handling the nested held-out components with the
+dependence-preserving statistics. Freeze immediately after; no recipe change once it has been seen.
 """
 import json
 import sys
@@ -47,13 +55,20 @@ def evaluate_checkpoint(run_id, components):
     return out, meta
 
 
-def run(run_id, stage0_id=None, components=None, probe_file=None):
+def run(run_id, stage0_id=None, components=None, probe_file=None, audit_vs=None,
+        verify_pool_bytes=True):
     """components defaults to the PINNED dev suite. The gate's dev macro is "equal weight per
     component" over that suite -- silently dropping HotpotQA and the held-out slices (as an
     earlier default did) would have changed which side of the BM25 bar the candidate lands on,
     since BM25 is strongest on HotpotQA."""
+    import dev_audit
     R = refs()
     comps = list(components) if components else dev_eval.dev_components()
+    # The eligibility audit: pinned six, verified bytes, verified encoder. Aborts, never shrinks.
+    pin_evidence = dev_audit.verify_pin(dev_eval.dev_components(), pool_bytes=verify_pool_bytes)
+    if components is not None and list(components) != dev_eval.dev_components():
+        print(f"[gate] WARNING: running on a SUBSET {comps}; this is not the pinned suite and the "
+              "result is diagnostic only", flush=True)
     pot = restrict(R["potion-retrieval-32M"], comps)
     bm = restrict(R["bm25"], comps)
     # dev_eval.TEACHER_REF, not the literal: under a different teacher the key is that teacher's,
@@ -110,12 +125,22 @@ def run(run_id, stage0_id=None, components=None, probe_file=None):
     else:
         res["conditions"]["G2_capacity_probe"] = {"pass": False, "note": "probe not run"}
 
+    # strict=True: a confirmatory-shaped comparison must abort on a missing qid rather than
+    # silently score the intersection (Codex M-perquery; review #3's "abort on any missing qid").
     g3 = boot.paired(restrict(cand, text_backed), bm, alternative="greater")
-    res["conditions"]["G3_candidate_above_bm25"] = {**g3, "pass": bool(g3["ci95"][0] > 0)}
+    g3_sf = boot.signflip(restrict(cand, text_backed), bm, alternative="greater", strict=True)
+    res["conditions"]["G3_candidate_above_bm25"] = {
+        **g3, "signflip_p": g3_sf["p"], "signflip_p_str": g3_sf["p_str"],
+        "pass": bool(g3["ci95_raw"][0] > 0),
+        "_note": "text-backed components only; BM25 has no row on the held-out slices"}
 
-    g4 = boot.upper_bound_one_sided(per["fp16"], per["int8"])
-    res["conditions"]["G4_int8_equivalence"] = {**g4, "bar": 0.005,
-                                               "pass": bool(g4["upper"] < 0.005)}
+    # The held-out components are nested, so the equivalence bound gets the dependence-preserving
+    # resampling; the dependence-blind one is kept beside it for comparison (review #3).
+    g4 = boot.upper_bound_one_sided(per["fp16"], per["int8"], dep=True)
+    g4_blind = boot.upper_bound_one_sided(per["fp16"], per["int8"])
+    res["conditions"]["G4_int8_equivalence"] = {
+        **g4, "bar": 0.005, "pass": bool(g4["upper_raw"] < 0.005),
+        "dependence_blind": g4_blind}
 
     mean_over = lambda blob, cs: float(np.mean([np.mean(list(blob[c].values())) for c in cs]))
     macros = {k: mean_over(v, comps) for k, v in per.items()}
@@ -134,6 +159,39 @@ def run(run_id, stage0_id=None, components=None, probe_file=None):
         macros_text_backed["fp16"] / res["macros_text_backed"][f"{dev_eval.TEACHER_REF} (teacher ceiling)"], 4)
     res["retention_vs_teacher_all_components"] = round(
         macros["fp16"] / res["macros_all_components"][f"{dev_eval.TEACHER_REF} (teacher ceiling)"], 4)
+    # Exploratory audit against the pre-lever winner: not a gate condition, and not confirmatory --
+    # both artifacts were selected on this suite. It exists so the report can state the whole
+    # selection chain's dev effect in one place, with the dependence handled (review #3).
+    if audit_vs:
+        base_per, _ = evaluate_checkpoint(audit_vs, comps)
+        res["exploratory_audit_vs"] = {
+            "baseline": audit_vs,
+            "fp16": boot.both_ways(per["fp16"], base_per["fp16"]),
+            "int8": boot.both_ways(per["int8"], base_per["int8"]),
+            "_status": "EXPLORATORY: both sides were selected on this dev suite; this is not "
+                       "confirmatory evidence (review #3 MAJOR 1)"}
+
+    # Unrounded per-query scores for both precisions, so any later reader can redo every number
+    # here without re-running the GPU pass (review #3's gate spec).
+    import gzip
+    dpath = REPO / "results" / f"m7_gate_perquery_{run_id}.json.gz"
+    raw = json.dumps({"run_id": run_id, "components": comps,
+                      "per_query": {v: {c: {q: float(x) for q, x in d.items()}
+                                        for c, d in blob.items()}
+                                    for v, blob in per.items()}}, sort_keys=True).encode()
+    with gzip.GzipFile(filename=str(dpath), mode="wb", mtime=0) as f:
+        f.write(raw)
+    import hashlib
+    res["per_query_dump"] = {"path": dpath.name,
+                             "payload_sha256": hashlib.sha256(raw).hexdigest(),
+                             "file_sha256": dev_audit.sha_file(dpath)}
+    rel = ensure_release(RUNS / f"{run_id}.npz")
+    res["artifact"] = {"release": rel.name, "sha256": dev_audit.sha_file(rel),
+                       "meta_sha256": dev_audit.sha_file(rel.parent / (rel.stem + ".meta.json"))}
+    res["pin_evidence"] = pin_evidence
+    res["code_identity"] = dev_audit.code_identity()
+    res["_role"] = ("mechanical eligibility audit after all selection; it cannot repair adaptive "
+                    "dev reuse and is not evidence of generalization. Freeze immediately after.")
     res["PASS"] = all(v.get("pass") for v in res["conditions"].values())
     (REPO / "results" / f"m7_gate_{run_id}.json").write_text(json.dumps(res, indent=1))
 
@@ -158,4 +216,7 @@ def run(run_id, stage0_id=None, components=None, probe_file=None):
 
 
 if __name__ == "__main__":
-    run(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else None)
+    # gate.py <run_id> [stage0_id] [--audit-vs <run_id>]
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    av = sys.argv[sys.argv.index("--audit-vs") + 1] if "--audit-vs" in sys.argv else None
+    run(args[0], args[1] if len(args) > 1 else None, audit_vs=av)

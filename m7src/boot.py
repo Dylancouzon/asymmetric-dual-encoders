@@ -130,9 +130,24 @@ def paired(a, b, B=B, seed=SEED, alternative="two-sided"):
             "resolved": bool(lo > 0 or hi < 0)}
 
 
-def upper_bound_one_sided(a, b, B=B, seed=SEED, level=0.975):
+def upper_bound_one_sided(a, b, B=B, seed=SEED, level=0.975, dep=False, unit_of=None):
     """One-sided upper bound on the macro (a - b). Used by the int8-equivalence dev gate:
-    the 97.5% upper bound of (fp16 - int8) must be below 0.005."""
+    the 97.5% upper bound of (fp16 - int8) must be below 0.005.
+
+    `dep=True` uses the same stratified, shared-draw resampling as `paired_dep`, which the gate
+    needs because the two held-out components are nested (review #3: "recheck int8 equivalence
+    with dependence-preserving handling of the nested held-out components")."""
+    if dep:
+        r = paired_dep(a, b, B=B, seed=seed, alternative="two-sided",
+                       unit_of=unit_of or unit_key)   # unit_key is defined below in this module
+        # paired_dep already reports the percentile interval; the equivalence bound is its upper
+        # endpoint at `level`, which for the default 0.975 is exactly ci95's upper end.
+        if level != 0.975:
+            raise ValueError("dependence-preserving bound is defined here at level 0.975 only")
+        return {"delta": round(r["delta_raw"], 5), "upper": round(r["ci95_raw"][1], 5),
+                "delta_raw": r["delta_raw"], "upper_raw": r["ci95_raw"][1],
+                "level": level, "B": B, "seed": seed, "method": r["method"],
+                "strata": r["strata"]}
     pairs = _align(a, b)
     rng = np.random.default_rng(seed)
     k = len(pairs)
@@ -143,8 +158,10 @@ def upper_bound_one_sided(a, b, B=B, seed=SEED, level=0.975):
         idx = rng.integers(0, n, size=(B, n))
         deltas += (da[idx].mean(1) - db[idx].mean(1)) / k
         base += (da.mean() - db.mean()) / k
-    return {"delta": round(base, 5), "upper": round(float(np.percentile(deltas, level * 100)), 5),
-            "level": level, "B": B, "seed": seed}
+    up = float(np.percentile(deltas, level * 100))
+    return {"delta": round(base, 5), "upper": round(up, 5), "delta_raw": float(base),
+            "upper_raw": up, "level": level, "B": B, "seed": seed,
+            "method": "componentwise paired bootstrap (dependence-blind)"}
 
 
 def holm(pvals, alpha=0.025):
