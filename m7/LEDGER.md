@@ -300,13 +300,25 @@ mechanical selection as the parameter.
   result and as a sidecar the generator checks on resume; generation is sampled, so the hashes are
   the only reproducible pin.
 
-## Codex reviews
+## Reviews and audits
 
-`research/m7-codex-gate-2026-08-26.md` (6 BLOCKER / 9 MAJOR / 2 MINOR),
-`research/m7-codex-review-2026-08-27.md` (4/8/4 + 4 ideas),
-`research/m7-codex-review-2026-08-27b.md` (3/5/6, on the repair itself). All findings implemented;
-the ones with standing protocol consequences are folded into the sections above. Still open and
-report-side only: the MINOR-doc-transform wording item.
+`research/m7-codex-gate-2026-08-26.md` (6 BLOCKER / 9 MAJOR / 2 MINOR) ·
+`research/m7-codex-review-2026-08-27.md` (4/8/4 + 4 ideas) ·
+`research/m7-codex-review-2026-08-27b.md` (3/5/6, on the repair itself) ·
+`research/m7-code-review-2026-08-28.md` (1/4/6, on the new modules) ·
+`research/m7-closed-avenue-audit-2026-08-27.md` (every closed avenue against CLAUDE.md's standing
+directive: 17 SOUND / 4 under-diagnosed / 4 premature) ·
+`research/m7-lever-sweep-2026-08-27.md` (untried levers, with literature numbers).
+
+All findings implemented; the ones with standing protocol consequences are folded into the
+sections above. Two worth naming because they were caught before they produced a number: the
+ablation driver could reuse a B artifact trained under DIFFERENT overrides (silently mislabelling
+an arm), and `gate.py`, `ann_sweep.py` and `edge_demo.py` all reconstructed the query rule from
+the prefix NAME, so they would have served a `pool_mode=sqrt` artifact under `mean`. The code
+review also verified the dependence machinery independently by simulation: null rejection at
+alpha=0.05 is 5.5% for `signflip_dep` against 12% for the dependence-blind version, and the
+full-duplication CI ratio is 1.392 against a theoretical sqrt(2). Still open, report-side only:
+the MINOR-doc-transform wording item.
 
 ## Incidents
 
