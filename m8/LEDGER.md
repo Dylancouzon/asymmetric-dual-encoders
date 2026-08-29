@@ -1011,8 +1011,40 @@ of six points, and this project has been wrong that way before.
   (+0.038, t = 2.7) while the table is flat (−0.012, t = −0.85). The gap widens because the
   teacher pulls away, which is what a fixed per-token vector cannot follow.
 
+### 17b. And which WORDS carry it — what D2's tokenizer actually has to cover
+
+`results/m8_fragmentation_attribution.json`, same class: descriptive, zero new access. "Train a
+64-128K tokenizer" is not a decision until you know what it must cover, and the two candidate
+answers have different consequences: ordinary English that WordPiece-30522 splits badly (any
+general corpus fixes it) versus vocabulary the 2018 vocabulary never saw (the tokenizer's TRAINING
+TEXT becomes load-bearing, and the genre bundle stops being an independent lever).
+
+Contrast: queries containing a word WordPiece splits into ≥ 3 pieces, versus queries without one.
+**Positive in all six datasets — 6/6 sign consistency, p = 0.016 on a sign test** — resolved in
+nfcorpus (+0.066, z = 3.15) and scidocs (+0.020, z = 2.23), near-resolved in scifact (+0.087,
+z = 1.98), unresolved in FiQA (z = 1.49) and trec-covid (z = 1.00, n = 50). ArguAna is
+**uninformative by construction**: its queries average 174 words, so 99% contain such a word and
+there is no contrast to measure.
+
+The words themselves, ranked by frequency × excess gap, fall into three groups and **not** into
+"ordinary English":
+
+| group | examples (subword counts) |
+|---|---|
+| hyphenated / punctuated compounds | `cyber-attacks` (4), `covid-19` (5), `sars-cov-2` (7), `pre-1967` (3) |
+| date-like strings | `11/09/11` (6), `18/08/11` (5), `9/11/2011` (5) |
+| post-2018 or rare named entities | `wikileaks` (5), `yanukovych` (6), `hyperloop` (4), `bitcoin` (3) |
+| genuine domain terms | `phosphorylation` (6), `abiogenesis` (4), `remittances` (4), `acquittal` (4) |
+
 **Consequences, recorded before any M8 probe reads them.** (i) H3 is reframed: the recoverable
 channel is fragmentation, not length. (ii) **D2's multi-word tokenizer is the lever that reaches
-the measured channel**, which is the evidence behind promoting B7 to Wave 1. (iii) B17 still
-measures the in-domain ceiling and is still worth running, but its "short-query" framing may not
-be quoted. (iv) Nothing here is an adoption, and no bar moves because of it.
+the measured channel**, which is the evidence behind promoting B7 to Wave 1. (iii) D2's tokenizer
+must be trained on text that CONTAINS the drifted vocabulary — so the tokenizer's training corpus
+is a design parameter of D2, not a free choice, and it gives the FineWeb arm (E13) a second and
+quite different argument from the one it was registered under: a modern web corpus is where
+`covid-19` and `sars-cov-2` live. That argument is **recorded, not acted on** — E13's ruling is
+Dylan's and the licensing question is unchanged. (iv) B17 still measures the in-domain ceiling and
+is still worth running, but its "short-query" framing may not be quoted. (v) Nothing here is an
+adoption, and no bar moves because of it. The word-level ranking in particular is descriptive
+colour: the contrast it decomposes is resolved in only two of six datasets, and the ranking
+double-counts a query across all of its fragmented words.
