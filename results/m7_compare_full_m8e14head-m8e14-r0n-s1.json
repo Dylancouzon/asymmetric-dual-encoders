@@ -1,0 +1,109 @@
+{
+ "_what": "full pinned dev suite, released QueryTable path, each artifact under its own frozen preprocessing rule",
+ "_status": "exploratory dev SELECTION evidence; only the three frozen-test comparisons are confirmatory (review #3 MAJOR 1)",
+ "encoder": {
+  "name": "stella-400M-v5",
+  "repo": "NovaSearch/stella_en_400M_v5",
+  "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+  "dim": 1024,
+  "pooling": "mean",
+  "query_prefix": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
+  "doc_prefix": "",
+  "trust_remote_code": true,
+  "max_length": 512,
+  "post_dense": "2_Dense_1024",
+  "config_kwargs": {
+   "use_memory_efficient_attention": false,
+   "unpad_inputs": false
+  },
+  "expect_st_mismatch": false,
+  "tokenizer_id": "bert-wordpiece-30522",
+  "cls_id": 101,
+  "vocab": 30522,
+  "notes": "MRL heads at 256/768/1024+; ArguAna and FiQA2018 are on its recorded training list, which is 2 of our 6 eval datasets -- must be labelled if used"
+ },
+ "components": [
+  "nq-250k",
+  "hotpotqa",
+  "cqadup-programmers",
+  "cqadup-physics",
+  "heldout-train",
+  "heldout-longq"
+ ],
+ "baseline": "m8e14-r0n-s1:sqrt",
+ "smoke": false,
+ "max_docs": null,
+ "artifacts": {
+  "m8e14-r0n-s1:sqrt": {
+   "run_id": "m8e14-r0n-s1",
+   "release": "m8e14-r0n-s1.release.npz",
+   "sha256": "59ecfc356d7e35322361d2503e7d8d2f0524ba6b61f127e790c291443d7d486f",
+   "preproc": {
+    "prefix": "",
+    "add_special_tokens": true,
+    "max_length": 512,
+    "pool_mode": "sqrt"
+   }
+  }
+ },
+ "macros_unrounded": {
+  "m8e14-r0n-s1:sqrt|fp16": 0.6164150650153233,
+  "m8e14-r0n-s1:sqrt|int8": 0.6163518071385248
+ },
+ "per_component_unrounded": {
+  "m8e14-r0n-s1:sqrt|fp16": {
+   "nq-250k": 0.8033472939488511,
+   "hotpotqa": 0.6126969661774784,
+   "cqadup-programmers": 0.33906505303529555,
+   "cqadup-physics": 0.39904264904596476,
+   "heldout-train": 0.633572820546339,
+   "heldout-longq": 0.9107656073380108
+  },
+  "m8e14-r0n-s1:sqrt|int8": {
+   "nq-250k": 0.803280478241553,
+   "hotpotqa": 0.6126854860443499,
+   "cqadup-programmers": 0.33874273177385233,
+   "cqadup-physics": 0.3991208233819081,
+   "heldout-train": 0.6335157160514743,
+   "heldout-longq": 0.9107656073380108
+  }
+ },
+ "comparisons": {},
+ "per_query_dump": {
+  "path": "m7_devperquery_m8e14head-m8e14-r0n-s1.json.gz",
+  "payload_sha256": "b9e4b3cb5f2859e9ac31657d8ede7a310abe4cb09d764c86166d2024a4b5d3f8",
+  "file_sha256": "069ce328656a0ec376b88770a5c539cfc382f799221e8550c6d015ce167bc486"
+ },
+ "pin_evidence": {
+  "dev_manifest_sha256": "4f991015db4407080ed9c8d1d2a85541d34b1e676aa593e510296eedca77e2ea",
+  "component_entries_sha256": {
+   "nq-250k": "471b6dcdb295c2bbead8e7a79ba105d50aeefd400130ba5e8055f755036ac724",
+   "hotpotqa": "564477421a3087bdc901283b4ae324f7da3ae80ab5593ffe8c69c1cc5bd17789",
+   "cqadup-programmers": "c4818a32269f9c2c31e850ea7b80b42fda24f6c0d813bd70927b5f8c5cb1c41b",
+   "cqadup-physics": "0222d447068030e480823cfc7df06c7421d75763c3d0921da5e5398c122b9e24",
+   "heldout-train": "f6164e55bef6207b944bb9d04bac89c0dd84357bdd8c30b3e64c5df97fa24b6c",
+   "heldout-longq": "30f3c6a3bd06300fd4e558e0b462054b61b1bb8dae19f58400f21b78c36bca78"
+  },
+  "pool_bytes_verified": true,
+  "pinned_at": "2026-08-27T22:58:44"
+ },
+ "code_identity": {
+  "git_head": "0a62261caa3bbeac40f1792045a580c308273f0a",
+  "m7src_dirty": false,
+  "source_sha256": {
+   "boot.py": "a845a22a3ce10acf89877a1a521e66654d343c0fb003261e64ee1adc54a3c23c",
+   "multieval.py": "9759ecafacbacf7fdb7d13f2ef84ff534523eec8210c9f6541236bad19a5e643",
+   "evalkit.py": "16f88eb2c7ea143de037effd4dbbba2c0342abbe8858ef283e8e98c4ae7a7b08",
+   "table.py": "56b815d3161f793757973dc2d724f2ba7a302a62dcbe6140c264a0f09b34819a",
+   "dev_eval.py": "e5f702536c8af6a7bfb64cbe8770a45f81201866b4b175d4dd129c398737caa1",
+   "heldout.py": "18df62aa0c019490a03a00aa8a58947a24991314dc660d32e886fd4519658161",
+   "dev_audit.py": "1b914cbb368553e96186b2261a55897dbf37a79304aa94262cf71c9043c658c3",
+   "devsuite.py": "3ae8141ac4b3f9bb8d64c29e026403b314a7f4295dfa9979888959e5f9050f7f",
+   "pool.py": "c72e7b8e7aa8a8d5365c696860f640d077b46712379e518fde50433b209a3ca8",
+   "encoders.py": "9479e9eda650b0c1db4b6375b656776982abd4fc55560b8145bf7f08638055d6",
+   "gate.py": "33ec963c36e9860cee64a15a4f99a6b5bfcd1359b4bef66d5230423f439c631c",
+   "fusion.py": "db686aebdc01af614d163e2aa8f64f068161bd6e404cbf7c50cb50d7a85b210d"
+  }
+ },
+ "seconds": 163.5
+}

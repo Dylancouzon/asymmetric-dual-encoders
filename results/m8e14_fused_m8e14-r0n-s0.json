@@ -1,0 +1,48 @@
+{
+  "_note": "The FUSED half of the noise floor (LEDGER \u00a74.7, \u00a74.4 gap list).",
+  "fusion_operator": {
+    "family": "convex0",
+    "param": 0.8
+  },
+  "_operator_note": "FROZEN, not re-fitted per arm: re-selecting would measure the floor of a fitting procedure, a different and much larger quantity (LEDGER 7).",
+  "components": [
+    "nq-250k",
+    "hotpotqa",
+    "cqadup-programmers",
+    "cqadup-physics"
+  ],
+  "_components_note": "the two held-out dev slices carry pool row indices rather than document text, so BM25 -- and therefore any fused read -- does not exist for them by construction.",
+  "arm_macros": {
+    "m8e14-r0n-s0:sqrt|int8": 0.5726230437469806
+  },
+  "floor": {},
+  "bars": {},
+  "detail": {},
+  "bar_formula": "bar = max(0.0040, 2 x floor); floor = max pairwise |delta| over the arms naming the null",
+  "null_arms": [
+    "m8e14-r0n-s0"
+  ],
+  "_registration": {
+    "probe": "NF",
+    "row": {
+      "wave": 1,
+      "title": "noise-floor measurement (the instrument every bar is set against)",
+      "question": "How large is a difference this dev instrument produces from nothing at all?",
+      "endpoint": "group_vector_median, worst_group, out_of_domain_macro and all_component_macro on the full pinned dev suite, int8, through the released QueryTable path",
+      "comparator": "K=3 arms of the IDENTICAL recipe, identical data, identical B checkpoint, differing ONLY in training seed (a true null)",
+      "bar": "no bar: this measures the instrument and adopts nothing. It EMITS bars: floor(endpoint) = max of the 3 pairwise |delta|; bar(endpoint) = max(0.0040, 2 x floor(endpoint)).",
+      "multiplicity": "none",
+      "no_survivor": "not applicable -- a floor always exists. If the floor exceeds the planning minimum on an endpoint, every bar reading that endpoint rises accordingly and that is the finding.",
+      "adopts": "nothing",
+      "also_published": "the +/-10% A-steps arms, as RECIPE SENSITIVITY beside the floor, never as the floor: a step change is a treatment, not a null",
+      "frame_disclosure": "measured in the incumbent teacher frame and the M7 data mix, A leg only with the B checkpoint fixed. An arm differing in its B leg has a larger floor and no bar may read such an arm until that floor is measured too.",
+      "noise_floor_exempt": true,
+      "exempt_reason": "it IS the noise floor"
+    },
+    "wave": 1,
+    "registry_sha256": "e98c9e5b02a22aa9f7291d53e776a6058ffbf1300f0702b2ff5d22accf51ff01",
+    "ledger_sha256": "03fe4ced38d38b162285cc8c66c110e3d9d0294e3b5975da05fa6f16b1764f05",
+    "ledger_commit": "0a62261caa3bbeac40f1792045a580c308273f0a",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}

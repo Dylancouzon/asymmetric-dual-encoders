@@ -1,0 +1,25 @@
+{
+ "run_id": "m8e14-mlp-s1",
+ "components": [
+  "cqadup-programmers",
+  "cqadup-physics"
+ ],
+ "macros": {
+  "bag|raw": {
+   "cqadup-programmers": 0.3334141169900382,
+   "cqadup-physics": 0.3989786843523069
+  },
+  "bag|headed": {
+   "cqadup-programmers": 0.30085820382211076,
+   "cqadup-physics": 0.37969894325885395
+  },
+  "teacher|raw": {
+   "cqadup-programmers": 0.46810047839901187,
+   "cqadup-physics": 0.4931245989857429
+  },
+  "teacher|headed": {
+   "cqadup-programmers": 0.4253833439291765,
+   "cqadup-physics": 0.4663367398401677
+  }
+ }
+}

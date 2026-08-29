@@ -1,0 +1,293 @@
+{
+  "_note": "E14-HEAD's verdict, as code.",
+  "read_at": "int8 / sqrt",
+  "bar": 0.004,
+  "dense_endpoint": "out_of_domain_macro",
+  "fused_endpoint": "4-component fused_macro under the frozen operator",
+  "comparator": "R0N (same patched path, head frozen at identity), seed-paired",
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "arm_scalars": {
+    "dense": {
+      "m8e14-lin-s0": 0.3428439378022723,
+      "m8e14-lin-s1": 0.34415472351816634,
+      "m8e14-lin-s2": 0.34492869248218283,
+      "m8e14-mlp-s0": 0.3393294650518785,
+      "m8e14-mlp-s1": 0.34027857354048235,
+      "m8e14-mlp-s2": 0.3375758889822817,
+      "m8e14-r0n-s0": 0.3673137076993903,
+      "m8e14-r0n-s1": 0.3689317775778802,
+      "m8e14-r0n-s2": 0.3689004583872488
+    },
+    "fused": {
+      "m8e14-lin-s0": 0.5694613860612552,
+      "m8e14-lin-s1": 0.5708648914652631,
+      "m8e14-lin-s2": 0.571556196404845,
+      "m8e14-mlp-s0": 0.5686711717536675,
+      "m8e14-mlp-s1": 0.568958311228812,
+      "m8e14-mlp-s2": 0.5688126441192818,
+      "m8e14-r0n-s0": 0.5726230437469806,
+      "m8e14-r0n-s1": 0.5733166889986723,
+      "m8e14-r0n-s2": 0.5730093295854821
+    }
+  },
+  "contrasts": {
+    "lin": {
+      "dense": {
+        "mean_gain": -0.02440619662063261,
+        "per_seed_gain": {
+          "0": -0.02446976989711802,
+          "1": -0.024777054059713866,
+          "2": -0.023971765905065945
+        },
+        "seed_signs_agree": true,
+        "meets_bar": false,
+        "p_one_sided_vs_measured_floor": 1.0
+      },
+      "fused": {
+        "mean_gain": -0.002355529466590567,
+        "per_seed_gain": {
+          "0": -0.0031616576857254053,
+          "1": -0.0024517975334091835,
+          "2": -0.0014531331806371117
+        },
+        "seed_signs_agree": true,
+        "meets_bar": false,
+        "p_one_sided_vs_measured_floor": 0.9999999999999147
+      }
+    },
+    "mlp": {
+      "dense": {
+        "mean_gain": -0.029320672029958916,
+        "per_seed_gain": {
+          "0": -0.027984242647511814,
+          "1": -0.02865320403739785,
+          "2": -0.031324569404967084
+        },
+        "seed_signs_agree": true,
+        "meets_bar": false,
+        "p_one_sided_vs_measured_floor": 1.0
+      },
+      "fused": {
+        "mean_gain": -0.004168978409791209,
+        "per_seed_gain": {
+          "0": -0.003951871993313039,
+          "1": -0.0043583777698602555,
+          "2": -0.004196685466200334
+        },
+        "seed_signs_agree": true,
+        "meets_bar": false,
+        "p_one_sided_vs_measured_floor": 1.0
+      }
+    }
+  },
+  "multiplicity": {
+    "within_treatment": "intersection-union over the two scalars",
+    "across_treatments": {
+      "lin": {
+        "p": 1.0,
+        "holm_threshold": 0.025,
+        "rejects_null": false
+      },
+      "mlp": {
+        "p": 1.0,
+        "holm_threshold": 0.05,
+        "rejects_null": false
+      }
+    },
+    "alpha": 0.05,
+    "sigma_sources": {
+      "dense": {
+        "sigma_A": 0.0010648942508266286,
+        "source": "crossed 3x3 fitted A-leg variance component"
+      },
+      "fused": {
+        "sigma_A": 0.00039143455572748456,
+        "source": "K=3 range floor 0.000663 / 1.693 -- a sample range at K=3 pins sigma only to about a 12x span (CODEMAP pitfall 18); read this p-value as an order of magnitude, not a rate"
+      }
+    },
+    "_note": "the threshold rule is primary and decides the verdict; where the two disagree the stricter governs"
+  },
+  "step_adequacy": {
+    "lin": {
+      "run_id": [
+        "m8e14-adq-lin-b2500",
+        "m8e14-adq-lin-b5000"
+      ],
+      "holdout": {
+        "b2500_at_1250": -0.14024348556995392,
+        "b2500_final": -0.12607485055923462,
+        "b5000_final": -0.12112127244472504
+      },
+      "improvement_within_2500": 0.0141686350107193,
+      "improvement_from_doubling": 0.0049535781145095825,
+      "ratio": 0.34961576120508053,
+      "threshold": 0.25,
+      "verdict": "OPTIMIZATION-INADEQUATE",
+      "_what": "a null at an inadequate step budget is evidence about the configuration, not about the method (CLAUDE.md standing directive #2)"
+    },
+    "mlp": {
+      "run_id": [
+        "m8e14-adq-mlp-b2500",
+        "m8e14-adq-mlp-b5000"
+      ],
+      "holdout": {
+        "b2500_at_1250": -0.1430664360523224,
+        "b2500_final": -0.1232781931757927,
+        "b5000_final": -0.11891856044530869
+      },
+      "improvement_within_2500": 0.019788242876529694,
+      "improvement_from_doubling": 0.004359632730484009,
+      "ratio": 0.22031429256686821,
+      "threshold": 0.25,
+      "verdict": "ADEQUATE",
+      "_what": "a null at an inadequate step budget is evidence about the configuration, not about the method (CLAUDE.md standing directive #2)"
+    }
+  },
+  "verdicts": {
+    "lin": "OPTIMIZATION-INADEQUATE",
+    "mlp": "NULL"
+  },
+  "primary_verdict_lin": "OPTIMIZATION-INADEQUATE",
+  "headline": "The winning arm had not plateaued by 2,500 steps, so this reports UNINFORMATIVE rather than a null. A null at an inadequate step budget is evidence about the configuration, not about the method.",
+  "descriptive": {
+    "end_to_end_null_R0N_vs_R0": {
+      "dense": {
+        "mean_delta": -7.029796413038358e-06,
+        "per_seed_delta": {
+          "0": 0.0,
+          "1": 0.0,
+          "2": -2.1089389239115075e-05
+        },
+        "max_abs_delta": 2.1089389239115075e-05,
+        "sigma_A": 0.0010648942508266286,
+        "within_one_sigma": true,
+        "_what": "R0N differs from R0 only by renormalization of the cached document vectors and by the patch stack around it. A delta far above the floor would mean the stack does something the head does not."
+      },
+      "fused": {
+        "mean_delta": -1.5003825441839425e-05,
+        "per_seed_delta": {
+          "0": -3.447226784192292e-05,
+          "1": -3.5257189968662672e-06,
+          "2": -7.013489486729085e-06
+        },
+        "max_abs_delta": 3.447226784192292e-05,
+        "sigma_A": 0.00039143455572748456,
+        "within_one_sigma": true,
+        "_what": "R0N differs from R0 only by renormalization of the cached document vectors and by the patch stack around it. A delta far above the floor would mean the stack does something the head does not."
+      }
+    },
+    "mechanism_control": {
+      "m8e14-lin-s0": {
+        "bag_gain": -0.02282901230771328,
+        "teacher_query_gain": -0.029743234836012045,
+        "bag_specific": 0.0069142225282987635,
+        "macros": {
+          "bag|raw": 0.36567295010998546,
+          "bag|headed": 0.3428439378022722,
+          "teacher|raw": 0.4806125386923774,
+          "teacher|headed": 0.45086930385636537
+        }
+      },
+      "m8e14-lin-s1": {
+        "bag_gain": -0.02008425506342676,
+        "teacher_query_gain": -0.033127517834719344,
+        "bag_specific": 0.013043262771292585,
+        "macros": {
+          "bag|raw": 0.36423897858159304,
+          "bag|headed": 0.3441547235181663,
+          "teacher|raw": 0.4806125386923774,
+          "teacher|headed": 0.44748502085765807
+        }
+      },
+      "m8e14-lin-s2": {
+        "bag_gain": -0.022562690272003028,
+        "teacher_query_gain": -0.02996805662711377,
+        "bag_specific": 0.007405366355110743,
+        "macros": {
+          "bag|raw": 0.3674913827541859,
+          "bag|headed": 0.3449286924821829,
+          "teacher|raw": 0.4806125386923774,
+          "teacher|headed": 0.45064448206526364
+        }
+      },
+      "m8e14-mlp-s0": {
+        "bag_gain": -0.026584160926173273,
+        "teacher_query_gain": -0.03508697954100548,
+        "bag_specific": 0.008502818614832208,
+        "macros": {
+          "bag|raw": 0.3659136259780518,
+          "bag|headed": 0.33932946505187855,
+          "teacher|raw": 0.4806125386923774,
+          "teacher|headed": 0.44552555915137193
+        }
+      },
+      "m8e14-mlp-s1": {
+        "bag_gain": -0.025917827130690185,
+        "teacher_query_gain": -0.03475249680770531,
+        "bag_specific": 0.008834669677015128,
+        "macros": {
+          "bag|raw": 0.36619640067117254,
+          "bag|headed": 0.34027857354048235,
+          "teacher|raw": 0.4806125386923774,
+          "teacher|headed": 0.4458600418846721
+        }
+      },
+      "m8e14-mlp-s2": {
+        "bag_gain": -0.02981141687190192,
+        "teacher_query_gain": -0.03494398097725249,
+        "bag_specific": 0.005132564105350568,
+        "macros": {
+          "bag|raw": 0.36738730585418355,
+          "bag|headed": 0.33757588898228164,
+          "teacher|raw": 0.4806125386923774,
+          "teacher|headed": 0.4456685577151249
+        }
+      },
+      "_what": "the head is supervised document-side metric learning and can win by fixing the teacher's relevance geometry or by separating training sources, neither of which requires documents to have been bag-unreachable. bag_gain minus teacher_query_gain is the part that is specific to the bag."
+    }
+  },
+  "scope": "THREE limits, all binding. (1) AN MLP OR LINEAR MAP ON THE FINAL DOCUMENT VECTOR CANNOT RECOVER INFORMATION THE TOWER DISCARDED, so this tests 'is the document space re-shapeable', NOT 'can the tower learn to be bag-reachable' -- E14's actual question. A null is therefore WEAK evidence about the LoRA and a positive is STRONG evidence FOR it; the asymmetry is the point of running the cheap stage first. (2) A POSITIVE DOES NOT BY ITSELF IDENTIFY BAG REACHABILITY -- it may be generic supervised document-side adaptation, which is what the mechanism control exists to separate. (3) BOTH DENSE COMPONENTS ARE CQADupStack FORUMS, so a gain licenses a CQADupStack-family claim, not broad out-of-domain reachability.",
+  "_registration": {
+    "probe": "E14-HEAD",
+    "row": {
+      "wave": 1,
+      "title": "doc-side re-shaping: RENORMALIZED heads on cached document vectors, trained with the table",
+      "question": "Dylan's E14 ruling was 'measure it small first'. This is the small measurement: can the document space be re-shaped to be more reachable by a bag of token vectors AT ALL, before anyone pays to fine-tune the tower?",
+      "amended": "2026-08-29, after a Codex adversarial review of the design found three BLOCKERs, before any arm ran. The previous row's central premise -- 'a linear doc-side map is provably absorbable, so the head must be nonlinear' -- was FALSE and contradicted this ledger's own section 6 D1 entry. See LEDGER 15.",
+      "lever": "TWO doc-side heads over the FROZEN teacher's cached document vectors, both of the form normalize(d + f(d)) with f zero-initialised: LIN, f(d) = W d (1024x1024, ~1.05M params) -- the PRIMARY; and MLP, f(d) = W2 GELU(W1 d + b1) (hidden 2048, ~4.2M params) -- the SECONDARY, which is also LIN's control: it is what says whether nonlinearity bought anything the linear map did not.",
+      "why_a_linear_head_is_NOT_a_no-op": "the retired row asserted it was. It is not: retrieval L2-normalizes documents, so the score is q.(Md)/|Md| and the per-document factor 1/|Md| cannot move into a shared query row. results/m7_absorb_check.json measures rank agreement with the absorbed form at 1.000 WITHOUT renormalization and 0.000 WITH it, and LEDGER section 6's D1 entry already recorded this as 'the absorbable dismissal was half wrong'. A renormalized linear head is genuine document-side capacity, and it is the cheaper and better-conditioned probe.",
+      "why_it_is_cheap": "the transformer is never re-run. The head is applied to document vectors already on disk, so re-encoding is a matmul over cached fp16 rather than 2M+ forward passes.",
+      "held_fixed": "the query side stays a pure lookup table (E1), the teacher weights are untouched, Phase A/B structure, updates, batch, negatives, temperature, table learning rate and the pair pool are all as R0. The reported arms train on the FULL pair pool, not the ladder's holdout-reduced pool.",
+      "endpoint": "the SAME two scalars as B3, both at int8/sqrt: DENSE = out-of-domain macro over cqadup-programmers and cqadup-physics; FUSED = the 4-component fused_macro under the frozen operator.",
+      "comparator": "R0N -- the SAME patched path with the head FROZEN AT IDENTITY, three paired seeds. NOT the existing R0 arms. At W=0 the head emits normalize(d) while R0 scores the raw cached fp16 vectors, and those are only approximately unit-norm: over 100,000 sampled pool rows only 0.36% have float32 norm exactly 1, max |norm-1| = 4.8e-05, mean 9.1e-06. Renormalization shifts Phase-A logits and therefore the training trajectory, so R0 is not the exact comparator to a head-bearing arm. R0N against the existing R0 is ALSO reported, as an end-to-end null on the whole patch stack.",
+      "bar": "mean-over-seeds gain >= 0.0040 on BOTH scalars, per head. 0.0040 is max(planning minimum, 2 x measured floor) at int8/sqrt; the endpoints and their floors are unchanged by this amendment, so the bar is unchanged.",
+      "seeds": "3 (0, 1, 2), paired: same Phase-B checkpoint, differing only in the Phase-A seed. The learning-rate ladder runs on a DISJOINT tuning seed (3) and its arms are never part of the reported mean.",
+      "multiplicity": "TWO treatments (LIN, MLP), each read on two scalars. Intersection-union WITHIN a treatment (both scalars must clear, which only lowers type-I). Holm ACROSS the two treatments, because the probe's question -- does ANY cheap doc-side head clear -- is a union and the multiplicity is real.",
+      "head_lr_selection": "ladder {3e-4, 1e-3, 3e-3} on tuning seed 3, selected on InfoNCE over a held-out 2% slice of the TRAINING pairs. The ladder subprocess is DEV-BLIND BY CONSTRUCTION, not by promise: train.run() evaluates cfg.eval_components every eval_every steps AND once more unconditionally at the end, and those components include both DENSE endpoint components, so a ladder that merely promised to ignore dev would still have observed it. dev_eval.eval_table is patched to raise in the ladder process. NOTE the holdout is held out from E14's Phase A only -- p35b-2m already distilled on every one of those queries and used their positives in its KL candidate sets.",
+      "step_adequacy": "PRE-REGISTERED, and it gates the null. On tuning seed 3, continue the winning arm from 2500 to 5000 steps reading ONLY the training-holdout statistic. Plateau rule: the holdout improvement over 2500->5000 must be under 25% of the improvement over 1250->2500. If it is not, the primary reports OPTIMIZATION-INADEQUATE / UNINFORMATIVE and NOT a method null -- a null at an inadequate step budget is evidence about the configuration, not the method (CLAUDE.md standing directive #2).",
+      "mechanism_control": "DESCRIPTIVE, does not gate the bar, and is what makes a positive interpretable. Score the headed documents against the FROZEN TEACHER query vectors as well as against the bag, giving {raw, headed} x {teacher queries, bag}. The head is supervised document-side metric learning and can win by fixing the teacher's relevance geometry or by separating training sources -- HotpotQA is ~85% of the document pool but ~24% of positive pairs -- none of which requires documents to have been bag-unreachable. The BAG gain MINUS the TEACHER-QUERY gain is the bag-specific evidence.",
+      "no_survivor": "THE CHEAP RE-SHAPING DOES NOT HELP. This does NOT close E14 and must never be written as though it did -- see scope_limit. It means the head route is dead and the LoRA question stands, with its cost known.",
+      "scope_limit": "THREE limits, all binding. (1) AN MLP OR LINEAR MAP ON THE FINAL DOCUMENT VECTOR CANNOT RECOVER INFORMATION THE TOWER DISCARDED, so this tests 'is the document space re-shapeable', NOT 'can the tower learn to be bag-reachable' -- E14's actual question. A null is therefore WEAK evidence about the LoRA and a positive is STRONG evidence FOR it; the asymmetry is the point of running the cheap stage first. (2) A POSITIVE DOES NOT BY ITSELF IDENTIFY BAG REACHABILITY -- it may be generic supervised document-side adaptation, which is what the mechanism control exists to separate. (3) BOTH DENSE COMPONENTS ARE CQADupStack FORUMS, so a gain licenses a CQADupStack-family claim, not broad out-of-domain reachability.",
+      "engineering_constraints": "REGISTERED because they change what the code must be, not merely how it is written. (a) The head must be applied to evaluation documents as a LAZY slice-transforming view, driven by the scorer's own chunking: materializing headed float32 vectors is ~21.4 GB for HotpotQA and ~25.3 GB for the 6.17M-row pool, over this box's working limit. (b) Each patched scoring process emits exactly ONE head arm; any un-headed row produced inside such a process is rejected, since dev_eval.doc_vecs is shared across every variant in a process. (c) Every head artifact binds the table sha256, the Phase-B checkpoint sha256, the head-state sha256, the architecture, the head lr/seed/schedule, the train/holdout split hash and the M8 patch-source hashes -- a run_id alone does not stop a stale head being paired with a table.",
+      "shippability_gate": "B6-pre PASSED with --head linear (results/m8_b6_pre.json) and with --head mlp (results/m8_b6_pre_mlp.json, 3,426 nodes, GELU as a plain Erf, zero custom-domain ops, parity 0.99999988). BOTH passes used identity/zero-ish weights, so before any head-bearing candidate is called shippable the ACTUAL TRAINED head must be exported and parity-tested -- a parity test that never leaves the identity path has not exercised the head.",
+      "noise_floor_exempt": false,
+      "bar_frozen": {
+        "date": "2026-08-29",
+        "bar": 0.004,
+        "read_at": "int8 / sqrt",
+        "source": "the same measured floors B3's bar cites; endpoints are identical so the floors bind unchanged",
+        "unchanged_by_the_amendment": true
+      },
+      "authorised_by": "Dylan 2026-08-29, E14 ruling 'measure it small first'. NOT authorised by that ruling: the 10.12M double pre-encode, the stella derived-weights licence check, any C2 redefinition."
+    },
+    "wave": 1,
+    "registry_sha256": "e98c9e5b02a22aa9f7291d53e776a6058ffbf1300f0702b2ff5d22accf51ff01",
+    "ledger_sha256": "03fe4ced38d38b162285cc8c66c110e3d9d0294e3b5975da05fa6f16b1764f05",
+    "ledger_commit": "0a62261caa3bbeac40f1792045a580c308273f0a",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}

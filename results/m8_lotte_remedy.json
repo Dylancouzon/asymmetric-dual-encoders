@@ -1,0 +1,337 @@
+{
+  "_note": "LEDGER 2026-08-29 E10-REMEDY. Forum queries only; the search split is non-commercial-research-only per the GooAQ licence and is never read. The shadow is a CHECK, never a selection surface -- see the module docstring. Hashing is NOT done here -- freeze_lotte.pin() is the sole hash authority, reading these remediated files back fresh from disk.",
+  "smoke": false,
+  "limit": null,
+  "dead_slices_no_remedy_applies": [
+    "writing/test",
+    "science/test",
+    "technology/test"
+  ],
+  "slices": {
+    "writing/dev": {
+      "topic": "writing",
+      "split": "dev",
+      "before": {
+        "docs": 277072,
+        "queries": 2003,
+        "qrels_pairs": 15098
+      },
+      "after": {
+        "docs": 277049,
+        "queries": 1988,
+        "qrels_pairs": 15021
+      },
+      "dropped": {
+        "leaked_query": 15,
+        "leaked_query_kinds": {
+          "exact": 2,
+          "near": 12,
+          "contains": 1
+        },
+        "dup_doc": 23,
+        "dup_doc_owners": {
+          "cqadup-english": 18,
+          "cqadup-programmers": 1,
+          "cqadup-physics": 4
+        },
+        "orphaned_qrels_pairs": 2,
+        "zero_positive_query": 0
+      },
+      "first_screen": {
+        "n_exact": 0,
+        "n_near": 23
+      },
+      "rescreen": {
+        "doc_hits": 0,
+        "query_hits": 0,
+        "passed": true
+      },
+      "final_disposition": "SURVIVES",
+      "written_relpath": "work/lotte/remediated/writing/dev",
+      "seconds": 157.7
+    },
+    "recreation/dev": {
+      "topic": "recreation",
+      "split": "dev",
+      "before": {
+        "docs": 263025,
+        "queries": 2002,
+        "qrels_pairs": 12752
+      },
+      "after": {
+        "docs": 263000,
+        "queries": 1994,
+        "qrels_pairs": 12686
+      },
+      "dropped": {
+        "leaked_query": 8,
+        "leaked_query_kinds": {
+          "exact": 0,
+          "near": 8,
+          "contains": 0
+        },
+        "dup_doc": 25,
+        "dup_doc_owners": {
+          "cqadup-physics": 3,
+          "cqadup-english": 22
+        },
+        "orphaned_qrels_pairs": 1,
+        "zero_positive_query": 0
+      },
+      "first_screen": {
+        "n_exact": 0,
+        "n_near": 25
+      },
+      "rescreen": {
+        "doc_hits": 0,
+        "query_hits": 0,
+        "passed": true
+      },
+      "final_disposition": "SURVIVES",
+      "written_relpath": "work/lotte/remediated/recreation/dev",
+      "seconds": 163.9
+    },
+    "recreation/test": {
+      "topic": "recreation",
+      "split": "test",
+      "before": {
+        "docs": 166975,
+        "queries": 2002,
+        "qrels_pairs": 6947
+      },
+      "after": {
+        "docs": 166975,
+        "queries": 1990,
+        "qrels_pairs": 6892
+      },
+      "dropped": {
+        "leaked_query": 12,
+        "leaked_query_kinds": {
+          "exact": 0,
+          "near": 12,
+          "contains": 0
+        },
+        "dup_doc": 0,
+        "dup_doc_owners": {},
+        "orphaned_qrels_pairs": 0,
+        "zero_positive_query": 0
+      },
+      "first_screen": {
+        "n_exact": 0,
+        "n_near": 0
+      },
+      "rescreen": {
+        "doc_hits": 0,
+        "query_hits": 0,
+        "passed": true
+      },
+      "final_disposition": "SURVIVES",
+      "written_relpath": "work/lotte/remediated/recreation/test",
+      "seconds": 68.5
+    },
+    "science/dev": {
+      "topic": "science",
+      "split": "dev",
+      "before": {
+        "docs": 343642,
+        "queries": 2013,
+        "qrels_pairs": 12271
+      },
+      "after": {
+        "docs": 343634,
+        "queries": 2002,
+        "qrels_pairs": 12210
+      },
+      "dropped": {
+        "leaked_query": 11,
+        "leaked_query_kinds": {
+          "exact": 0,
+          "near": 11,
+          "contains": 0
+        },
+        "dup_doc": 8,
+        "dup_doc_owners": {
+          "cqadup-physics": 2,
+          "cqadup-programmers": 3,
+          "cqadup-english": 3
+        },
+        "orphaned_qrels_pairs": 1,
+        "zero_positive_query": 0
+      },
+      "first_screen": {
+        "n_exact": 0,
+        "n_near": 8
+      },
+      "rescreen": {
+        "doc_hits": 0,
+        "query_hits": 0,
+        "passed": true
+      },
+      "final_disposition": "SURVIVES",
+      "written_relpath": "work/lotte/remediated/science/dev",
+      "seconds": 204.0
+    },
+    "technology/dev": {
+      "topic": "technology",
+      "split": "dev",
+      "before": {
+        "docs": 1276222,
+        "queries": 2003,
+        "qrels_pairs": 15741
+      },
+      "after": {
+        "docs": 1276195,
+        "queries": 1993,
+        "qrels_pairs": 15648
+      },
+      "dropped": {
+        "leaked_query": 10,
+        "leaked_query_kinds": {
+          "exact": 0,
+          "near": 10,
+          "contains": 0
+        },
+        "dup_doc": 27,
+        "dup_doc_owners": {
+          "cqadup-programmers": 21,
+          "cqadup-android": 5,
+          "cqadup-physics": 1
+        },
+        "orphaned_qrels_pairs": 2,
+        "zero_positive_query": 0
+      },
+      "first_screen": {
+        "n_exact": 0,
+        "n_near": 27
+      },
+      "rescreen": {
+        "doc_hits": 0,
+        "query_hits": 0,
+        "passed": true
+      },
+      "final_disposition": "SURVIVES",
+      "written_relpath": "work/lotte/remediated/technology/dev",
+      "seconds": 557.2
+    },
+    "lifestyle/dev": {
+      "topic": "lifestyle",
+      "split": "dev",
+      "before": {
+        "docs": 268893,
+        "queries": 2076,
+        "qrels_pairs": 12823
+      },
+      "after": {
+        "docs": 268890,
+        "queries": 2074,
+        "qrels_pairs": 12811
+      },
+      "dropped": {
+        "leaked_query": 2,
+        "leaked_query_kinds": {
+          "exact": 0,
+          "near": 2,
+          "contains": 0
+        },
+        "dup_doc": 3,
+        "dup_doc_owners": {
+          "cqadup-english": 2,
+          "cqadup-android": 1
+        },
+        "orphaned_qrels_pairs": 0,
+        "zero_positive_query": 0
+      },
+      "first_screen": {
+        "n_exact": 0,
+        "n_near": 3
+      },
+      "rescreen": {
+        "doc_hits": 0,
+        "query_hits": 0,
+        "passed": true
+      },
+      "final_disposition": "SURVIVES",
+      "written_relpath": "work/lotte/remediated/lifestyle/dev",
+      "seconds": 130.1
+    },
+    "lifestyle/test": {
+      "topic": "lifestyle",
+      "split": "test",
+      "before": {
+        "docs": 119461,
+        "queries": 2002,
+        "qrels_pairs": 10278
+      },
+      "after": {
+        "docs": 119458,
+        "queries": 1993,
+        "qrels_pairs": 10200
+      },
+      "dropped": {
+        "leaked_query": 9,
+        "leaked_query_kinds": {
+          "exact": 0,
+          "near": 8,
+          "contains": 1
+        },
+        "dup_doc": 3,
+        "dup_doc_owners": {
+          "cqadup-english": 3
+        },
+        "orphaned_qrels_pairs": 1,
+        "zero_positive_query": 0
+      },
+      "first_screen": {
+        "n_exact": 0,
+        "n_near": 3
+      },
+      "rescreen": {
+        "doc_hits": 0,
+        "query_hits": 0,
+        "passed": true
+      },
+      "final_disposition": "SURVIVES",
+      "written_relpath": "work/lotte/remediated/lifestyle/test",
+      "seconds": 52.5
+    }
+  },
+  "surviving_slices": [
+    "lifestyle/dev",
+    "lifestyle/test",
+    "recreation/dev",
+    "recreation/test",
+    "science/dev",
+    "technology/dev",
+    "writing/dev"
+  ],
+  "dropped_at_rescreen": [],
+  "total_surviving_queries": 14034,
+  "verdict": "PROCEED: all 7 surviving slices pass remedy + re-screen, 14,034 queries total",
+  "seconds": 1395.0,
+  "_registration": {
+    "probe": "E10-REMEDY",
+    "row": {
+      "wave": 1,
+      "title": "the LoTTE shadow, remediated per-question and re-screened to zero",
+      "question": "After dropping the leaked queries and the near-duplicate documents from the seven surviving slices, is the shadow ACTUALLY clean -- or did removal merely appear to work?",
+      "lever": "per-item removal, then a re-screen with the same two instruments S0 used: protected_filter._cqa_index() over the four protected CQADupStack corpora for documents, decontam.protected_query_index() for queries.",
+      "slices": "the SEVEN survivors of S0 (writing/dev, recreation/dev, recreation/test, science/dev, technology/dev, lifestyle/dev, lifestyle/test), ~14,034 queries. The three community-overlap slices (writing/test, science/test, technology/test) stay DEAD -- no remedy applies to a community that overlaps a protected set.",
+      "also_drops": "qrels entries orphaned by a removed document, and any query thereby left with ZERO positives. Not in the ruling's spec; added because a query whose positives no longer exist is unanswerable by construction and would depress the shadow for reasons unrelated to any candidate. It shrinks the shadow and cannot admit a contaminated item.",
+      "endpoint": "per-slice residual hit counts on documents and queries after remediation",
+      "comparator": "none -- this is a screen, not a comparison",
+      "bar": "ZERO exact and ZERO near hits, on documents AND queries, per slice. Stricter than S0's own bar, which dropped a slice above a 0.5% document near-duplicate rate. A slice that still hits is DROPPED.",
+      "multiplicity": "none -- per-slice screening, no inference",
+      "no_survivor": "if no slice survives the re-screen, E10 reopens with Dylan again; the shadow is mandatory and STOP-on-failure (LEDGER 2.3).",
+      "adopts": "the surviving slices as a hash-pinned PROTECTED partition: never trained on, entered into protected_filter's index, and the fit list regenerated (the current 337,981 predates them).",
+      "use_limit": "THE SHADOW IS A CHECK, NEVER A SELECTION SURFACE. It may not be used to choose between candidates, to rank arms, or to break a tie. The moment it is optimised against it becomes a second dev set and stops doing its job.",
+      "noise_floor_exempt": true,
+      "exempt_reason": "a screen with a zero-tolerance bar reads no effect size, so no floor applies",
+      "authorised_by": "Dylan 2026-08-29, E10 ruling (per-question remedy on the seven clean-community slices); spec at LEDGER 15, 2026-08-29."
+    },
+    "wave": 1,
+    "registry_sha256": "e98c9e5b02a22aa9f7291d53e776a6058ffbf1300f0702b2ff5d22accf51ff01",
+    "ledger_sha256": "6a406673e82a895b03a85c0136c91a1535fa763db8327ceefa237cc78874a7fe",
+    "ledger_commit": "d964f2fdda9bb34abc592b64c4c854c10a8c31ae",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}

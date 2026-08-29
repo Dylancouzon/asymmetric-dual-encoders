@@ -1,0 +1,25 @@
+{
+ "run_id": "m8e14-r0n-s2",
+ "components": [
+  "cqadup-programmers",
+  "cqadup-physics"
+ ],
+ "macros": {
+  "bag|raw": {
+   "cqadup-programmers": 0.3427056615610745,
+   "cqadup-physics": 0.39509525521342304
+  },
+  "bag|headed": {
+   "cqadup-programmers": 0.3427056615610745,
+   "cqadup-physics": 0.39509525521342304
+  },
+  "teacher|raw": {
+   "cqadup-programmers": 0.46810047839901187,
+   "cqadup-physics": 0.4931245989857429
+  },
+  "teacher|headed": {
+   "cqadup-programmers": 0.46810047839901187,
+   "cqadup-physics": 0.4931245989857429
+  }
+ }
+}
