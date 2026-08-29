@@ -1163,6 +1163,40 @@ CORPORA are ordinary public downloads while their query and qrel payloads stay g
 in either direction. It states what changed, why, and that the dependent numbers did not yet
 exist.)*
 
+- **2026-08-29 — the B-LEG noise floor is measured** (`results/m8_noise_floor_bleg.json`; §4.4's
+  gap list closes on this item). §4.7's floor holds the Phase-B checkpoint FIXED and varies only
+  the Phase-A seed. That is the shape of most probe arms, but **not** of `R-PHASE`, nor of any pool
+  or init change, which flow through the B leg — and the A-leg floor cannot bound those, because it
+  holds constant the very leg they perturb. This measures the missing one: **three full B→A chains
+  varying only the seed**, scored on the same four endpoints.
+  **The floors, at int8:** group-vector median 0.00147 (mean) / 0.00088 (sqrt); worst-group and
+  out-of-domain macro 0.00218 / 0.00111; all-component macro 0.00199 / 0.00070. fp16 tracks these
+  closely.
+  **The finding is that the B leg adds essentially nothing.** The A-leg floor spans 0.00095–0.00227
+  on the same endpoints; the B-leg floor spans 0.00070–0.00218. A whole extra 16,000-step phase of
+  seed-dependent training does not widen the instrument. So `R-PHASE` and the pool/init levers can
+  be read against the same 0.0040 planning minimum as everything else, rather than needing a
+  looser bar of their own — which is the practical point of measuring it.
+  **One endpoint is the exception and it is now binding**: at `int8.mean`, worst-group and
+  out-of-domain macro have 2 × floor = **0.004369**, above the 0.0040 planning minimum. Any bar
+  reading those two endpoints under `mean` pooling takes 0.004369, not 0.0040. Every other
+  endpoint keeps 0.0040 because the planning minimum still binds. B3 is unaffected: it reads at
+  `int8/sqrt` (0.00088–0.00111 → 0.0040) and is an A-leg-varying probe in any case.
+  **The honest caveat on the comparison.** "B is no larger than A" is a comparison of two
+  max-over-three-pairwise statistics, each from K = 3. That estimator is noisy, and the two ranges
+  overlap almost entirely, so the claim to make is the weak one — *the B leg does not visibly
+  inflate the floor* — not that the two are equal. What the number licenses is using 0.0040 for
+  B-leg-varying probes; it does not license a claim about Phase B's reproducibility in general.
+  **Provenance note.** Chain 0's B leg is M7's `p35b-2m`, written 2026-08-27, and nine commits
+  touched `m7src/` afterwards. Every changed hunk on the training path was read before the arm was
+  reused: the pseudoq change is docstring-only, `train.py`'s new `side_pos_sources` defaults to
+  `()` and takes the identical `index.get` branch, and the `teacher.py`/`table.py` additions are
+  refusals on `encode_cached`'s shard layout and on `ensure_release` — neither reached by a B leg,
+  neither altering a returned vector. Runs record no code vintage, which is why this had to be
+  done by hand; see CODEMAP 16.
+  *(No number this amendment affects existed beforehand: no bar had ever been read against a
+  B-leg-varying arm, because none had been measured.)*
+
 - **2026-08-29 — B3's lever replaced: ICT augmentation → real-pair pool scaling. No B3 number of
   any kind existed** (no ICT arm was ever built, let alone run; there is no ICT sampler in the
   repo). Prompted by an adversarial review of the ARM DEFINITION, briefed before any arm ran
