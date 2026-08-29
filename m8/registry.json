@@ -448,6 +448,24 @@
     "a licence check that stella permits releasing derived weights",
     "C2 must be REDEFINED: 'the M8 table against the SAME frozen document vectors' stops being possible once the tower moves, and C2 is Dylan's E11 ruling"
    ]
+  },
+  "E10-REMEDY": {
+   "wave": 1,
+   "title": "the LoTTE shadow, remediated per-question and re-screened to zero",
+   "question": "After dropping the leaked queries and the near-duplicate documents from the seven surviving slices, is the shadow ACTUALLY clean -- or did removal merely appear to work?",
+   "lever": "per-item removal, then a re-screen with the same two instruments S0 used: protected_filter._cqa_index() over the four protected CQADupStack corpora for documents, decontam.protected_query_index() for queries.",
+   "slices": "the SEVEN survivors of S0 (writing/dev, recreation/dev, recreation/test, science/dev, technology/dev, lifestyle/dev, lifestyle/test), ~14,034 queries. The three community-overlap slices (writing/test, science/test, technology/test) stay DEAD -- no remedy applies to a community that overlaps a protected set.",
+   "also_drops": "qrels entries orphaned by a removed document, and any query thereby left with ZERO positives. Not in the ruling's spec; added because a query whose positives no longer exist is unanswerable by construction and would depress the shadow for reasons unrelated to any candidate. It shrinks the shadow and cannot admit a contaminated item.",
+   "endpoint": "per-slice residual hit counts on documents and queries after remediation",
+   "comparator": "none -- this is a screen, not a comparison",
+   "bar": "ZERO exact and ZERO near hits, on documents AND queries, per slice. Stricter than S0's own bar, which dropped a slice above a 0.5% document near-duplicate rate. A slice that still hits is DROPPED.",
+   "multiplicity": "none -- per-slice screening, no inference",
+   "no_survivor": "if no slice survives the re-screen, E10 reopens with Dylan again; the shadow is mandatory and STOP-on-failure (LEDGER 2.3).",
+   "adopts": "the surviving slices as a hash-pinned PROTECTED partition: never trained on, entered into protected_filter's index, and the fit list regenerated (the current 337,981 predates them).",
+   "use_limit": "THE SHADOW IS A CHECK, NEVER A SELECTION SURFACE. It may not be used to choose between candidates, to rank arms, or to break a tie. The moment it is optimised against it becomes a second dev set and stops doing its job.",
+   "noise_floor_exempt": true,
+   "exempt_reason": "a screen with a zero-tolerance bar reads no effect size, so no floor applies",
+   "authorised_by": "Dylan 2026-08-29, E10 ruling (per-question remedy on the seven clean-community slices); spec at LEDGER 15, 2026-08-29."
   }
  },
  "dev_groups": {
@@ -603,7 +621,8 @@
   "measured": {
    "dense": "results/m8_noise_floor.json -- floors 0.00095-0.00227, bars 0.0040 except fp16.mean worst-group/OOD at 0.00454",
    "fused": "results/m8_noise_floor_fused.json -- floors 0.00059-0.00066, bars 0.0040",
-   "still_missing": "a B-leg-varying null pair; arms that restructure the B->A phases (R-PHASE, and any pool/init change flowing through B) have a larger floor that no bar may read until it is measured."
+   "still_missing": "a B-leg-varying null pair; arms that restructure the B->A phases (R-PHASE, and any pool/init change flowing through B) have a larger floor that no bar may read until it is measured.",
+   "crossed": "results/m8_noise_floor_crossed.json -- the 3x3 (B checkpoint seed) x (A seed) grid, which decomposes chain variance into sigma_B and sigma_A. Registered under NF; adopts nothing and does not change the bar formula."
   }
  }
 }

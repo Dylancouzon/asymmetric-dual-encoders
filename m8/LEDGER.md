@@ -1567,6 +1567,56 @@ exist.)*
   where one copy of it happens to live**; every route to that content must be enumerated, and
   enumerating them is a review task, not an authoring task.
 
+- **2026-08-29 — the B-leg floor's "aliasing understates it" claim is WITHDRAWN; the crossed
+  design is registered anyway, for a different reason.** `results/m8_noise_floor_bleg.json` states
+  that because one seed drives both legs, the two effects "may partially cancel, which would make
+  this floor an UNDER-estimate" — and STATUS repeated it as the anti-conservative direction. **It
+  does not follow.** A diagonal cell is `B_s + A_s + e`; for independent leg effects its variance
+  is exactly `sigma_B^2 + sigma_A^2 + sigma_e^2`, which IS the chain variance the floor estimates.
+  Simulated at 200,000 replicates the aliased diagonal and an independent chain match to four
+  digits in SD (0.003202 vs 0.003202) and in E[range] (0.005425 vs 0.005416). Only a **negative**
+  correlation between the two legs at a shared seed would bias it downward, and no mechanism for
+  one was ever named. The diagonal is **unbiased but noisy**, not anti-conservative. This is the
+  standing directive #4 case again — check the algebra before believing a capability claim, in
+  either direction — and it is the second time in two days that a claim about this floor has had
+  to be withdrawn after arithmetic.
+  **The crossed 3×3 still runs, for the two things it does buy:** (1) it **decomposes** chain
+  variance into `sigma_B` and `sigma_A`, which finally tests the ledger's unmeasured assertion
+  that a B-leg-varying arm needs a larger floor than an A-leg one — if `sigma_B` is small, the
+  measured A-leg floor already covers R-PHASE and every pool-or-init lever and a §4.4 gap-list
+  entry closes; (2) nine cells with **4 residual df** instead of a K=3 sample range whose CV is
+  0.525. It also tests the negative-correlation escape hatch directly, since that is what the
+  residual (interaction) term measures.
+  **Design**: (B-checkpoint seed) × (A seed), both in {0,1,2}. Five cells already exist — row
+  `b=0` is the A-leg floor (`m8nf-seed0/1/2`, all inited from `p35b-2m`) and the diagonal is the
+  B-leg floor — so **four A legs**, not six, complete the grid. Read at int8/sqrt only, the
+  variants every frozen bar actually reads. Registered under **NF**, which adopts nothing and has
+  no bar; **the bar formula is unchanged** and this is reported as the error rate the standing
+  0.0040 convention actually carries for a B-leg-varying arm, which is a disclosure, not a rule.
+  **Disclosed limits**: the pool is still held fixed, so this bounds seed variability and not
+  pool-varying levers; the moment estimators clip negative variance components to zero and `sqrt`
+  is concave, both biasing the reported chain SD **down** — simulated at this exact design, truth
+  0.00320 → mean estimate 0.00295, about 8% low, so read it as a floor on the floor.
+
+- **2026-08-29 — `E10-REMEDY` REGISTERED, with one step the ruling's spec did not contain.**
+  The five-step remedy above is implemented as `m8src/freeze_lotte.py` writing
+  `results/m8_lotte_remedy.json`. Registering it as its own probe row rather than folding it into
+  `S0` keeps S0's artifact as the record of the screen that *failed*, which is the thing the
+  ruling was made against.
+  **The added step, and why it is not a loosening.** Dropping near-duplicate **documents** orphans
+  the qrels that point at them. Left alone, the shadow would contain queries whose positives no
+  longer exist in the corpus — unanswerable by construction — and its nDCG would be depressed by
+  an amount that has nothing to do with any candidate. So the remedy also drops (a) every qrels
+  entry whose positive was removed and (b) every query left with **zero** positives, and reports
+  both counts. This *shrinks* the shadow further; it cannot admit a contaminated item.
+  **The re-screen bar is stricter than S0's**: ZERO exact and ZERO near hits on documents **and**
+  queries, where S0 dropped a slice at a document near-duplicate rate above 0.5%. A slice that
+  still hits after remediation is dropped outright.
+  **Use limit, registered here so it binds:** the shadow is a **check, never a selection surface**.
+  It may not be used to choose between candidates, to rank arms, or to break a tie. The moment it
+  is optimised against it becomes a second dev set and stops doing the one job it has.
+  Written before any remediated slice exists, so no number this could affect has been observed.
+
 ---
 
 ## 16. Gate findings → where each is discharged

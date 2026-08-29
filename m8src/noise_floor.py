@@ -87,6 +87,63 @@ def bleg_plan():
     return arms
 
 
+# ---- the crossed B x A design -------------------------------------------------------------
+#
+# THE STATED MOTIVE WAS WRONG, AND CHECKING IT IS WHY THIS IS WORTH RUNNING ANYWAY. The B-leg
+# floor's own artifact says the aliasing -- one seed driving both legs -- makes that floor an
+# UNDER-estimate, "the anti-conservative direction". That does not follow. A diagonal cell is
+# B_s + A_s + e; if the two leg effects are independent draws its variance is exactly
+# sigma_B^2 + sigma_A^2 + sigma_e^2, which IS the chain variance the floor is trying to estimate.
+# Simulated at 200,000 replicates: the aliased diagonal and an independent chain have the same SD
+# to four digits (0.003202 vs 0.003202) and the same E[range] (0.005425 vs 0.005416). Aliasing
+# would bias the floor downward only under NEGATIVE correlation between the two legs' effects at a
+# shared seed, and no mechanism for that has been named. So the diagonal is unbiased-but-noisy,
+# not anti-conservative, and the claim is withdrawn here rather than inherited.
+#
+# WHAT THE CROSSED GRID ACTUALLY BUYS, which is still worth the four arms:
+#   1. DECOMPOSITION. Is a B-leg-varying arm's floor really larger than an A-leg arm's? That is
+#      an assertion the ledger makes and no measurement supports. If sigma_B is small, the
+#      measured A-leg floor already covers R-PHASE and every pool-or-init lever, and a whole
+#      gap-list entry closes. If it is large, the size of the gap is finally a number.
+#   2. PRECISION. Nine cells with 4 residual df instead of a K=3 sample range whose CV is 0.525
+#      (m8/CODEMAP.md pitfall 18: one range pins sigma only to a 12x span).
+#   3. It TESTS the negative-correlation escape hatch directly: that is what the residual
+#      (interaction) term measures, and the diagonal cells sit in the same grid as the rest.
+#
+# It is also nearly free: the three chains on disk are the DIAGONAL of the 3x3, and the A-leg
+# floor arms are its FIRST ROW (all three init from `p35b-2m`, the seed-0 B checkpoint), so five
+# of the nine cells already exist and only four A legs have to be trained.
+B_CHECKPOINTS = {0: "p35b-2m", 1: "m8nfb-seed1-b", 2: "m8nfb-seed2-b"}
+
+# Cells already trained. Row b=0 is the A-leg floor (three A seeds over the seed-0 B checkpoint);
+# the diagonal is the B-leg floor (one seed driving both legs).
+EXISTING_CELLS = {
+    (0, 0): "m8nf-seed0", (0, 1): "m8nf-seed1", (0, 2): "m8nf-seed2",
+    (1, 1): "m8nfb-seed1-a", (2, 2): "m8nfb-seed2-a",
+}
+
+
+def crossed_cells():
+    """(B-checkpoint seed, A seed) -> run id, for the full 3x3."""
+    return {(b, a): EXISTING_CELLS.get((b, a), f"m8nfx-b{b}a{a}")
+            for b in SEEDS for a in SEEDS}
+
+
+def crossed_plan():
+    """The four A legs the 3x3 is missing. Same A recipe as every other cell; only the seed and
+    the B checkpoint it inits from vary."""
+    acfg = base_cfg(BASE_RUN)
+    arms = {}
+    for (b, a), rid in crossed_cells().items():
+        if (b, a) in EXISTING_CELLS:
+            continue
+        arms[rid] = {**acfg, "seed": a, "init": f"run:{B_CHECKPOINTS[b]}",
+                     "_kind": "crossed", "_value": f"b{b}a{a}", "_b": b, "_a": a}
+    for rid, x in arms.items():
+        x["_exists"] = (WORK / "runs" / f"{rid}.npz").exists()
+    return arms
+
+
 def arm_id(kind, value):
     return f"m8nf-{kind}{value}"
 
@@ -295,9 +352,125 @@ def measure(dump_path, arm_ids=None):
     }
 
 
+def _twoway(x):
+    """Two-way layout without replication on a 3x3 of one endpoint. Returns the variance
+    components and what they imply for a fresh null difference between two independent chains.
+
+    x[i][j] is the endpoint for B-checkpoint seed i, A seed j. With one observation per cell the
+    residual mean square IS the interaction, so sigma_e here means 'A-given-B variation plus any
+    B x A interaction' -- they are not separable at this design and the artifact says so rather
+    than pretending otherwise.
+    """
+    x = np.asarray(x, dtype=float)
+    n = x.shape[0]
+    g, rm, cm = x.mean(), x.mean(1), x.mean(0)
+    ss_b = n * float(((rm - g) ** 2).sum())
+    ss_a = n * float(((cm - g) ** 2).sum())
+    resid = x - rm[:, None] - cm[None, :] + g
+    ss_e = float((resid ** 2).sum())
+    df_b = df_a = n - 1
+    df_e = (n - 1) ** 2
+    ms_b, ms_a, ms_e = ss_b / df_b, ss_a / df_a, ss_e / df_e
+    # random-effects moment estimators; negative estimates are clipped to 0, which biases the
+    # chain SD DOWNWARD, so the clip is disclosed beside the number rather than hidden in it.
+    v_b, v_a = max(0.0, (ms_b - ms_e) / n), max(0.0, (ms_a - ms_e) / n)
+    v_chain = v_b + v_a + ms_e
+    sd_diff = float(np.sqrt(2 * v_chain))
+    from math import erfc, sqrt
+    p_exceed = float(erfc(0.0040 / (sd_diff * sqrt(2)))) if sd_diff > 0 else 0.0
+    diag = [float(x[i, i]) for i in range(n)]
+    return {
+        "cells": x.tolist(),
+        "row_means_by_B_seed": rm.tolist(), "col_means_by_A_seed": cm.tolist(),
+        "ms": {"B": ms_b, "A_given_B_plus_interaction": ms_e, "A": ms_a},
+        "df": {"B": df_b, "A": df_a, "residual": df_e},
+        "sd": {"B": float(np.sqrt(v_b)), "A": float(np.sqrt(v_a)),
+               "residual": float(np.sqrt(ms_e)), "chain": float(np.sqrt(v_chain))},
+        "clipped_to_zero": {"B": (ms_b - ms_e) < 0, "A": (ms_a - ms_e) < 0},
+        "sd_of_fresh_null_difference": sd_diff,
+        "p_null_difference_exceeds_0.0040": p_exceed,
+        "range_all_9_cells": float(np.ptp(x)),
+        "range_on_the_diagonal": float(np.ptp(diag)),
+        "range_within_rows": [float(np.ptp(r)) for r in x],
+        "diagonal_understates_by": (float(np.ptp(x) / np.ptp(diag))
+                                    if np.ptp(diag) > 0 else None),
+    }
+
+
+def measure_crossed(dump_path, prec="int8", mode="sqrt"):
+    """The crossed floor: a 3x3 of (B checkpoint seed) x (A seed), read at one precision/mode.
+
+    Reads at int8/sqrt only -- the release format and R0's adopted pooling rule, which is what
+    every frozen bar actually reads. Widening to the other three variants would quadruple the
+    scoring cost for numbers no bar consults (the same argument b3_score.sh makes).
+    """
+    import gzip
+    raw = json.loads(gzip.open(dump_path).read() if str(dump_path).endswith(".gz")
+                     else Path(dump_path).read_text())
+    pq = raw["per_query"] if "per_query" in raw else raw
+    want = crossed_cells()
+    got = {}
+    for key, comps in pq.items():
+        run, _, p = key.rpartition("|")
+        rid, _, m = run.partition(":")
+        if p == prec and (m or "mean") == mode:
+            got[rid] = _group_vector(comps)
+    missing = sorted({r for r in want.values()} - set(got))
+    if missing:
+        raise SystemExit(f"{prec}/{mode}: the 3x3 is missing {missing}. A crossed floor from a "
+                         f"partial grid is not a crossed floor -- the whole point is that the "
+                         f"aliased diagonal understates, and dropping cells re-introduces that.")
+    endpoints = ("group_vector_median", "worst_group", "out_of_domain_macro",
+                 "all_component_macro")
+    out = {}
+    for e in endpoints:
+        grid = [[got[want[(b, a)]][e] for a in SEEDS] for b in SEEDS]
+        if any(v is None for row in grid for v in row):
+            continue
+        out[f"{prec}.{mode}.{e}"] = _twoway(grid)
+    return {
+        "dump": str(dump_path),
+        "design": "3x3, (B checkpoint seed) x (A seed), one observation per cell",
+        "cells": {f"b{b}a{a}": want[(b, a)] for b in SEEDS for a in SEEDS},
+        "cells_reused": {f"b{b}a{a}": EXISTING_CELLS[(b, a)] for (b, a) in EXISTING_CELLS},
+        "read_at": f"{prec} / {mode}",
+        "components": out,
+        "what_this_answers": (
+            "(1) is a B-leg-varying arm's floor actually larger than an A-leg arm's? `sd.B` "
+            "against `sd.A` answers it, and no measurement supported that assertion before. "
+            "(2) `sd_of_fresh_null_difference` is the actionable number: the SD of the difference "
+            "between two independent full chains, which is the shape a B-leg-varying probe arm "
+            "has. (3) whether the aliased diagonal is biased at all -- the residual term is where "
+            "a leg-to-leg interaction at a shared seed would show up."),
+        "withdrawn_claim": (
+            "the B-leg artifact says its aliasing makes that floor an UNDER-estimate, 'the "
+            "anti-conservative direction'. It does not follow: a diagonal cell is B_s + A_s + e "
+            "and, for independent leg effects, has exactly the chain variance. Simulated at "
+            "200,000 replicates the aliased diagonal and an independent chain match to four "
+            "digits in SD (0.003202 vs 0.003202) and in E[range] (0.005425 vs 0.005416). The "
+            "diagonal is unbiased-but-noisy. Only a NEGATIVE correlation between the two legs at "
+            "a shared seed would bias it down, and no mechanism for that was ever named."),
+        "estimator_bias": (
+            "the variance components are moment estimators with negative values clipped to zero, "
+            "and sd = sqrt(var-hat) is a concave function of it, so both push the reported chain "
+            "SD DOWN. Simulated at this exact design: truth 0.00320 -> mean estimate 0.00295, "
+            "about 8% low. Read the chain SD as a floor on the floor, not as a tight estimate."),
+        "what_this_does_NOT_answer": (
+            "the pool is still held FIXED -- `pseudoq.build_decontaminated` draws with a seed "
+            "independent of the training seed, so all three B legs distil on the identical text "
+            "set. This bounds seed variability in a B-leg-varying arm; it does not bound a "
+            "pool-varying lever. It is also still the incumbent teacher frame and the M7 data "
+            "mix, and LEDGER 6 step 5 voids it on a teacher swap."),
+        "adopts": ("nothing. The registered bar formula is unchanged. This is reported as the "
+                   "error rate the standing 0.0040 convention actually carries for a "
+                   "B-leg-varying arm, which is a disclosure, not a new rule."),
+    }
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("step", choices=["plan", "train", "measure", "bleg"])
+    ap.add_argument("step", choices=["plan", "train", "measure", "bleg", "crossed",
+                                     "measure-crossed"])
     ap.add_argument("--dump", default=None, help="compare_full per-query dump for `measure`")
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--bleg-arms", action="store_true",
@@ -316,6 +489,25 @@ def main():
                               or k in ("seed", "steps_a", "steps_b", "init")}
                           for r, x in arms.items()}, indent=2, default=str))
         train(smoke=a.smoke, plan_fn=bleg_plan)
+    elif a.step == "crossed":
+        arms = crossed_plan()
+        print(json.dumps({r: {k: v for k, v in x.items() if k.startswith("_")
+                              or k in ("seed", "steps_a", "init")}
+                          for r, x in arms.items()}, indent=2, default=str))
+        train(smoke=a.smoke, plan_fn=crossed_plan)
+    elif a.step == "measure-crossed":
+        if not a.dump:
+            raise SystemExit("--dump is required: point at the compare_full per-query dump")
+        out = measure_crossed(a.dump)
+        out["leg"] = "crossed"
+        dest = OUT.parent / "m8_noise_floor_crossed.json"
+        probe_guard.write_result(dest, out, "NF", strict_commit=not a.smoke)
+        print(json.dumps({k: {kk: v[kk] for kk in
+                              ("sd", "sd_of_fresh_null_difference",
+                               "p_null_difference_exceeds_0.0040", "range_all_9_cells",
+                               "range_on_the_diagonal")}
+                          for k, v in out["components"].items()}, indent=2))
+        print(f"\nwrote {dest}", file=sys.stderr)
     elif a.step == "train":
         train(smoke=a.smoke)
     else:

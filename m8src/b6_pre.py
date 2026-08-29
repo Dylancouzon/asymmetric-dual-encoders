@@ -37,8 +37,19 @@ import m8base
 import probe_guard
 
 RESULTS = m8base.RESULTS
-OUT = RESULTS / "m8_b6_pre.json"
+# One artifact PER HEAD. The first version wrote every head to `m8_b6_pre.json`, so running
+# `--head mlp` -- which E14-HEAD's shippability gate requires -- would have silently overwritten
+# the `--head linear` PASS that §18, STATUS and the E14-HEAD registry row all cite, and the
+# overwrite would have looked like a successful run (m8/CODEMAP.md pitfall 8, the same class).
+# `linear` keeps the historical name so the cited artifact path stays valid and re-running it
+# reproduces that file rather than forking a second record of the same measurement.
 EXPORT_DIR = m8base.WORK / "onnx"
+
+
+def out_path(head):
+    return RESULTS / ("m8_b6_pre.json" if head == "linear" else f"m8_b6_pre_{head}.json")
+
+
 COS_TOL = 1e-4          # LEDGER §11.4 vector/cosine tolerance for the parity fixtures
 MAXABS_TOL = 1e-3
 
@@ -145,7 +156,7 @@ def main():
         out["stages"]["compose"] = f"FAILED: {type(e).__name__}: {e}"
         out["pass"] = False
         out["verdict"] = "composition failed before export was attempted"
-        probe_guard.write_result(OUT, out, "B6-pre")
+        probe_guard.write_result(out_path(a.head), out, "B6-pre")
         print(json.dumps(out["stages"], indent=2))
         return 1
 
@@ -170,7 +181,7 @@ def main():
         out["verdict"] = ("stella does not export under this path. E3's condition is not met by "
                           "this route; D1's registered no-survivor outcome applies unless another "
                           "export route is registered and tried.")
-        probe_guard.write_result(OUT, out, "B6-pre")
+        probe_guard.write_result(out_path(a.head), out, "B6-pre")
         print(json.dumps(out["stages"], indent=2))
         return 1
 
@@ -212,7 +223,7 @@ def main():
                       "E3's condition is NOT met by this route. D1's registered no-survivor "
                       "outcome applies unless another route is registered and tried.")
     out["seconds"] = round(time.time() - t0, 1)
-    probe_guard.write_result(OUT, out, "B6-pre")
+    probe_guard.write_result(out_path(a.head), out, "B6-pre")
     print(json.dumps({"stages": out["stages"], "parity": out.get("parity"),
                       "plain_nodes_only": out.get("plain_nodes_only"),
                       "pass": out["pass"], "verdict": out["verdict"]}, indent=2, default=str))
