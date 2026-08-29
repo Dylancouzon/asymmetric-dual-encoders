@@ -954,6 +954,12 @@ graph does not work forfeits the milestone's centre of gravity too late to recov
 | **NF** | how large is a difference this dev instrument produces from nothing? | the four dev endpoints a bar can read, int8, released path | K = 3 arms differing ONLY in training seed (a true null) | no bar: it EMITS them, per §4.7 | none | n/a — a floor always exists; a large floor raises every bar reading that endpoint, and that is the finding |
 | **B17** | does the class cap in-domain? | 50/50 query split on the dev CQA components; oracle table fitted on one half, scored on the other, vs the 0.481 teacher ceiling | the teacher ceiling | **routing rule below** | none | routing rule is exhaustive by construction |
 
+**Registered into Wave 1 after this table was written — fields in `m8/registry.json`, deliberately
+not restated here:** `E14-HEAD` (reported, NO SURVIVOR), `E10-REMEDY` (ran, then reopened),
+**`D2`** (the milestone's primary lever, bar 0.00519) and `NF-CROSSED-FUSED` (optional instrument
+read). The table above is a partial render kept for at-a-glance reading; the registry is the
+authority and the only thing `probe_guard` consults.
+
 **B17's registered routing rule** (fixed before its number, and amended per Fable D2 before any
 number exists): held-out **≥ 0.45** ⇒ supervision and objective are the story **AND R1 takes the
 majority budget ONLY IF B3-template OOD corroboration is also present** — an in-domain ceiling
