@@ -91,7 +91,11 @@ def train(rids=None, smoke=False):
     for rid, a in todo:
         over = {k: v for k, v in a.items() if not k.startswith("_")}
         if smoke:
+            # A smoke must NOT occupy the real run id. The first version wrote 90-step artifacts
+            # to `m8nf-seed0` etc, so plan()'s `_exists` check would then have reported the real
+            # arms as already trained and the floor would have been measured on 90-step tables.
             over["steps_a"] = 90
+            rid = rid + "-smoke"
         code = (
             "import sys; sys.path.insert(0, %r); sys.path.insert(0, %r)\n"
             "import program, sweep\n"
@@ -109,7 +113,17 @@ def train(rids=None, smoke=False):
 
 
 def _group_vector(per_q):
-    """per_q: {component: {qid: score}} -> the registered group vector and its summaries."""
+    """per_q: {component: {qid: score}} -> the registered group vector and its summaries.
+
+    ABORTS on a missing component. Quietly averaging over whichever components happen to be
+    present is the silent-intersection failure the ledger bans on every decision path, and a floor
+    computed over five of six components is a different number wearing the same name."""
+    want = {c for members in GROUPS.values() for c in members}
+    missing = sorted(want - set(per_q))
+    if missing:
+        raise AssertionError(f"noise floor: components {missing} absent. The registered group "
+                             f"vector is defined over {sorted(want)} (LEDGER 8) and may not be "
+                             f"computed over a subset.")
     means = {c: float(np.mean(list(v.values()))) for c, v in per_q.items()}
     gm = {}
     for g, members in GROUPS.items():
@@ -132,53 +146,66 @@ def measure(dump_path):
     raw = json.loads(gzip.open(dump_path).read() if str(dump_path).endswith(".gz")
                      else Path(dump_path).read_text())
     pq = raw["per_query"] if "per_query" in raw else raw
-    # compare_full keys its dump `<run_id>[:<pool_mode>]|<precision>`. int8 only: it is the
-    # release format and the C2 identity, so it is what a bar reads.
-    arms = {}
+    # compare_full keys its dump `<run_id>[:<pool_mode>]|<precision>`. BOTH precisions are kept:
+    # int8 is the release format and the C2 identity, but B10 registers "raw CI > 0 in BOTH
+    # precisions", so a bar reads fp16 too and an fp16 floor must exist for it (2026-08-29
+    # review finding -- the first version filtered fp16 out by construction).
+    arms = {"int8": {}, "fp16": {}}
     for key, comps in pq.items():
         parts = key.split("|")
-        if len(parts) < 2 or parts[-1] != "int8":
+        if len(parts) < 2 or parts[-1] not in arms:
             continue
-        arms[parts[0].split(":")[0]] = _group_vector(comps)
-    if not arms:
+        arms[parts[-1]][parts[0].split(":")[0]] = _group_vector(comps)
+    if not arms["int8"]:
         raise SystemExit(f"no int8 arms found in {dump_path}; keys look like "
                          f"{sorted(pq)[:4]}")
 
-    seed_arms = {r: v for r, v in arms.items() if r.startswith("m8nf-seed")}
-    step_arms = {r: v for r, v in arms.items() if r.startswith("m8nf-steps")}
     endpoints = ("group_vector_median", "worst_group", "out_of_domain_macro",
                  "all_component_macro")
-
-    floor, pairs = {}, {}
-    for e in endpoints:
-        ds = []
-        for a, b in itertools.combinations(sorted(seed_arms), 2):
-            va, vb = seed_arms[a][e], seed_arms[b][e]
-            if va is not None and vb is not None:
-                ds.append({"pair": [a, b], "abs_delta": abs(va - vb)})
-        pairs[e] = ds
-        floor[e] = max((d["abs_delta"] for d in ds), default=None)
-
-    ref = seed_arms.get(arm_id("seed", SEEDS[0]))
-    sensitivity = {}
-    for e in endpoints:
-        rows = []
-        for r, v in sorted(step_arms.items()):
-            if ref and v[e] is not None and ref[e] is not None:
-                rows.append({"arm": r, "delta_vs_seed0": v[e] - ref[e]})
-        sensitivity[e] = rows
-
-    bars = {e: (None if floor[e] is None else max(0.0040, 2 * floor[e])) for e in endpoints}
+    floor, pairs, bars, sensitivity, seeds_seen, steps_seen = {}, {}, {}, {}, {}, {}
+    for prec, a in arms.items():
+        if not a:
+            continue
+        seed_arms = {r: v for r, v in a.items() if r.startswith("m8nf-seed")}
+        step_arms = {r: v for r, v in a.items() if r.startswith("m8nf-steps")}
+        seeds_seen[prec], steps_seen[prec] = sorted(seed_arms), sorted(step_arms)
+        ref = seed_arms.get(arm_id("seed", SEEDS[0]))
+        for e in endpoints:
+            key = f"{prec}.{e}"
+            ds = []
+            for x, y in itertools.combinations(sorted(seed_arms), 2):
+                va, vb = seed_arms[x][e], seed_arms[y][e]
+                if va is not None and vb is not None:
+                    ds.append({"pair": [x, y], "abs_delta": abs(va - vb)})
+            pairs[key] = ds
+            floor[key] = max((d["abs_delta"] for d in ds), default=None)
+            bars[key] = None if floor[key] is None else max(0.0040, 2 * floor[key])
+            sensitivity[key] = [{"arm": r, "delta_vs_seed0": v[e] - ref[e]}
+                                for r, v in sorted(step_arms.items())
+                                if ref and v[e] is not None and ref[e] is not None]
     return {
         "dump": str(dump_path),
+        "seed_arms_by_precision": seeds_seen, "step_arms_by_precision": steps_seen,
         "_dump_path_note": ("the dump lands under a results/m7_devperquery_*.json.gz name because "
                             "compare_full.py is frozen M7 code and M8 does not edit m7src (G3)"),
-        "arms": arms, "seed_arms": sorted(seed_arms), "step_arms": sorted(step_arms),
+        "arms": arms,
         "pairwise": pairs, "floor": floor, "bars": bars,
         "recipe_sensitivity_steps": sensitivity,
         "bar_formula": "bar(endpoint) = max(0.0040, 2 x floor(endpoint)); "
                        "floor = max of the pairwise |delta| over the 3 seed arms",
-        "precision": "int8 (the release format, and the C2 identity)",
+        "precision": "BOTH int8 (the release format and the C2 identity) and fp16; keys are "
+                     "'<precision>.<endpoint>'",
+        "endpoints_NOT_covered": {
+            "fused": "B3, B13, R1-ASSEMBLY, D-SYNTH and D-FINEWEB register dense AND FUSED "
+                     "endpoints. No fused floor is measured here, so their bars are NOT yet "
+                     "computable as registered and remain refused. Measuring it needs a fused "
+                     "read of the same three seed arms -- the arms exist, only the scoring pass "
+                     "widens. LEDGER 4.4 gap list.",
+            "B-leg-varying arms": "this floor holds the B checkpoint fixed. R-PHASE restructures "
+                                  "the B->A phases, and any pool or init change flowing through "
+                                  "the B leg has a larger floor. No bar may read such an arm "
+                                  "until a B-leg null pair is measured. LEDGER 4.4 gap list.",
+        },
         "frame": {
             "teacher": "stella_en_400M_v5 (incumbent)",
             "data_mix": "the M7 mix, from the M7 candidate's own B checkpoint",
