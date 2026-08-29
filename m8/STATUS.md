@@ -147,21 +147,48 @@ HuggingFace `*-qrels` caches and the `load_dataset` network route. LEDGER §15.
 
 ## Done tonight
 
+**Protocol.** LEDGER v2 + `m8/registry.json`, after two adversarial gates on v1 (Codex: BLOCK,
+9/9/3) and two Fable passes, the second of which found four v1 fossils that had survived the
+rewrite into the *executable* layer — the "wrong number, no error" class. All actioned; the map is
+LEDGER §16, the amendments are §15, and the obligations still open are a **GAP LIST** in §4.4
+rather than a "DONE" heading that lies.
+
 | item | artifact |
 |---|---|
-| LEDGER v2 + machine-readable registry (22 probes; **7 runnable, 15 refuse themselves**) | `m8/LEDGER.md`, `m8/registry.json` |
-| Executable ship rule — every threshold a number, self-tested end to end | `m8src/decide.py` |
+| LEDGER v2 + machine-readable registry (23 probes; **7 runnable, 16 refuse themselves**), full manifest key schema, teacher-swap side-effect rule | `m8/LEDGER.md`, `m8/registry.json` |
+| Executable ship rule — every threshold a number, reading the registry rather than restating it | `m8src/decide.py` |
+| **11 checks on the rule, mostly its refusals**; establishes by measurement the `paired_dep` reduction §4.1 only asserted | `m8src/test_decide.py` |
 | Joint power simulation → MDE 0.0068, P(ship) table above | `m8src/power.py`, `results/m8_power.json` |
-| Guards G1 + G2, hardened against four concrete bypasses; **26/26 checks pass** | `m8src/paths_guard.py`, `m8src/probe_guard.py`, `m8src/test_guards.py` |
-| Retention decomposition (reframes H3) | `results/m8_retention_decomposition.json` |
+| Guards G1 + G2, hardened against four concrete routes; **26/26 checks pass** | `m8src/paths_guard.py`, `m8src/probe_guard.py`, `m8src/test_guards.py` |
+| **Rule audit** — for every stamped result it fetches the registry *from git at that result's commit* and diffs the bar against today's, so a registration that moved after a number existed is a BLOCKER | `m8src/rule_audit.py`, `results/m8_rule_audit.json` |
+| **B7 PASSED** — Gram-free preconditioned solver: 64K rows in 51 its / 10 s / 4.4 GB against a 34 GB dense Gram | `results/m8_b7_solver.json` |
+| **S0** — LoTTE overlap screen, 5.25M documents, 19 min: all ten slices reject | `results/m8_lotte_overlap.json` |
+| Protected-query filter, 80,954 queries over four partitions | `results/m8_protected_filter.json` |
+| Shadow alternatives measured (8 unused CQADupStack subforums) | `results/m8_shadow_alternatives.json` |
+| Retention decomposition + fragmentation attribution, both rewritten after review showed the first versions overclaimed | `results/m8_retention_decomposition.json`, `results/m8_fragmentation_attribution.json` |
 | Serial GPU/RAM/disk schedule | `results/m8_schedule.json` |
-| LoTTE acquired + provenance; M9-reserve inventories (EUR-Lex complete, USPTO sampled) | `work/lotte/`, `work/m9reserve/` |
-| S0 overlap screen + protected-query filter | `m8src/protected_filter.py` |
+| LoTTE acquired with provenance; M9-reserve inventories (EUR-Lex complete, USPTO sampled) | `work/lotte/`, `work/m9reserve/` |
+
+**Two defects the smokes caught before they cost anything**, which is what smokes are for:
+`M7_ENCODER` defaults to M7's *pre-swap* bge-base teacher, so every noise-floor arm died on a
+teacher mismatch — now pinned in `m8base`; and `sweep.one` catches its own exception and returns
+`None`, so a failed arm exits 0 and my driver ran all five after the first had failed.
+
+**A clean replication, unlooked for:** the noise floor's seed-0 arm reproduces M7's shipped
+candidate's proxy macro to all sixteen digits (0.5105689103506673). The floor's frame is the
+released artifact's frame.
 
 ## Running / next
 
-S0 full screen → protected-query filter → noise floor (incumbent frame) → T1 teacher screen.
-Blocked on nothing; items 1, 3, 4, 5 above shape what comes after.
+Noise floor (5 arms trained → full-suite scoring → floor per precision × pool-mode × endpoint),
+then the fused floor, then B7's real-data verification. **Wave-1 probes stay refused until their
+bars are frozen** — `probe_guard` enforces that, and today 16 of 23 registry rows refuse
+themselves.
+
+**Left for the next session, specified and unblocked:** the T1 teacher screens (B7 removed the
+arithmetic that blocked them; the four challengers need new encoder `Spec`s, `validate_encoder`
+passes, and Dylan's harrier ruling), the fit-list regeneration run, and the four gap-list
+obligations in LEDGER §4.4.
 
 ## File contract
 
