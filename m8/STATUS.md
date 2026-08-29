@@ -1,40 +1,129 @@
 # M8 status
 
-**Stage: PLANNING COMPLETE, 2026-08-29. Next session executes `m8/NEXT-SESSION.md` (overnight,
-Dylan offline ~12h). No training has run; no protected set touched.**
+**Stage: Phase 0 executing, overnight 2026-08-29.** LEDGER **v2** is live
+(`m8/LEDGER.md` + `m8/registry.json`), gated by two adversarial reviews of v1 — **Codex: BLOCK,
+9 BLOCKER / 9 MAJOR / 3 MINOR**, and a Fable scientific-judgment pass. All findings actioned; the
+map is LEDGER §16. Guards, the executable decision rule and the power simulation are committed and
+their tests pass. **No M8 training has run. No protected set has been scored.**
 
-The plan is `m8/PLAN-DRAFT.md` **v5** — final draft, gated by four adversarial reviews (three
-Codex: 17→14→8 findings; one Opus scientific-judgment pass whose fixes are folded in), with **all
-twelve owner rulings recorded** (§4 of the plan). Headlines: pure lookup is the product (no
-query-side neural head — that niche belongs to constella-nano/M9); STRICT C2 (the dense table must
-beat M7's dense table); byte cap 233 MB int8; LoTTE = mandatory shadow gate pending an overlap
-measurement; reserve BOTH new M9 sets (EUR-Lex + USPTO); PMC-OA excluded; synthetic Qwen3 training
-queries approved; training-only second teacher allowed; FEVER gets label + sensitivity;
-comparators (bge-small + LR-websearch) scored descriptively INSIDE the single access. Release
-names LOCKED: **qdrant/constella-zero-m8** and **qdrant/constella-nano-m9**.
+---
 
-Pipeline (binding order): protected freezes → filter → teacher freeze → noise floor → Stage R (one
-assembly, one validation) → Stage S (one finalist) → seeds → int8 → ONNX parity → fusion →
-manifest → one mandatory LoTTE shadow crossing → freeze → reserved-4 doc pre-encode → the single
-access. Ship rule: C1 ∧ C2 ∧ C3 + qualifying-v2-table + point/worst-group guards + six-set
-no-regression guard.
+## WAKE-UP NOTE FOR DYLAN — five decisions, in the order they block work
 
-## Wake-up note for Dylan (items the overnight session may add to; nothing here yet is blocking)
+**1. E14 — doc-side co-adaptation. The biggest lever nobody had named, and it needs your ruling.**
+The Fable review's headline: LightRetriever's table works because its document encoder was
+*co-trained to be reachable by a bag of token vectors*. M7 fit a bag to a **frozen** doc space that
+was never trained to be bag-compatible. That is, literally, what M7's own verdict "the remaining
+gap is architectural" describes. The fix is to LoRA/fine-tune the document tower jointly (or
+alternately) with the table. **Your rulings survive it**: the query side stays a pure lookup (E1),
+it is training-time not index-time (E5), and it ships as one doc-side ONNX file (E3).
+**What it costs, so you are not agreeing to a hidden bill:** it breaks document-vector sharing
+with frozen M7, so the 10.12M-document reserved pre-encode is paid **twice** (~20.7 GB and tens of
+GPU-hours per system); it needs a licence check that stella permits released derived weights; and
+it **forces C2 to be redefined**, because "the M8 table against the *same* frozen document
+vectors" stops being possible once the doc tower moves — and C2 is your E11 ruling. It also
+reopens the "frozen off-the-shelf document tower" premise, which CLAUDE.md explicitly lists as
+revisitable with arithmetic and your sign-off. **I have not opened it. Yes/no is yours.**
 
-- (to be filled by the overnight session: P(ship) from the power simulation; LoTTE overlap
-  measurement result; teacher-screen table + any swap case needing your sign-off; harrier-0.6b's
-  undisclosed training data if it matters; surprises.)
+**2. P(ship) — the number you asked the protocol to produce before it spends a week.**
+`results/m8_power.json`, calibrated on real paired per-query vectors. Reserved-four macro SE
+**0.00209**, 95% half-width **0.0041** (the plan's prior guess was 0.005 — good agreement).
+**Minimum detectable effect 0.0068.**
 
-## File contract (hygiene: full context, no pollution)
+| scenario | true C1 effect | P(ship) |
+|---|---|---|
+| structural target | +0.020 | **0.67** |
+| modest | +0.010 | **0.57** |
+| recipe-only | +0.005 | **0.15** |
+| M7 repeat (post-gate transfer was 0.000 ± 0.005) | 0.000 | **0.002** |
+| dense lags fused (strict C2 binds) | +0.020 / +0.006 | **0.46** |
+
+Read the bottom row: **if M8 is another recipe programme, it ships with probability ~0.15 and a
+repeat of M7's transfer ships essentially never.** That is the case for spending the milestone on
+capacity (D2/D1, and E14 if you open it) rather than on recipe knobs, and the LEDGER now says so
+in the protocol (§7) so the budget cannot quietly drift back.
+
+**3. LoTTE as the shadow (E10) — likely reopening; the full screen is running as I write.**
+Two findings. (a) **Licence splits**: the passages and package are CC BY-SA 4.0, but LoTTE's
+`search` queries are **non-commercial-research-only** (inherited GooAQ licence, quoted verbatim in
+LEDGER §2.3). I took the conservative route with no ruling needed — **forum queries only**, which
+is also the better analogue to CQADupStack. (b) **The registered overlap bar drops every slice.**
+On a 2,000-doc-per-slice smoke: three slices fail on *community* overlap alone —
+`writing/test` contains **english.stackexchange.com**, `technology/test` contains
+**android.stackexchange.com** (both are reserved confirmatory sets) and `science/test` contains
+physics (dev). The other seven fail only on **query leakage**, at rates of 0.1–0.8%.
+**I did not loosen the bar after watching it bite** — that is the tuning this project forbids. But
+the bar I registered drops a whole *slice* for a handful of leaked *queries*, whereas everywhere
+else in this project the remedy for a contaminated item is to remove the **item** (R1 removes
+pairs, not sources). The full screen computes both readings; the per-query-remedy column is
+labelled DESCRIPTIVE, NOT ADOPTED. **Your call: keep the slice-level bar (LoTTE dies, and the
+milestone has no shadow), or authorise the per-query remedy.**
+
+**4. Two licence/provenance rulings on reserved and candidate assets.**
+- **harrier-oss-v1-0.6b** (teacher challenger): training data **undisclosed** — a contamination
+  black box against four hash-pinned reserved sets. The screen may measure it; **adoption needs
+  your ruling**, and the LEDGER says the session does not make it.
+- **HUPD** (the buildable USPTO reserve): its HuggingFace card is tagged **CC-BY-NC-SA-4.0**,
+  more restrictive than the "CC-BY" previously recorded. Under our standing rule a wrapper tag is
+  not a licence and cannot restrict public-domain text (37 CFR 1.71) — but that is a *legal
+  interpretation*, and per your own instruction I am not inferring it. Also: the stronger
+  citation-based USPTO construction needs a **PatentsView API key**, which requires your signup.
+
+**5. The E12 comparator's bill.** You approved scoring bge-small and LR-dense-websearch inside the
+access as descriptive context. bge-small is cheap. **LR-dense-websearch means pushing 10.12M
+documents through a 1.5-billion-parameter Qwen on a 10 GB card** — plausibly more GPU time than
+all of Stage R's training combined, bought for one descriptive row. `instructions-m8.md` already
+sanctions published numbers as labelled context. **Pre-agreeing the fallback now beats discovering
+the collision in week three.**
+
+### Two things you should see, that are not questions
+
+**The short-query story was wrong, and measuring it changed the plan.** The premise behind H3 —
+"best on the longest queries, worst on the shortest" — is a *between-dataset* reading of six
+points. Within datasets it inverts: the table loses an **extra 0.00021 nDCG per additional query
+word beyond the teacher's own difficulty gradient** (t = 3.0), and ArguAna's own retention
+*declines* across its length quartiles (0.971 → 0.893). The signal that IS consistent is **subword
+fragmentation**: the table falls **0.050 nDCG further behind per +1.0 subwords-per-word** (t = 4.6),
+uncorrelated with length (r = 0.006). That is exactly the channel a multi-word tokenizer reaches,
+which is why D2's gate was promoted into Wave 1. `results/m8_retention_decomposition.json`,
+LEDGER §17. Zero new access — it is a re-read of M7's already-scored final run.
+
+**A near-miss, found by review rather than by accident.** `work/dev/cqadup-android.json` and
+`work/dev/cqadup-english.json` held the **complete corpora and qrels of two of the four reserved
+confirmatory sets**, materialized on 2026-08-26 when the untouched-final pair was defined. Any M8
+dev script calling `devsuite.load("cqadup-android")` would have scored a reserved set silently.
+**Nothing scored them** — no M8 evaluation had run. They are now a protected kind, along with the
+HuggingFace `*-qrels` caches and the `load_dataset` network route. LEDGER §15.
+
+---
+
+## Done tonight
+
+| item | artifact |
+|---|---|
+| LEDGER v2 + machine-readable registry (22 probes; **7 runnable, 15 refuse themselves**) | `m8/LEDGER.md`, `m8/registry.json` |
+| Executable ship rule — every threshold a number, self-tested end to end | `m8src/decide.py` |
+| Joint power simulation → MDE 0.0068, P(ship) table above | `m8src/power.py`, `results/m8_power.json` |
+| Guards G1 + G2, hardened against four concrete bypasses; **26/26 checks pass** | `m8src/paths_guard.py`, `m8src/probe_guard.py`, `m8src/test_guards.py` |
+| Retention decomposition (reframes H3) | `results/m8_retention_decomposition.json` |
+| Serial GPU/RAM/disk schedule | `results/m8_schedule.json` |
+| LoTTE acquired + provenance; M9-reserve inventories (EUR-Lex complete, USPTO sampled) | `work/lotte/`, `work/m9reserve/` |
+| S0 overlap screen + protected-query filter | `m8src/protected_filter.py` |
+
+## Running / next
+
+S0 full screen → protected-query filter → noise floor (incumbent frame) → T1 teacher screen.
+Blocked on nothing; items 1, 3, 4, 5 above shape what comes after.
+
+## File contract
 
 | file | contract | read when |
 |---|---|---|
-| `m8/STATUS.md` | ONE SCREEN. Stage, running, blocked. Updated every session before push. | always, first |
-| `m8/NEXT-SESSION.md` | The overnight worklist + hard guardrails. Deleted when consumed. | at session start |
-| `m8/PLAN-DRAFT.md` | v5, the authoritative plan. Superseded by LEDGER.md at transcription, then archived to `research/m8-planning/`. | while it exists |
-| `m8/LEDGER.md` | (next session) Binding pre-registrations, bars, verdicts. Protocol authority. | before any decision |
+| `m8/STATUS.md` | ONE screen plus the wake-up note. Stage, running, blocked. | always, first |
+| `m8/LEDGER.md` | Binding protocol. Rules, bars, verdicts, amendments. | before any decision |
+| `m8/registry.json` | The executable half of §9. `probe_guard` reads this, not the prose. | before any run |
 | `m8/EXPLORED.md` / `m8/RESULTS.md` | dead ends / runs, one row each. | as needed |
-| `research/m8-planning/*` | Archival planning record (5 reviews, 4 gates, 4 sweeps/checks). Point at it, never restate; read on demand. | on demand |
+| `research/m8-planning/*` | Archival planning record (6 reviews). Point at it, never restate. | on demand |
 
-Rules: every number carries an artifact pointer; no file restates another (link); STATUS stays one
-screen; a future session cold-starts from STATUS + NEXT-SESSION (later: STATUS + LEDGER) alone.
+Rules: every number carries an artifact pointer; no file restates another; a future session
+cold-starts from STATUS + LEDGER + registry alone.
