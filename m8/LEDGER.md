@@ -1163,6 +1163,64 @@ CORPORA are ordinary public downloads while their query and qrel payloads stay g
 in either direction. It states what changed, why, and that the dependent numbers did not yet
 exist.)*
 
+- **2026-08-29 — E14 SPECIFIED as two staged probes, `E14-HEAD` (runnable) and `E14-LORA`
+  (refused).** Dylan ruled "measure it small first"; this is what small means, and why.
+  **`E14-HEAD` is the cheap question**: an MLP head over the teacher's **cached** document vectors,
+  trained jointly with the table. The transformer is never re-run — the head is a matmul over fp16
+  already on disk — so it costs a training run instead of 2M+ forward passes. It must be
+  **nonlinear**: a linear doc-side map is provably absorbable into the table (standing directive
+  #4), so a linear head would measure nothing while looking like a result.
+  Endpoints are B3's two scalars unchanged, so **the measured floors bind and the bar is 0.0040**
+  at int8/sqrt; comparator R0; three paired seeds; one contrast.
+  **The scope limit is the whole reason the staging works, and it is asymmetric.** An MLP on the
+  final document vector cannot recover information the tower already discarded, so `E14-HEAD` tests
+  *is the document space re-shapeable*, not *can the tower learn to be bag-reachable* — which is
+  E14's real question. Therefore **a null here is WEAK evidence about the LoRA and must never be
+  written as closing E14**, while a positive here is STRONG evidence for buying it. That asymmetry
+  is what makes running the cheap stage first worth doing rather than a corner cut.
+  **A shippability gate is attached that did not exist before.** `B6-pre` PASSED with
+  `--head linear` only. E3 requires the head to fuse into ONE document ONNX file as plain nodes,
+  and **that is unproven for a nonlinear head** — so B6-pre must be re-run with `--head mlp` before
+  any head-bearing candidate is described as shippable.
+  **`E14-LORA` is registered and refused**, with a TBD bar on purpose: the bar is not written until
+  the head reports, because the head's number changes what effect size is worth buying and a bar
+  written today would be a guess wearing a pre-registration's clothes. Its bill — the doubled
+  10.12M pre-encode, hours of pool re-encoding per arm, the stella derived-weights licence check,
+  and the forced redefinition of C2 (Dylan's E11 ruling) — is itemised in the registry and **none
+  of it is authorised by the "measure it small first" ruling**.
+
+- **2026-08-29 — E10's remedy SPECIFIED (`E10-REMEDY`), with the exact slices.** From
+  `results/m8_lotte_overlap.json`, which had already computed the per-question remedy
+  descriptively:
+  **DEAD, community overlap with protected sets — no remedy applies:** `writing/test`
+  (english.stackexchange.com), `science/test` (physics.stackexchange.com), `technology/test`
+  (android + softwareengineering.stackexchange.com).
+  **SURVIVING SEVEN, ~14,034 queries after remedy:** `writing/dev` (1,988), `recreation/dev`
+  (1,994), `recreation/test` (1,990), `science/dev` (2,002), `technology/dev` (1,993),
+  `lifestyle/dev` (2,074), `lifestyle/test` (1,993).
+  **The screen corroborates the split rather than merely permitting it**: the three
+  community-overlapping slices leak at **1.19–7.85%** of queries, while all seven survivors leak at
+  **0.10–0.75%**, and the same ordering holds on document near-duplicates (0.013–0.156% against
+  0.001–0.010%). The contamination is concentrated exactly where the communities overlap, which is
+  what makes per-item removal credible here rather than convenient. All three dead slices are
+  **test** splits; the survivors are five dev and two test.
+  **The remedy, in order:**
+  1. Drop the leaked **queries** AND the near-duplicate **documents** — R1 removes the item, and
+     documents are items too (23 of 277,072 in `writing/dev`, owned by cqadup-english and the two
+     CQA dev components).
+  2. **Re-screen the remediated slices and require ZERO exact and ZERO near hits**, on queries and
+     documents both. A slice that still hits is dropped. Removal is not assumed to have worked
+     because it was performed.
+  3. Hash-pin the survivors as a **protected partition** — never trained on, and added to
+     `paths_guard`'s protected roots.
+  4. Feed the surviving queries into `protected_filter`'s index and **regenerate the fit list**;
+     the current 337,981 predates them.
+  5. Register the **use limit**: the shadow is a check, not a selection surface. It may not be used
+     to choose between candidates, and the moment it is optimised against it becomes a second dev
+     set and stops doing its job.
+  **Forum queries only** — LoTTE's `search` queries stay excluded under GooAQ's
+  non-commercial-research-only terms, which needed no ruling.
+
 - **2026-08-29 — E12 RULED by Dylan: LightRetriever-dense enters as PUBLISHED NUMBERS ONLY,
   labelled.** No LR-dense encode is bought. The full comparison would push 10.12M confirmatory
   documents through a 1.5B-parameter Qwen on a 10 GB card — on the order of a hundred-plus

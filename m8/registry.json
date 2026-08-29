@@ -406,6 +406,48 @@
    "endpoint": "would inherit B3's, but see blockers -- the estimand itself is wrong for B3's question",
    "comparator": "ICT fraction 0",
    "multiplicity": "n/a -- not runnable"
+  },
+  "E14-HEAD": {
+   "wave": 1,
+   "title": "doc-side re-shaping: a NONLINEAR head on cached document vectors, trained with the table",
+   "question": "Dylan's E14 ruling was 'measure it small first'. This is the small measurement: can the document space be re-shaped to be more reachable by a bag of token vectors AT ALL, before anyone pays to fine-tune the tower?",
+   "lever": "an MLP head (Linear -> GELU -> Linear) applied to the FROZEN teacher's cached document vectors, trained jointly with the table. It must be NONLINEAR: a linear doc-side map is provably absorbable into the table and would be a no-op (CLAUDE.md standing directive #4), so a linear head would measure nothing and look like a result.",
+   "why_it_is_cheap": "the transformer is never re-run. The head is applied to document vectors already on disk, so re-encoding is a matmul over cached fp16 rather than 2M+ forward passes. That is the whole reason this stage exists: it is hours cheaper than the LoRA and answers the prior question.",
+   "held_fixed": "the query side stays a pure lookup table (E1), the teacher weights are untouched, Phase A/B structure, updates, batch, negatives, temperature, learning rate and the pair pool are all as R0.",
+   "endpoint": "the SAME two scalars as B3, both at int8/sqrt: DENSE = out-of-domain macro over cqadup-programmers and cqadup-physics; FUSED = the 4-component fused_macro under the frozen operator. Affordable here because applying an MLP to 5.23M cached hotpotqa vectors is a matmul.",
+   "comparator": "R0, the frozen recipe with no doc-side head, at the same seeds",
+   "bar": "mean-over-seeds gain >= 0.0040 on BOTH scalars. 0.0040 is max(planning minimum, 2 x measured floor) at int8/sqrt, the same convention every other probe reads.",
+   "seeds": "3, paired: same Phase-B checkpoint, differing only in the Phase-A seed.",
+   "multiplicity": "none -- one pre-specified contrast against R0 on two scalars, an intersection-union that only lowers type-I.",
+   "no_survivor": "THE CHEAP RE-SHAPING DOES NOT HELP. This does NOT close E14 and must never be written as though it did -- see scope_limit. It means the head route is dead and the LoRA question stands, with its cost known.",
+   "scope_limit": "AN MLP ON THE FINAL DOCUMENT VECTOR CANNOT RECOVER INFORMATION THE TOWER DISCARDED. So this tests 'is the document space re-shapeable', NOT 'can the tower learn to be bag-reachable' -- which is E14's actual question. A null here is therefore WEAK evidence about the LoRA, and a positive here is strong evidence FOR it. The asymmetry is the point of running the cheap stage first.",
+   "shippability_gate": "B6-pre PASSED with --head linear only. Before any head-bearing candidate is called shippable, B6-pre must be re-run with --head mlp: E3 requires the head to fuse into ONE doc ONNX file as plain nodes, and that has not been demonstrated for a nonlinear head.",
+   "noise_floor_exempt": false,
+   "bar_frozen": {
+    "date": "2026-08-29",
+    "bar": 0.004,
+    "read_at": "int8 / sqrt",
+    "source": "the same measured floors B3's bar cites; endpoints are identical so the floors bind unchanged"
+   },
+   "authorised_by": "Dylan 2026-08-29, E14 ruling 'measure it small first'. NOT authorised by that ruling: the 10.12M double pre-encode, the stella derived-weights licence check, any C2 redefinition."
+  },
+  "E14-LORA": {
+   "wave": "gated -- NOT runnable",
+   "title": "doc-side co-adaptation proper: LoRA the document tower jointly with the table",
+   "question": "can the document tower learn to be reachable by a bag of token vectors? (E14's actual question, which E14-HEAD only approximates)",
+   "status": "REGISTERED AND REFUSED pending (a) E14-HEAD's result and (b) a fresh ruling from Dylan, because this is where the bill starts.",
+   "bar": "TBD -- deliberately. The bar is not written until E14-HEAD reports, because the head's result changes what effect size is worth buying and a bar written now would be a guess dressed as a pre-registration.",
+   "bar_pending": "E14-HEAD's measured gain, and Dylan's ruling on the costs below",
+   "endpoint": "would inherit E14-HEAD's two scalars",
+   "comparator": "R0",
+   "multiplicity": "n/a -- not runnable",
+   "no_survivor": "the frozen document tower stands and E14 closes for M8",
+   "the_bill_dylan_has_not_yet_agreed": [
+    "document vectors change, so the reserved 10.12M pre-encode is paid TWICE",
+    "the Phase-A pool bank (~2M rows, drawn from 6.17M) must be re-encoded per arm -- hours per arm on a 10 GB card, not minutes",
+    "a licence check that stella permits releasing derived weights",
+    "C2 must be REDEFINED: 'the M8 table against the SAME frozen document vectors' stops being possible once the tower moves, and C2 is Dylan's E11 ruling"
+   ]
   }
  },
  "dev_groups": {
