@@ -1353,3 +1353,42 @@ at 128K the untouched fraction is three times that before any training begins. T
 minimum-updates-per-reachable-row criterion and the compositional init floor (§8) are load-bearing,
 not paperwork.
 
+
+## 19. B2 — the KL term is degenerate. H2 CONFIRMED.
+
+`results/m8_b2_entropy.json`, 4,000 TRAIN queries, the recipe's own `kl_k=32`, `temp=0.02` and
+2M-row bank. **Descriptive; adopts nothing** (§9). Its one registered consequence is whether it
+triggers the separately registered `R-LIST` arm.
+
+Objective A's KL term asks the student to match the teacher's distribution over the query's
+positive plus 31 distractors drawn **uniformly** from two million documents, at temperature 0.02.
+What that distribution actually looks like:
+
+| | uniform bank (**the recipe**) | teacher's own top-200 |
+|---|---|---|
+| entropy, **median** | **5.65e-07 nats** | 0.505 nats |
+| entropy, mean | 1.98e-02 | 0.868 |
+| as a fraction of the ln(32) = 3.466 ceiling | **0.57%** | 25.1% |
+| teacher's max probability, median | **1.0** | 0.890 |
+| queries below 1e-4 nats | **82.9%** | 1.5% |
+| queries below 1e-2 nats | 94.4% | 14.5% |
+
+**For the median query the teacher's target is a delta function to seven decimal places.** The KL
+term is asking the student to reproduce a one-hot distribution it already reproduces; its gradient
+contribution is near zero for a reason that has nothing to do with the student. H2 predicted ~1e-4
+nats and the median is three orders of magnitude below even that.
+
+Two honesty notes. (i) **Quote the median, not the mean.** The mean of 1.98e-02 is carried almost
+entirely by the top 1% of queries (p99 = 0.669); the distribution is not concentrated near its
+mean and a mean alone would understate how degenerate the typical case is. (ii) **This does not
+show that a listwise objective would be better.** It shows the current term is not doing the work
+its presence implies. Whether a harder candidate set or a different objective helps is `R-LIST`'s
+question, and `R-LIST` remains a stub with a `TBD-noise-floor` bar that `probe_guard` refuses
+until it is frozen.
+
+**What it does establish for the milestone's diagnosis**: a concrete, measured mechanism for why
+the recipe class transferred ~0.000 in M7. One of the two training signals was, for five queries
+in six, carrying no information at all — and switching the candidate sampler to the teacher's own
+top-200 raises the median entropy by **six orders of magnitude**, to a quarter of the uniform
+ceiling. That is a cheap, well-defined change with a measured mechanism behind it, which is a
+different class of lever from the knob-tuning M7 measured at zero transfer.
