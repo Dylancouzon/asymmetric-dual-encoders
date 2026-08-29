@@ -1,8 +1,29 @@
 {
   "_note": "LEDGER \u00a74.4 deliverable 3: rule compliance, AUDITED rather than discovered.",
-  "head": "512f9bc5967de38ff86e67f1742e8687141b2eb4",
-  "registry_sha_now": 2,
+  "head": "ffa1a5a34b0d9fcab03a36972d4664dabc43af62",
+  "registry_version": 2,
+  "registry_sha256_now": "aacad17386a1ea71e7e1537366c0f4fb4f77f97ae222ae5c4eac230f47d79ae5",
   "stamped_results_checked": [
+    {
+      "file": "m8_b17_oracle.json",
+      "probe": "B17",
+      "commit": "62dbd5a3"
+    },
+    {
+      "file": "m8_b2_entropy.json",
+      "probe": "B2",
+      "commit": "ffa1a5a3"
+    },
+    {
+      "file": "m8_b6_pre.json",
+      "probe": "B6-pre",
+      "commit": "4d14141e"
+    },
+    {
+      "file": "m8_b7_realdata.json",
+      "probe": "B7",
+      "commit": "76bbc239"
+    },
     {
       "file": "m8_b7_solver.json",
       "probe": "B7",
@@ -17,17 +38,39 @@
       "file": "m8_lotte_overlap.json",
       "probe": "S0",
       "commit": "344e0895"
+    },
+    {
+      "file": "m8_noise_floor.json",
+      "probe": "NF",
+      "commit": "c8cdb107"
+    },
+    {
+      "file": "m8_noise_floor_fused.json",
+      "probe": "NF",
+      "commit": "c46aed79"
+    },
+    {
+      "file": "m8_t1_decision.json",
+      "probe": "T1",
+      "commit": "66545055"
     }
   ],
   "unstamped_artifacts": [
+    "m8_b7_realdata.SMOKE.json",
     "m8_devperquery_cal.json",
+    "m8_encoder_validation.json",
     "m8_fragmentation_attribution.json",
+    "m8_noise_floor_fused.SMOKE.json",
     "m8_power.json",
     "m8_protected_filter.json",
     "m8_retention_decomposition.json",
     "m8_rule_audit.json",
     "m8_schedule.json",
-    "m8_shadow_alternatives.json"
+    "m8_shadow_alternatives.json",
+    "m8_t1_granite-r2.json",
+    "m8_t1_gte-modernbert-base.json",
+    "m8_t1_stella-400M-v5.json",
+    "m8_trainq_manifest.json"
   ],
   "_unstamped_note": "not every results/m8_*.json is a probe result -- calibration caches, schedules and descriptive diagnostics are inputs, not registered measurements. They are listed so the distinction is visible.",
   "findings": [],

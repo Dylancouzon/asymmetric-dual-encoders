@@ -69,9 +69,28 @@ def main():
     qsel = rng.choice(len(q_texts), n, replace=False)
     dev = m8base.device()
 
-    # The bank, exactly as training builds it: a contiguous prefix of the pool.
+    # THE BANK, built exactly as `m7src/train.py:535-543` builds it: a seeded random sample of the
+    # 6.17M-row pool with the banned rows dropped -- NOT a contiguous prefix.
+    #
+    # The first version of this file took `pool_vecs[:2_000_000]` and called it "exactly as
+    # training builds it". The pool is ordered BY STORE, so a prefix is ~40% ESCI product text
+    # where a random sample is ~13%, and under-representing wiki distractors for wiki-heavy TRAIN
+    # queries biases the measured entropy DOWNWARD -- that is, toward the headline this probe was
+    # written to test. Caught by adversarial review. A convenience that flatters the hypothesis is
+    # the worst kind.
+    from train import banned_rows
+    brng = np.random.default_rng(cfg.seed)
     nb = min(a.bank, pool_vecs.shape[0])
-    bank = torch.from_numpy(np.ascontiguousarray(pool_vecs[:nb])).to(dev).half()
+    bank_ids = np.sort(brng.choice(pool_vecs.shape[0], size=nb, replace=False))
+    _barr, _, _ = banned_rows()
+    if _barr.size:
+        _i = np.minimum(np.searchsorted(_barr, bank_ids), _barr.size - 1)
+        _hit = _barr[_i] == bank_ids
+        bank_ids = bank_ids[~_hit]
+    nb = len(bank_ids)
+    print(f"bank: {nb:,} rows, seeded random sample of {pool_vecs.shape[0]:,} "
+          f"(the training draw, not a prefix)", flush=True)
+    bank = torch.from_numpy(np.ascontiguousarray(pool_vecs[bank_ids])).to(dev).half()
     tqs = torch.from_numpy(np.ascontiguousarray(tq[qsel])).to(dev).float()
     p_i = np.array([pos_idx[i][0] for i in qsel])
     pos_v = torch.from_numpy(np.ascontiguousarray(pool_vecs[p_i])).to(dev).float()
@@ -83,19 +102,50 @@ def main():
         h = -(p * torch.log(p.clamp_min(1e-30))).sum(1)
         return h.detach().cpu().numpy(), p.max(1).values.detach().cpu().numpy()
 
+    def student_side(cand, qv):
+        """THE HALF THE FIRST VERSION NEVER MEASURED. A one-hot teacher target does NOT by itself
+        make the KL gradient vanish: `F.kl_div(log_softmax(student), one_hot)` is exactly the
+        student's cross-entropy on the positive against 31 distractors, and its gradient is small
+        only insofar as the STUDENT already ranks the positive top. Asserting "carries no
+        information" from the teacher side alone was an inference, not a measurement."""
+        ls = torch.log_softmax(torch.einsum("bd,bkd->bk", qv, cand) / TEMP, 1)
+        pt = torch.softmax(torch.einsum("bd,bkd->bk", tqs, cand) / TEMP, 1)
+        kl = (pt * (torch.log(pt.clamp_min(1e-30)) - ls)).sum(1)
+        ps = ls.exp()
+        return {"student_p_on_positive": {
+                    "mean": float(ps[:, 0].mean()), "p50": float(ps[:, 0].median()),
+                    "p05": float(torch.quantile(ps[:, 0].float(), 0.05))},
+                "student_ranks_positive_top_frac": float((ls.argmax(1) == 0).float().mean()),
+                "kl_nats": {"mean": float(kl.mean()), "p50": float(kl.median()),
+                            "p95": float(torch.quantile(kl.float(), 0.95))}}
+
     out = {"_note": __doc__.strip().splitlines()[0],
            "status": "DIAGNOSTIC. Adopts nothing and may not adopt anything (LEDGER 9). Its only "
                      "registered consequence is whether it triggers the separately registered "
                      "R-LIST arm.",
            "setting": {"n_queries": int(n), "kl_k": KL_K, "temp": TEMP, "bank_rows": int(nb),
                        "entropy_ceiling_nats": float(np.log(KL_K)), "seed": a.seed},
-           "arms": {}}
+           "arms": {}, "student_side": None}
 
     # ---- arm 1: the recipe's own sampler -- uniform from the bank -------------------------
     sel = torch.from_numpy(rng.integers(0, nb, n * (KL_K - 1))).to(dev)
     dist = bank.index_select(0, sel).float().view(n, KL_K - 1, -1)
     cand = torch.cat([pos_v.unsqueeze(1), dist], 1)
     h_u, pmax_u = entropies(cand)
+
+    # The STUDENT side, on the same candidate sets: the shipped M7 table.
+    student = None
+    try:
+        import compare_full
+        rel, spre, models = compare_full.load("p35w-2m-s2500", device=dev)
+        qv = torch.as_tensor(models["int8"].encode([q_texts[i] for i in qsel], spre),
+                             device=dev).float()
+        qv = qv / qv.norm(dim=-1, keepdim=True).clamp_min(1e-12)
+        student = student_side(cand, qv)
+        student["_table"] = "p35w-2m-s2500 int8 (the shipped M7 artifact)"
+        del models, qv
+    except Exception as e:                                       # noqa: BLE001
+        student = {"_error": f"{type(e).__name__}: {e}"}
     del dist, cand
     m8base.empty_cache()
 
@@ -134,6 +184,7 @@ def main():
             "share_of_queries_below_1e-2_nats": float((h < 1e-2).mean()),
         }
 
+    out["student_side"] = student
     u, t = out["arms"]["uniform_bank_the_recipe"], out["arms"]["teacher_top200"]
     out["reading"] = (
         f"Under the recipe's own uniform sampler the teacher's candidate distribution carries "

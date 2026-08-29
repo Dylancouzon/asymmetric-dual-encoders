@@ -1,0 +1,22 @@
+{
+  "_note": "The FUSED half of the noise floor (LEDGER \u00a74.7, \u00a74.4 gap list).",
+  "fusion_operator": {
+    "family": "convex0",
+    "param": 0.8
+  },
+  "_operator_note": "FROZEN, not re-fitted per arm: re-selecting would measure the floor of a fitting procedure, a different and much larger quantity (LEDGER 7).",
+  "components": [
+    "cqadup-programmers"
+  ],
+  "_components_note": "the two held-out dev slices carry pool row indices rather than document text, so BM25 -- and therefore any fused read -- does not exist for them by construction.",
+  "arm_macros": {
+    "m8nf-seed0:mean|fp16": 0.369704101165538,
+    "m8nf-seed0:mean|int8": 0.36982990001631244,
+    "m8nf-seed0:sqrt|fp16": 0.3700332604752694,
+    "m8nf-seed0:sqrt|int8": 0.37015032089900657
+  },
+  "floor": {},
+  "bars": {},
+  "detail": {},
+  "bar_formula": "bar = max(0.0040, 2 x floor); floor = max pairwise |delta| over the 3 seed arms"
+}

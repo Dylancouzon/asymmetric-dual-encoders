@@ -448,11 +448,11 @@ duplication the dependence-blind interval is 1.43× too narrow.
    | reserved-4 equal-weight macro SE (near-sibling reference class) | **0.00209** |
    | 95% half-width | **0.0041** (the plan's prior estimate was 0.005 — agreement) |
    | **MDE** at power 0.8 (the binding leg is the α/3 bound, z = 2.394) | **0.0068** |
-   | P(ship) — structural target δ=0.020 | **0.67** |
-   | P(ship) — modest δ=0.010 | **0.57** |
-   | P(ship) — recipe-only δ=0.005 | **0.15** |
+   | P(ship) — structural target δ=0.020 | **0.84** |
+   | P(ship) — modest δ=0.010 | **0.80** |
+   | P(ship) — recipe-only δ=0.005 | **0.21** |
    | P(ship) — M7 repeat δ=0.000 | **0.002** |
-   | P(ship) — dense lags fused (C2 binds) | **0.46** |
+   | P(ship) — dense lags fused (C2 binds) | **0.57** |
 
    Calibration extrapolates each reserved set's per-query variance from its nearest dev analogue
    (fever←hotpotqa, dbpedia←nq-250k, android←programmers, english←physics), because the reserved
@@ -478,8 +478,6 @@ a wrong number, pointed the other way: a future session (or the owner reading Gi
 |---|---|---|
 | `m8src/test_final_guard.py` | the 14-line one-shot checklist in §6, each with an acceptance test | the access |
 | `m8src/test_freeze_binding.py` | the refusals `freeze.write` must make on M8 paths | the freeze |
-| B7 real-data verification | block CG vs the direct solve on the REAL X/Y/W0 across the full λ grid, compared on dev macro | any closed-form number the solver produces |
-| fused + fp16 noise floor | §4.7's floor on the endpoints B3/B10/B13/R1-ASSEMBLY actually read | those probes' bars |
 | B-leg noise floor | a null pair varying the B leg, for arms that restructure it (R-PHASE and any pool/init change flowing through B) | those probes' bars |
 | reserved-4 pre-encode allowlist entry | a corpus-only module registered under G2 — `check_dataset` currently refuses `beir/fever` outright, which is the right default and will block the pre-encode | pipeline step 13 |
 
@@ -544,10 +542,18 @@ move the all-component macro by **−0.0009 and +0.0015** (span 0.0024) — at t
 0.0027–0.0078 recipe-perturbation band, as a smaller perturbation should be. The two numbers
 measure different things and both stay on the record.
 
-**Two exact replications, unlooked for.** The seed-0 arm reproduces M7's shipped candidate's dev
-proxy macro to all sixteen digits (0.5105689103506673) and, served at `sqrt`, its full-suite macro
-of **0.6153** — the figure `m7/RESULTS.md` reports for the released artifact. The floor's frame is
-the released artifact's frame, demonstrated rather than asserted.
+**ONE replication, seen through three rank-invariant lenses — corrected 2026-08-29.** The seed-0
+arm reproduces M7's shipped candidate's dev proxy macro to all sixteen digits
+(0.5105689103506673), its full-suite macro at `sqrt` (0.6153), and its fused macro (0.57266,
+§4.7b). The first version of this file called that "two exact replications" and said the harness
+"reproduced a 2,500-step run exactly". **Both claims were wrong**, and a byte comparison shows it:
+`m8nf-seed0.npz` and `p35w-2m-s2500.npz` **differ** — 0.066% of `rows_fp16` elements, max
+|Δ| = 4.88e-4 (one fp16 ULP), and `rows_int8` and `token_weights` differ too. M7's stated
+non-bit-identical GPU reductions held exactly as M7 said. What the three matching numbers actually
+demonstrate is that **nDCG is rank-based and quantizes ~1e-7 of weight noise away**: no ranking on
+the dev suite flipped. That is a real and useful fact — the floor's frame is the released
+artifact's frame for every purpose a bar reads — but it is ONE replay observed three ways, not
+three independent validations, and the mechanism is metric insensitivity, not bitwise determinism.
 
 **What this floor does NOT cover** (§4.4 gap list): it holds the B checkpoint fixed, so an arm that
 restructures the B leg (R-PHASE, and any pool or init change flowing through B) has a larger floor
@@ -568,11 +574,15 @@ much larger quantity, and would let each arm choose its own operator (§7).
 | fused macro, fp16 · sqrt | 0.00060 | 0.0040 |
 | fused macro, fp16 · mean | 0.00066 | 0.0040 |
 
-**The fused floor is roughly THREE TIMES TIGHTER than the dense one** (0.0006 against
-0.0010–0.0023), which is what fusing with a deterministic BM25 run should do: half the fused score
-comes from a component with no seed at all, so seed variation is damped. Worth stating because it
-cuts the other way too — a fused endpoint resolves smaller effects than a dense one, so a lever
-that clears the fused bar and not the dense one has not shown a table improvement.
+**The fused floor is tighter than the dense one** (0.0006 against 0.0010–0.0023), which fusing
+with a deterministic BM25 run should do: part of the fused score comes from a component with no
+seed at all, so seed variation is damped. **Two corrections to how that was first stated**
+(2026-08-29 review): `convex0` at w = 0.8 weights BM25 at **20%**, not "half"
+(`m7src/fusion.py`); and the fused macro is over **four** components while the dense endpoints are
+over **six**, so "three times tighter" compares two different estimands and is not a like-for-like
+ratio. The directional point stands and is the one that matters: **a fused endpoint resolves
+smaller effects than a dense one, so a lever that clears the fused bar and not the dense one has
+NOT shown a table improvement.**
 
 **A third exact replication.** The seed-0 arm served at `sqrt` gives a fused dev macro of
 **0.57266**, against the frozen fusion spec's own recorded `dev_macro` of 0.5726634997854769
@@ -1211,6 +1221,25 @@ exist.)*
   screened in its own frame and the comparison is labelled teacher-plus-tokenizer. Registered in
   §6 and §10. No T1 or B7 number exists at this entry.
 
+- **2026-08-29 — amendment: `spec_name` added to T1's registry rows, and the record that it
+  landed after screen numbers existed.** It maps each candidate's repo identity to the encoder
+  `Spec` that implements it. Pure bookkeeping — no threshold, endpoint, comparator or multiplicity
+  changed — but this project's rule is that registry changes are amendments, and it landed after
+  the granite and gte screens had run, so it is logged rather than left implicit. Without it a
+  screened candidate silently read as unscreened, which is a wrong verdict rather than an error.
+
+- **2026-08-29 — corrections from the results review (fourth adversarial pass).** A Fable review of
+  the night's RESULTS rather than its protocol. Two measurements were re-run and several claims
+  corrected; the fixes are in §17b, §18, §19, §21, §4.4, §4.7 and §4.7b. The two that changed
+  numbers: **B2's distractor bank** was a contiguous pool prefix where training draws a seeded
+  random sample (the pool is store-ordered, so the composition was wrong) — re-run, and the recipe
+  proved *more* degenerate than the flawed version said; and **B2's student side was never
+  measured**, so "carries no information" was an inference — now computed on the shipped artifact
+  (median KL 1.08e-07 nats). The most important correction was methodological: **leave-one-out had
+  been run only against the dataset that threatened the claim the session disliked**, not against
+  the one carrying 53% of the variance behind the claim it kept. Run for all six; the fragmentation
+  channel survives every exclusion at t >= 3.28.
+
 - **2026-08-29 — INCIDENT, found by review before it cost anything.** `work/dev/cqadup-android.json`
   and `work/dev/cqadup-english.json` held the **complete corpora and qrels** of two of the four
   reserved confirmatory sets, materialized by `devsuite.load()` on 2026-08-26 when the
@@ -1279,9 +1308,26 @@ because the first version had already been used to promote a probe.
 ### 17b. Fragmentation IS the channel, and it survives the same attack
 
 - Pooled within-dataset, the table falls **0.050 nDCG further behind the teacher per +1.0
-  subwords-per-word** (t = 4.61). **ArguAna carries only 2.2% of the fragmentation variance**
-  (nfcorpus 53%, scidocs 23%, scifact 12%), and excluding ArguAna the slope is **+0.045,
-  t = 4.71** — unchanged, if anything stronger. This is not a one-dataset result.
+  subwords-per-word** (t = 4.61).
+- **It survives EVERY single-dataset exclusion**, which the first version did not check. That
+  version ran leave-one-out against ArguAna only — the dataset that threatened the *length* claim —
+  and not against nfcorpus, which carries **53%** of the fragmentation identification variance and
+  is the dataset this claim leans on. Using the tool against the claim you dislike and not the one
+  you keep is how a milestone gets routed on an unexamined number; caught by adversarial review
+  and now computed for all six:
+
+  | excluded | slope | t |
+  |---|---|---|
+  | scifact (**worst case**) | +0.0369 | **+3.28** |
+  | nfcorpus (53% of the variance) | +0.0566 | +3.50 |
+  | scidocs | +0.0590 | +4.32 |
+  | trec-covid | +0.0502 | +4.62 |
+  | arguana | +0.0454 | +4.71 |
+  | fiqa | +0.0562 | +5.01 |
+
+  **Every exclusion leaves the slope positive with t ≥ 3.28.** Contrast the length claim, where
+  removing ArguAna alone collapses t from 3.01 to 1.51. The two claims respond to the same test in
+  opposite ways, which is the whole reason to run it on both.
 - Mechanism, and its honest direction: the *teacher* does **better** on more-fragmented queries
   (+0.038, t = 2.72) while the table is flat (−0.012, t = −0.85). The gap widens because the
   teacher pulls away — which is what a fixed per-token vector cannot follow.
@@ -1333,8 +1379,15 @@ non-WordPiece teacher screen. `m8src/blockcg.py` never forms it.
 | 131,072 | 68 | 16.6 s | 5.72 GB | 137.4 GB | 84.4% |
 
 **Bar (registered): the 65,536-row solve completes within the 18 GB RAM budget and under 4 hours.
-PASS, by three orders of magnitude on time and a factor of four on memory.** Correctness: block CG
-agrees with the direct solve to **4.6e-7** relative Frobenius error on Zipfian data, 39× faster.
+PASS.** Correctness: block CG agrees with the direct solve to **4.6e-7** relative Frobenius error
+on Zipfian synthetic data.
+
+**The margin is measured on the EASY problem, and must be quoted as such** (2026-08-29 review).
+The real 30,522-row system needs **657** CG iterations at λ=1e-4 (§18b) against **26** on the
+synthetic Zipf draw — real conditioning is roughly 25× worse than the sampler produces. Scaling
+the real iteration count to 64K still lands in minutes, not hours, so the PASS is safe by a wide
+margin; but "three orders of magnitude of headroom" was headroom on synthetic data and is
+withdrawn.
 
 **Two things this measurement is not, stated so it is not over-read.** (i) The bag matrices are
 **synthetic** — 12 non-zeros per row, ids drawn Zipf(1.07). It measures the SOLVER. Verifying on
@@ -1376,51 +1429,76 @@ A regenerated list (`m8src/fitlist.py`) is required before any teacher-screen nu
 **What it unblocks:** D2 is computable, and so is **T1** (§10), which was blocked because every
 challenger's vocabulary is ≥ 50,368 (§15, 2026-08-29).
 
-**And one number for D2's coverage spec, free:** at 131,072 rows a 200,000-query draw reaches only
-**84.4%** of the vocabulary, against 99.9% at 30,522. M7 shipped with 5.71% of rows never trained;
-at 128K the untouched fraction is three times that before any training begins. The
-minimum-updates-per-reachable-row criterion and the compositional init floor (§8) are load-bearing,
-not paperwork.
+**And one number for D2's coverage spec — with its provenance attached:** at 131,072 rows a
+200,000-query draw reaches only **84.4%** of the vocabulary against 99.9% at 30,522. **That is a
+property of the Zipf(1.07) SYNTHETIC draw, not a measurement of real text**, and may not be quoted
+as a D2 coverage fact; the real figure needs a real tokenizer. It is nonetheless the right order of
+concern — M7 shipped with 5.71% of rows never trained by either phase — so the
+minimum-updates-per-reachable-row criterion and the compositional init floor (§8) stay
+load-bearing.
 
 
-## 19. B2 — the KL term is degenerate. H2 CONFIRMED.
+## 19. B2 — the KL term is degenerate, measured on BOTH sides. H2 CONFIRMED.
 
-`results/m8_b2_entropy.json`, 4,000 TRAIN queries, the recipe's own `kl_k=32`, `temp=0.02` and
-2M-row bank. **Descriptive; adopts nothing** (§9). Its one registered consequence is whether it
-triggers the separately registered `R-LIST` arm.
+`results/m8_b2_entropy.json`, 4,000 TRAIN queries, the recipe's own `kl_k=32`, `temp=0.02`, and
+the recipe's own bank. **Descriptive; adopts nothing** (§9). Its one registered consequence is
+whether it triggers the separately registered `R-LIST` arm.
 
 Objective A's KL term asks the student to match the teacher's distribution over the query's
-positive plus 31 distractors drawn **uniformly** from two million documents, at temperature 0.02.
-What that distribution actually looks like:
+positive plus 31 distractors drawn **uniformly** from a 2M-row bank at temperature 0.02.
+
+**THE TEACHER SIDE — the target.**
 
 | | uniform bank (**the recipe**) | teacher's own top-200 |
 |---|---|---|
-| entropy, **median** | **5.65e-07 nats** | 0.505 nats |
-| entropy, mean | 1.98e-02 | 0.868 |
-| as a fraction of the ln(32) = 3.466 ceiling | **0.57%** | 25.1% |
-| teacher's max probability, median | **1.0** | 0.890 |
-| queries below 1e-4 nats | **82.9%** | 1.5% |
-| queries below 1e-2 nats | 94.4% | 14.5% |
+| entropy, **median** | **4.73e-07 nats** | 0.369 nats |
+| entropy, mean | 1.82e-02 | 0.777 |
+| as a fraction of the ln(32) = 3.466 ceiling | **0.52%** | 22.4% |
+| teacher max probability, median | **1.000000** | 0.930 |
+| queries below 1e-4 nats | **84.3%** | 1.2% |
 
-**For the median query the teacher's target is a delta function to seven decimal places.** The KL
-term is asking the student to reproduce a one-hot distribution it already reproduces; its gradient
-contribution is near zero for a reason that has nothing to do with the student. H2 predicted ~1e-4
-nats and the median is three orders of magnitude below even that.
+**THE STUDENT SIDE — and this is the half that makes it a measurement rather than an inference.**
+A one-hot target does not by itself make a KL gradient vanish: `kl_div(log_softmax(student),
+one_hot)` is exactly the student's cross-entropy on the positive against 31 distractors, and it is
+small only insofar as the STUDENT already ranks the positive top. So the shipped M7 table
+(`p35w-2m-s2500` int8) was run through the identical candidate sets:
 
-Two honesty notes. (i) **Quote the median, not the mean.** The mean of 1.98e-02 is carried almost
-entirely by the top 1% of queries (p99 = 0.669); the distribution is not concentrated near its
-mean and a mean alone would understate how degenerate the typical case is. (ii) **This does not
-show that a listwise objective would be better.** It shows the current term is not doing the work
-its presence implies. Whether a harder candidate set or a different objective helps is `R-LIST`'s
-question, and `R-LIST` remains a stub with a `TBD-noise-floor` bar that `probe_guard` refuses
-until it is frozen.
+| | value |
+|---|---|
+| student probability on the positive, median | **1.0000** (mean 0.9960, p05 0.9998) |
+| student ranks the positive first | **99.75%** of queries |
+| **the actual KL term, median** | **1.08e-07 nats** (mean 2.57e-02, p95 2.11e-03) |
 
-**What it does establish for the milestone's diagnosis**: a concrete, measured mechanism for why
-the recipe class transferred ~0.000 in M7. One of the two training signals was, for five queries
-in six, carrying no information at all — and switching the candidate sampler to the teacher's own
-top-200 raises the median entropy by **six orders of magnitude**, to a quarter of the uniform
-ceiling. That is a cheap, well-defined change with a measured mechanism behind it, which is a
-different class of lever from the knob-tuning M7 measured at zero transfer.
+**So the loss term itself is 1.08e-07 nats for the median query.** Not "the target looks
+degenerate, therefore the gradient must be small" — the term was computed on the artifact that
+ships. The KL objective is asking a student that already reproduces a delta function to reproduce
+it again.
+
+**Two corrections the first version needed, both from adversarial review, both recorded because
+one of them ran against the hypothesis and one for it:**
+1. **The bank was wrong.** The first version took `pool_vecs[:2_000_000]` and called it "exactly
+   as training builds it". Training draws a *seeded random sample* of the 6.17M-row pool with
+   banned rows dropped (`m7src/train.py`). The pool is ordered by store, so a prefix is ~40% ESCI
+   product text where a random sample is ~13% — a real composition error. **Corrected, and the
+   bias ran OPPOSITE to the reviewer's prediction and to this section's interest**: the correct
+   random bank gives a median of 4.73e-07 against the prefix's 5.65e-07, i.e. the recipe's real
+   sampler is *more* degenerate than the flawed measurement said, not less.
+2. **The student side did not exist.** "One of the two training signals carries no information"
+   was an inference from the teacher alone. It is now measured, above.
+
+**Scope, stated rather than left to generalise.** This characterises the arms that draw
+distractors uniformly. Arms with `hard_neg_k > 0` put teacher-mined hard negatives into the
+candidate set (`m7src/train.py`), and their KL term is a different object that this probe does not
+measure. M7's shipped candidate has `hard_neg_k = 0`, so the shipped recipe is in scope.
+
+**What it establishes for the milestone's diagnosis**: a concrete, two-sided mechanism for why the
+recipe class transferred ~0.000 in M7 — one of two training signals was, for five queries in six,
+carrying essentially nothing, and the loss term's own median value is 1e-7. Switching the sampler
+to the teacher's top-200 raises the median target entropy by six orders of magnitude. That is a
+cheap, well-defined change with a measured mechanism behind it.
+
+**It still does NOT say a listwise objective wins.** That is `R-LIST`'s question; its bar is
+unfrozen and `probe_guard` refuses it.
 
 ## 20. B17 — the registered branch fired, and the number that fired it cannot carry it
 
@@ -1497,12 +1575,20 @@ ordering doing its job, and it is the same structure M7's screen produced.
 stale-list run at **0.343924** (§18b). A new solver, a new init builder, a regenerated fit list
 and a different code path reproduce the number M7 adopted its teacher on.
 
-**And the tower does not predict the table — again, on fresh candidates.** gte-modernbert-base has
+**And the tower again fails to order the table — on two fresh candidates.** gte-modernbert-base has
 the HIGHER published retrieval score of the two challengers (55.33 against granite's 53.1) and the
-**lower** distilled table by a wide margin (0.2349 against 0.2915). M7 established this with
-Spearman(ceiling, table) = 0.000 over eight candidates and paid for the lesson by approving
-arctic-embed-l on its tower; this is an independent reproduction in a new frame, on two models M7
-never measured. **A teacher's own retrieval quality remains not a selection criterion.**
+**lower** distilled table by a wide margin (0.2349 against 0.2915). **Stated at its true weight**
+(2026-08-29 review): this is an n = 2 sign anecdote resting on two self-reported model-card BEIR
+figures produced by different harnesses. It is *consistent with* M7's Spearman(ceiling, table) =
+0.000 over eight candidates and it is one more reason not to select a teacher on its tower — but
+calling it an "independent reproduction" oversold it, and that wording is withdrawn. M7's
+eight-candidate result remains the evidence; this is corroboration.
+
+**The Holm family, pinned now so a later screen cannot get a laxer one.** Tonight's correction ran
+over the **two** candidates screened. The registered family is **the challenger set** (§10). If
+stella-1.5B or harrier is ever screened, Holm must re-run over the **union of all challengers ever
+screened against this incumbent**, not over the newcomers alone. Verdict-neutral tonight (both
+p = 1.0), and registered before it could matter.
 
 **What is NOT settled.** Two registered candidates were not screened and their reasons are
 recorded rather than quietly dropped: `stella_en_1.5B_v5` needs `trust_remote_code` and has no

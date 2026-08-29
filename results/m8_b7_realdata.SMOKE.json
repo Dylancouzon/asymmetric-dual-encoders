@@ -1,0 +1,48 @@
+{
+  "_note": "B7's registered precondition: verify the Gram-free solver on the REAL system, not a synthetic",
+  "criterion": "the two tables' dev macro over ('cqadup-programmers', 'cqadup-physics') must agree to <= 0.0001. A Frobenius distance is not the acceptance criterion: what this solver feeds is a RANKING.",
+  "fit_list_disclosure": "work/trainq_texts.json is a STALE superset with 4,582 R1 hits (1.31%). The absolute dev macros here are inflated and may not be quoted as clean. Both solvers see the IDENTICAL X, Y, W0, so their AGREEMENT -- which is all this measures -- is invariant to that. A clean, regenerated list is required before any teacher-screen number is adopted.",
+  "encoder": {
+    "name": "stella-400M-v5",
+    "vocab": 30522,
+    "dim": 1024
+  },
+  "n_fit_queries": 20000,
+  "components": [
+    "cqadup-programmers",
+    "cqadup-physics"
+  ],
+  "lambda_grid": [
+    0.001
+  ],
+  "rows": [
+    {
+      "lambda": 0.001,
+      "direct": {
+        "seconds": 73.0,
+        "dev_macro_2": 0.1566670943361638,
+        "per_component": {
+          "cqadup-programmers": 0.12431470142109405,
+          "cqadup-physics": 0.18901948725123355
+        }
+      },
+      "block_cg": {
+        "seconds": 3.84,
+        "iterations": 289,
+        "worst_rel_residual": 8.036825533963565e-07,
+        "converged": true,
+        "dev_macro_2": 0.1566670943361638,
+        "per_component": {
+          "cqadup-programmers": 0.12431470142109405,
+          "cqadup-physics": 0.18901948725123355
+        }
+      },
+      "relative_error_fro": 0.0035049881437574245,
+      "dev_macro_abs_difference": 0.0,
+      "within_tolerance": true,
+      "speedup": 19.0
+    }
+  ],
+  "pass": true,
+  "smoke": true
+}

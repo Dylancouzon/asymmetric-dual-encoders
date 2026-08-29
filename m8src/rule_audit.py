@@ -49,6 +49,11 @@ UNVERIFIABLE = [
 ]
 
 
+def _sha256(p):
+    import hashlib
+    return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+
+
 def _git(*args):
     r = subprocess.run(("git", "-C", str(REPO)) + args, capture_output=True, text=True)
     return r.stdout, r.returncode
@@ -130,19 +135,35 @@ def audit():
         section = ledger.split("GAP LIST")[1].split("\n## ")[0]
         gap_rows = [ln for ln in section.splitlines()
                     if ln.startswith("|") and not set(ln) <= set("|-: ")]
-    gap_files = [n for n in ("m8src/test_decide.py", "m8src/rule_audit.py",
-                             "m8src/test_final_guard.py", "m8src/test_freeze_binding.py")
-                 if any(f"`{n}`" in row for row in gap_rows)]
-    stale = [n for n in gap_files if (REPO / n).exists()]
+    # Parse EVERY row's backticked paths, not a hardcoded tuple. The first version grepped two
+    # filenames, so it reported "no findings" while the gap list still named two obligations that
+    # had been discharged hours earlier -- the audit passing on precisely the invariant it exists
+    # to protect. Caught by adversarial review.
+    import re
+    stale = []
+    for row in gap_rows:
+        for path in re.findall(r"`([A-Za-z0-9_./-]+\.py)`", row):
+            if (REPO / path).exists():
+                stale.append({"path": path, "row": row.strip()[:150]})
     if stale:
-        findings.append({"severity": "MAJOR",
-                         "issue": f"the gap list still names files that now exist: {stale}. A "
-                                  f"stale gap list is how a DONE heading starts lying."})
+        findings.append({"severity": "MAJOR", "stale_rows": stale,
+                         "issue": "the gap list still names files that now exist. A stale gap "
+                                  "list is how a DONE heading starts lying."})
+    # And artifacts: a gap row naming a results file that exists is equally stale.
+    stale_art = []
+    for row in gap_rows:
+        for art in re.findall(r"`(results/m8_[A-Za-z0-9_.-]+\.json)`", row):
+            if (REPO / art).exists():
+                stale_art.append(art)
+    if stale_art:
+        findings.append({"severity": "MAJOR", "stale_artifacts": stale_art,
+                         "issue": "the gap list names artifacts that now exist"})
 
     return {
         "_note": __doc__.strip().splitlines()[0],
         "head": _git("rev-parse", "HEAD")[0].strip(),
-        "registry_sha_now": now.get("version"),
+        "registry_version": now.get("version"),
+        "registry_sha256_now": _sha256(REPO / "m8" / "registry.json"),
         "stamped_results_checked": checked,
         "unstamped_artifacts": unstamped,
         "_unstamped_note": "not every results/m8_*.json is a probe result -- calibration caches, "

@@ -5,54 +5,68 @@
     "n_queries": 4000,
     "kl_k": 32,
     "temp": 0.02,
-    "bank_rows": 2000000,
+    "bank_rows": 1997601,
     "entropy_ceiling_nats": 3.4657359027997265,
     "seed": 0
   },
   "arms": {
     "uniform_bank_the_recipe": {
       "entropy_nats": {
-        "mean": 0.019830860197544098,
-        "p1": 4.061255151621701e-11,
-        "p5": 5.213082188149087e-10,
-        "p25": 2.934582177260836e-08,
-        "p50": 5.650785510624701e-07,
-        "p75": 1.7811937141232193e-05,
-        "p95": 0.013372625224292278,
-        "p99": 0.6691743731498718
+        "mean": 0.018167769536376,
+        "p1": 4.5130638809398604e-11,
+        "p5": 6.734013902054414e-10,
+        "p25": 2.743854743414431e-08,
+        "p50": 4.732095817416848e-07,
+        "p75": 1.4195082258083858e-05,
+        "p95": 0.008345351554453373,
+        "p99": 0.6809004545211792
       },
-      "entropy_as_fraction_of_ceiling": 0.00572197673271184,
+      "entropy_as_fraction_of_ceiling": 0.0052421102028286475,
       "p_max_of_teacher_distribution": {
-        "mean": 0.9940616488456726,
+        "mean": 0.9945206642150879,
         "p50": 1.0,
         "p95": 1.0
       },
-      "share_of_queries_below_1e-4_nats": 0.8285,
-      "share_of_queries_below_1e-2_nats": 0.94425
+      "share_of_queries_below_1e-4_nats": 0.843,
+      "share_of_queries_below_1e-2_nats": 0.95275
     },
     "teacher_top200": {
       "entropy_nats": {
-        "mean": 0.868147611618042,
-        "p1": 4.385986540000886e-05,
-        "p5": 0.0007923145894892514,
-        "p25": 0.045178480446338654,
-        "p50": 0.5047272443771362,
-        "p75": 1.4784095287322998,
-        "p95": 2.862250804901123,
-        "p99": 3.1897566318511963
+        "mean": 0.776925265789032,
+        "p1": 5.554648669203743e-05,
+        "p5": 0.0009934257250279188,
+        "p25": 0.035265520215034485,
+        "p50": 0.36897242069244385,
+        "p75": 1.3116960525512695,
+        "p95": 2.700076103210449,
+        "p99": 3.061591625213623
       },
-      "entropy_as_fraction_of_ceiling": 0.2504944508081894,
+      "entropy_as_fraction_of_ceiling": 0.22417324561903526,
       "p_max_of_teacher_distribution": {
-        "mean": 0.7411906719207764,
-        "p50": 0.8896327614784241,
-        "p95": 0.9999363422393799
+        "mean": 0.7710884809494019,
+        "p50": 0.9297102689743042,
+        "p95": 0.999920666217804
       },
-      "share_of_queries_below_1e-4_nats": 0.01475,
-      "share_of_queries_below_1e-2_nats": 0.1455
+      "share_of_queries_below_1e-4_nats": 0.01175,
+      "share_of_queries_below_1e-2_nats": 0.14975
     }
   },
-  "reading": "Under the recipe's own uniform sampler the teacher's candidate distribution carries 1.98e-02 nats on average (0.57% of the ln(32)=3.466 ceiling), and 82.8% of queries are below 1e-4 nats. With distractors drawn from the teacher's own top-200 it carries 8.68e-01 nats (25.05% of ceiling). H2 predicted the first number would be ~1e-4.",
-  "seconds": 16.8,
+  "student_side": {
+    "student_p_on_positive": {
+      "mean": 0.995955765247345,
+      "p50": 1.0,
+      "p05": 0.9997867345809937
+    },
+    "student_ranks_positive_top_frac": 0.9975000619888306,
+    "kl_nats": {
+      "mean": 0.025720437988638878,
+      "p50": 1.0782818549159856e-07,
+      "p95": 0.002109870780259371
+    },
+    "_table": "p35w-2m-s2500 int8 (the shipped M7 artifact)"
+  },
+  "reading": "Under the recipe's own uniform sampler the teacher's candidate distribution carries 1.82e-02 nats on average (0.52% of the ln(32)=3.466 ceiling), and 84.3% of queries are below 1e-4 nats. With distractors drawn from the teacher's own top-200 it carries 7.77e-01 nats (22.42% of ceiling). H2 predicted the first number would be ~1e-4.",
+  "seconds": 40.6,
   "_registration": {
     "probe": "B2",
     "row": {
@@ -69,9 +83,9 @@
       "exempt_reason": "purely descriptive diagnostic, named as exempt in LEDGER 4.7"
     },
     "wave": 1,
-    "registry_sha256": "a561ebb598d7c4e6c74f5b21940735abe075f14628a9441ead31fcd5a0ae341e",
-    "ledger_sha256": "230ff719a1882bddeb91a22a8a110ab2abafe681014ca0de4ae29b8dcf3241d7",
-    "ledger_commit": "901dba626ed14359b9e71eb888e91c8c826a0a3c",
+    "registry_sha256": "aacad17386a1ea71e7e1537366c0f4fb4f77f97ae222ae5c4eac230f47d79ae5",
+    "ledger_sha256": "5cfa1c2291e558eaf4a971fe995559bbe5022d604c0417caa911f87f37bc12f4",
+    "ledger_commit": "ffa1a5a34b0d9fcab03a36972d4664dabc43af62",
     "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
   }
 }

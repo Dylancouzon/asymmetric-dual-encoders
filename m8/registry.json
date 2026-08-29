@@ -104,7 +104,8 @@
       "blocked_on": "B7 -- every challenger's vocabulary is >= 50,368 and the direct fp64 Gram at that size is 20.3 GB, above the 18 GB budget. Until a solver exists that does not materialize the Gram, T1 can only re-run candidates M7 already closed CI-resolved.",
       "frame_note": "fixed WITHIN a tokenizer family; a cross-family challenger is screened in its own vocabulary and the comparison is labelled teacher-plus-tokenizer, with the vocabulary size at every row",
       "penalty_note_2026_08_29": "every challenger is DISSIMILAR (none shares bert-wordpiece-30522), so every penalty is 0.0096. Fixed before any screen ran.",
-      "incumbent_spec_name": "stella-400M-v5"
+      "incumbent_spec_name": "stella-400M-v5",
+      "holm_family_note": "the family is the CHALLENGER SET. Holm ran over the two screened on 2026-08-29; if stella-1.5B or harrier is screened later, the correction must re-run over the UNION of all challengers ever screened against this incumbent, not over the newcomers alone. Pinned before it could matter (both screened p = 1.0)."
     },
     "B2": {
       "wave": 1,
@@ -347,7 +348,7 @@
       "wave": 1,
       "title": "noise-floor measurement (the instrument every bar is set against)",
       "question": "How large is a difference this dev instrument produces from nothing at all?",
-      "endpoint": "group_vector_median, worst_group, out_of_domain_macro and all_component_macro on the full pinned dev suite, int8, through the released QueryTable path",
+      "endpoint": "group_vector_median, worst_group, out_of_domain_macro and all_component_macro on the full pinned dev suite, through the released QueryTable path, at BOTH precisions (int8 and fp16) and BOTH pooling rules (mean and sqrt) -- B10's bar reads fp16 too. The FUSED macro is measured separately by m8src/fused_floor.py.",
       "comparator": "K=3 arms of the IDENTICAL recipe, identical data, identical B checkpoint, differing ONLY in training seed (a true null)",
       "bar": "no bar: this measures the instrument and adopts nothing. It EMITS bars: floor(endpoint) = max of the 3 pairwise |delta|; bar(endpoint) = max(0.0040, 2 x floor(endpoint)).",
       "multiplicity": "none",

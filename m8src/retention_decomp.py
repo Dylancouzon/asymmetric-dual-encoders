@@ -182,7 +182,13 @@ def main():
             var[ds] = float(((x - x.mean()) ** 2).sum())
         tot = sum(var.values()) or 1.0
         variance_share[key] = {d: v / tot for d, v in var.items()}
-        for drop in ("arguana",):
+        # EVERY single-dataset exclusion, not just the one that threatened the length claim.
+        # The first version ran leave-one-out against ArguAna only -- which killed the length
+        # slope -- and did not run it against nfcorpus, which carries 53% of the FRAGMENTATION
+        # identification variance and is the dataset the surviving claim leans on. Using the tool
+        # against the claim you dislike and not the one you keep is how a milestone gets routed on
+        # an unexamined number. Caught by adversarial review.
+        for drop in SIX:
             xs2, ys2 = [], []
             for ds in SIX:
                 if ds == drop:
@@ -199,6 +205,17 @@ def main():
                     np.concatenate(xs2), np.concatenate(ys2))
     pooled["variance_share_of_x_by_dataset"] = variance_share
     pooled["leave_one_out"] = leave_one_out
+    # The worst single-dataset exclusion per predictor: the number a claim must survive.
+    worst = {}
+    for key in ("words", "frag"):
+        rows_ = {k: v for k, v in leave_one_out.items()
+                 if k.startswith(f"gap_on_{key}_excluding_") and v}
+        if rows_:
+            k_min = min(rows_, key=lambda k: rows_[k]["slope"])
+            k_t = min(rows_, key=lambda k: abs(rows_[k]["t"]))
+            worst[key] = {"smallest_slope": {"drop": k_min, **rows_[k_min]},
+                          "weakest_t": {"drop": k_t, **rows_[k_t]}}
+    pooled["leave_one_out_worst_case"] = worst
 
     # The between-dataset picture the plan currently reads, stated beside it at n = 6.
     ds_ok = [d for d in SIX if "error" not in per_ds[d]]
