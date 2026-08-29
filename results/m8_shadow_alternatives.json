@@ -1,0 +1,74 @@
+{
+  "_note": "Shadow candidates, measured \u2014 so that if E10 reopens, the owner's decision comes with numbers.",
+  "status": "COUNTS ONLY. Nothing scored, nothing ranked, no qrels cached. Whether a shadow is substituted is E10, which is Dylan's ruling (LEDGER 2.3 / G9).",
+  "cqadupstack_used_by_this_project": {
+    "programmers": "dev component",
+    "physics": "dev component",
+    "android": "RESERVED confirmatory",
+    "english": "RESERVED confirmatory"
+  },
+  "cqadupstack_unused": {
+    "gaming": {
+      "n_docs": 45301,
+      "n_queries_total": 1595,
+      "n_queries_with_qrels": 1595,
+      "n_qrel_rows": 2263
+    },
+    "gis": {
+      "n_docs": 37637,
+      "n_queries_total": 885,
+      "n_queries_with_qrels": 885,
+      "n_qrel_rows": 1114
+    },
+    "mathematica": {
+      "n_docs": 16705,
+      "n_queries_total": 804,
+      "n_queries_with_qrels": 804,
+      "n_qrel_rows": 1358
+    },
+    "stats": {
+      "n_docs": 42269,
+      "n_queries_total": 652,
+      "n_queries_with_qrels": 652,
+      "n_qrel_rows": 913
+    },
+    "tex": {
+      "n_docs": 68184,
+      "n_queries_total": 2906,
+      "n_queries_with_qrels": 2906,
+      "n_qrel_rows": 5154
+    },
+    "unix": {
+      "n_docs": 47382,
+      "n_queries_total": 1072,
+      "n_queries_with_qrels": 1072,
+      "n_qrel_rows": 1693
+    },
+    "webmasters": {
+      "n_docs": 17405,
+      "n_queries_total": 506,
+      "n_queries_with_qrels": 506,
+      "n_qrel_rows": 1395
+    },
+    "wordpress": {
+      "n_docs": 48605,
+      "n_queries_total": 541,
+      "n_queries_with_qrels": 541,
+      "n_qrel_rows": 744
+    }
+  },
+  "totals_unused": {
+    "n_docs": 323488,
+    "n_queries": 8961,
+    "n_subforums": 8
+  },
+  "for": [
+    "licence already verified from the primary source (ADCS 2015, a 2014 dump predating the 2024 StackExchange clickwrap) -- and with no non-commercial split like LoTTE's `search` queries",
+    "zero acquisition cost; the loader already exists in devsuite",
+    "no contamination against the reserved android/english: different subforums"
+  ],
+  "against": [
+    "same benchmark family as two of the four reserved sets, so a weaker independence check than a separate corpus -- though LoTTE is also StackExchange, and the shadow is a once-crossed non-regression gate, not a selection instrument"
+  ],
+  "what_it_does_not_settle": "whether a same-family shadow is acceptable as the STOP gate E10 mandates. That is the ruling, and it is Dylan's."
+}

@@ -43,21 +43,50 @@ repeat of M7's transfer ships essentially never.** That is the case for spending
 capacity (D2/D1, and E14 if you open it) rather than on recipe knobs, and the LEDGER now says so
 in the protocol (§7) so the budget cannot quietly drift back.
 
-**3. LoTTE as the shadow (E10) — likely reopening; the full screen is running as I write.**
-Two findings. (a) **Licence splits**: the passages and package are CC BY-SA 4.0, but LoTTE's
-`search` queries are **non-commercial-research-only** (inherited GooAQ licence, quoted verbatim in
-LEDGER §2.3). I took the conservative route with no ruling needed — **forum queries only**, which
-is also the better analogue to CQADupStack. (b) **The registered overlap bar drops every slice.**
-On a 2,000-doc-per-slice smoke: three slices fail on *community* overlap alone —
-`writing/test` contains **english.stackexchange.com**, `technology/test` contains
-**android.stackexchange.com** (both are reserved confirmatory sets) and `science/test` contains
-physics (dev). The other seven fail only on **query leakage**, at rates of 0.1–0.8%.
-**I did not loosen the bar after watching it bite** — that is the tuning this project forbids. But
-the bar I registered drops a whole *slice* for a handful of leaked *queries*, whereas everywhere
-else in this project the remedy for a contaminated item is to remove the **item** (R1 removes
-pairs, not sources). The full screen computes both readings; the per-query-remedy column is
-labelled DESCRIPTIVE, NOT ADOPTED. **Your call: keep the slice-level bar (LoTTE dies, and the
-milestone has no shadow), or authorise the per-query remedy.**
+**3. LoTTE as the shadow (E10) — IT REOPENS. The full screen is done and every slice rejects.**
+`results/m8_lotte_overlap.json`, 5.25M documents screened in 19 minutes. Three findings, and an
+alternative the plan never named.
+
+(a) **Licence splits.** LoTTE's passages and package are CC BY-SA 4.0, but its `search` queries
+are **non-commercial-research-only** (inherited GooAQ licence, quoted verbatim in LEDGER §2.3).
+I took the conservative route, which needs no ruling and improves the instrument: **forum queries
+only** — also the better analogue to CQADupStack.
+
+(b) **All ten slices reject, and the failures split cleanly in two.**
+
+| | slices | why |
+|---|---|---|
+| hard reject | `writing/test`, `science/test`, `technology/test` | their StackExchange communities **literally include the protected sets**: english, physics, android + softwareengineering |
+| reject on query leakage only | the other seven | 2–15 fingerprint matches per ~2,000 forum questions (0.1–0.75%) |
+
+The structure is informative: **exact** query matches concentrate almost entirely in the three
+community-overlapping slices (111, 13, 34), while the seven clean-community slices are nearly all
+fingerprint-**near** matches (2–12 each, one exact). Two identical question titles across
+different StackExchange sites are not evidence of contamination — "what is the difference
+between X and Y" is not a leak.
+
+(c) **I did not relax the bar after watching it bite.** But note the tension, which is yours to
+resolve: the ledger's standing decontamination rule **R1 removes the ITEM** on query overlap,
+while S0's newer, narrower bar drops the whole **SLICE**. Everywhere else in this project a
+contaminated item is deleted, not its source. Under a per-question remedy, **seven slices survive
+with ~2,000 questions each** — a perfectly usable shadow. The alternative is computed and in the
+JSON, labelled DESCRIPTIVE / NOT ADOPTED.
+
+(d) **An alternative nobody named, now measured** (`results/m8_shadow_alternatives.json`).
+CQADupStack has **twelve** subforums. This project uses four — programmers and physics as dev,
+android and english as two of the reserved four. **Eight have never been touched**: gaming, gis,
+mathematica, stats, tex, unix, webmasters, wordpress = **323,488 documents and 8,961 queries**,
+almost exactly the reserved four's query count. They are CC BY-SA 3.0 under the licence this
+project already verified from the primary source, they need no download beyond what just ran, the
+loader already exists, and they carry **no contamination against the reserved android/english**,
+being different subforums. The honest objection: they are the same benchmark family as two of the
+four reserved sets, so a weaker independence check than a separate corpus — though LoTTE is also
+StackExchange, and the shadow is a once-crossed non-regression gate, not a selection instrument.
+
+**Your call, three options:** keep the slice-level bar and lose the shadow (the pipeline loses its
+STOP gate); authorise the per-question remedy and keep LoTTE; or substitute the eight unused
+CQADupStack subforums. I have not chosen — E10 is your ruling and S0's registration says the
+session does not substitute a shadow.
 
 **4. Two licence/provenance rulings on reserved and candidate assets.**
 - **harrier-oss-v1-0.6b** (teacher challenger): training data **undisclosed** — a contamination
