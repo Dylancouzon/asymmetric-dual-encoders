@@ -1770,7 +1770,7 @@ exist.)*
   **No reported arm had run when this was written.** Review at
   `research/m8-planning/codex-e14-impl-review-2026-08-29.md`.
 
-- **2026-08-29 — OPEN ITEM WITH A TRIGGER: does a fine-tuned encoder propagate to M9?** Raised by
+- **[SUPERSEDED THE SAME DAY by Dylan's ruling — see the entry below. Kept because the risk it names is still the reason the ruling is right.]** **2026-08-29 — OPEN ITEM WITH A TRIGGER: does a fine-tuned encoder propagate to M9?** Raised by
   Dylan while `E14-HEAD` was training. `instructions-m9.md` says M9's teacher is "the frozen teacher
   the shipping table line uses ... M8 inherits it unless its own ledger records a swap, in which
   case M9 follows M8", and that "docs are indexed with the teacher; the student is distilled into
@@ -1796,6 +1796,39 @@ exist.)*
   question may be moot: `E14-LORA` is registered-and-refused pending a fresh ruling, and the
   derived-weights licence question on stella is unresolved; if that goes against us there is no
   modified encoder to inherit and M9 uses stock stella regardless.
+
+- **2026-08-29 — RULED by Dylan, closing the item above: "M9 should go with whatever performs
+  best, not as a strict continuation of M8." M9 is NOT bound to inherit M8's document tower.**
+  The risk the previous entry raised — that a LoRA trained to make documents reachable by a BAG
+  would tax M9's transformer student — is not managed, it is removed: M9 selects its document
+  tower on M9's own measurement, so it can decline an encoder that is worse for it.
+
+  **Made executable, because "performs best" is a word until it is a value.**
+  1. **M9 runs its own document-tower screen, on M9's own artifact** — a distilled student tower,
+     not a table. **T1's NO SWAP does not transfer**, and the reason matters: T1 measured that a
+     teacher's retrieval quality does not predict its distilled TABLE (Spearman 0.000 over eight
+     candidates). That is a fact about tables. LEAF reports 97.1–98.6% retention for a distilled
+     TOWER, so the relationship M8 found absent is expected to be present for M9. Inheriting T1's
+     verdict would repeat, in reverse, the error M7 made selecting a teacher on the tower instead
+     of the table (§15, the withdrawn arctic-embed-l entry).
+  2. **The candidate set** is stock stella (the incumbent, re-probed in the identical frame and the
+     registered default), plus whatever document side the table line ships if E14 survives, plus
+     off-the-shelf challengers under the unchanged licence and vendor rules and the table-size
+     arithmetic where it applies.
+  3. **Selection is on dev, pre-registered, before the frozen comparators are touched.** The bars
+     already frozen in `results/perquery.json` (leaf-ir-asym 0.5155, mdbr-leaf-ir 0.5123,
+     arctic-embed-m-v1.5 0.5264, bge-small-en-v1.5 0.5042) are unaffected: they carry their own
+     document towers, so our choice does not move them.
+
+  **THE COST THIS RULING ACCEPTS, stated so nobody rediscovers it later:** if M9's pick differs
+  from the table line's, the product ships **two document indexes**, not one index serving two
+  query paths at different compute budgets. That unified-index story was the upside of strict
+  inheritance and it is what is being traded away. Flagged once here; the ruling stands.
+
+  **Nothing in M8 changes.** `E14-HEAD` is unaffected — it was never justified by M9 — and its
+  mechanism control keeps its original job: separating "documents became reachable by a bag" from
+  "supervised document-side adaptation helps". Its teacher-query leg is now evidence about the
+  head, not an early warning for a milestone that no longer depends on it.
 
 
 
