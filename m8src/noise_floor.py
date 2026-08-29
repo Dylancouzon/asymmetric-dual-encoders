@@ -132,15 +132,17 @@ def measure(dump_path):
     raw = json.loads(gzip.open(dump_path).read() if str(dump_path).endswith(".gz")
                      else Path(dump_path).read_text())
     pq = raw["per_query"] if "per_query" in raw else raw
+    # compare_full keys its dump `<run_id>[:<pool_mode>]|<precision>`. int8 only: it is the
+    # release format and the C2 identity, so it is what a bar reads.
     arms = {}
     for key, comps in pq.items():
-        rid = key.split("|")[0]
-        prec = "int8" if "int8" in key else "fp16"
-        if prec != "int8":                      # int8 is the release format; the bar reads it
+        parts = key.split("|")
+        if len(parts) < 2 or parts[-1] != "int8":
             continue
-        if "|table" not in key and "|matrix" not in key:
-            continue
-        arms[rid] = _group_vector(comps)
+        arms[parts[0].split(":")[0]] = _group_vector(comps)
+    if not arms:
+        raise SystemExit(f"no int8 arms found in {dump_path}; keys look like "
+                         f"{sorted(pq)[:4]}")
 
     seed_arms = {r: v for r, v in arms.items() if r.startswith("m8nf-seed")}
     step_arms = {r: v for r, v in arms.items() if r.startswith("m8nf-steps")}
@@ -168,6 +170,9 @@ def measure(dump_path):
 
     bars = {e: (None if floor[e] is None else max(0.0040, 2 * floor[e])) for e in endpoints}
     return {
+        "dump": str(dump_path),
+        "_dump_path_note": ("the dump lands under a results/m7_devperquery_*.json.gz name because "
+                            "compare_full.py is frozen M7 code and M8 does not edit m7src (G3)"),
         "arms": arms, "seed_arms": sorted(seed_arms), "step_arms": sorted(step_arms),
         "pairwise": pairs, "floor": floor, "bars": bars,
         "recipe_sensitivity_steps": sensitivity,
