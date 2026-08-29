@@ -40,6 +40,13 @@ have lost the remainder, so it is rewritten instead.
    pass before any encode.
 3. **The remaining gap-list obligations** (LEDGER §4.4). The pre-encode allowlist entry is DONE.
    What is left:
+   - **the crossed B×A seed design — NEW, and the B-leg floor's own review asked for it.** The
+     three chains vary ONE seed across both legs, so B-seed and A-seed effects are aliased and may
+     partially cancel — which would make the floor an *under*-estimate, the anti-conservative
+     direction. Crossing the three B checkpoints (`p35b-2m`, `m8nfb-seed1-b`, `m8nfb-seed2-b`)
+     against three A seeds separates B variance, A variance given B, and their interaction. The
+     three chains on disk are the diagonal, so **six more A legs (~30 min) complete a 3×3**. This
+     is the cheapest remaining thing that would upgrade a convention into a bound.
    - **the B-leg noise floor — DONE** (`results/m8_noise_floor_bleg.json`, LEDGER §15). It is not
      larger than the A-leg floor, so R-PHASE and the pool/init levers read the same 0.0040
      planning minimum; the one exception is `int8/mean` worst-group and OOD macro, which take
