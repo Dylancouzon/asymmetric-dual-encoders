@@ -1,9 +1,10 @@
 # M8 status
 
 **Stage: Phase 0 largely executed, overnight 2026-08-29.** LEDGER **v2** is live
-(`m8/LEDGER.md` + `m8/registry.json`), gated by four adversarial reviews. Both noise floors are
-measured, four probes have run, the teacher question is answered, and every result carries a
-registration stamp. **No M8 training candidate exists yet. No protected set has been scored. The
+(`m8/LEDGER.md` + `m8/registry.json`), gated by six adversarial reviews. **All three noise floors
+are now measured** (dense, fused, and the B-leg one that was the last gap-list item), five probes
+have run, the teacher question is answered, B3 has been redesigned twice and is running, and every
+result carries a registration stamp. **No M8 training candidate exists yet. No protected set has been scored. The
 reserved four are untouched.**
 
 ---
@@ -82,6 +83,44 @@ fallback beats discovering the collision in week three.**
 ---
 
 ## What was measured tonight
+
+**The B-LEG noise floor — the last floor, and it closes §4.4's gap list**
+(`results/m8_noise_floor_bleg.json`, LEDGER §15). Both existing floors held the Phase-B checkpoint
+FIXED and varied only the Phase-A seed. `R-PHASE` and every pool-or-init lever flow through the B
+leg instead, and no bar could read them, because the A-leg floor holds constant the very leg they
+perturb. Three full B→A chains varying only the seed now settle it.
+
+**The B leg adds essentially nothing.** A-leg floor 0.00095–0.00227 across the four endpoints;
+B-leg floor **0.00070–0.00218**. A whole extra 16,000-step seed-dependent phase does not widen the
+instrument, so R-PHASE and the pool/init levers read the same 0.0040 planning minimum as
+everything else. **One exception now binds**: at `int8/mean`, worst-group and out-of-domain macro
+take **0.004369** (2 × floor), not 0.0040. *The honest caveat: this compares two
+max-over-three-pairwise statistics at K = 3, and the ranges overlap almost entirely — the claim is
+"the B leg does not visibly inflate the floor", not that the two are equal.*
+
+**B3 — the probe was rebuilt twice tonight, both times before any arm ran, and is now running.**
+Its original lever was synthetic ICT augmentation. An adversarial review of the *arm definition*
+killed it: "equal updates AND equal exposure" over-constrains a fixed batch (three constraints,
+two free variables), my proposed batch-scaling fix did not even deliver equal *influence* under
+mean reduction, and the ICT shortcut survives sentence removal because the positive's teacher
+vector is precomputed over the **full document** — the cheap repair does not work. Above all,
+adding synthetic pairs at fixed compute measures whether spending Phase-A budget on ICT helps, not
+whether Phase A is short of pairs. Retired as registry row `B3-ICT`, refused, reasoning kept.
+
+**What replaced it**: nested subsets of the *real* pair pool at {0.25, 0.50, 0.75, 1.00} with
+updates, batch, negatives and the Phase-B checkpoint all held, so total draws are 1,280,000 in
+every arm and only the count of distinct pairs moves. A second review then found the replacement
+had **no computable verdict** — its fused endpoint named a quantity that does not exist (the two
+held-out dev components carry row indices, not text, so they have no fused read) while citing a
+floor measured on a different one, its dense endpoint was two numbers with no conjunction rule, and
+the whole bar lived in prose. All fixed before scoring: the scalars are pinned, the bar runs as
+code (`m8src/b3_decide.py`) with **a test per branch**, and the primary contrast moved from
+1.00-vs-0.75 to **1.00-vs-0.50** because at fixed draws the fractions are epochs and the last
+quarter is the least-powered segment of a concave curve — the design could have cleared its own
+manipulation check at twice the bar while the primary sat under it, and then declared "not
+starved". `no_survivor` is narrowed too: `p35b-2m` already distilled on every training query, so a
+null here says nothing about B-side pair levers. **Three free arms**: the f=1.00 recipe already
+exists at three seeds as the floor arms, verified config-identical.
 
 **T1 — the teacher question is answered: NO SWAP** (`results/m8_t1_decision.json`, LEDGER §21).
 These are the **first measurements of two teachers M7 closed "on arithmetic, not merit"**.
