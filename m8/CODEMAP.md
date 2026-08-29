@@ -57,3 +57,11 @@ G1. Run it after touching either guard.
    Cost one full review cycle.
 7. **`pkill` from a shell whose own command line contains the pattern kills itself** (exit 144).
    Anchor to the interpreter and kill in a separate command from any relaunch.
+8. **Synthetic data for a FEASIBILITY measurement must match the real distribution's hard
+   property, not its easy one.** B7's first bag matrix drew token ids UNIFORMLY. Real text is
+   Zipfian, and CG's cost is set by the condition number, so uniform draws are an unrealistically
+   easy problem: unpreconditioned CG converged in 131 iterations on uniform data and **failed to
+   converge in 1,500** on Zipfian data with the same shape and sparsity. A feasibility PASS from
+   the uniform version would have been a wrong number, not a crash — the class that has cost this
+   project the most. Jacobi preconditioning (the Gram's diagonal is just the column sum of X², one
+   pass, no Gram) brings it to 61 iterations. Measure the preconditioner's effect; do not assume it.
