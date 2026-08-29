@@ -336,6 +336,18 @@ Plan:
 - **E7 — vocab-rule rewrite (now material)**: replace "vocab ≤ ~50K" with a released-artifact byte
   cap (proposal: ≤120 MB int8; hard ceiling 233 MB = LR int8 parity). This directly decides whether
   Qwen3-Embedding-0.6B and stella-1.5B may enter the §2f teacher probes, and sets D2's size.
+  Dylan's 2026-08-29 guidance leans generous: "storage can be fairly cheap" for this use case
+  (inference-free/low-power deployments won't have massive datasets), so the cap should not be the
+  binding constraint — cold-start/latency and the vs-bge-small optics matter more than raw bytes.
+
+**Dimension note (Dylan asked, 2026-08-29, "stella is 4096?"):** stella_en_400M_v5 is natively
+**1024-d** (hidden_size 1024) and M7 shipped 1024-d; the advertised 2048–8192 dims are
+identity-activation linear MRL heads, so every dim above 1024 is provably rank-deficient — 4–8x
+storage for zero ranking capacity (verified from config.json in the architecture review; stella's
+card independently reports 1024-d within ~0.001 MTEB of 8192-d). Same cap applies to stella-1.5B:
+hidden 1536, so its 8960-d head is ~5.8x redundant; if it ever wins a probe we serve ≤1536. The
+"dimension down to 512 to halve the doc index" lever (old P9) demotes to nice-to-have under the
+storage guidance.
 - **E8 — PMC-OA commercial subset as training data**: licence-clean, but using it makes NFCorpus
   and TREC-COVID training-adjacent, weakening the six's descriptive continuity read (reserved four
   unaffected). Exclude (default) / include+disclose / research-arm-only?
