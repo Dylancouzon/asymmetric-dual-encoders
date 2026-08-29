@@ -121,3 +121,15 @@ a non-BERT teacher found two more, and both are silent:
    the uniform version would have been a wrong number, not a crash — the class that has cost this
    project the most. Jacobi preconditioning (the Gram's diagonal is just the column sum of X², one
    pass, no Gram) brings it to 61 iterations. Measure the preconditioner's effect; do not assume it.
+16. **A run's `meta.json` records no code vintage, so nothing tells you when two runs were trained
+   under different code.** The B-leg floor reuses M7's `p35b-2m` as its seed-0 arm; that checkpoint
+   was written 2026-08-27 21:44 and **nine commits touched `m7src/` afterwards**, three of them on
+   the training path. Only a hand diff of every hunk established that the arm is still a pure seed
+   variant — the pseudoq change was docstring-only, `train.py`'s `side_pos_sources` defaults to
+   `()` and takes the identical `index.get` branch, and the `teacher.py`/`table.py` additions are
+   refusals on `encode_cached` layout and on `ensure_release`, neither of which a B leg reaches nor
+   which alter a returned vector. **The direction of the risk is not symmetric**: an undetected code
+   difference *inflates* a measured noise floor, which raises bars and is conservative — so this
+   class of error hides behind a result that looks merely disappointing. Do the diff. Better,
+   stamp the commit into `meta.json` on the next run that writes one, and never compare two
+   checkpoints from different days without checking `git log --since` on the training path.
