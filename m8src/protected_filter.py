@@ -59,8 +59,12 @@ PROTECTED_COMMUNITIES = {
 
 
 def _rate(done, total, t0, what):
-    el = time.time() - t0
-    r = done / max(el, 1e-9)
+    """Progress with an HONEST rate. The first version passed a per-slice counter against a global
+    start time, so it printed a cumulative average as if it were the current slice's rate -- which
+    is exactly the reading the long-run discipline depends on being right (CLAUDE.md: "sanity-check
+    the RATE against an estimate before walking away"). `t0` must be this slice's own start."""
+    el = max(time.time() - t0, 1e-9)
+    r = done / el
     eta = (total - done) / max(r, 1e-9)
     return f"{what} {done:,}/{total:,} ({el:.0f}s, {r:,.0f}/s, eta {eta/60:.1f}m)"
 
@@ -134,9 +138,10 @@ def s0(limit=None, smoke=False):
     q_ex, q_gram, q_whole, q_counts = decontam.protected_query_index()
     print(f"  {sum(q_counts.values()):,} protected queries {q_counts}", flush=True)
 
-    slices, t1 = {}, time.time()
+    slices, t_all = {}, time.time()
     for topic in TOPICS:
         for split in SPLITS:
+            t1 = time.time()                      # per-slice, so the printed rate is this slice's
             d = LOTTE / topic / split
             if not d.exists():
                 continue
@@ -157,6 +162,8 @@ def s0(limit=None, smoke=False):
                         hit_owners[str(o)] = hit_owners.get(str(o), 0) + 1
                 if n_docs % 100_000 == 0:
                     print("  " + _rate(n_docs, n_docs, t1, f"{key} docs"), flush=True)
+                    # total is unknown until the file ends, so eta is 0 by construction here;
+                    # the RATE is the number to read.
 
             qs = lotte_forum_queries(topic, split)
             q_hits = [decontam.query_hits(q, q_ex, q_gram, q_whole) for q in qs]
@@ -229,6 +236,7 @@ def s0(limit=None, smoke=False):
         "verdict": ("E10 REOPENS WITH DYLAN" if reopen
                     else "PROCEED with the kept slices" if kept else "NO SLICE SURVIVES"),
         "seconds": round(time.time() - t0, 1),
+        "screen_seconds": round(time.time() - t_all, 1),
     }
     dest = REPO / "results" / ("m8_lotte_overlap.SMOKE.json" if (smoke or limit)
                                else "m8_lotte_overlap.json")
@@ -296,6 +304,7 @@ def build_filter(lotte_slices=None):
         "npz_relpath": str(dest.relative_to(REPO)), "npz_sha256": sha,
         "lotte_slices": sorted(lotte_slices) if lotte_slices else [],
         "seconds": round(time.time() - t0, 1),
+        "screen_seconds": round(time.time() - t_all, 1),
     }
     (REPO / "results" / "m8_protected_filter.json").write_text(
         json.dumps(meta, indent=2, default=str))
