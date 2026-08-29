@@ -205,6 +205,20 @@ instrument that cannot see its gain. Registered instead, before any crossing:
 Endpoint: equal-weight macro of nDCG@10 over surviving LoTTE slices, forum queries, exact search.
 Comparator: the frozen M7 released system on the identical slices. Statistic: point estimate for
 (a) — it is a guard, not a hypothesis — and the registered dev selection statistic for (b).
+
+**What this rule gives up, stated rather than glossed (2026-08-29 review).** v1 demanded an
+affirmative gain on data never used for selection. v2 demands only **non-regression** there and
+moves the affirmative requirement onto **dev**, an instrument the candidate was selected on and
+which §2.2 itself labels a biased estimator. Leg (b) is numerically demanding, but its pass
+probability is inflated by selection in a way v1's leg was not. **The crossing's protective
+function is therefore catastrophe detection, not confirmation**, and it may not be described as
+external validation. A middle rule existed and is recorded as considered: require the affirmative
+gain on the shadow's *own* half of the estimand and non-regression only on what it cannot see.
+It was not adopted because the shadow's CQA half is exactly where selection pressure is highest
+(two dev components are CQADupStack), so that rule buys less independence than it appears to.
+Second, leg (a)'s −0.0068 is the **reserved-4** MDE borrowed as a noise scale; at ~2,000 queries
+per slice the shadow's own macro SE is roughly 0.001–0.003, so −0.0068 is a 2–6 SE allowance —
+loose, and stated as loose.
 Registered branches: **GO → the access; NO-GO → "defer to M9, panel preserved" (default) or
 report-only.** Never a second crossing; never a fallback candidate; no re-selection after seeing it.
 
@@ -490,7 +504,22 @@ below is a number, not a word (Codex gate BLOCKER 1).
 2. **C2 resolved** (all three legs; table-vs-table, D1 disabled).
 3. **C3 resolved** (all three legs).
 4. **Qualifying v2 table.** Mechanical, from the immutable manifest's declared config diff against
-   R0, keyed on **config keys, not labels**:
+   R0, keyed on **config keys, not labels**. **The FULL key space is enumerated in
+   `m8/registry.json` — all 35 `train.Cfg` fields plus the artifact-level fields a release
+   records — and classified NOW, while the amendment is legal.** An unclassified key fails by
+   design, but leaving foreseeable keys unclassified would turn the condition into a coin decided
+   by naming conventions at manifest time, which is the opposite of a pre-registration.
+   Four classes: `qualifying_table` (27 keys), `qualifying_non_table` (`doc_side_head` alone),
+   `not_qualifying` (23 keys), and `neutral` — frame descriptors like `teacher_id`, `dim`,
+   `precision`, `fusion_param`, which are neither a lever nor a disqualifier.
+
+   **The teacher-swap side effect, registered before any swap exists.** A swap flips `teacher_id`
+   (neutral) and, if the tokenizer changes, `tokenizer_id` and `vocab` — which *are*
+   qualifying-table keys. That is a consequence of the swap, not an E11-sense v2 lever. So
+   whenever a teacher swap appears in the diff, **`tokenizer_id` and `vocab` do not count toward
+   condition 4**: the manifest must declare at least one other qualifying-table key. Without this,
+   swapping the teacher would have satisfied the qualifying-table requirement by itself, and the
+   registered swap branch of C2 (§4.2) would have been a release path with no lever in it.
    - **QUALIFYING_TABLE keys** — at least one must appear in the diff:
      `objective_family`, `tokenizer_id`, `vocab`, `row_init_construction`, `pool_composition`,
      `feature_set`, `structural_rider`.

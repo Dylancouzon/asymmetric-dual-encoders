@@ -360,33 +360,88 @@
     "six_set_no_regression_margin": -0.0075,
     "six_set_margin_provenance": "2.4x the measured near-sibling six-macro paired SE (0.0026-0.0032, from results/perquery.json: leaf-ir-asym vs mdbr-leaf-ir 0.00263, LR-dense-pertask vs LR-dense-websearch 0.00316). P(false veto | truly equal) ~ 0.99; ~80% power against a true regression of ~0.0135.",
     "qualifying_table_keys": [
+      "objective",
       "objective_family",
+      "kl_weight",
+      "cos_weight",
+      "kl_k",
+      "pool_composition",
+      "sources",
+      "side_pos_sources",
+      "b_pseudo_kind",
+      "b_query_sources_all",
+      "ict_fraction",
+      "synthetic_query_dose",
+      "genre_bundle",
       "tokenizer_id",
       "vocab",
-      "row_init_construction",
-      "pool_composition",
       "feature_set",
-      "structural_rider"
+      "ngram_rows",
+      "init",
+      "init_preproc",
+      "row_init_construction",
+      "idf_init_weights",
+      "structural_rider",
+      "pool_mode",
+      "learned_weights",
+      "low_rank_delta",
+      "doc_instruction",
+      "phase_structure"
     ],
     "qualifying_non_table_keys": [
       "doc_side_head"
     ],
     "not_qualifying_keys": [
+      "run_id",
       "seed",
       "steps_a",
       "steps_b",
+      "temp",
       "temperature",
       "hard_neg_k",
+      "hard_neg_source",
+      "use_provided_hardneg",
+      "fn_margin",
       "lr",
+      "lr_weights",
+      "lr_schedule",
+      "warmup_steps",
+      "batch",
+      "n_neg",
+      "bank_size",
+      "reg_init",
       "b_pseudo_queries",
-      "batch_size"
+      "b_pseudo_frac",
+      "eval_every",
+      "eval_components",
+      "preproc"
     ],
     "not_qualifying_patterns": [
       "*_tuning"
     ],
     "unknown_key_policy": "FAIL -- a key on neither list fails the qualifying condition; classification happens at manifest time, before the access",
     "c2_form_selector": "same_teacher -> table-vs-table on identical doc vectors; teacher_swapped -> dense-system-vs-dense-system. Selected by a fact fixed at pipeline step 5, before any M8 number.",
-    "six_set_read_timing": "scored after the freeze, inside the guarded access process, BEFORE the reserved payloads are opened, written atomically, logged to m8/SIX_ACCESS.log. It is NOT a decision point: the reserved access proceeds regardless of what it says, and nothing about the candidate may change after it. It governs shipping, not measuring."
+    "six_set_read_timing": "scored after the freeze, inside the guarded access process, BEFORE the reserved payloads are opened, written atomically, logged to m8/SIX_ACCESS.log. It is NOT a decision point: the reserved access proceeds regardless of what it says, and nothing about the candidate may change after it. It governs shipping, not measuring.",
+    "_key_schema_note": "EVERY key a candidate manifest can carry is classified here, NOW, while the amendment is legal. The space is train.Cfg's 35 fields plus the artifact-level fields a release records. An unclassified key FAILS condition 4 by design -- but leaving foreseeable keys unclassified would turn the condition into a coin decided by naming conventions at manifest time, which is the opposite of a pre-registration (2026-08-29 review finding).",
+    "neutral_keys": {
+      "_why": "keys that describe the FRAME rather than a lever. They are neither qualifying nor disqualifying, and they are enumerated so they do not fall through to 'unknown'.",
+      "keys": [
+        "teacher",
+        "teacher_id",
+        "teacher_revision",
+        "encoder_spec",
+        "dim",
+        "precision",
+        "fusion_family",
+        "fusion_param",
+        "released_system"
+      ]
+    },
+    "teacher_swap_note": "A teacher swap flips teacher_id/encoder_spec (NEUTRAL) and, if it changes tokenizer, also tokenizer_id and vocab -- which ARE qualifying-table keys. That is a side effect of the swap, not an E11-sense v2 lever, so a swap alone must NOT satisfy condition 4: the manifest must declare at least one qualifying_table key that is not tokenizer_id or vocab whenever a teacher swap is in the diff. Registered now, before any swap exists.",
+    "swap_side_effect_keys": [
+      "tokenizer_id",
+      "vocab"
+    ]
   },
   "shadow_gate": {
     "set": "LoTTE, forum queries only, surviving slices from S0",

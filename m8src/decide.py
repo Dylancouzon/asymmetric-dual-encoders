@@ -181,14 +181,22 @@ def qualifying_table(changes):
     An UNKNOWN key fails the condition: a key that was never classified cannot be argued into a
     category after a number exists. A qualifying_non_table change (doc_side_head) alone does not
     open the release path -- a qualifying TABLE change must also survive (E11 + G4-4)."""
+    reg = _registry()["ship_rule"]
     changes = set(changes)
     kinds = {k: probe_guard.classify_change(k) for k in changes}
     unknown = sorted(k for k, v in kinds.items() if v == "unknown")
     table = sorted(k for k, v in kinds.items() if v == "qualifying_table")
     non_table = sorted(k for k, v in kinds.items() if v == "qualifying_non_table")
+    # A teacher swap flips tokenizer_id/vocab as a SIDE EFFECT. Those are qualifying-table keys,
+    # but a swap is not an E11-sense v2 lever, so it may not satisfy condition 4 on its own.
+    swap = bool(changes & set(reg.get("neutral_keys", {}).get("keys", []))
+                & {"teacher", "teacher_id", "encoder_spec"})
+    side = set(reg.get("swap_side_effect_keys", []))
+    substantive = [k for k in table if not (swap and k in side)]
     return {"declared": sorted(changes), "classified": kinds, "unknown": unknown,
             "qualifying_table": table, "qualifying_non_table": non_table,
-            "pass": bool(table) and not unknown,
+            "teacher_swap_in_diff": swap, "qualifying_table_net_of_swap": substantive,
+            "pass": bool(substantive) and not unknown,
             "note": ("a distinct int8 payload is necessary but not sufficient; a "
                      "qualifying_non_table change alone does not satisfy the requirement "
                      "(LEDGER 5.4, E11/G4-4). An unknown key FAILS.")}

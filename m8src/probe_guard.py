@@ -156,10 +156,12 @@ def write_result(path, payload, probe_id, *, strict_commit=True):
 
 def classify_change(key, reg=None):
     """LEDGER 5.4, mechanically. -> 'qualifying_table' | 'qualifying_non_table' |
-    'not_qualifying' | 'unknown'. An unknown key FAILS the qualifying condition; classification
+    'not_qualifying' | 'neutral' | 'unknown'. An unknown key FAILS the qualifying condition; classification
     happens at manifest time, before the access, so a key cannot be argued into a category after a
     number exists."""
     s = (reg or registry())["ship_rule"]
+    if key in s.get("neutral_keys", {}).get("keys", []):
+        return "neutral"
     if key in s["qualifying_table_keys"]:
         return "qualifying_table"
     if key in s["qualifying_non_table_keys"]:
