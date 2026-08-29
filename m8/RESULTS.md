@@ -25,3 +25,29 @@ already holds. Written by hand until a sweep driver exists.
 | `filter` | protected-query fingerprint inventory | 80,954 queries over four partitions (six 3,727 · dev 12,772 · reserved-4 9,335 · M9-reserve 55,120); 4.22M gram keys | `results/m8_protected_filter.json` |
 | `shadow_alternatives` | counts for the 8 unused CQADupStack subforums | 323,488 docs / 8,961 queries, licence already cleared — a third option for E10 | `results/m8_shadow_alternatives.json` |
 | `m8_fragmentation_attribution` | which words carry the fragmentation cost | binary contrast **4/5 informative datasets positive, one-sided p=0.19 — NOT resolved**; the continuous slope is the instrument to quote. Words are a MIX (compounds, domain terms, ordinary English), not dominated by drifted vocabulary | `results/m8_fragmentation_attribution.json` |
+
+## Training arms (the rows `sweep.py` appends, kept HERE)
+
+`m7src/sweep.one` appends every run it makes to **`m7/RESULTS.md`** — M7's experiment
+ledger. G3 forbids M8 altering M7's record, so those rows were reverted there and are
+preserved here instead. The five FAILED rows are the teacher-mismatch the first smoke
+caught (`M7_ENCODER` defaults to M7's pre-swap bge-base); the `-smoke` rows are 90-step
+arms. Per-run detail is in `results/m7_run_m8nf-*.json`.
+
+| run | artifact | dev proxy | verdict |
+|---|---|---|---|
+| m8nf-seed0 | `work/runs/m8nf-seed0.json` | — | FAILED — AssertionError: init 'run:p35b-2m' was trained against NovaSearch/stella_en_400M_v5 but the active encoder is BAAI/bge-base-en-v1.5 |
+| m8nf-seed1 | `work/runs/m8nf-seed1.json` | — | FAILED — AssertionError: init 'run:p35b-2m' was trained against NovaSearch/stella_en_400M_v5 but the active encoder is BAAI/bge-base-en-v1.5 |
+| m8nf-seed2 | `work/runs/m8nf-seed2.json` | — | FAILED — AssertionError: init 'run:p35b-2m' was trained against NovaSearch/stella_en_400M_v5 but the active encoder is BAAI/bge-base-en-v1.5 |
+| m8nf-steps2250 | `work/runs/m8nf-steps2250.json` | — | FAILED — AssertionError: init 'run:p35b-2m' was trained against NovaSearch/stella_en_400M_v5 but the active encoder is BAAI/bge-base-en-v1.5 |
+| m8nf-steps2750 | `work/runs/m8nf-steps2750.json` | — | FAILED — AssertionError: init 'run:p35b-2m' was trained against NovaSearch/stella_en_400M_v5 but the active encoder is BAAI/bge-base-en-v1.5 |
+| m8nf-seed0-smoke | `work/runs/m8nf-seed0-smoke.json` | 0.5012 | ok |
+| m8nf-seed1-smoke | `work/runs/m8nf-seed1-smoke.json` | 0.5013 | ok |
+| m8nf-seed2-smoke | `work/runs/m8nf-seed2-smoke.json` | 0.5014 | ok |
+| m8nf-steps2250-smoke | `work/runs/m8nf-steps2250-smoke.json` | 0.5012 | ok |
+| m8nf-steps2750-smoke | `work/runs/m8nf-steps2750-smoke.json` | 0.5012 | ok |
+| m8nf-seed0 | `work/runs/m8nf-seed0.json` | 0.5106 | ok |
+| m8nf-seed1 | `work/runs/m8nf-seed1.json` | 0.5123 | ok |
+| m8nf-seed2 | `work/runs/m8nf-seed2.json` | 0.5123 | ok |
+| m8nf-steps2250 | `work/runs/m8nf-steps2250.json` | 0.5108 | ok |
+| m8nf-steps2750 | `work/runs/m8nf-steps2750.json` | 0.5107 | ok |

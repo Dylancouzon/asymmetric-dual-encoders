@@ -80,11 +80,14 @@ a non-BERT teacher found two more, and both are silent:
 8. **Running a frozen `m7src` script can OVERWRITE an M7 artifact.** `validate_encoder.py` writes
    `results/m7_encoder_validation.json` unconditionally, so validating an M8 challenger Spec
    silently replaced M7's own validation record. Caught by `git status`, restored with
-   `git checkout --`, and the M8 result kept as `results/m8_encoder_validation.json`. **Check
-   `git status results/` after running anything out of `m7src/`** — G3 protects M8 from editing
-   m7src's CODE, not from its scripts' side effects. Same class: `sweep.one` writes
-   `results/m7_run_<id>.json` for M8 arms, which is harmless (new files) but explains the m7_
-   prefix on M8 run records.
+   `git checkout --`, and the M8 result kept as `results/m8_encoder_validation.json`.
+   **`sweep.one` is worse**: it APPENDS every run to `m7/RESULTS.md`, M7's experiment ledger, so
+   fifteen M8 arm rows landed in it. Reverted, and the rows preserved in `m8/RESULTS.md` instead.
+   (It also writes `results/m7_run_<id>.json`, which is harmless — new files — and explains the
+   `m7_` prefix on M8 run records.)
+   **Check `git status m7/ results/` after running ANYTHING out of `m7src/`** — G3 protects M8
+   from editing m7src's CODE, not from its scripts' side effects, and three of them write into
+   M7's record without being asked.
 9. **`M7_ENCODER` defaults to bge-base — M7's PRE-SWAP teacher — and nothing warns you.**
    Every noise-floor arm died with "init 'run:p35b-2m' was trained against stella but the active
    encoder is bge-base". `m8base.py` now sets it, so every M8 process inherits the incumbent.
