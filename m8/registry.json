@@ -348,7 +348,7 @@
       "wave": 1,
       "title": "noise-floor measurement (the instrument every bar is set against)",
       "question": "How large is a difference this dev instrument produces from nothing at all?",
-      "endpoint": "group_vector_median, worst_group, out_of_domain_macro and all_component_macro on the full pinned dev suite, through the released QueryTable path, at BOTH precisions (int8 and fp16) and BOTH pooling rules (mean and sqrt) -- B10's bar reads fp16 too. The FUSED macro is measured separately by m8src/fused_floor.py.",
+      "endpoint": "group_vector_median, worst_group, out_of_domain_macro and all_component_macro on the full pinned dev suite, int8, through the released QueryTable path",
       "comparator": "K=3 arms of the IDENTICAL recipe, identical data, identical B checkpoint, differing ONLY in training seed (a true null)",
       "bar": "no bar: this measures the instrument and adopts nothing. It EMITS bars: floor(endpoint) = max of the 3 pairwise |delta|; bar(endpoint) = max(0.0040, 2 x floor(endpoint)).",
       "multiplicity": "none",

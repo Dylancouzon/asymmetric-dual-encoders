@@ -1240,6 +1240,18 @@ exist.)*
   the one carrying 53% of the variance behind the claim it kept. Run for all six; the fragmentation
   channel survives every exclusion at t >= 3.28.
 
+- **2026-08-29 — DISCLOSURE, and a registration edit REVERTED because the audit refused it.**
+  While actioning the results review I edited probe `NF`'s registered `endpoint` text to say it
+  covers both precisions and both pooling rules — which is what the probe actually measured. That
+  is a registration moving after its numbers exist, and `m8src/rule_audit.py` fired a **BLOCKER**
+  on it within a minute. **The edit is reverted**; the registered text stands as committed at
+  `c8cdb107`, and the discrepancy is disclosed here instead: the row says `int8`, and the probe
+  additionally emitted fp16 and both pool modes. The extra coverage is a strict SUPERSET, it moved
+  no bar (NF has no bar — it emits them), and B10's registered "both precisions" requirement is the
+  reason the wider read exists. Recorded rather than tidied away, because the alternative is a
+  session editing its own registrations to match what it happened to compute — which is the
+  failure the audit was written for, and it caught its author.
+
 - **2026-08-29 — INCIDENT, found by review before it cost anything.** `work/dev/cqadup-android.json`
   and `work/dev/cqadup-english.json` held the **complete corpora and qrels** of two of the four
   reserved confirmatory sets, materialized by `devsuite.load()` on 2026-08-26 when the
