@@ -205,9 +205,23 @@ def collect():
                 problems.append(f"{rid}: kept {v.get('pairs_kept')} but frac {v['pair_fraction']} "
                                 f"of {full} is {want}")
 
+    # REALISED counts, on one scale. The sidecar's `pairs_kept` is measured at the `kept_pairs`
+    # level (340,850 at f=1.00), while the adopted arms only know their post-`build_arrays` count
+    # (338,076, after banned positives drop). Mixing the two put the dose curve's last point on a
+    # different scale from the rest -- harmless for the verdict, which is a contrast of scalars,
+    # but wrong for the descriptive slope against log(pairs). Prefer each run's own
+    # `n_train_pairs`, which is the number of pairs the arm actually trained on.
+    for rid, v in got.items():
+        rp = WORK / "runs" / f"{rid}.json"
+        if rp.exists():
+            n = json.loads(rp.read_text()).get("n_train_pairs")
+            if n:
+                v["pairs_trained"] = n
+        v.setdefault("pairs_trained", v.get("pairs_kept"))
+
     by_frac = {}
     for rid, v in got.items():
-        by_frac.setdefault(v["pair_fraction"], set()).add(v["pairs_kept"])
+        by_frac.setdefault(v["pair_fraction"], set()).add(v["pairs_trained"])
     problems += [f"fraction {f}: seeds disagree on pair count {sorted(c)}"
                  for f, c in by_frac.items() if len(c) > 1]
     counts = [(f, sorted(c)[0]) for f, c in sorted(by_frac.items())]

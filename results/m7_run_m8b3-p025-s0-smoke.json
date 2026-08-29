@@ -1,0 +1,64 @@
+{
+ "run_id": "m8b3-p025-s0-smoke",
+ "cfg": {
+  "run_id": "m8b3-p025-s0-smoke",
+  "objective": "A",
+  "init": "run:p35b-2m",
+  "preproc": "noprefix",
+  "init_preproc": "",
+  "learned_weights": true,
+  "idf_init_weights": true,
+  "lr": 0.001,
+  "lr_weights": 0.01,
+  "warmup_steps": 200,
+  "lr_schedule": "warmup_linear",
+  "steps_b": 0,
+  "steps_a": 90,
+  "batch": 512,
+  "n_neg": 32768,
+  "temp": 0.02,
+  "hard_neg_k": 0,
+  "hard_neg_source": "teacher",
+  "use_provided_hardneg": true,
+  "fn_margin": 0.02,
+  "kl_weight": 1.0,
+  "kl_k": 32,
+  "cos_weight": 1.0,
+  "reg_init": 0.001,
+  "bank_size": 2000000,
+  "sources": [],
+  "eval_every": 500,
+  "eval_components": [
+   "nq-250k",
+   "cqadup-programmers",
+   "cqadup-physics"
+  ],
+  "seed": 0,
+  "b_query_sources_all": true,
+  "b_pseudo_queries": 0,
+  "b_pseudo_frac": 0.5,
+  "b_pseudo_kind": "short",
+  "pool_mode": "mean",
+  "side_pos_sources": []
+ },
+ "final_macro": 0.5011398467899882,
+ "coverage": {
+  "rows_updated": 20386,
+  "vocab": 30522,
+  "rows_updated_frac": 0.6679116487503052,
+  "median_updates_of_touched": 5.0
+ },
+ "history": [
+  {
+   "step": 90,
+   "phase": "final",
+   "macro": 0.5011398467899882,
+   "collapse": {
+    "mean_pairwise_cos": 0.2525,
+    "effective_rank": 473.28,
+    "dim": 1024,
+    "uniformity": -2.9626
+   }
+  }
+ ]
+}

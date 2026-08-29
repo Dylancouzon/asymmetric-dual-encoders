@@ -58,3 +58,16 @@ arms. Per-run detail is in `results/m7_run_m8nf-*.json`.
 | m8nfb-seed1-a | `work/runs/m8nfb-seed1-a.json` | 0.5103 | ok |
 | m8nfb-seed2-b | `work/runs/m8nfb-seed2-b.json` | 0.4949 | ok |
 | m8nfb-seed2-a | `work/runs/m8nfb-seed2-a.json` | 0.5113 | ok |
+
+### B3 pool-scaling arms (2026-08-29) — nested real-pair fractions at fixed compute
+
+| m8b3-p025-s0-smoke | `work/runs/m8b3-p025-s0-smoke.json` | 0.5011 | ok |
+| m8b3-p025-s0 | `work/runs/m8b3-p025-s0.json` | 0.5098 | ok |
+| m8b3-p025-s1 | `work/runs/m8b3-p025-s1.json` | 0.5087 | ok |
+| m8b3-p025-s2 | `work/runs/m8b3-p025-s2.json` | 0.5102 | ok |
+| m8b3-p050-s0 | `work/runs/m8b3-p050-s0.json` | 0.5104 | ok |
+| m8b3-p050-s1 | `work/runs/m8b3-p050-s1.json` | 0.5095 | ok |
+| m8b3-p050-s2 | `work/runs/m8b3-p050-s2.json` | 0.5110 | ok |
+| m8b3-p075-s0 | `work/runs/m8b3-p075-s0.json` | 0.5121 | ok |
+| m8b3-p075-s1 | `work/runs/m8b3-p075-s1.json` | 0.5119 | ok |
+| m8b3-p075-s2 | `work/runs/m8b3-p075-s2.json` | 0.5140 | ok |
