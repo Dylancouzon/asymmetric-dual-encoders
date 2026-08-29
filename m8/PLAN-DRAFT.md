@@ -1,11 +1,20 @@
-# M8 plan — DRAFT v2 (2026-08-29), post first adversarial gate
+# M8 plan — DRAFT v3 (2026-08-29), post second adversarial gate
 
-**Status: DRAFT v2.** Not yet a pre-registration. v1 (git history) was gated by a fresh Codex
-gpt-5.6-sol pass (`research/m8-planning/codex-plan-gate-2026-08-28.md`) which returned **STOP with
-17 findings**; every finding is actioned or explicitly disposed below (§6 maps them). No protected
-set has been touched; no training has run. Sources: five independent reviews in
-`research/m8-planning/` plus the gate. New scope from Dylan 2026-08-28: **ONNX/fastembed
-compatibility is a requirement** (§5) — eventually, not day-1; benchmark numbers still dominate.
+**Status: DRAFT v3.** Not yet a pre-registration. Gate #1
+(`research/m8-planning/codex-plan-gate-2026-08-28.md`, STOP, 17 findings) produced v2; gate #2
+(`research/m8-planning/codex-plan-gate2-2026-08-29.md`, STOP, 14 findings labelled G2-*) produced
+this v3 — its structural fixes: teacher frozen BEFORE Stage R (swap after = full restart), Stage R
+as one enumerated assembly + one common-frame validation gate, pipeline reordered so the shadow
+crossing is the LAST step before freeze (seeds/quantization/ONNX-parity/fusion all precede it),
+C2 endpoints + "qualifying v2 table" defined ex ante, contamination maps upgraded to enforced
+hash-pinned filters over all protected partitions, probe outputs made tri-state, ONNX reconciled
+with the teacher workstream, B4 demoted from "ceiling" to empirical probe, and the
+inherited-obligation matrix completed. Remaining LEDGER prerequisites (registration work, not plan
+gaps): executable confirmatory decision code + joint power simulation, per-probe frozen bars,
+Phase-0 benchmark schedule. No protected set has been touched; no training has run. Sources: five
+independent reviews in `research/m8-planning/` plus two gates and three completed sweeps. Scope
+additions from Dylan: ONNX/fastembed requirement (approved §3); teacher/data fully reopened (§2f);
+storage guidance (E7).
 
 ## 0. What is frozen, what is amendable, what needs Dylan
 
@@ -81,36 +90,51 @@ registration time.
 
 ## 2. The M8 design
 
-### 2a. Structure: one frozen recipe, then one structural direction (gate finding 11)
+### 2a. Structure and pipeline order (rewritten after gate #2 — findings G2-1, G2-2, G2-4, G2-5)
 
-The v1 "recipe floor as free riders" is replaced by an explicit two-stage design. The confirmatory
-claim is **system-level** (v2 replaces v1); per-lever attribution is dev-descriptive only and is
-labelled as such everywhere.
+The confirmatory claim is **system-level** (v2 replaces v1); per-lever attribution is
+dev-descriptive only and labelled as such everywhere. The pipeline order is now fixed so that the
+thing that crosses the shadow gate is byte-identical to the thing that gets frozen:
 
-- **Stage R (recipe rebuild) produces ONE frozen recipe R1 before any structural family trains.**
-  Contents, each entering only if its probe clears its registered bar, else the M7 setting stays:
-  ICT pairs at the B3-selected fraction; listwise distillation over teacher top-N candidates with
-  split temperatures (contingent on B2); one continuous mixed objective with replay across phases
-  (contingent on a registered matched three-arm test: M7-sequential vs mixed-replay vs
-  listwise-only, equal optimizer updates, B-target retention tracked); negatives per the
-  matched-steps arm of B13; hparams from B13's registered selection rule; pool rebuilt with
-  per-source quotas ≤25%, multi-span/doc, Wikipedia ICT added. R1 is frozen and hash-pinned before
-  Stage S begins. R1-vs-M7-recipe is reported descriptively on exploratory dev; it is not a
-  confirmatory claim.
-- **Stage S (structural family) trains candidate families UNDER frozen R1** from the currently
-  in-scope menu (§2c), each with a registered kill/keep gate. A pre-declared mechanical rule —
-  highest exploratory-dev worst-group gain among survivors, ties broken by smaller artifact bytes —
-  selects **exactly one** candidate. If no family survives its gate, the candidate is R1 alone
-  (recipe-only v2), which is a legitimate v2 per the mandate.
-- **Shadow gate:** the one candidate crosses the shadow-dev suite once, go/no-go, no fallback and
-  no second crossing (gate finding 13). Shadow-dev is **new, never-scored data frozen before
-  Phase 0** (see 2d); M7's existing dev components cannot become shadow by relabeling.
-- **Seeds:** three seeds for the finalist; aggregation rule pre-declared per architecture class
-  before seeds run — table-averaging only for identically-parameterized aligned tables, otherwise
-  mechanical median on the pre-declared statistic. Never best-seed.
-- Then fusion re-selection (mandatory), freeze, and the single reserved-4 access with M7's
-  hardened one-shot mechanics inherited verbatim (spent-receipt, exclusive lock, strict hashes,
-  atomic write, snapshot, single infra-retry — copied from `m7/LEDGER.md`, gate finding 17).
+**Teacher freeze → Stage R (one assembled recipe + one validation gate) → Stage S (one finalist by
+executable rule) → seed aggregation → final quantization → ONNX parity → fusion selection →
+immutable candidate manifest (hashes) → ONE shadow crossing (go/no-go, registered bar, STOP on
+NO-GO, no fallback) → freeze → the single reserved-4 access.**
+
+Any post-shadow mutation of the candidate invalidates the crossing. A teacher change after Stage R
+begins forces a full restart of R and S under the new teacher (G2-2) — which is why the teacher
+question is settled FIRST (§2f-T, now a Phase-0-opening workstream, not a parallel one).
+
+- **Stage R produces ONE assembled recipe R1, then validates the assembly once.** Every degree of
+  freedom is enumerated at registration with its M7 fallback: (1) ICT pair fraction, (2) listwise
+  distillation arm (candidate sampler + split temps), (3) phase structure (sequential vs
+  mixed-replay vs listwise-only — one registered three-arm test, equal optimizer updates, B-target
+  retention tracked), (4) negatives (B13 matched-steps), (5) temp/n_neg/steps (B13 region → ONE
+  confirm arm), (6) target design (B8), (7) row init (B15), (8) pool composition (quotas,
+  multi-span, Wikipedia ICT, genre bundle — all ONE pre-frozen pool spec, not per-source
+  adaptivity; §2f-DATA), (9) optional riders (B9 low-rank, B10 pooling, B14 doc instruction) —
+  each probe outputs exactly one of {adopt setting X, keep M7 fallback, stop direction} (G2-9).
+  **Assembly rule:** the adopted settings form one bundle; then a single common-frame validation —
+  assembled-R1 vs M7-recipe-R0, matched updates, matched data volume, same seed policy, dense AND
+  fused endpoints, registered bar — decides R1 vs falling back to R0 wholesale. No component may
+  be added, removed, or re-tuned after that gate.
+- **Stage S trains one candidate per family UNDER frozen R1** (menu §2c), using a fixed
+  within-family selection rule (registered per family: e.g. D2's vocab size is picked by its own
+  nested dev split, not by attempt count). Family finalists are compared to R1-alone on one named
+  group vector (exact groups, precision, aggregation, and budget registered; worst-group defined
+  as an explicit formula), with a practical-equivalence band; within the band, the tie-break is
+  total downloadable bytes + doc-index delta (complete cost, tokenizer assets and heads included).
+  Registered outcomes for: no survivor (candidate = R1-alone), D4'-only survivor (candidate =
+  R1 + D4' only if the qualifying-table condition of §2e still holds via R1's table change),
+  multiple survivors (the rule picks; no judgment).
+- **Seeds:** three seeds for the finalist; aggregation rule pre-declared per architecture class —
+  table-averaging only for identically-parameterized aligned tables, else mechanical median on the
+  registered statistic. Never best-seed. Aggregation happens BEFORE shadow (G2-4).
+- **Shadow gate:** registered statistic, threshold, tie rule, and STOP outcome written at LEDGER
+  time; the immutable manifest (table hash, tokenizer hash, fusion spec, ONNX graph hash, doc-side
+  component hashes) is what crosses; shadow NO-GO ends the milestone's release path (report-only).
+- One-shot mechanics inherited verbatim from `m7/LEDGER.md` (spent-receipt, tag-peel check,
+  exclusive lock, strict hashes, atomic write, snapshot, single infra-retry).
 
 ### 2b. Phase 0 probes — costed first, bounded subset first (gate findings 12, 16)
 
@@ -122,7 +146,13 @@ week" in v1 was an aspiration, not a schedule.
 Every probe registers at LEDGER-time: input hashes, split, endpoint, comparator, exact
 threshold/CI rule, multiplicity treatment, tie rule, the no-survivor outcome, and the unique
 direction it gates. Draft thresholds below are proposals to be frozen verbatim (or amended in
-writing) at registration; **a probe with no registered bar does not run.**
+writing) at registration; **a probe with no registered bar does not run.** Additional rules from
+gate #2 (G2-9): every probe's output is exactly one of {adopt named setting, keep named fallback,
+stop named direction} — no "allowed into a menu" outcomes; a pure diagnostic (B2) can only trigger
+a separately-registered performance arm, never admit a leg by itself; any conclusion that crosses
+frames (closed-form → trained, old table → new table) must be reconfirmed on the assembled
+candidate — in particular **B12 quantization re-runs on the actual Stage-S finalist** before the
+manifest is cut.
 
 Wave 1 (cheapest, most decision-relevant):
 
@@ -139,7 +169,7 @@ Wave 2 (needs wave-1 outcomes or more implementation):
 
 | # | probe | cost | gates | draft bar |
 |---|---|---|---|---|
-| B4 | **Bag-generalization ceiling**: train an expressive permutation-invariant model (DeepSets-style MLP over token embeddings) on an exploratory split of dev queries, eval on a grouped holdout; plus token-bag recoverability measured on the actual table | hours–1 day | whether the order-free class has headroom; informs E1 and the whole-milestone framing | holdout ≥ trained-table + 0.02 ⇒ class has headroom; below ⇒ doc side / lexical arm is where M8 spends |
+| B4 | **Empirical bag-capability probe** (renamed per G2-13 — an empirical LOWER bound on one implementation, never a ceiling): expressive permutation-invariant model (DeepSets-style) on an exploratory split, eval on grouped holdout, with registered sizes/seeds/optimization checks/saturation evidence; plus token-bag recoverability on the actual table | hours–1 day | positive ⇒ order-free headroom exists (informs E1); negative ⇒ DESCRIPTIVE only unless multiple sufficiently expressive variants converge to the same bound — it may NOT by itself route the milestone away from the query side | holdout ≥ trained-table + 0.02 ⇒ headroom established |
 | B5 | Index-time adaptation on ONE OOD **dev** corpus (spans → ridge-toward-W₀, 3 λ) | ~2 h | D3 (research row until E5) | ≥ +0.005 on that component |
 | B6 | Doc-side map, frozen table, cached pairs, OOD read | ~2 h | D1 (research row until E3) | ≥ +0.005 OOD |
 | B7 | Block-CG joint solve vocab curve V ∈ {30.5K control, 64K, 128K}, self-trained tokenizer | half day–1 day after benchmark | D2 | monotone slope with 64K−30.5K ≥ +0.005 on held-out dev queries |
@@ -191,7 +221,16 @@ happens now with the current closed-form frame; any swap decision is re-probed u
 architecture (frozen R1 + winning structural family) before it is put to Dylan** — teacher
 ordering can change when the tokenizer/objective changes, so the screen prunes, it never picks.
 
-**T — teacher sweep, run now, three prongs:**
+**T — teacher decision, now the OPENING workstream of Phase 0 (gate #2 reordering: the teacher is
+frozen BEFORE Stage R; a later swap = full R/S restart).** Screen rules per G2-3: within any one
+screen, the student frame is held constant (tokenizer, dim/byte budget, fit queries, λ grid, solver
+tolerance, dtype) — alternative tokenizer/dim combinations are ARCHITECTURE candidates (D2), never
+teacher effects; the fit-query list is REGENERATED through the current protected-query filter
+covering six + reserved + shadow + M9-reserve partitions (the M7 closed-form fit list contained
+disclosed protected-query hits and may not be reused); every candidate gets a teacher-training
+provenance row against all protected sets (MTEB registry proxy convention, see E9). Dev-only
+probing spends nothing; contaminated fit data is the leak channel, and it is now filtered, not
+disclosed. Three prongs:
 
 1. **Unblock the two never-probed shortlist survivors.** granite-embedding-english-r2 and
    gte-modernbert-base were excluded ONLY because `stage0_ridge` builds a float64 Gram (50,368² =
@@ -216,8 +255,12 @@ ordering can change when the tokenizer/objective changes, so the screen prunes, 
    closed-form TABLE criterion only (Spearman 0.000 stands); B16's MEV screen first if it
    validates; contamination column uses the MTEB registry proxy list consistently (see E9).
 
-Decision rule unchanged from the mandate: a swap needs the closed-form table criterion, an
-off-family read, re-probe under the final M8 frame, and Dylan's sign-off.
+Decision rule (amended per gate #2): a swap needs the closed-form table criterion under the fixed
+screening frame, an off-family read, and Dylan's sign-off — and it must be settled BEFORE Stage R
+freezes. There is no "re-probe under the final frame later": if evidence after Stage R ever
+overturns the teacher, Stage R and S restart under the new teacher. (The old "screen now, re-probe
+later" design was gate-rejected as incoherent: the recipe and architecture would have been selected
+under the wrong teacher.)
 
 **DATA — the untested hypothesis, stated honestly:** the clean-stack tax measured *MS-MARCO-shaped*
 data at +0.006. It says nothing about **genre-diverse clean data** — scientific/technical/legal
@@ -230,9 +273,22 @@ registers, the exact genres of the clean-4 failure — because none was ever col
    metadata), SEC EDGAR (private authorship), HackerNews (no grant), post-2024 StackOverflow.
    PMC-OA-commercial: conditional on E8 + a LOCAL PMID-overlap measurement vs NFCorpus/TREC-COVID
    (not web-resolvable) before any decision.
-2. **A registered genre-diversity probe in Stage R:** add the cleared technical corpora as ICT/
-   pseudo-span sources under the ≤25%-per-source quota; matched arm vs the Wikipedia-only rebuild;
-   read on the OOD dev groups. Bar: ≥ +0.005 OOD to enter R1.
+2. **A registered genre-diversity probe in Stage R** (spec tightened per G2-8): the source set and
+   per-source dose are FROZEN before scoring (one bundle: USPTO + EUR-Lex + US-federal at
+   registered shares, total technical share capped at a registered fraction); total examples and
+   optimizer updates matched to the Wikipedia-only comparator arm; endpoint = the registered OOD
+   group vector PLUS a technical, non-protected exploratory group built from held-out cleared-
+   corpus pseudo-queries (the current OOD pair is CQA and may be insensitive to the mechanism);
+   raw-CI rule + group-sign guard registered. Outcome: the whole fixed bundle enters R1's pool
+   spec or does not — no per-source cherry-pick after scores exist.
+2b. **Contamination enforcement precedes any data probe (G2-7):** the M7 R1/R2 machinery (query-
+   overlap removal, positive-document/span removal, source-family disclosure) is extended to cover
+   ALL protected partitions — six + reserved four + shadow + M9 reserve — and RUN over every new
+   corpus (Wikipedia ICT included: Wikipedia contains FEVER/DBpedia-adjacent documents, and ICT
+   turns corpus documents into training positives). Post-filter source hashes and counts are
+   frozen; M8-specific overlap rates are recomputed for the FINAL data mix and replace the M7-era
+   11.3%/9.32% disclosures, which describe M7's mix only. Maps do not protect anything; filters
+   do. E8 is decided from the measured PMID intersection, not assumption.
 3. **PMC-OA trade-off is Dylan's call (new E8):** licence-clean but its use makes NFCorpus and
    TREC-COVID *training-adjacent*, weakening the six as a descriptive continuity read (the
    reserved four are unaffected). Options: exclude (default), include and disclose, or include
@@ -272,8 +328,14 @@ Registered in `m8/LEDGER.md` before the first M8 number, as executable code
   simultaneous one-sided bound at α/m from the same bootstrap draws (M7's three-leg rule,
   inherited verbatim), m = 3:**
   - **C1 (release, primary): fused-M8 > fused-M7.**
-  - **C2 (release co-condition): dense-M8-table > dense-M7-table** — this is what makes the v2 a
-    stronger *table* per the mandate, and blocks a BM25F-rescued weak table from shipping.
+  - **C2 (release co-condition): dense released-M8 system > frozen dense M7 system** — both
+    endpoints fully frozen (tokenizer, table, doc encoder/head, dim, normalization, precision,
+    adaptation policy). C2 compares complete dense systems and is NOT presented as isolating table
+    causality (G2-6). Separately, shipping as a v2 requires a **qualifying v2 table**, defined ex
+    ante: a registered change to the table's generating recipe, features, or tokenizer AND a
+    distinct int8 payload — seed-only or hyperparameter-only changes do not qualify. R1-only
+    qualifies iff R1 adopted at least one registered recipe change (it changes the generating
+    recipe); a D4'-only winner does NOT qualify on its own.
   - **C3 (absolute floor): fused-M8 > BM25** (frozen builder) on the same macro.
   - Ship requires **all of C1, C2, C3**. No OpenSearch leg (finding 1); published numbers appear as
     labelled context only.
@@ -286,8 +348,14 @@ Registered in `m8/LEDGER.md` before the first M8 number, as executable code
   within-family transfer from dev) stated at the rows, as clean-4 was in M7.
 - **Weak-null caveat inherited**: M7's calibration note (mildly anti-conservative in one check,
   uniform weak-null FWER not established) is carried into the ledger text.
-- Power computed for this exact estimand/family at registration; the +0.02 planning target is
-  labelled as planning-only.
+- **Registration deliverables (LEDGER prerequisites, per G2-10):** executable decision code fixing
+  bootstrap draw count + seed, stratified paired resampling with strict qid alignment, the raw-CI
+  rule stated exactly (two-sided 95% lower endpoint > 0, unrounded, per M7's rule), Holm ordering
+  and tie handling, the α/3 simultaneous bound from the same draws, the worst-group formula with
+  its endpoint named (fused-M8 vs fused-M7), and a **joint power simulation of the all-of-C1/C2/C3
+  shipping rule** across plausible effect vectors and dependence, publishing minimum detectable
+  effects. Grouped sensitivity stays outside all shipping logic. The +0.02 planning target is
+  labelled planning-only.
 
 ---
 
@@ -313,14 +381,21 @@ Plan:
    registered parity check (bit-identical rankings vs the int8 reference path on one dev
    component) makes it a release artifact, not a demo. This is the fastembed-native form of the
    deliverable and costs ~a day.
-2. **Doc tower**: stella stays the teacher (its selection is measured on the shipped-table
-   criterion; every probed alternative is CI-resolved below). A **parity-verified ONNX export of
-   stella_en_400M_v5** is an M8 engineering task with M10 as the fallback landing zone: cosine
-   parity ~1.0 and nDCG delta ≤ 0.001 on one dev component vs the PyTorch path, fp32 and fp16
-   variants measured. If conversion proves blocked (custom-attention export failure), that fact —
-   not serving convenience — feeds the teacher-swap consideration with Dylan.
-3. **Teacher-probe filter**: any future teacher candidate must be ONNX-exportable (or already
-   exported) to enter a probe shortlist. Added to the background sweep spec.
+2. **Doc tower (parameterized by THE SELECTED TEACHER — §2f-T decides it; G2-11):** a
+   parity-verified ONNX export of the selected teacher is an M8 engineering task with M10 as the
+   fallback landing zone. **ONNX status in the teacher decision, made explicit:** it is a hard
+   product constraint on *eventual* servability, and the acceptable feasibility evidence is a
+   successful local export OR architecture-family precedent — the absence of an existing ONNX file
+   is NOT failure (stella itself lacks a validated official artifact). Feasibility is assessed for
+   every probe finalist BEFORE the teacher freezes, so it never forces a post-hoc restart; a
+   candidate is excluded on ONNX grounds only if export is demonstrated-infeasible, and that
+   exclusion is written down with the evidence.
+3. **Parity spec (upgraded per G2-12), run on the FINAL aggregated+quantized artifacts BEFORE the
+   shadow crossing, pinned in the candidate manifest** (graph, tokenizer, opset, ORT version,
+   precision, preprocessing hashes): the full query conformance fixture suite (specials, repeats,
+   sqrt counts, truncation, empty queries, dynamic axes, dequant, near-zero norms) + vector/cosine
+   tolerances + top-k agreement with a declared tie policy + an nDCG delta bound on pinned dev.
+   "One dev component, bit-identical" was under-specified and is superseded.
 4. Index-side tooling (BM25 builder, any adaptation/fitting scripts) are offline build steps, not
    served models; ONNX does not apply. Whether fastembed should eventually host index-build
    utilities is a product question for Dylan, out of M8 scope.
@@ -382,7 +457,9 @@ storage guidance.
 
 | inherited item | disposition in M8 |
 |---|---|
-| sqrt-pooling trained-through, full-chain arm (carried lever) | Redesigned arm allowed by mandate; runs only if B10/B13 make pooling look live; its own pre-registration; NOT revived at arm (a). |
+| sqrt-pooling trained-through, full-chain arm (carried lever) | Its own explicit registration slot at R1-assembly time: one full matched B+A chain under `sqrt` vs the mean twin, decided (run or formally deferred with owner-visible reasoning) when R1 is assembled — B10/B13 inform but do not falsify it (G2-14). NOT revived at arm (a). |
+| bigram/n-gram rows trained through the forward (the carried M7 lever, `instructions-m8.md`) | **Superseded by D2 and said so explicitly**: the self-trained no-whitespace-pretokenization tokenizer IS the n-gram direction in non-overlapping form (multi-word merges = phrases as tokens), avoiding the overlap/double-count pooling ambiguity of additive rows. If D2 dies at its gate, the additive-row variant is NOT automatically revived — it would need its own registration. |
+| M7's mandatory ablation set (flat-vs-learned weights, prefix variants, init controls, dense/BM25/fusion decomposition, int8) | Mapped per eligible architecture in the LEDGER, each row adopted or marked not-applicable WITH the reason; not summarized away as "an ablation table" (G2-14). |
 | negatives/step confound (carried) | B13 matched-steps design; disposition registered from its confirm arm. |
 | doc2query full dose (carried, blocked on E2) | Confirmatory: dead on compute (finding 15). Research probe only, bounded, if E2 lands. |
 | teacher revisit (carried, swap bar) | UPGRADED to workstream T (§2f): CG-frame re-sweep incl. the two solver-blocked survivors + byte-cap-admissible candidates + fresh releases; screen now, re-probe under final M8 frame, Dylan sign-off; runs parallel to Stage R, never blocks it. |

@@ -3,11 +3,15 @@
 **Stage: PLANNING, 2026-08-29. No training has run; no protected set touched; nothing frozen
 beyond what `instructions-m8.md` pre-registered on 2026-08-28.**
 
-Current object of work: `m8/PLAN-DRAFT.md` (v2) — the full M8 design awaiting (a) the second Codex
-gate (running), (b) three Sonnet sweeps (teacher candidates; data rights + shadow-dev candidates),
-(c) Dylan's rulings on E1–E8 (§4 of the draft; E4 = M9 reserve is the time-critical one, E7 =
-byte-cap gates two teacher probes). After those: transcribe into `m8/LEDGER.md` as executable
-pre-registrations and start Phase 0.
+Current object of work: `m8/PLAN-DRAFT.md` (**v3**) — two Codex gates run (STOP 17 → STOP 14, all
+findings actioned in v3; a third gate should confirm convergence before LEDGER transcription).
+All three sweeps DONE (teacher: probe stella-1.5B + harrier-0.6b, plus E9 FEVER-teacher-
+contamination disclosure, verified; data rights: USPTO/EUR-Lex/US-federal cleared, arXiv/SEC/HN
+out; shadow-dev: LoTTE is the only ready-made candidate → E10). Blocking on Dylan: rulings E1–E10
+(§4 of the draft; E4 = M9 reserve is time-critical, E7 = byte cap gates two teacher probes, E9/E10
+color the eval design). Pipeline order fixed by gate #2: teacher freeze → Stage R → Stage S →
+seeds → quantization → ONNX parity → fusion → manifest → one shadow crossing → freeze → the single
+reserved-4 access. After rulings + gate #3: transcribe into `m8/LEDGER.md` and start Phase 0.
 
 One-paragraph state of knowledge: M7 missed its release bar by −0.0243 CI-resolved; five
 independent planning reviews (4 Opus + Codex, `research/m8-planning/`) converged on a corrected
