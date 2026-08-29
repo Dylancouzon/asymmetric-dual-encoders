@@ -338,7 +338,7 @@
   "ship_rule": {
     "legs": {
       "C1": "fused-M8 system > fused-M7 system",
-      "C2": "M8 int8 query TABLE > M7 int8 query TABLE, same frozen incumbent document vectors, D1 DISABLED",
+      "C2": "M8 int8 query TABLE > M7 int8 query TABLE on the SAME frozen incumbent document vectors, D1 DISABLED. If the teacher swaps this is unsatisfiable and C2 reverts to the registered alternative: the dense SYSTEM comparison, each on its own teacher's document vectors, D1 still disabled (LEDGER 4.2).",
       "C3": "fused-M8 > BM25 (frozen fusion.bm25_run builder)"
     },
     "alpha": 0.025,
@@ -384,7 +384,8 @@
     "not_qualifying_patterns": [
       "*_tuning"
     ],
-    "unknown_key_policy": "FAIL -- a key on neither list fails the qualifying condition; classification happens at manifest time, before the access"
+    "unknown_key_policy": "FAIL -- a key on neither list fails the qualifying condition; classification happens at manifest time, before the access",
+    "c2_form_selector": "same_teacher -> table-vs-table on identical doc vectors; teacher_swapped -> dense-system-vs-dense-system. Selected by a fact fixed at pipeline step 5, before any M8 number."
   },
   "shadow_gate": {
     "set": "LoTTE, forum queries only, surviving slices from S0",

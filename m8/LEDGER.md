@@ -351,6 +351,30 @@ three of:
 | **C2** (strict, per E11) | **M8 int8 query TABLE > M7 int8 query TABLE**, both scored against the **same frozen incumbent document vectors, with any doc-side head (D1) DISABLED.** |
 | **C3** (absolute floor) | **fused-M8 > BM25**, frozen `fusion.bm25_run` builder. |
 
+**C2 IS ONLY COMPUTABLE UNDER THE SAME TEACHER, and the alternative is registered now rather
+than discovered later (self-review, 2026-08-29, before any M8 number).** "The same frozen
+incumbent document vectors" is satisfiable only while M8 and M7 share a document tower. If the
+teacher swaps, M7's table is bound to stella's document space and M8's to another, and a
+table-versus-table comparison across two different document spaces is not a table comparison at
+all — C2 as written would be *unsatisfiable*, and a post-swap session would have to invent a
+replacement after the fact. So both forms are fixed here, selected by a fact settled at pipeline
+step 5, long before any M8 number exists:
+
+- **Same teacher (the registered default): C2 = table vs table on identical document vectors,
+  D1 disabled.** One encode serves both endpoints.
+- **Teacher swapped (which needs Dylan's sign-off in any case): C2 = the dense SYSTEM comparison**
+  — M8's released dense system against M7's released dense system, each on its own teacher's
+  document vectors, D1 still disabled. The "same document vectors" clause is void because it is
+  unsatisfiable, not because it was inconvenient.
+
+This is a further, previously unstated cost of a swap, and it belongs in §10's list: **a swap
+converts E11's strict table claim into a system claim.** That is a reason to prefer the incumbent
+that has nothing to do with GPU hours.
+
+*And a cost a swap does NOT carry, so it is not over-budgeted:* D1-disabled document vectors are
+just the base teacher vectors, and D1-enabled is one GEMM away over the cached ones. Reporting C2
+with D1 disabled needs **no second document encode**.
+
 **Why C2 is written that way (Codex gate BLOCKER 2).** v1 said "dense released-M8 *system*", which
 would include D1 if D1 ships — so a table that LOSES to M7 could be rescued by a document-side
 head while the ledger claimed strict C2 had passed. E11's words are "the dense **table** must beat
@@ -819,6 +843,8 @@ undisclosed** — a contamination black box that **needs a ruling from Dylan bef
 session does not make it.
 
 **Costs a swap charges, written down so they cannot later be discovered as reasons to avoid it:**
+**it converts E11's strict table claim into a system claim** — C2's table-vs-table form is
+unsatisfiable across two document spaces (§4.2), which is a protocol cost, not a compute one;
 double reserved-4 pre-encode (20.7 GB and tens of hours *per system*); the FEVER-cancellation
 argument is lost if the teacher leaves the stella lineage (E9); the release NAME reopens with
 Dylan; WordPiece/fingerprint rebuild; re-encode of the 6.17M-doc pool, dev corpora and TRAIN
