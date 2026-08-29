@@ -1231,8 +1231,8 @@ the result JSON, or `research/m8-planning/`.*
 - **D-FINEWEB defaults to EXCLUSION (2026-08-29).** *"The Qdrant dataset should really prove its
   value. The webcrawl data could be okay to use, but it's better if we don't."* Measurable, but
   web-crawl enters training only on a **clearly-resolved** gain; being Qdrant's own dataset earns no
-  discount. Still pool-varying, so its bar remains uncomputable. Consequence: the HUPD/patent trigger
-  most likely never fires.
+  discount. Still pool-varying, so its bar remains uncomputable — that, not the patent
+  question, is what blocks it (the patent trigger was REMOVED; see the ruling below).
 - **Reserved sets are fine (2026-08-29)** — *"the sets are fine, continue with the codex review."*
   Closes the incident below; no quarantine.
 - **M9 picks its own document tower on measurement (2026-08-29)**, defaulting to a re-probed stella;
@@ -1247,10 +1247,33 @@ the result JSON, or `research/m8-planning/`.*
   teacher has read. stella stands. The vendor rule was never the obstacle.
 - **E12: LightRetriever-dense is published numbers only, labelled (2026-08-29).** No LR encode is
   bought; the report may never state or imply a head-to-head on our data.
-- **Patents (2026-08-29):** *"patents do not have to stay available as a clean held-out for M9"* →
-  HUPD deferred to M9, trigger = settle before web-crawl data enters training (now likely moot).
+- **Patents CLOSED (2026-08-29):** *"patents do not have to stay available as a clean held-out for
+  M9."* We are not preserving patents as an evaluation domain, so HUPD's CC-BY-NC-SA tag, the
+  37 CFR 1.71 counter-argument and the PatentsView alternative are all moot. **`D-FINEWEB`'s patent
+  trigger is REMOVED** — web-crawl data may enter the training mix without settling a patent
+  question first. *(Restored 2026-08-29 after the compression dropped it and left text that
+  resurrected the trigger.)* What still blocks `D-FINEWEB` is not paperwork: it is pool-varying and
+  its floor does not exist.
 
 **PROTOCOL AMENDMENTS**
+
+- **Review response #2 (2026-08-29), before any arm ran.** A second adversarial pass on the handoff
+  returned 5 findings; all adopted. **The compression had dropped three BINDING items** — restored
+  above and marked: `D-FINEWEB`'s patent trigger REMOVED (the compressed text had resurrected it);
+  **the E14 lr rule** (pre-registered at 1e-3, *the ladder selects nothing*) — the registry had
+  drifted back to a selecting ladder, a live protocol regression, now fixed and extended to bind
+  `E14-LORA`; and T1's withdrawn "independent reproduction" wording. **Lesson, and it is the cost of
+  compressing a protocol file: a cut is not safe because prose was removed — it is safe only when
+  every RULE survives. Diff old against new for rules, bars, withdrawn claims and rulings before
+  committing a compression.** Also fixed: the handoff files contradicted each other and the registry
+  (STATUS still asked the ruled system/table question; NEXT-SESSION said do not start `E14-LORA`
+  while its row said authorised), and **`D2-PRE`'s router was undefined** — "clearly positive",
+  "plausibly above", "adequate", "no material" are judgement, not a rule, and `probe_guard` checks
+  presence, not executability. Now numeric and frozen, including the additive-over-D2 reversal
+  margin. **Recorded for Dylan, not resolved:** condition 4 can now ship a system whose table
+  regressed behind a tower gain; `decide.ship()` has no table guard and `freeze.py` does not exist,
+  so the artifact invariants are prose. Registered default: **the table must not regress in a common
+  frame**, reported decomposed. Review: `research/m8-planning/codex-handoff-review-2026-08-29.md`.
 
 - **MILESTONE AUDIT AND RE-ROUTE (2026-08-29).** All nine probes returned nulls, negatives or
   instrument reads, while `D2` — the only lever with a mechanism pointing up — had no registry row
@@ -1302,7 +1325,15 @@ the result JSON, or `research/m8-planning/`.*
   and 0.000 with it). So **LIN became primary, MLP its nonlinearity control**. Zero-init gives
   `normalize(d)` not `d` → new comparator **`R0N`**. The lr ladder would have observed the endpoint
   before selecting → made dev-blind on a disjoint tuning seed. Second review returned 5 BLOCKERs,
-  two in machinery the probe did not need.
+  two in machinery the probe did not need. **THE LEARNING RATE IS PRE-REGISTERED AT 1e-3 AND THE
+  LADDER SELECTS NOTHING** *(restored 2026-08-29 — the compression dropped this and the registry
+  had drifted back to "the ladder selects")*: the `lin` ladder came back FLAT across a 10× range
+  (−0.2434 / −0.2404 / −0.2430), so a dev-blind selection apparatus, a bespoke holdout statistic and
+  a plateau continuation were deciding something that does not appear to matter, and every part of
+  it was a way to be wrong. 1e-3 is the registered grid's midpoint, the standard rate for a small
+  zero-init adapter head, and where that flat curve peaked. The ladder arms survive **only as a
+  descriptive sensitivity band, run if the primary reports a null**. Nothing is chosen after seeing
+  a number. **This rule binds any future adapter probe, `E14-LORA` included.**
 - **Registration hygiene (2026-08-29).** Full manifest key schema fixed before any manifest existed
   (35 `train.Cfg` fields + artifact-level; unknown key ⇒ condition 4 FAILS). T1's ordering, frame and
   `spec_name` fixed before any T1 number. Ledger opened v1 from `PLAN-DRAFT.md` (since **DELETED** —
@@ -1433,8 +1464,14 @@ constraint measures the fit set. (This is why `D2-PRE` must cross-fit.)
 
 stella 0.3438 · granite-r2 0.2915 (**−0.052** [−0.066, −0.039]) · gte-modernbert 0.2349 (**−0.109**
 [−0.123, −0.094]). All optima interior; condition 1 fails for both, so conditions 2–4 never arise.
-Gaps are 5–11× the 0.0096 swap penalty. **The tower again fails to order the table** — the M7 lesson
-(select a teacher on the distilled TABLE, never on the tower) reproduces. Screened in a shared
+Gaps are 5–11× the 0.0096 swap penalty. **The tower again fails to order the table**: gte-modernbert
+has the HIGHER published score of the two challengers (55.33 vs granite's 53.1) and the far LOWER
+distilled table. **WITHDRAWN, and stated at its true weight:** calling that an "independent
+reproduction" of M7's result oversold it — it is an n=2 sign anecdote resting on two self-reported
+model-card BEIR figures from different harnesses. M7's eight-candidate Spearman(ceiling, table)=0.000
+remains the evidence; this is corroboration. **Holm family pinned:** the family is the challenger
+set, so if stella-1.5B or harrier is ever screened, Holm re-runs over the UNION of all challengers
+ever screened against this incumbent, not the newcomers alone. Screened in a shared
 student frame only within a tokenizer family; cross-family screens are labelled teacher-plus-tokenizer.
 
 ### §22 — `B6-pre`: E3's hard condition is **MET** (`results/m8_b6_pre.json`, `m8_b6_pre_mlp.json`)

@@ -3,8 +3,9 @@
 **Read `m8/STATUS.md`, then `m8/LEDGER.md` §15's audit entry (2026-08-29), then the `D2` row in
 `m8/registry.json`. This file is the remaining work only.**
 
-Re-routed 2026-08-29 by a milestone audit: `D2` is the primary lever and everything else is
-deferred behind it. One item needs Dylan and is at the top of STATUS; nothing else is blocked.
+Re-routed 2026-08-29 by a milestone audit, then twice by adversarial review. **Two capacity routes
+are live: `D2` (table side, gated by `D2-PRE`) and `E14-LORA` (document side, authorised but its row
+is unwritten).** Everything else is deferred. Nothing is blocked on Dylan.
 
 ## 1. `D2-PRE` — the closed-form preflight. Run this FIRST; it can reverse the plan.
 
@@ -23,10 +24,14 @@ the authority. Staged, each stage able to stop the probe:
 4. **Four arms at equal row budget**: D2 segmentation · additive overlapping word n-grams ·
    additive character n-grams · D2 with zero-residual fallback.
 
-**The routing rule is fixed before the number, including the reversal: if an additive arm wins at
-equal budget, the additive class becomes the lever and `D2` stands down.** Authorise full chains
-only on a clear positive sign, headroom plausibly above 0.00519, adequate coverage by occurrence
-mass, and no material fused degradation. Nothing ships from a closed-form fit.
+**The router is NUMERIC and frozen** (registry `D2-PRE.bar` — an earlier draft said "clearly
+positive / plausibly above / adequate / no material", which is judgement, not a rule). Authorise
+full `D2` chains iff ALL of: cross-fitted `g_best ≥ +0.0052` (the chain bar itself — a screen
+routing a five-chain spend must clear the bar those chains will face); `g > 0` in ≥ 4 of 5 folds;
+zero-update occurrence mass ≤ 20%; fused ≥ −0.0020; and the sum-init compile reproduced R0 within
+0.001 **with mean-init strictly worse**. **Reversal margin, frozen:** additive replaces D2 if it
+leads by ≥ 0.0020 at equal row budget, and **ties break to additive** — a zero-residual additive row
+recovers R0 exactly, a segmentation change does not. Nothing ships from a closed-form fit.
 
 ## 2. `D2` — full chains, ONLY if `D2-PRE` clears
 
@@ -47,13 +52,32 @@ mass, and no material fused degradation. Nothing ships from a closed-form fit.
 adequacy gate trips, paired with a doubled-step R0. Then the class closes. No third budget, no
 vocabulary escalation after a number, no re-tokenized retry.
 
-## 3. `NF-CROSSED-FUSED` — MANDATORY before any `D2` success claim
+## 3. `E14-LORA` — AUTHORISED, and the other capacity route. Write the row before any arm.
+
+Dylan ruled M8 may ship a better **system**, so a document-side win now carries a v2 (condition 4,
+amended in prose and code). Licence closed — stella is MIT. **Not runnable yet, and `probe_guard`
+will refuse it: its bar is TBD by design.** Order, and it is not negotiable:
+
+1. **Measure the D×downstream floor first.** `0.00519` does **not** apply — it bounds B×A under a
+   *fixed* document tower (§23); a LoRA adds a document-training leg whose variance nothing has
+   measured. Same rule that governed the B leg: no bar may read such an arm until its floor exists.
+2. **Then the comparator.** Frozen R0 is **not** honest — it confounds "the tower changed" with
+   "the table was retrained against a new tower". Primary control is a **stock-stella tower whose
+   table is jointly retrained under the identical recipe, seeds and budget**; R0 is secondary.
+3. **Then the bar**, and only then an arm. One **fixed** LoRA config — the pre-registered-lr rule
+   binds, no config search — two OOD components against their own re-encoded corpora, three paired
+   end-to-end seeds. **No 10.12M pre-encode until that clears.**
+
+Bounds: derived from stella only (LoRA/adapter/last-block/head), never from scratch; query side
+stays a pure lookup table (E1).
+
+## 4. `NF-CROSSED-FUSED` — MANDATORY before any `D2` success claim
 
 Nine fused scoring passes over cells already on disk, no training. Fused is read as a pre-declared
 non-inferiority comparison against the floor it measures — not a sign test. A dense-only win is a
 **mechanism** success, never a release success.
 
-## 4. `E10` — time-boxed, and it does not gate `D2`
+## 5. `E10` — time-boxed, and it does not gate `D2`
 
 The remedy artifact stays unpinned; the review's BLOCKERs stand (`m8/LEDGER.md` §15, "E10
 REOPENED"). A shadow can stop a bad artifact shipping but may never be a selection surface, so it
@@ -62,7 +86,7 @@ acceptance detector, a canary that proves acceptance can fail, length-adaptive m
 declare M8 ran without a shadow and record that as a stated limitation. A third rebuild attempt is
 not worth a session.
 
-## 5. G8's dev-reuse counter is MISSING — build it
+## 6. G8's dev-reuse counter is MISSING — build it
 
 `results/m8_dev_reuse_count.json` is promised by §14 G8 and absent from HEAD. M7 logged 322
 in-training dev evaluations. Nested selection protects the *reserved* sets; it does not make
@@ -70,7 +94,7 @@ wikipedia/heldout selection independent of a CQADupStack dev bar, and a 0.005-sc
 difference deserves the counter that was promised. Small, and it should exist before D2's number is
 interpreted.
 
-## 6. If `D2`/the additive class misses — the exit CANNOT fire yet
+## 7. If the capacity levers miss — the exit CANNOT fire yet
 
 Registered order before the exit is even eligible: **`B10`** (`pool_mode`, redesigned arm, own bar),
 **`B8`** (closed-form document-centroid target, ~15 min — deferring it was a false economy), and
@@ -78,24 +102,23 @@ Registered order before the exit is even eligible: **`B10`** (`pool_mode`, redes
 `teacher_top200` arm is 0.777 nats, so the KL class is NOT closed). Then re-run CLAUDE.md's standing
 directive. Only then does the default — do not spend the access — apply.
 
-## 7. Deferred — do not start these
+## 8. Deferred — do not start these
 
 `freeze.py` / `final_run.py` (§4.4's gap list), `B9`, `B13`, `B14`, `B15`, `B6`, `D-GENRE`,
-`D-SYNTH`, `R-PHASE`, `D-FINEWEB` (pool-varying, bar not computable), `R1-ASSEMBLY`, `S-SELECT`,
-`E14-LORA`. Reasons are on each registry row's `plan_status`. **No new floors, guards or registry
-machinery until a capacity lever has a number.**
+`D-SYNTH`, `R-PHASE`, `D-FINEWEB` (pool-varying, bar not computable), `R1-ASSEMBLY`, `S-SELECT`.
+Reasons are on each registry row's `plan_status`. **No new floors, guards or registry machinery
+until a capacity lever has a number** — the one exception is the D×downstream floor `E14-LORA`
+needs, which is a precondition for writing its bar at all.
 
-## Owner-level questions, parked for Dylan (not M8 work)
+## Unregistered ideas, recorded so they are not lost
 
-Raised by the review and worth a decision at milestone level, not smuggled into M8: **`E14-LORA`**
-(reshape the document tower — the head result may not close it; the cost is a full re-encode and
-index replacement) and **small-k document facets** (§8 already records this as considered-not-
-adopted because it multiplies the document index — an E7/product conversation). A third, mine and
-not in the repo: **query-side small-k** — cluster the fired rows into 2–4 query vectors and score
-max-over-k against the *single* frozen document vector. It is not the banned token-level late
-interaction, it leaves the document index untouched, and it attacks the formal single-vector
-ceiling (DeepMind LIMIT, logged in M1) that is the ArguAna-style multi-topic failure mode. Cost is
-k ANN queries and no extra bytes. Unregistered and unmeasured — recorded so it is not lost.
+**Query-side small-k** (mine, not in the repo, not reviewed): cluster the fired rows into 2–4 query
+vectors, score max-over-k against the *single* document vector. Not the banned token-level late
+interaction; leaves the document index untouched; same table bytes; costs k ANN queries. Attacks
+the single-vector ceiling (LIMIT, logged in M1) that is the ArguAna multi-topic failure mode.
+Testable with **no training** on existing artifacts. **Small-k document facets** stay out: §8
+already records the objection — they multiply the document index, which is the one resource the
+edge product cannot spend.
 
 ## Session rules
 
