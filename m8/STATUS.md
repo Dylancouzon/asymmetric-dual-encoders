@@ -17,17 +17,20 @@ reserved four are untouched.**
 measured null** (`R0N` vs `R0`: −0.00001 dense, −0.000015 fused), which is what licenses reading
 the rest as a result rather than a defect.
 
-**The `lin` label understates it and the evidence disqualifies its premise:** the arm that PASSED
-step-adequacy (MLP) harms MORE, and the training holdout improved while the endpoint moved away
-from the bar. Labels stand as the rule produced them — changing a rule after seeing its number is
-the one thing this protocol forbids — with the disqualifying evidence reported beside them.
+**`lin`'s label, stated correctly** (revised after review — the first write-up overreached):
+LIN is a strong negative for the registered 2,500-step configuration but remains
+OPTIMIZATION-INADEQUATE for the METHOD-level question. MLP met the adequacy heuristic and was also
+harmful, which makes a generic undertraining story less plausible without resolving LIN at an
+adequate budget. A 5,000-step reported set with a paired 5,000-step R0N is the disciplined
+resolution if it is ever wanted.
 
-**The mechanism control is the real finding.** Bag-specific gain is POSITIVE on all six arms
-(LIN +0.0091, MLP +0.0075): the head genuinely makes documents relatively more bag-reachable, but
-buys it by damaging the space for every query type ~3× harder than it helps. Direction right,
-instrument wrong. Teacher-style queries lose MORE than bag queries (−0.031 vs −0.022), which is
-the first measurement bearing on whether the M9 pair can share a document side — **it is not
-free**, and it is a direct input to `E14-LORA`'s still-unwritten bar.
+**The mechanism control, stated correctly.** Across all seeds and both components the head reduced
+bag-query nDCG LESS than teacher-query nDCG (LIN +0.0091, MLP +0.0075; all twelve values positive).
+That is descriptive evidence of **relative** alignment toward the co-trained bag representation. It
+does NOT show an absolute bag benefit — both absolute bag gains are negative — and the earlier
+"buys bag-reachability by destroying information" claim is **withdrawn**. Teacher-style queries do
+lose more than bag queries (−0.031 vs −0.022), which is a first, descriptive read on whether the M9
+pair can share a document side, and an input to `E14-LORA`'s still-unwritten bar.
 
 **Scope, binding:** a null here is WEAK evidence about `E14-LORA` and may NEVER be written as
 closing E14. It removes the strongest argument FOR buying it. CQADupStack-family only.

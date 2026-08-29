@@ -143,14 +143,27 @@ Four rebindings, a lazy proxy over 1.92M document rows per arm, and renormalized
 introduce no endpoint artifact whatsoever. The review's BLOCKER 2 was right to demand `R0N` as the
 comparator on principle; empirically the precaution cost nothing and measured zero.
 
-**THE `lin` LABEL UNDERSTATES THE RESULT, and the evidence disqualifies its premise.** The
-step-adequacy gate flagged LIN (ratio 0.350) and cleared MLP (0.220), so the registered rule
-labels LIN OPTIMIZATION-INADEQUATE — "not trained long enough to call this a null". But **the arm
-that PASSED adequacy harms MORE** (−0.0293 vs −0.0244). Undertraining cannot explain a result the
-adequately-trained arm exhibits more strongly. Compounding it: the training holdout improved
-steadily (−0.140 → −0.126) while the endpoint moved away from the bar — the signature of the head
-fitting the training objective at the expense of out-of-domain retrieval. The label is reported as
-the rule produced it; this paragraph is why it should not be read as "inconclusive".
+**THE `lin` LABEL, STATED CORRECTLY (revised after review; the first version overreached).**
+**LIN is a strong negative result for the registered 2,500-step configuration, but remains
+OPTIMIZATION-INADEQUATE for the method-level question. MLP met the registered adequacy heuristic
+and was also harmful. Together these observations make a generic undertraining explanation less
+plausible, but they do not resolve LIN at an adequate budget.** The earlier claim that the evidence
+"disqualifies" the gate is **withdrawn**: MLP is a different architecture, its adequacy came from
+separate tuning-seed holdout-reduced arms rather than from the reported arms, and MLP harming more
+does not establish that a longer-trained LIN could not recover. Reporting the registered label and
+setting contrary evidence beside it is honest; declaring the label void is not — especially since
+this same section already discloses that the adequacy comparison is one unreplicated arm per budget
+and that 0.350 vs 0.220 is unresolved.
+
+**A factual correction to the earlier characterisation:** the endpoint did not "move steadily away".
+The in-training out-of-domain contrasts vs R0N were LIN −0.0210 / −0.0268 / −0.0264 and MLP
+−0.0309 / −0.0359 / −0.0309 at 500 / 1,500 / 2,500 steps — **early persistent harm, not monotone
+divergence**. The holdout and the endpoint also differ in seed, pool, schedule, precision and
+purpose, so the "training objective improved while the endpoint worsened" framing compares two
+things that were never the same measurement.
+
+**The disciplined resolution, if it is ever wanted:** a 5,000-step reported LIN set with a paired
+5,000-step R0N.
 
 **THE MECHANISM CONTROL IS THE MOST USEFUL NUMBER HERE, and it is not a flat null.** Per treatment,
 mean over 3 seeds, on the two dense components:
@@ -160,12 +173,23 @@ mean over 3 seeds, on the two dense components:
 | LIN | −0.02183 | −0.03095 | **+0.00912** |
 | MLP | −0.02744 | −0.03493 | **+0.00749** |
 
-All six arms positive on the bag-specific term. **The hypothesised mechanism is REAL** — the head
-does make documents relatively more reachable by a bag of token vectors. It achieves it by
-damaging the document space for every query type, and the damage is ~3× the re-shaping benefit.
-That is a far more informative negative than "nothing happened": the direction was right and the
-instrument is wrong. A doc-side map on a FINISHED vector buys bag-reachability only by destroying
-information, which is precisely the scope limit the registration wrote down in advance.
+**CORRECTED after adversarial review (2026-08-29) — the first write-up over-read this.** What the
+data establish: across all seeds and both components, applying the trained head reduced bag-query
+nDCG LESS than frozen-teacher-query nDCG (LIN +0.0091, MLP +0.0075 difference of differences; all
+twelve treatment × seed × component values positive). That is **descriptive evidence consistent
+with relative alignment toward the co-trained bag representation.** It does **not** show an
+absolute bag benefit — both absolute bag gains are NEGATIVE — it does not identify bag
+reachability, and it does not demonstrate information destruction. The earlier claim that the head
+"buys bag-reachability only by destroying information" is **withdrawn**: a poorer match to the
+teacher's query geometry is not evidence of information loss, and the linear residual map may well
+remain full-rank.
+
+**What would make it credible, and why it is not claimed today:** at n=3 the smallest exact
+one-sided sign-test p per treatment is 0.125, and the four cells are NOT independent — their
+covariance should be exploited by a paired PER-QUERY difference of differences, which
+`e14_score.py` currently discards by reducing each cell to a component mean before saving. The
+existing heads and tables can be re-scored for that without retraining; more seeds would need
+retraining.
 
 **Bearing on M9 and the paired release** (§15, Dylan's 2026-08-29 rulings): teacher-style queries
 lose MORE than bag queries (−0.031 vs −0.022). A document transform co-trained with a bag taxes a
