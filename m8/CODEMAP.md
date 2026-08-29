@@ -144,3 +144,17 @@ a non-BERT teacher found two more, and both are silent:
    empty; if the answer is "passes", it is not a test yet. The same question applies to a monitor
    grep, and to the `grep -cE "^(FAIL"` I used to check this very suite — it returned 0 because the
    real FAIL lines are indented.
+18. **"Max pairwise |Δ| over K arms" is the sample RANGE, and at K = 3 it is far too noisy to
+   compare against another such number.** Both noise floors use it. Under a Gaussian null its mean
+   is 1.693σ but its SD is 0.888σ — **CV 52.5%**, central 90% interval [0.431σ, 3.315σ], so one
+   observed range pins σ only to a **12× span**. Two experiments with *identical* underlying noise
+   produce ranges differing by ≥2× **40%** of the time, and P(one ≤ the other) is exactly 0.500.
+   So a sentence of the form "floor X is no larger than floor Y, therefore Y's bar covers X" is
+   **never** supportable at K = 3 — it is a coin flip dressed as a finding, and the B-leg writeup
+   made exactly that claim for several hours before review caught it. Two corollaries worth
+   keeping: `bar = 2 × floor` has no stated error rate and covers a fresh null difference only
+   about **89%** of the time at K = 3 (the 0.0040 planning minimum, not the floor term, is what
+   does the real work); and taking the largest of 16 endpoint × precision × pooling estimates is a
+   **winner's curse** — conservative for the endpoint that won, silent about the other fifteen.
+   Verify a claim like this with a simulation before writing it down: `np.ptp` over `(N, K)` normal
+   draws takes one line and settles it.
