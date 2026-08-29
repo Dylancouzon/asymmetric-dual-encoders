@@ -1162,6 +1162,55 @@ CORPORA are ordinary public downloads while their query and qrel payloads stay g
 in either direction. It states what changed, why, and that the dependent numbers did not yet
 exist.)*
 
+- **2026-08-29 — B3's lever replaced: ICT augmentation → real-pair pool scaling. No B3 number of
+  any kind existed** (no ICT arm was ever built, let alone run; there is no ICT sampler in the
+  repo). Prompted by an adversarial review of the ARM DEFINITION, briefed before any arm ran
+  (`work/briefs/b3-arms.md`). Four findings, all of which I accept:
+  1. **The registered arm shape is arithmetically impossible.** "Equal updates AND equal exposure"
+     cannot both hold with a non-zero synthetic fraction while the batch is fixed: updates `U`,
+     batch `B` and real exposure `U·B·(1−f)` are three constraints on two free variables, and
+     holding the first two forces `f = 0`. My proposed fix — scale the batch as `512/(1−f)` — does
+     not even deliver what it claims, because under mean reduction the 512 real examples are
+     weighted `1/B_f`, so their aggregate gradient weight still falls by `(1−f)`. **Equal sightings
+     are not equal influence.**
+  2. **My stated confound was wrong in my own favour, and the correction does not rescue the
+     design.** I had written that scaling the batch 512→2048 would change the contrastive task by
+     4×. With 32,768 *sampled* negatives the candidate count rises only from 33,279 to 34,815,
+     about 4.6%. But the surviving confounds — a fourfold reduction in gradient noise, mean-loss
+     dilution of the real gradient, and a changing synthetic-to-real gradient mixture — are not
+     bounded by anything and are not the 0.0040 bar's business to absorb.
+  3. **The ICT pathology cannot be fixed cheaply.** An ICT pseudo-query is a literal substring of
+     its positive, which a *token lookup table* has every incentive to exploit. The standard repair
+     is to remove the sampled sentence from the positive — but the positive's teacher vector is
+     precomputed over the FULL document, so removing the text from the pair does not remove the
+     shortcut from the **target**. The real repair requires re-encoding one ablated context per
+     pair, which is the entire cost the design existed to avoid, and it introduces a train/deploy
+     mismatch because served document vectors are full documents.
+  4. **Estimand.** Adding synthetic pairs at fixed compute measures whether spending Phase-A budget
+     on ICT helps. It does not measure whether Phase A is *pair-starved*, which is B3's registered
+     question.
+  **What replaces it**, registered in `m8/registry.json` before any arm runs: nested random subsets
+  of the 337,981 decontaminated **real** pairs at {0.25, 0.50, 0.75, 1.00}, with updates, batch,
+  negatives, temperature, learning rate and the Phase-B checkpoint all held, so total draws are
+  1,280,000 in every arm and the only thing varying is unique-pair count. The verdict rests on
+  **one** pre-specified contrast — 1.00 vs 0.75, both endpoints, both seeds sign-agreeing, mean
+  gain ≥ 0.0040 — because a curve still rising where the pair pool ends *is* what pair-starvation
+  means. A 1.00-vs-0.25 manipulation check runs first, and a probe that fails it reports
+  **uninformative** rather than "not starved". This also retires the ICT registration's
+  Holm-over-three-arms, which was three chances to win.
+  **The endpoints are unchanged, so the frozen bar stands**: 0.0040 is still
+  `max(planning minimum, 2 × floor)` against the same measured floors, and `bar_frozen` is carried
+  across verbatim rather than re-derived.
+  **An implementation constraint is recorded with it, because it is a trap**: G3 forbids editing
+  `m7src`, and `Cfg` has no pair-fraction knob, so the fraction must be applied by an m8src-side
+  wrapper over `kept_pairs` — which means **the treatment will not appear in the run's `cfg` or
+  `meta.json`**. It must be encoded in the run id and written to a stamped sidecar. That is
+  CODEMAP 16's class exactly, and it is the reason the constraint is in the registry and not only
+  in someone's head.
+  *(Recorded as my call under §0's amendment rule — before the numbers, in writing, with the
+  reasoning — not as one of Dylan's rulings. It is flagged in STATUS because it changes what a
+  registered probe measures.)*
+
 - **2026-08-29 — ledger opened (v1).** Transcribed from `m8/PLAN-DRAFT.md` v5 at commit `f8b67f3`.
   No M8 number of any kind existed. No protected partition had been touched.
 - **2026-08-29 — v2, after two adversarial gates on v1.** Codex (BLOCK, 9/9/3) and Fable
