@@ -1,0 +1,120 @@
+{
+ "_note": "What the approved arctic-embed-l teacher needs from RETENTION to clear each bar. Pure arithmetic over committed numbers (m7_calibration.json, m7_fusion_report). Read with the caveat that the MTEB->six projection is now known to MIS-ORDER candidates -- arctic measured best of five on dev (m7_teacher_probe.json) while projecting third -- so treat six_est as a scale, not a ranking, and note the PI carries no uncertainty from the retention factor itself, which Codex flagged as a composition error in the earlier version of this arithmetic.",
+ "retention_today_text_backed": 0.7853,
+ "fusion_transfer_estimate_hotpotqa_excluded": 0.049,
+ "bars": {
+  "bm25": 0.4174,
+  "tier2_release": 0.4583,
+  "tier1_aim": 0.4868
+ },
+ "teachers": {
+  "arctic-embed-l": {
+   "mteb_v1_retrieval": 55.98,
+   "six_est_affine": 0.5311,
+   "pi95_halfwidth": 0.0305,
+   "pi95_lower": 0.5006,
+   "at_today_retention": 0.4171,
+   "needs": {
+    "tier2_dense_alone": {
+     "dense_macro_required": 0.4583,
+     "retention_at_point_est": 0.8629,
+     "retention_at_pi_lower": 0.9155,
+     "retention_points_to_find_at_point_est": 0.0776
+    },
+    "tier1_fused": {
+     "dense_macro_required": 0.4378,
+     "retention_at_point_est": 0.8243,
+     "retention_at_pi_lower": 0.8746,
+     "retention_points_to_find_at_point_est": 0.039
+    },
+    "bm25": {
+     "dense_macro_required": 0.4174,
+     "retention_at_point_est": 0.7859,
+     "retention_at_pi_lower": 0.8338,
+     "retention_points_to_find_at_point_est": 0.0006
+    }
+   }
+  },
+  "stella_en_400M_v5": {
+   "mteb_v1_retrieval": 58.97,
+   "six_est_affine": 0.5562,
+   "pi95_halfwidth": 0.0345,
+   "pi95_lower": 0.5217,
+   "at_today_retention": 0.4368,
+   "needs": {
+    "tier2_dense_alone": {
+     "dense_macro_required": 0.4583,
+     "retention_at_point_est": 0.824,
+     "retention_at_pi_lower": 0.8785,
+     "retention_points_to_find_at_point_est": 0.0387
+    },
+    "tier1_fused": {
+     "dense_macro_required": 0.4378,
+     "retention_at_point_est": 0.7871,
+     "retention_at_pi_lower": 0.8392,
+     "retention_points_to_find_at_point_est": 0.0018
+    },
+    "bm25": {
+     "dense_macro_required": 0.4174,
+     "retention_at_point_est": 0.7504,
+     "retention_at_pi_lower": 0.8001,
+     "retention_points_to_find_at_point_est": -0.0349
+    }
+   }
+  },
+  "gte-large-en-v1.5": {
+   "mteb_v1_retrieval": 57.91,
+   "six_est_affine": 0.5473,
+   "pi95_halfwidth": 0.0329,
+   "pi95_lower": 0.5144,
+   "at_today_retention": 0.4298,
+   "needs": {
+    "tier2_dense_alone": {
+     "dense_macro_required": 0.4583,
+     "retention_at_point_est": 0.8374,
+     "retention_at_pi_lower": 0.8909,
+     "retention_points_to_find_at_point_est": 0.0521
+    },
+    "tier1_fused": {
+     "dense_macro_required": 0.4378,
+     "retention_at_point_est": 0.7999,
+     "retention_at_pi_lower": 0.8511,
+     "retention_points_to_find_at_point_est": 0.0146
+    },
+    "bm25": {
+     "dense_macro_required": 0.4174,
+     "retention_at_point_est": 0.7627,
+     "retention_at_pi_lower": 0.8114,
+     "retention_points_to_find_at_point_est": -0.0226
+    }
+   }
+  },
+  "bge-base-en-v1.5 (current)": {
+   "mteb_v1_retrieval": 53.25,
+   "six_est_affine": 0.5082,
+   "pi95_halfwidth": 0.0282,
+   "pi95_lower": 0.48,
+   "at_today_retention": 0.3991,
+   "needs": {
+    "tier2_dense_alone": {
+     "dense_macro_required": 0.4583,
+     "retention_at_point_est": 0.9018,
+     "retention_at_pi_lower": 0.9548,
+     "retention_points_to_find_at_point_est": 0.1165
+    },
+    "tier1_fused": {
+     "dense_macro_required": 0.4378,
+     "retention_at_point_est": 0.8615,
+     "retention_at_pi_lower": 0.9121,
+     "retention_points_to_find_at_point_est": 0.0762
+    },
+    "bm25": {
+     "dense_macro_required": 0.4174,
+     "retention_at_point_est": 0.8213,
+     "retention_at_pi_lower": 0.8696,
+     "retention_points_to_find_at_point_est": 0.036
+    }
+   }
+  }
+ }
+}

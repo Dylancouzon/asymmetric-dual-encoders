@@ -1,0 +1,19 @@
+{
+ "k": 10000,
+ "lam": 0.01,
+ "n_queries": 561482,
+ "macro_bigram_augmented": 0.5057,
+ "macro_unigram_rows_of_same_solve": 0.4915,
+ "aug_minus_uni_same_solve": {
+  "delta": 0.0143,
+  "ci95": [
+   0.0111,
+   0.0174
+  ],
+  "resolved": true
+ },
+ "artifact_cost_mb_fp16": 20.5,
+ "encoder": "stella-400M-v5-ffeb2b7e",
+ "seconds": 313.3,
+ "_note": "closed-form capacity probe; the unigram comparator is the SAME solve's unigram block (isolates the bigram rows' contribution at eval); compare also against the committed unigram-only ridge macro in results/m7_stage0_ridge_stella.json"
+}

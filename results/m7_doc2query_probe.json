@@ -1,0 +1,51 @@
+{
+ "generator": "BeIR/query-gen-msmarco-t5-base-v1",
+ "n_queries_per_doc": 5,
+ "winner": "s2w-1e3-s1000.release.npz",
+ "per_component": {
+  "cqadup-programmers": {
+   "orig": 0.3291,
+   "d2q": 0.3345
+  },
+  "cqadup-physics": {
+   "orig": 0.385,
+   "d2q": 0.3903
+  }
+ },
+ "_label": "DIAGNOSTIC ONLY \u2014 MS MARCO-trained generator, excluded from the clean stack; nothing here ships. Positive resolution escalates to Dylan for a clean-generator ruling, not to adoption.",
+ "d2q_minus_orig": {
+  "delta": 0.0054,
+  "ci95": [
+   -0.0007,
+   0.0114
+  ],
+  "resolved": false,
+  "signflip_p": 0.08460915390846091,
+  "signflip_p_str": "0.08461"
+ },
+ "seconds": 2533.7,
+ "recipe": {
+  "generator": "BeIR/query-gen-msmarco-t5-base-v1",
+  "n_queries_per_doc": 5,
+  "max_in": 256,
+  "max_out": 48,
+  "batch": 64,
+  "do_sample": true,
+  "top_k": 10,
+  "seed_rule": "torch.manual_seed(lo)",
+  "transformers": "4.57.6"
+ },
+ "expansion_sha256": {
+  "cqadup-programmers": "c25be530e2ab8ef672b2c4de62c6d1ce81365e958c22c5108ddda0f257a9a91a",
+  "cqadup-physics": "8d9dfa73a302ae02f493ac923c17157d60b63685f663accead816d4ac43a84b8"
+ },
+ "expansion_lines": {
+  "cqadup-programmers": 32176,
+  "cqadup-physics": 38316
+ },
+ "expansion_mtime": {
+  "cqadup-programmers": "2026-08-27T19:14:42.365794",
+  "cqadup-physics": "2026-08-27T19:28:29.813846"
+ },
+ "_provenance_note": "Recorded retroactively (Codex review #3 MAJOR 7). The resumable cache was keyed on component and N only, so a stale expansion could in principle have been reused. Evidence that it was not: work/d2q/ was created at 19:06 on 2026-08-27, after this module existed, and both JSONLs were written in that same session (19:14 and 19:28) with line counts exactly equal to their corpora. The generation is sampled, so regenerating cannot reproduce these bytes; the hashes above pin what was actually scored. generate() now writes and checks a recipe sidecar."
+}

@@ -1,0 +1,68 @@
+{
+ "scifact": {
+  "opensearch-doc-v3-gte": "d3cf40108f1dc16e4113848a477a1169811ad14fe7fbf035a53bbfe49e99eb64",
+  "lr-dense-pertask": "b642314aa852463e3fba146247cfe3053ac1c3502ce69c060bf8ce00da07888c",
+  "lr-dense-websearch": "4f0c40185a437848b1c096050db02c87c2f5d15e8f907ba981c4c8c9119d3fe8",
+  "bm25": "7686135f5a382ceb3550f4a384546c3da380310d7d6c14c3c3230c592421b2d8",
+  "potion-retrieval-32M": "a401882477f0b97e5b77a8d570408f0cc81edc0c7db2a85d02713bac08ccd90b",
+  "bge-small-en-v1.5": "5956fefc89eb9c15185327cbae9736cd05f79956a11cea228db4a1418f95bfe0",
+  "leaf-ir-asym": "f2894b3d04c4c4e0df7ae7a04663c8a1a4bfaa55931f427844c6608f007e7791",
+  "mdbr-leaf-ir": "33612bfa86070a7cf232f24148e3c0e2e2fab8fa6afc2638856b1618e38482ea",
+  "arctic-embed-m-v1.5": "5e683826dd04dcdec5b431d12a9ee69fb724fa793fa07b0f7418d16f66aca30b"
+ },
+ "nfcorpus": {
+  "opensearch-doc-v3-gte": "07cc9f8de70d0ffc08d4d06c09075717da2305d2f9ae527be6ea92e439f4edbd",
+  "lr-dense-pertask": "b080c47b38b1b65eac9d477477dd06e15373a953ede67f8b8f01223a97ef41ad",
+  "lr-dense-websearch": "87d1a24b1e99ebe83e56a32032441a2346f02e476a6cd90efcaffacd1c519ca8",
+  "bm25": "112a124741d2a68e06b47884b3cbe4d8d3329c11e1bb9cb02933c69a14bd9255",
+  "potion-retrieval-32M": "b86f73701d919df596882c83f8da8e6569064c62bd537304fd98354fee800e37",
+  "bge-small-en-v1.5": "57aa8435111f1265755614d604cf377e2116be2c391ae64d0ed1cb7ce7122d3e",
+  "leaf-ir-asym": "7388c6cecd4ba24cf6930d1910845c381e65d6f72a29d1e91e8883e9e0db7ef7",
+  "mdbr-leaf-ir": "582291e723242b5cc3ecd578c03627200b9768679c259f4e5ce6852f1953b3ea",
+  "arctic-embed-m-v1.5": "65ae3402e8b3345b5eb424dd1887898fe33965bc4d9238b3b2e84904b37f0878"
+ },
+ "fiqa": {
+  "opensearch-doc-v3-gte": "7bc1bfedb504f079d6119167ac7ec1bc1642c8c002e05c2822d950df3545fe09",
+  "lr-dense-pertask": "f9819adf18013ee5d1ea42ebb335a17ba18d35c47b660efa3b9b1dd6645f7519",
+  "lr-dense-websearch": "ed59ae90c80ff51ca26bb4026282da106e8f0dd78c0fa75d7a53001201de0c97",
+  "bm25": "7ec7cda4ef57f76f79594feb423900e13c03d275b93dea35577fddac95275225",
+  "potion-retrieval-32M": "b495f4202a93a712c610bcbf75fe4a637ceafa4ecf5d1b2f08576e1d94726843",
+  "bge-small-en-v1.5": "46c406fdc244440292c4e23b467c0fe7a1bfe76f9d90204381c8609321315432",
+  "leaf-ir-asym": "32605f54b06cc30723c144b96d4807675e67e3f2dc5d7ef271584b675c5a7173",
+  "mdbr-leaf-ir": "d13aae04c4b57c3861d015aa2700330f0e70d9f72d6b004133eace92a669d8f6",
+  "arctic-embed-m-v1.5": "da749fbfa4b13be805a40b4daf215cc0d35ad397ad9b75c9519e10b98c13a934"
+ },
+ "arguana": {
+  "opensearch-doc-v3-gte": "9ae15e12ef0721c95b31c5bcb9b70d7b487bc8359abe57c19ca317c2e999a792",
+  "lr-dense-pertask": "fd3d9d76a126c181f2d19262cdc153e0e9f98a2374d1344b2ebcd3b08e8bbe71",
+  "lr-dense-websearch": "38f4e901d9a0bdeb0fd2bf8557b7a63472ff69e39124b831562d893a232d04e0",
+  "bm25": "1fcde173dc60dc5d0f1729bca3c3cb4bdb94a718f6c1ce668560352279c81c3b",
+  "potion-retrieval-32M": "ac9a9a4c1968a672614f3fe758070891abe00d87bd8a8416a2c4e4355a39a9d4",
+  "bge-small-en-v1.5": "3a812f3a2a60e664b84590c033132baa981ed044036f5203339b6cefebb888bf",
+  "leaf-ir-asym": "e6006fcf85fb544715cc11a9debed3e30ed126ebd73fc5f18f3dfc14e0652289",
+  "mdbr-leaf-ir": "8b6fd886d2ccdd20136609a2bc61f4dc2cadef76a3c38c25a2d5ae35efab1871",
+  "arctic-embed-m-v1.5": "8e75c7404d71a777f12b4c81f06ad7cfd257ccd5fbd30c190c0f56dc80e69e15"
+ },
+ "scidocs": {
+  "opensearch-doc-v3-gte": "9f3ea2b8ec22ab777f731195f3ce1e63391da5a9cca0da3fdb1199b9aa194932",
+  "lr-dense-pertask": "3f432186df405f54525c16df0dc5066315a63ec108bace47d0c91a2b555dfb38",
+  "lr-dense-websearch": "fc3c113f8402233c14375b90e5e15d79fc441aee1639a09d9ede009c98fe22a9",
+  "bm25": "8df64f1458f3e96b75d83f3ed3548f2aa9ff439793b49934ce7e494db2ce4a90",
+  "potion-retrieval-32M": "5c4136f652827233af896ca17d6e223743c79e2885b074c1d93ab5f9fc1e0beb",
+  "bge-small-en-v1.5": "1b94651d2aca4320314c6d4c4a071b4231361e23e59a9c86e92fa274c0eaf159",
+  "leaf-ir-asym": "9940e015d8f8dca84b09bf1cf8139214bd08ffb404fd6bf2694d4a4f73b3a503",
+  "mdbr-leaf-ir": "348bd6c5bb261887952a2933b12099db014ac739dee7ea2b32bea3512317e96f",
+  "arctic-embed-m-v1.5": "72321a8a623d73fb364eac1d2bbe53ccce0088bd953420f24455bcfc072a06fe"
+ },
+ "trec-covid": {
+  "opensearch-doc-v3-gte": "40856009f570d4d698fe92eaaf286e9a28d5df628aac6d1ff1caebe052879814",
+  "lr-dense-pertask": "17021d879ab8644933ef8ca54989f8e3cd6947d2818d0f43512f133313253c05",
+  "lr-dense-websearch": "7399dfe2c149ec970b63305295ac94e1dd2453ea57f52ff7d2bb11ac1faf39c5",
+  "bm25": "f7e02b7392f2ace38f1209834c7d8e81593c3c9633edf41607d703f0c5ea43a7",
+  "potion-retrieval-32M": "914bf152cf879c8d1b13990c4ce5c150561fcacf3b1fc79693c2213ff6027780",
+  "bge-small-en-v1.5": "29f5490d53431c0a9f9b521289c4f58c0a120f6c8c975d2a19705602288b71d9",
+  "leaf-ir-asym": "fec28c50d4c90c4b8b35570f360dcd07677da10fd4c9af3090fa6569b328eeaa",
+  "mdbr-leaf-ir": "20e7e9f0acb3bc52e67d3c13897d67cc1b2a7cbc6b4bf8d7a2912882e7b86e48",
+  "arctic-embed-m-v1.5": "01294e57cba593ecdc9653f3a1e4bd142e561946e7743b9765eb0ca4d5cafc06"
+ }
+}

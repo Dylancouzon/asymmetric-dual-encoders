@@ -1,0 +1,100 @@
+{
+ "n_queries": 561482,
+ "init": "teacher",
+ "preproc": "4f7978fa7f69b559",
+ "target_prefix": true,
+ "vocab_coverage_train_queries": 0.8948627219710373,
+ "results": {
+  "0.0001": {
+   "train_cos": 0.921430706343881,
+   "macro": 0.4958517916753882,
+   "per_component": {
+    "nq-250k": 0.7920193154416183,
+    "cqadup-programmers": 0.3180038496850157,
+    "cqadup-physics": 0.3775322098995304
+   },
+   "overlap_at_10": {
+    "nq-250k": 0.6332271147161066,
+    "cqadup-programmers": 0.4124429223744292,
+    "cqadup-physics": 0.4707410972088547
+   },
+   "solve_s": 129.5
+  },
+  "0.001": {
+   "train_cos": 0.9213925626595109,
+   "macro": 0.49678710977778895,
+   "per_component": {
+    "nq-250k": 0.7927261156099812,
+    "cqadup-programmers": 0.3193439861393671,
+    "cqadup-physics": 0.37829122758401873
+   },
+   "overlap_at_10": {
+    "nq-250k": 0.6338354577056778,
+    "cqadup-programmers": 0.4132420091324201,
+    "cqadup-physics": 0.47487969201154956
+   },
+   "solve_s": 109.0
+  },
+  "0.01": {
+   "train_cos": 0.9207864814121379,
+   "macro": 0.49725448418424106,
+   "per_component": {
+    "nq-250k": 0.7911526949414633,
+    "cqadup-programmers": 0.3192412009185521,
+    "cqadup-physics": 0.38136955669270783
+   },
+   "overlap_at_10": {
+    "nq-250k": 0.6335168018539977,
+    "cqadup-programmers": 0.41107305936073063,
+    "cqadup-physics": 0.48267564966313764
+   },
+   "solve_s": 107.1
+  },
+  "0.1": {
+   "train_cos": 0.9142506321440402,
+   "macro": 0.4822344973632427,
+   "per_component": {
+    "nq-250k": 0.7775052320309432,
+    "cqadup-programmers": 0.2997616054660667,
+    "cqadup-physics": 0.3694366545927181
+   },
+   "overlap_at_10": {
+    "nq-250k": 0.6141367323290846,
+    "cqadup-programmers": 0.3808219178082192,
+    "cqadup-physics": 0.4631376323387873
+   },
+   "solve_s": 103.5
+  },
+  "1.0": {
+   "train_cos": 0.8809776463365032,
+   "macro": 0.4270166646348994,
+   "per_component": {
+    "nq-250k": 0.7059302909027295,
+    "cqadup-programmers": 0.251164259288933,
+    "cqadup-physics": 0.32395544371303564
+   },
+   "overlap_at_10": {
+    "nq-250k": 0.5214078794901507,
+    "cqadup-programmers": 0.2990867579908676,
+    "cqadup-physics": 0.37718960538979784
+   },
+   "solve_s": 98.7
+  },
+  "10.0": {
+   "train_cos": 0.7979439101843425,
+   "macro": 0.3199266587188372,
+   "per_component": {
+    "nq-250k": 0.5431067049209761,
+    "cqadup-programmers": 0.1839267386916394,
+    "cqadup-physics": 0.232746532543896
+   },
+   "overlap_at_10": {
+    "nq-250k": 0.3531865585168018,
+    "cqadup-programmers": 0.20490867579908678,
+    "cqadup-physics": 0.2598652550529355
+   },
+   "solve_s": 94.7
+  }
+ },
+ "_note": "Closed-form ridge under the stella teacher, fitted on the FINAL decontaminated TRAIN query set (561,482), proxy-3 components. The pre-registered M14 family-exposure read: stella table nq-250k 0.7912 vs bge table 0.7285 (+0.063, results/m7_stage0_ridge.json) -- the advantage is larger OFF StackExchange than on it, so it is not family-specific. Teacher proxy ceiling 0.6151 (work/devres/refs-stella-400M-v5.json); table retention 0.808 vs bge 0.794."
+}

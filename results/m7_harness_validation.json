@@ -1,0 +1,26 @@
+{
+ "bge-small-en-v1.5/arguana": {
+  "got": 0.6038,
+  "expected": 0.6034,
+  "delta": 0.0004,
+  "pass": true
+ },
+ "bge-small-en-v1.5/scifact": {
+  "got": 0.7127,
+  "expected": 0.7127,
+  "delta": 0.0,
+  "pass": true
+ },
+ "bm25/fiqa": {
+  "got": 0.2532,
+  "expected": 0.2532,
+  "delta": -0.0,
+  "pass": true
+ },
+ "_meta": {
+  "tol": 0.003,
+  "torch": "2.8.0+cu126",
+  "transformers": "4.57.6",
+  "device": "cuda"
+ }
+}

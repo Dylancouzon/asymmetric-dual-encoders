@@ -18,8 +18,33 @@ def doc_text(row):
     return f"{title} {row['text']}".strip() if title else row["text"].strip()
 
 
+# M7 protocol: the six confirmatory datasets plus the untouched-final pair. Loading one of
+# these parses its test qrels, which the M7 ledger treats as a scored access unless logged
+# otherwise. This trail is an audit, not a lock -- the qrels are plaintext on disk and nothing
+# here can stop a script reading them directly. Appends are best-effort and never fail the load.
+_M7_PROTECTED = {"scifact", "nfcorpus", "fiqa", "arguana", "scidocs", "trec-covid",
+                 "fever", "dbpedia-entity"}
+
+
+def _m7_access_trail(name):
+    if name not in _M7_PROTECTED:
+        return
+    try:
+        import datetime
+        import sys
+        line = json.dumps({
+            "ts": datetime.datetime.now().astimezone().isoformat(timespec="seconds"),
+            "dataset": name, "argv": sys.argv, "pid": os.getpid(),
+        })
+        with open(REPO / "m7" / "SIX_ACCESS.log", "a") as f:
+            f.write(line + "\n")
+    except Exception:
+        pass
+
+
 def load_beir(name):
     """Returns (doc_ids, doc_texts, query_ids, query_texts, qrels_dict) for test split."""
+    _m7_access_trail(name)
     corpus = load_dataset(f"BeIR/{name}", "corpus")["corpus"]
     queries = load_dataset(f"BeIR/{name}", "queries")["queries"]
     qrels_rows = load_dataset(f"BeIR/{name}-qrels", split="test")

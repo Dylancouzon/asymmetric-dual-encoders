@@ -1,0 +1,76 @@
+{
+ "candidate": "p35w-2m-s2500",
+ "baseline": "p35a-2m-1e3",
+ "components": [
+  "nq-250k",
+  "hotpotqa",
+  "cqadup-programmers",
+  "cqadup-physics",
+  "heldout-train",
+  "heldout-longq"
+ ],
+ "macro": {
+  "cand": 0.6113,
+  "base": 0.609,
+  "cand-int8": 0.6114,
+  "base-int8": 0.6091
+ },
+ "per_component_macro": {
+  "nq-250k": {
+   "cand": 0.8003,
+   "base": 0.8007,
+   "cand-int8": 0.8002,
+   "base-int8": 0.8009
+  },
+  "hotpotqa": {
+   "cand": 0.6066,
+   "base": 0.6016,
+   "cand-int8": 0.6065,
+   "base-int8": 0.6015
+  },
+  "cqadup-programmers": {
+   "cand": 0.3372,
+   "base": 0.3378,
+   "cand-int8": 0.3377,
+   "base-int8": 0.3383
+  },
+  "cqadup-physics": {
+   "cand": 0.3942,
+   "base": 0.3941,
+   "cand-int8": 0.3946,
+   "base-int8": 0.3943
+  },
+  "heldout-train": {
+   "cand": 0.6301,
+   "base": 0.6266,
+   "cand-int8": 0.6301,
+   "base-int8": 0.6265
+  },
+  "heldout-longq": {
+   "cand": 0.8995,
+   "base": 0.8933,
+   "cand-int8": 0.8995,
+   "base-int8": 0.8933
+  }
+ },
+ "cand_vs_base": {
+  "delta": 0.0023,
+  "ci95": [
+   0.0012,
+   0.0035
+  ],
+  "resolved": true,
+  "signflip_p": 1.999980000199998e-05,
+  "signflip_p_str": "0.00002"
+ },
+ "cand_vs_base_int8": {
+  "delta": 0.0023,
+  "ci95": [
+   0.0012,
+   0.0035
+  ],
+  "resolved": true,
+  "signflip_p": 1.999980000199998e-05,
+  "signflip_p_str": "0.00002"
+ }
+}

@@ -1,0 +1,150 @@
+{
+ "_note": "Disclosed training data per candidate teacher, read from the MTEB model registry (ModelMeta.training_datasets) -- the same source that flagged stella's ArguAna/FiQA2018 overlap. DISCLOSED fine-tuning data only: it bounds KNOWN contamination and cannot rule out incidental exposure in a web-scale pretraining corpus, and an absent registry entry is not evidence of cleanliness. Read next to results/m7_teacher_probe.json -- that file measures which teacher is better, this one measures whether the measurement is trustworthy on OUR six.",
+ "our_six_mteb_names": [
+  "SciFact",
+  "NFCorpus",
+  "FiQA2018",
+  "ArguAna",
+  "SCIDOCS",
+  "TRECCOVID"
+ ],
+ "mteb_version": "2.20.2",
+ "candidates": {
+  "Snowflake/snowflake-arctic-embed-l": {
+   "license": "apache-2.0",
+   "n_parameters": 335141888,
+   "n_disclosed_training_datasets": 11,
+   "overlap_with_our_six": [],
+   "cqadupstack_in_training": [],
+   "stackexchange_datasets": [],
+   "disclosed_training_datasets": [
+    "FEVER",
+    "FEVER-NL",
+    "FEVERHardNegatives",
+    "HotPotQA",
+    "HotPotQA-PL",
+    "HotPotQAHardNegatives",
+    "HotpotQA-NL",
+    "NQ",
+    "NQ-NL",
+    "NQ-PL",
+    "NQHardNegatives"
+   ]
+  },
+  "NovaSearch/stella_en_400M_v5": {
+   "license": "mit",
+   "n_parameters": 435000000,
+   "n_disclosed_training_datasets": 61,
+   "overlap_with_our_six": [
+    "ArguAna",
+    "FiQA2018"
+   ],
+   "cqadupstack_in_training": [],
+   "stackexchange_datasets": [
+    "StackExchangeClustering",
+    "StackExchangeClustering.v2",
+    "StackExchangeClusteringP2P",
+    "StackExchangeClusteringP2P.v2"
+   ],
+   "disclosed_training_datasets": [
+    "AmazonCounterfactualClassification",
+    "AmazonReviewsClassification",
+    "ArguAna",
+    "ArguAna-NL",
+    "ArguAna-PL",
+    "ArxivClusteringP2P",
+    "ArxivClusteringP2P.v2",
+    "ArxivClusteringS2S",
+    "Banking77Classification",
+    "BiorxivClusteringP2P",
+    "BiorxivClusteringP2P.v2",
+    "BiorxivClusteringS2S",
+    "BiorxivClusteringS2S.v2",
+    "EmotionClassification",
+    "FEVER",
+    "FEVER-NL",
+    "FEVERHardNegatives",
+    "FiQA2018",
+    "FiQA2018-NL",
+    "HotpotQA",
+    "HotpotQA-NL",
+    "HotpotQA-PL",
+    "HotpotQAHardNegatives",
+    "ImdbClassification",
+    "MIRACLReranking",
+    "MIRACLRetrieval",
+    "MIRACLRetrievalHardNegatives",
+    "MSMARCO",
+    "MSMARCO-PL",
+    "MSMARCOHardNegatives",
+    "MTOPIntentClassification",
+    "MedrxivClusteringP2P",
+    "MedrxivClusteringP2P.v2",
+    "MedrxivClusteringS2S",
+    "MedrxivClusteringS2S.v2",
+    "MrTidyRetrieval",
+    "NQ",
+    "NQ-NL",
+    "NQ-PL",
+    "NQHardNegatives",
+    "NanoArguAnaRetrieval",
+    "NanoFEVERRetrieval",
+    "NanoMSMARCORetrieval",
+    "NanoNQRetrieval",
+    "RedditClustering",
+    "RedditClustering.v2",
+    "RedditClusteringP2P",
+    "RedditClusteringP2P.v2",
+    "STS12",
+    "STS22",
+    "STSBenchmark",
+    "STSBenchmarkMultilingualSTS",
+    "StackExchangeClustering",
+    "StackExchangeClustering.v2",
+    "StackExchangeClusteringP2P",
+    "StackExchangeClusteringP2P.v2",
+    "ToxicConversationsClassification",
+    "TweetSentimentExtractionClassification",
+    "TwentyNewsgroupsClustering",
+    "TwentyNewsgroupsClustering.v2",
+    "mMARCO-NL"
+   ]
+  },
+  "Alibaba-NLP/gte-large-en-v1.5": {
+   "registry": "absent (KeyError)",
+   "overlap_with_our_six": "unknown"
+  },
+  "BAAI/bge-base-en-v1.5": {
+   "license": "mit",
+   "n_parameters": 109000000,
+   "n_disclosed_training_datasets": 6,
+   "overlap_with_our_six": [],
+   "cqadupstack_in_training": [],
+   "stackexchange_datasets": [],
+   "disclosed_training_datasets": [
+    "AmazonReviewsClassification",
+    "DuRetrieval",
+    "MLQARetrieval",
+    "NQ",
+    "NQ-NL",
+    "NQHardNegatives"
+   ]
+  },
+  "BAAI/bge-large-en-v1.5": {
+   "license": "mit",
+   "n_parameters": 335000000,
+   "n_disclosed_training_datasets": 6,
+   "overlap_with_our_six": [],
+   "cqadupstack_in_training": [],
+   "stackexchange_datasets": [],
+   "disclosed_training_datasets": [
+    "AmazonReviewsClassification",
+    "DuRetrieval",
+    "MLQARetrieval",
+    "NQ",
+    "NQ-NL",
+    "NQHardNegatives"
+   ]
+  }
+ }
+}

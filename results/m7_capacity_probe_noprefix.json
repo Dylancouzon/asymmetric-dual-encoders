@@ -1,0 +1,89 @@
+{
+ "_note": "DIAGNOSTIC ONLY -- categorically ineligible for any gate (instructions-m7.md). Train and eval queries are identical by design.",
+ "preproc": "noprefix",
+ "macro": 0.9999922480483922,
+ "per_component": {
+  "nq-250k": 0.9999767441451762,
+  "cqadup-programmers": 1.0,
+  "cqadup-physics": 1.0
+ },
+ "budgets": {
+  "nq-250k": {
+   "steps_used": 6000,
+   "final_loss": 0.03299148805381265,
+   "budget_steps": 6000,
+   "batch": 256,
+   "n_neg": 32768,
+   "temp": 0.02,
+   "lr": 0.01,
+   "seconds": 68.7,
+   "n_queries_trained": 3452
+  },
+  "cqadup-programmers": {
+   "steps_used": 6000,
+   "final_loss": 0.31853864178061486,
+   "budget_steps": 6000,
+   "batch": 256,
+   "n_neg": 32768,
+   "temp": 0.02,
+   "lr": 0.01,
+   "seconds": 67.7,
+   "n_queries_trained": 876
+  },
+  "cqadup-physics": {
+   "steps_used": 6000,
+   "final_loss": 0.2969880193471909,
+   "budget_steps": 6000,
+   "batch": 256,
+   "n_neg": 32768,
+   "temp": 0.02,
+   "lr": 0.01,
+   "seconds": 67.2,
+   "n_queries_trained": 1039
+  }
+ },
+ "vs_bm25_dev": {
+  "delta": 0.5917,
+  "ci95": [
+   0.5793,
+   0.6045
+  ],
+  "boot_tail": 0.0,
+  "boot_tail_str": "<0.0001",
+  "_boot_tail_note": "bootstrap tail mass, NOT a p-value; use signflip() for p",
+  "alternative": "greater",
+  "B": 10000,
+  "seed": 0,
+  "one_sided_lower_2.5": 0.5793,
+  "per_dataset": {
+   "cqadup-physics": {
+    "n": 1039,
+    "delta": 0.6529,
+    "ci95": [
+     0.629,
+     0.6774
+    ]
+   },
+   "cqadup-programmers": {
+    "n": 876,
+    "delta": 0.7025,
+    "ci95": [
+     0.6763,
+     0.7285
+    ]
+   },
+   "nq-250k": {
+    "n": 3452,
+    "delta": 0.4196,
+    "ci95": [
+     0.4066,
+     0.4327
+    ]
+   }
+  },
+  "resolved": true
+ },
+ "bar": "overfit table must CI-resolve above the BM25 dev row",
+ "passed": true,
+ "encoder": "stella-400M-v5"
+}

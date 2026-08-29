@@ -1,0 +1,329 @@
+{
+ "_what": "pre-registered rules x the arm families they bind, checked against committed artifacts. Written after the step-selection rule was found unapplied by accident rather than by audit (pre-freeze review M5).",
+ "_reading": "UNKNOWN is not PASS. A rule this file cannot verify mechanically is listed under `not_mechanically_checkable` with the reason, so the gap is visible rather than absent.",
+ "rules": {
+  "step_selection": {
+   "_rule": "LEDGER 'Step selection': an arm's step count is its best proxy eval, implemented by re-running to that step. AMENDED 2026-08-28 for decisions whose numbers did not yet exist: match the baseline's step count instead, because the proxy peak did not reproduce and inverted the full-suite ordering.",
+   "_status": "the p4n family was found NON-COMPLIANT on 2026-08-28 and corrected; the corrected arms then failed the negatives bar and the avenue closed. Arms listed complies=false that predate the amendment are the historical record, not new violations.",
+   "families": {
+    "p4n negatives": {
+     "p4n-bank-a": {
+      "best_step": 2500,
+      "final_step": 2500,
+      "best_macro": 0.51057,
+      "peak_rerun_as": null,
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p4n-bm2516-a": {
+      "best_step": 1500,
+      "final_step": 2500,
+      "best_macro": 0.51327,
+      "peak_rerun_as": "p4n-bm2516-s1500-a",
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p4n-bm2516-s1500-a": {
+      "best_step": 1500,
+      "final_step": 1500,
+      "best_macro": 0.51378,
+      "peak_rerun_as": null,
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p4n-mixed32-a": {
+      "best_step": 1000,
+      "final_step": 2500,
+      "best_macro": 0.51389,
+      "peak_rerun_as": "p4n-mixed32-s1000-a",
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p4n-mixed32-s1000-a": {
+      "best_step": 1000,
+      "final_step": 1000,
+      "best_macro": 0.51485,
+      "peak_rerun_as": null,
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p4n-teacher16-a": {
+      "best_step": 1500,
+      "final_step": 2500,
+      "best_macro": 0.513,
+      "peak_rerun_as": "p4n-teacher16-s1500-a",
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p4n-teacher16-s1500-a": {
+      "best_step": 1500,
+      "final_step": 1500,
+      "best_macro": 0.51262,
+      "peak_rerun_as": null,
+      "exempt_reason": null,
+      "complies": true
+     }
+    },
+    "p5s simplification": {
+     "p5s-simple-a": {
+      "best_step": 1000,
+      "final_step": 2500,
+      "best_macro": 0.514,
+      "peak_rerun_as": null,
+      "exempt_reason": "LEDGER 'Recipe simplification', AMENDED before any simplification arm had a full-suite number: the A-phase step count is FIXED at the baseline's 2500, because an equivalence test that also selects a step varies a fifth thing -- with an instrument whose peak did not reproduce.",
+      "complies": true
+     },
+     "p5s-simple-nohn-a": {
+      "best_step": 2000,
+      "final_step": 2500,
+      "best_macro": 0.51067,
+      "peak_rerun_as": null,
+      "exempt_reason": "LEDGER 'Recipe simplification', AMENDED before any simplification arm had a full-suite number: the A-phase step count is FIXED at the baseline's 2500, because an equivalence test that also selects a step varies a fifth thing -- with an instrument whose peak did not reproduce.",
+      "complies": true
+     }
+    },
+    "p4 mandatory ablations": {
+     "p4-base-a": {
+      "best_step": 2500,
+      "final_step": 2500,
+      "best_macro": 0.51057,
+      "peak_rerun_as": null,
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p4-flat-a": {
+      "best_step": 2500,
+      "final_step": 2500,
+      "best_macro": 0.50908,
+      "peak_rerun_as": null,
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p4-input-emb-a": {
+      "best_step": 2500,
+      "final_step": 2500,
+      "best_macro": 0.51133,
+      "peak_rerun_as": null,
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p4-prefix-a": {
+      "best_step": 2500,
+      "final_step": 2500,
+      "best_macro": 0.51042,
+      "peak_rerun_as": null,
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p4-random-a": {
+      "best_step": 2500,
+      "final_step": 2500,
+      "best_macro": 0.51121,
+      "peak_rerun_as": null,
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p4-reg0-a": {
+      "best_step": 2500,
+      "final_step": 2500,
+      "best_macro": 0.51057,
+      "peak_rerun_as": null,
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p4-uniform-w-a": {
+      "best_step": 2500,
+      "final_step": 2500,
+      "best_macro": 0.51154,
+      "peak_rerun_as": null,
+      "exempt_reason": null,
+      "complies": true
+     }
+    },
+    "p35 lever #2": {
+     "p35a-2m-1e3": {
+      "best_step": 2000,
+      "final_step": 2000,
+      "best_macro": 0.51086,
+      "peak_rerun_as": null,
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p35a-2m-1e3-x4000": {
+      "best_step": 2500,
+      "final_step": 4000,
+      "best_macro": 0.51194,
+      "peak_rerun_as": "p35w-2m-s2500",
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p35a-500k-1e3": {
+      "best_step": 1500,
+      "final_step": 2000,
+      "best_macro": 0.50803,
+      "peak_rerun_as": "p35w-500k-s1500",
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p35b-2m": {
+      "best_step": 16000,
+      "final_step": 16000,
+      "best_macro": 0.4981,
+      "peak_rerun_as": null,
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p35b-500k": {
+      "best_step": 8000,
+      "final_step": 8000,
+      "best_macro": 0.49335,
+      "peak_rerun_as": null,
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p35w-2m-s2500": {
+      "best_step": 2500,
+      "final_step": 2500,
+      "best_macro": 0.51057,
+      "peak_rerun_as": null,
+      "exempt_reason": null,
+      "complies": true
+     },
+     "p35w-500k-s1500": {
+      "best_step": 1000,
+      "final_step": 1500,
+      "best_macro": 0.50753,
+      "peak_rerun_as": null,
+      "exempt_reason": "an arm whose name marks it as the peak RE-RUN of a longer sibling is terminal by construction. 'Run long, find the peak, re-run once' does not recurse; applying the rule to the re-run would regress without end.",
+      "complies": true
+     }
+    }
+   }
+  },
+  "one_knob": {
+   "_rule": "an ablation arm varies only what its design names; the negatives design says 'vary ONLY the negatives, from the candidate's own B checkpoint at its own A recipe'.",
+   "p4n_vs_candidate": {
+    "p4n-bank-a": {
+     "differs_on": [
+      "init_preproc",
+      "pool_mode"
+     ],
+     "bookkeeping_only": [
+      "init_preproc",
+      "pool_mode"
+     ],
+     "behavioural": [],
+     "complies": true
+    },
+    "p4n-bm2516-a": {
+     "differs_on": [
+      "hard_neg_k",
+      "hard_neg_source",
+      "init_preproc",
+      "pool_mode"
+     ],
+     "bookkeeping_only": [
+      "init_preproc",
+      "pool_mode"
+     ],
+     "behavioural": [
+      "hard_neg_k",
+      "hard_neg_source"
+     ],
+     "complies": true
+    },
+    "p4n-bm2516-s1500-a": {
+     "differs_on": [
+      "b_pseudo_kind",
+      "hard_neg_k",
+      "hard_neg_source",
+      "init_preproc",
+      "pool_mode"
+     ],
+     "bookkeeping_only": [
+      "b_pseudo_kind",
+      "init_preproc",
+      "pool_mode"
+     ],
+     "behavioural": [
+      "hard_neg_k",
+      "hard_neg_source"
+     ],
+     "complies": true
+    },
+    "p4n-mixed32-a": {
+     "differs_on": [
+      "hard_neg_k",
+      "hard_neg_source",
+      "init_preproc",
+      "pool_mode"
+     ],
+     "bookkeeping_only": [
+      "init_preproc",
+      "pool_mode"
+     ],
+     "behavioural": [
+      "hard_neg_k",
+      "hard_neg_source"
+     ],
+     "complies": true
+    },
+    "p4n-mixed32-s1000-a": {
+     "differs_on": [
+      "b_pseudo_kind",
+      "hard_neg_k",
+      "hard_neg_source",
+      "init_preproc",
+      "pool_mode"
+     ],
+     "bookkeeping_only": [
+      "b_pseudo_kind",
+      "init_preproc",
+      "pool_mode"
+     ],
+     "behavioural": [
+      "hard_neg_k",
+      "hard_neg_source"
+     ],
+     "complies": true
+    },
+    "p4n-teacher16-a": {
+     "differs_on": [
+      "hard_neg_k",
+      "init_preproc",
+      "pool_mode"
+     ],
+     "bookkeeping_only": [
+      "init_preproc",
+      "pool_mode"
+     ],
+     "behavioural": [
+      "hard_neg_k"
+     ],
+     "complies": true
+    },
+    "p4n-teacher16-s1500-a": {
+     "differs_on": [
+      "hard_neg_k",
+      "init_preproc",
+      "pool_mode"
+     ],
+     "bookkeeping_only": [
+      "init_preproc",
+      "pool_mode"
+     ],
+     "behavioural": [
+      "hard_neg_k"
+     ],
+     "complies": true
+    }
+   }
+  }
+ },
+ "not_mechanically_checkable": {
+  "pre_registration_ordering": "that each bar was committed BEFORE its numbers. Verifiable only from `git log -p m7/LEDGER.md` commit order against result-artifact commit order; the review verified the step-rule case by hand (5cabf45 precedes 24ba6c6).",
+  "holm_family_membership": "which arms constitute a family is a judgement fixed in prose. negatives_decide.py and lever4_readjudicate.py encode theirs; nothing checks that the encoded family matches the written one.",
+  "six_set_access": "convention-based, not enforced -- any script can read committed qrels. m7/SIX_ACCESS.log is an audit trail, and the three known deviations are enumerated in the ledger.",
+  "dev_component_pinning": "enforced at runtime by dev_eval.dev_components() and heldout.verify_pinned(), not here."
+ }
+}

@@ -22,7 +22,8 @@
     "leaf-ir-asym": "da719c13b050d14999cdeac82ac020cf841c99dc496896b9a1514157f1ea819c",
     "mdbr-leaf-ir": "246a1ba832d96d6b286ff212606c613990e25c8f44aba71543a20324dff3a384",
     "arctic-embed-m-v1.5": "cba8e03ac5846b6e8a1cb44f9585837675f3b4a86f7512721aa822509c403a87"
-   }
+   },
+   "qtexts_sha256": "a561fc41731771d805534782175cbb7555c7dad42a3bb59d834b3684ae3bf576"
   },
   "nfcorpus": {
    "n_docs": 3633,
@@ -41,7 +42,8 @@
     "leaf-ir-asym": "3b338f5ac011990696351f7a78b1f308f684344e3263a520198c2b6997342d0c",
     "mdbr-leaf-ir": "6b04042b32fe69c71d0b1c3252d6c7408373a609164b5248419ecc9ac1b2d705",
     "arctic-embed-m-v1.5": "bed582ccca3df5fd4f5d7fc9ee63e06c1123481973fe30cf6148a608a8124185"
-   }
+   },
+   "qtexts_sha256": "00ff100e3b82bbf5473a1a75035cfa1bceef0eea059a841391684d6873ee4560"
   },
   "fiqa": {
    "n_docs": 57638,
@@ -60,7 +62,8 @@
     "leaf-ir-asym": "c5da8f57bc83a9960850ed14aec9a63a03ab2e30020e2778df333fd0a1232fa8",
     "mdbr-leaf-ir": "3b124875df3ec580bc2587608fe19d7a9a7986207bdf37c24c3089bf050335ab",
     "arctic-embed-m-v1.5": "4da13e41194de7d8e9e5bf4059a57032b046b127241dd650bf929d199b17283b"
-   }
+   },
+   "qtexts_sha256": "72af22cddcfb25e663c8280ee893db9a87ce294aebe02e10ceeef0e5eae73e90"
   },
   "arguana": {
    "n_docs": 8674,
@@ -79,7 +82,8 @@
     "leaf-ir-asym": "4f4b22b6cdf760d99decd0d9aa6afd98b2360391eb250eb64ce677eafb2ec8ea",
     "mdbr-leaf-ir": "6365f268c4441cf5426e0019ba5c07318181b3ec840d2d86b538fb6471a12897",
     "arctic-embed-m-v1.5": "07e826ebe670870715de629834823e801cfe388589c7ac9b3a9156e8cbf43cba"
-   }
+   },
+   "qtexts_sha256": "d931ba219521970380fb7709b58a88602d9b13c0096f83b6bc62d84d40561d46"
   },
   "scidocs": {
    "n_docs": 25657,
@@ -98,7 +102,8 @@
     "leaf-ir-asym": "546b4ffa8b91f1fb9095d7fcecf9af85ce5256166f436507f7ddb7def16f7eae",
     "mdbr-leaf-ir": "87c03ad0952e5d795e59ea9ef5884fcb16195c9e0a67cf14b7f255f4f716b252",
     "arctic-embed-m-v1.5": "315a2340c5acfc1e5f047f17f9d84dff3fe14dc6a825baaea94e7547c4f1bb93"
-   }
+   },
+   "qtexts_sha256": "4755a1b2247a65163b5d277666c69c7640b6a5bf58de96fa61385068c9e74bfa"
   },
   "trec-covid": {
    "n_docs": 171332,
@@ -117,7 +122,96 @@
     "leaf-ir-asym": "9124f6b5116df53580fce87b887683fc1d668a12ca834c79ef6f617dcd5d12e3",
     "mdbr-leaf-ir": "66c13fe8b6a0b9a65ea07495efc17eb0086fdefd23dd84abe20d8f5e41b70a19",
     "arctic-embed-m-v1.5": "f8979a78dd0ae5138062db606c47745cb72a4439b3d59fe55f2a50e408800299"
-   }
+   },
+   "qtexts_sha256": "4e8b173d1a9a2a008583d9ea13ebbe76ee94d30c4508fbe27028931f128402f8"
   }
- }
+ },
+ "m7_dev": {
+  "nq-250k": {
+   "n_docs": 250000,
+   "n_queries": 3452,
+   "corpus_ids_sha256": "f6260541f6ecf2c6820aa0504f15c7f2040582fd58b92ed0ab64e78b1ff7669f",
+   "corpus_text_sha256": "66610615ce015dc75f04e485cc3e98e87da4123fe3fb4b1ff99b27a88440aa68",
+   "qids_sha256": "89a8ed94aeecf8d0d7d6bfc3ebe529f2e54b32f20e354b0a7ba89971cf3b239c",
+   "qrels_sha256": "42de04c520ff132fca2a72b2c432348b4a73adde3c1d1d98cca9552636cd7927",
+   "construction": "BEIR NQ: all qrels-positive docs + rng(seed=0) distractors to 250000"
+  },
+  "hotpotqa": {
+   "n_docs": 5233329,
+   "n_queries": 7405,
+   "corpus_ids_sha256": "be799419ebc5b1589229a161083f93aa7d3871ba0afe7c42c896a0ce1fb7c853",
+   "corpus_text_sha256": "8e805db3af5d1f1a9e1f2529922e75300ff9a3b369809ab80f31b79b1224564a",
+   "qids_sha256": "18e7c61d7e8f2b9db18a913e7d582c056bff6f8713b80afa16b75e48e94a6231",
+   "qrels_sha256": "015a30eef019f894e070718f097130b152d192b244c88750f9141df6dcd21b5c",
+   "construction": "BEIR HotpotQA test split, full corpus"
+  },
+  "cqadup-programmers": {
+   "n_docs": 32176,
+   "n_queries": 876,
+   "corpus_ids_sha256": "434006e6a174b7f7508af49dd89b4ecbdcf92fdec01a253bb7fe23c78723c43e",
+   "corpus_text_sha256": "d7c33d881e5728565ff0b8d42f6da88cd89a8362a6b05ffd5d8b2064bd0f61ed",
+   "qids_sha256": "910ba91e5f5256ba65788b9a51f0aeffff3ebc1b9e17e34e2a2e2859655f2e01",
+   "qrels_sha256": "5e088f09a6cc533ca71bc15992e9c7bf33582b1dc1530300906b863e6d352efc",
+   "construction": "mteb/cqadupstack-programmers, full corpus + test qrels"
+  },
+  "cqadup-physics": {
+   "n_docs": 38316,
+   "n_queries": 1039,
+   "corpus_ids_sha256": "2354a8d4c7207a6ff443d8437e4e76470e5d3c46bf2eb317011a526e684fb5bf",
+   "corpus_text_sha256": "856f16df56c9515c7d6acd7e2bc2e4585dbd74c1da80ea1f2264deea6d2d892d",
+   "qids_sha256": "4c44ec7cf4f961b4c2c44cd1615679302d0979aca17ce09d80bf7e6e8a990fb9",
+   "qrels_sha256": "bfdc3429822a1f3308943510393b91c57c0650acb71d603d33146448e4e60236",
+   "construction": "mteb/cqadupstack-physics, full corpus + test qrels"
+  }
+ },
+ "m7_untouched_final": {
+  "fever": {
+   "n_docs": 5416568,
+   "n_queries": 6666,
+   "corpus_ids_sha256": "ef7c3d7d6d006bb31a43f095df0fbd01006085eb951993becfd3d94470195d67",
+   "corpus_text_sha256": "2c71339c8c31179ddb1443e171d83af82658820d0885cf4803a9b42c452a672a",
+   "qids_sha256": "472ef3c5b868e704c69fb356ffcd7cc7aab7669b5607bc7934e586f94c20c27c",
+   "qrels_sha256": "dbaa21877bdffe89dc4489234c4a15b59c2e05d7b2ff80fc836b9405e7391161",
+   "construction": "BeIR/fever test split, full corpus",
+   "qtexts_sha256": "cdba235e15a2a72e5e781fae8dd5e09ff20eaa9b06506da02c6ceab49c01f2c6"
+  },
+  "dbpedia-entity": {
+   "n_docs": 4635922,
+   "n_queries": 400,
+   "corpus_ids_sha256": "61a2b1b2489498ace1a4e1fc6924d8a5b62504da339428586420d6330f6d4c7f",
+   "corpus_text_sha256": "6c00ad5874b71ce4299b5ab8c93d7288b59cbdd60178d7b8c94a3e8f52459765",
+   "qids_sha256": "04598aafe14ee78964752627a3d8b6fc06c662092312999f3d6d171d4a8e7387",
+   "qrels_sha256": "39e0bafdcd8622ac684cede60c84a1ada6eec41840a349fac0a65f8070f2fa2e",
+   "construction": "BeIR/dbpedia-entity test split, full corpus",
+   "qtexts_sha256": "9f5de8c226af86db953f78c052f4ff3571aed5436cd66b24f1cd2aec7764e773"
+  },
+  "cqadup-android": {
+   "n_docs": 22998,
+   "n_queries": 699,
+   "corpus_ids_sha256": "32cfeae242c5df45b3a97697d11a99f2bd62ef740a163d5be7e24c7cfe16d0a8",
+   "corpus_text_sha256": "34cc0fd784977a143aaa52979d2266699cf1b8f909fdef5769d2b69218e8984d",
+   "qids_sha256": "3c9f39c0b5ca8a44772909ad05e5d2f595395417f74300f0b28925d7d3f32411",
+   "qrels_sha256": "e60d549e62ba811c2e342b9ea88729d0c001b4e952220995da15716c800606ac",
+   "construction": "mteb/cqadupstack-android, full corpus + test qrels; added pre-freeze per LEDGER untouched-final repair 2026-08-26",
+   "qtexts_sha256": "cfc5462931d095375b54da7bd958233bd9614f9eb55e8d404a2b177e31fc79eb"
+  },
+  "cqadup-english": {
+   "n_docs": 40221,
+   "n_queries": 1570,
+   "corpus_ids_sha256": "148a215ce6abb5e608996fc1acf5f71229fe3a9921ba1e63211520f7fdf9ccec",
+   "corpus_text_sha256": "d1fa6b7d80052ed2bbd806aa7c204f98a79420ccd4997389083934ac1c132159",
+   "qids_sha256": "d1761a9f61ec28030661cdfc6a5e5c913788e4901801726a53e9c7fb81d0fc2e",
+   "qrels_sha256": "51e44a87232fade6f55bd2506fdc6748bc4fa61ccc05b48a14d44e5f55e8d48a",
+   "construction": "mteb/cqadupstack-english, full corpus + test qrels; added pre-freeze per LEDGER untouched-final repair 2026-08-26",
+   "qtexts_sha256": "9da6edf7193a2ac7726e78de4f4bad29f89015bd46b923ba36b7d9f353e5ae94"
+  }
+ },
+ "m7_notes": {
+  "partitions": "datasets = KNOWN-TEST (the six); m7_dev = DEV; m7_untouched_final = UNTOUCHED-FINAL",
+  "climate_fever": "DROPPED from UNTOUCHED-FINAL: no affirmative license at any primary source (see m7/LEDGER.md). The partition therefore holds two sets, not three.",
+  "fever_caveat": "BEIR FEVER is scored as untouched-final but is IN-DOMAIN if fever-train pairs stay in the training mix (same corpus, disjoint queries). Labeled in the report; DBpedia-entity is the clean generalization probe.",
+  "frozen_eval_is_authoritative": "the final scorer reads queries/qrels only from results/frozen_eval/ after verifying corpus hashes against a fresh HF download",
+  "untouched_final_repair": "cqadup-android and cqadup-english added 2026-08-26 before freeze: the only near-zero-overlap non-Wikipedia members (R3: fever 11.3%%, dbpedia 9.32%%, cqadupstack ~0). Same family as two dev components -- development-informed at family level, labelled at the row."
+ },
+ "_qtexts_note": "qtexts_sha256 added 2026-08-28: the manifest pinned qids and qrels but NOT query text, so editing a query's text while leaving its key alone passed every check and was scored. Computed from the already-committed results/frozen_eval/ payloads (whose qids_sha256 was re-verified at the same time), NOT re-derived from a fresh download -- it pins them going forward and inherits git history's assurance about how they got there."
 }

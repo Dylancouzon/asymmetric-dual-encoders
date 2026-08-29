@@ -1,0 +1,238 @@
+{
+ "_note": "Candidate teacher ceilings measured on the two CQADupStack dev components -- the only dev components on no candidate's disclosed training list, and the nearest dev analogue to FiQA. Symmetric retrieval, each model's own pooling and prompt, fp16, our harness. A SELECTION diagnostic on dev: not a gate input, and the six-set is never read. Use this to rank teachers instead of the loose MTEB->six map in results/m7_calibration.json.",
+ "_pairwise_note": "All-pairs two-sided paired bootstrap over the same per-query scores. A SELECTION diagnostic, so no Holm correction is applied and none is claimed -- the mandate's family-wise alpha governs gate claims on the six, not this. Read a pair as resolved only if its CI excludes 0.",
+ "_pairwise_scope": "Pairwise rows exist only for candidates measured in the SAME invocation -- per-query scores are not persisted, so a merged-in candidate has a ceiling here but no pairwise row. Re-run the candidates together to compare them.",
+ "components": [
+  "cqadup-programmers",
+  "cqadup-physics"
+ ],
+ "candidates": {
+  "arctic-embed-l-mean": {
+   "repo": "Snowflake/snowflake-arctic-embed-l",
+   "pooling": "mean",
+   "query_prefix": "Represent this sentence for searching relevant passages: ",
+   "dim": 1024,
+   "macro_cqadupstack": 0.4684,
+   "per_component": {
+    "cqadup-programmers": 0.4491,
+    "cqadup-physics": 0.4877
+   }
+  },
+  "e5-base-v2": {
+   "repo": "intfloat/e5-base-v2",
+   "pooling": "mean",
+   "query_prefix": "query: ",
+   "dim": 768,
+   "macro_cqadupstack": 0.3928,
+   "per_component": {
+    "cqadup-programmers": 0.3746,
+    "cqadup-physics": 0.4109
+   }
+  },
+  "bge-base-en-v1.5": {
+   "repo": "BAAI/bge-base-en-v1.5",
+   "pooling": "cls",
+   "query_prefix": "Represent this sentence for searching relevant passages: ",
+   "dim": 768,
+   "macro_cqadupstack": 0.4484,
+   "per_component": {
+    "cqadup-programmers": 0.424,
+    "cqadup-physics": 0.4727
+   },
+   "vs_current_teacher": 0.0,
+   "ratio_to_current_teacher": 1.0
+  },
+  "bge-large-en-v1.5": {
+   "repo": "BAAI/bge-large-en-v1.5",
+   "pooling": "cls",
+   "query_prefix": "Represent this sentence for searching relevant passages: ",
+   "dim": 1024,
+   "macro_cqadupstack": 0.4486,
+   "per_component": {
+    "cqadup-programmers": 0.427,
+    "cqadup-physics": 0.4703
+   },
+   "vs_current_teacher_boot": {
+    "delta": 0.0002,
+    "ci95": [
+     -0.0092,
+     0.0096
+    ],
+    "p": 0.4784,
+    "p_str": "0.4784",
+    "alternative": "greater",
+    "B": 10000,
+    "seed": 0,
+    "one_sided_lower_2.5": -0.0092,
+    "per_dataset": {
+     "cqadup-physics": {
+      "n": 1039,
+      "delta": -0.0025,
+      "ci95": [
+       -0.015,
+       0.0099
+      ]
+     },
+     "cqadup-programmers": {
+      "n": 876,
+      "delta": 0.003,
+      "ci95": [
+       -0.011,
+       0.017
+      ]
+     }
+    },
+    "resolved": false
+   },
+   "vs_current_teacher": 0.0002,
+   "ratio_to_current_teacher": 1.0004
+  },
+  "gte-large-en-v1.5": {
+   "repo": "Alibaba-NLP/gte-large-en-v1.5",
+   "pooling": "cls",
+   "query_prefix": "",
+   "dim": 1024,
+   "macro_cqadupstack": 0.4711,
+   "per_component": {
+    "cqadup-programmers": 0.4322,
+    "cqadup-physics": 0.5099
+   },
+   "vs_current_teacher_boot": {
+    "delta": 0.0227,
+    "ci95": [
+     0.0117,
+     0.0338
+    ],
+    "p": 0.0002,
+    "p_str": "0.0002",
+    "alternative": "greater",
+    "B": 10000,
+    "seed": 0,
+    "one_sided_lower_2.5": 0.0117,
+    "per_dataset": {
+     "cqadup-physics": {
+      "n": 1039,
+      "delta": 0.0372,
+      "ci95": [
+       0.0217,
+       0.0527
+      ]
+     },
+     "cqadup-programmers": {
+      "n": 876,
+      "delta": 0.0081,
+      "ci95": [
+       -0.0077,
+       0.0241
+      ]
+     }
+    },
+    "resolved": true
+   },
+   "vs_current_teacher": 0.0227,
+   "ratio_to_current_teacher": 1.0506
+  },
+  "stella-400M-v5": {
+   "repo": "NovaSearch/stella_en_400M_v5",
+   "pooling": "mean",
+   "query_prefix": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
+   "dim": 1024,
+   "macro_cqadupstack": 0.4806,
+   "per_component": {
+    "cqadup-programmers": 0.468,
+    "cqadup-physics": 0.4932
+   },
+   "vs_current_teacher_boot": {
+    "delta": 0.0322,
+    "ci95": [
+     0.0213,
+     0.043
+    ],
+    "p": 0.0,
+    "p_str": "<0.0001",
+    "alternative": "greater",
+    "B": 10000,
+    "seed": 0,
+    "one_sided_lower_2.5": 0.0213,
+    "per_dataset": {
+     "cqadup-physics": {
+      "n": 1039,
+      "delta": 0.0204,
+      "ci95": [
+       0.0055,
+       0.0351
+      ]
+     },
+     "cqadup-programmers": {
+      "n": 876,
+      "delta": 0.044,
+      "ci95": [
+       0.0281,
+       0.06
+      ]
+     }
+    },
+    "resolved": true
+   },
+   "vs_current_teacher": 0.0322,
+   "ratio_to_current_teacher": 1.0718
+  },
+  "arctic-embed-l": {
+   "repo": "Snowflake/snowflake-arctic-embed-l",
+   "pooling": "cls",
+   "query_prefix": "Represent this sentence for searching relevant passages: ",
+   "dim": 1024,
+   "macro_cqadupstack": 0.4931,
+   "per_component": {
+    "cqadup-programmers": 0.4709,
+    "cqadup-physics": 0.5154
+   },
+   "vs_current_teacher_boot": {
+    "delta": 0.0447,
+    "ci95": [
+     0.0339,
+     0.0557
+    ],
+    "p": 0.0,
+    "p_str": "<0.0001",
+    "alternative": "greater",
+    "B": 10000,
+    "seed": 0,
+    "one_sided_lower_2.5": 0.0339,
+    "per_dataset": {
+     "cqadup-physics": {
+      "n": 1039,
+      "delta": 0.0426,
+      "ci95": [
+       0.0287,
+       0.0561
+      ]
+     },
+     "cqadup-programmers": {
+      "n": 876,
+      "delta": 0.0469,
+      "ci95": [
+       0.0298,
+       0.0642
+      ]
+     }
+    },
+    "resolved": true
+   },
+   "vs_current_teacher": 0.0447,
+   "ratio_to_current_teacher": 1.0997
+  },
+  "e5-large-v2": {
+   "repo": "intfloat/e5-large-v2",
+   "pooling": "mean",
+   "query_prefix": "query: ",
+   "dim": 1024,
+   "macro_cqadupstack": 0.3888,
+   "per_component": {
+    "cqadup-programmers": 0.3834,
+    "cqadup-physics": 0.3942
+   }
+  }
+ },
+ "pairwise": {}
+}

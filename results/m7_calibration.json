@@ -1,0 +1,1064 @@
+{
+ "_note": "Calibration of MTEB v1 English Retrieval (15-task BEIR avg) onto our six-set avg-6, fit on the nine transformers we measured ourselves. Supersedes the single-anchor projection: that anchor (bge-small, ratio 0.976) is the 3rd-HIGHEST of nine, so it biased every teacher estimate high. 'clears' uses the LOWER end of the calibration interval; 'point_clears' uses the point estimate. Retention is itself measured on dev and assumed to transfer to the six -- an assumption, not a result.",
+ "bars": {
+  "bm25": 0.4174,
+  "tier2_release": 0.4583,
+  "tier1_aim": 0.4868
+ },
+ "retention_today_text_backed": 0.7853,
+ "transformers_fit": {
+  "sigma_regression": 0.01095716440741721,
+  "df": 7,
+  "t975": 2.365,
+  "mteb_mean": 50.42777777777778,
+  "Sxx": 110.96615555555549,
+  "n": 9,
+  "mteb_range": [
+   41.95,
+   55.14
+  ],
+  "ratio": {
+   "mean": 0.961600637438932,
+   "sd": 0.023776411221861367,
+   "min": 0.925978792822186,
+   "max": 1.0014302741358758
+  },
+  "affine": {
+   "slope": 0.008387360150051763,
+   "intercept": 0.06159962176655662,
+   "pearson_r": 0.9501601614665046,
+   "resid_sd_ddof1_DEPRECATED": 0.01024948878577728,
+   "max_abs_resid": 0.01881576352509501
+  },
+  "per_model": {
+   "all-MiniLM-L6-v2": {
+    "mteb": 41.95,
+    "our6": 0.4201,
+    "ratio": 1.0014302741358758,
+    "affine_resid": 0.006650619938771862
+   },
+   "e5-small-v2": {
+    "mteb": 49.04,
+    "our6": 0.4541,
+    "ratio": 0.925978792822186,
+    "affine_resid": -0.01881576352509501
+   },
+   "gte-small": {
+    "mteb": 49.46,
+    "our6": 0.4837,
+    "ratio": 0.9779619894864537,
+    "affine_resid": 0.007261545211883269
+   },
+   "arctic-embed-xs": {
+    "mteb": 50.15,
+    "our6": 0.4662,
+    "ratio": 0.9296111665004986,
+    "affine_resid": -0.016025733291652522
+   },
+   "granite-small-r2": {
+    "mteb": 50.9,
+    "our6": 0.4947,
+    "ratio": 0.9719056974459724,
+    "affine_resid": 0.006183746595808615
+   },
+   "bge-small-en-v1.5": {
+    "mteb": 51.68,
+    "our6": 0.5042,
+    "ratio": 0.9756191950464396,
+    "affine_resid": 0.009141605678768316
+   },
+   "arctic-embed-s": {
+    "mteb": 51.98,
+    "our6": 0.4993,
+    "ratio": 0.9605617545209698,
+    "affine_resid": 0.0017253976337528454
+   },
+   "mdbr-leaf-ir": {
+    "mteb": 53.55,
+    "our6": 0.5123,
+    "ratio": 0.9566760037348273,
+    "affine_resid": 0.001557242198171549
+   },
+   "arctic-embed-m-v1.5": {
+    "mteb": 55.14,
+    "our6": 0.5264,
+    "ratio": 0.9546608632571636,
+    "affine_resid": 0.0023213395595891306
+   }
+  }
+ },
+ "statics_fit_separate_harness": {
+  "sigma_regression": 0.0044903737300436555,
+  "df": 1,
+  "t975": 1.96,
+  "mteb_mean": 33.70666666666667,
+  "Sxx": 10.120066666666682,
+  "n": 3,
+  "mteb_range": [
+   31.11,
+   35.06
+  ],
+  "ratio": {
+   "mean": 1.020870142477031,
+   "sd": 0.01015151399356632,
+   "min": 1.0091559370529326,
+   "max": 1.027096406160867
+  },
+  "affine": {
+   "slope": 0.009559554943643302,
+   "intercept": 0.021812601366263125,
+   "pearson_r": 0.9892738287346817,
+   "resid_sd_ddof1_DEPRECATED": 0.0031751737145758003,
+   "max_abs_resid": 0.0032190466465965573
+  },
+  "per_model": {
+   "potion-base-8M": {
+    "mteb": 31.11,
+    "our6": 0.3193,
+    "ratio": 1.0263580842172935,
+    "affine_resid": 8.964433699371055e-05
+   },
+   "static-retrieval-mrl-en-v1": {
+    "mteb": 34.95,
+    "our6": 0.3527,
+    "ratio": 1.0091559370529326,
+    "affine_resid": -0.0032190466465965573
+   },
+   "potion-retrieval-32M": {
+    "mteb": 35.06,
+    "our6": 0.3601,
+    "ratio": 1.027096406160867,
+    "affine_resid": 0.00312940230960268
+   }
+  }
+ },
+ "candidates": {
+  "stella_en_400M_v5": {
+   "mteb_v1_retrieval": 58.97,
+   "vocab": 30528,
+   "dim": 1024,
+   "params_m": 435,
+   "licence": "MIT",
+   "vendor_tier": "clean",
+   "table_mb_fp16": 62.5,
+   "table_mb_int8": 31.3,
+   "six_est_affine": 0.5562,
+   "pred_interval_95_halfwidth": 0.0345,
+   "extrapolating_beyond_fit": true,
+   "six_est_ratio_mean": 0.5671,
+   "six_est_bge_small_anchor_PRIOR_METHOD": 0.5753,
+   "extrapolation_beyond_fit_range": 3.83,
+   "at_retention": {
+    "0.7853": {
+     "point": 0.4368,
+     "pi95_teacher_only": [
+      0.4097,
+      0.4638
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8200": {
+     "point": 0.4561,
+     "pi95_teacher_only": [
+      0.4278,
+      0.4843
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8500": {
+     "point": 0.4728,
+     "pi95_teacher_only": [
+      0.4435,
+      0.5021
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    },
+    "0.8800": {
+     "point": 0.4895,
+     "pi95_teacher_only": [
+      0.4591,
+      0.5198
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": true
+     }
+    },
+    "0.9100": {
+     "point": 0.5061,
+     "pi95_teacher_only": [
+      0.4748,
+      0.5375
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": true
+     }
+    }
+   }
+  },
+  "gte-large-en-v1.5": {
+   "mteb_v1_retrieval": 57.91,
+   "vocab": 30528,
+   "dim": 1024,
+   "params_m": 434,
+   "licence": "Apache-2.0",
+   "vendor_tier": "justify-alibaba",
+   "table_mb_fp16": 62.5,
+   "table_mb_int8": 31.3,
+   "six_est_affine": 0.5473,
+   "pred_interval_95_halfwidth": 0.0329,
+   "extrapolating_beyond_fit": true,
+   "six_est_ratio_mean": 0.5569,
+   "six_est_bge_small_anchor_PRIOR_METHOD": 0.565,
+   "extrapolation_beyond_fit_range": 2.77,
+   "at_retention": {
+    "0.7853": {
+     "point": 0.4298,
+     "pi95_teacher_only": [
+      0.4039,
+      0.4557
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8200": {
+     "point": 0.4488,
+     "pi95_teacher_only": [
+      0.4218,
+      0.4758
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8500": {
+     "point": 0.4652,
+     "pi95_teacher_only": [
+      0.4372,
+      0.4932
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    },
+    "0.8800": {
+     "point": 0.4816,
+     "pi95_teacher_only": [
+      0.4526,
+      0.5106
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    },
+    "0.9100": {
+     "point": 0.4981,
+     "pi95_teacher_only": [
+      0.4681,
+      0.528
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": true
+     }
+    }
+   }
+  },
+  "arctic-embed-l": {
+   "mteb_v1_retrieval": 55.98,
+   "vocab": 30522,
+   "dim": 1024,
+   "params_m": 335,
+   "licence": "Apache-2.0",
+   "vendor_tier": "justify-snowflake-max",
+   "table_mb_fp16": 62.5,
+   "table_mb_int8": 31.3,
+   "six_est_affine": 0.5311,
+   "pred_interval_95_halfwidth": 0.0305,
+   "extrapolating_beyond_fit": true,
+   "six_est_ratio_mean": 0.5383,
+   "six_est_bge_small_anchor_PRIOR_METHOD": 0.5462,
+   "extrapolation_beyond_fit_range": 0.84,
+   "at_retention": {
+    "0.7853": {
+     "point": 0.4171,
+     "pi95_teacher_only": [
+      0.3931,
+      0.4411
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8200": {
+     "point": 0.4355,
+     "pi95_teacher_only": [
+      0.4105,
+      0.4606
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8500": {
+     "point": 0.4515,
+     "pi95_teacher_only": [
+      0.4255,
+      0.4774
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8800": {
+     "point": 0.4674,
+     "pi95_teacher_only": [
+      0.4405,
+      0.4943
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    },
+    "0.9100": {
+     "point": 0.4833,
+     "pi95_teacher_only": [
+      0.4555,
+      0.5111
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    }
+   }
+  },
+  "gte-modernbert-base": {
+   "mteb_v1_retrieval": 55.33,
+   "vocab": 50368,
+   "dim": 768,
+   "params_m": 149,
+   "licence": "Apache-2.0",
+   "vendor_tier": "justify-alibaba",
+   "table_mb_fp16": 77.4,
+   "table_mb_int8": 38.7,
+   "six_est_affine": 0.5257,
+   "pred_interval_95_halfwidth": 0.0299,
+   "extrapolating_beyond_fit": true,
+   "six_est_ratio_mean": 0.5321,
+   "six_est_bge_small_anchor_PRIOR_METHOD": 0.5398,
+   "extrapolation_beyond_fit_range": 0.19,
+   "at_retention": {
+    "0.7853": {
+     "point": 0.4128,
+     "pi95_teacher_only": [
+      0.3894,
+      0.4363
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8200": {
+     "point": 0.4311,
+     "pi95_teacher_only": [
+      0.4066,
+      0.4555
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8500": {
+     "point": 0.4468,
+     "pi95_teacher_only": [
+      0.4214,
+      0.4722
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8800": {
+     "point": 0.4626,
+     "pi95_teacher_only": [
+      0.4363,
+      0.4889
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    },
+    "0.9100": {
+     "point": 0.4784,
+     "pi95_teacher_only": [
+      0.4512,
+      0.5055
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    }
+   }
+  },
+  "arctic-embed-m-v1.5": {
+   "mteb_v1_retrieval": 55.14,
+   "vocab": 30522,
+   "dim": 768,
+   "params_m": 109,
+   "licence": "Apache-2.0",
+   "vendor_tier": "justify-snowflake-max",
+   "table_mb_fp16": 46.9,
+   "table_mb_int8": 23.4,
+   "six_est_affine": 0.5241,
+   "pred_interval_95_halfwidth": 0.0297,
+   "extrapolating_beyond_fit": false,
+   "six_est_ratio_mean": 0.5302,
+   "six_est_bge_small_anchor_PRIOR_METHOD": 0.538,
+   "extrapolation_beyond_fit_range": 0.0,
+   "at_retention": {
+    "0.7853": {
+     "point": 0.4116,
+     "pi95_teacher_only": [
+      0.3883,
+      0.4349
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8200": {
+     "point": 0.4297,
+     "pi95_teacher_only": [
+      0.4054,
+      0.4541
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8500": {
+     "point": 0.4455,
+     "pi95_teacher_only": [
+      0.4202,
+      0.4707
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8800": {
+     "point": 0.4612,
+     "pi95_teacher_only": [
+      0.4351,
+      0.4873
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    },
+    "0.9100": {
+     "point": 0.4769,
+     "pi95_teacher_only": [
+      0.4499,
+      0.5039
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    }
+   }
+  },
+  "bge-large-en-v1.5": {
+   "mteb_v1_retrieval": 54.29,
+   "vocab": 30522,
+   "dim": 1024,
+   "params_m": 335,
+   "licence": "MIT",
+   "vendor_tier": "clean",
+   "table_mb_fp16": 62.5,
+   "table_mb_int8": 31.3,
+   "six_est_affine": 0.5169,
+   "pred_interval_95_halfwidth": 0.0289,
+   "extrapolating_beyond_fit": false,
+   "six_est_ratio_mean": 0.5221,
+   "six_est_bge_small_anchor_PRIOR_METHOD": 0.5297,
+   "extrapolation_beyond_fit_range": -0.85,
+   "at_retention": {
+    "0.7853": {
+     "point": 0.406,
+     "pi95_teacher_only": [
+      0.3832,
+      0.4287
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8200": {
+     "point": 0.4239,
+     "pi95_teacher_only": [
+      0.4002,
+      0.4476
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8500": {
+     "point": 0.4394,
+     "pi95_teacher_only": [
+      0.4148,
+      0.464
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8800": {
+     "point": 0.4549,
+     "pi95_teacher_only": [
+      0.4295,
+      0.4804
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.9100": {
+     "point": 0.4704,
+     "pi95_teacher_only": [
+      0.4441,
+      0.4967
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    }
+   }
+  },
+  "gte-base-en-v1.5": {
+   "mteb_v1_retrieval": 54.09,
+   "vocab": 30528,
+   "dim": 768,
+   "params_m": 137,
+   "licence": "Apache-2.0",
+   "vendor_tier": "justify-alibaba",
+   "table_mb_fp16": 46.9,
+   "table_mb_int8": 23.4,
+   "six_est_affine": 0.5153,
+   "pred_interval_95_halfwidth": 0.0288,
+   "extrapolating_beyond_fit": false,
+   "six_est_ratio_mean": 0.5201,
+   "six_est_bge_small_anchor_PRIOR_METHOD": 0.5277,
+   "extrapolation_beyond_fit_range": -1.05,
+   "at_retention": {
+    "0.7853": {
+     "point": 0.4046,
+     "pi95_teacher_only": [
+      0.3821,
+      0.4272
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8200": {
+     "point": 0.4225,
+     "pi95_teacher_only": [
+      0.3989,
+      0.4461
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8500": {
+     "point": 0.438,
+     "pi95_teacher_only": [
+      0.4135,
+      0.4624
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8800": {
+     "point": 0.4534,
+     "pi95_teacher_only": [
+      0.4281,
+      0.4788
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.9100": {
+     "point": 0.4689,
+     "pi95_teacher_only": [
+      0.4427,
+      0.4951
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    }
+   }
+  },
+  "bge-base-en-v1.5 (current)": {
+   "mteb_v1_retrieval": 53.25,
+   "vocab": 30522,
+   "dim": 768,
+   "params_m": 109,
+   "licence": "MIT",
+   "vendor_tier": "clean",
+   "table_mb_fp16": 46.9,
+   "table_mb_int8": 23.4,
+   "six_est_affine": 0.5082,
+   "pred_interval_95_halfwidth": 0.0282,
+   "extrapolating_beyond_fit": false,
+   "six_est_ratio_mean": 0.5121,
+   "six_est_bge_small_anchor_PRIOR_METHOD": 0.5195,
+   "extrapolation_beyond_fit_range": -1.89,
+   "at_retention": {
+    "0.7853": {
+     "point": 0.3991,
+     "pi95_teacher_only": [
+      0.377,
+      0.4212
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8200": {
+     "point": 0.4167,
+     "pi95_teacher_only": [
+      0.3936,
+      0.4399
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8500": {
+     "point": 0.432,
+     "pi95_teacher_only": [
+      0.408,
+      0.4559
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8800": {
+     "point": 0.4472,
+     "pi95_teacher_only": [
+      0.4224,
+      0.472
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.9100": {
+     "point": 0.4625,
+     "pi95_teacher_only": [
+      0.4368,
+      0.4881
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    }
+   }
+  },
+  "granite-embedding-english-r2": {
+   "mteb_v1_retrieval": 53.1,
+   "vocab": 50368,
+   "dim": 768,
+   "params_m": 149,
+   "licence": "Apache-2.0",
+   "vendor_tier": "justify-ibm",
+   "table_mb_fp16": 77.4,
+   "table_mb_int8": 38.7,
+   "six_est_affine": 0.507,
+   "pred_interval_95_halfwidth": 0.0281,
+   "extrapolating_beyond_fit": false,
+   "six_est_ratio_mean": 0.5106,
+   "six_est_bge_small_anchor_PRIOR_METHOD": 0.5181,
+   "extrapolation_beyond_fit_range": -2.04,
+   "at_retention": {
+    "0.7853": {
+     "point": 0.3981,
+     "pi95_teacher_only": [
+      0.3761,
+      0.4202
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8200": {
+     "point": 0.4157,
+     "pi95_teacher_only": [
+      0.3927,
+      0.4388
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8500": {
+     "point": 0.4309,
+     "pi95_teacher_only": [
+      0.407,
+      0.4548
+     ],
+     "clears_lower_bound": {
+      "bm25": false,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.8800": {
+     "point": 0.4461,
+     "pi95_teacher_only": [
+      0.4214,
+      0.4709
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     }
+    },
+    "0.9100": {
+     "point": 0.4613,
+     "pi95_teacher_only": [
+      0.4358,
+      0.4869
+     ],
+     "clears_lower_bound": {
+      "bm25": true,
+      "tier2_release": false,
+      "tier1_aim": false
+     },
+     "point_clears": {
+      "bm25": true,
+      "tier2_release": true,
+      "tier1_aim": false
+     }
+    }
+   }
+  }
+ }
+}

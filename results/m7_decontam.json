@@ -1,0 +1,97 @@
+{
+ "n_train_pairs_in": 353519,
+ "n_train_pairs_kept": 347543,
+ "R1_query_removals": {
+  "hotpotqa-train": {
+   "exact": 0,
+   "near": 1169
+  },
+  "fever-train": {
+   "exact": 2,
+   "near": 4428
+  },
+  "squad-train": {
+   "exact": 0,
+   "near": 265
+  },
+  "esci-us": {
+   "exact": 18,
+   "near": 1
+  },
+  "mrtydi-en": {
+   "exact": 1,
+   "near": 47
+  }
+ },
+ "R1_total": 5931,
+ "R2_six_doc_removals": {
+  "hotpotqa-train": 25,
+  "fever-train": 3,
+  "squad-train": 15,
+  "esci-us": 1,
+  "mrtydi-en": 1
+ },
+ "R2_total": 45,
+ "R3_disclosed_overlap": {
+  "six (also the R2 removal basis)": {
+   "protected_docs_scanned": 272117,
+   "train_docs_exact_dup": 0,
+   "train_docs_near_dup": 23,
+   "train_docs_total": 854914,
+   "near_dup_rate": 3e-05
+  },
+  "cqadupstack-dev": {
+   "protected_docs_scanned": 70492,
+   "train_docs_exact_dup": 0,
+   "train_docs_near_dup": 1,
+   "train_docs_total": 854914,
+   "near_dup_rate": 0.0
+  },
+  "nq-250k-dev": {
+   "protected_docs_scanned": 250000,
+   "train_docs_exact_dup": 404,
+   "train_docs_near_dup": 3919,
+   "train_docs_total": 854914,
+   "near_dup_rate": 0.00458
+  },
+  "dbpedia-entity-untouched": {
+   "protected_docs_scanned": 4635922,
+   "train_docs_exact_dup": 15474,
+   "train_docs_near_dup": 79354,
+   "train_docs_total": 854914,
+   "near_dup_rate": 0.09298
+  },
+  "fever-untouched": {
+   "protected_docs_scanned": 5416568,
+   "train_docs_exact_dup": 46533,
+   "train_docs_near_dup": 95350,
+   "train_docs_total": 854914,
+   "near_dup_rate": 0.11178
+  },
+  "cqadupstack-untouched (android+english)": {
+   "protected_docs_scanned": 63219,
+   "train_docs_exact_dup": 0,
+   "train_docs_near_dup": 1,
+   "train_docs_total": 854914,
+   "near_dup_rate": 0.0
+  },
+  "hotpotqa-dev": "100% by construction: hotpotqa-corpus IS the dev corpus"
+ },
+ "protected_queries": {
+  "six": 3727,
+  "dev": 12772,
+  "untouched-final": 9335
+ },
+ "params": {
+  "ngram": 8,
+  "sketch": 32,
+  "dup_share": 8,
+  "hash": "blake2b-64 word hashes, polynomial rolling n-gram, bottom-k sketch"
+ },
+ "rules": {
+  "R1": "remove on query overlap (all partitions)",
+  "R2": "remove on positive-document overlap with the six",
+  "R3": "measure and disclose document overlap with dev and untouched-final; see the module docstring and m7/LEDGER.md for why removal there would delete the sources rather than decontaminate them"
+ },
+ "seconds": 2645.4
+}

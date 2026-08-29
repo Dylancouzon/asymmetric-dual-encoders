@@ -1,0 +1,211 @@
+{
+ "_note": "Per-component decomposition of the dev fusion gain for the frozen spec in results/m7_fusion_<run>.json. The macro alone cannot tell a broad gain from a one-component gain, and the six-set has no NQ-like component, so transfer depends on the breadth of this table -- especially the CQADupStack rows, the nearest dev analogue to FiQA. Dev only.",
+ "run_id": "p35w-2m-s2500",
+ "spec": {
+  "family": "convex0",
+  "param": 0.8,
+  "depth": 1000
+ },
+ "per_component": {
+  "nq-250k": {
+   "dense": 0.8006,
+   "bm25": 0.5804,
+   "fused": 0.8016
+  },
+  "hotpotqa": {
+   "dense": 0.6128,
+   "bm25": 0.5851,
+   "fused": 0.6993
+  },
+  "cqadup-programmers": {
+   "dense": 0.3389,
+   "bm25": 0.2975,
+   "fused": 0.3702
+  },
+  "cqadup-physics": {
+   "dense": 0.3957,
+   "bm25": 0.3471,
+   "fused": 0.4196
+  }
+ },
+ "macro": {
+  "dense": 0.537,
+  "bm25": 0.4525,
+  "fused": 0.5727
+ },
+ "macro_gain_fused_over_dense": 0.0357,
+ "fused_vs_dense": {
+  "delta": 0.0356,
+  "ci95": [
+   0.0314,
+   0.0399
+  ],
+  "delta_raw": 0.035639528086380115,
+  "ci95_raw": [
+   0.031430116173305496,
+   0.03986011162622497
+  ],
+  "boot_tail": 0.0,
+  "boot_tail_str": "<0.0001",
+  "_boot_tail_note": "bootstrap tail mass, NOT a p-value; use signflip() for p",
+  "alternative": "greater",
+  "B": 10000,
+  "seed": 0,
+  "one_sided_lower_2.5": 0.0314,
+  "one_sided_lower_raw": {
+   "2.5": 0.031430116173305496,
+   "0.8333": 0.030501583952666403
+  },
+  "per_dataset": {
+   "cqadup-physics": {
+    "n": 1039,
+    "delta": 0.0239,
+    "ci95": [
+     0.0141,
+     0.0335
+    ]
+   },
+   "cqadup-programmers": {
+    "n": 876,
+    "delta": 0.0312,
+    "ci95": [
+     0.0194,
+     0.0434
+    ]
+   },
+   "hotpotqa": {
+    "n": 7405,
+    "delta": 0.0865,
+    "ci95": [
+     0.0824,
+     0.0906
+    ]
+   },
+   "nq-250k": {
+    "n": 3452,
+    "delta": 0.0009,
+    "ci95": [
+     -0.0048,
+     0.0066
+    ]
+   }
+  },
+  "resolved": true
+ },
+ "fused_vs_bm25": {
+  "delta": 0.1201,
+  "ci95": [
+   0.1138,
+   0.1266
+  ],
+  "delta_raw": 0.12014926499886859,
+  "ci95_raw": [
+   0.11384249875588401,
+   0.1265948046377175
+  ],
+  "boot_tail": 0.0,
+  "boot_tail_str": "<0.0001",
+  "_boot_tail_note": "bootstrap tail mass, NOT a p-value; use signflip() for p",
+  "alternative": "greater",
+  "B": 10000,
+  "seed": 0,
+  "one_sided_lower_2.5": 0.1138,
+  "one_sided_lower_raw": {
+   "2.5": 0.11384249875588401,
+   "0.8333": 0.11238248738245207
+  },
+  "per_dataset": {
+   "cqadup-physics": {
+    "n": 1039,
+    "delta": 0.0726,
+    "ci95": [
+     0.058,
+     0.0872
+    ]
+   },
+   "cqadup-programmers": {
+    "n": 876,
+    "delta": 0.0726,
+    "ci95": [
+     0.0562,
+     0.0894
+    ]
+   },
+   "hotpotqa": {
+    "n": 7405,
+    "delta": 0.1142,
+    "ci95": [
+     0.1085,
+     0.1201
+    ]
+   },
+   "nq-250k": {
+    "n": 3452,
+    "delta": 0.2212,
+    "ci95": [
+     0.2104,
+     0.2319
+    ]
+   }
+  },
+  "resolved": true
+ },
+ "dense_vs_bm25": {
+  "delta": 0.0845,
+  "ci95": [
+   0.0764,
+   0.0926
+  ],
+  "delta_raw": 0.08450973691248848,
+  "ci95_raw": [
+   0.07642076607986995,
+   0.09256273896735255
+  ],
+  "boot_tail": 0.0,
+  "boot_tail_str": "<0.0001",
+  "_boot_tail_note": "bootstrap tail mass, NOT a p-value; use signflip() for p",
+  "alternative": "greater",
+  "B": 10000,
+  "seed": 0,
+  "one_sided_lower_2.5": 0.0764,
+  "one_sided_lower_raw": {
+   "2.5": 0.07642076607986995,
+   "0.8333": 0.0747224642903382
+  },
+  "per_dataset": {
+   "cqadup-physics": {
+    "n": 1039,
+    "delta": 0.0486,
+    "ci95": [
+     0.0302,
+     0.0674
+    ]
+   },
+   "cqadup-programmers": {
+    "n": 876,
+    "delta": 0.0414,
+    "ci95": [
+     0.0199,
+     0.0627
+    ]
+   },
+   "hotpotqa": {
+    "n": 7405,
+    "delta": 0.0277,
+    "ci95": [
+     0.0204,
+     0.035
+    ]
+   },
+   "nq-250k": {
+    "n": 3452,
+    "delta": 0.2203,
+    "ci95": [
+     0.2072,
+     0.233
+    ]
+   }
+  },
+  "resolved": true
+ }
+}

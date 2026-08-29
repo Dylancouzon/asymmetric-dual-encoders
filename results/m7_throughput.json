@@ -1,0 +1,50 @@
+{
+ "sample": {
+  "n": 10000,
+  "mean_tokens": 166.9,
+  "p95_tokens": 486
+ },
+ "teacher": {
+  "model": "BAAI/bge-base-en-v1.5",
+  "revision": "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a"
+ },
+ "runs": {
+  "fp32": {
+   "texts_per_s": 377.1,
+   "tokens_per_s": 62934,
+   "peak_vram_gb": 1.04,
+   "cos_vs_fp32": 1.0,
+   "batch_tokens": 16384
+  },
+  "fp16": {
+   "texts_per_s": 891.2,
+   "tokens_per_s": 148726,
+   "peak_vram_gb": 1.27,
+   "cos_vs_fp32": 1.0,
+   "batch_tokens": 32768
+  },
+  "bf16": {
+   "texts_per_s": 889.6,
+   "tokens_per_s": 148457,
+   "peak_vram_gb": 1.49,
+   "cos_vs_fp32": 0.999966,
+   "batch_tokens": 32768
+  }
+ },
+ "extrapolation_fp32_hours": {
+  "the six (269K docs)": 0.2,
+  "miracl-en (32.9M passages)": 24.23,
+  "nq-dev-250K": 0.18,
+  "hotpotqa (5.2M)": 3.85,
+  "esci (1.8M products)": 1.33,
+  "fever-wiki (5.4M)": 3.98
+ },
+ "storage_gb_fp16_768d": {
+  "the six (269K)": 0.41,
+  "nq-dev-250K": 0.38,
+  "hotpotqa (5.2M)": 8.04,
+  "esci (1.8M)": 2.76,
+  "fever-wiki (5.4M)": 8.29,
+  "miracl-en (32.9M)": 50.53
+ }
+}

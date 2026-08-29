@@ -1,0 +1,41 @@
+{
+ "_note": "cross-arm winner judged on the FULL pinned dev suite per the amended phase-2 selection rule; per-arm steps were chosen on best proxy eval. Dev-stage selection.",
+ "full_suite_macros": {
+  "s2w-3e4-s1500": 0.5907,
+  "s2w-1e3-s1000": 0.5987
+ },
+ "pairwise_1e3s1000_minus_3e4s1500": {
+  "delta": 0.0079,
+  "ci95": [
+   0.0057,
+   0.0106
+  ],
+  "resolved": true,
+  "signflip": {
+   "delta": 0.0079,
+   "p": 9.99990000099999e-06,
+   "p_str": "1.00e-05 (MC floor 1/(R+1))",
+   "R": 100000,
+   "seed": 0,
+   "alternative": "two-sided",
+   "method": "paired sign-flip randomization, macro-structured",
+   "per_dataset_n": {
+    "cqadup-physics": 1039,
+    "cqadup-programmers": 876,
+    "heldout-longq": 55,
+    "heldout-train": 7325,
+    "hotpotqa": 7405,
+    "nq-250k": 3452
+   },
+   "per_dataset_nonzero": {
+    "cqadup-physics": 194,
+    "cqadup-programmers": 148,
+    "heldout-longq": 12,
+    "heldout-train": 1987,
+    "hotpotqa": 2201,
+    "nq-250k": 422
+   }
+  }
+ },
+ "winner": "s2w-1e3-s1000"
+}

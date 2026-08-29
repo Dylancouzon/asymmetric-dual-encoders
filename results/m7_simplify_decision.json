@@ -1,0 +1,69 @@
+{
+ "_what": "recipe simplification, judged by the pre-registered non-inferiority rule",
+ "_protocol": "m7/LEDGER.md 'Recipe simplification', fixed before any number: accept iff the dependence-preserving raw paired 95% CI lower bound > -0.004 in fp16 AND int8. One arm, no ladder of fallbacks -- backing off component by component until something passes would be adaptive dev search.",
+ "_framing": "A reproducibility and over-engineering fix, not a quality change. Acceptance means the removed components were not carrying the number; it is not evidence that removing them helps.",
+ "_status": "exploratory dev SELECTION evidence",
+ "_ood_disclosure": "cqadup-programmers + cqadup-physics, the only dev components outside the TRAIN mix and its Wikipedia family. Disclosure only; not in the bar.",
+ "compare_artifact": "m7_compare_full_simplify.json",
+ "simplified": "p5s-simple-nohn-a",
+ "baseline": "p35w-2m-s2500",
+ "margin": 0.004,
+ "macro_fp16": {
+  "p5s-simple-nohn-a": 0.610454185843503,
+  "p35w-2m-s2500": 0.6152807763360729
+ },
+ "macro_int8": {
+  "p5s-simple-nohn-a": 0.6104529177805845,
+  "p35w-2m-s2500": 0.6153180182243478
+ },
+ "ood_macro_fp16": {
+  "p5s-simple-nohn-a": 0.3627242511867106,
+  "p35w-2m-s2500": 0.3672423408152648
+ },
+ "per_component_fp16": {
+  "p5s-simple-nohn-a": {
+   "nq-250k": 0.8062111530684682,
+   "hotpotqa": 0.6066143814200992,
+   "cqadup-programmers": 0.3346822938895072,
+   "cqadup-physics": 0.3907662084839139,
+   "heldout-train": 0.6325889823645613,
+   "heldout-longq": 0.8918620958344674
+  },
+  "p35w-2m-s2500": {
+   "nq-250k": 0.8009113602957164,
+   "hotpotqa": 0.6127323473239226,
+   "cqadup-programmers": 0.33875407187121787,
+   "cqadup-physics": 0.39573060975931174,
+   "heldout-train": 0.6316216108867948,
+   "heldout-longq": 0.9119346578794745
+  }
+ },
+ "stats": {
+  "fp16": {
+   "delta_raw": -0.004826590492570097,
+   "ci95_raw": [
+    -0.010220678622440325,
+    0.0007202960429344526
+   ],
+   "signflip_p": 0.956210437895621,
+   "non_inferior": false
+  },
+  "int8": {
+   "delta_raw": -0.004865100443763204,
+   "ci95_raw": [
+    -0.010235574864993898,
+    0.0006713814745580227
+   ],
+   "signflip_p": 0.957510424895751,
+   "non_inferior": false
+  }
+ },
+ "removed_and_what_it_buys": {
+  "init=teacher -> input_emb": "30,522 teacher forward passes to build the init rows",
+  "b_pseudo_queries request 2m -> 500k": "2.85x less pseudo-query generation and teacher encoding -- the REALISED pools are 924,704 and 324,704 spans, not 2m and 500k; build() saturates",
+  "idf_init_weights True -> False": "an IDF pass over the training queries",
+  "reg_init 1e-3 -> 0.0": "a penalty term and the W0 anchor it needs"
+ },
+ "accepted": false,
+ "consequence": "the measured recipe ships unchanged. WHY it failed is NOT established: single-knob main effects sum to about +0.0015 against this joint -0.0048, a gap the size of the recipe-perturbation band, so interaction and one unlucky draw are not separable. Do not report this as evidence that inert components interact."
+}

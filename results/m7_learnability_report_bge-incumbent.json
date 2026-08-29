@@ -1,0 +1,361 @@
+{
+ "_note": "Teacher candidates ranked by the score of the CLOSED-FORM table fitted against them, not by their own symmetric ceiling. Fitted on TRAIN query vectors, measured on the two CQADupStack dev components against that teacher's own documents. Paired bootstrap against the incumbent's table: same components, queries and qrels, so the pairing is valid. Closed-form and flat -- training moves a table (see m7_ridge_vs_trained.json), so this ranks candidates rather than predicting final scores, and it is a DEV selection: the six are unread.",
+ "components": [
+  "cqadup-programmers",
+  "cqadup-physics"
+ ],
+ "incumbent": "bge-base-en-v1.5",
+ "ranked_by_table_macro": [
+  "stella-400M-v5",
+  "bge-base-en-v1.5",
+  "bge-large-en-v1.5",
+  "e5-base-v2",
+  "arctic-embed-l",
+  "e5-large-v2",
+  "arctic-embed-l-mean",
+  "gte-large-en-v1.5"
+ ],
+ "candidates": {
+  "arctic-embed-l-mean": {
+   "dim": 1024,
+   "best_lambda": 0.0001,
+   "table_macro_2": 0.221,
+   "cosine_agreement": 0.7804,
+   "teacher_ceiling_2": 0.4684,
+   "ratio_table_over_ceiling": 0.4718,
+   "lambda_curve": {
+    "0.0001": 0.221,
+    "0.001": 0.221,
+    "0.01": 0.2138
+   }
+  },
+  "arctic-embed-l": {
+   "dim": 1024,
+   "best_lambda": 0.001,
+   "table_macro_2": 0.2594,
+   "cosine_agreement": 0.7507,
+   "teacher_ceiling_2": 0.4931,
+   "ratio_table_over_ceiling": 0.5261,
+   "lambda_curve": {
+    "0.0001": 0.2583,
+    "0.001": 0.2594,
+    "0.01": 0.2512,
+    "0.1": 0.1779
+   }
+  },
+  "bge-base-en-v1.5": {
+   "dim": 768,
+   "best_lambda": 0.01,
+   "table_macro_2": 0.3074,
+   "cosine_agreement": 0.8163,
+   "teacher_ceiling_2": 0.4484,
+   "ratio_table_over_ceiling": 0.6855,
+   "lambda_curve": {
+    "0.0001": 0.3021,
+    "0.001": 0.3044,
+    "0.01": 0.3074
+   }
+  },
+  "bge-large-en-v1.5": {
+   "dim": 1024,
+   "best_lambda": 0.001,
+   "table_macro_2": 0.2751,
+   "cosine_agreement": 0.7982,
+   "teacher_ceiling_2": 0.4486,
+   "ratio_table_over_ceiling": 0.6132,
+   "lambda_curve": {
+    "0.0001": 0.2719,
+    "0.001": 0.2751,
+    "0.01": 0.275
+   }
+  },
+  "e5-base-v2": {
+   "dim": 768,
+   "best_lambda": 0.01,
+   "table_macro_2": 0.2645,
+   "cosine_agreement": 0.9088,
+   "teacher_ceiling_2": 0.3928,
+   "ratio_table_over_ceiling": 0.6734,
+   "lambda_curve": {
+    "0.0001": 0.2621,
+    "0.001": 0.2637,
+    "0.01": 0.2645
+   }
+  },
+  "e5-large-v2": {
+   "dim": 1024,
+   "best_lambda": 0.001,
+   "table_macro_2": 0.2441,
+   "cosine_agreement": 0.8933,
+   "teacher_ceiling_2": 0.3888,
+   "ratio_table_over_ceiling": 0.6278,
+   "lambda_curve": {
+    "0.0001": 0.2432,
+    "0.001": 0.2441,
+    "0.01": 0.242
+   }
+  },
+  "gte-large-en-v1.5": {
+   "dim": 1024,
+   "best_lambda": 0.001,
+   "table_macro_2": 0.2033,
+   "cosine_agreement": 0.7195,
+   "teacher_ceiling_2": 0.4711,
+   "ratio_table_over_ceiling": 0.4315,
+   "lambda_curve": {
+    "0.0001": 0.2018,
+    "0.001": 0.2033,
+    "0.01": 0.2029
+   }
+  },
+  "stella-400M-v5": {
+   "dim": 1024,
+   "best_lambda": 0.01,
+   "table_macro_2": 0.3439,
+   "cosine_agreement": 0.7958,
+   "teacher_ceiling_2": 0.4806,
+   "ratio_table_over_ceiling": 0.7156,
+   "lambda_curve": {
+    "0.0001": 0.3407,
+    "0.001": 0.343,
+    "0.01": 0.3439,
+    "0.1": 0.3248
+   }
+  }
+ },
+ "vs_incumbent_boot": {
+  "stella-400M-v5": {
+   "delta": 0.0365,
+   "ci95": [
+    0.0249,
+    0.0481
+   ],
+   "p": 0.0,
+   "p_str": "<0.0001",
+   "alternative": "two-sided",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": null,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": 0.0262,
+     "ci95": [
+      0.0099,
+      0.0423
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": 0.0468,
+     "ci95": [
+      0.0294,
+      0.0639
+     ]
+    }
+   },
+   "resolved": true
+  },
+  "bge-large-en-v1.5": {
+   "delta": -0.0324,
+   "ci95": [
+    -0.0433,
+    -0.0214
+   ],
+   "p": 0.0,
+   "p_str": "<0.0001",
+   "alternative": "two-sided",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": null,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": -0.0208,
+     "ci95": [
+      -0.0354,
+      -0.0062
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": -0.044,
+     "ci95": [
+      -0.0602,
+      -0.0281
+     ]
+    }
+   },
+   "resolved": true
+  },
+  "e5-base-v2": {
+   "delta": -0.0429,
+   "ci95": [
+    -0.0557,
+    -0.0301
+   ],
+   "p": 0.0,
+   "p_str": "<0.0001",
+   "alternative": "two-sided",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": null,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": -0.0538,
+     "ci95": [
+      -0.0719,
+      -0.036
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": -0.032,
+     "ci95": [
+      -0.0513,
+      -0.0133
+     ]
+    }
+   },
+   "resolved": true
+  },
+  "arctic-embed-l": {
+   "delta": -0.048,
+   "ci95": [
+    -0.0608,
+    -0.0349
+   ],
+   "p": 0.0,
+   "p_str": "<0.0001",
+   "alternative": "two-sided",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": null,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": -0.0251,
+     "ci95": [
+      -0.0416,
+      -0.0078
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": -0.071,
+     "ci95": [
+      -0.0909,
+      -0.0511
+     ]
+    }
+   },
+   "resolved": true
+  },
+  "e5-large-v2": {
+   "delta": -0.0634,
+   "ci95": [
+    -0.0773,
+    -0.0493
+   ],
+   "p": 0.0,
+   "p_str": "<0.0001",
+   "alternative": "two-sided",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": null,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": -0.0601,
+     "ci95": [
+      -0.0796,
+      -0.0406
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": -0.0666,
+     "ci95": [
+      -0.0868,
+      -0.0465
+     ]
+    }
+   },
+   "resolved": true
+  },
+  "arctic-embed-l-mean": {
+   "delta": -0.0864,
+   "ci95": [
+    -0.1002,
+    -0.0723
+   ],
+   "p": 0.0,
+   "p_str": "<0.0001",
+   "alternative": "two-sided",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": null,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": -0.0664,
+     "ci95": [
+      -0.0846,
+      -0.0484
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": -0.1064,
+     "ci95": [
+      -0.1274,
+      -0.0852
+     ]
+    }
+   },
+   "resolved": true
+  },
+  "gte-large-en-v1.5": {
+   "delta": -0.1041,
+   "ci95": [
+    -0.118,
+    -0.0905
+   ],
+   "p": 0.0,
+   "p_str": "<0.0001",
+   "alternative": "two-sided",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": null,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": -0.0675,
+     "ci95": [
+      -0.086,
+      -0.0493
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": -0.1407,
+     "ci95": [
+      -0.1613,
+      -0.1202
+     ]
+    }
+   },
+   "resolved": true
+  }
+ },
+ "ceiling_vs_table": {
+  "n": 8,
+  "spearman_ceiling_vs_table": 0.0,
+  "spearman_p": 1.0,
+  "pearson_ceiling_vs_table": 0.104,
+  "spearman_ceiling_vs_ratio": -0.286,
+  "ratio_p": 0.493,
+  "_reading": "A teacher's own retrieval quality does not predict the quality of the table distilled from it, and its correlation with APPROXIMABILITY is negative: the better the tower, the harder a bag of token vectors finds it. Selecting a teacher on MTEB score or on a symmetric probe is therefore selecting on close to the wrong thing -- which is what this project did until 2026-08-26."
+ }
+}

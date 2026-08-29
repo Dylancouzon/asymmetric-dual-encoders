@@ -1,0 +1,38 @@
+{
+ "_note": "RESEARCH-ONLY msmarco decontamination for the clean-stack-tax arm (m7/LEDGER.md). R3 sweeps for FEVER/DBpedia skipped: M8-reserved. Pool-ban vacuous: side-bank positives never enter negative sampling.",
+ "source": "msmarco-train",
+ "pairs_total": 502939,
+ "pairs_train_side": 492920,
+ "r1_removed": {
+  "exact": 9,
+  "near": 2601,
+  "contains": 2,
+  "total": 2612
+ },
+ "r2_removed_pairs": 67,
+ "kept_pairs": 490241,
+ "r3_disclosure": {
+  "six": {
+   "protected_docs_scanned": 272117,
+   "train_docs_exact_dup": 1,
+   "train_docs_near_dup": 61,
+   "train_docs_total": 503852,
+   "near_dup_rate": 0.00012
+  },
+  "cqadupstack-dev": {
+   "protected_docs_scanned": 70492,
+   "train_docs_exact_dup": 0,
+   "train_docs_near_dup": 7,
+   "train_docs_total": 503852,
+   "near_dup_rate": 1e-05
+  },
+  "nq-250k-dev": {
+   "protected_docs_scanned": 250000,
+   "train_docs_exact_dup": 17,
+   "train_docs_near_dup": 2301,
+   "train_docs_total": 503852,
+   "near_dup_rate": 0.00457
+  }
+ },
+ "seconds": 237.4
+}

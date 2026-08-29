@@ -1,0 +1,99 @@
+{
+ "S": 4000,
+ "R": 2000,
+ "B": 10000,
+ "alpha": 0.025,
+ "bonferroni_level": 0.008333333333333333,
+ "binomial_se_at_alpha": 0.0025,
+ "candidates": [
+  "bge-small-en-v1.5",
+  "lr-dense-websearch"
+ ],
+ "comparators": [
+  "lr-dense-pertask",
+  "bm25",
+  "opensearch-doc-v3-gte"
+ ],
+ "_null": "each (comparison, dataset) per-query difference vector centered to mean zero; all three weak nulls true by construction; queries resampled within dataset, the SAME resample feeding all three comparisons",
+ "_rule": "Holm(sign-flip) at family alpha AND raw paired CI lower > 0 AND raw one-sided lower at alpha/3 > 0 -- final_run.py as written",
+ "_deviations": "R=2,000 sign-flip replicates instead of the run's 100,000; one shared randomization draw per dataset across the three comparisons (which the real run also does, since boot seeds every call with SEED=0)",
+ "results": {
+  "bge-small-en-v1.5": {
+   "family": {
+    "any_reject": 0.0198,
+    "any_signflip_holm": 0.021,
+    "any_ci25": 0.062,
+    "any_bonf": 0.0227,
+    "any_reject_studentized": 0.0203
+   },
+   "per_comparison": {
+    "lr-dense-pertask": {
+     "reject": 0.0088,
+     "signflip_holm": 0.009,
+     "ci25": 0.024,
+     "bonf": 0.0097,
+     "signflip_raw_0.025": 0.021,
+     "signflip_raw_bonf": 0.009,
+     "studentized_raw_bonf": 0.009
+    },
+    "bm25": {
+     "reject": 0.0077,
+     "signflip_holm": 0.0092,
+     "ci25": 0.0262,
+     "bonf": 0.009,
+     "signflip_raw_0.025": 0.0238,
+     "signflip_raw_bonf": 0.0075,
+     "studentized_raw_bonf": 0.0077
+    },
+    "opensearch-doc-v3-gte": {
+     "reject": 0.007,
+     "signflip_holm": 0.008,
+     "ci25": 0.0238,
+     "bonf": 0.0077,
+     "signflip_raw_0.025": 0.023,
+     "signflip_raw_bonf": 0.0077,
+     "studentized_raw_bonf": 0.0075
+    }
+   }
+  },
+  "lr-dense-websearch": {
+   "family": {
+    "any_reject": 0.0283,
+    "any_signflip_holm": 0.0305,
+    "any_ci25": 0.0818,
+    "any_bonf": 0.0305,
+    "any_reject_studentized": 0.0278
+   },
+   "per_comparison": {
+    "lr-dense-pertask": {
+     "reject": 0.0125,
+     "signflip_holm": 0.0135,
+     "ci25": 0.0357,
+     "bonf": 0.0135,
+     "signflip_raw_0.025": 0.034,
+     "signflip_raw_bonf": 0.0132,
+     "studentized_raw_bonf": 0.013
+    },
+    "bm25": {
+     "reject": 0.0085,
+     "signflip_holm": 0.01,
+     "ci25": 0.0275,
+     "bonf": 0.0095,
+     "signflip_raw_0.025": 0.0275,
+     "signflip_raw_bonf": 0.0088,
+     "studentized_raw_bonf": 0.0083
+    },
+    "opensearch-doc-v3-gte": {
+     "reject": 0.0115,
+     "signflip_holm": 0.013,
+     "ci25": 0.033,
+     "bonf": 0.0123,
+     "signflip_raw_0.025": 0.033,
+     "signflip_raw_bonf": 0.0127,
+     "studentized_raw_bonf": 0.0125
+    }
+   }
+  }
+ },
+ "seconds": 3066.2
+}

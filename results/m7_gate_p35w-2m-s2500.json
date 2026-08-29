@@ -1,0 +1,1205 @@
+{
+ "run_id": "p35w-2m-s2500",
+ "components": [
+  "nq-250k",
+  "hotpotqa",
+  "cqadup-programmers",
+  "cqadup-physics",
+  "heldout-train",
+  "heldout-longq"
+ ],
+ "conditions": {
+  "G1_stage0_above_potion": {
+   "delta": 0.1159,
+   "ci95": [
+    0.1074,
+    0.1244
+   ],
+   "delta_raw": 0.11585284523988709,
+   "ci95_raw": [
+    0.10744259508655912,
+    0.1243746006619488
+   ],
+   "boot_tail": 0.0,
+   "boot_tail_str": "<0.0001",
+   "_boot_tail_note": "bootstrap tail mass, NOT a p-value; use signflip() for p",
+   "alternative": "greater",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": 0.1074,
+   "one_sided_lower_raw": {
+    "2.5": 0.10744259508655912,
+    "0.8333": 0.1057233278193615
+   },
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": 0.0938,
+     "ci95": [
+      0.0738,
+      0.1139
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": 0.0804,
+     "ci95": [
+      0.0587,
+      0.1025
+     ]
+    },
+    "hotpotqa": {
+     "n": 7405,
+     "delta": 0.0499,
+     "ci95": [
+      0.0422,
+      0.0575
+     ]
+    },
+    "nq-250k": {
+     "n": 3452,
+     "delta": 0.2393,
+     "ci95": [
+      0.2261,
+      0.2522
+     ]
+    }
+   },
+   "resolved": true,
+   "stage0_sha256": "d13a993852da4c8fc2f2b37998c013dfa4e13fa74417d079864f6f4614a4a9ff",
+   "pass": true,
+   "checkpoint": "s1-objB",
+   "note": "Stage-0 distilled table",
+   "components": [
+    "nq-250k",
+    "hotpotqa",
+    "cqadup-programmers",
+    "cqadup-physics"
+   ]
+  },
+  "G2_capacity_probe": {
+   "pass": true,
+   "macro": 0.9999922480483922,
+   "vs_bm25": {
+    "delta": 0.5917,
+    "ci95": [
+     0.5793,
+     0.6045
+    ],
+    "boot_tail": 0.0,
+    "boot_tail_str": "<0.0001",
+    "_boot_tail_note": "bootstrap tail mass, NOT a p-value; use signflip() for p",
+    "alternative": "greater",
+    "B": 10000,
+    "seed": 0,
+    "one_sided_lower_2.5": 0.5793,
+    "per_dataset": {
+     "cqadup-physics": {
+      "n": 1039,
+      "delta": 0.6529,
+      "ci95": [
+       0.629,
+       0.6774
+      ]
+     },
+     "cqadup-programmers": {
+      "n": 876,
+      "delta": 0.7025,
+      "ci95": [
+       0.6763,
+       0.7285
+      ]
+     },
+     "nq-250k": {
+      "n": 3452,
+      "delta": 0.4196,
+      "ci95": [
+       0.4066,
+       0.4327
+      ]
+     }
+    },
+    "resolved": true
+   },
+   "encoder": "stella-400M-v5"
+  },
+  "G3_candidate_above_bm25": {
+   "delta": 0.0845,
+   "ci95": [
+    0.0764,
+    0.0926
+   ],
+   "delta_raw": 0.0845178564233313,
+   "ci95_raw": [
+    0.07644184178260095,
+    0.09259025372588976
+   ],
+   "boot_tail": 0.0,
+   "boot_tail_str": "<0.0001",
+   "_boot_tail_note": "bootstrap tail mass, NOT a p-value; use signflip() for p",
+   "alternative": "greater",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": 0.0764,
+   "one_sided_lower_raw": {
+    "2.5": 0.07644184178260095,
+    "0.8333": 0.07473396520403101
+   },
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": 0.0487,
+     "ci95": [
+      0.0302,
+      0.0674
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": 0.0412,
+     "ci95": [
+      0.0197,
+      0.0625
+     ]
+    },
+    "hotpotqa": {
+     "n": 7405,
+     "delta": 0.0276,
+     "ci95": [
+      0.0203,
+      0.0349
+     ]
+    },
+    "nq-250k": {
+     "n": 3452,
+     "delta": 0.2206,
+     "ci95": [
+      0.2074,
+      0.2332
+     ]
+    }
+   },
+   "resolved": true,
+   "signflip_p": 9.99990000099999e-06,
+   "signflip_p_str": "1.00e-05 (MC floor 1/(R+1))",
+   "pass": true,
+   "_note": "text-backed components only; BM25 has no row on the held-out slices"
+  },
+  "G4_int8_equivalence": {
+   "delta": -4e-05,
+   "upper": 0.00013,
+   "delta_raw": -3.7241888274854494e-05,
+   "upper_raw": 0.00013209347188684523,
+   "level": 0.975,
+   "B": 10000,
+   "seed": 0,
+   "method": "stratified paired bootstrap, shared draw across components",
+   "strata": [
+    {
+     "components": [
+      "cqadup-physics"
+     ],
+     "n_units": 1039
+    },
+    {
+     "components": [
+      "cqadup-programmers"
+     ],
+     "n_units": 876
+    },
+    {
+     "components": [
+      "heldout-longq",
+      "heldout-train"
+     ],
+     "n_units": 55
+    },
+    {
+     "components": [
+      "heldout-train"
+     ],
+     "n_units": 7270
+    },
+    {
+     "components": [
+      "hotpotqa"
+     ],
+     "n_units": 7405
+    },
+    {
+     "components": [
+      "nq-250k"
+     ],
+     "n_units": 3452
+    }
+   ],
+   "bar": 0.005,
+   "pass": true,
+   "dependence_blind": {
+    "delta": -4e-05,
+    "upper": 0.00013,
+    "delta_raw": -3.724188827485448e-05,
+    "upper_raw": 0.00013052386453211594,
+    "level": 0.975,
+    "B": 10000,
+    "seed": 0,
+    "method": "componentwise paired bootstrap (dependence-blind)"
+   }
+  }
+ },
+ "macros_all_components": {
+  "fp16": 0.6152807763360729,
+  "int8": 0.6153180182243478,
+  "stella-400M-v5-symmetric (teacher ceiling)": 0.6724183982907442
+ },
+ "macros_text_backed": {
+  "fp16": 0.5370320973125421,
+  "int8": 0.5370239716990968,
+  "bm25": 0.4525142408892109,
+  "potion-retrieval-32M": 0.38012926744982994,
+  "stella-400M-v5-symmetric (teacher ceiling)": 0.6350347771103328
+ },
+ "macros": {
+  "fp16": 0.5370320973125421,
+  "int8": 0.5370239716990968,
+  "bm25": 0.4525142408892109,
+  "potion-retrieval-32M": 0.38012926744982994,
+  "stella-400M-v5-symmetric (teacher ceiling)": 0.6350347771103328
+ },
+ "retention_vs_teacher_text_backed": 0.8457,
+ "retention_vs_teacher_all_components": 0.915,
+ "exploratory_audit_vs": {
+  "baseline": "s2w-1e3-s1000",
+  "fp16": {
+   "ordinary": {
+    "paired": {
+     "delta": 0.0166,
+     "ci95": [
+      0.0118,
+      0.0215
+     ],
+     "delta_raw": 0.016597262726893703,
+     "ci95_raw": [
+      0.011751462211240286,
+      0.02146168537235253
+     ],
+     "boot_tail": 0.0,
+     "boot_tail_str": "<0.0001",
+     "_boot_tail_note": "bootstrap tail mass, NOT a p-value; use signflip() for p",
+     "alternative": "two-sided",
+     "B": 10000,
+     "seed": 0,
+     "one_sided_lower_2.5": null,
+     "one_sided_lower_raw": null,
+     "per_dataset": {
+      "cqadup-physics": {
+       "n": 1039,
+       "delta": 0.0107,
+       "ci95": [
+        0.003,
+        0.0183
+       ]
+      },
+      "cqadup-programmers": {
+       "n": 876,
+       "delta": 0.0097,
+       "ci95": [
+        0.0015,
+        0.0179
+       ]
+      },
+      "heldout-longq": {
+       "n": 55,
+       "delta": 0.0327,
+       "ci95": [
+        0.0066,
+        0.0593
+       ]
+      },
+      "heldout-train": {
+       "n": 7325,
+       "delta": 0.0132,
+       "ci95": [
+        0.0104,
+        0.016
+       ]
+      },
+      "hotpotqa": {
+       "n": 7405,
+       "delta": 0.0339,
+       "ci95": [
+        0.0309,
+        0.037
+       ]
+      },
+      "nq-250k": {
+       "n": 3452,
+       "delta": -0.0006,
+       "ci95": [
+        -0.005,
+        0.0036
+       ]
+      }
+     },
+     "resolved": true
+    },
+    "signflip": {
+     "delta": 0.0166,
+     "p": 9.99990000099999e-06,
+     "p_str": "1.00e-05 (MC floor 1/(R+1))",
+     "R": 100000,
+     "seed": 0,
+     "alternative": "greater",
+     "method": "paired sign-flip randomization, macro-structured",
+     "per_dataset_n": {
+      "cqadup-physics": 1039,
+      "cqadup-programmers": 876,
+      "heldout-longq": 55,
+      "heldout-train": 7325,
+      "hotpotqa": 7405,
+      "nq-250k": 3452
+     },
+     "per_dataset_nonzero": {
+      "cqadup-physics": 312,
+      "cqadup-programmers": 275,
+      "heldout-longq": 20,
+      "heldout-train": 2574,
+      "hotpotqa": 3103,
+      "nq-250k": 782
+     }
+    }
+   },
+   "stratified_independent": {
+    "paired": {
+     "delta": 0.0166,
+     "ci95": [
+      0.0117,
+      0.0218
+     ],
+     "delta_raw": 0.016597262726893703,
+     "ci95_raw": [
+      0.01168886942685897,
+      0.02177940393753426
+     ],
+     "boot_tail": 0.0,
+     "_boot_tail_note": "bootstrap tail mass, NOT a p-value",
+     "alternative": "two-sided",
+     "B": 10000,
+     "seed": 0,
+     "one_sided_lower_2.5": 0.0117,
+     "method": "stratified paired bootstrap, INDEPENDENT draws (conditioning only, not the dependence fix)",
+     "shared_draw": false,
+     "strata": [
+      {
+       "components": [
+        "cqadup-physics"
+       ],
+       "n_units": 1039
+      },
+      {
+       "components": [
+        "cqadup-programmers"
+       ],
+       "n_units": 876
+      },
+      {
+       "components": [
+        "heldout-longq",
+        "heldout-train"
+       ],
+       "n_units": 55
+      },
+      {
+       "components": [
+        "heldout-train"
+       ],
+       "n_units": 7270
+      },
+      {
+       "components": [
+        "hotpotqa"
+       ],
+       "n_units": 7405
+      },
+      {
+       "components": [
+        "nq-250k"
+       ],
+       "n_units": 3452
+      }
+     ],
+     "per_dataset": {
+      "cqadup-physics": {
+       "n": 1039,
+       "delta": 0.0107,
+       "ci95": [
+        0.003,
+        0.0184
+       ],
+       "delta_raw": 0.01074226003304457,
+       "ci95_raw": [
+        0.002979270251053962,
+        0.01835126558432491
+       ]
+      },
+      "cqadup-programmers": {
+       "n": 876,
+       "delta": 0.0097,
+       "ci95": [
+        0.0014,
+        0.0179
+       ],
+       "delta_raw": 0.009683102610762495,
+       "ci95_raw": [
+        0.0014087974180239232,
+        0.017883068097768566
+       ]
+      },
+      "heldout-longq": {
+       "n": 55,
+       "delta": 0.0327,
+       "ci95": [
+        0.0064,
+        0.0604
+       ],
+       "delta_raw": 0.03271041020055776,
+       "ci95_raw": [
+        0.006433170119230673,
+        0.06036165933713255
+       ]
+      },
+      "heldout-train": {
+       "n": 7325,
+       "delta": 0.0132,
+       "ci95": [
+        0.0104,
+        0.016
+       ],
+       "delta_raw": 0.013185416353922341,
+       "ci95_raw": [
+        0.010414439048191825,
+        0.015997597462807496
+       ]
+      },
+      "hotpotqa": {
+       "n": 7405,
+       "delta": 0.0339,
+       "ci95": [
+        0.0308,
+        0.037
+       ],
+       "delta_raw": 0.03388241636017586,
+       "ci95_raw": [
+        0.03084616176415059,
+        0.03696931647097571
+       ]
+      },
+      "nq-250k": {
+       "n": 3452,
+       "delta": -0.0006,
+       "ci95": [
+        -0.0049,
+        0.0036
+       ],
+       "delta_raw": -0.0006200291971008021,
+       "ci95_raw": [
+        -0.00488634606245406,
+        0.0036431193268718224
+       ]
+      }
+     },
+     "resolved": true
+    },
+    "_note": "fixed stratum sizes, independent draws: the conditioning step only"
+   },
+   "dependence_preserving": {
+    "paired": {
+     "delta": 0.0166,
+     "ci95": [
+      0.0119,
+      0.0217
+     ],
+     "delta_raw": 0.016597262726893703,
+     "ci95_raw": [
+      0.011902472405051724,
+      0.02169083503499432
+     ],
+     "boot_tail": 0.0,
+     "_boot_tail_note": "bootstrap tail mass, NOT a p-value",
+     "alternative": "two-sided",
+     "B": 10000,
+     "seed": 0,
+     "one_sided_lower_2.5": 0.0119,
+     "method": "stratified paired bootstrap, shared draw across components",
+     "shared_draw": true,
+     "strata": [
+      {
+       "components": [
+        "cqadup-physics"
+       ],
+       "n_units": 1039
+      },
+      {
+       "components": [
+        "cqadup-programmers"
+       ],
+       "n_units": 876
+      },
+      {
+       "components": [
+        "heldout-longq",
+        "heldout-train"
+       ],
+       "n_units": 55
+      },
+      {
+       "components": [
+        "heldout-train"
+       ],
+       "n_units": 7270
+      },
+      {
+       "components": [
+        "hotpotqa"
+       ],
+       "n_units": 7405
+      },
+      {
+       "components": [
+        "nq-250k"
+       ],
+       "n_units": 3452
+      }
+     ],
+     "per_dataset": {
+      "cqadup-physics": {
+       "n": 1039,
+       "delta": 0.0107,
+       "ci95": [
+        0.003,
+        0.0187
+       ],
+       "delta_raw": 0.01074226003304457,
+       "ci95_raw": [
+        0.0029690146273454285,
+        0.018683695822457377
+       ]
+      },
+      "cqadup-programmers": {
+       "n": 876,
+       "delta": 0.0097,
+       "ci95": [
+        0.0016,
+        0.0179
+       ],
+       "delta_raw": 0.009683102610762495,
+       "ci95_raw": [
+        0.0015875602655404668,
+        0.01794812232566773
+       ]
+      },
+      "heldout-longq": {
+       "n": 55,
+       "delta": 0.0327,
+       "ci95": [
+        0.0072,
+        0.0599
+       ],
+       "delta_raw": 0.03271041020055776,
+       "ci95_raw": [
+        0.007164788605015112,
+        0.059860769496838474
+       ]
+      },
+      "heldout-train": {
+       "n": 7325,
+       "delta": 0.0132,
+       "ci95": [
+        0.0104,
+        0.016
+       ],
+       "delta_raw": 0.013185416353922341,
+       "ci95_raw": [
+        0.010405087970412872,
+        0.015964441198165563
+       ]
+      },
+      "hotpotqa": {
+       "n": 7405,
+       "delta": 0.0339,
+       "ci95": [
+        0.0308,
+        0.037
+       ],
+       "delta_raw": 0.03388241636017586,
+       "ci95_raw": [
+        0.030813423763932198,
+        0.03699213190822995
+       ]
+      },
+      "nq-250k": {
+       "n": 3452,
+       "delta": -0.0006,
+       "ci95": [
+        -0.0049,
+        0.0037
+       ],
+       "delta_raw": -0.0006200291971008021,
+       "ci95_raw": [
+        -0.004910242075012167,
+        0.0037152185526107217
+       ]
+      }
+     },
+     "resolved": true
+    },
+    "signflip": {
+     "delta": 0.0166,
+     "p": 9.99990000099999e-06,
+     "p_str": "1.00e-05 (MC floor 1/(R+1))",
+     "R": 100000,
+     "seed": 0,
+     "alternative": "greater",
+     "method": "paired sign-flip randomization, macro-structured, one sign per shared query",
+     "strata": [
+      {
+       "components": [
+        "cqadup-physics"
+       ],
+       "n_units": 1039
+      },
+      {
+       "components": [
+        "cqadup-programmers"
+       ],
+       "n_units": 876
+      },
+      {
+       "components": [
+        "heldout-longq",
+        "heldout-train"
+       ],
+       "n_units": 55
+      },
+      {
+       "components": [
+        "heldout-train"
+       ],
+       "n_units": 7270
+      },
+      {
+       "components": [
+        "hotpotqa"
+       ],
+       "n_units": 7405
+      },
+      {
+       "components": [
+        "nq-250k"
+       ],
+       "n_units": 3452
+      }
+     ],
+     "shared_units": 55,
+     "per_dataset_n": {
+      "cqadup-physics": 1039,
+      "cqadup-programmers": 876,
+      "heldout-longq": 55,
+      "heldout-train": 7325,
+      "hotpotqa": 7405,
+      "nq-250k": 3452
+     }
+    }
+   },
+   "_note": "exploratory selection evidence; the only confirmatory comparisons are the three frozen-test ones in the final run"
+  },
+  "int8": {
+   "ordinary": {
+    "paired": {
+     "delta": 0.0167,
+     "ci95": [
+      0.0118,
+      0.0215
+     ],
+     "delta_raw": 0.01665387059125391,
+     "ci95_raw": [
+      0.011820499874738231,
+      0.021520940530843715
+     ],
+     "boot_tail": 0.0,
+     "boot_tail_str": "<0.0001",
+     "_boot_tail_note": "bootstrap tail mass, NOT a p-value; use signflip() for p",
+     "alternative": "two-sided",
+     "B": 10000,
+     "seed": 0,
+     "one_sided_lower_2.5": null,
+     "one_sided_lower_raw": null,
+     "per_dataset": {
+      "cqadup-physics": {
+       "n": 1039,
+       "delta": 0.0107,
+       "ci95": [
+        0.003,
+        0.0183
+       ]
+      },
+      "cqadup-programmers": {
+       "n": 876,
+       "delta": 0.0099,
+       "ci95": [
+        0.0017,
+        0.0181
+       ]
+      },
+      "heldout-longq": {
+       "n": 55,
+       "delta": 0.033,
+       "ci95": [
+        0.0068,
+        0.0595
+       ]
+      },
+      "heldout-train": {
+       "n": 7325,
+       "delta": 0.0133,
+       "ci95": [
+        0.0105,
+        0.0161
+       ]
+      },
+      "hotpotqa": {
+       "n": 7405,
+       "delta": 0.034,
+       "ci95": [
+        0.0309,
+        0.0371
+       ]
+      },
+      "nq-250k": {
+       "n": 3452,
+       "delta": -0.001,
+       "ci95": [
+        -0.0053,
+        0.0032
+       ]
+      }
+     },
+     "resolved": true
+    },
+    "signflip": {
+     "delta": 0.0167,
+     "p": 9.99990000099999e-06,
+     "p_str": "1.00e-05 (MC floor 1/(R+1))",
+     "R": 100000,
+     "seed": 0,
+     "alternative": "greater",
+     "method": "paired sign-flip randomization, macro-structured",
+     "per_dataset_n": {
+      "cqadup-physics": 1039,
+      "cqadup-programmers": 876,
+      "heldout-longq": 55,
+      "heldout-train": 7325,
+      "hotpotqa": 7405,
+      "nq-250k": 3452
+     },
+     "per_dataset_nonzero": {
+      "cqadup-physics": 310,
+      "cqadup-programmers": 274,
+      "heldout-longq": 20,
+      "heldout-train": 2585,
+      "hotpotqa": 3110,
+      "nq-250k": 780
+     }
+    }
+   },
+   "stratified_independent": {
+    "paired": {
+     "delta": 0.0167,
+     "ci95": [
+      0.0117,
+      0.0219
+     ],
+     "delta_raw": 0.01665387059125391,
+     "ci95_raw": [
+      0.01172947604266822,
+      0.021879896177942715
+     ],
+     "boot_tail": 0.0,
+     "_boot_tail_note": "bootstrap tail mass, NOT a p-value",
+     "alternative": "two-sided",
+     "B": 10000,
+     "seed": 0,
+     "one_sided_lower_2.5": 0.0117,
+     "method": "stratified paired bootstrap, INDEPENDENT draws (conditioning only, not the dependence fix)",
+     "shared_draw": false,
+     "strata": [
+      {
+       "components": [
+        "cqadup-physics"
+       ],
+       "n_units": 1039
+      },
+      {
+       "components": [
+        "cqadup-programmers"
+       ],
+       "n_units": 876
+      },
+      {
+       "components": [
+        "heldout-longq",
+        "heldout-train"
+       ],
+       "n_units": 55
+      },
+      {
+       "components": [
+        "heldout-train"
+       ],
+       "n_units": 7270
+      },
+      {
+       "components": [
+        "hotpotqa"
+       ],
+       "n_units": 7405
+      },
+      {
+       "components": [
+        "nq-250k"
+       ],
+       "n_units": 3452
+      }
+     ],
+     "per_dataset": {
+      "cqadup-physics": {
+       "n": 1039,
+       "delta": 0.0107,
+       "ci95": [
+        0.0029,
+        0.0182
+       ],
+       "delta_raw": 0.010667926303064734,
+       "ci95_raw": [
+        0.0029261789020548013,
+        0.01824671684038401
+       ]
+      },
+      "cqadup-programmers": {
+       "n": 876,
+       "delta": 0.0099,
+       "ci95": [
+        0.0017,
+        0.0181
+       ],
+       "delta_raw": 0.00992944839267923,
+       "ci95_raw": [
+        0.0016677369241943096,
+        0.018132456867102974
+       ]
+      },
+      "heldout-longq": {
+       "n": 55,
+       "delta": 0.033,
+       "ci95": [
+        0.0066,
+        0.0606
+       ],
+       "delta_raw": 0.03297718874584932,
+       "ci95_raw": [
+        0.0066017662033724285,
+        0.060557230612750555
+       ]
+      },
+      "heldout-train": {
+       "n": 7325,
+       "delta": 0.0133,
+       "ci95": [
+        0.0106,
+        0.0161
+       ],
+       "delta_raw": 0.013323668616406215,
+       "ci95_raw": [
+        0.01055332893624398,
+        0.01613921130169381
+       ]
+      },
+      "hotpotqa": {
+       "n": 7405,
+       "delta": 0.034,
+       "ci95": [
+        0.0309,
+        0.037
+       ],
+       "delta_raw": 0.03397696708927056,
+       "ci95_raw": [
+        0.030932654012224912,
+        0.037033087957914344
+       ]
+      },
+      "nq-250k": {
+       "n": 3452,
+       "delta": -0.001,
+       "ci95": [
+        -0.0052,
+        0.0033
+       ],
+       "delta_raw": -0.0009519755997465795,
+       "ci95_raw": [
+        -0.00521388522157186,
+        0.0033324906983804915
+       ]
+      }
+     },
+     "resolved": true
+    },
+    "_note": "fixed stratum sizes, independent draws: the conditioning step only"
+   },
+   "dependence_preserving": {
+    "paired": {
+     "delta": 0.0167,
+     "ci95": [
+      0.012,
+      0.0217
+     ],
+     "delta_raw": 0.01665387059125391,
+     "ci95_raw": [
+      0.011961428266429089,
+      0.021725641333152457
+     ],
+     "boot_tail": 0.0,
+     "_boot_tail_note": "bootstrap tail mass, NOT a p-value",
+     "alternative": "two-sided",
+     "B": 10000,
+     "seed": 0,
+     "one_sided_lower_2.5": 0.012,
+     "method": "stratified paired bootstrap, shared draw across components",
+     "shared_draw": true,
+     "strata": [
+      {
+       "components": [
+        "cqadup-physics"
+       ],
+       "n_units": 1039
+      },
+      {
+       "components": [
+        "cqadup-programmers"
+       ],
+       "n_units": 876
+      },
+      {
+       "components": [
+        "heldout-longq",
+        "heldout-train"
+       ],
+       "n_units": 55
+      },
+      {
+       "components": [
+        "heldout-train"
+       ],
+       "n_units": 7270
+      },
+      {
+       "components": [
+        "hotpotqa"
+       ],
+       "n_units": 7405
+      },
+      {
+       "components": [
+        "nq-250k"
+       ],
+       "n_units": 3452
+      }
+     ],
+     "per_dataset": {
+      "cqadup-physics": {
+       "n": 1039,
+       "delta": 0.0107,
+       "ci95": [
+        0.0029,
+        0.0186
+       ],
+       "delta_raw": 0.010667926303064734,
+       "ci95_raw": [
+        0.0028637380566094136,
+        0.018592246899355205
+       ]
+      },
+      "cqadup-programmers": {
+       "n": 876,
+       "delta": 0.0099,
+       "ci95": [
+        0.0019,
+        0.0182
+       ],
+       "delta_raw": 0.00992944839267923,
+       "ci95_raw": [
+        0.0018854600868159542,
+        0.01817655331849294
+       ]
+      },
+      "heldout-longq": {
+       "n": 55,
+       "delta": 0.033,
+       "ci95": [
+        0.0074,
+        0.0602
+       ],
+       "delta_raw": 0.03297718874584932,
+       "ci95_raw": [
+        0.007424562134497228,
+        0.060165030992280766
+       ]
+      },
+      "heldout-train": {
+       "n": 7325,
+       "delta": 0.0133,
+       "ci95": [
+        0.0105,
+        0.0161
+       ],
+       "delta_raw": 0.013323668616406215,
+       "ci95_raw": [
+        0.010542560933265268,
+        0.016099889311978012
+       ]
+      },
+      "hotpotqa": {
+       "n": 7405,
+       "delta": 0.034,
+       "ci95": [
+        0.0309,
+        0.0371
+       ],
+       "delta_raw": 0.03397696708927056,
+       "ci95_raw": [
+        0.03092932671756352,
+        0.03709677674811591
+       ]
+      },
+      "nq-250k": {
+       "n": 3452,
+       "delta": -0.001,
+       "ci95": [
+        -0.0052,
+        0.0034
+       ],
+       "delta_raw": -0.0009519755997465795,
+       "ci95_raw": [
+        -0.005208634673715014,
+        0.00339237014848576
+       ]
+      }
+     },
+     "resolved": true
+    },
+    "signflip": {
+     "delta": 0.0167,
+     "p": 9.99990000099999e-06,
+     "p_str": "1.00e-05 (MC floor 1/(R+1))",
+     "R": 100000,
+     "seed": 0,
+     "alternative": "greater",
+     "method": "paired sign-flip randomization, macro-structured, one sign per shared query",
+     "strata": [
+      {
+       "components": [
+        "cqadup-physics"
+       ],
+       "n_units": 1039
+      },
+      {
+       "components": [
+        "cqadup-programmers"
+       ],
+       "n_units": 876
+      },
+      {
+       "components": [
+        "heldout-longq",
+        "heldout-train"
+       ],
+       "n_units": 55
+      },
+      {
+       "components": [
+        "heldout-train"
+       ],
+       "n_units": 7270
+      },
+      {
+       "components": [
+        "hotpotqa"
+       ],
+       "n_units": 7405
+      },
+      {
+       "components": [
+        "nq-250k"
+       ],
+       "n_units": 3452
+      }
+     ],
+     "shared_units": 55,
+     "per_dataset_n": {
+      "cqadup-physics": 1039,
+      "cqadup-programmers": 876,
+      "heldout-longq": 55,
+      "heldout-train": 7325,
+      "hotpotqa": 7405,
+      "nq-250k": 3452
+     }
+    }
+   },
+   "_note": "exploratory selection evidence; the only confirmatory comparisons are the three frozen-test ones in the final run"
+  },
+  "_status": "EXPLORATORY: both sides were selected on this dev suite; this is not confirmatory evidence (review #3 MAJOR 1)"
+ },
+ "per_query_dump": {
+  "path": "m7_gate_perquery_p35w-2m-s2500.json.gz",
+  "payload_sha256": "19356ad0e4c0286ed1ead0da0f21c16fc5ec0aa2486a86aec40ab0a376b4c85f",
+  "file_sha256": "55fd400a2d60d22e29d3143731e1262e49ea31e5cde20401783516f9339269a3"
+ },
+ "artifact": {
+  "release": "p35w-2m-s2500.release.npz",
+  "sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
+  "meta_sha256": "14f117b82c4bb7268a1d15302774a77130019a3c59bce677d3386d9fc6ddd4a9"
+ },
+ "pin_evidence": {
+  "dev_manifest_sha256": "4f991015db4407080ed9c8d1d2a85541d34b1e676aa593e510296eedca77e2ea",
+  "component_entries_sha256": {
+   "nq-250k": "471b6dcdb295c2bbead8e7a79ba105d50aeefd400130ba5e8055f755036ac724",
+   "hotpotqa": "564477421a3087bdc901283b4ae324f7da3ae80ab5593ffe8c69c1cc5bd17789",
+   "cqadup-programmers": "c4818a32269f9c2c31e850ea7b80b42fda24f6c0d813bd70927b5f8c5cb1c41b",
+   "cqadup-physics": "0222d447068030e480823cfc7df06c7421d75763c3d0921da5e5398c122b9e24",
+   "heldout-train": "f6164e55bef6207b944bb9d04bac89c0dd84357bdd8c30b3e64c5df97fa24b6c",
+   "heldout-longq": "30f3c6a3bd06300fd4e558e0b462054b61b1bb8dae19f58400f21b78c36bca78"
+  },
+  "pool_bytes_verified": true,
+  "pinned_at": "2026-08-27T22:58:44"
+ },
+ "code_identity": {
+  "git_head": "31d85872b0033c2cb3b3f4ecb47a31bcef0ca5b3",
+  "m7src_dirty": false,
+  "source_sha256": {
+   "boot.py": "a845a22a3ce10acf89877a1a521e66654d343c0fb003261e64ee1adc54a3c23c",
+   "multieval.py": "9759ecafacbacf7fdb7d13f2ef84ff534523eec8210c9f6541236bad19a5e643",
+   "evalkit.py": "16f88eb2c7ea143de037effd4dbbba2c0342abbe8858ef283e8e98c4ae7a7b08",
+   "table.py": "56b815d3161f793757973dc2d724f2ba7a302a62dcbe6140c264a0f09b34819a",
+   "dev_eval.py": "e5f702536c8af6a7bfb64cbe8770a45f81201866b4b175d4dd129c398737caa1",
+   "heldout.py": "18df62aa0c019490a03a00aa8a58947a24991314dc660d32e886fd4519658161",
+   "dev_audit.py": "1b914cbb368553e96186b2261a55897dbf37a79304aa94262cf71c9043c658c3",
+   "devsuite.py": "3ae8141ac4b3f9bb8d64c29e026403b314a7f4295dfa9979888959e5f9050f7f",
+   "pool.py": "c72e7b8e7aa8a8d5365c696860f640d077b46712379e518fde50433b209a3ca8",
+   "encoders.py": "9479e9eda650b0c1db4b6375b656776982abd4fc55560b8145bf7f08638055d6",
+   "gate.py": "33ec963c36e9860cee64a15a4f99a6b5bfcd1359b4bef66d5230423f439c631c",
+   "fusion.py": "db686aebdc01af614d163e2aa8f64f068161bd6e404cbf7c50cb50d7a85b210d"
+  }
+ },
+ "_role": "mechanical eligibility audit after all selection; it cannot repair adaptive dev reuse and is not evidence of generalization. Freeze immediately after.",
+ "PASS": true,
+ "diagnostic_subset": false
+}
