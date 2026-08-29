@@ -119,6 +119,18 @@ ALLOWLIST = {
         "kinds": {"untouched_labels"},
         "why": "the confirmatory access, only after the freeze (LEDGER G2 class d)",
     },
+    "m8src.pre_encode": {
+        # Registered NOW, at leisure, rather than discovered at pipeline step 13 under time
+        # pressure. It needs NO protected KIND: the reserved CORPORA are ordinary public BEIR
+        # downloads and the manifest is committed metadata. What it needs is the dataset-loader
+        # exemption -- `check_dataset` refuses `beir/fever` and `beir/dbpedia-entity` outright,
+        # which is the right default and would otherwise block the pre-encode.
+        "kinds": set(),
+        "corpus_only_datasets": True,
+        "why": "reserved-4 document pre-encode, corpus-only, after the freeze and before the "
+               "access (LEDGER G2 class c). It reads no query and no qrel payload and produces "
+               "no ranking; it may load the reserved CORPORA and nothing else.",
+    },
 }
 
 _claim = None
@@ -186,7 +198,16 @@ def check_dataset(name, config=None):
         hit = True
     if not hit:
         return None
-    if _claim is None or "untouched_labels" not in ALLOWLIST[_claim]["kinds"]:
+    entry = ALLOWLIST.get(_claim, {})
+    # The corpus-only exemption: a document pre-encode may load the reserved CORPORA and nothing
+    # else. It is deliberately NARROW -- config must be exactly "corpus" AND the dataset must not
+    # be a qrels repo. The first version accepted a null config too, which would have let
+    # `load_dataset("BeIR/fever-qrels")` through: a labels repo needs no config, so "no config"
+    # is the one case that must NOT be waved past.
+    if (entry.get("corpus_only_datasets") and not n.endswith("-qrels")
+            and str(config or "").lower() == "corpus"):
+        return "untouched_corpus_only"
+    if _claim is None or "untouched_labels" not in entry.get("kinds", set()):
         raise ProtectedPathRefusal(
             f"LEDGER G2: refusing load_dataset({name!r}, {config!r}) -- that is a reserved "
             f"confirmatory set. Downloading it fresh is the same contact as opening the frozen "

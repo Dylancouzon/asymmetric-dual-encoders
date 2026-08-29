@@ -110,7 +110,7 @@ the target's shape. Top-200 distractors raise the target's median six orders of 
 
 *Two corrections a review forced, both recorded: the first version drew distractors from a
 contiguous pool prefix where training draws a seeded random sample — and the fix made the recipe
-look* worse*, not better (median 5.65e-07 → 4.73e-07); and the student side did not exist at all,
+look **worse**, not better (median 5.65e-07 → 4.73e-07); and the student side did not exist at all,
 so "carries no information" was an inference. It is now a number.* It still does **not** say a
 listwise objective wins — that is `R-LIST`'s question and its bar is unfrozen, so the guard
 refuses it.

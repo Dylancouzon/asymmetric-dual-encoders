@@ -147,6 +147,31 @@ def t_load_dataset_network_route_refused():
     assert paths_guard.check_dataset("BeIR/scifact", "corpus") is None
 
 
+def t_pre_encode_exemption_is_narrow():
+    """m8src.pre_encode may load the reserved CORPORA and nothing else. The dangerous case is a
+    qrels repo, which needs NO config -- so "no config" must not be waved past."""
+    import importlib
+    pg = importlib.reload(paths_guard) if False else paths_guard
+    saved = pg._claim
+    try:
+        pg.__dict__["_claim"] = "m8src.pre_encode"
+        assert pg.check_dataset("BeIR/fever", "corpus") == "untouched_corpus_only", \
+            "the pre-encode must be able to load the reserved corpora"
+        for bad, cfg in (("BeIR/fever-qrels", None), ("BeIR/fever-qrels", "corpus"),
+                         ("BeIR/fever", None), ("BeIR/fever", "queries"),
+                         ("BeIR/dbpedia-entity", "queries")):
+            try:
+                pg.check_dataset(bad, cfg)
+            except pg.ProtectedPathRefusal:
+                continue
+            raise AssertionError(f"pre_encode was allowed {bad!r} config={cfg!r}")
+        # and it still cannot open a reserved PAYLOAD by path
+        assert _refused(lambda: open(REPO / "results" / "frozen_eval" / "untouched-fever.json")), \
+            "pre_encode opened a reserved payload"
+    finally:
+        pg.__dict__["_claim"] = saved
+
+
 def t_symlink_alias_refused():
     """A symlink whose name mentions none of the hints must still classify: the guard resolves
     BEFORE it looks at the name."""
