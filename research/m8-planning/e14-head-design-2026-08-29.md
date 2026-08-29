@@ -1,3 +1,11 @@
+> **SUPERSEDED, and kept only as the brief that was reviewed.** Codex returned three BLOCKERs
+> against this design (`codex-e14-head-review-2026-08-29.md`), all reproduced independently and
+> all adopted. The binding design is now the amended `E14-HEAD` row in `m8/registry.json` plus the
+> `m8/LEDGER.md` §15 entry of 2026-08-29. **Do not implement from this file.** Three things below
+> are simply wrong: the claim that a linear doc-side head is a no-op, the claim that zero-init
+> makes the head exactly the identity, and the learning-rate ladder, which would have observed the
+> endpoint before selecting on it.
+
 # E14-HEAD: implementation design, for adversarial review before anything runs
 
 You are reviewing a **design**, not code. Nothing here has been run. The point of the review is to

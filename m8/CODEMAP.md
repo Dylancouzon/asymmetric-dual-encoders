@@ -158,3 +158,34 @@ a non-BERT teacher found two more, and both are silent:
    **winner's curse** — conservative for the endpoint that won, silent about the other fifteen.
    Verify a claim like this with a simulation before writing it down: `np.ptp` over `(N, K)` normal
    draws takes one line and settles it.
+19. **A self-test that feeds normalized inputs to a normalizer cannot detect that it normalizes.**
+    `e14_head.py`'s first `self_test` asserted the doc-side head is "exactly the identity at
+    init", drew random vectors, **divided them by their norms**, and passed at 6e-08. It could
+    never have failed: for unit-norm inputs `normalize(d) == d` trivially. The head is in fact
+    `normalize(d)`, and the cached document vectors it will actually see are **not** unit-norm —
+    over 100,000 pool rows only **0.36%** have float32 norm exactly 1, max `|norm−1|` 4.8e-05. The
+    claim was wrong, the test was built out of the claim, and a review caught it rather than the
+    suite. Rewritten against **real pool rows**, the same function now reports 0.0 deviation from
+    `normalize(d)` and 5.36e-06 from raw `d` — which is the finding, and it is what forced the new
+    `R0N` comparator. Pitfall 17's family: before trusting a test, ask what input would make it
+    fail; if you cannot name one, it is not a test yet. **Fixture data must come from the real
+    distribution whenever the property under test is a property of that distribution** — the same
+    lesson B7 learned about Zipfian vs uniform token ids (pitfall 15), in a different disguise.
+20. **A registry row can contradict the ledger it belongs to, and nothing checks that.**
+    `E14-HEAD` was registered requiring a nonlinear head, on the stated ground that "a linear
+    doc-side map is provably absorbable into the table". **§6's D1 entry, in the same document,
+    already recorded the opposite**: retrieval L2-normalizes documents, so the score carries a
+    per-document `1/|Md|` that cannot move into a shared row, and `results/m7_absorb_check.json`
+    measures rank agreement with the absorbed form at 1.000 without renormalization and **0.000
+    with it**. The probe would have banned its own cheapest and best-conditioned arm on a premise
+    its own protocol file refutes. `rule_audit.py` diffs a result against the registry; nothing
+    diffs the registry against the ledger's physics. **Before freezing a row, re-read §6 and §17
+    for the mechanism it assumes** — and note the failure mode is asymmetric and quiet: a row that
+    over-restricts produces a smaller, cleaner-looking experiment, not an error.
+21. **An `m8src` script with a fixed output path plus a variant flag overwrites the variant it
+    already recorded.** `b6_pre.py` took `--head {linear,mlp,none}` and wrote every one of them to
+    `results/m8_b6_pre.json`, so running the `mlp` gate that `E14-HEAD` requires would have
+    silently replaced the `linear` PASS that §18, STATUS and a registry row all cite — and the
+    overwrite would have looked exactly like a successful run. Pitfall 8 is the m7src version of
+    this; the m8src version is worse, because the file is ours and the flag looks harmless. **If a
+    CLI flag changes what is measured, it must change where the result is written.**
