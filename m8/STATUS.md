@@ -126,7 +126,23 @@ all of Stage R's training combined, bought for one descriptive row. `instruction
 sanctions published numbers as labelled context. **Pre-agreeing the fallback now beats discovering
 the collision in week three.**
 
-### Three things you should see, that are not questions
+### Four things you should see, that are not questions
+
+**B2 found a real mechanism, and it is the best news of the night.** Objective A's KL term asks the
+student to match the teacher's distribution over the query's positive plus 31 distractors drawn
+*uniformly* from two million documents, at temperature 0.02. Measured on 4,000 TRAIN queries:
+**for the median query that distribution is a delta function to seven decimal places** — entropy
+5.65e-07 nats against a ln(32) = 3.466 ceiling, teacher max-probability median exactly 1.0, and
+**82.9% of queries below 1e-4 nats**. One of the two training signals is, for five queries in six,
+carrying no information at all. Drawing distractors from the teacher's own top-200 instead raises
+the median entropy **six orders of magnitude**, to a quarter of the ceiling.
+
+That is a concrete, measured mechanism for why M7's recipe programme transferred ~0.000 — and it
+is a different class of lever from knob-tuning. It does **not** yet say a listwise objective wins;
+that is `R-LIST`'s question and its bar is still unfrozen, so the guard refuses it.
+`results/m8_b2_entropy.json`, LEDGER §19.
+
+
 
 **B7 passed, and it reopens two doors at once.** The dense fp64 Gram is what closed granite-r2 and
 gte-modernbert in M7 "on arithmetic, not merit" — 20.3 GB at 50,368 rows against an 18 GB budget.
