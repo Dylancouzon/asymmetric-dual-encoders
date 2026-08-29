@@ -35,6 +35,22 @@ run that reframed H3 · `bench.py` throughput, the ridge control timing, and the
 **Tests** — `test_guards.py`, 26 checks, both halves of G2 (runtime refusals and a static scan) plus
 G1. Run it after touching either guard.
 
+## Things that must move with the encoder
+
+`m7/CODEMAP.md` names two: anything assuming **dim 768**, and `table.py`'s **`CLS_ID`**. Screening
+a non-BERT teacher found two more, and both are silent:
+
+3. **`table.py`'s `CLS_ID = 101`** is a module default but a constructor PARAMETER — pass
+   `spec.cls_id`. ModernBERT's is **50281**. The default would put a wrong vector behind every
+   degenerate empty query, and nothing would raise.
+4. **Anything assuming `tok.vocab_size == len(tok)`.** `m7src/init_table` sizes the teacher init
+   by `tok.vocab_size`. For all ten registry encoders that equals `len(tok)` equals 30,522. For
+   ModernBERT it is **50,280 against 50,368**, and **`[CLS]` is 50,281 — inside the gap**, so the
+   init has no row for the token `add_special_tokens=True` puts at the front of every query.
+   `m8src/init_m8.py` builds it at `max(len(tok), tok.vocab_size)` and falls through to m7src
+   whenever the two agree. Note the two published figures disagree too: `tok.vocab_size` says
+   50,280 and `len(tok)`/`config.vocab_size` say 50,368 — **measure it, do not read it off a card**.
+
 ## Pitfalls this milestone earned
 
 1. **An `m8src` module name that collides with an `m7src` one shadows it.** `m8src/_paths.py` sat
