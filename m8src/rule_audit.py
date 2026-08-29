@@ -123,10 +123,16 @@ def audit():
 
     # Gap list still true?
     ledger = (REPO / "m8" / "LEDGER.md").read_text()
+    # Only the gap TABLE's rows count, not the prose around it -- a struck item is announced in
+    # that prose, and matching it there made this check flag its own note (found on first run).
+    gap_rows = []
+    if "GAP LIST" in ledger:
+        section = ledger.split("GAP LIST")[1].split("\n## ")[0]
+        gap_rows = [ln for ln in section.splitlines()
+                    if ln.startswith("|") and not set(ln) <= set("|-: ")]
     gap_files = [n for n in ("m8src/test_decide.py", "m8src/rule_audit.py",
                              "m8src/test_final_guard.py", "m8src/test_freeze_binding.py")
-                 if f"`{n}`" in ledger.split("GAP LIST")[1].split("## ")[0]] \
-        if "GAP LIST" in ledger else []
+                 if any(f"`{n}`" in row for row in gap_rows)]
     stale = [n for n in gap_files if (REPO / n).exists()]
     if stale:
         findings.append({"severity": "MAJOR",

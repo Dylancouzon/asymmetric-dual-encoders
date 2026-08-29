@@ -1,6 +1,6 @@
 {
   "_note": "LEDGER \u00a74.4 deliverable 3: rule compliance, AUDITED rather than discovered.",
-  "head": "c7ab414781895edf9801112ecde6addea9c66202",
+  "head": "512f9bc5967de38ff86e67f1742e8687141b2eb4",
   "registry_sha_now": 2,
   "stamped_results_checked": [
     {
@@ -30,12 +30,7 @@
     "m8_shadow_alternatives.json"
   ],
   "_unstamped_note": "not every results/m8_*.json is a probe result -- calibration caches, schedules and descriptive diagnostics are inputs, not registered measurements. They are listed so the distinction is visible.",
-  "findings": [
-    {
-      "severity": "MAJOR",
-      "issue": "the gap list still names files that now exist: ['m8src/test_decide.py', 'm8src/rule_audit.py']. A stale gap list is how a DONE heading starts lying."
-    }
-  ],
+  "findings": [],
   "outstanding_violations": 0,
   "NOT_mechanically_checkable": [
     "pre-registration ORDERING beyond the commit graph: a bar committed minutes before a run that had already been executed locally is indistinguishable from one committed properly first.",
