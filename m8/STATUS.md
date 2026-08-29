@@ -106,7 +106,37 @@ diagonal, six more A legs complete it).
 0.0040 everywhere except `int8/mean` worst-group and OOD macro at **0.004369**. That one is the
 largest of 16 noisy estimates — likely high for its own endpoint, and silent about the other 15.
 
-**B3 — the probe was rebuilt twice tonight, both times before any arm ran, and is now running.**
+**B3 — ANSWERED. Phase A is not meaningfully pair-starved** (`results/m8_b3_decision.json`,
+LEDGER §15). Twelve arms: nested real-pair fractions {0.25, 0.50, 0.75, 1.00} × three seeds, at
+fixed updates, batch, negatives and Phase-B checkpoint, so total draws are 1,280,000 in every arm
+and only the count of distinct pairs moves.
+
+| contrast | dense | fused | meets 0.0040? |
+|---|---|---|---|
+| **4× dose**, 1.00 vs 0.25 | +0.00135 | +0.00369 | **no, neither** |
+| primary, 1.00 vs 0.50 | +0.00112 | +0.00201 | no |
+| 1.00 vs 0.75 | **−0.00107** | +0.00076 | no |
+
+The registered verdict is **UNINFORMATIVE**, which the registration defined in advance as *the
+strongest no-starvation evidence this probe can produce*: the floors show the instrument resolves
+0.0040, and a fourfold dose does not move either scalar that far. **What it would take is the
+actionable number**: the fitted slope is +0.00097 dense per doubling, so reaching the bar needs
+**~17.6× the pool — about 5.9M pairs**. M7's entire MS MARCO addition was 490K, under 1.5×. No
+pair-count lever available to M8 gets close, which is a direct argument for spending the milestone
+on capacity instead.
+
+**The redesign paid for itself in the data.** The original primary contrast was 1.00 vs 0.75, and
+it came out **negative on dense (−0.00107, all three seeds agreeing)** — exactly the concave,
+least-powered segment the review warned about. Had it not been moved to 1.00-vs-0.50 *before the
+arms ran*, B3 would have returned a negative estimate on its own primary and called it a FAIL.
+
+**Scope, because this is easy to over-read**: `p35b-2m` already distilled on every training query,
+so this measures the marginal value of distinct pairs *in Phase A given B absorbed them*, and says
+nothing about B-side pair levers. The fused scalar is biased toward the comparator (the frozen
+fusion operator was selected on the f=1.00 recipe) and, consistently, every fused gain exceeds its
+dense counterpart.
+
+**How it got here — the probe was rebuilt twice, both times before any arm ran.**
 Its original lever was synthetic ICT augmentation. An adversarial review of the *arm definition*
 killed it: "equal updates AND equal exposure" over-constrains a fixed batch (three constraints,
 two free variables), my proposed batch-scaling fix did not even deliver equal *influence* under

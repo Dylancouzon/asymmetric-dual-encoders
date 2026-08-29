@@ -56,10 +56,10 @@ have lost the remainder, so it is rewritten instead.
      M7's `freeze.py` alone is 34,659 bytes of accumulated refusals. This is the largest piece of
      engineering left in the milestone and it is weeks from being needed.
 4. **Wave-1 probes.** S0, T1, B2, B7 and both noise floors have run; B17 ran and was disowned
-   (§20). **B3 was rebuilt twice and its arms are running** — the ICT lever was retired before any arm
+   (§20). **B3 — DONE, verdict UNINFORMATIVE** (Phase A is not meaningfully pair-starved; reaching the bar would need ~17.6x the pool). It was rebuilt twice — the ICT lever was retired before any arm
    existed (registry `B3-ICT`), replaced by real-pair pool scaling, then pinned to computable
    scalars after a second review; the bar is code (`m8src/b3_decide.py`) with a test per branch.
-   What remains is the scoring pass and the verdict. **B6-pre — DONE and PASSED**
+   Nothing remains on B3. **B6-pre — DONE and PASSED**
    (`results/m8_b6_pre.json`): one file, 3,415 nodes, zero custom-domain ops, parity min-cosine
    0.99999994. D1 stays on the Stage-S menu.
 5. **FineWeb arm prep (E13)** — untouched. Span sampler, full contamination/near-dup filters,
