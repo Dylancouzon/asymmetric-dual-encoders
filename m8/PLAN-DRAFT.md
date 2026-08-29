@@ -205,10 +205,16 @@ ordering can change when the tokenizer/objective changes, so the screen prunes, 
    cost ~3x measured before committing). Both get closed-form table probes IF Dylan sets the byte
    cap (E7). ONNX-portability recorded per candidate (Qwen3-Embedding ONNX status to be checked in
    the sweep).
-3. **Fresh sweep for anything released or missed since `m7-teacher-shortlist-2026-08-26.md`**,
-   filters: licence permits derived-weight release; vendor rule (relaxed form); table byte cap per
-   E7; ONNX-exportable; probed on the closed-form TABLE criterion only (never the tower — Spearman
-   0.000 stands); B16's MEV/self-similarity screen applied first if it validates.
+3. **Fresh sweep for anything released or missed since `m7-teacher-shortlist-2026-08-26.md`** —
+   DONE 2026-08-29 (`research/m8-planning/teacher-sweep-2026-08-29.md`). Probe list:
+   **stella_en_1.5B_v5** (MIT, same lineage; breaks WordPiece compatibility — fingerprints rebuilt
+   if it wins; table floor 77.6 MB at MRL-512) and **microsoft/harrier-oss-v1-0.6b** (MIT on a
+   Qwen3 base, official ONNX, decoder-only inductive bias; training data undisclosed —
+   contamination black box, needs ruling before any adoption). Qwen3-Embedding-0.6B stays OUT
+   (dominated on the anchor scale). New licence flag: harrier-270m/27b are Gemma-3 derivatives
+   shipped as "MIT" — Gemma terms flow down; OUT regardless of the label. All probes on the
+   closed-form TABLE criterion only (Spearman 0.000 stands); B16's MEV screen first if it
+   validates; contamination column uses the MTEB registry proxy list consistently (see E9).
 
 Decision rule unchanged from the mandate: a swap needs the closed-form table criterion, an
 off-family read, re-probe under the final M8 frame, and Dylan's sign-off.
@@ -351,6 +357,14 @@ storage guidance.
 - **E8 — PMC-OA commercial subset as training data**: licence-clean, but using it makes NFCorpus
   and TREC-COVID training-adjacent, weakening the six's descriptive continuity read (reserved four
   unaffected). Exclude (default) / include+disclose / research-arm-only?
+- **E9 — FEVER teacher-contamination disclosure (new, 2026-08-29, verified)**: the MTEB registry
+  assigns stella a proxy training-datasets list (NVIDIA's, "distilled from gte-qwen, training data
+  unknown") that includes **FEVER** — one of the reserved four. M7 already treated this registry
+  entry as stella's disclosure for ArguAna/FiQA, so consistency requires treating FEVER the same
+  way. Paired legs C1/C2 share the teacher (contamination largely cancels); C3 and absolute FEVER
+  claims are teacher-flattered. Proposed registration (before any M8 number): proxy-disclosure
+  caveat at the FEVER row + a FEVER-excluded sensitivity read of all three legs. Needs your ack
+  since it colors the headline. `research/m8-planning/teacher-sweep-2026-08-29.md`.
 
 ---
 
