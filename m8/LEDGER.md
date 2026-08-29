@@ -1466,3 +1466,48 @@ general TRAIN list **plus** the in-domain half and score the held-out half, so t
 measured is what in-domain supervision *adds* to a table that already exists — which is the
 decision-relevant question. That is a different probe from the one registered here and may not be
 run under B17's id.
+
+## 21. T1 — the teacher screen. OUTCOME: NO SWAP; the incumbent stands.
+
+`results/m8_t1_decision.json` and the three per-candidate artifacts. Executed by
+`m8src/t1_decide.py` rather than read off by eye, because a bar a session can re-read in its own
+favour is not a bar.
+
+**These are the first measurements of granite-r2 and gte-modernbert as teachers.** M7 closed both
+**"on arithmetic, not merit"** — a 50,368-vocabulary fp64 Gram is 20.3 GB against an 18 GB budget.
+B7's solver removed that wall (§18), and four further things had to move before a number existed:
+a clean fit list (§3.3), runtime Spec registration, `spec.cls_id` passed explicitly, and an init
+built at `len(tok)` rather than `tok.vocab_size` (§15).
+
+| candidate | published tower quality | best λ | dev macro (CQA-2) | Δ vs incumbent | raw 95% CI | int8 table |
+|---|---|---|---|---|---|---|
+| **stella-400M-v5** (incumbent, re-probed) | MTEB-Ret 58.97 | 0.01 | **0.3438** | — | — | 31.3 MB |
+| granite-embedding-english-r2 | BEIR(15) 53.1 | 0.01 | 0.2915 | **−0.0523** | [−0.0663, −0.0385] | 38.7 MB |
+| gte-modernbert-base | BEIR(15) **55.33** | 0.01 | 0.2349 | **−0.1089** | [−0.1234, −0.0945] | 38.7 MB |
+
+Every optimum is **interior** (no grid-edge clipping, which M7 had to widen its grid to avoid),
+and every `signflip_dep` p is 1.0 in the "greater" direction — the challengers are not close.
+
+**Swap-bar condition 1 fails for both**, so conditions 2, 3 and the tie-break never arise and the
+off-family read is never bought (hotpotqa is 5.23M documents per candidate). That is the bar's
+ordering doing its job, and it is the same structure M7's screen produced.
+
+**THE FRAME VALIDATES ITSELF THREE WAYS.** The incumbent re-probed on the clean fit list scores
+**0.3438**, against M7's own recorded learnability figure of **0.3439** and this session's
+stale-list run at **0.343924** (§18b). A new solver, a new init builder, a regenerated fit list
+and a different code path reproduce the number M7 adopted its teacher on.
+
+**And the tower does not predict the table — again, on fresh candidates.** gte-modernbert-base has
+the HIGHER published retrieval score of the two challengers (55.33 against granite's 53.1) and the
+**lower** distilled table by a wide margin (0.2349 against 0.2915). M7 established this with
+Spearman(ceiling, table) = 0.000 over eight candidates and paid for the lesson by approving
+arctic-embed-l on its tower; this is an independent reproduction in a new frame, on two models M7
+never measured. **A teacher's own retrieval quality remains not a selection criterion.**
+
+**What is NOT settled.** Two registered candidates were not screened and their reasons are
+recorded rather than quietly dropped: `stella_en_1.5B_v5` needs `trust_remote_code` and has no
+usable sequence-start row (its `config.json` and `tokenizer_config.json` disagree, 151643 against
+null), so its fallback row must be registered first; `microsoft/harrier-oss-v1-0.6b` uses
+last-token pooling that `m7src/teacher.py` raises on, publishes no retrieval-only number, and
+needs Dylan's ruling on undisclosed training data. Neither absence changes tonight's verdict —
+the registered default is the incumbent and nothing displaced it.

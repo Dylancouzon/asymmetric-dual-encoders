@@ -1,0 +1,204 @@
+{
+  "_note": "T1's swap bar, executed (LEDGER \u00a710, registry probe `T1`).",
+  "incumbent": {
+    "name": "stella-400M-v5",
+    "best_lambda": "0.01",
+    "macro": 0.34382451833840955,
+    "int8_table_mb": 31.3,
+    "fit_list": "m8_trainq_texts.json (filtered)"
+  },
+  "components": [
+    "cqadup-programmers",
+    "cqadup-physics"
+  ],
+  "candidates": {
+    "granite-embedding-english-r2": {
+      "screened": true,
+      "spec_name": "granite-r2",
+      "best_lambda": "0.01",
+      "macro": 0.2915183404769821,
+      "incumbent_macro": 0.34382451833840955,
+      "delta_vs_incumbent": -0.052306177861427494,
+      "ci95_raw": [
+        -0.06631188318299887,
+        -0.03852229992381675
+      ],
+      "signflip_dep_p": 1.0,
+      "penalty_class": "dissimilar",
+      "penalty": 0.0096,
+      "cond1_beats_incumbent_ci_resolved": false,
+      "cond2_margin_exceeds_penalty": false,
+      "cond3_off_family": "NOT EVALUATED -- condition 1 failed, so the bar's ordering means it is never bought (hotpotqa is 5.23M docs per candidate)",
+      "int8_table_mb": 38.7,
+      "vocab": 50368,
+      "dim": 768,
+      "holm": {
+        "p": 1.0,
+        "threshold": 0.025,
+        "reject": false,
+        "rank": 1
+      }
+    },
+    "gte-modernbert-base": {
+      "screened": true,
+      "spec_name": "gte-modernbert-base",
+      "best_lambda": "0.01",
+      "macro": 0.2349355754066786,
+      "incumbent_macro": 0.34382451833840955,
+      "delta_vs_incumbent": -0.10888894293173097,
+      "ci95_raw": [
+        -0.12335679037736648,
+        -0.09445830326342881
+      ],
+      "signflip_dep_p": 1.0,
+      "penalty_class": "dissimilar",
+      "penalty": 0.0096,
+      "cond1_beats_incumbent_ci_resolved": false,
+      "cond2_margin_exceeds_penalty": false,
+      "cond3_off_family": "NOT EVALUATED -- condition 1 failed, so the bar's ordering means it is never bought (hotpotqa is 5.23M docs per candidate)",
+      "int8_table_mb": 38.7,
+      "vocab": 50368,
+      "dim": 768,
+      "holm": {
+        "p": 1.0,
+        "threshold": 0.05,
+        "reject": false,
+        "rank": 2
+      }
+    },
+    "stella_en_1.5B_v5": {
+      "screened": false,
+      "spec_name": "stella-1.5B-v5",
+      "why": "not screened this session"
+    },
+    "harrier-oss-v1-0.6b": {
+      "screened": false,
+      "spec_name": "harrier-0.6b",
+      "why": [
+        "training data undisclosed -- needs Dylan's ruling before adoption",
+        "LAST-TOKEN pooling: m7src/teacher.py implements only cls/mean and raises otherwise; screening it needs new code in m8src (m7src is frozen, G3)",
+        "no published retrieval-only number -- only mixed-task MTEB v2 69.0",
+        "no usable sequence-start row: its embedding lives at the LAST token"
+      ]
+    }
+  },
+  "holm_alpha_0.05": {
+    "granite-embedding-english-r2": {
+      "p": 1.0,
+      "threshold": 0.025,
+      "reject": false,
+      "rank": 1
+    },
+    "gte-modernbert-base": {
+      "p": 1.0,
+      "threshold": 0.05,
+      "reject": false,
+      "rank": 2
+    }
+  },
+  "survivors": [],
+  "verdict": "NO SWAP -- the incumbent stands. Same-teacher is the registered default (LEDGER \u00a710).",
+  "not_screened_this_session": {
+    "stella_en_1.5B_v5": "not screened this session",
+    "harrier-oss-v1-0.6b": [
+      "training data undisclosed -- needs Dylan's ruling before adoption",
+      "LAST-TOKEN pooling: m7src/teacher.py implements only cls/mean and raises otherwise; screening it needs new code in m8src (m7src is frozen, G3)",
+      "no published retrieval-only number -- only mixed-task MTEB v2 69.0",
+      "no usable sequence-start row: its embedding lives at the LAST token"
+    ]
+  },
+  "_registration": {
+    "probe": "T1",
+    "row": {
+      "wave": 1,
+      "title": "teacher screen (workstream T)",
+      "question": "Does any challenger teacher beat the incumbent stella_en_400M_v5 on the closed-form distilled TABLE by more than the swap's CI-widening penalty?",
+      "endpoint": "closed-form distilled table, equal-weight dev macro of nDCG@10 over cqadup-programmers and cqadup-physics, per-query, int8-irrelevant (closed form)",
+      "comparator": "the incumbent stella_en_400M_v5, re-probed in the IDENTICAL frame (mandatory control)",
+      "bar": "ALL FOUR: (1) challenger beats incumbent CI-resolved = raw two-sided 95% paired_dep CI excludes 0 AND signflip_dep p < 0.05; (2) point-estimate margin > the challenger's PRE-CLASSIFIED CI-widening penalty (0.0050 near-sibling / 0.0096 dissimilar, classification fixed below before any result); (3) per-component point-estimate delta >= 0 on BOTH nq-250k AND hotpotqa (one negative component is a reversal and fails); (4) Dylan signs off.",
+      "multiplicity": "Holm across the challenger set at alpha = 0.05",
+      "no_survivor": "keep the incumbent -- same-teacher is the registered default",
+      "tie_break": "two candidates are tied iff the raw 95% CI of their difference lies entirely within +/-0.0040; among tied candidates prefer no disclosed overlap with the protected sets, then the smaller dimension",
+      "statistic": "boot.paired_dep (B=10000, seed 0) + boot.signflip_dep (R=100000, seed 0), strict alignment",
+      "fit_list": "regenerated through the current protected-query filter; M7's work/trainq_texts.json has 1.31% R1 hits and is unusable",
+      "candidates": {
+        "stella_en_400M_v5": {
+          "role": "incumbent control",
+          "penalty_class": "incumbent",
+          "penalty": 0.0,
+          "vocab": 30522,
+          "dim": 1024,
+          "int8_mb": 31.3,
+          "spec_name": "stella-400M-v5"
+        },
+        "granite-embedding-english-r2": {
+          "role": "CG-frame control",
+          "penalty_class": "dissimilar",
+          "penalty": 0.0096,
+          "repo": "ibm-granite/granite-embedding-english-r2",
+          "vocab": 50368,
+          "dim": 768,
+          "int8_mb": 38.7,
+          "trust_remote_code": false,
+          "spec_name": "granite-r2"
+        },
+        "gte-modernbert-base": {
+          "role": "CG-frame control",
+          "penalty_class": "dissimilar",
+          "penalty": 0.0096,
+          "repo": "Alibaba-NLP/gte-modernbert-base",
+          "vocab": 50368,
+          "dim": 768,
+          "int8_mb": 38.7,
+          "trust_remote_code": false,
+          "note": "byte-identical tokenizer to granite-r2: the two share a bag matrix and one frame",
+          "spec_name": "gte-modernbert-base"
+        },
+        "stella_en_1.5B_v5": {
+          "role": "challenger",
+          "penalty_class": "dissimilar",
+          "penalty": 0.0096,
+          "note": "fits the 233 MB cap at int8 only; 310.6 MB at fp16. No usable BOS row: config.json and tokenizer_config.json disagree (151643 vs null).",
+          "repo": "NovaSearch/stella_en_1.5B_v5",
+          "vocab": 151646,
+          "dim": 1024,
+          "int8_mb": 155.3,
+          "trust_remote_code": true,
+          "auto_map": "same-repo",
+          "spec_name": "stella-1.5B-v5"
+        },
+        "harrier-oss-v1-0.6b": {
+          "role": "challenger",
+          "penalty_class": "dissimilar",
+          "penalty": 0.0096,
+          "note": "config.json vocab_size 151936 vs true tokenizer size 151669 -- a 267-row padding gap",
+          "repo": "microsoft/harrier-oss-v1-0.6b",
+          "vocab": 151669,
+          "dim": 1024,
+          "int8_mb": 155.3,
+          "trust_remote_code": false,
+          "vendor": "Microsoft",
+          "blockers": [
+            "training data undisclosed -- needs Dylan's ruling before adoption",
+            "LAST-TOKEN pooling: m7src/teacher.py implements only cls/mean and raises otherwise; screening it needs new code in m8src (m7src is frozen, G3)",
+            "no published retrieval-only number -- only mixed-task MTEB v2 69.0",
+            "no usable sequence-start row: its embedding lives at the LAST token"
+          ],
+          "spec_name": "harrier-0.6b"
+        }
+      },
+      "penalty_rule": "near-sibling iff the challenger shares the incumbent's tokenizer identity (bert-wordpiece-30522) AND its dimension (1024); else dissimilar. Fixed here, before any screen runs.",
+      "noise_floor_exempt": true,
+      "exempt_reason": "closed-form dev probe with its own CI-resolution bar, not a trained-arm comparison; named as exempt in LEDGER 4.7 and 6",
+      "blocked_on": "B7 -- every challenger's vocabulary is >= 50,368 and the direct fp64 Gram at that size is 20.3 GB, above the 18 GB budget. Until a solver exists that does not materialize the Gram, T1 can only re-run candidates M7 already closed CI-resolved.",
+      "frame_note": "fixed WITHIN a tokenizer family; a cross-family challenger is screened in its own vocabulary and the comparison is labelled teacher-plus-tokenizer, with the vocabulary size at every row",
+      "penalty_note_2026_08_29": "every challenger is DISSIMILAR (none shares bert-wordpiece-30522), so every penalty is 0.0096. Fixed before any screen ran.",
+      "incumbent_spec_name": "stella-400M-v5"
+    },
+    "wave": 1,
+    "registry_sha256": "aacad17386a1ea71e7e1537366c0f4fb4f77f97ae222ae5c4eac230f47d79ae5",
+    "ledger_sha256": "944083d86abca6a409f5b731768ed3f7657f647a7b5c2d8f9924d93ac1de673b",
+    "ledger_commit": "665450553c5380c4a5fa86144ada4c832032b2a4",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}
