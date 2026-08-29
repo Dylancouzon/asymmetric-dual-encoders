@@ -55,8 +55,12 @@ G1. Run it after touching either guard.
    pass phrased around "exploit / bypass / attack the guard" was cut off mid-read by the provider.
    The same questions in protocol language ("does this leave a degree of freedom open?") ran fine.
    Cost one full review cycle.
-7. **`pkill` from a shell whose own command line contains the pattern kills itself** (exit 144).
-   Anchor to the interpreter and kill in a separate command from any relaunch.
+7. **A `pgrep`/`pkill` pattern matches the waiting shell's OWN command line.** `pkill` from such a
+   shell kills itself (exit 144); an `until ! pgrep -f "x"` loop never exits because it always
+   finds itself. Hit three times in one session. Two fixes, both cheap: kill by pid
+   (`kill $(pgrep -f ...)` in a *separate* command from any relaunch), and write the wait pattern
+   so it cannot match itself — `pgrep -f "noise_floor[.]py train"` matches the real process while
+   the waiting shell's literal `noise_floor[.]py train` does not match that regex.
 8. **`M7_ENCODER` defaults to bge-base — M7's PRE-SWAP teacher — and nothing warns you.**
    Every noise-floor arm died with "init 'run:p35b-2m' was trained against stella but the active
    encoder is bge-base". `m8base.py` now sets it, so every M8 process inherits the incumbent.
