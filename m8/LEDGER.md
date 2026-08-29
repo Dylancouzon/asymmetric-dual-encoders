@@ -507,6 +507,16 @@ below is a number, not a word (Codex gate BLOCKER 1).
      and the result is written atomically. It is logged as a known-test access in
      `m8/SIX_ACCESS.log`. No model, fusion parameter or fallback may change after it.
    - One-directional: it can only block, never license.
+   - **AND IT IS NOT A DECISION POINT (self-review, 2026-08-29, before any M8 number).** The six
+     are scored *before* the reserved payloads are opened, in the same process, which creates an
+     obvious temptation: see a six-set regression, stop, "fix" the candidate, re-run. The freeze
+     receipt does not protect against that, because the six-set read does not spend the reserved
+     access. So it is registered here instead: **the six-set result is computed, recorded, and the
+     reserved access proceeds regardless of what it says.** No candidate, fusion parameter,
+     fallback or artifact may change after it, and no run may be abandoned because of it. It
+     governs SHIPPING, not MEASURING — and the measurement is what this milestone exists to
+     produce, since a miss is the pre-registered publishable outcome. The only thing the guard
+     does is decide whether a v2 replaces v1 on the hub.
 
 **Descriptive context inside the same access (E12, registered before any M8 number):**
 `bge-small-en-v1.5` and `LR-dense-websearch` scored on the reserved four — **outside the Holm
