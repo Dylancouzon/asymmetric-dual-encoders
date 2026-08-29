@@ -70,9 +70,12 @@ def leg(name, a, b, *, hypothesis):
     }
 
 
-def decide_family(legs):
+def decide_family(legs, per_query=None):
     """legs: {name: leg(...)}. Applies Holm over the sign-flip p's, then the two CI legs.
-    A leg is resolved only if all three pass."""
+    A leg is resolved only if all three pass.
+
+    `per_query` (optional): {name: (a, b)} so the alpha/3 bound can be recomputed at the EXACT
+    level and cross-checked against boot.paired's rounded percentile (LEDGER 4.1)."""
     holm = boot.holm({k: v["signflip_p"] for k, v in legs.items()}, alpha=ALPHA)
     out = {}
     for name, r in legs.items():
@@ -85,19 +88,52 @@ def decide_family(legs):
             "raw_ci_lower_gt0": bool(lo_raw > 0),
             "bonferroni_lower_gt0": bool(bonf is not None and bonf > 0),
         }
+        exact = None
+        if per_query and name in per_query:
+            exact = exact_bonferroni_lower(*per_query[name])
+            if bonf is not None and abs(exact - bonf) > 1e-6:
+                raise AssertionError(
+                    f"{name}: the exact alpha/3 bound {exact!r} and boot.paired's rounded "
+                    f"percentile {bonf!r} differ by {abs(exact - bonf):.2e} > 1e-6. A decision "
+                    f"may not read a bound whose level is uncertain (LEDGER 4.1).")
+            legs_pass["bonferroni_lower_gt0"] = bool(exact > 0)
         out[name] = {**r, "holm": holm[name], "bonferroni_lower_raw": bonf,
+                     "bonferroni_lower_exact": exact,
+                     "bonferroni_level_pct": BONF_LEVEL * 100,
                      "legs": legs_pass, "resolved": all(legs_pass.values())}
     return out
 
 
 def _bonf_lookup(one_sided):
-    """boot.paired keys the simultaneous bound by percentile as a string ('0.8333')."""
+    """boot.paired keys the simultaneous bound by percentile as the ROUNDED string '0.8333'."""
     if not one_sided:
         return None
     for k, v in one_sided.items():
         if abs(float(k) - BONF_LEVEL * 100) < 1e-3:
             return float(v)
     return None
+
+
+def exact_bonferroni_lower(a, b, B=boot.B, seed=boot.SEED):
+    """The alpha/3 simultaneous lower bound at the EXACT level, not boot.paired's rounded
+    '0.8333' percentile string.
+
+    The ledger requires the bound to be computed at 100 x 0.025/3 = 0.83333...%, and requires the
+    two to be checked against each other rather than assumed equal. This reproduces boot.paired's
+    bootstrap draw for draw -- same RNG, same seed, same per-dataset loop order over
+    sorted(set(a) & set(b)), same accumulation -- and takes the exact quantile. If this ever stops
+    matching boot.paired's rounded value to 1e-6, that is a real divergence and the assertion in
+    decide_family() will surface it instead of a decision quietly reading the wrong number.
+    """
+    pairs = boot._align(a, b, strict=True)
+    rng = np.random.default_rng(seed)
+    k = len(pairs)
+    deltas = np.zeros(B)
+    for _ds, (da, db) in pairs.items():
+        n = len(da)
+        idx = rng.integers(0, n, size=(B, n))
+        deltas += (da[idx].mean(1) - db[idx].mean(1)) / k
+    return float(np.percentile(deltas, BONF_LEVEL * 100))
 
 
 def worst_group(m8_per_query, m7_per_query, groups):
@@ -190,7 +226,7 @@ def self_test():
         "C2": leg("C2", m8, m7, hypothesis="dense M8 > frozen dense M7"),
         "C3": leg("C3", m8, bm25, hypothesis="fused-M8 > BM25"),
     }
-    fam = decide_family(legs)
+    fam = decide_family(legs, per_query={"C1": (m8, m7), "C2": (m8, m7), "C3": (m8, bm25)})
     six = {d: {f"q{i:07d}": float(v) for i, v in enumerate(rng.random(300))}
            for d in m8base.SIX}
     verdict = ship(
@@ -201,7 +237,8 @@ def self_test():
         six_guard=six_set_no_regression(six, six, margin=0.005))
     return {"legs": {k: {kk: v[kk] for kk in
                          ("delta_raw", "signflip_p", "ci95_raw", "bonferroni_lower_raw",
-                          "legs", "resolved")} for k, v in fam.items()},
+                          "bonferroni_lower_exact", "legs", "resolved")}
+                     for k, v in fam.items()},
             "verdict": verdict}
 
 
