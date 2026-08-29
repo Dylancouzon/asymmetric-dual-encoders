@@ -17,8 +17,19 @@ def load_source(name):
     """Memoized: these files are 2-21 MB of JSON and callers reach for them inside loops.
     An un-memoized version re-parsed a 16 MB file once per training pair in decontam.py --
     352,190 times -- and the step never finished. Bounded: five sources, ~63 MB of JSON.
-    load_store is deliberately NOT cached; hotpotqa-corpus alone is 5.23M strings."""
-    return json.loads((TRAIN / "sources" / f"{name}.json").read_text())
+    load_store is deliberately NOT cached; hotpotqa-corpus alone is 5.23M strings.
+
+    RESEARCH-ONLY sources (the clean-stack-tax msmarco arm) live under `sources-research/` and are
+    reachable ONLY by explicit name here: they must never enter `available_sources()`, because the
+    frozen lineage records carry `sources: []` and `freeze.assert_releasable` resolves that against
+    the canonical dir -- a canonical msmarco file would retroactively refuse the frozen artifact
+    (m7/LEDGER.md, 'the clean-stack tax', arm-shape constraint 1)."""
+    p = TRAIN / "sources" / f"{name}.json"
+    if not p.exists():
+        rp = TRAIN / "sources-research" / f"{name}.json"
+        if rp.exists():
+            return json.loads(rp.read_text())
+    return json.loads(p.read_text())
 
 
 def load_store(name):

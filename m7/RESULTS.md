@@ -116,3 +116,5 @@ StackExchange components (+0.047/+0.020), so the ranking was not StackExchange-s
 | p5s-simple-b | `work/runs/p5s-simple-b.json` | 0.4970 | ok |
 | p5s-simple-a | `work/runs/p5s-simple-a.json` | 0.5139 | ok |
 | p5s-simple-nohn-a | `work/runs/p5s-simple-nohn-a.json` | 0.5106 | ok |
+| tax-msmarco-b | `work/runs/tax-msmarco-b.json` | 0.5050 | ok |
+| tax-msmarco-a | `work/runs/tax-msmarco-a.json` | 0.5116 | ok |

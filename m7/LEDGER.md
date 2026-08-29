@@ -770,6 +770,53 @@ what is on disk, so the research variant cannot slip through as "no non-commerci
 
 **When.** Only after the final run has executed and `m7/FREEZE.json` is immutable. That ordering is
 the point: development is over, so a post-hoc measurement cannot inform a decision already made.
+**Triggered 2026-08-28 after the final run, on Dylan's go** ("unless you think it makes sense to do
+it now, to have our data-licensing tax verdict" — the assistant ruled now, because the attribution
+"what did the exclusion cost v1" exists only while the recipe is frozen; M8 will revisit the data
+mix as development, which answers a different question).
+
+**ARM SHAPE, fixed before any arm number exists (2026-08-28).** Three constraints discovered in the
+code and resolved in writing first:
+1. **The source file lives in `work/train/sources-research/`**, read via a `mix.load_source`
+   fallback, never in the canonical dir: the frozen lineage records say `sources: []`, which
+   `assert_releasable` resolves against the canonical dir on disk, so a canonical
+   `msmarco-train.json` would retroactively refuse the FROZEN artifact's releasability check. This
+   also keeps `available_sources()` — and therefore the pseudo-query store set — unchanged.
+2. **No pool rebuild.** The 6.17M-doc pool's content hash is pinned by the dev manifest and its ban
+   mask is index-addressed. MS MARCO positives are encoded as a SIDE BANK appended in memory after
+   the pool rows for this arm only: positives resolve into the side bank; **negative sampling stays
+   pool-only**, so the pool-ban pass is satisfied vacuously (msmarco rows can never be drawn as
+   negatives) and no mask or hash moves.
+3. **The pseudo-query pool is byte-identical to the frozen arm's.** A sixth doc store would change
+   `pseudoq.build`'s per-store dose (`n // len(stores) + 1`) for all five existing stores — a second
+   knob. MS MARCO therefore contributes its PAIRS (objective A) and their ~500K real queries
+   (objective B's cosine term, exactly as every pair source's queries do), not pseudo spans. The
+   one-knob claim is "msmarco pairs + queries added"; the confound paragraph above still applies.
+
+Decontamination: R1 (protected-query index) and R2 (positives vs the six) run for the new source
+with the same functions and thresholds; counts land in `results/m7_decontam_msmarco.json` and the
+kept qids merge into `kept.json` under their own key (inert for every five-source run). R3
+disclosure sweeps run for the six, cqadupstack-dev and nq-250k; the FEVER/DBpedia sweeps are
+SKIPPED — those corpora are M8-reserved and the arm never trains toward them (omission disclosed
+here). Pins for `BeIR/msmarco` / `BeIR/msmarco-qrels` join `m7_trainmix_revisions.json`.
+
+Run ids `tax-msmarco-b` (B, 16k) → `tax-msmarco-a` (A, 2500) — a byte-faithful clone of the frozen
+candidate's Cfg with `sources` extended, so `freeze.assert_releasable` refuses it by name.
+Scoring: full pinned dev suite, then ONE non-confirmatory six-set read using the frozen payloads
+and the final run's verified encode caches, logged to `m7/SIX_ACCESS.log`, written to
+`results/m7_cleanstack_tax.json`, reported as one descriptive sentence and never a tier claim.
+
+**OUTCOME 2026-08-28/29 (`results/m7_cleanstack_tax.json`; decontam: R1 −2,612, R2 −67, 490,241
+pairs added). The descriptive sentence:** adding decontaminated MS MARCO to the frozen recipe
+moves the six-set int8 macro by **+0.0058 [−0.0015, +0.0131]** and the fused macro by +0.0027
+[−0.0026, +0.0079] — both unresolved — while the release bar stays missed CI-resolved
+(**−0.0185 [−0.0344, −0.0030]** vs LR-dense-pertask) and fused-vs-OpenSearch stays a tie
+(+0.0070 [−0.0042, +0.0180]). **The MS MARCO exclusion is NOT what the release-bar miss is made
+of; the remaining gap is architectural.** Also disclosed: the arm is slightly worse on the full
+dev suite (−0.0030 [−0.0066, +0.0003]) while better on the six — the dev suite's in-distribution
+bias, visible once more. The release guard's refusal of the arm was asserted in-run before any
+number was read. B-leg proxy interim (+0.0069 at B16k, mostly gone after A) recorded in
+RESULTS.md rows `tax-msmarco-*`.
 
 **Design.** ONE arm, not a sweep — a sweep would be development. Take whatever recipe is FROZEN at
 that point, exactly as shipped, add decontaminated MS MARCO to the training mix, change nothing else.
@@ -890,3 +937,4 @@ full-duplication CI ratio is 1.392 against a theoretical √2.
 - FINAL-RUN complete in 4120s (the six and all three confirmatory decisions). Confirmatory rejections: none. Results in `results/m7_final_run.json`; the untouched-final tail is reserved for M8 and is not run.
 - FINAL-RUN-SIX-SHA256 d75116af2aa15bc9d1f8c372624159e241ee3a157dc8dddc5f481ef2beb96fb2
 - untouched-final tail SKIPPED: the four sets stay un-scored, reserved as M8's confirmatory evaluation (instructions-m8.md, registered 2026-08-28 pre-run). `--run-untouched-tail` or `--untouched-only` would burn them; neither was used.
+- 2026-08-29T02:36:18.684639+00:00 — **CLEAN-STACK-TAX six-set read** (pre-registered, NON-CONFIRMATORY): arm `tax-msmarco-a`, results in `results/m7_cleanstack_tax.json`. Supports one descriptive sentence; no tier claim.

@@ -12,6 +12,9 @@
   "BeIR/fever": "426aea4d30c65c041f093ae072e25fb5a0e64659",
   "BeIR/fever-qrels": "64cd0e4ef9b63a88ac8e69d1133a2f649acd4745",
   "castorini/mr-tydi@refs/convert/parquet": "22131bd5c4fa7d2e818716d02115c3ecf4f6b5bd",
-  "castorini/mr-tydi (main, for reference)": "1d43c80218d06d0ef80f5b172ccabd848b948bc1"
- }
+  "castorini/mr-tydi (main, for reference)": "1d43c80218d06d0ef80f5b172ccabd848b948bc1",
+  "BeIR/msmarco": "a918e0d11a77ed33f42f29d98340b655593b96ad",
+  "BeIR/msmarco-qrels": "253fbf8a3f8d4a0932b63882b5162bedc84779f5"
+ },
+ "_msmarco_note": "BeIR/msmarco + BeIR/msmarco-qrels pinned 2026-08-28 for the RESEARCH-ONLY clean-stack-tax arm (m7/LEDGER.md). MS MARCO remains permanently excluded from the release stack; freeze.assert_releasable enforces it."
 }

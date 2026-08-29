@@ -34,6 +34,13 @@ lookup table plus token counts.
 
 The untouched-final tail was **skipped — reserved for M8** as registered.
 
+**The clean-stack tax, measured (2026-08-28/29, `results/m7_cleanstack_tax.json`):** the frozen
+recipe + decontaminated MS MARCO (490,241 pairs) gains **+0.0058 [−0.0015, +0.0131]** on the six
+(int8; fused +0.0027) — and **still misses the release bar CI-resolved** (−0.0185
+[−0.0344, −0.0030]). The licensing exclusion is NOT what the miss is made of; the gap is
+architectural, which is where M8 should spend. Non-confirmatory by construction; the arm is
+refused by `freeze.assert_releasable` (asserted in-run) and is never released.
+
 Dev-selection numbers, for contrast with the six: full pinned dev macro 0.6153, out-of-domain
 subset 0.3672. The gap between 0.6153 and 0.4339 is the measured cost of reading dev as a forecast.
 

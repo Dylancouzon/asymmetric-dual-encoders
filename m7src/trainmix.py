@@ -183,8 +183,22 @@ def build_querytext():
     print(f"  querytext triviaqa: {len(tq):,}", flush=True)
 
 
+def build_msmarco():
+    """RESEARCH-ONLY (the clean-stack tax, m7/LEDGER.md): MS MARCO is non-commercial-research-only
+    and permanently excluded from the release stack. The source file is MOVED to
+    `sources-research/` so it can never enter `available_sources()` (arm-shape constraint 1);
+    the store stays canonical -- it is only reachable through this source's `docstore` field."""
+    beir_train_pairs("msmarco", "msmarco-train", "msmarco-pos", store_positives_only=True)
+    src = TRAIN / "sources" / "msmarco-train.json"
+    dst = TRAIN / "sources-research" / "msmarco-train.json"
+    dst.parent.mkdir(exist_ok=True)
+    src.replace(dst)
+    print(f"  moved {src.name} -> sources-research/ (research-only; never in available_sources)")
+
+
 BUILDERS = {"hotpotqa": build_hotpotqa, "fever": build_fever, "squad": build_squad,
-            "esci": build_esci, "mrtydi": build_mrtydi, "querytext": build_querytext}
+            "esci": build_esci, "mrtydi": build_mrtydi, "querytext": build_querytext,
+            "msmarco": build_msmarco}
 
 if __name__ == "__main__":
     for name in (sys.argv[1:] or list(BUILDERS)):

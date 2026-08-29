@@ -83,6 +83,10 @@ class Cfg:
                                         # reproduces every prior run.
     pool_mode: str = "mean"             # count saturation, applied in the TRAINING forward too
                                         # (table.POOL_MODES). "mean" reproduces every prior run.
+    side_pos_sources: tuple = ()        # RESEARCH-ONLY sources whose positives live outside the
+                                        # pool, resolved via an in-memory side bank appended after
+                                        # the pool rows (clean-stack tax, m7/LEDGER.md). () -- the
+                                        # default everywhere -- reproduces every prior run.
 
 
 # ---- data ----------------------------------------------------------------------------
@@ -95,9 +99,14 @@ def kept_pairs(sources=None):
     return [p for p in tr if p[1] in allow.get(p[0], set())]
 
 
-def build_arrays(cfg, index):
+def build_arrays(cfg, index, side_index=None):
+    """`side_index` maps (store, docid) -> row id >= len(pool) for RESEARCH sources whose store is
+    NOT in the pool (the clean-stack-tax msmarco arm, m7/LEDGER.md arm-shape constraint 2). Side
+    rows can never be banned (the B2 mask is pool-row-addressed) and never enter negative sampling
+    (every sampler draws from the pool-only bank)."""
     pairs = kept_pairs(list(cfg.sources) or None)
     store_of = {s: mix.load_source(s)["docstore"] for s in {p[0] for p in pairs}}
+    side_stores = {store_of[s] for s in getattr(cfg, "side_pos_sources", ()) if s in store_of}
     q_texts, pos_idx, hn_idx, src_id = [], [], [], []
     srcs = sorted({p[0] for p in pairs})
     sid = {s: i for i, s in enumerate(srcs)}
@@ -109,8 +118,11 @@ def build_arrays(cfg, index):
     n_banned_pos = 0
     for src in srcs:
         st = store_of[src]
+        # side stores are not in the pool spans; index.get would KeyError on them
+        _resolve = ((lambda d: (side_index or {}).get((st, d))) if st in side_stores
+                    else (lambda d: index.get(st, d)))
         for _, qid, query, posd, hneg in by_src[src]:
-            ps = [j for j in (index.get(st, d) for d in posd) if j is not None]
+            ps = [j for j in (_resolve(d) for d in posd) if j is not None]
             # review #2 MAJOR 10: a banned row must not enter the loss as a POSITIVE either --
             # dropping the row (and the pair, if nothing remains) extends R2 to the new classes.
             kept_ps = [j for j in ps if j not in _bset]
@@ -129,6 +141,39 @@ def build_arrays(cfg, index):
     if n_banned_pos:
         print(f"  build_arrays: dropped {n_banned_pos} banned positives (B2 mask)", flush=True)
     return q_texts, pos_idx, hn_idx, np.array(src_id, dtype=np.int32), srcs
+
+
+class _SidePool:
+    """Pool memmap + in-memory side bank, addressed as one row space: rows < len(pool) come from
+    the pool, rows >= len(pool) from the side bank. `len()` is deliberately the POOL length so
+    every negative sampler (`rng.choice(len(pool_vecs), ...)`, bank gathers) stays pool-only;
+    `shape`/`nbytes` describe the whole space for logging. Fancy-indexed gathers route per row."""
+
+    def __init__(self, pool, side):
+        assert pool.shape[1] == side.shape[1] and pool.dtype == side.dtype, \
+            f"side bank {side.shape}/{side.dtype} does not match pool {pool.shape}/{pool.dtype}"
+        self.pool, self.side, self.n = pool, side, len(pool)
+        self.shape = (len(pool) + len(side), pool.shape[1])
+        self.nbytes = pool.nbytes + side.nbytes
+        self.dtype = pool.dtype
+
+    def __len__(self):
+        return self.n
+
+    def __getitem__(self, ix):
+        ix = np.asarray(ix)
+        if ix.ndim == 0:
+            i = int(ix)
+            return self.pool[i] if i < self.n else self.side[i - self.n]
+        if ix.ndim != 1:
+            raise IndexError(f"_SidePool supports 0-d/1-d integer indexing, got shape {ix.shape}")
+        out = np.empty((len(ix), self.shape[1]), dtype=self.dtype)
+        m = ix < self.n
+        if m.any():
+            out[m] = self.pool[np.ascontiguousarray(ix[m])]
+        if (~m).any():
+            out[~m] = self.side[np.ascontiguousarray(ix[~m]) - self.n]
+        return out
 
 
 _BANNED = None
@@ -400,7 +445,27 @@ def run(cfg: Cfg, log=print):
     log(f"[{cfg.run_id}] {json.dumps(asdict(cfg))}")
     index, pool_vecs, pmeta = poolmod.build()
     log(f"  pool {pool_vecs.shape} ({pool_vecs.nbytes/1e9:.2f} GB fp16)")
-    q_texts, pos_idx, hn_idx, src_id, srcs = build_arrays(cfg, index)
+    # RESEARCH-ONLY side bank (clean-stack tax): positives from stores that are NOT in the pool,
+    # encoded separately and addressed as rows >= len(pool). len(_SidePool) is the POOL length,
+    # so `bank_ids = rng.choice(len(pool_vecs), ...)` below still samples negatives from the pool
+    # ONLY, the B2 ban mask stays index-valid, and the false-negative masking (pool-index
+    # comparisons) cannot collide. The pool file and its hashes are untouched.
+    side_index = {}
+    if cfg.side_pos_sources:
+        n0 = len(pool_vecs)
+        side_texts = []
+        for s in cfg.side_pos_sources:
+            st = mix.load_source(s)["docstore"]
+            ids, texts = mix.load_store(st)
+            for d, t in zip(ids, texts):
+                side_index[(st, d)] = n0 + len(side_texts)
+                side_texts.append(t)
+        sv = np.asarray(encode_cached(f"sidepos-{len(side_texts)}", side_texts, prefix="",
+                                      dtype=torch.float16, verbose=True))
+        pool_vecs = _SidePool(pool_vecs, sv)
+        log(f"  side bank {sv.shape} ({sv.nbytes/1e9:.2f} GB fp16) for {list(cfg.side_pos_sources)}"
+            f" -- rows {n0}..{n0+len(sv)-1}, positives only, never negatives")
+    q_texts, pos_idx, hn_idx, src_id, srcs = build_arrays(cfg, index, side_index=side_index)
     log(f"  train pairs {len(q_texts):,} over sources {srcs}")
 
     tq = np.asarray(encode_cached(f"trainq-{len(q_texts)}", q_texts, prefix=QUERY_PREFIX,
