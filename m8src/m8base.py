@@ -16,6 +16,13 @@ for p in (REPO / "bench", REPO / "m7src", REPO / "m8src", REPO):
         sys.path.insert(0, str(p))
 
 os.environ.setdefault("BENCH_DATASETS", "scifact,nfcorpus,fiqa,arguana,scidocs,trec-covid")
+# THE INCUMBENT TEACHER, pinned for every M8 process. `m7src/encoders.active()` reads M7_ENCODER
+# and defaults to bge-base -- M7's PRE-SWAP teacher. Without this pin, every arm initialized from
+# a stella checkpoint dies with "init was trained against stella but the active encoder is
+# bge-base", which is exactly what the first noise-floor smoke did, five times in a row.
+# m7/LEDGER.md: "All work keys on M7_ENCODER=stella-400M-v5 ... so no comparison can mix
+# teachers." A default beats remembering.
+os.environ.setdefault("M7_ENCODER", "stella-400M-v5")
 
 M8 = REPO / "m8"
 M7 = REPO / "m7"

@@ -96,11 +96,17 @@ def train(rids=None, smoke=False):
             # arms as already trained and the floor would have been measured on 90-step tables.
             over["steps_a"] = 90
             rid = rid + "-smoke"
+        # `sweep.one` CATCHES the exception, appends a FAILED row and returns None -- so a broken
+        # arm exits 0, and a driver that only checks the return code marches on and measures a
+        # floor from whatever survived. `sys.exit(2)` on None is what makes the check real.
         code = (
-            "import sys; sys.path.insert(0, %r); sys.path.insert(0, %r)\n"
+            "import os, sys\n"
+            "os.environ.setdefault('M7_ENCODER', 'stella-400M-v5')\n"
+            "sys.path.insert(0, %r); sys.path.insert(0, %r)\n"
             "import program, sweep\n"
             "d = sweep.one(%r, program.BASE, **%r)\n"
             "print('DEVPROXY', %r, d, flush=True)\n"
+            "sys.exit(0 if d is not None else 2)\n"
             % (str(REPO / "m7src"), str(REPO / "bench"), rid, over, rid))
         t0 = time.time()
         print(f"[{rid}] launching (steps_a={over.get('steps_a')}, seed={over.get('seed')})",
@@ -108,8 +114,9 @@ def train(rids=None, smoke=False):
         r = subprocess.run([sys.executable, "-u", "-c", code], cwd=str(REPO))
         print(f"[{rid}] exit {r.returncode} in {time.time()-t0:.0f}s", flush=True)
         if r.returncode != 0:
-            raise SystemExit(f"{rid} failed; stopping rather than measuring a floor from a "
-                             f"partial arm set")
+            raise SystemExit(f"{rid} failed (exit {r.returncode}); stopping rather than measuring "
+                             f"a floor from a partial arm set. Its FAILED row is in "
+                             f"m7/RESULTS.md.")
 
 
 def _group_vector(per_q):
