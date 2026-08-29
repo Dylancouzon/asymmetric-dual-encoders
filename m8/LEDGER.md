@@ -637,8 +637,16 @@ below is a number, not a word (Codex gate BLOCKER 1).
    - **NOT_QUALIFYING keys** (may appear, never sufficient). Illustrative subset:
      `seed`, `steps_a`, `steps_b`, `temperature`, `hard_neg_k`, `lr`, `b_pseudo_queries`,
      `batch_size`, and any key matching `*_tuning`.
-   - `doc_side_head` is qualifying for the *change* enumeration but is **explicitly excluded from
-     QUALIFYING_TABLE**: a D1 win alone does not open the release path (E11 + G4-4).
+   - **AMENDED 2026-08-29 (Dylan): a DOCUMENT-SIDE win now satisfies condition 4.** *"M8 can ship a
+     better system. If that system makes sense and is defensible. I'm okay having a custom document
+     encoder if this works well."* The rule that `doc_side_head` alone could not open the release
+     path (E11 + G4-4) is **superseded**; condition 4 takes one key from `qualifying_table_keys`
+     **or** `qualifying_system_keys`. **What still bounds a v2** (registry
+     `invariants_that_survive_the_amendment`): the query side stays a **pure lookup table** (E1,
+     non-negotiable); the document tower must be **derived from stella** — LoRA/adapter/last-block/
+     head, never trained from scratch (*"I don't want to go all the way to train a dense embedding
+     model from scratch"*); the win must clear C1/C2/C3 with its cost rows; and **the report must
+     decompose the win**, never presenting a document-side gain as the table having improved.
    - **Any key in the diff that is on neither list ⇒ the condition FAILS.** Classification happens
      at manifest time, before the access; a key cannot be argued into a category after a number.
    - A distinct int8 payload is **necessary but not sufficient**.
@@ -1189,6 +1197,20 @@ SHORT by rule (§14 G10): what changed, why, and the pointer. Long-form lives in
 the result JSON, or `research/m8-planning/`.*
 
 **RULINGS BY DYLAN**
+
+- **M8 MAY SHIP A BETTER SYSTEM (2026-08-29).** *"M8 can ship a better system. If that system makes
+  sense and is defensible. I'm okay having a custom document encoder if this works well. Obviously I
+  don't want to go all the way to train a dense embedding model from scratch."* **Ship-rule
+  condition 4 amended**: satisfied by a `qualifying_table` **or** `qualifying_system` key, so a
+  document-side win can carry a v2; E11/G4-4's "a D1 win alone does not open the release path" is
+  superseded. `C2` selects its **system** form whenever the tower is modified. Legal only because no
+  M8 candidate or number exists. **Bounds that survive, so this is not "anything that raises a
+  number ships":** query side stays a **pure lookup table** (E1, non-negotiable); the tower must be
+  **derived from stella** (LoRA/adapter/last-block/head — a from-scratch encoder is out, and a
+  different base model is a §10 teacher swap); the win clears C1/C2/C3 with cost rows; and **the
+  report decomposes the win** rather than presenting a document-side gain as a better table.
+  Unblocks `E14-LORA` to be registered and measured. Registry: `ship_rule.condition4_policy`,
+  `invariants_that_survive_the_amendment`.
 
 - **E14-LORA REOPENED + stella licence CLOSED (2026-08-29).** *"We wouldn't say keep your normal
   document encoder. Since most people are not currently using stella. I'm not against LoRA on the

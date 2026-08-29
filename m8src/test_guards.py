@@ -20,6 +20,7 @@ from pathlib import Path
 
 import numpy as np
 
+import decide
 import m8base
 import paths_guard
 import probe_guard
@@ -416,10 +417,19 @@ def t_probe_guard_stamps_results(tmp=None):
 def t_probe_guard_classifies_changes():
     """LEDGER 5.4: an unknown config key must FAIL, not be argued into a category later."""
     assert probe_guard.classify_change("tokenizer_id") == "qualifying_table"
-    assert probe_guard.classify_change("doc_side_head") == "qualifying_non_table"
+    # AMENDED 2026-08-29 (Dylan: "M8 can ship a better system"): the document side counts now.
+    assert probe_guard.classify_change("doc_side_head") == "qualifying_system"
+    assert probe_guard.classify_change("doc_encoder_delta") == "qualifying_system"
     assert probe_guard.classify_change("steps_a") == "not_qualifying"
     assert probe_guard.classify_change("lr_tuning") == "not_qualifying"
     assert probe_guard.classify_change("some_new_knob") == "unknown"
+    # and the consequence the amendment turns on: a document-side change ALONE now passes
+    # condition 4, where it previously could not (E11 + G4-4, superseded).
+    assert decide.qualifying_table({"doc_side_head"})["pass"] is True
+    assert decide.qualifying_table({"doc_side_head", "some_new_knob"})["pass"] is False, \
+        "an unknown key must still fail condition 4"
+    assert decide.qualifying_table({"steps_a", "lr"})["pass"] is False, \
+        "recipe-only knobs must still fail condition 4"
 
 
 def t_probe_guard_requires_committed_ledger():

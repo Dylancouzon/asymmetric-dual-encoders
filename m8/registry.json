@@ -469,7 +469,7 @@
     "a licence check that stella permits releasing derived weights",
     "C2 must be REDEFINED: 'the M8 table against the SAME frozen document vectors' stops being possible once the tower moves, and C2 is Dylan's E11 ruling"
    ],
-   "plan_status": "REOPENED by Dylan 2026-08-29 for registration and a DEV-SCALE measurement. The refusal rested on 'it costs us the keep-your-own-encoder story', and Dylan withdrew that premise: adopting this system already means adopting stella, so a LoRA'd stella costs the user the SAME one-time indexing pass and the marginal product cost is zero. LICENCE CLOSED by Dylan: stella is MIT and derived weights are fine. The reframe that motivates it: LightRetriever TRAINS its document encoder, so LR-dense-pertask 0.4583 -- M7's missed release bar -- was set with a co-adapted document side while M7/M8 fit a table to a frozen tower. STILL NEEDS A RULING BEFORE IT CAN SHIP, not before it can be measured: E11/5.4 say a document-side win does not make a qualifying v2 TABLE, and C2 falls to its registered teacher_swapped branch. Whether M8 ships a better SYSTEM or must ship a better TABLE is undecided and may not be decided after a number. STAGING IS BINDING: adapter + the two out-of-domain dev components against their OWN re-encoded corpora first; only a clearing dev result buys the 10.12M pre-encode."
+   "plan_status": "AUTHORISED TO REGISTER AND MEASURE 2026-08-29 (Dylan). Licence closed (stella MIT); the 'keep your own encoder' premise withdrawn; and condition 4 now admits a document-side win, so a successful LoRA can carry a v2. BOUNDS: derived from stella only -- LoRA/adapter/last-block/head -- never a from-scratch encoder; and the query side stays a pure lookup table (E1). STAGING BINDING: adapter + the two out-of-domain dev components against their OWN re-encoded corpora first; only a clearing dev result buys the 10.12M pre-encode. Bar is chain-level (it retrains everything downstream): 0.00519 on the dense OOD macro. The full row still needs writing -- that is the next session's job, before any arm runs."
   },
   "E10-REMEDY": {
    "wave": 1,
@@ -634,9 +634,6 @@
    "doc_instruction",
    "phase_structure"
   ],
-  "qualifying_non_table_keys": [
-   "doc_side_head"
-  ],
   "not_qualifying_keys": [
    "run_id",
    "seed",
@@ -666,7 +663,7 @@
    "*_tuning"
   ],
   "unknown_key_policy": "FAIL -- a key on neither list fails the qualifying condition; classification happens at manifest time, before the access",
-  "c2_form_selector": "same_teacher -> table-vs-table on identical doc vectors; teacher_swapped -> dense-system-vs-dense-system. Selected by a fact fixed at pipeline step 5, before any M8 number.",
+  "c2_form_selector": "same_teacher AND unmodified doc tower -> table-vs-table on identical doc vectors; teacher swapped OR doc tower modified (adapter/LoRA/last-block/head) -> dense-system-vs-dense-system, each on its own document vectors. A modified tower selects the SYSTEM form: table-vs-table across two different document spaces is not a table comparison. Selected by a fact fixed at pipeline step 5, before any M8 number.",
   "six_set_read_timing": "scored after the freeze, inside the guarded access process, BEFORE the reserved payloads are opened, written atomically, logged to m8/SIX_ACCESS.log. It is NOT a decision point: the reserved access proceeds regardless of what it says, and nothing about the candidate may change after it. It governs shipping, not measuring.",
   "_key_schema_note": "EVERY key a candidate manifest can carry is classified here, NOW, while the amendment is legal. The space is train.Cfg's 35 fields plus the artifact-level fields a release records. An unclassified key FAILS condition 4 by design -- but leaving foreseeable keys unclassified would turn the condition into a coin decided by naming conventions at manifest time, which is the opposite of a pre-registration (2026-08-29 review finding).",
   "neutral_keys": {
@@ -687,7 +684,22 @@
   "swap_side_effect_keys": [
    "tokenizer_id",
    "vocab"
-  ]
+  ],
+  "condition4_policy": "AMENDED 2026-08-29 by Dylan: 'M8 can ship a better system. If that system makes sense and is defensible. I'm okay having a custom document encoder if this works well.' Condition 4 is now satisfied by at least one key from qualifying_table_keys OR qualifying_system_keys. The previous rule required a TABLE key and made doc_side_head explicitly insufficient (E11/G4-4); that is superseded. Legal only because no M8 candidate or number exists.",
+  "qualifying_system_keys": [
+   "doc_side_head",
+   "doc_encoder_delta",
+   "doc_adapter_spec",
+   "doc_encoder_training"
+  ],
+  "invariants_that_survive_the_amendment": {
+   "_why": "Widening condition 4 to the document side removes the requirement that the TABLE improve. These are what still bounds a v2, so the amendment does not become 'anything that raises a number ships'.",
+   "query_side_stays_a_pure_lookup_table": "E1, NON-NEGOTIABLE. Tokenize -> look up rows -> pool -> normalize. No transformer, no nonlinear query-side head, no query-time model of any kind. This is the artifact class the project exists to measure; a system that violates it is not an M8 v2 whatever it scores.",
+   "document_tower_must_be_DERIVED_from_the_incumbent": "Dylan, 2026-08-29: 'Obviously I don't want to go all the way to train a dense embedding model from scratch.' LoRA, adapters, last-block or head tuning ON stella are in scope. Training a document encoder from scratch, or adopting a different base model, is OUT and would be a teacher swap under section 10 needing its own registration and sign-off.",
+   "defensible_is_part_of_the_bar": "'If that system makes sense and is defensible.' A document-side win must still clear C1/C2/C3 on the reserved four under the registered statistics, carry its cost rows (doc-index bytes, indexing throughput, re-encode cost), and state plainly that the document side is ours.",
+   "the_report_must_decompose_the_win": "If the gain comes from the document tower, the report says so and does NOT present it as the query table having improved. The North Star question -- how much quality survives as query compute goes to zero -- is answered by the SYSTEM at a stated query cost, and the attribution between the two sides is reported, never blurred."
+  },
+  "_amended": "2026-08-29 (Dylan: ship a better system). Prior wording in git history."
  },
  "shadow_gate": {
   "set": "LoTTE, forum queries only, surviving slices from S0",

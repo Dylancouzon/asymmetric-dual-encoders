@@ -162,7 +162,13 @@ def t_point_guard_is_strict():
 def t_qualifying_branches():
     q = decide.qualifying_table
     assert q({"pool_composition", "steps_a"})["pass"], "a real data-construction lever must pass"
-    assert not q({"doc_side_head"})["pass"], "a doc-side head ALONE must not qualify (E11/G4-4)"
+    # AMENDED 2026-08-29 (Dylan: "M8 can ship a better system. ... I'm okay having a custom
+    # document encoder if this works well"). This assertion previously read `not ... ["pass"]`
+    # under E11/G4-4. That rule is SUPERSEDED: a document-side change now satisfies condition 4
+    # on its own. The invariants that replace it -- pure-lookup-table query side, tower derived
+    # from the incumbent rather than trained from scratch -- are artifact properties asserted at
+    # freeze, not config-key facts, so they are deliberately not testable here.
+    assert q({"doc_side_head"})["pass"], "a doc-side change must now qualify (LEDGER §5.4, amended)"
     assert not q({"seed", "steps_a", "lr"})["pass"], "ordinary tuning must not qualify"
     assert not q({"some_new_knob"})["pass"], "an unknown key must FAIL, not be ignored"
     assert q({"some_new_knob"})["unknown"] == ["some_new_knob"]

@@ -155,17 +155,23 @@ def write_result(path, payload, probe_id, *, strict_commit=True):
 
 
 def classify_change(key, reg=None):
-    """LEDGER 5.4, mechanically. -> 'qualifying_table' | 'qualifying_non_table' |
+    """LEDGER 5.4, mechanically. -> 'qualifying_table' | 'qualifying_system' |
     'not_qualifying' | 'neutral' | 'unknown'. An unknown key FAILS the qualifying condition; classification
     happens at manifest time, before the access, so a key cannot be argued into a category after a
-    number exists."""
+    number exists.
+
+    AMENDED 2026-08-29 (Dylan: "M8 can ship a better system"): the old 'qualifying_non_table' class
+    existed to hold `doc_side_head` OUTSIDE the release path (E11 + G4-4). A document-side win now
+    satisfies condition 4, so the class is renamed 'qualifying_system' and counts. The old registry
+    key is still accepted so a result written under the previous registration still classifies.
+    """
     s = (reg or registry())["ship_rule"]
     if key in s.get("neutral_keys", {}).get("keys", []):
         return "neutral"
     if key in s["qualifying_table_keys"]:
         return "qualifying_table"
-    if key in s["qualifying_non_table_keys"]:
-        return "qualifying_non_table"
+    if key in s.get("qualifying_system_keys", s.get("qualifying_non_table_keys", [])):
+        return "qualifying_system"
     if key in s["not_qualifying_keys"]:
         return "not_qualifying"
     if any(fnmatch.fnmatch(key, p) for p in s.get("not_qualifying_patterns", [])):
