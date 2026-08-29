@@ -23,7 +23,12 @@ GPU-hours per system); it needs a licence check that stella permits released der
 it **forces C2 to be redefined**, because "the M8 table against the *same* frozen document
 vectors" stops being possible once the doc tower moves — and C2 is your E11 ruling. It also
 reopens the "frozen off-the-shelf document tower" premise, which CLAUDE.md explicitly lists as
-revisitable with arithmetic and your sign-off. **I have not opened it. Yes/no is yours.**
+revisitable with arithmetic and your sign-off.
+**A literature sweep run tonight says nobody has measured this** (`research/m8-planning/literature-2026-08-29.md`):
+LightRetriever's own ablation table never freezes its document tower — every row trains it fully —
+and EmbedDistill (arXiv 2301.12005) runs the inverse experiment with a small *transformer* query
+side, never a bag of embeddings. So E14 is an open experiment, not a question we can settle by
+reading: unguided, and correspondingly novel if it works. **I have not opened it. Yes/no is yours.**
 
 **2. P(ship) — the number you asked the protocol to produce before it spends a week.**
 `results/m8_power.json`, calibrated on real paired per-query vectors. Reserved-four macro SE
@@ -100,9 +105,14 @@ CQADupStack subforums. I have not chosen — E10 is your ruling and S0's registr
 session does not substitute a shadow.
 
 **4. Two licence/provenance rulings on reserved and candidate assets.**
-- **harrier-oss-v1-0.6b** (teacher challenger): training data **undisclosed** — a contamination
-  black box against four hash-pinned reserved sets. The screen may measure it; **adoption needs
-  your ruling**, and the LEDGER says the session does not make it.
+- **harrier-oss-v1-0.6b** (teacher challenger). Identified tonight as **`microsoft/harrier-oss-v1-0.6b`**
+  — so on the vendor rule it is Microsoft, "OK with justification", **not** disqualified. But it
+  now carries **three** blockers, not one: training data **undisclosed** (the contamination black
+  box — your ruling); it uses **last-token pooling**, which `m7src/teacher.py` does not implement
+  and raises on, so screening it needs new code rather than a new config row; and it publishes
+  **no retrieval-only number** at all, only a mixed-task MTEB v2 overall of 69.0, so a screen
+  result would have nothing to be sanity-checked against. My read: not worth your ruling until
+  the other three challengers have been screened.
 - **HUPD** (the buildable USPTO reserve): its HuggingFace card is tagged **CC-BY-NC-SA-4.0**,
   more restrictive than the "CC-BY" previously recorded. Under our standing rule a wrapper tag is
   not a licence and cannot restrict public-domain text (37 CFR 1.71) — but that is a *legal
@@ -125,6 +135,16 @@ and 131,072 rows in 17 seconds — where the dense Gram would have been 34 GB an
 with the direct solve to 4.6e-7. So **D2's 64–128K vocabulary is computable, and so is a teacher
 screen for challengers that do not share stella's WordPiece vocabulary — which is all four of
 them.** `results/m8_b7_solver.json`, LEDGER §18.
+
+**D2's one existing precedent points the wrong way, and you should know that before the week is
+spent.** The only published vocabulary-size ablation on a *static / bag-of-words* retriever is VDR
+(ICLR 2024, arXiv 2212.07699): 30K → 110K rows moved BEIR nDCG@10 **44.5 → 42.6**, a small
+regression. It is confounded — the two vocabularies also swapped English BERT for multilingual
+BERT, which the authors themselves blame — so it does not close D2. But it is the closest evidence
+that exists and it is negative. Positive precedent is thinner: multi-word tokens help e-commerce
+retrieval on a *contextual* model. **Neither a known success nor a known failure**: the week is not
+pre-empted, and it is not de-risked either. Recorded in LEDGER §8 so D2's registration is read
+against it rather than against an assumption.
 
 **The short-query story was wrong, and so was my first correction of it.** H3's premise ("best on
 the longest queries, worst on the shortest") is a between-dataset reading of six points, and it
