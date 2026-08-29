@@ -93,18 +93,27 @@ These are the **first measurements of two teachers M7 closed "on arithmetic, not
 | gte-modernbert-base | BEIR **55.33** | 0.01 | 0.2349 | −0.109 | [−0.123, −0.094] |
 
 All optima interior; both losses CI-resolved at 5–11× the swap penalty, so condition 1 fails and
-the expensive off-family read is never bought. **The frame validates three ways**: the incumbent
-re-probed scores 0.3438 against M7's recorded 0.3439. And **the tower still does not predict the
-table** — gte has the higher published score and the lower table, an independent reproduction of
-M7's Spearman-0.000 finding on two models M7 never measured.
+the expensive off-family read is never bought. **The frame reproduces M7's own number**: the
+incumbent re-probed scores 0.3438 against M7's recorded 0.3439, through a new solver, a new init
+builder and a regenerated fit list. And **the tower again fails to order the table** — gte has the
+higher published score and the lower table. That is an n=2 sign anecdote on self-reported card
+figures, so it *corroborates* M7's eight-candidate Spearman-0.000 result rather than reproducing
+it; I had called it an independent reproduction and that is withdrawn.
 
-**B2 — the KL term is degenerate. H2 confirmed** (LEDGER §19). For the **median** training query
-the teacher's target over its 32-candidate set is a delta function to seven decimal places
-(5.65e-07 nats against a ln(32)=3.466 ceiling; teacher max-probability median exactly 1.0; 82.9%
-of queries below 1e-4 nats). One of two training signals carries no information for five queries
-in six. Top-200 distractors raise the median **six orders of magnitude**. A measured mechanism for
-M7's 0.000 transfer — and a different class of lever from knob-tuning. It does *not* say a listwise
-objective wins; that is `R-LIST`'s question and its bar is unfrozen, so the guard refuses it.
+**B2 — the KL term is dead, measured on BOTH sides. H2 confirmed** (LEDGER §19). The teacher's
+target over its 32-candidate set is, for the median training query, a delta function
+(**4.73e-07 nats** against a ln(32)=3.466 ceiling; max-probability median 1.000000; **84.3%** of
+queries below 1e-4). And the half that makes it a measurement rather than an inference: the
+**shipped M7 table ranks the positive first in 99.75% of queries**, so **the KL term's own median
+value is 1.08e-07 nats**. The loss term was computed on the artifact that ships, not deduced from
+the target's shape. Top-200 distractors raise the target's median six orders of magnitude.
+
+*Two corrections a review forced, both recorded: the first version drew distractors from a
+contiguous pool prefix where training draws a seeded random sample — and the fix made the recipe
+look* worse*, not better (median 5.65e-07 → 4.73e-07); and the student side did not exist at all,
+so "carries no information" was an inference. It is now a number.* It still does **not** say a
+listwise objective wins — that is `R-LIST`'s question and its bar is unfrozen, so the guard
+refuses it.
 
 **B7 — PASSED, and it reopened two doors** (§18, §18b). A Gram-free preconditioned solver does
 65,536 rows in 51 iterations / 10 s / 4.4 GB where the dense fp64 Gram would be 34 GB, and 131,072
@@ -113,9 +122,10 @@ macro at all four λ**. Honest note: at the 30,522-row control the *direct* solv
 λ — CG's value is existing above 50,368 rows at all.
 
 **Noise floors — measured; B3's bar frozen at 0.0040** (§4.7, §4.7b). Dense floor 0.00095–0.00227,
-fused floor 0.00059–0.00066 (≈3× tighter, because half the fused score comes from a deterministic
-BM25 run). The planning minimum binds almost everywhere. **A lever that clears the fused bar but
-not the dense one has not shown a table improvement.**
+fused floor 0.00059–0.00066 — tighter, because part of the fused score comes from a deterministic
+BM25 run with no seed at all. The planning minimum binds almost everywhere. **A lever that clears
+the fused bar but not the dense one has not shown a table improvement.** *(The two are not a
+like-for-like ratio — the fused macro is over four components and the dense endpoints over six.)*
 
 **Fit list regenerated** (§3.3): 337,981 kept of 338,076. The 95 removals are **all** from
 M9-reserve; screening against six+dev+reserved alone removes zero, because M7 had already applied
@@ -123,10 +133,12 @@ R1 against exactly that index.
 
 **§17 — the short-query story, twice corrected.** H3's premise does not survive. Nor did my first
 replacement for it: ArguAna carries **99.7%** of the within-dataset length variance, so that claim
-was ArguAna-only and is **withdrawn**. **Fragmentation survives the same attack** — ArguAna holds
-2.2% of that variance and the slope is unchanged (t = 4.71). The table falls ~0.05 nDCG further
-behind per +1.0 subwords-per-word, because the *teacher* pulls ahead while the table stays flat.
-No published match for that asymmetry.
+was ArguAna-only and is **withdrawn**. **Fragmentation survives — and survives every single-dataset exclusion**, which is the check the
+first version skipped: it had run leave-one-out only against the dataset that threatened the claim
+I disliked, not against nfcorpus, which carries 53% of the variance behind the claim I kept. Run
+for all six, the worst case is +0.0369 at **t = 3.28** and every exclusion stays positive. The
+table falls ~0.05 nDCG further behind per +1.0 subwords-per-word, because the *teacher* pulls ahead
+while the table stays flat. No published match for that asymmetry.
 
 **B17 — its registered branch fired and is DISOWNED** (§20). The ≤0.40 branch ("the class caps in
 domain") triggered at 0.1999 — but the same class fitted on 350K general queries scores 0.3439, so
