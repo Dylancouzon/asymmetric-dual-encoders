@@ -6,7 +6,7 @@ pointed at, never restated. Machine-readable registrations live in **`m8/registr
 is the executable half of this file: §9's tables are its human-readable rendering, `m8src/registry.py`
 is the parser, and where the two disagree the JSON is what ran.
 
-Transcribed 2026-08-29 from `m8/PLAN-DRAFT.md` v5 and rewritten the same night as **v2** after two
+Transcribed 2026-08-29 from `m8/PLAN-DRAFT.md` v5 (**that draft is deleted — git history has it; see §15**) and rewritten the same night as **v2** after two
 adversarial gates on the v1 text — Codex (**verdict BLOCK, 9 BLOCKER / 9 MAJOR / 3 MINOR**;
 `research/m8-planning/codex-ledger-gate-2026-08-29.md`) and a Fable scientific-judgment pass
 (`research/m8-planning/fable-ledger-review-2026-08-29.md`). Both are actioned below; §16 records
