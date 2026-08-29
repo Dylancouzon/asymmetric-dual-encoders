@@ -83,3 +83,10 @@ arms. Per-run detail is in `results/m7_run_m8nf-*.json`.
 | m8nfx-b1a2 | `work/runs/m8nfx-b1a2.json` | 0.5103 | ok |
 | m8nfx-b2a0 | `work/runs/m8nfx-b2a0.json` | 0.5094 | ok |
 | m8nfx-b2a1 | `work/runs/m8nfx-b2a1.json` | 0.5107 | ok |
+
+### E14-HEAD smoke (2026-08-29)
+
+| m8e14-lad-lin-lr1e3-smoke | `work/runs/m8e14-lad-lin-lr1e3-smoke.json` | -0.3275 | ok |
+| m8e14-r0n-s0-smoke | `work/runs/m8e14-r0n-s0-smoke.json` | 0.5012 | ok |
+| m8e14-lin-s0-smoke | `work/runs/m8e14-lin-s0-smoke.json` | 0.4974 | ok |
+| m8e14-r0n-s0-smoke | `work/runs/m8e14-r0n-s0-smoke.json` | 0.5012 | ok |
