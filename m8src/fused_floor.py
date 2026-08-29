@@ -70,8 +70,10 @@ def main():
     loaded = {}
     for rid in a.arms:
         for mode in ("mean", "sqrt"):
-            rel, pre, models = compare_full.load(f"{rid}:{mode}" if mode != "mean" else rid,
-                                                mode if mode != "mean" else None, device=device)
+            # compare_full.load takes the BARE run id plus an optional pool-mode override; the
+            # "rid:mode" form is its COMMAND-LINE spelling, split before it ever reaches load().
+            rel, pre, models = compare_full.load(rid, mode if mode != "mean" else None,
+                                                device=device)
             for prec, m in models.items():
                 loaded[f"{rid}:{mode}|{prec}"] = (m, pre)
     print(f"{len(loaded)} arm variants loaded", flush=True)
