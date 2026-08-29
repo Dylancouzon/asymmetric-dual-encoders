@@ -26,9 +26,15 @@ MECHANICS that are easy to get wrong and are therefore done explicitly:
   * `validate_encoder.py` must pass for a Spec before it is screened -- skipping it is how a
     comparison silently runs the wrong model (m7/CODEMAP.md).
 
-THE FIT LIST. `m8src/fitlist.py` regenerates it through the current protected-query filter. M7's
-`work/trainq_texts.json` carries 4,582 R1 hits and may not back a quotable absolute number; the
-screen refuses to use it unless `--allow-stale-fitlist` is passed, which marks the output.
+THE FIT LIST. `m8src/protected_filter.py fitlist` regenerates it through the current
+protected-query filter (337,981 kept of 338,076). M7's `work/trainq_texts.json` carries 4,582 R1
+hits and may not back a quotable absolute number; this screen refuses it unless
+`--allow-stale-fitlist` is passed, which marks the output.
+
+A FOURTH THING THAT MUST MOVE WITH THE ENCODER, found here: `m7src/init_table` sizes the table by
+`tok.vocab_size`, which for ModernBERT is 50,280 while `len(tok)` is 50,368 and `[CLS]` is 50,281
+-- inside the gap. `m8src/init_m8.py` builds the init at the true size and falls through to m7src
+whenever the two agree, so the incumbent's cached init is reused untouched.
 """
 import argparse
 import json
@@ -53,8 +59,8 @@ def screen_one(name, fit_texts, lambdas=LAMBDAS, device=None):
     import blockcg
     import dev_eval
     import encoders
+    import init_m8
     import stage0_ridge as sr
-    from init_table import get_init
     from table import Preproc, QueryTable, get_tokenizer
     from teacher import QUERY_PREFIX, encode_cached
 
@@ -68,7 +74,10 @@ def screen_one(name, fit_texts, lambdas=LAMBDAS, device=None):
     X = sr.bag_matrix(tok, fit_texts, pre, spec.vocab)
     Y = np.asarray(encode_cached(f"trainq-{len(fit_texts)}", fit_texts, prefix=QUERY_PREFIX,
                                  dtype=torch.float16, verbose=True), dtype=np.float32)
-    W0 = get_init("teacher", pre)
+    # init_m8.get_init falls through to m7src for BERT-family encoders and sizes the table by
+    # len(tokenizer) where that differs from tok.vocab_size -- ModernBERT's [CLS] is token 50,281
+    # against a vocab_size of 50,280, so m7src's builder cannot represent its own inputs there.
+    W0 = init_m8.get_init("teacher", pre)
     print(f"{name}: X {X.shape} ({X.nnz:,} nnz)  Y {Y.shape}  W0 {W0.shape} "
           f"({time.time()-t0:.0f}s)", flush=True)
     assert W0.shape[0] == spec.vocab, \
@@ -117,7 +126,8 @@ def load_fit_list(allow_stale=False):
         return json.loads(m8.read_text()), "m8_trainq_texts.json (filtered)"
     if not allow_stale:
         raise SystemExit(
-            "m8src/fitlist.py has not been run: work/m8_trainq_texts.json is missing. M7's list "
+            "the fit list has not been regenerated: work/m8_trainq_texts.json is missing. Run "
+            "`m8src/protected_filter.py fitlist`. M7's list "
             "carries 4,582 R1 hits (1.31%) against the current protected-query index and may not "
             "back a quotable absolute number (LEDGER §3.3). Run fitlist.py, or pass "
             "--allow-stale-fitlist to run a RANKING-ONLY screen whose output is marked stale.")
