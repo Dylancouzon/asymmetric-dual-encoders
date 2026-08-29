@@ -51,3 +51,10 @@ arms. Per-run detail is in `results/m7_run_m8nf-*.json`.
 | m8nf-seed2 | `work/runs/m8nf-seed2.json` | 0.5123 | ok |
 | m8nf-steps2250 | `work/runs/m8nf-steps2250.json` | 0.5108 | ok |
 | m8nf-steps2750 | `work/runs/m8nf-steps2750.json` | 0.5107 | ok |
+
+### B-leg noise floor chains (2026-08-29) — full B→A chains varying only the seed
+
+| m8nfb-seed1-b | `work/runs/m8nfb-seed1-b.json` | 0.4944 | ok |
+| m8nfb-seed1-a | `work/runs/m8nfb-seed1-a.json` | 0.5103 | ok |
+| m8nfb-seed2-b | `work/runs/m8nfb-seed2-b.json` | 0.4949 | ok |
+| m8nfb-seed2-a | `work/runs/m8nfb-seed2-a.json` | 0.5113 | ok |

@@ -1,8 +1,8 @@
 {
   "_note": "LEDGER \u00a74.4 deliverable 3: rule compliance, AUDITED rather than discovered.",
-  "head": "29ece87a92f255c2b8f38e58e1155baf806bc249",
+  "head": "2ffec51aad12161fac3bf1a5d0dbd6ece680d75b",
   "registry_version": 2,
-  "registry_sha256_now": "90d0f54c6bfc27bb14d08f53a347df547177330c7d6e106249f3cd967a37d320",
+  "registry_sha256_now": "45e55ba54f9ebf92e607da6f567612502d86dcc968283e99aac9399bb01ff03e",
   "stamped_results_checked": [
     {
       "file": "m8_b17_oracle.json",
