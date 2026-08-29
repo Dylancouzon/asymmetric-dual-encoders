@@ -223,11 +223,13 @@ off-family read, re-probe under the final M8 frame, and Dylan's sign-off.
 data at +0.006. It says nothing about **genre-diverse clean data** — scientific/technical/legal
 registers, the exact genres of the clean-4 failure — because none was ever collected. Workstream:
 
-1. **Rights review sweep (Sonnet, now):** USPTO patents (public domain), EUR-Lex (reuse grant),
-   US federal/CFR, PMC-OA **commercial-use** subset, arXiv abstracts (CC0 metadata; SciDocs
-   citation-graph adjacency needs a contamination read), plus anything else the sweep surfaces.
-   Output: per-source licence verdict + contamination map against ALL protected sets (six,
-   reserved four, any new shadow/M9 reserve).
+1. **Rights review sweep — DONE 2026-08-29** (`research/m8-planning/data-rights-sweep-2026-08-29.md`).
+   Cleared for training, zero eval overlap: **USPTO patent full text** (37 CFR public domain),
+   **EUR-Lex** (2011/833/EU; TDM-silence nuance recorded), **US federal/CFR/court opinions**
+   (§105 / FreeLaw PD). OUT: bulk arXiv (default licence is distribution-only; wrapper-CC0 is
+   metadata), SEC EDGAR (private authorship), HackerNews (no grant), post-2024 StackOverflow.
+   PMC-OA-commercial: conditional on E8 + a LOCAL PMID-overlap measurement vs NFCorpus/TREC-COVID
+   (not web-resolvable) before any decision.
 2. **A registered genre-diversity probe in Stage R:** add the cleared technical corpora as ICT/
    pseudo-span sources under the ≤25%-per-source quota; matched arm vs the Wikipedia-only rebuild;
    read on the OOD dev groups. Bar: ≥ +0.005 OOD to enter R1.
@@ -244,13 +246,17 @@ registers, the exact genres of the clean-4 failure — because none was ever col
   rebalanced weighting: selection statistic = median/worst-group gain over {CQA group, Wikipedia/QA
   group, heldout groups}, never the arithmetic-mean macro.
 - **Shadow dev**: NEW never-scored components, frozen (hash-pinned, licence-verified) before
-  Phase 0. Candidates to review for licence + contamination: BEIR sets not otherwise used and not
-  reserved (e.g. Quora is licence-out; **Touché-2020 is banned by inherited M7 dev protocol** —
-  proposing it in v1 was an error (gate finding 17); using it would require an explicit written
-  pre-result amendment with Dylan's sign-off, which we do NOT request), non-BEIR options (LoTTE
-  subsets — licence review needed; SciQ; TREC collections with clean terms). A Sonnet sweep
-  produces the candidate list with licence status; the pick is registered before Phase 0. If no
-  clean shadow set exists, the shadow gate is dropped WITH a written note — not silently weakened.
+  Phase 0. (**Touché-2020 stays banned** by inherited M7 dev protocol — v1 proposing it was an
+  error, gate finding 17.) The sweep is DONE
+  (`research/m8-planning/data-rights-sweep-2026-08-29.md`): the only clean ready-made candidate is
+  **LoTTE** (CC BY-SA over the pre-clickwrap 2021 StackExchange dump, 5 topic slices) — but it is
+  StackExchange-family, so adopting it needs a written reading of "out-of-family" as "not literally
+  CQADupStack" → **E10, Dylan's call**. Everything else checked fails (SciQ NC; BRIGHT/BioASQ no
+  licence; FreshStack post-clickwrap; TREC classics LDC; MLDR mC4). If E10 is declined, the shadow
+  gate is dropped WITH a written note — not silently weakened. For the **M9 reserve (E4)** the
+  sweep's recommendation is build-our-own retrieval sets over EUR-Lex (EURLEX57K) and USPTO full
+  text — cleanest rights available and genuinely out-of-family, at the cost of constructing
+  queries/qrels under a frozen, pre-registered procedure.
 - **Dev-reuse counter** from day one; published like `m7_dev_reuse_count.json`.
 - M7's clean-4 are burned diagnostics; never dev evidence.
 
@@ -357,6 +363,10 @@ storage guidance.
 - **E8 — PMC-OA commercial subset as training data**: licence-clean, but using it makes NFCorpus
   and TREC-COVID training-adjacent, weakening the six's descriptive continuity read (reserved four
   unaffected). Exclude (default) / include+disclose / research-arm-only?
+- **E10 — LoTTE as shadow-dev (new, 2026-08-29)**: the only licence-clean ready-made shadow
+  candidate found; StackExchange-family (different subforums from CQADupStack and the reserved
+  pair). Adopt under a written "not literally CQADupStack" family reading / decline (shadow gate
+  then dropped with a note) / wait for a second sweep pass (COLIEE et al. need organizer contact)?
 - **E9 — FEVER teacher-contamination disclosure (new, 2026-08-29, verified)**: the MTEB registry
   assigns stella a proxy training-datasets list (NVIDIA's, "distilled from gte-qwen, training data
   unknown") that includes **FEVER** — one of the reserved four. M7 already treated this registry
