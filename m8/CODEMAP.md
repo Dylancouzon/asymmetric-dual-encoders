@@ -61,32 +61,40 @@ G1. Run it after touching either guard.
    (`kill $(pgrep -f ...)` in a *separate* command from any relaunch), and write the wait pattern
    so it cannot match itself — `pgrep -f "noise_floor[.]py train"` matches the real process while
    the waiting shell's literal `noise_floor[.]py train` does not match that regex.
-8. **`M7_ENCODER` defaults to bge-base — M7's PRE-SWAP teacher — and nothing warns you.**
+8. **Running a frozen `m7src` script can OVERWRITE an M7 artifact.** `validate_encoder.py` writes
+   `results/m7_encoder_validation.json` unconditionally, so validating an M8 challenger Spec
+   silently replaced M7's own validation record. Caught by `git status`, restored with
+   `git checkout --`, and the M8 result kept as `results/m8_encoder_validation.json`. **Check
+   `git status results/` after running anything out of `m7src/`** — G3 protects M8 from editing
+   m7src's CODE, not from its scripts' side effects. Same class: `sweep.one` writes
+   `results/m7_run_<id>.json` for M8 arms, which is harmless (new files) but explains the m7_
+   prefix on M8 run records.
+9. **`M7_ENCODER` defaults to bge-base — M7's PRE-SWAP teacher — and nothing warns you.**
    Every noise-floor arm died with "init 'run:p35b-2m' was trained against stella but the active
    encoder is bge-base". `m8base.py` now sets it, so every M8 process inherits the incumbent.
    The refusal itself is good design in `m7src` (it is what stops a mixed-teacher comparison); the
    defect was relying on an operator to export a variable.
-9. **`sweep.one` catches its exception, records a FAILED row, and returns None.** A driver that
+10. **`sweep.one` catches its exception, records a FAILED row, and returns None.** A driver that
    only checks the subprocess return code sees exit 0 and marches on — mine ran all five arms
    after the first one failed. Any wrapper must turn `None` into a nonzero exit itself.
-10. **A smoke must not occupy the real run id.** `noise_floor.train(smoke=True)` wrote 90-step
+11. **A smoke must not occupy the real run id.** `noise_floor.train(smoke=True)` wrote 90-step
    artifacts to `m8nf-seed0` etc, so the next `plan()` would have seen `_exists=True` and the
    floor would have been measured on 90-step tables. Smokes get a `-smoke` suffix.
-11. **Never restate a constant that lives in the registry.** `power.py` carried its own copies of
+12. **Never restate a constant that lives in the registry.** `power.py` carried its own copies of
    the six-set margin and the worst-group shape; §5 was then given its measured values and the
    copies went stale within hours, so the P(ship) table handed to the owner was wrong by a factor
    that mattered. Read the registry; do not mirror it.
-12. **A pooled within-dataset OLS is not automatically a within-dataset result.** It weights each
+13. **A pooled within-dataset OLS is not automatically a within-dataset result.** It weights each
    dataset by that dataset's variance in x, and ArguAna carries **99.7%** of the six's
    within-dataset query-LENGTH variance (174-word queries against 2-12). The "pooled" length slope
    was ArguAna's slope — the exact one-dataset dependence the diagnostic existed to escape, on the
    one dataset that is also a disclosed teacher-training set. Always report the variance share per
    dataset and a leave-one-out slope before believing a pooled within-dataset number. (The
    fragmentation slope passed the same test: ArguAna holds only 2.2% of that variance.)
-13. **Strip punctuation before tokenizing, not after.** Counting subwords on the raw whitespace
+14. **Strip punctuation before tokenizing, not after.** Counting subwords on the raw whitespace
    token put ordinary words over a fragmentation threshold; fixing it flipped one dataset's
    contrast from +0.062 to −0.007 and turned a "6/6 sign-consistent" claim into 4/5, p=0.19.
-14. **Synthetic data for a FEASIBILITY measurement must match the real distribution's hard
+15. **Synthetic data for a FEASIBILITY measurement must match the real distribution's hard
    property, not its easy one.** B7's first bag matrix drew token ids UNIFORMLY. Real text is
    Zipfian, and CG's cost is set by the condition number, so uniform draws are an unrealistically
    easy problem: unpreconditioned CG converged in 131 iterations on uniform data and **failed to
