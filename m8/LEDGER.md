@@ -821,6 +821,17 @@ identically-parameterized aligned tables, otherwise mechanical median. **Never b
   artifacts first**; and a **compositional init floor (Fable 8): every cold multi-word row
   initializes to the mean of its constituent unigram rows**, so a coverage failure degrades to M7
   behaviour rather than to noise.
+  **THE ONE EXISTING PRECEDENT, and it is not encouraging** (`research/m8-planning/literature-2026-08-29.md`,
+  swept 2026-08-29). The only published vocabulary-size ablation on a *static / bag-of-words*
+  retriever is VDR (arXiv 2212.07699, ICLR 2024): 30K → 110K rows moved BEIR nDCG@10
+  **44.5 → 42.6 — a small regression**. It is confounded (the two vocabularies also swapped
+  English BERT for multilingual BERT, and the authors blame the language mismatch, not the size),
+  so it does not close D2. But it is the closest thing to evidence that exists, it points the
+  wrong way, and D2's registration should be read against it rather than against an assumption
+  that more rows help. Positive precedent is thinner still: multi-word brand tokens help
+  e-commerce retrieval (arXiv 2406.01233) on a *contextual* ColBERT-style model, with no clean
+  before/after delta. **Neither a known success nor a known failure: the week is not pre-empted,
+  and it is not de-risked.**
   *Context:* M7 shipped with **1,743 rows (5.71%) never trained by either phase**
   (`results/m7_cold_rows_p4n-teacher16-a.json`); the reachable 749 contributed at 0.143× a trained
   row. A 128K vocabulary makes coverage the first question, not an afterthought.
@@ -1216,6 +1227,14 @@ because the first version had already been used to promote a probe.
   called it uninformative, and it tokenized words with punctuation attached, which inflated the
   with-arm; correcting the punctuation flipped trec-covid's contrast from +0.062 to −0.007.*
   **The continuous slope is the instrument to quote; the binary contrast is not.**
+- **No published match** (`research/m8-planning/literature-2026-08-29.md`). Tokenizer "fertility"
+  (subwords per word) is an established metric (Rust et al., ACL 2021) and one paper links it to
+  retrieval MRR (Amharic passage retrieval, arXiv 2505.19356: fertility 13.80 → MRR 0.019 against
+  fertility 1.46 → MRR 0.775) — but that is a cross-lingual tokenizer *mismatch* which degrades
+  the contextual model too. **The specific asymmetry measured here — the TEACHER improving with
+  fragmentation while the table stays flat — has no match in the sweep**, and it runs against the
+  fertility literature's naive "fragmentation is universally bad" reading. Treat it as a genuine
+  finding of this project, and report it as one.
 - **The words**, ranked by excess against *their own dataset's* without-arm mean (an earlier
   ranking used a cross-dataset baseline, so a hard dataset inflated every word in it): a mix of
   hyphenated compounds (`cyber-attacks`, `pre-1967`, `non-proliferation`), domain terms
