@@ -70,9 +70,22 @@ M9RESERVE = REPO / "work" / "m9reserve"
 RESERVED_HF_IDS = {
     "beir/fever", "beir/fever-qrels",
     "beir/dbpedia-entity", "beir/dbpedia-entity-qrels",
+    # The reserved CQADupStack subforums are also published under `mteb/` with the subforum in the
+    # REPO NAME rather than in the config. The config-based check below cannot see those.
+    "mteb/cqadupstack-android", "mteb/cqadupstack-english",
 }
 RESERVED_CQA_CONFIGS = {"android", "english"}
-RESERVED_HF_CACHE_DIRS = ("BeIR___fever-qrels", "BeIR___dbpedia-entity-qrels")
+# PREFIXES, not exact names, and they cover the CORPUS repos as well as the `-qrels` ones. The
+# first version listed only ("BeIR___fever-qrels", "BeIR___dbpedia-entity-qrels"), which left
+# `BeIR___fever`, `BeIR___dbpedia-entity`, `mteb___cqadupstack-android` and
+# `mteb___cqadupstack-english` classified UNPROTECTED -- verified live by an adversarial review
+# on 2026-08-29. Guarding the labels while leaving the corpora open is guarding one door of four,
+# which is CODEMAP pitfall 2 restated in the module that exists to prevent it. Over-matching on a
+# reserved name is the safe direction; under-matching is the one that loses the milestone.
+RESERVED_HF_CACHE_PREFIXES = (
+    "BeIR___fever", "BeIR___dbpedia-entity",
+    "mteb___cqadupstack-android", "mteb___cqadupstack-english",
+)
 RESERVED_WORK_DEV = {"cqadup-android.json", "cqadup-english.json"}
 
 KINDS = ("untouched_labels", "lotte", "m9reserve")
@@ -83,9 +96,15 @@ def _classify_resolved(p: Path):
         return "untouched_labels"
     if p.parent == WORK_DEV and p.name in RESERVED_WORK_DEV:
         return "untouched_labels"                     # same labels, different file
-    for d in RESERVED_HF_CACHE_DIRS:
-        if any(part == d for part in p.parts):
+    parts = [str(x) for x in p.parts]
+    for d in RESERVED_HF_CACHE_PREFIXES:
+        if any(part.startswith(d) for part in parts):
             return "untouched_labels"
+    # The BeIR spelling puts the subforum in a CONFIG directory under one `cqadupstack` repo dir,
+    # so the repo name alone never carries `android`/`english`.
+    low = [x.lower() for x in parts]
+    if any("cqadupstack" in x for x in low) and any(x in RESERVED_CQA_CONFIGS for x in low):
+        return "untouched_labels"
     if p == LOTTE or LOTTE in p.parents:
         return "lotte"
     if p == M9RESERVE or M9RESERVE in p.parents:
@@ -193,9 +212,15 @@ def check_dataset(name, config=None):
     """The network route. `load_dataset('BeIR/fever-qrels')` touches no guarded path, so the
     loader itself is guarded by dataset identity."""
     n = str(name).lower().strip("/")
+    cfg = str(config or "").lower()
     hit = n in RESERVED_HF_IDS
-    if not hit and "cqadupstack" in n and config and str(config).lower() in RESERVED_CQA_CONFIGS:
-        hit = True
+    if not hit and "cqadupstack" in n:
+        # the subforum may arrive in the CONFIG (`BeIR/cqadupstack`, config `android`) or baked
+        # into the REPO NAME (`mteb/cqadupstack-android`). The first version checked only the
+        # config, so every `mteb/` spelling was waved straight through.
+        hit = cfg in RESERVED_CQA_CONFIGS or any(
+            n.endswith("-" + c) or ("-" + c + "-") in n or n.endswith("/" + c)
+            for c in RESERVED_CQA_CONFIGS)
     if not hit:
         return None
     entry = ALLOWLIST.get(_claim, {})
@@ -310,7 +335,7 @@ def status():
                                                      str(WORK_DEV) + "/{" +
                                                      ",".join(sorted(RESERVED_WORK_DEV)) + "}",
                                                      "HF cache: " +
-                                                     ", ".join(RESERVED_HF_CACHE_DIRS)],
+                                                     ", ".join(RESERVED_HF_CACHE_PREFIXES)],
                                 "lotte": [str(LOTTE)], "m9reserve": [str(M9RESERVE)]},
             "protected_dataset_ids": sorted(RESERVED_HF_IDS),
             "allowlist": {k: sorted(v["kinds"]) for k, v in ALLOWLIST.items()}}

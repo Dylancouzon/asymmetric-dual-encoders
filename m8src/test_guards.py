@@ -128,9 +128,52 @@ def t_dev_components_still_loadable():
 
 
 def t_hf_cache_reserved_qrels_refused():
-    for d in paths_guard.RESERVED_HF_CACHE_DIRS:
+    for d in paths_guard.RESERVED_HF_CACHE_PREFIXES:
         probe = paths_guard.HF / d / "default" / "anything.arrow"
         assert _refused(lambda q=probe: open(q)), f"HF cache {d} was NOT refused"
+
+
+def t_hf_cache_reserved_CORPORA_refused():
+    """The routes an adversarial review found LIVE and unguarded on 2026-08-29.
+
+    The suite previously iterated `RESERVED_HF_CACHE_DIRS`, which held only the two `-qrels`
+    spellings -- so it asserted exactly the cases that already worked and could never have found
+    these. Hard-coded here on purpose: a test that derives its cases from the same constant the
+    code reads cannot detect that the constant is incomplete.
+    """
+    for d in ("BeIR___fever", "BeIR___dbpedia-entity",
+              "mteb___cqadupstack-android", "mteb___cqadupstack-english"):
+        probe = paths_guard.HF / d / "default" / "0.0.0" / "shard.arrow"
+        assert _refused(lambda q=probe: open(q)), f"HF cache {d} was NOT refused"
+
+
+def t_hf_cache_beir_cqadupstack_config_dir_refused():
+    """The BeIR spelling puts the subforum in a CONFIG directory, so the repo dir never says it."""
+    for cfg in ("android", "english"):
+        probe = paths_guard.HF / "BeIR___cqadupstack" / cfg / "0.0.0" / "shard.arrow"
+        assert _refused(lambda q=probe: open(q)), f"BeIR cqadupstack/{cfg} was NOT refused"
+
+
+def t_hf_cache_non_reserved_cqa_allowed():
+    """And the guard must NOT swallow the DEV subforums, or every dev eval starts refusing."""
+    for cfg in ("physics", "programmers"):
+        probe = paths_guard.HF / "BeIR___cqadupstack" / cfg / "0.0.0" / "shard.arrow"
+        assert paths_guard.classify(probe) is None, f"dev subforum {cfg} was wrongly protected"
+
+
+def t_load_dataset_mteb_name_spelling_refused():
+    """`mteb/cqadupstack-android` carries the subforum in the NAME, not the config."""
+    for name in ("mteb/cqadupstack-android", "mteb/cqadupstack-english"):
+        for cfg in (None, "queries", "corpus"):
+            assert _refused(lambda n=name, c=cfg: paths_guard.check_dataset(n, c)), \
+                f"check_dataset({name!r}, {cfg!r}) was NOT refused"
+
+
+def t_load_dataset_dev_subforum_allowed():
+    for name, cfg in (("mteb/cqadupstack-physics", "queries"),
+                      ("BeIR/cqadupstack", "programmers")):
+        assert paths_guard.check_dataset(name, cfg) is None, \
+            f"dev component {name}/{cfg} was wrongly refused"
 
 
 def t_load_dataset_network_route_refused():

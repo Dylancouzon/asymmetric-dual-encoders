@@ -240,3 +240,24 @@ surviving queries into the filter's index, and the fit-list regeneration are all
 run. Pinning the shadow IS trusting it, and a shadow that is quietly still contaminated is worse
 than no shadow — it gives false reassurance immediately before a one-shot access. Adversarial
 review briefed on exactly these two questions; disposition to follow.
+
+### E14-HEAD campaign: 4 adequacy + 9 reported arms (2026-08-29)
+
+| m8e14-adq-lin-b2500-smoke | `work/runs/m8e14-adq-lin-b2500-smoke.json` | -0.1887 | ok |
+| m8e14-adq-mlp-b2500-smoke | `work/runs/m8e14-adq-mlp-b2500-smoke.json` | -0.1948 | ok |
+| m8e14-r0n-s0-smoke | `work/runs/m8e14-r0n-s0-smoke.json` | 0.5012 | ok |
+| m8e14-lin-s0-smoke | `work/runs/m8e14-lin-s0-smoke.json` | 0.4974 | ok |
+| m8e14-mlp-s0-smoke | `work/runs/m8e14-mlp-s0-smoke.json` | 0.4908 | ok |
+| m8e14-adq-lin-b2500 | `work/runs/m8e14-adq-lin-b2500.json` | -0.1261 | ok |
+| m8e14-adq-lin-b5000 | `work/runs/m8e14-adq-lin-b5000.json` | -0.1211 | ok |
+| m8e14-adq-mlp-b2500 | `work/runs/m8e14-adq-mlp-b2500.json` | -0.1233 | ok |
+| m8e14-adq-mlp-b5000 | `work/runs/m8e14-adq-mlp-b5000.json` | -0.1189 | ok |
+| m8e14-r0n-s0 | `work/runs/m8e14-r0n-s0.json` | 0.5106 | ok |
+| m8e14-r0n-s1 | `work/runs/m8e14-r0n-s1.json` | 0.5123 | ok |
+| m8e14-r0n-s2 | `work/runs/m8e14-r0n-s2.json` | 0.5123 | ok |
+| m8e14-lin-s0 | `work/runs/m8e14-lin-s0.json` | 0.4906 | ok |
+| m8e14-lin-s1 | `work/runs/m8e14-lin-s1.json` | 0.4920 | ok |
+| m8e14-lin-s2 | `work/runs/m8e14-lin-s2.json` | 0.4925 | ok |
+| m8e14-mlp-s0 | `work/runs/m8e14-mlp-s0.json` | 0.4876 | ok |
+| m8e14-mlp-s1 | `work/runs/m8e14-mlp-s1.json` | 0.4894 | ok |
+| m8e14-mlp-s2 | `work/runs/m8e14-mlp-s2.json` | 0.4895 | ok |

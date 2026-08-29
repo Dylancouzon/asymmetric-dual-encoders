@@ -1,6 +1,6 @@
 {
   "_note": "LEDGER \u00a74.4 deliverable 3: rule compliance, AUDITED rather than discovered.",
-  "head": "e03fccb41bd5b4b610e46ac8f6654f7570f0d837",
+  "head": "797a56559adb111c95eab7f0eb77f6db649fcc39",
   "registry_version": 2,
   "registry_sha256_now": "e98c9e5b02a22aa9f7291d53e776a6058ffbf1300f0702b2ff5d22accf51ff01",
   "stamped_results_checked": [
@@ -45,6 +45,11 @@
       "commit": "a76fd9c9"
     },
     {
+      "file": "m8_e14_head.json",
+      "probe": "E14-HEAD",
+      "commit": "0a62261c"
+    },
+    {
       "file": "m8_lotte_overlap.SMOKE.json",
       "probe": "S0",
       "commit": "5adc3c7e"
@@ -53,6 +58,16 @@
       "file": "m8_lotte_overlap.json",
       "probe": "S0",
       "commit": "344e0895"
+    },
+    {
+      "file": "m8_lotte_remedy.SMOKE.json",
+      "probe": "E10-REMEDY",
+      "commit": "0a62261c"
+    },
+    {
+      "file": "m8_lotte_remedy.json",
+      "probe": "E10-REMEDY",
+      "commit": "d964f2fd"
     },
     {
       "file": "m8_noise_floor.json",
