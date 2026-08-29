@@ -320,8 +320,9 @@ returns neither `one_sided_lower_raw` nor the α/3 bound.
 
 - **CONFIRMATORY** (the reserved four) uses `boot.signflip` + `boot.paired`. The four sets are
   **disjoint** — no shared underlying query, no nesting — so dataset-stratified paired resampling
-  *is* the dependence-preserving estimator here; `paired_dep` reduces to it exactly, and
-  `m8src/test_decide.py` asserts that reduction rather than assuming it.
+  *is* the dependence-preserving estimator here and `paired_dep` reduces to it exactly.
+  **NOT YET ASSERTED IN CODE** (§4.4 gap list): `m8src/test_decide.py` does not exist. Until it
+  does, the reduction is a stated argument, not a checked one.
 - **DEV** (the six components, two of them nested) uses `signflip_dep` / `paired_dep` throughout.
 - **The α/3 bound is computed at the exact level.** `boot.paired` hardcodes the percentile string
   `"0.8333"`; M8 computes `100 × 0.025/3 = 0.8333333…` in `m8src/decide.py` from the same draws
@@ -390,7 +391,7 @@ in every component it feeds. Reported three ways so the effects separate (ordina
 fixed-stratum-independent isolates conditioning; → shared-draw isolates covariance). Under full
 duplication the dependence-blind interval is 1.43× too narrow.
 
-### 4.4 Registration deliverables — DONE 2026-08-29
+### 4.4 Registration deliverables — two done, one outstanding
 
 1. **`m8src/decide.py`** — the executable confirmatory rule and the complete ship predicate:
    draws, seed, stratified paired resampling, strict qid alignment, Holm ordering and ties, the
@@ -416,9 +417,27 @@ duplication the dependence-blind interval is 1.43× too narrow.
    sets have never been scored. **DBpedia is the weak link**: n=400 against its analogue's 3,452.
    Sensitivity is reported at ±25% / −20% on the calibrated sd. **The P(ship) figures go to Dylan
    before Phase 0 spends its week** — a knowing report-only choice beats a discovered one.
-3. **`m8src/rule_audit.py`** — ported from M7, so rule compliance is audited rather than
-   discovered. M7 found its step-selection rule unapplied *by accident*, after it had governed
-   four arms and a promoted adoption.
+3. **`m8src/rule_audit.py` — NOT YET PORTED.** M7 found its step-selection rule unapplied *by
+   accident*, after it had governed four arms and a promoted adoption, and `rule_audit.py` is the
+   instrument that stops that recurring. It must exist before any adoption decision.
+
+**GAP LIST — obligations this ledger states that are NOT yet implemented.** Written here because
+a protocol document asserting guards that do not exist is the same failure class as code producing
+a wrong number, pointed the other way: a future session (or the owner reading GitHub) trusts a
+"DONE" heading. Each line is a blocker for the stage named.
+
+| missing | what it must do | blocks |
+|---|---|---|
+| `m8src/test_decide.py` | assert `paired_dep` reduces to the ordinary stratified path on the disjoint reserved four; exercise every ship-condition branch including the negative controls | any confirmatory decision |
+| `m8src/rule_audit.py` | every mechanically-checkable rule against every arm family it binds, with the unverifiable listed as unverifiable | any adoption |
+| `m8src/test_final_guard.py` | the 14-line one-shot checklist in §6, each with an acceptance test | the access |
+| `m8src/test_freeze_binding.py` | the refusals `freeze.write` must make on M8 paths | the freeze |
+| B7 real-data verification | block CG vs the direct solve on the REAL X/Y/W0 across the full λ grid, compared on dev macro | any closed-form number the solver produces |
+| fused + fp16 noise floor | §4.7's floor on the endpoints B3/B10/B13/R1-ASSEMBLY actually read | those probes' bars |
+| B-leg noise floor | a null pair varying the B leg, for arms that restructure it (R-PHASE and any pool/init change flowing through B) | those probes' bars |
+| reserved-4 pre-encode allowlist entry | a corpus-only module registered under G2 — `check_dataset` currently refuses `beir/fever` outright, which is the right default and will block the pre-encode | pipeline step 13 |
+
+`./run_m8_tests.sh` names the unported suites in its output for the same reason.
 
 ### 4.5 Weak-null calibration caveat (carried verbatim, may never be dropped)
 
@@ -574,8 +593,10 @@ before any bar, and `NEXT-SESSION.md` said the opposite. There is now one order.
   promoted into Wave 1.
 
 **One-shot mechanics — the itemized port checklist (Codex gate MAJOR 4).** "Copied verbatim" was
-not an executable statement. Each line below is ported to M8 paths **with its own acceptance test**
-in `m8src/test_final_guard.py` / `m8src/test_freeze_binding.py`:
+not an executable statement. Each line below **must be** ported to M8 paths with its own
+acceptance test in `m8src/test_final_guard.py` / `m8src/test_freeze_binding.py`. **Neither file
+exists yet** (§4.4 gap list); this is the specification they must satisfy, not a record that they
+do:
 
 | # | obligation |
 |---|---|
@@ -1020,67 +1041,102 @@ statement. Items 5 and 8 → §17 and §8's D2 coverage spec.
 
 ## 17. Measured: what the query-side loss is actually made of
 
-`results/m8_retention_decomposition.json`, run 2026-08-29 on M7's already-scored final run and the
-six's frozen query texts. **Zero new access.** Descriptive; adopts nothing (§4.6). It exists
-because H3 — "short-query loss, partly recoverable in-class" — rested on a between-dataset reading
-of six points, and this project has been wrong that way before.
+`results/m8_retention_decomposition.json` and `results/m8_fragmentation_attribution.json`, run
+2026-08-29 on M7's already-scored final run and the six's frozen query texts. **Zero new access.**
+Descriptive; adopts nothing (§4.6). It exists because H3 — "short-query loss, partly recoverable
+in-class" — rested on a between-dataset reading of six points, and this project has been wrong
+that way before.
 
-**The short-query premise does not survive a within-dataset read.**
+**Both claims below were REWRITTEN on 2026-08-29 after an adversarial review showed the first
+version overclaimed.** What the review changed is recorded in place rather than quietly fixed,
+because the first version had already been used to promote a probe.
 
-- Pooled within dataset, the table loses an **extra 0.00021 nDCG per additional query word beyond
-  the teacher's own difficulty gradient** (t = 3.0; table slope on words −0.00045, teacher slope
-  −0.00023). **Longer queries are relatively WORSE**, not better.
-- The between-dataset "best on longest" reading is carried by ArguAna — which is one of stella's
-  two **disclosed training sets**, and whose own retention **declines monotonically across its
-  length quartiles: 0.971 → 0.941 → 0.907 → 0.893**.
-- Per-dataset length slopes **flip sign** (FiQA +0.0084, t = +3.6; nfcorpus −0.0074, t = −1.8), so
-  there is no single length effect to recover.
+### 17a. The short-query premise is unsupported — but the affirmative claim is ArguAna's alone
 
-**The signal that IS consistent is subword fragmentation.**
+- **Withdrawn:** "within datasets the table loses an extra 0.00021 nDCG per query word beyond the
+  teacher's own difficulty gradient (t = 3.0), so longer queries are relatively worse." **ArguAna
+  carries 99.7% of the within-dataset length variance** (its queries average 174 words against
+  2–12 for the other five), so the pooled slope IS the ArguAna slope — the one-dataset dependence
+  the diagnostic was built to escape — and ArguAna is one of the teacher's two **disclosed
+  training sets**. Excluding it: slope +0.0018, **t = 1.51, not resolved**.
+- **What survives, and it is enough:** the per-dataset length slopes **flip sign**
+  (FiQA +0.0084 t = +3.6; nfcorpus −0.0074 t = −1.8; trec-covid +0.0126 t = +1.2; scifact,
+  scidocs unresolved). **There is no single length effect to recover**, and ArguAna's own
+  retention *declines* across its length quartiles (0.971 → 0.941 → 0.907 → 0.893). H3's
+  "best on the longest, worst on the shortest" premise is a between-dataset artifact; the
+  milestone may not build on it.
+- **Also withdrawn:** "length and fragmentation are uncorrelated (r = 0.006)". That pooled r was
+  ArguAna-dominated too. Per dataset, r(words, frag) is **negative in four of six**
+  (−0.26, −0.35, −0.24, −0.14) — longer queries are *less* fragmented per word, which is what
+  averaging over more words does. The two channels are distinct, but not because they are
+  uncorrelated.
 
-- Pooled within dataset, the table falls **0.050 nDCG further behind the teacher per +1.0
-  subwords-per-word** (t = 4.6), resolved within scifact (+0.147, t = 3.8), nfcorpus (+0.044,
-  t = 4.1) and ArguAna (+0.252, t = 3.0).
-- Within dataset, length and fragmentation are **uncorrelated** (r = 0.006) — two independent
-  channels, not one restated.
+### 17b. Fragmentation IS the channel, and it survives the same attack
+
+- Pooled within-dataset, the table falls **0.050 nDCG further behind the teacher per +1.0
+  subwords-per-word** (t = 4.61). **ArguAna carries only 2.2% of the fragmentation variance**
+  (nfcorpus 53%, scidocs 23%, scifact 12%), and excluding ArguAna the slope is **+0.045,
+  t = 4.71** — unchanged, if anything stronger. This is not a one-dataset result.
 - Mechanism, and its honest direction: the *teacher* does **better** on more-fragmented queries
-  (+0.038, t = 2.7) while the table is flat (−0.012, t = −0.85). The gap widens because the
-  teacher pulls away, which is what a fixed per-token vector cannot follow.
+  (+0.038, t = 2.72) while the table is flat (−0.012, t = −0.85). The gap widens because the
+  teacher pulls away — which is what a fixed per-token vector cannot follow.
+- **The weaker instrument, reported as weaker.** A binary present/absent contrast (does the query
+  contain a word WordPiece splits into ≥ 3 pieces?) gives **4 of 5 informative datasets positive,
+  one-sided p = 0.19 — not resolved**; individually resolved only in nfcorpus (+0.067, z = 3.21)
+  and scifact (+0.103, z = 2.58). ArguAna is excluded as having **no contrast to measure** (97% of
+  its queries are in the with-arm). *The first version of this section reported "6/6 sign
+  consistency, p = 0.016" — it counted ArguAna's coin flip in the tally while the same paragraph
+  called it uninformative, and it tokenized words with punctuation attached, which inflated the
+  with-arm; correcting the punctuation flipped trec-covid's contrast from +0.062 to −0.007.*
+  **The continuous slope is the instrument to quote; the binary contrast is not.**
+- **The words**, ranked by excess against *their own dataset's* without-arm mean (an earlier
+  ranking used a cross-dataset baseline, so a hard dataset inflated every word in it): a mix of
+  hyphenated compounds (`cyber-attacks`, `pre-1967`, `non-proliferation`), domain terms
+  (`phosphorylation`, `myocardial`, `stochastic`, `bitcoin`), named entities (`wikileaks`,
+  `hyperloop`, `guardian.co.uk`) **and ordinary English the 2018 vocabulary splits badly**
+  (`u.s`, `it's`, `inequalities`, `adverts`, `censoring`). The "post-2018 drift" story is
+  **weaker than first stated**: drifted vocabulary is present but does not dominate.
 
-### 17b. And which WORDS carry it — what D2's tokenizer actually has to cover
+**Consequences, recorded before any M8 probe reads them.** (i) H3's short-query framing is
+unsupported and may not be quoted; B17 still measures the in-domain ceiling and is still worth
+running. (ii) **D2's multi-word tokenizer reaches the one channel that is measured and robust**,
+which is the evidence behind promoting B7 into Wave 1 — and B7 has since PASSED (§18), so the
+promotion cost nothing regardless. (iii) Because the words are a mix rather than mostly drifted
+vocabulary, D2's tokenizer training corpus matters **less** than 17b's first version claimed; the
+second, quite different argument it seemed to give the FineWeb arm (E13) is **withdrawn** — E13
+stands or falls on its registered data-probe bar and Dylan's licensing ruling, not on this.
+(iv) Nothing here is an adoption and no bar moves because of it.
 
-`results/m8_fragmentation_attribution.json`, same class: descriptive, zero new access. "Train a
-64-128K tokenizer" is not a decision until you know what it must cover, and the two candidate
-answers have different consequences: ordinary English that WordPiece-30522 splits badly (any
-general corpus fixes it) versus vocabulary the 2018 vocabulary never saw (the tokenizer's TRAINING
-TEXT becomes load-bearing, and the genre bundle stops being an independent lever).
+## 18. B7 — the solver gate, PASSED
 
-Contrast: queries containing a word WordPiece splits into ≥ 3 pieces, versus queries without one.
-**Positive in all six datasets — 6/6 sign consistency, p = 0.016 on a sign test** — resolved in
-nfcorpus (+0.066, z = 3.15) and scidocs (+0.020, z = 2.23), near-resolved in scifact (+0.087,
-z = 1.98), unresolved in FiQA (z = 1.49) and trec-covid (z = 1.00, n = 50). ArguAna is
-**uninformative by construction**: its queries average 174 words, so 99% contain such a word and
-there is no contrast to measure.
+`results/m8_b7_solver.json`. The dense fp64 Gram is what closed granite-r2 and gte-modernbert in
+M7 "on arithmetic, not merit", and what would have closed D2's 64–128K vocabulary and every
+non-WordPiece teacher screen. `m8src/blockcg.py` never forms it.
 
-The words themselves, ranked by frequency × excess gap, fall into three groups and **not** into
-"ordinary English":
+| vocabulary | CG iterations | wall | peak host RSS | dense fp64 Gram would be | rows reached |
+|---|---|---|---|---|---|
+| 30,522 (control) | 26 | 5.2 s | 3.77 GB | 7.5 GB | 99.9% |
+| **65,536** | **51** | **10.4 s** | **4.42 GB** | **34.4 GB** | 96.6% |
+| 131,072 | 68 | 16.6 s | 5.72 GB | 137.4 GB | 84.4% |
 
-| group | examples (subword counts) |
-|---|---|
-| hyphenated / punctuated compounds | `cyber-attacks` (4), `covid-19` (5), `sars-cov-2` (7), `pre-1967` (3) |
-| date-like strings | `11/09/11` (6), `18/08/11` (5), `9/11/2011` (5) |
-| post-2018 or rare named entities | `wikileaks` (5), `yanukovych` (6), `hyperloop` (4), `bitcoin` (3) |
-| genuine domain terms | `phosphorylation` (6), `abiogenesis` (4), `remittances` (4), `acquittal` (4) |
+**Bar (registered): the 65,536-row solve completes within the 18 GB RAM budget and under 4 hours.
+PASS, by three orders of magnitude on time and a factor of four on memory.** Correctness: block CG
+agrees with the direct solve to **4.6e-7** relative Frobenius error on Zipfian data, 39× faster.
 
-**Consequences, recorded before any M8 probe reads them.** (i) H3 is reframed: the recoverable
-channel is fragmentation, not length. (ii) **D2's multi-word tokenizer is the lever that reaches
-the measured channel**, which is the evidence behind promoting B7 to Wave 1. (iii) D2's tokenizer
-must be trained on text that CONTAINS the drifted vocabulary — so the tokenizer's training corpus
-is a design parameter of D2, not a free choice, and it gives the FineWeb arm (E13) a second and
-quite different argument from the one it was registered under: a modern web corpus is where
-`covid-19` and `sars-cov-2` live. That argument is **recorded, not acted on** — E13's ruling is
-Dylan's and the licensing question is unchanged. (iv) B17 still measures the in-domain ceiling and
-is still worth running, but its "short-query" framing may not be quoted. (v) Nothing here is an
-adoption, and no bar moves because of it. The word-level ranking in particular is descriptive
-colour: the contrast it decomposes is resolved in only two of six datasets, and the ranking
-double-counts a query across all of its fragmented words.
+**Two things this measurement is not, stated so it is not over-read.** (i) The bag matrices are
+**synthetic** — 12 non-zeros per row, ids drawn Zipf(1.07). It measures the SOLVER. Verifying on
+the real X, Y, W0 across the full λ grid (which reaches 1e-4, where fp32 CG on a Zipfian Gram is
+least comfortable) and comparing the two tables' **dev macro** rather than their Frobenius
+distance is a registered precondition before any closed-form number this solver produces is
+adopted. (ii) It says nothing about D2's quality — B7's quality half needs a real trained
+tokenizer.
+
+**What it unblocks:** D2 is computable, and so is **T1** (§10), which was blocked because every
+challenger's vocabulary is ≥ 50,368 (§15, 2026-08-29).
+
+**And one number for D2's coverage spec, free:** at 131,072 rows a 200,000-query draw reaches only
+**84.4%** of the vocabulary, against 99.9% at 30,522. M7 shipped with 5.71% of rows never trained;
+at 128K the untouched fraction is three times that before any training begins. The
+minimum-updates-per-reachable-row criterion and the compositional init floor (§8) are load-bearing,
+not paperwork.
+

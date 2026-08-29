@@ -32,16 +32,27 @@ revisitable with arithmetic and your sign-off. **I have not opened it. Yes/no is
 
 | scenario | true C1 effect | P(ship) |
 |---|---|---|
-| structural target | +0.020 | **0.67** |
-| modest | +0.010 | **0.57** |
-| recipe-only | +0.005 | **0.15** |
+| structural target | +0.020 | **0.84** |
+| modest | +0.010 | **0.80** |
+| recipe-only | +0.005 | **0.21** |
 | M7 repeat (post-gate transfer was 0.000 ± 0.005) | 0.000 | **0.002** |
-| dense lags fused (strict C2 binds) | +0.020 / +0.006 | **0.46** |
+| dense lags fused (strict C2 binds) | +0.020 / +0.006 | **0.57** |
 
-Read the bottom row: **if M8 is another recipe programme, it ships with probability ~0.15 and a
-repeat of M7's transfer ships essentially never.** That is the case for spending the milestone on
+*Correction, same night: an earlier version of this table read 0.67 / 0.57 / 0.15 / 0.002 / 0.46.
+It was wrong. The simulator still carried the planning-draft's guard constants (six-set margin
+0.005, SE 0.006, three homogeneous worst-groups) after §5 had been given its measured ones
+(margin 0.0075, near-sibling SE 0.0026–0.0032, four datasets whose SEs differ fourfold). It
+overstated the six-set guard's false-veto rate about fortyfold, and that guard is the dominant
+term. Found by an adversarial review of the rewrite; the simulator now READS the registry instead
+of restating it.*
+
+Read the bottom two rows: **a recipe-only programme ships with probability ~0.2, and a repeat of
+M7's measured transfer ships essentially never.** That is the case for spending the milestone on
 capacity (D2/D1, and E14 if you open it) rather than on recipe knobs, and the LEDGER now says so
-in the protocol (§7) so the budget cannot quietly drift back.
+in the protocol (§7) so the budget cannot quietly drift back. The remaining drag on the good
+scenarios is the qualifying-v2-table condition (85% assumed) and, at the null, the worst-group
+guard — which vetoes ~23% of truly-equal candidates, mostly on DBpedia's 400 queries. That is the
+deliberate safe-error direction, not a defect.
 
 **3. LoTTE as the shadow (E10) — IT REOPENS. The full screen is done and every slice rejects.**
 `results/m8_lotte_overlap.json`, 5.25M documents screened in 19 minutes. Three findings, and an
@@ -105,17 +116,27 @@ all of Stage R's training combined, bought for one descriptive row. `instruction
 sanctions published numbers as labelled context. **Pre-agreeing the fallback now beats discovering
 the collision in week three.**
 
-### Two things you should see, that are not questions
+### Three things you should see, that are not questions
 
-**The short-query story was wrong, and measuring it changed the plan.** The premise behind H3 —
-"best on the longest queries, worst on the shortest" — is a *between-dataset* reading of six
-points. Within datasets it inverts: the table loses an **extra 0.00021 nDCG per additional query
-word beyond the teacher's own difficulty gradient** (t = 3.0), and ArguAna's own retention
-*declines* across its length quartiles (0.971 → 0.893). The signal that IS consistent is **subword
-fragmentation**: the table falls **0.050 nDCG further behind per +1.0 subwords-per-word** (t = 4.6),
-uncorrelated with length (r = 0.006). That is exactly the channel a multi-word tokenizer reaches,
-which is why D2's gate was promoted into Wave 1. `results/m8_retention_decomposition.json`,
-LEDGER §17. Zero new access — it is a re-read of M7's already-scored final run.
+**B7 passed, and it reopens two doors at once.** The dense fp64 Gram is what closed granite-r2 and
+gte-modernbert in M7 "on arithmetic, not merit" — 20.3 GB at 50,368 rows against an 18 GB budget.
+A Gram-free preconditioned solver now does **65,536 rows in 51 iterations, 10 seconds, 4.4 GB**,
+and 131,072 rows in 17 seconds — where the dense Gram would have been 34 GB and 137 GB. It agrees
+with the direct solve to 4.6e-7. So **D2's 64–128K vocabulary is computable, and so is a teacher
+screen for challengers that do not share stella's WordPiece vocabulary — which is all four of
+them.** `results/m8_b7_solver.json`, LEDGER §18.
+
+**The short-query story was wrong, and so was my first correction of it.** H3's premise ("best on
+the longest queries, worst on the shortest") is a between-dataset reading of six points, and it
+does not survive: the per-dataset length slopes flip sign, and ArguAna's own retention *declines*
+across its length quartiles. But my first replacement claim — "within datasets, longer queries are
+relatively worse, t = 3.0" — was itself an ArguAna-only result: **ArguAna carries 99.7% of the
+within-dataset length variance**, and excluding it the slope is t = 1.51, unresolved. Withdrawn.
+**What survives is fragmentation**, and it survives the same attack: ArguAna holds only 2.2% of
+the fragmentation variance, and excluding it the slope is +0.045, **t = 4.71** — unchanged. The
+table falls ~0.05 nDCG further behind its teacher per +1.0 subwords-per-word, because the *teacher*
+pulls ahead on fragmented queries while the table stays flat. That is the channel a multi-word
+tokenizer reaches, and it is why B7 was promoted. LEDGER §17.
 
 **A near-miss, found by review rather than by accident.** `work/dev/cqadup-android.json` and
 `work/dev/cqadup-english.json` held the **complete corpora and qrels of two of the four reserved
@@ -123,8 +144,6 @@ confirmatory sets**, materialized on 2026-08-26 when the untouched-final pair wa
 dev script calling `devsuite.load("cqadup-android")` would have scored a reserved set silently.
 **Nothing scored them** — no M8 evaluation had run. They are now a protected kind, along with the
 HuggingFace `*-qrels` caches and the `load_dataset` network route. LEDGER §15.
-
----
 
 ## Done tonight
 
