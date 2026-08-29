@@ -969,12 +969,49 @@ freedom below was a word in v1 and is a value here.
 entirely within **±0.0040** (the project's practical-equivalence band). Among tied candidates:
 prefer no disclosed overlap with the protected sets, then the smaller dimension.
 
-**Candidates and their pre-classified penalties:** the incumbent (re-probe, control);
-`granite-embedding-english-r2` and `gte-modernbert-base` as CG-frame controls (dissimilar);
-`stella_en_1.5B_v5` (**dissimilar** — it breaks WordPiece compatibility, so fingerprints get
-rebuilt if it wins); `harrier-oss-v1-0.6b` (dissimilar). **harrier's training data is
-undisclosed** — a contamination black box that **needs a ruling from Dylan before adoption**; the
-session does not make it.
+**Candidates, established from primary sources 2026-08-29**
+(`research/m8-planning/challenger-specs-2026-08-29.md`). Every challenger is **dissimilar** —
+none shares the incumbent's `bert-wordpiece-30522` tokenizer — so every penalty is **0.0096**,
+fixed here before any screen runs.
+
+| candidate | vocab × dim | int8 MB | trust_remote_code | notes |
+|---|---|---|---|---|
+| `stella_en_400M_v5` (incumbent control) | 30,522 × 1024 | 31.3 | yes, same-repo | the frame everything is compared against |
+| `ibm-granite/granite-embedding-english-r2` | 50,368 × 768 | 38.7 | **no** (native ModernBert) | headroom either precision |
+| `Alibaba-NLP/gte-modernbert-base` | 50,368 × 768 | 38.7 | **no** (native ModernBert) | **byte-identical tokenizer to granite-r2**, so the two share a bag matrix and are in one frame |
+| `NovaSearch/stella_en_1.5B_v5` | 151,646 × 1024 | 155.3 | yes, **same-repo** (revision pins the code) | fits the 233 MB cap at int8; **busts it at fp16** (310.6 MB) — an int8-only survivor |
+| `microsoft/harrier-oss-v1-0.6b` | 151,669 × 1024 | 155.3 | no (native Qwen3) | see the three blockers below |
+
+**Arithmetic verdict: none of the four busts the 233 MB int8 cap.** The two Qwen-family
+candidates are int8-only survivors — at fp16 they would be 310.6 MB — which is consistent with
+the int8-always release rule (§8) but worth stating, because it removes a fallback.
+
+**harrier carries THREE separate blockers, only one of which was known:**
+1. **Training data undisclosed** — a contamination black box against four hash-pinned reserved
+   sets. **Needs Dylan's ruling before adoption**; the session does not make it. *(known)*
+2. **It uses LAST-TOKEN pooling**, and `m7src/teacher.py`'s `pool_project_normalize` implements
+   only `cls` and `mean` and RAISES on anything else. Screening it needs real new code, not a new
+   `Spec` row — and `m7src` is frozen for M8 (G3), so that code would have to live in `m8src`.
+   *(new, 2026-08-29)*
+3. **No published retrieval-only number** — only a mixed-task MTEB v2 overall of 69.0. There is no
+   BEIR or MTEB-Retrieval figure to sanity-check a screen result against. *(new)*
+   Its vendor position is **Microsoft**, which the relaxed vendor rule places in
+   "OK WITH JUSTIFICATION" (Azure AI Search is one service among hundreds) — so it is not
+   disqualified on vendor grounds, and that is worth knowing before spending the ruling.
+
+**And a fallback-row problem the plan had not seen.** `QueryTable`'s degenerate-empty-query
+fallback needs a sequence-start row. **Neither Qwen-family candidate has a usable one**:
+stella-1.5B's `config.json` and `tokenizer_config.json` disagree with each other
+(`bos_token_id` 151643 versus `bos_token: null`), and harrier's entire embedding lives at the LAST
+token, so a start-token fallback is close to meaningless there. Any screen of those two must
+register what the fallback row IS before it runs — `m8src/teacher_screen.py` passes
+`spec.cls_id` explicitly rather than inheriting `table.py`'s BERT default, which makes the choice
+visible instead of silently wrong.
+
+**A padding-gap reminder, larger than before:** harrier's true tokenizer size is **151,669** while
+its `config.json` reports `vocab_size` 151,936 — a 267-row gap. `Spec.vocab` is the TOKENIZER
+size; taking the config figure would ship 267 dead rows. The existing gte-large/stella-400M case
+was six rows.
 
 **Costs a swap charges, written down so they cannot later be discovered as reasons to avoid it:**
 **it converts E11's strict table claim into a system claim** — C2's table-vs-table form is

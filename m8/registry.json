@@ -36,36 +36,69 @@
         "stella_en_400M_v5": {
           "role": "incumbent control",
           "penalty_class": "incumbent",
-          "penalty": 0.0
+          "penalty": 0.0,
+          "vocab": 30522,
+          "dim": 1024,
+          "int8_mb": 31.3
         },
         "granite-embedding-english-r2": {
           "role": "CG-frame control",
           "penalty_class": "dissimilar",
-          "penalty": 0.0096
+          "penalty": 0.0096,
+          "repo": "ibm-granite/granite-embedding-english-r2",
+          "vocab": 50368,
+          "dim": 768,
+          "int8_mb": 38.7,
+          "trust_remote_code": false
         },
         "gte-modernbert-base": {
           "role": "CG-frame control",
           "penalty_class": "dissimilar",
-          "penalty": 0.0096
+          "penalty": 0.0096,
+          "repo": "Alibaba-NLP/gte-modernbert-base",
+          "vocab": 50368,
+          "dim": 768,
+          "int8_mb": 38.7,
+          "trust_remote_code": false,
+          "note": "byte-identical tokenizer to granite-r2: the two share a bag matrix and one frame"
         },
         "stella_en_1.5B_v5": {
           "role": "challenger",
           "penalty_class": "dissimilar",
           "penalty": 0.0096,
-          "note": "breaks WordPiece-30522 compatibility; fingerprints rebuilt if it wins"
+          "note": "fits the 233 MB cap at int8 only; 310.6 MB at fp16. No usable BOS row: config.json and tokenizer_config.json disagree (151643 vs null).",
+          "repo": "NovaSearch/stella_en_1.5B_v5",
+          "vocab": 151646,
+          "dim": 1024,
+          "int8_mb": 155.3,
+          "trust_remote_code": true,
+          "auto_map": "same-repo"
         },
         "harrier-oss-v1-0.6b": {
           "role": "challenger",
           "penalty_class": "dissimilar",
           "penalty": 0.0096,
-          "note": "training data UNDISCLOSED -- a contamination black box; needs a Dylan ruling BEFORE adoption, not after the screen"
+          "note": "config.json vocab_size 151936 vs true tokenizer size 151669 -- a 267-row padding gap",
+          "repo": "microsoft/harrier-oss-v1-0.6b",
+          "vocab": 151669,
+          "dim": 1024,
+          "int8_mb": 155.3,
+          "trust_remote_code": false,
+          "vendor": "Microsoft",
+          "blockers": [
+            "training data undisclosed -- needs Dylan's ruling before adoption",
+            "LAST-TOKEN pooling: m7src/teacher.py implements only cls/mean and raises otherwise; screening it needs new code in m8src (m7src is frozen, G3)",
+            "no published retrieval-only number -- only mixed-task MTEB v2 69.0",
+            "no usable sequence-start row: its embedding lives at the LAST token"
+          ]
         }
       },
       "penalty_rule": "near-sibling iff the challenger shares the incumbent's tokenizer identity (bert-wordpiece-30522) AND its dimension (1024); else dissimilar. Fixed here, before any screen runs.",
       "noise_floor_exempt": true,
       "exempt_reason": "closed-form dev probe with its own CI-resolution bar, not a trained-arm comparison; named as exempt in LEDGER 4.7 and 6",
       "blocked_on": "B7 -- every challenger's vocabulary is >= 50,368 and the direct fp64 Gram at that size is 20.3 GB, above the 18 GB budget. Until a solver exists that does not materialize the Gram, T1 can only re-run candidates M7 already closed CI-resolved.",
-      "frame_note": "fixed WITHIN a tokenizer family; a cross-family challenger is screened in its own vocabulary and the comparison is labelled teacher-plus-tokenizer, with the vocabulary size at every row"
+      "frame_note": "fixed WITHIN a tokenizer family; a cross-family challenger is screened in its own vocabulary and the comparison is labelled teacher-plus-tokenizer, with the vocabulary size at every row",
+      "penalty_note_2026_08_29": "every challenger is DISSIMILAR (none shares bert-wordpiece-30522), so every penalty is 0.0096. Fixed before any screen ran."
     },
     "B2": {
       "wave": 1,
