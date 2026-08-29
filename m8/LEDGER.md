@@ -1770,6 +1770,38 @@ exist.)*
   **No reported arm had run when this was written.** Review at
   `research/m8-planning/codex-e14-impl-review-2026-08-29.md`.
 
+- **2026-08-29 — `E14-HEAD` REPORTED. NO SURVIVOR: both heads HARM, and the mechanism control says
+  the hypothesis was right while the instrument was wrong.** Dense −0.0244 (LIN) and −0.0293 (MLP)
+  against a +0.0040 bar, all six arms agreeing in sign; fused −0.0024 and −0.0042. Full table in
+  `m8/RESULTS.md`; artifact `results/m8_e14_head.json`.
+
+  **The patch stack measured as a null**, which is what licenses reading any of it: `R0N` vs `R0`
+  is −0.00001 dense (σ_A 0.00106) and −0.000015 fused. Four rebindings and a lazy proxy over 1.92M
+  document rows per arm introduce no endpoint artifact.
+
+  **The mechanism control is the finding, not the bar.** Bag-specific gain is POSITIVE on all six
+  arms (LIN +0.0091, MLP +0.0075): the head genuinely makes documents relatively more reachable by
+  a bag. It does so by damaging the space for every query type, ~3× harder than it helps bags.
+  **The direction was right and the instrument is wrong** — a map on a FINISHED document vector
+  buys bag-reachability only by destroying information, which is the scope limit the registration
+  wrote down before any arm ran.
+
+  **Bearing on the pair and on `E14-LORA`:** teacher-style queries lose MORE than bag queries
+  (−0.031 vs −0.022), so a document transform co-trained with a bag taxes a transformer query path
+  harder than it taxes the bag. That is the first MEASUREMENT on whether a shared document side is
+  free for the M9 pair. It is not free. Moot for this head; a direct input to `E14-LORA`'s bar.
+
+  **A REGISTRATION GAP, recorded and NOT applied retroactively.** `B3`'s decision code has a
+  `NEGATIVE-DOSE` branch for "measurably worse, reported as a finding rather than folded into
+  FAIL". `E14-HEAD`'s row has no negative branch, so a −0.024 is labelled with language written for
+  a null, and `lin`'s adequacy flag labels it OPTIMIZATION-INADEQUATE — "not trained long enough".
+  **The evidence disqualifies that reading**: the arm that PASSED adequacy (MLP) harms MORE, and
+  the training holdout improved while the endpoint moved away from the bar. The registered labels
+  stand as the rule produced them, because changing a rule after seeing its number is the one thing
+  this protocol does not permit; the disqualifying evidence is reported beside them. **Every future
+  probe row must carry a negative branch** — the asymmetry is not free, since a harm reported as
+  "inconclusive" invites exactly the wrong follow-up spend.
+
 - **[SUPERSEDED THE SAME DAY by Dylan's ruling — see the entry below. Kept because the risk it names is still the reason the ruling is right.]** **2026-08-29 — OPEN ITEM WITH A TRIGGER: does a fine-tuned encoder propagate to M9?** Raised by
   Dylan while `E14-HEAD` was training. `instructions-m9.md` says M9's teacher is "the frozen teacher
   the shipping table line uses ... M8 inherits it unless its own ledger records a swap, in which

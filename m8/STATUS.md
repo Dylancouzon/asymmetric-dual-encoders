@@ -1,10 +1,39 @@
 # M8 status
 
-**Stage: Phase 0 complete, 2026-08-29.** LEDGER **v2** is live (`m8/LEDGER.md` +
-`m8/registry.json`). All four noise floors are measured, eight probes have run, the teacher
-question is closed, and all five owner decisions are ruled. Every result carries a registration
-stamp. **No M8 training candidate exists yet. No protected set has been scored. The reserved four
-are untouched.**
+**Stage: Phase 0 complete; the milestone's main bet has REPORTED, 2026-08-29.** LEDGER **v2** is
+live (`m8/LEDGER.md` + `m8/registry.json`). All four noise floors are measured, nine probes have
+run, the teacher question is closed, and all owner decisions are ruled. Every result carries a
+registration stamp. **No M8 training candidate exists yet. No protected set has been scored. The
+reserved four are untouched.**
+
+## `E14-HEAD` — NO SURVIVOR. Both heads HARM; the mechanism was real and the instrument wrong.
+
+| treatment | DENSE | FUSED | bar | registered verdict |
+|---|---|---|---|---|
+| **LIN** (primary) | **−0.0244** | −0.0024 | +0.0040 | OPTIMIZATION-INADEQUATE |
+| **MLP** (control) | **−0.0293** | −0.0042 | +0.0040 | NULL |
+
+~6× the bar in the WRONG direction on dense, all six arms agreeing in sign. **The patch stack is a
+measured null** (`R0N` vs `R0`: −0.00001 dense, −0.000015 fused), which is what licenses reading
+the rest as a result rather than a defect.
+
+**The `lin` label understates it and the evidence disqualifies its premise:** the arm that PASSED
+step-adequacy (MLP) harms MORE, and the training holdout improved while the endpoint moved away
+from the bar. Labels stand as the rule produced them — changing a rule after seeing its number is
+the one thing this protocol forbids — with the disqualifying evidence reported beside them.
+
+**The mechanism control is the real finding.** Bag-specific gain is POSITIVE on all six arms
+(LIN +0.0091, MLP +0.0075): the head genuinely makes documents relatively more bag-reachable, but
+buys it by damaging the space for every query type ~3× harder than it helps. Direction right,
+instrument wrong. Teacher-style queries lose MORE than bag queries (−0.031 vs −0.022), which is
+the first measurement bearing on whether the M9 pair can share a document side — **it is not
+free**, and it is a direct input to `E14-LORA`'s still-unwritten bar.
+
+**Scope, binding:** a null here is WEAK evidence about `E14-LORA` and may NEVER be written as
+closing E14. It removes the strongest argument FOR buying it. CQADupStack-family only.
+
+**Also banked:** fusion absorbs ~10× of the dense degradation (−0.0244 → −0.0024), an independent
+read on how much of the fused system's quality is BM25 rather than the table.
 
 ---
 

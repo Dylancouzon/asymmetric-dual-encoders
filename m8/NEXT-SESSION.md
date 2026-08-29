@@ -8,27 +8,11 @@ finished lives in LEDGER/RESULTS/EXPLORED/CODEMAP and is not repeated here.**
 
 ## In order
 
-1. **`E14-HEAD` — the milestone's main bet. The registration is now correct; the code is not
-   written.** A Codex pass found three BLOCKERs in the design *before* any arm ran and the row was
-   amended (LEDGER §15, 2026-08-29). **Implement from the registry row and that entry — NOT from
-   `research/m8-planning/e14-head-design-2026-08-29.md`, which is the reviewed brief and is wrong
-   in three specific places.** What already exists: `m8src/e14_head.py` holds both heads
-   (`lin` primary, `mlp` its nonlinearity control), the verbatim `infonce` copy with the
-   false-negative mask kept in raw teacher space, and a self-test that is bit-identical to
-   `m7src`'s loss on all six branch cases.
-   What is left, in dependency order:
-   - the per-arm training driver: rebind `train.infonce` and `torch.optim.Adam` in a subprocess,
-     persist the head with its sha256 provenance bindings;
-   - the **`R0N`** comparator arms (head frozen at identity, 3 seeds) — these are also the
-     end-to-end null on the whole patch stack, so run them first and check they land within the
-     floor of the existing R0 arms;
-   - the **dev-blind** lr ladder on tuning seed 3, plus the step-adequacy continuation to 5,000
-     steps with its pre-registered plateau rule;
-   - the streamed (lazy slice-transforming) scoring path — a materializing patch needs ~21.4 GB on
-     HotpotQA and does not fit;
-   - the mechanism control (headed documents against frozen *teacher* queries).
-   **Re-brief a review on the implementation before the campaign runs.** The design review paid
-   for itself; the previous session's B3 review did too.
+1. **`E14-HEAD` — DONE, 2026-08-29. NO SURVIVOR.** Both heads harm (dense −0.0244 / −0.0293
+   against a +0.0040 bar); the patch stack measured as a null; the mechanism control shows the
+   hypothesis was real and the instrument wrong. Results in `m8/RESULTS.md` and STATUS; artifact
+   `results/m8_e14_head.json`. **Nothing further to run here.** `E14-LORA` remains registered and
+   REFUSED with a TBD bar, and this result is an input to that bar, not a licence to write it.
 
 2. **`E10-REMEDY` — code is written and registered, nothing has run.**
    `protected_filter.py remedy` does the per-item removal and the zero-tolerance re-screen;

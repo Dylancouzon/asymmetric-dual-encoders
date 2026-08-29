@@ -124,3 +124,64 @@ as written; these are disclosures, not grounds for re-reading it.
 comparator — the noise floor and the frozen recipe are both at 2,500, so the budget cannot be
 changed for one arm alone. That is ~9 further training arms and ~9 further scoring passes, and it
 is a spend decision, not a free follow-up.
+
+## E14-HEAD — COMPLETE, 2026-08-29. NO SURVIVOR: the cheap re-shaping HARMS.
+
+Bar +0.0040 on BOTH scalars vs `R0N`, 3 paired seeds, int8/sqrt. `results/m8_e14_head.json`.
+
+| treatment | DENSE (out-of-domain macro) | FUSED (4-comp, frozen operator) | registered verdict |
+|---|---|---|---|
+| **LIN** (primary, 1.05M) | **−0.02441** | −0.00236 | OPTIMIZATION-INADEQUATE |
+| **MLP** (control, 4.2M) | **−0.02932** | −0.00417 | NULL |
+
+Per-seed dense gains: LIN [−0.02447, −0.02478, −0.02397]; MLP [−0.02798, −0.02865, −0.03132].
+Not "fails to clear" — **~6× the bar in the wrong direction**, all six arms agreeing in sign.
+
+**THE PATCH STACK IS A MEASURED NULL, which is what licenses reading the rest as a result.**
+`R0N` vs the existing `R0` arms: dense **−0.00001** (σ_A 0.00106), fused **−0.000015** (σ 0.00039).
+Four rebindings, a lazy proxy over 1.92M document rows per arm, and renormalized cached vectors
+introduce no endpoint artifact whatsoever. The review's BLOCKER 2 was right to demand `R0N` as the
+comparator on principle; empirically the precaution cost nothing and measured zero.
+
+**THE `lin` LABEL UNDERSTATES THE RESULT, and the evidence disqualifies its premise.** The
+step-adequacy gate flagged LIN (ratio 0.350) and cleared MLP (0.220), so the registered rule
+labels LIN OPTIMIZATION-INADEQUATE — "not trained long enough to call this a null". But **the arm
+that PASSED adequacy harms MORE** (−0.0293 vs −0.0244). Undertraining cannot explain a result the
+adequately-trained arm exhibits more strongly. Compounding it: the training holdout improved
+steadily (−0.140 → −0.126) while the endpoint moved away from the bar — the signature of the head
+fitting the training objective at the expense of out-of-domain retrieval. The label is reported as
+the rule produced it; this paragraph is why it should not be read as "inconclusive".
+
+**THE MECHANISM CONTROL IS THE MOST USEFUL NUMBER HERE, and it is not a flat null.** Per treatment,
+mean over 3 seeds, on the two dense components:
+
+| treatment | vs BAG queries | vs TEACHER queries | bag-specific (bag − teacher) |
+|---|---|---|---|
+| LIN | −0.02183 | −0.03095 | **+0.00912** |
+| MLP | −0.02744 | −0.03493 | **+0.00749** |
+
+All six arms positive on the bag-specific term. **The hypothesised mechanism is REAL** — the head
+does make documents relatively more reachable by a bag of token vectors. It achieves it by
+damaging the document space for every query type, and the damage is ~3× the re-shaping benefit.
+That is a far more informative negative than "nothing happened": the direction was right and the
+instrument is wrong. A doc-side map on a FINISHED vector buys bag-reachability only by destroying
+information, which is precisely the scope limit the registration wrote down in advance.
+
+**Bearing on M9 and the paired release** (§15, Dylan's 2026-08-29 rulings): teacher-style queries
+lose MORE than bag queries (−0.031 vs −0.022). A document transform co-trained with a bag taxes a
+transformer query path HARDER than it taxes the bag. Moot for this head, which does not ship;
+**direct evidence for `E14-LORA`'s still-unwritten bar**, and the first measurement on whether a
+shared document side is free for the pair. It is not.
+
+**Fusion absorbs ~10× of the dense degradation** (−0.0244 dense → −0.0024 fused under the frozen
+convex operator, param 0.8). An independent read on how much of the fused system's quality is
+carried by BM25 rather than by the table, corroborating M7's fusion finding from the other
+direction. Carried forward: dense-side regressions are cheap in the fused product, and dense-side
+GAINS are presumably discounted just as heavily.
+
+**Scope, unchanged from the registration and binding on how this is written up:** a null here is
+WEAK evidence about `E14-LORA` and may NEVER be written as closing E14. What it removes is the
+strongest argument FOR buying the LoRA. Both dense components are CQADupStack forums, so this is a
+CQADupStack-family result.
+
+Cost: 13 training arms (~2.7 h), 9 dense passes (1,450 s), 9 fused passes, 9 mechanism passes.
