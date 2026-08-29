@@ -444,6 +444,16 @@ Plan:
 
 ---
 
+## 3b. Release naming — LOCKED (Dylan, 2026-08-29)
+
+The family is **constella** (constellation + stella: navigate by fixed stars, no engine). M8's
+released artifact is **`qdrant/constella-zero-m8`**; the M9 distilled tower is
+**`qdrant/constella-nano-m9`** (tier suffixes zero/nano state the query-side compute budget;
+milestone number trails). The two are planned as a parallel no-compute/low-compute release pair.
+Caveat carried from the naming discussion: the stella association should track the teacher that
+actually freezes in workstream T — if the teacher ever swaps away from the stella lineage, the
+name question reopens with Dylan.
+
 ## 4. Decision items — ALL RULED by Dylan, 2026-08-29 (one-by-one Q&A, this session)
 
 | item | ruling |
