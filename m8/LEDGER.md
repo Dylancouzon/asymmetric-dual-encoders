@@ -494,6 +494,37 @@ floor" did not say which statistic.)*
 - Published to `results/m8_noise_floor.json`. Bars marked `TBD-noise-floor` in `m8/registry.json`
   are frozen by a §15 amendment once it exists. **No bar, no run** — enforced by
   `m8src/probe_guard.py` (G1), not by prose.
+
+**MEASURED, 2026-08-29** (`results/m8_noise_floor.json`; five arms, `m8nf-*`, one process each).
+Three arms differing ONLY in training seed, scored on the full pinned dev suite through the
+released `QueryTable` path, at both precisions and both pooling rules:
+
+| endpoint | floor (max pairwise \|Δ\| over 3 seeds) | bar = max(0.0040, 2×floor) |
+|---|---|---|
+| group-vector median | 0.00095 – 0.00190 | **0.0040** |
+| worst group | 0.00162 – 0.00227 | **0.0040**, except fp16·mean where 2×floor = **0.00454** |
+| out-of-domain macro | 0.00162 – 0.00227 | as above |
+| all-component macro | 0.00102 – 0.00141 | **0.0040** |
+
+**The planning minimum binds nearly everywhere**: seed-to-seed variation is smaller than the
+smallest effect this project has ever adopted, so 0.0040 is the operative bar on every dense
+endpoint but one. That is the outcome that keeps the wave-1 and wave-2 probes runnable; had the
+floor come in at 0.003, every bar would have doubled and most levers would have been unresolvable
+by construction.
+
+**Recipe sensitivity, reported BESIDE the floor and never as it** (§4.7): the ±10% A-step arms
+move the all-component macro by **−0.0009 and +0.0015** (span 0.0024) — at the low end of M7's
+0.0027–0.0078 recipe-perturbation band, as a smaller perturbation should be. The two numbers
+measure different things and both stay on the record.
+
+**Two exact replications, unlooked for.** The seed-0 arm reproduces M7's shipped candidate's dev
+proxy macro to all sixteen digits (0.5105689103506673) and, served at `sqrt`, its full-suite macro
+of **0.6153** — the figure `m7/RESULTS.md` reports for the released artifact. The floor's frame is
+the released artifact's frame, demonstrated rather than asserted.
+
+**What this floor does NOT cover** (§4.4 gap list): it holds the B checkpoint fixed, so an arm that
+restructures the B leg (R-PHASE, and any pool or init change flowing through B) has a larger floor
+that is not yet measured; and the FUSED endpoints are measured separately (§4.7b).
 - **Exempt from noise calibration, named explicitly**: purely descriptive diagnostics that adopt
   nothing (B2, B16, `retention_decomp`) and arithmetic/feasibility gates (B7's memory curve, the
   ONNX export precondition). Everything else is calibrated.
