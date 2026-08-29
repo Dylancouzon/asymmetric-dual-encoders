@@ -1,13 +1,41 @@
 # M7 status
 
-**Stage: FREEZE-READY. The familywise question is CLOSED (option c), the fifth adversarial review
-(8 BLOCKER / 9 MAJOR — verdict STOP) is fully actioned, and the gate re-ran GO from clean commit
-`31d8587` with every number identical (G1 +0.1159 · G3 +0.0845 · G4 0.00013 · retention
-0.846/0.915). All three freeze predicates were dry-run against the rerun gate and pass. Nothing
-blocks the freeze. Two decisions are yours.**
+**Stage: FINAL RUN DONE, 2026-08-28 (freeze `d24c704`, one `--infra-retry` after a harness
+interrupt killed the first attempt — access spent once, receipt tag pushed). ZERO TIER CLAIMS:
+the release bar is missed CI-resolved, the BM25 comparison does not survive the registered
+familywise rule, and the fused system statistically ties OpenSearch. This is the pre-registered
+publishable outcome — a measurement of how much quality a zero-compute query side retains — and
+nothing about the system may change now.** `results/m7_final_run.json`.
 
-Candidate **`p35w-2m-s2500`**, served at `pool_mode=sqrt`. Full pinned dev macro **0.6153**,
-out-of-domain subset **0.3672** — both dev SELECTION numbers, not evidence about the six.
+## The six (confirmatory, one shot)
+
+| comparison | Δ | raw 95% CI | sign-flip p | verdict |
+|---|---|---|---|---|
+| C1 int8 table > LR-dense-pertask 0.4583 | **−0.0243** | [−0.0405, −0.0086] | 0.997 | **miss, resolved BELOW the bar** |
+| C2 int8 table > BM25 0.4174 | +0.0165 | [+0.0017, +0.0311] | 0.0149 vs Holm 0.0083 | not resolved (CI leg passes, multiplicity legs fail) |
+| C3 fused system > OpenSearch 0.4868 | +0.0043 | [−0.0063, +0.0151] | 0.219 | not resolved — a statistical tie |
+
+Macros (avg-6): **int8 table 0.4339** · fp16 0.4337 (int8 quality-free, as G4 said) · BM25 0.4174
+· **fused 0.4911** · teacher-symmetric 0.5744. Six-set retention vs the teacher **0.755** — almost
+exactly the dev out-of-domain retention (0.764) and far below the all-six dev retention (0.915):
+the dev macro's in-distribution bias, measured and disclosed in advance, was real.
+
+**Clean-4 robustness** (pre-registered, exposure-restricted, descriptive): C1 −0.0443
+[−0.0675, −0.0212] · C2 **−0.0311** [−0.0517, −0.0109] — on the four datasets with no disclosed
+teacher overlap the table is BELOW BM25 — · C3 −0.0107 [−0.0262, +0.0043]. The system's two
+strongest datasets (ArguAna 0.5916, FiQA 0.3728) are exactly stella's two disclosed training sets;
+the report must carry that at the dataset rows.
+
+**Fusion vs dense on the six, descriptive as registered**: +0.057 (0.4911 vs 0.4339), carried by
+trec-covid +0.153 and scifact +0.097 — much larger than the dev CQADupStack hint, and the one
+clearly bright spot: the fused zero-query-compute system descriptively tops every Group-B system
+in FINAL_MATRIX (opensearch 0.4868, LR-hybrid-pertask 0.4720) while its query side remains a
+lookup table plus token counts.
+
+The untouched-final tail was **skipped — reserved for M8** as registered.
+
+Dev-selection numbers, for contrast with the six: full pinned dev macro 0.6153, out-of-domain
+subset 0.3672. The gap between 0.6153 and 0.4339 is the measured cost of reading dev as a forecast.
 
 ## The gate: GO, 2026-08-28 (`results/m7_gate_p35w-2m-s2500.json`)
 
@@ -33,27 +61,22 @@ the dev macro have no analogue among the six; the CQADupStack pair says only, qu
 the gain is not exclusively Wikipedia-shaped. Per the fifth review (MAJOR 4) the report may not
 quote +0.036 — or any number — as an expected six-set transfer.
 
-## Open for Dylan, in this order
+## Open for Dylan
 
-*(Closed 2026-08-28: the familywise question — Dylan ruled option (c), keep the rule as
-registered and report the measured rates 0.0198/0.0283 vs nominal 0.025. `final_run.py`
-untouched. See LEDGER § "The familywise question".)*
+*(Closed 2026-08-28: the familywise question — option (c); the freeze — written, committed
+`d24c704`, tag pushed; the final run — done, on your explicit go, with the one permitted retry
+after the interrupt.)*
 
-1. **The freeze.** `freeze.write('p35w-2m-s2500')` — the fusion spec and `released_system` are NOT
-   arguments; it loads the selection and the gate result itself and refuses on any mismatch. Then
-   commit, and **push the tag**: `git tag -a m7-freeze -m "..." <commit> && git push origin m7-freeze`.
-2. **The final run.** One shot. `final_run.py --freeze-hash <commit>`.
-
-**Budget you should know before scheduling 2.** The six are ~40–60 min. The non-confirmatory
-`untouched-final` tail (10.1M docs, tens of hours, ~21 GB) is now **RESERVED FOR M8 by default**
-(registered 2026-08-28, before any six-set number): the final run skips it, keeping FEVER /
-DBpedia / cqadup-android / english un-scored as the v2's confirmatory sets. Override is yours,
-before it would run; scoring them burns them for M8.
-
-Also still yours: the doc2query licensing ruling (a revival needs a commercially clean generator),
-and the HF release go. Milestones renumbered per your call: **M8 = the learnings v2**
-(`instructions-m8.md`, new), **M9 = the LEAF-style distilled tower** (`instructions-m9.md`,
-updated for the stella inheritance and the dead tokenizer rationale).
+1. **Release decision, now trivially framed**: the registered release bar (CI-resolved over
+   LR-dense-pertask) was missed CI-resolved, so under the mandate the v1 dense table does not
+   ship — consistent with your "v1 will probably not be released publicly". The fused system's
+   descriptive edge over OpenSearch is a tie statistically and carries no release claim. Say the
+   word if you want anything shipped anyway; otherwise this closes itself.
+2. **The M7 report** (updating the M6 artifact with the M7 section) — I can draft it next; the
+   binding framing is already registered in the LEDGER.
+3. **M8 kickoff** — the v2 mandate is live (`instructions-m8.md`), the reserved sets are intact,
+   and the clean-stack-tax variant is now legal to run (the freeze is immutable and the final
+   number exists). The doc2query licensing ruling remains open if M8 wants that lever.
 
 ## The fifth review (2026-08-28, post-gate pre-freeze): STOP, then all findings actioned
 
