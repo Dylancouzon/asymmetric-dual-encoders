@@ -90,13 +90,21 @@ FIXED and varied only the Phase-A seed. `R-PHASE` and every pool-or-init lever f
 leg instead, and no bar could read them, because the A-leg floor holds constant the very leg they
 perturb. Three full B→A chains varying only the seed now settle it.
 
-**The B leg adds essentially nothing.** A-leg floor 0.00095–0.00227 across the four endpoints;
-B-leg floor **0.00070–0.00218**. A whole extra 16,000-step seed-dependent phase does not widen the
-instrument, so R-PHASE and the pool/init levers read the same 0.0040 planning minimum as
-everything else. **One exception now binds**: at `int8/mean`, worst-group and out-of-domain macro
-take **0.004369** (2 × floor), not 0.0040. *The honest caveat: this compares two
-max-over-three-pairwise statistics at K = 3, and the ranges overlap almost entirely — the claim is
-"the B leg does not visibly inflate the floor", not that the two are equal.*
+The floors: A-leg 0.00095–0.00227 across the four endpoints, B-leg **0.00070–0.00218**. **The
+comparison I first drew from that is withdrawn.** I wrote that the B leg "adds essentially
+nothing"; a review showed the claim has no content. At K = 3 the statistic is the sample **range**
+(CV 0.525): two experiments with identical noise give ranges differing by ≥2× **40%** of the time,
+and P(R_B ≤ R_A) is exactly **0.500**. Our ratios sit at p = 0.35 and 0.48 — unremarkable, and just
+as consistent with the B leg being noisier. One K = 3 range pins σ only to a **12× span**.
+**Two design faults are recorded rather than smoothed over**: the chain seed drives *both* legs, so
+B-seed and A-seed effects are aliased and may cancel — which makes the range an *under*-estimate,
+the anti-conservative direction; and the pseudo-query pool is identical across chains, so this
+floor does not bound pool-varying levers, which was half its stated motivation. The fix is
+specified (cross the three B checkpoints against several A seeds; the chains on disk are its
+diagonal, six more A legs complete it).
+**The bars are unchanged and stand as a pre-registered convention, not a statistical bound**:
+0.0040 everywhere except `int8/mean` worst-group and OOD macro at **0.004369**. That one is the
+largest of 16 noisy estimates — likely high for its own endpoint, and silent about the other 15.
 
 **B3 — the probe was rebuilt twice tonight, both times before any arm ran, and is now running.**
 Its original lever was synthetic ICT augmentation. An adversarial review of the *arm definition*
