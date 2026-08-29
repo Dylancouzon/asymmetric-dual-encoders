@@ -1830,6 +1830,35 @@ exist.)*
   "supervised document-side adaptation helps". Its teacher-query leg is now evidence about the
   head, not an early warning for a milestone that no longer depends on it.
 
+- **2026-08-29 — REFINED minutes later by Dylan: PREFER THE PAIR. "It would be great if we released
+  that as a pair with the same model document side. It would make for great content and would be
+  easier to train here as a continuation."** So the shared document tower is the **preferred
+  outcome and the registered default**, and M9 breaks the pair **only on CI-resolved evidence**
+  (raw 95% CI excluding 0 AND `signflip_dep` p < 0.05 — §10's definition, not a new one). An
+  unresolved difference is not a reason to diverge. This does not contradict "whatever performs
+  best": a tie goes to the pair, only a measured loss breaks it, and the previous entry's cost
+  disclosure — two document indexes — is now the thing being actively avoided rather than accepted.
+
+  **The "easier as a continuation" assumption is CORRECT, and worth stating precisely because it is
+  only true of the head.** M9's student is distilled into the teacher's QUERY space, and a
+  document-side head does not touch that space — so the **same student and the same distillation
+  run serve both lines**; only the document index differs. With an E14 head that index is a matmul
+  over already-cached document vectors, which is the entire reason the head was the cheap test.
+  With an E14 LoRA the encoder itself changed and the pool needs a full re-encode: hours, once, and
+  no longer free. The student is not retrained in either case.
+
+  **WHETHER THE PAIR IS FREE IS ALREADY BEING MEASURED, and this raises the stakes on a cell that
+  was registered for another reason.** If documents carry the head while the student imitates the
+  teacher's ORIGINAL query vectors, the deciding quantity is teacher-style queries against HEADED
+  documents — precisely the `{teacher} x {headed}` cell of `E14-HEAD`'s mechanism control, running
+  now. Read it as: does a neural query encoder still find documents that were re-shaped for a bag?
+  A loss there means the pair costs M9 quality and we know it **before M9 starts** rather than
+  after. No extra work; the arms are in flight.
+
+  **The content argument is a real product argument, not a separate one.** "One document index, two
+  query encoders, pick your compute budget" is the shape the pair ships in, and it is only
+  coherent while both lines target the same document space.
+
 
 
 ---
