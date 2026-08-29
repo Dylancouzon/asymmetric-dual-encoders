@@ -1511,3 +1511,40 @@ null), so its fallback row must be registered first; `microsoft/harrier-oss-v1-0
 last-token pooling that `m7src/teacher.py` raises on, publishes no retrieval-only number, and
 needs Dylan's ruling on undisclosed training data. Neither absence changes tonight's verdict —
 the registered default is the incumbent and nothing displaced it.
+
+## 22. B6-pre — E3's hard condition is MET. D1 survives.
+
+`results/m8_b6_pre.json`. E3 approved a doc-side head **only** if it "fuses into the doc ONNX
+graph as plain nodes — one served file, no custom pipeline". This is the binary gate on that, and
+its registered no-survivor outcome was that D1 closes and comes off the Stage-S menu.
+
+| | result |
+|---|---|
+| export | **one file**, 1,754 MB, opset 17, CPU |
+| graph | 3,415 nodes, **zero custom-domain ops** — Constant/Unsqueeze/Gather/Shape/Add/Mul/MatMul/Gemm/ReduceL2 |
+| parity vs the torch forward of the same module | min cosine **0.999999940**, max-abs **2.05e-07** |
+| tolerances (§11.4) | cosine 1e-4, max-abs 1e-3 |
+
+**PASS on every leg.** The teacher exports despite running under `trust_remote_code`, the folded
+published Dense head and the D1 candidate both appear as ordinary `MatMul`/`Gemm`, and the final
+L2 normalize is a plain `ReduceL2` — so what a user would download and serve is one file whose
+output is already the mapped, renormalized document vector. **D1 stays on the Stage-S menu and
+B6's quality arm may be registered.**
+
+**Three things this does NOT establish**, stated so the pass is not over-read:
+1. **It is a feasibility result, not a quality one.** The head is identity-initialized precisely so
+   that a parity failure would be unambiguously the exporter's fault. Whether a *trained* doc-side
+   head helps is B6's quality arm, which still carries a `TBD-noise-floor` bar and is refused.
+2. **1,754 MB is the doc-side graph**, which is served offline and is not the query-side artifact
+   the 233 MB cap binds (§8). It is not free — it is a real serving cost — but it is not a cap
+   violation and must not be reported as one.
+3. **The export ran on CPU at opset 17 with an identity head.** An MLP head, a different opset, or
+   GPU export are not covered; `--head mlp` is one command away and should run before D1 is
+   committed to an MLP variant.
+
+**It also settles the environment question the plan left open.** `onnx` 1.22.0 and `onnxruntime`
+1.29.0 were installed to run this — purely additive (with `flatbuffers`, `ml-dtypes`), and
+**numpy 2.3.5, torch 2.8.0+cu126, transformers 4.57.6, scipy 1.18.1 and datasets 5.0.1 were all
+verified unchanged before and after**. Nothing on any scoring path moved, which is the property
+that mattered: M7's pre-freeze review found that a package upgrade between freeze and final run
+would have silently changed the fused system C3 judges.
