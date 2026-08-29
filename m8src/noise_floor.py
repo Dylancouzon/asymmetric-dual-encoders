@@ -157,12 +157,18 @@ def measure(dump_path):
     # int8 is the release format and the C2 identity, but B10 registers "raw CI > 0 in BOTH
     # precisions", so a bar reads fp16 too and an fp16 floor must exist for it (2026-08-29
     # review finding -- the first version filtered fp16 out by construction).
+    # The key keeps the POOL MODE. `cfg.pool_mode` is None for these arms -- they train and
+    # self-evaluate under `mean` -- while the M7 release is served under `sqrt`, adopted after the
+    # fact by adopt_pool_mode.py. A floor measured under a rule the artifact is not served under
+    # is a floor for a different function, and stripping ":mode" from the key would silently
+    # collapse the two variants of the same arm onto each other. So the floor is reported per
+    # (precision, pool_mode) and a bar reads the one its candidate is actually served under.
     arms = {"int8": {}, "fp16": {}}
     for key, comps in pq.items():
         parts = key.split("|")
         if len(parts) < 2 or parts[-1] not in arms:
             continue
-        arms[parts[-1]][parts[0].split(":")[0]] = _group_vector(comps)
+        arms[parts[-1]][parts[0]] = _group_vector(comps)
     if not arms["int8"]:
         raise SystemExit(f"no int8 arms found in {dump_path}; keys look like "
                          f"{sorted(pq)[:4]}")
@@ -173,23 +179,30 @@ def measure(dump_path):
     for prec, a in arms.items():
         if not a:
             continue
-        seed_arms = {r: v for r, v in a.items() if r.startswith("m8nf-seed")}
-        step_arms = {r: v for r, v in a.items() if r.startswith("m8nf-steps")}
-        seeds_seen[prec], steps_seen[prec] = sorted(seed_arms), sorted(step_arms)
-        ref = seed_arms.get(arm_id("seed", SEEDS[0]))
-        for e in endpoints:
-            key = f"{prec}.{e}"
-            ds = []
-            for x, y in itertools.combinations(sorted(seed_arms), 2):
-                va, vb = seed_arms[x][e], seed_arms[y][e]
-                if va is not None and vb is not None:
-                    ds.append({"pair": [x, y], "abs_delta": abs(va - vb)})
-            pairs[key] = ds
-            floor[key] = max((d["abs_delta"] for d in ds), default=None)
-            bars[key] = None if floor[key] is None else max(0.0040, 2 * floor[key])
-            sensitivity[key] = [{"arm": r, "delta_vs_seed0": v[e] - ref[e]}
-                                for r, v in sorted(step_arms.items())
-                                if ref and v[e] is not None and ref[e] is not None]
+        modes = sorted({(r.split(":", 1) + ["mean"])[1] for r in a})
+        for mode in modes:
+            sel = {r: v for r, v in a.items() if (r.split(":", 1) + ["mean"])[1] == mode}
+            seed_arms = {r: v for r, v in sel.items() if r.startswith("m8nf-seed")}
+            step_arms = {r: v for r, v in sel.items() if r.startswith("m8nf-steps")}
+            if not seed_arms:
+                continue
+            seeds_seen[f"{prec}.{mode}"] = sorted(seed_arms)
+            steps_seen[f"{prec}.{mode}"] = sorted(step_arms)
+            ref = next((v for r, v in seed_arms.items()
+                        if r.split(":", 1)[0] == arm_id("seed", SEEDS[0])), None)
+            for e in endpoints:
+                key = f"{prec}.{mode}.{e}"
+                ds = []
+                for x, y in itertools.combinations(sorted(seed_arms), 2):
+                    va, vb = seed_arms[x][e], seed_arms[y][e]
+                    if va is not None and vb is not None:
+                        ds.append({"pair": [x, y], "abs_delta": abs(va - vb)})
+                pairs[key] = ds
+                floor[key] = max((d["abs_delta"] for d in ds), default=None)
+                bars[key] = None if floor[key] is None else max(0.0040, 2 * floor[key])
+                sensitivity[key] = [{"arm": r, "delta_vs_seed0": v[e] - ref[e]}
+                                    for r, v in sorted(step_arms.items())
+                                    if ref and v[e] is not None and ref[e] is not None]
     return {
         "dump": str(dump_path),
         "seed_arms_by_precision": seeds_seen, "step_arms_by_precision": steps_seen,
