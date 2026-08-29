@@ -1,0 +1,394 @@
+{
+  "_note": "The executable half of m8/LEDGER.md section 9. m8src/probe_guard.py reads THIS file, not the prose; m8/LEDGER.md renders it for humans. A probe is runnable only if its row has a non-empty bar, endpoint, comparator, multiplicity and no_survivor, and the bar contains no 'TBD'. Adding or completing a row is a LEDGER section 15 amendment, made BEFORE the run, committed and pushed. The sha256 of this file is stamped into every result artifact before any metric is written.",
+  "version": 2,
+  "ledger": "m8/LEDGER.md",
+  "created": "2026-08-29",
+  "alpha_family": 0.025,
+  "m_confirmatory": 3,
+  "probes": {
+    "S0": {
+      "wave": 1,
+      "title": "LoTTE overlap screen vs the protected partitions",
+      "question": "Does any LoTTE slice overlap the reserved or dev CQADupStack components?",
+      "endpoint": "per (topic, split) slice: community-name intersection; R1-fingerprint document near-duplicate rate; query-leakage hit count",
+      "comparator": "reserved cqadup-android/english and dev cqadup-physics/programmers",
+      "bar": "DROP the slice if the community intersection is non-empty, OR the document near-duplicate rate > 0.005, OR any query-leakage hit exists (zero tolerance). REOPEN E10 with Dylan if, after drops, the surviving document near-duplicate rate > 0.02 or fewer than 2 topics survive in the crossing split.",
+      "multiplicity": "none (screening, applied per slice independently)",
+      "no_survivor": "if no slice survives, E10 reopens with Dylan; the session does not substitute another shadow",
+      "notes": "LoTTE dev and test draw from DISJOINT StackExchange communities within a topic, so the two splits are screened separately. Forum queries only (the search split is non-commercial-research-only per the GooAQ licence).",
+      "adopts": "nothing; it selects which slices the shadow crossing may use",
+      "noise_floor_exempt": true,
+      "exempt_reason": "a contamination screen, not a quality comparison"
+    },
+    "T1": {
+      "wave": 1,
+      "title": "teacher screen (workstream T)",
+      "question": "Does any challenger teacher beat the incumbent stella_en_400M_v5 on the closed-form distilled TABLE by more than the swap's CI-widening penalty?",
+      "endpoint": "closed-form distilled table, equal-weight dev macro of nDCG@10 over cqadup-programmers and cqadup-physics, per-query, int8-irrelevant (closed form)",
+      "comparator": "the incumbent stella_en_400M_v5, re-probed in the IDENTICAL frame (mandatory control)",
+      "bar": "ALL FOUR: (1) challenger beats incumbent CI-resolved = raw two-sided 95% paired_dep CI excludes 0 AND signflip_dep p < 0.05; (2) point-estimate margin > the challenger's PRE-CLASSIFIED CI-widening penalty (0.0050 near-sibling / 0.0096 dissimilar, classification fixed below before any result); (3) per-component point-estimate delta >= 0 on BOTH nq-250k AND hotpotqa (one negative component is a reversal and fails); (4) Dylan signs off.",
+      "multiplicity": "Holm across the challenger set at alpha = 0.05",
+      "no_survivor": "keep the incumbent -- same-teacher is the registered default",
+      "tie_break": "two candidates are tied iff the raw 95% CI of their difference lies entirely within +/-0.0040; among tied candidates prefer no disclosed overlap with the protected sets, then the smaller dimension",
+      "statistic": "boot.paired_dep (B=10000, seed 0) + boot.signflip_dep (R=100000, seed 0), strict alignment",
+      "fit_list": "regenerated through the current protected-query filter; M7's work/trainq_texts.json has 1.31% R1 hits and is unusable",
+      "candidates": {
+        "stella_en_400M_v5": {
+          "role": "incumbent control",
+          "penalty_class": "incumbent",
+          "penalty": 0.0
+        },
+        "granite-embedding-english-r2": {
+          "role": "CG-frame control",
+          "penalty_class": "dissimilar",
+          "penalty": 0.0096
+        },
+        "gte-modernbert-base": {
+          "role": "CG-frame control",
+          "penalty_class": "dissimilar",
+          "penalty": 0.0096
+        },
+        "stella_en_1.5B_v5": {
+          "role": "challenger",
+          "penalty_class": "dissimilar",
+          "penalty": 0.0096,
+          "note": "breaks WordPiece-30522 compatibility; fingerprints rebuilt if it wins"
+        },
+        "harrier-oss-v1-0.6b": {
+          "role": "challenger",
+          "penalty_class": "dissimilar",
+          "penalty": 0.0096,
+          "note": "training data UNDISCLOSED -- a contamination black box; needs a Dylan ruling BEFORE adoption, not after the screen"
+        }
+      },
+      "penalty_rule": "near-sibling iff the challenger shares the incumbent's tokenizer identity (bert-wordpiece-30522) AND its dimension (1024); else dissimilar. Fixed here, before any screen runs.",
+      "noise_floor_exempt": true,
+      "exempt_reason": "closed-form dev probe with its own CI-resolution bar, not a trained-arm comparison; named as exempt in LEDGER 4.7 and 6"
+    },
+    "B2": {
+      "wave": 1,
+      "title": "candidate-set entropy (is the KL term degenerate?)",
+      "question": "H2: is the distillation KL term one-hot to ~1e-4 nats under 31 uniform distractors at temperature 0.02?",
+      "endpoint": "entropy quantiles of the teacher's candidate distribution, uniform sampling vs top-200 sampling",
+      "comparator": "none (diagnostic)",
+      "bar": "descriptive; adopts nothing and may not adopt anything",
+      "multiplicity": "none",
+      "no_survivor": "may trigger the separately registered R-LIST arm, or not; it cannot itself change the recipe",
+      "adopts": "nothing",
+      "noise_floor_exempt": true,
+      "exempt_reason": "purely descriptive diagnostic, named as exempt in LEDGER 4.7"
+    },
+    "B3": {
+      "wave": 1,
+      "title": "ICT pair fraction (is Phase A pair-starved?)",
+      "question": "H1: does adding licence-clean ICT pairs to Phase A improve out-of-domain retrieval at equal updates and equal exposure?",
+      "endpoint": "dense AND fused equal-weight macro of nDCG@10 over the registered out-of-domain group (cqadup-programmers, cqadup-physics), plus the group-vector median over all three dev groups",
+      "comparator": "ICT fraction 0 (= R0), at equal updates AND equal exposure",
+      "bar": "B3 TEMPLATE: sign-consistency on BOTH out-of-domain components, AND a seed replicate agreeing in sign, AND the group-vector median gain >= bar(endpoint) from results/m8_noise_floor.json where bar = max(0.0040, 2 x floor)",
+      "multiplicity": "Holm over the 3 non-zero arms {0.25, 0.50, 0.75} at alpha = 0.05",
+      "no_survivor": "keep R0's ICT fraction (zero)",
+      "arms": [
+        0.0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "prior": "The clean-stack-tax arm added 490,241 real MS MARCO pairs to the frozen recipe for +0.0058 [-0.0015, +0.0131], unresolved. ICT spans are synthetic and should be worth less per pair. The honest prior is 'a rounding lever'; the caveat that keeps it worth running is that the tax arm held A-steps fixed, so exposure per pair fell as pairs were added.",
+      "noise_floor_exempt": false,
+      "bar_pending": "the numeric floor term; the template and the multiplicity are fixed now"
+    },
+    "B7": {
+      "wave": 1,
+      "title": "block-CG vocabulary curve (gates D2)",
+      "question": "Can the closed-form table solve be computed at 64K and 128K rows inside this box's budget?",
+      "endpoint": "solver wall-clock and peak RAM at 30,522 (control) / 65,536 / 131,072 rows, plus the closed-form dev macro at each",
+      "comparator": "the 30,522-row control (M7's shipped vocabulary)",
+      "bar": "FEASIBILITY, binary: the 65,536-row solve must complete within the 18 GB peak-RAM budget and under 4 hours wall-clock. Quality at each size is DESCRIPTIVE at this stage and adopts nothing.",
+      "multiplicity": "none",
+      "no_survivor": "D2 is closed on arithmetic (as granite-r2 and gte-modernbert were in M7: a 50,368-vocab fp64 Gram is 20.3 GB); the milestone routes to D1 / D4' / R1",
+      "notes": "the fp64 Gram is 34.4 GB at 64K and 137.4 GB at 128K, which is why a block-CG solver is the subject rather than a direct solve",
+      "noise_floor_exempt": true,
+      "exempt_reason": "arithmetic/feasibility gate, named as exempt in LEDGER 4.7"
+    },
+    "B6-pre": {
+      "wave": 1,
+      "title": "doc-side head ONNX fuse precondition (gates D1)",
+      "question": "Can teacher + a linear/MLP doc-side head export to ONE ONNX file as plain MatMul/activation nodes?",
+      "endpoint": "a successful export, plus parity vs torch within the LEDGER 11.4 vector/cosine tolerances",
+      "comparator": "the torch forward of the same composed module",
+      "bar": "BINARY FEASIBILITY (E3's hard condition): one served file, no custom pipeline, parity within the registered tolerances",
+      "multiplicity": "none",
+      "no_survivor": "D1 is closed; B6's quality arm never runs and the doc-side-head row is removed from the Stage-S menu",
+      "noise_floor_exempt": true,
+      "exempt_reason": "feasibility gate, named as exempt in LEDGER 4.7"
+    },
+    "B17": {
+      "wave": 1,
+      "title": "in-domain oracle generalization ceiling",
+      "question": "Does the lookup-table class cap in-domain, or is supervision the binding constraint?",
+      "endpoint": "nDCG@10 on the held-out query half of the dev CQADupStack components, from an oracle table fitted on the other half",
+      "comparator": "the 0.481 teacher ceiling on the same half",
+      "bar": "ROUTING RULE, not an adoption: held-out >= 0.45 => supervision/objective is the story AND R1 takes the majority budget ONLY IF B3-template out-of-domain corroboration is also present; without that corroboration the branch reads 'both'. held-out <= 0.40 => the class caps in-domain and D2/D1/D4' carry the milestone. Between 0.40 and 0.45 => both, budget split 50/50.",
+      "multiplicity": "none",
+      "no_survivor": "the routing rule is exhaustive by construction; there is no 'no survivor' state",
+      "notes": "its 'short-query loss' framing may NOT be quoted: results/m8_retention_decomposition.json shows the short-query premise does not survive a within-dataset read (LEDGER 17). The in-domain ceiling question is unaffected and is what this probe measures.",
+      "noise_floor_exempt": true,
+      "exempt_reason": "a routing diagnostic against a fixed ceiling, adopting no recipe setting"
+    },
+    "B8": {
+      "wave": 2,
+      "title": "target design (bare + doc-centroid targets)",
+      "question": "Does a doc-centroid target beat the bare teacher target in closed form?",
+      "endpoint": "closed-form dev group vector",
+      "comparator": "R0's target",
+      "bar": "TBD-noise-floor",
+      "multiplicity": "Holm within the target family at alpha = 0.05",
+      "no_survivor": "keep R0's target"
+    },
+    "B9": {
+      "wave": 2,
+      "title": "SVD rank truncation",
+      "question": "Is the trained table low-rank enough that a rank-truncated delta is free?",
+      "endpoint": "dev group vector at each rank, int8",
+      "comparator": "full-rank R1 rows",
+      "bar": "TBD-noise-floor",
+      "multiplicity": "Holm over the rank grid at alpha = 0.05",
+      "no_survivor": "keep full rank",
+      "notes": "truncation cannot RAISE quality; this is a compression diagnostic and is time-boxed accordingly"
+    },
+    "B10": {
+      "wave": 2,
+      "title": "scoring/pooling family",
+      "question": "Does sum / max / top-k / LSE beat the frozen sqrt pooling?",
+      "endpoint": "dev group vector, exact search only, fp16 AND int8",
+      "comparator": "R1's pooling rule (default sqrt)",
+      "bar": "TBD-noise-floor",
+      "multiplicity": "Holm within the family at alpha = 0.05, raw CI > 0 in BOTH precisions",
+      "no_survivor": "keep R1's pooling rule",
+      "precondition": "ANY alternative must demonstrate ONNX export and pass the LEDGER 11.4 parity fixtures BEFORE it is adoptable (LEDGER 11.1)"
+    },
+    "B13": {
+      "wave": 2,
+      "title": "joint configuration confirm (A-grid + matched-steps negatives + riders)",
+      "question": "Does ONE complete named configuration beat the complete fallback?",
+      "endpoint": "dev group vector, dense and fused",
+      "comparator": "the complete R0 fallback",
+      "bar": "TBD-noise-floor",
+      "multiplicity": "ONE confirm arm; no per-axis adoptions",
+      "no_survivor": "the complete fallback"
+    },
+    "B14": {
+      "wave": 2,
+      "title": "doc-side instruction refit",
+      "question": "Does refitting the document-side instruction help out of domain?",
+      "endpoint": "the two out-of-domain dev corpora only",
+      "comparator": "R0's doc instruction",
+      "bar": "TBD-noise-floor",
+      "multiplicity": "none",
+      "no_survivor": "keep R0",
+      "notes": "low prior: M7 measured a query prefix at -0.0019, CI-resolved HARMFUL"
+    },
+    "B15": {
+      "wave": 2,
+      "title": "context-averaged row init (Wada)",
+      "question": "Does context-averaged initialization beat the teacher-vector init?",
+      "endpoint": "dev group vector",
+      "comparator": "R0's init",
+      "bar": "TBD-noise-floor",
+      "multiplicity": "Holm over the init family at alpha = 0.05",
+      "no_survivor": "keep R0's init"
+    },
+    "B16": {
+      "wave": 2,
+      "title": "MEV / self-similarity",
+      "question": "descriptive teacher-geometry diagnostic",
+      "endpoint": "MEV and self-similarity statistics",
+      "comparator": "none",
+      "bar": "descriptive only; may NOT prune a candidate unless separately validated on fresh clean-screen artifacts",
+      "multiplicity": "none",
+      "no_survivor": "descriptive: it can neither adopt nor prune. If it suggests pruning a candidate, that pruning needs its own registration and validation on fresh clean-screen artifacts.",
+      "adopts": "nothing",
+      "noise_floor_exempt": true,
+      "exempt_reason": "descriptive"
+    },
+    "B6": {
+      "wave": 2,
+      "title": "doc-side map quality arm (D1)",
+      "question": "Does a doc-side head improve retrieval on a frozen table?",
+      "endpoint": "dev group vector",
+      "comparator": "the frozen table with no head",
+      "bar": "TBD-noise-floor",
+      "multiplicity": "Holm over the head variants at alpha = 0.05",
+      "no_survivor": "D1 does not ship",
+      "precondition": "B6-pre must pass first"
+    },
+    "D-GENRE": {
+      "wave": 2,
+      "title": "genre bundle (USPTO + EUR-Lex + federal)",
+      "question": "Does a technical-genre bundle improve out-of-domain retrieval?",
+      "endpoint": "registered out-of-domain groups plus a technical non-protected exploratory group from held-out cleared-corpus pseudo-queries",
+      "comparator": "a Wikipedia-only arm at matched examples and updates",
+      "bar": "TBD-noise-floor",
+      "multiplicity": "whole-bundle in or out; no post-hoc cherry-pick",
+      "no_survivor": "Wikipedia-only pool"
+    },
+    "D-SYNTH": {
+      "wave": 2,
+      "title": "synthetic Qwen3 query component (E2)",
+      "question": "Does a dosed synthetic-query component help?",
+      "endpoint": "dev group vector, dense and fused",
+      "comparator": "the same pool without the synthetic component, matched exposure",
+      "bar": "TBD-noise-floor",
+      "multiplicity": "one dose, one arm",
+      "no_survivor": "no synthetic component"
+    },
+    "D-FINEWEB": {
+      "wave": 2,
+      "title": "FineWeb arm (E13, clean-stack-tax design)",
+      "question": "What would Qdrant/FineWeb-10B spans add, if the licence allowed shipping them?",
+      "endpoint": "dev group vector, dense and fused",
+      "comparator": "the same pool without FineWeb, matched exposure",
+      "bar": "TBD-noise-floor",
+      "multiplicity": "one arm",
+      "no_survivor": "no FineWeb",
+      "release_status": "NEVER RELEASED; refused by freeze.assert_releasable. If it clears the bar by a shippable margin the licensing ruling goes to Dylan WITH the number."
+    },
+    "R-LIST": {
+      "wave": 2,
+      "title": "listwise distillation arm",
+      "question": "Does a listwise objective beat the KL objective?",
+      "endpoint": "dev group vector, dense and fused",
+      "comparator": "R0's objective at equal updates",
+      "bar": "TBD-noise-floor",
+      "multiplicity": "Holm over sampler x temperature at alpha = 0.05",
+      "no_survivor": "R0's objective",
+      "trigger": "B2 only"
+    },
+    "R-PHASE": {
+      "wave": 2,
+      "title": "phase structure (sequential / mixed-replay / listwise-only)",
+      "question": "Is the B-then-A phase structure the right one?",
+      "endpoint": "dev group vector, with B-target retention tracked",
+      "comparator": "R0's sequential B->A at equal updates",
+      "bar": "TBD-noise-floor",
+      "multiplicity": "Holm over the 3 arms at alpha = 0.05",
+      "no_survivor": "R0's sequential structure"
+    },
+    "R1-ASSEMBLY": {
+      "wave": 2,
+      "title": "the one Stage-R validation gate",
+      "question": "Does the assembled bundle beat R0 in a common frame?",
+      "endpoint": "dev group vector, dense AND fused endpoints, matched updates/data/seed policy",
+      "comparator": "R0",
+      "bar": "TBD-noise-floor",
+      "multiplicity": "ONE ordered nested sequence, registered: R1-full -> R1-data-only -> R0; the first that clears the bar is the candidate; no fourth rung may be added",
+      "no_survivor": "R0",
+      "r1_data_only": "the pool-spec and ICT-fraction adoptions only (Stage-R DoF 1 and 8), with DoF 2-7 and 9 at their R0 fallbacks"
+    },
+    "S-SELECT": {
+      "wave": 2,
+      "title": "Stage-S family selection",
+      "question": "Which family finalist ships?",
+      "endpoint": "the registered group vector (median of three group means), int8, unrounded",
+      "comparator": "R1-alone",
+      "bar": "TBD-noise-floor",
+      "multiplicity": "within-family rules first, then finalists vs R1-alone under the 0.0040 practical-equivalence band",
+      "no_survivor": "the candidate is R1-alone",
+      "tie_break": "total downloadable bytes, then doc-index delta"
+    }
+  },
+  "dev_groups": {
+    "out-of-domain": [
+      "cqadup-programmers",
+      "cqadup-physics"
+    ],
+    "wikipedia": [
+      "nq-250k",
+      "hotpotqa"
+    ],
+    "heldout": [
+      "heldout-train",
+      "heldout-longq"
+    ]
+  },
+  "dev_aggregation": {
+    "selection": "median of the three group means",
+    "worst_group": "min of the three group means",
+    "precision": "int8",
+    "practical_equivalence_band": 0.004,
+    "band_provenance": "the smallest effect this project has ever adopted (M7 lever #4)"
+  },
+  "ship_rule": {
+    "legs": {
+      "C1": "fused-M8 system > fused-M7 system",
+      "C2": "M8 int8 query TABLE > M7 int8 query TABLE, same frozen incumbent document vectors, D1 DISABLED",
+      "C3": "fused-M8 > BM25 (frozen fusion.bm25_run builder)"
+    },
+    "alpha": 0.025,
+    "m": 3,
+    "bonferroni_level": 0.008333333333333333,
+    "legs_per_hypothesis": [
+      "Holm-corrected signflip rejection at family alpha",
+      "raw two-sided 95% CI lower endpoint > 0",
+      "raw one-sided lower bound at alpha/3 > 0, same draws"
+    ],
+    "point_guard_c1": 0.005,
+    "worst_group_threshold": -0.01,
+    "worst_group_members": [
+      "fever",
+      "dbpedia-entity",
+      "cqadup-android",
+      "cqadup-english"
+    ],
+    "six_set_no_regression_margin": -0.0075,
+    "six_set_margin_provenance": "2.4x the measured near-sibling six-macro paired SE (0.0026-0.0032, from results/perquery.json: leaf-ir-asym vs mdbr-leaf-ir 0.00263, LR-dense-pertask vs LR-dense-websearch 0.00316). P(false veto | truly equal) ~ 0.99; ~80% power against a true regression of ~0.0135.",
+    "qualifying_table_keys": [
+      "objective_family",
+      "tokenizer_id",
+      "vocab",
+      "row_init_construction",
+      "pool_composition",
+      "feature_set",
+      "structural_rider"
+    ],
+    "qualifying_non_table_keys": [
+      "doc_side_head"
+    ],
+    "not_qualifying_keys": [
+      "seed",
+      "steps_a",
+      "steps_b",
+      "temperature",
+      "hard_neg_k",
+      "lr",
+      "b_pseudo_queries",
+      "batch_size"
+    ],
+    "not_qualifying_patterns": [
+      "*_tuning"
+    ],
+    "unknown_key_policy": "FAIL -- a key on neither list fails the qualifying condition; classification happens at manifest time, before the access"
+  },
+  "shadow_gate": {
+    "set": "LoTTE, forum queries only, surviving slices from S0",
+    "endpoint": "equal-weight macro of nDCG@10 over surviving slices, exact search",
+    "comparator": "the frozen M7 released system on the identical slices",
+    "go_rule": "GO iff BOTH (a) LoTTE surviving-slice macro delta >= -0.0068 (non-regression at the MDE scale) AND (b) dev worst-group >= +0.0068",
+    "mde": 0.0068,
+    "mde_source": "results/m8_power.json",
+    "branches": {
+      "GO": "proceed to the access",
+      "NO-GO": "defer to M9, panel preserved (default) or report-only"
+    },
+    "crossings_allowed": 1
+  },
+  "noise_floor": {
+    "replicates": 3,
+    "vary": "training seed ONLY (a true null)",
+    "floor_statistic": "max over the 3 pairwise |delta| on that endpoint",
+    "bar_formula": "bar(endpoint) = max(planning_minimum, 2 x floor(endpoint)); planning_minimum never below 0.0040",
+    "multi_endpoint": "max over the endpoints' bars",
+    "also_published": "the +/-10% A-steps perturbation, reported as recipe sensitivity BESIDE the floor, never AS the floor",
+    "output": "results/m8_noise_floor.json"
+  }
+}

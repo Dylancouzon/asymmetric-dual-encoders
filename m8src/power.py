@@ -46,12 +46,12 @@ from pathlib import Path
 import numpy as np
 from scipy import stats
 
-import _paths
+import m8base
 import boot
 import decide
 
-REPO = _paths.REPO
-RESULTS = _paths.RESULTS
+REPO = m8base.REPO
+RESULTS = m8base.RESULTS
 OUT = RESULTS / "m8_power.json"
 
 # n on the reserved four (results/eval_manifest.json, m7_untouched_final), and the dev analogue

@@ -27,7 +27,7 @@ from pathlib import Path
 
 import numpy as np
 
-import _paths                                     # noqa: F401  (sys.path + G2 guard)
+import m8base                                    # noqa: F401  (sys.path + G2 guard)
 import boot                                       # m7src, the frozen statistics machinery
 
 ALPHA = 0.025
@@ -175,7 +175,7 @@ def self_test():
     executable before any real number exists. Zero-padded qids: boot._align_ids sorts qids as
     STRINGS (m7/CODEMAP.md pitfall 19)."""
     rng = np.random.default_rng(0)
-    ds = _paths.RESERVED_FOUR
+    ds = m8base.RESERVED_FOUR
     n = {"fever": 6666, "dbpedia-entity": 400, "cqadup-android": 699, "cqadup-english": 1570}
 
     def make(shift):
@@ -192,7 +192,7 @@ def self_test():
     }
     fam = decide_family(legs)
     six = {d: {f"q{i:07d}": float(v) for i, v in enumerate(rng.random(300))}
-           for d in _paths.SIX}
+           for d in m8base.SIX}
     verdict = ship(
         fam,
         qualifying=qualifying_table({"data-construction", "feature-tokenizer"}),

@@ -35,11 +35,11 @@ from pathlib import Path
 
 import numpy as np
 
-import _paths
+import m8base
 
-RESULTS = _paths.RESULTS
+RESULTS = m8base.RESULTS
 OUT = RESULTS / "m8_retention_decomposition.json"
-SIX = list(_paths.SIX)
+SIX = list(m8base.SIX)
 # Disclosed on stella's training list -- flagged at the row, per m7/LEDGER.md.
 DISCLOSED_OVERLAP = {"arguana", "fiqa"}
 
