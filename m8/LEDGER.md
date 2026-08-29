@@ -1209,11 +1209,17 @@ exist.)*
   quarantined and may not be adopted, and if the review's substantive direction turns out to rest
   on such content the review is re-run under a read-exclusion before anything is adopted from it.
 
-  **Fix, adopted now:** every adversarial-review brief must carry an explicit read-exclusion for
-  `results/frozen_eval/untouched-*`, the reserved qrels caches and `work/m9reserve`, and the review
-  log is audited for reserved-set reads before its findings are read. Recorded in CLAUDE.md's
-  review instructions so it binds outside this milestone. **For Dylan:** flagged in `m8/STATUS.md`.
-  My reading is that the sets remain usable and the access is intact; the call is his.
+  **RULED by Dylan, 2026-08-29: "the sets are fine, continue with the codex review."** The reserved
+  four stand as M8's confirmatory sets, the access is intact, and the **quarantine on that review's
+  recommendations is LIFTED** — its findings are read and adopted on their merits like any other
+  review's. Recorded because a future session must not re-litigate this from the incident text
+  alone and conclude the sets are compromised: they are not, on the owner's explicit call.
+
+  **Fix, adopted and kept regardless of the ruling** (it costs nothing and the hole is structural):
+  every adversarial-review brief carries an explicit read-exclusion for
+  `results/frozen_eval/untouched-*`, the reserved qrels caches and `work/m9reserve`; briefs name the
+  files to read rather than inviting a repo-wide search; and the review log is audited for
+  reserved-set reads before its findings are read. In CLAUDE.md so it binds outside this milestone.
 
 - **2026-08-29 — MILESTONE AUDIT AND RE-ROUTE.** No M8 candidate exists and no protected set has
   been scored, so every change here is legal in both directions.
