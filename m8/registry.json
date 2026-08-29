@@ -124,7 +124,7 @@
    "wave": 1,
    "title": "real-pair pool scaling at fixed compute (is Phase A pair-starved?)",
    "question": "H1 (UNCHANGED): is Phase A pair-starved -- would more unique training pairs improve out-of-domain retrieval?",
-   "lever": "nested random subsets of the 337,981 decontaminated real pairs at fractions {0.25, 0.50, 0.75, 1.00}. NESTED (0.25 subset of 0.50 subset of 0.75 subset of full) so no between-arm sampling noise enters the contrast.",
+   "lever": "nested random subsets of the Phase-A pair pool at fractions {0.25, 0.50, 0.75, 1.00}. NESTED (0.25 subset of 0.50 subset of 0.75 subset of full) so no between-arm sampling noise enters the contrast.",
    "held_fixed": "2,500 updates, batch 512, n_neg 32,768, LR, temperature, negative construction, AND the same Phase-B checkpoint p35b-2m. Total draws are therefore identical at 1,280,000 in every arm: compute is fixed and ONLY the unique-pair count varies, i.e. the treatment is diversity-versus-repetition at fixed budget.",
    "endpoint": "dense AND fused equal-weight macro of nDCG@10 over the registered out-of-domain group (cqadup-programmers, cqadup-physics), plus the group-vector median over all three dev groups -- UNCHANGED from the ICT registration, which is why the measured floors below still bind.",
    "comparator": "fraction 1.00 (= R0, the frozen recipe)",
@@ -142,7 +142,20 @@
     "read_at": "int8 / sqrt -- the release format and R0's adopted pooling rule"
    },
    "implementation_constraint": "G3 forbids editing m7src, and no pair-fraction knob exists in m7src/train.py's Cfg. The fraction must therefore be applied by an m8src-side wrapper over train.kept_pairs -- which means the treatment does NOT appear in the run's cfg or meta.json. The fraction MUST therefore be encoded in the run id AND written to a stamped sidecar; see CODEMAP 16 for why an unrecorded treatment is the dangerous case.",
-   "supersedes": "the ICT-fraction registration of 2026-08-29, retired the same day before any arm ran (see B3-ICT and LEDGER 15)."
+   "supersedes": "the ICT-fraction registration of 2026-08-29, retired the same day before any arm ran (see B3-ICT and LEDGER 15).",
+   "pool_size": {
+    "kept_pairs": 340850,
+    "realised_at_fraction_1.00": 338076,
+    "note": "THREE different counts exist in this project and they are not interchangeable. `train.kept_pairs()` returns 340,850 decontaminated TRAIN pairs -- that is the list the fraction is applied to. `build_arrays` then drops pairs whose positives are banned or unresolvable, leaving the 338,076 the run records as `n_train_pairs`. Neither is the 337,981 of `results/m8_fitlist.json`, which is the CLOSED-FORM TABLE's fit list and has nothing to do with Phase A. The first version of this registration cited 337,981; corrected 2026-08-29 before any arm ran.",
+    "source_shares_at_1.00": {
+     "hotpotqa-train": 0.2399,
+     "fever-train": 0.2867,
+     "squad-train": 0.2492,
+     "esci-us": 0.2145,
+     "mrtydi-en": 0.0097
+    },
+    "source_share_note": "uniform subsetting preserves these shares in expectation and, being a fixed-permutation prefix, up to hypergeometric noise. mrtydi-en is the thin one at 0.97% (3,310 pairs), so the 0.25 arm holds roughly 828 of them -- small, but not a regime where the source disappears."
+   }
   },
   "B7": {
    "wave": 1,

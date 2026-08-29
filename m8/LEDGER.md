@@ -1192,7 +1192,10 @@ exist.)*
      question.
   **What replaces it**, registered in `m8/registry.json` before any arm runs (the retired
   lever is kept as row `B3-ICT`, refused, so the reasoning is not lost): nested random subsets
-  of the 337,981 decontaminated **real** pairs at {0.25, 0.50, 0.75, 1.00}, with updates, batch,
+  of the Phase-A **real** pair pool at {0.25, 0.50, 0.75, 1.00} — 340,850 pairs from
+  `train.kept_pairs()`, realising the 338,076 a run records as `n_train_pairs` once banned
+  positives are dropped. (The registration first cited 337,981, which is the *closed-form
+  table's fit list* and not a Phase-A quantity at all; corrected before any arm ran.), with updates, batch,
   negatives, temperature, learning rate and the Phase-B checkpoint all held, so total draws are
   1,280,000 in every arm and the only thing varying is unique-pair count. The verdict rests on
   **one** pre-specified contrast — 1.00 vs 0.75, both endpoints, both seeds sign-agreeing, mean
