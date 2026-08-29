@@ -338,7 +338,7 @@
    "no_survivor": "no FineWeb",
    "release_status": "NEVER RELEASED; refused by freeze.assert_releasable. If it clears the bar by a shippable margin the licensing ruling goes to Dylan WITH the number.",
    "blocked_by_open_question": "The HUPD/patent licence question is DEFERRED to M9 but is triggered by THIS arm: FineWeb is a general web crawl and the one planned source that could contain patent text, so the M9 patent reserve must be settled before any web-crawl-derived data enters the training mix (LEDGER 15, 2026-08-29).",
-   "plan_status": "DEFERRED-PENDING-D2 (2026-08-29 audit). It is POOL-VARYING, and section 23's crossed floor explicitly does not bound a pool-varying lever (all nine cells share one pseudo-query pool), so its bar is not computable even after the chain floor was adopted: a fresh draw is a different ~925K-span text set plus a teacher re-encode per seed, ~2.3 h before the arm is registrable at all."
+   "plan_status": "DEFERRED, and the DEFAULT IS NOW EXCLUSION (Dylan, 2026-08-29): 'the Qdrant dataset should really prove its value. The webcrawl data could be okay to use, but it's better if we don't.' It may be MEASURED, but web-crawl data enters the training mix only on a clearly-resolved gain, never a marginal one; being Qdrant's own dataset earns no discount. Unchanged and still binding: it is POOL-VARYING, so section 23's crossed floor does not bound it and its bar is not computable -- a fresh draw is a different ~925K-span text set plus a teacher re-encode per seed. Consequence: the HUPD/patent trigger most likely never fires, removing an open question from M9's path."
   },
   "R-LIST": {
    "wave": 2,
@@ -468,7 +468,8 @@
     "the Phase-A pool bank (~2M rows, drawn from 6.17M) must be re-encoded per arm -- hours per arm on a 10 GB card, not minutes",
     "a licence check that stella permits releasing derived weights",
     "C2 must be REDEFINED: 'the M8 table against the SAME frozen document vectors' stops being possible once the tower moves, and C2 is Dylan's E11 ruling"
-   ]
+   ],
+   "plan_status": "REOPENED by Dylan 2026-08-29 for registration and a DEV-SCALE measurement. The refusal rested on 'it costs us the keep-your-own-encoder story', and Dylan withdrew that premise: adopting this system already means adopting stella, so a LoRA'd stella costs the user the SAME one-time indexing pass and the marginal product cost is zero. LICENCE CLOSED by Dylan: stella is MIT and derived weights are fine. The reframe that motivates it: LightRetriever TRAINS its document encoder, so LR-dense-pertask 0.4583 -- M7's missed release bar -- was set with a co-adapted document side while M7/M8 fit a table to a frozen tower. STILL NEEDS A RULING BEFORE IT CAN SHIP, not before it can be measured: E11/5.4 say a document-side win does not make a qualifying v2 TABLE, and C2 falls to its registered teacher_swapped branch. Whether M8 ships a better SYSTEM or must ship a better TABLE is undecided and may not be decided after a number. STAGING IS BINDING: adapter + the two out-of-domain dev components against their OWN re-encoded corpora first; only a clearing dev result buys the 10.12M pre-encode."
   },
   "E10-REMEDY": {
    "wave": 1,

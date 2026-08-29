@@ -15,7 +15,30 @@ codex review."** The reserved four stand, the access is intact, no quarantine. P
 anyway: briefs carry a read-exclusion, logs are audited before findings are read (LEDGER §15;
 CLAUDE.md).
 
-## The one decision, and it can wait for the number
+## `E14-LORA` is REOPENED — and one question is now the milestone's real fork
+
+Dylan, 2026-08-29: *"We wouldn't say keep your normal document encoder. Since most people are not
+currently using stella. I'm not against LoRA on the document tower"* + *"stella is good for derived
+weights, no license blocker."* Both premises the refusal rested on are gone: the user re-indexes
+with stella either way, so co-adapting the tower has **zero marginal product cost**, and MIT covers
+derived weights.
+
+**The reframe behind it:** LightRetriever **trains its document encoder**
+(`research/lightretriever.md:19,23,382`). `LR-dense-pertask 0.4583` — M7's missed release bar — was
+set by a system with a co-adapted document side, while M7 and M8 fit a table to a tower never
+trained to be fit. **M8 has been solving a harder problem than the system it is benchmarked
+against**, which is the best available explanation for why every cheap table-side lever comes back
+flat. Unmeasured — that is the point of the probe. `E14-HEAD` does not settle it: a head on a
+*finished* document vector cannot recover what the tower discarded, and §15 registered that scope
+limit before any arm ran.
+
+**Needed from Dylan before it can SHIP — not before it can be measured: does M8 ship a better
+SYSTEM, or must it ship a better TABLE?** `E11`/§5.4 say a document-side win is not a qualifying v2
+table, and `C2` falls to its registered `teacher_swapped` branch. It cannot be decided after a
+number. Staging is binding either way: dev-scale first, on the two out-of-domain components against
+their own re-encoded corpora; only a clearing dev result buys the 10.12M pre-encode.
+
+## The other decision, and it can wait for the number
 
 A **pre-committed exit** is registered: M8 does not spend its confirmatory access without a credible
 release candidate — it would close as a measurement, leaving the reserved four clean for M9. An
@@ -66,10 +89,11 @@ floor for B-leg-varying arms — registered before the arm exists rather than af
 
 | # | question | ruling |
 |---|---|---|
-| 1 | `E14` doc-side co-adaptation | Measured small: `E14-HEAD` NO SURVIVOR. `E14-LORA` refused, TBD bar. C2 and E11 stand. |
+| 1 | `E14` doc-side co-adaptation | `E14-HEAD` NO SURVIVOR — but it tested a head on *finished* vectors. **`E14-LORA` REOPENED 2026-08-29**; licence closed (stella MIT). Ship-vs-measure fork open, above. |
 | 2 | `E10` the shadow | Seven clean-community LoTTE slices, per-question remedy — then **REOPENED on review**; artifact unpinned, now time-boxed. |
 | 3 | `harrier` | Closed on undisclosed training data. **stella stands; T1's NO SWAP is final for M8.** |
-| 4 | HUPD / patents | Deferred to M9. Trigger: settle before any web-crawl data enters training. |
+| 4 | HUPD / patents | Deferred to M9. Trigger (web-crawl data entering training) most likely never fires — see ruling 6. |
+| 6 | Qdrant/FineWeb (`D-FINEWEB`) | **Default is EXCLUSION** (Dylan): it "should really prove its value"; web-crawl enters only on a clearly-resolved gain, never a marginal one. |
 | 5 | `E12` LR-dense | Published numbers only, labelled. No head-to-head may be stated or implied. |
 
 ## Results

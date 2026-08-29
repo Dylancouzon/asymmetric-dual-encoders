@@ -1187,6 +1187,73 @@ CORPORA are ordinary public downloads while their query and qrel payloads stay g
 in either direction. It states what changed, why, and that the dependent numbers did not yet
 exist.)*
 
+- **2026-08-29 — RULED by Dylan, reopening `E14-LORA`: "We wouldn't say keep your normal document
+  encoder. Since most people are not currently using stella. I'm not against LoRA on the document
+  tower."** This withdraws the premise the refusal rested on, and it is a correction to an argument
+  made in this session, not a change of mind about a fact.
+
+  **The withdrawn premise.** The case against touching the document tower was that it costs the
+  architecture its selling point — "keep your normal document encoder, get a zero-compute query
+  path for free". **That selling point never existed.** Adopting this system already means adopting
+  **stella** on the document side, which essentially nobody is running today, so the user re-indexes
+  their corpus either way. A LoRA'd stella costs them **the same one-time indexing pass** as stock
+  stella: the marginal product cost of co-adapting the tower is **zero**. Every argument in this
+  ledger that leans on "frozen off-the-shelf document tower" as a *user-facing* virtue is void; the
+  premise survives only where it is defended on evidence or protocol, never on that story.
+
+  **The licence question is CLOSED by Dylan, same day: "Confirming stella is good for derived
+  weights, no license blocker to me."** `stella_en_400M_v5` is **MIT**
+  (`research/m7-teacher-shortlist-2026-08-26.md:37`), which permits modified weights commercially
+  with attribution. The "stella derived-weights licence check" carried as an open blocker in three
+  places (§15 ×2, §9's `E14-LORA` row) is **discharged on the owner's ruling** — licensing is
+  commercial reality and therefore his call, exactly as CLAUDE.md requires. Nothing about
+  `E14-LORA` is blocked on licensing any more.
+
+  **THE REFRAME, and it is the most important thing recorded today.** **LightRetriever trains its
+  document encoder.** Its table rows are produced by running each vocabulary token through *the
+  trained LLM*, and its own ablation A2 says the full-sized query-side model during **training** is
+  what makes the table good (`research/lightretriever.md:19,23,382`). So `LR-dense-pertask 0.4583`
+  — M7's release bar, the one missed CI-resolved by −0.0243 — was achieved **with a co-trained
+  document side**, while M7 and M8 have been fitting a table to a tower that was never trained to
+  be fit. **M8 has been solving a strictly harder problem than the system it is benchmarked
+  against.** That is the best available explanation for why every cheap table-side lever keeps
+  returning flat, and it is a candidate explanation for a large share of the miss — *candidate*,
+  because it is unmeasured, and the whole point of `E14-LORA` is to measure it.
+
+  **`E14-HEAD` was the wrong cheap measurement of the right question, by its own registration.** A
+  head on a **finished** document vector cannot recover information the tower already discarded —
+  §15 wrote that scope limit down before any arm ran, which is exactly why a null there is WEAK
+  evidence about the LoRA and may never close it. A LoRA changes what the tower **computes** and is
+  a strictly larger hypothesis class. Dylan's "measure it small first" ruling was right; `E14-HEAD`
+  was a poor instantiation of it.
+
+  **What is now authorised, and what still needs a ruling.** `E14-LORA` is reopened for
+  **registration and a dev-scale measurement**. It must be staged: train the adapter and evaluate on
+  the two out-of-domain dev components against **their own re-encoded corpora** — small, self-
+  contained, no 10.12M pass — and only a clearing dev result buys the full pre-encode. **Still
+  Dylan's to rule, and it is the real decision, not licence or compute:** `E11`/§5.4 say a
+  document-side win does not make a qualifying v2 **table**, and `C2` (table-vs-table on identical
+  document vectors) becomes unsatisfiable, falling to its already-registered `teacher_swapped`
+  branch, dense-system vs dense-system. So the question is **whether M8 ships a better SYSTEM or
+  must ship a better TABLE.** Nothing about that may be decided after seeing a number.
+
+  **The one real cost to price, not a blocker.** `E14-HEAD`'s mechanism control measured
+  teacher-style queries losing MORE than bag queries (−0.031 vs −0.022): co-adapting documents
+  toward a bag plausibly taxes a genuine transformer query path. That is an input to M9's
+  document-side inheritance, and it is no longer a veto — Dylan ruled 2026-08-29 that M9 picks its
+  own tower on measurement, preferring the pair but breaking it on CI-resolved loss.
+
+- **2026-08-29 — RULED by Dylan on the Qdrant/FineWeb arm (`D-FINEWEB`/E13): "the Qdrant dataset
+  should really prove its value. The webcrawl data could be okay to use, but it's better if we
+  don't."** The default is **EXCLUSION**. The arm may be measured, but web-crawl data enters the
+  training mix only on a **clearly-resolved** gain, not a marginal one — being Qdrant's own dataset
+  earns it no discount, and "a wrapper tag, including our own, is not a licence" still stands.
+  Ordering unchanged: its bar is still not computable (it is pool-varying, and §23's crossed floor
+  explicitly does not bound a pool-varying lever), so it stays deferred behind the capacity levers.
+  **Consequence:** the HUPD/patent trigger — "settle before any web-crawl data enters training" —
+  now most likely never fires, which removes an open question from M9's path rather than deferring
+  it again.
+
 - **2026-08-29 — `D2` AMENDED after an adversarial review of its registration, before any arm ran
   and before any tokenizer was trained. Three BLOCKERs adopted, two of them against decisions the
   audit had made hours earlier. `D2-PRE` registered. The exit is gated. §13 is REOPENED.**
