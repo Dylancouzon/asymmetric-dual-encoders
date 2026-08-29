@@ -71,3 +71,15 @@ arms. Per-run detail is in `results/m7_run_m8nf-*.json`.
 | m8b3-p075-s0 | `work/runs/m8b3-p075-s0.json` | 0.5121 | ok |
 | m8b3-p075-s1 | `work/runs/m8b3-p075-s1.json` | 0.5119 | ok |
 | m8b3-p075-s2 | `work/runs/m8b3-p075-s2.json` | 0.5140 | ok |
+
+### M8 crossed BxA seed grid (NF), 2026-08-29
+
+| m8nfx-b1a0 | `work/runs/m8nfx-b1a0.json` | — | FAILED — BrokenPipeError: [Errno 32] Broken pipe |
+| m8nfx-b1a0-smoke | `work/runs/m8nfx-b1a0-smoke.json` | 0.4970 | ok |
+| m8nfx-b1a2-smoke | `work/runs/m8nfx-b1a2-smoke.json` | 0.4974 | ok |
+| m8nfx-b2a0-smoke | `work/runs/m8nfx-b2a0-smoke.json` | 0.4996 | ok |
+| m8nfx-b2a1-smoke | `work/runs/m8nfx-b2a1-smoke.json` | 0.4986 | ok |
+| m8nfx-b1a0 | `work/runs/m8nfx-b1a0.json` | 0.5088 | ok |
+| m8nfx-b1a2 | `work/runs/m8nfx-b1a2.json` | 0.5103 | ok |
+| m8nfx-b2a0 | `work/runs/m8nfx-b2a0.json` | 0.5094 | ok |
+| m8nfx-b2a1 | `work/runs/m8nfx-b2a1.json` | 0.5107 | ok |
