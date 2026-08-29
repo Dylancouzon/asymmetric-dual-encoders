@@ -1178,1078 +1178,160 @@ CORPORA are ordinary public downloads while their query and qrel payloads stay g
 | **G7** | **Ordering interlock**: no teacher download or probe until the protected-query filter covering six + reserved + shadow + M9-reserve inventories is built, hashed and committed. |
 | **G8** | **Dev-reuse counter runs from evaluation #1** (`results/m8_dev_reuse_count.json`). |
 | **G9** | **Wake-up-note discipline**: anything needing Dylan goes to the top of `m8/STATUS.md`; it is never decided alone. |
+| **G10** | **Markdown stays TIGHT** (Dylan, 2026-08-29: *"we're diluting context for next session"*). Every line in a file a session must read before deciding is a tax on every session that follows. Write the decision, the number a rule reads, and the pointer — nothing else. One fact, one home: numbers in the result JSON, bars in `registry.json`, runs in `RESULTS.md`, closed avenues in `EXPLORED.md`, long-form in `research/m8-planning/`. An amendment is *what changed, why, the pointer*, not the reasoning that produced it. **Always keep withdrawn claims and owner rulings** — re-deriving a withdrawn claim costs more than the lines — but keep them short. Adding a long entry means compressing an old one. `wc -l` what you edit; past ~1,500 lines, compressing is part of the task. Full rule in CLAUDE.md. |
 
 ---
 
 ## 15. Amendments and incidents
 
-*(Dated entries only. An amendment is legal only before any raw number it would affect exists —
-in either direction. It states what changed, why, and that the dependent numbers did not yet
-exist.)*
-
-- **2026-08-29 — RULED by Dylan, reopening `E14-LORA`: "We wouldn't say keep your normal document
-  encoder. Since most people are not currently using stella. I'm not against LoRA on the document
-  tower."** This withdraws the premise the refusal rested on, and it is a correction to an argument
-  made in this session, not a change of mind about a fact.
-
-  **The withdrawn premise.** The case against touching the document tower was that it costs the
-  architecture its selling point — "keep your normal document encoder, get a zero-compute query
-  path for free". **That selling point never existed.** Adopting this system already means adopting
-  **stella** on the document side, which essentially nobody is running today, so the user re-indexes
-  their corpus either way. A LoRA'd stella costs them **the same one-time indexing pass** as stock
-  stella: the marginal product cost of co-adapting the tower is **zero**. Every argument in this
-  ledger that leans on "frozen off-the-shelf document tower" as a *user-facing* virtue is void; the
-  premise survives only where it is defended on evidence or protocol, never on that story.
-
-  **The licence question is CLOSED by Dylan, same day: "Confirming stella is good for derived
-  weights, no license blocker to me."** `stella_en_400M_v5` is **MIT**
-  (`research/m7-teacher-shortlist-2026-08-26.md:37`), which permits modified weights commercially
-  with attribution. The "stella derived-weights licence check" carried as an open blocker in three
-  places (§15 ×2, §9's `E14-LORA` row) is **discharged on the owner's ruling** — licensing is
-  commercial reality and therefore his call, exactly as CLAUDE.md requires. Nothing about
-  `E14-LORA` is blocked on licensing any more.
-
-  **THE REFRAME, and it is the most important thing recorded today.** **LightRetriever trains its
-  document encoder.** Its table rows are produced by running each vocabulary token through *the
-  trained LLM*, and its own ablation A2 says the full-sized query-side model during **training** is
-  what makes the table good (`research/lightretriever.md:19,23,382`). So `LR-dense-pertask 0.4583`
-  — M7's release bar, the one missed CI-resolved by −0.0243 — was achieved **with a co-trained
-  document side**, while M7 and M8 have been fitting a table to a tower that was never trained to
-  be fit. **M8 has been solving a strictly harder problem than the system it is benchmarked
-  against.** That is the best available explanation for why every cheap table-side lever keeps
-  returning flat, and it is a candidate explanation for a large share of the miss — *candidate*,
-  because it is unmeasured, and the whole point of `E14-LORA` is to measure it.
-
-  **`E14-HEAD` was the wrong cheap measurement of the right question, by its own registration.** A
-  head on a **finished** document vector cannot recover information the tower already discarded —
-  §15 wrote that scope limit down before any arm ran, which is exactly why a null there is WEAK
-  evidence about the LoRA and may never close it. A LoRA changes what the tower **computes** and is
-  a strictly larger hypothesis class. Dylan's "measure it small first" ruling was right; `E14-HEAD`
-  was a poor instantiation of it.
-
-  **What is now authorised, and what still needs a ruling.** `E14-LORA` is reopened for
-  **registration and a dev-scale measurement**. It must be staged: train the adapter and evaluate on
-  the two out-of-domain dev components against **their own re-encoded corpora** — small, self-
-  contained, no 10.12M pass — and only a clearing dev result buys the full pre-encode. **Still
-  Dylan's to rule, and it is the real decision, not licence or compute:** `E11`/§5.4 say a
-  document-side win does not make a qualifying v2 **table**, and `C2` (table-vs-table on identical
-  document vectors) becomes unsatisfiable, falling to its already-registered `teacher_swapped`
-  branch, dense-system vs dense-system. So the question is **whether M8 ships a better SYSTEM or
-  must ship a better TABLE.** Nothing about that may be decided after seeing a number.
-
-  **The one real cost to price, not a blocker.** `E14-HEAD`'s mechanism control measured
-  teacher-style queries losing MORE than bag queries (−0.031 vs −0.022): co-adapting documents
-  toward a bag plausibly taxes a genuine transformer query path. That is an input to M9's
-  document-side inheritance, and it is no longer a veto — Dylan ruled 2026-08-29 that M9 picks its
-  own tower on measurement, preferring the pair but breaking it on CI-resolved loss.
-
-- **2026-08-29 — RULED by Dylan on the Qdrant/FineWeb arm (`D-FINEWEB`/E13): "the Qdrant dataset
-  should really prove its value. The webcrawl data could be okay to use, but it's better if we
-  don't."** The default is **EXCLUSION**. The arm may be measured, but web-crawl data enters the
-  training mix only on a **clearly-resolved** gain, not a marginal one — being Qdrant's own dataset
-  earns it no discount, and "a wrapper tag, including our own, is not a licence" still stands.
-  Ordering unchanged: its bar is still not computable (it is pool-varying, and §23's crossed floor
-  explicitly does not bound a pool-varying lever), so it stays deferred behind the capacity levers.
-  **Consequence:** the HUPD/patent trigger — "settle before any web-crawl data enters training" —
-  now most likely never fires, which removes an open question from M9's path rather than deferring
-  it again.
-
-- **2026-08-29 — `D2` AMENDED after an adversarial review of its registration, before any arm ran
-  and before any tokenizer was trained. Three BLOCKERs adopted, two of them against decisions the
-  audit had made hours earlier. `D2-PRE` registered. The exit is gated. §13 is REOPENED.**
-  Review log audited for reserved-set reads first (see the incident below); Dylan ruled the sets
-  fine and lifted the quarantine, so the findings are adopted on their merits.
-
-  **BLOCKER 1 — the "compositional init floor" was not a floor, and the fix is the SUM.** The row
-  specified initializing a multi-word row to the **mean** of its constituent unigram rows. The
-  served query is `normalize(Σ_types g(count_t)·w_t)`. Replacing constituents `a,b` (each count 1)
-  by a phrase row `w_p = w_a + w_b` leaves the summand **identical**, so the normalized query is
-  **exactly** unchanged — a true floor. The mean changes the sum by `−(w_a+w_b)/2`, which is not a
-  positive scalar multiple of the old sum, so the final normalize does not restore it and the
-  phrase is silently downweighted ~2× against every other token. **The registration would have
-  degraded the baseline before any learning began**, and a coverage shortfall would then have
-  degraded to something worse than M7 rather than to M7. Re-derived independently here, not taken
-  on the reviewer's word. Rows are now trained as a **residual on top of the sum init**, so an
-  under-updated row stays at zero residual and reproduces R0 exactly.
-
-  **BLOCKER 2 — the coverage gate contained an escape clause that voided the bar.** It permitted
-  "expand the pool and re-measure", contradicting `held_fixed` in the same row. Exercising it
-  invalidates the pre-existing R0 chains as controls and makes the arm **pool-varying**, which
-  §23's crossed floor explicitly does not bound — so 0.00519 would not be calibrated for the
-  resulting experiment. **Removed**: if a vocabulary cannot be covered by the fixed pool the answer
-  is the smaller vocabulary or a NO-GO, never a bigger pool. The gate itself was also rebuilt —
-  the old one counted *unique* dev-reachable rows with zero updates, which the vocabulary
-  denominator games (many one-occurrence rows dilute it) and which was calibrated against M7's
-  5.71% *overall* cold-row figure, a different quantity. It now reports dev token **occurrence
-  mass** at 0/<5/<20 effective updates and gates on a **performance** condition: the sum-init
-  zero-residual compile must reproduce R0 within 0.001 dense.
-
-  **BLOCKER 3 — the pre-committed exit was premature on this repository's own evidence.** It fired
-  after `D2` + `B10`. But **`B2` did not close the KL class**: its uniform-bank arm is degenerate
-  (0.0052 of the entropy ceiling) while its **`teacher_top200` arm measures 0.777 nats mean, 0.369
-  median** (`results/m8_b2_entropy.json`), and B2's own artifact names `R-LIST` as the consequence.
-  And §15 forbids `E14-HEAD` from closing `E14-LORA`. **A pre-commitment cannot perform a future
-  milestone audit in advance** — it can bind the default, not the finding. The exit is now gated on
-  `D2`, `B10`, **`B8`** (a closed-form document-centroid target at ~15 min — deferring it was a
-  false economy) and **`R-LIST`** all having run and missed, plus a re-run of CLAUDE.md's standing
-  directive at that point.
-
-  **REOPENED: §13's "n-gram rows are superseded by D2, no auto-revival" — and this reverses the
-  audit's own ruling from this morning.** The audit found the worklist recommending bigram rows,
-  found §13 retiring them, and resolved it in §13's favour. **§13 is the part that is wrong**, on
-  algebra: D2 picks ONE segmentation and *removes* the constituent activations, while additive
-  overlapping rows *keep* the incumbent unigrams and can fire several phrases at once. Decisively,
-  **an additive phrase row with zero residual recovers R0 exactly, whereas a segmentation change
-  does not** — the additive class is strictly the safer parameterisation of the same intuition, and
-  character n-grams additionally reach rare technical strings a frequency tokenizer may never
-  allocate a token to. The blanket supersession is withdrawn; the two classes are compared head to
-  head at equal row budget in `D2-PRE` before either gets a training chain.
-
-  **REGISTERED: `D2-PRE`**, a sub-hour closed-form preflight over frozen incumbent rows using the
-  block-CG solver `B7` already proved. It measures the actual fertility reduction, verifies the
-  sum-init compile reproduces R0 (with mean-init scored beside it as a negative control), and
-  solves cross-fitted residuals for four arms at equal row budget — D2 segmentation, additive word
-  n-grams, additive character n-grams, and D2 with a zero-residual fallback. **Its routing rule is
-  fixed before the number, including the reversal: if an additive arm wins at equal budget, the
-  additive class becomes the lever and D2 stands down.** Closed-form screening is informative here
-  because `T1` ranked teachers on exactly this criterion and `B7`'s real-data run reproduced M7's
-  trained dev macro at the argmax λ; its known failure mode is `B17`, which fitted and scored on
-  the same 957 queries and was disowned — hence the cross-fitting requirement and hence "routing,
-  never adoption".
-
-  **Also adopted.** §17b is downgraded from "an upper bound" to **correlated headroom, not a bound
-  in either direction** — it is uncontrolled between-query OLS, so the slope may be driven by
-  specificity or rarity and D2 could recover none of it, while a phrase feature could equally
-  exceed it via conjunction effects. `NF-CROSSED-FUSED` becomes **mandatory before any D2 success
-  claim** and its "plausibly clear" escape wording — an undefined judgement, therefore exploitable
-  — is removed; a dense-only win is labelled a **mechanism** success, never a release success.
-  Tokenizer training is pinned deterministic with its sha256 in the result, so tokenizer randomness
-  contributes no variance the bar does not cover.
-
-  **Recorded and NOT fixed, because it needs work rather than a wording change:** G8's dev-reuse
-  counter (`results/m8_dev_reuse_count.json`) is promised by §14 and **absent from HEAD**. M7
-  logged 322 in-training dev evaluations. Nested selection protects the *reserved* sets, but it
-  does not make wikipedia/heldout selection independent of a CQADupStack dev bar, and a 0.005-scale
-  development difference deserves the counter that was promised. This is on the worklist.
-
-  **Kept against the review, with reasons.** (i) **0.00519 stands.** The reviewer is right that it
-  is probably conservative for a three-seed mean (SD ≈ 0.00125 → ~4.15σ) rather than for a single
-  arm — but lowering a bar after registering it, on an argument available before the number, is
-  precisely what this protocol forbids; conservative is the safe direction and it stays.
-  (ii) **Retokenization is NOT pool-varying**, which the review also concluded: a fixed collection
-  of pseudo-query texts is one pool however it is segmented, and the tokenizer belongs to the B
-  leg. The audit's own worry here was wrong, and 0.00519 is the right *kind* of bar.
-
-- **2026-08-29 — INCIDENT: an adversarial reviewer read two RESERVED confirmatory sets in full.
-  `paths_guard` does not and cannot cover it. No set was scored; no decision read them.**
-
-  During the audit's Codex review, a repo-wide grep dumped
-  `results/frozen_eval/untouched-cqadup-english.json` (164,742 bytes) and
-  `untouched-dbpedia-entity.json` (67,801 bytes) into the reviewer's context — **complete, queries
-  AND qrels, untruncated**. `dev-cqadup-programmers.json` also, which is development-visible and
-  fine. Found by auditing the review log, not by any guard.
-
-  **Why no guard caught it, and this is the general lesson.** `paths_guard` (G2) is an in-process
-  Python bulkhead: it classifies paths for code running inside `m8src`. **Codex is a separate
-  process with ordinary read access to the whole repo**, so G2 is structurally incapable of
-  constraining it. The standing grant (CLAUDE.md, 2026-08-28) makes adversarial reviews a *routine*
-  instrument — so this is not a one-off, it is a standing hole that every future review reopens.
-
-  **Exposure, stated precisely rather than minimised.** To the reviewer: both files entire. To this
-  session: roughly twenty query strings and zero qrels, from inspecting the log — the qrels sit
-  later in each line and were never displayed. Nothing was scored, no model saw them, no bar or
-  candidate was chosen with knowledge of them.
-
-  **Assessment, and the part that actually matters.** The reserved four are not burned in the sense
-  that matters for the access — burning requires *scoring*, and none happened. The real residual
-  risk is narrower and more interesting: **the reviewer's recommendations are now potentially
-  informed by two reserved sets**, so a lever it proposes could be one it likes *because of* what
-  it saw. Therefore: any recommendation from this review that draws on reserved-set content is
-  quarantined and may not be adopted, and if the review's substantive direction turns out to rest
-  on such content the review is re-run under a read-exclusion before anything is adopted from it.
-
-  **RULED by Dylan, 2026-08-29: "the sets are fine, continue with the codex review."** The reserved
-  four stand as M8's confirmatory sets, the access is intact, and the **quarantine on that review's
-  recommendations is LIFTED** — its findings are read and adopted on their merits like any other
-  review's. Recorded because a future session must not re-litigate this from the incident text
-  alone and conclude the sets are compromised: they are not, on the owner's explicit call.
-
-  **Fix, adopted and kept regardless of the ruling** (it costs nothing and the hole is structural):
-  every adversarial-review brief carries an explicit read-exclusion for
-  `results/frozen_eval/untouched-*`, the reserved qrels caches and `work/m9reserve`; briefs name the
-  files to read rather than inviting a repo-wide search; and the review log is audited for
-  reserved-set reads before its findings are read. In CLAUDE.md so it binds outside this milestone.
-
-- **2026-08-29 — MILESTONE AUDIT AND RE-ROUTE.** No M8 candidate exists and no protected set has
-  been scored, so every change here is legal in both directions.
-
-  **Finding.** All nine probes run so far returned a null, a negative, or an instrument reading —
-  `B3` (data volume, ~17.6× the pool to reach the bar), `E14-HEAD` (doc-side head, −0.0244 dense),
-  `T1` (teacher, −0.052/−0.109), `B2` (KL term), and M7's clean-stack tax (+0.0058, miss
-  survives). Meanwhile **`D2` — the only remaining lever with a measured mechanism pointing up —
-  had no registry row, no schedule, and no place on the worklist**, though §9 calls it the
-  milestone's centre of gravity and both its gates (`B7`, `B6-pre`) have PASSED.
-
-  **A first-pass audit claim, corrected rather than dropped.** It read condition 4 as admitting
-  only seven `qualifying_table` keys, so the recipe/data class could not ship. **Wrong** — the
-  registry classifies 27 and is the authority (§9); `ict_fraction`, `sources`, `phase_structure`,
-  `pool_mode`, `init`, `ngram_rows` and others qualify. The recipe class *can* satisfy condition 4;
-  what it cannot do is carry the bar, which §7 already establishes on measurement (M7's post-gate
-  programme transferred at 0.000 ± 0.005). The re-route rests on that, not on the false claim.
-
-  **Three defects fixed.** (1) §5's key list read as exhaustive and was a partial render — now
-  labelled, pointing at the registry. (2) `NEXT-SESSION.md` item 2 recommended "bigram rows
-  trained through the forward", which §13 had retired as **superseded by D2, no auto-revival** —
-  worklist rewritten; §13 unchanged and still binding, so D2's death does not revive additive
-  n-gram rows. (3) The `E10` REOPENED amendment was living after §23, where the file contract
-  sends nobody — moved into §15, text unaltered.
-
-  **ADOPTED: the chain floor, B-leg-varying arms only.** §23 measured σ_chain = 0.00153 and
-  computed the formula's answer, **0.00519**, but recorded it NOT ADOPTED pending its own
-  amendment before any affected arm ran. This is that amendment; no such arm has run. **An arm
-  that retrains the Phase-B checkpoint now reads bar 0.00519** on the out-of-domain macro and
-  worst group. A-leg-only bars are untouched (`B3`, `E14-HEAD` read σ_A → 0.0036, under the
-  planning minimum). `D2` is registered *with* the higher bar rather than inheriting the lower one
-  by omission.
-
-  **NOT adopted:** there is still no chain-level FUSED floor (§23's cells were scored dense only).
-  `D2` therefore carries a dense-only bar with a descriptive fused read; its row states the
-  type-I cost of losing intersection-union. `NF-CROSSED-FUSED` (nine fused passes over cells
-  already on disk, no training) would let an amendment promote fused to a barred endpoint before
-  `D2` runs.
-
-  **REGISTERED: `D2`** (`m8/registry.json` holds the row). Its decisions: vocabulary selected on a
-  nested dev split the bar never reads; a coverage precondition measured before training, not
-  assumed; the compositional init floor made mandatory; the paired R0 comparator taken from §23's
-  existing diagonal; and a **bounded** step-adequacy gate — one continuation at doubled steps, or
-  the class closes. `E14-HEAD` is the precedent for that bound: an adequacy gate with no ceiling
-  is a way never to take no for an answer.
-
-  **PRE-COMMITTED EXIT.** If `D2`'s finalist misses and the named alternate (`B10`/`pool_mode`)
-  also misses, **M8 does not proceed to a confirmatory access**: it closes as a measurement, the
-  reserved four stay unspent for M9, and the report states why the class did not move. An access
-  is one-shot and its value is the chance of a resolved win; with every measured lever dead that
-  chance is `m7_repeat` ≈ 0.002 (`results/m8_power.json`), which buys almost no information while
-  permanently costing M9 its clean sets. **Not renegotiable after seeing D2's number.** It is a
-  milestone-scope call, so it is also put to Dylan in `m8/STATUS.md`; he may override before the
-  number, either way.
-
-  **Scope discipline for the rest of M8.** `freeze.py`/`final_run.py` wait until a candidate
-  exists; no new floors, guards or registry machinery until `D2` has a number; `E10` is time-boxed
-  (worklist), because a shadow can stop a bad artifact shipping but by its own ruling may never
-  raise the number.
-
-- **2026-08-29 — `E10` REOPENED. The remedy artifact is NOT decontaminated and its zero re-screen
-  was tautological. `results/m8_lotte_remedy.json` may not be pinned, served, or grandfathered.**
-  Adversarial review verdict: *"STOP / reopen E10."* Reproduced counter-examples, not projections.
-
-  **BLOCKER 1 — the screen compared ROLES, not protected CONTENT.** `_cqa_index()` holds only the
-  four CQADupStack corpora; LoTTE documents were screened against protected DOCUMENTS and LoTTE
-  queries only against protected QUERIES. The query↔document comparison was never made. Two
-  confirmed survivors: `science/dev` qid 1147 "How to design a house to be cooled passively?"
-  matches protected physics document 111653; `recreation/test` qid 355 "What is the terminal
-  velocity of a sheep?" matches protected physics document 129267, **and that protected document
-  states it was inspired by the Gaming.SE question** — the quoted-across-sites case named in the
-  brief. A targeted audit found **36 retained shadow queries sharing an 8-word run with protected
-  corpus documents**; under our own registered query rule those are hits. LoTTE documents were also
-  never screened against FEVER, DBpedia, NQ or HotpotQA despite the stated policy.
-
-  **BLOCKER 2 — the re-screen cannot fail on ordinary input.** Remediation constructs the exact
-  complement of the first pass's hits and the second pass applies the SAME deterministic detector
-  to those unchanged IN-MEMORY survivors. A canary would be found, removed, and then provably
-  absent. Worse, files are written first but the re-screen reads the in-memory lists, so an altered
-  or recontaminated output file is never examined. CODEMAP pitfalls 17 and 19 exactly. **The
-  detector may remain the removal mechanism but cannot certify itself**; acceptance needs an
-  INDEPENDENT detector (StackExchange IDs/URLs, migration and cross-site links, character
-  shingles/containment) plus a canary test that proves acceptance can fail.
-
-  **The 100× asymmetry is real AND diagnostic of a weaker document screen.** Query detection fires
-  on ONE shared 8-gram (one 4-gram for short queries); document detection requires EIGHT shared
-  entries from bottom-32 sketches, so a document under 15 normalized words **can never** be a near
-  hit — a one-word edit of a 16-word document and a 14-word verbatim quotation both return nothing.
-  So `recreation/test = 0` is a measurement of the detector, not of the corpus. Normalization is
-  lowercase + `isalnum()` only: no Unicode normalization, stemming, typo tolerance or reordering.
-  The short-query rule is also DIRECTIONAL — a protected short query inside a longer candidate is
-  caught, a short candidate extracted from a longer protected question is not.
-
-  **The exact 14,034 match is CIRCULAR evidence**, and I cited it as validation. Those counts were
-  derived by S0 with the same raw data and the same detector, then written into the registration.
-  Matching them proves repeatability and absence of input drift — nothing about coverage. Two
-  confirmed retained protected documents coexist with an exact 14,034.
-
-  **Also found:** `pin()` trusts the mutable remedy artifact, permits an arbitrary subset, hashes
-  whatever bytes occupy the paths at pin time and never binds them to what was SCREENED;
-  `build_fitlist()` reads `m8_lotte_overlap.json["kept"]`, which S0 left EMPTY, so the fit list
-  never sees the remedy survivors at all; and correlation with the exam remains unmeasured, with a
-  concrete design offered (a preregistered candidate panel, rank-correlated across LoTTE dev
-  slices, unused CQADupStack subforums and non-reserved entity proxies, keeping the LoTTE test
-  slices untouched for the eventual crossing).
-
-  **What this does NOT change:** no protected set was scored, and no number from this artifact
-  reached any decision. The shadow was never pinned, precisely because the two questions this
-  review answered were the ones held open. Review at
-  `research/m8-planning/codex-e10-remedy-review-2026-08-29.md`.
-
-- **2026-08-29 — E14 SPECIFIED as two staged probes, `E14-HEAD` (runnable) and `E14-LORA`
-  (refused).** Dylan ruled "measure it small first"; this is what small means, and why.
-  **`E14-HEAD` is the cheap question**: an MLP head over the teacher's **cached** document vectors,
-  trained jointly with the table. The transformer is never re-run — the head is a matmul over fp16
-  already on disk — so it costs a training run instead of 2M+ forward passes. It must be
-  **nonlinear**: a linear doc-side map is provably absorbable into the table (standing directive
-  #4), so a linear head would measure nothing while looking like a result.
-  Endpoints are B3's two scalars unchanged, so **the measured floors bind and the bar is 0.0040**
-  at int8/sqrt; comparator R0; three paired seeds; one contrast.
-  **The scope limit is the whole reason the staging works, and it is asymmetric.** An MLP on the
-  final document vector cannot recover information the tower already discarded, so `E14-HEAD` tests
-  *is the document space re-shapeable*, not *can the tower learn to be bag-reachable* — which is
-  E14's real question. Therefore **a null here is WEAK evidence about the LoRA and must never be
-  written as closing E14**, while a positive here is STRONG evidence for buying it. That asymmetry
-  is what makes running the cheap stage first worth doing rather than a corner cut.
-  **A shippability gate is attached that did not exist before.** `B6-pre` PASSED with
-  `--head linear` only. E3 requires the head to fuse into ONE document ONNX file as plain nodes,
-  and **that is unproven for a nonlinear head** — so B6-pre must be re-run with `--head mlp` before
-  any head-bearing candidate is described as shippable.
-  **`E14-LORA` is registered and refused**, with a TBD bar on purpose: the bar is not written until
-  the head reports, because the head's number changes what effect size is worth buying and a bar
-  written today would be a guess wearing a pre-registration's clothes. Its bill — the doubled
-  10.12M pre-encode, hours of pool re-encoding per arm, the stella derived-weights licence check,
-  and the forced redefinition of C2 (Dylan's E11 ruling) — is itemised in the registry and **none
-  of it is authorised by the "measure it small first" ruling**.
-
-- **2026-08-29 — E10's remedy SPECIFIED (`E10-REMEDY`), with the exact slices.** From
-  `results/m8_lotte_overlap.json`, which had already computed the per-question remedy
-  descriptively:
-  **DEAD, community overlap with protected sets — no remedy applies:** `writing/test`
-  (english.stackexchange.com), `science/test` (physics.stackexchange.com), `technology/test`
-  (android + softwareengineering.stackexchange.com).
-  **SURVIVING SEVEN, ~14,034 queries after remedy:** `writing/dev` (1,988), `recreation/dev`
-  (1,994), `recreation/test` (1,990), `science/dev` (2,002), `technology/dev` (1,993),
-  `lifestyle/dev` (2,074), `lifestyle/test` (1,993).
-  **The screen corroborates the split rather than merely permitting it**: the three
-  community-overlapping slices leak at **1.19–7.85%** of queries, while all seven survivors leak at
-  **0.10–0.75%**, and the same ordering holds on document near-duplicates (0.013–0.156% against
-  0.001–0.010%). The contamination is concentrated exactly where the communities overlap, which is
-  what makes per-item removal credible here rather than convenient. All three dead slices are
-  **test** splits; the survivors are five dev and two test.
-  **The remedy, in order:**
-  1. Drop the leaked **queries** AND the near-duplicate **documents** — R1 removes the item, and
-     documents are items too (23 of 277,072 in `writing/dev`, owned by cqadup-english and the two
-     CQA dev components).
-  2. **Re-screen the remediated slices and require ZERO exact and ZERO near hits**, on queries and
-     documents both. A slice that still hits is dropped. Removal is not assumed to have worked
-     because it was performed.
-  3. Hash-pin the survivors as a **protected partition** — never trained on, and added to
-     `paths_guard`'s protected roots.
-  4. Feed the surviving queries into `protected_filter`'s index and **regenerate the fit list**;
-     the current 337,981 predates them.
-  5. Register the **use limit**: the shadow is a check, not a selection surface. It may not be used
-     to choose between candidates, and the moment it is optimised against it becomes a second dev
-     set and stops doing its job.
-  **Forum queries only** — LoTTE's `search` queries stay excluded under GooAQ's
-  non-commercial-research-only terms, which needed no ruling.
-
-- **2026-08-29 — E12 RULED by Dylan: LightRetriever-dense enters as PUBLISHED NUMBERS ONLY,
-  labelled.** No LR-dense encode is bought. The full comparison would push 10.12M confirmatory
-  documents through a 1.5B-parameter Qwen on a 10 GB card — on the order of a hundred-plus
-  GPU-hours, plausibly exceeding Stage R itself — for a comparator that **does not gate the ship
-  decision**: the three confirmatory legs are C1 and C2 (M8 against M7) and C3 (M8 against BM25).
-  The partial option (measuring only the two CQADupStack confirmatory sets, ~63K documents, about
-  0.6% of the total) was offered and declined; it is recorded here in case a future session wants
-  a cheap like-for-like and assumes none was available.
-  **The binding constraint that comes with this ruling:** published figures are their setup on
-  their data, so the report may present LR-dense as **context only and must never state or imply a
-  head-to-head** on our datasets — no shared table column that reads as like-for-like, no delta
-  computed against our numbers, and the labelling must survive editing. `instructions-m8.md`
-  already sanctioned published numbers as labelled context, so this ruling adds no permission; it
-  fixes the scope and forbids the overclaim.
-
-- **2026-08-29 — HUPD DEFERRED to M9 by Dylan, with a trigger.** The patent-licence question
-  (HUPD is tagged CC-BY-NC-SA-4.0; the counter-argument is that a wrapper cannot restrict statutory
-  public-domain patent text under 37 CFR 1.71; the clean alternative is building from PatentsView,
-  which needs an API key) stays **OPEN and is not needed for M8**.
-  **Why deferring is safe rather than merely convenient.** Postponing a decontamination question is
-  normally dangerous, because training can run before the eval set is settled. That risk requires
-  overlap, and **there is no patent text in M8's training mix at all** — hotpotqa-train,
-  fever-train, squad-train, esci-us, mrtydi-en, with the pseudo-query pool drawn from those same
-  corpora. The property that makes patents attractive as a held-out domain (nothing we train on
-  resembles them) is exactly what makes the decision free to postpone.
-  **THE TRIGGER, which is the only thing that makes this urgent again: a general web crawl.** If
-  the `D-FINEWEB` arm (E13) proceeds, FineWeb is the one planned source that could contain patent
-  text. **The patent question must be settled BEFORE any web-crawl-derived data enters the training
-  mix** — not before M8 in general. `D-FINEWEB`'s bar is not frozen, so nothing is pressing; this
-  entry is the reason a future session must not treat that arm as independent of an M9 question.
-  Options as costed, for whoever picks this up: request a PatentsView key (removes the question
-  rather than answering it, and citation-based labels are a stronger eval than HUPD's); rule the
-  public-domain read sound; rule the NC tag does not reach held-out EVALUATION data, which is a
-  narrower question than the MS MARCO training precedent settled; or drop patents.
-
-- **2026-08-29 — PATENT QUESTION CLOSED by Dylan: "patents do not have to stay available as a clean
-  held-out for M9."** The option the entry above costed as "or drop patents" is the one taken. This
-  resolves the whole branch rather than answering it: HUPD's CC-BY-NC-SA tag, the 37 CFR 1.71
-  public-domain counter-argument, and the PatentsView-key alternative all become moot, because we
-  are not preserving patents as an evaluation domain that web-crawl training data could contaminate.
-  **`D-FINEWEB`'s patent trigger is REMOVED** — web-crawl-derived data may enter the training mix
-  without settling a patent question first.
-  **What still blocks `D-FINEWEB`, and it is not paperwork.** Its bar reads `TBD-noise-floor`, and
-  the floor it would need **does not exist**. `pseudoq.build_decontaminated(n, seed=SEED)` draws
-  with a MODULE-level seed independent of `cfg.seed`, so every arm measured in this milestone shares
-  one pseudo-query pool — which is exactly why §23's crossed design states it "does not bound a
-  pool-varying lever". `D-FINEWEB` changes pool CONTENT. By the same rule the NF row already states
-  for B legs — no bar may read such an arm until that floor is measured — it needs a POOL-VARYING
-  floor: K chains differing only in the pool draw seed. That is not cheap: a different draw is a
-  different ~925K-span text set, so each seed needs a fresh teacher encode rather than hitting M7's
-  cache (the crossed floor was cheap precisely because the pool was held fixed). Estimate ~2.3 h
-  before the arm is registrable at all. Recorded so a future session does not mistake this row for
-  a form to fill in.
-
-- **2026-08-29 — harrier RULED by Dylan: CLOSED, on undisclosed training data.**
-  `microsoft/harrier-oss-v1-0.6b` passes the vendor rule (Microsoft is "OK with justification")
-  and fails on protocol. Our contamination story depends on knowing what the teacher has read —
-  stella discloses ArguAna and FiQA2018, which is precisely why §4's four-dataset primary
-  comparison exists. **An undisclosed teacher admits no such design**: there is no comparison that
-  repairs not knowing. The evaluation protocol is the one thing this project does not relax, so a
-  candidate that undermines it is out regardless of what it might score. Two lesser blockers stand
-  behind that one and did not need to be reached: last-token pooling that `m7src/teacher.py`
-  refuses (new code, and new code is where the bugs are), and no published retrieval-only number
-  against which a screen result could be sanity-checked — a broken harness and a genuine 0.31
-  would be indistinguishable.
-  **`NovaSearch/stella_en_400M_v5` therefore stands as the teacher, and T1's NO SWAP is final for
-  M8** unless Dylan reopens it. **stella-1.5B remains unscreened** — it was offered alongside this
-  ruling and not commissioned; its blocker is mechanical (config and tokenizer disagree about BOS,
-  151643 against null, so a degenerate-query fallback row must be registered first) and it can be
-  picked up at any time without a new ruling.
-
-- **2026-08-29 — E10 RULED (Dylan delegated the call: "independently from the rules, take the
-  decision that makes the most sense"). The shadow is the SEVEN clean-community LoTTE slices under
-  a per-question remedy. The CQADupStack subforums are REJECTED as a shadow.**
-  **The reason the subforums lose is not contamination — they passed that screen — it is
-  correlation with the exam.** Two of the reserved four confirmatory sets *are* CQADupStack
-  (android, english). A shadow drawn from the same benchmark family is not independent of the set
-  it exists to protect: iterating against subforums would tune us toward CQADupStack's format and
-  inflate a confirmatory read we can never re-take. A shadow whose job is catching self-deception
-  must not be correlated with the thing it is protecting. This consideration was missing when the
-  three options were first costed in STATUS, and it is decisive.
-  **The remedy** follows §3's standing rule R1 — remove the ITEM, not the slice — rather than
-  inventing an exception: drop the 2–15 leaking questions per slice, keep the seven slices at
-  roughly 2,000 questions each (~14,000 total), genuinely out-of-domain and uncorrelated with the
-  reserved four. **The three community-overlapping slices (english, physics, android +
-  softwareengineering) stay dead**; no remedy applies to a community that overlaps a protected set.
-  **Two binding conditions:**
-  1. **Re-screen after remediation** and require ZERO residual matches. Removal is not assumed to
-     have worked because it was performed.
-  2. **The shadow is a CHECK, not a selection surface.** It is registered with a use limit and may
-     never be used to choose between candidates. The moment it is optimised against it becomes a
-     second dev set and stops doing the one job it has.
-  **Consequence for the fit list:** the surviving shadow queries are now a protected partition and
-  must enter `protected_filter`'s index; the fit list is regenerated before any further training.
-  LoTTE's `search` queries stay excluded regardless (GooAQ is non-commercial-research-only); forum
-  queries only, which needed no ruling.
-
-- **2026-08-29 — E14 RULED by Dylan: measure it small first.** Doc-side co-adaptation is
-  approved as a **dev-scale measurement**, not as a milestone commitment. Train a LoRA on the
-  document tower alongside the table at dev scale, measure the gain, and bring him the number.
-  **Explicitly NOT yet authorised**: the 10.12M-document re-encode, the stella derived-weights
-  licence question, and any redefinition of C2. Those are bought only if the dev gain justifies
-  them — so **C2 and E11 stand unchanged for now**. The probe must be registered with its bar
-  frozen before it runs, like every other, and its no-survivor outcome is "the frozen document
-  tower stays and E14 closes".
-
-- **2026-08-29 — B3 RAN. Verdict UNINFORMATIVE, and it is the useful kind**
-  (`results/m8_b3_decision.json`). Twelve arms — nested real-pair fractions {0.25, 0.50, 0.75,
-  1.00} × three seeds, 84,520 / 169,056 / 253,557 / 338,076 pairs actually trained on, with
-  updates, batch, negatives, temperature, learning rate and the Phase-B checkpoint all held so
-  total draws are 1,280,000 everywhere. Read at int8/sqrt.
-
-  | contrast | dense | fused | meets 0.0040? |
-  |---|---|---|---|
-  | manipulation, 1.00 vs 0.25 (a **4× dose**) | +0.00135 | +0.00369 | **no, neither** |
-  | primary, 1.00 vs 0.50 | +0.00112 | +0.00201 | no |
-  | descriptive, 1.00 vs 0.75 | **−0.00107** | +0.00076 | no |
-
-  The manipulation check fails, so the registered verdict is UNINFORMATIVE — and the registration
-  already said what that means: since the floors show this instrument resolves 0.0040, **a 4× dose
-  that moves neither scalar that far is the strongest no-starvation evidence this probe can
-  produce.** Phase-A-side pair-count levers are deprioritised on the narrowed scope.
-
-  **What it would take, which is the number that makes this actionable.** The fitted slope is
-  **+0.00097 dense / +0.00186 fused per DOUBLING** of distinct pairs. Reaching the bar therefore
-  needs ~4.1 doublings on dense — **~17.6× the pool, about 5.9M pairs** — and ~2.2 doublings on
-  fused (~4.4×, ~1.5M). No pair-count lever available to M8 reaches that: the clean-stack-tax arm's
-  entire MS MARCO addition was 490K pairs, under 1.5× the pool. *(Extrapolating a log-linear fit
-  past the measured range is a magnitude, not a forecast, and it is labelled as such in the
-  artifact.)*
-
-  **The redesign paid for itself in the data.** The original primary was 1.00 vs 0.75, and the
-  review's objection — that at fixed draws the fractions are epochs, so the last quarter is the
-  least-powered segment of a concave curve — is visible in the result: that contrast came out
-  **negative on dense (−0.00107, all three seeds agreeing in sign)**. Had the primary not been
-  moved to 1.00 vs 0.50 before the arms ran, B3 would have returned a negative point estimate on
-  its own primary endpoint and had to call it a FAIL.
-
-  **Two biases stated with the number, both registered in advance.** The frozen fusion operator
-  (convex0, w = 0.8) was selected on the f = 1.00 recipe, which biases the FUSED scalar toward the
-  comparator — and consistently, every fused gain here exceeds its dense counterpart, the fused
-  4× dose landing at 0.00369 against a 0.0040 bar. And the "last half" is a single fixed
-  permutation, so the contrast estimates the effect of *those* pairs; the three seeds cover
-  training noise only. A second pool seed was not added after seeing a near-bar number, which the
-  registration explicitly forbade.
-
-  **Scope, unchanged from the registration and worth repeating because it is easy to over-read**:
-  `p35b-2m` ran 16,000 objective-B steps over the full pair query set, so every arm — 0.25 included
-  — began from a table that had already seen all ~338K training queries and their teacher vectors.
-  This measures the marginal value of distinct pairs IN PHASE A GIVEN B absorbed them. It says
-  nothing about B-side pair levers, which flow through the leg held fixed here.
-
-- **2026-08-29 — the B-LEG noise floor is measured** (`results/m8_noise_floor_bleg.json`; §4.4's
-  gap list closes on this item). §4.7's floor holds the Phase-B checkpoint FIXED and varies only
-  the Phase-A seed. That is the shape of most probe arms, but **not** of `R-PHASE`, nor of any pool
-  or init change, which flow through the B leg — and the A-leg floor cannot bound those, because it
-  holds constant the very leg they perturb. This measures the missing one: **three full B→A chains
-  varying only the seed**, scored on the same four endpoints.
-  **The floors, at int8:** group-vector median 0.00147 (mean) / 0.00088 (sqrt); worst-group and
-  out-of-domain macro 0.00218 / 0.00111; all-component macro 0.00199 / 0.00070. fp16 tracks these
-  closely.
-  **The comparison I first drew from this is WITHDRAWN.** I wrote that "the B leg adds essentially
-  nothing" — A-leg 0.00095–0.00227 against B-leg 0.00070–0.00218 — and that this licensed reading
-  B-leg-varying probes against the same 0.0040 minimum. An adversarial review killed it and the
-  arithmetic is not close. **At K = 3 the "max pairwise |Δ|" statistic IS the sample range**, whose
-  coefficient of variation is **0.525**; two experiments with *identical* noise produce ranges
-  differing by ≥2× **40%** of the time, and P(R_B ≤ R_A) is exactly **0.500 — a coin flip**. Our
-  observed ratios sit at p = 0.35 and p = 0.48 under equal noise: entirely unremarkable, and
-  equally consistent with the B leg being substantially noisier. A single K = 3 range pins σ only
-  to a **12× span**. (Verified here rather than taken on trust: a 4M-draw simulation reproduces the
-  review's figure exactly.)
-  **What the measurement is actually good for**, which is less than I claimed but not nothing: a
-  negative control and a magnitude yardstick — evidence that the 0.0040 convention does not sit
-  *below* same-configuration seed variation for full chains. It does **not** show the B leg adds no
-  variability, and it does **not** statistically bound B-leg-varying probes.
-  **Two design faults, recorded rather than papered over:**
-  - **The two legs' seeds are ALIASED.** One chain-level seed drives both Phase B and Phase A, so
-    their effects cannot be separated and **may partially cancel** — which would make the observed
-    range an *under*-estimate, the anti-conservative direction. The fix is a crossed design: the
-    three B checkpoints × several A seeds, separating B variance, A variance given B, and the B×A
-    interaction. The three chains on disk are its diagonal; six more A legs complete it.
-  - **The pool is held fixed, so this floor does not bound pool-varying levers at all.** `pseudoq`
-    draws with a seed independent of the training seed, so all three chains distil on the identical
-    text set. That makes this a clean *conditional* seed null — and it means half the stated
-    motivation ("any pool or init change flows through the B leg") is not served by it.
-  **The bars stand as a pre-registered decision CONVENTION, not a statistical bound.** "Twice the
-  observed maximum" has never had a stated error rate, and at K = 3 it covers a fresh null
-  difference about **89%** of the time, not 95%; the 0.0040 minimum, which binds nearly everywhere,
-  is the term doing the real work. The `int8.mean` exception below is the largest of 16 noisy
-  estimates — a winner's curse, so likely high for its own endpoint while saying nothing about
-  whether the other 15 are adequate.
-  **One endpoint is the exception and it is now binding**: at `int8.mean`, worst-group and
-  out-of-domain macro have 2 × floor = **0.004369**, above the 0.0040 planning minimum. Any bar
-  reading those two endpoints under `mean` pooling takes 0.004369, not 0.0040. Every other
-  endpoint keeps 0.0040 because the planning minimum still binds. B3 is unaffected: it reads at
-  `int8/sqrt` (0.00088–0.00111 → 0.0040) and is an A-leg-varying probe in any case.
-  **The honest caveat on the comparison.** "B is no larger than A" is a comparison of two
-  max-over-three-pairwise statistics, each from K = 3. That estimator is noisy, and the two ranges
-  overlap almost entirely, so the claim to make is the weak one — *the B leg does not visibly
-  inflate the floor* — not that the two are equal. What the number licenses is using 0.0040 for
-  B-leg-varying probes; it does not license a claim about Phase B's reproducibility in general.
-  **Provenance note.** Chain 0's B leg is M7's `p35b-2m`, written 2026-08-27, and nine commits
-  touched `m7src/` afterwards. Every changed hunk on the training path was read before the arm was
-  reused: the pseudoq change is docstring-only, `train.py`'s new `side_pos_sources` defaults to
-  `()` and takes the identical `index.get` branch, and the `teacher.py`/`table.py` additions are
-  refusals on `encode_cached`'s shard layout and on `ensure_release` — neither reached by a B leg,
-  neither altering a returned vector. Runs record no code vintage, which is why this had to be
-  done by hand; see CODEMAP 16.
-  *(No number this amendment affects existed beforehand: no bar had ever been read against a
-  B-leg-varying arm, because none had been measured.)*
-
-- **2026-08-29 — B3's lever replaced: ICT augmentation → real-pair pool scaling. No B3 number of
-  any kind existed** (no ICT arm was ever built, let alone run; there is no ICT sampler in the
-  repo). Prompted by an adversarial review of the ARM DEFINITION, briefed before any arm ran
-  (`work/briefs/b3-arms.md`). Four findings, all of which I accept:
-  1. **The registered arm shape is arithmetically impossible.** "Equal updates AND equal exposure"
-     cannot both hold with a non-zero synthetic fraction while the batch is fixed: updates `U`,
-     batch `B` and real exposure `U·B·(1−f)` are three constraints on two free variables, and
-     holding the first two forces `f = 0`. My proposed fix — scale the batch as `512/(1−f)` — does
-     not even deliver what it claims, because under mean reduction the 512 real examples are
-     weighted `1/B_f`, so their aggregate gradient weight still falls by `(1−f)`. **Equal sightings
-     are not equal influence.**
-  2. **My stated confound was wrong in my own favour, and the correction does not rescue the
-     design.** I had written that scaling the batch 512→2048 would change the contrastive task by
-     4×. With 32,768 *sampled* negatives the candidate count rises only from 33,279 to 34,815,
-     about 4.6%. But the surviving confounds — a fourfold reduction in gradient noise, mean-loss
-     dilution of the real gradient, and a changing synthetic-to-real gradient mixture — are not
-     bounded by anything and are not the 0.0040 bar's business to absorb.
-  3. **The ICT pathology cannot be fixed cheaply.** An ICT pseudo-query is a literal substring of
-     its positive, which a *token lookup table* has every incentive to exploit. The standard repair
-     is to remove the sampled sentence from the positive — but the positive's teacher vector is
-     precomputed over the FULL document, so removing the text from the pair does not remove the
-     shortcut from the **target**. The real repair requires re-encoding one ablated context per
-     pair, which is the entire cost the design existed to avoid, and it introduces a train/deploy
-     mismatch because served document vectors are full documents.
-  4. **Estimand.** Adding synthetic pairs at fixed compute measures whether spending Phase-A budget
-     on ICT helps. It does not measure whether Phase A is *pair-starved*, which is B3's registered
-     question.
-  **What replaces it**, registered in `m8/registry.json` before any arm runs (the retired
-  lever is kept as row `B3-ICT`, refused, so the reasoning is not lost): nested random subsets
-  of the Phase-A **real** pair pool at {0.25, 0.50, 0.75, 1.00} — 340,850 pairs from
-  `train.kept_pairs()`, realising the 338,076 a run records as `n_train_pairs` once banned
-  positives are dropped. (The registration first cited 337,981, which is the *closed-form
-  table's fit list* and not a Phase-A quantity at all; corrected before any arm ran.), with updates, batch,
-  negatives, temperature, learning rate and the Phase-B checkpoint all held, so total draws are
-  1,280,000 in every arm and the only thing varying is unique-pair count. The verdict rests on
-  **one** pre-specified contrast — 1.00 vs 0.75, both endpoints, both seeds sign-agreeing, mean
-  gain ≥ 0.0040 — because a curve still rising where the pair pool ends *is* what pair-starvation
-  means. A 1.00-vs-0.25 manipulation check runs first, and a probe that fails it reports
-  **uninformative** rather than "not starved". This also retires the ICT registration's
-  Holm-over-three-arms, which was three chances to win.
-  **The endpoints are unchanged, so the frozen bar stands**: 0.0040 is still
-  `max(planning minimum, 2 × floor)` against the same measured floors, and `bar_frozen` is carried
-  across verbatim rather than re-derived.
-  **An implementation constraint is recorded with it, because it is a trap**: G3 forbids editing
-  `m7src`, and `Cfg` has no pair-fraction knob, so the fraction must be applied by an m8src-side
-  wrapper over `kept_pairs` — which means **the treatment will not appear in the run's `cfg` or
-  `meta.json`**. It must be encoded in the run id and written to a stamped sidecar. That is
-  CODEMAP 16's class exactly, and it is the reason the constraint is in the registry and not only
-  in someone's head.
-  *(Recorded as my call under §0's amendment rule — before the numbers, in writing, with the
-  reasoning — not as one of Dylan's rulings. It is flagged in STATUS because it changes what a
-  registered probe measures.)*
-
-- **2026-08-29 — ledger opened (v1).** Transcribed from `m8/PLAN-DRAFT.md` v5 at commit `f8b67f3`. **That draft was DELETED 2026-08-29**: this ledger had diverged from it by 17 dated amendments and the draft still carried stale bars, the pre-ruling C2 definition and superseded E-entries, so it had become a second source of truth that disagreed with the binding one. Git history has it, and the archived reviews under `research/m8-planning/` that cite it cite it as history.
-  No M8 number of any kind existed. No protected partition had been touched.
-- **2026-08-29 — v2, after two adversarial gates on v1.** Codex (BLOCK, 9/9/3) and Fable
-  (scientific judgment). All findings actioned; the map is §16. **No M8 evaluation number existed
-  at this entry**: the only artifacts produced were `results/m8_power.json` (a simulation
-  calibrated on M7's committed vectors), `results/m8_retention_decomposition.json` (a descriptive
-  re-read of M7's already-scored final run), `results/m8_schedule.json` (timings) and the
-  protected inventories. Every bar amended below was amended before the number it binds existed.
-  Substantive changes: the "harder direction" amendment loophole deleted; C2 redefined as
-  table-versus-table with D1 disabled; the ship predicate's four unset variables given measured
-  values (six-set margin **0.0075**, worst-group = the four datasets at **−0.010**, point guard
-  **> 0.005** strict, qualifying by config-key whitelist); the noise-floor formula registered
-  (true-seed nulls, max-of-pairwise, `bar = max(planning_min, 2×floor)`); the pipeline given ONE
-  legal order; the shadow GO rule made two-legged; B17's routing given an OOD corroboration
-  condition; B7 and B6-pre promoted to Wave 1; the ordered nested fallback registered; the ONNX
-  graph bound to the selected pooling operator; the guard hardened against four concrete bypasses.
-- **2026-08-29 — amendments from the second adversarial review, all before the numbers they bind.**
-  A Fable pass over LEDGER v2 and `m8src/` found four v1 fossils that had survived the rewrite
-  into the *executable* layer — the class that produces a wrong number rather than an error.
-  Actioned, in descending severity:
-  (a) **`decide.py` carried its own qualifying-key vocabulary** while `registry.json` carried a
-  different one, so a manifest written in either would have failed the other. The code now reads
-  the registry; there is no second copy.
-  (b) **`power.py` still had the planning draft's guard constants** (six-set margin 0.005, SE
-  0.006, three homogeneous worst-groups) after §5 had been given its measured ones. It overstated
-  the six-set guard's false-veto rate ~40x, and that guard dominates P(ship): the table in
-  `m8/STATUS.md` moved from 0.67/0.57/0.15/0.002/0.46 to **0.84/0.80/0.21/0.002/0.57**. The
-  simulator now reads the registry and simulates the four datasets with their own SEs.
-  (c) **The noise floor covered only int8 dense**, while B10's bar reads both precisions. It now
-  reports per **(precision, pool_mode, endpoint)** — the pool-mode dimension added because
-  `cfg.pool_mode` is None for these arms (they serve `mean`) while the M7 release serves `sqrt`,
-  and a floor under a rule the artifact is not served under is a floor for a different function.
-  **The FUSED floor and the B-leg floor remain unmeasured and are in the §4.4 gap list**; the
-  probes whose bars read them stay refused.
-  (d) **This ledger asserted tests that did not exist.** `test_decide.py` and `rule_audit.py` were
-  written; `test_final_guard.py` and `test_freeze_binding.py` remain open and are now listed as
-  open rather than described as done.
-  Also: `worst_group` now aborts on a missing dataset instead of shrinking, the six-set guard
-  aligns strictly, the point guard is strict `>`, B7's memory bar measures host RSS (a 10 GB card
-  cannot fail an 18 GB RAM bar), B7's real result goes through G1's commit gate, and S0's
-  duplicate rate no longer double-counts a document that is both an exact and a near hit.
-  **No M8 evaluation number existed for any rule changed here.**
-
-- **2026-08-29 — amendment: the full manifest key schema, before any manifest exists.** All 35
-  `train.Cfg` fields plus the artifact-level fields are classified in `registry.json` as
-  qualifying-table (27), qualifying-non-table (1), not-qualifying (23) or neutral (9), and the
-  **teacher-swap side effect** is registered: a swap flips `tokenizer_id`/`vocab`, which are
-  qualifying-table keys, so without a rule a swap alone would have satisfied condition 4 and the
-  registered swap branch of C2 would have been a release path with no lever in it. Those two keys
-  now do not count toward condition 4 whenever a teacher swap is in the diff.
-
-- **2026-08-29 — amendment: T1's ordering and frame, before any T1 number exists.** Discovered
-  while scaffolding the screen: M7's shared bag matrix works only because all ten registered
-  encoders ship a byte-identical `bert-wordpiece-30522` vocabulary, and **none of T1's four
-  challengers does**. So (a) T1 is blocked on B7 — at 50,368 rows the direct fp64 Gram is 20.3 GB
-  against an 18 GB budget, the same arithmetic that closed granite-r2 and gte-modernbert in M7 —
-  and (b) "fixed student frame" is fixed within a tokenizer family; a cross-family challenger is
-  screened in its own frame and the comparison is labelled teacher-plus-tokenizer. Registered in
-  §6 and §10. No T1 or B7 number exists at this entry.
-
-- **2026-08-29 — amendment: `spec_name` added to T1's registry rows, and the record that it
-  landed after screen numbers existed.** It maps each candidate's repo identity to the encoder
-  `Spec` that implements it. Pure bookkeeping — no threshold, endpoint, comparator or multiplicity
-  changed — but this project's rule is that registry changes are amendments, and it landed after
-  the granite and gte screens had run, so it is logged rather than left implicit. Without it a
-  screened candidate silently read as unscreened, which is a wrong verdict rather than an error.
-
-- **2026-08-29 — corrections from the results review (fourth adversarial pass).** A Fable review of
-  the night's RESULTS rather than its protocol. Two measurements were re-run and several claims
-  corrected; the fixes are in §17b, §18, §19, §21, §4.4, §4.7 and §4.7b. The two that changed
-  numbers: **B2's distractor bank** was a contiguous pool prefix where training draws a seeded
-  random sample (the pool is store-ordered, so the composition was wrong) — re-run, and the recipe
-  proved *more* degenerate than the flawed version said; and **B2's student side was never
-  measured**, so "carries no information" was an inference — now computed on the shipped artifact
-  (median KL 1.08e-07 nats). The most important correction was methodological: **leave-one-out had
-  been run only against the dataset that threatened the claim the session disliked**, not against
-  the one carrying 53% of the variance behind the claim it kept. Run for all six; the fragmentation
-  channel survives every exclusion at t >= 3.28.
-
-- **2026-08-29 — DISCLOSURE, and a registration edit REVERTED because the audit refused it.**
-  While actioning the results review I edited probe `NF`'s registered `endpoint` text to say it
-  covers both precisions and both pooling rules — which is what the probe actually measured. That
-  is a registration moving after its numbers exist, and `m8src/rule_audit.py` fired a **BLOCKER**
-  on it within a minute. **The edit is reverted**; the registered text stands as committed at
-  `c8cdb107`, and the discrepancy is disclosed here instead: the row says `int8`, and the probe
-  additionally emitted fp16 and both pool modes. The extra coverage is a strict SUPERSET, it moved
-  no bar (NF has no bar — it emits them), and B10's registered "both precisions" requirement is the
-  reason the wider read exists. Recorded rather than tidied away, because the alternative is a
-  session editing its own registrations to match what it happened to compute — which is the
-  failure the audit was written for, and it caught its author.
-
-- **2026-08-29 — INCIDENT, found by review before it cost anything.** `work/dev/cqadup-android.json`
-  and `work/dev/cqadup-english.json` held the **complete corpora and qrels** of two of the four
-  reserved confirmatory sets, materialized by `devsuite.load()` on 2026-08-26 when the
-  untouched-final pair was defined. Any M8 dev script calling `devsuite.load("cqadup-android")`
-  would have scored a reserved set silently. **Nothing scored them** — no M8 evaluation had run —
-  and they are now a protected kind under G2. The general lesson, and the reason the guard is an
-  allowlist rather than a path list: **a protected partition is defined by its CONTENT, not by
-  where one copy of it happens to live**; every route to that content must be enumerated, and
-  enumerating them is a review task, not an authoring task.
-
-- **2026-08-29 — the B-leg floor's "aliasing understates it" claim is WITHDRAWN; the crossed
-  design is registered anyway, for a different reason.** `results/m8_noise_floor_bleg.json` states
-  that because one seed drives both legs, the two effects "may partially cancel, which would make
-  this floor an UNDER-estimate" — and STATUS repeated it as the anti-conservative direction. **It
-  does not follow.** A diagonal cell is `B_s + A_s + e`; for independent leg effects its variance
-  is exactly `sigma_B^2 + sigma_A^2 + sigma_e^2`, which IS the chain variance the floor estimates.
-  Simulated at 200,000 replicates the aliased diagonal and an independent chain match to four
-  digits in SD (0.003202 vs 0.003202) and in E[range] (0.005425 vs 0.005416). Only a **negative**
-  correlation between the two legs at a shared seed would bias it downward, and no mechanism for
-  one was ever named. The diagonal is **unbiased but noisy**, not anti-conservative. This is the
-  standing directive #4 case again — check the algebra before believing a capability claim, in
-  either direction — and it is the second time in two days that a claim about this floor has had
-  to be withdrawn after arithmetic.
-  **The crossed 3×3 still runs, for the two things it does buy:** (1) it **decomposes** chain
-  variance into `sigma_B` and `sigma_A`, which finally tests the ledger's unmeasured assertion
-  that a B-leg-varying arm needs a larger floor than an A-leg one — if `sigma_B` is small, the
-  measured A-leg floor already covers R-PHASE and every pool-or-init lever and a §4.4 gap-list
-  entry closes; (2) nine cells with **4 residual df** instead of a K=3 sample range whose CV is
-  0.525. It also tests the negative-correlation escape hatch directly, since that is what the
-  residual (interaction) term measures.
-  **Design**: (B-checkpoint seed) × (A seed), both in {0,1,2}. Five cells already exist — row
-  `b=0` is the A-leg floor (`m8nf-seed0/1/2`, all inited from `p35b-2m`) and the diagonal is the
-  B-leg floor — so **four A legs**, not six, complete the grid. Read at int8/sqrt only, the
-  variants every frozen bar actually reads. Registered under **NF**, which adopts nothing and has
-  no bar; **the bar formula is unchanged** and this is reported as the error rate the standing
-  0.0040 convention actually carries for a B-leg-varying arm, which is a disclosure, not a rule.
-  **Disclosed limits**: the pool is still held fixed, so this bounds seed variability and not
-  pool-varying levers; the moment estimators clip negative variance components to zero and `sqrt`
-  is concave, both biasing the reported chain SD **down** — simulated at this exact design, truth
-  0.00320 → mean estimate 0.00295, about 8% low, so read it as a floor on the floor.
-
-- **2026-08-29 — `E10-REMEDY` REGISTERED, with one step the ruling's spec did not contain.**
-  The five-step remedy above is implemented as `m8src/freeze_lotte.py` writing
-  `results/m8_lotte_remedy.json`. Registering it as its own probe row rather than folding it into
-  `S0` keeps S0's artifact as the record of the screen that *failed*, which is the thing the
-  ruling was made against.
-  **The added step, and why it is not a loosening.** Dropping near-duplicate **documents** orphans
-  the qrels that point at them. Left alone, the shadow would contain queries whose positives no
-  longer exist in the corpus — unanswerable by construction — and its nDCG would be depressed by
-  an amount that has nothing to do with any candidate. So the remedy also drops (a) every qrels
-  entry whose positive was removed and (b) every query left with **zero** positives, and reports
-  both counts. This *shrinks* the shadow further; it cannot admit a contaminated item.
-  **The re-screen bar is stricter than S0's**: ZERO exact and ZERO near hits on documents **and**
-  queries, where S0 dropped a slice at a document near-duplicate rate above 0.5%. A slice that
-  still hits after remediation is dropped outright.
-  **Use limit, registered here so it binds:** the shadow is a **check, never a selection surface**.
-  It may not be used to choose between candidates, to rank arms, or to break a tie. The moment it
-  is optimised against it becomes a second dev set and stops doing the one job it has.
-  Written before any remediated slice exists, so no number this could affect has been observed.
-
-- **2026-08-29 — `E14-HEAD` AMENDED after an adversarial review of the design, before any arm ran.
-  Codex verdict: "the probe should not run as designed", three BLOCKERs. All three reproduced
-  here independently rather than taken on trust. This is the standing grant paying for itself
-  again: the probe is the milestone's main bet, and it would have measured the wrong thing.**
-
-  **BLOCKER 1 — the registration's central premise was FALSE, and this ledger already said so.**
-  The retired row read "a linear doc-side map is provably absorbable into the table, so a linear
-  head would measure nothing while looking like a result", and made nonlinearity a requirement on
-  that basis. But **§6's D1 entry, in this same file**, records the correction made in M7: the
-  absorbable dismissal was *half wrong*, because retrieval L2-normalizes documents, so the score
-  is `q·(Md)/|Md|` and the per-document factor `1/|Md|` cannot move into a shared query row.
-  `results/m7_absorb_check.json` measures rank agreement with the absorbed form at **1.000 without
-  renormalization and 0.000 with it**. A renormalized linear head is **genuine document-side
-  capacity**, and it is the cheaper (1.05M vs 4.2M parameters) and better-conditioned probe.
-  Consequences, all adopted: nonlinearity is no longer required; **LIN becomes the primary and MLP
-  the secondary**, with MLP serving as the control that says whether nonlinearity bought anything;
-  and an MLP win could otherwise have been attributed to nonlinearity when its effective linear
-  map plus renormalization was doing the work.
-  *The general lesson is uncomfortable and worth keeping: the false premise was written into a
-  registry row while its refutation sat in §6 of the document the row belongs to.* Cross-check a
-  registration against the ledger's own physics section before freezing it.
-
-  **BLOCKER 2 — zero-init does NOT make the arm identical to R0.** At `W = 0` the head emits
-  `normalize(d)`, not `d`, and R0 scores the **raw cached fp16 vectors** in both training and
-  evaluation. Measured over 100,000 sampled pool rows: only **0.36%** have float32 norm exactly 1,
-  max `|norm−1|` = **4.8e-05**, mean **9.1e-06**. Small, but it defeats every part of the
-  "R0 plus capacity, exactly identity at step 0" claim — and because renormalization shifts
-  Phase-A logits it shifts the training trajectory too, so rescoring R0 is not a repair.
-  **Adopted: a new comparator `R0N`**, the same patched path with the head frozen at identity,
-  three paired seeds. `R0N` against the existing `R0` is additionally reported as an **end-to-end
-  null on the whole patch stack**, which the design did not previously have.
-  *And the self-test I had already written and passed did not catch this, because it fed the head
-  pre-normalized random vectors — a test that assumed its own conclusion.* This is CODEMAP
-  pitfall 17's class exactly, one file later.
-
-  **BLOCKER 3 — the learning-rate ladder would have observed the endpoint before selecting.**
-  `train.run()` evaluates `cfg.eval_components` every `eval_every` steps **and once more
-  unconditionally at the end**, and R0's components include *both* DENSE endpoint components. A
-  ladder that merely promised to ignore dev would still have seen it several times per arm, and
-  `eval_every=0` does not help because the final evaluation is unconditional. **Adopted: the
-  ladder subprocess is dev-blind by construction** — `dev_eval.eval_table` is patched to raise —
-  and two related fixes: the ladder runs on a **disjoint tuning seed (3)** so selection is not
-  made on one of the three reported seeds, and the reported arms return to the **full pair pool**.
-
-  **MAJOR findings adopted.** (a) **A positive does not by itself identify bag reachability**: the
-  head is supervised document-side metric learning and can win by fixing the teacher's relevance
-  geometry or separating training sources — HotpotQA is ~85% of the document pool but ~24% of
-  positive pairs. A **mechanism control** is registered: score headed documents against the frozen
-  *teacher* query vectors as well as the bag, and read the bag gain minus the teacher-query gain.
-  Descriptive, does not gate the bar, and is what makes a positive mean E14 rather than "supervised
-  adaptation helps". (b) **Step adequacy is pre-registered and gates the null**: continue the
-  winning tuning-seed arm to 5,000 steps on the holdout only, plateau rule = the 2500→5000
-  improvement must be under 25% of the 1250→2500 improvement, else the primary reports
-  **OPTIMIZATION-INADEQUATE**, not a method null. (c) **Streamed evaluation is now a registered
-  engineering constraint**: materializing headed float32 vectors is ~21.4 GB for HotpotQA and
-  ~25.3 GB for the pool, over this box, so the head must be a lazy slice-transforming view driven
-  by the scorer's own chunking. (d) **Provenance binding**: a `run_id` does not stop a stale head
-  being paired with a table, so each head artifact binds the table, Phase-B checkpoint and head
-  state by sha256 along with the architecture, lr/seed/schedule, split hash and patch-source
-  hashes. (e) Both dense components are CQADupStack forums, so a gain licenses a
-  **CQADupStack-family** claim, not broad out-of-domain reachability.
-
-  **Confirmed sound and kept unchanged:** the false-negative mask stays in **raw teacher space**
-  (the reward-hacking channel is real and this closes it; the id-based own-positive and
-  all-positive masks are head-independent), cross-process scoring does not break seed pairing, and
-  no C2 redefinition occurs so long as D1 stays disabled for C2 as §5.4 requires.
-
-  **The bar is UNCHANGED at 0.0040** — the endpoints and their measured floors are untouched by
-  any of this. Multiplicity does change: two treatments now, intersection-union within a treatment
-  and **Holm across the two**, because "does ANY cheap doc-side head clear" is a union.
-
-  **No E14-HEAD arm had run when this was written.** Full review at
-  `research/m8-planning/e14-head-design-2026-08-29.md` (the brief) and
-  `research/m8-planning/codex-e14-head-review-2026-08-29.md` (the findings).
-
-- **2026-08-29 (later the same day) — `E14-HEAD` IMPLEMENTED, then CUT BACK after a second
-  adversarial review of the IMPLEMENTATION returned five BLOCKERs. Every decision below was made
-  before any reported arm ran, and three of them retire machinery this probe did not need.**
-  Codex verdict: "the remaining campaign should pause". All five reproduced here independently.
-
-  **What was wrong.** (1) The MLP head's `fc1` weight and bias are RANDOM and were built before
-  `train.run` reaches `torch.manual_seed`, so the three MLP arms differed in initialization as
-  well as in treatment, were not reproducible from their recorded seeds, and were not seed-paired.
-  Verified: two `mlp` builds differ, two `lin` builds are identical — which is why a smoke that
-  ran only `lin` could never have caught it. (2) The step-adequacy arm was not a continuation:
-  at step 2,500 a 2,500-step arm sits at lr factor **0.1000** and a 5,000-step arm at **0.5208**,
-  so its 2,500 point was a different optimizer state and both plateau windows were confounded by
-  position on the anneal. (3) The holdout statistic was contaminated and mismatched: ~32% of its
-  negatives lay in the training bank by arithmetic (1,997,601 of 6,169,142 pool rows, each sampled
-  ~41 times), it pooled `mean` against a `sqrt` endpoint, read the live fp32 table against a
-  folded-int8 endpoint, and disabled three masks on a justification that was **wrong** — the id
-  masks are index comparisons and the false-negative mask is computed in raw teacher space, so all
-  three are arm-INDEPENDENT and omitting them rewarded demoting a query's own siblings.
-  (4) `--arms` bypassed the reported-arm allowlist, so a tuning arm could still be endpoint-scored
-  deliberately even after the default discovery was fixed. (5) Provenance was recorded but not
-  enforced, and `collect()`'s treatment-count check was `if have:` — **vacuous when empty**, which
-  is CODEMAP pitfall 17 in the check whose only job is to notice a missing arm, written in the same
-  session that added pitfall 22 about that class.
-
-  **THE LEARNING RATE IS NOW PRE-REGISTERED AT 1e-3 AND THE LADDER SELECTS NOTHING.** Two of the
-  five BLOCKERs were in ladder machinery, and the `lin` ladder had already come back FLAT across a
-  10x range (**-0.2434 / -0.2404 / -0.2430**). A dev-blind selection apparatus, a bespoke holdout
-  statistic and a plateau continuation were deciding something that does not appear to matter, and
-  every part of it was a way to be wrong. 1e-3 is the registered grid's midpoint and the standard
-  rate for a small zero-init adapter head; it is independently where that flat curve peaked. The
-  ladder arms survive as a **descriptive sensitivity band**, run only if the primary reports a
-  null, where a flat band is what makes that null a statement about the lever rather than about
-  the learning rate. This *narrows* the experiment's degrees of freedom rather than widening them:
-  nothing is now chosen after seeing a number.
-
-  **Step-adequacy is restated**, since frozen `m7src` checkpoints no optimizer moments and a true
-  continuation is not available: train the same configuration at 2,500 and 5,000 steps, each
-  properly annealed under its own schedule, and require
-  `holdout(5000,final) - holdout(2500,final) < 0.25 x [holdout(2500,final) - holdout(2500,1250)]`.
-  The 25% relation and the direction of the gate are unchanged; each arm is now internally
-  coherent instead of read mid-anneal. It can only turn a null into UNINFORMATIVE and can never
-  overturn a treatment that reached the bar.
-
-  **The holdout statistic is repaired and demoted to descriptive.** Its negatives are an 8,192-row
-  reserve added to `train.banned_rows`, which `train.run` removes from the negative bank and
-  `build_arrays` removes from the training positives — so it is disjoint from everything the head
-  trains on **by construction**, not by measurement, and its id-set hash is bound into each arm.
-  Pooling is `sqrt`; all three masks are restored at the arm's own `fn_margin`. The fp32-vs-int8
-  mismatch is **declared, not repaired**: folding mid-training would run the release path on an
-  unfinished artifact every eval, so this is an explicit fp32 proxy, and one more reason the
-  statistic no longer decides anything.
-
-  **Also adopted:** the head's initialization is seeded (`lin` verified seed-invariant, `mlp`
-  verified reproducible within a seed and distinct across seeds); `assert_fired` now fails if a
-  trainable head is bit-identical to its init or a frozen head moved at all; `--arms` is validated
-  against the enumerated reported set; `collect()` requires all nine arms by name; the
-  R0N-vs-R0 null reads R0's own canonical artifacts, which the first version could never have
-  found inside the E14 dump; a positive with an incomplete mechanism control is reported as
-  uninterpretable rather than as a positive; Holm takes `max(p_dense, p_fused)` per treatment, the
-  intersection-union rule the row states; and `git HEAD` plus a dirty-tree flag are stamped into
-  every arm (CODEMAP pitfall 16 — nothing else records code vintage).
-
-  **The six ladder arms trained before this entry are VOID and were deleted**: the three `mlp` ones
-  for the seeding defect, the three `lin` ones because the statistic they were measured on has been
-  replaced. No endpoint number existed for any of them — every ladder arm is dev-blind by
-  construction — so nothing observed is being un-observed here.
-
-  **OWNER RULING, Dylan 2026-08-29: re-encoding is acceptable.** "We are not expecting people to
-  have an existing Stella collection." This removes the re-index objection from the head's cost and
-  from `E14-LORA`'s bill, so neither may be argued down on that ground. Our own compute cost for a
-  re-encode is unchanged, and stella's derived-weights licence question is untouched and still open.
-  Recorded because the verdict's framing depends on it: the query side stays a pure lookup table
-  either way — the head is applied to DOCUMENTS at index time — and what E14 was putting at risk
-  was only drop-in compatibility with an existing index.
-
-  **No reported arm had run when this was written.** Review at
-  `research/m8-planning/codex-e14-impl-review-2026-08-29.md`.
-
-- **2026-08-29 — `E14-HEAD` REPORTED. NO SURVIVOR: both heads HARM, and the mechanism control says
-  the hypothesis was right while the instrument was wrong.** Dense −0.0244 (LIN) and −0.0293 (MLP)
-  against a +0.0040 bar, all six arms agreeing in sign; fused −0.0024 and −0.0042. Full table in
-  `m8/RESULTS.md`; artifact `results/m8_e14_head.json`.
-
-  **The patch stack measured as a null**, which is what licenses reading any of it: `R0N` vs `R0`
-  is −0.00001 dense (σ_A 0.00106) and −0.000015 fused. Four rebindings and a lazy proxy over 1.92M
-  document rows per arm introduce no endpoint artifact.
-
-  **The mechanism control is the most useful number here — stated as CORRECTED after review
-  (2026-08-29); the first version of this entry over-read it.** What the data establish: across all
-  seeds and both components the head reduced bag-query nDCG LESS than teacher-query nDCG (LIN
-  +0.0091, MLP +0.0075; all twelve values positive). That is descriptive evidence consistent with
-  **relative** alignment toward the co-trained bag representation. It does **not** show an absolute
-  bag benefit — both absolute bag gains are negative — it does not identify bag reachability, and
-  it does not demonstrate information destruction. **The earlier claims that the head "genuinely
-  makes documents more reachable by a bag" and "buys bag-reachability only by destroying
-  information" are WITHDRAWN**: a poorer match to the teacher's query geometry is not evidence of
-  information loss, and the linear residual map may well remain full-rank. At n=3 the smallest
-  exact one-sided sign-test p per treatment is 0.125, and the four cells are not independent.
-
-  **Bearing on the pair and on `E14-LORA`:** teacher-style queries lose MORE than bag queries
-  (−0.031 vs −0.022), so a document transform co-trained with a bag taxes a transformer query path
-  harder than it taxes the bag. That is the first MEASUREMENT on whether a shared document side is
-  free for the M9 pair. It is not free. Moot for this head; a direct input to `E14-LORA`'s bar.
-
-  **A REGISTRATION GAP, recorded and NOT applied retroactively.** `B3`'s decision code has a
-  `NEGATIVE-DOSE` branch for "measurably worse, reported as a finding rather than folded into
-  FAIL". `E14-HEAD`'s row has no negative branch, so a −0.024 is labelled with language written for
-  a null, and `lin`'s adequacy flag labels it OPTIMIZATION-INADEQUATE — "not trained long enough".
-  **CORRECTED after review: the claim that "the evidence disqualifies that reading" is WITHDRAWN.**
-  LIN is a strong negative for the registered 2,500-step configuration but remains
-  OPTIMIZATION-INADEQUATE for the method-level question. MLP met the heuristic and was also harmful,
-  which makes a generic undertraining story less plausible — but MLP is a different architecture,
-  its adequacy came from separate holdout-reduced arms, and 0.350 vs 0.220 across a 0.25 line is
-  one unreplicated arm per budget, not a resolved difference. Also withdrawn: the endpoint did not
-  move "away" monotonically — the in-training contrasts were −0.0210/−0.0268/−0.0264 (LIN), early
-  persistent harm rather than divergence. The registered labels stand as the rule produced them;
-  contrary evidence sits beside them. **Every future probe row must carry a negative branch** — a
-  harm reported as "inconclusive" invites exactly the wrong follow-up spend. (`D2`'s row carries
-  one and bounds its adequacy continuation to a single doubled-step set.)
-
-- **[SUPERSEDED THE SAME DAY by Dylan's ruling — see the entry below. Kept because the risk it names is still the reason the ruling is right.]** **2026-08-29 — OPEN ITEM WITH A TRIGGER: does a fine-tuned encoder propagate to M9?** Raised by
-  Dylan while `E14-HEAD` was training. `instructions-m9.md` says M9's teacher is "the frozen teacher
-  the shipping table line uses ... M8 inherits it unless its own ledger records a swap, in which
-  case M9 follows M8", and that "docs are indexed with the teacher; the student is distilled into
-  its query space". That rule was written about a **swap** — a different off-the-shelf model, as T1
-  tested — so whether a LoRA-modified stella counts is ambiguous **by the letter and unambiguous by
-  the mechanism**: M9's student is distilled to imitate the teacher's QUERY space and searches an
-  index built by the teacher, so a student distilled against stock stella would be searching a space
-  it was not trained for. If `E14-LORA` ships, M9 must follow it.
-  **Why that is the desirable outcome:** one document index with two query paths at different
-  compute budgets — the near-zero-compute table, and M9's small distilled tower — which only works
-  if both target the same document space. Two towers means two indexes and defeats the point.
-  **THE RISK, WHICH IS REAL AND MUST NOT BE LEFT IMPLICIT:** `E14-LORA` would fine-tune the encoder
-  to be reachable by a BAG of averaged token vectors. M9's student is a genuine transformer.
-  Re-shaping the document space toward a degenerate query geometry could tax the stronger query
-  path — M9 would inherit an encoder optimised for the system it is meant to beat.
-  **`E14-HEAD`'s mechanism control already bears on this**, having been registered for a different
-  reason: its `{teacher queries} x {raw, headed}` leg asks whether a real neural query encoder still
-  works against re-shaped documents, and M9's student is distilled to imitate exactly those teacher
-  queries. A NEGATIVE teacher-query leg is early warning that this direction taxes M9, at no extra
-  cost. **Read that leg with M9 in mind, not only E14.**
-  **TRIGGER:** settle whether a fine-tuned stella counts as "a swap" for M9's inheritance rule
-  **before M9 starts** and before any `E14-LORA` release decision — not afterwards. Note the
-  question may be moot: `E14-LORA` is registered-and-refused pending a fresh ruling, and the
-  derived-weights licence question on stella is unresolved; if that goes against us there is no
-  modified encoder to inherit and M9 uses stock stella regardless.
-
-- **2026-08-29 — RULED by Dylan, closing the item above: "M9 should go with whatever performs
-  best, not as a strict continuation of M8." M9 is NOT bound to inherit M8's document tower.**
-  The risk the previous entry raised — that a LoRA trained to make documents reachable by a BAG
-  would tax M9's transformer student — is not managed, it is removed: M9 selects its document
-  tower on M9's own measurement, so it can decline an encoder that is worse for it.
-
-  **Made executable, because "performs best" is a word until it is a value.**
-  1. **M9 runs its own document-tower screen, on M9's own artifact** — a distilled student tower,
-     not a table. **T1's NO SWAP does not transfer**, and the reason matters: T1 measured that a
-     teacher's retrieval quality does not predict its distilled TABLE (Spearman 0.000 over eight
-     candidates). That is a fact about tables. LEAF reports 97.1–98.6% retention for a distilled
-     TOWER, so the relationship M8 found absent is expected to be present for M9. Inheriting T1's
-     verdict would repeat, in reverse, the error M7 made selecting a teacher on the tower instead
-     of the table (§15, the withdrawn arctic-embed-l entry).
-  2. **The candidate set** is stock stella (the incumbent, re-probed in the identical frame and the
-     registered default), plus whatever document side the table line ships if E14 survives, plus
-     off-the-shelf challengers under the unchanged licence and vendor rules and the table-size
-     arithmetic where it applies.
-  3. **Selection is on dev, pre-registered, before the frozen comparators are touched.** The bars
-     already frozen in `results/perquery.json` (leaf-ir-asym 0.5155, mdbr-leaf-ir 0.5123,
-     arctic-embed-m-v1.5 0.5264, bge-small-en-v1.5 0.5042) are unaffected: they carry their own
-     document towers, so our choice does not move them.
-
-  **THE COST THIS RULING ACCEPTS, stated so nobody rediscovers it later:** if M9's pick differs
-  from the table line's, the product ships **two document indexes**, not one index serving two
-  query paths at different compute budgets. That unified-index story was the upside of strict
-  inheritance and it is what is being traded away. Flagged once here; the ruling stands.
-
-  **Nothing in M8 changes.** `E14-HEAD` is unaffected — it was never justified by M9 — and its
-  mechanism control keeps its original job: separating "documents became reachable by a bag" from
-  "supervised document-side adaptation helps". Its teacher-query leg is now evidence about the
-  head, not an early warning for a milestone that no longer depends on it.
-
-- **2026-08-29 — REFINED minutes later by Dylan: PREFER THE PAIR. "It would be great if we released
-  that as a pair with the same model document side. It would make for great content and would be
-  easier to train here as a continuation."** So the shared document tower is the **preferred
-  outcome and the registered default**, and M9 breaks the pair **only on CI-resolved evidence**
-  (raw 95% CI excluding 0 AND `signflip_dep` p < 0.05 — §10's definition, not a new one). An
-  unresolved difference is not a reason to diverge. This does not contradict "whatever performs
-  best": a tie goes to the pair, only a measured loss breaks it, and the previous entry's cost
-  disclosure — two document indexes — is now the thing being actively avoided rather than accepted.
-
-  **The "easier as a continuation" assumption is CORRECT, and worth stating precisely because it is
-  only true of the head.** M9's student is distilled into the teacher's QUERY space, and a
-  document-side head does not touch that space — so the **same student and the same distillation
-  run serve both lines**; only the document index differs. With an E14 head that index is a matmul
-  over already-cached document vectors, which is the entire reason the head was the cheap test.
-  With an E14 LoRA the encoder itself changed and the pool needs a full re-encode: hours, once, and
-  no longer free. The student is not retrained in either case.
-
-  **WHETHER THE PAIR IS FREE IS ALREADY BEING MEASURED, and this raises the stakes on a cell that
-  was registered for another reason.** If documents carry the head while the student imitates the
-  teacher's ORIGINAL query vectors, the deciding quantity is teacher-style queries against HEADED
-  documents — precisely the `{teacher} x {headed}` cell of `E14-HEAD`'s mechanism control, running
-  now. Read it as: does a neural query encoder still find documents that were re-shaped for a bag?
-  A loss there means the pair costs M9 quality and we know it **before M9 starts** rather than
-  after. No extra work; the arms are in flight.
-
-  **The content argument is a real product argument, not a separate one.** "One document index, two
-  query encoders, pick your compute budget" is the shape the pair ships in, and it is only
-  coherent while both lines target the same document space.
-
-
-
----
+*Newest first. An amendment is legal only before any raw number it would affect exists. Entries are
+SHORT by rule (§14 G10): what changed, why, and the pointer. Long-form lives in the registry row,
+the result JSON, or `research/m8-planning/`.*
+
+**RULINGS BY DYLAN**
+
+- **E14-LORA REOPENED + stella licence CLOSED (2026-08-29).** *"We wouldn't say keep your normal
+  document encoder. Since most people are not currently using stella. I'm not against LoRA on the
+  document tower"* + *"stella is good for derived weights, no license blocker."* The refusal rested
+  on "it costs us the keep-your-own-encoder story" — **that story never existed**: adopting this
+  system already means adopting stella, so the user re-indexes either way and co-adaptation has
+  **zero marginal product cost**. Any argument leaning on "frozen off-the-shelf document tower" as a
+  *user-facing* virtue is void; the premise survives only where defended on evidence or protocol.
+  **Reframe:** LightRetriever **trains its document encoder** (`research/lightretriever.md:19,23,382`),
+  so `LR-dense-pertask 0.4583` — M7's missed bar — was set with a co-adapted document side while
+  M7/M8 fit a table to a frozen tower. Best available explanation for the flat table-side levers;
+  unmeasured. `E14-HEAD` does not settle it (head on a *finished* vector; scope limit registered
+  before any arm ran). **Still needs a ruling before it can SHIP, not before it is measured:** E11/§5.4
+  say a document-side win is not a qualifying v2 *table*, and C2 falls to its `teacher_swapped`
+  branch — **does M8 ship a better SYSTEM or must it ship a better TABLE?** Staging binding: dev-scale
+  on the two OOD components against their own re-encoded corpora; only a clearing result buys the
+  10.12M pre-encode. Row: `E14-LORA`.
+- **D-FINEWEB defaults to EXCLUSION (2026-08-29).** *"The Qdrant dataset should really prove its
+  value. The webcrawl data could be okay to use, but it's better if we don't."* Measurable, but
+  web-crawl enters training only on a **clearly-resolved** gain; being Qdrant's own dataset earns no
+  discount. Still pool-varying, so its bar remains uncomputable. Consequence: the HUPD/patent trigger
+  most likely never fires.
+- **Reserved sets are fine (2026-08-29)** — *"the sets are fine, continue with the codex review."*
+  Closes the incident below; no quarantine.
+- **M9 picks its own document tower on measurement (2026-08-29)**, defaulting to a re-probed stella;
+  T1's NO SWAP does not transfer, being a fact about distilled TABLES not towers. **Refined minutes
+  later: PREFER THE PAIR** — a shared document side is the default, broken only on CI-resolved loss.
+- **E14: measure it small first (2026-08-29).** Dev-scale only; the doubled pre-encode and any C2
+  redefinition were NOT authorised. Partly superseded by the E14-LORA reopening above.
+- **E10: seven clean-community LoTTE slices, per-question remedy (2026-08-29).** CQADupStack
+  subforums rejected **not on contamination — they passed — but on correlation with the exam**: two
+  of the reserved four ARE CQADupStack. The shadow is a check, never a selection surface.
+- **harrier CLOSED (2026-08-29)** on undisclosed training data: no design repairs not knowing what a
+  teacher has read. stella stands. The vendor rule was never the obstacle.
+- **E12: LightRetriever-dense is published numbers only, labelled (2026-08-29).** No LR encode is
+  bought; the report may never state or imply a head-to-head on our data.
+- **Patents (2026-08-29):** *"patents do not have to stay available as a clean held-out for M9"* →
+  HUPD deferred to M9, trigger = settle before web-crawl data enters training (now likely moot).
+
+**PROTOCOL AMENDMENTS**
+
+- **MILESTONE AUDIT AND RE-ROUTE (2026-08-29).** All nine probes returned nulls, negatives or
+  instrument reads, while `D2` — the only lever with a mechanism pointing up — had no registry row
+  and no place on the worklist. Registered `D2`; deferred the recipe/data class; wrote the
+  pre-committed exit. **ADOPTED: the chain floor.** §23 measured σ_chain 0.00153 and computed
+  **0.00519**, recorded NOT ADOPTED pending its own amendment before any affected arm ran. This is
+  it; no such arm has run. **A B-leg-varying arm now reads 0.00519**, not 0.0040; A-leg-only bars
+  (`B3`, `E14-HEAD`) are untouched. **Corrections made here:** §5's key list read as exhaustive and
+  is a partial render of the registry's 27 — which also **withdraws the audit's own first claim**
+  that the recipe class could not satisfy condition 4 (it can; it just cannot carry the bar, §7).
+  The `E10` amendment was living outside §15 (moved). The LEDGER carried two `E14-HEAD` claims that
+  `RESULTS.md` had already recorded as withdrawn.
+- **`D2` AMENDED after adversarial review, before any arm ran; `D2-PRE` REGISTERED; §13 REOPENED
+  (2026-08-29).** Three BLOCKERs, two against the audit's own decisions hours earlier.
+  (1) **The "compositional init floor" was not a floor.** It specified the **mean** of constituent
+  rows; the served query is `normalize(Σ_types g(count)·w_t)`, so the **sum** leaves the summand
+  identical and the query exactly unchanged, while the mean silently downweights the phrase ~2×.
+  Re-derived independently. Rows are now a residual on the sum init.
+  (2) **The coverage gate permitted "expand the pool and re-measure"**, which invalidates the
+  existing R0 chains as controls and makes the arm pool-varying — 0.00519 would not be calibrated.
+  Removed; gate rebuilt on dev token occurrence mass plus a performance condition.
+  (3) **The exit fired too early.** `B2` did NOT close the KL class — its `teacher_top200` arm is
+  0.777 nats and B2's own artifact names `R-LIST`; and §15 forbids `E14-HEAD` closing `E14-LORA`.
+  Exit now gated on `D2`, `B10`, `B8`, `R-LIST` all missing plus a re-run of the standing directive.
+  **§13's "n-gram rows superseded by D2, no auto-revival" is WITHDRAWN on algebra** — D2 removes
+  constituent activations while additive overlapping rows keep them, and an additive row with zero
+  residual recovers R0 exactly. Classes compared at equal row budget in `D2-PRE`.
+  Also: §17b downgraded to **correlated headroom, not a bound in either direction**;
+  `NF-CROSSED-FUSED` made mandatory with its undefined "plausibly clear" escape removed; tokenizer
+  training pinned deterministic. **Kept against the review:** 0.00519 stands (lowering a registered
+  bar on an argument available beforehand is what the protocol forbids), and retokenization is not
+  pool-varying (the review agreed). **Recorded, unfixed:** G8's dev-reuse counter is absent from
+  HEAD. Review: `research/m8-planning/codex-d2-reroute-review-2026-08-29.md`.
+- **`E10` REOPENED (2026-08-29). The remedy artifact is NOT decontaminated; its zero re-screen was
+  tautological. `results/m8_lotte_remedy.json` may not be pinned, served or grandfathered.**
+  (a) The screen compared **roles, not protected content** — LoTTE queries were never compared to
+  protected *documents*; two verbatim survivors confirmed, and 36 retained queries share an 8-word
+  run with protected documents. (b) The re-screen **cannot fail**: remediation builds the exact
+  complement of its own hits and re-reads in-memory survivors, not the serialized files. (c) The
+  100× query/document asymmetry measures the **detector**, not the corpus (documents need 8 shared
+  bottom-32 entries, so a document under 15 words can never hit). (d) The exact 14,034 match is
+  **circular**, not validation. Needs: union screen across roles and families, an INDEPENDENT
+  acceptance detector, a canary proving acceptance can fail, length-adaptive matching, and a
+  measured correlation with the exam. Review: `research/m8-planning/codex-e10-remedy-review-2026-08-29.md`.
+- **`E14-HEAD` AMENDED after a design review, then CUT BACK after an implementation review
+  (2026-08-29, both before any arm ran).** The registration required a nonlinear head on a premise
+  this ledger had already refuted: a **renormalized** linear map is NOT absorbable (the per-document
+  `1/|Md|` cannot move into a shared row; §6 D1 recorded rank agreement 1.000 without renormalization
+  and 0.000 with it). So **LIN became primary, MLP its nonlinearity control**. Zero-init gives
+  `normalize(d)` not `d` → new comparator **`R0N`**. The lr ladder would have observed the endpoint
+  before selecting → made dev-blind on a disjoint tuning seed. Second review returned 5 BLOCKERs,
+  two in machinery the probe did not need.
+- **Registration hygiene (2026-08-29).** Full manifest key schema fixed before any manifest existed
+  (35 `train.Cfg` fields + artifact-level; unknown key ⇒ condition 4 FAILS). T1's ordering, frame and
+  `spec_name` fixed before any T1 number. Ledger opened v1 from `PLAN-DRAFT.md` (since **DELETED** —
+  it had become a second source of truth disagreeing with this one after 17 amendments); v2 after
+  Codex (BLOCK 9/9/3) and Fable gates; further amendments from a second Fable pass and a fourth
+  results-review pass, all before the numbers they bind.
+
+**RESULTS THAT CHANGED THE PROTOCOL**
+
+- **`E14-HEAD` REPORTED — NO SURVIVOR (2026-08-29).** Dense −0.0244 (LIN) / −0.0293 (MLP) vs a
+  +0.0040 bar, all six arms agreeing in sign; fused −0.0024 / −0.0042. **The patch stack measured as
+  a null** (`R0N` vs `R0`: −0.00001 dense), which is what licenses reading the rest.
+  **CORRECTED after review — two claims WITHDRAWN.** (1) The mechanism control shows only that the
+  head reduced bag-query nDCG LESS than teacher-query nDCG (LIN +0.0091, MLP +0.0075, all twelve
+  values positive) — descriptive evidence of **relative** alignment. It does **not** show an absolute
+  bag benefit (both absolute gains are negative); "genuinely makes documents more reachable by a bag"
+  and "buys bag-reachability only by destroying information" are withdrawn. At n=3 the smallest
+  one-sided sign-test p is 0.125 and the cells are not independent. (2) "The evidence disqualifies
+  the OPTIMIZATION-INADEQUATE reading" is withdrawn: LIN is a strong negative for the registered
+  2,500-step config but remains inadequate for the method-level question; MLP is a different
+  architecture and 0.350 vs 0.220 is one unreplicated arm per budget. The endpoint also did not move
+  "away" monotonically — early persistent harm, not divergence. **Registered labels stand as the rule
+  produced them; contrary evidence sits beside them.** **Every future probe row must carry a negative
+  branch.** Bearing on M9: teacher-style queries lose MORE than bag queries (−0.031 vs −0.022), so a
+  shared document side is not free for the pair. `results/m8_e14_head.json`.
+- **`B3` RAN — UNINFORMATIVE, the useful kind (2026-08-29).** A 4× dose moves dense +0.00135 / fused
+  +0.00369 vs 0.0040; slope +0.00097 per doubling ⇒ ~17.6× the pool (~5.9M pairs). Phase A is not
+  meaningfully pair-starved. B3's lever had been replaced (ICT → real-pair pool scaling) before any
+  B3 number existed; the retired 1.00-vs-0.75 primary came out NEGATIVE on dense.
+  `results/m8_b3_decision.json`.
+- **The B-leg floor, and a WITHDRAWN claim (2026-08-29).** The B-leg artifact's "aliasing understates
+  the floor" claim is **withdrawn**: at K=3 the floor statistic is the sample range (CV 0.525), so
+  `P(R_B ≤ R_A)` is a coin flip and "the B leg adds nothing" had no content. The crossed B×A design
+  was registered anyway for a different reason and measured (§23).
+
+**INCIDENTS**
+
+- **An external reviewer read two RESERVED sets in full (2026-08-29).** A repo-wide grep dumped
+  `untouched-cqadup-english` (164,742 B) and `untouched-dbpedia-entity` (67,801 B) — queries AND
+  qrels — into a Codex review's context. **`paths_guard`/G2 is an in-process bulkhead and is
+  structurally incapable of constraining a separate process**, so the routine-review grant reopens
+  this hole every time. Nothing was scored; no model or decision read them. **Dylan ruled the sets
+  fine**; quarantine lifted. **Fix kept regardless:** briefs carry a read-exclusion for
+  `results/frozen_eval/untouched-*`, the reserved qrels caches and `work/m9reserve`; briefs name
+  files rather than inviting repo-wide searches; review logs are audited before findings are read.
+  In CLAUDE.md so it binds outside M8.
+- **Reserved corpora materialized on disk, found by review (2026-08-29).** `work/dev/cqadup-{android,
+  english}.json` held the complete corpora AND qrels of two reserved sets. **Nothing scored them.**
+  Now a protected kind under G2.
+- **A registration edit REVERTED because the audit refused it (2026-08-29).** Disclosed rather than
+  quietly kept.
 
 ## 16. Gate findings → where each is discharged
 
@@ -2272,423 +1354,92 @@ statement. Items 5 and 8 → §17 and §8's D2 coverage spec.
 
 ---
 
-## 17. Measured: what the query-side loss is actually made of
-
-`results/m8_retention_decomposition.json` and `results/m8_fragmentation_attribution.json`, run
-2026-08-29 on M7's already-scored final run and the six's frozen query texts. **Zero new access.**
-Descriptive; adopts nothing (§4.6). It exists because H3 — "short-query loss, partly recoverable
-in-class" — rested on a between-dataset reading of six points, and this project has been wrong
-that way before.
-
-**Both claims below were REWRITTEN on 2026-08-29 after an adversarial review showed the first
-version overclaimed.** What the review changed is recorded in place rather than quietly fixed,
-because the first version had already been used to promote a probe.
-
-### 17a. The short-query premise is unsupported — but the affirmative claim is ArguAna's alone
-
-- **Withdrawn:** "within datasets the table loses an extra 0.00021 nDCG per query word beyond the
-  teacher's own difficulty gradient (t = 3.0), so longer queries are relatively worse." **ArguAna
-  carries 99.7% of the within-dataset length variance** (its queries average 174 words against
-  2–12 for the other five), so the pooled slope IS the ArguAna slope — the one-dataset dependence
-  the diagnostic was built to escape — and ArguAna is one of the teacher's two **disclosed
-  training sets**. Excluding it: slope +0.0018, **t = 1.51, not resolved**.
-- **What survives, and it is enough:** the per-dataset length slopes **flip sign**
-  (FiQA +0.0084 t = +3.6; nfcorpus −0.0074 t = −1.8; trec-covid +0.0126 t = +1.2; scifact,
-  scidocs unresolved). **There is no single length effect to recover**, and ArguAna's own
-  retention *declines* across its length quartiles (0.971 → 0.941 → 0.907 → 0.893). H3's
-  "best on the longest, worst on the shortest" premise is a between-dataset artifact; the
-  milestone may not build on it.
-- **Also withdrawn:** "length and fragmentation are uncorrelated (r = 0.006)". That pooled r was
-  ArguAna-dominated too. Per dataset, r(words, frag) is **negative in four of six**
-  (−0.26, −0.35, −0.24, −0.14) — longer queries are *less* fragmented per word, which is what
-  averaging over more words does. The two channels are distinct, but not because they are
-  uncorrelated.
-
-### 17b. Fragmentation IS the channel, and it survives the same attack
-
-- Pooled within-dataset, the table falls **0.050 nDCG further behind the teacher per +1.0
-  subwords-per-word** (t = 4.61).
-- **It survives EVERY single-dataset exclusion**, which the first version did not check. That
-  version ran leave-one-out against ArguAna only — the dataset that threatened the *length* claim —
-  and not against nfcorpus, which carries **53%** of the fragmentation identification variance and
-  is the dataset this claim leans on. Using the tool against the claim you dislike and not the one
-  you keep is how a milestone gets routed on an unexamined number; caught by adversarial review
-  and now computed for all six:
-
-  | excluded | slope | t |
-  |---|---|---|
-  | scifact (**worst case**) | +0.0369 | **+3.28** |
-  | nfcorpus (53% of the variance) | +0.0566 | +3.50 |
-  | scidocs | +0.0590 | +4.32 |
-  | trec-covid | +0.0502 | +4.62 |
-  | arguana | +0.0454 | +4.71 |
-  | fiqa | +0.0562 | +5.01 |
-
-  **Every exclusion leaves the slope positive with t ≥ 3.28.** Contrast the length claim, where
-  removing ArguAna alone collapses t from 3.01 to 1.51. The two claims respond to the same test in
-  opposite ways, which is the whole reason to run it on both.
-- Mechanism, and its honest direction: the *teacher* does **better** on more-fragmented queries
-  (+0.038, t = 2.72) while the table is flat (−0.012, t = −0.85). The gap widens because the
-  teacher pulls away — which is what a fixed per-token vector cannot follow.
-- **The weaker instrument, reported as weaker.** A binary present/absent contrast (does the query
-  contain a word WordPiece splits into ≥ 3 pieces?) gives **4 of 5 informative datasets positive,
-  one-sided p = 0.19 — not resolved**; individually resolved only in nfcorpus (+0.067, z = 3.21)
-  and scifact (+0.103, z = 2.58). ArguAna is excluded as having **no contrast to measure** (97% of
-  its queries are in the with-arm). *The first version of this section reported "6/6 sign
-  consistency, p = 0.016" — it counted ArguAna's coin flip in the tally while the same paragraph
-  called it uninformative, and it tokenized words with punctuation attached, which inflated the
-  with-arm; correcting the punctuation flipped trec-covid's contrast from +0.062 to −0.007.*
-  **The continuous slope is the instrument to quote; the binary contrast is not.**
-- **No published match** (`research/m8-planning/literature-2026-08-29.md`). Tokenizer "fertility"
-  (subwords per word) is an established metric (Rust et al., ACL 2021) and one paper links it to
-  retrieval MRR (Amharic passage retrieval, arXiv 2505.19356: fertility 13.80 → MRR 0.019 against
-  fertility 1.46 → MRR 0.775) — but that is a cross-lingual tokenizer *mismatch* which degrades
-  the contextual model too. **The specific asymmetry measured here — the TEACHER improving with
-  fragmentation while the table stays flat — has no match in the sweep**, and it runs against the
-  fertility literature's naive "fragmentation is universally bad" reading. Treat it as a genuine
-  finding of this project, and report it as one.
-- **The words**, ranked by excess against *their own dataset's* without-arm mean (an earlier
-  ranking used a cross-dataset baseline, so a hard dataset inflated every word in it): a mix of
-  hyphenated compounds (`cyber-attacks`, `pre-1967`, `non-proliferation`), domain terms
-  (`phosphorylation`, `myocardial`, `stochastic`, `bitcoin`), named entities (`wikileaks`,
-  `hyperloop`, `guardian.co.uk`) **and ordinary English the 2018 vocabulary splits badly**
-  (`u.s`, `it's`, `inequalities`, `adverts`, `censoring`). The "post-2018 drift" story is
-  **weaker than first stated**: drifted vocabulary is present but does not dominate.
-
-**Consequences, recorded before any M8 probe reads them.** (i) H3's short-query framing is
-unsupported and may not be quoted; B17 still measures the in-domain ceiling and is still worth
-running. (ii) **D2's multi-word tokenizer reaches the one channel that is measured and robust**,
-which is the evidence behind promoting B7 into Wave 1 — and B7 has since PASSED (§18), so the
-promotion cost nothing regardless. (iii) Because the words are a mix rather than mostly drifted
-vocabulary, D2's tokenizer training corpus matters **less** than 17b's first version claimed; the
-second, quite different argument it seemed to give the FineWeb arm (E13) is **withdrawn** — E13
-stands or falls on its registered data-probe bar and Dylan's licensing ruling, not on this.
-(iv) Nothing here is an adoption and no bar moves because of it.
-
-## 18. B7 — the solver gate, PASSED
-
-`results/m8_b7_solver.json`. The dense fp64 Gram is what closed granite-r2 and gte-modernbert in
-M7 "on arithmetic, not merit", and what would have closed D2's 64–128K vocabulary and every
-non-WordPiece teacher screen. `m8src/blockcg.py` never forms it.
-
-| vocabulary | CG iterations | wall | peak host RSS | dense fp64 Gram would be | rows reached |
-|---|---|---|---|---|---|
-| 30,522 (control) | 26 | 5.2 s | 3.77 GB | 7.5 GB | 99.9% |
-| **65,536** | **51** | **10.4 s** | **4.42 GB** | **34.4 GB** | 96.6% |
-| 131,072 | 68 | 16.6 s | 5.72 GB | 137.4 GB | 84.4% |
-
-**Bar (registered): the 65,536-row solve completes within the 18 GB RAM budget and under 4 hours.
-PASS.** Correctness: block CG agrees with the direct solve to **4.6e-7** relative Frobenius error
-on Zipfian synthetic data.
-
-**The margin is measured on the EASY problem, and must be quoted as such** (2026-08-29 review).
-The real 30,522-row system needs **657** CG iterations at λ=1e-4 (§18b) against **26** on the
-synthetic Zipf draw — real conditioning is roughly 25× worse than the sampler produces. Scaling
-the real iteration count to 64K still lands in minutes, not hours, so the PASS is safe by a wide
-margin; but "three orders of magnitude of headroom" was headroom on synthetic data and is
-withdrawn.
-
-**Two things this measurement is not, stated so it is not over-read.** (i) The bag matrices are
-**synthetic** — 12 non-zeros per row, ids drawn Zipf(1.07). It measures the SOLVER. Verifying on
-the real X, Y, W0 across the full λ grid (which reaches 1e-4, where fp32 CG on a Zipfian Gram is
-least comfortable) and comparing the two tables' **dev macro** rather than their Frobenius
-distance is a registered precondition before any closed-form number this solver produces is
-adopted. (ii) It says nothing about D2's quality — B7's quality half needs a real trained
-tokenizer.
-
-### 18b. B7's registered real-data precondition — DISCHARGED
-
-`results/m8_b7_realdata.json` (`m8src/b7_real.py`). §18 required this before any closed-form number
-the solver produces may be adopted: verify on the REAL system, across the REAL λ grid — which
-reaches 1e-4, where fp32 CG on a real Gram is least comfortable — and accept on **dev macro**, not
-Frobenius distance, because what the solver feeds downstream is a ranking.
-
-| λ | direct | block CG | \|Δ macro\| | relative Frobenius | direct s | CG s |
-|---|---|---|---|---|---|---|
-| 1e-4 | 0.340701 | 0.340701 | **0.0e+00** | — | 84 | 205 (657 its) |
-| 1e-3 | 0.343049 | 0.343049 | **0.0e+00** | — | 80 | 88 (282 its) |
-| **1e-2** | **0.343924** | **0.343924** | **0.0e+00** | — | 75 | 48 (150 its) |
-| 1e-1 | 0.324783 | 0.324783 | **0.0e+00** | — | 78 | 30 (96 its) |
-
-**Identical dev macro at every λ**, including the worst-conditioned one. The λ argmax is 1e-2 and
-**interior**, and its value 0.343924 reproduces the 0.3439 M7's own learnability report recorded
-for stella — so the CG frame reproduces M7's adopted teacher criterion, not merely its own
-internal consistency.
-
-**An honest timing note that the headline could hide:** at the 30,522-row control vocabulary the
-DIRECT solve is faster at small λ (84 s against 205 s at 1e-4) and only loses as conditioning
-improves. Block CG is not a speed win here. Its entire value is that it **exists** above 50,368
-rows, where the direct solve's Gram does not fit in this box at all.
-
-**Fit-list disclosure**: this ran on M7's stale `work/trainq_texts.json` (4,582 R1 hits, 1.31%),
-so the ABSOLUTE macros above are inflated and may not be quoted as clean. Both solvers saw the
-identical X, Y and W0, so their AGREEMENT — which is all this measures — is invariant to that.
-A regenerated list (`m8src/fitlist.py`) is required before any teacher-screen number is adopted.
-
-**What it unblocks:** D2 is computable, and so is **T1** (§10), which was blocked because every
-challenger's vocabulary is ≥ 50,368 (§15, 2026-08-29).
-
-**And one number for D2's coverage spec — with its provenance attached:** at 131,072 rows a
-200,000-query draw reaches only **84.4%** of the vocabulary against 99.9% at 30,522. **That is a
-property of the Zipf(1.07) SYNTHETIC draw, not a measurement of real text**, and may not be quoted
-as a D2 coverage fact; the real figure needs a real tokenizer. It is nonetheless the right order of
-concern — M7 shipped with 5.71% of rows never trained by either phase — so the
-minimum-updates-per-reachable-row criterion and the compositional init floor (§8) stay
-load-bearing.
-
-
-## 19. B2 — the KL term is degenerate, measured on BOTH sides. H2 CONFIRMED.
-
-`results/m8_b2_entropy.json`, 4,000 TRAIN queries, the recipe's own `kl_k=32`, `temp=0.02`, and
-the recipe's own bank. **Descriptive; adopts nothing** (§9). Its one registered consequence is
-whether it triggers the separately registered `R-LIST` arm.
-
-Objective A's KL term asks the student to match the teacher's distribution over the query's
-positive plus 31 distractors drawn **uniformly** from a 2M-row bank at temperature 0.02.
-
-**THE TEACHER SIDE — the target.**
-
-| | uniform bank (**the recipe**) | teacher's own top-200 |
-|---|---|---|
-| entropy, **median** | **4.73e-07 nats** | 0.369 nats |
-| entropy, mean | 1.82e-02 | 0.777 |
-| as a fraction of the ln(32) = 3.466 ceiling | **0.52%** | 22.4% |
-| teacher max probability, median | **1.000000** | 0.930 |
-| queries below 1e-4 nats | **84.3%** | 1.2% |
-
-**THE STUDENT SIDE — and this is the half that makes it a measurement rather than an inference.**
-A one-hot target does not by itself make a KL gradient vanish: `kl_div(log_softmax(student),
-one_hot)` is exactly the student's cross-entropy on the positive against 31 distractors, and it is
-small only insofar as the STUDENT already ranks the positive top. So the shipped M7 table
-(`p35w-2m-s2500` int8) was run through the identical candidate sets:
-
-| | value |
-|---|---|
-| student probability on the positive, median | **1.0000** (mean 0.9960, p05 0.9998) |
-| student ranks the positive first | **99.75%** of queries |
-| **the actual KL term, median** | **1.08e-07 nats** (mean 2.57e-02, p95 2.11e-03) |
-
-**So the loss term itself is 1.08e-07 nats for the median query.** Not "the target looks
-degenerate, therefore the gradient must be small" — the term was computed on the artifact that
-ships. The KL objective is asking a student that already reproduces a delta function to reproduce
-it again.
-
-**Two corrections the first version needed, both from adversarial review, both recorded because
-one of them ran against the hypothesis and one for it:**
-1. **The bank was wrong.** The first version took `pool_vecs[:2_000_000]` and called it "exactly
-   as training builds it". Training draws a *seeded random sample* of the 6.17M-row pool with
-   banned rows dropped (`m7src/train.py`). The pool is ordered by store, so a prefix is ~40% ESCI
-   product text where a random sample is ~13% — a real composition error. **Corrected, and the
-   bias ran OPPOSITE to the reviewer's prediction and to this section's interest**: the correct
-   random bank gives a median of 4.73e-07 against the prefix's 5.65e-07, i.e. the recipe's real
-   sampler is *more* degenerate than the flawed measurement said, not less.
-2. **The student side did not exist.** "One of the two training signals carries no information"
-   was an inference from the teacher alone. It is now measured, above.
-
-**Scope, stated rather than left to generalise.** This characterises the arms that draw
-distractors uniformly. Arms with `hard_neg_k > 0` put teacher-mined hard negatives into the
-candidate set (`m7src/train.py`), and their KL term is a different object that this probe does not
-measure. M7's shipped candidate has `hard_neg_k = 0`, so the shipped recipe is in scope.
-
-**What it establishes for the milestone's diagnosis**: a concrete, two-sided mechanism for why the
-recipe class transferred ~0.000 in M7 — one of two training signals was, for five queries in six,
-carrying essentially nothing, and the loss term's own median value is 1e-7. Switching the sampler
-to the teacher's top-200 raises the median target entropy by six orders of magnitude. That is a
-cheap, well-defined change with a measured mechanism behind it.
-
-**It still does NOT say a listwise objective wins.** That is `R-LIST`'s question; its bar is
-unfrozen and `probe_guard` refuses it.
-
-## 20. B17 — the registered branch fired, and the number that fired it cannot carry it
-
-`results/m8_b17_oracle.json`. 957 fit queries (a 50/50 split of the two dev CQADupStack
-components), oracle λ chosen on the held-out half, scored against the teacher's symmetric CQA-2
-ceiling of 0.4806.
-
-| | held-out CQA-2 macro |
-|---|---|
-| init only (teacher-vector rows, nothing fitted) | 0.0174 |
-| **oracle λ = 0.01, fitted on 957 in-domain queries** | **0.1999** (41.6% of the teacher) |
-| λ = 1e-4 / 1e-3 / 1e-1 / 1.0 | 0.192 / 0.197 / 0.159 / 0.094 |
-
-**The registered routing rule reads ≤ 0.40 as "the class caps in domain, and D2/D1/D4' carry the
-milestone". That branch fired. It should not be relied on, and the reason is a number this project
-already had.**
-
-The SAME closed-form class, fitted on the 349,934-query general TRAIN list, scores **0.3439** on
-these same two components (§18b, and M7's own learnability report). So:
-
-    957 in-domain queries  -> 0.200
-    350K general queries   -> 0.344
-    the teacher itself     -> 0.481
-
-A class that reaches 0.344 with more — and *out-of-domain* — supervision has not "capped in
-domain at 0.20". **What B17 measured is its own fit-set size**, exactly as its pre-registered
-caveat warned: 957 queries against 31,254,528 parameters leaves the ridge enormously
-underdetermined, and the +0.183 it gains over the bare init is what that supervision budget buys,
-not what the class can do.
-
-**This is recorded as a probe whose registered design cannot answer its registered question.** The
-rule is NOT amended — the number exists, and amending a rule after seeing what it says is the one
-thing §0 forbids outright. It fired, it is on the record, and it is disowned on evidence rather
-than quietly ignored.
-
-**And it is disowned in the direction that costs me something.** B17's branch points at D2/D1 —
-the same conclusion the power simulation (§4.4), B2 (§19) and the fragmentation channel (§17b)
-already support. It would have been easy and comfortable to bank it as a fourth independent
-witness. It is not one: those three stand on their own and B17 adds nothing to them.
-
-**What a properly-powered version needs, and that it needs its own registration:** fit on the
-general TRAIN list **plus** the in-domain half and score the held-out half, so the quantity
-measured is what in-domain supervision *adds* to a table that already exists — which is the
-decision-relevant question. That is a different probe from the one registered here and may not be
-run under B17's id.
-
-## 21. T1 — the teacher screen. OUTCOME: NO SWAP; the incumbent stands.
-
-`results/m8_t1_decision.json` and the three per-candidate artifacts. Executed by
-`m8src/t1_decide.py` rather than read off by eye, because a bar a session can re-read in its own
-favour is not a bar.
-
-**These are the first measurements of granite-r2 and gte-modernbert as teachers.** M7 closed both
-**"on arithmetic, not merit"** — a 50,368-vocabulary fp64 Gram is 20.3 GB against an 18 GB budget.
-B7's solver removed that wall (§18), and four further things had to move before a number existed:
-a clean fit list (§3.3), runtime Spec registration, `spec.cls_id` passed explicitly, and an init
-built at `len(tok)` rather than `tok.vocab_size` (§15).
-
-| candidate | published tower quality | best λ | dev macro (CQA-2) | Δ vs incumbent | raw 95% CI | int8 table |
-|---|---|---|---|---|---|---|
-| **stella-400M-v5** (incumbent, re-probed) | MTEB-Ret 58.97 | 0.01 | **0.3438** | — | — | 31.3 MB |
-| granite-embedding-english-r2 | BEIR(15) 53.1 | 0.01 | 0.2915 | **−0.0523** | [−0.0663, −0.0385] | 38.7 MB |
-| gte-modernbert-base | BEIR(15) **55.33** | 0.01 | 0.2349 | **−0.1089** | [−0.1234, −0.0945] | 38.7 MB |
-
-Every optimum is **interior** (no grid-edge clipping, which M7 had to widen its grid to avoid),
-and every `signflip_dep` p is 1.0 in the "greater" direction — the challengers are not close.
-
-**Swap-bar condition 1 fails for both**, so conditions 2, 3 and the tie-break never arise and the
-off-family read is never bought (hotpotqa is 5.23M documents per candidate). That is the bar's
-ordering doing its job, and it is the same structure M7's screen produced.
-
-**THE FRAME VALIDATES ITSELF THREE WAYS.** The incumbent re-probed on the clean fit list scores
-**0.3438**, against M7's own recorded learnability figure of **0.3439** and this session's
-stale-list run at **0.343924** (§18b). A new solver, a new init builder, a regenerated fit list
-and a different code path reproduce the number M7 adopted its teacher on.
-
-**And the tower again fails to order the table — on two fresh candidates.** gte-modernbert-base has
-the HIGHER published retrieval score of the two challengers (55.33 against granite's 53.1) and the
-**lower** distilled table by a wide margin (0.2349 against 0.2915). **Stated at its true weight**
-(2026-08-29 review): this is an n = 2 sign anecdote resting on two self-reported model-card BEIR
-figures produced by different harnesses. It is *consistent with* M7's Spearman(ceiling, table) =
-0.000 over eight candidates and it is one more reason not to select a teacher on its tower — but
-calling it an "independent reproduction" oversold it, and that wording is withdrawn. M7's
-eight-candidate result remains the evidence; this is corroboration.
-
-**The Holm family, pinned now so a later screen cannot get a laxer one.** Tonight's correction ran
-over the **two** candidates screened. The registered family is **the challenger set** (§10). If
-stella-1.5B or harrier is ever screened, Holm must re-run over the **union of all challengers ever
-screened against this incumbent**, not over the newcomers alone. Verdict-neutral tonight (both
-p = 1.0), and registered before it could matter.
-
-**What is NOT settled.** Two registered candidates were not screened and their reasons are
-recorded rather than quietly dropped: `stella_en_1.5B_v5` needs `trust_remote_code` and has no
-usable sequence-start row (its `config.json` and `tokenizer_config.json` disagree, 151643 against
-null), so its fallback row must be registered first; `microsoft/harrier-oss-v1-0.6b` uses
-last-token pooling that `m7src/teacher.py` raises on, publishes no retrieval-only number, and
-needs Dylan's ruling on undisclosed training data. Neither absence changes tonight's verdict —
-the registered default is the incumbent and nothing displaced it.
-
-## 22. B6-pre — E3's hard condition is MET. (D1 survived this gate, then FAILED on quality.)
-
-*Heading corrected 2026-08-29: this section cleared D1's **export** precondition. `E14-HEAD` later
-measured D1's quality at −0.0244/−0.0293 dense against a +0.0040 bar — see §8's D1 entry. B6-pre's
-PASS still matters, because it is the same gate `D2`'s output must clear, and it used near-identity
-weights, so the actual trained artifact must be re-exported before anything is called shippable.*
-
-`results/m8_b6_pre.json`. E3 approved a doc-side head **only** if it "fuses into the doc ONNX
-graph as plain nodes — one served file, no custom pipeline". This is the binary gate on that, and
-its registered no-survivor outcome was that D1 closes and comes off the Stage-S menu.
-
-| | result |
-|---|---|
-| export | **one file**, 1,754 MB, opset 17, CPU |
-| graph | 3,415 nodes, **zero custom-domain ops** — Constant/Unsqueeze/Gather/Shape/Add/Mul/MatMul/Gemm/ReduceL2 |
-| parity vs the torch forward of the same module | min cosine **0.999999940**, max-abs **2.05e-07** |
-| tolerances (§11.4) | cosine 1e-4, max-abs 1e-3 |
-
-**PASS on every leg.** The teacher exports despite running under `trust_remote_code`, the folded
-published Dense head and the D1 candidate both appear as ordinary `MatMul`/`Gemm`, and the final
-L2 normalize is a plain `ReduceL2` — so what a user would download and serve is one file whose
-output is already the mapped, renormalized document vector. **D1 stays on the Stage-S menu and
-B6's quality arm may be registered.**
-
-**Three things this does NOT establish**, stated so the pass is not over-read:
-1. **It is a feasibility result, not a quality one.** The head is identity-initialized precisely so
-   that a parity failure would be unambiguously the exporter's fault. Whether a *trained* doc-side
-   head helps is B6's quality arm, which still carries a `TBD-noise-floor` bar and is refused.
-2. **1,754 MB is the doc-side graph**, which is served offline and is not the query-side artifact
-   the 233 MB cap binds (§8). It is not free — it is a real serving cost — but it is not a cap
-   violation and must not be reported as one.
-3. **The export ran on CPU at opset 17 with an identity head.** An MLP head, a different opset, or
-   GPU export are not covered; `--head mlp` is one command away and should run before D1 is
-   committed to an MLP variant.
-
-**It also settles the environment question the plan left open.** `onnx` 1.22.0 and `onnxruntime`
-1.29.0 were installed to run this — purely additive (with `flatbuffers`, `ml-dtypes`), and
-**numpy 2.3.5, torch 2.8.0+cu126, transformers 4.57.6, scipy 1.18.1 and datasets 5.0.1 were all
-verified unchanged before and after**. Nothing on any scoring path moved, which is the property
-that mattered: M7's pre-freeze review found that a package upgrade between freeze and final run
-would have silently changed the fused system C3 judges.
-
----
-
-## 23. The crossed B × A floor — the B leg costs about what the A leg costs
-
-`results/m8_noise_floor_crossed.json`, registered under **NF**, read at int8/sqrt. Nine cells,
-(B-checkpoint seed) × (A seed); five already existed — row `b=0` is the A-leg floor and the
-diagonal is the B-leg floor — so four A legs completed it.
-
-**The question this answers.** §4.7 and the B-leg artifact both *assert* that an arm differing in
-its B leg has a larger floor, and forbid any bar from reading such an arm until it is measured.
-Nothing had measured it. Two-way layout without replication, 4 residual df, against the K=3 sample
-range whose CV is 0.525.
-
-| endpoint (int8/sqrt) | σ_B | σ_A | σ_resid | σ_chain | SD(fresh null Δ) | P(\|Δ\| > 0.0040) |
-|---|---|---|---|---|---|---|
-| out-of-domain macro | 0.00103 | 0.00106 | 0.00039 | 0.00153 | 0.00217 | **6.5%** |
-| worst group | 0.00103 | 0.00106 | 0.00039 | 0.00153 | 0.00217 | **6.5%** |
-| group-vector median | 0.0 | 0.0 | 0.00077 | 0.00077 | 0.00109 | 0.02% |
-| all-component macro | 0.00033 | 0.0 | 0.00057 | 0.00066 | 0.00093 | 0.002% |
-
-*(worst group and out-of-domain macro are identical because the out-of-domain group IS the worst
-group in all nine cells. σ_B and σ_A are moment estimators with negatives clipped to zero, and
-`sqrt` is concave, so both push the chain SD **down** — simulated at this exact design, truth
-0.00320 → mean estimate 0.00295, ~8% low. Read σ_chain as a floor on the floor.)*
-
-**The finding: the assertion is directionally right and quantitatively mild.** The B leg
-contributes about **as much as** the A leg on the endpoint that matters and nothing detectable on
-two of the four. A full chain's SD is ~√2 × an A-leg arm's, not some larger multiple. So the §4.4
-gap-list entry **narrows rather than closes**: a B-leg-varying arm does need a larger bar, and the
-size of the gap is now a number instead of a warning.
-
-**What it means for bars actually in force — nothing changes.** `B3` and `E14-HEAD` read the
-out-of-domain macro on **A-leg-only** arms (the Phase-B checkpoint is held fixed), so their null
-is σ_A alone: `2 × 1.693 × 0.00106 = 0.0036`, under the 0.0040 planning minimum, which is
-therefore still what does the work. **Their frozen bars stand unchanged.**
-
-**What it means for a B-leg-varying probe — 0.0040 is too low.** Applying the registered formula
-with the floor term estimated from this design instead of from one noisy K=3 range gives
-**0.00519** on the out-of-domain macro and worst group. **NOT ADOPTED**: changing how the floor
-term is estimated is a formula change and needs its own amendment before any arm it would affect
-runs. It is recorded so the next session that registers `R-PHASE`, `D-FINEWEB` or any pool-or-init
-lever inherits the number rather than the warning.
-
-**The withdrawn aliasing claim is confirmed withdrawn, on this data.** The valid check is the
-observed diagonal range against its own expectation at K=3 under the fitted σ, not against the
-nine-cell range (E[range] grows with K, so that comparison measures nothing — the artifact
-previously carried a field that made it, and it has been removed). Ratio **0.43**, inside the
-[0.25, 1.96] noise interval a K=3 range spans. The aliased diagonal is behaving.
-
-**Frame, unchanged and still binding:** incumbent teacher, M7 data mix, and the pseudo-query pool
-held FIXED across all nine cells — `pseudoq.build_decontaminated` draws with a seed independent of
-the training seed. This bounds seed variability in a B-leg-varying arm; it does **not** bound a
-pool-varying lever, and LEDGER §6 step 5 voids it on a teacher swap.
+## 17–23. Measured results that bars or plans read
+
+*One block per probe: the verdict, the numbers a rule reads, and the withdrawn claims. Everything
+else — full tables, per-arm detail, provenance — is in the result JSON and `m8/RESULTS.md`.*
+
+### §17 / §17b — what the query-side loss is made of (`results/m8_retention_decomposition.json`)
+
+**Fragmentation is the channel, and it survives the attack the length claim fails.** Pooled
+within-dataset, the table falls **0.050 nDCG further behind the teacher per +1.0 subwords/word**
+(t = 4.61), and **every single-dataset exclusion leaves the slope positive at t ≥ 3.28** (worst case
+scifact +0.0369, t = 3.28). Mechanism: the **teacher improves** with fragmentation (+0.038, t = 2.72)
+while the table is flat (−0.012, t = −0.85) — the gap widens because the teacher pulls away.
+
+**Read it as CORRELATED HEADROOM, not a bound in either direction** (downgraded 2026-08-29): it is
+uncontrolled between-query OLS, so the slope may be driven by specificity, rarity or domain and D2
+could recover none of it — while a phrase feature could equally exceed it via conjunction effects.
+No write-up may quote `0.050 × Δfertility` as a forecast.
+
+**WITHDRAWN:** H3's short-query framing is unsupported and may not be quoted (removing ArguAna
+collapses its t from 3.01 to 1.51; ArguAna is 97% single-arm and has no contrast to measure). The
+binary present/absent contrast is **not resolved** (4/5 informative datasets positive, one-sided
+p = 0.19) — **the continuous slope is the instrument to quote**. An earlier "6/6, p = 0.016" counted
+ArguAna's coin flip and tokenized with punctuation attached. Also withdrawn: the "post-2018 drift"
+story — the costly words are a mix of compounds, domain terms, entities and ordinary English.
+Because of that mix, D2's tokenizer training corpus matters **less** than first claimed, and the
+argument this section seemed to give the FineWeb arm is withdrawn.
+
+### §18 — `B7`, the solver gate: **PASSED** (`results/m8_b7_solver.json`, `m8_b7_realdata.json`)
+
+30,522: 26 its / 5.2 s / 3.77 GB · **65,536: 51 its / 10.4 s / 4.42 GB** · 131,072: 68 its / 16.6 s /
+5.72 GB. A dense fp64 Gram would be 34.4 GB and 137.4 GB. Agrees with the direct solve to 4.6e-7.
+**Unpreconditioned CG does not converge in 1,500 iterations on Zipfian data (5.9e-4); Jacobi
+converges in 61** — a uniform synthetic converges in 131 and would have produced a wrong PASS.
+Real-data precondition discharged: identical dev macro at every λ, argmax λ=1e-2 at 0.343924,
+reproducing M7's 0.3439 for stella. **Unblocks D2 (64–128K vocabularies) and T1.**
+
+### §19 — `B2`, the KL term (`results/m8_b2_entropy.json`)
+
+**H2 CONFIRMED for the recipe's UNIFORM bank, and only that.** Teacher target median entropy
+**4.73e-07 nats**, p_max median 1.000000, 84.3% below 1e-4, entropy 0.0052 of ceiling; the shipped
+table already ranks the positive first in **99.75%** of queries, so the KL term's own median value is
+1.08e-07 nats. **It does NOT close the KL class:** the `teacher_top200` arm measures **0.777 nats
+mean / 0.369 median**, and this artifact names **`R-LIST`** as the consequence. Hard-candidate
+listwise distillation stays live.
+
+### §20 — `B17`: the branch fired and was **DISOWNED** (`results/m8_b17_oracle.json`)
+
+Held-out **0.1999** (41.6% of the 0.4806 teacher) fired the registered ≤0.40 branch — but the same
+class on 350K general queries scores **0.3439**, so B17 measured its **own 957-query fit set**,
+exactly as its pre-registered caveat warned. **The rule was NOT amended**; the branch is disowned in
+the direction that costs us something. Standing lesson: a capacity probe whose fit set is the binding
+constraint measures the fit set. (This is why `D2-PRE` must cross-fit.)
+
+### §21 — `T1`, the teacher screen: **NO SWAP** (`results/m8_t1_decision.json`)
+
+stella 0.3438 · granite-r2 0.2915 (**−0.052** [−0.066, −0.039]) · gte-modernbert 0.2349 (**−0.109**
+[−0.123, −0.094]). All optima interior; condition 1 fails for both, so conditions 2–4 never arise.
+Gaps are 5–11× the 0.0096 swap penalty. **The tower again fails to order the table** — the M7 lesson
+(select a teacher on the distilled TABLE, never on the tower) reproduces. Screened in a shared
+student frame only within a tokenizer family; cross-family screens are labelled teacher-plus-tokenizer.
+
+### §22 — `B6-pre`: E3's hard condition is **MET** (`results/m8_b6_pre.json`, `m8_b6_pre_mlp.json`)
+
+One file, opset 17, **zero custom-domain ops**; 3,415 nodes linear / 3,426 with GELU (exports as a
+plain `Erf`); parity min-cosine 0.99999994 / max-abs 2.05e-07 against §11.4 tolerances of 1e-4 and
+1e-3. **This cleared D1's EXPORT gate only** — `E14-HEAD` later measured D1's quality at −0.0244 /
+−0.0293. It still matters because **`D2`'s output must clear the same gate**, and because both passes
+used **near-identity weights**: the actual trained artifact must be re-exported before anything is
+called shippable.
+
+### §23 — the crossed B × A floor (`results/m8_noise_floor_crossed.json`)
+
+Nine cells, (B-checkpoint seed) × (A seed), int8/sqrt. On the out-of-domain macro and worst group:
+**σ_B 0.00103, σ_A 0.00106, σ_resid 0.00039, σ_chain 0.00153**, SD(fresh null Δ) 0.00217, and the
+standing 0.0040 carries **~6.5%** type-I against a fresh null difference between two chains. Nothing
+detectable on the other two endpoints. σ_chain is **a floor on the floor** (moment estimators clipped
+at zero, `sqrt` concave, ~8% low at this design).
+
+**Consequences in force.** A-leg-only arms (`B3`, `E14-HEAD`) read σ_A alone → `2 × 1.693 × 0.00106
+= 0.0036`, under the planning minimum, so **their bars stand unchanged at 0.0040**. A **B-leg-varying
+arm reads 0.00519**, adopted by the 2026-08-29 audit amendment — `D2` is the first arm it governs.
+**Still not bounded: a POOL-varying lever** — all nine cells share one pseudo-query pool — which is
+why `D-FINEWEB`'s bar remains uncomputable. **No chain-level FUSED floor exists** (cells were scored
+dense only); `NF-CROSSED-FUSED` measures it.
+
+**WITHDRAWN:** the "aliasing understates the floor" claim that motivated this design. The aliased
+diagonal is `B_s + A_s + e`, already carrying the chain variance — unbiased-but-noisy, not
+anti-conservative. Confirmed on this data: the diagonal's range sits at 0.43× its own expectation,
+inside the [0.25, 1.96] interval a K=3 range spans.

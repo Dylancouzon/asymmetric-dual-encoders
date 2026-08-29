@@ -195,6 +195,32 @@ facts only (how he wants sessions run, what tooling exists on the box), and anyt
 would help a future session must be mirrored into one of those files. A lesson that lives only in a
 memory file is lost to every session that does not happen to recall it.
 
+## Markdown files must be TIGHT (Dylan, 2026-08-29)
+
+*"Information is wayyyy too verbose in there. We're diluting context for next session."* Said of an
+M8 ledger that had reached 2,694 lines, ~40% of it one session's amendment prose.
+
+**Every line in a `.md` file costs a future session context it could have spent on the work.** A
+file a session is *told* to read before deciding — `CLAUDE.md`, `STATUS.md`, `LEDGER.md` — is loaded
+whether or not the reader needs the paragraph you enjoyed writing. Verbosity there is not
+thoroughness; it is a tax levied on every session that follows.
+
+**The rule:** write the decision, the number a rule reads, and the pointer. Nothing else.
+
+- **One fact, one home.** Numbers live in the result JSON, bars in `registry.json`, runs in
+  `RESULTS.md`, closed avenues in `EXPLORED.md`, long-form reviews in `research/*`. A `.md` that
+  restates any of them is duplication that will go stale in exactly one direction — the wrong one.
+- **An amendment is: what changed, why, and the pointer.** Not the reasoning that got you there.
+  If the reasoning matters, it belongs in the archived review, cited by path.
+- **Prefer a table to prose, a clause to a sentence, a pointer to a summary.** Cut every sentence
+  that only restates the previous one with more emphasis.
+- **Withdrawn claims and owner rulings are the exception — always keep them**, because a future
+  session that re-derives a withdrawn claim wastes far more than the lines cost. Keep them *short*.
+- **When you add to a long file, budget for it**: if an entry runs past ~10 lines, compress an old
+  one or move detail out. Files grow by default; only deliberate effort shrinks them.
+- **Check the size when you touch it.** `wc -l` on the file you just edited. If a protocol file has
+  grown past ~1,500 lines, compressing it is part of the task, not a separate one.
+
 ## Verification gates (Dylan, 2026-08-24)
 
 Results dictate Qdrant engineering decisions: correct, not decimal-precise; blind spots stated openly.
