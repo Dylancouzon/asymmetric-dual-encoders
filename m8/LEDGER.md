@@ -183,6 +183,33 @@ tolerance — a leaked query is a scored query). **E10 REOPENS and goes to Dylan
 either the surviving document near-dup rate exceeds **2%** or fewer than **two topics survive in
 the split used for the crossing**. The session does not decide those.
 
+### S0 OUTCOME, 2026-08-29: ALL TEN SLICES REJECT. E10 REOPENS WITH DYLAN.
+
+`results/m8_lotte_overlap.json`, 5.25M documents screened in 19 minutes. The registered branch
+fired: fewer than two topics survive in either split, so **the session does not substitute a
+shadow** and the ruling returns to the owner. The failures split cleanly in two:
+
+| | slices | reason |
+|---|---|---|
+| hard reject | `writing/test`, `science/test`, `technology/test` | their StackExchange communities **literally include protected sets**: english, physics, android + softwareengineering |
+| query-leakage only | the other seven | 2–15 fingerprint matches per ~2,000 forum questions (0.1–0.75%); document near-duplicate rates 0.001–0.16%, all under the 0.5% bar |
+
+**Exact** query matches concentrate almost entirely in the three community-overlapping slices
+(111, 13, 34); the seven clean-community slices are nearly all fingerprint-**near** (2–12 each,
+one exact). Two identical question titles across different StackExchange sites are not by
+themselves evidence of contamination.
+
+**The bar was not relaxed after it bit.** But the tension is real and goes to Dylan: §3's standing
+rule **R1 removes the ITEM** on query overlap, while S0's newer, narrower bar drops the whole
+**SLICE**. Under a per-question remedy seven slices survive with ~2,000 questions each. That
+alternative is computed and stored in the artifact, labelled DESCRIPTIVE / NOT ADOPTED, and its
+`would_keep` flag embeds an **unregistered ≥500-question threshold** which would itself need
+registering if the remedy were adopted. A third option was measured and is on the table:
+`results/m8_shadow_alternatives.json` — the **eight unused CQADupStack subforums** (gaming, gis,
+mathematica, stats, tex, unix, webmasters, wordpress: 323,488 documents, 8,961 queries), already
+licence-cleared, no contamination against reserved android/english, but the same benchmark family
+as two reserved sets.
+
 **Registered coverage statement, stated up front rather than discovered:** the shadow reads the
 **CQA/forum half of the estimand only**. No clean Wikipedia/entity-shaped shadow exists —
 candidates were swept and failed on licence. The FEVER/DBpedia half is guarded instead by the
