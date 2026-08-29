@@ -1163,6 +1163,15 @@ CORPORA are ordinary public downloads while their query and qrel payloads stay g
 in either direction. It states what changed, why, and that the dependent numbers did not yet
 exist.)*
 
+- **2026-08-29 — E14 RULED by Dylan: measure it small first.** Doc-side co-adaptation is
+  approved as a **dev-scale measurement**, not as a milestone commitment. Train a LoRA on the
+  document tower alongside the table at dev scale, measure the gain, and bring him the number.
+  **Explicitly NOT yet authorised**: the 10.12M-document re-encode, the stella derived-weights
+  licence question, and any redefinition of C2. Those are bought only if the dev gain justifies
+  them — so **C2 and E11 stand unchanged for now**. The probe must be registered with its bar
+  frozen before it runs, like every other, and its no-survivor outcome is "the frozen document
+  tower stays and E14 closes".
+
 - **2026-08-29 — B3 RAN. Verdict UNINFORMATIVE, and it is the useful kind**
   (`results/m8_b3_decision.json`). Twelve arms — nested real-pair fractions {0.25, 0.50, 0.75,
   1.00} × three seeds, 84,520 / 169,056 / 253,557 / 338,076 pairs actually trained on, with
