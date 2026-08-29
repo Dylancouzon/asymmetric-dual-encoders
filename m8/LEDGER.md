@@ -335,8 +335,9 @@ returns neither `one_sided_lower_raw` nor the α/3 bound.
 - **CONFIRMATORY** (the reserved four) uses `boot.signflip` + `boot.paired`. The four sets are
   **disjoint** — no shared underlying query, no nesting — so dataset-stratified paired resampling
   *is* the dependence-preserving estimator here and `paired_dep` reduces to it exactly.
-  **NOT YET ASSERTED IN CODE** (§4.4 gap list): `m8src/test_decide.py` does not exist. Until it
-  does, the reduction is a stated argument, not a checked one.
+  **ASSERTED IN CODE, not merely argued** (`m8src/test_decide.py`, 2026-08-29): the ordinary and
+  dependence-preserving point estimates agree to 1e-12 and their interval half-widths to within
+  5% on the four reserved sets, which is the degeneracy the argument claims.
 - **DEV** (the six components, two of them nested) uses `signflip_dep` / `paired_dep` throughout.
 - **The α/3 bound is computed at the exact level.** `boot.paired` hardcodes the percentile string
   `"0.8333"`; M8 computes `100 × 0.025/3 = 0.8333333…` in `m8src/decide.py` from the same draws
@@ -435,14 +436,15 @@ duplication the dependence-blind interval is 1.43× too narrow.
    accident*, after it had governed four arms and a promoted adoption, and `rule_audit.py` is the
    instrument that stops that recurring. It must exist before any adoption decision.
 
-**GAP LIST — obligations this ledger states that are NOT yet implemented.** Written here because
+**GAP LIST — obligations this ledger states that are NOT yet implemented.** *(`m8src/test_decide.py`
+landed 2026-08-29 and is struck from this list: 11 checks, including the `paired_dep` reduction and
+every ship-condition refusal.)* Written here because
 a protocol document asserting guards that do not exist is the same failure class as code producing
 a wrong number, pointed the other way: a future session (or the owner reading GitHub) trusts a
 "DONE" heading. Each line is a blocker for the stage named.
 
 | missing | what it must do | blocks |
 |---|---|---|
-| `m8src/test_decide.py` | assert `paired_dep` reduces to the ordinary stratified path on the disjoint reserved four; exercise every ship-condition branch including the negative controls | any confirmatory decision |
 | `m8src/rule_audit.py` | every mechanically-checkable rule against every arm family it binds, with the unverifiable listed as unverifiable | any adoption |
 | `m8src/test_final_guard.py` | the 14-line one-shot checklist in §6, each with an acceptance test | the access |
 | `m8src/test_freeze_binding.py` | the refusals `freeze.write` must make on M8 paths | the freeze |
