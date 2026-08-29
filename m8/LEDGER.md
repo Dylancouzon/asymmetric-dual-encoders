@@ -2350,3 +2350,55 @@ previously carried a field that made it, and it has been removed). Ratio **0.43*
 held FIXED across all nine cells — `pseudoq.build_decontaminated` draws with a seed independent of
 the training seed. This bounds seed variability in a B-leg-varying arm; it does **not** bound a
 pool-varying lever, and LEDGER §6 step 5 voids it on a teacher swap.
+
+- **2026-08-29 — `E10` REOPENED. The remedy artifact is NOT decontaminated and its zero re-screen
+  was tautological. `results/m8_lotte_remedy.json` may not be pinned, served, or grandfathered.**
+  Adversarial review verdict: *"STOP / reopen E10."* Reproduced counter-examples, not projections.
+
+  **BLOCKER 1 — the screen compared ROLES, not protected CONTENT.** `_cqa_index()` holds only the
+  four CQADupStack corpora; LoTTE documents were screened against protected DOCUMENTS and LoTTE
+  queries only against protected QUERIES. The query↔document comparison was never made. Two
+  confirmed survivors: `science/dev` qid 1147 "How to design a house to be cooled passively?"
+  matches protected physics document 111653; `recreation/test` qid 355 "What is the terminal
+  velocity of a sheep?" matches protected physics document 129267, **and that protected document
+  states it was inspired by the Gaming.SE question** — the quoted-across-sites case named in the
+  brief. A targeted audit found **36 retained shadow queries sharing an 8-word run with protected
+  corpus documents**; under our own registered query rule those are hits. LoTTE documents were also
+  never screened against FEVER, DBpedia, NQ or HotpotQA despite the stated policy.
+
+  **BLOCKER 2 — the re-screen cannot fail on ordinary input.** Remediation constructs the exact
+  complement of the first pass's hits and the second pass applies the SAME deterministic detector
+  to those unchanged IN-MEMORY survivors. A canary would be found, removed, and then provably
+  absent. Worse, files are written first but the re-screen reads the in-memory lists, so an altered
+  or recontaminated output file is never examined. CODEMAP pitfalls 17 and 19 exactly. **The
+  detector may remain the removal mechanism but cannot certify itself**; acceptance needs an
+  INDEPENDENT detector (StackExchange IDs/URLs, migration and cross-site links, character
+  shingles/containment) plus a canary test that proves acceptance can fail.
+
+  **The 100× asymmetry is real AND diagnostic of a weaker document screen.** Query detection fires
+  on ONE shared 8-gram (one 4-gram for short queries); document detection requires EIGHT shared
+  entries from bottom-32 sketches, so a document under 15 normalized words **can never** be a near
+  hit — a one-word edit of a 16-word document and a 14-word verbatim quotation both return nothing.
+  So `recreation/test = 0` is a measurement of the detector, not of the corpus. Normalization is
+  lowercase + `isalnum()` only: no Unicode normalization, stemming, typo tolerance or reordering.
+  The short-query rule is also DIRECTIONAL — a protected short query inside a longer candidate is
+  caught, a short candidate extracted from a longer protected question is not.
+
+  **The exact 14,034 match is CIRCULAR evidence**, and I cited it as validation. Those counts were
+  derived by S0 with the same raw data and the same detector, then written into the registration.
+  Matching them proves repeatability and absence of input drift — nothing about coverage. Two
+  confirmed retained protected documents coexist with an exact 14,034.
+
+  **Also found:** `pin()` trusts the mutable remedy artifact, permits an arbitrary subset, hashes
+  whatever bytes occupy the paths at pin time and never binds them to what was SCREENED;
+  `build_fitlist()` reads `m8_lotte_overlap.json["kept"]`, which S0 left EMPTY, so the fit list
+  never sees the remedy survivors at all; and correlation with the exam remains unmeasured, with a
+  concrete design offered (a preregistered candidate panel, rank-correlated across LoTTE dev
+  slices, unused CQADupStack subforums and non-reserved entity proxies, keeping the LoTTE test
+  slices untouched for the eventual crossing).
+
+  **What this does NOT change:** no protected set was scored, and no number from this artifact
+  reached any decision. The shadow was never pinned, precisely because the two questions this
+  review answered were the ones held open. Review at
+  `research/m8-planning/codex-e10-remedy-review-2026-08-29.md`.
+
