@@ -49,9 +49,27 @@ MERGED_TAG = "m8e14head"
 OOD = ("cqadup-programmers", "cqadup-physics")
 
 
+# The arms that are READ. Ladder (`m8e14-lad-*`) and step-adequacy (`m8e14-step-*`) arms also
+# leave head artifacts on disk, and they must never be scored: they are tuning arms on the
+# disjoint tuning seed, trained on the holdout-reduced pool. Globbing every head artifact would
+# have put them in the merged dump -- and would also have spent hours scoring them.
+REPORTED_TAGS = ("r0n", "lin", "mlp")
+REPORTED_SEEDS = (0, 1, 2)
+
+
+def reported_arms():
+    return [f"m8e14-{t}-s{s}" for t in REPORTED_TAGS for s in REPORTED_SEEDS]
+
+
 def arms_on_disk():
-    return sorted(p.stem[:-5] for p in RUNS.glob("m8e14-*.head.json")
-                  if not p.stem.endswith("-smoke.head"))
+    want = reported_arms()
+    have = [r for r in want if (RUNS / f"{r}.head.json").exists()]
+    stray = sorted(p.stem[:-5] for p in RUNS.glob("m8e14-*.head.json")
+                   if p.stem[:-5] not in want and not p.stem.endswith("-smoke.head"))
+    if stray:
+        print(f"not scoring {len(stray)} non-reported arm(s) (tuning seed / holdout-reduced "
+              f"pool): {stray}", flush=True)
+    return have
 
 
 def _head_loader(rid):
