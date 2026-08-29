@@ -9,6 +9,7 @@ Two halves, because either alone fails open:
   STATIC   -- no unclaimed file under m8src/ even MENTIONS a protected path, so a future module
               cannot quietly acquire the capability by being refactored into an allowlisted one.
 """
+import copy
 import json
 import os
 import re
@@ -316,14 +317,39 @@ def t_probe_guard_refuses_incomplete_row():
 
 
 def t_probe_guard_refuses_bar_pending():
-    """A bar can READ complete and still be unfinished; bar_pending names what is missing."""
-    reg = probe_guard.registry()["probes"]
-    pend = [p for p, r in reg.items() if r.get("bar_pending")]
-    for p in pend:
+    """A bar can READ complete and still be unfinished; bar_pending names what is missing.
+
+    This test used to iterate the registry for rows carrying `bar_pending` -- and for most of the
+    milestone there were NONE, so it passed by asserting nothing over an empty list. It now
+    SYNTHESIZES the case against a row that is otherwise complete, so the code path is exercised
+    whatever the registry happens to contain, and a row whose bar says TBD cannot stand in for it
+    (a TBD bar refuses one check earlier, which is a different guard).
+    """
+    reg = copy.deepcopy(probe_guard.registry())
+    donor = next(p for p, r in reg["probes"].items()
+                 if "tbd" not in str(r.get("bar", "")).lower() and not r.get("bar_pending")
+                 and all(str(r.get(f, "")).strip() for f in ("bar", "endpoint", "comparator",
+                                                             "multiplicity", "no_survivor")))
+    reg["probes"][donor]["bar_pending"] = "the floor term"
+    orig = probe_guard.registry
+    probe_guard.registry = lambda: reg
+    try:
         try:
-            probe_guard.assert_registered(p, strict_commit=False)
+            probe_guard.assert_registered(donor, strict_commit=False)
         except probe_guard.ProbeNotRegistered as e:
             assert "bar_pending" in str(e), str(e)
+        else:
+            raise AssertionError(f"a complete row with bar_pending was accepted ({donor})")
+    finally:
+        probe_guard.registry = orig
+
+    # and every row that actually declares it must refuse for SOME registered reason
+    for p, r in probe_guard.registry()["probes"].items():
+        if not r.get("bar_pending"):
+            continue
+        try:
+            probe_guard.assert_registered(p, strict_commit=False)
+        except probe_guard.ProbeNotRegistered:
             continue
         raise AssertionError(f"probe {p} with bar_pending was accepted")
 
