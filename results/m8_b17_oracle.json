@@ -1,0 +1,96 @@
+{
+  "_note": "B17: does the lookup-table class cap IN DOMAIN? (LEDGER \u00a79, registry probe `B17`.)",
+  "components": [
+    "cqadup-programmers",
+    "cqadup-physics"
+  ],
+  "seed": 0,
+  "n_fit_queries": 957,
+  "n_parameters": 31254528,
+  "teacher_symmetric_ceiling_cqa2": 0.4806,
+  "per_lambda": {
+    "0.0001": {
+      "held_out_macro": 0.19230030055763395,
+      "per_component": {
+        "cqadup-programmers": 0.16573738511655345,
+        "cqadup-physics": 0.21886321599871444
+      },
+      "cg_iterations": 742,
+      "cg_converged": true
+    },
+    "0.001": {
+      "held_out_macro": 0.19649059246584344,
+      "per_component": {
+        "cqadup-programmers": 0.17059918150670159,
+        "cqadup-physics": 0.22238200342498532
+      },
+      "cg_iterations": 258,
+      "cg_converged": true
+    },
+    "0.01": {
+      "held_out_macro": 0.19993858006944248,
+      "per_component": {
+        "cqadup-programmers": 0.17875323952138045,
+        "cqadup-physics": 0.22112392061750452
+      },
+      "cg_iterations": 85,
+      "cg_converged": true
+    },
+    "0.1": {
+      "held_out_macro": 0.15859428430867192,
+      "per_component": {
+        "cqadup-programmers": 0.14710649426803007,
+        "cqadup-physics": 0.17008207434931377
+      },
+      "cg_iterations": 26,
+      "cg_converged": true
+    },
+    "1.0": {
+      "held_out_macro": 0.09442207846626693,
+      "per_component": {
+        "cqadup-programmers": 0.08959385812601481,
+        "cqadup-physics": 0.09925029880651906
+      },
+      "cg_iterations": 11,
+      "cg_converged": true
+    }
+  },
+  "init_only_held_out_macro": 0.017353230566734233,
+  "init_only_per_component": {
+    "cqadup-programmers": 0.016382876724951794,
+    "cqadup-physics": 0.018323584408516672
+  },
+  "oracle_lambda": "0.01",
+  "oracle_held_out_macro": 0.19993858006944248,
+  "oracle_as_fraction_of_teacher": 0.41601868512160317,
+  "gain_over_init": 0.18258534950270824,
+  "routing_rule": {
+    "registered": ">=0.45 / <=0.40 / between",
+    "value": 0.19993858006944248,
+    "branch": "class caps in domain -> D2/D1/D4' carry the milestone"
+  },
+  "caveat": "the fit half is 957 queries against 31,254,528 parameters, so the ridge is enormously underdetermined and stays near its initialization. This measures what ~957 in-domain queries buy ON TOP OF the teacher-vector init; it is NOT the class's asymptotic ceiling, and a low value is evidence about that supervision budget rather than proof of a hard limit.",
+  "oracle_note": "lambda is chosen on the HELD-OUT half -- selection on the reported quantity, deliberately, as the strongest shot for the class. The honestly-selected value is per_lambda at the fit-half argmax, and the difference is the size of the favour.",
+  "seconds": 15.4,
+  "_registration": {
+    "probe": "B17",
+    "row": {
+      "wave": 1,
+      "title": "in-domain oracle generalization ceiling",
+      "question": "Does the lookup-table class cap in-domain, or is supervision the binding constraint?",
+      "endpoint": "nDCG@10 on the held-out query half of the dev CQADupStack components, from an oracle table fitted on the other half",
+      "comparator": "the 0.481 teacher ceiling on the same half",
+      "bar": "ROUTING RULE, not an adoption: held-out >= 0.45 => supervision/objective is the story AND R1 takes the majority budget ONLY IF B3-template out-of-domain corroboration is also present; without that corroboration the branch reads 'both'. held-out <= 0.40 => the class caps in-domain and D2/D1/D4' carry the milestone. Between 0.40 and 0.45 => both, budget split 50/50.",
+      "multiplicity": "none",
+      "no_survivor": "the routing rule is exhaustive by construction; there is no 'no survivor' state",
+      "notes": "its 'short-query loss' framing may NOT be quoted: results/m8_retention_decomposition.json shows the short-query premise does not survive a within-dataset read (LEDGER 17). The in-domain ceiling question is unaffected and is what this probe measures.",
+      "noise_floor_exempt": true,
+      "exempt_reason": "a routing diagnostic against a fixed ceiling, adopting no recipe setting"
+    },
+    "wave": 1,
+    "registry_sha256": "a561ebb598d7c4e6c74f5b21940735abe075f14628a9441ead31fcd5a0ae341e",
+    "ledger_sha256": "dced8bf95c488d8d5b4333d981d5d8e7fdb960b1328532906e50ce68664003e8",
+    "ledger_commit": "62dbd5a3b2b388135375c72d4a7a38a7b2ab074d",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}

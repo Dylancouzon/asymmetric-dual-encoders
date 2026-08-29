@@ -1421,3 +1421,48 @@ in six, carrying no information at all — and switching the candidate sampler t
 top-200 raises the median entropy by **six orders of magnitude**, to a quarter of the uniform
 ceiling. That is a cheap, well-defined change with a measured mechanism behind it, which is a
 different class of lever from the knob-tuning M7 measured at zero transfer.
+
+## 20. B17 — the registered branch fired, and the number that fired it cannot carry it
+
+`results/m8_b17_oracle.json`. 957 fit queries (a 50/50 split of the two dev CQADupStack
+components), oracle λ chosen on the held-out half, scored against the teacher's symmetric CQA-2
+ceiling of 0.4806.
+
+| | held-out CQA-2 macro |
+|---|---|
+| init only (teacher-vector rows, nothing fitted) | 0.0174 |
+| **oracle λ = 0.01, fitted on 957 in-domain queries** | **0.1999** (41.6% of the teacher) |
+| λ = 1e-4 / 1e-3 / 1e-1 / 1.0 | 0.192 / 0.197 / 0.159 / 0.094 |
+
+**The registered routing rule reads ≤ 0.40 as "the class caps in domain, and D2/D1/D4' carry the
+milestone". That branch fired. It should not be relied on, and the reason is a number this project
+already had.**
+
+The SAME closed-form class, fitted on the 349,934-query general TRAIN list, scores **0.3439** on
+these same two components (§18b, and M7's own learnability report). So:
+
+    957 in-domain queries  -> 0.200
+    350K general queries   -> 0.344
+    the teacher itself     -> 0.481
+
+A class that reaches 0.344 with more — and *out-of-domain* — supervision has not "capped in
+domain at 0.20". **What B17 measured is its own fit-set size**, exactly as its pre-registered
+caveat warned: 957 queries against 31,254,528 parameters leaves the ridge enormously
+underdetermined, and the +0.183 it gains over the bare init is what that supervision budget buys,
+not what the class can do.
+
+**This is recorded as a probe whose registered design cannot answer its registered question.** The
+rule is NOT amended — the number exists, and amending a rule after seeing what it says is the one
+thing §0 forbids outright. It fired, it is on the record, and it is disowned on evidence rather
+than quietly ignored.
+
+**And it is disowned in the direction that costs me something.** B17's branch points at D2/D1 —
+the same conclusion the power simulation (§4.4), B2 (§19) and the fragmentation channel (§17b)
+already support. It would have been easy and comfortable to bank it as a fourth independent
+witness. It is not one: those three stand on their own and B17 adds nothing to them.
+
+**What a properly-powered version needs, and that it needs its own registration:** fit on the
+general TRAIN list **plus** the in-domain half and score the held-out half, so the quantity
+measured is what in-domain supervision *adds* to a table that already exists — which is the
+decision-relevant question. That is a different probe from the one registered here and may not be
+run under B17's id.
