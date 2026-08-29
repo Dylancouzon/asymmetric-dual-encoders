@@ -65,6 +65,13 @@ adversarial review before anything expensive or irreversible (standing grant).
 10. **STATUS update + wake-up note** before session end: what ran, what's blocked, P(ship), LoTTE
     result, teacher-screen table, any surprises. One screen.
 
+11. **FineWeb arm prep (ruling E13, 2026-08-29 — measure first, ship-decide later):** build the
+    Qdrant/FineWeb-10B span sampler (~1–2M spans), run it through the full contamination/near-dup
+    filters vs ALL protected partitions, teacher-encode the survivors (~17–35 min). The arm itself
+    joins the registered data probe (same bar, matched exposure, never released, refused by
+    `assert_releasable`). If its result clears the bar by a shippable margin → wake-up note with
+    the number; the licensing ruling returns to Dylan, never inferred.
+
 Stretch (only if all above lands cleanly): B7 solver benchmark at 64K, stella ONNX export attempt
 (config-flag recipe in `research/m8-planning/onnx-feasibility-2026-08-29.md`), the constella-zero
 query-side ONNX graph prototype + conformance fixtures.

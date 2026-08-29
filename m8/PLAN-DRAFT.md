@@ -289,6 +289,7 @@ manifest; (5) index-side tooling is offline, not served.
 | E10 | **LoTTE adopted as the mandatory shadow** under the written "not literally CQADupStack" reading — pending the overlap measurement (§2d); shadow STOP-on-failure. |
 | E11 | **STRICT C2** ("we want something that looks good on benchmarks too; hybrid should be the default but isn't to everyone") — the dense table must beat M7's dense table; the fused-objective lever stays consciously excluded. |
 | E12 | **Comparators inside the access: YES, bge-small + LR-dense-websearch**, descriptive only, outside the Holm family, registered before any M8 number. |
+| E13 | **FineWeb (Qdrant/FineWeb-10B): measure first, ship-decide later** (2026-08-29). The affirmative-licence standard stays in force for the RELEASED stack; a FineWeb arm joins the registered data probe under the clean-stack-tax design — fully filtered/decontaminated (R1/R2 + near-dup vs ALL protected partitions), matched exposure, never released, refused by the release guard. If it clears the probe bar by a margin worth shipping, the licensing ruling comes back to Dylan WITH the number; note that Qdrant redistributing FineWeb is itself evidence of the company's posture, but a wrapper tag — including our own — is not a licence. |
 
 ## 5. Inherited-obligation matrix
 
