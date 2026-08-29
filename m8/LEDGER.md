@@ -1149,7 +1149,7 @@ gte-large-en-v1.5 (same architecture) ships first-party ONNX. Verdict: days, not
 | item | disposition |
 |---|---|
 | sqrt full-chain arm | Own registration slot at R1-assembly time — run, or formally deferred with owner-visible reasoning. B10/B13 inform it; they do not falsify it. **Never revived at M7's arm (a).** |
-| n-gram rows | **Superseded by D2** — a no-whitespace multi-word tokenizer IS the n-gram direction in non-overlapping form. If D2 dies, additive rows need their own registration; **no auto-revival.** |
+| n-gram rows | **REOPENED 2026-08-29** (§15, review response). The former ruling — "superseded by D2, no auto-revival" — collapsed two hypothesis classes and is **withdrawn on algebra**: D2 picks one segmentation and removes constituent activations, while additive overlapping rows keep the incumbent unigrams and can fire several phrases at once, and an additive row with **zero residual recovers R0 exactly** where a segmentation change does not. Character n-grams additionally reach rare strings a frequency tokenizer never tokenizes. The classes are compared head to head at equal row budget in **`D2-PRE`**; whichever wins is the registered lever. |
 | negatives / step-count confound | B13 matched-steps. The honest M7 statement stands: "the dev suite cannot separate the negatives source from the step count", never "mined negatives do not help". |
 | doc2query full dose | Dead on compute for anything confirmatory; bounded research probe only. |
 | teacher revisit | §10. Swap bar with the CI-widening penalty; same-teacher default; Dylan signs. |
@@ -1186,6 +1186,92 @@ CORPORA are ordinary public downloads while their query and qrel payloads stay g
 *(Dated entries only. An amendment is legal only before any raw number it would affect exists —
 in either direction. It states what changed, why, and that the dependent numbers did not yet
 exist.)*
+
+- **2026-08-29 — `D2` AMENDED after an adversarial review of its registration, before any arm ran
+  and before any tokenizer was trained. Three BLOCKERs adopted, two of them against decisions the
+  audit had made hours earlier. `D2-PRE` registered. The exit is gated. §13 is REOPENED.**
+  Review log audited for reserved-set reads first (see the incident below); Dylan ruled the sets
+  fine and lifted the quarantine, so the findings are adopted on their merits.
+
+  **BLOCKER 1 — the "compositional init floor" was not a floor, and the fix is the SUM.** The row
+  specified initializing a multi-word row to the **mean** of its constituent unigram rows. The
+  served query is `normalize(Σ_types g(count_t)·w_t)`. Replacing constituents `a,b` (each count 1)
+  by a phrase row `w_p = w_a + w_b` leaves the summand **identical**, so the normalized query is
+  **exactly** unchanged — a true floor. The mean changes the sum by `−(w_a+w_b)/2`, which is not a
+  positive scalar multiple of the old sum, so the final normalize does not restore it and the
+  phrase is silently downweighted ~2× against every other token. **The registration would have
+  degraded the baseline before any learning began**, and a coverage shortfall would then have
+  degraded to something worse than M7 rather than to M7. Re-derived independently here, not taken
+  on the reviewer's word. Rows are now trained as a **residual on top of the sum init**, so an
+  under-updated row stays at zero residual and reproduces R0 exactly.
+
+  **BLOCKER 2 — the coverage gate contained an escape clause that voided the bar.** It permitted
+  "expand the pool and re-measure", contradicting `held_fixed` in the same row. Exercising it
+  invalidates the pre-existing R0 chains as controls and makes the arm **pool-varying**, which
+  §23's crossed floor explicitly does not bound — so 0.00519 would not be calibrated for the
+  resulting experiment. **Removed**: if a vocabulary cannot be covered by the fixed pool the answer
+  is the smaller vocabulary or a NO-GO, never a bigger pool. The gate itself was also rebuilt —
+  the old one counted *unique* dev-reachable rows with zero updates, which the vocabulary
+  denominator games (many one-occurrence rows dilute it) and which was calibrated against M7's
+  5.71% *overall* cold-row figure, a different quantity. It now reports dev token **occurrence
+  mass** at 0/<5/<20 effective updates and gates on a **performance** condition: the sum-init
+  zero-residual compile must reproduce R0 within 0.001 dense.
+
+  **BLOCKER 3 — the pre-committed exit was premature on this repository's own evidence.** It fired
+  after `D2` + `B10`. But **`B2` did not close the KL class**: its uniform-bank arm is degenerate
+  (0.0052 of the entropy ceiling) while its **`teacher_top200` arm measures 0.777 nats mean, 0.369
+  median** (`results/m8_b2_entropy.json`), and B2's own artifact names `R-LIST` as the consequence.
+  And §15 forbids `E14-HEAD` from closing `E14-LORA`. **A pre-commitment cannot perform a future
+  milestone audit in advance** — it can bind the default, not the finding. The exit is now gated on
+  `D2`, `B10`, **`B8`** (a closed-form document-centroid target at ~15 min — deferring it was a
+  false economy) and **`R-LIST`** all having run and missed, plus a re-run of CLAUDE.md's standing
+  directive at that point.
+
+  **REOPENED: §13's "n-gram rows are superseded by D2, no auto-revival" — and this reverses the
+  audit's own ruling from this morning.** The audit found the worklist recommending bigram rows,
+  found §13 retiring them, and resolved it in §13's favour. **§13 is the part that is wrong**, on
+  algebra: D2 picks ONE segmentation and *removes* the constituent activations, while additive
+  overlapping rows *keep* the incumbent unigrams and can fire several phrases at once. Decisively,
+  **an additive phrase row with zero residual recovers R0 exactly, whereas a segmentation change
+  does not** — the additive class is strictly the safer parameterisation of the same intuition, and
+  character n-grams additionally reach rare technical strings a frequency tokenizer may never
+  allocate a token to. The blanket supersession is withdrawn; the two classes are compared head to
+  head at equal row budget in `D2-PRE` before either gets a training chain.
+
+  **REGISTERED: `D2-PRE`**, a sub-hour closed-form preflight over frozen incumbent rows using the
+  block-CG solver `B7` already proved. It measures the actual fertility reduction, verifies the
+  sum-init compile reproduces R0 (with mean-init scored beside it as a negative control), and
+  solves cross-fitted residuals for four arms at equal row budget — D2 segmentation, additive word
+  n-grams, additive character n-grams, and D2 with a zero-residual fallback. **Its routing rule is
+  fixed before the number, including the reversal: if an additive arm wins at equal budget, the
+  additive class becomes the lever and D2 stands down.** Closed-form screening is informative here
+  because `T1` ranked teachers on exactly this criterion and `B7`'s real-data run reproduced M7's
+  trained dev macro at the argmax λ; its known failure mode is `B17`, which fitted and scored on
+  the same 957 queries and was disowned — hence the cross-fitting requirement and hence "routing,
+  never adoption".
+
+  **Also adopted.** §17b is downgraded from "an upper bound" to **correlated headroom, not a bound
+  in either direction** — it is uncontrolled between-query OLS, so the slope may be driven by
+  specificity or rarity and D2 could recover none of it, while a phrase feature could equally
+  exceed it via conjunction effects. `NF-CROSSED-FUSED` becomes **mandatory before any D2 success
+  claim** and its "plausibly clear" escape wording — an undefined judgement, therefore exploitable
+  — is removed; a dense-only win is labelled a **mechanism** success, never a release success.
+  Tokenizer training is pinned deterministic with its sha256 in the result, so tokenizer randomness
+  contributes no variance the bar does not cover.
+
+  **Recorded and NOT fixed, because it needs work rather than a wording change:** G8's dev-reuse
+  counter (`results/m8_dev_reuse_count.json`) is promised by §14 and **absent from HEAD**. M7
+  logged 322 in-training dev evaluations. Nested selection protects the *reserved* sets, but it
+  does not make wikipedia/heldout selection independent of a CQADupStack dev bar, and a 0.005-scale
+  development difference deserves the counter that was promised. This is on the worklist.
+
+  **Kept against the review, with reasons.** (i) **0.00519 stands.** The reviewer is right that it
+  is probably conservative for a three-seed mean (SD ≈ 0.00125 → ~4.15σ) rather than for a single
+  arm — but lowering a bar after registering it, on an argument available before the number, is
+  precisely what this protocol forbids; conservative is the safe direction and it stays.
+  (ii) **Retokenization is NOT pool-varying**, which the review also concluded: a fixed collection
+  of pseudo-query texts is one pool however it is segmented, and the tokenizer belongs to the B
+  leg. The audit's own worry here was wrong, and 0.00519 is the right *kind* of bar.
 
 - **2026-08-29 — INCIDENT: an adversarial reviewer read two RESERVED confirmatory sets in full.
   `paths_guard` does not and cannot cover it. No set was scored; no decision read them.**
