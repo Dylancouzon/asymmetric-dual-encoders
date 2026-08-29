@@ -3,15 +3,19 @@
 **Stage: PLANNING, 2026-08-29. No training has run; no protected set touched; nothing frozen
 beyond what `instructions-m8.md` pre-registered on 2026-08-28.**
 
-Current object of work: `m8/PLAN-DRAFT.md` (**v3**) — two Codex gates run (STOP 17 → STOP 14, all
-findings actioned in v3; a third gate should confirm convergence before LEDGER transcription).
-All three sweeps DONE (teacher: probe stella-1.5B + harrier-0.6b, plus E9 FEVER-teacher-
-contamination disclosure, verified; data rights: USPTO/EUR-Lex/US-federal cleared, arXiv/SEC/HN
-out; shadow-dev: LoTTE is the only ready-made candidate → E10). Blocking on Dylan: rulings E1–E10
-(§4 of the draft; E4 = M9 reserve is time-critical, E7 = byte cap gates two teacher probes, E9/E10
-color the eval design). Pipeline order fixed by gate #2: teacher freeze → Stage R → Stage S →
-seeds → quantization → ONNX parity → fusion → manifest → one shadow crossing → freeze → the single
-reserved-4 access. After rulings + gate #3: transcribe into `m8/LEDGER.md` and start Phase 0.
+Current object of work: `m8/PLAN-DRAFT.md` (**v4**) — three Codex gates run (STOP 17 → 14 → 8,
+findings converging, all actioned) and **Dylan ruled all ten decision items on 2026-08-29** (§4
+table of the draft; headline rulings: pure lookup is the product — no query-side neural head ever
+in M8; doc-side head approved IF it fuses into the doc ONNX graph; byte cap 233 MB int8; reserve
+BOTH new M9 sets (EUR-Lex + USPTO, we build them); LoTTE adopted as mandatory shadow gate;
+index-time adaptation research-only; PMC-OA excluded; synthetic Qwen3 training queries approved;
+training-only second teacher allowed if licence-clean; FEVER gets label + sensitivity read).
+All three sweeps DONE (teacher: probe stella-1.5B + harrier-0.6b; data: USPTO/EUR-Lex/US-federal
+cleared; details in research/m8-planning/). Pipeline: teacher freeze → Stage R (one assembly, one
+validation) → Stage S (one finalist) → seeds → int8 → ONNX parity → fusion → manifest → one
+mandatory LoTTE shadow crossing → freeze → the single reserved-4 access. Next: gate #4 convergence
+check on v4, then write `m8/LEDGER.md` (executable pre-registrations + stats code + power
+simulation + probe bars + LoTTE/reserve freezes) and start Phase 0 with the teacher workstream.
 
 One-paragraph state of knowledge: M7 missed its release bar by −0.0243 CI-resolved; five
 independent planning reviews (4 Opus + Codex, `research/m8-planning/`) converged on a corrected
