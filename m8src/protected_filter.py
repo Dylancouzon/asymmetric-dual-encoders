@@ -254,10 +254,15 @@ def s0(limit=None, smoke=False):
 
 # ---------------------------------------------------------------- FILTER ----------------------
 
-def build_filter(lotte_slices=None):
-    """The protected-query fingerprint inventory: six + dev + reserved-4 + surviving LoTTE forum
-    queries + M9-reserve query text. Emits HASHES ONLY."""
-    t0 = time.time()
+def protected_query_groups(lotte_slices=None):
+    """EVERY protected query string, by partition group: six + dev + reserved-4 (from M7's own
+    `decontam.protected_queries`) PLUS the surviving LoTTE forum queries and the M9-reserve query
+    text, which M7's function knows nothing about.
+
+    This exists as ONE function because it was briefly TWO. `build_filter` extended the set and
+    `build_fitlist` called `decontam.protected_query_index()` directly, so the fit list was
+    screened against 25,834 queries while its own manifest claimed 80,954 -- a false statement in
+    an artifact, which is the failure class this project cares most about. One source now."""
     pq = decontam.protected_queries()                       # six + dev + untouched-final
     groups = {k: list(v) for k, v in pq.items()}
 
@@ -297,6 +302,24 @@ def build_filter(lotte_slices=None):
             m9_detail[f"{f}:{listkey}.{textkey}"] = len(got)
     groups["m9-reserve"] = m9
 
+    return groups, m9_detail
+
+
+def extended_index(lotte_slices=None):
+    """-> (exact-key set, sorted gram array, short-whole index, per-group counts) over EVERY
+    protected partition. The same three structures `decontam.query_hits` consumes."""
+    groups, m9_detail = protected_query_groups(lotte_slices)
+    prot = [q for v in groups.values() for q in v]
+    q_ex = set(int(decontam.exact_u64(q)) for q in prot)
+    q_gram = np.unique(np.concatenate([decontam.query_grams(q) for q in prot]))
+    q_whole = decontam.short_whole_index(prot)
+    return q_ex, q_gram, q_whole, {k: len(v) for k, v in groups.items()}, m9_detail
+
+
+def build_filter(lotte_slices=None):
+    """The protected-query fingerprint inventory. Emits HASHES ONLY."""
+    t0 = time.time()
+    groups, m9_detail = protected_query_groups(lotte_slices)
     prot = [q for v in groups.values() for q in v]
     q_ex = np.unique(np.array([decontam.exact_u64(q) for q in prot], dtype=np.uint64))
     q_gram = np.unique(np.concatenate([decontam.query_grams(q) for q in prot]))
@@ -327,13 +350,91 @@ def build_filter(lotte_slices=None):
     return meta
 
 
+# ---------------------------------------------------------------- FIT LIST --------------------
+
+def build_fitlist(limit=None):
+    """Regenerate the closed-form fit list THROUGH the current filter (LEDGER §3.3).
+
+    This lives HERE, not in its own module, and the guard is why. A separate `m8src/fitlist.py`
+    tried to `claim("m8src.protected_filter")` and was refused: an entry may only claim itself.
+    That refusal was correct and it pointed at better architecture -- screening TRAIN queries
+    against protected query TEXT *is* this module's contact class (G2 class b), so the work
+    belongs in the one module that already holds the capability rather than in a second one that
+    borrows it. Everything downstream still reads only the query-only hash inventory.
+
+    M7's `work/trainq_texts.json` carries 4,582 R1 hits (1.31%) and M8's filter covers partitions
+    M7's never screened -- the reserved four, the shadow, and 55,120 M9-reserve queries -- so
+    "the same contaminated list for everyone" no longer covers it. M7's own pins are NOT touched
+    (G3); the two lists coexist and their difference is the measurement.
+    """
+    import hashlib
+    import pool as poolmod
+    import train
+    from train import Cfg
+
+    t0 = time.time()
+    index, _vecs, _meta = poolmod.build()
+    q_texts, *_ = train.build_arrays(Cfg(), index)
+    q_texts = list(q_texts)
+    if limit:
+        q_texts = q_texts[:limit]
+    print(f"derived {len(q_texts):,} TRAIN query texts ({time.time()-t0:.0f}s)", flush=True)
+
+    lot = None
+    lp = REPO / "results" / "m8_lotte_overlap.json"
+    if lp.exists():
+        lot = json.loads(lp.read_text())["kept"] or None
+    q_ex, q_gram, q_whole, counts, m9_detail = extended_index(lot)
+    print(f"protected-query index: {sum(counts.values()):,} queries {counts}", flush=True)
+
+    t1 = time.time()
+    kinds, hits = {"exact": 0, "near": 0, "contains": 0}, set()
+    for i, q in enumerate(q_texts):
+        k = decontam.query_hits(q, q_ex, q_gram, q_whole)
+        if k:
+            kinds[k] += 1
+            hits.add(i)
+        if (i + 1) % 100_000 == 0:
+            print("  " + _rate(i + 1, len(q_texts), t1, "screened"), flush=True)
+    keep = [q for i, q in enumerate(q_texts) if i not in hits]
+
+    payload = json.dumps(keep)
+    dest = REPO / "work" / "m8_trainq_texts.json"
+    if not limit:
+        dest.write_text(payload)
+    meta = {
+        "_what": "the M8 closed-form fit list: TRAIN query texts screened through the CURRENT "
+                 "protected-query filter. `screened_against` records exactly which partitions "
+                 "that was -- an earlier version claimed M9-reserve coverage it did not have.",
+        "_why_not_in_place": "work/trainq_texts.json and results/m7_trainq_manifest.json are M7's "
+                             "provenance pins for a frozen, released system; G3 forbids M8 from "
+                             "editing M7's record.",
+        "screened_against": counts, "n_protected_queries": sum(counts.values()),
+        "m9_reserve_fields": m9_detail,
+        "n_derived": len(q_texts), "n_kept": len(keep), "n_removed": len(hits),
+        "removal_rate": len(hits) / max(len(q_texts), 1), "hits_by_kind": kinds,
+        "m7_list_known_r1_hits": 4582, "m7_list_known_r1_rate": 0.0131,
+        "relpath": str(dest.relative_to(REPO)),
+        "sha256": hashlib.sha256(payload.encode()).hexdigest(), "bytes": len(payload),
+        "produced_by": "m8src/protected_filter.py fitlist", "smoke": bool(limit),
+        "seconds": round(time.time() - t0, 1),
+    }
+    if not limit:
+        (REPO / "results" / "m8_trainq_manifest.json").write_text(json.dumps(meta, indent=2))
+    print(json.dumps(meta, indent=2))
+    return meta
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("step", choices=["s0", "filter", "all"])
+    ap.add_argument("step", choices=["s0", "filter", "fitlist", "all"])
     ap.add_argument("--limit", type=int, default=None,
                     help="documents per slice; use for the smoke, never for the real run")
     ap.add_argument("--smoke", action="store_true")
     a = ap.parse_args()
+    if a.step == "fitlist":
+        build_fitlist(limit=a.limit)
+        return 0
     kept = None
     if a.step in ("s0", "all"):
         r = s0(limit=a.limit, smoke=a.smoke)
