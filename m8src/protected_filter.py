@@ -264,23 +264,34 @@ def build_filter(lotte_slices=None):
             lot += lotte_forum_queries(topic, split)
         groups["lotte-shadow"] = lot
 
-    m9 = []
-    for f, qkey in (("eurlex_inventory.json", "queries"), ("uspto_inventory.json", "queries")):
+    # M9-RESERVE. The first version of this looked for a bare list of strings under `queries` and
+    # silently found none, because both inventories store LISTS OF RECORDS. A filter that quietly
+    # covers three partitions where the ledger says four is worse than one that fails loudly, so
+    # the field names are explicit and a miss is an error, not an empty list (G7).
+    M9_FIELDS = {
+        "eurlex_inventory.json": [("queries", "query_text")],
+        # USPTO's registered construction is query = abstract, gold doc = the application body.
+        # The abstract is the query text, so that is what the protected-query index must hold.
+        "uspto_inventory.json": [("records", "abstract_text"), ("records", "title")],
+    }
+    m9, m9_detail = [], {}
+    for f, specs in M9_FIELDS.items():
         p = REPO / "work" / "m9reserve" / f
         if not p.exists():
-            continue
-        try:
-            d = json.loads(p.read_text())
-        except (json.JSONDecodeError, MemoryError) as e:
-            print(f"  WARNING: {f} unreadable ({type(e).__name__}); M9 queries NOT in the filter",
-                  file=sys.stderr)
-            continue
-        q = d.get(qkey) or d.get("query_texts") or []
-        if isinstance(q, dict):
-            q = list(q.values())
-        m9 += [str(x) for x in q if isinstance(x, (str, int, float))]
-    if m9:
-        groups["m9-reserve"] = m9
+            raise SystemExit(f"G7: {f} is missing; the filter must cover the M9 reserve before "
+                             f"any teacher download or probe")
+        d = json.loads(p.read_text())
+        for listkey, textkey in specs:
+            rows = d.get(listkey) or []
+            got = [str(r[textkey]) for r in rows
+                   if isinstance(r, dict) and r.get(textkey)]
+            if not got:
+                raise SystemExit(f"G7: {f}[{listkey}][{textkey}] yielded no query text. The "
+                                 f"filter must not silently cover fewer partitions than the "
+                                 f"ledger claims -- fix the field name or the inventory.")
+            m9 += got
+            m9_detail[f"{f}:{listkey}.{textkey}"] = len(got)
+    groups["m9-reserve"] = m9
 
     prot = [q for v in groups.values() for q in v]
     q_ex = np.unique(np.array([decontam.exact_u64(q) for q in prot], dtype=np.uint64))
@@ -296,6 +307,7 @@ def build_filter(lotte_slices=None):
                  "decontamination reads this and therefore never needs the label-bearing "
                  "capability that built it (LEDGER G2 class b).",
         "groups": {k: len(v) for k, v in groups.items()},
+        "m9_reserve_fields": m9_detail,
         "n_protected_queries": len(prot),
         "n_exact_keys": int(q_ex.size), "n_gram_keys": int(q_gram.size),
         "n_short_queries_4to7_words": len(short),
@@ -304,7 +316,6 @@ def build_filter(lotte_slices=None):
         "npz_relpath": str(dest.relative_to(REPO)), "npz_sha256": sha,
         "lotte_slices": sorted(lotte_slices) if lotte_slices else [],
         "seconds": round(time.time() - t0, 1),
-        "screen_seconds": round(time.time() - t_all, 1),
     }
     (REPO / "results" / "m8_protected_filter.json").write_text(
         json.dumps(meta, indent=2, default=str))
