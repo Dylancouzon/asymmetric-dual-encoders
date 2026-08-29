@@ -1257,6 +1257,28 @@ the result JSON, or `research/m8-planning/`.*
 
 **PROTOCOL AMENDMENTS**
 
+- **`D2-PRE` review response #3 (2026-08-29), before any solve or retrieval score existed.** A Codex
+  pass on the IMPLEMENTATION design returned **6 BLOCKERs / 8 MAJORs, all adopted**; two BLOCKERs
+  were contradictions *inside the frozen row* that no implementation could repair. The row is the
+  record (`registry.json` `D2-PRE.amended_2`, `frozen_definitions`, `cross_fitting_design`); the
+  four that change what the probe *means*: **stage 1 is descriptive and may not stop the probe** (it
+  gated on §17b's slope as a one-directional bound, which §17b forbids, and would have killed the
+  additive arms on a fertility test irrelevant to them); **the five folds now score disjoint OOD
+  query folds**, because scoring every fold's table on the identical 1,915 queries made "positive in
+  4/5 folds" nearly redundant with a positive mean; **one shared comparator** (arm (a)'s sum-init
+  compile) for all four arms; and **arm (d)'s coldness frozen at <20 fit activations**, without
+  which it is algebraically identical to arm (a) (a ridge column with no activations has normal
+  equation `λΔ = 0`). Also: the ridge denominator is R0's for every arm — it cancels at serve time
+  but **not inside the least-squares objective**, so an arm-specific one silently changes each arm's
+  target and effective λ. **Disclosure:** stage 1's number was measured in a prototype *before* this
+  amendment (OOD fertility reduction 0.229/0.245 against the ~0.104 the old text named). It clears
+  under both readings, so the amendment cannot have chosen this probe's route.
+  **Standing lesson: the pooling canary must carry CONTEXT TOKENS.** A phrase that is a query's only
+  content normalizes sum-init and mean-init to the *same* vector, so the two-token fixture the first
+  self-test used scored 0.0 for both and could never have failed — CODEMAP pitfall 19's family,
+  caught by printing the control rather than by the assertion. With context tokens: sum 1.5e-8,
+  mean 0.040.
+
 - **Review response #2 (2026-08-29), before any arm ran.** A second adversarial pass on the handoff
   returned 5 findings; all adopted. **The compression had dropped three BINDING items** — restored
   above and marked: `D-FINEWEB`'s patent trigger REMOVED (the compressed text had resurrected it);
