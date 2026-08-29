@@ -23,31 +23,31 @@ have lost the remainder, so it is rewritten instead.
 
 ## Executable without Dylan, in order
 
-1. **Regenerate the fit list.** `m8src/fitlist.py` — written and smoke-ready, not yet run. It
-   derives the TRAIN query list from the current kept pairs and screens it through the filter that
-   now covers M9-reserve too. **Every teacher-screen number is ranking-only until this exists**;
-   `m8src/teacher_screen.py` refuses the stale list unless explicitly overridden.
-2. **T1, the teacher screens.** B7 removed the arithmetic that blocked them (LEDGER §18) and the
-   four candidates' Specs are established from primary sources
-   (`research/m8-planning/challenger-specs-2026-08-29.md`). What remains:
-   - write `m8src/challengers.py` — the four `Spec`s, inserted into `encoders.REGISTRY` at
-     RUNTIME (no `m7src` edit; G3);
-   - run `validate_encoder.py` for each before any encode — skipping it is how a comparison
-     silently runs the wrong model;
-   - screen granite-r2 and gte-modernbert FIRST: no `trust_remote_code`, byte-identical
-     tokenizers to each other, 38.7 MB tables, and they are the registered CG-frame controls;
-   - stella-1.5B next (int8-only at 155 MB; register its fallback row explicitly — its
-     `config.json` and `tokenizer_config.json` disagree about BOS);
-   - harrier last, and only after Dylan rules — it also needs last-token pooling, which
-     `m7src/teacher.py` does not implement.
-   `m8src/teacher_screen.py` is written and takes one candidate per process.
+1. **Fit list — DONE** (`m8src/protected_filter.py fitlist`): 337,981 kept of 338,076, all 95
+   removals from M9-reserve. Re-run it if the filter's coverage changes (e.g. if Dylan authorises
+   a LoTTE remedy, the surviving shadow queries must enter it).
+2. **T1 — DONE for three of five candidates; NO SWAP** (LEDGER §21). The incumbent was re-probed
+   in the identical frame and stands at 0.3438; granite-r2 (−0.052) and gte-modernbert (−0.109)
+   both lose CI-resolved. What remains, and only if there is a reason to want it:
+   - **stella-1.5B** — needs its degenerate-query fallback row REGISTERED first: its
+     `config.json` and `tokenizer_config.json` disagree about BOS (151643 against null), so there
+     is no defensible default. Needs `trust_remote_code` (same-repo, so `revision` pins it).
+     int8-only at 155 MB.
+   - **harrier** — needs Dylan's ruling AND new code: last-token pooling, which
+     `m7src/teacher.py` raises on. It publishes no retrieval-only number either, so a screen
+     result would have nothing to check against. Lowest priority of anything on this list.
+   `m8src/challengers.py` registers Specs at runtime; add a row and `validate_encoder.py` must
+   pass before any encode.
 3. **The remaining gap-list obligations** (LEDGER §4.4): `test_final_guard.py`,
    `test_freeze_binding.py`, a **B-leg-varying noise floor** (the one floor still unmeasured —
    R-PHASE and any pool/init change flowing through the B leg cannot be read without it), and the
    **reserved-4 pre-encode allowlist entry** (G2 currently refuses `beir/fever` outright, which is
    the right default and will block the pre-encode at pipeline step 13 unless registered first).
-4. **Wave-1 probes still unrun.** B3's bar is frozen at 0.0040 (both endpoints) so its arms can
-   run. B6-pre (the doc-side ONNX fuse feasibility gate) has never been attempted and gates D1.
+4. **Wave-1 probes.** S0, T1, B2, B7 and both noise floors have run; B17 ran and was disowned
+   (§20). **B3's bar is frozen at 0.0040 on both endpoints, so its four arms can run** — that is
+   the largest remaining measurement, and its honest prior is in §3 (the clean-stack-tax arm put
+   half a million real pairs at +0.0058, unresolved). **B6-pre — the doc-side ONNX fuse
+   feasibility gate — has never been attempted and gates D1 entirely.**
 5. **FineWeb arm prep (E13)** — untouched. Span sampler, full contamination/near-dup filters,
    teacher-encode. The arm itself stays refused until its bar is frozen.
 
