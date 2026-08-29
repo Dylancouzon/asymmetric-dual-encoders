@@ -1163,6 +1163,32 @@ CORPORA are ordinary public downloads while their query and qrel payloads stay g
 in either direction. It states what changed, why, and that the dependent numbers did not yet
 exist.)*
 
+- **2026-08-29 — E10 RULED (Dylan delegated the call: "independently from the rules, take the
+  decision that makes the most sense"). The shadow is the SEVEN clean-community LoTTE slices under
+  a per-question remedy. The CQADupStack subforums are REJECTED as a shadow.**
+  **The reason the subforums lose is not contamination — they passed that screen — it is
+  correlation with the exam.** Two of the reserved four confirmatory sets *are* CQADupStack
+  (android, english). A shadow drawn from the same benchmark family is not independent of the set
+  it exists to protect: iterating against subforums would tune us toward CQADupStack's format and
+  inflate a confirmatory read we can never re-take. A shadow whose job is catching self-deception
+  must not be correlated with the thing it is protecting. This consideration was missing when the
+  three options were first costed in STATUS, and it is decisive.
+  **The remedy** follows §3's standing rule R1 — remove the ITEM, not the slice — rather than
+  inventing an exception: drop the 2–15 leaking questions per slice, keep the seven slices at
+  roughly 2,000 questions each (~14,000 total), genuinely out-of-domain and uncorrelated with the
+  reserved four. **The three community-overlapping slices (english, physics, android +
+  softwareengineering) stay dead**; no remedy applies to a community that overlaps a protected set.
+  **Two binding conditions:**
+  1. **Re-screen after remediation** and require ZERO residual matches. Removal is not assumed to
+     have worked because it was performed.
+  2. **The shadow is a CHECK, not a selection surface.** It is registered with a use limit and may
+     never be used to choose between candidates. The moment it is optimised against it becomes a
+     second dev set and stops doing the one job it has.
+  **Consequence for the fit list:** the surviving shadow queries are now a protected partition and
+  must enter `protected_filter`'s index; the fit list is regenerated before any further training.
+  LoTTE's `search` queries stay excluded regardless (GooAQ is non-commercial-research-only); forum
+  queries only, which needed no ruling.
+
 - **2026-08-29 — E14 RULED by Dylan: measure it small first.** Doc-side co-adaptation is
   approved as a **dev-scale measurement**, not as a milestone commitment. Train a LoRA on the
   document tower alongside the table at dev scale, measure the gain, and bring him the number.
