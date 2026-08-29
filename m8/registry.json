@@ -219,7 +219,8 @@
    "comparator": "R0's target",
    "bar": "TBD-noise-floor",
    "multiplicity": "Holm within the target family at alpha = 0.05",
-   "no_survivor": "keep R0's target"
+   "no_survivor": "keep R0's target",
+   "plan_status": "DEFERRED-PENDING-D2 (2026-08-29 audit). Recipe/data class. Section 7 budgets it as hygiene, not the route to the bar: M7's entire post-gate lever programme transferred to the six at 0.000 +/- 0.005. Bar still TBD-noise-floor, so probe_guard refuses it regardless. Not cancelled -- it becomes live only if a capacity lever clears and Stage R is actually assembled."
   },
   "B9": {
    "wave": 2,
@@ -230,7 +231,8 @@
    "bar": "TBD-noise-floor",
    "multiplicity": "Holm over the rank grid at alpha = 0.05",
    "no_survivor": "keep full rank",
-   "notes": "truncation cannot RAISE quality; this is a compression diagnostic and is time-boxed accordingly"
+   "notes": "truncation cannot RAISE quality; this is a compression diagnostic and is time-boxed accordingly",
+   "plan_status": "DEFERRED-PENDING-D2 (2026-08-29 audit). Recipe/data class. Section 7 budgets it as hygiene, not the route to the bar: M7's entire post-gate lever programme transferred to the six at 0.000 +/- 0.005. Bar still TBD-noise-floor, so probe_guard refuses it regardless. Not cancelled -- it becomes live only if a capacity lever clears and Stage R is actually assembled."
   },
   "B10": {
    "wave": 2,
@@ -241,7 +243,8 @@
    "bar": "TBD-noise-floor",
    "multiplicity": "Holm within the family at alpha = 0.05, raw CI > 0 in BOTH precisions",
    "no_survivor": "keep R1's pooling rule",
-   "precondition": "ANY alternative must demonstrate ONNX export and pass the LEDGER 11.4 parity fixtures BEFORE it is adoptable (LEDGER 11.1)"
+   "precondition": "ANY alternative must demonstrate ONNX export and pass the LEDGER 11.4 parity fixtures BEFORE it is adoptable (LEDGER 11.1)",
+   "plan_status": "NAMED ALTERNATE to D2 (2026-08-29 audit). pool_mode is a qualifying_table key and the M7 candidate trains at mean while serving at sqrt, so training through the served rule is genuine multiplicity-dependent capacity (CLAUDE.md directive 4). PRIOR IS WEAK: M7's lever #6 arm (a) measured +0.0011, p=0.051/0.073, CI straddling zero. instructions-m8.md permits a REDESIGNED arm, never a revival of the dead one, and a redesign needs its own bar -- 0.00519 if it retrains the B leg. Runs only if D2 misses."
   },
   "B13": {
    "wave": 2,
@@ -251,7 +254,8 @@
    "comparator": "the complete R0 fallback",
    "bar": "TBD-noise-floor",
    "multiplicity": "ONE confirm arm; no per-axis adoptions",
-   "no_survivor": "the complete fallback"
+   "no_survivor": "the complete fallback",
+   "plan_status": "DEFERRED-PENDING-D2 (2026-08-29 audit). Recipe/data class. Section 7 budgets it as hygiene, not the route to the bar: M7's entire post-gate lever programme transferred to the six at 0.000 +/- 0.005. Bar still TBD-noise-floor, so probe_guard refuses it regardless. Not cancelled -- it becomes live only if a capacity lever clears and Stage R is actually assembled."
   },
   "B14": {
    "wave": 2,
@@ -262,7 +266,8 @@
    "bar": "TBD-noise-floor",
    "multiplicity": "none",
    "no_survivor": "keep R0",
-   "notes": "low prior: M7 measured a query prefix at -0.0019, CI-resolved HARMFUL"
+   "notes": "low prior: M7 measured a query prefix at -0.0019, CI-resolved HARMFUL",
+   "plan_status": "DEFERRED-PENDING-D2 (2026-08-29 audit). Recipe/data class. Section 7 budgets it as hygiene, not the route to the bar: M7's entire post-gate lever programme transferred to the six at 0.000 +/- 0.005. Bar still TBD-noise-floor, so probe_guard refuses it regardless. Not cancelled -- it becomes live only if a capacity lever clears and Stage R is actually assembled."
   },
   "B15": {
    "wave": 2,
@@ -272,7 +277,8 @@
    "comparator": "R0's init",
    "bar": "TBD-noise-floor",
    "multiplicity": "Holm over the init family at alpha = 0.05",
-   "no_survivor": "keep R0's init"
+   "no_survivor": "keep R0's init",
+   "plan_status": "DEFERRED-PENDING-D2 (2026-08-29 audit). Recipe/data class. Section 7 budgets it as hygiene, not the route to the bar: M7's entire post-gate lever programme transferred to the six at 0.000 +/- 0.005. Bar still TBD-noise-floor, so probe_guard refuses it regardless. Not cancelled -- it becomes live only if a capacity lever clears and Stage R is actually assembled."
   },
   "B16": {
    "wave": 2,
@@ -296,7 +302,8 @@
    "bar": "TBD-noise-floor",
    "multiplicity": "Holm over the head variants at alpha = 0.05",
    "no_survivor": "D1 does not ship",
-   "precondition": "B6-pre must pass first"
+   "precondition": "B6-pre must pass first",
+   "plan_status": "DEFERRED-PENDING-D2 (2026-08-29 audit). Recipe/data class. Section 7 budgets it as hygiene, not the route to the bar: M7's entire post-gate lever programme transferred to the six at 0.000 +/- 0.005. Bar still TBD-noise-floor, so probe_guard refuses it regardless. Not cancelled -- it becomes live only if a capacity lever clears and Stage R is actually assembled."
   },
   "D-GENRE": {
    "wave": 2,
@@ -306,7 +313,8 @@
    "comparator": "a Wikipedia-only arm at matched examples and updates",
    "bar": "TBD-noise-floor",
    "multiplicity": "whole-bundle in or out; no post-hoc cherry-pick",
-   "no_survivor": "Wikipedia-only pool"
+   "no_survivor": "Wikipedia-only pool",
+   "plan_status": "DEFERRED-PENDING-D2 (2026-08-29 audit). Recipe/data class. Section 7 budgets it as hygiene, not the route to the bar: M7's entire post-gate lever programme transferred to the six at 0.000 +/- 0.005. Bar still TBD-noise-floor, so probe_guard refuses it regardless. Not cancelled -- it becomes live only if a capacity lever clears and Stage R is actually assembled."
   },
   "D-SYNTH": {
    "wave": 2,
@@ -316,7 +324,8 @@
    "comparator": "the same pool without the synthetic component, matched exposure",
    "bar": "TBD-noise-floor",
    "multiplicity": "one dose, one arm",
-   "no_survivor": "no synthetic component"
+   "no_survivor": "no synthetic component",
+   "plan_status": "DEFERRED-PENDING-D2 (2026-08-29 audit). Recipe/data class. Section 7 budgets it as hygiene, not the route to the bar: M7's entire post-gate lever programme transferred to the six at 0.000 +/- 0.005. Bar still TBD-noise-floor, so probe_guard refuses it regardless. Not cancelled -- it becomes live only if a capacity lever clears and Stage R is actually assembled."
   },
   "D-FINEWEB": {
    "wave": 2,
@@ -328,7 +337,8 @@
    "multiplicity": "one arm",
    "no_survivor": "no FineWeb",
    "release_status": "NEVER RELEASED; refused by freeze.assert_releasable. If it clears the bar by a shippable margin the licensing ruling goes to Dylan WITH the number.",
-   "blocked_by_open_question": "The HUPD/patent licence question is DEFERRED to M9 but is triggered by THIS arm: FineWeb is a general web crawl and the one planned source that could contain patent text, so the M9 patent reserve must be settled before any web-crawl-derived data enters the training mix (LEDGER 15, 2026-08-29)."
+   "blocked_by_open_question": "The HUPD/patent licence question is DEFERRED to M9 but is triggered by THIS arm: FineWeb is a general web crawl and the one planned source that could contain patent text, so the M9 patent reserve must be settled before any web-crawl-derived data enters the training mix (LEDGER 15, 2026-08-29).",
+   "plan_status": "DEFERRED-PENDING-D2 (2026-08-29 audit). It is POOL-VARYING, and section 23's crossed floor explicitly does not bound a pool-varying lever (all nine cells share one pseudo-query pool), so its bar is not computable even after the chain floor was adopted: a fresh draw is a different ~925K-span text set plus a teacher re-encode per seed, ~2.3 h before the arm is registrable at all."
   },
   "R-LIST": {
    "wave": 2,
@@ -339,7 +349,8 @@
    "bar": "TBD-noise-floor",
    "multiplicity": "Holm over sampler x temperature at alpha = 0.05",
    "no_survivor": "R0's objective",
-   "trigger": "B2 only"
+   "trigger": "B2 only",
+   "plan_status": "DEFERRED-PENDING-D2 (2026-08-29 audit). Recipe/data class. Section 7 budgets it as hygiene, not the route to the bar: M7's entire post-gate lever programme transferred to the six at 0.000 +/- 0.005. Bar still TBD-noise-floor, so probe_guard refuses it regardless. Not cancelled -- it becomes live only if a capacity lever clears and Stage R is actually assembled."
   },
   "R-PHASE": {
    "wave": 2,
@@ -349,7 +360,8 @@
    "comparator": "R0's sequential B->A at equal updates",
    "bar": "TBD-noise-floor",
    "multiplicity": "Holm over the 3 arms at alpha = 0.05",
-   "no_survivor": "R0's sequential structure"
+   "no_survivor": "R0's sequential structure",
+   "plan_status": "DEFERRED-PENDING-D2 (2026-08-29 audit). Recipe/data class. Section 7 budgets it as hygiene, not the route to the bar: M7's entire post-gate lever programme transferred to the six at 0.000 +/- 0.005. Bar still TBD-noise-floor, so probe_guard refuses it regardless. Not cancelled -- it becomes live only if a capacity lever clears and Stage R is actually assembled."
   },
   "R1-ASSEMBLY": {
    "wave": 2,
@@ -360,7 +372,8 @@
    "bar": "TBD-noise-floor",
    "multiplicity": "ONE ordered nested sequence, registered: R1-full -> R1-data-only -> R0; the first that clears the bar is the candidate; no fourth rung may be added",
    "no_survivor": "R0",
-   "r1_data_only": "the pool-spec and ICT-fraction adoptions only (Stage-R DoF 1 and 8), with DoF 2-7 and 9 at their R0 fallbacks"
+   "r1_data_only": "the pool-spec and ICT-fraction adoptions only (Stage-R DoF 1 and 8), with DoF 2-7 and 9 at their R0 fallbacks",
+   "plan_status": "CONDITIONAL on a surviving lever. Assembles nothing if D2 and B10 both miss -- see D2's no_survivor and the pre-committed exit (LEDGER 15, 2026-08-29)."
   },
   "S-SELECT": {
    "wave": 2,
@@ -371,7 +384,8 @@
    "bar": "TBD-noise-floor",
    "multiplicity": "within-family rules first, then finalists vs R1-alone under the 0.0040 practical-equivalence band",
    "no_survivor": "the candidate is R1-alone",
-   "tie_break": "total downloadable bytes, then doc-index delta"
+   "tie_break": "total downloadable bytes, then doc-index delta",
+   "plan_status": "CONDITIONAL on a surviving lever. Assembles nothing if D2 and B10 both miss -- see D2's no_survivor and the pre-committed exit (LEDGER 15, 2026-08-29)."
   },
   "NF": {
    "wave": 1,
@@ -472,7 +486,53 @@
    "use_limit": "THE SHADOW IS A CHECK, NEVER A SELECTION SURFACE. It may not be used to choose between candidates, to rank arms, or to break a tie. The moment it is optimised against it becomes a second dev set and stops doing its job.",
    "noise_floor_exempt": true,
    "exempt_reason": "a screen with a zero-tolerance bar reads no effect size, so no floor applies",
-   "authorised_by": "Dylan 2026-08-29, E10 ruling (per-question remedy on the seven clean-community slices); spec at LEDGER 15, 2026-08-29."
+   "authorised_by": "Dylan 2026-08-29, E10 ruling (per-question remedy on the seven clean-community slices); spec at LEDGER 15, 2026-08-29.",
+   "plan_status": "REOPENED and TIME-BOXED (2026-08-29 audit). The artifact may not be pinned, served or grandfathered. A shadow can stop a bad artifact shipping; by its own ruling it may never be a selection surface, so it cannot raise the number and does not gate D2."
+  },
+  "D2": {
+   "wave": 1,
+   "title": "D2 -- compositional capacity: a multi-word tokenizer, trained through the forward",
+   "registered": "2026-08-29, in the milestone audit and re-route (LEDGER 15). NO D2 number of any kind exists: no tokenizer has been trained, no arm has run, and the coverage precondition has not been measured. Every field here is legal in both directions.",
+   "question": "The table falls behind the teacher in proportion to how badly the query FRAGMENTS -- 0.050 nDCG per +1.0 subwords-per-word, t=4.61, surviving every single-dataset exclusion at t>=3.28 (LEDGER 17b). Does giving the table multi-word ROWS, so a query composes into fewer and longer units, recover any of that loss?",
+   "why_this_probe_and_not_another": "It is the only remaining lever in this milestone with a MEASURED mechanism pointing up. B3 closed data volume (~17.6x the pool to reach the bar), T1 closed the teacher (-0.052/-0.109), B2 closed the KL term, E14-HEAD closed the cheap doc-side head (-0.0244 dense), and M7's clean-stack tax closed licensing as the explanation (+0.0058, miss survives). Section 7 already records that the recipe/data class is hygiene rather than the route: M7's entire post-gate lever programme transferred to the six at 0.000 +/- 0.005. Both of D2's gates have PASSED -- B7 solves 128K rows in 17 s / 5.7 GB, B6-pre exports a fused doc graph with zero custom-domain ops.",
+   "lever": "A self-trained tokenizer over the training corpus with MULTI-WORD merges (merges permitted across the whitespace boundary), vocabulary V in {65536, 131072}, replacing bert-wordpiece-30522. Rows are trained through the forward under R0's recipe. This is the n-gram direction in non-overlapping form (LEDGER 13); additive n-gram rows on top of a unigram vocabulary are NOT part of this probe and are not revived by its outcome.",
+   "held_fixed": "Teacher (stella_en_400M_v5) and its document vectors; the pseudo-query pool and its draw seed; phase structure B->A; updates, batch, negatives (hard_neg_k=0), temperature, learning rates and schedules; precision int8; serving pool_mode sqrt; the frozen convex0 w=0.8 fusion operator; the query side stays a pure lookup table (E1) and the document side stays unheaded (D1 disabled). ONLY tokenizer_id, vocab and the row_init_construction they force may differ from R0.",
+   "coverage_precondition": "MEASURED BEFORE ANY TRAINING ARM, and reported whatever it says. Tokenize the pinned dev queries and the training pool with each candidate tokenizer and record, per vocabulary: (a) rows reachable from dev queries, (b) of those, the fraction receiving ZERO training updates from the pool, (c) the full update histogram (0 / 1-9 / >=10). GATE: a vocabulary whose dev-reachable rows are >20% never-updated is NOT registrable and does not run -- fall back to the smaller vocabulary, or expand the pool and re-measure. Provenance for the threshold: M7 SHIPPED at 5.71% never-trained rows overall (results/m7_cold_rows_p4n-teacher16-a.json) and its reachable cold rows contributed at 0.143x a trained row, so 20% is a generous ceiling that still leaves the compositional init floor meaningful. A row that no dev query reaches cannot move the endpoint and is not counted.",
+   "compositional_init_floor": "MANDATORY (Fable 8, promoted here from menu prose to a registered condition). Every multi-word row initializes to the MEAN of its constituent unigram rows in the incumbent frame, so a row the pool never updates degrades to approximately M7 behaviour rather than to noise. This is what makes a coverage shortfall a quality question instead of a catastrophe, and it is why the coverage gate can sit at 20% rather than at 5%.",
+   "vocab_selection": "TWO candidates, ONE finalist, selected on a NESTED DEV SPLIT THE BAR NEVER READS. Selection endpoint: the mean of the wikipedia group (nq-250k, hotpotqa) and the heldout group (heldout-train, heldout-longq), int8/sqrt, ONE seed per vocabulary. The bar reads the OUT-OF-DOMAIN macro (cqadup-programmers, cqadup-physics), which selection never touches, so the finalist is not chosen on the endpoint that judges it. Ties (|delta| < 0.0040 on the selection endpoint) break to the SMALLER vocabulary, on downloadable bytes -- the section 8 tie-break, fixed here before any number.",
+   "endpoint": "PRIMARY and barred: DENSE = out-of-domain macro over cqadup-programmers and cqadup-physics, int8/sqrt -- the same scalar B3 and E14-HEAD read. SECONDARY and DESCRIPTIVE: the 4-component fused macro under the frozen operator, and the worst-group scalar. Reported always, adopted never.",
+   "comparator": "R0 at THREE INDEPENDENT FULL CHAINS, paired by chain seed. These ALREADY EXIST as section 23's crossed-grid diagonal -- (b0,a0), (b1,a1), (b2,a2) from work/runs/m8nf-seed0.json and m8nfb-seed{1,2}-{b,a}.json -- so the floor measurement already paid for D2's control and no R0 retraining is needed. Verify at run time that all three are readable as full chains in the incumbent frame before reading any D2 number; if any is not, retrain it rather than substituting an A-leg-only arm.",
+   "bar": "mean-over-seeds gain >= 0.00519 on the DENSE out-of-domain macro. 0.00519 is the registered section 4.7 formula 2 x 1.693 x sigma_chain with sigma_chain = 0.00153 measured by the crossed B x A design (section 23), ADOPTED for B-leg-varying arms by the 2026-08-29 audit amendment. D2 retrains the Phase-B checkpoint, so it is a chain-varying arm and 0.0040 -- the A-leg-only bar B3 and E14-HEAD read -- does NOT apply to it. Note sigma_chain is itself a floor on the floor (section 23: moment estimators clipped at zero, sqrt concave, ~8% low at this design), so 0.00519 is if anything permissive.",
+   "bar_is_dense_only_and_why": "There is no chain-level FUSED floor: section 23's nine cells were scored dense only, so a fused bar is not computable as registered. A fused SIGN condition was considered and REJECTED with its reason: E14-HEAD measured fusion damping a dense change ~10x (-0.0244 dense -> -0.0024 fused), so a true dense win at the bar would land near the 0.00066 fused floor and a three-seed sign test would veto real wins roughly as often as fake ones. THE COST IS STATED, NOT HIDDEN: B3 and E14-HEAD bought type-I protection from intersection-union across two scalars, and D2 does not have it -- its type-I is the nominal single-endpoint rate. NF-CROSSED-FUSED (nine fused scoring passes over cells already on disk, no new training) is the cheap measurement that would let an amendment promote fused to a barred endpoint BEFORE D2 runs; if it is measured in time, D2's bar becomes both scalars by amendment.",
+   "seeds": 3,
+   "multiplicity": "ONE contrast at the bar: the single finalist vocabulary against R0 on one endpoint. Vocabulary selection happens earlier, on a disjoint endpoint, and is NOT in the family -- that is what the nested split buys. No Holm correction is needed and none is applied. Registering it this way also removes the temptation to report whichever vocabulary won.",
+   "step_adequacy": "BOUNDED BY DESIGN, and the bound is the point. The E14-HEAD plateau heuristic is computed on a disjoint tuning seed and a training holdout. If it fires OPTIMIZATION-INADEQUATE, EXACTLY ONE continuation is permitted: the reported set at doubled steps WITH a paired doubled-step R0 (the budget cannot change for one arm alone -- the floor and the frozen recipe are both at 2,500). If that also misses, the class CLOSES. There is no third budget, no vocabulary escalation after a number, and no re-tokenized retry. E14-HEAD is the precedent this bound exists to avoid: an adequacy gate with no ceiling is a way never to take no for an answer, and D2 is the second lever in this milestone whose cheap predecessor failed and whose escalation was left 'open'.",
+   "no_survivor": "THE COMPOSITIONAL-CAPACITY ROUTE IS CLOSED. Combined with B3, T1, B2 and E14-HEAD, that leaves only the recipe/data class, which section 7 budgets as hygiene on measurement. In that case M8 DOES NOT PROCEED TO A CONFIRMATORY ACCESS unless the named alternate (B10 / pool_mode, the sqrt full-chain arm) clears its own bar: M8 closes as a MEASUREMENT, the reserved four stay un-scored and unspent for M9, and the report states the frontier and why the class did not move. Pre-committed 2026-08-29 while no D2 number exists; NOT renegotiable after seeing one. Dylan may override it before the number, either way (LEDGER 15, and flagged in m8/STATUS.md).",
+   "prior_evidence_against": "STATED UP FRONT so a negative is not read as a surprise. (1) The only published vocabulary-size ablation on a static/bag-of-words retriever is VDR (arXiv 2212.07699, ICLR 2024): 30K -> 110K rows moved BEIR nDCG@10 44.5 -> 42.6, a small REGRESSION. It is confounded (the vocabularies also swapped English for multilingual BERT and the authors blame the language mismatch), so it does not close D2, but it is the closest evidence and it points the wrong way. (2) M7 shipped with 1,743 rows (5.71%) never trained by either phase at a 30,522 vocabulary; 128K makes coverage the first question, not an afterthought. (3) See scope_limit for why section 17b's slope is not a forecast.",
+   "scope_limit": "SECTION 17b SIZES AN UPPER BOUND, NOT AN EXPECTED GAIN, and no write-up may quote 0.050 x delta-fertility as a forecast. The slope is a BETWEEN-QUERY association of the table-vs-teacher GAP, and its mechanism is that the TEACHER improves with fragmentation (+0.038, t=2.72) while the table is flat (-0.012, t=-0.85). Reducing the table's fertility does not make the table a teacher, and no causal step from fertility to table quality has been established. Both dense components are CQADupStack forums, so a D2 result is a CQADupStack-family dev result and says nothing about the reserved four.",
+   "engineering_constraints": "E7 cap binds the TOTAL downloadable query-side system (int8 table + tokenizer artifacts + ONNX container) at 233 MB: 65,536 x 1024 int8 = 65.8 MB, 131,072 x 1024 int8 = 131.6 MB, both fit with room for a large tokenizer, and the tokenizer's own bytes count and must be reported. B7 measured the solver at both sizes (65,536: 51 its / 10 s / 4.4 GB; 131,072: 68 its / 17 s / 5.7 GB) so neither vocabulary is gated on the solver. B6-pre's PASS used near-identity weights, so the ACTUAL trained table must be re-exported before anything is called shippable. G5 applies: smoke every new path, write the wall-clock estimate before launch and check the rate in the slow region, setsid nohup for anything over 10 minutes.",
+   "cost_estimate": "TO BE MEASURED BEFORE LAUNCH, NOT TRUSTED FROM THIS FIELD (CLAUDE.md: never trust a docstring's cost estimate -- two in m7src/train.py were wrong by two orders of magnitude on the same day). Shape: tokenizer training x2 (minutes), the coverage measurement (no training), 2 selection chains at 1 seed, 3 finalist chains at 3 seeds = 5 new full B->A chains, plus scoring. R0's three chains already exist. Compositional init needs no new teacher forwards.",
+   "noise_floor_exempt": false,
+   "bar_frozen": "2026-08-29, in the audit amendment, before any tokenizer was trained.",
+   "authorised_by": "LEDGER 8 (D2 is on the Stage-S menu), LEDGER 9 (Wave-1 promotion of its gates), and the 2026-08-29 milestone audit amendment in LEDGER 15.",
+   "plan_status": "LIVE -- the milestone's primary lever. Next to run."
+  },
+  "NF-CROSSED-FUSED": {
+   "wave": 1,
+   "title": "NF-CROSSED-FUSED -- the chain-level FUSED floor, from cells already on disk",
+   "registered": "2026-08-29, milestone audit. Cheap and optional: it does not gate D2, it upgrades D2's bar if it lands first.",
+   "question": "Section 23's crossed B x A grid was scored DENSE only, so no chain-level fused floor exists and no B-leg-varying arm can carry a barred fused endpoint. What is sigma_chain on the fused macro?",
+   "lever": "NONE -- no training. Nine existing crossed cells (work/runs/m8nfx-* plus the diagonal) scored through the frozen convex0 w=0.8 operator, APPLIED and never re-fitted (section 4.7b: re-fitting per arm measures the floor of a fitting procedure, a different and much larger quantity).",
+   "held_fixed": "Everything. The cells exist; this is a scoring pass.",
+   "endpoint": "fused macro over the frozen spec's four components, int8/sqrt.",
+   "comparator": "none -- this measures the instrument, exactly as NF does.",
+   "bar": "NO BAR: this is a floor measurement, exempt from noise calibration under section 4.7's named exemption for arithmetic and instrument reads. Its OUTPUT is a bar: 2 x 1.693 x sigma_chain(fused), adopted for B-leg-varying arms by amendment, or the planning minimum 0.0040 if that is larger.",
+   "multiplicity": "none -- one variance decomposition on one endpoint.",
+   "no_survivor": "NOT APPLICABLE -- a floor cannot fail, it can only come out larger or smaller than hoped. If sigma_chain(fused) implies a bar D2 cannot plausibly clear, that is reported as a resolution limit of the design, and D2 stays dense-only-barred rather than acquiring an unclearable second condition.",
+   "noise_floor_exempt": true,
+   "bar_frozen": "2026-08-29.",
+   "authorised_by": "LEDGER 15, 2026-08-29 audit amendment; section 4.7's exemption for instrument reads.",
+   "plan_status": "LIVE, optional, cheap. Upgrades D2's bar to two endpoints if it lands before D2 runs."
   }
  },
  "dev_groups": {

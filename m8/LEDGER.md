@@ -622,10 +622,19 @@ below is a number, not a word (Codex gate BLOCKER 1).
    condition 4**: the manifest must declare at least one other qualifying-table key. Without this,
    swapping the teacher would have satisfied the qualifying-table requirement by itself, and the
    registered swap branch of C2 (§4.2) would have been a release path with no lever in it.
-   - **QUALIFYING_TABLE keys** — at least one must appear in the diff:
-     `objective_family`, `tokenizer_id`, `vocab`, `row_init_construction`, `pool_composition`,
-     `feature_set`, `structural_rider`.
-   - **NOT_QUALIFYING keys** (may appear, never sufficient):
+   - **THE LISTS BELOW ARE A PARTIAL RENDER. `m8/registry.json` is the authority** (§9), and it
+     classifies **27** qualifying-table keys, **1** qualifying-non-table, **23** not-qualifying and
+     **9** neutral. *Corrected 2026-08-29 in the milestone audit: this prose named seven qualifying
+     keys and read as exhaustive, which understates the condition — a session reading §5 alone
+     would wrongly conclude the recipe/data class cannot satisfy condition 4. It can; what it
+     cannot do is carry the bar (§7).* Read the registry before writing a manifest.
+   - **QUALIFYING_TABLE keys** — at least one must appear in the diff. Seven of the twenty-seven,
+     as illustration only: `objective_family`, `tokenizer_id`, `vocab`, `row_init_construction`,
+     `pool_composition`, `feature_set`, `structural_rider`. The registry also classifies
+     `ict_fraction`, `sources`, `phase_structure`, `pool_mode`, `init`, `learned_weights`,
+     `low_rank_delta`, `doc_instruction`, `ngram_rows`, `synthetic_query_dose`, `genre_bundle`
+     and others as qualifying.
+   - **NOT_QUALIFYING keys** (may appear, never sufficient). Illustrative subset:
      `seed`, `steps_a`, `steps_b`, `temperature`, `hard_neg_k`, `lr`, `b_pseudo_queries`,
      `batch_size`, and any key matching `*_tuning`.
    - `doc_side_head` is qualifying for the *change* enumeration but is **explicitly excluded from
@@ -852,7 +861,11 @@ identically-parameterized aligned tables, otherwise mechanical median. **Never b
 
 ### The menu
 
-- **D2 — compositional capacity (in scope).** Self-trained tokenizer (64–128K, multi-word merges),
+- **D2 — compositional capacity. REGISTERED 2026-08-29** (`m8/registry.json`; bar **0.00519**, the
+  chain floor, because D2 retrains the B leg). The row is the authority for bar, endpoint,
+  comparator, vocabulary selection, the coverage gate and the bounded adequacy gate; what follows
+  is the design rationale it was built from.
+  Self-trained tokenizer (64–128K, multi-word merges),
   rows initialized per B15's winner, **trained through the forward** under R1. Gated by B7.
   **Registered coverage spec:** a minimum-updates-per-reachable-row criterion; targeted rare-row
   span sampling with the pool expansion needed to meet it; a coverage-vs-capacity diagnosis rule
@@ -875,10 +888,15 @@ identically-parameterized aligned tables, otherwise mechanical median. **Never b
   (`results/m7_cold_rows_p4n-teacher16-a.json`); the reachable 749 contributed at 0.143× a trained
   row. A 128K vocabulary makes coverage the first question, not an afterthought.
   *And the measured reason D2 is the priority:* see §17.
-- **D1 — doc-side head (in scope per E3, conditional).** Linear 1024→1024 / 2-layer MLP / →512
-  over cached teacher vectors, jointly trained. **Preconditions:** (i) fuses into ONE doc-side
-  ONNX file as plain MatMul/activation nodes (E3, tested at B6 entry); (ii) **a D1 win alone does
-  not make a qualifying v2 table** (§5.4).
+- **D1 — doc-side head. MEASURED AND HARMFUL (`E14-HEAD`, 2026-08-29): do not plan around it.**
+  Exactly this lever — LIN 1024→1024 (1.05M) and a 2-layer MLP (4.2M) over cached teacher vectors,
+  jointly trained — scored **−0.0244 / −0.0293** dense against a +0.0040 bar, all six arms agreeing
+  in sign, on a measured-null patch stack. LIN's registered label is OPTIMIZATION-INADEQUATE at
+  2,500 steps, so D1 is not *formally* closed, but reviving it costs a 5,000-step reported set with
+  a paired 5,000-step R0N and it is **not** a route to the bar. Preconditions, unchanged if it ever
+  returns: (i) fuses into ONE doc-side ONNX file as plain MatMul/activation nodes (E3, B6-pre
+  PASSED); (ii) **a D1 win alone does not make a qualifying v2 table** (§5.4) — so it could never
+  have opened the release path by itself.
   *Why it is live at all:* the "absorbable" dismissal was **half wrong**. `q·(Md) = (Mᵀq)·d` holds
   only if the mapped document is not renormalized; retrieval L2-normalizes documents, so the
   per-document factor `1/|Md|` cannot move into a shared table — rank agreement with the absorbed
@@ -1162,6 +1180,116 @@ CORPORA are ordinary public downloads while their query and qrel payloads stay g
 *(Dated entries only. An amendment is legal only before any raw number it would affect exists —
 in either direction. It states what changed, why, and that the dependent numbers did not yet
 exist.)*
+
+- **2026-08-29 — MILESTONE AUDIT AND RE-ROUTE.** No M8 candidate exists and no protected set has
+  been scored, so every change here is legal in both directions.
+
+  **Finding.** All nine probes run so far returned a null, a negative, or an instrument reading —
+  `B3` (data volume, ~17.6× the pool to reach the bar), `E14-HEAD` (doc-side head, −0.0244 dense),
+  `T1` (teacher, −0.052/−0.109), `B2` (KL term), and M7's clean-stack tax (+0.0058, miss
+  survives). Meanwhile **`D2` — the only remaining lever with a measured mechanism pointing up —
+  had no registry row, no schedule, and no place on the worklist**, though §9 calls it the
+  milestone's centre of gravity and both its gates (`B7`, `B6-pre`) have PASSED.
+
+  **A first-pass audit claim, corrected rather than dropped.** It read condition 4 as admitting
+  only seven `qualifying_table` keys, so the recipe/data class could not ship. **Wrong** — the
+  registry classifies 27 and is the authority (§9); `ict_fraction`, `sources`, `phase_structure`,
+  `pool_mode`, `init`, `ngram_rows` and others qualify. The recipe class *can* satisfy condition 4;
+  what it cannot do is carry the bar, which §7 already establishes on measurement (M7's post-gate
+  programme transferred at 0.000 ± 0.005). The re-route rests on that, not on the false claim.
+
+  **Three defects fixed.** (1) §5's key list read as exhaustive and was a partial render — now
+  labelled, pointing at the registry. (2) `NEXT-SESSION.md` item 2 recommended "bigram rows
+  trained through the forward", which §13 had retired as **superseded by D2, no auto-revival** —
+  worklist rewritten; §13 unchanged and still binding, so D2's death does not revive additive
+  n-gram rows. (3) The `E10` REOPENED amendment was living after §23, where the file contract
+  sends nobody — moved into §15, text unaltered.
+
+  **ADOPTED: the chain floor, B-leg-varying arms only.** §23 measured σ_chain = 0.00153 and
+  computed the formula's answer, **0.00519**, but recorded it NOT ADOPTED pending its own
+  amendment before any affected arm ran. This is that amendment; no such arm has run. **An arm
+  that retrains the Phase-B checkpoint now reads bar 0.00519** on the out-of-domain macro and
+  worst group. A-leg-only bars are untouched (`B3`, `E14-HEAD` read σ_A → 0.0036, under the
+  planning minimum). `D2` is registered *with* the higher bar rather than inheriting the lower one
+  by omission.
+
+  **NOT adopted:** there is still no chain-level FUSED floor (§23's cells were scored dense only).
+  `D2` therefore carries a dense-only bar with a descriptive fused read; its row states the
+  type-I cost of losing intersection-union. `NF-CROSSED-FUSED` (nine fused passes over cells
+  already on disk, no training) would let an amendment promote fused to a barred endpoint before
+  `D2` runs.
+
+  **REGISTERED: `D2`** (`m8/registry.json` holds the row). Its decisions: vocabulary selected on a
+  nested dev split the bar never reads; a coverage precondition measured before training, not
+  assumed; the compositional init floor made mandatory; the paired R0 comparator taken from §23's
+  existing diagonal; and a **bounded** step-adequacy gate — one continuation at doubled steps, or
+  the class closes. `E14-HEAD` is the precedent for that bound: an adequacy gate with no ceiling
+  is a way never to take no for an answer.
+
+  **PRE-COMMITTED EXIT.** If `D2`'s finalist misses and the named alternate (`B10`/`pool_mode`)
+  also misses, **M8 does not proceed to a confirmatory access**: it closes as a measurement, the
+  reserved four stay unspent for M9, and the report states why the class did not move. An access
+  is one-shot and its value is the chance of a resolved win; with every measured lever dead that
+  chance is `m7_repeat` ≈ 0.002 (`results/m8_power.json`), which buys almost no information while
+  permanently costing M9 its clean sets. **Not renegotiable after seeing D2's number.** It is a
+  milestone-scope call, so it is also put to Dylan in `m8/STATUS.md`; he may override before the
+  number, either way.
+
+  **Scope discipline for the rest of M8.** `freeze.py`/`final_run.py` wait until a candidate
+  exists; no new floors, guards or registry machinery until `D2` has a number; `E10` is time-boxed
+  (worklist), because a shadow can stop a bad artifact shipping but by its own ruling may never
+  raise the number.
+
+- **2026-08-29 — `E10` REOPENED. The remedy artifact is NOT decontaminated and its zero re-screen
+  was tautological. `results/m8_lotte_remedy.json` may not be pinned, served, or grandfathered.**
+  Adversarial review verdict: *"STOP / reopen E10."* Reproduced counter-examples, not projections.
+
+  **BLOCKER 1 — the screen compared ROLES, not protected CONTENT.** `_cqa_index()` holds only the
+  four CQADupStack corpora; LoTTE documents were screened against protected DOCUMENTS and LoTTE
+  queries only against protected QUERIES. The query↔document comparison was never made. Two
+  confirmed survivors: `science/dev` qid 1147 "How to design a house to be cooled passively?"
+  matches protected physics document 111653; `recreation/test` qid 355 "What is the terminal
+  velocity of a sheep?" matches protected physics document 129267, **and that protected document
+  states it was inspired by the Gaming.SE question** — the quoted-across-sites case named in the
+  brief. A targeted audit found **36 retained shadow queries sharing an 8-word run with protected
+  corpus documents**; under our own registered query rule those are hits. LoTTE documents were also
+  never screened against FEVER, DBpedia, NQ or HotpotQA despite the stated policy.
+
+  **BLOCKER 2 — the re-screen cannot fail on ordinary input.** Remediation constructs the exact
+  complement of the first pass's hits and the second pass applies the SAME deterministic detector
+  to those unchanged IN-MEMORY survivors. A canary would be found, removed, and then provably
+  absent. Worse, files are written first but the re-screen reads the in-memory lists, so an altered
+  or recontaminated output file is never examined. CODEMAP pitfalls 17 and 19 exactly. **The
+  detector may remain the removal mechanism but cannot certify itself**; acceptance needs an
+  INDEPENDENT detector (StackExchange IDs/URLs, migration and cross-site links, character
+  shingles/containment) plus a canary test that proves acceptance can fail.
+
+  **The 100× asymmetry is real AND diagnostic of a weaker document screen.** Query detection fires
+  on ONE shared 8-gram (one 4-gram for short queries); document detection requires EIGHT shared
+  entries from bottom-32 sketches, so a document under 15 normalized words **can never** be a near
+  hit — a one-word edit of a 16-word document and a 14-word verbatim quotation both return nothing.
+  So `recreation/test = 0` is a measurement of the detector, not of the corpus. Normalization is
+  lowercase + `isalnum()` only: no Unicode normalization, stemming, typo tolerance or reordering.
+  The short-query rule is also DIRECTIONAL — a protected short query inside a longer candidate is
+  caught, a short candidate extracted from a longer protected question is not.
+
+  **The exact 14,034 match is CIRCULAR evidence**, and I cited it as validation. Those counts were
+  derived by S0 with the same raw data and the same detector, then written into the registration.
+  Matching them proves repeatability and absence of input drift — nothing about coverage. Two
+  confirmed retained protected documents coexist with an exact 14,034.
+
+  **Also found:** `pin()` trusts the mutable remedy artifact, permits an arbitrary subset, hashes
+  whatever bytes occupy the paths at pin time and never binds them to what was SCREENED;
+  `build_fitlist()` reads `m8_lotte_overlap.json["kept"]`, which S0 left EMPTY, so the fit list
+  never sees the remedy survivors at all; and correlation with the exam remains unmeasured, with a
+  concrete design offered (a preregistered candidate panel, rank-correlated across LoTTE dev
+  slices, unused CQADupStack subforums and non-reserved entity proxies, keeping the LoTTE test
+  slices untouched for the eventual crossing).
+
+  **What this does NOT change:** no protected set was scored, and no number from this artifact
+  reached any decision. The shadow was never pinned, precisely because the two questions this
+  review answered were the ones held open. Review at
+  `research/m8-planning/codex-e10-remedy-review-2026-08-29.md`.
 
 - **2026-08-29 — E14 SPECIFIED as two staged probes, `E14-HEAD` (runnable) and `E14-LORA`
   (refused).** Dylan ruled "measure it small first"; this is what small means, and why.
@@ -1798,12 +1926,17 @@ exist.)*
   is −0.00001 dense (σ_A 0.00106) and −0.000015 fused. Four rebindings and a lazy proxy over 1.92M
   document rows per arm introduce no endpoint artifact.
 
-  **The mechanism control is the finding, not the bar.** Bag-specific gain is POSITIVE on all six
-  arms (LIN +0.0091, MLP +0.0075): the head genuinely makes documents relatively more reachable by
-  a bag. It does so by damaging the space for every query type, ~3× harder than it helps bags.
-  **The direction was right and the instrument is wrong** — a map on a FINISHED document vector
-  buys bag-reachability only by destroying information, which is the scope limit the registration
-  wrote down before any arm ran.
+  **The mechanism control is the most useful number here — stated as CORRECTED after review
+  (2026-08-29); the first version of this entry over-read it.** What the data establish: across all
+  seeds and both components the head reduced bag-query nDCG LESS than teacher-query nDCG (LIN
+  +0.0091, MLP +0.0075; all twelve values positive). That is descriptive evidence consistent with
+  **relative** alignment toward the co-trained bag representation. It does **not** show an absolute
+  bag benefit — both absolute bag gains are negative — it does not identify bag reachability, and
+  it does not demonstrate information destruction. **The earlier claims that the head "genuinely
+  makes documents more reachable by a bag" and "buys bag-reachability only by destroying
+  information" are WITHDRAWN**: a poorer match to the teacher's query geometry is not evidence of
+  information loss, and the linear residual map may well remain full-rank. At n=3 the smallest
+  exact one-sided sign-test p per treatment is 0.125, and the four cells are not independent.
 
   **Bearing on the pair and on `E14-LORA`:** teacher-style queries lose MORE than bag queries
   (−0.031 vs −0.022), so a document transform co-trained with a bag taxes a transformer query path
@@ -1814,12 +1947,17 @@ exist.)*
   `NEGATIVE-DOSE` branch for "measurably worse, reported as a finding rather than folded into
   FAIL". `E14-HEAD`'s row has no negative branch, so a −0.024 is labelled with language written for
   a null, and `lin`'s adequacy flag labels it OPTIMIZATION-INADEQUATE — "not trained long enough".
-  **The evidence disqualifies that reading**: the arm that PASSED adequacy (MLP) harms MORE, and
-  the training holdout improved while the endpoint moved away from the bar. The registered labels
-  stand as the rule produced them, because changing a rule after seeing its number is the one thing
-  this protocol does not permit; the disqualifying evidence is reported beside them. **Every future
-  probe row must carry a negative branch** — the asymmetry is not free, since a harm reported as
-  "inconclusive" invites exactly the wrong follow-up spend.
+  **CORRECTED after review: the claim that "the evidence disqualifies that reading" is WITHDRAWN.**
+  LIN is a strong negative for the registered 2,500-step configuration but remains
+  OPTIMIZATION-INADEQUATE for the method-level question. MLP met the heuristic and was also harmful,
+  which makes a generic undertraining story less plausible — but MLP is a different architecture,
+  its adequacy came from separate holdout-reduced arms, and 0.350 vs 0.220 across a 0.25 line is
+  one unreplicated arm per budget, not a resolved difference. Also withdrawn: the endpoint did not
+  move "away" monotonically — the in-training contrasts were −0.0210/−0.0268/−0.0264 (LIN), early
+  persistent harm rather than divergence. The registered labels stand as the rule produced them;
+  contrary evidence sits beside them. **Every future probe row must carry a negative branch** — a
+  harm reported as "inconclusive" invites exactly the wrong follow-up spend. (`D2`'s row carries
+  one and bounds its adequacy continuation to a single doubled-step set.)
 
 - **[SUPERSEDED THE SAME DAY by Dylan's ruling — see the entry below. Kept because the risk it names is still the reason the ruling is right.]** **2026-08-29 — OPEN ITEM WITH A TRIGGER: does a fine-tuned encoder propagate to M9?** Raised by
   Dylan while `E14-HEAD` was training. `instructions-m9.md` says M9's teacher is "the frozen teacher
@@ -2350,55 +2488,3 @@ previously carried a field that made it, and it has been removed). Ratio **0.43*
 held FIXED across all nine cells — `pseudoq.build_decontaminated` draws with a seed independent of
 the training seed. This bounds seed variability in a B-leg-varying arm; it does **not** bound a
 pool-varying lever, and LEDGER §6 step 5 voids it on a teacher swap.
-
-- **2026-08-29 — `E10` REOPENED. The remedy artifact is NOT decontaminated and its zero re-screen
-  was tautological. `results/m8_lotte_remedy.json` may not be pinned, served, or grandfathered.**
-  Adversarial review verdict: *"STOP / reopen E10."* Reproduced counter-examples, not projections.
-
-  **BLOCKER 1 — the screen compared ROLES, not protected CONTENT.** `_cqa_index()` holds only the
-  four CQADupStack corpora; LoTTE documents were screened against protected DOCUMENTS and LoTTE
-  queries only against protected QUERIES. The query↔document comparison was never made. Two
-  confirmed survivors: `science/dev` qid 1147 "How to design a house to be cooled passively?"
-  matches protected physics document 111653; `recreation/test` qid 355 "What is the terminal
-  velocity of a sheep?" matches protected physics document 129267, **and that protected document
-  states it was inspired by the Gaming.SE question** — the quoted-across-sites case named in the
-  brief. A targeted audit found **36 retained shadow queries sharing an 8-word run with protected
-  corpus documents**; under our own registered query rule those are hits. LoTTE documents were also
-  never screened against FEVER, DBpedia, NQ or HotpotQA despite the stated policy.
-
-  **BLOCKER 2 — the re-screen cannot fail on ordinary input.** Remediation constructs the exact
-  complement of the first pass's hits and the second pass applies the SAME deterministic detector
-  to those unchanged IN-MEMORY survivors. A canary would be found, removed, and then provably
-  absent. Worse, files are written first but the re-screen reads the in-memory lists, so an altered
-  or recontaminated output file is never examined. CODEMAP pitfalls 17 and 19 exactly. **The
-  detector may remain the removal mechanism but cannot certify itself**; acceptance needs an
-  INDEPENDENT detector (StackExchange IDs/URLs, migration and cross-site links, character
-  shingles/containment) plus a canary test that proves acceptance can fail.
-
-  **The 100× asymmetry is real AND diagnostic of a weaker document screen.** Query detection fires
-  on ONE shared 8-gram (one 4-gram for short queries); document detection requires EIGHT shared
-  entries from bottom-32 sketches, so a document under 15 normalized words **can never** be a near
-  hit — a one-word edit of a 16-word document and a 14-word verbatim quotation both return nothing.
-  So `recreation/test = 0` is a measurement of the detector, not of the corpus. Normalization is
-  lowercase + `isalnum()` only: no Unicode normalization, stemming, typo tolerance or reordering.
-  The short-query rule is also DIRECTIONAL — a protected short query inside a longer candidate is
-  caught, a short candidate extracted from a longer protected question is not.
-
-  **The exact 14,034 match is CIRCULAR evidence**, and I cited it as validation. Those counts were
-  derived by S0 with the same raw data and the same detector, then written into the registration.
-  Matching them proves repeatability and absence of input drift — nothing about coverage. Two
-  confirmed retained protected documents coexist with an exact 14,034.
-
-  **Also found:** `pin()` trusts the mutable remedy artifact, permits an arbitrary subset, hashes
-  whatever bytes occupy the paths at pin time and never binds them to what was SCREENED;
-  `build_fitlist()` reads `m8_lotte_overlap.json["kept"]`, which S0 left EMPTY, so the fit list
-  never sees the remedy survivors at all; and correlation with the exam remains unmeasured, with a
-  concrete design offered (a preregistered candidate panel, rank-correlated across LoTTE dev
-  slices, unused CQADupStack subforums and non-reserved entity proxies, keeping the LoTTE test
-  slices untouched for the eventual crossing).
-
-  **What this does NOT change:** no protected set was scored, and no number from this artifact
-  reached any decision. The shadow was never pinned, precisely because the two questions this
-  review answered were the ones held open. Review at
-  `research/m8-planning/codex-e10-remedy-review-2026-08-29.md`.
-
