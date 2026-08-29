@@ -1466,7 +1466,7 @@ exist.)*
   reasoning — not as one of Dylan's rulings. It is flagged in STATUS because it changes what a
   registered probe measures.)*
 
-- **2026-08-29 — ledger opened (v1).** Transcribed from `m8/PLAN-DRAFT.md` v5 at commit `f8b67f3`.
+- **2026-08-29 — ledger opened (v1).** Transcribed from `m8/PLAN-DRAFT.md` v5 at commit `f8b67f3`. **That draft was DELETED 2026-08-29**: this ledger had diverged from it by 17 dated amendments and the draft still carried stale bars, the pre-ruling C2 definition and superseded E-entries, so it had become a second source of truth that disagreed with the binding one. Git history has it, and the archived reviews under `research/m8-planning/` that cite it cite it as history.
   No M8 number of any kind existed. No protected partition had been touched.
 - **2026-08-29 — v2, after two adversarial gates on v1.** Codex (BLOCK, 9/9/3) and Fable
   (scientific judgment). All findings actioned; the map is §16. **No M8 evaluation number existed
