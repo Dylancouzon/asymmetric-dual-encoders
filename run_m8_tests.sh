@@ -16,6 +16,7 @@ run() {
 run m8src/test_guards.py          # G1 + G2: the refusals that must happen
 run m8src/decide.py               # the ship rule's own end-to-end self-test
 run m8src/test_decide.py          # its reductions and, more importantly, its refusals
+run m8src/test_b3_decide.py       # B3's four verdict branches, three of them unwelcome
 run m8src/rule_audit.py           # did any registration MOVE after a result read it?
 
 # NOT YET PORTED, and named here so the gap is visible rather than silent. Each becomes a `run`
