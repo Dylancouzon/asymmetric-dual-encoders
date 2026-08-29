@@ -179,8 +179,18 @@ def _group_vector(per_q):
     }
 
 
-def measure(dump_path):
-    """Read a compare_full per-query dump and compute the floor on every endpoint."""
+BLEG_ARMS = ("m8nf-seed0", "m8nfb-seed1-a", "m8nfb-seed2-a")
+
+
+def measure(dump_path, arm_ids=None):
+    """Read a compare_full per-query dump and compute the floor on every endpoint.
+
+    `arm_ids` names the null explicitly. The default (None) discovers the A-LEG floor's arms by
+    their `m8nf-seed` prefix -- arms that share one Phase-B checkpoint and vary only the Phase-A
+    seed. Passing `BLEG_ARMS` instead measures the B-LEG floor: three FULL chains (B then A)
+    varying only the seed, which is the shape R-PHASE and every pool-or-init change actually has.
+    The A-leg floor does not bound those, because it holds constant the very leg they perturb.
+    """
     import gzip
     raw = json.loads(gzip.open(dump_path).read() if str(dump_path).endswith(".gz")
                      else Path(dump_path).read_text())
@@ -214,7 +224,18 @@ def measure(dump_path):
         modes = sorted({(r.split(":", 1) + ["mean"])[1] for r in a})
         for mode in modes:
             sel = {r: v for r, v in a.items() if (r.split(":", 1) + ["mean"])[1] == mode}
-            seed_arms = {r: v for r, v in sel.items() if r.startswith("m8nf-seed")}
+            if arm_ids is None:
+                seed_arms = {r: v for r, v in sel.items() if r.startswith("m8nf-seed")}
+            else:
+                want = set(arm_ids)
+                seed_arms = {r: v for r, v in sel.items() if r.split(":", 1)[0] in want}
+                # a floor from a PARTIAL arm set is a smaller floor, so it silently loosens every
+                # bar that reads it. Refuse rather than under-report.
+                if seed_arms and len(seed_arms) != len(want):
+                    raise SystemExit(
+                        f"{prec}.{mode}: expected arms {sorted(want)} but the dump has "
+                        f"{sorted(r.split(':', 1)[0] for r in seed_arms)}. A floor computed from a "
+                        f"partial arm set understates the floor and loosens every bar reading it.")
             step_arms = {r: v for r, v in sel.items() if r.startswith("m8nf-steps")}
             if not seed_arms:
                 continue
@@ -279,6 +300,8 @@ def main():
     ap.add_argument("step", choices=["plan", "train", "measure", "bleg"])
     ap.add_argument("--dump", default=None, help="compare_full per-query dump for `measure`")
     ap.add_argument("--smoke", action="store_true")
+    ap.add_argument("--bleg-arms", action="store_true",
+                    help="measure the B-LEG floor from the three full chains, not the A-leg arms")
     a = ap.parse_args()
 
     if a.step == "plan":
@@ -298,10 +321,16 @@ def main():
     else:
         if not a.dump:
             raise SystemExit("--dump is required: point at the compare_full per-query dump")
-        out = measure(a.dump)
-        probe_guard.write_result(OUT, out, "NF", strict_commit=not a.smoke)
-        print(json.dumps({"floor": out["floor"], "bars": out["bars"]}, indent=2))
-        print(f"\nwrote {OUT}", file=sys.stderr)
+        # The B-leg floor gets its OWN artifact. Writing it to `OUT` would overwrite the A-leg
+        # floor that B3's frozen bar and every other registered bar already cite -- a silent
+        # redefinition of a number that has already been read.
+        out = measure(a.dump, arm_ids=BLEG_ARMS if a.bleg_arms else None)
+        out["leg"] = "B" if a.bleg_arms else "A"
+        out["arms_measured"] = list(BLEG_ARMS) if a.bleg_arms else None
+        dest = (OUT.parent / "m8_noise_floor_bleg.json") if a.bleg_arms else OUT
+        probe_guard.write_result(dest, out, "NF", strict_commit=not a.smoke)
+        print(json.dumps({"leg": out["leg"], "floor": out["floor"], "bars": out["bars"]}, indent=2))
+        print(f"\nwrote {dest}", file=sys.stderr)
     return 0
 
 
