@@ -51,14 +51,40 @@ OUT = REPO / "results" / "m8_noise_floor.json"
 # an arm's base recipe must come from the artifact it varies against, never from a snapshot
 # (m7/CODEMAP.md pitfall 15).
 BASE_RUN = "p35w-2m-s2500"
+B_BASE_RUN = "p35b-2m"          # the B checkpoint the A-leg floor holds fixed
 SEEDS = (0, 1, 2)
 STEP_PERTURBATIONS = (2250, 2750)          # +/-10% of 2500, the recipe-sensitivity arms
 GROUPS = m8base.DEV_GROUPS
 
 
-def base_cfg():
-    meta = json.loads((WORK / "runs" / f"{BASE_RUN}.meta.json").read_text())["cfg"]
+def base_cfg(run=BASE_RUN):
+    meta = json.loads((WORK / "runs" / f"{run}.meta.json").read_text())["cfg"]
     return {k: v for k, v in meta.items() if k != "run_id"}
+
+
+def bleg_plan():
+    """The B-LEG floor: full chains (B then A) differing ONLY in seed.
+
+    §4.7's floor holds the B checkpoint fixed, which is the shape of nearly every probe arm -- but
+    R-PHASE restructures the B->A phases, and any pool or init change flows through the B leg, so
+    those arms have a LARGER floor that the A-leg measurement does not bound. This measures it.
+
+    Seed 0's chain already exists end to end (`p35b-2m` -> `m8nf-seed0`), so only seeds 1 and 2
+    need training. And the expensive part is free: `pseudoq.build_decontaminated` does NOT take
+    the cfg seed -- it uses the module default -- so the ~925K-span objective-B text set is
+    identical across seeds and `encode_cached` hits M7's existing cache. A B-leg arm therefore
+    costs its training, not a re-encode.
+    """
+    bcfg, acfg = base_cfg(B_BASE_RUN), base_cfg(BASE_RUN)
+    arms = {}
+    for s_ in SEEDS[1:]:
+        b_id, a_id = f"m8nfb-seed{s_}-b", f"m8nfb-seed{s_}-a"
+        arms[b_id] = {**bcfg, "seed": s_, "_kind": "bleg", "_value": s_, "_leg": "b"}
+        arms[a_id] = {**acfg, "seed": s_, "init": f"run:{b_id}",
+                      "_kind": "bleg", "_value": s_, "_leg": "a", "_after": b_id}
+    for rid, a in arms.items():
+        a["_exists"] = (WORK / "runs" / f"{rid}.npz").exists()
+    return arms
 
 
 def arm_id(kind, value):
@@ -79,11 +105,17 @@ def plan():
     return cfg, arms
 
 
-def train(rids=None, smoke=False):
+def train(rids=None, smoke=False, plan_fn=None):
     """Train the arms. ONE PROCESS PER ARM (m7/CODEMAP.md pitfall 14: a driver that runs a night
     of arms in one process accumulates every memoized cache and the third arm thrashes)."""
-    cfg, arms = plan()
+    arms = plan_fn() if plan_fn else plan()[1]
+    # B legs before the A legs that init from them -- dict order is insertion order, and bleg_plan
+    # inserts each pair in that order, so this is already correct; asserted rather than assumed.
     todo = [(r, a) for r, a in arms.items() if (rids is None or r in rids) and not a["_exists"]]
+    for i, (r, a) in enumerate(todo):
+        dep = a.get("_after")
+        if dep and dep in {x for x, _ in todo[i + 1:]}:
+            raise SystemExit(f"{r} inits from {dep}, which is scheduled AFTER it")
     if not todo:
         print("every arm already on disk")
         return
@@ -244,7 +276,7 @@ def measure(dump_path):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("step", choices=["plan", "train", "measure"])
+    ap.add_argument("step", choices=["plan", "train", "measure", "bleg"])
     ap.add_argument("--dump", default=None, help="compare_full per-query dump for `measure`")
     ap.add_argument("--smoke", action="store_true")
     a = ap.parse_args()
@@ -255,6 +287,12 @@ def main():
                           "arms": {r: {k: v for k, v in x.items() if k.startswith("_")
                                        or k in ("seed", "steps_a")}
                                    for r, x in arms.items()}}, indent=2, default=str))
+    elif a.step == "bleg":
+        arms = bleg_plan()
+        print(json.dumps({r: {k: v for k, v in x.items() if k.startswith("_")
+                              or k in ("seed", "steps_a", "steps_b", "init")}
+                          for r, x in arms.items()}, indent=2, default=str))
+        train(smoke=a.smoke, plan_fn=bleg_plan)
     elif a.step == "train":
         train(smoke=a.smoke)
     else:
