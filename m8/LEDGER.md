@@ -1031,6 +1031,41 @@ exist.)*
   legal order; the shadow GO rule made two-legged; B17's routing given an OOD corroboration
   condition; B7 and B6-pre promoted to Wave 1; the ordered nested fallback registered; the ONNX
   graph bound to the selected pooling operator; the guard hardened against four concrete bypasses.
+- **2026-08-29 — amendments from the second adversarial review, all before the numbers they bind.**
+  A Fable pass over LEDGER v2 and `m8src/` found four v1 fossils that had survived the rewrite
+  into the *executable* layer — the class that produces a wrong number rather than an error.
+  Actioned, in descending severity:
+  (a) **`decide.py` carried its own qualifying-key vocabulary** while `registry.json` carried a
+  different one, so a manifest written in either would have failed the other. The code now reads
+  the registry; there is no second copy.
+  (b) **`power.py` still had the planning draft's guard constants** (six-set margin 0.005, SE
+  0.006, three homogeneous worst-groups) after §5 had been given its measured ones. It overstated
+  the six-set guard's false-veto rate ~40x, and that guard dominates P(ship): the table in
+  `m8/STATUS.md` moved from 0.67/0.57/0.15/0.002/0.46 to **0.84/0.80/0.21/0.002/0.57**. The
+  simulator now reads the registry and simulates the four datasets with their own SEs.
+  (c) **The noise floor covered only int8 dense**, while B10's bar reads both precisions. It now
+  reports per **(precision, pool_mode, endpoint)** — the pool-mode dimension added because
+  `cfg.pool_mode` is None for these arms (they serve `mean`) while the M7 release serves `sqrt`,
+  and a floor under a rule the artifact is not served under is a floor for a different function.
+  **The FUSED floor and the B-leg floor remain unmeasured and are in the §4.4 gap list**; the
+  probes whose bars read them stay refused.
+  (d) **This ledger asserted tests that did not exist.** `test_decide.py` and `rule_audit.py` were
+  written; `test_final_guard.py` and `test_freeze_binding.py` remain open and are now listed as
+  open rather than described as done.
+  Also: `worst_group` now aborts on a missing dataset instead of shrinking, the six-set guard
+  aligns strictly, the point guard is strict `>`, B7's memory bar measures host RSS (a 10 GB card
+  cannot fail an 18 GB RAM bar), B7's real result goes through G1's commit gate, and S0's
+  duplicate rate no longer double-counts a document that is both an exact and a near hit.
+  **No M8 evaluation number existed for any rule changed here.**
+
+- **2026-08-29 — amendment: the full manifest key schema, before any manifest exists.** All 35
+  `train.Cfg` fields plus the artifact-level fields are classified in `registry.json` as
+  qualifying-table (27), qualifying-non-table (1), not-qualifying (23) or neutral (9), and the
+  **teacher-swap side effect** is registered: a swap flips `tokenizer_id`/`vocab`, which are
+  qualifying-table keys, so without a rule a swap alone would have satisfied condition 4 and the
+  registered swap branch of C2 would have been a release path with no lever in it. Those two keys
+  now do not count toward condition 4 whenever a teacher swap is in the diff.
+
 - **2026-08-29 — amendment: T1's ordering and frame, before any T1 number exists.** Discovered
   while scaffolding the screen: M7's shared bag matrix works only because all ten registered
   encoders ship a byte-identical `bert-wordpiece-30522` vocabulary, and **none of T1's four
