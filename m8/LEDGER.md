@@ -1617,6 +1617,81 @@ exist.)*
   is optimised against it becomes a second dev set and stops doing the one job it has.
   Written before any remediated slice exists, so no number this could affect has been observed.
 
+- **2026-08-29 — `E14-HEAD` AMENDED after an adversarial review of the design, before any arm ran.
+  Codex verdict: "the probe should not run as designed", three BLOCKERs. All three reproduced
+  here independently rather than taken on trust. This is the standing grant paying for itself
+  again: the probe is the milestone's main bet, and it would have measured the wrong thing.**
+
+  **BLOCKER 1 — the registration's central premise was FALSE, and this ledger already said so.**
+  The retired row read "a linear doc-side map is provably absorbable into the table, so a linear
+  head would measure nothing while looking like a result", and made nonlinearity a requirement on
+  that basis. But **§6's D1 entry, in this same file**, records the correction made in M7: the
+  absorbable dismissal was *half wrong*, because retrieval L2-normalizes documents, so the score
+  is `q·(Md)/|Md|` and the per-document factor `1/|Md|` cannot move into a shared query row.
+  `results/m7_absorb_check.json` measures rank agreement with the absorbed form at **1.000 without
+  renormalization and 0.000 with it**. A renormalized linear head is **genuine document-side
+  capacity**, and it is the cheaper (1.05M vs 4.2M parameters) and better-conditioned probe.
+  Consequences, all adopted: nonlinearity is no longer required; **LIN becomes the primary and MLP
+  the secondary**, with MLP serving as the control that says whether nonlinearity bought anything;
+  and an MLP win could otherwise have been attributed to nonlinearity when its effective linear
+  map plus renormalization was doing the work.
+  *The general lesson is uncomfortable and worth keeping: the false premise was written into a
+  registry row while its refutation sat in §6 of the document the row belongs to.* Cross-check a
+  registration against the ledger's own physics section before freezing it.
+
+  **BLOCKER 2 — zero-init does NOT make the arm identical to R0.** At `W = 0` the head emits
+  `normalize(d)`, not `d`, and R0 scores the **raw cached fp16 vectors** in both training and
+  evaluation. Measured over 100,000 sampled pool rows: only **0.36%** have float32 norm exactly 1,
+  max `|norm−1|` = **4.8e-05**, mean **9.1e-06**. Small, but it defeats every part of the
+  "R0 plus capacity, exactly identity at step 0" claim — and because renormalization shifts
+  Phase-A logits it shifts the training trajectory too, so rescoring R0 is not a repair.
+  **Adopted: a new comparator `R0N`**, the same patched path with the head frozen at identity,
+  three paired seeds. `R0N` against the existing `R0` is additionally reported as an **end-to-end
+  null on the whole patch stack**, which the design did not previously have.
+  *And the self-test I had already written and passed did not catch this, because it fed the head
+  pre-normalized random vectors — a test that assumed its own conclusion.* This is CODEMAP
+  pitfall 17's class exactly, one file later.
+
+  **BLOCKER 3 — the learning-rate ladder would have observed the endpoint before selecting.**
+  `train.run()` evaluates `cfg.eval_components` every `eval_every` steps **and once more
+  unconditionally at the end**, and R0's components include *both* DENSE endpoint components. A
+  ladder that merely promised to ignore dev would still have seen it several times per arm, and
+  `eval_every=0` does not help because the final evaluation is unconditional. **Adopted: the
+  ladder subprocess is dev-blind by construction** — `dev_eval.eval_table` is patched to raise —
+  and two related fixes: the ladder runs on a **disjoint tuning seed (3)** so selection is not
+  made on one of the three reported seeds, and the reported arms return to the **full pair pool**.
+
+  **MAJOR findings adopted.** (a) **A positive does not by itself identify bag reachability**: the
+  head is supervised document-side metric learning and can win by fixing the teacher's relevance
+  geometry or separating training sources — HotpotQA is ~85% of the document pool but ~24% of
+  positive pairs. A **mechanism control** is registered: score headed documents against the frozen
+  *teacher* query vectors as well as the bag, and read the bag gain minus the teacher-query gain.
+  Descriptive, does not gate the bar, and is what makes a positive mean E14 rather than "supervised
+  adaptation helps". (b) **Step adequacy is pre-registered and gates the null**: continue the
+  winning tuning-seed arm to 5,000 steps on the holdout only, plateau rule = the 2500→5000
+  improvement must be under 25% of the 1250→2500 improvement, else the primary reports
+  **OPTIMIZATION-INADEQUATE**, not a method null. (c) **Streamed evaluation is now a registered
+  engineering constraint**: materializing headed float32 vectors is ~21.4 GB for HotpotQA and
+  ~25.3 GB for the pool, over this box, so the head must be a lazy slice-transforming view driven
+  by the scorer's own chunking. (d) **Provenance binding**: a `run_id` does not stop a stale head
+  being paired with a table, so each head artifact binds the table, Phase-B checkpoint and head
+  state by sha256 along with the architecture, lr/seed/schedule, split hash and patch-source
+  hashes. (e) Both dense components are CQADupStack forums, so a gain licenses a
+  **CQADupStack-family** claim, not broad out-of-domain reachability.
+
+  **Confirmed sound and kept unchanged:** the false-negative mask stays in **raw teacher space**
+  (the reward-hacking channel is real and this closes it; the id-based own-positive and
+  all-positive masks are head-independent), cross-process scoring does not break seed pairing, and
+  no C2 redefinition occurs so long as D1 stays disabled for C2 as §5.4 requires.
+
+  **The bar is UNCHANGED at 0.0040** — the endpoints and their measured floors are untouched by
+  any of this. Multiplicity does change: two treatments now, intersection-union within a treatment
+  and **Holm across the two**, because "does ANY cheap doc-side head clear" is a union.
+
+  **No E14-HEAD arm had run when this was written.** Full review at
+  `research/m8-planning/e14-head-design-2026-08-29.md` (the brief) and
+  `research/m8-planning/codex-e14-head-review-2026-08-29.md` (the findings).
+
 ---
 
 ## 16. Gate findings → where each is discharged
