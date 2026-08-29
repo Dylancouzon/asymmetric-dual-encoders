@@ -57,6 +57,27 @@ HOLDOUT_NEG = 8192              # negatives for the holdout statistic, fixed sam
 HEAD_SUBCHUNK = 50_000          # rows per head application inside one scorer chunk
 
 
+def _git(*args):
+    import subprocess
+    try:
+        return subprocess.run(["git", *args], cwd=str(REPO), capture_output=True,
+                              text=True, timeout=10).stdout.strip()
+    except Exception:
+        return None
+
+
+def _git_head():
+    return _git("rev-parse", "HEAD") or None
+
+
+def _git_dirty():
+    """Whether the tree that produced this arm had uncommitted changes. Recorded, not refused:
+    an arm trained from a dirty tree is not reproducible from a commit, and the reader deserves
+    to know that rather than to infer it."""
+    out = _git("status", "--porcelain", "--", "m8src", "m7src", "bench")
+    return None if out is None else bool(out)
+
+
 def _sha_file(p):
     h = hashlib.sha256()
     with open(p, "rb") as f:
@@ -207,6 +228,15 @@ class Handle:
                 bad.append("the head wrapper was installed but NO document row was ever "
                            "transformed through it -- the proxy was built and never read, so "
                            "nothing scored was headed")
+        # Whether the head MOVED, asserted here rather than left to a later collect() pass. The
+        # first version proved only that an optimizer was constructed and a parameter group added,
+        # which is not the same claim: a trainable head that never moved is the comparator wearing
+        # this arm's name, and a frozen head that moved is not a comparator at all.
+        moved = self.head_delta()
+        if self.trainable and moved == 0.0:
+            bad.append("a TRAINABLE head is bit-identical to its initialization after training")
+        if not self.trainable and moved != 0.0:
+            bad.append(f"a FROZEN head moved by {moved:.3g} -- R0N is not the identity comparator")
         if bad:
             raise SystemExit("E14 PATCH DID NOT FIRE AS REGISTERED:\n  " + "\n  ".join(bad))
 
@@ -257,11 +287,23 @@ class Handle:
                 "e14_patch.py": _sha_file(REPO / "m8src" / "e14_patch.py"),
                 "e14_run.py": _sha_file(REPO / "m8src" / "e14_run.py"),
             },
+            # CODEMAP pitfall 16: a run's meta.json records no code vintage, so nothing tells you
+            # two arms were trained under different code. The source hashes above cover this
+            # probe's own files; this covers everything else the arm ran through.
+            "git_head": _git_head(),
+            "git_dirty": _git_dirty(),
             "holdout": (None if self.holdout is None else
                         {"frac": self.holdout["frac"], "n": int(self.holdout["n"]),
                          "seed": HOLDOUT_SEED, "split_sha256": self.holdout["split_sha"],
                          "n_train_after_holdout": int(self.holdout["n_keep"]),
-                         "negatives": HOLDOUT_NEG}),
+                         "negatives": HOLDOUT_NEG,
+                         "negatives_sha256": self.holdout.get("negatives_sha"),
+                         "negatives_disjoint_by_construction": (
+                             "the reserve is added to train.banned_rows, which train.run removes "
+                             "from the negative bank and build_arrays removes from the training "
+                             "positives"),
+                         "read_at": "sqrt pooling, live fp32 table (a registered proxy for the "
+                                    "folded int8 endpoint)"}),
             "patch_counters": dict(self.counters),
             "head_max_abs_move_from_init": self.head_delta(),
             "_what": ("the head that was trained with this table, bound to it by sha256. A run_id "
@@ -273,7 +315,8 @@ class Handle:
         return rec
 
 
-def install(*, head_kind, head_lr, trainable, arm_kind, holdout_frac=0.0, temp=0.02):
+def install(*, head_kind, head_lr, trainable, arm_kind, seed, holdout_frac=0.0, temp=0.02,
+            fn_margin=0.02):
     """Rebind the four sites. Call BEFORE `sweep.one`/`train.run`, after `import m8base`.
 
     `arm_kind` is "reported" (full pool, headed in-training dev) or "ladder" (holdout split,
@@ -294,6 +337,17 @@ def install(*, head_kind, head_lr, trainable, arm_kind, holdout_frac=0.0, temp=0
     if arm_kind == "ladder" and not holdout_frac:
         raise ValueError("a ladder arm needs a holdout to select on")
 
+    # THE HEAD'S INITIALIZATION MUST BE SEEDED HERE, and this is not a formality. `build_head`
+    # runs before `train.run()` reaches its own `torch.manual_seed(cfg.seed)`, and the MLP head's
+    # `fc1` weight and bias are RANDOM (only `fc2` is zero-init). Zero `W2` hides them in the
+    # initial output but the first `W2` gradient already depends on them, so without this the
+    # three MLP arms would have differed in their initialization as well as in their treatment,
+    # the arms would not have been reproducible from their recorded seeds, and the seed pairing
+    # the whole read rests on would have been false for MLP. `lin` is unaffected (zeros_ is
+    # deterministic) -- which is exactly why this stayed invisible through a smoke that only ran
+    # `lin`. Found by an adversarial review of the implementation, reproduced here before any
+    # reported arm ran.
+    torch.manual_seed(seed)
     head = e14_head.build_head(poolmod.DIM, kind=head_kind, device="cuda")
     if not trainable:
         for p in head.parameters():
@@ -339,6 +393,31 @@ def install(*, head_kind, head_lr, trainable, arm_kind, holdout_frac=0.0, temp=0
         import devsuite
         devsuite.load = _refuse
 
+        # THE NEGATIVE RESERVE, MADE DISJOINT FROM TRAINING BY CONSTRUCTION.
+        #
+        # The first version drew the statistic's negatives uniformly from the pool. That is
+        # ~32% contaminated by arithmetic alone: the negative bank is 1,997,601 of 6,169,142 pool
+        # rows, and each bank row is sampled ~41 times over 2,500 steps. A trainable document head
+        # can lower such a statistic by learning to demote rows it has SEEN rather than by
+        # improving retrieval over the 4.17M documents it has not.
+        #
+        # The clean fix is available because `train.run` removes `banned_rows()` from the negative
+        # bank AND `build_arrays` removes them from the training positives. Adding the reserve
+        # there makes it unreachable as a training negative and as a training positive, by
+        # construction rather than by measurement -- no reconstruction of `bank_ids` required.
+        pool_vecs = poolmod.build()[1]
+        reserve = np.sort(np.random.default_rng(HOLDOUT_SEED + 1).choice(
+            pool_vecs.shape[0], HOLDOUT_NEG, replace=False))
+        hold["negatives_sha"] = hashlib.sha256(reserve.tobytes()).hexdigest()
+        _real_banned = train.banned_rows
+
+        def _banned():
+            arr, bset, third = _real_banned()
+            merged = np.union1d(np.asarray(arr, dtype=np.int64), reserve)
+            return merged, set(bset) | set(int(x) for x in reserve), third
+
+        train.banned_rows = _banned
+
         # the holdout split, installed on build_arrays so training can never draw these pairs
         stash = {}
         _real_ba = train.build_arrays
@@ -353,6 +432,8 @@ def install(*, head_kind, head_lr, trainable, arm_kind, holdout_frac=0.0, temp=0
             stash["keep"] = keep_i
             stash["hold_q"] = [q_texts[i] for i in hold_i]
             stash["hold_pos"] = np.array([pos_idx[i][0] for i in hold_i], dtype=np.int64)
+            stash["hold_allpos"] = [pos_idx[i] for i in hold_i]
+            stash["hold_i"] = hold_i
             hold["n"], hold["n_keep"] = nh, len(keep_i)
             hold["split_sha"] = hashlib.sha256(hold_i.tobytes()).hexdigest()
             print(f"  [e14] holdout {nh} pairs of {n} (seed {HOLDOUT_SEED}), "
@@ -369,29 +450,55 @@ def install(*, head_kind, head_lr, trainable, arm_kind, holdout_frac=0.0, temp=0
 
         def _ec(name, texts, **kw):
             if name.startswith("trainq-") and "full_q" in stash:
-                full = _real_ec(f"trainq-{len(stash['full_q'])}", stash["full_q"], **kw)
-                return np.asarray(full)[stash["keep"]]
+                full = np.asarray(_real_ec(f"trainq-{len(stash['full_q'])}", stash["full_q"], **kw))
+                # the held-out queries' TEACHER vectors, which the false-negative mask needs
+                stash["hold_tq"] = full[stash["hold_i"]]
+                return full[stash["keep"]]
             return _real_ec(name, texts, **kw)
 
         train.encode_cached = _ec
 
-        # the statistic the ladder selects on, in place of any dev evaluation
-        pool_vecs = poolmod.build()[1]
-        neg_rows = np.sort(np.random.default_rng(HOLDOUT_SEED + 1).choice(
-            pool_vecs.shape[0], HOLDOUT_NEG, replace=False))
+        # THE STATISTIC, built to match the objective rather than to be convenient.
+        #
+        # Four things the first version got wrong, all found by review before any reported arm:
+        #   * negatives overlapped the training bank -> now the reserve above, disjoint by
+        #     construction, with its id-set hash bound into the arm's provenance;
+        #   * it pooled `mean` while the endpoint reads `sqrt` -> now sqrt;
+        #   * it disabled the own-positive, all-positive and false-negative masks, on the stated
+        #     ground that masks would "drift between arms". THAT REASONING WAS WRONG: the id masks
+        #     are index comparisons and the false-negative mask is computed in RAW teacher space,
+        #     so all three are arm-INDEPENDENT. Omitting them rewarded a head for demoting a
+        #     query's own siblings. All three are restored, `fn_margin` at the arm's own value.
+        #   * (not repaired, declared) it reads the live fp32 table while the endpoint reads the
+        #     folded int8 release artifact. Folding mid-training would mean running the release
+        #     path on an unfinished artifact every eval; this is registered as an explicit fp32
+        #     proxy, and it is one more reason this statistic is descriptive and no longer selects.
+        sqrt_pre = None
 
         def _eval_table(model, pre, components=None, tok=None):
+            nonlocal sqrt_pre
             counters["holdout_evals"] += 1
+            if sqrt_pre is None:
+                from dataclasses import asdict as _asdict
+                from table import Preproc as _Preproc
+                sqrt_pre = _Preproc(**{**_asdict(pre), "pool_mode": "sqrt"})
+            n = len(stash["hold_q"])
             with torch.no_grad():
-                qv = torch.from_numpy(model.encode(stash["hold_q"], pre, tok=tok)).cuda().float()
+                qv = torch.from_numpy(
+                    model.encode(stash["hold_q"], sqrt_pre, tok=tok)).cuda().float()
                 pos_v = torch.from_numpy(
                     np.ascontiguousarray(pool_vecs[stash["hold_pos"]])).cuda().float()
-                neg_v = torch.from_numpy(
-                    np.ascontiguousarray(pool_vecs[neg_rows])).cuda().float()
-                # fn_margin=0 and no index masks: the statistic must be IDENTICAL in construction
-                # across arms, and the mask is a per-batch data property that would make it drift.
-                loss = float(e14_head.infonce_head(qv, pos_v, neg_v, temp, head=head,
-                                                   fn_space="raw"))
+                neg_v = torch.from_numpy(np.ascontiguousarray(pool_vecs[reserve])).cuda().float()
+                tq = torch.from_numpy(np.ascontiguousarray(stash["hold_tq"])).cuda().float()
+                mx = max(len(p) for p in stash["hold_allpos"])
+                allpos = np.full((n, mx), -1, dtype=np.int64)
+                for r, ps in enumerate(stash["hold_allpos"]):
+                    allpos[r, :len(ps)] = ps
+                loss = float(e14_head.infonce_head(
+                    qv, pos_v, neg_v, temp, tq, pos_v, fn_margin, head=head, fn_space="raw",
+                    neg_pool_idx=torch.from_numpy(reserve).cuda(),
+                    pos_pool_idx=torch.from_numpy(stash["hold_pos"]).cuda(),
+                    all_pos_idx=torch.from_numpy(allpos).cuda()))
             # negated: `macro` is read as higher-is-better everywhere in this harness
             return {"holdout-infonce": {"0": -loss}}
 

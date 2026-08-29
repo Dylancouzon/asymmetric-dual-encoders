@@ -90,3 +90,12 @@ arms. Per-run detail is in `results/m7_run_m8nf-*.json`.
 | m8e14-r0n-s0-smoke | `work/runs/m8e14-r0n-s0-smoke.json` | 0.5012 | ok |
 | m8e14-lin-s0-smoke | `work/runs/m8e14-lin-s0-smoke.json` | 0.4974 | ok |
 | m8e14-r0n-s0-smoke | `work/runs/m8e14-r0n-s0-smoke.json` | 0.5012 | ok |
+
+### E14-HEAD lr ladder, VOID (see LEDGER 15, 2026-08-29): mlp seeding defect, lin statistic replaced
+
+| m8e14-lad-lin-lr3e4 | `work/runs/m8e14-lad-lin-lr3e4.json` | -0.2434 | ok |
+| m8e14-lad-lin-lr1e3 | `work/runs/m8e14-lad-lin-lr1e3.json` | -0.2404 | ok |
+| m8e14-lad-lin-lr3e3 | `work/runs/m8e14-lad-lin-lr3e3.json` | -0.2430 | ok |
+| m8e14-lad-mlp-lr3e4 | `work/runs/m8e14-lad-mlp-lr3e4.json` | -0.2427 | ok |
+| m8e14-lad-mlp-lr1e3 | `work/runs/m8e14-lad-mlp-lr1e3.json` | -0.2386 | ok |
+| m8e14-lad-mlp-lr3e3 | `work/runs/m8e14-lad-mlp-lr3e3.json` | -0.2498 | ok |

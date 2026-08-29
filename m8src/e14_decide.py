@@ -9,8 +9,10 @@ The registered rule, applied literally:
     cached fp16 vectors, and those are not exactly unit-norm.
   * BAR: mean-over-seeds gain >= 0.0040 on BOTH scalars, per head. Intersection-union within a
     treatment (which only lowers type-I), Holm across the two treatments.
-  * The STEP-ADEQUACY gate comes first and it can veto a null: if the winning tuning-seed arm has
-    not plateaued, the primary reports OPTIMIZATION-INADEQUATE and NOT a method null.
+  * The STEP-ADEQUACY gate comes first and it can veto a null: if doubling the step budget on the
+    tuning seed still buys more than a quarter of what the second half of the 2,500-step budget
+    bought, the primary reports OPTIMIZATION-INADEQUATE and NOT a method null. It can only turn a
+    null into UNINFORMATIVE; it can never overturn a treatment that reached the bar.
 
 HOW "HOLM ACROSS THE TWO TREATMENTS" IS IMPLEMENTED, since the registered bar is a THRESHOLD and
 Holm needs p-values. The threshold rule is primary and decides the verdict. Holm is computed
@@ -24,9 +26,10 @@ for the dense endpoint, and the K=3 range floor divided by 1.693 for the fused e
 all that was measured there. Two things are stated rather than buried: the fused sigma comes from a
 sample RANGE at K = 3 and so pins sigma only to about a 12x span (CODEMAP pitfall 18), and
 sqrt(2) * sigma_A treats the two arms as INDEPENDENT A legs even though they share a seed, which
-is the conservative direction. At the registered bar these p-values are ~1e-6, so Holm cannot
-change a verdict the threshold rule reaches; it is reported because the registration asks for it,
-not because it is doing work. WHERE THE TWO DISAGREE, THE STRICTER GOVERNS.
+is the conservative direction. A treatment must clear BOTH scalars, so its p-value entering Holm
+is the WORSE of its two. At the registered bar these p-values are ~1e-6, so Holm cannot change a
+verdict the threshold rule reaches; it is reported because the registration asks for it, not
+because it is doing work. WHERE THE TWO DISAGREE, THE STRICTER GOVERNS.
 
 Everything else here is DESCRIPTIVE and gates nothing: the mechanism control, the R0N-vs-R0
 end-to-end null on the patch stack, and the per-seed spread.
@@ -40,7 +43,6 @@ import sys
 import numpy as np
 
 import m8base
-import noise_floor
 import probe_guard
 
 REPO = m8base.REPO
@@ -185,17 +187,32 @@ def verdict_of(con, hp, inadequate):
     return out
 
 
+def r0_scalars():
+    """R0's two scalars, from THEIR OWN canonical artifacts.
+
+    The first version looked for `m8nf-seed*` inside the E14 inputs. They are not there and never
+    will be: the E14 scorer enumerates the nine E14 arms, so the registered R0N-vs-R0 null would
+    have quietly reported "R0 arms not present" instead of being measured.
+    """
+    dense = _dense_scalars(RESULTS / "m7_devperquery_m8noise.json.gz")
+    fused = _fused_scalars(RESULTS / "m8_noise_floor_fused.json")
+    return {"dense": dense, "fused": fused}
+
+
 def end_to_end_null(scal, sig):
     """R0N against the existing R0 arms: is the patch stack itself visible? DESCRIPTIVE."""
+    r0 = r0_scalars()
     out = {}
     for which, vals in scal.items():
-        gains = {}
+        gains, missing = {}, []
         for s in SEEDS:
             a, b = _arm(COMPARATOR, s), f"m8nf-seed{s}"
-            if a in vals and b in vals:
-                gains[s] = vals[a] - vals[b]
-        if not gains:
-            out[which] = {"note": "R0 arms not present in this artifact"}
+            if a in vals and b in r0[which]:
+                gains[s] = vals[a] - r0[which][b]
+            else:
+                missing.append(a if a not in vals else b)
+        if missing:
+            out[which] = {"note": f"cannot form the registered null; absent: {sorted(missing)}"}
             continue
         mean = float(np.mean(list(gains.values())))
         out[which] = {
@@ -252,11 +269,30 @@ def main():
     inadequate = [t for t in TREATMENTS
                   if adeq.get(t, {}).get("verdict") != "ADEQUATE"]
 
-    hp = holm({t: con[t]["dense"]["p_one_sided_vs_measured_floor"] for t in TREATMENTS})
+    # A treatment must clear BOTH scalars, so its p-value is the WORSE of the two before Holm
+    # runs across treatments. The first version passed only the dense p, which is not the
+    # intersection-union rule the registration states.
+    hp = holm({t: max(con[t][w]["p_one_sided_vs_measured_floor"] for w in ("dense", "fused"))
+               for t in TREATMENTS})
     verdicts = verdict_of(con, hp, inadequate)
 
+    mech = mechanism([_arm(t, s) for t in TREATMENTS for s in SEEDS])
+    mech_arms = [k for k in mech if k != "_what"]
+    positive = [t for t in TREATMENTS if verdicts[t] == "CLEARS"]
+
     primary = verdicts["lin"]
-    if any(v == "CLEARS" for v in verdicts.values()):
+    if positive and len(mech_arms) < len(TREATMENTS) * len(SEEDS):
+        # The mechanism control is what separates "documents became bag-reachable" from "supervised
+        # document-side adaptation helps". A positive without it is not interpretable, so it is not
+        # reported as one.
+        headline = (f"{positive} cleared the bar, but the mechanism control is incomplete "
+                    f"({len(mech_arms)} of {len(TREATMENTS) * len(SEEDS)} arms). The gain cannot "
+                    f"yet be attributed to bag reachability rather than to generic supervised "
+                    f"document-side adaptation, so no positive interpretation is issued.")
+    elif any(v == "CLEARS-THRESHOLD-NOT-HOLM" for v in verdicts.values()):
+        headline = ("A treatment cleared the threshold on both scalars but did not survive Holm "
+                    "across the two treatments. Reported as unresolved, not as a positive.")
+    elif positive:
         headline = ("A cheap renormalized doc-side head clears the bar on both scalars. The "
                     "document space IS re-shapeable toward bag reachability at this scale, which "
                     "is STRONG evidence for buying E14-LORA -- read the mechanism control before "
@@ -291,7 +327,7 @@ def main():
         "headline": headline,
         "descriptive": {
             "end_to_end_null_R0N_vs_R0": end_to_end_null(scal, sig),
-            "mechanism_control": mechanism([_arm(t, s) for t in TREATMENTS for s in SEEDS]),
+            "mechanism_control": mech,
         },
         "scope": reg["scope_limit"],
     }

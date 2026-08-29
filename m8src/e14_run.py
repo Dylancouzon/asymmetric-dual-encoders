@@ -52,8 +52,18 @@ TUNE_SEED = 3                   # disjoint from every reported seed, so selectio
 HEADS = ("lin", "mlp")          # `lin` PRIMARY, `mlp` its nonlinearity control
 LADDER = (("3e4", 3e-4), ("1e3", 1e-3), ("3e3", 3e-3))
 HOLDOUT_FRAC = 0.02
-ADEQUACY_STEPS = 5000
-ADEQUACY_EVAL_EVERY = 1250      # gives the 1250 / 2500 / 5000 readings the plateau rule needs
+
+# THE HEAD LEARNING RATE IS PRE-REGISTERED, NOT SELECTED. The ladder was built to choose it and
+# was demoted (LEDGER section 15, 2026-08-29) after a review found its selection statistic
+# contaminated and its continuation arm unfaithful, and after the `lin` ladder came back FLAT
+# across a 10x range: -0.2434 / -0.2404 / -0.2430. An elaborate dev-blind apparatus was deciding
+# something that does not appear to matter, and every part of it was a way to be wrong.
+# 1e-3 is the registered grid's midpoint and the standard rate for a small zero-init adapter head;
+# it is also, independently, where that flat curve peaked. The ladder arms survive as a
+# DESCRIPTIVE sensitivity band and select nothing.
+HEAD_LR = 1e-3
+ADEQUACY_BUDGETS = (2500, 5000)
+ADEQUACY_EVAL_EVERY = 1250      # gives the 1250 mid-point reading the plateau rule needs
 
 
 def base_cfg(run=BASE_RUN):
@@ -69,6 +79,20 @@ def _arm(rid, over, *, head_kind, head_lr, trainable, arm_kind, kind_tag, seed):
 
 
 def plan_ladder():
+    """The lr ladder, plus a FROZEN-head reference arm on the same holdout.
+
+    The reference arm exists because the ladder alone cannot answer "does the head help the
+    training objective at all?". It only ranks three learning rates against each other, and the
+    `lin` ladder came back nearly flat across a 10x range (-0.2434 / -0.2404 / -0.2430), which is
+    ambiguous between "the lr does not matter here" and "the head does not do much". `m8e14-lad-ref`
+    is the same dev-blind path with the head frozen at identity, so the ladder's three arms have
+    something head-free to be compared against.
+
+    It is a DIAGNOSTIC and takes no part in any decision. It is on the tuning seed and the
+    holdout-reduced pool like every ladder arm, so it is never scored and never enters the
+    reported set. Note it was added AFTER the `lin` ladder values were seen, which is why it is
+    recorded as a post-hoc diagnostic rather than as part of the registered arm set.
+    """
     cfg = base_cfg()
     arms = {}
     for hk in HEADS:
@@ -76,30 +100,48 @@ def plan_ladder():
             arms.update(_arm(f"m8e14-lad-{hk}-lr{tag}", {**cfg, "seed": TUNE_SEED},
                              head_kind=hk, head_lr=lr, trainable=True, arm_kind="ladder",
                              kind_tag=f"lad-{hk}", seed=TUNE_SEED))
+    arms.update(_arm("m8e14-lad-ref", {**cfg, "seed": TUNE_SEED},
+                     head_kind="lin", head_lr=0.0, trainable=False, arm_kind="ladder",
+                     kind_tag="lad-ref", seed=TUNE_SEED))
     return arms
 
 
-def plan_adequacy(winners):
-    """The winning lr per head, continued to 5,000 steps and read on the holdout only.
+def plan_adequacy():
+    """Two budgets, each fully annealed under its OWN schedule, at the pre-registered lr.
 
-    Implemented as ONE 5,000-step arm read at 1250 / 2500 / 5000 rather than as a restart from the
-    2,500-step checkpoint, because `set_lr` parameterizes the warmup/decay by the phase's TOTAL
-    step count: a restart would change the schedule half way through the curve and the plateau
-    rule would then be reading two different schedules against each other. The rule's arithmetic
-    is unchanged; it is applied within a single consistent schedule.
+    THE FIRST VERSION OF THIS WAS WRONG AND A REVIEW CAUGHT IT. It ran one fresh 5,000-step arm and
+    read the plateau at 1250 / 2500 / 5000 inside it, calling that a continuation of the 2,500-step
+    arm. It is not: `set_lr` parameterizes warmup and decay by the phase's TOTAL step count, so at
+    step 2,500 a 2,500-step arm sits at lr factor 0.1000 (its schedule floor) while a 5,000-step
+    arm sits at 0.5208. The 2,500 point of that curve is a different optimizer state than the arm
+    it claimed to continue, and BOTH plateau windows are confounded by where they sit on the anneal
+    rather than by how much optimization remains.
+
+    A true continuation would need the optimizer moments and RNG state, which frozen `m7src` does
+    not checkpoint. So the rule is restated (LEDGER section 15) in a form that is faithful and
+    measurable here: train the SAME configuration at 2,500 and at 5,000 steps, each properly
+    annealed, and ask whether doubling the budget buys much:
+
+        improvement_from_doubling = holdout(5000, final) - holdout(2500, final)
+        improvement_within_2500   = holdout(2500, final) - holdout(2500, step 1250)
+        ADEQUATE if improvement_from_doubling < 0.25 * improvement_within_2500
+
+    The 25% relation and the direction of the gate are unchanged; what changes is that each arm is
+    internally coherent instead of being read mid-anneal.
     """
     cfg = base_cfg()
     arms = {}
-    for hk, lr in winners.items():
-        arms.update(_arm(f"m8e14-step-{hk}",
-                         {**cfg, "seed": TUNE_SEED, "steps_a": ADEQUACY_STEPS,
-                          "eval_every": ADEQUACY_EVAL_EVERY},
-                         head_kind=hk, head_lr=lr, trainable=True, arm_kind="ladder",
-                         kind_tag=f"step-{hk}", seed=TUNE_SEED))
+    for hk in HEADS:
+        for b in ADEQUACY_BUDGETS:
+            arms.update(_arm(f"m8e14-adq-{hk}-b{b}",
+                             {**cfg, "seed": TUNE_SEED, "steps_a": b,
+                              "eval_every": ADEQUACY_EVAL_EVERY},
+                             head_kind=hk, head_lr=HEAD_LR, trainable=True, arm_kind="ladder",
+                             kind_tag=f"adq-{hk}", seed=TUNE_SEED))
     return arms
 
 
-def plan_reported(winners):
+def plan_reported():
     cfg = base_cfg()
     arms = {}
     for s in SEEDS:
@@ -109,7 +151,7 @@ def plan_reported(winners):
     for hk in HEADS:
         for s in SEEDS:
             arms.update(_arm(f"m8e14-{hk}-s{s}", {**cfg, "seed": s},
-                             head_kind=hk, head_lr=winners[hk], trainable=True,
+                             head_kind=hk, head_lr=HEAD_LR, trainable=True,
                              arm_kind="reported", kind_tag=hk, seed=s))
     return arms
 
@@ -117,8 +159,10 @@ def plan_reported(winners):
 def _code(rid, over, a, sidecar, smoke=False):
     patch_kw = {"head_kind": a["_head_kind"], "head_lr": a["_head_lr"],
                 "trainable": a["_trainable"], "arm_kind": a["_arm_kind"],
+                "seed": a["_seed"],     # the HEAD's init seed; see e14_patch.install
                 "holdout_frac": HOLDOUT_FRAC if a["_arm_kind"] == "ladder" else 0.0,
-                "temp": over.get("temp", 0.02)}
+                "temp": over.get("temp", 0.02),
+                "fn_margin": over.get("fn_margin", 0.02)}
     return (
         "import os, sys, json\n"
         "os.environ.setdefault('M7_ENCODER', 'stella-400M-v5')\n"
@@ -192,49 +236,69 @@ def holdout_curve(rid):
     return out
 
 
-def select(verbose=True):
-    """The winning head lr per head, on the holdout only. Refuses if the ladder is incomplete."""
-    winners, table = {}, {}
+def sensitivity(verbose=True):
+    """The lr band, DESCRIPTIVE. It selects nothing -- `HEAD_LR` is pre-registered.
+
+    Reported so that a null can be read as a statement about the lever rather than about the
+    learning rate: a flat band says the lr was not the binding constraint, and a peaked band with
+    the pre-registered value off the peak would be a reason to distrust a null.
+    """
+    table = {}
     for hk in HEADS:
         rows = {}
         for tag, lr in LADDER:
             rid = f"m8e14-lad-{hk}-lr{tag}"
             sc = SIDE / f"{rid}.json"
             if not sc.exists():
-                raise SystemExit(f"ladder arm {rid} has no sidecar; run `ladder` first")
+                continue
             d = json.loads(sc.read_text())
             rows[lr] = {"run_id": rid, "final_holdout": d["dev_proxy"],
                         "curve": holdout_curve(rid)}
-        best = max(rows, key=lambda lr: rows[lr]["final_holdout"])
-        winners[hk], table[hk] = best, rows
-        if verbose:
+        table[hk] = rows
+        if verbose and rows:
+            span = max(r["final_holdout"] for r in rows.values()) - \
+                min(r["final_holdout"] for r in rows.values())
             print(f"[{hk}] " + "  ".join(f"lr={lr:g}:{rows[lr]['final_holdout']:+.4f}"
-                                         for lr in sorted(rows)) + f"  -> {best:g}")
-    return winners, table
+                                         for lr in sorted(rows))
+                  + f"   span {span:.4f}   (pre-registered lr {HEAD_LR:g})")
+    return table
 
 
 def adequacy_verdict():
-    """The pre-registered plateau rule, as code.
+    """The plateau rule as restated in LEDGER section 15. See `plan_adequacy` for why.
 
-    improvement(2500->5000) must be under 25% of improvement(1250->2500). If it is not, the primary
-    reports OPTIMIZATION-INADEQUATE / UNINFORMATIVE and NOT a method null.
+    Doubling the budget must buy under 25% of what the second half of the 2,500-step budget
+    bought. If it buys more, the primary reports OPTIMIZATION-INADEQUATE and NOT a method null.
     """
     out = {}
     for hk in HEADS:
-        rid = f"m8e14-step-{hk}"
-        c = holdout_curve(rid)
-        if not c or not {1250, 2500, 5000} <= set(c):
-            out[hk] = {"run_id": rid, "verdict": "MISSING",
-                       "note": "needs holdout readings at 1250, 2500 and 5000"}
+        a2, a5 = f"m8e14-adq-{hk}-b2500", f"m8e14-adq-{hk}-b5000"
+        c2, c5 = holdout_curve(a2), holdout_curve(a5)
+        if not c2 or not c5 or 1250 not in c2 or 2500 not in c2 or 5000 not in c5:
+            out[hk] = {"run_id": [a2, a5], "verdict": "MISSING",
+                       "note": "needs the 2500-step arm read at 1250 and 2500, and the 5000-step "
+                               "arm read at 5000"}
             continue
-        early, late = c[2500] - c[1250], c[5000] - c[2500]
-        ratio = (late / early) if early > 0 else float("inf")
-        out[hk] = {"run_id": rid, "holdout": {k: c[k] for k in (1250, 2500, 5000)},
-                   "improvement_1250_2500": early, "improvement_2500_5000": late,
-                   "ratio": ratio, "threshold": 0.25,
-                   "verdict": "ADEQUATE" if ratio < 0.25 else "OPTIMIZATION-INADEQUATE",
-                   "_what": ("a null at an inadequate step budget is evidence about the "
-                             "configuration, not about the method")}
+        within = c2[2500] - c2[1250]
+        doubling = c5[5000] - c2[2500]
+        if within > 0:
+            ratio = doubling / within
+            ok = ratio < 0.25
+        else:
+            # the 2,500-step arm was already flat over its own second half, so there is no
+            # improvement to take a fraction OF. It is adequate iff doubling buys nothing either.
+            ratio = None
+            ok = doubling <= 0
+        out[hk] = {
+            "run_id": [a2, a5],
+            "holdout": {"b2500_at_1250": c2[1250], "b2500_final": c2[2500],
+                        "b5000_final": c5[5000]},
+            "improvement_within_2500": within, "improvement_from_doubling": doubling,
+            "ratio": ratio, "threshold": 0.25,
+            "verdict": "ADEQUATE" if ok else "OPTIMIZATION-INADEQUATE",
+            "_what": ("a null at an inadequate step budget is evidence about the configuration, "
+                      "not about the method (CLAUDE.md standing directive #2)"),
+        }
     return out
 
 
@@ -255,17 +319,26 @@ def collect():
             problems.append(f"{rid}: a FROZEN head moved ({moved:.3g}) -- R0N is not frozen")
         if pr.get("sha256", {}).get("phase_b_checkpoint") is None:
             problems.append(f"{rid}: no Phase-B checkpoint hash bound")
+    # The reported set is ENUMERATED and every member required. The first version asked
+    # `if have and len(have) != len(SEEDS)` -- which passes when `have` is EMPTY, so a run with
+    # zero reported arms reported no problems. That is CODEMAP pitfall 17 exactly, in the check
+    # whose whole job is to notice a missing arm, and it was written in the same session that
+    # added pitfall 22 about the same class.
     for kind in ("r0n",) + HEADS:
-        have = [r for r, d in arms.items() if d["tag"] == kind]
-        if have and len(have) != len(SEEDS):
-            problems.append(f"{kind}: {len(have)} arms, expected {len(SEEDS)} paired seeds")
+        want = {f"m8e14-{kind}-s{s}" for s in SEEDS}
+        missing = sorted(want - set(arms))
+        if missing:
+            problems.append(f"{kind}: missing {len(missing)} of {len(want)} arms: {missing}")
+        for rid in sorted(want & set(arms)):
+            if arms[rid]["seed"] not in SEEDS:
+                problems.append(f"{rid}: seed {arms[rid]['seed']} is not a reported seed")
     return arms, problems
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("stage", choices=["selftest", "smoke", "ladder", "adequacy", "reported",
-                                      "select", "collect"])
+                                      "sensitivity", "collect"])
     ap.add_argument("--only", nargs="*", default=None)
     ap.add_argument("--no-guard", action="store_true",
                     help="skip the registry gate. For a smoke on an uncommitted tree ONLY; a "
@@ -278,9 +351,8 @@ def main():
         print(json.dumps(out, indent=2))
         return 0 if out["pass"] else 1
 
-    if a.stage == "select":
-        w, t = select()
-        print(json.dumps({"winners": {k: v for k, v in w.items()}}, indent=1))
+    if a.stage == "sensitivity":
+        sensitivity()
         return 0
 
     if a.stage == "collect":
@@ -295,23 +367,28 @@ def main():
               flush=True)
 
     if a.stage == "smoke":
+        _ = plan_adequacy()     # constructed so a typo in it fails at smoke time, not later
         # Smoke the path with no execution history: a ladder arm exercises the holdout split, the
         # cache-subset encode and the dev-blindness refusals; a reported arm exercises the headed
         # scorer view. Both patch stacks, 90 steps each.
+        # Both patch stacks AND both head kinds. The previous smoke ran `lin` only, which is
+        # exactly why the MLP head's unseeded initialization survived it: `lin` is zero-init and
+        # deterministic, so the whole defect was invisible on the path that was smoked.
         arms = {}
-        arms.update({k: v for k, v in plan_ladder().items() if k.endswith("lin-lr1e3")})
-        arms.update({k: v for k, v in plan_reported({"lin": 1e-3, "mlp": 1e-3}).items()
-                     if k in ("m8e14-r0n-s0", "m8e14-lin-s0")})
+        arms.update({k: v for k, v in plan_adequacy().items() if k.endswith("-b2500")})
+        arms.update({k: v for k, v in plan_reported().items()
+                     if k in ("m8e14-r0n-s0", "m8e14-lin-s0", "m8e14-mlp-s0")})
         run_arms(arms, smoke=True, only=a.only)
         return 0
 
     if a.stage == "ladder":
+        # DESCRIPTIVE ONLY since the lr was pre-registered; kept because a flat sensitivity band
+        # is what makes a null a statement about the lever rather than about the learning rate.
         run_arms(plan_ladder(), only=a.only)
         return 0
 
-    winners, _ = select(verbose=True)
     if a.stage == "adequacy":
-        run_arms(plan_adequacy(winners), only=a.only)
+        run_arms(plan_adequacy(), only=a.only)
         print(json.dumps(adequacy_verdict(), indent=1))
         return 0
     if a.stage == "reported":
@@ -320,7 +397,7 @@ def main():
             if r["verdict"] == "MISSING":
                 raise SystemExit(f"step-adequacy has not run for {hk}; it gates the null and must "
                                  f"be measured before the reported arms are read.")
-        run_arms(plan_reported(winners), only=a.only)
+        run_arms(plan_reported(), only=a.only)
         return 0
     return 0
 

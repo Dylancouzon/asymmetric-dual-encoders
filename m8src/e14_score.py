@@ -232,7 +232,17 @@ def main():
     ap.add_argument("--arms", nargs="*", default=None)
     ap.add_argument("--dry", action="store_true")
     a = ap.parse_args()
+    # `--arms` IS NOT A WAY ROUND THE ALLOWLIST. Making the DEFAULT discovery enumerate the
+    # reported arms fixed the accident; it left the deliberate route open, and an operator could
+    # still have endpoint-scored a tuning arm by naming it. Dev-blindness that holds inside the
+    # training subprocess but not at the workflow level is not dev-blindness.
     arms = a.arms or arms_on_disk()
+    illegal = [r for r in arms if r not in reported_arms()]
+    if illegal:
+        raise SystemExit(
+            f"refusing to score {illegal}: not in the reported set. Ladder and step-adequacy arms "
+            f"are trained on the tuning seed and a holdout-reduced pool, and scoring one against "
+            f"the endpoint is exactly what the registration forbids.")
     if not arms:
         raise SystemExit("no E14 head arms on disk (looked for work/runs/m8e14-*.head.json)")
     print(f"{len(arms)} arms: {arms}", flush=True)

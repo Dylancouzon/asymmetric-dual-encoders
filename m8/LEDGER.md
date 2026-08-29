@@ -1692,6 +1692,85 @@ exist.)*
   `research/m8-planning/e14-head-design-2026-08-29.md` (the brief) and
   `research/m8-planning/codex-e14-head-review-2026-08-29.md` (the findings).
 
+- **2026-08-29 (later the same day) — `E14-HEAD` IMPLEMENTED, then CUT BACK after a second
+  adversarial review of the IMPLEMENTATION returned five BLOCKERs. Every decision below was made
+  before any reported arm ran, and three of them retire machinery this probe did not need.**
+  Codex verdict: "the remaining campaign should pause". All five reproduced here independently.
+
+  **What was wrong.** (1) The MLP head's `fc1` weight and bias are RANDOM and were built before
+  `train.run` reaches `torch.manual_seed`, so the three MLP arms differed in initialization as
+  well as in treatment, were not reproducible from their recorded seeds, and were not seed-paired.
+  Verified: two `mlp` builds differ, two `lin` builds are identical — which is why a smoke that
+  ran only `lin` could never have caught it. (2) The step-adequacy arm was not a continuation:
+  at step 2,500 a 2,500-step arm sits at lr factor **0.1000** and a 5,000-step arm at **0.5208**,
+  so its 2,500 point was a different optimizer state and both plateau windows were confounded by
+  position on the anneal. (3) The holdout statistic was contaminated and mismatched: ~32% of its
+  negatives lay in the training bank by arithmetic (1,997,601 of 6,169,142 pool rows, each sampled
+  ~41 times), it pooled `mean` against a `sqrt` endpoint, read the live fp32 table against a
+  folded-int8 endpoint, and disabled three masks on a justification that was **wrong** — the id
+  masks are index comparisons and the false-negative mask is computed in raw teacher space, so all
+  three are arm-INDEPENDENT and omitting them rewarded demoting a query's own siblings.
+  (4) `--arms` bypassed the reported-arm allowlist, so a tuning arm could still be endpoint-scored
+  deliberately even after the default discovery was fixed. (5) Provenance was recorded but not
+  enforced, and `collect()`'s treatment-count check was `if have:` — **vacuous when empty**, which
+  is CODEMAP pitfall 17 in the check whose only job is to notice a missing arm, written in the same
+  session that added pitfall 22 about that class.
+
+  **THE LEARNING RATE IS NOW PRE-REGISTERED AT 1e-3 AND THE LADDER SELECTS NOTHING.** Two of the
+  five BLOCKERs were in ladder machinery, and the `lin` ladder had already come back FLAT across a
+  10x range (**-0.2434 / -0.2404 / -0.2430**). A dev-blind selection apparatus, a bespoke holdout
+  statistic and a plateau continuation were deciding something that does not appear to matter, and
+  every part of it was a way to be wrong. 1e-3 is the registered grid's midpoint and the standard
+  rate for a small zero-init adapter head; it is independently where that flat curve peaked. The
+  ladder arms survive as a **descriptive sensitivity band**, run only if the primary reports a
+  null, where a flat band is what makes that null a statement about the lever rather than about
+  the learning rate. This *narrows* the experiment's degrees of freedom rather than widening them:
+  nothing is now chosen after seeing a number.
+
+  **Step-adequacy is restated**, since frozen `m7src` checkpoints no optimizer moments and a true
+  continuation is not available: train the same configuration at 2,500 and 5,000 steps, each
+  properly annealed under its own schedule, and require
+  `holdout(5000,final) - holdout(2500,final) < 0.25 x [holdout(2500,final) - holdout(2500,1250)]`.
+  The 25% relation and the direction of the gate are unchanged; each arm is now internally
+  coherent instead of read mid-anneal. It can only turn a null into UNINFORMATIVE and can never
+  overturn a treatment that reached the bar.
+
+  **The holdout statistic is repaired and demoted to descriptive.** Its negatives are an 8,192-row
+  reserve added to `train.banned_rows`, which `train.run` removes from the negative bank and
+  `build_arrays` removes from the training positives — so it is disjoint from everything the head
+  trains on **by construction**, not by measurement, and its id-set hash is bound into each arm.
+  Pooling is `sqrt`; all three masks are restored at the arm's own `fn_margin`. The fp32-vs-int8
+  mismatch is **declared, not repaired**: folding mid-training would run the release path on an
+  unfinished artifact every eval, so this is an explicit fp32 proxy, and one more reason the
+  statistic no longer decides anything.
+
+  **Also adopted:** the head's initialization is seeded (`lin` verified seed-invariant, `mlp`
+  verified reproducible within a seed and distinct across seeds); `assert_fired` now fails if a
+  trainable head is bit-identical to its init or a frozen head moved at all; `--arms` is validated
+  against the enumerated reported set; `collect()` requires all nine arms by name; the
+  R0N-vs-R0 null reads R0's own canonical artifacts, which the first version could never have
+  found inside the E14 dump; a positive with an incomplete mechanism control is reported as
+  uninterpretable rather than as a positive; Holm takes `max(p_dense, p_fused)` per treatment, the
+  intersection-union rule the row states; and `git HEAD` plus a dirty-tree flag are stamped into
+  every arm (CODEMAP pitfall 16 — nothing else records code vintage).
+
+  **The six ladder arms trained before this entry are VOID and were deleted**: the three `mlp` ones
+  for the seeding defect, the three `lin` ones because the statistic they were measured on has been
+  replaced. No endpoint number existed for any of them — every ladder arm is dev-blind by
+  construction — so nothing observed is being un-observed here.
+
+  **OWNER RULING, Dylan 2026-08-29: re-encoding is acceptable.** "We are not expecting people to
+  have an existing Stella collection." This removes the re-index objection from the head's cost and
+  from `E14-LORA`'s bill, so neither may be argued down on that ground. Our own compute cost for a
+  re-encode is unchanged, and stella's derived-weights licence question is untouched and still open.
+  Recorded because the verdict's framing depends on it: the query side stays a pure lookup table
+  either way — the head is applied to DOCUMENTS at index time — and what E14 was putting at risk
+  was only drop-in compatibility with an existing index.
+
+  **No reported arm had run when this was written.** Review at
+  `research/m8-planning/codex-e14-impl-review-2026-08-29.md`.
+
+
 ---
 
 ## 16. Gate findings → where each is discharged
