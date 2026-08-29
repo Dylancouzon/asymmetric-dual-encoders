@@ -1,6 +1,6 @@
 {
   "_note": "LEDGER \u00a74.4 deliverable 3: rule compliance, AUDITED rather than discovered.",
-  "head": "fbfc3df11199b1c8731618bd2dd425e89426cb5f",
+  "head": "e2d67ee3927a4273337f1ac0a428c68bb6caac98",
   "registry_version": 2,
   "registry_sha256_now": "bca516f528ba2cfc03a7c7d34c89fd502c204246cd7d9ff7d603fb626d3dea2d",
   "stamped_results_checked": [
@@ -13,6 +13,16 @@
       "file": "m8_b2_entropy.json",
       "probe": "B2",
       "commit": "ffa1a5a3"
+    },
+    {
+      "file": "m8_b3_decision.json",
+      "probe": "B3",
+      "commit": "a1b4f308"
+    },
+    {
+      "file": "m8_b3_fused.json",
+      "probe": "NF",
+      "commit": "a1b4f308"
     },
     {
       "file": "m8_b6_pre.json",
