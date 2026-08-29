@@ -2398,7 +2398,12 @@ last-token pooling that `m7src/teacher.py` raises on, publishes no retrieval-onl
 needs Dylan's ruling on undisclosed training data. Neither absence changes tonight's verdict —
 the registered default is the incumbent and nothing displaced it.
 
-## 22. B6-pre — E3's hard condition is MET. D1 survives.
+## 22. B6-pre — E3's hard condition is MET. (D1 survived this gate, then FAILED on quality.)
+
+*Heading corrected 2026-08-29: this section cleared D1's **export** precondition. `E14-HEAD` later
+measured D1's quality at −0.0244/−0.0293 dense against a +0.0040 bar — see §8's D1 entry. B6-pre's
+PASS still matters, because it is the same gate `D2`'s output must clear, and it used near-identity
+weights, so the actual trained artifact must be re-exported before anything is called shippable.*
 
 `results/m8_b6_pre.json`. E3 approved a doc-side head **only** if it "fuses into the doc ONNX
 graph as plain nodes — one served file, no custom pipeline". This is the binary gate on that, and
