@@ -189,3 +189,20 @@ a non-BERT teacher found two more, and both are silent:
     overwrite would have looked exactly like a successful run. Pitfall 8 is the m7src version of
     this; the m8src version is worse, because the file is ours and the flag looks harmless. **If a
     CLI flag changes what is measured, it must change where the result is written.**
+22. **A DISCOVERED arm set silently grows to include arms that must never be read.**
+    `e14_score.arms_on_disk()` globbed `work/runs/m8e14-*.head.json`. That was exactly right when
+    the only head artifacts were the nine reported arms — and wrong the moment the lr ladder wrote
+    six more, plus two step-adequacy arms. Those are trained on the **disjoint tuning seed** and on
+    a **holdout-reduced pool**; scoring them would have cost hours and, worse, merged tuning arms
+    into the dump the verdict reads. Caught by watching the ladder write its artifacts, not by any
+    test — pitfall 17's family again, because a glob over a set that happens to be correct today
+    asserts nothing about tomorrow. **A set of arms that a decision reads must be ENUMERATED, and
+    anything else found on disk named and skipped out loud** — silence would look identical to
+    "there was nothing else there".
+23. **A ladder arm's saved `dev_macro` is not a dev macro.** The E14 ladder replaces
+    `dev_eval.eval_table` with the training-holdout InfoNCE, so `train.run`'s ordinary bookkeeping
+    stamps that number into `work/runs/<id>.meta.json`, the `.npz` metadata and
+    `results/m7_run_<id>.json` under the key `dev_macro` — where it sits looking like an nDCG and
+    is in fact a negated loss around −0.24. Nothing downstream can tell. The protection is the one
+    above: ladder and adequacy arms are never in the scored set. **When a patch changes what a
+    metric MEANS, check what the unpatched code writes that metric into.**
