@@ -95,7 +95,8 @@
       "no published retrieval-only number -- only mixed-task MTEB v2 69.0",
       "no usable sequence-start row: its embedding lives at the LAST token"
      ],
-     "spec_name": "harrier-0.6b"
+     "spec_name": "harrier-0.6b",
+     "ruled_out": "CLOSED by Dylan 2026-08-29 on UNDISCLOSED TRAINING DATA: no comparison design repairs not knowing what the teacher has read, and the evaluation protocol is not relaxed. Not screened."
     }
    },
    "penalty_rule": "near-sibling iff the challenger shares the incumbent's tokenizer identity (bert-wordpiece-30522) AND its dimension (1024); else dissimilar. Fixed here, before any screen runs.",

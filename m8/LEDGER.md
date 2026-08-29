@@ -1163,6 +1163,23 @@ CORPORA are ordinary public downloads while their query and qrel payloads stay g
 in either direction. It states what changed, why, and that the dependent numbers did not yet
 exist.)*
 
+- **2026-08-29 — harrier RULED by Dylan: CLOSED, on undisclosed training data.**
+  `microsoft/harrier-oss-v1-0.6b` passes the vendor rule (Microsoft is "OK with justification")
+  and fails on protocol. Our contamination story depends on knowing what the teacher has read —
+  stella discloses ArguAna and FiQA2018, which is precisely why §4's four-dataset primary
+  comparison exists. **An undisclosed teacher admits no such design**: there is no comparison that
+  repairs not knowing. The evaluation protocol is the one thing this project does not relax, so a
+  candidate that undermines it is out regardless of what it might score. Two lesser blockers stand
+  behind that one and did not need to be reached: last-token pooling that `m7src/teacher.py`
+  refuses (new code, and new code is where the bugs are), and no published retrieval-only number
+  against which a screen result could be sanity-checked — a broken harness and a genuine 0.31
+  would be indistinguishable.
+  **`NovaSearch/stella_en_400M_v5` therefore stands as the teacher, and T1's NO SWAP is final for
+  M8** unless Dylan reopens it. **stella-1.5B remains unscreened** — it was offered alongside this
+  ruling and not commissioned; its blocker is mechanical (config and tokenizer disagree about BOS,
+  151643 against null, so a degenerate-query fallback row must be registered first) and it can be
+  picked up at any time without a new ruling.
+
 - **2026-08-29 — E10 RULED (Dylan delegated the call: "independently from the rules, take the
   decision that makes the most sense"). The shadow is the SEVEN clean-community LoTTE slices under
   a per-question remedy. The CQADupStack subforums are REJECTED as a shadow.**
