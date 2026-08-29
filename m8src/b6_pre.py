@@ -90,9 +90,20 @@ class Composed:
                         if b is not None:
                             lin.bias.copy_(torch.as_tensor(b))
                     self.dense = lin.to(device)
-                # The D1 candidate itself: a square linear map over the document vector. Identity-
-                # initialized so a parity failure is unambiguously the EXPORT's fault and not a
-                # random map's numerics.
+                # The D1 candidate itself, over the document vector. Weights are set to identity so
+                # a parity failure is unambiguously the EXPORT's fault and not a random map's
+                # numerics.
+                #
+                # TWO THINGS THIS DOES NOT ESTABLISH, stated because the earlier comment claimed
+                # one of them. (1) `mlp` is NOT the identity FUNCTION: identity weights around a
+                # GELU give `GELU(v)`, not `v`. Harmless here -- parity compares torch against ONNX
+                # for the SAME module -- but it is not an identity path. (2) Near-identity weights
+                # exercise the graph's SHAPE, not its numerics: what this proves is that a
+                # nonlinearity fuses as a plain node (it exports as `Erf`) and that the file is one
+                # file. `E14-HEAD`'s registry row therefore requires the ACTUAL TRAINED head to be
+                # exported and parity-tested before any head-bearing candidate is called shippable,
+                # and the trained head is the residual form in `m8src/e14_head.py`
+                # (`normalize(d + f(d))`), not this bare Sequential.
                 self.head = None
                 if head == "linear":
                     h = nn.Linear(spec.dim, spec.dim, bias=True)
