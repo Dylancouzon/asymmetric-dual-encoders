@@ -1,0 +1,46 @@
+{
+  "_note": "LEDGER \u00a74.4 deliverable 3: rule compliance, AUDITED rather than discovered.",
+  "head": "c7ab414781895edf9801112ecde6addea9c66202",
+  "registry_sha_now": 2,
+  "stamped_results_checked": [
+    {
+      "file": "m8_b7_solver.json",
+      "probe": "B7",
+      "commit": "a76fd9c9"
+    },
+    {
+      "file": "m8_lotte_overlap.SMOKE.json",
+      "probe": "S0",
+      "commit": "5adc3c7e"
+    },
+    {
+      "file": "m8_lotte_overlap.json",
+      "probe": "S0",
+      "commit": "344e0895"
+    }
+  ],
+  "unstamped_artifacts": [
+    "m8_devperquery_cal.json",
+    "m8_fragmentation_attribution.json",
+    "m8_power.json",
+    "m8_protected_filter.json",
+    "m8_retention_decomposition.json",
+    "m8_rule_audit.json",
+    "m8_schedule.json",
+    "m8_shadow_alternatives.json"
+  ],
+  "_unstamped_note": "not every results/m8_*.json is a probe result -- calibration caches, schedules and descriptive diagnostics are inputs, not registered measurements. They are listed so the distinction is visible.",
+  "findings": [
+    {
+      "severity": "MAJOR",
+      "issue": "the gap list still names files that now exist: ['m8src/test_decide.py', 'm8src/rule_audit.py']. A stale gap list is how a DONE heading starts lying."
+    }
+  ],
+  "outstanding_violations": 0,
+  "NOT_mechanically_checkable": [
+    "pre-registration ORDERING beyond the commit graph: a bar committed minutes before a run that had already been executed locally is indistinguishable from one committed properly first.",
+    "whether a probe's CODE measures what its registry row says it measures.",
+    "Holm family membership: which comparisons belong to which family is a judgement recorded in prose.",
+    "whether a number was seen before a rule that reads it was written."
+  ]
+}

@@ -16,17 +16,17 @@ run() {
 run m8src/test_guards.py          # G1 + G2: the refusals that must happen
 run m8src/decide.py               # the ship rule's own end-to-end self-test
 run m8src/test_decide.py          # its reductions and, more importantly, its refusals
+run m8src/rule_audit.py           # did any registration MOVE after a result read it?
 
 # NOT YET PORTED, and named here so the gap is visible rather than silent. Each becomes a `run`
 # line when it lands; until then this block is the checklist (LEDGER section 6).
 cat <<'PENDING'
 === NOT YET PORTED (LEDGER section 4.4 gap list) ===
-  rule_audit.py            every mechanically-checkable rule against every arm family it binds
   test_freeze_binding.py   the refusals freeze.write must make on M8 paths
   test_final_guard.py      the one-shot access guard: peeled tag, spent receipt, pid lock,
                            infra-retry arity, corpus-only loading, BM25 package/config check
   test_dep_stats.py        already covered by m7src; re-point at M8's endpoints when they exist
-  (test_decide.py has landed and now runs above.)
+  (test_decide.py and rule_audit.py have landed and now run above.)
 Running M8's confirmatory access before these exist is a LEDGER G3 violation.
 PENDING
 echo

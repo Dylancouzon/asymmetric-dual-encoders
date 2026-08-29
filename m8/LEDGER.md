@@ -432,20 +432,23 @@ duplication the dependence-blind interval is 1.43× too narrow.
    sets have never been scored. **DBpedia is the weak link**: n=400 against its analogue's 3,452.
    Sensitivity is reported at ±25% / −20% on the calibrated sd. **The P(ship) figures go to Dylan
    before Phase 0 spends its week** — a knowing report-only choice beats a discovered one.
-3. **`m8src/rule_audit.py` — NOT YET PORTED.** M7 found its step-selection rule unapplied *by
-   accident*, after it had governed four arms and a promoted adoption, and `rule_audit.py` is the
-   instrument that stops that recurring. It must exist before any adoption decision.
+3. **`m8src/rule_audit.py`** — ported 2026-08-29, and M8-specific rather than a copy. M7's version
+   checked M7's rules; M8's strongest check is one M7 did not have: for every stamped result, it
+   fetches the registry blob **from git at that result's own commit** and diffs the probe's bar,
+   endpoint, comparator, multiplicity and no-survivor against today's. **A registration that moved
+   after a number existed is a BLOCKER**, in either direction. It also verifies the stamped commit
+   is an ancestor of HEAD, checks registry hygiene, and checks that this gap list is still true —
+   which is what caught the gap list naming two files that had already landed. Four things it
+   cannot check are listed as unverifiable rather than reported as passes.
 
-**GAP LIST — obligations this ledger states that are NOT yet implemented.** *(`m8src/test_decide.py`
-landed 2026-08-29 and is struck from this list: 11 checks, including the `paired_dep` reduction and
-every ship-condition refusal.)* Written here because
+**GAP LIST — obligations this ledger states that are NOT yet implemented.** *(`m8src/test_decide.py` and
+`m8src/rule_audit.py` landed 2026-08-29 and are struck from this list.)* Written here because
 a protocol document asserting guards that do not exist is the same failure class as code producing
 a wrong number, pointed the other way: a future session (or the owner reading GitHub) trusts a
 "DONE" heading. Each line is a blocker for the stage named.
 
 | missing | what it must do | blocks |
 |---|---|---|
-| `m8src/rule_audit.py` | every mechanically-checkable rule against every arm family it binds, with the unverifiable listed as unverifiable | any adoption |
 | `m8src/test_final_guard.py` | the 14-line one-shot checklist in §6, each with an acceptance test | the access |
 | `m8src/test_freeze_binding.py` | the refusals `freeze.write` must make on M8 paths | the freeze |
 | B7 real-data verification | block CG vs the direct solve on the REAL X/Y/W0 across the full λ grid, compared on dev macro | any closed-form number the solver produces |
