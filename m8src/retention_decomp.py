@@ -148,19 +148,57 @@ def main():
             if xs:
                 pooled[f"within_dataset_{tgt}_on_{key}"] = _ols(np.concatenate(xs),
                                                                 np.concatenate(ys))
-    # Collinearity: within dataset, are length and fragmentation the same variable?
-    xs, ys = [], []
+    # Collinearity: within dataset, are length and fragmentation the same variable? Reported
+    # POOLED and PER DATASET, because a pooled correlation can be dominated by one dataset.
+    xs, ys, per_r = [], [], {}
     for ds in SIX:
         r = [x for x in rows if x["ds"] == ds]
         if len(r) < 8:
             continue
         a = np.array([v["words"] for v in r], float)
         b = np.array([v["frag"] for v in r], float)
+        per_r[ds] = float(np.corrcoef(a, b)[0, 1]) if a.std() and b.std() else None
         xs.append(a - a.mean())
         ys.append(b - b.mean())
     if xs:
         a, b = np.concatenate(xs), np.concatenate(ys)
         pooled["within_dataset_corr_words_frag"] = float(np.corrcoef(a, b)[0, 1])
+        pooled["within_dataset_corr_words_frag_per_dataset"] = per_r
+
+    # WHO DRIVES THE POOLED SLOPE. A pooled within-dataset OLS weights each dataset by its own
+    # variance in x. ArguAna's queries average 174 words against 2-12 for the other five, so it
+    # can carry essentially all the LENGTH variance and the "pooled within-dataset" read becomes
+    # the one-dataset read the diagnostic was built to escape -- and that dataset is one of the
+    # teacher's two DISCLOSED training sets. This reports the share explicitly and recomputes the
+    # slopes with ArguAna removed. (2026-08-29 review finding; it changed the conclusion.)
+    variance_share, leave_one_out = {}, {}
+    for key in ("words", "frag"):
+        var = {}
+        for ds in SIX:
+            r = [x for x in rows if x["ds"] == ds]
+            if len(r) < 8:
+                continue
+            x = np.array([v[key] for v in r], float)
+            var[ds] = float(((x - x.mean()) ** 2).sum())
+        tot = sum(var.values()) or 1.0
+        variance_share[key] = {d: v / tot for d, v in var.items()}
+        for drop in ("arguana",):
+            xs2, ys2 = [], []
+            for ds in SIX:
+                if ds == drop:
+                    continue
+                r = [x for x in rows if x["ds"] == ds]
+                if len(r) < 8:
+                    continue
+                x = np.array([v[key] for v in r], float)
+                y = np.array([v["gap"] for v in r], float)
+                xs2.append(x - x.mean())
+                ys2.append(y - y.mean())
+            if xs2:
+                leave_one_out[f"gap_on_{key}_excluding_{drop}"] = _ols(
+                    np.concatenate(xs2), np.concatenate(ys2))
+    pooled["variance_share_of_x_by_dataset"] = variance_share
+    pooled["leave_one_out"] = leave_one_out
 
     # The between-dataset picture the plan currently reads, stated beside it at n = 6.
     ds_ok = [d for d in SIX if "error" not in per_ds[d]]

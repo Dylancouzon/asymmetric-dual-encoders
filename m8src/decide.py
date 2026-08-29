@@ -1,8 +1,11 @@
 """LEDGER 4 + 5, as code: the confirmatory decision rule and the complete ship rule.
 
-Registered before the first M8 number exists. This module is the pre-registration -- the ledger's
-prose describes what this code does, and where they disagree the code is what ran, so the two are
-committed together and any change to either is a LEDGER 15 amendment.
+Registered before the first M8 number exists. **`m8/registry.json` is the authority** for every
+constant this module applies -- the ledger's prose renders it and this module reads it. It does
+NOT restate them: a restatement went stale within hours once (this file carried its own
+qualifying-key vocabulary while the registry carried a different one, so a manifest written in
+either vocabulary would have failed the other), which is the precise disaster mode section 5.4
+exists to prevent. Any change to the registry or to this module is a LEDGER 15 amendment.
 
 Estimand: the EQUAL-WEIGHT macro over the four reserved sets (LEDGER 4.2). The grouped variant is
 a registered sensitivity read and is computed alongside, never substituted.
@@ -29,23 +32,20 @@ import numpy as np
 
 import m8base                                    # noqa: F401  (sys.path + G2 guard)
 import boot                                       # m7src, the frozen statistics machinery
+import probe_guard                                # the registry's one change classifier
+
+
+def _registry():
+    return json.loads((m8base.REPO / "m8" / "registry.json").read_text())
 
 ALPHA = 0.025
 M = 3                                             # C1, C2, C3
 BONF_LEVEL = ALPHA / M                            # 0.0083333...
-POINT_GUARD_C1 = 0.005                            # LEDGER 5.2
-WORST_GROUP_MAX_REGRESSION = 0.01                 # LEDGER 5.3
+POINT_GUARD_C1 = 0.005                            # LEDGER 5.5, mirrors registry.point_guard_c1
 LEGS = ("C1", "C2", "C3")
 
-# LEDGER 5.1. A distinct int8 payload is necessary but not sufficient; D1 alone does not qualify.
-QUALIFYING_CHANGES = frozenset({
-    "objective-family", "data-construction", "feature-tokenizer",
-    "row-init-construction", "structural-rider", "doc-side-head",
-})
-NOT_QUALIFYING = frozenset({
-    "seed", "steps", "temperature", "negative-count", "learning-rate", "pool-size", "tuning",
-})
-QUALIFYING_TABLE_CHANGES = QUALIFYING_CHANGES - {"doc-side-head"}
+# The qualifying-key vocabulary lives in m8/registry.json and is read through
+# probe_guard.classify_change. There is deliberately no copy of it here.
 
 
 def _macro(per_query):
@@ -136,43 +136,62 @@ def exact_bonferroni_lower(a, b, B=boot.B, seed=boot.SEED):
     return float(np.percentile(deltas, BONF_LEVEL * 100))
 
 
-def worst_group(m8_per_query, m7_per_query, groups):
-    """LEDGER 5.3, as an explicit formula. groups: {name: (dataset, ...)}. Returns the per-group
-    point-estimate deltas and the worst one. A group regresses if its delta < -0.01."""
-    rows = {}
-    for g, members in groups.items():
-        d = [np.mean(list(m8_per_query[ds].values())) - np.mean(list(m7_per_query[ds].values()))
-             for ds in members if ds in m8_per_query and ds in m7_per_query]
-        if d:
-            rows[g] = float(np.mean(d))
-    worst = min(rows.values()) if rows else None
-    return {"per_group": rows, "worst": worst,
-            "threshold": -WORST_GROUP_MAX_REGRESSION,
-            "pass": bool(worst is not None and worst >= -WORST_GROUP_MAX_REGRESSION)}
+def worst_group(m8_per_query, m7_per_query):
+    """LEDGER 5.6, with NO grouping choice left open: the groups ARE the four reserved datasets,
+    individually, read from the registry.
+
+    Aborts on a missing dataset rather than shrinking the guard -- a guard that quietly covers
+    three datasets where the rule says four is worse than no guard, and silently scoring the
+    intersection is the failure mode section 4.1 bans on every confirmatory path."""
+    ship = _registry()["ship_rule"]
+    members, thr = ship["worst_group_members"], ship["worst_group_threshold"]
+    missing = [ds for ds in members if ds not in m8_per_query or ds not in m7_per_query]
+    if missing:
+        raise AssertionError(f"worst-group guard: {missing} absent from one of the inputs. It is "
+                             f"defined over exactly {members} (LEDGER 5.6) and may not be "
+                             f"evaluated over a subset.")
+    rows = {ds: float(np.mean(list(m8_per_query[ds].values()))
+                      - np.mean(list(m7_per_query[ds].values()))) for ds in members}
+    worst = min(rows.values())
+    return {"per_dataset": rows, "worst": worst, "threshold": thr, "members": members,
+            "pass": bool(worst >= thr)}
 
 
-def six_set_no_regression(m8_six, m7_six, margin):
-    """LEDGER 5.4 -- the anti-memorization ship-blocker. Descriptive, frozen per-query vectors,
-    ZERO new access: both arguments come from already-scored artifacts. One-directional: it can
-    only block, never license."""
+def six_set_no_regression(m8_six, m7_six, margin=None):
+    """LEDGER 5.7 -- the anti-memorization ship-blocker. One-directional: it can only block, never
+    license. The margin comes from the registry, where its provenance (2.4x the measured
+    near-sibling six-macro SE) is recorded.
+
+    Strict alignment, like every other decision path: `boot._align(strict=True)` aborts on a
+    missing dataset or qid rather than silently comparing two different statistics."""
+    if margin is None:
+        margin = _registry()["ship_rule"]["six_set_no_regression_margin"]
+    boot._align(m8_six, m7_six, strict=True)          # aborts on any mismatch
     d = _macro(m8_six) - _macro(m7_six)
     return {"delta_raw": float(d), "margin": -abs(margin),
             "macro_m8": _macro(m8_six), "macro_m7": _macro(m7_six),
+            "n_datasets": len(m8_six),
             "pass": bool(d >= -abs(margin))}
 
 
 def qualifying_table(changes):
-    """LEDGER 5.1. `changes` is the manifest's declared change set. A doc-side head alone does not
-    open the release path: a qualifying TABLE change (R1 or D2) must also survive."""
+    """LEDGER 5.4. `changes` is the manifest's declared CONFIG-KEY diff against R0. Classification
+    is delegated to the registry (probe_guard.classify_change) so there is exactly one vocabulary.
+
+    An UNKNOWN key fails the condition: a key that was never classified cannot be argued into a
+    category after a number exists. A qualifying_non_table change (doc_side_head) alone does not
+    open the release path -- a qualifying TABLE change must also survive (E11 + G4-4)."""
     changes = set(changes)
-    unknown = changes - QUALIFYING_CHANGES - NOT_QUALIFYING
-    qualifying = changes & QUALIFYING_CHANGES
-    table_changes = changes & QUALIFYING_TABLE_CHANGES
-    return {"declared": sorted(changes), "unknown": sorted(unknown),
-            "qualifying": sorted(qualifying), "qualifying_table": sorted(table_changes),
-            "pass": bool(table_changes) and not unknown,
-            "note": ("a distinct int8 payload is necessary but not sufficient; "
-                     "doc-side-head alone does not satisfy the requirement (LEDGER 5.1, E11/G4-4)")}
+    kinds = {k: probe_guard.classify_change(k) for k in changes}
+    unknown = sorted(k for k, v in kinds.items() if v == "unknown")
+    table = sorted(k for k, v in kinds.items() if v == "qualifying_table")
+    non_table = sorted(k for k, v in kinds.items() if v == "qualifying_non_table")
+    return {"declared": sorted(changes), "classified": kinds, "unknown": unknown,
+            "qualifying_table": table, "qualifying_non_table": non_table,
+            "pass": bool(table) and not unknown,
+            "note": ("a distinct int8 payload is necessary but not sufficient; a "
+                     "qualifying_non_table change alone does not satisfy the requirement "
+                     "(LEDGER 5.4, E11/G4-4). An unknown key FAILS.")}
 
 
 def ship(family, *, qualifying, worst, six_guard):
@@ -180,7 +199,7 @@ def ship(family, *, qualifying, worst, six_guard):
     reportable as the pre-registered publishable outcome rather than argued about."""
     c1 = family["C1"]
     point_guard = {"delta_raw": c1["delta_raw"], "threshold": POINT_GUARD_C1,
-                   "pass": bool(c1["delta_raw"] >= POINT_GUARD_C1),
+                   "pass": bool(c1["delta_raw"] > POINT_GUARD_C1),      # STRICT, as registered
                    "note": "a product margin, not a hypothesis: a resolved win too small to be "
                            "worth a version bump is not a v2"}
     conds = {
@@ -231,10 +250,9 @@ def self_test():
            for d in m8base.SIX}
     verdict = ship(
         fam,
-        qualifying=qualifying_table({"data-construction", "feature-tokenizer"}),
-        worst=worst_group(m8, m7, {"cqa": ("cqadup-android", "cqadup-english"),
-                                   "fever": ("fever",), "dbpedia": ("dbpedia-entity",)}),
-        six_guard=six_set_no_regression(six, six, margin=0.005))
+        qualifying=qualifying_table({"pool_composition", "tokenizer_id", "steps_a"}),
+        worst=worst_group(m8, m7),
+        six_guard=six_set_no_regression(six, six))
     return {"legs": {k: {kk: v[kk] for kk in
                          ("delta_raw", "signflip_p", "ci95_raw", "bonferroni_lower_raw",
                           "bonferroni_lower_exact", "legs", "resolved")}

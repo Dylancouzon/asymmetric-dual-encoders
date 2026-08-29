@@ -195,7 +195,49 @@
       "t": 2.720571189777914,
       "n": 3727
     },
-    "within_dataset_corr_words_frag": 0.00639094739444413
+    "within_dataset_corr_words_frag": 0.00639094739444413,
+    "within_dataset_corr_words_frag_per_dataset": {
+      "scifact": -0.25584661990415947,
+      "nfcorpus": -0.35008385893169747,
+      "fiqa": -0.23551908206026262,
+      "arguana": 0.1111934022072657,
+      "scidocs": -0.1443131125571383,
+      "trec-covid": 0.005089283913539567
+    },
+    "variance_share_of_x_by_dataset": {
+      "words": {
+        "scifact": 0.0006808635480133507,
+        "nfcorpus": 0.00016395363390039232,
+        "fiqa": 0.0010299254761337617,
+        "arguana": 0.9971115300166955,
+        "scidocs": 0.0009678940950086194,
+        "trec-covid": 4.5833230248366346e-05
+      },
+      "frag": {
+        "scifact": 0.11848646218302268,
+        "nfcorpus": 0.5299367273204091,
+        "fiqa": 0.09875962208465497,
+        "arguana": 0.021972376392707625,
+        "scidocs": 0.2258089770168307,
+        "trec-covid": 0.005035835002374926
+      }
+    },
+    "leave_one_out": {
+      "gap_on_words_excluding_arguana": {
+        "slope": 0.0017644684362393842,
+        "intercept": 6.337315859259202e-18,
+        "se": 0.0011672375819843346,
+        "t": 1.5116617760368385,
+        "n": 2321
+      },
+      "gap_on_frag_excluding_arguana": {
+        "slope": 0.04543056427561932,
+        "intercept": 9.217913977104294e-18,
+        "se": 0.009652904089408236,
+        "t": 4.706414137634346,
+        "n": 2321
+      }
+    }
   },
   "between_dataset": {
     "gap_on_median_words": {

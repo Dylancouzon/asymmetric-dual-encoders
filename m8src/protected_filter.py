@@ -149,13 +149,17 @@ def s0(limit=None, smoke=False):
             comm = lotte_communities(topic, split)
             comm_hits = sorted({c for s in PROTECTED_COMMUNITIES.values() for c in comm & s})
 
-            n_docs = n_near = n_exact = 0
+            n_docs = n_near = n_exact = n_dup = 0
             hit_owners = {}
             for text in lotte_docs(topic, split, limit=limit):
                 n_docs += 1
                 ex, near = idx.match(text, decontam.DUP_SHARE)
                 if ex.size:
                     n_exact += 1
+                # A document that is BOTH an exact and a near hit is ONE duplicate. Summing the
+                # two counters double-counted it against the registered 0.5% / 2% bars.
+                if ex.size or near.size:
+                    n_dup += 1
                 if near.size:
                     n_near += 1
                     for o in np.unique(owner[near]):
@@ -169,7 +173,7 @@ def s0(limit=None, smoke=False):
             q_hits = [decontam.query_hits(q, q_ex, q_gram, q_whole) for q in qs]
             n_qhit = sum(1 for h in q_hits if h)
 
-            dup_rate = (n_near + n_exact) / max(n_docs, 1)
+            dup_rate = n_dup / max(n_docs, 1)
             drop_reasons = []
             if comm_hits:
                 drop_reasons.append(f"community intersection {comm_hits}")
@@ -200,7 +204,7 @@ def s0(limit=None, smoke=False):
                 "communities": sorted(comm),
                 "community_intersection": comm_hits,
                 "doc_exact_hits": n_exact, "doc_near_hits": n_near,
-                "doc_dup_rate": dup_rate,
+                "doc_duplicate_docs": n_dup, "doc_dup_rate": dup_rate,
                 "doc_hit_owners": hit_owners,
                 "query_leak_hits": n_qhit,
                 "query_leak_kinds": {k: q_hits.count(k) for k in ("exact", "near", "contains")},
@@ -211,7 +215,7 @@ def s0(limit=None, smoke=False):
                   f"dup={dup_rate:.4%} qleak={n_qhit} {drop_reasons or ''}", flush=True)
 
     kept = {k: v for k, v in slices.items() if v["verdict"] == "KEEP"}
-    surviving_rate = (sum(v["doc_near_hits"] + v["doc_exact_hits"] for v in kept.values())
+    surviving_rate = (sum(v["doc_duplicate_docs"] for v in kept.values())
                       / max(sum(v["n_docs_screened"] for v in kept.values()), 1))
     topics_by_split = {s: sorted({v["topic"] for v in kept.values() if v["split"] == s})
                        for s in SPLITS}

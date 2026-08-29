@@ -1,576 +1,259 @@
 {
   "_note": "Which WORDS carry the fragmentation cost? A follow-on to `retention_decomp.py`, same class:",
   "status": "DESCRIPTIVE / EXPLORATORY. Adopts nothing; may not be cited for an adoption (LEDGER 4.6). No new evaluation access.",
-  "definition": "a word is 'badly fragmented' when WordPiece-30522 splits it into >= 3 subwords",
+  "definition": "a word is 'badly fragmented' when WordPiece-30522 splits the punctuation-stripped token into >= 3 subwords",
   "per_dataset": {
     "scifact": {
       "n": 300,
-      "share_of_queries_with_a_badly_fragmented_word": 0.8933333333333333,
-      "mean_gap_with": 0.178653728925448,
-      "mean_gap_without": 0.09219203295064601,
-      "difference": 0.086461695974802,
-      "se_of_difference": 0.04375740222461625,
-      "z": 1.9759330211372086,
-      "mean_fraction_of_words_badly_fragmented": 0.2008236939188248
+      "share_of_queries_with_a_badly_fragmented_word": 0.8766666666666667,
+      "mean_gap_with": 0.18207953035095753,
+      "mean_gap_without": 0.07952507903078151,
+      "difference": 0.10255445132017602,
+      "se_of_difference": 0.03971467825922188,
+      "z": 2.582280804361358,
+      "mean_fraction_of_words_badly_fragmented": 0.1831888592652864,
+      "informative": true
     },
     "nfcorpus": {
       "n": 323,
-      "share_of_queries_with_a_badly_fragmented_word": 0.42724458204334365,
-      "mean_gap_with": 0.13864425966915048,
-      "mean_gap_without": 0.07298681649758121,
-      "difference": 0.06565744317156927,
-      "se_of_difference": 0.020870551498909647,
-      "z": 3.145937143778853,
-      "mean_fraction_of_words_badly_fragmented": 0.2345117472826451
+      "share_of_queries_with_a_badly_fragmented_word": 0.42105263157894735,
+      "mean_gap_with": 0.14001641144984386,
+      "mean_gap_without": 0.07269110657335041,
+      "difference": 0.06732530487649345,
+      "se_of_difference": 0.0209939346071943,
+      "z": 3.206893140146397,
+      "mean_fraction_of_words_badly_fragmented": 0.23337030186875385,
+      "informative": true
     },
     "fiqa": {
       "n": 648,
-      "share_of_queries_with_a_badly_fragmented_word": 0.4228395061728395,
-      "mean_gap_with": 0.198653654607176,
-      "mean_gap_without": 0.16778119810456227,
-      "difference": 0.03087245650261372,
-      "se_of_difference": 0.020720795501034714,
-      "z": 1.4899262193419203,
-      "mean_fraction_of_words_badly_fragmented": 0.05775205244182083
+      "share_of_queries_with_a_badly_fragmented_word": 0.35185185185185186,
+      "mean_gap_with": 0.2001117795999181,
+      "mean_gap_without": 0.17037091358259804,
+      "difference": 0.029740866017320067,
+      "se_of_difference": 0.02135017571514912,
+      "z": 1.3930033370272121,
+      "mean_fraction_of_words_badly_fragmented": 0.045355919884582895,
+      "informative": true
     },
     "arguana": {
       "n": 1406,
-      "share_of_queries_with_a_badly_fragmented_word": 0.9879089615931721,
-      "mean_gap_with": 0.04534320022664639,
-      "mean_gap_without": 0.0445613403534527,
-      "difference": 0.0007818598731936868,
-      "se_of_difference": 0.033255118598437015,
-      "z": 0.023510963308680972,
-      "mean_fraction_of_words_badly_fragmented": 0.057023675461447515
+      "share_of_queries_with_a_badly_fragmented_word": 0.9743954480796586,
+      "mean_gap_with": 0.04505996154613035,
+      "mean_gap_without": 0.05575279396172087,
+      "difference": -0.01069283241559052,
+      "se_of_difference": 0.04310538658599247,
+      "z": -0.24806255696742233,
+      "mean_fraction_of_words_badly_fragmented": 0.03333213918577332,
+      "informative": false
     },
     "scidocs": {
       "n": 1000,
-      "share_of_queries_with_a_badly_fragmented_word": 0.661,
-      "mean_gap_with": 0.07871078266691695,
-      "mean_gap_without": 0.058313118040937445,
-      "difference": 0.0203976646259795,
-      "se_of_difference": 0.009128304095700233,
-      "z": 2.2345513922556055,
-      "mean_fraction_of_words_badly_fragmented": 0.12410565914630828
+      "share_of_queries_with_a_badly_fragmented_word": 0.644,
+      "mean_gap_with": 0.07767674308692697,
+      "mean_gap_without": 0.06115772980541834,
+      "difference": 0.016519013281508635,
+      "se_of_difference": 0.00909453565421893,
+      "z": 1.8163668723257476,
+      "mean_fraction_of_words_badly_fragmented": 0.1182856254545099,
+      "informative": true
     },
     "trec-covid": {
       "n": 50,
-      "share_of_queries_with_a_badly_fragmented_word": 0.88,
-      "mean_gap_with": 0.28179435600184505,
-      "mean_gap_without": 0.22028586085567525,
-      "difference": 0.061508495146169795,
-      "se_of_difference": 0.06155846094130896,
-      "z": 0.9991883196172366,
-      "mean_fraction_of_words_badly_fragmented": 0.13196469869999283
+      "share_of_queries_with_a_badly_fragmented_word": 0.82,
+      "mean_gap_with": 0.2730785445869633,
+      "mean_gap_without": 0.2804940556833041,
+      "difference": -0.00741551109634081,
+      "se_of_difference": 0.09079831647283074,
+      "z": -0.08167013865901057,
+      "mean_fraction_of_words_badly_fragmented": 0.12140048513577927,
+      "informative": true
     }
+  },
+  "sign_test_informative_only": {
+    "informative_datasets": [
+      "fiqa",
+      "nfcorpus",
+      "scidocs",
+      "scifact",
+      "trec-covid"
+    ],
+    "n": 5,
+    "positive": 4,
+    "p_one_sided": 0.1875,
+    "_caveat": "the one-sided direction was chosen after seeing section 17's slope, so this p is descriptive dressing, not an inferential claim. Excluded as uninformative (no contrast to measure): arguana"
   },
   "top_words_by_total_excess_gap": [
     {
-      "word": "cyber-attacks",
-      "count": 24,
-      "subwords": 4,
-      "mean_gap": 0.30718329719023263,
-      "excess_vs_all": 0.15354996684070218,
-      "total_excess": 3.685199204176852,
+      "word": "u.s",
+      "count": 56,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.04364172525094413,
+      "total_excess": 2.4439366140528715,
       "datasets": {
-        "arguana": 24
-      }
-    },
-    {
-      "word": "11/09/11",
-      "count": 9,
-      "subwords": 6,
-      "mean_gap": 0.5,
-      "excess_vs_all": 0.3463666696504696,
-      "total_excess": 3.117300026854226,
-      "datasets": {
-        "arguana": 9
-      }
-    },
-    {
-      "word": "covid-19",
-      "count": 31,
-      "subwords": 5,
-      "mean_gap": 0.25007746083955273,
-      "excess_vs_all": 0.09644413049002229,
-      "total_excess": 2.989768045190691,
-      "datasets": {
-        "trec-covid": 31
-      }
-    },
-    {
-      "word": "hyperloop",
-      "count": 20,
-      "subwords": 4,
-      "mean_gap": 0.2876201247231893,
-      "excess_vs_all": 0.13398679437365887,
-      "total_excess": 2.6797358874731776,
-      "datasets": {
-        "arguana": 20
-      }
-    },
-    {
-      "word": "remittances",
-      "count": 6,
-      "subwords": 4,
-      "mean_gap": 0.569323441926607,
-      "excess_vs_all": 0.4156901115770766,
-      "total_excess": 2.4941406694624595,
-      "datasets": {
-        "arguana": 6
-      }
-    },
-    {
-      "word": "18/08/11",
-      "count": 6,
-      "subwords": 5,
-      "mean_gap": 0.5522186240708328,
-      "excess_vs_all": 0.39858529372130236,
-      "total_excess": 2.391511762327814,
-      "datasets": {
-        "arguana": 6
-      }
-    },
-    {
-      "word": "circumcision",
-      "count": 10,
-      "subwords": 6,
-      "mean_gap": 0.3623212623289701,
-      "excess_vs_all": 0.20868793197943966,
-      "total_excess": 2.0868793197943964,
-      "datasets": {
-        "arguana": 10
+        "fiqa": 9,
+        "arguana": 46,
+        "trec-covid": 1
       }
     },
     {
       "word": "acquittal",
       "count": 5,
-      "subwords": 4,
-      "mean_gap": 0.5178340982509624,
-      "excess_vs_all": 0.36420076790143197,
-      "total_excess": 1.82100383950716,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.4620813042892415,
+      "total_excess": 2.3104065214462075,
       "datasets": {
         "arguana": 5
       }
     },
     {
-      "word": "pre-1967",
-      "count": 8,
+      "word": "cyber-attacks",
+      "count": 7,
       "subwords": 3,
-      "mean_gap": 0.3753568766204092,
-      "excess_vs_all": 0.22172354627087873,
-      "total_excess": 1.7737883701670298,
+      "mean_excess_vs_own_dataset": 0.3298143495148533,
+      "total_excess": 2.308700446603973,
       "datasets": {
-        "arguana": 8
-      }
-    },
-    {
-      "word": "wikileaks",
-      "count": 12,
-      "subwords": 5,
-      "mean_gap": 0.3011697254265539,
-      "excess_vs_all": 0.14753639507702346,
-      "total_excess": 1.7704367409242816,
-      "datasets": {
-        "arguana": 12
+        "arguana": 7
       }
     },
     {
       "word": "bitcoin",
       "count": 7,
       "subwords": 3,
-      "mean_gap": 0.4012195737872322,
-      "excess_vs_all": 0.24758624343770178,
-      "total_excess": 1.7331037040639123,
+      "mean_excess_vs_own_dataset": 0.3088580771883341,
+      "total_excess": 2.1620065403183384,
       "datasets": {
         "fiqa": 2,
         "scidocs": 5
       }
     },
     {
-      "word": "9/11/2011",
-      "count": 11,
-      "subwords": 5,
-      "mean_gap": 0.29979170515748726,
-      "excess_vs_all": 0.14615837480795682,
-      "total_excess": 1.607742122887525,
-      "datasets": {
-        "arguana": 11
-      }
-    },
-    {
       "word": "censoring",
-      "count": 9,
-      "subwords": 3,
-      "mean_gap": 0.3171174225382456,
-      "excess_vs_all": 0.16348409218871515,
-      "total_excess": 1.4713568296984363,
-      "datasets": {
-        "arguana": 9
-      }
-    },
-    {
-      "word": "sars-cov-2",
       "count": 7,
-      "subwords": 7,
-      "mean_gap": 0.35753567652679485,
-      "excess_vs_all": 0.2039023461772644,
-      "total_excess": 1.4273164232408508,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.2618367845058153,
+      "total_excess": 1.8328574915407074,
       "datasets": {
-        "trec-covid": 7
+        "arguana": 7
       }
     },
     {
-      "word": "yanukovych",
-      "count": 10,
-      "subwords": 6,
-      "mean_gap": 0.2755923053663084,
-      "excess_vs_all": 0.12195897501677797,
-      "total_excess": 1.2195897501677797,
+      "word": "pre-1967",
+      "count": 5,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.3473908204950378,
+      "total_excess": 1.7369541024751889,
       "datasets": {
-        "arguana": 10
+        "arguana": 5
       }
     },
     {
       "word": "phosphorylation",
       "count": 5,
-      "subwords": 6,
-      "mean_gap": 0.39742738813589595,
-      "excess_vs_all": 0.2437940577863655,
-      "total_excess": 1.2189702889318275,
+      "subwords": 5,
+      "mean_excess_vs_own_dataset": 0.3179023091051144,
+      "total_excess": 1.5895115455255722,
       "datasets": {
         "scifact": 5
-      }
-    },
-    {
-      "word": "16/09/11",
-      "count": 5,
-      "subwords": 6,
-      "mean_gap": 0.3562071871080222,
-      "excess_vs_all": 0.20257385675849174,
-      "total_excess": 1.0128692837924587,
-      "datasets": {
-        "arguana": 5
-      }
-    },
-    {
-      "word": "devalue",
-      "count": 6,
-      "subwords": 3,
-      "mean_gap": 0.3100809871741701,
-      "excess_vs_all": 0.15644765682463965,
-      "total_excess": 0.9386859409478379,
-      "datasets": {
-        "arguana": 6
-      }
-    },
-    {
-      "word": "9/12/2011",
-      "count": 9,
-      "subwords": 5,
-      "mean_gap": 0.25662483488653903,
-      "excess_vs_all": 0.10299150453700859,
-      "total_excess": 0.9269235408330773,
-      "datasets": {
-        "arguana": 9
-      }
-    },
-    {
-      "word": "abiogenesis",
-      "count": 9,
-      "subwords": 4,
-      "mean_gap": 0.2539531690476384,
-      "excess_vs_all": 0.10031983869810798,
-      "total_excess": 0.9028785482829719,
-      "datasets": {
-        "arguana": 9
-      }
-    },
-    {
-      "word": "circumventing",
-      "count": 6,
-      "subwords": 4,
-      "mean_gap": 0.30391096979796095,
-      "excess_vs_all": 0.1502776394484305,
-      "total_excess": 0.901665836690583,
-      "datasets": {
-        "arguana": 6
-      }
-    },
-    {
-      "word": "demobilisation",
-      "count": 6,
-      "subwords": 4,
-      "mean_gap": 0.2975964202381242,
-      "excess_vs_all": 0.14396308988859377,
-      "total_excess": 0.8637785393315627,
-      "datasets": {
-        "arguana": 6
-      }
-    },
-    {
-      "word": "impartial",
-      "count": 6,
-      "subwords": 4,
-      "mean_gap": 0.29257173115701757,
-      "excess_vs_all": 0.13893840080748712,
-      "total_excess": 0.8336304048449228,
-      "datasets": {
-        "arguana": 6
-      }
-    },
-    {
-      "word": "child's",
-      "count": 5,
-      "subwords": 3,
-      "mean_gap": 0.3155555575320082,
-      "excess_vs_all": 0.16192222718247776,
-      "total_excess": 0.8096111359123888,
-      "datasets": {
-        "fiqa": 1,
-        "arguana": 4
-      }
-    },
-    {
-      "word": "adverts",
-      "count": 16,
-      "subwords": 4,
-      "mean_gap": 0.20053198904530734,
-      "excess_vs_all": 0.04689865869577689,
-      "total_excess": 0.7503785391324302,
-      "datasets": {
-        "arguana": 16
-      }
-    },
-    {
-      "word": "50%",
-      "count": 5,
-      "subwords": 3,
-      "mean_gap": 0.29956992314723774,
-      "excess_vs_all": 0.1459365927977073,
-      "total_excess": 0.7296829639885365,
-      "datasets": {
-        "scifact": 1,
-        "arguana": 4
-      }
-    },
-    {
-      "word": "myocardial",
-      "count": 6,
-      "subwords": 3,
-      "mean_gap": 0.26885786546090973,
-      "excess_vs_all": 0.11522453511137928,
-      "total_excess": 0.6913472106682756,
-      "datasets": {
-        "scifact": 4,
-        "arguana": 2
-      }
-    },
-    {
-      "word": "401(k",
-      "count": 6,
-      "subwords": 5,
-      "mean_gap": 0.2653964425311405,
-      "excess_vs_all": 0.11176311218161003,
-      "total_excess": 0.6705786730896601,
-      "datasets": {
-        "fiqa": 6
-      }
-    },
-    {
-      "word": "re-offend",
-      "count": 5,
-      "subwords": 5,
-      "mean_gap": 0.28025753767125783,
-      "excess_vs_all": 0.12662420732172738,
-      "total_excess": 0.633121036608637,
-      "datasets": {
-        "arguana": 5
-      }
-    },
-    {
-      "word": "unilateral",
-      "count": 10,
-      "subwords": 4,
-      "mean_gap": 0.21686792672157193,
-      "excess_vs_all": 0.06323459637204148,
-      "total_excess": 0.6323459637204148,
-      "datasets": {
-        "arguana": 10
-      }
-    },
-    {
-      "word": "non-proliferation",
-      "count": 6,
-      "subwords": 4,
-      "mean_gap": 0.2551557084609502,
-      "excess_vs_all": 0.10152237811141976,
-      "total_excess": 0.6091342686685186,
-      "datasets": {
-        "arguana": 6
       }
     },
     {
       "word": "inequalities",
       "count": 10,
       "subwords": 4,
-      "mean_gap": 0.21386468838532138,
-      "excess_vs_all": 0.06023135803579094,
-      "total_excess": 0.6023135803579094,
+      "mean_excess_vs_own_dataset": 0.1581118944236005,
+      "total_excess": 1.581118944236005,
       "datasets": {
         "arguana": 10
       }
     },
     {
-      "word": "heathrow",
+      "word": "devalue",
       "count": 6,
       "subwords": 3,
-      "mean_gap": 0.25,
-      "excess_vs_all": 0.09636666965046956,
-      "total_excess": 0.5782000179028173,
+      "mean_excess_vs_own_dataset": 0.2543281932124492,
+      "total_excess": 1.5259691592746953,
       "datasets": {
         "arguana": 6
       }
     },
     {
-      "word": "disarmament",
-      "count": 8,
-      "subwords": 4,
-      "mean_gap": 0.22579518074107477,
-      "excess_vs_all": 0.07216185039154432,
-      "total_excess": 0.5772948031323546,
-      "datasets": {
-        "arguana": 8
-      }
-    },
-    {
-      "word": "agnosticism",
-      "count": 6,
-      "subwords": 4,
-      "mean_gap": 0.24604683095236166,
-      "excess_vs_all": 0.09241350060283121,
-      "total_excess": 0.5544810036169873,
-      "datasets": {
-        "arguana": 6
-      }
-    },
-    {
-      "word": "israel's",
+      "word": "adverts",
       "count": 10,
       "subwords": 3,
-      "mean_gap": 0.2079193704569096,
-      "excess_vs_all": 0.05428604010737917,
-      "total_excess": 0.5428604010737916,
+      "mean_excess_vs_own_dataset": 0.14246894995767923,
+      "total_excess": 1.4246894995767923,
       "datasets": {
         "arguana": 10
       }
     },
     {
-      "word": "9/14/2011",
-      "count": 5,
+      "word": "guardian.co.uk",
+      "count": 22,
       "subwords": 5,
-      "mean_gap": 0.25840593484403585,
-      "excess_vs_all": 0.1047726044945054,
-      "total_excess": 0.523863022472527,
+      "mean_excess_vs_own_dataset": 0.05736142208868007,
+      "total_excess": 1.2619512859509616,
       "datasets": {
-        "arguana": 5
+        "arguana": 22
       }
     },
     {
-      "word": "supranational",
-      "count": 5,
-      "subwords": 5,
-      "mean_gap": 0.25781296526357755,
-      "excess_vs_all": 0.10417963491404711,
-      "total_excess": 0.5208981745702356,
+      "word": "non-proliferation",
+      "count": 6,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.1994029144992293,
+      "total_excess": 1.1964174869953759,
       "datasets": {
-        "arguana": 5
+        "arguana": 6
+      }
+    },
+    {
+      "word": "myocardial",
+      "count": 6,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.19725688145314843,
+      "total_excess": 1.1835412887188905,
+      "datasets": {
+        "scifact": 4,
+        "arguana": 2
+      }
+    },
+    {
+      "word": "wikileaks",
+      "count": 6,
+      "subwords": 4,
+      "mean_excess_vs_own_dataset": 0.1943213320677115,
+      "total_excess": 1.1659279924062689,
+      "datasets": {
+        "arguana": 6
       }
     },
     {
       "word": "stochastic",
       "count": 7,
       "subwords": 3,
-      "mean_gap": 0.22753905154818338,
-      "excess_vs_all": 0.07390572119865293,
-      "total_excess": 0.5173400483905706,
+      "mean_excess_vs_own_dataset": 0.16638132174276504,
+      "total_excess": 1.1646692521993554,
       "datasets": {
         "scidocs": 7
       }
     },
     {
-      "word": "2012",
-      "count": 10,
-      "subwords": 4,
-      "mean_gap": 0.2010681978184048,
-      "excess_vs_all": 0.04743486746887435,
-      "total_excess": 0.4743486746887435,
-      "datasets": {
-        "arguana": 10
-      }
-    },
-    {
-      "word": "anonymity",
+      "word": "circumcision",
       "count": 5,
       "subwords": 4,
-      "mean_gap": 0.2478847368038261,
-      "excess_vs_all": 0.09425140645429567,
-      "total_excess": 0.4712570322714783,
+      "mean_excess_vs_own_dataset": 0.23038251765295775,
+      "total_excess": 1.1519125882647887,
       "datasets": {
         "arguana": 5
-      }
-    },
-    {
-      "word": "haaretz.com",
-      "count": 5,
-      "subwords": 6,
-      "mean_gap": 0.24519586282782102,
-      "excess_vs_all": 0.09156253247829058,
-      "total_excess": 0.4578126623914529,
-      "datasets": {
-        "arguana": 5
-      }
-    },
-    {
-      "word": "09/02/2011",
-      "count": 10,
-      "subwords": 5,
-      "mean_gap": 0.19546532595840393,
-      "excess_vs_all": 0.04183199560887349,
-      "total_excess": 0.4183199560887349,
-      "datasets": {
-        "arguana": 10
-      }
-    },
-    {
-      "word": "i.e",
-      "count": 8,
-      "subwords": 5,
-      "mean_gap": 0.19929345999563838,
-      "excess_vs_all": 0.04566012964610794,
-      "total_excess": 0.3652810371688635,
-      "datasets": {
-        "arguana": 8
-      }
-    },
-    {
-      "word": "medvedev",
-      "count": 7,
-      "subwords": 4,
-      "mean_gap": 0.20354696406172695,
-      "excess_vs_all": 0.04991363371219651,
-      "total_excess": 0.3493954359853756,
-      "datasets": {
-        "arguana": 7
       }
     },
     {
       "word": "it's",
       "count": 10,
       "subwords": 3,
-      "mean_gap": 0.18814210931178832,
-      "excess_vs_all": 0.034508778962257874,
-      "total_excess": 0.34508778962257874,
+      "mean_excess_vs_own_dataset": 0.10892519784152226,
+      "total_excess": 1.0892519784152226,
       "datasets": {
         "fiqa": 2,
         "arguana": 7,
@@ -578,389 +261,447 @@
       }
     },
     {
-      "word": "data.worldbank.org",
-      "count": 5,
-      "subwords": 7,
-      "mean_gap": 0.21946864494801196,
-      "excess_vs_all": 0.06583531459848152,
-      "total_excess": 0.3291765729924076,
-      "datasets": {
-        "arguana": 5
-      }
-    },
-    {
-      "word": "creationism",
-      "count": 15,
-      "subwords": 3,
-      "mean_gap": 0.1753953169047639,
-      "excess_vs_all": 0.021761986555233453,
-      "total_excess": 0.32642979832850183,
-      "datasets": {
-        "arguana": 15
-      }
-    },
-    {
-      "word": "ibid",
-      "count": 8,
-      "subwords": 3,
-      "mean_gap": 0.19011543203894157,
-      "excess_vs_all": 0.03648210168941113,
-      "total_excess": 0.291856813515289,
-      "datasets": {
-        "arguana": 8
-      }
-    },
-    {
-      "word": "socio-economic",
-      "count": 5,
-      "subwords": 3,
-      "mean_gap": 0.21189118547620786,
-      "excess_vs_all": 0.058257855126677416,
-      "total_excess": 0.2912892756333871,
-      "datasets": {
-        "arguana": 5
-      }
-    },
-    {
-      "word": "non-white",
+      "word": "hyperloop",
       "count": 7,
       "subwords": 3,
-      "mean_gap": 0.1944340063935678,
-      "excess_vs_all": 0.040800676044037365,
-      "total_excess": 0.28560473230826156,
+      "mean_excess_vs_own_dataset": 0.15248804430634763,
+      "total_excess": 1.0674163101444334,
       "datasets": {
         "arguana": 7
       }
     },
     {
-      "word": "jurors",
-      "count": 24,
-      "subwords": 4,
-      "mean_gap": 0.16531356835354982,
-      "excess_vs_all": 0.011680238004019378,
-      "total_excess": 0.28032571209646506,
-      "datasets": {
-        "arguana": 24
-      }
-    },
-    {
-      "word": "rail-mobile",
+      "word": "non-white",
       "count": 6,
       "subwords": 3,
-      "mean_gap": 0.20025319549806445,
-      "excess_vs_all": 0.046619865148534,
-      "total_excess": 0.279719190891204,
+      "mean_excess_vs_own_dataset": 0.16597927680968827,
+      "total_excess": 0.9958756608581296,
       "datasets": {
         "arguana": 6
       }
     },
     {
-      "word": "mitt",
-      "count": 6,
-      "subwords": 3,
-      "mean_gap": 0.20025319549806445,
-      "excess_vs_all": 0.046619865148534,
-      "total_excess": 0.279719190891204,
-      "datasets": {
-        "arguana": 6
-      }
-    },
-    {
-      "word": "boston.com",
-      "count": 6,
-      "subwords": 4,
-      "mean_gap": 0.20025319549806445,
-      "excess_vs_all": 0.046619865148534,
-      "total_excess": 0.279719190891204,
-      "datasets": {
-        "arguana": 6
-      }
-    },
-    {
-      "word": "fix",
-      "count": 10,
-      "subwords": 3,
-      "mean_gap": 0.1802664020551105,
-      "excess_vs_all": 0.026633071705580047,
-      "total_excess": 0.26633071705580047,
-      "datasets": {
-        "arguana": 10
-      }
-    },
-    {
-      "word": "feminisation",
+      "word": "9/11/2011",
       "count": 5,
-      "subwords": 3,
-      "mean_gap": 0.20628722891351728,
-      "excess_vs_all": 0.052653898563986834,
-      "total_excess": 0.26326949281993417,
+      "subwords": 5,
+      "mean_excess_vs_own_dataset": 0.19832408114577146,
+      "total_excess": 0.9916204057288573,
       "datasets": {
         "arguana": 5
       }
     },
     {
-      "word": "u.s",
-      "count": 99,
-      "subwords": 5,
-      "mean_gap": 0.15623498981049297,
-      "excess_vs_all": 0.0026016594609625243,
-      "total_excess": 0.2575642866352899,
+      "word": "yanukovych",
+      "count": 5,
+      "subwords": 4,
+      "mean_excess_vs_own_dataset": 0.19543181677089594,
+      "total_excess": 0.9771590838544797,
       "datasets": {
-        "fiqa": 9,
-        "arguana": 89,
-        "trec-covid": 1
+        "arguana": 5
+      }
+    },
+    {
+      "word": "impartial",
+      "count": 5,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.19533328342670023,
+      "total_excess": 0.9766664171335011,
+      "datasets": {
+        "arguana": 5
+      }
+    },
+    {
+      "word": "anonymity",
+      "count": 5,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.19213194284210525,
+      "total_excess": 0.9606597142105262,
+      "datasets": {
+        "arguana": 5
+      }
+    },
+    {
+      "word": "i.e",
+      "count": 6,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.1484601116277066,
+      "total_excess": 0.8907606697662395,
+      "datasets": {
+        "arguana": 6
+      }
+    },
+    {
+      "word": "9/12/2011",
+      "count": 5,
+      "subwords": 5,
+      "mean_excess_vs_own_dataset": 0.1778495624829483,
+      "total_excess": 0.8892478124147416,
+      "datasets": {
+        "arguana": 5
       }
     },
     {
       "word": "america's",
       "count": 6,
       "subwords": 3,
-      "mean_gap": 0.19598627225873824,
-      "excess_vs_all": 0.0423529419092078,
-      "total_excess": 0.2541176514552468,
+      "mean_excess_vs_own_dataset": 0.14023347829701738,
+      "total_excess": 0.8414008697821043,
       "datasets": {
         "arguana": 6
+      }
+    },
+    {
+      "word": "euthanasia",
+      "count": 12,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.06949627430905103,
+      "total_excess": 0.8339552917086124,
+      "datasets": {
+        "arguana": 12
+      }
+    },
+    {
+      "word": "dictate",
+      "count": 11,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.07504445717117562,
+      "total_excess": 0.8254890288829319,
+      "datasets": {
+        "arguana": 11
+      }
+    },
+    {
+      "word": "long-term",
+      "count": 9,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.09150426123438803,
+      "total_excess": 0.8235383511094923,
+      "datasets": {
+        "scifact": 2,
+        "fiqa": 1,
+        "arguana": 6
+      }
+    },
+    {
+      "word": "data.worldbank.org",
+      "count": 5,
+      "subwords": 6,
+      "mean_excess_vs_own_dataset": 0.1637158509862911,
+      "total_excess": 0.8185792549314554,
+      "datasets": {
+        "arguana": 5
+      }
+    },
+    {
+      "word": "socio-economic",
+      "count": 5,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.156138391514487,
+      "total_excess": 0.780691957572435,
+      "datasets": {
+        "arguana": 5
+      }
+    },
+    {
+      "word": "s0305-750x(99)00101-1",
+      "count": 6,
+      "subwords": 14,
+      "mean_excess_vs_own_dataset": 0.1256700417100943,
+      "total_excess": 0.7540202502605657,
+      "datasets": {
+        "arguana": 6
+      }
+    },
+    {
+      "word": "feminisation",
+      "count": 5,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.15053443495179644,
+      "total_excess": 0.7526721747589822,
+      "datasets": {
+        "arguana": 5
+      }
+    },
+    {
+      "word": "impartiality",
+      "count": 6,
+      "subwords": 4,
+      "mean_excess_vs_own_dataset": 0.12510177436361336,
+      "total_excess": 0.7506106461816802,
+      "datasets": {
+        "arguana": 6
+      }
+    },
+    {
+      "word": "disarmament",
+      "count": 5,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.14643028802913616,
+      "total_excess": 0.7321514401456808,
+      "datasets": {
+        "arguana": 5
+      }
+    },
+    {
+      "word": "poachers",
+      "count": 6,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.11716615481460695,
+      "total_excess": 0.7029969288876416,
+      "datasets": {
+        "arguana": 6
+      }
+    },
+    {
+      "word": "militaries",
+      "count": 8,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.08694867250771729,
+      "total_excess": 0.6955893800617383,
+      "datasets": {
+        "arguana": 8
       }
     },
     {
       "word": "can't",
       "count": 8,
       "subwords": 3,
-      "mean_gap": 0.18314002771425228,
-      "excess_vs_all": 0.029506697364721834,
-      "total_excess": 0.23605357891777468,
+      "mean_excess_vs_own_dataset": 0.0844054388947025,
+      "total_excess": 0.67524351115762,
       "datasets": {
         "fiqa": 3,
         "arguana": 5
       }
-    }
-  ],
-  "bottom_words_by_total_excess_gap": [
-    {
-      "word": "ideologies",
-      "count": 9,
-      "subwords": 4,
-      "mean_gap": -0.12057578289134223,
-      "excess_vs_all": -0.27420911324087266,
-      "total_excess": -2.467882019167854,
-      "datasets": {
-        "arguana": 9
-      }
     },
     {
-      "word": "hypocritical",
-      "count": 9,
-      "subwords": 5,
-      "mean_gap": -0.1272306671171137,
-      "excess_vs_all": -0.28086399746664414,
-      "total_excess": -2.527775977199797,
-      "datasets": {
-        "arguana": 9
-      }
-    },
-    {
-      "word": "atheism",
-      "count": 19,
-      "subwords": 5,
-      "mean_gap": 0.020170448921143835,
-      "excess_vs_all": -0.1334628814283866,
-      "total_excess": -2.5357947471393456,
-      "datasets": {
-        "arguana": 19
-      }
-    },
-    {
-      "word": "devolution",
-      "count": 8,
+      "word": "endangers",
+      "count": 5,
       "subwords": 3,
-      "mean_gap": -0.16502714489564924,
-      "excess_vs_all": -0.3186604752451797,
-      "total_excess": -2.5492838019614377,
+      "mean_excess_vs_own_dataset": 0.13368718585114278,
+      "total_excess": 0.6684359292557139,
+      "datasets": {
+        "arguana": 5
+      }
+    },
+    {
+      "word": "unimaginable",
+      "count": 5,
+      "subwords": 4,
+      "mean_excess_vs_own_dataset": 0.12161776748518745,
+      "total_excess": 0.6080888374259372,
+      "datasets": {
+        "arguana": 5
+      }
+    },
+    {
+      "word": "hiv/aids",
+      "count": 5,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.10929650515621733,
+      "total_excess": 0.5464825257810867,
+      "datasets": {
+        "arguana": 5
+      }
+    },
+    {
+      "word": "disseminate",
+      "count": 6,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.09101864683748954,
+      "total_excess": 0.5461118810249372,
+      "datasets": {
+        "arguana": 6
+      }
+    },
+    {
+      "word": "sars-cov-2",
+      "count": 7,
+      "subwords": 7,
+      "mean_excess_vs_own_dataset": 0.0770416208434908,
+      "total_excess": 0.5392913459044356,
+      "datasets": {
+        "trec-covid": 7
+      }
+    },
+    {
+      "word": "dynamism",
+      "count": 5,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.1073401813954249,
+      "total_excess": 0.5367009069771245,
+      "datasets": {
+        "arguana": 5
+      }
+    },
+    {
+      "word": "disproportionate",
+      "count": 8,
+      "subwords": 6,
+      "mean_excess_vs_own_dataset": 0.06702438593752924,
+      "total_excess": 0.5361950875002339,
       "datasets": {
         "arguana": 8
       }
     },
     {
-      "word": "provocations",
-      "count": 5,
+      "word": "no.1",
+      "count": 6,
       "subwords": 3,
-      "mean_gap": -0.3801465637098828,
-      "excess_vs_all": -0.5337798940594133,
-      "total_excess": -2.6688994702970663,
+      "mean_excess_vs_own_dataset": 0.08909224710970287,
+      "total_excess": 0.5345534826582172,
+      "datasets": {
+        "arguana": 6
+      }
+    },
+    {
+      "word": "19/08/11",
+      "count": 5,
+      "subwords": 5,
+      "mean_excess_vs_own_dataset": 0.10676917880277029,
+      "total_excess": 0.5338458940138514,
       "datasets": {
         "arguana": 5
       }
     },
     {
-      "word": "neo-functionalism",
-      "count": 14,
-      "subwords": 6,
-      "mean_gap": -0.05253281833393386,
-      "excess_vs_all": -0.2061661486834643,
-      "total_excess": -2.8863260815685003,
-      "datasets": {
-        "arguana": 14
-      }
-    },
-    {
-      "word": "inefficient",
-      "count": 12,
-      "subwords": 6,
-      "mean_gap": -0.09189615376838271,
-      "excess_vs_all": -0.24552948411791314,
-      "total_excess": -2.9463538094149575,
-      "datasets": {
-        "arguana": 12
-      }
-    },
-    {
-      "word": "church's",
-      "count": 13,
+      "word": "impractical",
+      "count": 9,
       "subwords": 3,
-      "mean_gap": -0.07311960515947148,
-      "excess_vs_all": -0.22675293550900194,
-      "total_excess": -2.947788161617025,
+      "mean_excess_vs_own_dataset": 0.058421003772719304,
+      "total_excess": 0.5257890339544737,
       "datasets": {
-        "arguana": 13
+        "arguana": 9
       }
     },
     {
-      "word": "austerity",
-      "count": 24,
-      "subwords": 4,
-      "mean_gap": 0.016048451878880123,
-      "excess_vs_all": -0.13758487847065032,
-      "total_excess": -3.3020370832956076,
-      "datasets": {
-        "arguana": 24
-      }
-    },
-    {
-      "word": "ossetian",
-      "count": 19,
+      "word": "401(k",
+      "count": 5,
       "subwords": 3,
-      "mean_gap": -0.04698890845865119,
-      "excess_vs_all": -0.20062223880818164,
-      "total_excess": -3.811822537355451,
+      "mean_excess_vs_own_dataset": 0.10066527490091123,
+      "total_excess": 0.5033263745045562,
       "datasets": {
-        "arguana": 19
+        "fiqa": 5
       }
     },
     {
-      "word": "dissidents",
+      "word": "outweigh",
+      "count": 5,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.09986271293272841,
+      "total_excess": 0.4993135646636421,
+      "datasets": {
+        "arguana": 5
+      }
+    },
+    {
+      "word": "coercion",
+      "count": 8,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.061452457891933765,
+      "total_excess": 0.4916196631354701,
+      "datasets": {
+        "arguana": 7,
+        "scidocs": 1
+      }
+    },
+    {
+      "word": "poaching",
       "count": 10,
-      "subwords": 4,
-      "mean_gap": -0.2573569011585285,
-      "excess_vs_all": -0.4109902315080589,
-      "total_excess": -4.109902315080589,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.04799857530407582,
+      "total_excess": 0.4799857530407582,
       "datasets": {
         "arguana": 10
       }
     },
     {
-      "word": "iii",
-      "count": 23,
-      "subwords": 4,
-      "mean_gap": -0.02962594162659049,
-      "excess_vs_all": -0.18325927197612094,
-      "total_excess": -4.214963255450781,
-      "datasets": {
-        "arguana": 23
-      }
-    },
-    {
-      "word": "&amp",
-      "count": 51,
-      "subwords": 3,
-      "mean_gap": 0.058431134994397525,
-      "excess_vs_all": -0.09520219535513291,
-      "total_excess": -4.855311963111778,
-      "datasets": {
-        "arguana": 51
-      }
-    },
-    {
-      "word": "jazeera",
+      "word": "one's",
       "count": 7,
       "subwords": 3,
-      "mean_gap": -0.5842040254970896,
-      "excess_vs_all": -0.73783735584662,
-      "total_excess": -5.16486149092634,
+      "mean_excess_vs_own_dataset": 0.06782061767458418,
+      "total_excess": 0.47474432372208925,
       "datasets": {
-        "arguana": 7
+        "fiqa": 1,
+        "arguana": 6
       }
     },
     {
-      "word": "12/09/11",
-      "count": 27,
-      "subwords": 6,
-      "mean_gap": -0.06504154239925145,
-      "excess_vs_all": -0.2186748727487819,
-      "total_excess": -5.904221564217111,
+      "word": "stockpiles",
+      "count": 6,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.07837768913855932,
+      "total_excess": 0.47026613483135593,
       "datasets": {
-        "arguana": 27
+        "arguana": 6
       }
     },
     {
-      "word": "democracies",
-      "count": 58,
-      "subwords": 4,
-      "mean_gap": 0.0410663413900276,
-      "excess_vs_all": -0.11256698895950285,
-      "total_excess": -6.528885359651165,
-      "datasets": {
-        "arguana": 58
-      }
-    },
-    {
-      "word": "reparations",
-      "count": 47,
+      "word": "09/02/2011",
+      "count": 5,
       "subwords": 5,
-      "mean_gap": 0.01202118880352106,
-      "excess_vs_all": -0.14161214154600937,
-      "total_excess": -6.655770652662441,
+      "mean_excess_vs_own_dataset": 0.08991898084890365,
+      "total_excess": 0.44959490424451826,
       "datasets": {
-        "arguana": 47
+        "arguana": 5
       }
     },
     {
-      "word": "ossetia",
-      "count": 51,
+      "word": "undermining",
+      "count": 11,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.039183497300834286,
+      "total_excess": 0.43101847030917717,
+      "datasets": {
+        "arguana": 11
+      }
+    },
+    {
+      "word": "unilateral",
+      "count": 6,
       "subwords": 4,
-      "mean_gap": -0.024506698202618356,
-      "excess_vs_all": -0.1781400285521488,
-      "total_excess": -9.085141456159588,
+      "mean_excess_vs_own_dataset": 0.06822229250221759,
+      "total_excess": 0.40933375501330554,
       "datasets": {
-        "arguana": 51
+        "arguana": 6
       }
     },
     {
-      "word": "self-determination",
-      "count": 51,
+      "word": "convolutional",
+      "count": 16,
       "subwords": 5,
-      "mean_gap": -0.049714616516940806,
-      "excess_vs_all": -0.20334794686647126,
-      "total_excess": -10.370745290190035,
+      "mean_excess_vs_own_dataset": 0.02534470275150103,
+      "total_excess": 0.40551524402401645,
       "datasets": {
-        "arguana": 51
+        "scidocs": 16
       }
     },
     {
-      "word": "microfinance",
-      "count": 68,
-      "subwords": 4,
-      "mean_gap": -0.00405071160024381,
-      "excess_vs_all": -0.15768404194977426,
-      "total_excess": -10.722514852584649,
+      "word": "trade-off",
+      "count": 6,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.06451657404226095,
+      "total_excess": 0.38709944425356574,
       "datasets": {
-        "arguana": 68
+        "arguana": 5,
+        "scidocs": 1
+      }
+    },
+    {
+      "word": "reliant",
+      "count": 5,
+      "subwords": 3,
+      "mean_excess_vs_own_dataset": 0.07475128927509926,
+      "total_excess": 0.3737564463754963,
+      "datasets": {
+        "arguana": 5
       }
     }
   ],
-  "n_distinct_badly_fragmented_words": 9113,
+  "n_distinct_badly_fragmented_words": 6712,
   "caveats": [
-    "The comparison within a dataset is between DIFFERENT queries, not a paired one: queries containing a rare technical term may be harder for reasons other than tokenization. This bounds the channel, it does not isolate it.",
+    "The comparison within a dataset is between DIFFERENT queries, not a paired one: queries containing a rare technical term may be harder for reasons other than tokenization. This bounds the channel; it does not isolate it.",
     "ArguAna and FiQA are on the teacher's disclosed training list; their gaps are deflated and they carry the caveat at the row.",
-    "Word-level attribution double-counts a query across all its fragmented words."
+    "Word-level attribution counts a query once per DISTINCT fragmented word it contains, so a query with three of them contributes to three words.",
+    "Excess is now measured against each word's OWN dataset's without-arm mean, so a hard dataset no longer inflates every word that appears in it."
   ]
 }

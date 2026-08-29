@@ -1,5 +1,44 @@
 {
   "_note": "LEDGER 4.4 deliverable 2 -- the joint power simulation of the FULL ship rule.",
+  "registered_params": {
+    "six_margin": 0.0075,
+    "worst_group_threshold": -0.01,
+    "worst_group_members": [
+      "fever",
+      "dbpedia-entity",
+      "cqadup-android",
+      "cqadup-english"
+    ],
+    "point_guard_c1": 0.005
+  },
+  "six_macro_se_measured": {
+    "reference_pairs": [
+      {
+        "se": 0.002628153739448297,
+        "pair": [
+          "leaf-ir-asym",
+          "mdbr-leaf-ir"
+        ]
+      },
+      {
+        "se": 0.003162500049762987,
+        "pair": [
+          "lr-dense-pertask",
+          "lr-dense-websearch"
+        ]
+      }
+    ],
+    "near_sibling_se": 0.003162500049762987,
+    "min_over_all_pairs": {
+      "se": 0.0022231067383088436,
+      "pair": [
+        "leaf-ir-asym",
+        "arctic-embed-m-v1.5"
+      ]
+    },
+    "median_over_all_pairs": 0.006573557519180848,
+    "_why_max": "conservative: for a false-veto estimate the larger SE is the safe one"
+  },
   "calibration": {
     "central": {
       "scale": 1.0,
@@ -224,21 +263,38 @@
           "rho": 0.8,
           "tau": 0.005,
           "d_six": 0.0,
-          "se_six": 0.006,
-          "six_margin": 0.005,
+          "se_six": null,
           "qualifying": 0.85
         },
         "S": 20000,
         "macro_se": 0.002091576308521556,
+        "registered_params": {
+          "six_margin": 0.0075,
+          "worst_group_threshold": -0.01,
+          "worst_group_members": [
+            "fever",
+            "dbpedia-entity",
+            "cqadup-android",
+            "cqadup-english"
+          ],
+          "point_guard_c1": 0.005
+        },
+        "se_six_used": 0.003162500049762987,
+        "per_dataset_se": {
+          "fever": 0.001499510368233595,
+          "dbpedia-entity": 0.006117098906382625,
+          "cqadup-android": 0.004513942896985515,
+          "cqadup-english": 0.0031546715229552828
+        },
         "P_C1_resolved": 1.0,
         "P_C2_resolved": 1.0,
         "P_C3_resolved": 1.0,
         "P_all_three": 1.0,
         "P_point_guard": 1.0,
         "P_worst_group": 1.0,
-        "P_six_no_regression": 0.7962,
-        "P_qualifying_table": 0.84955,
-        "P_ship": 0.6729
+        "P_six_no_regression": 0.99145,
+        "P_qualifying_table": 0.85135,
+        "P_ship": 0.8442
       },
       "sd+25%": {
         "scenario": {
@@ -248,21 +304,38 @@
           "rho": 0.8,
           "tau": 0.005,
           "d_six": 0.0,
-          "se_six": 0.006,
-          "six_margin": 0.005,
+          "se_six": null,
           "qualifying": 0.85
         },
         "S": 20000,
         "macro_se": 0.002614470385651945,
+        "registered_params": {
+          "six_margin": 0.0075,
+          "worst_group_threshold": -0.01,
+          "worst_group_members": [
+            "fever",
+            "dbpedia-entity",
+            "cqadup-android",
+            "cqadup-english"
+          ],
+          "point_guard_c1": 0.005
+        },
+        "se_six_used": 0.003162500049762987,
+        "per_dataset_se": {
+          "fever": 0.0018743879602919939,
+          "dbpedia-entity": 0.0076463736329782815,
+          "cqadup-android": 0.005642428621231893,
+          "cqadup-english": 0.003943339403694104
+        },
         "P_C1_resolved": 1.0,
         "P_C2_resolved": 1.0,
         "P_C3_resolved": 1.0,
         "P_all_three": 1.0,
         "P_point_guard": 1.0,
-        "P_worst_group": 1.0,
-        "P_six_no_regression": 0.7962,
-        "P_qualifying_table": 0.84955,
-        "P_ship": 0.6729
+        "P_worst_group": 0.99965,
+        "P_six_no_regression": 0.99145,
+        "P_qualifying_table": 0.85135,
+        "P_ship": 0.84385
       },
       "sd-20%": {
         "scenario": {
@@ -272,21 +345,38 @@
           "rho": 0.8,
           "tau": 0.005,
           "d_six": 0.0,
-          "se_six": 0.006,
-          "six_margin": 0.005,
+          "se_six": null,
           "qualifying": 0.85
         },
         "S": 20000,
         "macro_se": 0.0016732610468172448,
+        "registered_params": {
+          "six_margin": 0.0075,
+          "worst_group_threshold": -0.01,
+          "worst_group_members": [
+            "fever",
+            "dbpedia-entity",
+            "cqadup-android",
+            "cqadup-english"
+          ],
+          "point_guard_c1": 0.005
+        },
+        "se_six_used": 0.003162500049762987,
+        "per_dataset_se": {
+          "fever": 0.0011996082945868762,
+          "dbpedia-entity": 0.0048936791251061006,
+          "cqadup-android": 0.0036111543175884123,
+          "cqadup-english": 0.0025237372183642263
+        },
         "P_C1_resolved": 1.0,
         "P_C2_resolved": 1.0,
         "P_C3_resolved": 1.0,
         "P_all_three": 1.0,
         "P_point_guard": 1.0,
         "P_worst_group": 1.0,
-        "P_six_no_regression": 0.7962,
-        "P_qualifying_table": 0.84955,
-        "P_ship": 0.6729
+        "P_six_no_regression": 0.99145,
+        "P_qualifying_table": 0.85135,
+        "P_ship": 0.8442
       }
     },
     "modest": {
@@ -298,21 +388,38 @@
           "rho": 0.8,
           "tau": 0.005,
           "d_six": -0.002,
-          "se_six": 0.006,
-          "six_margin": 0.005,
+          "se_six": null,
           "qualifying": 0.85
         },
         "S": 20000,
         "macro_se": 0.002091576308521556,
+        "registered_params": {
+          "six_margin": 0.0075,
+          "worst_group_threshold": -0.01,
+          "worst_group_members": [
+            "fever",
+            "dbpedia-entity",
+            "cqadup-android",
+            "cqadup-english"
+          ],
+          "point_guard_c1": 0.005
+        },
+        "se_six_used": 0.003162500049762987,
+        "per_dataset_se": {
+          "fever": 0.001499510368233595,
+          "dbpedia-entity": 0.006117098906382625,
+          "cqadup-android": 0.004513942896985515,
+          "cqadup-english": 0.0031546715229552828
+        },
         "P_C1_resolved": 0.99135,
         "P_C2_resolved": 0.9917,
         "P_C3_resolved": 1.0,
         "P_all_three": 0.98635,
         "P_point_guard": 0.99145,
-        "P_worst_group": 0.99815,
-        "P_six_no_regression": 0.68965,
-        "P_qualifying_table": 0.84955,
-        "P_ship": 0.57395
+        "P_worst_group": 0.9922,
+        "P_six_no_regression": 0.96015,
+        "P_qualifying_table": 0.85135,
+        "P_ship": 0.8
       },
       "sd+25%": {
         "scenario": {
@@ -322,21 +429,38 @@
           "rho": 0.8,
           "tau": 0.005,
           "d_six": -0.002,
-          "se_six": 0.006,
-          "six_margin": 0.005,
+          "se_six": null,
           "qualifying": 0.85
         },
         "S": 20000,
         "macro_se": 0.002614470385651945,
+        "registered_params": {
+          "six_margin": 0.0075,
+          "worst_group_threshold": -0.01,
+          "worst_group_members": [
+            "fever",
+            "dbpedia-entity",
+            "cqadup-android",
+            "cqadup-english"
+          ],
+          "point_guard_c1": 0.005
+        },
+        "se_six_used": 0.003162500049762987,
+        "per_dataset_se": {
+          "fever": 0.0018743879602919939,
+          "dbpedia-entity": 0.0076463736329782815,
+          "cqadup-android": 0.005642428621231893,
+          "cqadup-english": 0.003943339403694104
+        },
         "P_C1_resolved": 0.9253,
         "P_C2_resolved": 0.92425,
         "P_C3_resolved": 1.0,
         "P_all_three": 0.89,
         "P_point_guard": 0.97215,
-        "P_worst_group": 0.9951,
-        "P_six_no_regression": 0.68965,
-        "P_qualifying_table": 0.84955,
-        "P_ship": 0.51655
+        "P_worst_group": 0.98075,
+        "P_six_no_regression": 0.96015,
+        "P_qualifying_table": 0.85135,
+        "P_ship": 0.71275
       },
       "sd-20%": {
         "scenario": {
@@ -346,21 +470,38 @@
           "rho": 0.8,
           "tau": 0.005,
           "d_six": -0.002,
-          "se_six": 0.006,
-          "six_margin": 0.005,
+          "se_six": null,
           "qualifying": 0.85
         },
         "S": 20000,
         "macro_se": 0.0016732610468172448,
+        "registered_params": {
+          "six_margin": 0.0075,
+          "worst_group_threshold": -0.01,
+          "worst_group_members": [
+            "fever",
+            "dbpedia-entity",
+            "cqadup-android",
+            "cqadup-english"
+          ],
+          "point_guard_c1": 0.005
+        },
+        "se_six_used": 0.003162500049762987,
+        "per_dataset_se": {
+          "fever": 0.0011996082945868762,
+          "dbpedia-entity": 0.0048936791251061006,
+          "cqadup-android": 0.0036111543175884123,
+          "cqadup-english": 0.0025237372183642263
+        },
         "P_C1_resolved": 0.9998,
         "P_C2_resolved": 0.9998,
         "P_C3_resolved": 1.0,
         "P_all_three": 0.9997,
         "P_point_guard": 0.99875,
-        "P_worst_group": 0.9992,
-        "P_six_no_regression": 0.68965,
-        "P_qualifying_table": 0.84955,
-        "P_ship": 0.58215
+        "P_worst_group": 0.9974,
+        "P_six_no_regression": 0.96015,
+        "P_qualifying_table": 0.85135,
+        "P_ship": 0.8141
       }
     },
     "recipe_only": {
@@ -372,21 +513,38 @@
           "rho": 0.8,
           "tau": 0.005,
           "d_six": -0.003,
-          "se_six": 0.006,
-          "six_margin": 0.005,
+          "se_six": null,
           "qualifying": 0.6
         },
         "S": 20000,
         "macro_se": 0.002091576308521556,
+        "registered_params": {
+          "six_margin": 0.0075,
+          "worst_group_threshold": -0.01,
+          "worst_group_members": [
+            "fever",
+            "dbpedia-entity",
+            "cqadup-android",
+            "cqadup-english"
+          ],
+          "point_guard_c1": 0.005
+        },
+        "se_six_used": 0.003162500049762987,
+        "per_dataset_se": {
+          "fever": 0.001499510368233595,
+          "dbpedia-entity": 0.006117098906382625,
+          "cqadup-android": 0.004513942896985515,
+          "cqadup-english": 0.0031546715229552828
+        },
         "P_C1_resolved": 0.4992,
         "P_C2_resolved": 0.50135,
         "P_C3_resolved": 1.0,
         "P_all_three": 0.3994,
         "P_point_guard": 0.5006,
-        "P_worst_group": 0.9775,
-        "P_six_no_regression": 0.6316,
-        "P_qualifying_table": 0.6007,
-        "P_ship": 0.1475
+        "P_worst_group": 0.95185,
+        "P_six_no_regression": 0.927,
+        "P_qualifying_table": 0.60175,
+        "P_ship": 0.2118
       },
       "sd+25%": {
         "scenario": {
@@ -396,21 +554,38 @@
           "rho": 0.8,
           "tau": 0.005,
           "d_six": -0.003,
-          "se_six": 0.006,
-          "six_margin": 0.005,
+          "se_six": null,
           "qualifying": 0.6
         },
         "S": 20000,
         "macro_se": 0.002614470385651945,
+        "registered_params": {
+          "six_margin": 0.0075,
+          "worst_group_threshold": -0.01,
+          "worst_group_members": [
+            "fever",
+            "dbpedia-entity",
+            "cqadup-android",
+            "cqadup-english"
+          ],
+          "point_guard_c1": 0.005
+        },
+        "se_six_used": 0.003162500049762987,
+        "per_dataset_se": {
+          "fever": 0.0018743879602919939,
+          "dbpedia-entity": 0.0076463736329782815,
+          "cqadup-android": 0.005642428621231893,
+          "cqadup-english": 0.003943339403694104
+        },
         "P_C1_resolved": 0.3158,
         "P_C2_resolved": 0.3153,
         "P_C3_resolved": 1.0,
         "P_all_three": 0.22345,
         "P_point_guard": 0.5006,
-        "P_worst_group": 0.9617,
-        "P_six_no_regression": 0.6316,
-        "P_qualifying_table": 0.6007,
-        "P_ship": 0.08085
+        "P_worst_group": 0.91715,
+        "P_six_no_regression": 0.927,
+        "P_qualifying_table": 0.60175,
+        "P_ship": 0.1142
       },
       "sd-20%": {
         "scenario": {
@@ -420,21 +595,38 @@
           "rho": 0.8,
           "tau": 0.005,
           "d_six": -0.003,
-          "se_six": 0.006,
-          "six_margin": 0.005,
+          "se_six": null,
           "qualifying": 0.6
         },
         "S": 20000,
         "macro_se": 0.0016732610468172448,
+        "registered_params": {
+          "six_margin": 0.0075,
+          "worst_group_threshold": -0.01,
+          "worst_group_members": [
+            "fever",
+            "dbpedia-entity",
+            "cqadup-android",
+            "cqadup-english"
+          ],
+          "point_guard_c1": 0.005
+        },
+        "se_six_used": 0.003162500049762987,
+        "per_dataset_se": {
+          "fever": 0.0011996082945868762,
+          "dbpedia-entity": 0.0048936791251061006,
+          "cqadup-android": 0.0036111543175884123,
+          "cqadup-english": 0.0025237372183642263
+        },
         "P_C1_resolved": 0.72535,
         "P_C2_resolved": 0.7249,
         "P_C3_resolved": 1.0,
         "P_all_three": 0.6415,
         "P_point_guard": 0.5006,
-        "P_worst_group": 0.98615,
-        "P_six_no_regression": 0.6316,
-        "P_qualifying_table": 0.6007,
-        "P_ship": 0.17705
+        "P_worst_group": 0.97155,
+        "P_six_no_regression": 0.927,
+        "P_qualifying_table": 0.60175,
+        "P_ship": 0.2604
       }
     },
     "m7_repeat": {
@@ -446,21 +638,38 @@
           "rho": 0.8,
           "tau": 0.005,
           "d_six": 0.0,
-          "se_six": 0.006,
-          "six_margin": 0.005,
+          "se_six": null,
           "qualifying": 0.85
         },
         "S": 20000,
         "macro_se": 0.002091576308521556,
+        "registered_params": {
+          "six_margin": 0.0075,
+          "worst_group_threshold": -0.01,
+          "worst_group_members": [
+            "fever",
+            "dbpedia-entity",
+            "cqadup-android",
+            "cqadup-english"
+          ],
+          "point_guard_c1": 0.005
+        },
+        "se_six_used": 0.003162500049762987,
+        "per_dataset_se": {
+          "fever": 0.001499510368233595,
+          "dbpedia-entity": 0.006117098906382625,
+          "cqadup-android": 0.004513942896985515,
+          "cqadup-english": 0.0031546715229552828
+        },
         "P_C1_resolved": 0.00965,
         "P_C2_resolved": 0.0077,
         "P_C3_resolved": 1.0,
         "P_all_three": 0.0036,
         "P_point_guard": 0.00975,
-        "P_worst_group": 0.8512,
-        "P_six_no_regression": 0.7962,
-        "P_qualifying_table": 0.84955,
-        "P_ship": 0.00205
+        "P_worst_group": 0.77175,
+        "P_six_no_regression": 0.99145,
+        "P_qualifying_table": 0.85135,
+        "P_ship": 0.00195
       },
       "sd+25%": {
         "scenario": {
@@ -470,21 +679,38 @@
           "rho": 0.8,
           "tau": 0.005,
           "d_six": 0.0,
-          "se_six": 0.006,
-          "six_margin": 0.005,
+          "se_six": null,
           "qualifying": 0.85
         },
         "S": 20000,
         "macro_se": 0.002614470385651945,
+        "registered_params": {
+          "six_margin": 0.0075,
+          "worst_group_threshold": -0.01,
+          "worst_group_members": [
+            "fever",
+            "dbpedia-entity",
+            "cqadup-android",
+            "cqadup-english"
+          ],
+          "point_guard_c1": 0.005
+        },
+        "se_six_used": 0.003162500049762987,
+        "per_dataset_se": {
+          "fever": 0.0018743879602919939,
+          "dbpedia-entity": 0.0076463736329782815,
+          "cqadup-android": 0.005642428621231893,
+          "cqadup-english": 0.003943339403694104
+        },
         "P_C1_resolved": 0.00965,
         "P_C2_resolved": 0.0077,
         "P_C3_resolved": 1.0,
         "P_all_three": 0.0036,
         "P_point_guard": 0.0288,
-        "P_worst_group": 0.8074,
-        "P_six_no_regression": 0.7962,
-        "P_qualifying_table": 0.84955,
-        "P_ship": 0.0019
+        "P_worst_group": 0.71095,
+        "P_six_no_regression": 0.99145,
+        "P_qualifying_table": 0.85135,
+        "P_ship": 0.00165
       },
       "sd-20%": {
         "scenario": {
@@ -494,21 +720,38 @@
           "rho": 0.8,
           "tau": 0.005,
           "d_six": 0.0,
-          "se_six": 0.006,
-          "six_margin": 0.005,
+          "se_six": null,
           "qualifying": 0.85
         },
         "S": 20000,
         "macro_se": 0.0016732610468172448,
+        "registered_params": {
+          "six_margin": 0.0075,
+          "worst_group_threshold": -0.01,
+          "worst_group_members": [
+            "fever",
+            "dbpedia-entity",
+            "cqadup-android",
+            "cqadup-english"
+          ],
+          "point_guard_c1": 0.005
+        },
+        "se_six_used": 0.003162500049762987,
+        "per_dataset_se": {
+          "fever": 0.0011996082945868762,
+          "dbpedia-entity": 0.0048936791251061006,
+          "cqadup-android": 0.0036111543175884123,
+          "cqadup-english": 0.0025237372183642263
+        },
         "P_C1_resolved": 0.00965,
         "P_C2_resolved": 0.0077,
         "P_C3_resolved": 1.0,
         "P_all_three": 0.0036,
         "P_point_guard": 0.0012,
-        "P_worst_group": 0.8805,
-        "P_six_no_regression": 0.7962,
-        "P_qualifying_table": 0.84955,
-        "P_ship": 0.0003
+        "P_worst_group": 0.81785,
+        "P_six_no_regression": 0.99145,
+        "P_qualifying_table": 0.85135,
+        "P_ship": 0.0006
       }
     },
     "dense_lags_fused": {
@@ -520,21 +763,38 @@
           "rho": 0.8,
           "tau": 0.005,
           "d_six": 0.0,
-          "se_six": 0.006,
-          "six_margin": 0.005,
+          "se_six": null,
           "qualifying": 0.85
         },
         "S": 20000,
         "macro_se": 0.002091576308521556,
+        "registered_params": {
+          "six_margin": 0.0075,
+          "worst_group_threshold": -0.01,
+          "worst_group_members": [
+            "fever",
+            "dbpedia-entity",
+            "cqadup-android",
+            "cqadup-english"
+          ],
+          "point_guard_c1": 0.005
+        },
+        "se_six_used": 0.003162500049762987,
+        "per_dataset_se": {
+          "fever": 0.001499510368233595,
+          "dbpedia-entity": 0.006117098906382625,
+          "cqadup-android": 0.004513942896985515,
+          "cqadup-english": 0.0031546715229552828
+        },
         "P_C1_resolved": 1.0,
         "P_C2_resolved": 0.6799,
         "P_C3_resolved": 1.0,
         "P_all_three": 0.6799,
         "P_point_guard": 1.0,
         "P_worst_group": 1.0,
-        "P_six_no_regression": 0.7962,
-        "P_qualifying_table": 0.84955,
-        "P_ship": 0.46015
+        "P_six_no_regression": 0.99145,
+        "P_qualifying_table": 0.85135,
+        "P_ship": 0.5729
       },
       "sd+25%": {
         "scenario": {
@@ -544,21 +804,38 @@
           "rho": 0.8,
           "tau": 0.005,
           "d_six": 0.0,
-          "se_six": 0.006,
-          "six_margin": 0.005,
+          "se_six": null,
           "qualifying": 0.85
         },
         "S": 20000,
         "macro_se": 0.002614470385651945,
+        "registered_params": {
+          "six_margin": 0.0075,
+          "worst_group_threshold": -0.01,
+          "worst_group_members": [
+            "fever",
+            "dbpedia-entity",
+            "cqadup-android",
+            "cqadup-english"
+          ],
+          "point_guard_c1": 0.005
+        },
+        "se_six_used": 0.003162500049762987,
+        "per_dataset_se": {
+          "fever": 0.0018743879602919939,
+          "dbpedia-entity": 0.0076463736329782815,
+          "cqadup-android": 0.005642428621231893,
+          "cqadup-english": 0.003943339403694104
+        },
         "P_C1_resolved": 1.0,
         "P_C2_resolved": 0.46425,
         "P_C3_resolved": 1.0,
         "P_all_three": 0.46425,
         "P_point_guard": 1.0,
-        "P_worst_group": 1.0,
-        "P_six_no_regression": 0.7962,
-        "P_qualifying_table": 0.84955,
-        "P_ship": 0.3125
+        "P_worst_group": 0.99965,
+        "P_six_no_regression": 0.99145,
+        "P_qualifying_table": 0.85135,
+        "P_ship": 0.391
       },
       "sd-20%": {
         "scenario": {
@@ -568,21 +845,38 @@
           "rho": 0.8,
           "tau": 0.005,
           "d_six": 0.0,
-          "se_six": 0.006,
-          "six_margin": 0.005,
+          "se_six": null,
           "qualifying": 0.85
         },
         "S": 20000,
         "macro_se": 0.0016732610468172448,
+        "registered_params": {
+          "six_margin": 0.0075,
+          "worst_group_threshold": -0.01,
+          "worst_group_members": [
+            "fever",
+            "dbpedia-entity",
+            "cqadup-android",
+            "cqadup-english"
+          ],
+          "point_guard_c1": 0.005
+        },
+        "se_six_used": 0.003162500049762987,
+        "per_dataset_se": {
+          "fever": 0.0011996082945868762,
+          "dbpedia-entity": 0.0048936791251061006,
+          "cqadup-android": 0.0036111543175884123,
+          "cqadup-english": 0.0025237372183642263
+        },
         "P_C1_resolved": 1.0,
         "P_C2_resolved": 0.88515,
         "P_C3_resolved": 1.0,
         "P_all_three": 0.88515,
         "P_point_guard": 1.0,
         "P_worst_group": 1.0,
-        "P_six_no_regression": 0.7962,
-        "P_qualifying_table": 0.84955,
-        "P_ship": 0.59675
+        "P_six_no_regression": 0.99145,
+        "P_qualifying_table": 0.85135,
+        "P_ship": 0.7476
       }
     }
   },

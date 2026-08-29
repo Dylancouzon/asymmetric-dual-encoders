@@ -151,6 +151,63 @@ def _holm_reject(ps, alpha=ALPHA):
     return rej
 
 
+def registry_params():
+    """The ship rule's constants, READ FROM m8/registry.json rather than restated here.
+
+    They were restated here once, and the restatement went stale the moment section 5 got its
+    measured values: this file carried six_margin = 0.005 and se_six = 0.006 while the registry
+    said 0.0075 and the measured near-sibling six-macro SE was 0.0026-0.0032. The six-set guard's
+    false-veto rate was overstated about fortyfold, and it is the dominant term in P(ship) -- so
+    the headline table handed to the owner was materially wrong. A planning instrument that
+    disagrees with the rule it simulates is worse than no instrument."""
+    reg = json.loads((REPO / "m8" / "registry.json").read_text())["ship_rule"]
+    return {"six_margin": abs(reg["six_set_no_regression_margin"]),
+            "worst_group_threshold": reg["worst_group_threshold"],
+            "worst_group_members": reg["worst_group_members"],
+            "point_guard_c1": reg["point_guard_c1"]}
+
+
+def six_macro_se():
+    """The six-set macro's paired SE for a NEAR-SIBLING system pair, measured from the frozen
+    comparator vectors -- the same provenance the registered 0.0075 margin was derived from."""
+    import itertools
+    pq = json.loads((RESULTS / "perquery.json").read_text())["datasets"]
+    six = list(m8base.SIX)
+    names = list(pq[six[0]]["systems"])
+    out = []
+    for a, b in itertools.combinations(names, 2):
+        k = len(six)
+        var = 0.0
+        for ds in six:
+            d = (np.asarray(pq[ds]["systems"][a], float)
+                 - np.asarray(pq[ds]["systems"][b], float))
+            var += d.var(ddof=1) / len(d)
+        out.append((float(np.sqrt(var) / k), a, b))
+    out.sort()
+    # The reference class is NAMED, not taken as the minimum. LEDGER 5.7 derives the registered
+    # 0.0075 margin from two specific near-sibling pairs -- the same model family asym-vs-sym, and
+    # the same table under two instruction sets -- and the simulation must use the same pairs or
+    # it is simulating a different guard. The MAX of the two is used: for a false-veto estimate
+    # the conservative direction is the LARGER standard error, and taking the minimum over all
+    # pairs would flatter the guard.
+    named = {frozenset(("leaf-ir-asym", "mdbr-leaf-ir")),
+             frozenset(("lr-dense-pertask", "lr-dense-websearch"))}
+    ref = [(se, a, b) for se, a, b in out if frozenset((a, b)) in named]
+    return {"reference_pairs": [{"se": se, "pair": [a, b]} for se, a, b in ref],
+            "near_sibling_se": max(se for se, _, _ in ref) if ref else out[0][0],
+            "min_over_all_pairs": {"se": out[0][0], "pair": list(out[0][1:])},
+            "median_over_all_pairs": float(np.median([o[0] for o in out])),
+            "_why_max": "conservative: for a false-veto estimate the larger SE is the safe one"}
+
+
+def per_dataset_se(cal):
+    """SE of each reserved dataset's own mean difference: sd_d / sqrt(n_d). The worst-group guard
+    reads PER-DATASET point estimates (LEDGER 5.6, four singleton groups), and their SEs differ by
+    4x across the four -- DBpedia's n = 400 against FEVER's 6,666 -- so simulating them with a
+    common noise term is simulating a different guard."""
+    return {ds: m["sd"] / np.sqrt(m["n"]) for ds, m in cal["per_dataset"].items()}
+
+
 def simulate(scenario, cal, S=20000, seed=0):
     """One scenario -> P(ship) and the per-condition marginals.
 
@@ -182,20 +239,26 @@ def simulate(scenario, cal, S=20000, seed=0):
     bonf_lo = hat - stats.norm.isf(BONF) * se
     resolved = _holm_reject(ps) & (ci_lo > 0) & (bonf_lo > 0)
 
-    point_guard = hat[:, 0] >= decide.POINT_GUARD_C1
-    # Worst-group: three reported groups (cqa pair, fever, dbpedia). Each group's TRUE effect is
-    # d_c1 + N(0, tau); the guard reads the point estimate, so add that group's own sampling noise.
-    k = 3
-    g_true = scenario["d_c1"] + scenario["tau"] * rng.standard_normal((S, k))
-    g_hat = g_true + se * np.sqrt(k) * rng.standard_normal((S, k))
-    worst_ok = g_hat.min(1) >= -decide.WORST_GROUP_MAX_REGRESSION
-    six_hat = scenario["d_six"] + scenario["se_six"] * rng.standard_normal(S)
-    six_ok = six_hat >= -abs(scenario["six_margin"])
+    par = registry_params()
+    point_guard = hat[:, 0] > par["point_guard_c1"]          # STRICT, as registered
+    # Worst-group: the FOUR reserved datasets individually (LEDGER 5.6), each with its own
+    # sampling SE. Each dataset's TRUE effect is d_c1 + N(0, tau); the guard reads a point
+    # estimate, so add that dataset's own sd_d/sqrt(n_d).
+    ses = per_dataset_se(cal)
+    members = [m for m in par["worst_group_members"] if m in ses]
+    g_true = scenario["d_c1"] + scenario["tau"] * rng.standard_normal((S, len(members)))
+    g_hat = g_true + np.array([ses[m] for m in members]) * rng.standard_normal((S, len(members)))
+    worst_ok = g_hat.min(1) >= par["worst_group_threshold"]
+    se_six = scenario.get("se_six") or six_macro_se()["near_sibling_se"]
+    six_hat = scenario["d_six"] + se_six * rng.standard_normal(S)
+    six_ok = six_hat >= -par["six_margin"]
     qual_ok = rng.random(S) < scenario["qualifying"]
 
     ship = resolved.all(1) & point_guard & worst_ok & six_ok & qual_ok
     return {
         "scenario": scenario, "S": S, "macro_se": se,
+        "registered_params": par, "se_six_used": se_six,
+        "per_dataset_se": {m: ses[m] for m in members},
         "P_C1_resolved": float(resolved[:, 0].mean()),
         "P_C2_resolved": float(resolved[:, 1].mean()),
         "P_C3_resolved": float(resolved[:, 2].mean()),
@@ -216,7 +279,7 @@ def mde(cal, power=0.8, seed=0, S=20000):
     for _ in range(40):
         mid = (lo + hi) / 2
         r = simulate({"d_c1": mid, "d_c2": mid, "d_c3": 0.06, "rho": 0.8, "tau": 0.005,
-                      "d_six": 0.0, "se_six": 0.006, "six_margin": 0.005, "qualifying": 1.0},
+                      "d_six": 0.0, "se_six": None, "qualifying": 1.0},
                      cal, S=S, seed=seed)
         if r["P_C1_resolved"] < power:
             lo = mid
@@ -262,19 +325,19 @@ SCENARIOS = {
     # measurements: no M8 number exists.
     "structural_target": dict(
         d_c1=0.020, d_c2=0.020, d_c3=0.060, rho=0.8, tau=0.005,
-        d_six=0.000, se_six=0.006, six_margin=0.005, qualifying=0.85),
+        d_six=0.000, se_six=None, qualifying=0.85),
     "modest": dict(
         d_c1=0.010, d_c2=0.010, d_c3=0.060, rho=0.8, tau=0.005,
-        d_six=-0.002, se_six=0.006, six_margin=0.005, qualifying=0.85),
+        d_six=-0.002, se_six=None, qualifying=0.85),
     "recipe_only": dict(
         d_c1=0.005, d_c2=0.005, d_c3=0.060, rho=0.8, tau=0.005,
-        d_six=-0.003, se_six=0.006, six_margin=0.005, qualifying=0.60),
+        d_six=-0.003, se_six=None, qualifying=0.60),
     "m7_repeat": dict(   # the post-gate lever programme transferred 0.000 +/- 0.005 in M7
         d_c1=0.000, d_c2=0.000, d_c3=0.060, rho=0.8, tau=0.005,
-        d_six=0.000, se_six=0.006, six_margin=0.005, qualifying=0.85),
+        d_six=0.000, se_six=None, qualifying=0.85),
     "dense_lags_fused": dict(   # strict C2 (E11) is the plausible binding constraint
         d_c1=0.020, d_c2=0.006, d_c3=0.060, rho=0.8, tau=0.005,
-        d_six=0.000, se_six=0.006, six_margin=0.005, qualifying=0.85),
+        d_six=0.000, se_six=None, qualifying=0.85),
 }
 
 
@@ -289,6 +352,8 @@ def main():
     cal_lo = calibrate(scale=0.80)
     out = {
         "_note": __doc__.strip().splitlines()[0],
+        "registered_params": registry_params(),
+        "six_macro_se_measured": six_macro_se(),
         "calibration": {k: {kk: vv for kk, vv in v.items() if kk != "dev_source"}
                         for k, v in {"central": cal, "sd+25%": cal_hi, "sd-20%": cal_lo}.items()},
         "dev_analogue_sds": {k: v for k, v in cal["dev_source"].items()},

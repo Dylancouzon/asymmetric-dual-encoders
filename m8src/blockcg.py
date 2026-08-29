@@ -33,9 +33,14 @@ independent CG runs sharing one sparse matmul), not the full block-CG with d x d
 The cheap version is what the sparse matmul cost makes worthwhile: the matmul is shared, which is
 where all the time goes, and the d systems differ only in their right-hand sides.
 
-CORRECTNESS IS NOT ASSUMED. `verify()` solves the same real system both ways at V = 30,522 and
-reports the relative error. A solver that agrees with the direct answer to ~1e-6 on the artifact
-that ships is the evidence; a solver that merely converges is not. This is the check that turns
+CORRECTNESS IS NOT ASSUMED, and the evidence's LIMIT is stated. `verify()` solves the same
+SYNTHETIC system both ways at V = 30,522 and reports the relative error. That checks the solver's
+mathematics against a reference implementation; it does NOT check it on the real bag matrix at the
+real lambda grid, and the screen's grid reaches down to 1e-4 (`m7src/stage0_ridge.LAMBDAS`), where
+an fp32 CG on a Zipfian Gram is least comfortable. Verifying on the real X, Y, W0 across the full
+lambda grid, and comparing the two tables' DEV MACRO rather than their Frobenius distance, is the
+check that must run before any closed-form number this solver produces is adopted. It is
+registered as a precondition, not done here. This is the check that turns
 "block CG should work" into a measurement -- and this project has twice had an "obvious" numerical
 claim come back wrong (the doc-side map's absorbability, reported with its two numbers reversed on
 a transposed matrix).
@@ -208,7 +213,7 @@ def verify(n=200_000, V=30_522, d=1024, lam=1e-3, device="cuda", seed=0, uniform
     num = float(np.linalg.norm(Wc - Wd))
     den = float(np.linalg.norm(Wd))
     return {
-        "setting": {"n": n, "V": V, "d": d, "lam": lam,
+        "setting": {"n": n, "V": V, "d": d, "lam": lam, "data": "SYNTHETIC, not the real system",
                     "token_distribution": "uniform" if uniform else "zipf(s=1.07)",
                     "coverage": coverage(X)},
         "direct": di, "block_cg": ci,
@@ -216,6 +221,13 @@ def verify(n=200_000, V=30_522, d=1024, lam=1e-3, device="cuda", seed=0, uniform
         "max_abs_error": float(np.abs(Wc - Wd).max()),
         "speedup_vs_direct": round(di["seconds"] / max(ci["seconds"], 1e-9), 2),
     }
+
+
+def _host_peak_gb():
+    """Peak host RSS. The registered B7 bar is an 18 GB *RAM* budget, and a VRAM number on a 10 GB
+    card can never fail it -- checking VRAM against 18 GB was a vacuous test."""
+    import resource
+    return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1e6
 
 
 def b7_curve(sizes=(30_522, 65_536, 131_072), n=200_000, d=1024, lam=1e-3, device="cuda",
@@ -235,6 +247,7 @@ def b7_curve(sizes=(30_522, 65_536, 131_072), n=200_000, d=1024, lam=1e-3, devic
                                             "converged")},
             "wall_seconds": round(time.time() - t0, 2),
             "peak_vram_gb": None if peak is None else round(peak, 2),
+            "peak_host_rss_gb": round(_host_peak_gb(), 2),
             "dense_gram_fp64_gb": round(V * V * 8 / 1e9, 2),
             "blockcg_arrays_fp32_gb": round(5 * V * d * 4 / 1e9, 2),
             "token_distribution": "uniform" if uniform else "zipf(s=1.07)",
@@ -253,6 +266,8 @@ def main():
     ap.add_argument("step", choices=["verify", "curve", "smoke"])
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--n", type=int, default=200_000)
+    ap.add_argument("--no-verify", action="store_true",
+                    help="curve only; the correctness check is a separate, slower run")
     a = ap.parse_args()
 
     import probe_guard
@@ -273,18 +288,28 @@ def main():
         out["correctness"] = verify(n=a.n, device=a.device)
         print(json.dumps(out["correctness"], indent=2, default=str))
     else:
-        out["correctness_zipf"] = verify(n=a.n, device=a.device)
-        out["correctness_uniform_baseline"] = verify(n=a.n, device=a.device, uniform=True)
+        if not a.no_verify:
+            out["correctness_zipf"] = verify(n=a.n, device=a.device)
+            out["correctness_uniform_baseline"] = verify(n=a.n, device=a.device, uniform=True)
+            out["correctness"] = out["correctness_zipf"]
+        else:
+            prev = RESULTS / "m8_b7_solver.json"
+            if prev.exists():
+                old = json.loads(prev.read_text())
+                for k in ("correctness_zipf", "correctness_uniform_baseline", "correctness"):
+                    if k in old:
+                        out[k] = old[k]
         out["curve"] = b7_curve(n=a.n, device=a.device)
-        out["correctness"] = out["correctness_zipf"]
         out["verdict"] = {
             "bar": "the 65,536-row solve must complete within the 18 GB peak-RAM budget and "
                    "under 4 hours wall-clock",
             "pass": bool(any(r["V"] == 65_536 and r["converged"]
-                             and (r["peak_vram_gb"] or 0) < 18 and r["wall_seconds"] < 4 * 3600
+                             and r["peak_host_rss_gb"] < 18 and r["wall_seconds"] < 4 * 3600
                              for r in out["curve"])),
+            "measured_against": "peak HOST RSS (the registered bar is an 18 GB RAM budget); VRAM "
+                                "is reported beside it but a 10 GB card cannot fail an 18 GB bar",
         }
-        probe_guard.write_result(RESULTS / "m8_b7_solver.json", out, "B7", strict_commit=False)
+        probe_guard.write_result(RESULTS / "m8_b7_solver.json", out, "B7")
         print(json.dumps(out["verdict"], indent=2))
     return 0
 
