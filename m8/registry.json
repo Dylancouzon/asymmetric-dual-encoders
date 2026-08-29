@@ -628,8 +628,8 @@
   "measured": {
    "dense": "results/m8_noise_floor.json -- floors 0.00095-0.00227, bars 0.0040 except fp16.mean worst-group/OOD at 0.00454",
    "fused": "results/m8_noise_floor_fused.json -- floors 0.00059-0.00066, bars 0.0040",
-   "still_missing": "a B-leg-varying null pair; arms that restructure the B->A phases (R-PHASE, and any pool/init change flowing through B) have a larger floor that no bar may read until it is measured.",
-   "crossed": "results/m8_noise_floor_crossed.json -- the 3x3 (B checkpoint seed) x (A seed) grid, which decomposes chain variance into sigma_B and sigma_A. Registered under NF; adopts nothing and does not change the bar formula."
+   "still_missing": "a POOL-varying null. The B-leg gap is now measured (see 'crossed'), but all nine cells share one pseudo-query pool -- pseudoq.build_decontaminated draws with a seed independent of the training seed -- so no floor here bounds a lever that changes the pool itself.",
+   "crossed": "results/m8_noise_floor_crossed.json -- the 3x3 (B checkpoint seed) x (A seed) grid, LEDGER 23. MEASURED: on the out-of-domain macro sigma_B 0.00103 vs sigma_A 0.00106, sigma_chain 0.00153, so a B-leg-varying arm's null is about sqrt(2) times an A-leg arm's and the standing 0.0040 carries ~6.5% type-I there. Bars in force are UNAFFECTED: B3 and E14-HEAD read A-leg-only arms, whose null is sigma_A alone (2 x 1.693 x 0.00106 = 0.0036, under the planning minimum). For a B-leg-varying probe the formula with the floor term estimated from this design would give 0.00519 -- REPORTED, NOT ADOPTED, since changing the floor estimator is itself a formula change needing its own amendment."
   }
  }
 }

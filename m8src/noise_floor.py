@@ -23,8 +23,13 @@ FRAME, disclosed. The floor is measured in the INCUMBENT teacher frame and the M
 the M7 candidate's own B checkpoint. LEDGER 6 step 5 already requires re-measurement if the
 teacher swaps; the same applies if the data mix changes materially. What this measures is the
 magnitude of seed-to-seed variation in the A phase that produces the shipped rows, with the B
-checkpoint held fixed -- which is the shape of nearly every probe arm. **An arm that differs in
-its B leg has a larger floor, and no bar may read such an arm until that floor is measured too.**
+checkpoint held fixed -- which is the shape of nearly every probe arm. An arm that differs in its
+B leg was ASSERTED to have a larger floor, with no bar allowed to read one until it was measured.
+**It is now measured** (`results/m8_noise_floor_crossed.json`, the 3x3 B x A grid): on the
+out-of-domain macro sigma_B = 0.00103 against sigma_A = 0.00106, so the B leg contributes about
+as much as the A leg and no more. The assertion was directionally right and quantitatively mild --
+a full chain's SD is 0.00153, roughly sqrt(2) times an A-leg-only arm's, and the standing 0.0040
+convention carries ~6.5% type-I against a fresh null difference between two independent chains.
 
 Endpoints, all from the full pinned dev suite through the released `QueryTable` path (never the
 fast proxy): the registered group vector's median, the worst group, the out-of-domain macro, and
@@ -392,8 +397,23 @@ def _twoway(x):
         "range_all_9_cells": float(np.ptp(x)),
         "range_on_the_diagonal": float(np.ptp(diag)),
         "range_within_rows": [float(np.ptp(r)) for r in x],
-        "diagonal_understates_by": (float(np.ptp(x) / np.ptp(diag))
-                                    if np.ptp(diag) > 0 else None),
+        # The only VALID check on whether the aliased diagonal runs low. Comparing the 9-cell
+        # range against the 3-cell one measures nothing -- E[range] grows with K, so the 9-cell
+        # range is larger under identical noise. The comparison that means something is the
+        # observed diagonal range against its own expectation at K = 3 under the fitted sigma,
+        # E[range] = 1.693 sigma. A ratio near 1 says the diagonal is behaving; and because one
+        # K = 3 range pins sigma only to a 12x span (CV 0.525, central 90% [0.431, 3.315] sigma),
+        # a ratio anywhere inside that interval is noise, not bias.
+        "range_expected_on_3_cells_under_fitted_sigma": 1.693 * float(np.sqrt(v_chain)),
+        "diagonal_range_over_its_expectation": (
+            float(np.ptp(diag) / (1.693 * np.sqrt(v_chain))) if v_chain > 0 else None),
+        "diagonal_ratio_noise_interval_at_K3": [0.431 / 1.693, 3.315 / 1.693],
+        # What the REGISTERED formula would give for a B-leg-varying arm if its floor term were
+        # estimated from this design instead of from a single K = 3 range. NOT ADOPTED -- NF
+        # emits bars, but changing how the floor term is estimated is a formula change and needs
+        # its own amendment. Reported so the size of the gap is on the record.
+        "implied_bar_if_floor_estimated_from_this_design": max(
+            0.0040, 2 * 1.693 * float(np.sqrt(v_chain))),
     }
 
 
@@ -463,7 +483,10 @@ def measure_crossed(dump_path, prec="int8", mode="sqrt"):
             "mix, and LEDGER 6 step 5 voids it on a teacher swap."),
         "adopts": ("nothing. The registered bar formula is unchanged. This is reported as the "
                    "error rate the standing 0.0040 convention actually carries for a "
-                   "B-leg-varying arm, which is a disclosure, not a new rule."),
+                   "B-leg-varying arm, which is a disclosure, not a new rule. Note the A-leg "
+                   "arms every frozen bar currently reads -- B3, E14-HEAD -- are UNAFFECTED: "
+                   "they hold the B checkpoint fixed, so their null is sd.A alone, and "
+                   "2 x 1.693 x sd.A stays under the 0.0040 planning minimum."),
     }
 
 

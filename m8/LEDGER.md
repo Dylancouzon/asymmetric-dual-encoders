@@ -2076,3 +2076,57 @@ B6's quality arm may be registered.**
 verified unchanged before and after**. Nothing on any scoring path moved, which is the property
 that mattered: M7's pre-freeze review found that a package upgrade between freeze and final run
 would have silently changed the fused system C3 judges.
+
+---
+
+## 23. The crossed B × A floor — the B leg costs about what the A leg costs
+
+`results/m8_noise_floor_crossed.json`, registered under **NF**, read at int8/sqrt. Nine cells,
+(B-checkpoint seed) × (A seed); five already existed — row `b=0` is the A-leg floor and the
+diagonal is the B-leg floor — so four A legs completed it.
+
+**The question this answers.** §4.7 and the B-leg artifact both *assert* that an arm differing in
+its B leg has a larger floor, and forbid any bar from reading such an arm until it is measured.
+Nothing had measured it. Two-way layout without replication, 4 residual df, against the K=3 sample
+range whose CV is 0.525.
+
+| endpoint (int8/sqrt) | σ_B | σ_A | σ_resid | σ_chain | SD(fresh null Δ) | P(\|Δ\| > 0.0040) |
+|---|---|---|---|---|---|---|
+| out-of-domain macro | 0.00103 | 0.00106 | 0.00039 | 0.00153 | 0.00217 | **6.5%** |
+| worst group | 0.00103 | 0.00106 | 0.00039 | 0.00153 | 0.00217 | **6.5%** |
+| group-vector median | 0.0 | 0.0 | 0.00077 | 0.00077 | 0.00109 | 0.02% |
+| all-component macro | 0.00033 | 0.0 | 0.00057 | 0.00066 | 0.00093 | 0.002% |
+
+*(worst group and out-of-domain macro are identical because the out-of-domain group IS the worst
+group in all nine cells. σ_B and σ_A are moment estimators with negatives clipped to zero, and
+`sqrt` is concave, so both push the chain SD **down** — simulated at this exact design, truth
+0.00320 → mean estimate 0.00295, ~8% low. Read σ_chain as a floor on the floor.)*
+
+**The finding: the assertion is directionally right and quantitatively mild.** The B leg
+contributes about **as much as** the A leg on the endpoint that matters and nothing detectable on
+two of the four. A full chain's SD is ~√2 × an A-leg arm's, not some larger multiple. So the §4.4
+gap-list entry **narrows rather than closes**: a B-leg-varying arm does need a larger bar, and the
+size of the gap is now a number instead of a warning.
+
+**What it means for bars actually in force — nothing changes.** `B3` and `E14-HEAD` read the
+out-of-domain macro on **A-leg-only** arms (the Phase-B checkpoint is held fixed), so their null
+is σ_A alone: `2 × 1.693 × 0.00106 = 0.0036`, under the 0.0040 planning minimum, which is
+therefore still what does the work. **Their frozen bars stand unchanged.**
+
+**What it means for a B-leg-varying probe — 0.0040 is too low.** Applying the registered formula
+with the floor term estimated from this design instead of from one noisy K=3 range gives
+**0.00519** on the out-of-domain macro and worst group. **NOT ADOPTED**: changing how the floor
+term is estimated is a formula change and needs its own amendment before any arm it would affect
+runs. It is recorded so the next session that registers `R-PHASE`, `D-FINEWEB` or any pool-or-init
+lever inherits the number rather than the warning.
+
+**The withdrawn aliasing claim is confirmed withdrawn, on this data.** The valid check is the
+observed diagonal range against its own expectation at K=3 under the fitted σ, not against the
+nine-cell range (E[range] grows with K, so that comparison measures nothing — the artifact
+previously carried a field that made it, and it has been removed). Ratio **0.43**, inside the
+[0.25, 1.96] noise interval a K=3 range spans. The aliased diagonal is behaving.
+
+**Frame, unchanged and still binding:** incumbent teacher, M7 data mix, and the pseudo-query pool
+held FIXED across all nine cells — `pseudoq.build_decontaminated` draws with a seed independent of
+the training seed. This bounds seed variability in a B-leg-varying arm; it does **not** bound a
+pool-varying lever, and LEDGER §6 step 5 voids it on a teacher swap.

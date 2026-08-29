@@ -1,10 +1,10 @@
 # M8 status
 
 **Stage: Phase 0 complete, 2026-08-29.** LEDGER **v2** is live (`m8/LEDGER.md` +
-`m8/registry.json`), gated by seven adversarial reviews. All three noise floors are measured, six
-probes have run, the teacher question is closed, and all five owner decisions are ruled. Every
-result carries a registration stamp. **No M8 training candidate exists yet. No protected set has
-been scored. The reserved four are untouched.**
+`m8/registry.json`). All four noise floors are measured, eight probes have run, the teacher
+question is closed, and all five owner decisions are ruled. Every result carries a registration
+stamp. **No M8 training candidate exists yet. No protected set has been scored. The reserved four
+are untouched.**
 
 ---
 
@@ -12,69 +12,86 @@ been scored. The reserved four are untouched.**
 
 | # | question | ruling |
 |---|---|---|
-| 1 | **E14** doc-side co-adaptation | **Measure it small first.** Specified as two staged probes: `E14-HEAD` (runnable) and `E14-LORA` (refused, TBD bar). The doubled 10.12M pre-encode, the stella licence check and any C2 redefinition are **NOT** authorised — **C2 and E11 stand unchanged**. |
-| 2 | **E10** the shadow | **Seven clean-community LoTTE slices, per-question remedy** (~14,034 queries). Subforums **rejected — not on contamination, which they passed, but on correlation with the exam**: two of the reserved four *are* CQADupStack. Re-screen after remedy; the shadow is a check, **never** a selection surface. |
-| 3 | **harrier** | **Closed, on undisclosed training data** — no comparison design repairs not knowing what a teacher has read. **stella stands; T1's NO SWAP is final for M8.** stella-1.5B remains unscreened, no new ruling needed. |
-| 4 | **HUPD** / patents | **Deferred to M9** — safe because no patent text exists anywhere in M8's training mix. **Trigger:** settle before any web-crawl data (`D-FINEWEB`) enters training; that row carries the note. |
+| 1 | **E14** doc-side co-adaptation | **Measure it small first.** Two staged probes: `E14-HEAD` (registered, **amended after review**, not yet run) and `E14-LORA` (refused, TBD bar). The doubled 10.12M pre-encode, the stella licence check and any C2 redefinition are **NOT** authorised — **C2 and E11 stand unchanged**. |
+| 2 | **E10** the shadow | **Seven clean-community LoTTE slices, per-question remedy** (~14,034 queries). Subforums **rejected — not on contamination, which they passed, but on correlation with the exam**: two of the reserved four *are* CQADupStack. The shadow is a check, **never** a selection surface. |
+| 3 | **harrier** | **Closed, on undisclosed training data.** **stella stands; T1's NO SWAP is final for M8.** |
+| 4 | **HUPD** / patents | **Deferred to M9** — safe because no patent text exists anywhere in M8's training mix. **Trigger:** settle before any web-crawl data (`D-FINEWEB`) enters training. |
 | 5 | **E12** LR-dense | **Published numbers only, labelled.** The report may never state or imply a head-to-head on our data. |
 
 **Nothing is blocked on Dylan.**
 
 ---
 
+## The main bet: `E14-HEAD` is registered but its premise had to be repaired first
+
+An adversarial review of the design (Codex, **before any arm ran**) returned three BLOCKERs, all
+reproduced independently and all adopted. LEDGER §15 has the full disposition; the three that
+matter:
+
+1. **The registration required a nonlinear head on a premise this ledger already refuted.** A
+   *renormalized* linear doc-side map is **not** absorbable into the table — the score carries a
+   per-document `1/|Md|` that cannot move into a shared row, and §6's D1 entry recorded rank
+   agreement 1.000 without renormalization and **0.000 with it**. So **`LIN` is now the primary**
+   (1.05M params, better conditioned) and **`MLP` is its nonlinearity control**.
+2. **Zero-init gives `normalize(d)`, not `d`.** The cached vectors are only approximately
+   unit-norm — 0.36% exactly 1, max `|norm−1|` 4.8e-05 over 100,000 pool rows. New comparator
+   **`R0N`** (same patched path, head frozen at identity), which doubles as an end-to-end null on
+   the patch stack.
+3. **The lr ladder would have observed the endpoint before selecting.** `train.run()` evaluates
+   `eval_components` — which include *both* DENSE endpoint components — every 500 steps *and* once
+   more unconditionally. The ladder is now **dev-blind by construction**, on a disjoint tuning seed.
+
+Also registered: a **mechanism control** (headed documents against frozen *teacher* queries, so a
+win can be attributed to bag-reachability rather than generic supervised doc adaptation), a
+**step-adequacy** continuation whose plateau rule makes an under-trained null report
+UNINFORMATIVE, streamed head application (a materializing patch needs ~21.4 GB on HotpotQA), and
+sha256 provenance binding. **Bar unchanged at 0.0040**; multiplicity is now Holm across the two
+treatments.
+
+`m8src/e14_head.py` holds both heads and the verbatim `infonce` copy — bit-identical to `m7src`'s
+on all six branch cases, with the false-negative mask deliberately kept in **raw teacher space**
+(the head would otherwise control which negatives are masked out of its own loss, and masking more
+makes InfoNCE trivially smaller). **The training driver is not written.**
+
+---
+
 ## Results
 
-**B3 — Phase A is not meaningfully pair-starved** (`results/m8_b3_decision.json`). Twelve arms:
-nested real-pair fractions {0.25, 0.50, 0.75, 1.00} × three seeds, at fixed updates, batch,
-negatives and Phase-B checkpoint — 1,280,000 draws in every arm, so only the count of *distinct*
-pairs moves.
+**The crossed B × A floor — the B leg costs about what the A leg costs** (§23,
+`results/m8_noise_floor_crossed.json`). Nine cells, four newly trained. On the out-of-domain
+macro **σ_B 0.00103 against σ_A 0.00106**, σ_chain 0.00153, and the standing 0.0040 carries
+**~6.5%** type-I against a fresh null difference between two independent chains.
+**Bars in force are unaffected** — B3 and E14-HEAD read *A-leg-only* arms, whose null is σ_A alone
+(`2 × 1.693 × 0.00106 = 0.0036`, under the planning minimum). For a **B-leg-varying** probe the
+formula would give **0.00519**: reported, **not adopted**. The §4.4 gap narrows to a
+pool-varying null — all nine cells share one pseudo-query pool.
+*The claim that motivated this design was withdrawn before it ran*: the aliased diagonal is
+`B_s + A_s + e`, which already has the chain variance, so it is unbiased-but-noisy, not
+anti-conservative. Confirmed on this data — the diagonal's range sits at 0.43× its own
+expectation, inside the [0.25, 1.96] interval a K=3 range spans.
 
-| contrast | dense | fused | meets 0.0040? |
-|---|---|---|---|
-| **4× dose**, 1.00 vs 0.25 | +0.00135 | +0.00369 | **no, neither** |
-| primary, 1.00 vs 0.50 | +0.00112 | +0.00201 | no |
-| 1.00 vs 0.75 | **−0.00107** | +0.00076 | no |
+**B6-pre — PASSED for a NONLINEAR head** (§22, `results/m8_b6_pre_mlp.json`). 3,426 nodes, GELU
+exports as a plain `Erf`, zero custom-domain ops, parity 0.99999988. E3's condition is met, so
+`E14-HEAD`'s output is shippable in principle. **Both passes used near-identity weights**, so the
+registry requires the *actual trained head* to be re-exported before anything is called shippable.
 
-Verdict **UNINFORMATIVE**, which the registration defined in advance as the strongest
-no-starvation evidence this probe can produce. **The actionable number**: the slope is +0.00097
-dense per doubling, so reaching the bar needs **~17.6× the pool (~5.9M pairs)**. M7's entire
-MS MARCO addition was 490K, under 1.5×. **This is the argument for spending M8 on capacity.**
-*Scope: `p35b-2m` had already distilled on every training query, so this measures pairs in Phase A
-given B absorbed them, and says nothing about B-side levers such as `D-FINEWEB`.*
+**B3 — Phase A is not meaningfully pair-starved** (`results/m8_b3_decision.json`). A 4× dose moves
+dense +0.00135 and fused +0.00369 against a 0.0040 bar; verdict **UNINFORMATIVE**, which the
+registration defined in advance as the strongest no-starvation evidence this probe can produce.
+The actionable number: reaching the bar would need **~17.6× the pool (~5.9M pairs)**. M7's entire
+MS MARCO addition was 490K. **This is the argument for spending M8 on capacity.**
 
-**T1 — NO SWAP** (`results/m8_t1_decision.json`, §21). First measurements of two teachers M7 closed
-on arithmetic: granite-r2 −0.052 [−0.066, −0.039], gte-modernbert −0.109 [−0.123, −0.094], both
-CI-resolved at 5–11× the swap penalty. The frame reproduces M7's own number (0.3438 vs 0.3439)
-through a new solver, init builder and fit list. The tower again fails to order the table.
+**T1 — NO SWAP** (§21). granite-r2 −0.052 [−0.066, −0.039], gte-modernbert −0.109 [−0.123,
+−0.094], both CI-resolved. The tower again fails to order the table.
 
-**B2 — the KL term is dead, measured on both sides** (§19). Teacher target median entropy
-**4.73e-07 nats** against a ln(32) ceiling; the **shipped table ranks the positive first 99.75%** of
-the time, so the term's own median value is **1.08e-07 nats**. Does *not* say a listwise objective
-wins — that is `R-LIST`, whose bar is unfrozen.
+**B2 — the KL term is dead** (§19): teacher target median entropy 4.73e-07 nats; the shipped table
+ranks the positive first 99.75% of the time. **B7 — PASSED** (§18): 65,536 rows in 51 iterations /
+10 s / 4.4 GB. **B17 — DISOWNED** (§20). **§17 — fragmentation survives every single-dataset
+exclusion**; the query-length claim was ArguAna-only and is withdrawn.
 
-**B7 — PASSED** (§18). Gram-free preconditioned solver: 65,536 rows in 51 iterations / 10 s /
-4.4 GB where the dense fp64 Gram would be 34 GB. Reopens the vocabulary door.
-
-**B6-pre — PASSED** (`results/m8_b6_pre.json`). Teacher + doc-side head exports to **one** ONNX
-file, 3,415 nodes, zero custom-domain ops, parity 0.99999994. D1 survives E3. **Caveat: run with
-`--head linear` only — a nonlinear head is unproven and `E14-HEAD` now depends on it.**
-
-**Noise floors — all three measured.** Dense 0.00095–0.00227, fused 0.00059–0.00066, B-leg
-0.00070–0.00218. **The B-leg comparison I first drew is withdrawn**: at K = 3 the statistic is the
-sample **range** (CV 0.525) — two identical-noise experiments differ by ≥2× **40%** of the time and
-P(R_B ≤ R_A) is exactly **0.500**. Two design faults recorded: the chain seed **aliases both legs**
-(making the range an *under*-estimate, the anti-conservative direction), and the pool is held fixed
-so it does not bound pool-varying levers. **Bars stand as a pre-registered convention, not a
-bound**: 0.0040 everywhere except `int8/mean` worst-group and OOD at 0.004369.
-
-**B17 — registered branch fired and was DISOWNED** (§20); it had measured its own 957-query fit
-set. **§17 — fragmentation survives every single-dataset exclusion** (worst case t = 3.28); my own
-query-length claim was ArguAna-only and is withdrawn. **Fit list**: 337,981 kept of 338,076, all 95
-removals from M9-reserve — regenerate once the LoTTE survivors land.
-
-**A near-miss, found by review.** `work/dev/cqadup-{android,english}.json` held the complete corpora
-**and qrels** of two reserved confirmatory sets; any `devsuite.load(...)` would have scored one
-silently. **Nothing scored them.** Now a protected kind (§15).
+**A near-miss, found by review.** `work/dev/cqadup-{android,english}.json` held the complete
+corpora **and qrels** of two reserved confirmatory sets. **Nothing scored them.** Now a protected
+kind (§15).
 
 ---
 
@@ -82,27 +99,21 @@ silently. **Nothing scored them.** Now a protected kind (§15).
 
 | item | artifact |
 |---|---|
-| LEDGER v2 + machine-readable registry (26 probes, 10 runnable) | `m8/LEDGER.md`, `m8/registry.json` |
-| Executable ship rule, and B3's verdict as code with a test per branch | `m8src/decide.py`, `b3_decide.py`, `test_decide.py`, `test_b3_decide.py` |
+| LEDGER v2 + machine-readable registry (27 probes) | `m8/LEDGER.md`, `m8/registry.json` |
+| Executable ship rule, B3's verdict as code, a test per branch | `m8src/decide.py`, `b3_decide.py`, `test_decide.py`, `test_b3_decide.py` |
 | Guards G1/G2, hardened against four concrete routes | `m8src/paths_guard.py`, `probe_guard.py`, `test_guards.py` |
 | Rule audit — diffs each result's registry **from git at that result's commit** | `m8src/rule_audit.py` |
-| Gram-free solver, teacher screens, entropy probe, all three floors, dose-curve runner | `m8src/blockcg.py`, `teacher_screen.py`, `b2_entropy.py`, `noise_floor.py`, `fused_floor.py`, `b3_pool.py` |
+| E10 remediation + the protected-query filter (one module, because one process gets one `claim()`) | `m8src/protected_filter.py`, `freeze_lotte.py` |
+| E14 heads, the verbatim loss copy and its equivalence proof | `m8src/e14_head.py` |
+| Solver, teacher screens, entropy probe, all four floors, dose-curve runner | `m8src/blockcg.py`, `teacher_screen.py`, `b2_entropy.py`, `noise_floor.py`, `fused_floor.py`, `b3_pool.py` |
 
-`./run_m8_tests.sh` runs everything. `m8/CODEMAP.md` carries 18 pitfalls, several earned this week.
-
----
+`./run_m8_tests.sh` runs everything. `m8/CODEMAP.md` carries 21 pitfalls, several earned this week.
 
 ## Next
 
-1. **`E14-HEAD`** — runnable, bar frozen at 0.0040. The milestone's main bet, and the review point
-   that matters most before it runs.
-2. **`E10-REMEDY`** — drop leaked queries *and* near-duplicate documents from the seven slices,
-   re-screen requiring **zero** hits, hash-pin, then regenerate the fit list.
-3. **B6-pre with `--head mlp`** — cheap, and it gates whether `E14-HEAD`'s output is shippable.
-4. **Crossed B×A seed design** — six A legs (~30 min); the cheapest way to turn the floor
-   convention into a bound.
-5. Still open: `m8src/freeze.py` and `final_run.py` and their suites (§4.4 gap list, weeks out);
-   `D-FINEWEB` prep (bar unfrozen; carries the patent trigger).
+`m8/NEXT-SESSION.md` has the ordered worklist. In short: `E14-HEAD`'s driver (implement from the
+**amended registry row**, not the superseded brief), then run `E10-REMEDY` and regenerate the fit
+list, then `D-FINEWEB`.
 
 ## File contract
 
@@ -114,9 +125,6 @@ silently. **Nothing scored them.** Now a protected kind (§15).
 | `m8/NEXT-SESSION.md` | Remaining worklist. | at session start |
 | `m8/RESULTS.md` / `EXPLORED.md` / `CODEMAP.md` | runs / closed avenues / modules and pitfalls. | as needed |
 | `research/m8-planning/*` | Archival record: reviews, literature sweep, challenger Specs. | on demand |
-
-`m8/PLAN-DRAFT.md` was **deleted** 2026-08-29 — after 17 amendments it was a second source of truth
-that disagreed with the binding one. Git history has it.
 
 Every number carries an artifact pointer; no file restates another; a future session cold-starts
 from STATUS + LEDGER + registry alone.
