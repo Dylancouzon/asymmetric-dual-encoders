@@ -129,8 +129,8 @@ def main():
             "reported as such rather than folded into FAIL or UNINFORMATIVE.")
     elif not both(man, "meets_bar"):
         verdict, headline = "UNINFORMATIVE", (
-            "A 4x dose moved neither scalar by the bar. The floors show this instrument resolves "
-            "0.0040, so " + reg["uninformative_action"])
+            "A 4x dose (0.25 -> 1.00 of the pool) moved neither scalar by the bar. "
+            + reg["uninformative_action"])
     elif both(pri, "meets_bar"):
         verdict, headline = "PASS", (
             "Phase A is pair-starved at the frozen recipe: doubling the pool from half to all of "
@@ -150,8 +150,19 @@ def main():
                     xs.append(np.log2(counts[f])); ys.append(vals[rid])
         slopes[which] = (float(np.polyfit(xs, ys, 1)[0]) if len(set(xs)) > 1 else None)
 
+    doublings = {w: (bar / sl if sl and sl > 0 else None)
+                 for w, sl in slopes.items()}
     out = {
         "_note": __doc__.strip().splitlines()[0],
+        "what_would_reach_the_bar": {
+            "doublings_of_the_pool_needed": doublings,
+            "multiple_of_the_current_pool": {w: (2 ** d if d else None)
+                                             for w, d in doublings.items()},
+            "_note": "extrapolating the fitted log-linear slope, which the data do not license "
+                     "beyond the measured range -- this is a magnitude, not a forecast. It is "
+                     "here because 'the lever is too small to see' is only actionable alongside "
+                     "how much more pool it would take to see it.",
+        },
         "read_at": f"{PREC} / {MODE}",
         "dense_endpoint": DENSE_ENDPOINT,
         "fused_endpoint": "4-component fused_macro under the frozen operator",

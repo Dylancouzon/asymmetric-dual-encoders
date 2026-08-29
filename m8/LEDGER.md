@@ -1163,6 +1163,52 @@ CORPORA are ordinary public downloads while their query and qrel payloads stay g
 in either direction. It states what changed, why, and that the dependent numbers did not yet
 exist.)*
 
+- **2026-08-29 — B3 RAN. Verdict UNINFORMATIVE, and it is the useful kind**
+  (`results/m8_b3_decision.json`). Twelve arms — nested real-pair fractions {0.25, 0.50, 0.75,
+  1.00} × three seeds, 84,520 / 169,056 / 253,557 / 338,076 pairs actually trained on, with
+  updates, batch, negatives, temperature, learning rate and the Phase-B checkpoint all held so
+  total draws are 1,280,000 everywhere. Read at int8/sqrt.
+
+  | contrast | dense | fused | meets 0.0040? |
+  |---|---|---|---|
+  | manipulation, 1.00 vs 0.25 (a **4× dose**) | +0.00135 | +0.00369 | **no, neither** |
+  | primary, 1.00 vs 0.50 | +0.00112 | +0.00201 | no |
+  | descriptive, 1.00 vs 0.75 | **−0.00107** | +0.00076 | no |
+
+  The manipulation check fails, so the registered verdict is UNINFORMATIVE — and the registration
+  already said what that means: since the floors show this instrument resolves 0.0040, **a 4× dose
+  that moves neither scalar that far is the strongest no-starvation evidence this probe can
+  produce.** Phase-A-side pair-count levers are deprioritised on the narrowed scope.
+
+  **What it would take, which is the number that makes this actionable.** The fitted slope is
+  **+0.00097 dense / +0.00186 fused per DOUBLING** of distinct pairs. Reaching the bar therefore
+  needs ~4.1 doublings on dense — **~17.6× the pool, about 5.9M pairs** — and ~2.2 doublings on
+  fused (~4.4×, ~1.5M). No pair-count lever available to M8 reaches that: the clean-stack-tax arm's
+  entire MS MARCO addition was 490K pairs, under 1.5× the pool. *(Extrapolating a log-linear fit
+  past the measured range is a magnitude, not a forecast, and it is labelled as such in the
+  artifact.)*
+
+  **The redesign paid for itself in the data.** The original primary was 1.00 vs 0.75, and the
+  review's objection — that at fixed draws the fractions are epochs, so the last quarter is the
+  least-powered segment of a concave curve — is visible in the result: that contrast came out
+  **negative on dense (−0.00107, all three seeds agreeing in sign)**. Had the primary not been
+  moved to 1.00 vs 0.50 before the arms ran, B3 would have returned a negative point estimate on
+  its own primary endpoint and had to call it a FAIL.
+
+  **Two biases stated with the number, both registered in advance.** The frozen fusion operator
+  (convex0, w = 0.8) was selected on the f = 1.00 recipe, which biases the FUSED scalar toward the
+  comparator — and consistently, every fused gain here exceeds its dense counterpart, the fused
+  4× dose landing at 0.00369 against a 0.0040 bar. And the "last half" is a single fixed
+  permutation, so the contrast estimates the effect of *those* pairs; the three seeds cover
+  training noise only. A second pool seed was not added after seeing a near-bar number, which the
+  registration explicitly forbade.
+
+  **Scope, unchanged from the registration and worth repeating because it is easy to over-read**:
+  `p35b-2m` ran 16,000 objective-B steps over the full pair query set, so every arm — 0.25 included
+  — began from a table that had already seen all ~338K training queries and their teacher vectors.
+  This measures the marginal value of distinct pairs IN PHASE A GIVEN B absorbed them. It says
+  nothing about B-side pair levers, which flow through the leg held fixed here.
+
 - **2026-08-29 — the B-LEG noise floor is measured** (`results/m8_noise_floor_bleg.json`; §4.4's
   gap list closes on this item). §4.7's floor holds the Phase-B checkpoint FIXED and varies only
   the Phase-A seed. That is the shape of most probe arms, but **not** of `R-PHASE`, nor of any pool

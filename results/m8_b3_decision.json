@@ -1,0 +1,231 @@
+{
+  "_note": "B3's bar, executed (registry probe `B3`, LEDGER \u00a79).",
+  "what_would_reach_the_bar": {
+    "doublings_of_the_pool_needed": {
+      "dense": 4.136262138800669,
+      "fused": 2.1520262586163112
+    },
+    "multiple_of_the_current_pool": {
+      "dense": 17.58486237400828,
+      "fused": 4.444515808898041
+    },
+    "_note": "extrapolating the fitted log-linear slope, which the data do not license beyond the measured range -- this is a magnitude, not a forecast. It is here because 'the lever is too small to see' is only actionable alongside how much more pool it would take to see it."
+  },
+  "read_at": "int8 / sqrt",
+  "dense_endpoint": "out_of_domain_macro",
+  "fused_endpoint": "4-component fused_macro under the frozen operator",
+  "bar": 0.004,
+  "pair_counts_by_fraction": {
+    "0.25": 84520,
+    "0.5": 169056,
+    "0.75": 253557,
+    "1.0": 338076
+  },
+  "arm_scalars": {
+    "dense": {
+      "m8b3-p025-s0": 0.3678337651577014,
+      "m8b3-p025-s1": 0.36513878520209164,
+      "m8b3-p025-s2": 0.36814421674364833,
+      "m8b3-p050-s0": 0.36807142449837826,
+      "m8b3-p050-s1": 0.36583458522100387,
+      "m8b3-p050-s2": 0.36788962094722033,
+      "m8b3-p075-s0": 0.36917026295125155,
+      "m8b3-p075-s1": 0.3690671786688192,
+      "m8b3-p075-s2": 0.37014673862324643,
+      "m8nf-seed0": 0.3673137076993903,
+      "m8nf-seed1": 0.3689317775778802,
+      "m8nf-seed2": 0.3689215477764879
+    },
+    "fused": {
+      "m8b3-p025-s0": 0.5695705676951268,
+      "m8b3-p025-s1": 0.5688441821173676,
+      "m8b3-p025-s2": 0.5695018025176274,
+      "m8b3-p050-s0": 0.5713851593707959,
+      "m8b3-p050-s1": 0.5710017925268851,
+      "m8b3-p050-s2": 0.5705728172131228,
+      "m8b3-p075-s0": 0.5719855624468256,
+      "m8b3-p075-s1": 0.5723248042247658,
+      "m8b3-p075-s2": 0.5724115896387639,
+      "m8nf-seed0": 0.5726575160148225,
+      "m8nf-seed1": 0.5733202147176691,
+      "m8nf-seed2": 0.5730163430749688
+    }
+  },
+  "contrasts": {
+    "manipulation_1.00_vs_0.25": {
+      "dense": {
+        "mean_gain": 0.0013500886501056815,
+        "per_seed_gain": {
+          "0": -0.000520057458311074,
+          "1": 0.003792992375788562,
+          "2": 0.0007773310328395566
+        },
+        "seed_signs_agree": false,
+        "meets_bar": false,
+        "at_or_below_negative_bar": false
+      },
+      "fused": {
+        "mean_gain": 0.0036925071591128824,
+        "per_seed_gain": {
+          "0": 0.0030869483196956926,
+          "1": 0.004476032600301494,
+          "2": 0.003514540557341461
+        },
+        "seed_signs_agree": true,
+        "meets_bar": false,
+        "at_or_below_negative_bar": false
+      }
+    },
+    "primary_1.00_vs_0.50": {
+      "dense": {
+        "mean_gain": 0.0011238007957186473,
+        "per_seed_gain": {
+          "0": -0.0007577167989879507,
+          "1": 0.0030971923568763327,
+          "2": 0.0010319268292675599
+        },
+        "seed_signs_agree": false,
+        "meets_bar": false,
+        "at_or_below_negative_bar": false
+      },
+      "fused": {
+        "mean_gain": 0.0020114348988855557,
+        "per_seed_gain": {
+          "0": 0.0012723566440265843,
+          "1": 0.002318422190784042,
+          "2": 0.002443525861846041
+        },
+        "seed_signs_agree": true,
+        "meets_bar": false,
+        "at_or_below_negative_bar": false
+      }
+    },
+    "descriptive_1.00_vs_0.75": {
+      "dense": {
+        "mean_gain": -0.0010723823965195962,
+        "per_seed_gain": {
+          "0": -0.001856555251861236,
+          "1": -0.00013540109093901354,
+          "2": -0.0012251908467585393
+        },
+        "seed_signs_agree": true,
+        "meets_bar": false,
+        "at_or_below_negative_bar": false
+      },
+      "fused": {
+        "mean_gain": 0.0007573724990350325,
+        "per_seed_gain": {
+          "0": 0.0006719535679968747,
+          "1": 0.0009954104929033036,
+          "2": 0.000604753436204919
+        },
+        "seed_signs_agree": true,
+        "meets_bar": false,
+        "at_or_below_negative_bar": false
+      }
+    }
+  },
+  "verdict": "UNINFORMATIVE",
+  "headline": "A 4x dose (0.25 -> 1.00 of the pool) moved neither scalar by the bar. UNINFORMATIVE is not a null result and not a pass. Given the floors already show the instrument resolves 0.0040, a 4x dose that moves neither scalar that far is itself the strongest no-starvation evidence this probe can produce -- it is recorded as such, and the pair-count levers are deprioritised on the same narrowed scope as `no_survivor`.",
+  "descriptive": {
+    "slope_per_doubling_of_pairs": {
+      "dense": 0.0009670566965467573,
+      "fused": 0.0018587133795346347
+    },
+    "_slope_note": "gain in the scalar per doubling of distinct pairs at FIXED compute; descriptive, gates nothing.",
+    "group_vector_median": {
+      "m8b3-p025-s0": 0.6994219068449146,
+      "m8b3-p025-s1": 0.6988486815600499,
+      "m8b3-p025-s2": 0.6997258563894663,
+      "m8b3-p050-s0": 0.7048491856139714,
+      "m8b3-p050-s1": 0.7037846954937276,
+      "m8b3-p050-s2": 0.7042146128791551,
+      "m8b3-p075-s0": 0.7065176378729994,
+      "m8b3-p075-s1": 0.7058506538415511,
+      "m8b3-p075-s2": 0.7075073708763608,
+      "m8nf-seed0": 0.7067876931504877,
+      "m8nf-seed1": 0.7079969499781742,
+      "m8nf-seed2": 0.7061001483233137
+    },
+    "seed_sign_agreement": {
+      "manipulation_1.00_vs_0.25": {
+        "dense": false,
+        "fused": true
+      },
+      "primary_1.00_vs_0.50": {
+        "dense": false,
+        "fused": true
+      },
+      "descriptive_1.00_vs_0.75": {
+        "dense": true,
+        "fused": true
+      }
+    },
+    "_sign_note": "reported, never a gate: at n=2 it was nearly vacuous evidence and cost real power, so the registration dropped it as a requirement."
+  },
+  "known_biases": [
+    "The frozen fusion operator (convex0, w=0.8) was SELECTED on p35w-2m-s2500, i.e. on the f=1.00 recipe. Arms with a weaker dense side are read under a weight optimal for the comparator, which biases the FUSED scalar TOWARD passing. The dense scalar carries no such bias and both must pass.",
+    "One permutation. The 'last half' is a single fixed draw, so the contrast estimates the effect of THOSE pairs; the three seeds cover training noise only. A second pool seed must NOT be added after seeing a near-bar number."
+  ],
+  "scope": "Phase-A-side pair-count levers at the FROZEN Phase-B checkpoint are deprioritised. Deliberately narrower than the first version, which deprioritised ICT, doc2query and more-real-pairs outright: `p35b-2m` ran 16,000 objective-B steps over the full pair query set, so EVERY arm -- 0.25 included -- inherits a table that has already seen all ~338K training queries and their teacher vectors. This probe therefore measures the marginal value of distinct pairs IN PHASE A GIVEN B absorbed them. A B-side pair lever flows through a leg this design holds fixed and needs its own evidence.",
+  "_registration": {
+    "probe": "B3",
+    "row": {
+      "wave": 1,
+      "title": "real-pair pool scaling at fixed compute (is Phase A pair-starved?)",
+      "question": "H1 (UNCHANGED): is Phase A pair-starved -- would more unique training pairs improve out-of-domain retrieval?",
+      "lever": "nested random subsets of the Phase-A pair pool at fractions {0.25, 0.50, 0.75, 1.00}. NESTED (0.25 subset of 0.50 subset of 0.75 subset of full) so no between-arm sampling noise enters the contrast.",
+      "held_fixed": "2,500 updates, batch 512, n_neg 32,768, LR, temperature, negative construction, AND the same Phase-B checkpoint p35b-2m. Total draws are therefore identical at 1,280,000 in every arm: compute is fixed and ONLY the unique-pair count varies, i.e. the treatment is diversity-versus-repetition at fixed budget.",
+      "endpoint": "TWO scalars, both pinned exactly, both read at int8 / sqrt (the release format and R0's adopted pooling rule). DENSE = the out-of-domain macro (equal-weight mean of nDCG@10 over cqadup-programmers and cqadup-physics). FUSED = the 4-component `fused_macro` over nq-250k, hotpotqa, cqadup-programmers and cqadup-physics under the FROZEN fusion operator. The group-vector median over three dev groups is reported DESCRIPTIVELY and binds nothing.",
+      "comparator": "fraction 1.00 (= R0, the frozen recipe)",
+      "bar": "Evaluated in this order, on the two pinned scalars above. (1) MANIPULATION CHECK: the 1.00-vs-0.25 gain must reach >= 0.0040 on BOTH scalars. If it does not, the lever moved nothing this instrument resolves and the probe reports UNINFORMATIVE. (2) PRIMARY CONTRAST: 1.00 vs 0.50 -- mean-over-seeds gain >= 0.0040 on BOTH scalars -> PASS, 'Phase A is pair-starved at the frozen recipe'. (3) If the primary fails but the manipulation check passed -> FAIL, worded ONLY as stated in `fail_wording`. (4) NEGATIVE-DOSE, checked before (1) and defined as the mirror of the bar so it needs no separate machinery: if the 1.00-vs-0.25 mean gain is <= -0.0040 on BOTH scalars, more distinct pairs made the table WORSE at fixed compute. That is a finding about pool quality in its own right and is reported as such, never folded into FAIL or UNINFORMATIVE.",
+      "multiplicity": "none. The manipulation check is a hierarchical gate, the two scalars are an intersection-union (requiring BOTH is conservative, not double jeopardy), and the bar sits about 4 sigma above the measured dense floor and about 6 above the fused one. The conjunction only lowers type-I.",
+      "seeds": "THREE per fraction, paired: every arm inits from the same Phase-B checkpoint p35b-2m and differs only in the Phase-A seed. Fraction 1.00 is already on disk as `m8nf-seed0`, `m8nf-seed1`, `m8nf-seed2` -- verified config-identical to the f=1.00 arm (n_train_pairs 338,076; only the seed differs) -- so they ARE the 1.00 arms and are not retrained. Three rather than two because sign agreement at n=2 is nearly vacuous (P = 0.25 under the null against a bar at roughly 4 sigma) while costing real power near the bar.",
+      "no_survivor": "Phase-A-side pair-count levers at the FROZEN Phase-B checkpoint are deprioritised. Deliberately narrower than the first version, which deprioritised ICT, doc2query and more-real-pairs outright: `p35b-2m` ran 16,000 objective-B steps over the full pair query set, so EVERY arm -- 0.25 included -- inherits a table that has already seen all ~338K training queries and their teacher vectors. This probe therefore measures the marginal value of distinct pairs IN PHASE A GIVEN B absorbed them. A B-side pair lever flows through a leg this design holds fixed and needs its own evidence.",
+      "prior": "M7's clean-stack-tax arm added 490,241 real pairs for +0.0058 [-0.0015, +0.0131], unresolved -- but it held A-steps fixed, so exposure per pair fell as pairs were added and the two effects were confounded. This design separates them by holding total draws fixed and varying only the unique-pair count.",
+      "noise_floor_exempt": false,
+      "bar_frozen": {
+        "date": "2026-08-29",
+        "dense_floor": 0.0018968016548605027,
+        "fused_floor": 0.000663,
+        "bar": 0.004,
+        "read_at": "int8 / sqrt -- the release format and R0's adopted pooling rule"
+      },
+      "implementation_constraint": "G3 forbids editing m7src, and no pair-fraction knob exists in m7src/train.py's Cfg. The fraction must therefore be applied by an m8src-side wrapper over train.kept_pairs -- which means the treatment does NOT appear in the run's cfg or meta.json. The fraction MUST therefore be encoded in the run id AND written to a stamped sidecar; see CODEMAP 16 for why an unrecorded treatment is the dangerous case.",
+      "supersedes": "the ICT-fraction registration of 2026-08-29, retired the same day before any arm ran (see B3-ICT and LEDGER 15).",
+      "pool_size": {
+        "kept_pairs": 340850,
+        "realised_at_fraction_1.00": 338076,
+        "note": "THREE different counts exist in this project and they are not interchangeable. `train.kept_pairs()` returns 340,850 decontaminated TRAIN pairs -- that is the list the fraction is applied to. `build_arrays` then drops pairs whose positives are banned or unresolvable, leaving the 338,076 the run records as `n_train_pairs`. Neither is the 337,981 of `results/m8_fitlist.json`, which is the CLOSED-FORM TABLE's fit list and has nothing to do with Phase A. The first version of this registration cited 337,981; corrected 2026-08-29 before any arm ran.",
+        "source_shares_at_1.00": {
+          "hotpotqa-train": 0.2399,
+          "fever-train": 0.2867,
+          "squad-train": 0.2492,
+          "esci-us": 0.2145,
+          "mrtydi-en": 0.0097
+        },
+        "source_share_note": "uniform subsetting preserves these shares in expectation and, being a fixed-permutation prefix, up to hypergeometric noise. mrtydi-en is the thin one at 0.97% (3,310 pairs), so the 0.25 arm holds roughly 828 of them -- small, but not a regime where the source disappears."
+      },
+      "endpoint_correction": "The ICT registration said the endpoint included the group-vector median over all three dev groups and that it was 'UNCHANGED, which is why the measured floors still bind'. That was FALSE for the fused half: the two held-out dev components carry pool row indices rather than document text, so no fused read exists for them by construction, and the fused floor of 0.00066 was measured on the 4-component fused_macro -- a different scalar from the one the endpoint text named. The endpoint is now pinned to the quantities the floors actually measured. Corrected 2026-08-29 before any arm was scored.",
+      "primary_contrast_rationale": "The primary was 1.00 vs 0.75 and is now 1.00 vs 0.50. At fixed total draws the fractions are epochs -- 1.00 is 3.8 epochs, 0.75 is 5.1 -- and a learning curve roughly linear in log(pairs) puts only about log(4/3)/log(4) = 21% of the 0.25->1.00 gain in the last quarter. So the 0.75->1.00 segment is the least-powered part of the curve: the design could clear the manipulation check at twice the bar while the primary segment's TRUE effect sat under it, and then declare 'not starved' while the curve was still climbing. 1.00 vs 0.50 is a single pre-specified contrast that carries about half the curve, and 'what does doubling the pool buy' is the actual M8 budget question. The log-slope of endpoint against log(pairs) over all four fractions is reported alongside, DESCRIPTIVELY.",
+      "decision_statistic": "mean over the three seeds of the per-seed gain, on each pinned scalar. Seed sign agreement is REPORTED but is not a gate -- it was a gate in the first version and is dropped: at n=2 it added almost no evidence and removed about 30% of the power near the bar.",
+      "fail_wording": "No rise of at least 0.0040 from half the pool to all of it, at the frozen 2,500-step Phase-A recipe on top of a Phase-B checkpoint that had already distilled on every training query.",
+      "uninformative_action": "UNINFORMATIVE is not a null result and not a pass. Given the floors already show the instrument resolves 0.0040, a 4x dose that moves neither scalar that far is itself the strongest no-starvation evidence this probe can produce -- it is recorded as such, and the pair-count levers are deprioritised on the same narrowed scope as `no_survivor`.",
+      "known_biases": [
+        "The frozen fusion operator (convex0, w=0.8) was SELECTED on p35w-2m-s2500, i.e. on the f=1.00 recipe. Arms with a weaker dense side are read under a weight optimal for the comparator, which biases the FUSED scalar TOWARD passing. The dense scalar carries no such bias and both must pass.",
+        "One permutation. The 'last half' is a single fixed draw, so the contrast estimates the effect of THOSE pairs; the three seeds cover training noise only. A second pool seed must NOT be added after seeing a near-bar number."
+      ],
+      "implemented_by": "m8src/b3_decide.py -- the bar runs as code and writes its own verdict; the registry is read, not restated.",
+      "fail_wording_prohibits": [
+        "Phase A is not pair-starved",
+        "any statement about pair-count levers in general",
+        "any statement about B-side pair levers, which this design holds fixed"
+      ]
+    },
+    "wave": 1,
+    "registry_sha256": "bca516f528ba2cfc03a7c7d34c89fd502c204246cd7d9ff7d603fb626d3dea2d",
+    "ledger_sha256": "f3bbb08cdbee57459e6bc9a48309783f2fb882dec29ee7d652e3aec5eb9997a4",
+    "ledger_commit": "a1b4f308b85b8e19a992eecb4e847bb14569ce8a",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}
