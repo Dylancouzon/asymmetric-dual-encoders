@@ -1344,6 +1344,35 @@ distance is a registered precondition before any closed-form number this solver 
 adopted. (ii) It says nothing about D2's quality — B7's quality half needs a real trained
 tokenizer.
 
+### 18b. B7's registered real-data precondition — DISCHARGED
+
+`results/m8_b7_realdata.json` (`m8src/b7_real.py`). §18 required this before any closed-form number
+the solver produces may be adopted: verify on the REAL system, across the REAL λ grid — which
+reaches 1e-4, where fp32 CG on a real Gram is least comfortable — and accept on **dev macro**, not
+Frobenius distance, because what the solver feeds downstream is a ranking.
+
+| λ | direct | block CG | \|Δ macro\| | relative Frobenius | direct s | CG s |
+|---|---|---|---|---|---|---|
+| 1e-4 | 0.340701 | 0.340701 | **0.0e+00** | — | 84 | 205 (657 its) |
+| 1e-3 | 0.343049 | 0.343049 | **0.0e+00** | — | 80 | 88 (282 its) |
+| **1e-2** | **0.343924** | **0.343924** | **0.0e+00** | — | 75 | 48 (150 its) |
+| 1e-1 | 0.324783 | 0.324783 | **0.0e+00** | — | 78 | 30 (96 its) |
+
+**Identical dev macro at every λ**, including the worst-conditioned one. The λ argmax is 1e-2 and
+**interior**, and its value 0.343924 reproduces the 0.3439 M7's own learnability report recorded
+for stella — so the CG frame reproduces M7's adopted teacher criterion, not merely its own
+internal consistency.
+
+**An honest timing note that the headline could hide:** at the 30,522-row control vocabulary the
+DIRECT solve is faster at small λ (84 s against 205 s at 1e-4) and only loses as conditioning
+improves. Block CG is not a speed win here. Its entire value is that it **exists** above 50,368
+rows, where the direct solve's Gram does not fit in this box at all.
+
+**Fit-list disclosure**: this ran on M7's stale `work/trainq_texts.json` (4,582 R1 hits, 1.31%),
+so the ABSOLUTE macros above are inflated and may not be quoted as clean. Both solvers saw the
+identical X, Y and W0, so their AGREEMENT — which is all this measures — is invariant to that.
+A regenerated list (`m8src/fitlist.py`) is required before any teacher-screen number is adopted.
+
 **What it unblocks:** D2 is computable, and so is **T1** (§10), which was blocked because every
 challenger's vocabulary is ≥ 50,368 (§15, 2026-08-29).
 
