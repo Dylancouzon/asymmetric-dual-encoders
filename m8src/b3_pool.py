@@ -7,12 +7,19 @@ existed -- established that it could not answer the question (LEDGER §15, regis
 fixed compute measures whether spending Phase-A budget on ICT helps, not whether Phase A is short
 of pairs. So the lever is now the real pair pool itself.
 
-THE DESIGN. Four nested subsets of the 337,981 decontaminated real pairs -- {0.25, 0.50, 0.75,
-1.00} -- with updates (2,500), batch (512), negatives (32,768), temperature, learning rate and the
-Phase-B checkpoint ALL held. Total draws are therefore 1,280,000 in every arm. Compute is fixed;
+THE DESIGN. Four nested subsets of the Phase-A pair pool -- {0.25, 0.50, 0.75, 1.00} of the
+340,850 pairs `train.kept_pairs()` returns, realising the 338,076 a run records once banned
+positives drop -- at THREE seeds each, with updates (2,500), batch (512), negatives (32,768),
+temperature, learning rate and the Phase-B checkpoint ALL held. Total draws are therefore 1,280,000 in every arm. Compute is fixed;
 the only thing that varies is how many DISTINCT pairs those draws are spread over, which is
 diversity against repetition at constant budget. That is the honest form of "pair-starved": if
 quality is still climbing where the real pool runs out, more pairs would buy something.
+
+WHAT A NULL DOES NOT LICENSE. `p35b-2m` ran 16,000 objective-B steps over the full pair query set,
+so every arm -- 0.25 included -- starts from a table that has already seen all ~338K training
+queries and their teacher vectors. This probe measures the marginal value of distinct pairs IN
+PHASE A GIVEN B absorbed them. A B-side pair lever flows through the leg held fixed here, so it is
+not covered by this result; the registry's `no_survivor` is scoped accordingly.
 
 NESTING IS THE POINT. The subsets are prefixes of ONE fixed permutation, drawn from a pool seed
 that is deliberately INDEPENDENT of the training seed. So 0.25 is a subset of 0.50 is a subset of
@@ -43,11 +50,18 @@ OUT = RESULTS / "m8_b3_pool.json"
 B_CHECKPOINT = "p35b-2m"          # the ONE Phase-B checkpoint every arm inits from
 A_BASE_RUN = "p35w-2m-s2500"      # the frozen Phase-A recipe every arm inherits
 FRACTIONS = (0.25, 0.50, 0.75, 1.00)
-SEEDS = (0, 1)
+SEEDS = (0, 1, 2)
+# Fraction 1.00 is a no-op patch, so the A-leg noise-floor arms ARE the 1.00 arms: same Phase-B
+# checkpoint, same frozen Phase-A recipe, full pool (n_train_pairs 338,076), differing only in
+# seed. Verified config-identical before being adopted. Retraining them would burn ~20 minutes to
+# reproduce three artifacts that already exist.
+EXISTING_AT_1_00 = {0: "m8nf-seed0", 1: "m8nf-seed1", 2: "m8nf-seed2"}
 POOL_SEED = 20260829              # fixes the nesting; independent of the training seed BY DESIGN
 
 
 def arm_id(frac, seed):
+    if frac >= 1.0 and seed in EXISTING_AT_1_00:
+        return EXISTING_AT_1_00[seed]
     return f"m8b3-p{int(round(frac * 100)):03d}-s{seed}"
 
 
@@ -73,7 +87,10 @@ def _subprocess_code(rid, over, frac, sidecar):
     return (
         "import os, sys, json\n"
         "os.environ.setdefault('M7_ENCODER', 'stella-400M-v5')\n"
-        "sys.path.insert(0, %r); sys.path.insert(0, %r)\n"
+        "sys.path.insert(0, %r); sys.path.insert(0, %r); sys.path.insert(0, %r)\n"
+        # m8base installs the G2 protected-path guard. Without it the process that does the actual
+        # training -- the one that touches data -- runs unguarded.
+        "import m8base\n"
         "import numpy as np, program, sweep, train\n"
         "FRAC = %r; POOL_SEED = %r\n"
         "_orig = train.kept_pairs\n"
@@ -96,10 +113,13 @@ def _subprocess_code(rid, over, frac, sidecar):
         "    print('POOL PATCH NEVER FIRED', flush=True); sys.exit(3)\n"
         "json.dump({'run_id': %r, 'pair_fraction': FRAC, 'pool_seed': POOL_SEED,\n"
         "           'pairs_full': _seen.get('full'), 'pairs_kept': _seen.get('kept'),\n"
-        "           'dev_macro': (d or {}).get('dev_macro')}, open(%r, 'w'), indent=1)\n"
+        # `sweep.one` returns the dev proxy as a FLOAT, not a dict -- the first version called
+        # .get() on it and every arm died after training, at the very last line.
+        "           'dev_proxy': (d if isinstance(d, (int, float)) else None)},\n"
+        "          open(%r, 'w'), indent=1)\n"
         "print('DEVPROXY', %r, d, flush=True)\n"
         "sys.exit(0 if d is not None else 2)\n"
-        % (str(REPO / "m7src"), str(REPO / "bench"), frac, POOL_SEED,
+        % (str(REPO / "m7src"), str(REPO / "bench"), str(REPO / "m8src"), frac, POOL_SEED,
            rid, over, rid, str(sidecar), rid))
 
 
@@ -137,22 +157,59 @@ def train(rids=None, smoke=False):
 
 
 def collect():
-    """Gather the sidecars and check the nesting actually held, before anything is scored."""
+    """Gather the sidecars and verify the arms are a dose curve, BEFORE anything is scored.
+
+    The first version claimed to "check the nesting" and did not: a missing sidecar was silently
+    dropped, `pairs_full` was never compared across arms, and `pool_seed` was written but never
+    read. All three matter. The dangerous window is a child killed between `save_table` and the
+    sidecar write -- that leaves the .npz on disk, so `_exists` reads True forever, with no record
+    that any fraction was applied.
+    """
     sc_dir = WORK / "b3_sidecars"
-    rows = {}
+    rows, problems = {}, []
     for f in FRACTIONS:
-        for s in SEEDS:
-            rid = arm_id(f, s)
+        for s_ in SEEDS:
+            rid = arm_id(f, s_)
             p = sc_dir / f"{rid}.json"
-            rows[rid] = json.loads(p.read_text()) if p.exists() else None
+            if p.exists():
+                rows[rid] = json.loads(p.read_text())
+            elif f >= 1.0:
+                # the adopted floor arms predate this probe and have no sidecar; synthesize one
+                # from the run's own record, which carries the pair count that matters.
+                rp = WORK / "runs" / f"{rid}.json"
+                if rp.exists():
+                    n = json.loads(rp.read_text()).get("n_train_pairs")
+                    rows[rid] = {"run_id": rid, "pair_fraction": 1.0, "pool_seed": POOL_SEED,
+                                 "pairs_full": None, "pairs_kept": n, "adopted": True}
+                else:
+                    rows[rid] = None
+            else:
+                rows[rid] = None
+            if rows[rid] is None:
+                problems.append(f"{rid}: NO sidecar and no adoptable run record -- its fraction is "
+                                f"unrecorded, so it cannot enter the curve")
+
     got = {r: v for r, v in rows.items() if v}
-    # the manipulation the design rests on: pair counts must be MONOTONE in the fraction and
-    # IDENTICAL across seeds at the same fraction. If they are not, the arms are not a dose curve.
+    fulls = {v["pairs_full"] for v in got.values() if v.get("pairs_full") is not None}
+    if len(fulls) > 1:
+        problems.append(f"arms disagree on the FULL pool size {sorted(fulls)}: the permutation is "
+                        f"taken over that length, so a change breaks nesting while leaving the "
+                        f"per-arm counts looking monotone")
+    for rid, v in got.items():
+        if v.get("pool_seed") != POOL_SEED:
+            problems.append(f"{rid}: pool_seed {v.get('pool_seed')} != {POOL_SEED}")
+        full = v.get("pairs_full")
+        if full is not None and not v.get("adopted"):
+            want = full if v["pair_fraction"] >= 1.0 else int(round(v["pair_fraction"] * full))
+            if v.get("pairs_kept") != want:
+                problems.append(f"{rid}: kept {v.get('pairs_kept')} but frac {v['pair_fraction']} "
+                                f"of {full} is {want}")
+
     by_frac = {}
     for rid, v in got.items():
         by_frac.setdefault(v["pair_fraction"], set()).add(v["pairs_kept"])
-    problems = [f"fraction {f}: seeds disagree on pair count {sorted(c)}"
-                for f, c in by_frac.items() if len(c) > 1]
+    problems += [f"fraction {f}: seeds disagree on pair count {sorted(c)}"
+                 for f, c in by_frac.items() if len(c) > 1]
     counts = [(f, sorted(c)[0]) for f, c in sorted(by_frac.items())]
     if any(b <= a for (_, a), (_, b) in zip(counts, counts[1:])):
         problems.append(f"pair counts are not increasing in the fraction: {counts}")
