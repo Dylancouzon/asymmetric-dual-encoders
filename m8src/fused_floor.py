@@ -61,6 +61,11 @@ def main():
                     help="artifact filename under results/ (default: the A-leg fused floor). The "
                          "B-leg floor MUST use its own name -- overwriting the A-leg artifact "
                          "would redefine a floor that frozen bars already cite.")
+    ap.add_argument("--modes", nargs="*", default=["mean", "sqrt"],
+                    help="pool modes to load. A probe that reads only its release pooling can pass "
+                         "just that one and halve the variants scored.")
+    ap.add_argument("--precisions", nargs="*", default=["fp16", "int8"],
+                    help="precisions to keep. Same reason.")
     ap.add_argument("--per-query-out", default=None,
                     help="also write the per-query fused scores to this .json.gz")
     ap.add_argument("--components", nargs="*", default=list(COMPONENTS))
@@ -80,13 +85,14 @@ def main():
     # Load every arm's table ONCE. Small (31 MB int8 each); the corpora are the expensive side.
     loaded = {}
     for rid in a.arms:
-        for mode in ("mean", "sqrt"):
+        for mode in a.modes:
             # compare_full.load takes the BARE run id plus an optional pool-mode override; the
             # "rid:mode" form is its COMMAND-LINE spelling, split before it ever reaches load().
             rel, pre, models = compare_full.load(rid, mode if mode != "mean" else None,
                                                 device=device)
             for prec, m in models.items():
-                loaded[f"{rid}:{mode}|{prec}"] = (m, pre)
+                if prec in a.precisions:
+                    loaded[f"{rid}:{mode}|{prec}"] = (m, pre)
     print(f"{len(loaded)} arm variants loaded", flush=True)
 
     per_query = {k: {} for k in loaded}
@@ -124,7 +130,7 @@ def main():
         raise SystemExit(f"--seed-arms names {missing}, which --arms did not load")
     floor, bars, rows = {}, {}, {}
     for prec in ("fp16", "int8"):
-        for mode in ("mean", "sqrt"):
+        for mode in a.modes:
             sel = {r: macro(per_query[f"{r}:{mode}|{prec}"]) for r in null_arms
                    if f"{r}:{mode}|{prec}" in per_query}
             if null_arms and len(sel) not in (0, len(null_arms)):
