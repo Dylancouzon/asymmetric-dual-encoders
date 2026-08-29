@@ -101,7 +101,12 @@ def _preamble():
             % (str(REPO / "m7src"), str(REPO / "bench"), str(REPO / "m8src")))
 
 
-def dense_code(rid):
+def dense_code(rid, smoke=False):
+    # `compare_full`'s own --smoke truncates every corpus to 200K documents and writes to a
+    # `_smoke`-suffixed tag, so it exercises the whole patched path -- head loading, the sha bind,
+    # the proxy, multieval's identity check across the two pool-sharing components -- in a couple
+    # of minutes instead of the full pass. This path has NO execution history, which is exactly
+    # where the standing discipline says to smoke first.
     return (
         _preamble() + _head_loader(rid) +
         "import dev_eval\n"
@@ -110,25 +115,25 @@ def dense_code(rid):
         # baseline is the arm itself and there are no candidates: this pass exists to produce the
         # arm's per-query rows, not a comparison. Every comparison is made after the merge, across
         # arms, by the decision code.
-        "compare_full.main(%r, %r, [])\n"
+        "compare_full.main(%r, %r, [], smoke=%r)\n"
         "print('DENSE OK', %r, flush=True)\n"
-        % (f"{MERGED_TAG}-{rid}", f"{rid}:{MODE}", rid))
+        % (f"{MERGED_TAG}-{rid}", f"{rid}:{MODE}", bool(smoke), rid))
 
 
-def fused_code(rid):
+def fused_code(rid, smoke=False):
     return (
         _preamble() + _head_loader(rid) +
         "import dev_eval\n"
         "dev_eval.doc_vecs = e14_patch.patch_doc_vecs(head)\n"
         "import fused_floor\n"
         "sys.argv = ['fused_floor.py', '--arms', %r, '--seed-arms', %r, '--modes', %r,\n"
-        "            '--precisions', %r, '--out', %r]\n"
+        "            '--precisions', %r, '--out', %r] + (['--smoke'] if %r else [])\n"
         "fused_floor.main()\n"
         "print('FUSED OK', %r, flush=True)\n"
-        % (rid, rid, MODE, PREC, f"m8e14_fused_{rid}.json", rid))
+        % (rid, rid, MODE, PREC, f"m8e14_fused_{rid}.json", bool(smoke), rid))
 
 
-def mechanism_code(rid):
+def mechanism_code(rid, smoke=False):
     """{raw, headed} documents x {bag, teacher} queries, on the DENSE endpoint's components."""
     return (
         _preamble() + _head_loader(rid) +
@@ -158,10 +163,10 @@ def mechanism_code(rid):
            str(RESULTS / f"m8e14_mechanism_{rid}.json"), rid))
 
 
-def run(kind, arms, dry=False):
+def run(kind, arms, dry=False, smoke=False):
     maker = {"dense": dense_code, "fused": fused_code, "mechanism": mechanism_code}[kind]
     for rid in arms:
-        code = maker(rid)
+        code = maker(rid, smoke=smoke) if kind != "mechanism" else maker(rid)
         if dry:
             print(f"----- {kind} {rid} -----\n{code}")
             continue
@@ -231,6 +236,10 @@ def main():
     ap.add_argument("stage", choices=["dense", "fused", "mechanism", "merge", "fused-merge"])
     ap.add_argument("--arms", nargs="*", default=None)
     ap.add_argument("--dry", action="store_true")
+    ap.add_argument("--smoke", action="store_true",
+                    help="truncate every corpus (compare_full/fused_floor --smoke). Exercises the "
+                         "whole patched path in minutes; every number it produces is MEANINGLESS "
+                         "and lands under a _smoke tag, so it cannot be mistaken for a result.")
     a = ap.parse_args()
     # `--arms` IS NOT A WAY ROUND THE ALLOWLIST. Making the DEFAULT discovery enumerate the
     # reported arms fixed the accident; it left the deliberate route open, and an operator could
@@ -251,7 +260,7 @@ def main():
     elif a.stage == "fused-merge":
         fused_merge(arms)
     else:
-        run(a.stage, arms, dry=a.dry)
+        run(a.stage, arms, dry=a.dry, smoke=a.smoke)
     return 0
 
 
