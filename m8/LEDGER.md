@@ -1770,6 +1770,34 @@ exist.)*
   **No reported arm had run when this was written.** Review at
   `research/m8-planning/codex-e14-impl-review-2026-08-29.md`.
 
+- **2026-08-29 — OPEN ITEM WITH A TRIGGER: does a fine-tuned encoder propagate to M9?** Raised by
+  Dylan while `E14-HEAD` was training. `instructions-m9.md` says M9's teacher is "the frozen teacher
+  the shipping table line uses ... M8 inherits it unless its own ledger records a swap, in which
+  case M9 follows M8", and that "docs are indexed with the teacher; the student is distilled into
+  its query space". That rule was written about a **swap** — a different off-the-shelf model, as T1
+  tested — so whether a LoRA-modified stella counts is ambiguous **by the letter and unambiguous by
+  the mechanism**: M9's student is distilled to imitate the teacher's QUERY space and searches an
+  index built by the teacher, so a student distilled against stock stella would be searching a space
+  it was not trained for. If `E14-LORA` ships, M9 must follow it.
+  **Why that is the desirable outcome:** one document index with two query paths at different
+  compute budgets — the near-zero-compute table, and M9's small distilled tower — which only works
+  if both target the same document space. Two towers means two indexes and defeats the point.
+  **THE RISK, WHICH IS REAL AND MUST NOT BE LEFT IMPLICIT:** `E14-LORA` would fine-tune the encoder
+  to be reachable by a BAG of averaged token vectors. M9's student is a genuine transformer.
+  Re-shaping the document space toward a degenerate query geometry could tax the stronger query
+  path — M9 would inherit an encoder optimised for the system it is meant to beat.
+  **`E14-HEAD`'s mechanism control already bears on this**, having been registered for a different
+  reason: its `{teacher queries} x {raw, headed}` leg asks whether a real neural query encoder still
+  works against re-shaped documents, and M9's student is distilled to imitate exactly those teacher
+  queries. A NEGATIVE teacher-query leg is early warning that this direction taxes M9, at no extra
+  cost. **Read that leg with M9 in mind, not only E14.**
+  **TRIGGER:** settle whether a fine-tuned stella counts as "a swap" for M9's inheritance rule
+  **before M9 starts** and before any `E14-LORA` release decision — not afterwards. Note the
+  question may be moot: `E14-LORA` is registered-and-refused pending a fresh ruling, and the
+  derived-weights licence question on stella is unresolved; if that goes against us there is no
+  modified encoder to inherit and M9 uses stock stella regardless.
+
+
 
 ---
 

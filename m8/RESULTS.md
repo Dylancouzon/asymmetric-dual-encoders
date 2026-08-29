@@ -99,3 +99,28 @@ arms. Per-run detail is in `results/m7_run_m8nf-*.json`.
 | m8e14-lad-mlp-lr3e4 | `work/runs/m8e14-lad-mlp-lr3e4.json` | -0.2427 | ok |
 | m8e14-lad-mlp-lr1e3 | `work/runs/m8e14-lad-mlp-lr1e3.json` | -0.2386 | ok |
 | m8e14-lad-mlp-lr3e3 | `work/runs/m8e14-lad-mlp-lr3e3.json` | -0.2498 | ok |
+
+## E14-HEAD step-adequacy (2026-08-29) — the gate fired on the PRIMARY
+
+Two budgets per head at the pre-registered lr 1e-3, tuning seed 3, each fully annealed under its
+own schedule; read on the repaired training-holdout statistic only (LEDGER §15).
+
+| head | holdout @1250 | @2500 | @5000 | within-2500 | from doubling | ratio | verdict |
+|---|---|---|---|---|---|---|---|
+| **lin** (primary) | −0.14024 | −0.12607 | −0.12112 | 0.01417 | 0.00495 | **0.350** | **OPTIMIZATION-INADEQUATE** |
+| mlp (control) | −0.14307 | −0.12328 | −0.11892 | 0.01979 | 0.00436 | 0.220 | ADEQUATE |
+
+**Consequence, as pre-registered:** a null on LIN's endpoints reports UNINFORMATIVE, not a method
+null. A positive is unaffected — the gate can never overturn an arm that reached the bar.
+
+**Two honest qualifications, neither of which reinterprets the rule after the fact.** (1) Both
+heads gain a SIMILAR ABSOLUTE amount from doubling (0.00495 vs 0.00436); LIN fails on the
+denominator — it improved less over 1250→2500 — not because more steps help it more. (2) The gate
+is ONE arm per budget with no replication and the holdout statistic has no measured floor, so
+0.350 against 0.220 across a 0.25 line is not a resolved difference. The rule was applied exactly
+as written; these are disclosures, not grounds for re-reading it.
+
+**What would change it:** a reported arm set at 5,000 steps, with R0N re-run at 5,000 as its paired
+comparator — the noise floor and the frozen recipe are both at 2,500, so the budget cannot be
+changed for one arm alone. That is ~9 further training arms and ~9 further scoring passes, and it
+is a spend decision, not a free follow-up.
