@@ -1256,6 +1256,25 @@ exist.)*
   public-domain read sound; rule the NC tag does not reach held-out EVALUATION data, which is a
   narrower question than the MS MARCO training precedent settled; or drop patents.
 
+- **2026-08-29 — PATENT QUESTION CLOSED by Dylan: "patents do not have to stay available as a clean
+  held-out for M9."** The option the entry above costed as "or drop patents" is the one taken. This
+  resolves the whole branch rather than answering it: HUPD's CC-BY-NC-SA tag, the 37 CFR 1.71
+  public-domain counter-argument, and the PatentsView-key alternative all become moot, because we
+  are not preserving patents as an evaluation domain that web-crawl training data could contaminate.
+  **`D-FINEWEB`'s patent trigger is REMOVED** — web-crawl-derived data may enter the training mix
+  without settling a patent question first.
+  **What still blocks `D-FINEWEB`, and it is not paperwork.** Its bar reads `TBD-noise-floor`, and
+  the floor it would need **does not exist**. `pseudoq.build_decontaminated(n, seed=SEED)` draws
+  with a MODULE-level seed independent of `cfg.seed`, so every arm measured in this milestone shares
+  one pseudo-query pool — which is exactly why §23's crossed design states it "does not bound a
+  pool-varying lever". `D-FINEWEB` changes pool CONTENT. By the same rule the NF row already states
+  for B legs — no bar may read such an arm until that floor is measured — it needs a POOL-VARYING
+  floor: K chains differing only in the pool draw seed. That is not cheap: a different draw is a
+  different ~925K-span text set, so each seed needs a fresh teacher encode rather than hitting M7's
+  cache (the crossed floor was cheap precisely because the pool was held fixed). Estimate ~2.3 h
+  before the arm is registrable at all. Recorded so a future session does not mistake this row for
+  a form to fill in.
+
 - **2026-08-29 — harrier RULED by Dylan: CLOSED, on undisclosed training data.**
   `microsoft/harrier-oss-v1-0.6b` passes the vendor rule (Microsoft is "OK with justification")
   and fails on protocol. Our contamination story depends on knowing what the teacher has read —

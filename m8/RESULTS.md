@@ -185,3 +185,34 @@ strongest argument FOR buying the LoRA. Both dense components are CQADupStack fo
 CQADupStack-family result.
 
 Cost: 13 training arms (~2.7 h), 9 dense passes (1,450 s), 9 fused passes, 9 mechanism passes.
+
+## E10-REMEDY — ran 2026-08-29. PROCEED, pending review.
+
+`results/m8_lotte_remedy.json`. All seven surviving slices pass remedy + zero-tolerance re-screen.
+
+| slice | docs → after | removed | queries → after | removed | re-screen |
+|---|---|---|---|---|---|
+| writing/dev | 277,072 → 277,049 | 23 | 2,003 → 1,988 | 15 | 0 / 0 |
+| recreation/dev | 263,025 → 263,000 | 25 | 2,002 → 1,994 | 8 | 0 / 0 |
+| recreation/test | 166,975 → 166,975 | **0** | 2,002 → 1,990 | 12 | 0 / 0 |
+| science/dev | 343,642 → 343,634 | 8 | 2,013 → 2,002 | 11 | 0 / 0 |
+| technology/dev | 1,276,222 → 1,276,195 | 27 | 2,003 → 1,993 | 10 | 0 / 0 |
+| lifestyle/dev | 268,893 → 268,890 | 3 | 2,076 → 2,074 | 2 | 0 / 0 |
+| lifestyle/test | 119,461 → 119,458 | 3 | 2,002 → 1,993 | 9 | 0 / 0 |
+
+**14,034 surviving queries — the pre-registered total, and every per-slice count matches §15's
+figure exactly.** That is evidence the remedy is deterministic and did what was specified.
+
+**AN ASYMMETRY THAT IS NOT YET EXPLAINED, and the shadow is NOT pinned until it is.** The document
+screen removed **89 of 2,715,290** documents (0.003%) with one slice removing ZERO, while the query
+screen removed **67 of 14,101** (0.5%) — over a hundred times the rate, against the same protected
+content. Either that has a mechanism worth stating, or the document screen is materially weaker
+than the query screen and 0.003% measures the screen rather than the corpus. Related and worse:
+every re-screen returned exactly 0/0, and a re-screen that removes the items it would flag may not
+be capable of returning anything else — CODEMAP pitfalls 17 and 19's family.
+
+**Therefore NOT DONE:** `freeze_lotte.py pin`, the `paths_guard` partition entry, feeding the
+surviving queries into the filter's index, and the fit-list regeneration are all deliberately NOT
+run. Pinning the shadow IS trusting it, and a shadow that is quietly still contaminated is worse
+than no shadow — it gives false reassurance immediately before a one-shot access. Adversarial
+review briefed on exactly these two questions; disposition to follow.

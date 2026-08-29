@@ -206,3 +206,17 @@ a non-BERT teacher found two more, and both are silent:
     is in fact a negated loss around −0.24. Nothing downstream can tell. The protection is the one
     above: ladder and adequacy arms are never in the scored set. **When a patch changes what a
     metric MEANS, check what the unpatched code writes that metric into.**
+24. **A guarded file must not be EDITED while a guarded run is in flight, and "push before launch"
+    is only half the rule.** `probe_guard.write_result` re-checks that `m8/LEDGER.md` and
+    `m8/registry.json` are committed AND that HEAD is on a remote — **at write time, not at launch
+    time**. Three refusals in one session, all mine, all correct: `fused_floor` refused after 134 s
+    of scoring because a commit was unpushed; `protected_filter remedy` refused at startup because
+    the ledger was dirty; and a third was only avoided by noticing in time that editing the ledger
+    mid-run would have killed a 40-minute streaming job **at its final write**, after all the work.
+    The guard is right every time — a bar that exists only locally can be rewritten by the session
+    that saw the number, which is the whole point. The operating rules are two, not one:
+    **(a) commit and push before launching guarded work**, and **(b) treat the guarded files as
+    frozen for the duration of any guarded run.** Write-ups go in the scratchpad until the tree is
+    free. Note the asymmetry that makes this bite: the launch-time check fails fast and cheap, the
+    write-time check fails after the entire job has run.
+
