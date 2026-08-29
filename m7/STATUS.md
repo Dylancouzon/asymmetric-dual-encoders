@@ -68,22 +68,17 @@ the dev macro have no analogue among the six; the CQADupStack pair says only, qu
 the gain is not exclusively Wikipedia-shaped. Per the fifth review (MAJOR 4) the report may not
 quote +0.036 — or any number — as an expected six-set transfer.
 
-## Open for Dylan
+## M7 is CLOSED (2026-08-29)
 
-*(Closed 2026-08-28: the familywise question — option (c); the freeze — written, committed
-`d24c704`, tag pushed; the final run — done, on your explicit go, with the one permitted retry
-after the interrupt.)*
+Everything is done: the final run (zero tier claims, the miss pre-registered as publishable), the
+clean-stack-tax measurement (the gap is architectural), the report update (M7 section added to
+the M6 artifact, every number checked against the artifacts of record), and the **merge to
+`main`** (`89a52e6`, all 268 branch commits preserved). No release: the bar was missed, per the
+mandate — consistent with Dylan's "v1 will probably not be released publicly".
 
-1. **Release decision, now trivially framed**: the registered release bar (CI-resolved over
-   LR-dense-pertask) was missed CI-resolved, so under the mandate the v1 dense table does not
-   ship — consistent with your "v1 will probably not be released publicly". The fused system's
-   descriptive edge over OpenSearch is a tie statistically and carries no release claim. Say the
-   word if you want anything shipped anyway; otherwise this closes itself.
-2. **The M7 report** (updating the M6 artifact with the M7 section) — I can draft it next; the
-   binding framing is already registered in the LEDGER.
-3. **M8 kickoff** — the v2 mandate is live (`instructions-m8.md`), the reserved sets are intact,
-   and the clean-stack-tax variant is now legal to run (the freeze is immutable and the final
-   number exists). The doc2query licensing ruling remains open if M8 wants that lever.
+**Next: M8** (`instructions-m8.md`) — the learnings v2, confirmatory on the reserved
+untouched-final four, opening direction capacity/architecture per the tax verdict. Still Dylan's
+whenever relevant: the doc2query licensing ruling (only if M8 wants that lever).
 
 ## The fifth review (2026-08-28, post-gate pre-freeze): STOP, then all findings actioned
 
