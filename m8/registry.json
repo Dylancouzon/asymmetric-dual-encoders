@@ -370,7 +370,12 @@
     "ESTIMAND. Adding synthetic pairs at fixed compute measures whether spending Phase-A budget on ICT helps -- not whether Phase A is pair-starved. B3's question is answered by the pool-scaling design instead."
    ],
    "if_reopened": "use the sampled sentence as query, form the positive from surrounding context with that sentence removed (ORQA removes it in 90% of examples, retaining 10% deliberately), RE-ENCODE that ablated context, filter empty/short contexts and near-duplicate sentences, and enforce at most one example per document per batch so sibling spans cannot act as each other's negatives.",
-   "no_survivor": "n/a -- not run"
+   "no_survivor": "n/a -- not run",
+   "bar": "TBD -- and deliberately so. This row is a REFUSAL kept for the record, not a probe awaiting a number: the blockers below are design faults, not a missing floor, so a bar must not be written for it until they are answered.",
+   "bar_pending": "the four blockers below; a bar written before them would be a bar for a probe that cannot answer its question",
+   "endpoint": "would inherit B3's, but see blockers -- the estimand itself is wrong for B3's question",
+   "comparator": "ICT fraction 0",
+   "multiplicity": "n/a -- not runnable"
   }
  },
  "dev_groups": {
