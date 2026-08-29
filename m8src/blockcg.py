@@ -61,8 +61,8 @@ def _to_torch_sparse(X, device, dtype):
     return torch.sparse_coo_tensor(idx, val, X.shape, device=device, dtype=dtype).coalesce()
 
 
-def block_cg_ridge(X, Y, W0, lam, tol=None, maxiter=500, device="cuda", dtype=None,
-                   verbose=False, log_every=25):
+def block_cg_ridge(X, Y, W0, lam, tol=None, maxiter=1500, device="cuda", dtype=None,
+                   verbose=False, log_every=100, precond=True):
     """Solve (X^T X + lam I) W = X^T Y + lam W0 without forming the Gram.
 
     Returns (W, info). `tol` is on the per-column relative residual: the loop stops when EVERY
@@ -89,22 +89,35 @@ def block_cg_ridge(X, Y, W0, lam, tol=None, maxiter=500, device="cuda", dtype=No
     def A(P):
         return torch.sparse.mm(XtT, torch.sparse.mm(Xt, P)) + lam * P
 
+    # JACOBI PRECONDITIONING. Real token frequencies are Zipfian, so diag(X^T X) spans several
+    # orders of magnitude and unpreconditioned CG crawls on precisely the rare rows the table most
+    # needs. The diagonal of the Gram is just the column sum of X^2 -- one pass, no Gram -- and
+    # dividing by it removes most of that skew. Reported measured, not assumed: `precond=False`
+    # runs the same problem without it so the effect is a number.
+    if precond:
+        dg = np.asarray(X.multiply(X).sum(axis=0)).ravel() + lam
+        Minv = torch.as_tensor(1.0 / np.maximum(dg, 1e-12), device=device,
+                               dtype=dtype).unsqueeze(1)
+    else:
+        Minv = None
+
     B = torch.sparse.mm(XtT, Yt) + lam * W0t
     R = B - A(W)
-    P = R.clone()
-    rs = (R * R).sum(0)                                   # per-column residual norms^2
+    Z = R * Minv if Minv is not None else R
+    P = Z.clone()
+    rz = (R * Z).sum(0)
     b_norm = (B * B).sum(0).sqrt().clamp_min(1e-30)
     hist = []
     t0 = time.time()
     it = 0
+    rel = (R * R).sum(0).sqrt() / b_norm
     for it in range(1, maxiter + 1):
         AP = A(P)
         denom = (P * AP).sum(0).clamp_min(1e-30)
-        alpha = rs / denom
+        alpha = rz / denom
         W += alpha * P
         R -= alpha * AP
-        rs_new = (R * R).sum(0)
-        rel = (rs_new.sqrt() / b_norm)
+        rel = (R * R).sum(0).sqrt() / b_norm
         worst = float(rel.max())
         if verbose and (it % log_every == 0 or it == 1):
             print(f"    cg it={it:4d} worst_rel_resid={worst:.3e} ({time.time()-t0:.1f}s)",
@@ -112,17 +125,20 @@ def block_cg_ridge(X, Y, W0, lam, tol=None, maxiter=500, device="cuda", dtype=No
         hist.append(worst)
         if worst < tol:
             break
-        P = R + (rs_new / rs.clamp_min(1e-30)) * P
-        rs = rs_new
+        Z = R * Minv if Minv is not None else R
+        rz_new = (R * Z).sum(0)
+        P = Z + (rz_new / rz.clamp_min(1e-30)) * P
+        rz = rz_new
 
     info = {"iterations": it, "worst_rel_residual": float(rel.max()),
             "mean_rel_residual": float(rel.mean()), "seconds": round(time.time() - t0, 2),
             "converged": bool(float(rel.max()) < tol), "tol": tol, "maxiter": maxiter,
             "device": device, "dtype": str(dtype), "V": int(V), "n": int(n), "d": int(d),
-            "lam": lam, "history_worst": hist[:5] + (["..."] if len(hist) > 10 else [])
+            "lam": lam, "preconditioner": "jacobi" if precond else "none",
+            "history_worst": hist[:5] + (["..."] if len(hist) > 10 else [])
                         + hist[-5:] if hist else []}
     out = W.detach().to("cpu").numpy().astype(np.float64)
-    del Xt, XtT, Yt, W, W0t, R, P, B
+    del Xt, XtT, Yt, W, W0t, R, P, B, Z
     m8base.empty_cache()
     return out, info
 
@@ -138,13 +154,34 @@ def direct_ridge(X, Y, W0, lam):
     return W, {"seconds": round(time.time() - t0, 2), "gram_bytes": G.nbytes}
 
 
-def synthetic(n, V, d, nnz=12, seed=0):
-    """A bag matrix with realistic sparsity, for the FEASIBILITY half of B7 at vocabularies whose
-    tokenizer does not exist yet. Labelled synthetic wherever it is reported: it measures the
-    SOLVER, not the quality of any table."""
+def synthetic(n, V, d, nnz=12, seed=0, zipf_s=1.07, uniform=False):
+    """A bag matrix for the FEASIBILITY half of B7, at vocabularies whose tokenizer does not exist
+    yet. Labelled synthetic wherever it is reported: it measures the SOLVER, not the quality of
+    any table.
+
+    TOKENS ARE DRAWN ZIPFIAN, NOT UNIFORM, and that is the whole point. CG's cost is governed by
+    the condition number of `X^T X + lam I`, and a uniform token distribution gives a nearly
+    isotropic Gram -- an unrealistically easy problem. Real text is Zipfian (s ~ 1.0-1.1 for
+    English): a few hundred tokens carry most of the mass, the spectrum is extremely skewed, and
+    the rare rows the table most needs are the worst-conditioned directions. Measuring the solver
+    on uniform draws would have produced a feasibility PASS that says nothing about the real
+    problem -- the "wrong number rather than a crash" failure class this project has been bitten
+    by before. `uniform=True` is kept only to report the optimistic baseline beside the realistic
+    one, so the gap between them is visible rather than assumed."""
     rng = np.random.default_rng(seed)
     rows = np.repeat(np.arange(n), nnz)
-    cols = rng.integers(0, V, size=n * nnz)
+    if uniform:
+        cols = rng.integers(0, V, size=n * nnz)
+    else:
+        # Zipf over rank, mapped onto vocabulary ids. `rng.zipf` is unbounded, so resample the
+        # tail rather than clipping it -- clipping would pile the whole tail onto one row and
+        # create an artificial singleton direction.
+        cols = rng.zipf(zipf_s, size=n * nnz)
+        bad = cols > V
+        while bad.any():
+            cols[bad] = rng.zipf(zipf_s, size=int(bad.sum()))
+            bad = cols > V
+        cols = cols - 1
     vals = np.full(n * nnz, 1.0 / nnz)
     X = sp.csr_matrix((vals, (rows, cols)), shape=(n, V))
     Y = rng.standard_normal((n, d)).astype(np.float64)
@@ -153,9 +190,17 @@ def synthetic(n, V, d, nnz=12, seed=0):
     return X, Y, W0
 
 
-def verify(n=200_000, V=30_522, d=1024, lam=1e-3, device="cuda", seed=0):
+def coverage(X):
+    """How much of the vocabulary the draw actually reaches -- the number that says whether a
+    feasibility result at V rows is about V rows at all."""
+    hit = np.diff(X.tocsc().indptr) > 0
+    return {"rows_reached": int(hit.sum()), "V": int(X.shape[1]),
+            "fraction_reached": float(hit.mean())}
+
+
+def verify(n=200_000, V=30_522, d=1024, lam=1e-3, device="cuda", seed=0, uniform=False):
     """Block CG vs the direct solve at the control vocabulary. The claim is agreement, measured."""
-    X, Y, W0 = synthetic(n, V, d, seed=seed)
+    X, Y, W0 = synthetic(n, V, d, seed=seed, uniform=uniform)
     t0 = time.time()
     Wd, di = direct_ridge(X, Y, W0, lam)
     di["total_seconds"] = round(time.time() - t0, 2)
@@ -163,7 +208,9 @@ def verify(n=200_000, V=30_522, d=1024, lam=1e-3, device="cuda", seed=0):
     num = float(np.linalg.norm(Wc - Wd))
     den = float(np.linalg.norm(Wd))
     return {
-        "setting": {"n": n, "V": V, "d": d, "lam": lam, "data": "synthetic, matched sparsity"},
+        "setting": {"n": n, "V": V, "d": d, "lam": lam,
+                    "token_distribution": "uniform" if uniform else "zipf(s=1.07)",
+                    "coverage": coverage(X)},
         "direct": di, "block_cg": ci,
         "relative_error_fro": num / den,
         "max_abs_error": float(np.abs(Wc - Wd).max()),
@@ -171,12 +218,13 @@ def verify(n=200_000, V=30_522, d=1024, lam=1e-3, device="cuda", seed=0):
     }
 
 
-def b7_curve(sizes=(30_522, 65_536, 131_072), n=200_000, d=1024, lam=1e-3, device="cuda"):
+def b7_curve(sizes=(30_522, 65_536, 131_072), n=200_000, d=1024, lam=1e-3, device="cuda",
+             uniform=False):
     """B7's FEASIBILITY half: wall-clock and peak memory at each vocabulary size."""
     import torch
     rows = []
     for V in sizes:
-        X, Y, W0 = synthetic(n, V, d)
+        X, Y, W0 = synthetic(n, V, d, uniform=uniform)
         if device == "cuda":
             torch.cuda.reset_peak_memory_stats()
         t0 = time.time()
@@ -189,6 +237,8 @@ def b7_curve(sizes=(30_522, 65_536, 131_072), n=200_000, d=1024, lam=1e-3, devic
             "peak_vram_gb": None if peak is None else round(peak, 2),
             "dense_gram_fp64_gb": round(V * V * 8 / 1e9, 2),
             "blockcg_arrays_fp32_gb": round(5 * V * d * 4 / 1e9, 2),
+            "token_distribution": "uniform" if uniform else "zipf(s=1.07)",
+            "coverage": coverage(X),
         })
         print(f"  V={V:,}: {rows[-1]['iterations']} its, {rows[-1]['wall_seconds']}s, "
               f"peak {rows[-1]['peak_vram_gb']} GB VRAM  "
@@ -212,16 +262,21 @@ def main():
         return 0
     out = {"_note": "B7 -- the block-CG solver that decides whether D2's 64-128K vocabulary and "
                     "any non-WordPiece teacher screen are computable on this box at all.",
-           "data_disclosure": "the bag matrices here are SYNTHETIC with matched sparsity (12 "
-                              "non-zeros per row). This measures the SOLVER. The quality half of "
-                              "B7 -- the closed-form dev macro at each vocabulary -- needs a real "
-                              "trained tokenizer and is a separate, descriptive run."}
+           "data_disclosure": (
+               "the bag matrices here are SYNTHETIC: 12 non-zeros per row, token ids drawn "
+               "ZIPFIAN (s = 1.07) rather than uniform, because CG's cost is set by the condition "
+               "number and a uniform draw is an unrealistically easy problem. The uniform result "
+               "is reported beside it as the optimistic baseline so the gap is visible. This "
+               "measures the SOLVER. The quality half of B7 -- the closed-form dev macro at each "
+               "vocabulary -- needs a real trained tokenizer and is a separate, descriptive run.")}
     if a.step == "verify":
         out["correctness"] = verify(n=a.n, device=a.device)
         print(json.dumps(out["correctness"], indent=2, default=str))
     else:
-        out["correctness"] = verify(n=a.n, device=a.device)
+        out["correctness_zipf"] = verify(n=a.n, device=a.device)
+        out["correctness_uniform_baseline"] = verify(n=a.n, device=a.device, uniform=True)
         out["curve"] = b7_curve(n=a.n, device=a.device)
+        out["correctness"] = out["correctness_zipf"]
         out["verdict"] = {
             "bar": "the 65,536-row solve must complete within the 18 GB peak-RAM budget and "
                    "under 4 hours wall-clock",
