@@ -52,6 +52,17 @@ def frozen_spec():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--arms", nargs="*", default=list(ARMS))
+    # `--arms` only controlled which arms were LOADED; the floor was computed over the module
+    # constant SEED_ARMS regardless, so passing a different null measured the wrong thing while
+    # looking like it worked. The null is now named explicitly and defaults to the A-leg one.
+    ap.add_argument("--seed-arms", nargs="*", default=None,
+                    help="the arms forming the null (default: the A-leg seed arms)")
+    ap.add_argument("--out", default=None,
+                    help="artifact filename under results/ (default: the A-leg fused floor). The "
+                         "B-leg floor MUST use its own name -- overwriting the A-leg artifact "
+                         "would redefine a floor that frozen bars already cite.")
+    ap.add_argument("--per-query-out", default=None,
+                    help="also write the per-query fused scores to this .json.gz")
     ap.add_argument("--components", nargs="*", default=list(COMPONENTS))
     ap.add_argument("--smoke", action="store_true")
     a = ap.parse_args()
@@ -107,11 +118,19 @@ def main():
         return float(np.mean([np.mean(list(pq[c].values())) for c in a.components]))
 
     import itertools
+    null_arms = list(a.seed_arms) if a.seed_arms is not None else list(SEED_ARMS)
+    missing = [r for r in null_arms if r not in a.arms]
+    if missing:
+        raise SystemExit(f"--seed-arms names {missing}, which --arms did not load")
     floor, bars, rows = {}, {}, {}
     for prec in ("fp16", "int8"):
         for mode in ("mean", "sqrt"):
-            sel = {r: macro(per_query[f"{r}:{mode}|{prec}"]) for r in SEED_ARMS
+            sel = {r: macro(per_query[f"{r}:{mode}|{prec}"]) for r in null_arms
                    if f"{r}:{mode}|{prec}" in per_query}
+            if null_arms and len(sel) not in (0, len(null_arms)):
+                raise SystemExit(f"{prec}.{mode}: null needs {sorted(null_arms)} but only "
+                                 f"{sorted(sel)} were scored; a floor from a partial arm set "
+                                 f"understates the floor and loosens every bar reading it.")
             if len(sel) < 2:
                 continue
             key = f"{prec}.{mode}.fused_macro"
@@ -132,14 +151,20 @@ def main():
                             "exist for them by construction.",
         "arm_macros": {k: macro(v) for k, v in per_query.items()},
         "floor": floor, "bars": bars, "detail": rows,
-        "bar_formula": "bar = max(0.0040, 2 x floor); floor = max pairwise |delta| over the 3 "
-                       "seed arms",
+        "bar_formula": "bar = max(0.0040, 2 x floor); floor = max pairwise |delta| over the "
+                       "arms naming the null",
+        "null_arms": null_arms,
     }
+    if a.per_query_out:
+        import gzip
+        with gzip.open(RESULTS / a.per_query_out, "wt") as fh:
+            json.dump({"per_query": per_query, "components": list(a.components)}, fh)
+        print(f"wrote per-query fused scores to {a.per_query_out}", flush=True)
     if a.smoke:
         (RESULTS / "m8_noise_floor_fused.SMOKE.json").write_text(json.dumps(out, indent=2,
                                                                            default=str))
     else:
-        probe_guard.write_result(OUT, out, "NF")
+        probe_guard.write_result((RESULTS / a.out) if a.out else OUT, out, "NF")
     print(json.dumps({"floor": floor, "bars": bars}, indent=2))
     return 0
 
