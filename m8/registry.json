@@ -63,7 +63,9 @@
       },
       "penalty_rule": "near-sibling iff the challenger shares the incumbent's tokenizer identity (bert-wordpiece-30522) AND its dimension (1024); else dissimilar. Fixed here, before any screen runs.",
       "noise_floor_exempt": true,
-      "exempt_reason": "closed-form dev probe with its own CI-resolution bar, not a trained-arm comparison; named as exempt in LEDGER 4.7 and 6"
+      "exempt_reason": "closed-form dev probe with its own CI-resolution bar, not a trained-arm comparison; named as exempt in LEDGER 4.7 and 6",
+      "blocked_on": "B7 -- every challenger's vocabulary is >= 50,368 and the direct fp64 Gram at that size is 20.3 GB, above the 18 GB budget. Until a solver exists that does not materialize the Gram, T1 can only re-run candidates M7 already closed CI-resolved.",
+      "frame_note": "fixed WITHIN a tokenizer family; a cross-family challenger is screened in its own vocabulary and the comparison is labelled teacher-plus-tokenizer, with the vocabulary size at every row"
     },
     "B2": {
       "wave": 1,

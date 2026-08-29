@@ -508,6 +508,7 @@ before any bar, and `NEXT-SESSION.md` said the opposite. There is now one order.
  2. protected-query filter build + hash + commit                      [G7 interlock]
  3. code benchmark + published serial schedule                        [G6]
  4. NOISE FLOOR, measured in the INCUMBENT teacher frame              [G4]
+ 4b. B7 block-CG solver feasibility            [GATES BOTH D2 AND T1 -- see the note below]
  5. teacher-screen registration (probe T1, exact) -> screens -> teacher freeze
     -- if a swap lands, EVERY floor and bar measured in the incumbent frame is
        re-measured in the new frame before it may be read. A swap after Stage R
@@ -527,6 +528,16 @@ before any bar, and `NEXT-SESSION.md` said the opposite. There is now one order.
 - **The teacher screen (T1) is exempt from the noise-floor gate** and runs at step 5 because it is
   a closed-form dev probe with its own registered CI-resolution bar, not a trained-arm comparison.
   That exemption is named here rather than assumed.
+- **T1 IS BLOCKED ON B7, and this was not obvious (§15, 2026-08-29).** M7's screen shared ONE bag
+  matrix across candidates because every encoder in the registry ships a byte-identical
+  `bert-wordpiece-30522` vocabulary — verified: all ten. **Not one of T1's four challengers does.**
+  granite-r2 is 50,368, gte-modernbert ~50K BPE, stella-1.5B and harrier are Qwen-line. So each
+  would be screened at its own vocabulary, and the direct fp64 Gram at 50,368 rows is **20.3 GB,
+  above this box's 18 GB budget** — which is precisely the arithmetic on which M7 closed granite-r2
+  and gte-modernbert "on arithmetic, not merit". Until B7 delivers a solver that does not
+  materialize the Gram, **T1 can only re-run candidates M7 already closed CI-resolved**, which is
+  not a screen. B7 therefore gates D2 *and* T1, which is a second, independent reason it was
+  promoted into Wave 1.
 
 **One-shot mechanics — the itemized port checklist (Codex gate MAJOR 4).** "Copied verbatim" was
 not an executable statement. Each line below is ported to M8 paths **with its own acceptance test**
@@ -760,7 +771,13 @@ candidate** unless separately validated on fresh clean-screen artifacts.
 **Executable swap rule (Codex gate BLOCKER 4). Probe id `T1`, governed by G1.** Every degree of
 freedom below was a word in v1 and is a value here.
 
-- **Frame.** Fixed student frame per screen: the closed-form distilled table
+- **Frame, clarified (§15, 2026-08-29).** "Fixed student frame" is fixed **within a tokenizer
+  family**. A challenger with a different tokenizer is screened in its own natural frame — its
+  tokenizer, its vocabulary — because that is the frame it would actually ship in. The comparison
+  is then explicitly a **teacher-plus-tokenizer** comparison, not a teacher comparison, and the
+  vocabulary size is reported at every row so the confound is visible rather than hidden. Any
+  swap argued on such a screen must say which of the two factors it is buying.
+- **Frame.** Within a family: the closed-form distilled table
   (`scripts/teacher_learnability.py` + `learnability_report.py`), fit list **regenerated through
   the current protected-query filter** (M7's list had 1.31% R1 hits and is unusable), λ selected
   on the same interior grid for every candidate, identical bag matrix.
@@ -923,6 +940,15 @@ exist.)*
   legal order; the shadow GO rule made two-legged; B17's routing given an OOD corroboration
   condition; B7 and B6-pre promoted to Wave 1; the ordered nested fallback registered; the ONNX
   graph bound to the selected pooling operator; the guard hardened against four concrete bypasses.
+- **2026-08-29 — amendment: T1's ordering and frame, before any T1 number exists.** Discovered
+  while scaffolding the screen: M7's shared bag matrix works only because all ten registered
+  encoders ship a byte-identical `bert-wordpiece-30522` vocabulary, and **none of T1's four
+  challengers does**. So (a) T1 is blocked on B7 — at 50,368 rows the direct fp64 Gram is 20.3 GB
+  against an 18 GB budget, the same arithmetic that closed granite-r2 and gte-modernbert in M7 —
+  and (b) "fixed student frame" is fixed within a tokenizer family; a cross-family challenger is
+  screened in its own frame and the comparison is labelled teacher-plus-tokenizer. Registered in
+  §6 and §10. No T1 or B7 number exists at this entry.
+
 - **2026-08-29 — INCIDENT, found by review before it cost anything.** `work/dev/cqadup-android.json`
   and `work/dev/cqadup-english.json` held the **complete corpora and qrels** of two of the four
   reserved confirmatory sets, materialized by `devsuite.load()` on 2026-08-26 when the
