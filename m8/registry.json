@@ -119,7 +119,7 @@
       "question": "H1: does adding licence-clean ICT pairs to Phase A improve out-of-domain retrieval at equal updates and equal exposure?",
       "endpoint": "dense AND fused equal-weight macro of nDCG@10 over the registered out-of-domain group (cqadup-programmers, cqadup-physics), plus the group-vector median over all three dev groups",
       "comparator": "ICT fraction 0 (= R0), at equal updates AND equal exposure",
-      "bar": "B3 TEMPLATE: sign-consistency on BOTH out-of-domain components, AND a seed replicate agreeing in sign, AND the group-vector median gain >= bar(endpoint) from results/m8_noise_floor.json where bar = max(0.0040, 2 x floor)",
+      "bar": "B3 TEMPLATE, frozen 2026-08-29 from results/m8_noise_floor.json and results/m8_noise_floor_fused.json: sign-consistency on BOTH out-of-domain components, AND a seed replicate agreeing in sign, AND the group-vector median gain >= 0.0040 on the dense endpoint AND >= 0.0040 on the fused endpoint. 0.0040 is max(planning minimum, 2 x floor) at int8/sqrt for both endpoints: the measured floors are 0.00190 (dense group-vector median) and 0.00066 (fused macro), so 2x floor is 0.0038 and 0.0013 respectively and the planning minimum binds.",
       "multiplicity": "Holm over the 3 non-zero arms {0.25, 0.50, 0.75} at alpha = 0.05",
       "no_survivor": "keep R0's ICT fraction (zero)",
       "arms": [
@@ -130,7 +130,13 @@
       ],
       "prior": "The clean-stack-tax arm added 490,241 real MS MARCO pairs to the frozen recipe for +0.0058 [-0.0015, +0.0131], unresolved. ICT spans are synthetic and should be worth less per pair. The honest prior is 'a rounding lever'; the caveat that keeps it worth running is that the tax arm held A-steps fixed, so exposure per pair fell as pairs were added.",
       "noise_floor_exempt": false,
-      "bar_pending": "the numeric floor term; the template and the multiplicity are fixed now"
+      "bar_frozen": {
+        "date": "2026-08-29",
+        "dense_floor": 0.0018968016548605027,
+        "fused_floor": 0.000663,
+        "bar": 0.004,
+        "read_at": "int8 / sqrt -- the release format and R0's adopted pooling rule"
+      }
     },
     "B7": {
       "wave": 1,
@@ -496,6 +502,11 @@
     "bar_formula": "bar(endpoint) = max(planning_minimum, 2 x floor(endpoint)); planning_minimum never below 0.0040",
     "multi_endpoint": "max over the endpoints' bars",
     "also_published": "the +/-10% A-steps perturbation, reported as recipe sensitivity BESIDE the floor, never AS the floor",
-    "output": "results/m8_noise_floor.json"
+    "output": "results/m8_noise_floor.json",
+    "measured": {
+      "dense": "results/m8_noise_floor.json -- floors 0.00095-0.00227, bars 0.0040 except fp16.mean worst-group/OOD at 0.00454",
+      "fused": "results/m8_noise_floor_fused.json -- floors 0.00059-0.00066, bars 0.0040",
+      "still_missing": "a B-leg-varying null pair; arms that restructure the B->A phases (R-PHASE, and any pool/init change flowing through B) have a larger floor that no bar may read until it is measured."
+    }
   }
 }

@@ -551,7 +551,37 @@ the released artifact's frame, demonstrated rather than asserted.
 
 **What this floor does NOT cover** (§4.4 gap list): it holds the B checkpoint fixed, so an arm that
 restructures the B leg (R-PHASE, and any pool or init change flowing through B) has a larger floor
-that is not yet measured; and the FUSED endpoints are measured separately (§4.7b).
+that is not yet measured. **A B-leg null pair remains the one outstanding floor.**
+
+### 4.7b The FUSED floor — MEASURED 2026-08-29
+
+`results/m8_noise_floor_fused.json` (`m8src/fused_floor.py`). B3, B13, R1-ASSEMBLY, D-SYNTH and
+D-FINEWEB register "dense AND fused" endpoints, so without this their bars were not computable as
+registered and `probe_guard` refused them. The frozen `convex0` w=0.8 operator is APPLIED, never
+re-fitted — re-fitting per arm would measure the floor of a fitting procedure, a different and
+much larger quantity, and would let each arm choose its own operator (§7).
+
+| endpoint | floor (max pairwise \|Δ\| over 3 seeds) | bar |
+|---|---|---|
+| fused macro, int8 · sqrt | **0.00066** | **0.0040** |
+| fused macro, int8 · mean | 0.00059 | 0.0040 |
+| fused macro, fp16 · sqrt | 0.00060 | 0.0040 |
+| fused macro, fp16 · mean | 0.00066 | 0.0040 |
+
+**The fused floor is roughly THREE TIMES TIGHTER than the dense one** (0.0006 against
+0.0010–0.0023), which is what fusing with a deterministic BM25 run should do: half the fused score
+comes from a component with no seed at all, so seed variation is damped. Worth stating because it
+cuts the other way too — a fused endpoint resolves smaller effects than a dense one, so a lever
+that clears the fused bar and not the dense one has not shown a table improvement.
+
+**A third exact replication.** The seed-0 arm served at `sqrt` gives a fused dev macro of
+**0.57266**, against the frozen fusion spec's own recorded `dev_macro` of 0.5726634997854769
+(`results/m7_fusion_p35w-2m-s2500.json`). The floor's frame reproduces the released system on the
+dense proxy, on the full dense suite, and now under fusion.
+
+Components: `nq-250k`, `hotpotqa`, `cqadup-programmers`, `cqadup-physics` — the frozen spec's own
+four. The two held-out dev slices carry pool row indices rather than document text, so BM25, and
+therefore any fused read, does not exist for them by construction.
 - **Exempt from noise calibration, named explicitly**: purely descriptive diagnostics that adopt
   nothing (B2, B16, `retention_decomp`) and arithmetic/feasibility gates (B7's memory curve, the
   ONNX export precondition). Everything else is calibrated.
