@@ -1,0 +1,56 @@
+{
+  "cqadup-physics": {
+    "sd": 0.12499826117134454,
+    "n": 1039,
+    "arms": [
+      "p35a-2m-1e3|int8|table",
+      "s2w-1e3-s1000|int8|table"
+    ],
+    "mean": 0.009137857329881888
+  },
+  "cqadup-programmers": {
+    "sd": 0.11934236738725666,
+    "n": 876,
+    "arms": [
+      "p35a-2m-1e3|int8|table",
+      "s2w-1e3-s1000|int8|table"
+    ],
+    "mean": 0.009353871634897518
+  },
+  "heldout-longq": {
+    "sd": 0.07942445962530463,
+    "n": 55,
+    "arms": [
+      "p35a-2m-1e3|int8|table",
+      "s2w-1e3-s1000|int8|table"
+    ],
+    "mean": 0.01416641177931277
+  },
+  "heldout-train": {
+    "sd": 0.11801419459614439,
+    "n": 7325,
+    "arms": [
+      "p35a-2m-1e3|int8|table",
+      "s2w-1e3-s1000|int8|table"
+    ],
+    "mean": 0.008090435801740995
+  },
+  "hotpotqa": {
+    "sd": 0.12242838699434615,
+    "n": 7405,
+    "arms": [
+      "p35a-2m-1e3|int8|table",
+      "s2w-1e3-s1000|int8|table"
+    ],
+    "mean": 0.022689170966550872
+  },
+  "nq-250k": {
+    "sd": 0.1223419781276525,
+    "n": 3452,
+    "arms": [
+      "p35a-2m-1e3|int8|table",
+      "s2w-1e3-s1000|int8|table"
+    ],
+    "mean": -0.0006195576657106825
+  }
+}

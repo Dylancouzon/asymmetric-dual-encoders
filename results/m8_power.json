@@ -1,0 +1,591 @@
+{
+  "_note": "LEDGER 4.4 deliverable 2 -- the joint power simulation of the FULL ship rule.",
+  "calibration": {
+    "central": {
+      "scale": 1.0,
+      "per_dataset": {
+        "fever": {
+          "analogue": "hotpotqa",
+          "sd": 0.12242838699434615,
+          "n": 6666,
+          "analogue_n": 7405,
+          "var_contribution": 1.4053320902750323e-07
+        },
+        "dbpedia-entity": {
+          "analogue": "nq-250k",
+          "sd": 0.1223419781276525,
+          "n": 400,
+          "analogue_n": 3452,
+          "var_contribution": 2.3386811894042194e-06
+        },
+        "cqadup-android": {
+          "analogue": "cqadup-programmers",
+          "sd": 0.11934236738725666,
+          "n": 699,
+          "analogue_n": 876,
+          "var_contribution": 1.273480029827874e-06
+        },
+        "cqadup-english": {
+          "analogue": "cqadup-physics",
+          "sd": 0.12499826117134454,
+          "n": 1570,
+          "analogue_n": 1039,
+          "var_contribution": 6.219970261090628e-07
+        }
+      },
+      "macro_se": 0.002091576308521556,
+      "half_width_95": 0.00409948956470225
+    },
+    "sd+25%": {
+      "scale": 1.25,
+      "per_dataset": {
+        "fever": {
+          "analogue": "hotpotqa",
+          "sd": 0.1530354837429327,
+          "n": 6666,
+          "analogue_n": 7405,
+          "var_contribution": 2.1958313910547383e-07
+        },
+        "dbpedia-entity": {
+          "analogue": "nq-250k",
+          "sd": 0.15292747265956563,
+          "n": 400,
+          "analogue_n": 3452,
+          "var_contribution": 3.654189358444093e-06
+        },
+        "cqadup-android": {
+          "analogue": "cqadup-programmers",
+          "sd": 0.14917795923407082,
+          "n": 699,
+          "analogue_n": 876,
+          "var_contribution": 1.989812546606053e-06
+        },
+        "cqadup-english": {
+          "analogue": "cqadup-physics",
+          "sd": 0.15624782646418067,
+          "n": 1570,
+          "analogue_n": 1039,
+          "var_contribution": 9.718703532954109e-07
+        }
+      },
+      "macro_se": 0.002614470385651945,
+      "half_width_95": 0.005124361955877813
+    },
+    "sd-20%": {
+      "scale": 0.8,
+      "per_dataset": {
+        "fever": {
+          "analogue": "hotpotqa",
+          "sd": 0.09794270959547692,
+          "n": 6666,
+          "analogue_n": 7405,
+          "var_contribution": 8.994125377760208e-08
+        },
+        "dbpedia-entity": {
+          "analogue": "nq-250k",
+          "sd": 0.09787358250212201,
+          "n": 400,
+          "analogue_n": 3452,
+          "var_contribution": 1.4967559612187008e-06
+        },
+        "cqadup-android": {
+          "analogue": "cqadup-programmers",
+          "sd": 0.09547389390980533,
+          "n": 699,
+          "analogue_n": 876,
+          "var_contribution": 8.150272190898394e-07
+        },
+        "cqadup-english": {
+          "analogue": "cqadup-physics",
+          "sd": 0.09999860893707563,
+          "n": 1570,
+          "analogue_n": 1039,
+          "var_contribution": 3.980780967098002e-07
+        }
+      },
+      "macro_se": 0.0016732610468172448,
+      "half_width_95": 0.0032795916517618
+    }
+  },
+  "dev_analogue_sds": {
+    "cqadup-physics": {
+      "sd": 0.12499826117134454,
+      "n": 1039,
+      "arms": [
+        "p35a-2m-1e3|int8|table",
+        "s2w-1e3-s1000|int8|table"
+      ],
+      "mean": 0.009137857329881888
+    },
+    "cqadup-programmers": {
+      "sd": 0.11934236738725666,
+      "n": 876,
+      "arms": [
+        "p35a-2m-1e3|int8|table",
+        "s2w-1e3-s1000|int8|table"
+      ],
+      "mean": 0.009353871634897518
+    },
+    "heldout-longq": {
+      "sd": 0.07942445962530463,
+      "n": 55,
+      "arms": [
+        "p35a-2m-1e3|int8|table",
+        "s2w-1e3-s1000|int8|table"
+      ],
+      "mean": 0.01416641177931277
+    },
+    "heldout-train": {
+      "sd": 0.11801419459614439,
+      "n": 7325,
+      "arms": [
+        "p35a-2m-1e3|int8|table",
+        "s2w-1e3-s1000|int8|table"
+      ],
+      "mean": 0.008090435801740995
+    },
+    "hotpotqa": {
+      "sd": 0.12242838699434615,
+      "n": 7405,
+      "arms": [
+        "p35a-2m-1e3|int8|table",
+        "s2w-1e3-s1000|int8|table"
+      ],
+      "mean": 0.022689170966550872
+    },
+    "nq-250k": {
+      "sd": 0.1223419781276525,
+      "n": 3452,
+      "arms": [
+        "p35a-2m-1e3|int8|table",
+        "s2w-1e3-s1000|int8|table"
+      ],
+      "mean": -0.0006195576657106825
+    }
+  },
+  "six_dissimilar_sds": {
+    "scifact": {
+      "sd": 0.3531187278382403,
+      "n": 300
+    },
+    "nfcorpus": {
+      "sd": 0.22241372928765488,
+      "n": 323
+    },
+    "fiqa": {
+      "sd": 0.30876292803769756,
+      "n": 648
+    },
+    "arguana": {
+      "sd": 0.33670179962744673,
+      "n": 1406
+    },
+    "scidocs": {
+      "sd": 0.16568066286698296,
+      "n": 1000
+    },
+    "trec-covid": {
+      "sd": 0.24094467609155787,
+      "n": 50
+    }
+  },
+  "prior_plan_estimate": {
+    "near_sibling_half_width": 0.005,
+    "dissimilar_half_width": 0.0096,
+    "source": "m8/PLAN-DRAFT.md 1.10"
+  },
+  "mde": {
+    "central": {
+      "mde_c1_power0.80": 0.006762154424428936,
+      "analytic_single_leg": 0.006767506465269366,
+      "binding_leg": "the alpha/3 = 0.008333 simultaneous lower bound (z = 2.394)",
+      "macro_se": 0.002091576308521556
+    },
+    "sd+25%": {
+      "mde_c1_power0.80": 0.008452693030536166,
+      "analytic_single_leg": 0.008459383081586707,
+      "binding_leg": "the alpha/3 = 0.008333 simultaneous lower bound (z = 2.394)",
+      "macro_se": 0.002614470385651945
+    },
+    "sd-20%": {
+      "mde_c1_power0.80": 0.005409723539543147,
+      "analytic_single_leg": 0.005414005172215493,
+      "binding_leg": "the alpha/3 = 0.008333 simultaneous lower bound (z = 2.394)",
+      "macro_se": 0.0016732610468172448
+    }
+  },
+  "scenarios": {
+    "structural_target": {
+      "central": {
+        "scenario": {
+          "d_c1": 0.02,
+          "d_c2": 0.02,
+          "d_c3": 0.06,
+          "rho": 0.8,
+          "tau": 0.005,
+          "d_six": 0.0,
+          "se_six": 0.006,
+          "six_margin": 0.005,
+          "qualifying": 0.85
+        },
+        "S": 20000,
+        "macro_se": 0.002091576308521556,
+        "P_C1_resolved": 1.0,
+        "P_C2_resolved": 1.0,
+        "P_C3_resolved": 1.0,
+        "P_all_three": 1.0,
+        "P_point_guard": 1.0,
+        "P_worst_group": 1.0,
+        "P_six_no_regression": 0.7962,
+        "P_qualifying_table": 0.84955,
+        "P_ship": 0.6729
+      },
+      "sd+25%": {
+        "scenario": {
+          "d_c1": 0.02,
+          "d_c2": 0.02,
+          "d_c3": 0.06,
+          "rho": 0.8,
+          "tau": 0.005,
+          "d_six": 0.0,
+          "se_six": 0.006,
+          "six_margin": 0.005,
+          "qualifying": 0.85
+        },
+        "S": 20000,
+        "macro_se": 0.002614470385651945,
+        "P_C1_resolved": 1.0,
+        "P_C2_resolved": 1.0,
+        "P_C3_resolved": 1.0,
+        "P_all_three": 1.0,
+        "P_point_guard": 1.0,
+        "P_worst_group": 1.0,
+        "P_six_no_regression": 0.7962,
+        "P_qualifying_table": 0.84955,
+        "P_ship": 0.6729
+      },
+      "sd-20%": {
+        "scenario": {
+          "d_c1": 0.02,
+          "d_c2": 0.02,
+          "d_c3": 0.06,
+          "rho": 0.8,
+          "tau": 0.005,
+          "d_six": 0.0,
+          "se_six": 0.006,
+          "six_margin": 0.005,
+          "qualifying": 0.85
+        },
+        "S": 20000,
+        "macro_se": 0.0016732610468172448,
+        "P_C1_resolved": 1.0,
+        "P_C2_resolved": 1.0,
+        "P_C3_resolved": 1.0,
+        "P_all_three": 1.0,
+        "P_point_guard": 1.0,
+        "P_worst_group": 1.0,
+        "P_six_no_regression": 0.7962,
+        "P_qualifying_table": 0.84955,
+        "P_ship": 0.6729
+      }
+    },
+    "modest": {
+      "central": {
+        "scenario": {
+          "d_c1": 0.01,
+          "d_c2": 0.01,
+          "d_c3": 0.06,
+          "rho": 0.8,
+          "tau": 0.005,
+          "d_six": -0.002,
+          "se_six": 0.006,
+          "six_margin": 0.005,
+          "qualifying": 0.85
+        },
+        "S": 20000,
+        "macro_se": 0.002091576308521556,
+        "P_C1_resolved": 0.99135,
+        "P_C2_resolved": 0.9917,
+        "P_C3_resolved": 1.0,
+        "P_all_three": 0.98635,
+        "P_point_guard": 0.99145,
+        "P_worst_group": 0.99815,
+        "P_six_no_regression": 0.68965,
+        "P_qualifying_table": 0.84955,
+        "P_ship": 0.57395
+      },
+      "sd+25%": {
+        "scenario": {
+          "d_c1": 0.01,
+          "d_c2": 0.01,
+          "d_c3": 0.06,
+          "rho": 0.8,
+          "tau": 0.005,
+          "d_six": -0.002,
+          "se_six": 0.006,
+          "six_margin": 0.005,
+          "qualifying": 0.85
+        },
+        "S": 20000,
+        "macro_se": 0.002614470385651945,
+        "P_C1_resolved": 0.9253,
+        "P_C2_resolved": 0.92425,
+        "P_C3_resolved": 1.0,
+        "P_all_three": 0.89,
+        "P_point_guard": 0.97215,
+        "P_worst_group": 0.9951,
+        "P_six_no_regression": 0.68965,
+        "P_qualifying_table": 0.84955,
+        "P_ship": 0.51655
+      },
+      "sd-20%": {
+        "scenario": {
+          "d_c1": 0.01,
+          "d_c2": 0.01,
+          "d_c3": 0.06,
+          "rho": 0.8,
+          "tau": 0.005,
+          "d_six": -0.002,
+          "se_six": 0.006,
+          "six_margin": 0.005,
+          "qualifying": 0.85
+        },
+        "S": 20000,
+        "macro_se": 0.0016732610468172448,
+        "P_C1_resolved": 0.9998,
+        "P_C2_resolved": 0.9998,
+        "P_C3_resolved": 1.0,
+        "P_all_three": 0.9997,
+        "P_point_guard": 0.99875,
+        "P_worst_group": 0.9992,
+        "P_six_no_regression": 0.68965,
+        "P_qualifying_table": 0.84955,
+        "P_ship": 0.58215
+      }
+    },
+    "recipe_only": {
+      "central": {
+        "scenario": {
+          "d_c1": 0.005,
+          "d_c2": 0.005,
+          "d_c3": 0.06,
+          "rho": 0.8,
+          "tau": 0.005,
+          "d_six": -0.003,
+          "se_six": 0.006,
+          "six_margin": 0.005,
+          "qualifying": 0.6
+        },
+        "S": 20000,
+        "macro_se": 0.002091576308521556,
+        "P_C1_resolved": 0.4992,
+        "P_C2_resolved": 0.50135,
+        "P_C3_resolved": 1.0,
+        "P_all_three": 0.3994,
+        "P_point_guard": 0.5006,
+        "P_worst_group": 0.9775,
+        "P_six_no_regression": 0.6316,
+        "P_qualifying_table": 0.6007,
+        "P_ship": 0.1475
+      },
+      "sd+25%": {
+        "scenario": {
+          "d_c1": 0.005,
+          "d_c2": 0.005,
+          "d_c3": 0.06,
+          "rho": 0.8,
+          "tau": 0.005,
+          "d_six": -0.003,
+          "se_six": 0.006,
+          "six_margin": 0.005,
+          "qualifying": 0.6
+        },
+        "S": 20000,
+        "macro_se": 0.002614470385651945,
+        "P_C1_resolved": 0.3158,
+        "P_C2_resolved": 0.3153,
+        "P_C3_resolved": 1.0,
+        "P_all_three": 0.22345,
+        "P_point_guard": 0.5006,
+        "P_worst_group": 0.9617,
+        "P_six_no_regression": 0.6316,
+        "P_qualifying_table": 0.6007,
+        "P_ship": 0.08085
+      },
+      "sd-20%": {
+        "scenario": {
+          "d_c1": 0.005,
+          "d_c2": 0.005,
+          "d_c3": 0.06,
+          "rho": 0.8,
+          "tau": 0.005,
+          "d_six": -0.003,
+          "se_six": 0.006,
+          "six_margin": 0.005,
+          "qualifying": 0.6
+        },
+        "S": 20000,
+        "macro_se": 0.0016732610468172448,
+        "P_C1_resolved": 0.72535,
+        "P_C2_resolved": 0.7249,
+        "P_C3_resolved": 1.0,
+        "P_all_three": 0.6415,
+        "P_point_guard": 0.5006,
+        "P_worst_group": 0.98615,
+        "P_six_no_regression": 0.6316,
+        "P_qualifying_table": 0.6007,
+        "P_ship": 0.17705
+      }
+    },
+    "m7_repeat": {
+      "central": {
+        "scenario": {
+          "d_c1": 0.0,
+          "d_c2": 0.0,
+          "d_c3": 0.06,
+          "rho": 0.8,
+          "tau": 0.005,
+          "d_six": 0.0,
+          "se_six": 0.006,
+          "six_margin": 0.005,
+          "qualifying": 0.85
+        },
+        "S": 20000,
+        "macro_se": 0.002091576308521556,
+        "P_C1_resolved": 0.00965,
+        "P_C2_resolved": 0.0077,
+        "P_C3_resolved": 1.0,
+        "P_all_three": 0.0036,
+        "P_point_guard": 0.00975,
+        "P_worst_group": 0.8512,
+        "P_six_no_regression": 0.7962,
+        "P_qualifying_table": 0.84955,
+        "P_ship": 0.00205
+      },
+      "sd+25%": {
+        "scenario": {
+          "d_c1": 0.0,
+          "d_c2": 0.0,
+          "d_c3": 0.06,
+          "rho": 0.8,
+          "tau": 0.005,
+          "d_six": 0.0,
+          "se_six": 0.006,
+          "six_margin": 0.005,
+          "qualifying": 0.85
+        },
+        "S": 20000,
+        "macro_se": 0.002614470385651945,
+        "P_C1_resolved": 0.00965,
+        "P_C2_resolved": 0.0077,
+        "P_C3_resolved": 1.0,
+        "P_all_three": 0.0036,
+        "P_point_guard": 0.0288,
+        "P_worst_group": 0.8074,
+        "P_six_no_regression": 0.7962,
+        "P_qualifying_table": 0.84955,
+        "P_ship": 0.0019
+      },
+      "sd-20%": {
+        "scenario": {
+          "d_c1": 0.0,
+          "d_c2": 0.0,
+          "d_c3": 0.06,
+          "rho": 0.8,
+          "tau": 0.005,
+          "d_six": 0.0,
+          "se_six": 0.006,
+          "six_margin": 0.005,
+          "qualifying": 0.85
+        },
+        "S": 20000,
+        "macro_se": 0.0016732610468172448,
+        "P_C1_resolved": 0.00965,
+        "P_C2_resolved": 0.0077,
+        "P_C3_resolved": 1.0,
+        "P_all_three": 0.0036,
+        "P_point_guard": 0.0012,
+        "P_worst_group": 0.8805,
+        "P_six_no_regression": 0.7962,
+        "P_qualifying_table": 0.84955,
+        "P_ship": 0.0003
+      }
+    },
+    "dense_lags_fused": {
+      "central": {
+        "scenario": {
+          "d_c1": 0.02,
+          "d_c2": 0.006,
+          "d_c3": 0.06,
+          "rho": 0.8,
+          "tau": 0.005,
+          "d_six": 0.0,
+          "se_six": 0.006,
+          "six_margin": 0.005,
+          "qualifying": 0.85
+        },
+        "S": 20000,
+        "macro_se": 0.002091576308521556,
+        "P_C1_resolved": 1.0,
+        "P_C2_resolved": 0.6799,
+        "P_C3_resolved": 1.0,
+        "P_all_three": 0.6799,
+        "P_point_guard": 1.0,
+        "P_worst_group": 1.0,
+        "P_six_no_regression": 0.7962,
+        "P_qualifying_table": 0.84955,
+        "P_ship": 0.46015
+      },
+      "sd+25%": {
+        "scenario": {
+          "d_c1": 0.02,
+          "d_c2": 0.006,
+          "d_c3": 0.06,
+          "rho": 0.8,
+          "tau": 0.005,
+          "d_six": 0.0,
+          "se_six": 0.006,
+          "six_margin": 0.005,
+          "qualifying": 0.85
+        },
+        "S": 20000,
+        "macro_se": 0.002614470385651945,
+        "P_C1_resolved": 1.0,
+        "P_C2_resolved": 0.46425,
+        "P_C3_resolved": 1.0,
+        "P_all_three": 0.46425,
+        "P_point_guard": 1.0,
+        "P_worst_group": 1.0,
+        "P_six_no_regression": 0.7962,
+        "P_qualifying_table": 0.84955,
+        "P_ship": 0.3125
+      },
+      "sd-20%": {
+        "scenario": {
+          "d_c1": 0.02,
+          "d_c2": 0.006,
+          "d_c3": 0.06,
+          "rho": 0.8,
+          "tau": 0.005,
+          "d_six": 0.0,
+          "se_six": 0.006,
+          "six_margin": 0.005,
+          "qualifying": 0.85
+        },
+        "S": 20000,
+        "macro_se": 0.0016732610468172448,
+        "P_C1_resolved": 1.0,
+        "P_C2_resolved": 0.88515,
+        "P_C3_resolved": 1.0,
+        "P_all_three": 0.88515,
+        "P_point_guard": 1.0,
+        "P_worst_group": 1.0,
+        "P_six_no_regression": 0.7962,
+        "P_qualifying_table": 0.84955,
+        "P_ship": 0.59675
+      }
+    }
+  },
+  "shadow_gate_note": "LEDGER 2.3: the LoTTE shadow GO threshold is the MDE reported here, not zero. Read it off mde.central.",
+  "limitation": "The reserved four have never been scored, so their per-query variance is extrapolated from dev analogues (fever<-hotpotqa, dbpedia<-nq-250k, android<-programmers, english<-physics). DBpedia is the weak link: n=400 against its analogue's 3,452. Sensitivity is reported at +/-25%/-20% on the calibrated sd rather than as a point."
+}
