@@ -1172,11 +1172,36 @@ exist.)*
   **The floors, at int8:** group-vector median 0.00147 (mean) / 0.00088 (sqrt); worst-group and
   out-of-domain macro 0.00218 / 0.00111; all-component macro 0.00199 / 0.00070. fp16 tracks these
   closely.
-  **The finding is that the B leg adds essentially nothing.** The A-leg floor spans 0.00095–0.00227
-  on the same endpoints; the B-leg floor spans 0.00070–0.00218. A whole extra 16,000-step phase of
-  seed-dependent training does not widen the instrument. So `R-PHASE` and the pool/init levers can
-  be read against the same 0.0040 planning minimum as everything else, rather than needing a
-  looser bar of their own — which is the practical point of measuring it.
+  **The comparison I first drew from this is WITHDRAWN.** I wrote that "the B leg adds essentially
+  nothing" — A-leg 0.00095–0.00227 against B-leg 0.00070–0.00218 — and that this licensed reading
+  B-leg-varying probes against the same 0.0040 minimum. An adversarial review killed it and the
+  arithmetic is not close. **At K = 3 the "max pairwise |Δ|" statistic IS the sample range**, whose
+  coefficient of variation is **0.525**; two experiments with *identical* noise produce ranges
+  differing by ≥2× **40%** of the time, and P(R_B ≤ R_A) is exactly **0.500 — a coin flip**. Our
+  observed ratios sit at p = 0.35 and p = 0.48 under equal noise: entirely unremarkable, and
+  equally consistent with the B leg being substantially noisier. A single K = 3 range pins σ only
+  to a **12× span**. (Verified here rather than taken on trust: a 4M-draw simulation reproduces the
+  review's figure exactly.)
+  **What the measurement is actually good for**, which is less than I claimed but not nothing: a
+  negative control and a magnitude yardstick — evidence that the 0.0040 convention does not sit
+  *below* same-configuration seed variation for full chains. It does **not** show the B leg adds no
+  variability, and it does **not** statistically bound B-leg-varying probes.
+  **Two design faults, recorded rather than papered over:**
+  - **The two legs' seeds are ALIASED.** One chain-level seed drives both Phase B and Phase A, so
+    their effects cannot be separated and **may partially cancel** — which would make the observed
+    range an *under*-estimate, the anti-conservative direction. The fix is a crossed design: the
+    three B checkpoints × several A seeds, separating B variance, A variance given B, and the B×A
+    interaction. The three chains on disk are its diagonal; six more A legs complete it.
+  - **The pool is held fixed, so this floor does not bound pool-varying levers at all.** `pseudoq`
+    draws with a seed independent of the training seed, so all three chains distil on the identical
+    text set. That makes this a clean *conditional* seed null — and it means half the stated
+    motivation ("any pool or init change flows through the B leg") is not served by it.
+  **The bars stand as a pre-registered decision CONVENTION, not a statistical bound.** "Twice the
+  observed maximum" has never had a stated error rate, and at K = 3 it covers a fresh null
+  difference about **89%** of the time, not 95%; the 0.0040 minimum, which binds nearly everywhere,
+  is the term doing the real work. The `int8.mean` exception below is the largest of 16 noisy
+  estimates — a winner's curse, so likely high for its own endpoint while saying nothing about
+  whether the other 15 are adequate.
   **One endpoint is the exception and it is now binding**: at `int8.mean`, worst-group and
   out-of-domain macro have 2 × floor = **0.004369**, above the 0.0040 planning minimum. Any bar
   reading those two endpoints under `mean` pooling takes 0.004369, not 0.0040. Every other
