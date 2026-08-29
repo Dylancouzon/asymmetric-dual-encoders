@@ -695,9 +695,11 @@
   },
   "frame": {
     "teacher": "stella_en_400M_v5 (incumbent)",
-    "data_mix": "the M7 mix, from the M7 candidate's own B checkpoint",
-    "legs_varied": "A leg only; the B checkpoint is held fixed",
-    "disclosure": "an arm that differs in its B leg has a LARGER floor, and no bar may read such an arm until that floor is measured too. LEDGER 6 step 5 already voids this floor on a teacher swap; the same applies to a material data-mix change."
+    "data_mix": "the M7 mix",
+    "legs_varied": "BOTH: three full B->A chains, one seed driving both legs",
+    "aliasing": "because ONE seed drives both legs, B-seed and A-seed effects cannot be separated and may partially cancel, which would make this floor an UNDER-estimate. Crossing the three B checkpoints against several A seeds is the fix (LEDGER 15, 2026-08-29).",
+    "pool": "held FIXED -- pseudoq draws with a seed independent of the training seed, so all three chains distil on the identical text set. This is a conditional seed null and does NOT bound pool-varying levers.",
+    "disclosure": "K = 3 makes this statistic the sample RANGE (CV 0.525). It is a pre-registered decision CONVENTION and a magnitude yardstick, not a statistical bound; do not read it as showing the B leg adds no variability."
   },
   "why_steps_are_not_the_floor": "a +/-10% step change is a TREATMENT, not a null: calling its magnitude 'noise' would license a bar that a real effect could clear. It is reported here as recipe sensitivity, never as the floor (LEDGER 4.7).",
   "leg": "B",
@@ -724,9 +726,9 @@
       "exempt_reason": "it IS the noise floor"
     },
     "wave": 1,
-    "registry_sha256": "81a563c88841e2e4829782e3befde608d4bf161d27b634a62dacf52bad2512c9",
-    "ledger_sha256": "c9bf7db3454ea57fafc0b18f25f10b29a56be20b8c807e3a112ecca6c24b2488",
-    "ledger_commit": "dcb495486d37b73c8ded725113a39751e0d1bea5",
+    "registry_sha256": "bca516f528ba2cfc03a7c7d34c89fd502c204246cd7d9ff7d603fb626d3dea2d",
+    "ledger_sha256": "f3bbb08cdbee57459e6bc9a48309783f2fb882dec29ee7d652e3aec5eb9997a4",
+    "ledger_commit": "4e216d7faf751ec4cef16321069909fbb2c30867",
     "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
   }
 }

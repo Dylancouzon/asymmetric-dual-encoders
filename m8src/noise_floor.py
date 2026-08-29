@@ -327,6 +327,27 @@ def main():
         out = measure(a.dump, arm_ids=BLEG_ARMS if a.bleg_arms else None)
         out["leg"] = "B" if a.bleg_arms else "A"
         out["arms_measured"] = list(BLEG_ARMS) if a.bleg_arms else None
+        if a.bleg_arms:
+            # `frame` is written by the A-leg path and describes THAT null. Left alone it made the
+            # B-leg artifact say "A leg only; the B checkpoint is held fixed" and assert that a
+            # B-differing arm "has a LARGER floor" -- a file contradicting its own contents, and
+            # asserting the very claim this measurement does not support.
+            out["frame"] = {
+                "teacher": "stella_en_400M_v5 (incumbent)",
+                "data_mix": "the M7 mix",
+                "legs_varied": "BOTH: three full B->A chains, one seed driving both legs",
+                "aliasing": "because ONE seed drives both legs, B-seed and A-seed effects cannot "
+                            "be separated and may partially cancel, which would make this floor an "
+                            "UNDER-estimate. Crossing the three B checkpoints against several A "
+                            "seeds is the fix (LEDGER 15, 2026-08-29).",
+                "pool": "held FIXED -- pseudoq draws with a seed independent of the training seed, "
+                        "so all three chains distil on the identical text set. This is a "
+                        "conditional seed null and does NOT bound pool-varying levers.",
+                "disclosure": "K = 3 makes this statistic the sample RANGE (CV 0.525). It is a "
+                              "pre-registered decision CONVENTION and a magnitude yardstick, not a "
+                              "statistical bound; do not read it as showing the B leg adds no "
+                              "variability.",
+            }
         dest = (OUT.parent / "m8_noise_floor_bleg.json") if a.bleg_arms else OUT
         probe_guard.write_result(dest, out, "NF", strict_commit=not a.smoke)
         print(json.dumps({"leg": out["leg"], "floor": out["floor"], "bars": out["bars"]}, indent=2))
