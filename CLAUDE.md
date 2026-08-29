@@ -216,6 +216,16 @@ Results dictate Qdrant engineering decisions: correct, not decimal-precise; blin
   failed open, a confounded diagnostic that had licensed a four-hour lever, and a retention figure
   belonging to a reverted candidate. **Brief them adversarially**: give them the numbers, name what
   you believe, and ask them to break it. A review told "confirm this" returns nothing.
+- **EVERY brief must carry a READ-EXCLUSION, and the log must be audited afterwards (2026-08-29
+  incident).** An external reviewer is a separate process with ordinary read access to the whole
+  repo, so `paths_guard`/G2 — an in-process Python bulkhead — is structurally incapable of
+  constraining it. A repo-wide grep dumped two RESERVED confirmatory sets, queries **and qrels**,
+  complete, into a reviewer's context. Nothing was scored and no decision read them, but the
+  reviewer's recommendations were thereby potentially informed by held-out data. So: state in the
+  brief that `results/frozen_eval/untouched-*`, the reserved qrels caches and `work/m9reserve` must
+  not be read; prefer naming the files to read over inviting a repo-wide search; and **grep the
+  review log for reserved-set reads before reading its findings.** Quarantine anything that draws
+  on them.
 
 ## Key decisions (log)
 

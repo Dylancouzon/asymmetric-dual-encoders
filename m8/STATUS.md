@@ -4,7 +4,18 @@
 run.** Nine probes have run; all returned nulls, negatives or instrument readings. **No M8
 training candidate exists. No protected set has been scored. The reserved four are untouched.**
 
-## For Dylan — one decision, and it can wait for the number
+## For Dylan — one incident to rule on, one decision that can wait
+
+**INCIDENT, 2026-08-29: an adversarial reviewer read two RESERVED sets in full** (queries *and*
+qrels: `untouched-cqadup-english`, `untouched-dbpedia-entity`), via a repo-wide grep. `paths_guard`
+cannot cover an external process — a standing hole the routine-review grant reopens every time.
+**No set was scored, no model saw them, no decision read them.** My reading: the sets remain usable
+and the access is intact, because burning requires scoring. The residual risk is that *the
+reviewer's recommendations* may be informed by what it saw, so anything in that review drawing on
+reserved content is quarantined. Fix adopted: every brief now carries a read-exclusion and every
+review log is audited before its findings are read (LEDGER §15; CLAUDE.md). **The call is yours.**
+
+## The decision, and it can wait for the number
 
 The audit registered a **pre-committed exit**: if `D2` and its one alternate (`B10`/`pool_mode`)
 both miss their bars, **M8 does not spend its confirmatory access** — it closes as a measurement

@@ -1181,6 +1181,40 @@ CORPORA are ordinary public downloads while their query and qrel payloads stay g
 in either direction. It states what changed, why, and that the dependent numbers did not yet
 exist.)*
 
+- **2026-08-29 — INCIDENT: an adversarial reviewer read two RESERVED confirmatory sets in full.
+  `paths_guard` does not and cannot cover it. No set was scored; no decision read them.**
+
+  During the audit's Codex review, a repo-wide grep dumped
+  `results/frozen_eval/untouched-cqadup-english.json` (164,742 bytes) and
+  `untouched-dbpedia-entity.json` (67,801 bytes) into the reviewer's context — **complete, queries
+  AND qrels, untruncated**. `dev-cqadup-programmers.json` also, which is development-visible and
+  fine. Found by auditing the review log, not by any guard.
+
+  **Why no guard caught it, and this is the general lesson.** `paths_guard` (G2) is an in-process
+  Python bulkhead: it classifies paths for code running inside `m8src`. **Codex is a separate
+  process with ordinary read access to the whole repo**, so G2 is structurally incapable of
+  constraining it. The standing grant (CLAUDE.md, 2026-08-28) makes adversarial reviews a *routine*
+  instrument — so this is not a one-off, it is a standing hole that every future review reopens.
+
+  **Exposure, stated precisely rather than minimised.** To the reviewer: both files entire. To this
+  session: roughly twenty query strings and zero qrels, from inspecting the log — the qrels sit
+  later in each line and were never displayed. Nothing was scored, no model saw them, no bar or
+  candidate was chosen with knowledge of them.
+
+  **Assessment, and the part that actually matters.** The reserved four are not burned in the sense
+  that matters for the access — burning requires *scoring*, and none happened. The real residual
+  risk is narrower and more interesting: **the reviewer's recommendations are now potentially
+  informed by two reserved sets**, so a lever it proposes could be one it likes *because of* what
+  it saw. Therefore: any recommendation from this review that draws on reserved-set content is
+  quarantined and may not be adopted, and if the review's substantive direction turns out to rest
+  on such content the review is re-run under a read-exclusion before anything is adopted from it.
+
+  **Fix, adopted now:** every adversarial-review brief must carry an explicit read-exclusion for
+  `results/frozen_eval/untouched-*`, the reserved qrels caches and `work/m9reserve`, and the review
+  log is audited for reserved-set reads before its findings are read. Recorded in CLAUDE.md's
+  review instructions so it binds outside this milestone. **For Dylan:** flagged in `m8/STATUS.md`.
+  My reading is that the sets remain usable and the access is intact; the call is his.
+
 - **2026-08-29 — MILESTONE AUDIT AND RE-ROUTE.** No M8 candidate exists and no protected set has
   been scored, so every change here is legal in both directions.
 
