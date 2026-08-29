@@ -40,20 +40,21 @@ have lost the remainder, so it is rewritten instead.
    pass before any encode.
 3. **The remaining gap-list obligations** (LEDGER §4.4). The pre-encode allowlist entry is DONE.
    What is left:
-   - **a B-leg-varying noise floor** — the one floor still unmeasured. R-PHASE and any pool or
-     init change flowing through the B leg cannot be read by any bar without it. Cost: the B leg
-     is 16,000 steps (against the A leg's 2,500), so two chains plus a scoring pass is roughly
-     2–3 hours. Mechanical and fully specified; `m8src/noise_floor.py` needs only a B-varying arm
-     set.
+   - **the B-leg noise floor — DONE** (`results/m8_noise_floor_bleg.json`, LEDGER §15). It is not
+     larger than the A-leg floor, so R-PHASE and the pool/init levers read the same 0.0040
+     planning minimum; the one exception is `int8/mean` worst-group and OOD macro, which take
+     0.004369. All three floors now exist.
    - **`m8src/freeze.py` and `m8src/final_run.py`, and only then their test suites.** The tests
      are in the gap list but they cannot precede the modules, and the modules are a real port —
      M7's `freeze.py` alone is 34,659 bytes of accumulated refusals. This is the largest piece of
      engineering left in the milestone and it is weeks from being needed.
 4. **Wave-1 probes.** S0, T1, B2, B7 and both noise floors have run; B17 ran and was disowned
-   (§20). **B3's bar is frozen at 0.0040 on both endpoints, so its four arms can run** — that is
-   the largest remaining measurement, and its honest prior is in §3 (the clean-stack-tax arm put
-   half a million real pairs at +0.0058, unresolved). **B6-pre — the doc-side ONNX fuse
-   feasibility gate — has never been attempted and gates D1 entirely.**
+   (§20). **B3 was rebuilt twice and its arms are running** — the ICT lever was retired before any arm
+   existed (registry `B3-ICT`), replaced by real-pair pool scaling, then pinned to computable
+   scalars after a second review; the bar is code (`m8src/b3_decide.py`) with a test per branch.
+   What remains is the scoring pass and the verdict. **B6-pre — DONE and PASSED**
+   (`results/m8_b6_pre.json`): one file, 3,415 nodes, zero custom-domain ops, parity min-cosine
+   0.99999994. D1 stays on the Stage-S menu.
 5. **FineWeb arm prep (E13)** — untouched. Span sampler, full contamination/near-dup filters,
    teacher-encode. The arm itself stays refused until its bar is frozen.
 

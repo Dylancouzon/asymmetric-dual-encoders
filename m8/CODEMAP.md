@@ -133,3 +133,14 @@ a non-BERT teacher found two more, and both are silent:
    class of error hides behind a result that looks merely disappointing. Do the diff. Better,
    stamp the commit into `meta.json` on the next run that writes one, and never compare two
    checkpoints from different days without checking `git log --since` on the training path.
+17. **A test that iterates a collection can assert nothing and still print PASS.**
+   `test_guards.py`'s `probe_guard_refuses_bar_pending` looped over registry rows carrying
+   `bar_pending` and asserted each one refuses. For most of the milestone **no row had that field**,
+   so the loop body never executed and the check passed by testing nothing — while sitting in a
+   suite whose whole job is to prove the guards refuse. It only surfaced when a row with the field
+   was finally added and the test failed for an unrelated reason. The fix is not to add a row: it is
+   to **synthesize the case** so the code path runs whatever the data happens to contain. Before
+   trusting any `for x in <discovered set>: assert ...` test, ask what it does when the set is
+   empty; if the answer is "passes", it is not a test yet. The same question applies to a monitor
+   grep, and to the `grep -cE "^(FAIL"` I used to check this very suite — it returned 0 because the
+   real FAIL lines are indented.
