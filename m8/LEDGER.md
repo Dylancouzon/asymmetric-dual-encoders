@@ -1163,6 +1163,26 @@ CORPORA are ordinary public downloads while their query and qrel payloads stay g
 in either direction. It states what changed, why, and that the dependent numbers did not yet
 exist.)*
 
+- **2026-08-29 — HUPD DEFERRED to M9 by Dylan, with a trigger.** The patent-licence question
+  (HUPD is tagged CC-BY-NC-SA-4.0; the counter-argument is that a wrapper cannot restrict statutory
+  public-domain patent text under 37 CFR 1.71; the clean alternative is building from PatentsView,
+  which needs an API key) stays **OPEN and is not needed for M8**.
+  **Why deferring is safe rather than merely convenient.** Postponing a decontamination question is
+  normally dangerous, because training can run before the eval set is settled. That risk requires
+  overlap, and **there is no patent text in M8's training mix at all** — hotpotqa-train,
+  fever-train, squad-train, esci-us, mrtydi-en, with the pseudo-query pool drawn from those same
+  corpora. The property that makes patents attractive as a held-out domain (nothing we train on
+  resembles them) is exactly what makes the decision free to postpone.
+  **THE TRIGGER, which is the only thing that makes this urgent again: a general web crawl.** If
+  the `D-FINEWEB` arm (E13) proceeds, FineWeb is the one planned source that could contain patent
+  text. **The patent question must be settled BEFORE any web-crawl-derived data enters the training
+  mix** — not before M8 in general. `D-FINEWEB`'s bar is not frozen, so nothing is pressing; this
+  entry is the reason a future session must not treat that arm as independent of an M9 question.
+  Options as costed, for whoever picks this up: request a PatentsView key (removes the question
+  rather than answering it, and citation-based labels are a stronger eval than HUPD's); rule the
+  public-domain read sound; rule the NC tag does not reach held-out EVALUATION data, which is a
+  narrower question than the MS MARCO training precedent settled; or drop patents.
+
 - **2026-08-29 — harrier RULED by Dylan: CLOSED, on undisclosed training data.**
   `microsoft/harrier-oss-v1-0.6b` passes the vendor rule (Microsoft is "OK with justification")
   and fails on protocol. Our contamination story depends on knowing what the teacher has read —

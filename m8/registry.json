@@ -327,7 +327,8 @@
    "bar": "TBD-noise-floor",
    "multiplicity": "one arm",
    "no_survivor": "no FineWeb",
-   "release_status": "NEVER RELEASED; refused by freeze.assert_releasable. If it clears the bar by a shippable margin the licensing ruling goes to Dylan WITH the number."
+   "release_status": "NEVER RELEASED; refused by freeze.assert_releasable. If it clears the bar by a shippable margin the licensing ruling goes to Dylan WITH the number.",
+   "blocked_by_open_question": "The HUPD/patent licence question is DEFERRED to M9 but is triggered by THIS arm: FineWeb is a general web crawl and the one planned source that could contain patent text, so the M9 patent reserve must be settled before any web-crawl-derived data enters the training mix (LEDGER 15, 2026-08-29)."
   },
   "R-LIST": {
    "wave": 2,
