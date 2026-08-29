@@ -39,7 +39,8 @@
           "penalty": 0.0,
           "vocab": 30522,
           "dim": 1024,
-          "int8_mb": 31.3
+          "int8_mb": 31.3,
+          "spec_name": "stella-400M-v5"
         },
         "granite-embedding-english-r2": {
           "role": "CG-frame control",
@@ -49,7 +50,8 @@
           "vocab": 50368,
           "dim": 768,
           "int8_mb": 38.7,
-          "trust_remote_code": false
+          "trust_remote_code": false,
+          "spec_name": "granite-r2"
         },
         "gte-modernbert-base": {
           "role": "CG-frame control",
@@ -60,7 +62,8 @@
           "dim": 768,
           "int8_mb": 38.7,
           "trust_remote_code": false,
-          "note": "byte-identical tokenizer to granite-r2: the two share a bag matrix and one frame"
+          "note": "byte-identical tokenizer to granite-r2: the two share a bag matrix and one frame",
+          "spec_name": "gte-modernbert-base"
         },
         "stella_en_1.5B_v5": {
           "role": "challenger",
@@ -72,7 +75,8 @@
           "dim": 1024,
           "int8_mb": 155.3,
           "trust_remote_code": true,
-          "auto_map": "same-repo"
+          "auto_map": "same-repo",
+          "spec_name": "stella-1.5B-v5"
         },
         "harrier-oss-v1-0.6b": {
           "role": "challenger",
@@ -90,7 +94,8 @@
             "LAST-TOKEN pooling: m7src/teacher.py implements only cls/mean and raises otherwise; screening it needs new code in m8src (m7src is frozen, G3)",
             "no published retrieval-only number -- only mixed-task MTEB v2 69.0",
             "no usable sequence-start row: its embedding lives at the LAST token"
-          ]
+          ],
+          "spec_name": "harrier-0.6b"
         }
       },
       "penalty_rule": "near-sibling iff the challenger shares the incumbent's tokenizer identity (bert-wordpiece-30522) AND its dimension (1024); else dissimilar. Fixed here, before any screen runs.",
@@ -98,7 +103,8 @@
       "exempt_reason": "closed-form dev probe with its own CI-resolution bar, not a trained-arm comparison; named as exempt in LEDGER 4.7 and 6",
       "blocked_on": "B7 -- every challenger's vocabulary is >= 50,368 and the direct fp64 Gram at that size is 20.3 GB, above the 18 GB budget. Until a solver exists that does not materialize the Gram, T1 can only re-run candidates M7 already closed CI-resolved.",
       "frame_note": "fixed WITHIN a tokenizer family; a cross-family challenger is screened in its own vocabulary and the comparison is labelled teacher-plus-tokenizer, with the vocabulary size at every row",
-      "penalty_note_2026_08_29": "every challenger is DISSIMILAR (none shares bert-wordpiece-30522), so every penalty is 0.0096. Fixed before any screen ran."
+      "penalty_note_2026_08_29": "every challenger is DISSIMILAR (none shares bert-wordpiece-30522), so every penalty is 0.0096. Fixed before any screen ran.",
+      "incumbent_spec_name": "stella-400M-v5"
     },
     "B2": {
       "wave": 1,
