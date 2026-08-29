@@ -9,78 +9,17 @@ reserved four are untouched.**
 
 ---
 
-## WAKE-UP NOTE — five decisions, in the order they block work
+## OWNER RULINGS — all five decided 2026-08-29 (LEDGER §15 has the reasoning)
 
-**1. E14 — doc-side co-adaptation. The biggest unopened lever, and it needs your ruling.**
-LightRetriever's table works because its document encoder was *co-trained to be reachable by a bag
-of token vectors*. M7 fit a bag to a **frozen** doc space never trained to be bag-compatible —
-which is, literally, what M7's own verdict "the remaining gap is architectural" describes. The fix
-is to LoRA/fine-tune the document tower jointly with the table. **Your rulings survive it**: the
-query side stays pure lookup (E1), it is training-time not index-time (E5), one doc-side ONNX file
-(E3). **The bill, so you are not agreeing to a hidden one:** it breaks document-vector sharing
-with frozen M7, so the 10.12M-document reserved pre-encode is paid **twice**; it needs a licence
-check that stella permits released derived weights; and it **forces C2 to be redefined**, since
-"the M8 table against the *same* frozen document vectors" stops being possible once the doc tower
-moves — and C2 is your E11 ruling. **A literature sweep found nobody has measured this**
-(`research/m8-planning/literature-2026-08-29.md`): LightRetriever's own ablations never freeze the
-document tower, and EmbedDistill runs the inverse experiment with a *transformer* query side. So
-E14 is an open experiment — unguided, and correspondingly novel if it works. **I have not opened
-it.**
-
-**2. P(ship), before the milestone spends a week.** `results/m8_power.json`, calibrated on real
-paired per-query vectors. Reserved-four macro SE **0.00209**, 95% half-width **0.0041**, **MDE
-0.0068**.
-
-| scenario | true C1 effect | P(ship) |
+| # | question | ruling |
 |---|---|---|
-| structural target | +0.020 | **0.84** |
-| modest | +0.010 | **0.80** |
-| recipe-only | +0.005 | **0.21** |
-| M7 repeat (its post-gate transfer was 0.000 ± 0.005) | 0.000 | **0.002** |
-| dense lags fused (strict C2 binds) | +0.020 / +0.006 | **0.57** |
+| 1 | **E14** doc-side co-adaptation | **Measure it small first.** A dev-scale LoRA on the document tower, and bring back the number. The 10.12M double pre-encode, the stella derived-weights licence check and any C2 redefinition are **NOT** authorised — so **C2 and E11 stand unchanged**. |
+| 2 | **E10** the shadow | **The seven clean-community LoTTE slices, per-question remedy** (R1's own logic). The CQADupStack subforums are **rejected — not on contamination, which they passed, but on correlation with the exam**: two of the reserved four *are* CQADupStack, so iterating against subforums would tune us toward a confirmatory read we cannot re-take. Re-screen after remedy; the shadow is a check, **never** a selection surface. |
+| 3 | **harrier** | **Closed, on undisclosed training data.** No comparison design repairs not knowing what a teacher has read, and the protocol is the thing we do not relax. **stella stands; T1's NO SWAP is final for M8.** stella-1.5B remains unscreened and needs no new ruling to pick up. |
+| 4 | **HUPD** / patents | **Deferred to M9** — safe because **no patent text exists anywhere in M8's training mix**, so the reserve cannot be contaminated by work done now. **Trigger:** settle it before any web-crawl-derived data (the `D-FINEWEB` arm) enters training; that row now carries the note. |
+| 5 | **E12** LR-dense | **Published numbers only, labelled.** A full run is ~10.12M docs through a 1.5B model for a comparator that does not gate the ship decision. **The report may never state or imply a head-to-head** on our data. |
 
-*An earlier version of this table read 0.67 / 0.57 / 0.15 / 0.002 / 0.46 and was wrong: the
-simulator still carried the planning draft's guard constants after §5 had been given its measured
-ones, overstating the six-set guard's false-veto rate ~40×. Found by adversarial review; the
-simulator now reads the registry instead of restating it.*
-
-**A recipe-only programme ships with probability ~0.2; a repeat of M7's measured transfer ships
-essentially never.** That is the case for spending the milestone on capacity, and the LEDGER says
-so in the protocol (§7) so the budget cannot drift back.
-
-**3. E10 — the shadow. IT REOPENS: all ten LoTTE slices reject.**
-`results/m8_lotte_overlap.json`, 5.25M documents screened. Three of the ten fail on **community
-intersection with protected sets** (english, physics, android + softwareengineering) — those are
-dead under any remedy. The other seven fail only on **query leakage**, 2–15 fingerprint matches
-per ~2,000 questions. Exact matches concentrate almost entirely in the three community-overlapping
-slices; the clean-community seven are nearly all fingerprint-*near*.
-
-**I did not relax the bar after watching it bite.** But the tension is yours to resolve: §3's
-standing rule **R1 removes the ITEM**, while S0's newer bar drops the whole **SLICE**. Under a
-per-question remedy, seven slices survive with ~2,000 questions each. A third option is measured:
-`results/m8_shadow_alternatives.json` — the **eight unused CQADupStack subforums** (323,488
-documents, 8,961 queries), already licence-cleared, no contamination against the reserved pair,
-but the same benchmark family as two reserved sets. **Also: LoTTE's `search` queries are
-non-commercial-research-only** (GooAQ licence); I used forum queries only, which needs no ruling.
-**Your call: lose the shadow, authorise the per-question remedy, or substitute the subforums.**
-
-**4. Two licence/provenance rulings.**
-- **harrier** is `microsoft/harrier-oss-v1-0.6b` — Microsoft, so "OK with justification", **not**
-  disqualified. But it has **three** blockers now: undisclosed training data (your ruling);
-  **last-token pooling** that `m7src/teacher.py` raises on, so it needs new code; and **no
-  published retrieval-only number** to sanity-check a screen against. My read: not worth your
-  ruling yet.
-- **HUPD** (USPTO reserve) is tagged **CC-BY-NC-SA-4.0**, stricter than previously recorded. Our
-  standing rule says a wrapper tag cannot restrict public-domain text (37 CFR 1.71) — but that is
-  a legal interpretation and I am not inferring it. The stronger citation-based construction needs
-  a **PatentsView API key** you must request.
-
-**5. The E12 comparator's bill.** LR-dense-websearch means pushing 10.12M documents through a
-1.5B-parameter Qwen on a 10 GB card — plausibly more GPU time than all of Stage R.
-`instructions-m8.md` already sanctions published numbers as labelled context. **Pre-agreeing the
-fallback beats discovering the collision in week three.**
-
----
+**Nothing is now blocked on Dylan.**
 
 ## What was measured tonight
 

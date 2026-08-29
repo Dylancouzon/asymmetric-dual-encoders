@@ -1163,6 +1163,21 @@ CORPORA are ordinary public downloads while their query and qrel payloads stay g
 in either direction. It states what changed, why, and that the dependent numbers did not yet
 exist.)*
 
+- **2026-08-29 — E12 RULED by Dylan: LightRetriever-dense enters as PUBLISHED NUMBERS ONLY,
+  labelled.** No LR-dense encode is bought. The full comparison would push 10.12M confirmatory
+  documents through a 1.5B-parameter Qwen on a 10 GB card — on the order of a hundred-plus
+  GPU-hours, plausibly exceeding Stage R itself — for a comparator that **does not gate the ship
+  decision**: the three confirmatory legs are C1 and C2 (M8 against M7) and C3 (M8 against BM25).
+  The partial option (measuring only the two CQADupStack confirmatory sets, ~63K documents, about
+  0.6% of the total) was offered and declined; it is recorded here in case a future session wants
+  a cheap like-for-like and assumes none was available.
+  **The binding constraint that comes with this ruling:** published figures are their setup on
+  their data, so the report may present LR-dense as **context only and must never state or imply a
+  head-to-head** on our datasets — no shared table column that reads as like-for-like, no delta
+  computed against our numbers, and the labelling must survive editing. `instructions-m8.md`
+  already sanctioned published numbers as labelled context, so this ruling adds no permission; it
+  fixes the scope and forbids the overclaim.
+
 - **2026-08-29 — HUPD DEFERRED to M9 by Dylan, with a trigger.** The patent-licence question
   (HUPD is tagged CC-BY-NC-SA-4.0; the counter-argument is that a wrapper cannot restrict statutory
   public-domain patent text under 37 CFR 1.71; the clean alternative is building from PatentsView,
