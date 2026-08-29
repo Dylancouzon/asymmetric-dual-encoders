@@ -38,11 +38,17 @@ have lost the remainder, so it is rewritten instead.
      result would have nothing to check against. Lowest priority of anything on this list.
    `m8src/challengers.py` registers Specs at runtime; add a row and `validate_encoder.py` must
    pass before any encode.
-3. **The remaining gap-list obligations** (LEDGER §4.4): `test_final_guard.py`,
-   `test_freeze_binding.py`, a **B-leg-varying noise floor** (the one floor still unmeasured —
-   R-PHASE and any pool/init change flowing through the B leg cannot be read without it), and the
-   **reserved-4 pre-encode allowlist entry** (G2 currently refuses `beir/fever` outright, which is
-   the right default and will block the pre-encode at pipeline step 13 unless registered first).
+3. **The remaining gap-list obligations** (LEDGER §4.4). The pre-encode allowlist entry is DONE.
+   What is left:
+   - **a B-leg-varying noise floor** — the one floor still unmeasured. R-PHASE and any pool or
+     init change flowing through the B leg cannot be read by any bar without it. Cost: the B leg
+     is 16,000 steps (against the A leg's 2,500), so two chains plus a scoring pass is roughly
+     2–3 hours. Mechanical and fully specified; `m8src/noise_floor.py` needs only a B-varying arm
+     set.
+   - **`m8src/freeze.py` and `m8src/final_run.py`, and only then their test suites.** The tests
+     are in the gap list but they cannot precede the modules, and the modules are a real port —
+     M7's `freeze.py` alone is 34,659 bytes of accumulated refusals. This is the largest piece of
+     engineering left in the milestone and it is weeks from being needed.
 4. **Wave-1 probes.** S0, T1, B2, B7 and both noise floors have run; B17 ran and was disowned
    (§20). **B3's bar is frozen at 0.0040 on both endpoints, so its four arms can run** — that is
    the largest remaining measurement, and its honest prior is in §3 (the clean-stack-tax arm put

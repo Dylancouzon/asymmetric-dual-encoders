@@ -476,8 +476,8 @@ a wrong number, pointed the other way: a future session (or the owner reading Gi
 
 | missing | what it must do | blocks |
 |---|---|---|
-| `m8src/test_final_guard.py` | the 14-line one-shot checklist in §6, each with an acceptance test | the access |
-| `m8src/test_freeze_binding.py` | the refusals `freeze.write` must make on M8 paths | the freeze |
+| `m8src/final_run.py` + `m8src/test_final_guard.py` | the one-shot access path and the 14-line checklist in §6, each with an acceptance test. **The test cannot precede the module** — there is nothing yet to test, and writing acceptance tests against a module that does not exist is how a suite ends up asserting its author's intentions. | the access |
+| `m8src/freeze.py` + `m8src/test_freeze_binding.py` | the freeze path and the refusals it must make on M8 paths. Same dependency: **the module first.** M7's `freeze.py` is 34,659 bytes of accumulated refusals; the port is a real job, not a rename. | the freeze |
 | B-leg noise floor | a null pair varying the B leg, for arms that restructure it (R-PHASE and any pool/init change flowing through B) | those probes' bars |
 
 `./run_m8_tests.sh` names the unported suites in its output for the same reason.
