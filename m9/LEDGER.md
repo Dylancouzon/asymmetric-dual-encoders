@@ -547,6 +547,68 @@ import. No G2 allowlist entry is created for M9.1; none is needed.
     rather than DEV-6, because DEV-6 no longer has four checkpoints. The decision contrasts are
     unchanged — they always read the final checkpoint, and DEV-6 is still evaluated there.
 
+20. **WITHDRAWN 2026-08-30, on measurement and the owner's ruling: the teacher screen.** `m9s2`
+    (stella-1.5B) ran to completion before an unrelated guard failure voided its artifact, and its
+    checkpoint curve sits **behind** the stella-400M anchor at every point —
+    0.44649 / 0.48034 / 0.49225 / **0.49775** against 0.44814 / 0.48121 / 0.49459 / **0.50004**, a
+    final delta of **−0.00229** where the swap rule needs **+0.010**. A teacher 3.75× larger with a
+    materially better MTEB score (0.5837 vs 0.5609) distils *worse*, which is M8's `T1` finding
+    generalising from tables to towers. Qwen3-0.6B's nominal edge (+0.004) is smaller than the one
+    that just lost (+0.023). **stella-400M stands as the teacher by default and by Dylan's product
+    preference — one document model and one collection shared by `zero` and `nano` — not by a
+    registered measurement.** The figures above are diagnostic: they informed a decision not to
+    spend two GPU-hours, and no M9 claim rests on them.
+21. **Recorded 2026-08-30 (operational):** editing `m9src/guard9.py` mid-screen voided every arm in
+    flight, because the guard's own module sits in the `protocol` scope it enforces. Care had been
+    taken over `LEDGER.md` and `registry.json` and none over the guard itself. Cost: the
+    eligibility of five completed arms, though their document caches and numbers survived. **All
+    guarded-file edits are batched into windows between arms from here.**
+
+---
+
+## §14 M9.2 — the recipe lock for the seven-day build
+
+Lives in **`m9/M92_LOCK.md`**, deliberately outside this file: a guarded protocol file cannot be
+edited while an arm is in flight, and the build's recipe needed drafting while the screen ran.
+Constants a machine reads are generated into `work/m9long/config.json` by `m9src/make_config.py`,
+which shows the arithmetic for every one. The build's own scope (`build`) pins the trainer, the
+watchdog, the config and the manifest.
+
+Registered there and not repeated here: dose 5/5/90 by token · 113 examples a step · warmup →
+stable → decay-on-demand with a 59,507,872-token cooldown · the four-part kill envelope · the
+first-eval gate against this run's own step-0 baseline · stop-on-evidence rather than on a horizon.
+
+---
+
+## §15 Codex review #5 — the seven-day trainer
+
+`research/m9-codex-longrun-2026-08-30.md`. Verdict **DO NOT LAUNCH**, seven blockers, all actioned.
+The first was that a fresh run **crashed before its first optimizer step** (`warmfit.ARTIFACT` did
+not exist), which proved the fresh-start path had never been executed end to end. The most
+consequential was that the loss was **not the plain example mean its own docstring claimed** —
+token shares set the batch composition and were then applied again as objective weights, giving a
+95-token document ~6× the weight of a 16-token query. Also: integrity compared two copies of a
+*declaration* rather than bytes; resume silently accepted a different recipe; decay was not
+resumable; the mandated kill envelope did not exist; and the trainer ran outside the guard.
+Its dose recommendation (5/5/90) and cooldown scale (the anchor's own 59.5M tokens) were both
+adopted over my drafts, and its advice to skip the capacity probe was taken.
+
+---
+
+## §16 Codex review #6 — the watchdog
+
+`research/m9-codex-watchdog-2026-08-30.md`. Verdict **DO NOT LAUNCH UNATTENDED**, six blockers, all
+actioned. The first defeated every stopping rule in §15's work: the trainer exits *normally* after
+a first-eval failure, a regression, a plateau or a completed cooldown, and the watchdog — seeing
+only "no PID" — restarted it, after which the first-eval gate could never fire again. The second is
+the sharper lesson: **the throughput guard written specifically for the measured `m9s2` slowdown
+would not have caught `m9s2`**, because it used the cumulative session mean, which takes ~five days
+to fall below half after a 5× drop on day three and re-baselines onto the degraded rate at every
+restart. Also: `exists()`-then-write is not a lock; a fresh-start wedge was invisible because both
+staleness checks were guarded on a heartbeat that did not exist yet; the plateau rule compared
+evaluations ~164M tokens apart while demanding a 1B-token span, so it could never fire; and a crash
+between checkpoint and history append lost that evaluation permanently.
+
 ---
 
 ## §10 Codex lock review — disposition

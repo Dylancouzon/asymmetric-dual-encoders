@@ -141,7 +141,8 @@
       "both_pass": "larger point estimate wins",
       "on_swap": "STOP and return to Dylan: student/prompt/mix cannot run on DEV6 in a challenger space",
       "stop_enforced_in": "m9src/screen.py:require_predecessors -- a challenger selection refuses every subsequent arm, not just warns",
-      "voids_downstream": "a challenger win voids every student/prompt/mix decision taken under the incumbent and returns the milestone to Dylan; it never silently re-bases them"
+      "voids_downstream": "a challenger win voids every student/prompt/mix decision taken under the incumbent and returns the milestone to Dylan; it never silently re-bases them",
+      "status": "NOT EXERCISED in M9. stella-400M stands as the teacher by default and by the owner's product preference -- one document model and one collection shared by zero and nano -- with a diagnostic measurement pointing the same way. The rule itself is unchanged and available."
     },
     "student": {
       "surface": "DEV6",
@@ -209,7 +210,9 @@
       "prompt": "b",
       "mix": "query-only",
       "seed": 0,
-      "surface": "SCREEN3"
+      "surface": "SCREEN3",
+      "decision_eligible": false,
+      "withdrawn": "WITHDRAWN 2026-08-30 by Dylan, on measurement. m9s2 (stella-1.5B) ran to completion before an unrelated guard failure voided its artifact, and its checkpoint curve is BEHIND the stella-400M anchor at every point: 0.44649/0.48034/0.49225/0.49775 against 0.44814/0.48121/0.49459/0.50004 -- a final delta of -0.00229 where the swap rule needs +0.010, i.e. the wrong sign. A teacher 3.75x larger with a materially better MTEB score (0.5837 vs 0.5609) distils WORSE, which is M8's T1 finding generalising from tables to towers. Qwen3-0.6B's nominal edge (+0.004) is smaller than the one that just lost (+0.023), so its prior is worse still. Diagnostic, not a registered result: it informs a resource decision, and stella-400M remains the teacher by default, not by measurement."
     },
     {
       "id": "m9s3",
@@ -219,7 +222,9 @@
       "prompt": "b",
       "mix": "query-only",
       "seed": 0,
-      "surface": "SCREEN3"
+      "surface": "SCREEN3",
+      "decision_eligible": false,
+      "withdrawn": "WITHDRAWN 2026-08-30 by Dylan, on measurement. m9s2 (stella-1.5B) ran to completion before an unrelated guard failure voided its artifact, and its checkpoint curve is BEHIND the stella-400M anchor at every point: 0.44649/0.48034/0.49225/0.49775 against 0.44814/0.48121/0.49459/0.50004 -- a final delta of -0.00229 where the swap rule needs +0.010, i.e. the wrong sign. A teacher 3.75x larger with a materially better MTEB score (0.5837 vs 0.5609) distils WORSE, which is M8's T1 finding generalising from tables to towers. Qwen3-0.6B's nominal edge (+0.004) is smaller than the one that just lost (+0.023), so its prior is worse still. Diagnostic, not a registered result: it informs a resource decision, and stella-400M remains the teacher by default, not by measurement."
     },
     {
       "id": "m9s4",
@@ -261,7 +266,8 @@
       "seed": 0,
       "surface": "SCREEN3",
       "decision_eligible": false,
-      "why": "a 109M student at the identical dose, to measure whether the >=35M cap is what binds retention before three days of compute are committed. OUT OF M9 SCOPE for selection -- the mandate caps nano at 35M and reserves anything larger for M10 on Dylan's call. Authorised by Dylan 2026-08-30."
+      "why": "a 109M student at the identical dose, to measure whether the >=35M cap is what binds retention before three days of compute are committed. OUT OF M9 SCOPE for selection -- the mandate caps nano at 35M and reserves anything larger for M10 on Dylan's call. Authorised by Dylan 2026-08-30.",
+      "withdrawn": "WITHDRAWN 2026-08-30 by Dylan, on Codex review #5 (m9/EXPLORED.md)"
     }
   ],
   "validation_samples": {
@@ -483,7 +489,6 @@
       "runs": [
         "m9-warmfit",
         "m9-fp16-gate",
-        "m9-port-pilot",
         "m9-bridge-dryrun",
         "m9s1",
         "m9s1c",
@@ -493,15 +498,18 @@
     },
     "B": {
       "runs": [
-        "m9s2",
-        "m9s3",
         "m9s4",
         "m9s5",
         "m9s6"
       ],
       "gated_by": "adequacy",
       "purpose": "the seed-sensitivity row and the five contrast arms",
-      "order_amendment": "WITHDRAWN 2026-08-30. The reorder (student/prompt/mix before the teacher arms) was justified by a time budget that no longer exists, and Codex pass 4 was right that the 'void later' rule is not equivalent to teacher-first: teacher-first PREVENTS invalid downstream experiments, while void-later runs them, inspects them and promises to discard them. Order restored to the mandate's. The void rule is kept as a belt-and-braces backstop, not as a justification."
+      "order_amendment": "WITHDRAWN 2026-08-30. The reorder (student/prompt/mix before the teacher arms) was justified by a time budget that no longer exists, and Codex pass 4 was right that the 'void later' rule is not equivalent to teacher-first: teacher-first PREVENTS invalid downstream experiments, while void-later runs them, inspects them and promises to discard them. Order restored to the mandate's. The void rule is kept as a belt-and-braces backstop, not as a justification.",
+      "withdrawn_runs": [
+        "m9s2",
+        "m9s3",
+        "m9cap-diag"
+      ]
     },
     "order_enforced_in": "m9src/screen.py:require_predecessors",
     "diagnostics": {
