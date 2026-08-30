@@ -21,6 +21,13 @@ for p in (REPO / "m7src", REPO / "m8src", REPO / "bench", REPO):
 # The teacher M9 inherits. ASSIGNED, never defaulted: `setdefault` would let an operator's stale
 # export silently replace the incumbent (Codex BLOCKER-4; CODEMAP pitfall 9 is the same failure
 # from the other direction). A conflicting value is refused, not overridden in silence.
+# Interleaving a 23 GB retrieval evaluation with training fragments the caching allocator: the
+# card sits at 9,985/10,240 MiB, power falls from 288 W to 150 W at 96% "utilisation", and the
+# training rate drops from ~2,000 to ~340 ex/s. `empty_cache()` alone does not repair it because
+# the arena is fragmented, not merely cached. Expandable segments are the allocator's own fix, and
+# they are pinned here so the environment is part of the lock rather than an operator's export.
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+
 INCUMBENT = "stella-400M-v5"
 _env = os.environ.get("M7_ENCODER")
 if _env not in (None, "", INCUMBENT):

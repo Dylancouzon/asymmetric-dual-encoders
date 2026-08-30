@@ -202,7 +202,10 @@ def decide(kind, a, b, *, hist_a=None, hist_b=None, idx=None):
         res["direction_stable"] = len(signs) == 1
         ok = ok and res["direction_stable"]
     elif rule.get("rank_stability"):
-        res["rank_stability"] = rank_stable(hist_a, hist_b, sname)
+        # SCREEN-3: the only surface with four checkpoints, since DEV-6 is now read once at the
+        # end (m9/registry.json dose.checkpoint_surfaces).
+        res["rank_stability"] = rank_stable(hist_a, hist_b,
+                                            reg()["rules"]["rank_stability_surface"])
         ok = ok and res["rank_stability"]["stable"]
 
     res["pass"] = bool(ok)

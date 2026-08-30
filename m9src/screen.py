@@ -235,13 +235,13 @@ def run_arm(arm_id, smoke=0):
         plan["offs"] = plan["offs"][:keep]
         cfg = {**cfg, "steps": keep - 1, "checkpoints": [keep - 1]}
 
-    late = set(cfg["checkpoints"][-2:])
+    final = cfg["checkpoints"][-1]
 
     def eval_fn(model, step):
-        # SCREEN-3 every checkpoint; the three heavy DEV-6-only components at the last two only
-        # (m9/registry.json dose.checkpoint_surfaces).
+        # SCREEN-3 every checkpoint; the three heavy DEV-6-only components at the FINAL checkpoint
+        # only (m9/registry.json dose.checkpoint_surfaces).
         comps = eval9.components("SCREEN3")
-        if spec["teacher"] == eval9.INCUMBENT and step in late:
+        if spec["teacher"] == eval9.INCUMBENT and step == final:
             comps = eval9.components("DEV6")
         per = eval9.eval_student(model, spec["teacher"], comps=comps)
         return {"macros": eval9.macros(per, spec["teacher"]), "per_component": per}
@@ -298,14 +298,15 @@ def adequacy_verdict():
     assert got == cl["sha256"], (
         f"the ceiling artifact {cl['artifact']} hashes {got[:12]}, the registry pins "
         f"{cl['sha256'][:12]} -- the retention denominator is not the registered one")
-    ceil6 = cl["DEV6"]
+    surf = g["surface"]
+    ceil6 = cl[surf]
     ck = r["dose"]["checkpoints"]
-    m = {h["step"]: h["macros"]["DEV6"]["macro"] for h in blob["history"]
-         if "DEV6" in h.get("macros", {})}
+    m = {h["step"]: h["macros"][surf]["macro"] for h in blob["history"]
+         if surf in h.get("macros", {})}
     missing = [c for c in ck[-2:] if c not in m]
     ret = m.get(ck[-1], 0.0) / ceil6
     slope = (m.get(ck[-1], 0.0) - m.get(ck[-2], 0.0)) if not missing else None
-    out = {"anchor": "m9s1", "ceiling_dev6": ceil6, "final_macro": m.get(ck[-1]),
+    out = {"anchor": "m9s1", "surface": surf, "ceiling": ceil6, "final_macro": m.get(ck[-1]),
            "retention": round(ret, 4), "late_slope": slope,
            "conditions": g["conditions"], "missing_checkpoints": missing,
            "pass_retention": bool(ret >= g["conditions"]["retention_at_final"]["min"]),

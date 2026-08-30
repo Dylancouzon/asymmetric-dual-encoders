@@ -231,7 +231,7 @@ fires, the run stops (§0 amendment).
 | optimizer steps | **30,349** — the last batch is 32 examples and **is** trained, at its natural size |
 | **T_base non-pad tokens** | **59,507,872** (16 × 3,719,242); per-step budget **1,960.8** |
 | checkpoints | **7,588** · 15,175 · 22,762 · **30,349** — the step at which each quarter of the examples *completes* (the first was one step early in the draft). Decision reads the last; the last two feed the rank-stability rule, **by step id, never by position** |
-| checkpoint **surfaces** | SCREEN-3 at all four (0.65 GB of document vectors, free, and it carries the dose-response curve); **DEV-6 at checkpoints 3 and 4 only** — a DEV-6 pass streams 23.3 GB at this box's measured 174 MB/s, so four passes per arm would cost more wall-clock than the training they measure. Fixed before any arm ran; every rule stays executable because the decision reads checkpoint 4 and rank stability reads 3 and 4 |
+| checkpoint **surfaces** | SCREEN-3 at all four (0.65 GB of document vectors — nearly free, and it carries the dose-response curve); **DEV-6 at the FINAL checkpoint only.** A DEV-6 pass streams 23.3 GB, and *interleaved with training* it fragments the CUDA allocator badly enough to cost more wall-clock than the training it measures (§9.15). Reading it once, at the end, removes the interleaving. Consequence, fixed before any arm ran: the adequacy gate and the rank-stability rule both read **SCREEN-3**, the only surface with four points; the decision contrasts read **DEV-6 at the final checkpoint**, which is where they were always defined |
 | seed | 0 (data order, init, dropout); arm 1b seed 1 |
 | optimizer | AdamW, β (0.9, 0.999), eps 1e-8, weight decay 0.01 on tensors with dim > 1 and 0.0 otherwise, grad-clip 1.0 global norm, no gradient accumulation |
 | LR | `warmup: 1e-4·(step+1)/910`; then `1e-5 + 0.5·(1e-4−1e-5)·(1+cos(π·(step−910)/(30349−910−1)))`. The `−1` matters: with `steps−warmup` the last executed step is short of the endpoint and `lr_final` is never reached |
@@ -513,10 +513,17 @@ import. No G2 allowlist entry is created for M9.1; none is needed.
     its own feature space. §3.2a now states the estimand instead.
 14. **Corrected 2026-08-30:** the adequacy gate was described as a ranking-adequacy test. It is a
     **budget trigger** with two judgement thresholds; §4.4 says so.
-15. **Recorded 2026-08-30 (operational, not a claim):** the first anchor attempt degraded from
-    1,990 to 786 ex/s because the per-checkpoint evaluation left ~10 GB cached in the PyTorch
-    allocator — 98% GPU utilisation at 160 W, the allocator-thrash signature CLAUDE.md names.
-    `torch.cuda.empty_cache()` now follows every checkpoint evaluation.
+15. **Recorded 2026-08-30 (operational, not a claim), and corrected twice:** interleaving a DEV-6
+    evaluation with training collapses the training rate from ~2,000 to ~340 ex/s — the card pinned
+    at 9,985/10,240 MiB, power down from 288 W to 150 W at 96% "utilisation", which is CLAUDE.md's
+    allocator-thrash signature, not work. `torch.cuda.empty_cache()` after each evaluation was
+    tried first and **did not fix it**: the arena is fragmented, not merely cached. The fix is
+    `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`, pinned in `m9src/m9base.py` so it is part
+    of the lock rather than an operator's export, together with reading DEV-6 once at the end
+    instead of interleaving it. Two anchor attempts were killed and re-run over this.
+16. **Corrected 2026-08-30:** the adequacy gate and the rank-stability rule now read **SCREEN-3**
+    rather than DEV-6, because DEV-6 no longer has four checkpoints. The decision contrasts are
+    unchanged — they always read the final checkpoint, and DEV-6 is still evaluated there.
 
 ---
 

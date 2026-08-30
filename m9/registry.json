@@ -82,8 +82,9 @@
     "epoch_order": "one default_rng(seed); fresh permutation(n) per epoch, concatenated",
     "retrieval_dtype": "fp32 matmul from fp16 document memmaps",
     "checkpoint_surfaces": {
-      "SCREEN3": "all four checkpoints (0.65 GB of document vectors -- free, and it carries the dose-response curve)",
-      "DEV6": "checkpoints 3 and 4 only -- the two the rank-stability rule reads. A DEV6 pass streams 23.3 GB of document vectors at this box's measured 174 MB/s, so four passes per arm would cost more wall-clock than the training they measure",
+      "SCREEN3": "all four checkpoints -- 0.65 GB of document vectors, so it is nearly free and it carries the dose-response curve",
+      "DEV6": "the FINAL checkpoint only. A DEV-6 pass streams 23.3 GB of document vectors and, interleaved with training, fragments the allocator badly enough to cost more wall-clock than the training it measures. Reading it once, at the end, removes the interleaving",
+      "consequence": "the adequacy gate and the rank-stability rule both read SCREEN-3, which has all four points; the DECISION contrasts read DEV-6 at the final checkpoint, which is where they were always defined",
       "decided_before_any_arm_ran": true
     },
     "batch_size_note": "locked at 128. The batch-32 pilot was registered and then REMOVED before any arm ran: two matched epochs give batch 32 four times the optimizer updates and compress a separate warmup+cosine schedule into a miniature, so it measures early optimization speed, not the batch size that wins at final dose (Codex pass 2, MAJOR-7). LEAF's bs=32 finding was made at roughly a hundred times this dose.",
@@ -162,8 +163,9 @@
       "rank_stability": true,
       "default": "query-only"
     },
-    "rank_stability_rule": "the contrast must have the same sign at the last two checkpoints; a flip means 'not stable at screen dose' -> default, arm recorded diagnostic",
-    "scope": "every screen verdict is artifact-specific at the screen dose; never 'resolved', 'confirmed' or 'significant'"
+    "rank_stability_rule": "the contrast must have the same sign at the last two checkpoints ON SCREEN-3 (the only surface with four points); a flip means 'not stable at screen dose' -> default, arm recorded diagnostic",
+    "scope": "every screen verdict is artifact-specific at the screen dose; never 'resolved', 'confirmed' or 'significant'",
+    "rank_stability_surface": "SCREEN3"
   },
   "arms": [
     {
@@ -480,16 +482,16 @@
   },
   "adequacy_gate": {
     "read_after": "m9s1",
-    "surface": "DEV6",
+    "surface": "SCREEN3",
     "conditions": {
       "retention_at_final": {
         "min": 0.6,
-        "of": "the stella-400M DEV-6 symmetric ceiling 0.67238",
+        "of": "the stella-400M SCREEN-3 symmetric ceiling 0.68223",
         "why": "below this the student sits so far from the teacher surface that a contrast between two arms is dominated by early-imitability rather than by the factor under test (Codex pass 2, MAJOR-9)"
       },
       "late_slope": {
         "max": 0.02,
-        "definition": "macro(ckpt4) - macro(ckpt3) on DEV6",
+        "definition": "macro(ckpt4) - macro(ckpt3) on SCREEN-3",
         "why": "a curve still climbing steeply at the final checkpoint is an early-training snapshot, and its ranking need not survive to final dose"
       }
     },
@@ -499,9 +501,9 @@
     },
     "decided_before_any_arm_ran": true,
     "kind": "a BUDGET TRIGGER, not a calibrated ranking-adequacy test. Neither threshold is tied to a measured rank-concordance rate, and the slope is a two-point difference read where the cosine schedule has already decayed the LR to 1e-5 -- so a small late gain can mean the schedule shut learning down rather than that the representation converged (Codex pass 3). It is used only to decide whether spending stage B is worth it; it certifies nothing",
-    "ceiling_from": "registry ceilings.stella-400M-v5.DEV6, with the artifact hash pinned"
+    "ceiling_from": "registry ceilings.stella-400M-v5.SCREEN3, with the artifact hash pinned"
   },
-  "lock_constants_sha256": "106e4d3f38392d12e345c71cb1394d124b858ff795280c60022dda573b0cb5dd",
+  "lock_constants_sha256": "cc9a452b1c5d7327838c4dc6c2855c5435d0e6a71cf1a71f6814ee6d4126bb33",
   "ceilings": {
     "stella-400M-v5": {
       "DEV6": 0.67238,
