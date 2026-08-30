@@ -38,7 +38,19 @@ def spec_and_cfg():
     return row, screen.arm_cfg(row), diag
 
 
+SKIPPED = ("WITHDRAWN by Dylan, 2026-08-30, on Codex review #5's recommendation. It costs 60-70 "
+           "minutes; the mandate caps nano at 35M so M9 cannot act on the result whichever way it "
+           "goes; and that hour buys something the seven-day run actually needs -- a real "
+           "resume-equivalence test and a post-eval throughput check. The question it would have "
+           "answered (is the 35M cap what binds retention, or the dose?) carries forward to M10, "
+           "where a larger student is in scope. This module is left intact so M10 can run it.")
+
+
 def run():
+    raise SystemExit("m9cap-diag is not run in M9.\n\n" + SKIPPED)
+
+
+def _run_unused():
     t0 = time.time()
     spec, cfg, diag = spec_and_cfg()
     guard9.begin_run(RUN_ID)

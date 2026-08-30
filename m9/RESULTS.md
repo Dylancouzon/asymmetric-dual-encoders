@@ -274,3 +274,10 @@ edge-class hardware, and quantization is a precondition rather than an optimisat
 - **The head+tail long-query probe.** Will not run in M9; first-512 truncation is stated as a
   limitation and `heldout-longq` may not change any decision.
 - **Stage B** (`m9s1b`, `m9s2`, `m9s3`, `m9s4`, `m9s5`, `m9s6`) — gated on the adequacy gate.
+- **The capacity probe (`m9cap-diag`)** — registered, authorised, and **withdrawn before running**
+  on Dylan's ruling, 2026-08-30. It would have cost 60–70 minutes to ask whether the ≤35M cap or
+  the dose is what binds retention. M9 cannot act on either answer — the mandate caps nano at 35M —
+  and the same hour buys a real resume-equivalence test and a post-eval throughput check for the
+  seven-day build, which can save that run rather than merely inform the next milestone. The
+  question carries to M10, where a larger student is in scope; `m9src/capacity_probe.py` is left
+  intact so M10 can run it unchanged.
