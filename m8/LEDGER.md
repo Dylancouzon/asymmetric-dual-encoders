@@ -1257,6 +1257,19 @@ the result JSON, or `research/m8-planning/`.*
 
 **PROTOCOL AMENDMENTS**
 
+- **Stale bars unfrozen `B8` / `R-LIST` / `B10` (2026-08-29), after `D2-PRE`.** All three still read
+  `TBD-noise-floor` although the floor was measured on 2026-08-29, so `probe_guard` refused them —
+  and since `B10` is `D2`'s NAMED ALTERNATE and `B8` + `R-LIST` are both required by
+  `D2.exit_precondition`, **the milestone's entire fallback path was unreachable and the
+  pre-committed exit could never fire.** D2 was the only runnable route by accident of the guard, not
+  by evidence. Bars frozen from the MEASURED floor by §4.7's formula, arm type per §23: `B8`
+  **0.0040** (closed-form, deterministic, adopts nothing), `R-LIST` **0.0040** (A-leg-only), `B10`
+  **0.00519** (trains through the served rule → chain-varying). No number is new; nothing is
+  loosened. **Standing lesson: a measured floor does not freeze a bar — an amendment does. When a
+  floor lands, sweep every row whose bar reads TBD in the same commit.** (The first attempt was
+  itself refused because the provenance note inside the `bar` string contained the literal "TBD" —
+  the guard was right, and provenance now lives in `bar_frozen`, not in the rule.)
+
 - **`D2-PRE` review response #3 (2026-08-29), before any solve or retrieval score existed.** A Codex
   pass on the IMPLEMENTATION design returned **6 BLOCKERs / 8 MAJORs, all adopted**; two BLOCKERs
   were contradictions *inside the frozen row* that no implementation could repair. The row is the
@@ -1524,3 +1537,35 @@ dense only); `NF-CROSSED-FUSED` measures it.
 diagonal is `B_s + A_s + e`, already carrying the chain variance — unbiased-but-noisy, not
 anti-conservative. Confirmed on this data: the diagonal's range sits at 0.43× its own expectation,
 inside the [0.25, 1.96] interval a K=3 range spans.
+
+### §24 — `D2-PRE`: **DO NOT AUTHORISE** (`results/m8_d2_pre.json`)
+
+**All four new-row classes are NEGATIVE out-of-fold** against the +0.00519 bar, so `D2`'s five
+chains are not authorised: `add_word` **−0.0028** (best) · `seg` **−0.0052** · `seg_cold` −0.0055 ·
+`add_char` −0.0137. One positive fold out of five for three arms, zero for `add_char`. 96 minutes.
+
+**The negative is not a failed measurement — the three artifact explanations are all excluded.**
+(a) The sum-init zero-residual compile reproduces R0 to **−2.8e-06** against a 0.001 tolerance, so
+the registry's corrected compositional floor (**sum**, not mean) is confirmed at full scale and
+condition 5 passes. (b) Coverage was never the constraint: zero-update occurrence mass **0.0001 –
+0.001** against the 20% gate. (c) No leakage — **zero** OOD query texts appear in the fit list — and
+λ was **interior** for three of four arms, so the descent-and-stop amendment cannot be blamed.
+
+**The sharpest evidence.** `seg_cold` forces **23,601 of 35,014** rows to zero residual and moves the
+result by 0.0002 against `seg`. Two-thirds of the added vocabulary is inert: the residual capacity is
+not thinly spread, it is absent.
+
+**BOTH classes close, and that was the design.** `reversal_margin_met` fired — additive beats
+segmentation by 0.0024 ≥ the registered 0.0020 margin, as the algebra predicted (an additive row at
+zero residual recovers R0 exactly; a segmentation change does not). Had anything cleared, the chains
+would have gone additive. Since both are negative, a `D2` miss **cannot** be re-read as the wrong
+parameterisation — which is exactly why the additive arms were registered alongside it.
+
+**Scope, stated:** this is a CLOSED-FORM screen on the CQADupStack dev pair. It says the added rows
+carry no closed-form residual capacity; it does not prove trained rows could not. That is what the
+0.00519 routing threshold was for, and it was not met by any arm in any direction.
+
+**Descriptive only, never a gate** (§15 review #3): stage-1 fertility reduction 0.164 / 0.176 on the
+OOD pair. It cleared the old text's ~0.104 comfortably and the arms still lost — which is itself
+evidence for §17b's downgrade to correlated headroom, since the mechanism moved and the metric did
+not follow.

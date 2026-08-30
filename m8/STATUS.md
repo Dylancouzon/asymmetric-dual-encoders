@@ -1,8 +1,12 @@
 # M8 status
 
-**Re-routed by a milestone audit, 2026-08-29. Next to run: `D2-PRE`.** Nine probes have run; all
-returned nulls, negatives or instrument reads. **No M8 candidate exists; no protected set has been
-scored; the confirmatory access is unspent.**
+**`D2-PRE` ran 2026-08-29: DO NOT AUTHORISE. `D2` is CLOSED and so is the additive n-gram class**
+(§24). Ten probes have run; all returned nulls, negatives or instrument reads. **No M8 candidate
+exists; no protected set has been scored; the confirmatory access is unspent.**
+
+**Next: `B8` (~15 min), then `R-LIST`, then `B10`** — all three were REFUSED by `probe_guard` until
+2026-08-29 because their bars still read `TBD-noise-floor` long after the floor was measured, which
+made the fallback path unreachable and the pre-committed exit unable to fire. Bars now frozen (§15).
 
 ## Open for Dylan — one question, and it must be answered before any number
 
@@ -17,14 +21,22 @@ stay clean for M9 (P(ship) under `m7_repeat` ≈ 0.002). It cannot fire until `D
 
 ## The plan
 
-**`D2-PRE` first** — a sub-hour closed-form preflight on the `B7` solver, comparing D2's
-segmentation against additive overlapping word and character n-gram rows at equal row budget,
-cross-fitted. **It can reverse the plan**: if an additive arm wins, D2 stands down. Registered
-before the number. Then `D2` (bar **0.00519**, the chain floor) only if it clears.
+**`D2` is closed.** `D2-PRE` scored all four new-row classes NEGATIVE out-of-fold against +0.00519 —
+best `add_word` −0.0028, D2's own segmentation −0.0052 (§24, `results/m8_d2_pre.json`). Not a
+coverage, compile, leakage or λ artifact; all four were checked and excluded. Zeroing 23,601 of
+35,014 rows moved the result 0.0002, so the added rows are inert rather than under-trained. The
+registered reversal fired (additive > segmentation by 0.0024), so **both** classes close and a D2
+miss cannot be re-read as the wrong parameterisation.
 
-`D2`'s mechanism is §17b — the table falls 0.050 nDCG behind the teacher per +1.0 subwords/word,
-t=4.61, surviving every single-dataset exclusion at t ≥ 3.28 — but that is **correlated headroom,
-not a bound in either direction**. Prior is not clean: VDR 30K→110K moved BEIR 44.5 → 42.6.
+Remaining order, cheapest first: **`B8`** (closed-form document-centroid target, ~15 min; the ledger
+calls deferring it a false economy) → **`R-LIST`** (`B2` triggered it directly: `teacher_top200` is
+0.777 nats, so the KL class is NOT closed) → **`B10`** (`pool_mode`, weak prior +0.0011). Then
+re-run CLAUDE.md's standing directive, and only then is the exit eligible.
+
+**Unregistered, and ranked above the above by an external review: Vector-PRF** (arXiv 2205.00235) —
+`q' = normalize(αq + β·mean(top-k docs))` at the published fixed α=0.4/β=0.6/k=3. No training, no
+document-index growth, uses the contextual document tower to pull a bag query onto the document
+manifold. It is a SYSTEM change, not a better table; register it as such.
 
 Worklist: `m8/NEXT-SESSION.md`. Protocol: `m8/LEDGER.md`. Bars: `m8/registry.json`.
 

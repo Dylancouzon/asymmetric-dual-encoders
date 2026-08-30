@@ -124,3 +124,19 @@ arms. Per-run detail is in `results/m7_run_m8nf-*.json`.
 | m8e14-mlp-s0 | `work/runs/m8e14-mlp-s0.json` | 0.4876 | ok |
 | m8e14-mlp-s1 | `work/runs/m8e14-mlp-s1.json` | 0.4894 | ok |
 | m8e14-mlp-s2 | `work/runs/m8e14-mlp-s2.json` | 0.4895 | ok |
+
+## `D2-PRE` — 2026-08-29, DO NOT AUTHORISE (`results/m8_d2_pre.json`)
+
+Closed-form, no training. 4 arms x 35,014 added rows x 5 folds, cross-fitted with disjoint OOD
+scoring folds. 5,785 s.
+
+| arm | OOF gain vs C | folds > 0 | lambda |
+|---|---|---|---|
+| `add_word` | **−0.00284** | 1/5 | 1 (interior) |
+| `seg` (D2) | **−0.00523** | 1/5 | 1 (interior) |
+| `seg_cold` | −0.00545 | 1/5 | 1 (interior) |
+| `add_char` | −0.01367 | 0/5 | 10 (boundary) |
+
+Bar +0.00519. R0 0.367314 · compile 0.367311 (delta −2.8e-06) · zero-update mass 0.0001–0.001 ·
+OOD/fit text overlap 0/0 · `reversal_margin_met` true (additive > segmentation by 0.0024).
+Conditions 3 and 5 pass; 1, 2 fail; 4 not run (conjunction already decided).

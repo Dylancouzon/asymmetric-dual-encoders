@@ -25,3 +25,13 @@ avenue with no reopening condition is a guess, not a finding.
 | **A LINEAR doc-side head** | Provably absorbable into the table (standing directive #4), so it adds no capacity and would measure nothing while producing a number. `E14-HEAD` therefore specifies a NONLINEAR head. | Nothing — it is algebra, not a measurement. |
 | **B17's ≤0.40 "class caps in domain" branch** | Fired at 0.1999 and was **disowned**: the same class fitted on 350K general queries scores 0.3439, so B17 measured its own 957-query fit set, exactly as its pre-registered caveat warned. The rule was NOT amended. | A capacity probe with a fit set large enough that its own fit is not the binding constraint. |
 | **Post-hoc linear projection into a frozen doc space** | M2/M7 negative result, airtight: potion-32M→arctic-m reaches 0.3280 against its own symmetric 0.3427, even with test-set-tuned regularisation. | Nothing linear. This is the observation that motivates E14's *nonlinear*, *jointly trained* framing. |
+
+- **Compositional new rows — BOTH classes closed on evidence (`D2-PRE`, 2026-08-29).** Non-overlapping
+  multi-word segmentation AND additive overlapping word/character n-gram rows, at an equal 35,014-row
+  budget on frozen incumbent rows: every arm NEGATIVE out-of-fold (best −0.0028, D2's own −0.0052)
+  against +0.00519. Not a coverage failure (zero-update mass 0.0001–0.001 vs a 20% gate), not a
+  compile failure (sum-init reproduces R0 to −2.8e-06), not leakage (0/0 overlap), not the lambda
+  rule (interior for 3 of 4 arms). **Decisive detail:** zeroing 23,601 of 35,014 rows moves the
+  result 0.0002 — two-thirds of the added vocabulary is inert. §17b's fertility mechanism DID move
+  (reduction 0.164/0.176) and the metric did not follow, which is direct evidence for its downgrade
+  to correlated headroom. Closes `D2` and the n-gram class; `§13`'s supersession question is moot.

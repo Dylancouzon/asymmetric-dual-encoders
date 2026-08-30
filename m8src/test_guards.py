@@ -345,19 +345,48 @@ def t_probe_guard_refuses_tbd_bar():
 
 
 def t_probe_guard_refuses_incomplete_row():
-    """Every wave-2 stub must be refused: a stub is a placeholder for a registration, not one."""
-    reg = probe_guard.registry()["probes"]
-    # B16 is wave 2 but descriptive-and-exempt by registration, so it is legitimately runnable;
-    # the stubs are the ones that will become bars.
-    stubs = [p for p, r in reg.items()
-             if r.get("wave") == 2 and r.get("adopts") != "nothing"]
-    assert stubs, "no wave-2 stubs found"
-    for p in stubs:
+    """An incomplete row must be refused: a stub is a placeholder for a registration, not one.
+
+    This test used to assert that every wave-2 row with `adopts != nothing` refuses, on the
+    assumption that wave 2 == unfinished. That coupled a guard test to the CALENDAR rather than to
+    the guard: when `B8`, `R-LIST` and `B10` had their bars frozen from the measured floor
+    (LEDGER §15, 2026-08-29) they became legitimately runnable and this test failed -- reporting a
+    correct registry as a broken one. Worse, it was the same brittleness in the other direction as
+    CODEMAP pitfall 17: the set it iterated was DISCOVERED, so what it proved depended on what the
+    registry happened to contain that day.
+
+    It now SYNTHESIZES the case against a complete donor row, one required field at a time, so the
+    refusal path is exercised whatever the registry holds -- and then checks that every row still
+    carrying a placeholder does refuse, for a registered reason.
+    """
+    base = probe_guard.registry()
+    donor = next(p for p, r in base["probes"].items()
+                 if "tbd" not in str(r.get("bar", "")).lower() and not r.get("bar_pending")
+                 and all(str(r.get(f, "")).strip() for f in probe_guard.REQUIRED))
+    orig = probe_guard.registry
+    try:
+        for field in probe_guard.REQUIRED:
+            reg = copy.deepcopy(base)
+            reg["probes"][donor][field] = ""
+            probe_guard.registry = lambda r=reg: r
+            try:
+                probe_guard.assert_registered(donor, strict_commit=False)
+            except probe_guard.ProbeNotRegistered as e:
+                assert field in str(e), f"refused for the wrong reason on {field}: {e}"
+            else:
+                raise AssertionError(f"a row with an empty {field!r} was accepted ({donor})")
+    finally:
+        probe_guard.registry = orig
+
+    # and any row still carrying a TBD bar must refuse
+    for p, r in probe_guard.registry()["probes"].items():
+        if "tbd" not in str(r.get("bar", "")).lower():
+            continue
         try:
             probe_guard.assert_registered(p, strict_commit=False)
         except probe_guard.ProbeNotRegistered:
             continue
-        raise AssertionError(f"wave-2 stub {p} was accepted as runnable")
+        raise AssertionError(f"probe {p} with a TBD bar was accepted")
 
 
 def t_probe_guard_refuses_bar_pending():

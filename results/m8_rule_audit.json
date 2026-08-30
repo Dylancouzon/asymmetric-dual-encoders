@@ -1,8 +1,8 @@
 {
   "_note": "LEDGER \u00a74.4 deliverable 3: rule compliance, AUDITED rather than discovered.",
-  "head": "c6f294c7559a477d9315076d78d36784e0d7b8fd",
+  "head": "2f8df3b3166210a2e5e4bddd6c380edce3f03eb5",
   "registry_version": 2,
-  "registry_sha256_now": "36fe9a5199abaaa44fbc78342f6aae5c133f51eeef5cf6b5f3fe035c597d14b5",
+  "registry_sha256_now": "792be640c06225dea349198e69ca8dac39dd29ba0397c30690fcf9e9e33ba31b",
   "stamped_results_checked": [
     {
       "file": "m8_b17_oracle.json",
@@ -43,6 +43,11 @@
       "file": "m8_b7_solver.json",
       "probe": "B7",
       "commit": "a76fd9c9"
+    },
+    {
+      "file": "m8_d2_pre.json",
+      "probe": "D2-PRE",
+      "commit": "fe2f4652"
     },
     {
       "file": "m8_e14_head.json",
@@ -92,6 +97,8 @@
   ],
   "unstamped_artifacts": [
     "m8_b7_realdata.SMOKE.json",
+    "m8_d2_pre.SMOKE.json",
+    "m8_dev_reuse_count.json",
     "m8_devperquery_cal.json",
     "m8_encoder_validation.json",
     "m8_fragmentation_attribution.json",

@@ -22,10 +22,10 @@
   },
   "eval_only_variants_total": 112,
   "closed_form_dev_reads": {
-   "D2-PRE": 0,
-   "_note": "not yet run"
+   "D2-PRE": 50,
+   "_note": "4 arms x 5 folds plus the comparator, over the two out-of-domain components"
   },
-  "total_dev_looks": 284,
+  "total_dev_looks": 334,
   "per_arm": {
    "m8b3-p025-s0": 5,
    "m8b3-p025-s1": 5,
