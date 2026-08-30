@@ -97,6 +97,27 @@ Both are well under the 0.0056 decision threshold, which is reassuring but prove
 over K = 2 is one half-normal draw, not an estimate of σ (`m8/CODEMAP.md` pitfall 18). It is why
 this number is **reported beside** every contrast and never **read by** one.
 
+## M10 port risks, retired early
+
+| question | answer |
+|---|---|
+| **Does the DOCUMENT model export?** `B6-pre` only ever proved this on near-identity weights, and stella carries custom remote code | **YES.** `results/m9_doc_export.json`: 435M params, dim 1024, 3,416 nodes, **zero custom-domain ops** at opset 17, parity min-cos **0.99999940** / max-abs 3.3e-07. 1.75 GB fp32, 875 MB fp16 |
+| **Does fastembed actually serve nano?** The M9.1 port pilot could only register a description | **YES, exactly.** min-cos **0.9999997**, max-abs 6.3e-08. It needed a finding: fastembed applies its own declared pooling, so it rejects an already-pooled graph, and has no slot for a dense layer *after* pooling — which is where nano's head sits. Masked mean-pooling is linear, so `mean(W·hᵢ+b) == W·mean(hᵢ)+b`; exporting the head **per token** and letting fastembed pool is identical. nano therefore ships two graphs from one set of weights, agreeing to 6e-08 |
+
+## Edge serving cost — measured on an Apple M5 Pro, 4 threads, batch 1
+
+`results/m9_edge_cost_Apple_M5_Pro.json`. ONNX Runtime, tokenizer inside the timed region.
+
+| model | shipped fp16 | cold load | p50 @1–5w | @6–10w | @11–20w | @21–50w | @51–120w |
+|---|---|---|---|---|---|---|---|
+| nano-bge-small | 68.2 MB | 78 ms | 1.59 ms | **2.33 ms** | 3.22 ms | 6.24 ms | 12.28 ms |
+| nano-MiniLM-L6 | 46.8 MB | 40 ms | 0.84 ms | **1.15 ms** | 1.66 ms | 3.13 ms | 6.03 ms |
+| mdbr-leaf-ir (comparator) | 46.0 MB | 40 ms | 0.82 ms | 1.13 ms | 1.70 ms | 3.14 ms | 6.35 ms |
+
+For the frontier: `zero`'s query side is a 0.023 ms table lookup, so nano costs ~50–100× more
+query-side compute and is still ~1–2 ms on an edge-class CPU. Latency is architecture- and
+tokenizer-dependent, not weight-dependent, so these hold for the trained artifact.
+
 ## Reference rows measured this milestone
 
 | row | DEV-6 | SCREEN-3 (family weights) |

@@ -90,6 +90,8 @@ def export(name, out_dir, opset=17):
     head = torch.nn.Linear(hid, spec["head"]) if spec["head"] else None
 
     class Serve(torch.nn.Module):
+        """The self-contained serving graph: pooling and normalization inside."""
+
         def __init__(self):
             super().__init__()
             self.b, self.h = backbone, head
@@ -102,6 +104,25 @@ def export(name, out_dir, opset=17):
                 v = self.h(v)
             return torch.nn.functional.normalize(v, dim=-1, eps=1e-12)
 
+    class ServeTokens(torch.nn.Module):
+        """The same model, emitting TOKEN-level vectors for a host that pools itself.
+
+        fastembed applies its own declared pooling to the model output, so it cannot accept a
+        graph that has already pooled -- and its pipeline has no slot for a dense layer AFTER
+        pooling, which is exactly where nano's head sits. The algebra makes that a non-problem:
+        masked mean-pooling is linear, so mean(W.h_i + b) == W.mean(h_i) + b. Applying the head
+        PER TOKEN and letting the host mean-pool is therefore identical, not an approximation --
+        `--check-commute` measures it rather than asserting it.
+        """
+
+        def __init__(self):
+            super().__init__()
+            self.b, self.h = backbone, head
+
+        def forward(self, input_ids, attention_mask):
+            hs = self.b(input_ids=input_ids, attention_mask=attention_mask).last_hidden_state
+            return self.h(hs) if self.h is not None else hs
+
     ex = tok(["a short query", "a longer example sentence for the export trace"],
              padding=True, truncation=True, max_length=64, return_tensors="pt")
     torch.onnx.export(Serve().eval(), (ex["input_ids"], ex["attention_mask"]), str(p32),
@@ -110,7 +131,18 @@ def export(name, out_dir, opset=17):
                                     "attention_mask": {0: "b", 1: "s"},
                                     "embedding": {0: "b"}},
                       opset_version=opset, do_constant_folding=True, dynamo=False)
+    ptok = out_dir / "model_tokens.onnx"
+    torch.onnx.export(ServeTokens().eval(), (ex["input_ids"], ex["attention_mask"]), str(ptok),
+                      input_names=["input_ids", "attention_mask"], output_names=["token_embeddings"],
+                      dynamic_axes={"input_ids": {0: "b", 1: "s"},
+                                    "attention_mask": {0: "b", 1: "s"},
+                                    "token_embeddings": {0: "b", 1: "s"}},
+                      opset_version=opset, do_constant_folding=True, dynamo=False)
     tok.save_pretrained(out_dir)
+    # fastembed's local-model route wants a config.json beside the graph; without it
+    # `TextEmbedding(specific_model_path=...)` refuses. Saving it is what turns a registered
+    # description into an actually served model.
+    backbone.config.save_pretrained(out_dir)
     import onnx
     from onnxruntime.transformers.float16 import convert_float_to_float16
     import copy

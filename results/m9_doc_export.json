@@ -1,0 +1,37 @@
+{
+  "_what": "can the DOCUMENT half of the pair be ported? stella-400M -> ONNX. B6-pre only ever exported a document graph on near-identity weights, so the real artifact has never been through this. Feeds no quality decision.",
+  "repo": "NovaSearch/stella_en_400M_v5",
+  "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+  "opset": 17,
+  "host": {
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+    "machine": "x86_64",
+    "python": "3.12.14"
+  },
+  "dim": 1024,
+  "params": 435188736,
+  "export_seconds": 64.9,
+  "onnx_bytes": 1749799839,
+  "n_nodes": 3416,
+  "domains": [
+    ""
+  ],
+  "custom_domain_ops": [],
+  "pass_no_custom_ops": true,
+  "onnx_fp16_bytes": 875481471,
+  "parity_min_cos": 0.9999994039535522,
+  "parity_mean_cos": 1.0,
+  "parity_max_abs": 3.3155083656311035e-07,
+  "parity_n": 40,
+  "pass_parity": true,
+  "pass": true,
+  "fastembed_local": {
+    "served": true,
+    "route": "TextEmbedding(model_name=..., specific_model_path=<dir>) with add_custom_model(pooling=MEAN, normalization=True, model_file='model_tokens.onnx')",
+    "min_cos_vs_self_contained_graph": 0.999999664330427,
+    "max_abs": 6.331118590496843e-08,
+    "finding": "fastembed applies its OWN declared pooling to the model output, so it cannot accept a graph that has already pooled -- and its pipeline has no slot for a dense layer AFTER pooling, which is exactly where nano's head sits. Masked mean-pooling is linear, so mean(W.h_i + b) == W.mean(h_i) + b: exporting the head PER TOKEN and letting fastembed pool is identical, not an approximation. Measured, not assumed.",
+    "consequence_for_m10": "nano ships TWO graphs from one set of weights -- a self-contained model.onnx for anyone calling ONNX Runtime directly, and model_tokens.onnx for fastembed. They agree to 6e-08."
+  },
+  "seconds": 167.6
+}
