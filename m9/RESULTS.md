@@ -20,6 +20,22 @@ the JSON; this file is the index and the one-line reading.
 | `m9s1` | the anchor: stella-400M teacher, bge-small student, prompt (b), query-only, seed 0, warm-started head, 16 epochs / 30,349 steps / 59,507,872 non-pad tokens |
 | `m9s1c` | the same arm **without** the warm start — a registered diagnostic that prices it |
 
+### `m9s1c` — what the closed-form head is worth
+
+| | SCREEN-3 | DEV-6 |
+|---|---|---|
+| `m9s1` warm-started | 0.49958 | 0.48041 |
+| `m9s1c` random head | 0.47304 | 0.45632 |
+| **delta** | **+0.0265** | **+0.0241** |
+
+The estimand is the **fixed-SGD-dose warm-start delta**: same seed, same 30,349 steps, same
+59.5M non-pad tokens, differing only in whether the head started from a ridge solution or from
+PyTorch's default init. It is not compute-matched — the warm start adds a Stage-0 phase of 60,000
+forwards and 918,015 tokens for 8.4 s — and one seed cannot separate initialization value from its
+interaction with data order. At **+0.0265** it is nonetheless about 4.7x the 0.0056 decision
+threshold, and it costs 0.5% of the arm's wall-clock. Twelve seconds of `np.linalg.solve`, found by
+a closed-form probe before any chain was spent.
+
 **Aborted attempt 1 (quarantined, `logs/m9_arm_m9s1_aborted.log`).** Reached checkpoint 1
 (7,588 steps, 4 epochs, 14,878,695 non-pad tokens): SCREEN-3 **0.448139** = **65.7%** of the 0.6822
 ceiling, up from 50.8% at the warm-started start. Killed at ~11,000 steps for two independent
@@ -64,6 +80,22 @@ so the pilot stands as a fail and the decision goes to M10 with three facts:
    changes retrieval**. Register a macro-shift threshold on SCREEN-3 *before* measuring it, the way
    M7 priced its int8 table as quality-free (0.4117 vs 0.4114). That is an M10 task; M9 does not
    get to invent a threshold tonight for a number it has already seen.
+
+### `m9s1b` — seed sensitivity (reported, read by no rule)
+
+Identical recipe and dose at seed 1 instead of seed 0. With the head warm-started in closed form
+the model has **no random initialization at all** — a pretrained backbone and a deterministic head
+— so the seed moves only data order and dropout.
+
+| | SCREEN-3 | DEV-6 |
+|---|---|---|
+| seed 0 (`m9s1`) | 0.49958 | 0.48041 |
+| seed 1 (`m9s1b`) | 0.50081 | 0.48271 |
+| \|Δ\| | **0.00123** | **0.00230** |
+
+Both are well under the 0.0056 decision threshold, which is reassuring but proves little: a range
+over K = 2 is one half-normal draw, not an estimate of σ (`m8/CODEMAP.md` pitfall 18). It is why
+this number is **reported beside** every contrast and never **read by** one.
 
 ## Reference rows measured this milestone
 
