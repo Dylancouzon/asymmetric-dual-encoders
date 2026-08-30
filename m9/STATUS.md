@@ -165,7 +165,7 @@ SEL_PROMPT=$(.venv/bin/python -c "import json;print(json.load(open('results/m9_s
 .venv/bin/python m9src/test_resume.py            # MUST pass; never skip
 # ONLY before the first launch -- NEVER once the build has started (it would erase the run's
 # resumable state and its kill-rule history):
-rm -f work/m9long/terminal.json work/m9long/trainer.lock work/m9long/watchdog.lock \
+rm -f work/m9long/terminal.json work/m9long/trainer.lock \
       work/m9long/heartbeat.json work/m9long/history.jsonl work/m9long/step0_eval.json \
       work/m9long/throughput_baseline.json \
       work/m9tokens/SESSION-build.json work/m9tokens/m9-build.json

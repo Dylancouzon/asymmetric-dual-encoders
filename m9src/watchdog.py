@@ -57,39 +57,29 @@ def log(rec):
 
 
 WD_LOCK = RUN / "watchdog.lock"
+_WD_LOCK_FH = None    # held open for the watchdog's lifetime; the kernel releases it on death
 
 
 def acquire_wd_lock():
     """Two watchdogs do not compose: each SIGTERMs trainers the other just started and both
-    inflate restart counters until one (or both) gives up (Fable review, M3). Same O_EXCL +
-    /proc start-time pattern as the trainer lock."""
+    inflate restart counters until one (or both) gives up (Fable review, M3). flock, not
+    O_EXCL-plus-staleness: the kernel drops the lock the instant the holder dies, so there is no
+    stale-lock state and therefore no takeover race (Codex #10/#11). The file is NEVER unlinked --
+    unlinking would let a second watchdog lock a fresh inode while the first still runs."""
+    global _WD_LOCK_FH
+    import fcntl
     RUN.mkdir(parents=True, exist_ok=True)
-    for _ in range(2):
-        try:
-            fd = os.open(WD_LOCK, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-            os.write(fd, json.dumps({"pid": os.getpid(),
-                                     "start": longrun._proc_start(os.getpid()),
-                                     "at": time.time()}).encode())
-            os.close(fd)
-            return
-        except FileExistsError:
-            held = read_json(WD_LOCK)
-            if held and longrun._proc_start(held["pid"]) == held.get("start"):
-                raise SystemExit(f"{WD_LOCK} is held by live watchdog pid {held['pid']}. "
-                                 f"Two watchdogs must never supervise one trainer.")
-            # Atomic takeover: only ONE contender can rename the stale lock, so a second
-            # watchdog racing this path cannot unlink the winner's freshly created lock
-            # (Codex #10). The loser loops and finds the new, live lock.
-            try:
-                stale = WD_LOCK.with_suffix(".stale")
-                os.rename(WD_LOCK, stale)
-                stale.unlink(missing_ok=True)
-                print(f"cleared a stale watchdog lock from pid "
-                      f"{held['pid'] if held else '?'}", flush=True)
-            except FileNotFoundError:
-                pass
-            time.sleep(1)
-    raise SystemExit("could not acquire the watchdog lock")
+    fh = open(WD_LOCK, "a+")
+    try:
+        fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        fh.close()
+        raise SystemExit(f"{WD_LOCK} is flock-held by a live watchdog. Two watchdogs must never "
+                         f"supervise one trainer.")
+    fh.truncate(0)
+    fh.write(json.dumps({"pid": os.getpid(), "at": time.time()}))
+    fh.flush()
+    _WD_LOCK_FH = fh
 
 
 def trainer_alive():
@@ -444,7 +434,6 @@ def main():
     except Exception as e:
         print(f"final status write failed: {e!r}", flush=True)
     log({"event": "watchdog_stop", "detail": f"{restarts} restarts"})
-    WD_LOCK.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
