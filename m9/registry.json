@@ -75,11 +75,10 @@
       }
     },
     "T_base_nonpad_tokens": 59507872,
-    "per_step_token_budget": 1960.8,
     "partial_batch": "the final batch is trained at its natural size (32 examples)",
     "grad_accumulation": 0,
     "weight_decay_applies_to": "parameters with dim > 1; 0.0 otherwise",
-    "lr_formula": "warmup: 1e-4*(step+1)/910; then 1e-5 + 0.5*(1e-4-1e-5)*(1+cos(pi*(step-910)/(30349-910)))",
+    "lr_formula": "warmup: 1e-4*(step+1)/910; then 1e-5 + 0.5*(1e-4-1e-5)*(1+cos(pi*min(1,(step-910)/(30349-910-1))))",
     "epoch_order": "one default_rng(seed); fresh permutation(n) per epoch, concatenated",
     "retrieval_dtype": "fp32 matmul from fp16 document memmaps",
     "checkpoint_surfaces": {
@@ -92,7 +91,8 @@
       "why": "prompt policy (a) prepends ~20 tokens per query; 16 full epochs would be a larger non-pad dose than the baseline and would confound prompt with dose",
       "steps": 30349,
       "tokens": 59507872
-    }
+    },
+    "token_budget_note": "the batcher tracks T_base cumulatively; there is no per-step budget constant to go stale"
   },
   "objective": {
     "phase1": "mean_over_batch(sum_over_dim((normalize(student_out) - target)^2))",
@@ -138,7 +138,8 @@
       "default": "stella-400M stays",
       "tie": "stella stays",
       "both_pass": "larger point estimate wins",
-      "on_swap": "STOP and return to Dylan: student/prompt/mix cannot run on DEV6 in a challenger space"
+      "on_swap": "STOP and return to Dylan: student/prompt/mix cannot run on DEV6 in a challenger space",
+      "stop_enforced_in": "m9src/screen.py:require_predecessors -- a challenger selection refuses every subsequent arm, not just warns"
     },
     "student": {
       "surface": "DEV6",
@@ -266,22 +267,13 @@
       "min_cos": 0.9999,
       "max_abs": 0.001,
       "applies_to": "every example",
-      "sample_sha256": "65128ee7571f09f4f37a71d23b361b756209b38fe862ab532756adbcd0b4ad8b"
+      "sample_sha256": "3cd2aff8d76763058068769ffd990dff11b6ee83c8701ee0de305e34a5e733fb"
     },
     "bridge_dryrun": {
       "surface": "DEV6",
       "anchor": "bge-small-en-v1.5",
       "max_abs_delta_ndcg": 0.0003,
       "qid_drift": 0
-    },
-    "throughput_pilot": {
-      "n_queries": 20000,
-      "query_seed": 13,
-      "n_docs": 5000,
-      "doc_source": "first 5000 of the locked candidate list",
-      "warmup_batches_discarded": 2,
-      "formula": "sum over the 9 runs of (examples / measured ex_per_s) + measured challenger encode seconds",
-      "fallback_threshold_gpu_hours": 12
     }
   },
   "bins": {
@@ -452,10 +444,14 @@
     "n_fit": 60000,
     "seed": 21,
     "lambda": 0.0001,
-    "lambda_selected_on": "the training residual, NOT a dev surface (train sq-L2 0.49556 at 1e-4, monotone in lambda over 1e-4..1)",
+    "lambda_selected_on": "a TRAINING-ONLY holdout: fit on the first 50,000 of the 60,000-text warm-start sample, score the remaining 10,000 under the ACTUAL normalized objective ||normalize(XA)-Y||^2, locked grid 1e-6..1, ties to the larger lambda. m9src/warmfit.py; the result is results/m9_warmfit.json and nano.warm_start_head refuses to run without it",
     "applies_to": "every arm except the registered diagnostic contrast m9s1c",
     "evidence": "results/m9_head_probe.json -- 0.3463 SCREEN-3 macro from a frozen backbone, 50.8% of the 0.6822 ceiling, against 12.4% for a random head after 2,000 trained steps",
-    "decided": "2026-08-30, before any screen arm ran"
+    "decided": "2026-08-30, before any screen arm ran",
+    "n_fit_split": 50000,
+    "withdrawn": "the v3 claim that lambda was selected on the training residual. The head probe in fact selected argmax SCREEN-3, a dev surface (Codex pass 3, BLOCKER-B1). A residual criterion would not have rescued it: a ridge residual is monotone in lambda",
+    "estimand": "per-arm training-only-calibrated ridge initialization PLUS SGD. Each arm fits its own head in its own feature space under its own teacher's targets, so a contrast is end-to-end (factor + refit), not a pure factor contrast. Stated, not assumed away",
+    "stage0_dose": "60,000 supervised backbone forwards + a 385x385 solve, reported separately from the SGD dose; the retention curve is read against both the SGD budget and total compute"
   },
   "staging": {
     "A": {
@@ -501,7 +497,17 @@
       "pass": "stage B runs as registered",
       "fail": "stage B does NOT run. M9.1 reports the anchor curve, the warm-start contrast and a priced dose-response extrapolation, and the teacher/student/prompt/mix questions go back to Dylan with a budget attached rather than being answered at an inadequate dose"
     },
-    "decided_before_any_arm_ran": true
+    "decided_before_any_arm_ran": true,
+    "kind": "a BUDGET TRIGGER, not a calibrated ranking-adequacy test. Neither threshold is tied to a measured rank-concordance rate, and the slope is a two-point difference read where the cosine schedule has already decayed the LR to 1e-5 -- so a small late gain can mean the schedule shut learning down rather than that the representation converged (Codex pass 3). It is used only to decide whether spending stage B is worth it; it certifies nothing",
+    "ceiling_from": "registry ceilings.stella-400M-v5.DEV6, with the artifact hash pinned"
   },
-  "lock_constants_sha256": "3e8cba8e2c43dab89b4349ce0eb788eb9c7a1ccbb67b7f08dcb816d0225b6fb1"
+  "lock_constants_sha256": "106e4d3f38392d12e345c71cb1394d124b858ff795280c60022dda573b0cb5dd",
+  "ceilings": {
+    "stella-400M-v5": {
+      "DEV6": 0.67238,
+      "SCREEN3": 0.68223,
+      "artifact": "results/m9_dev_symmetric_stella-400M-v5.json",
+      "sha256": "69c6c80d2a5b97b07a81b20140f5f99a632dde6c86b88ba70affe4c798924e0d"
+    }
+  }
 }

@@ -1,0 +1,37 @@
+{
+  "tolerance": 0.0003,
+  "components": {
+    "cqadup-programmers": {
+      "n": 876,
+      "missing": 0,
+      "extra": 0,
+      "order_preserved": true,
+      "max_abs_delta": 0.0,
+      "mean_abs_delta": 0.0
+    },
+    "cqadup-physics": {
+      "n": 1039,
+      "missing": 0,
+      "extra": 0,
+      "order_preserved": true,
+      "max_abs_delta": 0.0,
+      "mean_abs_delta": 0.0
+    }
+  },
+  "max_abs_delta_overall": 0.0,
+  "qid_drift": 0,
+  "seconds": 225.8,
+  "pass": true,
+  "_registration": {
+    "run_id": "m9-bridge-dryrun",
+    "diagnostic": false,
+    "commit": "3319199240e4cb53fc3b69da30cac4a16e78b1a5",
+    "branch": "m9-work",
+    "session_sha256": "dcc917ea0d4a236efcbc29c6c1f8437af682d2a25289f38561b4ae7d7d159bdc",
+    "stage": "M9.0",
+    "opened_at": 1788073895.3241038,
+    "written_at": 1788073895.4071243,
+    "extra": {},
+    "eligible_for_decision": true
+  }
+}

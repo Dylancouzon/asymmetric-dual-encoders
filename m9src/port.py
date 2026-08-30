@@ -57,9 +57,11 @@ def parity_sample():
             deficit = quota[b] + deficit - k
             if k:
                 out += [texts[i] for i in rng.choice(pool, size=k, replace=False)]
-        if len(out) < want:                         # top up from the whole set, deterministic
-            extra = rng.choice(len(texts), size=want - len(out), replace=False)
-            out += [texts[i] for i in extra]
+        if len(out) < want:                # top up WITHOUT re-drawing anything already taken
+            taken = set(out)
+            spare = [t for t in texts if t not in taken]
+            extra = rng.choice(len(spare), size=min(want - len(out), len(spare)), replace=False)
+            out += [spare[i] for i in extra]
         return out[:want]
 
     q = json.loads((WORK / "m9_screen_queries.json").read_text())
@@ -131,14 +133,24 @@ def export(student_key, out_dir=None, state_dict=None):
 
 def parity(student_key, texts=None, state_dict=None):
     r = registry()["validation_samples"]["onnx_parity"]
+    import hashlib
     texts = texts or parity_sample()
+    want = json.loads((RESULTS / "m9_lock_constants.json").read_text())[
+        "validation_samples"]["onnx_parity"]["sha256"]
+    h = hashlib.sha256()
+    for t in texts:
+        h.update(t.encode()); h.update(b"\x00")
+    assert h.hexdigest() == want, (
+        f"the parity sample hashes {h.hexdigest()[:12]}, the lock pins {want[:12]}")
     p, meta, m = export(student_key, state_dict=state_dict)
 
     import onnxruntime as ort
     sess = ort.InferenceSession(str(p), providers=["CPUExecutionProvider"])
+    s16 = ort.InferenceSession(str(p.parent / "model_fp16.onnx"),
+                               providers=["CPUExecutionProvider"])
     m = m.cpu().eval()
 
-    mins, maxa = [], []
+    mins, maxa, mins16 = [], [], []
     t0 = time.time()
     B = 32
     for i in range(0, len(texts), B):
@@ -149,19 +161,27 @@ def parity(student_key, texts=None, state_dict=None):
                                                 dim=-1, eps=1e-12).numpy()
         got = sess.run(None, {"input_ids": b["input_ids"].numpy(),
                               "attention_mask": b["attention_mask"].numpy()})[0]
+        got16 = s16.run(None, {"input_ids": b["input_ids"].numpy(),
+                               "attention_mask": b["attention_mask"].numpy()})[0]
         mins.append((ref * got).sum(1))
+        mins16.append((ref * got16).sum(1))
         maxa.append(np.abs(ref - got).max())
 
     cos = np.concatenate(mins)
-    out = {**meta, "n_sample": len(texts), "min_cos": float(cos.min()),
+    cos16 = np.concatenate(mins16)
+    out = {**meta, "n_sample": len(texts), "sample_sha256": h.hexdigest(),
+           "fp16_min_cos": float(cos16.min()), "fp16_mean_cos": float(cos16.mean()),
+           "min_cos": float(cos.min()),
            "mean_cos": float(cos.mean()), "max_abs": float(max(maxa)),
            "seconds": round(time.time() - t0, 1),
            "pass_min_cos": bool(cos.min() >= r["min_cos"]),
            "pass_max_abs": bool(max(maxa) <= r["max_abs"]),
            "pass_no_custom_ops": not meta["custom_domain_ops"]}
     out["pass_size"] = bool(meta["within_70MB_target"])
+    # the SHIPPED graph is the fp16 one, so it carries its own parity row (Codex pass 3, M16)
+    out["pass_fp16_min_cos"] = bool(cos16.min() >= r["min_cos"])
     out["pass"] = bool(out["pass_min_cos"] and out["pass_max_abs"] and out["pass_no_custom_ops"]
-                       and out["pass_size"])
+                       and out["pass_size"] and out["pass_fp16_min_cos"])
     return out
 
 
@@ -180,16 +200,16 @@ def fastembed_check(student_key, texts):
     # mean pooling, output normalization, dim 1024, one model file, a bert tokenizer. Build the
     # description directly and report the exact fields, so M10 inherits a checked schema and not
     # a guess.
+    name = f"qdrant/nano-{student_key}"
     try:
-        desc = DenseModelDescription(
-            model=f"qdrant/nano-{student_key}",
-            dim=1024, description="M9 nano distilled query tower", license="mit",
-            size_in_GB=round(sum(f.stat().st_size for f in d.iterdir() if f.is_file()) / 1e9, 4),
-            sources=ModelSource(hf=f"qdrant/nano-{student_key}"),
-            model_file="model.onnx", additional_files=["model_fp16.onnx"],
-        )
-        TextEmbedding.add_custom_model(model=desc, pooling=PoolingType.MEAN, normalization=True)
-        listed = any(m["model"] == desc.model for m in TextEmbedding.list_supported_models())
+        TextEmbedding.add_custom_model(
+            model=name, pooling=PoolingType.MEAN, normalization=True,
+            sources=ModelSource(hf=name), dim=1024, model_file="model.onnx",
+            description="M9 nano distilled query tower", license="mit",
+            size_in_gb=round(sum(f.stat().st_size for f in d.iterdir() if f.is_file()) / 1e9, 4),
+            additional_files=["model_fp16.onnx"])
+        listed = any(m["model"] == name for m in TextEmbedding.list_supported_models())
+        _ = DenseModelDescription
         return {"available": True, "registered": True, "listed_after_registration": listed,
                 "pooling": "MEAN", "normalization": True, "dim": 1024,
                 "note": "the description is accepted and the model is listed; end-to-end serving "

@@ -97,7 +97,9 @@ def warm_start_head(model, texts, targets, prefix=""):
     At ~1% of LEAF's dose a random head spends a large share of the whole budget re-deriving a
     linear map that has a closed form. Identical treatment for every arm, so no contrast moves.
     """
+    import warmfit
     r = registry()["warm_start"]
+    lam = warmfit.selected_lambda()          # refuses unless chosen on a training-only holdout
     rng = np.random.default_rng(r["seed"])
     sel = np.sort(rng.choice(len(texts), size=min(r["n_fit"], len(texts)), replace=False))
     X = _pooled(model, [texts[i] for i in sel], prefix)
@@ -105,14 +107,24 @@ def warm_start_head(model, texts, targets, prefix=""):
     Xc = np.hstack([X, np.ones((X.shape[0], 1), dtype=np.float32)])
     G = Xc.T @ Xc
     scale = float(np.trace(G) / G.shape[0])
-    A = np.linalg.solve(G + r["lambda"] * scale * np.eye(G.shape[0], dtype=np.float32), Xc.T @ Y)
-    resid = float(np.mean(np.sum((Xc @ A - Y) ** 2, axis=1)))
+    A = np.linalg.solve(G + lam * scale * np.eye(G.shape[0], dtype=np.float32), Xc.T @ Y)
+    P = Xc @ A
+    P = P / np.maximum(np.linalg.norm(P, axis=1, keepdims=True), 1e-12)
+    resid = float(np.mean(np.sum((P - Y) ** 2, axis=1)))
+    nonpad = int(sum(len(x) for x in pretokenize(model.tok, [texts[i] for i in sel],
+                                                 model.max_seq, verbose=False)))
     dev = next(model.parameters()).device
     with torch.no_grad():
         model.head.weight.copy_(torch.from_numpy(np.ascontiguousarray(A[:-1].T)).to(dev))
         model.head.bias.copy_(torch.from_numpy(np.ascontiguousarray(A[-1])).to(dev))
-    return {"n_fit": int(sel.size), "lambda": r["lambda"], "seed": r["seed"],
-            "train_sq_l2": round(resid, 5), "prefix": prefix}
+    return {"n_fit": int(sel.size), "lambda": lam, "seed": r["seed"],
+            "train_objective": round(resid, 5), "prefix": prefix,
+            # STAGE-0 DOSE: this phase is 60,000 supervised backbone forwards plus a solve, and it
+            # is NOT part of the registered SGD dose. Reported so the retention-vs-dose curve can
+            # be read against both the SGD budget and total compute (Codex pass 3, MAJOR).
+            "stage0_examples": int(sel.size), "stage0_nonpad_tokens": nonpad,
+            "stage0_teacher_target_accesses": int(sel.size),
+            "stage0_seconds": None}
 
 
 def pretokenize(tok, texts, max_len, verbose=True, label=""):
@@ -229,7 +241,9 @@ def train_arm(arm_id, student_key, plan, cfg, eval_fn=None, device="cuda", log_e
     ws = None
     if warm_start:
         model.eval()
+        _t = time.time()
         ws = warm_start_head(model, warm_texts, plan["tgt"], warm_prefix)
+        ws["stage0_seconds"] = round(time.time() - _t, 1)
         print(f"  {arm_id} warm-start head: {json.dumps(ws)}", flush=True)
 
     decay = [p for _n, p in model.named_parameters() if p.dim() > 1]
@@ -275,6 +289,10 @@ def train_arm(arm_id, student_key, plan, cfg, eval_fn=None, device="cuda", log_e
             if eval_fn is not None:
                 rec.update(eval_fn(model, step + 1))
                 model.train()
+                # The eval allocates large GPU tiles; keeping them caches the allocator into a
+                # near-full 10 GB and training degrades from ~1,990 to <800 ex/s with power draw
+                # falling to 160 W -- the allocator-thrash signature, not work (CLAUDE.md).
+                torch.cuda.empty_cache()
             hist.append(rec)
             print(f"  {arm_id} CKPT " + json.dumps(
                 {k: v for k, v in rec.items() if k != "per_component"}), flush=True)

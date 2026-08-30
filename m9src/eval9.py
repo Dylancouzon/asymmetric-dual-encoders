@@ -80,9 +80,19 @@ def eval_student(student, teacher_key, comps=None):
         # Subsetting is exact only if both components rank against the identical corpus under the
         # identical self-hit and tie-break path. Assert it; do not assume it (Codex pass 2,
         # MAJOR-11). Same object identity for the memmap is the strongest available check.
-        assert len(lq_di) == len(tr_ids) and lq_di[0] == tr_ids[0] and lq_di[-1] == tr_ids[-1], \
+        import hashlib
+
+        def _h(seq):
+            hh = hashlib.sha256()
+            for x in seq:
+                hh.update(str(x).encode()); hh.update(b"\x00")
+            return hh.hexdigest()
+
+        assert _h(lq_di) == _h(tr_ids), \
             "heldout-longq and heldout-train no longer share a corpus -- score longq separately"
         assert lq_dv.shape == tr_dv.shape, "shared-corpus vector shapes differ"
+        assert lq_dv is tr_dv or bytes(np.asarray(lq_dv[:64])) == bytes(np.asarray(tr_dv[:64])), \
+            "shared-corpus document vectors differ"
         lq = [str(q) for q in lq_ids]
         assert set(lq) <= set(out["heldout-train"]), (
             "heldout-longq is no longer a subset of heldout-train -- score it separately")

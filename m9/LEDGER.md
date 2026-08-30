@@ -19,6 +19,11 @@ reserved-set reads:
 
 - **Pass 1** on the first draft — `research/m9-codex-lock-2026-08-30.md`, **DO NOT COMMIT**,
   7 BLOCKER / 8 MAJOR / 4 MINOR + a post-number-freedom table + an arithmetic audit. Disposition §10.
+- **Pass 3** on v3 — `research/m9-codex-lock3-2026-08-30.md`, **v3 is broken; do not let `m9s1`
+  open stage B.** It caught a false statement in this ledger: the warm-start ridge λ was described
+  as selected on the training residual and had in fact been selected on **SCREEN-3, a dev
+  surface**. The anchor run in flight at the time was killed and quarantined; §3.2a now selects λ
+  on a training-only holdout. Disposition §12.
 - **Pass 2** on the amended lock **and the code that executes it** —
   `research/m9-codex-lock2-2026-08-30.md`, **DO NOT COMMIT. DO NOT SPEND THE 6 GPU-hours.**
   Its finding was that the amendment had moved several failures out of the prose and into the
@@ -267,17 +272,36 @@ them; MSE+cosine is affine-redundant under normalized outputs). Phase 2 is out o
 
 The head is **initialized to the closed-form ridge solution** from the frozen backbone's
 mean-pooled outputs to the teacher targets, then trained normally with everything else:
-n_fit **60,000** screen-pool texts, seed **21**, ridge **λ = 1e-4** on a trace-normalized Gram,
-bias column included. λ is selected on the **training residual**, never on a dev surface.
+n_fit **60,000** screen-pool texts, seed **21**, ridge on a trace-normalized Gram, bias column
+included.
+
+**λ is selected on a training-only holdout** (`m9src/warmfit.py`): fit on the first 50,000 of the
+60,000, score the remaining 10,000 under the **actual normalized objective**
+`‖normalize(XA) − Y‖²`, locked grid {1e-6 … 1}, ties to the larger λ. No dev surface is read, and
+`nano.warm_start_head` refuses to run until that selection exists and matches the registry.
+The v3 text claiming λ came from the *training residual* is withdrawn (§9.12): the probe had in
+fact taken the SCREEN-3 argmax, and a residual criterion would not have rescued it either — a ridge
+residual is monotone in λ, so it merely picks the bottom of the grid.
 
 Why, measured before any arm ran (`results/m9_head_probe.json`, a `-diag` artifact no decision may
 cite): a frozen bge-small backbone plus this head alone scores **0.3463** on SCREEN-3 — **50.8%**
 of the 0.6822 teacher ceiling — while a *random* head after 2,000 trained steps reached **12.4%**.
 At ~1% of LEAF's dose, a random head spends a large share of the entire budget re-deriving a linear
 map that has a closed form, and a screen run that way would partly rank arms by how fast each one
-recovers from its own initialization rather than by the factor under test. Every arm gets the
-identical treatment (each student fits its own head, under its own prompt policy and its own
-teacher's targets), so no contrast moves.
+recovers from its own initialization rather than by the factor under test. **The estimand this creates, stated rather than assumed away.** Every arm gets the identical
+*algorithm*, but not an identical *effect*: each arm fits its own head, in its own feature space,
+under its own teacher's targets, so a contrast measures **the factor plus its refit**, end to end.
+The teacher screen becomes "index quality *and* linear decodability after a calibrated head fit";
+the prompt arm is "prompt plus refit in that prompt's feature space"; the mix arm is warm-started
+on query targets only, so it tests *adding documents to a query-calibrated start*, not an
+independently optimized mixed recipe. Every M9 claim carries that wording. The v3 sentence "so no
+contrast moves" is withdrawn (§9.13).
+
+**Stage-0 dose.** The warm start is an extra supervised phase — 60,000 frozen-backbone forwards,
+60,000 teacher-target accesses and a 385×385 solve — and it is **not** part of the registered SGD
+dose. Every arm reports it separately, so the retention curve can be read against both the SGD
+budget and total compute, and so it is never silently compared to LEAF's random-head recipe as
+though the doses matched.
 
 Two consequences worth stating. **The model now has no random initialization at all** — pretrained
 backbone plus a deterministic head — so the seed controls only data order and dropout, and the
@@ -376,6 +400,16 @@ teacher/student/prompt/mix questions go back to Dylan with a budget attached rat
 answered at an inadequate dose. Both outcomes are actions, which is the test `m8/FINDINGS.md` §4
 requires of any screen worth building.
 
+**What this gate is not.** It is a **budget trigger**, not a calibrated ranking-adequacy test.
+Neither threshold is tied to a measured rank-concordance rate; 0.60 was chosen as "clearly on the
+teacher surface" and 0.02 as "no longer climbing fast", and both are judgement. The slope is read
+where the cosine schedule has already decayed the LR to 1e-5, so a small late gain can mean the
+schedule shut learning down rather than that the representation converged — and any *negative*
+slope also passes it. It decides only whether spending stage B is worth it; it certifies nothing
+about whether a stage-B contrast would rank the same way at final dose. The verdict is
+**recomputed** by `require_predecessors`, never read from a stored boolean, and the retention
+denominator is the registry's pinned ceiling with its artifact hash checked.
+
 ### 4.3 What a screen result may NOT do
 
 Ship, set a bar, touch the six, or touch LoTTE. Its only outputs are the M9.2 recipe selection and
@@ -467,6 +501,22 @@ import. No G2 allowlist entry is created for M9.1; none is needed.
     been a store-biased sample rather than a uniform one. It now keeps RNG draw order.
 11. **Corrected 2026-08-30:** the cosine LR denominator was `steps − warmup`, so the schedule
     stopped one step short and never reached `lr_final`.
+12. **WITHDRAWN 2026-08-30, and the run that used it was killed:** "λ is selected on the training
+    residual, never on a dev surface" (§3.2a, v3). False. `m9src/head_probe.py` evaluated every λ
+    on **SCREEN-3** and took the argmax — a dev surface — and the artifact's own `_status` field
+    said the number was optimistic for exactly that reason. Caught by Codex pass 3. The anchor arm
+    then in flight (≈11,000 of 30,349 steps) was **killed and quarantined**, λ selection moved to a
+    training-only holdout under the real normalized objective, and the anchor re-run from scratch.
+    `results/m9_head_probe.json` remains as a `-diag` artifact and no rule may cite it.
+13. **WITHDRAWN 2026-08-30:** "every arm gets the identical treatment, so no contrast moves"
+    (§3.2a, v3). The algorithm is identical; the effect is not, because each arm refits its head in
+    its own feature space. §3.2a now states the estimand instead.
+14. **Corrected 2026-08-30:** the adequacy gate was described as a ranking-adequacy test. It is a
+    **budget trigger** with two judgement thresholds; §4.4 says so.
+15. **Recorded 2026-08-30 (operational, not a claim):** the first anchor attempt degraded from
+    1,990 to 786 ex/s because the per-checkpoint evaluation left ~10 GB cached in the PyTorch
+    allocator — 98% GPU utilisation at 160 W, the allocator-thrash signature CLAUDE.md names.
+    `torch.cuda.empty_cache()` now follows every checkpoint evaluation.
 
 ---
 
@@ -527,3 +577,33 @@ became §3's staging. All 6 BLOCKER / 11 MAJOR / 3 MINOR actioned.
 | MIN 1 LR never reaches `lr_final` | **adopted** — denominator `steps − warmup − 1` |
 | MIN 2 checkpoint off-by-one | **adopted** — 7,588 |
 | MIN 3 validation sample hashes absent | **adopted** — both materialized into `results/m9_lock_constants.json` and mirrored into the registry |
+
+---
+
+## §12 Codex lock review #3 — disposition
+
+`research/m9-codex-lock3-2026-08-30.md`. Verdict **v3 is broken; do not let `m9s1` open stage B**,
+with the in-flight anchor to be finished and quarantined. It was instead **killed at ~11,000 of
+30,349 steps** — because it was quarantined anyway, and because it had by then degraded to 786 ex/s
+on allocator thrash (§9.15), so finishing it would have cost 1.7 hours for a diagnostic.
+
+| finding | disposition |
+|---|---|
+| **B1 λ was DEV-tuned while the ledger said otherwise** | **adopted in full** — claim withdrawn (§9.12), `m9src/warmfit.py` selects λ on a training-only 50K/10K split under the real normalized objective, `warm_start_head` refuses without it, anchor re-run |
+| MAJOR "identical treatment, no contrast moves" is false | **adopted** — §3.2a states the estimand: factor **plus refit**, per arm, end to end (§9.13) |
+| MAJOR the warm start adds uncounted dose | **adopted** — Stage-0 dose (examples, non-pad tokens, teacher-target accesses, seconds) reported separately from the SGD dose by every arm |
+| MAJOR `m9s1c` does not fully price the warm start | **adopted as wording** — its estimand is the **fixed-SGD-dose warm-start delta**, one seed, not compute-matched. Extra random-head seeds are a stage-B item, not claimed now |
+| MAJOR both adequacy numbers arbitrary; slope ≠ convergence | **adopted** — §4.4 renames it a **budget trigger** and states that neither threshold is calibrated, that the LR has already decayed to 1e-5 where the slope is read, and that a negative slope also passes |
+| **B adequacy authorization and ceiling unguarded** | **adopted** — the ceiling is a registry constant with its artifact hash checked at read time, and `require_predecessors` **recomputes** the verdict instead of trusting `"pass": true` |
+| B1(A) STOP still advisory | **adopted** — `require_predecessors` refuses every arm once an eligible decision artifact names a non-incumbent teacher |
+| B3 tokens overwritable; write/consume non-atomic; `eligible()` trusts copied metadata | **adopted** — `begin_run` refuses a consumed id, the result is written to a temp file and published only after the token is consumed, and `eligible()` additionally requires a consumed token this session issued |
+| B4 stale code hashes in the constants | **adopted** — constants regenerated as the last step before the commit |
+| M10 "chunking" still retained every block | **adopted** — blocks are regenerated from the seed on demand and discarded, so two contrasts still share draws but nothing holds 3.2 GB |
+| M11 longq subsetting under-asserted | **adopted** — full ordered doc-id hash and a vector-content check, not first/last |
+| M15 caches trusted by shape | **adopted** — challenger cache chunks carry content hashes in `chunks.json` and a stitch refuses unless every part is accounted for; a failed ceiling now **raises** instead of leaving the arm looking complete |
+| M16 parity tested the graph that is not shipped | **adopted** — the fp16 graph carries its own parity row and is a pass conjunct; the parity sample's hash is verified against the lock |
+| MIN 1/3 stale registry LR string, unverified sample hash, duplicate top-up | **adopted** — all three |
+| B2 arm 6 realizes five tokens over baseline | **accepted and recorded, not fixed** — 0.08 parts per million on 59.5M tokens, from stopping at the first example that crosses each cumulative target. Exact equality would require splitting an example |
+| M14 Qwen template deviates from the mandate | **unchanged, and still unratified** — it binds only stage-B arms, which cannot run until Dylan rules on §0 |
+| M17 cost model incomplete | **partially adopted** — Stage-0 dose is now reported, so the anchor's own timing no longer under-reports itself; a full execution-graph cost model is a stage-B item |
+

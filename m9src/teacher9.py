@@ -118,13 +118,23 @@ def encode_cached(key, name, texts, role, batch_size=64, max_length=512, chunk=5
     n, dim = len(texts), spec["dim"]
     nchunk = (n + chunk - 1) // chunk
     t0 = time.time()
+    man_p = d / "chunks.json"
+    man = json.loads(man_p.read_text()) if man_p.exists() else {}
     for ci in range(nchunk):
         p = d / f"chunk_{ci:05d}.npy"
-        if p.exists() and np.load(p, mmap_mode="r").shape[0] == min(chunk, n - ci * chunk):
-            continue
+        key = p.name
+        if p.exists() and key in man:
+            # content hash, not shape: a truncated or half-written chunk has the right shape
+            # (m8/CODEMAP.md's cache discipline; Codex pass 3, M15)
+            if hashlib.sha256(p.read_bytes()).hexdigest() == man[key]["sha256"]:
+                continue
+            print(f"  {key}: content hash mismatch, re-encoding", flush=True)
         lo, hi = ci * chunk, min(n, (ci + 1) * chunk)
         v = encode(key, texts[lo:hi], role, batch_size=batch_size, max_length=max_length)
         np.save(p, v.astype(np.float16))
+        man[p.name] = {"rows": int(hi - lo),
+                       "sha256": hashlib.sha256(p.read_bytes()).hexdigest()}
+        man_p.write_text(json.dumps(man, indent=1))
         if verbose:
             done = hi
             el = time.time() - t0
@@ -132,6 +142,9 @@ def encode_cached(key, name, texts, role, batch_size=64, max_length=512, chunk=5
                   f"eta {(n-done)/max(done/max(el,1e-9),1e-9)/60:.1f}m)", flush=True)
 
     comb = d / "combined.f16"
+    if len(man) != nchunk:
+        raise SystemExit(f"{d.name}: {len(man)} hashed chunks for {nchunk} expected -- refuse to "
+                         f"stitch a cache whose parts are not all accounted for")
     if not comb.exists() or comb.stat().st_size != n * dim * 2:
         mm = np.memmap(comb, dtype=np.float16, mode="w+", shape=(n, dim))
         for ci in range(nchunk):

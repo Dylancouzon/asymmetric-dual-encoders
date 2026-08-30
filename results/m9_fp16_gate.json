@@ -1,0 +1,28 @@
+{
+  "n": 10000,
+  "seed": 11,
+  "sample_sha256": "c6397f33cf43b1ea90e32872950d01f03986bd522df9661eb25745923c9266b0",
+  "min_cos": 0.9999586343765259,
+  "mean_cos": 0.9999995231628418,
+  "max_abs": 0.0002016127109527588,
+  "thresholds": {
+    "min_cos": 0.9999,
+    "max_abs": 0.001
+  },
+  "pass_min_cos": true,
+  "pass_max_abs": true,
+  "pass": true,
+  "_effect": "PASS -> every arm trains on the fp16 target cache. FAIL -> the lock requires fp32 targets for every arm, which means re-encoding 337,981 texts through the teacher and holding 1.38 GB per teacher.",
+  "_registration": {
+    "run_id": "m9-fp16-gate",
+    "diagnostic": false,
+    "commit": "3319199240e4cb53fc3b69da30cac4a16e78b1a5",
+    "branch": "m9-work",
+    "session_sha256": "dcc917ea0d4a236efcbc29c6c1f8437af682d2a25289f38561b4ae7d7d159bdc",
+    "stage": "M9.0",
+    "opened_at": 1788073625.263566,
+    "written_at": 1788073658.9644597,
+    "extra": {},
+    "eligible_for_decision": true
+  }
+}

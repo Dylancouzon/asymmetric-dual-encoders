@@ -38,7 +38,13 @@ def constants():
 
 def selected():
     p = RESULTS / "m9_screen_decisions.json"
-    return json.loads(p.read_text())["selected"] if p.exists() else {}
+    if not p.exists():
+        return {}
+    blob = json.loads(p.read_text())
+    if not guard9.eligible(blob):
+        raise SystemExit("results/m9_screen_decisions.json is not decision-eligible under the "
+                         "current lock -- re-run `screen.py decide` before resolving any arm")
+    return blob["selected"]
 
 
 def arm_spec(arm_id, sel=None):
@@ -80,9 +86,24 @@ def require_predecessors(arm_id):
         if not p.exists() or not guard9.eligible(json.loads(p.read_text())):
             raise SystemExit(f"{arm_id} may not run: predecessor {prev} has no eligible artifact. "
                              f"The registered order is {order}.")
+    # A teacher swap STOPS the milestone; it does not merely annotate it (LEDGER §0).
+    dec = RESULTS / "m9_screen_decisions.json"
+    if dec.exists():
+        blob = json.loads(dec.read_text())
+        t = blob.get("selected", {}).get("teacher")
+        if guard9.eligible(blob) and t and t != eval9.INCUMBENT:
+            raise SystemExit(
+                f"{arm_id} may not run: the teacher screen selected {t!r}. m9/LEDGER.md §0 "
+                f"requires stopping and returning to Dylan, because student/prompt/mix cannot be "
+                f"decided on DEV-6 in a challenger's space and M9 does not proceed on a proxy.")
     if stage == "B":
         g = RESULTS / "m9_adequacy.json"
-        if not g.exists() or not json.loads(g.read_text()).get("pass"):
+        ok = False
+        if g.exists():
+            blob = json.loads(g.read_text())
+            # recomputed, not trusted: a stored boolean cannot authorize six GPU-hours
+            ok = guard9.eligible(blob) and adequacy_verdict()["pass"]
+        if not ok:
             raise SystemExit(
                 f"{arm_id} is a stage-B arm and the adequacy gate has not passed. Run "
                 f"`python m9src/screen.py adequacy` after m9s1; if it fails, stage B does not run "
@@ -237,8 +258,11 @@ def run_arm(arm_id, smoke=0):
         rec["retention"] = {s: round(rec["final"][s]["macro"]
                                      / rec["teacher_symmetric"][s]["macro"], 4)
                             for s in rec["final"] if s in rec["teacher_symmetric"]}
-    except Exception as e:                        # a ceiling row must never kill an arm
+    except Exception as e:
+        # A missing ceiling is not cosmetic: it is the retention denominator and the adequacy
+        # gate's input, so the arm records the failure AND refuses to look complete.
         rec["teacher_symmetric_error"] = repr(e)[:300]
+        raise
 
     RUNS.mkdir(exist_ok=True)
     torch.save({"student": spec["student"], "state_dict": model.state_dict(), "spec": spec,
@@ -262,14 +286,20 @@ def _load():
     return have
 
 
-def adequacy():
-    """The registered gate between stage A and stage B (m9/registry.json adequacy_gate)."""
-    g = registry()["adequacy_gate"]
+def adequacy_verdict():
+    """Recompute the gate from the artifacts. Pure; `adequacy()` is the writing wrapper."""
+    import hashlib
+    r = registry()
+    g = r["adequacy_gate"]
     blob = json.loads((RESULTS / "m9_screen_m9s1.json").read_text())
     assert guard9.eligible(blob), "m9s1's artifact is not decision-eligible"
-    sym = json.loads((RESULTS / "m9_dev_symmetric_stella-400M-v5.json").read_text())
-    ceil6 = sym["macros"]["DEV6"]["macro"]
-    ck = registry()["dose"]["checkpoints"]
+    cl = r["ceilings"]["stella-400M-v5"]
+    got = hashlib.sha256((m9base.REPO / cl["artifact"]).read_bytes()).hexdigest()
+    assert got == cl["sha256"], (
+        f"the ceiling artifact {cl['artifact']} hashes {got[:12]}, the registry pins "
+        f"{cl['sha256'][:12]} -- the retention denominator is not the registered one")
+    ceil6 = cl["DEV6"]
+    ck = r["dose"]["checkpoints"]
     m = {h["step"]: h["macros"]["DEV6"]["macro"] for h in blob["history"]
          if "DEV6" in h.get("macros", {})}
     missing = [c for c in ck[-2:] if c not in m]
@@ -284,6 +314,13 @@ def adequacy():
            "curve": sorted(m.items())}
     out["pass"] = bool(not missing and out["pass_retention"] and out["pass_slope"])
     out["action"] = g["outcomes"]["pass" if out["pass"] else "fail"]
+    out["kind"] = g["kind"]
+    return out
+
+
+def adequacy():
+    """The registered budget trigger between stage A and stage B."""
+    out = adequacy_verdict()
     guard9.begin_run("m9-adequacy")
     guard9.write_result(RESULTS / "m9_adequacy.json", out, "m9-adequacy")
     print(json.dumps({k: v for k, v in out.items() if k != "conditions"}, indent=1))

@@ -81,13 +81,19 @@ CHUNK = 1000   # bootstrap replicates per block
 
 
 def indices(sizes, B, seed):
-    """Draw indices in blocks. A DEV-6 draw is 20,000 x 20,152 int64 = 3.2 GB if materialised in
-    one go (Codex pass 2, MAJOR-10) on a 25 GB box that is also holding document memmaps."""
-    rng = np.random.default_rng(seed)
-    return {"sizes": list(sizes), "B": B, "seed": seed,
-            "blocks": [{c: rng.integers(0, n, size=(min(CHUNK, B - b), n), dtype=np.int32)
-                        for c, n in sizes}
-                       for b in range(0, B, CHUNK)]}
+    """A resample PLAN, not the draws. Materialising every block at once is 3.2 GB for DEV-6 on a
+    25 GB box that is also holding document memmaps, and holding them in a list defeats the point
+    of chunking (Codex pass 2 MAJOR-10, pass 3). The blocks are regenerated on demand from the
+    same seed, so two contrasts handed the same plan see draw-for-draw identical resamples."""
+    return {"sizes": list(sizes), "B": B, "seed": seed}
+
+
+def _blocks(idx):
+    rng = np.random.default_rng(idx["seed"])
+    B = idx["B"]
+    for b in range(0, B, CHUNK):
+        k = min(CHUNK, B - b)
+        yield {c: rng.integers(0, n, size=(k, n), dtype=np.int32) for c, n in idx["sizes"]}
 
 
 def macro(per_component, surface_name):
@@ -111,11 +117,12 @@ def contrast(a, b, surface_name, *, quantile, idx=None, weights=None, check_mani
 
     point = float(sum(w[c] * d.mean() for c, d in aligned))
     parts = []
-    for blk in idx["blocks"]:
+    for blk in _blocks(idx):
         acc = np.zeros(next(iter(blk.values())).shape[0], dtype=np.float64)
         for c, d in aligned:
             acc += w[c] * d[blk[c]].mean(axis=1)
         parts.append(acc)
+        del blk
     reps = np.concatenate(parts)
     return {"surface": surface_name, "weights": w, "point": point,
             "per_component": {c: float(d.mean()) for c, d in aligned},

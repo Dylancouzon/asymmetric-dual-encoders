@@ -34,7 +34,7 @@ GUARDED = ("m9/LEDGER.md", "m9/registry.json")
 BRANCH = "m9-work"
 CODE = tuple(f"m9src/{n}.py" for n in
              ("m9base", "data", "eval9", "fp16_gate", "guard9", "nano", "port", "screen",
-              "screen_stats", "teacher9", "lock_constants", "bridge_dryrun")) + \
+              "screen_stats", "teacher9", "warmfit", "lock_constants", "bridge_dryrun")) + \
        ("m7src/evalkit.py", "m7src/teacher.py", "m7src/devsuite.py", "m7src/dev_eval.py",
         "m7src/pool.py", "m7src/heldout.py", "m7src/train.py", "m7src/mix.py",
         "m8src/paths_guard.py")
@@ -134,6 +134,10 @@ def begin_run(run_id, extra=None):
         return {"run_id": run_id, "diagnostic": True,
                 "_note": "diagnostic: no state check, ineligible for any decision"}
     sess = open_session()
+    old = TOKENS / f"{run_id}.json"
+    if old.exists() and json.loads(old.read_text()).get("consumed"):
+        raise NotLocked(f"{run_id!r} already produced a result under this lock. Delete its "
+                        f"artifact and token deliberately if you mean to re-run it.")
     tok = {"run_id": run_id, "diagnostic": False, "commit": sess["commit"],
            "branch": sess["branch"], "session_sha256": sess["fingerprint_sha256"],
            "opened_at": time.time(), "consumed": False, "extra": extra or {}}
@@ -169,9 +173,11 @@ def write_result(path, payload, run_id):
         "session_sha256": tok["session_sha256"], "stage": sess["stage"],
         "opened_at": tok["opened_at"], "written_at": time.time(), "extra": tok["extra"],
         "eligible_for_decision": True}
-    path.write_text(json.dumps(payload, indent=2, default=str))
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=2, default=str))
     tok["consumed"] = True
-    tp.write_text(json.dumps(tok, indent=1))
+    tp.write_text(json.dumps(tok, indent=1))       # consume BEFORE publishing
+    tmp.replace(path)
     return payload["_registration"]
 
 
@@ -187,8 +193,15 @@ def eligible(payload, strict=True):
         sess = open_session()
     except NotLocked:
         return False
-    return (reg.get("session_sha256") == sess["fingerprint_sha256"]
-            and reg.get("commit") == sess["commit"])
+    if reg.get("session_sha256") != sess["fingerprint_sha256"] or reg.get("commit") != sess["commit"]:
+        return False
+    # and it must correspond to a token THIS session actually issued and consumed, so a
+    # hand-written registration block cannot vouch for itself (Codex pass 3, B3)
+    tp = TOKENS / f"{reg.get('run_id')}.json"
+    if not tp.exists():
+        return False
+    tok = json.loads(tp.read_text())
+    return bool(tok.get("consumed") and tok.get("session_sha256") == reg.get("session_sha256"))
 
 
 def self_test():
