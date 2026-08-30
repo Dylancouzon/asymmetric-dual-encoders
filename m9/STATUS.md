@@ -121,40 +121,26 @@ arm, or arms from three different code states.
 
 ## HANDOFF — read this first if you are a fresh session
 
-**DO NOT LAUNCH THE BUILD YET.** Codex review #7 (`research/m9-codex-prelaunch-2026-08-30.md`,
-disposition `m9/LEDGER.md` §17) found **nine launch blockers**. Four are fixed; **five remain** and
-each would waste part of a seven-day run. Nothing is running right now.
+**All nine Codex #7 launch blockers are fixed** (commits `198e9c8` +
+the follow-up actioning Codex #8, `research/` has both reviews). Codex #8 re-reviewed the first
+five fixes and found five more blockers — mix verdict ignored, first-eval gate impossible, stale
+corpora blessable, decisions outliving their arms, cooldown not durable — all actioned the same
+day. Key behaviors a fresh session must know:
 
-### Fixed already
-- `longrun.py` crashed with `NameError: tput` at step 500 — a dangling reference left by the
-  rolling-throughput rewrite, hidden because the resume test disables logging.
-- The first-eval gate could never fire: step 0 is appended to history, so `len(history)==1` was
-  already false. It now counts *trained* evaluations.
-- `make_config.py` silently invented a default config when no screen decision existed, and ignored
-  the screen's **mix** and **prompt** verdicts. It now refuses absence and reads both.
-- `test_resume.py` wrote the **real** `work/m9long/terminal.json`, and the watchdog refuses to start
-  after any terminal marker — so running the test before launch would have blocked the launch.
+- `make_config` **fails closed**: no decision file, missing fields, a challenger teacher, or a
+  `query-only` mix verdict each refuse to build (the last one goes back to Dylan — M92_LOCK §4).
+- `prepare` takes `--student` and `--prompt-policy` and skips corpora already tokenized under the
+  same recipe (identity-bound: student, prefix, source hash). Meta was verified by sample
+  re-tokenization and backfilled 2026-08-30.
+- Plateau and the stable token cap **enter the cooldown automatically** and checkpoint at once;
+  under the watchdog the trainer also anneals before the wall-clock horizon
+  (`--anneal-before-deadline`).
+- The build has its own guard session (`SESSION-build.json`); session mismatch is scoped to the
+  run's dependency scopes.
+- The watchdog restarts on checkpoint-stale/eval-overdue (judged over observed time), survives
+  its own exceptions, and gives evals a 1 h heartbeat grace.
 
-### STILL BLOCKING — fix before launching
-1. **Prompt policy (a) is not implemented in the corpus.** `longrun.prepare()` always tokenizes
-   queries with policy (b); the selected prefix reaches only the warm-start fit. If `m9s5` picks
-   (a), warm start and SGD train different recipes. Either implement it in `prepare` or make the
-   build refuse a policy-(a) selection.
-2. **A registered stop never runs the cooldown.** `M92_LOCK.md` §6 says plateau triggers the
-   cooldown; the code writes a terminal marker and the watchdog exits, leaving an **unannealed**
-   stable-phase checkpoint. Either have the trainer enter `decay` automatically on plateau and on
-   the token cap, or delete that promise from the lock.
-3. **The guard session is not dependency-scoped at session level.** `open_session()` compares the
-   whole fingerprint, so generating `manifest.json` and `config.json` — both in the `build` scope —
-   after opening the session can make `begin_run("m9-build")` reject it. Give M9.3 its own session,
-   or scope `open_session` the way `eligible()` already is.
-4. **The watchdog can crash on its own status refresh.** `write_status()` assumes every heartbeat
-   carries `step`/`tok_per_s`/`phase`/`stable_token_cap`, but the `verify`/`model`/`eval`/`stopped`
-   beats do not. Nothing supervises the watchdog itself.
-5. **Checkpoint-stale and eval-overdue only log.** They never stop or restart anything, so the
-   conditions they detect run on unattended.
-
-### Then, in this order
+### Launch sequence
 ```bash
 cd /home/dylan/asymetric-dual-encoders            # branch m9-work
 ./m9status.sh && .venv/bin/python m9src/guard9.py   # expect problems: []
@@ -167,16 +153,20 @@ rm -f work/m9tokens/*.json results/m9_screen_m9s*.json results/m9_adequacy.json 
     m9s1 adequacy m9s1c m9s1b m9s4 decide m9s5 decide m9s6 decide
 test -s results/m9_screen_decisions.json || { echo "no FINAL decision -- stop"; exit 1; }
 
-# 2. build prerequisites (~40 min). Each must succeed before the next.
+# 2. build prerequisites (~40 min; longer if the screen picked MiniLM or policy (a) --
+#    prepare then re-tokenizes what changed). Each must succeed before the next.
+#    STUDENT and POLICY come from results/m9_screen_decisions.json "selected".
+.venv/bin/python m9src/longrun.py prepare --student <SELECTED> --prompt-policy <SELECTED> && \
 .venv/bin/python m9src/longrun.py targets && \
 .venv/bin/python m9src/longrun.py manifest && \
 .venv/bin/python m9src/longrun.py verify && \
 .venv/bin/python m9src/make_config.py && \
 .venv/bin/python m9src/test_resume.py            # MUST pass; never skip
-rm -f work/m9long/terminal.json work/m9long/ckpt/STOP work/m9long/trainer.lock
+rm -f work/m9long/terminal.json work/m9long/ckpt/STOP work/m9long/trainer.lock \
+      work/m9tokens/SESSION-build.json work/m9tokens/m9-build.json
 
 # 3. fill m9/M92_LOCK.md from the decision (it is still DRAFT with blank fields), commit, push,
-#    THEN open the build session and launch
+#    THEN launch (the watchdog starts the trainer; the trainer opens the build session)
 setsid nohup .venv/bin/python m9src/watchdog.py --hours 168 > logs/m9_watchdog.log 2>&1 &
 ```
 

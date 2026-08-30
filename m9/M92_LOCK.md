@@ -57,6 +57,11 @@ choice. LEAF's own ablation found documents did the heavy lifting even for a que
 document text. Against that, nano serves **only** queries, and the query manifold is what it is
 scored on.
 
+**REGISTERED (before `m9s6` ran): the m9s6 verdict maps to the build as** — `70/30` (documents
+help at matched dose) → the 5/5/90 build below; `query-only` (documents failed their only direct
+test) → **`make_config` refuses and the build STOPS for Dylan's ruling on shares**, because a
+seven-day 90%-document bet would then be unsupported by its own screen.
+
 **REGISTERED: 5% real queries / 5% spans / 90% documents by non-pad token**, on Codex review #5's
 recommendation and against my own 20/10/70 draft. The reason is repetition, not weight: with a true
 combined-example mean, queries are short enough that a 5% *token* share is still ~23% of the
@@ -100,7 +105,11 @@ the stop message.
   against a 12.6 GB target map would otherwise silently reduce delivered dose while the wall clock
   ran out.
 - **Stop on wall clock:** seven days, or whenever Dylan needs the box; the `STOP` file halts
-  cleanly at the next step boundary and `decay` still produces a servable artifact.
+  cleanly at the next step boundary and `decay` still produces a servable artifact. Under the
+  watchdog the trainer runs `--anneal-before-deadline`: when the remaining session time no longer
+  fits the cooldown at the measured rate (×1.25 margin), it enters decay by itself, so the horizon
+  cannot truncate the anneal even at degraded throughput. Every decay entry checkpoints
+  immediately, so a restart resumes into the cooldown, never into stable LR.
 - **Any stop yields a model.** There is no state in which the run has to be thrown away.
 
 ## 7. What this run may and may not do

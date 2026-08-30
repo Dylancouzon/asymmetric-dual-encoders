@@ -45,7 +45,9 @@ gate; it is not advice.
 | M9 execution on branch `m9-work`, frequent commit+push; merges to main need Dylan's go | in force; the guard requires HEAD on `origin/m9-work` |
 | Query asset: quality first, 70 MB target, exceedable with logged measured justification | in force. **Unit defined**: decimal MB of *total shipped artifact bytes* (ONNX graph + tokenizer + config), measured by the port pilot — not the theoretical weight product. Weights alone: bge-small nano 67.508 MB, MiniLM nano 46.215 MB |
 
-### M9.0 amendment to the mandate — the teacher-screen surface (needs Dylan's ratification)
+### M9.0 amendment to the mandate — the teacher-screen surface (**RATIFIED by Dylan 2026-08-30**,
+after a plain-language walkthrough of the three options; the challenger had already lost on
+measurement, so the surface decided nothing)
 
 `instructions-m9.md` fixes the tuning-dev macro at M7's **six** pinned components for every screen
 arm. That is satisfiable for any stella arm and **physically impossible for a challenger teacher**:

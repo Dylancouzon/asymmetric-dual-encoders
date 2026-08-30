@@ -39,7 +39,11 @@ def build(decisions=None):
     r = guard9.registry()
     dec = decisions or {}
     p = RESULTS / "m9_screen_decisions.json"
-    if not dec and p.exists():
+    if not dec:
+        if not p.exists():
+            raise SystemExit(f"{p} does not exist -- there is no screen decision. A seven-day "
+                             f"build does not run on invented defaults (Codex #7/#8). Run the "
+                             f"screen chain through `decide` first.")
         blob = json.loads(p.read_text())
         if not guard9.eligible(blob):
             raise SystemExit("m9_screen_decisions.json is not decision-eligible")
@@ -47,12 +51,21 @@ def build(decisions=None):
             raise SystemExit(f"the screen decision is provisional; missing {blob['missing_arms']}")
         dec = blob["selected"]
 
-    student = dec.get("student", "bge-small-en-v1.5")
-    teacher = dec.get("teacher", "stella-400M-v5")
-    prompt = dec.get("prompt", "b")
+    missing = [k for k in ("student", "teacher", "prompt", "mix") if k not in dec]
+    if missing:
+        raise SystemExit(f"the screen decision lacks {missing}; refusing to fill defaults")
+    student, teacher, prompt, mix = dec["student"], dec["teacher"], dec["prompt"], dec["mix"]
     if teacher != "stella-400M-v5":
         raise SystemExit(f"teacher {teacher!r}: a challenger win STOPS M9 (LEDGER §0), it does not "
                          f"start a seven-day build")
+    # Registered mapping (M92_LOCK §4, written before m9s6 ran): "70/30" confirms document text
+    # helps at matched dose -> the registered 5/5/90 build. "query-only" means documents failed
+    # their only direct test, so a 90%-documents seven-day bet is unsupported by its own screen --
+    # that is an owner decision, not a formula.
+    if mix != "70/30":
+        raise SystemExit(f"the screen selected mix {mix!r}. The registered document-dominant "
+                         f"build (5/5/90) rests on m9s6 confirming documents help; without it, "
+                         f"STOP and get Dylan's ruling on the build shares (M92_LOCK §4).")
 
     total_tokens = int(HOURS * 3600 * TOK_PER_S)
     decay_steps = math.ceil(COOLDOWN_TOKENS / TOKENS_PER_STEP)

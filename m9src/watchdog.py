@@ -92,7 +92,7 @@ def terminal_state():
 
 def start_trainer(hours):
     cmd = (f"cd {REPO} && setsid nohup .venv/bin/python m9src/longrun.py train "
-           f"--hours {hours} >> logs/m9_build.log 2>&1 &")
+           f"--hours {hours} --anneal-before-deadline >> logs/m9_build.log 2>&1 &")
     subprocess.run(["bash", "-lc", cmd], check=False)
     time.sleep(20)
     return trainer_alive()
@@ -109,6 +109,21 @@ def read_json(p, default=None):
         return json.loads(p.read_text())
     except Exception:
         return default
+
+
+def read_incidents(k=40):
+    """Per-line tolerant: one torn line in watchdog.jsonl must not send every tick into the
+    exception handler and disable supervision for as long as it stays in the tail window
+    (Codex #8, MAJOR 3)."""
+    if not INCIDENTS.exists():
+        return []
+    out = []
+    for line in INCIDENTS.read_text().splitlines()[-k:]:
+        try:
+            out.append(json.loads(line))
+        except (json.JSONDecodeError, ValueError):
+            continue
+    return out
 
 
 def write_status(hb, rows, incidents):
@@ -189,6 +204,8 @@ def main():
                     help="a fresh trainer must produce its first heartbeat within this")
     ap.add_argument("--ckpt-stale", type=int, default=5400)
     ap.add_argument("--eval-stale", type=int, default=4 * 3600)
+    ap.add_argument("--eval-grace", type=int, default=3600,
+                    help="heartbeat staleness allowance while the trainer is inside an evaluation")
     ap.add_argument("--max-restarts", type=int, default=8)
     ap.add_argument("--max-restarts-6h", type=int, default=3)
     ap.add_argument("--min-disk-gb", type=float, default=25.0)
@@ -220,8 +237,7 @@ def main():
         try:
             hb = read_json(HEARTBEAT)
             rows = longrun.read_history()
-            incidents = [json.loads(l) for l in INCIDENTS.read_text().splitlines()[-40:]
-                         if l.strip()] if INCIDENTS.exists() else []
+            incidents = read_incidents()
 
             if (longrun.CKPT / "STOP").exists():
                 log({"event": "stop_file", "detail": "clean halt requested; watchdog exiting"})
@@ -253,7 +269,13 @@ def main():
             # its whole read) legitimately beat slower than a training step, so they get the
             # startup allowance, not the train one.
             state = (hb or {}).get("state", "train")
-            thresh = a.stale if state == "train" else max(a.stale, a.startup_deadline)
+            # An evaluation writes one beat at its start and none inside; the four-hour overdue
+            # rule only runs while state is "train", so a slow (page-cache-thrashed) eval must
+            # get ITS grace here, not the 30-minute startup one -- killing it mid-read replays
+            # 5,000 steps and meets the same eval again: a restart loop (Codex #8, MAJOR 4).
+            thresh = (a.stale if state == "train"
+                      else a.eval_grace if state in ("eval", "eval0")
+                      else max(a.stale, a.startup_deadline))
             started = hb["wall"] if hb else launched_at
             stale = (time.time() - started) > (thresh if hb else a.startup_deadline)
             step_now = hb.get("step") if hb else None
@@ -358,9 +380,7 @@ def main():
                 print(f"watchdog_error (unloggable): {e!r}", flush=True)
 
     try:
-        write_status(read_json(HEARTBEAT), longrun.read_history(),
-                     [json.loads(l) for l in INCIDENTS.read_text().splitlines()[-40:] if l.strip()]
-                     if INCIDENTS.exists() else [])
+        write_status(read_json(HEARTBEAT), longrun.read_history(), read_incidents())
         if not a.no_push:
             push_status()
     except Exception as e:

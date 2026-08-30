@@ -68,8 +68,11 @@ DEPS = {
     "m9-fp16-gate": ("protocol", "data", "fp16"),
     "m9-bridge-dryrun": ("protocol", "eval", "bridge"),
     "m9-port-pilot": ("protocol", "data", "train", "port"),
-    "m9-adequacy": ("protocol",),
-    "m9-decisions": ("protocol",),
+    # Aggregates inherit the union of their inputs' scopes: a decision built from arms must die
+    # with those arms, or a post-screen edit to train/eval code leaves the arms ineligible while
+    # the protocol-only decision still feeds make_config (Codex #8, blocker 4).
+    "m9-adequacy": ("protocol", "data", "train", "eval"),
+    "m9-decisions": ("protocol", "data", "train", "eval"),
     "m9-build": ("protocol", "data", "train", "eval", "build"),
 }
 GUARDED = SCOPES["protocol"][:2]

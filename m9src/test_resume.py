@@ -34,7 +34,8 @@ SCRATCH = WORK / "m9long_test"
 
 def scratch_cfg(total_steps):
     cfg = make_config.build(decisions={"student": "bge-small-en-v1.5",
-                                       "teacher": "stella-400M-v5", "prompt": "b"})
+                                       "teacher": "stella-400M-v5", "prompt": "b",
+                                       "mix": "70/30"})
     cfg.update({"run_id": "m9-build-test", "tokens_per_step": 1024, "warmup_steps": 5,
                 "log_every": 10 ** 9, "ckpt_every": 10 ** 9, "eval_every": 10 ** 9,
                 "stable_token_cap": 10 ** 15})
