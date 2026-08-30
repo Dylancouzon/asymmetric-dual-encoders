@@ -148,9 +148,34 @@ tokenizer-dependent, not weight-dependent, so these hold for the trained artifac
 3. **nano's disadvantage is length-dependent**: 2× at ten words, 5× at a hundred. A table lookup is
    linear in tokens; a transformer is not. Any claim about query-side cost has to name a length.
 
-*Not a finding:* the 1–5-word row records a 115 ms zero search — a cold-start artifact from the
-first bucket measured, before the index warmed. It is excluded above and should be re-measured
-with a warm-up pass before it appears in any report.
+**Round 2** (200 warm-up searches per path × `ef`, randomised bucket order) confirmed the 115 ms
+1–5-word row was a cold-start artifact: it becomes **0.73–1.22 ms**, in line with every other
+bucket. Round 2 also swept the document index's storage, at 6–10-word queries, `ef=default`:
+
+| config | segments | peak RSS | load | zero | nano | nano ÷ zero |
+|---|---|---|---|---|---|---|
+| `fp16_mmap` | 2,226 MB | 6,821 MB | 7.5 s | 1.500 ms | 2.142 ms | **1.43×** |
+| `fp16_ram` | 2,226 MB | 6,821 MB | 10.6 s | 1.019 ms | 2.133 ms | **2.09×** |
+| `int8_mmap` | 3,254 MB | 7,028 MB | 7.9 s | 0.850 ms | 1.822 ms | **2.14×** |
+| `int8_ram` | 3,254 MB | 7,088 MB | 7.6 s | 0.843 ms | 1.835 ms | **2.18×** |
+| `binary_mmap` | 2,354 MB | 7,088 MB | 5.6 s | 6.344 ms | 4.889 ms | **0.77×** |
+| `binary_ram` | 2,354 MB | 7,088 MB | 7.0 s | 0.522 ms | 1.467 ms | **2.81×** |
+
+**Two findings, and the second is a warning.**
+
+1. **Cheaper search makes the encoder gap matter more.** The ratio climbs 1.43× → 2.09× → 2.18× →
+   **2.81×** as search gets faster (mmap → RAM → int8 → binary). Binary-quantized search is 0.27 ms
+   against fp16's 0.77 ms, so nano's transformer goes from a third of the query to nearly three
+   quarters of it. **The frontier's shape is a function of the index configuration**, and any
+   query-side cost claim has to name one.
+2. **The quantization sweep did not actually test the storage lever.** int8 segments are
+   **3,254 MB — larger than fp16's 2,226 MB** — and binary's 2,354 MB is barely smaller, because
+   Qdrant retains the original vectors alongside the quantized ones for rescoring. Peak RSS is
+   ~7 GB in every configuration, which is not an edge device. What was measured is the *latency*
+   benefit of quantization; the *storage* benefit — the thing that decides whether a 1M-document
+   index fits on a phone — needs the originals moved off RAM or discarded, and is still open.
+   `binary_mmap` is separately pathological (6.3 ms zero, 8.2 ms at 1–5 words): rescoring against
+   memory-mapped originals thrashes.
 
 ## Reference rows measured this milestone
 
