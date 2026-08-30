@@ -54,6 +54,7 @@ RUN = WORK / "m9long"
 TOKENS = RUN / "corpora"
 CKPT = RUN / "ckpt"
 HISTORY = RUN / "history.jsonl"
+HEARTBEAT = RUN / "heartbeat.json"
 MANIFEST = RUN / "manifest.json"
 CONFIG = RUN / "config.json"
 LOCKFILE = RUN / "trainer.lock"
@@ -518,6 +519,18 @@ def _train(cfg, hours, max_steps, start_decay, device):
             print(f"  step {step:,} loss {loss_acc/nlog:.5f} lr {lr:.2e} "
                   f"{rate:,.0f} tok/s | cum {cum['tokens']/1e9:.3f}B tokens "
                   f"({cum['tokens']/cfg['stable_token_cap']:.1%} of cap)", flush=True)
+            # the heartbeat an out-of-process watchdog reads. Liveness is not a PID: a wedged
+            # process keeps its PID and stops writing this.
+            _hb = {"wall": time.time(), "step": step, "tokens": cum["tokens"],
+                   "examples": cum["examples"], "tok_per_s": rate, "phase": phase["name"],
+                   "loss": loss_acc / max(nlog, 1), "lr": lr, "pid": os.getpid(),
+                   "stable_token_cap": cfg["stable_token_cap"],
+                   "floor": (cfg["throughput_floor_frac"] * float(np.median(tput[:8]))
+                             if len(tput) > 8 else None),
+                   "evals": len(read_history())}
+            _t = HEARTBEAT.with_suffix(".tmp")
+            _t.write_text(json.dumps(_hb))
+            os.replace(_t, HEARTBEAT)
             loss_acc, nlog = 0.0, 0
             if len(tput) > 12 and rate < cfg["throughput_floor_frac"] * float(np.median(tput[:8])):
                 stop_reason = (f"throughput collapse: {rate:,.0f} tok/s against an early median "
