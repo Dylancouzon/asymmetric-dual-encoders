@@ -1,54 +1,59 @@
-# Task for the Mac: Edge prototype round 3 — the storage question, properly this time
+# Task for the Mac: Edge prototype round 4 — does it actually fit? (the last one)
 
-Rounds 1 and 2 are in `results/m9_edge_prototype_Apple_M5_Pro.json` and
-`bench/edge_prototype_pair.py`. Round 2 fixed the cold-start artifact and produced a real finding
-(cheaper search makes the encoder gap matter *more*: the nano ÷ zero ratio climbs 1.43× → 2.81×).
+Rounds 1–3 are in `results/m9_edge_prototype_Apple_M5_Pro.json` and `bench/edge_prototype_pair.py`.
+~20–30 minutes. Same rules: Docker + CPU, latency and bytes only, **no quality numbers**.
 
-But it did **not** answer the question it was aimed at, and that is what round 3 is for.
-~30–45 minutes. Same rules: CPU + Docker, latency and bytes only, **no quality numbers**.
+## Why there is a round 4
 
-## What went wrong, and it is not your fault
+Round 3 settled the storage side — binary quantization gives a **128 MB** hot copy against
+**2,048 MB** of originals, and `binary + rescore=false` is both the smallest and the fastest
+configuration measured (0.441 ms zero, 1.446 ms nano). It also found a trap worth keeping: the same
+index *with* rescore costs **8.467 ms**, nineteen times slower, because rescoring against
+memory-mapped originals thrashes.
 
-| config | segments |
-|---|---|
-| fp16 | 2,226 MB |
-| **int8** | **3,254 MB** |
-| binary | 2,354 MB |
+What it could not settle is the question the whole edge premise rests on. Peak RSS came out at
+**5.9–7.0 GB in every configuration**, including the one holding 128 MB of hot vectors — because
+RSS counts resident pages of the memory-mapped originals, and those are evictable page cache.
+**RSS is the wrong instrument.** It measures what the kernel happened to keep, not what the process
+needs.
 
-Quantizing made the index **bigger**, because Qdrant keeps the original vectors alongside the
-quantized ones so it can rescore. Peak RSS was ~7 GB in every configuration. So round 2 measured
-quantization's *latency* benefit and never its *storage* benefit — and storage is the thing that
-decides whether a 1M-document index fits on an edge device at all.
+The right instrument is a hard memory limit: give the container less RAM than the index and see
+whether it still serves.
 
-## What round 3 must measure
+## The measurement
 
-For each of **fp16 / int8 / binary**, configure the collection so the originals are **not resident
-in RAM**, and report what actually lands on disk and in memory:
+Run Qdrant in a memory-capped container against the **binary + `rescore=false`** collection from
+round 3 (originals `on_disk`, quantized copy `always_ram`), at these limits:
 
-- `vectors_config.on_disk = true` (originals on disk, not RAM), **and**
-- `quantization_config.*.always_ram = true` (the quantized copy is the thing kept hot).
+```
+docker run -m 256m  ...
+docker run -m 512m  ...
+docker run -m 1g    ...
+docker run -m 2g    ...
+```
 
-That is the configuration the quantization feature exists for: a small hot copy in RAM, the
-originals on disk only for rescoring. Report per configuration:
+For each limit report:
 
-- **segment bytes on disk**, split into original-vector bytes vs quantized bytes if Qdrant exposes
-  it (`/collections/<name>` telemetry, or just the on-disk file sizes per segment directory);
-- **peak RSS** — this is the number that decides edge feasibility, and round 2's ~7 GB says the
-  configuration was wrong, not that quantization does not work;
+- **serves or dies** — and if it dies, how (OOM-kill, refusal to load, timeouts);
 - **collection load time**;
-- per-bucket p50/p95 for **both** query paths, at `ef=default` and `ef=128`, keeping round 2's
-  200-search warm-up and randomised bucket order.
+- per-bucket p50/p95 for both query paths at `ef=default`, keeping round 3's 200-search warm-up and
+  randomised bucket order;
+- container memory actually used (`docker stats` / cgroup `memory.current`), which unlike RSS is
+  the constrained truth.
 
-Also run one **`rescore=false`** row for int8 and binary. With rescoring off the originals need
-never be touched at query time, which is the genuinely small-footprint mode — it costs recall, and
-recall is measured on the training box, but the cost side belongs here.
+Add an fp16 row at whichever limits it survives, as the contrast — that is the configuration
+someone would reach for by default.
 
-## The number that matters
+## What the answer means
 
-**Peak RSS for a 1M × 1024 index.** If binary + `always_ram` + `on_disk` originals lands near
-~130 MB of hot vectors instead of ~7 GB, then the document index stops dominating the frontier and
-the whole edge story changes — which would be the third time this prototype has overturned an
-assumption. If it does not, that is equally worth knowing and should be said plainly.
+A 1M-document index is 2 GB of original vectors. If binary + `rescore=false` **serves at 512 MB or
+below**, the document index stops dominating the frontier and the pair is genuinely deployable on
+edge-class hardware. If it needs multiple gigabytes regardless of quantization, then the honest
+report says the *document index*, not the query encoder, is what keeps this off a phone — and every
+query-side millisecond this project has optimised is beside the point.
+
+Both outcomes are publishable. Do not tune the configuration to reach the nicer one; report the
+limit at which it first works.
 
 ## Setup
 
@@ -58,11 +63,11 @@ git fetch origin && git checkout m9-work && git pull
 ```
 
 Extend `bench/edge_prototype_pair.py`. Write `results/m9_edge_prototype_<cpu>.json` with
-`round: 3`, keeping rounds 1–2 recoverable from git history.
+`round: 4`; git history keeps rounds 1–3.
 
 ```bash
 git add results/m9_edge_prototype_*.json bench/edge_prototype_pair.py
-git commit -m "m9: edge prototype round 3 -- storage-configured quantization sweep"
+git commit -m "m9: edge prototype round 4 -- memory-constrained serving"
 git push origin m9-work
 ```
 
@@ -79,5 +84,6 @@ git push origin m9-work
 
 ## Report back
 
-Bytes and peak RSS per configuration, the latency table, and whether `rescore=false` changes the
-footprint materially. This is the last thing needed from this machine.
+The limit at which binary + `rescore=false` first serves, what failure looks like below it, and the
+latency at each surviving limit. That single number — the smallest RAM that serves a 1M × 1024
+index — is the one the edge story needs, and it is the last thing needed from this machine.
