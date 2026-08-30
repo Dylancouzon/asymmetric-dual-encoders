@@ -1,0 +1,80 @@
+{
+  "_what": "M9 candidate query-text sources re-screened through M8's EXTENDED protected-query filter. Hashes and kept-index lists only; no text, no labels, no documents leave this module.",
+  "capability": "none added. m8src/protected_filter holds the only claim and performs the only protected read, exactly as in M8; the G2 allowlist Dylan authorised was reverted unused and m8src/paths_guard.py is byte-identical to M8's.",
+  "screened_against": {
+    "six": 3727,
+    "dev": 12772,
+    "untouched-final": 9335,
+    "lotte-shadow": 14101,
+    "m9-reserve": 55120
+  },
+  "m9_reserve_fields": {
+    "eurlex_inventory.json:queries.query_text": 1504,
+    "uspto_inventory.json:records.abstract_text": 26808,
+    "uspto_inventory.json:records.title": 26808
+  },
+  "lotte_source": "results/m8_lotte_remedy.json surviving_slices -- NOT m8_lotte_overlap.json, whose `kept` is empty because its verdict was 'E10 REOPENS WITH DYLAN' before remediation",
+  "n_protected_queries": 95055,
+  "method": {
+    "ngram": 8,
+    "sketch": 32,
+    "dup_share": 8,
+    "short_ngram": 4,
+    "hash": "blake2b-64 word hashes, polynomial rolling n-gram, bottom-k sketch"
+  },
+  "sources": {
+    "pseudoq": {
+      "path": "work/pseudoq/pseudoq-2000000-0.json",
+      "what": "M7 vocabulary-coverage spans drawn from the decontaminated document stores, <=32 words. NOT questions; treated as short document text",
+      "n_in_after_m7_screen": 923590,
+      "n_kept": 923408,
+      "n_removed": 182,
+      "hits_by_kind": {
+        "exact": 2,
+        "near": 162,
+        "contains": 18
+      },
+      "removal_rate": 0.0002,
+      "kept_index_relpath": "work/decontam/m9_kept_pseudoq.json",
+      "kept_index_sha256": "d8abcfdbeb7c87aebdeb191743d154cb9926ae726945d49f5ffcf5ccc8913de9",
+      "kept_text_sha256": "d576cdf745102fa738935ac88d738d5b2961775076a1285f0990817b5ecba9dc",
+      "seconds": 183.7
+    },
+    "nqopen": {
+      "path": "work/train/querytext/nqopen.json",
+      "what": "google-research-datasets/nq_open train questions -- REAL queries, the scarce resource for a query tower",
+      "n_in_after_m7_screen": 85871,
+      "n_kept": 85863,
+      "n_removed": 8,
+      "hits_by_kind": {
+        "exact": 0,
+        "near": 5,
+        "contains": 3
+      },
+      "removal_rate": 9e-05,
+      "kept_index_relpath": "work/decontam/m9_kept_nqopen.json",
+      "kept_index_sha256": "1518b0d396d1ef97400c86a479d32dc974113f0d57b2692b40ea71f0a30ded8c",
+      "kept_text_sha256": "576493177168743aad5e01b92d3d1bbb044285cf75838b8eba6404498c870c3f",
+      "seconds": 11.5
+    },
+    "triviaqa": {
+      "path": "work/train/querytext/triviaqa.json",
+      "what": "mandarjoshi/trivia_qa rc.nocontext train questions -- REAL queries",
+      "n_in_after_m7_screen": 134761,
+      "n_kept": 134665,
+      "n_removed": 96,
+      "hits_by_kind": {
+        "exact": 0,
+        "near": 96,
+        "contains": 0
+      },
+      "removal_rate": 0.00071,
+      "kept_index_relpath": "work/decontam/m9_kept_triviaqa.json",
+      "kept_index_sha256": "7dae108bd211fa517621950bc35c4fd54c916e768ea1aacae76026cb10070f6f",
+      "kept_text_sha256": "de1367672afa2a760ce2aa212a888ce9231581cb6a1c0fd6dca46c61fc080441",
+      "seconds": 20.4
+    }
+  },
+  "total_kept": 1143936,
+  "seconds": 242.7
+}
