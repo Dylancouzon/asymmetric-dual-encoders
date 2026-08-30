@@ -19,8 +19,22 @@ the JSON; this file is the index and the one-line reading.
 |---|---|
 | `m9s1` | the anchor: stella-400M teacher, bge-small student, prompt (b), query-only, seed 0, warm-started head, 16 epochs / 30,349 steps / 59,507,872 non-pad tokens |
 | `m9s1c` | the same arm **without** the warm start — a registered diagnostic that prices it |
+| `m9s1b` | the same arm at seed 1 — seed sensitivity, reported and read by no rule |
 
-### `m9s1c` — what the closed-form head is worth
+**Stage A, final (all three under one session, the fifth and last anchor attempt):**
+
+| arm | SCREEN-3 | retention | DEV-6 | retention |
+|---|---|---|---|---|
+| `m9s1` anchor | **0.50004** | **0.733** | **0.48071** | **0.715** |
+| `m9s1c` random head | 0.47287 | 0.693 | 0.45620 | 0.679 |
+| `m9s1b` seed 1 | 0.50081 | 0.734 | 0.48271 | 0.718 |
+
+**Warm start is worth +0.02717 SCREEN-3 / +0.02451 DEV-6** at identical SGD dose — ~4.9× the 0.0056
+decision threshold, for a Stage-0 phase costing 8.4 s and 918,015 tokens. **Seed sensitivity is
+0.00078 / 0.00200**, comfortably under the threshold; with the head warm-started the model has no
+random initialization at all, so the seed moves only data order and dropout.
+
+### `m9s1c` — what the closed-form head is worth (round-1 figures; stage-A table above is final)
 
 | | SCREEN-3 | DEV-6 |
 |---|---|---|

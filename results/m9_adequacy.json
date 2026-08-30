@@ -2,9 +2,9 @@
   "anchor": "m9s1",
   "surface": "SCREEN3",
   "ceiling": 0.68223,
-  "final_macro": 0.49958,
-  "retention": 0.7323,
-  "late_slope": 0.00524800000000003,
+  "final_macro": 0.500035,
+  "retention": 0.7329,
+  "late_slope": 0.005443000000000031,
   "conditions": {
     "retention_at_final": {
       "min": 0.6,
@@ -27,15 +27,15 @@
     ],
     [
       15175,
-      0.481327
+      0.48121
     ],
     [
       22762,
-      0.494332
+      0.494592
     ],
     [
       30349,
-      0.49958
+      0.500035
     ]
   ],
   "pass": true,
@@ -44,12 +44,18 @@
   "_registration": {
     "run_id": "m9-adequacy",
     "diagnostic": false,
-    "commit": "793748755bbe7191dbe538d296333fdf6ee08038",
+    "commit": "dbf81765cfc4d8b262980ee9488dc5186dcb8730",
     "branch": "m9-work",
-    "session_sha256": "e5bfabda6995db26213aca6bad1d321142df3b25c1c0b2a526271c76bb6d7ded",
+    "session_sha256": "380570c28bffed9bf4e425c1b7a649e8a9ed3622dfc8a9ca056f654ce1fc0393",
     "stage": "M9.0",
-    "opened_at": 1788083317.3610184,
-    "written_at": 1788083317.4433837,
+    "scopes": [
+      "protocol"
+    ],
+    "scoped": {
+      "protocol": "9d5ecaa1ba7d60068f4b35e3205fc8109c4143ebc6fe955c442348d553b9b58a"
+    },
+    "opened_at": 1788101261.2515686,
+    "written_at": 1788101261.3348136,
     "extra": {},
     "eligible_for_decision": true
   }

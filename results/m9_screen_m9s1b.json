@@ -24,15 +24,15 @@
     "stage0_examples": 60000,
     "stage0_nonpad_tokens": 918015,
     "stage0_teacher_target_accesses": 60000,
-    "stage0_seconds": 13.1
+    "stage0_seconds": 8.3
   },
-  "seconds": 2055.2,
+  "seconds": 2130.6,
   "history": [
     {
       "step": 7588,
       "examples": 971264,
       "nonpad_tokens": 14878760,
-      "elapsed_s": 482.1,
+      "elapsed_s": 480.0,
       "macros": {
         "SCREEN3": {
           "macro": 0.445251,
@@ -5423,7 +5423,7 @@
       "step": 15175,
       "examples": 1942400,
       "nonpad_tokens": 29755676,
-      "elapsed_s": 968.7,
+      "elapsed_s": 963.6,
       "macros": {
         "SCREEN3": {
           "macro": 0.480212,
@@ -10814,7 +10814,7 @@
       "step": 22762,
       "examples": 2913536,
       "nonpad_tokens": 44632540,
-      "elapsed_s": 1453.2,
+      "elapsed_s": 1444.4,
       "macros": {
         "SCREEN3": {
           "macro": 0.496718,
@@ -16205,7 +16205,7 @@
       "step": 30349,
       "examples": 3884576,
       "nonpad_tokens": 59507872,
-      "elapsed_s": 1936.9,
+      "elapsed_s": 1923.9,
       "macros": {
         "SCREEN3": {
           "macro": 0.500813,
@@ -36428,8 +36428,9 @@
     "query_tokens_per_epoch": 3719242,
     "dose_form": "fixed 128-example batches over 16 full epochs",
     "target_norms": {
-      "min": 0.999971,
-      "max": 1.000032
+      "min": 0.999947,
+      "max": 1.000053,
+      "n_checked": 242786
     },
     "scheduled_examples": 3884576,
     "scheduled_steps": 30349
@@ -36483,12 +36484,24 @@
   "_registration": {
     "run_id": "m9s1b",
     "diagnostic": false,
-    "commit": "793748755bbe7191dbe538d296333fdf6ee08038",
+    "commit": "dbf81765cfc4d8b262980ee9488dc5186dcb8730",
     "branch": "m9-work",
-    "session_sha256": "e5bfabda6995db26213aca6bad1d321142df3b25c1c0b2a526271c76bb6d7ded",
+    "session_sha256": "380570c28bffed9bf4e425c1b7a649e8a9ed3622dfc8a9ca056f654ce1fc0393",
     "stage": "M9.0",
-    "opened_at": 1788085427.8588326,
-    "written_at": 1788087519.7901666,
+    "scopes": [
+      "protocol",
+      "data",
+      "train",
+      "eval"
+    ],
+    "scoped": {
+      "protocol": "9d5ecaa1ba7d60068f4b35e3205fc8109c4143ebc6fe955c442348d553b9b58a",
+      "data": "beac6ee6f3ee1546f3331b53b5e436b2bd5f1b6840342d4c1070ea1830af8deb",
+      "train": "ffce1339607960c7078442982d43e35b78f30d1d0f57bd9e57e60b1ac5c513df",
+      "eval": "c859ec36080f1e959a66051f7f9ad0e715045a8e9bf0ca6679b0d30fa5dd9546"
+    },
+    "opened_at": 1788103392.1065462,
+    "written_at": 1788105568.3518136,
     "extra": {
       "spec": {
         "id": "m9s1b",
