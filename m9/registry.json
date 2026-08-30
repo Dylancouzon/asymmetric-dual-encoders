@@ -1,554 +1,557 @@
 {
-  "_note": "M9 pre-registration. Every constant a rule reads lives here and nowhere else (m8/CODEMAP.md pitfall 12: never mirror a registry constant into code). m9/LEDGER.md is the prose; this is the machine copy.",
-  "version": 2,
-  "ledger": "m9/LEDGER.md",
-  "created": "2026-08-30",
-  "stage": "M9.0",
-  "alpha_family": 0.025,
-  "data": {
-    "screen_query_pool_relpath": "work/m9_screen_queries.json",
-    "screen_query_pool_sha256": "77c7ce118feab016bd9991c295b15859ba6af582e557d3dbd98508433fc49238",
-    "n_screen_queries": 242786,
-    "excluded_sources": [
-      "fever-train",
-      "nqopen",
-      "triviaqa"
-    ],
-    "doc_pool": "work/pool/stella-400M-v5",
-    "doc_pool_excluded_store": "fever-pos",
-    "fineweb": "EXCLUDED \u2014 no persisted reserved-set document fingerprints exist (m9/LEDGER.md 1.3)",
-    "n_eligible_doc_rows": 6149679,
-    "doc_candidates_n": 400000,
-    "doc_candidates_seed": 9,
-    "doc_candidates_rows_sha256": "216e8783c52df2ea220c526c9063dc8d70dff3e352c3509d045850aff3495e98",
-    "doc_candidates_order": "RNG draw order, NOT sorted (a sorted prefix is store-biased)"
-  },
-  "dose": {
-    "examples": 3884576,
-    "batch_size": 128,
-    "steps": 30349,
-    "epochs_query_only": 16,
-    "checkpoints": [
-      7588,
-      15175,
-      22762,
-      30349
-    ],
-    "decision_checkpoint": 30349,
-    "seed": 0,
-    "lr_peak": 0.0001,
-    "lr_final": 1e-05,
-    "warmup_steps": 910,
-    "schedule": "linear warmup then cosine",
-    "optimizer": "AdamW",
-    "betas": [
-      0.9,
-      0.999
-    ],
-    "eps": 1e-08,
-    "weight_decay": 0.01,
-    "grad_clip": 1.0,
-    "precision": "bf16 autocast backbone, loss in fp32",
-    "max_seq": 512,
-    "mix_arm": {
-      "design": "fixed-compute: identical optimizer updates AND identical non-pad tokens, split 70/30 BY TOKEN",
-      "query_token_target": 41655510,
-      "doc_token_target": 17852362,
-      "batching": "token-budgeted with a CUMULATIVE budget: each role fills until its running total reaches its share of the tokens due by the end of that step, so per-step rounding cannot accumulate. Streams are consumed in order and asserted never to run dry; every step is asserted non-empty.",
-      "loss_weighting": "plain mean over all examples in the batch; no role weighting",
-      "challenger_branch": "a selected challenger re-encodes the SAME 111,906 raw documents in its own space",
-      "n_doc_candidates": 400000,
-      "materialized": {
-        "steps": 30349,
-        "presentations": 2908338,
-        "consumed_query": 2719336,
-        "consumed_doc": 189002,
-        "realized_query_tokens": 41655512.0,
-        "realized_doc_tokens": 17852365.0,
-        "doc_share_realized": 0.3,
-        "batch_size": {
-          "mean": 95.83,
-          "min": 68,
-          "max": 124
-        },
-        "doc_candidate_headroom": 210998
-      }
-    },
-    "T_base_nonpad_tokens": 59507872,
-    "partial_batch": "the final batch is trained at its natural size (32 examples)",
-    "grad_accumulation": 0,
-    "weight_decay_applies_to": "parameters with dim > 1; 0.0 otherwise",
-    "lr_formula": "warmup: 1e-4*(step+1)/910; then 1e-5 + 0.5*(1e-4-1e-5)*(1+cos(pi*min(1,(step-910)/(30349-910-1))))",
-    "epoch_order": "one default_rng(seed); fresh permutation(n) per epoch, concatenated",
-    "retrieval_dtype": "fp32 matmul from fp16 document memmaps",
-    "checkpoint_surfaces": {
-      "SCREEN3": "all four checkpoints -- 0.65 GB of document vectors, so it is nearly free and it carries the dose-response curve",
-      "DEV6": "the FINAL checkpoint only. A DEV-6 pass streams 23.3 GB of document vectors and, interleaved with training, fragments the allocator badly enough to cost more wall-clock than the training it measures. Reading it once, at the end, removes the interleaving",
-      "consequence": "the adequacy gate and the rank-stability rule both read SCREEN-3, which has all four points; the DECISION contrasts read DEV-6 at the final checkpoint, which is where they were always defined",
-      "decided_before_any_arm_ran": true
-    },
-    "batch_size_note": "locked at 128. The batch-32 pilot was registered and then REMOVED before any arm ran: two matched epochs give batch 32 four times the optimizer updates and compress a separate warmup+cosine schedule into a miniature, so it measures early optimization speed, not the batch size that wins at final dose (Codex pass 2, MAJOR-7). LEAF's bs=32 finding was made at roughly a hundred times this dose.",
-    "arm5_token_matched": {
-      "why": "prompt policy (a) prepends ~20 tokens per query; 16 full epochs would be a larger non-pad dose than the baseline and would confound prompt with dose",
-      "steps": 30349,
-      "tokens": 59507872
-    },
-    "token_budget_note": "the batcher tracks T_base cumulatively; there is no per-step budget constant to go stale"
-  },
-  "objective": {
-    "phase1": "mean_over_batch(sum_over_dim((normalize(student_out) - target)^2))",
-    "normalize_eps": 1e-12,
-    "loss_dtype": "fp32",
-    "auxiliary_terms": "none",
-    "pooling": "mean over attention mask",
-    "head": "Linear(hidden, 1024, bias=True), default init",
-    "output": "L2-normalized"
-  },
-  "templates": {
-    "query_policy_b_student": "",
-    "query_policy_a_student": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
-    "query_teacher_target": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
-    "doc_student": "passage: ",
-    "doc_teacher_target": "",
-    "baseline_prompt_policy": "b"
-  },
-  "statistic": {
-    "module": "m9src/screen_stats.py",
-    "B": 20000,
-    "seed": 0,
-    "resample": "n_d queries with replacement within each component",
-    "aggregate": "component means combined at the surface's weights",
-    "shared_indices_across_contrasts": true,
-    "qid_manifest": "results/m9_lock_constants.json -> qid_manifest (ordered sha256 per component)",
-    "quantile_method": "linear",
-    "chunk_replicates": 1000
-  },
-  "rules": {
-    "mde": {
-      "value": 0.0056,
-      "provenance": "1.96 x the DEV-6 macro SE implied by the p90 per-query difference SD (0.1195) over 2,031 historical dev contrasts: SE = (1/6)*sqrt(sum_c s^2/n_c) = 0.002876 -> 0.005636, rounded to 0.0056 (results/m9_power_prereg.json)",
-      "withdrawn": "the earlier max(0.0051, 2F) form: a K=2 seed range is one half-normal draw, not a sigma estimate (Codex pass 2, MAJOR-8)",
-      "seed_replica": "arm m9s1b is REPORTED as seed sensitivity and read by no rule"
-    },
-    "teacher_swap": {
-      "surface": "SCREEN3",
-      "margin": 0.01,
-      "quantile": 0.0125,
-      "multiplicity": "Bonferroni over 2 challenger contrasts",
-      "extra": "direction stable across family, equal and query-pooled weightings",
-      "default": "stella-400M stays",
-      "tie": "stella stays",
-      "both_pass": "larger point estimate wins",
-      "on_swap": "STOP and return to Dylan: student/prompt/mix cannot run on DEV6 in a challenger space",
-      "stop_enforced_in": "m9src/screen.py:require_predecessors -- a challenger selection refuses every subsequent arm, not just warns",
-      "voids_downstream": "a challenger win voids every student/prompt/mix decision taken under the incumbent and returns the milestone to Dylan; it never silently re-bases them",
-      "status": "NOT EXERCISED in M9. stella-400M stands as the teacher by default and by the owner's product preference -- one document model and one collection shared by zero and nano -- with a diagnostic measurement pointing the same way. The rule itself is unchanged and available."
-    },
-    "student": {
-      "surface": "DEV6",
-      "margin": "MDE",
-      "quantile": 0.025,
-      "rank_stability": true,
-      "default": "bge-small-en-v1.5"
-    },
-    "prompt": {
-      "surface": "DEV6",
-      "margin": "MDE",
-      "quantile": 0.025,
-      "rank_stability": true,
-      "default": "b"
-    },
-    "mix": {
-      "surface": "DEV6",
-      "margin": "MDE",
-      "quantile": 0.025,
-      "rank_stability": true,
-      "default": "query-only"
-    },
-    "rank_stability_rule": "a PROXY VETO, not a stability test of the decision surface: adoption is decided on DEV-6 at the final checkpoint while stability is measured on SCREEN-3, the only surface with four points (Codex pass 4). The contrast must have the same sign at the last two SCREEN-3 checkpoints; a flip means 'not stable at screen dose' -> default, arm recorded diagnostic.",
-    "scope": "every screen verdict is artifact-specific at the screen dose; never 'resolved', 'confirmed' or 'significant'",
-    "rank_stability_surface": "SCREEN3"
-  },
-  "arms": [
-    {
-      "id": "m9s1",
-      "varies": "anchor",
-      "teacher": "stella-400M-v5",
-      "student": "bge-small-en-v1.5",
-      "prompt": "b",
-      "mix": "query-only",
-      "seed": 0,
-      "surface": "both"
-    },
-    {
-      "id": "m9s1b",
-      "varies": "seed",
-      "teacher": "stella-400M-v5",
-      "student": "bge-small-en-v1.5",
-      "prompt": "b",
-      "mix": "query-only",
-      "seed": 1,
-      "surface": "DEV6"
-    },
-    {
-      "id": "m9s1c",
-      "varies": "warm start (DIAGNOSTIC contrast, decides nothing)",
-      "teacher": "stella-400M-v5",
-      "student": "bge-small-en-v1.5",
-      "prompt": "b",
-      "mix": "query-only",
-      "seed": 0,
-      "surface": "DEV6",
-      "warm_start": false,
-      "decision_eligible": false
-    },
-    {
-      "id": "m9s2",
-      "varies": "teacher",
-      "teacher": "stella-1.5B-v5",
-      "student": "bge-small-en-v1.5",
-      "prompt": "b",
-      "mix": "query-only",
-      "seed": 0,
-      "surface": "SCREEN3",
-      "decision_eligible": false,
-      "withdrawn": "WITHDRAWN 2026-08-30 by Dylan, on measurement. m9s2 (stella-1.5B) ran to completion before an unrelated guard failure voided its artifact, and its checkpoint curve is BEHIND the stella-400M anchor at every point: 0.44649/0.48034/0.49225/0.49775 against 0.44814/0.48121/0.49459/0.50004 -- a final delta of -0.00229 where the swap rule needs +0.010, i.e. the wrong sign. A teacher 3.75x larger with a materially better MTEB score (0.5837 vs 0.5609) distils WORSE, which is M8's T1 finding generalising from tables to towers. Qwen3-0.6B's nominal edge (+0.004) is smaller than the one that just lost (+0.023), so its prior is worse still. Diagnostic, not a registered result: it informs a resource decision, and stella-400M remains the teacher by default, not by measurement."
-    },
-    {
-      "id": "m9s3",
-      "varies": "teacher",
-      "teacher": "qwen3-embedding-0.6B",
-      "student": "bge-small-en-v1.5",
-      "prompt": "b",
-      "mix": "query-only",
-      "seed": 0,
-      "surface": "SCREEN3",
-      "decision_eligible": false,
-      "withdrawn": "WITHDRAWN 2026-08-30 by Dylan, on measurement. m9s2 (stella-1.5B) ran to completion before an unrelated guard failure voided its artifact, and its checkpoint curve is BEHIND the stella-400M anchor at every point: 0.44649/0.48034/0.49225/0.49775 against 0.44814/0.48121/0.49459/0.50004 -- a final delta of -0.00229 where the swap rule needs +0.010, i.e. the wrong sign. A teacher 3.75x larger with a materially better MTEB score (0.5837 vs 0.5609) distils WORSE, which is M8's T1 finding generalising from tables to towers. Qwen3-0.6B's nominal edge (+0.004) is smaller than the one that just lost (+0.023), so its prior is worse still. Diagnostic, not a registered result: it informs a resource decision, and stella-400M remains the teacher by default, not by measurement."
-    },
-    {
-      "id": "m9s4",
-      "varies": "student",
-      "teacher": "selected",
-      "student": "all-MiniLM-L6-v2",
-      "prompt": "b",
-      "mix": "query-only",
-      "seed": 0,
-      "surface": "DEV6"
-    },
-    {
-      "id": "m9s5",
-      "varies": "prompt",
-      "teacher": "selected",
-      "student": "selected",
-      "prompt": "a",
-      "mix": "query-only",
-      "seed": 0,
-      "surface": "DEV6"
-    },
-    {
-      "id": "m9s6",
-      "varies": "mix",
-      "teacher": "selected",
-      "student": "selected",
-      "prompt": "selected",
-      "mix": "70/30",
-      "seed": 0,
-      "surface": "DEV6"
-    },
-    {
-      "id": "m9cap-diag",
-      "varies": "STUDENT CAPACITY (diagnostic, decides nothing)",
-      "teacher": "stella-400M-v5",
-      "student": "bge-base-en-v1.5",
-      "prompt": "b",
-      "mix": "query-only",
-      "seed": 0,
-      "surface": "SCREEN3",
-      "decision_eligible": false,
-      "why": "a 109M student at the identical dose, to measure whether the >=35M cap is what binds retention before three days of compute are committed. OUT OF M9 SCOPE for selection -- the mandate caps nano at 35M and reserves anything larger for M10 on Dylan's call. Authorised by Dylan 2026-08-30.",
-      "withdrawn": "WITHDRAWN 2026-08-30 by Dylan, on Codex review #5 (m9/EXPLORED.md)"
-    }
+ "_note": "M9 pre-registration. Every constant a rule reads lives here and nowhere else (m8/CODEMAP.md pitfall 12: never mirror a registry constant into code). m9/LEDGER.md is the prose; this is the machine copy.",
+ "version": 2,
+ "ledger": "m9/LEDGER.md",
+ "created": "2026-08-30",
+ "stage": "M9.0",
+ "alpha_family": 0.025,
+ "data": {
+  "screen_query_pool_relpath": "work/m9_screen_queries.json",
+  "screen_query_pool_sha256": "77c7ce118feab016bd9991c295b15859ba6af582e557d3dbd98508433fc49238",
+  "n_screen_queries": 242786,
+  "excluded_sources": [
+   "fever-train",
+   "nqopen",
+   "triviaqa"
   ],
-  "validation_samples": {
-    "fp16_target_cache": {
-      "n": 10000,
-      "strata": "10 equal-count WordPiece-length deciles of the screen pool",
-      "seed": 11,
-      "min_cos": 0.9999,
-      "max_abs": 0.001,
-      "withdrawn": "the 'query retrieval macro shift <= 1e-4' clause: training texts carry no qrels (LEDGER S9.2)",
-      "sample_sha256": "c6397f33cf43b1ea90e32872950d01f03986bd522df9661eb25745923c9266b0"
+  "doc_pool": "work/pool/stella-400M-v5",
+  "doc_pool_excluded_store": "fever-pos",
+  "fineweb": "EXCLUDED \u2014 no persisted reserved-set document fingerprints exist (m9/LEDGER.md 1.3)",
+  "n_eligible_doc_rows": 6149679,
+  "doc_candidates_n": 400000,
+  "doc_candidates_seed": 9,
+  "doc_candidates_rows_sha256": "216e8783c52df2ea220c526c9063dc8d70dff3e352c3509d045850aff3495e98",
+  "doc_candidates_order": "RNG draw order, NOT sorted (a sorted prefix is store-biased)"
+ },
+ "dose": {
+  "examples": 3884576,
+  "batch_size": 128,
+  "steps": 30349,
+  "epochs_query_only": 16,
+  "checkpoints": [
+   7588,
+   15175,
+   22762,
+   30349
+  ],
+  "decision_checkpoint": 30349,
+  "seed": 0,
+  "lr_peak": 0.0001,
+  "lr_final": 1e-05,
+  "warmup_steps": 910,
+  "schedule": "linear warmup then cosine",
+  "optimizer": "AdamW",
+  "betas": [
+   0.9,
+   0.999
+  ],
+  "eps": 1e-08,
+  "weight_decay": 0.01,
+  "grad_clip": 1.0,
+  "precision": "bf16 autocast backbone, loss in fp32",
+  "max_seq": 512,
+  "mix_arm": {
+   "design": "fixed-compute: identical optimizer updates AND identical non-pad tokens, split 70/30 BY TOKEN",
+   "query_token_target": 41655510,
+   "doc_token_target": 17852362,
+   "batching": "token-budgeted with a CUMULATIVE budget: each role fills until its running total reaches its share of the tokens due by the end of that step, so per-step rounding cannot accumulate. Streams are consumed in order and asserted never to run dry; every step is asserted non-empty.",
+   "loss_weighting": "plain mean over all examples in the batch; no role weighting",
+   "challenger_branch": "a selected challenger re-encodes the SAME 111,906 raw documents in its own space",
+   "n_doc_candidates": 400000,
+   "materialized": {
+    "steps": 30349,
+    "presentations": 2908338,
+    "consumed_query": 2719336,
+    "consumed_doc": 189002,
+    "realized_query_tokens": 41655512.0,
+    "realized_doc_tokens": 17852365.0,
+    "doc_share_realized": 0.3,
+    "batch_size": {
+     "mean": 95.83,
+     "min": 68,
+     "max": 124
     },
-    "onnx_parity": {
-      "n": 512,
-      "composition": "256 query-pool + 256 documents; 51/51/51/51/52 per length bin per side, longest bin first, shortfall to the next bin down",
-      "seed": 12,
-      "opset": 17,
-      "min_cos": 0.9999,
-      "max_abs": 0.001,
-      "applies_to": "every example",
-      "sample_sha256": "3cd2aff8d76763058068769ffd990dff11b6ee83c8701ee0de305e34a5e733fb"
-    },
-    "bridge_dryrun": {
-      "surface": "DEV6",
-      "anchor": "bge-small-en-v1.5",
-      "max_abs_delta_ndcg": 0.0003,
-      "qid_drift": 0
-    }
+    "doc_candidate_headroom": 210998
+   }
   },
-  "bins": {
-    "length_words": [
-      [
-        1,
-        5
-      ],
-      [
-        6,
-        10
-      ],
-      [
-        11,
-        20
-      ],
-      [
-        21,
-        50
-      ],
-      [
-        51,
-        null
-      ]
-    ],
-    "fragmentation_subwords_per_word": [
-      [
-        1.0,
-        1.2
-      ],
-      [
-        1.2,
-        1.5
-      ],
-      [
-        1.5,
-        2.0
-      ],
-      [
-        2.0,
-        null
-      ]
-    ],
-    "fragmentation_note": "punctuation stripped BEFORE tokenizing (m8/CODEMAP.md pitfall 14)"
+  "T_base_nonpad_tokens": 59507872,
+  "partial_batch": "the final batch is trained at its natural size (32 examples)",
+  "grad_accumulation": 0,
+  "weight_decay_applies_to": "parameters with dim > 1; 0.0 otherwise",
+  "lr_formula": "warmup: 1e-4*(step+1)/910; then 1e-5 + 0.5*(1e-4-1e-5)*(1+cos(pi*min(1,(step-910)/(30349-910-1))))",
+  "epoch_order": "one default_rng(seed); fresh permutation(n) per epoch, concatenated",
+  "retrieval_dtype": "fp32 matmul from fp16 document memmaps",
+  "checkpoint_surfaces": {
+   "SCREEN3": "all four checkpoints -- 0.65 GB of document vectors, so it is nearly free and it carries the dose-response curve",
+   "DEV6": "the FINAL checkpoint only. A DEV-6 pass streams 23.3 GB of document vectors and, interleaved with training, fragments the allocator badly enough to cost more wall-clock than the training it measures. Reading it once, at the end, removes the interleaving",
+   "consequence": "the adequacy gate and the rank-stability rule both read SCREEN-3, which has all four points; the DECISION contrasts read DEV-6 at the final checkpoint, which is where they were always defined",
+   "decided_before_any_arm_ran": true
   },
-  "lotte": {
-    "read_at_m9_1": false,
-    "kind": "non-inferiority veto, NOT a confirmation",
-    "threshold": 0.004,
-    "fallback_recipe": "stella-400M x bge-small x prompt b x query-only",
-    "rule": "one atomic batch over two hash-pinned equal-dose checkpoints; the selection stands unless the selected recipe's 7-slice macro is worse by more than 0.004 AND the 97.5% one-sided paired-bootstrap upper bound on (selected - fallback) is below -0.004",
-    "adoption_may_not_trigger_retraining": true,
-    "reads_permitted": 2
+  "batch_size_note": "locked at 128. The batch-32 pilot was registered and then REMOVED before any arm ran: two matched epochs give batch 32 four times the optimizer updates and compress a separate warmup+cosine schedule into a miniature, so it measures early optimization speed, not the batch size that wins at final dose (Codex pass 2, MAJOR-7). LEAF's bs=32 finding was made at roughly a hundred times this dose.",
+  "arm5_token_matched": {
+   "why": "prompt policy (a) prepends ~20 tokens per query; 16 full epochs would be a larger non-pad dose than the baseline and would confound prompt with dose",
+   "steps": 30349,
+   "tokens": 59507872
   },
-  "bars": {
-    "aim": {
-      "system": "leaf-ir-asym",
-      "avg6": 0.5155,
-      "ndo4": 0.5233
-    },
-    "release": {
-      "system": "bge-small symmetric",
-      "avg6": 0.5042,
-      "ndo4": 0.5046
-    },
-    "ceiling": {
-      "system": "stella-400M symmetric",
-      "avg6": 0.5744,
-      "ndo4": 0.564
-    }
+  "token_budget_note": "the batcher tracks T_base cumulatively; there is no per-step budget constant to go stale"
+ },
+ "objective": {
+  "phase1": "mean_over_batch(sum_over_dim((normalize(student_out) - target)^2))",
+  "normalize_eps": 1e-12,
+  "loss_dtype": "fp32",
+  "auxiliary_terms": "none",
+  "pooling": "mean over attention mask",
+  "head": "Linear(hidden, 1024, bias=True), default init",
+  "output": "L2-normalized"
+ },
+ "templates": {
+  "query_policy_b_student": "",
+  "query_policy_a_student": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
+  "query_teacher_target": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
+  "doc_student": "passage: ",
+  "doc_teacher_target": "",
+  "baseline_prompt_policy": "b"
+ },
+ "statistic": {
+  "module": "m9src/screen_stats.py",
+  "B": 20000,
+  "seed": 0,
+  "resample": "n_d queries with replacement within each component",
+  "aggregate": "component means combined at the surface's weights",
+  "shared_indices_across_contrasts": true,
+  "qid_manifest": "results/m9_lock_constants.json -> qid_manifest (ordered sha256 per component)",
+  "quantile_method": "linear",
+  "chunk_replicates": 1000
+ },
+ "rules": {
+  "mde": {
+   "value": 0.0056,
+   "provenance": "1.96 x the DEV-6 macro SE implied by the p90 per-query difference SD (0.1195) over 2,031 historical dev contrasts: SE = (1/6)*sqrt(sum_c s^2/n_c) = 0.002876 -> 0.005636, rounded to 0.0056 (results/m9_power_prereg.json)",
+   "withdrawn": "the earlier max(0.0051, 2F) form: a K=2 seed range is one half-normal draw, not a sigma estimate (Codex pass 2, MAJOR-8)",
+   "seed_replica": "arm m9s1b is REPORTED as seed sensitivity and read by no rule"
   },
-  "_review": "research/m9-codex-lock-2026-08-30.md (gpt-5.6-sol, DO NOT COMMIT on v1; 7 BLOCKER / 8 MAJOR / 4 MINOR, all actioned -- m9/LEDGER.md S10)",
-  "branch": "m9-work",
-  "lock_constants": "results/m9_lock_constants.json",
-  "power_basis": "results/m9_power_prereg.json",
-  "models": {
-    "students": {
-      "bge-small-en-v1.5": {
-        "repo": "BAAI/bge-small-en-v1.5",
-        "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
-        "params": 33754240,
-        "fp16_MB": 67.508
-      },
-      "all-MiniLM-L6-v2": {
-        "repo": "sentence-transformers/all-MiniLM-L6-v2",
-        "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
-        "params": 23107456,
-        "fp16_MB": 46.215
-      }
-    },
-    "teachers": {
-      "stella-400M-v5": {
-        "repo": "NovaSearch/stella_en_400M_v5",
-        "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
-        "pooling": "mean",
-        "path": "m7src/teacher.py (frozen)"
-      },
-      "stella-1.5B-v5": {
-        "repo": "NovaSearch/stella_en_1.5B_v5",
-        "revision": "7817065102fd9e1b031fe874e910c01f40b2f001",
-        "pooling": "mean",
-        "path": "sentence-transformers"
-      },
-      "qwen3-embedding-0.6B": {
-        "repo": "Qwen/Qwen3-Embedding-0.6B",
-        "revision": "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
-        "pooling": "last-token",
-        "path": "sentence-transformers"
-      }
-    },
-    "st_vs_frozen_parity": {
-      "n": 64,
-      "min_cos": 0.99959,
-      "max_abs": 0.000145
-    },
-    "diagnostic_students": {
-      "bge-base-en-v1.5": {
-        "repo": "BAAI/bge-base-en-v1.5",
-        "revision": "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a",
-        "params_approx": 109000000,
-        "licence": "MIT",
-        "vendor": "BAAI, clean",
-        "note": "DIAGNOSTIC ONLY. Never selectable as nano's student under the M9 mandate."
-      }
-    }
+  "teacher_swap": {
+   "surface": "SCREEN3",
+   "margin": 0.01,
+   "quantile": 0.0125,
+   "multiplicity": "Bonferroni over 2 challenger contrasts",
+   "extra": "direction stable across family, equal and query-pooled weightings",
+   "default": "stella-400M stays",
+   "tie": "stella stays",
+   "both_pass": "larger point estimate wins",
+   "on_swap": "STOP and return to Dylan: student/prompt/mix cannot run on DEV6 in a challenger space",
+   "stop_enforced_in": "m9src/screen.py:require_predecessors -- a challenger selection refuses every subsequent arm, not just warns",
+   "voids_downstream": "a challenger win voids every student/prompt/mix decision taken under the incumbent and returns the milestone to Dylan; it never silently re-bases them",
+   "status": "NOT EXERCISED in M9. stella-400M stands as the teacher by default and by the owner's product preference -- one document model and one collection shared by zero and nano -- with a diagnostic measurement pointing the same way. The rule itself is unchanged and available."
   },
-  "surfaces": {
-    "DEV6": {
-      "components": [
-        "nq-250k",
-        "hotpotqa",
-        "cqadup-programmers",
-        "cqadup-physics",
-        "heldout-train",
-        "heldout-longq"
-      ],
-      "weights": "equal per component",
-      "n_queries": 20152,
-      "decides": [
-        "batch_size",
-        "student",
-        "prompt",
-        "mix",
-        "seed_floor"
-      ]
-    },
-    "SCREEN3": {
-      "components": [
-        "nq-250k",
-        "cqadup-programmers",
-        "cqadup-physics"
-      ],
-      "weights": {
-        "nq-250k": 0.5,
-        "cqadup-programmers": 0.25,
-        "cqadup-physics": 0.25
-      },
-      "n_queries": 5367,
-      "decides": [
-        "teacher"
-      ],
-      "sensitivity_weightings": [
-        "family",
-        "equal",
-        "query-pooled"
-      ]
-    }
+  "student": {
+   "surface": "DEV6",
+   "margin": "MDE",
+   "quantile": 0.025,
+   "rank_stability": true,
+   "default": "bge-small-en-v1.5"
   },
-  "artifact_size": {
-    "unit": "decimal MB of total shipped bytes (ONNX graph + tokenizer + config)",
-    "target": 70,
-    "weights_only_bge": 67.508,
-    "weights_only_minilm": 46.215,
-    "measured_by": "m9src/port.py"
+  "prompt": {
+   "surface": "DEV6",
+   "margin": "MDE",
+   "quantile": 0.025,
+   "rank_stability": true,
+   "default": "b"
   },
-  "warm_start": {
-    "what": "the head is initialized to the closed-form ridge solution from the FROZEN backbone's mean-pooled outputs to the teacher targets, then trained normally with the rest of the model",
-    "n_fit": 60000,
-    "seed": 21,
-    "lambda": 0.0001,
-    "lambda_selected_on": "a TRAINING-ONLY holdout: fit on the first 50,000 of the 60,000-text warm-start sample, score the remaining 10,000 under the ACTUAL normalized objective ||normalize(XA)-Y||^2, locked grid 1e-6..1, ties to the larger lambda. m9src/warmfit.py; the result is results/m9_warmfit.json and nano.warm_start_head refuses to run without it",
-    "applies_to": "every arm except the registered diagnostic contrast m9s1c",
-    "evidence": "results/m9_head_probe.json -- 0.3463 SCREEN-3 macro from a frozen backbone, 50.8% of the 0.6822 ceiling, against 12.4% for a random head after 2,000 trained steps",
-    "decided": "2026-08-30, before any screen arm ran",
-    "n_fit_split": 50000,
-    "withdrawn": "the v3 claim that lambda was selected on the training residual. The head probe in fact selected argmax SCREEN-3, a dev surface (Codex pass 3, BLOCKER-B1). A residual criterion would not have rescued it: a ridge residual is monotone in lambda",
-    "estimand": "per-arm training-only-calibrated ridge initialization PLUS SGD. Each arm fits its own head in its own feature space under its own teacher's targets, so a contrast is end-to-end (factor + refit), not a pure factor contrast. Stated, not assumed away",
-    "stage0_dose": "60,000 supervised backbone forwards + a 385x385 solve, reported separately from the SGD dose; the retention curve is read against both the SGD budget and total compute"
+  "mix": {
+   "surface": "DEV6",
+   "margin": "MDE",
+   "quantile": 0.025,
+   "rank_stability": true,
+   "default": "query-only"
   },
-  "staging": {
-    "A": {
-      "runs": [
-        "m9-warmfit",
-        "m9-fp16-gate",
-        "m9-bridge-dryrun",
-        "m9s1",
-        "m9s1c",
-        "m9s1b"
-      ],
-      "purpose": "the corrected, fully guarded anchor curve plus the M9.1 pilots. m9s1c prices the head warm start."
-    },
-    "B": {
-      "runs": [
-        "m9s4",
-        "m9s5",
-        "m9s6"
-      ],
-      "gated_by": "adequacy",
-      "purpose": "the three contrast arms that set the build's recipe: student, prompt, mix",
-      "order_amendment": "WITHDRAWN 2026-08-30. The reorder (student/prompt/mix before the teacher arms) was justified by a time budget that no longer exists, and Codex pass 4 was right that the 'void later' rule is not equivalent to teacher-first: teacher-first PREVENTS invalid downstream experiments, while void-later runs them, inspects them and promises to discard them. Order restored to the mandate's. The void rule is kept as a belt-and-braces backstop, not as a justification.",
-      "withdrawn_runs": [
-        "m9s2",
-        "m9s3",
-        "m9cap-diag"
-      ]
-    },
-    "order_enforced_in": "m9src/screen.py:require_predecessors",
-    "diagnostics": {
-      "runs": [
-        "m9cap-diag"
-      ],
-      "note": "run after the screen; decision-ineligible by construction (-diag id)"
-    }
+  "rank_stability_rule": "a PROXY VETO, not a stability test of the decision surface: adoption is decided on DEV-6 at the final checkpoint while stability is measured on SCREEN-3, the only surface with four points (Codex pass 4). The contrast must have the same sign at the last two SCREEN-3 checkpoints; a flip means 'not stable at screen dose' -> default, arm recorded diagnostic.",
+  "scope": "every screen verdict is artifact-specific at the screen dose; never 'resolved', 'confirmed' or 'significant'",
+  "rank_stability_surface": "SCREEN3"
+ },
+ "arms": [
+  {
+   "id": "m9s1",
+   "varies": "anchor",
+   "teacher": "stella-400M-v5",
+   "student": "bge-small-en-v1.5",
+   "prompt": "b",
+   "mix": "query-only",
+   "seed": 0,
+   "surface": "both"
   },
-  "adequacy_gate": {
-    "read_after": "m9s1",
-    "surface": "SCREEN3",
-    "conditions": {
-      "retention_at_final": {
-        "min": 0.6,
-        "of": "the stella-400M SCREEN-3 symmetric ceiling 0.68223",
-        "why": "below this the student sits so far from the teacher surface that a contrast between two arms is dominated by early-imitability rather than by the factor under test (Codex pass 2, MAJOR-9)"
-      },
-      "late_slope": {
-        "max": 0.02,
-        "definition": "macro(ckpt4) - macro(ckpt3) on SCREEN-3",
-        "why": "a curve still climbing steeply at the final checkpoint is an early-training snapshot, and its ranking need not survive to final dose"
-      }
-    },
-    "outcomes": {
-      "pass": "stage B runs as registered",
-      "fail": "stage B does NOT run. M9.1 reports the anchor curve, the warm-start contrast and a priced dose-response extrapolation, and the teacher/student/prompt/mix questions go back to Dylan with a budget attached rather than being answered at an inadequate dose"
-    },
-    "decided_before_any_arm_ran": true,
-    "kind": "a BUDGET TRIGGER, not a calibrated ranking-adequacy test. Neither threshold is tied to a measured rank-concordance rate, and the slope is a two-point difference read where the cosine schedule has already decayed the LR to 1e-5 -- so a small late gain can mean the schedule shut learning down rather than that the representation converged (Codex pass 3). It is used only to decide whether spending stage B is worth it; it certifies nothing",
-    "ceiling_from": "registry ceilings.stella-400M-v5.SCREEN3, with the artifact hash pinned"
+  {
+   "id": "m9s1b",
+   "varies": "seed",
+   "teacher": "stella-400M-v5",
+   "student": "bge-small-en-v1.5",
+   "prompt": "b",
+   "mix": "query-only",
+   "seed": 1,
+   "surface": "DEV6",
+   "decision_eligible": false,
+   "withdrawn": "WITHDRAWN 2026-08-30 (chunked-backward re-run): read by no decision rule; the pre-chunking run already measured the seed spread (0.5008 vs anchor 0.4998, ~0.001, well under MDE 0.0056), recorded as diagnostic in m9/RESULTS.md. Withdrawn before any re-run number existed, to protect the launch window; Dylan asked for the cut."
   },
-  "lock_constants_sha256": "7a8c73eb46e4a7f072c89b30e71d55b48df4082cda5155a0a8bdca2eaca5c09c",
-  "ceilings": {
-    "stella-400M-v5": {
-      "DEV6": 0.67238,
-      "SCREEN3": 0.68223,
-      "artifact": "results/m9_dev_symmetric_stella-400M-v5.json",
-      "sha256": "69c6c80d2a5b97b07a81b20140f5f99a632dde6c86b88ba70affe4c798924e0d"
-    }
+  {
+   "id": "m9s1c",
+   "varies": "warm start (DIAGNOSTIC contrast, decides nothing)",
+   "teacher": "stella-400M-v5",
+   "student": "bge-small-en-v1.5",
+   "prompt": "b",
+   "mix": "query-only",
+   "seed": 0,
+   "surface": "DEV6",
+   "warm_start": false,
+   "decision_eligible": false,
+   "withdrawn": "WITHDRAWN 2026-08-30 (chunked-backward re-run): read by no decision rule; the pre-chunking run already measured the seed spread (0.5008 vs anchor 0.4998, ~0.001, well under MDE 0.0056), recorded as diagnostic in m9/RESULTS.md. Withdrawn before any re-run number existed, to protect the launch window; Dylan asked for the cut."
+  },
+  {
+   "id": "m9s2",
+   "varies": "teacher",
+   "teacher": "stella-1.5B-v5",
+   "student": "bge-small-en-v1.5",
+   "prompt": "b",
+   "mix": "query-only",
+   "seed": 0,
+   "surface": "SCREEN3",
+   "decision_eligible": false,
+   "withdrawn": "WITHDRAWN 2026-08-30 by Dylan, on measurement. m9s2 (stella-1.5B) ran to completion before an unrelated guard failure voided its artifact, and its checkpoint curve is BEHIND the stella-400M anchor at every point: 0.44649/0.48034/0.49225/0.49775 against 0.44814/0.48121/0.49459/0.50004 -- a final delta of -0.00229 where the swap rule needs +0.010, i.e. the wrong sign. A teacher 3.75x larger with a materially better MTEB score (0.5837 vs 0.5609) distils WORSE, which is M8's T1 finding generalising from tables to towers. Qwen3-0.6B's nominal edge (+0.004) is smaller than the one that just lost (+0.023), so its prior is worse still. Diagnostic, not a registered result: it informs a resource decision, and stella-400M remains the teacher by default, not by measurement."
+  },
+  {
+   "id": "m9s3",
+   "varies": "teacher",
+   "teacher": "qwen3-embedding-0.6B",
+   "student": "bge-small-en-v1.5",
+   "prompt": "b",
+   "mix": "query-only",
+   "seed": 0,
+   "surface": "SCREEN3",
+   "decision_eligible": false,
+   "withdrawn": "WITHDRAWN 2026-08-30 by Dylan, on measurement. m9s2 (stella-1.5B) ran to completion before an unrelated guard failure voided its artifact, and its checkpoint curve is BEHIND the stella-400M anchor at every point: 0.44649/0.48034/0.49225/0.49775 against 0.44814/0.48121/0.49459/0.50004 -- a final delta of -0.00229 where the swap rule needs +0.010, i.e. the wrong sign. A teacher 3.75x larger with a materially better MTEB score (0.5837 vs 0.5609) distils WORSE, which is M8's T1 finding generalising from tables to towers. Qwen3-0.6B's nominal edge (+0.004) is smaller than the one that just lost (+0.023), so its prior is worse still. Diagnostic, not a registered result: it informs a resource decision, and stella-400M remains the teacher by default, not by measurement."
+  },
+  {
+   "id": "m9s4",
+   "varies": "student",
+   "teacher": "selected",
+   "student": "all-MiniLM-L6-v2",
+   "prompt": "b",
+   "mix": "query-only",
+   "seed": 0,
+   "surface": "DEV6"
+  },
+  {
+   "id": "m9s5",
+   "varies": "prompt",
+   "teacher": "selected",
+   "student": "selected",
+   "prompt": "a",
+   "mix": "query-only",
+   "seed": 0,
+   "surface": "DEV6"
+  },
+  {
+   "id": "m9s6",
+   "varies": "mix",
+   "teacher": "selected",
+   "student": "selected",
+   "prompt": "selected",
+   "mix": "70/30",
+   "seed": 0,
+   "surface": "DEV6"
+  },
+  {
+   "id": "m9cap-diag",
+   "varies": "STUDENT CAPACITY (diagnostic, decides nothing)",
+   "teacher": "stella-400M-v5",
+   "student": "bge-base-en-v1.5",
+   "prompt": "b",
+   "mix": "query-only",
+   "seed": 0,
+   "surface": "SCREEN3",
+   "decision_eligible": false,
+   "why": "a 109M student at the identical dose, to measure whether the >=35M cap is what binds retention before three days of compute are committed. OUT OF M9 SCOPE for selection -- the mandate caps nano at 35M and reserves anything larger for M10 on Dylan's call. Authorised by Dylan 2026-08-30.",
+   "withdrawn": "WITHDRAWN 2026-08-30 by Dylan, on Codex review #5 (m9/EXPLORED.md)"
   }
+ ],
+ "validation_samples": {
+  "fp16_target_cache": {
+   "n": 10000,
+   "strata": "10 equal-count WordPiece-length deciles of the screen pool",
+   "seed": 11,
+   "min_cos": 0.9999,
+   "max_abs": 0.001,
+   "withdrawn": "the 'query retrieval macro shift <= 1e-4' clause: training texts carry no qrels (LEDGER S9.2)",
+   "sample_sha256": "c6397f33cf43b1ea90e32872950d01f03986bd522df9661eb25745923c9266b0"
+  },
+  "onnx_parity": {
+   "n": 512,
+   "composition": "256 query-pool + 256 documents; 51/51/51/51/52 per length bin per side, longest bin first, shortfall to the next bin down",
+   "seed": 12,
+   "opset": 17,
+   "min_cos": 0.9999,
+   "max_abs": 0.001,
+   "applies_to": "every example",
+   "sample_sha256": "3cd2aff8d76763058068769ffd990dff11b6ee83c8701ee0de305e34a5e733fb"
+  },
+  "bridge_dryrun": {
+   "surface": "DEV6",
+   "anchor": "bge-small-en-v1.5",
+   "max_abs_delta_ndcg": 0.0003,
+   "qid_drift": 0
+  }
+ },
+ "bins": {
+  "length_words": [
+   [
+    1,
+    5
+   ],
+   [
+    6,
+    10
+   ],
+   [
+    11,
+    20
+   ],
+   [
+    21,
+    50
+   ],
+   [
+    51,
+    null
+   ]
+  ],
+  "fragmentation_subwords_per_word": [
+   [
+    1.0,
+    1.2
+   ],
+   [
+    1.2,
+    1.5
+   ],
+   [
+    1.5,
+    2.0
+   ],
+   [
+    2.0,
+    null
+   ]
+  ],
+  "fragmentation_note": "punctuation stripped BEFORE tokenizing (m8/CODEMAP.md pitfall 14)"
+ },
+ "lotte": {
+  "read_at_m9_1": false,
+  "kind": "non-inferiority veto, NOT a confirmation",
+  "threshold": 0.004,
+  "fallback_recipe": "stella-400M x bge-small x prompt b x query-only",
+  "rule": "one atomic batch over two hash-pinned equal-dose checkpoints; the selection stands unless the selected recipe's 7-slice macro is worse by more than 0.004 AND the 97.5% one-sided paired-bootstrap upper bound on (selected - fallback) is below -0.004",
+  "adoption_may_not_trigger_retraining": true,
+  "reads_permitted": 2
+ },
+ "bars": {
+  "aim": {
+   "system": "leaf-ir-asym",
+   "avg6": 0.5155,
+   "ndo4": 0.5233
+  },
+  "release": {
+   "system": "bge-small symmetric",
+   "avg6": 0.5042,
+   "ndo4": 0.5046
+  },
+  "ceiling": {
+   "system": "stella-400M symmetric",
+   "avg6": 0.5744,
+   "ndo4": 0.564
+  }
+ },
+ "_review": "research/m9-codex-lock-2026-08-30.md (gpt-5.6-sol, DO NOT COMMIT on v1; 7 BLOCKER / 8 MAJOR / 4 MINOR, all actioned -- m9/LEDGER.md S10)",
+ "branch": "m9-work",
+ "lock_constants": "results/m9_lock_constants.json",
+ "power_basis": "results/m9_power_prereg.json",
+ "models": {
+  "students": {
+   "bge-small-en-v1.5": {
+    "repo": "BAAI/bge-small-en-v1.5",
+    "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "params": 33754240,
+    "fp16_MB": 67.508
+   },
+   "all-MiniLM-L6-v2": {
+    "repo": "sentence-transformers/all-MiniLM-L6-v2",
+    "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+    "params": 23107456,
+    "fp16_MB": 46.215
+   }
+  },
+  "teachers": {
+   "stella-400M-v5": {
+    "repo": "NovaSearch/stella_en_400M_v5",
+    "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+    "pooling": "mean",
+    "path": "m7src/teacher.py (frozen)"
+   },
+   "stella-1.5B-v5": {
+    "repo": "NovaSearch/stella_en_1.5B_v5",
+    "revision": "7817065102fd9e1b031fe874e910c01f40b2f001",
+    "pooling": "mean",
+    "path": "sentence-transformers"
+   },
+   "qwen3-embedding-0.6B": {
+    "repo": "Qwen/Qwen3-Embedding-0.6B",
+    "revision": "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+    "pooling": "last-token",
+    "path": "sentence-transformers"
+   }
+  },
+  "st_vs_frozen_parity": {
+   "n": 64,
+   "min_cos": 0.99959,
+   "max_abs": 0.000145
+  },
+  "diagnostic_students": {
+   "bge-base-en-v1.5": {
+    "repo": "BAAI/bge-base-en-v1.5",
+    "revision": "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a",
+    "params_approx": 109000000,
+    "licence": "MIT",
+    "vendor": "BAAI, clean",
+    "note": "DIAGNOSTIC ONLY. Never selectable as nano's student under the M9 mandate."
+   }
+  }
+ },
+ "surfaces": {
+  "DEV6": {
+   "components": [
+    "nq-250k",
+    "hotpotqa",
+    "cqadup-programmers",
+    "cqadup-physics",
+    "heldout-train",
+    "heldout-longq"
+   ],
+   "weights": "equal per component",
+   "n_queries": 20152,
+   "decides": [
+    "batch_size",
+    "student",
+    "prompt",
+    "mix",
+    "seed_floor"
+   ]
+  },
+  "SCREEN3": {
+   "components": [
+    "nq-250k",
+    "cqadup-programmers",
+    "cqadup-physics"
+   ],
+   "weights": {
+    "nq-250k": 0.5,
+    "cqadup-programmers": 0.25,
+    "cqadup-physics": 0.25
+   },
+   "n_queries": 5367,
+   "decides": [
+    "teacher"
+   ],
+   "sensitivity_weightings": [
+    "family",
+    "equal",
+    "query-pooled"
+   ]
+  }
+ },
+ "artifact_size": {
+  "unit": "decimal MB of total shipped bytes (ONNX graph + tokenizer + config)",
+  "target": 70,
+  "weights_only_bge": 67.508,
+  "weights_only_minilm": 46.215,
+  "measured_by": "m9src/port.py"
+ },
+ "warm_start": {
+  "what": "the head is initialized to the closed-form ridge solution from the FROZEN backbone's mean-pooled outputs to the teacher targets, then trained normally with the rest of the model",
+  "n_fit": 60000,
+  "seed": 21,
+  "lambda": 0.0001,
+  "lambda_selected_on": "a TRAINING-ONLY holdout: fit on the first 50,000 of the 60,000-text warm-start sample, score the remaining 10,000 under the ACTUAL normalized objective ||normalize(XA)-Y||^2, locked grid 1e-6..1, ties to the larger lambda. m9src/warmfit.py; the result is results/m9_warmfit.json and nano.warm_start_head refuses to run without it",
+  "applies_to": "every arm except the registered diagnostic contrast m9s1c",
+  "evidence": "results/m9_head_probe.json -- 0.3463 SCREEN-3 macro from a frozen backbone, 50.8% of the 0.6822 ceiling, against 12.4% for a random head after 2,000 trained steps",
+  "decided": "2026-08-30, before any screen arm ran",
+  "n_fit_split": 50000,
+  "withdrawn": "the v3 claim that lambda was selected on the training residual. The head probe in fact selected argmax SCREEN-3, a dev surface (Codex pass 3, BLOCKER-B1). A residual criterion would not have rescued it: a ridge residual is monotone in lambda",
+  "estimand": "per-arm training-only-calibrated ridge initialization PLUS SGD. Each arm fits its own head in its own feature space under its own teacher's targets, so a contrast is end-to-end (factor + refit), not a pure factor contrast. Stated, not assumed away",
+  "stage0_dose": "60,000 supervised backbone forwards + a 385x385 solve, reported separately from the SGD dose; the retention curve is read against both the SGD budget and total compute"
+ },
+ "staging": {
+  "A": {
+   "runs": [
+    "m9-warmfit",
+    "m9-fp16-gate",
+    "m9-bridge-dryrun",
+    "m9s1",
+    "m9s1c",
+    "m9s1b"
+   ],
+   "purpose": "the corrected, fully guarded anchor curve plus the M9.1 pilots. m9s1c prices the head warm start."
+  },
+  "B": {
+   "runs": [
+    "m9s4",
+    "m9s5",
+    "m9s6"
+   ],
+   "gated_by": "adequacy",
+   "purpose": "the three contrast arms that set the build's recipe: student, prompt, mix",
+   "order_amendment": "WITHDRAWN 2026-08-30. The reorder (student/prompt/mix before the teacher arms) was justified by a time budget that no longer exists, and Codex pass 4 was right that the 'void later' rule is not equivalent to teacher-first: teacher-first PREVENTS invalid downstream experiments, while void-later runs them, inspects them and promises to discard them. Order restored to the mandate's. The void rule is kept as a belt-and-braces backstop, not as a justification.",
+   "withdrawn_runs": [
+    "m9s2",
+    "m9s3",
+    "m9cap-diag"
+   ]
+  },
+  "order_enforced_in": "m9src/screen.py:require_predecessors",
+  "diagnostics": {
+   "runs": [
+    "m9cap-diag"
+   ],
+   "note": "run after the screen; decision-ineligible by construction (-diag id)"
+  }
+ },
+ "adequacy_gate": {
+  "read_after": "m9s1",
+  "surface": "SCREEN3",
+  "conditions": {
+   "retention_at_final": {
+    "min": 0.6,
+    "of": "the stella-400M SCREEN-3 symmetric ceiling 0.68223",
+    "why": "below this the student sits so far from the teacher surface that a contrast between two arms is dominated by early-imitability rather than by the factor under test (Codex pass 2, MAJOR-9)"
+   },
+   "late_slope": {
+    "max": 0.02,
+    "definition": "macro(ckpt4) - macro(ckpt3) on SCREEN-3",
+    "why": "a curve still climbing steeply at the final checkpoint is an early-training snapshot, and its ranking need not survive to final dose"
+   }
+  },
+  "outcomes": {
+   "pass": "stage B runs as registered",
+   "fail": "stage B does NOT run. M9.1 reports the anchor curve, the warm-start contrast and a priced dose-response extrapolation, and the teacher/student/prompt/mix questions go back to Dylan with a budget attached rather than being answered at an inadequate dose"
+  },
+  "decided_before_any_arm_ran": true,
+  "kind": "a BUDGET TRIGGER, not a calibrated ranking-adequacy test. Neither threshold is tied to a measured rank-concordance rate, and the slope is a two-point difference read where the cosine schedule has already decayed the LR to 1e-5 -- so a small late gain can mean the schedule shut learning down rather than that the representation converged (Codex pass 3). It is used only to decide whether spending stage B is worth it; it certifies nothing",
+  "ceiling_from": "registry ceilings.stella-400M-v5.SCREEN3, with the artifact hash pinned"
+ },
+ "lock_constants_sha256": "7a8c73eb46e4a7f072c89b30e71d55b48df4082cda5155a0a8bdca2eaca5c09c",
+ "ceilings": {
+  "stella-400M-v5": {
+   "DEV6": 0.67238,
+   "SCREEN3": 0.68223,
+   "artifact": "results/m9_dev_symmetric_stella-400M-v5.json",
+   "sha256": "69c6c80d2a5b97b07a81b20140f5f99a632dde6c86b88ba70affe4c798924e0d"
+  }
+ }
 }
