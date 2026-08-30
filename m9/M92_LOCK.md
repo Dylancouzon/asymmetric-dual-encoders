@@ -26,7 +26,7 @@ already exist, and the extended screen added 220,528 real questions. Seven days 
 26,854 tokens/s is **16.24 B tokens, 273× the anchor dose**, over ~6.6 M unique texts against
 LEAF's 6.7 M. That is the first M9 run at a dose where the aim is reachable rather than arithmetic.
 
-## 3. Corpora (hashes pinned in `work/m9long/corpora.json`)
+## 3. Corpora (every byte hashed in `work/m9long/manifest.json`, recomputed by `longrun verify`)
 
 | corpus | texts | tokens/epoch | role |
 |---|---|---|---|

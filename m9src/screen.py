@@ -268,7 +268,8 @@ def run_arm(arm_id, smoke=0):
         comps = eval9.components("SCREEN3")
         if spec["teacher"] == eval9.INCUMBENT and step == final:
             comps = eval9.components("DEV6")
-        per = eval9.eval_student(model, spec["teacher"], comps=comps)
+        per = eval9.eval_student(model, spec["teacher"], comps=comps,
+                                 query_prefix=meta["student_query_prefix"])
         return {"macros": eval9.macros(per, spec["teacher"]), "per_component": per}
 
     rec, model = nano.train_arm(run_id, spec["student"], plan, cfg, eval_fn=eval_fn,

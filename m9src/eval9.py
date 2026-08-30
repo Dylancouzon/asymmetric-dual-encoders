@@ -54,9 +54,11 @@ def doc_vecs(comp, teacher_key):
 CHUNK = {"hotpotqa": 250_000, "heldout-train": 250_000, "heldout-longq": 250_000}
 
 
-def eval_student(student, teacher_key, comps=None):
+def eval_student(student, teacher_key, comps=None, query_prefix=""):
     """-> {component: {qid: nDCG@10}}. `student.encode_queries(texts)` returns (n, dim) fp32
-    unit-norm rows aligned to `texts`."""
+    unit-norm rows aligned to `texts`. `query_prefix` must be the prefix the student was TRAINED
+    to serve with (prompt policy (a) trains with the Instruct prefix; scoring it bare would
+    measure an off-policy model and confound the m9s5 contrast -- Fable review, M5)."""
     import evalkit
 
     comps = comps or sorted(set().union(*[set(components(s))
@@ -71,7 +73,8 @@ def eval_student(student, teacher_key, comps=None):
         comps = [c for c in comps if c != "heldout-longq"]
     for comp in comps:
         doc_ids, q_ids, q_texts, qrels, dv = doc_vecs(comp, teacher_key)
-        qv = student.encode_queries(list(q_texts))
+        qv = (student.encode_queries(list(q_texts), prefix=query_prefix) if query_prefix
+              else student.encode_queries(list(q_texts)))
         assert qv.shape == (len(q_ids), dv.shape[1]), f"{comp}: {qv.shape} vs {dv.shape}"
         run = evalkit.topk_ids_scores(qv, dv, doc_ids, k=100,
                                       chunk=CHUNK.get(comp, 200_000), qids=q_ids)

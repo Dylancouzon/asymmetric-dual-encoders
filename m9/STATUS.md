@@ -165,14 +165,21 @@ SEL_PROMPT=$(.venv/bin/python -c "import json;print(json.load(open('results/m9_s
 .venv/bin/python m9src/test_resume.py            # MUST pass; never skip
 # ONLY before the first launch -- NEVER once the build has started (it would erase the run's
 # resumable state and its kill-rule history):
-rm -f work/m9long/terminal.json work/m9long/ckpt/STOP work/m9long/trainer.lock \
-      work/m9long/heartbeat.json work/m9long/history.jsonl \
+rm -f work/m9long/terminal.json work/m9long/trainer.lock work/m9long/watchdog.lock \
+      work/m9long/heartbeat.json work/m9long/history.jsonl work/m9long/step0_eval.json \
       work/m9long/throughput_baseline.json \
       work/m9tokens/SESSION-build.json work/m9tokens/m9-build.json
+rm -rf work/m9long/ckpt
 
 # 3. fill m9/M92_LOCK.md from the decision (it is still DRAFT with blank fields), commit, push,
 #    THEN launch (the watchdog starts the trainer; the trainer opens the build session)
 setsid nohup .venv/bin/python m9src/watchdog.py --hours 168 > logs/m9_watchdog.log 2>&1 &
+
+# 4. VERIFY the launch -- silence is not success. Expect exactly one of each process, the
+#    step-0 eval line within ~30 min, and origin/m9-status updated within ~35 min.
+pgrep -af "watchdog.py"; pgrep -af "longrun[.]py train"
+tail -f logs/m9_build.log            # wait for "EVAL step 0" then the first "step 500" line
+git ls-remote origin m9-status       # sha should change after the first status push
 ```
 
 > **WARNING, learned the expensive way.** `m9src/guard9.py` sits inside the `protocol` scope it

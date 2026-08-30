@@ -56,9 +56,36 @@ def log(rec):
     print(f"[{rec['at']}] {rec.get('event')}: {rec.get('detail','')}", flush=True)
 
 
+WD_LOCK = RUN / "watchdog.lock"
+
+
+def acquire_wd_lock():
+    """Two watchdogs do not compose: each SIGTERMs trainers the other just started and both
+    inflate restart counters until one (or both) gives up (Fable review, M3). Same O_EXCL +
+    /proc start-time pattern as the trainer lock."""
+    RUN.mkdir(parents=True, exist_ok=True)
+    for _ in range(2):
+        try:
+            fd = os.open(WD_LOCK, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.write(fd, json.dumps({"pid": os.getpid(),
+                                     "start": longrun._proc_start(os.getpid()),
+                                     "at": time.time()}).encode())
+            os.close(fd)
+            return
+        except FileExistsError:
+            held = read_json(WD_LOCK)
+            if held and longrun._proc_start(held["pid"]) == held.get("start"):
+                raise SystemExit(f"{WD_LOCK} is held by live watchdog pid {held['pid']}. "
+                                 f"Two watchdogs must never supervise one trainer.")
+            print(f"clearing a stale watchdog lock from pid "
+                  f"{held['pid'] if held else '?'}", flush=True)
+            WD_LOCK.unlink(missing_ok=True)
+    raise SystemExit("could not acquire the watchdog lock")
+
+
 def trainer_alive():
     out = subprocess.run(["pgrep", "-af", "longrun[.]py (train|decay)"],
-                         capture_output=True, text=True)
+                         capture_output=True, text=True, timeout=30)
     pids = []
     for line in out.stdout.splitlines():
         pid, _, args = line.partition(" ")
@@ -91,16 +118,20 @@ def terminal_state():
 
 
 def start_trainer(hours):
+    # The dead trainer's heartbeat must go first, or its old wall clock gives the fresh process
+    # only ~80s to finish a possibly cold import before being declared stale (Fable review, M2).
+    # Only called with no live trainer (wait_gone confirmed), so there is no competing writer.
+    HEARTBEAT.unlink(missing_ok=True)
     cmd = (f"cd {REPO} && setsid nohup .venv/bin/python m9src/longrun.py train "
            f"--hours {hours} --anneal-before-deadline >> logs/m9_build.log 2>&1 &")
-    subprocess.run(["bash", "-lc", cmd], check=False)
+    subprocess.run(["bash", "-lc", cmd], check=False, timeout=60)
     time.sleep(20)
     return trainer_alive()
 
 
 def gpu_ok():
     r = subprocess.run(["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader"],
-                       capture_output=True, text=True)
+                       capture_output=True, text=True, timeout=60)
     return r.returncode == 0 and bool(r.stdout.strip())
 
 
@@ -129,7 +160,11 @@ def read_incidents(k=40):
 def write_status(hb, rows, incidents):
     """A file a human can read from a phone, refreshed on the timer and pushed."""
     best = max((r["screen3"] for r in rows), default=None)
-    ceil = 0.68223
+    try:
+        ceil = longrun.guard9.registry()["ceilings"][
+            read_json(longrun.CONFIG)["teacher"]]["SCREEN3"]
+    except Exception:
+        ceil = 0.68223
     lines = ["# M9.3 build — live status", "",
              f"_Updated {time.strftime('%Y-%m-%d %H:%M:%S')} by `m9src/watchdog.py`._", ""]
     if hb:
@@ -181,14 +216,16 @@ def push_status():
                             f"cd {REPO} && git worktree add -B {STATUS_BRANCH} {STATUS_WT} "
                             f"origin/{STATUS_BRANCH} 2>/dev/null || "
                             f"git worktree add -B {STATUS_BRANCH} {STATUS_WT}"],
-                           check=True, capture_output=True, text=True)
+                           check=True, capture_output=True, text=True, timeout=120)
         shutil.copy2(STATUS_MD, STATUS_WT / "RUN_STATUS.md")
+        # timeout: a hung push (WSL network flap mid-transfer) would otherwise freeze the
+        # single-threaded watchdog indefinitely -- no restarts, no checks (Fable review, M4)
         r = subprocess.run(
             ["bash", "-lc",
              f"cd {STATUS_WT} && git add RUN_STATUS.md && "
              f"(git diff --cached --quiet || git commit -q -m 'm9.3 build status') && "
              f"git push -q origin {STATUS_BRANCH}"],
-            capture_output=True, text=True)
+            capture_output=True, text=True, timeout=180)
         if r.returncode != 0:
             log({"event": "status_push_failed", "detail": (r.stderr or r.stdout)[:200]})
     except Exception as e:
@@ -228,7 +265,14 @@ def main():
             raise SystemExit(f"{req} is missing -- the build is not ready to be watched. Run "
                              f"`longrun.py prepare`, `targets`, `manifest`, then generate the "
                              f"config. A watchdog over a run that cannot start is theatre.")
+    acquire_wd_lock()
     log({"event": "watchdog_start", "detail": f"period {a.period}s, horizon {a.hours}h"})
+    # The initial launch is deliberate, not a "restart" of a dead trainer: counting it against
+    # max_restarts spent supervision budget on a non-incident (Fable review, minor).
+    if not terminal_state() and not trainer_alive():
+        pids = start_trainer(max(0.5, (deadline - time.time()) / 3600))
+        log({"event": "launch", "detail": f"initial trainer start; pids {pids}"})
+        launched_at = time.time()
 
     while time.time() < deadline:
         time.sleep(a.period)
@@ -350,7 +394,7 @@ def main():
                                                        f"{restarts}/{a.max_restarts}; "
                                                        f"pids {pids}"})
                 last_step, last_step_at = None, time.time()
-                last_ckpt_at = last_eval_at = time.time()
+                last_ckpt_at = last_eval_at = launched_at = time.time()
 
             if hb and hb.get("tok_per_s") and hb.get("floor") and hb["tok_per_s"] < hb["floor"]:
                 log({"event": "throughput_low",
@@ -386,6 +430,7 @@ def main():
     except Exception as e:
         print(f"final status write failed: {e!r}", flush=True)
     log({"event": "watchdog_stop", "detail": f"{restarts} restarts"})
+    WD_LOCK.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":

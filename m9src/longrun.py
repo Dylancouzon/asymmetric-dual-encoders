@@ -603,6 +603,9 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
         step0 = evaluate(model, cfg, 0, cum, 0.0)
         with open(HISTORY, "a") as fh:
             fh.write(json.dumps({**step0, "step0": True}) + "\n")
+        # also durable outside history: the step-0 row exists in no checkpoint, so losing
+        # history.jsonl would silently disarm the first-eval gate (Fable review, minor)
+        (RUN / "step0_eval.json").write_text(json.dumps({**step0, "step0": True}))
         model.train()
         torch.cuda.empty_cache()
 
@@ -734,6 +737,11 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
             rec = evaluate(model, cfg, step, cum, time.time() - t0)
             model.train()
             torch.cuda.empty_cache()      # the screen measured 1,990 -> 786 ex/s without this
+            # The rolling window must not contain the eval pause: eval_every is a multiple of
+            # log_every, so the next floor check lands 500 steps later with the pause still in
+            # the window, and a 300-450s eval reads as a >=50% collapse -- a registered stop the
+            # watchdog rightly refuses to restart (Fable review, B1).
+            samples[:] = [(time.time(), sess_tok)]
             blob = _blob(model, opt, step, streams, cfg, cum, phase, best, man)
             save_ckpt(CKPT / f"step{step}.pt", {**blob, "eval": rec})
             save_ckpt(CKPT / "last.pt", blob)
@@ -754,7 +762,9 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
                 # false at the first trained evaluation and the gate could never fire; and after a
                 # pre-first-eval restart the baseline is recovered from history rather than from a
                 # local that a resume leaves None (Codex #8, blocker 2).
-                base_rec = next((r for r in hist_rows if r.get("step0")), None)
+                base_rec = next((r for r in hist_rows if r.get("step0")), None) \
+                    or ((RUN / "step0_eval.json").exists()
+                        and json.loads((RUN / "step0_eval.json").read_text()))
                 base = base_rec["screen3"] if base_rec else None
                 print(f"  first eval {rec['screen3']:.5f}; absolute floor "
                       f"{cfg['first_eval_floor']} (advisory); step-0 baseline "
@@ -885,7 +895,8 @@ def read_history():
 
 
 def evaluate(model, cfg, step, cum, elapsed):
-    per = eval9.eval_student(model, cfg["teacher"], comps=eval9.components("SCREEN3"))
+    per = eval9.eval_student(model, cfg["teacher"], comps=eval9.components("SCREEN3"),
+                             query_prefix=cfg["student_query_prefix"])
     m = eval9.macros(per, cfg["teacher"])["SCREEN3"]
     ceil = guard9.registry()["ceilings"][cfg["teacher"]]["SCREEN3"]
     rec = {"step": step, "tokens": cum["tokens"], "examples": cum["examples"],
