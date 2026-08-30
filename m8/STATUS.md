@@ -4,7 +4,9 @@
 (§24). Ten probes have run; all returned nulls, negatives or instrument reads. **No M8 candidate
 exists; no protected set has been scored; the confirmatory access is unspent.**
 
-**Next: `B8` (~15 min), then `R-LIST`, then `B10`** — all three were REFUSED by `probe_guard` until
+**`B8` ran 2026-08-29: NO SURVIVOR** (§25) — the doc-centroid target costs 0.167 and even a
+50/50 blend is −0.003, so R0's bare teacher-query target stands. **Next: `VECTOR-PRF`, then
+`R-LIST`, then `B10`.** All three — all three were REFUSED by `probe_guard` until
 2026-08-29 because their bars still read `TBD-noise-floor` long after the floor was measured, which
 made the fallback path unreachable and the pre-committed exit unable to fire. Bars now frozen (§15).
 
@@ -28,8 +30,8 @@ coverage, compile, leakage or λ artifact; all four were checked and excluded. Z
 registered reversal fired (additive > segmentation by 0.0024), so **both** classes close and a D2
 miss cannot be re-read as the wrong parameterisation.
 
-Remaining order, cheapest first: **`B8`** (closed-form document-centroid target, ~15 min; the ledger
-calls deferring it a false economy) → **`R-LIST`** (`B2` triggered it directly: `teacher_top200` is
+Remaining order: ~~`B8`~~ **done, NO SURVIVOR (§25)** → **`VECTOR-PRF`** (train-free, below) →
+**`R-LIST`** (`B2` triggered it directly: `teacher_top200` is
 0.777 nats, so the KL class is NOT closed) → **`B10`** (`pool_mode`, weak prior +0.0011). Then
 re-run CLAUDE.md's standing directive, and only then is the exit eligible.
 

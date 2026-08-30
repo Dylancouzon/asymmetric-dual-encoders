@@ -8,12 +8,10 @@ This file is the remaining work only.**
 without a mechanism §24 does not already exclude — coverage, compile, leakage and λ were each
 checked and excluded, and two-thirds of the added rows were measurably inert.
 
-## 1. `B8` — run FIRST. ~15 minutes.
+## 1. `B8` — DONE 2026-08-29, NO SURVIVOR (§25)
 
-Closed-form document-centroid target against R0's target, bar **0.0040** on the closed-form dev
-group vector, DIAGNOSTIC ONLY (nothing ships from a closed-form fit — the rule `D2-PRE` ran under).
-Its bar was frozen 2026-08-29; it had been unrunnable for the whole milestone. The ledger calls
-deferring it "a false economy" and it was deferred behind a multi-hour tokenizer tournament anyway.
+`bare` 0.6388 · `mix50` −0.0032 · `centroid` −0.1669 on the dev group vector; bar 0.0040, all optima
+interior, comparator reproduces B7. Keep R0's target. One of the three exit preconditions discharged.
 
 ## 2. `R-LIST` — `B2` triggered it directly
 
