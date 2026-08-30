@@ -10,10 +10,12 @@ Deliberately not `m7src/boot.py`: boot exposes one-sided lower bounds only at 2.
 (M=1 and M=3), and the teacher rule needs 1.25% (Bonferroni over two challengers). Same algorithm,
 the quantile and the weights are parameters.
 
-Two things Codex forced. `align()` checks the pinned ordered-qid hash, so two systems cannot
-quietly agree to drop the same hard queries (BLOCKER-5). And the decision threshold is
-`max(0.0051, 2*F)` with F measured by the seed-replica arm, not M8's table-specific 0.004
-(MAJOR-2 / MAJOR-4).
+Two things Codex forced. `align()` checks the pinned qid-SET hash for every component, so two
+systems cannot quietly agree to drop the same hard queries (pass 1, BLOCKER-5) -- and the check is
+on the sorted set, which is what the statistic actually consumes, not on load order. And the
+decision threshold is ONE registered number measured from 2,031 historical dev contrasts; the
+earlier `max(0.0051, 2F)` form was withdrawn because a two-seed range is not a sigma estimate
+(pass 2, MAJOR-8).
 """
 import json
 
@@ -43,7 +45,9 @@ def surface(name):
 
 def align(a, b, comps, check_manifest=True):
     """-> [(component, delta array in sorted-qid order)]. Refuses a missing component and refuses
-    a qid set that does not match the M9.0 manifest."""
+    a qid SET that does not match the M9.0 manifest. Order is imposed here (sorted), so the
+    manifest field this reads is `qids_sha256`, not `qids_ordered_sha256`; the ordered hash pins
+    the loader's order and is checked in `lock_constants`, not here."""
     man = constants()["qid_manifest"] if check_manifest else {}
     out = []
     for c in comps:
@@ -73,9 +77,17 @@ def _sha_list(items):
     return h.hexdigest()
 
 
+CHUNK = 1000   # bootstrap replicates per block
+
+
 def indices(sizes, B, seed):
+    """Draw indices in blocks. A DEV-6 draw is 20,000 x 20,152 int64 = 3.2 GB if materialised in
+    one go (Codex pass 2, MAJOR-10) on a 25 GB box that is also holding document memmaps."""
     rng = np.random.default_rng(seed)
-    return {c: rng.integers(0, n, size=(B, n)) for c, n in sizes}
+    return {"sizes": list(sizes), "B": B, "seed": seed,
+            "blocks": [{c: rng.integers(0, n, size=(min(CHUNK, B - b), n), dtype=np.int32)
+                        for c, n in sizes}
+                       for b in range(0, B, CHUNK)]}
 
 
 def macro(per_component, surface_name):
@@ -91,57 +103,80 @@ def contrast(a, b, surface_name, *, quantile, idx=None, weights=None, check_mani
         tot = sum(weights[c] for c in comps)
         w = {c: weights[c] / tot for c in comps}
     aligned = align(a, b, comps, check_manifest)
-    B = st["B"]
+    sizes = [(c, d.size) for c, d in aligned]
     if idx is None:
-        idx = indices([(c, d.size) for c, d in aligned], B, st["seed"])
-    else:
-        B = int(next(iter(idx.values())).shape[0])
-        for c, d in aligned:
-            assert idx[c].shape == (B, d.size), f"{c}: idx {idx[c].shape} vs n={d.size}"
+        idx = indices(sizes, st["B"], st["seed"])
+    assert idx["sizes"] == sizes, f"resample draws were made for {idx['sizes']}, not {sizes}"
+    B = idx["B"]
 
     point = float(sum(w[c] * d.mean() for c, d in aligned))
-    reps = np.zeros(B, dtype=np.float64)
-    for c, d in aligned:
-        reps += w[c] * d[idx[c]].mean(axis=1)
+    parts = []
+    for blk in idx["blocks"]:
+        acc = np.zeros(next(iter(blk.values())).shape[0], dtype=np.float64)
+        for c, d in aligned:
+            acc += w[c] * d[blk[c]].mean(axis=1)
+        parts.append(acc)
+    reps = np.concatenate(parts)
     return {"surface": surface_name, "weights": w, "point": point,
             "per_component": {c: float(d.mean()) for c, d in aligned},
             "n_per_component": {c: int(d.size) for c, d in aligned},
-            "quantile": quantile,
-            "lower_bound": float(np.quantile(reps, quantile, method="linear")),
+            "quantile": quantile, "quantile_method": st["quantile_method"],
+            "lower_bound": float(np.quantile(reps, quantile, method=st["quantile_method"])),
             "ci95": [float(np.quantile(reps, 0.025)), float(np.quantile(reps, 0.975))],
             "B": B, "seed": st["seed"]}
 
 
-def seed_floor(arm1, arm1b):
-    """F = |macro(m9s1) - macro(m9s1b)| on DEV6. The measured training-noise term of the MDE."""
+def seed_sensitivity(arm1, arm1b):
+    """|macro(anchor) - macro(seed replica)| on DEV6, aligned through the pinned manifest.
+
+    REPORTED, never read by a rule. Codex pass 2, MAJOR-8: a single absolute difference between
+    two seeds is one half-normal draw, not an estimated sigma; it can sit near zero under large
+    real seed variance or inflate a threshold arbitrarily. Calling it a noise floor would repeat
+    m8/CODEMAP.md pitfall 18 with K=2 instead of K=3.
+    """
+    comps, _ = surface("DEV6")
+    aligned = align(arm1, arm1b, comps)          # forces both through the manifest check
     m1, _ = macro(arm1, "DEV6")
     m2, _ = macro(arm1b, "DEV6")
-    return abs(m1 - m2)
+    return {"delta": abs(m1 - m2), "macro_anchor": m1, "macro_replica": m2,
+            "n_aligned": {c: int(d.size) for c, d in aligned}, "K": 2,
+            "status": "REPORTED ONLY -- no rule reads this"}
 
 
-def mde(F=None):
-    r = reg()["rules"]["mde"]
-    floor = float(r["formula"].split(",")[0].split("(")[1])
-    return floor if F is None else max(floor, 2.0 * F)
+def mde():
+    """The single registered minimum detectable effect. One number, fixed at M9.0."""
+    return float(reg()["rules"]["mde"]["value"])
 
 
 def rank_stable(hist_a, hist_b, surface_name):
-    """Sign agreement of the contrast at the last two checkpoints (m9/LEDGER.md §4.2)."""
-    def m(h):
-        return macro(h["per_component"], surface_name)[0]
-    if len(hist_a) < 2 or len(hist_b) < 2:
-        return {"checked": False, "stable": False, "reason": "fewer than two checkpoints"}
-    d3 = m(hist_a[-2]) - m(hist_b[-2])
-    d4 = m(hist_a[-1]) - m(hist_b[-1])
-    return {"checked": True, "stable": bool(np.sign(d3) == np.sign(d4) and d4 != 0),
+    """Sign agreement of the contrast at the two REGISTERED late checkpoints.
+
+    Reads them by step id, not by position: an arm that lost its final checkpoint would otherwise
+    have checkpoints 2 and 3 silently substituted for 3 and 4 (Codex pass 2, MAJOR-10).
+    """
+    want = reg()["dose"]["checkpoints"][-2:]
+
+    def at(hist, step):
+        for h in hist:
+            if h["step"] == step and surface_name in h.get("macros", {}):
+                return macro(h["per_component"], surface_name)[0]
+        return None
+
+    got = [(at(hist_a, s_), at(hist_b, s_)) for s_ in want]
+    if any(x is None or y is None for x, y in got):
+        return {"checked": False, "stable": False, "required_steps": want,
+                "reason": "an arm is missing one of the registered late checkpoints on this surface"}
+    d3, d4 = (got[0][0] - got[0][1]), (got[1][0] - got[1][1])
+    return {"checked": True, "required_steps": want,
+            "stable": bool(np.sign(d3) == np.sign(d4) and d4 != 0),
             "delta_ckpt3": d3, "delta_ckpt4": d4}
 
 
-def decide(kind, a, b, *, F=None, hist_a=None, hist_b=None, idx=None):
-    """kind in {'teacher_swap','batch_size','student','prompt','mix'} -> the registered verdict."""
+def decide(kind, a, b, *, hist_a=None, hist_b=None, idx=None):
+    """kind in {'teacher_swap','student','prompt','mix'} -> the registered verdict."""
     rule = reg()["rules"][kind]
     sname = rule["surface"]
-    thr = rule["margin"] if isinstance(rule["margin"], (int, float)) else mde(F)
+    thr = rule["margin"] if isinstance(rule["margin"], (int, float)) else mde()
     res = contrast(a, b, sname, quantile=rule["quantile"], idx=idx)
     res["rule"] = {"kind": kind, **rule}
     res["threshold"] = thr
@@ -188,26 +223,32 @@ def self_test():
             b[c] = {q: float(base[i]) for i, q in enumerate(qs)}
         return a, b
 
+    ck = reg()["dose"]["checkpoints"][-2:]
+
+    def H(per):
+        return [{"step": s_, "per_component": per, "macros": {"DEV6": {}, "SCREEN3": {}}}
+                for s_ in ck]
+
     big_a, big_b = make(0.02)
-    h = [{"per_component": big_a}, {"per_component": big_a}]
-    hb = [{"per_component": big_b}, {"per_component": big_b}]
-    d = decide("student", big_a, big_b, F=0.001, hist_a=h, hist_b=hb)
-    assert d["pass"] and d["threshold"] == 0.0051, d["threshold"]
+    h, hb = H(big_a), H(big_b)
+    d = decide("student", big_a, big_b, hist_a=h, hist_b=hb)
+    assert d["pass"] and d["threshold"] == mde(), d["threshold"]
     n_a, n_b = make(0.0)
-    d0 = decide("student", n_a, n_b, F=0.001,
-                hist_a=[{"per_component": n_a}] * 2, hist_b=[{"per_component": n_b}] * 2)
+    d0 = decide("student", n_a, n_b,
+                hist_a=H(n_a), hist_b=H(n_b))
     assert not d0["pass"]
     # sub-margin but resolved: fails on the MARGIN, not the bound
     s_a, s_b = make(0.002, noise=0.004)
-    d1 = decide("student", s_a, s_b, F=0.001,
-                hist_a=[{"per_component": s_a}] * 2, hist_b=[{"per_component": s_b}] * 2)
+    d1 = decide("student", s_a, s_b,
+                hist_a=H(s_a), hist_b=H(s_b))
     assert d1["bound_positive"] and not d1["margin_met"] and not d1["pass"], d1["point"]
-    # a measured seed floor RAISES the threshold
-    assert mde(0.01) == 0.02 and mde(0.0001) == 0.0051
+    assert mde() == reg()["rules"]["mde"]["value"]
     # rank instability alone kills an adoption
-    d2 = decide("student", big_a, big_b, F=0.001,
-                hist_a=[{"per_component": big_b}, {"per_component": big_a}],
-                hist_b=[{"per_component": big_a}, {"per_component": big_b}])
+    d2 = decide("student", big_a, big_b,
+                hist_a=[{"step": ck[0], "per_component": big_b, "macros": {"DEV6": {}}},
+                        {"step": ck[1], "per_component": big_a, "macros": {"DEV6": {}}}],
+                hist_b=[{"step": ck[0], "per_component": big_a, "macros": {"DEV6": {}}},
+                        {"step": ck[1], "per_component": big_b, "macros": {"DEV6": {}}}])
     assert not d2["pass"] and not d2["rank_stability"]["stable"]
     # teacher rule runs on the family-weighted 3-component surface with its sensitivity row
     t_a, t_b = make(0.02, comps=surface("SCREEN3")[0])

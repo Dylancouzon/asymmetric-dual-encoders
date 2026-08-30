@@ -71,6 +71,50 @@ class Nano(nn.Module):
         return out
 
 
+@torch.inference_mode()
+def _pooled(model, texts, prefix, batch_size=256):
+    dev = next(model.parameters()).device
+    h = model.backbone.config.hidden_size
+    out = np.empty((len(texts), h), dtype=np.float32)
+    order = np.argsort([len(t) for t in texts], kind="stable")
+    for i in range(0, len(order), batch_size):
+        sel = order[i:i + batch_size]
+        b = model.tok([prefix + texts[j] for j in sel], padding=True, truncation=True,
+                      max_length=model.max_seq, return_tensors="pt").to(dev)
+        with torch.autocast("cuda", dtype=torch.bfloat16, enabled=dev.type == "cuda"):
+            hs = model.backbone(**b).last_hidden_state
+        m = b["attention_mask"].unsqueeze(-1).to(hs.dtype)
+        out[sel] = ((hs * m).sum(1) / m.sum(1).clamp(min=1e-9)).float().cpu().numpy()
+    return out
+
+
+def warm_start_head(model, texts, targets, prefix=""):
+    """Replace the head's random init with the closed-form ridge solution from the FROZEN
+    backbone's mean-pooled outputs to the teacher targets (m9/LEDGER.md §3.2a).
+
+    Measured at M9.0 before any arm ran (`results/m9_head_probe.json`): this alone reaches 50.8%
+    of the teacher's SCREEN-3 ceiling, against 12.4% for a random head after 2,000 trained steps.
+    At ~1% of LEAF's dose a random head spends a large share of the whole budget re-deriving a
+    linear map that has a closed form. Identical treatment for every arm, so no contrast moves.
+    """
+    r = registry()["warm_start"]
+    rng = np.random.default_rng(r["seed"])
+    sel = np.sort(rng.choice(len(texts), size=min(r["n_fit"], len(texts)), replace=False))
+    X = _pooled(model, [texts[i] for i in sel], prefix)
+    Y = np.asarray(targets[sel], dtype=np.float32)
+    Xc = np.hstack([X, np.ones((X.shape[0], 1), dtype=np.float32)])
+    G = Xc.T @ Xc
+    scale = float(np.trace(G) / G.shape[0])
+    A = np.linalg.solve(G + r["lambda"] * scale * np.eye(G.shape[0], dtype=np.float32), Xc.T @ Y)
+    resid = float(np.mean(np.sum((Xc @ A - Y) ** 2, axis=1)))
+    dev = next(model.parameters()).device
+    with torch.no_grad():
+        model.head.weight.copy_(torch.from_numpy(np.ascontiguousarray(A[:-1].T)).to(dev))
+        model.head.bias.copy_(torch.from_numpy(np.ascontiguousarray(A[-1])).to(dev))
+    return {"n_fit": int(sel.size), "lambda": r["lambda"], "seed": r["seed"],
+            "train_sq_l2": round(resid, 5), "prefix": prefix}
+
+
 def pretokenize(tok, texts, max_len, verbose=True, label=""):
     """-> list[list[int]]. Done once per arm; per-step tokenization would cost more than the
     forward pass at these sequence lengths."""
@@ -120,38 +164,55 @@ def fixed_batches(order, bs):
     return order, offs
 
 
-def token_batches(streams, steps, budget, shares):
-    """Token-budgeted batching for the mix arm (m9/LEDGER.md §3.1).
+def token_batches(streams, steps, total_tokens, shares):
+    """Token-budgeted batching (m9/LEDGER.md §3.1).
 
-    `streams` is [(index array, token-length array)] per role and `shares` the per-role fraction of
-    `budget` to fill each step. Each stream is consumed IN ORDER and never wraps: the schedules
-    were sized at M9.0 to cover exactly `steps` steps, and running dry is an error rather than a
-    silent short arm.
+    `streams` is [(index array, token-length array indexed by those indices)] per role and
+    `shares` the fraction of the total non-pad token budget each role must carry. The budget is
+    tracked CUMULATIVELY, not per step: each role fills until its running total reaches its share
+    of the tokens due by the end of this step, so the per-step rounding error cannot accumulate
+    across 30,349 steps (Codex pass 2, BLOCKER-2).
+
+    Guarantees, asserted rather than hoped for: exactly `steps` non-empty batches; no stream runs
+    dry; realized tokens within one example of each role's target.
     """
+    assert abs(sum(shares) - 1.0) < 1e-12
     flat, offs, pos = [], [0], [0] * len(streams)
-    for _ in range(steps):
+    got = [0.0] * len(streams)
+    for st in range(1, steps + 1):
+        due = [total_tokens * sh * st / steps for sh in shares]
         for si, (idx, tlen) in enumerate(streams):
-            want, got = budget * shares[si], 0.0
-            while got < want and pos[si] < len(idx):
-                flat.append(int(idx[pos[si]]))
-                got += float(tlen[idx[pos[si]]])
+            while got[si] < due[si]:
+                if pos[si] >= len(idx):
+                    raise AssertionError(
+                        f"stream {si} ran dry at step {st}/{steps} after {pos[si]:,} examples "
+                        f"({got[si]:,.0f}/{due[si]:,.0f} tokens) -- the M9.0 token arithmetic and "
+                        f"this batcher disagree, and a short arm must never look like a full one")
+                j = int(idx[pos[si]])
+                flat.append(j)
+                got[si] += float(tlen[j])
                 pos[si] += 1
+        if len(flat) == offs[-1]:
+            raise AssertionError(f"step {st} would be an empty batch; the LR schedule would "
+                                 f"advance over nothing")
         offs.append(len(flat))
-    for si, (idx, _t) in enumerate(streams):
-        if pos[si] < len(idx) * 0.98:
-            raise AssertionError(f"stream {si} consumed only {pos[si]:,}/{len(idx):,} -- the "
-                                 f"M9.0 token arithmetic and this batcher disagree")
-    return np.asarray(flat, dtype=np.int32), np.asarray(offs, dtype=np.int64), pos
+    assert len(offs) - 1 == steps
+    return (np.asarray(flat, dtype=np.int32), np.asarray(offs, dtype=np.int64), pos,
+            [round(g, 1) for g in got])
 
 
 def lr_at(step, steps, peak, final, warmup):
+    """Zero-based `step`. The denominator is `steps - warmup - 1` so the LAST EXECUTED step is the
+    cosine endpoint; with `steps - warmup` the schedule stops one step short of `final` and never
+    reaches it (Codex pass 2, MINOR-1)."""
     if step < warmup:
         return peak * (step + 1) / warmup
-    t = (step - warmup) / max(steps - warmup, 1)
-    return final + 0.5 * (peak - final) * (1 + math.cos(math.pi * t))
+    t = (step - warmup) / max(steps - warmup - 1, 1)
+    return final + 0.5 * (peak - final) * (1 + math.cos(math.pi * min(t, 1.0)))
 
 
-def train_arm(arm_id, student_key, plan, cfg, eval_fn=None, device="cuda", log_every=500):
+def train_arm(arm_id, student_key, plan, cfg, eval_fn=None, device="cuda", log_every=500,
+              warm_start=True, warm_texts=None, warm_prefix=""):
     """`plan`: ids (list[list[int]]), tgt ((N,1024) fp16), flat+offs (the locked batch schedule).
     `cfg`: batch_size, steps, warmup_steps, lr_peak, lr_final, seed, checkpoints, and the AdamW
     settings. Returns (run record, model)."""
@@ -165,6 +226,12 @@ def train_arm(arm_id, student_key, plan, cfg, eval_fn=None, device="cuda", log_e
     assert steps == cfg["steps"], f"{arm_id}: schedule has {steps:,} steps, cfg says {cfg['steps']:,}"
     ckpts = set(cfg["checkpoints"])
 
+    ws = None
+    if warm_start:
+        model.eval()
+        ws = warm_start_head(model, warm_texts, plan["tgt"], warm_prefix)
+        print(f"  {arm_id} warm-start head: {json.dumps(ws)}", flush=True)
+
     decay = [p for _n, p in model.named_parameters() if p.dim() > 1]
     nodecay = [p for _n, p in model.named_parameters() if p.dim() <= 1]
     opt = torch.optim.AdamW(
@@ -177,8 +244,7 @@ def train_arm(arm_id, student_key, plan, cfg, eval_fn=None, device="cuda", log_e
     model.train()
     for step in range(steps):
         rows = flat[offs[step]:offs[step + 1]]
-        if rows.size == 0:
-            continue
+        assert rows.size > 0, f"{arm_id}: step {step} has an empty batch"
         lr = lr_at(step, steps, cfg["lr_peak"], cfg["lr_final"], cfg["warmup_steps"])
         for g in opt.param_groups:
             g["lr"] = lr
@@ -219,8 +285,8 @@ def train_arm(arm_id, student_key, plan, cfg, eval_fn=None, device="cuda", log_e
             "batch_size_realized": {"mean": round(float(bsz.mean()), 2), "min": int(bsz.min()),
                                     "max": int(bsz.max())},
             "tokens_per_step": {"mean": round(tok_acc / steps, 1)},
-            "n_params": model.n_params(), "seconds": round(time.time() - t0, 1),
-            "history": hist}, model
+            "n_params": model.n_params(), "warm_start": ws,
+            "seconds": round(time.time() - t0, 1), "history": hist}, model
 
 
 def artifact_bytes(student_key):
@@ -249,12 +315,14 @@ def self_test():
     qlen = rng.integers(8, 24, size=n).astype(np.float64)
     dlen = rng.integers(60, 130, size=200_000).astype(np.float64)
     tot_q = qlen.sum() * 16
-    qorder = epoch_order(n, 12, 0)[:int(round(0.70 * tot_q / qlen.mean()))]
-    dorder = np.arange(int(round(0.30 * tot_q / dlen.mean())))
-    budget = tot_q / r["steps"]
-    f2, o2, pos = token_batches([(qorder, qlen), (dorder, dlen)], r["steps"], budget, [0.70, 0.30])
-    assert len(o2) - 1 == r["steps"]
-    assert 0.90 < (len(f2) / (pos[0] + pos[1])) < 1.11
+    qorder = epoch_order(n, 16, 0)
+    dorder = np.arange(int(round(0.30 * tot_q / dlen.mean() * 1.3)))
+    f2, o2, pos, real = token_batches([(qorder, np.concatenate([qlen, dlen])),
+                                       (dorder + n, np.concatenate([qlen, dlen]))],
+                                      r["steps"], tot_q, [0.70, 0.30])
+    assert len(o2) - 1 == r["steps"] and int(o2[-1]) == len(f2) == pos[0] + pos[1]
+    assert abs(real[0] - 0.70 * tot_q) < 600 and abs(real[1] - 0.30 * tot_q) < 600, real
+    assert np.all(np.diff(o2) > 0), "an empty batch slipped through"
     assert lr_at(0, 1000, 1e-4, 1e-5, 100) < 1e-4
     assert abs(lr_at(999, 1000, 1e-4, 1e-5, 100) - 1e-5) < 2e-7
     for k in STUDENTS:

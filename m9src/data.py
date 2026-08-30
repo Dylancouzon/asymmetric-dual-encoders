@@ -114,7 +114,10 @@ def doc_pool_rows(n, seed):
     mask[banned] = False
     eligible = np.flatnonzero(mask)
     rng = np.random.default_rng(seed)
-    rows = np.sort(rng.choice(eligible, size=n, replace=False))
+    # DRAW ORDER, not sorted. Sorting global pool row ids makes any prefix of the candidate list a
+    # low-row prefix, i.e. esci-prod first -- so the mix arm's documents would be a store-biased
+    # sample rather than a uniform one (Codex pass 2, MAJOR-13).
+    rows = rng.choice(eligible, size=n, replace=False)
     meta = {"n_eligible": int(eligible.size), "n_drawn": int(rows.size), "seed": seed,
             "excluded_store": FEVER_STORE, "n_banned": int(banned.size),
             "rows_sha256": hashlib.sha256(rows.tobytes()).hexdigest()}

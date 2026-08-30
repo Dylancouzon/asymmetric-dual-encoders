@@ -1,0 +1,93 @@
+{
+  "sample": {
+    "n": 512,
+    "word_len_min": 1,
+    "word_len_max": 624,
+    "word_len_mean": 37.6
+  },
+  "students": {
+    "bge-small-en-v1.5": {
+      "student": "bge-small-en-v1.5",
+      "path": "work/m9onnx/bge-small-en-v1.5/model.onnx",
+      "opset": 17,
+      "onnx_bytes": 134676086,
+      "domains": [
+        ""
+      ],
+      "custom_domain_ops": [],
+      "n_nodes": 1039,
+      "shipped_files": {
+        "model.onnx": 134676086,
+        "special_tokens_map.json": 695,
+        "tokenizer.json": 711648,
+        "tokenizer_config.json": 1272,
+        "vocab.txt": 231508
+      },
+      "shipped_bytes": 135621209,
+      "shipped_MB_decimal": 135.621,
+      "within_70MB_target": false,
+      "n_sample": 512,
+      "min_cos": 0.9999993443489075,
+      "mean_cos": 1.0,
+      "max_abs": 1.564621925354004e-07,
+      "seconds": 26.4,
+      "pass_min_cos": true,
+      "pass_max_abs": true,
+      "pass_no_custom_ops": true,
+      "pass": true,
+      "fastembed": {
+        "available": true,
+        "registered": false,
+        "error": "ValueError('At least one source should be set, current sources: hf=None, url=None')"
+      }
+    },
+    "all-MiniLM-L6-v2": {
+      "student": "all-MiniLM-L6-v2",
+      "path": "work/m9onnx/all-MiniLM-L6-v2/model.onnx",
+      "opset": 17,
+      "onnx_bytes": 91973569,
+      "domains": [
+        ""
+      ],
+      "custom_domain_ops": [],
+      "n_nodes": 565,
+      "shipped_files": {
+        "model.onnx": 91973569,
+        "special_tokens_map.json": 695,
+        "tokenizer.json": 711648,
+        "tokenizer_config.json": 1464,
+        "vocab.txt": 231508
+      },
+      "shipped_bytes": 92918884,
+      "shipped_MB_decimal": 92.919,
+      "within_70MB_target": false,
+      "n_sample": 512,
+      "min_cos": 0.9999991655349731,
+      "mean_cos": 1.0,
+      "max_abs": 1.4901161193847656e-07,
+      "seconds": 13.4,
+      "pass_min_cos": true,
+      "pass_max_abs": true,
+      "pass_no_custom_ops": true,
+      "pass": true,
+      "fastembed": {
+        "available": true,
+        "registered": false,
+        "error": "ValueError('At least one source should be set, current sources: hf=None, url=None')"
+      }
+    }
+  },
+  "pass_all": true,
+  "_registration": {
+    "run_id": "m9-port-pilot",
+    "diagnostic": false,
+    "commit": "5ea8b6a18fe8b4146a34b23511f1e0ae8d1b3193",
+    "branch": "m9-work",
+    "stage": "M9.0",
+    "opened_at": 1788072421.9779449,
+    "extra": {},
+    "verified_at_write": true,
+    "fingerprint_sha256": "99950a15777ed5800a42641ff800e6c6527c283be5d4a1c2f2b662691079135a",
+    "eligible_for_decision": true
+  }
+}

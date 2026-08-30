@@ -14,10 +14,22 @@ commit, branch, lock-file hashes, code hashes, data hashes, arm id) and the resu
 unless every one of those is byte-identical at write time. Amending the lock mid-run therefore
 kills the run rather than blessing it.
 
-Adversarial review of the first draft: `research/m9-codex-lock-2026-08-30.md` (gpt-5.6-sol,
-verdict DO NOT COMMIT — 7 BLOCKER / 8 MAJOR / 4 MINOR + a post-number-freedom table + an
-arithmetic audit). **All findings actioned**; the disposition table is §10. Read-exclusion
-honoured, log audited: zero reserved-set reads.
+Two adversarial reviews, both gpt-5.6-sol, both read-exclusion honoured and log-audited with zero
+reserved-set reads:
+
+- **Pass 1** on the first draft — `research/m9-codex-lock-2026-08-30.md`, **DO NOT COMMIT**,
+  7 BLOCKER / 8 MAJOR / 4 MINOR + a post-number-freedom table + an arithmetic audit. Disposition §10.
+- **Pass 2** on the amended lock **and the code that executes it** —
+  `research/m9-codex-lock2-2026-08-30.md`, **DO NOT COMMIT. DO NOT SPEND THE 6 GPU-hours.**
+  Its finding was that the amendment had moved several failures out of the prose and into the
+  code. Disposition §11. Its closing recommendation is what M9.1 was restructured around:
+  *"the only defensible next GPU action is a corrected, fully guarded anchor curve — not all nine
+  arms."*
+
+**Staging (§3).** Stage A is the pilots plus the anchor arm and its warm-start contrast. Stage B —
+the seed replica and the five contrast arms — runs only if the anchor clears the registered
+**adequacy gate** (§4.4). `m9src/screen.py:require_predecessors` enforces both the order and the
+gate; it is not advice.
 
 ### Owner approvals carried in (Dylan, 2026-08-30 planning session)
 
@@ -91,12 +103,14 @@ The frozen stella document pool `work/pool/stella-400M-v5/` (6,169,142 rows × 1
 `banned_pool_rows` (B2 mask, pool-identity bound). Union measured, not subtracted:
 **6,149,679 eligible rows** (276 banned rows fall inside the FEVER span).
 
-Arm-6 **candidate list**: the first **400,000** eligible rows drawn by
-`numpy.random.default_rng(9).choice(eligible, replace=False)`, sorted — rows sha256
-`89fb550ec82fcfb9577aa55038f10889a88296723b8b0449c46af705bdc17ae6`. Arm 6 consumes this list
-**in order** until its token target is met: **111,906 documents, each seen exactly once**
-(§3.1). Doc targets under stella are the existing pool vectors, so they cost zero teacher compute.
-WordPiece length of a `"passage: "`-prefixed candidate: mean 94.57, p50 64, p95 306, max 512.
+Arm-6 **candidate list**: **400,000** eligible rows drawn by
+`numpy.random.default_rng(9).choice(eligible, replace=False)` **in draw order, not sorted** — rows
+sha256 `216e8783c52df2ea220c526c9063dc8d70dff3e352c3509d045850aff3495e98`. (Sorting global pool row
+ids would make any prefix a low-row prefix — `esci-prod` first — so the sample would be
+store-biased rather than uniform.) The materialized schedule consumes **189,002 documents, each
+seen exactly once**, leaving 210,998 candidates of headroom. Doc targets under stella are the
+existing pool vectors, so they cost zero teacher compute. WordPiece length of a
+`"passage: "`-prefixed candidate: mean 94.57, p50 64, p95 306, max 512.
 
 *What arm 6 can and cannot answer:* it estimates single-pass regression over the **pre-screened M7
 document pool** (Wikipedia/Amazon-product/SQuAD/mrTyDi). It is **not** evidence about LEAF-style
@@ -170,20 +184,23 @@ value in the environment is rejected rather than inherited.
 
 ## §3 The screen — a batch pilot, then seven sequential arms
 
-| # | id | varies | teacher | student | prompt | mix | seed | decided on |
+| stage | id | varies | teacher | student | prompt | mix | seed | decided on |
 |---|---|---|---|---|---|---|---|---|
-| P | `m9p-bs32` / `m9p-bs128` | batch size | stella-400M | bge-small | (b) | query-only | 0 | DEV-6 |
-| 1 | `m9s1` | anchor | stella-400M | bge-small | (b) | query-only | 0 | both |
-| 1b | `m9s1b` | **training seed** | stella-400M | bge-small | (b) | query-only | **1** | DEV-6 |
-| 2 | `m9s2` | teacher | stella-1.5B | bge-small | (b) | query-only | 0 | SCREEN-3 |
-| 3 | `m9s3` | teacher | Qwen3-0.6B | bge-small | (b) | query-only | 0 | SCREEN-3 |
-| 4 | `m9s4` | student | selected | MiniLM-L6 | (b) | query-only | 0 | DEV-6 |
-| 5 | `m9s5` | prompt | selected | selected | (a) | query-only | 0 | DEV-6 |
-| 6 | `m9s6` | mix | selected | selected | selected | 70/30 **by token** | 0 | DEV-6 |
+| **A** | `m9s1` | anchor | stella-400M | bge-small | (b) | query-only | 0 | both |
+| **A** | `m9s1c` | **no warm start** (diagnostic, decides nothing) | stella-400M | bge-small | (b) | query-only | 0 | DEV-6 |
+| B | `m9s1b` | training seed (**reported**, read by no rule) | stella-400M | bge-small | (b) | query-only | **1** | DEV-6 |
+| B | `m9s2` | teacher | stella-1.5B | bge-small | (b) | query-only | 0 | SCREEN-3 |
+| B | `m9s3` | teacher | Qwen3-0.6B | bge-small | (b) | query-only | 0 | SCREEN-3 |
+| B | `m9s4` | student | selected | MiniLM-L6 | (b) | query-only | 0 | DEV-6 |
+| B | `m9s5` | prompt | selected | selected | (a) | query-only | 0 | DEV-6 |
+| B | `m9s6` | mix | selected | selected | selected | 70/30 **by token** | 0 | DEV-6 |
 
-Order is fixed and may not change after `m9p-bs128` starts. Arm 1b exists to **measure** the
-training-noise floor the decision threshold reads, instead of importing M8's table-specific 0.004
-(§4.2). If a teacher challenger fires, the run stops (§0 amendment).
+Order is fixed and enforced in code. **The batch-32-versus-128 pilot was registered and then
+removed before any arm ran**: two matched epochs give batch 32 four times the optimizer updates
+and compress a separate warmup+cosine schedule into a miniature, so it would have measured early
+optimization speed rather than the batch size that wins at final dose. LEAF's `bs=32` finding was
+made at roughly a hundred times this dose. Batch size is locked at **128**. If a teacher challenger
+fires, the run stops (§0 amendment).
 
 **Role byte-templates (literal, locked).**
 - QUERY policy **(b) — baseline**: student input = raw query bytes. Teacher target =
@@ -208,36 +225,66 @@ training-noise floor the decision threshold reads, instead of importing M8's tab
 | batch size | **128** examples (subject to the P pilot) |
 | optimizer steps | **30,349** — the last batch is 32 examples and **is** trained, at its natural size |
 | **T_base non-pad tokens** | **59,507,872** (16 × 3,719,242); per-step budget **1,960.8** |
-| checkpoints | 7,587 · 15,175 · 22,762 · **30,349** (decision reads the last; the last two also feed the rank-stability rule) |
+| checkpoints | **7,588** · 15,175 · 22,762 · **30,349** — the step at which each quarter of the examples *completes* (the first was one step early in the draft). Decision reads the last; the last two feed the rank-stability rule, **by step id, never by position** |
 | checkpoint **surfaces** | SCREEN-3 at all four (0.65 GB of document vectors, free, and it carries the dose-response curve); **DEV-6 at checkpoints 3 and 4 only** — a DEV-6 pass streams 23.3 GB at this box's measured 174 MB/s, so four passes per arm would cost more wall-clock than the training they measure. Fixed before any arm ran; every rule stays executable because the decision reads checkpoint 4 and rank stability reads 3 and 4 |
 | seed | 0 (data order, init, dropout); arm 1b seed 1 |
 | optimizer | AdamW, β (0.9, 0.999), eps 1e-8, weight decay 0.01 on tensors with dim > 1 and 0.0 otherwise, grad-clip 1.0 global norm, no gradient accumulation |
-| LR | `warmup: 1e-4·(step+1)/910`; then `1e-5 + 0.5·(1e-4−1e-5)·(1+cos(π·(step−910)/(30349−910)))` |
+| LR | `warmup: 1e-4·(step+1)/910`; then `1e-5 + 0.5·(1e-4−1e-5)·(1+cos(π·(step−910)/(30349−910−1)))`. The `−1` matters: with `steps−warmup` the last executed step is short of the endpoint and `lr_final` is never reached |
 | precision | bf16 autocast backbone; **loss in fp32**; retrieval matmul fp32 from fp16 document memmaps |
 | max sequence | 512, dynamic padding to the longest member of the batch |
 | epoch order | one `default_rng(seed)`, a fresh `permutation(n)` per epoch, concatenated |
 
-**Arm 6 is a fixed-compute contrast** (Codex BLOCKER-2): identical **30,349** optimizer updates and
-identical **59,507,872** non-pad tokens, split **70/30 by token**, not by example. Per step it
-fills 70% × 1,960.8 query tokens from the locked query schedule and 30% from the locked document
-candidate list, both consumed in order; batch size therefore floats (≈90 queries + ≈4 documents).
-Targets: **41,655,510** query tokens (11.20 epochs of the pool) and **17,852,415** document tokens
-(**111,906 documents, single pass, no repeats**). Loss is the plain mean over all examples in the
-batch — **no role weighting**. The realized per-step token distribution is reported for every arm.
+**Two arms are token-matched rather than example-matched**, because their inputs are not the same
+length as the baseline's and an example-matched version would confound the factor under test with
+the token dose (Codex pass 1 BLOCKER-2, pass 2 BLOCKER-2):
 
-The baseline arms keep fixed 128-example batches (their texts are one length family, so per-step
-tokens are near-constant); this asymmetry with arm 6's token-budgeted batches is deliberate,
-recorded, and reported.
+- **arm 5 (prompt policy (a))** prepends ~20 tokens to every query. Sixteen full epochs would be a
+  *larger* non-pad dose than the baseline, so instead it holds **30,349 optimizer updates and
+  59,507,872 non-pad tokens** and sees correspondingly fewer presentations of the same pool.
+- **arm 6 (mix)** holds the same 30,349 updates and 59,507,872 tokens, split **70/30 by token**:
+  41,655,512 query and 17,852,365 document tokens realized — a **0.30000** document share and
+  five tokens over `T_base` in total. Batch size floats: mean **95.83**, range 68–124.
+  Loss is the plain mean over the batch — **no role weighting**.
 
-**If the P pilot selects batch 32**, every arm falls back to the registered 8-epoch dose:
-1,942,288 examples, **60,697** steps, checkpoints 15,174 / 30,348 / 45,522 / 60,697, warmup 1,821,
-T_base 29,753,936. No other dose is permitted.
+The token budget is tracked **cumulatively**, not per step: each role fills until its running total
+reaches its share of the tokens due by the end of that step, so per-step rounding cannot accumulate
+over 30,349 steps. The batcher asserts, rather than hopes, that there are exactly 30,349 non-empty
+batches and that no stream runs dry — a short arm must never be able to look like a full one. Both
+schedules are **materialized and their realized counts recorded at lock time**
+(`results/m9_lock_constants.json` → `token_budget.students.*.mix_schedule`), not estimated.
+
+Baseline arms keep fixed 128-example batches; their texts are one length family, so per-step tokens
+are near-constant. The asymmetry is deliberate, and the realized per-step token distribution is
+reported for every arm.
 
 ### 3.2 Objective (phase 1)
 
 `loss = mean_over_batch( sum_over_dim( (normalize(student_out, eps=1e-12) − target)² ) )`, target =
 the L2-normalized teacher vector, computed in fp32. No auxiliary term (LEAF's ablation rejected
 them; MSE+cosine is affine-redundant under normalized outputs). Phase 2 is out of scope for M9.1.
+
+### 3.2a Head warm start — closed-form, every arm (M9.0 amendment, before any arm ran)
+
+The head is **initialized to the closed-form ridge solution** from the frozen backbone's
+mean-pooled outputs to the teacher targets, then trained normally with everything else:
+n_fit **60,000** screen-pool texts, seed **21**, ridge **λ = 1e-4** on a trace-normalized Gram,
+bias column included. λ is selected on the **training residual**, never on a dev surface.
+
+Why, measured before any arm ran (`results/m9_head_probe.json`, a `-diag` artifact no decision may
+cite): a frozen bge-small backbone plus this head alone scores **0.3463** on SCREEN-3 — **50.8%**
+of the 0.6822 teacher ceiling — while a *random* head after 2,000 trained steps reached **12.4%**.
+At ~1% of LEAF's dose, a random head spends a large share of the entire budget re-deriving a linear
+map that has a closed form, and a screen run that way would partly rank arms by how fast each one
+recovers from its own initialization rather than by the factor under test. Every arm gets the
+identical treatment (each student fits its own head, under its own prompt policy and its own
+teacher's targets), so no contrast moves.
+
+Two consequences worth stating. **The model now has no random initialization at all** — pretrained
+backbone plus a deterministic head — so the seed controls only data order and dropout, and the
+seed-replica floor F measures exactly that and nothing else. And **arm `m9s1c`** repeats arm 1
+*without* the warm start at the identical dose: a registered **DIAGNOSTIC contrast** that prices
+the warm start at the screen dose and feeds M9.3's budget estimate. It decides nothing and is
+marked decision-ineligible in the registry.
 
 ### 3.3 fp16 target cache acceptance
 
@@ -292,13 +339,15 @@ and may understate the spread between two different student backbones.
 | **prompt** | DEV-6 | same form | **policy (b)** |
 | **mix** | DEV-6 | same form | **query-only** |
 
-**MDE = max(0.0051, 2 × F)** where **F = |macro(m9s1) − macro(m9s1b)|** on DEV-6, the measured
-training-noise floor at the screen dose. 0.0051 is 1.96 × the p90 DEV-6 macro SE. `F` is
-registered as *measured at M9.1 by arm 1b before any student/prompt/mix contrast is read*, and
-`m9src/screen_stats` refuses to decide those three until the arm-1b artifact exists. **Stated
-limitation:** F is a range over K = 2 seeds and is therefore a very noisy estimate of σ
-(`m8/CODEMAP.md` pitfall 18); it is used only to *raise* the threshold, never to lower it below
-0.0051.
+**MDE = 0.0056**, one number, fixed at M9.0. It is 1.96 × the DEV-6 macro SE implied by the p90
+per-query difference SD (0.1195) over the 2,031 historical dev contrasts:
+SE = (1/6)·√(Σ_c s²/n_c) = 0.002876 → 0.005636, rounded to 0.0056.
+
+**Withdrawn before any arm ran:** the earlier `max(0.0051, 2F)` form with F a seed-replica range.
+A single absolute difference between two seeds is one half-normal draw, not an estimated σ — it can
+sit near zero under large real seed variance or inflate the threshold arbitrarily, and calling it a
+noise floor would repeat `m8/CODEMAP.md` pitfall 18 at K = 2 instead of K = 3. Arm `m9s1b` still
+runs in stage B, and its seed sensitivity is **reported beside every contrast**; no rule reads it.
 
 **Rank stability.** A student/prompt/mix decision that adopts a challenger must also have the same
 sign at checkpoints 3 and 4. The screen runs at ~1% of LEAF's example dose and ~0.5% of its
@@ -308,9 +357,24 @@ last two checkpoints ⇒ **not stable at screen dose** ⇒ the default is taken 
 recorded as diagnostic.
 
 **Scope of every screen verdict.** These are *artifact-specific* selections at the screen dose
-under seeds 0 and 1 — not claims that a recipe is superior. The bootstrap quantifies query
-resampling conditional on one fitted artifact; F is the only training-uncertainty term in the
-rule, and it is coarse. No screen result may be reported as resolved, confirmed, or significant.
+under seed 0 — not claims that a recipe is superior. The bootstrap quantifies query resampling
+conditional on one fitted artifact and contains **no** training-uncertainty term at all. No screen
+result may be reported as resolved, confirmed, or significant.
+
+### 4.4 The adequacy gate — stage A → stage B
+
+Read once, on the anchor arm, on DEV-6, before any challenger teacher is encoded:
+
+| condition | threshold | why |
+|---|---|---|
+| retention at the final checkpoint | ≥ **0.60** of the 0.67238 DEV-6 ceiling | below this the student sits so far from the teacher surface that a contrast between two arms is dominated by early imitability rather than by the factor under test |
+| late slope, macro(ckpt4) − macro(ckpt3) | ≤ **0.02** | a curve still climbing steeply at the last checkpoint is an early-training snapshot whose ranking need not survive to final dose |
+
+**PASS** → stage B runs as registered. **FAIL** → stage B does **not** run; M9.1 reports the anchor
+curve, the warm-start contrast and a priced dose-response extrapolation, and the
+teacher/student/prompt/mix questions go back to Dylan with a budget attached rather than being
+answered at an inadequate dose. Both outcomes are actions, which is the test `m8/FINDINGS.md` §4
+requires of any screen worth building.
 
 ### 4.3 What a screen result may NOT do
 
@@ -339,11 +403,8 @@ before it is believed (pitfall 13).
 | parity sample | **512** texts: 256 query-pool + 256 documents, **51/51/51/51/52** per length bin per side (longest bin first, shortfall flowing to the next bin down), seed 12, ids materialized and hashed at M9.0 |
 | **fastembed** | `TextEmbedding.add_custom_model()` accepts the description for any student that can still win; full serving parity needs a published repo path and is M10's step. Recorded either way |
 | **artifact size** | total shipped bytes (ONNX + tokenizer + config) measured and compared against the 70 MB decimal target |
-| **throughput pilot** | pinned manifest: **20,000** query texts (seed 13 from the locked pool) + **5,000** documents (first 5,000 of the locked candidate list), at the registered batch settings, first 2 batches discarded as warmup. GPU-hours = Σ over the 9 runs of (examples ÷ measured ex/s) + measured challenger-teacher encode seconds |
-
-**Fallback trigger:** if the pilot's GPU-hour total exceeds **12**, every arm falls back to the
-registered 8-epoch dose (§3.1). The manifest, the warmup exclusion and the formula are fixed above
-precisely so the trigger cannot be steered.
+| **fp16 target gate** | `m9src/fp16_gate.py`, and `screen.query_targets()` refuses to hand out fp16 rows until it has passed. §3.3's thresholds on the locked 10,000-text sample |
+| **throughput** | the anchor arm **is** the measurement — it reports realized ex/s, tokens/step and per-checkpoint evaluation seconds. There is no separate pilot and **no dose fallback**: a single dose is registered, and if it proves unaffordable that is a finding reported to Dylan, not a threshold a session can steer itself across |
 
 ---
 
@@ -391,6 +452,21 @@ import. No G2 allowlist entry is created for M9.1; none is needed.
    token-matched design.
 4. **Corrected 2026-08-30:** the first draft's parity sample asked for 64 per bin per side across
    five bins (320) while also asking for 256 per side. Now 51/51/51/51/52.
+5. **Amended 2026-08-30, before any arm ran:** the head is warm-started in closed form (§3.2a).
+   The first draft trained it from a random init, which the head probe showed costs most of an
+   affordable budget. LEAF's own recipe trains from random init — at roughly a hundred times this
+   dose, where it does not matter.
+6. **Withdrawn 2026-08-30:** the searchsorted estimate of arm 6's document count (111,906) and its
+   53-token overshoot. The schedule is now materialized by the real batcher at lock time and its
+   realized counts recorded, so there is no estimate left to be off by.
+7. **Withdrawn 2026-08-30:** `MDE = max(0.0051, 2F)`. See §4.2.
+8. **Withdrawn 2026-08-30:** the batch-32-versus-128 pilot and both fallback doses. See §3 and §6.
+9. **Corrected 2026-08-30:** checkpoint 1 was 7,587; four epochs complete at step **7,588**.
+10. **Corrected 2026-08-30:** the document candidate list was **sorted** by global pool row id, so
+    any prefix of it was a low-row prefix — `esci-prod` first — and arm 6's documents would have
+    been a store-biased sample rather than a uniform one. It now keeps RNG draw order.
+11. **Corrected 2026-08-30:** the cosine LR denominator was `steps − warmup`, so the schedule
+    stopped one step short and never reached `lr_final`.
 
 ---
 
@@ -419,3 +495,35 @@ import. No G2 allowlist entry is created for M9.1; none is needed.
 | MIN B=10,000 too few below the 1.25% quantile | **adopted** — B = 20,000 |
 | MIN `"passage: "` disjointness | **adopted** — asserted on the pinned tokenized inputs |
 | MIN eligible-row arithmetic assumed | **adopted** — union measured: 6,149,679 (276 banned rows sit inside the FEVER span) |
+
+---
+
+## §11 Codex lock review #2 — disposition
+
+`research/m9-codex-lock2-2026-08-30.md`. Verdict **DO NOT COMMIT. DO NOT SPEND THE 6 GPU-hours** on
+the v2 lock; its core finding was that the v1 amendment had moved several failures out of the prose
+and into the code. Its closing recommendation — *run one corrected, fully guarded anchor curve* —
+became §3's staging. All 6 BLOCKER / 11 MAJOR / 3 MINOR actioned.
+
+| finding | disposition |
+|---|---|
+| B1 amendment unratified; STOP advisory only | **adopted in code** — `screen.require_predecessors` refuses every stage-B arm until the adequacy gate passes, and `decide()` records the STOP note. Ratification is a **standing item for Dylan** (§0, `m9/STATUS.md`); nothing that depends on it can run meanwhile |
+| B2 equal-token dosing false (arms 5 and 6) | **adopted** — arm 5 is now token-matched too; the batcher tracks a cumulative budget, asserts 30,349 non-empty steps and asserts no stream runs dry; both schedules materialized at lock time |
+| B3 run token does not freeze the experiment | **adopted** — one **session manifest** frozen before the first arm; per-run tokens are one-use and consumed atomically; `eligible()` recomputes instead of trusting a boolean; diagnostics confined to `work/m9smoke/` where the decision loader cannot address them |
+| B4 fingerprint omits inputs; stale code hashes | **adopted** — the fingerprint now covers `m7src/train.py`, `m7src/mix.py`, the banned-row mask and `results/m9_lock_constants.json`; starting files are compared against the hashes the registry pins; constants regenerated after the final code change |
+| B5 fp16 gate absent | **adopted** — `m9src/fp16_gate.py` implements it and `screen.query_targets()` refuses fp16 rows until it has passed |
+| B6 port pilot crashes | **adopted** — registry-key drift fixed, run token opened, `--no-strict` removed, size rule and fastembed registration made pass conjuncts |
+| M7 batch pilot uninformative | **adopted** — the pilot and both fallback doses were **removed**; batch 128 locked with the reason recorded |
+| M8 `2F` not a noise bound | **adopted** — MDE is one registered number, 0.0056; the seed replica is reported, never read by a rule |
+| M9 teacher screen may rank early imitability | **adopted** — the adequacy gate (§4.4) sits between the anchor and any challenger encode |
+| M10 statistic not fully locked | **adopted** — quantile method registered, bootstrap draws chunked (a DEV-6 draw is 3.2 GB in one block), rank stability reads registered **step ids**, `seed_sensitivity` goes through `align()` |
+| M11 longq subsetting conditionally identical | **adopted** — corpus identity, vector shape, qrels and qid containment all asserted |
+| M12 arm order and fallbacks unenforced | **adopted** — `require_predecessors`; the fallbacks no longer exist to be unenforced |
+| M13 document sample source-biased | **adopted** — draw order kept; the realized schedule now consumes **189,002** documents from a uniform draw |
+| M14 Qwen template deviates from the mandate | **adopted as a recorded deviation** — each teacher's own repository template is used, because a teacher's targets are only meaningful under the prompt it was trained with. Listed in §0's amendment for Dylan; it binds only stage-B arms, which cannot run yet |
+| M15 caches and auxiliary outputs unguarded | **partially adopted** — the symmetric ceiling and parity artifacts are in the fingerprint's blast radius via the code hashes; per-chunk content hashing of challenger caches is a **stage-B prerequisite**, recorded here and not yet built |
+| M16 port acceptance incomplete | **adopted** — total shipped bytes measured against the 70 MB decimal target, fastembed registration required, fp16 graph emitted |
+| M17 six-hour estimate incomplete | **adopted** — there is no estimate left to defend: the anchor arm *is* the measurement, and there is no fallback for a number to steer |
+| MIN 1 LR never reaches `lr_final` | **adopted** — denominator `steps − warmup − 1` |
+| MIN 2 checkpoint off-by-one | **adopted** — 7,588 |
+| MIN 3 validation sample hashes absent | **adopted** — both materialized into `results/m9_lock_constants.json` and mirrored into the registry |

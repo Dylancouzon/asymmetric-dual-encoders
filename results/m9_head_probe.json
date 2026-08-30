@@ -1,0 +1,77 @@
+{
+  "student": "bge-small-en-v1.5",
+  "n_fit": 60000,
+  "seed": 21,
+  "hidden": 384,
+  "arms": {
+    "ridge-0.0001": {
+      "lambda": 0.0001,
+      "train_sq_l2": 0.49556,
+      "screen3_macro": 0.346269,
+      "means": {
+        "nq-250k": 0.5298,
+        "cqadup-programmers": 0.144386,
+        "cqadup-physics": 0.181091
+      }
+    },
+    "ridge-0.001": {
+      "lambda": 0.001,
+      "train_sq_l2": 0.49564,
+      "screen3_macro": 0.345361,
+      "means": {
+        "nq-250k": 0.529294,
+        "cqadup-programmers": 0.143446,
+        "cqadup-physics": 0.179412
+      }
+    },
+    "ridge-0.01": {
+      "lambda": 0.01,
+      "train_sq_l2": 0.4961,
+      "screen3_macro": 0.341574,
+      "means": {
+        "nq-250k": 0.525586,
+        "cqadup-programmers": 0.140078,
+        "cqadup-physics": 0.175047
+      }
+    },
+    "ridge-0.1": {
+      "lambda": 0.1,
+      "train_sq_l2": 0.50256,
+      "screen3_macro": 0.311178,
+      "means": {
+        "nq-250k": 0.489404,
+        "cqadup-programmers": 0.112737,
+        "cqadup-physics": 0.153166
+      }
+    },
+    "ridge-1": {
+      "lambda": 1.0,
+      "train_sq_l2": 0.56603,
+      "screen3_macro": 0.15483,
+      "means": {
+        "nq-250k": 0.272906,
+        "cqadup-programmers": 0.024849,
+        "cqadup-physics": 0.04866
+      }
+    }
+  },
+  "ceiling_screen3": 0.682232,
+  "best": {
+    "lambda": 0.0001,
+    "train_sq_l2": 0.49556,
+    "screen3_macro": 0.346269,
+    "means": {
+      "nq-250k": 0.5298,
+      "cqadup-programmers": 0.144386,
+      "cqadup-physics": 0.181091
+    },
+    "retention": 0.5076
+  },
+  "seconds": 21.5,
+  "_status": "DIAGNOSTIC. Reads DEV, sets no bar, and no screen decision may cite it. lambda is selected on the same surface it reports, so the retention here is an OPTIMISTIC upper bound for a closed-form head.",
+  "_registration": {
+    "run_id": "m9-head-probe-diag",
+    "diagnostic": true,
+    "eligible_for_decision": false
+  }
+}

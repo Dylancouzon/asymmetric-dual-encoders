@@ -75,12 +75,21 @@ def eval_student(student, teacher_key, comps=None):
                                       chunk=CHUNK.get(comp, 200_000), qids=q_ids)
         out[comp] = evalkit.per_query_ndcg(run, qrels)
     if subset_longq:
-        _di, lq_ids, _qt, lq_rels, _dv = doc_vecs("heldout-longq", teacher_key)
+        tr_ids, _tq, _tt, _tr, tr_dv = doc_vecs("heldout-train", teacher_key)
+        lq_di, lq_ids, _qt, lq_rels, lq_dv = doc_vecs("heldout-longq", teacher_key)
+        # Subsetting is exact only if both components rank against the identical corpus under the
+        # identical self-hit and tie-break path. Assert it; do not assume it (Codex pass 2,
+        # MAJOR-11). Same object identity for the memmap is the strongest available check.
+        assert len(lq_di) == len(tr_ids) and lq_di[0] == tr_ids[0] and lq_di[-1] == tr_ids[-1], \
+            "heldout-longq and heldout-train no longer share a corpus -- score longq separately"
+        assert lq_dv.shape == tr_dv.shape, "shared-corpus vector shapes differ"
         lq = [str(q) for q in lq_ids]
         assert set(lq) <= set(out["heldout-train"]), (
             "heldout-longq is no longer a subset of heldout-train -- score it separately")
         assert all(lq_rels[q] == _train_rels(teacher_key)[q] for q in lq_rels), (
             "heldout-longq qrels differ from heldout-train's for the shared queries")
+        # a query dropped by heldout-train's own scoring cannot be recovered by subsetting
+        assert set(lq) <= set(out["heldout-train"])
         out["heldout-longq"] = {q: out["heldout-train"][q] for q in lq}
     return out
 

@@ -11,7 +11,6 @@ Usage:  python m9src/screen.py arm m9s1
 """
 import argparse
 import json
-import math
 import time
 
 import numpy as np
@@ -56,31 +55,45 @@ def arm_spec(arm_id, sel=None):
 
 
 def arm_cfg(spec, sel=None):
-    """-> the fully numeric training configuration for one arm."""
-    r = registry()
-    d = r["dose"]
-    n = r["data"]["n_screen_queries"]
-    bs = spec.get("batch_size") or int((sel or {}).get("batch_size") or d["batch_size"])
-    if spec.get("epochs"):                                    # the batch pilot
-        ex = spec["epochs"] * n
-        steps = math.ceil(ex / bs)
-    elif bs != d["batch_size"]:                               # registered batch-32 fallback dose
-        fb = d["fallback_batch32"]
-        assert bs == fb["batch_size"], f"no registered dose for batch size {bs}"
-        ex, steps = fb["examples"], fb["steps"]
-    else:
-        ex, steps = d["examples"], d["steps"]
-    warmup = max(1, int(round(0.03 * steps)))
-    ck = [int(round(steps * k / 4)) for k in (1, 2, 3, 4)]
-    if not spec.get("epochs") and bs == d["batch_size"]:
-        ck, warmup = list(d["checkpoints"]), d["warmup_steps"]
-    return {"batch_size": bs, "steps": steps, "examples": ex, "warmup_steps": warmup,
-            "checkpoints": ck, "seed": int(spec.get("seed", d["seed"])),
+    """-> the fully numeric training configuration for one arm. One dose, one batch size; there
+    are no pilot arms and no fallback regimes left to disagree with each other."""
+    d = registry()["dose"]
+    return {"batch_size": d["batch_size"], "steps": d["steps"], "examples": d["examples"],
+            "warmup_steps": d["warmup_steps"], "checkpoints": list(d["checkpoints"]),
+            "seed": int(spec.get("seed", d["seed"])),
             "lr_peak": d["lr_peak"], "lr_final": d["lr_final"],
-            "epochs": spec.get("epochs") or (ex // n)}
+            "epochs": d["epochs_query_only"],
+            "token_matched": spec["prompt"] == "a" or spec["mix"] != "query-only"}
+
+
+def require_predecessors(arm_id):
+    """Refuse an arm whose registered predecessors have not produced eligible artifacts, and
+    refuse every stage-B arm until the adequacy gate has passed (Codex pass 2, MAJOR-12)."""
+    st = registry()["staging"]
+    stage = "A" if arm_id in st["A"]["runs"] else "B"
+    order = st["A"]["runs"] + st["B"]["runs"]
+    assert arm_id in order, f"{arm_id} is not a registered run"
+    for prev in order[:order.index(arm_id)]:
+        if prev.startswith("m9-"):
+            continue                      # the pilots are checked by their own gates
+        p = RESULTS / f"m9_screen_{prev}.json"
+        if not p.exists() or not guard9.eligible(json.loads(p.read_text())):
+            raise SystemExit(f"{arm_id} may not run: predecessor {prev} has no eligible artifact. "
+                             f"The registered order is {order}.")
+    if stage == "B":
+        g = RESULTS / "m9_adequacy.json"
+        if not g.exists() or not json.loads(g.read_text()).get("pass"):
+            raise SystemExit(
+                f"{arm_id} is a stage-B arm and the adequacy gate has not passed. Run "
+                f"`python m9src/screen.py adequacy` after m9s1; if it fails, stage B does not run "
+                f"and M9.1 reports the anchor curve instead (m9/registry.json adequacy_gate).")
 
 
 def query_targets(teacher_key, texts, rows):
+    import fp16_gate
+    ok, why = fp16_gate.passed()
+    if not ok:
+        raise SystemExit(f"fp16 targets refused: {why}")
     if teacher_key == eval9.INCUMBENT:
         return np.asarray(m9data.stella_query_targets()[rows], dtype=np.float16)
     import teacher9
@@ -120,11 +133,24 @@ def build_plan(spec, cfg, tok):
     meta = {"n_query_texts": len(texts), "student_query_prefix": qprefix,
             "query_tokens_per_epoch": int(qlen.sum())}
 
-    if spec["mix"] == "query-only":
+    if spec["mix"] == "query-only" and spec["prompt"] != "a":
         order = nano.epoch_order(len(texts), cfg["epochs"], cfg["seed"])
         assert order.size == cfg["examples"], f"{order.size} vs {cfg['examples']}"
         flat, offs = nano.fixed_batches(order, cfg["batch_size"])
         ids, tgt = q_ids, q_tgt
+        meta["dose_form"] = "fixed 128-example batches over 16 full epochs"
+    elif spec["mix"] == "query-only":
+        # Prompt policy (a) prepends ~20 tokens to every query, so 16 epochs would be a LARGER
+        # non-pad dose than the baseline and the contrast would confound prompt with dose
+        # (Codex pass 2, BLOCKER-2). Match tokens and optimizer updates instead; the arm therefore
+        # sees fewer presentations of the same pool, which is what a fixed compute budget means.
+        big = nano.epoch_order(len(texts), cfg["epochs"], cfg["seed"])
+        flat, offs, pos, real = nano.token_batches([(big, qlen)], cfg["steps"],
+                                                   d["T_base_nonpad_tokens"], [1.0])
+        ids, tgt = q_ids, q_tgt
+        meta.update({"dose_form": "token-matched: same steps and same non-pad tokens as baseline",
+                     "consumed": {"query": pos[0]}, "realized_tokens": real,
+                     "presentations": int(offs[-1])})
     else:
         mx = d["mix_arm"]
         assert cfg["batch_size"] == d["batch_size"], "the mix arm is only defined at the main dose"
@@ -132,32 +158,33 @@ def build_plan(spec, cfg, tok):
                                            r["data"]["doc_candidates_seed"])
         assert dmeta["rows_sha256"] == r["data"]["doc_candidates_rows_sha256"], \
             "the doc candidate list does not match the M9.0 hash"
-        n_docs = mx["n_docs_single_pass"]
+        n_docs = mx["n_doc_candidates"]
         drows = cand[:n_docs]
         dtexts = m9data.row_texts(drows)
         d_ids = nano.pretokenize(tok, [tpl["doc_student"] + t for t in dtexts], d["max_seq"],
                                  label="docs")
         dlen = np.array([len(x) for x in d_ids], dtype=np.float64)
-        assert set(map(tuple, q_ids[:2000])).isdisjoint(set(map(tuple, d_ids[:2000]))), \
+        # the FULL pinned inputs, not a 2,000-row corner of them (Codex pass 2, MINOR role rule)
+        assert set(map(tuple, q_ids)).isdisjoint(set(map(tuple, d_ids))), \
             "query and document tokenized inputs overlap -- the role marker is not separating them"
         d_tgt = doc_targets(spec["teacher"], drows, dtexts)
 
-        # query stream: consume the locked epoch order until the registered query-token target
-        big = nano.epoch_order(len(texts), cfg["epochs"], cfg["seed"])
-        cum = np.cumsum(qlen[big])
-        nq = int(np.searchsorted(cum, mx["query_token_target"]) + 1)
-        qstream = big[:nq]
+        # Both streams are long enough by construction (16 epochs of queries covers 100% of
+        # T_base and the document candidate list covers well over 30%), so the batcher stops on
+        # the step count and never on exhaustion.
+        qstream = nano.epoch_order(len(texts), cfg["epochs"], cfg["seed"])
         dstream = np.arange(n_docs, dtype=np.int64) + len(texts)
         alllen = np.concatenate([qlen, dlen])
-        flat, offs, pos = nano.token_batches(
+        flat, offs, pos, real = nano.token_batches(
             [(qstream, alllen), (dstream, alllen)], cfg["steps"],
-            d["per_step_token_budget"], [0.70, 0.30])
+            d["T_base_nonpad_tokens"], [0.70, 0.30])
         ids, tgt = q_ids + d_ids, np.vstack([q_tgt, d_tgt])
-        meta.update({"doc": dmeta, "n_doc_texts": n_docs, "student_doc_prefix": tpl["doc_student"],
-                     "query_stream_len": int(nq), "doc_stream_len": int(dstream.size),
+        meta.update({"dose_form": "token-matched 70/30 by TOKEN, same steps as baseline",
+                     "doc": dmeta, "n_doc_candidates": n_docs,
+                     "student_doc_prefix": tpl["doc_student"],
                      "consumed": {"query": pos[0], "doc": pos[1]},
-                     "query_tokens": float(qlen[qstream].sum()),
-                     "doc_tokens": float(dlen.sum())})
+                     "realized_tokens": real, "presentations": int(offs[-1]),
+                     "doc_share_realized": round(real[1] / sum(real), 4)})
 
     meta["target_norms"] = {
         "min": round(float(np.linalg.norm(np.asarray(tgt[:256], np.float32), axis=1).min()), 6),
@@ -169,6 +196,8 @@ def build_plan(spec, cfg, tok):
 
 def run_arm(arm_id, smoke=0):
     r = registry()
+    if not smoke:
+        require_predecessors(arm_id)
     sel = selected()
     spec = arm_spec(arm_id, sel)
     cfg = arm_cfg(spec, sel)
@@ -196,7 +225,10 @@ def run_arm(arm_id, smoke=0):
         per = eval9.eval_student(model, spec["teacher"], comps=comps)
         return {"macros": eval9.macros(per, spec["teacher"]), "per_component": per}
 
-    rec, model = nano.train_arm(run_id, spec["student"], plan, cfg, eval_fn=eval_fn)
+    rec, model = nano.train_arm(run_id, spec["student"], plan, cfg, eval_fn=eval_fn,
+                                warm_start=spec.get("warm_start", True),
+                                warm_texts=json.loads((WORK / "m9_screen_queries.json").read_text()),
+                                warm_prefix=meta["student_query_prefix"])
     rec.update({"spec": spec, "cfg": cfg, "plan": meta})
     rec["final"] = rec["history"][-1]["macros"]
     try:
@@ -230,6 +262,34 @@ def _load():
     return have
 
 
+def adequacy():
+    """The registered gate between stage A and stage B (m9/registry.json adequacy_gate)."""
+    g = registry()["adequacy_gate"]
+    blob = json.loads((RESULTS / "m9_screen_m9s1.json").read_text())
+    assert guard9.eligible(blob), "m9s1's artifact is not decision-eligible"
+    sym = json.loads((RESULTS / "m9_dev_symmetric_stella-400M-v5.json").read_text())
+    ceil6 = sym["macros"]["DEV6"]["macro"]
+    ck = registry()["dose"]["checkpoints"]
+    m = {h["step"]: h["macros"]["DEV6"]["macro"] for h in blob["history"]
+         if "DEV6" in h.get("macros", {})}
+    missing = [c for c in ck[-2:] if c not in m]
+    ret = m.get(ck[-1], 0.0) / ceil6
+    slope = (m.get(ck[-1], 0.0) - m.get(ck[-2], 0.0)) if not missing else None
+    out = {"anchor": "m9s1", "ceiling_dev6": ceil6, "final_macro": m.get(ck[-1]),
+           "retention": round(ret, 4), "late_slope": slope,
+           "conditions": g["conditions"], "missing_checkpoints": missing,
+           "pass_retention": bool(ret >= g["conditions"]["retention_at_final"]["min"]),
+           "pass_slope": bool(slope is not None
+                              and slope <= g["conditions"]["late_slope"]["max"]),
+           "curve": sorted(m.items())}
+    out["pass"] = bool(not missing and out["pass_retention"] and out["pass_slope"])
+    out["action"] = g["outcomes"]["pass" if out["pass"] else "fail"]
+    guard9.begin_run("m9-adequacy")
+    guard9.write_result(RESULTS / "m9_adequacy.json", out, "m9-adequacy")
+    print(json.dumps({k: v for k, v in out.items() if k != "conditions"}, indent=1))
+    return out
+
+
 def decide():
     """One function, fixed contrast orientation, shared resamples, registered outcome table."""
     have = _load()
@@ -241,25 +301,19 @@ def decide():
     def hist(a):
         return have[a]["history"]
 
-    # --- batch size -------------------------------------------------------------------
-    if {"m9p-bs32", "m9p-bs128"} <= set(have):
-        d = screen_stats.decide("batch_size", per("m9p-bs32"), per("m9p-bs128"))
-        out["batch_size"] = d
-        sel["batch_size"] = 32 if d["pass"] else 128
-
-    # --- training-noise floor ---------------------------------------------------------
-    F = None
     if {"m9s1", "m9s1b"} <= set(have):
-        F = screen_stats.seed_floor(per("m9s1"), per("m9s1b"))
-        out["seed_floor"] = {"F": F, "MDE": screen_stats.mde(F), "K": 2,
-                             "limitation": registry()["rules"]["mde"]["limitation"]}
+        out["seed_sensitivity"] = screen_stats.seed_sensitivity(per("m9s1"), per("m9s1b"))
+    if {"m9s1", "m9s1c"} <= set(have):
+        a, b = have["m9s1"], have["m9s1c"]
+        out["warm_start_value"] = {
+            "delta_dev6": round(a["final"]["DEV6"]["macro"] - b["final"]["DEV6"]["macro"], 6),
+            "status": "DIAGNOSTIC -- prices the closed-form head warm start, decides nothing"}
 
-    # --- teacher (both challengers, shared resamples, then the outcome table) ----------
     if {"m9s1", "m9s2", "m9s3"} <= set(have):
         comps, _ = screen_stats.surface("SCREEN3")
-        idx = screen_stats.indices(
-            [(c, len(per("m9s1")[c])) for c in comps],
-            registry()["statistic"]["B"], registry()["statistic"]["seed"])
+        idx = screen_stats.indices([(c, len(per("m9s1")[c])) for c in comps],
+                                   registry()["statistic"]["B"],
+                                   registry()["statistic"]["seed"])
         cand = {}
         for tag, arm in (("stella-1.5B-v5", "m9s2"), ("qwen3-embedding-0.6B", "m9s3")):
             d = screen_stats.decide("teacher_swap", per(arm), per("m9s1"), idx=idx)
@@ -275,38 +329,31 @@ def decide():
             sel["teacher"] = eval9.INCUMBENT if len(ties) > 1 else best[0]
             if sel["teacher"] != eval9.INCUMBENT:
                 notes.append(
-                    "TEACHER SWAP FIRED: student/prompt/mix cannot be decided on DEV-6 in a "
-                    "challenger space. m9/LEDGER.md §0 requires stopping here and returning to "
-                    "Dylan with the priced options. No downstream arm may run.")
+                    "TEACHER SWAP FIRED. m9/LEDGER.md §0 requires STOPPING here: student, prompt "
+                    "and mix cannot be decided on DEV-6 in a challenger's space, and M9 does not "
+                    "proceed on a proxy. No downstream arm may run until Dylan rules.")
 
     stop = sel.get("teacher", eval9.INCUMBENT) != eval9.INCUMBENT
-
-    # --- student / prompt / mix -------------------------------------------------------
-    if not stop and F is not None:
-        anchor = "m9s1"
+    if not stop:
+        base = "m9s1"
         if "m9s4" in have:
-            d = screen_stats.decide("student", per("m9s4"), per(anchor), F=F,
-                                    hist_a=hist("m9s4"), hist_b=hist(anchor))
+            d = screen_stats.decide("student", per("m9s4"), per(base),
+                                    hist_a=hist("m9s4"), hist_b=hist(base))
             out["student"] = d
             sel["student"] = (have["m9s4"]["spec"]["student"] if d["pass"]
-                              else have[anchor]["spec"]["student"])
-            base = "m9s4" if d["pass"] else anchor
-        else:
-            base = anchor
+                              else have[base]["spec"]["student"])
+            base = "m9s4" if d["pass"] else base
         if "m9s5" in have:
-            d = screen_stats.decide("prompt", per("m9s5"), per(base), F=F,
+            d = screen_stats.decide("prompt", per("m9s5"), per(base),
                                     hist_a=hist("m9s5"), hist_b=hist(base))
             out["prompt"] = {**d, "baseline_arm": base}
             sel["prompt"] = "a" if d["pass"] else "b"
             base = "m9s5" if d["pass"] else base
         if "m9s6" in have:
-            d = screen_stats.decide("mix", per("m9s6"), per(base), F=F,
+            d = screen_stats.decide("mix", per("m9s6"), per(base),
                                     hist_a=hist("m9s6"), hist_b=hist(base))
             out["mix"] = {**d, "baseline_arm": base}
             sel["mix"] = "70/30" if d["pass"] else "query-only"
-    elif not stop:
-        notes.append("student/prompt/mix withheld: the seed floor F needs arm m9s1b, which has "
-                     "not run. The MDE is not defined without it.")
 
     payload = {
         "arms_present": sorted(have), "decisions": out, "selected": sel, "notes": notes,
@@ -314,7 +361,7 @@ def decide():
         "retention": {k: v.get("retention") for k, v in have.items()},
         "curves": {k: [{"step": h["step"], "examples": h["examples"],
                         "nonpad_tokens": h["nonpad_tokens"],
-                        **{s: h["macros"][s]["macro"] for s in h["macros"]}}
+                        **{s_: h["macros"][s_]["macro"] for s_ in h["macros"]}}
                        for h in v["history"]] for k, v in have.items()},
         "scope": registry()["rules"]["scope"]}
     guard9.begin_run("m9-decisions")
@@ -331,7 +378,7 @@ def decide():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["arm", "decide", "plan"])
+    ap.add_argument("cmd", choices=["arm", "decide", "plan", "adequacy"])
     ap.add_argument("arm_id", nargs="?")
     ap.add_argument("--smoke", type=int, default=0, help="examples; writes to <id>-smoke")
     a = ap.parse_args()
@@ -340,6 +387,8 @@ def main():
         run_arm(a.arm_id, smoke=a.smoke)
     elif a.cmd == "decide":
         decide()
+    elif a.cmd == "adequacy":
+        adequacy()
     else:
         sel = selected()
         spec = arm_spec(a.arm_id, sel)
