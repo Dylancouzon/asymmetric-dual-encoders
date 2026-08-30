@@ -22,6 +22,7 @@ from m9base import RESULTS, WORK
 import guard9   # noqa: E402
 
 GRID = (1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1.0)
+ARTIFACT = RESULTS / "m9_warmfit.json"
 
 
 def solve(Xc, Y, lam):
@@ -85,7 +86,7 @@ def run(student_key="bge-small-en-v1.5"):
                     "a random permutation of the 60,000-text sample, not a contiguous prefix.",
            "_scope": "calibrated in the ANCHOR student's feature space and reused globally; it is "
                      "an anchor-calibrated global lambda, not a per-arm calibrated one."}
-    guard9.write_result(RESULTS / "m9_warmfit.json", out, "m9-warmfit")
+    guard9.write_result(ARTIFACT, out, "m9-warmfit")
     print(json.dumps({k: v for k, v in out.items() if k != "rows"}, indent=1))
     for g in grid:
         print(f"  lambda {g['lambda']:g}: fit {g['fit_objective']:.5f}  val {g['val_objective']:.5f}")
@@ -94,7 +95,7 @@ def run(student_key="bge-small-en-v1.5"):
 
 def selected_lambda():
     """The predicate `nano.warm_start_head` consults. Refuses until the selection has run."""
-    p = RESULTS / "m9_warmfit.json"
+    p = ARTIFACT
     if not p.exists():
         raise SystemExit("the warm-start lambda has not been selected on a training-only holdout "
                          "-- run m9src/warmfit.py (m9/LEDGER.md §3.2a)")

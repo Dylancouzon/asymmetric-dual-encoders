@@ -53,6 +53,9 @@ SCOPES = {
     "port":     ("m9src/port.py",),
     "fp16":     ("m9src/fp16_gate.py",),
     "bridge":   ("m9src/bridge_dryrun.py",),
+    # M9.3: the seven-day build. Its own scope, so the screen's arms are not voided by a change
+    # here and a build cannot start from dirty code (Codex review #5, blocker 7).
+    "build":    ("m9src/longrun.py", "work/m9long/config.json", "work/m9long/manifest.json"),
 }
 # What each kind of run depends on. An incumbent arm does not import `teacher9`, so a challenger
 # repair leaves its result standing.
@@ -66,6 +69,7 @@ DEPS = {
     "m9-port-pilot": ("protocol", "data", "train", "port"),
     "m9-adequacy": ("protocol",),
     "m9-decisions": ("protocol",),
+    "m9-build": ("protocol", "data", "train", "eval", "build"),
 }
 GUARDED = SCOPES["protocol"][:2]
 CODE = tuple(f for k, v in SCOPES.items() for f in v if f.endswith((".py", ".sh")))
