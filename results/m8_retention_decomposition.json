@@ -1,0 +1,627 @@
+{
+  "_note": "Registered DESCRIPTIVE diagnostic: what is the short-query loss actually made of?",
+  "status": "DESCRIPTIVE / EXPLORATORY. Adopts nothing; may not be cited for an adoption (LEDGER 4.6). No new evaluation access: every input was already scored.",
+  "source": {
+    "per_query": "results/m7_final_run.json six.int8-table / six.teacher-symmetric",
+    "texts": "results/frozen_eval/<six>.json",
+    "tokenizer": "NovaSearch/stella_en_400M_v5 @ ffeb2b7"
+  },
+  "per_dataset": {
+    "scifact": {
+      "n": 300,
+      "median_words": 12.0,
+      "mean_frag": 1.7130958921983654,
+      "macro_table": 0.6101307346589265,
+      "macro_teacher": 0.7795618826803956,
+      "retention_macro": 0.7826585011584868,
+      "mean_gap": 0.16943114802146916,
+      "within_slope_gap_on_words": {
+        "slope": -0.0030577762158027254,
+        "intercept": 0.20767373589377522,
+        "se": 0.00340960198867302,
+        "t": -0.8968132427071872,
+        "n": 300
+      },
+      "within_slope_gap_on_frag": {
+        "slope": 0.14692169679287398,
+        "intercept": -0.08225980722921697,
+        "se": 0.03862608682615659,
+        "t": 3.8036909473672695,
+        "n": 300
+      },
+      "teacher_disclosed_overlap": false
+    },
+    "nfcorpus": {
+      "n": 323,
+      "median_words": 2.0,
+      "mean_frag": 1.7498569284173,
+      "macro_table": 0.3123921390803689,
+      "macro_teacher": 0.41343074244382183,
+      "retention_macro": 0.7556093609144647,
+      "mean_gap": 0.1010386033634529,
+      "within_slope_gap_on_words": {
+        "slope": -0.007421555926255701,
+        "intercept": 0.12548608170876585,
+        "se": 0.004140983485087821,
+        "t": -1.7922206048349665,
+        "n": 323
+      },
+      "within_slope_gap_on_frag": {
+        "slope": 0.04414848849465144,
+        "intercept": 0.023785064891935673,
+        "se": 0.010912010426810899,
+        "t": 4.045862015140513,
+        "n": 323
+      },
+      "teacher_disclosed_overlap": false
+    },
+    "fiqa": {
+      "n": 648,
+      "median_words": 10.0,
+      "mean_frag": 1.2677964984738377,
+      "macro_table": 0.3727623009067084,
+      "macro_teacher": 0.5535975932731784,
+      "retention_macro": 0.6733452338597236,
+      "mean_gap": 0.18083529236646992,
+      "within_slope_gap_on_words": {
+        "slope": 0.008396937309261871,
+        "intercept": 0.08897435319153582,
+        "se": 0.0023503205024815585,
+        "t": 3.5726775562720334,
+        "n": 648
+      },
+      "within_slope_gap_on_frag": {
+        "slope": -0.006946772053585943,
+        "intercept": 0.1896423856517021,
+        "se": 0.03703973765832067,
+        "t": -0.18754916996625673,
+        "n": 648
+      },
+      "teacher_disclosed_overlap": true
+    },
+    "arguana": {
+      "n": 1406,
+      "median_words": 174.0,
+      "mean_frag": 1.244087305774579,
+      "macro_table": 0.591560073987573,
+      "macro_teacher": 0.6368938207164639,
+      "retention_macro": 0.9288205580674446,
+      "mean_gap": 0.045333746728890845,
+      "within_slope_gap_on_words": {
+        "slope": 0.0002094296931279771,
+        "intercept": 0.004797929538936962,
+        "se": 8.29983266536102e-05,
+        "t": 2.5233001865449953,
+        "n": 1406
+      },
+      "within_slope_gap_on_frag": {
+        "slope": 0.25228937567169707,
+        "intercept": -0.2685362629260614,
+        "se": 0.08537477357787451,
+        "t": 2.9550810514486643,
+        "n": 1406
+      },
+      "teacher_disclosed_overlap": true
+    },
+    "scidocs": {
+      "n": 1000,
+      "median_words": 9.0,
+      "mean_frag": 1.3996021143533184,
+      "macro_table": 0.16769336543409222,
+      "macro_teacher": 0.23948933979280213,
+      "retention_macro": 0.7002122331589986,
+      "mean_gap": 0.0717959743587099,
+      "within_slope_gap_on_words": {
+        "slope": -0.0008587880574672619,
+        "intercept": 0.07990465119731574,
+        "se": 0.0013856125452572014,
+        "t": -0.6197894645272941,
+        "n": 1000
+      },
+      "within_slope_gap_on_frag": {
+        "slope": 0.018921578045503522,
+        "intercept": 0.045313293719321815,
+        "se": 0.013853321925456411,
+        "t": 1.365851320522181,
+        "n": 1000
+      },
+      "teacher_disclosed_overlap": false
+    },
+    "trec-covid": {
+      "n": 50,
+      "median_words": 10.0,
+      "mean_frag": 1.5128571608130432,
+      "macro_table": 0.5489915794925339,
+      "macro_teacher": 0.8234049160768386,
+      "retention_macro": 0.6667334245564585,
+      "mean_gap": 0.27441333658430467,
+      "within_slope_gap_on_words": {
+        "slope": 0.012618132552260733,
+        "intercept": 0.14066113153034077,
+        "se": 0.010617619217492583,
+        "t": 1.1884144923442248,
+        "n": 50
+      },
+      "within_slope_gap_on_frag": {
+        "slope": 0.008262311694302246,
+        "intercept": 0.26191363917271016,
+        "se": 0.15705686513038936,
+        "t": 0.05260713492175484,
+        "n": 50
+      },
+      "teacher_disclosed_overlap": false
+    }
+  },
+  "pooled_within_dataset": {
+    "within_dataset_gap_on_words": {
+      "slope": 0.0002139213758603303,
+      "intercept": 6.365002488474189e-18,
+      "se": 7.099850470839187e-05,
+      "t": 3.0130405807693754,
+      "n": 3727
+    },
+    "within_dataset_table_on_words": {
+      "slope": -0.00044884049402015437,
+      "intercept": 2.1822865674768644e-17,
+      "se": 9.324180857697005e-05,
+      "t": -4.813725740311457,
+      "n": 3727
+    },
+    "within_dataset_teacher_on_words": {
+      "slope": -0.00023491911815982417,
+      "intercept": -6.819645523365202e-18,
+      "se": 9.103173680145773e-05,
+      "t": -2.5806287610681107,
+      "n": 3727
+    },
+    "within_dataset_gap_on_frag": {
+      "slope": 0.04997574393976209,
+      "intercept": -2.273215174455067e-18,
+      "se": 0.010832565661286252,
+      "t": 4.613472514490902,
+      "n": 3727
+    },
+    "within_dataset_table_on_frag": {
+      "slope": -0.012131439660185496,
+      "intercept": 2.273215174455067e-17,
+      "se": 0.014292430068881002,
+      "t": -0.8488017504174714,
+      "n": 3727
+    },
+    "within_dataset_teacher_on_frag": {
+      "slope": 0.037844304279576454,
+      "intercept": -2.182286567476864e-17,
+      "se": 0.013910426024420912,
+      "t": 2.720571189777914,
+      "n": 3727
+    },
+    "within_dataset_corr_words_frag": 0.00639094739444413,
+    "within_dataset_corr_words_frag_per_dataset": {
+      "scifact": -0.25584661990415947,
+      "nfcorpus": -0.35008385893169747,
+      "fiqa": -0.23551908206026262,
+      "arguana": 0.1111934022072657,
+      "scidocs": -0.1443131125571383,
+      "trec-covid": 0.005089283913539567
+    },
+    "variance_share_of_x_by_dataset": {
+      "words": {
+        "scifact": 0.0006808635480133507,
+        "nfcorpus": 0.00016395363390039232,
+        "fiqa": 0.0010299254761337617,
+        "arguana": 0.9971115300166955,
+        "scidocs": 0.0009678940950086194,
+        "trec-covid": 4.5833230248366346e-05
+      },
+      "frag": {
+        "scifact": 0.11848646218302268,
+        "nfcorpus": 0.5299367273204091,
+        "fiqa": 0.09875962208465497,
+        "arguana": 0.021972376392707625,
+        "scidocs": 0.2258089770168307,
+        "trec-covid": 0.005035835002374926
+      }
+    },
+    "leave_one_out": {
+      "gap_on_words_excluding_scifact": {
+        "slope": 0.000216150473201741,
+        "intercept": 4.696804356134854e-18,
+        "se": 6.924422559851565e-05,
+        "t": 3.121566763631688,
+        "n": 3427
+      },
+      "gap_on_words_excluding_nfcorpus": {
+        "slope": 0.00021517344539192517,
+        "intercept": 4.757244391411376e-18,
+        "se": 7.247175612615665e-05,
+        "t": 2.96906625275311,
+        "n": 3404
+      },
+      "gap_on_words_excluding_fiqa": {
+        "slope": 0.0002054847902244331,
+        "intercept": 6.002423587510751e-18,
+        "se": 6.993217917159243e-05,
+        "t": 2.9383438734296483,
+        "n": 3079
+      },
+      "gap_on_words_excluding_arguana": {
+        "slope": 0.0017644684362393842,
+        "intercept": 6.337315859259202e-18,
+        "se": 0.0011672375819843346,
+        "t": 1.5116617760368385,
+        "n": 2321
+      },
+      "gap_on_words_excluding_scidocs": {
+        "slope": 0.0002149606508946764,
+        "intercept": 3.720537699545633e-18,
+        "se": 7.88393986122158e-05,
+        "t": 2.726563807925461,
+        "n": 2727
+      },
+      "gap_on_words_excluding_trec-covid": {
+        "slope": 0.00021335282473489787,
+        "intercept": -4.577237249303632e-19,
+        "se": 7.099433093415918e-05,
+        "t": 3.0052093163996902,
+        "n": 3677
+      },
+      "gap_on_frag_excluding_scifact": {
+        "slope": 0.03694499343651535,
+        "intercept": 4.79681517444372e-18,
+        "se": 0.0112654368127737,
+        "t": 3.2794994149382655,
+        "n": 3427
+      },
+      "gap_on_frag_excluding_nfcorpus": {
+        "slope": 0.05654523545148635,
+        "intercept": 2.378622195705688e-18,
+        "se": 0.016144557630268765,
+        "t": 3.5024332500428517,
+        "n": 3404
+      },
+      "gap_on_frag_excluding_fiqa": {
+        "slope": 0.05621342070765633,
+        "intercept": 5.502221621884855e-18,
+        "se": 0.011221956380375146,
+        "t": 5.009235359884471,
+        "n": 3079
+      },
+      "gap_on_frag_excluding_arguana": {
+        "slope": 0.04543056427561932,
+        "intercept": 9.217913977104294e-18,
+        "se": 0.009652904089408236,
+        "t": 4.706414137634346,
+        "n": 2321
+      },
+      "gap_on_frag_excluding_scidocs": {
+        "slope": 0.059033339836021693,
+        "intercept": 5.315053856493761e-19,
+        "se": 0.013658652107224514,
+        "t": 4.322047254194065,
+        "n": 2727
+      },
+      "gap_on_frag_excluding_trec-covid": {
+        "slope": 0.05018686909337124,
+        "intercept": 9.154474498607266e-19,
+        "se": 0.010858634293606596,
+        "t": 4.621839886708454,
+        "n": 3677
+      }
+    },
+    "leave_one_out_worst_case": {
+      "words": {
+        "smallest_slope": {
+          "drop": "gap_on_words_excluding_fiqa",
+          "slope": 0.0002054847902244331,
+          "intercept": 6.002423587510751e-18,
+          "se": 6.993217917159243e-05,
+          "t": 2.9383438734296483,
+          "n": 3079
+        },
+        "weakest_t": {
+          "drop": "gap_on_words_excluding_arguana",
+          "slope": 0.0017644684362393842,
+          "intercept": 6.337315859259202e-18,
+          "se": 0.0011672375819843346,
+          "t": 1.5116617760368385,
+          "n": 2321
+        }
+      },
+      "frag": {
+        "smallest_slope": {
+          "drop": "gap_on_frag_excluding_scifact",
+          "slope": 0.03694499343651535,
+          "intercept": 4.79681517444372e-18,
+          "se": 0.0112654368127737,
+          "t": 3.2794994149382655,
+          "n": 3427
+        },
+        "weakest_t": {
+          "drop": "gap_on_frag_excluding_scifact",
+          "slope": 0.03694499343651535,
+          "intercept": 4.79681517444372e-18,
+          "se": 0.0112654368127737,
+          "t": 3.2794994149382655,
+          "n": 3427
+        }
+      }
+    }
+  },
+  "between_dataset": {
+    "gap_on_median_words": {
+      "slope": -0.0006633041918432086,
+      "intercept": 0.16446418517554567,
+      "se": 0.0005299223041495448,
+      "t": -1.2517008373665723,
+      "n": 6
+    },
+    "gap_on_mean_frag": {
+      "slope": 0.08458926186265021,
+      "intercept": 0.015179716880794055,
+      "se": 0.1901628177744225,
+      "t": 0.44482545459014405,
+      "n": 6
+    },
+    "_note": "n = 6 datasets. Reported so the between- and within-dataset readings can be compared; six points cannot separate length from task type or contamination."
+  },
+  "length_strata_within_dataset": {
+    "scifact": {
+      "Q1": {
+        "n": 92,
+        "words_range": [
+          0.0,
+          9.0
+        ],
+        "table": 0.6181131868680104,
+        "teacher": 0.8130437025539332,
+        "retention": 0.7602459559386452
+      },
+      "Q2": {
+        "n": 79,
+        "words_range": [
+          9.0,
+          12.0
+        ],
+        "table": 0.5866899179957916,
+        "teacher": 0.7625375169564493,
+        "retention": 0.7693915446120917
+      },
+      "Q3": {
+        "n": 62,
+        "words_range": [
+          12.0,
+          15.0
+        ],
+        "table": 0.5617299391950844,
+        "teacher": 0.713263628090951,
+        "retention": 0.7875488347815431
+      },
+      "Q4": {
+        "n": 67,
+        "words_range": [
+          15.0,
+          29.0
+        ],
+        "table": 0.6715977231948986,
+        "teacher": 0.8150109759396772,
+        "retention": 0.8240351885084388
+      }
+    },
+    "nfcorpus": {
+      "Q1": {
+        "n": 103,
+        "words_range": [
+          0.0,
+          1.0
+        ],
+        "table": 0.30929752162698926,
+        "teacher": 0.4365799246305184,
+        "retention": 0.7084556668260699
+      },
+      "Q2": {
+        "n": 69,
+        "words_range": [
+          1.0,
+          2.0
+        ],
+        "table": 0.32789973261749344,
+        "teacher": 0.42112928176485687,
+        "retention": 0.7786201216959798
+      },
+      "Q3": {
+        "n": 90,
+        "words_range": [
+          2.0,
+          5.0
+        ],
+        "table": 0.26051202546715735,
+        "teacher": 0.3538137599890098,
+        "retention": 0.7362970436063577
+      },
+      "Q4": {
+        "n": 61,
+        "words_range": [
+          5.0,
+          11.0
+        ],
+        "table": 0.37662053037259124,
+        "teacher": 0.45359407756762354,
+        "retention": 0.8303030154013491
+      }
+    },
+    "fiqa": {
+      "Q1": {
+        "n": 203,
+        "words_range": [
+          0.0,
+          8.0
+        ],
+        "table": 0.334050674738341,
+        "teacher": 0.473015544068395,
+        "retention": 0.7062150048287619
+      },
+      "Q2": {
+        "n": 122,
+        "words_range": [
+          8.0,
+          10.0
+        ],
+        "table": 0.41862920842158463,
+        "teacher": 0.576006940617553,
+        "retention": 0.7267780627309121
+      },
+      "Q3": {
+        "n": 195,
+        "words_range": [
+          10.0,
+          14.0
+        ],
+        "table": 0.40230869765198857,
+        "teacher": 0.6154082279588253,
+        "retention": 0.6537265499136381
+      },
+      "Q4": {
+        "n": 128,
+        "words_range": [
+          14.0,
+          31.0
+        ],
+        "table": 0.34542753551634964,
+        "teacher": 0.5658721389673669,
+        "retention": 0.6104338979238383
+      }
+    },
+    "arguana": {
+      "Q1": {
+        "n": 358,
+        "words_range": [
+          0.0,
+          134.0
+        ],
+        "table": 0.6228181528909892,
+        "teacher": 0.6416564276735307,
+        "retention": 0.97064118121462
+      },
+      "Q2": {
+        "n": 347,
+        "words_range": [
+          134.0,
+          174.0
+        ],
+        "table": 0.6197833880188032,
+        "teacher": 0.658540686392842,
+        "retention": 0.9411466911993972
+      },
+      "Q3": {
+        "n": 353,
+        "words_range": [
+          174.0,
+          230.0
+        ],
+        "table": 0.5885636569316124,
+        "teacher": 0.6485585764436332,
+        "retention": 0.9074949870511271
+      },
+      "Q4": {
+        "n": 348,
+        "words_range": [
+          230.0,
+          868.0
+        ],
+        "table": 0.5343010308970395,
+        "teacher": 0.5985773424060506,
+        "retention": 0.8926182016000721
+      }
+    },
+    "scidocs": {
+      "Q1": {
+        "n": 297,
+        "words_range": [
+          0.0,
+          7.0
+        ],
+        "table": 0.13420875412300073,
+        "teacher": 0.20213287996377527,
+        "retention": 0.6639630036788305
+      },
+      "Q2": {
+        "n": 244,
+        "words_range": [
+          7.0,
+          9.0
+        ],
+        "table": 0.15218553965691525,
+        "teacher": 0.22817843230614718,
+        "retention": 0.6669584768324107
+      },
+      "Q3": {
+        "n": 226,
+        "words_range": [
+          9.0,
+          11.0
+        ],
+        "table": 0.19078406031347803,
+        "teacher": 0.2625561559359059,
+        "retention": 0.726640971846234
+      },
+      "Q4": {
+        "n": 233,
+        "words_range": [
+          11.0,
+          25.0
+        ],
+        "table": 0.2042184384224362,
+        "teacher": 0.2765778786238035,
+        "retention": 0.7383758941191773
+      }
+    },
+    "trec-covid": {
+      "Q1": {
+        "n": 18,
+        "words_range": [
+          0.0,
+          9.0
+        ],
+        "table": 0.5718584052739284,
+        "teacher": 0.7582310150216466,
+        "retention": 0.7542007566883855
+      },
+      "Q2": {
+        "n": 9,
+        "words_range": [
+          9.0,
+          10.0
+        ],
+        "table": 0.49866179145045764,
+        "teacher": 0.88527998697537,
+        "retention": 0.5632814463073718
+      },
+      "Q3": {
+        "n": 16,
+        "words_range": [
+          10.0,
+          12.0
+        ],
+        "table": 0.5299740407776841,
+        "teacher": 0.7985529007962023,
+        "retention": 0.6636680428425844
+      },
+      "Q4": {
+        "n": 7,
+        "words_range": [
+          12.0,
+          22.0
+        ],
+        "table": 0.5983695577427027,
+        "teacher": 0.9682458911335315,
+        "retention": 0.6179933870333162
+      }
+    }
+  },
+  "caveats": [
+    "Retention is table/teacher; ArguAna and FiQA are on stella's DISCLOSED training list, so their denominators are inflated and their retention is deflated.",
+    "trec-covid is n=50: its dataset-level row is the least resolved of the six.",
+    "'gap' is teacher minus table per query, not a ratio -- ratios are undefined where the teacher scores 0 and are unstable where it scores near 0.",
+    "OLS slopes are descriptive summaries of a scatter, not inferential claims."
+  ]
+}

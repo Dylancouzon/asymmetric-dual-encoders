@@ -1,0 +1,347 @@
+{
+  "_note": "LEDGER 2.3 / registry probe S0. Forum queries only; the search split is non-commercial-research-only per the GooAQ licence and is never read.",
+  "smoke": true,
+  "doc_limit_per_slice": 2000,
+  "slices": {
+    "writing/dev": {
+      "topic": "writing",
+      "split": "dev",
+      "n_docs_screened": 2000,
+      "n_forum_queries": 2003,
+      "communities": [
+        "ell.stackexchange.com",
+        "linguistics.stackexchange.com",
+        "literature.stackexchange.com",
+        "worldbuilding.stackexchange.com",
+        "writing.stackexchange.com"
+      ],
+      "community_intersection": [],
+      "doc_exact_hits": 0,
+      "doc_near_hits": 0,
+      "doc_dup_rate": 0.0,
+      "doc_hit_owners": {},
+      "query_leak_hits": 15,
+      "query_leak_kinds": {
+        "exact": 2,
+        "near": 12,
+        "contains": 1
+      },
+      "verdict": "DROP",
+      "drop_reasons": [
+        "15 query-leakage hits (zero tolerance)"
+      ]
+    },
+    "writing/test": {
+      "topic": "writing",
+      "split": "test",
+      "n_docs_screened": 2000,
+      "n_forum_queries": 2000,
+      "communities": [
+        "english.stackexchange.com"
+      ],
+      "community_intersection": [
+        "english.stackexchange.com"
+      ],
+      "doc_exact_hits": 0,
+      "doc_near_hits": 22,
+      "doc_dup_rate": 0.011,
+      "doc_hit_owners": {
+        "cqadup-english": 22
+      },
+      "query_leak_hits": 157,
+      "query_leak_kinds": {
+        "exact": 111,
+        "near": 43,
+        "contains": 3
+      },
+      "verdict": "DROP",
+      "drop_reasons": [
+        "community intersection ['english.stackexchange.com']",
+        "document near-duplicate rate 1.1000% > 0.5%",
+        "157 query-leakage hits (zero tolerance)"
+      ]
+    },
+    "recreation/dev": {
+      "topic": "recreation",
+      "split": "dev",
+      "n_docs_screened": 2000,
+      "n_forum_queries": 2002,
+      "communities": [
+        "boardgames.stackexchange.com",
+        "photo.stackexchange.com",
+        "rpg.stackexchange.com",
+        "scifi.stackexchange.com"
+      ],
+      "community_intersection": [],
+      "doc_exact_hits": 0,
+      "doc_near_hits": 0,
+      "doc_dup_rate": 0.0,
+      "doc_hit_owners": {},
+      "query_leak_hits": 8,
+      "query_leak_kinds": {
+        "exact": 0,
+        "near": 8,
+        "contains": 0
+      },
+      "verdict": "DROP",
+      "drop_reasons": [
+        "8 query-leakage hits (zero tolerance)"
+      ]
+    },
+    "recreation/test": {
+      "topic": "recreation",
+      "split": "test",
+      "n_docs_screened": 2000,
+      "n_forum_queries": 2002,
+      "communities": [
+        "anime.stackexchange.com",
+        "gaming.stackexchange.com",
+        "movies.stackexchange.com"
+      ],
+      "community_intersection": [],
+      "doc_exact_hits": 0,
+      "doc_near_hits": 0,
+      "doc_dup_rate": 0.0,
+      "doc_hit_owners": {},
+      "query_leak_hits": 12,
+      "query_leak_kinds": {
+        "exact": 0,
+        "near": 12,
+        "contains": 0
+      },
+      "verdict": "DROP",
+      "drop_reasons": [
+        "12 query-leakage hits (zero tolerance)"
+      ]
+    },
+    "science/dev": {
+      "topic": "science",
+      "split": "dev",
+      "n_docs_screened": 2000,
+      "n_forum_queries": 2013,
+      "communities": [
+        "academia.stackexchange.com",
+        "astronomy.stackexchange.com",
+        "chemistry.stackexchange.com",
+        "datascience.stackexchange.com",
+        "earthscience.stackexchange.com",
+        "engineering.stackexchange.com",
+        "philosophy.stackexchange.com",
+        "stats.stackexchange.com"
+      ],
+      "community_intersection": [],
+      "doc_exact_hits": 0,
+      "doc_near_hits": 0,
+      "doc_dup_rate": 0.0,
+      "doc_hit_owners": {},
+      "query_leak_hits": 11,
+      "query_leak_kinds": {
+        "exact": 0,
+        "near": 11,
+        "contains": 0
+      },
+      "verdict": "DROP",
+      "drop_reasons": [
+        "11 query-leakage hits (zero tolerance)"
+      ]
+    },
+    "science/test": {
+      "topic": "science",
+      "split": "test",
+      "n_docs_screened": 2000,
+      "n_forum_queries": 2017,
+      "communities": [
+        "biology.stackexchange.com",
+        "math.stackexchange.com",
+        "physics.stackexchange.com"
+      ],
+      "community_intersection": [
+        "physics.stackexchange.com"
+      ],
+      "doc_exact_hits": 0,
+      "doc_near_hits": 0,
+      "doc_dup_rate": 0.0,
+      "doc_hit_owners": {},
+      "query_leak_hits": 24,
+      "query_leak_kinds": {
+        "exact": 13,
+        "near": 11,
+        "contains": 0
+      },
+      "verdict": "DROP",
+      "drop_reasons": [
+        "community intersection ['physics.stackexchange.com']",
+        "24 query-leakage hits (zero tolerance)"
+      ]
+    },
+    "technology/dev": {
+      "topic": "technology",
+      "split": "dev",
+      "n_docs_screened": 2000,
+      "n_forum_queries": 2003,
+      "communities": [
+        "askubuntu.com",
+        "electronics.stackexchange.com",
+        "serverfault.com",
+        "superuser.com",
+        "webapps.stackexchange.com"
+      ],
+      "community_intersection": [],
+      "doc_exact_hits": 0,
+      "doc_near_hits": 0,
+      "doc_dup_rate": 0.0,
+      "doc_hit_owners": {},
+      "query_leak_hits": 10,
+      "query_leak_kinds": {
+        "exact": 0,
+        "near": 10,
+        "contains": 0
+      },
+      "verdict": "DROP",
+      "drop_reasons": [
+        "10 query-leakage hits (zero tolerance)"
+      ]
+    },
+    "technology/test": {
+      "topic": "technology",
+      "split": "test",
+      "n_docs_screened": 2000,
+      "n_forum_queries": 2004,
+      "communities": [
+        "android.stackexchange.com",
+        "apple.stackexchange.com",
+        "networkengineering.stackexchange.com",
+        "security.stackexchange.com",
+        "softwareengineering.stackexchange.com",
+        "unix.stackexchange.com"
+      ],
+      "community_intersection": [
+        "android.stackexchange.com",
+        "softwareengineering.stackexchange.com"
+      ],
+      "doc_exact_hits": 0,
+      "doc_near_hits": 1,
+      "doc_dup_rate": 0.0005,
+      "doc_hit_owners": {
+        "cqadup-programmers": 1
+      },
+      "query_leak_hits": 46,
+      "query_leak_kinds": {
+        "exact": 34,
+        "near": 12,
+        "contains": 0
+      },
+      "verdict": "DROP",
+      "drop_reasons": [
+        "community intersection ['android.stackexchange.com', 'softwareengineering.stackexchange.com']",
+        "46 query-leakage hits (zero tolerance)"
+      ]
+    },
+    "lifestyle/dev": {
+      "topic": "lifestyle",
+      "split": "dev",
+      "n_docs_screened": 2000,
+      "n_forum_queries": 2076,
+      "communities": [
+        "bicycles.stackexchange.com",
+        "coffee.stackexchange.com",
+        "crafts.stackexchange.com",
+        "diy.stackexchange.com",
+        "gardening.stackexchange.com",
+        "lifehacks.stackexchange.com",
+        "mechanics.stackexchange.com",
+        "music.stackexchange.com",
+        "outdoors.stackexchange.com",
+        "parenting.stackexchange.com",
+        "pets.stackexchange.com"
+      ],
+      "community_intersection": [],
+      "doc_exact_hits": 0,
+      "doc_near_hits": 0,
+      "doc_dup_rate": 0.0,
+      "doc_hit_owners": {},
+      "query_leak_hits": 2,
+      "query_leak_kinds": {
+        "exact": 0,
+        "near": 2,
+        "contains": 0
+      },
+      "verdict": "DROP",
+      "drop_reasons": [
+        "2 query-leakage hits (zero tolerance)"
+      ]
+    },
+    "lifestyle/test": {
+      "topic": "lifestyle",
+      "split": "test",
+      "n_docs_screened": 2000,
+      "n_forum_queries": 2002,
+      "communities": [
+        "cooking.stackexchange.com",
+        "sports.stackexchange.com",
+        "travel.stackexchange.com"
+      ],
+      "community_intersection": [],
+      "doc_exact_hits": 0,
+      "doc_near_hits": 0,
+      "doc_dup_rate": 0.0,
+      "doc_hit_owners": {},
+      "query_leak_hits": 9,
+      "query_leak_kinds": {
+        "exact": 0,
+        "near": 8,
+        "contains": 1
+      },
+      "verdict": "DROP",
+      "drop_reasons": [
+        "9 query-leakage hits (zero tolerance)"
+      ]
+    }
+  },
+  "kept": [],
+  "dropped": [
+    "lifestyle/dev",
+    "lifestyle/test",
+    "recreation/dev",
+    "recreation/test",
+    "science/dev",
+    "science/test",
+    "technology/dev",
+    "technology/test",
+    "writing/dev",
+    "writing/test"
+  ],
+  "surviving_dup_rate": 0.0,
+  "surviving_topics_by_split": {
+    "dev": [],
+    "test": []
+  },
+  "reopen_E10": [
+    "only 0 topic(s) survive in dev",
+    "only 0 topic(s) survive in test"
+  ],
+  "verdict": "E10 REOPENS WITH DYLAN",
+  "seconds": 49.8,
+  "_registration": {
+    "probe": "S0",
+    "row": {
+      "wave": 1,
+      "title": "LoTTE overlap screen vs the protected partitions",
+      "question": "Does any LoTTE slice overlap the reserved or dev CQADupStack components?",
+      "endpoint": "per (topic, split) slice: community-name intersection; R1-fingerprint document near-duplicate rate; query-leakage hit count",
+      "comparator": "reserved cqadup-android/english and dev cqadup-physics/programmers",
+      "bar": "DROP the slice if the community intersection is non-empty, OR the document near-duplicate rate > 0.005, OR any query-leakage hit exists (zero tolerance). REOPEN E10 with Dylan if, after drops, the surviving document near-duplicate rate > 0.02 or fewer than 2 topics survive in the crossing split.",
+      "multiplicity": "none (screening, applied per slice independently)",
+      "no_survivor": "if no slice survives, E10 reopens with Dylan; the session does not substitute another shadow",
+      "notes": "LoTTE dev and test draw from DISJOINT StackExchange communities within a topic, so the two splits are screened separately. Forum queries only (the search split is non-commercial-research-only per the GooAQ licence).",
+      "adopts": "nothing; it selects which slices the shadow crossing may use",
+      "noise_floor_exempt": true,
+      "exempt_reason": "a contamination screen, not a quality comparison"
+    },
+    "wave": 1,
+    "registry_sha256": "6667b1f6b0ea7645da0bae515f1691a5da45330f6e138c6b2f4f1f5cfe47277c",
+    "ledger_sha256": "71d8bdbbe8d8ab5e29cafccdc6eebc23cf525f00d8069b917a29fd85d2e500a6",
+    "ledger_commit": "5adc3c7ec1b34e2688f3460a80bdca00cdea404d",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}

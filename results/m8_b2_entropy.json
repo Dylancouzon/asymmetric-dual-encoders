@@ -1,0 +1,91 @@
+{
+  "_note": "B2: is the distillation KL term degenerate? (LEDGER \u00a79, hypothesis H2.)",
+  "status": "DIAGNOSTIC. Adopts nothing and may not adopt anything (LEDGER 9). Its only registered consequence is whether it triggers the separately registered R-LIST arm.",
+  "setting": {
+    "n_queries": 4000,
+    "kl_k": 32,
+    "temp": 0.02,
+    "bank_rows": 1997601,
+    "entropy_ceiling_nats": 3.4657359027997265,
+    "seed": 0
+  },
+  "arms": {
+    "uniform_bank_the_recipe": {
+      "entropy_nats": {
+        "mean": 0.018167769536376,
+        "p1": 4.5130638809398604e-11,
+        "p5": 6.734013902054414e-10,
+        "p25": 2.743854743414431e-08,
+        "p50": 4.732095817416848e-07,
+        "p75": 1.4195082258083858e-05,
+        "p95": 0.008345351554453373,
+        "p99": 0.6809004545211792
+      },
+      "entropy_as_fraction_of_ceiling": 0.0052421102028286475,
+      "p_max_of_teacher_distribution": {
+        "mean": 0.9945206642150879,
+        "p50": 1.0,
+        "p95": 1.0
+      },
+      "share_of_queries_below_1e-4_nats": 0.843,
+      "share_of_queries_below_1e-2_nats": 0.95275
+    },
+    "teacher_top200": {
+      "entropy_nats": {
+        "mean": 0.776925265789032,
+        "p1": 5.554648669203743e-05,
+        "p5": 0.0009934257250279188,
+        "p25": 0.035265520215034485,
+        "p50": 0.36897242069244385,
+        "p75": 1.3116960525512695,
+        "p95": 2.700076103210449,
+        "p99": 3.061591625213623
+      },
+      "entropy_as_fraction_of_ceiling": 0.22417324561903526,
+      "p_max_of_teacher_distribution": {
+        "mean": 0.7710884809494019,
+        "p50": 0.9297102689743042,
+        "p95": 0.999920666217804
+      },
+      "share_of_queries_below_1e-4_nats": 0.01175,
+      "share_of_queries_below_1e-2_nats": 0.14975
+    }
+  },
+  "student_side": {
+    "student_p_on_positive": {
+      "mean": 0.995955765247345,
+      "p50": 1.0,
+      "p05": 0.9997867345809937
+    },
+    "student_ranks_positive_top_frac": 0.9975000619888306,
+    "kl_nats": {
+      "mean": 0.025720437988638878,
+      "p50": 1.0782818549159856e-07,
+      "p95": 0.002109870780259371
+    },
+    "_table": "p35w-2m-s2500 int8 (the shipped M7 artifact)"
+  },
+  "reading": "Under the recipe's own uniform sampler the teacher's candidate distribution carries 1.82e-02 nats on average (0.52% of the ln(32)=3.466 ceiling), and 84.3% of queries are below 1e-4 nats. With distractors drawn from the teacher's own top-200 it carries 7.77e-01 nats (22.42% of ceiling). H2 predicted the first number would be ~1e-4.",
+  "seconds": 40.6,
+  "_registration": {
+    "probe": "B2",
+    "row": {
+      "wave": 1,
+      "title": "candidate-set entropy (is the KL term degenerate?)",
+      "question": "H2: is the distillation KL term one-hot to ~1e-4 nats under 31 uniform distractors at temperature 0.02?",
+      "endpoint": "entropy quantiles of the teacher's candidate distribution, uniform sampling vs top-200 sampling",
+      "comparator": "none (diagnostic)",
+      "bar": "descriptive; adopts nothing and may not adopt anything",
+      "multiplicity": "none",
+      "no_survivor": "may trigger the separately registered R-LIST arm, or not; it cannot itself change the recipe",
+      "adopts": "nothing",
+      "noise_floor_exempt": true,
+      "exempt_reason": "purely descriptive diagnostic, named as exempt in LEDGER 4.7"
+    },
+    "wave": 1,
+    "registry_sha256": "aacad17386a1ea71e7e1537366c0f4fb4f77f97ae222ae5c4eac230f47d79ae5",
+    "ledger_sha256": "5cfa1c2291e558eaf4a971fe995559bbe5022d604c0417caa911f87f37bc12f4",
+    "ledger_commit": "ffa1a5a34b0d9fcab03a36972d4664dabc43af62",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}

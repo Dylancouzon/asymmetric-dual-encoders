@@ -26,8 +26,43 @@ A decision report (Artifact) with a quality-vs-query-side-cost frontier: nDCG@10
 - [x] M5: done. Two-collection Edge prototype works: 0.9 ms/query zero-transformer (0.42 lookup + 0.48 HNSW), shard load 0.24 s. ANN gap −1.8 nDCG at default ef, −0.5 at ef=512 (1.42 ms). fp16 shards: table 1.82 GB (bloated by an HNSW index a retrieve-only collection doesn't need; raw fp16 table = 466 MB), docs 754 MB. `results/edge_prototype.json`, `results/edge_variant.json`.
 - [x] M6: done 2026-08-25. Report artifact: https://claude.ai/code/artifact/db771dd1-2d59-4c34-9d6e-70dd4d337d16 ("Zero-Compute Query Encoders"). Gates run: Codex adversarial verification (gpt-5.6-terra, all findings actioned) → Codex writing pass (gpt-5.5, zero number changes, verified by diff) → humanizer (clean). andrey-review deliberately skipped: internal decision report, not channel DevRel content, and two adversarial technical passes already ran.
 - [x] M7: **final run done 2026-08-28** (freeze `d24c704`, tag `m7-freeze`, one `--infra-retry` after a harness interrupt; access spent, `m7-six-spent` on origin). **Zero tier claims**: release bar missed CI-resolved (int8 avg-6 0.4339 vs LR-dense-pertask 0.4583, −0.0243 [−0.0405, −0.0086]); vs BM25 +0.0165 positive but not surviving the registered familywise rule; fused system 0.4911 vs OpenSearch 0.4868 a statistical tie (+0.0043 [−0.0063, +0.0151]). Clean-4 robustness is worse (table below BM25 there); six-set retention vs teacher 0.755 — the dev out-of-domain read (0.764), not the all-six dev read (0.915), was the honest forecaster. Fusion vs dense +0.057 descriptive is the bright spot. The pre-registered miss-is-publishable framing applies; untouched-final reserved for M8; report pending. Full detail: `m7/STATUS.md`, `results/m7_final_run.json`. Original scope line kept for context: self-directed (WSL2 on the Windows/RTX 3080 box; repo on ext4, never /mnt/c) build + release of a Qdrant lookup-table query encoder. Binding mandate with comparators, tiers, eval protocol, and ops: `instructions-m7.md`. Research: `research/m7-novelty.md` (unpublished as of 2026-08-25), `research/m7-data-licensing.md`, `research/m7-teacher-shortlist-2026-08-26.md` (the pre-relaxation `m7-teacher-shortlist.md` was deleted in the 2026-08-28 cleanup; git history has it). Host setup checklist for Dylan: `setup-windows.md`. Core decisions 2026-08-25: teacher bge-base-en-v1.5 (swap delegated, no competitor vendors) — **SUPERSEDED 2026-08-26: the teacher is `NovaSearch/stella_en_400M_v5`, chosen on the distilled TABLE rather than the tower; see the decision log below and `m7/LEDGER.md`**; clean data stack, MS MARCO excluded from the RELEASE stack permanently (its terms are non-commercial-research-only; IBM Granite is the precedent) — with ONE research-only variant approved 2026-08-28 as the final M7 task, to measure what the exclusion costs, never released and refused by `freeze.assert_releasable`; aim = CI-resolved win over OpenSearch 0.4868 (candidate: released zero-query-compute system, fusion allowed and labeled), release bar = CI-resolved win over LR-dense-pertask 0.4583 (candidate: the released int8 dense table). Frozen comparator per-query vectors in `results/perquery.json`, dataset content pinned by `results/eval_manifest.json` + `results/frozen_eval/` (vendored queries+qrels), validated by `scripts/validate_perquery.py` — 50/54 cells <5e-5, four cells ≤3e-4 allowlisted with a provenance note in FINAL_MATRIX.md. Research/web work in Sonnet subagents. Plan gates run 2026-08-25, all findings implemented: Codex gpt-5.6-sol #1 (Dylan's model pick; 7 BLOCKER/23 MAJOR/8 MINOR), Opus (6 BLOCKER/10 MAJOR + leanness cuts), Codex gpt-5.6-sol #2 fresh thread (3 BLOCKER/9 MAJOR/4 MINOR — comparator drift manifest, capacity probe made gate-ineligible with a falsifiable bar, tier candidates fixed to the released artifacts, Holm at family α=0.025, dev suite pinned). Session state lives in small files under `m7/` (STATUS.md = one-screen status Dylan reads on GitHub, RESULTS.md, EXPLORED.md, LEDGER.md) with frequent commit+push under a standing grant scoped to the M7 work branch (headless box). CC BY-SA position confirmed by Dylan 2026-08-25: NQ/SQuAD/HotpotQA/FEVER approved for training with model-card attribution. Remaining item for Dylan: run setup-windows.md; HF release go stays his.
-- [ ] M8 (queued, after M7's final run — renumbered 2026-08-28, Dylan: "M8 will be the v2"): the learnings-driven v2 of M7's zero-compute table. Tiny mandate in `instructions-m8.md`; scope and levers are set in `m8/LEDGER.md` AFTER M7's final number is read, but the now-or-never items were pre-registered 2026-08-28 before that number exists: M8's confirmatory sets are the RESERVED untouched-final four (FEVER, DBpedia-entity, cqadup-android/english — M7's final run defaults to skipping the tail so they stay un-scored; scoring them burns them for M8), the M7-vs-M8 comparison is confirmatory only there (frozen artifacts, paired, one access), and M7's six are development-informed for M8 (descriptive continuity only). Carried-in levers each needing their own pre-registration: bigram rows trained through the forward, pooling trained through at scale, doc2query with a commercially clean generator (Dylan's licensing ruling still open), the negatives/step-count confound. The clean-stack-tax variant stays an M7 task; its result is an M8 input.
-- [ ] M9 (queued, after M8 — renumbered from M8 on 2026-08-28): LEAF-style distilled small query tower against the frozen teacher the table line ships (**stella_en_400M_v5**; follows M8's teacher if M8 swaps) — tiny mandate in `instructions-m9.md` (the old `instructions-m8.md`, brought up to date: the bge-base teacher line and the shared-tokenizer rationale for a bge-small student were stale after the 2026-08-26 swap; student shortlist to be re-derived at M9 start). Release bar: CI-resolved above bge-small symmetric 0.5042. Comparator per-query vectors (leaf-ir-asym 0.5155, mdbr-leaf-ir 0.5123, arctic-m 0.5264) frozen into `results/perquery.json` 2026-08-25 while the Mac caches still existed.
+- [x] M8: **CLOSED 2026-08-30 as a MEASUREMENT.** No candidate, no release, **no confirmatory
+  access spent** — the reserved four stay clean for M9. Twelve probes; every lever with a measured
+  mechanism is closed. M7 shipped avg-6 0.4339 against `LR-dense-pertask` 0.4583 (−0.0243
+  CI-resolved), and every M8 lever moved the dev endpoint 0.000–0.005 against a class whose
+  historical transfer to the six is 0.000 ± 0.005. **The deficit is not the table's resolution
+  (`D2-PRE`, all four new-row classes negative), its placement (`VECTOR-PRF`, −0.051, negative on
+  all six), or its training target (`B8`, doc-centroid −0.167).** What was never tested at capacity
+  is document-side co-adaptation — which is what the system we lost to does. **Read `m8/FINDINGS.md`
+  first**, then `m8/EXPLORED.md` (closed avenues with reopening conditions). Deliberately not run:
+  `E14-LORA` (authorised; the affordable version is a proxy, not a test — deferred with a real
+  budget), `R-LIST` (the one open lever with a mechanism — `B2`'s `teacher_top200` is 0.777 nats,
+  so the KL *class* is open), `B10`.
+- [ ] M9 (**next — a planning session runs first**): **nano**, the LEAF-style distilled small query
+  tower against a frozen document index. Mandate `instructions-m9.md`; **planning context in
+  `m9/BRIEF.md`** (what M7/M8 established, what M10 demands of the artifact, the harness inventory,
+  and the questions planning must answer). Release bar: CI-resolved above bge-small symmetric
+  0.5042. Teacher: M9 picks its own on measurement — T1's NO SWAP does **not** transfer, being a
+  fact about distilled TABLES not TOWERS. Comparator vectors frozen in `results/perquery.json` are
+  **irreplaceable**.
+- [ ] M10: **release the pair, port it, write the whitepaper.** Mandate `instructions-m10.md`.
+  Ships no new science: **zeo** (M7's table, already frozen and verified releasable) + **nano**
+  (M9's tower) released as two points on a quality-vs-query-cost frontier — zero tier wins exist and
+  the model cards say so; **ONNX port including the document model** (B6-pre passed only on
+  near-identity weights, so the real artifacts have never been exported); **fastembed integration**;
+  and the **whitepaper**, sourced primarily from `m8/FINDINGS.md` and `m8/EXPLORED.md`.
+
+- [ ] M11 (**noted, not scoped — 2026-08-30, Dylan**): **an IMAGE model.** The rationale is the
+  edge itself: a large share of edge workloads are vision — object detection, anomaly detection,
+  visual inspection, retrieval over image collections — so the asymmetric premise this whole project
+  tests (heavy encoder in the cloud, near-zero-compute encoder on the device) has a bigger and more
+  natural market in vision than in text. Open at this stage: whether the query side is a lookup
+  table at all (the text trick — tokenize, gather rows, average — has no obvious image analogue;
+  patch/codebook quantization is the nearest idea), whether the target is image→image retrieval or
+  text→image, and which frozen document tower plays stella's role. **Do not inherit M7/M8's
+  architecture assumptions without re-deriving them** — M8's whole finding is that the query-side
+  levers were exhausted for a BAG-of-tokens encoder, which is a text-specific parameterisation.
+  Scope it properly when M10 lands.
 
 ## Candidate routes (to be confirmed in M1)
 
@@ -194,6 +229,32 @@ facts only (how he wants sessions run, what tooling exists on the box), and anyt
 would help a future session must be mirrored into one of those files. A lesson that lives only in a
 memory file is lost to every session that does not happen to recall it.
 
+## Markdown files must be TIGHT (Dylan, 2026-08-29)
+
+*"Information is wayyyy too verbose in there. We're diluting context for next session."* Said of an
+M8 ledger that had reached 2,694 lines, ~40% of it one session's amendment prose.
+
+**Every line in a `.md` file costs a future session context it could have spent on the work.** A
+file a session is *told* to read before deciding — `CLAUDE.md`, `STATUS.md`, `LEDGER.md` — is loaded
+whether or not the reader needs the paragraph you enjoyed writing. Verbosity there is not
+thoroughness; it is a tax levied on every session that follows.
+
+**The rule:** write the decision, the number a rule reads, and the pointer. Nothing else.
+
+- **One fact, one home.** Numbers live in the result JSON, bars in `registry.json`, runs in
+  `RESULTS.md`, closed avenues in `EXPLORED.md`, long-form reviews in `research/*`. A `.md` that
+  restates any of them is duplication that will go stale in exactly one direction — the wrong one.
+- **An amendment is: what changed, why, and the pointer.** Not the reasoning that got you there.
+  If the reasoning matters, it belongs in the archived review, cited by path.
+- **Prefer a table to prose, a clause to a sentence, a pointer to a summary.** Cut every sentence
+  that only restates the previous one with more emphasis.
+- **Withdrawn claims and owner rulings are the exception — always keep them**, because a future
+  session that re-derives a withdrawn claim wastes far more than the lines cost. Keep them *short*.
+- **When you add to a long file, budget for it**: if an entry runs past ~10 lines, compress an old
+  one or move detail out. Files grow by default; only deliberate effort shrinks them.
+- **Check the size when you touch it.** `wc -l` on the file you just edited. If a protocol file has
+  grown past ~1,500 lines, compressing it is part of the task, not a separate one.
+
 ## Verification gates (Dylan, 2026-08-24)
 
 Results dictate Qdrant engineering decisions: correct, not decimal-precise; blind spots stated openly.
@@ -215,6 +276,16 @@ Results dictate Qdrant engineering decisions: correct, not decimal-precise; blin
   failed open, a confounded diagnostic that had licensed a four-hour lever, and a retention figure
   belonging to a reverted candidate. **Brief them adversarially**: give them the numbers, name what
   you believe, and ask them to break it. A review told "confirm this" returns nothing.
+- **EVERY brief must carry a READ-EXCLUSION, and the log must be audited afterwards (2026-08-29
+  incident).** An external reviewer is a separate process with ordinary read access to the whole
+  repo, so `paths_guard`/G2 — an in-process Python bulkhead — is structurally incapable of
+  constraining it. A repo-wide grep dumped two RESERVED confirmatory sets, queries **and qrels**,
+  complete, into a reviewer's context. Nothing was scored and no decision read them, but the
+  reviewer's recommendations were thereby potentially informed by held-out data. So: state in the
+  brief that `results/frozen_eval/untouched-*`, the reserved qrels caches and `work/m9reserve` must
+  not be read; prefer naming the files to read over inviting a repo-wide search; and **grep the
+  review log for reserved-set reads before reading its findings.** Quarantine anything that draws
+  on them.
 
 ## Key decisions (log)
 

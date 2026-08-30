@@ -1,0 +1,138 @@
+{
+  "_note": "LEDGER \u00a74.4 deliverable 3: rule compliance, AUDITED rather than discovered.",
+  "head": "1e2bbaad4fe84aa303726895373a344469f93cdd",
+  "registry_version": 2,
+  "registry_sha256_now": "7f74f4141c51ec286fd653c7616bface597e5e20a49f3ce0ebe4dc21ddff5f52",
+  "stamped_results_checked": [
+    {
+      "file": "m8_b17_oracle.json",
+      "probe": "B17",
+      "commit": "62dbd5a3"
+    },
+    {
+      "file": "m8_b2_entropy.json",
+      "probe": "B2",
+      "commit": "ffa1a5a3"
+    },
+    {
+      "file": "m8_b3_decision.json",
+      "probe": "B3",
+      "commit": "a1b4f308"
+    },
+    {
+      "file": "m8_b3_fused.json",
+      "probe": "NF",
+      "commit": "a1b4f308"
+    },
+    {
+      "file": "m8_b6_pre.json",
+      "probe": "B6-pre",
+      "commit": "4d14141e"
+    },
+    {
+      "file": "m8_b6_pre_mlp.json",
+      "probe": "B6-pre",
+      "commit": "f22f7d35"
+    },
+    {
+      "file": "m8_b7_realdata.json",
+      "probe": "B7",
+      "commit": "76bbc239"
+    },
+    {
+      "file": "m8_b7_solver.json",
+      "probe": "B7",
+      "commit": "a76fd9c9"
+    },
+    {
+      "file": "m8_b8_target.json",
+      "probe": "B8",
+      "commit": "b5097b45"
+    },
+    {
+      "file": "m8_d2_pre.json",
+      "probe": "D2-PRE",
+      "commit": "fe2f4652"
+    },
+    {
+      "file": "m8_e14_head.json",
+      "probe": "E14-HEAD",
+      "commit": "0a62261c"
+    },
+    {
+      "file": "m8_lotte_overlap.SMOKE.json",
+      "probe": "S0",
+      "commit": "5adc3c7e"
+    },
+    {
+      "file": "m8_lotte_overlap.json",
+      "probe": "S0",
+      "commit": "344e0895"
+    },
+    {
+      "file": "m8_lotte_remedy.json",
+      "probe": "E10-REMEDY",
+      "commit": "d964f2fd"
+    },
+    {
+      "file": "m8_noise_floor.json",
+      "probe": "NF",
+      "commit": "c8cdb107"
+    },
+    {
+      "file": "m8_noise_floor_bleg.json",
+      "probe": "NF",
+      "commit": "4e216d7f"
+    },
+    {
+      "file": "m8_noise_floor_crossed.json",
+      "probe": "NF",
+      "commit": "e2323678"
+    },
+    {
+      "file": "m8_noise_floor_fused.json",
+      "probe": "NF",
+      "commit": "c46aed79"
+    },
+    {
+      "file": "m8_t1_decision.json",
+      "probe": "T1",
+      "commit": "66545055"
+    },
+    {
+      "file": "m8_vector_prf.json",
+      "probe": "VECTOR-PRF",
+      "commit": "3e03aeb3"
+    }
+  ],
+  "unstamped_artifacts": [
+    "m8_b7_realdata.SMOKE.json",
+    "m8_b8_target.SMOKE.json",
+    "m8_d2_pre.SMOKE.json",
+    "m8_dev_reuse_count.json",
+    "m8_devperquery_cal.json",
+    "m8_encoder_validation.json",
+    "m8_fragmentation_attribution.json",
+    "m8_noise_floor_fused.SMOKE.json",
+    "m8_power.json",
+    "m8_protected_filter.json",
+    "m8_retention_decomposition.json",
+    "m8_rule_audit.json",
+    "m8_schedule.json",
+    "m8_shadow_alternatives.json",
+    "m8_t1_granite-r2.json",
+    "m8_t1_gte-modernbert-base.json",
+    "m8_t1_stella-400M-v5.json",
+    "m8_trainq_manifest.json",
+    "m8_vector_prf.SMOKE.json"
+  ],
+  "_unstamped_note": "not every results/m8_*.json is a probe result -- calibration caches, schedules and descriptive diagnostics are inputs, not registered measurements. They are listed so the distinction is visible.",
+  "findings": [],
+  "outstanding_violations": 0,
+  "NOT_mechanically_checkable": [
+    "pre-registration ORDERING beyond the commit graph: a bar committed minutes before a run that had already been executed locally is indistinguishable from one committed properly first.",
+    "whether a probe's CODE measures what its registry row says it measures.",
+    "Holm family membership: which comparisons belong to which family is a judgement recorded in prose.",
+    "whether a number was seen before a rule that reads it was written."
+  ]
+}

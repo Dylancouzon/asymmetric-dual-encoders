@@ -1,0 +1,28 @@
+{
+  "_note": "QUERY-ONLY fingerprint inventory. Hashes, never text, never labels: downstream decontamination reads this and therefore never needs the label-bearing capability that built it (LEDGER G2 class b).",
+  "groups": {
+    "six": 3727,
+    "dev": 12772,
+    "untouched-final": 9335,
+    "m9-reserve": 55120
+  },
+  "m9_reserve_fields": {
+    "eurlex_inventory.json:queries.query_text": 1504,
+    "uspto_inventory.json:records.abstract_text": 26808,
+    "uspto_inventory.json:records.title": 26808
+  },
+  "n_protected_queries": 80954,
+  "n_exact_keys": 78620,
+  "n_gram_keys": 4220227,
+  "n_short_queries_4to7_words": 14876,
+  "method": {
+    "ngram": 8,
+    "sketch": 32,
+    "dup_share": 8,
+    "short_ngram": 4
+  },
+  "npz_relpath": "work/decontam/m8_protected_query_index.npz",
+  "npz_sha256": "420b110f46629db50cc403fb2c07a670c5f10a9da1a9019ae75ce07b5ece0aa4",
+  "lotte_slices": [],
+  "seconds": 24.6
+}

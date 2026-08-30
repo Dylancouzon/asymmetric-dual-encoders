@@ -1,0 +1,239 @@
+{
+  "_note": "B7 -- the block-CG solver that decides whether D2's 64-128K vocabulary and any non-WordPiece teacher screen are computable on this box at all.",
+  "data_disclosure": "the bag matrices here are SYNTHETIC: 12 non-zeros per row, token ids drawn ZIPFIAN (s = 1.07) rather than uniform, because CG's cost is set by the condition number and a uniform draw is an unrealistically easy problem. The uniform result is reported beside it as the optimistic baseline so the gap is visible. This measures the SOLVER. The quality half of B7 -- the closed-form dev macro at each vocabulary -- needs a real trained tokenizer and is a separate, descriptive run.",
+  "correctness_zipf": {
+    "setting": {
+      "n": 200000,
+      "V": 30522,
+      "d": 1024,
+      "lam": 0.001,
+      "token_distribution": "zipf(s=1.07)",
+      "coverage": {
+        "rows_reached": 30487,
+        "V": 30522,
+        "fraction_reached": 0.9988532861542494
+      }
+    },
+    "direct": {
+      "seconds": 159.54,
+      "gram_bytes": 7452739872,
+      "total_seconds": 164.26
+    },
+    "block_cg": {
+      "iterations": 26,
+      "worst_rel_residual": 5.460106535792875e-07,
+      "mean_rel_residual": 1.0756433965752876e-07,
+      "seconds": 4.07,
+      "converged": true,
+      "tol": 1e-06,
+      "maxiter": 1500,
+      "device": "cuda",
+      "dtype": "torch.float32",
+      "V": 30522,
+      "n": 200000,
+      "d": 1024,
+      "lam": 0.001,
+      "preconditioner": "jacobi",
+      "history_worst": [
+        44.32075119018555,
+        16.1198673248291,
+        4.208464622497559,
+        2.0928497314453125,
+        0.9759036302566528,
+        "...",
+        6.862310783617431e-06,
+        2.2546021227753954e-06,
+        1.173871510218305e-06,
+        1.182875507765857e-06,
+        5.460106535792875e-07
+      ]
+    },
+    "relative_error_fro": 4.6319390035835817e-07,
+    "max_abs_error": 1.740297544836067e-06,
+    "speedup_vs_direct": 39.2
+  },
+  "correctness_uniform_baseline": {
+    "setting": {
+      "n": 200000,
+      "V": 30522,
+      "d": 1024,
+      "lam": 0.001,
+      "token_distribution": "uniform",
+      "coverage": {
+        "rows_reached": 30522,
+        "V": 30522,
+        "fraction_reached": 1.0
+      }
+    },
+    "direct": {
+      "seconds": 176.34,
+      "gram_bytes": 7452739872,
+      "total_seconds": 190.02
+    },
+    "block_cg": {
+      "iterations": 18,
+      "worst_rel_residual": 7.115529570000945e-07,
+      "mean_rel_residual": 2.910009584411455e-07,
+      "seconds": 3.29,
+      "converged": true,
+      "tol": 1e-06,
+      "maxiter": 1500,
+      "device": "cuda",
+      "dtype": "torch.float32",
+      "V": 30522,
+      "n": 200000,
+      "d": 1024,
+      "lam": 0.001,
+      "preconditioner": "jacobi",
+      "history_worst": [
+        0.7681351900100708,
+        0.5614782571792603,
+        0.20812714099884033,
+        0.054287683218717575,
+        0.021550113335251808,
+        "...",
+        2.7309806682751514e-05,
+        1.011475978884846e-05,
+        3.7967090520396596e-06,
+        1.3742065902988543e-06,
+        7.115529570000945e-07
+      ]
+    },
+    "relative_error_fro": 4.064164920007576e-07,
+    "max_abs_error": 1.303686457676534e-07,
+    "speedup_vs_direct": 53.6
+  },
+  "correctness": {
+    "setting": {
+      "n": 200000,
+      "V": 30522,
+      "d": 1024,
+      "lam": 0.001,
+      "token_distribution": "zipf(s=1.07)",
+      "coverage": {
+        "rows_reached": 30487,
+        "V": 30522,
+        "fraction_reached": 0.9988532861542494
+      }
+    },
+    "direct": {
+      "seconds": 159.54,
+      "gram_bytes": 7452739872,
+      "total_seconds": 164.26
+    },
+    "block_cg": {
+      "iterations": 26,
+      "worst_rel_residual": 5.460106535792875e-07,
+      "mean_rel_residual": 1.0756433965752876e-07,
+      "seconds": 4.07,
+      "converged": true,
+      "tol": 1e-06,
+      "maxiter": 1500,
+      "device": "cuda",
+      "dtype": "torch.float32",
+      "V": 30522,
+      "n": 200000,
+      "d": 1024,
+      "lam": 0.001,
+      "preconditioner": "jacobi",
+      "history_worst": [
+        44.32075119018555,
+        16.1198673248291,
+        4.208464622497559,
+        2.0928497314453125,
+        0.9759036302566528,
+        "...",
+        6.862310783617431e-06,
+        2.2546021227753954e-06,
+        1.173871510218305e-06,
+        1.182875507765857e-06,
+        5.460106535792875e-07
+      ]
+    },
+    "relative_error_fro": 4.6319390035835817e-07,
+    "max_abs_error": 1.740297544836067e-06,
+    "speedup_vs_direct": 39.2
+  },
+  "curve": [
+    {
+      "V": 30522,
+      "iterations": 26,
+      "seconds": 4.09,
+      "worst_rel_residual": 5.570613552663417e-07,
+      "converged": true,
+      "wall_seconds": 5.16,
+      "peak_vram_gb": 4.26,
+      "peak_host_rss_gb": 3.77,
+      "dense_gram_fp64_gb": 7.45,
+      "blockcg_arrays_fp32_gb": 0.63,
+      "token_distribution": "zipf(s=1.07)",
+      "coverage": {
+        "rows_reached": 30487,
+        "V": 30522,
+        "fraction_reached": 0.9988532861542494
+      }
+    },
+    {
+      "V": 65536,
+      "iterations": 51,
+      "seconds": 9.37,
+      "worst_rel_residual": 8.109154805424623e-07,
+      "converged": true,
+      "wall_seconds": 10.43,
+      "peak_vram_gb": 5.26,
+      "peak_host_rss_gb": 4.42,
+      "dense_gram_fp64_gb": 34.36,
+      "blockcg_arrays_fp32_gb": 1.34,
+      "token_distribution": "zipf(s=1.07)",
+      "coverage": {
+        "rows_reached": 63311,
+        "V": 65536,
+        "fraction_reached": 0.9660491943359375
+      }
+    },
+    {
+      "V": 131072,
+      "iterations": 68,
+      "seconds": 14.87,
+      "worst_rel_residual": 9.143384431808954e-07,
+      "converged": true,
+      "wall_seconds": 16.58,
+      "peak_vram_gb": 7.14,
+      "peak_host_rss_gb": 5.72,
+      "dense_gram_fp64_gb": 137.44,
+      "blockcg_arrays_fp32_gb": 2.68,
+      "token_distribution": "zipf(s=1.07)",
+      "coverage": {
+        "rows_reached": 110600,
+        "V": 131072,
+        "fraction_reached": 0.84381103515625
+      }
+    }
+  ],
+  "verdict": {
+    "bar": "the 65,536-row solve must complete within the 18 GB peak-RAM budget and under 4 hours wall-clock",
+    "pass": true,
+    "measured_against": "peak HOST RSS (the registered bar is an 18 GB RAM budget); VRAM is reported beside it but a 10 GB card cannot fail an 18 GB bar"
+  },
+  "_registration": {
+    "probe": "B7",
+    "row": {
+      "wave": 1,
+      "title": "block-CG vocabulary curve (gates D2)",
+      "question": "Can the closed-form table solve be computed at 64K and 128K rows inside this box's budget?",
+      "endpoint": "solver wall-clock and peak RAM at 30,522 (control) / 65,536 / 131,072 rows, plus the closed-form dev macro at each",
+      "comparator": "the 30,522-row control (M7's shipped vocabulary)",
+      "bar": "FEASIBILITY, binary: the 65,536-row solve must complete within the 18 GB peak-RAM budget and under 4 hours wall-clock. Quality at each size is DESCRIPTIVE at this stage and adopts nothing.",
+      "multiplicity": "none",
+      "no_survivor": "D2 is closed on arithmetic (as granite-r2 and gte-modernbert were in M7: a 50,368-vocab fp64 Gram is 20.3 GB); the milestone routes to D1 / D4' / R1",
+      "notes": "the fp64 Gram is 34.4 GB at 64K and 137.4 GB at 128K, which is why a block-CG solver is the subject rather than a direct solve",
+      "noise_floor_exempt": true,
+      "exempt_reason": "arithmetic/feasibility gate, named as exempt in LEDGER 4.7"
+    },
+    "wave": 1,
+    "registry_sha256": "49c93266ba46fb7a285c48b3fd12ed4b04c50531618836075a26a97da13f46d6",
+    "ledger_sha256": "437d5d7f422bc4a89f89cf03b348603b9f7e6b7ea89a09b0e938a0f12e09ae43",
+    "ledger_commit": "a76fd9c9fa54fe5deb8b798994b4ecff3ade00c6",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "_what": "the M8 closed-form fit list: TRAIN query texts screened through the CURRENT protected-query filter. `screened_against` records exactly which partitions that was -- an earlier version claimed M9-reserve coverage it did not have.",
+  "_why_not_in_place": "work/trainq_texts.json and results/m7_trainq_manifest.json are M7's provenance pins for a frozen, released system; G3 forbids M8 from editing M7's record.",
+  "screened_against": {
+    "six": 3727,
+    "dev": 12772,
+    "untouched-final": 9335,
+    "m9-reserve": 55120
+  },
+  "n_protected_queries": 80954,
+  "m9_reserve_fields": {
+    "eurlex_inventory.json:queries.query_text": 1504,
+    "uspto_inventory.json:records.abstract_text": 26808,
+    "uspto_inventory.json:records.title": 26808
+  },
+  "n_derived": 338076,
+  "n_kept": 337981,
+  "n_removed": 95,
+  "removal_rate": 0.0002810019048971237,
+  "hits_by_kind": {
+    "exact": 64,
+    "near": 31,
+    "contains": 0
+  },
+  "m7_list_known_r1_hits": 4582,
+  "m7_list_known_r1_rate": 0.0131,
+  "relpath": "work/m8_trainq_texts.json",
+  "sha256": "da0f208ef29bae3833ffead070eb34b61f390f9d72ed96d448d45ae6b52072c2",
+  "bytes": 21327603,
+  "produced_by": "m8src/protected_filter.py fitlist",
+  "smoke": false,
+  "seconds": 69.5
+}

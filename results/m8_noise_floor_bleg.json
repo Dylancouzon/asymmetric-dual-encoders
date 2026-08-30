@@ -1,0 +1,734 @@
+{
+  "dump": "results/m7_devperquery_m8nfbfloor.json.gz",
+  "seed_arms_by_precision": {
+    "int8.mean": [
+      "m8nf-seed0",
+      "m8nfb-seed1-a",
+      "m8nfb-seed2-a"
+    ],
+    "int8.sqrt": [
+      "m8nf-seed0:sqrt",
+      "m8nfb-seed1-a:sqrt",
+      "m8nfb-seed2-a:sqrt"
+    ],
+    "fp16.mean": [
+      "m8nf-seed0",
+      "m8nfb-seed1-a",
+      "m8nfb-seed2-a"
+    ],
+    "fp16.sqrt": [
+      "m8nf-seed0:sqrt",
+      "m8nfb-seed1-a:sqrt",
+      "m8nfb-seed2-a:sqrt"
+    ]
+  },
+  "step_arms_by_precision": {
+    "int8.mean": [],
+    "int8.sqrt": [],
+    "fp16.mean": [],
+    "fp16.sqrt": []
+  },
+  "_dump_path_note": "the dump lands under a results/m7_devperquery_*.json.gz name because compare_full.py is frozen M7 code and M8 does not edit m7src (G3)",
+  "arms": {
+    "int8": {
+      "m8nf-seed0:sqrt": {
+        "component_means": {
+          "cqadup-physics": 0.3957100635526596,
+          "cqadup-programmers": 0.33891735184612104,
+          "heldout-longq": 0.9120680471521202,
+          "heldout-train": 0.6317441753975794,
+          "hotpotqa": 0.6128202886940733,
+          "nq-250k": 0.8007550976069021
+        },
+        "group_means": {
+          "out-of-domain": 0.3673137076993903,
+          "wikipedia": 0.7067876931504877,
+          "heldout": 0.7719061112748498
+        },
+        "group_vector_median": 0.7067876931504877,
+        "worst_group": 0.3673137076993903,
+        "out_of_domain_macro": 0.3673137076993903,
+        "all_component_macro": 0.6153358373749093
+      },
+      "m8nf-seed0": {
+        "component_means": {
+          "cqadup-physics": 0.39450872358644157,
+          "cqadup-programmers": 0.3376559523084304,
+          "heldout-longq": 0.8995234312060718,
+          "heldout-train": 0.6301161944610273,
+          "hotpotqa": 0.6065691285209134,
+          "nq-250k": 0.8001132413054708
+        },
+        "group_means": {
+          "out-of-domain": 0.36608233794743594,
+          "wikipedia": 0.7033411849131921,
+          "heldout": 0.7648198128335495
+        },
+        "group_vector_median": 0.7033411849131921,
+        "worst_group": 0.36608233794743594,
+        "out_of_domain_macro": 0.36608233794743594,
+        "all_component_macro": 0.6114144452313925
+      },
+      "m8nfb-seed1-a:sqrt": {
+        "component_means": {
+          "cqadup-physics": 0.39522890054999715,
+          "cqadup-programmers": 0.3397368933732081,
+          "heldout-longq": 0.9112022850666642,
+          "heldout-train": 0.6335630770938437,
+          "hotpotqa": 0.6128510271127079,
+          "nq-250k": 0.8024866621051348
+        },
+        "group_means": {
+          "out-of-domain": 0.36748289696160263,
+          "wikipedia": 0.7076688446089213,
+          "heldout": 0.772382681080254
+        },
+        "group_vector_median": 0.7076688446089213,
+        "worst_group": 0.36748289696160263,
+        "out_of_domain_macro": 0.36748289696160263,
+        "all_component_macro": 0.6158448075502594
+      },
+      "m8nfb-seed1-a": {
+        "component_means": {
+          "cqadup-physics": 0.3918056477941023,
+          "cqadup-programmers": 0.3375362872257649,
+          "heldout-longq": 0.8986643593557712,
+          "heldout-train": 0.6319173913087238,
+          "hotpotqa": 0.6080442387028006,
+          "nq-250k": 0.8015775113941492
+        },
+        "group_means": {
+          "out-of-domain": 0.3646709675099336,
+          "wikipedia": 0.704810875048475,
+          "heldout": 0.7652908753322475
+        },
+        "group_vector_median": 0.704810875048475,
+        "worst_group": 0.3646709675099336,
+        "out_of_domain_macro": 0.3646709675099336,
+        "all_component_macro": 0.611590905963552
+      },
+      "m8nfb-seed2-a:sqrt": {
+        "component_means": {
+          "cqadup-physics": 0.3958394661315593,
+          "cqadup-programmers": 0.34100290283267226,
+          "heldout-longq": 0.9108241505390547,
+          "heldout-train": 0.6344081154765068,
+          "hotpotqa": 0.6124938464826751,
+          "nq-250k": 0.8016552793394195
+        },
+        "group_means": {
+          "out-of-domain": 0.3684211844821158,
+          "wikipedia": 0.7070745629110473,
+          "heldout": 0.7726161330077808
+        },
+        "group_vector_median": 0.7070745629110473,
+        "worst_group": 0.3684211844821158,
+        "out_of_domain_macro": 0.3684211844821158,
+        "all_component_macro": 0.6160372934669812
+      },
+      "m8nfb-seed2-a": {
+        "component_means": {
+          "cqadup-physics": 0.39287206524613266,
+          "cqadup-programmers": 0.3408386177360215,
+          "heldout-longq": 0.9051411070106649,
+          "heldout-train": 0.6335702961365482,
+          "hotpotqa": 0.6068149871940919,
+          "nq-250k": 0.8011666401681347
+        },
+        "group_means": {
+          "out-of-domain": 0.36685534149107707,
+          "wikipedia": 0.7039908136811133,
+          "heldout": 0.7693557015736066
+        },
+        "group_vector_median": 0.7039908136811133,
+        "worst_group": 0.36685534149107707,
+        "out_of_domain_macro": 0.36685534149107707,
+        "all_component_macro": 0.6134006189152656
+      }
+    },
+    "fp16": {
+      "m8nf-seed0:sqrt": {
+        "component_means": {
+          "cqadup-physics": 0.3957306097593118,
+          "cqadup-programmers": 0.33875407187121787,
+          "heldout-longq": 0.9119346578794745,
+          "heldout-train": 0.6316216108867948,
+          "hotpotqa": 0.6127323473239226,
+          "nq-250k": 0.8009113602957164
+        },
+        "group_means": {
+          "out-of-domain": 0.36724234081526486,
+          "wikipedia": 0.7068218538098194,
+          "heldout": 0.7717781343831347
+        },
+        "group_vector_median": 0.7068218538098194,
+        "worst_group": 0.36724234081526486,
+        "out_of_domain_macro": 0.36724234081526486,
+        "all_component_macro": 0.6152807763360729
+      },
+      "m8nf-seed0": {
+        "component_means": {
+          "cqadup-physics": 0.3941913718686244,
+          "cqadup-programmers": 0.3371691869709737,
+          "heldout-longq": 0.8995234312060718,
+          "heldout-train": 0.6300678910086936,
+          "hotpotqa": 0.6065825856168969,
+          "nq-250k": 0.8003193323119537
+        },
+        "group_means": {
+          "out-of-domain": 0.3656802794197991,
+          "wikipedia": 0.7034509589644253,
+          "heldout": 0.7647956611073827
+        },
+        "group_vector_median": 0.7034509589644253,
+        "worst_group": 0.3656802794197991,
+        "out_of_domain_macro": 0.3656802794197991,
+        "all_component_macro": 0.6113089664972025
+      },
+      "m8nfb-seed1-a:sqrt": {
+        "component_means": {
+          "cqadup-physics": 0.39499059506270556,
+          "cqadup-programmers": 0.3398592058343279,
+          "heldout-longq": 0.9112022850666642,
+          "heldout-train": 0.633707947676728,
+          "hotpotqa": 0.6130110978779434,
+          "nq-250k": 0.8025394030168517
+        },
+        "group_means": {
+          "out-of-domain": 0.3674249004485167,
+          "wikipedia": 0.7077752504473975,
+          "heldout": 0.7724551163716962
+        },
+        "group_vector_median": 0.7077752504473975,
+        "worst_group": 0.3674249004485167,
+        "out_of_domain_macro": 0.3674249004485167,
+        "all_component_macro": 0.6158850890892035
+      },
+      "m8nfb-seed1-a": {
+        "component_means": {
+          "cqadup-physics": 0.39186483967031827,
+          "cqadup-programmers": 0.3376659179251238,
+          "heldout-longq": 0.8972047373402837,
+          "heldout-train": 0.6317816280571182,
+          "hotpotqa": 0.6082503910962693,
+          "nq-250k": 0.8015716622908999
+        },
+        "group_means": {
+          "out-of-domain": 0.36476537879772103,
+          "wikipedia": 0.7049110266935846,
+          "heldout": 0.7644931826987009
+        },
+        "group_vector_median": 0.7049110266935846,
+        "worst_group": 0.36476537879772103,
+        "out_of_domain_macro": 0.36476537879772103,
+        "all_component_macro": 0.6113898627300022
+      },
+      "m8nfb-seed2-a:sqrt": {
+        "component_means": {
+          "cqadup-physics": 0.39591624893750055,
+          "cqadup-programmers": 0.3414326740003692,
+          "heldout-longq": 0.9108241505390547,
+          "heldout-train": 0.6342763454274898,
+          "hotpotqa": 0.6125318320846201,
+          "nq-250k": 0.8016361017215896
+        },
+        "group_means": {
+          "out-of-domain": 0.3686744614689349,
+          "wikipedia": 0.7070839669031048,
+          "heldout": 0.7725502479832722
+        },
+        "group_vector_median": 0.7070839669031048,
+        "worst_group": 0.3686744614689349,
+        "out_of_domain_macro": 0.3686744614689349,
+        "all_component_macro": 0.6161028921184373
+      },
+      "m8nfb-seed2-a": {
+        "component_means": {
+          "cqadup-physics": 0.3921827484664526,
+          "cqadup-programmers": 0.34074926689732493,
+          "heldout-longq": 0.9051411070106649,
+          "heldout-train": 0.6334359688146539,
+          "hotpotqa": 0.6069466476135648,
+          "nq-250k": 0.8009048911357409
+        },
+        "group_means": {
+          "out-of-domain": 0.36646600768188875,
+          "wikipedia": 0.7039257693746528,
+          "heldout": 0.7692885379126594
+        },
+        "group_vector_median": 0.7039257693746528,
+        "worst_group": 0.36646600768188875,
+        "out_of_domain_macro": 0.36646600768188875,
+        "all_component_macro": 0.6132267716564003
+      }
+    }
+  },
+  "pairwise": {
+    "int8.mean.group_vector_median": [
+      {
+        "pair": [
+          "m8nf-seed0",
+          "m8nfb-seed1-a"
+        ],
+        "abs_delta": 0.001469690135282864
+      },
+      {
+        "pair": [
+          "m8nf-seed0",
+          "m8nfb-seed2-a"
+        ],
+        "abs_delta": 0.0006496287679211843
+      },
+      {
+        "pair": [
+          "m8nfb-seed1-a",
+          "m8nfb-seed2-a"
+        ],
+        "abs_delta": 0.0008200613673616797
+      }
+    ],
+    "int8.mean.worst_group": [
+      {
+        "pair": [
+          "m8nf-seed0",
+          "m8nfb-seed1-a"
+        ],
+        "abs_delta": 0.001411370437502335
+      },
+      {
+        "pair": [
+          "m8nf-seed0",
+          "m8nfb-seed2-a"
+        ],
+        "abs_delta": 0.0007730035436411264
+      },
+      {
+        "pair": [
+          "m8nfb-seed1-a",
+          "m8nfb-seed2-a"
+        ],
+        "abs_delta": 0.0021843739811434615
+      }
+    ],
+    "int8.mean.out_of_domain_macro": [
+      {
+        "pair": [
+          "m8nf-seed0",
+          "m8nfb-seed1-a"
+        ],
+        "abs_delta": 0.001411370437502335
+      },
+      {
+        "pair": [
+          "m8nf-seed0",
+          "m8nfb-seed2-a"
+        ],
+        "abs_delta": 0.0007730035436411264
+      },
+      {
+        "pair": [
+          "m8nfb-seed1-a",
+          "m8nfb-seed2-a"
+        ],
+        "abs_delta": 0.0021843739811434615
+      }
+    ],
+    "int8.mean.all_component_macro": [
+      {
+        "pair": [
+          "m8nf-seed0",
+          "m8nfb-seed1-a"
+        ],
+        "abs_delta": 0.0001764607321594891
+      },
+      {
+        "pair": [
+          "m8nf-seed0",
+          "m8nfb-seed2-a"
+        ],
+        "abs_delta": 0.0019861736838731048
+      },
+      {
+        "pair": [
+          "m8nfb-seed1-a",
+          "m8nfb-seed2-a"
+        ],
+        "abs_delta": 0.0018097129517136157
+      }
+    ],
+    "int8.sqrt.group_vector_median": [
+      {
+        "pair": [
+          "m8nf-seed0:sqrt",
+          "m8nfb-seed1-a:sqrt"
+        ],
+        "abs_delta": 0.0008811514584335933
+      },
+      {
+        "pair": [
+          "m8nf-seed0:sqrt",
+          "m8nfb-seed2-a:sqrt"
+        ],
+        "abs_delta": 0.0002868697605595827
+      },
+      {
+        "pair": [
+          "m8nfb-seed1-a:sqrt",
+          "m8nfb-seed2-a:sqrt"
+        ],
+        "abs_delta": 0.0005942816978740106
+      }
+    ],
+    "int8.sqrt.worst_group": [
+      {
+        "pair": [
+          "m8nf-seed0:sqrt",
+          "m8nfb-seed1-a:sqrt"
+        ],
+        "abs_delta": 0.00016918926221232145
+      },
+      {
+        "pair": [
+          "m8nf-seed0:sqrt",
+          "m8nfb-seed2-a:sqrt"
+        ],
+        "abs_delta": 0.0011074767827254917
+      },
+      {
+        "pair": [
+          "m8nfb-seed1-a:sqrt",
+          "m8nfb-seed2-a:sqrt"
+        ],
+        "abs_delta": 0.0009382875205131702
+      }
+    ],
+    "int8.sqrt.out_of_domain_macro": [
+      {
+        "pair": [
+          "m8nf-seed0:sqrt",
+          "m8nfb-seed1-a:sqrt"
+        ],
+        "abs_delta": 0.00016918926221232145
+      },
+      {
+        "pair": [
+          "m8nf-seed0:sqrt",
+          "m8nfb-seed2-a:sqrt"
+        ],
+        "abs_delta": 0.0011074767827254917
+      },
+      {
+        "pair": [
+          "m8nfb-seed1-a:sqrt",
+          "m8nfb-seed2-a:sqrt"
+        ],
+        "abs_delta": 0.0009382875205131702
+      }
+    ],
+    "int8.sqrt.all_component_macro": [
+      {
+        "pair": [
+          "m8nf-seed0:sqrt",
+          "m8nfb-seed1-a:sqrt"
+        ],
+        "abs_delta": 0.0005089701753501208
+      },
+      {
+        "pair": [
+          "m8nf-seed0:sqrt",
+          "m8nfb-seed2-a:sqrt"
+        ],
+        "abs_delta": 0.0007014560920719504
+      },
+      {
+        "pair": [
+          "m8nfb-seed1-a:sqrt",
+          "m8nfb-seed2-a:sqrt"
+        ],
+        "abs_delta": 0.00019248591672182958
+      }
+    ],
+    "fp16.mean.group_vector_median": [
+      {
+        "pair": [
+          "m8nf-seed0",
+          "m8nfb-seed1-a"
+        ],
+        "abs_delta": 0.0014600677291592978
+      },
+      {
+        "pair": [
+          "m8nf-seed0",
+          "m8nfb-seed2-a"
+        ],
+        "abs_delta": 0.0004748104102274553
+      },
+      {
+        "pair": [
+          "m8nfb-seed1-a",
+          "m8nfb-seed2-a"
+        ],
+        "abs_delta": 0.0009852573189318425
+      }
+    ],
+    "fp16.mean.worst_group": [
+      {
+        "pair": [
+          "m8nf-seed0",
+          "m8nfb-seed1-a"
+        ],
+        "abs_delta": 0.000914900622078052
+      },
+      {
+        "pair": [
+          "m8nf-seed0",
+          "m8nfb-seed2-a"
+        ],
+        "abs_delta": 0.0007857282620896688
+      },
+      {
+        "pair": [
+          "m8nfb-seed1-a",
+          "m8nfb-seed2-a"
+        ],
+        "abs_delta": 0.0017006288841677208
+      }
+    ],
+    "fp16.mean.out_of_domain_macro": [
+      {
+        "pair": [
+          "m8nf-seed0",
+          "m8nfb-seed1-a"
+        ],
+        "abs_delta": 0.000914900622078052
+      },
+      {
+        "pair": [
+          "m8nf-seed0",
+          "m8nfb-seed2-a"
+        ],
+        "abs_delta": 0.0007857282620896688
+      },
+      {
+        "pair": [
+          "m8nfb-seed1-a",
+          "m8nfb-seed2-a"
+        ],
+        "abs_delta": 0.0017006288841677208
+      }
+    ],
+    "fp16.mean.all_component_macro": [
+      {
+        "pair": [
+          "m8nf-seed0",
+          "m8nfb-seed1-a"
+        ],
+        "abs_delta": 8.089623279972091e-05
+      },
+      {
+        "pair": [
+          "m8nf-seed0",
+          "m8nfb-seed2-a"
+        ],
+        "abs_delta": 0.0019178051591978162
+      },
+      {
+        "pair": [
+          "m8nfb-seed1-a",
+          "m8nfb-seed2-a"
+        ],
+        "abs_delta": 0.0018369089263980953
+      }
+    ],
+    "fp16.sqrt.group_vector_median": [
+      {
+        "pair": [
+          "m8nf-seed0:sqrt",
+          "m8nfb-seed1-a:sqrt"
+        ],
+        "abs_delta": 0.0009533966375780967
+      },
+      {
+        "pair": [
+          "m8nf-seed0:sqrt",
+          "m8nfb-seed2-a:sqrt"
+        ],
+        "abs_delta": 0.0002621130932853877
+      },
+      {
+        "pair": [
+          "m8nfb-seed1-a:sqrt",
+          "m8nfb-seed2-a:sqrt"
+        ],
+        "abs_delta": 0.000691283544292709
+      }
+    ],
+    "fp16.sqrt.worst_group": [
+      {
+        "pair": [
+          "m8nf-seed0:sqrt",
+          "m8nfb-seed1-a:sqrt"
+        ],
+        "abs_delta": 0.00018255963325186642
+      },
+      {
+        "pair": [
+          "m8nf-seed0:sqrt",
+          "m8nfb-seed2-a:sqrt"
+        ],
+        "abs_delta": 0.0014321206536700437
+      },
+      {
+        "pair": [
+          "m8nfb-seed1-a:sqrt",
+          "m8nfb-seed2-a:sqrt"
+        ],
+        "abs_delta": 0.0012495610204181773
+      }
+    ],
+    "fp16.sqrt.out_of_domain_macro": [
+      {
+        "pair": [
+          "m8nf-seed0:sqrt",
+          "m8nfb-seed1-a:sqrt"
+        ],
+        "abs_delta": 0.00018255963325186642
+      },
+      {
+        "pair": [
+          "m8nf-seed0:sqrt",
+          "m8nfb-seed2-a:sqrt"
+        ],
+        "abs_delta": 0.0014321206536700437
+      },
+      {
+        "pair": [
+          "m8nfb-seed1-a:sqrt",
+          "m8nfb-seed2-a:sqrt"
+        ],
+        "abs_delta": 0.0012495610204181773
+      }
+    ],
+    "fp16.sqrt.all_component_macro": [
+      {
+        "pair": [
+          "m8nf-seed0:sqrt",
+          "m8nfb-seed1-a:sqrt"
+        ],
+        "abs_delta": 0.0006043127531305537
+      },
+      {
+        "pair": [
+          "m8nf-seed0:sqrt",
+          "m8nfb-seed2-a:sqrt"
+        ],
+        "abs_delta": 0.0008221157823643521
+      },
+      {
+        "pair": [
+          "m8nfb-seed1-a:sqrt",
+          "m8nfb-seed2-a:sqrt"
+        ],
+        "abs_delta": 0.00021780302923379846
+      }
+    ]
+  },
+  "floor": {
+    "int8.mean.group_vector_median": 0.001469690135282864,
+    "int8.mean.worst_group": 0.0021843739811434615,
+    "int8.mean.out_of_domain_macro": 0.0021843739811434615,
+    "int8.mean.all_component_macro": 0.0019861736838731048,
+    "int8.sqrt.group_vector_median": 0.0008811514584335933,
+    "int8.sqrt.worst_group": 0.0011074767827254917,
+    "int8.sqrt.out_of_domain_macro": 0.0011074767827254917,
+    "int8.sqrt.all_component_macro": 0.0007014560920719504,
+    "fp16.mean.group_vector_median": 0.0014600677291592978,
+    "fp16.mean.worst_group": 0.0017006288841677208,
+    "fp16.mean.out_of_domain_macro": 0.0017006288841677208,
+    "fp16.mean.all_component_macro": 0.0019178051591978162,
+    "fp16.sqrt.group_vector_median": 0.0009533966375780967,
+    "fp16.sqrt.worst_group": 0.0014321206536700437,
+    "fp16.sqrt.out_of_domain_macro": 0.0014321206536700437,
+    "fp16.sqrt.all_component_macro": 0.0008221157823643521
+  },
+  "bars": {
+    "int8.mean.group_vector_median": 0.004,
+    "int8.mean.worst_group": 0.004368747962286923,
+    "int8.mean.out_of_domain_macro": 0.004368747962286923,
+    "int8.mean.all_component_macro": 0.004,
+    "int8.sqrt.group_vector_median": 0.004,
+    "int8.sqrt.worst_group": 0.004,
+    "int8.sqrt.out_of_domain_macro": 0.004,
+    "int8.sqrt.all_component_macro": 0.004,
+    "fp16.mean.group_vector_median": 0.004,
+    "fp16.mean.worst_group": 0.004,
+    "fp16.mean.out_of_domain_macro": 0.004,
+    "fp16.mean.all_component_macro": 0.004,
+    "fp16.sqrt.group_vector_median": 0.004,
+    "fp16.sqrt.worst_group": 0.004,
+    "fp16.sqrt.out_of_domain_macro": 0.004,
+    "fp16.sqrt.all_component_macro": 0.004
+  },
+  "recipe_sensitivity_steps": {
+    "int8.mean.group_vector_median": [],
+    "int8.mean.worst_group": [],
+    "int8.mean.out_of_domain_macro": [],
+    "int8.mean.all_component_macro": [],
+    "int8.sqrt.group_vector_median": [],
+    "int8.sqrt.worst_group": [],
+    "int8.sqrt.out_of_domain_macro": [],
+    "int8.sqrt.all_component_macro": [],
+    "fp16.mean.group_vector_median": [],
+    "fp16.mean.worst_group": [],
+    "fp16.mean.out_of_domain_macro": [],
+    "fp16.mean.all_component_macro": [],
+    "fp16.sqrt.group_vector_median": [],
+    "fp16.sqrt.worst_group": [],
+    "fp16.sqrt.out_of_domain_macro": [],
+    "fp16.sqrt.all_component_macro": []
+  },
+  "bar_formula": "bar(endpoint) = max(0.0040, 2 x floor(endpoint)); floor = max of the pairwise |delta| over the 3 seed arms",
+  "precision": "BOTH int8 (the release format and the C2 identity) and fp16; keys are '<precision>.<endpoint>'",
+  "endpoints_NOT_covered": {
+    "fused": "B3, B13, R1-ASSEMBLY, D-SYNTH and D-FINEWEB register dense AND FUSED endpoints. No fused floor is measured here, so their bars are NOT yet computable as registered and remain refused. Measuring it needs a fused read of the same three seed arms -- the arms exist, only the scoring pass widens. LEDGER 4.4 gap list.",
+    "B-leg-varying arms": "this floor holds the B checkpoint fixed. R-PHASE restructures the B->A phases, and any pool or init change flowing through the B leg has a larger floor. No bar may read such an arm until a B-leg null pair is measured. LEDGER 4.4 gap list."
+  },
+  "frame": {
+    "teacher": "stella_en_400M_v5 (incumbent)",
+    "data_mix": "the M7 mix",
+    "legs_varied": "BOTH: three full B->A chains, one seed driving both legs",
+    "aliasing": "because ONE seed drives both legs, B-seed and A-seed effects cannot be separated and may partially cancel, which would make this floor an UNDER-estimate. Crossing the three B checkpoints against several A seeds is the fix (LEDGER 15, 2026-08-29).",
+    "pool": "held FIXED -- pseudoq draws with a seed independent of the training seed, so all three chains distil on the identical text set. This is a conditional seed null and does NOT bound pool-varying levers.",
+    "disclosure": "K = 3 makes this statistic the sample RANGE (CV 0.525). It is a pre-registered decision CONVENTION and a magnitude yardstick, not a statistical bound; do not read it as showing the B leg adds no variability."
+  },
+  "why_steps_are_not_the_floor": "a +/-10% step change is a TREATMENT, not a null: calling its magnitude 'noise' would license a bar that a real effect could clear. It is reported here as recipe sensitivity, never as the floor (LEDGER 4.7).",
+  "leg": "B",
+  "arms_measured": [
+    "m8nf-seed0",
+    "m8nfb-seed1-a",
+    "m8nfb-seed2-a"
+  ],
+  "_registration": {
+    "probe": "NF",
+    "row": {
+      "wave": 1,
+      "title": "noise-floor measurement (the instrument every bar is set against)",
+      "question": "How large is a difference this dev instrument produces from nothing at all?",
+      "endpoint": "group_vector_median, worst_group, out_of_domain_macro and all_component_macro on the full pinned dev suite, int8, through the released QueryTable path",
+      "comparator": "K=3 arms of the IDENTICAL recipe, identical data, identical B checkpoint, differing ONLY in training seed (a true null)",
+      "bar": "no bar: this measures the instrument and adopts nothing. It EMITS bars: floor(endpoint) = max of the 3 pairwise |delta|; bar(endpoint) = max(0.0040, 2 x floor(endpoint)).",
+      "multiplicity": "none",
+      "no_survivor": "not applicable -- a floor always exists. If the floor exceeds the planning minimum on an endpoint, every bar reading that endpoint rises accordingly and that is the finding.",
+      "adopts": "nothing",
+      "also_published": "the +/-10% A-steps arms, as RECIPE SENSITIVITY beside the floor, never as the floor: a step change is a treatment, not a null",
+      "frame_disclosure": "measured in the incumbent teacher frame and the M7 data mix, A leg only with the B checkpoint fixed. An arm differing in its B leg has a larger floor and no bar may read such an arm until that floor is measured too.",
+      "noise_floor_exempt": true,
+      "exempt_reason": "it IS the noise floor"
+    },
+    "wave": 1,
+    "registry_sha256": "bca516f528ba2cfc03a7c7d34c89fd502c204246cd7d9ff7d603fb626d3dea2d",
+    "ledger_sha256": "f3bbb08cdbee57459e6bc9a48309783f2fb882dec29ee7d652e3aec5eb9997a4",
+    "ledger_commit": "4e216d7faf751ec4cef16321069909fbb2c30867",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}

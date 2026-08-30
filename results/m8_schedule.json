@@ -1,0 +1,53 @@
+{
+  "_note": "LEDGER G6. Measured on dev corpora only; the reserved four are not downloaded.",
+  "encoder": {
+    "name": "bge-base-en-v1.5",
+    "repo": "BAAI/bge-base-en-v1.5",
+    "revision": "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a",
+    "dim": 768,
+    "pooling": "cls",
+    "query_prefix": "Represent this sentence for searching relevant passages: ",
+    "doc_prefix": "",
+    "trust_remote_code": false,
+    "max_length": 512,
+    "post_dense": null,
+    "config_kwargs": {},
+    "expect_st_mismatch": false,
+    "tokenizer_id": "bert-wordpiece-30522",
+    "cls_id": 101,
+    "vocab": 30522,
+    "notes": ""
+  },
+  "throughput": [],
+  "ridge_control": {
+    "vocab": 30522,
+    "dim": 1024,
+    "n_rows": 200000,
+    "gram_seconds": 11.16,
+    "solve_seconds": 166.06,
+    "gram_bytes_fp64": 7452739872,
+    "note": "at 64K the fp64 Gram is 34.4 GB and at 128K it is 137.4 GB -- above this box's 18 GB peak budget, which is exactly why B7 measures a block-CG solver instead. M7 closed granite-r2 and gte-modernbert on this arithmetic (50,368-vocab fp64 Gram = 20.3 GB), not on merit."
+  },
+  "schedule": {
+    "reserved_pre_encode": [],
+    "reserved_total_hours_per_teacher_dim_system": 0.0,
+    "reserved_total_vectors_gb_fp16": 20.7,
+    "systems_to_pre_encode": {
+      "m8_candidate": "shares the teacher's document vectors with frozen M7 IF the teacher does not change and no doc-side head (D1) ships. Otherwise its own full pass.",
+      "frozen_m7": "one pass with the frozen stella teacher.",
+      "bge-small-en-v1.5 (E12, descriptive)": "384-d, 33M params: cheap, and its vectors are ~0.4x the bytes.",
+      "LR-dense-websearch (E12, descriptive)": "a 1.5B Qwen2.5 over the same 10.12M docs at 1536-d. THIS IS THE CALENDAR RISK: it is plausibly larger than all of Stage R's training combined, purchased for a descriptive row. instructions-m8.md line 39 already sanctions published numbers as labelled context; the fallback is pre-agreed rather than discovered."
+    },
+    "hard_rules": [
+      "Strictly sequential: one GPU/memory job at a time, enforced by flock (m7 drivers).",
+      "18 GB peak RAM budget; nothing materializes a whole corpus.",
+      "setsid nohup for anything over 10 minutes -- a harness interrupt killed M7's first final run 40 minutes in.",
+      "Write the wall-clock estimate BEFORE launch; kill any job exceeding it 2x.",
+      "Take the rate check IN the slow region, not on the first batches."
+    ],
+    "disk": {
+      "free_gb_at_transcription": 781,
+      "reserved_vectors_per_system_gb": 20.7
+    }
+  }
+}

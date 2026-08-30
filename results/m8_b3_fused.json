@@ -1,0 +1,96 @@
+{
+  "_note": "The FUSED half of the noise floor (LEDGER \u00a74.7, \u00a74.4 gap list).",
+  "fusion_operator": {
+    "family": "convex0",
+    "param": 0.8
+  },
+  "_operator_note": "FROZEN, not re-fitted per arm: re-selecting would measure the floor of a fitting procedure, a different and much larger quantity (LEDGER 7).",
+  "components": [
+    "nq-250k",
+    "hotpotqa",
+    "cqadup-programmers",
+    "cqadup-physics"
+  ],
+  "_components_note": "the two held-out dev slices carry pool row indices rather than document text, so BM25 -- and therefore any fused read -- does not exist for them by construction.",
+  "arm_macros": {
+    "m8b3-p025-s0:sqrt|int8": 0.5695705676951268,
+    "m8b3-p025-s1:sqrt|int8": 0.5688441821173676,
+    "m8b3-p025-s2:sqrt|int8": 0.5695018025176274,
+    "m8b3-p050-s0:sqrt|int8": 0.5713851593707959,
+    "m8b3-p050-s1:sqrt|int8": 0.5710017925268851,
+    "m8b3-p050-s2:sqrt|int8": 0.5705728172131228,
+    "m8b3-p075-s0:sqrt|int8": 0.5719855624468256,
+    "m8b3-p075-s1:sqrt|int8": 0.5723248042247658,
+    "m8b3-p075-s2:sqrt|int8": 0.5724115896387639,
+    "m8nf-seed0:sqrt|int8": 0.5726575160148225,
+    "m8nf-seed1:sqrt|int8": 0.5733202147176691,
+    "m8nf-seed2:sqrt|int8": 0.5730163430749688
+  },
+  "floor": {
+    "int8.sqrt.fused_macro": 0.0006626987028466313
+  },
+  "bars": {
+    "int8.sqrt.fused_macro": 0.004
+  },
+  "detail": {
+    "int8.sqrt.fused_macro": {
+      "arm_macros": {
+        "m8nf-seed0": 0.5726575160148225,
+        "m8nf-seed1": 0.5733202147176691,
+        "m8nf-seed2": 0.5730163430749688
+      },
+      "pairwise": [
+        {
+          "pair": [
+            "m8nf-seed0",
+            "m8nf-seed1"
+          ],
+          "abs_delta": 0.0006626987028466313
+        },
+        {
+          "pair": [
+            "m8nf-seed0",
+            "m8nf-seed2"
+          ],
+          "abs_delta": 0.00035882706014633836
+        },
+        {
+          "pair": [
+            "m8nf-seed1",
+            "m8nf-seed2"
+          ],
+          "abs_delta": 0.000303871642700293
+        }
+      ]
+    }
+  },
+  "bar_formula": "bar = max(0.0040, 2 x floor); floor = max pairwise |delta| over the arms naming the null",
+  "null_arms": [
+    "m8nf-seed0",
+    "m8nf-seed1",
+    "m8nf-seed2"
+  ],
+  "_registration": {
+    "probe": "NF",
+    "row": {
+      "wave": 1,
+      "title": "noise-floor measurement (the instrument every bar is set against)",
+      "question": "How large is a difference this dev instrument produces from nothing at all?",
+      "endpoint": "group_vector_median, worst_group, out_of_domain_macro and all_component_macro on the full pinned dev suite, int8, through the released QueryTable path",
+      "comparator": "K=3 arms of the IDENTICAL recipe, identical data, identical B checkpoint, differing ONLY in training seed (a true null)",
+      "bar": "no bar: this measures the instrument and adopts nothing. It EMITS bars: floor(endpoint) = max of the 3 pairwise |delta|; bar(endpoint) = max(0.0040, 2 x floor(endpoint)).",
+      "multiplicity": "none",
+      "no_survivor": "not applicable -- a floor always exists. If the floor exceeds the planning minimum on an endpoint, every bar reading that endpoint rises accordingly and that is the finding.",
+      "adopts": "nothing",
+      "also_published": "the +/-10% A-steps arms, as RECIPE SENSITIVITY beside the floor, never as the floor: a step change is a treatment, not a null",
+      "frame_disclosure": "measured in the incumbent teacher frame and the M7 data mix, A leg only with the B checkpoint fixed. An arm differing in its B leg has a larger floor and no bar may read such an arm until that floor is measured too.",
+      "noise_floor_exempt": true,
+      "exempt_reason": "it IS the noise floor"
+    },
+    "wave": 1,
+    "registry_sha256": "bca516f528ba2cfc03a7c7d34c89fd502c204246cd7d9ff7d603fb626d3dea2d",
+    "ledger_sha256": "f3bbb08cdbee57459e6bc9a48309783f2fb882dec29ee7d652e3aec5eb9997a4",
+    "ledger_commit": "a1b4f308b85b8e19a992eecb4e847bb14569ce8a",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}

@@ -1,0 +1,195 @@
+{
+  "_note": "The FUSED half of the noise floor (LEDGER \u00a74.7, \u00a74.4 gap list).",
+  "fusion_operator": {
+    "family": "convex0",
+    "param": 0.8
+  },
+  "_operator_note": "FROZEN, not re-fitted per arm: re-selecting would measure the floor of a fitting procedure, a different and much larger quantity (LEDGER 7).",
+  "components": [
+    "nq-250k",
+    "hotpotqa",
+    "cqadup-programmers",
+    "cqadup-physics"
+  ],
+  "_components_note": "the two held-out dev slices carry pool row indices rather than document text, so BM25 -- and therefore any fused read -- does not exist for them by construction.",
+  "arm_macros": {
+    "m8nf-seed0:mean|fp16": 0.5715228049767449,
+    "m8nf-seed0:mean|int8": 0.5715894376280175,
+    "m8nf-seed0:sqrt|fp16": 0.5725517291280706,
+    "m8nf-seed0:sqrt|int8": 0.5726575160148225,
+    "m8nf-seed1:mean|fp16": 0.5717977269311935,
+    "m8nf-seed1:mean|int8": 0.5720169795273883,
+    "m8nf-seed1:sqrt|fp16": 0.5731557858001611,
+    "m8nf-seed1:sqrt|int8": 0.5733202147176691,
+    "m8nf-seed2:mean|fp16": 0.5721850274425822,
+    "m8nf-seed2:mean|int8": 0.5721800044013231,
+    "m8nf-seed2:sqrt|fp16": 0.5731182238091646,
+    "m8nf-seed2:sqrt|int8": 0.5730163430749688,
+    "m8nf-steps2250:mean|fp16": 0.5708814176677968,
+    "m8nf-steps2250:mean|int8": 0.5707280214498033,
+    "m8nf-steps2250:sqrt|fp16": 0.5719916218087575,
+    "m8nf-steps2250:sqrt|int8": 0.5718888555665095,
+    "m8nf-steps2750:mean|fp16": 0.5718589806384198,
+    "m8nf-steps2750:mean|int8": 0.571776070821682,
+    "m8nf-steps2750:sqrt|fp16": 0.5730530547029167,
+    "m8nf-steps2750:sqrt|int8": 0.5729215837628712
+  },
+  "floor": {
+    "fp16.mean.fused_macro": 0.0006622224658372478,
+    "fp16.sqrt.fused_macro": 0.0006040566720905138,
+    "int8.mean.fused_macro": 0.0005905667733056008,
+    "int8.sqrt.fused_macro": 0.0006626987028466313
+  },
+  "bars": {
+    "fp16.mean.fused_macro": 0.004,
+    "fp16.sqrt.fused_macro": 0.004,
+    "int8.mean.fused_macro": 0.004,
+    "int8.sqrt.fused_macro": 0.004
+  },
+  "detail": {
+    "fp16.mean.fused_macro": {
+      "arm_macros": {
+        "m8nf-seed0": 0.5715228049767449,
+        "m8nf-seed1": 0.5717977269311935,
+        "m8nf-seed2": 0.5721850274425822
+      },
+      "pairwise": [
+        {
+          "pair": [
+            "m8nf-seed0",
+            "m8nf-seed1"
+          ],
+          "abs_delta": 0.00027492195444855927
+        },
+        {
+          "pair": [
+            "m8nf-seed0",
+            "m8nf-seed2"
+          ],
+          "abs_delta": 0.0006622224658372478
+        },
+        {
+          "pair": [
+            "m8nf-seed1",
+            "m8nf-seed2"
+          ],
+          "abs_delta": 0.0003873005113886885
+        }
+      ]
+    },
+    "fp16.sqrt.fused_macro": {
+      "arm_macros": {
+        "m8nf-seed0": 0.5725517291280706,
+        "m8nf-seed1": 0.5731557858001611,
+        "m8nf-seed2": 0.5731182238091646
+      },
+      "pairwise": [
+        {
+          "pair": [
+            "m8nf-seed0",
+            "m8nf-seed1"
+          ],
+          "abs_delta": 0.0006040566720905138
+        },
+        {
+          "pair": [
+            "m8nf-seed0",
+            "m8nf-seed2"
+          ],
+          "abs_delta": 0.000566494681093932
+        },
+        {
+          "pair": [
+            "m8nf-seed1",
+            "m8nf-seed2"
+          ],
+          "abs_delta": 3.756199099658186e-05
+        }
+      ]
+    },
+    "int8.mean.fused_macro": {
+      "arm_macros": {
+        "m8nf-seed0": 0.5715894376280175,
+        "m8nf-seed1": 0.5720169795273883,
+        "m8nf-seed2": 0.5721800044013231
+      },
+      "pairwise": [
+        {
+          "pair": [
+            "m8nf-seed0",
+            "m8nf-seed1"
+          ],
+          "abs_delta": 0.0004275418993707758
+        },
+        {
+          "pair": [
+            "m8nf-seed0",
+            "m8nf-seed2"
+          ],
+          "abs_delta": 0.0005905667733056008
+        },
+        {
+          "pair": [
+            "m8nf-seed1",
+            "m8nf-seed2"
+          ],
+          "abs_delta": 0.000163024873934825
+        }
+      ]
+    },
+    "int8.sqrt.fused_macro": {
+      "arm_macros": {
+        "m8nf-seed0": 0.5726575160148225,
+        "m8nf-seed1": 0.5733202147176691,
+        "m8nf-seed2": 0.5730163430749688
+      },
+      "pairwise": [
+        {
+          "pair": [
+            "m8nf-seed0",
+            "m8nf-seed1"
+          ],
+          "abs_delta": 0.0006626987028466313
+        },
+        {
+          "pair": [
+            "m8nf-seed0",
+            "m8nf-seed2"
+          ],
+          "abs_delta": 0.00035882706014633836
+        },
+        {
+          "pair": [
+            "m8nf-seed1",
+            "m8nf-seed2"
+          ],
+          "abs_delta": 0.000303871642700293
+        }
+      ]
+    }
+  },
+  "bar_formula": "bar = max(0.0040, 2 x floor); floor = max pairwise |delta| over the 3 seed arms",
+  "_registration": {
+    "probe": "NF",
+    "row": {
+      "wave": 1,
+      "title": "noise-floor measurement (the instrument every bar is set against)",
+      "question": "How large is a difference this dev instrument produces from nothing at all?",
+      "endpoint": "group_vector_median, worst_group, out_of_domain_macro and all_component_macro on the full pinned dev suite, int8, through the released QueryTable path",
+      "comparator": "K=3 arms of the IDENTICAL recipe, identical data, identical B checkpoint, differing ONLY in training seed (a true null)",
+      "bar": "no bar: this measures the instrument and adopts nothing. It EMITS bars: floor(endpoint) = max of the 3 pairwise |delta|; bar(endpoint) = max(0.0040, 2 x floor(endpoint)).",
+      "multiplicity": "none",
+      "no_survivor": "not applicable -- a floor always exists. If the floor exceeds the planning minimum on an endpoint, every bar reading that endpoint rises accordingly and that is the finding.",
+      "adopts": "nothing",
+      "also_published": "the +/-10% A-steps arms, as RECIPE SENSITIVITY beside the floor, never as the floor: a step change is a treatment, not a null",
+      "frame_disclosure": "measured in the incumbent teacher frame and the M7 data mix, A leg only with the B checkpoint fixed. An arm differing in its B leg has a larger floor and no bar may read such an arm until that floor is measured too.",
+      "noise_floor_exempt": true,
+      "exempt_reason": "it IS the noise floor"
+    },
+    "wave": 1,
+    "registry_sha256": "f7d7db969064cd316479de813bf3f5513c7f84d0538fd12e9950ce31ec7eb9fc",
+    "ledger_sha256": "768c012761d365bf3c5e5a9a16cefe725f5d42bac150be4edfa6a118ee10f063",
+    "ledger_commit": "c46aed7920bd11000d0986ea930e1ba5c295903d",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "_note": "B8 -- target design: does a DOCUMENT-CENTROID target beat the bare teacher-query target?",
+  "targets": {
+    "bare": {
+      "argmax_lambda": 0.001,
+      "ood_macro_at_argmax": 0.24983600810062356,
+      "lambda_curve": {
+        "0.0001": 0.20972572859456723,
+        "0.001": 0.24983600810062356,
+        "0.01": 0.24464519894428755,
+        "0.1": 0.19426821584944345,
+        "1.0": 0.11339935666154471,
+        "10.0": 0.07584383633745562
+      },
+      "argmax_at_grid_boundary": false,
+      "group_vector": {
+        "out_of_domain_macro": 0.24983600810062356
+      }
+    },
+    "centroid": {
+      "argmax_lambda": 0.01,
+      "ood_macro_at_argmax": 0.11688800588129945,
+      "lambda_curve": {
+        "0.0001": 0.03830329853833406,
+        "0.001": 0.08307769023194653,
+        "0.01": 0.11688800588129945,
+        "0.1": 0.10174226884051743,
+        "1.0": 0.06222278985076227,
+        "10.0": 0.04959981423824476
+      },
+      "argmax_at_grid_boundary": false,
+      "group_vector": {
+        "out_of_domain_macro": 0.11688800588129945
+      }
+    },
+    "mix50": {
+      "argmax_lambda": 0.01,
+      "ood_macro_at_argmax": 0.20548920566514672,
+      "lambda_curve": {
+        "0.0001": 0.1484021991170865,
+        "0.001": 0.20075098435450134,
+        "0.01": 0.20548920566514672,
+        "0.1": 0.15240791012441024,
+        "1.0": 0.07762355819936151,
+        "10.0": 0.050750726629934184
+      },
+      "argmax_at_grid_boundary": false,
+      "group_vector": {
+        "out_of_domain_macro": 0.20548920566514672
+      }
+    }
+  },
+  "endpoint": "out_of_domain_macro",
+  "delta_vs_bare": {
+    "centroid": -0.13294800221932412,
+    "mix50": -0.04434680243547684
+  },
+  "bar": 0.004,
+  "verdict": "NO SURVIVOR -- keep R0's target",
+  "cleared_bar": {
+    "centroid": false,
+    "mix50": false
+  },
+  "provenance": {
+    "n_pairs": 20000,
+    "dropped_no_positive": 0,
+    "mean_positives_per_query": 2.0
+  },
+  "components": [
+    "cqadup-programmers",
+    "cqadup-physics"
+  ],
+  "smoke": true,
+  "adopts": "nothing. A closed-form fit routes; it never ships. A target clearing 0.0040 here buys a TRAINED confirmation at the chain bar 0.00519.",
+  "lambda_rule": "argmax on the OOD pair, the same instrument T1's teacher screen used; boundary attainment is reported per target because an argmax at the grid edge means the grid did not bracket the optimum.",
+  "seconds": 92.2
+}

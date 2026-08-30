@@ -1,0 +1,36 @@
+{
+ "lin": {
+  "run_id": [
+   "m8e14-adq-lin-b2500",
+   "m8e14-adq-lin-b5000"
+  ],
+  "holdout": {
+   "b2500_at_1250": -0.14024348556995392,
+   "b2500_final": -0.12607485055923462,
+   "b5000_final": -0.12112127244472504
+  },
+  "improvement_within_2500": 0.0141686350107193,
+  "improvement_from_doubling": 0.0049535781145095825,
+  "ratio": 0.34961576120508053,
+  "threshold": 0.25,
+  "verdict": "OPTIMIZATION-INADEQUATE",
+  "_what": "a null at an inadequate step budget is evidence about the configuration, not about the method (CLAUDE.md standing directive #2)"
+ },
+ "mlp": {
+  "run_id": [
+   "m8e14-adq-mlp-b2500",
+   "m8e14-adq-mlp-b5000"
+  ],
+  "holdout": {
+   "b2500_at_1250": -0.1430664360523224,
+   "b2500_final": -0.1232781931757927,
+   "b5000_final": -0.11891856044530869
+  },
+  "improvement_within_2500": 0.019788242876529694,
+  "improvement_from_doubling": 0.004359632730484009,
+  "ratio": 0.22031429256686821,
+  "threshold": 0.25,
+  "verdict": "ADEQUATE",
+  "_what": "a null at an inadequate step budget is evidence about the configuration, not about the method (CLAUDE.md standing directive #2)"
+ }
+}

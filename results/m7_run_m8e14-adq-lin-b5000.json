@@ -1,0 +1,108 @@
+{
+ "run_id": "m8e14-adq-lin-b5000",
+ "cfg": {
+  "run_id": "m8e14-adq-lin-b5000",
+  "objective": "A",
+  "init": "run:p35b-2m",
+  "preproc": "noprefix",
+  "init_preproc": "",
+  "learned_weights": true,
+  "idf_init_weights": true,
+  "lr": 0.001,
+  "lr_weights": 0.01,
+  "warmup_steps": 200,
+  "lr_schedule": "warmup_linear",
+  "steps_b": 0,
+  "steps_a": 5000,
+  "batch": 512,
+  "n_neg": 32768,
+  "temp": 0.02,
+  "hard_neg_k": 0,
+  "hard_neg_source": "teacher",
+  "use_provided_hardneg": true,
+  "fn_margin": 0.02,
+  "kl_weight": 1.0,
+  "kl_k": 32,
+  "cos_weight": 1.0,
+  "reg_init": 0.001,
+  "bank_size": 2000000,
+  "sources": [],
+  "eval_every": 1250,
+  "eval_components": [
+   "nq-250k",
+   "cqadup-programmers",
+   "cqadup-physics"
+  ],
+  "seed": 3,
+  "b_query_sources_all": true,
+  "b_pseudo_queries": 0,
+  "b_pseudo_frac": 0.5,
+  "b_pseudo_kind": "short",
+  "pool_mode": "mean",
+  "side_pos_sources": []
+ },
+ "final_macro": -0.12112127244472504,
+ "coverage": {
+  "rows_updated": 26772,
+  "vocab": 30522,
+  "rows_updated_frac": 0.8771377801895142,
+  "median_updates_of_touched": 163.0
+ },
+ "history": [
+  {
+   "step": 1250,
+   "phase": "A",
+   "macro": -0.14546644687652588,
+   "collapse": {
+    "mean_pairwise_cos": 0.0765,
+    "effective_rank": 574.39,
+    "dim": 1024,
+    "uniformity": -3.6559
+   }
+  },
+  {
+   "step": 2500,
+   "phase": "A",
+   "macro": -0.13279694318771362,
+   "collapse": {
+    "mean_pairwise_cos": 0.0537,
+    "effective_rank": 588.82,
+    "dim": 1024,
+    "uniformity": -3.7467
+   }
+  },
+  {
+   "step": 3750,
+   "phase": "A",
+   "macro": -0.12597890198230743,
+   "collapse": {
+    "mean_pairwise_cos": 0.0461,
+    "effective_rank": 594.53,
+    "dim": 1024,
+    "uniformity": -3.7775
+   }
+  },
+  {
+   "step": 5000,
+   "phase": "A",
+   "macro": -0.12112127244472504,
+   "collapse": {
+    "mean_pairwise_cos": 0.0439,
+    "effective_rank": 596.05,
+    "dim": 1024,
+    "uniformity": -3.7866
+   }
+  },
+  {
+   "step": 5000,
+   "phase": "final",
+   "macro": -0.12112127244472504,
+   "collapse": {
+    "mean_pairwise_cos": 0.0439,
+    "effective_rank": 596.05,
+    "dim": 1024,
+    "uniformity": -3.7866
+   }
+  }
+ ]
+}

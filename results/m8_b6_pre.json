@@ -1,0 +1,83 @@
+{
+  "_note": "B6-pre: can the teacher plus a doc-side head export to ONE ONNX file? (LEDGER \u00a79, \u00a711.3.)",
+  "encoder": {
+    "name": "stella-400M-v5",
+    "repo": "NovaSearch/stella_en_400M_v5",
+    "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+    "trust_remote_code": true,
+    "dim": 1024
+  },
+  "head": "linear",
+  "opset": 17,
+  "criterion": "one file, plain nodes, and parity within cosine 0.0001 / max-abs 0.001 against the torch forward of the SAME module",
+  "stages": {
+    "compose": "ok",
+    "torch_forward": "ok, (6, 1024)",
+    "export": "ok, 1754.1 MB, one file",
+    "graph": {
+      "n_nodes": 3415,
+      "op_histogram": {
+        "Shape": 243,
+        "Constant": 1208,
+        "Gather": 246,
+        "Unsqueeze": 297,
+        "Slice": 99,
+        "Concat": 145,
+        "Reshape": 97,
+        "ConstantOfShape": 1,
+        "Mul": 172,
+        "Equal": 1,
+        "Where": 1,
+        "Expand": 1,
+        "Cast": 148,
+        "Add": 217,
+        "LayerNormalization": 49,
+        "Sub": 1,
+        "MatMul": 144,
+        "Split": 48,
+        "Div": 98,
+        "Neg": 48,
+        "Transpose": 96,
+        "Softmax": 24,
+        "Erf": 24,
+        "ReduceSum": 2,
+        "Clip": 2,
+        "Gemm": 2,
+        "ReduceL2": 1
+      },
+      "custom_domain_ops": []
+    },
+    "runtime": "ok"
+  },
+  "plain_nodes_only": true,
+  "parity": {
+    "min_cosine": 0.9999999403953552,
+    "max_abs": 2.0489096641540527e-07,
+    "cos_tol": 0.0001,
+    "maxabs_tol": 0.001,
+    "pass": true
+  },
+  "pass": true,
+  "verdict": "E3's condition is MET by this route: one file, plain nodes, parity within tolerance. D1 stays on the Stage-S menu and B6's quality arm may be registered.",
+  "seconds": 34.5,
+  "_registration": {
+    "probe": "B6-pre",
+    "row": {
+      "wave": 1,
+      "title": "doc-side head ONNX fuse precondition (gates D1)",
+      "question": "Can teacher + a linear/MLP doc-side head export to ONE ONNX file as plain MatMul/activation nodes?",
+      "endpoint": "a successful export, plus parity vs torch within the LEDGER 11.4 vector/cosine tolerances",
+      "comparator": "the torch forward of the same composed module",
+      "bar": "BINARY FEASIBILITY (E3's hard condition): one served file, no custom pipeline, parity within the registered tolerances",
+      "multiplicity": "none",
+      "no_survivor": "D1 is closed; B6's quality arm never runs and the doc-side-head row is removed from the Stage-S menu",
+      "noise_floor_exempt": true,
+      "exempt_reason": "feasibility gate, named as exempt in LEDGER 4.7"
+    },
+    "wave": 1,
+    "registry_sha256": "aacad17386a1ea71e7e1537366c0f4fb4f77f97ae222ae5c4eac230f47d79ae5",
+    "ledger_sha256": "5502668ab45648638fced59bda01aba0aacc0a9bea6d0dca5b1f408b9347276a",
+    "ledger_commit": "4d14141ef1e38aab4d8e008852f91d0d241dead8",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}

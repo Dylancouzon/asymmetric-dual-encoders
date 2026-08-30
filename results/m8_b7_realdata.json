@@ -1,0 +1,150 @@
+{
+  "_note": "B7's registered precondition: verify the Gram-free solver on the REAL system, not a synthetic",
+  "criterion": "the two tables' dev macro over ('cqadup-programmers', 'cqadup-physics') must agree to <= 0.0001. A Frobenius distance is not the acceptance criterion: what this solver feeds is a RANKING.",
+  "fit_list_disclosure": "work/trainq_texts.json is a STALE superset with 4,582 R1 hits (1.31%). The absolute dev macros here are inflated and may not be quoted as clean. Both solvers see the IDENTICAL X, Y, W0, so their AGREEMENT -- which is all this measures -- is invariant to that. A clean, regenerated list is required before any teacher-screen number is adopted.",
+  "encoder": {
+    "name": "stella-400M-v5",
+    "vocab": 30522,
+    "dim": 1024
+  },
+  "n_fit_queries": 349934,
+  "components": [
+    "cqadup-programmers",
+    "cqadup-physics"
+  ],
+  "lambda_grid": [
+    0.0001,
+    0.001,
+    0.01,
+    0.1
+  ],
+  "rows": [
+    {
+      "lambda": 0.0001,
+      "direct": {
+        "seconds": 83.9,
+        "dev_macro_2": 0.3407013134144162,
+        "per_component": {
+          "cqadup-programmers": 0.3119835057329032,
+          "cqadup-physics": 0.36941912109592917
+        }
+      },
+      "block_cg": {
+        "seconds": 204.76,
+        "iterations": 657,
+        "worst_rel_residual": 9.848326953942887e-07,
+        "converged": true,
+        "dev_macro_2": 0.3407013134144162,
+        "per_component": {
+          "cqadup-programmers": 0.3119835057329032,
+          "cqadup-physics": 0.36941912109592917
+        }
+      },
+      "relative_error_fro": 0.7004715158113434,
+      "dev_macro_abs_difference": 0.0,
+      "within_tolerance": true,
+      "speedup": 0.4
+    },
+    {
+      "lambda": 0.001,
+      "direct": {
+        "seconds": 80.3,
+        "dev_macro_2": 0.3430489517689801,
+        "per_component": {
+          "cqadup-programmers": 0.3136962687572857,
+          "cqadup-physics": 0.37240163478067456
+        }
+      },
+      "block_cg": {
+        "seconds": 88.39,
+        "iterations": 282,
+        "worst_rel_residual": 7.628219691468985e-07,
+        "converged": true,
+        "dev_macro_2": 0.3430489517689801,
+        "per_component": {
+          "cqadup-programmers": 0.3136962687572857,
+          "cqadup-physics": 0.37240163478067456
+        }
+      },
+      "relative_error_fro": 0.08630596914987126,
+      "dev_macro_abs_difference": 0.0,
+      "within_tolerance": true,
+      "speedup": 0.9
+    },
+    {
+      "lambda": 0.01,
+      "direct": {
+        "seconds": 75.4,
+        "dev_macro_2": 0.34392408686689957,
+        "per_component": {
+          "cqadup-programmers": 0.31215182352337467,
+          "cqadup-physics": 0.37569635021042447
+        }
+      },
+      "block_cg": {
+        "seconds": 47.52,
+        "iterations": 150,
+        "worst_rel_residual": 8.662920549795672e-07,
+        "converged": true,
+        "dev_macro_2": 0.34392408686689957,
+        "per_component": {
+          "cqadup-programmers": 0.31215182352337467,
+          "cqadup-physics": 0.37569635021042447
+        }
+      },
+      "relative_error_fro": 0.010236971517934599,
+      "dev_macro_abs_difference": 0.0,
+      "within_tolerance": true,
+      "speedup": 1.6
+    },
+    {
+      "lambda": 0.1,
+      "direct": {
+        "seconds": 77.5,
+        "dev_macro_2": 0.32478266015027,
+        "per_component": {
+          "cqadup-programmers": 0.28781067011552836,
+          "cqadup-physics": 0.36175465018501174
+        }
+      },
+      "block_cg": {
+        "seconds": 30.24,
+        "iterations": 96,
+        "worst_rel_residual": 8.529257797817991e-07,
+        "converged": true,
+        "dev_macro_2": 0.32478266015027,
+        "per_component": {
+          "cqadup-programmers": 0.28781067011552836,
+          "cqadup-physics": 0.36175465018501174
+        }
+      },
+      "relative_error_fro": 0.001517126763989708,
+      "dev_macro_abs_difference": 0.0,
+      "within_tolerance": true,
+      "speedup": 2.6
+    }
+  ],
+  "pass": true,
+  "smoke": false,
+  "_registration": {
+    "probe": "B7",
+    "row": {
+      "wave": 1,
+      "title": "block-CG vocabulary curve (gates D2)",
+      "question": "Can the closed-form table solve be computed at 64K and 128K rows inside this box's budget?",
+      "endpoint": "solver wall-clock and peak RAM at 30,522 (control) / 65,536 / 131,072 rows, plus the closed-form dev macro at each",
+      "comparator": "the 30,522-row control (M7's shipped vocabulary)",
+      "bar": "FEASIBILITY, binary: the 65,536-row solve must complete within the 18 GB peak-RAM budget and under 4 hours wall-clock. Quality at each size is DESCRIPTIVE at this stage and adopts nothing.",
+      "multiplicity": "none",
+      "no_survivor": "D2 is closed on arithmetic (as granite-r2 and gte-modernbert were in M7: a 50,368-vocab fp64 Gram is 20.3 GB); the milestone routes to D1 / D4' / R1",
+      "notes": "the fp64 Gram is 34.4 GB at 64K and 137.4 GB at 128K, which is why a block-CG solver is the subject rather than a direct solve",
+      "noise_floor_exempt": true,
+      "exempt_reason": "arithmetic/feasibility gate, named as exempt in LEDGER 4.7"
+    },
+    "wave": 1,
+    "registry_sha256": "a561ebb598d7c4e6c74f5b21940735abe075f14628a9441ead31fcd5a0ae341e",
+    "ledger_sha256": "39761b98f0978c3b57eab18d03b4278d09654c8dd6b7e32100a4e3943d26de2a",
+    "ledger_commit": "76bbc239a91e8378bec317a016da1efc45715d56",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}

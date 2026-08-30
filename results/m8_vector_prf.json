@@ -1,0 +1,124 @@
+{
+  "_note": "VECTOR-PRF -- train-free dense pseudo-relevance feedback on R0's frozen table.",
+  "config": {
+    "alpha": 0.4,
+    "beta": 0.6,
+    "depth": 3,
+    "source": "arXiv 2205.00235, published config, used verbatim -- no grid"
+  },
+  "group_vector": {
+    "base": {
+      "component_means": {
+        "nq-250k": 0.8007550976069021,
+        "hotpotqa": 0.6128202886940733,
+        "cqadup-programmers": 0.33891735184612104,
+        "cqadup-physics": 0.39571006355265953,
+        "heldout-train": 0.6317441753975794,
+        "heldout-longq": 0.9120680471521204
+      },
+      "group_means": {
+        "out-of-domain": 0.3673137076993903,
+        "wikipedia": 0.7067876931504877,
+        "heldout": 0.77190611127485
+      },
+      "group_vector_median": 0.7067876931504877,
+      "worst_group": 0.3673137076993903,
+      "out_of_domain_macro": 0.3673137076993903,
+      "all_component_macro": 0.6153358373749093
+    },
+    "prf": {
+      "component_means": {
+        "nq-250k": 0.7668702234191216,
+        "hotpotqa": 0.5446685213882251,
+        "cqadup-programmers": 0.3280429183898251,
+        "cqadup-physics": 0.38946908495223864,
+        "heldout-train": 0.5841969294529822,
+        "heldout-longq": 0.8645001165059122
+      },
+      "group_means": {
+        "out-of-domain": 0.35875600167103183,
+        "wikipedia": 0.6557693724036733,
+        "heldout": 0.7243485229794472
+      },
+      "group_vector_median": 0.6557693724036733,
+      "worst_group": 0.35875600167103183,
+      "out_of_domain_macro": 0.35875600167103183,
+      "all_component_macro": 0.5796246323513841
+    }
+  },
+  "fused_macro": {
+    "base": 0.5726575160148225,
+    "prf": 0.5519675992379576
+  },
+  "per_component_means": {
+    "base": {
+      "nq-250k": 0.8007550976069021,
+      "hotpotqa": 0.6128202886940733,
+      "cqadup-programmers": 0.33891735184612104,
+      "cqadup-physics": 0.39571006355265953,
+      "heldout-train": 0.6317441753975794,
+      "heldout-longq": 0.9120680471521204
+    },
+    "prf": {
+      "nq-250k": 0.7668702234191216,
+      "hotpotqa": 0.5446685213882251,
+      "cqadup-programmers": 0.3280429183898251,
+      "cqadup-physics": 0.38946908495223864,
+      "heldout-train": 0.5841969294529822,
+      "heldout-longq": 0.8645001165059122
+    }
+  },
+  "delta_group_vector": -0.05101832074681445,
+  "delta_fused_macro": -0.020689916776864936,
+  "mean_cosine_q_to_qprime": {
+    "nq-250k": 0.8557045459747314,
+    "hotpotqa": 0.8455392122268677,
+    "cqadup-programmers": 0.7971441745758057,
+    "cqadup-physics": 0.8192626237869263,
+    "heldout-train": 0.8630602955818176,
+    "heldout-longq": 0.9162065386772156
+  },
+  "bar": 0.004,
+  "cleared_bar": false,
+  "verdict": "NO SURVIVOR -- train-free query-side post-hoc refinement does not recover the bag-query gap",
+  "cost_disclosure": "TWO ANN queries per search plus a k-vector fetch, against one for R0. The edge story changes from a single round trip to two, and the feedback vectors must be retrievable at query time.",
+  "is_a_system_change": "qualifying_system, never qualifying_table: no row changed. Any write-up must decompose it as a retrieval-procedure change.",
+  "components": [
+    "nq-250k",
+    "hotpotqa",
+    "cqadup-programmers",
+    "cqadup-physics",
+    "heldout-train",
+    "heldout-longq"
+  ],
+  "smoke": false,
+  "seconds": 324.9,
+  "_registration": {
+    "probe": "VECTOR-PRF",
+    "row": {
+      "wave": 1,
+      "title": "VECTOR-PRF -- train-free dense pseudo-relevance feedback on the frozen R0 table",
+      "registered": "2026-08-29, AFTER D2-PRE and B8 both returned NO SURVIVOR and BEFORE any PRF number of any kind exists. Surfaced by an external adversarial review as the cheapest mechanistically-live lever the plan had missed.",
+      "question": "The table is a BAG of context-free rows; the document tower is contextual. D2-PRE just falsified the hypothesis that finer vocabulary granularity repairs that mismatch. Does one round of dense pseudo-relevance feedback -- pulling the bag query toward the document manifold using the documents themselves -- recover any of it, with NO training and NO change to the document index?",
+      "lever": "q' = normalize(alpha*q + beta*mean(d_1..d_k)) where q is R0's shipped int8 table output at sqrt pooling and d_1..d_k are the top-k document vectors from the FIRST retrieval. Retrieve again with q'. The FROZEN PUBLISHED CONFIG alpha=0.4, beta=0.6, k=3 (Vector-PRF, arXiv 2205.00235) is used verbatim: NO grid, NO tuning, no per-component choice. One configuration, registered before the number.",
+      "held_fixed": "R0's shipped table, byte for byte -- this probe trains NOTHING and changes no row. Teacher, document vectors, document index, pooling rule, precision int8, the frozen convex0 w=0.8 fusion operator. Only the QUERY-TIME PROCEDURE changes.",
+      "endpoint": "PRIMARY and barred: the registered dev group vector at int8/sqrt. SECONDARY and descriptive: the out-of-domain macro, the worst group, and the 4-component fused macro under the frozen operator.",
+      "comparator": "R0's own table under single-pass retrieval, scored in the identical frame in the same process -- a strictly paired comparison in which the only difference is the second pass.",
+      "bar": "mean gain >= 0.0040 on the dev group vector at int8/sqrt. 0.0040 is LEDGER 4.7's planning minimum and it is the RIGHT floor here rather than a conservative one: this probe trains nothing and exact search is deterministic, so there is NO training-seed variance for a floor to measure and the seed-null floor term is exactly zero. The comparison is paired on the identical table, so even table-level noise cancels.",
+      "multiplicity": "ONE frozen configuration and ONE contrast against R0. No family, no Holm, and none is needed. Adding a second (alpha, beta, k) after seeing this number is forbidden: the published config is used precisely so that the probe cannot tune its way to a result.",
+      "no_survivor": "TRAIN-FREE QUERY-SIDE POST-HOC REFINEMENT DOES NOT RECOVER THE BAG-QUERY GAP on this dev suite. Combined with D2-PRE, that closes both the 'finer vocabulary' and the 'refine the query vector after the fact' routes, and leaves document-side co-adaptation (E14-LORA) as the only untested high-capacity lever. It does NOT close a LEARNED feedback encoder (ANCE-PRF and its family use a trained query encoder and are out of scope under E1).",
+      "is_a_system_change_not_a_table": "STATED UP FRONT. This raises no number in the table itself; it is a change to the retrieval PROCEDURE and therefore a `qualifying_system` key under Dylan's 2026-08-29 condition-4 ruling, never a `qualifying_table` one. Any write-up must decompose it as such. It also COSTS: a second ANN query per search plus a k-vector fetch, so the E7 query-side story changes from one round trip to two, and that must be reported beside any gain. Query drift is the known failure mode and a NEGATIVE result is entirely plausible.",
+      "cost_estimate": "Minutes. No training, no re-encoding; one extra retrieval pass over dev corpora already on disk. Components are the outer loop (CODEMAP pitfall 6).",
+      "noise_floor_exempt": true,
+      "exempt_reason": "Trains nothing and uses exact search, so the arm is DETERMINISTIC and paired against the identical table: the true-seed-null floor is zero by construction. The planning minimum 0.0040 still binds as the smallest effect this project has ever adopted.",
+      "bar_frozen": "2026-08-29, before any PRF number existed.",
+      "plan_status": "LIVE -- run after B8, before B10.",
+      "authorised_by": "CLAUDE.md's standing directive (sweep the literature for the specific failure before declaring a bar unreachable) plus Dylan's 2026-08-29 system ruling."
+    },
+    "wave": 1,
+    "registry_sha256": "8a3220810451ee0eb9ddf94111051d53fb2643f14ad711d06de740e9346ec295",
+    "ledger_sha256": "bade844d68e773fe5b497e2d42cba9f1f2b39ac8875e0fcd772aaf8f4a1ae27b",
+    "ledger_commit": "3e03aeb3c12709d1cd2cc91a933958e540da1ac9",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}

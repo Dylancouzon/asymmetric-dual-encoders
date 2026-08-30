@@ -1,0 +1,314 @@
+{
+  "dump": "results/m7_devperquery_m8xfloor.json.gz",
+  "design": "3x3, (B checkpoint seed) x (A seed), one observation per cell",
+  "cells": {
+    "b0a0": "m8nf-seed0",
+    "b0a1": "m8nf-seed1",
+    "b0a2": "m8nf-seed2",
+    "b1a0": "m8nfx-b1a0",
+    "b1a1": "m8nfb-seed1-a",
+    "b1a2": "m8nfx-b1a2",
+    "b2a0": "m8nfx-b2a0",
+    "b2a1": "m8nfx-b2a1",
+    "b2a2": "m8nfb-seed2-a"
+  },
+  "cells_reused": {
+    "b0a0": "m8nf-seed0",
+    "b0a1": "m8nf-seed1",
+    "b0a2": "m8nf-seed2",
+    "b1a1": "m8nfb-seed1-a",
+    "b2a2": "m8nfb-seed2-a"
+  },
+  "read_at": "int8 / sqrt",
+  "components": {
+    "int8.sqrt.group_vector_median": {
+      "cells": [
+        [
+          0.7067876931504877,
+          0.7079969499781742,
+          0.7061001483233137
+        ],
+        [
+          0.70740296113533,
+          0.7076688446089213,
+          0.7066329209539055
+        ],
+        [
+          0.7063025285659512,
+          0.7060547851077822,
+          0.7070745629110473
+        ]
+      ],
+      "row_means_by_B_seed": [
+        0.7069615971506585,
+        0.7072349088993857,
+        0.7064772921949268
+      ],
+      "col_means_by_A_seed": [
+        0.7068310609505897,
+        0.7072401932316259,
+        0.7066025440627556
+      ],
+      "ms": {
+        "B": 4.4161683650682483e-07,
+        "A_given_B_plus_interaction": 5.907011551090497e-07,
+        "A": 3.131028269861519e-07
+      },
+      "df": {
+        "B": 2,
+        "A": 2,
+        "residual": 4
+      },
+      "sd": {
+        "B": 0.0,
+        "A": 0.0,
+        "residual": 0.0007685708523675938,
+        "chain": 0.0007685708523675938
+      },
+      "clipped_to_zero": {
+        "B": true,
+        "A": true
+      },
+      "sd_of_fresh_null_difference": 0.001086923323062901,
+      "p_null_difference_exceeds_0.0040": 0.00023313116972284274,
+      "range_all_9_cells": 0.0019421648703920047,
+      "range_on_the_diagonal": 0.0008811514584335933,
+      "range_within_rows": [
+        0.0018968016548605027,
+        0.0010359236550158135,
+        0.0010197778032651206
+      ],
+      "range_expected_on_3_cells_under_fitted_sigma": 0.0013011904530583363,
+      "diagonal_range_over_its_expectation": 0.6771886900664869,
+      "diagonal_ratio_noise_interval_at_K3": [
+        0.25457767277023036,
+        1.9580626107501475
+      ],
+      "implied_bar_if_floor_estimated_from_this_design": 0.004
+    },
+    "int8.sqrt.worst_group": {
+      "cells": [
+        [
+          0.3673137076993903,
+          0.3689317775778802,
+          0.3689215477764879
+        ],
+        [
+          0.36529314492603027,
+          0.36748289696160263,
+          0.3662613934234668
+        ],
+        [
+          0.3662697379376879,
+          0.3687317073856512,
+          0.3684211844821158
+        ]
+      ],
+      "row_means_by_B_seed": [
+        0.3683890110179195,
+        0.36634581177036657,
+        0.367807543268485
+      ],
+      "col_means_by_A_seed": [
+        0.3662921968543695,
+        0.36838212730837805,
+        0.36786804189402345
+      ],
+      "ms": {
+        "B": 3.3247134407124087e-06,
+        "A_given_B_plus_interaction": 1.5569105609249352e-07,
+        "A": 3.5576903524233136e-06
+      },
+      "df": {
+        "B": 2,
+        "A": 2,
+        "residual": 4
+      },
+      "sd": {
+        "B": 0.0010277844106977422,
+        "A": 0.0010648942508266286,
+        "residual": 0.00039457705976462127,
+        "chain": 0.001531676080772108
+      },
+      "clipped_to_zero": {
+        "B": false,
+        "A": false
+      },
+      "sd_of_fresh_null_difference": 0.0021661170865903833,
+      "p_null_difference_exceeds_0.0040": 0.06480190771631354,
+      "range_all_9_cells": 0.003638632651849938,
+      "range_on_the_diagonal": 0.0011074767827254917,
+      "range_within_rows": [
+        0.0016180698784898917,
+        0.0021897520355723676,
+        0.002461969447963286
+      ],
+      "range_expected_on_3_cells_under_fitted_sigma": 0.002593127604747179,
+      "diagonal_range_over_its_expectation": 0.427081482877302,
+      "diagonal_ratio_noise_interval_at_K3": [
+        0.25457767277023036,
+        1.9580626107501475
+      ],
+      "implied_bar_if_floor_estimated_from_this_design": 0.005186255209494358
+    },
+    "int8.sqrt.out_of_domain_macro": {
+      "cells": [
+        [
+          0.3673137076993903,
+          0.3689317775778802,
+          0.3689215477764879
+        ],
+        [
+          0.36529314492603027,
+          0.36748289696160263,
+          0.3662613934234668
+        ],
+        [
+          0.3662697379376879,
+          0.3687317073856512,
+          0.3684211844821158
+        ]
+      ],
+      "row_means_by_B_seed": [
+        0.3683890110179195,
+        0.36634581177036657,
+        0.367807543268485
+      ],
+      "col_means_by_A_seed": [
+        0.3662921968543695,
+        0.36838212730837805,
+        0.36786804189402345
+      ],
+      "ms": {
+        "B": 3.3247134407124087e-06,
+        "A_given_B_plus_interaction": 1.5569105609249352e-07,
+        "A": 3.5576903524233136e-06
+      },
+      "df": {
+        "B": 2,
+        "A": 2,
+        "residual": 4
+      },
+      "sd": {
+        "B": 0.0010277844106977422,
+        "A": 0.0010648942508266286,
+        "residual": 0.00039457705976462127,
+        "chain": 0.001531676080772108
+      },
+      "clipped_to_zero": {
+        "B": false,
+        "A": false
+      },
+      "sd_of_fresh_null_difference": 0.0021661170865903833,
+      "p_null_difference_exceeds_0.0040": 0.06480190771631354,
+      "range_all_9_cells": 0.003638632651849938,
+      "range_on_the_diagonal": 0.0011074767827254917,
+      "range_within_rows": [
+        0.0016180698784898917,
+        0.0021897520355723676,
+        0.002461969447963286
+      ],
+      "range_expected_on_3_cells_under_fitted_sigma": 0.002593127604747179,
+      "diagonal_range_over_its_expectation": 0.427081482877302,
+      "diagonal_ratio_noise_interval_at_K3": [
+        0.25457767277023036,
+        1.9580626107501475
+      ],
+      "implied_bar_if_floor_estimated_from_this_design": 0.005186255209494358
+    },
+    "int8.sqrt.all_component_macro": {
+      "cells": [
+        [
+          0.6153358373749093,
+          0.6163566226242468,
+          0.6154515248257498
+        ],
+        [
+          0.614542074901932,
+          0.6158448075502594,
+          0.6146603301504084
+        ],
+        [
+          0.6161346551362022,
+          0.6155081372101386,
+          0.6160372934669812
+        ]
+      ],
+      "row_means_by_B_seed": [
+        0.615714661608302,
+        0.6150157375342,
+        0.6158933619377741
+      ],
+      "col_means_by_A_seed": [
+        0.6153375224710146,
+        0.6159031891282148,
+        0.6153830494810465
+      ],
+      "ms": {
+        "B": 6.453266314307641e-07,
+        "A_given_B_plus_interaction": 3.244076391354571e-07,
+        "A": 2.9629836413348797e-07
+      },
+      "df": {
+        "B": 2,
+        "A": 2,
+        "residual": 4
+      },
+      "sd": {
+        "B": 0.00032706726744168247,
+        "A": 0.0,
+        "residual": 0.0005695679407546189,
+        "chain": 0.0006567957342791031
+      },
+      "clipped_to_zero": {
+        "B": false,
+        "A": true
+      },
+      "sd_of_fresh_null_difference": 0.0009288494351263031,
+      "p_null_difference_exceeds_0.0040": 1.6593063599559306e-05,
+      "range_all_9_cells": 0.0018145477223148188,
+      "range_on_the_diagonal": 0.0007014560920719504,
+      "range_within_rows": [
+        0.0010207852493375746,
+        0.001302732648327365,
+        0.0006265179260636078
+      ],
+      "range_expected_on_3_cells_under_fitted_sigma": 0.0011119551781345216,
+      "diagonal_range_over_its_expectation": 0.6308312653831537,
+      "diagonal_ratio_noise_interval_at_K3": [
+        0.25457767277023036,
+        1.9580626107501475
+      ],
+      "implied_bar_if_floor_estimated_from_this_design": 0.004
+    }
+  },
+  "what_this_answers": "(1) is a B-leg-varying arm's floor actually larger than an A-leg arm's? `sd.B` against `sd.A` answers it, and no measurement supported that assertion before. (2) `sd_of_fresh_null_difference` is the actionable number: the SD of the difference between two independent full chains, which is the shape a B-leg-varying probe arm has. (3) whether the aliased diagonal is biased at all -- the residual term is where a leg-to-leg interaction at a shared seed would show up.",
+  "withdrawn_claim": "the B-leg artifact says its aliasing makes that floor an UNDER-estimate, 'the anti-conservative direction'. It does not follow: a diagonal cell is B_s + A_s + e and, for independent leg effects, has exactly the chain variance. Simulated at 200,000 replicates the aliased diagonal and an independent chain match to four digits in SD (0.003202 vs 0.003202) and in E[range] (0.005425 vs 0.005416). The diagonal is unbiased-but-noisy. Only a NEGATIVE correlation between the two legs at a shared seed would bias it down, and no mechanism for that was ever named.",
+  "estimator_bias": "the variance components are moment estimators with negative values clipped to zero, and sd = sqrt(var-hat) is a concave function of it, so both push the reported chain SD DOWN. Simulated at this exact design: truth 0.00320 -> mean estimate 0.00295, about 8% low. Read the chain SD as a floor on the floor, not as a tight estimate.",
+  "what_this_does_NOT_answer": "the pool is still held FIXED -- `pseudoq.build_decontaminated` draws with a seed independent of the training seed, so all three B legs distil on the identical text set. This bounds seed variability in a B-leg-varying arm; it does not bound a pool-varying lever. It is also still the incumbent teacher frame and the M7 data mix, and LEDGER 6 step 5 voids it on a teacher swap.",
+  "adopts": "nothing. The registered bar formula is unchanged. This is reported as the error rate the standing 0.0040 convention actually carries for a B-leg-varying arm, which is a disclosure, not a new rule. Note the A-leg arms every frozen bar currently reads -- B3, E14-HEAD -- are UNAFFECTED: they hold the B checkpoint fixed, so their null is sd.A alone, and 2 x 1.693 x sd.A stays under the 0.0040 planning minimum.",
+  "leg": "crossed",
+  "_registration": {
+    "probe": "NF",
+    "row": {
+      "wave": 1,
+      "title": "noise-floor measurement (the instrument every bar is set against)",
+      "question": "How large is a difference this dev instrument produces from nothing at all?",
+      "endpoint": "group_vector_median, worst_group, out_of_domain_macro and all_component_macro on the full pinned dev suite, int8, through the released QueryTable path",
+      "comparator": "K=3 arms of the IDENTICAL recipe, identical data, identical B checkpoint, differing ONLY in training seed (a true null)",
+      "bar": "no bar: this measures the instrument and adopts nothing. It EMITS bars: floor(endpoint) = max of the 3 pairwise |delta|; bar(endpoint) = max(0.0040, 2 x floor(endpoint)).",
+      "multiplicity": "none",
+      "no_survivor": "not applicable -- a floor always exists. If the floor exceeds the planning minimum on an endpoint, every bar reading that endpoint rises accordingly and that is the finding.",
+      "adopts": "nothing",
+      "also_published": "the +/-10% A-steps arms, as RECIPE SENSITIVITY beside the floor, never as the floor: a step change is a treatment, not a null",
+      "frame_disclosure": "measured in the incumbent teacher frame and the M7 data mix, A leg only with the B checkpoint fixed. An arm differing in its B leg has a larger floor and no bar may read such an arm until that floor is measured too.",
+      "noise_floor_exempt": true,
+      "exempt_reason": "it IS the noise floor"
+    },
+    "wave": 1,
+    "registry_sha256": "42d19ddd3c5e29a50ea02016bf1e64ef688b376038a02d825b6493e36082c2df",
+    "ledger_sha256": "accf4839802acc1dfdd9c810592543aac0fc4b3944efafad143fc94e8b3092b1",
+    "ledger_commit": "e2323678b501b718330f813689b2bae7ddf3ef54",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}

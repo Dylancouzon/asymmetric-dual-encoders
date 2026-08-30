@@ -1,0 +1,150 @@
+{
+  "_note": "B8 -- target design: does a DOCUMENT-CENTROID target beat the bare teacher-query target?",
+  "targets": {
+    "bare": {
+      "argmax_lambda": 0.01,
+      "ood_macro_at_argmax": 0.34740848000037466,
+      "lambda_curve": {
+        "0.0001": 0.34395068419059016,
+        "0.001": 0.3461287122512152,
+        "0.01": 0.34740848000037466,
+        "0.1": 0.3291700431795722,
+        "1.0": 0.2791880522268653,
+        "10.0": 0.19755500699207806
+      },
+      "argmax_at_grid_boundary": false,
+      "group_vector": {
+        "component_means": {
+          "nq-250k": 0.76482490531798,
+          "hotpotqa": 0.5127383107470445,
+          "cqadup-programmers": 0.3126800854908429,
+          "cqadup-physics": 0.3821368745099064,
+          "heldout-train": 0.486094591640467,
+          "heldout-longq": 0.8776185363235874
+        },
+        "group_means": {
+          "out-of-domain": 0.34740848000037466,
+          "wikipedia": 0.6387816080325122,
+          "heldout": 0.6818565639820272
+        },
+        "group_vector_median": 0.6387816080325122,
+        "worst_group": 0.34740848000037466,
+        "out_of_domain_macro": 0.34740848000037466,
+        "all_component_macro": 0.556015550671638
+      }
+    },
+    "centroid": {
+      "argmax_lambda": 0.1,
+      "ood_macro_at_argmax": 0.164530164380762,
+      "lambda_curve": {
+        "0.0001": 0.15017116630104219,
+        "0.001": 0.15307906171984412,
+        "0.01": 0.1626655030049392,
+        "0.1": 0.164530164380762,
+        "1.0": 0.14099500464357442,
+        "10.0": 0.10451088506375335
+      },
+      "argmax_at_grid_boundary": false,
+      "group_vector": {
+        "component_means": {
+          "nq-250k": 0.5732620740357001,
+          "hotpotqa": 0.37056693333099233,
+          "cqadup-programmers": 0.13346580617736636,
+          "cqadup-physics": 0.1955945225841577,
+          "heldout-train": 0.5315278997045406,
+          "heldout-longq": 0.5903749579845835
+        },
+        "group_means": {
+          "out-of-domain": 0.164530164380762,
+          "wikipedia": 0.4719145036833462,
+          "heldout": 0.5609514288445621
+        },
+        "group_vector_median": 0.4719145036833462,
+        "worst_group": 0.164530164380762,
+        "out_of_domain_macro": 0.164530164380762,
+        "all_component_macro": 0.3991320323028901
+      }
+    },
+    "mix50": {
+      "argmax_lambda": 0.01,
+      "ood_macro_at_argmax": 0.30641872532844866,
+      "lambda_curve": {
+        "0.0001": 0.3020827775342634,
+        "0.001": 0.30419209132790215,
+        "0.01": 0.30641872532844866,
+        "0.1": 0.29274021942810274,
+        "1.0": 0.23923465391403131,
+        "10.0": 0.15195840784757975
+      },
+      "argmax_at_grid_boundary": false,
+      "group_vector": {
+        "component_means": {
+          "nq-250k": 0.7479621640276235,
+          "hotpotqa": 0.5231543154030281,
+          "cqadup-programmers": 0.27343895273274077,
+          "cqadup-physics": 0.33939849792415655,
+          "heldout-train": 0.602457483110001,
+          "heldout-longq": 0.8612974677701765
+        },
+        "group_means": {
+          "out-of-domain": 0.30641872532844866,
+          "wikipedia": 0.6355582397153259,
+          "heldout": 0.7318774754400887
+        },
+        "group_vector_median": 0.6355582397153259,
+        "worst_group": 0.30641872532844866,
+        "out_of_domain_macro": 0.30641872532844866,
+        "all_component_macro": 0.5579514801612878
+      }
+    }
+  },
+  "endpoint": "group_vector_median",
+  "delta_vs_bare": {
+    "centroid": -0.16686710434916596,
+    "mix50": -0.0032233683171862815
+  },
+  "bar": 0.004,
+  "verdict": "NO SURVIVOR -- keep R0's target",
+  "cleared_bar": {
+    "centroid": false,
+    "mix50": false
+  },
+  "provenance": {
+    "n_pairs": 340850,
+    "dropped_no_positive": 0,
+    "mean_positives_per_query": 3.930259645005134
+  },
+  "components": [
+    "nq-250k",
+    "hotpotqa",
+    "cqadup-programmers",
+    "cqadup-physics",
+    "heldout-train",
+    "heldout-longq"
+  ],
+  "smoke": false,
+  "adopts": "nothing. A closed-form fit routes; it never ships. A target clearing 0.0040 here buys a TRAINED confirmation at the chain bar 0.00519.",
+  "lambda_rule": "argmax on the OOD pair, the same instrument T1's teacher screen used; boundary attainment is reported per target because an argmax at the grid edge means the grid did not bracket the optimum.",
+  "seconds": 1756.4,
+  "_registration": {
+    "probe": "B8",
+    "row": {
+      "wave": 2,
+      "title": "target design (bare + doc-centroid targets)",
+      "question": "Does a doc-centroid target beat the bare teacher target in closed form?",
+      "endpoint": "closed-form dev group vector",
+      "comparator": "R0's target",
+      "bar": "DIAGNOSTIC AND ROUTING at 0.0040 on the closed-form dev group vector -- LEDGER 4.7's planning minimum, which binds because a closed-form solve is DETERMINISTIC and carries no training-seed noise for a floor to measure. NOTHING IS ADOPTED FROM A CLOSED-FORM FIT, the same rule D2-PRE ran under: a target design that clears here buys a TRAINED confirmation at the chain bar 0.00519, never a place in R1 directly.",
+      "multiplicity": "Holm within the target family at alpha = 0.05",
+      "no_survivor": "keep R0's target",
+      "plan_status": "DEFERRED-PENDING-D2 (2026-08-29 audit). Recipe/data class. Section 7 budgets it as hygiene, not the route to the bar: M7's entire post-gate lever programme transferred to the six at 0.000 +/- 0.005. Bar still TBD-noise-floor, so probe_guard refuses it regardless. Not cancelled -- it becomes live only if a capacity lever clears and Stage R is actually assembled.",
+      "noise_floor_exempt": false,
+      "bar_frozen": "2026-08-29, before any B8 arm ran. Frozen 2026-08-29 by amendment, replacing the stale noise-floor placeholder this row had carried since before the floor was measured. The floor exists (LEDGER 4.7 for the A-leg floor, LEDGER 23 for the crossed B x A design) and this row was simply never updated, so probe_guard refused it -- which made B10 (D2's named alternate) and both probes D2.exit_precondition requires unreachable, and the pre-committed exit therefore unable to fire at all. bar = max(0.0040, 2 x floor) is LEDGER 4.7's registered formula applied unchanged; the only judgement is which floor the arm reads, and LEDGER 23 fixes that by arm type. No number is new and no bar is loosened."
+    },
+    "wave": 2,
+    "registry_sha256": "792be640c06225dea349198e69ca8dac39dd29ba0397c30690fcf9e9e33ba31b",
+    "ledger_sha256": "8882d4f0d9233121f4a8a66f41eac33969e1e4904770c694e057131084293710",
+    "ledger_commit": "b5097b454c871da60ff837f22c1a6e04c1503cb5",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}
