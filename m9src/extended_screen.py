@@ -7,15 +7,19 @@ M9-reserve, and the extended screen needs a structure (`decontam.short_whole_ind
 persisted fingerprint npz does not carry. So M9.0 excluded all three, and the 7-day build would
 have trained on 242,786 query texts seen ~870 times each.
 
-What it does, and the bulkhead. It holds the **same contact class M8 already sanctioned** for
-`m8src/protected_filter` (LEDGER G2 class b): it reads protected query TEXT in order to protect
-against it. It emits **hashes and kept-INDEX lists only** — never a label, a qrel, a document, or
-a line of protected text. The protected text is read, hashed and discarded inside this process; no
-caller and no transcript ever sees it, which is why the work is done here rather than by an
-external agent whose context would hold it.
+What it does, and why it needs NO new capability. Dylan authorised a G2 allowlist entry for this
+module; it turned out to be unnecessary, and the guard is what showed that. `m8src/protected_filter`
+claims its entry **at import time**, so importing it both grants and performs the one protected
+read — building the extended protected-query index — inside the module that already holds that
+contact class. This module then handles only what that returns: an exact-hash set, a gram array and
+a short-whole index. Every candidate source it screens (`work/pseudoq/`, `work/train/querytext/`)
+is ordinary training text on no protected path.
 
-Authorised by Dylan 2026-08-30. G2 allowlist entry `m9src.extended_screen`, kinds
-{untouched_labels, lotte, m9reserve}. Reviewed as a boundary change before its output was used.
+So the protection boundary is **unchanged from M8**, the allowlist addition was reverted, and
+`m8src/paths_guard.py` is byte-identical to M8's. The output is hashes and kept-INDEX lists only —
+never a label, a qrel, a document, or a line of protected text. Nothing leaves the process but
+counts and hashes, which is why this is done here rather than by an external agent whose context
+would hold the text.
 
     python m9src/extended_screen.py            # screen every registered candidate source
 """
@@ -28,15 +32,11 @@ import numpy as np
 import m9base
 from m9base import REPO, WORK, RESULTS
 
-import paths_guard   # noqa: E402
-
-paths_guard.claim(
-    "m9src.extended_screen",
-    note="M9 candidate query-text sources screened through the extended protected-query filter; "
-         "emits hashes and kept-index lists only.")
-
-import decontam            # noqa: E402
+# Import order is the whole design: `protected_filter` claims its own G2 entry at import time and
+# is the only module that opens a protected path. One entry per process, so this module must NOT
+# claim anything itself -- doing so made the very next import fail, correctly.
 import protected_filter    # noqa: E402
+import decontam            # noqa: E402
 
 OUT = WORK / "decontam"
 ARTIFACT = RESULTS / "m9_extended_screen.json"
@@ -86,10 +86,18 @@ def _sha_texts(texts):
 
 def main():
     t0 = time.time()
-    lot = None
-    p = RESULTS / "m8_lotte_overlap.json"
-    if p.exists():
-        lot = json.loads(p.read_text())["kept"] or None
+    # THE LoTTE SLICES COME FROM THE REMEDY RECORD, NOT THE FIRST SCREEN.
+    # `m8_lotte_overlap.json` records the FIRST screen, whose verdict was "E10 REOPENS WITH DYLAN"
+    # and whose `kept` list is EMPTY -- no slice passed before remediation. The slices that exist
+    # are in `m8_lotte_remedy.json`: "PROCEED: all 7 surviving slices pass remedy + re-screen,
+    # 14,034 queries". Reading the first file yields an empty LoTTE group and silently screens
+    # nothing against M9's own fresh confirmation surface, which is precisely the surface new
+    # training text must not leak into.
+    rem = json.loads((RESULTS / "m8_lotte_remedy.json").read_text())
+    lot = list(rem["surviving_slices"])
+    assert lot and rem["verdict"].startswith("PROCEED"), rem["verdict"]
+    print(f"LoTTE shadow: {len(lot)} surviving slices, {rem['total_surviving_queries']:,} queries "
+          f"(dead: {rem['dead_slices_no_remedy_applies']})", flush=True)
 
     # The one protected read. Everything after this line is hashes.
     q_ex, q_gram, q_whole, counts, m9_detail = protected_filter.extended_index(lot)
@@ -99,8 +107,13 @@ def main():
     out = {"_what": "M9 candidate query-text sources re-screened through M8's EXTENDED "
                     "protected-query filter. Hashes and kept-index lists only; no text, no "
                     "labels, no documents leave this module.",
-           "authorised_by": "Dylan, 2026-08-30 (G2 allowlist entry m9src.extended_screen)",
+           "capability": "none added. m8src/protected_filter holds the only claim and performs the only "
+                  "protected read, exactly as in M8; the G2 allowlist Dylan authorised was "
+                  "reverted unused and m8src/paths_guard.py is byte-identical to M8's.",
            "screened_against": counts, "m9_reserve_fields": m9_detail,
+           "lotte_source": "results/m8_lotte_remedy.json surviving_slices -- NOT "
+                           "m8_lotte_overlap.json, whose `kept` is empty because its verdict was "
+                           "'E10 REOPENS WITH DYLAN' before remediation",
            "n_protected_queries": sum(counts.values()),
            "method": {"ngram": decontam.NGRAM, "sketch": decontam.SKETCH,
                       "dup_share": decontam.DUP_SHARE, "short_ngram": decontam.SHORT_NGRAM,
