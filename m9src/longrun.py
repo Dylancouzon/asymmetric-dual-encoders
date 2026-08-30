@@ -671,20 +671,27 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
         for name in names:
             flat, offs, _m = corpora[name]
             idx = streams[name].take(per_step[name])
-            ii, am, ntok = collate(flat, offs, idx, pad_id, device)
-            t = torch.from_numpy(tgt.get(name, idx)).to(device)
-            with torch.autocast("cuda", dtype=torch.bfloat16):
-                v = model(ii, am)
-            v = F.normalize(v.float(), dim=-1, eps=1e-12)
-            # THE objective, in one place: the plain mean over the step's examples. Token shares
-            # set how many examples each source contributes and nothing else.
-            part = ((v - t) ** 2).sum(-1).sum() / n_ex
-            if not torch.isfinite(part):
-                stop_reason = f"non-finite loss on {name} at step {step}"
+            # Chunked by padded area: collate pads to the longest row, and 78 documents with one
+            # 512-token member is ~13 GB on a 10 GB card -- the bug m9s6 found in the screen's
+            # twin of this loop. Gradient identical: chunk losses are normalized by n_ex.
+            for ch in nano.length_chunks((offs[idx + 1] - offs[idx])):
+                sub = idx[ch]
+                ii, am, ntok = collate(flat, offs, sub, pad_id, device)
+                t = torch.from_numpy(tgt.get(name, sub)).to(device)
+                with torch.autocast("cuda", dtype=torch.bfloat16):
+                    v = model(ii, am)
+                v = F.normalize(v.float(), dim=-1, eps=1e-12)
+                # THE objective, in one place: the plain mean over the step's examples. Token
+                # shares set how many examples each source contributes and nothing else.
+                part = ((v - t) ** 2).sum(-1).sum() / n_ex
+                if not torch.isfinite(part):
+                    stop_reason = f"non-finite loss on {name} at step {step}"
+                    break
+                part.backward()
+                step_loss += float(part.detach())
+                step_tok += ntok
+            if stop_reason:
                 break
-            part.backward()
-            step_loss += float(part.detach())
-            step_tok += ntok
             cum["by_source"][name] += len(idx)
         if stop_reason:
             break

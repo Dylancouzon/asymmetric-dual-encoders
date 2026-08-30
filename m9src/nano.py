@@ -213,6 +213,32 @@ def token_batches(streams, steps, total_tokens, shares):
             [round(g, 1) for g in got])
 
 
+def length_chunks(lens, cap_positions=16384):
+    """Split one batch's rows into micro-chunks whose PADDED area (rows x max-len) stays under
+    `cap_positions`, rows grouped by length. `collate` pads a whole batch to its longest row, so
+    one 512-token document in a mixed batch pads ~90 short queries to 512 and the forward needs
+    >10 GB on this card -- measured, deterministic, found by m9s6 at step 0 (and latent in the
+    seven-day build's collate, which mixes 78 documents into every step). One optimizer step
+    still consumes every chunk: each chunk's loss is summed and normalized by the FULL batch
+    size, so the gradient equals the unchunked batch mean exactly (up to fp summation order).
+    128x256 measured 7.12 GB peak; the 16,384-position cap keeps peaks near ~3.6 GB, and a
+    query-only batch (128 x ~40 tokens) stays a single chunk."""
+    lens = np.asarray(lens)
+    order = np.argsort(lens, kind="stable")
+    chunks, cur, cur_max = [], [], 0
+    for k in order:
+        n = int(lens[k])
+        m = max(cur_max, n)
+        if cur and (len(cur) + 1) * m > cap_positions:
+            chunks.append(np.asarray(cur, dtype=np.int64))
+            cur, cur_max = [int(k)], n
+        else:
+            cur.append(int(k))
+            cur_max = m
+    chunks.append(np.asarray(cur, dtype=np.int64))
+    return chunks
+
+
 def lr_at(step, steps, peak, final, warmup):
     """Zero-based `step`. The denominator is `steps - warmup - 1` so the LAST EXECUTED step is the
     cosine endpoint; with `steps - warmup` the schedule stops one step short of `final` and never
@@ -262,20 +288,25 @@ def train_arm(arm_id, student_key, plan, cfg, eval_fn=None, device="cuda", log_e
         lr = lr_at(step, steps, cfg["lr_peak"], cfg["lr_final"], cfg["warmup_steps"])
         for g in opt.param_groups:
             g["lr"] = lr
-        ii, am = collate(ids, rows, pad_id, device)
-        tok_acc += int(am.sum().item())
-        ex_acc += int(rows.size)
-        bsz.append(int(rows.size))
-        t = torch.from_numpy(np.asarray(tgt[rows], dtype=np.float32)).to(device)
-        with torch.autocast("cuda", dtype=torch.bfloat16):
-            v = model(ii, am)
-        v = F.normalize(v.float(), dim=-1, eps=1e-12)
-        loss = ((v - t) ** 2).sum(-1).mean()
-        loss.backward()
+        n_ex = int(rows.size)
+        step_loss = 0.0
+        for ch in length_chunks([len(ids[j]) for j in rows]):
+            sub = rows[ch]
+            ii, am = collate(ids, sub, pad_id, device)
+            tok_acc += int(am.sum().item())
+            t = torch.from_numpy(np.asarray(tgt[sub], dtype=np.float32)).to(device)
+            with torch.autocast("cuda", dtype=torch.bfloat16):
+                v = model(ii, am)
+            v = F.normalize(v.float(), dim=-1, eps=1e-12)
+            part = ((v - t) ** 2).sum(-1).sum() / n_ex
+            part.backward()
+            step_loss += float(part.detach())
+        ex_acc += n_ex
+        bsz.append(n_ex)
         torch.nn.utils.clip_grad_norm_(model.parameters(), r["grad_clip"])
         opt.step()
         opt.zero_grad(set_to_none=True)
-        loss_acc += float(loss.detach())
+        loss_acc += step_loss
         nlog += 1
 
         if (step + 1) % log_every == 0:
