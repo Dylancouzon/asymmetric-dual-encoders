@@ -1,76 +1,74 @@
-# Task for the Mac: Edge prototype round 2 — fix the cold start, then quantize the index
+# Task for the Mac: Edge prototype round 3 — the storage question, properly this time
 
-Round 1 is in `results/m9_edge_prototype_Apple_M5_Pro.json` and `bench/edge_prototype_pair.py`, and
-it produced the most report-shaping numbers of the milestone. Two follow-ups, ~45–60 minutes total.
-Same rules as before: CPU + Docker, latency and architecture only, **no quality numbers**.
+Rounds 1 and 2 are in `results/m9_edge_prototype_Apple_M5_Pro.json` and
+`bench/edge_prototype_pair.py`. Round 2 fixed the cold-start artifact and produced a real finding
+(cheaper search makes the encoder gap matter *more*: the nano ÷ zero ratio climbs 1.43× → 2.81×).
 
-## 1. Fix the cold-start artifact (small, do it first)
+But it did **not** answer the question it was aimed at, and that is what round 3 is for.
+~30–45 minutes. Same rules: CPU + Docker, latency and bytes only, **no quality numbers**.
 
-The 1–5-word bucket recorded a **115 ms** zero-path search where every other bucket is ~0.8 ms.
-That is the index warming on the first timed query, not a property of short queries — and it is
-currently the only number in the artifact that cannot be published.
+## What went wrong, and it is not your fault
 
-- Add an explicit **warm-up pass** before any timing: at least 200 searches, discarded, per
-  `(path, ef)` combination, not just once at the start.
-- **Randomise bucket order** per repetition, or interleave buckets, so that if a warming effect
-  survives it cannot land entirely in one bucket again.
-- Report a `warmup_searches` field so the artifact says what was done.
-
-Round 1's other rows looked stable (p95 within ~15% of p50), so this should simply make the first
-bucket join them. If 1–5-word queries are *genuinely* slower after warm-up, that is a real finding
-— say so rather than smoothing it.
-
-## 2. Quantize the document index — this is the real edge story
-
-Round 1's asset table is lopsided and nobody had noticed:
-
-| asset | bytes |
+| config | segments |
 |---|---|
-| document index (1M × 1024) | **2,225.8 MB** |
-| `zero` int8 token table | 270.1 MB |
-| `nano` fp16 ONNX | 46.1 MB |
+| fp16 | 2,226 MB |
+| **int8** | **3,254 MB** |
+| binary | 2,354 MB |
 
-**The index is 8× the larger query asset and 48× the smaller one.** Every "query-side cost" number
-this project has produced is rounding error next to it, and Qdrant quantization is the lever that
-exists precisely for this. So sweep the document collection's storage:
+Quantizing made the index **bigger**, because Qdrant keeps the original vectors alongside the
+quantized ones so it can rescore. Peak RSS was ~7 GB in every configuration. So round 2 measured
+quantization's *latency* benefit and never its *storage* benefit — and storage is the thing that
+decides whether a 1M-document index fits on an edge device at all.
 
-- **fp16** (round 1's baseline),
-- **scalar int8** quantization,
-- **binary** quantization if the local Qdrant build supports it at 1024d,
-- and with `on_disk` / mmap vectors on and off, since an edge device's constraint is RAM before it
-  is disk.
+## What round 3 must measure
 
-For each configuration report: **segment bytes on disk, peak RSS, collection load time**, and the
-same per-bucket p50/p95 search latency for **both** query paths. Rescoring/oversampling settings,
-if you enable them, must be recorded — they trade latency for recall and the table has to show it.
+For each of **fp16 / int8 / binary**, configure the collection so the originals are **not resident
+in RAM**, and report what actually lands on disk and in memory:
 
-**Still no recall here.** Quantization obviously costs quality; that is measured on the training
-box against the real stella index. What this task establishes is the **cost side of that trade**,
-so the frontier can show what a 4× or 16× smaller index actually buys in bytes, RAM and
-milliseconds.
+- `vectors_config.on_disk = true` (originals on disk, not RAM), **and**
+- `quantization_config.*.always_ram = true` (the quantized copy is the thing kept hot).
+
+That is the configuration the quantization feature exists for: a small hot copy in RAM, the
+originals on disk only for rescoring. Report per configuration:
+
+- **segment bytes on disk**, split into original-vector bytes vs quantized bytes if Qdrant exposes
+  it (`/collections/<name>` telemetry, or just the on-disk file sizes per segment directory);
+- **peak RSS** — this is the number that decides edge feasibility, and round 2's ~7 GB says the
+  configuration was wrong, not that quantization does not work;
+- **collection load time**;
+- per-bucket p50/p95 for **both** query paths, at `ef=default` and `ef=128`, keeping round 2's
+  200-search warm-up and randomised bucket order.
+
+Also run one **`rescore=false`** row for int8 and binary. With rescoring off the originals need
+never be touched at query time, which is the genuinely small-footprint mode — it costs recall, and
+recall is measured on the training box, but the cost side belongs here.
+
+## The number that matters
+
+**Peak RSS for a 1M × 1024 index.** If binary + `always_ram` + `on_disk` originals lands near
+~130 MB of hot vectors instead of ~7 GB, then the document index stops dominating the frontier and
+the whole edge story changes — which would be the third time this prototype has overturned an
+assumption. If it does not, that is equally worth knowing and should be said plainly.
 
 ## Setup
 
 ```bash
 cd <the repo>
 git fetch origin && git checkout m9-work && git pull
-python m9src/edge_cost.py --threads 4      # writes the nano ONNX graphs if absent
 ```
 
-Extend `bench/edge_prototype_pair.py` (yours from round 1). Write
-`results/m9_edge_prototype_<cpu>.json` — overwriting round 1 is fine, git history keeps it — and
-add a `round: 2` field plus `warmup_searches` and the quantization configuration per row.
+Extend `bench/edge_prototype_pair.py`. Write `results/m9_edge_prototype_<cpu>.json` with
+`round: 3`, keeping rounds 1–2 recoverable from git history.
 
 ```bash
 git add results/m9_edge_prototype_*.json bench/edge_prototype_pair.py
-git commit -m "m9: edge prototype round 2 -- warmed timings and document-index quantization sweep"
+git commit -m "m9: edge prototype round 3 -- storage-configured quantization sweep"
 git push origin m9-work
 ```
 
 ## Do not do these
 
-- **Nothing that feeds a quality decision on this machine.** Vectors and evaluations must come from
-  one consistent device; MPS is not bit-identical to CUDA.
+- **Nothing that feeds a quality decision on this machine.** MPS is not bit-identical to CUDA.
 - **Do not touch the held-out sets**: `results/frozen_eval/untouched-*`, `work/m9reserve/`,
   `work/dev/cqadup-android.json`, `work/dev/cqadup-english.json`, `work/lotte/`, or any HuggingFace
   cache for BeIR fever, BeIR dbpedia-entity, mteb cqadupstack-android / cqadupstack-english.
@@ -81,7 +79,5 @@ git push origin m9-work
 
 ## Report back
 
-The warmed per-bucket table, and the quantization sweep as bytes / RSS / load / latency per
-configuration. Most interesting outcome to look for: whether int8 or binary quantization changes
-the **ratio** between the two query paths — if a smaller index makes search cheaper, nano's
-transformer becomes a larger share of the query, and the frontier's shape changes again.
+Bytes and peak RSS per configuration, the latency table, and whether `rescore=false` changes the
+footprint materially. This is the last thing needed from this machine.
