@@ -118,6 +118,44 @@ arm, or arms from three different code states.
 - **fp16 ONNX parity** missed its locked 0.9999 threshold at 0.99953 — recorded as a fail rather
   than re-thresholded; the right follow-up is a preregistered retrieval-impact tolerance.
 
+## HANDOFF — read this first if you are a fresh session
+
+**The next action is to finish M9.1's three recipe arms, then launch the M9.3 build tonight.**
+Nothing is running right now. Order matters; the guard enforces it.
+
+```bash
+cd /home/dylan/asymetric-dual-encoders            # branch m9-work
+./m9status.sh                                     # where the chain is
+.venv/bin/python m9src/guard9.py                  # must print problems: []
+
+# 1. the screen (~2.5 h). m9src is FROZEN until this finishes -- see the warning below.
+rm -f work/m9tokens/*.json results/m9_screen_m9s*.json results/m9_adequacy.json \
+      results/m9_screen_state.json results/m9_screen_decisions.json
+.venv/bin/python -c "import sys;sys.path[:0]=['m9src'];import guard9;guard9.open_session(force=True)"
+setsid nohup ./run_m9_stage.sh gate:warmfit gate:fp16_gate gate:bridge_dryrun:verify \
+    m9s1 adequacy m9s1c m9s1b m9s4 decide m9s5 decide m9s6 decide > logs/m9_chain_out.log 2>&1 &
+
+# 2. the build's remaining prerequisites (~40 min, after the screen)
+.venv/bin/python m9src/longrun.py targets         # 1.14M texts, one stella pass
+.venv/bin/python m9src/longrun.py manifest
+.venv/bin/python m9src/longrun.py verify
+.venv/bin/python m9src/make_config.py             # reads the FINAL decide artifact
+.venv/bin/python m9src/test_resume.py             # MUST pass; do not skip this one
+git add -A && git commit -m "m9.2: recipe lock" && git push origin m9-work
+
+# 3. launch
+setsid nohup .venv/bin/python m9src/watchdog.py --hours 168 > logs/m9_watchdog.log 2>&1 &
+```
+
+The watchdog starts the trainer itself, restarts it if it dies or wedges, refuses to restart a
+*registered* stop, and republishes `m9/RUN_STATUS.md` on branch `m9-status` every 30 minutes.
+
+> **WARNING, learned the expensive way.** `m9src/guard9.py` is itself inside the `protocol` scope
+> it enforces, and `m9src/warmfit.py`/`nano.py`/`screen.py` are inside `train`. **Editing any file
+> under `m9src/` while an arm is running voids that arm at write time** — it cost five completed
+> arms today. Batch every guarded-file edit into a window when nothing is running.
+> `m9/LEDGER.md`, `m9/registry.json` and `results/m9_lock_constants.json` are guarded too.
+
 ## Where the seven-day build stands
 
 Dylan is available until ~00:30 tonight and away for three days after, so the build launches
@@ -131,7 +169,8 @@ tonight and runs unattended. Everything for it is written, reviewed and committe
 | dose | **5% queries / 5% spans / 90% documents** by token — 109.6 query epochs, not 438 |
 | schedule | warmup → stable → **decay on demand**, cooldown 59.5 M tokens (the anchor's whole dose) |
 | kill envelope | non-finite, regression, plateau, throughput collapse, first-eval vs step-0 baseline |
-| remaining | teacher targets for 1.14 M new texts · manifest · **resume-equivalence test on the real path** · fill the M9.2 lock from `decide` · Codex review of that lock · launch |
+| teacher | **stella-400M, not screened** — `m9s2` (stella-1.5B) was behind the anchor at every checkpoint (final −0.00229 against a +0.010 bar), so the teacher arms were withdrawn on measurement and on the owner's product preference: one document model, one collection, shared by `zero` and `nano` |
+| remaining | the three recipe arms · teacher targets for 1.14 M new texts · manifest · **resume-equivalence test on the real path** · fill the M9.2 lock from `decide` · launch |
 
 `m9/M92_LOCK.md` is the recipe lock; `m9/RUN_STATUS.md` will be published on branch `m9-status`
 every 30 minutes so the run is legible from anywhere while nobody is at the machine.
