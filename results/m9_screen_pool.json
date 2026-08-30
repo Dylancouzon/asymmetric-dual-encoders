@@ -1,0 +1,45 @@
+{
+  "derived_from": "train.build_arrays(Cfg(), pool.build()) + work/m8_trainq_texts.json",
+  "n_derived": 338076,
+  "n_kept": 337981,
+  "m8_manifest_sha256": "da0f208ef29bae3833ffead070eb34b61f390f9d72ed96d448d45ae6b52072c2",
+  "by_source": {
+    "esci-us": 73030,
+    "fever-train": 95195,
+    "hotpotqa-train": 81743,
+    "mrtydi-en": 3300,
+    "squad-train": 84713
+  },
+  "pool_encoder": "stella-400M-v5",
+  "pool_n": 6169142,
+  "excluded_sources": [
+    "fever-train"
+  ],
+  "n_screen_pool": 242786,
+  "screen_pool_sha256": "77c7ce118feab016bd9991c295b15859ba6af582e557d3dbd98508433fc49238",
+  "screen_rows_sha256": "43c591a2eca81690d845e8ef3d8a32bd8850a66299700ce930de3ce9dc434d0d",
+  "by_source_kept": {
+    "esci-us": 73030,
+    "hotpotqa-train": 81743,
+    "mrtydi-en": 3300,
+    "squad-train": 84713
+  },
+  "word_len": {
+    "mean": 10.637,
+    "p50": 9,
+    "p95": 25,
+    "max": 108
+  },
+  "stella_target_cache": {
+    "shape": [
+      337981,
+      1024
+    ],
+    "dtype": "float16",
+    "verified": "teacher.encode_cached re-derived the same key"
+  },
+  "target_norm_check": {
+    "min": 0.999972,
+    "max": 1.000022
+  }
+}

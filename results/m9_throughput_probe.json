@@ -1,0 +1,88 @@
+{
+  "_what": "synthetic-text throughput probe on the RTX 3080, run BEFORE the M9.0 lock to size the screen dose. No real corpus text was encoded and no teacher target was produced: the inputs are random word sequences at controlled lengths. The M9.1 throughput pilot re-prices on real texts (m9/LEDGER.md S6).",
+  "gpu": "NVIDIA GeForce RTX 3080 10GB",
+  "dtype": "fp16 (encode) / bf16 autocast (train)",
+  "date": "2026-08-30",
+  "rows": {
+    "stella-400M/query": {
+      "repo": "NovaSearch/stella_en_400M_v5",
+      "n": 2048,
+      "sec": 0.99,
+      "per_s": 2075.6,
+      "max_len": 128,
+      "bs": 128,
+      "peak_gb": 1.02
+    },
+    "stella-400M/doc": {
+      "repo": "NovaSearch/stella_en_400M_v5",
+      "n": 512,
+      "sec": 2.44,
+      "per_s": 210.1,
+      "max_len": 512,
+      "bs": 32,
+      "peak_gb": 1.19
+    },
+    "qwen3-0.6B/query": {
+      "repo": "Qwen/Qwen3-Embedding-0.6B",
+      "n": 2048,
+      "sec": 1.78,
+      "per_s": 1151.6,
+      "max_len": 128,
+      "bs": 128,
+      "peak_gb": 1.53
+    },
+    "qwen3-0.6B/doc": {
+      "repo": "Qwen/Qwen3-Embedding-0.6B",
+      "n": 512,
+      "sec": 3.52,
+      "per_s": 145.5,
+      "max_len": 512,
+      "bs": 32,
+      "peak_gb": 2.14
+    },
+    "train/bge-small/query": {
+      "repo": "BAAI/bge-small-en-v1.5",
+      "bs": 128,
+      "steps": 60,
+      "sec": 3.16,
+      "steps_per_s": 19.01,
+      "ex_per_s": 2433.3,
+      "nwords": 12,
+      "max_len": 128,
+      "peak_gb": 1.1
+    },
+    "train/bge-small/doc": {
+      "repo": "BAAI/bge-small-en-v1.5",
+      "bs": 32,
+      "steps": 60,
+      "sec": 3.24,
+      "steps_per_s": 18.53,
+      "ex_per_s": 592.9,
+      "nwords": 180,
+      "max_len": 512,
+      "peak_gb": 1.9
+    },
+    "train/minilm-l6/query": {
+      "repo": "sentence-transformers/all-MiniLM-L6-v2",
+      "bs": 128,
+      "steps": 60,
+      "sec": 1.79,
+      "steps_per_s": 33.48,
+      "ex_per_s": 4285.0,
+      "nwords": 12,
+      "max_len": 128,
+      "peak_gb": 0.69
+    },
+    "train/minilm-l6/doc": {
+      "repo": "sentence-transformers/all-MiniLM-L6-v2",
+      "bs": 32,
+      "steps": 60,
+      "sec": 2.01,
+      "steps_per_s": 29.92,
+      "ex_per_s": 957.5,
+      "nwords": 180,
+      "max_len": 512,
+      "peak_gb": 1.07
+    }
+  }
+}

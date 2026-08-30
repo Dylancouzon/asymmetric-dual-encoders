@@ -1,0 +1,40 @@
+{
+  "_what": "Pre-registered power basis for the M9.1 screen decision rules (Codex MAJOR-2). Empirical distribution of per-query nDCG@10 DIFFERENCE standard deviations over 2,031 system pairs found in M7/M8's committed dev per-query dumps (results/m7_devperquery_*.json.gz), computed on the same two surfaces M9 decides on. Measured BEFORE any M9 arm was trained.",
+  "caveat": "These pairs are mostly close variants of one table family, so they may understate the spread between two different STUDENT backbones. The p90 row is used as the planning value.",
+  "surfaces": {
+    "screen3": {
+      "n_contrasts": 2031,
+      "sd_perquery_diff": {
+        "p10": 0.0301,
+        "p50": 0.0847,
+        "p90": 0.1256,
+        "max": 0.1686
+      },
+      "macro_SE": {
+        "p10": 0.0005,
+        "p50": 0.00137,
+        "p90": 0.00205,
+        "max": 0.00285
+      },
+      "mde_1p96_se_at_p90": 0.00402,
+      "mde_bonf2_at_p90": 0.00459
+    },
+    "full6": {
+      "n_contrasts": 2031,
+      "sd_perquery_diff": {
+        "p10": 0.0272,
+        "p50": 0.0835,
+        "p90": 0.1195,
+        "max": 0.1474
+      },
+      "macro_SE": {
+        "p10": 0.00068,
+        "p50": 0.00163,
+        "p90": 0.00259,
+        "max": 0.00314
+      },
+      "mde_1p96_se_at_p90": 0.00508,
+      "mde_bonf2_at_p90": 0.00581
+    }
+  }
+}

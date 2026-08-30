@@ -1,0 +1,473 @@
+{
+  "_note": "M9 pre-registration. Every constant a rule reads lives here and nowhere else (m8/CODEMAP.md pitfall 12: never mirror a registry constant into code). m9/LEDGER.md is the prose; this is the machine copy.",
+  "version": 2,
+  "ledger": "m9/LEDGER.md",
+  "created": "2026-08-30",
+  "stage": "M9.0",
+  "alpha_family": 0.025,
+  "data": {
+    "screen_query_pool_relpath": "work/m9_screen_queries.json",
+    "screen_query_pool_sha256": "77c7ce118feab016bd9991c295b15859ba6af582e557d3dbd98508433fc49238",
+    "n_screen_queries": 242786,
+    "excluded_sources": [
+      "fever-train",
+      "nqopen",
+      "triviaqa"
+    ],
+    "doc_pool": "work/pool/stella-400M-v5",
+    "doc_pool_excluded_store": "fever-pos",
+    "fineweb": "EXCLUDED \u2014 no persisted reserved-set document fingerprints exist (m9/LEDGER.md 1.3)",
+    "n_eligible_doc_rows": 6149679,
+    "doc_candidates_n": 400000,
+    "doc_candidates_seed": 9,
+    "doc_candidates_rows_sha256": "89fb550ec82fcfb9577aa55038f10889a88296723b8b0449c46af705bdc17ae6"
+  },
+  "dose": {
+    "examples": 3884576,
+    "batch_size": 128,
+    "steps": 30349,
+    "epochs_query_only": 16,
+    "checkpoints": [
+      7587,
+      15175,
+      22762,
+      30349
+    ],
+    "decision_checkpoint": 30349,
+    "seed": 0,
+    "lr_peak": 0.0001,
+    "lr_final": 1e-05,
+    "warmup_steps": 910,
+    "schedule": "linear warmup then cosine",
+    "optimizer": "AdamW",
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "precision": "bf16 autocast backbone, loss in fp32",
+    "max_seq": 512,
+    "mix_arm": {
+      "design": "fixed-compute: identical optimizer updates AND identical non-pad tokens, split 70/30 BY TOKEN",
+      "query_token_target": 41655510,
+      "doc_token_target": 17852362,
+      "doc_tokens_realized": 17852415,
+      "n_docs_single_pass": 111906,
+      "doc_epochs": 1,
+      "query_epochs_equivalent": 11.2,
+      "batching": "token-budgeted: per step fill 0.70*per_step_token_budget query tokens and 0.30 doc tokens, both streams consumed in order",
+      "loss_weighting": "plain mean over all examples in the batch; no role weighting",
+      "challenger_branch": "a selected challenger re-encodes the SAME 111,906 raw documents in its own space"
+    },
+    "fallback_if_over_12_gpu_hours": {
+      "examples": 1942288,
+      "steps": 15175,
+      "epochs_query_only": 8,
+      "checkpoints": [
+        3794,
+        7588,
+        11381,
+        15175
+      ],
+      "warmup_steps": 455,
+      "T_base_nonpad_tokens": 29753936
+    },
+    "T_base_nonpad_tokens": 59507872,
+    "per_step_token_budget": 1960.8,
+    "partial_batch": "the final batch is trained at its natural size (32 examples)",
+    "grad_accumulation": 0,
+    "weight_decay_applies_to": "parameters with dim > 1; 0.0 otherwise",
+    "lr_formula": "warmup: 1e-4*(step+1)/910; then 1e-5 + 0.5*(1e-4-1e-5)*(1+cos(pi*(step-910)/(30349-910)))",
+    "epoch_order": "one default_rng(seed); fresh permutation(n) per epoch, concatenated",
+    "retrieval_dtype": "fp32 matmul from fp16 document memmaps",
+    "fallback_batch32": {
+      "trigger": "arm P selects batch 32",
+      "examples": 1942288,
+      "batch_size": 32,
+      "steps": 60697,
+      "epochs_query_only": 8,
+      "checkpoints": [
+        15174,
+        30348,
+        45522,
+        60697
+      ],
+      "warmup_steps": 1821,
+      "T_base_nonpad_tokens": 29753936
+    },
+    "checkpoint_surfaces": {
+      "SCREEN3": "all four checkpoints (0.65 GB of document vectors -- free, and it carries the dose-response curve)",
+      "DEV6": "checkpoints 3 and 4 only -- the two the rank-stability rule reads. A DEV6 pass streams 23.3 GB of document vectors at this box's measured 174 MB/s, so four passes per arm would cost more wall-clock than the training they measure",
+      "decided_before_any_arm_ran": true
+    }
+  },
+  "objective": {
+    "phase1": "mean_over_batch(sum_over_dim((normalize(student_out) - target)^2))",
+    "normalize_eps": 1e-12,
+    "loss_dtype": "fp32",
+    "auxiliary_terms": "none",
+    "pooling": "mean over attention mask",
+    "head": "Linear(hidden, 1024, bias=True), default init",
+    "output": "L2-normalized"
+  },
+  "templates": {
+    "query_policy_b_student": "",
+    "query_policy_a_student": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
+    "query_teacher_target": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
+    "doc_student": "passage: ",
+    "doc_teacher_target": "",
+    "baseline_prompt_policy": "b"
+  },
+  "statistic": {
+    "module": "m9src/screen_stats.py",
+    "B": 20000,
+    "seed": 0,
+    "resample": "n_d queries with replacement within each component",
+    "aggregate": "component means combined at the surface's weights",
+    "shared_indices_across_contrasts": true,
+    "qid_manifest": "results/m9_lock_constants.json -> qid_manifest (ordered sha256 per component)"
+  },
+  "rules": {
+    "mde": {
+      "formula": "max(0.0051, 2 * F)",
+      "F": "|macro(m9s1) - macro(m9s1b)| on DEV6, measured at M9.1",
+      "floor_provenance": "1.96 x p90 DEV6 macro SE 0.00259 (results/m9_power_prereg.json)",
+      "limitation": "F is a K=2 range and is a very noisy sigma estimate (m8/CODEMAP.md pitfall 18); it may only RAISE the threshold"
+    },
+    "teacher_swap": {
+      "surface": "SCREEN3",
+      "margin": 0.01,
+      "quantile": 0.0125,
+      "multiplicity": "Bonferroni over 2 challenger contrasts",
+      "extra": "direction stable across family, equal and query-pooled weightings",
+      "default": "stella-400M stays",
+      "tie": "stella stays",
+      "both_pass": "larger point estimate wins",
+      "on_swap": "STOP and return to Dylan: student/prompt/mix cannot run on DEV6 in a challenger space"
+    },
+    "batch_size": {
+      "surface": "DEV6",
+      "margin": "MDE",
+      "quantile": 0.025,
+      "default": "128"
+    },
+    "student": {
+      "surface": "DEV6",
+      "margin": "MDE",
+      "quantile": 0.025,
+      "rank_stability": true,
+      "default": "bge-small-en-v1.5"
+    },
+    "prompt": {
+      "surface": "DEV6",
+      "margin": "MDE",
+      "quantile": 0.025,
+      "rank_stability": true,
+      "default": "b"
+    },
+    "mix": {
+      "surface": "DEV6",
+      "margin": "MDE",
+      "quantile": 0.025,
+      "rank_stability": true,
+      "default": "query-only"
+    },
+    "rank_stability_rule": "the contrast must have the same sign at the last two checkpoints; a flip means 'not stable at screen dose' -> default, arm recorded diagnostic",
+    "scope": "every screen verdict is artifact-specific at the screen dose; never 'resolved', 'confirmed' or 'significant'"
+  },
+  "arms": [
+    {
+      "id": "m9p-bs128",
+      "varies": "batch pilot",
+      "teacher": "stella-400M-v5",
+      "student": "bge-small-en-v1.5",
+      "prompt": "b",
+      "mix": "query-only",
+      "seed": 0,
+      "batch_size": 128,
+      "epochs": 2,
+      "surface": "DEV6"
+    },
+    {
+      "id": "m9p-bs32",
+      "varies": "batch pilot",
+      "teacher": "stella-400M-v5",
+      "student": "bge-small-en-v1.5",
+      "prompt": "b",
+      "mix": "query-only",
+      "seed": 0,
+      "batch_size": 32,
+      "epochs": 2,
+      "surface": "DEV6"
+    },
+    {
+      "id": "m9s1",
+      "varies": "anchor",
+      "teacher": "stella-400M-v5",
+      "student": "bge-small-en-v1.5",
+      "prompt": "b",
+      "mix": "query-only",
+      "seed": 0,
+      "surface": "both"
+    },
+    {
+      "id": "m9s1b",
+      "varies": "seed",
+      "teacher": "stella-400M-v5",
+      "student": "bge-small-en-v1.5",
+      "prompt": "b",
+      "mix": "query-only",
+      "seed": 1,
+      "surface": "DEV6"
+    },
+    {
+      "id": "m9s2",
+      "varies": "teacher",
+      "teacher": "stella-1.5B-v5",
+      "student": "bge-small-en-v1.5",
+      "prompt": "b",
+      "mix": "query-only",
+      "seed": 0,
+      "surface": "SCREEN3"
+    },
+    {
+      "id": "m9s3",
+      "varies": "teacher",
+      "teacher": "qwen3-embedding-0.6B",
+      "student": "bge-small-en-v1.5",
+      "prompt": "b",
+      "mix": "query-only",
+      "seed": 0,
+      "surface": "SCREEN3"
+    },
+    {
+      "id": "m9s4",
+      "varies": "student",
+      "teacher": "selected",
+      "student": "all-MiniLM-L6-v2",
+      "prompt": "b",
+      "mix": "query-only",
+      "seed": 0,
+      "surface": "DEV6"
+    },
+    {
+      "id": "m9s5",
+      "varies": "prompt",
+      "teacher": "selected",
+      "student": "selected",
+      "prompt": "a",
+      "mix": "query-only",
+      "seed": 0,
+      "surface": "DEV6"
+    },
+    {
+      "id": "m9s6",
+      "varies": "mix",
+      "teacher": "selected",
+      "student": "selected",
+      "prompt": "selected",
+      "mix": "70/30",
+      "seed": 0,
+      "surface": "DEV6"
+    }
+  ],
+  "validation_samples": {
+    "fp16_target_cache": {
+      "n": 10000,
+      "strata": "10 equal-count WordPiece-length deciles of the screen pool",
+      "seed": 11,
+      "min_cos": 0.9999,
+      "max_abs": 0.001,
+      "withdrawn": "the 'query retrieval macro shift <= 1e-4' clause: training texts carry no qrels (LEDGER S9.2)"
+    },
+    "onnx_parity": {
+      "n": 512,
+      "composition": "256 query-pool + 256 documents; 51/51/51/51/52 per length bin per side, longest bin first, shortfall to the next bin down",
+      "seed": 12,
+      "opset": 17,
+      "min_cos": 0.9999,
+      "max_abs": 0.001,
+      "applies_to": "every example"
+    },
+    "bridge_dryrun": {
+      "surface": "DEV6",
+      "anchor": "bge-small-en-v1.5",
+      "max_abs_delta_ndcg": 0.0003,
+      "qid_drift": 0
+    },
+    "throughput_pilot": {
+      "n_queries": 20000,
+      "query_seed": 13,
+      "n_docs": 5000,
+      "doc_source": "first 5000 of the locked candidate list",
+      "warmup_batches_discarded": 2,
+      "formula": "sum over the 9 runs of (examples / measured ex_per_s) + measured challenger encode seconds",
+      "fallback_threshold_gpu_hours": 12
+    }
+  },
+  "bins": {
+    "length_words": [
+      [
+        1,
+        5
+      ],
+      [
+        6,
+        10
+      ],
+      [
+        11,
+        20
+      ],
+      [
+        21,
+        50
+      ],
+      [
+        51,
+        null
+      ]
+    ],
+    "fragmentation_subwords_per_word": [
+      [
+        1.0,
+        1.2
+      ],
+      [
+        1.2,
+        1.5
+      ],
+      [
+        1.5,
+        2.0
+      ],
+      [
+        2.0,
+        null
+      ]
+    ],
+    "fragmentation_note": "punctuation stripped BEFORE tokenizing (m8/CODEMAP.md pitfall 14)"
+  },
+  "lotte": {
+    "read_at_m9_1": false,
+    "kind": "non-inferiority veto, NOT a confirmation",
+    "threshold": 0.004,
+    "fallback_recipe": "stella-400M x bge-small x prompt b x query-only",
+    "rule": "one atomic batch over two hash-pinned equal-dose checkpoints; the selection stands unless the selected recipe's 7-slice macro is worse by more than 0.004 AND the 97.5% one-sided paired-bootstrap upper bound on (selected - fallback) is below -0.004",
+    "adoption_may_not_trigger_retraining": true,
+    "reads_permitted": 2
+  },
+  "bars": {
+    "aim": {
+      "system": "leaf-ir-asym",
+      "avg6": 0.5155,
+      "ndo4": 0.5233
+    },
+    "release": {
+      "system": "bge-small symmetric",
+      "avg6": 0.5042,
+      "ndo4": 0.5046
+    },
+    "ceiling": {
+      "system": "stella-400M symmetric",
+      "avg6": 0.5744,
+      "ndo4": 0.564
+    }
+  },
+  "_review": "research/m9-codex-lock-2026-08-30.md (gpt-5.6-sol, DO NOT COMMIT on v1; 7 BLOCKER / 8 MAJOR / 4 MINOR, all actioned -- m9/LEDGER.md S10)",
+  "branch": "m9-work",
+  "lock_constants": "results/m9_lock_constants.json",
+  "power_basis": "results/m9_power_prereg.json",
+  "models": {
+    "students": {
+      "bge-small-en-v1.5": {
+        "repo": "BAAI/bge-small-en-v1.5",
+        "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+        "params": 33754240,
+        "fp16_MB": 67.508
+      },
+      "all-MiniLM-L6-v2": {
+        "repo": "sentence-transformers/all-MiniLM-L6-v2",
+        "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+        "params": 23107456,
+        "fp16_MB": 46.215
+      }
+    },
+    "teachers": {
+      "stella-400M-v5": {
+        "repo": "NovaSearch/stella_en_400M_v5",
+        "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+        "pooling": "mean",
+        "path": "m7src/teacher.py (frozen)"
+      },
+      "stella-1.5B-v5": {
+        "repo": "NovaSearch/stella_en_1.5B_v5",
+        "revision": "7817065102fd9e1b031fe874e910c01f40b2f001",
+        "pooling": "mean",
+        "path": "sentence-transformers"
+      },
+      "qwen3-embedding-0.6B": {
+        "repo": "Qwen/Qwen3-Embedding-0.6B",
+        "revision": "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+        "pooling": "last-token",
+        "path": "sentence-transformers"
+      }
+    },
+    "st_vs_frozen_parity": {
+      "n": 64,
+      "min_cos": 0.99959,
+      "max_abs": 0.000145
+    }
+  },
+  "surfaces": {
+    "DEV6": {
+      "components": [
+        "nq-250k",
+        "hotpotqa",
+        "cqadup-programmers",
+        "cqadup-physics",
+        "heldout-train",
+        "heldout-longq"
+      ],
+      "weights": "equal per component",
+      "n_queries": 20152,
+      "decides": [
+        "batch_size",
+        "student",
+        "prompt",
+        "mix",
+        "seed_floor"
+      ]
+    },
+    "SCREEN3": {
+      "components": [
+        "nq-250k",
+        "cqadup-programmers",
+        "cqadup-physics"
+      ],
+      "weights": {
+        "nq-250k": 0.5,
+        "cqadup-programmers": 0.25,
+        "cqadup-physics": 0.25
+      },
+      "n_queries": 5367,
+      "decides": [
+        "teacher"
+      ],
+      "sensitivity_weightings": [
+        "family",
+        "equal",
+        "query-pooled"
+      ]
+    }
+  },
+  "artifact_size": {
+    "unit": "decimal MB of total shipped bytes (ONNX graph + tokenizer + config)",
+    "target": 70,
+    "weights_only_bge": 67.508,
+    "weights_only_minilm": 46.215,
+    "measured_by": "m9src/port.py"
+  }
+}

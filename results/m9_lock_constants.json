@@ -1,0 +1,150 @@
+{
+  "_what": "every numeric quantity the M9.0 lock states, materialized once, before the lock is committed. No training, no retrieval evaluation, no protected path.",
+  "framework": {
+    "python": "3.12.14",
+    "torch": "2.8.0+cu126",
+    "transformers": "4.57.6",
+    "numpy": "2.3.5",
+    "onnxruntime": "1.29.0",
+    "sentence_transformers": "5.7.0",
+    "fastembed": null,
+    "cuda": "12.6",
+    "gpu": "NVIDIA GeForce RTX 3080"
+  },
+  "artifact_sizes": {
+    "bge-small-en-v1.5": {
+      "params": 33754240,
+      "weights_fp16_bytes": 67508480,
+      "weights_fp16_MB_decimal": 67.508
+    },
+    "all-MiniLM-L6-v2": {
+      "params": 23107456,
+      "weights_fp16_bytes": 46214912,
+      "weights_fp16_MB_decimal": 46.215
+    }
+  },
+  "token_budget": {
+    "doc_candidates": {
+      "n": 400000,
+      "seed": 9,
+      "rows_sha256": "89fb550ec82fcfb9577aa55038f10889a88296723b8b0449c46af705bdc17ae6",
+      "n_eligible": 6149679,
+      "n_banned": 7190
+    },
+    "students": {
+      "bge-small-en-v1.5": {
+        "query_tokens_per_epoch": 3719242,
+        "T_base_nonpad_tokens": 59507872,
+        "query_len": {
+          "mean": 15.32,
+          "p50": 14,
+          "p95": 32,
+          "max": 143
+        },
+        "doc_len": {
+          "mean": 94.57,
+          "p50": 64,
+          "p95": 306,
+          "max": 512
+        },
+        "mix_doc_token_target": 17852362,
+        "mix_n_docs_single_epoch": 111906,
+        "mix_doc_tokens_realized": 17852415,
+        "mix_query_token_target": 41655510,
+        "per_step_token_budget": 1960.8
+      },
+      "all-MiniLM-L6-v2": {
+        "query_tokens_per_epoch": 3719242,
+        "T_base_nonpad_tokens": 59507872,
+        "query_len": {
+          "mean": 15.32,
+          "p50": 14,
+          "p95": 32,
+          "max": 143
+        },
+        "doc_len": {
+          "mean": 94.57,
+          "p50": 64,
+          "p95": 306,
+          "max": 512
+        },
+        "mix_doc_token_target": 17852362,
+        "mix_n_docs_single_epoch": 111906,
+        "mix_doc_tokens_realized": 17852415,
+        "mix_query_token_target": 41655510,
+        "per_step_token_budget": 1960.8
+      }
+    }
+  },
+  "qid_manifest": {
+    "nq-250k": {
+      "n_queries": 3452,
+      "qids_sha256": "7a599ec2e87f0d5737664ad9fb14e90896bd5198c5c82dcd899e6cb794a5a14b",
+      "qids_ordered_sha256": "6b08ecc7ee59234d1fc5fba017a95bd244ffef2940a6bdd4f40a606bcc2c9795",
+      "n_qrels": 3452,
+      "n_docs": 250000,
+      "dim": 1024
+    },
+    "hotpotqa": {
+      "n_queries": 7405,
+      "qids_sha256": "5d511776a579f872d4810fa7eb5194138bfc95ea92da3121cba9041f226b59ea",
+      "qids_ordered_sha256": "aa316548c01b03bed24aa6ae88d240821872a14720df2c0c2f80626f7c4bb58d",
+      "n_qrels": 7405,
+      "n_docs": 5233329,
+      "dim": 1024
+    },
+    "cqadup-programmers": {
+      "n_queries": 876,
+      "qids_sha256": "0eff4f8e2371608b0b48420f9d8959964d90055474b739d82cdf862f68067b56",
+      "qids_ordered_sha256": "c8ea814d58612bf40e17b870e0f580966e84656af234210200c2624108a73d22",
+      "n_qrels": 876,
+      "n_docs": 32176,
+      "dim": 1024
+    },
+    "cqadup-physics": {
+      "n_queries": 1039,
+      "qids_sha256": "7e9072aac95c484b399d8ea2961c1d3a9c8a7b236aae2328ae42371764da6d57",
+      "qids_ordered_sha256": "fe987a31cfa25dbd9ede27d8e0add43ce4f86035dc9bd32737981f74fb5af7eb",
+      "n_qrels": 1039,
+      "n_docs": 38316,
+      "dim": 1024
+    },
+    "heldout-train": {
+      "n_queries": 7325,
+      "qids_sha256": "61eb026b155c825ba09a0b1dc748daf06cc60d5d52edf831111010aa31232ec4",
+      "qids_ordered_sha256": "de58fb960400571f58709b7d631c3126ed8ebf0ce837073cb3075fad1b6018ba",
+      "n_qrels": 7325,
+      "n_docs": 6169142,
+      "dim": 1024
+    },
+    "heldout-longq": {
+      "n_queries": 55,
+      "qids_sha256": "df5b3b0ffe19251657bb009267e0752346e4f010fffcd75ac44ef7c5e0b5e7b5",
+      "qids_ordered_sha256": "342e2a180fd9bec5f6fec681266087ed86bffc7a050140f8588831a1e5b87a51",
+      "n_qrels": 55,
+      "n_docs": 6169142,
+      "dim": 1024
+    }
+  },
+  "code_hashes": {
+    "m9src/data.py": "9ef4c7a3270cc4ce",
+    "m9src/eval9.py": "88df883e045abeca",
+    "m9src/guard9.py": "cc41c53c0f30bec1",
+    "m9src/lock_constants.py": "fed16a1cd5e15b11",
+    "m9src/m9base.py": "5e6055b8adc8bb7a",
+    "m9src/nano.py": "475b5649b2d97152",
+    "m9src/port.py": "fdc8cdca8fa7178d",
+    "m9src/screen.py": "7dcca41aa304b06e",
+    "m9src/screen_stats.py": "9547876f8c79bf2a",
+    "m9src/teacher9.py": "3d2ba47b04b9ce76",
+    "m7src/evalkit.py": "16f88eb2c7ea143d",
+    "m7src/teacher.py": "873a4040536c8f90",
+    "m7src/devsuite.py": "3ae8141ac4b3f9bb",
+    "m7src/dev_eval.py": "e5f702536c8af6a7",
+    "m7src/pool.py": "c72e7b8e7aa8a8d5",
+    "m7src/mix.py": "8c3e9d11c5dbc4e4",
+    "m7src/train.py": "5ab59213ae3c0657",
+    "m7src/heldout.py": "18df62aa0c019490",
+    "m8src/paths_guard.py": "83918ebdc7836f67"
+  }
+}
