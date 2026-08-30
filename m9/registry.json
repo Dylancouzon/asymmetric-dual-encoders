@@ -493,11 +493,9 @@
     "m9-warmfit",
     "m9-fp16-gate",
     "m9-bridge-dryrun",
-    "m9s1",
-    "m9s1c",
-    "m9s1b"
+    "m9s1"
    ],
-   "purpose": "the corrected, fully guarded anchor curve plus the M9.1 pilots. m9s1c prices the head warm start."
+   "purpose": "the corrected, fully guarded anchor curve plus the M9.1 pilots. m9s1c prices the head warm start. m9s1c/m9s1b withdrawn 2026-08-30 (see their arm entries)."
   },
   "B": {
    "runs": [
