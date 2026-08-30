@@ -1,0 +1,48 @@
+{
+  "_note": "VECTOR-PRF -- train-free dense pseudo-relevance feedback on R0's frozen table.",
+  "config": {
+    "alpha": 0.4,
+    "beta": 0.6,
+    "depth": 3,
+    "source": "arXiv 2205.00235, published config, used verbatim -- no grid"
+  },
+  "group_vector": {
+    "base": {
+      "group_vector_median": 0.3673137076993903
+    },
+    "prf": {
+      "group_vector_median": 0.35875600167103183
+    }
+  },
+  "fused_macro": {
+    "base": 0.39488112793298824,
+    "prf": 0.39361570374292587
+  },
+  "per_component_means": {
+    "base": {
+      "cqadup-programmers": 0.33891735184612104,
+      "cqadup-physics": 0.39571006355265953
+    },
+    "prf": {
+      "cqadup-programmers": 0.3280429183898251,
+      "cqadup-physics": 0.38946908495223864
+    }
+  },
+  "delta_group_vector": -0.00855770602835848,
+  "delta_fused_macro": -0.0012654241900623697,
+  "mean_cosine_q_to_qprime": {
+    "cqadup-programmers": 0.7971441745758057,
+    "cqadup-physics": 0.8192626237869263
+  },
+  "bar": 0.004,
+  "cleared_bar": false,
+  "verdict": "NO SURVIVOR -- train-free query-side post-hoc refinement does not recover the bag-query gap",
+  "cost_disclosure": "TWO ANN queries per search plus a k-vector fetch, against one for R0. The edge story changes from a single round trip to two, and the feedback vectors must be retrievable at query time.",
+  "is_a_system_change": "qualifying_system, never qualifying_table: no row changed. Any write-up must decompose it as a retrieval-procedure change.",
+  "components": [
+    "cqadup-programmers",
+    "cqadup-physics"
+  ],
+  "smoke": true,
+  "seconds": 15.5
+}
