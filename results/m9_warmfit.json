@@ -15,60 +15,71 @@
   "rows": [
     {
       "lambda": 1e-06,
-      "fit_unnormalized_sq_l2": 0.494965,
-      "fit_objective": 0.580203,
-      "val_objective": 0.612947
+      "fit_unnormalized_sq_l2": 0.4949508309364319,
+      "fit_objective": 0.5801486968994141,
+      "val_objective": 0.5909149646759033
     },
     {
       "lambda": 1e-05,
-      "fit_unnormalized_sq_l2": 0.494965,
-      "fit_objective": 0.580203,
-      "val_objective": 0.612945
+      "fit_unnormalized_sq_l2": 0.4949508309364319,
+      "fit_objective": 0.5801485776901245,
+      "val_objective": 0.5909143686294556
     },
     {
       "lambda": 0.0001,
-      "fit_unnormalized_sq_l2": 0.494968,
-      "fit_objective": 0.580206,
-      "val_objective": 0.612935
+      "fit_unnormalized_sq_l2": 0.4949535131454468,
+      "fit_objective": 0.5801514983177185,
+      "val_objective": 0.5909122228622437
     },
     {
       "lambda": 0.001,
-      "fit_unnormalized_sq_l2": 0.495044,
-      "fit_objective": 0.580307,
-      "val_objective": 0.612957
+      "fit_unnormalized_sq_l2": 0.49502554535865784,
+      "fit_objective": 0.5802455544471741,
+      "val_objective": 0.5909681916236877
     },
     {
       "lambda": 0.01,
-      "fit_unnormalized_sq_l2": 0.495526,
-      "fit_objective": 0.580925,
-      "val_objective": 0.613296
+      "fit_unnormalized_sq_l2": 0.49549561738967896,
+      "fit_objective": 0.580837607383728,
+      "val_objective": 0.591296374797821
     },
     {
       "lambda": 0.1,
-      "fit_unnormalized_sq_l2": 0.502019,
-      "fit_objective": 0.588261,
-      "val_objective": 0.619063
+      "fit_unnormalized_sq_l2": 0.5019981861114502,
+      "fit_objective": 0.5881345868110657,
+      "val_objective": 0.5968773365020752
     },
     {
       "lambda": 1.0,
-      "fit_unnormalized_sq_l2": 0.565607,
-      "fit_objective": 0.668526,
-      "val_objective": 0.694263
+      "fit_unnormalized_sq_l2": 0.5657421350479126,
+      "fit_objective": 0.6683924794197083,
+      "val_objective": 0.6726316213607788
     }
   ],
   "selected_lambda": 0.0001,
   "registered_lambda": 0.0001,
   "agrees_with_registry": true,
-  "_what": "lambda selected on a TRAINING-ONLY holdout under the actual normalized objective. No dev surface is read. Ties go to the larger lambda.",
+  "_what": "lambda selected on a TRAINING-ONLY holdout under the actual normalized objective. No dev surface is read. Ties go to the larger lambda. The split is a random permutation of the 60,000-text sample, not a contiguous prefix.",
+  "_scope": "calibrated in the ANCHOR student's feature space and reused globally; it is an anchor-calibrated global lambda, not a per-arm calibrated one.",
   "_registration": {
     "run_id": "m9-warmfit",
     "diagnostic": false,
-    "commit": "793748755bbe7191dbe538d296333fdf6ee08038",
+    "commit": "dbf81765cfc4d8b262980ee9488dc5186dcb8730",
     "branch": "m9-work",
-    "session_sha256": "e5bfabda6995db26213aca6bad1d321142df3b25c1c0b2a526271c76bb6d7ded",
+    "session_sha256": "380570c28bffed9bf4e425c1b7a649e8a9ed3622dfc8a9ca056f654ce1fc0393",
     "stage": "M9.0",
-    "opened_at": 1788080941.863231,
-    "written_at": 1788080957.7213516,
+    "scopes": [
+      "protocol",
+      "data",
+      "train"
+    ],
+    "scoped": {
+      "protocol": "9d5ecaa1ba7d60068f4b35e3205fc8109c4143ebc6fe955c442348d553b9b58a",
+      "data": "beac6ee6f3ee1546f3331b53b5e436b2bd5f1b6840342d4c1070ea1830af8deb",
+      "train": "ffce1339607960c7078442982d43e35b78f30d1d0f57bd9e57e60b1ac5c513df"
+    },
+    "opened_at": 1788098861.928833,
+    "written_at": 1788098882.9577432,
     "extra": {},
     "eligible_for_decision": true
   }
