@@ -47,12 +47,14 @@ def parity_sample():
         bins = {}
         for i, t in enumerate(texts):
             bins.setdefault(length_bin(len(t.split()), edges), []).append(i)
-        per = want // len(edges)
+        nb = len(edges)
+        quota = [want // nb] * nb
+        quota[-1] += want - sum(quota)              # 51/51/51/51/52, the remainder to the longest
         out, deficit = [], 0
-        for b in range(len(edges) - 1, -1, -1):     # longest bin first; shortfall flows DOWN
+        for b in range(nb - 1, -1, -1):             # longest bin first; shortfall flows DOWN
             pool = bins.get(b, [])
-            k = min(len(pool), per + deficit)
-            deficit = per + deficit - k
+            k = min(len(pool), quota[b] + deficit)
+            deficit = quota[b] + deficit - k
             if k:
                 out += [texts[i] for i in rng.choice(pool, size=k, replace=False)]
         if len(out) < want:                         # top up from the whole set, deterministic
@@ -61,8 +63,9 @@ def parity_sample():
         return out[:want]
 
     q = json.loads((WORK / "m9_screen_queries.json").read_text())
-    drows, _ = m9data.doc_pool_rows(r["data"]["doc_subsample_n"], r["data"]["doc_subsample_seed"])
-    d = m9data.row_texts(drows[rng.choice(drows.size, size=4000, replace=False)])
+    cand, _ = m9data.doc_pool_rows(r["data"]["doc_candidates_n"],
+                                   r["data"]["doc_candidates_seed"])
+    d = m9data.row_texts(np.sort(rng.choice(cand, size=6000, replace=False)))
     return take(q, half) + take(d, half)
 
 
@@ -101,9 +104,15 @@ def export(student_key, out_dir=None, state_dict=None):
     g = onnx.load(str(p))
     domains = sorted({n.domain for n in g.graph.node})
     custom = [d for d in domains if d not in ("", "ai.onnx", "ai.onnx.ml")]
+    shipped = sorted(f for f in out_dir.iterdir() if f.is_file())
+    total = sum(f.stat().st_size for f in shipped)
     meta = {"student": student_key, "path": str(p.relative_to(m9base.REPO)), "opset": opset,
-            "bytes": p.stat().st_size, "domains": domains, "custom_domain_ops": custom,
-            "n_nodes": len(g.graph.node)}
+            "onnx_bytes": p.stat().st_size, "domains": domains, "custom_domain_ops": custom,
+            "n_nodes": len(g.graph.node),
+            # the 70 MB cap is on TOTAL SHIPPED BYTES, not the weight product (LEDGER §0)
+            "shipped_files": {f.name: f.stat().st_size for f in shipped},
+            "shipped_bytes": total, "shipped_MB_decimal": round(total / 1e6, 3),
+            "within_70MB_target": total <= 70e6}
     return p, meta, m
 
 
@@ -175,7 +184,8 @@ def fastembed_check(student_key, texts):
         return {"available": True, "registered": False, "error": repr(e)[:400]}
 
 
-def main(strict=True):
+def main():
+    guard9.begin_run("m9-port-pilot")
     texts = parity_sample()
     lens = [len(t.split()) for t in texts]
     out = {"sample": {"n": len(texts), "word_len_min": min(lens), "word_len_max": max(lens),
@@ -187,11 +197,9 @@ def main(strict=True):
         print(k, json.dumps({a: b for a, b in out["students"][k].items()
                              if a not in ("domains",)}, indent=1), flush=True)
     out["pass_all"] = all(v["pass"] for v in out["students"].values())
-    guard9.write_result(RESULTS / "m9_port_pilot.json", out, "M9.1 ONNX/fastembed pilot",
-                        strict=strict)
+    guard9.write_result(RESULTS / "m9_port_pilot.json", out, "m9-port-pilot")
     return out
 
 
 if __name__ == "__main__":
-    import sys
-    main(strict="--no-strict" not in sys.argv)
+    main()
