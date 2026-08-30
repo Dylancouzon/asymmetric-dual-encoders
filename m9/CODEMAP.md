@@ -70,6 +70,13 @@ M9.1 gates and diagnostics.
    had moved failures *out of the prose and into the implementation*, and the third attacked the
    two things the second had never seen. Reviewing the document alone would have shipped a lock
    whose statistic, batcher and guard did something else.
-10. **The most valuable thing a review produced was a smaller experiment.** Pass 2's verdict was
+10. **A guard keyed on HEAD makes "commit frequently" and "run a multi-arm screen" mutually
+    exclusive.** The session manifest originally bound to the lock commit *and* the fingerprint, so
+    committing an arm's own RESULT moved HEAD and would have voided every arm already run. It only
+    showed up in use — the self-test passed, and so did the first arm. What must not move mid-screen
+    is the lock, the code and the input data; that is the fingerprint. HEAD's only job is "is the
+    lock pushed", which `check_state()` still enforces. Ask of any freshness check: *what is the
+    smallest thing whose change should invalidate this?* — and key on exactly that.
+11. **The most valuable thing a review produced was a smaller experiment.** Pass 2's verdict was
     "DO NOT SPEND THE 6 GPU-HOURS — run one corrected, fully guarded anchor curve instead". That is
     now stage A, and the adequacy gate decides whether stage B is worth running at all.

@@ -2,8 +2,8 @@
   "sample": {
     "n": 512,
     "word_len_min": 1,
-    "word_len_max": 624,
-    "word_len_mean": 37.6
+    "word_len_max": 522,
+    "word_len_mean": 37.1
   },
   "students": {
     "bge-small-en-v1.5": {
@@ -18,28 +18,43 @@
       "n_nodes": 1039,
       "shipped_files": {
         "model.onnx": 134676086,
+        "model_fp16.onnx": 67556362,
         "special_tokens_map.json": 695,
         "tokenizer.json": 711648,
         "tokenizer_config.json": 1272,
         "vocab.txt": 231508
       },
-      "shipped_bytes": 135621209,
-      "shipped_MB_decimal": 135.621,
-      "within_70MB_target": false,
+      "fp32_shipped_bytes": 135621209,
+      "fp32_shipped_MB_decimal": 135.621,
+      "fp16_onnx_bytes": 67556362,
+      "fp16_shipped_bytes": 68501485,
+      "fp16_shipped_MB_decimal": 68.501,
+      "within_70MB_target": true,
       "n_sample": 512,
-      "min_cos": 0.9999993443489075,
+      "sample_sha256": "3cd2aff8d76763058068769ffd990dff11b6ee83c8701ee0de305e34a5e733fb",
+      "fp16_min_cos": 0.9995259046554565,
+      "fp16_mean_cos": 1.000000238418579,
+      "min_cos": 0.9999994039535522,
       "mean_cos": 1.0,
-      "max_abs": 1.564621925354004e-07,
-      "seconds": 26.4,
+      "max_abs": 1.862645149230957e-07,
+      "seconds": 159.1,
       "pass_min_cos": true,
       "pass_max_abs": true,
       "pass_no_custom_ops": true,
-      "pass": true,
+      "pass_size": true,
+      "pass_fp16_min_cos": false,
+      "pass": false,
       "fastembed": {
         "available": true,
-        "registered": false,
-        "error": "ValueError('At least one source should be set, current sources: hf=None, url=None')"
-      }
+        "registered": true,
+        "listed_after_registration": true,
+        "pooling": "MEAN",
+        "normalization": true,
+        "dim": 1024,
+        "note": "the description is accepted and the model is listed; end-to-end serving parity needs the artifact published at the named repo path, which is M10's step",
+        "dir": "work/m9onnx/bge-small-en-v1.5"
+      },
+      "pass_fastembed": true
     },
     "all-MiniLM-L6-v2": {
       "student": "all-MiniLM-L6-v2",
@@ -53,41 +68,56 @@
       "n_nodes": 565,
       "shipped_files": {
         "model.onnx": 91973569,
+        "model_fp16.onnx": 46103154,
         "special_tokens_map.json": 695,
         "tokenizer.json": 711648,
         "tokenizer_config.json": 1464,
         "vocab.txt": 231508
       },
-      "shipped_bytes": 92918884,
-      "shipped_MB_decimal": 92.919,
-      "within_70MB_target": false,
+      "fp32_shipped_bytes": 92918884,
+      "fp32_shipped_MB_decimal": 92.919,
+      "fp16_onnx_bytes": 46103154,
+      "fp16_shipped_bytes": 47048469,
+      "fp16_shipped_MB_decimal": 47.048,
+      "within_70MB_target": true,
       "n_sample": 512,
+      "sample_sha256": "3cd2aff8d76763058068769ffd990dff11b6ee83c8701ee0de305e34a5e733fb",
+      "fp16_min_cos": 0.999519407749176,
+      "fp16_mean_cos": 0.9999736547470093,
       "min_cos": 0.9999991655349731,
       "mean_cos": 1.0,
-      "max_abs": 1.4901161193847656e-07,
-      "seconds": 13.4,
+      "max_abs": 1.434236764907837e-07,
+      "seconds": 81.4,
       "pass_min_cos": true,
       "pass_max_abs": true,
       "pass_no_custom_ops": true,
-      "pass": true,
+      "pass_size": true,
+      "pass_fp16_min_cos": false,
+      "pass": false,
       "fastembed": {
         "available": true,
-        "registered": false,
-        "error": "ValueError('At least one source should be set, current sources: hf=None, url=None')"
-      }
+        "registered": true,
+        "listed_after_registration": true,
+        "pooling": "MEAN",
+        "normalization": true,
+        "dim": 1024,
+        "note": "the description is accepted and the model is listed; end-to-end serving parity needs the artifact published at the named repo path, which is M10's step",
+        "dir": "work/m9onnx/all-MiniLM-L6-v2"
+      },
+      "pass_fastembed": true
     }
   },
-  "pass_all": true,
+  "pass_all": false,
   "_registration": {
     "run_id": "m9-port-pilot",
     "diagnostic": false,
-    "commit": "5ea8b6a18fe8b4146a34b23511f1e0ae8d1b3193",
+    "commit": "b8142f8a8e19b8bc61c97d9f5741a9de9b4068d0",
     "branch": "m9-work",
+    "session_sha256": "d0799ac7500d5c6c9344013c4e3c96113f045ed9a2c3687f9fb9301a9c1b5d7c",
     "stage": "M9.0",
-    "opened_at": 1788072421.9779449,
+    "opened_at": 1788080456.8423607,
+    "written_at": 1788080743.9502063,
     "extra": {},
-    "verified_at_write": true,
-    "fingerprint_sha256": "99950a15777ed5800a42641ff800e6c6527c283be5d4a1c2f2b662691079135a",
     "eligible_for_decision": true
   }
 }

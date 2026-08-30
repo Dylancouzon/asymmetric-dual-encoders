@@ -11,7 +11,7 @@ the JSON; this file is the index and the one-line reading.
 | ST-vs-frozen teacher parity | in `m9src/teacher9.parity_vs_frozen` | min-cos **0.99959**, max-abs 1.45e-4 on 64 real texts — the `SentenceTransformer` path used for challenger teachers reproduces M7's frozen path, so challenger numbers are admissible |
 | fp16 target gate | `results/m9_fp16_gate.json` | **PASS** — min-cos 0.999959 (≥0.9999), max-abs 2.02e-4 (≤1e-3) on the locked 10,000-text decile-stratified sample. Arms train on the fp16 target cache |
 | bridge-tolerance dry run | `results/m9_bridge_dryrun.json` | **PASS, exactly** — 1,915 queries, zero missing/extra/reordered qids, max per-query \|Δ nDCG@10\| **0.0** across a fresh process. The scorer is bit-reproducible, which is the drift class the real six-set bridge exists to catch |
-| ONNX / fastembed port pilot | `results/m9_port_pilot.json` | parity **PASS** for both students — min-cos 0.9999993 / 0.9999992, max-abs 1.6e-7, opset 17, **zero custom-domain ops**. Size and fastembed registration re-run after the anchor (see below) |
+| ONNX / fastembed port pilot | `results/m9_port_pilot.json` | **`pass_all` FALSE — on one conjunct, and it is an informative miss.** fp32 export parity **PASS** (min-cos 0.9999994, max-abs 1.6e-7, opset 17, **zero custom-domain ops**). Shipped **fp16** artifact **68.501 MB** (bge-small) and **47.048 MB** (MiniLM) — both **inside the 70 MB target**. **fastembed registration PASS** — `add_custom_model` accepts the description and the model is listed. **fp16 parity FAILS**: min-cos 0.99953 against the locked 0.9999 |
 
 ## M9.1 stage A — the anchor curve
 
@@ -27,7 +27,43 @@ reasons: Codex pass 3 found its warm-start λ had been selected on SCREEN-3 rath
 data, which makes anything it produced diagnostic; and it had degraded from 1,990 to 786 ex/s
 because each checkpoint evaluation left ~10 GB in the PyTorch allocator. Both fixed; re-run.
 
-*(rows filled in as they land; the adequacy gate reads `m9s1`'s DEV-6 curve)*
+### `m9s1` — the anchor curve (the headline of M9.1)
+
+| step | examples | non-pad tokens | SCREEN-3 | retention | DEV-6 | retention |
+|---|---|---|---|---|---|---|
+| 0 (warm-started head, frozen backbone) | 0 | 0 | 0.3463 | 0.508 | — | — |
+| 7,588 | 971,264 | 14,878,695 | 0.4481 | 0.657 | — | — |
+| 15,175 | 1,942,400 | 29,755,611 | 0.4812 | 0.705 | — | — |
+| 22,762 | 2,913,536 | 44,632,656 | 0.4944 | 0.725 | — | — |
+| 30,349 | 3,884,576 | 59,507,872 | 0.4998 | 0.733 | 0.4806 | 0.715 |
+
+**Final: SCREEN-3 0.4998 (73.3% of the 0.68223 ceiling), DEV-6 0.4806 (71.5% of 0.67238).**
+Stage-0 dose (the warm start, reported apart from the SGD dose): 60,000 examples, 918,015 non-pad
+tokens, 8.5 s. Training: 2015 s at ~2,010 ex/s.
+
+The curve decelerates hard — quarter-on-quarter gains of **+0.0330, +0.0132, +0.0054** — so the
+16-epoch dose is close to what this data volume yields, and more SGD on the same 242,786 queries is
+not where the remaining 27% of the ceiling lives.
+
+Adequacy gate: **PASS** (retention 0.7326 ≥ 0.60; late slope 0.0054 ≤ 0.02) → stage B authorised.
+It is a budget trigger, not a certification that a stage-B contrast would rank the same way at
+final dose.
+
+### The fp16 parity miss — read it correctly
+
+The 1 − 1e-4 threshold was registered for **torch-versus-ONNX export fidelity at the same
+precision**, and it passes there by four orders of magnitude. It is then being applied to a
+**precision change**, where 0.99953 is ordinary fp16 rounding on a 33M model, not an export defect.
+The threshold is not moved after seeing the number — that is the one thing the protocol forbids —
+so the pilot stands as a fail and the decision goes to M10 with three facts:
+
+1. fp32 passes every fidelity conjunct and **misses the size target** (135.6 MB vs 70 MB).
+2. fp16 **meets** the size target and fastembed registration, and misses a cosine threshold written
+   for a different comparison.
+3. The measurement that should decide this is not a cosine at all: it is **whether the fp16 graph
+   changes retrieval**. Register a macro-shift threshold on SCREEN-3 *before* measuring it, the way
+   M7 priced its int8 table as quality-free (0.4117 vs 0.4114). That is an M10 task; M9 does not
+   get to invent a threshold tonight for a number it has already seen.
 
 ## Reference rows measured this milestone
 

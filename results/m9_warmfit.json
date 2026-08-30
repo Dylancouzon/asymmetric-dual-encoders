@@ -1,0 +1,75 @@
+{
+  "student": "bge-small-en-v1.5",
+  "n_fit": 60000,
+  "n_fit_split": 50000,
+  "seed": 21,
+  "grid": [
+    1e-06,
+    1e-05,
+    0.0001,
+    0.001,
+    0.01,
+    0.1,
+    1.0
+  ],
+  "rows": [
+    {
+      "lambda": 1e-06,
+      "fit_unnormalized_sq_l2": 0.494965,
+      "fit_objective": 0.580203,
+      "val_objective": 0.612947
+    },
+    {
+      "lambda": 1e-05,
+      "fit_unnormalized_sq_l2": 0.494965,
+      "fit_objective": 0.580203,
+      "val_objective": 0.612945
+    },
+    {
+      "lambda": 0.0001,
+      "fit_unnormalized_sq_l2": 0.494968,
+      "fit_objective": 0.580206,
+      "val_objective": 0.612935
+    },
+    {
+      "lambda": 0.001,
+      "fit_unnormalized_sq_l2": 0.495044,
+      "fit_objective": 0.580307,
+      "val_objective": 0.612957
+    },
+    {
+      "lambda": 0.01,
+      "fit_unnormalized_sq_l2": 0.495526,
+      "fit_objective": 0.580925,
+      "val_objective": 0.613296
+    },
+    {
+      "lambda": 0.1,
+      "fit_unnormalized_sq_l2": 0.502019,
+      "fit_objective": 0.588261,
+      "val_objective": 0.619063
+    },
+    {
+      "lambda": 1.0,
+      "fit_unnormalized_sq_l2": 0.565607,
+      "fit_objective": 0.668526,
+      "val_objective": 0.694263
+    }
+  ],
+  "selected_lambda": 0.0001,
+  "registered_lambda": 0.0001,
+  "agrees_with_registry": true,
+  "_what": "lambda selected on a TRAINING-ONLY holdout under the actual normalized objective. No dev surface is read. Ties go to the larger lambda.",
+  "_registration": {
+    "run_id": "m9-warmfit",
+    "diagnostic": false,
+    "commit": "b8142f8a8e19b8bc61c97d9f5741a9de9b4068d0",
+    "branch": "m9-work",
+    "session_sha256": "d0799ac7500d5c6c9344013c4e3c96113f045ed9a2c3687f9fb9301a9c1b5d7c",
+    "stage": "M9.0",
+    "opened_at": 1788078242.762827,
+    "written_at": 1788078258.111147,
+    "extra": {},
+    "eligible_for_decision": true
+  }
+}

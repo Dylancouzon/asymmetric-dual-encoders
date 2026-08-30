@@ -521,6 +521,11 @@ import. No G2 allowlist entry is created for M9.1; none is needed.
     `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`, pinned in `m9src/m9base.py` so it is part
     of the lock rather than an operator's export, together with reading DEV-6 once at the end
     instead of interleaving it. Two anchor attempts were killed and re-run over this.
+17. **Corrected 2026-08-30:** the session manifest was keyed on the lock commit as well as the
+    fingerprint, so committing an arm's own result would have voided every arm already run. It is
+    keyed on the **fingerprint** alone; `check_state()` still requires the guarded files clean and
+    HEAD pushed on `m9-work`. The anchor was re-run under the corrected guard — deterministically,
+    reproducing checkpoint 1 to six decimals for the third time.
 16. **Corrected 2026-08-30:** the adequacy gate and the rank-stability rule now read **SCREEN-3**
     rather than DEV-6, because DEV-6 no longer has four checkpoints. The decision contrasts are
     unchanged — they always read the final checkpoint, and DEV-6 is still evaluated there.

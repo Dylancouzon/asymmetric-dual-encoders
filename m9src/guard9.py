@@ -11,7 +11,9 @@ So there are three layers now:
 1. **A session manifest** (`work/m9tokens/SESSION.json`) written before the first arm: the lock
    commit and the complete fingerprint of every file a result may depend on. Every later arm must
    match it exactly, so the whole screen is one frozen experiment, not nine independent ones.
-2. **A per-run token**, one use, consumed atomically at write time.
+2. **A per-run token**, one use, consumed atomically at write time. The session is keyed on the
+   FINGERPRINT, never on HEAD: committing an arm's own result moves HEAD, and that must not void
+   the arm that produced it.
 3. **Read-time verification**: `eligible()` recomputes rather than trusting the recorded boolean,
    and requires the artifact's session to be the current one.
 
@@ -113,13 +115,19 @@ def open_session(force=False):
     TOKENS.mkdir(parents=True, exist_ok=True)
     if SESSION.exists() and not force:
         sess = json.loads(SESSION.read_text())
-        if sess["fingerprint_sha256"] != fp_sha(fp) or sess["commit"] != head:
+        # The session is bound to the FINGERPRINT, not to HEAD. Binding it to the commit was wrong
+        # in a way that only shows up in use: committing an arm's own RESULT moves HEAD and would
+        # then void every arm already run, making "commit frequently" and "run a multi-arm screen"
+        # mutually exclusive. What must not move is the lock, the code and the input data -- which
+        # is exactly what the fingerprint covers. `check_state()` still requires the guarded files
+        # to be clean and HEAD to be pushed on `m9-work`.
+        if sess["fingerprint_sha256"] != fp_sha(fp):
             raise NotLocked(
-                "the screen session was opened at commit "
-                f"{sess['commit'][:12]} / fingerprint {sess['fingerprint_sha256'][:12]}, and the "
-                f"tree is now {head[:12]} / {fp_sha(fp)[:12]}. Arms from different lock states may "
-                "not be combined. Either restore the tree or start a new session with force=True, "
-                "which invalidates every arm already run under the old one.")
+                f"the screen session was opened at fingerprint "
+                f"{sess['fingerprint_sha256'][:12]} and the tree is now {fp_sha(fp)[:12]}. Arms "
+                "from different lock states may not be combined. Either restore the tree or start "
+                "a new session with force=True, which invalidates every arm already run under it.")
+        sess["head_at_last_check"] = head
         return sess
     sess = {"opened_at": time.time(), "commit": head, "branch": branch,
             "stage": registry()["stage"], "fingerprint": fp, "fingerprint_sha256": fp_sha(fp)}
@@ -164,10 +172,10 @@ def write_result(path, payload, run_id):
     if tok.get("consumed"):
         raise NotLocked(f"the run token for {run_id!r} was already consumed; a token is one-use")
     sess = open_session()
-    if sess["fingerprint_sha256"] != tok["session_sha256"] or sess["commit"] != tok["commit"]:
+    if sess["fingerprint_sha256"] != tok["session_sha256"]:
         raise NotLocked(f"{run_id}: the lock, code or data changed while the run was in flight "
-                        f"({tok['commit'][:12]}/{tok['session_sha256'][:12]} -> "
-                        f"{sess['commit'][:12]}/{sess['fingerprint_sha256'][:12]}). This run is void.")
+                        f"({tok['session_sha256'][:12]} -> {sess['fingerprint_sha256'][:12]}). "
+                        f"This run is void.")
     payload["_registration"] = {
         "run_id": run_id, "diagnostic": False, "commit": tok["commit"], "branch": tok["branch"],
         "session_sha256": tok["session_sha256"], "stage": sess["stage"],
@@ -193,7 +201,7 @@ def eligible(payload, strict=True):
         sess = open_session()
     except NotLocked:
         return False
-    if reg.get("session_sha256") != sess["fingerprint_sha256"] or reg.get("commit") != sess["commit"]:
+    if reg.get("session_sha256") != sess["fingerprint_sha256"]:
         return False
     # and it must correspond to a token THIS session actually issued and consumed, so a
     # hand-written registration block cannot vouch for itself (Codex pass 3, B3)
