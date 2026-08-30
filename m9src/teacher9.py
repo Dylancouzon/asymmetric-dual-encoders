@@ -22,6 +22,10 @@ from m9base import WORK
 
 ENC9 = WORK / "enc9"
 
+# bf16, not fp16: in fp16 the stella-1.5B forward produced NaN for 24 of 242,786 real query texts
+# (0.01%) -- an overflow in its attention path. bf16 has fp32's exponent range at the same cost.
+COMPUTE_DTYPE = torch.bfloat16
+
 # Pinned revisions: the local snapshot ids, recorded so a re-download cannot silently move.
 TEACHERS = {
     "stella-400M-v5": {
@@ -81,7 +85,7 @@ def load_st(key):
         # loss came back `nan`. bf16 has fp32's exponent range at the same memory cost.
         m = SentenceTransformer(spec["repo"], revision=spec["revision"],
                                 trust_remote_code=True, device="cuda",
-                                model_kwargs={"dtype": torch.bfloat16}, **kw)
+                                model_kwargs={"dtype": COMPUTE_DTYPE}, **kw)
         m.eval()
         got = m.get_sentence_embedding_dimension()
         assert got == spec["dim"], f"{key}: ST reports dim {got}, spec says {spec['dim']}"
@@ -119,9 +123,19 @@ def encode_cached(key, name, texts, role, batch_size=64, max_length=512, chunk=5
     import time
 
     spec = TEACHERS[key]
+    import transformers
+    # The key MUST carry the compute dtype and the config overrides. Without them the fp16->bf16
+    # repair would have reused the very chunks that produced 24 NaN vectors (Codex pass 4,
+    # BLOCKER). The encoder-code hash is in too, so any change to this module builds a new cache
+    # rather than trusting an old one.
     blob = {"name": name, "repo": spec["repo"], "revision": spec["revision"], "role": role,
             "prompt": spec["query_prompt"] if role == "query" else spec["doc_prompt"],
             "max_length": max_length, "dim": spec["dim"], "store_dtype": "fp16",
+            "compute_dtype": str(COMPUTE_DTYPE),
+            "config_kwargs": spec.get("config_kwargs") or {},
+            "transformers": transformers.__version__,
+            "encoder_code_sha256": hashlib.sha256(
+                __import__("pathlib").Path(__file__).read_bytes()).hexdigest()[:16],
             "corpus_sha256": _sha_texts(texts), "path": "sentence-transformers"}
     dkey = hashlib.sha256(json.dumps(blob, sort_keys=True).encode()).hexdigest()[:12]
     d = ENC9 / f"{name}-{key}-{dkey}"
@@ -131,6 +145,7 @@ def encode_cached(key, name, texts, role, batch_size=64, max_length=512, chunk=5
     n, dim = len(texts), spec["dim"]
     nchunk = (n + chunk - 1) // chunk
     t0 = time.time()
+    wrote = False
     man_p = d / "chunks.json"
     man = json.loads(man_p.read_text()) if man_p.exists() else {}
     for ci in range(nchunk):
@@ -149,6 +164,7 @@ def encode_cached(key, name, texts, role, batch_size=64, max_length=512, chunk=5
         man[p.name] = {"rows": int(hi - lo),
                        "sha256": hashlib.sha256(p.read_bytes()).hexdigest()}
         man_p.write_text(json.dumps(man, indent=1))
+        wrote = True
         if verbose:
             done = hi
             el = time.time() - t0
@@ -156,6 +172,10 @@ def encode_cached(key, name, texts, role, batch_size=64, max_length=512, chunk=5
                   f"eta {(n-done)/max(done/max(el,1e-9),1e-9)/60:.1f}m)", flush=True)
 
     comb = d / "combined.f16"
+    if wrote and comb.exists():
+        # A repaired chunk with an unchanged combined byte-size would otherwise be served from the
+        # stale stitch (Codex pass 4, BLOCKER).
+        comb.unlink()
     if len(man) != nchunk:
         raise SystemExit(f"{d.name}: {len(man)} hashed chunks for {nchunk} expected -- refuse to "
                          f"stitch a cache whose parts are not all accounted for")

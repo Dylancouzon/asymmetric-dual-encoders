@@ -26,7 +26,13 @@ for p in (REPO / "m7src", REPO / "m8src", REPO / "bench", REPO):
 # training rate drops from ~2,000 to ~340 ex/s. `empty_cache()` alone does not repair it because
 # the arena is fragmented, not merely cached. Expandable segments are the allocator's own fix, and
 # they are pinned here so the environment is part of the lock rather than an operator's export.
-os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+_ALLOC = "expandable_segments:True"
+_have = os.environ.get("PYTORCH_CUDA_ALLOC_CONF")
+if _have not in (None, "", _ALLOC):
+    raise SystemExit(f"PYTORCH_CUDA_ALLOC_CONF={_have!r} conflicts with M9's pinned {_ALLOC!r}. "
+                     f"Unset it; `setdefault` would have let a stale export win silently, which is "
+                     f"the same failure already fixed for M7_ENCODER (Codex pass 4).")
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = _ALLOC
 
 INCUMBENT = "stella-400M-v5"
 _env = os.environ.get("M7_ENCODER")

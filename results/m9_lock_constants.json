@@ -164,29 +164,5 @@
       "dim": 1024
     }
   },
-  "code_hashes": {
-    "m9src/bridge_dryrun.py": "1b47bc694155d0b2",
-    "m9src/data.py": "00e1273596ffa036",
-    "m9src/eval9.py": "52f964365974ccb3",
-    "m9src/fp16_gate.py": "68a0cb46674f4746",
-    "m9src/guard9.py": "0e18c70b0c8eb1d6",
-    "m9src/head_probe.py": "dbb971565a409af4",
-    "m9src/lock_constants.py": "1acbc7eaf4b4d4c4",
-    "m9src/m9base.py": "fec1d23278496f64",
-    "m9src/nano.py": "2325f913e5a47816",
-    "m9src/port.py": "bafecd828be590ac",
-    "m9src/screen.py": "dd14d7356614ea9a",
-    "m9src/screen_stats.py": "ab27487e9f407aed",
-    "m9src/teacher9.py": "a85f7f7c09855a76",
-    "m9src/warmfit.py": "ea8bba9325163a79",
-    "m7src/evalkit.py": "16f88eb2c7ea143d",
-    "m7src/teacher.py": "873a4040536c8f90",
-    "m7src/devsuite.py": "3ae8141ac4b3f9bb",
-    "m7src/dev_eval.py": "e5f702536c8af6a7",
-    "m7src/pool.py": "c72e7b8e7aa8a8d5",
-    "m7src/mix.py": "8c3e9d11c5dbc4e4",
-    "m7src/train.py": "5ab59213ae3c0657",
-    "m7src/heldout.py": "18df62aa0c019490",
-    "m8src/paths_guard.py": "83918ebdc7836f67"
-  }
+  "_code_hashes": "removed -- guard9's scoped fingerprint is the single live record"
 }

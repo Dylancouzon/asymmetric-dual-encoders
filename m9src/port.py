@@ -150,7 +150,7 @@ def parity(student_key, texts=None, state_dict=None):
                                providers=["CPUExecutionProvider"])
     m = m.cpu().eval()
 
-    mins, maxa, mins16 = [], [], []
+    mins, maxa, mins16, maxa16 = [], [], [], []
     t0 = time.time()
     B = 32
     for i in range(0, len(texts), B):
@@ -166,6 +166,7 @@ def parity(student_key, texts=None, state_dict=None):
         mins.append((ref * got).sum(1))
         mins16.append((ref * got16).sum(1))
         maxa.append(np.abs(ref - got).max())
+        maxa16.append(np.abs(ref - got16).max())
 
     cos = np.concatenate(mins)
     cos16 = np.concatenate(mins16)
@@ -178,8 +179,10 @@ def parity(student_key, texts=None, state_dict=None):
            "pass_max_abs": bool(max(maxa) <= r["max_abs"]),
            "pass_no_custom_ops": not meta["custom_domain_ops"]}
     out["pass_size"] = bool(meta["within_70MB_target"])
-    # the SHIPPED graph is the fp16 one, so it carries its own parity row (Codex pass 3, M16)
+    # the SHIPPED graph is the fp16 one, so it carries BOTH halves of the locked parity condition
+    out["fp16_max_abs"] = float(max(maxa16))
     out["pass_fp16_min_cos"] = bool(cos16.min() >= r["min_cos"])
+    out["pass_fp16_max_abs"] = bool(max(maxa16) <= r["max_abs"])
     out["pass"] = bool(out["pass_min_cos"] and out["pass_max_abs"] and out["pass_no_custom_ops"]
                        and out["pass_size"] and out["pass_fp16_min_cos"])
     return out
@@ -204,10 +207,13 @@ def fastembed_check(student_key, texts):
     try:
         TextEmbedding.add_custom_model(
             model=name, pooling=PoolingType.MEAN, normalization=True,
-            sources=ModelSource(hf=name), dim=1024, model_file="model.onnx",
+            # the fp16 graph is the artifact the 70 MB target is about, so IT is the model_file;
+            # naming the 135.6 MB fp32 graph would have demonstrated a serving route for something
+            # we do not intend to ship (Codex pass 4)
+            sources=ModelSource(hf=name), dim=1024, model_file="model_fp16.onnx",
             description="M9 nano distilled query tower", license="mit",
             size_in_gb=round(sum(f.stat().st_size for f in d.iterdir() if f.is_file()) / 1e9, 4),
-            additional_files=["model_fp16.onnx"])
+            additional_files=["model.onnx"])
         listed = any(m["model"] == name for m in TextEmbedding.list_supported_models())
         _ = DenseModelDescription
         return {"available": True, "registered": True, "listed_after_registration": listed,
@@ -249,4 +255,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    out = main()
+    # A gate that exits 0 on failure is not a gate.
+    sys.exit(0 if out["pass_all"] else 2)

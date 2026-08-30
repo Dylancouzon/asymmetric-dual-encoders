@@ -32,16 +32,44 @@ import time
 import m9base
 from m9base import REPO, M9, WORK
 
-GUARDED = ("m9/LEDGER.md", "m9/registry.json")
 BRANCH = "m9-work"
-CODE = tuple(f"m9src/{n}.py" for n in
-             ("m9base", "data", "eval9", "fp16_gate", "guard9", "nano", "port", "screen",
-              "screen_stats", "teacher9", "warmfit", "lock_constants", "bridge_dryrun")) + \
-       ("m7src/evalkit.py", "m7src/teacher.py", "m7src/devsuite.py", "m7src/dev_eval.py",
-        "m7src/pool.py", "m7src/heldout.py", "m7src/train.py", "m7src/mix.py",
-        "m8src/paths_guard.py")
-DATA = ("work/m9_screen_queries.json", "work/m9_screen_rows.npy",
-        "work/decontam/banned_pool_rows.npy", "results/m9_lock_constants.json")
+
+# Dependency-SCOPED fingerprints (Codex pass 4, MAJOR). A single fingerprint over every file was
+# both overbroad and the milestone's clearest waste: three 1.5-hour re-runs of deterministic
+# INCUMBENT arms were forced by edits to `teacher9.py`, which an incumbent arm never executes.
+# A result is invalidated by the scopes it actually depends on and by nothing else.
+SCOPES = {
+    "protocol": ("m9/LEDGER.md", "m9/registry.json", "instructions-m9.md",
+                 "m9src/m9base.py", "m9src/guard9.py", "m9src/screen_stats.py",
+                 "m9src/lock_constants.py", "results/m9_lock_constants.json"),
+    "data":     ("work/m9_screen_queries.json", "work/m9_screen_rows.npy",
+                 "work/decontam/banned_pool_rows.npy"),
+    "train":    ("m9src/nano.py", "m9src/data.py", "m9src/warmfit.py", "m9src/screen.py",
+                 "run_m9_stage.sh"),
+    "eval":     ("m9src/eval9.py", "m7src/evalkit.py", "m7src/dev_eval.py", "m7src/devsuite.py",
+                 "m7src/heldout.py", "m7src/pool.py", "m7src/teacher.py", "m7src/train.py",
+                 "m7src/mix.py", "m8src/paths_guard.py"),
+    "challenger": ("m9src/teacher9.py",),
+    "port":     ("m9src/port.py",),
+    "fp16":     ("m9src/fp16_gate.py",),
+    "bridge":   ("m9src/bridge_dryrun.py",),
+}
+# What each kind of run depends on. An incumbent arm does not import `teacher9`, so a challenger
+# repair leaves its result standing.
+DEPS = {
+    "incumbent_arm": ("protocol", "data", "train", "eval"),
+    "challenger_arm": ("protocol", "data", "train", "eval", "challenger"),
+    "decision": ("protocol",),
+    "m9-warmfit": ("protocol", "data", "train"),
+    "m9-fp16-gate": ("protocol", "data", "fp16"),
+    "m9-bridge-dryrun": ("protocol", "eval", "bridge"),
+    "m9-port-pilot": ("protocol", "data", "train", "port"),
+    "m9-adequacy": ("protocol",),
+    "m9-decisions": ("protocol",),
+}
+GUARDED = SCOPES["protocol"][:2]
+CODE = tuple(f for k, v in SCOPES.items() for f in v if f.endswith((".py", ".sh")))
+DATA = tuple(SCOPES["data"]) + ("results/m9_lock_constants.json",)
 TOKENS = WORK / "m9tokens"
 SESSION = TOKENS / "SESSION.json"
 SMOKE_DIR = WORK / "m9smoke"
@@ -65,14 +93,42 @@ def registry():
 
 
 def fingerprint():
-    """Every file a result is allowed to depend on, hashed."""
-    return {"lock": {f: _sha(f) for f in GUARDED},
-            "code": {f: _sha(f) for f in CODE},
-            "data": {f: _sha(f) for f in DATA}}
+    """-> {scope: sha over that scope's files}. Scoped, so a change invalidates only what
+    depends on it."""
+    out = {}
+    for scope, files in SCOPES.items():
+        h = hashlib.sha256()
+        for f in files:
+            h.update(f.encode())
+            h.update((_sha(f) or "MISSING").encode())
+        out[scope] = h.hexdigest()
+    return out
 
 
 def fp_sha(fp):
     return hashlib.sha256(json.dumps(fp, sort_keys=True).encode()).hexdigest()
+
+
+def deps_for(run_id):
+    """Which scopes a run's result depends on."""
+    if run_id in DEPS:
+        return DEPS[run_id]
+    reg = registry()
+    row = next((a for a in reg["arms"] if a["id"] == run_id), None)
+    if row is None:
+        return tuple(SCOPES)                       # unknown run: depend on everything
+    ch = row.get("teacher") not in (None, "stella-400M-v5")
+    return DEPS["challenger_arm"] if ch else DEPS["incumbent_arm"]
+
+
+def scoped(fp, run_id):
+    return {k: fp[k] for k in deps_for(run_id)}
+
+
+def payload_sha(payload):
+    """Hash of the artifact body, excluding its own registration block."""
+    body = {k: v for k, v in payload.items() if k != "_registration"}
+    return hashlib.sha256(json.dumps(body, sort_keys=True, default=str).encode()).hexdigest()
 
 
 def check_state():
@@ -148,6 +204,7 @@ def begin_run(run_id, extra=None):
                         f"artifact and token deliberately if you mean to re-run it.")
     tok = {"run_id": run_id, "diagnostic": False, "commit": sess["commit"],
            "branch": sess["branch"], "session_sha256": sess["fingerprint_sha256"],
+           "scopes": deps_for(run_id), "scoped": scoped(sess["fingerprint"], run_id),
            "opened_at": time.time(), "consumed": False, "extra": extra or {}}
     (TOKENS / f"{run_id}.json").write_text(json.dumps(tok, indent=1))
     return tok
@@ -172,15 +229,18 @@ def write_result(path, payload, run_id):
     if tok.get("consumed"):
         raise NotLocked(f"the run token for {run_id!r} was already consumed; a token is one-use")
     sess = open_session()
-    if sess["fingerprint_sha256"] != tok["session_sha256"]:
-        raise NotLocked(f"{run_id}: the lock, code or data changed while the run was in flight "
-                        f"({tok['session_sha256'][:12]} -> {sess['fingerprint_sha256'][:12]}). "
+    now = scoped(sess["fingerprint"], run_id)
+    moved = [k for k in now if now[k] != tok["scoped"].get(k)]
+    if moved:
+        raise NotLocked(f"{run_id}: scope(s) {moved} changed while the run was in flight. "
                         f"This run is void.")
     payload["_registration"] = {
         "run_id": run_id, "diagnostic": False, "commit": tok["commit"], "branch": tok["branch"],
         "session_sha256": tok["session_sha256"], "stage": sess["stage"],
+        "scopes": list(tok["scopes"]), "scoped": tok["scoped"],
         "opened_at": tok["opened_at"], "written_at": time.time(), "extra": tok["extra"],
         "eligible_for_decision": True}
+    tok["payload_sha256"] = payload_sha(payload)
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(payload, indent=2, default=str))
     tok["consumed"] = True
@@ -201,15 +261,20 @@ def eligible(payload, strict=True):
         sess = open_session()
     except NotLocked:
         return False
-    if reg.get("session_sha256") != sess["fingerprint_sha256"]:
+    # Only the scopes this result DEPENDS on must be unchanged.
+    now = scoped(sess["fingerprint"], reg.get("run_id", ""))
+    if any(now[k] != reg.get("scoped", {}).get(k) for k in now):
         return False
-    # and it must correspond to a token THIS session actually issued and consumed, so a
-    # hand-written registration block cannot vouch for itself (Codex pass 3, B3)
+    # It must correspond to a token this session issued and consumed, and the BODY must be the
+    # body that token wrote -- a copied registration block cannot vouch for edited content
+    # (Codex pass 4, MAJOR).
     tp = TOKENS / f"{reg.get('run_id')}.json"
     if not tp.exists():
         return False
     tok = json.loads(tp.read_text())
-    return bool(tok.get("consumed") and tok.get("session_sha256") == reg.get("session_sha256"))
+    if not tok.get("consumed"):
+        return False
+    return tok.get("payload_sha256") == payload_sha(payload)
 
 
 def self_test():

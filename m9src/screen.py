@@ -10,6 +10,7 @@ Usage:  python m9src/screen.py arm m9s1
         python m9src/screen.py plan m9s6      (assemble and report, train nothing)
 """
 import argparse
+import hashlib
 import json
 import time
 
@@ -36,15 +37,28 @@ def constants():
     return json.loads((RESULTS / "m9_lock_constants.json").read_text())
 
 
+STATE = RESULTS / "m9_screen_state.json"          # PROVISIONAL, never decision-eligible
+FINAL = RESULTS / "m9_screen_decisions.json"     # written only when every mandatory arm exists
+
+
+def mandatory_arms():
+    """Every arm a FINAL decision must be able to read."""
+    r = registry()
+    return [a["id"] for a in r["arms"] if a.get("decision_eligible", True)
+            and a["id"] not in ("m9s1b",)]        # the seed replica is reported, never read
+
+
 def selected():
-    p = RESULTS / "m9_screen_decisions.json"
-    if not p.exists():
-        return {}
-    blob = json.loads(p.read_text())
-    if not guard9.eligible(blob):
-        raise SystemExit("results/m9_screen_decisions.json is not decision-eligible under the "
-                         "current lock -- re-run `screen.py decide` before resolving any arm")
-    return blob["selected"]
+    """Resolve `selected` fields for the NEXT arm. Reads the provisional state deliberately: the
+    chain needs a student before the prompt arm can run. It is the FINAL artifact that M9.2 may
+    consume, and that one only exists when every mandatory arm has (Codex pass 4, BLOCKER)."""
+    for p in (FINAL, STATE):
+        if p.exists():
+            blob = json.loads(p.read_text())
+            if p is FINAL and not guard9.eligible(blob):
+                raise SystemExit(f"{p.name} is not decision-eligible under the current lock")
+            return blob["selected"]
+    return {}
 
 
 def arm_spec(arm_id, sel=None):
@@ -86,12 +100,14 @@ def require_predecessors(arm_id):
         if not p.exists() or not guard9.eligible(json.loads(p.read_text())):
             raise SystemExit(f"{arm_id} may not run: predecessor {prev} has no eligible artifact. "
                              f"The registered order is {order}.")
-    # A teacher swap STOPS the milestone; it does not merely annotate it (LEDGER §0).
-    dec = RESULTS / "m9_screen_decisions.json"
-    if dec.exists():
+    # A teacher swap STOPS the milestone; it does not merely annotate it (LEDGER §0). Read the
+    # RAW teacher arms, not a decision artifact that may not have been refreshed (Codex pass 4).
+    for dec in (RESULTS / "m9_screen_decisions.json", RESULTS / "m9_screen_state.json"):
+        if not dec.exists():
+            continue
         blob = json.loads(dec.read_text())
         t = blob.get("selected", {}).get("teacher")
-        if guard9.eligible(blob) and t and t != eval9.INCUMBENT:
+        if t and t != eval9.INCUMBENT:
             raise SystemExit(
                 f"{arm_id} may not run: the teacher screen selected {t!r}. m9/LEDGER.md §0 "
                 f"requires stopping and returning to Dylan, because student/prompt/mix cannot be "
@@ -411,7 +427,13 @@ def decide():
             out["mix"] = {**d, "baseline_arm": base}
             sel["mix"] = "70/30" if d["pass"] else "query-only"
 
+    need = mandatory_arms()
+    missing = [a for a in need if a not in have]
+    complete = not missing
     payload = {
+        "complete": complete, "mandatory_arms": need, "missing_arms": missing,
+        "arm_artifact_sha256": {k: hashlib.sha256(
+            (RESULTS / f"m9_screen_{k}.json").read_bytes()).hexdigest() for k in sorted(have)},
         "arms_present": sorted(have), "decisions": out, "selected": sel, "notes": notes,
         "final_macros": {k: v.get("final") for k, v in have.items()},
         "retention": {k: v.get("retention") for k, v in have.items()},
@@ -420,8 +442,19 @@ def decide():
                         **{s_: h["macros"][s_]["macro"] for s_ in h["macros"]}}
                        for h in v["history"]] for k, v in have.items()},
         "scope": registry()["rules"]["scope"]}
-    guard9.begin_run("m9-decisions")
-    guard9.write_result(RESULTS / "m9_screen_decisions.json", payload, "m9-decisions")
+    if not complete:
+        # A provisional read is a working note, not a decision. It goes to a different filename,
+        # is stamped ineligible, and M9.2 cannot consume it.
+        payload["_registration"] = {"run_id": "m9-decisions-provisional", "diagnostic": True,
+                                    "eligible_for_decision": False,
+                                    "why": f"missing mandatory arms {missing}"}
+        STATE.write_text(json.dumps(payload, indent=2, default=str))
+        print(f"PROVISIONAL state written; missing {missing}. No final decision exists.")
+    else:
+        guard9.begin_run("m9-decisions")
+        guard9.write_result(FINAL, payload, "m9-decisions")
+        if STATE.exists():
+            STATE.unlink()      # a stale provisional must not outlive the final it preceded
     print(json.dumps({k: v for k, v in payload.items() if k != "decisions"}, indent=1)[:3000])
     for k, v in out.items():
         if isinstance(v, dict) and "point" in v:

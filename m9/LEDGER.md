@@ -388,12 +388,13 @@ result may be reported as resolved, confirmed, or significant.
 
 ### 4.4 The adequacy gate — stage A → stage B
 
-Read once, on the anchor arm, on DEV-6, before any challenger teacher is encoded:
+Read once, on the anchor arm, on **SCREEN-3** (the only surface with four checkpoints once DEV-6
+moved to the final one — §3.1), before any challenger teacher is encoded:
 
 | condition | threshold | why |
 |---|---|---|
-| retention at the final checkpoint | ≥ **0.60** of the 0.67238 DEV-6 ceiling | below this the student sits so far from the teacher surface that a contrast between two arms is dominated by early imitability rather than by the factor under test |
-| late slope, macro(ckpt4) − macro(ckpt3) | ≤ **0.02** | a curve still climbing steeply at the last checkpoint is an early-training snapshot whose ranking need not survive to final dose |
+| retention at the final checkpoint | ≥ **0.60** of the 0.68223 SCREEN-3 ceiling | below this the student sits so far from the teacher surface that a contrast between two arms is dominated by early imitability rather than by the factor under test |
+| late slope, macro(ckpt4) − macro(ckpt3) on SCREEN-3 | ≤ **0.02** | a curve still climbing steeply at the last checkpoint is an early-training snapshot whose ranking need not survive to final dose |
 
 **PASS** → stage B runs as registered. **FAIL** → stage B does **not** run; M9.1 reports the anchor
 curve, the warm-start contrast and a priced dose-response extrapolation, and the
@@ -634,4 +635,45 @@ on allocator thrash (§9.15), so finishing it would have cost 1.7 hours for a di
 | B2 arm 6 realizes five tokens over baseline | **accepted and recorded, not fixed** — 0.08 parts per million on 59.5M tokens, from stopping at the first example that crosses each cumulative target. Exact equality would require splitting an example |
 | M14 Qwen template deviates from the mandate | **unchanged, and still unratified** — it binds only stage-B arms, which cannot run until Dylan rules on §0 |
 | M17 cost model incomplete | **partially adopted** — Stage-0 dose is now reported, so the anchor's own timing no longer under-reports itself; a full execution-graph cost model is a stage-B item |
+
+---
+
+## §13 Codex lock review #4 — disposition, and the over-engineering audit
+
+`research/m9-codex-lock4-2026-08-30.md`. It reviewed the six changes made after pass 3, none of
+which anyone had checked, and answered the question it was asked: **what is not earning its cost.**
+
+> *"Bluntly: the discipline is now eating the experiment."*
+
+**Not earning its cost, and now removed or reduced:** the all-or-nothing session fingerprint;
+re-running deterministic incumbent arms after challenger-only edits; SCREEN-3 "rank stability"
+sold as a test of the DEV-6 decision surface; provisional `decide()` artifacts masquerading as
+final ones; duplicated code hashes in two places; a ledger long enough to contradict itself
+(§3 said SCREEN-3 adequacy while §4.4 still said DEV-6 — reconciled).
+
+**Earning its cost, and kept:** the training-only warmfit; the warm-start ablation (+0.0265 for
+0.5% of wall-clock); anchor-first staging; full-row finiteness and unit-norm checks; bf16
+challenger encoding; materialized token schedules with exhaustion and non-empty-step assertions;
+pinned qid manifests and fixed contrast orientation; refusing to re-threshold the fp16 parity
+result; atomic result publication.
+
+| finding | disposition |
+|---|---|
+| **B1 the stage-B reorder is a protocol breach, and "void later" is not equivalent to teacher-first** | **withdrawn, order restored to the mandate's.** The reviewer is right that teacher-first *prevents* invalid downstream experiments while void-later runs them and promises to discard them. The reorder was justified by a time budget that no longer exists (Dylan: 15 hours available, then a 3-day run) |
+| **B2 bf16 does not invalidate the fp16 cache; combined not rebuilt after a repair** | **adopted** — compute dtype, config overrides, transformers version and the encoder's own code hash are in the cache key; `combined.f16` is deleted whenever any chunk is written |
+| **B3 provisional decisions are eligible and can become the de facto decision** | **adopted** — interim output is `results/m9_screen_state.json`, stamped ineligible; the final artifact is written only when every mandatory arm exists, carries `complete: true` and the sha256 of each arm it read, and deletes the provisional it supersedes. The STOP check reads both |
+| M dependency-scoped fingerprints | **adopted** — eight scopes (protocol, data, train, eval, challenger, port, fp16, bridge); a run declares what it depends on. A challenger repair no longer voids the incumbent anchor, which is what three 1.5-hour re-runs bought nothing for |
+| M `eligible()` proves a token was consumed, not that the payload is the one it wrote | **adopted** — the token stores the body's sha256 and `eligible()` recomputes it |
+| M the allocator setting is not pinned | **adopted** — assigned, and a conflicting value refused, exactly as `M7_ENCODER` already was |
+| M rank stability is a proxy, not a stability test of the decision surface | **adopted as naming** — the registry calls it a **proxy veto** |
+| M the port pilot is not a gate | **adopted** — it exits non-zero on failure, records the fp16 graph's max-abs as well as its cosine, and registers the **fp16** graph as fastembed's `model_file` (naming the 135.6 MB fp32 graph demonstrated a serving route for something we do not intend to ship) |
+| warmfit's split is index-contiguous, not random | **adopted** — a seeded permutation; fit p95 was 26 words against validation's 16. Selection now reads full-precision objectives, and the artifact says λ is **anchor-calibrated and globally reused**, not per-arm calibrated |
+| the K=2 seed replica is read by no rule | **kept as reporting.** It is already run and it costs nothing to report; §4.2 already says no rule reads it |
+
+**Added in the same pass, on Dylan's authorisation:** a **capacity probe** (`m9cap-diag`) — the
+identical recipe and dose on a **109M** student. The anchor sits at 73.2% of the ceiling and the
+aim needs ~90%; the curve says more epochs on 242,786 queries asymptote near 74%. The probe
+separates "the data volume is the wall" from "33M parameters cannot represent this teacher's query
+space", before three days of compute are committed to one of those answers. It is diagnostic and
+out of M9's scope for selection — the mandate caps nano at 35M.
 

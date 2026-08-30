@@ -164,7 +164,7 @@
       "rank_stability": true,
       "default": "query-only"
     },
-    "rank_stability_rule": "the contrast must have the same sign at the last two checkpoints ON SCREEN-3 (the only surface with four points); a flip means 'not stable at screen dose' -> default, arm recorded diagnostic",
+    "rank_stability_rule": "a PROXY VETO, not a stability test of the decision surface: adoption is decided on DEV-6 at the final checkpoint while stability is measured on SCREEN-3, the only surface with four points (Codex pass 4). The contrast must have the same sign at the last two SCREEN-3 checkpoints; a flip means 'not stable at screen dose' -> default, arm recorded diagnostic.",
     "scope": "every screen verdict is artifact-specific at the screen dose; never 'resolved', 'confirmed' or 'significant'",
     "rank_stability_surface": "SCREEN3"
   },
@@ -250,6 +250,18 @@
       "mix": "70/30",
       "seed": 0,
       "surface": "DEV6"
+    },
+    {
+      "id": "m9cap-diag",
+      "varies": "STUDENT CAPACITY (diagnostic, decides nothing)",
+      "teacher": "stella-400M-v5",
+      "student": "bge-base-en-v1.5",
+      "prompt": "b",
+      "mix": "query-only",
+      "seed": 0,
+      "surface": "SCREEN3",
+      "decision_eligible": false,
+      "why": "a 109M student at the identical dose, to measure whether the >=35M cap is what binds retention before three days of compute are committed. OUT OF M9 SCOPE for selection -- the mandate caps nano at 35M and reserves anything larger for M10 on Dylan's call. Authorised by Dylan 2026-08-30."
     }
   ],
   "validation_samples": {
@@ -391,6 +403,16 @@
       "n": 64,
       "min_cos": 0.99959,
       "max_abs": 0.000145
+    },
+    "diagnostic_students": {
+      "bge-base-en-v1.5": {
+        "repo": "BAAI/bge-base-en-v1.5",
+        "revision": "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a",
+        "params_approx": 109000000,
+        "licence": "MIT",
+        "vendor": "BAAI, clean",
+        "note": "DIAGNOSTIC ONLY. Never selectable as nano's student under the M9 mandate."
+      }
     }
   },
   "surfaces": {
@@ -471,17 +493,23 @@
     },
     "B": {
       "runs": [
+        "m9s2",
+        "m9s3",
         "m9s4",
         "m9s5",
-        "m9s6",
-        "m9s2",
-        "m9s3"
+        "m9s6"
       ],
       "gated_by": "adequacy",
       "purpose": "the seed-sensitivity row and the five contrast arms",
-      "order_amendment": "2026-08-30, BEFORE any teacher number was observed (the stella-1.5B arm died at `loss nan` from fp16 overflow in its own encoder, so it produced no comparison). The mandate's order put the teacher arms first because a swap changes arm 4's baseline. That reason is preserved by a stronger rule instead of by ordering: if a teacher challenger fires, the student, prompt and mix decisions taken under the incumbent are VOID and the milestone returns to Dylan, which is already what LEDGER S0's conditional branch requires. The reorder buys the recipe-setting arms -- 35 minutes each, no teacher encode -- ahead of two arms that cost 2.1 and 1.4 hours and can only either change nothing or stop everything."
+      "order_amendment": "WITHDRAWN 2026-08-30. The reorder (student/prompt/mix before the teacher arms) was justified by a time budget that no longer exists, and Codex pass 4 was right that the 'void later' rule is not equivalent to teacher-first: teacher-first PREVENTS invalid downstream experiments, while void-later runs them, inspects them and promises to discard them. Order restored to the mandate's. The void rule is kept as a belt-and-braces backstop, not as a justification."
     },
-    "order_enforced_in": "m9src/screen.py:require_predecessors"
+    "order_enforced_in": "m9src/screen.py:require_predecessors",
+    "diagnostics": {
+      "runs": [
+        "m9cap-diag"
+      ],
+      "note": "run after the screen; decision-ineligible by construction (-diag id)"
+    }
   },
   "adequacy_gate": {
     "read_after": "m9s1",
@@ -506,7 +534,7 @@
     "kind": "a BUDGET TRIGGER, not a calibrated ranking-adequacy test. Neither threshold is tied to a measured rank-concordance rate, and the slope is a two-point difference read where the cosine schedule has already decayed the LR to 1e-5 -- so a small late gain can mean the schedule shut learning down rather than that the representation converged (Codex pass 3). It is used only to decide whether spending stage B is worth it; it certifies nothing",
     "ceiling_from": "registry ceilings.stella-400M-v5.SCREEN3, with the artifact hash pinned"
   },
-  "lock_constants_sha256": "cc9a452b1c5d7327838c4dc6c2855c5435d0e6a71cf1a71f6814ee6d4126bb33",
+  "lock_constants_sha256": "7a8c73eb46e4a7f072c89b30e71d55b48df4082cda5155a0a8bdca2eaca5c09c",
   "ceilings": {
     "stella-400M-v5": {
       "DEV6": 0.67238,

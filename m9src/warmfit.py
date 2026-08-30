@@ -37,17 +37,25 @@ def objective(Xc, Y, A):
     return float(np.mean(np.sum((P - Y) ** 2, axis=1)))
 
 
-def select(Xc, Y, n_fit):
-    """-> (lambda, rows). Fit on the first `n_fit`, validate on the rest, both training text."""
-    Xf, Yf, Xv, Yv = Xc[:n_fit], Y[:n_fit], Xc[n_fit:], Y[n_fit:]
+def select(Xc, Y, n_fit, seed=0):
+    """-> (lambda, rows). Fit on a RANDOM `n_fit` of the sample, validate on the rest.
+
+    Both halves are training text, so there is no dev leakage either way -- but taking the first
+    n_fit of a sorted index list made the split index-contiguous and therefore length-skewed
+    (fit p95 26 words against validation p95 16; Codex pass 4). A permutation removes that.
+    """
+    perm = np.random.default_rng(seed).permutation(Xc.shape[0])
+    fit, val = perm[:n_fit], perm[n_fit:]
+    Xf, Yf, Xv, Yv = Xc[fit], Y[fit], Xc[val], Y[val]
     rows = []
     for lam in GRID:
         A = solve(Xf, Yf, lam)
         rows.append({"lambda": lam,
-                     "fit_unnormalized_sq_l2": round(float(np.mean(np.sum((Xf @ A - Yf) ** 2, 1))), 6),
-                     "fit_objective": round(objective(Xf, Yf, A), 6),
-                     "val_objective": round(objective(Xv, Yv, A), 6)})
-    best = min(rows, key=lambda r: (r["val_objective"], -r["lambda"]))   # ties -> larger lambda
+                     "fit_unnormalized_sq_l2": float(np.mean(np.sum((Xf @ A - Yf) ** 2, 1))),
+                     "fit_objective": objective(Xf, Yf, A),
+                     "val_objective": objective(Xv, Yv, A)})
+    # full precision, not the rounded display value (Codex pass 4); ties -> the larger lambda
+    best = min(rows, key=lambda r: (r["val_objective"], -r["lambda"]))
     return best["lambda"], rows
 
 
@@ -67,13 +75,16 @@ def run(student_key="bge-small-en-v1.5"):
     Y = np.asarray(m9data.stella_query_targets()[rows_idx[sel]], dtype=np.float32)
     Xc = np.hstack([X, np.ones((X.shape[0], 1), dtype=np.float32)])
 
-    lam, grid = select(Xc, Y, r["n_fit_split"])
+    lam, grid = select(Xc, Y, r["n_fit_split"], seed=r["seed"])
     out = {"student": student_key, "n_fit": r["n_fit"], "n_fit_split": r["n_fit_split"],
            "seed": r["seed"], "grid": list(GRID), "rows": grid, "selected_lambda": lam,
            "registered_lambda": r["lambda"],
            "agrees_with_registry": lam == r["lambda"],
            "_what": "lambda selected on a TRAINING-ONLY holdout under the actual normalized "
-                    "objective. No dev surface is read. Ties go to the larger lambda."}
+                    "objective. No dev surface is read. Ties go to the larger lambda. The split is "
+                    "a random permutation of the 60,000-text sample, not a contiguous prefix.",
+           "_scope": "calibrated in the ANCHOR student's feature space and reused globally; it is "
+                     "an anchor-calibrated global lambda, not a per-arm calibrated one."}
     guard9.write_result(RESULTS / "m9_warmfit.json", out, "m9-warmfit")
     print(json.dumps({k: v for k, v in out.items() if k != "rows"}, indent=1))
     for g in grid:
