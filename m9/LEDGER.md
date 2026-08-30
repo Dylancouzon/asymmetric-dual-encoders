@@ -195,8 +195,8 @@ value in the environment is rejected rather than inherited.
 | **A** | `m9s1` | anchor | stella-400M | bge-small | (b) | query-only | 0 | both |
 | **A** | `m9s1c` | **no warm start** (diagnostic, decides nothing) | stella-400M | bge-small | (b) | query-only | 0 | DEV-6 |
 | B | `m9s1b` | training seed (**reported**, read by no rule) | stella-400M | bge-small | (b) | query-only | **1** | DEV-6 |
-| B | `m9s2` | teacher | stella-1.5B | bge-small | (b) | query-only | 0 | SCREEN-3 |
-| B | `m9s3` | teacher | Qwen3-0.6B | bge-small | (b) | query-only | 0 | SCREEN-3 |
+| ~~B~~ | ~~`m9s2`~~ | **WITHDRAWN** (§9.20) — stella-1.5B measured −0.00229 against a +0.010 bar | | | | | | |
+| ~~B~~ | ~~`m9s3`~~ | **WITHDRAWN** (§9.20) — a smaller nominal edge than the one that just lost | | | | | | |
 | B | `m9s4` | student | selected | MiniLM-L6 | (b) | query-only | 0 | DEV-6 |
 | B | `m9s5` | prompt | selected | selected | (a) | query-only | 0 | DEV-6 |
 | B | `m9s6` | mix | selected | selected | selected | 70/30 **by token** | 0 | DEV-6 |
@@ -570,8 +570,9 @@ import. No G2 allowlist entry is created for M9.1; none is needed.
 
 Lives in **`m9/M92_LOCK.md`**, deliberately outside this file: a guarded protocol file cannot be
 edited while an arm is in flight, and the build's recipe needed drafting while the screen ran.
-Constants a machine reads are generated into `work/m9long/config.json` by `m9src/make_config.py`,
-which shows the arithmetic for every one. The build's own scope (`build`) pins the trainer, the
+Constants a machine reads are generated into `work/m9long/config.json` by `m9src/make_config.py`
+from the screen's decision artifact — **not** by parsing `M92_LOCK.md`, which is the human record.
+It shows the arithmetic for every constant. The build's own scope (`build`) pins the trainer, the
 watchdog, the config and the manifest.
 
 Registered there and not repeated here: dose 5/5/90 by token · 113 examples a step · warmup →
@@ -738,4 +739,37 @@ aim needs ~90%; the curve says more epochs on 242,786 queries asymptote near 74%
 separates "the data volume is the wall" from "33M parameters cannot represent this teacher's query
 space", before three days of compute are committed to one of those answers. It is diagnostic and
 out of M9's scope for selection — the mandate caps nano at 35M.
+
+---
+
+## §17 Codex review #7 — final pre-launch audit
+
+`research/m9-codex-prelaunch-2026-08-30.md`. Verdict: **M9 is not closed and the build is not safe
+to launch** — nine launch blockers plus a list of file inconsistencies.
+
+The first blocker is the one to remember: `longrun.py` would have raised `NameError: tput` at
+**step 500**, a dangling reference left when rolling throughput replaced the cumulative mean — and
+`test_resume.py` hid it by setting `log_every = 10**9`. **A test that disables the code path it is
+meant to cover is not a test**, which is `m8/CODEMAP.md` pitfall 17 in a new disguise.
+
+Fixed in the same session: the `tput` crash; a first-eval gate that could never fire because step 0
+is itself in history; `make_config.py` silently inventing a default config and ignoring the screen's
+mix and prompt verdicts; and `test_resume.py` writing the **real** terminal marker, which would have
+made the watchdog refuse to launch.
+
+**Still blocking, and recorded in `m9/STATUS.md`'s handoff:** prompt policy (a) is not implemented
+in `prepare`; a registered stop never runs the cooldown the lock promises; `open_session()` compares
+the whole fingerprint so build artifacts generated after it can reject the build's own run token;
+`write_status()` can crash the watchdog on a heartbeat that lacks training fields; and the
+checkpoint-stale and eval-overdue checks only log.
+
+Also actioned: RESULTS still carried the withdrawn "training residual" λ wording and no `m9s2`
+diagnostic row; EXPLORED and the §3 arm table still presented the teacher screen as live; STATUS
+said stage B was running, cited the DEV-6 ceiling for a gate that reads SCREEN-3, and described
+`nqopen`/`triviaqa` as excluded when the build admits them.
+
+**On guard scoping, the reviewer's ruling is adopted:** `guard9.py` stays in the `protocol` scope —
+changing the code that decides eligibility during an arm *must* invalidate that arm. The repair is
+to scope `open_session()` the way `eligible()` already is, or to give M9.3 its own session; the
+"batch edits between arms" discipline is operational hygiene, not a fix.
 

@@ -622,8 +622,7 @@ def _train(cfg, hours, max_steps, start_decay, device):
                    "examples": cum["examples"], "tok_per_s": rate, "phase": phase["name"],
                    "loss": loss_acc / max(nlog, 1), "lr": lr, "pid": os.getpid(),
                    "stable_token_cap": cfg["stable_token_cap"],
-                   "floor": (cfg["throughput_floor_frac"] * float(np.median(tput[:8]))
-                             if len(tput) > 8 else None),
+                   "floor": (baseline * cfg["throughput_floor_frac"]) if baseline else None,
                    "evals": len(read_history())}
             _t = HEARTBEAT.with_suffix(".tmp")
             _t.write_text(json.dumps(_hb))

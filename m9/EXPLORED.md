@@ -31,7 +31,9 @@ a premise that has already been tested. Every row is a thing M9 deliberately did
 | **20/10/70 token mix** | drafted, then rejected for *repetition*, not weight: it gives the 463,314 real queries ~438 presentations. At 5/5/90 they get 109.6, and because queries are short they are still ~23% of the objective under a true example mean | evidence that 109 presentations is under-training the query manifold — which the in-run SCREEN-3 curve would show |
 | **Document-side co-adaptation** (`E14-LORA`) | `m8/FINDINGS.md`'s one untested high-capacity lever, and explicitly out of M9 scope: training the document tower breaks the one-index/two-query-paths pair that is the product | post-M10, with a real budget, as its own system |
 | **A higher-dimensional or MRL stella index** | stella's alternative dims are separate learned heads, so a smaller index is a separate system and a full re-encode, not a free truncation | M10+ as its own system |
-| **Re-deriving `zero` against a stronger teacher** | `T1`: a teacher's own retrieval quality does not predict its distilled *table* (Spearman 0.000 over eight candidates). Discards a frozen, confirmatory-verified artifact for a coin flip | the teacher screen fires AND the 400M ceiling is the diagnosed cause |
+| **Re-deriving `zero` against a stronger teacher** | `T1`: a teacher's own retrieval quality does not predict its distilled *table* (Spearman 0.000 over eight candidates). Discards a frozen, confirmatory-verified artifact for a coin flip | a future milestone re-runs a teacher screen. M9's was **withdrawn**: stella-1.5B measured −0.00229 against a +0.010 bar |
+
+| **The teacher screen itself** (`m9s2`, `m9s3`) | withdrawn on measurement and owner preference: stella-1.5B was behind the anchor at every checkpoint (final −0.00229 against a +0.010 bar), and a swap would break the one-index/two-query-paths pair that is the product | a milestone whose product story does not require `zero` and `nano` to share a document model |
 
 ## Measurement
 

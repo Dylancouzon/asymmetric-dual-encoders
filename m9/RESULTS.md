@@ -7,7 +7,7 @@ the JSON; this file is the index and the one-line reading.
 
 | run | artifact | outcome |
 |---|---|---|
-| head probe (diagnostic, `-diag`) | `results/m9_head_probe.json` | a **frozen** bge-small backbone with a closed-form ridge head scores **0.3463** on SCREEN-3 = **50.8%** of the 0.6822 ceiling; λ selected on the training residual. Changed the recipe: every arm now warm-starts the head (`m9/LEDGER.md` §3.2a) |
+| head probe (diagnostic, `-diag`) | `results/m9_head_probe.json` | a **frozen** bge-small backbone with a closed-form ridge head scores **0.3463** on SCREEN-3 = **50.8%** of the 0.6822 ceiling; λ selected on a training-only holdout under the real normalized objective (the earlier 'training residual' wording is withdrawn, LEDGER §9.12). Changed the recipe: every arm now warm-starts the head (`m9/LEDGER.md` §3.2a) |
 | ST-vs-frozen teacher parity | in `m9src/teacher9.parity_vs_frozen` | min-cos **0.99959**, max-abs 1.45e-4 on 64 real texts — the `SentenceTransformer` path used for challenger teachers reproduces M7's frozen path, so challenger numbers are admissible |
 | fp16 target gate | `results/m9_fp16_gate.json` | **PASS** — min-cos 0.999959 (≥0.9999), max-abs 2.02e-4 (≤1e-3) on the locked 10,000-text decile-stratified sample. Arms train on the fp16 target cache |
 | bridge-tolerance dry run | `results/m9_bridge_dryrun.json` | **PASS, exactly** — 1,915 queries, zero missing/extra/reordered qids, max per-query \|Δ nDCG@10\| **0.0** across a fresh process. The scorer is bit-reproducible, which is the drift class the real six-set bridge exists to catch |
@@ -273,7 +273,26 @@ edge-class hardware, and quantization is a precondition rather than an optimisat
   batch size that wins at final dose.
 - **The head+tail long-query probe.** Will not run in M9; first-512 truncation is stated as a
   limitation and `heldout-longq` may not change any decision.
-- **Stage B** (`m9s1b`, `m9s2`, `m9s3`, `m9s4`, `m9s5`, `m9s6`) — gated on the adequacy gate.
+- **The teacher arms `m9s2` / `m9s3`** — withdrawn on measurement plus the owner's product
+  preference; see the diagnostic row below. **Stage B is now `m9s4`, `m9s5`, `m9s6` only.**
+
+### `m9s2` — the teacher arm that was withdrawn (DIAGNOSTIC; its artifact was voided)
+
+`m9s2` (stella-1.5B) trained to completion before an unrelated guard failure voided its artifact,
+so these figures are a log read, not a registered result. No M9 claim rests on them.
+
+| checkpoint | stella-1.5B | stella-400M anchor | delta |
+|---|---|---|---|
+| 7,588 | 0.44649 | 0.44814 | −0.0017 |
+| 15,175 | 0.48034 | 0.48121 | −0.0009 |
+| 22,762 | 0.49225 | 0.49459 | −0.0023 |
+| 30,349 | **0.49775** | **0.50004** | **−0.0023** |
+
+The swap rule needs **+0.010**; this is the wrong sign. A teacher 3.75× larger with a better MTEB
+score (0.5837 vs 0.5609) distils **worse** — M8's `T1` finding generalising from tables to towers.
+Qwen3-0.6B's nominal edge (+0.004) is smaller than the one that just lost (+0.023). **stella-400M
+stands as the teacher by default and by owner preference — one document model, one collection,
+shared by `zero` and `nano` — not by a registered screen result.**
 - **The capacity probe (`m9cap-diag`)** — registered, authorised, and **withdrawn before running**
   on Dylan's ruling, 2026-08-30. It would have cost 60–70 minutes to ask whether the ≤35M cap or
   the dose is what binds retention. M9 cannot act on either answer — the mandate caps nano at 35M —

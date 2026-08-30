@@ -1,12 +1,12 @@
 # M9 status — M9.1 in flight
 
-**Stage: M9.1 stage B running; the M9.3 seven-day build is built, reviewed and waiting to launch.** Branch `m9-work`. Nothing has touched
+**Stage: nothing is running. M9.1's three recipe arms are outstanding; the M9.3 build is written and reviewed but NOT launchable — see the blocker list below.** Branch `m9-work`. Nothing has touched
 the six or the reserved four; LoTTE unread. `results/perquery.json` untouched.
 
 M9.1 is **staged**, on Codex's recommendation after it reviewed the lock *and the code*: stage A is
 the four gates plus the **anchor arm** and its warm-start contrast; stage B — the seed replica and
 the five contrast arms — runs only if the anchor clears a pre-registered **adequacy gate**
-(retention ≥ 0.60 of the DEV-6 ceiling and a late-checkpoint slope ≤ 0.02). Its words were: *"the
+(retention ≥ 0.60 of the **SCREEN-3** ceiling and a late-checkpoint slope ≤ 0.02). Its words were: *"the
 only defensible next GPU action is a corrected, fully guarded anchor curve — not all nine arms."*
 Spending six GPU-hours on contrasts measured at a dose where the student sits far from the teacher
 surface would have ranked early imitability, not the factors under test.
@@ -33,8 +33,9 @@ surface would have ranked early imitability, not the factors under test.
 pooling, `Linear(hidden, 1024)` · 16 epochs = 3,884,576 examples = 30,349 steps = 59,507,872 non-pad
 tokens · two surfaces (DEV-6 equal weight decides student/prompt/mix; family-weighted SCREEN-3
 decides the teacher) · **MDE = 0.0056**, one number derived from 2,031 historical dev contrasts ·
-the head **warm-started in closed form** for every arm, with λ chosen on a training-only holdout. `nqopen`/`triviaqa` excluded from all of M9 rather than left as a post-hoc
-freedom. Full text: `m9/LEDGER.md`; machine copy: `m9/registry.json`.
+the head **warm-started in closed form** for every arm, with λ chosen on a training-only holdout. `nqopen`/`triviaqa` were excluded at M9.0 and later **admitted** for the build by
+`m9src/extended_screen.py` (220,528 real questions); the screen itself still runs on the
+242,786-text pool it locked. Full text: `m9/LEDGER.md`; machine copy: `m9/registry.json`.
 
 ## Reviews — three adversarial passes, all before any arm ran
 
@@ -120,41 +121,70 @@ arm, or arms from three different code states.
 
 ## HANDOFF — read this first if you are a fresh session
 
-**The next action is to finish M9.1's three recipe arms, then launch the M9.3 build tonight.**
-Nothing is running right now. Order matters; the guard enforces it.
+**DO NOT LAUNCH THE BUILD YET.** Codex review #7 (`research/m9-codex-prelaunch-2026-08-30.md`,
+disposition `m9/LEDGER.md` §17) found **nine launch blockers**. Four are fixed; **five remain** and
+each would waste part of a seven-day run. Nothing is running right now.
 
+### Fixed already
+- `longrun.py` crashed with `NameError: tput` at step 500 — a dangling reference left by the
+  rolling-throughput rewrite, hidden because the resume test disables logging.
+- The first-eval gate could never fire: step 0 is appended to history, so `len(history)==1` was
+  already false. It now counts *trained* evaluations.
+- `make_config.py` silently invented a default config when no screen decision existed, and ignored
+  the screen's **mix** and **prompt** verdicts. It now refuses absence and reads both.
+- `test_resume.py` wrote the **real** `work/m9long/terminal.json`, and the watchdog refuses to start
+  after any terminal marker — so running the test before launch would have blocked the launch.
+
+### STILL BLOCKING — fix before launching
+1. **Prompt policy (a) is not implemented in the corpus.** `longrun.prepare()` always tokenizes
+   queries with policy (b); the selected prefix reaches only the warm-start fit. If `m9s5` picks
+   (a), warm start and SGD train different recipes. Either implement it in `prepare` or make the
+   build refuse a policy-(a) selection.
+2. **A registered stop never runs the cooldown.** `M92_LOCK.md` §6 says plateau triggers the
+   cooldown; the code writes a terminal marker and the watchdog exits, leaving an **unannealed**
+   stable-phase checkpoint. Either have the trainer enter `decay` automatically on plateau and on
+   the token cap, or delete that promise from the lock.
+3. **The guard session is not dependency-scoped at session level.** `open_session()` compares the
+   whole fingerprint, so generating `manifest.json` and `config.json` — both in the `build` scope —
+   after opening the session can make `begin_run("m9-build")` reject it. Give M9.3 its own session,
+   or scope `open_session` the way `eligible()` already is.
+4. **The watchdog can crash on its own status refresh.** `write_status()` assumes every heartbeat
+   carries `step`/`tok_per_s`/`phase`/`stable_token_cap`, but the `verify`/`model`/`eval`/`stopped`
+   beats do not. Nothing supervises the watchdog itself.
+5. **Checkpoint-stale and eval-overdue only log.** They never stop or restart anything, so the
+   conditions they detect run on unattended.
+
+### Then, in this order
 ```bash
 cd /home/dylan/asymetric-dual-encoders            # branch m9-work
-./m9status.sh                                     # where the chain is
-.venv/bin/python m9src/guard9.py                  # must print problems: []
+./m9status.sh && .venv/bin/python m9src/guard9.py   # expect problems: []
 
-# 1. the screen (~2.5 h). m9src is FROZEN until this finishes -- see the warning below.
+# 1. the screen (~2.5 h). WAIT for it -- do not background and continue.
 rm -f work/m9tokens/*.json results/m9_screen_m9s*.json results/m9_adequacy.json \
       results/m9_screen_state.json results/m9_screen_decisions.json
 .venv/bin/python -c "import sys;sys.path[:0]=['m9src'];import guard9;guard9.open_session(force=True)"
-setsid nohup ./run_m9_stage.sh gate:warmfit gate:fp16_gate gate:bridge_dryrun:verify \
-    m9s1 adequacy m9s1c m9s1b m9s4 decide m9s5 decide m9s6 decide > logs/m9_chain_out.log 2>&1 &
+./run_m9_stage.sh gate:warmfit gate:fp16_gate gate:bridge_dryrun:verify \
+    m9s1 adequacy m9s1c m9s1b m9s4 decide m9s5 decide m9s6 decide
+test -s results/m9_screen_decisions.json || { echo "no FINAL decision -- stop"; exit 1; }
 
-# 2. the build's remaining prerequisites (~40 min, after the screen)
-.venv/bin/python m9src/longrun.py targets         # 1.14M texts, one stella pass
-.venv/bin/python m9src/longrun.py manifest
-.venv/bin/python m9src/longrun.py verify
-.venv/bin/python m9src/make_config.py             # reads the FINAL decide artifact
-.venv/bin/python m9src/test_resume.py             # MUST pass; do not skip this one
-git add -A && git commit -m "m9.2: recipe lock" && git push origin m9-work
+# 2. build prerequisites (~40 min). Each must succeed before the next.
+.venv/bin/python m9src/longrun.py targets && \
+.venv/bin/python m9src/longrun.py manifest && \
+.venv/bin/python m9src/longrun.py verify && \
+.venv/bin/python m9src/make_config.py && \
+.venv/bin/python m9src/test_resume.py            # MUST pass; never skip
+rm -f work/m9long/terminal.json work/m9long/ckpt/STOP work/m9long/trainer.lock
 
-# 3. launch
+# 3. fill m9/M92_LOCK.md from the decision (it is still DRAFT with blank fields), commit, push,
+#    THEN open the build session and launch
 setsid nohup .venv/bin/python m9src/watchdog.py --hours 168 > logs/m9_watchdog.log 2>&1 &
 ```
 
-The watchdog starts the trainer itself, restarts it if it dies or wedges, refuses to restart a
-*registered* stop, and republishes `m9/RUN_STATUS.md` on branch `m9-status` every 30 minutes.
-
-> **WARNING, learned the expensive way.** `m9src/guard9.py` is itself inside the `protocol` scope
-> it enforces, and `m9src/warmfit.py`/`nano.py`/`screen.py` are inside `train`. **Editing any file
-> under `m9src/` while an arm is running voids that arm at write time** — it cost five completed
-> arms today. Batch every guarded-file edit into a window when nothing is running.
-> `m9/LEDGER.md`, `m9/registry.json` and `results/m9_lock_constants.json` are guarded too.
+> **WARNING, learned the expensive way.** `m9src/guard9.py` sits inside the `protocol` scope it
+> enforces, and `warmfit.py`/`nano.py`/`screen.py` sit inside `train`. **Editing anything under
+> `m9src/` while an arm runs voids that arm at write time** — it cost five completed arms today.
+> `m9/LEDGER.md`, `m9/registry.json` and `results/m9_lock_constants.json` are guarded too. Batch
+> every guarded-file edit into a window when nothing is running.
 
 ## Where the seven-day build stands
 

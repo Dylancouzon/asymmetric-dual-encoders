@@ -503,7 +503,7 @@
         "m9s6"
       ],
       "gated_by": "adequacy",
-      "purpose": "the seed-sensitivity row and the five contrast arms",
+      "purpose": "the three contrast arms that set the build's recipe: student, prompt, mix",
       "order_amendment": "WITHDRAWN 2026-08-30. The reorder (student/prompt/mix before the teacher arms) was justified by a time budget that no longer exists, and Codex pass 4 was right that the 'void later' rule is not equivalent to teacher-first: teacher-first PREVENTS invalid downstream experiments, while void-later runs them, inspects them and promises to discard them. Order restored to the mandate's. The void rule is kept as a belt-and-braces backstop, not as a justification.",
       "withdrawn_runs": [
         "m9s2",
