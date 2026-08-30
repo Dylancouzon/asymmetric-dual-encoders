@@ -38,6 +38,11 @@ TEACHERS = {
         "repo": "NovaSearch/stella_en_1.5B_v5",
         "revision": "7817065102fd9e1b031fe874e910c01f40b2f001",
         "dim": 1024, "frozen_path": False,
+        # Its vendored modeling_qwen.py was written against an older transformers and calls
+        # DynamicCache.get_usable_length, removed in 4.57. An embedding model has no use for a KV
+        # cache, so turning it off avoids the legacy path entirely rather than patching a
+        # third-party file in the HF module cache.
+        "config_kwargs": {"use_cache": False},
         "query_prompt": "Instruct: Given a web search query, retrieve relevant passages that "
                         "answer the query.\nQuery: ",
         "doc_prompt": "",
@@ -122,13 +127,14 @@ def encode_cached(key, name, texts, role, batch_size=64, max_length=512, chunk=5
     man = json.loads(man_p.read_text()) if man_p.exists() else {}
     for ci in range(nchunk):
         p = d / f"chunk_{ci:05d}.npy"
-        key = p.name
-        if p.exists() and key in man:
+        cname = p.name          # NOT `key` -- that is the teacher id, and shadowing it made the
+                                # next encode() call ask TEACHERS for 'chunk_00000.npy'
+        if p.exists() and cname in man:
             # content hash, not shape: a truncated or half-written chunk has the right shape
             # (m8/CODEMAP.md's cache discipline; Codex pass 3, M15)
-            if hashlib.sha256(p.read_bytes()).hexdigest() == man[key]["sha256"]:
+            if hashlib.sha256(p.read_bytes()).hexdigest() == man[cname]["sha256"]:
                 continue
-            print(f"  {key}: content hash mismatch, re-encoding", flush=True)
+            print(f"  {cname}: content hash mismatch, re-encoding", flush=True)
         lo, hi = ci * chunk, min(n, (ci + 1) * chunk)
         v = encode(key, texts[lo:hi], role, batch_size=batch_size, max_length=max_length)
         np.save(p, v.astype(np.float16))

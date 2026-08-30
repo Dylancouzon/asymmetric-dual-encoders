@@ -132,7 +132,7 @@ def doc_targets(teacher_key, rows, texts):
         return np.asarray(vecs[rows], dtype=np.float16)
     import teacher9
     v = teacher9.encode_cached(teacher_key, "m9screend", texts, "doc",
-                               batch_size=32, max_length=512)
+                               batch_size=16, max_length=512)
     out = np.asarray(v, dtype=np.float16)
     teacher9.release(teacher_key)
     return out

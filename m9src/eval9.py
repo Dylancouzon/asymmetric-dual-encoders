@@ -42,8 +42,10 @@ def doc_vecs(comp, teacher_key):
         import devsuite
         import teacher9
         doc_ids, doc_texts, q_ids, q_texts, qrels = devsuite.load(comp)
+        # batch 16, not 32: measured peak is 8.53 GB for Qwen3 at batch 32 on a 10 GB card, and
+        # the student is resident on the same device during a checkpoint evaluation.
         dv = teacher9.encode_cached(teacher_key, f"dev-{comp}-docs", doc_texts, "doc",
-                                    batch_size=32, max_length=512)
+                                    batch_size=16, max_length=512)
     assert dv.shape[0] == len(doc_ids)
     _DOCS[ck] = (doc_ids, q_ids, q_texts, qrels, dv)
     return _DOCS[ck]
