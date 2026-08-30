@@ -1569,3 +1569,28 @@ carry no closed-form residual capacity; it does not prove trained rows could not
 OOD pair. It cleared the old text's ~0.104 comfortably and the arms still lost — which is itself
 evidence for §17b's downgrade to correlated headroom, since the mechanism moved and the metric did
 not follow.
+
+### §25 — `B8`, target design: **NO SURVIVOR** (`results/m8_b8_target.json`)
+
+Closed form, 340,850 decontaminated pairs (**0 dropped** — every query's positives resolve in the
+pool, so no selection bias), three targets sharing one X / W0 / λ grid.
+
+| target | group vector | OOD | Δ vs bare | λ |
+|---|---|---|---|---|
+| `bare` (R0's) | **0.6388** | 0.3474 | — | 1e-2 interior |
+| `mix50` | 0.6356 | 0.3064 | **−0.0032** | 1e-2 interior |
+| `centroid` | 0.4719 | 0.1645 | **−0.1669** | 1e-1 interior |
+
+Bar 0.0040; neither clears. **The comparator is sound**: `bare` independently reproduces B7's
+closed-form 0.3439 (§18) at 0.3474 on a differently-built fit list, and every optimum is interior so
+nothing is grid-limited.
+
+**The mechanism, stated because the intuition was reasonable and is now refuted.** Retrieval scores
+`q·d` and never `q·q`, so fitting the table to the teacher's QUERY point looks like aiming at the
+wrong manifold. It is not: aiming at the positives' centroid costs **0.167**. The teacher's query
+encoder already performs the cross-manifold mapping, and a centroid target instead fits *which*
+documents happen to be positive. `mix50`'s −0.0032 is inside the noise band — read it as "bare is at
+least as good", not as "blending hurts".
+
+**Consequence:** one of `D2.exit_precondition`'s three remaining probes is discharged. `R-LIST` and
+`B10` remain.
