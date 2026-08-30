@@ -118,6 +118,40 @@ For the frontier: `zero`'s query side is a 0.023 ms table lookup, so nano costs 
 query-side compute and is still ~1–2 ms on an edge-class CPU. Latency is architecture- and
 tokenizer-dependent, not weight-dependent, so these hold for the trained artifact.
 
+## The pair on Qdrant Edge — and it reframes the frontier
+
+`results/m9_edge_prototype_Apple_M5_Pro.json`, `bench/edge_prototype_pair.py`. One synthetic
+1M × 1024 index, two query paths, M5 Pro, 4 threads, `ef=default`. **Latency and architecture only
+— recall is measured on the training box against the real stella index.**
+
+| query length | zero: encode + search | nano: encode + search | nano ÷ zero |
+|---|---|---|---|
+| 6–10 words | 0.234 + 0.845 = **1.09 ms** | 1.173 + 0.935 = **2.13 ms** | **1.96×** |
+| 21–50 words | 0.566 + 0.805 = 1.37 ms | 3.201 + 0.942 = 4.14 ms | 3.02× |
+| 51–120 words | 0.696 + 0.775 = 1.46 ms | 6.451 + 1.010 = 7.46 ms | 5.10× |
+
+| asset | bytes | cold load |
+|---|---|---|
+| `zero` int8 token table | **270.1 MB** | 0.51 s |
+| `nano` fp16 ONNX | **46.1 MB** | 0.17 s |
+| document index (1M × 1024) | 2,225.8 MB of segments | 8.4 s |
+
+**Three things here are not what the project assumed.**
+
+1. **ANN search is the floor, so the system gap is far smaller than the encoder gap.** The query
+   *encoders* differ by ~50× in isolation; the *systems* differ by **1.96×** at typical query
+   length, because both pay ~0.85–0.94 ms of search against the same index. "Zero query compute"
+   buys about one millisecond of a two-millisecond query.
+2. **The zero-compute model is the BIGGER artifact.** 270 MB against nano's 46 MB — nano is
+   **5.9× smaller on disk** and loads 3× faster. The lookup table's whole cost is storage, and it
+   is the thing an edge device has least of.
+3. **nano's disadvantage is length-dependent**: 2× at ten words, 5× at a hundred. A table lookup is
+   linear in tokens; a transformer is not. Any claim about query-side cost has to name a length.
+
+*Not a finding:* the 1–5-word row records a 115 ms zero search — a cold-start artifact from the
+first bucket measured, before the index warmed. It is excluded above and should be re-measured
+with a warm-up pass before it appears in any report.
+
 ## Reference rows measured this milestone
 
 | row | DEV-6 | SCREEN-3 (family weights) |
