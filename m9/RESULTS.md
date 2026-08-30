@@ -220,6 +220,37 @@ is measuring the wrong thing.
 **The frontier ratio now spans 1.44× to 3.28×** across index configurations. No single query-side
 cost number is meaningful without naming the index it was measured against.
 
+**Round 4 answers it.** A hard container limit is the instrument RSS could not be — give Qdrant
+less RAM than the index and see whether it still serves. 1M × 1024, 6–10-word queries:
+
+| index | RAM limit | serves? | container mem after queries | zero | nano |
+|---|---|---|---|---|---|
+| binary | **256m** | yes | 202 MB | 3.387 ms | 4.469 ms |
+| binary | **512m** | yes | 440 MB | 3.366 ms | 3.732 ms |
+| binary | **1g** | yes | 871 MB | 1.819 ms | 3.794 ms |
+| binary | **2g** | yes | 874 MB | 2.219 ms | 3.513 ms |
+| fp16 | **256m** | yes | 187 MB | 531.840 ms | 473.518 ms |
+| fp16 | **512m** | yes | 369 MB | 440.161 ms | 466.295 ms |
+| fp16 | **1g** | yes | 748 MB | 398.305 ms | 434.135 ms |
+| fp16 | **2g** | yes | 743 MB | 225.379 ms | 232.714 ms |
+
+**A 1M-document index serves in 256 MB — but only binary-quantized.** With `binary` +
+`rescore=false` the whole system answers a query in **3.4 ms (zero) / 4.5 ms (nano)** inside a
+256 MB container, using 202 MB. Uncompressed fp16 "serves" at every limit and is **useless at all
+of them**: 532 ms at 256 MB, and still 225 ms with 2 GB — two orders of magnitude slower, thrashing
+against the disk.
+
+So the edge premise survives, with a condition attached that nothing in M7–M9 had stated:
+**the pair is deployable on edge-class hardware, and quantization is not an optimisation but a
+precondition.** The document index — 2 GB of fp16 vectors — was the thing keeping this off a
+device, and binary quantization removes it at 16× compression.
+
+One more: under memory pressure the two query paths **converge** — 1.32× at 256 MB and 1.11× at
+512 MB, against 2.09× at 1 GB. When search is the bottleneck, `zero`'s free encoder buys almost
+nothing. Across every configuration measured the ratio spans **1.11× to 3.28×**, which is the range
+the report has to quote rather than any single number. (The binary 1 GB/2 GB rows are non-monotone —
+1.819 vs 2.219 ms — so treat sub-millisecond differences under Docker as noise.)
+
 ## Reference rows measured this milestone
 
 | row | DEV-6 | SCREEN-3 (family weights) |
