@@ -92,8 +92,10 @@ the stop message.
   checkpoint after it, silently.
 - **Regression:** two consecutive evaluations more than **0.0056** (the MDE) below the best
   checkpoint → stop.
-- **Plateau:** less than **+0.001** SCREEN-3 over **1 B tokens** → run the cooldown and stop. Judged
-  in tokens, never in steps, because that is the unit the dose is registered in.
+- **Plateau:** less than **+0.001** SCREEN-3 over **1 B tokens** → the trainer enters the cooldown
+  itself, then stops. Judged in tokens, never in steps, because that is the unit the dose is
+  registered in. The **stable-phase token cap** ends the same way: cooldown, then stop. Neither
+  leaves an unannealed checkpoint waiting for a human.
 - **Throughput collapse:** below **50%** of the session's early median → stop. Page-cache thrashing
   against a 12.6 GB target map would otherwise silently reduce delivered dose while the wall clock
   ran out.

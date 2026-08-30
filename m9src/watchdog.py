@@ -118,11 +118,17 @@ def write_status(hb, rows, incidents):
     lines = ["# M9.3 build — live status", "",
              f"_Updated {time.strftime('%Y-%m-%d %H:%M:%S')} by `m9src/watchdog.py`._", ""]
     if hb:
+        # Heartbeats from non-train states (`verify`, `model`, `eval`, `stopped`) carry no
+        # step/throughput fields; rendering must not assume them (Codex review #7, blocker 4).
         age = time.time() - hb["wall"]
-        lines += [f"**step {hb['step']:,}** · **{hb['tokens']/1e9:.3f} B tokens** "
-                  f"({hb['tokens']/hb['stable_token_cap']:.1%} of the cap) · "
-                  f"{hb['tok_per_s']:,.0f} tok/s · phase **{hb['phase']}** · "
-                  f"heartbeat {age:.0f}s old", ""]
+        if hb.get("step") is not None and hb.get("stable_token_cap"):
+            lines += [f"**step {hb['step']:,}** · **{hb.get('tokens', 0)/1e9:.3f} B tokens** "
+                      f"({hb.get('tokens', 0)/hb['stable_token_cap']:.1%} of the cap) · "
+                      f"{(hb.get('tok_per_s') or 0):,.0f} tok/s · "
+                      f"phase **{hb.get('phase', '?')}** · heartbeat {age:.0f}s old", ""]
+        else:
+            lines += [f"state **{hb.get('state', '?')}** · heartbeat {age:.0f}s old"
+                      + (f" · {hb.get('reason')}" if hb.get("reason") else ""), ""]
     if rows:
         lines += [f"**Best SCREEN-3 {best:.5f} — retention {best/ceil:.3f}** of the "
                   f"{ceil} teacher ceiling.", "",
@@ -194,6 +200,12 @@ def main():
     restarts, failed_starts, last_status, recent = 0, 0, 0.0, []
     launched_at = time.time()
     last_step, last_step_at, last_digest = None, time.time(), time.time()
+    # Checkpoint/eval advancement is judged over time THIS watchdog has observed, never over raw
+    # mtimes: a resume after downtime starts with an old `last.pt`, and acting on its age directly
+    # would restart a healthy trainer before its first checkpoint boundary -- a crash loop made of
+    # nothing (Codex review #7, blocker 5).
+    last_ckpt_mtime, last_ckpt_at = None, time.time()
+    last_eval_n, last_eval_at = None, time.time()
     for req in (longrun.CONFIG, longrun.MANIFEST):
         if not req.exists():
             raise SystemExit(f"{req} is missing -- the build is not ready to be watched. Run "
@@ -203,129 +215,156 @@ def main():
 
     while time.time() < deadline:
         time.sleep(a.period)
-        hb = read_json(HEARTBEAT)
-        rows = longrun.read_history()
-        incidents = [json.loads(l) for l in INCIDENTS.read_text().splitlines()[-40:]
-                     if l.strip()] if INCIDENTS.exists() else []
+        # One bad iteration must never kill the only supervisor of a seven-day run: nothing
+        # supervises the watchdog itself (Codex review #7, blocker 4).
+        try:
+            hb = read_json(HEARTBEAT)
+            rows = longrun.read_history()
+            incidents = [json.loads(l) for l in INCIDENTS.read_text().splitlines()[-40:]
+                         if l.strip()] if INCIDENTS.exists() else []
 
-        if (longrun.CKPT / "STOP").exists():
-            log({"event": "stop_file", "detail": "clean halt requested; watchdog exiting"})
-            break
-
-        free_gb = shutil.disk_usage(longrun.CKPT if longrun.CKPT.exists() else REPO).free / 1e9
-        if free_gb < a.min_disk_gb:
-            (longrun.CKPT).mkdir(parents=True, exist_ok=True)
-            (longrun.CKPT / "STOP").write_text("watchdog: disk headroom")
-            log({"event": "disk_low", "detail": f"{free_gb:.1f} GB free < {a.min_disk_gb}; "
-                                                f"asked the trainer to stop cleanly"})
-            break
-        if not gpu_ok():
-            log({"event": "gpu_missing", "detail": "nvidia-smi failed"})
-
-        term = terminal_state()
-        if term:
-            log({"event": "terminal", "detail": f"the trainer stopped deliberately: "
-                                                f"{term['reason']} (step {term['step']:,}, "
-                                                f"{term['tokens']/1e9:.3f}B tokens). Not "
-                                                f"restarting -- a registered stop is a decision."})
-            break
-
-        alive = trainer_alive()
-        # A fresh start has no heartbeat yet, so `hb and ...` was False for both staleness checks
-        # and a wedge during verify/targets/warm-start was invisible forever (Codex, blocker 4).
-        started = hb["wall"] if hb else launched_at
-        stale = (time.time() - started) > (a.stale if hb else a.startup_deadline)
-        step_now = hb.get("step") if hb else None
-        no_progress = (step_now is not None and step_now == last_step
-                       and (time.time() - last_step_at) > a.stale
-                       and (hb or {}).get("state") == "train")
-        if step_now != last_step:
-            last_step, last_step_at = step_now, time.time()
-
-        # the two checks the docstring promised and the first version never implemented
-        ck = longrun.CKPT / "last.pt"
-        if ck.exists() and time.time() - ck.stat().st_mtime > a.ckpt_stale:
-            log({"event": "checkpoint_stale",
-                 "detail": f"last.pt is {(time.time()-ck.stat().st_mtime)/60:.0f} min old; a crash "
-                           f"now costs everything since it"})
-        if rows and time.time() - rows[-1]["wall"] > a.eval_stale:
-            log({"event": "eval_overdue",
-                 "detail": f"no evaluation for {(time.time()-rows[-1]['wall'])/3600:.1f} h; the "
-                           f"trainer's own quality kill rules cannot fire without them"})
-
-        if not alive or stale or no_progress:
-            why = ("dead" if not alive else
-                   ("no heartbeat within the startup deadline" if not hb else "stale heartbeat")
-                   if stale else "no step progress")
-            if restarts >= a.max_restarts:
-                log({"event": "giving_up", "detail": f"{why}; {restarts} restarts already. A crash "
-                                                     f"loop is a different problem from a crash."})
+            if (longrun.CKPT / "STOP").exists():
+                log({"event": "stop_file", "detail": "clean halt requested; watchdog exiting"})
                 break
-            if alive:
-                for pid in alive:
-                    try:
-                        os.kill(pid, 15)
-                    except ProcessLookupError:
-                        pass
-                if not wait_gone(alive):
-                    log({"event": "will_not_restart",
-                         "detail": f"pids {alive} did not exit even after SIGKILL; refusing to "
-                                   f"start a second writer"})
-                    continue
-            time.sleep(2 ** min(restarts, 5))        # backoff; a crash loop should not thrash
-            pids = start_trainer(max(0.5, (deadline - time.time()) / 3600))
-            restarts += 1
-            recent.append(time.time())
-            recent[:] = [t for t in recent if t > time.time() - 6 * 3600]
-            if len(recent) > a.max_restarts_6h:
-                log({"event": "giving_up", "detail": f"{len(recent)} restarts in six hours; that is "
-                                                     f"a crash loop, not a crash"})
+
+            free_gb = shutil.disk_usage(longrun.CKPT if longrun.CKPT.exists() else REPO).free / 1e9
+            if free_gb < a.min_disk_gb:
+                (longrun.CKPT).mkdir(parents=True, exist_ok=True)
+                (longrun.CKPT / "STOP").write_text("watchdog: disk headroom")
+                log({"event": "disk_low", "detail": f"{free_gb:.1f} GB free < {a.min_disk_gb}; "
+                                                    f"asked the trainer to stop cleanly"})
                 break
-            if not pids:
-                # A restart that starts nothing is not a restart. Retrying a launch that cannot
-                # launch just burns the budget silently -- exactly the class this watchdog exists
-                # for. Two in a row and it stops and says so.
-                failed_starts += 1
-                log({"event": "restart_failed", "detail": f"{why}; nothing came up. See "
-                                                          f"logs/m9_build.log. "
-                                                          f"{failed_starts} consecutive."})
-                if failed_starts >= 2:
-                    log({"event": "giving_up", "detail": "two consecutive launches produced no "
-                                                         "process; this is a configuration "
-                                                         "failure, not a crash"})
+            if not gpu_ok():
+                log({"event": "gpu_missing", "detail": "nvidia-smi failed"})
+
+            term = terminal_state()
+            if term:
+                log({"event": "terminal", "detail": f"the trainer stopped deliberately: "
+                                                    f"{term['reason']} (step {term['step']:,}, "
+                                                    f"{term['tokens']/1e9:.3f}B tokens). Not "
+                                                    f"restarting -- a registered stop is a "
+                                                    f"decision."})
+                break
+
+            alive = trainer_alive()
+            # A fresh start has no heartbeat yet, so `hb and ...` was False for both staleness
+            # checks and a wedge during verify/targets/warm-start was invisible forever (Codex,
+            # blocker 4). Non-train states (verify hashes gigabytes, an eval holds the beat for
+            # its whole read) legitimately beat slower than a training step, so they get the
+            # startup allowance, not the train one.
+            state = (hb or {}).get("state", "train")
+            thresh = a.stale if state == "train" else max(a.stale, a.startup_deadline)
+            started = hb["wall"] if hb else launched_at
+            stale = (time.time() - started) > (thresh if hb else a.startup_deadline)
+            step_now = hb.get("step") if hb else None
+            no_progress = (step_now is not None and step_now == last_step
+                           and (time.time() - last_step_at) > a.stale
+                           and state == "train")
+            if step_now != last_step:
+                last_step, last_step_at = step_now, time.time()
+
+            # Checkpoint/eval wedges RESTART, they do not just log (Codex review #7, blocker 5).
+            ck = longrun.CKPT / "last.pt"
+            ck_m = ck.stat().st_mtime if ck.exists() else None
+            if ck_m != last_ckpt_mtime:
+                last_ckpt_mtime, last_ckpt_at = ck_m, time.time()
+            ckpt_wedged = (bool(alive) and state == "train" and ck_m is not None
+                           and time.time() - last_ckpt_at > a.ckpt_stale)
+            if len(rows) != last_eval_n:
+                last_eval_n, last_eval_at = len(rows), time.time()
+            eval_wedged = (bool(alive) and state == "train" and bool(rows)
+                           and time.time() - last_eval_at > a.eval_stale)
+
+            if not alive or stale or no_progress or ckpt_wedged or eval_wedged:
+                why = ("dead" if not alive else
+                       ("no heartbeat within the startup deadline" if not hb
+                        else "stale heartbeat") if stale else
+                       "no step progress" if no_progress else
+                       f"no new checkpoint for {(time.time()-last_ckpt_at)/60:.0f} min -- a crash "
+                       f"now costs everything since the last one" if ckpt_wedged else
+                       f"no new evaluation for {(time.time()-last_eval_at)/3600:.1f} h -- the "
+                       f"trainer's own quality kill rules cannot fire without them")
+                if restarts >= a.max_restarts:
+                    log({"event": "giving_up", "detail": f"{why}; {restarts} restarts already. A "
+                                                         f"crash loop is a different problem from "
+                                                         f"a crash."})
                     break
-            else:
-                failed_starts = 0
-                log({"event": "restart", "detail": f"{why}; restart {restarts}/{a.max_restarts}; "
-                                                   f"pids {pids}"})
-            last_step, last_step_at = None, time.time()
+                if alive:
+                    for pid in alive:
+                        try:
+                            os.kill(pid, 15)
+                        except ProcessLookupError:
+                            pass
+                    if not wait_gone(alive):
+                        log({"event": "will_not_restart",
+                             "detail": f"pids {alive} did not exit even after SIGKILL; refusing to "
+                                       f"start a second writer"})
+                        continue
+                time.sleep(2 ** min(restarts, 5))    # backoff; a crash loop should not thrash
+                pids = start_trainer(max(0.5, (deadline - time.time()) / 3600))
+                restarts += 1
+                recent.append(time.time())
+                recent[:] = [t for t in recent if t > time.time() - 6 * 3600]
+                if len(recent) > a.max_restarts_6h:
+                    log({"event": "giving_up", "detail": f"{len(recent)} restarts in six hours; "
+                                                         f"that is a crash loop, not a crash"})
+                    break
+                if not pids:
+                    # A restart that starts nothing is not a restart. Retrying a launch that
+                    # cannot launch just burns the budget silently -- exactly the class this
+                    # watchdog exists for. Two in a row and it stops and says so.
+                    failed_starts += 1
+                    log({"event": "restart_failed", "detail": f"{why}; nothing came up. See "
+                                                              f"logs/m9_build.log. "
+                                                              f"{failed_starts} consecutive."})
+                    if failed_starts >= 2:
+                        log({"event": "giving_up", "detail": "two consecutive launches produced "
+                                                             "no process; this is a configuration "
+                                                             "failure, not a crash"})
+                        break
+                else:
+                    failed_starts = 0
+                    log({"event": "restart", "detail": f"{why}; restart "
+                                                       f"{restarts}/{a.max_restarts}; "
+                                                       f"pids {pids}"})
+                last_step, last_step_at = None, time.time()
+                last_ckpt_at = last_eval_at = time.time()
 
-        if hb and hb.get("tok_per_s") and hb.get("floor") and hb["tok_per_s"] < hb["floor"]:
-            log({"event": "throughput_low",
-                 "detail": f"{hb['tok_per_s']:,.0f} tok/s below the floor {hb['floor']:,.0f} -- "
-                           f"the m9s2 failure mode; the trainer's own rule should also fire"})
+            if hb and hb.get("tok_per_s") and hb.get("floor") and hb["tok_per_s"] < hb["floor"]:
+                log({"event": "throughput_low",
+                     "detail": f"{hb['tok_per_s']:,.0f} tok/s below the floor "
+                               f"{hb['floor']:,.0f} -- the m9s2 failure mode; the trainer's own "
+                               f"rule should also fire"})
 
-        if time.time() - last_digest > 86400:
-            r0 = [r for r in rows if r["wall"] >= time.time() - 86400]
-            if r0:
-                log({"event": "daily", "detail":
-                     f"{len(r0)} evals; tokens {r0[0]['tokens']/1e9:.2f}B -> "
-                     f"{r0[-1]['tokens']/1e9:.2f}B; SCREEN-3 {r0[0]['screen3']:.5f} -> "
-                     f"{r0[-1]['screen3']:.5f} ({r0[-1]['screen3']-r0[0]['screen3']:+.5f}); "
-                     f"best {max(r['screen3'] for r in rows):.5f}"})
-            last_digest = time.time()
+            if time.time() - last_digest > 86400:
+                r0 = [r for r in rows if r["wall"] >= time.time() - 86400]
+                if r0:
+                    log({"event": "daily", "detail":
+                         f"{len(r0)} evals; tokens {r0[0]['tokens']/1e9:.2f}B -> "
+                         f"{r0[-1]['tokens']/1e9:.2f}B; SCREEN-3 {r0[0]['screen3']:.5f} -> "
+                         f"{r0[-1]['screen3']:.5f} ({r0[-1]['screen3']-r0[0]['screen3']:+.5f}); "
+                         f"best {max(r['screen3'] for r in rows):.5f}"})
+                last_digest = time.time()
 
-        if time.time() - last_status > a.status_every:
-            write_status(hb, rows, incidents)
-            if not a.no_push:
-                push_status()
-            last_status = time.time()
+            if time.time() - last_status > a.status_every:
+                write_status(hb, rows, incidents)
+                if not a.no_push:
+                    push_status()
+                last_status = time.time()
+        except Exception as e:
+            try:
+                log({"event": "watchdog_error", "detail": repr(e)[:300]})
+            except Exception:
+                print(f"watchdog_error (unloggable): {e!r}", flush=True)
 
-    write_status(read_json(HEARTBEAT), longrun.read_history(),
-                 [json.loads(l) for l in INCIDENTS.read_text().splitlines()[-40:] if l.strip()]
-                 if INCIDENTS.exists() else [])
-    if not a.no_push:
-        push_status()
+    try:
+        write_status(read_json(HEARTBEAT), longrun.read_history(),
+                     [json.loads(l) for l in INCIDENTS.read_text().splitlines()[-40:] if l.strip()]
+                     if INCIDENTS.exists() else [])
+        if not a.no_push:
+            push_status()
+    except Exception as e:
+        print(f"final status write failed: {e!r}", flush=True)
     log({"event": "watchdog_stop", "detail": f"{restarts} restarts"})
 
 

@@ -167,32 +167,46 @@ def _is_diagnostic(run_id):
     return run_id.endswith("-smoke") or run_id.endswith("-diag")
 
 
-def open_session(force=False):
-    """Freeze the whole screen once. Every arm afterwards must match this manifest."""
+def _session_path(run_id=None):
+    """M9.3 gets its OWN session: its inputs (`config.json`, `manifest.json`, the filled lock) are
+    generated AFTER the screen's session opened, so sharing SESSION.json would make the build's
+    prerequisites void the screen -- or the screen's frozen build-scope hash veto the build
+    (Codex review #7, blocker 3)."""
+    return TOKENS / ("SESSION-build.json" if run_id == "m9-build" else "SESSION.json")
+
+
+def open_session(force=False, run_id=None):
+    """Freeze the experiment once. Every later run must match this manifest ON THE SCOPES IT
+    DEPENDS ON. With no run_id (a deliberate, human open) every scope must match."""
     problems, head, branch = check_state()
     if problems:
         raise NotLocked("M9.0 lock is not in a runnable state:\n  " + "\n  ".join(problems))
     fp = fingerprint()
+    path = _session_path(run_id)
     TOKENS.mkdir(parents=True, exist_ok=True)
-    if SESSION.exists() and not force:
-        sess = json.loads(SESSION.read_text())
+    if path.exists() and not force:
+        sess = json.loads(path.read_text())
         # The session is bound to the FINGERPRINT, not to HEAD. Binding it to the commit was wrong
         # in a way that only shows up in use: committing an arm's own RESULT moves HEAD and would
         # then void every arm already run, making "commit frequently" and "run a multi-arm screen"
         # mutually exclusive. What must not move is the lock, the code and the input data -- which
         # is exactly what the fingerprint covers. `check_state()` still requires the guarded files
         # to be clean and HEAD to be pushed on `m9-work`.
-        if sess["fingerprint_sha256"] != fp_sha(fp):
+        # Scoped per Codex #7: a run is voided by the scopes it depends on and by nothing else,
+        # so generating build inputs mid-screen does not void screen arms.
+        keys = deps_for(run_id) if run_id else tuple(SCOPES)
+        moved = [k for k in keys if fp[k] != sess["fingerprint"].get(k)]
+        if moved:
             raise NotLocked(
-                f"the screen session was opened at fingerprint "
-                f"{sess['fingerprint_sha256'][:12]} and the tree is now {fp_sha(fp)[:12]}. Arms "
-                "from different lock states may not be combined. Either restore the tree or start "
-                "a new session with force=True, which invalidates every arm already run under it.")
+                f"{path.name} was opened at fingerprint {sess['fingerprint_sha256'][:12]} and "
+                f"scope(s) {moved} have since changed (tree now {fp_sha(fp)[:12]}). Runs from "
+                "different lock states may not be combined. Either restore the tree or start "
+                "a new session with force=True, which invalidates every run already made under it.")
         sess["head_at_last_check"] = head
         return sess
     sess = {"opened_at": time.time(), "commit": head, "branch": branch,
             "stage": registry()["stage"], "fingerprint": fp, "fingerprint_sha256": fp_sha(fp)}
-    SESSION.write_text(json.dumps(sess, indent=1))
+    path.write_text(json.dumps(sess, indent=1))
     return sess
 
 
@@ -202,7 +216,7 @@ def begin_run(run_id, extra=None):
     if _is_diagnostic(run_id):
         return {"run_id": run_id, "diagnostic": True,
                 "_note": "diagnostic: no state check, ineligible for any decision"}
-    sess = open_session()
+    sess = open_session(run_id=run_id)
     old = TOKENS / f"{run_id}.json"
     if old.exists() and json.loads(old.read_text()).get("consumed"):
         raise NotLocked(f"{run_id!r} already produced a result under this lock. Delete its "
@@ -233,7 +247,7 @@ def write_result(path, payload, run_id):
     tok = json.loads(tp.read_text())
     if tok.get("consumed"):
         raise NotLocked(f"the run token for {run_id!r} was already consumed; a token is one-use")
-    sess = open_session()
+    sess = open_session(run_id=run_id)
     now = scoped(sess["fingerprint"], run_id)
     moved = [k for k in now if now[k] != tok["scoped"].get(k)]
     if moved:
@@ -263,7 +277,7 @@ def eligible(payload, strict=True):
     if not strict:
         return True
     try:
-        sess = open_session()
+        sess = open_session(run_id=reg.get("run_id"))
     except NotLocked:
         return False
     # Only the scopes this result DEPENDS on must be unchanged.

@@ -168,35 +168,62 @@ def extra_texts():
     return out
 
 
-def prepare(student_key, doc_limit=None):
+def _corpus_current(name, prefix, n):
+    """True when `name` is already tokenized with exactly this prefix and text count, so a
+    re-prepare under a new prompt policy re-tokenizes the query corpora (~463K texts, minutes)
+    without redoing the 6.15M documents (whose prefix a query policy never touches)."""
+    p = TOKENS / name / "meta.json"
+    if not p.exists():
+        return False
+    m = json.loads(p.read_text())
+    return m.get("prefix") == prefix and m.get("n") == n and (TOKENS / name / "flat.npy").exists()
+
+
+def prepare(student_key, doc_limit=None, prompt_policy="b"):
+    """`prompt_policy` must be the policy the screen SELECTED (`m9s5`): the prefix is baked into
+    the tokenized corpus, so preparing under (b) and training a recipe locked to (a) would give the
+    warm start and SGD two different inputs (Codex review #7, blocker 1). `train` re-checks."""
     RUN.mkdir(parents=True, exist_ok=True)
     tok = nano.Nano(student_key).tok
     tpl = guard9.registry()["templates"]
+    qpre = tpl["query_policy_a_student"] if prompt_policy == "a" else tpl["query_policy_b_student"]
     t0 = time.time()
 
     q = json.loads((WORK / "m9_screen_queries.json").read_text())
-    _save_corpus("queries_pair",
-                 *_pack_streaming(tok, q, tpl["query_policy_b_student"], label="queries_pair"),
-                 {"role": "query", "prefix": tpl["query_policy_b_student"],
-                  "source": "work/m9_screen_queries.json"})
+    if _corpus_current("queries_pair", qpre, len(q)):
+        print("  queries_pair: already tokenized under this policy", flush=True)
+    else:
+        _save_corpus("queries_pair",
+                     *_pack_streaming(tok, q, qpre, label="queries_pair"),
+                     {"role": "query", "prefix": qpre, "prompt_policy": prompt_policy,
+                      "source": "work/m9_screen_queries.json"})
     for name, (texts, row) in extra_texts().items():
         role = "query" if name in QUERY_SOURCES else "doc_span"
-        pre = tpl["query_policy_b_student"] if role == "query" else tpl["doc_student"]
-        _save_corpus(name, *_pack_streaming(tok, texts, pre, label=name),
-                     {"role": role, "prefix": pre, "what": row["what"],
-                      "kept_index_sha256": row["kept_index_sha256"]})
+        pre = qpre if role == "query" else tpl["doc_student"]
+        if _corpus_current(name, pre, len(texts)):
+            print(f"  {name}: already tokenized under this policy", flush=True)
+        else:
+            _save_corpus(name, *_pack_streaming(tok, texts, pre, label=name),
+                         {"role": role, "prefix": pre, "prompt_policy": prompt_policy,
+                          "what": row["what"], "kept_index_sha256": row["kept_index_sha256"]})
         del texts
 
     r = guard9.registry()
-    rows, dmeta = m9data.doc_pool_rows(doc_limit or r["data"]["n_eligible_doc_rows"],
-                                       r["data"]["doc_candidates_seed"])
-    print(f"  documents: reading {rows.size:,} texts from the pool stores...", flush=True)
-    texts = m9data.row_texts(rows)
-    _save_corpus("documents", *_pack_streaming(tok, texts, tpl["doc_student"], label="documents"),
-                 {"role": "doc", "prefix": tpl["doc_student"], **dmeta})
-    np.save(TOKENS / "documents" / "pool_rows.npy", rows)
-    del texts
-    print(f"prepare done in {time.time()-t0:.0f}s -- now run `targets`, then `verify`", flush=True)
+    n_docs = doc_limit or r["data"]["n_eligible_doc_rows"]
+    if _corpus_current("documents", tpl["doc_student"], n_docs) and \
+            (TOKENS / "documents" / "pool_rows.npy").exists():
+        print("  documents: already tokenized (doc prefix is policy-independent)", flush=True)
+    else:
+        rows, dmeta = m9data.doc_pool_rows(n_docs, r["data"]["doc_candidates_seed"])
+        print(f"  documents: reading {rows.size:,} texts from the pool stores...", flush=True)
+        texts = m9data.row_texts(rows)
+        _save_corpus("documents",
+                     *_pack_streaming(tok, texts, tpl["doc_student"], label="documents"),
+                     {"role": "doc", "prefix": tpl["doc_student"], **dmeta})
+        np.save(TOKENS / "documents" / "pool_rows.npy", rows)
+        del texts
+    print(f"prepare done in {time.time()-t0:.0f}s -- now run `targets`, `manifest`, `verify`",
+          flush=True)
 
 
 # --------------------------------------------------------------------------- targets ----------
@@ -462,6 +489,16 @@ def _train(cfg, hours, max_steps, start_decay, device):
     reconcile_history()
     names = [n for n in QUERY_SOURCES + SPAN_SOURCES + DOC_SOURCES if cfg["shares"].get(_grp(n))]
     corpora = {n: load_corpus(n) for n in names}
+    doc_pre = guard9.registry()["templates"]["doc_student"]
+    for n in names:
+        want = cfg["student_query_prefix"] if n in QUERY_SOURCES else doc_pre
+        got = corpora[n][2].get("prefix")
+        if got != want:
+            raise SystemExit(
+                f"corpus {n!r} is tokenized with prefix {got!r}; the locked recipe (prompt policy "
+                f"{cfg.get('prompt_policy')!r}) requires {want!r}. The warm start and SGD would "
+                f"train different recipes. Re-run `longrun.py prepare --prompt-policy "
+                f"{cfg.get('prompt_policy')}`, then `targets`, `manifest`, `verify`.")
     beat("targets")
     tgt = Targets()
     tgt.check(corpora)
@@ -549,7 +586,8 @@ def _train(cfg, hours, max_steps, start_decay, device):
             stop_reason = "max_steps"
             break
         if phase["name"] == "decay" and step >= phase["decay_from"] + phase["decay_steps"]:
-            stop_reason = "cooldown complete"
+            stop_reason = "cooldown complete" + (
+                f" (entered on: {phase['trigger']})" if phase.get("trigger") else "")
             break
         if deadline and time.time() > deadline:
             stop_reason = "session wall-clock budget"
@@ -558,8 +596,12 @@ def _train(cfg, hours, max_steps, start_decay, device):
             stop_reason = "STOP file"
             break
         if phase["name"] == "stable" and cum["tokens"] >= cfg["stable_token_cap"]:
-            stop_reason = f"stable-phase token cap {cfg['stable_token_cap']:,}"
-            break
+            # A registered end of the stable phase RUNS the cooldown rather than stopping with an
+            # unannealed checkpoint (M92_LOCK §6; Codex review #7, blocker 2).
+            phase = {"name": "decay", "decay_from": step, "decay_steps": cfg["decay_steps"],
+                     "trigger": f"stable-phase token cap {cfg['stable_token_cap']:,}"}
+            print(f"cooldown begins at step {step:,} for {cfg['decay_steps']:,} steps "
+                  f"({phase['trigger']})", flush=True)
 
         lr = lr_at(step, cfg, phase)
         for g in opt.param_groups:
@@ -616,17 +658,9 @@ def _train(cfg, hours, max_steps, start_decay, device):
             print(f"  step {step:,} loss {loss_acc/nlog:.5f} lr {lr:.2e} "
                   f"{rate:,.0f} tok/s | cum {cum['tokens']/1e9:.3f}B tokens "
                   f"({cum['tokens']/cfg['stable_token_cap']:.1%} of cap)", flush=True)
-            # the heartbeat an out-of-process watchdog reads. Liveness is not a PID: a wedged
-            # process keeps its PID and stops writing this.
-            _hb = {"wall": time.time(), "step": step, "tokens": cum["tokens"],
-                   "examples": cum["examples"], "tok_per_s": rate, "phase": phase["name"],
-                   "loss": loss_acc / max(nlog, 1), "lr": lr, "pid": os.getpid(),
-                   "stable_token_cap": cfg["stable_token_cap"],
-                   "floor": (baseline * cfg["throughput_floor_frac"]) if baseline else None,
-                   "evals": len(read_history())}
-            _t = HEARTBEAT.with_suffix(".tmp")
-            _t.write_text(json.dumps(_hb))
-            os.replace(_t, HEARTBEAT)
+            # The watchdog's heartbeat is `beat("train", ...)` above, written on its own 60 s
+            # timer every step. A second writer here raced it and was the only one that omitted
+            # `state`, which the watchdog's no-progress rule keys on (Codex review #7, blocker 4).
             loss_acc, nlog = 0.0, 0
             # Freeze a baseline ONCE, after warmup, and persist it so restarts inherit it rather
             # than re-baselining onto a degraded rate.
@@ -669,7 +703,18 @@ def _train(cfg, hours, max_steps, start_decay, device):
                     stop_reason = (f"first evaluation {rec['screen3']:.5f} is below the step-0 "
                                    f"baseline {base:.5f} by more than "
                                    f"{cfg['first_eval_regression']} -- training is making it worse")
-            stop_reason = stop_reason or check_kill(rec, cfg)
+            kill = stop_reason or check_kill(rec, cfg)
+            if kill and kill.startswith("plateau:"):
+                # A plateau is a registered stop that RUNS the cooldown (M92_LOCK §6), so enter
+                # decay instead of stopping -- and never re-fire inside a cooldown already running
+                # (Codex review #7, blocker 2).
+                if phase["name"] == "stable":
+                    phase = {"name": "decay", "decay_from": step,
+                             "decay_steps": cfg["decay_steps"], "trigger": kill}
+                    print(f"cooldown begins at step {step:,} for {cfg['decay_steps']:,} steps "
+                          f"({kill})", flush=True)
+                kill = None
+            stop_reason = kill
             if best is None or rec["screen3"] > best["screen3"]:
                 best = {"step": step, "screen3": rec["screen3"], "tokens": cum["tokens"]}
         elif step % cfg["ckpt_every"] == 0:
@@ -812,10 +857,12 @@ def main():
     ap.add_argument("--max-steps", type=int, default=None)
     ap.add_argument("--doc-limit", type=int, default=None)
     ap.add_argument("--student", default="bge-small-en-v1.5")
+    ap.add_argument("--prompt-policy", choices=["a", "b"], default="b",
+                    help="the screen-selected query prompt policy; baked into the tokenized corpus")
     a = ap.parse_args()
 
     if a.cmd == "prepare":
-        prepare(a.student, a.doc_limit)
+        prepare(a.student, a.doc_limit, a.prompt_policy)
     elif a.cmd == "targets":
         targets()
     elif a.cmd == "manifest":

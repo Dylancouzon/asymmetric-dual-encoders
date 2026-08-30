@@ -105,6 +105,10 @@ def main():
     longrun.CKPT = SCRATCH / "ckpt"
     longrun.HISTORY = SCRATCH / "history.jsonl"
     longrun.LOCKFILE = SCRATCH / "trainer.lock"
+    # TERMINAL and HEARTBEAT too: leaving them real meant the test's own registered stop blocked
+    # the launch and its heartbeat could confuse a live watchdog.
+    longrun.TERMINAL = SCRATCH / "terminal.json"
+    longrun.HEARTBEAT = SCRATCH / "heartbeat.json"
     SCRATCH.mkdir(parents=True, exist_ok=True)
     try:
         cfg = scratch_cfg(n)

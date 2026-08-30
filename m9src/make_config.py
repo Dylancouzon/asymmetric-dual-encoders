@@ -101,6 +101,12 @@ def build(decisions=None):
     per_step, epochs = {}, {}
     for name in longrun.QUERY_SOURCES + longrun.SPAN_SOURCES + longrun.DOC_SOURCES:
         _f, offs, meta = longrun.load_corpus(name)
+        if name in longrun.QUERY_SOURCES and meta.get("prefix") != cfg["student_query_prefix"]:
+            raise SystemExit(
+                f"corpus {name!r} is tokenized with prefix {meta.get('prefix')!r} but the screen "
+                f"selected prompt policy {prompt!r} ({cfg['student_query_prefix']!r}). Re-run "
+                f"`longrun.py prepare --prompt-policy {prompt}`, then `targets`, `manifest`, "
+                f"`verify` -- documents are skipped automatically (Codex #7, blocker 1).")
         grp = longrun._grp(name)
         sibs = [n for n in (longrun.QUERY_SOURCES + longrun.SPAN_SOURCES + longrun.DOC_SOURCES)
                 if longrun._grp(n) == grp]
