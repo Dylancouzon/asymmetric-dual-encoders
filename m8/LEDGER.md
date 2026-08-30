@@ -687,7 +687,13 @@ REPORT FRAMING. Nothing about the system may change after the reserved-set numbe
 ---
 
 
-## 6–8. Pipeline, Stage R, Stage S — REMOVED 2026-08-30
+## 6–8. Pipeline, Stage R, Stage S — REMOVED 2026-08-30 (binding rules restored in §6 below)
+
+**Cross-reference note.** Surviving text still cites "§6", "§7" and "§8". Every rule those citations
+depended on is restored in **§6.1–6.5** below; what was removed is the M8 stage plan, the Stage-R
+degree-of-freedom table and the Stage-S menu, which describe work that will not happen. A citation
+you cannot resolve in §6 refers to removed planning, not to a lost rule — and the diff that proves
+it is `research/m8-planning/` plus this file's own git history.
 
 M8 assembled no candidate, so the binding stage ordering, the Stage-R degrees of freedom
 and the Stage-S menu describe work that will not happen. The prose probe registrations are
@@ -696,6 +702,109 @@ actually reads, and retains every row including those that never ran. The one fi
 those sections carried is in `m8/EXPLORED.md`: **the recipe/data class is hygiene, not a
 route to the bar** — M7's entire post-gate lever programme transferred to the six at
 0.000 ± 0.005.
+
+## 6. RULES THAT SURVIVE THE COMPRESSION — restored 2026-08-30
+
+*Sections 6–8 were removed as M8-specific planning. An adversarial diff (Codex, 2026-08-30) found
+that they also carried BINDING rules with no other home — including the one-access safety
+checklist, while the confirmatory access is still UNSPENT and inherited by M9. Those rules are
+restored here VERBATIM. This is the incident the §14 G10 rule exists to prevent, caught by the
+mandated diff rather than by luck.*
+
+### 6.1 Inheritance and naming
+
+**NAMING DISCREPANCY, for Dylan.** The locked names below are `constella-zero-m8` /
+`constella-nano-m9`, but the 2026-08-30 product framing says **"Constella-zeo"** and
+**"Constella-nano"**, and M8 ships nothing so a `-m8` suffix on the zero-compute model is now
+wrong — the artifact is M7's. **The released names need a ruling before M10 pushes anything.**
+
+
+**Reading order for a cold session:** `m8/STATUS.md` → this file → `m8/registry.json`.
+`m7/LEDGER.md` is the inherited protocol and is authoritative for anything this file does not
+override. `m7/CODEMAP.md` is the module map and pitfall list — read it before writing code.
+
+**Release names, LOCKED by Dylan:** **`qdrant/constella-zero-m8`** (this milestone's table) and
+**`qdrant/constella-nano-m9`** (M9's distilled tower). Constella = constellation + stella:
+navigate by fixed stars, no engine. **If the teacher leaves the stella lineage, naming reopens
+with Dylan.**
+
+### 6.2 The one-access safety checklist — BINDING, and the access is UNSPENT
+
+**M9 inherits the reserved four and their single access. Every item below must be ported to M9's
+paths with its own acceptance test before that access is spent.** M8 never built
+`test_final_guard.py` / `test_freeze_binding.py` (§4.4 gap list); this is the specification they
+must satisfy, not a record that they do.
+
+
+| # | obligation |
+|---|---|
+| 1 | Durable **spent receipt**: an annotated `m8-reserved-spent` tag pushed to origin the moment the confirmatory block is on disk. |
+| 2 | **Peeled** tag check (`refs/tags/X^{}`) — an annotated tag resolves to the tag OBJECT and would otherwise never match. |
+| 3 | The access counts as SPENT when the **result file** holds the confirmatory block, not when the ledger says so. |
+| 4 | **Exclusive pid lock**; two concurrent launches cannot both pass a read-only guard. |
+| 5 | Guard runs **before** preflight; preflight takes the kinds it may verify and logs its own payload-hash reads. |
+| 6 | Table **snapshotted** after verification, not reopened by path per dataset. |
+| 7 | Confirmatory result written **atomically**, before any secondary block. |
+| 8 | Per-query values persisted as **raw floats** (rounding to 1e-6 made a close decision unreproducible). |
+| 9 | Corpora load **corpus-only**; labels come from the frozen payloads and nowhere else. |
+| 10 | **BM25 package/config verification** against the fusion spec's own cache keys — a `bm25s`/`PyStemmer` upgrade between freeze and access would silently change the fused system C3 judges. |
+| 11 | `load_and_verify` **re-runs** `assert_releasable` and `assert_gate_passed` rather than trusting recorded verdicts. |
+| 12 | `assert_gate_passed` requires the exact registered condition set, the pinned component list, a real Stage-0 checkpoint, the per-query dump's bytes, and a clean committed **evaluator identity**. |
+| 13 | Exactly **one** `--infra-retry`, requiring the same commit. |
+
+### 6.3 Stage-R invariants that still bind
+
+**R0 :=** the registered M7 recipe settings instantiated under the selected teacher, current
+filters, and M8's data volume / precision / seed policy.
+
+direction. Diagnostics may only trigger **separately registered** performance arms — and a
+diagnostic may not trigger an arm that does not yet have a complete registry row.
+
+
+### 6.4 The frozen fusion contract
+
+**Fusion operator** — family grid, depth, dev components, frozen `bm25_run` — is frozen **before**
+Stage R and applied identically at every fused read; the final invocation instantiates parameters
+only. Amendable only if D4' BM25F re-registers the lexical function, and only before Stage R.
+Inherited mechanics: one family, one parameter, no per-dataset weights or routing,
+`fusion.DEPTH` = 1000 for selection and application alike, fitted against the **int8 release**
+artifact; the zero-score-padding and self-hit drops are part of the frozen function; on an exact
+tie the **simpler** system wins (dense-only first, then the first grid point in order);
+`n_tied_at_best` written into the spec.
+
+### 6.5 Release-format, seeds, and the standing kill-list
+
+→ the candidate is R1-alone; multiple → the rule picks.**
+
+**Release-format rule: int8, always.** It is the C2 identity, the proven-quality-free format
+(M7 G4 int8 upper bound 0.00013 against a 0.005 bar), and what the ONNX graph embeds. All sizing,
+eligibility and tie-breaks are computed at int8. A 4-bit variant is **research-only and never
+ships**.
+
+identically-parameterized aligned tables, otherwise mechanical median. **Never best-seed.**
+
+
+  **before** Stage R. **May never be the sole qualifying change.** Full-dose dual-index question
+  expansion stays dead on compute (263–702 days); a bounded ≤50K-doc research probe may run and
+  may **never** be extrapolated to the reserved system.
+- **R1-only** — legitimate **iff** at least one qualifying table change survived (§5.4).
+
+**Research-only, never candidates:** D3 index-time adaptation (E5 — one labelled measurement
+allowed AFTER the final access); D5 nonlinear query-side head (E1 — out entirely).
+
+**Kill-list, standing (algebra and arithmetic, not preference):** higher table dims
+(identity-linear MRL heads off a 1024-d hidden state); absorbable transforms as capacity —
+query-side centering, whitening, top-PC removal, any per-token scalar weight — allowed only as
+registered training priors and killed on cross-domain validation; full late interaction; another
+31 MB unigram table with better hyperparameters as the sole change.
+
+**Considered and recorded, not adopted (so it is not rediscovered as an oversight):** doc-side
+small-k multi-vector (k = 2–4 facets, max-over-facets). It is not the kill-list's token-level late
+interaction, the query side is untouched, and it attacks the short-query ambiguity floor nothing
+else on the menu reaches — but it multiplies the document index by k, which is an E7/product
+conversation Dylan has not had. It is in the wake-up note beside E14, not in the menu.
+
+- **B12** — superseded by the int8-always rule; a 4-bit sweep may run post-finalist as research.
 
 ## 9. Probe index — `registry.json` is authoritative
 
@@ -710,31 +819,31 @@ The prose registrations were removed 2026-08-30; **`m8/registry.json` is the pre
 | `B7` | block-CG vocabulary curve (gates D2) | ran |
 | `B6-pre` | doc-side head ONNX fuse precondition (gates D1) | ran |
 | `B17` | in-domain oracle generalization ceiling | ran |
-| `B8` | target design (bare + doc-centroid targets) | deferred, never run |
-| `B9` | SVD rank truncation | deferred, never run |
+| `B8` | target design (bare + doc-centroid targets) | ran |
+| `B9` | SVD rank truncation | registered, not run |
 | `B10` | scoring/pooling family | registered, not run |
-| `B13` | joint configuration confirm (A-grid + matched-steps negatives + riders) | deferred, never run |
-| `B14` | doc-side instruction refit | deferred, never run |
-| `B15` | context-averaged row init (Wada) | deferred, never run |
-| `B16` | MEV / self-similarity | ran |
-| `B6` | doc-side map quality arm (D1) | deferred, never run |
-| `D-GENRE` | genre bundle (USPTO + EUR-Lex + federal) | deferred, never run |
-| `D-SYNTH` | synthetic Qwen3 query component (E2) | deferred, never run |
-| `D-FINEWEB` | FineWeb arm (E13, clean-stack-tax design) | deferred, never run |
-| `R-LIST` | listwise distillation arm | deferred, never run |
-| `R-PHASE` | phase structure (sequential / mixed-replay / listwise-only) | deferred, never run |
-| `R1-ASSEMBLY` | the one Stage-R validation gate | conditional, never run |
-| `S-SELECT` | Stage-S family selection | conditional, never run |
+| `B13` | joint configuration confirm (A-grid + matched-steps negatives + ri | registered, not run |
+| `B14` | doc-side instruction refit | registered, not run |
+| `B15` | context-averaged row init (Wada) | registered, not run |
+| `B16` | MEV / self-similarity | registered, not run |
+| `B6` | doc-side map quality arm (D1) | registered, not run |
+| `D-GENRE` | genre bundle (USPTO + EUR-Lex + federal) | registered, not run |
+| `D-SYNTH` | synthetic Qwen3 query component (E2) | registered, not run |
+| `D-FINEWEB` | FineWeb arm (E13, clean-stack-tax design) | registered, not run |
+| `R-LIST` | listwise distillation arm | registered, not run |
+| `R-PHASE` | phase structure (sequential / mixed-replay / listwise-only) | registered, not run |
+| `R1-ASSEMBLY` | the one Stage-R validation gate | registered, not run |
+| `S-SELECT` | Stage-S family selection | registered, not run |
 | `NF` | noise-floor measurement (the instrument every bar is set against) | ran |
-| `B3-ICT` | ICT (Inverse Cloze Task) pair augmentation | ran |
-| `E14-HEAD` | doc-side re-shaping: RENORMALIZED heads on cached document vectors, trai | ran |
-| `E14-LORA` | doc-side co-adaptation proper: LoRA the document tower jointly with the  | authorised, not run |
-| `E10-REMEDY` | the LoTTE shadow, remediated per-question and re-screened to zero | not run |
-| `D2` | D2 -- compositional capacity: a multi-word tokenizer, trained through th | ran |
-| `NF-CROSSED-FUSED` | NF-CROSSED-FUSED -- the chain-level FUSED floor, from cells already on d | ran |
-| `D2-PRE` | D2-PRE -- closed-form preflight: does ANY new-row class carry residual c | ran |
-| `VECTOR-PRF` | VECTOR-PRF -- train-free dense pseudo-relevance feedback on the frozen R | ran |
-| `E14-PRE` | E14-PRE -- does the document tower hold reachable structure its read-out | registered, cancelled mid-run |
+| `B3-ICT` | ICT (Inverse Cloze Task) pair augmentation | registered, not run |
+| `E14-HEAD` | doc-side re-shaping: RENORMALIZED heads on cached document vectors | ran |
+| `E14-LORA` | doc-side co-adaptation proper: LoRA the document tower jointly wit | registered, not run |
+| `E10-REMEDY` | the LoTTE shadow, remediated per-question and re-screened to zero | prior remedy RAN and was INVALIDATED; corrected remedy never ran |
+| `D2` | D2 -- compositional capacity: a multi-word tokenizer, trained thro | NOT run — `D2-PRE` routed against authorising its five chains |
+| `NF-CROSSED-FUSED` | NF-CROSSED-FUSED -- the chain-level FUSED floor, from cells alread | not run — no chain-level fused floor exists |
+| `D2-PRE` | D2-PRE -- closed-form preflight: does ANY new-row class carry resi | ran |
+| `VECTOR-PRF` | VECTOR-PRF -- train-free dense pseudo-relevance feedback on the fr | ran |
+| `E14-PRE` | E14-PRE -- does the document tower hold reachable structure its re | registered, launched, CANCELLED mid-run |
 
 ## 10. Workstream T — the teacher
 
@@ -937,6 +1046,22 @@ SHORT by rule (§14 G10): what changed, why, and the pointer. Long-form lives in
 the result JSON, or `research/m8-planning/`.*
 
 **RULINGS BY DYLAN**
+
+- **M8 CLOSES NOW, and the registered exit precondition is SUPERSEDED (2026-08-30).** *"M8 should be
+  closed now. Since it's mostly a loss, we should really sanitize the files and only keep the
+  learnings."* **This is an OWNER OVERRIDE, not the registered exit firing.** `D2.exit_precondition`
+  required `D2`, `B10`, `B8` **and** `R-LIST` to have run and missed, plus a fresh standing-directive
+  audit. Only `B8` did (NO SURVIVOR, §25); `D2`'s chains were never authorised (`D2-PRE` routed
+  against them, §24) and `B10` and `R-LIST` were never run. **So M8's closure is a decision not to
+  spend, and no document may present it as proof that the route is exhausted.** The exit clause
+  always reserved this override to Dylan; it is exercised here explicitly and dated so a future
+  session does not mistake a budget decision for a measurement. Untested and inherited: `R-LIST`
+  (mechanistically triggered by `B2`), `B10`, a trained `D2`, `E14-LORA`.
+- **The release is the PAIR (2026-08-30).** M7 is releasable *paired with a good low-compute model* —
+  `constella-zero` + `constella-nano` as two points on a quality-vs-query-cost frontier, not a
+  leaderboard claim. M10 carries the release, the ONNX port **including the document model**, the
+  fastembed integration and the whitepaper (`instructions-m10.md`). M11 is noted as an **image**
+  model, on the ground that most edge workloads are vision.
 
 - **M8 MAY SHIP A BETTER SYSTEM (2026-08-29).** *"M8 can ship a better system. If that system makes
   sense and is defensible. I'm okay having a custom document encoder if this works well. Obviously I
@@ -1164,7 +1289,7 @@ the result JSON, or `research/m8-planning/`.*
 
 ## 16. Gate findings — REMOVED 2026-08-30
 
-An index of where each pre-milestone gate finding was discharged. Every one was discharged before any probe ran; the dispositions live in the sections they changed and in `research/m8-planning/`.
+An index of where each pre-milestone gate finding was discharged. Every one was discharged before any probe ran. **Correction (Codex diff, 2026-08-30): two dispositions lived in the removed §6 — gate BLOCKER 5 in its stage ordering and MAJOR 4 in its port checklist. The checklist is restored verbatim in §6.2; the stage ordering is gone with the stage plan, and its disposition now exists only in `research/m8-planning/`.** All others live in the sections they changed.
 
 ## 17–23. Measured results that bars or plans read
 

@@ -13,15 +13,22 @@ this harness. Numbers live in `results/m8_*.json`; this is the reading of them.
 time — be improved enough to beat a co-adapted system, with the document tower held frozen?**
 
 **No, on this evidence.** M7 shipped at avg-6 **0.4339** against LightRetriever's
-`LR-dense-pertask` **0.4583** — a CI-resolved miss of **−0.0243**. Every lever M8 measured moved the
-dev endpoint by **0.000–0.005**, and M7's whole post-gate lever programme transferred to the six at
-**0.000 ± 0.005**. The gap is roughly five times the size of the largest effect anything in this
-class produces.
+`LR-dense-pertask` **0.4583** — a CI-resolved miss of **−0.0243**. **No lever M8 measured IMPROVED
+the dev endpoint by more than ~0.005** (several were strongly negative: −0.167, −0.051, −0.024), and
+M7's whole post-gate lever programme transferred to the six at **0.000 ± 0.005**. The gap is roughly
+five times the largest *improvement* anything in this class produces.
 
-**The single most useful sentence for the next model:** the deficit is not in the table's
-*resolution*, its *placement*, or its *training target*. Those were each tested and each failed.
-What was never tested at capacity is **co-adaptation of the document side** — and that is exactly
-what the system we lost to does.
+**Read "No" precisely.** M8 produced no candidate from the probes it executed. It did **not** prove
+the route impossible: closure was an owner decision not to spend (§15, 2026-08-30), and `R-LIST`,
+`B10`, a *trained* `D2` and full document co-adaptation were never run.
+
+**The single most useful sentence for the next model, scoped to what was actually executed:**
+under a **frozen document tower**, the deficit was not repaired by finer query *resolution*
+(a closed-form, equal-budget screen — not a trained-capacity test), by query *placement*
+(train-free PRF at one published config), or by *target design* (closed form). What was never
+tested at capacity is **co-adaptation of the document side** — exactly what the system we lost to
+does. **Still untested, not closed:** `R-LIST`, `B10`, a *trained* D2, and full document
+co-adaptation.
 
 ---
 
@@ -39,7 +46,7 @@ with the condition that would REOPEN it, which is what makes these findings rath
 | Query placement | `VECTOR-PRF` | −0.051 dense, −0.021 fused, negative on **all six** components | train-free post-hoc refinement does not recover the gap |
 | The training target | `B8` | doc-centroid −0.167, 50/50 blend −0.003 | aiming at the document manifold is **worse**; the teacher's query encoder already does that mapping |
 | A doc-side head | `E14-HEAD` | −0.0244 / −0.0293 | a head on a **finished** vector cannot recover what pooling discarded |
-| Licensing | clean-stack tax | +0.0058 | MS MARCO exclusion costs 0.0058 — real, measured, and declined on commercial grounds, not technical ones |
+| Licensing | clean-stack tax | +0.0058 **[−0.0015, +0.0131]** on the six, **−0.0030** [−0.0066, +0.0003] on dev | MS MARCO exclusion is priced but **UNRESOLVED on both endpoints and opposite in sign** — declined commercially; do not quote it as a clean available gain |
 
 ### Never run, and why it matters that they weren't
 
@@ -61,7 +68,7 @@ with the condition that would REOPEN it, which is what makes these findings rath
 
 ## 3. Mechanisms worth carrying into the next model
 
-1. **The objective is exhausted, not the architecture.** `B2`'s 99.75% is the number to remember:
+1. **The objective may be exhausted before the architecture is.** `B2`'s 99.75% is the number to remember:
    under the shipped recipe the table already ranks the positive first for nearly every training
    query, so the gradient carries almost no information. Any future table training should start from
    **hard candidates**, not a uniform bank. This is the strongest untested lead M8 leaves behind.

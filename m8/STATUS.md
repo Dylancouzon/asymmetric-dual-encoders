@@ -1,8 +1,9 @@
 # M8 status — CLOSED
 
 **M8 closed 2026-08-30 as a MEASUREMENT.** No candidate, no release, **no confirmatory access
-spent**; the reserved four are clean and inherited by M9. Twelve probes ran; every lever with a
-measured mechanism is closed.
+spent**; the reserved four are clean and inherited by M9. Twelve probes ran. **Closure was an owner decision not to spend, not the registered
+exit proving exhaustion** — see §15's 2026-08-30 ruling. `R-LIST`, `B10`, a trained `D2` and
+document co-adaptation remain UNTESTED.
 
 **Read `m8/FINDINGS.md` first** — it is what this milestone produced. `m8/EXPLORED.md` is the
 closed-avenue register with reopening conditions. Everything else here is provenance.
@@ -10,12 +11,13 @@ closed-avenue register with reopening conditions. Everything else here is proven
 ## The verdict
 
 M7 shipped avg-6 **0.4339** against `LR-dense-pertask` **0.4583** — a CI-resolved **−0.0243** miss.
-Every M8 lever moved the dev endpoint by **0.000–0.005**, against a class whose historical transfer
-to the six is **0.000 ± 0.005**. The gap is ~5x the largest effect this class produces.
+**No M8 lever improved the dev endpoint by more than ~0.005**, against a class whose historical
+transfer to the six is **0.000 ± 0.005**. The gap is ~5x the largest effect this class produces.
 
-**The deficit is not the table's resolution, its placement, or its training target** — each was
-tested and each failed. What was never tested at capacity is **document-side co-adaptation**, which
-is exactly what the system we lost to does.
+Under a **frozen document tower**, the deficit was not repaired by finer query resolution (a
+closed-form equal-budget screen, *not* a trained-capacity test), by query placement, or by target
+design. What was never tested at capacity is **document-side co-adaptation**, which is exactly what
+the system we lost to does.
 
 | probe | result |
 |---|---|
