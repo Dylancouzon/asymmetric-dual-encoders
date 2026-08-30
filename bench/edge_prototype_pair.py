@@ -30,9 +30,9 @@ from pathlib import Path
 
 import numpy as np
 from qdrant_edge import (BinaryQuantizationConfig, Distance, EdgeConfig, EdgeShard,
-                          EdgeVectorParams, HnswIndexConfig, Point, Query, QueryRequest,
-                          ScalarQuantizationConfig, ScalarType, SearchParams, UpdateOperation,
-                          VectorStorageDatatype)
+                          EdgeVectorParams, HnswIndexConfig, Point, Query, QuantizationSearchParams,
+                          QueryRequest, ScalarQuantizationConfig, ScalarType, SearchParams,
+                          UpdateOperation, VectorStorageDatatype)
 
 from core import REPO
 
@@ -162,14 +162,16 @@ def timed_search(docs_shard, v, params):
     return (time.perf_counter() - t0) * 1000
 
 
-def measure_path(encode_fn, docs_shard, bucket_texts, warmup_seed):
+def measure_path(encode_fn, docs_shard, bucket_texts, warmup_seed, ef_sweep=None, quant_params=None):
     """Per ef: warm up WARMUP_SEARCHES times (discarded), then time N_TIMED queries per bucket,
-    with bucket order randomized so a residual warming effect can't land in one bucket again."""
+    with bucket order randomized so a residual warming effect can't land in one bucket again.
+    quant_params (round 3): a QuantizationSearchParams applied at every ef, e.g. rescore=False."""
+    ef_sweep = ef_sweep or EF_SWEEP
     out = {b: {} for b in bucket_texts}
     bucket_order_log = {}
-    for ef in EF_SWEEP:
+    for ef in ef_sweep:
         ef_key = f"ef={ef or 'default'}"
-        params = SearchParams(hnsw_ef=ef) if ef else None
+        params = SearchParams(hnsw_ef=ef, quantization=quant_params) if (ef or quant_params) else None
 
         warm_texts = synth_texts(8, WARMUP_SEARCHES, seed=warmup_seed)
         for t in warm_texts:
@@ -268,5 +270,123 @@ def measure():
     print(f"\nwrote {dest.relative_to(REPO)}")
 
 
+ROUND3_EF_SWEEP = (None, 128)
+# Configs already built with the round-3-correct storage shape: originals on_disk (mmap'd, not
+# RAM), quantized copy always_ram (the hot path). fp16 has no quantized copy, included as baseline.
+ROUND3_RUNS = [("fp16_mmap", False), ("int8_mmap", False), ("int8_mmap", True),
+              ("binary_mmap", False), ("binary_mmap", True)]
+
+
+def vector_bytes_split(path):
+    """original (matrix.dat) vs quantized (quantized.data) bytes, summed across segments."""
+    orig = sum(f.stat().st_size for f in Path(path).rglob("vector_storage-dense/matrix.dat"))
+    quant = sum(f.stat().st_size for f in Path(path).rglob("vector_storage-dense/quantized.data"))
+    return orig, quant
+
+
+def measure_one():
+    """Round 3: ONE doc-index config, measured in its OWN process, invoked by measure3() below.
+    Round 2 measured all 6 configs in one process, so `ru_maxrss` (a high-water mark for the whole
+    process, never reset) reported roughly the same ~7GB for every config -- whatever the first,
+    heaviest config touched stayed in the number for every config measured after it. Isolating
+    each config in its own process is what makes peak RSS mean anything per-config."""
+    import argparse
+
+    from transformers import AutoTokenizer
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("name")
+    ap.add_argument("--no-rescore", action="store_true")
+    a = ap.parse_args(sys.argv[2:])
+
+    threads = 4
+    scale = json.loads((EDGE_DIR / "table_scale.json").read_text())["scale"]
+    zero_tok = AutoTokenizer.from_pretrained("NovaSearch/stella_en_400M_v5",
+                                             revision="ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20")
+    table_shard = EdgeShard.load(TABLE_SHARD)
+
+    import onnxruntime as ort
+    so = ort.SessionOptions()
+    so.intra_op_num_threads = threads
+    so.inter_op_num_threads = 1
+    sess = ort.InferenceSession(str(NANO_ONNX), so, providers=["CPUExecutionProvider"])
+    nano_tok = AutoTokenizer.from_pretrained(str(NANO_DIR))
+
+    def zero_fn(t, _tok=zero_tok, _shard=table_shard, _scale=scale):
+        ids = _tok(t, add_special_tokens=True, truncation=True, max_length=512)["input_ids"]
+        return zero_encode(_shard, ids, _scale)
+
+    def nano_fn(t, _sess=sess, _tok=nano_tok):
+        return nano_encode(_sess, _tok, t)
+
+    path = docs_shard_path(a.name)
+    t0 = time.perf_counter()
+    docs_shard = EdgeShard.load(path)
+    load_s = round(time.perf_counter() - t0, 3)
+    rss_after_load_mb = round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1e6, 1)
+
+    bucket_texts = {f"{lo}-{hi}w": synth_texts((lo + hi) // 2, N_TIMED) for lo, hi in BUCKETS}
+    qp = QuantizationSearchParams(rescore=False) if a.no_rescore else None
+    zero_buckets, zero_order = measure_path(zero_fn, docs_shard, bucket_texts, warmup_seed=1,
+                                            ef_sweep=ROUND3_EF_SWEEP, quant_params=qp)
+    nano_buckets, nano_order = measure_path(nano_fn, docs_shard, bucket_texts, warmup_seed=2,
+                                            ef_sweep=ROUND3_EF_SWEEP, quant_params=qp)
+    buckets = {b: {"zero": zero_buckets[b], "nano": nano_buckets[b]} for b in bucket_texts}
+
+    orig_bytes, quant_bytes = vector_bytes_split(path)
+    out = {
+        "load_s": load_s,
+        "bytes_mb": du_mb(path),
+        "orig_vector_bytes_mb": round(orig_bytes / 1e6, 1),
+        "quantized_vector_bytes_mb": round(quant_bytes / 1e6, 1),
+        "rss_after_load_mb": rss_after_load_mb,
+        "peak_rss_mb": round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1e6, 1),
+        "no_rescore": a.no_rescore,
+        "bucket_order": {"zero": zero_order, "nano": nano_order},
+        "buckets": buckets,
+    }
+    docs_shard.close()
+    table_shard.close()
+    print("RESULT_JSON:" + json.dumps(out))
+
+
+def measure3():
+    """Orchestrator: runs each ROUND3_RUNS entry in its own subprocess (see measure_one) and
+    assembles the combined report. Writes round: 3, keeping rounds 1-2 recoverable from git."""
+    out = {"_what": "M9 pair edge prototype ROUND 3: storage-configured quantization "
+                    "(originals on_disk/mmap, quantized copy always_ram) with each config measured "
+                    "in its own process for a clean peak-RSS reading, plus rescore=false rows for "
+                    "int8/binary. Latency/architecture only, see file docstring.",
+           "round": 3, "warmup_searches": WARMUP_SEARCHES, "host": host(), "threads": 4,
+           "n_docs": N_DOCS, "dim": DIM, "table_shard_mb": du_mb(TABLE_SHARD),
+           "nano_onnx_mb": round(NANO_ONNX.stat().st_size / 1e6, 1)}
+
+    out["configs"] = {}
+    for name, no_rescore in ROUND3_RUNS:
+        key = name + ("_norescore" if no_rescore else "")
+        cmd = [sys.executable, str(Path(__file__).resolve()), "measure_one", name]
+        if no_rescore:
+            cmd.append("--no-rescore")
+        t0 = time.time()
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+        if proc.returncode != 0:
+            print(f"{key}: FAILED\n{proc.stderr[-4000:]}", flush=True)
+            out["configs"][key] = {"error": proc.stderr[-2000:]}
+            continue
+        line = next(l for l in proc.stdout.splitlines() if l.startswith("RESULT_JSON:"))
+        cfg_out = json.loads(line[len("RESULT_JSON:"):])
+        out["configs"][key] = cfg_out
+        d10 = cfg_out["buckets"]["6-10w"]
+        print(f"{key}: rss_after_load {cfg_out['rss_after_load_mb']} MB · peak_rss {cfg_out['peak_rss_mb']} MB"
+              f" · orig {cfg_out['orig_vector_bytes_mb']} MB · quant {cfg_out['quantized_vector_bytes_mb']} MB · "
+              f"zero default {d10['zero']['ef=default']} · nano default {d10['nano']['ef=default']}"
+              f" · ({time.time()-t0:.0f}s)", flush=True)
+
+    tag = out["host"]["cpu"].replace(" ", "_")
+    dest = REPO / "results" / f"m9_edge_prototype_{tag}.json"
+    dest.write_text(json.dumps(out, indent=1))
+    print(f"\nwrote {dest.relative_to(REPO)}")
+
+
 if __name__ == "__main__":
-    {"build": build, "measure": measure}[sys.argv[1]]()
+    {"build": build, "measure": measure, "measure_one": measure_one, "measure3": measure3}[sys.argv[1]]()
