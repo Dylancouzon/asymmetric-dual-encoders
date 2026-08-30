@@ -129,6 +129,14 @@ ALLOWLIST = {
         "why": "decontamination: it must read protected query text to protect against it "
                "(LEDGER G2 class b). It emits a QUERY-ONLY hash inventory and never a label.",
     },
+    "m9src.extended_screen": {
+        "kinds": {"untouched_labels", "lotte", "m9reserve"},
+        "why": "M9 amendment 2026-08-30, authorised by Dylan: the same decontamination contact "
+               "class as m8src.protected_filter (LEDGER G2 class b), extended to M9's own "
+               "candidate query-text sources. It reads protected query TEXT, emits hashes and "
+               "kept-INDEX lists only, and never a label, a qrel or a document. Nothing "
+               "downstream needs the capability -- consumers read index lists.",
+    },
     "m8src.shadow_cross": {
         "kinds": {"lotte"},
         "why": "the single mandatory LoTTE shadow crossing, after the manifest is immutable "
