@@ -380,6 +380,15 @@ def decide():
                     "and mix cannot be decided on DEV-6 in a challenger's space, and M9 does not "
                     "proceed on a proxy. No downstream arm may run until Dylan rules.")
 
+    if "teacher" not in sel:
+        # Under the stage-B reorder (LEDGER §9.18) the teacher arms run LAST, so the downstream
+        # arms resolve against the incumbent -- which is the registered default until a challenger
+        # fires, and a later fire VOIDS these decisions rather than silently re-basing them.
+        sel["teacher"] = eval9.INCUMBENT
+        notes.append("teacher defaults to the incumbent: the teacher arms have not run. If one "
+                     "later fires, every student/prompt/mix decision here is VOID and the "
+                     "milestone returns to Dylan (m9/registry.json rules.teacher_swap).")
+
     stop = sel.get("teacher", eval9.INCUMBENT) != eval9.INCUMBENT
     if not stop:
         base = "m9s1"
