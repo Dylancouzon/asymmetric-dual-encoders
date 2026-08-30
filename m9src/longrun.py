@@ -50,16 +50,36 @@ HISTORY = RUN / "history.jsonl"
 
 # --------------------------------------------------------------------------- corpora ----------
 
-def _pack(ids):
-    """-> (flat int32, offsets int64). A list of 6.15M token lists is ~50 bytes/int as Python
-    objects; flat it is 4."""
-    lens = np.fromiter((len(x) for x in ids), dtype=np.int64, count=len(ids))
-    offs = np.zeros(len(ids) + 1, dtype=np.int64)
+def _pack_streaming(tok, texts, prefix, max_len=512, batch=20_000, label=""):
+    """-> (flat int32, offsets int64), tokenizing and packing in CHUNKS.
+
+    The obvious version -- tokenize everything, then pack -- is a trap at this scale. A Python list
+    of ~95 token ids costs ~3.5 kB once the list object and the un-cached int objects are counted,
+    so 6.15M documents is roughly **21 GB** of transient heap before a single byte is packed. That
+    OOMs a 25 GB box, and on this box it would have taken the training chain with it. Packed as
+    int32 the same corpus is 2.3 GB, and streaming never holds more than one chunk of lists.
+    """
+    chunks, offs_parts, total, t0 = [], [], 0, time.time()
+    for i in range(0, len(texts), batch):
+        ids = tok([prefix + t for t in texts[i:i + batch]], truncation=True,
+                  max_length=max_len, add_special_tokens=True)["input_ids"]
+        lens = np.fromiter((len(x) for x in ids), dtype=np.int64, count=len(ids))
+        flat = np.empty(int(lens.sum()), dtype=np.int32)
+        pos = 0
+        for x in ids:
+            flat[pos:pos + len(x)] = x
+            pos += len(x)
+        chunks.append(flat)
+        offs_parts.append(lens)
+        total += len(ids)
+        del ids
+        if label and (i // batch) % 25 == 0 and i:
+            el = time.time() - t0
+            print(f"    {label} {total:,}/{len(texts):,} ({total/max(el,1e-9):,.0f}/s)", flush=True)
+    lens = np.concatenate(offs_parts) if offs_parts else np.zeros(0, dtype=np.int64)
+    offs = np.zeros(lens.size + 1, dtype=np.int64)
     np.cumsum(lens, out=offs[1:])
-    flat = np.empty(int(offs[-1]), dtype=np.int32)
-    for i, x in enumerate(ids):
-        flat[offs[i]:offs[i + 1]] = x
-    return flat, offs
+    return np.concatenate(chunks) if chunks else np.zeros(0, dtype=np.int32), offs
 
 
 def _save_corpus(name, flat, offs, meta):
@@ -110,7 +130,8 @@ def prepare(student_key, doc_limit=None):
 
     q = json.loads((WORK / "m9_screen_queries.json").read_text())
     prov["corpora"]["queries_pair"] = _save_corpus(
-        "queries_pair", *_pack(nano.pretokenize(tok, q, 512, verbose=False)),
+        "queries_pair",
+        *_pack_streaming(tok, q, tpl["query_policy_b_student"], label="queries_pair"),
         {"role": "query", "prefix": tpl["query_policy_b_student"],
          "source": "work/m9_screen_queries.json (M7 TRAIN pair sources minus fever)"})
 
@@ -119,8 +140,9 @@ def prepare(student_key, doc_limit=None):
         role = "query" if name in ("nqopen", "triviaqa") else "doc_span"
         pre = tpl["query_policy_b_student"] if role == "query" else tpl["doc_student"]
         prov["corpora"][name] = _save_corpus(
-            name, *_pack(nano.pretokenize(tok, [pre + t for t in texts], 512, verbose=False)),
+            name, *_pack_streaming(tok, texts, pre, label=name),
             {"role": role, "prefix": pre, **eprov[name]})
+        del texts
 
     r = guard9.registry()
     rows, dmeta = m9data.doc_pool_rows(doc_limit or r["data"]["n_eligible_doc_rows"],
@@ -128,8 +150,7 @@ def prepare(student_key, doc_limit=None):
     print(f"  documents: reading {rows.size:,} texts from the pool stores...", flush=True)
     texts = m9data.row_texts(rows)
     prov["corpora"]["documents"] = _save_corpus(
-        "documents", *_pack(nano.pretokenize(tok, [tpl["doc_student"] + t for t in texts],
-                                             512, verbose=False)),
+        "documents", *_pack_streaming(tok, texts, tpl["doc_student"], label="documents"),
         {"role": "doc", "prefix": tpl["doc_student"], **dmeta})
     np.save(TOKENS / "documents" / "pool_rows.npy", rows)
     del texts
