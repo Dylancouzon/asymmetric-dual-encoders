@@ -132,7 +132,13 @@ def main():
     a = ap.parse_args()
 
     deadline = time.time() + a.hours * 3600
-    restarts, last_status, last_step, last_step_at = 0, 0.0, None, time.time()
+    restarts, failed_starts, last_status = 0, 0, 0.0
+    last_step, last_step_at, last_digest = None, time.time(), time.time()
+    for req in (longrun.CONFIG, longrun.MANIFEST):
+        if not req.exists():
+            raise SystemExit(f"{req} is missing -- the build is not ready to be watched. Run "
+                             f"`longrun.py prepare`, `targets`, `manifest`, then generate the "
+                             f"config. A watchdog over a run that cannot start is theatre.")
     log({"event": "watchdog_start", "detail": f"period {a.period}s, horizon {a.hours}h"})
 
     while time.time() < deadline:
@@ -178,14 +184,39 @@ def main():
             longrun.LOCKFILE.unlink(missing_ok=True)
             pids = start_trainer(max(0.5, (deadline - time.time()) / 3600))
             restarts += 1
-            log({"event": "restart", "detail": f"{why}; restart {restarts}/{a.max_restarts}; "
-                                               f"pids {pids}"})
+            if not pids:
+                # A restart that starts nothing is not a restart. Retrying a launch that cannot
+                # launch just burns the budget silently -- exactly the class this watchdog exists
+                # for. Two in a row and it stops and says so.
+                failed_starts += 1
+                log({"event": "restart_failed", "detail": f"{why}; nothing came up. See "
+                                                          f"logs/m9_build.log. "
+                                                          f"{failed_starts} consecutive."})
+                if failed_starts >= 2:
+                    log({"event": "giving_up", "detail": "two consecutive launches produced no "
+                                                         "process; this is a configuration "
+                                                         "failure, not a crash"})
+                    break
+            else:
+                failed_starts = 0
+                log({"event": "restart", "detail": f"{why}; restart {restarts}/{a.max_restarts}; "
+                                                   f"pids {pids}"})
             last_step, last_step_at = None, time.time()
 
         if hb and hb.get("tok_per_s") and hb.get("floor") and hb["tok_per_s"] < hb["floor"]:
             log({"event": "throughput_low",
                  "detail": f"{hb['tok_per_s']:,.0f} tok/s below the floor {hb['floor']:,.0f} -- "
                            f"the m9s2 failure mode; the trainer's own rule should also fire"})
+
+        if time.time() - last_digest > 86400:
+            r0 = [r for r in rows if r["wall"] >= time.time() - 86400]
+            if r0:
+                log({"event": "daily", "detail":
+                     f"{len(r0)} evals; tokens {r0[0]['tokens']/1e9:.2f}B -> "
+                     f"{r0[-1]['tokens']/1e9:.2f}B; SCREEN-3 {r0[0]['screen3']:.5f} -> "
+                     f"{r0[-1]['screen3']:.5f} ({r0[-1]['screen3']-r0[0]['screen3']:+.5f}); "
+                     f"best {max(r['screen3'] for r in rows):.5f}"})
+            last_digest = time.time()
 
         if time.time() - last_status > a.status_every:
             write_status(hb, rows, incidents)

@@ -546,6 +546,12 @@ def _train(cfg, hours, max_steps, start_decay, device):
             save_ckpt(CKPT / "last.pt", blob)
             with open(HISTORY, "a") as fh:
                 fh.write(json.dumps(rec) + "\n")     # after the checkpoint, so replay can dedupe
+            # First-eval sanity gate: at ~164M tokens the build should already be past the
+            # anchor's 59.5M-token result. If it is not, the recipe or the data is wrong and six
+            # more days will not fix it -- stop now rather than discover it on day seven.
+            if len(read_history()) == 1 and rec["screen3"] < cfg["first_eval_floor"]:
+                stop_reason = (f"first evaluation {rec['screen3']:.5f} below the floor "
+                               f"{cfg['first_eval_floor']} -- the recipe or the data is wrong")
             stop_reason = stop_reason or check_kill(rec, cfg)
             if best is None or rec["screen3"] > best["screen3"]:
                 best = {"step": step, "screen3": rec["screen3"], "tokens": cum["tokens"]}

@@ -78,6 +78,10 @@ def build(decisions=None):
         "plateau_tokens": 1_000_000_000,    # judged over a billion tokens, never over steps
         "plateau_gain": 0.001,
         "throughput_floor_frac": 0.5,
+        # The anchor reached 0.50004 on 59.5M tokens; the first build evaluation lands at ~164M
+        # with 15x the unique text, so anything below 0.45 means something is broken rather than
+        # merely slow.
+        "first_eval_floor": 0.45,
         "_arithmetic": {
             "measured_tokens_per_s": TOK_PER_S,
             "horizon_hours": HOURS,
