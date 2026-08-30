@@ -92,7 +92,7 @@ def encode_readout(texts, pooling, use_dense, prefix="", batch_tokens=16384, ver
         out[idx] = encode_batch(tok, model, [prefix + texts[k] for k in idx], 512, device,
                                 pooling=pooling, dense=dense)
         done += len(idx)
-        if verbose and done % 50_000 < len(idx):
+        if verbose and done % 10_000 < len(idx):
             print(f"      {done:,}/{len(texts):,} @ {done/(time.time()-t0):.0f}/s", flush=True)
         i = j
     return out
@@ -148,19 +148,28 @@ def probe1(tok, pre, fit_texts, X, dev_texts, dev_ids, cache):
             dv[c] = cache[k]
         W0 = np.zeros((X.shape[1], Y.shape[1]), dtype=np.float32)
         best = (None, -1.0)
-        curve = {}
+        curve, cg = {}, {}
         for lam in LAMBDAS:
-            W, _ = blockcg.block_cg_ridge(X, Y, W0, lam, device=m8base.device())
+            W, info = blockcg.block_cg_ridge(X, Y, W0, lam, device=m8base.device())
             W = W.astype(np.float32)
             m = float(np.mean([
                 np.mean(list(score_against(encode([counts_of(x) for x in dev_ids[c]], W),
                                            c, dv[c]).values())) for c in OOD]))
             curve[lam] = m
+            cg[lam] = {"iterations": info["iterations"], "converged": info["converged"],
+                       "worst_rel_residual": info["worst_rel_residual"],
+                       "seconds": info["seconds"]}
+            print(f"    [{name}] lam={lam:<7g} ood={m:.6f} ({info['iterations']} its, "
+                  f"{'converged' if info['converged'] else 'NOT CONVERGED'}, "
+                  f"{info['seconds']:.0f}s)", flush=True)
             if m > best[1]:
                 best = (lam, m)
             del W
             m8base.empty_cache()
         out[name] = {"argmax_lambda": best[0], "ood_macro": best[1], "lambda_curve": curve,
+                     "cg": cg,
+                     "argmax_converged": bool(cg[best[0]]["converged"]),
+                     "any_lambda_not_converged": bool(not all(v["converged"] for v in cg.values())),
                      "argmax_at_grid_boundary": best[0] in (min(LAMBDAS), max(LAMBDAS)),
                      "dim": int(Y.shape[1]), "seconds": round(time.time() - t0, 1)}
         print(f"  [{name:14s}] ood={best[1]:.6f} at lam={best[0]:g}"
