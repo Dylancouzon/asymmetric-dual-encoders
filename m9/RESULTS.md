@@ -177,6 +177,35 @@ bucket. Round 2 also swept the document index's storage, at 6–10-word queries,
    `binary_mmap` is separately pathological (6.3 ms zero, 8.2 ms at 1–5 words): rescoring against
    memory-mapped originals thrashes.
 
+**Round 3** put the originals on disk (`vectors_config.on_disk`) with the quantized copy pinned
+(`always_ram`), measured each configuration in its own process for a clean peak-RSS reading, and
+added `rescore=false` rows. 6–10-word queries, `ef=default`:
+
+| config | originals | quantized copy | peak RSS | zero | nano | nano ÷ zero |
+|---|---|---|---|---|---|---|
+| `fp16_mmap` | 2,048 MB | 0 MB | 6,101 MB | 1.491 ms | 2.144 ms | 1.44× |
+| `int8_mmap` | 2,048 MB | 1,028 MB | 6,890 MB | 0.841 ms | 1.882 ms | 2.24× |
+| `int8_mmap_norescore` | 2,048 MB | 1,028 MB | 7,007 MB | 0.825 ms | 1.860 ms | 2.25× |
+| `binary_mmap` | 2,048 MB | 128 MB | 6,305 MB | 8.467 ms | 4.435 ms | 0.52× |
+| `binary_mmap_norescore` | 2,048 MB | 128 MB | 5,919 MB | 0.441 ms | 1.446 ms | 3.28× |
+
+**What it settles.** The quantized copy really is small: **binary is 128 MB against 2,048 MB of
+originals, 16×**, and `binary + rescore=false` is also the fastest configuration measured —
+0.441 ms for zero, 1.446 ms for nano. And rescoring against memory-mapped originals is a trap, not
+a tuning choice: `binary_mmap` *with* rescore costs 8.467 ms, nineteen times its `rescore=false`
+sibling. On an edge device that mode is unusable.
+
+**What it does not settle, and the instrument is why.** Peak RSS stays **5.9–7.0 GB in every
+configuration**, including the one holding 128 MB of hot vectors. That is not 6 GB of *required*
+memory: RSS counts resident pages of the memory-mapped originals, and those are page cache the
+kernel can evict. **RSS cannot answer "does a 1M-document index fit on an edge device"** — the
+question needs a memory-*constrained* run (a container with a hard limit) that either serves or
+fails. Recorded as open rather than answered, because the number that looks like an answer here
+is measuring the wrong thing.
+
+**The frontier ratio now spans 1.44× to 3.28×** across index configurations. No single query-side
+cost number is meaningful without naming the index it was measured against.
+
 ## Reference rows measured this milestone
 
 | row | DEV-6 | SCREEN-3 (family weights) |
