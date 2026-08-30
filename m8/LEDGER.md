@@ -1,29 +1,16 @@
-# M8 protocol ledger
+# M8 ledger — CLOSED 2026-08-30
 
-**The protocol authority for M8.** Partitions, licence evidence, every pre-registered bar and
-decision rule, gate results, freeze record, incidents. Detail lives in `results/m8_*.json` and is
-pointed at, never restated. Machine-readable registrations live in **`m8/registry.json`**, which
-is the executable half of this file: §9's tables are its human-readable rendering, `m8src/registry.py`
-is the parser, and where the two disagree the JSON is what ran.
+**M8 closed as a MEASUREMENT.** `m8/FINDINGS.md` is what this milestone produced; `m8/EXPLORED.md`
+is the closed-avenue register. **This file is now the PROTOCOL AND PROVENANCE record**: the rules a
+future milestone inherits, every ruling Dylan made, every claim this project withdrew, and the
+measured numbers a bar reads.
 
-Transcribed 2026-08-29 from `m8/PLAN-DRAFT.md` v5 (**that draft is deleted — git history has it; see §15**) and rewritten the same night as **v2** after two
-adversarial gates on the v1 text — Codex (**verdict BLOCK, 9 BLOCKER / 9 MAJOR / 3 MINOR**;
-`research/m8-planning/codex-ledger-gate-2026-08-29.md`) and a Fable scientific-judgment pass
-(`research/m8-planning/fable-ledger-review-2026-08-29.md`). Both are actioned below; §16 records
-which finding each change discharges. Nothing here is new decision-making: every rule traces to
-the plan, to Dylan's rulings (§12), or to M7's ledger, which binds unchanged except where amended
-in writing here.
-
-**Reading order for a cold session:** `m8/STATUS.md` → this file → `m8/registry.json`.
-`m7/LEDGER.md` is the inherited protocol and is authoritative for anything this file does not
-override. `m7/CODEMAP.md` is the module map and pitfall list — read it before writing code.
-
-**Release names, LOCKED by Dylan:** **`qdrant/constella-zero-m8`** (this milestone's table) and
-**`qdrant/constella-nano-m9`** (M9's distilled tower). Constella = constellation + stella:
-navigate by fixed stars, no engine. **If the teacher leaves the stella lineage, naming reopens
-with Dylan.**
-
----
+**Compressed 2026-08-30** from 1,619 lines. Removed: the stage pipeline, the Stage-R and Stage-S
+menus, the prose probe registrations (`registry.json` is the authoritative pre-registration record)
+and the gate-findings index — all M8-specific machinery for work that will not run. **Kept verbatim:
+every Dylan ruling, every withdrawn claim, the guardrails, the statistics and the floors.** The rule
+that governs this file is §14 G10 and the lesson behind it: *a cut is not safe because prose was
+removed — it is safe only when every RULE survives.*
 
 ## 0. Inheritance: frozen / amendable / ruled
 
@@ -699,302 +686,55 @@ REPORT FRAMING. Nothing about the system may change after the reserved-set numbe
 
 ---
 
-## 6. Pipeline (order is binding) — ONE legal ordering
 
-*(Codex gate BLOCKER 5: v1 ordered `teacher freeze → noise floor` while §4.7 required the floor
-before any bar, and `NEXT-SESSION.md` said the opposite. There is now one order.)*
+## 6–8. Pipeline, Stage R, Stage S — REMOVED 2026-08-30
 
-```
- 1. protected-partition freezes (LoTTE overlap S0 -> pin; M9-reserve inventories)
- 2. protected-query filter build + hash + commit                      [G7 interlock]
- 3. code benchmark + published serial schedule                        [G6]
- 4. NOISE FLOOR, measured in the INCUMBENT teacher frame              [G4]
- 4b. B7 block-CG solver feasibility            [GATES BOTH D2 AND T1 -- see the note below]
- 5. teacher-screen registration (probe T1, exact) -> screens -> teacher freeze
-    -- if a swap lands, EVERY floor and bar measured in the incumbent frame is
-       re-measured in the new frame before it may be read. A swap after Stage R
-       begins is a full R/S restart.
- 6. freeze Stage-R bars in m8/registry.json (amendment entries, §15)
- 7. Stage R  (one assembly + ONE validation gate, ordered nested fallback)
- 8. Stage S  (one finalist, by executable rule)
- 9. three-seed aggregation -> int8 export -> ONNX parity -> fusion instantiation
-10. immutable candidate manifest
-11. ONE mandatory LoTTE shadow crossing                               [STOP-on-failure]
-12. freeze
-13. reserved-4 doc pre-encode (all scored systems)
-14. THE SINGLE ACCESS: six-set descriptive block, then the reserved four, atomically
-```
+M8 assembled no candidate, so the binding stage ordering, the Stage-R degrees of freedom
+and the Stage-S menu describe work that will not happen. The prose probe registrations are
+superseded by **`m8/registry.json`**, which is machine-readable, is what `probe_guard`
+actually reads, and retains every row including those that never ran. The one finding
+those sections carried is in `m8/EXPLORED.md`: **the recipe/data class is hygiene, not a
+route to the bar** — M7's entire post-gate lever programme transferred to the six at
+0.000 ± 0.005.
 
-- **Any post-manifest mutation invalidates the shadow crossing.**
-- **The teacher screen (T1) is exempt from the noise-floor gate** and runs at step 5 because it is
-  a closed-form dev probe with its own registered CI-resolution bar, not a trained-arm comparison.
-  That exemption is named here rather than assumed.
-- **T1 IS BLOCKED ON B7, and this was not obvious (§15, 2026-08-29).** M7's screen shared ONE bag
-  matrix across candidates because every encoder in the registry ships a byte-identical
-  `bert-wordpiece-30522` vocabulary — verified: all ten. **Not one of T1's four challengers does.**
-  granite-r2 is 50,368, gte-modernbert ~50K BPE, stella-1.5B and harrier are Qwen-line. So each
-  would be screened at its own vocabulary, and the direct fp64 Gram at 50,368 rows is **20.3 GB,
-  above this box's 18 GB budget** — which is precisely the arithmetic on which M7 closed granite-r2
-  and gte-modernbert "on arithmetic, not merit". Until B7 delivers a solver that does not
-  materialize the Gram, **T1 can only re-run candidates M7 already closed CI-resolved**, which is
-  not a screen. B7 therefore gates D2 *and* T1, which is a second, independent reason it was
-  promoted into Wave 1.
+## 9. Probe index — `registry.json` is authoritative
 
-**One-shot mechanics — the itemized port checklist (Codex gate MAJOR 4).** "Copied verbatim" was
-not an executable statement. Each line below **must be** ported to M8 paths with its own
-acceptance test in `m8src/test_final_guard.py` / `m8src/test_freeze_binding.py`. **Neither file
-exists yet** (§4.4 gap list); this is the specification they must satisfy, not a record that they
-do:
+The prose registrations were removed 2026-08-30; **`m8/registry.json` is the pre-registration record** and is what `probe_guard` reads. Every row is kept, including those that never ran — deleting them would hide what was committed to in advance, which is the one thing a pre-registration exists to prevent. This index exists so no registry row is orphaned from the ledger.
 
-| # | obligation |
-|---|---|
-| 1 | Durable **spent receipt**: an annotated `m8-reserved-spent` tag pushed to origin the moment the confirmatory block is on disk. |
-| 2 | **Peeled** tag check (`refs/tags/X^{}`) — an annotated tag resolves to the tag OBJECT and would otherwise never match. |
-| 3 | The access counts as SPENT when the **result file** holds the confirmatory block, not when the ledger says so. |
-| 4 | **Exclusive pid lock**; two concurrent launches cannot both pass a read-only guard. |
-| 5 | Guard runs **before** preflight; preflight takes the kinds it may verify and logs its own payload-hash reads. |
-| 6 | Table **snapshotted** after verification, not reopened by path per dataset. |
-| 7 | Confirmatory result written **atomically**, before any secondary block. |
-| 8 | Per-query values persisted as **raw floats** (rounding to 1e-6 made a close decision unreproducible). |
-| 9 | Corpora load **corpus-only**; labels come from the frozen payloads and nowhere else. |
-| 10 | **BM25 package/config verification** against the fusion spec's own cache keys — a `bm25s`/`PyStemmer` upgrade between freeze and access would silently change the fused system C3 judges. |
-| 11 | `load_and_verify` **re-runs** `assert_releasable` and `assert_gate_passed` rather than trusting recorded verdicts. |
-| 12 | `assert_gate_passed` requires the exact registered condition set, the pinned component list, a real Stage-0 checkpoint, the per-query dump's bytes, and a clean committed **evaluator identity**. |
-| 13 | Exactly **one** `--infra-retry`, requiring the same commit. |
-| 14 | **No post-hoc subgroups**: the only fixed subgroups reported are those registered here. |
-
----
-
-## 7. Stage R — degrees of freedom, each with its M7 fallback
-
-**R0 :=** the registered M7 recipe settings instantiated under the selected teacher, current
-filters, and M8's data volume / precision / seed policy.
-
-| # | degree of freedom | probe | fallback |
-|---|---|---|---|
-| 1 | ICT pair fraction | B3 | M7 (no ICT component) |
-| 2 | listwise distillation arm — candidate sampler + split temperatures | B2-triggered arm `R-LIST` | M7 objective |
-| 3 | phase structure — ONE registered three-arm test (sequential / mixed-replay / listwise-only, equal updates) | `R-PHASE` | M7 sequential B→A |
-| 4 | negatives | B13, matched steps | M7 (`hard_neg_k=0`) |
-| 5 | hyperparameters | B13 | M7 |
-| 6 | target design | B8 | M7 |
-| 7 | row init | B15 | M7 (`teacher`) |
-| 8 | pool spec — ONE frozen composition: per-source quotas ≤25%, multi-span/doc, Wikipedia ICT, the genre bundle, the dosed synthetic component | `D-GENRE`, `D-SYNTH` | M7 pseudo-query pool |
-| 9 | riders: B9 low-rank, B10 pooling, B14 doc instruction | B9/B10/B14 | M7 |
-
-**Probe outputs are tri-state**: adopt the named setting / keep the named fallback / stop the
-direction. Diagnostics may only trigger **separately registered** performance arms — and a
-diagnostic may not trigger an arm that does not yet have a complete registry row.
-
-**B13 confirms ONE complete named configuration jointly** — a single confirm arm against the
-complete fallback — never per-axis adoptions.
-
-**The fused-objective lever (recipe P3) is consciously EXCLUDED per E11.** Recorded so no future
-session re-derives it as an oversight.
-
-**Assembly and the one validation gate, with an ORDERED NESTED FALLBACK (Fable D4).** Adopted
-settings form one bundle. **ONE** common-frame validation: assembled candidate vs R0, matched
-updates / data / seed policy, **dense AND fused endpoints**, bar from §4.7. v1's outcome was
-binary (R1 or wholesale R0), which discards every surviving probe win if one adopted setting is
-bad. Component-by-component back-off is still forbidden as adaptive dev search — but a **fixed,
-ordered, pre-named nested sequence registered before any validation number is one extra
-pre-registered arm, not a search**:
-
-> **R1-full → R1-data-only → R0.** The first of the three that clears the §4.7 bar against R0 is
-> the candidate. `R1-data-only` is defined NOW as: the pool-spec and ICT-fraction adoptions only
-> (DoF 1 and 8), with DoF 2–7 and 9 at their R0 fallbacks. No fourth rung exists and none may be
-> added after a number.
-
-**Honest statement of what Stage R is for (Fable E).** M7 measured the expected six-set transfer
-of its entire post-gate lever programme at **0.000 ± 0.005**, and the clean-stack-tax arm measured
-the marginal value of half a million extra real pairs at **+0.0058, unresolved**. The recipe/data
-class is therefore budgeted as **hygiene and a better training frame for D2/D1 — not as the route
-to the bar.** The bar is cleared by *capacity* (D2, D1, and if Dylan opens it, the E14 question in
-the wake-up note) or it is not cleared. This sentence is in the protocol so the P(ship) priors and
-the budget split cannot quietly drift back to the recipe half.
-
-**Fusion operator** — family grid, depth, dev components, frozen `bm25_run` — is frozen **before**
-Stage R and applied identically at every fused read; the final invocation instantiates parameters
-only. Amendable only if D4' BM25F re-registers the lexical function, and only before Stage R.
-Inherited mechanics: one family, one parameter, no per-dataset weights or routing,
-`fusion.DEPTH` = 1000 for selection and application alike, fitted against the **int8 release**
-artifact; the zero-score-padding and self-hit drops are part of the frozen function; on an exact
-tie the **simpler** system wins (dense-only first, then the first grid point in order);
-`n_tied_at_best` written into the spec.
-
-*On B11 / length-conditioned fusion (Fable B, correcting v1's reason).* v1 removed B11 as "moot
-under E11's strict C2". That reason is wrong: C2 is an *additional* leg, and **C1 — the primary
-hypothesis — is fused-vs-fused**, so fusion improvements are live for the primary claim. The
-correct reason B11 stays out is the **frozen fusion operator's own rule: no routing and no
-conditional weights**, plus the optics of a system whose weight depends on the query. A
-length-conditioned weight would have to be registered as the fusion family *before Stage R* or not
-at all; it is not, so it is out — on that ground, recorded here so it is not rediscovered as an
-oversight.
-
----
-
-## 8. Stage S — the menu and the selection rule
-
-**Registered group vector (used by Stage S selection AND by the dev selection rule in §2.2):**
-
-| group | members | weight |
+| probe | question | outcome |
 |---|---|---|
-| out-of-domain | cqadup-programmers, cqadup-physics | 1 |
-| wikipedia | nq-250k, hotpotqa | 1 |
-| heldout | heldout-train, heldout-longq | 1 |
-
-Aggregation: **median of the three group means**; **worst-group** = `min` of the three group
-means. Precision: **int8**, the release format. Both are computed unrounded.
-**Practical-equivalence band: 0.0040** — the smallest effect this project has ever adopted
-(lever #4), the same provenance M7 used for its non-inferiority margin.
-
-**Selection**: fixed within-family rules first (D2's vocabulary by its own nested dev split), then
-family finalists versus **R1-alone** on the group vector above, under the 0.0040 band.
-**Tie-break**: total downloadable bytes, then doc-index delta. Registered outcomes: **no survivor
-→ the candidate is R1-alone; multiple → the rule picks.**
-
-**Release-format rule: int8, always.** It is the C2 identity, the proven-quality-free format
-(M7 G4 int8 upper bound 0.00013 against a 0.005 bar), and what the ONNX graph embeds. All sizing,
-eligibility and tie-breaks are computed at int8. A 4-bit variant is **research-only and never
-ships**.
-
-**The 233 MB cap (E7), defined (Codex gate MINOR).** It binds the **total downloadable query-side
-system**: the int8 table initializer **plus** the tokenizer artifacts **plus** the ONNX graph
-container. It does **not** bind the document-side index or any D1 doc-side head — those are
-reported separately in the cost rows (payload / container / doc-index / hydration). At
-128K × 1024 int8 the table is 131.6 MB, so D2 fits with room for a large tokenizer.
-
-**Seeds**: three. Aggregation pre-declared per architecture class — table-average only for
-identically-parameterized aligned tables, otherwise mechanical median. **Never best-seed.**
-
-### The menu
-
-- **D2 — compositional capacity. REGISTERED 2026-08-29** (`m8/registry.json`; bar **0.00519**, the
-  chain floor, because D2 retrains the B leg). The row is the authority for bar, endpoint,
-  comparator, vocabulary selection, the coverage gate and the bounded adequacy gate; what follows
-  is the design rationale it was built from.
-  Self-trained tokenizer (64–128K, multi-word merges),
-  rows initialized per B15's winner, **trained through the forward** under R1. Gated by B7.
-  **Registered coverage spec:** a minimum-updates-per-reachable-row criterion; targeted rare-row
-  span sampling with the pool expansion needed to meet it; a coverage-vs-capacity diagnosis rule
-  for any failure; the "bag mass on cold rows vs per-query retention" diagnostic run **on existing
-  artifacts first**; and a **compositional init floor (Fable 8): every cold multi-word row
-  initializes to the mean of its constituent unigram rows**, so a coverage failure degrades to M7
-  behaviour rather than to noise.
-  **THE ONE EXISTING PRECEDENT, and it is not encouraging** (`research/m8-planning/literature-2026-08-29.md`,
-  swept 2026-08-29). The only published vocabulary-size ablation on a *static / bag-of-words*
-  retriever is VDR (arXiv 2212.07699, ICLR 2024): 30K → 110K rows moved BEIR nDCG@10
-  **44.5 → 42.6 — a small regression**. It is confounded (the two vocabularies also swapped
-  English BERT for multilingual BERT, and the authors blame the language mismatch, not the size),
-  so it does not close D2. But it is the closest thing to evidence that exists, it points the
-  wrong way, and D2's registration should be read against it rather than against an assumption
-  that more rows help. Positive precedent is thinner still: multi-word brand tokens help
-  e-commerce retrieval (arXiv 2406.01233) on a *contextual* ColBERT-style model, with no clean
-  before/after delta. **Neither a known success nor a known failure: the week is not pre-empted,
-  and it is not de-risked.**
-  *Context:* M7 shipped with **1,743 rows (5.71%) never trained by either phase**
-  (`results/m7_cold_rows_p4n-teacher16-a.json`); the reachable 749 contributed at 0.143× a trained
-  row. A 128K vocabulary makes coverage the first question, not an afterthought.
-  *And the measured reason D2 is the priority:* see §17.
-- **D1 — doc-side head. MEASURED AND HARMFUL (`E14-HEAD`, 2026-08-29): do not plan around it.**
-  Exactly this lever — LIN 1024→1024 (1.05M) and a 2-layer MLP (4.2M) over cached teacher vectors,
-  jointly trained — scored **−0.0244 / −0.0293** dense against a +0.0040 bar, all six arms agreeing
-  in sign, on a measured-null patch stack. LIN's registered label is OPTIMIZATION-INADEQUATE at
-  2,500 steps, so D1 is not *formally* closed, but reviving it costs a 5,000-step reported set with
-  a paired 5,000-step R0N and it is **not** a route to the bar. Preconditions, unchanged if it ever
-  returns: (i) fuses into ONE doc-side ONNX file as plain MatMul/activation nodes (E3, B6-pre
-  PASSED); (ii) **a D1 win alone does not make a qualifying v2 table** (§5.4) — so it could never
-  have opened the release path by itself.
-  *Why it is live at all:* the "absorbable" dismissal was **half wrong**. `q·(Md) = (Mᵀq)·d` holds
-  only if the mapped document is not renormalized; retrieval L2-normalizes documents, so the
-  per-document factor `1/|Md|` cannot move into a shared table — rank agreement with the absorbed
-  form is 1.000 without renormalization and **0.000 with it** (`results/m7_absorb_check.json`).
-- **D4' — lexical arm, bounded (auxiliary).** BM25F title/text, weights dev-fitted and frozen
-  **before** Stage R. **May never be the sole qualifying change.** Full-dose dual-index question
-  expansion stays dead on compute (263–702 days); a bounded ≤50K-doc research probe may run and
-  may **never** be extrapolated to the reserved system.
-- **R1-only** — legitimate **iff** at least one qualifying table change survived (§5.4).
-
-**Research-only, never candidates:** D3 index-time adaptation (E5 — one labelled measurement
-allowed AFTER the final access); D5 nonlinear query-side head (E1 — out entirely).
-
-**Kill-list, standing (algebra and arithmetic, not preference):** higher table dims
-(identity-linear MRL heads off a 1024-d hidden state); absorbable transforms as capacity —
-query-side centering, whitening, top-PC removal, any per-token scalar weight — allowed only as
-registered training priors and killed on cross-domain validation; full late interaction; another
-31 MB unigram table with better hyperparameters as the sole change.
-
-**Considered and recorded, not adopted (so it is not rediscovered as an oversight):** doc-side
-small-k multi-vector (k = 2–4 facets, max-over-facets). It is not the kill-list's token-level late
-interaction, the query side is untouched, and it attacks the short-query ambiguity floor nothing
-else on the menu reaches — but it multiplies the document index by k, which is an E7/product
-conversation Dylan has not had. It is in the wake-up note beside E14, not in the menu.
-
----
-
-## 9. Probe registrations
-
-**`m8/registry.json` is the authority**; the tables here render it. `m8src/probe_guard.py` reads
-the registry **at the current commit**, refuses any probe id whose row lacks bar / endpoint /
-comparator / multiplicity / no-survivor outcome, refuses any bar containing `TBD`, and refuses
-unless `m8/LEDGER.md` and `m8/registry.json` are committed and HEAD is on the remote. The registry
-blob's sha256 is stamped into every result file before any metric is written (Codex gate
-BLOCKER 7), so a result can always be traced to the exact registration it ran under.
-
-**Wave-1 ordering, revised (Fable C).** v1 put the two capacity gates in Wave 2, behind five
-recipe probes, while the plan's own routing rule says D2/D1 may carry the milestone and the
-measured evidence says the recipe class transfers ~nothing. **B7 (block-CG vocabulary curve) and
-B6's ONNX-fuse precondition are promoted to Wave 1**: they are closed-form / feasibility gates on
-the highest-expected-value levers, and discovering in Wave 2 that the solver or the fused doc
-graph does not work forfeits the milestone's centre of gravity too late to recover.
-
-### Wave 1
-
-| id | question | endpoint | comparator | bar | multiplicity | no survivor |
-|---|---|---|---|---|---|---|
-| **S0** | LoTTE overlap vs protected sets | community intersection; R1 doc near-dup rate; query-leakage hits | reserved android/english + dev physics/programmers | drop slice on any community hit, doc near-dup > 0.5%, or any query hit; reopen E10 above 2% surviving or < 2 surviving topics | none (screening, per slice) | if no slice survives, E10 reopens with Dylan |
-| **T1** | teacher screen (§10) | closed-form distilled table, dev macro on the two CQA dev components | incumbent stella, re-probed in the identical frame | see §10, all four conditions | Holm over the challenger set at α = 0.05 | keep the incumbent (registered default) |
-| **B2** | is the KL term degenerate? | candidate-set entropy quantiles, uniform vs top-200 | none (diagnostic) | descriptive; **adopts nothing** | none | may trigger the registered `R-LIST` arm, or not |
-| **B3** | is Phase A pair-starved? | dense + fused macro on the registered OOD groups, plus the group-vector median | nested real-pair pool fractions {0.25, 0.50, 0.75, 1.00} at **fixed** updates, batch, negatives and total draws (1,280,000) — so only unique-pair count varies | **one pre-specified dose contrast**: 1.00 vs 0.75, mean-over-seeds gain ≥ 0.0040 on BOTH endpoints with both seeds agreeing in sign. A 1.00-vs-0.25 manipulation check runs first; failing it reports UNINFORMATIVE, not "not starved" | none — a single registered contrast, not a best-of-three | Phase A is not pair-starved; the pair-COUNT levers are deprioritised |
-| **B3-ICT** | *(retired 2026-08-29 before any arm ran — was B3's original lever)* | — | ICT fraction 0 | **refused**: the arm shape over-constrains a fixed batch, and the ICT shortcut survives sentence removal because the positive's teacher vector is precomputed over the full document. See §15 | n/a | n/a — not run |
-| **B7** | block-CG vocabulary curve | solver wall-clock and peak RAM at 30.5K / 64K / 128K, plus closed-form dev macro at each | the 30.5K control | **feasibility**: 64K must solve within the 18 GB peak-RAM budget and under 4 h. Quality is descriptive at this stage | none | D2 is closed on arithmetic; the milestone routes to D1/D4'/R1 |
-| **B6-pre** | can a doc-side head fuse into ONE ONNX file? | a successful export of teacher+linear head as plain MatMul/activation nodes, parity vs torch within the §11 tolerances | none | **binary feasibility gate** (E3's hard condition) | none | D1 is closed; B6's quality arm never runs |
-| **NF** | how large is a difference this dev instrument produces from nothing? | the four dev endpoints a bar can read, int8, released path | K = 3 arms differing ONLY in training seed (a true null) | no bar: it EMITS them, per §4.7 | none | n/a — a floor always exists; a large floor raises every bar reading that endpoint, and that is the finding |
-| **B17** | does the class cap in-domain? | 50/50 query split on the dev CQA components; oracle table fitted on one half, scored on the other, vs the 0.481 teacher ceiling | the teacher ceiling | **routing rule below** | none | routing rule is exhaustive by construction |
-
-**Registered into Wave 1 after this table was written — fields in `m8/registry.json`, deliberately
-not restated here:** `E14-HEAD` (reported, NO SURVIVOR), `E10-REMEDY` (ran, then reopened),
-**`D2`** (the milestone's primary lever, bar 0.00519) and `NF-CROSSED-FUSED` (optional instrument
-read). The table above is a partial render kept for at-a-glance reading; the registry is the
-authority and the only thing `probe_guard` consults.
-
-**B17's registered routing rule** (fixed before its number, and amended per Fable D2 before any
-number exists): held-out **≥ 0.45** ⇒ supervision and objective are the story **AND R1 takes the
-majority budget ONLY IF B3-template OOD corroboration is also present** — an in-domain ceiling
-cannot license the class of work whose out-of-domain transfer M7 measured at 0.000 ± 0.005;
-without that corroboration the branch reads "both". Held-out **≤ 0.40** ⇒ the class caps in-domain
-and **D2/D1/D4' carry the milestone**. Between 0.40 and 0.45 ⇒ both, budget split 50/50.
-
-### Wave 2 — REGISTERED BUT NOT RUNNABLE
-
-`B8`, `B9`, `B10`, `B13`, `B14`, `B15`, `D-GENRE`, `D-SYNTH`, `D-FINEWEB`, `R-LIST`, `R-PHASE`,
-`B6` (the quality arm), **`R1-ASSEMBLY`** (Stage R's one validation gate, §7) and **`S-SELECT`**
-(Stage S's family selection, §8) exist as **stubs** in `m8/registry.json` with
-`bar: "TBD-noise-floor"` and their non-bar fields filled where already decided. `probe_guard`
-**refuses every one of them today**, by design: a stub is a placeholder for a registration, not a
-registration. Each becomes runnable only via a §15 amendment that fills its complete row.
-
-**Inside workstream T: B16** (MEV / self-similarity) — **descriptive only; may not prune a
-candidate** unless separately validated on fresh clean-screen artifacts.
-
-### Removed from M8's calendar, with reasons
-
-- **B1' / B4** — E1 makes them decision-irrelevant here; recorded as **M9 planning diagnostics**.
-- **B5** — E5: index-time adaptation is research-only, AFTER the final access.
-- **B12** — superseded by the int8-always rule; a 4-bit sweep may run post-finalist as research.
-- **B11** — out on the frozen fusion operator's no-routing rule, **not** on E11 (see §7).
-
----
+| `S0` | LoTTE overlap screen vs the protected partitions | ran |
+| `T1` | teacher screen (workstream T) | ran |
+| `B2` | candidate-set entropy (is the KL term degenerate?) | ran |
+| `B3` | real-pair pool scaling at fixed compute (is Phase A pair-starved?) | ran |
+| `B7` | block-CG vocabulary curve (gates D2) | ran |
+| `B6-pre` | doc-side head ONNX fuse precondition (gates D1) | ran |
+| `B17` | in-domain oracle generalization ceiling | ran |
+| `B8` | target design (bare + doc-centroid targets) | deferred, never run |
+| `B9` | SVD rank truncation | deferred, never run |
+| `B10` | scoring/pooling family | registered, not run |
+| `B13` | joint configuration confirm (A-grid + matched-steps negatives + riders) | deferred, never run |
+| `B14` | doc-side instruction refit | deferred, never run |
+| `B15` | context-averaged row init (Wada) | deferred, never run |
+| `B16` | MEV / self-similarity | ran |
+| `B6` | doc-side map quality arm (D1) | deferred, never run |
+| `D-GENRE` | genre bundle (USPTO + EUR-Lex + federal) | deferred, never run |
+| `D-SYNTH` | synthetic Qwen3 query component (E2) | deferred, never run |
+| `D-FINEWEB` | FineWeb arm (E13, clean-stack-tax design) | deferred, never run |
+| `R-LIST` | listwise distillation arm | deferred, never run |
+| `R-PHASE` | phase structure (sequential / mixed-replay / listwise-only) | deferred, never run |
+| `R1-ASSEMBLY` | the one Stage-R validation gate | conditional, never run |
+| `S-SELECT` | Stage-S family selection | conditional, never run |
+| `NF` | noise-floor measurement (the instrument every bar is set against) | ran |
+| `B3-ICT` | ICT (Inverse Cloze Task) pair augmentation | ran |
+| `E14-HEAD` | doc-side re-shaping: RENORMALIZED heads on cached document vectors, trai | ran |
+| `E14-LORA` | doc-side co-adaptation proper: LoRA the document tower jointly with the  | authorised, not run |
+| `E10-REMEDY` | the LoTTE shadow, remediated per-question and re-screened to zero | not run |
+| `D2` | D2 -- compositional capacity: a multi-word tokenizer, trained through th | ran |
+| `NF-CROSSED-FUSED` | NF-CROSSED-FUSED -- the chain-level FUSED floor, from cells already on d | ran |
+| `D2-PRE` | D2-PRE -- closed-form preflight: does ANY new-row class carry residual c | ran |
+| `VECTOR-PRF` | VECTOR-PRF -- train-free dense pseudo-relevance feedback on the frozen R | ran |
+| `E14-PRE` | E14-PRE -- does the document tower hold reachable structure its read-out | registered, cancelled mid-run |
 
 ## 10. Workstream T — the teacher
 
@@ -1421,26 +1161,10 @@ the result JSON, or `research/m8-planning/`.*
 - **A registration edit REVERTED because the audit refused it (2026-08-29).** Disclosed rather than
   quietly kept.
 
-## 16. Gate findings → where each is discharged
 
-**Codex (`research/m8-planning/codex-ledger-gate-2026-08-29.md`, verdict BLOCK).**
-BLOCKER 1 → §5 (all seven conditions literal, margins measured, six-set timing registered) +
-`m8src/decide.py`. BLOCKER 2 → §4.2 C2. BLOCKER 3 → §9 + `m8/registry.json` (Wave 2 registered as
-refused stubs). BLOCKER 4 → §10. BLOCKER 5 → §6. BLOCKER 6 → §14 G2 + `m8src/paths_guard.py`
-(hardened) + §15 incident. BLOCKER 7 → §9 (registry sha stamped into results). BLOCKER 8 → §4.1.
-BLOCKER 9 → §11.1. MAJOR 1 → §0. MAJOR 2 → §4.7. MAJOR 3 → §2.3. MAJOR 4 → §6 checklist.
-MAJOR 5 → §2.1 pin provenance. MAJOR 6 → §2.2 mandatory dev disclosure. MAJOR 7 → §3.4.
-MAJOR 8 → §4.2 + §5. MAJOR 9 → §14 G3. MINORs → release names (header), 233 MB cap (§8),
-rulings verbatim (§12).
+## 16. Gate findings — REMOVED 2026-08-30
 
-**Fable (`research/m8-planning/fable-ledger-review-2026-08-29.md`).**
-A (diagnosis) → §17 + §3 H1 prior. B (menu) → §8 recorded-not-adopted + §7 B11 correction + **E14
-to the wake-up note**. C (effort) → §9 Wave-1 promotion. D1 (shadow blind) → §2.3 two-legged GO.
-D2 (B17 routing) → §9 routing rule. D3 (pre-encode bill) → §14 G6 + wake-up note.
-D4 (binary fallback) → §7 ordered nested fallback. E (uncomfortable question) → §7's honest
-statement. Items 5 and 8 → §17 and §8's D2 coverage spec.
-
----
+An index of where each pre-milestone gate finding was discharged. Every one was discharged before any probe ran; the dispositions live in the sections they changed and in `research/m8-planning/`.
 
 ## 17–23. Measured results that bars or plans read
 

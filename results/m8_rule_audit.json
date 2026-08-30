@@ -1,8 +1,8 @@
 {
   "_note": "LEDGER \u00a74.4 deliverable 3: rule compliance, AUDITED rather than discovered.",
-  "head": "2f8df3b3166210a2e5e4bddd6c380edce3f03eb5",
+  "head": "459f7375b37e11a134a5ea3a6a052e4598dbd93d",
   "registry_version": 2,
-  "registry_sha256_now": "792be640c06225dea349198e69ca8dac39dd29ba0397c30690fcf9e9e33ba31b",
+  "registry_sha256_now": "c0a5764ccd8e6a96944fe36163563807a414cc7b14aeee36f6cdb0b4218635a1",
   "stamped_results_checked": [
     {
       "file": "m8_b17_oracle.json",
@@ -43,6 +43,11 @@
       "file": "m8_b7_solver.json",
       "probe": "B7",
       "commit": "a76fd9c9"
+    },
+    {
+      "file": "m8_b8_target.json",
+      "probe": "B8",
+      "commit": "b5097b45"
     },
     {
       "file": "m8_d2_pre.json",
@@ -93,10 +98,16 @@
       "file": "m8_t1_decision.json",
       "probe": "T1",
       "commit": "66545055"
+    },
+    {
+      "file": "m8_vector_prf.json",
+      "probe": "VECTOR-PRF",
+      "commit": "3e03aeb3"
     }
   ],
   "unstamped_artifacts": [
     "m8_b7_realdata.SMOKE.json",
+    "m8_b8_target.SMOKE.json",
     "m8_d2_pre.SMOKE.json",
     "m8_dev_reuse_count.json",
     "m8_devperquery_cal.json",
@@ -112,7 +123,8 @@
     "m8_t1_granite-r2.json",
     "m8_t1_gte-modernbert-base.json",
     "m8_t1_stella-400M-v5.json",
-    "m8_trainq_manifest.json"
+    "m8_trainq_manifest.json",
+    "m8_vector_prf.SMOKE.json"
   ],
   "_unstamped_note": "not every results/m8_*.json is a probe result -- calibration caches, schedules and descriptive diagnostics are inputs, not registered measurements. They are listed so the distinction is visible.",
   "findings": [],

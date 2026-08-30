@@ -475,7 +475,7 @@
     "a licence check that stella permits releasing derived weights",
     "C2 must be REDEFINED: 'the M8 table against the SAME frozen document vectors' stops being possible once the tower moves, and C2 is Dylan's E11 ruling"
    ],
-   "plan_status": "AUTHORISED TO REGISTER AND MEASURE (Dylan, 2026-08-29). Licence closed (stella MIT); condition 4 now admits a document-side win. BOUNDS: derived from stella only (LoRA/adapter/last-block/head), never from scratch; query side stays a pure lookup table (E1). NOT YET RUNNABLE and probe_guard will refuse it: the bar is TBD by design because the D x downstream floor it depends on has not been measured. Writing this row -- floor first, then comparator, then bar -- is the next session's first PROTOCOL task, sequenced after D2-PRE which is already registered and runnable.",
+   "plan_status": "AUTHORISED, NOT RUN, DEFERRED TO M9/M10 (2026-08-30). Dylan authorised it and the licence is closed; M8 declined to spend on it because what was affordable here -- a dev-scale LoRA against a shrunken stale negative bank on two CQADupStack components -- is a PROXY for co-adaptation, not a test of it, and the same weakness is why E14-HEAD says nothing about the tower. LightRetriever's 0.4583 came from a full co-adapted regime. Test it with a real training budget or not at all. The D x downstream floor was never measured, so this row's bar is still TBD by design and probe_guard still refuses it.",
    "design_findings_to_register": "FROM THE 2026-08-29 review, to be built into the row before any arm runs -- recorded now because the row is unwritten and these are the decisions that make it honest. (1) COMPARATOR: frozen R0 is NOT the honest primary. Comparing a LoRA'd tower + retrained table against R0 confounds 'the tower changed' with 'the table was retrained against a new tower'. The primary control is a STOCK-stella tower whose table is JOINTLY RETRAINED under the identical recipe, seeds and budget; R0 is secondary and descriptive. (2) FLOOR: 0.00519 does NOT apply. It bounds B x A variation under a FIXED document tower (section 23); a LoRA adds a document-training leg whose variance nothing has measured. A D x downstream floor must be measured and registered BEFORE any E14-LORA bar is written -- same rule that governed the B leg. (3) CHEAPEST CREDIBLE SIGN: one FIXED LoRA configuration (no config search -- the lr rule above binds), train-only fitting, the two OOD dev components against their own re-encoded corpora, three paired end-to-end seeds against the stock-tower retraining control. No 10.12M pre-encode until that clears."
   },
   "E10-REMEDY": {
@@ -607,7 +607,7 @@
    "noise_floor_exempt": true,
    "exempt_reason": "Trains nothing and is deterministic end to end -- closed-form solves and exact search -- so the true-seed-null floor is zero by construction. The planning minimum 0.0040 binds as the routing threshold.",
    "bar_frozen": "2026-08-29, before any read-out was encoded.",
-   "plan_status": "LIVE -- gates E14-LORA.",
+   "plan_status": "REGISTERED AND CANCELLED BEFORE COMPLETION, 2026-08-30. Launched, then stopped on the judgement that it could not change the decision it gated: both probes vary how the tower's output is READ or MAPPED, while E14-LORA changes what the tower COMPUTES -- the scope limit written into this row's no_survivor BEFORE the run. A negative could not have closed E14-LORA and a positive was unlikely for reasons unrelated to it (three of the four read-outs are ones stella was never trained to use). Recorded rather than deleted: the design and the reason it was abandoned are the finding. Partial numbers, none decision-bearing: the incumbent read-out solved to 0.3447 OOD at lambda=1e-3 interior, reproducing B7's 0.3439 and B8's 0.3474.",
    "authorised_by": "Dylan, 2026-08-29: run the screen before the floor. CLAUDE.md's standing directive (check every factor before believing a product is capped) and the D2-PRE precedent."
   }
  },
@@ -779,5 +779,49 @@
    "still_missing": "a POOL-varying null. The B-leg gap is now measured (see 'crossed'), but all nine cells share one pseudo-query pool -- pseudoq.build_decontaminated draws with a seed independent of the training seed -- so no floor here bounds a lever that changes the pool itself.",
    "crossed": "results/m8_noise_floor_crossed.json -- the 3x3 (B checkpoint seed) x (A seed) grid, LEDGER 23. MEASURED: on the out-of-domain macro sigma_B 0.00103 vs sigma_A 0.00106, sigma_chain 0.00153, so a B-leg-varying arm's null is about sqrt(2) times an A-leg arm's and the standing 0.0040 carries ~6.5% type-I there. Bars in force are UNAFFECTED: B3 and E14-HEAD read A-leg-only arms, whose null is sigma_A alone (2 x 1.693 x 0.00106 = 0.0036, under the planning minimum). For a B-leg-varying probe the formula with the floor term estimated from this design would give 0.00519 -- REPORTED, NOT ADOPTED, since changing the floor estimator is itself a formula change needing its own amendment."
   }
+ },
+ "_closed": {
+  "milestone": "M8",
+  "closed": "2026-08-30",
+  "verdict": "CLOSED AS A MEASUREMENT. No candidate, no release, no confirmatory access spent.",
+  "probes_run": [
+   "S0",
+   "T1",
+   "B2",
+   "B3",
+   "B7",
+   "B6-pre",
+   "B17",
+   "NF",
+   "E14-HEAD",
+   "D2-PRE",
+   "B8",
+   "VECTOR-PRF"
+  ],
+  "registered_not_run": [
+   "R-LIST",
+   "B10",
+   "E14-LORA",
+   "E14-PRE (cancelled mid-run)",
+   "B9",
+   "B13",
+   "B14",
+   "B15",
+   "B6",
+   "D-GENRE",
+   "D-SYNTH",
+   "D-FINEWEB",
+   "R-PHASE",
+   "R1-ASSEMBLY",
+   "S-SELECT",
+   "B3-ICT",
+   "NF-CROSSED-FUSED",
+   "E10-REMEDY",
+   "B16",
+   "D2"
+  ],
+  "why_rows_are_kept_not_pruned": "This file is the PRE-REGISTRATION RECORD. Deleting rows that never ran would hide what was committed to in advance, which is the one thing a pre-registration exists to prevent. Rows are marked closed; none is removed.",
+  "reserved_sets": "UNSPENT and UNSCORED: fever, dbpedia-entity, cqadup-android, cqadup-english. One confirmatory access remains, inherited by M9.",
+  "findings": "m8/FINDINGS.md"
  }
 }
