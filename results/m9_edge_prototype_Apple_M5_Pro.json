@@ -1,6 +1,6 @@
 {
- "_what": "M9 pair edge prototype ROUND 3: storage-configured quantization (originals on_disk/mmap, quantized copy always_ram) with each config measured in its own process for a clean peak-RSS reading, plus rescore=false rows for int8/binary. Latency/architecture only, see file docstring.",
- "round": 3,
+ "_what": "M9 pair edge prototype ROUND 4: does the winning round-3 config (binary quantization, originals on_disk, quantized copy always_ram, rescore=false) actually serve a 1M x 1024 index under a real memory-capped container? An fp16 row runs as the default-reach-for contrast. Real Qdrant in Docker, not qdrant_edge -- RSS isn't a real constraint, a cgroup memory limit is.",
+ "round": 4,
  "warmup_searches": 200,
  "host": {
   "platform": "macOS-26.4.1-arm64-arm-64bit",
@@ -8,1082 +8,766 @@
   "cpu": "Apple M5 Pro",
   "cores": "15"
  },
- "threads": 4,
  "n_docs": 1000000,
  "dim": 1024,
- "table_shard_mb": 270.1,
- "nano_onnx_mb": 46.1,
+ "mem_limits": [
+  "256m",
+  "512m",
+  "1g",
+  "2g"
+ ],
  "configs": {
-  "fp16_mmap": {
-   "load_s": 8.208,
-   "bytes_mb": 7444.9,
-   "orig_vector_bytes_mb": 2048.0,
-   "quantized_vector_bytes_mb": 0.0,
-   "rss_after_load_mb": 5770.8,
-   "peak_rss_mb": 6101.3,
-   "no_rescore": false,
-   "bucket_order": {
-    "zero": {
-     "ef=default": [
-      "51-120w",
+  "binary": {
+   "256m": {
+    "served": true,
+    "load_s": 1.025,
+    "container_mem_after_load_mb": 252.8,
+    "container_mem_after_queries_mb": 202.1,
+    "bucket_order": {
+     "zero": [
       "11-20w",
-      "6-10w",
       "1-5w",
+      "6-10w",
+      "51-120w",
       "21-50w"
      ],
-     "ef=128": [
-      "11-20w",
-      "51-120w",
-      "21-50w",
+     "nano": [
+      "1-5w",
       "6-10w",
-      "1-5w"
+      "51-120w",
+      "11-20w",
+      "21-50w"
      ]
     },
-    "nano": {
-     "ef=default": [
-      "51-120w",
-      "11-20w",
-      "6-10w",
-      "1-5w",
-      "21-50w"
-     ],
-     "ef=128": [
-      "11-20w",
-      "51-120w",
-      "21-50w",
-      "6-10w",
-      "1-5w"
-     ]
+    "buckets": {
+     "1-5w": {
+      "zero": {
+       "encode_ms_p50": 0.635,
+       "search_ms_p50": 4.467,
+       "search_ms_p95": 5.476,
+       "total_ms_p50": 5.151
+      },
+      "nano": {
+       "encode_ms_p50": 0.933,
+       "search_ms_p50": 3.123,
+       "search_ms_p95": 3.519,
+       "total_ms_p50": 4.058
+      }
+     },
+     "6-10w": {
+      "zero": {
+       "encode_ms_p50": 0.364,
+       "search_ms_p50": 2.982,
+       "search_ms_p95": 3.423,
+       "total_ms_p50": 3.387
+      },
+      "nano": {
+       "encode_ms_p50": 1.265,
+       "search_ms_p50": 3.173,
+       "search_ms_p95": 3.698,
+       "total_ms_p50": 4.469
+      }
+     },
+     "11-20w": {
+      "zero": {
+       "encode_ms_p50": 1.562,
+       "search_ms_p50": 5.275,
+       "search_ms_p95": 5.929,
+       "total_ms_p50": 6.867
+      },
+      "nano": {
+       "encode_ms_p50": 1.768,
+       "search_ms_p50": 3.221,
+       "search_ms_p95": 4.009,
+       "total_ms_p50": 5.006
+      }
+     },
+     "21-50w": {
+      "zero": {
+       "encode_ms_p50": 2.116,
+       "search_ms_p50": 4.815,
+       "search_ms_p95": 6.087,
+       "total_ms_p50": 6.915
+      },
+      "nano": {
+       "encode_ms_p50": 3.269,
+       "search_ms_p50": 3.121,
+       "search_ms_p95": 3.637,
+       "total_ms_p50": 6.366
+      }
+     },
+     "51-120w": {
+      "zero": {
+       "encode_ms_p50": 1.898,
+       "search_ms_p50": 4.214,
+       "search_ms_p95": 10.125,
+       "total_ms_p50": 6.124
+      },
+      "nano": {
+       "encode_ms_p50": 6.503,
+       "search_ms_p50": 3.767,
+       "search_ms_p95": 5.095,
+       "total_ms_p50": 10.333
+      }
+     }
     }
    },
-   "buckets": {
-    "1-5w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.138,
-       "encode_ms_p95": 0.182,
-       "search_ms_p50": 1.031,
-       "search_ms_p95": 1.384,
-       "total_ms_p50": 1.179
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.135,
-       "encode_ms_p95": 0.182,
-       "search_ms_p50": 0.942,
-       "search_ms_p95": 1.145,
-       "total_ms_p50": 1.079
-      }
-     },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 0.868,
-       "encode_ms_p95": 0.968,
-       "search_ms_p50": 0.936,
-       "search_ms_p95": 1.121,
-       "total_ms_p50": 1.807
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.871,
-       "encode_ms_p95": 0.966,
-       "search_ms_p50": 1.121,
-       "search_ms_p95": 1.279,
-       "total_ms_p50": 1.992
-      }
-     }
+   "512m": {
+    "served": true,
+    "load_s": 0.51,
+    "container_mem_after_load_mb": 442.0,
+    "container_mem_after_queries_mb": 440.5,
+    "bucket_order": {
+     "zero": [
+      "11-20w",
+      "1-5w",
+      "6-10w",
+      "51-120w",
+      "21-50w"
+     ],
+     "nano": [
+      "1-5w",
+      "6-10w",
+      "51-120w",
+      "11-20w",
+      "21-50w"
+     ]
     },
-    "6-10w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.251,
-       "encode_ms_p95": 0.311,
-       "search_ms_p50": 1.247,
-       "search_ms_p95": 1.526,
-       "total_ms_p50": 1.491
+    "buckets": {
+     "1-5w": {
+      "zero": {
+       "encode_ms_p50": 0.554,
+       "search_ms_p50": 3.867,
+       "search_ms_p95": 5.244,
+       "total_ms_p50": 4.534
       },
-      "ef=128": {
-       "encode_ms_p50": 0.243,
-       "encode_ms_p95": 0.295,
-       "search_ms_p50": 0.937,
-       "search_ms_p95": 1.179,
-       "total_ms_p50": 1.194
+      "nano": {
+       "encode_ms_p50": 0.889,
+       "search_ms_p50": 2.453,
+       "search_ms_p95": 3.312,
+       "total_ms_p50": 3.355
       }
      },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 1.158,
-       "encode_ms_p95": 1.26,
-       "search_ms_p50": 0.939,
-       "search_ms_p95": 1.091,
-       "total_ms_p50": 2.144
+     "6-10w": {
+      "zero": {
+       "encode_ms_p50": 0.437,
+       "search_ms_p50": 2.92,
+       "search_ms_p95": 4.399,
+       "total_ms_p50": 3.366
       },
-      "ef=128": {
-       "encode_ms_p50": 1.159,
-       "encode_ms_p95": 1.261,
-       "search_ms_p50": 1.166,
-       "search_ms_p95": 1.356,
-       "total_ms_p50": 2.348
-      }
-     }
-    },
-    "11-20w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.372,
-       "encode_ms_p95": 0.44,
-       "search_ms_p50": 1.741,
-       "search_ms_p95": 2.578,
-       "total_ms_p50": 2.115
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.345,
-       "encode_ms_p95": 0.424,
-       "search_ms_p50": 0.952,
-       "search_ms_p95": 1.103,
-       "total_ms_p50": 1.305
+      "nano": {
+       "encode_ms_p50": 1.171,
+       "search_ms_p50": 2.57,
+       "search_ms_p95": 3.076,
+       "total_ms_p50": 3.732
       }
      },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 1.615,
-       "encode_ms_p95": 1.82,
-       "search_ms_p50": 0.97,
-       "search_ms_p95": 1.098,
-       "total_ms_p50": 2.619
+     "11-20w": {
+      "zero": {
+       "encode_ms_p50": 1.306,
+       "search_ms_p50": 4.373,
+       "search_ms_p95": 5.927,
+       "total_ms_p50": 5.896
       },
-      "ef=128": {
+      "nano": {
        "encode_ms_p50": 1.64,
-       "encode_ms_p95": 1.811,
-       "search_ms_p50": 1.202,
-       "search_ms_p95": 1.422,
-       "total_ms_p50": 2.86
-      }
-     }
-    },
-    "21-50w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.55,
-       "encode_ms_p95": 0.62,
-       "search_ms_p50": 0.859,
-       "search_ms_p95": 1.078,
-       "total_ms_p50": 1.428
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.544,
-       "encode_ms_p95": 0.601,
-       "search_ms_p50": 0.95,
-       "search_ms_p95": 1.114,
-       "total_ms_p50": 1.486
+       "search_ms_p50": 2.689,
+       "search_ms_p95": 3.223,
+       "total_ms_p50": 4.341
       }
      },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 3.183,
-       "encode_ms_p95": 3.345,
-       "search_ms_p50": 0.966,
-       "search_ms_p95": 1.111,
-       "total_ms_p50": 4.129
+     "21-50w": {
+      "zero": {
+       "encode_ms_p50": 0.897,
+       "search_ms_p50": 2.721,
+       "search_ms_p95": 4.419,
+       "total_ms_p50": 3.653
       },
-      "ef=128": {
-       "encode_ms_p50": 3.176,
-       "encode_ms_p95": 3.341,
-       "search_ms_p50": 1.186,
-       "search_ms_p95": 1.382,
-       "total_ms_p50": 4.358
-      }
-     }
-    },
-    "51-120w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.722,
-       "encode_ms_p95": 0.767,
-       "search_ms_p50": 2.482,
-       "search_ms_p95": 3.829,
-       "total_ms_p50": 3.212
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.698,
-       "encode_ms_p95": 0.711,
-       "search_ms_p50": 0.944,
-       "search_ms_p95": 1.107,
-       "total_ms_p50": 1.635
+      "nano": {
+       "encode_ms_p50": 3.202,
+       "search_ms_p50": 2.726,
+       "search_ms_p95": 3.407,
+       "total_ms_p50": 5.993
       }
      },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 6.433,
-       "encode_ms_p95": 6.964,
-       "search_ms_p50": 0.986,
-       "search_ms_p95": 1.143,
-       "total_ms_p50": 7.393
+     "51-120w": {
+      "zero": {
+       "encode_ms_p50": 0.862,
+       "search_ms_p50": 2.061,
+       "search_ms_p95": 3.502,
+       "total_ms_p50": 3.004
       },
-      "ef=128": {
-       "encode_ms_p50": 6.433,
-       "encode_ms_p95": 6.878,
-       "search_ms_p50": 1.199,
-       "search_ms_p95": 1.368,
-       "total_ms_p50": 7.656
+      "nano": {
+       "encode_ms_p50": 6.467,
+       "search_ms_p50": 3.242,
+       "search_ms_p95": 3.87,
+       "total_ms_p50": 9.692
       }
      }
-    }
-   }
-  },
-  "int8_mmap": {
-   "load_s": 8.315,
-   "bytes_mb": 8473.2,
-   "orig_vector_bytes_mb": 2048.0,
-   "quantized_vector_bytes_mb": 1028.0,
-   "rss_after_load_mb": 6889.8,
-   "peak_rss_mb": 6889.8,
-   "no_rescore": false,
-   "bucket_order": {
-    "zero": {
-     "ef=default": [
-      "51-120w",
-      "11-20w",
-      "6-10w",
-      "1-5w",
-      "21-50w"
-     ],
-     "ef=128": [
-      "11-20w",
-      "51-120w",
-      "21-50w",
-      "6-10w",
-      "1-5w"
-     ]
-    },
-    "nano": {
-     "ef=default": [
-      "51-120w",
-      "11-20w",
-      "6-10w",
-      "1-5w",
-      "21-50w"
-     ],
-     "ef=128": [
-      "11-20w",
-      "51-120w",
-      "21-50w",
-      "6-10w",
-      "1-5w"
-     ]
     }
    },
-   "buckets": {
-    "1-5w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.136,
-       "encode_ms_p95": 0.194,
-       "search_ms_p50": 0.583,
-       "search_ms_p95": 0.682,
-       "total_ms_p50": 0.742
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.168,
-       "encode_ms_p95": 0.211,
-       "search_ms_p50": 0.738,
-       "search_ms_p95": 0.846,
-       "total_ms_p50": 0.907
-      }
-     },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 0.895,
-       "encode_ms_p95": 0.998,
-       "search_ms_p50": 0.666,
-       "search_ms_p95": 0.772,
-       "total_ms_p50": 1.569
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.904,
-       "encode_ms_p95": 1.002,
-       "search_ms_p50": 0.804,
-       "search_ms_p95": 0.924,
-       "total_ms_p50": 1.713
-      }
-     }
-    },
-    "6-10w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.249,
-       "encode_ms_p95": 0.301,
-       "search_ms_p50": 0.595,
-       "search_ms_p95": 0.684,
-       "total_ms_p50": 0.841
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.32,
-       "encode_ms_p95": 0.391,
-       "search_ms_p50": 0.751,
-       "search_ms_p95": 0.848,
-       "total_ms_p50": 1.064
-      }
-     },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 1.192,
-       "encode_ms_p95": 1.401,
-       "search_ms_p50": 0.669,
-       "search_ms_p95": 0.771,
-       "total_ms_p50": 1.882
-      },
-      "ef=128": {
-       "encode_ms_p50": 1.223,
-       "encode_ms_p95": 1.333,
-       "search_ms_p50": 0.807,
-       "search_ms_p95": 0.971,
-       "total_ms_p50": 2.053
-      }
-     }
-    },
-    "11-20w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.435,
-       "encode_ms_p95": 0.558,
-       "search_ms_p50": 0.636,
-       "search_ms_p95": 0.752,
-       "total_ms_p50": 1.066
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.333,
-       "encode_ms_p95": 0.413,
-       "search_ms_p50": 0.706,
-       "search_ms_p95": 0.809,
-       "total_ms_p50": 1.059
-      }
-     },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 1.715,
-       "encode_ms_p95": 2.627,
-       "search_ms_p50": 0.696,
-       "search_ms_p95": 1.147,
-       "total_ms_p50": 2.442
-      },
-      "ef=128": {
-       "encode_ms_p50": 1.708,
-       "encode_ms_p95": 1.889,
-       "search_ms_p50": 0.823,
-       "search_ms_p95": 0.942,
-       "total_ms_p50": 2.537
-      }
-     }
-    },
-    "21-50w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.686,
-       "encode_ms_p95": 0.771,
-       "search_ms_p50": 0.591,
-       "search_ms_p95": 0.691,
-       "total_ms_p50": 1.274
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.666,
-       "encode_ms_p95": 0.767,
-       "search_ms_p50": 0.724,
-       "search_ms_p95": 0.828,
-       "total_ms_p50": 1.395
-      }
-     },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 3.205,
-       "encode_ms_p95": 3.441,
-       "search_ms_p50": 0.699,
-       "search_ms_p95": 0.796,
-       "total_ms_p50": 3.923
-      },
-      "ef=128": {
-       "encode_ms_p50": 3.264,
-       "encode_ms_p95": 3.454,
-       "search_ms_p50": 0.853,
-       "search_ms_p95": 1.016,
-       "total_ms_p50": 4.1
-      }
-     }
-    },
-    "51-120w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.873,
-       "encode_ms_p95": 0.952,
-       "search_ms_p50": 0.597,
-       "search_ms_p95": 0.699,
-       "total_ms_p50": 1.442
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.808,
-       "encode_ms_p95": 0.878,
-       "search_ms_p50": 0.716,
-       "search_ms_p95": 0.879,
-       "total_ms_p50": 1.531
-      }
-     },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 6.466,
-       "encode_ms_p95": 7.015,
-       "search_ms_p50": 0.686,
-       "search_ms_p95": 0.796,
-       "total_ms_p50": 7.134
-      },
-      "ef=128": {
-       "encode_ms_p50": 6.523,
-       "encode_ms_p95": 6.999,
-       "search_ms_p50": 0.872,
-       "search_ms_p95": 1.021,
-       "total_ms_p50": 7.372
-      }
-     }
-    }
-   }
-  },
-  "int8_mmap_norescore": {
-   "load_s": 4.875,
-   "bytes_mb": 8473.2,
-   "orig_vector_bytes_mb": 2048.0,
-   "quantized_vector_bytes_mb": 1028.0,
-   "rss_after_load_mb": 7006.7,
-   "peak_rss_mb": 7006.7,
-   "no_rescore": true,
-   "bucket_order": {
-    "zero": {
-     "ef=default": [
-      "51-120w",
+   "1g": {
+    "served": true,
+    "load_s": 0.504,
+    "container_mem_after_load_mb": 828.8,
+    "container_mem_after_queries_mb": 871.3,
+    "bucket_order": {
+     "zero": [
       "11-20w",
-      "6-10w",
       "1-5w",
+      "6-10w",
+      "51-120w",
       "21-50w"
      ],
-     "ef=128": [
-      "11-20w",
-      "51-120w",
-      "21-50w",
-      "6-10w",
-      "1-5w"
-     ]
-    },
-    "nano": {
-     "ef=default": [
-      "51-120w",
-      "11-20w",
-      "6-10w",
+     "nano": [
       "1-5w",
+      "6-10w",
+      "51-120w",
+      "11-20w",
       "21-50w"
-     ],
-     "ef=128": [
-      "11-20w",
-      "51-120w",
-      "21-50w",
-      "6-10w",
-      "1-5w"
-     ]
-    }
-   },
-   "buckets": {
-    "1-5w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.133,
-       "encode_ms_p95": 0.169,
-       "search_ms_p50": 0.614,
-       "search_ms_p95": 0.753,
-       "total_ms_p50": 0.745
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.14,
-       "encode_ms_p95": 0.185,
-       "search_ms_p50": 0.769,
-       "search_ms_p95": 0.89,
-       "total_ms_p50": 0.909
-      }
-     },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 0.885,
-       "encode_ms_p95": 0.989,
-       "search_ms_p50": 0.685,
-       "search_ms_p95": 0.801,
-       "total_ms_p50": 1.576
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.873,
-       "encode_ms_p95": 0.97,
-       "search_ms_p50": 0.793,
-       "search_ms_p95": 0.919,
-       "total_ms_p50": 1.675
-      }
-     }
-    },
-    "6-10w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.23,
-       "encode_ms_p95": 0.288,
-       "search_ms_p50": 0.578,
-       "search_ms_p95": 0.682,
-       "total_ms_p50": 0.825
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.241,
-       "encode_ms_p95": 0.288,
-       "search_ms_p50": 0.78,
-       "search_ms_p95": 0.918,
-       "total_ms_p50": 1.034
-      }
-     },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 1.166,
-       "encode_ms_p95": 1.302,
-       "search_ms_p50": 0.679,
-       "search_ms_p95": 0.759,
-       "total_ms_p50": 1.86
-      },
-      "ef=128": {
-       "encode_ms_p50": 1.166,
-       "encode_ms_p95": 1.282,
-       "search_ms_p50": 0.805,
-       "search_ms_p95": 0.964,
-       "total_ms_p50": 2.009
-      }
-     }
-    },
-    "11-20w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.329,
-       "encode_ms_p95": 0.41,
-       "search_ms_p50": 0.585,
-       "search_ms_p95": 0.684,
-       "total_ms_p50": 0.926
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.335,
-       "encode_ms_p95": 0.411,
-       "search_ms_p50": 0.723,
-       "search_ms_p95": 0.899,
-       "total_ms_p50": 1.069
-      }
-     },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 1.66,
-       "encode_ms_p95": 1.834,
-       "search_ms_p50": 0.693,
-       "search_ms_p95": 0.827,
-       "total_ms_p50": 2.379
-      },
-      "ef=128": {
-       "encode_ms_p50": 1.692,
-       "encode_ms_p95": 1.848,
-       "search_ms_p50": 0.843,
-       "search_ms_p95": 0.957,
-       "total_ms_p50": 2.528
-      }
-     }
-    },
-    "21-50w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.535,
-       "encode_ms_p95": 0.599,
-       "search_ms_p50": 0.613,
-       "search_ms_p95": 0.798,
-       "total_ms_p50": 1.161
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.581,
-       "encode_ms_p95": 0.655,
-       "search_ms_p50": 0.832,
-       "search_ms_p95": 1.014,
-       "total_ms_p50": 1.402
-      }
-     },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 3.197,
-       "encode_ms_p95": 3.41,
-       "search_ms_p50": 0.684,
-       "search_ms_p95": 0.857,
-       "total_ms_p50": 3.881
-      },
-      "ef=128": {
-       "encode_ms_p50": 3.186,
-       "encode_ms_p95": 3.353,
-       "search_ms_p50": 0.832,
-       "search_ms_p95": 0.966,
-       "total_ms_p50": 4.008
-      }
-     }
-    },
-    "51-120w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.678,
-       "encode_ms_p95": 0.754,
-       "search_ms_p50": 0.604,
-       "search_ms_p95": 0.727,
-       "total_ms_p50": 1.281
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.686,
-       "encode_ms_p95": 0.728,
-       "search_ms_p50": 0.772,
-       "search_ms_p95": 0.931,
-       "total_ms_p50": 1.46
-      }
-     },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 6.486,
-       "encode_ms_p95": 7.222,
-       "search_ms_p50": 0.752,
-       "search_ms_p95": 0.913,
-       "total_ms_p50": 7.248
-      },
-      "ef=128": {
-       "encode_ms_p50": 6.572,
-       "encode_ms_p95": 7.254,
-       "search_ms_p50": 0.886,
-       "search_ms_p95": 1.089,
-       "total_ms_p50": 7.544
-      }
-     }
-    }
-   }
-  },
-  "binary_mmap": {
-   "load_s": 5.555,
-   "bytes_mb": 7573.0,
-   "orig_vector_bytes_mb": 2048.0,
-   "quantized_vector_bytes_mb": 128.0,
-   "rss_after_load_mb": 5673.0,
-   "peak_rss_mb": 6305.2,
-   "no_rescore": false,
-   "bucket_order": {
-    "zero": {
-     "ef=default": [
-      "51-120w",
-      "11-20w",
-      "6-10w",
-      "1-5w",
-      "21-50w"
-     ],
-     "ef=128": [
-      "11-20w",
-      "51-120w",
-      "21-50w",
-      "6-10w",
-      "1-5w"
      ]
     },
-    "nano": {
-     "ef=default": [
-      "51-120w",
-      "11-20w",
-      "6-10w",
-      "1-5w",
-      "21-50w"
-     ],
-     "ef=128": [
-      "11-20w",
-      "51-120w",
-      "21-50w",
-      "6-10w",
-      "1-5w"
-     ]
-    }
-   },
-   "buckets": {
-    "1-5w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.138,
-       "encode_ms_p95": 0.181,
-       "search_ms_p50": 7.433,
-       "search_ms_p95": 8.848,
-       "total_ms_p50": 7.586
+    "buckets": {
+     "1-5w": {
+      "zero": {
+       "encode_ms_p50": 0.197,
+       "search_ms_p50": 1.572,
+       "search_ms_p95": 1.752,
+       "total_ms_p50": 1.781
       },
-      "ef=128": {
-       "encode_ms_p50": 0.136,
-       "encode_ms_p95": 0.182,
-       "search_ms_p50": 1.757,
-       "search_ms_p95": 4.685,
-       "total_ms_p50": 1.89
+      "nano": {
+       "encode_ms_p50": 0.898,
+       "search_ms_p50": 2.435,
+       "search_ms_p95": 3.33,
+       "total_ms_p50": 3.33
       }
      },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 0.911,
-       "encode_ms_p95": 1.011,
-       "search_ms_p50": 3.315,
-       "search_ms_p95": 4.15,
-       "total_ms_p50": 4.21
+     "6-10w": {
+      "zero": {
+       "encode_ms_p50": 0.302,
+       "search_ms_p50": 1.514,
+       "search_ms_p95": 1.6,
+       "total_ms_p50": 1.819
       },
-      "ef=128": {
-       "encode_ms_p50": 0.9,
-       "encode_ms_p95": 0.983,
-       "search_ms_p50": 1.165,
-       "search_ms_p95": 2.563,
-       "total_ms_p50": 2.072
-      }
-     }
-    },
-    "6-10w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.261,
-       "encode_ms_p95": 0.345,
-       "search_ms_p50": 8.189,
-       "search_ms_p95": 10.165,
-       "total_ms_p50": 8.467
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.236,
-       "encode_ms_p95": 0.294,
-       "search_ms_p50": 1.733,
-       "search_ms_p95": 3.869,
-       "total_ms_p50": 1.965
+      "nano": {
+       "encode_ms_p50": 1.2,
+       "search_ms_p50": 2.552,
+       "search_ms_p95": 3.054,
+       "total_ms_p50": 3.794
       }
      },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 1.181,
-       "encode_ms_p95": 1.302,
-       "search_ms_p50": 3.259,
-       "search_ms_p95": 4.003,
-       "total_ms_p50": 4.435
+     "11-20w": {
+      "zero": {
+       "encode_ms_p50": 1.171,
+       "search_ms_p50": 2.635,
+       "search_ms_p95": 3.014,
+       "total_ms_p50": 3.742
       },
-      "ef=128": {
-       "encode_ms_p50": 1.202,
-       "encode_ms_p95": 1.311,
-       "search_ms_p50": 1.005,
-       "search_ms_p95": 2.032,
-       "total_ms_p50": 2.292
-      }
-     }
-    },
-    "11-20w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.358,
-       "encode_ms_p95": 0.453,
-       "search_ms_p50": 8.16,
-       "search_ms_p95": 10.603,
-       "total_ms_p50": 8.484
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.34,
-       "encode_ms_p95": 0.408,
-       "search_ms_p50": 1.505,
-       "search_ms_p95": 3.495,
-       "total_ms_p50": 1.832
+      "nano": {
+       "encode_ms_p50": 1.7,
+       "search_ms_p50": 2.631,
+       "search_ms_p95": 3.057,
+       "total_ms_p50": 4.271
       }
      },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 1.69,
-       "encode_ms_p95": 1.875,
-       "search_ms_p50": 3.278,
-       "search_ms_p95": 3.875,
-       "total_ms_p50": 4.991
+     "21-50w": {
+      "zero": {
+       "encode_ms_p50": 0.844,
+       "search_ms_p50": 1.645,
+       "search_ms_p95": 2.318,
+       "total_ms_p50": 2.5
       },
-      "ef=128": {
-       "encode_ms_p50": 1.711,
-       "encode_ms_p95": 2.037,
-       "search_ms_p50": 0.953,
-       "search_ms_p95": 2.077,
-       "total_ms_p50": 2.651
-      }
-     }
-    },
-    "21-50w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.555,
-       "encode_ms_p95": 0.646,
-       "search_ms_p50": 5.553,
-       "search_ms_p95": 7.858,
-       "total_ms_p50": 6.107
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.538,
-       "encode_ms_p95": 0.582,
-       "search_ms_p50": 1.718,
-       "search_ms_p95": 4.533,
-       "total_ms_p50": 2.23
+      "nano": {
+       "encode_ms_p50": 3.201,
+       "search_ms_p50": 2.611,
+       "search_ms_p95": 3.196,
+       "total_ms_p50": 5.826
       }
      },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 3.229,
-       "encode_ms_p95": 3.403,
-       "search_ms_p50": 2.304,
-       "search_ms_p95": 3.267,
-       "total_ms_p50": 5.569
+     "51-120w": {
+      "zero": {
+       "encode_ms_p50": 0.793,
+       "search_ms_p50": 1.495,
+       "search_ms_p95": 1.629,
+       "total_ms_p50": 2.288
       },
-      "ef=128": {
-       "encode_ms_p50": 3.185,
-       "encode_ms_p95": 3.662,
-       "search_ms_p50": 0.833,
-       "search_ms_p95": 1.864,
-       "total_ms_p50": 4.014
+      "nano": {
+       "encode_ms_p50": 6.493,
+       "search_ms_p50": 3.096,
+       "search_ms_p95": 3.815,
+       "total_ms_p50": 9.555
       }
      }
-    },
-    "51-120w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.657,
-       "encode_ms_p95": 0.698,
-       "search_ms_p50": 8.466,
-       "search_ms_p95": 10.606,
-       "total_ms_p50": 9.119
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.664,
-       "encode_ms_p95": 0.712,
-       "search_ms_p50": 1.216,
-       "search_ms_p95": 3.039,
-       "total_ms_p50": 1.877
-      }
-     },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 6.471,
-       "encode_ms_p95": 7.07,
-       "search_ms_p50": 3.348,
-       "search_ms_p95": 4.316,
-       "total_ms_p50": 9.824
-      },
-      "ef=128": {
-       "encode_ms_p50": 6.544,
-       "encode_ms_p95": 7.51,
-       "search_ms_p50": 0.937,
-       "search_ms_p95": 1.939,
-       "total_ms_p50": 7.428
-      }
-     }
-    }
-   }
-  },
-  "binary_mmap_norescore": {
-   "load_s": 5.763,
-   "bytes_mb": 7573.0,
-   "orig_vector_bytes_mb": 2048.0,
-   "quantized_vector_bytes_mb": 128.0,
-   "rss_after_load_mb": 5669.9,
-   "peak_rss_mb": 5919.1,
-   "no_rescore": true,
-   "bucket_order": {
-    "zero": {
-     "ef=default": [
-      "51-120w",
-      "11-20w",
-      "6-10w",
-      "1-5w",
-      "21-50w"
-     ],
-     "ef=128": [
-      "11-20w",
-      "51-120w",
-      "21-50w",
-      "6-10w",
-      "1-5w"
-     ]
-    },
-    "nano": {
-     "ef=default": [
-      "51-120w",
-      "11-20w",
-      "6-10w",
-      "1-5w",
-      "21-50w"
-     ],
-     "ef=128": [
-      "11-20w",
-      "51-120w",
-      "21-50w",
-      "6-10w",
-      "1-5w"
-     ]
     }
    },
-   "buckets": {
-    "1-5w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.129,
-       "encode_ms_p95": 0.167,
-       "search_ms_p50": 0.207,
-       "search_ms_p95": 0.232,
-       "total_ms_p50": 0.337
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.128,
-       "encode_ms_p95": 0.172,
-       "search_ms_p50": 0.252,
-       "search_ms_p95": 0.278,
-       "total_ms_p50": 0.379
-      }
-     },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 0.864,
-       "encode_ms_p95": 0.968,
-       "search_ms_p50": 0.267,
-       "search_ms_p95": 0.305,
-       "total_ms_p50": 1.132
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.867,
-       "encode_ms_p95": 0.958,
-       "search_ms_p50": 0.314,
-       "search_ms_p95": 0.346,
-       "total_ms_p50": 1.184
-      }
-     }
+   "2g": {
+    "served": true,
+    "load_s": 0.51,
+    "container_mem_after_load_mb": 820.1,
+    "container_mem_after_queries_mb": 874.3,
+    "bucket_order": {
+     "zero": [
+      "11-20w",
+      "1-5w",
+      "6-10w",
+      "51-120w",
+      "21-50w"
+     ],
+     "nano": [
+      "1-5w",
+      "6-10w",
+      "51-120w",
+      "11-20w",
+      "21-50w"
+     ]
     },
-    "6-10w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.223,
-       "encode_ms_p95": 0.28,
-       "search_ms_p50": 0.211,
-       "search_ms_p95": 0.234,
-       "total_ms_p50": 0.441
+    "buckets": {
+     "1-5w": {
+      "zero": {
+       "encode_ms_p50": 0.289,
+       "search_ms_p50": 2.777,
+       "search_ms_p95": 4.619,
+       "total_ms_p50": 2.954
       },
-      "ef=128": {
-       "encode_ms_p50": 0.227,
-       "encode_ms_p95": 0.285,
-       "search_ms_p50": 0.241,
-       "search_ms_p95": 0.272,
-       "total_ms_p50": 0.474
+      "nano": {
+       "encode_ms_p50": 0.881,
+       "search_ms_p50": 2.381,
+       "search_ms_p95": 2.889,
+       "total_ms_p50": 3.282
       }
      },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 1.156,
-       "encode_ms_p95": 1.741,
-       "search_ms_p50": 0.277,
-       "search_ms_p95": 0.356,
-       "total_ms_p50": 1.446
+     "6-10w": {
+      "zero": {
+       "encode_ms_p50": 0.287,
+       "search_ms_p50": 1.879,
+       "search_ms_p95": 3.204,
+       "total_ms_p50": 2.219
       },
-      "ef=128": {
-       "encode_ms_p50": 1.215,
-       "encode_ms_p95": 1.319,
-       "search_ms_p50": 0.327,
-       "search_ms_p95": 0.394,
-       "total_ms_p50": 1.559
-      }
-     }
-    },
-    "11-20w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.334,
-       "encode_ms_p95": 0.417,
-       "search_ms_p50": 0.216,
-       "search_ms_p95": 0.237,
-       "total_ms_p50": 0.547
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.342,
-       "encode_ms_p95": 0.42,
-       "search_ms_p50": 0.251,
-       "search_ms_p95": 0.274,
-       "total_ms_p50": 0.592
-      }
-     },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 1.68,
-       "encode_ms_p95": 1.865,
-       "search_ms_p50": 0.283,
-       "search_ms_p95": 0.325,
-       "total_ms_p50": 1.955
-      },
-      "ef=128": {
-       "encode_ms_p50": 1.574,
-       "encode_ms_p95": 1.793,
-       "search_ms_p50": 0.31,
-       "search_ms_p95": 0.351,
-       "total_ms_p50": 1.918
-      }
-     }
-    },
-    "21-50w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.515,
-       "encode_ms_p95": 0.58,
-       "search_ms_p50": 0.21,
-       "search_ms_p95": 0.237,
-       "total_ms_p50": 0.733
-      },
-      "ef=128": {
-       "encode_ms_p50": 0.536,
-       "encode_ms_p95": 0.592,
-       "search_ms_p50": 0.244,
-       "search_ms_p95": 0.277,
-       "total_ms_p50": 0.782
-      }
-     },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 3.191,
-       "encode_ms_p95": 3.365,
-       "search_ms_p50": 0.28,
-       "search_ms_p95": 0.316,
-       "total_ms_p50": 3.474
-      },
-      "ef=128": {
-       "encode_ms_p50": 3.191,
-       "encode_ms_p95": 3.352,
-       "search_ms_p50": 0.322,
-       "search_ms_p95": 0.372,
+      "nano": {
+       "encode_ms_p50": 1.19,
+       "search_ms_p50": 2.335,
+       "search_ms_p95": 2.828,
        "total_ms_p50": 3.513
       }
-     }
-    },
-    "51-120w": {
-     "zero": {
-      "ef=default": {
-       "encode_ms_p50": 0.693,
-       "encode_ms_p95": 0.708,
-       "search_ms_p50": 0.219,
-       "search_ms_p95": 0.25,
-       "total_ms_p50": 0.905
+     },
+     "11-20w": {
+      "zero": {
+       "encode_ms_p50": 1.355,
+       "search_ms_p50": 4.425,
+       "search_ms_p95": 5.439,
+       "total_ms_p50": 5.671
       },
-      "ef=128": {
-       "encode_ms_p50": 0.682,
-       "encode_ms_p95": 0.699,
-       "search_ms_p50": 0.242,
-       "search_ms_p95": 0.281,
-       "total_ms_p50": 0.924
+      "nano": {
+       "encode_ms_p50": 1.681,
+       "search_ms_p50": 2.579,
+       "search_ms_p95": 3.146,
+       "total_ms_p50": 4.254
       }
      },
-     "nano": {
-      "ef=default": {
-       "encode_ms_p50": 6.414,
-       "encode_ms_p95": 7.012,
-       "search_ms_p50": 0.299,
-       "search_ms_p95": 0.331,
-       "total_ms_p50": 6.712
+     "21-50w": {
+      "zero": {
+       "encode_ms_p50": 1.28,
+       "search_ms_p50": 3.426,
+       "search_ms_p95": 4.583,
+       "total_ms_p50": 4.688
       },
-      "ef=128": {
-       "encode_ms_p50": 6.432,
-       "encode_ms_p95": 7.155,
-       "search_ms_p50": 0.339,
-       "search_ms_p95": 0.385,
-       "total_ms_p50": 6.765
+      "nano": {
+       "encode_ms_p50": 3.203,
+       "search_ms_p50": 2.682,
+       "search_ms_p95": 3.259,
+       "total_ms_p50": 5.867
+      }
+     },
+     "51-120w": {
+      "zero": {
+       "encode_ms_p50": 1.035,
+       "search_ms_p50": 2.18,
+       "search_ms_p95": 3.66,
+       "total_ms_p50": 3.367
+      },
+      "nano": {
+       "encode_ms_p50": 6.472,
+       "search_ms_p50": 2.966,
+       "search_ms_p95": 3.413,
+       "total_ms_p50": 9.383
+      }
+     }
+    }
+   }
+  },
+  "fp16": {
+   "256m": {
+    "served": true,
+    "load_s": 0.51,
+    "container_mem_after_load_mb": 254.8,
+    "container_mem_after_queries_mb": 186.7,
+    "bucket_order": {
+     "zero": [
+      "11-20w",
+      "1-5w",
+      "6-10w",
+      "51-120w",
+      "21-50w"
+     ],
+     "nano": [
+      "1-5w",
+      "6-10w",
+      "51-120w",
+      "11-20w",
+      "21-50w"
+     ]
+    },
+    "buckets": {
+     "1-5w": {
+      "zero": {
+       "encode_ms_p50": 1.001,
+       "search_ms_p50": 582.696,
+       "search_ms_p95": 641.775,
+       "total_ms_p50": 583.643
+      },
+      "nano": {
+       "encode_ms_p50": 5.098,
+       "search_ms_p50": 457.943,
+       "search_ms_p95": 503.206,
+       "total_ms_p50": 462.98
+      }
+     },
+     "6-10w": {
+      "zero": {
+       "encode_ms_p50": 1.448,
+       "search_ms_p50": 530.346,
+       "search_ms_p95": 589.108,
+       "total_ms_p50": 531.84
+      },
+      "nano": {
+       "encode_ms_p50": 6.522,
+       "search_ms_p50": 467.024,
+       "search_ms_p95": 502.929,
+       "total_ms_p50": 473.518
+      }
+     },
+     "11-20w": {
+      "zero": {
+       "encode_ms_p50": 1.967,
+       "search_ms_p50": 630.686,
+       "search_ms_p95": 683.839,
+       "total_ms_p50": 632.732
+      },
+      "nano": {
+       "encode_ms_p50": 8.512,
+       "search_ms_p50": 459.954,
+       "search_ms_p95": 479.342,
+       "total_ms_p50": 468.26
+      }
+     },
+     "21-50w": {
+      "zero": {
+       "encode_ms_p50": 2.752,
+       "search_ms_p50": 484.895,
+       "search_ms_p95": 527.504,
+       "total_ms_p50": 487.815
+      },
+      "nano": {
+       "encode_ms_p50": 14.365,
+       "search_ms_p50": 464.068,
+       "search_ms_p95": 492.414,
+       "total_ms_p50": 477.236
+      }
+     },
+     "51-120w": {
+      "zero": {
+       "encode_ms_p50": 3.505,
+       "search_ms_p50": 495.809,
+       "search_ms_p95": 540.701,
+       "total_ms_p50": 499.26
+      },
+      "nano": {
+       "encode_ms_p50": 24.103,
+       "search_ms_p50": 458.966,
+       "search_ms_p95": 518.416,
+       "total_ms_p50": 483.574
+      }
+     }
+    }
+   },
+   "512m": {
+    "served": true,
+    "load_s": 0.511,
+    "container_mem_after_load_mb": 472.6,
+    "container_mem_after_queries_mb": 368.6,
+    "bucket_order": {
+     "zero": [
+      "11-20w",
+      "1-5w",
+      "6-10w",
+      "51-120w",
+      "21-50w"
+     ],
+     "nano": [
+      "1-5w",
+      "6-10w",
+      "51-120w",
+      "11-20w",
+      "21-50w"
+     ]
+    },
+    "buckets": {
+     "1-5w": {
+      "zero": {
+       "encode_ms_p50": 1.006,
+       "search_ms_p50": 441.598,
+       "search_ms_p95": 484.634,
+       "total_ms_p50": 442.609
+      },
+      "nano": {
+       "encode_ms_p50": 5.025,
+       "search_ms_p50": 456.322,
+       "search_ms_p95": 498.28,
+       "total_ms_p50": 461.179
+      }
+     },
+     "6-10w": {
+      "zero": {
+       "encode_ms_p50": 1.463,
+       "search_ms_p50": 438.739,
+       "search_ms_p95": 469.556,
+       "total_ms_p50": 440.161
+      },
+      "nano": {
+       "encode_ms_p50": 6.48,
+       "search_ms_p50": 459.839,
+       "search_ms_p95": 499.494,
+       "total_ms_p50": 466.295
+      }
+     },
+     "11-20w": {
+      "zero": {
+       "encode_ms_p50": 1.947,
+       "search_ms_p50": 448.355,
+       "search_ms_p95": 481.775,
+       "total_ms_p50": 450.45
+      },
+      "nano": {
+       "encode_ms_p50": 8.516,
+       "search_ms_p50": 448.843,
+       "search_ms_p95": 476.51,
+       "total_ms_p50": 456.985
+      }
+     },
+     "21-50w": {
+      "zero": {
+       "encode_ms_p50": 2.804,
+       "search_ms_p50": 435.667,
+       "search_ms_p95": 475.122,
+       "total_ms_p50": 438.194
+      },
+      "nano": {
+       "encode_ms_p50": 14.408,
+       "search_ms_p50": 450.488,
+       "search_ms_p95": 475.697,
+       "total_ms_p50": 465.186
+      }
+     },
+     "51-120w": {
+      "zero": {
+       "encode_ms_p50": 3.541,
+       "search_ms_p50": 439.607,
+       "search_ms_p95": 480.297,
+       "total_ms_p50": 442.99
+      },
+      "nano": {
+       "encode_ms_p50": 24.125,
+       "search_ms_p50": 449.137,
+       "search_ms_p95": 494.743,
+       "total_ms_p50": 471.906
+      }
+     }
+    }
+   },
+   "1g": {
+    "served": true,
+    "load_s": 0.509,
+    "container_mem_after_load_mb": 634.4,
+    "container_mem_after_queries_mb": 747.6,
+    "bucket_order": {
+     "zero": [
+      "11-20w",
+      "1-5w",
+      "6-10w",
+      "51-120w",
+      "21-50w"
+     ],
+     "nano": [
+      "1-5w",
+      "6-10w",
+      "51-120w",
+      "11-20w",
+      "21-50w"
+     ]
+    },
+    "buckets": {
+     "1-5w": {
+      "zero": {
+       "encode_ms_p50": 1.008,
+       "search_ms_p50": 402.219,
+       "search_ms_p95": 441.912,
+       "total_ms_p50": 403.166
+      },
+      "nano": {
+       "encode_ms_p50": 5.057,
+       "search_ms_p50": 418.76,
+       "search_ms_p95": 459.918,
+       "total_ms_p50": 423.433
+      }
+     },
+     "6-10w": {
+      "zero": {
+       "encode_ms_p50": 1.457,
+       "search_ms_p50": 396.827,
+       "search_ms_p95": 453.703,
+       "total_ms_p50": 398.305
+      },
+      "nano": {
+       "encode_ms_p50": 6.545,
+       "search_ms_p50": 427.412,
+       "search_ms_p95": 464.199,
+       "total_ms_p50": 434.135
+      }
+     },
+     "11-20w": {
+      "zero": {
+       "encode_ms_p50": 1.861,
+       "search_ms_p50": 403.726,
+       "search_ms_p95": 439.676,
+       "total_ms_p50": 405.829
+      },
+      "nano": {
+       "encode_ms_p50": 8.314,
+       "search_ms_p50": 418.132,
+       "search_ms_p95": 448.895,
+       "total_ms_p50": 426.48
+      }
+     },
+     "21-50w": {
+      "zero": {
+       "encode_ms_p50": 2.836,
+       "search_ms_p50": 400.769,
+       "search_ms_p95": 438.144,
+       "total_ms_p50": 403.588
+      },
+      "nano": {
+       "encode_ms_p50": 14.309,
+       "search_ms_p50": 410.608,
+       "search_ms_p95": 447.598,
+       "total_ms_p50": 424.656
+      }
+     },
+     "51-120w": {
+      "zero": {
+       "encode_ms_p50": 3.532,
+       "search_ms_p50": 399.818,
+       "search_ms_p95": 447.363,
+       "total_ms_p50": 403.375
+      },
+      "nano": {
+       "encode_ms_p50": 23.67,
+       "search_ms_p50": 401.9,
+       "search_ms_p95": 448.242,
+       "total_ms_p50": 425.261
+      }
+     }
+    }
+   },
+   "2g": {
+    "served": true,
+    "load_s": 0.514,
+    "container_mem_after_load_mb": 643.7,
+    "container_mem_after_queries_mb": 742.8,
+    "bucket_order": {
+     "zero": [
+      "11-20w",
+      "1-5w",
+      "6-10w",
+      "51-120w",
+      "21-50w"
+     ],
+     "nano": [
+      "1-5w",
+      "6-10w",
+      "51-120w",
+      "11-20w",
+      "21-50w"
+     ]
+    },
+    "buckets": {
+     "1-5w": {
+      "zero": {
+       "encode_ms_p50": 0.992,
+       "search_ms_p50": 225.849,
+       "search_ms_p95": 248.184,
+       "total_ms_p50": 226.856
+      },
+      "nano": {
+       "encode_ms_p50": 5.091,
+       "search_ms_p50": 228.933,
+       "search_ms_p95": 261.006,
+       "total_ms_p50": 234.139
+      }
+     },
+     "6-10w": {
+      "zero": {
+       "encode_ms_p50": 1.498,
+       "search_ms_p50": 223.898,
+       "search_ms_p95": 248.19,
+       "total_ms_p50": 225.379
+      },
+      "nano": {
+       "encode_ms_p50": 6.557,
+       "search_ms_p50": 226.297,
+       "search_ms_p95": 250.904,
+       "total_ms_p50": 232.714
+      }
+     },
+     "11-20w": {
+      "zero": {
+       "encode_ms_p50": 1.944,
+       "search_ms_p50": 223.555,
+       "search_ms_p95": 250.272,
+       "total_ms_p50": 225.583
+      },
+      "nano": {
+       "encode_ms_p50": 8.604,
+       "search_ms_p50": 208.822,
+       "search_ms_p95": 231.281,
+       "total_ms_p50": 217.439
+      }
+     },
+     "21-50w": {
+      "zero": {
+       "encode_ms_p50": 2.763,
+       "search_ms_p50": 210.05,
+       "search_ms_p95": 231.886,
+       "total_ms_p50": 212.502
+      },
+      "nano": {
+       "encode_ms_p50": 14.256,
+       "search_ms_p50": 174.22,
+       "search_ms_p95": 207.991,
+       "total_ms_p50": 188.291
+      }
+     },
+     "51-120w": {
+      "zero": {
+       "encode_ms_p50": 3.538,
+       "search_ms_p50": 191.366,
+       "search_ms_p95": 222.228,
+       "total_ms_p50": 194.873
+      },
+      "nano": {
+       "encode_ms_p50": 23.907,
+       "search_ms_p50": 145.333,
+       "search_ms_p95": 188.199,
+       "total_ms_p50": 168.616
       }
      }
     }

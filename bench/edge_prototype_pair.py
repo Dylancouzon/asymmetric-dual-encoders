@@ -388,5 +388,222 @@ def measure3():
     print(f"\nwrote {dest.relative_to(REPO)}")
 
 
+DOCKER_IMAGE = "qdrant/qdrant:v1.19.0"
+DOCKER_STORAGE = {"binary": EDGE_DIR / "docker_storage_binary", "fp16": EDGE_DIR / "docker_storage_fp16"}
+MEM_LIMITS = ("256m", "512m", "1g", "2g")
+HTTP_PORT, GRPC_PORT = 16333, 16334
+
+
+def _docker_run(name, storage_dir, mem_limit=None):
+    subprocess.run(["docker", "rm", "-f", name], capture_output=True)
+    cmd = ["docker", "run", "-d", "--name", name]
+    if mem_limit:
+        cmd += ["-m", mem_limit]
+    cmd += ["-p", f"{HTTP_PORT}:6333", "-p", f"{GRPC_PORT}:6334",
+            "-v", f"{storage_dir}:/qdrant/storage", DOCKER_IMAGE]
+    subprocess.run(cmd, capture_output=True)
+
+
+def _wait_healthy(timeout_s=30):
+    import urllib.request
+    t0 = time.time()
+    while time.time() - t0 < timeout_s:
+        try:
+            with urllib.request.urlopen(f"http://localhost:{HTTP_PORT}/healthz", timeout=2) as r:
+                if r.status == 200:
+                    return round(time.time() - t0, 3)
+        except Exception:
+            pass
+        time.sleep(0.5)
+    return None
+
+
+def _docker_stop_rm(name):
+    subprocess.run(["docker", "stop", name], capture_output=True)
+    subprocess.run(["docker", "rm", name], capture_output=True)
+
+
+def _docker_mem_used_mb(name):
+    """cgroup memory.current via `docker stats`, the constrained truth round 4 needs -- unlike RSS
+    it can't include evictable page cache the container was never charged for."""
+    out = subprocess.run(["docker", "stats", "--no-stream", "--format", "{{.MemUsage}}", name],
+                         capture_output=True, text=True).stdout.strip()
+    try:
+        used = out.split("/")[0].strip()
+        val = float(used[:-3])
+        mult = {"KiB": 1 / 1024, "MiB": 1.0, "GiB": 1024.0}[used[-3:]]
+        return round(val * mult, 1)
+    except Exception:
+        return None
+
+
+def build_docker_collection(kind):
+    """kind: 'binary' (originals on_disk, quantized copy always_ram, matches round 3's winning
+    config) or 'fp16' (on_disk, unquantized -- the default-reach-for baseline). Real Qdrant, not
+    qdrant_edge: round 4 needs an actual memory-capped container, which only a real server has."""
+    from qdrant_client import QdrantClient, models
+
+    storage_dir = DOCKER_STORAGE[kind]
+    name = f"m9_r4_build_{kind}"
+    _docker_run(name, storage_dir)  # no -m: generous memory for the one-time build/index
+    load_s = _wait_healthy(60)
+    print(f"build {kind}: container healthy after {load_s}s", flush=True)
+    c = QdrantClient(url=f"http://localhost:{HTTP_PORT}", grpc_port=GRPC_PORT, prefer_grpc=True, timeout=120)
+    if c.collection_exists("docs"):
+        print(f"build {kind}: collection already built", flush=True)
+    else:
+        quant = (models.BinaryQuantization(binary=models.BinaryQuantizationConfig(always_ram=True))
+                 if kind == "binary" else None)
+        c.create_collection("docs", vectors_config=models.VectorParams(
+            size=DIM, distance=models.Distance.DOT, on_disk=True, quantization_config=quant))
+        rng = np.random.default_rng(0)  # same seed as every other round -> byte-identical docs
+        t0 = time.time()
+        for start in range(0, N_DOCS, 500):
+            n = min(500, N_DOCS - start)
+            v = rng.standard_normal((n, DIM)).astype(np.float32)
+            v /= np.linalg.norm(v, axis=1, keepdims=True)
+            c.upsert("docs", points=[models.PointStruct(id=start + i, vector=v[i].tolist()) for i in range(n)])
+            if start % 200_000 == 0:
+                print(f"build {kind}: {start}/{N_DOCS} ({time.time()-t0:.0f}s)", flush=True)
+        while c.get_collection("docs").status != models.CollectionStatus.GREEN:
+            time.sleep(2)
+        print(f"build {kind}: {N_DOCS} points, green, {time.time()-t0:.0f}s total", flush=True)
+    _docker_stop_rm(name)
+
+
+def build4():
+    build_docker_collection("binary")
+    build_docker_collection("fp16")
+
+
+def serve_one(kind, mem_limit):
+    """Start a container at `mem_limit`, see if it serves the pre-built `docs` collection, and if
+    so run round 3's warm-up + randomized-bucket-order sweep at ef=default only (round 4 keeps the
+    sweep small; the point here is the memory limit, not another ef table)."""
+    from qdrant_client import QdrantClient, models
+
+    from transformers import AutoTokenizer
+    import onnxruntime as ort
+
+    name = f"m9_r4_serve_{kind}_{mem_limit}"
+    _docker_run(name, DOCKER_STORAGE[kind], mem_limit=mem_limit)
+    load_s = _wait_healthy(30)
+    if load_s is None:
+        inspect = subprocess.run(
+            ["docker", "inspect", name, "--format", "OOMKilled={{.State.OOMKilled}} status={{.State.Status}} exit={{.State.ExitCode}}"],
+            capture_output=True, text=True).stdout.strip()
+        logs = subprocess.run(["docker", "logs", "--tail", "20", name], capture_output=True, text=True).stderr
+        _docker_stop_rm(name)
+        return {"served": False, "reason": inspect, "logs_tail": logs[-1500:]}
+
+    c = QdrantClient(url=f"http://localhost:{HTTP_PORT}", grpc_port=GRPC_PORT, prefer_grpc=True, timeout=30)
+    try:
+        info = c.get_collection("docs")
+        if info.points_count != N_DOCS:
+            raise RuntimeError(f"points_count={info.points_count}, expected {N_DOCS}")
+    except Exception as e:
+        inspect = subprocess.run(
+            ["docker", "inspect", name, "--format", "OOMKilled={{.State.OOMKilled}} status={{.State.Status}}"],
+            capture_output=True, text=True).stdout.strip()
+        _docker_stop_rm(name)
+        return {"served": False, "reason": f"collection not ready after healthz: {e!r} / {inspect}"}
+
+    mem_after_load_mb = _docker_mem_used_mb(name)
+
+    scale = json.loads((EDGE_DIR / "table_scale.json").read_text())["scale"]
+    zero_tok = AutoTokenizer.from_pretrained("NovaSearch/stella_en_400M_v5",
+                                             revision="ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20")
+    table_shard = EdgeShard.load(TABLE_SHARD)
+    so = ort.SessionOptions()
+    so.intra_op_num_threads = 4
+    so.inter_op_num_threads = 1
+    sess = ort.InferenceSession(str(NANO_ONNX), so, providers=["CPUExecutionProvider"])
+    nano_tok = AutoTokenizer.from_pretrained(str(NANO_DIR))
+
+    def zero_fn(t):
+        ids = zero_tok(t, add_special_tokens=True, truncation=True, max_length=512)["input_ids"]
+        return zero_encode(table_shard, ids, scale)
+
+    def nano_fn(t):
+        return nano_encode(sess, nano_tok, t)
+
+    sp = models.SearchParams(quantization=models.QuantizationSearchParams(rescore=False)) if kind == "binary" else None
+
+    def timed_search(v):
+        t0 = time.perf_counter()
+        c.query_points("docs", query=v.tolist(), limit=100, search_params=sp,
+                       with_payload=False, with_vectors=False)
+        return (time.perf_counter() - t0) * 1000
+
+    bucket_texts = {f"{lo}-{hi}w": synth_texts((lo + hi) // 2, N_TIMED) for lo, hi in BUCKETS}
+
+    def run_path(encode_fn, warmup_seed):
+        for t in synth_texts(8, WARMUP_SEARCHES, seed=warmup_seed):
+            timed_search(encode_fn(t))
+        order = list(bucket_texts)
+        random.Random(warmup_seed).shuffle(order)
+        res = {}
+        for bkey in order:
+            enc_lat, search_lat = [], []
+            for t in bucket_texts[bkey]:
+                t0 = time.perf_counter()
+                v = encode_fn(t)
+                t1 = time.perf_counter()
+                search_lat.append(timed_search(v))
+                enc_lat.append((t1 - t0) * 1000)
+            res[bkey] = {
+                "encode_ms_p50": round(statistics.median(enc_lat), 3),
+                "search_ms_p50": round(statistics.median(search_lat), 3),
+                "search_ms_p95": round(sorted(search_lat)[int(0.95 * len(search_lat)) - 1], 3),
+                "total_ms_p50": round(statistics.median([a + b for a, b in zip(enc_lat, search_lat)]), 3),
+            }
+        return res, order
+
+    zero_buckets, zero_order = run_path(zero_fn, 11)
+    nano_buckets, nano_order = run_path(nano_fn, 12)
+    mem_after_queries_mb = _docker_mem_used_mb(name)
+    table_shard.close()
+    _docker_stop_rm(name)
+    return {
+        "served": True,
+        "load_s": load_s,
+        "container_mem_after_load_mb": mem_after_load_mb,
+        "container_mem_after_queries_mb": mem_after_queries_mb,
+        "bucket_order": {"zero": zero_order, "nano": nano_order},
+        "buckets": {b: {"zero": zero_buckets[b], "nano": nano_buckets[b]} for b in bucket_texts},
+    }
+
+
+def measure4():
+    out = {"_what": "M9 pair edge prototype ROUND 4: does the winning round-3 config (binary "
+                    "quantization, originals on_disk, quantized copy always_ram, rescore=false) "
+                    "actually serve a 1M x 1024 index under a real memory-capped container? An "
+                    "fp16 row runs as the default-reach-for contrast. Real Qdrant in Docker, not "
+                    "qdrant_edge -- RSS isn't a real constraint, a cgroup memory limit is.",
+           "round": 4, "warmup_searches": WARMUP_SEARCHES, "host": host(), "n_docs": N_DOCS,
+           "dim": DIM, "mem_limits": list(MEM_LIMITS)}
+    out["configs"] = {}
+    for kind in ("binary", "fp16"):
+        out["configs"][kind] = {}
+        for limit in MEM_LIMITS:
+            print(f"{kind} @ {limit}: starting", flush=True)
+            r = serve_one(kind, limit)
+            out["configs"][kind][limit] = r
+            if r["served"]:
+                d10 = r["buckets"]["6-10w"]
+                print(f"{kind} @ {limit}: SERVED · load {r['load_s']}s · "
+                      f"mem_after_load {r['container_mem_after_load_mb']} MiB · "
+                      f"mem_after_queries {r['container_mem_after_queries_mb']} MiB · "
+                      f"zero {d10['zero']} · nano {d10['nano']}", flush=True)
+            else:
+                print(f"{kind} @ {limit}: DIED -- {r['reason']}", flush=True)
+
+    tag = out["host"]["cpu"].replace(" ", "_")
+    dest = REPO / "results" / f"m9_edge_prototype_{tag}.json"
+    dest.write_text(json.dumps(out, indent=1))
+    print(f"\nwrote {dest.relative_to(REPO)}")
+
+
 if __name__ == "__main__":
-    {"build": build, "measure": measure, "measure_one": measure_one, "measure3": measure3}[sys.argv[1]]()
+    {"build": build, "measure": measure, "measure_one": measure_one, "measure3": measure3,
+     "build4": build4, "measure4": measure4}[sys.argv[1]]()
