@@ -93,6 +93,22 @@ and 6.7M unique texts; M9's affordable dose is ~1% of that on 243K unique querie
 four-checkpoint curve is the registered instrument for saying what retention this budget buys, and
 it is the main thing stage A exists to produce.
 
+## Re-runs, and why they were cheap
+
+Four anchor attempts, and every one of them was killed for a reason worth the GPU-hour:
+
+| # | killed because | fix |
+|---|---|---|
+| 1 | Codex pass 3 found the warm-start λ had been chosen on SCREEN-3, a dev surface | λ moved to a training-only holdout under the real objective |
+| 2 | training collapsed 1,990 → 786 ex/s: allocator fragmentation from interleaved 23 GB evaluations | `expandable_segments`, and DEV-6 read once at the end |
+| 3 | the session manifest keyed on HEAD, so committing an arm's own result would have voided it | keyed on the fingerprint instead |
+| 4 | the challenger-teacher path had three defects the incumbent arms could never reach | all three fixed, path smoked before spending |
+
+The runs are deterministic — checkpoint 1 reproduced to six decimals across attempts — so each
+re-run cost time and nothing else. That is the point of the guard: it made every one of these
+*visible* rather than letting a milestone rest on a number chosen after seeing dev, a truncated
+arm, or arms from three different code states.
+
 ## Files
 
 | file | contract |

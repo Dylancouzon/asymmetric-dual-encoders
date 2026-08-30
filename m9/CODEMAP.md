@@ -77,6 +77,17 @@ M9.1 gates and diagnostics.
     is the lock, the code and the input data; that is the fingerprint. HEAD's only job is "is the
     lock pushed", which `check_state()` still enforces. Ask of any freshness check: *what is the
     smallest thing whose change should invalidate this?* — and key on exactly that.
-11. **The most valuable thing a review produced was a smaller experiment.** Pass 2's verdict was
+11. **Never rebind a function's parameter name to a loop-local.** A cache-hashing patch set
+    `key = p.name` inside `encode_cached(key, ...)`, where `key` was the *teacher id*. The next call
+    asked `TEACHERS['chunk_00000.npy']`. It cost a two-hour arm's launch — and nothing but running
+    the path would have found it, because every unit-level check passed.
+12. **Smoke a path the arm has never executed, even when the arm around it is already proven.**
+    Three defects sat in the challenger-teacher path that the incumbent arms could never reach: the
+    shadowing above, `stella-1.5B`'s vendored `modeling_qwen.py` calling
+    `DynamicCache.get_usable_length` (removed in transformers 4.57 — an embedding model needs no KV
+    cache, so `use_cache=False` avoids the legacy path without patching a third-party file), and a
+    measured 8.53 GB peak at document batch 32 on a 10 GB card with the student resident. Four
+    minutes of smoking found all three; the alternative was finding them 91 minutes into an encode.
+13. **The most valuable thing a review produced was a smaller experiment.** Pass 2's verdict was
     "DO NOT SPEND THE 6 GPU-HOURS — run one corrected, fully guarded anchor curve instead". That is
     now stage A, and the adequacy gate decides whether stage B is worth running at all.
