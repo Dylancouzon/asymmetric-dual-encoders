@@ -20,7 +20,13 @@ Hard-candidate listwise distillation. `B2` measured the recipe's uniform-bank KL
 recipe's degenerate instance is. Bar **0.0040**, A-leg-only (reuses R0's Phase-B checkpoint); an arm
 that also retrains the B leg reads 0.00519 instead, fixed before it runs.
 
-## 3. `VECTOR-PRF` — unregistered, and ranked above `B10`. Write the row first.
+## 3. `VECTOR-PRF` — DONE 2026-08-29, NO SURVIVOR (§26)
+
+Published config α=0.4 β=0.6 k=3, no grid: **−0.051** dev group vector, **−0.021** fused, negative on
+all six components, drift cos(q,q') 0.80–0.92. Closes train-free query-side post-hoc refinement.
+Does NOT close a learned feedback encoder — out of scope under E1 regardless. Original note follows.
+
+### (superseded design note)
 
 `q' = normalize(αq + β·mean(d_1..k))` at the PUBLISHED fixed config α=0.4, β=0.6, k=3
 (arXiv 2205.00235) — no tuning grid, no training, no document-index growth. It attacks the

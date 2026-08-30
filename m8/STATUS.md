@@ -4,9 +4,9 @@
 (§24). Ten probes have run; all returned nulls, negatives or instrument reads. **No M8 candidate
 exists; no protected set has been scored; the confirmatory access is unspent.**
 
-**`B8` ran 2026-08-29: NO SURVIVOR** (§25) — the doc-centroid target costs 0.167 and even a
-50/50 blend is −0.003, so R0's bare teacher-query target stands. **Next: `VECTOR-PRF`, then
-`R-LIST`, then `B10`.** All three — all three were REFUSED by `probe_guard` until
+**Three more probes ran 2026-08-29, all NO SURVIVOR:** `D2-PRE` (§24), `B8` (§25, doc-centroid
+target −0.167), `VECTOR-PRF` (§26, −0.051 dense / −0.021 fused, negative on all six components).
+**Next: `R-LIST`, then `B10`** — the last two exit preconditions. Both — all three were REFUSED by `probe_guard` until
 2026-08-29 because their bars still read `TBD-noise-floor` long after the floor was measured, which
 made the fallback path unreachable and the pre-committed exit unable to fire. Bars now frozen (§15).
 
@@ -30,15 +30,16 @@ coverage, compile, leakage or λ artifact; all four were checked and excluded. Z
 registered reversal fired (additive > segmentation by 0.0024), so **both** classes close and a D2
 miss cannot be re-read as the wrong parameterisation.
 
-Remaining order: ~~`B8`~~ **done, NO SURVIVOR (§25)** → **`VECTOR-PRF`** (train-free, below) →
-**`R-LIST`** (`B2` triggered it directly: `teacher_top200` is
+Remaining order: ~~`B8`~~ and ~~`VECTOR-PRF`~~ **both done, NO SURVIVOR (§25, §26)** → **`R-LIST`** (`B2` triggered it directly: `teacher_top200` is
 0.777 nats, so the KL class is NOT closed) → **`B10`** (`pool_mode`, weak prior +0.0011). Then
 re-run CLAUDE.md's standing directive, and only then is the exit eligible.
 
-**Unregistered, and ranked above the above by an external review: Vector-PRF** (arXiv 2205.00235) —
-`q' = normalize(αq + β·mean(top-k docs))` at the published fixed α=0.4/β=0.6/k=3. No training, no
-document-index growth, uses the contextual document tower to pull a bag query onto the document
-manifold. It is a SYSTEM change, not a better table; register it as such.
+**What the three negatives say jointly.** `D2-PRE` made the query's vocabulary finer; `VECTOR-PRF`
+moved the query vector onto the document manifold; `B8` re-aimed the training target at that
+manifold. All three failed. **The query-side gap is not a vocabulary-resolution problem, not a
+query-placement problem, and not a target-design problem.** What remains untested at capacity is
+document-side co-adaptation (`E14-LORA`) — which is also the one thing LightRetriever does and M7/M8
+do not (§15).
 
 Worklist: `m8/NEXT-SESSION.md`. Protocol: `m8/LEDGER.md`. Bars: `m8/registry.json`.
 
