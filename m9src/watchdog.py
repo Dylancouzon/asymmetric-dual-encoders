@@ -77,9 +77,18 @@ def acquire_wd_lock():
             if held and longrun._proc_start(held["pid"]) == held.get("start"):
                 raise SystemExit(f"{WD_LOCK} is held by live watchdog pid {held['pid']}. "
                                  f"Two watchdogs must never supervise one trainer.")
-            print(f"clearing a stale watchdog lock from pid "
-                  f"{held['pid'] if held else '?'}", flush=True)
-            WD_LOCK.unlink(missing_ok=True)
+            # Atomic takeover: only ONE contender can rename the stale lock, so a second
+            # watchdog racing this path cannot unlink the winner's freshly created lock
+            # (Codex #10). The loser loops and finds the new, live lock.
+            try:
+                stale = WD_LOCK.with_suffix(".stale")
+                os.rename(WD_LOCK, stale)
+                stale.unlink(missing_ok=True)
+                print(f"cleared a stale watchdog lock from pid "
+                      f"{held['pid'] if held else '?'}", flush=True)
+            except FileNotFoundError:
+                pass
+            time.sleep(1)
     raise SystemExit("could not acquire the watchdog lock")
 
 
@@ -268,11 +277,16 @@ def main():
     acquire_wd_lock()
     log({"event": "watchdog_start", "detail": f"period {a.period}s, horizon {a.hours}h"})
     # The initial launch is deliberate, not a "restart" of a dead trainer: counting it against
-    # max_restarts spent supervision budget on a non-incident (Fable review, minor).
-    if not terminal_state() and not trainer_alive():
-        pids = start_trainer(max(0.5, (deadline - time.time()) / 3600))
-        log({"event": "launch", "detail": f"initial trainer start; pids {pids}"})
-        launched_at = time.time()
+    # max_restarts spent supervision budget on a non-incident (Fable review, minor). Guarded like
+    # a tick: a TimeoutExpired here must not kill the watchdog before its loop even starts
+    # (Codex #10) -- the loop's dead-trainer path retries the launch.
+    try:
+        if not terminal_state() and not trainer_alive():
+            pids = start_trainer(max(0.5, (deadline - time.time()) / 3600))
+            log({"event": "launch", "detail": f"initial trainer start; pids {pids}"})
+            launched_at = time.time()
+    except Exception as e:
+        log({"event": "watchdog_error", "detail": f"initial launch: {e!r}"[:300]})
 
     while time.time() < deadline:
         time.sleep(a.period)

@@ -645,6 +645,7 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
             # durable immediately: a restart before the next scheduled checkpoint must resume
             # into the cooldown, not into another 1.7 h of stable LR (Codex #8, blocker 5)
             save_ckpt(CKPT / "last.pt", _blob(model, opt, step, streams, cfg, cum, phase, best, man))
+            samples[:] = [(time.time(), sess_tok)]      # the save must not read as a slowdown
         if (anneal and deadline and phase["name"] == "stable" and rate and step > 0
                 and (deadline - time.time()) <
                 1.25 * cfg["decay_steps"] * cfg["tokens_per_step"] / rate):
@@ -658,6 +659,7 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
             print(f"cooldown begins at step {step:,} for {cfg['decay_steps']:,} steps "
                   f"({phase['trigger']})", flush=True)
             save_ckpt(CKPT / "last.pt", _blob(model, opt, step, streams, cfg, cum, phase, best, man))
+            samples[:] = [(time.time(), sess_tok)]      # the save must not read as a slowdown
 
         lr = lr_at(step, cfg, phase)
         for g in opt.param_groups:
@@ -737,11 +739,6 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
             rec = evaluate(model, cfg, step, cum, time.time() - t0)
             model.train()
             torch.cuda.empty_cache()      # the screen measured 1,990 -> 786 ex/s without this
-            # The rolling window must not contain the eval pause: eval_every is a multiple of
-            # log_every, so the next floor check lands 500 steps later with the pause still in
-            # the window, and a 300-450s eval reads as a >=50% collapse -- a registered stop the
-            # watchdog rightly refuses to restart (Fable review, B1).
-            samples[:] = [(time.time(), sess_tok)]
             blob = _blob(model, opt, step, streams, cfg, cum, phase, best, man)
             save_ckpt(CKPT / f"step{step}.pt", {**blob, "eval": rec})
             save_ckpt(CKPT / "last.pt", blob)
@@ -792,6 +789,12 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
                               _blob(model, opt, step, streams, cfg, cum, phase, best, man))
                 kill = None
             stop_reason = kill
+            # Reset the rolling window LAST, after the eval pause AND the fsynced checkpoint
+            # writes above: eval_every is a multiple of log_every, so the next floor check lands
+            # 500 steps later, and any pause still in the window reads as a collapse -- a
+            # registered stop the watchdog rightly refuses to restart (Fable B1; Codex #10 moved
+            # the reset below the checkpoint I/O).
+            samples[:] = [(time.time(), sess_tok)]
         elif step % cfg["ckpt_every"] == 0:
             save_ckpt(CKPT / "last.pt", _blob(model, opt, step, streams, cfg, cum, phase, best, man))
 
