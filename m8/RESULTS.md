@@ -140,3 +140,11 @@ scoring folds. 5,785 s.
 Bar +0.00519. R0 0.367314 · compile 0.367311 (delta −2.8e-06) · zero-update mass 0.0001–0.001 ·
 OOD/fit text overlap 0/0 · `reversal_margin_met` true (additive > segmentation by 0.0024).
 Conditions 3 and 5 pass; 1, 2 fail; 4 not run (conjunction already decided).
+
+## `B8` / `VECTOR-PRF` — 2026-08-29, both NO SURVIVOR
+
+`B8` (`results/m8_b8_target.json`, 340,850 pairs, 0 dropped): bare 0.6388 group vector ·
+mix50 −0.0032 · centroid −0.1669; bar 0.0040; all λ interior; bare reproduces B7's 0.3439 at 0.3474.
+
+`VECTOR-PRF` (`results/m8_vector_prf.json`, α=0.4 β=0.6 k=3 published, no grid): group vector
+−0.0510, fused −0.0207, negative on all six components, cos(q,q') 0.80–0.92.

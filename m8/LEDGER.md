@@ -1594,3 +1594,26 @@ least as good", not as "blending hurts".
 
 **Consequence:** one of `D2.exit_precondition`'s three remaining probes is discharged. `R-LIST` and
 `B10` remain.
+
+### §26 — `VECTOR-PRF`: **NO SURVIVOR** (`results/m8_vector_prf.json`)
+
+Train-free dense pseudo-relevance feedback on R0's frozen table at the PUBLISHED config
+alpha=0.4, beta=0.6, k=3 (arXiv 2205.00235), used verbatim with no grid. **Dev group vector
+−0.0510, fused macro −0.0207, and negative on ALL SIX components** — nq-250k 0.801→0.767,
+hotpotqa 0.613→0.545, cqadup-programmers 0.339→0.328, cqadup-physics 0.396→0.390,
+heldout-train 0.632→0.584, heldout-longq 0.912→0.865. Bar 0.0040. Query drift cos(q,q') 0.80–0.92.
+
+**Why it was worth running and why the negative is informative.** It was surfaced by an external
+review as the cheapest mechanistically-live lever the plan had missed, and it attacks the
+bag-vs-context mismatch from the opposite side to `D2`: instead of making the query's *vocabulary*
+finer, it moves the query *vector* onto the document manifold using the documents themselves. Both
+fail, which is a stronger joint statement than either alone — **the gap is not a query-representation
+resolution problem and not a query-placement problem.**
+
+**Scope, honestly.** This closes TRAIN-FREE post-hoc refinement. It does NOT close a LEARNED feedback
+encoder (ANCE-PRF and family), which trains a query encoder and is out of scope under E1 anyway. The
+uniformly negative sign across six components with a single frozen config is also consistent with
+PRF being a poor fit for a bag query specifically: feedback assumes the first pass is good enough to
+trust, and the table's first pass is precisely what is weak.
+
+**Consequence:** a `qualifying_system` route closes. `R-LIST` and `B10` remain before the exit.

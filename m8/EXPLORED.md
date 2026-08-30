@@ -35,3 +35,14 @@ avenue with no reopening condition is a guess, not a finding.
   result 0.0002 — two-thirds of the added vocabulary is inert. §17b's fertility mechanism DID move
   (reduction 0.164/0.176) and the metric did not follow, which is direct evidence for its downgrade
   to correlated headroom. Closes `D2` and the n-gram class; `§13`'s supersession question is moot.
+
+- **Doc-centroid targets (`B8`, 2026-08-29).** Fitting the table to the positives' centroid instead
+  of the teacher's query vector costs **−0.167** on the dev group vector; a 50/50 blend is −0.003.
+  The "retrieval scores q·d, never q·q, so aim at the document manifold" intuition is REFUTED, not
+  untested: the teacher's query encoder already does that mapping, and a centroid target fits which
+  documents happen to be positive. Keep R0's bare target.
+- **Train-free dense PRF (`VECTOR-PRF`, 2026-08-29).** Published config, no grid: **−0.051** dev
+  group vector, **−0.021** fused, negative on all six components. Closes query-side post-hoc
+  refinement. Does NOT close a learned feedback encoder (out of scope under E1 regardless).
+  Together with `D2-PRE` this says the query-side gap is neither a vocabulary-resolution problem nor
+  a query-placement problem.
