@@ -155,14 +155,19 @@ test -s results/m9_screen_decisions.json || { echo "no FINAL decision -- stop"; 
 
 # 2. build prerequisites (~40 min; longer if the screen picked MiniLM or policy (a) --
 #    prepare then re-tokenizes what changed). Each must succeed before the next.
-#    STUDENT and POLICY come from results/m9_screen_decisions.json "selected".
-.venv/bin/python m9src/longrun.py prepare --student <SELECTED> --prompt-policy <SELECTED> && \
+SEL_STUDENT=$(.venv/bin/python -c "import json;print(json.load(open('results/m9_screen_decisions.json'))['selected']['student'])")
+SEL_PROMPT=$(.venv/bin/python -c "import json;print(json.load(open('results/m9_screen_decisions.json'))['selected']['prompt'])")
+.venv/bin/python m9src/longrun.py prepare --student "$SEL_STUDENT" --prompt-policy "$SEL_PROMPT" && \
 .venv/bin/python m9src/longrun.py targets && \
 .venv/bin/python m9src/longrun.py manifest && \
 .venv/bin/python m9src/longrun.py verify && \
 .venv/bin/python m9src/make_config.py && \
 .venv/bin/python m9src/test_resume.py            # MUST pass; never skip
+# ONLY before the first launch -- NEVER once the build has started (it would erase the run's
+# resumable state and its kill-rule history):
 rm -f work/m9long/terminal.json work/m9long/ckpt/STOP work/m9long/trainer.lock \
+      work/m9long/heartbeat.json work/m9long/history.jsonl \
+      work/m9long/throughput_baseline.json \
       work/m9tokens/SESSION-build.json work/m9tokens/m9-build.json
 
 # 3. fill m9/M92_LOCK.md from the decision (it is still DRAFT with blank fields), commit, push,

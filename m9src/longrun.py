@@ -209,31 +209,39 @@ def prepare(student_key, doc_limit=None, prompt_policy="b"):
     for name, (texts, row) in extra_texts().items():
         role = "query" if name in QUERY_SOURCES else "doc_span"
         pre = qpre if role == "query" else tpl["doc_student"]
-        if _corpus_current(name, pre, len(texts), student_key,
-                           {"kept_index_sha256": row["kept_index_sha256"]}):
+        # Identity is the BYTES of the source and the kept index, not their declared hashes:
+        # a declaration matches any stale corpus whose declaration was copied along (Codex #9).
+        ident = {"kept_index_sha256": row["kept_index_sha256"],
+                 "source_sha256": sha_file(m9base.REPO / row["path"]),
+                 "kept_file_sha256": sha_file(WORK / "decontam" / f"m9_kept_{name}.json")}
+        if _corpus_current(name, pre, len(texts), student_key, ident):
             print(f"  {name}: already tokenized under this recipe", flush=True)
         else:
             _save_corpus(name, *_pack_streaming(tok, texts, pre, label=name),
                          {"role": role, "prefix": pre, "prompt_policy": prompt_policy,
-                          "student": student_key, "what": row["what"],
-                          "kept_index_sha256": row["kept_index_sha256"]})
+                          "student": student_key, "what": row["what"], **ident})
         del texts
 
     r = guard9.registry()
     n_docs = doc_limit or r["data"]["n_eligible_doc_rows"]
-    if _corpus_current("documents", tpl["doc_student"], n_docs, student_key,
-                       {"doc_candidates_seed": r["data"]["doc_candidates_seed"]}) and \
-            (TOKENS / "documents" / "pool_rows.npy").exists():
+    rows_p = TOKENS / "documents" / "pool_rows.npy"
+    # The row map's BYTES bind tokens to targets (Targets reads the same file): a same-sized
+    # replacement map would silently train tokens against other rows' vectors (Codex #9).
+    if rows_p.exists() and _corpus_current(
+            "documents", tpl["doc_student"], n_docs, student_key,
+            {"doc_candidates_seed": r["data"]["doc_candidates_seed"],
+             "pool_rows_sha256": sha_file(rows_p)}):
         print("  documents: already tokenized (doc prefix is policy-independent)", flush=True)
     else:
         rows, dmeta = m9data.doc_pool_rows(n_docs, r["data"]["doc_candidates_seed"])
         print(f"  documents: reading {rows.size:,} texts from the pool stores...", flush=True)
         texts = m9data.row_texts(rows)
+        np.save(rows_p, rows)
         _save_corpus("documents",
                      *_pack_streaming(tok, texts, tpl["doc_student"], label="documents"),
                      {"role": "doc", "prefix": tpl["doc_student"], "student": student_key,
-                      "doc_candidates_seed": r["data"]["doc_candidates_seed"], **dmeta})
-        np.save(TOKENS / "documents" / "pool_rows.npy", rows)
+                      "doc_candidates_seed": r["data"]["doc_candidates_seed"],
+                      "pool_rows_sha256": sha_file(rows_p), **dmeta})
         del texts
     print(f"prepare done in {time.time()-t0:.0f}s -- now run `targets`, `manifest`, `verify`",
           flush=True)
@@ -573,8 +581,12 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
         print(f"warm-start head: {json.dumps(ws)}", flush=True)
 
     if start_decay and phase["name"] != "decay":
-        phase = {"name": "decay", "decay_from": step, "decay_steps": cfg["decay_steps"]}
+        phase = {"name": "decay", "decay_from": step, "decay_steps": cfg["decay_steps"],
+                 "trigger": "manual decay command"}
         print(f"cooldown begins at step {step:,} for {cfg['decay_steps']:,} steps", flush=True)
+        # durable immediately, like every other decay entry: an interrupted manual cooldown must
+        # resume as a cooldown, not as stable LR (Codex #9)
+        save_ckpt(CKPT / "last.pt", _blob(model, opt, step, streams, cfg, cum, phase, best, man))
 
     # per-step example counts, fixed by the TOKEN shares -- sampling only, never loss weighting
     per_step = {}
@@ -751,6 +763,10 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
                     stop_reason = (f"first evaluation {rec['screen3']:.5f} is below the step-0 "
                                    f"baseline {base:.5f} by more than "
                                    f"{cfg['first_eval_regression']} -- training is making it worse")
+            # best is updated BEFORE the kill/cooldown block, so a decay-entry checkpoint carries
+            # this evaluation's best, not the previous one's (Codex #9, minor)
+            if best is None or rec["screen3"] > best["screen3"]:
+                best = {"step": step, "screen3": rec["screen3"], "tokens": cum["tokens"]}
             kill = stop_reason or check_kill(rec, cfg)
             if kill and kill.startswith("plateau:"):
                 # A plateau is a registered stop that RUNS the cooldown (M92_LOCK §6), so enter
@@ -766,8 +782,6 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
                               _blob(model, opt, step, streams, cfg, cum, phase, best, man))
                 kill = None
             stop_reason = kill
-            if best is None or rec["screen3"] > best["screen3"]:
-                best = {"step": step, "screen3": rec["screen3"], "tokens": cum["tokens"]}
         elif step % cfg["ckpt_every"] == 0:
             save_ckpt(CKPT / "last.pt", _blob(model, opt, step, streams, cfg, cum, phase, best, man))
 

@@ -72,7 +72,7 @@ DEPS = {
     # with those arms, or a post-screen edit to train/eval code leaves the arms ineligible while
     # the protocol-only decision still feeds make_config (Codex #8, blocker 4).
     "m9-adequacy": ("protocol", "data", "train", "eval"),
-    "m9-decisions": ("protocol", "data", "train", "eval"),
+    "m9-decisions": ("protocol", "data", "train", "eval", "challenger"),
     "m9-build": ("protocol", "data", "train", "eval", "build"),
 }
 GUARDED = SCOPES["protocol"][:2]
