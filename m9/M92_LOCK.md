@@ -14,10 +14,7 @@ file stays small.
 | prompt policy | ‹prompt› | `m9s5` |
 | mix | ‹mix› | `m9s6` |
 | head warm start | **on**, ridge λ = 1e-4 from a training-only holdout | `results/m9_warmfit.json` |
-
-Capacity probe (`m9cap-diag`, 109M student, diagnostic, decides nothing here): ‹cap›. A large
-positive delta means the ≤35M cap binds and no amount of compute reaches the aim — an M10 input,
-and a reason to tell Dylan before spending seven days rather than after.
+| capacity probe | **withdrawn before running** (Dylan, on Codex #5) — M9 cannot act on either answer under the 35M cap; carries to M10 | `m9/RESULTS.md` |
 
 ## 2. Why this run exists, in one paragraph
 
@@ -60,8 +57,12 @@ choice. LEAF's own ablation found documents did the heavy lifting even for a que
 document text. Against that, nano serves **only** queries, and the query manifold is what it is
 scored on.
 
-**Decision rule:** take the share the mix arm supports; if `m9s6` does not resolve, register
-**10%** and say why. The in-run instrument is a **SCREEN-3 macro on held-out dev queries every
+**REGISTERED: 5% real queries / 5% spans / 90% documents by non-pad token**, on Codex review #5's
+recommendation and against my own 20/10/70 draft. The reason is repetition, not weight: with a true
+combined-example mean, queries are short enough that a 5% *token* share is still ~23% of the
+*objective*, while real-query presentations fall from ~438 to **109.6**. Realized epochs at the
+seven-day horizon: queries 109.6, spans 21.2, documents 25.1; **113 examples a step** (25 queries,
+10 spans, 78 documents), which is the same order as LEAF's batch 32 once documents dominate. The in-run instrument is a **SCREEN-3 macro on held-out dev queries every
 `eval_every` steps** — if that curve turns down while training loss keeps falling, the query side
 is being fitted and the run stops or the share drops. Both outcomes are actions.
 
@@ -73,22 +74,29 @@ whatever stable checkpoint we choose to stop at. **How long to run becomes an ob
 
 | field | value |
 |---|---|
-| warmup | ‹warmup› steps, linear to `lr_peak` |
+| warmup | **2,000** steps, linear to `lr_peak` |
 | stable | `lr_peak` = 1e-4, indefinite |
-| cooldown | ‹decay_steps› steps, cosine to `lr_final` = 1e-5, triggered by `longrun.py decay` |
+| cooldown | **7,265 steps = 59,507,872 tokens**, cosine to `lr_final` = 1e-5, resumable, triggered by `longrun.py decay`. That is the anchor arm's entire dose — the only annealing scale this project has measured. The 4,000-step default it replaces was five minutes and supported by nothing |
 | optimizer | AdamW, β (0.9, 0.999), eps 1e-8, wd 0.01 on dim>1, grad-clip 1.0 |
 | precision | bf16 autocast, loss in fp32 |
-| tokens/step | ‹tokens_per_step› |
-| checkpoint | every ‹ckpt_every› steps, atomic (tmp + `os.replace`) |
-| eval | every ‹eval_every› steps, SCREEN-3, appended to `history.jsonl` |
+| tokens/step | **8,192** |
+| checkpoint | every **5,000** steps, atomic (tmp + fsync + `os.replace` + directory fsync) |
+| eval | every **20,000** steps (~164 M tokens, ~1.7 h; 99 over the horizon), SCREEN-3, appended to `history.jsonl` after the checkpoint so replay can dedupe |
 
 ## 6. Stopping rules, registered before the run
 
-- **Stop on flat:** if the SCREEN-3 macro gains less than ‹flat_thresh› over ‹flat_window› steps
-  across two consecutive evaluations, run the cooldown and stop. The anchor's halving pattern says
-  this is the expected exit.
-- **Stop on turn:** if the macro falls for two consecutive evaluations while training loss keeps
-  falling, stop and record the query share as the suspected cause.
+All four are implemented in `longrun.check_kill` and the training loop, and each names itself in
+the stop message.
+
+- **Non-finite loss or gradient norm** → stop at that step. One NaN can poison Adam state and every
+  checkpoint after it, silently.
+- **Regression:** two consecutive evaluations more than **0.0056** (the MDE) below the best
+  checkpoint → stop.
+- **Plateau:** less than **+0.001** SCREEN-3 over **1 B tokens** → run the cooldown and stop. Judged
+  in tokens, never in steps, because that is the unit the dose is registered in.
+- **Throughput collapse:** below **50%** of the session's early median → stop. Page-cache thrashing
+  against a 12.6 GB target map would otherwise silently reduce delivered dose while the wall clock
+  ran out.
 - **Stop on wall clock:** seven days, or whenever Dylan needs the box; the `STOP` file halts
   cleanly at the next step boundary and `decay` still produces a servable artifact.
 - **Any stop yields a model.** There is no state in which the run has to be thrown away.
