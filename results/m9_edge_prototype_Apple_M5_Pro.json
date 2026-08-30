@@ -1,0 +1,264 @@
+{
+ "_what": "M9 pair edge prototype: zero vs nano query paths, one synthetic doc index. Latency/architecture only -- see file docstring.",
+ "host": {
+  "platform": "macOS-26.4.1-arm64-arm-64bit",
+  "python": "3.12.13",
+  "cpu": "Apple M5 Pro",
+  "cores": "15"
+ },
+ "threads": 4,
+ "n_docs": 1000000,
+ "dim": 1024,
+ "docs_shard_load_s": 8.4,
+ "docs_shard_mb": 7444.6,
+ "zero_load_s": 0.512,
+ "table_shard_mb": 270.1,
+ "nano_load_s": 0.17,
+ "nano_onnx_mb": 46.1,
+ "buckets": {
+  "1-5w": {
+   "zero": {
+    "ef=default": {
+     "encode_ms_p50": 0.33,
+     "encode_ms_p95": 0.736,
+     "search_ms_p50": 115.094,
+     "search_ms_p95": 279.885,
+     "total_ms_p50": 115.527
+    },
+    "ef=128": {
+     "encode_ms_p50": 0.17,
+     "encode_ms_p95": 0.243,
+     "search_ms_p50": 9.854,
+     "search_ms_p95": 24.377,
+     "total_ms_p50": 10.029
+    },
+    "ef=512": {
+     "encode_ms_p50": 0.196,
+     "encode_ms_p95": 0.281,
+     "search_ms_p50": 18.436,
+     "search_ms_p95": 94.587,
+     "total_ms_p50": 18.66
+    }
+   },
+   "nano": {
+    "ef=default": {
+     "encode_ms_p50": 0.913,
+     "encode_ms_p95": 1.07,
+     "search_ms_p50": 1.744,
+     "search_ms_p95": 2.39,
+     "total_ms_p50": 2.651
+    },
+    "ef=128": {
+     "encode_ms_p50": 0.873,
+     "encode_ms_p95": 0.996,
+     "search_ms_p50": 1.262,
+     "search_ms_p95": 1.479,
+     "total_ms_p50": 2.146
+    },
+    "ef=512": {
+     "encode_ms_p50": 0.9,
+     "encode_ms_p95": 1.02,
+     "search_ms_p50": 4.054,
+     "search_ms_p95": 4.862,
+     "total_ms_p50": 4.96
+    }
+   }
+  },
+  "6-10w": {
+   "zero": {
+    "ef=default": {
+     "encode_ms_p50": 0.234,
+     "encode_ms_p95": 0.303,
+     "search_ms_p50": 0.845,
+     "search_ms_p95": 0.979,
+     "total_ms_p50": 1.087
+    },
+    "ef=128": {
+     "encode_ms_p50": 0.233,
+     "encode_ms_p95": 0.275,
+     "search_ms_p50": 0.945,
+     "search_ms_p95": 1.129,
+     "total_ms_p50": 1.181
+    },
+    "ef=512": {
+     "encode_ms_p50": 0.239,
+     "encode_ms_p95": 0.284,
+     "search_ms_p50": 3.245,
+     "search_ms_p95": 3.835,
+     "total_ms_p50": 3.487
+    }
+   },
+   "nano": {
+    "ef=default": {
+     "encode_ms_p50": 1.173,
+     "encode_ms_p95": 1.303,
+     "search_ms_p50": 0.935,
+     "search_ms_p95": 1.076,
+     "total_ms_p50": 2.131
+    },
+    "ef=128": {
+     "encode_ms_p50": 1.168,
+     "encode_ms_p95": 1.292,
+     "search_ms_p50": 1.116,
+     "search_ms_p95": 1.281,
+     "total_ms_p50": 2.314
+    },
+    "ef=512": {
+     "encode_ms_p50": 1.195,
+     "encode_ms_p95": 1.314,
+     "search_ms_p50": 3.638,
+     "search_ms_p95": 4.074,
+     "total_ms_p50": 4.849
+    }
+   }
+  },
+  "11-20w": {
+   "zero": {
+    "ef=default": {
+     "encode_ms_p50": 0.351,
+     "encode_ms_p95": 0.428,
+     "search_ms_p50": 0.772,
+     "search_ms_p95": 0.94,
+     "total_ms_p50": 1.133
+    },
+    "ef=128": {
+     "encode_ms_p50": 0.341,
+     "encode_ms_p95": 0.423,
+     "search_ms_p50": 0.982,
+     "search_ms_p95": 1.151,
+     "total_ms_p50": 1.33
+    },
+    "ef=512": {
+     "encode_ms_p50": 0.42,
+     "encode_ms_p95": 0.546,
+     "search_ms_p50": 3.557,
+     "search_ms_p95": 4.542,
+     "total_ms_p50": 3.989
+    }
+   },
+   "nano": {
+    "ef=default": {
+     "encode_ms_p50": 1.712,
+     "encode_ms_p95": 1.877,
+     "search_ms_p50": 0.937,
+     "search_ms_p95": 1.099,
+     "total_ms_p50": 2.655
+    },
+    "ef=128": {
+     "encode_ms_p50": 1.668,
+     "encode_ms_p95": 1.862,
+     "search_ms_p50": 1.087,
+     "search_ms_p95": 1.274,
+     "total_ms_p50": 2.763
+    },
+    "ef=512": {
+     "encode_ms_p50": 1.709,
+     "encode_ms_p95": 1.983,
+     "search_ms_p50": 3.636,
+     "search_ms_p95": 3.969,
+     "total_ms_p50": 5.397
+    }
+   }
+  },
+  "21-50w": {
+   "zero": {
+    "ef=default": {
+     "encode_ms_p50": 0.566,
+     "encode_ms_p95": 0.653,
+     "search_ms_p50": 0.805,
+     "search_ms_p95": 0.991,
+     "total_ms_p50": 1.371
+    },
+    "ef=128": {
+     "encode_ms_p50": 0.546,
+     "encode_ms_p95": 0.621,
+     "search_ms_p50": 0.948,
+     "search_ms_p95": 1.166,
+     "total_ms_p50": 1.497
+    },
+    "ef=512": {
+     "encode_ms_p50": 0.563,
+     "encode_ms_p95": 0.621,
+     "search_ms_p50": 3.247,
+     "search_ms_p95": 3.54,
+     "total_ms_p50": 3.792
+    }
+   },
+   "nano": {
+    "ef=default": {
+     "encode_ms_p50": 3.201,
+     "encode_ms_p95": 3.346,
+     "search_ms_p50": 0.942,
+     "search_ms_p95": 1.074,
+     "total_ms_p50": 4.138
+    },
+    "ef=128": {
+     "encode_ms_p50": 3.212,
+     "encode_ms_p95": 3.381,
+     "search_ms_p50": 1.165,
+     "search_ms_p95": 1.3,
+     "total_ms_p50": 4.332
+    },
+    "ef=512": {
+     "encode_ms_p50": 3.254,
+     "encode_ms_p95": 3.832,
+     "search_ms_p50": 3.703,
+     "search_ms_p95": 4.248,
+     "total_ms_p50": 6.949
+    }
+   }
+  },
+  "51-120w": {
+   "zero": {
+    "ef=default": {
+     "encode_ms_p50": 0.696,
+     "encode_ms_p95": 0.75,
+     "search_ms_p50": 0.775,
+     "search_ms_p95": 0.924,
+     "total_ms_p50": 1.463
+    },
+    "ef=128": {
+     "encode_ms_p50": 0.691,
+     "encode_ms_p95": 0.736,
+     "search_ms_p50": 0.938,
+     "search_ms_p95": 1.046,
+     "total_ms_p50": 1.617
+    },
+    "ef=512": {
+     "encode_ms_p50": 0.702,
+     "encode_ms_p95": 0.758,
+     "search_ms_p50": 3.296,
+     "search_ms_p95": 3.786,
+     "total_ms_p50": 4.002
+    }
+   },
+   "nano": {
+    "ef=default": {
+     "encode_ms_p50": 6.451,
+     "encode_ms_p95": 6.914,
+     "search_ms_p50": 1.01,
+     "search_ms_p95": 1.226,
+     "total_ms_p50": 7.463
+    },
+    "ef=128": {
+     "encode_ms_p50": 6.606,
+     "encode_ms_p95": 7.47,
+     "search_ms_p50": 1.244,
+     "search_ms_p95": 1.614,
+     "total_ms_p50": 7.842
+    },
+    "ef=512": {
+     "encode_ms_p50": 6.456,
+     "encode_ms_p95": 6.905,
+     "search_ms_p50": 3.712,
+     "search_ms_p95": 4.246,
+     "total_ms_p50": 10.264
+    }
+   }
+  }
+ },
+ "peak_rss_mb": 6067.6,
+ "docs_segments_mb_no_wal": 2225.8,
+ "table_segments_mb_no_wal": 102.4,
+ "wal_note": "docs_shard_mb/table_shard_mb include an uncompacted insert-time WAL (docs WAL 4.8 GB, table WAL 128 MB) that a real deployed shard would not ship; the *_segments_mb_no_wal fields are the on-disk footprint that matters for distribution size. Table segments (~33 MB) sit right on the raw 30522x1024 uint8 table (~31 MB): m=0 (no HNSW graph) confirmed working for the retrieve-only shard, unlike the M5 fp16 prototype which paid a ~4x HNSW tax on the token table."
+}
