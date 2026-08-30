@@ -140,7 +140,8 @@
       "tie": "stella stays",
       "both_pass": "larger point estimate wins",
       "on_swap": "STOP and return to Dylan: student/prompt/mix cannot run on DEV6 in a challenger space",
-      "stop_enforced_in": "m9src/screen.py:require_predecessors -- a challenger selection refuses every subsequent arm, not just warns"
+      "stop_enforced_in": "m9src/screen.py:require_predecessors -- a challenger selection refuses every subsequent arm, not just warns",
+      "voids_downstream": "a challenger win voids every student/prompt/mix decision taken under the incumbent and returns the milestone to Dylan; it never silently re-bases them"
     },
     "student": {
       "surface": "DEV6",
@@ -458,25 +459,27 @@
   "staging": {
     "A": {
       "runs": [
+        "m9-warmfit",
         "m9-fp16-gate",
         "m9-port-pilot",
         "m9-bridge-dryrun",
         "m9s1",
-        "m9s1c"
+        "m9s1c",
+        "m9s1b"
       ],
       "purpose": "the corrected, fully guarded anchor curve plus the M9.1 pilots. m9s1c prices the head warm start."
     },
     "B": {
       "runs": [
-        "m9s1b",
-        "m9s2",
-        "m9s3",
         "m9s4",
         "m9s5",
-        "m9s6"
+        "m9s6",
+        "m9s2",
+        "m9s3"
       ],
       "gated_by": "adequacy",
-      "purpose": "the seed-sensitivity row and the five contrast arms"
+      "purpose": "the seed-sensitivity row and the five contrast arms",
+      "order_amendment": "2026-08-30, BEFORE any teacher number was observed (the stella-1.5B arm died at `loss nan` from fp16 overflow in its own encoder, so it produced no comparison). The mandate's order put the teacher arms first because a swap changes arm 4's baseline. That reason is preserved by a stronger rule instead of by ordering: if a teacher challenger fires, the student, prompt and mix decisions taken under the incumbent are VOID and the milestone returns to Dylan, which is already what LEDGER S0's conditional branch requires. The reorder buys the recipe-setting arms -- 35 minutes each, no teacher encode -- ahead of two arms that cost 2.1 and 1.4 hours and can only either change nothing or stop everything."
     },
     "order_enforced_in": "m9src/screen.py:require_predecessors"
   },

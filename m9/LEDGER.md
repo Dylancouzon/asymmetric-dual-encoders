@@ -31,9 +31,10 @@ reserved-set reads:
   *"the only defensible next GPU action is a corrected, fully guarded anchor curve — not all nine
   arms."*
 
-**Staging (§3).** Stage A is the pilots plus the anchor arm and its warm-start contrast. Stage B —
-the seed replica and the five contrast arms — runs only if the anchor clears the registered
-**adequacy gate** (§4.4). `m9src/screen.py:require_predecessors` enforces both the order and the
+**Staging (§3).** Stage A is the pilots plus the anchor arm, its warm-start contrast and the seed
+replica. Stage B — the five contrast arms — runs only if the anchor clears the registered
+**adequacy gate** (§4.4), and runs in the order **student → prompt → mix → teacher A → teacher B**
+(§9.18). `m9src/screen.py:require_predecessors` enforces both the order and the
 gate; it is not advice.
 
 ### Owner approvals carried in (Dylan, 2026-08-30 planning session)
@@ -521,6 +522,21 @@ import. No G2 allowlist entry is created for M9.1; none is needed.
     `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`, pinned in `m9src/m9base.py` so it is part
     of the lock rather than an operator's export, together with reading DEV-6 once at the end
     instead of interleaving it. Two anchor attempts were killed and re-run over this.
+18. **Amended 2026-08-30, before any teacher number was observed:** stage B's order is
+    student → prompt → mix → the two teacher arms, not teacher-first. The mandate ordered the
+    teacher arms first because a swap changes arm 4's baseline; that reason is preserved by a
+    **stronger rule** rather than by ordering — a challenger win **voids** every student/prompt/mix
+    decision taken under the incumbent and returns the milestone to Dylan, which is already what
+    §0's conditional branch requires. What the reorder buys: the three arms that actually set the
+    M9.2 recipe cost ~35 minutes each and need no teacher encode, while the two teacher arms cost
+    2.1 and 1.4 hours and can only either change nothing or stop everything. No teacher comparison
+    existed when this was written — the stella-1.5B arm had died at `loss nan` inside its own
+    encoder (§9.19).
+19. **Recorded 2026-08-30:** encoding with **stella-1.5B in fp16 produced NaN for 24 of 242,786
+    real query texts** (0.01%) — an overflow in its attention path, invisible to a 256-row sampled
+    norm check and surfacing only as `loss nan` a thousand steps into a two-hour arm. Two fixes:
+    challenger teachers now encode in **bf16** (fp32's exponent range at fp16's memory cost), and
+    `build_plan` checks **every** target for finiteness and unit norm instead of a corner of them.
 17. **Corrected 2026-08-30:** the session manifest was keyed on the lock commit as well as the
     fingerprint, so committing an arm's own result would have voided every arm already run. It is
     keyed on the **fingerprint** alone; `check_state()` still requires the guarded files clean and

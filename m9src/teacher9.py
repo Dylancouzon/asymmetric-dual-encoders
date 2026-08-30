@@ -76,9 +76,12 @@ def load_st(key):
         kw = {}
         if spec.get("config_kwargs"):
             kw["config_kwargs"] = dict(spec["config_kwargs"])
+        # bf16, not fp16. In fp16 the stella-1.5B forward produced NaN for 24 of 242,786 real
+        # query texts (0.01%) -- an overflow in the attention path, invisible until a training
+        # loss came back `nan`. bf16 has fp32's exponent range at the same memory cost.
         m = SentenceTransformer(spec["repo"], revision=spec["revision"],
                                 trust_remote_code=True, device="cuda",
-                                model_kwargs={"dtype": torch.float16}, **kw)
+                                model_kwargs={"dtype": torch.bfloat16}, **kw)
         m.eval()
         got = m.get_sentence_embedding_dimension()
         assert got == spec["dim"], f"{key}: ST reports dim {got}, spec says {spec['dim']}"
@@ -100,7 +103,12 @@ def encode(key, texts, role, batch_size=64, max_length=512, verbose=False):
     prompt = spec["query_prompt"] if role == "query" else spec["doc_prompt"]
     v = m.encode(texts, prompt=prompt, batch_size=batch_size, normalize_embeddings=True,
                  convert_to_numpy=True, show_progress_bar=verbose)
-    return np.asarray(v, dtype=np.float32)
+    v = np.asarray(v, dtype=np.float32)
+    if not np.isfinite(v).all():
+        n = int((~np.isfinite(v).all(axis=1)).sum())
+        raise SystemExit(f"{key}: {n} of {len(texts)} encoded vectors are non-finite. A teacher "
+                         f"target that is not a finite unit vector must never reach a trainer.")
+    return v
 
 
 def encode_cached(key, name, texts, role, batch_size=64, max_length=512, chunk=50_000,

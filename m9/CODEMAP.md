@@ -88,6 +88,11 @@ M9.1 gates and diagnostics.
     cache, so `use_cache=False` avoids the legacy path without patching a third-party file), and a
     measured 8.53 GB peak at document batch 32 on a 10 GB card with the student resident. Four
     minutes of smoking found all three; the alternative was finding them 91 minutes into an encode.
-13. **The most valuable thing a review produced was a smaller experiment.** Pass 2's verdict was
+13. **A sampled sanity check on targets is not a sanity check.** `build_plan` verified the norms of
+    the first 256 target rows. 24 rows out of 242,786 were NaN — fp16 overflow inside stella-1.5B —
+    and the first symptom was `loss nan` a thousand steps into a two-hour arm. Checking all 242,786
+    rows for finiteness and unit norm costs about a second. **Whenever a check samples, ask what
+    fraction of a real defect it would miss**; here the answer was 99.9%.
+14. **The most valuable thing a review produced was a smaller experiment.** Pass 2's verdict was
     "DO NOT SPEND THE 6 GPU-HOURS — run one corrected, fully guarded anchor curve instead". That is
     now stage A, and the adequacy gate decides whether stage B is worth running at all.

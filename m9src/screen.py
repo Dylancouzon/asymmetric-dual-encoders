@@ -207,9 +207,18 @@ def build_plan(spec, cfg, tok):
                      "realized_tokens": real, "presentations": int(offs[-1]),
                      "doc_share_realized": round(real[1] / sum(real), 4)})
 
-    meta["target_norms"] = {
-        "min": round(float(np.linalg.norm(np.asarray(tgt[:256], np.float32), axis=1).min()), 6),
-        "max": round(float(np.linalg.norm(np.asarray(tgt[:256], np.float32), axis=1).max()), 6)}
+    # EVERY target, not a 256-row corner of them. 24 NaN rows in 242,786 (0.01%) were invisible to
+    # a sampled check and surfaced only as `loss nan` a thousand steps into a two-hour arm.
+    tf = np.asarray(tgt, dtype=np.float32)
+    finite = np.isfinite(tf).all(axis=1)
+    nrm = np.linalg.norm(np.where(finite[:, None], tf, 0.0), axis=1)
+    if not finite.all():
+        raise SystemExit(f"{int((~finite).sum())} of {len(tf)} teacher targets are non-finite -- "
+                         f"refuse to train on them")
+    assert 0.99 < nrm.min() and nrm.max() < 1.01, f"target norms {nrm.min()}..{nrm.max()}"
+    meta["target_norms"] = {"min": round(float(nrm.min()), 6), "max": round(float(nrm.max()), 6),
+                            "n_checked": int(nrm.size)}
+    del tf
     meta["scheduled_examples"] = int(offs[-1])
     meta["scheduled_steps"] = int(len(offs) - 1)
     return {"ids": ids, "tgt": tgt, "flat": flat, "offs": offs}, meta
