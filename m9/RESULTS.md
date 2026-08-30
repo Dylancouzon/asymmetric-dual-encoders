@@ -251,6 +251,14 @@ nothing. Across every configuration measured the ratio spans **1.11× to 3.28×*
 the report has to quote rather than any single number. (The binary 1 GB/2 GB rows are non-monotone —
 1.819 vs 2.219 ms — so treat sub-millisecond differences under Docker as noise.)
 
+**Owner ruling, Dylan 2026-08-30:** **TurboQuant (int4) is Qdrant's preferred quantization method**
+and is the one the whitepaper should benchmark; the scalar-int8 / binary sweep above is enough for
+M9's cost story. The full comparison — TurboQuant against binary, int8 and fp16, on latency,
+footprint **and recall** — is deferred to the whitepaper, where everything gets benchmarked
+together rather than piecemeal. **1M documents is confirmed as the upper bound for that testing.**
+The M9 finding that survives regardless is the *shape*: an unquantized index is unusable on
+edge-class hardware, and quantization is a precondition rather than an optimisation.
+
 ## Reference rows measured this milestone
 
 | row | DEV-6 | SCREEN-3 (family weights) |

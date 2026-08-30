@@ -109,6 +109,15 @@ re-run cost time and nothing else. That is the point of the guard: it made every
 *visible* rather than letting a milestone rest on a number chosen after seeing dev, a truncated
 arm, or arms from three different code states.
 
+## Deferred to M10 / the whitepaper
+
+- **TurboQuant (int4) benchmarks** — Dylan's ruling, 2026-08-30: it is Qdrant's preferred method
+  and belongs in the whitepaper's all-in comparison against binary, int8 and fp16, on latency,
+  footprint *and* recall. M9 measured enough to establish the shape (quantization is a
+  precondition, not an optimisation). 1M documents is the confirmed upper bound.
+- **fp16 ONNX parity** missed its locked 0.9999 threshold at 0.99953 — recorded as a fail rather
+  than re-thresholded; the right follow-up is a preregistered retrieval-impact tolerance.
+
 ## Files
 
 | file | contract |
