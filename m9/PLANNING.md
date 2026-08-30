@@ -100,12 +100,12 @@ explicit pooling/normalization/dim; official listing via a fastembed-team issue 
 
 | avenue | why rejected | reopens if |
 |---|---|---|
-| Re-derive zeo against stella-1.5B; rebuild the pair there | tower quality does not predict table quality (T1, Spearman 0.000; stella-400M was #1 of 9 ON THE TABLE); discards a frozen, confirmatory-verified artifact for a coin flip | teacher screen fires AND the 400M ceiling is the diagnosed cause |
+| Re-derive zero against stella-1.5B; rebuild the pair there | tower quality does not predict table quality (T1, Spearman 0.000; stella-400M was #1 of 9 ON THE TABLE); discards a frozen, confirmatory-verified artifact for a coin flip | teacher screen fires AND the 400M ceiling is the diagnosed cause |
 | Teacher swap for nano alone | breaks the pair (two indexes); ceiling is not the binding constraint | screen swap rule: lower-CI>0 AND ≥0.010 |
 | >35M student (~110M ≈ 0.568 at 99% retention) | third frontier point competing with arctic-m symmetric, not LEAF; muddies the pair | M10+ scoping, Dylan's call |
 | Student init by pruning stella's layers (2306.11550-style) | ~50M+ at 1024 hidden (over cap); unproven vs LEAF's in-band init | a <35M pruning beating a finalist in the screen |
-| Warm-start student token embeddings from zeo's rows | convergence trick the headroom doesn't need; couples artifacts | phase-1 convergence diagnosed as binding |
-| zeo+nano dense fusion as a product mode | correlated dense channels; BM25 already carries the decorrelated one | the optional descriptive row measuring a non-trivial gain |
+| Warm-start student token embeddings from zero's rows | convergence trick the headroom doesn't need; couples artifacts | phase-1 convergence diagnosed as binding |
+| zero+nano dense fusion as a product mode | correlated dense channels; BM25 already carries the decorrelated one | the optional descriptive row measuring a non-trivial gain |
 | Higher-dim stella index (2048/4096) | card: ~0.001 below 8192d at 1024d; index doubles for nothing | nothing |
 | MRL / smaller-dim index | stella's alternative dims are separate learned heads → separate system + full re-encode, not a free truncation | M10+ as its own system |
 | Reserved-four composition changes | protocol-frozen; FEVER handled by NDO-3 macro + labelled row | nothing |
@@ -126,3 +126,19 @@ read-exclusion honored — log audited, zero reserved-path reads). **All 23 find
 Highest-value catches: LoTTE double-use (F6 — would have destroyed the only fresh surface),
 artifact-freeze-before-confirmation (F14), dose-in-units (F4), FEVER out of training (F9/F10),
 system-level headline (F22), comparator bridge check (F23).
+
+**Pass 2** (same reviewer, on the committed text: `research/m9-codex-mandate-2026-08-30.md`,
+11 BLOCKER / 7 MAJOR / 1 MINOR — all actioned in the 2026-08-30 mandate rewrite; log audited,
+no reserved reads). Adopted as stated except: seed replicas at full dose carry a Dylan-waiver
+clause (multi-day-dose case), and the M9.1 arm list names bge-small as the anchor student
+(pass 2 left it open). Owner rulings taken in-session and recorded in the mandate: FineWeb
+APPROVED (conditions in §Data), git = branch `m9-work` for execution sessions, size = quality
+first, 70 MB fp16 target, exceedable with logged measured justification. Also renamed:
+the M7 model is **zero** ("zeo" was Dylan's typo, propagated since the M8 close — fixed
+repo-wide this session). Structural changes pass 2 forced: M9.0 screen-lock stage; exhaustive
+M7 carry-forward list (was "everything else binds", which silently re-imported M7's table
+mission); bridge = phase 1 of the single six-set transaction; reserved manifest in the same
+freeze commit; NDO-4/NDO-3 demoted to descriptive (the "unrestricted headline" tier was an
+undeclared third gate); fully specified bootstrap/sign-flip algorithms; LoTTE atomic-read
+protocol; six sequential screen arms with a conditional teacher branch; kill/extension/phase-2
+all numeric-at-lock with "diagnosed defect" = implementation divergence only.

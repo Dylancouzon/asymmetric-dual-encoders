@@ -39,7 +39,7 @@ A decision report (Artifact) with a quality-vs-query-side-cost frontier: nDCG@10
   budget), `R-LIST` (the one open lever with a mechanism — `B2`'s `teacher_top200` is 0.777 nats,
   so the KL *class* is open), `B10`.
 - [ ] M9 (**next — PLANNED 2026-08-30, execution starts at stage M9.1 pilots/screens**): **nano**,
-  the LEAF-style distilled ≤35M query tower serving against zeo's SAME frozen stella-400M 1024d
+  the LEAF-style distilled ≤35M query tower serving against zero's SAME frozen stella-400M 1024d
   index (the product is the pair). Mandate **rewritten** `instructions-m9.md` (staged: pilots →
   adversarially-reviewed recipe lock → build → final); evidence `m9/PLANNING.md`; plan review
   `research/m9-codex-plan-2026-08-30.md` (23 findings, all actioned). **Aim (heavily preferred,
@@ -50,7 +50,7 @@ A decision report (Artifact) with a quality-vs-query-side-cost frontier: nDCG@10
   training pool (reserved-set overlap); LoTTE-clean = fresh surface, NOT training data. Comparator
   vectors in `results/perquery.json` are **irreplaceable**.
 - [ ] M10: **release the pair, port it, write the whitepaper.** Mandate `instructions-m10.md`.
-  Ships no new science: **zeo** (M7's table, already frozen and verified releasable) + **nano**
+  Ships no new science: **zero** (M7's table, already frozen and verified releasable) + **nano**
   (M9's tower) released as two points on a quality-vs-query-cost frontier — zero tier wins exist and
   the model cards say so; **ONNX port including the document model** (B6-pre passed only on
   near-identity weights, so the real artifacts have never been exported); **fastembed integration**;

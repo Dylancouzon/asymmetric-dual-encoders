@@ -10,13 +10,13 @@ what M10 will demand of M9's artifact, and the questions the planning session ha
 
 | milestone | artifact | state |
 |---|---|---|
-| M7 | **zeo** — zero-compute lookup table, stella-derived, int8, no transformer at query time | **frozen, verified releasable** (`m7/FREEZE.json`; artifact sha `a7007b1a…` re-verified 2026-08-30) |
+| M7 | **zero** — zero-compute lookup table, stella-derived, int8, no transformer at query time | **frozen, verified releasable** (`m7/FREEZE.json`; artifact sha `a7007b1a…` re-verified 2026-08-30) |
 | M8 | v2 of the table | **CLOSED as a measurement.** No candidate. See `m8/FINDINGS.md` |
 | **M9** | **nano** — LEAF-style distilled small query tower against a frozen document index | **next** |
-| M10 | **zeo + nano release, whitepaper, ONNX port (incl. the document model), fastembed integration** | after M9 |
+| M10 | **zero + nano release, whitepaper, ONNX port (incl. the document model), fastembed integration** | after M9 |
 
 **The product is the PAIR, not a winner.** Dylan, 2026-08-30: M7 is releasable *paired with a good
-low-compute model*. So M9 is not trying to beat zeo — it is building the other point on a
+low-compute model*. So M9 is not trying to beat zero — it is building the other point on a
 quality-vs-query-cost frontier. That reframes what "success" means and it should shape the plan:
 the deliverable is a defensible frontier with honest costs, not a leaderboard row.
 
@@ -31,7 +31,7 @@ the deliverable is a defensible frontier with honest costs, not a leaderboard ro
    not after training. A backbone needing custom ops is disqualified on M10 grounds alone.
 2. **fastembed-integrable.** Its conventions (tokenizer packaging, pooling, output naming) should be
    checked at student-selection time.
-3. **Size budget.** zeo's query-side system is capped at 233 MB (E7). nano needs its own stated
+3. **Size budget.** zero's query-side system is capped at 233 MB (E7). nano needs its own stated
    budget; `instructions-m9.md` expects ~3–5 ms/query plus model load. Report the same three cost
    rows M7 used so the frontier is comparable: **query asset ≠ document index ≠ hydration.**
 

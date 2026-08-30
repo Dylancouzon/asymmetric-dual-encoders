@@ -714,7 +714,7 @@ mandated diff rather than by luck.*
 ### 6.1 Inheritance and naming
 
 **NAMING DISCREPANCY, for Dylan.** The locked names below are `constella-zero-m8` /
-`constella-nano-m9`, but the 2026-08-30 product framing says **"Constella-zeo"** and
+`constella-nano-m9`, but the 2026-08-30 product framing says **"Constella-zero"** and
 **"Constella-nano"**, and M8 ships nothing so a `-m8` suffix on the zero-compute model is now
 wrong — the artifact is M7's. **The released names need a ruling before M10 pushes anything.**
 

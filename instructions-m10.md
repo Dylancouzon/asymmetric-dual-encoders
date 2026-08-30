@@ -9,7 +9,7 @@ M10 ships no new science. It turns two frozen artifacts into a product and a pap
 ## Deliverables
 
 1. **Release both models.**
-   - **zeo** — M7's zero-compute lookup table. Already frozen and verified releasable:
+   - **zero** — M7's zero-compute lookup table. Already frozen and verified releasable:
      `m7/FREEZE.json`, artifact sha `a7007b1a…`, licence check passed, gate PASS on G1–G4. Re-verify
      the sha before pushing; those files are gitignored and mutable.
    - **nano** — M9's distilled query tower.
@@ -22,7 +22,7 @@ M10 ships no new science. It turns two frozen artifacts into a product and a pap
 
 2. **ONNX port, INCLUDING the document model.** `B6-pre` (§22) exported the document graph at opset
    17, zero custom-domain ops, parity min-cosine 0.99999994 — **but on near-identity weights.** The
-   real trained artifacts have never been exported. Export and parity-verify all three: zeo's query
+   real trained artifacts have never been exported. Export and parity-verify all three: zero's query
    path, nano, and the document tower. §11.4 tolerances: 1e-4 min-cosine, 1e-3 max-abs.
 
 3. **fastembed integration** for both query-side models.
