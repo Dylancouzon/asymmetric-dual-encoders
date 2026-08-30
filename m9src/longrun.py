@@ -55,6 +55,7 @@ TOKENS = RUN / "corpora"
 CKPT = RUN / "ckpt"
 HISTORY = RUN / "history.jsonl"
 HEARTBEAT = RUN / "heartbeat.json"
+TERMINAL = RUN / "terminal.json"
 MANIFEST = RUN / "manifest.json"
 CONFIG = RUN / "config.json"
 LOCKFILE = RUN / "trainer.lock"
@@ -62,6 +63,31 @@ LOCKFILE = RUN / "trainer.lock"
 QUERY_SOURCES = ("queries_pair", "nqopen", "triviaqa")
 SPAN_SOURCES = ("pseudoq",)
 DOC_SOURCES = ("documents",)
+
+
+_BEAT = {"at": 0.0}
+
+
+def beat(state, **kw):
+    """Write the heartbeat on a 60-second timer of its OWN, not on the training log cadence.
+
+    Tying it to `log_every` was a defect Codex found: at a 5x slowdown the log line arrives every
+    ~763 s, which sits deliberately under a 900 s staleness threshold, so the exact failure the
+    watchdog exists for kept it looking alive. It also emitted nothing at all during `verify`,
+    target mapping, model construction or warm start, so a wedge there was invisible forever.
+    """
+    now = time.time()
+    if state in ("train",) and now - _BEAT["at"] < 60:
+        return
+    _BEAT["at"] = now
+    rec = {"wall": now, "state": state, "pid": os.getpid(), **kw}
+    try:
+        RUN.mkdir(parents=True, exist_ok=True)
+        t = HEARTBEAT.with_suffix(".tmp")
+        t.write_text(json.dumps(rec))
+        os.replace(t, HEARTBEAT)
+    except OSError:
+        pass
 
 
 def sha_file(p, chunk=1 << 24):
@@ -365,6 +391,54 @@ def save_ckpt(path, blob):
     os.close(fd)
 
 
+def _proc_start(pid):
+    """The PID's start time, so a recycled PID cannot impersonate the lock holder."""
+    try:
+        return Path(f"/proc/{pid}/stat").read_text().split(") ", 1)[1].split()[19]
+    except (OSError, IndexError):
+        return None
+
+
+def _acquire_lock():
+    """O_CREAT|O_EXCL, not exists()-then-write. The watchdog can SIGTERM a trainer and start a
+    replacement; if the old one is stuck in uninterruptible I/O, a check-then-write race puts two
+    processes on the same `last.tmp`, and `os.replace` protects against one crashing writer, not
+    two live ones."""
+    RUN.mkdir(parents=True, exist_ok=True)
+    for _ in range(2):
+        try:
+            fd = os.open(LOCKFILE, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.write(fd, json.dumps({"pid": os.getpid(), "start": _proc_start(os.getpid()),
+                                     "at": time.time()}).encode())
+            os.close(fd)
+            return
+        except FileExistsError:
+            try:
+                held = json.loads(LOCKFILE.read_text())
+            except (OSError, json.JSONDecodeError):
+                held = None
+            alive = held and _proc_start(held["pid"]) == held.get("start")
+            if alive:
+                raise SystemExit(
+                    f"{LOCKFILE} is held by live pid {held['pid']} (start {held['start']}). "
+                    f"Two trainers must never write {CKPT}.")
+            print(f"clearing a stale lock from pid {held['pid'] if held else '?'}", flush=True)
+            LOCKFILE.unlink(missing_ok=True)
+    raise SystemExit("could not acquire the trainer lock")
+
+
+def write_terminal(reason, step, cum, phase):
+    """A registered stop, recorded atomically. Without this the watchdog sees only 'no PID' and
+    restarts the run it just deliberately ended -- which would resurrect a first-eval failure, a
+    regression stop, a plateau stop and a completed cooldown alike (Codex, blocker 1)."""
+    t = TERMINAL.with_suffix(".tmp")
+    t.write_text(json.dumps({"reason": reason, "step": step, "tokens": cum["tokens"],
+                             "examples": cum["examples"], "phase": phase["name"],
+                             "at": time.strftime("%Y-%m-%dT%H:%M:%S"), "wall": time.time()},
+                            indent=1))
+    os.replace(t, TERMINAL)
+
+
 def load_config():
     assert CONFIG.exists(), f"{CONFIG} missing -- M9.2 writes it when the recipe is locked"
     cfg = json.loads(CONFIG.read_text())
@@ -375,10 +449,7 @@ def load_config():
 def train(cfg, hours=None, max_steps=None, start_decay=False, device="cuda"):
     RUN.mkdir(parents=True, exist_ok=True)
     CKPT.mkdir(parents=True, exist_ok=True)
-    if LOCKFILE.exists():
-        raise SystemExit(f"{LOCKFILE} exists -- another trainer may be running. Remove it only if "
-                         f"you are certain no process is writing to {CKPT}.")
-    LOCKFILE.write_text(json.dumps({"pid": os.getpid(), "started": time.time()}))
+    _acquire_lock()
     try:
         return _train(cfg, hours, max_steps, start_decay, device)
     finally:
@@ -386,11 +457,15 @@ def train(cfg, hours=None, max_steps=None, start_decay=False, device="cuda"):
 
 
 def _train(cfg, hours, max_steps, start_decay, device):
+    beat("verify")
     man = verify(strict=True)
+    reconcile_history()
     names = [n for n in QUERY_SOURCES + SPAN_SOURCES + DOC_SOURCES if cfg["shares"].get(_grp(n))]
     corpora = {n: load_corpus(n) for n in names}
+    beat("targets")
     tgt = Targets()
     tgt.check(corpora)
+    beat("model")
 
     model = nano.Nano(cfg["student"]).to(device)
     pad_id = model.tok.pad_token_id
@@ -430,6 +505,7 @@ def _train(cfg, hours, max_steps, start_decay, device):
               flush=True)
     else:
         torch.manual_seed(cfg["seed"])
+        beat("warm_start")
         q = json.loads((WORK / "m9_screen_queries.json").read_text())
         ws = nano.warm_start_head(model, q, np.asarray(tgt.q[tgt.qrows]),
                                   cfg["student_query_prefix"])
@@ -448,8 +524,22 @@ def _train(cfg, hours, max_steps, start_decay, device):
     print("examples/step: " + json.dumps(per_step) +
           f"  (total {sum(per_step.values())})", flush=True)
 
+    step0 = None
+    if step == 0:
+        beat("eval0")
+        step0 = evaluate(model, cfg, 0, cum, 0.0)
+        with open(HISTORY, "a") as fh:
+            fh.write(json.dumps({**step0, "step0": True}) + "\n")
+        model.train()
+        torch.cuda.empty_cache()
+
     t0, sess_tok, sess_ex, loss_acc, nlog = time.time(), 0, 0, 0.0, 0
-    tput = []
+    # ROLLING throughput, not the cumulative session mean. Cumulative hides exactly the failure
+    # this guards: a 5x slowdown after three good days needs ~five more days to drag the average
+    # under half, and every restart resets the baseline so a degraded rate becomes the new normal.
+    samples = [(time.time(), 0)]
+    base_p = RUN / "throughput_baseline.json"
+    baseline = json.loads(base_p.read_text())["tok_per_s"] if base_p.exists() else None
     deadline = t0 + hours * 3600 if hours else None
     stop_reason = None
     model.train()
@@ -512,10 +602,17 @@ def _train(cfg, hours, max_steps, start_decay, device):
         loss_acc += step_loss
         nlog += 1
 
+        samples.append((time.time(), sess_tok))
+        samples[:] = [x for x in samples if x[0] > time.time() - cfg["throughput_window_s"]] \
+            or samples[-2:]
+        rate = ((samples[-1][1] - samples[0][1]) / max(samples[-1][0] - samples[0][0], 1e-9))
+        beat("train", step=step, tokens=cum["tokens"], examples=cum["examples"],
+             tok_per_s=rate, phase=phase["name"], loss=step_loss, lr=lr,
+             baseline=baseline, floor=(baseline * cfg["throughput_floor_frac"]) if baseline else None,
+             stable_token_cap=cfg["stable_token_cap"], evals=len(read_history()))
+
         if step % cfg["log_every"] == 0:
             el = time.time() - t0
-            rate = sess_tok / el
-            tput.append(rate)
             print(f"  step {step:,} loss {loss_acc/nlog:.5f} lr {lr:.2e} "
                   f"{rate:,.0f} tok/s | cum {cum['tokens']/1e9:.3f}B tokens "
                   f"({cum['tokens']/cfg['stable_token_cap']:.1%} of cap)", flush=True)
@@ -532,12 +629,22 @@ def _train(cfg, hours, max_steps, start_decay, device):
             _t.write_text(json.dumps(_hb))
             os.replace(_t, HEARTBEAT)
             loss_acc, nlog = 0.0, 0
-            if len(tput) > 12 and rate < cfg["throughput_floor_frac"] * float(np.median(tput[:8])):
-                stop_reason = (f"throughput collapse: {rate:,.0f} tok/s against an early median "
-                               f"of {np.median(tput[:8]):,.0f}")
+            # Freeze a baseline ONCE, after warmup, and persist it so restarts inherit it rather
+            # than re-baselining onto a degraded rate.
+            if baseline is None and el > cfg["throughput_baseline_after_s"]:
+                baseline = rate
+                base_p.write_text(json.dumps({"tok_per_s": rate, "at": time.time(),
+                                              "measured_over_s": cfg["throughput_window_s"]}))
+                print(f"  throughput baseline frozen at {rate:,.0f} tok/s "
+                      f"(floor {rate*cfg['throughput_floor_frac']:,.0f})", flush=True)
+            if baseline and rate < cfg["throughput_floor_frac"] * baseline:
+                stop_reason = (f"throughput collapse: {rate:,.0f} tok/s over the last "
+                               f"{cfg['throughput_window_s']}s against a frozen baseline of "
+                               f"{baseline:,.0f}")
                 break
 
         if step % cfg["eval_every"] == 0:
+            beat("eval", step=step, tokens=cum["tokens"])
             rec = evaluate(model, cfg, step, cum, time.time() - t0)
             model.train()
             torch.cuda.empty_cache()      # the screen measured 1,990 -> 786 ex/s without this
@@ -549,9 +656,20 @@ def _train(cfg, hours, max_steps, start_decay, device):
             # First-eval sanity gate: at ~164M tokens the build should already be past the
             # anchor's 59.5M-token result. If it is not, the recipe or the data is wrong and six
             # more days will not fix it -- stop now rather than discover it on day seven.
-            if len(read_history()) == 1 and rec["screen3"] < cfg["first_eval_floor"]:
-                stop_reason = (f"first evaluation {rec['screen3']:.5f} below the floor "
-                               f"{cfg['first_eval_floor']} -- the recipe or the data is wrong")
+            if len(read_history()) == 1:
+                # An ABSOLUTE floor is unsupported: this build's mixture is not the anchor's, and
+                # by its first evaluation it has seen only ~8.2M query tokens. So the absolute
+                # number is logged, and the hard gate is against THIS run's own step-0 baseline --
+                # a first evaluation below where the warm-started head started means something is
+                # broken, whatever the mixture (Codex, threshold disposition).
+                base = step0["screen3"] if step0 else None
+                print(f"  first eval {rec['screen3']:.5f}; absolute floor "
+                      f"{cfg['first_eval_floor']} (advisory); step-0 baseline "
+                      f"{base if base is None else round(base, 5)}", flush=True)
+                if base is not None and rec["screen3"] < base - cfg["first_eval_regression"]:
+                    stop_reason = (f"first evaluation {rec['screen3']:.5f} is below the step-0 "
+                                   f"baseline {base:.5f} by more than "
+                                   f"{cfg['first_eval_regression']} -- training is making it worse")
             stop_reason = stop_reason or check_kill(rec, cfg)
             if best is None or rec["screen3"] > best["screen3"]:
                 best = {"step": step, "screen3": rec["screen3"], "tokens": cum["tokens"]}
@@ -559,6 +677,8 @@ def _train(cfg, hours, max_steps, start_decay, device):
             save_ckpt(CKPT / "last.pt", _blob(model, opt, step, streams, cfg, cum, phase, best, man))
 
     save_ckpt(CKPT / "last.pt", _blob(model, opt, step, streams, cfg, cum, phase, best, man))
+    write_terminal(stop_reason, step, cum, phase)
+    beat("stopped", step=step, tokens=cum["tokens"], reason=stop_reason)
     print(f"STOPPED: {stop_reason}\n  step {step:,}, cumulative {cum['tokens']/1e9:.3f}B tokens, "
           f"{cum['examples']:,} examples, phase {phase['name']}, best {best}", flush=True)
     return {"step": step, "cum": cum, "phase": phase, "best": best, "stop_reason": stop_reason}
@@ -597,13 +717,44 @@ def check_kill(rec, cfg):
     if all(best - r["screen3"] > cfg["regression_thresh"] for r in tail):
         return (f"SCREEN-3 regression: two consecutive evaluations more than "
                 f"{cfg['regression_thresh']} below the best {best:.5f}")
-    span = tail[-1]["tokens"] - tail[0]["tokens"]
-    if span >= cfg["plateau_tokens"]:
-        gain = tail[-1]["screen3"] - tail[0]["screen3"]
+    # Adjacent evaluations are ~164M tokens apart, so requiring rows[-2:] to span 1B tokens was a
+    # rule that could never fire (Codex, blocker 5). Look back to the latest evaluation at or
+    # before `now - plateau_tokens` -- about seven evals -- and compare against that.
+    now = rows[-1]
+    older = [r for r in rows if r["tokens"] <= now["tokens"] - cfg["plateau_tokens"]]
+    if older:
+        ref = older[-1]
+        gain = now["screen3"] - ref["screen3"]
         if gain < cfg["plateau_gain"]:
-            return (f"plateau: {gain:+.5f} over {span/1e9:.2f}B tokens, below "
-                    f"{cfg['plateau_gain']}")
+            return (f"plateau: {gain:+.5f} over {(now['tokens']-ref['tokens'])/1e9:.2f}B tokens "
+                    f"(step {ref['step']:,} -> {now['step']:,}), below {cfg['plateau_gain']}")
     return None
+
+
+def reconcile_history():
+    """Rebuild missing history rows from the `eval` blocks embedded in `step*.pt`.
+
+    The checkpoint is written before the history line is appended, so a crash in between used to
+    lose that evaluation permanently -- taking the first-eval gate and the regression/plateau
+    windows with it. The checkpoints are the durable record; history is the index.
+    """
+    have = {r["step"] for r in read_history()}
+    added = 0
+    for p in sorted(CKPT.glob("step*.pt")):
+        step = int(p.stem[4:])
+        if step in have:
+            continue
+        try:
+            rec = torch.load(p, map_location="cpu", weights_only=False).get("eval")
+        except Exception:
+            continue
+        if rec:
+            with open(HISTORY, "a") as fh:
+                fh.write(json.dumps(rec) + "\n")
+            added += 1
+    if added:
+        print(f"reconciled {added} evaluation(s) from checkpoints into history", flush=True)
+    return added
 
 
 def read_history():

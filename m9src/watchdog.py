@@ -57,8 +57,37 @@ def log(rec):
 
 
 def trainer_alive():
-    out = subprocess.run(["pgrep", "-f", "longrun[.]py train"], capture_output=True, text=True)
-    return [int(x) for x in out.stdout.split()]
+    out = subprocess.run(["pgrep", "-af", "longrun[.]py (train|decay)"],
+                         capture_output=True, text=True)
+    pids = []
+    for line in out.stdout.splitlines():
+        pid, _, args = line.partition(" ")
+        if str(REPO) in args or "m9src/longrun.py" in args:   # this repo's trainer, not any
+            pids.append(int(pid))
+    return pids
+
+
+def wait_gone(pids, timeout=180):
+    """Do not start a replacement until the old process is CONFIRMED gone. A SIGTERM plus a
+    15-second nap is not confirmation, and a trainer stuck in uninterruptible I/O that comes back
+    would give two writers the same `last.tmp` -- which atomic replace does not protect against."""
+    t0 = time.time()
+    while time.time() - t0 < timeout:
+        if not any(os.path.exists(f"/proc/{p}") for p in pids):
+            return True
+        time.sleep(2)
+    for p in pids:
+        try:
+            os.kill(p, 9)
+        except ProcessLookupError:
+            pass
+    time.sleep(5)
+    return not any(os.path.exists(f"/proc/{p}") for p in pids)
+
+
+def terminal_state():
+    """A registered stop. The watchdog must never restart after one."""
+    return read_json(longrun.TERMINAL)
 
 
 def start_trainer(hours):
@@ -113,26 +142,57 @@ def write_status(hb, rows, incidents):
     STATUS_MD.write_text("\n".join(lines))
 
 
+STATUS_WT = WORK / "m9status"
+STATUS_BRANCH = "m9-status"
+
+
 def push_status():
-    subprocess.run(["bash", "-lc",
-                    f"cd {REPO} && git add m9/RUN_STATUS.md && "
-                    f"git commit -q -m 'm9.3: build status' && git push -q origin m9-work"],
-                   check=False, capture_output=True)
+    """Publish the status file on its OWN branch, through a separate worktree.
+
+    Committing on `m9-work` was unsafe in three ways Codex named: `git commit` would sweep up any
+    human changes already staged; a failed push would leave HEAD unpushed, which fails the build
+    guard and makes the next restart give up; and every failure was swallowed. A dedicated
+    worktree touches neither the index nor HEAD of the working branch.
+    """
+    try:
+        if not STATUS_WT.exists():
+            subprocess.run(["bash", "-lc",
+                            f"cd {REPO} && git worktree add -B {STATUS_BRANCH} {STATUS_WT} "
+                            f"origin/{STATUS_BRANCH} 2>/dev/null || "
+                            f"git worktree add -B {STATUS_BRANCH} {STATUS_WT}"],
+                           check=True, capture_output=True, text=True)
+        shutil.copy2(STATUS_MD, STATUS_WT / "RUN_STATUS.md")
+        r = subprocess.run(
+            ["bash", "-lc",
+             f"cd {STATUS_WT} && git add RUN_STATUS.md && "
+             f"(git diff --cached --quiet || git commit -q -m 'm9.3 build status') && "
+             f"git push -q origin {STATUS_BRANCH}"],
+            capture_output=True, text=True)
+        if r.returncode != 0:
+            log({"event": "status_push_failed", "detail": (r.stderr or r.stdout)[:200]})
+    except Exception as e:
+        log({"event": "status_push_failed", "detail": repr(e)[:200]})
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--hours", type=float, default=168)
     ap.add_argument("--period", type=int, default=60, help="the consistent timer, in seconds")
-    ap.add_argument("--stale", type=int, default=900, help="heartbeat age that means wedged")
+    ap.add_argument("--stale", type=int, default=300, help="heartbeat age that means wedged")
+    ap.add_argument("--startup-deadline", type=int, default=1800,
+                    help="a fresh trainer must produce its first heartbeat within this")
+    ap.add_argument("--ckpt-stale", type=int, default=5400)
+    ap.add_argument("--eval-stale", type=int, default=4 * 3600)
     ap.add_argument("--max-restarts", type=int, default=8)
+    ap.add_argument("--max-restarts-6h", type=int, default=3)
     ap.add_argument("--min-disk-gb", type=float, default=25.0)
     ap.add_argument("--status-every", type=int, default=1800)
     ap.add_argument("--no-push", action="store_true")
     a = ap.parse_args()
 
     deadline = time.time() + a.hours * 3600
-    restarts, failed_starts, last_status = 0, 0, 0.0
+    restarts, failed_starts, last_status, recent = 0, 0, 0.0, []
+    launched_at = time.time()
     last_step, last_step_at, last_digest = None, time.time(), time.time()
     for req in (longrun.CONFIG, longrun.MANIFEST):
         if not req.exists():
@@ -152,7 +212,7 @@ def main():
             log({"event": "stop_file", "detail": "clean halt requested; watchdog exiting"})
             break
 
-        free_gb = shutil.disk_usage(REPO).free / 1e9
+        free_gb = shutil.disk_usage(longrun.CKPT if longrun.CKPT.exists() else REPO).free / 1e9
         if free_gb < a.min_disk_gb:
             (longrun.CKPT).mkdir(parents=True, exist_ok=True)
             (longrun.CKPT / "STOP").write_text("watchdog: disk headroom")
@@ -162,28 +222,65 @@ def main():
         if not gpu_ok():
             log({"event": "gpu_missing", "detail": "nvidia-smi failed"})
 
+        term = terminal_state()
+        if term:
+            log({"event": "terminal", "detail": f"the trainer stopped deliberately: "
+                                                f"{term['reason']} (step {term['step']:,}, "
+                                                f"{term['tokens']/1e9:.3f}B tokens). Not "
+                                                f"restarting -- a registered stop is a decision."})
+            break
+
         alive = trainer_alive()
-        stale = hb and (time.time() - hb["wall"]) > a.stale
-        no_progress = hb and last_step is not None and hb["step"] == last_step and \
-            (time.time() - last_step_at) > a.stale
-        if hb and hb["step"] != last_step:
-            last_step, last_step_at = hb["step"], time.time()
+        # A fresh start has no heartbeat yet, so `hb and ...` was False for both staleness checks
+        # and a wedge during verify/targets/warm-start was invisible forever (Codex, blocker 4).
+        started = hb["wall"] if hb else launched_at
+        stale = (time.time() - started) > (a.stale if hb else a.startup_deadline)
+        step_now = hb.get("step") if hb else None
+        no_progress = (step_now is not None and step_now == last_step
+                       and (time.time() - last_step_at) > a.stale
+                       and (hb or {}).get("state") == "train")
+        if step_now != last_step:
+            last_step, last_step_at = step_now, time.time()
+
+        # the two checks the docstring promised and the first version never implemented
+        ck = longrun.CKPT / "last.pt"
+        if ck.exists() and time.time() - ck.stat().st_mtime > a.ckpt_stale:
+            log({"event": "checkpoint_stale",
+                 "detail": f"last.pt is {(time.time()-ck.stat().st_mtime)/60:.0f} min old; a crash "
+                           f"now costs everything since it"})
+        if rows and time.time() - rows[-1]["wall"] > a.eval_stale:
+            log({"event": "eval_overdue",
+                 "detail": f"no evaluation for {(time.time()-rows[-1]['wall'])/3600:.1f} h; the "
+                           f"trainer's own quality kill rules cannot fire without them"})
 
         if not alive or stale or no_progress:
-            why = ("dead" if not alive else "stale heartbeat" if stale else "no step progress")
+            why = ("dead" if not alive else
+                   ("no heartbeat within the startup deadline" if not hb else "stale heartbeat")
+                   if stale else "no step progress")
             if restarts >= a.max_restarts:
                 log({"event": "giving_up", "detail": f"{why}; {restarts} restarts already. A crash "
                                                      f"loop is a different problem from a crash."})
                 break
-            for pid in alive:
-                try:
-                    os.kill(pid, 15)
-                except ProcessLookupError:
-                    pass
-            time.sleep(15)
-            longrun.LOCKFILE.unlink(missing_ok=True)
+            if alive:
+                for pid in alive:
+                    try:
+                        os.kill(pid, 15)
+                    except ProcessLookupError:
+                        pass
+                if not wait_gone(alive):
+                    log({"event": "will_not_restart",
+                         "detail": f"pids {alive} did not exit even after SIGKILL; refusing to "
+                                   f"start a second writer"})
+                    continue
+            time.sleep(2 ** min(restarts, 5))        # backoff; a crash loop should not thrash
             pids = start_trainer(max(0.5, (deadline - time.time()) / 3600))
             restarts += 1
+            recent.append(time.time())
+            recent[:] = [t for t in recent if t > time.time() - 6 * 3600]
+            if len(recent) > a.max_restarts_6h:
+                log({"event": "giving_up", "detail": f"{len(recent)} restarts in six hours; that is "
+                                                     f"a crash loop, not a crash"})
+                break
             if not pids:
                 # A restart that starts nothing is not a restart. Retrying a launch that cannot
                 # launch just burns the budget silently -- exactly the class this watchdog exists

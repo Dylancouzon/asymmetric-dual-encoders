@@ -78,10 +78,13 @@ def build(decisions=None):
         "plateau_tokens": 1_000_000_000,    # judged over a billion tokens, never over steps
         "plateau_gain": 0.001,
         "throughput_floor_frac": 0.5,
+        "throughput_window_s": 600,          # rolling, never the cumulative session mean
+        "throughput_baseline_after_s": 900,  # frozen once after warmup, persisted across restarts
         # The anchor reached 0.50004 on 59.5M tokens; the first build evaluation lands at ~164M
         # with 15x the unique text, so anything below 0.45 means something is broken rather than
         # merely slow.
-        "first_eval_floor": 0.45,
+        "first_eval_floor": 0.45,          # ADVISORY: logged, never a hard stop
+        "first_eval_regression": 0.02,     # HARD: below this run's own step-0 baseline
         "_arithmetic": {
             "measured_tokens_per_s": TOK_PER_S,
             "horizon_hours": HOURS,

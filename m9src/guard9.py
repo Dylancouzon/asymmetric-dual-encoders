@@ -55,7 +55,8 @@ SCOPES = {
     "bridge":   ("m9src/bridge_dryrun.py",),
     # M9.3: the seven-day build. Its own scope, so the screen's arms are not voided by a change
     # here and a build cannot start from dirty code (Codex review #5, blocker 7).
-    "build":    ("m9src/longrun.py", "work/m9long/config.json", "work/m9long/manifest.json"),
+    "build":    ("m9src/longrun.py", "m9src/watchdog.py", "m9src/make_config.py",
+                 "m9/M92_LOCK.md", "work/m9long/config.json", "work/m9long/manifest.json"),
 }
 # What each kind of run depends on. An incumbent arm does not import `teacher9`, so a challenger
 # repair leaves its result standing.
