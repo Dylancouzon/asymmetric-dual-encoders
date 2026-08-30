@@ -38,13 +38,17 @@ A decision report (Artifact) with a quality-vs-query-side-cost frontier: nDCG@10
   `E14-LORA` (authorised; the affordable version is a proxy, not a test — deferred with a real
   budget), `R-LIST` (the one open lever with a mechanism — `B2`'s `teacher_top200` is 0.777 nats,
   so the KL *class* is open), `B10`.
-- [ ] M9 (**next — a planning session runs first**): **nano**, the LEAF-style distilled small query
-  tower against a frozen document index. Mandate `instructions-m9.md`; **planning context in
-  `m9/BRIEF.md`** (what M7/M8 established, what M10 demands of the artifact, the harness inventory,
-  and the questions planning must answer). Release bar: CI-resolved above bge-small symmetric
-  0.5042. Teacher: M9 picks its own on measurement — T1's NO SWAP does **not** transfer, being a
-  fact about distilled TABLES not TOWERS. Comparator vectors frozen in `results/perquery.json` are
-  **irreplaceable**.
+- [ ] M9 (**next — PLANNED 2026-08-30, execution starts at stage M9.1 pilots/screens**): **nano**,
+  the LEAF-style distilled ≤35M query tower serving against zeo's SAME frozen stella-400M 1024d
+  index (the product is the pair). Mandate **rewritten** `instructions-m9.md` (staged: pilots →
+  adversarially-reviewed recipe lock → build → final); evidence `m9/PLANNING.md`; plan review
+  `research/m9-codex-plan-2026-08-30.md` (23 findings, all actioned). **Aim (heavily preferred,
+  Dylan): beat leaf-ir-asym 0.5155 avg-6 — as a SYSTEM claim; release bar: bge-small 0.5042.**
+  Headroom measured: stella ceiling 0.5744 avg-6 / 0.5640 NDO-4 → aim needs 89.7%/92.8% retention
+  (literature band 96–98.6% is a prior, dose-dependent). Teacher: stella stays (screen restored,
+  margin-gated lower-CI>0 AND ≥0.010); students: MiniLM-L6-v2 vs bge-small. fever-train leaves the
+  training pool (reserved-set overlap); LoTTE-clean = fresh surface, NOT training data. Comparator
+  vectors in `results/perquery.json` are **irreplaceable**.
 - [ ] M10: **release the pair, port it, write the whitepaper.** Mandate `instructions-m10.md`.
   Ships no new science: **zeo** (M7's table, already frozen and verified releasable) + **nano**
   (M9's tower) released as two points on a quality-vs-query-cost frontier — zero tier wins exist and

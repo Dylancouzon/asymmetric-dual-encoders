@@ -125,18 +125,12 @@ pitfalls, each one a real incident. Read it before writing a probe.
 
 ---
 
-## 7. Questions the planning session must answer
+## 7. Planning questions — ANSWERED 2026-08-30
 
-1. **Teacher.** Re-probe stella in M9's own frame against the shortlist — on the *tower*, since that
-   is the artifact. If the pick differs from the table line's, that is **two document indexes**, not
-   one index with two query paths. `instructions-m9.md` sets the tie-break: **prefer the pair**,
-   broken only on a CI-resolved loss.
-2. **Student backbone** — ≤35M, permissive clean vendor, **and ONNX/fastembed-exportable** (§2).
-   Re-derive the shortlist; the original draft's rationale went stale at the 2026-08-26 teacher swap.
-3. **Objective** — uniform bank or hard candidates? See §3.3. Measure the entropy early.
-4. **Dev suite** — inherit M7's (494 reads deep) or build fresh headroom?
-5. **Does M9 test `E14-LORA`**, or does that go to M10 with the release work?
-6. **What does the frontier look like** — which points does the whitepaper need, and does M9 owe any
-   measurement that only makes sense alongside zeo?
-7. **Confirmatory design** — one access, four reserved sets. What is the candidate, what is the
-   comparator, and what is the pre-registered rule? Nothing is scored until that is written down.
+The planning session ran (goal per Dylan: beat leaf-ir-asym 0.5155, pair heavily preferred).
+All seven questions are resolved in the rewritten `instructions-m9.md`; evidence and the
+considered-and-rejected register in `m9/PLANNING.md`; adversarial plan review (23 findings, all
+actioned) in `research/m9-codex-plan-2026-08-30.md`. Headline arithmetic: stella ceiling measured
+0.5744 avg-6 → aim needs 89.7% retention vs a 96–98.6% literature band (a prior, not a forecast —
+dose-dependent). Note §3.3's R-LIST lead does NOT drive M9: phase-1 is LEAF's L2 regression, which
+does not saturate the way the table's KL did; ranking losses are symptom-gated phase-2.
