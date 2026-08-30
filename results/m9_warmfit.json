@@ -63,12 +63,12 @@
   "_registration": {
     "run_id": "m9-warmfit",
     "diagnostic": false,
-    "commit": "b8142f8a8e19b8bc61c97d9f5741a9de9b4068d0",
+    "commit": "793748755bbe7191dbe538d296333fdf6ee08038",
     "branch": "m9-work",
-    "session_sha256": "d0799ac7500d5c6c9344013c4e3c96113f045ed9a2c3687f9fb9301a9c1b5d7c",
+    "session_sha256": "e5bfabda6995db26213aca6bad1d321142df3b25c1c0b2a526271c76bb6d7ded",
     "stage": "M9.0",
-    "opened_at": 1788078242.762827,
-    "written_at": 1788078258.111147,
+    "opened_at": 1788080941.863231,
+    "written_at": 1788080957.7213516,
     "extra": {},
     "eligible_for_decision": true
   }

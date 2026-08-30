@@ -69,12 +69,24 @@ deterministic crash in the mandatory port pilot.
 | fp16 target gate | PASS — min-cos 0.999959, max-abs 2.0e-4 |
 | bridge-tolerance dry run | PASS — zero qid drift, max \|Δ nDCG@10\| **0.0** across processes |
 | ONNX export, both students | PASS — min-cos 0.9999993, opset 17, **zero custom-domain ops** |
-| aborted anchor at 4 epochs (quarantined, λ was dev-selected) | SCREEN-3 0.4481 = 65.7% of the ceiling |
+| **anchor `m9s1`, final (16 epochs)** | **SCREEN-3 0.4998 = 73.3% · DEV-6 0.4806 = 71.5%** |
+| anchor curve, SCREEN-3 at 4/8/12/16 epochs | 0.4481 → 0.4812 → 0.4944 → 0.4998 |
+| adequacy gate | **PASS** (0.7326 ≥ 0.60; late slope 0.0054 ≤ 0.02) → stage B authorised |
+| shipped fp16 artifact, bge-small nano / MiniLM nano | **68.5 MB / 47.0 MB** — inside the 70 MB target |
+| fastembed `add_custom_model` | accepted and listed |
+| fp16 ONNX parity | **0.99953 vs a locked 0.9999 — MISS**, recorded rather than re-thresholded |
 
 The head-probe rows are the session's most consequential finding so far, and they changed the
 recipe: at ~1% of LEAF's dose a randomly-initialized projection head spends a large share of the
 whole budget re-deriving a linear map that has a closed form. Every arm now warm-starts it, and arm
 `m9s1c` repeats the anchor without it to price exactly what that is worth.
+
+**What the anchor curve says, and it is the point of stage A.** Quarter-on-quarter gains are
+**+0.0330, +0.0132, +0.0054** — each roughly half the last. Sixteen epochs is close to what 242,786
+unique queries yield, so the remaining ~27% of the ceiling is not behind more SGD on this data. The
+levers that could reach it are more unique text (the document pool has 6.15M pre-screened rows, and
+the mix arm prices exactly that), a better student, or a co-adapted document side — which is what
+`m8/FINDINGS.md` already named as the one untested high-capacity lever.
 
 The honest headline risk is unchanged: **LEAF's published 97.9% retention came from ~100 A100-hours
 and 6.7M unique texts; M9's affordable dose is ~1% of that on 243K unique queries.** The
