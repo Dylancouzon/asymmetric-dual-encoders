@@ -1,6 +1,6 @@
 # M9 status — M9.1 in flight
 
-**Stage: M9.0 LOCKED (2026-08-30), M9.1 stage A running.** Branch `m9-work`. Nothing has touched
+**Stage: M9.1 stage B running; the M9.3 seven-day build is built, reviewed and waiting to launch.** Branch `m9-work`. Nothing has touched
 the six or the reserved four; LoTTE unread. `results/perquery.json` untouched.
 
 M9.1 is **staged**, on Codex's recommendation after it reviewed the lock *and the code*: stage A is
@@ -118,6 +118,24 @@ arm, or arms from three different code states.
 - **fp16 ONNX parity** missed its locked 0.9999 threshold at 0.99953 — recorded as a fail rather
   than re-thresholded; the right follow-up is a preregistered retrieval-impact tolerance.
 
+## Where the seven-day build stands
+
+Dylan is available until ~00:30 tonight and away for three days after, so the build launches
+tonight and runs unattended. Everything for it is written, reviewed and committed:
+
+| piece | state |
+|---|---|
+| `m9src/longrun.py` | resumable, stoppable, guarded trainer. Rewritten after Codex #5 returned DO NOT LAUNCH on seven blockers |
+| `m9src/watchdog.py` | out-of-process timer. Hardened after Codex #6 returned DO NOT LAUNCH UNATTENDED on six more |
+| corpora | tokenized and hashed: **7,536,401 texts, 627 M tokens/epoch** (documents 581 M) |
+| dose | **5% queries / 5% spans / 90% documents** by token — 109.6 query epochs, not 438 |
+| schedule | warmup → stable → **decay on demand**, cooldown 59.5 M tokens (the anchor's whole dose) |
+| kill envelope | non-finite, regression, plateau, throughput collapse, first-eval vs step-0 baseline |
+| remaining | teacher targets for 1.14 M new texts · manifest · **resume-equivalence test on the real path** · fill the M9.2 lock from `decide` · Codex review of that lock · launch |
+
+`m9/M92_LOCK.md` is the recipe lock; `m9/RUN_STATUS.md` will be published on branch `m9-status`
+every 30 minutes so the run is legible from anywhere while nobody is at the machine.
+
 ## Files
 
 | file | contract |
@@ -125,5 +143,9 @@ arm, or arms from three different code states.
 | `LEDGER.md` | the M9.0 lock: protocol, rulings, and every number a rule reads |
 | `registry.json` | the machine copy of those constants |
 | `RESULTS.md` | runs, in order |
+| `EXPLORED.md` | closed avenues, each with what would reopen it |
+| `M92_LOCK.md` | the recipe lock for the seven-day build |
+| `RUN_STATUS.md` | live build status, republished on branch `m9-status` |
 | `PLANNING.md` · `BRIEF.md` | the pre-M9.0 evidence and context |
+| `EDGE_COST_MAC.md` · `EDGE_PROTOTYPE_MAC.md` | task cards for the second machine |
 | `CODEMAP.md` | modules and the pitfalls this milestone earned |

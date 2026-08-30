@@ -28,7 +28,20 @@ stage order and the adequacy gate, and holds the single decision function.
 **Measurement** — `eval9.py` DEV-6 / SCREEN-3 scoring against a teacher's document space ·
 `screen_stats.py` the one statistic and the one decision rule · `lock_constants.py` materializes
 every number the lock states · `fp16_gate.py`, `port.py`, `bridge_dryrun.py`, `head_probe.py` the
-M9.1 gates and diagnostics.
+M9.1 gates and diagnostics · `warmfit.py` selects the warm-start λ on a training-only holdout and
+`nano.warm_start_head` refuses to run without it.
+
+**The M9.3 build** — `longrun.py` the resumable, stoppable trainer (corpora → targets → manifest →
+verify → train → decay), with the kill envelope and the heartbeat · `watchdog.py` the
+out-of-process timer that restarts a dead or wedged trainer, refuses to restart a *registered*
+stop, and publishes `RUN_STATUS.md` on its own branch · `make_config.py` derives every knob from
+measured quantities and shows the arithmetic · `test_resume.py` the split-run equivalence test
+(parameters, Adam moments, streams, ledger, phase, next LR).
+
+**Off the training box** — `edge_cost.py` CPU serving latency and shipped bytes ·
+`export_doc_model.py` the stella-400M ONNX port and the fastembed serving route ·
+`extended_screen.py` admits new query text through M8's extended filter, emitting hashes and
+kept-index lists only · `capacity_probe.py` withdrawn for M9, intact for M10.
 
 ## Pitfalls this milestone earned
 
@@ -93,6 +106,30 @@ M9.1 gates and diagnostics.
     and the first symptom was `loss nan` a thousand steps into a two-hour arm. Checking all 242,786
     rows for finiteness and unit norm costs about a second. **Whenever a check samples, ask what
     fraction of a real defect it would miss**; here the answer was 99.9%.
-14. **The most valuable thing a review produced was a smaller experiment.** Pass 2's verdict was
+14. **Tokenize in chunks or not at all.** A Python list of ~95 token ids costs ~3.5 kB once the
+    list object and un-cached int objects are counted, so "tokenize everything, then pack" is
+    **~21 GB of transient heap** for 6.15M documents — on a 25 GB box that is also training, the
+    OOM killer takes both. Packed int32 the same corpus is 2.3 GB. Caught by watching free memory
+    climb, not by reasoning about it.
+15. **A guard that restarts things must know the difference between a crash and a decision.** The
+    watchdog saw "no PID" and restarted the trainer — including after a first-eval failure, a
+    regression stop, a plateau stop and a completed cooldown. It would have resurrected every
+    deliberate stop, and after a restart the first-eval gate could never fire again. A registered
+    stop now writes an atomic terminal marker, and the watchdog treats it as a decision.
+16. **A throughput guard built from a cumulative mean cannot catch a slowdown.** The rule written
+    specifically for the measured `m9s2` collapse would not have caught `m9s2`: session-cumulative
+    tok/s takes ~five days to fall below half after a 5× drop on day three, and every restart
+    re-baselines onto the degraded rate. Roll the window, freeze the baseline once, persist it.
+17. **A threshold whose window is narrower than its span is a dead rule.** The plateau check
+    compared the last two evaluations — ~164M tokens apart — and required them to span 1B. It could
+    never fire. Any rule of the form "X over Y" must look back far enough to *find* Y.
+18. **Write the checkpoint before the history line, then reconcile.** A crash in between used to
+    lose that evaluation permanently, taking the first-eval gate and the regression window with it.
+    The checkpoints carry their own `eval` block and history is rebuilt from them on startup.
+19. **`exists()`-then-write is not a lock.** A watchdog that SIGTERMs a trainer, naps fifteen
+    seconds and starts a replacement can put two processes on the same `last.tmp`; atomic replace
+    protects against one crashing writer, not two live ones. `O_CREAT|O_EXCL` plus the holder's
+    `/proc` start time, and confirm the old PID is *gone* before starting anything.
+20. **The most valuable thing a review produced was a smaller experiment.** Pass 2's verdict was
     "DO NOT SPEND THE 6 GPU-HOURS — run one corrected, fully guarded anchor curve instead". That is
     now stage A, and the adequacy gate decides whether stage B is worth running at all.
