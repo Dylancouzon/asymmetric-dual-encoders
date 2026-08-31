@@ -50,50 +50,67 @@ def sh(*a):
     return subprocess.run(a, cwd=REPO, capture_output=True, text=True).stdout.strip()
 
 
+def branch_name():
+    return sh("git", "rev-parse", "--abbrev-ref", "HEAD")
+
+
 def sh_ok(*a):
     r = subprocess.run(a, cwd=REPO, capture_output=True, text=True)
     return r.returncode == 0, (r.stderr or r.stdout).strip()
 
 
+_LOCK_FH = None
+
+
 def acquire_lock():
-    """One process at a time. A stale lock from a dead pid is reclaimed once; a live one refuses."""
+    """flock, NOT O_EXCL-plus-staleness.
+
+    The O_EXCL form had the classic race: two processes both see a dead holder's lock, A replaces
+    it, B unlinks A's new lock and takes its own -- two processes scoring the six. It also had to
+    guess liveness from `kill(pid, 0)`, where PermissionError means "alive but not ours" and was
+    being read as dead. The kernel drops an flock the instant the holder dies, so there is no
+    stale state to reclaim and nothing to guess (Codex final9 review, blocker 5).
+    """
+    global _LOCK_FH
+    import fcntl
     LOCK.parent.mkdir(parents=True, exist_ok=True)
-    for attempt in (1, 2):
-        try:
-            fd = os.open(LOCK, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-            os.write(fd, f"{os.getpid()}\n".encode())
-            os.close(fd)
-            return
-        except FileExistsError:
-            try:
-                pid = int(LOCK.read_text().split()[0])
-            except (ValueError, IndexError, OSError):
-                pid = None
-            alive = False
-            if pid is not None:
-                try:
-                    os.kill(pid, 0)
-                    alive = True
-                except (ProcessLookupError, PermissionError):
-                    alive = False
-            if alive:
-                raise SystemExit(f"REFUSED: pid {pid} holds {LOCK}. Two concurrent runs could "
-                                 f"both score the six.")
-            if attempt == 1:
-                print(f"[final9] removing stale lock (pid {pid} is gone)")
-                LOCK.unlink(missing_ok=True)
-    raise SystemExit(f"REFUSED: could not acquire {LOCK}")
+    fh = open(LOCK, "a+")
+    try:
+        fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        fh.close()
+        raise SystemExit(f"REFUSED: {LOCK} is flock-held by a live final9 process. Two concurrent "
+                         f"runs could both score the six.")
+    fh.truncate(0)
+    fh.write(f"{os.getpid()}\n")
+    fh.flush()
+    _LOCK_FH = fh          # held for the process lifetime; never unlinked
 
 
-def spent_tag_exists():
-    """-> (exists, where). origin is the EXTERNAL witness and is checked first: a local-only tag
-    could be deleted, but the pushed one is what makes the spend durable."""
-    remote = sh("git", "ls-remote", "origin", f"refs/tags/{SPENT_TAG}",
-                f"refs/tags/{SPENT_TAG}^{{}}")
-    if remote:
+def spent_tag_exists(conf):
+    """-> (exists, where). FAILS CLOSED.
+
+    The first version ran `git ls-remote` and treated empty stdout as "absent" -- so an auth
+    failure, a network drop or a renamed remote all read as "the access is unspent", which would
+    permit a SECOND scoring of the six (Codex final9 review, blocker 2). A non-zero exit is now an
+    unknown, and unknown is refused. `origin` is identity-pinned so repointing it cannot
+    manufacture an unspent verdict.
+    """
+    want_url = conf.get("origin_url")
+    got_url = sh("git", "remote", "get-url", "origin")
+    if want_url and got_url != want_url:
+        raise SystemExit(f"REFUSED: origin is {got_url!r}, not the registered {want_url!r}. "
+                         f"The spend receipt's witness must be the registered remote.")
+    r = subprocess.run(["git", "ls-remote", "origin", f"refs/tags/{SPENT_TAG}",
+                        f"refs/tags/{SPENT_TAG}^{{}}"], cwd=REPO, capture_output=True, text=True)
+    if r.returncode != 0:
+        raise SystemExit(f"REFUSED: cannot reach origin to check {SPENT_TAG} "
+                         f"({(r.stderr or '').strip()[:200]}). Refusing to assume the access is "
+                         f"unspent. Fix connectivity and retry.")
+    if r.stdout.strip():
         return True, "origin"
     if sh("git", "tag", "-l", SPENT_TAG):
-        return True, "local"
+        return True, "local-only"
     return False, ""
 
 
@@ -105,6 +122,11 @@ def write_atomic(path, text):
         f.flush()
         os.fsync(f.fileno())
     os.replace(tmp, path)
+    dfd = os.open(str(path.parent), os.O_RDONLY)      # the rename itself must be durable
+    try:
+        os.fsync(dfd)
+    finally:
+        os.close(dfd)
 
 
 def sha256_file(p):
@@ -126,14 +148,26 @@ def preflight(conf, infra_retry):
     """
     problems = []
 
-    exists, where = spent_tag_exists()
-    if exists and not infra_retry:
-        problems.append(f"{SPENT_TAG} exists on {where}: the six-set access is already spent.")
-    if exists and infra_retry:
-        problems.append(f"--infra-retry is inadmissible: {SPENT_TAG} exists on {where}, so the "
-                        f"failure did NOT precede the spend.")
-    if RESULT.exists() and not infra_retry:
-        problems.append(f"{RESULT} already exists; use --recover to recompute decisions from it.")
+    exists, where = spent_tag_exists(conf)
+    if exists and where == "origin":
+        problems.append(f"{SPENT_TAG} exists on origin: the six-set access is already spent."
+                        + (" --infra-retry is inadmissible: the failure did NOT precede the spend."
+                           if infra_retry else ""))
+    elif exists and where == "local-only":
+        # origin absence is positively established at this point (ls-remote exited 0 and empty),
+        # so the crash landed between tag creation and push, i.e. BEFORE the durable spend.
+        if not infra_retry:
+            problems.append(f"a LOCAL-ONLY {SPENT_TAG} exists while origin has none: a crash "
+                            f"between tag creation and push. Rerun with --infra-retry, which "
+                            f"clears the remnant; the access was never durably spent.")
+        else:
+            ok, err = sh_ok("git", "tag", "-d", SPENT_TAG)
+            print(f"[final9] cleared local-only {SPENT_TAG} remnant ({'ok' if ok else err})")
+    # Checked unconditionally: ignoring it under --infra-retry accepted an inconsistent state and
+    # would permit rescoring (Codex final9 review, major).
+    if RESULT.exists():
+        problems.append(f"{RESULT} already exists; a scored result must never be overwritten. "
+                        f"Use --recover to recompute decisions from it.")
 
     if sh("git", "status", "--porcelain"):
         problems.append("working tree is dirty; the freeze commit must be clean.")
@@ -175,12 +209,19 @@ def spend_access(freeze_sha):
     stamp = datetime.now(timezone.utc).isoformat()
     ledger_append(f"\n- {stamp} — **{BEGIN}** freeze `{freeze_sha[:12]}` "
                   f"pid {os.getpid()} host `{os.uname().nodename}`")
-    ok, err = sh_ok("git", "add", str(LEDGER))
-    ok2, err2 = sh_ok("git", "commit", "-q", "-m", f"m9: {BEGIN} {freeze_sha[:12]}")
-    ok3, err3 = sh_ok("git", "push", "-q", "origin", "HEAD")
-    if not ok3:
-        raise SystemExit(f"ABORT before any protected read: could not push the {BEGIN} ledger "
-                         f"entry ({err3}). No access consumed.")
+    for cmd in (("git", "add", str(LEDGER)),
+                ("git", "commit", "-q", "-m", f"m9: {BEGIN} {freeze_sha[:12]}"),
+                ("git", "push", "-q", "origin", "HEAD")):
+        ok, err = sh_ok(*cmd)
+        if not ok:
+            raise SystemExit(f"ABORT before any protected read: {' '.join(cmd)} failed ({err}). "
+                             f"No access consumed.")
+    # Positively verify the BEGIN entry reached origin: a successful `push` of an UNCHANGED HEAD
+    # would otherwise satisfy the check while the ledger entry existed nowhere durable
+    # (Codex final9 review, blocker 1).
+    if sh("git", "rev-parse", "HEAD") != sh("git", "rev-parse", "origin/" + branch_name()):
+        raise SystemExit("ABORT before any protected read: HEAD is not the pushed origin tip "
+                         "after the BEGIN commit. No access consumed.")
     ok4, err4 = sh_ok("git", "tag", "-a", SPENT_TAG, "-m",
                       f"M9 six-set access spent {stamp} freeze {freeze_sha[:12]}")
     if not ok4:
@@ -233,12 +274,37 @@ def main():
     acquire_lock()
     try:
         if a.recover:
+            # Resolves the wedge: a crash between scoring and the ledger digest leaves a spent
+            # access whose C1 verdict was never established, blocking the reserved conditional.
+            # It performs NO six-set I/O -- it opens only RESULT and the registry, and
+            # `final_stats` reads nothing else (verified by inspection; there is no capability
+            # boundary enforcing it, which is stated as a limitation).
             if not RESULT.exists():
                 raise SystemExit("--recover needs an existing results/m9_final_run.json")
+            exists, where = spent_tag_exists(conf)
+            if not (exists and where == "origin"):
+                raise SystemExit(f"--recover REFUSED: {SPENT_TAG} is not on origin ({where or 'absent'}). "
+                                 f"A result without a durable spend receipt has unverified "
+                                 f"provenance and must not be turned into a decision.")
             blob = json.loads(RESULT.read_text())
+            fz = json.loads(FREEZE.read_text())
+            if blob.get("freeze_sha256") != fz["checkpoint_sha256"]:
+                raise SystemExit("--recover REFUSED: the result was produced under a different "
+                                 "frozen checkpoint than m9/FREEZE.json names.")
             rec = decide(blob["rows"], conf)
             blob["decision_record"] = rec
             write_atomic(RESULT, json.dumps(blob, indent=1))
+            digest = sha256_file(RESULT)
+            ledger_append(f"- {datetime.now(timezone.utc).isoformat()} — **{END}** (recover) "
+                          f"result sha256 `{digest[:16]}` outcome `{rec['decision']['outcome']}`")
+            for cmd in (("git", "add", str(LEDGER), str(RESULT)),
+                        ("git", "commit", "-q", "-m", f"m9: {END} (recover) {digest[:12]}"),
+                        ("git", "push", "-q", "origin", "HEAD")):
+                ok, err = sh_ok(*cmd)
+                if not ok:
+                    print(f"WARNING: {' '.join(cmd)} failed ({err}); the decision is on disk but "
+                          f"NOT durable on origin. Push it manually before acting on it.")
+                    break
             print(json.dumps(rec["decision"], indent=1))
             return 0
 
