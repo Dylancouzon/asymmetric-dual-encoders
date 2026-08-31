@@ -54,3 +54,35 @@ cannot fire yet (it needs a ≥1B-token lookback; total is 0.86B) and at current
 fire soon. Re-assess at ~50% of dose, when the projection is firm enough to be worth acting on —
 and if it then points at a miss, prepare the "what would change it" analysis for Dylan
 (doc-side co-adaptation / larger student / more dose are all explicitly out of M9's scope).
+
+### Eval 11 (1.228B tokens, 10.7% of cap): three flat evals — diagnosed, NOT concluded
+
+SCREEN-3 0.54487 (retention 0.7983). Increments +0.0052, +0.0004, +0.0003. Saturating fit stable
+across four evals: central 0.836, asymptote 0.8515.
+
+**Why this is not yet evidence of a ceiling** (the standing directive requires diagnosis before
+pessimism):
+
+1. **The build is ABOVE the anchor at half its query dose.** The query-only anchor `m9s1` reached
+   0.50004 at 16 query epochs; this build is at **0.54487 at 8.3 query epochs**. The 5/5/90 mix is
+   outperforming the arm whose flattening motivated the owner's override, at less query dose.
+2. **We are 10.7% through, at 8.3 of 77 planned query epochs and 1.9 of 17.7 document epochs.**
+   The owner's ruling recorded the relevant caveat verbatim: "neutral-per-token at 11 query epochs
+   is NOT evidence that documents help at 110." Document contribution is the untested variable and
+   it has barely begun.
+3. **The fit cannot see the anneal.** Every point is a constant-LR (1e-4) checkpoint. A plateau at
+   constant LR is the classic signature of a run that steps down on cosine decay to 1e-5.
+
+**Phase 2 is UNAVAILABLE, and this is a lock gap worth recording.** The mandate required M9.2 to
+register "one fully specified phase-2 loss and its hyperparameters" plus its numeric trigger;
+`m9/LEDGER.md` says "Phase 2 is out of scope for M9.1" and no thresholds or loss were ever
+registered. Specifying one now, in response to an observed flat curve, would be a post-hoc rescue
+and is refused. Recorded as a limitation, not improvised around.
+
+**Plateau rule, checked not assumed:** its lookback slides forward, so it becomes sensitive near
+2.2B tokens. Calibration looks sound — firing needs <+0.001 across ~8 evals, while per-eval noise
+alone is ~0.005 and the trailing 1B window has gained +0.078. If it does fire, cooldown produces an
+annealed servable model at ~19% of dose; that is the registered, correct response to a genuinely
+flat curve, not a malfunction.
+
+**No action. Re-assess at ~50% of dose, or immediately if a regression stop fires.**
