@@ -4,8 +4,9 @@ No trainer or watchdog is running and nothing has trained. Screen, targets, corp
 config, and resume prerequisites are complete. The locked build is stella-400M-v5 ×
 bge-small-en-v1.5 × bare prompt × 5/5/90; see `M92_LOCK.md`.
 
-Before launch, the owner must commit and push this pre-launch repair (this session was forbidden to
-do so), then require `.venv/bin/python m9src/guard9.py` to print `problems: []`. Launch only then:
+The pre-launch repair is committed and pushed; `guard9.py` prints `problems: []` and
+`test_resume.py` passes bitwise. **Everything is verified and the only thing missing is Dylan's
+GO.** Re-check the guard, then launch:
 
 ```bash
 setsid nohup .venv/bin/python m9src/watchdog.py --hours 168 --eval-stale 18000 \
@@ -22,8 +23,20 @@ tail -n 200 logs/m9_watchdog.log logs/m9_build.log
 rg -n "Traceback|Error|FAILED|OOM|Killed|assert" logs/m9_watchdog.log logs/m9_build.log
 ```
 
-`m9/RUN_STATUS.md` refreshes every 30 minutes. Expect exactly one watchdog and one trainer, then
-step-0 eval, step 500, checkpoints every 3,000 steps, and evals every 15,000 steps.
+`m9/RUN_STATUS.md` refreshes every 30 minutes on branch `m9-status`. Expect exactly one watchdog
+and one trainer, then step-0 eval, step 500, checkpoints every 3,000 steps (~22 min), and evals
+every 15,000 steps (~1.8 h; 3.6 h at the 50% throughput floor, against a 5 h staleness limit).
+
+**Verify the launch before walking away** — these paths were reviewed sixteen times but the
+watchdog supervising a live trainer, and its push to `m9-status`, had never actually run:
+
+```bash
+tail -f logs/m9_build.log          # want: warm-start adapter line, EVAL step 0, step 500
+cat work/m9long/heartbeat.json     # want: state train, advancing step
+git ls-remote origin m9-status     # want: the sha to move within ~35 min
+```
+
+If any of that fails, stop it (below) rather than leave it running.
 
 ## Stop, cool down, restart
 
