@@ -1,8 +1,8 @@
 # M9.3 build — live status
 
-_Updated 2026-08-31 00:45:27 by `m9src/watchdog.py`._
+_Updated 2026-08-31 00:50:55 by `m9src/watchdog.py`._
 
-**step 17,089** · **0.140 B tokens** (1.2% of the cap) · 26,065 tok/s · phase **stable** · heartbeat 41s old
+**step 18,225** · **0.149 B tokens** (1.3% of the cap) · 25,895 tok/s · phase **stable** · heartbeat 8s old
 
 **Best SCREEN-3 0.46710 — retention 0.685** of the 0.68223 teacher ceiling.
 
@@ -17,6 +17,8 @@ _Updated 2026-08-31 00:45:27 by `m9src/watchdog.py`._
 |---|---|---|
 | 2026-08-30T23:14:00 | watchdog_start | period 60s, mode train, absolute deadline 1788750840.314 (created) |
 | 2026-08-30T23:14:20 | launch | initial trainer start; pids [225231, 225232] |
+| 2026-08-31T00:48:57 | watchdog_start | period 60s, mode train, absolute deadline 1788750840.314 (reused) |
+| 2026-08-31T00:49:55 | watchdog_start | period 60s, mode train, absolute deadline 1788750840.314 (reused) |
 
 ## Stop, cool down, restart
 
