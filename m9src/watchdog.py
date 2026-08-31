@@ -143,9 +143,16 @@ def start_trainer(deadline, cooldown=False):
 
 
 def gpu_ok():
-    r = subprocess.run(["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader"],
-                       capture_output=True, text=True, timeout=60)
-    return r.returncode == 0 and bool(r.stdout.strip())
+    """ADVISORY ONLY, and it must never raise. A wedged driver makes `nvidia-smi` hang until the
+    timeout; `TimeoutExpired` used to escape here into the loop's outer `except Exception`, which
+    logged and started the next iteration -- so a wedged GPU disabled restart, terminal-state and
+    deadline supervision for the rest of the run (Codex unattended review, blocker 1)."""
+    try:
+        r = subprocess.run(["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader"],
+                           capture_output=True, text=True, timeout=60)
+        return r.returncode == 0 and bool(r.stdout.strip())
+    except Exception:
+        return False
 
 
 def read_json(p, default=None):
@@ -223,12 +230,29 @@ def shared_deadline(hours, cooldown=False):
         saved = read_json(DEADLINE)
         if saved and isinstance(saved.get("wall"), (int, float)):
             return float(saved["wall"]), "reused"
+        # FAIL CLOSED. read_json() maps every parse/read error to None, so a truncated or
+        # corrupt deadline.json used to look identical to "no deadline yet" and a watchdog
+        # restart minted a brand-new seven-day horizon, silently extending the run past the
+        # registered budget (Codex unattended review, major 6).
+        if DEADLINE.exists():
+            raise SystemExit(
+                f"{DEADLINE} exists but is unreadable or has no numeric 'wall'. Refusing to "
+                f"create a new {hours} h horizon, which would extend the registered run. "
+                f"Repair or delete it deliberately, recording the decision.")
     wall = time.time() + hours * 3600
     tmp = DEADLINE.with_suffix(".tmp")
-    tmp.write_text(json.dumps({"wall": wall, "hours": hours, "mode":
-                               "cooldown" if cooldown else "train",
-                               "created_at": time.strftime("%Y-%m-%dT%H:%M:%S")}, indent=1))
+    with open(tmp, "w") as fh:
+        json.dump({"wall": wall, "hours": hours,
+                   "mode": "cooldown" if cooldown else "train",
+                   "created_at": time.strftime("%Y-%m-%dT%H:%M:%S")}, fh, indent=1)
+        fh.flush()
+        os.fsync(fh.fileno())
     os.replace(tmp, DEADLINE)
+    dfd = os.open(str(DEADLINE.parent), os.O_RDONLY)
+    try:
+        os.fsync(dfd)
+    finally:
+        os.close(dfd)
     return wall, "created"
 
 
@@ -312,8 +336,10 @@ def push_status():
             ["bash", "-lc",
              f"cd {STATUS_WT} && git add RUN_STATUS.md && "
              f"(git diff --cached --quiet || git commit -q -m 'm9.3 build status') && "
-             f"git push -q origin {STATUS_BRANCH}"],
-            capture_output=True, text=True, timeout=180)
+             # `timeout` bounds git ITSELF: killing the bash wrapper left a hung push alive,
+             # holding index.lock and blocking every later push (Codex review, minor 9).
+             f"timeout -k 10 120 git push -q origin {STATUS_BRANCH}"],
+            capture_output=True, text=True, timeout=180, start_new_session=True)
         if r.returncode != 0:
             log({"event": "status_push_failed", "detail": (r.stderr or r.stdout)[:200]})
     except Exception as e:

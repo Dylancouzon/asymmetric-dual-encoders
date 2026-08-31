@@ -813,3 +813,21 @@ screen's twin of the same loop.
 |---|---|
 | two extra preregistered seeds (mandate §Recipe/Seeds) | **waived** — ~14 GPU-days for a reporting-only figure; `registry.json owner_rulings.seed_replicas_waived`. Report states seed variability unmeasured, as a limitation |
 | M9.3 build | **GO at the locked 168 h horizon**, recipe unchanged (`M92_LOCK.md`) |
+
+### Codex unattended-operation review, 2026-08-31 (mid-build, log `research/m9-codex-unattended-2026-08-31.log`)
+
+Verdict "not safe to call failure-proof": 2 BLOCKER, 5 MAJOR, 3 MINOR. Reserved-read audit of the
+log: clean (only the brief's own exclusion text and two naming lines of `M92_LOCK.md`).
+
+| # | finding | disposition |
+|---|---|---|
+| B1 | `TimeoutExpired` escaping `gpu_ok()` reached the loop's outer `except`, so a wedged driver disabled restart/terminal/deadline supervision for the rest of the run | **FIXED** — probe made advisory and non-raising |
+| B2 | nothing supervised the watchdog; its death was silent | **FIXED** — `m9src/guardian.sh`, verified live against SIGKILL. Safe by flock: a relaunch while one lives exits immediately |
+| M6 | corrupt `deadline.json` read as "missing" → a fresh 168 h horizon on restart | **FIXED** — fails closed; file+dir fsync |
+| m9 | 180 s timeout killed the bash wrapper, not a hung `git push` | **FIXED** — `timeout -k 10 120` binds git itself; `start_new_session` |
+| M3 | deadline stop stays armed during decay → a late slowdown can truncate the cooldown | **OPEN, trainer-side.** Only bites below ~18,940 tok/s sustained (live: 25,970). Scheduled with M4/M5 |
+| M4 | corrupt `last.pt` has no fallback to the newest readable `stepN.pt` | **OPEN, trainer-side** |
+| M5 | eval exceptions uncontained; a transient one kills the trainer | **OPEN, trainer-side** |
+| M7/m8/m10 | `SESSION.json` init outside the trainer lock; eval crash window; argv-heuristic process match | **accepted, documented.** m10 bit the operator during this very repair — a `pgrep` pattern matched the operator's own shell, which was killed. Trainer unaffected; kill by exact PID from `ps -eo pid,args` |
+
+Trainer PID 225232 was never restarted by this repair; `deadline.json` reused, not reset.
