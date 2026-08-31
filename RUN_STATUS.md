@@ -1,1 +1,30 @@
-# M9.3 build — not started yet
+# M9.3 build — live status
+
+_Updated 2026-08-30 23:15:20 by `m9src/watchdog.py`._
+
+state **eval0** · heartbeat 48s old
+
+**Best SCREEN-3 0.34619 — retention 0.507** of the 0.68223 teacher ceiling.
+
+| step | B tokens | SCREEN-3 | retention |
+|---|---|---|---|
+| 0 | 0.000 | 0.34619 | 0.5074 |
+
+## Incidents
+
+| when | event | detail |
+|---|---|---|
+| 2026-08-30T23:14:00 | watchdog_start | period 60s, mode train, absolute deadline 1788750840.314 (created) |
+| 2026-08-30T23:14:20 | launch | initial trainer start; pids [225231, 225232] |
+
+## Stop, cool down, restart
+
+1. Stop safely: `touch work/m9long/ckpt/STOP`. Keep the watchdog running;
+   it supervises until `terminal.json` confirms the trainer exited.
+2. Cool down: after that terminal marker appears, run
+   `setsid nohup .venv/bin/python m9src/watchdog.py --cooldown --hours 4 >> logs/m9_watchdog.log 2>&1 &`.
+   The cooldown command safely consumes the acknowledged STOP and terminal markers, resumes
+   `last.pt` in decay, and supervises it through `cooldown complete`.
+3. Restart after a crash: if the watchdog is alive, do nothing; it restarts the trainer exactly.
+   If the watchdog died, rerun the original watchdog launch command. It reuses `deadline.json`,
+   attaches to a live trainer or resumes `last.pt`, and never resets the seven-day horizon.
