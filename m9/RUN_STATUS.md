@@ -1,6 +1,6 @@
 # M9.3 build — live status
 
-_Updated 2026-08-31 06:17:09 by `m9src/watchdog.py`._
+_Updated 2026-08-31 06:20:00 by `m9src/watchdog.py`._
 
 **Best SCREEN-3 0.53334 — retention 0.782** of the 0.68223 teacher ceiling.
 
@@ -17,7 +17,6 @@ _Updated 2026-08-31 06:17:09 by `m9src/watchdog.py`._
 
 | when | event | detail |
 |---|---|---|
-| 2026-08-30T23:14:00 | watchdog_start | period 60s, mode train, absolute deadline 1788750840.314 (created) |
 | 2026-08-30T23:14:20 | launch | initial trainer start; pids [225231, 225232] |
 | 2026-08-31T00:48:57 | watchdog_start | period 60s, mode train, absolute deadline 1788750840.314 (reused) |
 | 2026-08-31T00:49:55 | watchdog_start | period 60s, mode train, absolute deadline 1788750840.314 (reused) |
@@ -27,6 +26,9 @@ _Updated 2026-08-31 06:17:09 by `m9src/watchdog.py`._
 | 2026-08-31T06:17:09 | restart_failed | dead; nothing came up. See logs/m9_build.log. 2 consecutive. |
 | 2026-08-31T06:17:09 | give_up_stop_requested | two consecutive launches produced no process; configuration failure; wrote /home/dylan/asy |
 | 2026-08-31T06:17:09 | giving_up | two consecutive launches produced no process; configuration failure; wrote STOP; remaining |
+| 2026-08-31T06:17:11 | watchdog_stop | 2 restarts |
+| 2026-08-31T06:18:19 | watchdog_start | period 60s, mode train, absolute deadline 1788750840.314 (reused) |
+| 2026-08-31T06:18:39 | launch | initial trainer start; pids [] |
 
 ## Stop, cool down, restart
 
