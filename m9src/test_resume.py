@@ -13,23 +13,39 @@ It compares, after both paths reach the same step:
 * phase, and the learning rate the schedule would next produce.
 
 Run against a scratch config and a scratch checkpoint directory so it can never touch a real build.
+CUDA determinism is enforced in this test process so exact equality is a meaningful gate even when
+the production training process intentionally uses the faster default kernel selection.
 
     python m9src/test_resume.py --n1 12 --n2 8
 """
 import argparse
 import json
+import os
 import shutil
 import time
+from pathlib import Path
+
+# Must be set before torch initializes CUDA. Deterministic algorithms will raise instead of falling
+# back if this model reaches an operation for which PyTorch has no deterministic implementation.
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
 import torch
 
 import m9base
-from m9base import WORK
 
 import longrun     # noqa: E402
 import make_config  # noqa: E402
 
-SCRATCH = WORK / "m9long_test"
+SCRATCH = Path("/tmp/m9long_test")
+
+
+def enforce_determinism():
+    torch.use_deterministic_algorithms(True)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cuda.matmul.allow_tf32 = False
+    torch.backends.cudnn.allow_tf32 = False
+    torch.set_float32_matmul_precision("highest")
 
 
 def scratch_cfg(total_steps):
@@ -101,6 +117,8 @@ def main():
     ap.add_argument("--n2", type=int, default=8)
     a = ap.parse_args()
     n = a.n1 + a.n2
+
+    enforce_determinism()
 
     real_run, real_ckpt = longrun.RUN, longrun.CKPT
     longrun.RUN = SCRATCH
