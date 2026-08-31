@@ -34,3 +34,23 @@ merged into the ledger afterwards. This file is in no scope.
   the registered m9s6-vs-m9s1 veto is unchanged, the build's final candidate is ADDED to the same
   atomic batch, and the final-checkpoint identity rule is registered now so LoTTE cannot influence
   it. Runs once, post-build, pre-freeze.
+
+### Curve watch, eval 8 (step 105,000, 0.860B tokens, 7.5% of cap)
+
+SCREEN-3 0.53903, retention 0.7901. Per-doubling increments: +0.0344, +0.0283, +0.0171, +0.0256,
++0.0167, **+0.0058**. The bracket has stabilised across the last two evals — central (saturating
+power-law) endpoint 0.836–0.843 retention, **fitted asymptote 0.851** — i.e. on this recipe
+SCREEN-3 retention appears to asymptote near 0.85 even at unbounded dose.
+
+For context, not as a forecast: the release bar needs 87.8% and the aim 89.7% **on avg-6**, a
+different surface with no calibrated map from SCREEN-3. Two known biases run in opposite
+directions — SCREEN-3 is partly in-domain (NQ at 0.50 weight, `nqopen` in the mix), which inflates
+it relative to avg-6; and the fit sees only stable-LR checkpoints, so it cannot see the final
+cosine anneal, which biases it low.
+
+**No action, and none available:** the dose is fixed at the 11.42B cap with no registered extension,
+the recipe is locked, the student is capped at 35M and the teacher is fixed. The plateau rule
+cannot fire yet (it needs a ≥1B-token lookback; total is 0.86B) and at current increments would not
+fire soon. Re-assess at ~50% of dose, when the projection is firm enough to be worth acting on —
+and if it then points at a miss, prepare the "what would change it" analysis for Dylan
+(doc-side co-adaptation / larger student / more dose are all explicitly out of M9's scope).
