@@ -1,0 +1,11 @@
+{
+ "_what": "DIAGNOSTIC decomposition of the m9s6 mix verdict; decides nothing, read by no rule",
+ "m9s6_query_tokens": 41655512.0,
+ "m9s6_doc_tokens": 17852365.0,
+ "m9s6_query_epochs": 11.2,
+ "anchor_screen3_interpolated_at_same_query_tokens": 0.49258,
+ "m9s6_screen3_actual": 0.4924,
+ "document_token_contribution": -0.00017,
+ "reading": "the entire -0.00604 DEV-6 deficit is the 30% query-token reduction; 17.9M document tokens contributed -0.0002, i.e. neutral within noise (MDE 0.0056, seed spread ~0.001). The arm is a SUBSTITUTION test at fixed budget, not a test of unique text at scale.",
+ "caveat": "neutral-per-token at 11 query epochs does not establish neutral at 110; equally it is not evidence that documents help there. Both remain unmeasured at build dose."
+}
