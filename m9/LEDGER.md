@@ -831,3 +831,24 @@ log: clean (only the brief's own exclusion text and two naming lines of `M92_LOC
 | M7/m8/m10 | `SESSION.json` init outside the trainer lock; eval crash window; argv-heuristic process match | **accepted, documented.** m10 bit the operator during this very repair — a `pgrep` pattern matched the operator's own shell, which was killed. Trainer unaffected; kill by exact PID from `ps -eo pid,args` |
 
 Trainer PID 225232 was never restarted by this repair; `deadline.json` reused, not reset.
+
+### Codex review of the M3/M4/M5 trainer patch, 2026-08-31 — **REJECTED, not applied**
+
+Log `research/m9-codex-patch-review-2026-08-31.log`; reserved-read audit clean. Verdict: *"Do not
+restart the live trainer onto this code."* The patch was reverted from disk the same minute; the
+live trainer (pid 225232) never executed it. Rejected version kept for redesign.
+
+| blocker | why v1 was wrong | what the redesign must do |
+|---|---|---|
+| M3 | trainer grace of 6 h is fiction: `watchdog.py:484` gives up 1,800 s after the deadline and refuses to restart a dead trainer past it, so the effective grace is ~30 min and a cooldown crash still ends the run | the fix must span BOTH files; watchdog must honour decay |
+| M4 | `int(q.stem[4:])` runs before the `try` → any stray `step*.pt` crashes startup; "readable" ≠ schema-valid; and `reconcile_history()` runs BEFORE fallback, so a rewind leaves future eval rows, stale plateau/regression history, and a `best` disagreeing with history | no silent rewind — fall back only when no history/checkpoint frontier is later than the candidate, else write terminal state and stop |
+| M5 | counter is process-global, so the watchdog's 5 h eval-stale restart resets it before three failures (3 intervals = 5.4 h nominal, 10.8 h at floor) — the bound never binds. Worse, a caught exception can resume training after eval perturbed CPU/CUDA RNG, **changing later gradients** — a locked-mathematics violation | bounded immediate retries at the same boundary, RNG/state restored after each failure, counter checkpointed, watchdog coordinated |
+
+Also fixed from the same review: sentinel's `[ -f ]`-then-`stat` race against the watchdog's
+heartbeat unlink (empty arithmetic → bash exit, i.e. the alarm dying silently); unanchored `pgrep`
+in sentinel and guardian (the sentinel reported "2 trainer processes" within a minute of arming —
+it was counting the bash launch wrapper); no multi-guardian detection; no proof-of-life.
+
+**Standing decision for the redesign:** these three are low-probability risk-reduction on a healthy
+run (M3 binds only below ~18,940 tok/s; live rate 25,971). Whether to touch a verified running
+build at all is itself a question for the next review, not an assumption.
