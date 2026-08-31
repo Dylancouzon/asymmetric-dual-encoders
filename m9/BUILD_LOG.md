@@ -86,3 +86,26 @@ annealed servable model at ~19% of dose; that is the registered, correct respons
 flat curve, not a malfunction.
 
 **No action. Re-assess at ~50% of dose, or immediately if a regression stop fires.**
+
+### `m9src/final9.py` — access control written and hardened; APPROVAL DEFERRED
+
+Two review passes (`research/codex_final9*.log`). Pass 1: 5 BLOCKER / 3 MAJOR. Fixed: ignored
+`git add`/`commit` failures in the BEGIN sequence (+ positive origin-tip verification, so a no-op
+push cannot pass); `spent_tag_exists` **failing open** on a network/auth error — the worst of them,
+since it would have permitted a second scoring of the six — now fails closed with a pinned
+`origin_url`; `--recover` now completes step 5 durably and verifies the result came from the frozen
+checkpoint; `acquire_lock` replaced with flock (the O_EXCL form had a stale-unlink race and read
+`PermissionError` as "dead"); local-only tag no longer blocks `--infra-retry`; `RESULT` never
+overwritten; parent-dir fsync.
+
+Pass 2 rejected again, correctly, and the decisive point stands: **approval is vacuous while the
+scoring path is absent** — `spend_access()` is never called, so the ordering guarantees hold only
+because the module cannot score. Also fixed from pass 2: flock file no longer unlinked while the
+descriptor is open; origin pinning mandatory; recovery push failure returns non-zero instead of
+success; a spent access with no result now reports a documented loss instead of a misleading
+refusal; and `--recover` installs `m8src/paths_guard` as a real capability boundary rather than
+asserting one in a comment.
+
+**Next:** wire step 4's encoding when the GPU is free, then re-review the module as a whole. Until
+then `final9.py` refuses to run — and independently refuses while
+`final_run_registry.ratified_by_owner` is false.

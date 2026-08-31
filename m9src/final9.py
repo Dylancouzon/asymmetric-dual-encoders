@@ -36,6 +36,21 @@ sys.path.insert(0, str(REPO / "m7src"))
 
 from m9src import final_stats                                   # noqa: E402
 
+
+def seal_protected_paths():
+    """A real boundary, not a promise. `--recover` must not be able to open six-set data even if
+    something downstream tried; a comment asserting `final_stats` does no such I/O cannot
+    establish that from the code under review (Codex final9 re-review, B4)."""
+    try:
+        sys.path.insert(0, str(REPO / "m8src"))
+        import paths_guard
+        paths_guard.install()
+        return True
+    except Exception as e:
+        print(f"WARNING: could not install paths_guard ({e!r}); recovery proceeds WITHOUT an "
+              f"enforced boundary. Treat its provenance claim as unverified.")
+        return False
+
 LOCK = REPO / "work" / "m9final.lock"
 RESULT = REPO / "results" / "m9_final_run.json"
 LEDGER = REPO / "m9" / "LEDGER.md"
@@ -97,8 +112,11 @@ def spent_tag_exists(conf):
     manufacture an unspent verdict.
     """
     want_url = conf.get("origin_url")
+    if not want_url:
+        raise SystemExit("REFUSED: final_run_registry.origin_url is not set. The spend receipt's "
+                         "witness must be a pinned remote.")
     got_url = sh("git", "remote", "get-url", "origin")
-    if want_url and got_url != want_url:
+    if got_url != want_url:
         raise SystemExit(f"REFUSED: origin is {got_url!r}, not the registered {want_url!r}. "
                          f"The spend receipt's witness must be the registered remote.")
     r = subprocess.run(["git", "ls-remote", "origin", f"refs/tags/{SPENT_TAG}",
@@ -279,9 +297,19 @@ def main():
             # It performs NO six-set I/O -- it opens only RESULT and the registry, and
             # `final_stats` reads nothing else (verified by inspection; there is no capability
             # boundary enforcing it, which is stated as a limitation).
-            if not RESULT.exists():
-                raise SystemExit("--recover needs an existing results/m9_final_run.json")
+            sealed = seal_protected_paths()
             exists, where = spent_tag_exists(conf)
+            if not RESULT.exists():
+                # The access can be spent with no scores on disk (a crash between the tag push and
+                # the first durable write). No decision can be reconstructed -- say so plainly
+                # rather than refusing with a misleading message (Codex final9 re-review).
+                if exists and where == "origin":
+                    raise SystemExit(
+                        f"ACCESS SPENT, NO RESULT. {SPENT_TAG} is on origin but {RESULT.name} does "
+                        f"not exist: the run died between spending the access and writing any "
+                        f"score. No decision can be established and none may be invented. This is "
+                        f"a documented loss of the six-set access -- disclose it and stop.")
+                raise SystemExit("--recover needs an existing results/m9_final_run.json")
             if not (exists and where == "origin"):
                 raise SystemExit(f"--recover REFUSED: {SPENT_TAG} is not on origin ({where or 'absent'}). "
                                  f"A result without a durable spend receipt has unverified "
@@ -302,10 +330,12 @@ def main():
                         ("git", "push", "-q", "origin", "HEAD")):
                 ok, err = sh_ok(*cmd)
                 if not ok:
-                    print(f"WARNING: {' '.join(cmd)} failed ({err}); the decision is on disk but "
-                          f"NOT durable on origin. Push it manually before acting on it.")
-                    break
+                    print(json.dumps(rec["decision"], indent=1))
+                    print(f"FAILED: {' '.join(cmd)} ({err}). The decision is on disk but NOT "
+                          f"durable on origin; it must not be acted on until pushed.")
+                    return 3
             print(json.dumps(rec["decision"], indent=1))
+            print(f"[final9] recovery durable on origin; paths_guard={'on' if sealed else 'OFF'}")
             return 0
 
         problems = preflight(conf, a.infra_retry)
@@ -325,7 +355,10 @@ def main():
             "results/perquery.json for the b-sides and call decide(). See m9/FINAL_LOCK.md and "
             "reuse m7src/final_run.py verify_and_load/score_set.")
     finally:
-        LOCK.unlink(missing_ok=True)
+        # The lock file is deliberately NOT unlinked: unlinking it while our descriptor is still
+        # open would let another process lock a fresh inode and score concurrently (Codex final9
+        # re-review). The kernel releases the flock when this process dies.
+        pass
 
 
 if __name__ == "__main__":
