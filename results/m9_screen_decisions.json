@@ -1,0 +1,459 @@
+{
+  "complete": true,
+  "mandatory_arms": [
+    "m9s1",
+    "m9s4",
+    "m9s5",
+    "m9s6"
+  ],
+  "missing_arms": [],
+  "arm_artifact_sha256": {
+    "m9s1": "397dfdf5e04f1fcbc5185d44c592cad3afcbba55d8a9bafdfd31cc796942cbe7",
+    "m9s4": "d12ff143894ac0b9323f1facdc6946b015a0398b00f9e51ed4787037c26fa21e",
+    "m9s5": "8c06fa4ab77ddea279d60d14adc1ad3d38472f05cf8110f94533dad9442b333c",
+    "m9s6": "4bf13c1626bcf3f11db2becfb629d8298f45b1ca85e608fe205e92a6a1089153"
+  },
+  "arms_present": [
+    "m9s1",
+    "m9s4",
+    "m9s5",
+    "m9s6"
+  ],
+  "decisions": {
+    "student": {
+      "surface": "DEV6",
+      "weights": {
+        "nq-250k": 0.16666666666666666,
+        "hotpotqa": 0.16666666666666666,
+        "cqadup-programmers": 0.16666666666666666,
+        "cqadup-physics": 0.16666666666666666,
+        "heldout-train": 0.16666666666666666,
+        "heldout-longq": 0.16666666666666666
+      },
+      "point": -0.0026063566788631903,
+      "per_component": {
+        "nq-250k": -0.006374266780644691,
+        "hotpotqa": -0.005019913447963021,
+        "cqadup-programmers": -0.0031683314487546224,
+        "cqadup-physics": -0.0012910026374731856,
+        "heldout-train": -0.009378023195646132,
+        "heldout-longq": 0.009593397437302512
+      },
+      "n_per_component": {
+        "nq-250k": 3452,
+        "hotpotqa": 7405,
+        "cqadup-programmers": 876,
+        "cqadup-physics": 1039,
+        "heldout-train": 7325,
+        "heldout-longq": 55
+      },
+      "quantile": 0.025,
+      "quantile_method": "linear",
+      "lower_bound": -0.006689682025784291,
+      "ci95": [
+        -0.006689682025784291,
+        0.001529609207917368
+      ],
+      "B": 20000,
+      "seed": 0,
+      "rule": {
+        "kind": "student",
+        "surface": "DEV6",
+        "margin": "MDE",
+        "quantile": 0.025,
+        "rank_stability": true,
+        "default": "bge-small-en-v1.5"
+      },
+      "threshold": 0.0056,
+      "margin_met": false,
+      "bound_positive": false,
+      "rank_stability": {
+        "checked": true,
+        "required_steps": [
+          22762,
+          30349
+        ],
+        "stable": true,
+        "delta_ckpt3": -0.005517257000495657,
+        "delta_ckpt4": -0.004301966911879229
+      },
+      "pass": false,
+      "action": "default: bge-small-en-v1.5",
+      "scope": "every screen verdict is artifact-specific at the screen dose; never 'resolved', 'confirmed' or 'significant'"
+    },
+    "prompt": {
+      "surface": "DEV6",
+      "weights": {
+        "nq-250k": 0.16666666666666666,
+        "hotpotqa": 0.16666666666666666,
+        "cqadup-programmers": 0.16666666666666666,
+        "cqadup-physics": 0.16666666666666666,
+        "heldout-train": 0.16666666666666666,
+        "heldout-longq": 0.16666666666666666
+      },
+      "point": -0.020361165279898084,
+      "per_component": {
+        "nq-250k": -0.01910992966005616,
+        "hotpotqa": -0.039990089305596284,
+        "cqadup-programmers": -0.010406153790854456,
+        "cqadup-physics": -0.015015358455740318,
+        "heldout-train": -0.025032205086058575,
+        "heldout-longq": -0.01261325538108271
+      },
+      "n_per_component": {
+        "nq-250k": 3452,
+        "hotpotqa": 7405,
+        "cqadup-programmers": 876,
+        "cqadup-physics": 1039,
+        "heldout-train": 7325,
+        "heldout-longq": 55
+      },
+      "quantile": 0.025,
+      "quantile_method": "linear",
+      "lower_bound": -0.02481007573404811,
+      "ci95": [
+        -0.02481007573404811,
+        -0.015967714832615162
+      ],
+      "B": 20000,
+      "seed": 0,
+      "rule": {
+        "kind": "prompt",
+        "surface": "DEV6",
+        "margin": "MDE",
+        "quantile": 0.025,
+        "rank_stability": true,
+        "default": "b"
+      },
+      "threshold": 0.0056,
+      "margin_met": false,
+      "bound_positive": false,
+      "rank_stability": {
+        "checked": true,
+        "required_steps": [
+          22762,
+          30349
+        ],
+        "stable": true,
+        "delta_ckpt3": -0.018992219317388592,
+        "delta_ckpt4": -0.01591034289167681
+      },
+      "pass": false,
+      "action": "default: b",
+      "scope": "every screen verdict is artifact-specific at the screen dose; never 'resolved', 'confirmed' or 'significant'",
+      "baseline_arm": "m9s1"
+    },
+    "mix": {
+      "surface": "DEV6",
+      "weights": {
+        "nq-250k": 0.16666666666666666,
+        "hotpotqa": 0.16666666666666666,
+        "cqadup-programmers": 0.16666666666666666,
+        "cqadup-physics": 0.16666666666666666,
+        "heldout-train": 0.16666666666666666,
+        "heldout-longq": 0.16666666666666666
+      },
+      "point": -0.0060447005806618295,
+      "per_component": {
+        "nq-250k": -0.007193092072235926,
+        "hotpotqa": -0.009235712383852918,
+        "cqadup-programmers": -0.004541545398079969,
+        "cqadup-physics": -0.005916775252090306,
+        "heldout-train": -0.008204402934289111,
+        "heldout-longq": -0.0011766754434227478
+      },
+      "n_per_component": {
+        "nq-250k": 3452,
+        "hotpotqa": 7405,
+        "cqadup-programmers": 876,
+        "cqadup-physics": 1039,
+        "heldout-train": 7325,
+        "heldout-longq": 55
+      },
+      "quantile": 0.025,
+      "quantile_method": "linear",
+      "lower_bound": -0.008802814711267242,
+      "ci95": [
+        -0.008802814711267242,
+        -0.0032914186320823257
+      ],
+      "B": 20000,
+      "seed": 0,
+      "rule": {
+        "kind": "mix",
+        "surface": "DEV6",
+        "margin": "MDE",
+        "quantile": 0.025,
+        "rank_stability": true,
+        "default": "query-only"
+      },
+      "threshold": 0.0056,
+      "margin_met": false,
+      "bound_positive": false,
+      "rank_stability": {
+        "checked": true,
+        "required_steps": [
+          22762,
+          30349
+        ],
+        "stable": true,
+        "delta_ckpt3": -0.008564882653926242,
+        "delta_ckpt4": -0.006211126198660488
+      },
+      "pass": false,
+      "action": "default: query-only",
+      "scope": "every screen verdict is artifact-specific at the screen dose; never 'resolved', 'confirmed' or 'significant'",
+      "baseline_arm": "m9s1"
+    }
+  },
+  "selected": {
+    "teacher": "stella-400M-v5",
+    "student": "bge-small-en-v1.5",
+    "prompt": "b",
+    "mix": "query-only"
+  },
+  "notes": [
+    "teacher defaults to the incumbent: the teacher arms have not run. If one later fires, every student/prompt/mix decision here is VOID and the milestone returns to Dylan (m9/registry.json rules.teacher_swap)."
+  ],
+  "final_macros": {
+    "m9s1": {
+      "SCREEN3": {
+        "macro": 0.498616,
+        "means": {
+          "nq-250k": 0.732449,
+          "cqadup-programmers": 0.213519,
+          "cqadup-physics": 0.316046
+        }
+      },
+      "DEV6": {
+        "macro": 0.480614,
+        "means": {
+          "nq-250k": 0.732449,
+          "hotpotqa": 0.428412,
+          "cqadup-programmers": 0.213519,
+          "cqadup-physics": 0.316046,
+          "heldout-train": 0.377998,
+          "heldout-longq": 0.815258
+        }
+      }
+    },
+    "m9s4": {
+      "SCREEN3": {
+        "macro": 0.494314,
+        "means": {
+          "nq-250k": 0.726075,
+          "cqadup-programmers": 0.210351,
+          "cqadup-physics": 0.314755
+        }
+      },
+      "DEV6": {
+        "macro": 0.478007,
+        "means": {
+          "nq-250k": 0.726075,
+          "hotpotqa": 0.423392,
+          "cqadup-programmers": 0.210351,
+          "cqadup-physics": 0.314755,
+          "heldout-train": 0.36862,
+          "heldout-longq": 0.824852
+        }
+      }
+    },
+    "m9s5": {
+      "SCREEN3": {
+        "macro": 0.482705,
+        "means": {
+          "nq-250k": 0.713339,
+          "cqadup-programmers": 0.203113,
+          "cqadup-physics": 0.301031
+        }
+      },
+      "DEV6": {
+        "macro": 0.460253,
+        "means": {
+          "nq-250k": 0.713339,
+          "hotpotqa": 0.388422,
+          "cqadup-programmers": 0.203113,
+          "cqadup-physics": 0.301031,
+          "heldout-train": 0.352966,
+          "heldout-longq": 0.802645
+        }
+      }
+    },
+    "m9s6": {
+      "SCREEN3": {
+        "macro": 0.492405,
+        "means": {
+          "nq-250k": 0.725256,
+          "cqadup-programmers": 0.208978,
+          "cqadup-physics": 0.31013
+        }
+      },
+      "DEV6": {
+        "macro": 0.474569,
+        "means": {
+          "nq-250k": 0.725256,
+          "hotpotqa": 0.419176,
+          "cqadup-programmers": 0.208978,
+          "cqadup-physics": 0.31013,
+          "heldout-train": 0.369793,
+          "heldout-longq": 0.814082
+        }
+      }
+    }
+  },
+  "retention": {
+    "m9s1": {
+      "SCREEN3": 0.7309,
+      "DEV6": 0.7148
+    },
+    "m9s4": {
+      "SCREEN3": 0.7246,
+      "DEV6": 0.7109
+    },
+    "m9s5": {
+      "SCREEN3": 0.7075,
+      "DEV6": 0.6845
+    },
+    "m9s6": {
+      "SCREEN3": 0.7218,
+      "DEV6": 0.7058
+    }
+  },
+  "curves": {
+    "m9s1": [
+      {
+        "step": 7588,
+        "examples": 971264,
+        "nonpad_tokens": 14878695,
+        "SCREEN3": 0.448609
+      },
+      {
+        "step": 15175,
+        "examples": 1942400,
+        "nonpad_tokens": 29755611,
+        "SCREEN3": 0.481276
+      },
+      {
+        "step": 22762,
+        "examples": 2913536,
+        "nonpad_tokens": 44632656,
+        "SCREEN3": 0.495403
+      },
+      {
+        "step": 30349,
+        "examples": 3884576,
+        "nonpad_tokens": 59507872,
+        "SCREEN3": 0.498616,
+        "DEV6": 0.480614
+      }
+    ],
+    "m9s4": [
+      {
+        "step": 7588,
+        "examples": 971264,
+        "nonpad_tokens": 14878695,
+        "SCREEN3": 0.444098
+      },
+      {
+        "step": 15175,
+        "examples": 1942400,
+        "nonpad_tokens": 29755611,
+        "SCREEN3": 0.478
+      },
+      {
+        "step": 22762,
+        "examples": 2913536,
+        "nonpad_tokens": 44632656,
+        "SCREEN3": 0.489885
+      },
+      {
+        "step": 30349,
+        "examples": 3884576,
+        "nonpad_tokens": 59507872,
+        "SCREEN3": 0.494314,
+        "DEV6": 0.478007
+      }
+    ],
+    "m9s5": [
+      {
+        "step": 7588,
+        "examples": 433566,
+        "nonpad_tokens": 14878470,
+        "SCREEN3": 0.42023
+      },
+      {
+        "step": 15175,
+        "examples": 867049,
+        "nonpad_tokens": 29754938,
+        "SCREEN3": 0.456788
+      },
+      {
+        "step": 22762,
+        "examples": 1300515,
+        "nonpad_tokens": 44631421,
+        "SCREEN3": 0.47641
+      },
+      {
+        "step": 30349,
+        "examples": 1733869,
+        "nonpad_tokens": 59507877,
+        "SCREEN3": 0.482705,
+        "DEV6": 0.460253
+      }
+    ],
+    "m9s6": [
+      {
+        "step": 7588,
+        "examples": 727166,
+        "nonpad_tokens": 14878468,
+        "SCREEN3": 0.435103
+      },
+      {
+        "step": 15175,
+        "examples": 1453774,
+        "nonpad_tokens": 29754937,
+        "SCREEN3": 0.471791
+      },
+      {
+        "step": 22762,
+        "examples": 2180773,
+        "nonpad_tokens": 44631486,
+        "SCREEN3": 0.486838
+      },
+      {
+        "step": 30349,
+        "examples": 2908338,
+        "nonpad_tokens": 59507877,
+        "SCREEN3": 0.492405,
+        "DEV6": 0.474569
+      }
+    ]
+  },
+  "scope": "every screen verdict is artifact-specific at the screen dose; never 'resolved', 'confirmed' or 'significant'",
+  "_registration": {
+    "run_id": "m9-decisions",
+    "diagnostic": false,
+    "commit": "43d92938819a6965569a5c93d08df979854c4d2d",
+    "branch": "m9-work",
+    "session_sha256": "def5f88a0acf99f8190974f225a9c0c2c7ff03a84f7d4c067d13ada5871fb610",
+    "stage": "M9.0",
+    "scopes": [
+      "protocol",
+      "data",
+      "train",
+      "eval",
+      "challenger"
+    ],
+    "scoped": {
+      "protocol": "7a26535a722a0ae0a062bc2dbc769ce30ed9c2e49dd3830ff6b8bd120df08571",
+      "data": "beac6ee6f3ee1546f3331b53b5e436b2bd5f1b6840342d4c1070ea1830af8deb",
+      "train": "5a2017f7714188d217f7154eed37ef67f5c9984eab02f579e725bf412d424de8",
+      "eval": "e811aeed5d68e81ed4abcdba34cc40bad99ff2630ae7ad07dd093df2d8b89348",
+      "challenger": "1d4ae5a3393a6845157e4a02c6dddcc5ce411323223a18bef93e2952ac6735dc"
+    },
+    "opened_at": 1788140228.3672912,
+    "written_at": 1788140228.4612465,
+    "extra": {},
+    "eligible_for_decision": true
+  }
+}

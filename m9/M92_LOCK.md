@@ -1,7 +1,7 @@
-# M9.2 — the recipe lock for the seven-day build (DRAFT, blanks filled when the screen lands)
+# M9.2 — the recipe lock for the seven-day build (LOCKED 2026-08-30)
 
-Status: **DRAFT.** Every `‹…›` is filled from `results/m9_screen_decisions.json` before this file is
-committed and before `longrun` opens a session. Reviewed adversarially, then locked, then launched.
+Status: **LOCKED.** Filled from `results/m9_screen_decisions.json` (eligible, complete).
+Seven adversarial passes actioned (six Codex, one fresh-context). Committed before launch.
 `m9/LEDGER.md` gets a short §14 pointing here; the bulk lives in this file so the guarded protocol
 file stays small.
 
@@ -9,10 +9,10 @@ file stays small.
 
 | field | value | from |
 |---|---|---|
-| teacher | ‹teacher› | `m9s2`/`m9s3` vs `m9s1`, SCREEN-3 family weights, margin 0.010 |
-| student | ‹student› | `m9s4` vs anchor, DEV-6, margin 0.0056 |
-| prompt policy | ‹prompt› | `m9s5` |
-| mix | ‹mix› | `m9s6` |
+| teacher | **stella-400M-v5** (incumbent; challengers withdrawn on measurement) | `m9s2`/`m9s3` vs `m9s1`, SCREEN-3 family weights, margin 0.010 |
+| student | **bge-small-en-v1.5** (MiniLM −0.0026, fails the ≥0.0056 bar) | `m9s4` vs anchor, DEV-6, margin 0.0056 |
+| prompt policy | **(b), bare queries** (policy (a) −0.0204) | `m9s5` |
+| mix | screen verdict **query-only** (−0.0060) → **OWNER RULING: 5/5/90 as registered** (`registry.json` `owner_rulings.m9s6_mix_override`) | `m9s6` |
 | head warm start | **on**, ridge λ = 1e-4 from a training-only holdout | `results/m9_warmfit.json` |
 | capacity probe | **withdrawn before running** (Dylan, on Codex #5) — M9 cannot act on either answer under the 35M cap; carries to M10 | `m9/RESULTS.md` |
 
@@ -61,6 +61,22 @@ scored on.
 help at matched dose) → the 5/5/90 build below; `query-only` (documents failed their only direct
 test) → **`make_config` refuses and the build STOPS for Dylan's ruling on shares**, because a
 seven-day 90%-document bet would then be unsupported by its own screen.
+
+**WHAT HAPPENED, 2026-08-30.** `m9s6` selected **query-only**: DEV-6 0.4746 against the anchor's
+0.4806, −0.0060. The registered branch above therefore fired and `make_config` refused the build.
+**Decomposed before the ruling** (`results/m9_mix_decomposition.json`): m9s6 ran 41.66 M query
+tokens (11.2 epochs) against the anchor's 59.51 M (16), and the anchor's own curve interpolated at
+41.66 M query tokens gives SCREEN-3 **0.49258** against m9s6's actual **0.49240** — so its 17.9 M
+document tokens contributed **−0.00017**, neutral within noise, and the entire deficit is the
+query-token cut. The arm is a *substitution* test at fixed budget, not a test of unique text at
+scale. **Dylan ruled: run 5/5/90 as registered** (`m9/registry.json` →
+`owner_rulings.m9s6_mix_override`, which `make_config` requires by name before it will build a
+non-`70/30` mix). Grounds: documents measured neutral rather than harmful; query-only cannot fill
+the horizon (356 epochs of the same 45.6 M-token corpus, against an anchor that asymptotes by 16);
+LEAF reaches 97.9 % retention on comparable unique-text scale with a document-dominant mix; and the
+downside is bounded by the plateau rule, which cools down and stops early rather than spending seven
+days. **The caveat is recorded with the ruling: neutral-per-token at 11 query epochs is not evidence
+that documents help at 110. The build is that test; its SCREEN-3 curve is the instrument.**
 
 **REGISTERED: 5% real queries / 5% spans / 90% documents by non-pad token**, on Codex review #5's
 recommendation and against my own 20/10/70 draft. The reason is repetition, not weight: with a true
@@ -120,7 +136,7 @@ the reserved batch are M9.4 and are governed by `m9/LEDGER.md` §Final run, unch
 
 ## 8. Before launch — the checklist
 
-- [ ] `results/m9_screen_decisions.json` complete, every mandatory arm present
+- [x] `results/m9_screen_decisions.json` complete, every mandatory arm present
 - [ ] teacher targets encoded for `nqopen`, `triviaqa`, `pseudoq` (~1.14 M texts, one stella pass)
 - [ ] `longrun prepare` finished, `corpora.json` hashes written
 - [ ] `work/m9long/config.json` generated from this file

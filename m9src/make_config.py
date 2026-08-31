@@ -62,11 +62,19 @@ def build(decisions=None):
     # helps at matched dose -> the registered 5/5/90 build. "query-only" means documents failed
     # their only direct test, so a 90%-documents seven-day bet is unsupported by its own screen --
     # that is an owner decision, not a formula.
+    ruling = r.get("owner_rulings", {}).get("m9s6_mix_override")
     if mix != "70/30":
-        raise SystemExit(f"the screen selected mix {mix!r}. The registered document-dominant "
-                         f"build (5/5/90) rests on m9s6 confirming documents help; without it, "
-                         f"STOP and get Dylan's ruling on the build shares (M92_LOCK §4).")
+        # The stop is real: only an explicit owner ruling that NAMES this verdict lifts it, and
+        # the shares then come from the ruling itself, not from this file's constant.
+        if not (ruling and ruling.get("overrides_verdict") == mix):
+            raise SystemExit(f"the screen selected mix {mix!r}. The registered document-dominant "
+                             f"build (5/5/90) rests on m9s6 confirming documents help; without it, "
+                             f"STOP and get Dylan's ruling on the build shares (M92_LOCK §4).")
+        print(f"OWNER RULING ({ruling['date']}, {ruling['ruled_by']}): mix verdict {mix!r} "
+              f"overridden; shares {ruling['build_shares']}", flush=True)
 
+    shares = dict(ruling["build_shares"]) if (ruling and mix != "70/30") else dict(SHARES)
+    assert abs(sum(shares.values()) - 1.0) < 1e-9, shares
     total_tokens = int(HOURS * 3600 * TOK_PER_S)
     decay_steps = math.ceil(COOLDOWN_TOKENS / TOKENS_PER_STEP)
     stable_cap = total_tokens - COOLDOWN_TOKENS
@@ -79,7 +87,7 @@ def build(decisions=None):
         "student_query_prefix": (r["templates"]["query_policy_a_student"] if prompt == "a"
                                  else r["templates"]["query_policy_b_student"]),
         "seed": 0,
-        "shares": SHARES,
+        "shares": shares,
         "tokens_per_step": TOKENS_PER_STEP,
         "lr_peak": 1e-4, "lr_final": 1e-5, "warmup_steps": 2000,
         "decay_steps": decay_steps,
@@ -124,7 +132,7 @@ def build(decisions=None):
         sibs = [n for n in (longrun.QUERY_SOURCES + longrun.SPAN_SOURCES + longrun.DOC_SOURCES)
                 if longrun._grp(n) == grp]
         tot = sum(longrun.load_corpus(s)[2]["n_tokens"] for s in sibs)
-        share = SHARES[grp] * meta["n_tokens"] / tot
+        share = shares[grp] * meta["n_tokens"] / tot
         per_step[name] = max(1, int(round(TOKENS_PER_STEP * share / meta["mean_tokens"])))
         epochs[name] = round(total_tokens * share / meta["n_tokens"], 1)
     cfg["_arithmetic"]["examples_per_step"] = per_step

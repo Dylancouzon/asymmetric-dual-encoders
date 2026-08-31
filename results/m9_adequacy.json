@@ -1,0 +1,68 @@
+{
+  "anchor": "m9s1",
+  "surface": "SCREEN3",
+  "ceiling": 0.68223,
+  "final_macro": 0.498616,
+  "retention": 0.7309,
+  "late_slope": 0.0032130000000000214,
+  "conditions": {
+    "retention_at_final": {
+      "min": 0.6,
+      "of": "the stella-400M SCREEN-3 symmetric ceiling 0.68223",
+      "why": "below this the student sits so far from the teacher surface that a contrast between two arms is dominated by early-imitability rather than by the factor under test (Codex pass 2, MAJOR-9)"
+    },
+    "late_slope": {
+      "max": 0.02,
+      "definition": "macro(ckpt4) - macro(ckpt3) on SCREEN-3",
+      "why": "a curve still climbing steeply at the final checkpoint is an early-training snapshot, and its ranking need not survive to final dose"
+    }
+  },
+  "missing_checkpoints": [],
+  "pass_retention": true,
+  "pass_slope": true,
+  "curve": [
+    [
+      7588,
+      0.448609
+    ],
+    [
+      15175,
+      0.481276
+    ],
+    [
+      22762,
+      0.495403
+    ],
+    [
+      30349,
+      0.498616
+    ]
+  ],
+  "pass": true,
+  "action": "stage B runs as registered",
+  "kind": "a BUDGET TRIGGER, not a calibrated ranking-adequacy test. Neither threshold is tied to a measured rank-concordance rate, and the slope is a two-point difference read where the cosine schedule has already decayed the LR to 1e-5 -- so a small late gain can mean the schedule shut learning down rather than that the representation converged (Codex pass 3). It is used only to decide whether spending stage B is worth it; it certifies nothing",
+  "_registration": {
+    "run_id": "m9-adequacy",
+    "diagnostic": false,
+    "commit": "43d92938819a6965569a5c93d08df979854c4d2d",
+    "branch": "m9-work",
+    "session_sha256": "def5f88a0acf99f8190974f225a9c0c2c7ff03a84f7d4c067d13ada5871fb610",
+    "stage": "M9.0",
+    "scopes": [
+      "protocol",
+      "data",
+      "train",
+      "eval"
+    ],
+    "scoped": {
+      "protocol": "7a26535a722a0ae0a062bc2dbc769ce30ed9c2e49dd3830ff6b8bd120df08571",
+      "data": "beac6ee6f3ee1546f3331b53b5e436b2bd5f1b6840342d4c1070ea1830af8deb",
+      "train": "5a2017f7714188d217f7154eed37ef67f5c9984eab02f579e725bf412d424de8",
+      "eval": "e811aeed5d68e81ed4abcdba34cc40bad99ff2630ae7ad07dd093df2d8b89348"
+    },
+    "opened_at": 1788133676.372509,
+    "written_at": 1788133676.459738,
+    "extra": {},
+    "eligible_for_decision": true
+  }
+}

@@ -775,3 +775,34 @@ changing the code that decides eligibility during an arm *must* invalidate that 
 to scope `open_session()` the way `eligible()` already is, or to give M9.3 its own session; the
 "batch edits between arms" discipline is operational hygiene, not a fix.
 
+## §18 Pre-launch hardening — five further adversarial passes, 2026-08-30 evening
+
+All five ran before the M9.1 re-screen opened its session; every finding actioned same-day.
+Briefs carried the read-exclusion; every review log audited clean of reserved-set reads.
+
+| pass | scope | verdict → disposition |
+|---|---|---|
+| Codex #8 (`scratchpad`, actioned in `0c912e8`) | the five #7 blocker fixes | DO NOT LAUNCH: 5 BLOCKER / 4 MAJOR — mix verdict ignored by make_config, first-eval gate impossible (step-0 row), stale-corpus blessing, decisions outliving voided arms, cooldown not durable. All fixed |
+| Codex #9 (verify, `eb6d1da`) | the #8 fixes | 3 BLOCKER residue — identity must bind BYTES not declarations; m9-decisions needs the challenger scope; manual decay not durable. Fixed |
+| Fable fresh-context (`0eadaf9`) | whole launch path | DO NOT LAUNCH: 1 BLOCKER / 6 MAJOR — eval pause inside the rolling throughput window turns one slow eval into a registered permanent stop; policy-(a) prefix never reached eval (would confound m9s5); stale-heartbeat 80s restart race; no two-watchdog guard; untimed git push; cleanup gaps. All fixed |
+| Codex #10 (`2506343`) | the Fable fixes | window reset sat BEFORE checkpoint I/O; initial launch unguarded; stale-lock takeover racy. Fixed |
+| Codex #11 (`cf7632e`) | the #10 fixes | takeover still racy (path vs inode) → replaced with flock (kernel-released, no staleness state); smoked live |
+
+**Registered before m9s6 ran** (M92_LOCK §4): mix verdict `70/30` → the 5/5/90 build; `query-only`
+→ make_config refuses, shares become an owner decision. **Registered schedule change** (§5/§6):
+plateau and the stable token cap enter the cooldown automatically; under the watchdog the trainer
+also anneals before the wall-clock horizon (`--anneal-before-deadline`, 1.25× margin at measured
+rate); every decay entry checkpoints immediately.
+
+Also: `m9-status` is a status-only orphan branch (the watchdog worktree no longer checks out the
+repo tree — closes the 2026-08-29 read-exclusion surface); corpora meta verified by 200-sample
+re-tokenization per corpus and identity-stamped (student, source/kept/pool-rows hashes); Dylan
+RATIFIED the §0 amendment (recorded at §0).
+
+**§18.1 The screen, re-run and final (2026-08-30 21:37).** Teacher stella-400M · student
+**bge-small** (MiniLM −0.0026) · prompt **(b)** (policy (a) −0.0204) · mix verdict **query-only**
+(−0.0060) **overridden by owner ruling to 5/5/90** — grounds, decomposition and caveat in
+`m9/M92_LOCK.md` §4 and `registry.json owner_rulings`. `m9s1b`/`m9s1c` withdrawn before the re-run
+(read by no rule; measured pre-chunking). **The chunked-backward fix is the day's real catch**: a
+padded-batch OOM that would have killed the seven-day build at step 0, found by `m9s6` in the
+screen's twin of the same loop.

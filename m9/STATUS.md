@@ -149,8 +149,10 @@ cd /home/dylan/asymetric-dual-encoders            # branch m9-work
 rm -f work/m9tokens/*.json results/m9_screen_m9s*.json results/m9_adequacy.json \
       results/m9_screen_state.json results/m9_screen_decisions.json
 .venv/bin/python -c "import sys;sys.path[:0]=['m9src'];import guard9;guard9.open_session(force=True)"
+# decide (provisional) must precede m9s4: with the teacher arms withdrawn, m9s4 resolves
+# teacher="selected" from the provisional state a decide writes (learned 2026-08-30, one dead arm)
 ./run_m9_stage.sh gate:warmfit gate:fp16_gate gate:bridge_dryrun:verify \
-    m9s1 adequacy m9s1c m9s1b m9s4 decide m9s5 decide m9s6 decide
+    m9s1 adequacy m9s1c m9s1b decide m9s4 decide m9s5 decide m9s6 decide
 test -s results/m9_screen_decisions.json || { echo "no FINAL decision -- stop"; exit 1; }
 
 # 2. build prerequisites (~40 min; longer if the screen picked MiniLM or policy (a) --

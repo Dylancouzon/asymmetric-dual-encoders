@@ -20,14 +20,14 @@
   },
   "max_abs_delta_overall": 0.0,
   "qid_drift": 0,
-  "seconds": 225.3,
+  "seconds": 223.6,
   "pass": true,
   "_registration": {
     "run_id": "m9-bridge-dryrun",
     "diagnostic": false,
-    "commit": "dbf81765cfc4d8b262980ee9488dc5186dcb8730",
+    "commit": "43d92938819a6965569a5c93d08df979854c4d2d",
     "branch": "m9-work",
-    "session_sha256": "380570c28bffed9bf4e425c1b7a649e8a9ed3622dfc8a9ca056f654ce1fc0393",
+    "session_sha256": "def5f88a0acf99f8190974f225a9c0c2c7ff03a84f7d4c067d13ada5871fb610",
     "stage": "M9.0",
     "scopes": [
       "protocol",
@@ -35,12 +35,12 @@
       "bridge"
     ],
     "scoped": {
-      "protocol": "9d5ecaa1ba7d60068f4b35e3205fc8109c4143ebc6fe955c442348d553b9b58a",
-      "eval": "c859ec36080f1e959a66051f7f9ad0e715045a8e9bf0ca6679b0d30fa5dd9546",
+      "protocol": "7a26535a722a0ae0a062bc2dbc769ce30ed9c2e49dd3830ff6b8bd120df08571",
+      "eval": "e811aeed5d68e81ed4abcdba34cc40bad99ff2630ae7ad07dd093df2d8b89348",
       "bridge": "c69f0f9bb77d3f814037d57620640f624982a415f1a813313b156455714df0e3"
     },
-    "opened_at": 1788099145.341824,
-    "written_at": 1788099145.426844,
+    "opened_at": 1788131450.5499432,
+    "written_at": 1788131450.6349366,
     "extra": {},
     "eligible_for_decision": true
   }

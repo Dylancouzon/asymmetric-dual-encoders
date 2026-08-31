@@ -64,9 +64,9 @@
   "_registration": {
     "run_id": "m9-warmfit",
     "diagnostic": false,
-    "commit": "250634335b52657ef1d8264bc0cda2680a45bf9b",
+    "commit": "43d92938819a6965569a5c93d08df979854c4d2d",
     "branch": "m9-work",
-    "session_sha256": "f071d5580e7be902741f2e209ee714b9055163a35415b3ee67cb965691ce4170",
+    "session_sha256": "def5f88a0acf99f8190974f225a9c0c2c7ff03a84f7d4c067d13ada5871fb610",
     "stage": "M9.0",
     "scopes": [
       "protocol",
@@ -74,12 +74,12 @@
       "train"
     ],
     "scoped": {
-      "protocol": "e90e2d9ba82926f4b009a09f5dd8a2dcfbfd9b27d81d153b289bbef5cc093cef",
+      "protocol": "7a26535a722a0ae0a062bc2dbc769ce30ed9c2e49dd3830ff6b8bd120df08571",
       "data": "beac6ee6f3ee1546f3331b53b5e436b2bd5f1b6840342d4c1070ea1830af8deb",
-      "train": "9ef1f9a836b93e6f9a6b28e50ab9be74e5336e48a06f76e26cfac276177693c8"
+      "train": "5a2017f7714188d217f7154eed37ef67f5c9984eab02f579e725bf412d424de8"
     },
-    "opened_at": 1788117429.016014,
-    "written_at": 1788117447.526019,
+    "opened_at": 1788131171.9545019,
+    "written_at": 1788131188.7159932,
     "extra": {},
     "eligible_for_decision": true
   }
