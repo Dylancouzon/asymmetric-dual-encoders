@@ -880,3 +880,19 @@ actioned in `m9/FINAL_LOCK.md` + `registry.final_run`. Reserved-read audit clean
 | M2/M3 disclosures unbound; headline referenced not quoted; "unrestricted" not banned | headline reproduced verbatim, paraphrase forbidden; each disclosure binds a value; all three forbidden words listed |
 | M4/M5 `paired_dep` defaults (`strict=False`, `k=len(aligned)`) allow a silent 5-dataset macro; shared draws not guaranteed by the API | assert exactly six datasets + identical frozen qids, then `strict=True`; one frozen draw plan, digest serialized, reused by both contrasts |
 | M6/m1 manifest not revision-complete; `FINAL-BEGIN` misnamed | hashes/revisions pinned per row; ledger marker is `FINAL-RUN-BEGIN` |
+
+### Unattended memory-safety finding, 2026-08-31 — the trainer is the kernel's top OOM victim
+
+Found while diagnosing two Codex reviews dying mid-run. The box has 25 GB; the trainer's RSS is
+19.8 GB, but **`RssAnon` is only 2.1 GB** — the other 18.5 GB is memory-mapped corpus/target
+pages, i.e. reclaimable page cache (`VmSwap` 0). Real memory pressure is therefore low.
+
+**The risk is the ordering, not the volume.** `oom_badness` counts file-backed pages, so the
+trainer's `oom_score` is **1073** — the highest on the box. Any *other* process triggering an OOM
+would get the seven-day trainer killed first, though its own pages are reclaimable and it is the
+innocent party. Lowering its score needs `CAP_SYS_RESOURCE` (no root here).
+
+**Mitigation, permission-free:** `m9src/sacrificial.sh` sets `oom_score_adj=1000` on itself and
+execs the helper, because *raising* a process's own score requires no privilege. **Every helper
+tool run alongside the build — Codex reviews especially — must go through it**, so the helper
+loses any OOM contest with the trainer. Verified: wrapper reports `oom_score_adj=1000`.
