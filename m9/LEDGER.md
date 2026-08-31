@@ -806,3 +806,10 @@ RATIFIED the §0 amendment (recorded at §0).
 (read by no rule; measured pre-chunking). **The chunked-backward fix is the day's real catch**: a
 padded-batch OOM that would have killed the seven-day build at step 0, found by `m9s6` in the
 screen's twin of the same loop.
+
+### Owner ruling 2026-08-30 — seed replicas waived; 168 h build authorized
+
+| item | ruling |
+|---|---|
+| two extra preregistered seeds (mandate §Recipe/Seeds) | **waived** — ~14 GPU-days for a reporting-only figure; `registry.json owner_rulings.seed_replicas_waived`. Report states seed variability unmeasured, as a limitation |
+| M9.3 build | **GO at the locked 168 h horizon**, recipe unchanged (`M92_LOCK.md`) |

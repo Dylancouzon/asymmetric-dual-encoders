@@ -567,6 +567,14 @@
    "why": "m9s6 is a SUBSTITUTION test at fixed budget: results/m9_mix_decomposition.json shows its 17.9M document tokens contributed between -0.00017 and -0.00235 depending on how the concave anchor curve is read (both inside MDE 0.0056), i.e. NOT DISTINGUISHABLE FROM NEUTRAL -- the stronger 'entire deficit is the query cut' claim is withdrawn. Query-only cannot fill the horizon (356 epochs of 45.6M tokens/epoch; the anchor asymptotes by 16), so only the 6.15M-doc pool sustains a 7-day run. Downside bounded by the plateau rule: if documents add nothing the run cools down and stops early with a servable model.",
    "caveat": "neutral-per-token at 11 query epochs is NOT evidence that documents help at 110. The build is the test; its SCREEN-3 curve is the instrument and its kill rules the bound.",
    "recorded_before": "any build number existed"
+  },
+  "seed_replicas_waived": {
+   "ruled_by": "Dylan",
+   "date": "2026-08-30",
+   "waives": "mandate/Recipe/Seeds: two additional preregistered seeds at the identical full recipe and dose, reporting-only",
+   "why": "the final dose is a 168 h single-GPU run, so two replicas are ~14 GPU-days of wall clock for a reporting-only variability figure; the mandate's waiver clause ('Dylan may waive by logged ruling if the final dose makes replicas multi-day') is exactly this case",
+   "consequence": "ship the preregistered seed only; the report must state that seed-to-seed variability was NOT measured, as a limitation, and must not present any DEV/LoTTE gap as seed-robust",
+   "recorded_before": "the build was launched"
   }
  }
 }
