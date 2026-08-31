@@ -1,42 +1,34 @@
-# M9 status — build ready; not launched
+# M9 status — build RUNNING (launched 2026-08-30 23:14)
 
-No trainer or watchdog is running and nothing has trained. Screen, targets, corpora, manifest,
-config, and resume prerequisites are complete. The locked build is stella-400M-v5 ×
-bge-small-en-v1.5 × bare prompt × 5/5/90; see `M92_LOCK.md`.
+Trainer pid 225232, watchdog + `guardian.sh` + `sentinel.sh` supervising. Recipe `M92_LOCK.md`,
+unchanged. Absolute deadline persisted in `work/m9long/deadline.json` — never reset by a restart.
 
-The pre-launch repair is committed and pushed; `guard9.py` prints `problems: []` and
-`test_resume.py` passes bitwise. **Everything is verified and the only thing missing is Dylan's
-GO.** Re-check the guard, then launch:
+Live state: `m9/RUN_STATUS.md`, refreshed every 30 min and pushed to branch `m9-status`.
 
-```bash
-setsid nohup .venv/bin/python m9src/watchdog.py --hours 168 --eval-stale 18000 \
-  --ckpt-stale 7200 > logs/m9_watchdog.log 2>&1 &
-```
+## OPEN WORK — carry this forward across any context clear
 
-Monitor from a fresh session:
+| # | item | state |
+|---|---|---|
+| 1 | Codex M3/M4/M5 trainer repair (deadline-truncates-cooldown, corrupt-`last.pt` fallback, uncontained eval exceptions) | patch written, **Codex-reviewed before applying**; needs one trainer restart at a checkpoint boundary |
+| 2 | M9.4 final-run scorer (`final_run.py`): bridge as phase 1, C1/C2, B=10,000 bootstrap + B=100,000 sign-flip, Holm at α=0.025 | **not written.** Must be Codex-reviewed before it touches the six — M7 precedent: a rounded CI endpoint was caught there |
+| 3 | LoTTE read #1 batch manifest (fusion weight + non-inferiority veto) | not built; one atomic batch, no second chance |
+| 4 | Cost rows (query asset / doc index / hydration + doc-encode, ONNX batch-1 latency protocol) | not measured |
+| 5 | Report artifact | after M9.4 |
 
-```bash
-pgrep -af "watchdog[.]py"
-pgrep -af "longrun[.]py (train|decay)"
-.venv/bin/python m9src/longrun.py status
-tail -n 200 logs/m9_watchdog.log logs/m9_build.log
-rg -n "Traceback|Error|FAILED|OOM|Killed|assert" logs/m9_watchdog.log logs/m9_build.log
-```
+Owner rulings in force: seed replicas **waived** (report must state variability unmeasured);
+GO at the locked 168 h horizon.
 
-`m9/RUN_STATUS.md` refreshes every 30 minutes on branch `m9-status`. Expect exactly one watchdog
-and one trainer, then step-0 eval, step 500, checkpoints every 3,000 steps (~22 min), and evals
-every 15,000 steps (~1.8 h; 3.6 h at the 50% throughput floor, against a 5 h staleness limit).
+## Supervision — three layers, because silence is not health
 
-**Verify the launch before walking away** — these paths were reviewed sixteen times but the
-watchdog supervising a live trainer, and its push to `m9-status`, had never actually run:
+- `watchdog.py` restarts the trainer, enforces staleness/deadline, pushes status.
+- `guardian.sh` restarts the **watchdog** (it was an unsupervised single point of failure).
+  Safe by flock: a relaunch while one lives exits immediately. Verified against SIGKILL.
+- `sentinel.sh` is the inverse alarm: it is SILENT when healthy and speaks only on a stall,
+  a missing process, a throughput collapse, low disk, or the run ending. A log-tailing monitor
+  cannot detect "nothing was ever written again"; this can.
 
-```bash
-tail -f logs/m9_build.log          # want: warm-start adapter line, EVAL step 0, step 500
-cat work/m9long/heartbeat.json     # want: state train, advancing step
-git ls-remote origin m9-status     # want: the sha to move within ~35 min
-```
-
-If any of that fails, stop it (below) rather than leave it running.
+**Never kill by `pgrep` pattern** — a pattern matched the operator's own shell during the
+2026-08-31 repair and killed it. Use exact PIDs from `ps -eo pid,args`.
 
 ## Stop, cool down, restart
 
