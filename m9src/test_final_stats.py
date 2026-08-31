@@ -45,7 +45,7 @@ def test_gate_field_is_the_1p25_quantile_not_the_2p5():
     al = fs.align(a, b)
     plan, _ = fs.draw_plan(al, 2000, 900)
     r = fs.bootstrap(al, plan, 0.0125)
-    assert r["quantile"] == 0.0125 and r["quantile_method"] == "linear"
+    assert r["quantile"] == 0.0125 and r["quantile_method"] == "inverted_cdf"
     # the reporting-only 2.5% endpoint must be a DIFFERENT, higher number
     assert r["ci95_raw_reporting_only"][0] > r["lower_q0125_raw"]
     # full precision: not rounded to 4dp
@@ -83,7 +83,8 @@ def test_c1_and_c2_share_one_plan():
     rows = {"nano": mk(0.03, seed=1), "bge": mk(0.0, seed=2), "leaf": mk(0.01, seed=3)}
     conf = {"bootstrap": {"B": 400, "seed": 900, "quantile": 0.0125},
             "signflip": {"B": 2000, "seed": 901}, "holm": {"alpha_family": 0.025}}
-    out = fs.run_contrasts(rows, ("nano", "bge"), ("nano", "leaf"), conf)
+    out = fs.run_contrasts(rows, ("nano", "bge"), ("nano", "leaf"), conf,
+                           allow_unregistered=True)
     assert "plan_sha256" in out and len(out["plan_sha256"]) == 64
     # one plan digest for the whole record, not one per contrast
     assert set(out["contrasts"]) == {"C1", "C2"}
@@ -103,7 +104,8 @@ def test_pass_requires_both_bootstrap_and_holm():
     rows = {"nano": mk(0.0005, seed=1), "bge": mk(0.0, seed=2), "leaf": mk(0.0, seed=3)}
     conf = {"bootstrap": {"B": 400, "seed": 900, "quantile": 0.0125},
             "signflip": {"B": 2000, "seed": 901}, "holm": {"alpha_family": 0.025}}
-    out = fs.run_contrasts(rows, ("nano", "bge"), ("nano", "leaf"), conf)
+    out = fs.run_contrasts(rows, ("nano", "bge"), ("nano", "leaf"), conf,
+                           allow_unregistered=True)
     for c in out["contrasts"].values():
         assert c["passes"] == (c["bootstrap_rejects"] and c["holm_rejects"])
 
@@ -113,7 +115,8 @@ def test_null_data_does_not_pass():
     rows = {"nano": mk(0.0, seed=7), "bge": mk(0.0, seed=8), "leaf": mk(0.0, seed=9)}
     conf = {"bootstrap": {"B": 800, "seed": 900, "quantile": 0.0125},
             "signflip": {"B": 3000, "seed": 901}, "holm": {"alpha_family": 0.025}}
-    out = fs.run_contrasts(rows, ("nano", "bge"), ("nano", "leaf"), conf)
+    out = fs.run_contrasts(rows, ("nano", "bge"), ("nano", "leaf"), conf,
+                           allow_unregistered=True)
     assert not any(c["passes"] for c in out["contrasts"].values())
 
 
@@ -122,7 +125,8 @@ def test_strong_effect_does_pass():
     rows = {"nano": mk(0.15, seed=7), "bge": mk(0.0, seed=8), "leaf": mk(0.0, seed=9)}
     conf = {"bootstrap": {"B": 800, "seed": 900, "quantile": 0.0125},
             "signflip": {"B": 3000, "seed": 901}, "holm": {"alpha_family": 0.025}}
-    out = fs.run_contrasts(rows, ("nano", "bge"), ("nano", "leaf"), conf)
+    out = fs.run_contrasts(rows, ("nano", "bge"), ("nano", "leaf"), conf,
+                           allow_unregistered=True)
     assert all(c["passes"] for c in out["contrasts"].values())
 
 
@@ -133,6 +137,8 @@ def test_registry_constants_are_the_locked_ones():
     assert c["signflip"]["B"] == 100000 and c["signflip"]["seed"] == 901
     assert c["holm"]["alpha_family"] == 0.025
     assert c["bootstrap"]["decision_field"] == "lower_q0125_raw"
+    assert c["bootstrap"]["quantile_method"] == "inverted_cdf"
+    assert c["bootstrap"]["quantile"] == 0.0125
     assert c["bootstrap"]["B"] != 20000, "must not inherit the M9.0 screen B"
 
 
@@ -149,11 +155,58 @@ def test_agrees_with_boot_paired_dep_where_they_overlap():
     a, b = mk(0.02, n=200, seed=11), mk(0.0, n=200, seed=12)
     al = fs.align(a, b)
     plan, _ = fs.draw_plan(al, 4000, 900)
-    mine = fs.bootstrap(al, plan, 0.025)          # ask for 2.5% to compare like with like
+    # boot uses np.percentile, i.e. linear interpolation, so compare on THAT method;
+    # the gate itself uses inverted_cdf.
+    mine = fs.bootstrap(al, plan, 0.025, method="linear")
     theirs = boot.paired_dep(a, b, B=4000, seed=900, alternative="greater", strict=True)
     assert abs(mine["delta_raw"] - theirs["delta_raw"]) < 1e-12, "point estimates must match exactly"
     assert abs(mine["lower_q0125_raw"] - theirs["ci95_raw"][0]) < 5e-4, (
         f"2.5% endpoints diverge: {mine['lower_q0125_raw']} vs {theirs['ci95_raw'][0]}")
+
+
+def test_gate_uses_inverted_cdf_and_is_not_more_permissive_than_linear():
+    """Codex code review, critical defect: `linear` interpolates toward the next order statistic
+    and returns a weakly HIGHER (more permissive) bound. The gate must use the empirical quantile.
+    """
+    a, b = mk(0.02, n=200, seed=21), mk(0.0, n=200, seed=22)
+    al = fs.align(a, b)
+    plan, _ = fs.draw_plan(al, 8000, 900)
+    inv = fs.bootstrap(al, plan, 0.0125, method="inverted_cdf")
+    lin = fs.bootstrap(al, plan, 0.0125, method="linear")
+    assert inv["quantile_method"] == "inverted_cdf"
+    assert inv["lower_q0125_raw"] <= lin["lower_q0125_raw"], (
+        "inverted_cdf must never be more permissive than linear")
+
+
+def test_registry_mismatch_is_refused():
+    """A caller must not be able to move the gate by passing its own constants."""
+    rows = {"nano": mk(0.15, seed=7), "bge": mk(0.0, seed=8), "leaf": mk(0.0, seed=9)}
+    conf = {"bootstrap": {"B": 400, "seed": 12345, "quantile": 0.0125},
+            "signflip": {"B": 2000, "seed": 901}, "holm": {"alpha_family": 0.05}}
+    with pytest.raises(ValueError, match="registered lock"):
+        fs.run_contrasts(rows, ("nano", "bge"), ("nano", "leaf"), conf)
+
+
+def test_reversed_contrast_direction_is_refused():
+    """A reversed pair would silently test the wrong direction."""
+    rows = {"nano-dense": mk(0.15, seed=7), "bge-small-en-v1.5": mk(0.0, seed=8),
+            "leaf-ir-asym": mk(0.0, seed=9)}
+    c = fs.cfg()
+    conf = {"bootstrap": {"B": c["bootstrap"]["B"], "seed": c["bootstrap"]["seed"]},
+            "signflip": {"B": c["signflip"]["B"], "seed": c["signflip"]["seed"]},
+            "holm": {"alpha_family": c["holm"]["alpha_family"]}}
+    with pytest.raises(ValueError, match="registered lock"):
+        fs.run_contrasts(rows, ("bge-small-en-v1.5", "nano-dense"),
+                         ("leaf-ir-asym", "nano-dense"), conf)
+
+
+def test_inconsistent_plan_replicate_counts_refused():
+    a, b = mk(0.02, seed=1), mk(0.0, seed=2)
+    al = fs.align(a, b)
+    plan, _ = fs.draw_plan(al, 100, 900)
+    plan["fiqa"] = plan["fiqa"][:50]          # fewer replicates than the rest
+    with pytest.raises(ValueError, match="inconsistent replicate counts"):
+        fs.bootstrap(al, plan, 0.0125)
 
 
 def test_the_two_quantiles_are_ordered_and_gate_is_stricter():

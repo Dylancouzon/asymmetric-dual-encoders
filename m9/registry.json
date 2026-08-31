@@ -619,20 +619,23 @@
    "seed": 900,
    "resample": "n_d queries with replacement within each dataset",
    "decision_field": "lower_q0125_raw",
-   "decision_field_def": "np.quantile(draws, 0.0125, method='linear'), full precision",
+   "decision_field_def": "np.quantile(draws, 0.0125, method='inverted_cdf'), full precision -- the EMPIRICAL quantile, i.e. the 125th order statistic at B=10,000",
    "requirement": "lower_q0125_raw > 0",
    "not_the_gate": [
     "one_sided_lower_2.5 (rounded to 4dp)",
     "ci95_raw[0] (a 2.5% endpoint)"
    ],
-   "draw_plan": "one frozen plan, byte-identical across C1 and C2, digest serialized"
+   "draw_plan": "one frozen plan, byte-identical across C1 and C2, digest serialized",
+   "quantile": 0.0125,
+   "quantile_method": "inverted_cdf",
+   "quantile_method_correction": "was 'linear' in the first draft. NumPy's linear method interpolates toward the 126th order statistic and returns a weakly HIGHER, more permissive bound, which could flip the irreversible gate in the candidate's favour. Corrected 2026-08-31 before any six-set number existed (Codex code review)."
   },
   "signflip": {
    "B": 100000,
    "seed": 901,
    "alternative": "greater",
    "p": "(1 + #(T* >= T_obs)) / (B + 1)",
-   "signs": "independent Rademacher per paired query, one frozen plan shared by C1 and C2"
+   "signs": "independent Rademacher per paired query; C1 and C2 pass the SAME SEED -- a same-seed guarantee, not a materialized shared plan (no digest, unlike the bootstrap draw plan). Sharing is comparability, not a condition of marginal validity."
   },
   "holm": {
    "alpha_family": 0.025,

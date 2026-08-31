@@ -85,7 +85,7 @@ def draw_plan(aligned, B, seed):
     return plan, h.hexdigest()
 
 
-def bootstrap(aligned, plan, quantile):
+def bootstrap(aligned, plan, quantile, method="inverted_cdf"):
     """Equal-weight macro of per-query differences, with the FULL draw vector retained.
 
     The decision field is `lower_q0125_raw`: the only number permitted to decide, never rounded.
@@ -99,7 +99,10 @@ def bootstrap(aligned, plan, quantile):
     for ds, d in diffs.items():
         if plan[ds].shape[1] != d.size:
             raise ValueError(f"{ds}: plan width {plan[ds].shape[1]} != n {d.size}")
-    B = next(iter(plan.values())).shape[0]
+    Bs = {ds: int(v.shape[0]) for ds, v in plan.items()}
+    if len(set(Bs.values())) != 1:
+        raise ValueError(f"draw plan has inconsistent replicate counts: {Bs}")
+    B = next(iter(Bs.values()))
     draws = np.zeros(B, dtype=np.float64)
     for ds, d in diffs.items():
         draws += d[plan[ds]].mean(axis=1)             # (B, n_d) -> (B,)
@@ -107,13 +110,17 @@ def bootstrap(aligned, plan, quantile):
     point = sum(float(d.mean()) for d in diffs.values()) / k
     return {
         "delta_raw": point,
-        "lower_q0125_raw": float(np.quantile(draws, quantile, method="linear")),   # THE gate
+        # `inverted_cdf` IS the empirical quantile: with B=10,000 it is the 125th order
+        # statistic. NumPy's default `linear` interpolates toward the 126th and returns a weakly
+        # HIGHER -- i.e. more permissive -- bound, which can flip an irreversible release
+        # decision in the candidate's favour (Codex code review, critical defect).
+        "lower_q0125_raw": float(np.quantile(draws, quantile, method=method)),      # THE gate
         "quantile": quantile,
-        "quantile_method": "linear",
+        "quantile_method": method,
         "B": int(B),
         "draws_sha256": hashlib.sha256(np.ascontiguousarray(draws).tobytes()).hexdigest(),
-        "ci95_raw_reporting_only": [float(np.quantile(draws, 0.025, method="linear")),
-                                    float(np.quantile(draws, 0.975, method="linear"))],
+        "ci95_raw_reporting_only": [float(np.quantile(draws, 0.025, method=method)),
+                                    float(np.quantile(draws, 0.975, method=method))],
         "per_dataset_delta_raw": {ds: float(d.mean()) for ds, d in diffs.items()},
         "n_by_dataset": {ds: int(d.size) for ds, d in diffs.items()},
         "_gate_note": "lower_q0125_raw is the ONLY field that decides; ci95_raw is a 2.5% "
@@ -121,14 +128,47 @@ def bootstrap(aligned, plan, quantile):
     }
 
 
-def run_contrasts(rows, c1, c2, conf=None):
+def _assert_matches_registry(conf, c1, c2):
+    """The registry is the lock. A caller-supplied conf must not be able to move the gate.
+
+    `run_contrasts(conf=...)` exists for tests, but on the real run an overridden B, seed,
+    quantile or alpha would be an unreviewable change to a pre-registered decision rule -- and a
+    reversed contrast pair would silently test the wrong direction (Codex code review, item 5).
+    """
+    r = cfg()
+    bad = []
+    for path, got in (("bootstrap.B", conf["bootstrap"]["B"]),
+                      ("bootstrap.seed", conf["bootstrap"]["seed"]),
+                      ("signflip.B", conf["signflip"]["B"]),
+                      ("signflip.seed", conf["signflip"]["seed"]),
+                      ("holm.alpha_family", conf["holm"]["alpha_family"])):
+        sec, key = path.split(".")
+        if r[sec][key] != got:
+            bad.append(f"{path}: registry {r[sec][key]!r} != supplied {got!r}")
+    if conf["bootstrap"].get("quantile", 0.0125) != 0.0125:
+        bad.append("bootstrap.quantile is not the registered 0.0125")
+    if conf["bootstrap"].get("quantile_method", "inverted_cdf") != "inverted_cdf":
+        bad.append("bootstrap.quantile_method is not the registered inverted_cdf")
+    want = ((r["contrasts"]["C1"]["a"], r["contrasts"]["C1"]["b"]),
+            (r["contrasts"]["C2"]["a"], r["contrasts"]["C2"]["b"]))
+    if (tuple(c1), tuple(c2)) != want:
+        bad.append(f"contrasts {(tuple(c1), tuple(c2))} != registered {want}")
+    if bad:
+        raise ValueError("refusing to run: supplied configuration does not match the "
+                         "registered lock:\n  " + "\n  ".join(bad))
+
+
+def run_contrasts(rows, c1, c2, conf=None, allow_unregistered=False):
     """The two registered contrasts, sharing one draw plan and one sign-plan seed.
 
     `rows` maps system -> {dataset: {qid: score}}. Returns the decision record; it writes no
     verdict text and takes no action -- the caller applies the locked claim table.
     """
     conf = conf or cfg()
+    if not allow_unregistered:
+        _assert_matches_registry(conf, c1, c2)
     q = conf["bootstrap"].get("quantile", 0.0125)
+    qm = conf["bootstrap"].get("quantile_method", "inverted_cdf")
     Bb, sb = conf["bootstrap"]["B"], conf["bootstrap"]["seed"]
     Rs, ss = conf["signflip"]["B"], conf["signflip"]["seed"]
     alpha = conf["holm"]["alpha_family"]
@@ -148,9 +188,16 @@ def run_contrasts(rows, c1, c2, conf=None):
            "quantile": q, "contrasts": {}}
     pvals = {}
     for name, (a, b) in pairs.items():
-        boots = bootstrap(al[name], plan, q)
+        boots = bootstrap(al[name], plan, q, method=qm)
         sf = boot.signflip_dep(rows[a], rows[b], R=Rs, seed=ss, alternative="greater",
                                strict=True, unit_of=boot.unit_key)
+        # The sign plan is NOT materialized: C1 and C2 pass the same seed, R, qids and ordering
+        # to signflip_dep, which shares signs only insofar as it consumes its RNG identically in
+        # both calls. That is a same-seed guarantee, not a verified frozen shared plan -- and
+        # sharing is a comparability device here, not a condition of marginal validity
+        # (Codex code review, item 4).
+        sf["_sharing_note"] = ("same sign-plan seed across C1/C2; no materialized plan digest, "
+                               "unlike the bootstrap draw plan")
         pvals[name] = sf["p"]
         out["contrasts"][name] = {"a": a, "b": b, "bootstrap": boots, "signflip": sf}
 

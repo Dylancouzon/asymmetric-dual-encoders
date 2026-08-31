@@ -82,11 +82,11 @@ impossible, not merely unlikely.
 - **Bootstrap**: B = 10,000; resample `n_d` queries with replacement within each dataset;
   seed `900`; one **frozen draw plan** generated once and reused byte-identically by C1 and C2,
   its digest serialized into the result. Decision field is
-  **`lower_q0125_raw` = `np.quantile(draws, 0.0125, method="linear")`, serialized at full
+  **`lower_q0125_raw` = `np.quantile(draws, 0.0125, method="inverted_cdf")` — the EMPIRICAL quantile (the 125th order statistic at B=10,000), serialized at full
   precision. ONLY this field decides.** Rounded fields and `ci95_raw[0]` (a 2.5% endpoint) are
   reporting-only and are explicitly NOT the gate.
 - **Sign-flip**: B = 100,000 one-sided dependent replicates on the same equal-weight statistic;
-  independent Rademacher signs per paired query, one frozen sign plan shared by C1 and C2;
+  independent Rademacher signs per paired query; C1 and C2 use the SAME SEED (a same-seed guarantee, NOT a materialized shared plan -- no digest exists, unlike the bootstrap draw plan);
   seed `901`; `p = (1 + #(T* >= T_obs)) / (B + 1)`. Holm step-down over the two p-values at
   family alpha = 0.025.
 - A contrast passes **only if both** the bootstrap bound and Holm reject. The sign-flip is a

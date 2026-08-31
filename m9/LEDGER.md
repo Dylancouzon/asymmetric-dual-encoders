@@ -896,3 +896,25 @@ innocent party. Lowering its score needs `CAP_SYS_RESOURCE` (no root here).
 execs the helper, because *raising* a process's own score requires no privilege. **Every helper
 tool run alongside the build — Codex reviews especially — must go through it**, so the helper
 loses any OOM contest with the trainer. Verified: wrapper reports `oom_score_adj=1000`.
+
+### Codex code review of `final_stats.py`, 2026-08-31 — "not fit to decide release as written", now fixed
+
+Log `research/m9-codex-finalstats-2026-08-31.log`. Verdict reversed by the fixes below; 16/16 tests.
+
+| finding | disposition |
+|---|---|
+| **CRITICAL: `method="linear"` is not the empirical quantile.** At B=10,000 the empirical 0.0125 quantile is the **125th order statistic** (`inverted_cdf`); NumPy's `linear` interpolates toward the 126th and returns a weakly **higher, more permissive** bound — able to flip the irreversible gate in the candidate's favour | **FIXED** — gate is `method="inverted_cdf"`; registry records the correction and its reason. Test asserts `inverted_cdf <= linear`, i.e. never more permissive |
+| caller-supplied `conf` could change B, seeds, quantile, alpha | **FIXED** — `_assert_matches_registry` refuses any deviation; tests must pass `allow_unregistered=True` explicitly |
+| contrast identities/order unenforced; a reversed pair silently tests the wrong direction | **FIXED** — contrasts asserted against `registry.contrasts` |
+| plan replicate counts not checked across datasets | **FIXED** — inconsistent B refused |
+| **the lock OVERCLAIMED**: "one frozen sign plan shared by C1 and C2" is only a same-seed guarantee — no sign plan or digest is materialized, unlike the bootstrap draw plan | **CORRECTED in lock, registry and code comment.** Sharing is a comparability device, not a condition of validity |
+| gate field, 1/6 weighting, resampling unit, `alternative="greater"` tail | confirmed correct |
+
+**Answer recorded for the report (asked because I could not settle it myself):** sharing bootstrap
+indices across C1 and C2 **does not affect either interval's marginal validity**. It correlates
+their Monte-Carlo error only — common random numbers for comparability. Do not describe it as
+anything stronger.
+
+**Operational note:** three background Codex runs were killed mid-exploration without emitting
+findings; the same brief, narrowed and run in the FOREGROUND with the module inlined, completed in
+under ten minutes. Prefer foreground + inlined code + explicit "do not explore" for review briefs.
