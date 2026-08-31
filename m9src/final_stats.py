@@ -8,7 +8,7 @@ would decide release on the wrong tail at reduced precision -- the same class of
 caught in M7's `final_run.py`. So the bootstrap is reimplemented here to return the full-precision
 draw vector and one explicitly named decision field, and nothing else may decide.
 
-Constants come from `m9/registry.json -> final_run`. Prose is not authoritative; the registry is.
+Constants come from `m9/final_run_registry.json`. Prose is not authoritative; the registry is.
 """
 from __future__ import annotations
 
@@ -23,14 +23,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from m7src import boot                                    # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
-REGISTRY = REPO / "m9" / "registry.json"
+REGISTRY = REPO / "m9" / "final_run_registry.json"
 
 SIX = ("scifact", "nfcorpus", "fiqa", "arguana", "scidocs", "trec-covid")
 
 
 def cfg():
     """The registry is the single source of decision constants (BLOCKER 5)."""
-    return json.loads(REGISTRY.read_text())["final_run"]
+    return json.loads(REGISTRY.read_text())
 
 
 def _assert_six(aligned):

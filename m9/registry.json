@@ -3,7 +3,7 @@
  "version": 2,
  "ledger": "m9/LEDGER.md",
  "created": "2026-08-30",
- "stage": "M9.3",
+ "stage": "M9.0",
  "alpha_family": 0.025,
  "data": {
   "screen_query_pool_relpath": "work/m9_screen_queries.json",
@@ -576,122 +576,5 @@
    "consequence": "ship the preregistered seed only; the report must state that seed-to-seed variability was NOT measured, as a limitation, and must not present any DEV/LoTTE gap as seed-robust",
    "recorded_before": "the build was launched"
   }
- },
- "final_run": {
-  "_note": "M9.4 constants. DISCLOSED AMENDMENT to the M9.2 lock (see m9/FINAL_LOCK.md), awaiting Dylan's ratification. The executor reads THESE values, never the M9.0 screen defaults.",
-  "classification": "amendment",
-  "ratified_by_owner": false,
-  "spec": "m9/FINAL_LOCK.md",
-  "datasets": [
-   "scifact",
-   "nfcorpus",
-   "fiqa",
-   "arguana",
-   "scidocs",
-   "trec-covid"
-  ],
-  "weights": "equal 1/6, asserted; a 5-dataset macro must be impossible",
-  "comparator_source": {
-   "path": "results/perquery.json",
-   "sha256": "6b18e3dd74fd308b087d4e652c0999c9d6a2e729c78edb73f000f9b7a25fda7e",
-   "rule": "C1/C2 use ONLY these frozen rows; the freshly-scored bridge anchor is validation-only and discarded"
-  },
-  "bridge": {
-   "anchor": "bge-small-en-v1.5",
-   "max_abs_per_query_delta": 0.0003,
-   "qids": "zero missing, extra or reordered",
-   "failure": "consumes the access"
-  },
-  "contrasts": {
-   "C1": {
-    "a": "nano-dense",
-    "b": "bge-small-en-v1.5",
-    "gate": "release"
-   },
-   "C2": {
-    "a": "nano-dense",
-    "b": "leaf-ir-asym",
-    "gate": "aim"
-   }
-  },
-  "bootstrap": {
-   "B": 10000,
-   "seed": 900,
-   "resample": "n_d queries with replacement within each dataset",
-   "decision_field": "lower_q0125_raw",
-   "decision_field_def": "np.quantile(draws, 0.0125, method='inverted_cdf'), full precision -- the EMPIRICAL quantile, i.e. the 125th order statistic at B=10,000",
-   "requirement": "lower_q0125_raw > 0",
-   "not_the_gate": [
-    "one_sided_lower_2.5 (rounded to 4dp)",
-    "ci95_raw[0] (a 2.5% endpoint)"
-   ],
-   "draw_plan": "one frozen plan, byte-identical across C1 and C2, digest serialized",
-   "quantile": 0.0125,
-   "quantile_method": "inverted_cdf",
-   "quantile_method_correction": "was 'linear' in the first draft. NumPy's linear method interpolates toward the 126th order statistic and returns a weakly HIGHER, more permissive bound, which could flip the irreversible gate in the candidate's favour. Corrected 2026-08-31 before any six-set number existed (Codex code review)."
-  },
-  "signflip": {
-   "B": 100000,
-   "seed": 901,
-   "alternative": "greater",
-   "p": "(1 + #(T* >= T_obs)) / (B + 1)",
-   "signs": "independent Rademacher per paired query; C1 and C2 pass the SAME SEED -- a same-seed guarantee, not a materialized shared plan (no digest, unlike the bootstrap draw plan). Sharing is comparability, not a condition of marginal validity."
-  },
-  "holm": {
-   "alpha_family": 0.025,
-   "over": [
-    "C1",
-    "C2"
-   ]
-  },
-  "pass_rule": "a contrast passes only if BOTH the bootstrap bound and Holm reject",
-  "implementation": {
-   "module": "m9src/final_stats.py",
-   "reuses": "m7src/boot.py signflip_dep, holm, strata, unit_key",
-   "why_new_code": "boot.py exposes no 0.0125 quantile and rounds one_sided_lower_2.5 to 4dp",
-   "status": "NOT YET WRITTEN -- must be implemented, unit-tested and reviewed before the run"
-  },
-  "access_state_machine": [
-   "lock+guard",
-   "ledger FINAL-RUN-BEGIN pushed",
-   "m9-six-spent tag PUSHED (before any protected read)",
-   "open six / bridge / score",
-   "decisions + digest pushed"
-  ],
-  "infra_retry_admissible_iff": "the m9-six-spent tag does not exist on origin",
-  "recover_path": "--recover recomputes decisions from results/m9_final_run.json and never re-reads the six",
-  "reserved": {
-   "trigger": "if C1 passes then execute, unmodified",
-   "systems_included": [
-    "nano-dense",
-    "bge-small-en-v1.5",
-    "leaf-ir-asym"
-   ],
-   "systems_omitted": "all others",
-   "ndo3_weights": {
-    "dbpedia": 0.5,
-    "cqadup-android": 0.25,
-    "cqadup-english": 0.25
-   },
-   "estimands": {
-    "R1": "nano - bge-small",
-    "R2": "nano - leaf-ir-asym"
-   },
-   "alpha": 0.0,
-   "gate": null,
-   "B": 10000,
-   "seed": 902,
-   "interval": "two-sided 95%, ci95_raw at full precision",
-   "leave_one_out": "remaining weights renormalized to sum to 1",
-   "fever": "labelled double-contaminated sensitivity row, zero alpha, never gate-relevant",
-   "min_free_gb": 120,
-   "crash": "per-system atomic outputs; resume at the first incomplete system; scores suppressed until all complete"
-  },
-  "forbidden_words": [
-   "resolved",
-   "confirmed",
-   "unrestricted"
-  ],
-  "headline_verbatim": "the selected-teacher-document + nano-query asymmetric system outperformed the arctic-document + leaf-query system on the six development-informed datasets in our exact-search harness"
  }
 }

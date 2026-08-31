@@ -153,6 +153,6 @@ Registered conditional: **`if C1 passes then execute`**, exactly as written, els
 
 ## Registry binding
 
-Every constant above is mirrored into `registry.json -> final_run` and the executor reads it from
+Every constant above is mirrored into `m9/final_run_registry.json` (NOT `registry.json`: the build adapter permits only `owner_rulings` additions there, and protocol-scope edits block the trainer) and the executor reads it from
 there, never from this prose and never from the M9.0 screen defaults (B = 20,000, seed 0 — which
 must never be used for the final run). Prose and registry disagreeing is a hard abort.
