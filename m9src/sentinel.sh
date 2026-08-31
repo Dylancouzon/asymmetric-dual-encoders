@@ -20,9 +20,17 @@ MIN_GB=50
 py() { .venv/bin/python -c "$1" 2>/dev/null; }
 last_step=""; last_step_at=$(date +%s); last_evals=""; last_evals_at=$(date +%s)
 
+last_ok=$(date +%s)
 while true; do
   sleep $PERIOD
   now=$(date +%s)
+
+  # Positive proof of life, once a day: silence otherwise means healthy, but only if this
+  # process is actually still running to be silent.
+  if [ $(( now - last_ok )) -ge 86400 ]; then
+    last_ok=$now
+    echo "SENTINEL OK (daily): step $(py "import json;print(json.load(open('$HB')).get('step'))") | $(py "import json;print(round(json.load(open('$HB')).get('tokens',0)/1e9,3))")B tokens | evals $(py "import json;print(json.load(open('$HB')).get('evals'))")"
+  fi
 
   # The run ending is itself an event worth waking someone for -- including a clean finish.
   if [ -f "$RUN/terminal.json" ]; then
@@ -30,9 +38,10 @@ while true; do
     exit 0
   fi
 
-  trainer=$(pgrep -c -f "\.venv/bin/python m9src/longrun\.py" || true)
-  watchdog=$(pgrep -c -f "\.venv/bin/python m9src/watchdog\.py" || true)
-  guardian=$(pgrep -c -f "bash m9src/guardian\.sh" || true)
+  trainer=$(pgrep -c -f "^\.venv/bin/python m9src/longrun\.py" || true)
+  watchdog=$(pgrep -c -f "^\.venv/bin/python m9src/watchdog\.py" || true)
+  guardian=$(pgrep -c -f "^bash m9src/guardian\.sh" || true)
+  trainer=${trainer:-0}; watchdog=${watchdog:-0}; guardian=${guardian:-0}
 
   # A dead trainer with no terminal marker is the silent-death case. The watchdog should
   # restart it; say so anyway, because "the watchdog should" is the assumption under test.
@@ -41,9 +50,16 @@ while true; do
   [ "$watchdog" -eq 0 ] && echo "ALERT: no watchdog (guardian should relaunch within 60s; verify)"
   [ "$watchdog" -gt 1 ] && echo "ALERT: $watchdog watchdogs running -- must never happen"
   [ "$guardian" -eq 0 ] && echo "ALERT: guardian is gone -- watchdog is now unsupervised"
+  [ "$guardian" -gt 1 ] && echo "ALERT: $guardian guardians running -- they will fight over relaunches"
 
-  [ -f "$HB" ] || { echo "ALERT: heartbeat.json missing"; continue; }
-  hb_age=$(( now - $(stat -c %Y "$HB") ))
+  hb_mtime=$(stat -c %Y "$HB" 2>/dev/null || echo 0)
+  if [ "$hb_mtime" -eq 0 ]; then
+    # A momentary absence is normal at trainer launch; only a persistent one is an alert.
+    sleep 30
+    hb_mtime=$(stat -c %Y "$HB" 2>/dev/null || echo 0)
+    [ "$hb_mtime" -eq 0 ] && { echo "ALERT: heartbeat.json missing for >30s"; continue; }
+  fi
+  hb_age=$(( now - hb_mtime ))
   [ "$hb_age" -gt "$HB_S" ] && echo "ALERT: heartbeat ${hb_age}s old (>${HB_S}s) -- trainer wedged?"
 
   step=$(py "import json;print(json.load(open('$HB')).get('step',''))")

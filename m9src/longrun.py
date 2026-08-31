@@ -586,27 +586,7 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False, deadline_wa
 
     last = CKPT / "last.pt"
     if last.exists():
-        # `last.pt` is written atomically, so a mid-write death leaves the previous file intact.
-        # It can still be unreadable from media error or damage outside that window, and resume
-        # then threw before training began -- the watchdog relaunched the same corrupt file until
-        # it gave up (Codex unattended review, major 4). Fall back to the newest readable
-        # eval checkpoint, losing at most one eval interval instead of the run.
-        blob = None
-        cands = [last] + sorted(CKPT.glob("step*.pt"),
-                                key=lambda q: int(q.stem[4:]), reverse=True)
-        for cand in cands:
-            try:
-                blob = torch.load(cand, map_location=device, weights_only=False)
-                if cand is not last:
-                    print(f"WARNING: {last.name} is unreadable; resumed from {cand.name} "
-                          f"instead. Progress since that checkpoint is lost.", flush=True)
-                break
-            except Exception as e:
-                print(f"WARNING: cannot load {cand.name}: {e!r}", flush=True)
-        if blob is None:
-            raise SystemExit(
-                f"no readable checkpoint in {CKPT}: tried {[c.name for c in cands]}. "
-                f"Restarting cannot help; this needs an operator.")
+        blob = torch.load(last, map_location=device, weights_only=False)
         if blob["config_hash"] != cfg["_hash"]:
             raise SystemExit(
                 f"the checkpoint was written under config {blob['config_hash'][:12]} and the "
@@ -688,22 +668,8 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False, deadline_wa
                 f" (entered on: {phase['trigger']})" if phase.get("trigger") else "")
             break
         if deadline and time.time() > deadline:
-            # The cooldown is FINITE (cfg["decay_steps"]) and produces the only annealed,
-            # servable checkpoint. Stopping it at the wall clock yields a partially-annealed
-            # model -- the anneal trigger's 25% margin is computed at the CURRENT rate, so any
-            # later slowdown, restart or eval pause can still overrun it (Codex unattended
-            # review, major 3). During decay, let it finish, under a hard bound so a wedged
-            # decay cannot run forever.
-            if phase["name"] == "decay" and time.time() < deadline + cfg.get(
-                    "decay_overrun_grace_s", 6 * 3600):
-                if not globals().get("_overrun_logged"):
-                    globals()["_overrun_logged"] = True
-                    print(f"past the wall-clock deadline at step {step:,} but the cooldown is "
-                          f"running; finishing the anneal within the grace window", flush=True)
-            else:
-                stop_reason = ("session wall-clock budget" if phase["name"] != "decay"
-                               else "wall-clock budget plus decay grace exhausted mid-cooldown")
-                break
+            stop_reason = "session wall-clock budget"
+            break
         if (CKPT / "STOP").exists():
             stop_reason = "STOP file"
             break
@@ -827,28 +793,7 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False, deadline_wa
 
         if step % cfg["eval_every"] == 0:
             beat("eval", step=step, tokens=cum["tokens"])
-            # An uncontained eval exception killed the trainer and lost progress back to the
-            # last checkpoint; a deterministic one repeated at every eval boundary until the
-            # watchdog gave up (Codex unattended review, major 5). Tolerate transients, but
-            # never train on blind: the evaluation IS the kill envelope, so consecutive
-            # failures stop the run cleanly, with terminal state, rather than silently.
-            try:
-                rec = evaluate(model, cfg, step, cum, time.time() - t0)
-                eval_failures = 0
-            except Exception as e:
-                eval_failures = globals().get("_eval_failures", 0) + 1
-                globals()["_eval_failures"] = eval_failures
-                print(f"WARNING: evaluation at step {step:,} raised {e!r} "
-                      f"(consecutive failures: {eval_failures})", flush=True)
-                if eval_failures >= cfg.get("max_eval_failures", 3):
-                    stop_reason = (f"{eval_failures} consecutive evaluations failed; the kill "
-                                   f"envelope is blind, refusing to keep training")
-                    break
-                model.train()
-                torch.cuda.empty_cache()
-                samples[:] = [(time.time(), sess_tok)]
-                continue
-            globals()["_eval_failures"] = 0
+            rec = evaluate(model, cfg, step, cum, time.time() - t0)
             model.train()
             torch.cuda.empty_cache()      # the screen measured 1,990 -> 786 ex/s without this
             # Persist `best` in the checkpoint produced by THIS evaluation, not one evaluation

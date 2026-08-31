@@ -27,13 +27,13 @@ while true; do
     say "terminal.json present; run is over, guardian exiting"
     exit 0
   fi
-  if pgrep -f "watchdog[.]py --hours" > /dev/null 2>&1; then
+  if pgrep -f "^\.venv/bin/python m9src/watchdog\.py" > /dev/null 2>&1; then
     continue
   fi
   say "WATCHDOG ABSENT -- relaunching"
   setsid nohup .venv/bin/python m9src/watchdog.py $WD_ARGS >> logs/m9_watchdog.log 2>&1 &
   sleep 20
-  if pgrep -f "watchdog[.]py --hours" > /dev/null 2>&1; then
+  if pgrep -f "^\.venv/bin/python m9src/watchdog\.py" > /dev/null 2>&1; then
     say "relaunch OK"
   else
     say "RELAUNCH FAILED -- see logs/m9_watchdog.log"
