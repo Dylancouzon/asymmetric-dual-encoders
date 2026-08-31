@@ -918,3 +918,41 @@ anything stronger.
 **Operational note:** three background Codex runs were killed mid-exploration without emitting
 findings; the same brief, narrowed and run in the FOREGROUND with the module inlined, completed in
 under ten minutes. Prefer foreground + inlined code + explicit "do not explore" for review briefs.
+
+### M9.3 BUILD PROVENANCE DISCLOSURE — build session force-reopened 2026-08-31 06:20 UTC
+
+**This build is NOT an uninterrupted single-lock run and must never be described as one.** Its
+provenance spans two build lock states, though every scientific input is unchanged.
+
+| item | value |
+|---|---|
+| old `SESSION-build.json` fingerprint | `24dcbe852bde` |
+| new tree fingerprint | `2b1e2ae214bc` |
+| command | `open_session(force=True, run_id="m9-build")` |
+| resume boundary | `work/m9long/ckpt/last.pt` at step ~78,754 (~0.645B tokens), written pre-amendment |
+| invalidated | prior guard9 runs/tokens under `SESSION-build.json` **only** |
+| NOT touched | `work/m9tokens/SESSION.json` was neither forced nor reopened; screen arms `m9s1`, `m9s4`, `m9s5`, `m9s6`, `m9-decisions`, `m9-adequacy` remain under their original lock and stay valid |
+
+**Changed, classified:** *protocol bookkeeping* — `m9/LEDGER.md` (review logs), `m9/registry.json`
+(ADDED `final_run`, bumped `stage`). *Approved infrastructure repair* — `m9src/longrun.py`,
+`m9src/watchdog.py` (M3 anneal protection + M4 fail-fast diagnostic).
+
+**Unchanged:** recipe, dose, sampling specification, `work/m9long/config.json`,
+`work/m9long/manifest.json`, `m9/M92_LOCK.md`, `m9src/make_config.py`, and all data/train/eval
+scope files. The checkpoint's `config_hash` and `manifest_hash` are unchanged and its resume guard
+verifies both. **No dose, sampling or recipe change was introduced by this intervention.**
+
+**Reason:** the trainer restart was blocked because mandatory protocol logging and the approved
+build repair moved scoped fingerprints. **Review:** five adversarial passes on the M3/M4 diff
+(`research/codex_m3{,b,c,d,e}.log`), approved on the fifth; amendment pushed before the force.
+
+### Consequence, and a standing rule for the rest of the build
+
+`m9/LEDGER.md` and `m9/registry.json` are in guard9's **protocol** scope, and `DEPS["m9-build"]`
+includes it — so **any** edit to them makes the trainer refuse to start. The watchdog's automatic
+crash-recovery calls `begin_run` too, so protocol logging during the build silently disables
+unattended restart: a crash days later would not recover.
+
+**Rule from now until the build ends: no writes to `m9/LEDGER.md`, `m9/registry.json` or any other
+protocol-scope file.** Build-period notes go to `m9/BUILD_LOG.md`, which is in no scope, and are
+merged into the ledger after the build completes.
