@@ -513,6 +513,10 @@ def train(cfg, hours=None, max_steps=None, start_decay=False, device="cuda", ann
 
 
 def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
+    # Explicit BUILD-only adapter. This does not alter warmfit.py: its standalone entry point and
+    # every other process retain the original strict ambient-protocol semantics.
+    import make_config
+    make_config.install_build_warmfit_adapter()
     beat("verify")
     man = verify(strict=True)
     reconcile_history()

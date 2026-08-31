@@ -145,7 +145,8 @@ def _verify_token_registration(payload, expected_run_id):
         _refuse(f"{expected_run_id}: run token is not valid JSON: {exc}")
     if token.get("run_id") != expected_run_id or token.get("consumed") is not True:
         _refuse(f"{expected_run_id}: run token is not the consumed token for this artifact")
-    for key in ("commit", "branch", "session_sha256", "scopes", "scoped", "opened_at", "extra"):
+    for key in ("diagnostic", "commit", "branch", "session_sha256", "scopes", "scoped",
+                "opened_at", "extra"):
         if token.get(key) != reg.get(key):
             _refuse(f"{expected_run_id}: registration/token mismatch in {key}")
     actual_payload = guard9.payload_sha(payload)
@@ -175,6 +176,70 @@ def _verify_token_registration(payload, expected_run_id):
         if reg.get("scoped", {}).get(scope) != frozen.get(scope):
             _refuse(f"{expected_run_id}: registration/session mismatch in {scope} scope")
     return reg
+
+
+def _verify_warmfit_artifact(blob):
+    """Return the registered warm-start lambda after checking its complete frozen lineage.
+
+    Warmfit predates the post-screen owner ruling and ledger records. Its data and train scopes
+    remain exact ambient matches; protocol uses the same narrow, phase-aware exception as the
+    screen verifier: append-only LEDGER, owner_rulings-only registry additions, and no other byte
+    drift from the artifact's registered commit.
+    """
+    reg = _verify_token_registration(blob, "m9-warmfit")
+    expected_scopes = set(guard9.deps_for("m9-warmfit"))
+    if set(reg.get("scopes", ())) != expected_scopes:
+        _refuse("m9-warmfit: registration does not contain exactly its dependency scopes")
+    for scope in ("data", "train"):
+        current = _scope_sha(scope)
+        recorded = reg.get("scoped", {}).get(scope)
+        if current != recorded:
+            _refuse(
+                f"m9-warmfit: ambient {scope} scope changed: registered {recorded}, "
+                f"current {current}")
+    _verify_record_only_protocol_drift(reg)
+
+    selected = blob.get("selected_lambda")
+    if isinstance(selected, bool) or not isinstance(selected, Real) or not math.isfinite(selected):
+        _refuse(f"m9-warmfit: selected_lambda must be a finite real number, got {selected!r}")
+    pinned = guard9.registry().get("warm_start", {}).get("lambda")
+    if isinstance(pinned, bool) or not isinstance(pinned, Real) or not math.isfinite(pinned):
+        _refuse(f"registry warm_start.lambda must be a finite real number, got {pinned!r}")
+    if selected != pinned:
+        _refuse(
+            f"m9-warmfit: selected lambda {selected:g} disagrees with registry "
+            f"warm_start.lambda {pinned:g}")
+    return selected
+
+
+def build_warm_start_lambda():
+    """Resolve the build's warmfit artifact under post-screen lineage rules, or fail closed."""
+    path = RESULTS / "m9_warmfit.json"
+    if not path.exists():
+        raise SystemExit(f"BUILD warm-start verification failed: artifact is missing at {path}")
+    try:
+        blob = json.loads(path.read_text())
+        return _verify_warmfit_artifact(blob)
+    except (json.JSONDecodeError, DecisionIntegrityError) as exc:
+        raise SystemExit(f"BUILD warm-start verification failed: {exc}") from exc
+
+
+def install_build_warmfit_adapter():
+    """Explicitly install the build-only, phase-aware lambda resolver in this process."""
+    import warmfit
+
+    print("BUILD-SCOPE WARM-START ADAPTER: preserving frozen m9-warmfit train/data lineage "
+          "while allowing only post-screen record additions, then installing its lambda resolver",
+          flush=True)
+    selected = build_warm_start_lambda()
+
+    def verified_selected_lambda():
+        return selected
+
+    # This is deliberately process-local and entered only by longrun. warmfit.py is untouched, so
+    # standalone `python m9src/warmfit.py` and every non-build caller retain strict guard semantics.
+    warmfit.selected_lambda = verified_selected_lambda
+    return selected
 
 
 def _verify_screen_decision(blob, results_dir=None):
