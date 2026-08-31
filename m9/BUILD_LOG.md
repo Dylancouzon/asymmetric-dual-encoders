@@ -20,3 +20,13 @@ merged into the ledger afterwards. This file is in no scope.
   `m9/final_run_registry.json` (no scope, same authority); `registry.json` restored to its
   post-screen state apart from the owner ruling, `stage` back to `M9.0`. `final_stats.py` and
   `FINAL_LOCK.md` updated; 16/16 tests still pass.
+- **Build resumed 06:22** as pid 248010 from step 78,000 (0.639B tokens), command line now
+  carrying `--decay-grace-s 21600`, so the M3 anneal protection is live. Cost of the whole
+  intervention: 754 steps re-run (~6.2M tokens) and ~25 min of downtime. Manifest recomputed
+  clean; eval history (6) preserved; `deadline.json` never reset.
+- **KNOWN GAP, disclosed:** `m9src/test_resume.py` was NOT re-run after the M3/M4 diff. It was
+  blocked first by the registry-integrity guard, and re-running it now would contend with the live
+  trainer for the 10 GB GPU. Mitigation: the diff touches only the deadline branch and wraps
+  `torch.load` in try/except — Codex confirmed across five passes that it alters no sampling,
+  optimizer, RNG, token-accounting or resume code — and the live resume at step 78,000 succeeded
+  with the manifest and config hashes verified. Re-run it at the next natural pause.
