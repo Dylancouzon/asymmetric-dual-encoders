@@ -1,8 +1,8 @@
 # M9.3 build — live status
 
-_Updated 2026-08-31 00:50:55 by `m9src/watchdog.py`._
+_Updated 2026-08-31 01:51:00 by `m9src/watchdog.py`._
 
-**step 18,225** · **0.149 B tokens** (1.3% of the cap) · 25,895 tok/s · phase **stable** · heartbeat 8s old
+**step 29,648** · **0.243 B tokens** (2.1% of the cap) · 26,001 tok/s · phase **stable** · heartbeat 2s old
 
 **Best SCREEN-3 0.46710 — retention 0.685** of the 0.68223 teacher ceiling.
 

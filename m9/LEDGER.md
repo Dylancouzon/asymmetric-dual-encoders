@@ -852,3 +852,31 @@ it was counting the bash launch wrapper); no multi-guardian detection; no proof-
 **Standing decision for the redesign:** these three are low-probability risk-reduction on a healthy
 run (M3 binds only below ~18,940 tok/s; live rate 25,971). Whether to touch a verified running
 build at all is itself a question for the next review, not an assumption.
+
+### M9.4 final-run lock written mid-build as a DISCLOSED AMENDMENT, 2026-08-31
+
+**Gap found:** M9.2 locked the build recipe but none of the final-run fields the mandate requires
+(no system manifest, claim table, statistics block, or reserved manifest; `registry.json` had no
+final-run key). Written now because protocol may only be written ahead of the numbers it affects,
+and **no six-set, reserved, LoTTE or confirmatory output exists in M9**. Author's observations at
+time of writing, disclosed for influence assessment: SCREEN-3 build evals at steps 0/15,000/30,000
+and throughput telemetry — nothing else.
+
+**This is NOT the M9.2 preregistration and must never be described as one. Dylan's ratification is
+a standing open item** (`registry.final_run.ratified_by_owner: false`).
+
+Reviewed: `research/m9-codex-finallock-2026-08-31.log` — 7 BLOCKER / 6 MAJOR / 1 MINOR, all
+actioned in `m9/FINAL_LOCK.md` + `registry.final_run`. Reserved-read audit clean.
+
+| finding | fix |
+|---|---|
+| **B1 (the M7-equivalent bug)** `boot.py` exposes NO 0.0125 quantile and rounds `one_sided_lower_2.5` to 4dp; a caller using `ci95_raw[0]` (2.5%) would pass contrasts the mandate fails | decision field is `lower_q0125_raw = np.quantile(draws, 0.0125, "linear")`, full precision, **only that field decides**; rounded fields explicitly not the gate. Requires `m9src/final_stats.py` — the "no new statistics code" claim was **withdrawn as false** |
+| B2 not the M9.2 preregistration | classified as a disclosed amendment with the observation set stated; owner ratification pending |
+| B3/B4 crash rules self-contradictory; a state could be both retry-eligible and spent | durable state machine: the `m9-six-spent` tag is **pushed before the first protected read**; `--infra-retry` admissible iff that tag is absent from origin; `--recover` recomputes decisions without re-reading the six; preflight may not open six-set queries/qrels |
+| B5 constants not machine-registered (executor could read the M9.0 screen defaults B=20,000/seed 0) | mirrored into `registry.final_run`; prose/registry disagreement is a hard abort |
+| B6 C1 computable against either the fresh bridge row or the frozen row (differing by up to 3e-4) | bridge row is **validation-only and discarded**; C1/C2 use only frozen rows from `perquery.json` pinned at sha256 `6b18e3dd…` |
+| B7 reserved section was placeholders ("pinned hashes", "restart semantics") | complete manifest: systems INCLUDED/OMITTED, estimands R1/R2 + directions, B/seed/interval, renormalized leave-one-out, 120 GB gate, per-system atomic crash semantics |
+| M1 `C1 fail / C2 pass` cell wrong — it suppressed a permitted aim claim | corrected: no release, **aim claim permitted**; C2 does not gate the ship and C1 does not gate the claim |
+| M2/M3 disclosures unbound; headline referenced not quoted; "unrestricted" not banned | headline reproduced verbatim, paraphrase forbidden; each disclosure binds a value; all three forbidden words listed |
+| M4/M5 `paired_dep` defaults (`strict=False`, `k=len(aligned)`) allow a silent 5-dataset macro; shared draws not guaranteed by the API | assert exactly six datasets + identical frozen qids, then `strict=True`; one frozen draw plan, digest serialized, reused by both contrasts |
+| M6/m1 manifest not revision-complete; `FINAL-BEGIN` misnamed | hashes/revisions pinned per row; ledger marker is `FINAL-RUN-BEGIN` |
