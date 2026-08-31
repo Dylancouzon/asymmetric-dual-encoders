@@ -35,6 +35,7 @@ import hashlib
 import json
 import math
 import os
+import statistics
 import time
 from pathlib import Path
 
@@ -502,17 +503,47 @@ def load_config():
     return cfg
 
 
-def train(cfg, hours=None, max_steps=None, start_decay=False, device="cuda", anneal=False):
+def _consume_terminal_stop_for_decay():
+    """Make the documented STOP -> decay transition atomic under the trainer lock.
+
+    A STOP is only consumed after the prior trainer acknowledged it with a terminal marker. This
+    prevents a second command from withdrawing a stop request from a still-running trainer.
+    """
+    stop = CKPT / "STOP"
+    if not stop.exists() and not TERMINAL.exists():
+        return
+    if not (CKPT / "last.pt").exists():
+        raise SystemExit("cannot start cooldown: STOP/terminal exists but ckpt/last.pt does not")
+    try:
+        term = json.loads(TERMINAL.read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SystemExit(f"cannot start cooldown: terminal marker is not readable: {exc}")
+    if (stop.exists() and term.get("reason") != "STOP file"
+            and not term.get("watchdog_action")):
+        raise SystemExit("cannot consume STOP: the prior trainer has not acknowledged it with a "
+                         "terminal STOP-file marker")
+    if term.get("phase") == "decay" and str(term.get("reason", "")).startswith("cooldown complete"):
+        raise SystemExit("cooldown is already complete; refusing to start a second cooldown")
+    stop.unlink(missing_ok=True)
+    TERMINAL.unlink(missing_ok=True)
+    print("acknowledged prior terminal stop; consumed STOP and terminal markers for cooldown",
+          flush=True)
+
+
+def train(cfg, hours=None, max_steps=None, start_decay=False, device="cuda", anneal=False,
+          deadline_wall=None):
     RUN.mkdir(parents=True, exist_ok=True)
     CKPT.mkdir(parents=True, exist_ok=True)
     _acquire_lock()
     try:
-        return _train(cfg, hours, max_steps, start_decay, device, anneal)
+        if start_decay:
+            _consume_terminal_stop_for_decay()
+        return _train(cfg, hours, max_steps, start_decay, device, anneal, deadline_wall)
     finally:
         LOCKFILE.unlink(missing_ok=True)
 
 
-def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
+def _train(cfg, hours, max_steps, start_decay, device, anneal=False, deadline_wall=None):
     # Explicit BUILD-only adapter. This does not alter warmfit.py: its standalone entry point and
     # every other process retain the original strict ambient-protocol semantics.
     import make_config
@@ -620,7 +651,10 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
     samples = [(time.time(), 0)]
     base_p = RUN / "throughput_baseline.json"
     baseline = json.loads(base_p.read_text())["tok_per_s"] if base_p.exists() else None
-    deadline = t0 + hours * 3600 if hours else None
+    baseline_rates = []
+    if deadline_wall is not None and hours is not None:
+        raise ValueError("pass either hours or deadline_wall, not both")
+    deadline = deadline_wall if deadline_wall is not None else (t0 + hours * 3600 if hours else None)
     stop_reason = None
     rate = None            # rolling tok/s; set after the first step of this session
     model.train()
@@ -647,7 +681,7 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
             print(f"cooldown begins at step {step:,} for {cfg['decay_steps']:,} steps "
                   f"({phase['trigger']})", flush=True)
             # durable immediately: a restart before the next scheduled checkpoint must resume
-            # into the cooldown, not into another 1.7 h of stable LR (Codex #8, blocker 5)
+            # into the cooldown, not into another stable-LR checkpoint interval (Codex #8, B5)
             save_ckpt(CKPT / "last.pt", _blob(model, opt, step, streams, cfg, cum, phase, best, man))
             samples[:] = [(time.time(), sess_tok)]      # the save must not read as a slowdown
         if (anneal and deadline and phase["name"] == "stable" and rate and step > 0
@@ -717,13 +751,17 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
         samples[:] = [x for x in samples if x[0] > time.time() - cfg["throughput_window_s"]] \
             or samples[-2:]
         rate = ((samples[-1][1] - samples[0][1]) / max(samples[-1][0] - samples[0][0], 1e-9))
+        el = time.time() - t0
+        base_start = cfg["throughput_baseline_start_s"]
+        base_end = base_start + cfg["throughput_baseline_window_s"]
+        if baseline is None and base_start <= el <= base_end:
+            baseline_rates.append(rate)
         beat("train", step=step, tokens=cum["tokens"], examples=cum["examples"],
              tok_per_s=rate, phase=phase["name"], loss=step_loss, lr=lr,
              baseline=baseline, floor=(baseline * cfg["throughput_floor_frac"]) if baseline else None,
              stable_token_cap=cfg["stable_token_cap"], evals=len(read_history()))
 
         if step % cfg["log_every"] == 0:
-            el = time.time() - t0
             print(f"  step {step:,} loss {loss_acc/nlog:.5f} lr {lr:.2e} "
                   f"{rate:,.0f} tok/s | cum {cum['tokens']/1e9:.3f}B tokens "
                   f"({cum['tokens']/cfg['stable_token_cap']:.1%} of cap)", flush=True)
@@ -731,14 +769,22 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
             # timer every step. A second writer here raced it and was the only one that omitted
             # `state`, which the watchdog's no-progress rule keys on (Codex review #7, blocker 4).
             loss_acc, nlog = 0.0, 0
-            # Freeze a baseline ONCE, after warmup, and persist it so restarts inherit it rather
-            # than re-baselining onto a degraded rate.
-            if baseline is None and el > cfg["throughput_baseline_after_s"]:
-                baseline = rate
-                base_p.write_text(json.dumps({"tok_per_s": rate, "at": time.time(),
-                                              "measured_over_s": cfg["throughput_window_s"]}))
-                print(f"  throughput baseline frozen at {rate:,.0f} tok/s "
-                      f"(floor {rate*cfg['throughput_floor_frac']:,.0f})", flush=True)
+            # Freeze one EARLY MEDIAN after a full sampling window and persist it across restarts.
+            # The mixed-arm measurement is a lower bound on the baseline: an abnormally slow cold
+            # start therefore cannot bless its own degraded rate as normal.
+            if baseline is None and el > base_end and baseline_rates:
+                early_median = statistics.median(baseline_rates)
+                measured = cfg["_arithmetic"]["measured_tokens_per_s"]
+                baseline = max(early_median, measured)
+                base_p.write_text(json.dumps({"tok_per_s": baseline, "at": time.time(),
+                                              "method": "max(early_median, measured_mixed_rate)",
+                                              "early_median_tok_per_s": early_median,
+                                              "measured_mixed_tok_per_s": measured,
+                                              "samples": len(baseline_rates),
+                                              "window_s": cfg["throughput_baseline_window_s"]}))
+                print(f"  throughput baseline frozen at {baseline:,.0f} tok/s "
+                      f"(early median {early_median:,.0f}, measured mixed floor {measured:,.0f}; "
+                      f"floor {baseline*cfg['throughput_floor_frac']:,.0f})", flush=True)
             if baseline and rate < cfg["throughput_floor_frac"] * baseline:
                 stop_reason = (f"throughput collapse: {rate:,.0f} tok/s over the last "
                                f"{cfg['throughput_window_s']}s against a frozen baseline of "
@@ -750,12 +796,16 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
             rec = evaluate(model, cfg, step, cum, time.time() - t0)
             model.train()
             torch.cuda.empty_cache()      # the screen measured 1,990 -> 786 ex/s without this
+            # Persist `best` in the checkpoint produced by THIS evaluation, not one evaluation
+            # late. A crash between the checkpoint and history append must recover both together.
+            if best is None or rec["screen3"] > best["screen3"]:
+                best = {"step": step, "screen3": rec["screen3"], "tokens": cum["tokens"]}
             blob = _blob(model, opt, step, streams, cfg, cum, phase, best, man)
             save_ckpt(CKPT / f"step{step}.pt", {**blob, "eval": rec})
             save_ckpt(CKPT / "last.pt", blob)
             with open(HISTORY, "a") as fh:
                 fh.write(json.dumps(rec) + "\n")     # after the checkpoint, so replay can dedupe
-            # First-eval sanity gate: at ~164M tokens the build should already be past the
+            # First-eval sanity gate: at ~123M tokens the build should already be past the
             # anchor's 59.5M-token result. If it is not, the recipe or the data is wrong and six
             # more days will not fix it -- stop now rather than discover it on day seven.
             hist_rows = read_history()
@@ -781,10 +831,6 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False):
                     stop_reason = (f"first evaluation {rec['screen3']:.5f} is below the step-0 "
                                    f"baseline {base:.5f} by more than "
                                    f"{cfg['first_eval_regression']} -- training is making it worse")
-            # best is updated BEFORE the kill/cooldown block, so a decay-entry checkpoint carries
-            # this evaluation's best, not the previous one's (Codex #9, minor)
-            if best is None or rec["screen3"] > best["screen3"]:
-                best = {"step": step, "screen3": rec["screen3"], "tokens": cum["tokens"]}
             kill = stop_reason or check_kill(rec, cfg)
             if kill and kill.startswith("plateau:"):
                 # A plateau is a registered stop that RUNS the cooldown (M92_LOCK §6), so enter
@@ -850,7 +896,7 @@ def check_kill(rec, cfg):
     if all(best - r["screen3"] > cfg["regression_thresh"] for r in tail):
         return (f"SCREEN-3 regression: two consecutive evaluations more than "
                 f"{cfg['regression_thresh']} below the best {best:.5f}")
-    # Adjacent evaluations are ~164M tokens apart, so requiring rows[-2:] to span 1B tokens was a
+    # Adjacent evaluations target ~123M tokens, so requiring rows[-2:] to span 1B tokens was a
     # rule that could never fire (Codex, blocker 5). Look back to the latest evaluation at or
     # before `now - plateau_tokens` -- about seven evals -- and compare against that.
     now = rows[-1]
@@ -944,6 +990,8 @@ def main():
     ap.add_argument("cmd", choices=["prepare", "targets", "verify", "manifest", "train",
                                     "decay", "status"])
     ap.add_argument("--hours", type=float, default=None)
+    ap.add_argument("--deadline-wall", type=float, default=None,
+                    help="absolute Unix deadline shared with the watchdog")
     ap.add_argument("--max-steps", type=int, default=None)
     ap.add_argument("--doc-limit", type=int, default=None)
     ap.add_argument("--student", default="bge-small-en-v1.5")
@@ -971,7 +1019,7 @@ def main():
         cfg = load_config()
         guard9.begin_run(cfg["run_id"])
         train(cfg, hours=a.hours, max_steps=a.max_steps, start_decay=(a.cmd == "decay"),
-              anneal=a.anneal_before_deadline)
+              anneal=a.anneal_before_deadline, deadline_wall=a.deadline_wall)
 
 
 if __name__ == "__main__":

@@ -20,8 +20,9 @@ from m9base import RESULTS, WORK
 import guard9   # noqa: E402
 import longrun  # noqa: E402
 
-# Measured on this box by the anchor arm: 59,507,872 non-pad tokens in 2,216 s.
-TOK_PER_S = 26_854
+# Measured on this box by the mixed m9s6 arm: 59,507,877 non-pad tokens in 3,134.7 s.
+# The query-only anchor is not representative of a build whose token mix is 90% documents.
+TOK_PER_S = 18_984
 HOURS = 168                                   # the horizon we size for; we stop on evidence
 
 # Codex review #5's registration, adopted. At a true combined-example mean, queries are short
@@ -35,7 +36,7 @@ TOKENS_PER_STEP = 8192
 
 # The only annealing evidence this project owns is the anchor's own run: 59.5M tokens. Codex #5 was
 # right that the 4,000-step default was five minutes and unsupported by anything.
-COOLDOWN_TOKENS = 59_507_872
+COOLDOWN_TOKENS = 59_507_877
 
 SHARE_KEYS = {"queries", "spans", "documents"}
 RULING_DECISION = "results/m9_screen_decisions.json"
@@ -407,9 +408,16 @@ def build():
 
     total_tokens = int(HOURS * 3600 * TOK_PER_S)
     decay_steps = math.ceil(COOLDOWN_TOKENS / TOKENS_PER_STEP)
-    stable_cap = total_tokens - COOLDOWN_TOKENS
+    decay_scheduled_tokens = decay_steps * TOKENS_PER_STEP
+    # The loop schedules whole steps. Reserve the whole scheduled cooldown so stable + decay
+    # never exceeds the measured-rate horizon by the final partial step.
+    stable_cap = total_tokens - decay_scheduled_tokens
     steps_total = total_tokens // TOKENS_PER_STEP
-    eval_every = 20_000                                    # ~164M tokens, ~1.7 h
+    # At the permitted 50% throughput floor these are 3.60 h and 0.72 h apart respectively.
+    # Watchdog defaults are 5 h / 2 h, leaving room for eval and checkpoint I/O without allowing
+    # a healthy floor-rate run to restart itself.
+    eval_every = 15_000
+    ckpt_every = 3_000
     cfg = {
         "run_id": "m9-build",
         "_what": "M9.3: the seven-day build. Stops on evidence, not on this horizon.",
@@ -422,7 +430,7 @@ def build():
         "lr_peak": 1e-4, "lr_final": 1e-5, "warmup_steps": 2000,
         "decay_steps": decay_steps,
         "betas": [0.9, 0.999], "eps": 1e-8, "weight_decay": 0.01, "grad_clip": 1.0,
-        "log_every": 500, "ckpt_every": 5000, "eval_every": eval_every,
+        "log_every": 500, "ckpt_every": ckpt_every, "eval_every": eval_every,
         "stable_token_cap": stable_cap,
         # kill envelope, all in the units the dose is registered in
         "regression_thresh": 0.0056,        # the MDE: two evals this far below best -> stop
@@ -430,8 +438,9 @@ def build():
         "plateau_gain": 0.001,
         "throughput_floor_frac": 0.5,
         "throughput_window_s": 600,          # rolling, never the cumulative session mean
-        "throughput_baseline_after_s": 900,  # frozen once after warmup, persisted across restarts
-        # The anchor reached 0.50004 on 59.5M tokens; the first build evaluation lands at ~164M
+        "throughput_baseline_start_s": 900,
+        "throughput_baseline_window_s": 900, # median across this early window, then persisted
+        # The anchor reached 0.50004 on 59.5M tokens; the first build evaluation lands at ~123M
         # with 15x the unique text, so anything below 0.45 means something is broken rather than
         # merely slow.
         "first_eval_floor": 0.45,          # ADVISORY: logged, never a hard stop
@@ -444,6 +453,7 @@ def build():
             "evals_if_never_stopped": steps_total // eval_every,
             "cooldown_tokens": COOLDOWN_TOKENS,
             "cooldown_steps": decay_steps,
+            "cooldown_scheduled_tokens": decay_scheduled_tokens,
             "cooldown_provenance": "the anchor arm's entire dose -- the only annealing scale this "
                                    "project has measured",
         },

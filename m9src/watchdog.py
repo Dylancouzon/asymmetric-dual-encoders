@@ -44,7 +44,18 @@ import longrun   # noqa: E402
 RUN = longrun.RUN
 HEARTBEAT = RUN / "heartbeat.json"
 INCIDENTS = RUN / "watchdog.jsonl"
+DEADLINE = RUN / "deadline.json"
 STATUS_MD = REPO / "m9" / "RUN_STATUS.md"
+
+OPERATOR_PROCEDURE = """1. Stop safely: `touch work/m9long/ckpt/STOP`. Keep the watchdog running;
+   it supervises until `terminal.json` confirms the trainer exited.
+2. Cool down: after that terminal marker appears, run
+   `setsid nohup .venv/bin/python m9src/watchdog.py --cooldown --hours 4 >> logs/m9_watchdog.log 2>&1 &`.
+   The cooldown command safely consumes the acknowledged STOP and terminal markers, resumes
+   `last.pt` in decay, and supervises it through `cooldown complete`.
+3. Restart after a crash: if the watchdog is alive, do nothing; it restarts the trainer exactly.
+   If the watchdog died, rerun the original watchdog launch command. It reuses `deadline.json`,
+   attaches to a live trainer or resumes `last.pt`, and never resets the seven-day horizon."""
 
 
 def log(rec):
@@ -93,7 +104,7 @@ def trainer_alive():
     return pids
 
 
-def wait_gone(pids, timeout=180):
+def wait_gone(pids, timeout=180, escalate=True):
     """Do not start a replacement until the old process is CONFIRMED gone. A SIGTERM plus a
     15-second nap is not confirmation, and a trainer stuck in uninterruptible I/O that comes back
     would give two writers the same `last.tmp` -- which atomic replace does not protect against."""
@@ -102,12 +113,13 @@ def wait_gone(pids, timeout=180):
         if not any(os.path.exists(f"/proc/{p}") for p in pids):
             return True
         time.sleep(2)
-    for p in pids:
-        try:
-            os.kill(p, 9)
-        except ProcessLookupError:
-            pass
-    time.sleep(5)
+    if escalate:
+        for p in pids:
+            try:
+                os.kill(p, 9)
+            except ProcessLookupError:
+                pass
+        time.sleep(5)
     return not any(os.path.exists(f"/proc/{p}") for p in pids)
 
 
@@ -116,13 +128,15 @@ def terminal_state():
     return read_json(longrun.TERMINAL)
 
 
-def start_trainer(hours):
+def start_trainer(deadline, cooldown=False):
     # The dead trainer's heartbeat must go first, or its old wall clock gives the fresh process
     # only ~80s to finish a possibly cold import before being declared stale (Fable review, M2).
     # Only called with no live trainer (wait_gone confirmed), so there is no competing writer.
     HEARTBEAT.unlink(missing_ok=True)
-    cmd = (f"cd {REPO} && setsid nohup .venv/bin/python m9src/longrun.py train "
-           f"--hours {hours} --anneal-before-deadline >> logs/m9_build.log 2>&1 &")
+    mode = "decay" if cooldown else "train"
+    anneal = "" if cooldown else " --anneal-before-deadline"
+    cmd = (f"cd {REPO} && setsid nohup .venv/bin/python m9src/longrun.py {mode} "
+           f"--deadline-wall {deadline:.6f}{anneal} >> logs/m9_build.log 2>&1 &")
     subprocess.run(["bash", "-lc", cmd], check=False, timeout=60)
     time.sleep(20)
     return trainer_alive()
@@ -139,6 +153,83 @@ def read_json(p, default=None):
         return json.loads(p.read_text())
     except Exception:
         return default
+
+
+def write_watchdog_terminal(reason, action):
+    """Record a terminal state even when a wedged trainer cannot write its own marker."""
+    hb = read_json(HEARTBEAT, {}) or {}
+    rec = {"reason": f"watchdog giving up: {reason}", "step": hb.get("step", 0),
+           "tokens": hb.get("tokens", 0), "examples": hb.get("examples", 0),
+           "phase": hb.get("phase", "unknown"), "watchdog_action": action,
+           "at": time.strftime("%Y-%m-%dT%H:%M:%S"), "wall": time.time()}
+    longrun.TERMINAL.parent.mkdir(parents=True, exist_ok=True)
+    tmp = longrun.TERMINAL.with_suffix(".tmp")
+    tmp.write_text(json.dumps(rec, indent=1))
+    os.replace(tmp, longrun.TERMINAL)
+    return rec
+
+
+def give_up_safely(reason, clean_grace=120):
+    """Leave no silently-running trainer behind on any supervision give-up path."""
+    longrun.CKPT.mkdir(parents=True, exist_ok=True)
+    stop = longrun.CKPT / "STOP"
+    stop.write_text(f"watchdog giving up: {reason}\n")
+    pids = trainer_alive()
+    log({"event": "give_up_stop_requested",
+         "detail": f"{reason}; wrote {stop}; waiting up to {clean_grace}s for a clean terminal "
+                   f"stop from pids {pids or 'none'}"})
+    until = time.time() + clean_grace
+    while pids and time.time() < until:
+        time.sleep(2)
+        pids = trainer_alive()
+    term = terminal_state()
+    if term and not trainer_alive():
+        action = (f"requested STOP and trainer exited cleanly with terminal reason "
+                  f"{term.get('reason')!r}")
+        log({"event": "giving_up", "detail": f"{reason}; {action}. Nothing remains running."})
+        return
+
+    pids = trainer_alive()
+    actions = ["wrote STOP"]
+    if pids:
+        for pid in pids:
+            try:
+                os.kill(pid, 15)
+            except ProcessLookupError:
+                pass
+        actions.append(f"sent SIGTERM to {pids}")
+        log({"event": "give_up_sigterm", "detail": f"{reason}; sent SIGTERM to pids {pids}"})
+        wait_gone(pids, timeout=30, escalate=False)
+    pids = trainer_alive()
+    if pids:
+        for pid in pids:
+            try:
+                os.kill(pid, 9)
+            except ProcessLookupError:
+                pass
+        actions.append(f"sent SIGKILL to {pids}")
+        log({"event": "give_up_sigkill", "detail": f"{reason}; sent SIGKILL to pids {pids}"})
+        wait_gone(pids, timeout=10, escalate=False)
+    remaining = trainer_alive()
+    action = "; ".join(actions) + f"; remaining trainer pids {remaining or 'none'}"
+    write_watchdog_terminal(reason, action)
+    log({"event": "giving_up", "detail": f"{reason}; {action}; wrote terminal marker. "
+                                            "No trainer will be restarted."})
+
+
+def shared_deadline(hours, cooldown=False):
+    """Create once, then reuse after watchdog crashes so restarts cannot extend the run."""
+    if not cooldown:
+        saved = read_json(DEADLINE)
+        if saved and isinstance(saved.get("wall"), (int, float)):
+            return float(saved["wall"]), "reused"
+    wall = time.time() + hours * 3600
+    tmp = DEADLINE.with_suffix(".tmp")
+    tmp.write_text(json.dumps({"wall": wall, "hours": hours, "mode":
+                               "cooldown" if cooldown else "train",
+                               "created_at": time.strftime("%Y-%m-%dT%H:%M:%S")}, indent=1))
+    os.replace(tmp, DEADLINE)
+    return wall, "created"
 
 
 def read_incidents(k=40):
@@ -191,9 +282,7 @@ def write_status(hb, rows, incidents):
         for i in incidents[-12:]:
             lines.append(f"| {i['at']} | {i.get('event')} | {str(i.get('detail',''))[:90]} |")
         lines.append("")
-    lines += ["## To stop it",
-              "", "```bash", f"touch {longrun.CKPT}/STOP        # clean halt at the next step",
-              "python m9src/longrun.py decay      # cooldown -> a servable model", "```", ""]
+    lines += ["## Stop, cool down, restart", "", OPERATOR_PROCEDURE, ""]
     STATUS_MD.write_text("\n".join(lines))
 
 
@@ -234,12 +323,14 @@ def push_status():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--hours", type=float, default=168)
+    ap.add_argument("--cooldown", action="store_true",
+                    help="supervise the STOP -> decay transition (normally use --hours 4)")
     ap.add_argument("--period", type=int, default=60, help="the consistent timer, in seconds")
     ap.add_argument("--stale", type=int, default=300, help="heartbeat age that means wedged")
     ap.add_argument("--startup-deadline", type=int, default=1800,
                     help="a fresh trainer must produce its first heartbeat within this")
-    ap.add_argument("--ckpt-stale", type=int, default=5400)
-    ap.add_argument("--eval-stale", type=int, default=4 * 3600)
+    ap.add_argument("--ckpt-stale", type=int, default=2 * 3600)
+    ap.add_argument("--eval-stale", type=int, default=5 * 3600)
     ap.add_argument("--eval-grace", type=int, default=3600,
                     help="heartbeat staleness allowance while the trainer is inside an evaluation")
     ap.add_argument("--max-restarts", type=int, default=8)
@@ -249,7 +340,6 @@ def main():
     ap.add_argument("--no-push", action="store_true")
     a = ap.parse_args()
 
-    deadline = time.time() + a.hours * 3600
     restarts, failed_starts, last_status, recent = 0, 0, 0.0, []
     launched_at = time.time()
     last_step, last_step_at, last_digest = None, time.time(), time.time()
@@ -265,20 +355,31 @@ def main():
                              f"`longrun.py prepare`, `targets`, `manifest`, then generate the "
                              f"config. A watchdog over a run that cannot start is theatre.")
     acquire_wd_lock()
-    log({"event": "watchdog_start", "detail": f"period {a.period}s, horizon {a.hours}h"})
+    if a.cooldown:
+        if trainer_alive():
+            raise SystemExit("cannot start cooldown watchdog while a trainer is still alive")
+        if not longrun.TERMINAL.exists() or not (longrun.CKPT / "last.pt").exists():
+            raise SystemExit("cooldown requires an acknowledged terminal stop and ckpt/last.pt")
+    prior_terminal_wall = (read_json(longrun.TERMINAL, {}) or {}).get("wall") if a.cooldown else None
+    deadline, deadline_action = shared_deadline(a.hours, cooldown=a.cooldown)
+    log({"event": "watchdog_start", "detail": f"period {a.period}s, mode "
+                                                f"{'cooldown' if a.cooldown else 'train'}, "
+                                                f"absolute deadline {deadline:.3f} "
+                                                f"({deadline_action})"})
     # The initial launch is deliberate, not a "restart" of a dead trainer: counting it against
     # max_restarts spent supervision budget on a non-incident (Fable review, minor). Guarded like
     # a tick: a TimeoutExpired here must not kill the watchdog before its loop even starts
     # (Codex #10) -- the loop's dead-trainer path retries the launch.
     try:
-        if not terminal_state() and not trainer_alive():
-            pids = start_trainer(max(0.5, (deadline - time.time()) / 3600))
+        if (a.cooldown or not terminal_state()) and not trainer_alive():
+            pids = start_trainer(deadline, cooldown=a.cooldown)
             log({"event": "launch", "detail": f"initial trainer start; pids {pids}"})
             launched_at = time.time()
     except Exception as e:
         log({"event": "watchdog_error", "detail": f"initial launch: {e!r}"[:300]})
 
-    while time.time() < deadline:
+    stop_seen = False
+    while True:
         time.sleep(a.period)
         # One bad iteration must never kill the only supervisor of a seven-day run: nothing
         # supervises the watchdog itself (Codex review #7, blocker 4).
@@ -287,9 +388,11 @@ def main():
             rows = longrun.read_history()
             incidents = read_incidents()
 
-            if (longrun.CKPT / "STOP").exists():
-                log({"event": "stop_file", "detail": "clean halt requested; watchdog exiting"})
-                break
+            stop_requested = (longrun.CKPT / "STOP").exists()
+            if stop_requested and not stop_seen:
+                log({"event": "stop_file", "detail": "clean halt requested; watchdog remains "
+                                                    "until the trainer records a terminal state"})
+                stop_seen = True
 
             free_gb = shutil.disk_usage(longrun.CKPT if longrun.CKPT.exists() else REPO).free / 1e9
             if free_gb < a.min_disk_gb:
@@ -297,15 +400,20 @@ def main():
                 (longrun.CKPT / "STOP").write_text("watchdog: disk headroom")
                 log({"event": "disk_low", "detail": f"{free_gb:.1f} GB free < {a.min_disk_gb}; "
                                                     f"asked the trainer to stop cleanly"})
-                break
+                stop_requested = stop_seen = True
             if not gpu_ok():
                 log({"event": "gpu_missing", "detail": "nvidia-smi failed"})
 
             term = terminal_state()
+            # During cooldown launch the trainer removes the acknowledged prior marker under its
+            # lock. Do not mistake that old marker for completion while the new process imports.
+            if a.cooldown and term and term.get("wall") == prior_terminal_wall:
+                term = None
             if term:
                 log({"event": "terminal", "detail": f"the trainer stopped deliberately: "
-                                                    f"{term['reason']} (step {term['step']:,}, "
-                                                    f"{term['tokens']/1e9:.3f}B tokens). Not "
+                                                    f"{term.get('reason')} (step "
+                                                    f"{term.get('step', 0):,}, "
+                                                    f"{term.get('tokens', 0)/1e9:.3f}B tokens). Not "
                                                     f"restarting -- a registered stop is a "
                                                     f"decision."})
                 break
@@ -317,10 +425,10 @@ def main():
             # its whole read) legitimately beat slower than a training step, so they get the
             # startup allowance, not the train one.
             state = (hb or {}).get("state", "train")
-            # An evaluation writes one beat at its start and none inside; the four-hour overdue
+            # An evaluation writes one beat at its start and none inside; the five-hour overdue
             # rule only runs while state is "train", so a slow (page-cache-thrashed) eval must
             # get ITS grace here, not the 30-minute startup one -- killing it mid-read replays
-            # 5,000 steps and meets the same eval again: a restart loop (Codex #8, MAJOR 4).
+            # 15,000 steps and meets the same eval again: a restart loop (Codex #8, MAJOR 4).
             thresh = (a.stale if state == "train"
                       else a.eval_grace if state in ("eval", "eval0")
                       else max(a.stale, a.startup_deadline))
@@ -345,6 +453,17 @@ def main():
             eval_wedged = (bool(alive) and state == "train" and bool(rows)
                            and time.time() - last_eval_at > a.eval_stale)
 
+            # Both processes own this exact absolute deadline. The trainer stops at its next safe
+            # step boundary; the watchdog stays beyond it until terminal state exists.
+            past_deadline = time.time() >= deadline
+            if past_deadline and not alive:
+                give_up_safely("shared deadline passed and trainer exited without terminal state",
+                               clean_grace=0)
+                break
+            if past_deadline and alive and time.time() > deadline + a.startup_deadline:
+                give_up_safely("trainer remained alive past the shared deadline grace")
+                break
+
             if not alive or stale or no_progress or ckpt_wedged or eval_wedged:
                 why = ("dead" if not alive else
                        ("no heartbeat within the startup deadline" if not hb
@@ -354,10 +473,14 @@ def main():
                        f"now costs everything since the last one" if ckpt_wedged else
                        f"no new evaluation for {(time.time()-last_eval_at)/3600:.1f} h -- the "
                        f"trainer's own quality kill rules cannot fire without them")
+                if stop_requested:
+                    give_up_safely(f"trainer failed while a clean STOP was pending: {why}")
+                    break
+                if past_deadline:
+                    give_up_safely(f"trainer failed at the shared deadline: {why}")
+                    break
                 if restarts >= a.max_restarts:
-                    log({"event": "giving_up", "detail": f"{why}; {restarts} restarts already. A "
-                                                         f"crash loop is a different problem from "
-                                                         f"a crash."})
+                    give_up_safely(f"{why}; {restarts} restarts already; crash-loop limit reached")
                     break
                 if alive:
                     for pid in alive:
@@ -366,18 +489,16 @@ def main():
                         except ProcessLookupError:
                             pass
                     if not wait_gone(alive):
-                        log({"event": "will_not_restart",
-                             "detail": f"pids {alive} did not exit even after SIGKILL; refusing to "
-                                       f"start a second writer"})
-                        continue
+                        give_up_safely(f"pids {alive} did not exit after restart termination; "
+                                       "refusing to start a second writer", clean_grace=0)
+                        break
                 time.sleep(2 ** min(restarts, 5))    # backoff; a crash loop should not thrash
-                pids = start_trainer(max(0.5, (deadline - time.time()) / 3600))
+                pids = start_trainer(deadline, cooldown=a.cooldown)
                 restarts += 1
                 recent.append(time.time())
                 recent[:] = [t for t in recent if t > time.time() - 6 * 3600]
                 if len(recent) > a.max_restarts_6h:
-                    log({"event": "giving_up", "detail": f"{len(recent)} restarts in six hours; "
-                                                         f"that is a crash loop, not a crash"})
+                    give_up_safely(f"{len(recent)} restarts in six hours; crash-loop limit reached")
                     break
                 if not pids:
                     # A restart that starts nothing is not a restart. Retrying a launch that
@@ -388,9 +509,8 @@ def main():
                                                               f"logs/m9_build.log. "
                                                               f"{failed_starts} consecutive."})
                     if failed_starts >= 2:
-                        log({"event": "giving_up", "detail": "two consecutive launches produced "
-                                                             "no process; this is a configuration "
-                                                             "failure, not a crash"})
+                        give_up_safely("two consecutive launches produced no process; "
+                                       "configuration failure", clean_grace=0)
                         break
                 else:
                     failed_starts = 0
