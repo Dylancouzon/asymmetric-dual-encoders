@@ -30,3 +30,7 @@ merged into the ledger afterwards. This file is in no scope.
   `torch.load` in try/except — Codex confirmed across five passes that it alters no sampling,
   optimizer, RNG, token-accounting or resume code — and the live resume at step 78,000 succeeded
   with the manifest and config hashes verified. Re-run it at the next natural pause.
+- LoTTE read #1 amended and pre-registered in `m9/LOTTE_LOCK.md` (Codex-approved with a firewall):
+  the registered m9s6-vs-m9s1 veto is unchanged, the build's final candidate is ADDED to the same
+  atomic batch, and the final-checkpoint identity rule is registered now so LoTTE cannot influence
+  it. Runs once, post-build, pre-freeze.
