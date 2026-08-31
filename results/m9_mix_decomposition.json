@@ -6,6 +6,10 @@
  "anchor_screen3_interpolated_at_same_query_tokens": 0.49258,
  "m9s6_screen3_actual": 0.4924,
  "document_token_contribution": -0.00017,
- "reading": "the entire -0.00604 DEV-6 deficit is the 30% query-token reduction; 17.9M document tokens contributed -0.0002, i.e. neutral within noise (MDE 0.0056, seed spread ~0.001). The arm is a SUBSTITUTION test at fixed budget, not a test of unique text at scale.",
- "caveat": "neutral-per-token at 11 query epochs does not establish neutral at 110; equally it is not evidence that documents help there. Both remain unmeasured at build dose."
+ "reading": "m9s6 is a SUBSTITUTION test at fixed budget. Its 17.9M document tokens contribute between -0.00235 and -0.00017 SCREEN-3, depending on how the query-only counterfactual is estimated: the anchor curve is strongly concave (gain/Mtok 0.00220 -> 0.00095 -> 0.00022), so LINEAR interpolation understates the counterfactual and is the OPTIMISTIC end for documents (Codex, 2026-08-30). The whole range sits inside the MDE 0.0056, so the defensible claim is: documents are NOT DISTINGUISHABLE FROM NEUTRAL at this dose. The stronger claim -- that the entire deficit is the query-token cut -- is NOT supported and was withdrawn.",
+ "caveat": "neutral-per-token at 11 query epochs is NOT evidence that documents help at 110. Both remain unmeasured at build dose; the build is that test.",
+ "document_token_contribution_linear": -0.00017,
+ "document_token_contribution_concavity_bound": -0.00235,
+ "surface_caveat": "the decomposition is computed on SCREEN-3, the surface with 4 checkpoints; the m9s6 VERDICT was decided on DEV-6 (-0.00604), read once at the final checkpoint. The decomposition therefore explains a SCREEN-3 deficit and is evidence about, not a decomposition of, the DEV-6 number.",
+ "_bound_method": "upper bound on the query-only counterfactual for a concave curve: walk back from the measured 44.63M-token checkpoint using the SHALLOWER subsequent slope (0.000216/Mtok). An earlier attempt extrapolated the STEEP first-segment slope and produced 0.5074 -- above the anchor's own final 0.49862, i.e. not a bound at all. Corrected."
 }

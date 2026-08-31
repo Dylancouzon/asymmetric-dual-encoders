@@ -8,8 +8,10 @@ Everything that came from a screen decision is read from `results/m9_screen_deci
 dose figure is derived from measured quantities and shown with its arithmetic, so a reviewer can
 check the numbers rather than take them.
 """
+import hashlib
 import json
 import math
+from numbers import Real
 
 import m9base
 from m9base import RESULTS, WORK
@@ -33,6 +35,59 @@ TOKENS_PER_STEP = 8192
 # The only annealing evidence this project owns is the anchor's own run: 59.5M tokens. Codex #5 was
 # right that the 4,000-step default was five minutes and unsupported by anything.
 COOLDOWN_TOKENS = 59_507_872
+
+SHARE_KEYS = {"queries", "spans", "documents"}
+RULING_DECISION = "results/m9_screen_decisions.json"
+
+
+def _validated_shares(value, where):
+    if not isinstance(value, dict):
+        raise ValueError(f"{where} must be an object with exactly {sorted(SHARE_KEYS)}")
+    keys = set(value)
+    if keys != SHARE_KEYS:
+        raise ValueError(
+            f"{where} keys must be exactly {sorted(SHARE_KEYS)}; got {sorted(keys)}")
+    for key, share in value.items():
+        if isinstance(share, bool) or not isinstance(share, Real):
+            raise TypeError(f"{where}.{key} must be a real number, got {share!r}")
+        if not math.isfinite(float(share)) or not 0.0 <= share <= 1.0:
+            raise ValueError(f"{where}.{key} must be finite and in [0, 1], got {share!r}")
+    if not math.isclose(math.fsum(value.values()), 1.0, rel_tol=0.0, abs_tol=1e-9):
+        raise ValueError(f"{where} must sum to 1.0 within 1e-9; got {math.fsum(value.values())}")
+    return {key: value[key] for key in ("queries", "spans", "documents")}
+
+
+def _validated_override(ruling, mix, decision):
+    if not isinstance(ruling, dict):
+        raise ValueError("owner_rulings.m9s6_mix_override must be an object")
+    required_text = ("ruled_by", "date", "why", "caveat", "overrides_verdict")
+    empty = [key for key in required_text
+             if not isinstance(ruling.get(key), str) or not ruling[key].strip()]
+    if empty:
+        raise ValueError(f"m9s6_mix_override requires non-empty fields: {empty}")
+    if ruling["overrides_verdict"] != mix:
+        raise ValueError(
+            f"m9s6_mix_override names verdict {ruling['overrides_verdict']!r}, not {mix!r}")
+
+    artifact = ruling.get("decision_artifact")
+    expected_sha = ruling.get("decision_sha256")
+    if artifact != RULING_DECISION:
+        raise ValueError(
+            f"m9s6_mix_override.decision_artifact must be {RULING_DECISION!r}, got {artifact!r}")
+    if not isinstance(expected_sha, str) or not expected_sha.strip():
+        raise ValueError("m9s6_mix_override.decision_sha256 must be non-empty")
+    path = m9base.REPO / artifact
+    raw = path.read_bytes()
+    actual_sha = hashlib.sha256(raw).hexdigest()
+    if actual_sha != expected_sha:
+        raise ValueError(
+            f"m9s6_mix_override applies to decision sha256 {expected_sha}, but {artifact} "
+            f"currently hashes {actual_sha}; a ruling for one screen cannot authorize another")
+    bound = json.loads(raw)
+    if not bound.get("complete") or bound.get("selected") != decision:
+        raise ValueError(
+            "m9s6_mix_override is not bound to this complete screen decision; refusing override")
+    return _validated_shares(ruling.get("build_shares"), "m9s6_mix_override.build_shares")
 
 
 def build(decisions=None):
@@ -64,17 +119,18 @@ def build(decisions=None):
     # that is an owner decision, not a formula.
     ruling = r.get("owner_rulings", {}).get("m9s6_mix_override")
     if mix != "70/30":
-        # The stop is real: only an explicit owner ruling that NAMES this verdict lifts it, and
-        # the shares then come from the ruling itself, not from this file's constant.
-        if not (ruling and ruling.get("overrides_verdict") == mix):
+        # The stop is real: only an explicit owner ruling bound to this exact screen decision
+        # lifts it, and the shares then come from the ruling, not from this file's constant.
+        if not ruling:
             raise SystemExit(f"the screen selected mix {mix!r}. The registered document-dominant "
                              f"build (5/5/90) rests on m9s6 confirming documents help; without it, "
                              f"STOP and get Dylan's ruling on the build shares (M92_LOCK §4).")
+        shares = _validated_override(ruling, mix, dec)
         print(f"OWNER RULING ({ruling['date']}, {ruling['ruled_by']}): mix verdict {mix!r} "
-              f"overridden; shares {ruling['build_shares']}", flush=True)
+              f"overridden; shares {shares}", flush=True)
+    else:
+        shares = _validated_shares(SHARES, "SHARES")
 
-    shares = dict(ruling["build_shares"]) if (ruling and mix != "70/30") else dict(SHARES)
-    assert abs(sum(shares.values()) - 1.0) < 1e-9, shares
     total_tokens = int(HOURS * 3600 * TOK_PER_S)
     decay_steps = math.ceil(COOLDOWN_TOKENS / TOKENS_PER_STEP)
     stable_cap = total_tokens - COOLDOWN_TOKENS

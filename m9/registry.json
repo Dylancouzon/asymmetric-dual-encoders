@@ -557,12 +557,14 @@
    "ruled_by": "Dylan",
    "date": "2026-08-30",
    "overrides_verdict": "query-only",
+   "decision_artifact": "results/m9_screen_decisions.json",
+   "decision_sha256": "29e912308feb89a98784238a7038ad37d9261d2bb895cee9ddb4c08aa8bd0239",
    "build_shares": {
     "queries": 0.05,
     "spans": 0.05,
     "documents": 0.9
    },
-   "why": "m9s6 is a SUBSTITUTION test at fixed budget: results/m9_mix_decomposition.json shows its 17.9M document tokens contributed -0.00017 (neutral within noise; MDE 0.0056) and the whole -0.00604 deficit is its 30% query-token cut. Query-only cannot fill the horizon (356 epochs of 45.6M tokens/epoch; the anchor asymptotes by 16), so only the 6.15M-doc pool sustains a 7-day run. Downside bounded by the plateau rule: if documents add nothing the run cools down and stops early with a servable model.",
+   "why": "m9s6 is a SUBSTITUTION test at fixed budget: results/m9_mix_decomposition.json shows its 17.9M document tokens contributed between -0.00017 and -0.00235 depending on how the concave anchor curve is read (both inside MDE 0.0056), i.e. NOT DISTINGUISHABLE FROM NEUTRAL -- the stronger 'entire deficit is the query cut' claim is withdrawn. Query-only cannot fill the horizon (356 epochs of 45.6M tokens/epoch; the anchor asymptotes by 16), so only the 6.15M-doc pool sustains a 7-day run. Downside bounded by the plateau rule: if documents add nothing the run cools down and stops early with a servable model.",
    "caveat": "neutral-per-token at 11 query epochs is NOT evidence that documents help at 110. The build is the test; its SCREEN-3 curve is the instrument and its kill rules the bound.",
    "recorded_before": "any build number existed"
   }

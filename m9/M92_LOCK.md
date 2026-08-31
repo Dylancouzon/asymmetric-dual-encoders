@@ -49,7 +49,7 @@ At 16.24 B tokens, a token share buys these epoch counts:
 | 20% | 438 | 19.5 | 42 |
 | 15% | 328 | 20.9 | 42 |
 | **10%** | **219** | **22.3** | **42** |
-| 5% | 110 | 23.7 | 42 |
+| 5% | 110 | 25.1 | 42 |
 
 The query side is thin however it is sliced: 463,314 texts against 16 B tokens. Two facts bound the
 choice. LEAF's own ablation found documents did the heavy lifting even for a query-serving student
@@ -65,10 +65,16 @@ seven-day 90%-document bet would then be unsupported by its own screen.
 **WHAT HAPPENED, 2026-08-30.** `m9s6` selected **query-only**: DEV-6 0.4746 against the anchor's
 0.4806, −0.0060. The registered branch above therefore fired and `make_config` refused the build.
 **Decomposed before the ruling** (`results/m9_mix_decomposition.json`): m9s6 ran 41.66 M query
-tokens (11.2 epochs) against the anchor's 59.51 M (16), and the anchor's own curve interpolated at
-41.66 M query tokens gives SCREEN-3 **0.49258** against m9s6's actual **0.49240** — so its 17.9 M
-document tokens contributed **−0.00017**, neutral within noise, and the entire deficit is the
-query-token cut. The arm is a *substitution* test at fixed budget, not a test of unique text at
+tokens (11.2 epochs) against the anchor's 59.51 M (16). Estimating the query-only counterfactual
+from the anchor's own curve puts m9s6's 17.9 M document tokens at **−0.00017 to −0.00235** SCREEN-3
+— linear interpolation gives the optimistic end, and because the anchor curve is strongly concave
+(gain/Mtok 0.00220 → 0.00095 → 0.00022) the concavity-corrected bound is the pessimistic one
+(Codex, same day). **The whole range sits inside the MDE 0.0056, so the defensible claim is that
+documents are not distinguishable from neutral at this dose — not that they are exactly neutral,
+and not that the entire deficit is the query-token cut. That stronger claim was made first and is
+withdrawn.** Note also the surface: the decomposition is computed on SCREEN-3 (4 checkpoints) while
+the verdict was decided on DEV-6 (read once), so it is evidence about the DEV-6 deficit, not a
+decomposition of it. The arm is a *substitution* test at fixed budget, not a test of unique text at
 scale. **Dylan ruled: run 5/5/90 as registered** (`m9/registry.json` →
 `owner_rulings.m9s6_mix_override`, which `make_config` requires by name before it will build a
 non-`70/30` mix). Grounds: documents measured neutral rather than harmful; query-only cannot fill
