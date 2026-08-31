@@ -69,6 +69,13 @@ def log(rec):
 
 WD_LOCK = RUN / "watchdog.lock"
 _WD_LOCK_FH = None    # held open for the watchdog's lifetime; the kernel releases it on death
+_decay_grace_logged = [False]   # one log line per watchdog process, not a safety mechanism
+DECAY_SEEN = longrun.RUN / "decay_seen.json"   # durable latch: the cooldown has begun
+# `start_trainer` sleeps 20 s after launching, so a launch decided at T completes near T+25 s.
+# Refusing to BEGIN a launch that would finish past the cutoff makes the bound hard rather than
+# hard-plus-one-launch (Codex pass 4).
+LAUNCH_COST_S = 25
+_latch_distrusted = [False]   # set if a clear failed: never trust the latch again this process
 
 
 def acquire_wd_lock():
@@ -128,15 +135,16 @@ def terminal_state():
     return read_json(longrun.TERMINAL)
 
 
-def start_trainer(deadline, cooldown=False):
+def start_trainer(deadline, cooldown=False, decay_grace_s=None):
     # The dead trainer's heartbeat must go first, or its old wall clock gives the fresh process
     # only ~80s to finish a possibly cold import before being declared stale (Fable review, M2).
     # Only called with no live trainer (wait_gone confirmed), so there is no competing writer.
     HEARTBEAT.unlink(missing_ok=True)
     mode = "decay" if cooldown else "train"
     anneal = "" if cooldown else " --anneal-before-deadline"
+    grace = "" if decay_grace_s is None else f" --decay-grace-s {int(decay_grace_s)}"
     cmd = (f"cd {REPO} && setsid nohup .venv/bin/python m9src/longrun.py {mode} "
-           f"--deadline-wall {deadline:.6f}{anneal} >> logs/m9_build.log 2>&1 &")
+           f"--deadline-wall {deadline:.6f}{anneal}{grace} >> logs/m9_build.log 2>&1 &")
     subprocess.run(["bash", "-lc", cmd], check=False, timeout=60)
     time.sleep(20)
     return trainer_alive()
@@ -153,6 +161,15 @@ def gpu_ok():
         return r.returncode == 0 and bool(r.stdout.strip())
     except Exception:
         return False
+
+
+def write_json_atomic(p, obj):
+    tmp = p.with_suffix(".tmp")
+    with open(tmp, "w") as fh:
+        json.dump(obj, fh)
+        fh.flush()
+        os.fsync(fh.fileno())
+    os.replace(tmp, p)
 
 
 def read_json(p, default=None):
@@ -359,6 +376,12 @@ def main():
     ap.add_argument("--eval-stale", type=int, default=5 * 3600)
     ap.add_argument("--eval-grace", type=int, default=3600,
                     help="heartbeat staleness allowance while the trainer is inside an evaluation")
+    ap.add_argument("--decay-grace", type=float, default=longrun.DECAY_GRACE_S,
+                    help="seconds past the shared deadline that a RUNNING cooldown may continue "
+                         "and still be supervised/restarted; mirrors longrun --decay-grace-s. "
+                         "Without this the trainer's grace is fiction: the watchdog used to give "
+                         "up 1,800 s past the deadline and refuse restarts regardless of phase "
+                         "(Codex unattended review, major 3)")
     ap.add_argument("--max-restarts", type=int, default=8)
     ap.add_argument("--max-restarts-6h", type=int, default=3)
     ap.add_argument("--min-disk-gb", type=float, default=25.0)
@@ -366,6 +389,7 @@ def main():
     ap.add_argument("--no-push", action="store_true")
     a = ap.parse_args()
 
+    a.decay_grace = longrun._check_grace(a.decay_grace)
     restarts, failed_starts, last_status, recent = 0, 0, 0.0, []
     launched_at = time.time()
     last_step, last_step_at, last_digest = None, time.time(), time.time()
@@ -397,8 +421,14 @@ def main():
     # a tick: a TimeoutExpired here must not kill the watchdog before its loop even starts
     # (Codex #10) -- the loop's dead-trainer path retries the launch.
     try:
-        if (a.cooldown or not terminal_state()) and not trainer_alive():
-            pids = start_trainer(deadline, cooldown=a.cooldown)
+        _l0 = read_json(DECAY_SEEN) or {}
+        _eff0 = deadline + (a.decay_grace if _l0.get("deadline") == deadline else 0)
+        if time.time() + LAUNCH_COST_S >= _eff0:
+            # Do not launch; the loop's past-deadline path writes terminal state properly.
+            log({"event": "initial_launch_refused",
+                 "detail": f"effective deadline {_eff0:.0f} already passed"})
+        elif (a.cooldown or not terminal_state()) and not trainer_alive():
+            pids = start_trainer(deadline, cooldown=a.cooldown, decay_grace_s=a.decay_grace)
             log({"event": "launch", "detail": f"initial trainer start; pids {pids}"})
             launched_at = time.time()
     except Exception as e:
@@ -481,13 +511,60 @@ def main():
 
             # Both processes own this exact absolute deadline. The trainer stops at its next safe
             # step boundary; the watchdog stays beyond it until terminal state exists.
-            past_deadline = time.time() >= deadline
+            # PHASE-AWARE deadline. A cooldown already running is finite and produces the only
+            # annealed, servable checkpoint, so it is supervised past the nominal deadline for
+            # the same grace the trainer honours. Outside decay nothing changes.
+            hb_phase = (hb or {}).get("phase")
+            if hb_phase == "decay":
+                latched = read_json(DECAY_SEEN) or {}
+                if latched.get("deadline") != deadline:
+                    try:
+                        write_json_atomic(DECAY_SEEN, {"at": time.time(), "deadline": deadline,
+                                                       "step": (hb or {}).get("step")})
+                    except Exception as e:
+                        # A read-only or full disk must never terminate the only supervisor
+                        # (Codex re-review, d). Losing the latch only costs the grace.
+                        log({"event": "decay_latch_failed", "detail": repr(e)[:200]})
+            # The latch is SCOPED to this deadline, so an old run's latch cannot grant grace
+            # (Codex re-review, b/c). A FRESH heartbeat is authoritative: if it says the trainer
+            # is not in decay, believe it over the latch. The latch exists only to cover the case
+            # where the phase cannot be observed at all -- missing or stale heartbeat.
+            hb_fresh = bool(hb) and (time.time() - float(hb.get("wall", 0))) <= thresh
+            if hb_fresh and hb_phase and hb_phase != "decay" and DECAY_SEEN.exists():
+                # CLEAR it. A fresh heartbeat saying the trainer is not in decay is authoritative,
+                # and leaving the latch in place would resurrect the grace as soon as the
+                # heartbeat went stale again (Codex pass 3).
+                try:
+                    DECAY_SEEN.unlink()
+                    log({"event": "decay_latch_cleared",
+                         "detail": f"fresh heartbeat reports phase {hb_phase!r}"})
+                except Exception as e:
+                    # Logging was not enough: the still-present latch would resurrect the grace
+                    # the moment the heartbeat went stale (Codex pass 4). Distrust it outright.
+                    _latch_distrusted[0] = True
+                    log({"event": "decay_latch_clear_failed",
+                         "detail": f"{e!r}; latch distrusted for the rest of this process"[:200]})
+            _l = read_json(DECAY_SEEN) or {}
+            latch_valid = (not _latch_distrusted[0]) and _l.get("deadline") == deadline
+            in_decay = (hb_phase == "decay") if (hb_fresh and hb_phase) else latch_valid
+            eff_deadline = deadline + (a.decay_grace if in_decay else 0)
+            past_deadline = time.time() >= eff_deadline
+            if in_decay and time.time() >= deadline and not _decay_grace_logged[0]:
+                _decay_grace_logged[0] = True
+                log({"event": "decay_grace", "detail":
+                     f"past the nominal deadline with the cooldown running; supervising to "
+                     f"+{a.decay_grace/3600:.1f} h so the anneal is not truncated"})
             if past_deadline and not alive:
                 give_up_safely("shared deadline passed and trainer exited without terminal state",
                                clean_grace=0)
                 break
-            if past_deadline and alive and time.time() > deadline + a.startup_deadline:
-                give_up_safely("trainer remained alive past the shared deadline grace")
+            # During decay the bound is EXACTLY deadline + grace: adding startup_deadline on top
+            # made the real ceiling 6 h 30 min, i.e. the 6 h bound was not enforced (Codex,
+            # minimal change 2). Outside decay the old allowance is unchanged.
+            hard_cutoff = eff_deadline if in_decay else (deadline + a.startup_deadline)
+            if past_deadline and alive and time.time() > hard_cutoff:
+                give_up_safely("trainer remained alive past the shared deadline grace"
+                               + (" (decay grace exhausted)" if in_decay else ""))
                 break
 
             if not alive or stale or no_progress or ckpt_wedged or eval_wedged:
@@ -519,7 +596,14 @@ def main():
                                        "refusing to start a second writer", clean_grace=0)
                         break
                 time.sleep(2 ** min(restarts, 5))    # backoff; a crash loop should not thrash
-                pids = start_trainer(deadline, cooldown=a.cooldown)
+                if time.time() + LAUNCH_COST_S >= eff_deadline:
+                    # Stopping the old trainer and backing off consumes real time; without this
+                    # recheck a restart begun just before the cutoff could launch after it
+                    # (Codex re-review, a).
+                    give_up_safely("effective deadline passed while preparing a restart; "
+                                   "refusing to launch a trainer past the cutoff")
+                    break
+                pids = start_trainer(deadline, cooldown=a.cooldown, decay_grace_s=a.decay_grace)
                 restarts += 1
                 recent.append(time.time())
                 recent[:] = [t for t in recent if t > time.time() - 6 * 3600]

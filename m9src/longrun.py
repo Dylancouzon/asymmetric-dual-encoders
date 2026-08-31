@@ -57,6 +57,22 @@ CKPT = RUN / "ckpt"
 HISTORY = RUN / "history.jsonl"
 HEARTBEAT = RUN / "heartbeat.json"
 TERMINAL = RUN / "terminal.json"
+# How long past the shared wall-clock deadline a RUNNING cooldown may continue, so the deadline
+# cannot truncate the anneal and leave a partially-annealed model. Passed by CLI and mirrored by
+# the watchdog's --decay-grace: it must NOT live in cfg, which is hashed into every checkpoint
+# (Codex unattended review, major 3).
+DECAY_GRACE_S = 6 * 3600          # INTEGER seconds; see _check_grace
+
+
+def _check_grace(g):
+    """A non-finite or negative grace would defeat the termination checks that bound this run;
+    a non-integral one cannot survive the CLI round-trip to the watchdog intact (Codex approval
+    review of the M3 diff)."""
+    import math as _m
+    if not isinstance(g, (int, float)) or not _m.isfinite(g) or g < 0 or int(g) != g:
+        raise SystemExit(f"--decay-grace-s must be a finite, non-negative integer number of "
+                         f"seconds; got {g!r}")
+    return int(g)
 MANIFEST = RUN / "manifest.json"
 CONFIG = RUN / "config.json"
 LOCKFILE = RUN / "trainer.lock"
@@ -531,19 +547,22 @@ def _consume_terminal_stop_for_decay():
 
 
 def train(cfg, hours=None, max_steps=None, start_decay=False, device="cuda", anneal=False,
-          deadline_wall=None):
+          deadline_wall=None, decay_grace_s=DECAY_GRACE_S):
     RUN.mkdir(parents=True, exist_ok=True)
     CKPT.mkdir(parents=True, exist_ok=True)
+    decay_grace_s = _check_grace(decay_grace_s)
     _acquire_lock()
     try:
         if start_decay:
             _consume_terminal_stop_for_decay()
-        return _train(cfg, hours, max_steps, start_decay, device, anneal, deadline_wall)
+        return _train(cfg, hours, max_steps, start_decay, device, anneal, deadline_wall,
+                      decay_grace_s)
     finally:
         LOCKFILE.unlink(missing_ok=True)
 
 
-def _train(cfg, hours, max_steps, start_decay, device, anneal=False, deadline_wall=None):
+def _train(cfg, hours, max_steps, start_decay, device, anneal=False, deadline_wall=None,
+           decay_grace_s=DECAY_GRACE_S):
     # Explicit BUILD-only adapter. This does not alter warmfit.py: its standalone entry point and
     # every other process retain the original strict ambient-protocol semantics.
     import make_config
@@ -586,7 +605,27 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False, deadline_wa
 
     last = CKPT / "last.pt"
     if last.exists():
-        blob = torch.load(last, map_location=device, weights_only=False)
+        try:
+            blob = torch.load(last, map_location=device, weights_only=False)
+        except Exception as e:
+            # Do NOT silently fall back to an older checkpoint. `reconcile_history()` has already
+            # run, so resuming behind the history frontier would leave future eval rows in place,
+            # make the plateau/regression rules read stale results, and let `best` disagree with
+            # history (Codex unattended review, major 4). Stop with a diagnostic instead of
+            # letting the watchdog relaunch the same unreadable file until it gives up.
+            cands = []
+            for q in sorted(CKPT.glob("step*.pt")):
+                try:
+                    cands.append((int(q.stem[4:]), q.name))
+                except ValueError:
+                    continue          # arbitrary residue must not crash the diagnostic itself
+            newest = max(cands)[1] if cands else "none"
+            raise SystemExit(
+                f"{last} is unreadable ({e!r}). Refusing to auto-resume from an older "
+                f"checkpoint: history has already been reconciled and rewinding would leave "
+                f"eval rows ahead of the trainer. Newest eval checkpoint present: {newest}. "
+                f"Operator recovery required -- resume deliberately and truncate "
+                f"{HISTORY.name} to match.")
         if blob["config_hash"] != cfg["_hash"]:
             raise SystemExit(
                 f"the checkpoint was written under config {blob['config_hash'][:12]} and the "
@@ -656,6 +695,7 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False, deadline_wa
         raise ValueError("pass either hours or deadline_wall, not both")
     deadline = deadline_wall if deadline_wall is not None else (t0 + hours * 3600 if hours else None)
     stop_reason = None
+    _decay_overrun_logged = False   # gates a log line only; never a safety decision
     rate = None            # rolling tok/s; set after the first step of this session
     model.train()
 
@@ -668,8 +708,24 @@ def _train(cfg, hours, max_steps, start_decay, device, anneal=False, deadline_wa
                 f" (entered on: {phase['trigger']})" if phase.get("trigger") else "")
             break
         if deadline and time.time() > deadline:
-            stop_reason = "session wall-clock budget"
-            break
+            # The cooldown is FINITE and produces the only annealed, servable checkpoint; the
+            # anneal trigger's margin is computed at the CURRENT rate, so a later slowdown,
+            # restart or eval pause can still overrun the deadline mid-decay and leave a
+            # partially-annealed model (Codex unattended review, major 3).
+            #
+            # `decay_grace_s` arrives by CLI, NOT via cfg: config.json is hashed into every
+            # checkpoint and a resume refuses a changed hash, so adding a config key here would
+            # make the live checkpoint unresumable.
+            if phase["name"] == "decay" and time.time() < deadline + decay_grace_s:
+                if not _decay_overrun_logged:
+                    _decay_overrun_logged = True
+                    print(f"past the wall-clock deadline at step {step:,} with the cooldown "
+                          f"running; finishing the anneal inside the {decay_grace_s/3600:.1f} h "
+                          f"grace", flush=True)
+            else:
+                stop_reason = ("session wall-clock budget" if phase["name"] != "decay"
+                               else "wall-clock budget plus decay grace exhausted mid-cooldown")
+                break
         if (CKPT / "STOP").exists():
             stop_reason = "STOP file"
             break
@@ -997,6 +1053,9 @@ def main():
     ap.add_argument("--student", default="bge-small-en-v1.5")
     ap.add_argument("--prompt-policy", choices=["a", "b"], default="b",
                     help="the screen-selected query prompt policy; baked into the tokenized corpus")
+    ap.add_argument("--decay-grace-s", type=float, default=DECAY_GRACE_S,
+                    help="seconds past the shared deadline that a RUNNING cooldown may continue; "
+                         "must match the watchdog's --decay-grace")
     ap.add_argument("--anneal-before-deadline", action="store_true",
                     help="enter the cooldown automatically when the session deadline no longer "
                          "fits stable + cooldown; the watchdog passes this so the horizon cannot "
@@ -1019,7 +1078,8 @@ def main():
         cfg = load_config()
         guard9.begin_run(cfg["run_id"])
         train(cfg, hours=a.hours, max_steps=a.max_steps, start_decay=(a.cmd == "decay"),
-              anneal=a.anneal_before_deadline, deadline_wall=a.deadline_wall)
+              anneal=a.anneal_before_deadline, deadline_wall=a.deadline_wall,
+              decay_grace_s=a.decay_grace_s)
 
 
 if __name__ == "__main__":
