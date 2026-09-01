@@ -1,0 +1,21 @@
+{
+ "_note": "M9 candidate `nano`. The identity rule registered in m9/LOTTE_LOCK.md BEFORE any LoTTE access fixes this deterministically: the run reached `cooldown complete`, so the candidate is the final post-cooldown checkpoint. No dev selection was applied -- the best training checkpoint (step 375,000, 0.558274) was NOT chosen.",
+ "checkpoint": "work/m9long/ckpt/last.pt",
+ "checkpoint_sha256": "9d631b2c64244aff72db605e94cd973eeb4b80527f14d91fbeab5bc45fec6b52",
+ "step": 457265,
+ "tokens": 3743344735,
+ "examples": 51670945,
+ "stop_reason": "cooldown complete (entered on: plateau: +0.00089 over 1.11B tokens (step 315,000 -> 450,000), below 0.001)",
+ "dose_note": "3.743B tokens = 32.8% of the 11.42B registered cap. The plateau rule fired at step 450,000 (+0.00089 over 1.11B tokens, below 0.001) and entered the registered cooldown; see m9/BUILD_LOG.md for the disclosed caveat on that rule's noise sensitivity.",
+ "teacher": "stella-400M-v5",
+ "student": "bge-small-en-v1.5",
+ "student_query_prefix": "",
+ "config_hash": "0781b39716f46fae47a3c47833d15d689a464ffa5fb5a459f490486e7e9b9ea1",
+ "manifest_sha256": "10248411d6037b6d7bf2a79cd90a59f9d362803b2710c07fdb4c113f59ffa000",
+ "dev_screen3": 0.560585,
+ "dev_retention_screen3": 0.8217,
+ "dev_surface_note": "SCREEN-3 is a DEV surface and is NOT avg-6, on which the bars are stated. No calibrated map between them exists.",
+ "provenance": "build provenance spans TWO build lock states -- see the M9.3 BUILD PROVENANCE DISCLOSURE in m9/LEDGER.md. Never describe this as a single-lock run.",
+ "seed_replicas": "WAIVED by owner ruling 2026-08-30; seed variability is UNMEASURED",
+ "frozen_at_head": "37d2df75c37f35346e52942e201b6e0fda626db3"
+}

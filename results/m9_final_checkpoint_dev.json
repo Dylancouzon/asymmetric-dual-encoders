@@ -1,0 +1,13 @@
+{
+ "step": 457265,
+ "tokens": 3743344735,
+ "phase": "decay",
+ "screen3": 0.560585,
+ "retention": 0.8217,
+ "means": {
+  "nq-250k": 0.828857,
+  "cqadup-programmers": 0.234493,
+  "cqadup-physics": 0.350133
+ },
+ "ceiling": 0.68223
+}

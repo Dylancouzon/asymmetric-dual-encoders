@@ -160,3 +160,32 @@ upside the projection structurally could not model — is now being applied and 
 SCREEN-3 is the last piece of evidence before the freeze. The GPU frees today, which unblocks
 `test_resume.py` (the disclosed gap), the LoTTE read-#1 batch, cost rows on this box, and wiring
 `final9.py`'s scoring path for a non-vacuous review.
+
+### BUILD COMPLETE 2026-09-01 18:04 — candidate frozen
+
+`cooldown complete`, step 457,265, **3.743B tokens (32.8% of the registered cap)**.
+
+| checkpoint | SCREEN-3 | retention |
+|---|---|---|
+| best during training (step 375,000) | 0.558274 | 0.8183 |
+| last pre-cooldown (step 450,000) | 0.55659 | 0.8158 |
+| **FINAL, annealed (step 457,265)** | **0.560585** | **0.8217** |
+
+The anneal added **+0.0040** over the pre-cooldown checkpoint and +0.0023 over the best — the
+upside the projection structurally could not model, now measured. It lands almost exactly on the
+quarter-mark saturating estimate (0.8232), so that fit was well calibrated.
+
+Candidate fixed by the identity rule registered in `m9/LOTTE_LOCK.md` **before** any LoTTE access:
+the run reached `cooldown complete`, so it is the final post-cooldown checkpoint. **No dev
+selection** — the better-scoring step-375,000 checkpoint was NOT chosen.
+
+`m9/FREEZE.json` written; sha256 `9d631b2c…`. **`test_resume.py` PASSES bitwise on the M3/M4
+code**, closing the gap disclosed on 2026-08-31.
+
+**OPEN: `freeze.assert_releasable` refuses.** It is M7 machinery that walks `work/runs/<id>.json`
+records; M9's build never wrote one, so the lineage cannot be established and the guard fails
+CLOSED (correctly — an unprovable claim is not a satisfied one). This is a bookkeeping gap, not a
+licensing problem: `work/m9long/manifest.json` hash-binds every corpus and MS MARCO and FEVER are
+excluded by construction. The fix is to derive a run record FROM the manifest, never to assert one
+— and it needs review before it is written, because a post-hoc record that satisfies a licence
+guard is exactly the kind of artifact that must not be fabricated.
