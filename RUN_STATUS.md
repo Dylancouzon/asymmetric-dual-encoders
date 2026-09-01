@@ -1,8 +1,8 @@
 # M9.3 build — live status
 
-_Updated 2026-09-01 17:55:19 by `m9src/watchdog.py`._
+_Updated 2026-09-01 18:04:21 by `m9src/watchdog.py`._
 
-**step 455,666** · **3.730 B tokens** (32.7% of the cap) · 24,246 tok/s · phase **decay** · heartbeat 7s old
+state **stopped** · heartbeat 7s old · cooldown complete (entered on: plateau: +0.00089 over 1.11B tokens (step 315,000 -> 450,000), below 0.001)
 
 **Best SCREEN-3 0.55827 — retention 0.818** of the 0.68223 teacher ceiling.
 
@@ -28,7 +28,6 @@ _Updated 2026-09-01 17:55:19 by `m9src/watchdog.py`._
 
 | when | event | detail |
 |---|---|---|
-| 2026-08-31T06:14:05 | watchdog_start | period 60s, mode train, absolute deadline 1788750840.314 (reused) |
 | 2026-08-31T06:14:25 | launch | initial trainer start; pids [] |
 | 2026-08-31T06:15:46 | restart_failed | dead; nothing came up. See logs/m9_build.log. 1 consecutive. |
 | 2026-08-31T06:17:09 | restart_failed | dead; nothing came up. See logs/m9_build.log. 2 consecutive. |
@@ -40,6 +39,7 @@ _Updated 2026-09-01 17:55:19 by `m9src/watchdog.py`._
 | 2026-08-31T06:20:00 | restart_failed | dead; nothing came up. See logs/m9_build.log. 1 consecutive. |
 | 2026-08-31T06:21:22 | watchdog_start | period 60s, mode train, absolute deadline 1788750840.314 (reused) |
 | 2026-09-01T06:22:21 | daily | 17 evals; tokens 0.74B -> 2.70B; SCREEN-3 0.53775 -> 0.55225 (+0.01451); best 0.55570 |
+| 2026-09-01T18:04:21 | terminal | the trainer stopped deliberately: cooldown complete (entered on: plateau: +0.00089 over 1. |
 
 ## Stop, cool down, restart
 
