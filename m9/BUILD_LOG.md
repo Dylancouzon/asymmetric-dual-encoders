@@ -138,3 +138,25 @@ and phase 2 was never registered. So this changes no action. It does change what
 expect, and it triggers the "what would change it" preparation promised at eval 11: LoTTE read #1
 (fresh surface, already amended to include the candidate) is the next real evidence, and the
 out-of-M9 levers are doc-side co-adaptation, a larger student, and more dose.
+
+### PLATEAU FIRED — cooldown began 2026-09-01 at step 450,000 (3.684B tokens, 32.3% of cap)
+
+`plateau: +0.00089 over 1.11B tokens (step 315,000 -> 450,000), below 0.001` → 7,265 cooldown
+steps, cosine to 1e-5, ~59.5M tokens (~40 min). Registered behaviour, not a fault.
+
+**Substantively correct.** Evals 22–31 spanning 2.58→3.68B: 0.5557, 0.5523, 0.5535, 0.5538,
+0.5583, 0.5539, 0.5565, 0.5573, 0.5553, 0.5566 — mean ~0.5553, no trend. The remaining 7.7B tokens
+were buying nothing measurable.
+
+**A caveat recorded for the report, NOT acted on.** The rule compares two individual evaluations,
+and per-eval noise (~0.005) is five times the +0.001 threshold, so it can fire during genuine slow
+improvement; had it compared bests (eval 26, 0.55827) rather than the point at the lookback, it
+would not have fired here. The rule was pre-registered before any result and is therefore executed
+as written — noting this after the fact is disclosure, never grounds to override. **A
+best-to-best or smoothed formulation is the right design for a future milestone.**
+
+**Consequences:** final dose 3.74B not 11.42B; the run ends ~4 days early; the anneal — the one
+upside the projection structurally could not model — is now being applied and its post-cooldown
+SCREEN-3 is the last piece of evidence before the freeze. The GPU frees today, which unblocks
+`test_resume.py` (the disclosed gap), the LoTTE read-#1 batch, cost rows on this box, and wiring
+`final9.py`'s scoring path for a non-vacuous review.
