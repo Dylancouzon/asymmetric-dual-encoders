@@ -1,14 +1,13 @@
 # M9.3 build — live status
 
-_Updated 2026-09-01 09:54:38 by `m9src/watchdog.py`._
+_Updated 2026-09-01 10:24:41 by `m9src/watchdog.py`._
 
-**step 370,441** · **3.033 B tokens** (26.6% of the cap) · 24,076 tok/s · phase **stable** · heartbeat 55s old
+**step 375,879** · **3.077 B tokens** (26.9% of the cap) · 24,213 tok/s · phase **stable** · heartbeat 13s old
 
-**Best SCREEN-3 0.55570 — retention 0.815** of the 0.68223 teacher ceiling.
+**Best SCREEN-3 0.55827 — retention 0.818** of the 0.68223 teacher ceiling.
 
 | step | B tokens | SCREEN-3 | retention |
 |---|---|---|---|
-| 150,000 | 1.228 | 0.54487 | 0.7987 |
 | 165,000 | 1.351 | 0.54532 | 0.7993 |
 | 180,000 | 1.473 | 0.54676 | 0.8014 |
 | 195,000 | 1.596 | 0.54938 | 0.8053 |
@@ -23,6 +22,7 @@ _Updated 2026-09-01 09:54:38 by `m9src/watchdog.py`._
 | 330,000 | 2.702 | 0.55225 | 0.8095 |
 | 345,000 | 2.824 | 0.55345 | 0.8112 |
 | 360,000 | 2.947 | 0.55382 | 0.8118 |
+| 375,000 | 3.070 | 0.55827 | 0.8183 |
 
 ## Incidents
 
