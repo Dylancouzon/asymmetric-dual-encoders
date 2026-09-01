@@ -51,6 +51,10 @@ while true; do
   [ "$watchdog" -gt 1 ] && echo "ALERT: $watchdog watchdogs running -- must never happen"
   [ "$guardian" -eq 0 ] && echo "ALERT: guardian is gone -- watchdog is now unsupervised"
   [ "$guardian" -gt 1 ] && echo "ALERT: $guardian guardians running -- they will fight over relaunches"
+  # Duplicate sentinels are harmless to the run but double every alert. Two were live on
+  # 2026-09-01 because a re-arm after the resume did not stop the previous one.
+  sentinel=$(pgrep -c -f "^bash .*m9src/sentinel\.sh" || true)
+  [ "${sentinel:-1}" -gt 1 ] && echo "NOTE: $sentinel sentinels running -- stop the older one"
 
   hb_mtime=$(stat -c %Y "$HB" 2>/dev/null || echo 0)
   if [ "$hb_mtime" -eq 0 ]; then
