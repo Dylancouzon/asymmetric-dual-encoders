@@ -109,3 +109,32 @@ asserting one in a comment.
 **Next:** wire step 4's encoding when the GPU is free, then re-review the module as a whole. Until
 then `final9.py` refuses to run — and independently refuses while
 `final_run_registry.ratified_by_owner` is false.
+
+### Quarter-mark projection (eval 25, 2.947B tokens, 25.8% of cap) — bracket tightened, and lower
+
+| reading | SCREEN-3 | retention | vs earlier fit (eval 11) |
+|---|---|---|---|
+| floor (stops now) | 0.5538 | 0.8118 | +0.014 |
+| **saturating (central)** | 0.5616 | **0.8232** | −0.013 |
+| loglinear (OPTIMISTIC bound) | 0.5922 | 0.8681 | −0.057 |
+| fitted asymptote | 0.5664 | 0.8302 | −0.021 |
+
+Only 1.95 doublings remain, so the bracket is much narrower than at eval 11 — and **the optimistic
+bound (0.868) now sits below the release bar's 87.8%**, on this surface.
+
+Read it carefully, because two things still separate this from a verdict:
+1. **SCREEN-3 is not avg-6.** The bars are avg-6 figures and no calibrated map exists. SCREEN-3 is
+   partly in-domain (NQ at 0.50 weight, `nqopen` in the mix), which by the M7 precedent inflates
+   it relative to a held-out surface — so the true avg-6 number may be *lower*, not higher.
+2. **The anneal is unmodelled.** Every point is a constant-LR checkpoint; the cosine decay to 1e-5
+   is not in the fit and reliably adds a step up of unknown size.
+
+Note the per-doubling column is now dominated by noise (−0.05 to +0.06): at a 2.9B base each eval
+is only ~0.06 doublings, so dividing by it amplifies per-eval noise. The all-points fit is the
+instrument; single increments here are meaningless.
+
+**No lever exists inside M9** — dose fixed, recipe locked, student capped at 35M, teacher fixed,
+and phase 2 was never registered. So this changes no action. It does change what Dylan should
+expect, and it triggers the "what would change it" preparation promised at eval 11: LoTTE read #1
+(fresh surface, already amended to include the candidate) is the next real evidence, and the
+out-of-M9 levers are doc-side co-adaptation, a larger student, and more dose.
