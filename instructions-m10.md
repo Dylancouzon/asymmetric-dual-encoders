@@ -3,8 +3,9 @@
 *Written 2026-09-01 by the planning session on Dylan's direction ("M9 failed to achieve our goals
 … make M10 a retry … build something unimpeachable by competitors"). Evidence `m10/PLANNING.md`;
 M9's record `m9/FINDINGS.md`. Adversarial review: gpt-5.6-terra, read-only, six passes
-(`research/m10-codex-plan-2026-09-01.md`, `-plan2-` … `-plan6-`; full logs are gitignored
-`.log` files beside them); every finding and its disposition is in PLANNING §8. The M9 model is **nano**; M7's table is **zero**; the product is
+(`research/m10-codex-plan-2026-09-01.md`, `-plan2-` … `-plan6-`; full logs are gitignored `.log`
+files beside them); every finding and its disposition is in PLANNING §8, including two reviewer
+dissents the owner can overrule. The M9 model is **nano**; M7's table is **zero**; the product is
 still the pair on one stella index.*
 
 ## What binds from M7 and M9 — exhaustive
@@ -109,7 +110,8 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
   corpus, query set and document set joins the protected index (`m8src/protected_filter`) before
   any seed is drawn or any PAQ or synthetic text is constructed.
   (e) **Screen lock**: `m10/LEDGER.md` §0 (skeleton committed 2026-09-01) fixes every arm of
-  §Screen (eleven arms), order, doses, seeds, the τ rule, surfaces, the thirteen contrasts, multiplicity control, confirmation design
+  §Screen (eleven arms), order, doses, seeds, the τ rule, surfaces, the thirteen contrasts,
+  multiplicity control, confirmation design
   and outcome→action maps.
 - **M10.1 DATA.** Generation under the §Data contract (200-query smoke per form first), PAQ
   samples, decontamination against the protected index (now including COV) and the six's
@@ -166,7 +168,8 @@ passage that exact- or near-matches the protected index is never used.
 (i) the protected index (six + dev + reserved + LoTTE **+ admitted COV queries and documents**),
 (ii) the six's documents; (iii) any word-5-gram shared with the query's own seed passage (a
 copied span is not a query); word-4-gram containment for 4–7-word queries. The M9 real-query pool
-and the document pool are re-screened against the COV additions (R1 removes matching queries; matching pool documents are
+and the document pool are re-screened against the COV additions (R1 removes matching queries;
+matching pool documents are
 removed too). Removal counts per screen, per form and per COV component are recorded **before any
 COV component is scored**. **FORMS-12 hold-out:** 500 seed documents per form are set aside first;
 queries generated from them are never trained on.
@@ -282,7 +285,8 @@ report's sense.
   100K-chunk cap are verified. Climate-FEVER refused (no licence at its primary source, as in M7).
   **At least three families must survive admission** or M10 returns to Dylan; the report names the
   family count (Codex pass 6 preferred four — with the CQADupStack pair demoted, four needs LEDGER;
-  Dylan may raise the floor). The two CQADupStack components are **DEV**, reported beside every COV read, never in the macro. COV contains no
+  Dylan may raise the floor). The two CQADupStack components are **DEV**, reported beside every COV
+  read, never in the macro. COV contains no
   scientific-claim, paper-title or argument retrieval (no licensed, non-contaminating set exists),
   so **family A's verdict is a verdict about coverage on the COV families**; those three forms are
   tested only by the six-set transaction (FORMS-12 reports them descriptively before that).
