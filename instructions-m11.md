@@ -36,30 +36,6 @@ M11 ships no new science. It turns two frozen artifacts into a product and a pap
    correlates with the gap (0.050 nDCG per +1.0 subwords/word, t = 4.61) and yet moving fertility by
    0.164–0.176 moved the metric not at all. **A correlated channel is not a lever.**
 
-## Use-case scoping (added 2026-09-02, Dylan)
-
-The pair's edge case is fixed vocabulary, frozen document collection: query encoder and index both
-baked at build time, no re-embedding path needed in the field. Whitepaper and model cards should
-name concrete targets, not just "edge retrieval" in the abstract. Candidates to scope against,
-ranked by fit:
-
-- **On-device camera/sensor classification against a fixed label or rule set** (Dylan's example:
-  a scooter's onboard camera checking "is this rider on a sidewalk" against a small closed set of
-  scene descriptions). Vocabulary and collection are fixed by the rule at deploy time; query
-  encoder never needs to know anything outside it.
-- **Offline field/vehicle manuals** — technician handheld or in-cab device holds one product line's
-  manual corpus, no connectivity, index frozen per firmware/hardware revision.
-- **Voice assistant intent routing on a fixed skill set** — smart-speaker or appliance firmware
-  matching an utterance against a bounded set of supported commands, re-flashed (not re-indexed) on
-  update.
-- **Regulatory/compliance lookup on embedded devices** — a fixed rule corpus (safety codes, spec
-  sheets) baked into hardware with a long refresh cycle (medical devices, industrial controllers).
-
-Each needs: the fixed vocabulary/collection size that's realistic for the use case, and why
-near-zero query compute matters there (battery, silicon cost, certification cycle) rather than just
-"it's on the edge." Fold the strongest 1-2 into the whitepaper as worked examples; the rest stay
-here as backlog.
-
 ## Standing constraints
 
 - Nothing in `results/perquery.json` may be overwritten — the frozen comparator vectors cannot be
