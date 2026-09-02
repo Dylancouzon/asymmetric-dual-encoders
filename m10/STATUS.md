@@ -10,7 +10,7 @@ Nothing has trained. The Mac ran three diagnostics (PLANNING §9, §9b, §9c): u
 
 **First session on the box** (or a cloud GPU, if funded):
 1. `git pull`; `nvidia-smi`; disk ≥ 200 GB free; `./run_tests.sh` and `./run_m8_tests.sh` green.
-2. M10.0-b/c: `m9src/capacity_probe.py` unchanged; per-component DEV-6 of the M9 candidate. M9's close-out later runs from `m9-work` (guard9 pins that branch).
+2. M10.0-c: per-component DEV-6 of the M9 candidate. (The capacity probe is optional and report-only: the 35M cap is hard.) M9's close-out later runs from `m9-work` (guard9 pins that branch).
 3. M10.0-d: COV admission — licence evidence, contamination check, fingerprint screen per
    candidate component; record in `m10/LEDGER.md`; **four admitted families** minimum (not four components).
 4. M10.0-e: `m10/LEDGER.md` §0 (screen lock: eleven arms, thirteen contrasts, τ rule, Bonferroni, seeds) pushed before

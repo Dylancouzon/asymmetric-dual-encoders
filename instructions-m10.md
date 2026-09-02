@@ -44,8 +44,10 @@ evidence:
 4. **Warm start from the M9 candidate** as a registered init arm (2306.11550: init moves retention
    up to 6 points). The M9 checkpoint is already at 94% on NQ.
 
-The student cap stays at 35M (LEAF's class; the pair's story); decision 6 makes a larger tier a
-conditional owner decision, not a silent refusal.
+**The student cap is 35M and it is hard** (Dylan, 2026-09-01: "109M is not an option. This isn't
+low compute anymore. 33M was already in the upper bound of what I think is acceptable"). bge-small
+with the three-layer head is 34.5M; MiniLM-L6 with it is 23.9M. The cheaper student gets the
+benefit of a tie (§Screen, family F).
 
 ## Owner rulings already made (Dylan, 2026-09-01)
 
@@ -63,7 +65,7 @@ conditional owner decision, not a silent refusal.
 | 3 | ~~FineWeb as a seed~~ **RULED 2026-09-01 (delegated by Dylan, decided by the planning session): FineWeb is OUT of M10 entirely — not a seed, not regression text.** Wikipedia stratified by category plus the approved pool corpora give the topic breadth; FineWeb would add a rights review, a URL blocklist to defend, and one more surface for a competitor to probe, for topics the prompts already carry. Reopens only if family A wins on forms yet COV shows a topic gap Wikipedia cannot seed | closed |
 | 4 | PAQ (machine-generated questions over Wikipedia; data CC BY-SA, generation code CC BY-NC) as query text | include; 1.0M uniform sample in the build (seed 0, pinned revision), 4.037M in the volume-control screen arm A2 only; attribution recorded |
 | 5 | ~~Confirm FineWeb documents excluded~~ **RULED 2026-09-01 with decision 3: excluded** (no reserved-set document fingerprints exist and creating them would open reserved corpora — `m9/LEDGER.md` §1.3) | closed |
-| 6 | If the capacity probe clears 85% on the CQA-2 components, scope a **>35M tier** as a separate frontier point (its 109M student is 768-hidden, so part of any clear is output width, which family G already buys) | nano ships at ≤35M regardless |
+| 6 | ~~A >35M tier~~ **RULED OUT by Dylan 2026-09-01** — 35M is a hard cap; no larger student in any role | closed |
 | 7 | Confirm: LoTTE read #1 withdrawn unexecuted in M9; renumbering M10/M11/M12 | as recorded in `m9/STATUS.md` and CLAUDE.md |
 
 ## Goal, bars, and the permitted claim — unchanged from M9
@@ -108,9 +110,10 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
   (a3) Head-width probe in closed form — **done** (PLANNING §9b): on a frozen bge-small a ridge
   head from 384 → 768 → 1152 features retains 27 → 33 → 37% (programmers) and 36 → 41 → 44%
   (physics) of stella; monotone, a floor, consistent with (a).
-  (b) Capacity probe (`m9src/capacity_probe.py`, 109M student, M9 anchor dose, unchanged): ≤75%
-  on the CQA-2 components → capacity is not binding at that dose; ≥85% → decision 6 fires. Between
-  → reported, no action.
+  (b) Capacity probe (`m9src/capacity_probe.py`, 109M student, M9 anchor dose, unchanged) —
+  **optional, report-only**: no outcome changes an M10 action now that the cap is hard, so it runs
+  only if the GPU is otherwise idle, and its row goes to the whitepaper as "what a 109M student
+  would have retained". Its 109M student is 768-hidden, so part of any gain is output width.
   (c) Per-component DEV-6 read of the M9 candidate incl. `heldout-longq` (the baseline row).
   (d) **COV admission** (§Surfaces): for every candidate component, commit to `m10/LEDGER.md` its
   primary-source licence URL and terms, HF repo and revision, corpus size, query count, qrels
@@ -233,11 +236,13 @@ Throughput is recorded for every arm and decides nothing. Order: A, B, C, D, E, 
 | **C — init** | bge-small · M9 candidate | 1 | resolved winner; default bge-small |
 | **D — objective** | anchor · anchor with phase-2 KL in cycle 3 | 1 | resolved winner; default phase 1 only |
 | **E — batch** | 32 · 128 at equal examples and identical schedule | 1 | resolved winner; default 32 (LEAF) |
-| **F — student** | bge-small · MiniLM-L6-v2 at equal examples | 1 | resolved winner; default bge-small |
+| **F — student** | bge-small (34.5M with the head) · MiniLM-L6-v2 (23.9M) at equal examples | 1 | bge-small only if it wins **resolved**; **default MiniLM-L6-v2** — owner preference for the low-compute point (2026-09-01); MiniLM is 2× cheaper to train and serve (`m9/RESULTS.md`), and M9's screen had it −0.0026 unresolved |
 | **G — output width** | feature = last layer only (384, M9's head) · last two of the three layers (768) · three layers (1152) | 1152−384 · 1152−768 · 768−384 | resolved winner; **default 1152** (the probe's evidence that width binds under L2, PLANNING §9; the screen, not the probe, decides) |
 
 A2 exists only as a control; the build never uses more than 1.0M PAQ. **Equal examples** holds for
-every family except B, which is matched on query presentations by design.
+every family except B, which is matched on query presentations by design. If family F selects
+MiniLM-L6, the other families' verdicts (taken on bge-small) transfer to it by assumption, and the
+report says so; the synthesized selected-recipe arm and LoTTE read #1 are the check on that transfer.
 
 **Rule, per contrast (families B–G):** the difference in COV macro (family-weighted, §Surfaces)
 between the two arms' final checkpoints; paired stratified bootstrap over queries within component,
@@ -324,7 +329,7 @@ update, the M10 section of the report artifact, decisions logged in CLAUDE.md, h
 
 ## Out of scope (reopening conditions in PLANNING §7)
 
-Document-side co-adaptation (breaks the pair; M11+ as its own system) · a >35M nano (decision 6
-scopes a separate tier only) · teacher change (stella-1.5B measured worse; Qwen3-0.6B never
+Document-side co-adaptation (breaks the pair; M11+ as its own system) · any student above 35M
+(hard cap, Dylan 2026-09-01) · teacher change (stella-1.5B measured worse; Qwen3-0.6B never
 screened and not the pair) · a nonlinear head (no fastembed path; the width comes from linear multi-layer pooling instead) · MS MARCO in any form ·
 FineWeb in any role (decisions 3 and 5) · any change to zero.

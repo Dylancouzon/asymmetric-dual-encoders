@@ -106,7 +106,7 @@ table: dev out-of-domain 0.764 vs six 0.755).
 | avenue | why rejected | reopens if |
 |---|---|---|
 | Teacher change (Qwen3-Embedding-0.6B, gte-large-v1.5, arctic-embed-l-v2) | breaks the one-index pair; stella-1.5B measured −0.0023; gte-large-v1.5 is stella's own backbone; Qwen3-0.6B +0.004 nominal, never screened | the pair story is dropped by Dylan |
-| >35M student for the release | third frontier point competing with arctic-m symmetric, not LEAF; the capacity probe answers the scientific question for the report | Dylan reopens after the probe |
+| >35M student in any role | **hard cap, Dylan 2026-09-01**: "109M is not an option. This isn't low compute anymore. 33M was already in the upper bound" | never |
 | Regress to stella's 768d or 256d head | a smaller index is a separate system and a full re-encode of every reserved corpus; §9 says whether the 384-rank bottleneck even binds | §9 shows <95% at k=384 AND the MLP-head arm fails |
 | Document-side co-adaptation (E14-LORA) | breaks the pair; M11+ as its own system | never inside M10 |
 | FineWeb-10B vectors as targets | wrong embedding space (gte-multilingual-base 768d) | never |
@@ -224,8 +224,8 @@ Within 35M parameters the width comes from the *feature*, not the backbone: mean
 parameters over the 384-d head (head 1.18M; ≈ 34.5M total), and still exportable per token so fastembed's own mean pooling
 reproduces it exactly (mean pooling is linear; M9's trick; identical masking required). This is
 screen family G in the mandate, default 1152; **the screen decides, not the probe.** Caveats: two
-forum components stand in for the six; the capacity probe's 109M student is 768-hidden, so a clear
-from it would be partly width, which decision 6 notes. Diagnostic; read by no rule; dev reads
+forum components stand in for the six; the capacity probe (now optional, report-only) has a
+768-hidden student, so any gain it showed would be partly width. Diagnostic; read by no rule; dev reads
 counted (2 components, 3 scoring passes each per basis).
 
 ## 9b. Head-width probe in closed form (`m10src/head_width_probe.py`, Mac, 2026-09-01)
