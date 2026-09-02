@@ -210,6 +210,16 @@ family G's export algebra and parameter count confirmed. 2 BLOCKER / 2 MAJOR / 2
 | m | stale numbers in §8 read as policy; "five passes" premature | **adopted** — this note at the top of §8; pass 5 recorded |
 | m | dev-reuse accounting not fillable | **adopted** — exact counts (86) in `m10/RESULTS.md` |
 
+**Pass 6 — verification of the pass-5 fixes and the trim** (`research/m10-codex-plan6-2026-09-01.md`;
+read-exclusion audited clean). 8 of 10 land; the trim removed nothing a box session needs. Two
+items remain as **recorded dissents**, plus one contradiction fixed:
+
+| # | finding | disposition |
+|---|---|---|
+| B | BRIGHT admitted although its third-party documents' rights are not conveyed | **not adopted, dissent recorded** — the reviewer's per-document standard would also disqualify the six and CQADupStack; the plan applies M7's dataset-level eval-use standard consistently, discloses the caveat, and uses COV for selection only, never for a claim. Owner may overrule (`m10/COV_CANDIDATES.md`) |
+| B | COV floor three, reviewer wants four | **not adopted, dissent recorded** — with the CQA pair demoted, four untouched families exist only if LEDGER admits; the floor stays three, the report names the family count, and Dylan may raise it |
+| M | mandate said M9 "is merged after the close-out cleanup" while STATUS says merged with close-out pending | **adopted** — one wording: merged 2026-09-01 after the repo cleanup; close-out pending from `m9-work` |
+
 ## 9. Rank-bottleneck probe (`m10src/rank_probe.py` + `rank_probe_mix.py`, Mac, 2026-09-01)
 
 `results/m10_rank_probe_mac.json`. Stella-400M query vectors (s2p prompt) projected onto their
