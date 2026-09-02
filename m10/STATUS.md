@@ -1,7 +1,7 @@
 # M10 status — PLANNED 2026-09-01; branch `m10-work`; waiting on the training box (Dylan travelling)
 
 Mandate `instructions-m10.md`; evidence `m10/PLANNING.md`; M9's record `m9/FINDINGS.md`.
-Nothing has trained. The Mac ran the rank-bottleneck probe (`results/m10_rank_probe_mac.json`, PLANNING §9): a 384-wide linear head is at the aim's ceiling, so the default student pools three layers (1152-d feature, family G).
+Nothing has trained. The Mac ran the rank-bottleneck probe (`results/m10_rank_probe_mac.json`, PLANNING §9): under L2 regression a 384-wide linear head binds before training, so the default student pools three layers (1152-d feature); screen family G decides.
 
 ## Next, in order
 
@@ -13,7 +13,7 @@ Nothing has trained. The Mac ran the rank-bottleneck probe (`results/m10_rank_pr
 2. M10.0-b/c: `m9src/capacity_probe.py` unchanged; per-component DEV-6 of the M9 candidate. M9's close-out later runs from `m9-work` (guard9 pins that branch).
 3. M10.0-d: COV admission — licence evidence, contamination check, fingerprint screen per
    candidate component; record in `m10/LEDGER.md`; **four admitted families** minimum (not four components).
-4. M10.0-e: `m10/LEDGER.md` §0 (screen lock: nine arms, τ rule, Bonferroni, seeds) pushed before
+4. M10.0-e: `m10/LEDGER.md` §0 (screen lock: eleven arms, thirteen contrasts, τ rule, Bonferroni, seeds) pushed before
    any arm runs.
 5. M10.1: generation (Qwen3-8B 4-bit via vLLM; 200-query smoke per form, read by a person, rate
    measured, then scale), PAQ sample, decontamination with the fixed thresholds, FORMS-12

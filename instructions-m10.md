@@ -3,7 +3,7 @@
 *Written 2026-09-01 by the planning session on Dylan's direction ("M9 failed to achieve our goals
 … make M10 a retry … build something unimpeachable by competitors"). Evidence `m10/PLANNING.md`;
 M9's record `m9/FINDINGS.md`. Adversarial review: gpt-5.6-terra, read-only, three passes
-(`research/m10-codex-plan-2026-09-01.log`, `-plan2-`, `-plan3-`, `-plan4-`); every finding and its
+(`research/m10-codex-plan-2026-09-01.md`, `-plan2-`, `-plan3-`, `-plan4-`; full logs are gitignored `.log` files beside them); every finding and its
 disposition is in PLANNING §8. The M9 model is **nano**; M7's table is **zero**; the product is
 still the pair on one stella index.*
 
@@ -93,11 +93,14 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
 
 - **M10.0 DIAGNOSIS + SCREEN LOCK** (no six-set, reserved or LoTTE output exists during this stage).
   (a) Rank-bottleneck probe — **done on the Mac 2026-09-01** (`results/m10_rank_probe_mac.json`,
-  PLANNING §9): one 384-d subspace of stella's query space retains 99.5% of a single query
-  distribution and only 90–93% once it must serve three distributions at once; at 640 it retains
-  98–100%. A 384-hidden linear-head student is therefore at the aim's ceiling before training.
-  **Action taken:** the head stays linear (a nonlinear head has no fastembed path) but the pooled
-  **feature widens** by concatenating mean-pooled states of three layers (§Recipe, screen family G).
+  PLANNING §9): the reconstruction-optimal (PCA) 384-d subspace of stella's query space retains
+  99.5% of a single query distribution's retrieval and 90–93% once it is fit to three distributions
+  at once; at 640 it retains 98–100%. L2 regression is a reconstruction objective, so this is the
+  subspace an L2-trained 384-hidden linear-head student is pushed toward. **It is evidence that
+  output width binds under L2 distillation, not a bound on every 384-d subspace** (a ranking-optimal
+  one may do better). **Action taken:** the head stays linear (a nonlinear head has no fastembed
+  path) but the pooled **feature widens** by concatenating mean-pooled states of three layers
+  (§Recipe); screen family G decides it against the 384-d and 768-d alternatives.
   (a2) Serving-parity check for the multi-layer head: export the per-token head over the three
   layers' token states, let fastembed mean-pool, compare to the in-graph pooled output on M9's
   parity sample (min-cos ≥ 1−1e-4, max-abs ≤ 1e-3). Must pass before family G is locked.
@@ -111,9 +114,9 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
   screen against the six and the reserved four. A component is named COV only after that record
   is pushed. Then **every admitted COV corpus, query set and document set joins the protected
   index** (`m8src/protected_filter`) before any PAQ or synthetic text is constructed.
-  (e) **Screen lock**: `m10/LEDGER.md` §0 fixes every arm of §Screen, order, doses, seeds, the τ
-  rule, surfaces, the ten contrasts, multiplicity control, confirmation design and outcome→action
-  maps.
+  (e) **Screen lock**: `m10/LEDGER.md` §0 fixes every arm of §Screen (eleven arms), order, doses,
+  seeds, the τ rule, surfaces, the thirteen contrasts, multiplicity control, confirmation design
+  and outcome→action maps.
 - **M10.1 DATA.** Generation (per-form smoke of 200 queries, read by a person, rate measured,
   before scaling), PAQ samples, decontamination against the protected index (now including COV)
   and the six's documents, the FORMS-12 hold-out, teacher targets, hard-candidate mining (§Data),
@@ -228,16 +231,18 @@ Throughput is recorded for every arm and decides nothing. Order: A, B, C, D, E, 
 | **D — objective** | anchor · anchor with phase-2 KL in cycle 3 | 1 | resolved winner; default phase 1 only |
 | **E — batch** | 32 · 128 at equal examples and identical schedule | 1 | resolved winner; default 32 (LEAF) |
 | **F — student** | bge-small · MiniLM-L6-v2 at equal examples | 1 | resolved winner; default bge-small |
-| **G — output width** | feature = last layer only (384, M9's head) · last two of the three layers (768) · three layers (1152) | 1152−384 · 1152−768 · 768−384 | resolved winner; **default 1152** (the probe's algebraic ceiling at 384 is the reason; PLANNING §9) |
+| **G — output width** | feature = last layer only (384, M9's head) · last two of the three layers (768) · three layers (1152) | 1152−384 · 1152−768 · 768−384 | resolved winner; **default 1152** (the probe's evidence that width binds under L2, PLANNING §9; the screen, not the probe, decides) |
 
 A2 exists only as a control; the build never uses more than 1.0M PAQ. **Equal examples** holds for
 every family except B, which is matched on query presentations by design.
 
-**Rule, per contrast:** the difference in COV macro (family-weighted, §Surfaces) between the two
-arms' final checkpoints; paired stratified bootstrap over queries within component, B = 20,000,
-seed 0; a contrast **resolves** when the point estimate ≥ MDE 0.0056 **and** the one-sided lower
-bound at the **0.025/13 quantile** (Bonferroni over the thirteen contrasts) is > 0, and the sign is
-stable across the last two cycle-end checkpoints. **Confirmation:** for every decision whose
+**Rule, per contrast (families B–G):** the difference in COV macro (family-weighted, §Surfaces)
+between the two arms' final checkpoints; paired stratified bootstrap over queries within component,
+B = 20,000, seed 0; a contrast **resolves** when the point estimate ≥ MDE 0.0056 **and** the
+one-sided lower bound at the **0.025/13 quantile** (Bonferroni over the thirteen contrasts) is > 0,
+and the sign is stable across the last two cycle-end checkpoints. **Family A's contrast A3−A2 is
+exempt from this rule and uses only its three-outcome rule in the table** (resolved requires the
+corrected lower bound > MDE); A3−A1 and A2−A1 are descriptive. **Confirmation:** for every decision whose
 non-default option won, both the winner and the default are re-trained with two more seeds at
 screen dose (at most four such decisions, largest margins first; the rest revert to default);
 the decision stands only if the winner's margin exceeds the largest seed range observed in

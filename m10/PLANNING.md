@@ -99,7 +99,7 @@ table: dev out-of-domain 0.764 vs six 0.755).
 |---|---|---|---|
 | RTX 3080 box, when Dylan is back | ≈ 4–5 weeks: generation 2–4 d (unmeasured rate), data + COV admission 1.5 d, screens 1.6 d + confirmations ≤ 2.4 d, build 2.6–4 d plus the batch-32 penalty, M9 close-out + final 1 d, review gates between | $0 | data and caches already on the box; one conservative budget, revised only from measured rates |
 | 1× A100 80 GB cloud | ≈ 10–12 days incl. 1 day to re-derive the pool, dev suite and fingerprints from HF; GPU work ≈ 80–110 h | ≈ $120–280 GPU + optional $110–330 hosted generation (Sept-2026 prices unverified) | reproducible from the repo except gitignored `work/` artifacts, which rebuild from the same sanctioned code |
-| Mac M5 Pro | probes and code only; stella document encode ≈ 40–70 docs/s on MPS | $0 | runs stella only in `.venv-mac` (transformers 4.57); transformers 5.x breaks stella's remote code |
+| Mac M5 Pro | probes and code only; stella document encode 20–100 docs/s on MPS depending on document length | $0 | runs stella only in `.venv-mac` (transformers 4.57); transformers 5.x breaks stella's remote code |
 
 ## 7. Considered and rejected (reopening condition per row)
 
@@ -118,7 +118,7 @@ table: dev out-of-domain 0.764 vs six 0.755).
 
 ## 8. Adversarial review disposition
 
-**Pass 1 — gpt-5.6-terra, high effort, read-only, 2026-09-01** (`research/m10-codex-plan-2026-09-01.log`;
+**Pass 1 — gpt-5.6-terra, high effort, read-only, 2026-09-01** (`research/m10-codex-plan-2026-09-01.md`;
 read-exclusion audited: the reviewer opened only the twelve named files). Verdict "not
 decision-grade"; 3 BLOCKER / 10 MAJOR / 2 MINOR. **All 15 actioned in the mandate rewrite:**
 
@@ -140,7 +140,7 @@ decision-grade"; 3 BLOCKER / 10 MAJOR / 2 MINOR. **All 15 actioned in the mandat
 | m14 | 35M cap is a product choice presented as science | **adopted** — decision 6: a conditional >35M tier if the capacity probe clears 85% |
 | m15 | reserved batch conditional on C1 only | **adopted** — `if C1 or C2` in the M10 re-registration |
 
-**Pass 2 — same reviewer, on the rewritten text** (`research/m10-codex-plan2-2026-09-01.log`;
+**Pass 2 — same reviewer, on the rewritten text** (`research/m10-codex-plan2-2026-09-01.md`;
 read-exclusion audited clean). Disposition audit: 10 of 15 pass-1 fixes landed, 5 did not
 (M4, M5, M11, M12 arithmetic, M7 timing). New: 3 BLOCKER / 8 MAJOR / 1 MINOR. **All actioned in
 the second rewrite:**
@@ -160,7 +160,7 @@ the second rewrite:**
 | M | dose and cost arithmetic (3.8B vs 4.2B; mining; screen days) | **adopted** — 4.2B in both files; mining FLOP count stated, measured on a smoke, HNSW fallback registered; screens re-budgeted at 2.5M examples: 1.3 days + ≤ 1.5 days confirmations; box path 3–4 weeks |
 | m | rank-probe docstring says 512d; STATUS asks for a nonlinear-head dry run | **adopted** — docstring corrected (1024/768/256); the dry-run line removed |
 
-**Pass 3 — same reviewer, verification of the second rewrite** (`research/m10-codex-plan3-2026-09-01.log`;
+**Pass 3 — same reviewer, verification of the second rewrite** (`research/m10-codex-plan3-2026-09-01.md`;
 read-exclusion audited clean). 12 of 15 pass-2 dispositions land; two "not fully"; 4 new MAJOR.
 **All actioned:**
 
@@ -172,15 +172,31 @@ read-exclusion audited clean). 12 of 15 pass-2 dispositions land; two "not fully
 | M | STATUS says four surviving components, mandate says four families | **adopted** — STATUS corrected to four families |
 | M | confirmation budget understated after the family-B redesign | **adopted** — worst case recomputed at 3.1B tokens ≈ 1.9 days plus the synthesized arm; box path ≈ 4 weeks; cloud GPU-hours 70–100 |
 
+**Pass 4 — same reviewer, on the third rewrite, family G and the report page**
+(`research/m10-codex-plan4-2026-09-01.md`; read-exclusion audited clean). Pass-3 items all land;
+family G's export algebra and parameter count confirmed. 2 BLOCKER / 2 MAJOR / 2 MINOR on the plan,
+5 number disagreements on the page. **All actioned:**
+
+| # | finding | disposition |
+|---|---|---|
+| B | §9 promoted the PCA row to an upper bound on every 384-d subspace | **adopted** — reworded everywhere: the row is the reconstruction-optimal subspace's retention, the target L2 regression pushes toward; evidence, not a bound; the screen decides G |
+| B | family A's rule contradicted the generic rule | **adopted** — A3−A2 exempted explicitly; resolved requires the corrected lower bound > MDE; A3−A1 and A2−A1 descriptive |
+| M | stale counts (ten contrasts, nine arms) | **adopted** — eleven arms, thirteen contrasts everywhere |
+| m | probe JSON provenance text said 512-d head | **adopted** — text field corrected to 768/256 (numbers untouched) |
+| M/m | report page: LEAF 97.9 vs 97.7; build-curve first point; Mac docs/s; 33M; premature "four passes" | **adopted** — LEAF labelled 97.9% on our six (97.7% is BEIR-14) in `m9/FINDINGS.md` and the page; the curve's first point labelled as the build's 0.12B eval with the screen anchor drawn separately; 20–100 docs/s; 33.4M; the review paragraph rewritten after this pass |
+
 ## 9. Rank-bottleneck probe (`m10src/rank_probe.py` + `rank_probe_mix.py`, Mac, 2026-09-01)
 
 `results/m10_rank_probe_mac.json`. Stella-400M query vectors (s2p prompt) projected onto their
 top-k principal components, renormalized, retrieved by exact search against the unmodified stella
 document vectors of the two CQADupStack dev components (manifest hashes verified). **The Mac
 reproduces the box ceiling**: programmers 0.4681 vs 0.46807, physics 0.4932 vs 0.49314.
-A student with hidden width h and a linear head emits vectors in ONE h-dimensional affine
-subspace, so the row for k = h, with the basis fit on the student's training distribution, is an
-upper bound on that class. Retention of the component's own full-rank score:
+A student with hidden width h and a linear head emits pre-normalization vectors in ONE
+h-dimensional affine subspace (L2 normalization does not change a ranking, so the subspace is what
+matters for retrieval). PCA gives the **reconstruction-optimal** k-d subspace of the fit set — the
+subspace an L2-regression objective pushes such a student toward — so the k = h row is the
+retention of that subspace, **not an upper bound over every k-d subspace** (a ranking-optimal one
+may do better). Retention of the component's own full-rank score:
 
 | basis fit on | k | programmers | physics |
 |---|---|---|---|
@@ -195,18 +211,21 @@ upper bound on that class. Retention of the component's own full-rank score:
 Explained variance of NQ queries at 384 components: 84.3% — stella's query space is not
 low-rank. Stella's 768-d and 256-d MRL heads do not help (768-space k=384: 82.1% / 89.2%).
 
-**Reading.** One 384-d subspace serves ONE query distribution almost perfectly (99.5% / 99.6%) and
-several distributions poorly: fit on NQ it caps forum retention at 80–89%; fit on a mixture that
-includes the target's own queries it still caps at 90–93%. The aim needs 89.7% across six
-distributions, so **the 384-wide linear-head class is at its ceiling for the aim before training
-starts** — coverage alone cannot fix it. At width 640 the cap is 98–100%. Within 35M parameters the
-width comes from the *feature*, not the backbone: mean-pool three layers (bge-small layers 12, 8, 4)
-and concatenate → 1152-d feature → Linear(1152→1024), +0.8M parameters, full-rank head, and still
-exportable per token so fastembed's own mean pooling reproduces it exactly (mean pooling is linear;
-M9's trick). This is screen family G in the mandate, default 1152. Caveats: an upper bound on the
-class, not a forecast of any student; two forum components stand in for the six; the capacity
-probe's 109M student is 768-hidden, so a clear from it would be partly width, which decision 6 notes.
-Diagnostic; read by no rule; dev reads counted (2 components, 3 scoring passes each per basis).
+**Reading.** The reconstruction-optimal 384-d subspace serves ONE query distribution almost
+perfectly (99.5% / 99.6%) and several distributions poorly: fit on NQ it retains 80–89% on forum
+queries; fit on a mixture that includes the target's own queries, 90–93%. The aim needs 89.7% across
+six distributions. Under L2 distillation — whose objective is reconstruction — this is **strong
+evidence that a 384-wide linear head binds before training starts**, and consistent with M9's
+50–71% on the same components; it is not a theorem about every 384-d subspace, and a ranking-aware
+loss (phase 2) could pull the student elsewhere. At width 640 the same subspace retains 98–100%.
+Within 35M parameters the width comes from the *feature*, not the backbone: mean-pool three layers
+(bge-small layers 12, 8, 4) and concatenate → 1152-d feature → Linear(1152→1024), +786,432
+parameters (≈ 34.2M total), and still exportable per token so fastembed's own mean pooling
+reproduces it exactly (mean pooling is linear; M9's trick; identical masking required). This is
+screen family G in the mandate, default 1152; **the screen decides, not the probe.** Caveats: two
+forum components stand in for the six; the capacity probe's 109M student is 768-hidden, so a clear
+from it would be partly width, which decision 6 notes. Diagnostic; read by no rule; dev reads
+counted (2 components, 3 scoring passes each per basis).
 
 ## 10. Reuse, do not rebuild
 

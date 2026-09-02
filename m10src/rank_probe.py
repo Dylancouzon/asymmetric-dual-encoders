@@ -3,8 +3,10 @@
 Teacher query vectors (stella-400M, s2p prompt) are projected onto their top-k principal
 components (basis fit on an INDEPENDENT query set), renormalized, and retrieved against the
 unmodified teacher document vectors of two dev components. A student with hidden width h and a
-linear head can only emit vectors in an h-dimensional affine subspace, so the k=h row is an
-UPPER BOUND on what any such student can retain -- whatever its backbone learns. Also repeated
+linear head emits pre-normalization vectors in an h-dimensional affine subspace; PCA gives the
+reconstruction-optimal such subspace, which is what L2 regression pushes the student toward. So
+the k=h row is evidence about the class under L2 distillation, NOT a bound over every subspace
+(a ranking-optimal one may do better). Also repeated
 in stella's 768-d and 256-d MRL heads, to price "regress to a smaller teacher target".
 
 Reads DEV components only (cqadup-programmers, cqadup-physics); never the six or reserved sets.

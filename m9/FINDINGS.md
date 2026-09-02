@@ -23,8 +23,8 @@ hides the finding:
 | cqadup-physics (forum questions) | 0.4931 | 0.3501 | **71.0%** |
 | cqadup-programmers (forum questions) | 0.4681 | 0.2345 | **50.1%** |
 
-Where the training queries look like the test queries, nano is already inside LEAF's published
-band (LEAF: 97.7%). Where they do not, it retains half. **This is a coverage failure, not a
+Where the training queries look like the test queries, nano is already inside LEAF's band (LEAF
+retains 97.9% of its teacher on our six; 97.7% on BEIR-14 in its paper). Where they do not, it retains half. **This is a coverage failure, not a
 capacity failure**: a 33M student that reaches 94% on one distribution has the capacity to reach
 94%. The six are scientific claims, biomedical questions, finance questions, 170-word
 counter-arguments, paper titles and COVID queries — none of which the pool contains — so the
@@ -36,7 +36,7 @@ avg-6 retention is expected below the SCREEN-3 macro, not above it.
 
 | hypothesis | probe | result | reading |
 |---|---|---|---|
-| More dose on the same pool | build curve | 73% at 60M tokens → 79% at 0.74B → 82% at 3.7B, then flat | 60× the dose bought +9 points; the pool is exhausted, not the student |
+| More dose on the same pool | screen anchor + build curve | anchor 73% at 60M tokens (separate 16-epoch run); build 68.5% at 0.12B → 79% at 0.74–0.86B → 82% at 3.7B, then flat for 1.1B | 30× the build's first-eval dose bought +14 points, then nothing; the pool is exhausted, not the student |
 | Student choice | `m9s4` | MiniLM-L6 −0.0026 DEV-6 vs bge-small, unresolved | a tie at screen dose; MiniLM is 2× cheaper to serve and to train |
 | Instruction template on the student | `m9s5` | −0.0204, resolved | the student gets raw query bytes; the teacher keeps its s2p template |
 | Documents as regression text | `m9s6` + build | neutral at equal budget (−0.0060 DEV-6); as *extra* text they beat 16 epochs of query repetition (0.545 at 8 query-epochs vs the anchor's 0.500 at 16) | text volume and breadth help; documents are the cheap form of breadth, not a substitute for query forms |
@@ -88,9 +88,9 @@ avg-6 retention is expected below the SCREEN-3 macro, not above it.
   `results/perquery.json` intact (sha `6b18e3dd…`); dev reuse 494 at M8 close plus M9's screen
   checkpoints and 32 build evaluations (`m8src/dev_reuse_m8.py` gives the exact count).
 - **Diagnostics for M10's design**: the rank-bottleneck probe ran on the Mac 2026-09-01
-  (`m10/PLANNING.md` §9): a 384-d output subspace serves one query distribution at 99.5% and three
-  at 90–93%, so M9's 384-wide linear head was at the aim's ceiling before training — the second
-  cause of the miss beside coverage. Still to run on the box: the capacity probe
+  (`m10/PLANNING.md` §9): the reconstruction-optimal 384-d output subspace serves one query
+  distribution at 99.5% and three at 90–93%, strong evidence that M9's 384-wide linear head bound
+  it under L2 regression — the second cause of the miss beside coverage. Still to run on the box: the capacity probe
   (`m9src/capacity_probe.py`, 60–70 min) and the per-component DEV-6 read incl. `heldout-longq`.
 - **A recommendation**: build M10's recipe around coverage first (synthetic queries in every form
   the six use and beyond, FineWeb breadth), then LEAF's optimizer regime (small batch, cyclic

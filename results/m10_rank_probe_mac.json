@@ -1,5 +1,5 @@
 {
- "_what": "M10.0 diagnostic (Mac, MPS): is a rank-k linear query head a structural ceiling for nano?\n\nTeacher query vectors (stella-400M, s2p prompt) are projected onto their top-k principal\ncomponents (basis fit on an INDEPENDENT query set), renormalized, and retrieved against the\nunmodified teacher document vectors of two dev components. A student with hidden width h and a\nlinear head can only emit vectors in an h-dimensional affine subspace, so the k=h row is an\nUPPER BOUND on what any such student can retain -- whatever its backbone learns. Also repeated\nin stella's 768-d and 512-d MRL heads, to price \"regress to a smaller teacher target\".\n\nReads DEV components only (cqadup-programmers, cqadup-physics); never the six or reserved sets.\nWrites results/m10_rank_probe_mac.json. Diagnostic: read by no rule.",
+ "_what": "M10.0 diagnostic (Mac, MPS): is a rank-k linear query head a structural ceiling for nano?\n\nTeacher query vectors (stella-400M, s2p prompt) are projected onto their top-k principal\ncomponents (basis fit on an INDEPENDENT query set), renormalized, and retrieved against the\nunmodified teacher document vectors of two dev components. A student with hidden width h and a\nlinear head can only emit vectors in an h-dimensional affine subspace, so the k=h row is an\nthe retention of the reconstruction-optimal (PCA) subspace -- the one an L2-regression objective pushes such a student toward; evidence about the class, not a bound over every k-d subspace. Also repeated\nin stella's 768-d and 256-d MRL heads, to price \"regress to a smaller teacher target\".\n\nReads DEV components only (cqadup-programmers, cqadup-physics); never the six or reserved sets.\nWrites results/m10_rank_probe_mac.json. Diagnostic: read by no rule.",
  "device": "mps",
  "teacher": "NovaSearch/stella_en_400M_v5",
  "teacher_revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
@@ -2378,5 +2378,6 @@
     }
    }
   }
- }
+ },
+ "_provenance_note": "2026-09-01: the _what text was corrected after the run (512-d -> 256-d head; 'upper bound' -> reconstruction-optimal subspace) per Codex pass 4; no number was changed."
 }
