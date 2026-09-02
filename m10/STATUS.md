@@ -1,7 +1,7 @@
 # M10 status — PLANNED 2026-09-01; branch `m10-work`; waiting on the training box (Dylan travelling)
 
 Mandate `instructions-m10.md`; evidence `m10/PLANNING.md`; M9's record `m9/FINDINGS.md`.
-Nothing has trained. The Mac ran the rank-bottleneck probe (`results/m10_rank_probe_mac.json`, PLANNING §9): under L2 regression a 384-wide linear head binds before training, so the default student pools three layers (1152-d feature); screen family G decides.
+Nothing has trained. The Mac ran three diagnostics (PLANNING §9, §9b, §9c): under L2 regression a 384-wide linear head binds before training; a frozen backbone retains more with each pooled layer added (384 → 768 → 1152); and fastembed serves the three-layer per-token head exactly. The default student therefore pools three layers (1152-d feature); screen family G decides.
 
 ## Next, in order
 
@@ -23,8 +23,7 @@ Nothing has trained. The Mac ran the rank-bottleneck probe (`results/m10_rank_pr
    ratified amendment; needs Dylan's decision 1) → LoTTE read #1.
 
 **Mac, meanwhile:** data pipeline code (`m10src/`), the 12 form prompts, the PAQ sampler, the
-COV admission records (licence URLs, revisions, sizes), and the M10.0-a2 fastembed parity check of
-the three-layer per-token head (CPU, reuse `m9src/port.py`).
+COV admission records (licence URLs, revisions, sizes). M10.0-a2 is done (`m10src/head_width_parity.py`).
 
 ## Guardrails that bite here
 

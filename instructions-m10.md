@@ -101,9 +101,13 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
   one may do better). **Action taken:** the head stays linear (a nonlinear head has no fastembed
   path) but the pooled **feature widens** by concatenating mean-pooled states of three layers
   (§Recipe); screen family G decides it against the 384-d and 768-d alternatives.
-  (a2) Serving-parity check for the multi-layer head: export the per-token head over the three
-  layers' token states, let fastembed mean-pool, compare to the in-graph pooled output on M9's
-  parity sample (min-cos ≥ 1−1e-4, max-abs ≤ 1e-3). Must pass before family G is locked.
+  (a2) Serving-parity check for the multi-layer head — **done on the Mac 2026-09-01**
+  (PLANNING §9c): fastembed 0.8.0 serves the per-token three-layer head and reproduces the
+  pool-then-head output to min-cos 0.99999984 / max-abs 2e-7 on 64 texts; zero custom ops; 34.5M
+  parameters. Repeat on the trained artifact with M9's locked parity sample before the freeze.
+  (a3) Head-width probe in closed form — **done** (PLANNING §9b): on a frozen bge-small a ridge
+  head from 384 → 768 → 1152 features retains 27 → 33 → 37% (programmers) and 36 → 41 → 44%
+  (physics) of stella; monotone, a floor, consistent with (a).
   (b) Capacity probe (`m9src/capacity_probe.py`, 109M student, M9 anchor dose, unchanged): ≤75%
   on the CQA-2 components → capacity is not binding at that dose; ≥85% → decision 6 fires. Between
   → reported, no action.
@@ -186,7 +190,7 @@ top-64 on the smoke sample (≥ 0.98 required) and the method recorded in the ma
 
 - **Student:** bge-small-en-v1.5 [family F]. **Feature [family G]:** masked mean-pooled hidden
   states of layers 12, 8 and 4 concatenated (1152-d; MiniLM-L6: layers 6, 4, 2) → Linear(1152→1024)
-  → L2 normalize; +0.8M parameters (34.2M total for bge-small). The head is warm-started in closed
+  → L2 normalize; the head is 1.18M parameters, +0.79M over M9's 384-d head (34.5M total for bge-small, under the cap). The head is warm-started in closed
   form (ridge on the concatenated features) for the bge-small init; the M9-candidate init keeps its
   384-d head and adds zero-initialized columns for the two extra layers. Exported per token so
   fastembed's mean pooling reproduces the pooled output exactly (M10.0-a2).

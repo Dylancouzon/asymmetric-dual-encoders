@@ -221,12 +221,41 @@ evidence that a 384-wide linear head binds before training starts**, and consist
 loss (phase 2) could pull the student elsewhere. At width 640 the same subspace retains 98–100%.
 Within 35M parameters the width comes from the *feature*, not the backbone: mean-pool three layers
 (bge-small layers 12, 8, 4) and concatenate → 1152-d feature → Linear(1152→1024), +786,432
-parameters (≈ 34.2M total), and still exportable per token so fastembed's own mean pooling
+parameters over the 384-d head (head 1.18M; ≈ 34.5M total), and still exportable per token so fastembed's own mean pooling
 reproduces it exactly (mean pooling is linear; M9's trick; identical masking required). This is
 screen family G in the mandate, default 1152; **the screen decides, not the probe.** Caveats: two
 forum components stand in for the six; the capacity probe's 109M student is 768-hidden, so a clear
 from it would be partly width, which decision 6 notes. Diagnostic; read by no rule; dev reads
 counted (2 components, 3 scoring passes each per basis).
+
+## 9b. Head-width probe in closed form (`m10src/head_width_probe.py`, Mac, 2026-09-01)
+
+`results/m10_head_width_probe_mac.json`. M9's head-probe design (frozen bge-small backbone, ridge
+head to stella targets fit on 20,000 NQ-open questions, λ on a training-only holdout) with three
+pooled features, scored on the two CQA components against the cached stella documents:
+
+| feature | dim | programmers (retention of stella) | physics |
+|---|---|---|---|
+| mean of layer 12 (M9's head) | 384 | 0.1271 (27.1%) | 0.1750 (35.5%) |
+| layers 12 + 8 | 768 | 0.1545 (33.0%) | 0.2022 (41.0%) |
+| layers 12 + 8 + 4 (M10 default) | 1152 | 0.1722 (36.8%) | 0.2167 (43.9%) |
+
+Each added layer helps a frozen backbone, monotonically, by 6 and 4 points on programmers. This is
+a floor (no training, NQ-only fit set), not a forecast — M9's trained 384-d student reached 50% /
+71% on the same components — and it is consistent with §9: with more output directions the
+frozen features already reach further into stella's space. Family G's default is 1152; the screen
+decides. Diagnostic, read by no rule; dev reads counted (2 components × 3 features).
+
+## 9c. Serving parity of the three-layer per-token head (`m10src/head_width_parity.py`, Mac CPU)
+
+`results/m10_head_width_parity_mac.json`. bge-small with the Linear(1152→1024) head applied per
+token over the concatenated states of layers 12, 8, 4, exported at opset 17: **1073 nodes, zero
+custom-domain ops, 34.54M parameters** (head 1.18M). fastembed 0.8.0 serves it as a custom
+MEAN-pooled normalized model and reproduces the pool-then-head reference to **min-cos
+0.99999984, max-abs 2.0e-07** on 64 texts of 1–300 words. **M10.0-a2 passes** (weights are
+random; parity does not depend on them). Two serving pitfalls for M11: fastembed needs
+`config.json` and `special_tokens_map.json` beside the graph, and transformers 5.x fast tokenizers
+no longer write the latter.
 
 ## 10. Reuse, do not rebuild
 

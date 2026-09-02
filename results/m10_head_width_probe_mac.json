@@ -1,0 +1,141 @@
+{
+ "_what": "M10.0 diagnostic (Mac, MPS): does a wider pooled FEATURE help a frozen bge-small backbone?\n\nClosed-form ridge head from frozen bge-small features to stella-400M query targets (the M9\nhead probe's design), with three feature sets: mean-pooled last layer (384, M9's head), last two\nof layers {12, 8, 4} (768), and all three (1152). Lambda is selected on a training-only holdout\n(warmfit.select's rule). Retrieval is scored on the two CQA dev components against the cached\nstella document vectors of rank_probe.py. Reads the same 20,000 NQ-open questions as the fit set.\nDiagnostic: a frozen backbone is a floor for a trained student, not a forecast; read by no rule.",
+ "student": "BAAI/bge-small-en-v1.5",
+ "fit_set": "20,000 nq_open train questions (seed 0)",
+ "lambda_rule": "training-only holdout 16,000/4,000, normalized objective, ties to larger lambda",
+ "features": {
+  "L12 (384)": {
+   "dim": 384,
+   "lambda": 0.01,
+   "grid": [
+    {
+     "lambda": 1e-06,
+     "val_objective": 0.5057483911514282
+    },
+    {
+     "lambda": 1e-05,
+     "val_objective": 0.5057459473609924
+    },
+    {
+     "lambda": 0.0001,
+     "val_objective": 0.5057326555252075
+    },
+    {
+     "lambda": 0.001,
+     "val_objective": 0.5057470798492432
+    },
+    {
+     "lambda": 0.01,
+     "val_objective": 0.5056561231613159
+    },
+    {
+     "lambda": 0.1,
+     "val_objective": 0.5119240880012512
+    },
+    {
+     "lambda": 1.0,
+     "val_objective": 0.5976514220237732
+    }
+   ],
+   "components": {
+    "cqadup-programmers": {
+     "ndcg10": 0.12707712910877184,
+     "retention_of_stella": 0.2714628190264097
+    },
+    "cqadup-physics": {
+     "ndcg10": 0.17497314607803174,
+     "retention_of_stella": 0.35478006090964964
+    }
+   }
+  },
+  "L12+L8 (768)": {
+   "dim": 768,
+   "lambda": 0.01,
+   "grid": [
+    {
+     "lambda": 1e-06,
+     "val_objective": 0.45613086223602295
+    },
+    {
+     "lambda": 1e-05,
+     "val_objective": 0.4561147093772888
+    },
+    {
+     "lambda": 0.0001,
+     "val_objective": 0.45598775148391724
+    },
+    {
+     "lambda": 0.001,
+     "val_objective": 0.4551261365413666
+    },
+    {
+     "lambda": 0.01,
+     "val_objective": 0.45448926091194153
+    },
+    {
+     "lambda": 0.1,
+     "val_objective": 0.472170352935791
+    },
+    {
+     "lambda": 1.0,
+     "val_objective": 0.5565581321716309
+    }
+   ],
+   "components": {
+    "cqadup-programmers": {
+     "ndcg10": 0.15450020326747582,
+     "retention_of_stella": 0.3300441315702276
+    },
+    "cqadup-physics": {
+     "ndcg10": 0.20217265830012576,
+     "retention_of_stella": 0.40993049295688383
+    }
+   }
+  },
+  "L12+L8+L4 (1152)": {
+   "dim": 1152,
+   "lambda": 0.01,
+   "grid": [
+    {
+     "lambda": 1e-06,
+     "val_objective": 0.43253445625305176
+    },
+    {
+     "lambda": 1e-05,
+     "val_objective": 0.4325057864189148
+    },
+    {
+     "lambda": 0.0001,
+     "val_objective": 0.4322255253791809
+    },
+    {
+     "lambda": 0.001,
+     "val_objective": 0.43028783798217773
+    },
+    {
+     "lambda": 0.01,
+     "val_objective": 0.4279159605503082
+    },
+    {
+     "lambda": 0.1,
+     "val_objective": 0.4483957588672638
+    },
+    {
+     "lambda": 1.0,
+     "val_objective": 0.5302977561950684
+    }
+   ],
+   "components": {
+    "cqadup-programmers": {
+     "ndcg10": 0.17218179970455622,
+     "retention_of_stella": 0.36781564913094217
+    },
+    "cqadup-physics": {
+     "ndcg10": 0.21669275025638407,
+     "retention_of_stella": 0.4393718056618499
+    }
+   }
+  }
+ },
+ "m9_reference": "M9's head probe: frozen bge-small + ridge head (384) scored 0.3463 on SCREEN-3 = 50.8% of the ceiling (results/m9_head_probe.json, -diag)"
+}
