@@ -63,7 +63,7 @@ benefit of a tie (§Screen, family F).
 | 1 | Ratify M9's final-lock amendment **together with the close-out amendment that strikes M9's reserved conditional** (§Stage plan, M10.2): M9's close-out is six-only and cannot spend the reserved access | blocks the close-out only |
 | 2 | Money: one A100/H100 for ≈ 80–110 GPU-hours (≈ **$120–280** at $1.5–2.5/h) and/or hosted open-weights generation (≈ 1.1B tokens ≈ **$110–330**); prices unverified Sept 2026 | box-only path when the box is reachable |
 | 3 | ~~FineWeb as a seed~~ **RULED 2026-09-01 (delegated by Dylan, decided by the planning session): FineWeb is OUT of M10 entirely — not a seed, not regression text.** Wikipedia stratified by category plus the approved pool corpora give the topic breadth; FineWeb would add a rights review, a URL blocklist to defend, and one more surface for a competitor to probe, for topics the prompts already carry. Reopens only if family A wins on forms yet COV shows a topic gap Wikipedia cannot seed | closed |
-| 4 | PAQ (machine-generated questions over Wikipedia; data CC BY-SA, generation code CC BY-NC) as query text | include; 1.0M uniform sample in the build (seed 0, pinned revision), 4.037M in the volume-control screen arm A2 only; attribution recorded |
+| 4 | PAQ (machine-generated questions over Wikipedia; data CC BY-SA, generation code CC BY-NC) as query text | include, from Facebook's official release (never the unofficial HF mirror); 1.0M uniform sample in the build (seed 0, file hashes pinned), 4.037M in the volume-control screen arm A2 only; attribution recorded |
 | 5 | ~~Confirm FineWeb documents excluded~~ **RULED 2026-09-01 with decision 3: excluded** (no reserved-set document fingerprints exist and creating them would open reserved corpora — `m9/LEDGER.md` §1.3) | closed |
 | 6 | ~~A >35M tier~~ **RULED OUT by Dylan 2026-09-01** — 35M is a hard cap; no larger student in any role | closed |
 | 7 | Confirm: LoTTE read #1 withdrawn unexecuted in M9; renumbering M10/M11/M12 | as recorded in `m9/STATUS.md` and CLAUDE.md |
@@ -124,8 +124,8 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
   (e) **Screen lock**: `m10/LEDGER.md` §0 fixes every arm of §Screen (eleven arms), order, doses,
   seeds, the τ rule, surfaces, the thirteen contrasts, multiplicity control, confirmation design
   and outcome→action maps.
-- **M10.1 DATA.** Generation (per-form smoke of 200 queries, read by a person, rate measured,
-  before scaling), PAQ samples, decontamination against the protected index (now including COV)
+- **M10.1 DATA.** Generation with the prompts in `m10src/forms.py` (per-form smoke of 200 queries,
+  read by a person, rate measured, before scaling), PAQ samples, decontamination against the protected index (now including COV)
   and the six's documents, the FORMS-12 hold-out, teacher targets, hard-candidate mining (§Data),
   `results/m10_data_manifest.json` with hashes and the provenance table. **After the manifest is
   immutable and before any arm**, the τ rule is executed and its table recorded.
@@ -150,7 +150,7 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
 |---|---|---|---|
 | M9 real queries (hotpotqa, squad, esci, mrtydi, nqopen, triviaqa; fever out) | 463K | CC BY-SA / Apache | real forms |
 | PAQ sample (decision 4) | 1.0M | CC BY-SA (data) | factoid volume — capped so it cannot dominate |
-| **Synthetic, Qwen3-8B (Apache-2.0; revision pinned), 4-bit, vLLM on the box or hosted** | 3.0M | generated under the generator's terms; provenance pinned; **not redistributed** without review | form breadth |
+| **Synthetic, Qwen/Qwen3-8B (Apache-2.0; revision `b968826d…`), 4-bit via vLLM on the box or hosted; registered fallback Qwen/Qwen3-4B if the 8B cannot hold batch 16 at 1,024 context on the 10 GB card** | 3.0M | generated under the generator's terms; provenance pinned; **not redistributed** without review | form breadth |
 
 **Form taxonomy — 12 forms, 250K each** (quotas locked at M10.1; ±10% realized): factoid question ·
 how-to / troubleshooting question with title and body · scientific claim (a statement) · long
@@ -263,13 +263,17 @@ report's sense.
 
 - **COV** — the primary selection surface: licensed, decontaminated, **qrel-bearing** retrieval
   components, admitted at M10.0-d, **weighted equally per family** (slices within a family are
-  averaged first). Candidate families and components, each requiring the admission record above:
-  **forum-technical** — cqadup-programmers, cqadup-physics (M7 dev, CC BY-SA 2014 dump, eval-only);
-  **consumer-health** — MTEB MedicalQARetrieval (questions over NIH consumer-health pages);
-  **long technical questions** — BRIGHT slices biology, earth-science, psychology, robotics,
-  sustainable-living; **economics** — BRIGHT economics; **legal** — MTEB LegalBench
-  consumer-contracts-QA and corporate-lobbying. **At least four families must survive admission**
-  or M10 returns to Dylan. COV contains no scientific-claim, paper-title or argument retrieval —
+  averaged first). Candidate families and components, draft admission records in
+  `m10/COV_CANDIDATES.md` (primary-source licences checked 2026-09-01), each still needing the
+  corpus-level check, the fingerprint screen and the pushed record: **forum-technical** —
+  cqadup-programmers, cqadup-physics (M7 dev, CC BY-SA 2014 dump, eval-only); **consumer-health** —
+  MTEB MedicalQARetrieval (CC BY 4.0 at MedQuAD; NIH sources); **long technical questions** — BRIGHT
+  slices biology, earth-science, psychology, robotics, sustainable-living (CC BY 4.0 on the
+  benchmark; third-party documents, eval-only, never redistributed); **economics** — BRIGHT
+  economics; **legal** — MTEB LegalBenchCorporateLobbying only (LegalBenchConsumerContractsQA is
+  **refused**, CC BY-NC); **finance** — LEDGER (CC BY 4.0 annual-report QA) once its structure and a
+  chunking rule are verified on the box. Climate-FEVER is refused (no licence at the primary
+  source, as in M7). **At least four families must survive admission** or M10 returns to Dylan. COV contains no scientific-claim, paper-title or argument retrieval —
   no licensed, non-contaminating, qrel-bearing set exists for those forms — so **family A's verdict
   is a verdict about coverage on the COV families**, and those three forms are tested only by the
   six-set transaction (FORMS-12 reports them descriptively before that).

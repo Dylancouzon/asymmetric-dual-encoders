@@ -22,8 +22,10 @@ Nothing has trained. The Mac ran three diagnostics (PLANNING §9, §9b, §9c): u
    `final9.py`'s scoring path and M9's six-only close-out (its reserved conditional struck by a
    ratified amendment; needs Dylan's decision 1) → LoTTE read #1.
 
-**Mac, meanwhile:** data pipeline code (`m10src/`), the 12 form prompts, the PAQ sampler, the
-COV admission records (licence URLs, revisions, sizes). M10.0-a2 is done (`m10src/head_width_parity.py`).
+**Done on the Mac 2026-09-01:** the three diagnostics, the 12 form prompts (`m10src/forms.py`),
+the COV admission drafts (`m10/COV_CANDIDATES.md`: MedicalQA, six BRIGHT slices and
+CorporateLobbying admit on licence; ConsumerContractsQA and Climate-FEVER refused; LEDGER pending),
+and the Qwen3-8B / PAQ source facts. **Mac, next:** the PAQ sampler against the official release.
 
 ## Guardrails that bite here
 
