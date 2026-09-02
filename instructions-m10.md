@@ -3,7 +3,7 @@
 *Written 2026-09-01 by the planning session on Dylan's direction ("M9 failed to achieve our goals
 … make M10 a retry … build something unimpeachable by competitors"). Evidence `m10/PLANNING.md`;
 M9's record `m9/FINDINGS.md`. Adversarial review: gpt-5.6-terra, read-only, six passes
-(`research/m10-codex-plan-2026-09-01.md`, `-plan2-` … `-plan5-`; full logs are gitignored
+(`research/m10-codex-plan-2026-09-01.md`, `-plan2-` … `-plan6-`; full logs are gitignored
 `.log` files beside them); every finding and its disposition is in PLANNING §8. The M9 model is **nano**; M7's table is **zero**; the product is
 still the pair on one stella index.*
 
@@ -112,7 +112,8 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
   §Screen (eleven arms), order, doses, seeds, the τ rule, surfaces, the thirteen contrasts, multiplicity control, confirmation design
   and outcome→action maps.
 - **M10.1 DATA.** Generation under the §Data contract (200-query smoke per form first), PAQ
-  samples, decontamination against the protected index (now including COV) and the six's documents, the FORMS-12 hold-out, teacher targets, hard-candidate mining (§Data),
+  samples, decontamination against the protected index (now including COV) and the six's
+  documents, the FORMS-12 hold-out, teacher targets, hard-candidate mining (§Data),
   `results/m10_data_manifest.json` with hashes and the provenance table. **After the manifest is
   immutable and before any arm**, the τ rule is executed and its table recorded.
 - **M10.2 SCREEN + RECIPE LOCK.** The arms of §Screen, the confirmation runs, then one pushed lock
