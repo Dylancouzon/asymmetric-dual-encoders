@@ -122,6 +122,10 @@ table: dev out-of-domain 0.764 vs six 0.755).
 
 ## 8. Adversarial review disposition
 
+*Each table records the state at that pass; later passes superseded some numbers (multiplicity
+/6 → /10 → /13, confirmations 3 → 4, the >35M conditional → hard cap, FineWeb → out, 3–4 weeks →
+4–5). The mandate is authoritative where a row here disagrees.*
+
 **Pass 1 — gpt-5.6-terra, high effort, read-only, 2026-09-01** (`research/m10-codex-plan-2026-09-01.md`;
 read-exclusion audited: the reviewer opened only the twelve named files). Verdict "not
 decision-grade"; 3 BLOCKER / 10 MAJOR / 2 MINOR. **All 15 actioned in the mandate rewrite:**
@@ -188,6 +192,23 @@ family G's export algebra and parameter count confirmed. 2 BLOCKER / 2 MAJOR / 2
 | M | stale counts (ten contrasts, nine arms) | **adopted** — eleven arms, thirteen contrasts everywhere |
 | m | probe JSON provenance text said 512-d head | **adopted** — text field corrected to 768/256 (numbers untouched) |
 | M/m | report page: LEAF 97.9 vs 97.7; build-curve first point; Mac docs/s; 33M; premature "four passes" | **adopted** — LEAF labelled 97.9% on our six (97.7% is BEIR-14) in `m9/FINDINGS.md` and the page; the curve's first point labelled as the build's 0.12B eval with the screen anchor drawn separately; 20–100 docs/s; 33.4M; the review paragraph rewritten after this pass |
+
+**Pass 5 — same reviewer, cross-file consistency and omissions on the frozen set**
+(`research/m10-codex-plan5-2026-09-01.md`; read-exclusion audited clean). 3 BLOCKER / 5 MAJOR /
+2 MINOR. **All actioned:**
+
+| # | finding | disposition |
+|---|---|---|
+| B | the CQADupStack components were scored by the Mac diagnostics yet proposed as COV | **adopted** — COV admits only surfaces no M10 decision has read; the CQA pair is DEV-6, reported beside every COV read; 86 raw reads logged in `m10/RESULTS.md`; floor three untouched families |
+| B | A2 and A3 were not volume-matched (4,500,314 vs 4,463,314) | **adopted** — identical post-screen unique counts, the larger downsampled with seed 0, both hashes locked before any arm |
+| B | BRIGHT's third-party documents fail an "every document's rights" standard | **adopted modified** — the standard applied is the dataset-level licence at the primary source, the same one that admitted CQADupStack and the six (also third-party text); BRIGHT is one family, its caveat disclosed, evaluation-only. Demanding per-document rights would disqualify the six themselves |
+| M | student contradiction (bge-small architecture vs MiniLM default) | **adopted** — bge-small is the screen anchor, family F decides the build student, MiniLM default; MiniLM's head passes the same parity check first |
+| M | generation gate not executable (20 vs 200, unpinned fallback, no decoding/seed/retry/rubric/approver) | **adopted** — §Data generation contract: 200 per form everywhere, pinned artifacts, sampling parameters, deterministic seeds, one retry, dedup, the 90%/80% rubric, Dylan as approver, two prompt revisions max |
+| M | the ledger does not exist | **adopted** — `m10/LEDGER.md` skeleton committed with the sections the lock must fill |
+| M | extension, margin, seed range, negatives RNG, missing-seed behaviour undefined | **adopted** — all defined in §Recipe and §Screen |
+| M | seed-level leakage; 5-word rule vs 8-gram screen; lenient parser | **adopted** — seeds pre-filtered against the protected index; word-5-gram containment against the seed; `forms.parse` strict |
+| m | stale numbers in §8 read as policy; "five passes" premature | **adopted** — this note at the top of §8; pass 5 recorded |
+| m | dev-reuse accounting not fillable | **adopted** — exact counts (86) in `m10/RESULTS.md` |
 
 ## 9. Rank-bottleneck probe (`m10src/rank_probe.py` + `rank_probe_mix.py`, Mac, 2026-09-01)
 

@@ -8,8 +8,8 @@ avenues `m10/EXPLORED.md` · selection-surface drafts `m10/COV_CANDIDATES.md` ·
 waits for M10's recipe lock and Dylan's ratification. M10's plan went through five Codex passes.
 Three Mac diagnostics fixed the architecture: a 384-wide linear head binds under L2 regression once
 queries are diverse, so the student pools three layers (1152-d, 34.5M parameters, fastembed-exact).
-The 35M cap is hard. FineWeb is out. `m10/LEDGER.md` does not exist yet — it is created on the box
-at M10.0-d/e.
+The 35M cap is hard. FineWeb is out. `m10/LEDGER.md` is a committed skeleton; the box fills it at
+M10.0-d/e.
 
 ## Dylan — four open decisions (defaults apply meanwhile)
 
@@ -24,10 +24,13 @@ Optional lever not yet taken: cap confirmation seeds at two decisions instead of
 
 ## Mac — before the box is reachable (no GPU; run only when Dylan says so)
 
-1. **Per-form generation smoke with Qwen3-8B 4-bit via mlx-lm** (~5 GB download, ~10 min of
-   generation): `pip install mlx-lm`, load `mlx-community/Qwen3-8B-4bit`, 20 queries × 12 forms
-   from `m10src/forms.py` over Wikipedia seed passages, save to `results/m10_forms_smoke_mac.json`
-   for Dylan to read. The prompts are adjusted from that read, before any scaling.
+1. **Per-form generation smoke with Qwen3-8B 4-bit via mlx-lm** (~5 GB download, ~80 min of
+   generation): `pip install mlx-lm`, load `mlx-community/Qwen3-8B-4bit` (revision recorded), 200
+   queries × 12 forms from `m10src/forms.py` over pre-filtered Wikipedia seed passages, under the
+   §Data generation contract, saved to `results/m10_forms_smoke_mac.json` for Dylan to read and
+   approve (90% contract / 80% on-form; at most two prompt revisions per form).
+1b. MiniLM-L6's three-layer head through `m10src/head_width_parity.py` (CPU, minutes), so family F
+   may select it.
 2. Port the trainer to the M10 recipe with a CPU smoke on a tiny model: cyclic schedule,
    example-mix batcher, three-layer pooled head, phase-2 KL term, `test_resume.py` equivalence.
 3. The PAQ sampler against the official Facebook release (1.0M build sample, 4.037M A2 sample, hashes).
@@ -39,12 +42,13 @@ Optional lever not yet taken: cap confirmation seeds at two decisions instead of
 
 1. `git pull` on `m10-work`; `nvidia-smi`; ≥ 200 GB free; `./run_tests.sh` and `./run_m8_tests.sh` green.
 2. M10.0-c: per-component DEV-6 read of the M9 candidate incl. `heldout-longq` (baseline row).
-3. M10.0-d: COV admission — verify LEDGER's structure; fingerprint screen and corpus-level check
-   per component; pushed records in `m10/LEDGER.md`; **four admitted families** minimum; then add
+3. M10.0-d: COV admission — verify LEDGER's structure and chunk count; fingerprint screen and
+   corpus-level check per component; pushed records in `m10/LEDGER.md` §2; **three untouched
+   families** minimum (the CQADupStack pair is DEV, not COV); then add
    every admitted corpus, query set and document set to the protected index; encode the admitted
    corpora with stella.
-4. M10.0-e: `m10/LEDGER.md` §0 screen lock (eleven arms, thirteen contrasts, τ rule, Bonferroni,
-   confirmation design, DEV-6-once rule) pushed before any arm runs.
+4. M10.0-e: `m10/LEDGER.md` §0 screen lock (eleven arms, thirteen contrasts, A2/A3 matched counts
+   and hashes, τ rule, Bonferroni, confirmation design, DEV-6-once rule) pushed before any arm runs.
 5. M10.1: generation smoke (if not done on the Mac), then generation at scale; PAQ; decontamination
    with the fixed thresholds; FORMS-12 hold-out; teacher targets; mining smoke then mining;
    manifest; τ table.

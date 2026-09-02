@@ -3,8 +3,8 @@
 *Written 2026-09-01 by the planning session on Dylan's direction ("M9 failed to achieve our goals
 … make M10 a retry … build something unimpeachable by competitors"). Evidence `m10/PLANNING.md`;
 M9's record `m9/FINDINGS.md`. Adversarial review: gpt-5.6-terra, read-only, five passes
-(`research/m10-codex-plan-2026-09-01.md`, `-plan2-` … `-plan5-`; full logs are gitignored `.log` files beside them); every finding and its
-disposition is in PLANNING §8. The M9 model is **nano**; M7's table is **zero**; the product is
+(`research/m10-codex-plan-2026-09-01.md`, `-plan2-` … `-plan5-`; full logs are gitignored
+`.log` files beside them); every finding and its disposition is in PLANNING §8. The M9 model is **nano**; M7's table is **zero**; the product is
 still the pair on one stella index.*
 
 ## What binds from M7 and M9 — exhaustive
@@ -24,27 +24,18 @@ mechanism, M10 controls. Read `m8/CODEMAP.md` and `m9/CODEMAP.md` before writing
 
 ## Why M9 missed, and what M10 changes
 
-M9's candidate retains **93.8%** of the teacher on NQ and **50–71%** on the two CQADupStack dev
-components (`m9/FINDINGS.md` §1). The thesis: the 463K-query pool (all Wikipedia QA and product
-search, longest query 108 words) did not cover the forms the model is tested on; and, found on the
-Mac while planning (M10.0-a), the 384-wide linear head is the subspace L2 regression could not
-push past once queries are diverse. The student's parameter count is not the constraint. **The
-thesis is tested before anything is built** (§Screen family A), and the
-test's reach is stated: it covers the query families the COV surface contains (§Surfaces), and
-the six-set transaction remains the only test of the forms COV lacks. M10 changes, in order of
-evidence:
+M9 retained **93.8%** of the teacher on NQ and **50–71%** on the two CQADupStack dev components
+(`m9/FINDINGS.md` §1): its 463K Wikipedia-QA and product queries did not cover the forms the model
+is tested on, and its 384-wide linear head is the subspace L2 regression cannot push past once
+queries are diverse (PLANNING §9). Parameter count is not the constraint. Both causes are tested
+before anything is built (§Screen, families A and G). M10 changes, in order of evidence (PLANNING §3):
 
-1. **Coverage** — a query corpus of ~4.5M texts spanning 12 query forms (§Data). Evidence: the
-   per-component spread; LEAF's ~1.8M query-like texts across five styles and its one-epoch
-   ablation (queries-only 46.7 vs queries+docs 60.7).
-2. **Optimizer regime** — LEAF's small batch and cyclic anneals (1-epoch loss bs16 0.4194 ≈ bs32
-   0.4214 ≪ bs256 0.4593; 3 cycles 1e-4→1e-5). M9 ran 113 examples/step at constant LR; its plateau
-   rule read un-annealed points and the anneal it never modelled added +0.004.
-3. **A ranking-aware phase-2 loss registered at lock and priced by a screen arm** (M9's
-   symptom gate was never specified). Evidence: listwise KL distillation at 90–95% retention for
-   17–32M students (mxbai-edge-colbert); EmbedDistill's score-distillation ablation; M8's `R-LIST`.
-4. **Warm start from the M9 candidate** as a registered init arm (2306.11550: init moves retention
-   up to 6 points). The M9 checkpoint is already at 94% on NQ.
+1. **Coverage** — ~4.5M query texts across 12 forms (§Data).
+2. **Optimizer regime** — LEAF's batch 32 and three linear 1e-4→1e-5 cycles; plateau read on
+   annealed checkpoints, best-to-best.
+3. **A ranking-aware phase-2 loss**, registered here and priced by a screen arm, never symptom-gated.
+4. **A wider linear output** — three mean-pooled layers concatenated (1152-d) before the head.
+5. **Warm start from the M9 candidate** as a screen arm.
 
 **The student cap is 35M and it is hard** (Dylan, 2026-09-01: "109M is not an option. This isn't
 low compute anymore. 33M was already in the upper bound of what I think is acceptable"). bge-small
@@ -64,10 +55,10 @@ benefit of a tie (§Screen, family F).
 |---|---|---|
 | 1 | Ratify M9's final-lock amendment **together with the close-out amendment that strikes M9's reserved conditional** (§Stage plan, M10.2): M9's close-out is six-only and cannot spend the reserved access | blocks the close-out only |
 | 2 | Money: one A100/H100 for ≈ 80–110 GPU-hours (≈ **$120–280** at $1.5–2.5/h) and/or hosted open-weights generation (≈ 1.1B tokens ≈ **$110–330**); prices unverified Sept 2026 | box-only path when the box is reachable |
-| 3 | ~~FineWeb as a seed~~ **RULED 2026-09-01 (delegated by Dylan, decided by the planning session): FineWeb is OUT of M10 entirely — not a seed, not regression text.** Wikipedia stratified by category plus the approved pool corpora give the topic breadth; FineWeb would add a rights review, a URL blocklist to defend, and one more surface for a competitor to probe, for topics the prompts already carry. Reopens only if family A wins on forms yet COV shows a topic gap Wikipedia cannot seed | closed |
+| 3 | FineWeb as a seed — **ruled out 2026-09-01** (delegated): Wikipedia and the approved corpora carry the topics; FineWeb adds a rights review and a blocklist for no measured gain. Reopening condition in `m10/EXPLORED.md` | closed |
 | 4 | PAQ (machine-generated questions over Wikipedia; data CC BY-SA, generation code CC BY-NC) as query text | include, from Facebook's official release (never the unofficial HF mirror); 1.0M uniform sample in the build (seed 0, file hashes pinned), 4.037M in the volume-control screen arm A2 only; attribution recorded |
-| 5 | ~~Confirm FineWeb documents excluded~~ **RULED 2026-09-01 with decision 3: excluded** (no reserved-set document fingerprints exist and creating them would open reserved corpora — `m9/LEDGER.md` §1.3) | closed |
-| 6 | ~~A >35M tier~~ **RULED OUT by Dylan 2026-09-01** — 35M is a hard cap; no larger student in any role | closed |
+| 5 | FineWeb documents — **excluded 2026-09-01**: no reserved-set document fingerprints exist and creating them would open reserved corpora (`m9/LEDGER.md` §1.3) | closed |
+| 6 | A >35M tier — **ruled out by Dylan 2026-09-01**; 35M is a hard cap | closed |
 | 7 | Confirm: LoTTE read #1 withdrawn unexecuted in M9; renumbering M10/M11/M12 | as recorded in `m9/STATUS.md` and CLAUDE.md |
 
 ## Goal, bars, and the permitted claim — unchanged from M9
@@ -96,39 +87,31 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
 ## Stage plan
 
 - **M10.0 DIAGNOSIS + SCREEN LOCK** (no six-set, reserved or LoTTE output exists during this stage).
-  (a) Rank-bottleneck probe — **done on the Mac 2026-09-01** (`results/m10_rank_probe_mac.json`,
-  PLANNING §9): the reconstruction-optimal (PCA) 384-d subspace of stella's query space retains
-  99.5% of a single query distribution's retrieval and 90–93% once it is fit to three distributions
-  at once; at 640 it retains 98–100%. L2 regression is a reconstruction objective, so this is the
-  subspace an L2-trained 384-hidden linear-head student is pushed toward. **It is evidence that
-  output width binds under L2 distillation, not a bound on every 384-d subspace** (a ranking-optimal
-  one may do better). **Action taken:** the head stays linear (a nonlinear head has no fastembed
-  path) but the pooled **feature widens** by concatenating mean-pooled states of three layers
-  (§Recipe); screen family G decides it against the 384-d and 768-d alternatives.
-  (a2) Serving-parity check for the multi-layer head — **done on the Mac 2026-09-01**
-  (PLANNING §9c): fastembed 0.8.0 serves the per-token three-layer head and reproduces the
-  pool-then-head output to min-cos 0.99999984 / max-abs 2e-7 on 64 texts; zero custom ops; 34.5M
-  parameters. Repeat on the trained artifact with M9's locked parity sample before the freeze.
-  (a3) Head-width probe in closed form — **done** (PLANNING §9b): on a frozen bge-small a ridge
-  head from 384 → 768 → 1152 features retains 27 → 33 → 37% (programmers) and 36 → 41 → 44%
-  (physics) of stella; monotone, a floor, consistent with (a).
-  (b) Capacity probe (`m9src/capacity_probe.py`, 109M student, M9 anchor dose, unchanged) —
-  **optional, report-only**: no outcome changes an M10 action now that the cap is hard, so it runs
-  only if the GPU is otherwise idle, and its row goes to the whitepaper as "what a 109M student
-  would have retained". Its 109M student is 768-hidden, so part of any gain is output width.
+  (a) Mac diagnostics — **done 2026-09-01**, `m10/RESULTS.md`, PLANNING §9–9c: the rank probe
+  (a 384-d subspace keeps 99.5% of one query distribution and 90–93% of three; 98–100% at 640 —
+  evidence about the class under L2 regression, not a bound), the head-width probe (a frozen
+  bge-small retains more with each pooled layer), and the serving-parity check (fastembed 0.8.0
+  reproduces the three-layer per-token head to 2e-7; 34.5M parameters). **Action taken:** the head
+  stays linear; the pooled feature widens to three layers (§Recipe); family G decides. Repeat the
+  parity check on MiniLM's head before family F may select it, and on the trained artifact with
+  M9's locked parity sample before the freeze.
+  (b) Capacity probe (`m9src/capacity_probe.py`, unchanged) — **optional, report-only**: no outcome
+  changes an M10 action under the hard cap; runs only on an idle GPU; its 109M student is
+  768-hidden, so any gain is partly width.
   (c) Per-component DEV-6 read of the M9 candidate incl. `heldout-longq` (the baseline row).
-  (d) **COV admission** (§Surfaces): for every candidate component, commit to `m10/LEDGER.md` its
-  primary-source licence URL and terms, HF repo and revision, corpus size, query count, qrels
-  format and the retrieval metric, its corpus-level contamination check and its fingerprint
-  screen against the six and the reserved four. A component is named COV only after that record
-  is pushed. Then **every admitted COV corpus, query set and document set joins the protected
-  index** (`m8src/protected_filter`) before any PAQ or synthetic text is constructed.
-  (e) **Screen lock**: `m10/LEDGER.md` §0 fixes every arm of §Screen (eleven arms), order, doses,
+  (d) **COV admission** (§Surfaces): for every candidate component, record in `m10/LEDGER.md` §2
+  its primary-source licence URL and terms, HF repo and revision, corpus size, query count, qrels
+  format and metric, its corpus-level contamination check and its fingerprint screen against the
+  six and the reserved four. A component is named COV only after that record is pushed. **COV
+  admits only surfaces no M10 decision has read**: the two CQADupStack dev components were scored
+  by the Mac diagnostics (PLANNING §9, 86 raw reads) and stay in DEV-6. Then every admitted COV
+  corpus, query set and document set joins the protected index (`m8src/protected_filter`) before
+  any seed is drawn or any PAQ or synthetic text is constructed.
+  (e) **Screen lock**: `m10/LEDGER.md` §0 (skeleton committed 2026-09-01) fixes every arm of §Screen (eleven arms), order, doses,
   seeds, the τ rule, surfaces, the thirteen contrasts, multiplicity control, confirmation design
   and outcome→action maps.
-- **M10.1 DATA.** Generation with the prompts in `m10src/forms.py` (per-form smoke of 200 queries,
-  read by a person, rate measured, before scaling), PAQ samples, decontamination against the protected index (now including COV)
-  and the six's documents, the FORMS-12 hold-out, teacher targets, hard-candidate mining (§Data),
+- **M10.1 DATA.** Generation under the §Data contract (200-query smoke per form first), PAQ
+  samples, decontamination against the protected index (now including COV) and the six's documents, the FORMS-12 hold-out, teacher targets, hard-candidate mining (§Data),
   `results/m10_data_manifest.json` with hashes and the provenance table. **After the manifest is
   immutable and before any arm**, the τ rule is executed and its table recorded.
 - **M10.2 SCREEN + RECIPE LOCK.** The arms of §Screen, the confirmation runs, then one pushed lock
@@ -165,11 +148,22 @@ excluded from COV** (`research/m7-data-licensing.md` map): S2ORC / Semantic Scho
 NutritionFacts.org and its mirrors; CORD-19; StackExchange personal finance (money.SE) and Reddit
 finance; args.me / idebate; every six-set and reserved corpus.
 
+**Generation contract (M10.1):** generator and quantized artifact pinned by HF repo + revision in
+the manifest (Qwen3-4B's revision pinned there if the fallback fires); vLLM sampling temperature
+0.8, top-p 0.95, `max_new_tokens` per form (60, or 400 for the argument and conversational
+forms), `seed = blake2b-64(seed_passage_id)`; the reply must parse as one JSON list of exactly n
+strings (`m10src/forms.parse`, strict — no preamble); one retry on a contract failure, then the
+seed is dropped; exact-duplicate queries removed. **Smoke:** 200 queries per form, read by Dylan,
+who is the approver; a form passes when ≥ 90% of replies meet the contract and ≥ 80% of a
+50-query sample are judged on-form; a failing form's prompt may be revised at most twice, each
+revision recorded in `m10/LEDGER.md` §1 before the next smoke. **Seeds are pre-filtered:** a seed
+passage that exact- or near-matches the protected index is never used.
+
 **Screens on every generated or PAQ query, thresholds fixed here (M7's fingerprints,
 `m7src/decontam.py`):** exact `blake2b-64` match or word-8-gram bottom-32 sketch ≥ 8/32 against
 (i) the protected index (six + dev + reserved + LoTTE **+ admitted COV queries and documents**),
-(ii) the six's documents, (iii) the query's own seed passage (a copied span is not a query);
-word-4-gram containment for 4–7-word queries. The M9 real-query pool and the document pool are
+(ii) the six's documents; (iii) any word-5-gram shared with the query's own seed passage (a
+copied span is not a query); word-4-gram containment for 4–7-word queries. The M9 real-query pool and the document pool are
 re-screened against the COV additions (R1 removes matching queries; matching pool documents are
 removed too). Removal counts per screen, per form and per COV component are recorded **before any
 COV component is scored**. **FORMS-12 hold-out:** 500 seed documents per form are set aside first;
@@ -184,8 +178,9 @@ carry M9's fixed document-role marker; teacher targets use the s2p template for 
 bytes for documents. The same student input never maps to two teacher targets.
 
 **Hard candidates for phase 2:** a fixed bank of 1M pool documents (seed 0). For every query text,
-the teacher's top-64 bank documents **excluding the query's own seed document**, plus 64 bank
-documents drawn uniformly per step. Mining is exact brute force on frozen stella fp16 vectors
+the teacher's top-64 bank documents **excluding the query's own seed document** (real and PAQ
+queries have none; nothing is excluded), plus 64 bank documents drawn uniformly per step with
+`numpy.default_rng(904 + step)`. Mining is exact brute force on frozen stella fp16 vectors
 (4.5M × 1M × 1024 ≈ 9.2e15 FLOP; on the RTX 3080 that is minutes at tensor-core rates and is
 **measured on a 10K-query smoke before the full pass**); if the measured full pass exceeds 4 h,
 the registered fallback is Qdrant HNSW over the bank with recall@64 audited against exact
@@ -193,12 +188,14 @@ top-64 on the smoke sample (≥ 0.98 required) and the method recorded in the ma
 
 ## Recipe (defaults; screen families decide the marked items)
 
-- **Student:** bge-small-en-v1.5 [family F]. **Feature [family G]:** masked mean-pooled hidden
-  states of layers 12, 8 and 4 concatenated (1152-d; MiniLM-L6: layers 6, 4, 2) → Linear(1152→1024)
-  → L2 normalize; the head is 1.18M parameters, +0.79M over M9's 384-d head (34.5M total for bge-small, under the cap). The head is warm-started in closed
-  form (ridge on the concatenated features) for the bge-small init; the M9-candidate init keeps its
-  384-d head and adds zero-initialized columns for the two extra layers. Exported per token so
-  fastembed's mean pooling reproduces the pooled output exactly (M10.0-a2).
+- **Student:** bge-small-en-v1.5 is the **screen anchor** (every non-F family is screened on it);
+  the **build student is decided by family F**, MiniLM-L6-v2 by default. Before F can select
+  MiniLM, its three-layer head passes the same export and fastembed parity check as bge-small's
+  (M10.0-a; the Mac can run it). **Feature [family G]:** masked mean-pooled hidden states of
+  layers 12, 8 and 4 concatenated (1152-d; MiniLM-L6: layers 6, 4, 2) → Linear(1152→1024) → L2
+  normalize; head 1.18M parameters, 34.5M total for bge-small. Warm-started in closed form (ridge)
+  for the bge-small init; the M9-candidate init keeps its 384-d head and zero-initializes the two
+  extra layers' columns. Exported per token so fastembed's mean pooling reproduces it exactly.
 - **Phase 1:** plain L2 on unit-norm teacher vectors, fp32 loss, bf16 autocast (M9 form).
 - **Phase 2 [family D]:** cycle 3 continues from the phase-1 checkpoint with
   L2 + λ·KL( softmax(t·Dᵀ/τ) ‖ softmax(s·Dᵀ/τ) ) over the 128 candidates per query-role example;
@@ -216,8 +213,9 @@ top-64 on the smoke sample (≥ 0.98 required) and the method recorded in the ma
 - **Dose:** **50M examples** registered. Tokens follow the mix: at 75/25, 37.5M × ~35 + 12.5M × ~230
   ≈ **4.2B tokens**; at 50/50 ≈ 6.6B. At M9's measured mixed rate of 18,984 tok/s that is
   **2.6–4 days on the RTX 3080** before any batch-32 throughput penalty, which family E measures
-  and the lock records as the build's wall-clock budget. **Extension:** one more cycle (+16.7M
-  examples) if the last cycle-end improved the best COV macro by ≥ 0.003; at most two; integer cap
+  and the lock records as the build's wall-clock budget. **Extension:** one more cycle of 16.7M
+  examples, linear 1e-4→1e-5 like cycle 3, if the last cycle-end improved the best COV macro by
+  ≥ 0.003; the same rule applies once more after the first extension; at most two; integer cap
   83.4M examples.
 - **Kill:** non-finite loss/grad; two consecutive cycle-end evaluations more than 0.0056 below the
   best. **Plateau** is read best-to-best on annealed checkpoints only.
@@ -235,7 +233,7 @@ recorded for every arm and decides nothing. Order: A, B, C, D, E, F, G.
 
 | family | arms | contrasts | rule and default |
 |---|---|---|---|
-| **A — data (the thesis)** | A1: M9 pool (463K unique texts) · A2: M9 pool + **4.037M PAQ = 4.5M unique texts** (factoid forms only — the volume control) · A3: M9 pool + 1.0M PAQ + 3.0M synthetic = 4.5M unique texts (form breadth at matched volume) | A3−A2 (forms at equal volume) · A3−A1 · A2−A1 (volume) | **Three registered outcomes on A3−A2:** corrected lower bound > MDE 0.0056 → coverage **resolved on the COV families**, build proceeds; point ≥ MDE and lower bound > 0 but ≤ MDE → **positive, not resolved**, build proceeds and the report says so; otherwise → **M10 stops before any build and returns to Dylan with all three rows**. A2−A1 is reported as the volume effect; if it resolves, the build keeps both volume and forms |
+| **A — data (the thesis)** | A1: M9 pool (463,314 queries) · A2: M9 pool + PAQ (factoid forms only — the volume control) · A3: M9 pool + 1.0M PAQ + 3.0M synthetic (form breadth). **A2 and A3 are cut to the identical post-screen unique-text count** (the smaller of the two after decontamination, the larger downsampled with seed 0) and both hashes are locked before any arm | A3−A2 (forms at equal volume) · A3−A1 · A2−A1 (volume) | **Three registered outcomes on A3−A2:** corrected lower bound > MDE 0.0056 → coverage **resolved on the COV families**, build proceeds; point ≥ MDE and lower bound > 0 but ≤ MDE → **positive, not resolved**, build proceeds and the report says so; otherwise → **M10 stops before any build and returns to Dylan with all three rows**. A2−A1 is reported as the volume effect; if it resolves, the build keeps both volume and forms |
 | **B — mix** | 100/0 · 75/25 · 50/50 query/document, **matched query presentations** (1.875M query examples in every arm; document examples 0 / 0.625M / 1.875M on top; totals 1.875M / 2.5M / 3.75M; the document cost in tokens and hours is reported) | 75/25−100/0 · 50/50−100/0 · 50/50−75/25 | resolved winner; default 75/25 |
 | **C — init** | bge-small · M9 candidate | 1 | resolved winner; default bge-small |
 | **D — objective** | anchor · anchor with phase-2 KL in cycle 3 | 1 | resolved winner; default phase 1 only |
@@ -244,7 +242,10 @@ recorded for every arm and decides nothing. Order: A, B, C, D, E, F, G.
 | **G — output width** | feature = last layer only (384, M9's head) · last two of the three layers (768) · three layers (1152) | 1152−384 · 1152−768 · 768−384 | resolved winner; **default 1152** (the probe's evidence that width binds under L2, PLANNING §9; the screen, not the probe, decides) |
 
 A2 exists only as a control; the build never uses more than 1.0M PAQ. **Equal examples** holds for
-every family except B, which is matched on query presentations by design. If family F selects
+every family except B, which is matched on query presentations by design. **Definitions:** a
+decision's *margin* is the COV macro difference between the winner's and the default's final
+checkpoints in the original screen; an arm's *seed range* is max minus min of its COV macro over
+its three seeds. If family F selects
 MiniLM-L6, the other families' verdicts (taken on bge-small) transfer to it by assumption, and the
 report says so; the synthesized selected-recipe arm and LoTTE read #1 are the check on that transfer.
 
@@ -266,22 +267,23 @@ report's sense.
 ## Surfaces
 
 - **COV** — the primary selection surface: licensed, decontaminated, **qrel-bearing** retrieval
-  components, admitted at M10.0-d, **weighted equally per family** (slices within a family are
-  averaged first). Candidate families and components, draft admission records in
-  `m10/COV_CANDIDATES.md` (primary-source licences checked 2026-09-01), each still needing the
-  corpus-level check, the fingerprint screen and the pushed record: **forum-technical** —
-  cqadup-programmers, cqadup-physics (M7 dev, CC BY-SA 2014 dump, eval-only); **consumer-health** —
-  MTEB MedicalQARetrieval (CC BY 4.0 at MedQuAD; NIH sources); **long technical questions** — BRIGHT
-  slices biology, earth-science, psychology, robotics, sustainable-living (CC BY 4.0 on the
-  benchmark; third-party documents, eval-only, never redistributed); **economics** — BRIGHT
-  economics; **legal** — MTEB LegalBenchCorporateLobbying only (LegalBenchConsumerContractsQA is
-  **refused**, CC BY-NC); **finance** — LEDGER (CC BY 4.0 annual-report QA) once its structure and a
-  chunking rule are verified on the box. Climate-FEVER is refused (no licence at the primary
-  source, as in M7). **At least four families must survive admission** or M10 returns to Dylan. COV contains no scientific-claim, paper-title or argument retrieval —
-  no licensed, non-contaminating, qrel-bearing set exists for those forms — so **family A's verdict
-  is a verdict about coverage on the COV families**, and those three forms are tested only by the
-  six-set transaction (FORMS-12 reports them descriptively before that).
-- **DEV-6** secondary, reported beside every COV read. SCREEN-3 is retired.
+  components that **no M10 decision has read**, admitted at M10.0-d, **weighted equally per family**
+  (slices within a family averaged first). Candidates, draft records in `m10/COV_CANDIDATES.md`
+  (primary-source licences checked 2026-09-01): **consumer-health** MTEB MedicalQARetrieval (CC BY
+  4.0 at MedQuAD; NIH sources); **BRIGHT**, one family, six slices (biology, earth-science,
+  economics, psychology, robotics, sustainable-living; CC BY 4.0 on the benchmark at its primary
+  source — the same dataset-level standard that admitted CQADupStack and the six, whose documents
+  are also third-party text; the document-rights caveat is disclosed and the data is evaluation-only,
+  never redistributed); **legal** MTEB LegalBenchCorporateLobbying (CC BY 4.0; ConsumerContractsQA
+  refused, CC BY-NC); **finance** LEDGER (CC BY 4.0 annual-report QA) once its structure and a
+  100K-chunk cap are verified. Climate-FEVER refused (no licence at its primary source, as in M7).
+  **At least three families must survive admission** or M10 returns to Dylan. The two CQADupStack
+  components are **DEV**, reported beside every COV read, never in the macro. COV contains no
+  scientific-claim, paper-title or argument retrieval (no licensed, non-contaminating set exists),
+  so **family A's verdict is a verdict about coverage on the COV families**; those three forms are
+  tested only by the six-set transaction (FORMS-12 reports them descriptively before that).
+- **DEV-6** (incl. the two CQADupStack components) secondary, reported beside every COV read.
+  SCREEN-3 is retired.
 - **FORMS-12**: 12 × 500 held-out synthetic queries, overlap@10 between student and teacher
   rankings over the 1M bank, per form. **Descriptive only** — teacher agreement on generated
   queries is a coverage diagnostic, not retrieval quality.
@@ -323,9 +325,8 @@ joins the M11 all-in quantization comparison.
    count and the selection-surface table published.
 3. Contamination handled three ways: stella's disclosed overlap (ArguAna, FiQA) at every headline;
    NDO-4 rows; reserved NDO-3 and LoTTE as surfaces no decision touched.
-4. Training data affirmatively licensed, no MS MARCO (LEAF trained on MS MARCO queries; the report
-   states our stack, not theirs), attribution recorded; synthetic queries with a permissive
-   generator, per-query provenance, and removal counts per screen.
+4. Training data affirmatively licensed, no MS MARCO, attribution recorded; synthetic queries from
+   an open-weights generator with pinned revision, per-query provenance and removal counts.
 5. Compute disclosed in examples, tokens and GPU-hours beside LEAF's ~100 A100-hours.
 6. System-level framing only (§Goal): no claim isolates nano from its document tower.
 7. Reproducibility: code, corpus manifests with hashes, model revisions, seeds, statistics code
@@ -340,5 +341,5 @@ update, the M10 section of the report artifact, decisions logged in CLAUDE.md, h
 
 Document-side co-adaptation (breaks the pair; M11+ as its own system) · any student above 35M
 (hard cap, Dylan 2026-09-01) · teacher change (stella-1.5B measured worse; Qwen3-0.6B never
-screened and not the pair) · a nonlinear head (no fastembed path; the width comes from linear multi-layer pooling instead) · MS MARCO in any form ·
-FineWeb in any role (decisions 3 and 5) · any change to zero.
+screened and not the pair) · a nonlinear head (no fastembed path; width comes from linear
+multi-layer pooling) · MS MARCO in any form · FineWeb in any role (decisions 3 and 5) · any change to zero.

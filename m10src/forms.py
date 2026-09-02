@@ -59,11 +59,14 @@ def prompt(form, passage, n=5):
 
 
 def parse(text, n):
-    """The generator's reply -> list of n strings, or None if it broke the contract."""
+    """The generator's reply -> list of n strings, or None if it broke the contract.
+
+    Strict: the whole reply must be the JSON list. Preamble is a contract failure (one retry, then
+    the seed is dropped), not something to salvage -- salvaging would hide a prompt that drifts.
+    """
     try:
-        start, end = text.index("["), text.rindex("]") + 1
-        out = json.loads(text[start:end])
-    except (ValueError, json.JSONDecodeError):
+        out = json.loads(text.strip())
+    except json.JSONDecodeError:
         return None
     if not (isinstance(out, list) and len(out) == n and all(isinstance(x, str) and x.strip() for x in out)):
         return None
@@ -75,6 +78,7 @@ if __name__ == "__main__":
             "operation. Its four main instruments observe in the ultraviolet, visible and near-infrared.")
     for f in FORMS:
         print(f"=== {f}\n{prompt(f, demo, 3)}\n")
-    assert parse('Sure! ["a", "b", "c"]', 3) == ["a", "b", "c"]
+    assert parse('["a", "b", "c"]', 3) == ["a", "b", "c"]
+    assert parse('Sure! ["a", "b", "c"]', 3) is None      # preamble breaks the contract
     assert parse('["a", "b"]', 3) is None
     print("parse self-check ok")
