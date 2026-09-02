@@ -60,9 +60,9 @@ conditional owner decision, not a silent refusal.
 |---|---|---|
 | 1 | Ratify M9's final-lock amendment **together with the close-out amendment that strikes M9's reserved conditional** (§Stage plan, M10.2): M9's close-out is six-only and cannot spend the reserved access | blocks the close-out only |
 | 2 | Money: one A100/H100 for ≈ 80–110 GPU-hours (≈ **$120–280** at $1.5–2.5/h) and/or hosted open-weights generation (≈ 1.1B tokens ≈ **$110–330**); prices unverified Sept 2026 | box-only path when the box is reachable |
-| 3 | FineWeb as a **seed** for synthetic queries (the 2026-08-30 approval covered document-side text; `research/m7-data-licensing.md` records FineWeb as not approved for seeding) — needs a source-level rights review | seeds = Wikipedia + the approved pool corpora |
+| 3 | ~~FineWeb as a seed~~ **RULED 2026-09-01 (delegated by Dylan, decided by the planning session): FineWeb is OUT of M10 entirely — not a seed, not regression text.** Wikipedia stratified by category plus the approved pool corpora give the topic breadth; FineWeb would add a rights review, a URL blocklist to defend, and one more surface for a competitor to probe, for topics the prompts already carry. Reopens only if family A wins on forms yet COV shows a topic gap Wikipedia cannot seed | closed |
 | 4 | PAQ (machine-generated questions over Wikipedia; data CC BY-SA, generation code CC BY-NC) as query text | include; 1.0M uniform sample in the build (seed 0, pinned revision), 4.037M in the volume-control screen arm A2 only; attribution recorded |
-| 5 | Confirm: FineWeb **documents are excluded** from M10 (no reserved-set document fingerprints exist and creating them would open reserved corpora — `m9/LEDGER.md` §1.3) | excluded |
+| 5 | ~~Confirm FineWeb documents excluded~~ **RULED 2026-09-01 with decision 3: excluded** (no reserved-set document fingerprints exist and creating them would open reserved corpora — `m9/LEDGER.md` §1.3) | closed |
 | 6 | If the capacity probe clears 85% on the CQA-2 components, scope a **>35M tier** as a separate frontier point (its 109M student is 768-hidden, so part of any clear is output width, which family G already buys) | nano ships at ≤35M regardless |
 | 7 | Confirm: LoTTE read #1 withdrawn unexecuted in M9; renumbering M10/M11/M12 | as recorded in `m9/STATUS.md` and CLAUDE.md |
 
@@ -150,9 +150,8 @@ how-to / troubleshooting question with title and body · scientific claim (a sta
 counter-argument paragraph (120–220 words) · finance / personal-economics question · paper-title
 query · 2–4-word keyword query · consumer-health question · product-search query · comparison
 question · yes/no verification question · conversational multi-sentence request. **Seeds:**
-Wikipedia stratified by top-level category (CC BY-SA) and the approved pool corpora; FineWeb only
-if decision 3 approves it, and then only after URL-domain exclusion of every source family below
-and the screens below. **Contaminating source families — never seeds, never regression text, and
+Wikipedia stratified by top-level category (CC BY-SA) and the approved pool corpora. FineWeb is
+out of M10 (decisions 3 and 5). **Contaminating source families — never seeds, never regression text, and
 excluded from COV** (`research/m7-data-licensing.md` map): S2ORC / Semantic Scholar; PubMed;
 NutritionFacts.org and its mirrors; CORD-19; StackExchange personal finance (money.SE) and Reddit
 finance; args.me / idebate; every six-set and reserved corpus.
@@ -324,4 +323,4 @@ update, the M10 section of the report artifact, decisions logged in CLAUDE.md, h
 Document-side co-adaptation (breaks the pair; M11+ as its own system) · a >35M nano (decision 6
 scopes a separate tier only) · teacher change (stella-1.5B measured worse; Qwen3-0.6B never
 screened and not the pair) · a nonlinear head (no fastembed path; the width comes from linear multi-layer pooling instead) · MS MARCO in any form ·
-FineWeb documents (decision 5) · any change to zero.
+FineWeb in any role (decisions 3 and 5) · any change to zero.

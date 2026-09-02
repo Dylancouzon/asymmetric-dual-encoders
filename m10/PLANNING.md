@@ -110,6 +110,7 @@ table: dev out-of-domain 0.764 vs six 0.755).
 | Regress to stella's 768d or 256d head | a smaller index is a separate system and a full re-encode of every reserved corpus; §9 says whether the 384-rank bottleneck even binds | §9 shows <95% at k=384 AND the MLP-head arm fails |
 | Document-side co-adaptation (E14-LORA) | breaks the pair; M11+ as its own system | never inside M10 |
 | FineWeb-10B vectors as targets | wrong embedding space (gte-multilingual-base 768d) | never |
+| FineWeb text in any role (Dylan delegated 2026-09-01; ruled out) | documents: no reserved-set fingerprints exist (Codex pass 1 B2); seeds: a rights review and a URL blocklist for topics Wikipedia and the pool already seed | family A wins on forms yet COV shows a topic gap Wikipedia cannot seed |
 | PubMedQA, Amazon QA, CC-News as query text (LEAF used them) | PubMed is a contaminating corpus for NFCorpus/TREC-COVID; Amazon QA and CC-News have no affirmative commercial grant | a licence review clears Amazon QA / CC-News |
 | Symptom-gated phase 2 (M9 design) | the gate was never specified; a flat curve then had no registered response | never in that form — phase 2 is a screen arm |
 | SCREEN-3 as the selection surface | NQ at weight 0.50 with NQ-adjacent training data inflated M9's read by ~11 points against its out-of-domain components | never |
