@@ -14,3 +14,6 @@ plan was written, so a future session does not re-derive it.
 | LegalBench ConsumerContractsQA | CC BY-NC 4.0 at the primary source | never |
 | Reserved-set document fingerprints | an unspent held-out access in disguise (Codex pass 1 B2) | never inside M10 |
 | Spending M9's LoTTE read on the M9 candidate | would burn the only fresh surface on a candidate that misses | never |
+| The RTX 3080 box as M10's execution target | Dylan 2026-09-01: "M10 will be done on a GPU budget, if allowed, or not at all." A LEAF-scale build is ≈ 10 days on it; the 50M dose it forced was a box artifact | never for M10 |
+| A 50M-example build with an 83.4M cap | set by the box's wall-clock; LEAF's dose is 201M on an easier target. Now 200M, extension capped by budget | never — the dose is budget-bound |
+| Qwen3-8B 4-bit and the Qwen3-4B fallback | needed only for a 10 GB card; the A100 serves the 8B in bf16 | the GPU has under 40 GB |

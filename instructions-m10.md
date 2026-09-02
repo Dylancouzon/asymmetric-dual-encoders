@@ -5,8 +5,10 @@
 M9's record `m9/FINDINGS.md`. Adversarial review: gpt-5.6-terra, read-only, six passes
 (`research/m10-codex-plan-2026-09-01.md`, `-plan2-` … `-plan6-`; full logs are gitignored `.log`
 files beside them); every finding and its disposition is in PLANNING §8, including two reviewer
-dissents the owner can overrule. The M9 model is **nano**; M7's table is **zero**; the product is
-still the pair on one stella index.*
+dissents the owner can overrule. **Amended 2026-09-01 after pass 6 on Dylan's compute ruling:** M10
+runs on a rented GPU budget or not at all (§Owner rulings, §Compute); the review amendments taken
+with it are decision 9 and PLANNING §8's amendment block. The M9 model is **nano**; M7's table is
+**zero**; the product is still the pair on one stella index.*
 
 ## What binds from M7 and M9 — exhaustive
 
@@ -50,18 +52,25 @@ benefit of a tie (§Screen, family F).
   under the headless commit-and-push contract; merges to main at stage boundaries
   need Dylan's go. M9's registered six-set close-out still runs from `m9-work`, because `guard9`
   pins that branch (`m9src/guard9.py:35`); the branch is kept until then.
+- **Compute (Dylan, 2026-09-01): "M10 won't be done on a 3080. M10 will be done on a GPU budget, if
+  allowed, or not at all."** Every M10 stage from M10.0-c on runs on a rented GPU under the budget in
+  §Compute, or M10 does not run. The RTX 3080 is not an execution target for any M10 step; it only
+  supplies M9's frozen checkpoint once (§Compute). Every dose and duration here is set from the
+  budget, not from the box.
 
 ## Owner decisions (defaults apply until Dylan rules; each is recorded in `m10/LEDGER.md`)
 
 | # | decision | default while open |
 |---|---|---|
 | 1 | Ratify M9's final-lock amendment **together with the close-out amendment that strikes M9's reserved conditional** (§Stage plan, M10.2): M9's close-out is six-only and cannot spend the reserved access | blocks the close-out only |
-| 2 | Money: one A100/H100 for ≈ 80–110 GPU-hours (≈ **$120–280** at $1.5–2.5/h) and/or hosted open-weights generation (≈ 1.1B tokens ≈ **$110–330**); prices unverified Sept 2026 | box-only path when the box is reachable |
+| 2 | **GPU budget approval** (§Compute): expected **$400–670**, hard ceiling **$1,000**, itemized in PLANNING §6; prices unverified Sept 2026. Refusal closes M10 unstarted | no GPU stage runs until approved; the Mac list in `m10/STATUS.md` continues |
 | 3 | FineWeb as a seed — **ruled out 2026-09-01** (delegated): Wikipedia and the approved corpora carry the topics; FineWeb adds a rights review and a blocklist for no measured gain. Reopening condition in `m10/EXPLORED.md` | closed |
 | 4 | PAQ (machine-generated questions over Wikipedia; data CC BY-SA, generation code CC BY-NC) as query text | include, from Facebook's official release (never the unofficial HF mirror); 1.0M uniform sample in the build (seed 0, file hashes pinned), 4.037M in the volume-control screen arm A2 only; attribution recorded |
 | 5 | FineWeb documents — **excluded 2026-09-01**: no reserved-set document fingerprints exist and creating them would open reserved corpora (`m9/LEDGER.md` §1.3) | closed |
 | 6 | A >35M tier — **ruled out by Dylan 2026-09-01**; 35M is a hard cap | closed |
 | 7 | Confirm: LoTTE read #1 withdrawn unexecuted in M9; renumbering M10/M11/M12 | as recorded in `m9/STATUS.md` and CLAUDE.md |
+| 8 | Second build seed (identical recipe and data, seed 1) as the headline's replication band (`m7/FINDINGS.md` 9): ≈ 100 GPU-hours ≈ $150–250 inside the ceiling | run after the build if ≥ 100 GPU-hours of the ceiling remain; seed 0 ships regardless; seed 1's rows are descriptive, inside the same six-set transaction if the lock says so |
+| 9 | The 2026-09-01 review amendments taken with the compute ruling: dose 200M examples, screen dose 5M, arms D-KL1 / D-NCE / G-1536, the COV resolution check, the seed-rank field, extension capped by budget (PLANNING §8, amendment block) | adopted; any item Dylan strikes reverts to the pass-6 text |
 
 ## Goal, bars, and the permitted claim — unchanged from M9
 
@@ -95,12 +104,13 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
   bge-small retains more with each pooled layer), and the serving-parity check (fastembed 0.8.0
   reproduces the three-layer per-token head to 2e-7; 34.5M parameters). **Action taken:** the head
   stays linear; the pooled feature widens to three layers (§Recipe); family G decides. Repeat the
-  parity check on MiniLM's head before family F may select it, and on the trained artifact with
-  M9's locked parity sample before the freeze.
+  parity check on MiniLM's head before family F may select it, on the four-layer head before G's
+  1536 arm runs, and on the trained artifact with M9's locked parity sample before the freeze.
   (b) Capacity probe (`m9src/capacity_probe.py`, unchanged) — **optional, report-only**: no outcome
   changes an M10 action under the hard cap; runs only on an idle GPU; its 109M student is
   768-hidden, so any gain is partly width.
-  (c) Per-component DEV-6 read of the M9 candidate incl. `heldout-longq` (the baseline row).
+  (c) **[GPU; gated on decision 2 — nothing from here on runs before the budget is approved]**
+  Per-component DEV-6 read of the M9 candidate incl. `heldout-longq` (the baseline row).
   (d) **COV admission** (§Surfaces): for every candidate component, record in `m10/LEDGER.md` §2
   its primary-source licence URL and terms, HF repo and revision, corpus size, query count, qrels
   format and metric, its corpus-level contamination check and its fingerprint screen against the
@@ -108,11 +118,12 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
   admits only surfaces no M10 decision has read**: the two CQADupStack dev components were scored
   by the Mac diagnostics (PLANNING §9, 86 raw reads) and stay in DEV-6. Then every admitted COV
   corpus, query set and document set joins the protected index (`m8src/protected_filter`) before
-  any seed is drawn or any PAQ or synthetic text is constructed.
+  any seed is drawn or any PAQ or synthetic text is constructed. The **COV resolution check**
+  (§Surfaces) runs on the admitted surface and its verdict is pushed before (e).
   (e) **Screen lock**: `m10/LEDGER.md` §0 (skeleton committed 2026-09-01) fixes every arm of
-  §Screen (eleven arms), order, doses, seeds, the τ rule, surfaces, the thirteen contrasts,
-  multiplicity control, confirmation design
-  and outcome→action maps.
+  §Screen (fourteen arms, or the cut set the resolution check leaves), order, doses, seeds, the τ
+  rule, surfaces, the sixteen contrasts (or the number run), multiplicity control, confirmation
+  design and outcome→action maps.
 - **M10.1 DATA.** Generation under the §Data contract (200-query smoke per form first), PAQ
   samples, decontamination against the protected index (now including COV) and the six's
   documents, the FORMS-12 hold-out, teacher targets, hard-candidate mining (§Data),
@@ -120,15 +131,16 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
   immutable and before any arm**, the τ rule is executed and its table recorded.
 - **M10.2 SCREEN + RECIPE LOCK.** The arms of §Screen, the confirmation runs, then one pushed lock
   commit with every field of M9's M9.2 list filled — including the phase-2 loss, the best-to-best
-  plateau/extension rule on annealed checkpoints, the final-run registry and LoTTE read #1's
-  manifest. Codex and Fable review the pushed lock. **Then, and only then,** M9's close-out runs:
+  plateau/extension rule on annealed checkpoints, the GPU-hour allocation under the ceiling (build,
+  extensions, decision 8), the final-run registry and LoTTE read #1's manifest. Codex and Fable review the pushed lock. **Then, and only then,** M9's close-out runs:
   its registered six-set transaction **amended before execution to six-only** (the `if C1 then
   execute` reserved conditional is struck; disclosed and ratified under decision 1), so M9 cannot
   spend the reserved access. Its rows are a forecasting calibration and a whitepaper frontier
   point; nothing in M10 may change on them. LoTTE read #1 then runs as the registered veto on
   the selected recipe.
 - **M10.3 BUILD.** One candidate under the kill and extension rules; export + parity; freeze;
-  pre-freeze review; LoTTE read #2 (audit only).
+  pre-freeze review; LoTTE read #2 (audit only); then the seed-1 replica if decision 8's condition
+  holds (descriptive, never a choice).
 - **M10.4 FINAL.** The six-set transaction → decision → the registered reserved conditional.
 
 ## Data
@@ -139,7 +151,7 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
 |---|---|---|---|
 | M9 real queries (hotpotqa, squad, esci, mrtydi, nqopen, triviaqa; fever out) | 463K | CC BY-SA / Apache | real forms |
 | PAQ sample (decision 4) | 1.0M | CC BY-SA (data) | factoid volume — capped so it cannot dominate |
-| **Synthetic, Qwen/Qwen3-8B (Apache-2.0; revision `b968826d…`), 4-bit via vLLM on the box or hosted; registered fallback Qwen/Qwen3-4B if the 8B cannot hold batch 16 at 1,024 context on the 10 GB card** | 3.0M | generated under the generator's terms; provenance pinned; **not redistributed** without review | form breadth |
+| **Synthetic, Qwen/Qwen3-8B (Apache-2.0; revision `b968826d…`), bf16 via vLLM on the rented GPU; registered fallback: hosted open-weights inference of the same revision if the smoke-measured pass would exceed 50 GPU-hours** | 3.0M | generated under the generator's terms; provenance pinned; **not redistributed** without review | form breadth |
 
 **Form taxonomy — 12 forms, 250K each** (quotas locked at M10.1; ±10% realized): factoid question ·
 how-to / troubleshooting question with title and body · scientific claim (a statement) · long
@@ -152,8 +164,8 @@ excluded from COV** (`research/m7-data-licensing.md` map): S2ORC / Semantic Scho
 NutritionFacts.org and its mirrors; CORD-19; StackExchange personal finance (money.SE) and Reddit
 finance; args.me / idebate; every six-set and reserved corpus.
 
-**Generation contract (M10.1):** generator and quantized artifact pinned by HF repo + revision in
-the manifest (Qwen3-4B's revision pinned there if the fallback fires); vLLM sampling temperature
+**Generation contract (M10.1):** generator pinned by HF repo + revision in the manifest (bf16
+weights; the hosted provider and its served revision recorded if the fallback fires); vLLM sampling temperature
 0.8, top-p 0.95, `max_new_tokens` per form (60, or 400 for the argument and conversational
 forms), `seed = blake2b-64(seed_passage_id)`; the reply must parse as one JSON list of exactly n
 strings (`m10src/forms.parse`, strict — no preamble); one retry on a contract failure, then the
@@ -186,10 +198,13 @@ bytes for documents. The same student input never maps to two teacher targets.
 the teacher's top-64 bank documents **excluding the query's own seed document** (real and PAQ
 queries have none; nothing is excluded), plus 64 bank documents drawn uniformly per step with
 `numpy.default_rng(904 + step)`. Mining is exact brute force on frozen stella fp16 vectors
-(4.5M × 1M × 1024 ≈ 9.2e15 FLOP; on the RTX 3080 that is minutes at tensor-core rates and is
+(4.5M × 1M × 1024 ≈ 9.2e15 FLOP; minutes on an A100 at tensor-core rates, and
 **measured on a 10K-query smoke before the full pass**); if the measured full pass exceeds 4 h,
 the registered fallback is Qdrant HNSW over the bank with recall@64 audited against exact
-top-64 on the smoke sample (≥ 0.98 required) and the method recorded in the manifest.
+top-64 on the smoke sample (≥ 0.98 required) and the method recorded in the manifest. For every
+synthetic query the manifest also records the teacher's rank of its seed passage against the 64
+mined candidates (1 = above all of them, 65 = below all). Provenance only, read by no M10 rule; it
+exists so a round-trip quality filter can be registered at M10.1 without a second generation pass.
 
 ## Recipe (defaults; screen families decide the marked items)
 
@@ -198,13 +213,20 @@ top-64 on the smoke sample (≥ 0.98 required) and the method recorded in the ma
   MiniLM, its three-layer head passes the same export and fastembed parity check as bge-small's
   (M10.0-a; the Mac can run it). **Feature [family G]:** masked mean-pooled hidden states of
   layers 12, 8 and 4 concatenated (1152-d; MiniLM-L6: layers 6, 4, 2) → Linear(1152→1024) → L2
-  normalize; head 1.18M parameters, 34.5M total for bge-small. Warm-started in closed form (ridge)
+  normalize; head 1.18M parameters, 34.5M total for bge-small. G's fourth arm adds layer 2
+  (MiniLM-L6: layer 1) → 1536-d, head 1.57M, 34.9M total, under the cap; its head passes the same
+  parity check first. Warm-started in closed form (ridge)
   for the bge-small init; the M9-candidate init keeps its 384-d head and zero-initializes the two
   extra layers' columns. Exported per token so fastembed's mean pooling reproduces it exactly.
 - **Phase 1:** plain L2 on unit-norm teacher vectors, fp32 loss, bf16 autocast (M9 form).
 - **Phase 2 [family D]:** cycle 3 continues from the phase-1 checkpoint with
   L2 + λ·KL( softmax(t·Dᵀ/τ) ‖ softmax(s·Dᵀ/τ) ) over the 128 candidates per query-role example;
-  document-role examples keep L2 only. **λ = 1.0.** **τ rule (locked at M10.0-e, executed once
+  document-role examples keep L2 only. **λ = 1.0.** Family D also prices two from-the-start
+  variants at equal examples: **D-KL1**, the same L2 + λ·KL from the first step of cycle 1; and
+  **D-NCE**, L2 + λ·InfoNCE at temperature τ on synthetic query-role examples only, the positive
+  being the frozen stella vector of the query's seed passage and the negatives its 128 candidates
+  (which already exclude the seed); real and PAQ queries and document-role examples keep L2 in that
+  arm. **τ rule (locked at M10.0-e, executed once
   after the M10.1 manifest is immutable):** draw 10,000 training queries with seed 0, equal thirds
   from real / PAQ / synthetic; for τ ∈ {0.01, 0.02, 0.05} compute the teacher's softmax over each
   query's 128 candidates and its effective support exp(H); choose the τ whose median exp(H) lies
@@ -215,22 +237,24 @@ top-64 on the smoke sample (≥ 0.98 required) and the method recorded in the ma
 - **Schedule:** 3 cycles of equal example count, each linear 1e-4→1e-5; 2,000 warmup steps in
   cycle 1. Evaluation at every cycle end (annealed) and at cycle midpoints (curve watch only).
 - **Init [family C]:** bge-small (default) or the M9 candidate.
-- **Dose:** **50M examples** registered. Tokens follow the mix: at 75/25, 37.5M × ~35 + 12.5M × ~230
-  ≈ **4.2B tokens**; at 50/50 ≈ 6.6B. At M9's measured mixed rate of 18,984 tok/s that is
-  **2.6–4 days on the RTX 3080** before any batch-32 throughput penalty, which family E measures
-  and the lock records as the build's wall-clock budget. **Extension:** one more cycle of 16.7M
-  examples, linear 1e-4→1e-5 like cycle 3, if the last cycle-end improved the best COV macro by
-  ≥ 0.003; the same rule applies once more after the first extension; at most two; integer cap
-  83.4M examples.
+- **Dose:** **200M examples** registered — LEAF's dose (6.7M texts × 30 epochs ≈ 201M; PLANNING §5),
+  three cycles of 66.7M. Tokens follow the mix: at 75/25, 150M × ~35 + 50M × ~230 ≈ **16.8B**; at
+  50/50 ≈ 26.5B. Query epochs ≈ 33 over 4.5M texts, document epochs ≈ 8 over the 6.15M pool. At the
+  planning rate of 560 examples/s (§Compute) that is ≈ **100 GPU-hours**; the first screen arm's
+  measured rate replaces it, and family E's batch-32 penalty is recorded in the lock as the build's
+  GPU-hour line. **Extension:** one more cycle of 66.7M examples, linear 1e-4→1e-5 like cycle 3,
+  whenever the last cycle-end improved the best COV macro by ≥ 0.003, repeated while it does; the
+  cap is the build's remaining GPU-hours under the approved ceiling (decision 2), written into the
+  lock as an integer example count.
 - **Kill:** non-finite loss/grad; two consecutive cycle-end evaluations more than 0.0056 below the
   best. **Plateau** is read best-to-best on annealed checkpoints only.
 - **Seeds:** one shipping seed for the build; confirmation seeds at screen dose per §Screen.
   Full-dose replicas stay waived unless Dylan reinstates them.
 
-## Screen — seven families, thirteen contrasts, locked at M10.0-e
+## Screen — seven families, sixteen contrasts, locked at M10.0-e
 
-**Screen dose = 2.5M examples** (5% of the build; ≈ 209M tokens ≈ 3 h per arm at 75/25 and
-18,984 tok/s), full 3-cycle schedule compressed to that dose, one seed, identical evaluation:
+**Screen dose = 5M examples** (2.5% of the build; ≈ 420M tokens at 75/25; ≈ 2.5 GPU-hours per arm
+at 560 examples/s), full 3-cycle schedule compressed to that dose, one seed, identical evaluation:
 **COV at every cycle end; DEV-6 once, at the final checkpoint** (its 5.2M-document hotpotqa and
 6.17M-row heldout components cost ~13 GB of reads per pass — M9's practice). Throughput is
 recorded for every arm and decides nothing. Order: A, B, C, D, E, F, G.
@@ -239,12 +263,12 @@ recorded for every arm and decides nothing. Order: A, B, C, D, E, F, G.
 | family | arms | contrasts | rule and default |
 |---|---|---|---|
 | **A — data (the thesis)** | A1: M9 pool (463,314 queries) · A2: M9 pool + PAQ (factoid forms only — the volume control) · A3: M9 pool + 1.0M PAQ + 3.0M synthetic (form breadth). **A2 and A3 are cut to the identical post-screen unique-text count** (the smaller of the two after decontamination, the larger downsampled with seed 0) and both hashes are locked before any arm | A3−A2 (forms at equal volume) · A3−A1 · A2−A1 (volume) | **Three registered outcomes on A3−A2:** corrected lower bound > MDE 0.0056 → coverage **resolved on the COV families**, build proceeds; point ≥ MDE and lower bound > 0 but ≤ MDE → **positive, not resolved**, build proceeds and the report says so; otherwise → **M10 stops before any build and returns to Dylan with all three rows**. A2−A1 is reported as the volume effect; if it resolves, the build keeps both volume and forms |
-| **B — mix** | 100/0 · 75/25 · 50/50 query/document, **matched query presentations** (1.875M query examples in every arm; document examples 0 / 0.625M / 1.875M on top; totals 1.875M / 2.5M / 3.75M; the document cost in tokens and hours is reported) | 75/25−100/0 · 50/50−100/0 · 50/50−75/25 | resolved winner; default 75/25 |
+| **B — mix** | 100/0 · 75/25 · 50/50 query/document, **matched query presentations** (3.75M query examples in every arm; document examples 0 / 1.25M / 3.75M on top; totals 3.75M / 5M / 7.5M; the document cost in tokens and GPU-hours is reported) | 75/25−100/0 · 50/50−100/0 · 50/50−75/25 | resolved winner; default 75/25 |
 | **C — init** | bge-small · M9 candidate | 1 | resolved winner; default bge-small |
-| **D — objective** | anchor · anchor with phase-2 KL in cycle 3 | 1 | resolved winner; default phase 1 only |
+| **D — objective** | anchor · D-KL3: phase-2 KL in cycle 3 · D-KL1: L2 + KL from cycle 1 · D-NCE: L2 + InfoNCE on the seed passage from cycle 1 (§Recipe) | D-KL3−anchor · D-KL1−anchor · D-NCE−anchor | resolved winner with the largest margin; default phase 1 only |
 | **E — batch** | 32 · 128 at equal examples and identical schedule | 1 | resolved winner; default 32 (LEAF) |
 | **F — student** | bge-small (34.5M with the head) · MiniLM-L6-v2 (23.9M) at equal examples | 1 | bge-small only if it wins **resolved**; **default MiniLM-L6-v2** — owner preference for the low-compute point (2026-09-01); MiniLM is 2× cheaper to train and serve (`m9/RESULTS.md`), and M9's screen had it −0.0026 unresolved |
-| **G — output width** | feature = last layer only (384, M9's head) · last two of the three layers (768) · three layers (1152) | 1152−384 · 1152−768 · 768−384 | resolved winner; **default 1152** (the probe's evidence that width binds under L2, PLANNING §9; the screen, not the probe, decides) |
+| **G — output width** | feature = last layer only (384, M9's head) · last two of the three layers (768) · three layers (1152) · four layers (1536, §Recipe) | 1152−384 · 1152−768 · 768−384 · 1536−1152 | resolved winner; **default 1152** (the probe's evidence that width binds under L2 and is still rising at three layers, PLANNING §9–9b; the screen, not the probe, decides) |
 
 A2 exists only as a control; the build never uses more than 1.0M PAQ. **Equal examples** holds for
 every family except B, which is matched on query presentations by design. **Definitions:** a
@@ -257,7 +281,8 @@ report says so; the synthesized selected-recipe arm and LoTTE read #1 are the ch
 **Rule, per contrast (families B–G):** the difference in COV macro (family-weighted, §Surfaces)
 between the two arms' final checkpoints; paired stratified bootstrap over queries within component,
 B = 20,000, seed 0; a contrast **resolves** when the point estimate ≥ MDE 0.0056 **and** the
-one-sided lower bound at the **0.025/13 quantile** (Bonferroni over the thirteen contrasts) is > 0,
+one-sided lower bound at the **0.025/16 quantile** (Bonferroni over the sixteen contrasts, or over
+the contrasts actually run if the COV resolution check cuts the screen, §Surfaces) is > 0,
 and the sign is stable across the last two cycle-end checkpoints. **Family A's contrast A3−A2 is
 exempt from this rule and uses only its three-outcome rule in the table** (resolved requires the
 corrected lower bound > MDE); A3−A1 and A2−A1 are descriptive. **Confirmation:** for every decision whose
@@ -265,8 +290,8 @@ non-default option won, both the winner and the default are re-trained with two 
 screen dose (at most four such decisions, largest margins first; the rest revert to default);
 the decision stands only if the winner's margin exceeds the largest seed range observed in
 either arm. Worst-case confirmation cost (B's 50/50 arm winning plus three other decisions) is
-≈ 3.9B tokens ≈ 2.4 days, plus the synthesized selected-recipe run (≤ 0.5B); PLANNING §5 has the
-arithmetic. Every screen verdict is artifact-specific at screen dose; never "resolved" in the
+85M examples ≈ 46 GPU-hours with evaluations, plus the synthesized selected-recipe run (5M);
+PLANNING §5 has the arithmetic. Every screen verdict is artifact-specific at screen dose; never "resolved" in the
 report's sense.
 
 ## Surfaces
@@ -290,13 +315,22 @@ report's sense.
   scientific-claim, paper-title or argument retrieval (no licensed, non-contaminating set exists),
   so **family A's verdict is a verdict about coverage on the COV families**; those three forms are
   tested only by the six-set transaction (FORMS-12 reports them descriptively before that).
+  **Resolution check (M10.0-d, before the lock):** with the contrast rule's own bootstrap (paired,
+  stratified within component, B = 20,000, seed 0), measure the distance between the point estimate
+  and the one-sided 0.025/16 lower bound for the COV-macro difference bge-small − all-MiniLM-L6-v2,
+  each scored symmetrically on the admitted surface. Comparators only, no M10 candidate, so no arm is
+  favoured; the reads enter `m10/LEDGER.md` §4. If the distance exceeds the MDE 0.0056, an MDE-sized
+  contrast cannot resolve here: the screen runs families A, D and G only, every other family takes
+  its default, and the Bonferroni denominator is the number of contrasts run. Distance and verdict
+  are pushed in `m10/LEDGER.md` §0 before any arm.
 - **DEV-6** (incl. the two CQADupStack components) secondary, reported beside every COV read.
   SCREEN-3 is retired.
 - **FORMS-12**: 12 × 500 held-out synthetic queries, overlap@10 between student and teacher
   rankings over the 1M bank, per form. **Descriptive only** — teacher agreement on generated
   queries is a coverage diagnostic, not retrieval quality.
 - **LoTTE-clean** (7 slices, macro over slices; its corpora — ~2.8M passages — are encoded with
-  stella once, ≈ 4 h on the RTX 3080, budgeted in PLANNING §5): **read #1** after the recipe lock.
+  stella once, ≈ 1.3 GPU-hours at the assumed 600 docs/s, budgeted in PLANNING §6): **read #1**
+  after the recipe lock.
   Before LoTTE opens, the **selected recipe is trained once as a single synthesized arm at screen
   dose** (its checkpoint hash committed); read #1 scores that checkpoint and the anchor's in one atomic batch.
   Veto rule (M9 §7, unchanged): the selection is vetoed if the selected recipe's 7-slice macro is
@@ -317,7 +351,25 @@ reserved conditional is `if C1 or C2 passes then execute`**, so an aim claim nev
 its descriptive reserved rows. Zero alpha on the reserved batch is unchanged. `m9src/final9.py`'s
 scoring path is written and reviewed before M9's close-out and reused.
 
-## Costs
+## Compute and costs
+
+**M10 runs on one rented A100 80 GB** (an H100 80 GB if its cost per example measures lower on the
+smoke), ≥ 500 GB persistent disk that survives stopping the instance, SSH, and a GitHub deploy key so
+the headless commit-and-push contract holds. Provider is Dylan's choice; $1.5–2.5/h assumed,
+unverified Sept 2026. The instance is stopped between stages. **Planning rate: 560 examples/s at
+batch 32** — LEAF's realized rate (201M examples in ~100 A100-hours, PLANNING §5) — and 600 stella
+documents/s for encodes (3× the box's 210); both unmeasured on our stack. **The first screen arm and
+the first encode measure the real rates, and PLANNING §6 is re-derived and pushed before the next
+stage starts.** Budget, from PLANNING §6: expected **226–246 GPU-hours ≈ $400–670** including
+generation on the same GPU and ≈ $40 of disk; hard ceiling **$1,000**; the second build seed
+(decision 8) and extension cycles (≈ 33 GPU-hours each) are allocated inside the ceiling at the lock.
+Wall-clock ≈ 2.5–3 weeks on one GPU; screen arms are independent and may run on 2–4 GPUs at the same
+total cost. **From the box, once, sha-verified:** `work/m9long/ckpt/last.pt` (M9's frozen candidate,
+`9d631b2c…`) — family C, M10.0-c and M9's close-out need it — plus any file `m9src/guard9.py`
+hashes that lives under `work/` (listed on the box before transfer). Everything else (pool, dev
+suite, fingerprints, teacher targets, six/reserved/LoTTE/COV encodes) is re-derived from the repo
+and HF (≈ 12 GPU-hours plus a day of CPU and network). Reserved-set encodes run only if the reserved
+conditional fires.
 
 M9's cost protocol (`instructions-m9.md` §Costs) unchanged; the frontier is reported per index
 configuration, naming the one measured (`m9/RESULTS.md` rounds 1–4). TurboQuant 4-bit (Qdrant 1.19)
@@ -347,7 +399,7 @@ update, the M10 section of the report artifact, decisions logged in CLAUDE.md, h
 
 ## Out of scope (reopening conditions in PLANNING §7)
 
-Document-side co-adaptation (breaks the pair; M11+ as its own system) · any student above 35M
+Document-side co-adaptation (inside M10 it breaks the pair; a tower co-trained against both query paths at once keeps it and is recommended 2026-09-01 as the M11 candidate, Dylan's call, PLANNING §7) · any student above 35M
 (hard cap, Dylan 2026-09-01) · teacher change (stella-1.5B measured worse; Qwen3-0.6B never
 screened and not the pair) · a nonlinear head (no fastembed path; width comes from linear
 multi-layer pooling) · MS MARCO in any form · FineWeb in any role (decisions 3 and 5) · any change to zero.

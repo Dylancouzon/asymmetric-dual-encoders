@@ -14,4 +14,4 @@ Nothing has trained. Dev reads below total **86 raw score reads** (43 per CQADup
 ## Deliberately not run
 
 - The capacity probe (`m9src/capacity_probe.py`): optional and report-only since the 35M cap is hard (Dylan, 2026-09-01).
-- Any synthetic generation: the per-form smoke is the first generation step and it runs on a GPU (or the Mac with mlx-lm, Qwen3-8B 4-bit), read by a person, before anything scales.
+- Any synthetic generation: the approving per-form smoke runs on the GPU instance with the pinned bf16 Qwen3-8B, read by a person, before anything scales; a Mac mlx-lm 4-bit pass only develops the prompts.
