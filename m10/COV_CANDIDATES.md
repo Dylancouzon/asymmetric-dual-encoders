@@ -28,8 +28,8 @@ set exists; searched 2026-09-01). They are tested only by the six-set transactio
   on 2026-09-01. Served in **bf16 by vLLM on the rented A100 80 GB** (≈ 16.4 GB of weights). The
   4-bit artifacts and the Qwen3-4B fallback existed only for the 10 GB card and were withdrawn with
   the box on 2026-09-01 (`m10/EXPLORED.md`). **Registered fallback:** hosted open-weights inference
-  of the same revision if the smoke-measured pass would exceed 50 GPU-hours; the provider and its
-  served revision go in the manifest.
+  of the same revision if the smoke's end-to-end projection of the full job exceeds 60 GPU-hours
+  (PLANNING §5); the provider and its served revision go in the manifest.
 - **PAQ**: data CC BY-SA, code CC BY-NC (github.com/facebookresearch/PAQ README). Download the
   official release from Facebook's file server (PAQ full: 64.9M pairs, 5.8 GB tar.gz of JSONL);
   the HF mirror `embedding-data/PAQ_pairs` is unofficial and carries no licence chain — do not use it.

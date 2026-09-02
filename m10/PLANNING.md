@@ -69,11 +69,13 @@ table: dev out-of-domain 0.764 vs six 0.755).
 
 - Query corpus ≈ 463K real + 1.0M PAQ + 3.0M synthetic = **4.5M** texts; ≈ 35 tokens mean (long
   forms 120–220 words at ~10% share) → ≈ 160M tokens per query epoch.
-- Generation: 3.0M queries × (~300 prompt + ~60 output) tokens ≈ **1.1B tokens**, of which ≈ 180M
-  are generated. Qwen3-8B bf16 via vLLM on the A100 — throughput **unmeasured**; at 1,500–3,000
-  generated tok/s ≈ **20–40 GPU-hours** ≈ $30–100. Fallback if the smoke-measured pass would exceed
-  50 GPU-hours: hosted open-weights inference at $0.1–0.3 per M tokens ≈ $110–330. Scale-up is gated
-  on the per-form 200-query smoke, which measures the real rate (watch-long-runs rule).
+- Generation: 3.0M queries × ~300 prompt tokens ≈ 900M prefill; output ≈ 60 tokens for ten forms
+  and ≈ 120–270 for the conversational and argument forms (`max_new_tokens` 400) ≈ **250M generated
+  tokens** (350M at the caps), plus retries. Qwen3-8B bf16 via vLLM on the A100 — **unmeasured**; at
+  1,500–3,000 decode tok/s with prefill overlapped ≈ **30–60 GPU-hours** ≈ $45–150. Fallback if the
+  smoke's end-to-end projection of the full job (all forms, prefill, retries, JSON failures) exceeds
+  60 GPU-hours: hosted open-weights inference at $0.1–0.3 per M tokens ≈ $110–330, the second §6
+  scenario. The per-form 200-query smoke measures requests/s end to end (watch-long-runs rule).
 - Teacher targets: stella query encode was 2,076/s on the box (`m9_throughput_probe.json`); at an
   assumed 3× on the A100, 4.5M queries + A2's 4.037M PAQ control texts + ≤ 3M seed passages (D-NCE
   positives) ≈ **2 GPU-hours** with mining. Hard-candidate mining: 4.5M × 1M × 1024 ≈ 9.2e15 FLOP,
@@ -96,8 +98,9 @@ table: dev out-of-domain 0.764 vs six 0.755).
   B 100/0 (3.75M) and B 50/50 (7.5M; the anchor doubles as B 75/25), C, D-KL3, D-KL1, D-NCE, E, F,
   G-384, G-768, G-1536 (9 × 5M = 45M) = **71.25M examples ≈ 40 GPU-hours**. Confirmations, worst
   case: B's 50/50 wins (2 seeds × 7.5M + default 2 × 5M = 25M) plus three ordinary decisions (each
-  winner + default × 2 seeds = 20M) = **85M ≈ 46 GPU-hours**, plus the synthesized selected-recipe
-  arm for LoTTE read #1 (5M ≈ 2.5 h). Capping confirmations at two decisions saves ≈ 20 GPU-hours.
+  winner + default × 2 seeds = 20M) = **85M ≈ 47 GPU-hours** with its 16 evaluations, plus the
+  synthesized selected-recipe arm for LoTTE read #1 (5M ≈ 2.5 h). Capping confirmations at two
+  decisions saves ≈ 20 GPU-hours.
 - Encodes with stella, all re-derived on the instance (the box's `work/` caches do not travel): the
   6.15M pool (targets and the heldout dev components) ≈ 2.8 h, hotpotqa 5.2M + nq-250k ≈ 2.5 h, the
   six ≈ 0.1 h, COV (MedicalQA 2K, BRIGHT a few K per slice, CorporateLobbying 319, LEDGER ≤ 100K
@@ -111,23 +114,33 @@ table: dev out-of-domain 0.764 vs six 0.755).
 "M10 won't be done on a 3080. M10 will be done on a GPU budget, if allowed, or not at all." The box
 path is withdrawn (§7). One A100 80 GB (H100 if cheaper per example on the smoke), ≥ 500 GB
 persistent disk, stopped between stages; $1.5–2.5/h assumed, unverified Sept 2026. Every line is at
-the §5 planning rates and is re-derived from the first arm's and first encode's measured rates.
+the §5 planning rates and is re-derived from the day-one rate benchmark (mandate §Compute) before
+generation starts, and again before the remaining screen arms.
 
-| line | GPU-hours | $ at 1.5–2.5/h |
+| mandatory line | GPU-hours | $ at 1.5–2.5/h |
 |---|---|---|
 | re-derive encodes (pool, dev suite, six, COV, LoTTE; reserved four only if the conditional fires) | 12 | 18–30 |
-| synthetic generation, Qwen3-8B bf16 via vLLM (hosted fallback above 50 h) | 20–40 | 30–100 |
+| day-one rate benchmark (encode, three training mixes, generation smoke) | 2 | 3–5 |
 | query and seed teacher targets, mining | 2 | 3–5 |
 | screens, 14 arms at 5M with evaluations | 40 | 60–100 |
-| confirmations, worst case 85M | 46 | 69–115 |
+| confirmations, worst case 85M with 16 evaluations | 47 | 71–118 |
 | synthesized selected-recipe arm, LoTTE reads, M9 close-out scoring, M10.0-c | 4 | 6–10 |
 | build, 200M examples | 100 | 150–250 |
 | export, parity, final run | 2 | 3–5 |
 | persistent disk ≈ 3 weeks, egress | — | ≈ 40 |
-| **expected** | **226–246** | **≈ $400–670** |
-| second build seed (decision 8), optional | 100 | 150–250 |
-| extension cycle, 66.7M examples, each | 33 | 50–83 |
+| **subtotal without generation** | **209** | **$354–563** |
+| **scenario A — generation on the GPU** (Qwen3-8B bf16, vLLM) | 30–60 | 45–150 |
+| **scenario A total** | **239–269** | **≈ $400–715** |
+| **scenario B — hosted generation** (if the smoke projects > 60 GPU-hours on the GPU) | 0 | 110–330 |
+| **scenario B total** | **209** | **≈ $465–895** |
+| optional: second build seed (decision 8) | 100 | 150–250 |
+| optional: extension cycle, 66.7M examples, each | 33 | 50–83 |
 | **ceiling requested** | | **$1,000, hard** |
+
+**Allocation order at the lock:** every mandatory line first at the measured rates and the billed
+price; then decision 8 if ≥ 100 GPU-hours remain; then `max_extension_cycles` whole cycles from the
+remainder (mandate §Recipe). At $2.5/h nothing optional fits in either scenario and the plan still
+completes; at $1.5/h with scenario A, seed 1 and three extensions fit.
 
 Wall-clock ≈ 2.5–3 weeks sequential on one GPU (≈ 240 GPU-hours, a day of CPU and network, the
 smoke approval and the review gates between stages); screen arms are independent, so 2–4 GPUs
@@ -266,13 +279,29 @@ places where the box, not the evidence, had set a number; they changed together:
 | 2 | build dose 50M → **200M** examples; extension while a cycle end gains ≥ 0.003, capped by budget | LEAF's dose is 201M on an easier target (768-d, 109M teacher); the old cap was the box's days | §5, mandate §Recipe |
 | 3 | screen dose 2.5M → **5M** | 2.5M was 5% of the old build; a 5% screen of 200M would cost ≈ 70 GPU-hours | §5, mandate §Screen |
 | 4 | family D gains **D-KL1** and **D-NCE**; family G gains **1536**; 16 contrasts, 0.025/16 | a ranking signal only in cycle 3 leaves §9's own caveat untested; the seed passage is a free positive (CARE stage 1, EmbedDistill); §9b is still rising at three layers and a fourth costs 0.39M parameters | mandate §Recipe, §Screen |
-| 5 | **COV resolution check** before the lock | MedicalQA 2,048 documents, CorporateLobbying 340 queries, BRIGHT ~100 per slice: an MDE-sized contrast may be unresolvable; comparators only, so no arm is favoured | mandate §Surfaces, M10.0-d |
+| 5 | **COV resolution number** before the lock (descriptive since pass 7) | MedicalQA 2,048 documents, CorporateLobbying 340 queries, BRIGHT ~100 per slice: an MDE-sized contrast may be unresolvable, and the report must say whether an unresolved verdict was invisible | mandate §Surfaces, M10.0-d |
 | 6 | seed-rank provenance field | a round-trip filter without a second generation pass | mandate §Data |
-| 7 | generator in bf16; 4-bit and Qwen3-4B fallback withdrawn; hosted fallback above 50 GPU-hours | an 80 GB card | mandate §Data, `m10/COV_CANDIDATES.md` |
+| 7 | generator in bf16; 4-bit and Qwen3-4B fallback withdrawn; hosted fallback if the end-to-end projection exceeds 60 GPU-hours | an 80 GB card | mandate §Data, `m10/COV_CANDIDATES.md` |
 | 8 | decision 8: second build seed inside the ceiling | the headline's CI is a query-sampling interval only (`m7/FINDINGS.md` 9) | mandate decisions |
 | 9 | co-training the tower recorded as the M11 candidate | every ≥ 96% near-zero-query system co-trained the document side | §7 |
 
-Codex verification of this amendment: not yet run.
+**Pass 7 — gpt-5.6-terra, high effort, read-only, on the amendment**
+(`research/m10-codex-plan7-2026-09-01.md`; read-exclusion audited clean: the reviewer opened the
+named plan files, `m9src/guard9.py`, `m9/PLANNING.md` §3, `m7/FINDINGS.md`, and ran one web search
+on A100 vLLM throughput). Verdict "not decision-grade"; 2 BLOCKER / 6 MAJOR / 1 MINOR / 5
+contradictions. **All actioned:**
+
+| # | finding | disposition |
+|---|---|---|
+| B | the COV resolution check scored bge-small and MiniLM — family F's own backbones — and made a COV-read decision (screen scope) before selection | **adopted** — demoted to a descriptive **resolution number**: e5-small-v2 and gte-small (candidates in no family), distance only, no direction, first disclosed COV read, cuts nothing; the screen always runs fourteen arms |
+| B | the hosted-generation branch was outside the budget table; at the high end seed 1 and extensions could not fit under $1,000 | **adopted** — §6 carries scenario A (GPU generation, $400–715) and scenario B (hosted, $465–895), an explicit allocation order, and the statement that at the high end nothing optional fits |
+| M | D-NCE not executable: logits, denominator, positive's template, reduction, τ reuse, missing seeds | **adopted** — the literal 129-way softmax cross-entropy is in §Recipe, τ reuse disclosed, removed-seed fallback to L2 counted |
+| M | extension rule not mechanical: baseline undefined, partial cycles, dollar→hour conversion, no ledger fields | **adopted** — m_k − max(m₁…m_{k−1}) ≥ 0.003, whole cycles, `max_extension_cycles` fixed at the lock from dollars minus mandatory lines at measured rates, hard stop on projected spend, ledger fields |
+| M | decision 8 contradicted "full-dose replicas stay waived"; "if the lock says so" a loophole; STATUS weaker | **adopted** — waiver sentence replaced; seed-1 boolean, seeds and row labels locked before any seed-0 six-set output; seed 0 alone controls every action; STATUS repeats the ≥ 100 GPU-hour criterion |
+| M | generation budget assumed 60 output tokens for every form; two forms allow 400 | **adopted** — ≈ 250M generated tokens (350M at caps), 30–60 GPU-hours, fallback gate on the end-to-end projection at 60 h |
+| M | parity sample and `results/perquery.json` had no cloud source or hash check | **adopted** — perquery.json is tracked and sha-verified on the instance; the parity sample regenerates from `m9/registry.json` (tracked, sha pinned) and `port.py` refuses a mismatch, in which case the 512 texts transfer from the box |
+| M | rates provisional; measuring only the first arm is too late; 46 h understated | **adopted** — a day-one rate benchmark (encode, three training mixes, generation smoke, billed price) re-derives §6 before generation and again before the remaining arms; 47 h |
+| m | STATUS still scheduled a Mac 4-bit generator pass | **adopted** — renamed prompt prototyping that produces nothing entering the smoke record, the data, or the manifest |
 
 ## 9. Rank-bottleneck probe (`m10src/rank_probe.py` + `rank_probe_mix.py`, Mac, 2026-09-01)
 
