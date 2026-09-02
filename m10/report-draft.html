@@ -1,0 +1,236 @@
+<title>Nano Retry Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --ground:#F2F4F7; --surface:#FFFFFF; --ink:#16202E; --muted:#5D6B7E; --rule:#D8DEE7;
+  --accent:#167C74; --accent-soft:#D7ECE9; --bar:#3A4657; --bar-soft:#C9D0DA;
+  --miss:#C8354F; --miss-soft:#F6DCE1; --pending:#B7791F; --pending-soft:#F5E7CF;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --display:"Barlow Condensed","Arial Narrow",Impact,sans-serif;
+  --body:"Source Sans 3","Source Sans Pro",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E131A; --surface:#151C26; --ink:#E6EBF2; --muted:#98A5B6; --rule:#263140;
+    --accent:#43B8AE; --accent-soft:#183531; --bar:#B8C3D2; --bar-soft:#34404F;
+    --miss:#FF6B82; --miss-soft:#3A1E27; --pending:#E0A64A; --pending-soft:#3A2E17;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E131A; --surface:#151C26; --ink:#E6EBF2; --muted:#98A5B6; --rule:#263140;
+  --accent:#43B8AE; --accent-soft:#183531; --bar:#B8C3D2; --bar-soft:#34404F;
+  --miss:#FF6B82; --miss-soft:#3A1E27; --pending:#E0A64A; --pending-soft:#3A2E17;
+}
+body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55;margin:0}
+main{max-width:900px;margin:0 auto;padding:40px 24px 80px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.05}
+h1{font-size:56px;font-weight:700;letter-spacing:-0.01em}
+h2{font-size:30px;font-weight:600;margin-top:56px;padding-top:18px;border-top:1px solid var(--rule)}
+h3{font-size:22px;font-weight:600;margin-top:28px}
+p{max-width:66ch;margin:14px 0}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:20px;max-width:60ch;color:var(--ink);margin-top:14px}
+.strip{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin:32px 0 8px}
+.strip div{background:var(--surface);padding:16px 18px}
+.strip .n{font-family:var(--display);font-size:40px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.strip .l{font-size:14px;color:var(--muted);margin-top:6px}
+.miss{color:var(--miss)} .ok{color:var(--accent)} .pend{color:var(--pending)}
+figure{margin:24px 0;background:var(--surface);border:1px solid var(--rule);padding:18px 18px 10px}
+figcaption{font-size:14px;color:var(--muted);margin-top:8px;max-width:70ch}
+svg{display:block;width:100%;height:auto}
+.axis{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+.lbl{font-family:var(--body);font-size:13px;fill:var(--ink)}
+.val{font-family:var(--mono);font-size:12px;fill:var(--ink);font-weight:600}
+.ref{font-family:var(--mono);font-size:11px;fill:var(--miss)}
+.tblwrap{overflow-x:auto;margin:18px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--surface)}
+th,td{padding:9px 12px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+th{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:14px}
+tr:last-child td{border-bottom:none}
+.tag{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:2px 7px;border-radius:3px;text-transform:uppercase}
+.tag.block{background:var(--miss-soft);color:var(--miss)} .tag.pend{background:var(--pending-soft);color:var(--pending)} .tag.ok{background:var(--accent-soft);color:var(--accent)}
+ol,ul{max-width:70ch;padding-left:22px} li{margin:6px 0}
+code{font-family:var(--mono);font-size:.88em;background:var(--surface);border:1px solid var(--rule);padding:1px 5px;border-radius:3px}
+.note{border-left:3px solid var(--accent);padding:6px 16px;margin:18px 0;max-width:70ch;color:var(--ink)}
+.note.warn{border-left-color:var(--pending)}
+.small{font-size:14px;color:var(--muted)}
+@media (max-width:640px){.strip{grid-template-columns:1fr} h1{font-size:42px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<main>
+<div class="eyebrow">Asymmetric dual encoders · M9 post-mortem and M10 plan · 1 September 2026</div>
+<h1>Nano Retry Plan</h1>
+<p class="lede">M9 built nano, a 33M query encoder distilled into stella's space, and it kept 82% of the teacher on dev. The number hides two findings: 94% where the training queries look like the test queries and 50 to 71% where they do not, and a 384-wide linear head that a closed-form probe shows was at the aim's ceiling before training began. M10 fixes both, tests both, and keeps every guardrail that makes the eventual number believable.</p>
+
+<div class="strip">
+  <div><div class="n miss">82.2%</div><div class="l">M9 retention on the dev macro, plateaued at 3.7B tokens. Both bars need at least 87.8% on the six.</div></div>
+  <div><div class="n">0 / 1</div><div class="l">Confirmatory accesses spent. The reserved four and LoTTE are untouched; the comparator vectors are intact.</div></div>
+  <div><div class="n pend">7</div><div class="l">Decisions waiting on Dylan. Each has a default so work proceeds; one blocks only the M9 close-out.</div></div>
+</div>
+
+<h2>What M9 found</h2>
+<p>The build ran the locked recipe: bge-small regressed by plain L2 onto stella-400M's query vectors, 5% queries / 5% spans / 90% documents, constant learning rate, plateau rule. It stopped at a third of the registered dose because the dev curve had been flat for 1.1B tokens. The anneal added +0.004. The candidate is frozen and not released.</p>
+
+<figure>
+<svg viewBox="0 0 860 250" role="img" aria-label="Horizontal bar chart of M9 nano retention per dev component: NQ 93.8 percent, cqadup-physics 71.0, cqadup-programmers 50.1, macro 82.2; vertical lines mark the release bar at 87.8 and the aim at 89.7 percent; LEAF's published 97.9 percent is marked for reference.">
+  <g class="axis">
+    <line x1="230" y1="20" x2="230" y2="200" stroke="var(--rule)"/>
+    <line x1="230" y1="200" x2="820" y2="200" stroke="var(--rule)"/>
+    <text x="230" y="218" text-anchor="middle">0</text>
+    <text x="377.5" y="218" text-anchor="middle">25</text>
+    <text x="525" y="218" text-anchor="middle">50</text>
+    <text x="672.5" y="218" text-anchor="middle">75</text>
+    <text x="820" y="218" text-anchor="middle">100% of teacher</text>
+  </g>
+  <g>
+    <text class="lbl" x="220" y="49" text-anchor="end">nq-250k (Wikipedia QA, in the training mix)</text>
+    <rect x="230" y="34" width="553.4" height="22" fill="var(--accent)"/>
+    <text class="val" x="812" y="50">93.8</text>
+    <text class="lbl" x="220" y="94" text-anchor="end">cqadup-physics (forum questions)</text>
+    <rect x="230" y="79" width="418.9" height="22" fill="var(--miss)"/>
+    <text class="val" x="655" y="95">71.0</text>
+    <text class="lbl" x="220" y="139" text-anchor="end">cqadup-programmers (forum questions)</text>
+    <rect x="230" y="124" width="295.6" height="22" fill="var(--miss)"/>
+    <text class="val" x="532" y="140">50.1</text>
+    <text class="lbl" x="220" y="184" text-anchor="end">SCREEN-3 macro</text>
+    <rect x="230" y="169" width="484.9" height="22" fill="var(--bar)"/>
+    <text class="val" x="721" y="185">82.2</text>
+  </g>
+  <g>
+    <line x1="748" y1="20" x2="748" y2="200" stroke="var(--miss)" stroke-dasharray="4 3"/>
+    <text class="ref" x="748" y="14" text-anchor="middle">release 87.8</text>
+    <line x1="759.2" y1="20" x2="759.2" y2="200" stroke="var(--miss)"/>
+    <text class="ref" x="775" y="30" text-anchor="start">aim 89.7</text>
+    <line x1="807.6" y1="20" x2="807.6" y2="200" stroke="var(--muted)" stroke-dasharray="2 3"/>
+    <text class="axis" x="807.6" y="14" text-anchor="middle">LEAF 97.9</text>
+  </g>
+</svg>
+<figcaption>Retention of the stella-400M ceiling by dev component, final annealed checkpoint (step 457,265). Bars are the required avg-6 retention for the release bar (bge-small 0.5042) and the aim (leaf-ir-asym 0.5155). Sources: results/m9_final_checkpoint_dev.json, results/m9_dev_symmetric_stella-400M-v5.json.</figcaption>
+</figure>
+
+<p>A 33M student that reaches 94% on one distribution has the capacity to reach 94%. The 463K training queries were all Wikipedia QA or product search, the longest 108 words. The six test sets are scientific claims, biomedical and finance questions, 170-word counter-arguments, paper titles and COVID queries, none of which the pool contains. The macro on the six is therefore expected below 82%, not above it.</p>
+
+<figure>
+<svg viewBox="0 0 860 240" role="img" aria-label="Line chart of M9 build retention against training tokens on a log scale, rising from 68 percent at 0.12 billion tokens to 79 percent at 0.86 billion and flattening near 81 to 82 percent from 2 to 3.7 billion tokens; the release bar at 87.8 percent is never approached.">
+  <g class="axis">
+    <line x1="70" y1="20" x2="70" y2="190" stroke="var(--rule)"/>
+    <line x1="70" y1="190" x2="830" y2="190" stroke="var(--rule)"/>
+    <text x="62" y="194" text-anchor="end">70%</text>
+    <text x="62" y="137" text-anchor="end">80%</text>
+    <text x="62" y="80" text-anchor="end">90%</text>
+    <text x="62" y="23" text-anchor="end">100%</text>
+    <line x1="70" y1="133.3" x2="830" y2="133.3" stroke="var(--rule)" stroke-dasharray="2 4"/>
+    <line x1="70" y1="76.7" x2="830" y2="76.7" stroke="var(--rule)" stroke-dasharray="2 4"/>
+    <text x="69" y="210" text-anchor="middle">0.06B</text>
+    <text x="277" y="210" text-anchor="middle">0.25B</text>
+    <text x="477" y="210" text-anchor="middle">1B</text>
+    <text x="667" y="210" text-anchor="middle">3.7B</text>
+    <text x="830" y="210" text-anchor="end">11.4B cap</text>
+    <text x="450" y="232" text-anchor="middle">non-pad training tokens, log scale</text>
+  </g>
+  <line x1="70" y1="89.1" x2="830" y2="89.1" stroke="var(--miss)" stroke-dasharray="4 3"/>
+  <text class="ref" x="826" y="85.1" text-anchor="end">release bar 87.8</text>
+  <polyline fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" points="174.0,198.7 274.3,170.1 333.1,156.4 374.7,150.5 406.8,143.7 433.3,140.0 455.6,138.9 507.2,134.1 575.3,128.0 584.0,128.9 592.3,128.3 600.2,126.3 607.6,128.8 614.7,125.1 621.4,128.0 627.8,127.0 634.0,126.7 639.9,123.0 645.6,126.6 651.1,124.4 656.3,123.8 661.4,125.5 666.3,124.4 668.6,121.0"/>
+  <circle cx="668.6" cy="121.0" r="4" fill="var(--accent)"/>
+  <text class="val" x="678.6" y="125.0">82.2 annealed</text>
+  <circle cx="68.8" cy="172.5" r="3.5" fill="var(--bar)"/>
+  <text class="val" x="76.8" y="176.5">73.1 query-only screen anchor (separate run)</text>
+</svg>
+<figcaption>SCREEN-3 retention during the M9 build (constant LR 1e-4 until the plateau rule fired at 3.68B tokens; cooldown to 1e-5). Thirty times the dose of the first checkpoint bought 14 points, the last 1.1B tokens nothing measurable. Sources: m9/RUN_STATUS.md, m9/BUILD_LOG.md.</figcaption>
+</figure>
+
+<h3>The second cause: a 384-wide head is at the ceiling</h3>
+<p>A closed-form probe ran on the Mac while this plan was written. It takes stella's own query vectors, keeps only their top-k principal directions, and retrieves against stella's unmodified document vectors of the two forum components. Because a student with a 384-wide hidden state and a linear head can only emit vectors inside one 384-dimensional subspace, the k = 384 row bounds what any such student can retain, whatever it learns.</p>
+<div class="tblwrap"><table>
+<tr><th>Subspace fit on</th><th class="num">k</th><th class="num">programmers</th><th class="num">physics</th></tr>
+<tr><td>NQ questions only (the M9 training distribution)</td><td class="num">384</td><td class="num">79.8%</td><td class="num">89.3%</td></tr>
+<tr><td>NQ plus the other forum component plus the target's own queries</td><td class="num">384</td><td class="num">90.4%</td><td class="num">93.1%</td></tr>
+<tr><td>The target's own queries only</td><td class="num">384</td><td class="num">99.5%</td><td class="num">99.6%</td></tr>
+<tr><td>NQ plus the other forum component</td><td class="num">512</td><td class="num">92.5%</td><td class="num">97.4%</td></tr>
+<tr><td>NQ plus the other forum component</td><td class="num">640</td><td class="num">97.9%</td><td class="num">100%</td></tr>
+</table></div>
+<p>One 384-dimensional subspace serves one query distribution almost perfectly and several at once poorly. The aim needs 89.7% across six distributions, so the M9 head class was at its ceiling before training started; coverage alone would not have fixed it. At 640 dimensions the ceiling is gone. Within 35M parameters the width comes from the feature, not the backbone: mean-pool three layers and concatenate them into a 1152-wide feature before the linear head. That adds 0.8M parameters, stays linear, and still exports per token so fastembed's own mean pooling reproduces it exactly. The Mac also reproduced the training box's teacher scores on both components to four decimals.</p>
+
+<h3>Closed in M9, with the number that closed it</h3>
+<div class="tblwrap"><table>
+<tr><th>Lever</th><th>Result</th><th>Reading</th></tr>
+<tr><td>More dose on the same pool</td><td class="num">73% → 79% → 82%, flat</td><td>The pool is exhausted, not the student.</td></tr>
+<tr><td>Student: MiniLM-L6 vs bge-small</td><td class="num">−0.0026, unresolved</td><td>A tie at screen dose. MiniLM is 2× cheaper to serve.</td></tr>
+<tr><td>Instruction template on the student</td><td class="num">−0.0204</td><td>The student gets raw query bytes.</td></tr>
+<tr><td>Documents as regression text</td><td class="num">neutral at equal budget</td><td>As extra text they beat query repetition; not a substitute for query forms.</td></tr>
+<tr><td>Bigger teacher (stella-1.5B)</td><td class="num">−0.0023</td><td>Select on the artifact, not the tower. Holds for towers too.</td></tr>
+<tr><td>Closed-form head warm start</td><td class="num">+0.027</td><td>Eight seconds of ridge, five times the decision threshold.</td></tr>
+<tr><td>ONNX export, fastembed, document model</td><td class="num">parity 0.9999994</td><td>The port risk for the release milestone is retired.</td></tr>
+<tr><td>Edge deployability</td><td class="num">256 MB container, 3.4 ms</td><td>Only binary-quantized. Quantization is a precondition, not an optimisation.</td></tr>
+</table></div>
+
+<h2>The M10 plan</h2>
+<p>Same pair, same bars, same protocol machinery. Four changes, in the order the evidence supports them.</p>
+<div class="tblwrap"><table>
+<tr><th>Change</th><th>What</th><th>Evidence</th></tr>
+<tr><td>Coverage</td><td>4.5M query texts: 463K real, 1.0M PAQ, 3.0M synthetic across 12 forms (claims, long arguments, finance, consumer health, titles, keywords, forum how-to, and more). Qwen3-8B generator, Wikipedia and approved-corpus seeds, fixed fingerprint thresholds, per-query provenance.</td><td>The per-component spread. LEAF's ~1.8M query-like texts across five styles and its one-epoch ablation (queries only 46.7 vs queries+docs 60.7).</td></tr>
+<tr><td>Optimizer regime</td><td>Batch 32, three linear cycles 1e-4 → 1e-5, plateau read best-to-best on annealed checkpoints.</td><td>LEAF: bs16 0.4194 ≈ bs32 0.4214, bs256 0.4593. M9's anneal was worth +0.004 and its plateau rule read constant-LR points.</td></tr>
+<tr><td>Ranking-aware phase 2</td><td>Cycle 3 adds a KL term over the teacher's top-64 documents plus 64 random ones from a fixed 1M bank. Temperature by a registered entropy rule before any arm runs. Priced by a screen arm, never symptom-gated.</td><td>Listwise KL reaches 90–95% at 17–32M elsewhere; EmbedDistill's ablation; M9's phase 2 was never specified.</td></tr>
+<tr><td>Wider output</td><td>Mean-pool layers 12, 8 and 4, concatenate to a 1152-wide feature, then the linear head. Screened against the 384 and 768 alternatives; default 1152.</td><td>The rank probe above: 90 to 93% ceiling at 384, 98 to 100% at 640 or more.</td></tr>
+<tr><td>Warm start</td><td>Init from the M9 checkpoint as a screen arm.</td><td>Init moves retention up to 6 points in the literature; the M9 model already sits at 94% on NQ.</td></tr>
+</table></div>
+
+<h3>The thesis is tested before anything is built</h3>
+<p>Eleven screen arms at 5% of the build dose, in seven decision families and thirteen contrasts. Family A holds everything fixed and varies only the data: the M9 pool, the pool plus enough PAQ factoid questions to match the full corpus's volume, and the full corpus with its 12 forms. Three registered outcomes on the forms-versus-volume contrast: a corrected lower bound above the 0.0056 margin resolves the coverage thesis on the COV families; a positive but smaller bound lets the build proceed with the verdict labelled unresolved; anything else stops M10 before any build and returns it to Dylan with all three rows. The other families decide mix (100/0, 75/25, 50/50 at matched query presentations), init, phase 2, batch (32 vs 128 at equal examples), student, and output width (384, 768, 1152), each with a default and a Bonferroni-corrected bound over the thirteen contrasts. Any decision that went against its default is re-trained with two more seeds for both the winner and the default; a margin inside the seed range reverts. The selected recipe is then trained once as a whole and checked against the anchor on LoTTE, a surface no decision has touched, under M9's non-inferiority rule.</p>
+
+<div class="note">Selection happens on COV, a new licensed, decontaminated, qrel-bearing surface weighted equally across five domain families: forum-technical (the two CQADupStack dev components), consumer health (MedicalQARetrieval), long technical questions (five BRIGHT slices), economics (BRIGHT), and legal (two LegalBench retrieval tasks). Each component is admitted only after its licence, revision, sizes and contamination checks are committed, and every admitted corpus joins the protected index before any training text is built. At least four families must survive. COV has no scientific-claim, paper-title or argument retrieval, so the coverage verdict is a verdict about the COV families, and those three forms are tested only by the six-set transaction.</div>
+
+<h3>Stages</h3>
+<ol>
+<li><strong>M10.0 diagnosis and screen lock.</strong> Rank-bottleneck probe (descriptive), capacity probe with a 109M student, COV admission and its addition to the protected index, then the pushed screen lock. No six-set, reserved or LoTTE output exists during this stage.</li>
+<li><strong>M10.1 data.</strong> Per-form 200-query smoke read by a person and rate measured, then generation at scale, PAQ sample, decontamination, held-out forms, teacher targets, hard-candidate mining, manifest.</li>
+<li><strong>M10.2 screen and recipe lock.</strong> The arms, the confirmation seeds, one pushed lock with every field filled, reviewed by Codex and Fable. Only then: M9's close-out on its frozen candidate, amended to six-only so it cannot spend the reserved access, and LoTTE read #1 as a veto.</li>
+<li><strong>M10.3 build.</strong> 50M examples, extension by one cycle if the last annealed checkpoint still gains, at most two. Export, parity, freeze, pre-freeze review, LoTTE read #2.</li>
+<li><strong>M10.4 final.</strong> The single six-set transaction, then the reserved batch if either contrast passes.</li>
+</ol>
+
+<h2>What Dylan owes</h2>
+<div class="tblwrap"><table>
+<tr><th>#</th><th>Decision</th><th>Default while open</th></tr>
+<tr><td class="num">1</td><td>Ratify M9's final-lock amendment together with the six-only amendment that strikes M9's reserved conditional, so the close-out can run after M10.2 without touching the reserved four.</td><td>Blocks the close-out only.</td></tr>
+<tr><td class="num">2</td><td>Money: one A100/H100 for about 80–110 GPU-hours (≈ $120–280) and/or hosted open-weights generation (≈ 1.1B tokens, ≈ $110–330). Prices unverified.</td><td>Box-only path; four to five weeks once the box is reachable.</td></tr>
+<tr><td class="num">3</td><td>FineWeb as a seed for synthetic queries, after a rights review.</td><td>Seeds are Wikipedia and the approved corpora.</td></tr>
+<tr><td class="num">4</td><td>PAQ as query text (data CC BY-SA, same family as NQ and SQuAD).</td><td>Included: 1.0M in the build, 4.04M in the volume-control screen arm only, attribution recorded.</td></tr>
+<tr><td class="num">5</td><td>Confirm FineWeb documents stay out (no reserved-set document fingerprints exist, and making them opens reserved corpora).</td><td>Excluded.</td></tr>
+<tr><td class="num">6</td><td>If the capacity probe clears 85% on the CQA components, scope a >35M tier as a separate frontier point.</td><td>nano ships at ≤35M regardless.</td></tr>
+<tr><td class="num">7</td><td>Confirm: LoTTE read #1 withdrawn unexecuted in M9; renumbering M10 (retry), M11 (release, port, whitepaper), M12 (image).</td><td>As recorded.</td></tr>
+</table></div>
+
+<h2>Compute</h2>
+<div class="tblwrap"><table>
+<tr><th>Path</th><th>Wall-clock to M10.4</th><th>Cost</th></tr>
+<tr><td>RTX 3080 box, when Dylan is back</td><td>≈ 4–5 weeks. Generation 2–4 days at an unmeasured rate, data and COV admission 1.5 days, screens 1.6 days plus up to 2.4 days of confirmation seeds, build 2.6–4 days at the measured 18,984 tok/s before the batch-32 penalty, close-out and final 1 day, reviews between.</td><td class="num">$0</td></tr>
+<tr><td>One A100 80 GB in the cloud</td><td>≈ 10–12 days including one day to re-derive the pool, dev suite and fingerprints from Hugging Face; 80–110 GPU-hours.</td><td class="num">$120–280 GPU, optional $110–330 generation</td></tr>
+<tr><td>Mac M5 Pro</td><td>Probes and code only. Stella runs at 20–100 documents/s on MPS depending on length.</td><td class="num">$0</td></tr>
+</table></div>
+
+<h2>Unimpeachable by competitors</h2>
+<ul>
+<li>Comparators byte-verified against official artifacts, scored in one exact-search harness, frozen as per-query vectors before any M10 number existed. The bridge check proves the harness unchanged.</li>
+<li>Pre-registration with pushed commits as the external witness. One six-set transaction per milestone, each disclosed. The reserved four's single access. Dev-reuse count and the selection-surface licence table published.</li>
+<li>Contamination handled three ways: stella's disclosed overlap on ArguAna and FiQA at every headline, the no-disclosed-overlap rows, and reserved and LoTTE surfaces no decision touched.</li>
+<li>Training data affirmatively licensed, no MS MARCO, attribution recorded. Synthetic queries with a permissive generator, per-query provenance and removal counts per screen.</li>
+<li>Compute disclosed in examples, tokens and GPU-hours beside LEAF's ~100 A100-hours.</li>
+<li>System-level framing only. The comparison is stella documents plus nano queries against arctic documents plus LEAF queries. No statement isolates nano from its document tower.</li>
+<li>Reproducibility: code, corpus manifests with hashes, model revisions, seeds, tested statistics code, and the full screen table including losing arms.</li>
+</ul>
+
+<h2>Review record and where things live</h2>
+<p>Four Codex passes (gpt-5.6-terra, read-only, high effort) reviewed the plan. Pass 1 returned 3 blockers, 10 majors and 2 minors: the M9 close-out moved behind M10's lock, reserved-set document fingerprints were dropped along with FineWeb documents, the coverage surface replaced the two CQA components as selector, and the screen gained its data-only family, mix family and multiplicity control. Pass 2 confirmed ten fixes, rejected five, and added 3 blockers, 8 majors and 1 minor: COV joined the protected index, M9's close-out became six-only, family B was redesigned around matched query presentations, family A gained its volume control, and the cost arithmetic was redone. Pass 3 verified the second rewrite and left four arithmetic and specification gaps, closed the same day (the coverage stop rule's three outcomes, the volume arm's exact size, an executable LoTTE veto, the confirmation budget). Pass 4 verified those and checked this page's numbers. Every finding and disposition is in <code>m10/PLANNING.md</code> §8. All logs were audited for reserved-set reads: clean.</p>
+<div class="tblwrap"><table>
+<tr><th>Read</th><th>For</th></tr>
+<tr><td><code>m9/FINDINGS.md</code></td><td>What M9 learned, the durable record.</td></tr>
+<tr><td><code>instructions-m10.md</code></td><td>The binding M10 mandate.</td></tr>
+<tr><td><code>m10/PLANNING.md</code></td><td>Evidence, arithmetic, rejected avenues, review dispositions.</td></tr>
+<tr><td><code>m10/STATUS.md</code></td><td>Exact next steps for the box session and for Dylan.</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td>Compressed from 345 to 221 lines; M1–M6 logs archived in <code>research/m1-m6-findings.md</code>.</td></tr>
+</table></div>
+<p class="small">Repo state: M9 closed and merged to main; M10 planning on branch m10-work. The training-box session could not be reached from this machine (no Remote Control link); nothing on the box was changed.</p>
+</main>

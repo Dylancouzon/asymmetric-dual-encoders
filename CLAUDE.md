@@ -2,108 +2,29 @@
 
 ## North star
 
-Decide, with defensible numbers, whether asymmetric dual encoders (big document encoder in the cloud, near-zero-compute query encoder on the edge) beat the obvious alternative: running a small 20–100M conventional embedding model on the edge. The research question from `instructions.md`: **how much retrieval quality do you retain as query-side computation approaches zero?**
+Decide, with defensible numbers, whether asymmetric dual encoders (big document encoder in the cloud, near-zero-compute query encoder on the edge) beat the obvious alternative: running a small 20–100M conventional embedding model on the edge. The research question: **how much retrieval quality do you retain as query-side computation approaches zero?**
 
-Target architecture being scoped: server indexes docs with a large LLM encoder; edge client holds two Qdrant collections (token→vector lookup table + document index); query = tokenize → lookup → average → normalize → ANN search. No transformer at query time, near-zero cold start.
+Architecture: the server indexes documents once with a large frozen encoder (**stella_en_400M_v5**, 1024d, since M7); the edge client holds the document index plus a query path. Two query paths exist: **zero** (M7, a token→vector lookup table, no transformer) and **nano** (M9/M10, a ≤35M distilled transformer). Both serve the SAME index — the product is the pair, two points on a quality-vs-query-cost frontier.
 
 ## Deliverable
 
-A decision report (Artifact) with a quality-vs-query-side-cost frontier: nDCG@10 on a fixed BEIR subset for each point on the spectrum, plus edge-relevant costs (artifact size on disk, query latency on CPU, cold start), and a Qdrant Edge two-collection prototype to prove the operational architecture.
+A decision report (Artifact) with a quality-vs-query-side-cost frontier: nDCG@10 on the six named datasets for each point, plus edge costs (query asset, document index, hydration, CPU latency), a Qdrant Edge prototype of the pair, and the released models. Every headline claim is paired on frozen comparator vectors with pre-registered statistics; the miss-is-publishable framing applies to every milestone.
 
 ## Constraints
 
-- Local machine: Apple M5 Pro, 24 GB RAM, 15 cores, MPS. 8B doc encoder is tight; smaller backbone preferred; pick small BEIR datasets.
-- Quality numbers come from exact (brute-force) search so ANN recall is not a confound. Qdrant Edge is used for the architecture/latency prototype, not the quality numbers.
-- Dylan is hands-off; decisions get made here and logged below.
+- Mac: Apple M5 Pro, 24 GB RAM, MPS — probes and CPU cost rows only. Training box: Windows/RTX 3080 10 GB under WSL2, headless, Dylan follows on GitHub. Cloud GPUs are Dylan's money decision (bring an estimate).
+- Quality numbers come from exact search so ANN recall is not a confound; Qdrant Edge is for architecture and latency.
+- Dylan is hands-off; decisions get made here and logged. The evaluation protocol (partitions, decontamination, frozen comparators, single final run, pre-registered statistics) may change only BEFORE the numbers it affects are observed, never retroactively.
 
 ## Stage plan
 
-- [x] M0: environment check, this file. (M5 Pro, 24 GB RAM, Docker + uv available.)
-- [x] M1: deep research, done 2026-08-24. Full notes in `research/`: `lightretriever.md`, `landscape.md`, `methodology.md`, `sparse-inference-free.md`, `literature.md`.
-- [x] M2: done, then adversarially verified (`research/verification-m2.md`: 3 BLOCKER / 9 MAJOR / 9 MINOR — all blockers fixed, see below). 15 configs × 5 datasets in `results/quality.json`. Benchmark resolution: ±0.007 nDCG on the 5-ds macro average (paired bootstrap), so the top cluster {arctic-m-v1.5, granite-r2, bge-small, leaf-asym, leaf-sym, gte-small} is a statistical tie internally; solid gaps only across clusters. leaf-ir-asym holds 97.1–98.6% of its 109M teacher (CI) with a 23M query encoder. BM25 (bm25s-lucene) 0.379 avg beats every static (best 0.344) and nearly matches e5-small 0.396. Statics collapse on FiQA (~0.17–0.19 vs ~0.40 for transformers).
-- [x] M3: done 2026-08-25. Dense reproduces the paper within noise after the BOS fix (avg-5 0.4114 vs paper 0.4136); sparse −3..−5 (cause capped, see findings); hybrid conservative.
-- [x] M4: done. Full 21-system × 6-dataset matrix in `results/FINAL_MATRIX.md` (+ costs.json, significance.json). TREC-COVID added; all baselines validate against official MTEB ≤0.003.
-- [x] M5: done. Two-collection Edge prototype works: 0.9 ms/query zero-transformer (0.42 lookup + 0.48 HNSW), shard load 0.24 s. ANN gap −1.8 nDCG at default ef, −0.5 at ef=512 (1.42 ms). fp16 shards: table 1.82 GB (bloated by an HNSW index a retrieve-only collection doesn't need; raw fp16 table = 466 MB), docs 754 MB. `results/edge_prototype.json`, `results/edge_variant.json`.
-- [x] M6: done 2026-08-25. Report artifact: https://claude.ai/code/artifact/db771dd1-2d59-4c34-9d6e-70dd4d337d16 ("Zero-Compute Query Encoders"). Gates run: Codex adversarial verification (gpt-5.6-terra, all findings actioned) → Codex writing pass (gpt-5.5, zero number changes, verified by diff) → humanizer (clean). andrey-review deliberately skipped: internal decision report, not channel DevRel content, and two adversarial technical passes already ran.
-- [x] M7: **final run done 2026-08-28** (freeze `d24c704`, tag `m7-freeze`, one `--infra-retry` after a harness interrupt; access spent, `m7-six-spent` on origin). **Zero tier claims**: release bar missed CI-resolved (int8 avg-6 0.4339 vs LR-dense-pertask 0.4583, −0.0243 [−0.0405, −0.0086]); vs BM25 +0.0165 positive but not surviving the registered familywise rule; fused system 0.4911 vs OpenSearch 0.4868 a statistical tie (+0.0043 [−0.0063, +0.0151]). Clean-4 robustness is worse (table below BM25 there); six-set retention vs teacher 0.755 — the dev out-of-domain read (0.764), not the all-six dev read (0.915), was the honest forecaster. Fusion vs dense +0.057 descriptive is the bright spot. The pre-registered miss-is-publishable framing applies; untouched-final reserved for M8; report pending. Full detail: `m7/STATUS.md`, `results/m7_final_run.json`. Original scope line kept for context: self-directed (WSL2 on the Windows/RTX 3080 box; repo on ext4, never /mnt/c) build + release of a Qdrant lookup-table query encoder. Binding mandate with comparators, tiers, eval protocol, and ops: `instructions-m7.md`. Research: `research/m7-novelty.md` (unpublished as of 2026-08-25), `research/m7-data-licensing.md`, `research/m7-teacher-shortlist-2026-08-26.md` (the pre-relaxation `m7-teacher-shortlist.md` was deleted in the 2026-08-28 cleanup; git history has it). Host setup checklist for Dylan: `setup-windows.md`. Core decisions 2026-08-25: teacher bge-base-en-v1.5 (swap delegated, no competitor vendors) — **SUPERSEDED 2026-08-26: the teacher is `NovaSearch/stella_en_400M_v5`, chosen on the distilled TABLE rather than the tower; see the decision log below and `m7/LEDGER.md`**; clean data stack, MS MARCO excluded from the RELEASE stack permanently (its terms are non-commercial-research-only; IBM Granite is the precedent) — with ONE research-only variant approved 2026-08-28 as the final M7 task, to measure what the exclusion costs, never released and refused by `freeze.assert_releasable`; aim = CI-resolved win over OpenSearch 0.4868 (candidate: released zero-query-compute system, fusion allowed and labeled), release bar = CI-resolved win over LR-dense-pertask 0.4583 (candidate: the released int8 dense table). Frozen comparator per-query vectors in `results/perquery.json`, dataset content pinned by `results/eval_manifest.json` + `results/frozen_eval/` (vendored queries+qrels), validated by `scripts/validate_perquery.py` — 50/54 cells <5e-5, four cells ≤3e-4 allowlisted with a provenance note in FINAL_MATRIX.md. Research/web work in Sonnet subagents. Plan gates run 2026-08-25, all findings implemented: Codex gpt-5.6-sol #1 (Dylan's model pick; 7 BLOCKER/23 MAJOR/8 MINOR), Opus (6 BLOCKER/10 MAJOR + leanness cuts), Codex gpt-5.6-sol #2 fresh thread (3 BLOCKER/9 MAJOR/4 MINOR — comparator drift manifest, capacity probe made gate-ineligible with a falsifiable bar, tier candidates fixed to the released artifacts, Holm at family α=0.025, dev suite pinned). Session state lives in small files under `m7/` (STATUS.md = one-screen status Dylan reads on GitHub, RESULTS.md, EXPLORED.md, LEDGER.md) with frequent commit+push under a standing grant scoped to the M7 work branch (headless box). CC BY-SA position confirmed by Dylan 2026-08-25: NQ/SQuAD/HotpotQA/FEVER approved for training with model-card attribution. Remaining item for Dylan: run setup-windows.md; HF release go stays his.
-- [x] M8: **CLOSED 2026-08-30 as a MEASUREMENT.** No candidate, no release, **no confirmatory
-  access spent** — the reserved four stay clean for M9. Twelve probes; every lever with a measured
-  mechanism is closed. M7 shipped avg-6 0.4339 against `LR-dense-pertask` 0.4583 (−0.0243
-  CI-resolved), and every M8 lever moved the dev endpoint 0.000–0.005 against a class whose
-  historical transfer to the six is 0.000 ± 0.005. **The deficit is not the table's resolution
-  (`D2-PRE`, all four new-row classes negative), its placement (`VECTOR-PRF`, −0.051, negative on
-  all six), or its training target (`B8`, doc-centroid −0.167).** What was never tested at capacity
-  is document-side co-adaptation — which is what the system we lost to does. **Read `m8/FINDINGS.md`
-  first**, then `m8/EXPLORED.md` (closed avenues with reopening conditions). Deliberately not run:
-  `E14-LORA` (authorised; the affordable version is a proxy, not a test — deferred with a real
-  budget), `R-LIST` (the one open lever with a mechanism — `B2`'s `teacher_top200` is 0.777 nats,
-  so the KL *class* is open), `B10`.
-- [ ] M9 (**next — PLANNED 2026-08-30, execution starts at stage M9.1 pilots/screens**): **nano**,
-  the LEAF-style distilled ≤35M query tower serving against zero's SAME frozen stella-400M 1024d
-  index (the product is the pair). Mandate **rewritten** `instructions-m9.md` (staged: pilots →
-  adversarially-reviewed recipe lock → build → final); evidence `m9/PLANNING.md`; plan review
-  `research/m9-codex-plan-2026-08-30.md` (23 findings, all actioned). **Aim (heavily preferred,
-  Dylan): beat leaf-ir-asym 0.5155 avg-6 — as a SYSTEM claim; release bar: bge-small 0.5042.**
-  Headroom measured: stella ceiling 0.5744 avg-6 / 0.5640 NDO-4 → aim needs 89.7%/92.8% retention
-  (literature band 96–98.6% is a prior, dose-dependent). Teacher: stella stays (screen restored,
-  margin-gated lower-CI>0 AND ≥0.010); students: MiniLM-L6-v2 vs bge-small. fever-train leaves the
-  training pool (reserved-set overlap); LoTTE-clean = fresh surface, NOT training data. Comparator
-  vectors in `results/perquery.json` are **irreplaceable**.
-- [ ] M10: **release the pair, port it, write the whitepaper.** Mandate `instructions-m10.md`.
-  Ships no new science: **zero** (M7's table, already frozen and verified releasable) + **nano**
-  (M9's tower) released as two points on a quality-vs-query-cost frontier — zero tier wins exist and
-  the model cards say so; **ONNX port including the document model** (B6-pre passed only on
-  near-identity weights, so the real artifacts have never been exported); **fastembed integration**;
-  and the **whitepaper**, sourced primarily from `m8/FINDINGS.md` and `m8/EXPLORED.md`.
-
-- [ ] M11 (**noted, not scoped — 2026-08-30, Dylan**): **an IMAGE model.** The rationale is the
-  edge itself: a large share of edge workloads are vision — object detection, anomaly detection,
-  visual inspection, retrieval over image collections — so the asymmetric premise this whole project
-  tests (heavy encoder in the cloud, near-zero-compute encoder on the device) has a bigger and more
-  natural market in vision than in text. Open at this stage: whether the query side is a lookup
-  table at all (the text trick — tokenize, gather rows, average — has no obvious image analogue;
-  patch/codebook quantization is the nearest idea), whether the target is image→image retrieval or
-  text→image, and which frozen document tower plays stella's role. **Do not inherit M7/M8's
-  architecture assumptions without re-deriving them** — M8's whole finding is that the query-side
-  levers were exhausted for a BAG-of-tokens encoder, which is a text-specific parameterisation.
-  Scope it properly when M10 lands.
-
-## Candidate routes (to be confirmed in M1)
-
-- LightRetriever (arXiv 2505.12260) with released pretrained artifacts — the zero-compute-query anchor point.
-- Small symmetric baselines (20–100M): bge-small-en-v1.5, e5-small-v2, all-MiniLM-L6-v2, gte-small, arctic-embed-xs — the "just run a small model" alternative.
-- Static embedding models used symmetrically (Model2Vec/potion, sentence-transformers static-retrieval) — the zero-compute symmetric strawman.
-- Aligned asymmetric pairs that need no training by us (e.g., MongoDB LEAF: docs with teacher, queries with distilled small model) — the middle of the spectrum.
-- Inference-free sparse retrieval (SPLADE-doc, uniCOIL/TILDE doc expansion, OpenSearch inference-free doc encoders, doc2query+BM25, BM25 itself) — same zero-query-compute property, sparse instead of dense, Qdrant-native. Added 2026-08-24 after Dylan flagged the instructions as a surface-level draft; this family is a direct competitor the draft missed.
-- Broader literature sweep for LightRetriever successors, industry asymmetric towers, and tiny-adapter alignment (static model + learned projection into a frozen big-model doc space).
-
-## Headline results (6 named datasets, exact search; claims stated only where bootstrap-resolved)
-
-Quality groups (avg-6 nDCG@10; strict within-group ordering NOT established — Codex blocker 2):
-- Group A, small/mid transformers on the query side: arctic-m-v1.5 0.5264, leaf-ir-asym 0.5155, mdbr-leaf-ir 0.5123, bge-small 0.5042, arctic-s 0.4993, granite-r2 0.4947, gte-small 0.4837.
-- Group B, zero-neural-query-compute: opensearch-doc-v3-gte 0.4868 (overlaps group A's tail), LR-hybrid-pertask 0.4720, LR-hybrid-websearch 0.4594, LR-dense-int8/pertask 0.4586/0.4583, LR-dense-websearch 0.4320, BM25 0.4174. (LR sparse/hybrid carry the unresolved −3..−5 reproduction gap → "conservative local reproduction", not a finished competitor result.)
-- Group C, symmetric statics: 0.3193–0.3601 — decisively last.
-- Resolved pairwise: LR-dense-websearch vs bge-small −7.2 [−8.8,−5.7]; vs best static +7.2 [+5.2,+9.2]; per-task tables +2.6 [+2.0,+3.3]; leaf-asym vs teacher −1.1 [−1.5,−0.7]; leaf-asym vs leaf-sym unresolved (+0.3 [−0.2,+0.8]) → say "retains comparable quality", not "beats".
-- Costs: LR lookup 0.023 ms / 466 MB fp16 raw table (int8 233 MB, quality-free); OpenSearch query side 0.018 ms / 0.9 MB idf (doc-side postings cost measured separately, see reruns); 33M transformer ~5 ms / 66 MB fp16 / 1.3 s load; statics ~0.2 ms / 15–65 MB. Cost rows are not one number: query asset ≠ doc index ≠ hydration.
-
-## Rerun outcomes (2026-08-25, post-Codex)
-
-- Projection (fixed loaders, oracle λ): potion-8M→arctic-m best 0.3036; potion-32M→arctic-m best 0.3280, below its own symmetric 0.3427. Negative result is airtight: linear post-hoc alignment into a contextual doc space fails even with test-set-tuned regularization.
-- New resolved pairs (6-ds bootstrap): leaf-asym > bge-small +1.1 [+0.2,+2.0] p=0.016; opensearch > lr-hybrid-pertask +1.5 [+0.2,+2.8] p=0.022; opensearch ties gte-small (p=0.66); opensearch < bge-small −1.7 [−2.8,−0.7]; **lr-dense-websearch ties BM25** +1.5 [−0.1,+3.0] p=0.07; lr-dense < e5-small −2.2 p=0.003; hybrid adds +2.8 over dense (websearch).
-- ANN sweep: lookup-query vectors are harder for HNSW — LR default ef loses 2.1 nDCG on FiQA vs bge-small's 0.7; at ef=512 both mostly recover (−0.5 vs −0.2). TREC-COVID shows no visible ANN penalty (n=50).
-- OpenSearch doc-side postings (full vocab, 5K-doc sample): 233 nnz/doc mean → ~1.4 GB per 1M docs. Doc-index ladder per 1M docs: bge-small 0.77 GB (384d fp16) < opensearch 1.4 GB < leaf/arctic-m 1.54 GB (768d) < LR 3.07 GB (1536d).
-
-## Codex gate (2026-08-25) — verdict "not decision-grade yet"; all reruns executed
-
-Findings and dispositions:
-- BLOCKER 1 projection loader mismatch (trained on ST-wrapper potion, evaluated on model2vec-native vectors): FIXED — re-encoded with StaticModel end-to-end, refit with oracle-λ selected directly on test retrieval (strongest possible shot for the method). Rerun in `results/codex_reruns.log`.
-- BLOCKER 2 ±0.007 was 5-ds-derived, ladder overclaims: FIXED — headline reworded as groups; significance rerun on 6-ds with 21 pairs incl. all near-neighbors; p reported as bounds (p<2e-4).
-- MAJOR 3 LR sparse/hybrid unresolved reproduction: quarantined with explicit label.
-- MAJOR 4 Edge prototype proves query-path composition, not production storage/cold start: reworded; token shard as a default-indexed collection is the wrong storage shape (1.82 GB vs 466 MB raw fp16); load times labeled warm-cache.
-- MAJOR 5 ANN behavior measured for one system/corpus only: FIXED — ef sweeps rerun for bge-small (fiqa + trec-covid) and LR (trec-covid) in `results/ann_sweep.json`.
-- MAJOR 7 OpenSearch doc-side postings cost unmeasured: FIXED — full-vocab nnz/doc on 5K-doc sample → `results/opensearch_index_cost.json`.
-- MINOR 8/9/10 (p=0 as bound, cost definitions, LEAF wording): adopted.
-- Ship-scope per Codex: all comparative claims scoped to "the six named datasets"; no generalization to production workloads, million-scale, filtered search, or non-English.
+- [x] M0–M6 (2026-08-24/25): environment, research (`research/landscape.md`, `literature.md`, `methodology.md`, `sparse-inference-free.md`, `lightretriever.md`), the 21-system × 6-dataset matrix (`results/FINAL_MATRIX.md`, costs, significance), the two-collection Edge prototype, and the M6 report artifact (https://claude.ai/code/artifact/db771dd1-2d59-4c34-9d6e-70dd4d337d16). Headline numbers, rerun outcomes, the M2 Codex gate and the M1/M2 findings logs are archived verbatim in `research/m1-m6-findings.md`.
+- [x] M7 (closed 2026-08-29): **zero**, the int8 lookup table distilled from stella. Final run avg-6 **0.4339** vs `LR-dense-pertask` 0.4583 (CI-resolved miss); fused with BM25 0.4911, a statistical tie with OpenSearch 0.4868. Frozen and verified releasable (`m7/FREEZE.json`). Mandate `instructions-m7.md`, detail `m7/STATUS.md`, transferable lessons `m7/FINDINGS.md`. Teacher decision: stella_en_400M_v5, chosen on the distilled TABLE, not the tower (see Key decisions).
+- [x] M8 (closed 2026-08-30 as a measurement): twelve probes, no lever moved the table more than 0.005; no confirmatory access spent. `m8/FINDINGS.md`, `m8/EXPLORED.md`.
+- [x] M9 (closed 2026-09-01 as a measurement, six-set close-out pending): **nano**, bge-small distilled into stella's query space by L2 regression. Build stopped by the plateau rule at 3.74B tokens: SCREEN-3 0.5606 = **82.2% retention**, but **93.8% on NQ against 50–71% on the two CQADupStack components** — a coverage failure, not a capacity one. Aim (leaf-ir-asym 0.5155) and release bar (bge-small 0.5042) both need ≥88% on avg-6; projected miss. **Read `m9/FINDINGS.md`.** Mandate `instructions-m9.md`; recipe `m9/M92_LOCK.md`; runs `m9/RESULTS.md`; closed avenues `m9/EXPLORED.md`. The registered six-set transaction (`m9/FINAL_LOCK.md`) is executed on the frozen candidate as M9's close-out measurement only after M10's recipe lock is pushed (so it cannot inform an M10 decision), six-only (its reserved conditional struck by a ratified amendment), and once Dylan ratifies it; LoTTE stays unread for M10.
+- [ ] M10 (**next — retry of nano, planned 2026-09-01**): same pair, same bars, new recipe built around the coverage finding: millions of synthetic queries in the six's forms and beyond, FineWeb breadth, LEAF's small-batch cyclic schedule, a registered ranking-aware phase-2 loss, warm start from the M9 candidate. Mandate `instructions-m10.md`; evidence `m10/PLANNING.md`; status `m10/STATUS.md`.
+- [ ] M11: release the pair, ONNX port including the document model, fastembed integration, whitepaper. `instructions-m11.md` (was M10 before the 2026-09-01 renumbering).
+- [ ] M12 (noted, not scoped — Dylan, 2026-08-30): an IMAGE model. Edge workloads are largely vision, so the asymmetric premise has a bigger market there. Open: whether the query side is a lookup table at all, image→image vs text→image, which frozen document tower. Do not inherit the text architecture's assumptions; scope it when M11 lands.
 
 ## Standing directive: push for the best model, not a model (Dylan, 2026-08-26)
 
@@ -262,7 +183,7 @@ thoroughness; it is a tax levied on every session that follows.
 ## Verification gates (Dylan, 2026-08-24)
 
 Results dictate Qdrant engineering decisions: correct, not decimal-precise; blind spots stated openly.
-- M2 gate: adversarial Opus review of methodology + code + M2 numbers → `research/verification-m2.md`. (running)
+- M2 gate: adversarial Opus review of methodology + code + M2 numbers → `research/verification-m2.md` (done).
 - Pre-report gate: Codex second opinion on the full result set + report draft, briefed for pushback; findings reported verbatim.
 - Significance: paired bootstrap on key system pairs before the report; deltas within noise get labeled as such.
 - **Codex CLI is installed on the box** (`/usr/local/bin/codex`, 0.149.1). Invoke it read-only and
@@ -293,53 +214,8 @@ Results dictate Qdrant engineering decisions: correct, not decimal-precise; blin
 
 ## Key decisions (log)
 
-- **WITHDRAWN THE SAME DAY, on evidence: `arctic-embed-l` is worse than the teacher we already
-  have.** Ranked by the closed-form table distilled from it — the artifact that ships — arctic is
-  −0.0480 [−0.0608, −0.0349] below bge-base, and a teacher's own retrieval quality turns out not to
-  predict its distilled table at all (Spearman 0.000 over eight candidates). Only
-  **stella_en_400M_v5** beats the incumbent (+0.0365 [0.0249, 0.0481]). The teacher question is back
-  with Dylan because stella's disclosed training data covers 2 of our 6 eval datasets;
-  `m7/LEDGER.md` pre-registers a four-dataset primary comparison as the answer to that.
-  `results/m7_learnability_report.json`. The entry below records what was decided and why, and is
-  kept because the failure mode — selecting a teacher on the tower instead of on the table — is the
-  lesson.
-- **[SUPERSEDED THE SAME DAY — see the entry above; the teacher is stella_en_400M_v5.]**
-  **Teacher for M7 was `Snowflake/snowflake-arctic-embed-l` (Dylan, 2026-08-26).** Chosen on
-  measurement, not projection: best of five candidates on the two CQADupStack dev components
-  (+0.0447 [0.0339, 0.0557] over bge-base; arctic > stella +0.0125 [0.0008, 0.0241] raw, which
-  would NOT survive multiplicity over the ten pairs, so the top is arctic ~= stella), Apache-2.0,
-  and the only candidate whose MTEB registry entry discloses **zero overlap with our six** — stella
-  lists ArguAna and FiQA2018, 2 of the 6. Dylan ruled on the vendor question explicitly, because the
-  released table only works against its teacher's document vectors, so the doc side of a Qdrant
-  release would be Snowflake's model. `results/m7_teacher_probe.json`,
-  `results/m7_teacher_contamination.json`. The projection that had ranked stella first is not merely
-  imprecise on this evidence, it is wrongly ordered.
-
-- BEIR subset: SciFact, NFCorpus, FiQA-2018, ArguAna, SciDocs (100,785 docs total; all appear in LightRetriever's tables and on MTEB → like-for-like comparison possible).
-- Harness: hand-rolled — HF `datasets` (BeIR/* repos) + `pytrec-eval-terrier` + numpy brute force. `beir`/`mteb` packages skipped (their value is model wrappers we don't use). Title+text join: `(title + " " + text).strip()`. Python 3.12 venv, torch 2.13 MPS.
-- LightRetriever config: `lightretriever/lightretriever-qwen2.5-1.5b` (ungated, 3.1 GB bf16, fits 24 GB RAM). Paper BEIR-15: dense 48.9 / sparse 47.3 / hybrid 52.1. MPS gotchas: use `sdpa` not flash-attn, explicit bf16, no autocast.
-- Llama-based MRL adapter (dimension truncation) is gated on HF — skipped unless Dylan requests access. Mistral-7B variant ships a reference lookup table to validate our table construction against.
-
-## Findings (log, M2)
-
-- Harness validation (corrected per verification B2): 50 of 58 overlapping cells within 0.001 of official MTEB; 10 of 12 configs within 0.0005 on the 5-ds average. The ArguAna gap was self-hits: BEIR drops doc_id==query_id (`ignore_identical_ids`); harness now does too. Query prefixes stay on everywhere (empirically validated; an earlier prefix diagnosis was wrong, reverted).
-- Verification B1 (fixed): transformers 5.x loads checkpoints in their config dtype — granite ran bf16, gte fp16, non-comparable. dtype now pinned fp32 everywhere; both models' artifacts deleted for re-encode; caches carry meta.json (dtype/prefix/max_seq) and refuse stale reuse.
-- Verification B2 (fixed): potion models must be encoded with the native model2vec loader — it reproduces official FiQA to 5 decimals (0.187609 vs 0.18761); the sentence-transformers wrapper deviates +0.0027. Both potions re-encoded.
-- Verification B3 (adopted): every reported delta gets a bootstrap CI; ±0.007 resolution stated once in the report; sub-resolution orderings reported as ties. LEAF asym-vs-sym per-dataset signs disagree with the LEAF paper on 3/5 (ArguAna reversal significant, −1.07 [−1.91,−0.22]) → resolved: our composition is byte-identical to MongoDB/mdbr-leaf-ir-asym (sha256-verified: query tower, Dense 384→768, teacher doc tower, prompts). The ArguAna reversal is a genuine finding on this subset, reported as such.
-- Verification M1/M2 (adopted): 5-ds subset correlates with BEIR-15 at Spearman only 0.55 → adding TREC-COVID (171K docs; balances the subset: LightRetriever's best category) + BM25 baseline (done, 0.379). All "X beats Y" claims scoped to the named datasets in the report.
-- Verification N7 (adopted): report doc-side costs too — LightRetriever's 1536-dim index is 4x bge-small's 384-dim per doc; index bytes/doc + encoding throughput go in the frontier table.
-- Remaining from verification: M9 sparse-mask ablation on SciFact (paper's reference doesn't mask padding; we do), M5 headline = single websearch table (per-task tables reported as oracle upper bound), MI8 ArguAna truncation caveat.
-- OpenSearch doc-v3-gte (2026-08-25): validated against its card ≤0.004 on 4/5 datasets; the card's SCIDOCS 0.455 is wrong (measured 0.1686, consistent with sibling models — use ours). 5-ds avg 0.4375: **best zero-query-compute system on this subset**, above LR hybrid per-task (0.4225) and LR hybrid websearch (0.4144), with a 133M doc encoder and Qdrant-native sparse output.
-- LR sparse reproduction (2026-08-25): our sparse runs −3 to −5 nDCG under the paper (scifact 0.631 vs 0.664). Tested and excluded: padding mask before amax (masked 0.6306 vs unmasked 0.6272 — not the cause), doc-token-restricted pooling flags (all default False in their args). Cause not isolated; capped per "correct, not decimal" — dense reproduces faithfully, sparse/hybrid reported as "our reproduction, conservative under-estimate" with this caveat. Hybrid per-task 0.4225 (paper 0.4374); hybrid-websearch 0.4144. int8 table is quality-free (0.4117 vs 0.4114) and halves the fp16 table.
-- M3 root-cause fix (2026-08-25): first LR dense run was −4pt avg vs paper (ArguAna −11.8). Cause: lookup tables built without `<|bos|>`. The shipped adapter tokenizer bakes `<|bos|>…<|endoftext|>` into add_special_tokens=True (base Qwen adds nothing), so the reference's bos check fires — table rows must be `[bos]+prompt+[tok]+[eos]`. Partial-table A/B (diag_bos.py): scifact 0.642→0.663 (paper 0.665), arguana 0.394→0.518 (0.512), scidocs 0.147→0.176 (0.181). Reproduction faithful after fix. No-bos tables archived in `artifacts/…/tables-nobos/`. Doc encoding was always correct (post-processor adds bos/eos there).
-- 2026-08-24 machine OOM incident: full-vocab fp32 logits in the sparse doc encoder + two concurrent MPS jobs exhausted 24 GB RAM (macOS killed jobs, Dylan saw the out-of-memory dialog). Fixed: sparse projection restricted to per-dataset query-token columns, batch cap 32, MPS watermarks (HIGH 0.7 / LOW 0.5 — both must be set, high-only crashes), strictly sequential jobs. Docker Desktop holds ~17 GB for Dylan's own containers; not touched.
-
-## Findings (log, M1)
-
-- LightRetriever lookup table ≠ input embedding matrix: each vocab token is forwarded through the full trained model ([bos]+instruction+token+[eos], take EOS hidden state). Using the raw embedding matrix instead costs −11.2 BEIR (paper ablation A2). Tables are per-instruction.
-- Paper headline numbers are hybrid (dense+sparse); dense-only (what the pure two-collection edge architecture gives) is 2–3 pts lower. But LightRetriever's sparse query side is also zero-compute (token counts) → hybrid on Qdrant Edge is plausible.
-- Inference-free sparse SOTA: `opensearch-neural-sparse-encoding-doc-v3-gte` (133M doc encoder) BEIR-13 avg 0.546; SPLADE-v3-doc 0.517. BM42 disqualified (query-side attention). miniCOIL lacks comparable BEIR numbers and needs per-token multi-vectors.
-- LEAF asymmetric verified: docs via teacher `Snowflake/snowflake-arctic-embed-m-v1.5` (109M), queries via `MongoDB/mdbr-leaf-ir` (23M) = 54.03 BEIR-en (beats symmetric-either). Packaged as `MongoDB/mdbr-leaf-ir-asym`.
-- Best small symmetric (MTEB v1 BEIR-en): arctic-embed-s 51.98, bge-small-en-v1.5 51.68, granite-small-english-r2 50.9. Best static: potion-retrieval-32M 35.06 MTEB-Ret.
-- Literature: no LightRetriever successor; ScalingNote (industry) 29M query tower keeps 99% R@50 vs 7B teacher; DeepMind LIMIT gives formal single-vector ceiling; "static model + linear map into frozen big-doc space" appears unpublished → candidate original experiment.
-- ArguAna queries avg 193 words (counter-argument retrieval) — stress case for bag-of-tokens query encoders; expect LightRetriever to lose there.
+- **Teacher = `NovaSearch/stella_en_400M_v5` (2026-08-26), chosen on the distilled table, not the tower.** `arctic-embed-l` had been picked the same morning on its own dev retrieval quality (+0.0447 over bge-base) and was **WITHDRAWN the same day**: ranked by the table distilled from it, arctic sits −0.0480 [−0.0608, −0.0349] below bge-base, and a teacher's own quality does not predict its table (Spearman 0.000 over eight candidates). Only stella beat the incumbent (+0.0365 [0.0249, 0.0481]). Stella discloses ArguAna and FiQA (2 of the six) and FEVER (1 of the reserved four) in its training data; every stella-based claim carries that qualification and the NDO-4 rows. `results/m7_learnability_report.json`, `results/m7_teacher_contamination.json`. Kept because the failure mode — selecting a teacher on the tower — is the lesson. M9 re-confirmed it for towers: stella-1.5B distils WORSE than stella-400M (−0.0023 at equal dose).
+- **Clean data stack (2026-08-25):** MS MARCO permanently excluded from anything released (non-commercial terms; priced at +0.0058 [−0.0015, +0.0131] on the six — not what the miss is made of). CC BY-SA sources (NQ, SQuAD, HotpotQA, FEVER, MIRACL, Mr.TyDi) approved with model-card attribution. FineWeb approved 2026-08-30 as document-side regression text (ODC-By, fingerprint-screened); the M10 mandate records its wider use. `research/m7-data-licensing.md`.
+- **Reserved four** (FEVER, DBpedia-entity, cqadup-android, cqadup-english): one confirmatory access, unspent through M9. **`results/perquery.json` is irreplaceable** — frozen comparator vectors regenerated from caches that no longer exist. Never overwrite it.
+- **Renumbering 2026-09-01 (Dylan):** M10 becomes the nano retry; release/port/whitepaper moves to M11; the image model to M12.
+- Harness, BEIR subset, LightRetriever reproduction details and the M1/M2 findings: `research/m1-m6-findings.md`.

@@ -39,6 +39,6 @@ a premise that has already been tested. Every row is a thing M9 deliberately did
 
 | avenue | why closed | reopens if |
 |---|---|---|
-| **fp16 ONNX parity threshold** | the shipped fp16 graph scores 0.99953 against a locked 0.9999. Recorded as a **fail** rather than re-thresholded after seeing the number — the threshold was written for same-precision export fidelity, not for a precision change | M10, with a **preregistered retrieval-impact tolerance** measured before the number is seen, the way M7 priced its int8 table as quality-free |
+| **fp16 ONNX parity threshold** | the shipped fp16 graph scores 0.99953 against a locked 0.9999. Recorded as a **fail** rather than re-thresholded after seeing the number — the threshold was written for same-precision export fidelity, not for a precision change | M11 (the port milestone), with a **preregistered retrieval-impact tolerance** measured before the number is seen, the way M7 priced its int8 table as quality-free |
 | **TurboQuant (int4) benchmarks** | Dylan's ruling: it is Qdrant's preferred method and belongs in the whitepaper's all-in comparison against binary/int8/fp16 on latency, footprint *and* recall — not piecemeal now | the whitepaper. 1M documents is the confirmed upper bound |
 | **Recall under quantization** | measured nowhere on the Mac by design: device-dependent numerics mean quality numbers come from one machine. The Mac established the *cost* side of the trade | the training box, against the real stella index, once nano exists |

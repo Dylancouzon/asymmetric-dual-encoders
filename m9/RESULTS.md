@@ -85,14 +85,14 @@ The 1 − 1e-4 threshold was registered for **torch-versus-ONNX export fidelity 
 precision**, and it passes there by four orders of magnitude. It is then being applied to a
 **precision change**, where 0.99953 is ordinary fp16 rounding on a 33M model, not an export defect.
 The threshold is not moved after seeing the number — that is the one thing the protocol forbids —
-so the pilot stands as a fail and the decision goes to M10 with three facts:
+so the pilot stands as a fail and the decision goes to M11 (the port milestone) with three facts:
 
 1. fp32 passes every fidelity conjunct and **misses the size target** (135.6 MB vs 70 MB).
 2. fp16 **meets** the size target and fastembed registration, and misses a cosine threshold written
    for a different comparison.
 3. The measurement that should decide this is not a cosine at all: it is **whether the fp16 graph
    changes retrieval**. Register a macro-shift threshold on SCREEN-3 *before* measuring it, the way
-   M7 priced its int8 table as quality-free (0.4117 vs 0.4114). That is an M10 task; M9 does not
+   M7 priced its int8 table as quality-free (0.4117 vs 0.4114). That is an M11 task; M9 does not
    get to invent a threshold tonight for a number it has already seen.
 
 ### `m9s1b` — seed sensitivity (reported, read by no rule)
@@ -111,7 +111,7 @@ Both are well under the 0.0056 decision threshold, which is reassuring but prove
 over K = 2 is one half-normal draw, not an estimate of σ (`m8/CODEMAP.md` pitfall 18). It is why
 this number is **reported beside** every contrast and never **read by** one.
 
-## M10 port risks, retired early
+## M11 port risks, retired early (M11 = the release/port milestone after the 2026-09-01 renumbering)
 
 | question | answer |
 |---|---|

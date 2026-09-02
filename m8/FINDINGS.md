@@ -2,7 +2,7 @@
 
 **M8 closed 2026-08-30 as a MEASUREMENT. No candidate, no release, no confirmatory access spent;
 the reserved four are clean for M9.** Twelve probes ran. This file is what M8 is *for*: the map of
-where the quality is not, written for the M10 whitepaper and for anyone training the next model in
+where the quality is not, written for the M11 whitepaper and for anyone training the next model in
 this harness. Numbers live in `results/m8_*.json`; this is the reading of them.
 
 ---

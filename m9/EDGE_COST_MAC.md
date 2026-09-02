@@ -59,5 +59,5 @@ p50 **18.2 ms**, p95 **27.1 ms**, cold load **82 ms**, shipped **47.0 MB**.
 ## Report back
 
 The one-line summary the script prints per model, and confirmation that the JSON is pushed. If
-`mdbr-leaf-ir` errored, paste the error — it is useful for M10's port, which has to ship a
+`mdbr-leaf-ir` errored, paste the error — it is useful for M11's port, which has to ship a
 comparator row.
