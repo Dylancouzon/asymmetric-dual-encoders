@@ -8,6 +8,8 @@
 | `rank_probe_mix.py` | the same from caches, with bases fit on NQ, the other component, mixtures, oracle | same file, `mixture_bases_1024d` |
 | `head_width_probe.py` | frozen bge-small + ridge head to stella targets with 384 / 768 / 1152-d pooled features | `results/m10_head_width_probe_mac.json` |
 | `head_width_parity.py` | ONNX export of the per-token three-layer head; fastembed serving parity | `results/m10_head_width_parity_mac.json`, `work/m10onnx/nano-3layer/` |
+| `forms.py` | the 12 synthetic-query form prompts, output contract and parser (self-check in `__main__`) | — |
+| `m10/report-draft.html` | source of the owner report artifact (https://claude.ai/code/artifact/fce61c94-5444-4c78-bb2e-46112cb7547a); republish from a session, never edit the live page | — |
 
 ## Pitfalls this milestone earned
 

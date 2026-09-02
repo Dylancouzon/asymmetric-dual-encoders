@@ -2,8 +2,8 @@
 
 *Written 2026-09-01 by the planning session on Dylan's direction ("M9 failed to achieve our goals
 … make M10 a retry … build something unimpeachable by competitors"). Evidence `m10/PLANNING.md`;
-M9's record `m9/FINDINGS.md`. Adversarial review: gpt-5.6-terra, read-only, three passes
-(`research/m10-codex-plan-2026-09-01.md`, `-plan2-`, `-plan3-`, `-plan4-`; full logs are gitignored `.log` files beside them); every finding and its
+M9's record `m9/FINDINGS.md`. Adversarial review: gpt-5.6-terra, read-only, five passes
+(`research/m10-codex-plan-2026-09-01.md`, `-plan2-` … `-plan5-`; full logs are gitignored `.log` files beside them); every finding and its
 disposition is in PLANNING §8. The M9 model is **nano**; M7's table is **zero**; the product is
 still the pair on one stella index.*
 
@@ -26,8 +26,10 @@ mechanism, M10 controls. Read `m8/CODEMAP.md` and `m9/CODEMAP.md` before writing
 
 M9's candidate retains **93.8%** of the teacher on NQ and **50–71%** on the two CQADupStack dev
 components (`m9/FINDINGS.md` §1). The thesis: the 463K-query pool (all Wikipedia QA and product
-search, longest query 108 words) did not cover the forms the model is tested on, and the student
-had the capacity. **The thesis is tested before anything is built** (§Screen family A), and the
+search, longest query 108 words) did not cover the forms the model is tested on; and, found on the
+Mac while planning (M10.0-a), the 384-wide linear head is the subspace L2 regression could not
+push past once queries are diverse. The student's parameter count is not the constraint. **The
+thesis is tested before anything is built** (§Screen family A), and the
 test's reach is stated: it covers the query families the COV surface contains (§Surfaces), and
 the six-set transaction remains the only test of the forms COV lacks. M10 changes, in order of
 evidence:
@@ -225,8 +227,10 @@ top-64 on the smoke sample (≥ 0.98 required) and the method recorded in the ma
 ## Screen — seven families, thirteen contrasts, locked at M10.0-e
 
 **Screen dose = 2.5M examples** (5% of the build; ≈ 209M tokens ≈ 3 h per arm at 75/25 and
-18,984 tok/s), full 3-cycle schedule compressed to that dose, one seed, identical evaluation.
-Throughput is recorded for every arm and decides nothing. Order: A, B, C, D, E, F, G.
+18,984 tok/s), full 3-cycle schedule compressed to that dose, one seed, identical evaluation:
+**COV at every cycle end; DEV-6 once, at the final checkpoint** (its 5.2M-document hotpotqa and
+6.17M-row heldout components cost ~13 GB of reads per pass — M9's practice). Throughput is
+recorded for every arm and decides nothing. Order: A, B, C, D, E, F, G.
 **Anchor** = the full M10 corpus (A3's data), mix 75/25, bge-small init, L2 only, bs 32, 1152-d feature.
 
 | family | arms | contrasts | rule and default |
@@ -281,9 +285,10 @@ report's sense.
 - **FORMS-12**: 12 × 500 held-out synthetic queries, overlap@10 between student and teacher
   rankings over the 1M bank, per form. **Descriptive only** — teacher agreement on generated
   queries is a coverage diagnostic, not retrieval quality.
-- **LoTTE-clean** (7 slices, macro over slices): **read #1** after the recipe lock. Before LoTTE
-  opens, the **selected recipe is trained once as a single synthesized arm at screen dose** (its
-  checkpoint hash committed); read #1 scores that checkpoint and the anchor's in one atomic batch.
+- **LoTTE-clean** (7 slices, macro over slices; its corpora — ~2.8M passages — are encoded with
+  stella once, ≈ 4 h on the RTX 3080, budgeted in PLANNING §5): **read #1** after the recipe lock.
+  Before LoTTE opens, the **selected recipe is trained once as a single synthesized arm at screen
+  dose** (its checkpoint hash committed); read #1 scores that checkpoint and the anchor's in one atomic batch.
   Veto rule (M9 §7, unchanged): the selection is vetoed if the selected recipe's 7-slice macro is
   worse than the anchor's by more than 0.004 AND the one-sided 97.5% paired-bootstrap upper bound
   (B = 10,000, seed 903, paired within slice) on (selected − anchor) is below −0.004; a veto means

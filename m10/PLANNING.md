@@ -92,6 +92,9 @@ table: dev out-of-domain 0.764 vs six 0.755).
   tokens ≈ 1.9 days**, plus the synthesized selected-recipe arm for LoTTE read #1 (0.2–0.5B).
   Family G adds two arms (+0.42B) and up to one more confirmed decision (+0.84B): screens ≈ 1.6 days,
   confirmations worst case ≈ 3.9B tokens ≈ 2.4 days. Screens total ≤ 4.5 days on the box.
+- Surfaces to encode once with stella: COV corpora (MedicalQA 2K, BRIGHT a few K per slice,
+  CorporateLobbying 319; LEDGER depends on its chunking, capped at 100K chunks) ≈ minutes to 1 h;
+  LoTTE-clean ≈ 2.8M passages ≈ **4 h** at 210 docs/s. Neither existed on the box before.
 
 ## 6. Compute plan
 
