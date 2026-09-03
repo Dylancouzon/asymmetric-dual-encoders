@@ -4,7 +4,15 @@ Question: is "a dense token→vector lookup table trained end to end against a f
 
 Two distinguishing axes; a candidate has to fail one of them to leave the claim standing. **(a)** the document tower is frozen and off-the-shelf — not co-trained, not a checkpoint then trained further. **(b)** the query-side rows are **dense vectors** read from a trained lookup table — not scalar term weights, not sparse lexical scores, not a live transformer or a per-query optimization.
 
-**Verdict, re-swept 2026-08-28 before the freeze: still no published construction matching both axes — but the field moved closer, and the defensible phrasing is "we found none", not "this is unprecedented."** The re-sweep ran a freshness pass *and* a deliberate falsification pass (nine adversarial query families, listed below). It found one construction that clears axis (a) outright and misses (b) on the representation, not on the ambition.
+**VERDICT WITHDRAWN 2026-09-03. pyNIFE matches both axes and predates the sweep by ten months** (§pyNIFE below). The text under the old verdict is kept because the rest of the survey stands.
+
+## pyNIFE — the claim is defeated (found 2026-09-03)
+
+**github.com/stephantul/pynife**, Stephan Tulkens, PyPI 0.1.0 on **2025-11-03**, MIT, Zenodo DOI 10.5281/zenodo.17512919. Axis (a) passes: the teacher (`mxbai-embed-large-v1`, `gte-modernbert-base`) is off-the-shelf, frozen, and the index is reused unchanged. Axis (b) passes: dense per-token rows in a lookup table, initialized by forwarding each vocabulary token through the teacher, then trained end to end by cosine distillation. Two published models, NanoBEIR nDCG@10 59.2 for both against teachers at 65.6 and 66.34. This is `zero`'s construction, published before M7 started. **Every novelty sentence in the report and the whitepaper has to go**; the defensible claims left are the measurement (six BEIR sets, exact search, frozen comparators, reserved sets, pre-registered statistics against NanoBEIR's 50 queries per set), the artifact constraints (30,522 rows int8 at 93.9 MB, no MS MARCO in the lineage against theirs in tokenizer, documents and queries), and the pair with `nano` on one index.
+
+**Why the sweep missed it:** no arXiv paper, no HF model-card language matching the query families, and the searches were phrased for papers and model releases. A GitHub/PyPI/Zenodo release is a publication. Future freshness passes search PyPI and GitHub by construction, not only arXiv and HF.
+
+**Old verdict, 2026-08-28, superseded:** no published construction matching both axes — but the field moved closer, and the defensible phrasing is "we found none", not "this is unprecedented." The re-sweep ran a freshness pass *and* a deliberate falsification pass (nine adversarial query families, listed below). It found one construction that clears axis (a) outright and misses (b) on the representation, not on the ambition.
 
 ## Re-sweep 2026-08-28 — what changed
 

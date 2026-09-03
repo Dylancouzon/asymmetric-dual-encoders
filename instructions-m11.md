@@ -25,7 +25,15 @@ M11 ships no new science. It turns two frozen artifacts into a product and a pap
    real trained artifacts have never been exported. Export and parity-verify all three: zero's query
    path, nano, and the document tower. §11.4 tolerances: 1e-4 min-cosine, 1e-3 max-abs.
 
-3. **fastembed integration** for both query-side models.
+3. **fastembed integration** for both query-side models. **The bar is a stock loader**: a user
+   names the model in fastembed and gets the query path, with no custom encoder file to copy and no
+   `pynife`-equivalent package to install first. pyNIFE clears this bar by shipping a plain
+   sentence-transformers Router (41 ms load, teacher and student swap at the call site); `zero`
+   currently needs `release/zero_encoder.py`, which is 89 lines the user has to obtain and trust.
+   Same test on both sides of the pair: register `zero` and `nano` so the document tower and the two
+   query paths are selectable by name against one index. The two release traps in `m11/STATUS.md`
+   (stella's `config_kwargs`, its padding-to-512 tokenizer) are the ones an integration will hit.
+
 
 4. **Whitepaper.** Primary source: `m8/FINDINGS.md` (the negative map and the method learnings) plus
    `m8/EXPLORED.md` (closed avenues, each with its reopening condition), M7's `FINAL_MATRIX.md`,
@@ -35,6 +43,16 @@ M11 ships no new science. It turns two frozen artifacts into a product and a pap
    which repairs do *not* work and why. The strongest single result to carry: fragmentation
    correlates with the gap (0.050 nDCG per +1.0 subwords/word, t = 4.61) and yet moving fertility by
    0.164–0.176 moved the metric not at all. **A correlated channel is not a lever.**
+
+   **Novelty claims are withdrawn — `research/m7-novelty.md` §pyNIFE.** pyNIFE (MIT, PyPI
+   2025-11-03) is `zero`'s construction, published before M7 started, and the 2026-08-25/28 sweep
+   missed it by searching arXiv and HF rather than PyPI and GitHub. The paper claims what is still
+   ours: the measurement standard, the artifact constraints, and the pair on one index. Cite pyNIFE
+   as prior art and read its NanoBEIR rows as independent corroboration of M8 — both their models
+   land on 59.2 regardless of teacher, which is their ceiling reading of our Spearman 0.000 between
+   teacher quality and table quality. Their caveats section states the mechanism our M9 coverage
+   failure is a symptom of, and states it better than we currently do: a static query path cannot
+   attenuate a token by context, and cannot represent negation, because no token sees another.
 
 ## Standing constraints
 
