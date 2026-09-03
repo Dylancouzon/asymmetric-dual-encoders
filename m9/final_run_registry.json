@@ -114,6 +114,6 @@
   "unrestricted"
  ],
  "headline_verbatim": "the selected-teacher-document + nano-query asymmetric system outperformed the arctic-document + leaf-query system on the six development-informed datasets in our exact-search harness",
- "origin_url": "https://github.com/Dylancouzon/asymetric-dual-encoders.git",
- "_origin_note": "the spend receipt's external witness. Pinned so repointing `origin` cannot manufacture an 'unspent' verdict (Codex final9 review, blocker 2)."
+ "origin_url": "https://github.com/Dylancouzon/asymmetric-dual-encoders.git",
+ "_origin_note": "the spend receipt's external witness. Pinned so repointing `origin` cannot manufacture an 'unspent' verdict (Codex final9 review, blocker 2). RE-PINNED 2026-09-03: the GitHub repository was renamed (was https://github.com/Dylancouzon/asymetric-dual-encoders.git); same repository, spelling corrected upstream. A factual correction to a URL, not a change to any decision rule, bar, statistic or estimand. Derived from `git remote get-url origin`, never hand-written, so the pin cannot disagree with the remote it witnesses."
 }
