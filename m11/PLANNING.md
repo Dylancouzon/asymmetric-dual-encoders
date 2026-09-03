@@ -104,6 +104,7 @@ Ruled 2026-09-03 (Dylan): edit, and state the deviation in both cards.
 | `model_tokens` + masked mean + L2 == `model.onnx` | 2.77e-08 |
 | literal `[PAD]` / `[CLS]` / `[SEP]` / `[UNK]` / `[MASK]` | 1.49e-08 |
 | 13 edge cases at b=1 (lengths 511/512/513, unmappable scripts, 120-char word, …) | 5.96e-07 |
+| 8 **raw id vectors** — `[unused*]` ids, lengths 510/512, repeat+unique mix, last table row, `[UNK]` alone | 1.19e-07 |
 | permutations of one bag agree | 1.49e-08 |
 | all-masked row returns the `[CLS]` fallback | **0.0** |
 | cost, 1 thread | s=8 **0.047 ms**, s=512 **1.22 ms** |
@@ -123,6 +124,15 @@ sit in a padded batch (so its id-0 position counts the batch's padding zeros). C
 
 So the check guards a graph-construction error with no user-facing consequence. Keep it — it is
 two lines and it pins the count semantics — but do not cite it as a caught production risk.
+
+Gate 6's list named three cases text cannot reach — `[unused*]` ids (1–99, unreachable by any
+tokenization), length 510, and a 512-length repeat+unique mix — so those go through raw id vectors
+compared against `_encode_ids`, which is the frozen rule itself.
+
+**Gate 7's cost row is only half done, and the other half is blocked on T4.** The ONNX graph
+latency is measured and published (0.047 ms at s=8, 1.22 ms at s=512, one thread). The
+*fastembed end-to-end* figure the plan asks for cannot be measured until fastembed actually serves
+the graph, which is T4. Until then the card's 0.38 ms row remains the numpy path, labelled as such.
 
 Two deviations from the plan, both deliberate:
 - **The ONNX graphs are not optional.** `--with-onnx` was removed: the card documents the files, so

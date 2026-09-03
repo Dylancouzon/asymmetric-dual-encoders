@@ -59,7 +59,12 @@
    "pass": true
   },
   {
-   "detail": "s=8 0.046 ms   s=512 1.148 ms",
+   "detail": "max-abs 1.192e-07 on len=510 head=[23703, 29252, 18659, 21869]",
+   "name": "11 8 raw id vectors (unused ids, 510/512, repeat+unique)",
+   "pass": true
+  },
+  {
+   "detail": "s=8 0.044 ms   s=512 1.164 ms",
    "name": "8 cost row measured",
    "pass": true
   }
@@ -77,8 +82,8 @@
  "eps": 1e-06,
  "fallback_max_abs": 0.0,
  "latency_ms_1thread": {
-  "s=512": 1.148494520020904,
-  "s=8": 0.04551625999738462
+  "s=512": 1.1640143000113312,
+  "s=8": 0.04424623999511823
  },
  "negative_control": {
   "dev_queries_max_abs": 3.725290298461914e-08,
@@ -88,6 +93,11 @@
  "pad_fixtures_max_abs": 1.4901161193847656e-08,
  "pass": true,
  "permutation_max_abs": 1.4901161193847656e-08,
+ "raw_id_vectors": {
+  "max_abs": 1.1920928955078125e-07,
+  "n": 8,
+  "worst": "len=510 head=[23703, 29252, 18659, 21869]"
+ },
  "source_table_sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
  "tokens_route_max_abs": 2.7707628288964337e-08
 }

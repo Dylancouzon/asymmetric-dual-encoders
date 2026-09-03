@@ -291,6 +291,34 @@ def main():
     checks.append(("10 count-mask is load-bearing (defective graph fails 5)",
                    bad_d > 1e-5, f"defective: [PAD] {bad_d:.3e} vs dev {bad_dev:.3e}"))
 
+    # 11 -- raw id vectors. Some of the plan's named edge cases cannot be reached through text at
+    # all: [unused*] ids (1-99 in this vocab) are unreachable by any tokenization, and a
+    # 512-length mix of repeats and uniques is awkward to write as a sentence. Both paths take
+    # ids here -- `_encode_ids` IS the frozen rule -- so the comparison stays honest.
+    rng = np.random.default_rng(0)
+    raw = [
+        [101, 1, 2, 3, 99, 102],                              # [unused0..] ids
+        [101] + [5] * 8 + [102],                              # one unused id, saturated
+        [101] + list(rng.integers(1, 30522, 510)) + [102],    # 512, mostly unique
+        [101] + ([7] * 200 + list(rng.integers(1, 30522, 310))) + [102],   # repeat+unique at 512
+        [101] + [30521] * 4 + [102],                          # last row of the table
+        list(rng.integers(1, 30522, 510)),                    # 510, no specials
+        [101, 102],                                           # specials only
+        [100],                                                # [UNK] alone
+    ]
+    worst11, which11 = 0.0, None
+    for ids_list in raw:
+        L = len(ids_list)
+        ids = np.asarray([ids_list], np.int64)
+        mask = np.ones((1, L), np.int64)
+        g = sess["model.onnx"].run(None, {"input_ids": ids, "attention_mask": mask})[0][0]
+        d = float(np.abs(g - enc._encode_ids(ids_list)).max())
+        if d > worst11:
+            worst11, which11 = d, f"len={L} head={[int(i) for i in ids_list[:4]]}"
+    res["raw_id_vectors"] = {"n": len(raw), "max_abs": worst11, "worst": which11}
+    checks.append((f"11 {len(raw)} raw id vectors (unused ids, 510/512, repeat+unique)",
+                   worst11 <= 1e-5, f"max-abs {worst11:.3e} on {which11}"))
+
     # 8 -- cost: the S x S count term is not free
     cost = {}
     for label, text in (("s=8", qs[0]), ("s=512", " ".join(["retrieval augmented"] * 400))):
