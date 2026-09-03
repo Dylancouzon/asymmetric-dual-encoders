@@ -185,8 +185,11 @@ Gates → `results/m11_zero_export.json`, each recording the achieved number and
 
 ## T3 — document tower
 
-Export exists (`work/m9onnx/stella-400M-doc/`, `results/m9_doc_export.json`: opset 17, no custom
-ops, fp32 min-cos 0.99999940). Four gaps, all blocking publication:
+Export exists and the artifacts ARE on this box (verified 2026-09-03): `work/m9onnx/stella-400M-doc/`
+holds `model.onnx` 1.75 GB, `model_fp16.onnx` 875 MB, and stella's four tokenizer files —
+**`config.json` and `model_tokens.onnx` are both absent**, as the gaps below say.
+`results/m9_doc_export.json`: opset 17, no custom ops, fp32 min-cos 0.99999940. **Five gaps**, all
+blocking publication:
 
 - **`model_fp16.onnx` FAILS the mandate tolerance**: measured max-abs **1.37e-3**, min-cos
   **0.99970**, output norms 0.9997–1.0004 — the final normalize ran in fp16. The recorded `pass:
@@ -199,6 +202,16 @@ ops, fp32 min-cos 0.99999940). Four gaps, all blocking publication:
 - **Recorded fp32 parity used word salad** from a 20-word vocabulary (`export_doc_model.py:30,34`),
   n=40, never real text. Re-run on real passages. Good news, measured: fp32 batch invariance is
   exact, and fixed-512 padding gives bit-identical output, so the attention mask survived export.
+- **T1 applies here too, unchanged.** The directory carries stella's tokenizer verbatim:
+  `model_max_length: 32768`, `max_length: 8000`, `padding: Fixed(512)`. The document index was
+  built at 512 (`FREEZE.json:encoder_spec`), so a fastembed caller would mistruncate documents of
+  513–8000 tokens — **worse here than on the query side, where long inputs are rare**. Reuse
+  `push.sanitise_tokenizer`.
+
+Reusable from T2: `push.py`'s gate structure and `verify_tokenizer.py` apply as-is to a second
+repo; `export_onnx.py` does not — that graph is hand-built from a table, this one is a torch
+export. Budget for the size: 1.75 GB through LFS, and the repo is NEW and PUBLIC (Amendment A
+ruling 2), so the name is a decision to make and record.
 
 Card must carry: `base_model: NovaSearch/stella_en_400M_v5` and the pinned revision `ffeb2b7e…`;
 **the Apache-2.0 lineage** — stella is trained from `Alibaba-NLP/gte-large-en-v1.5` and its

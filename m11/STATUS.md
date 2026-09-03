@@ -85,8 +85,24 @@ published until T0 and T1 land.**
 | T2 zero query path → ONNX | **DONE** 2026-09-03 — two opset-17 graphs, 10 checks, parity 4.47e-08 on 1,024 real dev queries; live at `fb8e5c5b`. `m11/PLANNING.md` §T2, incl. the measurement that the count-mask defect is unreachable by real text (0/7,325 dev queries produce id 0) |
 | T3 doc tower publish (PUBLIC, new repo) | fp32 passes; **fp16 fails §11.4 (1.37e-3)**, no `config.json`, no `model_tokens.onnx` |
 | T4 fastembed fork branch, no PR | fork cloned to `/home/dylan/fastembed`; **upstream 0.8.0 regression found and fixed** on branch `fix-fixed-padding-ragged-batch` (breaks `thenlper/gte-base`), reported as qdrant/fastembed#703 — T4 runs against that branch |
-| T5 card fixes | `MODEL_CARD.md:90` raises; must not go public as-is |
+| T5 card fixes | **DONE** 2026-09-03 — the raising snippet fixed, ONNX usage block added, the by-caller tokenizer table and cost rows corrected; gate 6 executes every block |
 | flip `zero` PUBLIC | **moot** — already public since the first push (see the correction above). `push()` now detects this, says so, and does not pretend to have published privately first |
+
+## Next session starts here (2026-09-03)
+
+**T0, T1, T2 are done, pushed, and live.** Working tree clean on `m11-work`. `zero` is at HF head
+`1cfae6cc`, 10 files, PUBLIC, byte-verified. Re-check anything with:
+
+    .venv/bin/python m11/release/push.py --build --gates    # 8 gates, uploads nothing
+    .venv/bin/python m11/release/test_gates.py              # 14 checks, must all hold
+    .venv/bin/python m11/release/export_onnx.py --check     # 11 ONNX parity checks
+
+**Next is T3** (`m11/PLANNING.md` §T3): five gaps, artifacts confirmed present on this box.
+Then T4 (fastembed, fork branch only, no PR) and T5 (done — folded into T2's card work).
+
+**Read `§Scope note` below before adding any gate or test.** Two adversarial reviews produced a
+malicious-actor threat model; the rollback to the accident model is Dylan's explicit instruction,
+not a shortcut.
 
 ## Open
 
