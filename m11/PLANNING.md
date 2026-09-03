@@ -195,6 +195,13 @@ fix the reported case (128 < 512 is unchanged); forcing `length = truncation` pa
 
 **T4 must run against this branch, not released 0.8.0** — that is the point of fixing it first.
 
+**Blast radius, audited 2026-09-03:** of the 34 `TextEmbedding` models with an HF source, four ship
+fixed padding and **only `thenlper/gte-base` has it below its truncation limit** (128 vs 512);
+`gte-large`, `all-MiniLM-L6-v2` and `siglip2-base-patch16-224` are padding == truncation and fine.
+The sparse/late-interaction/cross-encoder/multimodal registries were not audited. **The exposed
+population is `add_custom_model` repos** — which is how we hit it, and why this matters to us more
+than the supported-model count suggests.
+
 **Reported upstream as qdrant/fastembed#703** (2026-09-03, Dylan's go), Codex-reviewed before
 filing. The issue offers a PR but does not open one; **PR scope remains undecided**. Codex's review
 also caught a bug in the first patch — `padding.get("pad_token", tokenizer_config["pad_token"])`
