@@ -82,7 +82,7 @@ published until T0 and T1 land.**
 |---|---|
 | T0 bind the release path | **DONE** 2026-09-03 — 9 gates on a build snapshot; Codex reviewed the fix and broke it, all 9 findings actioned; `test_gates.py` proves 13 attacks refused |
 | T1 sanitise tokenizer (`zero` repo) | **DONE** 2026-09-03 — `push.sanitise_tokenizer`; gate 8 measures what fastembed's own loader gets; the doc-tower repo still needs the same edit under T3 |
-| T2 zero query path → ONNX | **DONE** 2026-09-03 — two opset-17 graphs, 10 checks, parity 4.47e-08 on 1,024 real dev queries; live at `fb8e5c5b`. `m11/PLANNING.md` §T2 |
+| T2 zero query path → ONNX | **DONE** 2026-09-03 — two opset-17 graphs, 10 checks, parity 4.47e-08 on 1,024 real dev queries; live at `fb8e5c5b`. `m11/PLANNING.md` §T2, incl. the measurement that the count-mask defect is unreachable by real text (0/7,325 dev queries produce id 0) |
 | T3 doc tower publish (PUBLIC, new repo) | fp32 passes; **fp16 fails §11.4 (1.37e-3)**, no `config.json`, no `model_tokens.onnx` |
 | T4 fastembed fork branch, no PR | fork cloned to `/home/dylan/fastembed`; **upstream 0.8.0 regression found and fixed** on branch `fix-fixed-padding-ragged-batch` (breaks `thenlper/gte-base`), reported as qdrant/fastembed#703 — T4 runs against that branch |
 | T5 card fixes | `MODEL_CARD.md:90` raises; must not go public as-is |

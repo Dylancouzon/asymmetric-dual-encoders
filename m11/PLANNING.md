@@ -107,11 +107,22 @@ Ruled 2026-09-03 (Dylan): edit, and state the deviation in both cards.
 | permutations of one bag agree | 1.49e-08 |
 | all-masked row returns the `[CLS]` fallback | **0.0** |
 | cost, 1 thread | s=8 **0.047 ms**, s=512 **1.22 ms** |
-| **negative control**: the count-mask IS load-bearing | defective graph off by **1.43e-02** on literal `[PAD]` but only **3.73e-08** on the 1,024 dev queries |
+| **negative control**: the count-mask IS load-bearing | defective graph off by **1.43e-02** on a padded batch of literal-`[PAD]` fixtures, **3.73e-08** on the 1,024 dev queries |
 
-That last row is the §Corrections warning confirmed by measurement: a graph masking the weight but
-not the count axis passes every ordinary query and fails only on a literal `[PAD]`. The check that
-catches it is in the suite because the plan said to put it there.
+**Reachability of that defect, measured 2026-09-03 — it is NIL, and the first write-up of this row
+overstated it.** Two conditions must BOTH hold: the text must tokenize to id 0, and that row must
+sit in a padded batch (so its id-0 position counts the batch's padding zeros). Consequences:
+
+- run individually at b=1, each literal-`[PAD]` fixture is off by only ~1e-8 — no padding, nothing
+  to miscount. The 1.43e-02 comes from running the three as a BATCH;
+- **0 of 7,325 real dev queries contain token id 0**, which is the only route in. `[UNK]` is 100,
+  truncation cannot introduce 0, and a WordPiece miss goes to `[UNK]`. So real text never gets
+  there;
+- 2,048 real dev queries in padded batches: **4.47e-08**. A maximally ragged batch (8-token query
+  beside a 512-token one): **8.94e-08**.
+
+So the check guards a graph-construction error with no user-facing consequence. Keep it — it is
+two lines and it pins the count semantics — but do not cite it as a caught production risk.
 
 Two deviations from the plan, both deliberate:
 - **The ONNX graphs are not optional.** `--with-onnx` was removed: the card documents the files, so
