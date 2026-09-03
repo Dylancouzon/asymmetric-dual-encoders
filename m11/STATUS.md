@@ -35,9 +35,9 @@ records hash to what the freeze recorded, (3) `freeze.assert_releasable`, (4) co
 
 ## Open
 
-- **Licence sign-off.** Card declares `license: mit` (matching stella) with CC BY-SA attribution
-  for NQ/SQuAD/HotpotQA/FEVER/Mr.TyDi. Fine while private; **needs Dylan's explicit answer before
-  any public flip**, per the CLAUDE.md licensing rule.
+- ~~Licence sign-off~~ — **RULED 2026-09-03 (Dylan): MIT, including for a public release.** Card
+  declares `license: mit` (matching stella) with CC BY-SA attribution for
+  NQ/SQuAD/HotpotQA/FEVER/Mr.TyDi. No further approval needed on licence to flip the repo public.
 - Deliverables 2–4 (ONNX incl. the document tower, fastembed, whitepaper) and `nano`: blocked on M10.
 - Qdrant: dense-only reproduces 0.4339 exactly; the fused 0.4911 needs **convex fusion at w=0.8**,
   which `Fusion.RRF` does not reproduce (dev 0.5504 vs 0.5727). Recorded in the card.
