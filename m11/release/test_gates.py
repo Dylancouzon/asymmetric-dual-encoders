@@ -93,6 +93,22 @@ def t_staged_encoder():
                        "does not reproduce the frozen query path")
 
 
+@test("gate 4 catches an encoder that is wrong only at b=1",
+      "does not reproduce the frozen query path")
+def t_encoder_b1():
+    """b=1 is the card's own usage and the batch pass does not exercise it, so an encoder correct
+    for len(texts) > 1 and wrong for a single text passed every gate (Codex, 2026-09-03)."""
+    with staged() as d:
+        src = (d / "zero_encoder.py").read_text()
+        line = "        out = np.empty((len(texts), self.dim), dtype=np.float32)"
+        assert line in src
+        (d / "zero_encoder.py").write_text(src.replace(line, line +
+            "\n        if len(texts) == 1:\n"
+            "            out[0] = 0.0\n            out[0, 0] = 1.0\n            return out"))
+        return attempt(lambda: push.gate_conformance(push.freeze()),
+                       "does not reproduce the frozen query path")
+
+
 @test("gate 4 reads the preproc rule from FREEZE.json, not from the bundle",
       "does not reproduce the frozen query path")
 def t_preproc_drift():

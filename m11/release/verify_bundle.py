@@ -107,20 +107,21 @@ def main():
         b = ZeroQueryEncoder(BUNDLE, variant=variant).encode(FIXTURES)
         dev = float(np.abs(a - b).max())
         cos = float((a * b).sum(1).min())
-        # b=1 and the `str` overload are the shapes the model card actually uses, and neither is
-        # exercised by the batch pass above (Fable, 2026-09-03).
+        # b=1 is the shape the model card actually uses, and a batch pass alone does not exercise
+        # it: an encoder correct for len(texts) > 1 and wrong for len(texts) == 1 passed every
+        # gate (Codex, 2026-09-03). Every fixture, both overloads, against the batched reference.
         enc1 = ZeroQueryEncoder(BUNDLE, variant=variant)
-        for one in (FIXTURES[0], FIXTURES[10], FIXTURES[12]):
-            solo = enc1.encode(one)
-            batched = enc1.encode([one])
-            i = FIXTURES.index(one)
-            d1 = max(float(np.abs(solo[0] - b[i]).max()), float(np.abs(batched[0] - b[i]).max()))
-            if d1 > TOL:
-                print(f"FAIL  {variant:5s}  b=1/str differs from the batch by {d1:.3e} on {one!r}")
-                ok = False
+        solo_dev = 0.0
+        for i, one in enumerate(FIXTURES):
+            for got in (enc1.encode(one), enc1.encode([one])):
+                solo_dev = max(solo_dev, float(np.abs(got[0] - a[i]).max()))
+        if solo_dev > TOL:
+            print(f"FAIL  {variant:5s}  b=1/str differs from the frozen path by {solo_dev:.3e}")
+            ok = False
         status = "PASS" if dev <= TOL else "FAIL"
         ok &= dev <= TOL
-        print(f"{status}  {variant:5s}  max-abs {dev:.3e}   min-cosine {cos:.9f}")
+        print(f"{status}  {variant:5s}  max-abs {dev:.3e}   min-cosine {cos:.9f}   "
+              f"b=1 {solo_dev:.3e}   ({len(FIXTURES)} fixtures)")
         if dev > TOL:
             i = int(np.abs(a - b).max(1).argmax())
             print(f"      worst fixture [{i}]: {FIXTURES[i][:70]!r}")

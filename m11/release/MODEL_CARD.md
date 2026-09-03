@@ -137,7 +137,8 @@ Precisely what that changes, by caller:
 |---|---|---|
 | `zero_encoder.py` (the reference path) | 512, no padding | unchanged — **byte-identical output**; it calls `no_padding()` and reads truncation from `config.json` |
 | `tokenizers` directly | every `encode` padded to 512 | ragged unless you enable padding yourself |
-| `transformers` / Sentence Transformers | `model_max_length` 32768, so `truncation=True` with no explicit length truncated at 32768 | 512 — but truncation and padding still happen only when the *call* asks for them |
+| `transformers` | `model_max_length` 32768, so `truncation=True` with no explicit length truncated at 32768 | 512 — but truncation and padding still happen only when the *call* asks for them |
+| Sentence Transformers | requests truncation itself and may impose its own `max_seq_length` | unchanged in that respect; only the underlying default moves to 512 |
 | fastembed's tokenizer loader | truncation 8000, fixed-512 padding kept | truncation 512, dynamic padding |
 
 The reference path is unaffected either way, so no published number changes; only what a
@@ -220,7 +221,7 @@ Amazon ESCI is Apache-2.0. The teacher, `NovaSearch/stella_en_400M_v5`, is MIT.
 | | |
 |---|---|
 | first published | 2026-09-03 — the frozen M7 bundle, with stella's tokenizer files copied verbatim |
-| this revision | 2026-09-03 — `tokenizer_config.json` `model_max_length`/`max_length` → 512, `tokenizer.json` `padding` → `null`, and one broken snippet in this card fixed |
+| this revision | 2026-09-03, commit `1aa60418` — `tokenizer_config.json` `model_max_length`/`max_length` 32768/8000 → 512, `tokenizer.json` `padding` `Fixed(512)` → `null`, and one broken snippet in this card fixed |
 
 `model.npz` is byte-identical across both (sha `a7007b1a…`) and the reference encoder's output is
 unchanged, so **no published number differs between revisions**. Pass `revision=` to
