@@ -38,12 +38,19 @@ records hash to what the freeze recorded, (3) `freeze.assert_releasable`, (4) co
 The zero half does not depend on M10. Four rulings and the slice: `instructions-m11.md`
 Amendment A. Tasks, graph design and gates: `m11/PLANNING.md`. Nothing here reads a quality set.
 
+Reviewed adversarially before execution (Codex + Fable, 2026-09-03); both logs audited clean for
+reserved-set reads. The review moved two blockers ahead of everything else — **nothing is
+published until T0 and T1 land.**
+
 | task | state |
 |---|---|
-| T1 flip `zero` PUBLIC | pending — `push.py --public` cannot flip an existing repo, fix first |
-| T2 zero query path → ONNX | pending — design settled, no `Unique` op, int8 initializer, two graphs |
-| T3 doc tower publish (PUBLIC, new repo) | export passes; needs `model_tokens.onnx` + re-verify |
-| T4 fastembed fork branch, no PR | fork `Dylancouzon/fastembed` created |
+| T0 bind the release path | **blocker** — gates hash the source table, not the uploaded bundle; gate 4 self-compares |
+| T1 sanitise tokenizer (both repos) | **blocker** — stella ships truncation 8000 + fixed-512 padding; fastembed mistruncates >512-token inputs and crashes on mixed batches |
+| T2 zero query path → ONNX | pending — design verified exact; int8 initializer, no `Unique`, two graphs |
+| T3 doc tower publish (PUBLIC, new repo) | fp32 passes; **fp16 fails §11.4 (1.37e-3)**, no `config.json`, no `model_tokens.onnx` |
+| T4 fastembed fork branch, no PR | fork `Dylancouzon/fastembed` created; two routes to test, incl. `parallel>1` |
+| T5 card fixes | `MODEL_CARD.md:90` raises; must not go public as-is |
+| flip `zero` PUBLIC | **last**, after remote byte verification — `create_repo(exist_ok=True)` ignores `private` |
 
 ## Open
 

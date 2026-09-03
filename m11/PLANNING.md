@@ -1,106 +1,195 @@
 # M11a plan — ship `zero` end to end
 
-Mandate + the four rulings: `instructions-m11.md` Amendment A. Branch `m11-work`, headless
-commit-and-push contract. Status/pointers: `m11/STATUS.md`. No quality number is read or written
-here, so `m9src/guard9.py` registration does not apply; `push.py`'s four release gates do.
+Mandate + the four rulings: `instructions-m11.md` Amendment A. Branch `m11-work`. Status:
+`m11/STATUS.md`. No quality number is read or written here, so `m9src/guard9.py` registration does
+not apply.
 
-## T1 — flip `zero` public
+**Reviewed adversarially before execution, 2026-09-03** — Codex (`work/briefs/m11a-codex.log`) and
+Fable, against `work/briefs/m11a-review.md`. Both logs audited for reserved-set reads: clean, the
+only matches are the exclusion text itself. The first draft of this plan asserted four things that
+are false; they are recorded in §Corrections so no one re-derives them. Fable's numbers below are
+measured, not argued.
 
-**`push.py --public` does not flip an EXISTING repo.** `create_repo(exist_ok=True)` is a no-op on
-visibility, so the current call would report `PUBLIC →` while the repo stayed private — a gate that
-fails open, the same class of bug the 2026-08-28 reviews caught twice. Fix `push()` to call
-`HfApi().update_repo_settings(repo_id, private=private)` after `create_repo` (hub 0.36.2;
-`update_repo_visibility` is the deprecated spelling), then re-read `api.repo_info(...).private` and
-refuse if it disagrees with the flag. Re-run all four gates before the flip.
+## Blocking findings — nothing is published until T0 and T1 are done
+
+**The release gates do not bind the bytes that get uploaded.** `push.py` gate 1 hashes the *source*
+table at `FREEZE.json:table_relpath`; `upload_folder` ships `work/release/zero-v1/`. Gate 4
+(`verify_bundle.py:41-46`) loads `BUNDLE/model.npz` on *both* sides of its comparison, so it is
+self-consistent for any bundle. A wrong-but-coherent bundle passes all four gates. `--push` is
+supported without `--build`, `README.md` is written *after* the gates, and no gate covers an ONNX
+file at all. Today the bytes happen to match (`a7007b1a…` both places); the gate does not make that
+true.
+
+**The shipped tokenizer makes the fastembed route wrong on real inputs.** stella's
+`tokenizer_config.json` carries `model_max_length: 32768`, `max_length: 8000`, and `tokenizer.json`
+carries padding `{"Fixed": 512}` — verified in the released bundle AND in the doc-tower directory.
+fastembed's `load_tokenizer` (`common/preprocessor_utils.py:120-125`) enables truncation at
+`min(model_max_length, max_length)` = **8000**, and calls `enable_padding` only `if not
+tokenizer.padding` — so stella's fixed 512 survives. Measured consequences:
+
+| symptom | measured |
+|---|---|
+| a 1202-token query is **not** truncated to 512 | max-abs 4.5e-4 vs the numpy path — 45x the gate |
+| `embed([long, short])` | **raises** `ValueError: inhomogeneous shape` (`onnx_text_model.py:82`) |
+| every query padded to 512 | 2.53 ms/query end-to-end vs the card's published **0.38 ms** |
+| after sanitising the two files | 0.211 ms/query, mixed batches work, cos vs numpy 0.999999989 |
+
+Queries under 512 tokens pass perfectly (214 of them, max-abs 2.7e-8) — precisely the "passes on
+synthetic, fails on real" class. **Worse on the doc side**: the index was built at `max_length 512`
+(`FREEZE.json:encoder_spec`), so documents of 513–8000 tokens served through fastembed would not
+reproduce the index, and long documents are common where long queries are not.
+
+## T0 — bind the release path (before any upload)
+
+1. `build()` writes a fresh staging dir from an explicit **manifest**; `push()` refuses any file in
+   it not on the manifest, and refuses to run at all unless `build()` ran in the same invocation.
+2. Gate 1 hashes **`OUT/model.npz`** against `FREEZE.json`, not only the source.
+3. Gate 4 compares the bundle against `m7src/table.py` loaded from the **frozen source path**, so
+   the two sides cannot both be the substituted file.
+4. Every ONNX artifact carries its sha256 in its parity result JSON; `push()` refuses to upload an
+   ONNX file whose sha is not recorded in a **passing** result.
+5. Generate `README.md` **before** the gates and execute every python block in it (the current card
+   raises — see T5).
+6. Upload private → re-download → verify remote shas → **then** flip visibility. Never the reverse.
+
+## T1 — sanitise the tokenizer in both repos
+
+Ship `model_max_length: 512`, `max_length: 512`, and `tokenizer.json` `padding: null`. This does not
+touch the frozen rule: `zero_encoder.py` calls `no_padding()` and takes truncation from
+`config.json:preproc.max_length`, so the numpy path is byte-identical before and after; only
+fastembed reads the changed fields. Re-run `verify_bundle.py` on the edited bundle, state the edit
+in both cards, and gate a fastembed batch containing a >512-token text beside a short one.
 
 ## T2 — zero's query path → ONNX
 
-The released rule (`m11/release/zero_encoder.py:79-88`): tokenize, take **unique** ids with counts
-`c_u`, weight each unique row by `sqrt(c_u)`, divide by `sum sqrt(c_u)`, L2 normalize.
+Rule (`m11/release/zero_encoder.py:79-88`): unique ids with counts `c_u`, weight each unique row by
+`sqrt(c_u)`, divide by `sum_u sqrt(c_u)`, L2 normalize.
 
-**Do not use the ONNX `Unique` op.** It is not per-row, so it breaks the moment fastembed hands the
-graph a padded batch. Use the per-occurrence identity instead — exact, not an approximation:
+**Do not use ONNX `Unique`** — without an axis it flattens the batch, with one it uniques whole
+slices, so neither is per-row. Use the per-occurrence identity (verified exact, both sides 4.449490
+on `"the the the the the the"`):
 
-    sum_u sqrt(c_u)·row_u  ==  sum_i row_{t_i} / sqrt(c_{t_i})       (each u contributes c_u terms)
-    sum_u sqrt(c_u)        ==  sum_i 1 / sqrt(c_{t_i})               (same weights, so the
-                                                                      denominator is free)
+    sum_u sqrt(c_u)·row_u == sum_i row_{t_i}/sqrt(c_{t_i});   sum_u sqrt(c_u) == sum_i 1/sqrt(c_{t_i})
 
-Per-occurrence counts without `Unique`, batch-safe and standard-op only: `Equal` on
-`ids[:,:,None]` vs `ids[:,None,:]` → `(b,s,s)`, mask the key axis with `attention_mask`, `ReduceSum`
-over it → `c` of shape `(b,s)`. At s ≤ 512 this is a trivial cost against a gather.
+Counts without `Unique`: `Equal(ids[:,:,None], ids[:,None,:])` → `(b,s,s)`, mask the **key** axis,
+`ReduceSum` → `(b,s)`. Graph, opset 17, standard domain only:
 
-Graph, opset 17, no custom domains:
-
-    w    = mask / sqrt(max(c, 1))                       # padded positions → 0
+    w    = mask / sqrt(max(c, 1))                       # mask on BOTH count-key axis and w
     rows = Gather(TABLE_INT8, ids) → Cast(f32) * scale[ids][:,:,None]
-    num  = ReduceSum(rows * w[:,:,None], axis=1)        # (b, 1024)
+    num  = ReduceSum(rows * w[:,:,None], axis=1)
     vec  = num / max(ReduceSum(w, axis=1), EPS)
     out  = Where(‖vec‖ ≤ EPS, FALLBACK, vec/‖vec‖)      # EPS 1e-6, FALLBACK = normalized row 101
 
-**Keep the table as an int8 initializer plus the fp32 per-row scale, and dequantize inside the
-graph.** That is bit-identical to what the numpy encoder does and keeps the graph at ~31 MB;
-materialising fp32 rows would cost 125 MB (30522 × 1024 × 4) and an fp16 initializer would lose
-precision the released artifact does not lose.
+Table stays an **int8 initializer + fp32 per-row scale**, dequantized in-graph: ~31 MB, against
+125 MB for fp32 rows. Gather→Cast→Mul is **bit-identical** to `rows_int8.astype(f32) *
+int8_scale[:,None]` (measured). The pooled *output* is not — `ReduceSum` order differs from numpy's
+`.sum(0)` — max-abs 8.9e-8 padded, 5.4e-7 at b=1, comfortably inside gate 2.
 
-**Ship two graphs from one table**, the pattern M9 established for nano:
+Two graphs from one table: `model.onnx` `(b,1024)` pooled+normalized for direct ORT callers, and
+`model_tokens.onnx` `(b,s,1024)` emitting `row_{t_i}/sqrt(c_{t_i})` for fastembed.
 
-| file | shape | for |
-|---|---|---|
-| `model.onnx` | `(b, 1024)` pooled + normalized | direct ONNX Runtime callers |
-| `model_tokens.onnx` | `(b, s, 1024)`, per token `row_{t_i}/sqrt(c_{t_i})` | fastembed, which pools itself |
-
-fastembed's `MEAN` pooling then computes `sum_i y_i / S`, and `S` is a positive scalar that the
-subsequent L2 normalize annihilates — so **`PoolingType.MEAN` + `normalization=True` reproduces the
-frozen rule exactly.** `PoolingType.DISABLED` exists in 0.8.0 but is not needed and would ask
-fastembed to post-process a shape its pipeline does not expect.
-
-Gates (all must pass, `results/m11_zero_export.json`):
-1. zero custom-domain ops, opset 17.
-2. `model.onnx` vs `ZeroQueryEncoder(variant="int8")` on ≥512 real dev queries: **min-cos ≥ 1−1e-6,
-   max-abs ≤ 1e-5.** The mandate's §11.4 tolerances (1e-4 / 1e-3) are the floor for a *learned*
-   port; this is the same arithmetic twice and must be far tighter. State the achieved number.
-3. **Batch invariance**: a query encoded alone equals the same query inside a padded batch beside a
-   500-token one, to 1e-6. This is what would catch a `Unique`-shaped or masking bug.
-4. `model_tokens.onnx` + MEAN + L2 equals `model.onnx` to 1e-6.
-5. Edge cases: single-token query, all-tokens-identical query, max_length truncation at 512.
+Gates → `results/m11_zero_export.json`, each recording the achieved number and the file sha256:
+1. zero custom-domain ops, opset 17, `onnx.checker` passes.
+2. vs `ZeroQueryEncoder(variant="int8")` on ≥512 **real dev queries**: min-cos ≥ 1−1e-6, max-abs
+   ≤ 1e-5. (§11.4's 1e-4/1e-3 is the floor for a *learned* port; this is the same arithmetic twice.)
+3. **Batch invariance** — alone vs inside a padded batch beside a 500-token query, to 1e-6.
+4. `model_tokens.onnx` + masked mean + L2 == `model.onnx`, to 1e-6.
+5. Fixtures must include **`"[PAD]"` and `"[PAD] [PAD] hello"`**. See §Corrections: a graph masking
+   the weight but not the count passes every ordinary query and fails only on literal `[PAD]`.
+6. Edge cases: single-token, all-tokens-identical, mixed repeat+unique at 512, permutations of one
+   bag, lengths 510–513, `[CLS]`/`[SEP]`/`[UNK]`/unused ids, empty and all-masked.
+7. **Cost row**: measure s=8 vs s=512 latency (0.032 ms vs 1.29 ms single-thread — the S×S term is
+   not free) and publish the post-T1 fastembed figure, not the 0.38 ms table-only number.
 
 ## T3 — document tower
 
-Artifacts exist and pass (`work/m9onnx/stella-400M-doc/`, `results/m9_doc_export.json`). Two gaps:
+Export exists (`work/m9onnx/stella-400M-doc/`, `results/m9_doc_export.json`: opset 17, no custom
+ops, fp32 min-cos 0.99999940). Four gaps, all blocking publication:
 
-- **No `model_tokens.onnx`** — the fastembed route for the doc side is unverified. Export the
-  per-token variant (backbone → per-token `Dense(1024)`, no pooling, no normalize). Masked mean is
-  linear, so `mean(W·h_i + b) == W·mean(h_i) + b`; M9 measured that equality at 6.3e-08 for nano.
-  Verify it here rather than inheriting it.
-- **Re-verify before publishing.** Re-run parity against the torch path on the artifacts as they sit
-  on disk; they are gitignored and mutable, and were written 2026-08-30.
+- **`model_fp16.onnx` FAILS the mandate tolerance**: measured max-abs **1.37e-3**, min-cos
+  **0.99970**, output norms 0.9997–1.0004 — the final normalize ran in fp16. The recorded `pass:
+  true` covers only fp32 (`export_doc_model.py:150` builds its session on `p32`). Re-export with the
+  normalize and Dense in fp32 (`op_block_list`); **if it still misses 1e-4/1e-3, publish fp32 only.**
+- **No `config.json`** in the directory — `fastembed.load_tokenizer` raises on it as-is, so the repo
+  as planned would be unusable through fastembed.
+- **No `model_tokens.onnx`.** Masked mean is linear, so `mean(W·h_i+b) == W·mean(h_i)+b`; measure it
+  here rather than inheriting the claim (see §Corrections on where that 6.3e-08 actually came from).
+- **Recorded fp32 parity used word salad** from a 20-word vocabulary (`export_doc_model.py:30,34`),
+  n=40, never real text. Re-run on real passages. Good news, measured: fp32 batch invariance is
+  exact, and fixed-512 padding gives bit-identical output, so the attention mask survived export.
 
-Publish fp32 + fp16 + per-token + tokenizer to a new **public** repo. Card must carry: stella
-attribution and MIT, the pinned revision `ffeb2b7e…`, the two mandatory
-`config_kwargs` (`use_memory_efficient_attention=False`, `unpad_inputs=False` — stella asserts on
-xformers without them), the exact head definition (masked mean → `2_Dense_1024` → L2), measured
-parity, and that this is the document half of an asymmetric pair whose query half is `zero`.
+Card must carry: `base_model: NovaSearch/stella_en_400M_v5` and the pinned revision `ffeb2b7e…`;
+**the Apache-2.0 lineage** — stella is trained from `Alibaba-NLP/gte-large-en-v1.5` and its
+`modeling.py` is "Copyright 2024 The GTE Team Authors and Alibaba Group", so ship the Apache text
+and notices alongside MIT (the pinned stella snapshot has no LICENSE file, which is a gap to fill,
+not permission to omit); a statement that this is a **format conversion with unchanged weights**;
+the two mandatory `config_kwargs`; the head definition (masked mean → `2_Dense_1024` → L2); measured
+parity per graph; and that it is **document-only** — stella's query side needs the `s2p_query`
+prompt and fastembed's `query_embed` adds no prefix, so symmetric use through fastembed is silently
+wrong. Note for the log: Alibaba is "OK WITH JUSTIFICATION" under the vendor rule and the decision
+log records NovaSearch as CLEAN without the lineage; the justification is that this is a conversion
+of an already-chosen teacher, not a new component choice.
 
 ## T4 — fastembed fork branch
 
-Fork `Dylancouzon/fastembed` created 2026-09-03. Clone to `/home/dylan/fastembed` (a sibling of this
-repo, NOT inside it), branch `zero-query-encoder`. Register both models via `add_custom_model`
-(`ModelSource(hf=…)`, `model_file="model_tokens.onnx"`, `pooling=MEAN`, `normalization=True`,
-`dim=1024`) and prove end-to-end serving parity against the numpy encoder — the M9 pilot only ever
-got a *description* accepted, never a served vector, for anything but nano.
+Fork `Dylancouzon/fastembed` created 2026-09-03. Clone to `/home/dylan/fastembed` (sibling of this
+repo, **not** inside it), branch `zero-query-encoder`.
 
-No PR this milestone (ruling 3). Leave the branch pushed and PR-ready, and write down what a PR
-would still need: canonical reference vectors per `CONTRIBUTING.md`, and an honest description —
-zero **missed** `LR-dense-pertask 0.4583` at 0.4339 (CI-resolved), and its fused variant ties
-OpenSearch. The card's framing carries into any PR text verbatim.
+Two integration routes; test both and pick on evidence:
+- **MEAN on `model_tokens.onnx`** (`normalization=True`). `fastembed.mean_pooling`
+  (`common/utils.py:26-32`) is the masked mean, divisor = real token count, a positive scalar the
+  normalize annihilates. Measured vs numpy: **3.3e-8**. Loses the frozen fallbacks, which are
+  unreachable in practice (no table row has norm ≤ EPS; min 0.196, row 101 = 2.15).
+- **`PoolingType.DISABLED` on the pooled `model.onnx`**, which preserves the fallbacks exactly.
+  DISABLED exists in 0.8.0; whether the pipeline accepts a `(b,1024)` graph is **untested** — the
+  first draft asserted it does not, which was unfounded.
+
+Gate serving parity end-to-end against the numpy encoder (the M9 pilot only ever got a *description*
+accepted for anything but nano), **including `parallel>1`**: `CustomTextEmbedding` does not override
+`_get_worker_class()`, so the inherited worker constructs `OnnxTextEmbedding`, which cannot resolve a
+runtime-registered name. Unverified but cheap to check, and a serial-only smoke would miss it.
+
+No PR this milestone. Leave the branch pushed and PR-ready; a PR would still need canonical
+reference vectors per `CONTRIBUTING.md` and an honest description — zero **missed**
+`LR-dense-pertask 0.4583` at 0.4339 (CI-resolved), its fused variant ties OpenSearch.
+
+## T5 — card fixes before anything goes public
+
+`MODEL_CARD.md:44` sets `q = enc.encode([...])`, a `(1,1024)` array; `:90` then calls
+`enc.encode([q])[0]`, which raises. Fix, then execute every block in the generated README.
+
+## Corrections — claims the first draft of this plan got wrong
+
+| claimed | actual |
+|---|---|
+| "bit-identical to what the numpy encoder does" | dequantization only; the pooled output differs by ≤5.4e-7 (ReduceSum order) |
+| "the ONNX path is masked so it is immune" to the padding trap | immune in correctness, not cost; and fastembed truncates at 8000, not 512 |
+| "at s ≤ 512 this is a trivial cost against a gather" | 40x: 1.29 ms at s=512 vs 0.032 ms at s=8 |
+| "gate 3 is what catches a masking bug" | catches count-only masking; **weight-only masking fails only on literal `[PAD]`** |
+| "`DISABLED` … a shape its pipeline does not expect" | unfounded; a `(b,1024)` graph may be fine, untested either way |
+| "artifacts exist and pass" (doc tower) | fp32 pooled only; fp16 fails §11.4, and n=40 on synthetic word salad |
+
+**Provenance defect in inherited evidence.** `results/m9_doc_export.json`'s `fastembed_local` block
+cannot have been written by `export_doc_model.py:try_fastembed` — that function emits
+`min_cos_vs_onnxruntime`/`shape`/`pass` and passes `model_file="model_fp16.onnx"`; the JSON has
+`min_cos_vs_self_contained_graph`/`max_abs`/`finding` and names `model_tokens.onnx`. Whatever
+produced it is not the named script. Treat that block as unattributed and re-measure; the 6.3e-08
+figure quoted for masked-mean linearity inherits the same doubt.
+
+## Open for Dylan
+
+- **Whitepaper contingency.** Both reviews argue deferral needs a cancellation branch: if the M10
+  budget is refused, the mandated report never ships despite M7/M8 being complete. Proposal — write
+  the zero-only paper if M10 is declined or unfunded past a date Dylan sets, revising later if nano
+  runs. Nothing in M11a needs redoing either way, provided the doc-tower repo name and both cards
+  avoid presupposing `nano`.
+- **The tokenizer edit changes published bytes** in an already-released repo. It does not touch the
+  frozen table or the numpy path, but it is a change to a shipped artifact and is recorded here
+  rather than made silently.
 
 ## Traps carried forward
 
-- **stella's `tokenizer.json` ships with padding-to-512 enabled.** A naive `tokenizers` load puts
-  ~500 `[PAD]` rows in every bag and cosine drops to 0.35 (`m11/STATUS.md`). The ONNX path is
-  masked so it is immune, but any *tokenizer* comparison harness must call `no_padding()`.
-- Padded positions must contribute zero to BOTH the count `c` and the weight `w`. A mask applied to
-  only one of them is the likeliest silent wrong answer in T2, and gate 3 is what catches it.
+- Padded positions must contribute zero to BOTH the count and the weight (§T2 gate 5).
 - `results/perquery.json` is irreplaceable and is not touched here.
-- The reserved four and their single confirmatory access stay unspent; M11a reads no eval set
-  beyond dev queries used as parity fixtures.
+- The reserved four and their single confirmatory access stay unspent; M11a reads no eval set beyond
+  dev queries used as parity fixtures.
