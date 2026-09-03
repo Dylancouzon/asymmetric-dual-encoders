@@ -69,47 +69,99 @@ table: dev out-of-domain 0.764 vs six 0.755).
 
 - Query corpus ≈ 463K real + 1.0M PAQ + 3.0M synthetic = **4.5M** texts; ≈ 35 tokens mean (long
   forms 120–220 words at ~10% share) → ≈ 160M tokens per query epoch.
-- Generation: 3.0M queries × (~300 prompt + ~60 output) tokens ≈ **1.1B tokens**, of which ≈ 180M
-  are generated. Local: Qwen3-8B 4-bit via vLLM on the RTX 3080 — throughput **unmeasured**; at an
-  assumed 1,000 generated tok/s ≈ 50 h, at 500 tok/s ≈ 100 h. Hosted open-weights inference at
-  $0.1–0.3 per M tokens ≈ **$110–330**. Scale-up is gated on the per-form 200-query smoke, which
-  measures the real rate (watch-long-runs rule).
-- Teacher targets: stella query encode 2,076/s (`m9_throughput_probe.json`) → 4.5M queries ≈ 36
-  min (A2's 4.037M PAQ control texts ≈ 35 min more). Hard-candidate mining: 4.5M × 1M × 1024
-  ≈ 9.2e15 FLOP; at a sustained 30 TFLOPS fp16 on the RTX 3080 ≈ 5 min of matmul plus top-k
-  over 1M columns per 1,024-query chunk — **unmeasured**; the mandate gates it on a 10K-query smoke
-  and registers Qdrant HNSW with an audited recall@64 ≥ 0.98 as the fallback. Bank: 1M pool
-  documents, seed 0.
-- Build dose 50M examples. At the default 75/25 mix: 37.5M query examples × ~35 tokens + 12.5M
-  document examples × ~230 tokens ≈ **4.2B tokens**; at 50/50 ≈ 6.6B. M9's *measured* mixed rate is
-  **18,984 tok/s** (`m9/M92_LOCK.md`; the 25,970 tok/s seen live mid-build is not used for planning)
-  → **2.6–4 days on the RTX 3080**, before the batch-32 throughput penalty that screen family E
-  measures. Query epochs ≈ 8 over 4.5M texts; document epochs ≈ 2 over the 6.15M pool.
-- Screens: 2.5M examples per arm ≈ 209M tokens ≈ 3.1 h at 75/25 (B 100/0 ≈ 66M tokens; B 50/50
-  ≈ 497M). Nine arms (A1–A3, B 100/0 and 50/50, C, D, E, F; the anchor doubles as B 75/25) ≈ 2.2B
-  tokens ≈ **1.3 days**. Confirmations, worst case: B's 50/50 wins (2 seeds × 497M + default
-  2 × 209M = 1.41B) plus two ordinary decisions (each winner + default × 2 seeds = 0.84B) = **3.1B
-  tokens ≈ 1.9 days**, plus the synthesized selected-recipe arm for LoTTE read #1 (0.2–0.5B).
-  Family G adds two arms (+0.42B) and up to one more confirmed decision (+0.84B): screens ≈ 1.6 days,
-  confirmations worst case ≈ 3.9B tokens ≈ 2.4 days. Screens total ≤ 4.5 days on the box.
+- Generation: 3.0M queries × ~300 prompt tokens ≈ 900M prefill; output ≈ 60 tokens for ten forms
+  and ≈ 120–270 for the conversational and argument forms (`max_new_tokens` 400) ≈ **250M generated
+  tokens** (350M at the caps), plus retries. Qwen3-8B bf16 via vLLM on the A100 — **unmeasured**; at
+  1,500–3,000 decode tok/s with prefill overlapped ≈ **30–60 GPU-hours** ≈ $45–150. Fallback if the
+  smoke's end-to-end projection of the full job (all forms, prefill, retries, JSON failures) exceeds
+  60 GPU-hours: hosted open-weights inference at $0.1–0.3 per M tokens ≈ $110–330, the second §6
+  scenario. The per-form 200-query smoke measures requests/s end to end (watch-long-runs rule).
+- Teacher targets: stella query encode was 2,076/s on the box (`m9_throughput_probe.json`); at an
+  assumed 3× on the A100, 4.5M queries + A2's 4.037M PAQ control texts + ≤ 3M seed passages (D-NCE
+  positives) ≈ **2 GPU-hours** with mining. Hard-candidate mining: 4.5M × 1M × 1024 ≈ 9.2e15 FLOP,
+  minutes of matmul plus top-k over 1M columns per 1,024-query chunk — **unmeasured**; the mandate
+  gates it on a 10K-query smoke and registers Qdrant HNSW with an audited recall@64 ≥ 0.98 as the
+  fallback. Bank: 1M pool documents, seed 0.
+- **Planning rate.** LEAF trained 6.7M texts × 30 epochs ≈ 201M examples at batch 32 in ~100
+  A100-hours (`m9/PLANNING.md` §3) → **≈ 560 examples/s**. Our examples are shorter on average (≈ 84
+  tokens at 75/25 against LEAF's 256-token FineWeb documents), so the rate is conservative in
+  direction; it is unmeasured on our stack. M9's box rate (18,984 tok/s ≈ 226 examples/s,
+  `m9/M92_LOCK.md`) is retired with the box. The first screen arm measures examples/s and §6 is
+  re-derived from it.
+- **Build dose 200M examples** (LEAF's; the 2026-09-01 amendment — the old 50M and its 83.4M cap
+  were set by the box's days, not by evidence; M9's plateau was on a narrow pool). At 75/25: 150M
+  query examples × ~35 tokens + 50M document examples × ~230 ≈ **16.8B tokens**; at 50/50 ≈ 26.5B.
+  ≈ **100 GPU-hours** at 560 examples/s. Query epochs ≈ 33 over 4.5M texts; document epochs ≈ 8
+  over the 6.15M pool (LEAF: 30 over everything). Each extension cycle is 66.7M ≈ 33 GPU-hours.
+- Screens: 5M examples per arm (2.5% of the build; 2.5M was 5% of the old 50M build) ≈ 2.5
+  GPU-hours at 560 examples/s, plus ≈ 0.3 h of DEV-6 and COV evaluation. Fourteen arms: A1–A3 (15M),
+  B 100/0 (3.75M) and B 50/50 (7.5M; the anchor doubles as B 75/25), C, D-KL3, D-KL1, D-NCE, E, F,
+  G-384, G-768, G-1536 (9 × 5M = 45M) = **71.25M examples ≈ 40 GPU-hours**. Confirmations, worst
+  case: B's 50/50 wins (2 seeds × 7.5M + default 2 × 5M = 25M) plus three ordinary decisions (each
+  winner + default × 2 seeds = 20M) = **85M ≈ 47 GPU-hours** with its 16 evaluations, plus the
+  synthesized selected-recipe arm for LoTTE read #1 (5M ≈ 2.5 h). Capping confirmations at two
+  decisions saves ≈ 20 GPU-hours.
+- Encodes with stella, all re-derived on the instance (the box's `work/` caches do not travel): the
+  6.15M pool (targets and the heldout dev components) ≈ 2.8 h, hotpotqa 5.2M + nq-250k ≈ 2.5 h, the
+  six ≈ 0.1 h, COV (MedicalQA 2K, BRIGHT a few K per slice, CorporateLobbying 319, LEDGER ≤ 100K
+  chunks) ≈ 0.3 h, LoTTE-clean 2.8M ≈ 1.3 h, the reserved four (FEVER 5.4M, DBpedia 4.6M, two CQA)
+  ≈ 4.6 h **only if the reserved conditional fires** — ≈ **12 GPU-hours** at an assumed 600 docs/s
+  (3× the box's 210, unmeasured), plus about a day of CPU and network to pull the pool, dev suite
+  and fingerprints from HF.
 
-## 6. Compute plan
+## 6. Compute plan — one rented GPU, or nothing (Dylan, 2026-09-01)
 
-| path | wall-clock to M10.4 | cost | notes |
-|---|---|---|---|
-| RTX 3080 box, when Dylan is back | ≈ 4–5 weeks: generation 2–4 d (unmeasured rate), data + COV admission 1.5 d, screens 1.6 d + confirmations ≤ 2.4 d, build 2.6–4 d plus the batch-32 penalty, M9 close-out + final 1 d, review gates between | $0 | data and caches already on the box; one conservative budget, revised only from measured rates |
-| 1× A100 80 GB cloud | ≈ 10–12 days incl. 1 day to re-derive the pool, dev suite and fingerprints from HF; GPU work ≈ 80–110 h | ≈ $120–280 GPU + optional $110–330 hosted generation (Sept-2026 prices unverified) | reproducible from the repo except gitignored `work/` artifacts, which rebuild from the same sanctioned code |
-| Mac M5 Pro | probes and code only; stella document encode 20–100 docs/s on MPS depending on document length | $0 | runs stella only in `.venv-mac` (transformers 4.57); transformers 5.x breaks stella's remote code |
+"M10 won't be done on a 3080. M10 will be done on a GPU budget, if allowed, or not at all." The box
+path is withdrawn (§7). One A100 80 GB (H100 if cheaper per example on the smoke), ≥ 500 GB
+persistent disk, stopped between stages; $1.5–2.5/h assumed, unverified Sept 2026. Every line is at
+the §5 planning rates and is re-derived from the day-one rate benchmark (mandate §Compute) before
+generation starts, and again before the remaining screen arms.
+
+| mandatory line | GPU-hours | $ at 1.5–2.5/h |
+|---|---|---|
+| re-derive encodes (pool, dev suite, six, COV, LoTTE; reserved four only if the conditional fires) | 12 | 18–30 |
+| day-one rate benchmark (encode, three training mixes, generation smoke) | 2 | 3–5 |
+| query and seed teacher targets, mining | 2 | 3–5 |
+| screens, 14 arms at 5M with evaluations | 40 | 60–100 |
+| confirmations, worst case 85M with 16 evaluations | 47 | 71–118 |
+| synthesized selected-recipe arm, LoTTE reads, M9 close-out scoring, M10.0-c | 4 | 6–10 |
+| build, 200M examples | 100 | 150–250 |
+| export, parity, final run | 2 | 3–5 |
+| persistent disk ≈ 3 weeks, egress | — | ≈ 40 |
+| **subtotal without generation** | **209** | **$354–563** |
+| **scenario A — generation on the GPU** (Qwen3-8B bf16, vLLM) | 30–60 | 45–150 |
+| **scenario A total** | **239–269** | **≈ $400–715** |
+| **scenario B — hosted generation** (if the smoke projects > 60 GPU-hours on the GPU) | 0 | 110–330 |
+| **scenario B total** | **209** | **≈ $465–895** |
+| optional: second build seed (decision 8) | 100 | 150–250 |
+| optional: extension cycle, 66.7M examples, each | 33 | 50–83 |
+| **ceiling requested** | | **$1,000, hard** |
+
+**Allocation order at the lock:** every mandatory line first at the measured rates and the billed
+price; then decision 8 if ≥ 100 GPU-hours remain; then `max_extension_cycles` whole cycles from the
+remainder (mandate §Recipe). At $2.5/h nothing optional fits in either scenario and the plan still
+completes; at $1.5/h with scenario A, seed 1 and three extensions fit.
+
+Wall-clock ≈ 2.5–3 weeks sequential on one GPU (≈ 240 GPU-hours, a day of CPU and network, the
+smoke approval and the review gates between stages); screen arms are independent, so 2–4 GPUs
+compress the screen and confirmation stages at the same total cost. The same dose on the RTX 3080
+would be ≈ 10 days for the build and ≈ 4 for the screens, before any confirmation seed. **From the
+box, once, sha-verified:** `work/m9long/ckpt/last.pt` (M9's frozen candidate, `9d631b2c…`) for
+family C, the M10.0-c baseline read and M9's close-out, plus any `work/` file `m9src/guard9.py`
+hashes; nothing else transfers. The Mac stays what it was: probes, code, the generation smoke's
+prompt development (stella only in `.venv-mac`).
 
 ## 7. Considered and rejected (reopening condition per row)
 
 | avenue | why rejected | reopens if |
 |---|---|---|
 | Teacher change (Qwen3-Embedding-0.6B, gte-large-v1.5, arctic-embed-l-v2) | breaks the one-index pair; stella-1.5B measured −0.0023; gte-large-v1.5 is stella's own backbone; Qwen3-0.6B +0.004 nominal, never screened | the pair story is dropped by Dylan |
-| >35M student for the release | third frontier point competing with arctic-m symmetric, not LEAF; the capacity probe answers the scientific question for the report | Dylan reopens after the probe |
+| >35M student in any role | **hard cap, Dylan 2026-09-01**: "109M is not an option. This isn't low compute anymore. 33M was already in the upper bound" | never |
 | Regress to stella's 768d or 256d head | a smaller index is a separate system and a full re-encode of every reserved corpus; §9 says whether the 384-rank bottleneck even binds | §9 shows <95% at k=384 AND the MLP-head arm fails |
-| Document-side co-adaptation (E14-LORA) | breaks the pair; M11+ as its own system | never inside M10 |
+| Document-side co-adaptation (E14-LORA) | inside M10 it breaks the pair. Co-training the tower against **both** query paths at once keeps it, and it is the lever every ≥ 96% near-zero-query system used (LightRetriever's lookup 96% vs zero's 75.5%; ScalingNote 99%; CARE stage 2); costs a new index and a rebuild of zero | never inside M10; **recommended 2026-09-01 as the M11 candidate**, Dylan's call |
+| The RTX 3080 as M10's execution target | Dylan 2026-09-01: cloud GPU budget or not at all. A LEAF-scale build is ≈ 10 days on it and the screens 4 more; the 50M dose and 83.4M cap it forced were box artifacts | never for M10 |
 | FineWeb-10B vectors as targets | wrong embedding space (gte-multilingual-base 768d) | never |
+| FineWeb text in any role (Dylan delegated 2026-09-01; ruled out) | documents: no reserved-set fingerprints exist (Codex pass 1 B2); seeds: a rights review and a URL blocklist for topics Wikipedia and the pool already seed | family A wins on forms yet COV shows a topic gap Wikipedia cannot seed |
 | PubMedQA, Amazon QA, CC-News as query text (LEAF used them) | PubMed is a contaminating corpus for NFCorpus/TREC-COVID; Amazon QA and CC-News have no affirmative commercial grant | a licence review clears Amazon QA / CC-News |
 | Symptom-gated phase 2 (M9 design) | the gate was never specified; a flat curve then had no registered response | never in that form — phase 2 is a screen arm |
 | SCREEN-3 as the selection surface | NQ at weight 0.50 with NQ-adjacent training data inflated M9's read by ~11 points against its out-of-domain components | never |
@@ -117,6 +169,10 @@ table: dev out-of-domain 0.764 vs six 0.755).
 | Hosted proprietary API as the query generator | output-use terms would be the weakest link in the licence story | never |
 
 ## 8. Adversarial review disposition
+
+*Each table records the state at that pass; later passes superseded some numbers (multiplicity
+/6 → /10 → /13, confirmations 3 → 4, the >35M conditional → hard cap, FineWeb → out, 3–4 weeks →
+4–5). The mandate is authoritative where a row here disagrees.*
 
 **Pass 1 — gpt-5.6-terra, high effort, read-only, 2026-09-01** (`research/m10-codex-plan-2026-09-01.md`;
 read-exclusion audited: the reviewer opened only the twelve named files). Verdict "not
@@ -185,6 +241,68 @@ family G's export algebra and parameter count confirmed. 2 BLOCKER / 2 MAJOR / 2
 | m | probe JSON provenance text said 512-d head | **adopted** — text field corrected to 768/256 (numbers untouched) |
 | M/m | report page: LEAF 97.9 vs 97.7; build-curve first point; Mac docs/s; 33M; premature "four passes" | **adopted** — LEAF labelled 97.9% on our six (97.7% is BEIR-14) in `m9/FINDINGS.md` and the page; the curve's first point labelled as the build's 0.12B eval with the screen anchor drawn separately; 20–100 docs/s; 33.4M; the review paragraph rewritten after this pass |
 
+**Pass 5 — same reviewer, cross-file consistency and omissions on the frozen set**
+(`research/m10-codex-plan5-2026-09-01.md`; read-exclusion audited clean). 3 BLOCKER / 5 MAJOR /
+2 MINOR. **All actioned:**
+
+| # | finding | disposition |
+|---|---|---|
+| B | the CQADupStack components were scored by the Mac diagnostics yet proposed as COV | **adopted** — COV admits only surfaces no M10 decision has read; the CQA pair is DEV-6, reported beside every COV read; 86 raw reads logged in `m10/RESULTS.md`; floor three untouched families |
+| B | A2 and A3 were not volume-matched (4,500,314 vs 4,463,314) | **adopted** — identical post-screen unique counts, the larger downsampled with seed 0, both hashes locked before any arm |
+| B | BRIGHT's third-party documents fail an "every document's rights" standard | **adopted modified** — the standard applied is the dataset-level licence at the primary source, the same one that admitted CQADupStack and the six (also third-party text); BRIGHT is one family, its caveat disclosed, evaluation-only. Demanding per-document rights would disqualify the six themselves |
+| M | student contradiction (bge-small architecture vs MiniLM default) | **adopted** — bge-small is the screen anchor, family F decides the build student, MiniLM default; MiniLM's head passes the same parity check first |
+| M | generation gate not executable (20 vs 200, unpinned fallback, no decoding/seed/retry/rubric/approver) | **adopted** — §Data generation contract: 200 per form everywhere, pinned artifacts, sampling parameters, deterministic seeds, one retry, dedup, the 90%/80% rubric, Dylan as approver, two prompt revisions max |
+| M | the ledger does not exist | **adopted** — `m10/LEDGER.md` skeleton committed with the sections the lock must fill |
+| M | extension, margin, seed range, negatives RNG, missing-seed behaviour undefined | **adopted** — all defined in §Recipe and §Screen |
+| M | seed-level leakage; 5-word rule vs 8-gram screen; lenient parser | **adopted** — seeds pre-filtered against the protected index; word-5-gram containment against the seed; `forms.parse` strict |
+| m | stale numbers in §8 read as policy; "five passes" premature | **adopted** — this note at the top of §8; pass 5 recorded |
+| m | dev-reuse accounting not fillable | **adopted** — exact counts (86) in `m10/RESULTS.md` |
+
+**Pass 6 — verification of the pass-5 fixes and the trim** (`research/m10-codex-plan6-2026-09-01.md`;
+read-exclusion audited clean). 8 of 10 land; the trim removed nothing a box session needs. Two
+items remain as **recorded dissents**, plus one contradiction fixed:
+
+| # | finding | disposition |
+|---|---|---|
+| B | BRIGHT admitted although its third-party documents' rights are not conveyed | **not adopted, dissent recorded** — the reviewer's per-document standard would also disqualify the six and CQADupStack; the plan applies M7's dataset-level eval-use standard consistently, discloses the caveat, and uses COV for selection only, never for a claim. Owner may overrule (`m10/COV_CANDIDATES.md`) |
+| B | COV floor three, reviewer wants four | **not adopted, dissent recorded** — with the CQA pair demoted, four untouched families exist only if LEDGER admits; the floor stays three, the report names the family count, and Dylan may raise it |
+| M | mandate said M9 "is merged after the close-out cleanup" while STATUS says merged with close-out pending | **adopted** — one wording: merged 2026-09-01 after the repo cleanup; close-out pending from `m9-work` |
+
+**Owner amendment 2026-09-01, after pass 6 — the compute ruling and the review taken with it.**
+Dylan: "M10 won't be done on a 3080. M10 will be done on a GPU budget, if allowed, or not at all."
+The same-day review of the plan against the goal (a best-in-class asymmetric pair) found four
+places where the box, not the evidence, had set a number; they changed together:
+
+| # | change | why | where |
+|---|---|---|---|
+| 1 | box path withdrawn; one rented A100; itemized budget, ceiling $1,000 | the ruling | §6, mandate §Compute, decision 2 |
+| 2 | build dose 50M → **200M** examples; extension while a cycle end gains ≥ 0.003, capped by budget | LEAF's dose is 201M on an easier target (768-d, 109M teacher); the old cap was the box's days | §5, mandate §Recipe |
+| 3 | screen dose 2.5M → **5M** | 2.5M was 5% of the old build; a 5% screen of 200M would cost ≈ 70 GPU-hours | §5, mandate §Screen |
+| 4 | family D gains **D-KL1** and **D-NCE**; family G gains **1536**; 16 contrasts, 0.025/16 | a ranking signal only in cycle 3 leaves §9's own caveat untested; the seed passage is a free positive (CARE stage 1, EmbedDistill); §9b is still rising at three layers and a fourth costs 0.39M parameters | mandate §Recipe, §Screen |
+| 5 | **COV resolution number** before the lock (descriptive since pass 7) | MedicalQA 2,048 documents, CorporateLobbying 340 queries, BRIGHT ~100 per slice: an MDE-sized contrast may be unresolvable, and the report must say whether an unresolved verdict was invisible | mandate §Surfaces, M10.0-d |
+| 6 | seed-rank provenance field | a round-trip filter without a second generation pass | mandate §Data |
+| 7 | generator in bf16; 4-bit and Qwen3-4B fallback withdrawn; hosted fallback if the end-to-end projection exceeds 60 GPU-hours | an 80 GB card | mandate §Data, `m10/COV_CANDIDATES.md` |
+| 8 | decision 8: second build seed inside the ceiling | the headline's CI is a query-sampling interval only (`m7/FINDINGS.md` 9) | mandate decisions |
+| 9 | co-training the tower recorded as the M11 candidate | every ≥ 96% near-zero-query system co-trained the document side | §7 |
+
+**Pass 7 — gpt-5.6-terra, high effort, read-only, on the amendment**
+(`research/m10-codex-plan7-2026-09-01.md`; read-exclusion audited clean: the reviewer opened the
+named plan files, `m9src/guard9.py`, `m9/PLANNING.md` §3, `m7/FINDINGS.md`, and ran one web search
+on A100 vLLM throughput). Verdict "not decision-grade"; 2 BLOCKER / 6 MAJOR / 1 MINOR / 5
+contradictions. **All actioned:**
+
+| # | finding | disposition |
+|---|---|---|
+| B | the COV resolution check scored bge-small and MiniLM — family F's own backbones — and made a COV-read decision (screen scope) before selection | **adopted** — demoted to a descriptive **resolution number**: e5-small-v2 and gte-small (candidates in no family), distance only, no direction, first disclosed COV read, cuts nothing; the screen always runs fourteen arms |
+| B | the hosted-generation branch was outside the budget table; at the high end seed 1 and extensions could not fit under $1,000 | **adopted** — §6 carries scenario A (GPU generation, $400–715) and scenario B (hosted, $465–895), an explicit allocation order, and the statement that at the high end nothing optional fits |
+| M | D-NCE not executable: logits, denominator, positive's template, reduction, τ reuse, missing seeds | **adopted** — the literal 129-way softmax cross-entropy is in §Recipe, τ reuse disclosed, removed-seed fallback to L2 counted |
+| M | extension rule not mechanical: baseline undefined, partial cycles, dollar→hour conversion, no ledger fields | **adopted** — m_k − max(m₁…m_{k−1}) ≥ 0.003, whole cycles, `max_extension_cycles` fixed at the lock from dollars minus mandatory lines at measured rates, hard stop on projected spend, ledger fields |
+| M | decision 8 contradicted "full-dose replicas stay waived"; "if the lock says so" a loophole; STATUS weaker | **adopted** — waiver sentence replaced; seed-1 boolean, seeds and row labels locked before any seed-0 six-set output; seed 0 alone controls every action; STATUS repeats the ≥ 100 GPU-hour criterion |
+| M | generation budget assumed 60 output tokens for every form; two forms allow 400 | **adopted** — ≈ 250M generated tokens (350M at caps), 30–60 GPU-hours, fallback gate on the end-to-end projection at 60 h |
+| M | parity sample and `results/perquery.json` had no cloud source or hash check | **adopted** — perquery.json is tracked and sha-verified on the instance; the parity sample regenerates from `m9/registry.json` (tracked, sha pinned) and `port.py` refuses a mismatch, in which case the 512 texts transfer from the box |
+| M | rates provisional; measuring only the first arm is too late; 46 h understated | **adopted** — a day-one rate benchmark (encode, three training mixes, generation smoke, billed price) re-derives §6 before generation and again before the remaining arms; 47 h |
+| m | STATUS still scheduled a Mac 4-bit generator pass | **adopted** — renamed prompt prototyping that produces nothing entering the smoke record, the data, or the manifest |
+
 ## 9. Rank-bottleneck probe (`m10src/rank_probe.py` + `rank_probe_mix.py`, Mac, 2026-09-01)
 
 `results/m10_rank_probe_mac.json`. Stella-400M query vectors (s2p prompt) projected onto their
@@ -220,12 +338,41 @@ evidence that a 384-wide linear head binds before training starts**, and consist
 loss (phase 2) could pull the student elsewhere. At width 640 the same subspace retains 98–100%.
 Within 35M parameters the width comes from the *feature*, not the backbone: mean-pool three layers
 (bge-small layers 12, 8, 4) and concatenate → 1152-d feature → Linear(1152→1024), +786,432
-parameters (≈ 34.2M total), and still exportable per token so fastembed's own mean pooling
+parameters over the 384-d head (head 1.18M; ≈ 34.5M total), and still exportable per token so fastembed's own mean pooling
 reproduces it exactly (mean pooling is linear; M9's trick; identical masking required). This is
 screen family G in the mandate, default 1152; **the screen decides, not the probe.** Caveats: two
-forum components stand in for the six; the capacity probe's 109M student is 768-hidden, so a clear
-from it would be partly width, which decision 6 notes. Diagnostic; read by no rule; dev reads
+forum components stand in for the six; the capacity probe (now optional, report-only) has a
+768-hidden student, so any gain it showed would be partly width. Diagnostic; read by no rule; dev reads
 counted (2 components, 3 scoring passes each per basis).
+
+## 9b. Head-width probe in closed form (`m10src/head_width_probe.py`, Mac, 2026-09-01)
+
+`results/m10_head_width_probe_mac.json`. M9's head-probe design (frozen bge-small backbone, ridge
+head to stella targets fit on 20,000 NQ-open questions, λ on a training-only holdout) with three
+pooled features, scored on the two CQA components against the cached stella documents:
+
+| feature | dim | programmers (retention of stella) | physics |
+|---|---|---|---|
+| mean of layer 12 (M9's head) | 384 | 0.1271 (27.1%) | 0.1750 (35.5%) |
+| layers 12 + 8 | 768 | 0.1545 (33.0%) | 0.2022 (41.0%) |
+| layers 12 + 8 + 4 (M10 default) | 1152 | 0.1722 (36.8%) | 0.2167 (43.9%) |
+
+Each added layer helps a frozen backbone, monotonically, by 6 and 4 points on programmers. This is
+a floor (no training, NQ-only fit set), not a forecast — M9's trained 384-d student reached 50% /
+71% on the same components — and it is consistent with §9: with more output directions the
+frozen features already reach further into stella's space. Family G's default is 1152; the screen
+decides. Diagnostic, read by no rule; dev reads counted (2 components × 3 features).
+
+## 9c. Serving parity of the three-layer per-token head (`m10src/head_width_parity.py`, Mac CPU)
+
+`results/m10_head_width_parity_mac.json`. bge-small with the Linear(1152→1024) head applied per
+token over the concatenated states of layers 12, 8, 4, exported at opset 17: **1073 nodes, zero
+custom-domain ops, 34.54M parameters** (head 1.18M). fastembed 0.8.0 serves it as a custom
+MEAN-pooled normalized model and reproduces the pool-then-head reference to **min-cos
+0.99999984, max-abs 2.0e-07** on 64 texts of 1–300 words. **M10.0-a2 passes** (weights are
+random; parity does not depend on them). Two serving pitfalls for M11: fastembed needs
+`config.json` and `special_tokens_map.json` beside the graph, and transformers 5.x fast tokenizers
+no longer write the latter.
 
 ## 10. Reuse, do not rebuild
 

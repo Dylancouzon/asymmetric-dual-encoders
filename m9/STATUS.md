@@ -25,8 +25,8 @@ a coverage failure. Both bars need ≥87.8% on avg-6; the candidate is not relea
   frozen candidate misses on dev; the six-set rows are still the only calibration between the dev
   surfaces and avg-6, and the whitepaper needs the 35M/3.7B-token frontier point — but they may
   not inform an open M10 decision, so the lock comes first.
-- `m9-status` (the watchdog's status-only orphan branch) has done its job; deleting it on origin
-  is Dylan's call.
+- `m9-status` (the watchdog's status-only orphan branch) was deleted on origin 2026-09-01 on
+  Dylan's instruction; `m9/RUN_STATUS.md` holds its final state.
 
 ## Never do
 

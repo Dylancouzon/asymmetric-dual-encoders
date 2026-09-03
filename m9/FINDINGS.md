@@ -90,8 +90,8 @@ avg-6 retention is expected below the SCREEN-3 macro, not above it.
 - **Diagnostics for M10's design**: the rank-bottleneck probe ran on the Mac 2026-09-01
   (`m10/PLANNING.md` §9): the reconstruction-optimal 384-d output subspace serves one query
   distribution at 99.5% and three at 90–93%, strong evidence that M9's 384-wide linear head bound
-  it under L2 regression — the second cause of the miss beside coverage. Still to run on the box: the capacity probe
-  (`m9src/capacity_probe.py`, 60–70 min) and the per-component DEV-6 read incl. `heldout-longq`.
+  it under L2 regression — the second cause of the miss beside coverage. Still to run on the box: the per-component DEV-6 read incl. `heldout-longq`; the capacity
+  probe is optional and report-only now that the 35M cap is hard (Dylan, 2026-09-01).
 - **A recommendation**: build M10's recipe around coverage first (synthetic queries in every form
   the six use and beyond, FineWeb breadth), then LEAF's optimizer regime (small batch, cyclic
   anneals), with a ranking-aware phase-2 loss registered at lock rather than symptom-gated.

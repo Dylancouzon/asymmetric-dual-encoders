@@ -1,0 +1,30 @@
+{
+ "_what": "M10.0-a2 (Mac, CPU): can fastembed serve the three-layer pooled head exactly?\n\nThe M10 default student concatenates masked-mean-pooled hidden states of layers 12, 8 and 4\n(1152-d) before a Linear(1152 -> 1024) head. Mean pooling is linear, so applying the head PER\nTOKEN over the concatenated per-token states and letting fastembed mean-pool afterwards is the\nsame vector as pooling first (identical masking required). This exports that per-token graph\n(opset 17), registers it as a fastembed custom model with MEAN pooling + normalization, and\ncompares fastembed's output to the in-graph pool-then-head reference. Random head weights: the\ncheck is about the serving path, not quality. Writes results/m10_head_width_parity_mac.json.",
+ "student": "BAAI/bge-small-en-v1.5",
+ "layers": [
+  12,
+  8,
+  4
+ ],
+ "opset": 17,
+ "custom_domain_ops": [],
+ "n_nodes": 1073,
+ "onnx_bytes": 137805407,
+ "params_total": 34540672,
+ "params_head": 1180672,
+ "n_texts": 64,
+ "ort_then_manual_mean_pool": {
+  "min_cos": 0.9999998807907104,
+  "max_abs": 2.0116567611694336e-07
+ },
+ "fastembed": {
+  "version": "0.8.0",
+  "served": true,
+  "min_cos": 0.9999998365736698,
+  "mean_cos": 1.0000000097414308,
+  "max_abs": 2.0209552109573536e-07,
+  "seconds": 0.9,
+  "pass_min_cos_1e-4": true,
+  "pass_max_abs_1e-3": true
+ }
+}
