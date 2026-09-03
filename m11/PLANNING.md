@@ -60,6 +60,19 @@ touch the frozen rule: `zero_encoder.py` calls `no_padding()` and takes truncati
 fastembed reads the changed fields. Re-run `verify_bundle.py` on the edited bundle, state the edit
 in both cards, and gate a fastembed batch containing a >512-token text beside a short one.
 
+**Editing the file is the only available mechanism, not a preference.** Two halves, different owners:
+
+- **Truncation 8000 is ours and is not a fastembed bug.** fastembed truncates at
+  `min(model_max_length, max_length)` as documented; our repo declares 8000 because it copies
+  stella's file, while the frozen rule and the index are 512. Dylan's own **qdrant/fastembed #689**
+  (2026-08-24) records that there is no API override — "the only override today is
+  `specific_model_path` with an edited `tokenizer_config.json`". #689 is the mirror case (a config
+  capping models *below* upstream); ours sits *above* our real limit. Related: #685/#687
+  (`max_length: 0`), #500 (`sys.maxsize` sentinel), #531 (docstring drift).
+- **Fixed-512 padding surviving is an upstream defect** — see §T4.
+
+Ruled 2026-09-03 (Dylan): edit, and state the deviation in both cards.
+
 ## T2 — zero's query path → ONNX
 
 Rule (`m11/release/zero_encoder.py:79-88`): unique ids with counts `c_u`, weight each unique row by
@@ -149,8 +162,23 @@ accepted for anything but nano), **including `parallel>1`**: `CustomTextEmbeddin
 `_get_worker_class()`, so the inherited worker constructs `OnnxTextEmbedding`, which cannot resolve a
 runtime-registered name. Unverified but cheap to check, and a serial-only smoke would miss it.
 
-No PR this milestone. Leave the branch pushed and PR-ready; a PR would still need canonical
-reference vectors per `CONTRIBUTING.md` and an honest description — zero **missed**
+**Upstream defect in `load_tokenizer` (under independent verification, 2026-09-03).**
+`common/preprocessor_utils.py` overrides truncation **unconditionally** but sets padding only
+`if not tokenizer.padding`. Nothing checks the two are consistent, so a repo shipping
+`padding = Fixed(512)` with truncation 8000 leaves every 513–8000-token input neither padded nor
+truncated → guaranteed ragged batch → opaque `ValueError: inhomogeneous shape` at
+`onnx_text_model.py:82`. Dynamic padding is the intended default (fastembed's own
+`enable_padding()` call yields `length: None`, i.e. batch-longest). Present on current `main`
+(HEAD `a34e7bc`), not only 0.8.0. No issue or PR covers the padding path — #689, #685/#687, #500 and
+#531 are all truncation precedence.
+
+**Ruled 2026-09-03 (Dylan): verify it with an independent agent; if confirmed, fix it on our local
+branch FIRST, so zero is tested against a correct fastembed rather than around a broken one.**
+Upstream disclosure scope (issue, PR, or neither) is not yet decided. Fork cloned to
+`/home/dylan/fastembed`.
+
+No model-integration PR this milestone. Leave the branch pushed and PR-ready; a PR would still need
+canonical reference vectors per `CONTRIBUTING.md` and an honest description — zero **missed**
 `LR-dense-pertask 0.4583` at 0.4339 (CI-resolved), its fused variant ties OpenSearch.
 
 ## T5 — card fixes before anything goes public
