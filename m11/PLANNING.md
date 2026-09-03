@@ -91,7 +91,37 @@ in both cards, and gate a fastembed batch containing a >512-token text beside a 
 
 Ruled 2026-09-03 (Dylan): edit, and state the deviation in both cards.
 
-## T2 — zero's query path → ONNX
+## T2 — zero's query path → ONNX — **DONE 2026-09-03**
+
+`m11/release/export_onnx.py`, results in `results/m11_zero_export.json`, live at commit
+`fb8e5c5b`. The design below was followed as written; ten checks, all passing:
+
+| check | measured |
+|---|---|
+| standard domain only, opset 17, checker | 13 op types, domain `''` |
+| 1,024 **real dev queries** (`heldout-train`) vs the numpy encoder | max-abs **4.47e-08**, min-cos **0.99999976** |
+| batch invariance, padded beside a 600-token query | 1.86e-08 |
+| `model_tokens` + masked mean + L2 == `model.onnx` | 2.77e-08 |
+| literal `[PAD]` / `[CLS]` / `[SEP]` / `[UNK]` / `[MASK]` | 1.49e-08 |
+| 13 edge cases at b=1 (lengths 511/512/513, unmappable scripts, 120-char word, …) | 5.96e-07 |
+| permutations of one bag agree | 1.49e-08 |
+| all-masked row returns the `[CLS]` fallback | **0.0** |
+| cost, 1 thread | s=8 **0.047 ms**, s=512 **1.22 ms** |
+| **negative control**: the count-mask IS load-bearing | defective graph off by **1.43e-02** on literal `[PAD]` but only **3.73e-08** on the 1,024 dev queries |
+
+That last row is the §Corrections warning confirmed by measurement: a graph masking the weight but
+not the count axis passes every ordinary query and fails only on a literal `[PAD]`. The check that
+catches it is in the suite because the plan said to put it there.
+
+Two deviations from the plan, both deliberate:
+- **The ONNX graphs are not optional.** `--with-onnx` was removed: the card documents the files, so
+  a build that omits them ships an incoherent card (gate 6 caught exactly that).
+- **Gate 8 re-runs `export_onnx.py --check` against the STAGED graphs** rather than checking a sha
+  against a recorded `"pass": true`, which was the plan's T0 item 4. A recorded verdict binds the
+  file to a claim, not to the arithmetic; the negative-control test corrupts the staged table and
+  requires gate 8 to notice.
+
+### Design as executed
 
 Rule (`m11/release/zero_encoder.py:79-88`): unique ids with counts `c_u`, weight each unique row by
 `sqrt(c_u)`, divide by `sum_u sqrt(c_u)`, L2 normalize.

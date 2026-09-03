@@ -20,8 +20,10 @@ publicly served between 15:23 and the T1 push are the PRE-T1 bundle — tokenize
 fixed-512 padding, and a card whose Qdrant block raises. Every earlier revision stays publicly
 reachable at its commit regardless of what is pushed next.
 
-Contents: `model.npz` (int8 + fp16 rows), `config.json`, stella's tokenizer at the pinned
-revision, `zero_encoder.py`, model card.
+Contents: `model.npz` (int8 + fp16 rows), `model.onnx` and `model_tokens.onnx` (opset 17, int8
+initializer + per-row fp32 scale, ~31 MB each), `config.json`, stella's tokenizer at the pinned
+revision (sanitised, see T1), `zero_encoder.py`, model card. A caller needs exactly ONE of the
+three weight files.
 
 ## Tooling (this directory)
 
@@ -30,17 +32,19 @@ revision, `zero_encoder.py`, model card.
 | `release/zero_encoder.py` | the shipped query path — 89 lines, numpy + tokenizers, **no torch** |
 | `release/verify_bundle.py` | gate 4: **staged** encoder vs `m7src/table.py` on the **frozen source** table (5.5e-7 max-abs) |
 | `release/verify_tokenizer.py` | gate 7: what fastembed's own `load_tokenizer` makes of the shipped files |
-| `release/test_gates.py` | 12 checks: 1 positive control, 11 breakages each gate must catch |
-| `release/push.py` | build + 7 gates + upload + re-download verification |
+| `release/export_onnx.py` | T2: builds both graphs and re-derives all 10 parity checks |
+| `release/test_gates.py` | 14 checks: 1 positive control, 13 breakages each gate must catch |
+| `release/push.py` | build + 8 gates + upload + re-download verification |
 | `release/MODEL_CARD.md` | the card; `REPO_ID` is substituted at push time |
 
-**Seven gates**, all re-run at every push: (1) the frozen source AND the staged `model.npz` hash to
+**Eight gates**, all re-run at every push: (1) the frozen source AND the staged `model.npz` hash to
 `FREEZE.json`, (2) lineage records unchanged, (3) `assert_releasable`, (4) conformance — the
 **staged** encoder against the **frozen source** table, preproc rule read from `FREEZE.json`,
 (5) the staging dir is exactly the manifest, (6) the card's python executes against the staging
-dir, (7) fastembed's loader gets the frozen 512 rule and dynamic padding. `--push` requires
-`--build` in the same invocation; after upload the commit is re-downloaded and compared file by
-file. T2 adds an ONNX gate that re-runs parity in-gate rather than reading a recorded verdict.
+dir, (7) fastembed's loader gets the frozen 512 rule and dynamic padding, (8) the staged ONNX graphs
+re-checked against the numpy path by re-running the parity arithmetic, not by reading a recorded
+verdict. `--push` requires `--build` in the same invocation; after upload the commit is
+re-downloaded and compared file by file.
 
 `test_gates.py` is what makes the gates worth having — passing gates prove nothing on their own,
 since the previous set all passed while gate 4 compared the bundle against itself.
@@ -78,7 +82,7 @@ published until T0 and T1 land.**
 |---|---|
 | T0 bind the release path | **DONE** 2026-09-03 — 9 gates on a build snapshot; Codex reviewed the fix and broke it, all 9 findings actioned; `test_gates.py` proves 13 attacks refused |
 | T1 sanitise tokenizer (`zero` repo) | **DONE** 2026-09-03 — `push.sanitise_tokenizer`; gate 8 measures what fastembed's own loader gets; the doc-tower repo still needs the same edit under T3 |
-| T2 zero query path → ONNX | pending — design verified exact; int8 initializer, no `Unique`, two graphs |
+| T2 zero query path → ONNX | **DONE** 2026-09-03 — two opset-17 graphs, 10 checks, parity 4.47e-08 on 1,024 real dev queries; live at `fb8e5c5b`. `m11/PLANNING.md` §T2 |
 | T3 doc tower publish (PUBLIC, new repo) | fp32 passes; **fp16 fails §11.4 (1.37e-3)**, no `config.json`, no `model_tokens.onnx` |
 | T4 fastembed fork branch, no PR | fork cloned to `/home/dylan/fastembed`; **upstream 0.8.0 regression found and fixed** on branch `fix-fixed-padding-ragged-batch` (breaks `thenlper/gte-base`), reported as qdrant/fastembed#703 — T4 runs against that branch |
 | T5 card fixes | `MODEL_CARD.md:90` raises; must not go public as-is |

@@ -1,0 +1,93 @@
+{
+ "artifacts": {
+  "model.onnx": {
+   "bytes": 31382036,
+   "relpath": "work/m11onnx/zero-v1/model.onnx",
+   "sha256": "6c8a9d0753330cb5291b4df005ecfaa04a27b587f6af6f0986778dc43fb9ec0a"
+  },
+  "model_tokens.onnx": {
+   "bytes": 31377524,
+   "relpath": "work/m11onnx/zero-v1/model_tokens.onnx",
+   "sha256": "457e73ec07c958982fcc7a276e4c218d6ab70b8a2c55452e38a318c27dcfb5f0"
+  }
+ },
+ "batch_invariance_max_abs": 1.862645149230957e-08,
+ "checks": [
+  {
+   "detail": "13 op types, domains ['']",
+   "name": "1 standard domain only, opset 17, checker passes",
+   "pass": true
+  },
+  {
+   "detail": "max-abs 4.470e-08   min-cos 0.999999762",
+   "name": "2 parity on 1024 real dev queries",
+   "pass": true
+  },
+  {
+   "detail": "1.863e-08",
+   "name": "3 batch invariance (padded beside a long query)",
+   "pass": true
+  },
+  {
+   "detail": "2.771e-08",
+   "name": "4 model_tokens + masked mean + L2 == model.onnx",
+   "pass": true
+  },
+  {
+   "detail": "1.490e-08",
+   "name": "5 literal [PAD] / special tokens",
+   "pass": true
+  },
+  {
+   "detail": "max-abs 5.960e-07 on 'x x x x x x x x x x x x x x '",
+   "name": "6 13 edge cases at b=1",
+   "pass": true
+  },
+  {
+   "detail": "1.490e-08",
+   "name": "7 permutations of one bag agree",
+   "pass": true
+  },
+  {
+   "detail": "0.000e+00",
+   "name": "9 all-masked row returns the [CLS] fallback",
+   "pass": true
+  },
+  {
+   "detail": "defective: [PAD] 1.426e-02 vs dev 3.725e-08",
+   "name": "10 count-mask is load-bearing (defective graph fails 5)",
+   "pass": true
+  },
+  {
+   "detail": "s=8 0.046 ms   s=512 1.148 ms",
+   "name": "8 cost row measured",
+   "pass": true
+  }
+ ],
+ "dev_queries": {
+  "max_abs": 4.470348358154297e-08,
+  "min_cos": 0.9999997615814209,
+  "n": 1024
+ },
+ "edge_cases": {
+  "max_abs": 5.960464477539062e-07,
+  "n": 13,
+  "worst": "x x x x x x x x x x x x x x x x x x x x "
+ },
+ "eps": 1e-06,
+ "fallback_max_abs": 0.0,
+ "latency_ms_1thread": {
+  "s=512": 1.148494520020904,
+  "s=8": 0.04551625999738462
+ },
+ "negative_control": {
+  "dev_queries_max_abs": 3.725290298461914e-08,
+  "pad_fixtures_max_abs": 0.014262028969824314
+ },
+ "opset": 17,
+ "pad_fixtures_max_abs": 1.4901161193847656e-08,
+ "pass": true,
+ "permutation_max_abs": 1.4901161193847656e-08,
+ "source_table_sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
+ "tokens_route_max_abs": 2.7707628288964337e-08
+}

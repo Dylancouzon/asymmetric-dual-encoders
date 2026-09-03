@@ -44,6 +44,37 @@ enc = ZeroQueryEncoder(d, variant="int8")           # or "fp16"
 q = enc.encode(["how do mrna vaccines work?"])      # (1, 1024), L2-normalized
 ```
 
+### ONNX
+
+The same query path is also an ONNX graph, so you can serve it without numpy or `tokenizers`
+Python — no transformer, still a gather and a sum. `model.onnx` returns the pooled, normalized
+vector; `model_tokens.onnx` returns one weighted row per token, for pipelines that do their own
+masked-mean pooling (fastembed's, for instance).
+
+```python
+# pip install onnxruntime tokenizers
+import numpy as np, onnxruntime as ort
+from tokenizers import Tokenizer
+
+tok = Tokenizer.from_file(f"{d}/tokenizer.json")     # padding/truncation already correct
+sess = ort.InferenceSession(f"{d}/model.onnx", providers=["CPUExecutionProvider"])
+
+encs = [tok.encode(t) for t in ["how do mrna vaccines work?", "who invented the barometer"]]
+L = max(len(e.ids) for e in encs)
+ids = np.zeros((len(encs), L), np.int64)
+attn = np.zeros((len(encs), L), np.int64)
+for i, e in enumerate(encs):
+    ids[i, :len(e.ids)], attn[i, :len(e.ids)] = e.ids, 1
+
+Q = sess.run(None, {"input_ids": ids, "attention_mask": attn})[0]   # (2, 1024), normalized
+assert Q.shape == (2, 1024)
+```
+
+Both graphs are opset 17, standard operators only, and carry the table as an **int8 initializer
+with a per-row fp32 scale** dequantized in-graph — so each is ~31 MB rather than the 125 MB fp32
+rows would cost. **You need exactly one of `model.npz`, `model.onnx` or `model_tokens.onnx`**, not
+all three; the repo ships all of them so you can pick your runtime.
+
 Documents are encoded by the frozen teacher — **pin the revision**, the table is only valid
 against this exact document space:
 
@@ -121,6 +152,8 @@ fingerprint (`adb24fb2e8cad66f`).
 | file | what |
 |---|---|
 | `model.npz` | `rows_int8` (30522×1024) + `int8_scale`, and `rows_fp16` for reference |
+| `model.onnx` | the whole query path as one opset-17 graph → `(b, 1024)` pooled + normalized |
+| `model_tokens.onnx` | the same, emitting `(b, s, 1024)` per-token weighted rows for pipelines that pool themselves |
 | `config.json` | the frozen preprocessing rule, teacher pin, document-encoder spec, shas |
 | `zero_encoder.py` | the whole query path — numpy + tokenizers, no torch |
 | `tokenizer.json`, `vocab.txt`, … | stella's WordPiece tokenizer, copied at the pinned revision — with the two edits below |
@@ -194,9 +227,15 @@ while its query side remains a table lookup plus token counts.
 |---|---|
 | query asset (int8 rows + scales + tokenizer) | **31.8 MB** |
 | query encode, batch 1, one CPU core | **0.38 ms** (`zero_encoder.py` measures ~0.07 ms) |
+| `model.onnx`, batch 1, one thread, 8-token query | **0.047 ms** |
+| `model.onnx`, batch 1, one thread, 512-token query | **1.22 ms** |
 | hydration (cold load to first query) | **0.22 s** |
 | document index, 1024-d fp16 | 2.05 GB per 1M documents |
 | document index, 1024-d int8 | 1.02 GB per 1M documents |
+
+The ONNX graph derives token counts from an all-pairs comparison, so its cost grows with the
+SQUARE of the sequence length — 26x from an 8-token query to a 512-token one. Real queries sit at
+the short end (the dev set's median is 13 wordpieces), but a long one is not free.
 
 For reference at the document side: LightRetriever 3.07, OpenSearch sparse 1.40,
 bge-small 0.77 GB/1M. `zero`'s document index is not cheap — the trade is all on the query side.
@@ -221,7 +260,8 @@ Amazon ESCI is Apache-2.0. The teacher, `NovaSearch/stella_en_400M_v5`, is MIT.
 | | |
 |---|---|
 | first published | 2026-09-03 — the frozen M7 bundle, with stella's tokenizer files copied verbatim |
-| this revision | 2026-09-03, commit `1aa60418` — `tokenizer_config.json` `model_max_length`/`max_length` 32768/8000 → 512, `tokenizer.json` `padding` `Fixed(512)` → `null`, and one broken snippet in this card fixed |
+| ONNX added | 2026-09-03, commit `fb8e5c5b` — `model.onnx` and `model_tokens.onnx`; the `.npz` and its numbers unchanged |
+| tokenizer fixed | 2026-09-03, commit `1aa60418` — `tokenizer_config.json` `model_max_length`/`max_length` 32768/8000 → 512, `tokenizer.json` `padding` `Fixed(512)` → `null`, and one broken snippet in this card fixed |
 
 `model.npz` is byte-identical across both (sha `a7007b1a…`) and the reference encoder's output is
 unchanged, so **no published number differs between revisions**. Pass `revision=` to

@@ -16,9 +16,9 @@ Gates, all of which run against `OUT/` after it is built and before a byte is up
   5. manifest exactness -- OUT/ contains every declared file and nothing else
   6. every python block in the generated README.md executes
   7. verify_tokenizer.py -- fastembed's own loader gets the frozen 512 rule and dynamic padding
-
-T2 adds an ONNX gate here; it re-runs parity in-gate rather than reading a `"pass": true` JSON,
-because a recorded verdict binds the file to a claim and not to the arithmetic.
+  8. export_onnx.py --check -- re-runs every ONNX parity check against the STAGED graphs. It
+     re-derives the numbers rather than reading a `"pass": true` JSON, because a recorded verdict
+     binds the file to a claim and not to the arithmetic.
 
 The gates exist to catch ACCIDENTS -- a stale staging directory, a hand-edit nobody remembers, the
 wrong tokenizer copied, a card that raises. Two adversarial reviews (Codex and Fable, 2026-09-03)
@@ -53,7 +53,10 @@ TOKENIZER_FILES = ("tokenizer.json", "tokenizer_config.json", "vocab.txt",
                    "special_tokens_map.json")
 # Exactly what ships. push() refuses to upload anything not on this list, and refuses to
 # leave anything on it behind.
-MANIFEST = ("model.npz", "config.json", "zero_encoder.py", "README.md") + TOKENIZER_FILES
+ONNX_FILES = ("model.onnx", "model_tokens.onnx")
+ONNX_SRC = REPO / "work/m11onnx/zero-v1"
+MANIFEST = (("model.npz", "config.json", "zero_encoder.py", "README.md")
+            + TOKENIZER_FILES + ONNX_FILES)
 
 # The frozen preprocessing rule is max_length 512 (FREEZE.json:preproc) and the document index
 # was built at 512 (FREEZE.json:encoder_spec). stella's own tokenizer files declare truncation
@@ -154,6 +157,11 @@ def build():
         "tokenizer_deviation_from_teacher": tok_deviation,
     }, indent=1, sort_keys=True) + "\n")
 
+    for name in ONNX_FILES:
+        src = ONNX_SRC / name
+        if not src.exists():
+            sys.exit(f"REFUSED: {src} does not exist; run m11/release/export_onnx.py first")
+        shutil.copy2(src, OUT / name)
     _BUILT = True
     print(f"  built {OUT}  ({len(list(OUT.iterdir()))} files)")
 
@@ -212,7 +220,7 @@ def gate_conformance(fz):
 
 
 def gate_manifest():
-    """(5) the snapshot is exactly the manifest -- no extra file rides along, none is missing."""
+    """(5) the staging dir is exactly the manifest -- no extra file, none missing."""
     want = set(MANIFEST)
     have = {p.name for p in OUT.iterdir() if p.name != "__pycache__"}
     if have != want:
@@ -294,6 +302,16 @@ def render_card(repo_id):
     (OUT / "README.md").write_text(card)
 
 
+def gate_onnx():
+    """(8) re-run the ONNX parity checks against the STAGED graphs."""
+    r = _run("export_onnx.py", "--check", "--no-write", "--onnx-dir", OUT, "--bundle", OUT)
+    sys.stdout.write(r.stdout)
+    if r.returncode != 0:
+        sys.stderr.write(r.stderr)
+        sys.exit("REFUSED: the staged ONNX graphs do not reproduce the numpy query path")
+    print("  gate 8 OK    staged ONNX graphs re-checked against the numpy path")
+
+
 def run_gates(repo_id=None):
     fz = freeze()
     gate_artifact(fz)
@@ -302,6 +320,7 @@ def run_gates(repo_id=None):
     gate_manifest()
     gate_readme(repo_id)
     gate_tokenizer()
+    gate_onnx()
 
 
 # ---------------------------------------------------------------- push

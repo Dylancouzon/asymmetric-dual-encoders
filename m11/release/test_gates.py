@@ -192,6 +192,23 @@ def t_card_renamed_variable():
         push.gate_readme(REPO_ID)               # must PASS, against the staged bytes
 
 
+@test("gate 8 catches a corrupted ONNX graph",
+      "do not reproduce the numpy query path")
+def t_onnx_corrupt():
+    """Gate 8 re-runs the parity arithmetic, so zeroing the table inside the graph must fail it --
+    a recorded `"pass": true` would not have noticed."""
+    import onnx
+    from onnx import numpy_helper
+    with staged() as d:
+        m = onnx.load(str(d / "model.onnx"))
+        for init in m.graph.initializer:
+            if init.name == "TABLE":
+                arr = numpy_helper.to_array(init)
+                init.CopyFrom(numpy_helper.from_array(arr // 2, "TABLE"))
+        onnx.save(m, str(d / "model.onnx"))
+        return attempt(push.gate_onnx, "do not reproduce the numpy query path")
+
+
 @test("push refuses without a build in the same invocation", "requires --build")
 def t_no_build():
     built, push._BUILT = push._BUILT, False
