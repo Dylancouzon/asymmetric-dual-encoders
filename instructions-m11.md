@@ -59,7 +59,7 @@ and publishes the document tower. Nano's export, any upstream PR and the whitepa
 | 1 | `zero-query-encoder-v1` flips **PUBLIC**. Licence was ruled MIT-and-public-valid on 2026-09-03; no further sign-off needed. |
 | 2 | The stella ONNX document tower is published as a **new PUBLIC HF repo** on Dylan's account. |
 | 3 | fastembed work lands on a branch of the fork **`Dylancouzon/fastembed`** (created 2026-09-03). **No PR is opened this milestone.** |
-| 4 | Whitepaper (deliverable 4) **deferred** until M10 resolves — the frontier has one point until nano exists. |
+| 4 | Whitepaper (deliverable 4) **deferred** until M10 resolves — the frontier has one point until nano exists. **Reaffirmed 2026-09-03** after both adversarial reviews proposed a cancellation contingency: deferral stands, no dated fallback. Do not re-propose it. |
 
 Dylan's go for an HF push is **granted for exactly these two repos** at these visibilities; anything
 else still needs asking.

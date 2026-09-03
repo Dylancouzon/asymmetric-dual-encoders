@@ -178,11 +178,10 @@ figure quoted for masked-mean linearity inherits the same doubt.
 
 ## Open for Dylan
 
-- **Whitepaper contingency.** Both reviews argue deferral needs a cancellation branch: if the M10
-  budget is refused, the mandated report never ships despite M7/M8 being complete. Proposal — write
-  the zero-only paper if M10 is declined or unfunded past a date Dylan sets, revising later if nano
-  runs. Nothing in M11a needs redoing either way, provided the doc-tower repo name and both cards
-  avoid presupposing `nano`.
+- ~~Whitepaper contingency~~ — **CLOSED 2026-09-03 (Dylan): deferral stands, no contingency.** Both
+  reviews proposed a dated fallback if the M10 budget is refused; ruled against. Not to be
+  re-proposed. Nothing in M11a needs redoing either way, provided the doc-tower repo name and both
+  cards avoid presupposing `nano`.
 - **The tokenizer edit changes published bytes** in an already-released repo. It does not touch the
   frozen table or the numpy path, but it is a change to a shipped artifact and is recorded here
   rather than made silently.
