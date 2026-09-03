@@ -48,7 +48,7 @@ published until T0 and T1 land.**
 | T1 sanitise tokenizer (both repos) | **blocker** — stella ships truncation 8000 + fixed-512 padding; fastembed mistruncates >512-token inputs and crashes on mixed batches |
 | T2 zero query path → ONNX | pending — design verified exact; int8 initializer, no `Unique`, two graphs |
 | T3 doc tower publish (PUBLIC, new repo) | fp32 passes; **fp16 fails §11.4 (1.37e-3)**, no `config.json`, no `model_tokens.onnx` |
-| T4 fastembed fork branch, no PR | fork `Dylancouzon/fastembed` created; two routes to test, incl. `parallel>1` |
+| T4 fastembed fork branch, no PR | fork cloned to `/home/dylan/fastembed`; **upstream 0.8.0 regression found and fixed** on branch `fix-fixed-padding-ragged-batch` (breaks `thenlper/gte-base`) — T4 runs against that branch |
 | T5 card fixes | `MODEL_CARD.md:90` raises; must not go public as-is |
 | flip `zero` PUBLIC | **last**, after remote byte verification — `create_repo(exist_ok=True)` ignores `private` |
 

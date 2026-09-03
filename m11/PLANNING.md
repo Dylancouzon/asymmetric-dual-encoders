@@ -172,10 +172,30 @@ truncated → guaranteed ragged batch → opaque `ValueError: inhomogeneous shap
 (HEAD `a34e7bc`), not only 0.8.0. No issue or PR covers the padding path — #689, #685/#687, #500 and
 #531 are all truncation precedence.
 
-**Ruled 2026-09-03 (Dylan): verify it with an independent agent; if confirmed, fix it on our local
-branch FIRST, so zero is tested against a correct fastembed rather than around a broken one.**
-Upstream disclosure scope (issue, PR, or neither) is not yet decided. Fork cloned to
-`/home/dylan/fastembed`.
+**CONFIRMED and FIXED on the fork, 2026-09-03.** Independently verified, then reproduced directly:
+it is a **0.8.0 regression that breaks `thenlper/gte-base`, a model on fastembed's own supported
+list** (ships `Fixed: 128` against truncation 512).
+
+| | padding | lengths for `["hello world", 200x"retrieval "]` | result |
+|---|---|---|---|
+| `main` a34e7bc | fixed 128 | `[128, 202]` | `ValueError: inhomogeneous shape` |
+| patched | dynamic | `[202, 202]` | works; batched vs single **max abs delta 0.0** |
+
+Cause: `800f388` (PR #588, colmodernvbert) added the `if not tokenizer.padding` guard so a
+left-padding model could keep `direction: Left`; first tagged in `v0.8.0`. The call was
+unconditional in 0.7.4, where gte-base worked. CI misses it because every model test uses strings
+shorter than 128 tokens.
+
+Fix (`Dylancouzon/fastembed` branch `fix-fixed-padding-ragged-batch`, commit `a8390e3`): always
+`enable_padding`, never passing `length`, carrying `direction`/`pad_id`/`pad_type_id`/`pad_token`/
+`pad_to_multiple_of` over from the tokenizer's own config so #588's left-padding case still works.
+Three regression tests in `tests/test_preprocessor_utils.py`; the two that matter fail on unpatched
+`main` and pass patched. Rejected alternatives: capping `length` to the truncation limit does not
+fix the reported case (128 < 512 is unchanged); forcing `length = truncation` pads stella to 8000.
+
+**T4 must run against this branch, not released 0.8.0** — that is the point of fixing it first.
+Upstream disclosure scope (issue, PR, or neither) is still Dylan's call and is NOT yet decided;
+nothing has been sent to `qdrant/fastembed`.
 
 No model-integration PR this milestone. Leave the branch pushed and PR-ready; a PR would still need
 canonical reference vectors per `CONTRIBUTING.md` and an honest description — zero **missed**
