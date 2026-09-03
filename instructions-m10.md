@@ -136,8 +136,12 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
   its registered six-set transaction **amended before execution to six-only** (the `if C1 then
   execute` reserved conditional is struck; disclosed and ratified under decision 1), so M9 cannot
   spend the reserved access. Its rows are a forecasting calibration and a whitepaper frontier
-  point; nothing in M10 may change on them. LoTTE read #1 then runs as the registered veto on
-  the selected recipe.
+  point; nothing in M10 may change on them. **Wherever those rows are published — frontier table,
+  whitepaper, model card — they carry M9's build-provenance disclosure with them:** the M9
+  candidate's provenance spans TWO build lock states (mid-build infrastructure repair, session
+  force-reopened; `m9/LEDGER.md` "M9.3 BUILD PROVENANCE DISCLOSURE" and `m9/BUILD_LOG.md`), and it
+  may never be described as an uninterrupted single-lock run. LoTTE read #1 then runs as the
+  registered veto on the selected recipe.
 - **M10.3 BUILD.** One candidate under the kill and extension rules; export + parity; freeze;
   pre-freeze review; LoTTE read #2 (audit only); then the seed-1 replica if decision 8's condition
   holds (descriptive, never a choice).
@@ -412,7 +416,12 @@ joins the M11 all-in quantization comparison.
 
 ## Deliverables
 
-Frozen candidate + `m10/FREEZE.json` (`assert_releasable` with a proper run record), the frontier
+Frozen candidate + `m10/FREEZE.json` (`assert_releasable` with a proper run record — it walks
+`work/runs/<id>.json` for `cfg.sources` and `cfg.init` across the whole lineage and fails CLOSED on
+a missing ancestor, which is why M9's freeze was refused; the record must be **derived from the
+run's own hash-bound `manifest.json`, never asserted by hand**, because a post-hoc record that
+happens to satisfy a licence guard is precisely the artifact that must not be fabricated; see
+`m9/BUILD_LOG.md`), the frontier
 update, the M10 section of the report artifact, decisions logged in CLAUDE.md, handoff to M11.
 
 ## Out of scope (reopening conditions in PLANNING §7)
