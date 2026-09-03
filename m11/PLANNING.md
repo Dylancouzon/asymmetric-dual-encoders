@@ -194,8 +194,15 @@ Three regression tests in `tests/test_preprocessor_utils.py`; the two that matte
 fix the reported case (128 < 512 is unchanged); forcing `length = truncation` pads stella to 8000.
 
 **T4 must run against this branch, not released 0.8.0** — that is the point of fixing it first.
-Upstream disclosure scope (issue, PR, or neither) is still Dylan's call and is NOT yet decided;
-nothing has been sent to `qdrant/fastembed`.
+
+**Reported upstream as qdrant/fastembed#703** (2026-09-03, Dylan's go), Codex-reviewed before
+filing. The issue offers a PR but does not open one; **PR scope remains undecided**. Codex's review
+also caught a bug in the first patch — `padding.get("pad_token", tokenizer_config["pad_token"])`
+evaluates its default eagerly, so a tokenizer serializing its own pad token with no
+`tokenizer_config.json` entry would newly raise `KeyError`; fixed in `c16cce6` with a test that
+fails on the eager form. Claims cut from the draft as unverifiable or wrong: an exhaustive
+blast-radius audit (siglip2 is not in v0.8.0), the reverse-shape "does not crash" claim, and an
+inference about #588's author intent.
 
 No model-integration PR this milestone. Leave the branch pushed and PR-ready; a PR would still need
 canonical reference vectors per `CONTRIBUTING.md` and an honest description — zero **missed**
