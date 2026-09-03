@@ -9,7 +9,7 @@ revision pinned in config.json), so it is only meaningful against document vecto
 by that exact encoder. Cosine similarity is the score.
 
 Conformance: this file reproduces the frozen training-time query path (m7src/table.py
-`encode_pooled`) to < 1e-5 max-abs on the release fixtures; see m11/release/test_conformance.py.
+`encode_pooled`) to < 1e-5 max-abs on the release fixtures; see m11/release/verify_bundle.py.
 """
 import json
 from pathlib import Path

@@ -87,7 +87,8 @@ client.upsert("docs", points=[
     models.PointStruct(id=i, vector=D[i].tolist(), payload={"text": t})
     for i, t in enumerate(docs)])           # D from the document encoder above
 
-hits = client.query_points("docs", query=enc.encode([q])[0].tolist(), limit=5).points
+hits = client.query_points("docs", query=q[0].tolist(), limit=5).points
+print(hits[0].payload["text"])          # q is the (1, 1024) array from Usage above
 ```
 
 **On the edge, put the table in the store too.** A second collection holds one point per vocab
@@ -99,7 +100,8 @@ tokenize → fetch rows by id → pool → search, with no model weights in your
 uses **convex score fusion at w=0.8**, not RRF: on development sets RRF scored 0.5504 against
 convex's 0.5727. Qdrant's native `Fusion.RRF` is therefore a *different, weaker* operating point,
 not the published one — combine the scores yourself to reproduce it. Dense-only in Qdrant
-reproduces 0.4339 exactly.
+reproduces 0.4339 exactly **with exact search** — the HNSW advice above is about cost, and ANN
+recall is a separate confound the published numbers deliberately avoid.
 
 Scalar-quantizing the document index to int8 halves it to ~1.02 GB per 1M vectors, but **that
 was never measured for quality here** — treat it as untested. (The int8 quality-free result
@@ -111,7 +113,7 @@ Tokenize with the bundled WordPiece tokenizer (`add_special_tokens=True`, trunca
 **no padding**, no prefix). A token appearing `c` times in the query carries **total weight
 `sqrt(c)`**, not `c`. Sum the rows, divide by the weight sum, L2-normalize. An empty or
 near-zero-norm bag falls back to the normalized `[CLS]` row (id **101**; row 0 is `[PAD]`).
-`zero_encoder.py` is 80 lines and is the reference. `config.json` carries the rule and its
+`zero_encoder.py` is 89 lines and is the reference. `config.json` carries the rule and its
 fingerprint (`adb24fb2e8cad66f`).
 
 ## Files
@@ -121,7 +123,27 @@ fingerprint (`adb24fb2e8cad66f`).
 | `model.npz` | `rows_int8` (30522×1024) + `int8_scale`, and `rows_fp16` for reference |
 | `config.json` | the frozen preprocessing rule, teacher pin, document-encoder spec, shas |
 | `zero_encoder.py` | the whole query path — numpy + tokenizers, no torch |
-| `tokenizer.json`, `vocab.txt`, … | stella's WordPiece tokenizer, copied at the pinned revision |
+| `tokenizer.json`, `vocab.txt`, … | stella's WordPiece tokenizer, copied at the pinned revision — with the two edits below |
+
+**Two deliberate edits to the copied tokenizer files.** stella's own files declare
+`model_max_length: 32768`, `max_length: 8000` and fixed-512 padding; the frozen rule here — and
+the document index — are **512 with no padding**. This bundle ships `model_max_length: 512`,
+`max_length: 512` and `padding: null`. `config.json` records the original values under
+`tokenizer_deviation_from_teacher`.
+
+Precisely what that changes, by caller:
+
+| caller | before | after |
+|---|---|---|
+| `zero_encoder.py` (the reference path) | 512, no padding | unchanged — **byte-identical output**; it calls `no_padding()` and reads truncation from `config.json` |
+| `tokenizers` directly | every `encode` padded to 512 | ragged unless you enable padding yourself |
+| `transformers` / Sentence Transformers | `model_max_length` 32768, so `truncation=True` with no explicit length truncated at 32768 | 512 — but truncation and padding still happen only when the *call* asks for them |
+| fastembed's tokenizer loader | truncation 8000, fixed-512 padding kept | truncation 512, dynamic padding |
+
+The reference path is unaffected either way, so no published number changes; only what a
+third-party loader does with the same files. The fastembed row is about
+`fastembed.common.preprocessor_utils.load_tokenizer` only — **this repo ships no ONNX graph**, so
+there is no fastembed inference path to describe yet.
 
 Per-token learned weights are **folded into the rows**, so the int8 artifact is self-contained.
 `int8` is the variant every published number below was measured on; it was measured
@@ -192,6 +214,17 @@ still misses the bar. The gap is architectural, not licensing.)
 
 NQ, SQuAD, HotpotQA, FEVER and Mr. TyDi derive from Wikipedia and are **CC BY-SA** (3.0/4.0).
 Amazon ESCI is Apache-2.0. The teacher, `NovaSearch/stella_en_400M_v5`, is MIT.
+
+## Revisions
+
+| | |
+|---|---|
+| first published | 2026-09-03 — the frozen M7 bundle, with stella's tokenizer files copied verbatim |
+| this revision | 2026-09-03 — `tokenizer_config.json` `model_max_length`/`max_length` → 512, `tokenizer.json` `padding` → `null`, and one broken snippet in this card fixed |
+
+`model.npz` is byte-identical across both (sha `a7007b1a…`) and the reference encoder's output is
+unchanged, so **no published number differs between revisions**. Pass `revision=` to
+`snapshot_download` if you need to pin one.
 
 ## Citation / provenance
 

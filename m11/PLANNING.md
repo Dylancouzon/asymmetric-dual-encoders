@@ -39,22 +39,40 @@ synthetic, fails on real" class. **Worse on the doc side**: the index was built 
 (`FREEZE.json:encoder_spec`), so documents of 513–8000 tokens served through fastembed would not
 reproduce the index, and long documents are common where long queries are not.
 
-## T0 — bind the release path (before any upload)
+## T0 — bind the release path — **DONE 2026-09-03**
 
-1. `build()` writes a fresh staging dir from an explicit **manifest**; `push()` refuses any file in
-   it not on the manifest, and refuses to run at all unless `build()` ran in the same invocation.
-2. Gate 1 hashes **`OUT/model.npz`** against `FREEZE.json`, not only the source.
-3. Gate 4 compares the bundle against `m7src/table.py` loaded from the **frozen source path**, so
-   the two sides cannot both be the substituted file.
-4. Every ONNX artifact carries its sha256 in its parity result JSON; `push()` refuses to upload an
-   ONNX file whose sha is not recorded in a **passing** result.
-5. Generate `README.md` **before** the gates and execute every python block in it (the current card
-   raises — see T5).
-6. Upload private → re-download → verify remote shas → **then** flip visibility. Never the reverse.
+1. `build()` rebuilds the staging dir from scratch against an explicit **manifest**; gate 5 refuses
+   any extra or missing file; `--push` requires `--build` in the same invocation. ✔
+2. Gate 1 hashes **`OUT/model.npz`** against `FREEZE.json`, not only the source. ✔
+3. Gate 4 loads the reference from the **frozen source path** *and* imports the **staged**
+   `zero_encoder.py`, so neither side can be the substituted file. The staged-import half was the
+   bigger hole: both gates read `m11/release/zero_encoder.py` and never executed what shipped. ✔
+4. ~~ONNX sha recorded in a passing parity JSON~~ — **deferred to T2 with a different design.** A
+   recorded verdict binds the file to a claim, not to the arithmetic; T2's gate re-runs parity
+   in-gate. No ONNX artifact may be staged until then.
+5. `README.md` is generated **before** the gates and gate 6 executes its python against the staging
+   dir, offline, with the substitution count asserted so a card edit cannot redirect the gate at
+   the published bundle. ✔
+6. ~~Upload private → verify → flip visibility~~ — **unavailable: the repo was never private.**
+   See `m11/STATUS.md`. Upload → re-download at the returned commit → compare file by file, which
+   is what remains meaningful. ✔
 
-## T1 — sanitise the tokenizer in both repos
+Also fixed here: `config.json`'s frozen fields now come from `FREEZE.json` with the mutable
+`.meta.json` sidecar cross-checked against it (it previously *set* the shipped preproc rule), and
+`fallback_token_id` is read from `encoder_spec.cls_id` instead of being hardcoded.
 
-Ship `model_max_length: 512`, `max_length: 512`, and `tokenizer.json` `padding: null`. This does not
+`test_gates.py`: 1 positive control + 11 breakages, each asserting the refusal message matches the
+reason. Reviewed by Codex and Fable; both broke the first implementation. See `m11/STATUS.md`
+§Scope note for what was deliberately NOT built.
+
+## T1 — sanitise the tokenizer — **DONE for `zero` 2026-09-03; T3 must repeat it for the doc tower**
+
+Ship `model_max_length: 512`, `max_length: 512`, and `tokenizer.json` `padding: null`. Done in
+`push.sanitise_tokenizer`, so it is part of every build rather than a one-off edit. Gate 7
+(`verify_tokenizer.py`) measures what `fastembed.load_tokenizer` actually returns: truncation 512,
+padding `length: None`, a mixed `[long, short]` batch rectangular at `[512, 512]`, and masked ids
+identical to the numpy encoder's. Conformance after the edit is unchanged at 5.513e-07 max-abs,
+confirming the numpy path is byte-identical. This does not
 touch the frozen rule: `zero_encoder.py` calls `no_padding()` and takes truncation from
 `config.json:preproc.max_length`, so the numpy path is byte-identical before and after; only
 fastembed reads the changed fields. Re-run `verify_bundle.py` on the edited bundle, state the edit
@@ -194,6 +212,13 @@ Three regression tests in `tests/test_preprocessor_utils.py`; the two that matte
 fix the reported case (128 < 512 is unchanged); forcing `length = truncation` pads stella to 8000.
 
 **T4 must run against this branch, not released 0.8.0** — that is the point of fixing it first.
+**Amended 2026-09-03, measured after T1:** the reason above is now wrong for *our* repo. With
+`padding: null` shipped, `not tokenizer.padding` is true, so stock 0.8.0 installs its own dynamic
+padding and the defect is not triggered — gate 8 passes on unpatched **0.8.0** (`verify_tokenizer.py`:
+truncation 512, padding `length: None`, mixed `[long, short]` batch `[512, 512]`). Confirmed by
+Codex. So released 0.8.0 is the correct regression target for the sanitised bundle, and the fork
+branch remains necessary only to validate the fix against *unsanitised* tokenizer files — which is
+still worth doing, for a different reason than the plan gave.
 
 **Blast radius, audited 2026-09-03:** of the 34 `TextEmbedding` models with an HF source, four ship
 fixed padding and **only `thenlper/gte-base` has it below its truncation limit** (128 vs 512);
