@@ -33,11 +33,23 @@ records hash to what the freeze recorded, (3) `freeze.assert_releasable`, (4) co
   ~500 `[PAD]` rows in every bag; cosine against the frozen path drops to 0.35. `zero_encoder.py`
   calls `no_padding()`. The transformers path never saw this because padding is off by default there.
 
+## M11a in flight (opened 2026-09-03, branch `m11-work`)
+
+The zero half does not depend on M10. Four rulings and the slice: `instructions-m11.md`
+Amendment A. Tasks, graph design and gates: `m11/PLANNING.md`. Nothing here reads a quality set.
+
+| task | state |
+|---|---|
+| T1 flip `zero` PUBLIC | pending — `push.py --public` cannot flip an existing repo, fix first |
+| T2 zero query path → ONNX | pending — design settled, no `Unique` op, int8 initializer, two graphs |
+| T3 doc tower publish (PUBLIC, new repo) | export passes; needs `model_tokens.onnx` + re-verify |
+| T4 fastembed fork branch, no PR | fork `Dylancouzon/fastembed` created |
+
 ## Open
 
 - ~~Licence sign-off~~ — **RULED 2026-09-03 (Dylan): MIT, including for a public release.** Card
   declares `license: mit` (matching stella) with CC BY-SA attribution for
   NQ/SQuAD/HotpotQA/FEVER/Mr.TyDi. No further approval needed on licence to flip the repo public.
-- Deliverables 2–4 (ONNX incl. the document tower, fastembed, whitepaper) and `nano`: blocked on M10.
+- `nano`, its ONNX port, any upstream fastembed PR, and the whitepaper: blocked on M10.
 - Qdrant: dense-only reproduces 0.4339 exactly; the fused 0.4911 needs **convex fusion at w=0.8**,
   which `Fusion.RRF` does not reproduce (dev 0.5504 vs 0.5727). Recorded in the card.

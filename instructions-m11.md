@@ -20,10 +20,13 @@ M11 ships no new science. It turns two frozen artifacts into a product and a pap
    - Model cards carry: CC BY-SA attribution (NQ/SQuAD/HotpotQA/FEVER), teacher + revision pin,
      the claims above, and the three cost rows (query asset / document index / hydration).
 
-2. **ONNX port, INCLUDING the document model.** `B6-pre` (§22) exported the document graph at opset
-   17, zero custom-domain ops, parity min-cosine 0.99999994 — **but on near-identity weights.** The
-   real trained artifacts have never been exported. Export and parity-verify all three: zero's query
+2. **ONNX port, INCLUDING the document model.** Export and parity-verify all three: zero's query
    path, nano, and the document tower. §11.4 tolerances: 1e-4 min-cosine, 1e-3 max-abs.
+   **Status correction (2026-09-03): the document tower is already exported on the REAL weights** —
+   `results/m9_doc_export.json`, opset 17, zero custom-domain ops, min-cos 0.99999940, max-abs
+   3.3e-07, artifacts in `work/m9onnx/stella-400M-doc/`. What that file does NOT show, despite its
+   `fastembed_local` block: that block was measured on `work/m9onnx/nano-minilm-l6`, and no
+   `model_tokens.onnx` exists for stella. **The doc tower has never been served through fastembed.**
 
 3. **fastembed integration** for both query-side models.
 
@@ -44,3 +47,24 @@ M11 ships no new science. It turns two frozen artifacts into a product and a pap
 - `freeze.assert_releasable` gates every upload; the MS MARCO research-only variant must never reach
   one.
 - Dylan's go is required for any HF push.
+
+
+## Amendment A — the M11a slice (Dylan, 2026-09-03)
+
+M10 is paused on budget. The `zero` half of M11 does not depend on it, so M11a ships zero end to end
+and publishes the document tower. Nano's export, any upstream PR and the whitepaper wait for M10.
+
+| # | ruling |
+|---|---|
+| 1 | `zero-query-encoder-v1` flips **PUBLIC**. Licence was ruled MIT-and-public-valid on 2026-09-03; no further sign-off needed. |
+| 2 | The stella ONNX document tower is published as a **new PUBLIC HF repo** on Dylan's account. |
+| 3 | fastembed work lands on a branch of the fork **`Dylancouzon/fastembed`** (created 2026-09-03). **No PR is opened this milestone.** |
+| 4 | Whitepaper (deliverable 4) **deferred** until M10 resolves — the frontier has one point until nano exists. |
+
+Dylan's go for an HF push is **granted for exactly these two repos** at these visibilities; anything
+else still needs asking.
+
+**M11a ships no new science and touches no quality number.** Nothing here reads a dev or reserved
+set, so M9's registration machinery (`m9src/guard9.py`) does not apply — its results are engineering
+parity artifacts, not decisions. The release gates in `m11/release/push.py` DO apply, unchanged, to
+every upload. Plan and gates: `m11/PLANNING.md`.
