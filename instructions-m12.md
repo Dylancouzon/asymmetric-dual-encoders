@@ -4,7 +4,22 @@ Created 2026-09-04 (Dylan). **Scoped down twice the same day** — Fable broke t
 broke the second and recommended killing the training half. Both reviews and what was cut:
 `m12/EXPLORED.md`. Binds from `instructions-m7.md`. Working files `m12/`, branch `m12-work`.
 
-**Local box. One to two days. No training, no new model, no released artifact changes.**
+**Local box. No training, no new model, no released artifact changes. Tier 1 is half a day and
+answers the question; Tier 2 runs only if Tier 1 fails.**
+
+## Where this applies: a CLOUD finding
+
+**Qdrant Cloud — fully pertinent.** Server-side fusion (prefetch + `fusion: rrf|dbsf`) is the only
+one-round-trip hybrid, and a cloud user genuinely cannot express `convex0`. This is the case the card
+sentence misleads and the case the CTO ask covers.
+
+**Edge — largely not, and say so rather than implying otherwise.** Qdrant Edge is embedded, so a user
+owns the process and can fuse in their own ~20 lines with any operator. More to the point,
+`bench/edge_prototype_pair.py` is **dense-only — no BM25, no fusion, ever**; fusion on edge would
+mean shipping a lexical index beside the document index, which has never been built or costed.
+**That gap is a NOTE, not a requirement** (Dylan, 2026-09-04): edge numbers depend heavily on hardware
+and corpus size, so a complete edge-fusion cost row is not something M12 or M14 owes. State the
+limitation plainly and move on.
 
 ## Why this is the whole milestone
 
@@ -75,16 +90,23 @@ entirely.**
 
 **Grids, pinned here before the first fusion call** (an unpinned "best few k" has no statable fitting
 budget):
-- **RRF-k, unweighted:** `k_q ∈ {1,2,3,4,6,11,21,31,61,101}` — **10 candidates**, comparable to
-  convex0's 8. Run first, as its own row: if it closes the 0.022, the gap was never about weights.
-- **RRF weighted:** `k_q ∈ {2,6,11,61}` × `(w_dense, w_bm25) ∈ {(1,1),(2,1),(3,1),(4,1),(1,2),(1,3)}`
+- **TIER 1 — RRF-k, unweighted:** `k_q ∈ {1,2,3,4,6,11,21,31,61,101}` — **10 candidates**, comparable
+  to convex0's 8.
+- **TIER 2 — RRF weighted:** `k_q ∈ {2,6,11,61}` × `(w_dense,w_bm25) ∈ {(1,1),(2,1),(3,1),(4,1),(1,2),(1,3)}`
   — **24 candidates**, judged under split-half (see the rule).
-- **DBSF:** none.
 
 All CPU re-fusion of runs built once — one GPU retrieval pass total, provided the dense runs are
 persisted (below).
 
-**(b) DBSF — parameter-free, untested here.** Per prefetch, using the **sample** SD:
+**Tier 2 runs only if Tier 1 fails, and that is a deliberate de-scope, not laziness.** Tier 1 is
+`convex0` reproduced + RRF over `k` + DBSF: the two operators a cloud user actually reaches for, both
+unfitted or nearly so, and therefore the two **strongest** evidence classes in the rule below.
+Weighted RRF is the weakest row — 24 candidates, split-half machinery, and a weight that has to
+transfer. If Tier 1 clears the bar the question is answered and fitting weights would produce a
+result we would discount anyway. **Registering the skip is part of the rule: Tier 2 is attempted iff
+no Tier 1 row passes.**
+
+**(b) DBSF — parameter-free, untested here. TIER 1.** Per prefetch, using the **sample** SD:
 `ŝ = (s − (μ − 3σ)) / (6σ)`, **no clipping**, and **0.5 for singleton or constant lists**; statistics
 are computed over the returned list at the **pinned depth 1000**; then sum the normalised channels.
 **Register the missing-document rule before scoring**: a doc in one prefetch and not the other
@@ -134,14 +156,15 @@ fitting budget — a single `max()` over ~34 configurations judged against a bar
 would be the contradiction the first draft carried (it both passed a fitted 0.5690 and forbade
 counting it):
 
-| operator | candidates | passes if | strength |
-|---|---|---|---|
-| **DBSF** | 0 | dev macro ≥ B | strongest — nothing fitted |
-| **RRF over `k`, unweighted** | 10 | dev macro ≥ B | second — one parameter, no weight to transfer |
-| **RRF weighted** | 24 | **held-out half** ≥ B, under a registered split-half of dev qids (fit on `hash(qid)` even, score on odd, and the reverse; report the macro of the two held-out halves) | weakest — and it is the only one whose margin the 0.004 bar under-estimates |
+| tier | operator | candidates | passes if | strength |
+|---|---|---|---|---|
+| 1 | **DBSF** | 0 | dev macro ≥ B | strongest — nothing fitted |
+| 1 | **RRF over `k`** | 10 | dev macro ≥ B | second — one parameter, no weight to transfer |
+| 2 | **RRF weighted** | 24 | **held-out half** ≥ B, under a registered split-half of dev qids (fit on `hash(qid)` even, score on odd, and the reverse; report the macro of the two held-out halves) | weakest — the only row whose margin the 0.004 bar under-estimates |
 
 **A shipping operator matches** if any row passes; recommend the highest-strength passing row's exact
-configuration **in Qdrant's units**. **None matches** if no row does; state the real cost of
+configuration **in Qdrant's units**. **Tier 2 is attempted iff neither Tier 1 row passes** — record
+the skip in `m12/LEDGER.md` when it happens. **None matches** if no row does; state the real cost of
 shipping-operator fusion plainly, in M14's paper and the card caveat.
 
 Report all five rows side by side (convex0, M7's unweighted RRF, RRF-over-`k`, weighted RRF, DBSF).
@@ -195,14 +218,13 @@ the teacher, cloud compute, any released artifact.
 ## Deliverables
 
 1. `m12src/` with `rrf_qdrant()` and `dbsf()`, plus parity tests against the vendored reference and
-   degenerate-case tests: singleton, constant, **missing doc**, **empty prefetch** (returned
-   unchanged, contributes nothing), **`w ≤ 0 → 0.0`**, and a **negative normalised DBSF score** (a doc
-   below `μ−3σ` must rank *below* an absent doc). `m7src/fusion.py` unchanged;
-   `m7src/test_fusion_paths.py` still passes.
-2. The 21-point M7 reproduction gate, then the five rows — convex0, M7's unweighted RRF,
-   **RRF over `k`**, **weighted RRF** (split-half), **DBSF** — fitting budgets stated, `k` in Qdrant's
-   units, within-component paired-bootstrap CIs, and the depth curve for the winners — against the
-   registered rule, in `m12/FINDINGS.md`.
+   **three** degenerate-case tests that can actually fire: constant/singleton list → 0.5, a
+   **missing doc** contributing 0, and a **negative normalised DBSF score** (a doc below `μ−3σ` must
+   rank *below* an absent doc). `m7src/fusion.py` unchanged; `m7src/test_fusion_paths.py` still passes.
+2. The 21-point M7 reproduction gate, then **Tier 1** — convex0, M7's unweighted RRF, RRF over `k`,
+   DBSF — with fitting budgets stated, `k` in Qdrant's units, within-component paired-bootstrap CIs
+   and the depth curve for the winners, in `m12/FINDINGS.md`. **Tier 2 (weighted RRF, split-half)
+   only if Tier 1 fails.**
 3. The registration itself, written **and pushed** before scoring, in `m12/LEDGER.md` — the remote
    timestamp is the external witness (M7 convention, `instructions-m7.md:67`).
 4. **The claim, resolved in all three places it is live** — `m11/release/MODEL_CARD.md:158-159`,
@@ -211,7 +233,9 @@ the teacher, cloud compute, any released artifact.
    route to 0.4911. If none matches: keep the sentence and add the measured cost. **Either way fix a
    second imprecision**: `MODEL_CARD.md:158` says "min-max normalized", but `convex0` is
    `floor_zero=True` → `s / max(s)` per query per channel, absent doc = 0. Describe the real operator.
-   A card edit is Dylan's call (2026-09-04 precedent). Carry the result into M14's paper.
+   A card edit is Dylan's call (2026-09-04 precedent). **Scope every rewritten sentence to the cloud
+   case** and note that edge fusion is unmeasured — as a limitation line, not a promised metric.
+   Carry both into M14's paper.
 
 ---
 
@@ -232,8 +256,11 @@ operator class** with split-half for the fitted one, replacing a `max()` that co
 claim ceiling (Protocol 4); `README.md:99` as a third live copy (Deliverable 4); execution facts a
 fresh session would otherwise re-derive.
 
-**Cut:** the NanoMSMARCO transfer check (50 queries, ~12× underpowered — Protocol 3), the stale
-`FAMILIES`-plumbing paragraph, and the depth curve over the full weight grid.
+**Cut / de-scoped 2026-09-04 (Dylan: "don't over-engineer"):** the NanoMSMARCO transfer check (50
+queries, ~12× underpowered — Protocol 3); the stale `FAMILIES`-plumbing paragraph; the depth curve
+over the full weight grid; six degenerate tests down to three; and **weighted RRF made conditional on
+Tier 1 failing**. Edge-fusion cost is a **note, not a requirement** — it depends too much on hardware
+and corpus size to owe a number.
 
 **Product note, out of scope:** the server's `ScoreFusion` carries `weights` and a `MinMax`
 normalisation — i.e. our `convex` family exists in Qdrant, unexposed at the API. For the CTO ask, not
