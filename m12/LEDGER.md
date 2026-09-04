@@ -78,3 +78,33 @@ self-hits after retrieval, Qdrant does not).
   artifact — DBSF's singleton/zero-variance branch fires **0.00%** at every depth (10/50/100/1000)
   with median list length exactly the depth, and all macros reproduce. Mechanism is real: DBSF
   standardises per list, convex0's `s/max(s)` flattens a bunched head. `logs/m12_depth_check.log`.
+
+## Amendment 2026-09-04 — the released fused system becomes DBSF (Dylan)
+
+**Ruling:** *"convex needs to go if it can't be done in Qdrant. 1000 prefetch to return 10 items is
+a lot too and not something very realistic."* So the published fused row is re-measured under a
+shipping operator at a realistic prefetch. **Registered BEFORE any six-set DBSF number exists.**
+
+**Operator: DBSF.** Zero fitted parameters — strictly fewer than convex0's dev-fitted `w=0.8`, so
+the released system loses a hyperparameter rather than gaining one.
+
+**Prefetch depth: 100.** Registered now, on dev evidence and deployment realism, NOT on a six-set
+outcome. Rationale: (a) 10x the returned 10, a realistic configuration; (b) DBSF reaches **99.9%**
+of its depth-1000 dev value by depth 100 (0.5574 vs 0.5580) — it saturates, whereas convex0 keeps
+climbing (0.5482 → 0.5727) and therefore *buys* its advantage with an unrealistic prefetch. Note
+this is NOT the dev argmax: DBSF is monotone in depth on dev, so a pure dev fit would say 1000.
+Realism, not quality, sets this number.
+
+**What is measured:** the six, nDCG@10 per dataset and the average, under `int8 table + BM25` fused
+by DBSF at depth 100. Depths 10/50/1000 reported as a descriptive curve. Per-dataset self-hit
+collision counts reported (ArguAna's queries ARE documents, so its count is high by construction and
+the truncation caveat is real there).
+
+**Status: DESCRIPTIVE, development-informed, post-M7.** C1/C2/C3 are untouched and keep their
+registered convex0 basis. The table artifact is unchanged. The 0.4911 convex0 row is retained and
+labelled, never deleted. Nothing reserved is touched: not the reserved four, not LoTTE.
+
+**Consequence accepted in advance:** the headline fused average will very likely FALL (dev DBSF@100
+0.5574 vs convex0@1000 0.5727). Any downstream claim resting on 0.4911 — including the
+"statistical tie with OpenSearch 0.4868" — must be re-checked against the new number and corrected
+if it no longer holds. That is the price of a reproducible headline and is the point of the change.
