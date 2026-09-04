@@ -384,3 +384,79 @@ supervision) · `m9src/final9.py` + `final_stats.py` (access machine, statistics
 `m8src/blockcg.py`, `decide.py`, `noise_floor.py`, `paths_guard.py`, `protected_filter`,
 `dev_reuse_m8.py` · `m7src/decontam.py` (R1/R2/R3 fingerprints), `fusion.py`, `freeze.py`,
 `boot.py`. `m8/CODEMAP.md` and `m9/CODEMAP.md` carry the pitfalls.
+
+## 11. Measured trainer rates (box, 2026-09-04) — the plan review's central number
+
+`results/m10_rate_bench_box.json`, script `m10src/rate_bench.py`. Random token ids only; no corpus,
+no protected path, no teacher, no data loading, no evaluation — it bounds the hardware, not the
+pipeline. M10 recipe shape: bge-small + Linear(1152→1024) per token over mean-pooled layers 12/8/4,
+34.54M parameters, bf16 autocast, fp32 loss, 60 timed steps.
+
+| configuration | steps/s | examples/s | 200M examples |
+|---|---|---|---|
+| bs32, 75/25, M9's two-chunk collate | 12.5 | 400 | 139 h |
+| bs32, one padded chunk | 23.3 | **745** | **75 h** |
+| bs32, all-query len 64 | 23.7 | 759 | 73 h |
+| bs128, 75/25 | 10.4 | **1,331** | 42 h |
+| bs512, 75/25 | 1.2 | 588 | 94 h |
+
+Fused AdamW changed nothing (397 vs 400): the cost is not the optimizer.
+
+**Reading.** §5's planning rate — 560 examples/s, LEAF's realized A100 rate — is *met or beaten by
+the 3080*. At batch 32 with ~35-token queries a step is ~11K padded tokens, ~2e12 FLOP, so the step
+is launch-bound and a bigger card buys ~1.5–2×, not 10×. M9's realized 226 examples/s
+(`m9/M92_LOCK.md`) was therefore a pipeline artifact, not a hardware limit — and the 2026-09-01
+withdrawal of the box was priced off it via LEAF's similarly launch-bound number. Three registered
+consequences (mandate amendment A7): length-bucketed single-chunk batching is part of the build,
+not an optimisation; the screens, confirmations, COV work and M10.0-c run on the box; family E's
+contrast must be read against bs128's 1.8× lower cost per example. Past bs512 the free regime ends.
+
+## 12. Why generate at all, and why ≈1.0M rather than 3.0M (the 2026-09-04 question)
+
+Dylan: *"I'm not sure why we need to generate synthetic data?"* and *"isn't synthetic data lower
+quality?"* Research sweep: one Sonnet subagent, web only, 2026-09-04.
+
+**The mechanism.** Phase 1 is `‖student(x) − stella(x)‖` — there is no label, and the teacher's
+embedding of any text is a correct target by construction. So the classic synthetic-data failure
+(a wrong relevance judgment) cannot occur here; the exposure is only (i) distribution shift, and
+(ii) diversity collapse. Both are measurable before a training step, which is what amendment A8's
+two gates do. Every comparable system is *more* exposed than we are — LEAF, Qwen3-Embedding and the
+InPars/Promptagator lineage all pair synthetic queries with implied positives — and they worked.
+
+**Why real queries cannot substitute.** LEAF's breadth came from MS MARCO 502K (non-commercial),
+Amazon QA 979K and CC-News 900K (no commercial grant) and PubMedQA 272K (contaminates NFCorpus and
+TREC-COVID). Our permissively-licensed real-query stock is factoid Wikipedia QA plus ESCI product
+search — exactly M9's two forms. Generation is a licence workaround, not a scientific preference,
+and the report says so.
+
+**But most of the breadth is harvestable as real text**, which is amendment A2: titles, headings and
+declarative lead sentences already sit in the licensed pool, and **three of the four clean-4
+headline datasets fall in that half** (scidocs↔titles, scifact↔claim sentences,
+trec-covid/nfcorpus↔headings and consumer-health). Generation is then confined to the interactive
+forms no corpus contains. Indirect support: arXiv 2502.19712's query-type ablation on TREC DL19/20
+has titles-only at 71.6–72.9 against real-MS-MARCO-style-only 72.8 and the six-type mix at
+72.4–73.2, while claims-only (a single generated form) sits at 65.3–68.0 — form diversity, not
+LLM origin, is what pays.
+
+**Why 1.0M and not 3.0M.** Every scale curve found saturates below it: DistilVDR (arXiv 2608.10636,
+Aug 2026 — asymmetric, pure cosine-regression, 70M query tower from an 8B teacher) saturates above
+75% of a 1.49M pool, with ~5 points from quarter-scale to full; SPEED (2410.18634) is log-linear
+only to ~920K and its sub-generators plateau at 10K–50K; doc2query-style scaling (2509.16442) gets
+90–95% of maximum gain at 50–75% corpus coverage; mxbai-edge-colbert's distillation stage used
+1.45M queries against a stella-1.5B teacher. **Nobody has published 100K vs 1M vs 3M**, so this is
+a prior, not a measurement — which is why A4−A3 is a registered screen contrast that can drop the
+generated half entirely.
+
+**Corrections to §3 the sweep forced.**
+- LEAF's loss is the L2 **norm** `‖e‖₂`, not squared L2, and its **Appendix B added distillation
+  terms to plain regression and found no improvement**. §3's "Ranking-aware KD" row is evidence
+  about *contrastive* systems, not about adding a term to embedding regression — the basis for
+  cutting family D to one arm (amendment A1).
+- LEAF's student is **MiniLM-L6-v2 plus a linear projection**, initialized off-the-shelf, document
+  side frozen — the same architecture as ours, which is why its 97.7% is the right aim.
+- LEAF pools the **last layer only**. Multi-layer pooling (family G) is ours, evidenced only by
+  §9–9b's two Mac probes, so G's losing arms are load-bearing for the paper.
+- LEAF's 800K "vocabulary" texts are Claude-generated definitions, on the *document* side — so even
+  LEAF's corpus is partly synthetic.
+- Nothing on-topic published 2026-08-01 to 2026-09-04 beyond DistilVDR; no new ≤35M permissively
+  licensed embedding backbone released in that window.

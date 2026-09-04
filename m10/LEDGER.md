@@ -37,13 +37,39 @@ Copied from `instructions-m10.md` §Owner decisions as each is taken, with date 
 
 - 2026-09-01 — Student cap: "109M is not an option. This isn't low compute anymore. 33M was already in the upper bound of what I think is acceptable." 35M hard.
 - 2026-09-01 — FineWeb: out of M10 in every role (delegated ruling; `m10/EXPLORED.md`).
-- 2026-09-01 — Compute (decision 2 reframed): "M10 won't be done on a 3080. M10 will be done on a GPU budget, if allowed, or not at all." Box withdrawn as an execution target; budget request expected $400–715 with generation on the GPU or $465–895 hosted, ceiling $1,000 (PLANNING §6). **Approval pending; no GPU stage runs before it.**
+- 2026-09-01 — Compute (decision 2 reframed): "M10 won't be done on a 3080. M10 will be done on a GPU budget, if allowed, or not at all." Box withdrawn as an execution target; budget request expected $400–715 with generation on the GPU or $465–895 hosted, ceiling $1,000 (PLANNING §6).
+- 2026-09-04 — **Budget VALIDATED** by Dylan, together with "do a full review yourself … is this the most efficient?", "I'm not sure why we need to generate synthetic data?", "isn't synthetic data lower quality? I wanna make sure we have the best chances on our side", "don't over-engineer", "keeping the same teacher (Stella) is the goal", and "make your changes to the plan, then have Fable do an adversarial review". Re-priced on measured rates to ≈$110–280 hybrid; ceiling $1,000 unchanged. Amendments **A1–A8** adopted (`instructions-m10.md` §Amendment 2026-09-04, decision 10); cuts and their reopening conditions in `m10/EXPLORED.md`; evidence PLANNING §11–12.
+- 2026-09-04 — Three days of box compute offered before the cloud instance ("I will be leaving for 3 days tonight"). Used for the no-approval-needed stages only; generation cannot start in that window (Dylan is the smoke approver and Qwen3-8B bf16 does not fit 10 GB).
 
 ## §4 Dev-reuse log
 
 | date | surface | raw score reads | artifact |
 |---|---|---|---|
 | 2026-09-01 | cqadup-programmers, cqadup-physics (Mac diagnostics) | 43 + 43 | `results/m10_rank_probe_mac.json`, `results/m10_head_width_probe_mac.json` |
+| 2026-09-04 | frozen comparator rows of `results/perquery.json` (bge-small, leaf-ir-asym, lr-dense-pertask, opensearch, bm25) on all-6 and clean-4 | comparator-only, no nano existed | amendment A3's clean-4 bars 0.5046 / 0.5233; not a dev-surface read |
 
 ## §5 Amendments and withdrawn claims (never compressed away)
+
+**2026-09-04 plan review, A1–A8** — what changed, in one line each; reasoning in
+`instructions-m10.md` §Amendment 2026-09-04, evidence in PLANNING §11–12.
+
+| id | change |
+|---|---|
+| A1 | family D cut to one arm, LEAF's ‖e‖₂; candidate bank, mining, HNSW fallback, τ rule, D-NCE spec and seed-rank field deleted |
+| A2 | generation 3.0M → ≈1.0M and confined to the six non-harvestable forms; ≈1.5M harvested real query-like text added as arm A3 |
+| A3 | C1/C2 registered on clean-4 as well as avg-6 — four conjuncts under Holm inside the unchanged 0.025 family alpha; clean-4 bars 0.5046 / 0.5233 |
+| A4 | the COV resolution number is measured first and sizes the screen: MDE = max(0.0056, measured distance at 0.025/11) |
+| A5 | decision 8 (full-dose seed 1) withdrawn; confirmations capped at two decisions |
+| A6 | family F runs second; every later family screens on its winner. Order A → F → G → B → E → C → D |
+| A7 | the box is an execution target again for everything but generation, on measured rates |
+| A8 | two pre-training data quality gates: per-form diversity (with an action) and stella-space distribution overlap vs MS MARCO dev (disclosed diagnostic, no action) |
+
+**Withdrawn in the same review, kept so it is not re-proposed:** dropping family F to anchor on
+MiniLM-L6. It would have killed family C as well (M9's candidate is a bge-small student) and arXiv
+2306.11550's depth curve disagrees with LEAF's 6-layer success. F and C stay; A6 fixes the ordering
+problem instead.
+
+**Corrected in the same review:** `instructions-m16.md`'s "if only one thing here ever runs, run
+B3" — B3 (cosine-space distillation) is a no-op on a normalized output, closed by algebra. The
+pyNIFE retention gap must be attributed to B4/B5.
 

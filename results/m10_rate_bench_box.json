@@ -1,0 +1,21 @@
+{
+  "_what": "Trainer-shape throughput microbenchmark on the RTX 3080, run 2026-09-04 during the M10 plan review to test the plan's imported planning rate (560 examples/s, LEAF's realized A100 rate). RANDOM TOKEN IDS ONLY: no corpus text, no protected path, no teacher, no data loading, no evaluation. It bounds the hardware, not the pipeline; the day-one rate benchmark (mandate Compute) replaces it.",
+  "date": "2026-09-04",
+  "gpu": "NVIDIA GeForce RTX 3080 10GB",
+  "torch": "2.8.0+cu126",
+  "model": "BAAI/bge-small-en-v1.5 + Linear(1152->1024) applied per token over mean-pooled concat of hidden layers 12/8/4, then masked mean pool + L2 normalize",
+  "params_m": 34.54,
+  "dtype": "bf16 autocast, fp32 loss",
+  "steps_measured": 60,
+  "warmup_steps": 10,
+  "planning_rate_being_tested": 560,
+  "rows": {
+    "bs32_mix7525_two_chunks_adamw": {"chunks": [[24, 64], [8, 256]], "steps_per_s": 12.49, "examples_per_s": 399.6, "gpu_hours_200m": 139.0, "note": "M9's collate: query and document chunks stepped separately"},
+    "bs32_mix7525_two_chunks_fused_adamw": {"chunks": [[24, 64], [8, 256]], "steps_per_s": 12.42, "examples_per_s": 397.5, "gpu_hours_200m": 139.8, "note": "fused AdamW makes no difference; the cost is not the optimizer"},
+    "bs32_single_padded_chunk_128": {"chunks": [[32, 128]], "steps_per_s": 23.29, "examples_per_s": 745.2, "gpu_hours_200m": 74.6, "note": "one padded chunk: 1.9x the two-chunk rate"},
+    "bs32_all_query_len64": {"chunks": [[32, 64]], "steps_per_s": 23.72, "examples_per_s": 759.0, "gpu_hours_200m": 73.2},
+    "bs128_mix7525_fused": {"chunks": [[96, 64], [32, 256]], "steps_per_s": 10.40, "examples_per_s": 1330.9, "gpu_hours_200m": 41.7, "note": "1.8x cheaper per example than bs32 single-chunk; family E must price this"},
+    "bs512_mix7525_fused": {"chunks": [[384, 64], [128, 256]], "steps_per_s": 1.15, "examples_per_s": 588.4, "gpu_hours_200m": 94.4, "note": "past the launch-bound regime; no longer free"}
+  },
+  "reading": "At batch 32 with ~35-token queries the step is launch-bound, not FLOP-bound. The box meets or beats the rate the plan assumed for a rented A100, so the 2026-09-01 withdrawal of the box rested on M9's realized 226 examples/s, which was a pipeline artifact rather than a hardware limit. Two registered consequences: length-bucketed single-chunk batching is part of the build, and family E's verdict must be read against the 1.8x cost difference."
+}

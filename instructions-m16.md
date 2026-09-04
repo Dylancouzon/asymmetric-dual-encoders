@@ -56,7 +56,7 @@ The pyNIFE retention comparison below does not weaken Group A — it adds a seco
 |---|---|---|
 | **B1 · `R-LIST` — hard-candidate listwise distillation.** | `B2` measured the shipped objective **inert**: uniform-bank KL median 4.73e-07 nats, and the table already ranks the positive first for **99.75%** of training queries. The `teacher_top200` variant measures **0.777 nats**, so the KL class is open and only the degenerate instance is closed. | The strongest untested table-side lead M8 leaves. Class prior is poor (M7's whole lever programme transferred at 0.000 ± 0.005). |
 | **B2 · `B10` — multiplicity-dependent pooling.** | Pooling multiplicity and new rows are the **only** two things that add capacity to a table; everything else on the query side is absorbable (`m7_absorb_check.json`). New rows are closed, so this is the surviving half. | +0.0011, CI straddling zero. Untested. |
-| **B3 · Distil in cosine space instead of L2.** | pyNIFE reports cosine beat MSE and KL outright; M9's plateau was diagnosed as a linear head that L2 regression cannot push past ~90–93% (`m10/PLANNING.md` §9). | Cheap arm, no new data, no new asset. Run it before anything expensive. |
+| **B3 · Distil in cosine space instead of L2.** | **CLOSED BY ALGEBRA 2026-09-04, not by measurement.** `m7src/train.py:420` already trains zero as normalized cosine + KL, and for a normalized output squared L2 = 2 − 2cos, so the two objectives share a gradient up to a factor of 2 (`m9src/nano.py:6`, `m10/EXPLORED.md`). pyNIFE's MSE-vs-cosine gap lives in its *unnormalized* static student, which is not our construction. | **Dead.** The ~+0.035 retention gap is real but must be attributed to B4/B5, not to the loss. |
 | **B4 · Drop the instruction prefix from distillation.** | A static model can only ever treat an instruction as a constant offset, and `m7_absorb_check.json` proves a constant offset is absorbable — so the prefix spends rows on something the table cannot use. `zero` currently carries stella's query prompt. | Cheap, and algebraically supported rather than guessed. |
 | **B5 · Larger vocabulary, tokenizer-first.** Retrain the tokenizer before distillation (pyNIFE uses ~100k rows), train every row jointly. | **Only reopens `D2` in this exact form.** `D2-PRE` closed additive n-gram rows and multi-word segmentation *at equal budget on frozen incumbent rows*, and found two-thirds of 35,014 added rows inert. A tokenizer trained before distillation with all rows learned is a different design, not a re-run. | Costs table bytes: 100k × 1024 int8 = 103 MB, still under LightRetriever's 466 MB. |
 
@@ -143,8 +143,12 @@ shape of the decision if the milestone is ever picked up.
    unfreezes, M10's recipe lock rests on a premise M16 discards, so the two are resequenced rather
    than run in parallel.
 
-**If only one thing here ever runs, run B3** (cosine-space distillation). It needs no new data, no
-new asset, no budget approval, and the retention comparison above prices it at roughly +0.035.
+**Amended 2026-09-04:** this section used to say *"if only one thing here ever runs, run B3"*. That
+was wrong — B3 is a no-op on a normalized output (see the B3 row). The pyNIFE retention gap stands
+at roughly +0.035, but the only recipe differences left to explain it are **B4** (drop the
+instruction prefix, already algebraically supported) and **B5** (tokenizer retrained before
+distillation). **Run B4 first:** it is the cheapest and the only one with an algebraic argument
+behind it.
 
 ## Inherited from M12 (2026-09-04): fusion-aware training of the table
 
