@@ -94,6 +94,15 @@ three results and an unweighted-RRF number is not a fair comparator for anything
    outcome logging, not pre-registration.
 3. **Weights are fitted on dev and dev only** — a weighted-RRF configuration selected on the six
    would be exactly the post-hoc fusion choice `m7/LEDGER.md:691` forbids.
+   **Optional addition, permitted 2026-09-04** (Dylan's rule: non-commercial licences are admissible
+   for validation, not training — `research/m7-data-licensing.md` §Rule change 2026-09-04): the fitted
+   weight's *transfer* is this milestone's weakest point, and it can now be checked on a
+   **non-commercially-licensed held-out set — NanoMSMARCO is the cheap fit** (~5K docs, so no 8.8M-doc
+   stella encode). Apply the dev-fitted weight **without refitting**; register the set and the rule
+   before scoring or it is outcome logging. **Descriptive only, and it may not change the pass rule
+   above** — the four text-backed dev components remain the registered macro. Note the confound: every
+   comparator trains on MS MARCO and neither of ours does, but a *within-system* weight-transfer read
+   is unaffected by that.
 4. **A `bm25s`-lucene result does not license a claim about `Qdrant/bm25`** (fixed `avg_len`, own
    tokenizer). DBSF's normalisation depends on the lexical implementation. State the gap; do not
    call it weak.

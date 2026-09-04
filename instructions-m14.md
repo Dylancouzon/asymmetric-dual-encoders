@@ -29,8 +29,9 @@ This is measured today and needs no nano. Everything else is evidence for it or 
 ## Contents
 
 1. The finding above, with the eleven-candidate table and the exposure-free control.
-2. The quality-vs-query-cost frontier: `zero`, `zero-hybrid` (M12), `nano` (M13, if it lands),
-   against the 21-system × 6-dataset matrix.
+2. The quality-vs-query-cost frontier: `zero` and `nano` (M13, if it lands), against the
+   21-system × 6-dataset matrix, plus M12's fusion-operator result. (`zero-hybrid` was **cut** from
+   M12 on 2026-09-04 and moved to M16; it is not an M14 deliverable.)
 3. Edge cost rows — query asset, document index, hydration, CPU latency — plus the offline BM25
    index cost M12 measures.
 4. The Qdrant Edge prototype: architecture and latency, with the exact-search caveat.
@@ -43,6 +44,11 @@ This is measured today and needs no nano. Everything else is evidence for it or 
 - **Every headline number is paired on frozen comparator vectors with pre-registered statistics.**
   No number enters the paper that is not already in a committed result JSON.
 - **stella's ArguAna/FiQA/FEVER exposure is disclosed wherever a stella-derived number appears.**
+- **Non-commercially-licensed sets may be reported as VALIDATION rows** (Dylan, 2026-09-04;
+  `research/m7-data-licensing.md` §Rule change 2026-09-04) — an MS MARCO row is now reportable, which
+  reviewers will look for. Two things must appear beside it: that it informed no training, and that
+  every comparator trains on MS MARCO while `zero` and `nano` do not, so the row is biased **against
+  us**. The training exclusion and its +0.0058 price are reported unchanged.
 - **Deltas inside the ~0.005 lever band are labelled as ties**, not wins.
 - Do not quote the off-family macro (+0.1018) as a product delta — it is a contamination control.
 - Do not claim `zero` confirmatorily beat BM25: C2 was +0.0165 [0.0017, 0.0311], Holm p=0.0149 >

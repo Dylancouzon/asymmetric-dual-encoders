@@ -1,6 +1,6 @@
 # M7 training-data licensing sweep (2026-08-25, Sonnet web sweep, licenses verified on primary sources)
 
-Context: Qdrant training and publicly releasing a retrieval model (Apache 2.0, commercial use). Decision made with Dylan 2026-08-25: **clean stack, MS MARCO excluded.**
+Context: Qdrant training and publicly releasing a retrieval model (Apache 2.0, commercial use). Decision made with Dylan 2026-08-25: **clean stack, MS MARCO excluded from training** — relaxed 2026-09-04 for validation use, see the rule-change section at the end of this file.
 
 ## Per-dataset table
 
@@ -65,3 +65,41 @@ Approved: Amazon ESCI, TriviaQA (QA pairs only — evidence documents keep their
 **Fingerprint decontamination scope** (Codex round 2): exact + near-duplicate filtering runs TRAIN↔DEV, TRAIN↔the-six, and TRAIN↔UNTOUCHED-FINAL, with removal counts logged per pair of partitions.
 
 Decontamination is fingerprint-level, not name-level: on top of the source-corpus exclusion list, every training pair and synthetic seed gets exact + near-duplicate filtering (character n-gram / MinHash) against all six benchmarks' queries and documents, with removal counts logged per benchmark. Web-derived text can mirror any excluded source under a different name.
+
+## Rule change 2026-09-04 (Dylan): non-commercial licences are admissible for VALIDATION, not training
+
+*"MS-MARCO is allowed for validation. Not training."* Generalised by Dylan the same message to
+**any dataset with similar licensing** — MS MARCO is the largest instance, not a special case.
+
+**Three classes, and the rule reaches only the first.**
+
+| class | examples here | status |
+|---|---|---|
+| **Affirmative grant, restricted to non-commercial research** | MS MARCO, PAQ's NC generation code, GooAQ (README clause) | **Validation/eval/diagnostics ALLOWED. Training still forbidden.** |
+| **No affirmative grant at all** | Quora QQP, WikiAnswers/Paralex, ELI5, StackExchange new downloads (no-LLM-training clickwrap), `sentence-transformers/embedding-training-data`, nomic contrastors | **Still fully OUT.** "No licence" is not "non-commercial licence" — there is nothing to rely on for either use. QQP's eval exclusion (Codex, 2026-08-25) stands unchanged. Reopening needs an explicit Dylan ruling. |
+| **Excluded for contamination, licence irrelevant** | S2ORC (SciDocs, SciFact built from it), StackExchange (FiQA) | **Still OUT of training AND validation.** The rule changes nothing; the reason was never the licence. |
+
+**What "validation" means, operationally.** Measuring, diagnosing, screening, dev-surface use, and
+reporting numbers. **Not**: gradient signal, distillation targets, mined negatives, or seeds for
+synthetic generation — a synthetic query seeded from an NC corpus is NC-derived training text and is
+forbidden. The released artifact must remain derivable from the clean stack alone.
+
+**The training exclusion is unchanged and still priced** at +0.0058 [-0.0015, +0.0131] on the six
+(`results/m7_cleanstack_tax.json`) — not what M7's miss is made of. `m7src/freeze.py`
+`NON_COMMERCIAL_SOURCES` and the `sources-research/` quarantine in `m7src/mix.py` stay exactly as
+they are: they guard *released weights*, which this rule does not touch. A validation cache must
+never be written under `work/train/sources/` (a canonical `msmarco` file retroactively refuses the
+frozen artifact, `mix.py:22-25`).
+
+**Two confounds any MS MARCO validation row must carry.**
+
+1. **Comparator home advantage.** stella, bge-small, arctic, LEAF and the OpenSearch models all
+   train on MS MARCO; `zero` and `nano` do not. A comparative number on MS MARCO is biased
+   **against us** — a win there is strong evidence, a loss is uninterpretable. Prefer it for
+   within-system diagnostics (query-form coverage, weight transfer) over head-to-head bars.
+2. **Decontamination reverses direction.** `m7src/decontam_msmarco.py` checks MS MARCO *training*
+   rows against protected queries. Validation use needs the opposite sweep: MS MARCO validation
+   queries against our approved training sources, or the surface is contaminated by our own mix.
+
+Commercial-use risk of the reporting itself is low: MS MARCO is a BEIR/MTEB member and commercial
+vendors publish those rows routinely. Recorded as Dylan's ruling, not an inference.

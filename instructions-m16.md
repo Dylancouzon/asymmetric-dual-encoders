@@ -80,7 +80,7 @@ One line each; the reopening condition lives in `m8/EXPLORED.md`, which is the c
 | More Phase-A pairs | `B3`: +0.00135 at 4× dose; the bar needs ~17.6× the pool |
 | Additive n-gram or segmentation rows on frozen rows at equal budget | `D2-PRE`: every arm negative out-of-fold, best −0.0028 |
 | A better off-the-shelf teacher | `T1`: granite-r2 −0.052, gte-modernbert −0.109 |
-| MS MARCO in the release stack | Non-commercial terms; the exclusion is priced and unresolved in both directions |
+| MS MARCO in the release stack | Non-commercial terms; the training exclusion is priced (+0.0058) and **stays closed** — Dylan's 2026-09-04 rule opened validation use only, so this row is now about training alone |
 
 **One caveat on the teacher row.** `T1` scored gte-modernbert at −0.109 in a shared student frame
 that assumes stella's `bert-wordpiece-30522` vocabulary; gte-modernbert does not ship it, so that
