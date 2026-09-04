@@ -65,3 +65,13 @@ self-hits after retrieval, Qdrant does not).
 ## Log
 
 - 2026-09-04 — registered, before any M12 number. Nothing scored yet.
+- 2026-09-04 — Tier 1 executed. Gate passed (max |delta| 1.11e-16 over 21 points; comparator
+  identical to the frozen literal). **NO MATCH at depth 1000**: DBSF 0.5580 (-0.0146), RRF best
+  k_q=3 0.5535 (-0.0192), both CIs excluding 0 and the bar. Tier 2 therefore REQUIRED and is being
+  run. `m12/tier1.json`.
+- 2026-09-04 — verification of the two results the review was to attack, run directly after the
+  external review stalled and was killed: (a) `bootstrap()` confirmed genuinely paired — one index
+  vector per component applied to both systems; (b) the depth-10 inversion is **not** a degenerate
+  artifact — DBSF's singleton/zero-variance branch fires **0.00%** at every depth (10/50/100/1000)
+  with median list length exactly the depth, and all macros reproduce. Mechanism is real: DBSF
+  standardises per list, convex0's `s/max(s)` flattens a bunched head. `logs/m12_depth_check.log`.
