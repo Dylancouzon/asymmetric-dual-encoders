@@ -61,7 +61,7 @@ Also fixed here: `config.json`'s frozen fields now come from `FREEZE.json` with 
 `.meta.json` sidecar cross-checked against it (it previously *set* the shipped preproc rule), and
 `fallback_token_id` is read from `encoder_spec.cls_id` instead of being hardcoded.
 
-`test_gates.py`: 2 that must pass + 12 that must refuse, each asserting the refusal message matches the
+`test_gates.py`: 2 that must pass + 16 that must refuse, each asserting the refusal message matches the
 reason. Reviewed by Codex and Fable; both broke the first implementation. See `m11/STATUS.md`
 §Scope note for what was deliberately NOT built.
 
@@ -285,10 +285,16 @@ constant), upload, verify the returned commit against a **hash snapshot captured
 gate**, flip PUBLIC. `push.py` compares the remote against the staging dir as it stands at
 verification time, which would compare changed bytes against themselves.
 
-## T4 — fastembed fork branch
+## T4 — fastembed integration
 
-Fork `Dylancouzon/fastembed` created 2026-09-03. Clone to `/home/dylan/fastembed` (sibling of this
-repo, **not** inside it), branch `zero-query-encoder`.
+**Superseded by the reopening below** (Dylan widened T4 to a full built-in integration). Everything
+in this section up to "T4 REOPENED" is the ORIGINAL plan and several of its conclusions were
+reversed: the branch is `add-constella-models`, not `zero-query-encoder`; `add_custom_model` is not
+the shipped route; and `parallel>1` DOES work once the model is registered natively. Kept because
+the measurements that led there are still the evidence.
+
+Fork `Dylancouzon/fastembed` created 2026-09-03, cloned to `/home/dylan/fastembed` (a sibling of
+this repo, **not** inside it).
 
 Two integration routes. **Both questions below were open in the plan and are now CLOSED by T3
 measurements — do not re-test them:**
@@ -437,6 +443,39 @@ fails them for the wrong reason.
 **A card teaching `add_custom_model` breaks when the model ships natively** — measured: the old doc
 card raised `ValueError: already registered` the moment the fork registered the name. That is why
 both cards use the built-in name only.
+
+### The close-out reviews (2026-09-03/04) — Fable then Codex, both logs audited clean
+
+**Fable: no merge blocker.** Its one real code finding: the card gate rewrites the exact text
+`TextEmbedding(NAME)`, so `TextEmbedding(model_name=NAME)` slipped past and would be served, under
+`HF_HUB_OFFLINE`, from the CACHED PUBLISHED bytes. Its "speculative" renumbering concern was real —
+M10's docs still handed nano off to "M11" in seven places.
+
+**Codex: three blockers, two of them real.**
+
+1. **`push.py` verified uploads against the mutable staging dir** while its docstring claimed a
+   "BUILD SNAPSHOT" — CODEMAP item 17, which `push_doc.py` implements and `push.py` had never
+   inherited. Now snapshots hashes after the last gate.
+2. **Gate 6 accepted a typo'd repo id.** A card naming the right model but calling
+   `snapshot_download("DylanCouzon/typo")` passed: the id check only required the correct name
+   *somewhere*, and the substitution rewrote the wrong argument away before execution. Now every
+   download argument must equal the repo id.
+3. `verify_published.py` compared file **counts**, not names, and hashed only two artifacts. Now
+   pins the expected commits, compares exact filenames to the manifests, and hashes every published
+   file against staged bytes. It immediately earned itself: it caught that the published doc card
+   was one edit behind the repo.
+
+**Its third "blocker" — that the BM25 and teacher rows violate the no-comparators ruling — was put
+to Dylan and DECLINED (2026-09-04): keep them.** They are not competing products; they are what
+makes 0.4339 interpretable, and "below BM25 on the four uncontaminated sets" is the card's single
+most important honesty statement.
+
+Also actioned: check/item counts wrong again (18 tests, 24 checklist items); `instructions-m11.md`
+had no closure banner, still said the doc tower had never been served through fastembed, and said
+the upstream PR waits for M10; Amendment A claimed M11 reads no dev set when three scripts read dev
+query and passage **texts** as parity fixtures (no qrels, nothing scored, reserved access unspent);
+PLANNING's T4 section read as current while later text reversed three of its conclusions; and the
+card's headline "~0.05 ms" was raw graph execution on pre-tokenized input, not end to end.
 
 ### The two reviews (2026-09-03) — both logs audited clean for reserved-set reads
 

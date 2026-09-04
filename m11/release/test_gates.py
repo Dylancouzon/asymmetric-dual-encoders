@@ -180,8 +180,8 @@ def t_card_wrong_repo():
 
 @test("gate 6 runs against the STAGING DIR even if the card renames its variable")
 def t_card_renamed_variable():
-    """A card edit must not silently redirect the gate to the published bundle: the substitution
-    is counted, and any surviving download call is refused (Fable, 2026-09-03)."""
+    """A card edit must not silently redirect the gate to the published bundle: any surviving
+    download call is refused, whatever the variable is called (Fable, 2026-09-03)."""
     with staged() as d:
         (d / "README.md").write_text(
             '```python\nfrom huggingface_hub import snapshot_download\nimport sys\n'
@@ -214,6 +214,32 @@ def t_card_unredirected_textembedding():
             f'from huggingface_hub import snapshot_download\nd = snapshot_download("{REPO_ID}")\n'
             f'NAME = "{REPO_ID}"\nm = TextEmbedding(model_name=NAME)\n```\n')
         return attempt(lambda: push.gate_readme(REPO_ID), "not redirected")
+
+
+@test("gate 6 catches a card downloading the WRONG repo while naming the right one",
+      "downloads")
+def t_card_wrong_download_arg():
+    """The substitution rewrites the download line whatever its argument, so a typo'd id would
+    vanish before execution while the correct id elsewhere satisfied the name check
+    (Codex, 2026-09-03)."""
+    with staged() as d:
+        (d / "README.md").write_text(
+            '```python\nfrom fastembed import TextEmbedding\n'
+            f'from huggingface_hub import snapshot_download\nNAME = "{REPO_ID}"\n'
+            'd = snapshot_download("DylanCouzon/typo")\n'
+            'm = TextEmbedding(NAME)\n```\n')
+        return attempt(lambda: push.gate_readme(REPO_ID), "downloads")
+
+
+@test("gate 6 catches a download the substitution cannot rewrite", "still downloads")
+def t_card_unrewritable_download():
+    """The regex anchors on `^name = snapshot_download(...)`. A different shape survives it, and
+    without the residual check would run against the PUBLISHED bytes."""
+    with staged() as d:
+        (d / "README.md").write_text(
+            '```python\nfrom huggingface_hub import snapshot_download\n'
+            f'NAME = "{REPO_ID}"\nPATHS = [snapshot_download(NAME)]\n```\n')
+        return attempt(lambda: push.gate_readme(REPO_ID), "still downloads")
 
 
 @test("gate 8 catches a corrupted ONNX graph",

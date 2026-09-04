@@ -12,7 +12,7 @@ that depended on M10 moved to **M12** (`instructions-m12.md`); the image model b
 | serving parity | **4.470e-08** vs the numpy reference over 1,024 real dev queries |
 | upstream issue | qdrant/fastembed#703 (padding regression breaking `thenlper/gte-base`) |
 
-**Final verification, 2026-09-03** — 8 zero gates, 14 `test_gates`, 11 ONNX parity checks, 5 doc
+**Final verification, 2026-09-03** — 8 zero gates, 18 `test_gates`, 11 ONNX parity checks, 5 doc
 gates, 6 serving checks, negative control 4.475e-04, and 8 anonymous live-repo checks
 (`m11/release/verify_published.py`). Re-run any of them:
 
@@ -53,7 +53,7 @@ three weight files.
 | `release/verify_bundle.py` | gate 4: **staged** encoder vs `m7src/table.py` on the **frozen source** table (5.5e-7 max-abs) |
 | `release/verify_tokenizer.py` | gate 7: what fastembed's own `load_tokenizer` makes of the shipped files |
 | `release/export_onnx.py` | T2: builds both graphs and re-derives all 11 parity checks |
-| `release/test_gates.py` | 14 checks: 2 that must pass, 12 breakages each gate must refuse |
+| `release/test_gates.py` | 18 checks: 2 that must pass, 16 breakages each gate must refuse |
 | `release/push.py` | build + 8 gates + upload + re-download verification |
 | `release/MODEL_CARD.md` | the card; `REPO_ID` is substituted at push time |
 | `release/export_doc.py` | T3: stella doc tower → ONNX, checks on 259 frozen real passages |
@@ -63,7 +63,7 @@ three weight files.
 | `release/verify_fastembed.py` | T4: serves the BUILT-IN model through `TextEmbedding`, 6 checks + `--negative-control` |
 | `release/verify_published.py` | what the two live repos actually serve, checked anonymously |
 
-**`m11/CODEMAP.md` is the reusable part** — the ONNX-port checklist, 23 items, each one paid for by
+**`m11/CODEMAP.md` is the reusable part** — the ONNX-port checklist, 24 items, each one paid for by
 a T2 or T3 defect. Read it before porting nano (M12) or M13's image model, not this file.
 
 **Eight gates**, all re-run at every push: (1) the frozen source AND the staged `model.npz` hash to

@@ -256,7 +256,7 @@ README_SUBSTITUTIONS = [
     # Fable, 2026-09-03: the old pattern was anchored to `^d = snapshot_download(...)`, so
     # renaming the variable in the card made it match nothing -- the gate then DOWNLOADED THE LIVE
     # REPO and certified the card against bytes that are not the ones shipping. Hence the
-    # substitution count assertion, the residual-name check, and HF_HUB_OFFLINE below.
+    # download-argument check, the residual-name check, and HF_HUB_OFFLINE below.
     (re.compile(r'^(\w+) = snapshot_download\(.*$', re.M), r'\1 = BUNDLE_DIR'),
     (re.compile(r'^from huggingface_hub import snapshot_download$', re.M), ''),
 ]
@@ -283,6 +283,13 @@ def gate_readme(repo_id=None):
     # textually: everything the gate then runs is pointed at the staging dir below.
     if repo_id and repo_id not in card:
         sys.exit(f"REFUSED: the card never names {repo_id!r}; a wrong repo id would ship unnoticed")
+    # Every Hub download in the card must name THIS repo. The substitution below rewrites the
+    # line regardless of its argument, so a typo'd id would vanish before execution and the
+    # "names it somewhere" check above would still pass (Codex, 2026-09-03).
+    for arg in re.findall(r"snapshot_download\(\s*[\"']([^\"']+)[\"']", card):
+        if repo_id and arg != repo_id:
+            sys.exit(f"REFUSED: the card downloads {arg!r}, not {repo_id!r}; the gate rewrites "
+                     "that line, so the wrong id would ship unnoticed")
     blocks = re.findall(r"```python\n(.*?)```", card, re.S)
     if not blocks:
         sys.exit("REFUSED: the generated README.md has no python blocks to execute")
@@ -342,6 +349,12 @@ def gate_onnx():
 
 
 def run_gates(repo_id=None):
+    """-> {filename: sha256} captured AFTER the last gate.
+
+    That snapshot is what the upload is verified against. Re-hashing OUT at verification time
+    would compare changed, ungated bytes with themselves -- the defect already fixed in
+    push_doc.py, which this had not inherited (Codex, 2026-09-03).
+    """
     fz = freeze()
     gate_artifact(fz)
     gate_licence(fz)
@@ -350,17 +363,19 @@ def run_gates(repo_id=None):
     gate_readme(repo_id)
     gate_tokenizer()
     gate_onnx()
+    return {name: sha256(OUT / name) for name in sorted(MANIFEST)}
 
 
 # ---------------------------------------------------------------- push
 
-def verify_remote(api, repo_id, want, revision):
-    """Re-download `revision` and compare every byte against the BUILD SNAPSHOT.
+def verify_remote(api, repo_id, snapshot, revision):
+    """Re-download `revision` and compare every byte against the post-gate hash SNAPSHOT.
 
     Pinned to the revision we just wrote, never to the mutable branch head: the head could be a
     different commit than the one uploaded, and could move again afterwards.
     """
     from huggingface_hub import snapshot_download
+    want = set(snapshot)
     remote = {s.rfilename for s in api.repo_info(repo_id, revision=revision).siblings}
     remote -= {".gitattributes"}
     if remote != want:
@@ -370,10 +385,10 @@ def verify_remote(api, repo_id, want, revision):
         got = snapshot_download(repo_id, revision=revision, local_dir=td, force_download=True,
                                 allow_patterns=sorted(want))
         for name in sorted(want):
-            a, b = sha256(OUT / name), sha256(Path(got) / name)
+            a, b = snapshot[name], sha256(Path(got) / name)
             if a != b:
                 sys.exit(f"REFUSED: remote {name} hashes {b}, staged {a}")
-    print(f"  verified  {len(want)} files at {revision[:10]} match the staging dir")
+    print(f"  verified  {len(want)} files at {revision[:10]} match the gated snapshot")
 
 
 def gates_only(repo_id):
@@ -391,8 +406,8 @@ def push(repo_id, public):
     repo_id = repo_id or DEFAULT_REPO_ID
 
     render_card(repo_id)            # BEFORE the gates: gate 6 executes what actually ships
-    run_gates(repo_id=repo_id)
-    want = set(MANIFEST)
+    snapshot = run_gates(repo_id=repo_id)
+    want = set(snapshot)
 
     api.create_repo(repo_id, repo_type="model", private=True, exist_ok=True)
     # create_repo(exist_ok=True) ignores `private` on an existing repo, so say it outright. If the
@@ -410,7 +425,7 @@ def push(repo_id, public):
                              allow_patterns=sorted(want), delete_patterns=["*"],
                              commit_message=f"constella-zero — FastEmbed-first card, run {freeze()['run_id']}")
     print(f"  uploaded commit {info.oid[:10]} → https://huggingface.co/{repo_id}")
-    verify_remote(api, repo_id, want, info.oid)
+    verify_remote(api, repo_id, snapshot, info.oid)
 
     if public and not was_public:
         api.update_repo_settings(repo_id=repo_id, repo_type="model", private=False)

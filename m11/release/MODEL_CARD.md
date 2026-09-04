@@ -19,8 +19,9 @@ The query side of an **asymmetric dual encoder**: documents are indexed once, in
 large frozen encoder; queries are encoded on the device by **a lookup table**.
 
 There is no transformer here. The model is 30,522 × 1024 int8 rows and one pooling rule —
-encoding a query is a gather and a weighted sum. The query asset is **31.8 MB** and a query costs
-**~0.05 ms** on one CPU core.
+encoding a query is a gather and a weighted sum. The query asset is **31.8 MB**, and the reference
+implementation encodes a query end to end, tokenization included, in **0.38 ms** on one CPU core
+(the ONNX graph alone runs an 8-token query in 0.047 ms — see [Costs](#costs)).
 
 It was distilled from [`stella_en_400M_v5`](https://huggingface.co/NovaSearch/stella_en_400M_v5)
 so that its output lands in that model's document space. The matching document encoder is
@@ -177,11 +178,14 @@ scores — not reciprocal rank fusion, so Qdrant's `Fusion.RRF` will not reprodu
 | | |
 |---|---|
 | query asset (int8 rows + scales + tokenizer) | 31.8 MB |
-| `model.onnx`, batch 1, one thread, 8-token query | 0.047 ms |
-| `model.onnx`, batch 1, one thread, 512-token query | 1.22 ms |
-| `zero_encoder.py`, batch 1, one CPU core | 0.38 ms |
+| `model.onnx` graph execution, batch 1, one thread, 8-token query | 0.047 ms |
+| `model.onnx` graph execution, batch 1, one thread, 512-token query | 1.22 ms |
+| `zero_encoder.py` end to end, batch 1, one CPU core, incl. tokenization | 0.38 ms |
 | hydration (cold load to first query) | 0.22 s |
 | document vectors, 1024-d fp16 / int8 | 2.05 / 1.02 GB per 1M — raw payload, before index overhead |
+
+The graph rows exclude tokenization; `zero_encoder.py`'s 0.38 ms is the end-to-end figure and the
+honest one to compare against another encoder. No end-to-end FastEmbed timing is published here.
 
 The graph derives token counts from an all-pairs comparison, so cost grows with the **square** of
 sequence length — 26x from an 8-token query to a 512-token one. Real queries sit at the short end

@@ -1,5 +1,12 @@
 # M11 — release the pair, port it, and write the whitepaper (tiny mandate)
 
+> **CLOSED 2026-09-03.** M11 shipped the `zero` half end to end: `constella-zero`, the ONNX
+> document tower, the FastEmbed integration and both cards. Everything below that depends on
+> **nano** — deliverables 1 (nano), 2 (nano), 3 (nano) and 4 (the whitepaper) — moved to
+> **`instructions-m12.md`**, and the image model became `instructions-m13.md`. Read Amendments A
+> and B at the bottom for what was actually ruled; the deliverable text above them is the ORIGINAL
+> mandate and is superseded wherever the two disagree. Outcome: `m11/STATUS.md`.
+
 Created 2026-08-30 as M10; renumbered M11 on 2026-09-01 when M10 became the nano retry. Runs after M10 delivers nano. Everything binds from `instructions-m7.md`
 unchanged: decision authority, licensing and decontamination rules, dev-only selection, the
 freeze/ledger protocol, and the headless git contract — working files under `m11/`.
@@ -26,7 +33,7 @@ M11 ships no new science. It turns two frozen artifacts into a product and a pap
    `results/m9_doc_export.json`, opset 17, zero custom-domain ops, min-cos 0.99999940, max-abs
    3.3e-07, artifacts in `work/m9onnx/stella-400M-doc/`. What that file does NOT show, despite its
    `fastembed_local` block: that block was measured on `work/m9onnx/nano-minilm-l6`, and no
-   `model_tokens.onnx` exists for stella. **The doc tower has never been served through fastembed.**
+   `model_tokens.onnx` exists for stella. ~~The doc tower has never been served through fastembed.~~ **Closed by T3/T4**: it is a built-in FastEmbed model and gate 4 measures it against direct ORT.
 
 3. **fastembed integration** for both query-side models.
 
@@ -52,7 +59,7 @@ M11 ships no new science. It turns two frozen artifacts into a product and a pap
 ## Amendment A — the M11a slice (Dylan, 2026-09-03)
 
 M10 is paused on budget. The `zero` half of M11 does not depend on it, so M11a ships zero end to end
-and publishes the document tower. Nano's export, any upstream PR and the whitepaper wait for M10.
+and publishes the document tower. Nano's export and the whitepaper wait for M10 (now M12). **The upstream PR does NOT** — both published models are already registered, so a clean single-concern PR can go out any time (`instructions-m12.md`).
 
 | # | ruling |
 |---|---|
@@ -64,8 +71,10 @@ and publishes the document tower. Nano's export, any upstream PR and the whitepa
 Dylan's go for an HF push is **granted for exactly these two repos** at these visibilities; anything
 else still needs asking.
 
-**M11a ships no new science and touches no quality number.** Nothing here reads a dev or reserved
-set, so M9's registration machinery (`m9src/guard9.py`) does not apply — its results are engineering
+**M11a ships no new science and touches no quality number.** It reads dev **query texts** and
+nq-250k **passage texts** as parity fixtures (`export_onnx.py`, `verify_fastembed.py`,
+`export_doc.py`) — no qrels, no scoring, no reserved set — so M9's registration machinery
+(`m9src/guard9.py`) does not apply — its results are engineering
 parity artifacts, not decisions. The release gates in `m11/release/push.py` DO apply, unchanged, to
 every upload. Plan and gates: `m11/PLANNING.md`.
 

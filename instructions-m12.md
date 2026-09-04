@@ -17,7 +17,7 @@ what shipped and giving the blocked remainder its own number is the accurate rec
 1. **Release `nano`** — M10's distilled query tower, on the same terms as `constella-zero`:
    frozen artifact, `assert_releasable`, MIT, model card carrying measured numbers and the stella
    contamination disclosure. Name is **`constella-nano`** (`m8/LEDGER.md` §6.1).
-2. **ONNX port of nano**, parity-verified. `m11/CODEMAP.md` is the checklist — 23 items, each one
+2. **ONNX port of nano**, parity-verified. `m11/CODEMAP.md` is the checklist — 24 items, each one
    paid for by a real defect. Read it before writing the exporter.
 3. **Register nano in FastEmbed**, the same way the pair already is: an entry in
    `supported_onnx_models` plus a canonical vector from the reference implementation. See the
