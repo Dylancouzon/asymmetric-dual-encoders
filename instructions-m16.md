@@ -145,3 +145,28 @@ shape of the decision if the milestone is ever picked up.
 
 **If only one thing here ever runs, run B3** (cosine-space distillation). It needs no new data, no
 new asset, no budget approval, and the retention comparison above prices it at roughly +0.035.
+
+## Inherited from M12 (2026-09-04): fusion-aware training of the table
+
+`constella-zero-hybrid` — train the table against the FUSED ranking so it stops competing with BM25
+and covers what BM25 misses. Cut from M12 before any code was written; both broken drafts and the
+evidence are in `m12/EXPLORED.md`. The idea is **not refuted** — M8 explicitly left hard-candidate
+listwise training open (`m8/FINDINGS.md:51`) — it is **unfunded and unimplementable as specified**.
+
+**All of these must be true before it runs again:**
+
+1. **A trainer that carries per-query candidate lists with aligned lexical scores.** Today training
+   scores one shared bank of 32,768 negatives per batch (`m7src/train.py:679-688`); both miners
+   return IDs only, and `mine_bm25_negatives` mines within each query's own store (`:217-220`), not
+   the global pool. 1–3 engineering days, plus a cache schema for raw scores and normalisation stats.
+2. **Both retrievers searching the same corpus**, or the union does not resemble deployed fusion.
+3. **A registered operator-specific loss**, with the detach decisions named. RRF is untrainable
+   (piecewise constant); DBSF is differentiable only with its statistics detached, which is a
+   surrogate choice Qdrant does not specify.
+4. **A measured noise floor for per-arm fusion re-selection.** The 0.004 fused floor is frozen-`w`
+   and does not calibrate it; `m7/LEDGER.md:655-656` requires re-selection when the checkpoint changes.
+5. **A bar derived from that floor**, not from the historical recipe band. At the 0.005 effect size
+   every table-side lever has produced, a 3-vs-3 design clears 0.008 with probability ≈ 0.
+
+Ranked below document-side co-adaptation, which remains this milestone's lead: it is the genuinely
+untested capacity lever, at a plausible δ ~0.02 against this idea's ≤0.005 class.
