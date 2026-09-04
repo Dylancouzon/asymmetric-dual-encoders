@@ -9,7 +9,7 @@ revision pinned in config.json), so it is only meaningful against document vecto
 by that exact encoder. Cosine similarity is the score.
 
 Conformance: this file reproduces the frozen training-time query path (m7src/table.py
-`encode_pooled`) to < 1e-5 max-abs on the release fixtures; see m11/release/test_conformance.py.
+`encode_pooled`) to < 1e-5 max-abs on the release fixtures; see m11/release/verify_bundle.py.
 """
 import json
 from pathlib import Path
@@ -47,6 +47,10 @@ class ZeroQueryEncoder:
         self.variant = variant
 
         self.tokenizer = Tokenizer.from_file(str(d / "tokenizer.json"))
+        n = self.tokenizer.get_vocab_size(with_added_tokens=True)
+        if n != self.rows.shape[0]:
+            raise ValueError(f"tokenizer has {n} tokens but the table has {self.rows.shape[0]} "
+                             "rows; a token id outside the table would index off the end")
         self.tokenizer.enable_truncation(max_length=self.max_length)
         # stella's tokenizer.json ships with padding-to-512 enabled. Padding would put ~500
         # [PAD] rows into every bag; the frozen path (transformers, padding off) never sees one.

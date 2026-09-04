@@ -1,0 +1,49 @@
+{
+ "_what": "M11a T3: why model_fp16.onnx is NOT published. CPU parity qualifies an fp16 graph only because CPUExecutionProvider up-converts it to fp32 -- which is also why it is ~8x SLOWER there. On CUDA, where it actually runs in fp16, it disagrees with the fp32 reference on 255 of 259 real passages. A CPU-only parity gate cannot see this.",
+ "decision": "fp32 only. model_fp16.onnx is not in the released manifest. The converter + repair path is retained in m11/release/export_doc.py behind --fp16 as an experimental build, not a shipped artifact.",
+ "date": "2026-09-03",
+ "fixtures": "m11/release/doc_fixtures.json, 259 real nq-250k passages, six length strata",
+ "environment": {
+  "gpu": "NVIDIA GeForce RTX 3080",
+  "onnxruntime_gpu": "1.20.2 (throwaway venv; the release venv keeps CPU-only onnxruntime 1.29.0)",
+  "note": "the release venv was NOT modified -- swapping onnxruntime for onnxruntime-gpu would disturb the live `zero` gates"
+ },
+ "cuda_fp32_vs_cpu_fp32": {
+  "min_cos": 1.0,
+  "mean_cos": 1.0,
+  "max_abs": 9.065e-05,
+  "n_below_0.999": 0,
+  "n": 259,
+  "verdict": "the fp32 artifact is correct on CUDA. No TF32 degradation, so the published graph needs no accelerator caveat."
+ },
+ "cuda_fp16_vs_cpu_fp32": {
+  "min_cos": 0.662159,
+  "mean_cos": 0.989181,
+  "max_abs": 7.355e-02,
+  "n_below_0.999": 255,
+  "n": 259,
+  "affected_strata": ["tiny", "short", "mid", "near", "boundary", "over"],
+  "affected_lengths": [7, 512],
+  "verdict": "unusable for retrieval. Not a long-input effect -- every stratum is hit, from 7 tokens up."
+ },
+ "cpu_fp16_vs_torch_fp32": {
+  "min_cos": 0.99999923,
+  "max_abs": 1.785e-04,
+  "n": 259,
+  "seconds": 2048,
+  "verdict": "PASSES mandate 11.4, and is MISLEADING. ORT has no fast CPU fp16 kernels, so it up-converts; this number certifies fp32 arithmetic on fp16 weights."
+ },
+ "cuda_latency": {
+  "fp32_seconds_259_passages": 4.1,
+  "fp16_seconds_259_passages": 2.3,
+  "fp16_speedup": 1.78,
+  "verdict": "the speedup is real and irrelevant -- it buys 1.78x on outputs that are wrong."
+ },
+ "cpu_latency": {
+  "fp32_seconds_259_passages": 207,
+  "fp16_seconds_259_passages": 2048,
+  "fp16_slowdown": 9.9
+ },
+ "transferable_lesson": "A CPU parity gate does not qualify a reduced-precision ONNX graph. Measure on the execution provider the precision exists for, or do not ship the precision.",
+ "what_would_change_it": "An fp16 export whose CUDA output matches the fp32 reference on the full fixture set -- e.g. keeping attention/softmax accumulation in fp32 via a wider node_block_list, or an fp16 export produced by a path that controls accumulation dtype rather than a post-hoc graph cast."
+}

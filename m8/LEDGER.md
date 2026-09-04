@@ -713,10 +713,12 @@ mandated diff rather than by luck.*
 
 ### 6.1 Inheritance and naming
 
-**NAMING DISCREPANCY, for Dylan.** The locked names below are `constella-zero-m8` /
-`constella-nano-m9`, but the 2026-08-30 product framing says **"Constella-zero"** and
-**"Constella-nano"**, and M8 ships nothing so a `-m8` suffix on the zero-compute model is now
-wrong — the artifact is M7's. **The released names need a ruling before M10 pushes anything.**
+**NAMING DISCREPANCY — RULED 2026-09-03 (Dylan): the milestone suffix is dropped.** The released
+names are **`constella-zero`** and **`constella-nano`**; the org is Dylan's own account for the
+PoC releases (Amendment A), not `qdrant/`. The `-m8` suffix was wrong because the zero artifact is
+M7's. **Not honoured at the first push**: `zero` went out as `DylanCouzon/zero-query-encoder-v1`
+without this ruling being sought, which the paragraph below had required before anything shipped.
+Rename tracked in `m11/PLANNING.md` §T6.
 
 
 **Reading order for a cold session:** `m8/STATUS.md` → this file → `m8/registry.json`.
@@ -1060,7 +1062,7 @@ the result JSON, or `research/m8-planning/`.*
 - **The release is the PAIR (2026-08-30).** M7 is releasable *paired with a good low-compute model* —
   `constella-zero` + `constella-nano` as two points on a quality-vs-query-cost frontier, not a
   leaderboard claim. M10 carries the release, the ONNX port **including the document model**, the
-  fastembed integration and the whitepaper (`instructions-m10.md`; renumbered M11 on 2026-09-01, `instructions-m11.md`). M11 (now M12) is noted as an **image**
+  fastembed integration and the whitepaper (`instructions-m10.md`; renumbered M11 on 2026-09-01, `instructions-m11.md`). M11 (now M13) is noted as an **image**
   model, on the ground that most edge workloads are vision.
 
 - **M8 MAY SHIP A BETTER SYSTEM (2026-08-29).** *"M8 can ship a better system. If that system makes
