@@ -183,47 +183,107 @@ Gates → `results/m11_zero_export.json`, each recording the achieved number and
 7. **Cost row**: measure s=8 vs s=512 latency (0.032 ms vs 1.29 ms single-thread — the S×S term is
    not free) and publish the post-T1 fastembed figure, not the 0.38 ms table-only number.
 
-## T3 — document tower
+## T3 — document tower — **IN PROGRESS 2026-09-03**
 
-Export exists and the artifacts ARE on this box (verified 2026-09-03): `work/m9onnx/stella-400M-doc/`
-holds `model.onnx` 1.75 GB, `model_fp16.onnx` 875 MB, and stella's four tokenizer files —
-**`config.json` and `model_tokens.onnx` are both absent**, as the gaps below say.
-`results/m9_doc_export.json`: opset 17, no custom ops, fp32 min-cos 0.99999940. **Five gaps**, all
-blocking publication:
+Repo (new, PUBLIC, Amendment A ruling 2): **`DylanCouzon/stella-en-400M-v5-doc-onnx`**.
+Re-exported from the pinned revision by `m11/release/export_doc.py`; pushed by
+`m11/release/push_doc.py`; card `m11/release/MODEL_CARD_DOC.md`; numbers
+`results/m11_doc_export.json`. The M9 artifacts and `m9src/export_doc_model.py` are left as the
+historical record and are NOT the shipped path — see §T3 corrections.
 
-- **`model_fp16.onnx` FAILS the mandate tolerance**: measured max-abs **1.37e-3**, min-cos
-  **0.99970**, output norms 0.9997–1.0004 — the final normalize ran in fp16. The recorded `pass:
-  true` covers only fp32 (`export_doc_model.py:150` builds its session on `p32`). Re-export with the
-  normalize and Dense in fp32 (`op_block_list`); **if it still misses 1e-4/1e-3, publish fp32 only.**
-- **No `config.json`** in the directory — `fastembed.load_tokenizer` raises on it as-is, so the repo
-  as planned would be unusable through fastembed.
-- **No `model_tokens.onnx`.** Masked mean is linear, so `mean(W·h_i+b) == W·mean(h_i)+b`; measure it
-  here rather than inheriting the claim (see §Corrections on where that 6.3e-08 actually came from).
-- **Recorded fp32 parity used word salad** from a 20-word vocabulary (`export_doc_model.py:30,34`),
-  n=40, never real text. Re-run on real passages. Good news, measured: fp32 batch invariance is
-  exact, and fixed-512 padding gives bit-identical output, so the attention mask survived export.
-- **T1 applies here too, unchanged.** The directory carries stella's tokenizer verbatim:
-  `model_max_length: 32768`, `max_length: 8000`, `padding: Fixed(512)`. The document index was
-  built at 512 (`FREEZE.json:encoder_spec`), so a fastembed caller would mistruncate documents of
-  513–8000 tokens — **worse here than on the query side, where long inputs are rare**. Reuse
-  `push.sanitise_tokenizer`.
+**Ships ONE graph.** `model.onnx`, fp32, pool→Dense→L2.
+- No `model_tokens.onnx`: `PoolingType.DISABLED` + `normalization=False` serves an already-pooled
+  graph unchanged (max-abs 2.46e-08). The M9 note claiming fastembed "has no slot for a dense layer
+  after pooling" is **wrong** and would have cost a third 1.75 GB file.
+- No `model_fp16.onnx`: **rejected on measurement, see below.** `export_doc.py --fp16` still builds
+  it; `push_doc.build()` refuses to run if one is sitting in the export dir.
 
-Reusable from T2: `push.py`'s gate structure and `verify_tokenizer.py` apply as-is to a second
-repo; `export_onnx.py` does not — that graph is hand-built from a table, this one is a torch
-export. Budget for the size: 1.75 GB through LFS, and the repo is NEW and PUBLIC (Amendment A
-ruling 2), so the name is a decision to make and record.
+**Fixtures are frozen**: `m11/release/doc_fixtures.json`, 259 real nq-250k passages in six strata
+by pinned-tokenizer token count — tiny/short/mid/near 48 each, **boundary(511–513) 19**,
+**over(514–1131) 48**. Strata are re-asserted on every load. hotpotqa is not used (1.6 GB / 5.2M
+strings, nothing over 445 tokens). Replaces the inherited n=40 of 20-word word salad.
 
-Card must carry: `base_model: NovaSearch/stella_en_400M_v5` and the pinned revision `ffeb2b7e…`;
-**the Apache-2.0 lineage** — stella is trained from `Alibaba-NLP/gte-large-en-v1.5` and its
-`modeling.py` is "Copyright 2024 The GTE Team Authors and Alibaba Group", so ship the Apache text
-and notices alongside MIT (the pinned stella snapshot has no LICENSE file, which is a gap to fill,
-not permission to omit); a statement that this is a **format conversion with unchanged weights**;
-the two mandatory `config_kwargs`; the head definition (masked mean → `2_Dense_1024` → L2); measured
-parity per graph; and that it is **document-only** — stella's query side needs the `s2p_query`
-prompt and fastembed's `query_embed` adds no prefix, so symmetric use through fastembed is silently
-wrong. Note for the log: Alibaba is "OK WITH JUSTIFICATION" under the vendor rule and the decision
-log records NovaSearch as CLEAN without the lineage; the justification is that this is a conversion
-of an already-chosen teacher, not a new component choice.
+### Measured 2026-09-03 (24–259 real passages; final numbers in the result JSON)
+
+| | measured |
+|---|---|
+| fp32 graph vs torch | cos 0.99999988, max-abs 2.9e-07, **batch invariance exactly 0.0** |
+| fp32 graph on CUDA vs on CPU | min-cos 1.000000, max-abs 9.07e-05, 0/259 bad — **no accelerator caveat needed** |
+| the OLD M9 fp16 on real text | max-abs 1.355e-03 — **fails**, as the plan said |
+| fp16 (backbone fp16, head fp32) vs torch, **CPU** | cos 0.99999923, max-abs 1.79e-04 — passes §11.4 **and means nothing** |
+| fp16 vs fp32 reference, **CUDA** | **min-cos 0.662, mean 0.989, 255/259 below 0.999** — unusable |
+| fp16 latency | CPU **9.9x SLOWER** (2048 s vs 207 s); CUDA 1.78x faster |
+| fp16, hand-built all-zero attention mask | **NaN**; fp32 returns a unit vector. Unreachable by any tokenizer (`encode("")` → `[CLS] [SEP]`) |
+
+### The T3 finding worth carrying forward
+
+**A CPU parity gate cannot qualify a reduced-precision ONNX graph.** ONNX Runtime has no fast CPU
+fp16 kernels, so it up-converts to fp32 — which is simultaneously why the fp16 graph *passes* CPU
+parity at cos 0.99999923 and why it runs 9.9x slower there. The passing number certifies fp32
+arithmetic on fp16 weights, i.e. a code path nobody would choose fp16 for. Run it on the provider
+the precision exists for and 255 of 259 passages are wrong, across every stratum from 7 tokens up.
+Had this shipped on the CPU number with a "use it on GPU" note, the card would have carried
+**exactly inverted** advice. `results/m11_doc_fp16_gpu.json`, incl. what would change the verdict.
+
+Two review rounds both reasoned about fp16 from CPU evidence alone — one arguing to ship it, one
+arguing to drop it for want of GPU evidence. Neither would have caught the inversion; only the
+measurement did. The reviewer who said "no supported execution path has demonstrated a benefit"
+was right for a reason weaker than the true one.
+
+### Traps this task found — all of them cost nothing only because they were caught
+
+- **`2_Dense_1024` HAS A BIAS** (`linear.weight` + `linear.bias`). A rewrite selecting the weight
+  by rank dropped it; the exact-key assertion is what caught it. The matrix is square, so a wrong
+  or transposed key stays shape-valid and a torch reference built the same way would certify it.
+- **`convert_float_to_float16(node_block_list=…)` emits an UNLOADABLE graph.** It inserts one
+  cast-to-fp32 node per CONSUMER, all sharing a name and an output tensor (ORT: `two nodes with
+  same node name`), and APPENDS them, breaking topological order (`onnx.checker`). `repair()`
+  drops the byte-identical clones and stable-Kahn re-sorts: 2 clones, 41 positions. A
+  level-by-level sort "works" but churns 3440 positions — use the stable form.
+- **The block list must be DERIVED**, never hard-coded: nodes after the last `LayerNormalization`
+  (17 of them). Hand-listing 14 omitted `/Constant_1` and `/Constant_2`, and
+  `convert_float_to_float16` matches names EXACTLY — a rename silently blocks nothing. With the
+  derived list the eps constants stay fp32 (`1e-09`, `1e-12`, verified in the converted graph).
+- **A dot product is not a cosine, and here the difference decided a verdict.** `m9src`'s
+  `(ref*got).sum(1)` is only a cosine when both sides are unit-norm; the fp16 graph's outputs are
+  0.9995–1.0004. Same graph: **dot 0.99954 (fails 1e-4), true cosine 0.99999940 (passes)**.
+  `export_onnx.py` had the same bare-dot form and now computes a real cosine and records norms.
+- **`export_onnx.py` check 1 claimed "checker passes" and never ran the checker** (predicate was
+  `not custom` alone), so `zero`'s live gate 8 asserted something it did not test. Fixed: the
+  checker runs with `full_check=True` and the opset is asserted.
+- **`parallel>1` cannot work** for `add_custom_model` repos in fastembed 0.8.0 — the worker builds
+  `OnnxTextEmbedding`, which cannot resolve a runtime-registered name. A card sentence, not a gate.
+- **A dtype census is what proves a filename.** A copied fp32 graph renamed `model_fp16.onnx`
+  passes opset/domain/IO checks perfectly; the initializer census (fp16 everywhere except
+  `dense.weight`/`dense.bias`) is what catches it.
+
+### Tokenizer and config
+
+`push.sanitise_tokenizer`'s edit applies here unchanged and matters more: `model_max_length` 32768
+and `max_length` 8000 against an index built at 512, so fastembed would send documents of 513–8000
+tokens through untruncated. `config.json` is stella's own with the two xformers flags set to what
+the graph was exported with. **The plan's claim that the M9 directory ships `padding: Fixed(512)`
+is wrong** — it holds `BatchLongest`, because `save_pretrained` recorded the transformers state at
+export time. The pinned snapshot is the source of truth and is what the build copies.
+
+### Licence
+
+stella's own card frontmatter declares **`license: mit`**, so the card declares MIT because
+upstream does and claims no separate licence. The `Alibaba-NLP/gte-large-en-v1.5` Apache-2.0
+lineage is recorded as attribution only; `modeling.py` is not redistributed here, so **no Apache
+licence text is shipped**. This supersedes the earlier instruction to ship Apache text alongside
+MIT, which would have implied undocumented dual licensing.
+
+### Gates (`push_doc.py`)
+
+(1) `export_doc.py --check` re-derived against the staged files on the **full** fixture set — no
+`--n`, since a shortened run still exits zero; (2) manifest exactness; (3) the tokenizer as
+`fastembed.load_tokenizer` reads it; (4) fastembed serves the staged graph via `DISABLED` and
+agrees with ORT; (5) the card's python blocks execute offline against the staged bytes. Then:
+create PRIVATE with `exist_ok=False` (a pre-existing destination is refused, the repo id is a
+constant), upload, verify the returned commit against a **hash snapshot captured after the last
+gate**, flip PUBLIC. `push.py` compares the remote against the staging dir as it stands at
+verification time, which would compare changed bytes against themselves.
 
 ## T4 — fastembed fork branch
 

@@ -149,10 +149,17 @@ def export():
 
 
 def ops_and_domains(path):
+    """Check 1 is labelled 'checker passes', so RUN the checker here.
+
+    It did not: the predicate was `not custom` alone, so gate 8 asserted a checker pass it never
+    performed, and nothing asserted the opset either (Codex, 2026-09-03).
+    """
     import onnx
+    onnx.checker.check_model(str(path), full_check=True)
     m = onnx.load(str(path))
     return ({n.op_type for n in m.graph.node},
-            {n.domain for n in m.graph.node} | {i.domain for i in m.opset_import})
+            {n.domain for n in m.graph.node} | {i.domain for i in m.opset_import},
+            [(o.domain, o.version) for o in m.opset_import])
 
 
 def tokenize(enc, texts):
@@ -196,11 +203,12 @@ def main():
     checks, res = [], {}
 
     # 1 -- standard ops only
-    ops, doms = ops_and_domains(OUT / "model.onnx")
-    ops2, doms2 = ops_and_domains(OUT / "model_tokens.onnx")
+    ops, doms, op1 = ops_and_domains(OUT / "model.onnx")
+    ops2, doms2, op2 = ops_and_domains(OUT / "model_tokens.onnx")
     custom = (doms | doms2) - {""}
-    checks.append(("1 standard domain only, opset 17, checker passes", not custom,
-                   f"{len(ops | ops2)} op types, domains {sorted(doms | doms2)}"))
+    opset_ok = op1 == op2 == [("", OPSET)]
+    checks.append(("1 standard domain only, opset 17, checker passes", not custom and opset_ok,
+                   f"{len(ops | ops2)} op types, domains {sorted(doms | doms2)}, opsets {op1}"))
 
     # 2 -- parity against the numpy encoder on real dev queries
     dev = json.loads((REPO / "work/dev/heldout-train.json").read_text())["q_texts"]
@@ -208,8 +216,15 @@ def main():
     got = np.concatenate([run("model.onnx", qs[i:i + 64])[0] for i in range(0, len(qs), 64)])
     want = enc.encode(qs)
     dev_abs = float(np.abs(got - want).max())
-    dev_cos = float((got * want).sum(1).min())
-    res["dev_queries"] = {"n": len(qs), "max_abs": dev_abs, "min_cos": dev_cos}
+    # A cosine, not a bare dot. Both sides are unit-norm here by construction, so the two agree --
+    # but the M9 document export recorded a dot AS a cosine, and on its fp16 graph (norms
+    # 0.9995-1.0004) that misread flipped the verdict. Record the norms so the assumption is
+    # visible rather than assumed (Codex, 2026-09-03).
+    ng, nw = np.linalg.norm(got, axis=1), np.linalg.norm(want, axis=1)
+    dev_cos = float(((got * want).sum(1) / (ng * nw)).min())
+    res["dev_queries"] = {"n": len(qs), "max_abs": dev_abs, "min_cos": dev_cos,
+                          "onnx_norms": [float(ng.min()), float(ng.max())],
+                          "numpy_norms": [float(nw.min()), float(nw.max())]}
     checks.append((f"2 parity on {len(qs)} real dev queries", dev_abs <= 1e-5 and dev_cos >= 1 - 1e-6,
                    f"max-abs {dev_abs:.3e}   min-cos {dev_cos:.9f}"))
 

@@ -83,10 +83,44 @@ published until T0 and T1 land.**
 | T0 bind the release path | **DONE** 2026-09-03 — 9 gates on a build snapshot; Codex reviewed the fix and broke it, all 9 findings actioned; `test_gates.py` proves 13 attacks refused |
 | T1 sanitise tokenizer (`zero` repo) | **DONE** 2026-09-03 — `push.sanitise_tokenizer`; gate 8 measures what fastembed's own loader gets; the doc-tower repo still needs the same edit under T3 |
 | T2 zero query path → ONNX | **DONE** 2026-09-03 — two opset-17 graphs, 10 checks, parity 4.47e-08 on 1,024 real dev queries; live at `fb8e5c5b`. `m11/PLANNING.md` §T2, incl. the measurement that the count-mask defect is unreachable by real text (0/7,325 dev queries produce id 0) |
-| T3 doc tower publish (PUBLIC, new repo) | fp32 passes; **fp16 fails §11.4 (1.37e-3)**, no `config.json`, no `model_tokens.onnx` |
+| T3 doc tower publish (PUBLIC, new repo) | **DONE 2026-09-03** — live at commit `e34cc6dd1e`, PUBLIC, byte-verified anonymously (published LFS sha256 == gated bytes, `fe31555e…`). Repo `DylanCouzon/stella-en-400M-v5-doc-onnx`. Re-exported fp32 from the pinned revision; 259 frozen real-passage fixtures; **fp16 rejected on a CUDA measurement**, `model_tokens.onnx` proved unnecessary. `m11/PLANNING.md` §T3 |
 | T4 fastembed fork branch, no PR | fork cloned to `/home/dylan/fastembed`; **upstream 0.8.0 regression found and fixed** on branch `fix-fixed-padding-ragged-batch` (breaks `thenlper/gte-base`), reported as qdrant/fastembed#703 — T4 runs against that branch |
 | T5 card fixes | **DONE** 2026-09-03 — the raising snippet fixed, ONNX usage block added, the by-caller tokenizer table and cost rows corrected; gate 6 executes every block |
 | flip `zero` PUBLIC | **moot** — already public since the first push (see the correction above). `push()` now detects this, says so, and does not pretend to have published privately first |
+
+## Released: stella document tower, ONNX
+
+**https://huggingface.co/DylanCouzon/stella-en-400M-v5-doc-onnx — PUBLIC**, commit `e34cc6dd1e`,
+7 files, 1.75 GB. fp32 only (`model.onnx`, opset 17, standard domain, no external data). Created
+private → uploaded → verified against a post-gate hash snapshot → flipped public. Verified again
+anonymously after the fact: the published LFS sha256 `fe31555e…` is the gated byte string.
+
+Parity vs the torch module on 259 frozen real NQ passages: **cos 0.99999988, max-abs 3.76e-07**,
+batch invariance bit-identical, and **CUDA vs CPU min-cos 1.000000 / max-abs 9.07e-05** so an index
+built on one holds on the other. Build+gates+push: `m11/release/push_doc.py`.
+
+## T3 — what it cost and what it caught (2026-09-03)
+
+Seven defects, none of which would have announced itself. The two that matter most:
+
+- **A CPU parity gate cannot qualify a reduced-precision ONNX graph.** The fp16 document graph
+  passes CPU parity (cos 0.99999923 on all 259 fixtures) only because ORT up-converts fp16 to
+  fp32 — the same fact that makes it 9.9x SLOWER on CPU. On CUDA it disagrees with fp32 on
+  **255 of 259 passages** (min-cos 0.662). Shipping on the CPU number would have put inverted
+  advice on the card. fp32 only. `results/m11_doc_fp16_gpu.json`.
+- **`2_Dense_1024` has a bias**, and the M9 builder selected the weight by rank
+  (`first tensor with dim()==2`). The matrix is square, so a wrong or transposed key stays
+  shape-valid and a torch reference built the same way certifies it. Assert exact state-dict keys.
+
+Also: `convert_float_to_float16(node_block_list=…)` emits an unloadable graph (duplicate node
+names + broken topological order); a bare dot product recorded as `min-cos` flips an fp16 verdict
+(dot 0.99954 vs true cosine 0.99999940); `export_onnx.py` check 1 claimed "checker passes" and
+never ran the checker, so `zero`'s live gate 8 asserted something it did not test (**fixed**);
+`PoolingType.DISABLED` serves an already-pooled graph, so no per-token graph is needed;
+`parallel>1` cannot work for `add_custom_model` repos in fastembed 0.8.0.
+
+New files: `m11/release/export_doc.py`, `push_doc.py`, `MODEL_CARD_DOC.md`, `doc_fixtures.json`
+(259 real nq-250k passages, six strata, re-asserted on load).
 
 ## Next session starts here (2026-09-03)
 
