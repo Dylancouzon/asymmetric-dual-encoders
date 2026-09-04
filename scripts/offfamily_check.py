@@ -34,6 +34,35 @@ COMPONENT = "heldout-train"
 STRATA = ("squad-train", "esci-us")
 
 
+def _bind_documents(name):
+    """Verify the DOCUMENTS, then allow the encoder to differ -- narrow, deliberate bypass.
+
+    heldout._verify_pool binds pool identity to the pinned build, which is stella's: it compares
+    `dim`, `encoder`, `encoder_revision` and the vector bytes. That is right for every normal dev
+    read and wrong for exactly this comparison, whose whole point is a second encoder over the SAME
+    documents. So the check that matters is reproduced here and the encoder fields are the only
+    ones dropped: stores, spans, counts, per-store id_sha256 and n must equal the pin, and the
+    component JSON must still hash to the pinned value. If any document moved, this raises.
+    stella's own arm passed the FULL pinned path -- no bypass was used for it."""
+    import heldout
+    import pool as poolmod
+    man = json.loads((REPO / "results" / "m7_dev_manifest.json").read_text())
+    pin = man.get("_pinned", {}).get("pool", {})
+    _, _, meta = poolmod.build()
+    for pin_key, meta_key in (("n", "n"), ("stores", "stores"), ("spans", "spans"),
+                              ("counts", "counts"), ("store_id_sha256", "id_sha256")):
+        if pin_key in pin and meta.get(meta_key) != pin[pin_key]:
+            raise SystemExit(f"DOCUMENT identity differs from the pin: {meta_key}")
+    import hashlib
+    got = hashlib.sha256((WORK / "dev" / f"{COMPONENT}.json").read_bytes()).hexdigest()
+    want = (man.get(COMPONENT) or {}).get("json_sha256")
+    if want and got != want:
+        raise SystemExit(f"PINNED dev component {COMPONENT} changed")
+    print(f"  documents bound: {meta['n']:,} docs, layout and per-store ids match the pin; "
+          f"encoder {meta.get('encoder')} dim {meta['dim']}", flush=True)
+    heldout._VERIFIED = "cheap"
+
+
 def main():
     import encoders
     lam = float(sys.argv[1])
@@ -46,6 +75,7 @@ def main():
     from table import Preproc, QueryTable, get_tokenizer
     from teacher import QUERY_PREFIX, encode_cached
 
+    _bind_documents(name)
     q_texts = encode_trainq.load_texts()
     pre, tok = Preproc(), get_tokenizer()
     print(f"{name}: bag matrix over {len(q_texts):,} TRAIN queries", flush=True)

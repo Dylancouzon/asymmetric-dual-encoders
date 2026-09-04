@@ -96,6 +96,30 @@ max|Δ| 0.00e+00 vs sentence-transformers); λ-curve flat 0.247–0.251 then fal
   projection may NOT be used for it (refuted, `EXPLORED.md`).
 - A swap requires the regenerated clean fit list (`m7_trainq_manifest.json`); this probe ranks only.
 
+## Off-family teacher check, 2026-09-04 — the confound is refuted
+
+Every component of the pinned dev suite carries stella exposure (NQ, HotpotQA disclosed;
+CQADupStack is StackExchange, of which stella discloses four datasets); bge-base discloses none.
+The 2026-08-26 family-exposure read used nq-250k as the control — itself on stella's list. Codex
+finding 14 (MAJOR) named the fix; run now. `scripts/offfamily_check.py`,
+`results/m7_offfamily_report.json`.
+
+Held-out SQuAD + ESCI, on **no** candidate's disclosed list, full 6.17M pool, λ*=0.01 each:
+
+| stratum | n | stella | bge-base | d [CI95] |
+|---|---|---|---|---|
+| squad-train | 1,790 | 0.5284 | 0.3632 | **+0.1652** [0.1503, 0.1801] |
+| esci-us | 1,598 | 0.3495 | 0.3111 | **+0.0384** [0.0293, 0.048] |
+| macro | | | | **+0.1018** [0.093, 0.1107] |
+
+Stella first on both, by ~3× the CQADupStack delta (+0.0365) that selected it — the selection set
+**understated** its advantage. **ESCI carries the argument**: Amazon product text is neither
+Wikipedia nor StackExchange nor a QA benchmark, so it is independent of stella's disclosed
+training in domain as well as by name, and stella still wins CI-resolved. SQuAD is Wikipedia, so
+it is domain-adjacent to stella's NQ/HotpotQA/FEVER/MIRACL training even though the dataset is not
+disclosed — do not lean on that row alone. Neither stratum resembles the six: this is a
+contamination control, not a prediction of the six-set gap.
+
 ## Teacher swap, 2026-08-26 — stella's closed-form table beats bge's best TRAINED arm
 
 `m7_stage0_ridge_stella.json`: proxy-3 **0.4973** at lam=0.01 (bge closed form 0.4542, bge best
