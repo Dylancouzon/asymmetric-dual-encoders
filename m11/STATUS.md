@@ -93,6 +93,7 @@ published until T0 and T1 land.**
 | T3 doc tower publish (PUBLIC, new repo) | **DONE 2026-09-03** — live at commit `e34cc6dd1e`, PUBLIC, byte-verified anonymously (published LFS sha256 == gated bytes, `fe31555e…`). Repo `DylanCouzon/stella-en-400M-v5-doc-onnx`. Re-exported fp32 from the pinned revision; 259 frozen real-passage fixtures; **fp16 rejected on a CUDA measurement**, `model_tokens.onnx` proved unnecessary. `m11/PLANNING.md` §T3 |
 | T4 fastembed fork branch, no PR | fork at `/home/dylan/fastembed`; **upstream 0.8.0 regression found, fixed and filed as qdrant/fastembed#703** (breaks `thenlper/gte-base`), branch `fix-fixed-padding-ragged-batch`. **De-risked by T3**: the `DISABLED` route is settled (bit-identical to ORT) and `parallel>1` is settled (cannot pass — not a gate). Remaining: serve `zero` end to end, gate parity vs the numpy encoder, leave the branch PR-ready. |
 | T5 card fixes | **DONE** 2026-09-03 — the raising snippet fixed, ONNX usage block added, the by-caller tokenizer table and cost rows corrected; gate 6 executes every block |
+| T6 rename + card rewrite (**after T4**) | `zero` → **`constella-zero`** (name locked in `m8/LEDGER.md` §6.1; milestone suffix dropped, Dylan 2026-09-03). Both cards rewritten: fastembed examples, competitive comparison and missed-bar framing removed, contamination caveat and measured numbers kept, more about the model itself. `m11/PLANNING.md` §T6 |
 | flip `zero` PUBLIC | **moot** — already public since the first push (see the correction above). `push()` now detects this, says so, and does not pretend to have published privately first |
 
 ## Released: stella document tower, ONNX
@@ -147,6 +148,10 @@ not a shortcut.
 
 ## Open
 
+- **`zero` is published under the WRONG NAME.** The family name was locked in `m8/LEDGER.md` §6.1
+  as `constella`, and `:716` required a ruling on the milestone suffix **before anything shipped**.
+  That ruling was not sought and the push went out as `zero-query-encoder-v1`. Ruled 2026-09-03:
+  **`constella-zero`**. Rename in T6; `move_repo` leaves a redirect so the old URL keeps working.
 - ~~Licence sign-off~~ — **RULED 2026-09-03 (Dylan): MIT, including for a public release.** Card
   declares `license: mit` (matching stella) with CC BY-SA attribution for
   NQ/SQuAD/HotpotQA/FEVER/Mr.TyDi. No further approval needed on licence to flip the repo public.

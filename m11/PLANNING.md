@@ -368,6 +368,38 @@ No model-integration PR this milestone. Leave the branch pushed and PR-ready; a 
 canonical reference vectors per `CONTRIBUTING.md` and an honest description — zero **missed**
 `LR-dense-pertask 0.4583` at 0.4339 (CI-resolved), its fused variant ties OpenSearch.
 
+## T6 — rename `constella-zero` and rewrite both cards (after T4; Dylan, 2026-09-03)
+
+**Naming ruling.** The locked family name is `constella` (`m8/LEDGER.md` §6.1: constellation +
+stella, navigate by fixed stars, no engine). The milestone suffix is **dropped**, so the query
+model is **`constella-zero`** and the tower will be `constella-nano`. `zero` shipped as
+`zero-query-encoder-v1` because the open ruling at `m8/LEDGER.md:716` was never sought before the
+push; HF `move_repo` leaves a redirect, so the old URL keeps working.
+
+The stella ONNX doc tower keeps `stella-en-400M-v5-doc-onnx`: it is a **format conversion of a
+third-party model**, not a constella artifact, and a `constella-*` name would misattribute
+someone else's weights. Confirm with Dylan if he wants otherwise.
+
+**Card rewrite (Dylan's ask).** Both cards, `constella-zero` especially:
+- **use the fastembed examples** — T3 settled the route, `PoolingType.DISABLED` +
+  `normalization=False` on the pooled graph, bit-identical to direct ORT. Both cards should show
+  the same registration pattern so the pair reads as one product.
+- **remove the competitive comparison and the missed bar** — LightRetriever `0.4583`, the
+  OpenSearch tie, "missed its own release bar". An internal project bar means nothing to someone
+  downloading the model, and the comparator table belongs in the whitepaper.
+- **KEEP** the measured nDCG@10 numbers and the **stella contamination disclosure** (ArguAna,
+  FiQA and FEVER are in stella's training data). That is not a competitive claim — it is what a
+  reader needs to interpret the numbers at all.
+- **be more informative about the model itself**: what it is, the pooling rule, the cost rows
+  (query asset / document index / hydration / CPU latency), the shipped file choice, limits.
+
+**`instructions-m11.md` deliverable 1 must be amended in the same change** — it currently *requires*
+the cards to carry the competitive claims ("Zero tier wins exist and the model cards must say so"),
+so removing them without amending it leaves a rule the repo knowingly breaks.
+
+Touch points for the rename: `push.py:363` default repo id, `MODEL_CARD.md` `REPO_ID`
+substitution, `m11/STATUS.md`, `instructions-m11.md` Amendment A ruling 1, `CLAUDE.md` M7 entry.
+
 ## T5 — card fixes before anything goes public
 
 `MODEL_CARD.md:44` sets `q = enc.encode([...])`, a `(1,1024)` array; `:90` then calls
