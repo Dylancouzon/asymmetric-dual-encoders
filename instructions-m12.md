@@ -9,16 +9,21 @@ broke the second and recommended killing the training half. Both reviews and wha
 ## Why this is the whole milestone
 
 M7's headline `zero`+BM25 **0.4911** uses `convex0 w=0.8`, per-query min-max at depth 1000, over
-`bm25s`-lucene. **Qdrant ships RRF and DBSF, not that.** On dev, RRF k=10 scores **0.5504** against
+`bm25s`-lucene — **a formula Qdrant does not implement.** On dev, unweighted RRF k=10 scores **0.5504** against
 convex0's **0.5727** (`m7/LEDGER.md:922`) — a 0.022 gap, larger than every table-side lever M7 and
 M8 ever measured. If our published pair is fused by a formula the product cannot run, the headline
 overstates what a user gets.
 
-**But the 0.022 is not established as an operator gap — the comparison was unfair to RRF.**
+**But that 0.022 is not established as an operator gap — the comparison was unfair to RRF.**
 `convex0` got a **dev-fitted weight** (0.8, chosen from 8 candidates). RRF got **none**: the M7 grid
 swept only `k` ∈ {10,20,30,60,100} (`m7src/fusion.py:209`) and passed no weights, while
 `fusion.rrf(runs, k=60, weights=None)` (`:29`) has supported them all along and `apply()` (`:259`)
 never plumbs them.
+
+**This is already a public claim.** `constella-zero`'s card says the fused row *"is not reciprocal
+rank fusion, so Qdrant's `Fusion.RRF` will not reproduce it"* (`m11/release/MODEL_CARD.md:158-159`,
+live). That sentence is literally true and a reader takes it as **"you cannot get 0.4911 in
+Qdrant"** — on evidence that never tried a weight. Correcting or confirming it is the point of M12.
 
 **Qdrant ships weighted RRF** — `weights` since **v1.17.0**, `k` since v1.16.0, e.g.
 `{"rrf": {"k": 60, "weights": [3.0, 1.0]}}` — plus parameter-free DBSF. So the live question is:
@@ -65,8 +70,10 @@ runs are not cached): `select_fusion` re-encodes dev queries and re-runs exact t
 **CUDA** (`select_fusion.py:50,73`). Documents are not re-encoded. This is a GPU run, not a CPU one.
 
 **Numeric decision rule, registered before scoring.** Dev macro over the four text-backed components,
-against convex0 **0.5727** and RRF **0.5504**, with the 0.004 frozen-operator fused floor
-(`m8_noise_floor_fused.json` — valid here precisely because Gate A fits nothing):
+against convex0 **0.5727**, with the 0.004 frozen-operator fused floor (`m8_noise_floor_fused.json`).
+That floor was measured with a **fixed** operator, so it is exact for DBSF and an **under-estimate**
+for weighted RRF, which fits 8 candidates as convex0 did — say so when reporting, and do not treat a
+weighted-RRF margin inside 0.004 as a win:
 
 | outcome | rule | what we do |
 |---|---|---|
@@ -77,7 +84,7 @@ Report all three side by side. **Fitting budgets must be stated**: convex0's `w`
 candidates, weighted RRF gets the same 8, DBSF fits nothing — so a DBSF tie is the strongest of the
 three results and an unweighted-RRF number is not a fair comparator for anything.
 
-## Protocol — three things that make this wrong if skipped
+## Protocol — four things that make this wrong if skipped
 
 1. **This does not replace the published 0.4911.** M7 froze the fusion family and parameter, and no
    neighbouring choice may be preferred after the six were seen (`m7/LEDGER.md:691`). A DBSF number
@@ -99,5 +106,8 @@ the teacher, cloud compute, any released artifact.
 1. Weighted RRF plumbed through `select_on_dev`/`apply`, and `dbsf` added, both with parity and degenerate-case tests.
 2. The dev macro under convex0, unweighted RRF, **weighted RRF** and DBSF — with fitting budgets stated — against the registered rule, in `m12/FINDINGS.md`.
 3. The registration itself, written before scoring, in `m12/LEDGER.md`.
-4. If DBSF is viable: a one-line correction to `m11/STATUS.md`'s standing operator caveat, and the
-   recommendation carried into M14's paper.
+4. **The card sentence, resolved either way.** If a shipping operator matches: record the exact
+   configuration, correct `m11/STATUS.md:193` and rewrite `MODEL_CARD.md:158-159` to give users the
+   Qdrant recipe that reproduces the number (a card edit is Dylan's call — 2026-09-04 precedent).
+   If none matches: keep the sentence and add the measured cost. Either way it stops resting on an
+   unweighted comparison. Carry the result into M14's paper.
