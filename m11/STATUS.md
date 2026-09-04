@@ -130,6 +130,22 @@ Parity vs the torch module on 259 frozen real NQ passages: **cos 0.99999988, max
 batch invariance bit-identical, and **CUDA vs CPU min-cos 1.000000 / max-abs 9.07e-05** so an index
 built on one holds on the other. Build+gates+push: `m11/release/push_doc.py`.
 
+## Addendum 2026-09-04 — the doc graph IS a complete query encoder
+
+Verified live, not inferred. stella is one tower used symmetrically: prepend the `s2p_query` prompt
+before tokenizing and the PUBLISHED doc graph reproduces the torch query path at **min-cos
+1.00000000, max-abs 8.9e-08** on 8 queries. No weights are missing and there is no second artifact
+to export. What is missing is **prompt handling in the serving layer** — neither the graph nor
+FastEmbed's `query_embed` prepends it, and unprompted queries embed at cos **0.80** to the correct
+vector (card says 0.82–0.87 on five; 0.80 is the min over eight). Silent, not an error.
+
+Consequence for the Cloud Inference ask: Cloud Inference already auto-prefixes the E5 family by
+call type. Applied to stella's prompt pair, **one hosted graph serves documents, full-quality
+queries, and the index zero/nano target** — three frontier points, not one.
+
+`MODEL_CARD_DOC.md`'s "the only supported way to embed queries" (Sentence Transformers) overstates
+the restriction — it is about tooling, not the graph. Card edit NOT made: public artifact, Dylan's call.
+
 ## T3 — what it cost and what it caught (2026-09-03)
 
 Seven defects, none of which would have announced itself. The two that matter most:
