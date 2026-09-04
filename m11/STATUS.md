@@ -130,6 +130,17 @@ Parity vs the torch module on 259 frozen real NQ passages: **cos 0.99999988, max
 batch invariance bit-identical, and **CUDA vs CPU min-cos 1.000000 / max-abs 9.07e-05** so an index
 built on one holds on the other. Build+gates+push: `m11/release/push_doc.py`.
 
+## Addendum 2026-09-04 — prior-art paragraph removed from the zero card
+
+Dylan edited https://huggingface.co/DylanCouzon/constella-zero directly: *"I removed the prior art
+mention on the hugging face card. Not really needed."* `m11/release/MODEL_CARD.md` is **resynced to
+match the live card** — diffed against the live README, the paragraph is the only substantive
+difference (`REPO_ID` placeholders aside). A push from a stale source would have silently re-added it.
+
+The pyNIFE evidence stays in the repo (`CLAUDE.md` M16: the ~+0.035 cosine-space retention
+comparison on fiqa) and **must still be cited in M14's paper** — a card is not a related-work
+section, and the paper is.
+
 ## Addendum 2026-09-04 — the doc graph IS a complete query encoder
 
 Verified live, not inferred. stella is one tower used symmetrically: prepend the `s2p_query` prompt

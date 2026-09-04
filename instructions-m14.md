@@ -47,5 +47,10 @@ This is measured today and needs no nano. Everything else is evidence for it or 
 - Do not quote the off-family macro (+0.1018) as a product delta — it is a contamination control.
 - Do not claim `zero` confirmatorily beat BM25: C2 was +0.0165 [0.0017, 0.0311], Holm p=0.0149 >
   0.0083, **not rejected**.
+- **Cite pyNIFE** (Stephan Tulkens, MIT, 2025-11-03) as prior art for the construction — a per-token
+  dense lookup table distilled from a frozen teacher, reusing that teacher's index unchanged. It was
+  dropped from the model card 2026-09-04 as card clutter; a paper without it would be a different
+  matter. Its retention comparison on fiqa (73.4% of a weaker teacher vs our 67.1%) is also the
+  cheap lead in M16.
 - No new measurement. If the paper wants a number that does not exist, that is a milestone, not a
   paragraph.

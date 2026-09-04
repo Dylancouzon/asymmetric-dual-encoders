@@ -30,14 +30,6 @@ the two are only meaningful together.
 
 *constella = constellation + stella: navigate by fixed stars, no engine.*
 
-**Prior art.** This construction — a per-token dense lookup table distilled from a frozen teacher,
-reusing that teacher's index unchanged — is not new here. [pyNIFE](https://github.com/stephantul/pynife)
-(Stephan Tulkens, MIT, 2025-11-03) published it first, and its models are worth comparing against.
-What is specific to this release is the measurement (six BEIR sets, exact search, frozen
-comparators, pre-registered statistics), the artifact constraints (30,522 int8 rows, no MS MARCO
-anywhere in the lineage), and the fact that a second, larger query encoder is coming for the same
-index.
-
 > **Research preview.** It is a bag of tokens and behaves like one. Read
 > [Results](#results) and [Limits](#limits) first.
 
