@@ -1,0 +1,65 @@
+{
+ "_note": "Exposure-free teacher ranking. SQuAD and ESCI are on NO candidate's disclosed training list (results/m7_teacher_contamination.json), while every component of the pinned dev suite carries stella exposure (NQ, HotpotQA disclosed; CQADupStack is StackExchange and stella discloses four StackExchange datasets). Closed-form tables at each candidate's lam*=0.01, shared TRAIN bag matrix, scored on heldout-train against the full 6.17M-doc pool, each candidate against its OWN document vectors; identical document layout verified by per-store id_sha256. Paired bootstrap, stella minus bge-base, two-sided.",
+ "candidates": {
+  "stella-400M-v5": {
+   "squad-train": {
+    "n": 1790,
+    "ndcg@10": 0.5284
+   },
+   "esci-us": {
+    "n": 1598,
+    "ndcg@10": 0.3495
+   }
+  },
+  "bge-base-en-v1.5": {
+   "squad-train": {
+    "n": 1790,
+    "ndcg@10": 0.3632
+   },
+   "esci-us": {
+    "n": 1598,
+    "ndcg@10": 0.3111
+   }
+  }
+ },
+ "paired_bootstrap_stella_minus_bge": {
+  "delta": 0.1018,
+  "ci95": [
+   0.093,
+   0.1107
+  ],
+  "delta_raw": 0.1017932954901728,
+  "ci95_raw": [
+   0.09296898508756579,
+   0.11071516586380674
+  ],
+  "boot_tail": 0.0,
+  "boot_tail_str": "<0.0001",
+  "_boot_tail_note": "bootstrap tail mass, NOT a p-value; use signflip() for p",
+  "alternative": "two-sided",
+  "B": 10000,
+  "seed": 0,
+  "one_sided_lower_2.5": null,
+  "one_sided_lower_raw": null,
+  "per_dataset": {
+   "esci-us": {
+    "n": 1598,
+    "delta": 0.0384,
+    "ci95": [
+     0.0293,
+     0.048
+    ]
+   },
+   "squad-train": {
+    "n": 1790,
+    "delta": 0.1652,
+    "ci95": [
+     0.1503,
+     0.1801
+    ]
+   }
+  },
+  "resolved": true
+ },
+ "cqadupstack_reference_delta": 0.0365
+}

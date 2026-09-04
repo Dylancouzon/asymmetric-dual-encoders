@@ -33,6 +33,10 @@ def sha256_file(p):
     return h.hexdigest()
 
 
+# Dylan 2026-09-04 permitted non-commercial data for VALIDATION, not training. This guard is
+# training-scope only (it walks a run's cfg.sources), so the rule change does not relax it and it
+# must not be weakened: validation caches simply never appear here. See
+# research/m7-data-licensing.md, "Rule change 2026-09-04".
 NON_COMMERCIAL_SOURCES = ("msmarco", "ms-marco", "ms_marco")
 
 

@@ -57,7 +57,7 @@ table: dev out-of-domain 0.764 vs six 0.755).
   GPU-batch encoder pattern for large teacher encodes. Companion drops (PubMed-MV on BGE-M3;
   Coyo-VE on Qwen3-VL-Embedding-2B) are whitepaper context; PubMed is a contaminating corpus here.
 - **Qdrant 1.18 (TurboQuant) and 1.19 (TurboQuant 4-bit as primary storage, cold/cached/pinned
-  memory tiers, per-tenant IDF)**: index-side levers for the M11 all-in quantization comparison
+  memory tiers, per-tenant IDF)**: index-side levers for the M13 all-in quantization comparison
   and the edge footprint story; they do not change nano's training. **Cloud Inference does not host
   stella**; the document tower stays self-hosted. **Qdrant Edge** versions separately (private
   beta). **fastembed 0.8.0**: `add_custom_model()` has no post-pooling Dense slot — M9's per-token
@@ -158,7 +158,7 @@ prompt development (stella only in `.venv-mac`).
 | Teacher change (Qwen3-Embedding-0.6B, gte-large-v1.5, arctic-embed-l-v2) | breaks the one-index pair; stella-1.5B measured −0.0023; gte-large-v1.5 is stella's own backbone; Qwen3-0.6B +0.004 nominal, never screened | the pair story is dropped by Dylan |
 | >35M student in any role | **hard cap, Dylan 2026-09-01**: "109M is not an option. This isn't low compute anymore. 33M was already in the upper bound" | never |
 | Regress to stella's 768d or 256d head | a smaller index is a separate system and a full re-encode of every reserved corpus; §9 says whether the 384-rank bottleneck even binds | §9 shows <95% at k=384 AND the MLP-head arm fails |
-| Document-side co-adaptation (E14-LORA) | inside M10 it breaks the pair. Co-training the tower against **both** query paths at once keeps it, and it is the lever every ≥ 96% near-zero-query system used (LightRetriever's lookup 96% vs zero's 75.5%; ScalingNote 99%; CARE stage 2); costs a new index and a rebuild of zero | never inside M10; **recommended 2026-09-01 as the M11 candidate**, Dylan's call |
+| Document-side co-adaptation (E14-LORA) | inside M10 it breaks the pair. Co-training the tower against **both** query paths at once keeps it, and it is the lever every ≥ 96% near-zero-query system used (LightRetriever's lookup 96% vs zero's 75.5%; ScalingNote 99%; CARE stage 2); costs a new index and a rebuild of zero | never inside M10; **recommended 2026-09-01 as the next-milestone candidate** (that slot was M12 then; it is **M16** after the 2026-09-04 renumbering), Dylan's call |
 | The RTX 3080 as M10's execution target | Dylan 2026-09-01: cloud GPU budget or not at all. A LEAF-scale build is ≈ 10 days on it and the screens 4 more; the 50M dose and 83.4M cap it forced were box artifacts | never for M10 |
 | FineWeb-10B vectors as targets | wrong embedding space (gte-multilingual-base 768d) | never |
 | FineWeb text in any role (Dylan delegated 2026-09-01; ruled out) | documents: no reserved-set fingerprints exist (Codex pass 1 B2); seeds: a rights review and a URL blocklist for topics Wikipedia and the pool already seed | family A wins on forms yet COV shows a topic gap Wikipedia cannot seed |
@@ -283,7 +283,7 @@ places where the box, not the evidence, had set a number; they changed together:
 | 6 | seed-rank provenance field | a round-trip filter without a second generation pass | mandate §Data |
 | 7 | generator in bf16; 4-bit and Qwen3-4B fallback withdrawn; hosted fallback if the end-to-end projection exceeds 60 GPU-hours | an 80 GB card | mandate §Data, `m10/COV_CANDIDATES.md` |
 | 8 | decision 8: second build seed inside the ceiling | the headline's CI is a query-sampling interval only (`m7/FINDINGS.md` 9) | mandate decisions |
-| 9 | co-training the tower recorded as the M11 candidate | every ≥ 96% near-zero-query system co-trained the document side | §7 |
+| 9 | co-training the tower recorded as the next-milestone candidate (now M16) | every ≥ 96% near-zero-query system co-trained the document side | §7 |
 
 **Pass 7 — gpt-5.6-terra, high effort, read-only, on the amendment**
 (`research/m10-codex-plan7-2026-09-01.md`; read-exclusion audited clean: the reviewer opened the
@@ -370,7 +370,7 @@ token over the concatenated states of layers 12, 8, 4, exported at opset 17: **1
 custom-domain ops, 34.54M parameters** (head 1.18M). fastembed 0.8.0 serves it as a custom
 MEAN-pooled normalized model and reproduces the pool-then-head reference to **min-cos
 0.99999984, max-abs 2.0e-07** on 64 texts of 1–300 words. **M10.0-a2 passes** (weights are
-random; parity does not depend on them). Two serving pitfalls for M11: fastembed needs
+random; parity does not depend on them). Two serving pitfalls (both hit and resolved in M11, see `m11/CODEMAP.md`): fastembed needs
 `config.json` and `special_tokens_map.json` beside the graph, and transformers 5.x fast tokenizers
 no longer write the latter.
 

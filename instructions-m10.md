@@ -321,6 +321,16 @@ report's sense.
   never redistributed); **legal** MTEB LegalBenchCorporateLobbying (CC BY 4.0; ConsumerContractsQA
   refused, CC BY-NC); **finance** LEDGER (CC BY 4.0 annual-report QA) once its structure and a
   100K-chunk cap are verified. Climate-FEVER refused (no licence at its primary source, as in M7).
+
+  **Admission reopened 2026-09-04 (Dylan: non-commercial licences are admissible for validation, not
+  training — `research/m7-data-licensing.md` §Rule change 2026-09-04).** A set refused *for its licence
+  alone* is re-admissible, and the resuming session must re-run admission before the family floor is
+  judged: **MTEB ConsumerContractsQA (CC BY-NC) is admissible**, restoring a second legal set and
+  taking the count to four **without** LEDGER, whose structure was never verified. Any other CC BY-NC
+  or research-only eval set is now in scope. **Still refused:** Climate-FEVER (no affirmative grant —
+  a different class), and anything excluded for contamination. MS MARCO itself is admissible but is a
+  **poor COV member** — every comparator trains on it and neither of ours does, so it is biased
+  against us; prefer it for the within-system read under FORMS-12.
   **At least three families must survive admission** or M10 returns to Dylan; the report names the
   family count (Codex pass 6 preferred four — with the CQADupStack pair demoted, four needs LEDGER;
   Dylan may raise the floor). The two CQADupStack components are **DEV**, reported beside every COV
@@ -341,6 +351,11 @@ report's sense.
 - **FORMS-12**: 12 × 500 held-out synthetic queries, overlap@10 between student and teacher
   rankings over the 1M bank, per form. **Descriptive only** — teacher agreement on generated
   queries is a coverage diagnostic, not retrieval quality.
+  **Now also permitted (2026-09-04, optional, descriptive):** the same overlap@10 diagnostic on a
+  sample of **real MS MARCO dev queries**, as an external check that the 12 synthetic forms cover the
+  natural query distribution — the one thing M9's coverage failure had no outside measurement of.
+  Validation only: MS MARCO text may **never** seed generation or enter the pool, and no MS
+  MARCO-derived cache may be written under `work/train/sources/` (`m7src/mix.py:22-25`).
 - **LoTTE-clean** (7 slices, macro over slices; its corpora — ~2.8M passages — are encoded with
   stella once, ≈ 1.3 GPU-hours at the assumed 600 docs/s, budgeted in PLANNING §6): **read #1**
   after the recipe lock.
@@ -395,7 +410,7 @@ conditional fires.
 
 M9's cost protocol (`instructions-m9.md` §Costs) unchanged; the frontier is reported per index
 configuration, naming the one measured (`m9/RESULTS.md` rounds 1–4). TurboQuant 4-bit (Qdrant 1.19)
-joins the M11 all-in quantization comparison.
+joins the M13 all-in quantization comparison.
 
 ## Unimpeachable by competitors — what the report must carry
 
@@ -422,11 +437,13 @@ a missing ancestor, which is why M9's freeze was refused; the record must be **d
 run's own hash-bound `manifest.json`, never asserted by hand**, because a post-hoc record that
 happens to satisfy a licence guard is precisely the artifact that must not be fabricated; see
 `m9/BUILD_LOG.md`), the frontier
-update, the M10 section of the report artifact, decisions logged in CLAUDE.md, handoff to M11.
+update, the M10 section of the report artifact, decisions logged in CLAUDE.md, handoff to M13.
 
 ## Out of scope (reopening conditions in PLANNING §7)
 
-Document-side co-adaptation (inside M10 it breaks the pair; a tower co-trained against both query paths at once keeps it and is recommended 2026-09-01 as the M11 candidate, Dylan's call, PLANNING §7) · any student above 35M
+Document-side co-adaptation (inside M10 it breaks the pair; a tower co-trained against both query paths at once keeps it and is recommended 2026-09-01 as the next-milestone candidate (that slot was M12 then; **M16** after the 2026-09-04 renumbering), Dylan's call, PLANNING §7) · any student above 35M
 (hard cap, Dylan 2026-09-01) · teacher change (stella-1.5B measured worse; Qwen3-0.6B never
 screened and not the pair) · a nonlinear head (no fastembed path; width comes from linear
-multi-layer pooling) · MS MARCO in any form · FineWeb in any role (decisions 3 and 5) · any change to zero.
+multi-layer pooling) · MS MARCO **in any training role** (unchanged; **validation/diagnostic use was
+permitted 2026-09-04**, see the admission note in §COV) · FineWeb in any role (decisions 3 and 5) · any
+change to zero.

@@ -1,0 +1,100 @@
+{
+ "_what": "M11a T3: stella_en_400M_v5 document path -> ONNX, verified on REAL passages with a true cosine. Supersedes results/m9_doc_export.json.",
+ "batch_invariance_model.onnx": {
+  "lengths": [
+   31,
+   191,
+   512
+  ],
+  "max_abs": 0.0,
+  "pass": true
+ },
+ "config_kwargs": {
+  "unpad_inputs": false,
+  "use_memory_efficient_attention": false
+ },
+ "dense": "2_Dense_1024",
+ "dim": 1024,
+ "encoded_lengths": {
+  "max": 512,
+  "median": 205,
+  "min": 7,
+  "n_truncated_to_512": 56
+ },
+ "fixtures": "m11/release/doc_fixtures.json",
+ "fixtures_sha256": "9572707bcf9a88fcb9f88292dcc46196fe67fbb0d71e682b828f377ab19d381d",
+ "fp16_shippable": false,
+ "graphs": {
+  "model.onnx": {
+   "bytes": 1749799839,
+   "custom_domain_ops": [],
+   "dtype_invariant_ok": true,
+   "external_data_initializers": [],
+   "float32_initializer_names": "many",
+   "initializers": {
+    "float16": 0,
+    "float32": 270
+   },
+   "io": {
+    "inputs": [
+     "input_ids",
+     "attention_mask"
+    ],
+    "outputs": [
+     "embedding"
+    ]
+   },
+   "n_nodes": 3416,
+   "opset": [
+    [
+     "",
+     17
+    ]
+   ],
+   "pass": true,
+   "present": true,
+   "sha256": "fe31555e2b40767e17487885fb67dcdf0dcee11bef31f42478e55c1ec69a4ea9"
+  },
+  "model_fp16.onnx": {
+   "present": false
+  }
+ },
+ "host": {
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+  "python": "3.12.14"
+ },
+ "max_length": 512,
+ "n_fixtures": 259,
+ "onnx_dir": "/home/dylan/asymetric-dual-encoders/work/m11onnx/stella-doc",
+ "parity_model.onnx": {
+  "all_finite": true,
+  "max_abs": 3.762543201446533e-07,
+  "mean_cos": 1.0,
+  "min_cos": 0.9999998807907104,
+  "min_dot": 0.9999992847442627,
+  "out_norms": [
+   0.9999992847442627,
+   1.0000007152557373
+  ],
+  "pass": true,
+  "ref_norms": [
+   0.9999998807907104,
+   1.0000001192092896
+  ],
+  "seconds_for_n": 172.2,
+  "tol_abs": 1e-05,
+  "tol_cos": 1e-06
+ },
+ "pass": true,
+ "repo": "NovaSearch/stella_en_400M_v5",
+ "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+ "seconds": 378.2,
+ "strata": {
+  "boundary": 19,
+  "mid": 48,
+  "near": 48,
+  "over": 48,
+  "short": 48,
+  "tiny": 48
+ }
+}

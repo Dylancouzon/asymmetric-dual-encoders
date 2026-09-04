@@ -164,6 +164,18 @@ REGISTRY = {
               "unchanged. Snowflake needs the strongest vendor justification of the admissible "
               "group (Cortex Search is built on Arctic Embed); it is also LEAF's teacher and the "
               "best group-A system on our six"),
+    # Added 2026-09-04 for the Cloud-Inference teacher question (Dylan: "we would heavily prefer
+    # using one of the models available in Qdrant cloud inference", vendor rule bent for this
+    # candidate BECAUSE Qdrant Cloud hosts it). Apache-2.0, plain BertModel, CLS pooling, the
+    # BGE retrieval prompt verbatim (config_sentence_transformers.json), 30,522 BERT WordPiece,
+    # 1024-d, no remote code -- the only launch-set Cloud Inference dense model that clears the
+    # licence and table-size rules and has never been through the table criterion.
+    "mxbai-embed-large-v1": Spec(
+        name="mxbai-embed-large-v1", repo="mixedbread-ai/mxbai-embed-large-v1",
+        revision="b33106f585b9ce46904ad7443a3b52b7a63e231c",
+        dim=1024, pooling="cls", query_prefix=BGE_PREFIX,
+        notes="hosted by Qdrant Cloud Inference; Mixedbread is OUT under the CLAUDE.md vendor "
+              "rule and the rule was bent for this candidate on 2026-09-04. MRL-truncatable"),
     "gte-base-en-v1.5": Spec(
         name="gte-base-en-v1.5", repo="Alibaba-NLP/gte-base-en-v1.5",
         revision="a829fd0e060bb84554da0dfd354d0de0f7712b7f",

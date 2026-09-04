@@ -79,6 +79,49 @@ components. Only **stella-400M-v5** beats the incumbent (+0.0365 [0.0249, 0.0481
 Caveats: closed-form and flat, so it ranks candidates rather than predicting scores; two
 components of one dataset family; dev-only.
 
+## Cloud-Inference teacher probe, 2026-09-04 — mxbai is 8th of 11
+
+Dylan: prefer a teacher hosted by **Qdrant Cloud Inference** (stella is not hosted); vendor rule
+bent for Mixedbread **because Qdrant Cloud hosts it**. Same criterion, same fit set (gram nnz
+12,936,008 identical to the 2026-08-26 sweep), same two dev components.
+
+**`mxbai-embed-large-v1` table 0.2509, d = −0.0930 [−0.1054, −0.0805] vs stella, RESOLVED** —
+below bge-base by 0.0565, between arctic-embed-l and e5-large-v2. Loader exact (pairwise
+max|Δ| 0.00e+00 vs sentence-transformers); λ-curve flat 0.247–0.251 then falls at 1e-1.
+
+- Its one advantage: **no disclosed MTEB training exposure** (card/blog: none except MS MARCO), so
+  no ArguAna/FiQA/FEVER caveat, unlike stella.
+- Best hosted candidate remains **bge-base-en-v1.5**, −0.0365. Six-set cost of that swap is
+  **unmeasured**; two unvalidated transfers put it at 0.045–0.07. The 0.406→0.489 MTEB→six tower
+  projection may NOT be used for it (refuted, `EXPLORED.md`).
+- λ grid completed 2026-09-04 (Codex: bge's optimum sat at the grid EDGE, biasing the
+  comparison): **bge-base λ=0.1 → 0.2848**, down from 0.3074. Optimum interior; objection closed.
+- A swap requires the regenerated clean fit list (`m7_trainq_manifest.json`); this probe ranks only.
+
+## Off-family teacher check, 2026-09-04 — the confound is refuted
+
+Every component of the pinned dev suite carries stella exposure (NQ, HotpotQA disclosed;
+CQADupStack is StackExchange, of which stella discloses four datasets); bge-base discloses none.
+The 2026-08-26 family-exposure read used nq-250k as the control — itself on stella's list. Codex
+finding 14 (MAJOR) named the fix; run now. `scripts/offfamily_check.py`,
+`results/m7_offfamily_report.json`.
+
+Held-out SQuAD + ESCI, on **no** candidate's disclosed list, full 6.17M pool, λ*=0.01 each:
+
+| stratum | n | stella | bge-base | d [CI95] |
+|---|---|---|---|---|
+| squad-train | 1,790 | 0.5284 | 0.3632 | **+0.1652** [0.1503, 0.1801] |
+| esci-us | 1,598 | 0.3495 | 0.3111 | **+0.0384** [0.0293, 0.048] |
+| macro | | | | **+0.1018** [0.093, 0.1107] |
+
+Stella first on both, by ~3× the CQADupStack delta (+0.0365) that selected it — the selection set
+**understated** its advantage. **ESCI carries the argument**: Amazon product text is neither
+Wikipedia nor StackExchange nor a QA benchmark, so it is independent of stella's disclosed
+training in domain as well as by name, and stella still wins CI-resolved. SQuAD is Wikipedia, so
+it is domain-adjacent to stella's NQ/HotpotQA/FEVER/MIRACL training even though the dataset is not
+disclosed — do not lean on that row alone. Neither stratum resembles the six: this is a
+contamination control, not a prediction of the six-set gap.
+
 ## Teacher swap, 2026-08-26 — stella's closed-form table beats bge's best TRAINED arm
 
 `m7_stage0_ridge_stella.json`: proxy-3 **0.4973** at lam=0.01 (bge closed form 0.4542, bge best
