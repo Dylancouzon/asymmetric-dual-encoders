@@ -108,3 +108,11 @@ labelled, never deleted. Nothing reserved is touched: not the reserved four, not
 0.5574 vs convex0@1000 0.5727). Any downstream claim resting on 0.4911 — including the
 "statistical tie with OpenSearch 0.4868" — must be re-checked against the new number and corrected
 if it no longer holds. That is the price of a reproducible headline and is the point of the change.
+- 2026-09-04 — six-set DBSF executed under the amendment. Reproduction of the published fused row
+  **0.4911 vs 0.4911** (delta −1.1e-06). **DBSF@100: all-6 0.4887, clean-4 0.4912** vs convex0's
+  0.4911 / 0.4866 — the reproducible, zero-parameter operator WINS on the registered headline
+  partition. Self-hits: arguana 1,298/1,406, fiqa 55, others 0. `m12/six_dbsf.json`.
+  A pre-run forecast that the headline would fall to ~0.47–0.48 and break the OpenSearch tie was
+  **wrong**; dev-to-six extrapolation of an operator difference is unreliable.
+- 2026-09-04 — **M12 CLOSED.** Card, README, `m11/STATUS.md`, `CLAUDE.md` updated. The live
+  HuggingFace card push is Dylan's call and is NOT done by this milestone.

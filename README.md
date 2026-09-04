@@ -91,15 +91,17 @@ nDCG@10 on six BEIR datasets, exact search, one pre-registered confirmatory run:
 
 `zero` **missed its release bar** (LightRetriever dense 0.4583) CI-resolved at −0.0243
 [−0.0405, −0.0086], and on the four datasets with no disclosed teacher overlap it is *below*
-BM25. The fused system ties OpenSearch's learned sparse retriever (0.4911 vs 0.4868) while its
+BM25. The fused system ties OpenSearch's learned sparse retriever (0.4911 vs 0.4868, the registered
+C3 comparison, measured under convex fusion; the Qdrant-runnable DBSF configuration scores 0.4887) while its
 query side stays a table lookup. Full characterisation, caveats and cost rows: the model card,
 or `m7/STATUS.md`.
 
-**If you fuse with BM25, the fusion rule matters.** The published system is convex fusion at
-w=0.8, which Qdrant does not implement. **In Qdrant use `Fusion.DBSF` at a shallow prefetch**: on
-dev it beats convex at `limit: 10` (0.5517 vs 0.5482) and ties it at 50, and only falls behind at
-deep prefetch (0.5580 vs 0.5727 at 1000). `Fusion.RRF` is weaker at every depth, fairly swept —
-best `k=3` unweighted, best `k=2 weights=[2,1]` of 24 configurations. Audit: `m12/FINDINGS.md`.
+**Fuse with BM25 using Qdrant's `Fusion.DBSF` at prefetch 100** (M12). It is a stock operator with
+no fitted parameters, and it scores **0.4887** on the six / **0.4912** on the four sets with no
+disclosed teacher overlap — against convex fusion's 0.4911 / 0.4866. So the reproducible operator
+is *better* on the contamination-controlled partition. The originally published convex fusion
+(w=0.8, prefetch 1000) is not implemented in Qdrant and needed an unrealistic prefetch depth;
+`Fusion.RRF` is weaker even after a fair sweep. Audit: `m12/FINDINGS.md`.
 
 ---
 

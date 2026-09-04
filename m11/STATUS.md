@@ -190,11 +190,12 @@ New files: `m11/release/export_doc.py`, `push_doc.py`, `MODEL_CARD_DOC.md`, `doc
   entries once nano exists, not a two-model PR now. The branch that exists today,
   `add-constella-models`, is deliberately not mergeable — it also carries the #703 padding fix, and
   the models sit on a personal account where upstream hosts under `Qdrant/`.
-- **Qdrant fusion**: dense-only reproduces 0.4339 exactly; the fused 0.4911 needs convex fusion at
-  w=0.8, which Qdrant does not implement. **M12 resolved what to tell users instead** (2026-09-04):
-  `Fusion.DBSF` at a shallow prefetch — better than convex at `limit: 10`, a tie at 50, behind only
-  at deep prefetch. RRF is weaker at every depth even after a fair sweep. Card, README and this line
-  rewritten from the M12 numbers; `m12/FINDINGS.md`.
+- **Qdrant fusion, resolved by M12 (2026-09-04)**: the recommended fused system is now
+  **`Fusion.DBSF` at prefetch 100** — a stock operator with **no fitted parameters** — scoring
+  **0.4887** on the six and **0.4912** on clean-4, against convex0's 0.4911 / 0.4866. On the
+  contamination-controlled partition the reproducible operator is BETTER. convex0 w=0.8 is retained
+  on the card as the operator of record at release, labelled not-runnable-in-Qdrant. RRF is weaker
+  even after a fair sweep. Card, README and this line rewritten; `m12/FINDINGS.md`.
 - **Spent, not recoverable**: `constella-zero` was public from its first push, so the "flip public
   last, after remote byte verification" ordering guarantee was never held. Every earlier revision
   stays publicly reachable, including the pre-T1 bundle. Nothing non-releasable is in any of them.

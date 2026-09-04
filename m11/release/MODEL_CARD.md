@@ -148,40 +148,53 @@ table shipped here (sha `a7007b1a…`).
 | system | arguana | fiqa | nfcorpus | scidocs | scifact | trec-covid | **average** |
 |---|---|---|---|---|---|---|---|
 | **constella-zero (int8)** | 0.5916 | 0.3728 | 0.3124 | 0.1677 | 0.6101 | 0.5490 | **0.4339** |
-| + BM25, convex fusion | 0.5975 | 0.4026 | 0.3497 | 0.1881 | 0.7068 | 0.7018 | **0.4911** |
+| **+ BM25, Qdrant `Fusion.DBSF`, prefetch 100** | 0.5800 | 0.3872 | 0.3442 | 0.1850 | 0.7173 | 0.7184 | **0.4887** |
+| + BM25, convex fusion (not runnable in Qdrant) | 0.5975 | 0.4026 | 0.3497 | 0.1881 | 0.7068 | 0.7018 | **0.4911** |
 | BM25 alone | 0.4878 | 0.2532 | 0.3180 | 0.1565 | 0.6791 | 0.6099 | 0.4174 |
 | the teacher, used on both sides | 0.6369 | 0.5536 | 0.4134 | 0.2395 | 0.7796 | 0.8234 | 0.5744 |
 
 A lookup table retains **75.5%** of the teacher's quality (0.4339 / 0.5744), with a query side
 that does no matrix multiplication at all.
 
-### Reproducing the fused row in Qdrant
+### Fusing with BM25 in Qdrant
 
-The fused row above uses **convex fusion** — `0.8 × dense + 0.2 × BM25`, each channel divided by
-its own per-query maximum, at prefetch depth 1000. Qdrant does not implement that operator, so
-that exact row is not reproducible in the engine.
+**The recommended fused system is `Fusion.DBSF` with a prefetch limit of 100** — the row in bold
+above. It is a stock Qdrant operator with **no fitted parameters**, so nothing about it was tuned
+on our data.
 
-**Use `Fusion.DBSF`, and keep the prefetch shallow.** Measured on our development set (nDCG@10
-macro over four components — *not* the six-dataset numbers above, which were measured once under
-convex fusion and are not re-run here):
+```python
+client.query_points(
+    "docs",
+    prefetch=[
+        models.Prefetch(query=query_vector, using="dense", limit=100),
+        models.Prefetch(query=bm25_sparse_vector, using="bm25", limit=100),
+    ],
+    query=models.FusionQuery(fusion=models.Fusion.DBSF),
+    limit=10,
+)
+```
 
-| prefetch limit | convex (the operator above) | **Qdrant DBSF** |
-|---|---|---|
-| 10 | 0.5482 | **0.5517** |
-| 50 | **0.5578** | 0.5558 |
-| 100 | **0.5637** | 0.5574 |
-| 1000 | **0.5727** | 0.5580 |
+**On the four datasets with no disclosed teacher overlap** (see Limits), DBSF at prefetch 100
+scores **0.4912** against convex fusion's 0.4866 — i.e. the reproducible operator is *better* than
+the one this model's fusion weight was originally tuned with, once the contaminated sets are
+removed. Across all six it is 0.4887 vs 0.4911.
 
-At `limit: 10` DBSF is **better** than the operator this model's fusion weight was tuned on; at
-`limit: 50` the difference (0.0020) is inside our measurement noise. The gap only opens at deep
-prefetch, where convex fusion's use of raw score magnitudes pays off and rank/distribution-based
-fusion cannot follow.
+The `convex fusion` row is retained for continuity: it was the operator of record when this model
+was released. It is `0.8 × dense + 0.2 × BM25`, each channel divided by its per-query maximum, at
+prefetch depth 1000 — **Qdrant does not implement it**, and a 1000-deep prefetch to return 10
+results is not a realistic configuration.
 
-`Fusion.RRF` is the weaker choice at every depth we measured. We swept it fairly — `k` from 1 to
-101 in Qdrant's units, best `k=3`, and 24 weighted configurations, best `k=2, weights=[2, 1]` —
-and its best point still lands below DBSF. An earlier version of this card said only that RRF
-"will not reproduce" the fused row; that was true but rested on an unweighted, badly-ranged
-comparison, which has now been redone.
+`Fusion.RRF` is the weaker choice. We swept it fairly — `k` from 1 to 101 in Qdrant's units (best
+`k=3`), and 24 weighted configurations (best `k=2, weights=[2, 1]`) — and its best point lands
+below DBSF on our development set. An earlier version of this card said only that RRF "will not
+reproduce" the fused row; that was true, but rested on an unweighted, badly-ranged comparison,
+which has since been redone.
+
+**Caveats.** Numbers use `bm25s` (lucene defaults), not Qdrant's own BM25, which has a fixed
+`avg_len` and its own tokenizer; DBSF normalises over the returned scores, so a different lexical
+implementation shifts its inputs. On ArguAna the queries *are* documents (1,298 self-matches over
+1,406 queries), which our evaluation discards after retrieval and Qdrant does not — there,
+`limit: 100` effectively yields 99 usable candidates.
 
 ## Limits
 

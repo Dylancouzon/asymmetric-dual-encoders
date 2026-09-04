@@ -55,12 +55,48 @@ common configuration — gives up nothing by using DBSF, which fits zero paramet
 (`logs/m12_depth_check.log`). The registered comparison is depth 1000, so this curve is
 descriptive by registration and does **not** overturn the NO MATCH verdict.
 
+## The published fused row, re-measured under a Qdrant operator (Dylan's ruling)
+
+*"convex needs to go if it can't be done in Qdrant. 1000 prefetch to return 10 items is a lot too
+and not something very realistic."* Registered before scoring (LEDGER Amendment): DBSF at prefetch
+**100**, depth set by realism, not by a dev argmax. `m12/six_dbsf.json`.
+
+| system | all 6 | clean 4 | contamination cost |
+|---|---|---|---|
+| **DBSF @ prefetch 100** (stock Qdrant, **0 fitted parameters**) | 0.4887 | **0.4912** | −0.0025 |
+| convex0 @ 1000 (published, dev-fitted `w=0.8`, not in Qdrant) | 0.4911 | 0.4866 | +0.0045 |
+| dense only | 0.4339 | 0.4098 | +0.0241 |
+| BM25 | 0.4174 | 0.4409 | −0.0235 |
+
+Per dataset, DBSF@100: arguana 0.5800, fiqa 0.3872, nfcorpus 0.3442, scidocs 0.1850,
+scifact 0.7173, trec-covid 0.7184. **Reproduction of the published row: 0.4911 vs 0.4911**
+(delta −1.1e-06), so the loading path and encode caches are intact.
+
+**On the registered headline partition the reproducible operator WINS** — 0.4912 vs 0.4866 — and
+lands fractionally above the old contaminated all-6 headline of 0.4911. Switching to DBSF costs
+0.0024 on all six, gains 0.0046 on clean-4, and removes a fitted hyperparameter from the released
+system. It is strictly the better claim.
+
+**A forecast that was wrong.** Before running this, the dev curve was used to predict the six-set
+headline would fall to ~0.47-0.48 and that the OpenSearch tie would break. Neither happened. Dev's
+four components are not representative of the six here: DBSF is much stronger on trec-covid
+(0.7184 vs 0.7018) and scifact (0.7173 vs 0.7068) than dev suggested. **Dev-to-six extrapolation
+of an OPERATOR difference is not reliable** — worth remembering before the next one.
+
+**Caveats.** `bm25s`-lucene, not `Qdrant/bm25`. ArguAna's queries ARE documents — **1,298 self-hits
+over 1,406 queries** — dropped after retrieval here and not by Qdrant, so `limit: 100` yields 99
+usable candidates there. fiqa has 55; the other four have zero.
+
 ## Consequences
 
-- Card, `README.md` and `m11/STATUS.md` rewritten to give users the reproducible recipe —
-  `Fusion.DBSF` at a shallow prefetch — instead of only saying RRF will not work.
-- The published 0.4911 row is **unchanged** and stays labelled as convex fusion. No six-set number
-  was recomputed under any new operator.
+- Card, `README.md` and `m11/STATUS.md` now lead with the reproducible recipe — `Fusion.DBSF` at
+  prefetch 100, with the client snippet — instead of only saying RRF will not work.
+- The convex0 row is **retained and labelled** "not runnable in Qdrant", never deleted: it was the
+  operator of record at release.
+- **C1/C2/C3 are untouched** and keep their registered convex0 basis. The OpenSearch tie claim is
+  annotated with which operator it was measured under, not restated for DBSF.
+- Benchmark composition is M14's call, with the rule registered in advance
+  (`instructions-m14.md`): headline clean-4, all six beside it, no re-picking.
 - Carry into M14: the depth-dependence is the reportable result, not the headline gap.
 
 ## Limits
