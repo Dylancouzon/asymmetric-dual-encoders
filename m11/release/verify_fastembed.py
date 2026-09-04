@@ -73,7 +73,7 @@ def register(model_file, name, pooling, normalization):
         model=name,
         pooling=getattr(PoolingType, pooling),
         normalization=normalization,
-        sources=ModelSource(hf="DylanCouzon/zero-query-encoder-v1"),
+        sources=ModelSource(hf="DylanCouzon/constella-zero"),
         dim=DIM,
         model_file=model_file,
         license="mit",

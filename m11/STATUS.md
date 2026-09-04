@@ -41,6 +41,7 @@ three weight files.
 | `release/MODEL_CARD_DOC.md` | the doc-tower card; repo id and measured numbers substituted |
 | `release/doc_fixtures.json` | 259 real nq-250k passages, six length strata, asserted on load |
 | `release/verify_fastembed.py` | T4: serves `zero` through `TextEmbedding`, 6 checks + `--negative-control` |
+| (fork) `fastembed/text/pre_pooled_embedding.py` | T4: the new upstream class — graphs that pool and normalize in-graph |
 
 **`m11/CODEMAP.md` is the reusable part** — the ONNX-port checklist, 19 items, each one paid for by
 a T2 or T3 defect. Read it before porting nano or M12's image model, not this file.
@@ -92,9 +93,9 @@ published until T0 and T1 land.**
 | T1 sanitise tokenizer (`zero` repo) | **DONE** 2026-09-03 — `push.sanitise_tokenizer`; gate 8 measures what fastembed's own loader gets; the doc-tower repo still needs the same edit under T3 |
 | T2 zero query path → ONNX | **DONE** 2026-09-03 — two opset-17 graphs, 10 checks, parity 4.47e-08 on 1,024 real dev queries; live at `fb8e5c5b`. `m11/PLANNING.md` §T2, incl. the measurement that the count-mask defect is unreachable by real text (0/7,325 dev queries produce id 0) |
 | T3 doc tower publish (PUBLIC, new repo) | **DONE 2026-09-03** — live at commit `e34cc6dd1e`, PUBLIC, byte-verified anonymously (published LFS sha256 == gated bytes, `fe31555e…`). Repo `DylanCouzon/stella-en-400M-v5-doc-onnx`. Re-exported fp32 from the pinned revision; 259 frozen real-passage fixtures; **fp16 rejected on a CUDA measurement**, `model_tokens.onnx` proved unnecessary. `m11/PLANNING.md` §T3 |
-| T4 fastembed fork branch, no PR | **DONE** 2026-09-03 — `verify_fastembed.py`, 6 checks green on stock 0.8.0 **and** the fork branch: parity vs the numpy encoder **4.47e-08** on 1,024 dev queries, 5.51e-07 past the 512-token rule. Negative control fires at 4.475e-04. Upstream padding regression fixed on the fork and filed as qdrant/fastembed#703; branch `fix-fixed-padding-ragged-batch` pushed, PR-ready, no PR opened |
+| T4 fastembed integration | **DONE** 2026-09-03 — **full built-in integration**, not `add_custom_model`: new `PrePooledEmbedding` class, 2 lines of registry wiring, 2 canonical vectors. Branch `add-constella-models` (renamed; also carries the #703 padding fix). Serving parity **4.47e-08** vs the numpy reference on 1,024 dev queries; `parallel=2` now works (3.7e-08 query, 0.00e+00 doc) — impossible via `add_custom_model` |
 | T5 card fixes | **DONE** 2026-09-03 — the raising snippet fixed, ONNX usage block added, the by-caller tokenizer table and cost rows corrected; gate 6 executes every block |
-| T6 rename + card rewrite (**after T4**) | `zero` → **`constella-zero`** (name locked in `m8/LEDGER.md` §6.1; milestone suffix dropped, Dylan 2026-09-03). Both cards rewritten: fastembed examples, competitive comparison and missed-bar framing removed, contamination caveat and measured numbers kept, more about the model itself. `m11/PLANNING.md` §T6 |
+| T6 rename + card rewrite | **DONE** 2026-09-03 — repo renamed to **`constella-zero`** (`move_repo`, old URL redirects). Both cards rewritten **FastEmbed-first**: built-in `TextEmbedding(NAME)` usage, install pointed at the branch until the PR lands, competitive comparison and release-bar framing removed, measured nDCG@10 and the stella contamination disclosure kept, Qdrant example switched to `COSINE`. **Not yet pushed to HF** |
 | flip `zero` PUBLIC | **moot** — already public since the first push (see the correction above). `push()` now detects this, says so, and does not pretend to have published privately first |
 
 ## Released: stella document tower, ONNX

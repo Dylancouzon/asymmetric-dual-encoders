@@ -68,3 +68,22 @@ else still needs asking.
 set, so M9's registration machinery (`m9src/guard9.py`) does not apply — its results are engineering
 parity artifacts, not decisions. The release gates in `m11/release/push.py` DO apply, unchanged, to
 every upload. Plan and gates: `m11/PLANNING.md`.
+
+## Amendment B — cards are FastEmbed-first, and carry no competitive claim (Dylan, 2026-09-03)
+
+**Supersedes deliverable 1's "Zero tier wins exist and the model cards must say so."** That rule
+required the cards to carry `LR-dense-pertask 0.4583`, the OpenSearch tie and the missed bar. Ruled
+out: *"remove the competitive comparison and the missed bar"* — an internal project bar means
+nothing to someone downloading the model, and the comparator table belongs in the whitepaper, which
+still carries all of it. Cards KEEP the measured nDCG@10 numbers and the stella contamination
+disclosure; those are what a reader needs to interpret the numbers at all.
+
+**Cards assume built-in FastEmbed support** (Dylan: *"the card should assume the model is in
+Fastembed, won't be released until then. You can point the card to our branch for now"*). So both
+cards use `TextEmbedding("<name>")` with the install pointed at
+`Dylancouzon/fastembed@add-constella-models`, and **the release is not considered done until the
+model ships in FastEmbed**. The card gate runs against that checkout (`FASTEMBED_FORK`).
+
+**Qdrant examples use `COSINE`, not `DOT`** (Dylan, 2026-09-03): Qdrant implements cosine as a dot
+product — normalize once on upsert, dot at query time — so `COSINE` is the same cost and does not
+depend on the caller preserving unit norm.

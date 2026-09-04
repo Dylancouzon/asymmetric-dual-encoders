@@ -231,10 +231,22 @@ def gate_fastembed():
           f"max-abs {mx:.2e}")
 
 
+# The cards document FastEmbed usage by BUILT-IN model name, which only resolves on the branch
+# carrying the registration (Dylan, 2026-09-03: "the card should assume the model is in Fastembed
+# ... point the card to our branch for now"). The card gate therefore runs against that checkout.
+FASTEMBED_FORK = Path("/home/dylan/fastembed")
+
 README_SUBSTITUTIONS = [
     (re.compile(r'^(\w+) = snapshot_download\(.*$', re.M), r'\1 = BUNDLE_DIR'),
     (re.compile(r'^from huggingface_hub import snapshot_download$', re.M), ''),
 ]
+
+# Applied separately, and NOT counted: a card may legitimately have no FastEmbed block (every
+# negative fixture in test_gates.py is such a card). TextEmbedding(NAME) would otherwise download
+# the PUBLISHED repo. DOC_NAME on the zero card is deliberately left alone -- it is the sibling
+# model, not the bytes under test.
+FASTEMBED_SUBSTITUTION = (re.compile(r'TextEmbedding\(NAME\)'),
+                          'TextEmbedding(NAME, specific_model_path=BUNDLE_DIR)')
 
 
 def gate_readme():
@@ -254,6 +266,10 @@ def gate_readme():
     if n_sub != 2:
         sys.exit(f"REFUSED: expected exactly 2 README substitutions, made {n_sub}; the card's "
                  "download line changed shape and the gate would run against the LIVE repo")
+    script = FASTEMBED_SUBSTITUTION[0].sub(FASTEMBED_SUBSTITUTION[1], script)
+    if REPO_ID and re.search(rf'TextEmbedding\(\s*["\']{re.escape(REPO_ID)}', script):
+        sys.exit("REFUSED: the card builds TextEmbedding from a literal repo id; the gate rewrites "
+                 "TextEmbedding(NAME) only, so this would be served from the PUBLISHED bytes")
     if "snapshot_download" in script or "hf_hub_download" in script:
         sys.exit("REFUSED: the card still reaches the Hub after substitution")
     script = f"BUNDLE_DIR = {str(OUT)!r}\n" + script
@@ -261,7 +277,8 @@ def gate_readme():
         f.write(script)
         path = f.name
     r = subprocess.run([sys.executable, path], capture_output=True, text=True, cwd=str(REPO),
-                       env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1", HF_HUB_OFFLINE="1"))
+                       env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1", HF_HUB_OFFLINE="1",
+                                PYTHONPATH=str(FASTEMBED_FORK)))
     if r.returncode != 0:
         sys.stderr.write(r.stdout[-4000:])
         sys.stderr.write(r.stderr[-4000:])

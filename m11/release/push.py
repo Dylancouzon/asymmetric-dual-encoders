@@ -240,6 +240,12 @@ def gate_tokenizer():
     print("  gate 7 OK    fastembed's loader gets truncation 512 and dynamic padding")
 
 
+# The cards document FastEmbed usage by BUILT-IN model name, which only resolves on the branch
+# carrying the registration (Dylan, 2026-09-03: "the card should assume the model is in Fastembed
+# ... point the card to our branch for now"). The card gate therefore runs against that checkout.
+FASTEMBED_FORK = Path("/home/dylan/fastembed")
+DEFAULT_REPO_ID = "DylanCouzon/constella-zero"
+
 README_SUBSTITUTIONS = [
     # The card tells a user to snapshot_download the repo; the gate runs the same code against
     # the staging dir, because the bytes being gated are not on the Hub yet. This is the only
@@ -252,6 +258,13 @@ README_SUBSTITUTIONS = [
     (re.compile(r'^(\w+) = snapshot_download\(.*$', re.M), r'\1 = BUNDLE_DIR'),
     (re.compile(r'^from huggingface_hub import snapshot_download$', re.M), ''),
 ]
+
+# Applied separately, and NOT counted: a card may legitimately have no FastEmbed block (every
+# negative fixture in test_gates.py is such a card). TextEmbedding(NAME) would otherwise download
+# the PUBLISHED repo. DOC_NAME on the zero card is deliberately left alone -- it is the sibling
+# model, not the bytes under test.
+FASTEMBED_SUBSTITUTION = (re.compile(r'TextEmbedding\(NAME\)'),
+                          'TextEmbedding(NAME, specific_model_path=BUNDLE_DIR)')
 
 
 def gate_readme(repo_id=None):
@@ -277,6 +290,10 @@ def gate_readme(repo_id=None):
     if n_sub != 2:
         sys.exit(f"REFUSED: expected exactly 2 README substitutions, made {n_sub}; the card's "
                  "download line has changed shape and the gate would run against the LIVE repo")
+    script = FASTEMBED_SUBSTITUTION[0].sub(FASTEMBED_SUBSTITUTION[1], script)
+    if repo_id and re.search(rf'TextEmbedding\(\s*["\']{re.escape(repo_id)}', script):
+        sys.exit("REFUSED: the card builds TextEmbedding from a literal repo id; the gate rewrites "
+                 "TextEmbedding(NAME) only, so this would be served from the PUBLISHED bytes")
     if "snapshot_download" in script or "hf_hub_download" in script:
         sys.exit("REFUSED: the card still downloads from the Hub after substitution; the gate "
                  "must exercise the STAGED bytes, not whatever is published")
@@ -288,7 +305,8 @@ def gate_readme(repo_id=None):
     # instead of silently validating published bytes. The card's stella pin is cached, so the
     # document-side block runs offline.
     r = subprocess.run([sys.executable, path], capture_output=True, text=True, cwd=str(REPO),
-                       env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1", HF_HUB_OFFLINE="1"))
+                       env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1", HF_HUB_OFFLINE="1",
+                                PYTHONPATH=str(FASTEMBED_FORK)))
     if r.returncode != 0:
         sys.stderr.write(r.stdout[-4000:])
         sys.stderr.write(r.stderr[-4000:])
@@ -359,8 +377,7 @@ def push(repo_id, public):
                  "bytes build() writes, and a push over a stale staging dir would be ungated")
     from huggingface_hub import HfApi
     api = HfApi()
-    who = api.whoami()["name"]
-    repo_id = repo_id or f"{who}/zero-query-encoder-v1"
+    repo_id = repo_id or DEFAULT_REPO_ID
 
     render_card(repo_id)            # BEFORE the gates: gate 7 executes what actually ships
     run_gates(repo_id=repo_id)
@@ -407,7 +424,9 @@ if __name__ == "__main__":
     if a.build:
         build()
     if a.gates and not a.push:
-        rid = a.repo_id or "REPO_ID_PLACEHOLDER"
+        # The card now names a FastEmbed model, so the gate needs the real id: a placeholder
+        # resolves to no registered model and gate 6 fails on a card that is in fact correct.
+        rid = a.repo_id or DEFAULT_REPO_ID
         gates_only(rid)
     if a.push:
         push(a.repo_id, public=a.public)

@@ -391,6 +391,52 @@ raising `Model ... is not supported in OnnxTextEmbedding`). Recorded, not gated.
 stdout from every worker process, so the probe silences fds 1/2 at the OS level — a Python-level
 redirect does not reach a child, and the flood deadlocked the first run against a full pipe.
 
+### T4 REOPENED and widened — full FastEmbed integration (Dylan, 2026-09-03)
+
+*"I want a full fastembed integration proof of concept ... at a level that is mergeable (so no
+crazy custom implementation) ... the model cards should reflect as if those were Fastembed models
+first so we promote our library. Use the same branch (maybe rename it)."* Then: *"the card should
+assume the model is in Fastembed, won't be released until then. You can point the card to our
+branch for now."*
+
+Branch `fix-fixed-padding-ragged-batch` → **`add-constella-models`**, carrying the #703 padding fix
+(2 commits) plus the integration. **Ruled fine by Dylan**: this branch will not be merged, a clean
+single-concern PR follows when we are ready. Same ruling covers the `DylanCouzon/...` registry
+names, which upstream would want under `Qdrant/`.
+
+**The integration**, 3 files, no new machinery:
+- `fastembed/text/pre_pooled_embedding.py` — `PrePooledEmbedding`, mirroring `pooled_embedding.py`:
+  `_post_process_onnx_output` returns the model output untouched. Needed because neither existing
+  class fits — `OnnxTextEmbedding` expects per-token output, and the pooled classes would apply a
+  masked mean on top of an already-pooled vector. `constella-zero` pools with count-saturated sqrt
+  weights; the stella tower applies a dense head AFTER pooling, so pooling cannot be a
+  post-processing step at all.
+- `text_embedding.py` — one import, one registry entry.
+- `tests/test_text_onnx_embeddings.py` — 2 canonical vectors from the reference implementations
+  (the numpy encoder; the torch module for the tower), per `CONTRIBUTING.md`.
+
+**Measured on a clean HF download** (`scratchpad/check_builtin.py`): both models listed; zero vs the
+numpy reference **max-abs 4.470e-08** over 1,024 dev queries; both canonical vectors pass upstream's
+own `atol=1e-3` assertion; doc output unit-norm.
+
+**`parallel>1` works now, and could not before.** `add_custom_model` cannot support it —
+`CustomTextEmbedding` has no `_get_worker_class`, so the worker builds `OnnxTextEmbedding` and
+cannot resolve a runtime-registered name. Natively: **3.725e-08** (query, vs numpy) and
+**0.00e+00** (doc, vs serial). This is the concrete argument for the PR. *Measuring it needs a
+`__main__` guard — the workers spawn and re-import the script; without one the first attempt
+re-ran the whole file per worker and looked like a fastembed failure.*
+
+**Card gates now run against the fork** (`FASTEMBED_FORK` in `push.py`/`push_doc.py`), because the
+cards use built-in model names that only resolve there. `TextEmbedding(NAME)` is rewritten to add
+`specific_model_path=BUNDLE_DIR` so the gate still certifies the STAGED bytes, and a literal repo id
+inside `TextEmbedding(...)` is refused. That rewrite is applied **uncounted** — every negative
+fixture in `test_gates.py` is a card with no FastEmbed block, so a fixed substitution count of 3
+fails them for the wrong reason.
+
+**A card teaching `add_custom_model` breaks when the model ships natively** — measured: the old doc
+card raised `ValueError: already registered` the moment the fork registered the name. That is why
+both cards use the built-in name only.
+
 No model-integration PR this milestone. Leave the branch pushed and PR-ready; a PR would still need
 canonical reference vectors per `CONTRIBUTING.md` and an honest description — zero **missed**
 `LR-dense-pertask 0.4583` at 0.4339 (CI-resolved), its fused variant ties OpenSearch.

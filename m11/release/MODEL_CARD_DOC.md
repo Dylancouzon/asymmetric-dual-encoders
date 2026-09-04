@@ -2,6 +2,8 @@
 license: mit
 base_model: NovaSearch/stella_en_400M_v5
 tags:
+  - fastembed
+  - qdrant
   - onnx
   - retrieval
   - feature-extraction
@@ -18,9 +20,14 @@ revision `ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20`.
 **No training, no fine-tuning, no distillation.** The weights are the source weights; this repo
 changes their *format*, not their values.
 
-It exists because a research project needed the document half of an asymmetric encoder pair to run
-under ONNX Runtime and fastembed, with the head baked into the graph. It may be useful to anyone
-who wants stella's document embeddings without `trust_remote_code` and a torch dependency.
+It exists to be the **document half of an asymmetric encoder pair**, served with
+[**FastEmbed**](https://github.com/qdrant/fastembed) and [**Qdrant**](https://qdrant.tech): this
+model indexes documents in the cloud, and
+[`DylanCouzon/constella-zero`](https://huggingface.co/DylanCouzon/constella-zero) — a 31 MB lookup
+table with no transformer in it — encodes queries into the same space on the device.
+
+It is equally useful on its own to anyone who wants stella's document embeddings without
+`trust_remote_code` and a torch dependency.
 
 ## What the graph computes
 
@@ -37,7 +44,9 @@ shipped tokenizer files enforce it (see *Tokenizer deviation*).
 (`Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: `).
 Nothing here adds that prefix, and fastembed's `query_embed` does not add one either — so using
 this model for queries as well as documents is **silently wrong**, not an error you will see. Embed
-documents here; embed queries with the prompt applied, through stella itself.
+documents here; embed queries with the prompt applied through stella itself, or with
+[`constella-zero`](https://huggingface.co/DylanCouzon/constella-zero), which was distilled to land
+in this exact document space and needs no prompt.
 
 Paired-sequence inputs are not supported: the graph has no `token_type_ids`, which matches
 single-string document encoding (where they are all zeros) and nothing else.
@@ -86,7 +95,37 @@ One was built, measured and rejected. It is documented because the failure is ea
 **A CPU parity gate cannot qualify a reduced-precision ONNX graph.** Measure on the execution
 provider the precision exists for, or do not ship the precision.
 
-## Usage — ONNX Runtime
+## Usage — FastEmbed
+
+The graph pools and normalizes internally, so it is served with pooling **disabled** and the
+output passed through untouched. Asking FastEmbed to pool again would apply a masked mean on top
+of a vector that has already been pooled and normalized.
+
+```python
+from fastembed import TextEmbedding
+
+NAME = "REPO_ID"
+doc_model = TextEmbedding(NAME)
+docs = ["Marie Curie was a physicist and chemist who conducted pioneering research on radioactivity.",
+        "The Nile is a major north-flowing river in northeastern Africa."]
+D = list(doc_model.embed(docs))
+print(len(D), D[0].shape)     # 2 (1024,)
+```
+
+Support for this model is in review upstream. Until it is released, install FastEmbed from the
+branch that carries it:
+
+    pip install "fastembed @ git+https://github.com/Dylancouzon/fastembed@add-constella-models"
+
+FastEmbed downloads only `model.onnx` and the tokenizer files, and serves them bit-identically to
+a direct ONNX Runtime session (max-abs 0.00e+00, measured on 259 real passages).
+
+`parallel=2` is supported and agrees with serial encoding exactly (max-abs 0.00e+00, measured).
+
+## Usage — ONNX Runtime directly
+
+If you would rather not take the FastEmbed dependency, the graph is plain opset-17 ONNX:
+
 
 ```python
 import numpy as np, onnxruntime as ort
@@ -111,32 +150,6 @@ for i, e in enumerate(enc):
 D = sess.run(None, {"input_ids": ids, "attention_mask": mask})[0]   # (2, 1024), L2-normalized
 print(D.shape, np.linalg.norm(D, axis=1))
 ```
-
-## Usage — fastembed
-
-The graph pools and normalizes internally, so register it with pooling **disabled** and let
-fastembed pass the output through untouched.
-
-```python
-from fastembed import TextEmbedding
-from fastembed.common.model_description import ModelSource, PoolingType
-
-TextEmbedding.add_custom_model(
-    model="REPO_ID",
-    pooling=PoolingType.DISABLED,      # the graph already pooled
-    normalization=False,               # ... and normalized
-    sources=ModelSource(hf="REPO_ID"),
-    dim=1024, model_file="model.onnx",
-    description="stella_en_400M_v5 document path, ONNX", license="mit", size_in_gb=1.8,
-)
-emb = TextEmbedding(model_name="REPO_ID", specific_model_path=d)
-V = list(emb.embed(docs))
-print(len(V), V[0].shape)
-```
-
-`parallel=` is **not supported** for models registered with `add_custom_model` in fastembed 0.8.0:
-the worker process constructs `OnnxTextEmbedding`, which cannot resolve a name registered at
-runtime, and raises `ValueError: Model ... is not supported in OnnxTextEmbedding`. Embed serially.
 
 ## Tokenizer deviation from the source repo
 

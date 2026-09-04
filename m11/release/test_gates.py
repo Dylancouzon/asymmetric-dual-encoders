@@ -21,7 +21,7 @@ sys.path.insert(0, str(HERE))
 
 import push
 
-REPO_ID = "DylanCouzon/zero-query-encoder-v1"
+REPO_ID = "DylanCouzon/constella-zero"
 TESTS = []
 
 
