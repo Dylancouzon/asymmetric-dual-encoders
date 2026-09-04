@@ -1,7 +1,6 @@
 # M10 status — PLANNED, budget VALIDATED 2026-09-04, plan re-cut the same day; nothing has trained
 
-Mandate `instructions-m10.md` (read **§Amendment 2026-09-04** first — it is authoritative over any
-older sentence there) · evidence `m10/PLANNING.md` (§11 measured rates, §12 the synthetic-data
+Mandate `instructions-m10.md` (read **§Amendment 2026-09-04** and **§Amendment 2026-09-04b** first — they are authoritative over any older sentence there; the **Weekend runbook** below is the execution order) · evidence `m10/PLANNING.md` (§11 measured rates, §12 the synthetic-data
 question) · runs `m10/RESULTS.md` · closed avenues `m10/EXPLORED.md` · selection-surface drafts
 `m10/COV_CANDIDATES.md` · code `m10/CODEMAP.md` · M9's record `m9/FINDINGS.md`.
 Owner report: https://claude.ai/code/artifact/fce61c94-5444-4c78-bb2e-46112cb7547a
@@ -65,68 +64,48 @@ actioned — read the mandate, not this paragraph, for the rules.**
 | 11 | Release rule: does C1a-pass / C1b-fail ship as "nano"? | **ruled 2026-09-04:** default stands (release needs C1b); "make sure we win enough so this isn't a question" |
 | 12 | CUREv1 as a validation-only biomedical read | **adopted 2026-09-04** as a reported diagnostic, never selection-bearing |
 | 13 | The 2026-09-04b amendments B1–B6 | adopted; strike any item and it reverts |
-| 14 | **Generation on the box** with Qwen's official `Qwen3-8B-AWQ` via vLLM, smoke pushed as `m10/SMOKE.md` for remote approval; hosted bf16 as fallback | **proposed** — waits for Dylan's go |
+| 14 | **Generation on the box** with Qwen's official `Qwen3-8B-AWQ` via vLLM, smoke pushed as `m10/SMOKE.md` for remote approval; hosted bf16 as fallback | **adopted 2026-09-04 ("Go on 14")** |
 | A7 | the box runs the screens | **confirmed 2026-09-04**; three uninterrupted box days over the weekend |
-| — | **Generation smoke approval** — you are the approver (200 queries × 12 forms, 90% contract / 80% on-form). It cannot run until a cloud instance exists (Qwen3-8B bf16 is 16.4 GB on a 10 GB card), so it will be waiting when you are back | blocks generation only |
+| — | **Generation smoke approval** — you are the approver (200 queries × 12 forms, 90% contract / 80% on-form). It runs on the box (decision 14); the sample is pushed as `m10/SMOKE.md` and a GitHub issue "M10 smoke approval" is opened — reply `approved: <forms>` there, or name the forms to redraft | **the one thing the weekend needs from you**; blocks generation and therefore family F |
 
 Decisions 2 (budget), 3, 5, 6, 8 and 9 are closed — see `instructions-m10.md` §Owner decisions.
 
-## The three-day box window (2026-09-04 → 09-07, Dylan away)
+## Weekend runbook — unsupervised, 2026-09-05 → 09-08 (Dylan follows on GitHub; decision 14 adopted)
 
-Everything here needs no approval, spends no cloud dollars, and touches no protected surface.
-**If decision 14 is go, generation joins the window:** day 1 — install vLLM, smoke it on the AWQ
-artifact, run the 12-form smoke, push `m10/SMOKE.md` (200 samples per form, the 90% contract rate per
-form computed); Dylan approves remotely; then ≈1.0M queries (≈1 box-day, GPU) while the harvest,
-decontamination and manifest run on CPU; then family F starts (the anchor's 20M curve first). The
-screen cannot start without the generated half, so this is what turns the window from preparation
-into proof.
+Standing rules: commit-and-push after every completed step; smoke every code path at 90 steps before
+a long run; arm the failure-signature monitor; read the first rate line; `setsid nohup` for anything
+long; zero cloud spend; no six / reserved / LoTTE read; dev reads counted; **no lock edit after an arm
+starts and no protocol change after a number is observed**. Anything not covered below: stop, record
+here, wait. Every step names its branch, so nothing below needs a judgement call.
 
-**Ordered by value, and the last four are droppable — ten items do not fit in 72 h (Fable M6).**
+| step | what | branch |
+|---|---|---|
+| **0a** (tonight) | vLLM in its own venv (`.venv-gen`, not the trainer's), `Qwen/Qwen3-8B-AWQ` rev `4da05a8e…` served on the card; a 50-prompt throughput smoke | works → 1; fails after 3 h of setup → **generation falls back to hosted bf16 after Dylan returns**; the weekend runs 0b–7 only and **no arm starts** (the anchor needs the generated half) |
+| **0b** (tonight) | rate re-measure on real tokenized corpora with `num_alloc_retries` logged; `torch.compile` on the fixed buckets | informational; pushed to `m10/RESULTS.md`; the box-vs-cloud build decision is the lock's (§0b), not the window's |
+| **1** | 12-form smoke, 200 per form, with the AWQ artifact → push **`m10/SMOKE.md`** (contract rate per form; a 50-query on-form sample per form) and open a GitHub issue "M10 smoke approval"; poll it hourly with `gh` | Dylan approves per form by commenting `approved: <forms>`; a form under 90% contract gets one prompt revision (≤2, each recorded in LEDGER §1) and a re-smoke; **no approval by Sunday noon → generation waits, F cannot start, the weekend delivers 2–7**; `gh` unavailable → same, approval arrives with Dylan's next session |
+| **2** | COV admission (M10.0-d): MedicalQA, BRIGHT, CorporateLobbying, ConsumerContractsQA; LEDGER if its structure verifies; **CUREv1 as a diagnostic** (decision 12); **`arxiv-title` diagnostic** drawn by id-without-version, seed 0; every admitted corpus into the protected index; stella encodes; the resolution number pushed | **fewer than three families admit → STOP and return to Dylan** (registered) |
+| **3** | harvest pipeline and yields (arXiv Kaggle CC0 — record artifact and revision; Wikipedia titles / headings / lead sentences; ESCI), post-dedup and post-screen counts pushed to LEDGER §1 | a form under 100K → reverts to generation (registered); quotas fixed only after the yields are pushed |
+| **4** | PAQ from Facebook's official release; the 1.0M build sample and the 4.037M A2 control (seed 0, hashes pinned) | — |
+| **5** | trainer port: per-token heads with pooling after the head, token-output export wrapper and their parity test; 4-step mix window; cyclic schedule; ‖e‖₂ and D-COV arms; `test_resume.py`; examples/s counter; 90-step smoke of every arm shape | any smoke failure is fixed before any arm; nothing else changes |
+| **6** | M10.0-c: per-component DEV-6 read of the M9 candidate incl. `heldout-longq` | descriptive baseline row |
+| **7** | parity checks for MiniLM-L6 / L12 three- and four-layer heads (CPU) | a failing head disqualifies that arm, reported |
+| **8** (after approval) | generation ≈1.0M under the §Data contract (seeds pre-filtered; strict JSON; one retry; dedup) → decontamination against the protected index and the six's documents → **A8 gates** → FORMS-12 hold-out → teacher targets → `results/m10_data_manifest.json` | a form over 25% near-duplicates → quota cut to its unique count (registered); the MS MARCO overlap row is disclosed, no action |
+| **9** | push **LEDGER §0a** (design) — it must precede any arm — then **§0b** (counts, hashes, measured rates, allocation) | no arm before both are on origin |
+| **10** | **family F**: anchor bge-small 20M (read 5 / 10 / 20M), MiniLM-L6 20M, L12 5M probe (extended iff within the MDE of the better 5M reading); COV at every cycle end, DEV-6 once | rule registered in §Screen; the winner is the build student; ties → cheaper to serve, labelled a product preference |
+| **11** | **family A** on the winner: A1, A2, A3 at 5M (A4 = the winner's 5M checkpoint) | three-outcome rule on A3−A2 (COV macro); A4−A3 decides the generated half; **A3−A2 fails → M10 STOPS before any build and returns to Dylan with all four rows** (registered) |
+| window ends | a running arm finishes under the watchdog; nothing new starts; this file records where things stand | — |
 
-1. **Rate work, and it is the one that must happen.** Length-bucketed single-chunk batching, then
-   `torch.compile(mode="reduce-overhead")` on the fixed buckets, then **re-measure on real tokenized
-   corpora with `num_alloc_retries` logged**. §11's numbers are random-token with no data loading,
-   and M9's pipeline achieved ~10% of the hardware roof; this is the number the build's cost line
-   and the box-versus-cloud decision actually read.
-2. **COV admission (M10.0-d)**, re-run under the 2026-09-04 licence rule: ConsumerContractsQA
-   (CC BY-NC) is re-admissible, giving four families without LEDGER; verify LEDGER's structure and
-   chunk cap; per-component licence, revision, size, qrels and metric records into `m10/LEDGER.md`
-   §2; corpus-level and fingerprint contamination screens; add every admitted corpus, query set and
-   document set to the protected index; encode with stella. **Plus the `arxiv-title` diagnostic surface
-   (B4, descriptive, no action):** draw 100K held-out arXiv papers by id-without-version with seed 0 (Kaggle metadata, CC0 —
-   record artifact and revision), protect them, encode them. If decision 12 is ruled yes, add CUREv1
-   (revision, licence clause, corpus provenance) as a reported diagnostic the same way.
-3. **The COV resolution number** (e5-small-v2 vs gte-small, distance only, no direction) — the
-   screen's power disclosure (A4's sizing struck by the Codex pass); pushed before the lock.
-4. **M10.0-c**: per-component DEV-6 read of the M9 candidate incl. `heldout-longq` (the baseline
-   row). The checkpoint and caches are on the box.
-5. **The §Harvest pipeline and its yields** — titles, headings, declarative lead sentences,
-   extracted interrogatives, with per-rule post-dedup counts pushed before any quota is fixed. Plus
-   the **arXiv licence check** (primary-source evidence of a commercial-use grant, artifact and
-   revision named) — without it the paper-title and scientific-claim forms revert to generation.
-   No model in the loop.
-6. **PAQ** download from Facebook's official release and the samplers (1.0M build, A2 control).
-7. **Trainer port** to the M10 recipe: cyclic schedule, example-mix batcher, per-token heads with
-   pooling AFTER the head (training wrapper) and a token-output export wrapper plus their parity
-   test (Codex B2), the three- and four-layer features, the ‖e‖₂ and D-COV loss arms,
-   `test_resume.py` equivalence, an examples/s counter.
-8. **Parity checks** (CPU, minutes) for MiniLM-L6's three-layer head and both students' four-layer
-   heads, so families F and G may run those arms.
-9. **Prompt prototyping** for the six generated forms (4-bit is fine — prototyping enters no
-   record, produces no smoke result and no manifest row).
-10. ~~The recipe pre-screen on DEV-6~~ — **dropped 2026-09-04b (amendment B5)**: it read DEV-6 twice
-    for defaults the screen re-decides. Drop items 8–9 before dropping 1–5. Parity for G-MLP is
-    already done (`results/m10_head_mlp_parity_box.json`); item 8 covers the other students' heads.
+**Needs Dylan during the window:** the smoke approval only. **Cannot happen:** a cloud instance, a
+protected read, an arm before §0a/§0b, a build. Realistic yield: steps 0–9 and family F; family A if
+the smoke is approved by Saturday.
 
 ## Then, in order
 
-M10.0-e screen lock (fifteen arms, fourteen contrasts, MDE 0.0056 and 0.025/14 fixed, the
-resolution number as power disclosure, LEDGER admitted if it verifies) → cloud
-instance for the generation smoke (Dylan reads it) → generation at ≈1.0M → M10.1 manifest with the
-A8 quality gates → M10.2 arms on the box, confirmations, the synthesized selected-recipe arm, the
-lock, Codex and Fable review, M9's six-only close-out from `m9-work`, LoTTE read #1 → M10.3 build
-(200M examples, ≈75 GPU-hours, whole extension cycles) → export, parity, freeze, LoTTE read #2 →
-M10.4 final: the six-set transaction with four C-conjuncts, then the reserved conditional.
+Families G → B → E → C → D on F's winner; ≤2 confirmations; the synthesized selected-recipe arm;
+the recipe lock (Codex and Fable review it); M9's six-only close-out from `m9-work`; LoTTE read #1
+→ cloud instance only if §0b puts the build there → M10.3 build (200M, whole extension cycles) →
+export, parity, freeze, LoTTE read #2 → M10.4 final: the six-set transaction in the order C1b → C1a
+→ C2a → C2b, then the reserved conditional.
 
 ## Guardrails that bite here
 

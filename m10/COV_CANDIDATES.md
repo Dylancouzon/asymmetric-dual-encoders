@@ -23,21 +23,20 @@ after ConsumerContractsQA's 2026-09-04 re-admission. The CQADupStack pair stays 
 verifies at M10.0-d (chunk rule, 100K cap), decided before any read; at 118,048 questions it is the
 one candidate large enough to move the surface's power. Amendment A4's conditional-remedy role is struck.
 **Forms without a published qrel-bearing surface:** scientific claims, paper titles, arguments.
-Paper titles get a constructed *secondary* surface, `arxiv-title` (mandate §Surfaces B4: 2,000
-held-out titles → own abstract among 100K; decides only whether the harvested scientific forms stay
-in the build); claims and arguments are tested only by the six-set transaction. **CUREv1**
+Paper titles get a constructed *diagnostic* surface, `arxiv-title` (mandate §Surfaces B4: 2,000
+held-out titles → own abstract among 100K; descriptive, no action — the Opus pass showed a null there
+could be a floor effect); claims and arguments are tested only by the six-set transaction. **CUREv1**
 (biomedical, PMC-OA full text, CC BY-NC, 2,000 real clinician queries, Qwen-annotated pools) is
-decision 12 — a reported diagnostic if Dylan admits it, never selection-bearing.
+decision 12 — **adopted 2026-09-04 as a reported diagnostic**, never selection-bearing.
 
 ## Generator and PAQ facts for M10.1
 
-- **Qwen/Qwen3-8B**: Apache-2.0 (LICENSE file in the repo); main revision `b968826d9c46dd6066d109eabc6255188de91218`
-  on 2026-09-01. Served in **bf16 by vLLM on the rented A100 80 GB** (≈ 16.4 GB of weights). The
-  4-bit artifacts and the Qwen3-4B fallback existed only for the 10 GB card and were withdrawn with
-  the box on 2026-09-01 (`m10/EXPLORED.md`). **Amended 2026-09-04: hosted open-weights inference of
-  that pinned revision is now the DEFAULT and self-hosting the fallback** — at ≈1.0M queries
-  (≈100M output plus ≈300M prompt tokens) hosting costs ≈$20–60 against 10–20 GPU-hours plus
-  instance setup. The provider and its served revision go in the manifest either way.
+- **Qwen3-8B** (Apache-2.0). **Decision 14 (2026-09-04): the generator is Qwen's official 4-bit release
+  `Qwen/Qwen3-8B-AWQ`, revision `4da05a8edb55…`, served by vLLM on the box** (≈6 GB on the 10 GB card);
+  the bf16 base (`Qwen/Qwen3-8B`, revision `b968826d9c46…`) via a hosted open-weights provider is the
+  fallback if vLLM will not run on the card or the smoke / A8 gates fail. The earlier bf16-only rule
+  was written for an 80 GB rented card, not for quality; the smoke rubric and the A8 diversity gate
+  are the quality guards either way. Provider and served revision go in the manifest if the fallback fires.
 - **PAQ**: data CC BY-SA, code CC BY-NC (github.com/facebookresearch/PAQ README). Download the
   official release from Facebook's file server (PAQ full: 64.9M pairs, 5.8 GB tar.gz of JSONL);
   the HF mirror `embedding-data/PAQ_pairs` is unofficial and carries no licence chain — do not use it.
