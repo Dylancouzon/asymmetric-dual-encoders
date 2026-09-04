@@ -1,4 +1,4 @@
-# M12 — fusion operator audit: does Qdrant's DBSF match our hand-fitted convex0?
+# M12 — fusion operator audit: does a shipping Qdrant operator match our hand-fitted convex0?
 
 Created 2026-09-04 (Dylan). **Scoped down twice the same day** — Fable broke the first draft, Codex
 broke the second and recommended killing the training half. Both reviews and what was cut:
@@ -14,9 +14,17 @@ convex0's **0.5727** (`m7/LEDGER.md:922`) — a 0.022 gap, larger than every tab
 M8 ever measured. If our published pair is fused by a formula the product cannot run, the headline
 overstates what a user gets.
 
-**DBSF is the untested third option**, is score-based, and is what Qdrant recommends beside RRF.
-Measuring it costs a day and changes what we tell users. That is a better day than any table
-retraining currently justifies.
+**But the 0.022 is not established as an operator gap — the comparison was unfair to RRF.**
+`convex0` got a **dev-fitted weight** (0.8, chosen from 8 candidates). RRF got **none**: the M7 grid
+swept only `k` ∈ {10,20,30,60,100} (`m7src/fusion.py:209`) and passed no weights, while
+`fusion.rrf(runs, k=60, weights=None)` (`:29`) has supported them all along and `apply()` (`:259`)
+never plumbs them.
+
+**Qdrant ships weighted RRF** — `weights` since **v1.17.0**, `k` since v1.16.0, e.g.
+`{"rrf": {"k": 60, "weights": [3.0, 1.0]}}` — plus parameter-free DBSF. So the live question is:
+**does a fairly-fitted shipping operator match our hand-rolled one?** If it does, the published
+number survives contact with the product and we gain a recommended configuration. If it does not,
+we owe users an honest correction. Either way it costs a day and needs no training.
 
 ## The fusion-aware training question is NOT in M12
 
@@ -38,7 +46,14 @@ It moved to `instructions-m16.md` with the full list of what it would need. Kill
 
 ## The audit
 
-**Implement DBSF to Qdrant parity**, not to a paraphrase. Per prefetch, using the **sample** SD:
+**Two operators, both to Qdrant parity, not to a paraphrase.**
+
+**(a) Weighted RRF — the fair comparison M7 never ran.** Sweep `k` × `weights` with a fitting budget
+matched to convex0's (8 candidates), using the `weights` argument already in `fusion.rrf`; plumb it
+through `select_on_dev` and `apply`. Qdrant's form is per-prefetch weights on the reciprocal-rank
+contributions. This is the cheapest and most likely explanation of the 0.022.
+
+**(b) DBSF — parameter-free, untested here.** Per prefetch, using the **sample** SD:
 `ŝ = (s − (μ − 3σ)) / (6σ)`, **no clipping**, and **0.5 for singleton or constant lists**; statistics
 are computed over the returned list at the **pinned depth 1000**; then sum the normalised channels.
 `FAMILIES` in `m7src/fusion.py:19` is closed and both selection and application assume a parameterised
@@ -55,12 +70,12 @@ against convex0 **0.5727** and RRF **0.5504**, with the 0.004 frozen-operator fu
 
 | outcome | rule | what we do |
 |---|---|---|
-| **DBSF viable** | ≥ 0.5687 (convex0 − 0.004) | recommend DBSF; the operator gap closes with no retraining |
-| **DBSF no better than RRF** | ≤ 0.5544 (RRF + 0.004) | the shipping operators cost ~0.02 and we say so plainly |
-| **intermediate** | between | report the number; recommend nothing |
+| **a shipping operator matches** | best of (weighted RRF, DBSF) ≥ 0.5687 (convex0 − 0.004) | recommend that exact configuration; the published number survives in the product, no retraining |
+| **none matches** | best ≤ 0.5687 | state the real cost of shipping-operator fusion plainly, in M14's paper and the card caveat |
 
-Note in the report that convex0's `w=0.8` was **dev-fitted** while DBSF fits nothing, so a tie
-favours DBSF on honesty grounds.
+Report all three side by side. **Fitting budgets must be stated**: convex0's `w` came from 8
+candidates, weighted RRF gets the same 8, DBSF fits nothing — so a DBSF tie is the strongest of the
+three results and an unweighted-RRF number is not a fair comparator for anything.
 
 ## Protocol — three things that make this wrong if skipped
 
@@ -70,7 +85,9 @@ favours DBSF on honesty grounds.
    artifact is unchanged; the *reported system* would not be. Version the operator spec and disclose.
 2. **Register the rule above before scoring.** Recording which operator won after seeing it is
    outcome logging, not pre-registration.
-3. **A `bm25s`-lucene result does not license a claim about `Qdrant/bm25`** (fixed `avg_len`, own
+3. **Weights are fitted on dev and dev only** — a weighted-RRF configuration selected on the six
+   would be exactly the post-hoc fusion choice `m7/LEDGER.md:691` forbids.
+4. **A `bm25s`-lucene result does not license a claim about `Qdrant/bm25`** (fixed `avg_len`, own
    tokenizer). DBSF's normalisation depends on the lexical implementation. State the gap; do not
    call it weak.
 
@@ -79,8 +96,8 @@ the teacher, cloud compute, any released artifact.
 
 ## Deliverables
 
-1. `dbsf` in `m7src/fusion.py` with parity and degenerate-case tests.
-2. The dev macro under all three operators, against the registered rule, in `m12/FINDINGS.md`.
+1. Weighted RRF plumbed through `select_on_dev`/`apply`, and `dbsf` added, both with parity and degenerate-case tests.
+2. The dev macro under convex0, unweighted RRF, **weighted RRF** and DBSF — with fitting budgets stated — against the registered rule, in `m12/FINDINGS.md`.
 3. The registration itself, written before scoring, in `m12/LEDGER.md`.
 4. If DBSF is viable: a one-line correction to `m11/STATUS.md`'s standing operator caveat, and the
    recommendation carried into M14's paper.
