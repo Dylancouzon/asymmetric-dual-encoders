@@ -163,22 +163,35 @@ above. DBSF has **no fitted fusion weights**; the prefetch limit of 100 was chos
 saturates on our development set, plus a deployability criterion, so the configuration is
 development-informed even though the operator itself fits nothing.
 
-Schematic — it assumes a collection with **named** dense and sparse vectors, which the quick-start
-collection above does not create:
+Fusion needs **named** vectors, so hybrid search gets its own collection:
 
 ```python
-# requires a collection configured with named vectors, e.g.
-#   vectors_config={"dense": VectorParams(size=1024, distance=Distance.COSINE)}
-#   sparse_vectors_config={"bm25": SparseVectorParams()}
-client.query_points(
-    "docs",
+# The sparse side is whatever lexical model you use -- FastEmbed's `Qdrant/bm25`, or your own.
+# Placeholder sparse vectors here, so this snippet runs with no extra download.
+client.create_collection(
+    "hybrid",
+    vectors_config={"dense": models.VectorParams(size=1024, distance=models.Distance.COSINE)},
+    sparse_vectors_config={"bm25": models.SparseVectorParams()},
+)
+client.upsert("hybrid", points=[
+    models.PointStruct(
+        id=i,
+        vector={"dense": D[i].tolist(),
+                "bm25": models.SparseVector(indices=[i], values=[1.0])},
+        payload={"text": t})
+    for i, t in enumerate(docs)])
+
+hits = client.query_points(
+    "hybrid",
     prefetch=[
-        models.Prefetch(query=dense_query_vector,  using="dense", limit=100),
-        models.Prefetch(query=bm25_query_vector,   using="bm25",  limit=100),
+        models.Prefetch(query=q.tolist(), using="dense", limit=100),
+        models.Prefetch(query=models.SparseVector(indices=[0], values=[1.0]),
+                        using="bm25", limit=100),
     ],
     query=models.FusionQuery(fusion=models.Fusion.DBSF),
     limit=10,
-)
+).points
+print(hits[0].payload["text"])
 ```
 
 **On the four datasets with no disclosed teacher overlap** (see Limits), DBSF at prefetch 100 scores
