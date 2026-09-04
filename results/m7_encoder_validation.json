@@ -144,6 +144,24 @@
    "pooling": "cls",
    "post_dense": null,
    "revision": "d8fb21ca8d905d2832ee8b96c894d3298964346b"
+  },
+  "mxbai-embed-large-v1": {
+   "status": "pass",
+   "dim": 1024,
+   "expect_st_mismatch": false,
+   "spec_fingerprint": {
+    "repo": "mixedbread-ai/mxbai-embed-large-v1",
+    "revision": "b33106f585b9ce46904ad7443a3b52b7a63e231c",
+    "pooling": "cls",
+    "post_dense": null,
+    "max_length": 512,
+    "config_kwargs": {}
+   },
+   "min_cosine_vs_sentence_transformers": 1.0000000138028764,
+   "max_abs_pairwise_sim_delta": 0.0,
+   "pooling": "cls",
+   "post_dense": null,
+   "revision": "b33106f585b9ce46904ad7443a3b52b7a63e231c"
   }
  }
 }

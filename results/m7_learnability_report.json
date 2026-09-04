@@ -13,6 +13,7 @@
   "gte-base-en-v1.5",
   "e5-base-v2",
   "arctic-embed-l",
+  "mxbai-embed-large-v1",
   "e5-large-v2",
   "arctic-embed-l-mean",
   "gte-large-en-v1.5"
@@ -136,6 +137,20 @@
     "0.0001": 0.2018,
     "0.001": 0.2033,
     "0.01": 0.2029
+   }
+  },
+  "mxbai-embed-large-v1": {
+   "dim": 1024,
+   "best_lambda": 0.01,
+   "table_macro_2": 0.2509,
+   "cosine_agreement": 0.7871,
+   "teacher_ceiling_2": 0.4433,
+   "ratio_table_over_ceiling": 0.566,
+   "lambda_curve": {
+    "0.0001": 0.2474,
+    "0.001": 0.2494,
+    "0.01": 0.2509,
+    "0.1": 0.2273
    }
   },
   "stella-400M-v5": {
@@ -383,6 +398,45 @@
      "ci95": [
       -0.1389,
       -0.0965
+     ]
+    }
+   },
+   "resolved": true
+  },
+  "mxbai-embed-large-v1": {
+   "delta": -0.093,
+   "ci95": [
+    -0.1054,
+    -0.0805
+   ],
+   "delta_raw": -0.0929769015721343,
+   "ci95_raw": [
+    -0.10540361709087594,
+    -0.08046954766783787
+   ],
+   "boot_tail": 0.0,
+   "boot_tail_str": "<0.0001",
+   "_boot_tail_note": "bootstrap tail mass, NOT a p-value; use signflip() for p",
+   "alternative": "two-sided",
+   "B": 10000,
+   "seed": 0,
+   "one_sided_lower_2.5": null,
+   "one_sided_lower_raw": null,
+   "per_dataset": {
+    "cqadup-physics": {
+     "n": 1039,
+     "delta": -0.0639,
+     "ci95": [
+      -0.08,
+      -0.048
+     ]
+    },
+    "cqadup-programmers": {
+     "n": 876,
+     "delta": -0.122,
+     "ci95": [
+      -0.1414,
+      -0.103
      ]
     }
    },

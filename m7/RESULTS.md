@@ -79,6 +79,23 @@ components. Only **stella-400M-v5** beats the incumbent (+0.0365 [0.0249, 0.0481
 Caveats: closed-form and flat, so it ranks candidates rather than predicting scores; two
 components of one dataset family; dev-only.
 
+## Cloud-Inference teacher probe, 2026-09-04 — mxbai is 8th of 11
+
+Dylan: prefer a teacher hosted by **Qdrant Cloud Inference** (stella is not hosted); vendor rule
+bent for Mixedbread **because Qdrant Cloud hosts it**. Same criterion, same fit set (gram nnz
+12,936,008 identical to the 2026-08-26 sweep), same two dev components.
+
+**`mxbai-embed-large-v1` table 0.2509, d = −0.0930 [−0.1054, −0.0805] vs stella, RESOLVED** —
+below bge-base by 0.0565, between arctic-embed-l and e5-large-v2. Loader exact (pairwise
+max|Δ| 0.00e+00 vs sentence-transformers); λ-curve flat 0.247–0.251 then falls at 1e-1.
+
+- Its one advantage: **no disclosed MTEB training exposure** (card/blog: none except MS MARCO), so
+  no ArguAna/FiQA/FEVER caveat, unlike stella.
+- Best hosted candidate remains **bge-base-en-v1.5**, −0.0365. Six-set cost of that swap is
+  **unmeasured**; two unvalidated transfers put it at 0.045–0.07. The 0.406→0.489 MTEB→six tower
+  projection may NOT be used for it (refuted, `EXPLORED.md`).
+- A swap requires the regenerated clean fit list (`m7_trainq_manifest.json`); this probe ranks only.
+
 ## Teacher swap, 2026-08-26 — stella's closed-form table beats bge's best TRAINED arm
 
 `m7_stage0_ridge_stella.json`: proxy-3 **0.4973** at lam=0.01 (bge closed form 0.4542, bge best
