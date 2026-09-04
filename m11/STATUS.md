@@ -144,7 +144,9 @@ call type. Applied to stella's prompt pair, **one hosted graph serves documents,
 queries, and the index zero/nano target** — three frontier points, not one.
 
 `MODEL_CARD_DOC.md`'s "the only supported way to embed queries" (Sentence Transformers) overstates
-the restriction — it is about tooling, not the graph. Card edit NOT made: public artifact, Dylan's call.
+the restriction — it is about tooling, not the graph. **Card left AS IS (Dylan, 2026-09-04.)** The
+conservative wording protects users from FastEmbed's `query_embed`, which silently returns a
+wrong-protocol vector; the graph's true capability is recorded here instead.
 
 ## T3 — what it cost and what it caught (2026-09-03)
 
