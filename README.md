@@ -95,9 +95,11 @@ BM25. The fused system ties OpenSearch's learned sparse retriever (0.4911 vs 0.4
 query side stays a table lookup. Full characterisation, caveats and cost rows: the model card,
 or `m7/STATUS.md`.
 
-**If you fuse with BM25, the fusion rule matters**: the published system is convex fusion at
-w=0.8, not RRF (dev 0.5727 vs 0.5504). Qdrant's `Fusion.RRF` is a different, weaker operating
-point.
+**If you fuse with BM25, the fusion rule matters.** The published system is convex fusion at
+w=0.8, which Qdrant does not implement. **In Qdrant use `Fusion.DBSF` at a shallow prefetch**: on
+dev it beats convex at `limit: 10` (0.5517 vs 0.5482) and ties it at 50, and only falls behind at
+deep prefetch (0.5580 vs 0.5727 at 1000). `Fusion.RRF` is weaker at every depth, fairly swept —
+best `k=3` unweighted, best `k=2 weights=[2,1]` of 24 configurations. Audit: `m12/FINDINGS.md`.
 
 ---
 

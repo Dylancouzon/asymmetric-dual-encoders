@@ -155,8 +155,33 @@ table shipped here (sha `a7007b1a…`).
 A lookup table retains **75.5%** of the teacher's quality (0.4339 / 0.5744), with a query side
 that does no matrix multiplication at all.
 
-The fused row is **weighted score fusion**, `0.8 × dense + 0.2 × BM25` on min-max normalized
-scores — not reciprocal rank fusion, so Qdrant's `Fusion.RRF` will not reproduce it.
+### Reproducing the fused row in Qdrant
+
+The fused row above uses **convex fusion** — `0.8 × dense + 0.2 × BM25`, each channel divided by
+its own per-query maximum, at prefetch depth 1000. Qdrant does not implement that operator, so
+that exact row is not reproducible in the engine.
+
+**Use `Fusion.DBSF`, and keep the prefetch shallow.** Measured on our development set (nDCG@10
+macro over four components — *not* the six-dataset numbers above, which were measured once under
+convex fusion and are not re-run here):
+
+| prefetch limit | convex (the operator above) | **Qdrant DBSF** |
+|---|---|---|
+| 10 | 0.5482 | **0.5517** |
+| 50 | **0.5578** | 0.5558 |
+| 100 | **0.5637** | 0.5574 |
+| 1000 | **0.5727** | 0.5580 |
+
+At `limit: 10` DBSF is **better** than the operator this model's fusion weight was tuned on; at
+`limit: 50` the difference (0.0020) is inside our measurement noise. The gap only opens at deep
+prefetch, where convex fusion's use of raw score magnitudes pays off and rank/distribution-based
+fusion cannot follow.
+
+`Fusion.RRF` is the weaker choice at every depth we measured. We swept it fairly — `k` from 1 to
+101 in Qdrant's units, best `k=3`, and 24 weighted configurations, best `k=2, weights=[2, 1]` —
+and its best point still lands below DBSF. An earlier version of this card said only that RRF
+"will not reproduce" the fused row; that was true but rested on an unweighted, badly-ranged
+comparison, which has now been redone.
 
 ## Limits
 

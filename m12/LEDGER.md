@@ -69,6 +69,9 @@ self-hits after retrieval, Qdrant does not).
   identical to the frozen literal). **NO MATCH at depth 1000**: DBSF 0.5580 (-0.0146), RRF best
   k_q=3 0.5535 (-0.0192), both CIs excluding 0 and the bar. Tier 2 therefore REQUIRED and is being
   run. `m12/tier1.json`.
+- 2026-09-04 — Tier 2 executed: weighted RRF held-out 0.5601 vs bar 0.5689, FAIL. Both halves
+  independently selected `k_q=2 w=(2,1)`; held-out (0.5601) ~ dev-fitted (0.5598), so no material
+  overfit. **M12 RESULT: NO MATCH.** `m12/tier2.json`, findings `m12/FINDINGS.md`.
 - 2026-09-04 — verification of the two results the review was to attack, run directly after the
   external review stalled and was killed: (a) `bootstrap()` confirmed genuinely paired — one index
   vector per component applied to both systems; (b) the depth-10 inversion is **not** a degenerate

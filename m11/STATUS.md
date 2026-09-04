@@ -191,7 +191,10 @@ New files: `m11/release/export_doc.py`, `push_doc.py`, `MODEL_CARD_DOC.md`, `doc
   `add-constella-models`, is deliberately not mergeable — it also carries the #703 padding fix, and
   the models sit on a personal account where upstream hosts under `Qdrant/`.
 - **Qdrant fusion**: dense-only reproduces 0.4339 exactly; the fused 0.4911 needs convex fusion at
-  w=0.8, which `Fusion.RRF` does not reproduce. Stated on the card.
+  w=0.8, which Qdrant does not implement. **M12 resolved what to tell users instead** (2026-09-04):
+  `Fusion.DBSF` at a shallow prefetch — better than convex at `limit: 10`, a tie at 50, behind only
+  at deep prefetch. RRF is weaker at every depth even after a fair sweep. Card, README and this line
+  rewritten from the M12 numbers; `m12/FINDINGS.md`.
 - **Spent, not recoverable**: `constella-zero` was public from its first push, so the "flip public
   last, after remote byte verification" ordering guarantee was never held. Every earlier revision
   stays publicly reachable, including the pre-T1 bundle. Nothing non-releasable is in any of them.
