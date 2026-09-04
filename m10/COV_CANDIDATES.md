@@ -19,14 +19,15 @@ not licence evidence; the primary-source column is what counts.
 **Families available (untouched by any M10 decision):** consumer-health, BRIGHT, legal (now two
 components) and finance if LEDGER verifies — **four against the three-family floor without LEDGER**,
 after ConsumerContractsQA's 2026-09-04 re-admission. The CQADupStack pair stays in DEV-6.
-**LEDGER's status changed 2026-09-04:** amendment A4 makes it the registered first remedy if the COV
-resolution distance exceeds 0.010, because at 118,048 questions it is the only admitted candidate
-large enough to move the surface's power — so its structure verification is no longer optional
-housekeeping but a conditional prerequisite of the screen lock.
-**Forms still without a qrel-bearing surface:** scientific claims, paper titles, arguments (no
-licensed, non-contaminating set exists; searched 2026-09-01). They are tested only by the six-set
-transaction — which is why amendment A2's arXiv harvest matters: it puts *training* coverage on two
-of those three forms even though no *selection* surface exists for them.
+**LEDGER (2026-09-04, after the Codex pass):** an ordinary admission — admitted if its structure
+verifies at M10.0-d (chunk rule, 100K cap), decided before any read; at 118,048 questions it is the
+one candidate large enough to move the surface's power. Amendment A4's conditional-remedy role is struck.
+**Forms without a published qrel-bearing surface:** scientific claims, paper titles, arguments.
+Paper titles get a constructed *secondary* surface, `arxiv-title` (mandate §Surfaces B4: 2,000
+held-out titles → own abstract among 100K; decides only whether the harvested scientific forms stay
+in the build); claims and arguments are tested only by the six-set transaction. **CUREv1**
+(biomedical, PMC-OA full text, CC BY-NC, 2,000 real clinician queries, Qwen-annotated pools) is
+decision 12 — a reported diagnostic if Dylan admits it, never selection-bearing.
 
 ## Generator and PAQ facts for M10.1
 

@@ -12,23 +12,28 @@ Dispositions: `instructions-m10.md` §Amendment 2026-09-04b (B1–B6) and decisi
 ## 1. Verdict
 
 **C1a (release, avg-6) is reachable if coverage works. C1b (release, clean-4) and C2a (aim, avg-6)
-are the real contest and sit at ~92% uniform retention — right where M9 stood on the one form it
-covered. C2b (aim, clean-4) needs 95.3% and no published precedent reaches it at our teacher gap.**
-The plan should run; it should also say this in advance, which it now does (B1).
+are the real contest at ~91–92% uniform retention — right where M9 stood on the one form it
+covered. C2b (aim, clean-4) sits near 95% and a bounded literature search found no pure-regression
+precedent at our teacher gap: a low-prior stretch aim.** The plan should run; it should also say
+this in advance, which it now does (B1).
 
-Arithmetic (`results/m10_conjunct_arithmetic.json`, comparator rows only):
+Arithmetic (`results/m10_conjunct_arithmetic.json`; comparator rows only; planning proxies = bar +
+comparator-pair bootstrap width at the registered 0.025 quantile — the Codex pass caught the first
+version on M9's 0.0125). A *uniform* retention is a lens, not an ordering: retention is
+distribution-specific, so heterogeneous retention can reorder the four.
 
-| conjunct | pass point | uniform retention of the ceiling |
+| conjunct | planning proxy | uniform retention of the ceiling |
 |---|---|---|
-| C1a release avg-6 | 0.5143 | **89.5%** |
-| C2a aim avg-6 | 0.5256 | 91.5% |
-| C1b release clean-4 | 0.5185 | **91.9%** |
-| C2b aim clean-4 | 0.5372 | **95.3%** |
+| C1a release avg-6 | 0.5131 | **89.3%** |
+| C2a aim avg-6 | 0.5244 | 91.3% |
+| C1b release clean-4 | 0.5168 | **91.6%** |
+| C2b aim clean-4 | 0.5355 | **94.9%** |
 
 Per dataset, to *equal* bge-small: scifact 91.4%, nfcorpus 83.0%, fiqa 72.9%, arguana 94.7%,
-scidocs 85.7%, trec-covid 92.0%. At uniform 92%, fiqa (a disclosed stella training set) supplies
-73% of nano's avg-6 margin over bge-small — the reason clean-4 is the headline, and the reason the
-headline is harder than the avg-6 aim. LEAF beats the ceiling on trec-covid (0.8301 vs 0.8234).
+scidocs 85.7%, trec-covid 92.0%. Stress (one set at 65%, the rest at 94%): `trec-covid` or `scifact`
+at 65% clears nothing; `nfcorpus` leaves only C1a. At uniform 92%, fiqa (a disclosed stella training
+set) supplies 73% of nano's avg-6 margin over bge-small — the reason clean-4 is the headline. LEAF
+beats the ceiling on trec-covid (0.8301 vs 0.8234).
 
 ## 2. What the literature says about the teacher gap (Sonnet sweep, primary sources)
 
@@ -58,10 +63,10 @@ for us; the screen's G-MLP and D-COV arms are the test.
 
 | # | gap | disposition |
 |---|---|---|
-| G1 | **The COV screen could not see the headline.** All four clean-4 sets are scientific/biomedical; COV had consumer-health, StackExchange, legal, finance. The A3−A2 contrast on harvested *scientific* text would be judged on surfaces blind to it, and the plan conceded those forms are "tested only by the six-set transaction" — i.e. the most important data decision for the headline was to be made blind | **B4**: constructed `arxiv-title` COV family (2,000 held-out real titles → own abstract among 100K; qrels by construction; licence-clean; protected before harvest), plus `ctgov-title` if ClinicalTrials.gov's terms verify. A form-retention surface, disclosed as such, never a claim |
-| G2 | **"A nonlinear head has no serving path" was wrong** for per-token heads | **B3**: proven — fastembed reproduces `1152→512→GELU→1024` per token to min-cos 0.99999988, zero custom ops, 34.48M (`results/m10_head_mlp_parity_box.json`). Arm G-MLP replaces G-768 |
-| G3 | **No four-conjunct release rule.** M9's table had C1/C2; with C1a/C1b under gatekeeping, the likely outcome (C1a pass, C1b fail) had no registered consequence | **B2**: table registered; the ship decision is **decision 11** (default: ship, disclosed) |
-| G4 | **Feasibility never stated.** The mandate registered C2b without saying the evidence puts it out of reach, or that C1b is harder than C2a | **B1**: §Goal carries the arithmetic and the literature ceiling before any nano number exists |
+| G1 | **The COV screen could not see the headline.** All four clean-4 sets are scientific/biomedical; COV had consumer-health, StackExchange, legal, finance. The A3−A2 contrast on harvested *scientific* text would be judged on surfaces blind to it, and the plan conceded those forms are "tested only by the six-set transaction" — i.e. the most important data decision for the headline was to be made blind | **B4**: constructed `arxiv-title` surface (2,000 held-out real titles → own abstract among 100K; qrels by construction; licence-clean; protected before harvest). **After the Codex pass: a registered secondary surface with one action (harvested scientific forms in/out of the build), not a COV family** — as a family it would reward A3 by construction and dominate the macro's power. `ctgov-title` dropped (terms clause unread) |
+| G2 | **"A nonlinear head has no serving path" was wrong** for per-token heads | **B3**: proven — fastembed reproduces a per-token head to ~1e-7 with zero custom ops. **After the Codex pass the arm is the residual form** `W_lin·x + W₂·GELU(W₁·x+b₁)` (W₁ 1152→192; 34.96M; `results/m10_head_mlp_parity_box.json`), because the first bottleneck form capped output rank at 512. Arm G-MLP replaces G-768 |
+| G3 | **No four-conjunct release rule.** M9's table had C1/C2; with C1a/C1b under gatekeeping, the likely outcome (C1a pass, C1b fail) had no registered consequence | **B2**: table registered; the ship decision is **decision 11**. Default after the Codex pass: **release needs C1b**, the headline; a C1a-only pass is published as a frontier measurement labelled not recommended |
+| G4 | **Feasibility never stated.** The mandate registered C2b without saying what the evidence puts it at, or what each conjunct demands per dataset | **B1**: §Goal carries the arithmetic (0.025 quantile), the stress scenarios and the literature prior before any nano number exists |
 | G5 | **Biomedical training coverage is thin by rule, not by availability.** Three headline sets are biomedical; PubMed / CORD-19 / NutritionFacts are excluded as source families (M7 rule written for a table trained on document text); Wikipedia-medical seeds, arXiv q-bio and (if licensed) ClinicalTrials.gov / DailyMed are what remains | **decision 12** — Dylan's; §4 below |
 | G6 | Query-asset target: bge-small + three-layer head ≈70.8 MB fp16 vs M9's 70 MB target; nobody had done the arithmetic for the wider head | **B6**: recorded; M9's rule (logged, measured justification) applies at the lock |
 | G7 | The DEV-6 recipe pre-screen read DEV-6 twice for defaults the screen re-decides | **B5**: dropped |
@@ -100,9 +105,9 @@ mirror of PubMed/PMC. **Withdrawn; not re-proposable without a licence change.**
 | source | clause (primary) | commercial + derivative | overlap with excluded families | use |
 |---|---|---|---|---|
 | arXiv metadata | *"free to use descriptive metadata … under CC0 1.0"* (info.arxiv.org/help/api/tou.html); full text NOT granted | yes (titles, abstracts) | none | harvest: title, claim forms; `arxiv-title` COV. q-bio is small (~3K/yr) |
-| MedlinePlus, government-authored Health Topics | *"Works produced by the federal government are not copyrighted"*; A.D.A.M. encyclopedia and ASHP monographs are third-party copyright, *"must be authorized in writing"* (medlineplus.gov/about/using/usingcontent) | yes for the government half only | none with the six; **same source as MedQuAD** (COV MedicalQA) → fingerprint-screen, disclose same-source | harvest / seeds: consumer-health |
-| CDC pages | *"not subject to copyright, is in the public domain"*, except contractor/licensed content (cdc.gov/other/agencymaterials.html) | yes | same MedQuAD caveat | consumer-health |
-| ClinicalTrials.gov | NLM parent policy (government works); the site's own terms page is JS-rendered and its clause **could not be read** | likely, **unverified** | none | `ctgov-title` COV and biomedical title/summary harvest **only if the clause is recorded at M10.0-d** |
+| MedlinePlus, government-authored Health Topics | *"Works produced by the federal government are not copyrighted"*; A.D.A.M. encyclopedia and ASHP monographs are third-party copyright, *"must be authorized in writing"* (medlineplus.gov/about/using/usingcontent) | yes for the government half only | none with the six; **same source as MedQuAD** (COV MedicalQA) | **OUT of M10** (Codex M7): harvesting it would let the MedicalQA read reward A3 by construction |
+| CDC pages | *"not subject to copyright, is in the public domain"*, except contractor/licensed content (cdc.gov/other/agencymaterials.html) | yes | same MedQuAD caveat | **OUT of M10**, same reason |
+| ClinicalTrials.gov | NLM parent policy (government works); the site's own terms page is JS-rendered and its clause **could not be read** | likely, **unverified** | none | **OUT of M10** until the clause is recorded |
 | Wikipedia medicine (WikiProject Medicine, ~30K+ articles) | CC BY-SA | yes | none | seeds (already approved) |
 
 Out: DailyMed (manufacturer-authored labels, no clean grant), OpenAlex (CC0 index, PubMed-sourced
@@ -118,21 +123,31 @@ PubMed-family by M7's map. Qrels: three levels; clinicians seeded relevance, the
 **annotated by Qwen 2.5 72B**, ≈9.9 relevant + 30.4 partially relevant per query; nDCG@10. The paper
 carries **no decontamination statement** against NFCorpus / CORD-19 / SciFact / SCIDOCS.
 
-Why admit it: it is the only real-query biomedical retrieval surface with an affirmative grant, and
-without it the screen sees biomedical questions only through MedQuAD's templated consumer-health
-set. Why it needs Dylan: it reopens the "excluded from COV" clause of the source-family rule for a
-selection surface. The precedent is already in the protocol — CQADupStack-programmers/physics are
-DEV while cqadup-android/english are reserved, same family, different split — and the guard is the
-same: fingerprint screen against the six's documents, removal counts published, never a claim.
-Caveats to disclose if admitted: LLM-annotated pools; full-text passages, so an abstract in
-`nfcorpus` or CORD-19 could sit inside a CUREv1 passage (the 8-gram screen catches it).
+Why read it at all: it is the only real-query biomedical retrieval surface with an affirmative grant,
+and without it the screen sees biomedical questions only through MedQuAD's templated consumer-health
+set. Why it needs Dylan: it reopens the validation clause of the source-family rule. **The review's
+first recommendation (admit as a selection-bearing COV family under the CQADupStack dev/reserved
+precedent) was withdrawn after the Codex pass (M6):** the precedent is a different split of one
+dataset, not an overturned source-family rule; Qwen-annotated candidate pools add judge-dependent
+label bias to a selector; and full-text passages can contain an `nfcorpus` or CORD-19 abstract that
+an 8-gram screen may or may not catch. **Recommendation now: admit CUREv1 as a reported diagnostic
+beside every arm — it makes the biomedical forms visible without deciding anything — and not as a
+COV family.**
 Alternatives considered: PublicHealthQA (172 English CDC/WHO COVID FAQ queries; WHO half is NC;
 MTEB pins revision `main`; COVID topic overlaps `trec-covid`) — too small and too close; BioASQ
 (500 test queries over 14.9M PubMed abstracts, registration-gated, not redistributed) — too large to
 encode and PubMed abstracts outright; DORIS-MAE (100 queries) and BIRCO-Clinical-Trial (50) — too
 small; ChemTEB — NQ/HotpotQA questions, which are in our training pool.
 
-## 5. What would change the verdict
+## 5. Codex pass on this review — `research/m10-codex-feasibility-2026-09-04.md`
+
+gpt-5.6-sol, read-only, high effort; read-exclusion audit clean. 4 BLOCKER / 8 MAJOR / 4 MINOR / 1
+missed, **all actioned** (dispositions there). The ones that changed this document: the 0.025
+quantile (§1), the residual G-MLP (§3 G2), `arxiv-title` demoted to a secondary surface (§3 G1),
+decision 11's default flipped to "release needs C1b" (§3 G3), CUREv1 as a diagnostic only (§4c),
+MedlinePlus / CDC / ClinicalTrials.gov out of M10 (§4b), and amendment A4's adaptive MDE struck.
+
+## 6. What would change the verdict
 
 - **Upward:** G-MLP or D-COV moving covered-form retention from ~94% toward 96–97% at screen dose
   (read on `nq-250k`, the named per-arm diagnostic); or decision 12(b) plus the constructed

@@ -3,12 +3,16 @@
 `m10/EXPLORED.md` closed "a nonlinear head" as having no fastembed serving path. That is true of a
 head applied AFTER pooling (fastembed pools the graph's per-token output itself, and a nonlinearity
 does not commute with the mean). It is NOT true of a head applied PER TOKEN before pooling: any
-per-token function -- here Linear(1152->k) -> GELU -> Linear(k->1024) over the concatenated states
-of layers 12/8/4 -- is exported as the graph's token output and fastembed's masked mean + normalize
-reproduces the training-time `normalize(mean_t(MLP(x_t)))` exactly, because the pooling is the
-same linear op on both sides. This script proves the serving path with random weights (parity does
-not depend on them) and records the parameter count under the 35M cap. Writes
-results/m10_head_mlp_parity_box.json. Diagnostic; read by no rule.
+per-token function is exported as the graph's token output and fastembed's masked mean + normalize
+reproduces the training-time `normalize(mean_t(head(x_t)))` exactly, because the pooling is the
+same linear op on both sides. Two forms, both over the concatenated states of layers 12/8/4:
+  mlp       Linear(1152->k) -> GELU -> Linear(k->1024)            (rank of the output <= k)
+  residual  Linear(1152->1024)(x) + Linear(k->1024)(GELU(Linear(1152->k)(x)))
+            -- the anchor's full-rank linear head plus a rank-k nonlinear correction; this is the
+            G-MLP arm after the Codex pass of 2026-09-04 (the bottleneck form capped rank at 512).
+Random weights (parity does not depend on them); records the parameter count against the 35M cap.
+Writes results/m10_head_mlp_parity_box.json (mode and k in the record). Diagnostic; read by no rule.
+Usage: head_mlp_parity.py [mlp|residual] [k]
 """
 import json, sys, time
 from pathlib import Path
@@ -17,10 +21,23 @@ import torch
 
 REPO = Path(__file__).resolve().parents[1]
 OUT = REPO / "results" / "m10_head_mlp_parity_box.json"
-DIR = REPO / "work" / "m10onnx" / "nano-3layer-mlp"
+DIR = REPO / "work" / "m10onnx" / "nano-3layer-mlp"   # overwritten per run; the JSON records which form
 STUDENT = "BAAI/bge-small-en-v1.5"
 LAYERS = (12, 8, 4)
-HIDDEN = int(sys.argv[1]) if len(sys.argv) > 1 else 512   # 1152->512->1024 = 1.116M, under the cap
+MODE = sys.argv[1] if len(sys.argv) > 1 else "residual"
+HIDDEN = int(sys.argv[2]) if len(sys.argv) > 2 else (192 if MODE == "residual" else 512)
+
+
+class ResidualHead(torch.nn.Module):
+    """Full-rank linear path plus a rank-k GELU correction, applied per token."""
+    def __init__(self, d_in, k, d_out):
+        super().__init__()
+        self.lin = torch.nn.Linear(d_in, d_out)
+        self.down = torch.nn.Linear(d_in, k)
+        self.up = torch.nn.Linear(k, d_out)
+
+    def forward(self, x):
+        return self.lin(x) + self.up(torch.nn.functional.gelu(self.down(x)))
 NAME = "qdrant/nano-3layer-mlp-parity-check"
 
 
@@ -52,8 +69,11 @@ def main():
     torch.manual_seed(0)
     tok = AutoTokenizer.from_pretrained(STUDENT)
     backbone = AutoModel.from_pretrained(STUDENT, dtype=torch.float32).eval()
-    head = torch.nn.Sequential(torch.nn.Linear(384 * len(LAYERS), HIDDEN), torch.nn.GELU(),
-                               torch.nn.Linear(HIDDEN, 1024))
+    if MODE == "residual":
+        head = ResidualHead(384 * len(LAYERS), HIDDEN, 1024)
+    else:
+        head = torch.nn.Sequential(torch.nn.Linear(384 * len(LAYERS), HIDDEN), torch.nn.GELU(),
+                                   torch.nn.Linear(HIDDEN, 1024))
     model = PerTokenMLP(backbone, head).eval()
     DIR.mkdir(parents=True, exist_ok=True)
     ex = tok(["a short query", "a somewhat longer example sentence for the export trace"],
@@ -88,7 +108,9 @@ def main():
     manual = manual / np.linalg.norm(manual, axis=1, keepdims=True)
     cos_manual = (ref * manual).sum(1)
 
-    res = {"_what": __doc__.strip(), "student": STUDENT, "layers": list(LAYERS), "head": f"1152->{HIDDEN}->GELU->1024, per token",
+    res = {"_what": __doc__.strip(), "student": STUDENT, "layers": list(LAYERS), "mode": MODE, "k": HIDDEN,
+           "head": (f"Linear(1152->1024)(x) + Linear({HIDDEN}->1024)(GELU(Linear(1152->{HIDDEN})(x))), per token"
+                    if MODE == "residual" else f"1152->{HIDDEN}->GELU->1024, per token"),
            "opset": 17, "custom_domain_ops": custom, "n_nodes": len(g.graph.node), "onnx_bytes": p.stat().st_size,
            "params_total": int(n_params), "params_head": int(n_head), "under_35M_cap": bool(n_params <= 35_000_000),
            "n_texts": len(texts),

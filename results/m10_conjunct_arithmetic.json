@@ -1,6 +1,7 @@
 {
- "_what": "What each M10 conjunct demands PER DATASET, from the frozen comparator rows (2026-09-04 review).\n\nComparator-only read: `results/perquery.json` (bge-small, leaf-ir-asym) and the stella symmetric\nceiling from `results/m7_final_run.json` (`six.teacher-symmetric`), both observed in M7. No nano\nnumber exists. Three quantities a reader of the plan needs and the mandate did not state:\n\n1. the retention of the ceiling nano needs on EACH dataset merely to equal each comparator;\n2. the UNIFORM retention that reaches each registered pass point (`results/m10_bars.json`);\n3. how much of nano's avg-6 margin over bge-small would come from fiqa, a disclosed stella\n   training set, at a given uniform retention -- the reason clean-4 is the headline.\n\nWrites results/m10_conjunct_arithmetic.json. Read by no rule.",
+ "_what": "What each M10 conjunct demands PER DATASET, from the frozen comparator rows (2026-09-04 review).\n\nComparator-only read: `results/perquery.json` (bge-small, leaf-ir-asym) and the stella symmetric\nceiling from `results/m7_final_run.json` (`six.teacher-symmetric`), both observed in M7. No nano\nnumber exists. Three quantities a reader of the plan needs and the mandate did not state:\n\n1. the retention of the ceiling nano needs on EACH dataset merely to equal each comparator;\n2. the UNIFORM retention that reaches each conjunct's planning proxy (`results/m10_bars.json`,\n   bar + comparator-pair bootstrap width at the registered 0.025 quantile) -- a PROXY lens: nano's\n   retention is distribution-specific (M9: 93.8% covered, 50-71% uncovered) and its own interval\n   will differ, so nothing here is a pass/fail rule;\n3. how much of nano's avg-6 margin over bge-small would come from fiqa, a disclosed stella\n   training set, at a given uniform retention -- the reason clean-4 is the headline;\n4. STRESS scenarios (Codex 2026-09-04): one dataset at an M9-uncovered 65% with the rest at 94%,\n   to show which single miss kills which conjunct -- trec-covid at 25% of clean-4 in particular.\n\nWrites results/m10_conjunct_arithmetic.json. Read by no rule.",
  "date": "2026-09-04",
+ "quantile": 0.025,
  "ceiling_macro": {
   "all6": 0.5744,
   "clean4": 0.564
@@ -49,11 +50,11 @@
    "retention_to_equal_leaf": 1.0081
   }
  },
- "uniform_retention_reaching_pass_point": {
-  "C1a_release_avg6": 0.8954,
-  "C1b_release_clean4": 0.9194,
-  "C2a_aim_avg6": 0.915,
-  "C2b_aim_clean4": 0.9525
+ "uniform_retention_reaching_proxy": {
+  "C1a_release_avg6": 0.8933,
+  "C1b_release_clean4": 0.9164,
+  "C2a_aim_avg6": 0.913,
+  "C2b_aim_clean4": 0.9495
  },
  "uniform_retention_scenarios": {
   "0.90": {
@@ -126,6 +127,48 @@
     "trec-covid": 0.0329
    },
    "fiqa_share_of_avg6_margin": 0.452
+  }
+ },
+ "stress_one_uncovered_dataset": {
+  "scifact@65%_rest@94%": {
+   "avg6": 0.5023,
+   "clean4": 0.4736,
+   "reaches_proxy": []
+  },
+  "nfcorpus@65%_rest@94%": {
+   "avg6": 0.52,
+   "clean4": 0.5002,
+   "reaches_proxy": [
+    "C1a_release_avg6"
+   ]
+  },
+  "fiqa@65%_rest@94%": {
+   "avg6": 0.5132,
+   "clean4": 0.5301,
+   "reaches_proxy": [
+    "C1a_release_avg6",
+    "C1b_release_clean4"
+   ]
+  },
+  "arguana@65%_rest@94%": {
+   "avg6": 0.5091,
+   "clean4": 0.5301,
+   "reaches_proxy": [
+    "C1b_release_clean4"
+   ]
+  },
+  "scidocs@65%_rest@94%": {
+   "avg6": 0.5284,
+   "clean4": 0.5128,
+   "reaches_proxy": [
+    "C1a_release_avg6",
+    "C2a_aim_avg6"
+   ]
+  },
+  "trec-covid@65%_rest@94%": {
+   "avg6": 0.5001,
+   "clean4": 0.4704,
+   "reaches_proxy": []
   }
  }
 }

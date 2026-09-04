@@ -5,9 +5,14 @@ ceiling from `results/m7_final_run.json` (`six.teacher-symmetric`), both observe
 number exists. Three quantities a reader of the plan needs and the mandate did not state:
 
 1. the retention of the ceiling nano needs on EACH dataset merely to equal each comparator;
-2. the UNIFORM retention that reaches each registered pass point (`results/m10_bars.json`);
+2. the UNIFORM retention that reaches each conjunct's planning proxy (`results/m10_bars.json`,
+   bar + comparator-pair bootstrap width at the registered 0.025 quantile) -- a PROXY lens: nano's
+   retention is distribution-specific (M9: 93.8% covered, 50-71% uncovered) and its own interval
+   will differ, so nothing here is a pass/fail rule;
 3. how much of nano's avg-6 margin over bge-small would come from fiqa, a disclosed stella
-   training set, at a given uniform retention -- the reason clean-4 is the headline.
+   training set, at a given uniform retention -- the reason clean-4 is the headline;
+4. STRESS scenarios (Codex 2026-09-04): one dataset at an M9-uncovered 65% with the rest at 94%,
+   to show which single miss kills which conjunct -- trec-covid at 25% of clean-4 in particular.
 
 Writes results/m10_conjunct_arithmetic.json. Read by no rule.
 """
@@ -34,7 +39,7 @@ def main():
                   "retention_to_equal_bge": round(bge[s] / ceil[s], 4),
                   "retention_to_equal_leaf": round(leaf[s] / ceil[s], 4)} for s in ALL6}
     cm = {"all6": mean([ceil[s] for s in ALL6]), "clean4": mean([ceil[s] for s in CLEAN4])}
-    pp = bars["pass_points"]
+    pp = bars["planning_proxies"]
     uniform = {k: round(v["nano_must_reach"] / cm["all6" if k.endswith("avg6") else "clean4"], 4)
                for k, v in pp.items()}
     scen = {}
@@ -46,11 +51,19 @@ def main():
             "passes": [k for k, v in pp.items() if (a6 if k.endswith("avg6") else c4) >= v["nano_must_reach"]],
             "nano_minus_bge_per_dataset": margin,
             "fiqa_share_of_avg6_margin": round((margin["fiqa"] / 6) / max(a6 - mean([bge[s] for s in ALL6]), 1e-9), 3)}
-    out = {"_what": __doc__.strip(), "date": "2026-09-04",
+    stress = {}
+    for weak in ALL6:
+        r = {s: (0.65 if s == weak else 0.94) for s in ALL6}
+        a6 = mean([r[s] * ceil[s] for s in ALL6]); c4 = mean([r[s] * ceil[s] for s in CLEAN4])
+        stress[f"{weak}@65%_rest@94%"] = {
+            "avg6": round(a6, 4), "clean4": round(c4, 4),
+            "reaches_proxy": [k for k, v in pp.items() if (a6 if k.endswith("avg6") else c4) >= v["nano_must_reach"]]}
+    out = {"_what": __doc__.strip(), "date": "2026-09-04", "quantile": 0.025,
            "ceiling_macro": {k: round(v, 4) for k, v in cm.items()},
            "per_dataset": per_ds,
-           "uniform_retention_reaching_pass_point": uniform,
-           "uniform_retention_scenarios": scen}
+           "uniform_retention_reaching_proxy": uniform,
+           "uniform_retention_scenarios": scen,
+           "stress_one_uncovered_dataset": stress}
     (REPO / "results/m10_conjunct_arithmetic.json").write_text(json.dumps(out, indent=1))
     print(json.dumps({k: v for k, v in out.items() if k != "_what"}, indent=1))
 

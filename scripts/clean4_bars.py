@@ -4,12 +4,14 @@ Amendment A3 registers C1/C2 on clean-4 as well as avg-6, so the clean-4 bars ar
 rule reads and must be reproducible. Comparator rows only: `results/perquery.json` holds
 per-query nDCG@10 for nine frozen systems, none of them nano.
 
-It also reports the *pass point* each conjunct implies — the bar plus the width between the
-point estimate and the registered one-sided 0.0125 bootstrap lower bound — because the Fable
-review of 2026-09-04 showed clean-4's width is 39% larger than avg-6's (trec-covid contributes
-25% of the clean-4 macro on 50 queries), so the aim conjunct on the headline partition demands
-LEAF-level retention. The width is estimated on the leaf-vs-bge comparator pair as a proxy for a
-nano-vs-comparator contrast, and it is an estimate, not the final run's interval.
+It also reports a *planning proxy* for each conjunct — the bar plus the width between the point
+estimate and the one-sided bootstrap lower bound at the REGISTERED quantile — because the Fable
+review of 2026-09-04 showed clean-4's width is ~36% larger than avg-6's (trec-covid contributes
+25% of the clean-4 macro on 50 queries). The quantile is 0.025: fixed-sequence gatekeeping tests
+each conjunct at the full one-sided 0.025 (amendment A3/B2); the Codex pass of 2026-09-04 caught
+this script still using M9's Holm-2 quantile 0.0125. The width is estimated on the leaf-vs-bge
+comparator pair, so these are PROXIES: nano's own interval depends on its per-query differences
+and will differ. Nothing here is a pass/fail rule; the rule is the final run's own bound.
 
 Writes results/m10_bars.json.
 """
@@ -30,7 +32,7 @@ def macro(datasets, system, sets):
     return sum(per_set) / len(per_set)
 
 
-def boot_width(datasets, a_sys, b_sys, sets, n_boot=20000, seed=0, q=0.0125):
+def boot_width(datasets, a_sys, b_sys, sets, n_boot=20000, seed=0, q=0.025):
     """-> (point, lower bound, width) for macro(a) - macro(b), paired, stratified per dataset."""
     rng = np.random.default_rng(seed)
     arrs = [(np.array(datasets[s]["systems"][a_sys]), np.array(datasets[s]["systems"][b_sys]))
@@ -70,7 +72,7 @@ def main():
             "C2b_aim_clean4": rows["leaf-ir-asym"]["clean4"],
         },
         "bootstrap_widths_proxy": widths,
-        "pass_points": {
+        "planning_proxies": {
             k: {"bar": bar, "width": widths[part]["width"],
                 "nano_must_reach": round(bar + widths[part]["width"], 4),
                 "retention_of_ceiling": round((bar + widths[part]["width"]) / ceiling[part], 4)}
@@ -84,7 +86,7 @@ def main():
     (REPO / "results/m10_bars.json").write_text(json.dumps(out, indent=1) + "\n")
     for s, r in rows.items():
         print(f"{s:26s} all6 {r['all6']:.4f}  clean4 {r['clean4']:.4f}")
-    for k, v in out["pass_points"].items():
+    for k, v in out["planning_proxies"].items():
         print(f"{k:22s} bar {v['bar']:.4f} + width {v['width']:.4f} -> nano must reach "
               f"{v['nano_must_reach']:.4f} = {v['retention_of_ceiling']*100:.1f}% of ceiling")
 

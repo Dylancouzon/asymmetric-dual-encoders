@@ -18,7 +18,7 @@ The review produced amendments **A1–A8**. What changed, shortest form:
   generation; the build is ≈75 GPU-hours, not 100; cloud spend re-prices to **≈$110–280** hybrid.
 - **Less machinery:** family D's three ranking-aware arms cut (LEAF's ‖e‖₂ loss plus **D-COV**, a
   document-covariance-weighted regression, in their place), which deletes the candidate bank, the
-  mining pass, the HNSW fallback, the τ rule and the seed-rank field. Fifteen arms, thirteen
+  mining pass, the HNSW fallback, the τ rule and the seed-rank field. Fifteen arms, fourteen
   contrasts. Confirmations capped at two decisions. The full-dose seed-1 replica is withdrawn.
   A **registered plateau response** replaces the cut class, so a flat curve still has an answer.
 - **Mostly real text, not generated:** ≈1.5M harvested titles / headings / claim sentences from the
@@ -47,8 +47,8 @@ on the optimistic end.
 
 **Second review the same day (feasibility; B1–B6, `instructions-m10.md` §Amendment 2026-09-04b;
 `research/m10-feasibility-review-2026-09-04.md`).** Verdict: **C1a reachable if coverage works; C1b
-and C2a are the contest at ~92% uniform retention; C2b (95.3%) is out of reach on every published
-precedent.** Weakness found and fixed: every clean-4 set is scientific/biomedical and the COV screen
+and C2a are the contest at ~91–92% uniform retention; C2b (~95%) is a low-prior stretch aim with no
+pure-regression precedent at our teacher gap.** Weakness found and fixed: every clean-4 set is scientific/biomedical and the COV screen
 had no surface that could see those forms (B4, `arxiv-title`). G-MLP, a per-token nonlinear head,
 is proven servable and replaces the 768 arm (B3). Decision 12 (CUREv1 as validation-only COV) is Dylan's.
 
@@ -60,8 +60,8 @@ is proven servable and replaces the 768 arm (B3). Decision 12 (CUREv1 as validat
 | 4 | PAQ as query text (CC BY-SA data, official release) | include |
 | 7 | Confirm LoTTE read #1 withdrawal and the renumbering | as recorded |
 | 10 | The 2026-09-04 amendments A1–A8 | adopted; strike any item and it reverts to the 2026-09-01 text |
-| 11 | **Release rule under four conjuncts**: does C1a-pass / C1b-fail ship? | ship, disclosed on the card ("did not resolve above bge-small on the contamination-controlled partition") |
-| 12 | **CUREv1 as a validation-only COV family** (PubMed-family; 2,000 real clinician queries; CC BY-NC). Reopens M7's "excluded from COV" clause for selection surfaces only; review recommends yes. (The training-text half — PubMed titles / PubMedQA — was withdrawn by the review: no affirmative grant on PubMed abstracts) | **not adopted until ruled** — biomedical training coverage then comes from Wikipedia-medical seeds, arXiv (CC0), MedlinePlus-government and CDC text (public domain, fingerprint-screened vs MedicalQA), and ClinicalTrials.gov if its terms clause is recorded |
+| 11 | **Release rule under four conjuncts**: does C1a-pass / C1b-fail ship as "nano"? | **no** — release needs C1b (the headline); a C1a-only pass is published as a frontier measurement labelled not recommended |
+| 12 | **CUREv1 as a validation-only biomedical read** (PubMed-family; 2,000 real clinician queries; CC BY-NC; Qwen-annotated pools). Review recommends: as a reported diagnostic yes, as a selection-bearing family no. (PubMed training text withdrawn: no affirmative grant) | **not adopted until ruled** — biomedical training coverage comes from Wikipedia-medical seeds and arXiv (CC0); MedlinePlus / CDC and ClinicalTrials.gov are out of M10 (`m10/EXPLORED.md`) |
 | 13 | The 2026-09-04b amendments B1–B6 | adopted; strike any item and it reverts |
 | — | **Generation smoke approval** — you are the approver (200 queries × 12 forms, 90% contract / 80% on-form). It cannot run until a cloud instance exists (Qwen3-8B bf16 is 16.4 GB on a 10 GB card), so it will be waiting when you are back | blocks generation only |
 
@@ -83,14 +83,12 @@ Generation is deliberately absent: it needs both Dylan and a bigger card.
    (CC BY-NC) is re-admissible, giving four families without LEDGER; verify LEDGER's structure and
    chunk cap; per-component licence, revision, size, qrels and metric records into `m10/LEDGER.md`
    §2; corpus-level and fingerprint contamination screens; add every admitted corpus, query set and
-   document set to the protected index; encode with stella. **Plus the constructed scientific family
-   (amendment B4):** draw the 100K held-out arXiv documents with seed 0 (Kaggle metadata, CC0 —
-   record the artifact and revision), build `arxiv-title`, protect it, encode it; do the same for
-   `ctgov-title` only if ClinicalTrials.gov's terms verify as a commercial grant (record the clause).
-   If decision 12(a) is ruled yes, admit CUREv1 (revision, licence clause, corpus provenance) the
-   same way.
-3. **The COV resolution number** (e5-small-v2 vs gte-small, distance only, no direction) — under
-   amendment A4 this now sizes the screen, so it must be pushed before the lock.
+   document set to the protected index; encode with stella. **Plus the `arxiv-title` secondary surface
+   (B4):** draw 100K held-out arXiv papers by id-without-version with seed 0 (Kaggle metadata, CC0 —
+   record artifact and revision), protect them, encode them. If decision 12 is ruled yes, add CUREv1
+   (revision, licence clause, corpus provenance) as a reported diagnostic the same way.
+3. **The COV resolution number** (e5-small-v2 vs gte-small, distance only, no direction) — the
+   screen's power disclosure (A4's sizing struck by the Codex pass); pushed before the lock.
 4. **M10.0-c**: per-component DEV-6 read of the M9 candidate incl. `heldout-longq` (the baseline
    row). The checkpoint and caches are on the box.
 5. **The §Harvest pipeline and its yields** — titles, headings, declarative lead sentences,
@@ -99,8 +97,10 @@ Generation is deliberately absent: it needs both Dylan and a bigger card.
    revision named) — without it the paper-title and scientific-claim forms revert to generation.
    No model in the loop.
 6. **PAQ** download from Facebook's official release and the samplers (1.0M build, A2 control).
-7. **Trainer port** to the M10 recipe: cyclic schedule, example-mix batcher, three- and four-layer
-   pooled heads, the ‖e‖₂ loss arm, `test_resume.py` equivalence, an examples/s counter.
+7. **Trainer port** to the M10 recipe: cyclic schedule, example-mix batcher, per-token heads with
+   pooling AFTER the head (training wrapper) and a token-output export wrapper plus their parity
+   test (Codex B2), the three- and four-layer features, the ‖e‖₂ and D-COV loss arms,
+   `test_resume.py` equivalence, an examples/s counter.
 8. **Parity checks** (CPU, minutes) for MiniLM-L6's three-layer head and both students' four-layer
    heads, so families F and G may run those arms.
 9. **Prompt prototyping** for the six generated forms (4-bit is fine — prototyping enters no
@@ -111,8 +111,8 @@ Generation is deliberately absent: it needs both Dylan and a bigger card.
 
 ## Then, in order
 
-M10.0-e screen lock (fifteen arms, thirteen contrasts, MDE from the resolution number, and the
-LEDGER-admission branch if the distance exceeds 0.010) → cloud
+M10.0-e screen lock (fifteen arms, fourteen contrasts, MDE 0.0056 and 0.025/14 fixed, the
+resolution number as power disclosure, LEDGER admitted if it verifies) → cloud
 instance for the generation smoke (Dylan reads it) → generation at ≈1.0M → M10.1 manifest with the
 A8 quality gates → M10.2 arms on the box, confirmations, the synthesized selected-recipe arm, the
 lock, Codex and Fable review, M9's six-only close-out from `m9-work`, LoTTE read #1 → M10.3 build

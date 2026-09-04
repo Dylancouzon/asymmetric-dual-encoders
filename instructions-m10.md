@@ -74,7 +74,7 @@ number exists. Evidence: PLANNING §11 (measured rates), §12 (the synthetic-dat
 | A1 | **Family D cut from three ranking-aware arms to one arm: LEAF's L2-norm loss `L=‖e‖₂`.** Deletes the 1M-document candidate bank, the exact-mining pass and its HNSW fallback, the τ entropy rule, the 129-way D-NCE spec and the seed-rank provenance field. **A registered plateau response replaces it** (§Recipe) | LEAF (97.7% asym), EmbedDistill, arXiv 2306.11550, mxbai-edge-colbert and DistilVDR all reach 92–98% retention by pure embedding regression, so the class is *unnecessary* at our target; and it was the most machinery-heavy block in the plan. LEAF's loss is the **norm**, not the square — a one-line arm we had silently diverged from. **Corrected after the Fable review: LEAF's Appendix B is about intermediate-layer KD (MiniLM / TinyBERT / DistilBERT losses, 54.9 / 53.7 / 55.3 vs 60.7), NOT about a ranking term on top of regression — no published null exists for the class we cut, so this is a cut on cost and sufficiency, not on evidence of inertness** |
 | A2 | **Generation cut from 3.0M to ≈1.0M, and only for the forms no corpus contains.** The harvestable forms come from **real** text mined out of the licensed pool (titles, headings, lead claim sentences, extracted interrogatives) — new arm A3 | Three independent saturation curves put diminishing returns under ~1–1.5M (DistilVDR saturates above 75% of a 1.49M pool; SPEED log-linear to ~920K; doc2query 50–75% coverage ≈ 90–95% of max gain). And **three of the four clean-4 headline datasets have a real-text counterpart** (scidocs↔titles, scifact↔claim sentences, trec-covid/nfcorpus↔headings), so the headline can rest on real text plus the teacher instead of on the generator's prior |
 | A3 | **C1/C2 registered on clean-4 as well as avg-6** (§Goal, §Final run). clean-4 bars: bge-small **0.5046**, leaf-ir-asym **0.5233** | M14 registered clean-4 as the headline partition for both zero and nano on 2026-09-04 (`instructions-m14.md`), while M10 had C1/C2 on avg-6 with NDO-4 *descriptive*. Left alone, the paper's headline would carry no pre-registered pass/fail for nano. Fixed now, before any M10 number exists |
-| A4 | **The COV resolution number is measured first and SIZES the screen** (arms, contrast count, MDE), instead of being measured after the lock and deciding nothing | The registered MDE 0.0056 sits **below the surface's own resolution**: on a family-weighted macro whose paired SE is 0.0033–0.0048 (BRIGHT ~100 queries/slice, CorporateLobbying 340), a contrast needs ≈0.009–0.0135 to resolve at the Bonferroni bound — 0.025/13 is z = 2.89, and it was z = 2.96 at the /16 count this finding was first written against — so a contrast landing at the MDE can never resolve. Codex pass 7's objection was to comparators drawn from family F; a direction-free power quantity on non-candidates (e5-small-v2, gte-small) is a power calculation, not a selection |
+| A4 | ~~**The COV resolution number is measured first and SIZES the screen**~~ **— STRUCK by the Codex pass the same day** (an α that adapts to an observed width is not pre-registration): the number is measured and *reported* as the power disclosure; MDE 0.0056 and α 0.025/14 are fixed (§Screen) | The registered MDE 0.0056 sits **below the surface's own resolution**: on a family-weighted macro whose paired SE is 0.0033–0.0048 (BRIGHT ~100 queries/slice, CorporateLobbying 340), a contrast needs ≈0.009–0.0135 to resolve at the Bonferroni bound — 0.025/13 is z = 2.89, and it was z = 2.96 at the /16 count this finding was first written against — so a contrast landing at the MDE can never resolve. Codex pass 7's objection was to comparators drawn from family F; a direction-free power quantity on non-candidates (e5-small-v2, gte-small) is a power calculation, not a selection |
 | A5 | **Decision 8 (second build seed, ≈100 GPU-hours) withdrawn; confirmations capped at two decisions** | Seed 1 is descriptive by construction and can trigger no action; the same hours buy ~3 extension cycles that can move the number. A screen-dose seed pair gives a replication band for ~5% of the cost |
 | A6 | **Family F runs SECOND (right after A), and the remaining families run on its winner** | It was seventh, which made every other verdict transfer to the build student by assumption. Reordering costs nothing and removes the assumption. Order is now A → F → G → B → E → C → D |
 | A7 | **⚠ This is the one amendment that reinterprets a verbatim owner ruling — Dylan should strike it explicitly if he does not want it.** **The box is an execution target again for everything that is not generation.** The 2026-09-01 ruling stands where it bites — the *dose* is not set by the box — but the box is where the screens and (optionally) the build run, and it holds ~200 GB of M9 caches the plan had budgeted 12 GPU-hours and a day of network to re-derive | Measured on the box 2026-09-04 (PLANNING §11): the M10 recipe shape runs at **400 examples/s** in M9's two-chunk collate and **745** in one padded chunk, against the plan's imported LEAF planning rate of 560. The 3080 meets or beats the assumed A100 rate because at batch 32 with 35-token queries the job is launch-bound, not FLOP-bound. Generation still needs the cloud: Qwen3-8B bf16 is 16 GB on a 10 GB card |
@@ -90,7 +90,7 @@ reproduced here before acting (B2's bootstrap widths; M1's pool composition).
 | # | actioned as |
 |---|---|
 | B1 | A1's justification corrected — LEAF's Appendix B is intermediate-layer KD, **no published null exists for the class we cut** — and a **registered plateau response** added (§Recipe) so a flat curve is not left without an answer, which is what M9 finding #4 demanded |
-| B2 | **fixed-sequence gatekeeping** replaces the contradictory "Holm + fixed sequence"; the four pass points and the `trec-covid` n=50 disclosure are in §Goal |
+| B2 | **fixed-sequence gatekeeping** replaces the contradictory "Holm + fixed sequence"; the four planning proxies and the `trec-covid` n=50 disclosure are in §Goal |
 | B3 | the two-step remedy is registered (admit LEDGER, then α = 0.05 uncorrected with seed confirmation as the guard); z corrected; MDE-redundancy and comparator bias stated (§Surfaces) |
 | M1 | **the review's most valuable finding** — the pool is Wikipedia + ESCI with no scientific text, so arXiv is added as a licence-gated source, yields are measured before quotas lock, a form under 100K reverts to generation, and the clean-4 mapping is reworded as the hypothesis A3−A2 tests (§Data) |
 | M2 | family F runs at 20M read as a curve, gains MiniLM-L12-v2, and its cheap-student tie-break is labelled a product preference (§Screen) |
@@ -103,7 +103,7 @@ reproduced here before acting (B2's bootstrap widths; M1's pool composition).
 | MINORs | all adopted; hosted generation becomes the **default** (≈$20–60 against 10–20 GPU-hours plus setup), and **D-COV** is added as a second family-D arm (§Recipe) — the one cheap lever aimed at the in-distribution ceiling |
 
 **The one thing the review found that the plan still does not answer** (PLANNING §13): M9 retained
-**93.8% on NQ while training on NQ-like data**, and C2b demands **95.2%** of the ceiling. Coverage
+**93.8% on NQ while training on NQ-like data**, and C2b's proxy sits near **95%** of the ceiling. Coverage
 explains the 50–71%, not the 93.8%. Only families G and E and the new D-COV touch the covered half.
 Recorded as an open weakness, not closed.
 
@@ -124,8 +124,8 @@ stella, the cap, the pair, the frozen tower or any observed number.
 |---|---|---|
 | B1 | **Feasibility statement in §Goal** with per-dataset arithmetic (`results/m10_conjunct_arithmetic.json`) | C1b is harder than C2a and no ≥10×-gap regression distillation exceeds ~95%; registering C2b without saying so invites "you always knew" |
 | B2 | **Four-conjunct claim decision table** (§Goal); release rule = **decision 11** | "C1 passes → release" was ambiguous on the likely outcome (C1a pass, C1b fail) |
-| B3 | **G-768 → G-MLP**, a per-token nonlinear head (§Screen, §Recipe); `m10/EXPLORED.md` row corrected | the "no serving path" closure held only for post-pooling heads (`results/m10_head_mlp_parity_box.json`); the one compute lever at the head inside the cap. Counts unchanged |
-| B4 | **Constructed scientific COV family** `arxiv-title` (+ `ctgov-title` if licensed) (§Surfaces) | every clean-4 set is scientific/biomedical and the screen had no surface that could see those forms |
+| B3 | **G-768 → G-MLP**, a per-token *residual* nonlinear head `W_lin·x + W₂·GELU(W₁·x+b₁)`, W₁: 1152→192 (§Screen, §Recipe); `m10/EXPLORED.md` row corrected | the "no serving path" closure held only for post-pooling heads (`results/m10_head_mlp_parity_box.json`, 34.96M, min-cos 0.99999989); the Codex pass replaced the first bottleneck form, whose output rank was ≤512 |
+| B4 | **Constructed scientific surface** `arxiv-title` (§Surfaces) — after the Codex pass a *registered secondary* surface with one action, not a COV family | every clean-4 set is scientific/biomedical and the screen had no surface that could see those forms; as an equal-weight family it would have rewarded A3 by construction and dominated the macro's power |
 | B5 | DEV-6 recipe pre-screen (STATUS item 10) **dropped** | read DEV-6 twice for defaults the screen re-decides |
 | B6 | **Query-asset size line** (§Recipe): ≈70.8 MB fp16 vs M9's 70 MB target | nobody had done the arithmetic for the wider head |
 
@@ -133,7 +133,18 @@ stella, the cap, the pair, the frozen tower or any observed number.
 confirmations (saves ≈10 GPU-h, weakens a reviewed rule); the dose, cap, teacher, family D,
 gatekeeping. **Open to Dylan:** decisions 11 and 12, and A7 (⚠).
 
+**Codex pass on B1–B6** (`research/m10-codex-feasibility-2026-09-04.md`; read-exclusion audit
+clean): 4 BLOCKER / 8 MAJOR / 4 MINOR, all actioned there — the 0.025 quantile in the proxies and
+the final bound; G-MLP's residual form and its training/export wrappers; family F's L12 rule and the
+fourteenth contrast; decision 11's default; `arxiv-title` demoted to a secondary surface; **A4's
+MDE sizing and its two-step remedy struck** (MDE 0.0056 and α fixed; the resolution number is a
+power disclosure); MedlinePlus / CDC / ClinicalTrials.gov out of M10; superseded prose deleted.
+
 ## Owner decisions (defaults apply until Dylan rules; each is recorded in `m10/LEDGER.md`)
+
+**States:** 1, 4, 7 default-active pending ratification · 2, 3, 5, 6, 8, 9 closed · 10, 13 adopted
+(strike an item to revert it) · 11, 12 proposed, default-active. This is the only pending-decision
+list; `m10/STATUS.md` points here.
 
 | # | decision | default while open |
 |---|---|---|
@@ -147,8 +158,8 @@ gatekeeping. **Open to Dylan:** decisions 11 and 12, and A7 (⚠).
 | 8 | Second build seed at full dose — **WITHDRAWN 2026-09-04** (amendment A5): descriptive by construction, could trigger no action, and cost ≈100 GPU-hours. Replaced by a screen-dose seed pair on the selected recipe as the replication band; the freed hours go to extension cycles | closed |
 | 9 | The 2026-09-01 review amendments taken with the compute ruling: dose 200M examples, screen dose 5M, G-1536, the COV resolution number, extension capped by budget (PLANNING §8, amendment block and pass 7). **D-KL1, D-NCE and the seed-rank field are struck by amendment A1; the resolution number is repurposed by A4** | adopted as amended |
 | 10 | The **2026-09-04 plan-review amendments A1–A8** (§Amendment 2026-09-04) | adopted on Dylan's "make your changes to the plan"; any item he strikes reverts to the 2026-09-01 text |
-| 11 | **Release rule under four conjuncts** (§Goal claim table): does a C1a pass with a C1b fail ship? | **ship**, with the card and paper stating nano did not resolve above bge-small on the contamination-controlled partition — the way `zero` shipped after its miss. The alternative is "release needs C1a AND C1b" |
-| 12 | **CUREv1 as a validation-only COV family** — 2,000 real clinician queries, CC BY-NC 4.0, PMC-OA full-text passages (PubMed-family), LLM-annotated pools; fingerprint-screened vs the six; never training data. Reopens the "excluded from COV" clause of M7's source-family rule for selection surfaces only (`research/m10-feasibility-review-2026-09-04.md` §4c) | **not adopted** until Dylan rules; the review recommends yes. **Withdrawn by the review:** PubMed titles / PubMedQA as training text — no affirmative grant on PubMed abstracts (NLM disclaims copyright; publishers may hold it), so the licence rule fails first (§4a) |
+| 11 | **Release rule under four conjuncts** (§Goal claim table): does a C1a pass with a C1b fail ship as "nano"? | **no** — "release" needs C1b, the headline partition (Codex 2026-09-04: releasing on the partition whose margin is 73% fiqa would be motivated). A C1a-only pass is still *published* as a frontier measurement labelled not recommended, as `zero` was. Dylan may loosen to "C1a suffices" |
+| 12 | **CUREv1 as a validation-only biomedical read** — 2,000 real clinician queries, CC BY-NC 4.0, PMC-OA full-text passages (PubMed-family), pools annotated by Qwen 2.5 72B; fingerprint-screened vs the six; never training data. Reopens the validation clause of M7's source-family rule (`research/m10-feasibility-review-2026-09-04.md` §4c) | **not adopted** until Dylan rules. Recommendation after the Codex pass: **as a reported diagnostic beside every arm — yes; as a selection-bearing COV family — no** (LLM-judged pools; provenance overlap fingerprints cannot see; Codex M6). **Withdrawn by the review:** PubMed titles / PubMedQA as training text — no affirmative grant on PubMed abstracts (NLM disclaims copyright; publishers may hold it); reopens only with per-record licence provenance (PMC-OA CC BY records) *and* the contamination rule resolved (§4a) |
 | 13 | The **2026-09-04b feasibility-review amendments B1–B6** (§Amendment 2026-09-04b) | adopted; strike any item and it reverts |
 
 ## Goal, bars, and the permitted claim — unchanged from M9
@@ -180,27 +191,32 @@ stops at the first non-rejection. This controls the family error rate and, unlik
 the avg-6 release claim nothing** — under Holm-4 the smallest-p conjunct would have needed 0.00625
 and C1a's bound would have widened ~11% against the two-conjunct design it replaces.
 
-**What each conjunct actually demands** (`results/m10_bars.json`, `pass_points`; the width is the
-point-to-0.0125-lower-bound distance of the registered paired stratified bootstrap, estimated on
-the leaf-vs-bge comparator pair as a proxy):
+**Planning proxies, not pass points** (`results/m10_bars.json`, `planning_proxies`): the bar plus the
+comparator-pair (leaf vs bge) bootstrap width at the **registered 0.025 quantile** — the Codex pass of
+2026-09-04 caught the script still on M9's Holm-2 0.0125. Nano's own interval depends on its per-query
+differences, so no retention figure "passes" by arithmetic; the rule is the final run's own bound.
 
-| conjunct | bar | width | nano must reach | = retention of ceiling |
+| conjunct | bar | proxy width | proxy point | = retention of ceiling |
 |---|---|---|---|---|
-| C1a release, avg-6 | 0.5042 | 0.0101 | **0.5143** | 89.5% of 0.5744 |
-| C1b release, clean-4 | 0.5046 | 0.0139 | **0.5185** | 91.9% of 0.5640 |
-| C2a aim, avg-6 | 0.5155 | 0.0101 | **0.5256** | 91.5% |
-| C2b aim, clean-4 | 0.5233 | 0.0139 | **0.5372** | **95.2%** |
+| C1a release, avg-6 | 0.5042 | 0.0089 | 0.5131 | 89.3% of 0.5744 |
+| C1b release, clean-4 | 0.5046 | 0.0122 | 0.5168 | 91.6% of 0.5640 |
+| C2a aim, avg-6 | 0.5155 | 0.0089 | 0.5244 | 91.3% |
+| C2b aim, clean-4 | 0.5233 | 0.0122 | 0.5355 | **94.9%** |
 
-**Disclosed with it (B1, `results/m10_conjunct_arithmetic.json`):** uniform retention that passes
-each conjunct — C1a **89.5%**, C2a 91.5%, C1b **91.9%**, C2b **95.3%** — so the headline release bar
-is harder than the avg-6 aim. To equal bge-small per dataset: scifact 91.4 · nfcorpus 83.0 · fiqa
-72.9 · arguana 94.7 · scidocs 85.7 · trec-covid 92.0%; LEAF beats the ceiling on trec-covid. At
-uniform 92%, fiqa (disclosed stella training data) supplies 73% of nano's avg-6 margin — why clean-4
-is the headline. **Feasibility, registered before any nano number:** M9 held 93.8% on its covered
-form, and no published regression distillation at a ≥10× teacher/student gap exceeds ~95%
-(`research/m10-feasibility-review-2026-09-04.md` §2). C1a is expected if coverage works; **C1b and
-C2a are the contest; C2b is registered as out of reach** and the report says so up front.
-clean-4's interval is 39% wider than avg-6's because `trec-covid` carries a
+**Disclosed with it (B1, `results/m10_conjunct_arithmetic.json`):** under a *uniform-retention
+proxy* the four sit at 89.3 / 91.3 / 91.6 / 94.9% (C1a / C2a / C1b / C2b) — a lens, not an ordering:
+retention is distribution-specific (M9: 93.8% covered, 50–71% uncovered), so heterogeneous
+retention can reorder them. To equal bge-small per dataset: scifact 91.4 · nfcorpus 83.0 · fiqa 72.9
+· arguana 94.7 · scidocs 85.7 · trec-covid 92.0%; LEAF beats the ceiling on trec-covid. **Stress:**
+one dataset at 65% with the rest at 94% clears no conjunct if it is `trec-covid` or `scifact`, only
+C1a if `nfcorpus`. At uniform 92%, fiqa (disclosed stella training data) supplies 73% of nano's avg-6
+margin — why clean-4 is the headline. **Prior, registered before any nano number:** M9 held 93.8% on
+its covered form; a bounded literature search (pure embedding regression, ≥10× teacher/student
+parameter gap; `research/m10-feasibility-review-2026-09-04.md` §2) found no result above ~95%, and
+EmbedDistill's 95–97% at ~10× used labels and score distillation. So C1a is expected if coverage
+works, **C1b and C2a are the contest, and C2b is a low-prior stretch aim** — the screen results that
+would raise the prior are G-MLP or D-COV moving `nq-250k` retention from ~94% toward 96–97%.
+clean-4's interval is ~36% wider than avg-6's because `trec-covid` carries a
 quarter of the clean-4 macro on **50 queries**, and C2b therefore demands LEAF-level retention on
 the headline partition. Registering clean-4 is still right — M14 headlines it — but the plan is
 registered knowing C2b is the hardest of the four by a wide margin, not knowing only that its bar
@@ -216,7 +232,7 @@ reserved NDO-3 stay descriptive.
 | outcome | release? | permitted claim |
 |---|---|---|
 | C1a fails | no release; measurement under the miss-is-publishable framing | none |
-| C1a passes, C1b fails | **release** (decision 11 default), card and paper state that nano did not resolve above bge-small on the contamination-controlled partition | none |
+| C1a passes, C1b fails | **not a release** (decision 11 default after the Codex pass): the checkpoint is published for reproducibility and as a frontier measurement, labelled *not recommended*; "release" is reserved for the headline partition. Card and paper state that nano did not resolve above bge-small on the contamination-controlled partition | none |
 | C1a, C1b pass, C2a fails | release | none; "beats bge-small on both partitions" |
 | C1a, C1b, C2a pass, C2b fails | release | M9's verbatim headline sentence on avg-6; the paper states the aim was missed on the headline partition |
 | all four pass | release | the headline sentence on both partitions |
@@ -235,7 +251,8 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
   evidence about the class under L2 regression, not a bound), the head-width probe (a frozen
   bge-small retains more with each pooled layer), and the serving-parity check (fastembed 0.8.0
   reproduces the three-layer per-token head to 2e-7; 34.5M parameters). **Action taken:** the head
-  stays linear; the pooled feature widens to three layers (§Recipe); family G decides. Repeat the
+  is applied per token — linear by default, G-MLP's residual form as an arm (§Screen); the pooled
+  feature widens to three layers; family G decides. Repeat the
   parity check on MiniLM's head before family F may select it, on the four-layer head before G's
   1536 arm runs, and on the trained artifact with M9's locked parity sample before the freeze.
   (b) Capacity probe (`m9src/capacity_probe.py`, unchanged) — **optional, report-only**: no outcome
@@ -253,11 +270,12 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
   any seed is drawn or any harvested, PAQ or synthetic text is constructed. **Re-run admission under
   Dylan's 2026-09-04 licence rule before judging the family floor: ConsumerContractsQA (CC BY-NC) is
   re-admissible, giving four families without LEDGER.** The **COV resolution number** (§Surfaces) is
-  measured on the admitted surface and pushed before (e), and by amendment A4 it **sizes the screen**.
+  measured on the admitted surface and pushed before (e) as the screen's **power disclosure** (A4's
+  sizing struck by the Codex pass). **Also here (B4):** draw the `arxiv-title` held-out papers by
+  id-without-version with seed 0, protect them, encode them.
   (e) **Screen lock**: `m10/LEDGER.md` §0 (skeleton committed 2026-09-01) fixes every arm of
-  §Screen (fifteen arms), order, doses, seeds, surfaces, the thirteen contrasts, the MDE and
-  multiplicity control **as sized by the resolution number**, confirmation design and
-  outcome→action maps.
+  §Screen (fifteen arms), order, doses, seeds, surfaces, the fourteen contrasts, MDE 0.0056 and the
+  fixed 0.025/14 bound, confirmation design and outcome→action maps.
 - **M10.1 DATA.** Harvesting of the real query-like text (§Data), generation for the non-harvestable
   forms under the §Data contract (200-query smoke per form first), PAQ samples, decontamination
   against the protected index (now including COV) and the six's documents, the FORMS-12 hold-out,
@@ -268,7 +286,7 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
 - **M10.2 SCREEN + RECIPE LOCK.** The arms of §Screen, the confirmation runs, then one pushed lock
   commit with every field of M9's M9.2 list filled — including the objective, the best-to-best
   plateau/extension rule on annealed checkpoints, the GPU-hour allocation under the ceiling (build,
-  extensions), the final-run registry with the four C-conjuncts and their Holm sequence, and
+  extensions), the final-run registry with the four C-conjuncts and their fixed sequence, and
   LoTTE read #1's manifest. Codex and Fable review the pushed lock. **Then, and only then,** M9's close-out runs:
   its registered six-set transaction **amended before execution to six-only** (the `if C1 then
   execute` reserved conditional is struck; disclosed and ratified under decision 1), so M9 cannot
@@ -325,14 +343,13 @@ scifact test. Two consequences, both binding:
   post-screen unique count, pushed to `m10/LEDGER.md` §1 at M10.1 before the per-form quotas are
   fixed. **A harvested form that yields under 100K post-dedup reverts to generation**, and the
   realized harvested/generated split is reported rather than assumed. `consumer-health`
-  harvest sources verified 2026-09-04b (clauses in `research/m10-feasibility-review-2026-09-04.md`
-  §4b): **MedlinePlus government-authored Health Topics and CDC pages** (US public domain; the
-  A.D.A.M. encyclopedia and licensed monographs inside MedlinePlus stay out), **ClinicalTrials.gov**
-  only once its terms clause is recorded, **arXiv metadata** (CC0). Out: DailyMed, OpenAlex,
-  bioRxiv/medRxiv, WHO, Cochrane, and everything PubMed / PMC / Europe PMC (no affirmative grant on
-  abstracts). MedlinePlus and CDC are MedQuAD sources: harvested text is fingerprint-screened against
-  MedicalQA and the report labels that COV read same-source for A3/A4 (precedent: the Wikipedia pool
-  beside `nq-250k`).
+  is **generated** from Wikipedia-medical seeds. Sources verified 2026-09-04b (clauses in
+  `research/m10-feasibility-review-2026-09-04.md` §4b) but **kept out of M10**: MedlinePlus
+  government-authored topics and CDC pages are US public domain yet are MedQuAD's sources, so
+  harvesting them would let the MedicalQA COV read reward A3 by construction (Codex M7);
+  ClinicalTrials.gov's terms clause could not be read. Out on licence: DailyMed, OpenAlex,
+  bioRxiv/medRxiv, WHO, Cochrane, everything PubMed / PMC / Europe PMC (no affirmative grant on
+  abstracts). In: **arXiv metadata** (CC0).
 
 **§Harvest — the real-text pipeline (M10.1, deterministic, no model in the loop).** From the 6.15M
 pool documents and the Wikipedia seed corpus, all under licences already approved for training:
@@ -422,10 +439,14 @@ loss-form arm. Reopening condition in `m10/EXPLORED.md`.
   parity check first. Warm-started in closed form (ridge)
   for the bge-small init; the M9-candidate init keeps its 384-d head and zero-initializes the two
   extra layers' columns. Exported per token so fastembed's mean pooling reproduces it exactly.
-  Any per-token head, linear or not, ships this way (B3; `m10/EXPLORED.md`). **Query-asset size
-  (B6):** bge-small or MiniLM-L12 with the three-layer head projects to ≈70.8 MB fp16 against M9's
-  70 MB target, whose rule is a logged, measured quality justification (`instructions-m9.md` §3);
-  MiniLM-L6 ≈49 MB. The lock records the projected size beside family F's verdict.
+  Any per-token head, linear or not, ships this way (B3; `m10/EXPLORED.md`): the **trainer pools
+  after the per-token head** (masked mean, then normalize — the parity script's reference form) and
+  the **export wrapper emits the per-token output** for fastembed to pool; a wrapper-parity test
+  precedes any G-MLP arm (M9's trainer pooled before the head and must be ported). **Query-asset
+  size (B6):** a *projection* — bge-small or MiniLM-L12 with the three-layer head ≈70.8 MB fp16
+  (10⁶ bytes) against M9's 70 MB *target*, whose rule is a logged, measured quality justification
+  (`instructions-m9.md` §3); MiniLM-L6 ≈49 MB. Measured at export with tokenizer bytes and CPU
+  latency (`m9src/edge_cost.py`), including G-MLP's per-token cost if it wins.
 - **Phase 1:** squared L2 on unit-norm teacher vectors, fp32 loss, bf16 autocast (M9 form). A
   cosine-space variant is closed by algebra, not measurement (`m10/EXPLORED.md`): the head ends in
   L2 normalize and the targets are unit-norm, so ‖a−b‖² = 2−2cos and the gradients agree up to a
@@ -497,7 +518,7 @@ loss-form arm. Reopening condition in `m10/EXPLORED.md`.
   **No full-dose replica runs** (decision 8 withdrawn, amendment A5); the replication band is the
   selected recipe re-trained at screen dose under two further seeds, reported descriptively.
 
-## Screen — seven families, fifteen arms, thirteen contrasts, locked at M10.0-e
+## Screen — seven families, fifteen arms, fourteen contrasts, locked at M10.0-e
 
 **Screen dose = 5M examples** (2.5% of the build; ≈ 420M tokens at 75/25; ≈ 1.9 GPU-hours per arm at
 the measured 745 examples/s), full 3-cycle schedule compressed to that dose, one seed, identical
@@ -514,8 +535,8 @@ feature. Screens run **on the box** (amendment A7).
 | family | arms | contrasts | rule and default |
 |---|---|---|---|
 | **A — data (the thesis)** | A1: M9 pool (463,314 queries) · A2: M9 pool + PAQ (factoid forms only — the volume control) · A3: A2 + the **harvested real** query-like text · A4: A3 + the **generated** forms (the full M10 corpus, = anchor). **A2, A3 and A4 are cut to the identical post-screen unique-text count** (the smallest of the three after decontamination, the larger two downsampled with seed 0) and all hashes are locked before any arm | **A3−A2** (forms from real text, at equal volume) · **A4−A3** (what generation adds over harvesting) · A4−A2 and A2−A1 descriptive | **Three registered outcomes on A3−A2** (the forms contrast, now carried by the real-text arm): corrected lower bound > MDE → coverage **resolved on the COV families**, build proceeds; point ≥ MDE and lower bound > 0 but ≤ MDE → **positive, not resolved**, build proceeds and the report says so; otherwise → **M10 stops before any build and returns to Dylan with all four rows**. **A4−A3 decides whether the generated half is in the build at all**: if it does not resolve, the build uses A3's corpus and the ≈1.0M generated queries are dropped from the build (they stay in the report as a measured null). A2−A1 is the volume effect; if it resolves, the build keeps volume as well as forms |
-| **F — student** | bge-small (34.5M with the head) · MiniLM-L6-v2 (23.9M) · **MiniLM-L12-v2 (33.4M with the head)** — the first two at **20M examples each, read as a curve at 5M / 10M / 20M**; L12 at 5M | 1 (pairwise against the winner-so-far) | **Amended after the Fable review.** The old rule ("bge-small only if it wins resolved") pre-decided MiniLM-L6 by construction, because M9's same contrast was −0.0026 *unresolved* and a 5M screen cannot resolve 0.003; that also silently skipped family C, since only bge-small has an M9 warm start. So F gets the dose its consequence deserves — it picks the build student and every later verdict — and a third arm, because arXiv 2306.11550's depth curve (1/2/4 layers → 86.1/92.5/96.2% retention) says depth buys retention while LEAF reached 97.7% on 6 layers, and L12 is 12 layers inside the cap. **Rule:** the arm with the best COV macro at 20M wins; among arms whose 20M macro is statistically indistinguishable, the cheapest to serve wins, and **that tie-break is labelled in the report as a product preference, not evidence** (Dylan 2026-09-01 called 33M "the upper bound of what I think is acceptable", so 33M is admissible). L12's three- and four-layer heads pass the parity check first. Cost ≈ 17 GPU-hours at the measured rate, on the box |
-| **G — output width and head form** | feature = last layer only (384, M9's head) · three layers (1152, = anchor) · four layers (1536, §Recipe) · **G-MLP**: per-token `Linear(1152→512)→GELU→Linear(512→1024)` over the three-layer feature (B3; replaces the 768 arm, whose step the head-width probe already shows) | 1152−384 · 1536−1152 · **MLP−1152** | resolved winner; **default 1152** (PLANNING §9–9b; the screen, not the probe, decides). The 384 arm is the paper's evidence for the M9 diagnosis. **G-MLP** is the one arm adding query-side compute at the head inside the cap (34.48M) and targets the in-distribution ceiling (PLANNING §13); fastembed serves it exactly because the nonlinearity precedes the mean pool (`results/m10_head_mlp_parity_box.json`, min-cos 0.99999988, zero custom ops). Warm start: `W1` = top-512 PCs of the pooled feature, `W2` = ridge from `GELU(W1·x+b1)` to the targets — approximate, so every arm still starts fitted |
+| **F — student** | bge-small (34.5M with the head) · MiniLM-L6-v2 (23.9M) · **MiniLM-L12-v2 (33.4M with the head)** — the first two at **20M examples each, read as a curve at 5M / 10M / 20M**; L12 at 5M | 2: L6−bge-small at 20M · L12−(winner) at 20M **if L12 is extended**; the count is fourteen whether or not it runs | **Amended after the Fable review, made executable after the Codex pass.** The old rule ("bge-small only if it wins resolved") pre-decided MiniLM-L6 by construction, because M9's same contrast was −0.0026 *unresolved* and a 5M screen cannot resolve 0.003; that also silently skipped family C, since only bge-small has an M9 warm start. So F gets the dose its consequence deserves — it picks the build student and every later verdict — and a third arm, because arXiv 2306.11550's depth curve (1/2/4 layers → 86.1/92.5/96.2% retention) says depth buys retention while LEAF reached 97.7% on 6 layers, and L12 is 12 layers inside the cap. **Rule:** L12 is a 5M *elimination probe* — extended to 20M only if its 5M COV macro is within the MDE of the better of the other two arms at 5M, else eliminated and reported; among the arms with a 20M reading the best COV macro wins; among arms whose 20M macro is statistically indistinguishable, the cheapest to serve wins, and **that tie-break is labelled in the report as a product preference, not evidence** (Dylan 2026-09-01 called 33M "the upper bound of what I think is acceptable", so 33M is admissible). L12's three- and four-layer heads pass the parity check first. Cost ≈ 17 GPU-hours at the measured rate, on the box |
+| **G — output width and head form** | feature = last layer only (384, M9's head) · three layers (1152, = anchor) · four layers (1536, §Recipe) · **G-MLP**: the anchor's linear head plus a per-token rank-192 GELU correction, `W_lin·x + W₂·GELU(W₁·x+b₁)`, W₁: 1152→192 (B3, residual form after the Codex pass; replaces the 768 arm, whose step the head-width probe already shows — the paper reports 384 vs 1152 vs 1536, not a trained curve) | 1152−384 · 1536−1152 · **MLP−1152** | resolved winner; **default 1152** (PLANNING §9–9b; the screen, not the probe, decides). The 384 arm is the paper's evidence for the M9 diagnosis. **G-MLP** keeps the linear path's full rank and adds the one nonlinearity the cap allows (34.96M for bge-small); fastembed serves it exactly because it precedes the mean pool (`results/m10_head_mlp_parity_box.json`, min-cos 0.99999989, zero custom ops). **Warm start, exact and deterministic:** `W_lin` = the anchor's ridge head; `W₁,b₁` = the top-192 principal directions of the frozen backbone's *per-token* 1152-d states on the fit set, centred (`b₁ = −W₁μ`; sign of each direction fixed so its largest-magnitude component is positive); `W₂,b₂` = ridge from the pooled `mean_t GELU(W₁x_t+b₁)` to the residual `t − W_lin·x̄` — exact for the training form because pooling commutes with the linear maps, so G-MLP starts *at* the anchor's fitted head plus a fitted correction |
 | **B — mix** | 100/0 · 50/50 query/document (75/25 = anchor), **matched query presentations** (3.75M query examples in every arm; document examples 0 / 1.25M / 3.75M on top; totals 3.75M / 5M / 7.5M; the document cost in tokens and GPU-hours is reported) | 100/0−75/25 · 50/50−75/25 | resolved winner; default 75/25 |
 | **E — batch** | 32 · 128 at equal examples and identical schedule | 1 | resolved winner; default 32 (LEAF). **Amendment A7: E is the one family whose throughput is read** — bs128 measured 1,331 examples/s against bs32's 745 (PLANNING §11), so a bs32 win must also be worth its 1.8× build cost; the lock records both the quality contrast and the GPU-hour delta, and a bs32 win that does not resolve reverts to bs128 |
 | **C — init** | bge-small (or MiniLM, per F) · the M9 candidate | 1 | resolved winner; default the off-the-shelf backbone. Available only if F selects bge-small: M9's candidate is a bge-small student, so a MiniLM build has no warm start and C is skipped and reported as skipped. The closed-form ridge head warm start (M9's `m9s1c`, +0.0272) is retained in every arm regardless |
@@ -529,14 +550,14 @@ its three seeds.
 
 **Rule, per contrast (families B–G):** the difference in COV macro (family-weighted, §Surfaces)
 between the two arms' final checkpoints; paired stratified bootstrap over queries within component,
-B = 20,000, seed 0; a contrast **resolves** when the point estimate ≥ the MDE **and** the one-sided
-lower bound at the **0.025/13 quantile** (Bonferroni over the thirteen contrasts) is > 0, and the sign
-is stable across the last two cycle-end checkpoints. **Amendment A4: the MDE is not 0.0056 by
-assertion — it is set at the lock from the measured COV resolution number** (§Surfaces), as
-`MDE = max(0.0056, the measured point-to-lower-bound distance at 0.025/13)`, so the registered
-detectable effect cannot be smaller than the surface can resolve. If that distance exceeds 0.010 the
-lock must first enlarge the surface or cut contrasts, and record which; a screen whose MDE its own
-surface cannot support is not run. **Family A's contrasts A3−A2 and A4−A3 are exempt from the
+B = 20,000, seed 0; a contrast **resolves** when the point estimate ≥ the **MDE 0.0056** **and** the
+one-sided lower bound at the **0.025/14 quantile** (Bonferroni over the fourteen contrasts, fixed
+whether or not F's second comparison runs) is > 0, and the sign is stable across the last two
+cycle-end checkpoints. **Both constants are fixed here** — the Codex pass of 2026-09-04 struck
+amendment A4's `MDE = max(0.0056, distance)` and its two-step remedy (admit LEDGER, then α = 0.05)
+as an α that adapts to an observed width. The resolution number (§Surfaces) is *reported* as the
+power disclosure; an underpowered contrast is reported as unresolved and reverts to default, and
+the report names the contrasts the surface could not have resolved. **Family A's contrasts A3−A2 and A4−A3 are exempt from the
 generic rule** and use the three-outcome rule in the table (resolved requires the corrected lower
 bound > MDE); A4−A2 and A2−A1 are descriptive. **Confirmation:** for every decision whose
 non-default option won, both the winner and the default are re-trained with two more seeds at
@@ -576,54 +597,35 @@ PLANNING §5 has the arithmetic. Every screen verdict is artifact-specific at sc
   Dylan may raise the floor). The two CQADupStack components are **DEV**, reported beside every COV
   read, never in the macro.
 
-  **Scientific family (B4).** Every clean-4 set is scientific or biomedical and no licensed published
-  set covers those forms outside S2ORC / PubMed / CORD-19, so as registered the screen could not see
-  the headline forms. Fix: a fifth COV family constructed from held-out real text with qrels by
-  construction — **`arxiv-title`**: 2,000 arXiv titles → their own abstract among 100K arXiv
-  abstracts (CC0 metadata; ≈8 min of encode), one relevant per query, nDCG@10; **`ctgov-title`** the
-  same from ClinicalTrials.gov brief titles → summaries, **only if its terms clause is recorded at
-  M10.0-d**. Rules: documents drawn with seed 0 at M10.1 *before* any harvest, excluded from every
-  training role, in the protected index; teacher score reported as the denominator; shares its form
-  and source with arm A3's harvest by design and the report says so; a form-retention surface, never a
-  claim. COV still has no argument retrieval (six-set only; FORMS-12 descriptive). **Decision 12
-  (open)**: CUREv1 as a sixth, validation-only family.
-  **Resolution number (M10.0-d, before the lock) — amendment A4: it now SIZES the screen.** With the
-  contrast rule's own bootstrap (paired, stratified within component, B = 20,000, seed 0), measure the
-  distance between the point estimate and the one-sided 0.025/13 lower bound for the COV-macro
-  difference between two frozen comparators that are candidates in no M10 family — **e5-small-v2 and
-  gte-small** (both `results/FINAL_MATRIX.md` rows) — each scored symmetrically on the admitted
-  surface. Only the distance is recorded, never which comparator led. It is the first disclosed COV
-  read (`m10/LEDGER.md` §4) and is published beside every contrast, so a reader can tell an unresolved
-  verdict from an invisible one. **The lock then sets MDE = max(0.0056, that distance).** Codex pass
-  7's objection was that the earlier version scored family F's own backbones and made a selection;
-  this version scores non-candidates, records no direction, and feeds a power calculation — which is
-  what a pre-registration is supposed to do before fixing an MDE, not after. e5-small-v2 and
-  gte-small are `results/FINAL_MATRIX.md` rows, **not** rows of `results/perquery.json`, so they need
-  fresh COV encodes; "frozen comparator" is the wrong word for them and is not used.
-
-  **The remedy is registered now, because the tripwire is a coin flip (Fable B3).** One-sided
-  0.025/13 is z = **2.89** (2.96 was the old 16-contrast value; the Fable review computed 2.84 for
-  the 11-contrast count that stood before D-COV and the second F arm were added). With the admitted surface — MedicalQA
-  2,048 queries, BRIGHT 6 × ~100, CorporateLobbying 340, ConsumerContractsQA 396, equal family
-  weights — and paired per-query nDCG-difference SDs of 0.07–0.27 measured on the six, the macro SE is
-  **0.0033–0.0048** and the distance **0.009–0.0135**, straddling 0.010. Cutting contrasts barely
-  helps (13 → 5 shrinks the distance ~11%); halving it needs 4× the queries, and only **LEDGER**
-  (118,048 questions) is that large. So, in order, before any arm runs: **(1) if the distance exceeds
-  0.010, LEDGER is admitted** — structure verified, chunking rule fixed, 100K-chunk cap — **and the
-  distance re-measured. (2) If it still exceeds 0.010, screen contrasts drop to one-sided α = 0.05
-  uncorrected, with the two-seed confirmation as the multiplicity guard**, and the report says so.
-  This is the right trade for an *internal selection surface*: over-conservatism here costs model
-  quality, while the only published claim is the six-set final, whose alpha is untouched. Whichever
-  branch fires is recorded in `m10/LEDGER.md` §0 before the first arm.
-
-  **One honest consequence of `MDE = max(0.0056, distance)`:** when the distance binds, "point ≥ MDE"
-  becomes nearly redundant with "lower bound > 0", so the MDE then expresses what is *detectable*
-  rather than what *matters*. Stated rather than hidden; the 0.0056 floor is the substantive
-  effect size and it governs whenever the surface can support it.
-  **And a bias note:** the distance is measured between two *unrelated* models, whereas screen arms
-  share init and data and will have a smaller paired SD (0.07–0.16 versus 0.14–0.27 on the six), so
-  the sizing is conservative — it over-estimates the needed MDE. The tighter alternative, a seed pair
-  of the anchor, would be a COV read before the lock; the trade is recorded, not taken.
+  **Scientific secondary surface (B4, demoted from a COV family by the Codex pass).** Every clean-4
+  set is scientific or biomedical and no licensed published set covers those forms outside S2ORC /
+  PubMed / CORD-19, so as registered the screen could not see the headline forms. **`arxiv-title`**:
+  2,000 held-out arXiv titles → their own abstract among 100K arXiv abstracts (CC0 metadata; ≈8 min
+  of encode), one relevant per query, nDCG@10, teacher score reported as the denominator. **Not in
+  the COV macro** — it shares form and source with arm A3's harvest, so as a family it would reward A3
+  by construction and its 2,000 low-variance queries would dominate the macro's power. It is a
+  **registered secondary surface with exactly one action:** if A3−A2 on `arxiv-title` does not
+  resolve (same rule and bound as the contrasts), the harvested paper-title and claim forms are
+  dropped from the build and reported as a measured null; nothing else reads it. Leakage rules: the
+  held-out set is drawn by arXiv id *without version* at M10.0-d (seed 0), every version of a
+  held-out paper is excluded from every training role, the harvest is fingerprint-screened against
+  the held-out titles and abstracts, and the set joins the protected index before any harvest.
+  ClinicalTrials.gov is not used (terms clause unread). COV still has no argument retrieval
+  (six-set only; FORMS-12 descriptive). **Decision 12 (open)**: CUREv1 as a validation-only read.
+  **Resolution number (M10.0-d, before the lock) — a power disclosure, nothing more** (A4's sizing
+  struck by the Codex pass). With the contrast rule's own bootstrap, measure the distance between the
+  point estimate and the one-sided 0.025/14 lower bound for the COV-macro difference between two
+  models that are candidates in no M10 family — **e5-small-v2 and gte-small** (`results/FINAL_MATRIX.md`
+  rows, fresh COV encodes) — scored symmetrically on the admitted surface. Only the distance is
+  recorded, never which led. It is the first disclosed COV read (`m10/LEDGER.md` §4) and is
+  published beside every contrast, so a reader can tell an unresolved verdict from an invisible one.
+  With MedicalQA 2,048, BRIGHT 6 × ~100, CorporateLobbying 340, ConsumerContractsQA 396 and paired
+  per-query SDs of 0.07–0.27, the expected distance is 0.009–0.0135 — above the MDE, so **most B–G
+  contrasts are expected to be unresolved at screen dose and to revert to default; that is disclosed
+  in advance, not repaired by loosening α.** LEDGER (118,048 questions) is admitted if its structure
+  verifies at M10.0-d, an ordinary admission decided before any read, because it is the one
+  candidate large enough to move the surface's power. The distance is measured between *unrelated*
+  models, so it over-estimates the width of a same-init contrast; recorded, not corrected.
 - **DEV-6** (incl. the two CQADupStack components) secondary, reported beside every COV read.
   SCREEN-3 is retired.
 - **FORMS-12**: 12 × 500 held-out generated or harvested queries, overlap@10 between student and
@@ -656,14 +658,18 @@ PLANNING §5 has the arithmetic. Every screen verdict is artifact-specific at sc
 ## Final run
 
 `m9/FINAL_LOCK.md` re-registered verbatim for M10 in the M10.2 lock with new BOUND-AT-FREEZE hashes
-and an `m10-six-spent` tag — bridge as phase 1, the C-conjuncts with the empirical 0.0125-quantile
-bootstrap bound and the sign-flip conjunct, FEVER labelled — **with two changes. (1) The
+and an `m10-six-spent` tag — bridge as phase 1, the C-conjuncts with the empirical bootstrap bound
+and the sign-flip conjunct, FEVER labelled — **with two changes. (1) The
 reserved conditional is `if any C-conjunct passes then execute`**, so an aim claim never stands
 without its descriptive reserved rows. **(2) Amendment A3: four conjuncts, not two** — `C1a`/`C2a`
 on avg-6 and `C1b`/`C2b` on clean-4 (bars 0.5042 / 0.5155 / 0.5046 / 0.5233), under
 **fixed-sequence gatekeeping in the order C1a → C1b → C2a → C2b at the full one-sided 0.025 each,
-stopping at the first non-rejection** (§Goal has the procedure, the pass points and the
-`trec-covid` n=50 disclosure). The sequence is fixed here, before any six-set output exists.
+stopping at the first non-rejection** (§Goal has the procedure, the planning proxies and the
+`trec-covid` n=50 disclosure). **The decision field is therefore the empirical one-sided 0.025
+quantile (`lower_q025_raw`, the 250th order statistic at B = 10,000), not M9's Holm-2 0.0125, and
+the sign-flip conjunct is tested at 0.025 inside the same sequence** — the Codex pass of 2026-09-04
+found the two quantiles named in different files. The sequence is fixed here, before any six-set
+output exists.
 clean-4 is M14's registered headline partition for both halves of the pair, so it carries a
 pre-registered pass/fail rather than arriving as a descriptive row after the fact. Zero alpha on the reserved batch is unchanged. `m9src/final9.py`'s
 scoring path is written and reviewed before M9's close-out and reused.
@@ -746,6 +752,10 @@ joins the M13 all-in quantization comparison.
 6. System-level framing only (§Goal): no claim isolates nano from its document tower.
 7. Reproducibility: code, corpus manifests with hashes, model revisions, seeds, statistics code
    with tests, and the full screen table including losing arms and confirmation seeds.
+8. **No general retrieval-quality language.** The six are development-informed by construction (the
+   data taxonomy targets their forms; COV selects; LoTTE vetoes); the reserved four are the only
+   untouched surface and are descriptive. Every conclusion is stated on the named datasets (Codex
+   2026-09-04, "what the review missed").
 
 ## Deliverables
 
@@ -761,8 +771,8 @@ update, the M10 section of the report artifact, decisions logged in CLAUDE.md, h
 
 Document-side co-adaptation (inside M10 it breaks the pair; a tower co-trained against both query paths at once keeps it and is recommended 2026-09-01 as the next-milestone candidate (that slot was M12 then; **M16** after the 2026-09-04 renumbering), Dylan's call, PLANNING §7) · any student above 35M
 (hard cap, Dylan 2026-09-01) · teacher change (stella-1.5B measured worse; Qwen3-0.6B never
-screened and not the pair) · a nonlinear head (no fastembed path; width comes from linear
-multi-layer pooling) · a cosine-space phase-1 loss (closed by algebra, `m10/EXPLORED.md`) · a
+screened and not the pair) · a **post-pooling** nonlinear head (no fastembed path; per-token heads
+ship, §Recipe) · a cosine-space phase-1 loss (closed by algebra, `m10/EXPLORED.md`) · a
 ranking-aware phase-2 loss (cut by amendment A1; reopening condition in §Recipe) · MS MARCO **in any training role** (unchanged; **validation/diagnostic use was
 permitted 2026-09-04**, see the admission note in §COV) · FineWeb in any role (decisions 3 and 5) · any
 change to zero.

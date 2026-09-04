@@ -46,8 +46,8 @@
  "bootstrap_widths_proxy": {
   "all6": {
    "proxy_point": 0.0113,
-   "proxy_lower_bound": 0.0012,
-   "width": 0.0101,
+   "proxy_lower_bound": 0.0024,
+   "width": 0.0089,
    "n_queries": {
     "scifact": 300,
     "nfcorpus": 323,
@@ -59,8 +59,8 @@
   },
   "clean4": {
    "proxy_point": 0.0187,
-   "proxy_lower_bound": 0.0048,
-   "width": 0.0139,
+   "proxy_lower_bound": 0.0065,
+   "width": 0.0122,
    "n_queries": {
     "nfcorpus": 323,
     "scidocs": 1000,
@@ -69,30 +69,30 @@
    }
   }
  },
- "pass_points": {
+ "planning_proxies": {
   "C1a_release_avg6": {
    "bar": 0.5042,
-   "width": 0.0101,
-   "nano_must_reach": 0.5143,
-   "retention_of_ceiling": 0.8954
+   "width": 0.0089,
+   "nano_must_reach": 0.5131,
+   "retention_of_ceiling": 0.8933
   },
   "C1b_release_clean4": {
    "bar": 0.5046,
-   "width": 0.0139,
-   "nano_must_reach": 0.5185,
-   "retention_of_ceiling": 0.9193
+   "width": 0.0122,
+   "nano_must_reach": 0.5168,
+   "retention_of_ceiling": 0.9163
   },
   "C2a_aim_avg6": {
    "bar": 0.5155,
-   "width": 0.0101,
-   "nano_must_reach": 0.5256,
-   "retention_of_ceiling": 0.915
+   "width": 0.0089,
+   "nano_must_reach": 0.5244,
+   "retention_of_ceiling": 0.913
   },
   "C2b_aim_clean4": {
    "bar": 0.5233,
-   "width": 0.0139,
-   "nano_must_reach": 0.5372,
-   "retention_of_ceiling": 0.9525
+   "width": 0.0122,
+   "nano_must_reach": 0.5355,
+   "retention_of_ceiling": 0.9495
   }
  }
 }
