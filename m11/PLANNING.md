@@ -364,6 +364,33 @@ fails on the eager form. Claims cut from the draft as unverifiable or wrong: an 
 blast-radius audit (siglip2 is not in v0.8.0), the reverse-shape "does not crash" claim, and an
 inference about #588's author intent.
 
+**DONE 2026-09-03 — `m11/release/verify_fastembed.py`, 6 checks, green on BOTH stock 0.8.0 and
+the fork branch** (`results/m11_fastembed_serving_{pypi,fork}.json`; the fork carries the same
+`__version__`, so the result file is keyed on the import path, not the version).
+
+| check | number |
+|---|---|
+| 2 parity vs the staged numpy encoder, 1,024 real dev queries | max-abs **4.470e-08**, min-cos 0.999999881 |
+| 2b parity on 4 inputs past the 512-token rule | max-abs 5.513e-07 |
+| 3 batch invariance, bs 1 vs 64 and beside a 1,200-token query | 4.470e-08 |
+| 4 served vectors unit-norm with `normalization=False` | [0.9999999, 1.0000001] |
+| 5 MEAN route on `model_tokens.onnx`, direction | min-cos 0.999999881 |
+
+Serving adds nothing to the graph: check 2 equals T2's direct-ORT number exactly. Route as
+planned — `PoolingType.DISABLED` + `normalization=False` on the pooled `model.onnx`.
+
+**Negative control (`--negative-control`): truncation 8000 put back is caught at max-abs 4.475e-04**,
+44x the threshold. Two facts it settles, both contrary to the plan's reasoning above:
+- with `padding: null` shipped there is **no ragged-batch crash** — stock 0.8.0 pads dynamically
+  and serves a **silently wrong vector**. The crash is not our exposure; a wrong vector is.
+- check 2 alone would not have caught it: dev queries are short, and the tokenizer rule only bites
+  past 512 tokens. That is why 2b exists.
+
+`parallel=2` fails as T3 measured (`RuntimeError: Thread unexpectedly terminated`, each worker
+raising `Model ... is not supported in OnnxTextEmbedding`). Recorded, not gated. It also floods
+stdout from every worker process, so the probe silences fds 1/2 at the OS level — a Python-level
+redirect does not reach a child, and the flood deadlocked the first run against a full pipe.
+
 No model-integration PR this milestone. Leave the branch pushed and PR-ready; a PR would still need
 canonical reference vectors per `CONTRIBUTING.md` and an honest description — zero **missed**
 `LR-dense-pertask 0.4583` at 0.4339 (CI-resolved), its fused variant ties OpenSearch.

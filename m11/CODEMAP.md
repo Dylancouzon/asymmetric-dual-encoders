@@ -92,6 +92,21 @@ Every line cost something in T3 or T2. Evidence: `results/m11_doc_fp16_gpu.json`
 19. **Execute the card's code against the staged bytes, offline.** Assert the substitution count so
     an edit cannot redirect the gate at the live repo.
 
+**Serving and gate hygiene**
+
+20. **Gate the SERVING path, not just the graph.** ONNX parity says the graph is right; it says
+    nothing about what the library feeds it. Here the two agreed to the digit (4.47e-08), which is
+    the result you want — but it is a measurement, not an assumption. (`verify_fastembed.py`)
+21. **Parity fixtures must exceed the truncation limit.** A tokenizer rule only bites past it, so a
+    fixture set of ordinary short queries passes under the WRONG rule. The negative control here
+    (truncation 8000 restored) is invisible to 1,024 real dev queries and 44x the threshold on one
+    long input.
+22. **A fork carries the same `__version__` as the release it branched from.** Key result files on
+    the import path, or a fork run silently overwrites the stock one and both look identical.
+23. **Silence a multiprocess probe at the fd level.** Worker processes write to the inherited fd,
+    so `contextlib.redirect_stderr` does not reach them; a flood of worker tracebacks filled the
+    pipe and deadlocked the run. `os.dup2` to `/dev/null` around the block.
+
 ## Gotchas specific to stella
 
 - Crashes without `config_kwargs={"use_memory_efficient_attention": False, "unpad_inputs": False}`,

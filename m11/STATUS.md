@@ -40,6 +40,7 @@ three weight files.
 | `release/push_doc.py` | T3: build + 5 gates + create-private → upload → verify → public |
 | `release/MODEL_CARD_DOC.md` | the doc-tower card; repo id and measured numbers substituted |
 | `release/doc_fixtures.json` | 259 real nq-250k passages, six length strata, asserted on load |
+| `release/verify_fastembed.py` | T4: serves `zero` through `TextEmbedding`, 6 checks + `--negative-control` |
 
 **`m11/CODEMAP.md` is the reusable part** — the ONNX-port checklist, 19 items, each one paid for by
 a T2 or T3 defect. Read it before porting nano or M12's image model, not this file.
@@ -91,7 +92,7 @@ published until T0 and T1 land.**
 | T1 sanitise tokenizer (`zero` repo) | **DONE** 2026-09-03 — `push.sanitise_tokenizer`; gate 8 measures what fastembed's own loader gets; the doc-tower repo still needs the same edit under T3 |
 | T2 zero query path → ONNX | **DONE** 2026-09-03 — two opset-17 graphs, 10 checks, parity 4.47e-08 on 1,024 real dev queries; live at `fb8e5c5b`. `m11/PLANNING.md` §T2, incl. the measurement that the count-mask defect is unreachable by real text (0/7,325 dev queries produce id 0) |
 | T3 doc tower publish (PUBLIC, new repo) | **DONE 2026-09-03** — live at commit `e34cc6dd1e`, PUBLIC, byte-verified anonymously (published LFS sha256 == gated bytes, `fe31555e…`). Repo `DylanCouzon/stella-en-400M-v5-doc-onnx`. Re-exported fp32 from the pinned revision; 259 frozen real-passage fixtures; **fp16 rejected on a CUDA measurement**, `model_tokens.onnx` proved unnecessary. `m11/PLANNING.md` §T3 |
-| T4 fastembed fork branch, no PR | fork at `/home/dylan/fastembed`; **upstream 0.8.0 regression found, fixed and filed as qdrant/fastembed#703** (breaks `thenlper/gte-base`), branch `fix-fixed-padding-ragged-batch`. **De-risked by T3**: the `DISABLED` route is settled (bit-identical to ORT) and `parallel>1` is settled (cannot pass — not a gate). Remaining: serve `zero` end to end, gate parity vs the numpy encoder, leave the branch PR-ready. |
+| T4 fastembed fork branch, no PR | **DONE** 2026-09-03 — `verify_fastembed.py`, 6 checks green on stock 0.8.0 **and** the fork branch: parity vs the numpy encoder **4.47e-08** on 1,024 dev queries, 5.51e-07 past the 512-token rule. Negative control fires at 4.475e-04. Upstream padding regression fixed on the fork and filed as qdrant/fastembed#703; branch `fix-fixed-padding-ragged-batch` pushed, PR-ready, no PR opened |
 | T5 card fixes | **DONE** 2026-09-03 — the raising snippet fixed, ONNX usage block added, the by-caller tokenizer table and cost rows corrected; gate 6 executes every block |
 | T6 rename + card rewrite (**after T4**) | `zero` → **`constella-zero`** (name locked in `m8/LEDGER.md` §6.1; milestone suffix dropped, Dylan 2026-09-03). Both cards rewritten: fastembed examples, competitive comparison and missed-bar framing removed, contamination caveat and measured numbers kept, more about the model itself. `m11/PLANNING.md` §T6 |
 | flip `zero` PUBLIC | **moot** — already public since the first push (see the correction above). `push()` now detects this, says so, and does not pretend to have published privately first |
@@ -132,15 +133,20 @@ New files: `m11/release/export_doc.py`, `push_doc.py`, `MODEL_CARD_DOC.md`, `doc
 
 ## Next session starts here (2026-09-03)
 
-**T0, T1, T2 are done, pushed, and live.** Working tree clean on `m11-work`. `zero` is at HF head
-`1cfae6cc`, 10 files, PUBLIC, byte-verified. Re-check anything with:
+**T0–T5 are done.** `zero` is at HF head `1cfae6cc`, 10 files, PUBLIC, byte-verified; the doc tower
+at `e34cc6dd1e`. Working tree clean on `m11-work`. Re-check anything with:
 
     .venv/bin/python m11/release/push.py --build --gates    # 8 gates, uploads nothing
     .venv/bin/python m11/release/test_gates.py              # 14 checks, must all hold
     .venv/bin/python m11/release/export_onnx.py --check     # 11 ONNX parity checks
+    .venv/bin/python m11/release/verify_fastembed.py        # 6 serving checks (add --negative-control)
+    PYTHONPATH=/home/dylan/fastembed .venv/bin/python m11/release/verify_fastembed.py   # same, on the fork
 
-**Next is T3** (`m11/PLANNING.md` §T3): five gaps, artifacts confirmed present on this box.
-Then T4 (fastembed, fork branch only, no PR) and T5 (done — folded into T2's card work).
+**Next is T6** (`m11/PLANNING.md` §T6): rename `zero` → `constella-zero` via `move_repo` (redirect
+keeps the old URL live) and rewrite BOTH cards — fastembed examples in, competitive comparison and
+missed-bar framing out, measured numbers and the stella contamination disclosure kept.
+`instructions-m11.md` deliverable 1 must be amended in the same change, since it currently
+*requires* the competitive claims.
 
 **Read `§Scope note` below before adding any gate or test.** Two adversarial reviews produced a
 malicious-actor threat model; the rollback to the accident model is Dylan's explicit instruction,
