@@ -1,127 +1,86 @@
-# M12 — `constella-zero-hybrid`: is there anything for a fusion-aware objective to move?
+# M12 — fusion operator audit: does Qdrant's DBSF match our hand-fitted convex0?
 
-Created 2026-09-04 (Dylan); **rewritten the same day after Fable's review**, which showed the first
-draft was not executable — see `m12/EXPLORED.md` §1 for what was cut and why. Binds from
-`instructions-m7.md` unchanged. Working files `m12/`, branch `m12-work`.
+Created 2026-09-04 (Dylan). **Scoped down twice the same day** — Fable broke the first draft, Codex
+broke the second and recommended killing the training half. Both reviews and what was cut:
+`m12/EXPLORED.md`. Binds from `instructions-m7.md`. Working files `m12/`, branch `m12-work`.
 
-**Local 3080 only.** No cloud budget. M10 stays paused; M12 does not touch it.
+**Local box. One to two days. No training, no new model, no released artifact changes.**
 
-## The question, stated correctly
+## Why this is the whole milestone
 
-`zero`'s final phase is **objective A, InfoNCE against frozen document vectors** (32,768 negatives,
-temp 0.02, 2,500 steps — `work/runs/p35w-2m-s2500.meta.json`), NOT regression onto stella's query
-vector. So "train against the fused ranking" means: add BM25 to the score the InfoNCE loss ranks on.
+M7's headline `zero`+BM25 **0.4911** uses `convex0 w=0.8`, per-query min-max at depth 1000, over
+`bm25s`-lucene. **Qdrant ships RRF and DBSF, not that.** On dev, RRF k=10 scores **0.5504** against
+convex0's **0.5727** (`m7/LEDGER.md:922`) — a 0.022 gap, larger than every table-side lever M7 and
+M8 ever measured. If our published pair is fused by a formula the product cannot run, the headline
+overstates what a user gets.
 
-Under convex0, `F = w·s/s_max + (1−w)·b/b_max` with `b` frozen — BM25 enters as a **fixed additive
-logit bias per candidate**, and the gradient reaches `W` only through `s`. That is not a no-op in
-general; it moves the optimum wherever training candidates exist for which the dense and fused
-margins disagree.
+**DBSF is the untested third option**, is score-based, and is what Qdrant recommends beside RRF.
+Measuring it costs a day and changes what we tell users. That is a better day than any table
+retraining currently justifies.
 
-**But M8 measured the shipped objective inert on the current candidate set**: the table already
-ranks the positive first for **99.75%** of training queries, uniform-bank KL median **4.73e-07
-nats** (`m8/FINDINGS.md` §3.1). A logit bias on a saturated softmax changes nothing. The same
-source shows where signal survives: the `teacher_top200` variant measures **0.777 nats**.
+## The fusion-aware training question is NOT in M12
 
-**So the milestone's real question is whether a fusion-aware objective has any gradient at all, and
-that is decided by the CANDIDATE SET, not by the loss.** Candidates must be mined from the
-**union of dense top-k and BM25 top-k**. A hybrid arm trained on uniform banks is a measured no-op
-and must not be run.
+It moved to `instructions-m16.md` with the full list of what it would need. Killed here because:
 
-Miss-is-publishable, and here a miss is informative: it says the table has no non-lexical capacity
-to redistribute — the sharpest available statement about this architecture's ceiling.
+- **The trainer cannot express it.** Training samples one shared bank of 32,768 negatives that every
+  query scores (`m7src/train.py:679-688`); there are no per-query candidate lists. Both miners return
+  **IDs only** — `mine_bm25_negatives` discards BM25 scores (`train.py:258`) and mines **within each
+  query's own store, not the global pool** (`train.py:217-220`), so a union with globally-mined dense
+  candidates would combine retrievers over different corpora, unlike deployed fusion. 1–3 engineering
+  days before a single arm runs.
+- **The bar rejects the plausible effect.** Fused seed SD is 0.000332 (`m8_noise_floor_fused.json`),
+  so a 3-vs-3 mean difference has SE ≈ 0.000271. At a true effect of 0.005 — the ceiling of every
+  table-side lever this project has measured — P(observed ≥ 0.008) is **effectively zero**. The
+  experiment was designed to return null.
+- **The null would not have meant what the draft claimed.** It would show that one miner, surrogate
+  and dose missed on a heavily reused dev surface — not that the architecture lacks non-lexical
+  capacity. M8 explicitly left hard-candidate listwise training open (`m8/FINDINGS.md:51`).
 
-## Gate A — DBSF on existing runs. Do this first; it may be the whole milestone.
+## The audit
 
-**RRF cannot be a training target**: it is a function of ranks, piecewise-constant, zero gradient
-almost everywhere. Surrogates need a temperature this mandate will not sweep. **DBSF is
-score-based** (per-query mean±3σ, then sum), differentiable with the statistics detached, and Qdrant
-ships it beside RRF.
+**Implement DBSF to Qdrant parity**, not to a paraphrase. Per prefetch, using the **sample** SD:
+`ŝ = (s − (μ − 3σ)) / (6σ)`, **no clipping**, and **0.5 for singleton or constant lists**; statistics
+are computed over the returned list at the **pinned depth 1000**; then sum the normalised channels.
+`FAMILIES` in `m7src/fusion.py:19` is closed and both selection and application assume a parameterised
+family (`:208`, `:252`) — DBSF is parameter-free, so plumbing plus degenerate-case tests is ~50–100
+lines, not 30. Parity tests against the documented behaviour are part of the deliverable.
 
-Add ~30 lines of `dbsf` to `m7src/fusion.py` and score the **existing, unchanged** `zero` on the
-existing `work/fusionruns` BM25 runs and dense runs. CPU, ~1 hour, no training, dev only.
+**Cost reality check before launching** (`work/fusionruns` holds **only** the four BM25 arrays; dense
+runs are not cached): `select_fusion` re-encodes dev queries and re-runs exact top-1000 retrieval on
+**CUDA** (`select_fusion.py:50,73`). Documents are not re-encoded. This is a GPU run, not a CPU one.
 
-- **If DBSF ≈ convex0 (~0.57)** the 0.022 RRF gap (dev RRF k=10 **0.5504** vs convex0 **0.5727**,
-  `m7/LEDGER.md:922`) closes with an *operator recommendation and no retraining* — worth more than
-  anything the training gates can deliver, and it fixes the caveat now standing in `m11/STATUS.md`.
-- **If DBSF ≈ RRF**, the operator is the bottleneck and no table fixes it. Say so and stop.
+**Numeric decision rule, registered before scoring.** Dev macro over the four text-backed components,
+against convex0 **0.5727** and RRF **0.5504**, with the 0.004 frozen-operator fused floor
+(`m8_noise_floor_fused.json` — valid here precisely because Gate A fits nothing):
 
-Register the winning operator here; every later number uses it. Disclose that FastEmbed's
-`Qdrant/bm25` (fixed `avg_len`, own tokenizer) is not `bm25s`-lucene, so the fusion **weight** is
-tied to the lexical function even where the complement is only weakly tied.
+| outcome | rule | what we do |
+|---|---|---|
+| **DBSF viable** | ≥ 0.5687 (convex0 − 0.004) | recommend DBSF; the operator gap closes with no retraining |
+| **DBSF no better than RRF** | ≤ 0.5544 (RRF + 0.004) | the shipping operators cost ~0.02 and we say so plainly |
+| **intermediate** | between | report the number; recommend nothing |
 
-## Gate B — two probes that CAN fail. Under an hour, no training.
+Note in the report that convex0's `w=0.8` was **dev-fitted** while DBSF fits nothing, so a tie
+favours DBSF on honesty grounds.
 
-The first draft's "headroom = fused(teacher) − fused(zero), kill below 0.005" was **not a gate**:
-teacher dense alone (0.6350) already beats fused zero (0.5727) by 0.062, so it could not fail.
+## Protocol — three things that make this wrong if skipped
 
-1. **Tension count.** Over union(dense top-200, BM25 top-200) on the training pool, the fraction of
-   training queries whose fused ranking is not already optimal. **≲1% → no gradient exists → STOP.**
-2. **Weighted ridge.** Refit the closed-form table (`blockcg.py`) with per-query weights ∝ BM25
-   weakness; score fused on dev against the unweighted ridge. **< 0.004** (the fused noise floor,
-   `results/m8_noise_floor_fused.json`) **→ nothing to redistribute → STOP.**
+1. **This does not replace the published 0.4911.** M7 froze the fusion family and parameter, and no
+   neighbouring choice may be preferred after the six were seen (`m7/LEDGER.md:691`). A DBSF number
+   is post-M7, development-informed, **descriptive** evidence about a successor system. The table
+   artifact is unchanged; the *reported system* would not be. Version the operator spec and disclose.
+2. **Register the rule above before scoring.** Recording which operator won after seeing it is
+   outcome logging, not pre-registration.
+3. **A `bm25s`-lucene result does not license a claim about `Qdrant/bm25`** (fixed `avg_len`, own
+   tokenizer). DBSF's normalisation depends on the lexical implementation. State the gap; do not
+   call it weak.
 
-Both are descriptive, dev/train only, no confirmatory access. Per-query bucketing of the
-teacher−zero loss by BM25 nDCG is kept as description, not as a gate.
-
-## Gate C — if both survive: 2 recipes × 3 seeds, and a control
-
-**A hybrid arm alone proves nothing.** Warm-starting and running more A-phase steps moves the dev
-macro **0.0027–0.0078 on step count alone** (`m7/LEDGER.md:314-324`). So:
-
-| arm | loss | candidates | seeds |
-|---|---|---|---|
-| **control** | unchanged objective A | union-mined (same as hybrid) | 3 |
-| **hybrid** | objective A on the fused score | union-mined | 3 |
-
-Same warm start, same steps, same candidates. This is also **the first recipe-replication term this
-repo has ever had** (`m7/FINDINGS.md` 9 records that every CI to date is query-sampling only).
-
-**Registered bar: hybrid − control ≥ 0.008 on the fused dev macro** — the recipe-perturbation band,
-not the 0.0006 seed floor. Below that, M12 reports a null and stops.
-
-**Fusion parameter, registered now to settle a live contradiction.** The plan may not say
-"co-registered, not re-fitted": `m7/LEDGER.md:655-656` requires re-selection whenever the checkpoint
-changes, and a hybrid table changes the `s/s_max` distribution by construction. **Both arms
-re-select their fusion parameter on dev, by the identical procedure**, and the fitting-procedure
-floor from `m8_noise_floor_fused.json` is reported alongside. Fixed-`w` would structurally handicap
-the hybrid arm and bias the experiment toward the null.
-
-**Precompute, to be budgeted and smoked before launch** (CLAUDE.md's long-run rule; the last BM25
-mining pass cost 3.6 hours against an estimated 3 minutes): BM25 over the 6.17M-doc training pool
-for union mining. `train.mine_bm25_negatives` exists (`m7src/train.py:217`). Read the first progress
-line and check the rate.
-
-## What M12 does NOT spend
-
-- **The reserved four: not touched.** No stella encode of them exists — **10.1M docs, tens of hours
-  and ~21 GB** on this box (`m7/LEDGER.md:100-101`), no comparator vectors (`m8/LEDGER.md:19`), and
-  M8's registered design for exactly this comparison has **MDE 0.0068 with P(ship | δ=0.005) = 0.21**.
-  Spending the project's last access at one-in-five odds, on an effect class where every lever to
-  date is ≤0.005, is the worst available trade. M16's co-adaptation is its natural owner.
-- **LoTTE:** only if Gate C's controlled dev effect clears 0.008. Corpora are at `work/lotte`.
-- **The six:** descriptive only, labelled as such. `instructions-m8.md` item 2 already makes every
-  post-M7 six-set claim development-informed for any successor — this is not fusion-specific.
-- **Hybrid comparators:** at most **one** (`bge-small` + BM25, the release bar's natural hybrid),
-  and only under the Gate-A operator. Each additional comparator needs its own dev encodes
-  (hotpotqa alone is 5.23M docs) and a registered six-set access class. Prefer deferring all of them
-  to M14's paper.
-- **nano, the document tower, a better teacher, cloud compute, fusion sweeps.** Out.
-- **The offline BM25 index cost row** — a real gap in the M7 headline, but it does not bear on this
-  hypothesis. Separate ticket, not a gate here.
-
-## Ship shape — decided at the end, not now
-
-Do **not** pre-commit to "ships alongside, never replacing". Two artifacts means two cards, two
-FastEmbed entries (M13's "one clean PR, all three" becomes four), two ports and two freezes. Gate C's
-**dense-only regression decides**, and every result row carries fused AND dense-only for the same
-table. If the regression is small, a single-artifact route exists: mixed batches with the BM25 bias
-present/absent at one fixed registered ratio, shipped as `constella-zero` v2 under M8's registered
-replacement rule (`m8/LEDGER.md:19`).
+**Not touched:** the six (dev only), the reserved four, LoTTE, comparators, nano, the document tower,
+the teacher, cloud compute, any released artifact.
 
 ## Deliverables
 
-1. Gate A's operator result — possibly the whole milestone.
-2. Gate B's two probe numbers, and the STOP if either fires.
-3. If reached: control-vs-hybrid × 3 seeds against the registered 0.008 bar, fused and dense-only.
-4. `m12/FINDINGS.md` (transferable), `m12/EXPLORED.md` (dead ends, starting with the cut first
-   draft), `m12/LEDGER.md` (registrations), decisions in `CLAUDE.md`.
+1. `dbsf` in `m7src/fusion.py` with parity and degenerate-case tests.
+2. The dev macro under all three operators, against the registered rule, in `m12/FINDINGS.md`.
+3. The registration itself, written before scoring, in `m12/LEDGER.md`.
+4. If DBSF is viable: a one-line correction to `m11/STATUS.md`'s standing operator caveat, and the
+   recommendation carried into M14's paper.
