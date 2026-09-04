@@ -1,111 +1,127 @@
-# M12 — `constella-zero-hybrid`: a table trained to be BM25's teammate
+# M12 — `constella-zero-hybrid`: is there anything for a fusion-aware objective to move?
 
-Created 2026-09-04 (Dylan). Everything binds from `instructions-m7.md` unchanged: decision
-authority, licensing and decontamination rules, dev-only selection, the freeze/ledger protocol, the
-headless git contract. Working files under `m12/`, branch `m12-work`.
+Created 2026-09-04 (Dylan); **rewritten the same day after Fable's review**, which showed the first
+draft was not executable — see `m12/EXPLORED.md` §1 for what was cut and why. Binds from
+`instructions-m7.md` unchanged. Working files `m12/`, branch `m12-work`.
 
-**Runs on the local 3080.** No cloud budget, no A100. M10 stays paused and M12 does not touch it.
+**Local 3080 only.** No cloud budget. M10 stays paused; M12 does not touch it.
 
-## The question
+## The question, stated correctly
 
-`zero` is trained to imitate stella's query vector — a dense-only objective. But the shipped
-headline is hybrid (0.4911 fused vs 0.4868 OpenSearch). A bag-of-token-vectors table is *naturally*
-good at the lexical matching BM25 already does, so under fusion the two partly duplicate each other.
+`zero`'s final phase is **objective A, InfoNCE against frozen document vectors** (32,768 negatives,
+temp 0.02, 2,500 steps — `work/runs/p35w-2m-s2500.meta.json`), NOT regression onto stella's query
+vector. So "train against the fused ranking" means: add BM25 to the score the InfoNCE loss ranks on.
 
-**Does training the table against the FUSED ranking beat training it to imitate a dense teacher?**
+Under convex0, `F = w·s/s_max + (1−w)·b/b_max` with `b` frozen — BM25 enters as a **fixed additive
+logit bias per candidate**, and the gradient reaches `W` only through `s`. That is not a no-op in
+general; it moves the optimum wherever training candidates exist for which the dense and fused
+margins disagree.
 
-Miss-is-publishable. A NO is a real finding: it says the table has no non-lexical capacity to
-redistribute, which is the sharpest statement anyone has made about this architecture's ceiling.
+**But M8 measured the shipped objective inert on the current candidate set**: the table already
+ranks the positive first for **99.75%** of training queries, uniform-bank KL median **4.73e-07
+nats** (`m8/FINDINGS.md` §3.1). A logit bias on a saturated softmax changes nothing. The same
+source shows where signal survives: the `teacher_top200` variant measures **0.777 nats**.
 
-## Gate 0 — headroom, before any training code
+**So the milestone's real question is whether a fusion-aware objective has any gradient at all, and
+that is decided by the CANDIDATE SET, not by the loss.** Candidates must be mined from the
+**union of dense top-k and BM25 top-k**. A hybrid arm trained on uniform banks is a measured no-op
+and must not be run.
 
-Fuse **stella itself** with BM25 on the four dev components and compare to fused `zero` (0.5727).
-Inputs all exist: `dev-{comp}-queries-pfx` and doc vectors in `work/enc`, BM25 runs in
-`work/fusionruns/bm25-{comp}-d1000.npz`, the release table `work/runs/p35w-2m-s2500.release.npz`.
-Reuse `select_fusion.dense_run` with teacher vectors in place of `model.encode`, `fusion.select_on_dev`,
-`evalkit.per_query_ndcg`. ~15 min. Dev-only, descriptive, spends no confirmatory access.
+Miss-is-publishable, and here a miss is informative: it says the table has no non-lexical capacity
+to redistribute — the sharpest available statement about this architecture's ceiling.
 
-Free by-product from the same per-query arrays: bucket the teacher−zero dense loss by BM25
-per-query nDCG. **If the loss sits on queries BM25 already answers, a hybrid objective has nothing
-to redistribute** and Gate 0 fails on mechanism, not just magnitude.
+## Gate A — DBSF on existing runs. Do this first; it may be the whole milestone.
 
-**Dense gap is 0.6350 − 0.5370 = 0.098; that is the ceiling.** The number that matters is
-fused(teacher) − fused(zero) — the part fusion has NOT already recovered.
+**RRF cannot be a training target**: it is a function of ranks, piecewise-constant, zero gradient
+almost everywhere. Surrogates need a temperature this mandate will not sweep. **DBSF is
+score-based** (per-query mean±3σ, then sum), differentiable with the statistics detached, and Qdrant
+ships it beside RRF.
 
-**KILL: if that residual is below 0.005** — the band every M7/M8 lever landed in — M12 stops here
-and the finding is written up. Do not proceed on hope.
+Add ~30 lines of `dbsf` to `m7src/fusion.py` and score the **existing, unchanged** `zero` on the
+existing `work/fusionruns` BM25 runs and dense runs. CPU, ~1 hour, no training, dev only.
 
-## Gate 1 — pick the fusion operator the product can run
+- **If DBSF ≈ convex0 (~0.57)** the 0.022 RRF gap (dev RRF k=10 **0.5504** vs convex0 **0.5727**,
+  `m7/LEDGER.md:922`) closes with an *operator recommendation and no retraining* — worth more than
+  anything the training gates can deliver, and it fixes the caveat now standing in `m11/STATUS.md`.
+- **If DBSF ≈ RRF**, the operator is the bottleneck and no table fixes it. Say so and stop.
 
-**Pre-register before Gate 2, and this is the decision most likely to waste the milestone.** M7's
-`convex0 w=0.8` per-query min-max over `bm25s`-lucene (`m7src/fusion.py:26-29`) is **not what Qdrant
-ships** — native hybrid is RRF/DBSF, and FastEmbed's `Qdrant/bm25` uses a fixed `avg_len`, not corpus
-avgdl. Best dev RRF was **0.5504 vs convex0 0.5727** (`m7/LEDGER.md:922`): a 0.022 gap, larger than
-every table-side lever ever measured here.
+Register the winning operator here; every later number uses it. Disclose that FastEmbed's
+`Qdrant/bm25` (fixed `avg_len`, own tokenizer) is not `bm25s`-lucene, so the fusion **weight** is
+tied to the lexical function even where the complement is only weakly tied.
 
-Train against the operator that will actually run in Qdrant. If that is RRF, the Gate 0 headroom is
-re-measured under RRF before Gate 2 — a residual computed under convex0 does not license training
-under RRF. Record the choice and the re-measured residual in `m12/LEDGER.md`.
+## Gate B — two probes that CAN fail. Under an hour, no training.
 
-## Gate 2 — train it
+The first draft's "headroom = fused(teacher) − fused(zero), kill below 0.005" was **not a gate**:
+teacher dense alone (0.6350) already beats fused zero (0.5727) by 0.062, so it could not fail.
 
-One recipe, not a sweep. Warm-start from the released `zero` table; keep the M7 vocabulary,
-preprocessing, row indexing and int8 output unchanged, so the artifact stays drop-in to the same
-stella index and the same 31 MB. The loss is a ranking loss on the **fused** score with the dense
-half differentiable and BM25 a frozen per-query constant.
+1. **Tension count.** Over union(dense top-200, BM25 top-200) on the training pool, the fraction of
+   training queries whose fused ranking is not already optimal. **≲1% → no gradient exists → STOP.**
+2. **Weighted ridge.** Refit the closed-form table (`blockcg.py`) with per-query weights ∝ BM25
+   weakness; score fused on dev against the unweighted ridge. **< 0.004** (the fused noise floor,
+   `results/m8_noise_floor_fused.json`) **→ nothing to redistribute → STOP.**
 
-Registered before the first run: loss form, the fusion parameter's treatment (co-registered, not
-re-fitted after seeing results), the dev step-selection rule from `m7/LEDGER.md`, and the arm budget.
-**Arm budget: 6.** M8 spent twelve probes to move nothing; M9's own findings log records 58 arms and
-322 evaluations as overfitting the dev suite. Six arms or stop.
+Both are descriptive, dev/train only, no confirmatory access. Per-query bucketing of the
+teacher−zero loss by BM25 nDCG is kept as description, not as a gate.
 
-## Gate 3 — report both numbers, always
+## Gate C — if both survive: 2 recipes × 3 seeds, and a control
 
-Every result row carries **fused AND dense-only** for the same table. The dense-only score is
-expected to fall; how far decides whether one artifact serves both use cases:
+**A hybrid arm alone proves nothing.** Warm-starting and running more A-phase steps moves the dev
+macro **0.0027–0.0078 on step count alone** (`m7/LEDGER.md:314-324`). So:
 
-| | index location | who runs BM25 | cost of hybrid |
+| arm | loss | candidates | seeds |
 |---|---|---|---|
-| **Offline device** | on device | the device — needs a local inverted index | real, unmeasured |
-| **CLI / thin client** | Qdrant cluster | the cluster — already built in | **zero** |
+| **control** | unchanged objective A | union-mined (same as hybrid) | 3 |
+| **hybrid** | objective A on the fused score | union-mined | 3 |
 
-`constella-zero-hybrid` **ships alongside `constella-zero`, never replacing it.** Two 31 MB files
-against one index; the deployment picks. If the dense-only regression is small, say so and let
-users pick on cost; if it is large, that is the finding.
+Same warm start, same steps, same candidates. This is also **the first recipe-replication term this
+repo has ever had** (`m7/FINDINGS.md` 9 records that every CI to date is query-sampling only).
 
-**Also measure and publish the offline BM25 cost** — inverted-index size and query latency on the
-existing Edge prototype corpus. It is a hole in the M7 headline today (`results/costs.json` is
-query-side only; `results/edge_prototype.json` has no sparse collection) and M12 is where it closes.
+**Registered bar: hybrid − control ≥ 0.008 on the fused dev macro** — the recipe-perturbation band,
+not the 0.0006 seed floor. Below that, M12 reports a null and stops.
 
-## Comparators and confirmatory surface — the two ways this becomes worthless
+**Fusion parameter, registered now to settle a live contradiction.** The plan may not say
+"co-registered, not re-fitted": `m7/LEDGER.md:655-656` requires re-selection whenever the checkpoint
+changes, and a hybrid table changes the `s/s_max` distribution by construction. **Both arms
+re-select their fusion parameter on dev, by the identical procedure**, and the fitting-procedure
+floor from `m8_noise_floor_fused.json` is reported alongside. Fixed-`w` would structurally handicap
+the hybrid arm and bias the experiment toward the null.
 
-1. **Hybrid must be compared to hybrid.** Today no dense+BM25 comparator rows exist except
-   `lightretriever-…-hybrid` 0.4720. Build `bge-small+BM25`, `mdbr-leaf-ir+BM25`,
-   `LR-dense-pertask+BM25` under the SAME Gate-1 operator. Giving only our own system BM25 is not a
-   result. These are a six-set read: register the file before generating it, and **never overwrite
-   `results/perquery.json`** (sha-pinned in `m9/FINAL_LOCK.md`).
-2. **The six cannot judge this model.** Their fused-vs-dense per-dataset rows were observed
-   2026-08-28 (`results/m7_final_run.json`), so a fusion-trained table is designed with knowledge of
-   how they respond to fusion. **Confirmatory surface is the reserved four or LoTTE, chosen and
-   registered at Gate 1** — one access, per `instructions-m7.md`. Six-set rows are descriptive only
-   and must be labelled as such.
+**Precompute, to be budgeted and smoked before launch** (CLAUDE.md's long-run rule; the last BM25
+mining pass cost 3.6 hours against an estimated 3 minutes): BM25 over the 6.17M-doc training pool
+for union mining. `train.mine_bm25_negatives` exists (`m7src/train.py:217`). Read the first progress
+line and check the rate.
 
-## Out of scope — do not expand this
+## What M12 does NOT spend
 
-- **nano.** Hybrid nano waits until hybrid zero pays. M10/M13 are untouched.
-- **The document tower.** Frozen. Co-adaptation is M16.
-- **A better teacher.** Closed 2026-09-04: stella first of eleven, and first on exposure-free
-  SQuAD/ESCI (`research/teacher-reviews-2026-09-04.md`, `m7/RESULTS.md`).
-- **A fusion-parameter sweep** beyond the single registered Gate-1 choice.
-- **Anything requiring cloud compute.**
+- **The reserved four: not touched.** No stella encode of them exists — **10.1M docs, tens of hours
+  and ~21 GB** on this box (`m7/LEDGER.md:100-101`), no comparator vectors (`m8/LEDGER.md:19`), and
+  M8's registered design for exactly this comparison has **MDE 0.0068 with P(ship | δ=0.005) = 0.21**.
+  Spending the project's last access at one-in-five odds, on an effect class where every lever to
+  date is ≤0.005, is the worst available trade. M16's co-adaptation is its natural owner.
+- **LoTTE:** only if Gate C's controlled dev effect clears 0.008. Corpora are at `work/lotte`.
+- **The six:** descriptive only, labelled as such. `instructions-m8.md` item 2 already makes every
+  post-M7 six-set claim development-informed for any successor — this is not fusion-specific.
+- **Hybrid comparators:** at most **one** (`bge-small` + BM25, the release bar's natural hybrid),
+  and only under the Gate-A operator. Each additional comparator needs its own dev encodes
+  (hotpotqa alone is 5.23M docs) and a registered six-set access class. Prefer deferring all of them
+  to M14's paper.
+- **nano, the document tower, a better teacher, cloud compute, fusion sweeps.** Out.
+- **The offline BM25 index cost row** — a real gap in the M7 headline, but it does not bear on this
+  hypothesis. Separate ticket, not a gate here.
+
+## Ship shape — decided at the end, not now
+
+Do **not** pre-commit to "ships alongside, never replacing". Two artifacts means two cards, two
+FastEmbed entries (M13's "one clean PR, all three" becomes four), two ports and two freezes. Gate C's
+**dense-only regression decides**, and every result row carries fused AND dense-only for the same
+table. If the regression is small, a single-artifact route exists: mixed batches with the BM25 bias
+present/absent at one fixed registered ratio, shipped as `constella-zero` v2 under M8's registered
+replacement rule (`m8/LEDGER.md:19`).
 
 ## Deliverables
 
-1. Gate 0 residual + the mechanism read, in `m12/FINDINGS.md`. (May be the whole milestone.)
-2. The registered operator choice and loss, in `m12/LEDGER.md`, before any training.
-3. `constella-zero-hybrid`, frozen and verified releasable, fused and dense-only on the registered
-   surface, alongside the unchanged `constella-zero`.
-4. Hybrid comparator rows under one operator.
-5. The offline BM25 cost row.
-6. Decisions logged in `CLAUDE.md`; transferable lessons in `m12/FINDINGS.md`; dead ends in
-   `m12/EXPLORED.md`.
+1. Gate A's operator result — possibly the whole milestone.
+2. Gate B's two probe numbers, and the STOP if either fires.
+3. If reached: control-vs-hybrid × 3 seeds against the registered 0.008 bar, fused and dense-only.
+4. `m12/FINDINGS.md` (transferable), `m12/EXPLORED.md` (dead ends, starting with the cut first
+   draft), `m12/LEDGER.md` (registrations), decisions in `CLAUDE.md`.
