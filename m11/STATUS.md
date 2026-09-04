@@ -6,8 +6,8 @@ that depended on M10 moved to **M12** (`instructions-m12.md`); the image model b
 
 | | |
 |---|---|
-| query encoder | https://huggingface.co/DylanCouzon/constella-zero — commit `d9d575a4a9`, 10 files |
-| document tower | https://huggingface.co/DylanCouzon/stella-en-400M-v5-doc-onnx — commit `e0430a63b6`, 7 files |
+| query encoder | https://huggingface.co/DylanCouzon/constella-zero — commit `4380addd6c`, 10 files |
+| document tower | https://huggingface.co/DylanCouzon/stella-en-400M-v5-doc-onnx — commit `ab61de6e45`, 7 files |
 | FastEmbed | `Dylancouzon/fastembed@add-constella-models` — 2 entries in `supported_onnx_models`, 2 canonical vectors |
 | serving parity | **4.470e-08** vs the numpy reference over 1,024 real dev queries |
 | upstream issue | qdrant/fastembed#703 (padding regression breaking `thenlper/gte-base`) |
@@ -28,7 +28,7 @@ defect. Read it before porting nano or M13's image model, not this file.
 
 ## What shipped — `constella-zero`
 
-**https://huggingface.co/DylanCouzon/constella-zero — PUBLIC**, commit `d9d575a4a9`. Run
+**https://huggingface.co/DylanCouzon/constella-zero — PUBLIC**, commit `4380addd6c`. Run
 `p35w-2m-s2500`, table sha `a7007b1a…`, the M7 frozen artifact unchanged; the published bytes hash
 to `m7/FREEZE.json`'s `table_sha256`, re-verified anonymously after the final push.
 
@@ -119,10 +119,10 @@ reads. The reviews changed the design twice — see `m11/PLANNING.md`.
 
 ## Released: stella document tower, ONNX
 
-**https://huggingface.co/DylanCouzon/stella-en-400M-v5-doc-onnx — PUBLIC**, commit `e0430a63b6`,
+**https://huggingface.co/DylanCouzon/stella-en-400M-v5-doc-onnx — PUBLIC**, commit `ab61de6e45`,
 7 files, 1.75 GB. fp32 only (`model.onnx`, opset 17, standard domain, no external data). First push
 `e34cc6dd1e` went private → uploaded → verified against a post-gate hash snapshot → flipped public;
-the card rewrite was pushed over it with `--update`, and the graph's LFS sha256 (`fe31555e…`) is
+later card rewrites were pushed over it with `--update`, and the graph's LFS sha256 (`fe31555e…`) is
 unchanged between the two. Verified again
 anonymously after the fact: the published LFS sha256 `fe31555e…` is the gated byte string.
 

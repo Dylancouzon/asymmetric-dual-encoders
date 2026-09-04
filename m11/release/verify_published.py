@@ -21,7 +21,7 @@ def chk(n, p, d=""):
 
 # The commits M11 closed on. Pinned, not printed: a verifier that prints whatever the Hub
 # currently serves cannot tell you the Hub still serves what you shipped (Codex, 2026-09-03).
-EXPECTED = {ZERO: "d9d575a4a9", DOC: "e0430a63b6"}
+EXPECTED = {ZERO: "4380addd6c", DOC: "ab61de6e45"}
 
 for rid in (ZERO, DOC):
     r = requests.get(f"https://huggingface.co/api/models/{rid}", timeout=30).json()
