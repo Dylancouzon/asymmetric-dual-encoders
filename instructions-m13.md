@@ -1,4 +1,4 @@
-# M13 — the nano half of the pair, and the whitepaper
+# M13 — the nano half of the pair
 
 **Created 2026-09-03 by the renumbering below.** M11 shipped everything that did not depend on
 M10; this milestone is what was left, and it is **blocked on M10**, which is blocked on the cloud
@@ -23,10 +23,8 @@ what shipped and giving the blocked remainder its own number is the accurate rec
    two already published. An entry in `supported_onnx_models` and a canonical vector from the
    reference implementation, per `CONTRIBUTING.md`. See the note below: the PR waits for nano by
    Dylan's ruling, and branches fresh from upstream `main`.
-4. **Whitepaper / decision report** — the quality-vs-query-cost frontier with BOTH points, edge
-   cost rows, the Qdrant Edge prototype, and the comparator table that was deliberately kept OFF
-   the model cards (`instructions-m11.md` Amendment B). This is where
-   `LR-dense-pertask 0.4583`, the OpenSearch tie and the missed bar belong.
+4. ~~Whitepaper~~ — **moved to M14** (`instructions-m14.md`, Dylan 2026-09-04). It is its own
+   milestone so it is not hostage to M10; it still runs after nano when nano lands.
 
 ## The upstream FastEmbed PR — ONE PR, all three models (Dylan, 2026-09-04)
 

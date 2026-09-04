@@ -4,7 +4,7 @@ Read `STATUS.md` first. This file is what a future session needs to (a) port nan
 different model to ONNX without rediscovering T3's traps**. Numbers live in `results/m11_*.json`;
 the T3 narrative is `PLANNING.md` §T3. Nothing here restates them.
 
-Known future consumers: nano's port (M13, blocked on M10) and M14's image model.
+Known future consumers: nano's port (M13, blocked on M10) and M15's image model.
 
 ## Layout
 

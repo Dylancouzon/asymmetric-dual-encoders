@@ -426,7 +426,7 @@ update, the M10 section of the report artifact, decisions logged in CLAUDE.md, h
 
 ## Out of scope (reopening conditions in PLANNING §7)
 
-Document-side co-adaptation (inside M10 it breaks the pair; a tower co-trained against both query paths at once keeps it and is recommended 2026-09-01 as the next-milestone candidate (that slot was M12 then; **M15** after the 2026-09-04 renumbering), Dylan's call, PLANNING §7) · any student above 35M
+Document-side co-adaptation (inside M10 it breaks the pair; a tower co-trained against both query paths at once keeps it and is recommended 2026-09-01 as the next-milestone candidate (that slot was M12 then; **M16** after the 2026-09-04 renumbering), Dylan's call, PLANNING §7) · any student above 35M
 (hard cap, Dylan 2026-09-01) · teacher change (stella-1.5B measured worse; Qwen3-0.6B never
 screened and not the pair) · a nonlinear head (no fastembed path; width comes from linear
 multi-layer pooling) · MS MARCO in any form · FineWeb in any role (decisions 3 and 5) · any change to zero.

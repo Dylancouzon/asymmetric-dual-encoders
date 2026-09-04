@@ -3,7 +3,7 @@
 > **CLOSED 2026-09-03.** M11 shipped the `zero` half end to end: `constella-zero`, the ONNX
 > document tower, the FastEmbed integration and both cards. Everything below that depends on
 > **nano** — deliverables 1 (nano), 2 (nano), 3 (nano) and 4 (the whitepaper) — moved to
-> **`instructions-m13.md`**, and the image model became `instructions-m14.md`. Read Amendments A
+> **`instructions-m13.md`**, and the image model became `instructions-m15.md`. Read Amendments A
 > and B at the bottom for what was actually ruled; the deliverable text above them is the ORIGINAL
 > mandate and is superseded wherever the two disagree. Outcome: `m11/STATUS.md`.
 

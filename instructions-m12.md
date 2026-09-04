@@ -93,7 +93,7 @@ query-side only; `results/edge_prototype.json` has no sparse collection) and M12
 ## Out of scope — do not expand this
 
 - **nano.** Hybrid nano waits until hybrid zero pays. M10/M13 are untouched.
-- **The document tower.** Frozen. Co-adaptation is M15.
+- **The document tower.** Frozen. Co-adaptation is M16.
 - **A better teacher.** Closed 2026-09-04: stella first of eleven, and first on exposure-free
   SQuAD/ESCI (`research/teacher-reviews-2026-09-04.md`, `m7/RESULTS.md`).
 - **A fusion-parameter sweep** beyond the single registered Gate-1 choice.

@@ -1062,7 +1062,7 @@ the result JSON, or `research/m8-planning/`.*
 - **The release is the PAIR (2026-08-30).** M7 is releasable *paired with a good low-compute model* —
   `constella-zero` + `constella-nano` as two points on a quality-vs-query-cost frontier, not a
   leaderboard claim. M10 carries the release, the ONNX port **including the document model**, the
-  fastembed integration and the whitepaper (`instructions-m10.md`; renumbered M11 on 2026-09-01, `instructions-m11.md`). M11 (now M14) is noted as an **image**
+  fastembed integration and the whitepaper (`instructions-m10.md`; renumbered M11 on 2026-09-01, `instructions-m11.md`). M11 (now M15) is noted as an **image**
   model, on the ground that most edge workloads are vision.
 
 - **M8 MAY SHIP A BETTER SYSTEM (2026-08-29).** *"M8 can ship a better system. If that system makes

@@ -58,7 +58,7 @@ Weak row: the ceiling loses TREC-COVID to arctic-m (0.8234 vs 0.8461).
 - Adjacent: ScalingNote MSE+cosine (needs labels; NB: with normalized outputs squared-L2 and
   cosine are affine-equivalent — MSE+cosine dropped from our phase-2 pool); Jasper/stella distill
   (2412.19048) cosine+Gram-MSE+margin (phase-2 candidates); EmbedDistill (2301.12005);
-  2306.11550 (layer-pruned students). DistilVDR (2608.10636) = the image-model pointer (M14 since 2026-09-03).
+  2306.11550 (layer-pruned students). DistilVDR (2608.10636) = the image-model pointer (M15 since 2026-09-03).
 - Sanity: LEAF paper per-dataset on our six reproduces our harness (52.63→0.5264; 51.6→0.5155).
 
 ## 4. Student shortlist (Aug 2026; no new sub-35M retrieval-tuned encoder exists)
