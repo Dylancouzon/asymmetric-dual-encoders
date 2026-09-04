@@ -62,9 +62,11 @@ actioned — read the mandate, not this paragraph, for the rules.**
 | 4 | PAQ as query text (CC BY-SA data, official release) | include |
 | 7 | Confirm LoTTE read #1 withdrawal and the renumbering | as recorded |
 | 10 | The 2026-09-04 amendments A1–A8 | adopted; strike any item and it reverts to the 2026-09-01 text |
-| 11 | **Release rule under four conjuncts**: does C1a-pass / C1b-fail ship as "nano"? | **no** — release needs C1b (the headline); a C1a-only pass is published as a frontier measurement labelled not recommended |
-| 12 | **CUREv1 as a validation-only biomedical read** (PubMed-family; 2,000 real clinician queries; CC BY-NC; Qwen-annotated pools). Review recommends: as a reported diagnostic yes, as a selection-bearing family no. (PubMed training text withdrawn: no affirmative grant) | **not adopted until ruled** — biomedical training coverage comes from Wikipedia-medical seeds and arXiv (CC0); MedlinePlus / CDC and ClinicalTrials.gov are out of M10 (`m10/EXPLORED.md`) |
+| 11 | Release rule: does C1a-pass / C1b-fail ship as "nano"? | **ruled 2026-09-04:** default stands (release needs C1b); "make sure we win enough so this isn't a question" |
+| 12 | CUREv1 as a validation-only biomedical read | **adopted 2026-09-04** as a reported diagnostic, never selection-bearing |
 | 13 | The 2026-09-04b amendments B1–B6 | adopted; strike any item and it reverts |
+| 14 | **Generation on the box** with Qwen's official `Qwen3-8B-AWQ` via vLLM, smoke pushed as `m10/SMOKE.md` for remote approval; hosted bf16 as fallback | **proposed** — waits for Dylan's go |
+| A7 | the box runs the screens | **confirmed 2026-09-04**; three uninterrupted box days over the weekend |
 | — | **Generation smoke approval** — you are the approver (200 queries × 12 forms, 90% contract / 80% on-form). It cannot run until a cloud instance exists (Qwen3-8B bf16 is 16.4 GB on a 10 GB card), so it will be waiting when you are back | blocks generation only |
 
 Decisions 2 (budget), 3, 5, 6, 8 and 9 are closed — see `instructions-m10.md` §Owner decisions.
@@ -72,7 +74,12 @@ Decisions 2 (budget), 3, 5, 6, 8 and 9 are closed — see `instructions-m10.md` 
 ## The three-day box window (2026-09-04 → 09-07, Dylan away)
 
 Everything here needs no approval, spends no cloud dollars, and touches no protected surface.
-Generation is deliberately absent: it needs both Dylan and a bigger card.
+**If decision 14 is go, generation joins the window:** day 1 — install vLLM, smoke it on the AWQ
+artifact, run the 12-form smoke, push `m10/SMOKE.md` (200 samples per form, the 90% contract rate per
+form computed); Dylan approves remotely; then ≈1.0M queries (≈1 box-day, GPU) while the harvest,
+decontamination and manifest run on CPU; then family F starts (the anchor's 20M curve first). The
+screen cannot start without the generated half, so this is what turns the window from preparation
+into proof.
 
 **Ordered by value, and the last four are droppable — ten items do not fit in 72 h (Fable M6).**
 
