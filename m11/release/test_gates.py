@@ -169,13 +169,13 @@ def t_card_raises():
         return attempt(lambda: push.gate_readme(REPO_ID), "raises")
 
 
-@test("gate 6 catches a card pointing at the wrong repo", "does not download")
+@test("gate 6 catches a card pointing at the wrong repo", "never names")
 def t_card_wrong_repo():
     with staged() as d:
         (d / "README.md").write_text(
             '```python\nfrom huggingface_hub import snapshot_download\n'
             'd = snapshot_download("someone-else/other-model")\n```\n')
-        return attempt(lambda: push.gate_readme(REPO_ID), "does not download")
+        return attempt(lambda: push.gate_readme(REPO_ID), "never names")
 
 
 @test("gate 6 runs against the STAGING DIR even if the card renames its variable")

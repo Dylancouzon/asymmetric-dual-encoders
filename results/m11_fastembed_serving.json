@@ -2,23 +2,14 @@
  "batch_invariance_max_abs": 4.470348358154297e-08,
  "bundle": "/home/dylan/asymetric-dual-encoders/work/release/zero-v1",
  "dev_queries": {
-  "fastembed_norms": [
-   0.9999998807907104,
-   1.0000001192092896
-  ],
   "max_abs": 4.470348358154297e-08,
   "min_cos": 0.9999998807907104,
   "n": 1024
  },
  "fastembed_path": "/home/dylan/fastembed/fastembed/__init__.py",
- "fastembed_source": "fork",
  "fastembed_version": "0.8.0",
- "loader_tokenizer": {
-  "padding_length": null,
-  "truncation_max_length": 512
- },
  "long_inputs_max_abs": 5.513429641723633e-07,
- "mean_route_min_cos": 0.9999998807907104,
- "parallel_2": "RuntimeError: Thread unexpectedly terminated",
- "pass": true
+ "parallel_2_max_abs": "max-abs 4.470e-08",
+ "pass": true,
+ "served_by": "OnnxTextEmbedding"
 }

@@ -437,6 +437,41 @@ fails them for the wrong reason.
 card raised `ValueError: already registered` the moment the fork registered the name. That is why
 both cards use the built-in name only.
 
+### The two reviews (2026-09-03) — both logs audited clean for reserved-set reads
+
+**Fable, on the integration.** Five findings actioned, one of which changed the design:
+
+- **The new class was unnecessary and its stated rationale was FALSE.** `OnnxTextEmbedding`
+  already handles `ndim == 2` (`onnx_embedding.py:316-322`): pass through, then `normalize` — a
+  no-op on unit vectors. `PrePooledEmbedding` was deleted and both models registered as ordinary
+  `supported_onnx_models` entries. Parity is unchanged at 4.470e-08. The diff went from a new file
+  to **26 lines**. A maintainer would have caught the false rationale in seconds.
+- **`push_doc.py` could never have shipped the rewritten card** — it refuses when the repo exists,
+  and it does. Added `--update`.
+- **The doc registry description said "Prefixes: not necessary"** — wrong, stella's queries need
+  `s2p_query`. Now "necessary".
+- **`verify_fastembed.py` tested `add_custom_model`, not the path the cards ship.** Rewritten
+  against the built-in name, with the `parallel` check that motivates the PR.
+- **`push.py` documented a `--post-push-smoke` flag that never existed.** Claim removed.
+
+Could not break: canonical vectors (recomputed both), runtime correctness, the staged-bytes gate
+chain, the results arithmetic.
+
+**Codex, on the cards.** Factual errors confirmed and fixed: `zero_encoder.py` is **93** lines not
+89; "every number below was measured through it" was false; **FiQA is the 4th-strongest set, not
+joint-strongest**, so the contamination bullet overstated the overlap; "1/1000 of query-side cost"
+had no denominator on the card; the storage rows are raw payload, not index size; TriviaQA was
+missing from the attribution list. Also: `sentence-similarity` is a misleading tag for an
+asymmetric pair (removed), `library_name: fastembed` is the Qdrant convention (added, cf.
+`Qdrant/colmodernvbert`).
+
+Declined as disproportionate for a research-preview card: a full public evaluation manifest, and
+deleting the fusion row and cost table outright (the cost rows are a T6 requirement).
+
+**One inherited number was wrong and was re-measured.** Fable's cos(prompted, unprompted) = 0.79
+came from `"hello world"`. On five realistic queries it is **0.82-0.87** — that is what the doc
+card now says, with what it was measured on.
+
 No model-integration PR this milestone. Leave the branch pushed and PR-ready; a PR would still need
 canonical reference vectors per `CONTRIBUTING.md` and an honest description — zero **missed**
 `LR-dense-pertask 0.4583` at 0.4339 (CI-resolved), its fused variant ties OpenSearch.

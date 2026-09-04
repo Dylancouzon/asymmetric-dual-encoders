@@ -1,13 +1,14 @@
 ---
 license: mit
+language: en
 base_model: NovaSearch/stella_en_400M_v5
+library_name: fastembed
 tags:
   - fastembed
   - qdrant
   - onnx
   - retrieval
   - feature-extraction
-  - sentence-similarity
 pipeline_tag: feature-extraction
 ---
 
@@ -17,89 +18,16 @@ An **ONNX conversion of the document side** of
 [`NovaSearch/stella_en_400M_v5`](https://huggingface.co/NovaSearch/stella_en_400M_v5), pinned at
 revision `ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20`.
 
-**No training, no fine-tuning, no distillation.** The weights are the source weights; this repo
-changes their *format*, not their values.
+**No training, no fine-tuning, no distillation** — the weights are the source weights; this repo
+changes their format, not their values. It runs under ONNX Runtime and FastEmbed with the pooling
+head baked into the graph, so it needs neither `trust_remote_code` nor torch.
 
-It exists to be the **document half of an asymmetric encoder pair**, served with
-[**FastEmbed**](https://github.com/qdrant/fastembed) and [**Qdrant**](https://qdrant.tech): this
-model indexes documents in the cloud, and
-[`DylanCouzon/constella-zero`](https://huggingface.co/DylanCouzon/constella-zero) — a 31 MB lookup
-table with no transformer in it — encodes queries into the same space on the device.
+It is published as the document half of an asymmetric pair: this model indexes documents, and
+[`constella-zero`](https://huggingface.co/DylanCouzon/constella-zero) — a 31 MB lookup table with
+no transformer — encodes queries into the same space on the device (*constella* = constellation +
+stella). Used alone, it pairs with the prompted query path of the source stella model, below.
 
-It is equally useful on its own to anyone who wants stella's document embeddings without
-`trust_remote_code` and a torch dependency.
-
-## What the graph computes
-
-    masked mean over last_hidden_state  →  2_Dense_1024 (Linear 1024→1024, bias, Identity)  →  L2
-
-which is stella's `1_Pooling` + `2_Dense_1024` modules, folded in. Input is `input_ids` and
-`attention_mask` (int64); output is `embedding`, `(batch, 1024)`, already L2-normalized, so
-cosine similarity is a dot product.
-
-**`max_length` is 512.** That is the length the corresponding document index was built at, and the
-shipped tokenizer files enforce it (see *Tokenizer deviation*).
-
-**This is the DOCUMENT path only.** stella is asymmetric: queries require its `s2p_query` prompt
-(`Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: `).
-Nothing here adds that prefix, and fastembed's `query_embed` does not add one either — so using
-this model for queries as well as documents is **silently wrong**, not an error you will see. Embed
-documents here; embed queries with the prompt applied through stella itself, or with
-[`constella-zero`](https://huggingface.co/DylanCouzon/constella-zero), which was distilled to land
-in this exact document space and needs no prompt.
-
-Paired-sequence inputs are not supported: the graph has no `token_type_ids`, which matches
-single-string document encoding (where they are all zeros) and nothing else.
-
-## Files
-
-| file | precision | size |
-|---|---|---|
-| `model.onnx` | fp32 | ~1.75 GB |
-
-opset 17, standard ONNX domain only, no external-data initializers.
-
-**There is deliberately no fp16 graph.** One was built and rejected — see *Why no fp16* below.
-
-## Measured parity
-
-Against the torch module (backbone + Dense + normalize) on **259 real passages** sampled from
-Natural Questions and frozen as a length-stratified fixture set — tiny / short / mid / near-512 /
-**511–513 boundary** / **over-512 (truncated)** — so the truncation boundary is actually exercised
-rather than asserted.
-
-| comparison | min cosine | max abs |
-|---|---|---|
-| `model.onnx` vs the torch module, CPU | PARITY_FP32_COS | PARITY_FP32_ABS |
-| `model.onnx` on CUDA vs on CPU | 1.000000 | 9.07e-05 |
-
-Output norms are PARITY_FP32_NORMS. Batch invariance — the same text alone vs inside a ragged
-padded batch — is **bit-identical**.
-
-Cosine here is a true cosine, `dot / (‖a‖·‖b‖)`, not a bare dot product.
-
-The CUDA row matters in practice: the graph returns the same embeddings on GPU as on CPU, so an
-index built on one is valid for the other.
-
-## Why there is no fp16 graph
-
-One was built, measured and rejected. It is documented because the failure is easy to repeat:
-
-- It **passes** CPU parity — cos 0.99999923, max-abs 1.79e-04 over all 259 fixtures — and that
-  number is meaningless. ONNX Runtime has no fast CPU fp16 kernels, so it up-converts to fp32. The
-  same fact makes fp16 roughly **10× slower** than fp32 on CPU.
-- On `CUDAExecutionProvider`, where it actually runs in fp16, it disagrees with the fp32 reference
-  on **255 of 259 passages** (min cosine 0.662, max-abs 7.4e-02), at every length from 7 tokens
-  up. It is 1.78× faster and wrong.
-
-**A CPU parity gate cannot qualify a reduced-precision ONNX graph.** Measure on the execution
-provider the precision exists for, or do not ship the precision.
-
-## Usage — FastEmbed
-
-The graph pools and normalizes internally, so it is served with pooling **disabled** and the
-output passed through untouched. Asking FastEmbed to pool again would apply a masked mean on top
-of a vector that has already been pooled and normalized.
+## Usage
 
 ```python
 from fastembed import TextEmbedding
@@ -112,91 +40,123 @@ D = list(doc_model.embed(docs))
 print(len(D), D[0].shape)     # 2 (1024,)
 ```
 
-Support for this model is in review upstream. Until it is released, install FastEmbed from the
-branch that carries it:
+Not in a FastEmbed release yet. Until it is:
 
     pip install "fastembed @ git+https://github.com/Dylancouzon/fastembed@add-constella-models"
 
-FastEmbed downloads only `model.onnx` and the tokenizer files, and serves them bit-identically to
-a direct ONNX Runtime session (max-abs 0.00e+00, measured on 259 real passages).
+FastEmbed fetches only `model.onnx` and the tokenizer, and does not alter the graph's output —
+it matches a direct ONNX Runtime session exactly, with or without `parallel`.
 
-`parallel=2` is supported and agrees with serial encoding exactly (max-abs 0.00e+00, measured).
+The blocks below continue from this one.
 
-## Usage — ONNX Runtime directly
+### Sentence Transformers
 
-If you would rather not take the FastEmbed dependency, the graph is plain opset-17 ONNX:
-
+For the **source** model in torch — a different artifact, not this repo — and the only supported
+way to embed *queries*, which need stella's `s2p_query` prompt:
 
 ```python
-import numpy as np, onnxruntime as ort
-from tokenizers import Tokenizer
-from huggingface_hub import snapshot_download
+from sentence_transformers import SentenceTransformer
 
-d = snapshot_download("REPO_ID")
-
-tok = Tokenizer.from_file(f"{d}/tokenizer.json")          # already truncates at 512
-sess = ort.InferenceSession(f"{d}/model.onnx", providers=["CPUExecutionProvider"])
-
-docs = ["Marie Curie was a physicist and chemist who conducted pioneering research on radioactivity.",
-        "The Nile is a major north-flowing river in northeastern Africa."]
-enc = [tok.encode(t) for t in docs]
-L = max(len(e.ids) for e in enc)
-ids = np.zeros((len(enc), L), "int64")
-mask = np.zeros((len(enc), L), "int64")
-for i, e in enumerate(enc):
-    ids[i, :len(e.ids)] = e.ids
-    mask[i, :len(e.ids)] = 1
-
-D = sess.run(None, {"input_ids": ids, "attention_mask": mask})[0]   # (2, 1024), L2-normalized
-print(D.shape, np.linalg.norm(D, axis=1))
+st = SentenceTransformer(
+    "NovaSearch/stella_en_400M_v5",
+    revision="ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+    trust_remote_code=True,
+    # required unless xformers is installed; also the setting this graph was exported under
+    config_kwargs={"use_memory_efficient_attention": False, "unpad_inputs": False},
+)
+D_torch = st.encode(docs, normalize_embeddings=True)          # documents: no prompt
+Q_torch = st.encode(["who discovered radium?"], prompt_name="s2p_query",
+                    normalize_embeddings=True)                # queries: prompt required
 ```
+
+## Document path only
+
+stella is asymmetric. Queries need the `s2p_query` prompt
+(`Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: `),
+and nothing here adds it — neither the graph nor FastEmbed's `query_embed`. Embedding a query
+through this model without the prompt produces a perfectly valid vector that is simply not
+stella's query representation — cosine between the prompted and unprompted encodings of the same
+text ran **0.82–0.87** across five short queries here. Nothing errors; the retrieval is just not
+the protocol stella was trained for.
+
+So: embed documents here, and embed queries either through Sentence Transformers with the prompt,
+or with `constella-zero`, which was distilled to land in this document space and needs no prompt.
+
+Paired-sequence inputs are unsupported: the graph has no `token_type_ids`.
+
+## What the graph computes
+
+    masked mean over last_hidden_state  →  2_Dense_1024 (Linear 1024→1024, bias, Identity)  →  L2
+
+which is stella's `1_Pooling` + `2_Dense_1024` modules folded in. Inputs are `input_ids` and
+`attention_mask` (int64); the output is `(batch, 1024)`, already L2-normalized.
+
+`max_length` is **512** — the length the corresponding document index was built at, enforced by the
+shipped tokenizer files (see below).
+
+| file | precision | size |
+|---|---|---|
+| `model.onnx` | fp32 | ~1.75 GB |
+
+opset 17, standard ONNX domain only, no external-data initializers. **There is deliberately no
+fp16 graph** — see below.
+
+## Measured parity
+
+Against the torch module (backbone + Dense + normalize) on **259 real passages** from Natural
+Questions, frozen as a length-stratified fixture set — tiny / short / mid / near-512 / the 511–513
+boundary / over-512 truncated — so the truncation boundary is exercised, not assumed.
+
+| comparison | min cosine | max abs |
+|---|---|---|
+| `model.onnx` vs the torch module, CPU | PARITY_FP32_COS | PARITY_FP32_ABS |
+| `model.onnx` on CUDA vs on CPU | 1.000000 | 9.07e-05 |
+
+Output norms are PARITY_FP32_NORMS. Batch invariance — the same text alone vs inside a ragged
+padded batch — is bit-identical. Cosine here is a true cosine, not a bare dot product.
+
+The CUDA row matters in practice: an index built on GPU is valid for CPU search and vice versa.
+
+## Why there is no fp16 graph
+
+One was built and rejected: on `CUDAExecutionProvider` it fell to **min cosine 0.662** against the
+fp32 reference over the 259 fixtures. It looks fine on CPU (cos 0.99999923) only because ONNX
+Runtime up-converts fp16 there — which also makes it ~10x slower than fp32 on CPU. CPU parity did
+not qualify this export.
 
 ## Tokenizer deviation from the source repo
 
-The tokenizer files here are stella's own, from the pinned revision, with **two edits**:
+stella's own tokenizer files, from the pinned revision, with two edits:
 
-| field | stella | here | why |
-|---|---|---|---|
-| `tokenizer_config.json: model_max_length` | 32768 | **512** | fastembed truncates at `min(model_max_length, max_length)`, i.e. **8000** with stella's files. Documents of 513–8000 tokens would then pass through untruncated and **would not reproduce an index built at 512**. |
-| `tokenizer_config.json: max_length` | 8000 | **512** | as above |
-| `tokenizer.json: padding` | fixed 512 | **null** | so a reader installs dynamic batch-longest padding instead of padding every input to 512 |
+| field | stella | here |
+|---|---|---|
+| `model_max_length` | 32768 | **512** |
+| `max_length` | 8000 | **512** |
+| `tokenizer.json: padding` | fixed 512 | **null** |
 
-There is no API-level override for the truncation limit in fastembed today (see
-[qdrant/fastembed#689](https://github.com/qdrant/fastembed/issues/689)), so editing the shipped
-files is the mechanism, not a preference. Nothing about the weights or the graph changes; only
-readers that honour these fields are affected.
+FastEmbed truncates at `min(model_max_length, max_length)` — 8000 with stella's files — so
+documents of 513–8000 tokens would pass through untruncated and **would not reproduce an index
+built at 512**. There is no API-level override
+([qdrant/fastembed#689](https://github.com/qdrant/fastembed/issues/689)), so editing the shipped
+files is the mechanism, not a preference. `padding: null` means no tokenizer-configured padding,
+so FastEmbed applies its own batch-longest padding rather than padding every input to 512. The
+weights and the graph are untouched.
 
-`config.json` is stella's, with `use_memory_efficient_attention` and `unpad_inputs` set to
-`false` — the values the graph was exported with. If you load the *source* model in torch you must
-pass them too, or it raises `assert ... 'please install xformers'`:
-
-```
-# for reference, this is the SOURCE model in torch -- this repo ships ONNX only
-cfg = AutoConfig.from_pretrained("NovaSearch/stella_en_400M_v5", trust_remote_code=True)
-cfg.use_memory_efficient_attention = False
-cfg.unpad_inputs = False
-```
+`config.json` is stella's, with `use_memory_efficient_attention` and `unpad_inputs` set to `false`
+— the values the graph was exported under.
 
 ## Licence and attribution
 
 - The weights are stella's, and **NovaSearch releases `stella_en_400M_v5` under MIT**. This repo
-  redistributes them in ONNX form under the same terms and **claims no separate licence of its
-  own**.
-- stella is trained from
-  [`Alibaba-NLP/gte-large-en-v1.5`](https://huggingface.co/Alibaba-NLP/gte-large-en-v1.5), which is
-  **Apache-2.0**, and stella's `modeling.py` carries "Copyright 2024 The GTE Team Authors and
-  Alibaba Group". That code is **not** redistributed here — this repo contains no Python model
-  implementation, only ONNX graphs — so no Apache-2.0 licence text is shipped. The lineage is
-  recorded as attribution.
+  redistributes them in ONNX form under the same terms and claims no separate licence.
+- stella is trained from [`Alibaba-NLP/gte-large-en-v1.5`](https://huggingface.co/Alibaba-NLP/gte-large-en-v1.5)
+  (Apache-2.0), and stella's `modeling.py` carries "Copyright 2024 The GTE Team Authors and Alibaba
+  Group". That code is **not** redistributed here — this repo ships no Python model implementation
+  — so no Apache-2.0 licence text is included. The lineage is recorded as attribution.
 - Cite stella, not this conversion, for the model itself.
 
 ## Provenance
 
-| | |
-|---|---|
-| source | `NovaSearch/stella_en_400M_v5` @ `ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20` |
-| head | `2_Dense_1024`, Linear(1024→1024) with bias, Identity activation |
-| exporter | `torch.onnx.export`, opset 17, TorchScript path, constant folding on |
-| training | none |
-| fixtures | 259 real Natural Questions passages, length-stratified, frozen |
-| precisions | fp32 only — see *Why no fp16* |
+Converted from `NovaSearch/stella_en_400M_v5` @ `ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20` with
+`torch.onnx.export` (opset 17, constant folding on). No training. Parity fixtures are 259 real
+Natural Questions passages, length-stratified and frozen.
