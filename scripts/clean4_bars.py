@@ -43,7 +43,7 @@ def boot_width(datasets, a_sys, b_sys, sets, n_boot=20000, seed=0, q=0.025):
         draws[i] = np.mean([float((a[idx] - b[idx]).mean())
                             for a, b in arrs
                             for idx in (rng.integers(0, len(a), len(a)),)])
-    lb = float(np.quantile(draws, q))
+    lb = float(np.quantile(draws, q, method="inverted_cdf"))   # the registered empirical quantile (m9/FINAL_LOCK.md)
     return point, lb, point - lb
 
 

@@ -63,7 +63,7 @@ for us; the screen's G-MLP and D-COV arms are the test.
 
 | # | gap | disposition |
 |---|---|---|
-| G1 | **The COV screen could not see the headline.** All four clean-4 sets are scientific/biomedical; COV had consumer-health, StackExchange, legal, finance. The A3−A2 contrast on harvested *scientific* text would be judged on surfaces blind to it, and the plan conceded those forms are "tested only by the six-set transaction" — i.e. the most important data decision for the headline was to be made blind | **B4**: constructed `arxiv-title` surface (2,000 held-out real titles → own abstract among 100K; qrels by construction; licence-clean; protected before harvest). **After the Codex pass: a registered secondary surface with one action (harvested scientific forms in/out of the build), not a COV family** — as a family it would reward A3 by construction and dominate the macro's power. `ctgov-title` dropped (terms clause unread) |
+| G1 | **The COV screen could not see the headline.** All four clean-4 sets are scientific/biomedical; COV had consumer-health, StackExchange, legal, finance. The A3−A2 contrast on harvested *scientific* text would be judged on surfaces blind to it, and the plan conceded those forms are "tested only by the six-set transaction" — i.e. the most important data decision for the headline was to be made blind | **B4**: constructed `arxiv-title` surface (2,000 held-out real titles → own abstract among 100K; qrels by construction; licence-clean; protected before harvest). **After the Codex pass: not a COV family** (as a family it would reward A3 by construction and dominate the macro's power); **after the Opus pass: a descriptive diagnostic with no action** (title→own abstract can floor, and it is not scidocs' relation). `ctgov-title` dropped (terms clause unread) |
 | G2 | **"A nonlinear head has no serving path" was wrong** for per-token heads | **B3**: proven — fastembed reproduces a per-token head to ~1e-7 with zero custom ops. **After the Codex pass the arm is the residual form** `W_lin·x + W₂·GELU(W₁·x+b₁)` (W₁ 1152→192; 34.96M; `results/m10_head_mlp_parity_box.json`), because the first bottleneck form capped output rank at 512. Arm G-MLP replaces G-768 |
 | G3 | **No four-conjunct release rule.** M9's table had C1/C2; with C1a/C1b under gatekeeping, the likely outcome (C1a pass, C1b fail) had no registered consequence | **B2**: table registered; the ship decision is **decision 11**. Default after the Codex pass: **release needs C1b**, the headline; a C1a-only pass is published as a frontier measurement labelled not recommended |
 | G4 | **Feasibility never stated.** The mandate registered C2b without saying what the evidence puts it at, or what each conjunct demands per dataset | **B1**: §Goal carries the arithmetic (0.025 quantile), the stress scenarios and the literature prior before any nano number exists |
@@ -146,6 +146,14 @@ missed, **all actioned** (dispositions there). The ones that changed this docume
 quantile (§1), the residual G-MLP (§3 G2), `arxiv-title` demoted to a secondary surface (§3 G1),
 decision 11's default flipped to "release needs C1b" (§3 G3), CUREv1 as a diagnostic only (§4c),
 MedlinePlus / CDC / ClinicalTrials.gov out of M10 (§4b), and amendment A4's adaptive MDE struck.
+
+**Opus pass after Codex — `research/m10-opus-review-2026-09-04.md`** (3 BLOCKER / 9 MAJOR / 7
+MINOR / 4 missed, all actioned). What it changed here: the gatekeeping order is C1b → C1a → C2a →
+C2b (the stress table's `arguana` row showed the old order could block a headline-partition release);
+the mandate's 745 / 1,331 examples/s were transcription errors for 683 / 1,517; `arxiv-title` is a
+diagnostic with no action (§3 G1); family F now runs before A; the kill and plateau rules were
+inert and are now defined; C1 is worded as a system comparison; LEDGER §0 is split so the lock can
+actually be filled at M10.0-e.
 
 ## 6. What would change the verdict
 

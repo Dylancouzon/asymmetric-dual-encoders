@@ -12,10 +12,10 @@ money was spent ("is this the best way … is it the most efficient?", "I'm not 
 generate synthetic data?", "don't over-engineer", "keeping the same teacher (Stella) is the goal").
 The review produced amendments **A1–A8**. What changed, shortest form:
 
-- **Measured, not assumed:** the M10 recipe runs at **745 examples/s on the box** against the
-  plan's imported 560 on a rented A100 — the step is launch-bound at batch 32
+- **Measured, not assumed:** the M10 recipe runs at **683 examples/s blended (718 query-bucket / 596 document-bucket) on the box**
+  against the plan's imported 560 on a rented A100 — the step is launch-bound at batch 32
   (`results/m10_rate_bench_box.json`). The box is an execution target again for everything except
-  generation; the build is ≈75 GPU-hours, not 100; cloud spend re-prices to **≈$110–280** hybrid.
+  generation; the build is ≈81 GPU-hours at the hardware bound, not 100; cloud spend re-prices to **≈$110–280** hybrid.
 - **Less machinery:** family D's three ranking-aware arms cut (LEAF's ‖e‖₂ loss plus **D-COV**, a
   document-covariance-weighted regression, in their place), which deletes the candidate bank, the
   mining pass, the HNSW fallback, the τ rule and the seed-rank field. Fifteen arms, fourteen
@@ -26,8 +26,8 @@ The review produced amendments **A1–A8**. What changed, shortest form:
   of the four clean-4 headline datasets fall in the harvested half.
 - **Two protocol fixes:** C1/C2 are registered on **clean-4 as well as avg-6** under
   fixed-sequence gatekeeping (bars 0.5046 / 0.5233), because M14 made clean-4 the headline for both
-  halves of the pair; and the COV resolution number now **sizes** the screen, because the registered
-  MDE 0.0056 sat below the surface's own resolution.
+  halves of the pair; and the COV resolution number is reported as the screen's power disclosure (its sizing role was
+struck the same day by the Codex pass).
 
 **Then Fable reviewed the amendments and returned 3 BLOCKER / 8 MAJOR / 7 MINOR — all actioned**
 (`research/m10-fable-plan-2026-09-04.md`, dispositions in the mandate; read-exclusion audit clean).
@@ -40,7 +40,7 @@ unfounded** — arXiv metadata is added as a licence-gated source and every harv
 before quotas lock; and the benchmark was re-run because the shape 25% of build steps will use had
 never been timed.
 
-**What the review means for the numbers above:** the 745 examples/s is a *hardware* bound. M9's
+**What the review means for the numbers above:** the 683 examples/s is a *hardware* bound. M9's
 realized pipeline ran at ~10% of the comparable roof, so **the build is priced as a range and the
 real-data re-measure gates every dollar** (PLANNING §11). Do not commit to a box-versus-cloud split
 on the optimistic end.
@@ -50,7 +50,9 @@ on the optimistic end.
 and C2a are the contest at ~91–92% uniform retention; C2b (~95%) is a low-prior stretch aim with no
 pure-regression precedent at our teacher gap.** Weakness found and fixed: every clean-4 set is scientific/biomedical and the COV screen
 had no surface that could see those forms (B4, `arxiv-title`). G-MLP, a per-token nonlinear head,
-is proven servable and replaces the 768 arm (B3). Decision 12 (CUREv1 as validation-only COV) is Dylan's.
+is proven servable and replaces the 768 arm (B3). Decision 12 (CUREv1 as a validation-only diagnostic) is Dylan's. **Then a Codex pass and an Opus pass
+(`research/m10-codex-feasibility-2026-09-04.md`, `research/m10-opus-review-2026-09-04.md`), every finding
+actioned — read the mandate, not this paragraph, for the rules.**
 
 ## Dylan — open decisions (defaults apply meanwhile)
 
@@ -83,8 +85,8 @@ Generation is deliberately absent: it needs both Dylan and a bigger card.
    (CC BY-NC) is re-admissible, giving four families without LEDGER; verify LEDGER's structure and
    chunk cap; per-component licence, revision, size, qrels and metric records into `m10/LEDGER.md`
    §2; corpus-level and fingerprint contamination screens; add every admitted corpus, query set and
-   document set to the protected index; encode with stella. **Plus the `arxiv-title` secondary surface
-   (B4):** draw 100K held-out arXiv papers by id-without-version with seed 0 (Kaggle metadata, CC0 —
+   document set to the protected index; encode with stella. **Plus the `arxiv-title` diagnostic surface
+   (B4, descriptive, no action):** draw 100K held-out arXiv papers by id-without-version with seed 0 (Kaggle metadata, CC0 —
    record artifact and revision), protect them, encode them. If decision 12 is ruled yes, add CUREv1
    (revision, licence clause, corpus provenance) as a reported diagnostic the same way.
 3. **The COV resolution number** (e5-small-v2 vs gte-small, distance only, no direction) — the

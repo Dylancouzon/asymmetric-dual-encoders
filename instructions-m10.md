@@ -76,8 +76,8 @@ number exists. Evidence: PLANNING §11 (measured rates), §12 (the synthetic-dat
 | A3 | **C1/C2 registered on clean-4 as well as avg-6** (§Goal, §Final run). clean-4 bars: bge-small **0.5046**, leaf-ir-asym **0.5233** | M14 registered clean-4 as the headline partition for both zero and nano on 2026-09-04 (`instructions-m14.md`), while M10 had C1/C2 on avg-6 with NDO-4 *descriptive*. Left alone, the paper's headline would carry no pre-registered pass/fail for nano. Fixed now, before any M10 number exists |
 | A4 | ~~**The COV resolution number is measured first and SIZES the screen**~~ **— STRUCK by the Codex pass the same day** (an α that adapts to an observed width is not pre-registration): the number is measured and *reported* as the power disclosure; MDE 0.0056 and α 0.025/14 are fixed (§Screen) | The registered MDE 0.0056 sits **below the surface's own resolution**: on a family-weighted macro whose paired SE is 0.0033–0.0048 (BRIGHT ~100 queries/slice, CorporateLobbying 340), a contrast needs ≈0.009–0.0135 to resolve at the Bonferroni bound — 0.025/13 is z = 2.89, and it was z = 2.96 at the /16 count this finding was first written against — so a contrast landing at the MDE can never resolve. Codex pass 7's objection was to comparators drawn from family F; a direction-free power quantity on non-candidates (e5-small-v2, gte-small) is a power calculation, not a selection |
 | A5 | **Decision 8 (second build seed, ≈100 GPU-hours) withdrawn; confirmations capped at two decisions** | Seed 1 is descriptive by construction and can trigger no action; the same hours buy ~3 extension cycles that can move the number. A screen-dose seed pair gives a replication band for ~5% of the cost |
-| A6 | **Family F runs SECOND (right after A), and the remaining families run on its winner** | It was seventh, which made every other verdict transfer to the build student by assumption. Reordering costs nothing and removes the assumption. Order is now A → F → G → B → E → C → D |
-| A7 | **⚠ This is the one amendment that reinterprets a verbatim owner ruling — Dylan should strike it explicitly if he does not want it.** **The box is an execution target again for everything that is not generation.** The 2026-09-01 ruling stands where it bites — the *dose* is not set by the box — but the box is where the screens and (optionally) the build run, and it holds ~200 GB of M9 caches the plan had budgeted 12 GPU-hours and a day of network to re-derive | Measured on the box 2026-09-04 (PLANNING §11): the M10 recipe shape runs at **400 examples/s** in M9's two-chunk collate and **745** in one padded chunk, against the plan's imported LEAF planning rate of 560. The 3080 meets or beats the assumed A100 rate because at batch 32 with 35-token queries the job is launch-bound, not FLOP-bound. Generation still needs the cloud: Qwen3-8B bf16 is 16 GB on a 10 GB card |
+| A6 | **Family F runs SECOND (right after A), and the remaining families run on its winner** | It was seventh, which made every other verdict transfer to the build student by assumption. Reordering costs nothing and removes the assumption. Order was A → F → G → B → E → C → D; **F → A → … after the Opus pass**, so family A's stop rule is also decided on the build student |
+| A7 | **⚠ This is the one amendment that reinterprets a verbatim owner ruling — Dylan should strike it explicitly if he does not want it.** **The box is an execution target again for everything that is not generation.** The 2026-09-01 ruling stands where it bites — the *dose* is not set by the box — but the box is where the screens and (optionally) the build run, and it holds ~200 GB of M9 caches the plan had budgeted 12 GPU-hours and a day of network to re-derive | Measured on the box 2026-09-04 (PLANNING §11): the M10 recipe shape runs at **400 examples/s** in M9's two-chunk collate and **683** blended at 75/25 in length-bucketed single chunks (718 query-bucket / 596 document-bucket; `results/m10_rate_bench_box.json` — the Opus pass caught a stale 745 here), against the plan's imported LEAF planning rate of 560. The 3080 meets or beats the assumed A100 rate because at batch 32 with 35-token queries the job is launch-bound, not FLOP-bound. Generation still needs the cloud: Qwen3-8B bf16 is 16 GB on a 10 GB card |
 | A8 | **Two pre-training data quality gates added** (§Data): near-duplicate and dispersion metrics per form, and a **distribution-overlap check against real MS MARCO dev queries in stella's own space** | The synthetic risk here is not wrong labels — the teacher's embedding of any text is a correct target by construction — it is distribution shift and diversity collapse, both measurable before a training step. MS MARCO is permitted for validation by Dylan's 2026-09-04 rule. FORMS-12 cannot serve this purpose: it scores student-teacher agreement on the same synthetic queries and is circular for it |
 
 ### Fable adversarial review of A1–A8, 2026-09-04 — all findings actioned
@@ -125,7 +125,7 @@ stella, the cap, the pair, the frozen tower or any observed number.
 | B1 | **Feasibility statement in §Goal** with per-dataset arithmetic (`results/m10_conjunct_arithmetic.json`) | C1b is harder than C2a and no ≥10×-gap regression distillation exceeds ~95%; registering C2b without saying so invites "you always knew" |
 | B2 | **Four-conjunct claim decision table** (§Goal); release rule = **decision 11** | "C1 passes → release" was ambiguous on the likely outcome (C1a pass, C1b fail) |
 | B3 | **G-768 → G-MLP**, a per-token *residual* nonlinear head `W_lin·x + W₂·GELU(W₁·x+b₁)`, W₁: 1152→192 (§Screen, §Recipe); `m10/EXPLORED.md` row corrected | the "no serving path" closure held only for post-pooling heads (`results/m10_head_mlp_parity_box.json`, 34.96M, min-cos 0.99999989); the Codex pass replaced the first bottleneck form, whose output rank was ≤512 |
-| B4 | **Constructed scientific surface** `arxiv-title` (§Surfaces) — after the Codex pass a *registered secondary* surface with one action, not a COV family | every clean-4 set is scientific/biomedical and the screen had no surface that could see those forms; as an equal-weight family it would have rewarded A3 by construction and dominated the macro's power |
+| B4 | **Constructed scientific surface** `arxiv-title` (§Surfaces) — a COV family as proposed; a one-action secondary after the Codex pass; a *descriptive diagnostic with no action* after the Opus pass | every clean-4 set is scientific/biomedical and the screen had no surface that could see those forms; as an equal-weight family it would have rewarded A3 by construction and dominated the macro's power |
 | B5 | DEV-6 recipe pre-screen (STATUS item 10) **dropped** | read DEV-6 twice for defaults the screen re-decides |
 | B6 | **Query-asset size line** (§Recipe): ≈70.8 MB fp16 vs M9's 70 MB target | nobody had done the arithmetic for the wider head |
 
@@ -136,9 +136,18 @@ gatekeeping. **Open to Dylan:** decisions 11 and 12, and A7 (⚠).
 **Codex pass on B1–B6** (`research/m10-codex-feasibility-2026-09-04.md`; read-exclusion audit
 clean): 4 BLOCKER / 8 MAJOR / 4 MINOR, all actioned there — the 0.025 quantile in the proxies and
 the final bound; G-MLP's residual form and its training/export wrappers; family F's L12 rule and the
-fourteenth contrast; decision 11's default; `arxiv-title` demoted to a secondary surface; **A4's
+fourteenth contrast; decision 11's default; `arxiv-title` demoted to a secondary surface (then to a diagnostic by the Opus pass); **A4's
 MDE sizing and its two-step remedy struck** (MDE 0.0056 and α fixed; the resolution number is a
 power disclosure); MedlinePlus / CDC / ClinicalTrials.gov out of M10; superseded prose deleted.
+
+**Opus pass after Codex** (`research/m10-opus-review-2026-09-04.md`; audit clean): 3 BLOCKER / 9
+MAJOR / 7 MINOR, all actioned there — the mandate's 745 / 1,331 examples/s were not in the artifact
+(683 / 1,517 blended; 81 h; family E reads 2.2×); LEDGER §0 split into §0a (design, M10.0-e) and §0b
+(data-dependent constants, close of M10.1); gatekeeping order **C1b → C1a → C2a → C2b**; the mix as a
+4-step window; a kill rule that can fire mid-build; the plateau rule defined; C1 worded as a system
+comparison; family order **F → A → …**; `arxiv-title` descriptive only; B = 200,000 with
+`inverted_cdf`; the licensing row that would have excluded BRIGHT corrected; PLANNING §5–§6 marked
+superseded; LEDGER §5's duplicate tables deleted.
 
 ## Owner decisions (defaults apply until Dylan rules; each is recorded in `m10/LEDGER.md`)
 
@@ -186,8 +195,11 @@ any nano number existed).
 **Multiplicity: fixed-sequence gatekeeping, NOT Holm** (corrected after the Fable review, which
 found the two named together and incompatible — Holm orders by p-value, a fixed sequence does not,
 and a text permitting either lets a future session choose after seeing the numbers). Registered
-order **C1a → C1b → C2a → C2b**; each conjunct is tested at the **full one-sided 0.025** and testing
-stops at the first non-rejection. This controls the family error rate and, unlike Holm-4, **costs
+order **C1b → C1a → C2a → C2b** — the release gate of decision 11 first (the stress table has a case,
+`arguana` at 65%, where clean-4 passes and avg-6 fails, which the old C1a-first order could never
+test; Opus 2026-09-04), then the M9 headline sentence's conjunct C2a before the stretch aim C2b; **if
+Dylan makes C1a the release gate, C1a goes first**. Each conjunct is tested at the **full one-sided
+0.025** and testing stops at the first non-rejection. This controls the family error rate and, unlike Holm-4, **costs
 the avg-6 release claim nothing** — under Holm-4 the smallest-p conjunct would have needed 0.00625
 and C1a's bound would have widened ~11% against the two-conjunct design it replaces.
 
@@ -220,7 +232,9 @@ clean-4's interval is ~36% wider than avg-6's because `trec-covid` carries a
 quarter of the clean-4 macro on **50 queries**, and C2b therefore demands LEAF-level retention on
 the headline partition. Registering clean-4 is still right — M14 headlines it — but the plan is
 registered knowing C2b is the hardest of the four by a wide margin, not knowing only that its bar
-is 0.0078 higher. **C2 is a whole-system comparison** (stella documents + nano queries
+is 0.0078 higher. **clean-4 is also the most data-designed partition** (Opus): §Data names
+scidocs↔titles, scifact↔claims, nfcorpus/trec-covid↔headings, so the headline controls *teacher*
+contamination while maximising *training-design* targeting — two different exposures, both stated. **C2 is a whole-system comparison** (stella documents + nano queries
 vs arctic documents + LEAF queries): different document towers, index sizes, encode costs and
 disclosed teacher overlap. It supports exactly M9's verbatim headline sentence and **no statement
 about nano versus LEAF's query tower**; the report carries both systems' retention against their
@@ -229,13 +243,18 @@ reserved NDO-3 stay descriptive.
 
 **Claim decision table under four conjuncts (B2).** Testing stops at the first non-rejection:
 
-| outcome | release? | permitted claim |
+| outcome (order C1b → C1a → C2a → C2b) | release? | permitted claim |
 |---|---|---|
-| C1a fails | no release; measurement under the miss-is-publishable framing | none |
-| C1a passes, C1b fails | **not a release** (decision 11 default after the Codex pass): the checkpoint is published for reproducibility and as a frontier measurement, labelled *not recommended*; "release" is reserved for the headline partition. Card and paper state that nano did not resolve above bge-small on the contamination-controlled partition | none |
-| C1a, C1b pass, C2a fails | release | none; "beats bge-small on both partitions" |
-| C1a, C1b, C2a pass, C2b fails | release | M9's verbatim headline sentence on avg-6; the paper states the aim was missed on the headline partition |
+| C1b fails | **not a release** (decision 11 default): the checkpoint is published for reproducibility and as a frontier point, labelled *not recommended*; the card states it did not resolve above the bge-small system on the contamination-controlled partition. **M13 consequence (Opus):** a not-recommended model does not enter the upstream FastEmbed PR, so the single-PR ruling then covers zero and the tower only — Dylan decides this with decision 11 | none |
+| C1b passes, C1a fails | release | "the stella-document + nano-query system outperformed the bge-small system on the four contamination-controlled datasets"; avg-6 reported unresolved |
+| C1b, C1a pass, C2a fails | release | the same sentence on both partitions |
+| C1b, C1a, C2a pass, C2b fails | release | M9's verbatim headline sentence (avg-6); the paper states the aim was missed on the headline partition |
 | all four pass | release | the headline sentence on both partitions |
+
+**C1 is a system comparison too** (Opus M7): bge-small is a symmetric 384-d system with its own
+66.7 MB query asset and its own index, so every C1 sentence carries index bytes and document-encode
+cost beside it, exactly as C2 does. M9's "C1 fail, C2 pass → aim claim permitted" row does not
+survive gatekeeping and is deleted.
 
 Additional mandatory disclosures: per-dataset retention, the
 synthetic-data provenance table (generator revision and terms, prompts, seed sources and ids,
@@ -418,7 +437,10 @@ drawn with replacement within a form), and the lock records the realized shares.
 measures raw PAQ volume, and the unbalanced variant is available as a reported diagnostic, not an arm.
 
 **Mix:** by *example*, decided by screen family B; default **75% query-role / 25% document-role**
-examples per step. Query-role examples get raw bytes (prompt policy (b)); document-role examples
+examples as a **presentation share over a window of 4 steps** — 3 query-bucket steps, 1
+document-bucket step — because single-chunk length bucketing makes every step pure-query or
+pure-document (Opus M4; the two-chunk per-step form costs the whole speedup A7 rests on). Family B:
+100/0 = query steps only; 50/50 = alternating. Query-role examples get raw bytes (prompt policy (b)); document-role examples
 carry M9's fixed document-role marker; teacher targets use the s2p template for queries and raw
 bytes for documents. The same student input never maps to two teacher targets.
 
@@ -468,8 +490,9 @@ loss-form arm. Reopening condition in `m10/EXPLORED.md`.
 - **The registered plateau response [replaces the cut class] — this is what M9 finding #4 asked
   for.** M9's lesson was that a phase 2 must be specified at lock or a flat curve has no registered
   answer; cutting family D without one would recreate exactly that. So: at every cycle end the run
-  records per-form retention (FORMS-12 by form) and per-family COV. **If the plateau rule fires while
-  the dev→six forecast is below the release bar, exactly one registered top-up cycle runs** — one
+  records per-form retention (FORMS-12 by form) and per-family COV. **If the plateau rule fires (the extension condition fails at a cycle end k ≥ 3, §Kill) while
+  the dev→six forecast is below the release bar, exactly one registered top-up cycle runs, pre-empting
+  the stop once** — one
   further cycle of 66.7M examples, linear 1e-4→1e-5 as cycle 3, with the **bottom two forms by
   FORMS-12 retention at 2× presentation weight** and everything else unchanged. It needs no new data,
   no candidate list and no new loss; it is the plan's own coverage thesis applied to its own curve.
@@ -501,33 +524,38 @@ loss-form arm. Reopening condition in `m10/EXPLORED.md`.
 - **Dose:** **200M examples** registered — LEAF's dose (6.7M texts × 30 epochs ≈ 201M; PLANNING §5),
   three cycles of 66.7M. Tokens follow the mix: at 75/25, 150M × ~35 + 50M × ~230 ≈ **16.8B**; at
   50/50 ≈ 26.5B. Query epochs ≈ 37 over 4.0M texts, document epochs ≈ 8 over the 6.15M pool. At the
-  **measured** 745 examples/s in one padded chunk (PLANNING §11, on the box) that is ≈ **75
-  GPU-hours**, and ≈ 139 h in M9's two-chunk collate — so **length-bucketed single-chunk batching is
-  part of the build, not an optimisation** (amendment A7). The day-one benchmark's rate replaces
+  **measured** bucket rates (718 query / 596 document examples/s, blended **683** at 75/25; PLANNING
+  §11, on the box) that is ≈ **81 GPU-hours**, and ≈ 139 h in M9's two-chunk collate — so
+  **length-bucketed single-chunk batching is part of the build, not an optimisation** (amendment A7),
+  which is why the mix is a share over a 4-step window (§Data). The day-one benchmark's rate replaces
   both, and family E's batch-32 penalty is recorded in the lock as the build's GPU-hour line. **Extension:** let m_k be the COV macro (full precision, the locked formula and
   evaluation hashes) at the end of cycle k. After every cycle k ≥ 3, one more cycle of 66.7M examples
   (linear 1e-4→1e-5, as cycle 3) starts iff m_k − max(m₁, …, m_{k−1}) ≥ 0.003 **and** the extension
   cycles already run are fewer than `max_extension_cycles`, an integer the lock fixes from the
-  approved dollars minus every mandatory line of PLANNING §6 at the measured rates and the billed
-  price (§Compute). Whole cycles only; a cycle whose projected cost plus billed spend to date would
+  approved dollars minus every mandatory line of **this file's §Compute table** at the measured rates
+  and the billed price (PLANNING §5–§6 are superseded evidence, Opus M12). Whole cycles only; a cycle whose projected cost plus billed spend to date would
   exceed the ceiling does not start. The lock records m_k's formula, the evaluation hashes,
   `max_extension_cycles`, and the spend source.
-- **Kill:** non-finite loss/grad; two consecutive cycle-end evaluations more than 0.0056 below the
-  best. **Plateau** is read best-to-best on annealed checkpoints only.
+- **Kill:** non-finite loss/grad; two consecutive scheduled evaluations more than 0.0056 below the
+  best evaluation *of their own kind* (midpoint against midpoints, cycle end against cycle ends), so
+  the rule can fire inside the build and not only at its end (Opus M5). **Plateau** is read
+  best-to-best on annealed checkpoints only; **the plateau rule fires when the extension condition
+  below fails at a cycle end k ≥ 3** (Opus M6).
 - **Seeds:** one shipping seed for the build (seed 0); confirmation seeds at screen dose per §Screen.
   **No full-dose replica runs** (decision 8 withdrawn, amendment A5); the replication band is the
   selected recipe re-trained at screen dose under two further seeds, reported descriptively.
 
 ## Screen — seven families, fifteen arms, fourteen contrasts, locked at M10.0-e
 
-**Screen dose = 5M examples** (2.5% of the build; ≈ 420M tokens at 75/25; ≈ 1.9 GPU-hours per arm at
-the measured 745 examples/s), full 3-cycle schedule compressed to that dose, one seed, identical
+**Screen dose = 5M examples** (2.5% of the build; ≈ 420M tokens at 75/25; ≈ 2.0 GPU-hours per arm at
+the measured blended 683 examples/s), full 3-cycle schedule compressed to that dose, one seed, identical
 evaluation: **COV at every cycle end; DEV-6 once, at the final checkpoint** (its 5.2M-document
 hotpotqa and 6.17M-row heldout components cost ~13 GB of reads per pass — M9's practice).
 Throughput is recorded for every arm and decides nothing except family E (below).
-**Order (amendment A6): A → F → G → B → E → C → D**, and family F carries a higher dose than the
-rest (§F row) because every later verdict is taken on its winner. Data first because it is the thesis, then the
-student, then the two architecture/regime questions, then init and objective; every family after F
+**Order (A6, amended after the Opus pass): F → A → G → B → E → C → D**, and family F carries a higher
+dose than the rest (§F row) because every later verdict — family A's stop rule included — is taken on
+its winner (A4 at 5M is the winner's 5M checkpoint from F's curve; F's ≈17 GPU-h are spent before A
+can stop the milestone, accepted). Student first, then the data thesis, then the two architecture/regime questions, then init and objective; every family after F
 runs on F's winner, so no verdict transfers to the build student by assumption.
 **Anchor** = the full M10 corpus (A4's data), mix 75/25, bge-small init, squared L2, bs 32, 1152-d
 feature. Screens run **on the box** (amendment A7).
@@ -536,9 +564,9 @@ feature. Screens run **on the box** (amendment A7).
 |---|---|---|---|
 | **A — data (the thesis)** | A1: M9 pool (463,314 queries) · A2: M9 pool + PAQ (factoid forms only — the volume control) · A3: A2 + the **harvested real** query-like text · A4: A3 + the **generated** forms (the full M10 corpus, = anchor). **A2, A3 and A4 are cut to the identical post-screen unique-text count** (the smallest of the three after decontamination, the larger two downsampled with seed 0) and all hashes are locked before any arm | **A3−A2** (forms from real text, at equal volume) · **A4−A3** (what generation adds over harvesting) · A4−A2 and A2−A1 descriptive | **Three registered outcomes on A3−A2** (the forms contrast, now carried by the real-text arm): corrected lower bound > MDE → coverage **resolved on the COV families**, build proceeds; point ≥ MDE and lower bound > 0 but ≤ MDE → **positive, not resolved**, build proceeds and the report says so; otherwise → **M10 stops before any build and returns to Dylan with all four rows**. **A4−A3 decides whether the generated half is in the build at all**: if it does not resolve, the build uses A3's corpus and the ≈1.0M generated queries are dropped from the build (they stay in the report as a measured null). A2−A1 is the volume effect; if it resolves, the build keeps volume as well as forms |
 | **F — student** | bge-small (34.5M with the head) · MiniLM-L6-v2 (23.9M) · **MiniLM-L12-v2 (33.4M with the head)** — the first two at **20M examples each, read as a curve at 5M / 10M / 20M**; L12 at 5M | 2: L6−bge-small at 20M · L12−(winner) at 20M **if L12 is extended**; the count is fourteen whether or not it runs | **Amended after the Fable review, made executable after the Codex pass.** The old rule ("bge-small only if it wins resolved") pre-decided MiniLM-L6 by construction, because M9's same contrast was −0.0026 *unresolved* and a 5M screen cannot resolve 0.003; that also silently skipped family C, since only bge-small has an M9 warm start. So F gets the dose its consequence deserves — it picks the build student and every later verdict — and a third arm, because arXiv 2306.11550's depth curve (1/2/4 layers → 86.1/92.5/96.2% retention) says depth buys retention while LEAF reached 97.7% on 6 layers, and L12 is 12 layers inside the cap. **Rule:** L12 is a 5M *elimination probe* — extended to 20M only if its 5M COV macro is within the MDE of the better of the other two arms at 5M, else eliminated and reported; among the arms with a 20M reading the best COV macro wins; among arms whose 20M macro is statistically indistinguishable, the cheapest to serve wins, and **that tie-break is labelled in the report as a product preference, not evidence** (Dylan 2026-09-01 called 33M "the upper bound of what I think is acceptable", so 33M is admissible). L12's three- and four-layer heads pass the parity check first. Cost ≈ 17 GPU-hours at the measured rate, on the box |
-| **G — output width and head form** | feature = last layer only (384, M9's head) · three layers (1152, = anchor) · four layers (1536, §Recipe) · **G-MLP**: the anchor's linear head plus a per-token rank-192 GELU correction, `W_lin·x + W₂·GELU(W₁·x+b₁)`, W₁: 1152→192 (B3, residual form after the Codex pass; replaces the 768 arm, whose step the head-width probe already shows — the paper reports 384 vs 1152 vs 1536, not a trained curve) | 1152−384 · 1536−1152 · **MLP−1152** | resolved winner; **default 1152** (PLANNING §9–9b; the screen, not the probe, decides). The 384 arm is the paper's evidence for the M9 diagnosis. **G-MLP** keeps the linear path's full rank and adds the one nonlinearity the cap allows (34.96M for bge-small); fastembed serves it exactly because it precedes the mean pool (`results/m10_head_mlp_parity_box.json`, min-cos 0.99999989, zero custom ops). **Warm start, exact and deterministic:** `W_lin` = the anchor's ridge head; `W₁,b₁` = the top-192 principal directions of the frozen backbone's *per-token* 1152-d states on the fit set, centred (`b₁ = −W₁μ`; sign of each direction fixed so its largest-magnitude component is positive); `W₂,b₂` = ridge from the pooled `mean_t GELU(W₁x_t+b₁)` to the residual `t − W_lin·x̄` — exact for the training form because pooling commutes with the linear maps, so G-MLP starts *at* the anchor's fitted head plus a fitted correction |
+| **G — output width and head form** | feature = last layer only (384, M9's head) · three layers (1152, = anchor) · four layers (1536, §Recipe) · **G-MLP**: the anchor's linear head plus a per-token rank-192 GELU correction, `W_lin·x + W₂·GELU(W₁·x+b₁)`, W₁: 1152→192 (B3, residual form after the Codex pass; replaces the 768 arm, whose step the head-width probe already shows — the paper reports 384 vs 1152 vs 1536, not a trained curve) | 1152−384 · 1536−1152 · **MLP−1152** | resolved winner; **default 1152** (PLANNING §9–9b; the screen, not the probe, decides). The 384 arm is the paper's evidence for the M9 diagnosis. **G-MLP** keeps the linear path's full rank and adds the one nonlinearity the cap allows (34.96M for bge-small); fastembed serves it exactly because it precedes the mean pool (`results/m10_head_mlp_parity_box.json`, min-cos 0.99999989, zero custom ops). **Warm start, exact and deterministic:** `W_lin` = the anchor's ridge head; `W₁,b₁` = the top-192 principal directions of the frozen backbone's *per-token* 1152-d states on the fit set, centred (`b₁ = −W₁μ`; sign of each direction fixed so its largest-magnitude component is positive); `W₂,b₂` = ridge from the pooled `mean_t GELU(W₁x_t+b₁)` to the residual `t − W_lin·x̄` — exact for the training form because pooling commutes with the linear maps, so G-MLP starts *at* the anchor's fitted head plus a fitted correction; both ridges use the anchor's `warm_start` λ rule and `n_fit` (`m9/registry.json`), and the per-token PCA is a streamed 1152×1152 Gram matrix |
 | **B — mix** | 100/0 · 50/50 query/document (75/25 = anchor), **matched query presentations** (3.75M query examples in every arm; document examples 0 / 1.25M / 3.75M on top; totals 3.75M / 5M / 7.5M; the document cost in tokens and GPU-hours is reported) | 100/0−75/25 · 50/50−75/25 | resolved winner; default 75/25 |
-| **E — batch** | 32 · 128 at equal examples and identical schedule | 1 | resolved winner; default 32 (LEAF). **Amendment A7: E is the one family whose throughput is read** — bs128 measured 1,331 examples/s against bs32's 745 (PLANNING §11), so a bs32 win must also be worth its 1.8× build cost; the lock records both the quality contrast and the GPU-hour delta, and a bs32 win that does not resolve reverts to bs128 |
+| **E — batch** | 32 · 128 at equal examples and identical schedule | 1 | resolved winner; default 32 (LEAF). **Amendment A7: E is the one family whose throughput is read** — bs128 measured 1,517 examples/s blended against bs32's 683 (`results/m10_rate_bench_box.json`), so a bs32 win must also be worth its 2.2× build cost; the lock records both the quality contrast and the GPU-hour delta, and a bs32 win that does not resolve reverts to bs128 |
 | **C — init** | bge-small (or MiniLM, per F) · the M9 candidate | 1 | resolved winner; default the off-the-shelf backbone. Available only if F selects bge-small: M9's candidate is a bge-small student, so a MiniLM build has no warm start and C is skipped and reported as skipped. The closed-form ridge head warm start (M9's `m9s1c`, +0.0272) is retained in every arm regardless |
 | **D — objective** | anchor (squared L2) · **D-NORM** (LEAF's ‖e‖₂) · **D-COV** (document-covariance-weighted regression, §Recipe) | D-NORM−anchor · D-COV−anchor | resolved winner with the larger margin; default squared L2. The ranking-aware class is cut (amendment A1, §Recipe); **D-COV is added from the Fable review as the one cheap lever aimed at the in-distribution ceiling** (PLANNING §13 idea 8) |
 
@@ -550,7 +578,8 @@ its three seeds.
 
 **Rule, per contrast (families B–G):** the difference in COV macro (family-weighted, §Surfaces)
 between the two arms' final checkpoints; paired stratified bootstrap over queries within component,
-B = 20,000, seed 0; a contrast **resolves** when the point estimate ≥ the **MDE 0.0056** **and** the
+**B = 200,000**, seed 0, empirical quantile (`inverted_cdf`; at 0.025/14 that is the 357th order
+statistic — at B = 20,000 it would have been the 36th, Opus M9); a contrast **resolves** when the point estimate ≥ the **MDE 0.0056** **and** the
 one-sided lower bound at the **0.025/14 quantile** (Bonferroni over the fourteen contrasts, fixed
 whether or not F's second comparison runs) is > 0, and the sign is stable across the last two
 cycle-end checkpoints. **Both constants are fixed here** — the Codex pass of 2026-09-04 struck
@@ -597,16 +626,17 @@ PLANNING §5 has the arithmetic. Every screen verdict is artifact-specific at sc
   Dylan may raise the floor). The two CQADupStack components are **DEV**, reported beside every COV
   read, never in the macro.
 
-  **Scientific secondary surface (B4, demoted from a COV family by the Codex pass).** Every clean-4
+  **Scientific diagnostic surface (B4; a COV family until the Codex pass, an actioned secondary until the Opus pass).** Every clean-4
   set is scientific or biomedical and no licensed published set covers those forms outside S2ORC /
   PubMed / CORD-19, so as registered the screen could not see the headline forms. **`arxiv-title`**:
   2,000 held-out arXiv titles → their own abstract among 100K arXiv abstracts (CC0 metadata; ≈8 min
   of encode), one relevant per query, nDCG@10, teacher score reported as the denominator. **Not in
   the COV macro** — it shares form and source with arm A3's harvest, so as a family it would reward A3
   by construction and its 2,000 low-variance queries would dominate the macro's power. It is a
-  **registered secondary surface with exactly one action:** if A3−A2 on `arxiv-title` does not
-  resolve (same rule and bound as the contrasts), the harvested paper-title and claim forms are
-  dropped from the build and reported as a measured null; nothing else reads it. Leakage rules: the
+  **descriptive diagnostic with no action** (Opus M11: title→own abstract is near-lexical known-item
+  retrieval, so a null there could be a floor effect, and it is not scidocs' title→cited-abstract
+  relation); A3−A2 on the COV macro carries every data decision. Reported per arm beside FORMS-12 as
+  the one real-text scientific read. Leakage rules: the
   held-out set is drawn by arXiv id *without version* at M10.0-d (seed 0), every version of a
   held-out paper is excluded from every training role, the harvest is fingerprint-screened against
   the held-out titles and abstracts, and the set joins the protected index before any harvest.
@@ -659,16 +689,17 @@ PLANNING §5 has the arithmetic. Every screen verdict is artifact-specific at sc
 
 `m9/FINAL_LOCK.md` re-registered verbatim for M10 in the M10.2 lock with new BOUND-AT-FREEZE hashes
 and an `m10-six-spent` tag — bridge as phase 1, the C-conjuncts with the empirical bootstrap bound
-and the sign-flip conjunct, FEVER labelled — **with two changes. (1) The
+and the sign-flip conjunct, FEVER labelled — **with four changes (Opus: "two" understated it). (1) The
 reserved conditional is `if any C-conjunct passes then execute`**, so an aim claim never stands
 without its descriptive reserved rows. **(2) Amendment A3: four conjuncts, not two** — `C1a`/`C2a`
 on avg-6 and `C1b`/`C2b` on clean-4 (bars 0.5042 / 0.5155 / 0.5046 / 0.5233), under
-**fixed-sequence gatekeeping in the order C1a → C1b → C2a → C2b at the full one-sided 0.025 each,
+**fixed-sequence gatekeeping in the order C1b → C1a → C2a → C2b at the full one-sided 0.025 each,
 stopping at the first non-rejection** (§Goal has the procedure, the planning proxies and the
-`trec-covid` n=50 disclosure). **The decision field is therefore the empirical one-sided 0.025
-quantile (`lower_q025_raw`, the 250th order statistic at B = 10,000), not M9's Holm-2 0.0125, and
-the sign-flip conjunct is tested at 0.025 inside the same sequence** — the Codex pass of 2026-09-04
-found the two quantiles named in different files. The sequence is fixed here, before any six-set
+`trec-covid` n=50 disclosure). **(3) The decision field is the empirical one-sided 0.025 quantile
+(`lower_q025_raw`, the 250th order statistic at B = 10,000), not M9's Holm-2 0.0125, and (4) the
+sign-flip conjunct is tested at 0.025 inside the same sequence** — the Codex pass of 2026-09-04
+found the two quantiles named in different files. M9's claim-table row "C1 fail, C2 pass → aim
+permitted" is deleted by (2). The sequence is fixed here, before any six-set
 output exists.
 clean-4 is M14's registered headline partition for both halves of the pair, so it carries a
 pre-registered pass/fail rather than arriving as a descriptive row after the fact. Zero alpha on the reserved batch is unchanged. `m9src/final9.py`'s
@@ -683,8 +714,8 @@ generation, because the rate it was withdrawn on was wrong:
 | configuration, M10 recipe shape, **measured on the RTX 3080 2026-09-04** (PLANNING §11) | examples/s | 200M examples |
 |---|---|---|
 | batch 32, 75/25, M9's two-chunk collate | 400 | 139 h |
-| batch 32, one padded chunk | **745** | **75 h** |
-| batch 128, 75/25 | 1,331 | 42 h |
+| batch 32, single-chunk buckets (718 query / 596 document), blended 75/25 | **683** | **81 h** |
+| batch 128, single-chunk buckets (2,311 / 748), blended 75/25 | 1,517 | 37 h |
 
 The plan's imported LEAF planning rate was 560 examples/s on a rented A100; the box meets or beats
 it, because at batch 32 with ~35-token queries the step is launch-bound, not FLOP-bound, so a

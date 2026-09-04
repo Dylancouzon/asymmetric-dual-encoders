@@ -65,7 +65,7 @@ table: dev out-of-domain 0.764 vs six 0.755).
 - **No Qdrant-published static or distilled-tiny query encoder exists** (HF org: `bm25`,
   `minicoil-v1`, `Qwen3-Embedding-0.6B-onnx`, CLIP pairs for Edge). zero and nano would be first.
 
-## 5. Data arithmetic
+## 5. Data arithmetic — SUPERSEDED (2026-09-04 evidence only; the mandate's §Data and §Compute are authoritative)
 
 - Query corpus ≈ 463K real + 1.0M PAQ + 3.0M synthetic = **4.5M** texts; ≈ 35 tokens mean (long
   forms 120–220 words at ~10% share) → ≈ 160M tokens per query epoch.
@@ -109,7 +109,7 @@ table: dev out-of-domain 0.764 vs six 0.755).
   (3× the box's 210, unmeasured), plus about a day of CPU and network to pull the pool, dev suite
   and fingerprints from HF.
 
-## 6. Compute plan — one rented GPU, or nothing (Dylan, 2026-09-01)
+## 6. Compute plan — SUPERSEDED (the all-cloud plan; the mandate's §Compute table is authoritative and `max_extension_cycles` reads it, not this)
 
 "M10 won't be done on a 3080. M10 will be done on a GPU budget, if allowed, or not at all." The box
 path is withdrawn (§7). One A100 80 GB (H100 if cheaper per example on the smoke), ≥ 500 GB
@@ -493,8 +493,8 @@ Full findings and dispositions: `research/m10-fable-plan-2026-09-04.md`, tabulat
 
 **Adopted into the plan:** the arXiv scientific harvest source (§Data), form-balanced query sampling
 (§Data), the registered plateau response and D-COV (§Recipe), family F at 20M with a third arm
-(§Screen), fixed-sequence gatekeeping and the four pass points (§Goal), the resolution-number remedy
-(§Surfaces), hosted generation as the default, and the benchmark re-run (§11).
+(§Screen), fixed-sequence gatekeeping and the four planning proxies (§Goal), the resolution-number remedy
+(§Surfaces — struck the same day by the Codex pass), hosted generation as the default, and the benchmark re-run (§11).
 
 **Not yet done, ranked, with cost — these are the next actions, not ideas:**
 
@@ -508,8 +508,8 @@ Full findings and dispositions: `research/m10-fable-plan-2026-09-04.md`, tabulat
 
 M9 retained **93.8% on NQ while training on NQ-like data**. Coverage explains the 50–71% on forum
 questions; it does **not** explain the 93.8%. LEAF reaches 97.7% overall on an easier target
-(109M/768-d teacher). The four registered pass points need 89.5% / 91.9% / 91.5% / **95.2%** of the
-ceiling (§Goal), so **C2b demands better in-distribution retention than M9 achieved even where it was
+(109M/768-d teacher). The four planning proxies sit at 89.3% / 91.6% / 91.3% / **94.9%** of the
+ceiling (§Goal, 0.025 quantile), so **C2b demands better in-distribution retention than M9 achieved even where it was
 fully covered.** Everything M10 adds — coverage, width, the optimizer regime — attacks the
 out-of-distribution half. Only family G (width) and family E (regime) touch the covered half, and
 D-COV is now the one arm aimed squarely at it.

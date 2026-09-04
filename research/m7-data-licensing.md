@@ -77,7 +77,7 @@ Decontamination is fingerprint-level, not name-level: on top of the source-corpu
 |---|---|---|
 | **Affirmative grant, restricted to non-commercial research** | MS MARCO, PAQ's NC generation code, GooAQ (README clause) | **Validation/eval/diagnostics ALLOWED. Training still forbidden.** |
 | **No affirmative grant at all** | Quora QQP, WikiAnswers/Paralex, ELI5, StackExchange new downloads (no-LLM-training clickwrap), `sentence-transformers/embedding-training-data`, nomic contrastors | **Still fully OUT.** "No licence" is not "non-commercial licence" — there is nothing to rely on for either use. QQP's eval exclusion (Codex, 2026-08-25) stands unchanged. Reopening needs an explicit Dylan ruling. |
-| **Excluded for contamination, licence irrelevant** | S2ORC (SciDocs, SciFact built from it), StackExchange (FiQA) | **Still OUT of training AND validation.** The rule changes nothing; the reason was never the licence. |
+| **Excluded for contamination, licence irrelevant** | S2ORC (SciDocs, SciFact built from it), StackExchange **finance** — money.SE, FiQA's source (other StackExchange sites stay admissible for validation under the dataset-level standard, as CQADupStack has been since M7; corrected 2026-09-04 after the Opus pass, which found the earlier "StackExchange (FiQA)" would have excluded BRIGHT and CQADupStack) | **Still OUT of training AND validation.** The rule changes nothing; the reason was never the licence. |
 
 **What "validation" means, operationally.** Measuring, diagnosing, screening, dev-surface use, and
 reporting numbers. **Not**: gradient signal, distillation targets, mined negatives, or seeds for
