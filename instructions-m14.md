@@ -12,6 +12,34 @@ Binds from `instructions-m7.md` unchanged. Working files under `m14/`.
 plus whatever M12 produced. **One paper is the default**; the one-vs-two decision is Dylan's, taken
 at the start of M14 when the evidence is known, not now.
 
+## Benchmark composition — deferred here, but the RULE is registered now
+
+**Deferred to M14 (Dylan, 2026-09-04):** *"Benchmarks can be differed to M14, when we do the paper
+so that way we'll cross that bridge for both Zero and nano."* Right call — the product is the pair,
+and settling zero's partition now while nano's waits risks reporting the two halves of one frontier
+on different benchmarks.
+
+**But the choice is registered BEFORE nano's numbers exist, not made at M14 having seen them.**
+Deferring the decision is legitimate; deferring the *rule* would be post-hoc selection among
+pre-registered partitions, which is the one thing that would discredit the frontier. So:
+
+1. **Headline = clean-4** (`nfcorpus`, `scidocs`, `scifact`, `trec-covid`) — the pre-registered
+   no-disclosed-teacher-overlap partition (`results/m7_final_run.json` `clean4_robustness`).
+   Registered now, on the contamination argument alone, for **both** zero and nano.
+2. **All six always reported beside it**, for comparability with published BEIR numbers.
+3. **Contamination robustness (all-6 minus clean-4) is its own reported row** for dense and fused.
+4. **No re-picking the six.** Datasets may not be added to or removed from the headline after any
+   number is seen. New sets may only enter as labelled diagnostics.
+5. **MS MARCO, if built, is a validation-only diagnostic** — never a headline. Permitted by the
+   2026-09-04 licence rule (validation, not training). It is the MIRROR confound: every comparator
+   trains on it and neither of ours does, so we expect to lose and losing is still informative.
+   nq-250k-style build (~6,980 queries, 250K distractors, a 250K-doc stella encode, ~1h).
+
+**The number that makes this cheap** (M12, `m12/FINDINGS.md`): the FUSED system is nearly
+contamination-immune — clean-4 costs it **0.0045** (0.4911 → 0.4866) — while the dense table loses
+**0.0241** (0.4339 → 0.4098). And on clean-4 the fused story is *stronger*: 0.4866 vs BM25's 0.4409,
+where dense-only (0.4098) sits below BM25. Honesty costs 0.0045 here and buys the whole objection.
+
 ## What the paper argues
 
 The frontier is the *deliverable*, but it is not the *finding*. The finding is:
