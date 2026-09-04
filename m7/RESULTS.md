@@ -94,6 +94,8 @@ max|Δ| 0.00e+00 vs sentence-transformers); λ-curve flat 0.247–0.251 then fal
 - Best hosted candidate remains **bge-base-en-v1.5**, −0.0365. Six-set cost of that swap is
   **unmeasured**; two unvalidated transfers put it at 0.045–0.07. The 0.406→0.489 MTEB→six tower
   projection may NOT be used for it (refuted, `EXPLORED.md`).
+- λ grid completed 2026-09-04 (Codex: bge's optimum sat at the grid EDGE, biasing the
+  comparison): **bge-base λ=0.1 → 0.2848**, down from 0.3074. Optimum interior; objection closed.
 - A swap requires the regenerated clean fit list (`m7_trainq_manifest.json`); this probe ranks only.
 
 ## Off-family teacher check, 2026-09-04 — the confound is refuted
