@@ -1,111 +1,86 @@
-# M10 status — PLANNED, budget VALIDATED 2026-09-04, plan re-cut the same day; nothing has trained
+# M10 status — PLANNED and reviewed five ways on 2026-09-04; nothing has trained; the weekend runbook below is the execution order
 
-Mandate `instructions-m10.md` (read **§Amendment 2026-09-04** and **§Amendment 2026-09-04b** first — they are authoritative over any older sentence there; the **Weekend runbook** below is the execution order) · evidence `m10/PLANNING.md` (§11 measured rates, §12 the synthetic-data
-question) · runs `m10/RESULTS.md` · closed avenues `m10/EXPLORED.md` · selection-surface drafts
-`m10/COV_CANDIDATES.md` · code `m10/CODEMAP.md` · M9's record `m9/FINDINGS.md`.
+Mandate `instructions-m10.md` — §Amendment 2026-09-04, §Amendment 2026-09-04b and §Delegated
+authority are authoritative over any older sentence there · evidence `m10/PLANNING.md` (§11 measured
+rates, §12 the synthetic-data question; §5–§6 superseded) · lock `m10/LEDGER.md` §0a/§0b · runs
+`m10/RESULTS.md` · closed avenues `m10/EXPLORED.md` · surfaces `m10/COV_CANDIDATES.md` · code
+`m10/CODEMAP.md` · M9's record `m9/FINDINGS.md`.
 Owner report: https://claude.ai/code/artifact/fce61c94-5444-4c78-bb2e-46112cb7547a
 
-**Where things stand.** The 2026-09-01 plan went through seven Codex passes and Dylan's compute
-ruling. On 2026-09-04 he validated the budget and asked for a full efficiency review before any
-money was spent ("is this the best way … is it the most efficient?", "I'm not sure why we need to
-generate synthetic data?", "don't over-engineer", "keeping the same teacher (Stella) is the goal").
-The review produced amendments **A1–A8**. What changed, shortest form:
+**Where things stand.** Budget validated 2026-09-04. The same day the plan was re-cut (A1–A8), given a
+feasibility review (B1–B6), then attacked by Codex, Opus and Codex again; every finding is actioned and
+the records are `research/m10-fable-plan-2026-09-04.md`, `research/m10-feasibility-review-2026-09-04.md`,
+`research/m10-codex-feasibility-2026-09-04.md`, `research/m10-opus-review-2026-09-04.md`,
+`research/m10-codex-soundness-2026-09-04.md`. **Read the mandate for rules, not those files.**
+Feasibility verdict: **C1a reachable if coverage works; C1b and C2a are the contest at ~91–92% uniform
+retention; C2b (~95%) is a low-prior stretch aim** (`results/m10_conjunct_arithmetic.json`). Measured
+trainer rate on the box: **683 examples/s blended** (718 query-bucket / 596 document-bucket), a hardware
+bound; M9's pipeline ran at ~10% of its roof, so the real-data re-measure (step 0b) gates every plan.
 
-- **Measured, not assumed:** the M10 recipe runs at **683 examples/s blended (718 query-bucket / 596 document-bucket) on the box**
-  against the plan's imported 560 on a rented A100 — the step is launch-bound at batch 32
-  (`results/m10_rate_bench_box.json`). The box is an execution target again for everything except
-  generation; the build is ≈81 GPU-hours at the hardware bound, not 100; cloud spend re-prices to **≈$110–280** hybrid.
-- **Less machinery:** family D's three ranking-aware arms cut (LEAF's ‖e‖₂ loss plus **D-COV**, a
-  document-covariance-weighted regression, in their place), which deletes the candidate bank, the
-  mining pass, the HNSW fallback, the τ rule and the seed-rank field. Fifteen arms, fourteen
-  contrasts. Confirmations capped at two decisions. The full-dose seed-1 replica is withdrawn.
-  A **registered plateau response** replaces the cut class, so a flat curve still has an answer.
-- **Mostly real text, not generated:** ≈1.5M harvested titles / headings / claim sentences from the
-  licensed pool as new arm A3, generation cut to ≈1.0M for the six forms no corpus contains. Three
-  of the four clean-4 headline datasets fall in the harvested half.
-- **Two protocol fixes:** C1/C2 are registered on **clean-4 as well as avg-6** under
-  fixed-sequence gatekeeping (bars 0.5046 / 0.5233), because M14 made clean-4 the headline for both
-  halves of the pair; and the COV resolution number is reported as the screen's power disclosure (its sizing role was
-struck the same day by the Codex pass).
+## Dylan — decisions (all ruled 2026-09-04 unless marked)
 
-**Then Fable reviewed the amendments and returned 3 BLOCKER / 8 MAJOR / 7 MINOR — all actioned**
-(`research/m10-fable-plan-2026-09-04.md`, dispositions in the mandate; read-exclusion audit clean).
-The four that changed the plan most: the A1 cut had cited LEAF's Appendix B, which is about
-intermediate-layer KD and not about a ranking term on regression, so the justification was corrected
-and a plateau response registered; "Holm" and "fixed sequence" were named together and are
-incompatible, so it is now gatekeeping and avg-6 loses no alpha; **the document pool is Wikipedia
-plus ESCI and contains no scientific text, so "harvest paper titles and scientific claims" was
-unfounded** — arXiv metadata is added as a licence-gated source and every harvest yield is measured
-before quotas lock; and the benchmark was re-run because the shape 25% of build steps will use had
-never been timed.
-
-**What the review means for the numbers above:** the 683 examples/s is a *hardware* bound. M9's
-realized pipeline ran at ~10% of the comparable roof, so **the build is priced as a range and the
-real-data re-measure gates every dollar** (PLANNING §11). Do not commit to a box-versus-cloud split
-on the optimistic end.
-
-**Second review the same day (feasibility; B1–B6, `instructions-m10.md` §Amendment 2026-09-04b;
-`research/m10-feasibility-review-2026-09-04.md`).** Verdict: **C1a reachable if coverage works; C1b
-and C2a are the contest at ~91–92% uniform retention; C2b (~95%) is a low-prior stretch aim with no
-pure-regression precedent at our teacher gap.** Weakness found and fixed: every clean-4 set is scientific/biomedical and the COV screen
-had no surface that could see those forms (B4, `arxiv-title`). G-MLP, a per-token nonlinear head,
-is proven servable and replaces the 768 arm (B3). Decision 12 (CUREv1 as a validation-only diagnostic) is Dylan's. **Then a Codex pass and an Opus pass
-(`research/m10-codex-feasibility-2026-09-04.md`, `research/m10-opus-review-2026-09-04.md`), every finding
-actioned — read the mandate, not this paragraph, for the rules.**
-
-## Dylan — open decisions (defaults apply meanwhile)
-
-| # | decision | default |
+| # | decision | state |
 |---|---|---|
-| 1 | Ratify M9's final lock plus the six-only amendment (one sentence: "run M9's six-set scoring as registered, six only, no reserved batch") | blocks only the M9 close-out |
-| 4 | PAQ as query text (CC BY-SA data, official release) | include |
-| 7 | Confirm LoTTE read #1 withdrawal and the renumbering | as recorded |
-| 10 | The 2026-09-04 amendments A1–A8 | adopted; strike any item and it reverts to the 2026-09-01 text |
-| 11 | Release rule: does C1a-pass / C1b-fail ship as "nano"? | **ruled 2026-09-04:** default stands (release needs C1b); "make sure we win enough so this isn't a question" |
-| 12 | CUREv1 as a validation-only biomedical read | **adopted 2026-09-04** as a reported diagnostic, never selection-bearing |
-| 13 | The 2026-09-04b amendments B1–B6 | adopted; strike any item and it reverts |
-| 14 | **Generation on the box** with Qwen's official `Qwen3-8B-AWQ` via vLLM, smoke pushed as `m10/SMOKE.md` for remote approval; hosted bf16 as fallback | **adopted 2026-09-04 ("Go on 14")** |
-| A7 | the box runs the screens | **confirmed 2026-09-04**; three uninterrupted box days over the weekend |
-| — | **Generation smoke approval** — you are the approver (200 queries × 12 forms, 90% contract / 80% on-form). It runs on the box (decision 14); the sample is pushed as `m10/SMOKE.md` and a GitHub issue "M10 smoke approval" is opened — reply `approved: <forms>` there, or name the forms to redraft | **the one thing the weekend needs from you**; blocks generation and therefore family F |
+| 1 | Ratify M9's final lock plus the six-only amendment (one sentence: "run M9's six-set scoring as registered, six only, no reserved batch") | open; blocks only the M9 close-out, which runs after M10.2 |
+| 4 | PAQ as query text (CC BY-SA data, official release) | default: include |
+| 7 | Confirm LoTTE read #1 withdrawal and the renumbering | default: as recorded |
+| 10, 13 | Amendments A1–A8 and B1–B6 | adopted; strike an item to revert it |
+| 11 | Release rule: release needs C1b (the headline) | default confirmed: "make sure we win enough so this isn't a question" |
+| 12 | CUREv1 as a validation-only biomedical **diagnostic** | adopted ("yes") |
+| A7 | the box runs the screens | confirmed; three uninterrupted box days over the weekend |
+| 14 | generation on the box with Qwen's official `Qwen3-8B-AWQ` via vLLM; self-hosted bf16 via the same contract as the only fallback | adopted ("Go on 14") |
+| 15 | conditional pre-approval of the generation smoke (contract rate by the session, on-form rate by an independent Fable subagent, six-hour veto window) | adopted ("Yes to decision 15") |
+| — | delegated authority for unsupervised windows: Tier 1 alone, Tier 2 after a Fable consultation logged in LEDGER §3, Tier 3 never | granted (mandate §Delegated authority) |
 
-Decisions 2 (budget), 3, 5, 6, 8 and 9 are closed — see `instructions-m10.md` §Owner decisions.
+Decisions 2 (budget), 3, 5, 6, 8 and 9 are closed — `instructions-m10.md` §Owner decisions.
 
-## Weekend runbook — unsupervised, 2026-09-05 → 09-08 (Dylan follows on GitHub; decision 14 adopted)
+## Reaching Dylan
+
+`PushNotification` reaches his phone **only if Remote Control is connected to the running session**;
+otherwise it is a terminal notification. Ping at exactly these moments, one line, under 200
+characters, leading with the action: the smoke sample is ready; a registered STOP fires; a fallback
+fires; a Tier-2 decision was taken; family F's verdict lands. Never for progress. The GitHub issue
+"M10 smoke approval" (opened by the session with `gh`; account `Dylancouzon` is the approver) is the
+channel that works without Remote Control; he can also reply through Remote Control.
+
+## Weekend runbook — unsupervised, 2026-09-05 → 09-08 (decisions 14 and 15; §Delegated authority applies)
 
 Standing rules: commit-and-push after every completed step; smoke every code path at 90 steps before
 a long run; arm the failure-signature monitor; read the first rate line; `setsid nohup` for anything
 long; zero cloud spend; no six / reserved / LoTTE read; dev reads counted; **no lock edit after an arm
-starts and no protocol change after a number is observed**. Anything not covered below: stop, record
-here, wait. Every step names its branch, so nothing below needs a judgement call.
+starts and no protocol change after a number is observed.** A situation no row covers is a Tier-2
+decision (mandate §Delegated authority): consult a Fable subagent, decide, log, push, ping.
 
 | step | what | branch |
 |---|---|---|
-| **0a** (tonight) | vLLM in its own venv (`.venv-gen`, not the trainer's), `Qwen/Qwen3-8B-AWQ` rev `4da05a8e…` served on the card; a 50-prompt throughput smoke | works → 1; fails after 3 h of setup → **generation falls back to hosted bf16 after Dylan returns**; the weekend runs 0b–7 only and **no arm starts** (the anchor needs the generated half) |
-| **0b** (tonight) | rate re-measure on real tokenized corpora with `num_alloc_retries` logged; `torch.compile` on the fixed buckets | informational; pushed to `m10/RESULTS.md`; the box-vs-cloud build decision is the lock's (§0b), not the window's |
-| **1** | 12-form smoke, 200 per form, with the AWQ artifact → push **`m10/SMOKE.md`** (contract rate per form; a 50-query on-form sample per form) and open a GitHub issue "M10 smoke approval"; poll it hourly with `gh` | Dylan approves per form by commenting `approved: <forms>`; a form under 90% contract gets one prompt revision (≤2, each recorded in LEDGER §1) and a re-smoke; **no approval by Sunday noon → generation waits, F cannot start, the weekend delivers 2–7**; `gh` unavailable → same, approval arrives with Dylan's next session |
-| **2** | COV admission (M10.0-d): MedicalQA, BRIGHT, CorporateLobbying, ConsumerContractsQA; LEDGER if its structure verifies; **CUREv1 as a diagnostic** (decision 12); **`arxiv-title` diagnostic** drawn by id-without-version, seed 0; every admitted corpus into the protected index; stella encodes; the resolution number pushed | **fewer than three families admit → STOP and return to Dylan** (registered) |
-| **3** | harvest pipeline and yields (arXiv Kaggle CC0 — record artifact and revision; Wikipedia titles / headings / lead sentences; ESCI), post-dedup and post-screen counts pushed to LEDGER §1 | a form under 100K → reverts to generation (registered); quotas fixed only after the yields are pushed |
-| **4** | PAQ from Facebook's official release; the 1.0M build sample and the 4.037M A2 control (seed 0, hashes pinned) | — |
-| **5** | trainer port: per-token heads with pooling after the head, token-output export wrapper and their parity test; 4-step mix window; cyclic schedule; ‖e‖₂ and D-COV arms; `test_resume.py`; examples/s counter; 90-step smoke of every arm shape | any smoke failure is fixed before any arm; nothing else changes |
-| **6** | M10.0-c: per-component DEV-6 read of the M9 candidate incl. `heldout-longq` | descriptive baseline row |
-| **7** | parity checks for MiniLM-L6 / L12 three- and four-layer heads (CPU) | a failing head disqualifies that arm, reported |
-| **8** (after approval) | generation ≈1.0M under the §Data contract (seeds pre-filtered; strict JSON; one retry; dedup) → decontamination against the protected index and the six's documents → **A8 gates** → FORMS-12 hold-out → teacher targets → `results/m10_data_manifest.json` | a form over 25% near-duplicates → quota cut to its unique count (registered); the MS MARCO overlap row is disclosed, no action |
-| **9** | push **LEDGER §0a** (design) — it must precede any arm — then **§0b** (counts, hashes, measured rates, allocation) | no arm before both are on origin |
-| **10** | **family F**: anchor bge-small 20M (read 5 / 10 / 20M), MiniLM-L6 20M, L12 5M probe (extended iff within the MDE of the better 5M reading); COV at every cycle end, DEV-6 once | rule registered in §Screen; the winner is the build student; ties → cheaper to serve, labelled a product preference |
-| **11** | **family A** on the winner: A1, A2, A3 at 5M (A4 = the winner's 5M checkpoint) | three-outcome rule on A3−A2 (COV macro); A4−A3 decides the generated half; **A3−A2 fails → M10 STOPS before any build and returns to Dylan with all four rows** (registered) |
+| **0a** (tonight) | **vLLM setup**, timer starts at the first `pip install`: `python3.12 -m venv .venv-gen && .venv-gen/bin/pip install vllm==0.28.0` (attempt 1); attempt 2 = `vllm==0.27.1`; no third. Serve `Qwen/Qwen3-8B-AWQ --revision 4da05a8edb55c6046cce958586c33b61da07bb79 --max-model-len 4096 --gpu-memory-utilization 0.85 --reasoning-parser qwen3`, thinking disabled per request (`chat_template_kwargs={"enable_thinking": false}`). **Health assertion:** `/v1/models` lists the model, and a 64-prompt batch (8 seeds × 8 forms, n=5) returns ≥ 90% contract-valid replies at **≥ 700 aggregate output tok/s** | pass → step 1; either attempt fails, or the health assertion fails, or 3 h elapse → **fallback: self-hosted bf16 via the same vLLM contract on a rented GPU after Dylan returns**; the weekend runs 0b–7 only, **no arm starts** (the anchor needs the generated half); ping |
+| **0b** (tonight) | rate re-measure on real tokenized corpora with `num_alloc_retries` logged; `torch.compile` on the fixed buckets | informational, pushed to `m10/RESULTS.md`; the box-vs-cloud build decision belongs to the M10.2 lock |
+| **1** | **Smoke state machine (decision 15).** For each of the **seven generated forms** (keys in `m10src/forms.FORMS`: `howto argument finance comparison yesno conversational health`) generate 200 queries; state per form = `(form, prompt-hash, smoke-commit, state)`. Gates: contract ≥ 90% (session); on-form ≥ 80% on a 50-query sample judged by an **independent Fable subagent** given only the form's registered description (verdicts pushed). Push `m10/SMOKE.md`; open the GitHub issue; ping. A form that passes both gates is **auto-approved at push time + 6 h** unless a comment `redraft: <form>: <note>` from `Dylancouzon` (or a Remote Control message) arrives; `approved: <form>[, <form>]` ends the window early for those forms. Approval binds to the prompt-hash | a form failing a gate or vetoed → one prompt revision (≤ 2 total per form, each hash recorded in LEDGER §1) → re-smoke → new window; **two failures → the form is dropped from the build**, quota not redistributed, reported; a veto after generation started → that form's queries leave the build and are regenerated under a redraft if time permits. Forms are independent: approved forms generate while others redraft |
+| **2** | **COV admission (M10.0-d):** MedicalQA, BRIGHT, CorporateLobbying, ConsumerContractsQA; LEDGER if its structure verifies (chunk rule, 100K cap); **CUREv1 as a diagnostic** (decision 12); every admitted corpus into the protected index; stella encodes; the resolution number pushed | **fewer than three family IDs** (`consumer-health`, `BRIGHT`, `legal`, `finance` iff LEDGER) **→ STOP, ping, wait for Dylan** (registered) |
+| **3** | **Push LEDGER §0a** — the design lock: arms, order F → A → G → B → E → C → D, doses (B: 3.75M / 5M / 7.5M), seeds, surfaces, the thirteen contrasts by name, MDE 0.0056, 0.025/13, B = 200,000 `inverted_cdf`, confirmation design, warm-start record, outcome→action maps | must be on origin **before any harvest** (Codex B4) |
+| **4** | **Harvest.** First: download the Kaggle arXiv metadata artifact, record version and sha256, **draw `arxiv-title`** (sorted version-stripped ids, `default_rng(0).choice(N, 100_000, replace=False)`, first 2,000 = queries), protect and encode it. Then extraction rules over arXiv, Wikipedia and ESCI; post-dedup, post-screen yields pushed to LEDGER §1 | a form under 100K → reverts to generation at ≈143K (registered); quotas fixed only after the yields are pushed |
+| **5** | PAQ from Facebook's official release; the 1.0M build sample and the 4.037M A2 control (seed 0, hashes pinned) | — |
+| **6** | trainer port: per-token heads with pooling after the head, token-output export wrapper and their parity test; the 4-step mix window (4Q · 3Q+1D · 2Q+2D); cyclic schedule; ‖e‖₂ and D-COV arms; the kill and plateau rules as registered; `test_resume.py`; examples/s counter; 90-step smoke of every arm shape | any smoke failure is fixed before any arm; nothing else changes |
+| **7** | M10.0-c: per-component DEV-6 read of the M9 candidate incl. `heldout-longq`; parity checks for MiniLM-L6 / L12 heads (CPU) | descriptive baseline; a failing head disqualifies that arm, reported |
+| **8** (as forms clear their windows) | generation ≈1.0M under the §Data contract → decontamination against the protected index and the six's documents → **A8 gates** (near-duplicate rate > 25% → keep representatives only; < 50,000 retained → form dropped) → FORMS-12 hold-out → teacher targets → `results/m10_data_manifest.json` | the MS MARCO overlap row is a diagnostic, no action |
+| **9** | **Push LEDGER §0b** — corpus counts and hashes, arXiv artifact sha256, served generator revision and vLLM version, local measured rates, the screen's box allocation | no arm before §0a and §0b are both on origin; cloud price and build allocation are NOT here (M10.2) |
+| **10** | **family F:** anchor bge-small 20M (read 5 / 10 / 20M), MiniLM-L6 20M, L12 5M probe (extended iff `m_L12 ≥ max(m_L6, m_bge) − 0.0056`); COV at every cycle end, DEV-6 once | winner = highest 20M macro if its margin resolves, else cheapest to serve (labelled a product preference); ping the verdict |
+| **11** | **family A** on the winner: A1, A2, A3 at 5M (A4 = the winner's 5M checkpoint) | three-outcome rule on A3−A2 (COV macro); A4−A3 decides the generated half; **A3−A2 fails → M10 STOPS before any build; ping; wait for Dylan** (registered). A's verdict is labelled conditional on F's winner |
 | window ends | a running arm finishes under the watchdog; nothing new starts; this file records where things stand | — |
 
-**Needs Dylan during the window:** the smoke approval only. **Cannot happen:** a cloud instance, a
-protected read, an arm before §0a/§0b, a build. Realistic yield: steps 0–9 and family F; family A if
-the smoke is approved by Saturday.
+**Needs Dylan during the window:** nothing, unless he vetoes a form or a STOP fires. **Cannot happen:**
+a cloud instance, a protected read, an arm before §0a and §0b, a build, any Tier-3 decision.
+Realistic yield: steps 0–9 and family F; family A if every form clears its window by Saturday.
 
 ## Then, in order
 
-Families G → B → E → C → D on F's winner; ≤2 confirmations; the synthesized selected-recipe arm;
-the recipe lock (Codex and Fable review it); M9's six-only close-out from `m9-work`; LoTTE read #1
-→ cloud instance only if §0b puts the build there → M10.3 build (200M, whole extension cycles) →
-export, parity, freeze, LoTTE read #2 → M10.4 final: the six-set transaction in the order C1b → C1a
-→ C2a → C2b, then the reserved conditional.
+Families G → B → E → C → D on F's winner; ≤ 2 confirmations (stability checks, labelled); the
+synthesized selected-recipe arm; **the M10 `decide()` for four conjuncts under gatekeeping, written
+and unit-tested**; the recipe lock with cloud price, build allocation and `max_extension_cycles`
+(Codex and Fable review it); M9's six-only close-out from `m9-work`; LoTTE read #1 (decision-bearing:
+the veto) → cloud instance only if the lock puts the build there → M10.3 build (200M, whole extension
+cycles) → export, parity, freeze, LoTTE read #2 (audit) → M10.4 final: the six-set transaction in the
+order C1b → C1a → C2a → C2b, then the reserved conditional.
 
 ## Guardrails that bite here
 
@@ -113,4 +88,5 @@ No six/reserved/LoTTE access outside the registered transactions. `results/perqu
 rewritten. Never edit a `guard9` protocol-scope file before M9's close-out runs. Every review brief
 carries the reserved read-exclusion; audit the log after. Long runs: smoke, arm the
 failure-signature monitor, check the rate, watch the machine. Stella on the Mac runs only in
-`.venv-mac`. A stopped cloud instance costs disk only; an idle running one costs the budget.
+`.venv-mac`; vLLM lives in `.venv-gen`, never in the trainer's `.venv`. A stopped cloud instance costs
+disk only; an idle running one costs the budget.

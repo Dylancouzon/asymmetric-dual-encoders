@@ -35,4 +35,4 @@ stale caches.
 ## Deliberately not run
 
 - The capacity probe (`m9src/capacity_probe.py`): optional and report-only since the 35M cap is hard (Dylan, 2026-09-01).
-- Any synthetic generation: the approving per-form smoke runs on the GPU instance with the pinned bf16 Qwen3-8B, read by a person, before anything scales; a Mac mlx-lm 4-bit pass only develops the prompts.
+- Any synthetic generation yet: under decision 14 the smoke and the generation run on the box with Qwen's official AWQ release; the smoke is gated by the contract rate, an independent-model on-form read and Dylan's veto window (decision 15).

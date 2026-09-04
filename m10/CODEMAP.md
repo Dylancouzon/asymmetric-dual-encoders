@@ -17,5 +17,5 @@
 
 1. **Stella runs on the Mac only in `.venv-mac`** (transformers 4.57); transformers 5.x breaks its remote code (`get_extended_attention_mask(..., device=)`). MPS: ~170 short queries/s, 20–100 documents/s by length.
 2. **fastembed 0.8.0 custom models need `config.json` and `special_tokens_map.json` in the model directory**, and transformers 5.x fast tokenizers no longer write `special_tokens_map.json` — write it from `tok.special_tokens_map`.
-3. **A per-token linear head over concatenated layer states is exactly reproduced by fastembed's mean pooling** (2e-7), because mean pooling is linear. A nonlinear head is not.
+3. **A per-token linear head over concatenated layer states is exactly reproduced by fastembed's mean pooling** (2e-7), because mean pooling is linear. A **post-pooling** nonlinear head is not; a per-token nonlinear head is (`head_mlp_parity.py`).
 4. **PCA of teacher vectors is the reconstruction-optimal subspace, not a retrieval bound.** Say "the subspace L2 regression aims at", never "upper bound" (Codex pass 4).

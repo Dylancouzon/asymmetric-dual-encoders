@@ -2,8 +2,10 @@
 
 Each form is a fixed instruction the generator (Qwen3-8B, pinned at M10.1) receives with one seed
 passage. The output contract is one JSON list of strings so the pipeline can parse, count and
-fingerprint without heuristics. Quotas (250K per form) and seeds are set in the M10.1 manifest;
+fingerprint without heuristics. Quotas (per form, from the manifest; ≈143K for each generated form) and seeds are set in the M10.1 manifest;
 this file only fixes the wording, which the 200-query smoke per form reads before any scaling.
+Seven of the twelve are GENERATED under decision 14 (howto, argument, finance, comparison, yesno,
+conversational, health); the other five are harvested real text and their prompts here are unused.
 
 Rules baked into every prompt: write from the passage's topic, never copy a span of five or more
 consecutive words from it (the decontamination screen drops copies anyway), no preamble, plain

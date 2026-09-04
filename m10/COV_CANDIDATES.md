@@ -17,8 +17,8 @@ not licence evidence; the primary-source column is what counts.
 | scientific claims | Climate-FEVER | `mteb/climate-fever` | **none at the primary source** (github.com/tdiggelm/climate-fever-dataset has no licence statement; the HF `cc-by-sa-4.0` is a wrapper tag) — the same finding that dropped it from M7's untouched set | 5.4M Wikipedia docs / 1,535 claims | — | **refused**, as in M7 |
 
 **Families available (untouched by any M10 decision):** consumer-health, BRIGHT, legal (now two
-components) and finance if LEDGER verifies — **four against the three-family floor without LEDGER**,
-after ConsumerContractsQA's 2026-09-04 re-admission. The CQADupStack pair stays in DEV-6.
+components, one family) and finance if LEDGER verifies — **three family IDs without LEDGER, exactly the
+floor; four iff LEDGER admits** (Codex 2026-09-04 corrected an earlier "four"). The CQADupStack pair stays in DEV-6.
 **LEDGER (2026-09-04, after the Codex pass):** an ordinary admission — admitted if its structure
 verifies at M10.0-d (chunk rule, 100K cap), decided before any read; at 118,048 questions it is the
 one candidate large enough to move the surface's power. Amendment A4's conditional-remedy role is struck.
@@ -33,8 +33,10 @@ decision 12 — **adopted 2026-09-04 as a reported diagnostic**, never selection
 
 - **Qwen3-8B** (Apache-2.0). **Decision 14 (2026-09-04): the generator is Qwen's official 4-bit release
   `Qwen/Qwen3-8B-AWQ`, revision `4da05a8edb55…`, served by vLLM on the box** (≈6 GB on the 10 GB card);
-  the bf16 base (`Qwen/Qwen3-8B`, revision `b968826d9c46…`) via a hosted open-weights provider is the
-  fallback if vLLM will not run on the card or the smoke / A8 gates fail. The earlier bf16-only rule
+  the bf16 base (`Qwen/Qwen3-8B`, revision `b968826d9c46…`) served by the same vLLM contract on a rented
+  GPU after Dylan returns is the only fallback (never a third-party API — it could not honour the pinned
+  revision and per-request seed), firing if vLLM will not run on the card, the throughput floor is
+  unmet, or a form fails its gates twice. The earlier bf16-only rule
   was written for an 80 GB rented card, not for quality; the smoke rubric and the A8 diversity gate
   are the quality guards either way. Provider and served revision go in the manifest if the fallback fires.
 - **PAQ**: data CC BY-SA, code CC BY-NC (github.com/facebookresearch/PAQ README). Download the
