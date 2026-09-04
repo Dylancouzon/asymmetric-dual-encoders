@@ -6,7 +6,7 @@ that depended on M10 moved to **M12** (`instructions-m12.md`); the image model b
 
 | | |
 |---|---|
-| query encoder | https://huggingface.co/DylanCouzon/constella-zero — commit `4380addd6c`, 10 files |
+| query encoder | https://huggingface.co/DylanCouzon/constella-zero — commit `dc31fedf7f`, 10 files |
 | document tower | https://huggingface.co/DylanCouzon/stella-en-400M-v5-doc-onnx — commit `ab61de6e45`, 7 files |
 | FastEmbed | `Dylancouzon/fastembed@add-constella-models` — 2 entries in `supported_onnx_models`, 2 canonical vectors |
 | serving parity | **4.470e-08** vs the numpy reference over 1,024 real dev queries |
@@ -28,7 +28,7 @@ defect. Read it before porting nano or M13's image model, not this file.
 
 ## What shipped — `constella-zero`
 
-**https://huggingface.co/DylanCouzon/constella-zero — PUBLIC**, commit `4380addd6c`. Run
+**https://huggingface.co/DylanCouzon/constella-zero — PUBLIC**, commit `dc31fedf7f`. Run
 `p35w-2m-s2500`, table sha `a7007b1a…`, the M7 frozen artifact unchanged; the published bytes hash
 to `m7/FREEZE.json`'s `table_sha256`, re-verified anonymously after the final push.
 
