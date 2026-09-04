@@ -16,17 +16,34 @@ The review produced amendments **A1–A8**. What changed, shortest form:
   plan's imported 560 on a rented A100 — the step is launch-bound at batch 32
   (`results/m10_rate_bench_box.json`). The box is an execution target again for everything except
   generation; the build is ≈75 GPU-hours, not 100; cloud spend re-prices to **≈$110–280** hybrid.
-- **Less machinery:** family D cut from three ranking-aware arms to one (LEAF's ‖e‖₂ loss), which
-  deletes the candidate bank, the mining pass, the HNSW fallback, the τ rule and the seed-rank
-  field. Thirteen arms, eleven contrasts. Confirmations capped at two decisions. The full-dose
-  seed-1 replica is withdrawn.
+- **Less machinery:** family D's three ranking-aware arms cut (LEAF's ‖e‖₂ loss plus **D-COV**, a
+  document-covariance-weighted regression, in their place), which deletes the candidate bank, the
+  mining pass, the HNSW fallback, the τ rule and the seed-rank field. Fifteen arms, thirteen
+  contrasts. Confirmations capped at two decisions. The full-dose seed-1 replica is withdrawn.
+  A **registered plateau response** replaces the cut class, so a flat curve still has an answer.
 - **Mostly real text, not generated:** ≈1.5M harvested titles / headings / claim sentences from the
   licensed pool as new arm A3, generation cut to ≈1.0M for the six forms no corpus contains. Three
   of the four clean-4 headline datasets fall in the harvested half.
-- **Two protocol fixes:** C1/C2 are registered on **clean-4 as well as avg-6** (four Holm conjuncts;
-  clean-4 bars 0.5046 / 0.5233), because M14 made clean-4 the headline for both halves of the pair;
-  and the COV resolution number now **sizes** the screen instead of being measured after the lock,
-  because the registered MDE 0.0056 sat below the surface's own resolution.
+- **Two protocol fixes:** C1/C2 are registered on **clean-4 as well as avg-6** under
+  fixed-sequence gatekeeping (bars 0.5046 / 0.5233), because M14 made clean-4 the headline for both
+  halves of the pair; and the COV resolution number now **sizes** the screen, because the registered
+  MDE 0.0056 sat below the surface's own resolution.
+
+**Then Fable reviewed the amendments and returned 3 BLOCKER / 8 MAJOR / 7 MINOR — all actioned**
+(`research/m10-fable-plan-2026-09-04.md`, dispositions in the mandate; read-exclusion audit clean).
+The four that changed the plan most: the A1 cut had cited LEAF's Appendix B, which is about
+intermediate-layer KD and not about a ranking term on regression, so the justification was corrected
+and a plateau response registered; "Holm" and "fixed sequence" were named together and are
+incompatible, so it is now gatekeeping and avg-6 loses no alpha; **the document pool is Wikipedia
+plus ESCI and contains no scientific text, so "harvest paper titles and scientific claims" was
+unfounded** — arXiv metadata is added as a licence-gated source and every harvest yield is measured
+before quotas lock; and the benchmark was re-run because the shape 25% of build steps will use had
+never been timed.
+
+**What the review means for the numbers above:** the 745 examples/s is a *hardware* bound. M9's
+realized pipeline ran at ~10% of the comparable roof, so **the build is priced as a range and the
+real-data re-measure gates every dollar** (PLANNING §11). Do not commit to a box-versus-cloud split
+on the optimistic end.
 
 ## Dylan — open decisions (defaults apply meanwhile)
 
@@ -45,9 +62,13 @@ Decisions 2 (budget), 3, 5, 6, 8 and 9 are closed — see `instructions-m10.md` 
 Everything here needs no approval, spends no cloud dollars, and touches no protected surface.
 Generation is deliberately absent: it needs both Dylan and a bigger card.
 
-1. **Rate work.** Length-bucketed single-chunk batching in the trainer, then re-measure on real
-   tokenized corpora (§11's numbers are random-token, no data loading). This is the number the
-   build's cost line reads.
+**Ordered by value, and the last four are droppable — ten items do not fit in 72 h (Fable M6).**
+
+1. **Rate work, and it is the one that must happen.** Length-bucketed single-chunk batching, then
+   `torch.compile(mode="reduce-overhead")` on the fixed buckets, then **re-measure on real tokenized
+   corpora with `num_alloc_retries` logged**. §11's numbers are random-token with no data loading,
+   and M9's pipeline achieved ~10% of the hardware roof; this is the number the build's cost line
+   and the box-versus-cloud decision actually read.
 2. **COV admission (M10.0-d)**, re-run under the 2026-09-04 licence rule: ConsumerContractsQA
    (CC BY-NC) is re-admissible, giving four families without LEDGER; verify LEDGER's structure and
    chunk cap; per-component licence, revision, size, qrels and metric records into `m10/LEDGER.md`
@@ -57,8 +78,11 @@ Generation is deliberately absent: it needs both Dylan and a bigger card.
    amendment A4 this now sizes the screen, so it must be pushed before the lock.
 4. **M10.0-c**: per-component DEV-6 read of the M9 candidate incl. `heldout-longq` (the baseline
    row). The checkpoint and caches are on the box.
-5. **The §Harvest pipeline** — titles, headings, declarative lead sentences, extracted
-   interrogatives out of the licensed pool, with per-rule yields. No model in the loop.
+5. **The §Harvest pipeline and its yields** — titles, headings, declarative lead sentences,
+   extracted interrogatives, with per-rule post-dedup counts pushed before any quota is fixed. Plus
+   the **arXiv licence check** (primary-source evidence of a commercial-use grant, artifact and
+   revision named) — without it the paper-title and scientific-claim forms revert to generation.
+   No model in the loop.
 6. **PAQ** download from Facebook's official release and the samplers (1.0M build, A2 control).
 7. **Trainer port** to the M10 recipe: cyclic schedule, example-mix batcher, three- and four-layer
    pooled heads, the ‖e‖₂ loss arm, `test_resume.py` equivalence, an examples/s counter.
@@ -66,12 +90,14 @@ Generation is deliberately absent: it needs both Dylan and a bigger card.
    heads, so families F and G may run those arms.
 9. **Prompt prototyping** for the six generated forms (4-bit is fine — prototyping enters no
    record, produces no smoke result and no manifest row).
-10. If time remains: the **recipe pre-screen** (B, C, E, G on the M9 pool, **DEV-6 only — COV stays
-    unread**), labelled a pre-screen that sets defaults, never the screen.
+10. **Droppable:** the recipe pre-screen (B, C, E, G on the M9 pool, **DEV-6 only — COV stays
+    unread**), labelled a pre-screen that sets defaults, never the screen, with its DEV-6 reads
+    counted. Drop items 8–10 before dropping 1–5.
 
 ## Then, in order
 
-M10.0-e screen lock (thirteen arms, eleven contrasts, MDE from the resolution number) → cloud
+M10.0-e screen lock (fifteen arms, thirteen contrasts, MDE from the resolution number, and the
+LEDGER-admission branch if the distance exceeds 0.010) → cloud
 instance for the generation smoke (Dylan reads it) → generation at ≈1.0M → M10.1 manifest with the
 A8 quality gates → M10.2 arms on the box, confirmations, the synthesized selected-recipe arm, the
 lock, Codex and Fable review, M9's six-only close-out from `m9-work`, LoTTE read #1 → M10.3 build

@@ -1,21 +1,40 @@
 {
-  "_what": "Trainer-shape throughput microbenchmark on the RTX 3080, run 2026-09-04 during the M10 plan review to test the plan's imported planning rate (560 examples/s, LEAF's realized A100 rate). RANDOM TOKEN IDS ONLY: no corpus text, no protected path, no teacher, no data loading, no evaluation. It bounds the hardware, not the pipeline; the day-one rate benchmark (mandate Compute) replaces it.",
+  "_what": "Trainer-shape throughput microbenchmark on the RTX 3080, run 2026-09-04 during the M10 plan review to test the plan's imported planning rate (560 examples/s, LEAF's realized A100 rate). RANDOM TOKEN IDS ONLY: no corpus text, no protected path, no teacher, no data loading, no evaluation. It bounds the HARDWARE, not the pipeline; the real-data re-measure (m10/STATUS.md box-window item 1) is what the build's cost line reads.",
   "date": "2026-09-04",
   "gpu": "NVIDIA GeForce RTX 3080 10GB",
   "torch": "2.8.0+cu126",
-  "model": "BAAI/bge-small-en-v1.5 + Linear(1152->1024) applied per token over mean-pooled concat of hidden layers 12/8/4, then masked mean pool + L2 normalize",
+  "model": "BAAI/bge-small-en-v1.5 + Linear(1152->1024) applied per token over concat of hidden layers 12/8/4, then masked mean pool + L2 normalize",
   "params_m": 34.54,
   "dtype": "bf16 autocast, fp32 loss",
-  "steps_measured": 60,
-  "warmup_steps": 10,
   "planning_rate_being_tested": 560,
-  "rows": {
-    "bs32_mix7525_two_chunks_adamw": {"chunks": [[24, 64], [8, 256]], "steps_per_s": 12.49, "examples_per_s": 399.6, "gpu_hours_200m": 139.0, "note": "M9's collate: query and document chunks stepped separately"},
-    "bs32_mix7525_two_chunks_fused_adamw": {"chunks": [[24, 64], [8, 256]], "steps_per_s": 12.42, "examples_per_s": 397.5, "gpu_hours_200m": 139.8, "note": "fused AdamW makes no difference; the cost is not the optimizer"},
-    "bs32_single_padded_chunk_128": {"chunks": [[32, 128]], "steps_per_s": 23.29, "examples_per_s": 745.2, "gpu_hours_200m": 74.6, "note": "one padded chunk: 1.9x the two-chunk rate"},
-    "bs32_all_query_len64": {"chunks": [[32, 64]], "steps_per_s": 23.72, "examples_per_s": 759.0, "gpu_hours_200m": 73.2},
-    "bs128_mix7525_fused": {"chunks": [[96, 64], [32, 256]], "steps_per_s": 10.40, "examples_per_s": 1330.9, "gpu_hours_200m": 41.7, "note": "1.8x cheaper per example than bs32 single-chunk; family E must price this"},
-    "bs512_mix7525_fused": {"chunks": [[384, 64], [128, 256]], "steps_per_s": 1.15, "examples_per_s": 588.4, "gpu_hours_200m": 94.4, "note": "past the launch-bound regime; no longer free"}
+  "runs": {
+    "pass1_2026-09-04": {
+      "steps": 60, "warmup": 10, "note": "first pass; superseded by pass 2 for every shape it repeats. Kept because the two-chunk row and the plain-vs-fused AdamW comparison are only here.",
+      "rows": {
+        "bs32_mix7525_two_chunks_adamw": {"chunks": [[24, 64], [8, 256]], "steps_per_s": 12.49, "examples_per_s": 399.6, "gpu_hours_200m": 139.0, "note": "M9's collate: query and document chunks stepped separately inside one optimizer step"},
+        "bs32_mix7525_two_chunks_fused_adamw": {"chunks": [[24, 64], [8, 256]], "steps_per_s": 12.42, "examples_per_s": 397.5, "gpu_hours_200m": 139.8, "note": "fused AdamW makes no difference; the cost is not the optimizer"},
+        "bs512_mix7525_fused": {"chunks": [[384, 64], [128, 256]], "steps_per_s": 1.15, "examples_per_s": 588.4, "padded_tok_per_s": 65600, "note": "SUPERSEDED READING: pass 1 called this 'past the launch-bound regime'. Pass 2 shows 512x64 and 128x256 each reach 185-191K padded tok/s at 7.0 GB peak, so this two-chunk 57K-token step was memory-bound on a 10 GB card, not evidence about the compute regime. Flagged by the Fable review."}
+      }
+    },
+    "pass2_2026-09-04": {
+      "steps": 300, "warmup": 20, "optimizer": "fused AdamW", "note": "single homogeneous chunk per step (what length bucketing produces), 300 timed steps, peak memory and allocator retries logged. This is the pass to cite.",
+      "rows": {
+        "bs32_query_bucket_64":  {"chunks": [[32, 64]],   "steps_per_s": 22.43, "examples_per_s": 718.0, "padded_tok_per_s": 45933,  "peak_gb": 0.88, "alloc_retries": 0, "gpu_hours_200m": 77.4},
+        "bs32_mixed_pad_128":    {"chunks": [[32, 128]],  "steps_per_s": 21.95, "examples_per_s": 702.0, "padded_tok_per_s": 89911,  "peak_gb": 1.29, "alloc_retries": 0, "gpu_hours_200m": 79.1},
+        "bs32_doc_bucket_256":   {"chunks": [[32, 256]],  "steps_per_s": 18.61, "examples_per_s": 596.0, "padded_tok_per_s": 152448, "peak_gb": 2.11, "alloc_retries": 0, "gpu_hours_200m": 93.3, "note": "the shape 25% of build steps will run under length bucketing; untimed in pass 1, added on the Fable review"},
+        "bs64_query_bucket_64":  {"chunks": [[64, 64]],   "steps_per_s": 21.10, "examples_per_s": 1350.0, "padded_tok_per_s": 86411, "peak_gb": 1.29, "alloc_retries": 0, "gpu_hours_200m": 41.1},
+        "bs128_query_bucket_64": {"chunks": [[128, 64]],  "steps_per_s": 18.05, "examples_per_s": 2310.8, "padded_tok_per_s": 147892, "peak_gb": 2.11, "alloc_retries": 0, "gpu_hours_200m": 24.0},
+        "bs128_doc_bucket_256":  {"chunks": [[128, 256]], "steps_per_s": 5.84,  "examples_per_s": 747.5,  "padded_tok_per_s": 191354, "peak_gb": 7.03, "alloc_retries": 0, "gpu_hours_200m": 74.3},
+        "bs512_query_bucket_64": {"chunks": [[512, 64]],  "steps_per_s": 5.65,  "examples_per_s": 2893.4, "padded_tok_per_s": 185180, "peak_gb": 7.04, "alloc_retries": 0, "gpu_hours_200m": 19.2}
+      }
+    }
   },
-  "reading": "At batch 32 with ~35-token queries the step is launch-bound, not FLOP-bound. The box meets or beats the rate the plan assumed for a rented A100, so the 2026-09-01 withdrawal of the box rested on M9's realized 226 examples/s, which was a pipeline artifact rather than a hardware limit. Two registered consequences: length-bucketed single-chunk batching is part of the build, and family E's verdict must be read against the 1.8x cost difference."
+  "reading": "Launch-bound at batch 32 is now established rather than asserted: 4x the tokens per step (32x64 -> 32x256) costs only 20% more wall-clock, and 4x the batch at fixed length (32x64 -> 128x64) costs 24%. The card's throughput roof is 185-191K padded tokens/s, reached only at 128x256 and 512x64; batch 32 runs at 24-80% of it. Allocator retries were 0 in every pass-2 row, so pass 1's slow bs512 two-chunk row was memory pressure on 10 GB, not a compute-regime change.",
+  "build_cost_under_length_bucketing": {
+    "method": "200M examples at the mandate's 75/25 example mix = 150M query-bucket examples + 50M document-bucket examples, each at its own measured rate",
+    "bs32_gpu_hours": 81.3,
+    "bs128_gpu_hours": 36.6,
+    "bs128_is_cheaper_by": "2.2x, which family E must weigh against any bs32 quality win"
+  },
+  "the_caveat_that_binds": "These are hardware bounds. M9's realized pipeline ran at 18,984 tok/s (m9/M92_LOCK.md) against a comparable-shape hardware roof of ~191K here, i.e. roughly 10% efficiency, and the M10 trainer is being ported from that pipeline (m9src/longrun.py: per-step numpy collate, length_chunks, target fetch). Until the real-data re-measure lands, the build must be priced as a RANGE from hardware bound to M9 efficiency, and no dollar or box-vs-cloud decision may rest on the optimistic end alone. Raised by the Fable review of 2026-09-04."
 }

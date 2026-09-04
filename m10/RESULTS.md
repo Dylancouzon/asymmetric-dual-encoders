@@ -18,6 +18,18 @@ Nothing has trained. Dev reads below total **86 raw score reads** (43 per CQADup
 | trainer-shape throughput | `results/m10_rate_bench_box.json`, script `m10src/rate_bench.py` | the M10 recipe shape runs at 400 ex/s in M9's two-chunk collate, **745** in one padded chunk and 1,331 at batch 128, against the plan's imported 560 for a rented A100: the step is launch-bound at batch 32. Random token ids, fixed shapes, no data loading, no evaluation — it bounds the hardware, not the pipeline | none |
 | registered bars, both partitions | `results/m10_bars.json`, script `scripts/clean4_bars.py` | amendment A3's four bars, recomputed from the frozen comparator rows: release 0.5042 avg-6 / **0.5046** clean-4; aim 0.5155 / **0.5233** | none — comparator rows only, no dev surface |
 
+## Known pre-existing test failure (not caused by any M10 work)
+
+`./run_tests.sh` reports `test_encoders` FAIL — **7 of 158 replayed caches**, all of them M8 `T1`
+teacher-probe caches written for `Alibaba-NLP/gte-modernbert-base` and
+`ibm-granite/granite-embedding-english-r2` with meta pooling `cls-l2`, which matches 0 current
+`Spec` entries, so the replay refuses rather than guessing. Every other suite passes. Confirmed
+pre-existing at 2026-09-04: `git diff --name-only main HEAD -- m7src m8src m9src` is empty, so no
+M10 change touches the path. It blocks nothing in M10 (both encoders are closed avenues,
+`m8/EXPLORED.md`) but it means `run_tests.sh` is not green, and a future session must not read that
+red as its own breakage. Fixing it means either adding the two `cls-l2` Specs back or dropping the
+stale caches.
+
 ## Deliberately not run
 
 - The capacity probe (`m9src/capacity_probe.py`): optional and report-only since the 35M cap is hard (Dylan, 2026-09-01).

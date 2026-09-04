@@ -388,28 +388,53 @@ supervision) · `m9src/final9.py` + `final_stats.py` (access machine, statistics
 ## 11. Measured trainer rates (box, 2026-09-04) — the plan review's central number
 
 `results/m10_rate_bench_box.json`, script `m10src/rate_bench.py`. Random token ids only; no corpus,
-no protected path, no teacher, no data loading, no evaluation — it bounds the hardware, not the
-pipeline. M10 recipe shape: bge-small + Linear(1152→1024) per token over mean-pooled layers 12/8/4,
-34.54M parameters, bf16 autocast, fp32 loss, 60 timed steps.
+no protected path, no teacher, no data loading, no evaluation — it bounds the **hardware**, not the
+pipeline. M10 recipe shape: bge-small + Linear(1152→1024) per token over pooled layers 12/8/4,
+34.54M parameters, bf16 autocast, fp32 loss. Pass 2 (cite this one): single homogeneous chunk per
+step — what length bucketing produces — 300 timed steps, fused AdamW, peak memory and allocator
+retries logged.
 
-| configuration | steps/s | examples/s | 200M examples |
-|---|---|---|---|
-| bs32, 75/25, M9's two-chunk collate | 12.5 | 400 | 139 h |
-| bs32, one padded chunk | 23.3 | **745** | **75 h** |
-| bs32, all-query len 64 | 23.7 | 759 | 73 h |
-| bs128, 75/25 | 10.4 | **1,331** | 42 h |
-| bs512, 75/25 | 1.2 | 588 | 94 h |
+| shape | steps/s | examples/s | padded tok/s | peak GB | retries |
+|---|---|---|---|---|---|
+| bs32 × 64 (query bucket) | 22.4 | 718 | 45.9K | 0.88 | 0 |
+| bs32 × 128 (mixed padding) | 22.0 | 702 | 89.9K | 1.29 | 0 |
+| bs32 × 256 (document bucket) | 18.6 | 596 | 152K | 2.11 | 0 |
+| bs64 × 64 | 21.1 | 1,350 | 86.4K | 1.29 | 0 |
+| bs128 × 64 | 18.1 | 2,311 | 148K | 2.11 | 0 |
+| bs128 × 256 | 5.8 | 748 | **191K** | 7.03 | 0 |
+| bs512 × 64 | 5.7 | 2,893 | 185K | 7.04 | 0 |
 
-Fused AdamW changed nothing (397 vs 400): the cost is not the optimizer.
+Pass 1 (60 steps, kept for two rows only): M9's **two-chunk** collate at bs32 gives **400 ex/s**
+against pass 2's 702 for the same examples in one padded chunk — the 1.9× that makes length-bucketed
+single-chunk batching part of the build. Plain vs fused AdamW: 400 vs 397, so the cost is not the
+optimizer.
 
-**Reading.** §5's planning rate — 560 examples/s, LEAF's realized A100 rate — is *met or beaten by
-the 3080*. At batch 32 with ~35-token queries a step is ~11K padded tokens, ~2e12 FLOP, so the step
-is launch-bound and a bigger card buys ~1.5–2×, not 10×. M9's realized 226 examples/s
-(`m9/M92_LOCK.md`) was therefore a pipeline artifact, not a hardware limit — and the 2026-09-01
-withdrawal of the box was priced off it via LEAF's similarly launch-bound number. Three registered
-consequences (mandate amendment A7): length-bucketed single-chunk batching is part of the build,
-not an optimisation; the screens, confirmations, COV work and M10.0-c run on the box; family E's
-contrast must be read against bs128's 1.8× lower cost per example. Past bs512 the free regime ends.
+**Reading.** Launch-bound at batch 32 is now *established*, not asserted: 4× the tokens per step
+(32×64 → 32×256) costs 20% more wall-clock, and 4× the batch at fixed length (32×64 → 128×64) costs
+24%. The card's roof is 185–191K padded tok/s, reached only at 128×256 and 512×64; batch 32 runs at
+24–80% of it. §5's planning rate — 560 ex/s, LEAF's realized A100 rate — is therefore *met or
+beaten by the 3080*, and M9's realized 226 ex/s was a pipeline artifact rather than a hardware
+limit. Build cost under length bucketing, 200M examples at the 75/25 example mix (150M query-bucket
++ 50M document-bucket, each at its own rate): **81.3 GPU-hours at bs32, 36.6 at bs128** — bs128 is
+2.2× cheaper, which family E must weigh against any bs32 quality win.
+
+**Corrected after the Fable review (2026-09-04).** Pass 1 read its slow bs512 two-chunk row as
+"past the launch-bound regime". Wrong: padded tok/s *fell* to 66K there, and a compute-bound card
+plateaus rather than dropping 2.9× below its own roof. Pass 2 shows 512×64 and 128×256 both reach
+185–191K at 7.0 GB with zero allocator retries, so pass 1's row was memory pressure on a 10 GB card.
+Two consequences: an 80 GB A100 is **not** launch-bound at bs128+, so family E's cost ratio and the
+cloud build line are device-dependent and must be re-measured there; and the document bucket — the
+shape 25% of build steps will run — was untimed in pass 1 and is the expensive one.
+
+**The caveat that binds, and it is the reason nothing is committed on these numbers.** These are
+hardware bounds. M9's realized pipeline ran at **18,984 tok/s** (`m9/M92_LOCK.md`) against a
+comparable-shape roof of ~191K here — roughly **10% efficiency** — and the M10 trainer is being
+ported from that pipeline (`m9src/longrun.py`: per-step numpy collate, `length_chunks`, target
+fetch). So the build is priced as a **range from hardware bound to M9 efficiency**, and box-window
+item 1 (real-data re-measure with `torch.cuda.memory_stats()['num_alloc_retries']` logged) is the
+gate before any dollar or box-versus-cloud decision. At M9's efficiency the box build is 300+ hours,
+not 81, and a screen arm is 6–9 hours, not 2 — which is why closing that gap is worth more than the
+GPU rental (§13, idea 1).
 
 ## 12. Why generate at all, and why ≈1.0M rather than 3.0M (the 2026-09-04 question)
 
@@ -460,3 +485,38 @@ generated half entirely.
   LEAF's corpus is partly synthetic.
 - Nothing on-topic published 2026-08-01 to 2026-09-04 beyond DistilVDR; no new ≤35M permissively
   licensed embedding backbone released in that window.
+
+## 13. Carried from the Fable review (2026-09-04) — adopted, and the one gap still open
+
+Full findings and dispositions: `research/m10-fable-plan-2026-09-04.md`, tabulated in
+`instructions-m10.md` §Amendment 2026-09-04. Read-exclusion audit clean.
+
+**Adopted into the plan:** the arXiv scientific harvest source (§Data), form-balanced query sampling
+(§Data), the registered plateau response and D-COV (§Recipe), family F at 20M with a third arm
+(§Screen), fixed-sequence gatekeeping and the four pass points (§Goal), the resolution-number remedy
+(§Surfaces), hosted generation as the default, and the benchmark re-run (§11).
+
+**Not yet done, ranked, with cost — these are the next actions, not ideas:**
+
+| # | action | cost | why it is worth it |
+|---|---|---|---|
+| 1 | `torch.compile(mode="reduce-overhead")` / CUDA graphs on the fixed length buckets, then a real-data re-measure | 0 GPU-h, ~2–4 h engineering | §11's caveat is the whole cost story: M9's pipeline ran at ~10% of the hardware roof. Closing that gap is worth more than the GPU rental, and 1.5–3× at bs32 also dissolves most of family E's cost argument. **Box-window item 1** |
+| 2 | arXiv licence evidence and harvest yields | CPU + ~500K stella encodes ≈ minutes | amendment A2's scientific forms do not exist without it, and the fallback (revert to generation) must be chosen on a measured yield, not assumed. **Box-window item 5** |
+| 3 | `nq-250k` retention as a named per-arm diagnostic | ≈0 | see the open gap below |
+
+### The gap the plan still does not answer: the in-distribution ceiling
+
+M9 retained **93.8% on NQ while training on NQ-like data**. Coverage explains the 50–71% on forum
+questions; it does **not** explain the 93.8%. LEAF reaches 97.7% overall on an easier target
+(109M/768-d teacher). The four registered pass points need 89.5% / 91.9% / 91.5% / **95.2%** of the
+ceiling (§Goal), so **C2b demands better in-distribution retention than M9 achieved even where it was
+fully covered.** Everything M10 adds — coverage, width, the optimizer regime — attacks the
+out-of-distribution half. Only family G (width) and family E (regime) touch the covered half, and
+D-COV is now the one arm aimed squarely at it.
+
+This is recorded as an open weakness rather than closed. What would move it, in rough order of
+promise: D-COV or another loss that weights document-discriminative directions; more output width
+than 1536 (the parameter budget allows it only by shrinking the backbone); a longer dose on covered
+forms; and — outside M10's premise — document-side co-adaptation, which is M16 and which every
+≥96% near-zero-query system used. If M10 lands the release conjuncts but misses C2b, this section is
+the reason, and it was known in advance.

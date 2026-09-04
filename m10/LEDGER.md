@@ -7,12 +7,12 @@ row points at; this file records the decision, the number a rule reads, and the 
 ## §0 Screen lock — fill at M10.0-e, before any arm
 
 - COV resolution number (mandate §Surfaces; descriptive): the measured distance for e5-small-v2 vs gte-small, beside the MDE 0.0056; no direction, no verdict.
-- Arms (thirteen) **in the amendment-A6 order A → F → G → B → E → C → D**: A1 A2 A3-harvested A4-full (= anchor) · F-MiniLM · G-384 G-768 G-1536 · B 100/0 B 50/50 (B 75/25 = anchor) · E-bs128 · C-M9init (skipped and reported skipped if F selects MiniLM) · D-NORM: per arm the data manifest hash, mix, init, objective, batch, student, feature layers, dose in examples and tokens (5M screen dose), seed.
+- Arms (fifteen) **in the amendment-A6 order A → F → G → B → E → C → D**: A1 A2 A3-harvested A4-full (= anchor) · F-MiniLM-L6 (20M, read at 5/10/20M) F-MiniLM-L12 (5M) with the anchor extended to 20M · G-384 G-768 G-1536 · B 100/0 B 50/50 (B 75/25 = anchor) · E-bs128 · C-M9init (skipped and reported skipped if F does not select bge-small) · D-NORM D-COV: per arm the data manifest hash, mix, init, objective, batch, student, feature layers, dose in examples and tokens (5M screen dose), seed.
 - Day-one rate benchmark: stella docs/s; examples/s at batch 32 on the 75/25 mix, the 50/50 mix and MiniLM-L6; generation requests/s per form; the billed $/h; the re-derived PLANNING §6.
 - Allocation under the $1,000 ceiling: every mandatory line at measured rates; `max_extension_cycles`; m_k's formula and evaluation hashes; the billed-spend source; which stages run on the box and which are rented (amendment A7). Decision 8 is withdrawn (A5), so no seed-1 boolean is fixed.
 - A2, A3 and A4 post-screen unique-text counts (identical) and corpus hashes.
 - ~~τ entropy table~~ — struck with the ranking-aware class (amendment A1).
-- Eleven contrasts, the 0.025/11 bound, **MDE = max(0.0056, the measured COV resolution distance)** (amendment A4; if that distance exceeds 0.010, record the surface enlargement or contrast cut made before any arm), rank-stability rule; family A's three-outcome rule verbatim on A3−A2 and the A4−A3 drop rule.
+- Thirteen contrasts, the 0.025/13 bound, **MDE = max(0.0056, the measured COV resolution distance)** (amendment A4). **If that distance exceeds 0.010: first admit LEDGER (structure verified, chunk rule, 100K cap) and re-measure; if it still exceeds 0.010, screen contrasts drop to one-sided α = 0.05 uncorrected with the two-seed confirmation as the multiplicity guard.** Record which branch fired before the first arm. Rank-stability rule; family A's three-outcome rule verbatim on A3−A2 and the A4−A3 drop rule.
 - Confirmation design: which decisions (**at most two**, amendment A5), seeds, the margin and seed-range definitions; the replication seed pair on the selected recipe.
 - COV macro formula (families, slice averaging, weights); DEV-6-once evaluation rule.
 - Outcome → action map for every family; the synthesized selected-recipe arm; LoTTE read #1 manifest and veto rule.
@@ -60,7 +60,7 @@ Copied from `instructions-m10.md` §Owner decisions as each is taken, with date 
 | A1 | family D cut to one arm, LEAF's ‖e‖₂; candidate bank, mining, HNSW fallback, τ rule, D-NCE spec and seed-rank field deleted |
 | A2 | generation 3.0M → ≈1.0M and confined to the six non-harvestable forms; ≈1.5M harvested real query-like text added as arm A3 |
 | A3 | C1/C2 registered on clean-4 as well as avg-6 — four conjuncts under Holm inside the unchanged 0.025 family alpha; clean-4 bars 0.5046 / 0.5233 |
-| A4 | the COV resolution number is measured first and sizes the screen: MDE = max(0.0056, measured distance at 0.025/11) |
+| A4 | the COV resolution number is measured first and sizes the screen: MDE = max(0.0056, measured distance at 0.025/13), with the two-step remedy above registered if it exceeds 0.010 |
 | A5 | decision 8 (full-dose seed 1) withdrawn; confirmations capped at two decisions |
 | A6 | family F runs second; every later family screens on its winner. Order A → F → G → B → E → C → D |
 | A7 | the box is an execution target again for everything but generation, on measured rates |
