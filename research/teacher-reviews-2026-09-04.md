@@ -42,9 +42,11 @@ were opened. Actions taken are marked inline.
    **Any hybrid-aware training must first choose the operator the product can actually run.**
 6. **Hybrid retraining of zero is a NEW MILESTONE, not an M10 amendment** — the six-set
    fused-vs-dense rows were observed 2026-08-28, so a fusion-trained table is designed with
-   knowledge of them. Confirmatory surface would be the reserved four or LoTTE. That is M14.
+   knowledge of them. Confirmatory surface would be the reserved four or LoTTE. **That is now M12** (`instructions-m12.md`), created 2026-09-04.
 7. **No hybrid comparator rows exist** (only `lightretriever-…-hybrid` 0.4720). And do NOT say
    zero confirmatorily beat BM25: C2 was +0.0165 [0.0017, 0.0311], Holm p=0.0149 > 0.0083, **not rejected**.
+
+*Codex's verbatim text below predates the 2026-09-04 renumbering and is left unedited; its `M12` means today's M13.*
 
 ## Codex verdict on the CTO ask
 

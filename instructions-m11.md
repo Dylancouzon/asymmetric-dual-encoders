@@ -3,7 +3,7 @@
 > **CLOSED 2026-09-03.** M11 shipped the `zero` half end to end: `constella-zero`, the ONNX
 > document tower, the FastEmbed integration and both cards. Everything below that depends on
 > **nano** — deliverables 1 (nano), 2 (nano), 3 (nano) and 4 (the whitepaper) — moved to
-> **`instructions-m12.md`**, and the image model became `instructions-m13.md`. Read Amendments A
+> **`instructions-m13.md`**, and the image model became `instructions-m14.md`. Read Amendments A
 > and B at the bottom for what was actually ruled; the deliverable text above them is the ORIGINAL
 > mandate and is superseded wherever the two disagree. Outcome: `m11/STATUS.md`.
 
@@ -49,7 +49,7 @@ M11 ships no new science. It turns two frozen artifacts into a product and a pap
    index: no custom encoder file, no package to install first, two entries in FastEmbed's own
    `supported_onnx_models`. `zero_encoder.py` still ships, but as the reference implementation for
    readers who want it, not as a requirement. Both traps were hit and are recorded in
-   `m11/CODEMAP.md`. nano's registration is M12.
+   `m11/CODEMAP.md`. nano's registration is M13.
 
 
 4. **Whitepaper.** Primary source: `m8/FINDINGS.md` (the negative map and the method learnings) plus
@@ -84,7 +84,7 @@ M11 ships no new science. It turns two frozen artifacts into a product and a pap
 ## Amendment A — the M11a slice (Dylan, 2026-09-03)
 
 M10 is paused on budget. The `zero` half of M11 does not depend on it, so M11a ships zero end to end
-and publishes the document tower. Nano's export, the upstream PR and the whitepaper wait for M10 (now M12).
+and publishes the document tower. Nano's export, the upstream PR and the whitepaper wait for M10 (now M13).
 
 | # | ruling |
 |---|---|

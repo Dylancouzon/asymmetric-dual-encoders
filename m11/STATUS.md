@@ -2,7 +2,7 @@
 
 **Delivered: the zero half of the pair, end to end.** Two public models, both ONNX, both served by
 FastEmbed as built-in entries, both byte-verified against the bytes the gates signed off. Everything
-that depended on M10 moved to **M12** (`instructions-m12.md`); the image model became **M13**.
+that depended on M10 moved to **M13** (`instructions-m13.md`); the image model became **M14**.
 
 | | |
 |---|---|
@@ -24,7 +24,7 @@ gates, 6 serving checks, negative control 4.475e-04, and 8 anonymous live-repo c
     PYTHONPATH=/home/dylan/fastembed .venv/bin/python m11/release/verify_fastembed.py
 
 **`m11/CODEMAP.md` is the reusable part** — the ONNX-port checklist, each item paid for by a real
-defect. Read it before porting nano or M13's image model, not this file.
+defect. Read it before porting nano or M14's image model, not this file.
 
 ## What shipped — `constella-zero`
 
@@ -64,7 +64,7 @@ three weight files.
 | `release/verify_published.py` | what the two live repos actually serve, checked anonymously |
 
 **`m11/CODEMAP.md` is the reusable part** — the ONNX-port checklist, 24 items, each one paid for by
-a T2 or T3 defect. Read it before porting nano (M12) or M13's image model, not this file.
+a T2 or T3 defect. Read it before porting nano (M13) or M14's image model, not this file.
 
 **Eight gates**, all re-run at every push: (1) the frozen source AND the staged `model.npz` hash to
 `FREEZE.json`, (2) lineage records unchanged, (3) `assert_releasable`, (4) conformance — the
@@ -171,9 +171,9 @@ New files: `m11/release/export_doc.py`, `push_doc.py`, `MODEL_CARD_DOC.md`, `doc
 
 ## Carried forward
 
-- **`nano`, its ONNX port, its FastEmbed entry, and the whitepaper are M12** — blocked on M10,
-  which is blocked on the cloud GPU budget. `instructions-m12.md`.
-- **The upstream FastEmbed PR is M12** (Dylan, 2026-09-04): one clean PR adding all three model
+- **`nano`, its ONNX port, its FastEmbed entry, and the whitepaper are M13** — blocked on M10,
+  which is blocked on the cloud GPU budget. `instructions-m13.md`.
+- **The upstream FastEmbed PR is M13** (Dylan, 2026-09-04): one clean PR adding all three model
   entries once nano exists, not a two-model PR now. The branch that exists today,
   `add-constella-models`, is deliberately not mergeable — it also carries the #703 padding fix, and
   the models sit on a personal account where upstream hosts under `Qdrant/`.

@@ -395,7 +395,7 @@ conditional fires.
 
 M9's cost protocol (`instructions-m9.md` §Costs) unchanged; the frontier is reported per index
 configuration, naming the one measured (`m9/RESULTS.md` rounds 1–4). TurboQuant 4-bit (Qdrant 1.19)
-joins the M12 all-in quantization comparison.
+joins the M13 all-in quantization comparison.
 
 ## Unimpeachable by competitors — what the report must carry
 
@@ -422,11 +422,11 @@ a missing ancestor, which is why M9's freeze was refused; the record must be **d
 run's own hash-bound `manifest.json`, never asserted by hand**, because a post-hoc record that
 happens to satisfy a licence guard is precisely the artifact that must not be fabricated; see
 `m9/BUILD_LOG.md`), the frontier
-update, the M10 section of the report artifact, decisions logged in CLAUDE.md, handoff to M12.
+update, the M10 section of the report artifact, decisions logged in CLAUDE.md, handoff to M13.
 
 ## Out of scope (reopening conditions in PLANNING §7)
 
-Document-side co-adaptation (inside M10 it breaks the pair; a tower co-trained against both query paths at once keeps it and is recommended 2026-09-01 as the M12 candidate, Dylan's call, PLANNING §7) · any student above 35M
+Document-side co-adaptation (inside M10 it breaks the pair; a tower co-trained against both query paths at once keeps it and is recommended 2026-09-01 as the next-milestone candidate (that slot was M12 then; **M15** after the 2026-09-04 renumbering), Dylan's call, PLANNING §7) · any student above 35M
 (hard cap, Dylan 2026-09-01) · teacher change (stella-1.5B measured worse; Qwen3-0.6B never
 screened and not the pair) · a nonlinear head (no fastembed path; width comes from linear
 multi-layer pooling) · MS MARCO in any form · FineWeb in any role (decisions 3 and 5) · any change to zero.

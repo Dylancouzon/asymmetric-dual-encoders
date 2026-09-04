@@ -1,10 +1,10 @@
 # M11 code map — and the reusable ONNX-port checklist
 
-Read `STATUS.md` first. This file is what a future session needs to (a) port nano (M12) and (b) **port a
+Read `STATUS.md` first. This file is what a future session needs to (a) port nano (M13) and (b) **port a
 different model to ONNX without rediscovering T3's traps**. Numbers live in `results/m11_*.json`;
 the T3 narrative is `PLANNING.md` §T3. Nothing here restates them.
 
-Known future consumers: nano's port (M12, blocked on M10) and M13's image model.
+Known future consumers: nano's port (M13, blocked on M10) and M14's image model.
 
 ## Layout
 
