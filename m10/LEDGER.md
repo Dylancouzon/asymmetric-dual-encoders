@@ -7,23 +7,25 @@ row points at; this file records the decision, the number a rule reads, and the 
 ## §0 Screen lock — fill at M10.0-e, before any arm
 
 - COV resolution number (mandate §Surfaces; descriptive): the measured distance for e5-small-v2 vs gte-small, beside the MDE 0.0056; no direction, no verdict.
-- Arms (fourteen) in order A1 A2 A3 · B 100/0 B 50/50 (B 75/25 = anchor) · C-M9init · D-KL3 D-KL1 D-NCE · E-bs128 · F-MiniLM · G-384 G-768 G-1536: per arm the data manifest hash, mix, init, objective, batch, student, feature layers, dose in examples and tokens (5M screen dose), seed.
+- Arms (thirteen) **in the amendment-A6 order A → F → G → B → E → C → D**: A1 A2 A3-harvested A4-full (= anchor) · F-MiniLM · G-384 G-768 G-1536 · B 100/0 B 50/50 (B 75/25 = anchor) · E-bs128 · C-M9init (skipped and reported skipped if F selects MiniLM) · D-NORM: per arm the data manifest hash, mix, init, objective, batch, student, feature layers, dose in examples and tokens (5M screen dose), seed.
 - Day-one rate benchmark: stella docs/s; examples/s at batch 32 on the 75/25 mix, the 50/50 mix and MiniLM-L6; generation requests/s per form; the billed $/h; the re-derived PLANNING §6.
-- Allocation under the $1,000 ceiling: every mandatory line at measured rates; decision 8 boolean (≥ 100 GPU-hours remaining), seed-1 data and model seeds and six-set row labels; `max_extension_cycles`; m_k's formula and evaluation hashes; the billed-spend source.
-- A2 and A3 post-screen unique-text counts (identical) and corpus hashes.
-- τ: the entropy table over 10,000 queries (seed 0, equal thirds) and the chosen value.
-- Sixteen contrasts, the 0.025/16 bound, MDE 0.0056, rank-stability rule; family A's three-outcome rule verbatim; the literal D-NCE loss and the τ reused in it.
-- Confirmation design: which decisions, seeds, the margin and seed-range definitions.
+- Allocation under the $1,000 ceiling: every mandatory line at measured rates; `max_extension_cycles`; m_k's formula and evaluation hashes; the billed-spend source; which stages run on the box and which are rented (amendment A7). Decision 8 is withdrawn (A5), so no seed-1 boolean is fixed.
+- A2, A3 and A4 post-screen unique-text counts (identical) and corpus hashes.
+- ~~τ entropy table~~ — struck with the ranking-aware class (amendment A1).
+- Eleven contrasts, the 0.025/11 bound, **MDE = max(0.0056, the measured COV resolution distance)** (amendment A4; if that distance exceeds 0.010, record the surface enlargement or contrast cut made before any arm), rank-stability rule; family A's three-outcome rule verbatim on A3−A2 and the A4−A3 drop rule.
+- Confirmation design: which decisions (**at most two**, amendment A5), seeds, the margin and seed-range definitions; the replication seed pair on the selected recipe.
 - COV macro formula (families, slice averaging, weights); DEV-6-once evaluation rule.
 - Outcome → action map for every family; the synthesized selected-recipe arm; LoTTE read #1 manifest and veto rule.
 
 ## §1 Data manifest — fill at M10.1
 
-- Generator (repo, revision, bf16; hosted provider and served revision if the fallback fired), sampling parameters, seed rule, retry/dedup policy; per-form smoke results (contract %, on-form %), approver, prompt revisions (≤2 per form, each recorded here with the diff); the seed-rank field present for every synthetic query.
-- Seed sources and revisions; seed pre-filter removals; per-form quotas realized.
+- Generator (repo, revision, bf16; hosted provider and served revision if the fallback fired), sampling parameters, seed rule, retry/dedup policy; per-form smoke results (contract %, on-form %), approver, prompt revisions (≤2 per form, each recorded here with the diff).
+- Seed sources and revisions; seed pre-filter removals; per-form quotas realized, per source (harvested vs generated, amendment A2).
+- **§Harvest:** per extraction rule, the rule text, source corpus, yield, and the form it feeds; the span-exclusion form of the seed-passage screen.
+- **A8 quality gates:** per-form near-duplicate rate and mean pairwise cosine with any quota cut taken; the stella-space distribution-overlap table against the MS MARCO dev sample (disclosed diagnostic, no action).
 - PAQ release files and hashes; build sample (1.0M) and A2 sample; attribution.
 - Decontamination removals per screen, per form, per COV component; FORMS-12 hold-out seed ids.
-- Teacher-target cache keys; bank (1M, seed 0); mining method and, if HNSW, the recall@64 audit.
+- Teacher-target cache keys. ~~bank, mining method, recall@64 audit~~ — struck with the ranking-aware class (amendment A1).
 - `results/m10_data_manifest.json` sha256.
 
 ## §2 COV admission records — fill at M10.0-d, one row per component
