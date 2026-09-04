@@ -100,7 +100,12 @@ by DBSF at depth 100. Depths 10/50/1000 reported as a descriptive curve. Per-dat
 collision counts reported (ArguAna's queries ARE documents, so its count is high by construction and
 the truncation caveat is real there).
 
-**Status: DESCRIPTIVE, development-informed, post-M7.** C1/C2/C3 are untouched and keep their
+**Status: a post-M7 PRODUCT-POLICY OVERRIDE, not an M7-compliant result.** `m7/LEDGER.md:691`
+froze `w=0.8` "whatever the six say"; this changes the public recommendation after the six were
+seen. Registering ahead of the DBSF run prevents selecting on its outcome but does not restore
+pre-six blindness. Recorded as Dylan overriding the release freeze on implementability grounds
+(CLAUDE.md §"Past decisions are revisitable"). convex0 stays the M7 operator of record; the DBSF
+numbers are prospective deployment evidence. DESCRIPTIVE, development-informed, post-M7. C1/C2/C3 are untouched and keep their
 registered convex0 basis. The table artifact is unchanged. The 0.4911 convex0 row is retained and
 labelled, never deleted. Nothing reserved is touched: not the reserved four, not LoTTE.
 
@@ -110,9 +115,14 @@ labelled, never deleted. Nothing reserved is touched: not the reserved four, not
 if it no longer holds. That is the price of a reproducible headline and is the point of the change.
 - 2026-09-04 — six-set DBSF executed under the amendment. Reproduction of the published fused row
   **0.4911 vs 0.4911** (delta −1.1e-06). **DBSF@100: all-6 0.4887, clean-4 0.4912** vs convex0's
-  0.4911 / 0.4866 — the reproducible, zero-parameter operator WINS on the registered headline
-  partition. Self-hits: arguana 1,298/1,406, fiqa 55, others 0. `m12/six_dbsf.json`.
+  0.4911 / 0.4866 — a **TIE** on both partitions (+0.0046 and −0.0024 are inside the ~0.005 lever
+  band, and no six-set CI was computed). The case for DBSF is deployability at no measured cost, not
+  superiority. Self-hits: arguana 1,298/1,406, fiqa 55, others 0. `m12/six_dbsf.json`.
   A pre-run forecast that the headline would fall to ~0.47–0.48 and break the OpenSearch tie was
   **wrong**; dev-to-six extrapolation of an operator difference is unreliable.
+- 2026-09-04 — Codex close-out review: 2 BLOCKER + 4 MAJOR, all accepted and fixed — the protocol
+  framing (laundered an owner override as compliance), "WINS" language breaking our own ~0.005 tie
+  rule, the self-hit caveat stated backwards, an unrunnable card snippet, a false "nothing tuned"
+  claim, and the missing Tier-2 bootstrap (re-run, CI added). `logs/m12_codex_review.log`.
 - 2026-09-04 — **M12 CLOSED.** Card, README, `m11/STATUS.md`, `CLAUDE.md` updated. The live
   HuggingFace card push is Dylan's call and is NOT done by this milestone.

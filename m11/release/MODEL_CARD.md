@@ -159,25 +159,34 @@ that does no matrix multiplication at all.
 ### Fusing with BM25 in Qdrant
 
 **The recommended fused system is `Fusion.DBSF` with a prefetch limit of 100** — the row in bold
-above. It is a stock Qdrant operator with **no fitted parameters**, so nothing about it was tuned
-on our data.
+above. DBSF has **no fitted fusion weights**; the prefetch limit of 100 was chosen from where DBSF
+saturates on our development set, plus a deployability criterion, so the configuration is
+development-informed even though the operator itself fits nothing.
+
+Schematic — it assumes a collection with **named** dense and sparse vectors, which the quick-start
+collection above does not create:
 
 ```python
+# requires a collection configured with named vectors, e.g.
+#   vectors_config={"dense": VectorParams(size=1024, distance=Distance.COSINE)}
+#   sparse_vectors_config={"bm25": SparseVectorParams()}
 client.query_points(
     "docs",
     prefetch=[
-        models.Prefetch(query=query_vector, using="dense", limit=100),
-        models.Prefetch(query=bm25_sparse_vector, using="bm25", limit=100),
+        models.Prefetch(query=dense_query_vector,  using="dense", limit=100),
+        models.Prefetch(query=bm25_query_vector,   using="bm25",  limit=100),
     ],
     query=models.FusionQuery(fusion=models.Fusion.DBSF),
     limit=10,
 )
 ```
 
-**On the four datasets with no disclosed teacher overlap** (see Limits), DBSF at prefetch 100
-scores **0.4912** against convex fusion's 0.4866 — i.e. the reproducible operator is *better* than
-the one this model's fusion weight was originally tuned with, once the contaminated sets are
-removed. Across all six it is 0.4887 vs 0.4911.
+**On the four datasets with no disclosed teacher overlap** (see Limits), DBSF at prefetch 100 scores
+**0.4912** against convex fusion's 0.4866; across all six, 0.4887 vs 0.4911. Both differences are
+inside the ~0.005 band we treat as noise, and we computed no confidence interval for them, so read
+this as **no measured quality difference in either direction** — not as DBSF being better. The
+reason to prefer it is that it *runs in the product*, needs no 1000-deep prefetch, and removes a
+tuned weight from the system.
 
 The `convex fusion` row is retained for continuity: it was the operator of record when this model
 was released. It is `0.8 × dense + 0.2 × BM25`, each channel divided by its per-query maximum, at
@@ -192,9 +201,13 @@ which has since been redone.
 
 **Caveats.** Numbers use `bm25s` (lucene defaults), not Qdrant's own BM25, which has a fixed
 `avg_len` and its own tokenizer; DBSF normalises over the returned scores, so a different lexical
-implementation shifts its inputs. On ArguAna the queries *are* documents (1,298 self-matches over
-1,406 queries), which our evaluation discards after retrieval and Qdrant does not — there,
-`limit: 100` effectively yields 99 usable candidates.
+implementation shifts its inputs.
+
+Our evaluation excludes each query's own document *before* truncating to 100, so the numbers
+describe a prefetch with a **self-exclusion filter** (`must_not` on the point id). Without one, a
+plain `limit: 100` spends a slot on the self-match. This matters only where queries are also
+documents — ArguAna (1,298 of 1,406 queries) and FiQA (55); the other four datasets have none, so
+the clean-4 figures are unaffected either way.
 
 ## Limits
 

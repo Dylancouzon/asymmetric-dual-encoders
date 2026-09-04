@@ -288,6 +288,13 @@
     "even": 0.5564005084702729,
     "odd": 0.5637033001921741
   },
+  "held_out_comparator": 0.5728717135252495,
+  "held_out_delta_vs_comparator": -0.012819809194025922,
+  "ci95_dev_fitted_best_vs_convex0": [
+    -0.015989223914166892,
+    -0.009807509835482685
+  ],
+  "_ci_note": "post-selection (24 candidates) and therefore optimistic; added after the first pass, which omitted the registered bootstrap",
   "tier1_rows": {
     "M7 rrf (ours) k=10": 0.5503908577456825,
     "DBSF": 0.558034076514182,

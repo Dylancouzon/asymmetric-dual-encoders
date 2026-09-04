@@ -35,9 +35,9 @@ pre-registered partitions, which is the one thing that would discredit the front
    trains on it and neither of ours does, so we expect to lose and losing is still informative.
    nq-250k-style build (~6,980 queries, 250K distractors, a 250K-doc stella encode, ~1h).
 
-**The number that makes this cheap** (M12, `m12/FINDINGS.md`): the FUSED system is nearly
-contamination-immune — clean-4 costs it **0.0045** (0.4911 → 0.4866) — while the dense table loses
-**0.0241** (0.4339 → 0.4098). And on clean-4 the fused story is *stronger*: 0.4866 vs BM25's 0.4409,
+**The number that makes this cheap** (M12, `m12/FINDINGS.md`): FUSED systems are nearly
+contamination-immune — clean-4 costs convex0 **0.0045** (0.4911 → 0.4866) and *gains* DBSF@100
+**0.0025** (0.4887 → 0.4912) — while the dense table loses **0.0241** (0.4339 → 0.4098). And on clean-4 the fused story is *stronger*: 0.4866 vs BM25's 0.4409,
 where dense-only (0.4098) sits below BM25. Honesty costs 0.0045 here and buys the whole objection.
 
 ## What the paper argues

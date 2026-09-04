@@ -97,9 +97,10 @@ query side stays a table lookup. Full characterisation, caveats and cost rows: t
 or `m7/STATUS.md`.
 
 **Fuse with BM25 using Qdrant's `Fusion.DBSF` at prefetch 100** (M12). It is a stock operator with
-no fitted parameters, and it scores **0.4887** on the six / **0.4912** on the four sets with no
-disclosed teacher overlap — against convex fusion's 0.4911 / 0.4866. So the reproducible operator
-is *better* on the contamination-controlled partition. The originally published convex fusion
+no fitted fusion weights, and it scores **0.4887** on the six / **0.4912** on the four sets with no
+disclosed teacher overlap — against convex fusion's 0.4911 / 0.4866. Both gaps are inside the
+~0.005 tie band with no CI computed, so this is **no measured quality difference**; the reason to
+prefer it is that it runs in the product. The originally published convex fusion
 (w=0.8, prefetch 1000) is not implemented in Qdrant and needed an unrealistic prefetch depth;
 `Fusion.RRF` is weaker even after a fair sweep. Audit: `m12/FINDINGS.md`.
 

@@ -45,10 +45,13 @@ def main():
         qrels[c] = qr
         print(f"  loaded {c}", flush=True)
 
+    per_cache = {}
+
     def macros(fused):
         """(full macro, macro over the even-hash half, macro over the odd half). One per-query
         pass; the halves are subsets of it, so fitting and scoring cost the same as scoring."""
         per = {c: per_query_ndcg(fused[c], qrels[c]) for c in comps}
+        per_cache["last"] = per
         full = [np.mean(list(per[c].values())) for c in comps]
         halves = []
         for h in (0, 1):
@@ -57,16 +60,18 @@ def main():
 
     c_full, c_even, c_odd = macros(
         {c: fusion.convex([dense[c], bm25[c]], w=0.8, floor_zero=True) for c in comps})
+    convex_per = per_cache["last"]
     bars = {"full": c_full - BAR_DELTA, "even": c_even - BAR_DELTA, "odd": c_odd - BAR_DELTA}
     print(f"\n  convex0 w=0.8   full {c_full:.4f}   even {c_even:.4f}   odd {c_odd:.4f}")
     print(f"  bar (C-0.004)   full {bars['full']:.4f}   even {bars['even']:.4f}   odd {bars['odd']:.4f}\n")
 
-    grid = []
+    grid, per_by_cfg = [], {}
     for k in K_GRID:
         for w in W_GRID:
             f, e, o = macros({c: qfusion.rrf([dense[c], bm25[c]], k=k, weights=list(w))
                               for c in comps})
             grid.append({"k_q": k, "weights": list(w), "full": f, "even": e, "odd": o})
+            per_by_cfg[(k, tuple(w))] = per_cache["last"]
             print(f"    k_q={k:<3} w={str(w):<7} full {f:.4f}  even {e:.4f}  odd {o:.4f}", flush=True)
 
     # Fit on one half, score on the other. The held-out score is the ONLY one the rule reads.
@@ -83,6 +88,14 @@ def main():
     print(f"  (dev-fitted best, for transparency only: k_q={best_full['k_q']} "
           f"w={best_full['weights']} full {best_full['full']:.4f})")
 
+    # The registered Statistics section asks for a paired bootstrap on each operator-vs-convex0
+    # difference; the first Tier-2 pass omitted it (Codex close-out review). Reported on the
+    # DEV-FITTED best so it is comparable with the Tier-1 CIs, and flagged post-selection.
+    from run_tier1 import bootstrap
+    ci = bootstrap(per_by_cfg[(best_full["k_q"], tuple(best_full["weights"]))], convex_per, comps)
+    print(f"  CI (dev-fitted best vs convex0, post-selection): "
+          f"{best_full['full'] - c_full:+.4f} [{ci[0]:+.4f}, {ci[1]:+.4f}]")
+
     t1 = json.loads((REPO / "m12" / "tier1.json").read_text())
     out = {"tier": 2, "why_run": "Tier 1 NO MATCH (registered rule)", "candidates": len(grid),
            "grid": grid, "convex0": {"full": c_full, "even": c_even, "odd": c_odd}, "bars": bars,
@@ -90,6 +103,11 @@ def main():
            "held_out_macro": held, "held_out_bar": bar_held,
            "passes": bool(held >= bar_held),
            "dev_fitted_best": best_full,
+           "held_out_comparator": (c_even + c_odd) / 2,
+           "held_out_delta_vs_comparator": held - (c_even + c_odd) / 2,
+           "ci95_dev_fitted_best_vs_convex0": list(ci),
+           "_ci_note": "post-selection (24 candidates) and therefore optimistic; added after the "
+                       "first pass, which omitted the registered bootstrap",
            "tier1_rows": {r["label"]: r["macro"] for r in t1["rows"]}}
     out["m12_result"] = "MATCH" if out["passes"] else "NO MATCH"
     (REPO / "m12" / "tier2.json").write_text(json.dumps(out, indent=2))
