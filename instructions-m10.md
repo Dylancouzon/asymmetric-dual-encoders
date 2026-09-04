@@ -114,6 +114,25 @@ killed family C too (M9's candidate is bge-small, so there is no MiniLM warm sta
 on 6 layers. One 5M arm ≈ 2 GPU-hours is not the place to economise when it picks the build student.
 F stays, C stays, bge-small stays the anchor; A6 fixes the ordering problem instead.
 
+## Amendment 2026-09-04b — feasibility review (second review of the day; authoritative over older text)
+
+Dylan: *"is our goal feasible? … gaps, weaknesses, or avenues to improve? … No over-engineering."*
+Evidence and dispositions: `research/m10-feasibility-review-2026-09-04.md`. Nothing here touches
+stella, the cap, the pair, the frozen tower or any observed number.
+
+| # | change | why |
+|---|---|---|
+| B1 | **Feasibility statement in §Goal** with per-dataset arithmetic (`results/m10_conjunct_arithmetic.json`) | C1b is harder than C2a and no ≥10×-gap regression distillation exceeds ~95%; registering C2b without saying so invites "you always knew" |
+| B2 | **Four-conjunct claim decision table** (§Goal); release rule = **decision 11** | "C1 passes → release" was ambiguous on the likely outcome (C1a pass, C1b fail) |
+| B3 | **G-768 → G-MLP**, a per-token nonlinear head (§Screen, §Recipe); `m10/EXPLORED.md` row corrected | the "no serving path" closure held only for post-pooling heads (`results/m10_head_mlp_parity_box.json`); the one compute lever at the head inside the cap. Counts unchanged |
+| B4 | **Constructed scientific COV family** `arxiv-title` (+ `ctgov-title` if licensed) (§Surfaces) | every clean-4 set is scientific/biomedical and the screen had no surface that could see those forms |
+| B5 | DEV-6 recipe pre-screen (STATUS item 10) **dropped** | read DEV-6 twice for defaults the screen re-decides |
+| B6 | **Query-asset size line** (§Recipe): ≈70.8 MB fp16 vs M9's 70 MB target | nobody had done the arithmetic for the wider head |
+
+**Considered, not changed:** a three-seed anchor noise floor in place of the two-decision
+confirmations (saves ≈10 GPU-h, weakens a reviewed rule); the dose, cap, teacher, family D,
+gatekeeping. **Open to Dylan:** decisions 11 and 12, and A7 (⚠).
+
 ## Owner decisions (defaults apply until Dylan rules; each is recorded in `m10/LEDGER.md`)
 
 | # | decision | default while open |
@@ -128,6 +147,9 @@ F stays, C stays, bge-small stays the anchor; A6 fixes the ordering problem inst
 | 8 | Second build seed at full dose — **WITHDRAWN 2026-09-04** (amendment A5): descriptive by construction, could trigger no action, and cost ≈100 GPU-hours. Replaced by a screen-dose seed pair on the selected recipe as the replication band; the freed hours go to extension cycles | closed |
 | 9 | The 2026-09-01 review amendments taken with the compute ruling: dose 200M examples, screen dose 5M, G-1536, the COV resolution number, extension capped by budget (PLANNING §8, amendment block and pass 7). **D-KL1, D-NCE and the seed-rank field are struck by amendment A1; the resolution number is repurposed by A4** | adopted as amended |
 | 10 | The **2026-09-04 plan-review amendments A1–A8** (§Amendment 2026-09-04) | adopted on Dylan's "make your changes to the plan"; any item he strikes reverts to the 2026-09-01 text |
+| 11 | **Release rule under four conjuncts** (§Goal claim table): does a C1a pass with a C1b fail ship? | **ship**, with the card and paper stating nano did not resolve above bge-small on the contamination-controlled partition — the way `zero` shipped after its miss. The alternative is "release needs C1a AND C1b" |
+| 12 | **CUREv1 as a validation-only COV family** — 2,000 real clinician queries, CC BY-NC 4.0, PMC-OA full-text passages (PubMed-family), LLM-annotated pools; fingerprint-screened vs the six; never training data. Reopens the "excluded from COV" clause of M7's source-family rule for selection surfaces only (`research/m10-feasibility-review-2026-09-04.md` §4c) | **not adopted** until Dylan rules; the review recommends yes. **Withdrawn by the review:** PubMed titles / PubMedQA as training text — no affirmative grant on PubMed abstracts (NLM disclaims copyright; publishers may hold it), so the licence rule fails first (§4a) |
+| 13 | The **2026-09-04b feasibility-review amendments B1–B6** (§Amendment 2026-09-04b) | adopted; strike any item and it reverts |
 
 ## Goal, bars, and the permitted claim — unchanged from M9
 
@@ -169,7 +191,16 @@ the leaf-vs-bge comparator pair as a proxy):
 | C2a aim, avg-6 | 0.5155 | 0.0101 | **0.5256** | 91.5% |
 | C2b aim, clean-4 | 0.5233 | 0.0139 | **0.5372** | **95.2%** |
 
-**Disclosed with it:** clean-4's interval is 39% wider than avg-6's because `trec-covid` carries a
+**Disclosed with it (B1, `results/m10_conjunct_arithmetic.json`):** uniform retention that passes
+each conjunct — C1a **89.5%**, C2a 91.5%, C1b **91.9%**, C2b **95.3%** — so the headline release bar
+is harder than the avg-6 aim. To equal bge-small per dataset: scifact 91.4 · nfcorpus 83.0 · fiqa
+72.9 · arguana 94.7 · scidocs 85.7 · trec-covid 92.0%; LEAF beats the ceiling on trec-covid. At
+uniform 92%, fiqa (disclosed stella training data) supplies 73% of nano's avg-6 margin — why clean-4
+is the headline. **Feasibility, registered before any nano number:** M9 held 93.8% on its covered
+form, and no published regression distillation at a ≥10× teacher/student gap exceeds ~95%
+(`research/m10-feasibility-review-2026-09-04.md` §2). C1a is expected if coverage works; **C1b and
+C2a are the contest; C2b is registered as out of reach** and the report says so up front.
+clean-4's interval is 39% wider than avg-6's because `trec-covid` carries a
 quarter of the clean-4 macro on **50 queries**, and C2b therefore demands LEAF-level retention on
 the headline partition. Registering clean-4 is still right — M14 headlines it — but the plan is
 registered knowing C2b is the hardest of the four by a wide margin, not knowing only that its bar
@@ -178,7 +209,19 @@ vs arctic documents + LEAF queries): different document towers, index sizes, enc
 disclosed teacher overlap. It supports exactly M9's verbatim headline sentence and **no statement
 about nano versus LEAF's query tower**; the report carries both systems' retention against their
 own teachers, index bytes, document-encode cost and query latency beside the number. NDO-4 and
-reserved NDO-3 stay descriptive. Additional mandatory disclosures: per-dataset retention, the
+reserved NDO-3 stay descriptive.
+
+**Claim decision table under four conjuncts (B2).** Testing stops at the first non-rejection:
+
+| outcome | release? | permitted claim |
+|---|---|---|
+| C1a fails | no release; measurement under the miss-is-publishable framing | none |
+| C1a passes, C1b fails | **release** (decision 11 default), card and paper state that nano did not resolve above bge-small on the contamination-controlled partition | none |
+| C1a, C1b pass, C2a fails | release | none; "beats bge-small on both partitions" |
+| C1a, C1b, C2a pass, C2b fails | release | M9's verbatim headline sentence on avg-6; the paper states the aim was missed on the headline partition |
+| all four pass | release | the headline sentence on both partitions |
+
+Additional mandatory disclosures: per-dataset retention, the
 synthetic-data provenance table (generator revision and terms, prompts, seed sources and ids,
 counts per form, removal counts per screen), the selection-surface table (licence evidence,
 revisions, sizes, removals from training data), dose in examples / tokens / GPU-hours beside
@@ -281,9 +324,15 @@ scifact test. Two consequences, both binding:
 - **Yields are measured before quotas are locked.** For every extraction rule: post-dedup,
   post-screen unique count, pushed to `m10/LEDGER.md` §1 at M10.1 before the per-form quotas are
   fixed. **A harvested form that yields under 100K post-dedup reverts to generation**, and the
-  realized harvested/generated split is reported rather than assumed. `consumer-health` has no
-  licensed non-contaminating harvest source at all (MedQuAD is COV and protected), so it is
-  generated unless arXiv or another admitted source supplies it.
+  realized harvested/generated split is reported rather than assumed. `consumer-health`
+  harvest sources verified 2026-09-04b (clauses in `research/m10-feasibility-review-2026-09-04.md`
+  §4b): **MedlinePlus government-authored Health Topics and CDC pages** (US public domain; the
+  A.D.A.M. encyclopedia and licensed monographs inside MedlinePlus stay out), **ClinicalTrials.gov**
+  only once its terms clause is recorded, **arXiv metadata** (CC0). Out: DailyMed, OpenAlex,
+  bioRxiv/medRxiv, WHO, Cochrane, and everything PubMed / PMC / Europe PMC (no affirmative grant on
+  abstracts). MedlinePlus and CDC are MedQuAD sources: harvested text is fingerprint-screened against
+  MedicalQA and the report labels that COV read same-source for A3/A4 (precedent: the Wikipedia pool
+  beside `nq-250k`).
 
 **§Harvest — the real-text pipeline (M10.1, deterministic, no model in the loop).** From the 6.15M
 pool documents and the Wikipedia seed corpus, all under licences already approved for training:
@@ -373,6 +422,10 @@ loss-form arm. Reopening condition in `m10/EXPLORED.md`.
   parity check first. Warm-started in closed form (ridge)
   for the bge-small init; the M9-candidate init keeps its 384-d head and zero-initializes the two
   extra layers' columns. Exported per token so fastembed's mean pooling reproduces it exactly.
+  Any per-token head, linear or not, ships this way (B3; `m10/EXPLORED.md`). **Query-asset size
+  (B6):** bge-small or MiniLM-L12 with the three-layer head projects to ≈70.8 MB fp16 against M9's
+  70 MB target, whose rule is a logged, measured quality justification (`instructions-m9.md` §3);
+  MiniLM-L6 ≈49 MB. The lock records the projected size beside family F's verdict.
 - **Phase 1:** squared L2 on unit-norm teacher vectors, fp32 loss, bf16 autocast (M9 form). A
   cosine-space variant is closed by algebra, not measurement (`m10/EXPLORED.md`): the head ends in
   L2 normalize and the targets are unit-norm, so ‖a−b‖² = 2−2cos and the gradients agree up to a
@@ -462,7 +515,7 @@ feature. Screens run **on the box** (amendment A7).
 |---|---|---|---|
 | **A — data (the thesis)** | A1: M9 pool (463,314 queries) · A2: M9 pool + PAQ (factoid forms only — the volume control) · A3: A2 + the **harvested real** query-like text · A4: A3 + the **generated** forms (the full M10 corpus, = anchor). **A2, A3 and A4 are cut to the identical post-screen unique-text count** (the smallest of the three after decontamination, the larger two downsampled with seed 0) and all hashes are locked before any arm | **A3−A2** (forms from real text, at equal volume) · **A4−A3** (what generation adds over harvesting) · A4−A2 and A2−A1 descriptive | **Three registered outcomes on A3−A2** (the forms contrast, now carried by the real-text arm): corrected lower bound > MDE → coverage **resolved on the COV families**, build proceeds; point ≥ MDE and lower bound > 0 but ≤ MDE → **positive, not resolved**, build proceeds and the report says so; otherwise → **M10 stops before any build and returns to Dylan with all four rows**. **A4−A3 decides whether the generated half is in the build at all**: if it does not resolve, the build uses A3's corpus and the ≈1.0M generated queries are dropped from the build (they stay in the report as a measured null). A2−A1 is the volume effect; if it resolves, the build keeps volume as well as forms |
 | **F — student** | bge-small (34.5M with the head) · MiniLM-L6-v2 (23.9M) · **MiniLM-L12-v2 (33.4M with the head)** — the first two at **20M examples each, read as a curve at 5M / 10M / 20M**; L12 at 5M | 1 (pairwise against the winner-so-far) | **Amended after the Fable review.** The old rule ("bge-small only if it wins resolved") pre-decided MiniLM-L6 by construction, because M9's same contrast was −0.0026 *unresolved* and a 5M screen cannot resolve 0.003; that also silently skipped family C, since only bge-small has an M9 warm start. So F gets the dose its consequence deserves — it picks the build student and every later verdict — and a third arm, because arXiv 2306.11550's depth curve (1/2/4 layers → 86.1/92.5/96.2% retention) says depth buys retention while LEAF reached 97.7% on 6 layers, and L12 is 12 layers inside the cap. **Rule:** the arm with the best COV macro at 20M wins; among arms whose 20M macro is statistically indistinguishable, the cheapest to serve wins, and **that tie-break is labelled in the report as a product preference, not evidence** (Dylan 2026-09-01 called 33M "the upper bound of what I think is acceptable", so 33M is admissible). L12's three- and four-layer heads pass the parity check first. Cost ≈ 17 GPU-hours at the measured rate, on the box |
-| **G — output width** | feature = last layer only (384, M9's head) · last two of the three layers (768) · three layers (1152, = anchor) · four layers (1536, §Recipe) | 1152−384 · 1152−768 · 1536−1152 | resolved winner; **default 1152** (the probe's evidence that width binds under L2 and is still rising at three layers, PLANNING §9–9b; the screen, not the probe, decides). The 384 and 768 arms are also the paper's evidence for the M9 diagnosis |
+| **G — output width and head form** | feature = last layer only (384, M9's head) · three layers (1152, = anchor) · four layers (1536, §Recipe) · **G-MLP**: per-token `Linear(1152→512)→GELU→Linear(512→1024)` over the three-layer feature (B3; replaces the 768 arm, whose step the head-width probe already shows) | 1152−384 · 1536−1152 · **MLP−1152** | resolved winner; **default 1152** (PLANNING §9–9b; the screen, not the probe, decides). The 384 arm is the paper's evidence for the M9 diagnosis. **G-MLP** is the one arm adding query-side compute at the head inside the cap (34.48M) and targets the in-distribution ceiling (PLANNING §13); fastembed serves it exactly because the nonlinearity precedes the mean pool (`results/m10_head_mlp_parity_box.json`, min-cos 0.99999988, zero custom ops). Warm start: `W1` = top-512 PCs of the pooled feature, `W2` = ridge from `GELU(W1·x+b1)` to the targets — approximate, so every arm still starts fitted |
 | **B — mix** | 100/0 · 50/50 query/document (75/25 = anchor), **matched query presentations** (3.75M query examples in every arm; document examples 0 / 1.25M / 3.75M on top; totals 3.75M / 5M / 7.5M; the document cost in tokens and GPU-hours is reported) | 100/0−75/25 · 50/50−75/25 | resolved winner; default 75/25 |
 | **E — batch** | 32 · 128 at equal examples and identical schedule | 1 | resolved winner; default 32 (LEAF). **Amendment A7: E is the one family whose throughput is read** — bs128 measured 1,331 examples/s against bs32's 745 (PLANNING §11), so a bs32 win must also be worth its 1.8× build cost; the lock records both the quality contrast and the GPU-hour delta, and a bs32 win that does not resolve reverts to bs128 |
 | **C — init** | bge-small (or MiniLM, per F) · the M9 candidate | 1 | resolved winner; default the off-the-shelf backbone. Available only if F selects bge-small: M9's candidate is a bge-small student, so a MiniLM build has no warm start and C is skipped and reported as skipped. The closed-form ridge head warm start (M9's `m9s1c`, +0.0272) is retained in every arm regardless |
@@ -521,10 +574,19 @@ PLANNING §5 has the arithmetic. Every screen verdict is artifact-specific at sc
   **At least three families must survive admission** or M10 returns to Dylan; the report names the
   family count (Codex pass 6 preferred four — with the CQADupStack pair demoted, four needs LEDGER;
   Dylan may raise the floor). The two CQADupStack components are **DEV**, reported beside every COV
-  read, never in the macro. COV contains no
-  scientific-claim, paper-title or argument retrieval (no licensed, non-contaminating set exists),
-  so **family A's verdict is a verdict about coverage on the COV families**; those three forms are
-  tested only by the six-set transaction (FORMS-12 reports them descriptively before that).
+  read, never in the macro.
+
+  **Scientific family (B4).** Every clean-4 set is scientific or biomedical and no licensed published
+  set covers those forms outside S2ORC / PubMed / CORD-19, so as registered the screen could not see
+  the headline forms. Fix: a fifth COV family constructed from held-out real text with qrels by
+  construction — **`arxiv-title`**: 2,000 arXiv titles → their own abstract among 100K arXiv
+  abstracts (CC0 metadata; ≈8 min of encode), one relevant per query, nDCG@10; **`ctgov-title`** the
+  same from ClinicalTrials.gov brief titles → summaries, **only if its terms clause is recorded at
+  M10.0-d**. Rules: documents drawn with seed 0 at M10.1 *before* any harvest, excluded from every
+  training role, in the protected index; teacher score reported as the denominator; shares its form
+  and source with arm A3's harvest by design and the report says so; a form-retention surface, never a
+  claim. COV still has no argument retrieval (six-set only; FORMS-12 descriptive). **Decision 12
+  (open)**: CUREv1 as a sixth, validation-only family.
   **Resolution number (M10.0-d, before the lock) — amendment A4: it now SIZES the screen.** With the
   contrast rule's own bootstrap (paired, stratified within component, B = 20,000, seed 0), measure the
   distance between the point estimate and the one-sided 0.025/13 lower bound for the COV-macro

@@ -1,0 +1,131 @@
+{
+ "_what": "What each M10 conjunct demands PER DATASET, from the frozen comparator rows (2026-09-04 review).\n\nComparator-only read: `results/perquery.json` (bge-small, leaf-ir-asym) and the stella symmetric\nceiling from `results/m7_final_run.json` (`six.teacher-symmetric`), both observed in M7. No nano\nnumber exists. Three quantities a reader of the plan needs and the mandate did not state:\n\n1. the retention of the ceiling nano needs on EACH dataset merely to equal each comparator;\n2. the UNIFORM retention that reaches each registered pass point (`results/m10_bars.json`);\n3. how much of nano's avg-6 margin over bge-small would come from fiqa, a disclosed stella\n   training set, at a given uniform retention -- the reason clean-4 is the headline.\n\nWrites results/m10_conjunct_arithmetic.json. Read by no rule.",
+ "date": "2026-09-04",
+ "ceiling_macro": {
+  "all6": 0.5744,
+  "clean4": 0.564
+ },
+ "per_dataset": {
+  "scifact": {
+   "ceiling": 0.7796,
+   "bge_small": 0.7127,
+   "leaf_ir_asym": 0.699,
+   "retention_to_equal_bge": 0.9142,
+   "retention_to_equal_leaf": 0.8967
+  },
+  "nfcorpus": {
+   "ceiling": 0.4134,
+   "bge_small": 0.343,
+   "leaf_ir_asym": 0.3608,
+   "retention_to_equal_bge": 0.8295,
+   "retention_to_equal_leaf": 0.8726
+  },
+  "fiqa": {
+   "ceiling": 0.5536,
+   "bge_small": 0.4035,
+   "leaf_ir_asym": 0.4165,
+   "retention_to_equal_bge": 0.7289,
+   "retention_to_equal_leaf": 0.7523
+  },
+  "arguana": {
+   "ceiling": 0.6369,
+   "bge_small": 0.6034,
+   "leaf_ir_asym": 0.5833,
+   "retention_to_equal_bge": 0.9475,
+   "retention_to_equal_leaf": 0.9158
+  },
+  "scidocs": {
+   "ceiling": 0.2395,
+   "bge_small": 0.2052,
+   "leaf_ir_asym": 0.2034,
+   "retention_to_equal_bge": 0.8569,
+   "retention_to_equal_leaf": 0.8492
+  },
+  "trec-covid": {
+   "ceiling": 0.8234,
+   "bge_small": 0.7575,
+   "leaf_ir_asym": 0.8301,
+   "retention_to_equal_bge": 0.92,
+   "retention_to_equal_leaf": 1.0081
+  }
+ },
+ "uniform_retention_reaching_pass_point": {
+  "C1a_release_avg6": 0.8954,
+  "C1b_release_clean4": 0.9194,
+  "C2a_aim_avg6": 0.915,
+  "C2b_aim_clean4": 0.9525
+ },
+ "uniform_retention_scenarios": {
+  "0.90": {
+   "avg6": 0.517,
+   "clean4": 0.5076,
+   "passes": [
+    "C1a_release_avg6"
+   ],
+   "nano_minus_bge_per_dataset": {
+    "scifact": -0.0111,
+    "nfcorpus": 0.0291,
+    "fiqa": 0.0947,
+    "arguana": -0.0302,
+    "scidocs": 0.0103,
+    "trec-covid": -0.0165
+   },
+   "fiqa_share_of_avg6_margin": 1.24
+  },
+  "0.92": {
+   "avg6": 0.5284,
+   "clean4": 0.5189,
+   "passes": [
+    "C1a_release_avg6",
+    "C1b_release_clean4",
+    "C2a_aim_avg6"
+   ],
+   "nano_minus_bge_per_dataset": {
+    "scifact": 0.0045,
+    "nfcorpus": 0.0374,
+    "fiqa": 0.1058,
+    "arguana": -0.0175,
+    "scidocs": 0.0151,
+    "trec-covid": -0.0
+   },
+   "fiqa_share_of_avg6_margin": 0.728
+  },
+  "0.94": {
+   "avg6": 0.5399,
+   "clean4": 0.5301,
+   "passes": [
+    "C1a_release_avg6",
+    "C1b_release_clean4",
+    "C2a_aim_avg6"
+   ],
+   "nano_minus_bge_per_dataset": {
+    "scifact": 0.0201,
+    "nfcorpus": 0.0457,
+    "fiqa": 0.1169,
+    "arguana": -0.0048,
+    "scidocs": 0.0199,
+    "trec-covid": 0.0165
+   },
+   "fiqa_share_of_avg6_margin": 0.546
+  },
+  "0.96": {
+   "avg6": 0.5514,
+   "clean4": 0.5414,
+   "passes": [
+    "C1a_release_avg6",
+    "C1b_release_clean4",
+    "C2a_aim_avg6",
+    "C2b_aim_clean4"
+   ],
+   "nano_minus_bge_per_dataset": {
+    "scifact": 0.0357,
+    "nfcorpus": 0.0539,
+    "fiqa": 0.1279,
+    "arguana": 0.008,
+    "scidocs": 0.0247,
+    "trec-covid": 0.0329
+   },
+   "fiqa_share_of_avg6_margin": 0.452
+  }
+ }
+}

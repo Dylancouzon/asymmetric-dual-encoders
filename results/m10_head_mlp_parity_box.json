@@ -1,0 +1,32 @@
+{
+ "_what": "M10.0-a3 (box, CPU): can fastembed serve a NONLINEAR per-token head exactly?\n\n`m10/EXPLORED.md` closed \"a nonlinear head\" as having no fastembed serving path. That is true of a\nhead applied AFTER pooling (fastembed pools the graph's per-token output itself, and a nonlinearity\ndoes not commute with the mean). It is NOT true of a head applied PER TOKEN before pooling: any\nper-token function -- here Linear(1152->k) -> GELU -> Linear(k->1024) over the concatenated states\nof layers 12/8/4 -- is exported as the graph's token output and fastembed's masked mean + normalize\nreproduces the training-time `normalize(mean_t(MLP(x_t)))` exactly, because the pooling is the\nsame linear op on both sides. This script proves the serving path with random weights (parity does\nnot depend on them) and records the parameter count under the 35M cap. Writes\nresults/m10_head_mlp_parity_box.json. Diagnostic; read by no rule.",
+ "student": "BAAI/bge-small-en-v1.5",
+ "layers": [
+  12,
+  8,
+  4
+ ],
+ "head": "1152->512->GELU->1024, per token",
+ "opset": 17,
+ "custom_domain_ops": [],
+ "n_nodes": 1035,
+ "onnx_bytes": 137541859,
+ "params_total": 34475648,
+ "params_head": 1115648,
+ "under_35M_cap": true,
+ "n_texts": 64,
+ "ort_then_manual_mean_pool": {
+  "min_cos": 0.9999998211860657,
+  "max_abs": 1.026783138513565e-07
+ },
+ "fastembed": {
+  "version": "0.8.0",
+  "served": true,
+  "min_cos": 0.9999998802021283,
+  "mean_cos": 0.9999999957303314,
+  "max_abs": 1.0295839475947532e-07,
+  "seconds": 2.6,
+  "pass_min_cos_1e-4": true,
+  "pass_max_abs_1e-3": true
+ }
+}

@@ -45,6 +45,13 @@ realized pipeline ran at ~10% of the comparable roof, so **the build is priced a
 real-data re-measure gates every dollar** (PLANNING §11). Do not commit to a box-versus-cloud split
 on the optimistic end.
 
+**Second review the same day (feasibility; B1–B6, `instructions-m10.md` §Amendment 2026-09-04b;
+`research/m10-feasibility-review-2026-09-04.md`).** Verdict: **C1a reachable if coverage works; C1b
+and C2a are the contest at ~92% uniform retention; C2b (95.3%) is out of reach on every published
+precedent.** Weakness found and fixed: every clean-4 set is scientific/biomedical and the COV screen
+had no surface that could see those forms (B4, `arxiv-title`). G-MLP, a per-token nonlinear head,
+is proven servable and replaces the 768 arm (B3). Decision 12 (CUREv1 as validation-only COV) is Dylan's.
+
 ## Dylan — open decisions (defaults apply meanwhile)
 
 | # | decision | default |
@@ -53,6 +60,9 @@ on the optimistic end.
 | 4 | PAQ as query text (CC BY-SA data, official release) | include |
 | 7 | Confirm LoTTE read #1 withdrawal and the renumbering | as recorded |
 | 10 | The 2026-09-04 amendments A1–A8 | adopted; strike any item and it reverts to the 2026-09-01 text |
+| 11 | **Release rule under four conjuncts**: does C1a-pass / C1b-fail ship? | ship, disclosed on the card ("did not resolve above bge-small on the contamination-controlled partition") |
+| 12 | **CUREv1 as a validation-only COV family** (PubMed-family; 2,000 real clinician queries; CC BY-NC). Reopens M7's "excluded from COV" clause for selection surfaces only; review recommends yes. (The training-text half — PubMed titles / PubMedQA — was withdrawn by the review: no affirmative grant on PubMed abstracts) | **not adopted until ruled** — biomedical training coverage then comes from Wikipedia-medical seeds, arXiv (CC0), MedlinePlus-government and CDC text (public domain, fingerprint-screened vs MedicalQA), and ClinicalTrials.gov if its terms clause is recorded |
+| 13 | The 2026-09-04b amendments B1–B6 | adopted; strike any item and it reverts |
 | — | **Generation smoke approval** — you are the approver (200 queries × 12 forms, 90% contract / 80% on-form). It cannot run until a cloud instance exists (Qwen3-8B bf16 is 16.4 GB on a 10 GB card), so it will be waiting when you are back | blocks generation only |
 
 Decisions 2 (budget), 3, 5, 6, 8 and 9 are closed — see `instructions-m10.md` §Owner decisions.
@@ -73,7 +83,12 @@ Generation is deliberately absent: it needs both Dylan and a bigger card.
    (CC BY-NC) is re-admissible, giving four families without LEDGER; verify LEDGER's structure and
    chunk cap; per-component licence, revision, size, qrels and metric records into `m10/LEDGER.md`
    §2; corpus-level and fingerprint contamination screens; add every admitted corpus, query set and
-   document set to the protected index; encode with stella.
+   document set to the protected index; encode with stella. **Plus the constructed scientific family
+   (amendment B4):** draw the 100K held-out arXiv documents with seed 0 (Kaggle metadata, CC0 —
+   record the artifact and revision), build `arxiv-title`, protect it, encode it; do the same for
+   `ctgov-title` only if ClinicalTrials.gov's terms verify as a commercial grant (record the clause).
+   If decision 12(a) is ruled yes, admit CUREv1 (revision, licence clause, corpus provenance) the
+   same way.
 3. **The COV resolution number** (e5-small-v2 vs gte-small, distance only, no direction) — under
    amendment A4 this now sizes the screen, so it must be pushed before the lock.
 4. **M10.0-c**: per-component DEV-6 read of the M9 candidate incl. `heldout-longq` (the baseline
@@ -90,9 +105,9 @@ Generation is deliberately absent: it needs both Dylan and a bigger card.
    heads, so families F and G may run those arms.
 9. **Prompt prototyping** for the six generated forms (4-bit is fine — prototyping enters no
    record, produces no smoke result and no manifest row).
-10. **Droppable:** the recipe pre-screen (B, C, E, G on the M9 pool, **DEV-6 only — COV stays
-    unread**), labelled a pre-screen that sets defaults, never the screen, with its DEV-6 reads
-    counted. Drop items 8–10 before dropping 1–5.
+10. ~~The recipe pre-screen on DEV-6~~ — **dropped 2026-09-04b (amendment B5)**: it read DEV-6 twice
+    for defaults the screen re-decides. Drop items 8–9 before dropping 1–5. Parity for G-MLP is
+    already done (`results/m10_head_mlp_parity_box.json`); item 8 covers the other students' heads.
 
 ## Then, in order
 
