@@ -18,7 +18,7 @@ gates, 6 serving checks, negative control 4.475e-04, and 8 anonymous live-repo c
 
     .venv/bin/python m11/release/push.py --build --gates
     .venv/bin/python m11/release/test_gates.py
-    .venv/bin/python m11/release/export_onnx.py --check
+    .venv/bin/python m11/release/export_onnx.py --check --no-write
     .venv/bin/python m11/release/push_doc.py --gates
     .venv/bin/python m11/release/verify_published.py
     PYTHONPATH=/home/dylan/fastembed .venv/bin/python m11/release/verify_fastembed.py
@@ -53,7 +53,7 @@ three weight files.
 | `release/verify_bundle.py` | gate 4: **staged** encoder vs `m7src/table.py` on the **frozen source** table (5.5e-7 max-abs) |
 | `release/verify_tokenizer.py` | gate 7: what fastembed's own `load_tokenizer` makes of the shipped files |
 | `release/export_onnx.py` | T2: builds both graphs and re-derives all 11 parity checks |
-| `release/test_gates.py` | 14 checks: 1 positive control, 13 breakages each gate must catch |
+| `release/test_gates.py` | 14 checks: 2 that must pass, 12 breakages each gate must refuse |
 | `release/push.py` | build + 8 gates + upload + re-download verification |
 | `release/MODEL_CARD.md` | the card; `REPO_ID` is substituted at push time |
 | `release/export_doc.py` | T3: stella doc tower → ONNX, checks on 259 frozen real passages |
@@ -63,7 +63,7 @@ three weight files.
 | `release/verify_fastembed.py` | T4: serves the BUILT-IN model through `TextEmbedding`, 6 checks + `--negative-control` |
 | `release/verify_published.py` | what the two live repos actually serve, checked anonymously |
 
-**`m11/CODEMAP.md` is the reusable part** — the ONNX-port checklist, 19 items, each one paid for by
+**`m11/CODEMAP.md` is the reusable part** — the ONNX-port checklist, 23 items, each one paid for by
 a T2 or T3 defect. Read it before porting nano (M12) or M13's image model, not this file.
 
 **Eight gates**, all re-run at every push: (1) the frozen source AND the staged `model.npz` hash to
@@ -101,11 +101,12 @@ freeze gate, the PR-ref upload dance, and speculative ONNX gating.
 ## M11a — the slice, all done (2026-09-03)
 
 Rulings: `instructions-m11.md` Amendments A and B. Tasks and evidence: `m11/PLANNING.md`.
-Nothing in this milestone read a quality set.
+No qrels were read and nothing was scored: the dev **query texts** and nq-250k **passage
+texts** were used as parity fixtures only. The reserved access is unspent.
 
 | task | outcome |
 |---|---|
-| T0 bind the release path | 9 gates on a build snapshot; `test_gates.py` proves 13 attacks refused |
+| T0 bind the release path | gates bound to a build snapshot; `test_gates.py` proves 13 attacks refused |
 | T1 sanitise tokenizer | `push.sanitise_tokenizer`; gate 7 measures what FastEmbed's own loader gets |
 | T2 zero query path → ONNX | two opset-17 graphs, 11 checks, parity 4.47e-08 on 1,024 dev queries |
 | T3 doc tower → ONNX, published | fp32 only — **fp16 rejected on a CUDA measurement**; 259 frozen real-passage fixtures |
@@ -118,9 +119,11 @@ reads. The reviews changed the design twice — see `m11/PLANNING.md`.
 
 ## Released: stella document tower, ONNX
 
-**https://huggingface.co/DylanCouzon/stella-en-400M-v5-doc-onnx — PUBLIC**, commit `e34cc6dd1e`,
-7 files, 1.75 GB. fp32 only (`model.onnx`, opset 17, standard domain, no external data). Created
-private → uploaded → verified against a post-gate hash snapshot → flipped public. Verified again
+**https://huggingface.co/DylanCouzon/stella-en-400M-v5-doc-onnx — PUBLIC**, commit `e0430a63b6`,
+7 files, 1.75 GB. fp32 only (`model.onnx`, opset 17, standard domain, no external data). First push
+`e34cc6dd1e` went private → uploaded → verified against a post-gate hash snapshot → flipped public;
+the card rewrite was pushed over it with `--update`, and the graph's LFS sha256 (`fe31555e…`) is
+unchanged between the two. Verified again
 anonymously after the fact: the published LFS sha256 `fe31555e…` is the gated byte string.
 
 Parity vs the torch module on 259 frozen real NQ passages: **cos 0.99999988, max-abs 3.76e-07**,

@@ -1,6 +1,6 @@
 # M11 code map — and the reusable ONNX-port checklist
 
-Read `STATUS.md` first. This file is what a future session needs to (a) resume M11 and (b) **port a
+Read `STATUS.md` first. This file is what a future session needs to (a) port nano (M12) and (b) **port a
 different model to ONNX without rediscovering T3's traps**. Numbers live in `results/m11_*.json`;
 the T3 narrative is `PLANNING.md` §T3. Nothing here restates them.
 
@@ -75,7 +75,9 @@ Every line cost something in T3 or T2. Evidence: `results/m11_doc_fp16_gpu.json`
     bit-identical to direct ORT (max-abs 0.00e+00). You do NOT need a per-token graph for a model
     whose head sits after pooling. Believing otherwise costs a duplicate of the whole model.
 14. **`parallel>1` cannot work for `add_custom_model`**: the worker builds `OnnxTextEmbedding`,
-    which cannot resolve a runtime-registered name. Serial only; say so in the card.
+    which cannot resolve a runtime-registered name. Register the model natively instead — an entry
+    in `supported_onnx_models` costs ~13 lines and `parallel` then works. A card teaching
+    `add_custom_model` also breaks the day the model ships natively (`already registered`).
 15. **fastembed truncates at `min(model_max_length, max_length)` from the shipped files.** Ship the
     length your index was built at, or long documents silently fail to reproduce it. There is no
     API override (qdrant/fastembed#689). Ship `tokenizer.json` `padding: null` so fastembed
@@ -89,8 +91,10 @@ Every line cost something in T3 or T2. Evidence: `results/m11_doc_fp16_gpu.json`
 17. **Verify against a hash snapshot captured after the last gate**, not against the staging dir as
     it stands at verification time, which compares changed bytes with themselves.
 18. **Verify big files by LFS oid** — it IS the content sha256, so no multi-GB re-download.
-19. **Execute the card's code against the staged bytes, offline.** Assert the substitution count so
-    an edit cannot redirect the gate at the live repo.
+19. **Execute the card's code against the staged bytes, offline**, and refuse anything that would
+    reach the Hub instead: a surviving `snapshot_download`, a `TextEmbedding` built from a literal
+    repo id, or any un-redirected `TextEmbedding(` call. Do NOT assert a substitution count — a
+    card may legitimately have no block of a given kind, and every negative fixture is such a card.
 
 **Serving and gate hygiene**
 
@@ -103,7 +107,11 @@ Every line cost something in T3 or T2. Evidence: `results/m11_doc_fp16_gpu.json`
     long input.
 22. **A fork carries the same `__version__` as the release it branched from.** Key result files on
     the import path, or a fork run silently overwrites the stock one and both look identical.
-23. **Silence a multiprocess probe at the fd level.** Worker processes write to the inherited fd,
+23. **The card gate needs the FastEmbed branch on `PYTHONPATH` and the sibling model in the HF
+    cache**, because the cards name built-in models and one card embeds the other model. Both are
+    box-local assumptions (`FASTEMBED_FORK` is a hard-coded path); on another machine gate 6 fails
+    for reasons unrelated to the bundle.
+24. **Silence a multiprocess probe at the fd level.** Worker processes write to the inherited fd,
     so `contextlib.redirect_stderr` does not reach them; a flood of worker tracebacks filled the
     pipe and deadlocked the run. `os.dup2` to `/dev/null` around the block.
 

@@ -17,8 +17,9 @@ query and fails only on a literal "[PAD]" in the text, which is why that fixture
 
 Two graphs from one table:
   model.onnx         (b,1024)  pooled + normalized, with the fallback -- for a direct ORT caller
-  model_tokens.onnx  (b,s,1024) row_{t_i}/sqrt(c_{t_i}) -- for fastembed, whose masked mean and
-                     normalize recover the same direction (the 1/n it divides by is annihilated)
+  model_tokens.onnx  (b,s,1024) row_{t_i}/sqrt(c_{t_i}) -- for any pipeline that insists on doing
+                     its own masked-mean pooling, which recovers the same direction (the 1/n it
+                     divides by is annihilated by the normalize). fastembed serves model.onnx.
 
   .venv/bin/python m11/release/export_onnx.py            # export + check
   .venv/bin/python m11/release/export_onnx.py --check    # check what is already exported

@@ -1,8 +1,10 @@
-"""Build and push the `zero` release bundle to the Hugging Face Hub.
+"""Build and push the `constella-zero` release bundle to the Hugging Face Hub.
 
-  .venv/bin/python m11/release/push.py --build                    # (re)build work/release/zero-v1
-  .venv/bin/python m11/release/push.py --build --push             # build, gate, upload (PRIVATE)
-  .venv/bin/python m11/release/push.py --build --push --public    # ... then flip to PUBLIC, last
+  .venv/bin/python m11/release/push.py --build --gates            # build + gate, upload nothing
+  .venv/bin/python m11/release/push.py --build --push             # build, gate, upload, verify
+
+The repo is ALREADY PUBLIC, so `--push` replaces public bytes and `--public` is a no-op for it;
+the flag survives only for a repo that has to be created private first (Fable, 2026-09-03).
 
 `--push` REQUIRES `--build` in the same invocation: the gates below bind the bytes that `build()`
 just wrote, and a push over a stale or hand-edited staging directory would be ungated (M11a T0).
@@ -268,7 +270,7 @@ FASTEMBED_SUBSTITUTION = (re.compile(r'TextEmbedding\(NAME\)'),
 
 
 def gate_readme(repo_id=None):
-    """(7) execute the card's python blocks AS ONE SEQUENTIAL TUTORIAL, in one namespace.
+    """(6) execute the card's python blocks AS ONE SEQUENTIAL TUTORIAL, in one namespace.
 
     That is what it tests -- the blocks deliberately share `q`, `D`, `docs`, so this does not show
     that any block runs standalone. `snapshot_download(...)` is rewritten to the staging dir
@@ -291,6 +293,18 @@ def gate_readme(repo_id=None):
     if repo_id and re.search(rf'TextEmbedding\(\s*["\']{re.escape(repo_id)}', script):
         sys.exit("REFUSED: the card builds TextEmbedding from a literal repo id; the gate rewrites "
                  "TextEmbedding(NAME) only, so this would be served from the PUBLISHED bytes")
+    # FASTEMBED_SUBSTITUTION rewrites the exact text `TextEmbedding(NAME)`. A card edited to
+    # `TextEmbedding(model_name=NAME)` or `TextEmbedding(NAME, threads=1)` would slip past it and,
+    # under HF_HUB_OFFLINE, be served from the CACHED PUBLISHED bytes -- the redirection this
+    # machinery exists to prevent (Fable, 2026-09-03). So refuse any call that was not redirected.
+    # DOC_NAME is the sibling model, not the bytes under test, and is allowed through by name.
+    stray = [m.group(0) for m in re.finditer(r"TextEmbedding\([^)]*\)", script)
+             if "specific_model_path=BUNDLE_DIR" not in m.group(0)
+             and not m.group(0).startswith("TextEmbedding(DOC_NAME")]
+    if stray:
+        sys.exit(f"REFUSED: {stray[0]!r} is not redirected at the staging dir; the gate rewrites "
+                 "the exact text `TextEmbedding(NAME)` only, so this would run against the "
+                 "PUBLISHED bytes")
     if "snapshot_download" in script or "hf_hub_download" in script:
         sys.exit("REFUSED: the card still downloads from the Hub after substitution; the gate "
                  "must exercise the STAGED bytes, not whatever is published")
@@ -365,7 +379,7 @@ def verify_remote(api, repo_id, want, revision):
 def gates_only(repo_id):
     """--gates: render the card and run every gate, uploading nothing."""
     render_card(repo_id)
-    run_gates(repo_id=repo_id if repo_id != "REPO_ID_PLACEHOLDER" else None)
+    run_gates(repo_id=repo_id)
 
 
 def push(repo_id, public):
@@ -376,7 +390,7 @@ def push(repo_id, public):
     api = HfApi()
     repo_id = repo_id or DEFAULT_REPO_ID
 
-    render_card(repo_id)            # BEFORE the gates: gate 7 executes what actually ships
+    render_card(repo_id)            # BEFORE the gates: gate 6 executes what actually ships
     run_gates(repo_id=repo_id)
     want = set(MANIFEST)
 

@@ -192,6 +192,30 @@ def t_card_renamed_variable():
         push.gate_readme(REPO_ID)               # must PASS, against the staged bytes
 
 
+@test("gate 6 catches a card serving from a LITERAL repo id", "literal repo id")
+def t_card_literal_repo_id():
+    """The substitution rewrites `TextEmbedding(NAME)`; a hard-coded id would bypass it and be
+    served from the PUBLISHED bytes (Fable, 2026-09-03)."""
+    with staged() as d:
+        (d / "README.md").write_text(
+            '```python\nfrom fastembed import TextEmbedding\n'
+            f'from huggingface_hub import snapshot_download\nd = snapshot_download("{REPO_ID}")\n'
+            f'm = TextEmbedding("{REPO_ID}")\n```\n')
+        return attempt(lambda: push.gate_readme(REPO_ID), "literal repo id")
+
+
+@test("gate 6 catches a TextEmbedding call the substitution misses", "not redirected")
+def t_card_unredirected_textembedding():
+    """`TextEmbedding(model_name=NAME)` is not the exact text the regex rewrites, so without this
+    check it would run offline against the CACHED PUBLISHED bytes."""
+    with staged() as d:
+        (d / "README.md").write_text(
+            '```python\nfrom fastembed import TextEmbedding\n'
+            f'from huggingface_hub import snapshot_download\nd = snapshot_download("{REPO_ID}")\n'
+            f'NAME = "{REPO_ID}"\nm = TextEmbedding(model_name=NAME)\n```\n')
+        return attempt(lambda: push.gate_readme(REPO_ID), "not redirected")
+
+
 @test("gate 8 catches a corrupted ONNX graph",
       "do not reproduce the numpy query path")
 def t_onnx_corrupt():

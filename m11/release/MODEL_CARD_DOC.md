@@ -45,7 +45,7 @@ Not in a FastEmbed release yet. Until it is:
     pip install "fastembed @ git+https://github.com/Dylancouzon/fastembed@add-constella-models"
 
 FastEmbed fetches only `model.onnx` and the tokenizer, and does not alter the graph's output —
-it matches a direct ONNX Runtime session exactly, with or without `parallel`.
+it matches a direct ONNX Runtime session exactly.
 
 The blocks below continue from this one.
 

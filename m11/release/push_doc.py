@@ -266,6 +266,18 @@ def gate_readme():
     if REPO_ID and re.search(rf'TextEmbedding\(\s*["\']{re.escape(REPO_ID)}', script):
         sys.exit("REFUSED: the card builds TextEmbedding from a literal repo id; the gate rewrites "
                  "TextEmbedding(NAME) only, so this would be served from the PUBLISHED bytes")
+    # FASTEMBED_SUBSTITUTION rewrites the exact text `TextEmbedding(NAME)`. A card edited to
+    # `TextEmbedding(model_name=NAME)` or `TextEmbedding(NAME, threads=1)` would slip past it and,
+    # under HF_HUB_OFFLINE, be served from the CACHED PUBLISHED bytes -- the redirection this
+    # machinery exists to prevent (Fable, 2026-09-03). So refuse any call that was not redirected.
+    # DOC_NAME is the sibling model, not the bytes under test, and is allowed through by name.
+    stray = [m.group(0) for m in re.finditer(r"TextEmbedding\([^)]*\)", script)
+             if "specific_model_path=BUNDLE_DIR" not in m.group(0)
+             and not m.group(0).startswith("TextEmbedding(DOC_NAME")]
+    if stray:
+        sys.exit(f"REFUSED: {stray[0]!r} is not redirected at the staging dir; the gate rewrites "
+                 "the exact text `TextEmbedding(NAME)` only, so this would run against the "
+                 "PUBLISHED bytes")
     if "snapshot_download" in script or "hf_hub_download" in script:
         sys.exit("REFUSED: the card still reaches the Hub after substitution")
     script = f"BUNDLE_DIR = {str(OUT)!r}\n" + script
@@ -393,8 +405,10 @@ def push(update=False):
         print(f"  created {REPO_ID} PRIVATE")
     else:
         print(f"  updating existing {REPO_ID}")
+    # delete_patterns so an --update commit is exactly the manifest. Without it a renamed file
+    # stays live and public, and verify_remote refuses AFTER the commit exists (Fable, 2026-09-03).
     info = api.upload_folder(repo_id=REPO_ID, folder_path=str(OUT), repo_type="model",
-                             allow_patterns=sorted(snapshot),
+                             allow_patterns=sorted(snapshot), delete_patterns=["*"],
                              commit_message=f"stella_en_400M_v5 document path -> ONNX opset 17 "
                                             f"(source revision {ed.REVISION[:12]})")
     print(f"  uploaded commit {info.oid[:10]}")

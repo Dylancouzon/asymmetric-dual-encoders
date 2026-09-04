@@ -9,6 +9,9 @@ carries a file its manifest does not name, and that both cards say what we belie
 """
 import json, os, sys, hashlib
 os.environ.pop("HF_TOKEN", None)
+# popping HF_TOKEN is not enough: hf_hub_download and HfApi still pick up the token
+# cached in ~/.cache/huggingface (Fable, 2026-09-03).
+os.environ["HF_HUB_DISABLE_IMPLICIT_TOKEN"] = "1"
 import numpy as np, requests
 
 ZERO, DOC = "DylanCouzon/constella-zero", "DylanCouzon/stella-en-400M-v5-doc-onnx"

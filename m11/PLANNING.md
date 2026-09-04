@@ -51,8 +51,8 @@ reproduce the index, and long documents are common where long queries are not.
    recorded verdict binds the file to a claim, not to the arithmetic; T2's gate re-runs parity
    in-gate. No ONNX artifact may be staged until then.
 5. `README.md` is generated **before** the gates and gate 6 executes its python against the staging
-   dir, offline, with the substitution count asserted so a card edit cannot redirect the gate at
-   the published bundle. ✔
+   dir, offline, refusing any surviving Hub download and any `TextEmbedding` built from a literal
+   repo id, so a card edit cannot redirect the gate at the published bundle. ✔
 6. ~~Upload private → verify → flip visibility~~ — **unavailable: the repo was never private.**
    See `m11/STATUS.md`. Upload → re-download at the returned commit → compare file by file, which
    is what remains meaningful. ✔
@@ -61,7 +61,7 @@ Also fixed here: `config.json`'s frozen fields now come from `FREEZE.json` with 
 `.meta.json` sidecar cross-checked against it (it previously *set* the shipped preproc rule), and
 `fallback_token_id` is read from `encoder_spec.cls_id` instead of being hardcoded.
 
-`test_gates.py`: 1 positive control + 11 breakages, each asserting the refusal message matches the
+`test_gates.py`: 2 that must pass + 12 that must refuse, each asserting the refusal message matches the
 reason. Reviewed by Codex and Fable; both broke the first implementation. See `m11/STATUS.md`
 §Scope note for what was deliberately NOT built.
 
@@ -183,7 +183,7 @@ Gates → `results/m11_zero_export.json`, each recording the achieved number and
 7. **Cost row**: measure s=8 vs s=512 latency (0.032 ms vs 1.29 ms single-thread — the S×S term is
    not free) and publish the post-T1 fastembed figure, not the 0.38 ms table-only number.
 
-## T3 — document tower — **IN PROGRESS 2026-09-03**
+## T3 — document tower — **DONE 2026-09-03** (published, then re-pushed with the T6 card)
 
 Repo (new, PUBLIC, Amendment A ruling 2): **`DylanCouzon/stella-en-400M-v5-doc-onnx`**.
 Re-exported from the pinned revision by `m11/release/export_doc.py`; pushed by
