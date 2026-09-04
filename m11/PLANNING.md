@@ -290,19 +290,23 @@ verification time, which would compare changed bytes against themselves.
 Fork `Dylancouzon/fastembed` created 2026-09-03. Clone to `/home/dylan/fastembed` (sibling of this
 repo, **not** inside it), branch `zero-query-encoder`.
 
-Two integration routes; test both and pick on evidence:
+Two integration routes. **Both questions below were open in the plan and are now CLOSED by T3
+measurements — do not re-test them:**
 - **MEAN on `model_tokens.onnx`** (`normalization=True`). `fastembed.mean_pooling`
   (`common/utils.py:26-32`) is the masked mean, divisor = real token count, a positive scalar the
   normalize annihilates. Measured vs numpy: **3.3e-8**. Loses the frozen fallbacks, which are
   unreachable in practice (no table row has norm ≤ EPS; min 0.196, row 101 = 2.15).
-- **`PoolingType.DISABLED` on the pooled `model.onnx`**, which preserves the fallbacks exactly.
-  DISABLED exists in 0.8.0; whether the pipeline accepts a `(b,1024)` graph is **untested** — the
-  first draft asserted it does not, which was unfounded.
+- **`PoolingType.DISABLED` on the pooled `model.onnx`** preserves the fallbacks exactly. **Settled:
+  the pipeline DOES accept a `(b,1024)` graph** — `DISABLED` + `normalization=False` returns the
+  model output untouched, measured against direct ORT at **max-abs 0.00e+00** (T3 gate 4). This is
+  the preferred route: one graph, no per-token duplicate.
 
-Gate serving parity end-to-end against the numpy encoder (the M9 pilot only ever got a *description*
-accepted for anything but nano), **including `parallel>1`**: `CustomTextEmbedding` does not override
-`_get_worker_class()`, so the inherited worker constructs `OnnxTextEmbedding`, which cannot resolve a
-runtime-registered name. Unverified but cheap to check, and a serial-only smoke would miss it.
+Still to do: gate serving parity end-to-end against the numpy encoder (the M9 pilot only ever got a
+*description* accepted for anything but nano). **`parallel>1` is NOT a gate — it cannot pass:**
+`CustomTextEmbedding` does not override `_get_worker_class()`, so the worker constructs
+`OnnxTextEmbedding`, which cannot resolve a runtime-registered name and raises
+`ValueError: Model ... is not supported in OnnxTextEmbedding`. Measured, not inferred. It is a card
+sentence and, if anything, a candidate upstream fix — not a release gate.
 
 **Upstream defect in `load_tokenizer` (under independent verification, 2026-09-03).**
 `common/preprocessor_utils.py` overrides truncation **unconditionally** but sets padding only

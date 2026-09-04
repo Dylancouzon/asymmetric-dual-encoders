@@ -36,6 +36,13 @@ three weight files.
 | `release/test_gates.py` | 14 checks: 1 positive control, 13 breakages each gate must catch |
 | `release/push.py` | build + 8 gates + upload + re-download verification |
 | `release/MODEL_CARD.md` | the card; `REPO_ID` is substituted at push time |
+| `release/export_doc.py` | T3: stella doc tower → ONNX, checks on 259 frozen real passages |
+| `release/push_doc.py` | T3: build + 5 gates + create-private → upload → verify → public |
+| `release/MODEL_CARD_DOC.md` | the doc-tower card; repo id and measured numbers substituted |
+| `release/doc_fixtures.json` | 259 real nq-250k passages, six length strata, asserted on load |
+
+**`m11/CODEMAP.md` is the reusable part** — the ONNX-port checklist, 19 items, each one paid for by
+a T2 or T3 defect. Read it before porting nano or M12's image model, not this file.
 
 **Eight gates**, all re-run at every push: (1) the frozen source AND the staged `model.npz` hash to
 `FREEZE.json`, (2) lineage records unchanged, (3) `assert_releasable`, (4) conformance — the
@@ -84,7 +91,7 @@ published until T0 and T1 land.**
 | T1 sanitise tokenizer (`zero` repo) | **DONE** 2026-09-03 — `push.sanitise_tokenizer`; gate 8 measures what fastembed's own loader gets; the doc-tower repo still needs the same edit under T3 |
 | T2 zero query path → ONNX | **DONE** 2026-09-03 — two opset-17 graphs, 10 checks, parity 4.47e-08 on 1,024 real dev queries; live at `fb8e5c5b`. `m11/PLANNING.md` §T2, incl. the measurement that the count-mask defect is unreachable by real text (0/7,325 dev queries produce id 0) |
 | T3 doc tower publish (PUBLIC, new repo) | **DONE 2026-09-03** — live at commit `e34cc6dd1e`, PUBLIC, byte-verified anonymously (published LFS sha256 == gated bytes, `fe31555e…`). Repo `DylanCouzon/stella-en-400M-v5-doc-onnx`. Re-exported fp32 from the pinned revision; 259 frozen real-passage fixtures; **fp16 rejected on a CUDA measurement**, `model_tokens.onnx` proved unnecessary. `m11/PLANNING.md` §T3 |
-| T4 fastembed fork branch, no PR | fork cloned to `/home/dylan/fastembed`; **upstream 0.8.0 regression found and fixed** on branch `fix-fixed-padding-ragged-batch` (breaks `thenlper/gte-base`), reported as qdrant/fastembed#703 — T4 runs against that branch |
+| T4 fastembed fork branch, no PR | fork at `/home/dylan/fastembed`; **upstream 0.8.0 regression found, fixed and filed as qdrant/fastembed#703** (breaks `thenlper/gte-base`), branch `fix-fixed-padding-ragged-batch`. **De-risked by T3**: the `DISABLED` route is settled (bit-identical to ORT) and `parallel>1` is settled (cannot pass — not a gate). Remaining: serve `zero` end to end, gate parity vs the numpy encoder, leave the branch PR-ready. |
 | T5 card fixes | **DONE** 2026-09-03 — the raising snippet fixed, ONNX usage block added, the by-caller tokenizer table and cost rows corrected; gate 6 executes every block |
 | flip `zero` PUBLIC | **moot** — already public since the first push (see the correction above). `push()` now detects this, says so, and does not pretend to have published privately first |
 
