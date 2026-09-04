@@ -14,12 +14,12 @@
  "batch_invariance_max_abs": 1.862645149230957e-08,
  "checks": [
   {
-   "detail": "13 op types, domains ['']",
+   "detail": "13 op types, domains [''], opsets [('', 17)]",
    "name": "1 standard domain only, opset 17, checker passes",
    "pass": true
   },
   {
-   "detail": "max-abs 4.470e-08   min-cos 0.999999762",
+   "detail": "max-abs 4.470e-08   min-cos 0.999999881",
    "name": "2 parity on 1024 real dev queries",
    "pass": true
   },
@@ -64,15 +64,23 @@
    "pass": true
   },
   {
-   "detail": "s=8 0.044 ms   s=512 1.164 ms",
+   "detail": "s=8 0.045 ms   s=512 1.174 ms",
    "name": "8 cost row measured",
    "pass": true
   }
  ],
  "dev_queries": {
   "max_abs": 4.470348358154297e-08,
-  "min_cos": 0.9999997615814209,
-  "n": 1024
+  "min_cos": 0.9999998807907104,
+  "n": 1024,
+  "numpy_norms": [
+   0.9999998807907104,
+   1.0000001192092896
+  ],
+  "onnx_norms": [
+   0.9999998807907104,
+   1.0000001192092896
+  ]
  },
  "edge_cases": {
   "max_abs": 5.960464477539062e-07,
@@ -82,8 +90,8 @@
  "eps": 1e-06,
  "fallback_max_abs": 0.0,
  "latency_ms_1thread": {
-  "s=512": 1.1640143000113312,
-  "s=8": 0.04424623999511823
+  "s=512": 1.1736278000171296,
+  "s=8": 0.04521430004388094
  },
  "negative_control": {
   "dev_queries_max_abs": 3.725290298461914e-08,

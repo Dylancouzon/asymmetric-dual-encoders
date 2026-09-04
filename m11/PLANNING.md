@@ -404,14 +404,15 @@ Branch `fix-fixed-padding-ragged-batch` → **`add-constella-models`**, carrying
 single-concern PR follows when we are ready. Same ruling covers the `DylanCouzon/...` registry
 names, which upstream would want under `Qdrant/`.
 
-**The integration**, 3 files, no new machinery:
-- `fastembed/text/pre_pooled_embedding.py` — `PrePooledEmbedding`, mirroring `pooled_embedding.py`:
-  `_post_process_onnx_output` returns the model output untouched. Needed because neither existing
-  class fits — `OnnxTextEmbedding` expects per-token output, and the pooled classes would apply a
-  masked mean on top of an already-pooled vector. `constella-zero` pools with count-saturated sqrt
-  weights; the stella tower applies a dense head AFTER pooling, so pooling cannot be a
-  post-processing step at all.
-- `text_embedding.py` — one import, one registry entry.
+**The integration**, 2 files, 26 lines, no new machinery:
+- `fastembed/text/onnx_embedding.py` — two `DenseModelDescription` entries in the existing
+  `supported_onnx_models`. Both graphs pool and L2-normalize internally and emit `(b, dim)`;
+  `OnnxTextEmbedding` already passes 2-D output through and re-normalizes (a no-op on unit
+  vectors), so nothing else is needed. Pooling has to live in the graph — `constella-zero` uses
+  count-saturated sqrt weights, and the stella tower applies a dense head AFTER pooling — but that
+  is a fact about the export, not a reason for a new serving class.
+  *A first version added a `PrePooledEmbedding` class on the false premise that
+  `OnnxTextEmbedding` requires per-token output; Fable disproved it and the class was deleted.*
 - `tests/test_text_onnx_embeddings.py` — 2 canonical vectors from the reference implementations
   (the numpy encoder; the torch module for the tower), per `CONTRIBUTING.md`.
 

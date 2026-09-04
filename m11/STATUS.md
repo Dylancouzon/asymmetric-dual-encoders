@@ -1,24 +1,44 @@
-# M11 status
+# M11 status — CLOSED 2026-09-03
 
-**Partially delivered ahead of schedule (2026-09-03, Dylan's ask): `zero` is published.** The rest
-of M11 (nano, ONNX, fastembed, whitepaper) waits on M10, which waits on cloud GPU budget.
+**Delivered: the zero half of the pair, end to end.** Two public models, both ONNX, both served by
+FastEmbed as built-in entries, both byte-verified against the bytes the gates signed off. Everything
+that depended on M10 moved to **M12** (`instructions-m12.md`); the image model became **M13**.
 
-## Released: `zero` v1
+| | |
+|---|---|
+| query encoder | https://huggingface.co/DylanCouzon/constella-zero — commit `d9d575a4a9`, 10 files |
+| document tower | https://huggingface.co/DylanCouzon/stella-en-400M-v5-doc-onnx — commit `e0430a63b6`, 7 files |
+| FastEmbed | `Dylancouzon/fastembed@add-constella-models` — 2 entries in `supported_onnx_models`, 2 canonical vectors |
+| serving parity | **4.470e-08** vs the numpy reference over 1,024 real dev queries |
+| upstream issue | qdrant/fastembed#703 (padding regression breaking `thenlper/gte-base`) |
 
-**https://huggingface.co/DylanCouzon/zero-query-encoder-v1 — PUBLIC.** Run `p35w-2m-s2500`,
-table sha `a7007b1a…`, the M7 frozen artifact unchanged. Verified by clean re-download: published
-bytes hash to `m7/FREEZE.json`'s `table_sha256`.
+**Final verification, 2026-09-03** — 8 zero gates, 14 `test_gates`, 11 ONNX parity checks, 5 doc
+gates, 6 serving checks, negative control 4.475e-04, and 8 anonymous live-repo checks
+(`m11/release/verify_published.py`). Re-run any of them:
 
-**CORRECTION 2026-09-03: the repo has been PUBLIC since the first push, not private.** Anonymous
-`GET https://huggingface.co/api/models/DylanCouzon/zero-query-encoder-v1` returns 200 with
-`private: false`; three commits, all 2026-09-03 15:23–15:37 UTC. This file, `m11/PLANNING.md` and
-`instructions-m11.md` Amendment A all said PRIVATE, and the M11a ordering ("flip PUBLIC last,
-after remote byte verification") assumed it. **The ordering guarantee is spent — it cannot be
-recovered, only reported.** Amendment A ruling 1 and the MIT ruling already make public the
-intended end state, so the outcome is authorised; the sequence was not. Consequence: the bytes
-publicly served between 15:23 and the T1 push are the PRE-T1 bundle — tokenizer truncation 8000,
-fixed-512 padding, and a card whose Qdrant block raises. Every earlier revision stays publicly
-reachable at its commit regardless of what is pushed next.
+    .venv/bin/python m11/release/push.py --build --gates
+    .venv/bin/python m11/release/test_gates.py
+    .venv/bin/python m11/release/export_onnx.py --check
+    .venv/bin/python m11/release/push_doc.py --gates
+    .venv/bin/python m11/release/verify_published.py
+    PYTHONPATH=/home/dylan/fastembed .venv/bin/python m11/release/verify_fastembed.py
+
+**`m11/CODEMAP.md` is the reusable part** — the ONNX-port checklist, each item paid for by a real
+defect. Read it before porting nano or M13's image model, not this file.
+
+## What shipped — `constella-zero`
+
+**https://huggingface.co/DylanCouzon/constella-zero — PUBLIC**, commit `d9d575a4a9`. Run
+`p35w-2m-s2500`, table sha `a7007b1a…`, the M7 frozen artifact unchanged; the published bytes hash
+to `m7/FREEZE.json`'s `table_sha256`, re-verified anonymously after the final push.
+
+**The repo was PUBLIC from its first push, not private**, contrary to what this file,
+`m11/PLANNING.md` and `instructions-m11.md` Amendment A all said at the time. The M11a ordering
+("flip PUBLIC last, after remote byte verification") assumed otherwise, so **that guarantee is
+spent — it cannot be recovered, only reported.** The end state was authorised (Amendment A ruling
+1, and the MIT ruling); the sequence was not. Every earlier revision stays publicly reachable,
+including the pre-T1 bundle (truncation 8000, fixed-512 padding, a card whose Qdrant block raises).
+Nothing non-releasable is in any of them.
 
 Contents: `model.npz` (int8 + fp16 rows), `model.onnx` and `model_tokens.onnx` (opset 17, int8
 initializer + per-row fp32 scale, ~31 MB each), `config.json`, stella's tokenizer at the pinned
@@ -29,10 +49,10 @@ three weight files.
 
 | file | what |
 |---|---|
-| `release/zero_encoder.py` | the shipped query path — 89 lines, numpy + tokenizers, **no torch** |
+| `release/zero_encoder.py` | the shipped query path — 93 lines, numpy + tokenizers, **no torch** |
 | `release/verify_bundle.py` | gate 4: **staged** encoder vs `m7src/table.py` on the **frozen source** table (5.5e-7 max-abs) |
 | `release/verify_tokenizer.py` | gate 7: what fastembed's own `load_tokenizer` makes of the shipped files |
-| `release/export_onnx.py` | T2: builds both graphs and re-derives all 10 parity checks |
+| `release/export_onnx.py` | T2: builds both graphs and re-derives all 11 parity checks |
 | `release/test_gates.py` | 14 checks: 1 positive control, 13 breakages each gate must catch |
 | `release/push.py` | build + 8 gates + upload + re-download verification |
 | `release/MODEL_CARD.md` | the card; `REPO_ID` is substituted at push time |
@@ -40,11 +60,11 @@ three weight files.
 | `release/push_doc.py` | T3: build + 5 gates + create-private → upload → verify → public |
 | `release/MODEL_CARD_DOC.md` | the doc-tower card; repo id and measured numbers substituted |
 | `release/doc_fixtures.json` | 259 real nq-250k passages, six length strata, asserted on load |
-| `release/verify_fastembed.py` | T4: serves `zero` through `TextEmbedding`, 6 checks + `--negative-control` |
-| (fork) `fastembed/text/pre_pooled_embedding.py` | T4: the new upstream class — graphs that pool and normalize in-graph |
+| `release/verify_fastembed.py` | T4: serves the BUILT-IN model through `TextEmbedding`, 6 checks + `--negative-control` |
+| `release/verify_published.py` | what the two live repos actually serve, checked anonymously |
 
 **`m11/CODEMAP.md` is the reusable part** — the ONNX-port checklist, 19 items, each one paid for by
-a T2 or T3 defect. Read it before porting nano or M12's image model, not this file.
+a T2 or T3 defect. Read it before porting nano (M12) or M13's image model, not this file.
 
 **Eight gates**, all re-run at every push: (1) the frozen source AND the staged `model.npz` hash to
 `FREEZE.json`, (2) lineage records unchanged, (3) `assert_releasable`, (4) conformance — the
@@ -78,25 +98,23 @@ freeze gate, the PR-ref upload dance, and speculative ONNX gating.
   ~500 `[PAD]` rows in every bag; cosine against the frozen path drops to 0.35. `zero_encoder.py`
   calls `no_padding()`. The transformers path never saw this because padding is off by default there.
 
-## M11a in flight (opened 2026-09-03, branch `m11-work`)
+## M11a — the slice, all done (2026-09-03)
 
-The zero half does not depend on M10. Four rulings and the slice: `instructions-m11.md`
-Amendment A. Tasks, graph design and gates: `m11/PLANNING.md`. Nothing here reads a quality set.
+Rulings: `instructions-m11.md` Amendments A and B. Tasks and evidence: `m11/PLANNING.md`.
+Nothing in this milestone read a quality set.
 
-Reviewed adversarially before execution (Codex + Fable, 2026-09-03); both logs audited clean for
-reserved-set reads. The review moved two blockers ahead of everything else — **nothing is
-published until T0 and T1 land.**
-
-| task | state |
+| task | outcome |
 |---|---|
-| T0 bind the release path | **DONE** 2026-09-03 — 9 gates on a build snapshot; Codex reviewed the fix and broke it, all 9 findings actioned; `test_gates.py` proves 13 attacks refused |
-| T1 sanitise tokenizer (`zero` repo) | **DONE** 2026-09-03 — `push.sanitise_tokenizer`; gate 8 measures what fastembed's own loader gets; the doc-tower repo still needs the same edit under T3 |
-| T2 zero query path → ONNX | **DONE** 2026-09-03 — two opset-17 graphs, 10 checks, parity 4.47e-08 on 1,024 real dev queries; live at `fb8e5c5b`. `m11/PLANNING.md` §T2, incl. the measurement that the count-mask defect is unreachable by real text (0/7,325 dev queries produce id 0) |
-| T3 doc tower publish (PUBLIC, new repo) | **DONE 2026-09-03** — live at commit `e34cc6dd1e`, PUBLIC, byte-verified anonymously (published LFS sha256 == gated bytes, `fe31555e…`). Repo `DylanCouzon/stella-en-400M-v5-doc-onnx`. Re-exported fp32 from the pinned revision; 259 frozen real-passage fixtures; **fp16 rejected on a CUDA measurement**, `model_tokens.onnx` proved unnecessary. `m11/PLANNING.md` §T3 |
-| T4 fastembed integration | **DONE** 2026-09-03 — **full built-in integration**, not `add_custom_model`: new `PrePooledEmbedding` class, 2 lines of registry wiring, 2 canonical vectors. Branch `add-constella-models` (renamed; also carries the #703 padding fix). Serving parity **4.47e-08** vs the numpy reference on 1,024 dev queries; `parallel=2` now works (3.7e-08 query, 0.00e+00 doc) — impossible via `add_custom_model` |
-| T5 card fixes | **DONE** 2026-09-03 — the raising snippet fixed, ONNX usage block added, the by-caller tokenizer table and cost rows corrected; gate 6 executes every block |
-| T6 rename + card rewrite | **DONE** 2026-09-03 — repo renamed to **`constella-zero`** (`move_repo`, old URL redirects). Both cards rewritten **FastEmbed-first**: built-in `TextEmbedding(NAME)` usage, install pointed at the branch until the PR lands, competitive comparison and release-bar framing removed, measured nDCG@10 and the stella contamination disclosure kept, Qdrant example switched to `COSINE`. **Not yet pushed to HF** |
-| flip `zero` PUBLIC | **moot** — already public since the first push (see the correction above). `push()` now detects this, says so, and does not pretend to have published privately first |
+| T0 bind the release path | 9 gates on a build snapshot; `test_gates.py` proves 13 attacks refused |
+| T1 sanitise tokenizer | `push.sanitise_tokenizer`; gate 7 measures what FastEmbed's own loader gets |
+| T2 zero query path → ONNX | two opset-17 graphs, 11 checks, parity 4.47e-08 on 1,024 dev queries |
+| T3 doc tower → ONNX, published | fp32 only — **fp16 rejected on a CUDA measurement**; 259 frozen real-passage fixtures |
+| T4 FastEmbed integration | built-in registration, **not** `add_custom_model`; `parallel>1` works as a result |
+| T5 card fixes | folded into T2/T6 |
+| T6 rename + card rewrite | `constella-zero`; both cards FastEmbed-first, lean, no competitive framing |
+
+Reviewed adversarially at every stage (Codex + Fable); all logs audited clean for reserved-set
+reads. The reviews changed the design twice — see `m11/PLANNING.md`.
 
 ## Released: stella document tower, ONNX
 
@@ -132,39 +150,16 @@ never ran the checker, so `zero`'s live gate 8 asserted something it did not tes
 New files: `m11/release/export_doc.py`, `push_doc.py`, `MODEL_CARD_DOC.md`, `doc_fixtures.json`
 (259 real nq-250k passages, six strata, re-asserted on load).
 
-## Next session starts here (2026-09-03)
+## Carried forward
 
-**T0–T5 are done.** `zero` is at HF head `1cfae6cc`, 10 files, PUBLIC, byte-verified; the doc tower
-at `e34cc6dd1e`. Working tree clean on `m11-work`. Re-check anything with:
-
-    .venv/bin/python m11/release/push.py --build --gates    # 8 gates, uploads nothing
-    .venv/bin/python m11/release/test_gates.py              # 14 checks, must all hold
-    .venv/bin/python m11/release/export_onnx.py --check     # 11 ONNX parity checks
-    .venv/bin/python m11/release/verify_fastembed.py        # 6 serving checks (add --negative-control)
-    PYTHONPATH=/home/dylan/fastembed .venv/bin/python m11/release/verify_fastembed.py   # same, on the fork
-
-**Next is T6** (`m11/PLANNING.md` §T6): rename `zero` → `constella-zero` via `move_repo` (redirect
-keeps the old URL live) and rewrite BOTH cards — fastembed examples in, competitive comparison and
-missed-bar framing out, measured numbers and the stella contamination disclosure kept.
-`instructions-m11.md` deliverable 1 must be amended in the same change, since it currently
-*requires* the competitive claims.
-
-**Read `§Scope note` below before adding any gate or test.** Two adversarial reviews produced a
-malicious-actor threat model; the rollback to the accident model is Dylan's explicit instruction,
-not a shortcut.
-
-## Open
-
-- **`zero` is published under the WRONG NAME.** The family name was locked in `m8/LEDGER.md` §6.1
-  as `constella`, and `:716` required a ruling on the milestone suffix **before anything shipped**.
-  That ruling was not sought and the push went out as `zero-query-encoder-v1`. Ruled 2026-09-03:
-  **`constella-zero`**. Rename in T6; `move_repo` leaves a redirect so the old URL keeps working.
-- ~~Licence sign-off~~ — **RULED 2026-09-03 (Dylan): MIT, including for a public release.** Card
-  declares `license: mit` (matching stella) with CC BY-SA attribution for
-  NQ/SQuAD/HotpotQA/FEVER/Mr.TyDi. No further approval needed on licence to flip the repo public.
-- `nano`, its ONNX port, any upstream fastembed PR, and the whitepaper: blocked on M10.
-- **The already-public repo is serving pre-T1 bytes.** The corrected bundle is built and passes
-  all 9 gates; pushing it replaces the head. Prior revisions stay reachable — nothing
-  non-releasable or secret is in them, only the two known bundle states.
-- Qdrant: dense-only reproduces 0.4339 exactly; the fused 0.4911 needs **convex fusion at w=0.8**,
-  which `Fusion.RRF` does not reproduce (dev 0.5504 vs 0.5727). Recorded in the card.
+- **`nano`, its ONNX port, its FastEmbed entry, and the whitepaper are M12** — blocked on M10,
+  which is blocked on the cloud GPU budget. `instructions-m12.md`.
+- **The upstream FastEmbed PR is NOT blocked.** Both published models are registered on
+  `add-constella-models`; that branch is deliberately not mergeable (it also carries the #703
+  padding fix, and the models sit on a personal account where upstream hosts under `Qdrant/`).
+  Ruled fine by Dylan — a clean single-concern PR follows when we choose.
+- **Qdrant fusion**: dense-only reproduces 0.4339 exactly; the fused 0.4911 needs convex fusion at
+  w=0.8, which `Fusion.RRF` does not reproduce. Stated on the card.
+- **Spent, not recoverable**: `constella-zero` was public from its first push, so the "flip public
+  last, after remote byte verification" ordering guarantee was never held. Every earlier revision
+  stays publicly reachable, including the pre-T1 bundle. Nothing non-releasable is in any of them.
