@@ -19,26 +19,39 @@ what shipped and giving the blocked remainder its own number is the accurate rec
    contamination disclosure. Name is **`constella-nano`** (`m8/LEDGER.md` §6.1).
 2. **ONNX port of nano**, parity-verified. `m11/CODEMAP.md` is the checklist — 24 items, each one
    paid for by a real defect. Read it before writing the exporter.
-3. **Register nano in FastEmbed**, the same way the pair already is: an entry in
-   `supported_onnx_models` plus a canonical vector from the reference implementation. See the
-   note on the PR below.
+3. **Register nano in FastEmbed and open ONE upstream PR for all three models** — nano plus the
+   two already published. An entry in `supported_onnx_models` and a canonical vector from the
+   reference implementation, per `CONTRIBUTING.md`. See the note below: the PR waits for nano by
+   Dylan's ruling, and branches fresh from upstream `main`.
 4. **Whitepaper / decision report** — the quality-vs-query-cost frontier with BOTH points, edge
    cost rows, the Qdrant Edge prototype, and the comparator table that was deliberately kept OFF
    the model cards (`instructions-m11.md` Amendment B). This is where
    `LR-dense-pertask 0.4583`, the OpenSearch tie and the missed bar belong.
 
-## The upstream FastEmbed PR is NOT blocked on M10
+## The upstream FastEmbed PR — ONE PR, all three models (Dylan, 2026-09-04)
 
-`constella-zero` and `stella-en-400M-v5-doc-onnx` are both published and both registered on
-`Dylancouzon/fastembed@add-constella-models`. A clean, single-concern PR for those two can be
-opened whenever Dylan wants, independently of nano. It is listed here only so it is not forgotten;
-do not treat it as gated on M10.
+*"The Fastembed PR should be filed under M12, once we have both models we add all of them in one
+clean PR."* So the PR is an M12 deliverable and waits for nano, even though `constella-zero` and
+`stella-en-400M-v5-doc-onnx` are already published and already registered. One PR adding all three
+entries is a better thing to hand a maintainer than a two-model PR now and a one-model PR later.
 
-Two things that branch is NOT ready to be a PR as it stands:
-- it also carries the qdrant/fastembed#703 padding fix (2 commits), deliberately, because it was
-  never meant to be merged — Dylan, 2026-09-03: *"this branch won't be merged, we will do a clean
-  PR when we're ready"*;
+The branch that exists today, `Dylancouzon/fastembed@add-constella-models`, is **not** that PR and
+was never meant to be merged:
+- it also carries the qdrant/fastembed#703 padding fix (2 commits) — Dylan, 2026-09-03: *"this
+  branch won't be merged, we will do a clean PR when we're ready"*;
 - the models sit on a personal HF account, where upstream hosts under `Qdrant/`. Same ruling.
+
+So the M12 PR branches fresh from upstream `main` and carries only the model entries. What the zero
+half already proved, and what nano's entry must match:
+- **the bar is a stock loader** (`instructions-m11.md` deliverable 3): a name in
+  `supported_onnx_models`, no custom encoder file, no package to install first;
+- graphs that pool and normalize internally need no new class — `OnnxTextEmbedding` passes 2-D
+  output through and re-normalizes;
+- canonical vectors come from the reference implementation, per `CONTRIBUTING.md`;
+- registering natively is what makes `parallel>1` work at all.
+
+Whether #703 is offered separately, and whether the models move to a `Qdrant/` org first, are
+Dylan's calls at PR time.
 
 ## Inherited constraints
 

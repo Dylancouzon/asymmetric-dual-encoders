@@ -157,10 +157,10 @@ New files: `m11/release/export_doc.py`, `push_doc.py`, `MODEL_CARD_DOC.md`, `doc
 
 - **`nano`, its ONNX port, its FastEmbed entry, and the whitepaper are M12** — blocked on M10,
   which is blocked on the cloud GPU budget. `instructions-m12.md`.
-- **The upstream FastEmbed PR is NOT blocked.** Both published models are registered on
-  `add-constella-models`; that branch is deliberately not mergeable (it also carries the #703
-  padding fix, and the models sit on a personal account where upstream hosts under `Qdrant/`).
-  Ruled fine by Dylan — a clean single-concern PR follows when we choose.
+- **The upstream FastEmbed PR is M12** (Dylan, 2026-09-04): one clean PR adding all three model
+  entries once nano exists, not a two-model PR now. The branch that exists today,
+  `add-constella-models`, is deliberately not mergeable — it also carries the #703 padding fix, and
+  the models sit on a personal account where upstream hosts under `Qdrant/`.
 - **Qdrant fusion**: dense-only reproduces 0.4339 exactly; the fused 0.4911 needs convex fusion at
   w=0.8, which `Fusion.RRF` does not reproduce. Stated on the card.
 - **Spent, not recoverable**: `constella-zero` was public from its first push, so the "flip public

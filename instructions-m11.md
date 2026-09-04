@@ -84,7 +84,7 @@ M11 ships no new science. It turns two frozen artifacts into a product and a pap
 ## Amendment A — the M11a slice (Dylan, 2026-09-03)
 
 M10 is paused on budget. The `zero` half of M11 does not depend on it, so M11a ships zero end to end
-and publishes the document tower. Nano's export and the whitepaper wait for M10 (now M12). **The upstream PR does NOT** — both published models are already registered, so a clean single-concern PR can go out any time (`instructions-m12.md`).
+and publishes the document tower. Nano's export, the upstream PR and the whitepaper wait for M10 (now M12).
 
 | # | ruling |
 |---|---|
