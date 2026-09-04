@@ -53,38 +53,103 @@ It moved to `instructions-m16.md` with the full list of what it would need. Kill
 
 **Two operators, both to Qdrant parity, not to a paraphrase.**
 
-**(a) Weighted RRF — the fair comparison M7 never ran.** Sweep `k` × `weights` with a fitting budget
-matched to convex0's (8 candidates), using the `weights` argument already in `fusion.rrf`; plumb it
-through `select_on_dev` and `apply`. Qdrant's form is per-prefetch weights on the reciprocal-rank
-contributions. This is the cheapest and most likely explanation of the 0.022.
+**(a) Weighted RRF — the fair comparison M7 never ran.** Two things were unfitted, not one; the
+missing `k` range is the likelier half.
+
+*The operator, corrected 2026-09-04.* `fusion.rrf` computes `Σ wᵢ/(k+rankᵢ)`, rank 1-based. Qdrant
+computes `Σ 1/((posᵢ+1)/wᵢ + k − 1)`, pos 0-based (`qdrant-client/qdrant_client/hybrid/fusion.py`;
+docs agree). **These are different functions, so the existing `weights` argument is NOT parity.**
+Server `lib/segment/src/common/reciprocal_rank_fusion.rs` and the client agree; the server is
+authoritative. Algebraically it is `Σ wᵢ/(rankᵢ + wᵢ(k_q−1))` — our `rrf` family with a **per-list**
+`kᵢ`, so `rrf_qdrant()` is ~5 lines. Consequences:
+- **`k_qdrant = k_ours + 1`.** Report every recommended `k` in Qdrant's units.
+- **Not scale-invariant** for `k_q > 1`, so `(1,2)` ≠ `(2,4)` and the grid is 3-D (`w₁, w₂, k`).
+  **Except at `k_q = 1`**, where weights degenerate to pure multipliers and only the ratio matters.
+- `w ≤ 0 → 0.0`; **`k_q = 0` divides by zero at pos 0 and the server does not validate it**
+  (`validate.rs` returns `Ok(())`) — excluded from the grid, never recommended.
+
+*The unbracketed `k`.* The M7 sweep is strictly monotone decreasing in `k` — 10:**0.5504**, 20:0.5453,
+30:0.5405, 60:0.5352, 100:0.5324 (`m7/LEDGER.md:922`) — so its argmax sits on the **lower boundary**
+and the optimum was never bracketed. **Qdrant's default `k=2` is `k_ours=1`, outside the M7 grid
+entirely.**
+
+**Grids, pinned here before the first fusion call** (an unpinned "best few k" has no statable fitting
+budget):
+- **RRF-k, unweighted:** `k_q ∈ {1,2,3,4,6,11,21,31,61,101}` — **10 candidates**, comparable to
+  convex0's 8. Run first, as its own row: if it closes the 0.022, the gap was never about weights.
+- **RRF weighted:** `k_q ∈ {2,6,11,61}` × `(w_dense, w_bm25) ∈ {(1,1),(2,1),(3,1),(4,1),(1,2),(1,3)}`
+  — **24 candidates**, judged under split-half (see the rule).
+- **DBSF:** none.
+
+All CPU re-fusion of runs built once — one GPU retrieval pass total, provided the dense runs are
+persisted (below).
 
 **(b) DBSF — parameter-free, untested here.** Per prefetch, using the **sample** SD:
 `ŝ = (s − (μ − 3σ)) / (6σ)`, **no clipping**, and **0.5 for singleton or constant lists**; statistics
 are computed over the returned list at the **pinned depth 1000**; then sum the normalised channels.
-`FAMILIES` in `m7src/fusion.py:19` is closed and both selection and application assume a parameterised
-family (`:208`, `:252`) — DBSF is parameter-free, so plumbing plus degenerate-case tests is ~50–100
-lines, not 30. Parity tests against the documented behaviour are part of the deliverable.
+**Register the missing-document rule before scoring**: a doc in one prefetch and not the other
+contributes **0**, which under `(s−(μ−3σ))/(6σ)` is *not* the bottom of the normalised range. That is
+structurally M7's `floor_zero`/MAJOR 19 trap and must be a written choice, not a fall-out of the loop.
+DBSF lives in `m12src`; parity and degenerate-case tests are part of the deliverable.
+
+**(c) Depth — added 2026-09-04.** DBSF's μ and σ are computed over the returned list, so the operator
+at depth 1000 is **not** the one a user runs at `prefetch limit: 20`. Re-fuse the cached runs
+truncated to `d ∈ {10, 50, 100, 1000}` — for **convex0 and the registered winner of each operator
+class only**, not the full weight grid. **Depth 1000 stays the registered comparison**; the rest is a
+reported curve. Truncation is sound (top-d of an exact top-1000 is exact top-d; BM25 lists are already
+≤1000 after `drop_zero_scores`, matching a Qdrant sparse prefetch at `limit: d`) on two conditions:
+truncate on the **same stable sort `rrf()` uses** (`fusion.py:36`), and report the qid∈doc_ids
+collision count per component — both runs drop self-hits *after* retrieval, which Qdrant does not, so
+a non-zero count means a `d=10` list really holds 9.
+
+**`m7src/fusion.py` is not edited.** `select_on_dev`/`apply_frozen` produced the frozen M7 selection,
+and `m7src/test_fusion_paths.py:104` asserts the grid length. M12's operators and selection live in
+**`m12src/`**, importing `fusion` read-only; the M7 path stays byte-stable and its tests keep passing.
 
 **Cost reality check before launching** (`work/fusionruns` holds **only** the four BM25 arrays; dense
 runs are not cached): `select_fusion` re-encodes dev queries and re-runs exact top-1000 retrieval on
 **CUDA** (`select_fusion.py:50,73`). Documents are not re-encoded. This is a GPU run, not a CPU one.
 
 **Numeric decision rule, registered before scoring.** Dev macro over the four text-backed components,
-against convex0 **0.5727**, with the 0.004 frozen-operator fused floor (`m8_noise_floor_fused.json`).
-That floor was measured with a **fixed** operator, so it is exact for DBSF and an **under-estimate**
-for weighted RRF, which fits 8 candidates as convex0 did — say so when reporting, and do not treat a
-weighted-RRF margin inside 0.004 as a win:
+**The comparator is convex0 recomputed on M12's own runs, not the frozen literal.** M7's
+0.5726634997854769 came from a different torch/CUDA build; GPU top-k tie order and fp16 accumulation
+move the 4th–5th decimal, and every operator delta would then carry run-reproduction noise. So:
+recompute all **21 M7 grid points** first and **gate on `max|Δ| ≤ 1e-4` against `m7/FREEZE.json`**
+(M7's own reproduction tolerance, `m7/STATUS.md:92-93`) before scoring a single new operator. If the
+gate fails, stop and report — that is a finding about reproducibility, not a fusion result. The
+recomputed convex0 is the comparator; the frozen literal is reported beside it.
 
-| outcome | rule | what we do |
-|---|---|---|
-| **a shipping operator matches** | best of (weighted RRF, DBSF) ≥ 0.5687 (convex0 − 0.004) | recommend that exact configuration; the published number survives in the product, no retraining |
-| **none matches** | best ≤ 0.5687 | state the real cost of shipping-operator fusion plainly, in M14's paper and the card caveat |
+*What the 0.004 is and is not.* `m8_noise_floor_fused.json` sets it as `max(0.0040, 2×floor)` where
+the floor is **training-seed** spread with the operator **frozen**. An operator comparison on one
+fixed table is deterministic and has no seed noise at all, so 0.004 is borrowed here as "would this
+survive a retrained table" — a defensible conservative bar, but say that; it is not the instrument's
+precision. It carries no fitting allowance, so it is an **under-estimate** for any fitted operator
+and adequate only for DBSF, which fits nothing. **Also report a paired bootstrap over dev queries**
+on each operator-vs-convex0 difference — **resampled within component, then macro-of-means**
+(pooling would weight hotpotqa's 7,405 queries 8× physics's 1,039 and is not the macro); B and seed
+registered; percentile CI. A CI on a *fitted* winner is post-selection and optimistic — say so.
 
-Report all three side by side. **Fitting budgets must be stated**: convex0's `w` came from 8
-candidates, weighted RRF gets the same 8, DBSF fits nothing — so a DBSF tie is the strongest of the
-three results and an unweighted-RRF number is not a fair comparator for anything.
+Bar `B = convex0_recomputed − 0.004`. **One rule per operator class**, because they do not share a
+fitting budget — a single `max()` over ~34 configurations judged against a bar calibrated for one
+would be the contradiction the first draft carried (it both passed a fitted 0.5690 and forbade
+counting it):
 
-## Protocol — four things that make this wrong if skipped
+| operator | candidates | passes if | strength |
+|---|---|---|---|
+| **DBSF** | 0 | dev macro ≥ B | strongest — nothing fitted |
+| **RRF over `k`, unweighted** | 10 | dev macro ≥ B | second — one parameter, no weight to transfer |
+| **RRF weighted** | 24 | **held-out half** ≥ B, under a registered split-half of dev qids (fit on `hash(qid)` even, score on odd, and the reverse; report the macro of the two held-out halves) | weakest — and it is the only one whose margin the 0.004 bar under-estimates |
+
+**A shipping operator matches** if any row passes; recommend the highest-strength passing row's exact
+configuration **in Qdrant's units**. **None matches** if no row does; state the real cost of
+shipping-operator fusion plainly, in M14's paper and the card caveat.
+
+Report all five rows side by side (convex0, M7's unweighted RRF, RRF-over-`k`, weighted RRF, DBSF).
+**Fitting budgets must be stated**: convex0's `w` came from 8 candidates **inside a 21-point,
+3-family grid** — give both numbers. The M7 unweighted-RRF row (5 badly-placed `k`) is a fair
+comparator for nothing and is reported only as the thing being corrected.
+
+## Protocol — five things that make this wrong if skipped
 
 1. **This does not replace the published 0.4911.** M7 froze the fusion family and parameter, and no
    neighbouring choice may be preferred after the six were seen (`m7/LEDGER.md:691`). A DBSF number
@@ -94,29 +159,82 @@ three results and an unweighted-RRF number is not a fair comparator for anything
    outcome logging, not pre-registration.
 3. **Weights are fitted on dev and dev only** — a weighted-RRF configuration selected on the six
    would be exactly the post-hoc fusion choice `m7/LEDGER.md:691` forbids.
-   **Optional addition, permitted 2026-09-04** (Dylan's rule: non-commercial licences are admissible
-   for validation, not training — `research/m7-data-licensing.md` §Rule change 2026-09-04): the fitted
-   weight's *transfer* is this milestone's weakest point, and it can now be checked on a
-   **non-commercially-licensed held-out set — NanoMSMARCO is the cheap fit** (~5K docs, so no 8.8M-doc
-   stella encode). Apply the dev-fitted weight **without refitting**; register the set and the rule
-   before scoring or it is outcome logging. **Descriptive only, and it may not change the pass rule
-   above** — the four text-backed dev components remain the registered macro. Note the confound: every
-   comparator trains on MS MARCO and neither of ours does, but a *within-system* weight-transfer read
-   is unaffected by that.
-4. **A `bm25s`-lucene result does not license a claim about `Qdrant/bm25`** (fixed `avg_len`, own
+   Transfer is this milestone's weakest point and is handled by the **split-half in the rule above**
+   — free, same runs, no new corpus. **NanoMSMARCO was considered and CUT 2026-09-04**: it has **50
+   queries**, so per-query nDCG@10 SD ≈ 0.3–0.4 gives SE ≈ 0.05 — roughly 12× too coarse to read a
+   0.004 effect — and it would add a loader, a stella encode and a BM25 index for a number that
+   cannot answer the question. (Dylan's validation-not-training rule still permits it; the objection
+   is power, not licence. A usable MS MARCO transfer set means building dev the way `nq-250k` was
+   built — 6,980 queries, 250K distractors, a real stella encode — which is a separate budget line.)
+4. **M12 measures DEV; 0.4911 is a SIX-set number, and M12 may not claim to reproduce it.**
+   Added 2026-09-04. Re-running the six under a new operator IS the post-hoc fusion selection
+   `m7/LEDGER.md:691` forbids, so no M12 result can license "this Qdrant recipe gives you 0.4911".
+   The strongest sentence available is dev-scoped: *"on our development set, configuration X matches
+   the convex operator the 0.4911 row was measured under."* Any card wording above that ceiling
+   violates Protocol 1.
+5. **A `bm25s`-lucene result does not license a claim about `Qdrant/bm25`** (fixed `avg_len`, own
    tokenizer). DBSF's normalisation depends on the lexical implementation. State the gap; do not
    call it weak.
 
 **Not touched:** the six (dev only), the reserved four, LoTTE, comparators, nano, the document tower,
 the teacher, cloud compute, any released artifact.
 
+## Execution facts a fresh session must not re-derive
+
+- **Artifact:** `work/runs/p35w-2m-s2500.release.npz`, **int8** variant, loaded exactly as
+  `select_fusion.main:61-73` with `freeze.assert_encoder_matches_artifact`; the sha must match
+  `m7/FREEZE.json`.
+- **Persist the dense runs** to `work/m12/dense-<comp>-d1000.npz`, keyed on the table sha.
+  `select_fusion.dense_run` returns a dict and writes nothing — without this, "one GPU pass" is false
+  the moment the depth curve or a bootstrap is re-run.
+- **`qdrant-client` is not installed** and the venv has no pip. **Vendor** the two reference functions
+  (~40 lines) into the parity test, citing the upstream commit; pin the Rust file hash in
+  `m12/LEDGER.md`. Do not add a dependency for this.
+- `m12src` needs a `sys.path` entry for `m7src` to import `fusion`.
+
 ## Deliverables
 
-1. Weighted RRF plumbed through `select_on_dev`/`apply`, and `dbsf` added, both with parity and degenerate-case tests.
-2. The dev macro under convex0, unweighted RRF, **weighted RRF** and DBSF — with fitting budgets stated — against the registered rule, in `m12/FINDINGS.md`.
-3. The registration itself, written before scoring, in `m12/LEDGER.md`.
-4. **The card sentence, resolved either way.** If a shipping operator matches: record the exact
-   configuration, correct `m11/STATUS.md:193` and rewrite `MODEL_CARD.md:158-159` to give users the
-   Qdrant recipe that reproduces the number (a card edit is Dylan's call — 2026-09-04 precedent).
-   If none matches: keep the sentence and add the measured cost. Either way it stops resting on an
-   unweighted comparison. Carry the result into M14's paper.
+1. `m12src/` with `rrf_qdrant()` and `dbsf()`, plus parity tests against the vendored reference and
+   degenerate-case tests: singleton, constant, **missing doc**, **empty prefetch** (returned
+   unchanged, contributes nothing), **`w ≤ 0 → 0.0`**, and a **negative normalised DBSF score** (a doc
+   below `μ−3σ` must rank *below* an absent doc). `m7src/fusion.py` unchanged;
+   `m7src/test_fusion_paths.py` still passes.
+2. The 21-point M7 reproduction gate, then the five rows — convex0, M7's unweighted RRF,
+   **RRF over `k`**, **weighted RRF** (split-half), **DBSF** — fitting budgets stated, `k` in Qdrant's
+   units, within-component paired-bootstrap CIs, and the depth curve for the winners — against the
+   registered rule, in `m12/FINDINGS.md`.
+3. The registration itself, written **and pushed** before scoring, in `m12/LEDGER.md` — the remote
+   timestamp is the external witness (M7 convention, `instructions-m7.md:67`).
+4. **The claim, resolved in all three places it is live** — `m11/release/MODEL_CARD.md:158-159`,
+   `m11/STATUS.md:193` **and `README.md:99`** (missed by the original draft). If a shipping operator
+   matches on dev: give the exact Qdrant configuration, **dev-scoped per Protocol 4**, never as a
+   route to 0.4911. If none matches: keep the sentence and add the measured cost. **Either way fix a
+   second imprecision**: `MODEL_CARD.md:158` says "min-max normalized", but `convex0` is
+   `floor_zero=True` → `s / max(s)` per query per channel, absent doc = 0. Describe the real operator.
+   A card edit is Dylan's call (2026-09-04 precedent). Carry the result into M14's paper.
+
+---
+
+**Amendment 2026-09-04 (pre-execution review + Fable pass).** Verified against the Qdrant **server**
+Rust (`lib/segment/src/common/reciprocal_rank_fusion.rs`, authoritative), the client, the docs and the
+repo. **Confirmed as written:** `k` since v1.16.0, `weights` since v1.17.0, DBSF since v1.11.0 and
+parameter-free at the API, DBSF **sample** SD (ddof=1), no clamp, 0.5 for singleton/constant, every
+`m7src` line reference, the 0.5504/0.022 figures, and the "this is a GPU run" cost note. Client and
+server agree on everything M12 needs.
+
+**Corrected:** the weighted-RRF operator and its algebraic identity `Σ wᵢ/(rankᵢ+wᵢ(k_q−1))`, the
+`k_q=1` scale-invariance exception and the unvalidated `k_q=0` division by zero (§a); the unbracketed
+`k` sweep and **pinned grids** (§a); DBSF missing-document semantics (§b); depth parity, truncation
+conditions and self-hit accounting (§c); no edits to `m7src/fusion.py`; the comparator is **convex0
+recomputed behind a 21-point ≤1e-4 reproduction gate**, not the frozen literal (§rule); **one rule per
+operator class** with split-half for the fitted one, replacing a `max()` that contradicted its own
+"no fitted margin inside 0.004" clause (§rule); within-component bootstrap (§rule); the dev-vs-six
+claim ceiling (Protocol 4); `README.md:99` as a third live copy (Deliverable 4); execution facts a
+fresh session would otherwise re-derive.
+
+**Cut:** the NanoMSMARCO transfer check (50 queries, ~12× underpowered — Protocol 3), the stale
+`FAMILIES`-plumbing paragraph, and the depth curve over the full weight grid.
+
+**Product note, out of scope:** the server's `ScoreFusion` carries `weights` and a `MinMax`
+normalisation — i.e. our `convex` family exists in Qdrant, unexposed at the API. For the CTO ask, not
+for M12.
