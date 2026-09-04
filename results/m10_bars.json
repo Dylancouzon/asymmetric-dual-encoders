@@ -1,0 +1,46 @@
+{
+ "_what": "M10 bars on both registered partitions, from the frozen comparator vectors (results/perquery.json, per-query nDCG@10). Comparator rows only.",
+ "date": "2026-09-04",
+ "clean4": [
+  "nfcorpus",
+  "scidocs",
+  "scifact",
+  "trec-covid"
+ ],
+ "all6": [
+  "scifact",
+  "nfcorpus",
+  "fiqa",
+  "arguana",
+  "scidocs",
+  "trec-covid"
+ ],
+ "rows": {
+  "bge-small-en-v1.5": {
+   "all6": 0.5042,
+   "clean4": 0.5046
+  },
+  "leaf-ir-asym": {
+   "all6": 0.5155,
+   "clean4": 0.5233
+  },
+  "lr-dense-pertask": {
+   "all6": 0.4583,
+   "clean4": 0.4541
+  },
+  "opensearch-doc-v3-gte": {
+   "all6": 0.4868,
+   "clean4": 0.4974
+  },
+  "bm25": {
+   "all6": 0.4174,
+   "clean4": 0.4409
+  }
+ },
+ "registered": {
+  "C1a_release_avg6": 0.5042,
+  "C1b_release_clean4": 0.5046,
+  "C2a_aim_avg6": 0.5155,
+  "C2b_aim_clean4": 0.5233
+ }
+}
