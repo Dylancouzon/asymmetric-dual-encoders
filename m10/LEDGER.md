@@ -181,7 +181,58 @@ Copied from `instructions-m10.md` §Owner decisions as each is taken, with date 
 
 **Rung 2 is next as registered.** The residual failures the six judges named are what a definitional-pattern regex cannot reach: institutions whose lead is not definitional, bare lists of journal names and JEL codes, and word-sense errors inside a genuine-looking lead ("market" as a physical marketplace, "bank" as a riverbank, "trade" as a craft, "Banker" as a mycologist's surname). **Note for whoever runs it:** some `wikipedia-body` failures are chunks off-topic inside an ON-subject article, which a LEAD-sentence classifier of any kind cannot see. Classifying per CHUNK would reach them — but that is a different lever from the one T2-8 registered, and choosing it now, after these numbers, is an amendment that needs a Fable pass first.
 
-### M10.0-e power check — REGISTERED 2026-09-05 before it runs (COV read #2)
+### BOTH 2026-09-05 DECISIONS ARE SUSPENDED — two adversarial passes inverted them
+
+**Neither has run. Nothing below is executed until Dylan re-rules.** A Fable pass and a Codex
+statistical pass, briefed independently, agree — and the second finding is mine to own.
+
+**1. The W6 admission rule I drafted was a WEAKER bar dressed as the old one.** "Not significantly
+below 0.80" at n = 200 fails only at ≤ 150/200, so **the operative floor is 0.755, not 0.80**. Fable's
+pass table: a store whose true rate is 0.78 passes **83%** of the time under my test against **45%**
+under the approval rule it claimed to preserve. Codex went further: failure-to-reject is the wrong
+form outright — the correct instrument is a one-sided **non-inferiority** test, and at margin 0.05,
+n = 200, admission needs **X ≥ 161 (0.805)**. **The measured 156/200 and 158/200 FAIL it.** Under a
+correct formulation the candidate store does not pass. My framing turned a fail into a pass.
+
+**2. The option set I put to Dylan was SKEWED, and this is the finding that matters.** Every option
+I offered led to admitting `wikipedia-body`. Never offered: **reduce the health and finance quotas**
+to what a higher-precision store can supply — already named as his lever in W3 and T2-8, and the
+only option that buys precision instead of supply; dropping the two forms, the registered
+consequence of a form failing; finishing the registered rung-2 ladder before changing instruments;
+and per-chunk classification, which my own ledger flags at §3 as needing a pass first.
+
+**3. Corrections of fact in the ruling as I wrote it.**
+- The incumbent fails conjunct 1 (supply) on **BOTH** forms — finance 19,466 against a 33,000 need,
+  not only health at 8,663. So the three-conjunct test has **exactly one possible admittee** and its
+  "highest on-form among stores passing" clause selects from a set of size ≤ 1.
+- "The rule precedes the numbers it governs" is a fig leaf: expected post-filter on-form is
+  0.655·0.881 + 0.345·0.659 = **0.804** (health) and 0.790 (finance) from already-measured
+  conditionals. The rule precedes the measurement, not the information.
+- Conjunct 2 **cannot fail**: A8's near-duplicate gate applies to every form regardless of store and
+  read 0.0 in every arm, and the mean-cosine half that could discriminate carries no threshold.
+- **A4−A3's VALUE does depend on the store**, though no protocol constant does: that decisive
+  contrast would read "what generation from a ~0.65 / 0.53 on-subject Wikipedia-body store adds".
+- `argument` already ships at 0.67 on its full output by Dylan's own W2 ruling, so invoking 0.80 as
+  a fixed standard was inconsistent on its face.
+
+**4. The power check cannot answer what it was sold as answering.** P0 and P2 share backbone,
+tokenizer, init, seed, data order and warm-start head and differ by a 20% peak-LR change, so their
+paired width **systematically under-states** family F (bge-small vs MiniLM-L6 shares only the
+teacher target — in correlation terms that IS "unrelated models", i.e. the 0.0086 we already have),
+and G and E besides. Training on the M9 pool compounds it in the same direction, since two models
+that miss finance and legal the same way agree more than two that partly cover them. Codex: **REFUSE
+as registered**; runnable only as a descriptive calibration for same-init contrasts. Fable adds that
+the outcome map reads the wrong statistic — the bootstrap distance is QUERY noise for a fixed pair,
+while the seed effect is the point estimate |P0−P1|, which the bootstrap cannot see, so "distance
+below the MDE ⇒ adequately powered" is powered against query noise only.
+
+**What survives.** The owner's AUTHORITY to rule W6 is sound — a seed-store gate is a data-recipe
+constant, not one of `CLAUDE.md`'s protocol exceptions, and contamination exposure does not grow
+(body-only is disjoint from DBpedia and FEVER by construction, and the incumbent is itself
+Wikipedia). Peak LR leaks no screen verdict. The seed pair is the right instrument for the seed
+floor. The dose matching is right.
+
+### M10.0-e power check — REGISTERED 2026-09-05, SUSPENDED the same day (see above)
 
 **Why.** The resolution number 0.008619 was measured between UNRELATED models, and the mandate
 records that this over-estimates a same-init contrast's width without saying by how much. Family F
