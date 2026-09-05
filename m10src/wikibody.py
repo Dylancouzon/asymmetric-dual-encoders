@@ -440,6 +440,12 @@ def draw(per_form, path=None, margin=1.5, verbose=True, out_json=None):
     measured ~3% query-side drop rate, and running out is an error, not a silent short draw.
     """
     raw, dedup = _load_jsonl(path)
+    # T2-8 rung 1: the subject filter is applied HERE, not at scan time -- the scan only LABELS
+    # each row with the reject class its article's lead sentence fired, so a rung-2 or rung-3
+    # relabel does not need another 41-minute pass over the dump.
+    from collections import Counter
+    rejected = Counter(r["reject"] for r in dedup if r["reject"])
+    dedup = [r for r in dedup if not r.get("reject")]
     pool, by_form = [], {}
     for f in FORMS:
         rows = [r for r in dedup if r["form"] == f]          # already score-sorted
@@ -462,7 +468,9 @@ def draw(per_form, path=None, margin=1.5, verbose=True, out_json=None):
                          short=max(0, per_form - len(rows)),
                          min_score_taken=min((r["score"] for r in rows[:per_form]), default=None),
                          max_score_taken=max((r["score"] for r in rows[:per_form]), default=None))
-    rep = dict(per_form=per_form, margin=margin, n_raw=len(raw), n_after_exact_dedup=len(dedup),
+    rep = dict(per_form=per_form, margin=margin, n_raw=len(raw),
+               subject_filter="T2-8 rung 1 (lead-sentence head-noun regex)",
+               subject_rejected=dict(rejected), n_after_exact_dedup=len(dedup),
                screen=srep, counts=counts, store="wikipedia-body",
                repo=REPO_ID, config=CONFIG, revision=REVISION, licence=LICENCE,
                per_article_cap=PER_ARTICLE_CAP, min_score=MIN_SCORE, lead_excluded=True)
