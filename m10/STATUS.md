@@ -6,7 +6,7 @@
 |---|---|---|
 | **M10.0-e calibration** | `work/m10calib_run.log`; `work/m10calib/P*.json` + `P*_cov.json` | **P0 and P1 DONE and clean** (`steps_run` 156,250, `stopped` None): macro **0.477528** and **0.476141**, so the **seed effect is 0.001387** — inside the ≤0.002–0.003 the screen needs. **P2 running**, ~1.5 h; it gives the same-init paired width, which needs to land near **0.0043**, not merely under 0.0056 |
 | ↳ **when all three land** | run **`.venv/bin/python m10src/calib_report.py`** → `results/m10_calib_report.json`. It refuses any P arm whose `total_steps != 156250` (the smoke shares the path) or that stopped early. Then record it in LEDGER §M10.0-e and RESULTS, and log **COV read #2** in §4 | ~2 min |
-| **arm-shape smoke v4** | `work/m10arm_smoke_v4.log` | re-run after the `select_lambda` fix; ~15 min |
+| ~~arm-shape smoke v4~~ | **KILLED to protect the calibration** — see the memory note below. `results/m10_arm_smoke.json` is now **`_partial`: 8 of 12 shapes**, all passing. The full 12/12 was verified twice earlier; **re-run `m10src/arm_smoke.py --device cpu --max-len 128` once the box is free** (arms are blocked on W9 anyway) | ~15 min |
 
 **Two stale-artifact hazards.** (1) The 90-step smoke of `calib.run_arm` writes to the same
 `work/m10calib/P0.json` path the real run uses — check `total_steps == 156250` before believing any
@@ -22,6 +22,14 @@ unaffected; but the final checkpoint and any post-loop encode carry one peak-LR 
 what the BUILD would export. The three P arms all carry it identically, so the calibration's
 paired widths stand. **Fix after M10.0-e completes and before any registered arm** — changing it
 now leaves P1/P2 incomparable to P0. LEDGER §`lr_at` off-by-one.
+
+**`arm_smoke` reaches ~8 GB RSS even at `--max-len 128`.** Torch's CPU allocator does not return
+memory to the OS across the twelve model loads, so RSS climbs monotonically through the run
+regardless of sequence length; `--max-len` bounds the per-shape peak, not the cumulative total.
+Combined with a training arm it put the box into memory pressure and the harness started killing
+background tasks. **Run it alone, or `--only` a few shapes at a time.** The calibration survived
+because the smoke was killed by PID, not by pattern — `pkill -f arm_smoke` also matches your own
+waiting shell.
 
 **CPU contention is real on this box (16 cores).** Three concurrent jobs took the calibration's GPU
 from 65% to 35% and its rate from 945 to 874 ex/s; and `E-bs128` at 512 tokens **on CPU** took the
