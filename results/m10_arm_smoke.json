@@ -23,7 +23,10 @@
   "F-MiniLM-L6",
   "F-MiniLM-L12",
   "G-384",
-  "G-1536"
+  "G-1536",
+  "G-MLP",
+  "B-100/0",
+  "B-50/50"
  ],
  "arms": [
   {
@@ -211,6 +214,120 @@
    },
    "passed": true,
    "seconds": 48.0
+  },
+  {
+   "arm": "G-MLP",
+   "spec": {
+    "student": "bge-small",
+    "n_layers": 3,
+    "head": "mlp",
+    "pattern": "75/25",
+    "batch": 32,
+    "loss": "squared_l2",
+    "warm_start": "mlp"
+   },
+   "covers": [],
+   "device": "cpu",
+   "constructed": true,
+   "d_in": 1152,
+   "params": 34959680,
+   "under_cap": true,
+   "warm_start_registered": "mlp",
+   "warm_start_record": {
+    "n_fit": 256,
+    "lambda": 0.0001,
+    "lambda_rows": null,
+    "k": 192,
+    "d_in": 1152,
+    "n_tokens": 1744,
+    "train_objective": 0.0,
+    "train_objective_linear_only": 0.0,
+    "solves": "W_lin ridge on pooled | W1,b1 centred per-token PCA, signs fixed | W2,b2 ridge from pooled GELU features to solve 1's residual"
+   },
+   "warm_start_implemented": true,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 2880,
+   "examples_per_s": 62.9,
+   "mix": {
+    "Q": 68,
+    "D": 22,
+    "q_share": 0.7555555555555555
+   },
+   "passed": true,
+   "seconds": 59.1
+  },
+  {
+   "arm": "B-100/0",
+   "spec": {
+    "student": "bge-small",
+    "n_layers": 3,
+    "head": "linear",
+    "pattern": "100/0",
+    "batch": 32,
+    "loss": "squared_l2"
+   },
+   "covers": [],
+   "device": "cpu",
+   "constructed": true,
+   "d_in": 1152,
+   "params": 34540672,
+   "under_cap": true,
+   "warm_start_registered": "linear",
+   "warm_start_record": {
+    "n_fit": 256,
+    "lambda": 0.0001,
+    "train_objective": 0.0,
+    "d_in": 1152
+   },
+   "warm_start_implemented": true,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 2880,
+   "examples_per_s": 112.1,
+   "mix": {
+    "Q": 90,
+    "D": 0,
+    "q_share": 1.0
+   },
+   "passed": true,
+   "seconds": 28.9
+  },
+  {
+   "arm": "B-50/50",
+   "spec": {
+    "student": "bge-small",
+    "n_layers": 3,
+    "head": "linear",
+    "pattern": "50/50",
+    "batch": 32,
+    "loss": "squared_l2"
+   },
+   "covers": [],
+   "device": "cpu",
+   "constructed": true,
+   "d_in": 1152,
+   "params": 34540672,
+   "under_cap": true,
+   "warm_start_registered": "linear",
+   "warm_start_record": {
+    "n_fit": 256,
+    "lambda": 0.0001,
+    "train_objective": 0.0,
+    "d_in": 1152
+   },
+   "warm_start_implemented": true,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 2880,
+   "examples_per_s": 44.0,
+   "mix": {
+    "Q": 46,
+    "D": 44,
+    "q_share": 0.5111111111111111
+   },
+   "passed": true,
+   "seconds": 68.3
   }
  ],
  "failed": [],

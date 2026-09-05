@@ -44,7 +44,15 @@ allocation and `max_extension_cycles` are neither — they are fixed at the M10.
 
 ## §0b Screen lock — data-dependent constants, fill at the close of M10.1, before any arm
 
-- A2, A3 and A4 post-screen unique-text counts (identical) and corpus hashes; the generator revision actually served and vLLM version.
+- A2, A3 and A4 post-screen unique-text counts (identical) and corpus hashes — **STILL OPEN: A4
+  needs the generated half, so `data_cut` cannot be computed until generation runs.** Determinate
+  now: **A3's harvested component is 1,250,000 rows** (§1), **PAQ's A2 sample 4,037,000 with the
+  build's 1,000,000 nested inside it** (`work/m10paq/paq_draw.json`, hashes there), and the M9 pool
+  is 463,314. **Generator and server, pinned:** `Qwen/Qwen3-8B-AWQ` revision
+  `4da05a8edb55c6046cce958586c33b61da07bb79`, served by **vLLM 0.28.0** in `.venv-gen`
+  (`work/m10gen/serve.sh`, port 8001; `VLLM_WSL2_ENABLE_PIN_MEMORY=1` and
+  `VLLM_USE_FLASHINFER_SAMPLER=0` both required on this box, never `--enforce-eager`). The bf16
+  fallback did NOT fire.
 - **arXiv artifact, DRAWN 2026-09-05** (`work/m10arxiv/arxiv_draw.json`): the registered Kaggle
   `Cornell-University/arxiv` · `arxiv-metadata-oai-snapshot.json`, zip sha256
   `47cec120969d4238d67be52b960b7b851c993dc039a64f582cec97ec114443d9`, 1,820,571,144 bytes.
@@ -56,8 +64,44 @@ allocation and `max_extension_cycles` are neither — they are fixed at the M10.
   §Surfaces requires before any extraction. `arxiv-title` is DESCRIPTIVE and triggers no action.
   Credential: Dylan's Kaggle token, 2026-09-05, stored at `~/.kaggle/access_token` **outside the
   repo**; nothing in the tree contains it.
-- Local measured rates: stella docs/s; examples/s at batch 32 on the 75/25 window, the 50/50 window and each F student, on real tokenized data with `num_alloc_retries` logged; generation output tok/s.
-- The screen's box allocation (arms, doses, order, expected hours).
+- **Local measured rates, MEASURED 2026-09-04 on real tokenized corpora** — RTX 3080, torch
+  2.8.0+cu126, batch 32, 200 steps, **`alloc_retries = 0` on every row**
+  (`results/m10_rate_bench_real_box.json`). Not the random-token microbenchmark, which bounds the
+  hardware and not the pipeline (`results/m10_rate_bench_box.json`).
+
+| corpus (role, mean tokens) | M9's two-chunk path | length buckets | fixed buckets + `torch.compile` |
+|---|---|---|---|
+| `nqopen` (query, 11.7) | 639.7 | 732.4 | **959.5** |
+| `triviaqa` (query, 19.9) | 643.3 | 729.2 | **913.9** |
+| `pseudoq` (doc span, 41.4) | 527.5 | 646.4 | **949.9** |
+| `documents` (doc, 94.6) | 249.1 | 465.0 | **792.2** |
+
+  **Blended 75/25 with compile ≈ 910 examples/s**, against the 683 the plan was re-priced on and
+  the 560 it originally imported. **Independently confirmed in flight:** the M10.0-e calibration's
+  first arm logged **962 ex/s** on the real M9 query pool at batch 32, matching `nqopen`'s 959.5 —
+  so the compiled fixed-bucket path is what the trainer actually runs. Under three-way CPU
+  contention on this 16-core box the same arm fell to **842–852 ex/s** (GPU utilisation 65% → 33%),
+  which is the number a schedule should use if anything else is running.
+- **The screen's box allocation** — arms and doses from `m10/screen_registry.json`, order
+  **F → A → G → B → E → C → D**. **This presumes the screen runs as registered; W8 and W9 are
+  open and may cut it.**
+
+| family | examples |
+|---|---|
+| F (bge-small 20M · MiniLM-L6 20M · L12 5M, +15M iff extended) | 45M–60M |
+| A (A1 · A2 · A3 at 5M; A4 = ANCHOR) | 15M |
+| ANCHOR | 5M |
+| G (384 · 1536 · MLP at 5M) | 15M |
+| B (3.75M + 7.5M) | 11.25M |
+| E (bs128, 5M) | 5M |
+| C (M9init 5M, skipped iff F does not pick bge-small) | 0M–5M |
+| D (NORM · COV at 5M) | 10M |
+| **total before confirmations** | **106.25M–126.25M** |
+
+  At the measured blended 910 ex/s that is **32–39 GPU-hours**; at 683 it is 43–51. Confirmations
+  plus the synthesized selected-recipe arm and the replication seed pair add up to ~60M more,
+  putting the pre-build training stage at **166M–186M examples — comparable to a whole 200M build**
+  (Codex 2026-09-05). `E-bs128` is cheaper than its dose suggests: batch 128 measured 1,517 ex/s.
 - **Cloud price, build allocation and `max_extension_cycles` are NOT §0b** (the weekend spends nothing and the provider is Dylan's choice): they are fixed at the M10.2 recipe lock (Codex B5).
 - Nothing in §0b is chosen after seeing an arm.
 
