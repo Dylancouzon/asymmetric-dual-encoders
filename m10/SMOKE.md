@@ -12,7 +12,7 @@ Generator `Qwen/Qwen3-8B-AWQ` rev `4da05a8edb55…`, vLLM 0.28.0 on the box, thi
 | `finance` | 100% | **86%** | 0 | 96% | 93% | **6 h auto-approval clock running** |
 | `comparison` | 100% | **84%** | 0 | 100% | 100% | **6 h auto-approval clock running** |
 | `health` | 100% | **84%** | 1 | 86% | 90% | **6 h auto-approval clock running** |
-| `conversational` | 100% | **96%** | 2 | 100% | 100% | **HELD — needs Dylan's ruling** |
+| `conversational` | 100% | **100%** (r1, re-judged) | 1 | 99% | 99% | **CLEAR — resolved on evidence** |
 | `argument` | 100% | **88%** | 2 | 88% | 67% | **HELD — needs Dylan's ruling** |
 | `howto` | 100% | **80%** | 2 | 96% | 93% | **HELD — needs Dylan's ruling** |
 
