@@ -216,6 +216,38 @@ Results dictate Qdrant engineering decisions: correct, not decimal-precise; blin
   review log for reserved-set reads before reading its findings.** Quarantine anything that draws
   on them.
 
+## How to run an adversarial review, and why it is not optional (Dylan, 2026-09-05)
+
+*"Note the adversarial reviews process somewhere so next sessions keep doing it."* The standing
+grant above says reviews are routine; this is **how**. On 2026-09-05 six reviews caught, among
+other things: two arms that **could not win their own contrast**, a familywise α that was 0.0289
+not 0.025, a diversity gate **structurally blind** to 5 of 12 forms, the fact that **the M10 corpus
+had no path into the trainer at all**, and — on a re-review — that my own "fixes" for the first
+batch were **prose the validator never evaluated**.
+
+**The five rules that made those catches happen.**
+
+1. **Scope the read, always.** Every brief names the exact files to read and forbids a repo-wide or
+   recursive grep. This is not tidiness: a repo-wide grep once dumped two RESERVED confirmatory
+   sets into a reviewer's context. **Then grep the review log for reserved reads BEFORE reading its
+   findings**, and quarantine anything that drew on them.
+2. **State what you believe and ask them to break it.** Give the numbers, name your conclusion,
+   invite the attack. A review told "confirm this" returns nothing — and a review that returns
+   nothing is a badly written brief, not a clean bill of health.
+3. **Review the FIX, not just the decision.** The single most valuable catch of the day was a
+   re-review of eleven fixes that returned **NO-GO** because they were registry prose no code read.
+   *Writing something down is not making it work.* Same failure shape as a test that asserts a
+   sentence exists, or one that compares 0.0 ≤ 0.0.
+4. **Verify every checkable claim yourself before acting.** Reviewers are wrong sometimes, and a
+   claim you reproduce is one you can defend. Everything acted on today was re-derived first.
+5. **Two independent reviewers on anything expensive or irreversible.** They disagree usefully:
+   one said documenting a contradiction was enough, the other showed the registry then carried
+   *both* readings at once. Use different models, not the same one twice.
+
+**And record what the review overturned, including your own withdrawn claims** — four of mine were
+withdrawn on 2026-09-05 and each is in `m10/LEDGER.md` with the reasoning. A future session that
+re-derives a withdrawn claim wastes far more than the lines cost.
+
 ## Key decisions (log)
 
 - **Teacher = `NovaSearch/stella_en_400M_v5` (2026-08-26), chosen on the distilled table, not the tower.** `arctic-embed-l` had been picked the same morning on its own dev retrieval quality (+0.0447 over bge-base) and was **WITHDRAWN the same day**: ranked by the table distilled from it, arctic sits −0.0480 [−0.0608, −0.0349] below bge-base, and a teacher's own quality does not predict its table (Spearman 0.000 over eight candidates). Only stella beat the incumbent (+0.0365 [0.0249, 0.0481]). Stella discloses ArguAna and FiQA (2 of the six) and FEVER (1 of the reserved four) in its training data; every stella-based claim carries that qualification and the NDO-4 rows. `results/m7_learnability_report.json`, `results/m7_teacher_contamination.json`. Kept because the failure mode — selecting a teacher on the tower — is the lesson. M9 re-confirmed it for towers: stella-1.5B distils WORSE than stella-400M (−0.0023 at equal dose).
