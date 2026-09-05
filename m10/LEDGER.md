@@ -367,6 +367,22 @@ Copied from `instructions-m10.md` §Owner decisions as each is taken, with date 
 - 2026-09-04 — Three days of box compute offered before the cloud instance ("I will be leaving for 3 days tonight"). Used for the no-approval-needed stages only; generation cannot start in that window (Dylan is the smoke approver and Qwen3-8B bf16 does not fit 10 GB) — **unless decision 14 (official AWQ on the box, remote smoke approval) is adopted.**
 - 2026-09-04, evening — **Decision 11:** "Let's make sure we win enough so this isn't a question" — default stands, release needs C1b. **Decision 12:** "yes" — CUREv1 as a reported diagnostic. **A7:** "Yes, you will have 3 days of uninterrupted access to the 3080 during the weekend. The more we can prove before spending the better." **Asked:** whether synthetic generation is still needed and whether it could run locally in the window → decision 14, proposed, then **adopted the same evening ("Go on 14")**: `Qwen/Qwen3-8B-AWQ` on the box via vLLM, smoke approved remotely via a GitHub issue; self-hosted bf16 via the same vLLM contract the fallback. **Decision 15 ("Yes to decision 15"):** conditional pre-approval — contract rate by the session, on-form rate by an independent Fable subagent, six-hour veto window, late veto drops the form. **Delegated authority** granted for unsupervised windows (mandate §Delegated authority): Tier 1 alone, Tier 2 after a Fable consultation logged below, Tier 3 never. Generator pinned: `Qwen/Qwen3-8B-AWQ` `4da05a8edb55c6046cce958586c33b61da07bb79`; fallback base `b968826d9c46dd6066d109eabc6255188de91218`.
 
+**Dylan's rulings, 2026-09-05 (W7, W8, W9, W10).** Verbatim: *"W10 go with best recommendation of
+reviewer. W9 fix and have it reviewed. W8 whatever gives us the best result without over
+engineering, ask reviewer for recommendations. W7 same as above, go with best recommendation"*.
+
+| # | ruled | what it authorises |
+|---|---|---|
+| **W7** | **CLOSED — `factoid` and `product` stay EXCLUDED.** The reviewer's recommendation was "(f) execute the registration"; Dylan adopted it, which also **WAIVES the mandate's "a harvested form under 100K reverts to generation at ≈143K"** for these two forms. The 1.25M is carried by three forms at 417K/417K/416K, not five at ~250K. Realized split reported | nothing further; the draw already executed this |
+| **W8** | **OPEN pending a reviewer recommendation**, which Dylan asked for explicitly, plus M10.0-e's P2 number. Standing constraint: *"the best result without over engineering"* | brief a reviewer with the P2 width and the 32–39 GPU-h screen cost; adopt its recommendation |
+| **W9** | **FIX THEM, then have the fixes reviewed.** Covers the five blocking defects and the six specification gaps. **Includes the familywise α**, which I had reserved to Dylan as a pre-registered statistic — his "fix and have it reviewed" reaches it | edit `screen_registry.json` + `screen_lock.py`, then an adversarial review of the diff before anything trains |
+| **W10** | **Option (c), as the reviewer specified it:** below **39** words near-dup = word-4-gram set sharing ≥ 50% of the smaller query's grams with an earlier query of the same form; at ≥ 39 words the registered 8-gram bottom-32 ≥ 16/32 rule **bit-identical**; same 25% / 50,000 action; **uniform across forms**. The recommendation also included **fixing `health` at the prompt before the build, evidenced by a pilot** — that half is authorised too, and runs through decision 15's existing machinery (smoke, prompt-hash record, six-hour veto window), not around it | amend the A8 gate; run the pilot; propose the `health` prompt diff under decision 15 |
+
+**All four are pre-observation:** nothing registered has trained and no generation has run, so none
+of this is a protocol change made after seeing the numbers it governs. The A8 amendment's
+constant (50% of the smaller set) comes from the Jaccard intent, **not** from whatever value makes
+`health` pass or fail — recorded because that is the way this decision could be corrupted.
+
 ### Delegated decisions (unsupervised windows) — append-only
 
 | when (UTC) | commit | decision | options considered | Fable subagent's verbatim recommendation | taken | why |
