@@ -28,6 +28,17 @@ def prompt_hash(form):
                            digest_size=8).hexdigest()
 
 
+def judge_input(which, path=REPO / "work" / "m10gen" / "smoke" / "judge_input.json"):
+    """The judge scores against the FROZEN rubric, never the revised generator prompt."""
+    out = {}
+    for f in which:
+        d = json.loads((OUT / f"{f}.json").read_text())
+        out[f] = {"registered_description": forms.RUBRIC[f].format(n="N"),
+                  "sample": d["judge_sample"]}
+    path.write_text(json.dumps(out, indent=1))
+    return path
+
+
 def judge_sample(queries, k):
     """A deterministic spread across the seeds, not the first k.
 
@@ -129,7 +140,10 @@ def write_md(rows, seed_meta, path=REPO / "m10" / "SMOKE.md", judged=None):
     A("")
     for f, r in rows.items():
         A(f"\n## `{f}`\n")
-        A(f"*Registered description:* {forms.FORMS[f].format(n='N')}\n")
+        A(f"*Registered description (the frozen rubric the judge scored against):* "
+          f"{forms.RUBRIC[f].format(n='N')}\n")
+        if forms.FORMS[f] != forms.RUBRIC[f]:
+            A(f"*Generator prompt as revised:* {forms.FORMS[f].format(n='N')}\n")
         if judged.get(f, {}).get("note"):
             A(f"*Judge:* {judged[f]['note']}\n")
         if r.get("transport_failures"):

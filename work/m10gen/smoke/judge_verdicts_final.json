@@ -1,0 +1,822 @@
+{
+ "howto": {
+  "verdicts": [
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body has three sentences (limit one or two)"
+   },
+   {
+    "on_form": false,
+    "why": "24 words, below the 25-word minimum"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body has three sentences (limit one or two)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body has three sentences (limit one or two)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body has three sentences (limit one or two)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body has three sentences (limit one or two)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body has three sentences (limit one or two)"
+   },
+   {
+    "on_form": false,
+    "why": "body has three sentences (limit one or two)"
+   },
+   {
+    "on_form": false,
+    "why": "21 words, below the 25-word minimum"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body has three sentences (limit one or two)"
+   }
+  ],
+  "note": "Dominant failure is a third body sentence (8 of 10 misses), usually a trailing speculation or 'What could be causing this?' question; two items fall under 25 words. Title/newline structure and forum register are consistently right."
+ },
+ "argument": {
+  "verdicts": [
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "111 words, below the 120-word minimum"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "115 words, below the 120-word minimum"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "112 words, below the 120-word minimum"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "96 words, below the 120-word minimum"
+   },
+   {
+    "on_form": false,
+    "why": "106 words, below the 120-word minimum"
+   },
+   {
+    "on_form": false,
+    "why": "101 words, below the 120-word minimum"
+   }
+  ],
+  "note": "All six misses are under-length (96-115 words against a 120 minimum), concentrated in the second half of the sample; every item takes one side with a stated objection and rebuttal, though the 'First/Second/Third/Critics argue/If this claim holds' template is near-universal."
+ },
+ "conversational": {
+  "verdicts": [
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "'I'm limited to only using the provided passage' is a generation-prompt leak, not how a person talks to an assistant"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "request names no subject ('the specific shows he has been in' with no referent); not a usable request a person would make"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   }
+  ],
+  "note": "Consistently context-then-request, all within 36-62 words; the two misses are a prompt leak ('the provided passage') and a request with an unresolved pronoun and no named subject."
+ },
+ "health": {
+  "verdicts": [
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "7 words, below the 8-word minimum"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "biographical/history question about Maurice Hilleman, not a patient's consumer-health question"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "7 words, below the 8-word minimum"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "7 words, below the 8-word minimum"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "7 words, below the 8-word minimum"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "7 words, below the 8-word minimum"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "7 words, below the 8-word minimum"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "7 words, below the 8-word minimum"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   }
+  ],
+  "note": "Dominant failure is brevity: seven items land at exactly 7 words against an 8-word floor; one item is a history question about a vaccine developer rather than a patient's question. Register and plain language are otherwise on-form."
+ }
+}
