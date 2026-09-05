@@ -1201,6 +1201,26 @@ Readings where the registry was silent — all implemented behind constants, non
 
 Owed: the registered 12-shape smoke `results/m10_arm_smoke.json` predates the marker fix — re-run on CUDA after the encode (overwrites a registered record, so logged here first). CUDA anchor smoke over all encoded sources, same time.
 
+### Codex review of the loader diff, 2026-09-05 evening — NO-GO, twelve findings, four blockers; all verified by the lead before acting
+
+Brief `codex_loader_brief.md` (scratchpad; read-exclusion carried; log audited, **no reserved read**). Full text `research/m10-codex-loader-2026-09-05.md`.
+
+| # | finding (verified) | disposition |
+|---|---|---|
+| 1 | **cut arms train uncut** — `apply_data_cut` no-ops without a registered count; `build_query_stream` defaults `cut=None`; a test blessed it | FIX: A2/A3/A4 refuse to train uncut; smoke passes `allow_uncut` and records it |
+| 2 | **the M9 query and document pools were never re-screened against the M10 protected index** (mandate :462 requires it; COV text could reach gradients) | FIX: CPU rescreen via `protected10`, keep-mask bound into manifest and token-cache key |
+| 3 | hold-out guard protects a pathname | FIX: content-hash refusal of the 1,614 FORMS-12 texts from any source |
+| 4 | **resume resets `evals`/`cycle_end_evals`**, so the plateau/kill rule cannot fire on a resumed run | FIX: checkpoint carries evaluation state |
+| 5 | concurrent cache writers can mis-pair keys and vectors | FIX: single-writer lock (single writer in practice today) |
+| 6 | "unique-text" cut counted raw rows | FIX: global exact dedup before the cut (the registry says unique) |
+| 7 | balanced sampler cycles fixed batches, not with-replacement draws — a small form repeats the identical batch | FIX: per-(seed, form, occurrence) with-replacement draw, then length-sort |
+| 8 | a short cache file is zero-padded, not refused | FIX |
+| 9 | query/document student inputs can collide with two teacher targets | FIX: id-hash collision check, refuse on hit |
+| 10–11 | non-atomic checkpoint; tokenizer absent from token-cache key | FIX, cheap |
+| 12 | 128-bit content-hash collisions | NOT fixed by decision: negligible at 10^7 texts; docstring note |
+
+Fixes dispatched to an Opus worker; **re-review of the fixes by Codex before any arm trains** (the 2026-09-05 lesson: review the fix, not the decision).
+
 ## §4 Dev-reuse log
 
 | date | surface | raw score reads | artifact |
