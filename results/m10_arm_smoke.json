@@ -1,9 +1,9 @@
 {
  "_what": "\u00a7Screen's registered 90-step smoke of every arm shape",
  "steps": 90,
- "device": "cpu",
+ "device": "cuda",
  "n_texts": 4096,
- "max_len": 128,
+ "max_len": 512,
  "shapes_registered": [
   "ANCHOR",
   "F-MiniLM-L6",
@@ -46,7 +46,7 @@
     "A4",
     "F-bge-small"
    ],
-   "device": "cpu",
+   "device": "cuda",
    "constructed": true,
    "d_in": 1152,
    "params": 34540672,
@@ -62,14 +62,14 @@
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 68.7,
+   "examples_per_s": 662.9,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 51.9
+   "seconds": 6.3
   },
   {
    "arm": "F-MiniLM-L6",
@@ -82,7 +82,7 @@
     "loss": "squared_l2"
    },
    "covers": [],
-   "device": "cpu",
+   "device": "cuda",
    "constructed": true,
    "d_in": 1152,
    "params": 23893888,
@@ -91,21 +91,21 @@
    "warm_start_record": {
     "n_fit": 256,
     "lambda": 1.0,
-    "train_objective": 0.09026,
+    "train_objective": 0.09027,
     "d_in": 1152
    },
    "warm_start_implemented": true,
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 120.0,
+   "examples_per_s": 1242.0,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 33.9
+   "seconds": 5.0
   },
   {
    "arm": "F-MiniLM-L12",
@@ -118,7 +118,7 @@
     "loss": "squared_l2"
    },
    "covers": [],
-   "device": "cpu",
+   "device": "cuda",
    "constructed": true,
    "d_in": 1152,
    "params": 34540672,
@@ -127,21 +127,21 @@
    "warm_start_record": {
     "n_fit": 256,
     "lambda": 1.0,
-    "train_objective": 0.09956,
+    "train_objective": 0.09954,
     "d_in": 1152
    },
    "warm_start_implemented": true,
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 69.2,
+   "examples_per_s": 704.2,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 52.7
+   "seconds": 5.4
   },
   {
    "arm": "G-384",
@@ -154,7 +154,7 @@
     "loss": "squared_l2"
    },
    "covers": [],
-   "device": "cpu",
+   "device": "cuda",
    "constructed": true,
    "d_in": 384,
    "params": 33754240,
@@ -163,21 +163,21 @@
    "warm_start_record": {
     "n_fit": 256,
     "lambda": 1.0,
-    "train_objective": 0.19399,
+    "train_objective": 0.19401,
     "d_in": 384
    },
    "warm_start_implemented": true,
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 52.5,
+   "examples_per_s": 711.7,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 59.9
+   "seconds": 4.9
   },
   {
    "arm": "G-1536",
@@ -190,7 +190,7 @@
     "loss": "squared_l2"
    },
    "covers": [],
-   "device": "cpu",
+   "device": "cuda",
    "constructed": true,
    "d_in": 1536,
    "params": 34933888,
@@ -206,14 +206,14 @@
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 64.8,
+   "examples_per_s": 698.4,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 57.0
+   "seconds": 5.7
   },
   {
    "arm": "G-MLP",
@@ -227,7 +227,7 @@
     "warm_start": "mlp"
    },
    "covers": [],
-   "device": "cpu",
+   "device": "cuda",
    "constructed": true,
    "d_in": 1152,
    "params": 34959680,
@@ -239,51 +239,51 @@
     "lambda_rows": [
      {
       "lambda": 1e-06,
-      "fit_unnormalized_sq_l2": 6.753042014473465e-10,
-      "fit_objective": 6.7253569380199e-10,
-      "val_objective": 1.7546550035476685
+      "fit_unnormalized_sq_l2": 3.7439691347174175e-09,
+      "fit_objective": 3.733642728320774e-09,
+      "val_objective": 1.8600953817367554
      },
      {
       "lambda": 1e-05,
-      "fit_unnormalized_sq_l2": 1.5181156332033652e-09,
-      "fit_objective": 1.476409106082599e-09,
-      "val_objective": 1.0394662618637085
+      "fit_unnormalized_sq_l2": 1.0951232143341372e-09,
+      "fit_objective": 1.0420408980138518e-09,
+      "val_objective": 0.8518732786178589
      },
      {
       "lambda": 0.0001,
-      "fit_unnormalized_sq_l2": 2.6260947194600703e-08,
-      "fit_objective": 2.2602877791655374e-08,
-      "val_objective": 0.5545790195465088
+      "fit_unnormalized_sq_l2": 2.624724082522789e-08,
+      "fit_objective": 2.258579989700138e-08,
+      "val_objective": 0.5544677376747131
      },
      {
       "lambda": 0.001,
-      "fit_unnormalized_sq_l2": 2.579449301265413e-06,
-      "fit_objective": 2.2179922325449297e-06,
-      "val_objective": 0.5538640022277832
+      "fit_unnormalized_sq_l2": 2.5770150386961177e-06,
+      "fit_objective": 2.2155988972372143e-06,
+      "val_objective": 0.5536331534385681
      },
      {
       "lambda": 0.01,
-      "fit_unnormalized_sq_l2": 0.0002170316147385165,
-      "fit_objective": 0.00018531523528508842,
-      "val_objective": 0.5482025742530823
+      "fit_unnormalized_sq_l2": 0.00021690462017431855,
+      "fit_objective": 0.00018519120931159705,
+      "val_objective": 0.5479787588119507
      },
      {
       "lambda": 0.1,
-      "fit_unnormalized_sq_l2": 0.00897225271910429,
-      "fit_objective": 0.007521059364080429,
-      "val_objective": 0.5223729610443115
+      "fit_unnormalized_sq_l2": 0.008971447125077248,
+      "fit_objective": 0.007520229090005159,
+      "val_objective": 0.5222295522689819
      },
      {
       "lambda": 1.0,
-      "fit_unnormalized_sq_l2": 0.09868399798870087,
-      "fit_objective": 0.08537087589502335,
-      "val_objective": 0.49880266189575195
+      "fit_unnormalized_sq_l2": 0.09868417680263519,
+      "fit_objective": 0.08537150919437408,
+      "val_objective": 0.498745322227478
      }
     ],
     "k": 192,
     "d_in": 1152,
     "n_tokens": 1744,
-    "train_objective": 0.09217,
+    "train_objective": 0.09226,
     "train_objective_linear_only": 0.10386,
     "solves": "W_lin ridge on pooled | W1,b1 centred per-token PCA, signs fixed | W2,b2 ridge from pooled GELU features to solve 1's residual"
    },
@@ -291,14 +291,14 @@
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 65.5,
+   "examples_per_s": 696.2,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 64.9
+   "seconds": 5.6
   },
   {
    "arm": "B-100/0",
@@ -311,7 +311,7 @@
     "loss": "squared_l2"
    },
    "covers": [],
-   "device": "cpu",
+   "device": "cuda",
    "constructed": true,
    "d_in": 1152,
    "params": 34540672,
@@ -327,14 +327,14 @@
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 130.0,
+   "examples_per_s": 936.7,
    "mix": {
     "Q": 90,
     "D": 0,
     "q_share": 1.0
    },
    "passed": true,
-   "seconds": 32.7
+   "seconds": 4.3
   },
   {
    "arm": "B-50/50",
@@ -347,7 +347,7 @@
     "loss": "squared_l2"
    },
    "covers": [],
-   "device": "cpu",
+   "device": "cuda",
    "constructed": true,
    "d_in": 1152,
    "params": 34540672,
@@ -363,14 +363,14 @@
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 48.4,
+   "examples_per_s": 652.7,
    "mix": {
     "Q": 46,
     "D": 44,
     "q_share": 0.5111111111111111
    },
    "passed": true,
-   "seconds": 70.1
+   "seconds": 5.5
   }
  ],
  "failed": [],

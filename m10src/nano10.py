@@ -303,17 +303,37 @@ def window_shares(pattern, steps):
 # ---- the cyclic schedule (§Recipe) -----------------------------------------------------------
 
 def lr_at(step, total_steps, cycles=3, peak=1e-4, final=1e-5):
-    """LEAF's small-batch cyclic schedule: `cycles` cycles of equal length, each a linear decay
-    from `peak` to `final`, restarting at `peak`. The last step of every cycle is a cycle END,
-    which is where COV is read and where the sign-stability clause looks."""
+    """LEAF's small-batch cyclic schedule: `cycles` cycles, each a linear decay from `peak` to
+    `final`, restarting at `peak`. The last step of every cycle is a cycle END, which is where COV
+    is read and where the sign-stability clause looks.
+
+    **The LAST cycle absorbs the remainder.** `total_steps // cycles` does not divide evenly --
+    156,250/3 leaves one step over -- and the old `within = step % per` therefore wrapped on the
+    final step, sending the LR back to `peak` immediately after it had annealed to `final`:
+
+        step 156,246  1.0003e-05      step 156,248  1.0000e-05
+        step 156,247  1.0002e-05      step 156,249  1.0000e-04   <-- wrapped
+
+    §Recipe registers "3 cycles of equal example count, **each linear 1e-4 -> 1e-5**", so that
+    contradicted the registration. Cycle-end COV reads were taken at 156,248 and were unaffected,
+    but the final checkpoint carried one full-peak-LR AdamW update on an annealed model -- which is
+    what the BUILD would have exported. Fixed after M10.0-e completed and before any registered
+    arm; changing it mid-calibration would have left P1/P2 incomparable to P0.
+    """
     per = max(total_steps // cycles, 1)
-    within = step % per
-    return peak + (final - peak) * (within / max(per - 1, 1))
+    c = min(step // per, cycles - 1)                    # the last cycle absorbs the remainder
+    start = c * per
+    length = (total_steps - start) if c == cycles - 1 else per
+    within = step - start
+    return peak + (final - peak) * (within / max(length - 1, 1))
 
 
 def cycle_ends(total_steps, cycles=3):
+    """The last step of each cycle, matching `lr_at`'s boundaries exactly -- so the final cycle
+    end IS the final step of training and no step runs after the last COV read."""
     per = max(total_steps // cycles, 1)
-    return [min((c + 1) * per, total_steps) - 1 for c in range(cycles)]
+    return [(min((c + 1) * per, total_steps) if c < cycles - 1 else total_steps) - 1
+            for c in range(cycles)]
 
 
 # ---- export (the serving path) ----------------------------------------------------------------

@@ -203,3 +203,46 @@ if __name__ == "__main__":
     for k, v in sorted(globals().items()):
         if k.startswith("test_"):
             v(); print("PASS", k)
+
+
+# ---- the cyclic schedule's off-by-one (LEDGER: `lr_at` off-by-one) ---------------------------
+
+def test_the_last_step_of_training_anneals_instead_of_wrapping_to_peak():
+    """`total_steps // cycles` does not divide evenly, and `within = step % per` therefore wrapped
+    on the final step: the LR jumped back to `peak` immediately after annealing to `final`, so the
+    exported build checkpoint carried one full-peak-LR update on an annealed model."""
+    T, peak, final = 156_250, 1e-4, 1e-5
+    assert T % 3 != 0, "the fixture must have a remainder or it proves nothing"
+    assert abs(N.lr_at(T - 1, T, 3, peak, final) - final) < 1e-9, "the final step must be annealed"
+    # the old behaviour, kept as the regression
+    per = T // 3
+    assert (T - 1) % per == 0, "this is exactly why it wrapped"
+
+
+def test_every_cycle_end_anneals_and_every_cycle_start_is_at_peak():
+    T, peak, final = 156_250, 1e-4, 1e-5
+    ends = N.cycle_ends(T, 3)
+    assert ends[-1] == T - 1, "the last cycle end must BE the last training step"
+    for e in ends:
+        assert abs(N.lr_at(e, T, 3, peak, final) - final) < 1e-9, f"cycle end {e}"
+    for e in ends[:-1]:
+        assert abs(N.lr_at(e + 1, T, 3, peak, final) - peak) < 1e-9, f"cycle start after {e}"
+
+
+def test_the_schedule_is_monotone_within_every_cycle():
+    T = 156_250
+    ends = N.cycle_ends(T, 3)
+    starts = [0] + [e + 1 for e in ends[:-1]]
+    for s, e in zip(starts, ends):
+        lrs = [N.lr_at(k, T, 3, 1e-4, 1e-5) for k in range(s, min(s + 50, e + 1))]
+        assert all(a >= b for a, b in zip(lrs, lrs[1:])), f"cycle {s}-{e} is not decreasing"
+        assert N.lr_at(e, T, 3, 1e-4, 1e-5) < N.lr_at(s, T, 3, 1e-4, 1e-5)
+
+
+def test_a_dose_that_divides_evenly_is_unchanged():
+    """The fix must only touch the remainder case."""
+    T = 150_000                                   # 3 | 150000
+    ends = N.cycle_ends(T, 3)
+    assert ends == [49_999, 99_999, 149_999]
+    assert abs(N.lr_at(T - 1, T, 3, 1e-4, 1e-5) - 1e-5) < 1e-9
+    assert abs(N.lr_at(0, T, 3, 1e-4, 1e-5) - 1e-4) < 1e-9
