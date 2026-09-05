@@ -26,7 +26,11 @@
   "G-1536",
   "G-MLP",
   "B-100/0",
-  "B-50/50"
+  "B-50/50",
+  "E-bs128",
+  "D-NORM",
+  "D-COV",
+  "C-M9init"
  ],
  "arms": [
   {
@@ -379,11 +383,168 @@
    },
    "passed": true,
    "seconds": 10.4
+  },
+  {
+   "arm": "E-bs128",
+   "spec": {
+    "student": "bge-small",
+    "n_layers": 3,
+    "head": "linear",
+    "pattern": "75/25",
+    "batch": 128,
+    "loss": "squared_l2"
+   },
+   "covers": [],
+   "device": "cuda",
+   "max_len": 128,
+   "cloud_only": "batch 128 above ~128 tokens: driver error on this card; runs on the A100",
+   "constructed": true,
+   "d_in": 1152,
+   "params": 34540672,
+   "under_cap": true,
+   "warm_start_registered": "linear",
+   "warm_start_record": {
+    "n_fit": 256,
+    "lambda": 1.0,
+    "train_objective": 0.10386,
+    "d_in": 1152
+   },
+   "warm_start_implemented": true,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 11520,
+   "examples_per_s": 1973.8,
+   "mix": {
+    "Q": 68,
+    "D": 22,
+    "q_share": 0.7555555555555555
+   },
+   "passed": true,
+   "seconds": 7.8
+  },
+  {
+   "arm": "D-NORM",
+   "spec": {
+    "student": "bge-small",
+    "n_layers": 3,
+    "head": "linear",
+    "pattern": "75/25",
+    "batch": 32,
+    "loss": "leaf_norm_e2"
+   },
+   "covers": [],
+   "device": "cuda",
+   "max_len": 512,
+   "constructed": true,
+   "d_in": 1152,
+   "params": 34540672,
+   "under_cap": true,
+   "warm_start_registered": "linear",
+   "warm_start_record": {
+    "n_fit": 256,
+    "lambda": 1.0,
+    "train_objective": 0.10386,
+    "d_in": 1152
+   },
+   "warm_start_implemented": true,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 2880,
+   "examples_per_s": 704.0,
+   "mix": {
+    "Q": 68,
+    "D": 22,
+    "q_share": 0.7555555555555555
+   },
+   "passed": true,
+   "seconds": 5.6
+  },
+  {
+   "arm": "D-COV",
+   "spec": {
+    "student": "bge-small",
+    "n_layers": 3,
+    "head": "linear",
+    "pattern": "75/25",
+    "batch": 32,
+    "loss": "document_covariance_weighted"
+   },
+   "covers": [],
+   "device": "cuda",
+   "max_len": 512,
+   "constructed": true,
+   "d_in": 1152,
+   "params": 34540672,
+   "under_cap": true,
+   "warm_start_registered": "linear",
+   "warm_start_record": {
+    "n_fit": 256,
+    "lambda": 1.0,
+    "train_objective": 0.10386,
+    "d_in": 1152
+   },
+   "warm_start_implemented": true,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 2880,
+   "examples_per_s": 707.5,
+   "mix": {
+    "Q": 68,
+    "D": 22,
+    "q_share": 0.7555555555555555
+   },
+   "passed": true,
+   "seconds": 5.2
+  },
+  {
+   "arm": "C-M9init",
+   "spec": {
+    "student": "bge-small",
+    "n_layers": 3,
+    "head": "linear",
+    "pattern": "75/25",
+    "batch": 32,
+    "loss": "squared_l2",
+    "warm_start": "m9"
+   },
+   "covers": [],
+   "device": "cuda",
+   "max_len": 512,
+   "constructed": true,
+   "d_in": 1152,
+   "params": 34540672,
+   "under_cap": true,
+   "warm_start_registered": "m9",
+   "warm_start_record": {
+    "ckpt": "/home/dylan/asymetric-dual-encoders/work/m9long/ckpt/step450000.pt",
+    "backbone_keys_loaded": 199,
+    "backbone_missing": 0,
+    "head_block": [
+     1024,
+     384
+    ],
+    "zeroed_columns": 768,
+    "note": "M9's 384-d head kept in the last layer's columns; the two extra layers' columns are zero, so the arm starts at M9's function"
+   },
+   "warm_start_implemented": true,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 2880,
+   "examples_per_s": 707.1,
+   "mix": {
+    "Q": 68,
+    "D": 22,
+    "q_share": 0.7555555555555555
+   },
+   "passed": true,
+   "seconds": 4.8
   }
  ],
  "failed": [],
  "warm_start_not_implemented": [],
- "cloud_only": {},
- "all_shapes_pass": false,
- "_partial": true
+ "cloud_only": {
+  "E-bs128": "batch 128 above ~128 tokens: driver error on this card; runs on the A100"
+ },
+ "all_shapes_pass": true,
+ "_partial": false
 }

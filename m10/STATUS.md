@@ -48,9 +48,9 @@ and allocation · seeds confirmed for all seven generated forms.
 
 | # | what | where |
 |---|---|---|
-| **W7** | `factoid`/`product` have no quota row and both fall under the mandate's "under 100K reverts to generation". Default excluded, which is what the code does | issue #2 |
-| **W8/W9** | The screen's power, and **eleven registry decision-logic defects, five blocking** — `G-384` and `bs32` cannot win their own contrasts; F's familywise α is 0.02885; the L12 probe is schedule-confounded | issue #2 |
-| **W10** | A8's diversity gate is inert below 39 words. `health` reads **0.00% registered / 20.50% measured and RISING** — 20.5% is a floor, not an estimate. Recommended: option (c). **Does not block generation** — A8 runs on the manifest, not during it | issue #3 |
+| ~~W7 · W8 · W9 · W10~~ | **ALL RULED AND EXECUTED 2026-09-05.** W7 excluded · W8 band 1 (cut C) · W9's eleven defects fixed · W10's two-regime gate amended and validated | LEDGER, issues #2/#3 |
+| **W12** | **OPEN — family A's STOP is on the wrong surface.** COV contains none of A3's forms, so A3−A2 is expected small even if coverage is real, and its failure STOPS the milestone. Recommended: STOP only iff `A4−A2 point ≤ 0` | issue #2 |
+| **new** | **Register a paired M9-vs-M10 row on the six and clean-4** — the only measurement in the plan that tests coverage on the surfaces it was designed for. Zero compute, must precede any M10 six-set number | whole-plan review |
 
 ## Where the milestone actually stands
 
@@ -68,7 +68,7 @@ and allocation · seeds confirmed for all seven generated forms.
 | **seeds** | **RESOLVED FOR ALL SEVEN generated forms — generation's only blocker is the GPU** | `wikipedia-body` scanned (6,407,814 articles → 22,243,221 body chunks → 238,823 kept) and drawn after T2-8 rung 1: **health 33,000 · finance 33,000, short 0** (`work/m10gen/wikibody_draw.json`). `howto` is topical from the incumbent at **37,927** ≥ 33,000 — the marginal form on BOTH supply (≈12% margin after the FORMS-12 500 and the 400 gate seeds) and fidelity (80.0%, the threshold exactly, held for Dylan). `argument`, `comparison`, `yesno`, `conversational` route as `"general"` in `seeds.ROUTE`, so they draw from the 2,615,015 length-eligible passages — ample. **Rungs 2 and 3 do NOT run** (§W6 RESOLVED demotes the ladder to a diagnostic); there is **no post-generation admission test**, only A8's manifest gates and the FORMS-12 hold-out |
 | **W6 seed store** | **RESOLVED by Dylan** | Use `wikipedia-body`, report the measured numbers, **invent no standard**. There is no admission bar. Revisitable with reviewer approval |
 | **word-range filter** | **DONE — the largest on-form win found** | Enforcing each form's own frozen-rubric range: health **0.780 → 0.857**, finance **0.790 → 0.806**. Out-of-range queries score ~0 on-form. `results/m10_qfilter_effect.json` |
-| **5, 8–11** | not started | PAQ · generation (~10 box-h) · §0b · family F (~17 GPU-h) · family A |
+| **8–11** | not started | generation (~10 box-h) · §0b's data_cut · family F · family A |
 
 ## THE NEXT FIVE THINGS, in order
 
