@@ -9,7 +9,7 @@ conversational, health); the other five are harvested real text and their prompt
 
 Rules baked into every prompt: write from the passage's topic, never copy a span of five or more
 consecutive words from it (the decontamination screen drops copies anyway), no preamble, plain
-text, English. `ponytail:` one template per form, no prompt-tuning machinery; the smoke decides
+text, English. One template per form, no prompt-tuning machinery; the smoke decides
 whether a form's wording needs a second draft.
 """
 import json
