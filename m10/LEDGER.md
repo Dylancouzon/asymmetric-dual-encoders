@@ -444,6 +444,39 @@ came from. This is a **data-recipe** gate, which `CLAUDE.md` puts explicitly on 
 | W9 | **Eleven registry decision-logic defects; five BLOCK any arm.** `E-bs32` and `G-384` **cannot win their own contrasts** (one-sided rule + orientation: their win is a negative point, and `point >= MDE` refuses it), F's post-hoc orientation makes the familywise α **0.02885 not 0.025**, F2's comparator is adaptively selected with no selection-aware bootstrap, and the **L12 5M probe is schedule-confounded** — L6/bge read at 5M inside a 20M schedule are mid-cycle and un-annealed, which is the defect S1 created the standalone anchor to fix. Plus six specification gaps (multi-arm tie-breaks in G/B/D, the confirmation revert rule only in prose, `trained_arms_expected` 16 vs 15 when C is skipped, prose-DSL "machine-readable" fields, registry 16 vs mandate 15 arms, the "MDE" wording). Full table in §Codex review 2026-09-05 | Reorienting a contrast or reallocating α changes pre-registered statistics = Tier 3. **I have deliberately not edited the design lock**, since a partial repair would leave it inconsistent and the α item is yours regardless | **none for the data path**; blocks family F |
 | W3 | **Seed supply is OPEN — the widening was tried and REJECTED by its own gate.** Full-store, `min_score ≥ 4`: `health` 10,399, `finance` 22,375, `howto` 37,927 against a ~32–33K need. Widening the keyword lists raised the raw counts (health 36,284) but the registered judged-precision gate reads **28% on-topic on health's marginal and 38% on finance's**, against ≥ 80% — the router selects on the presence of "medic\*"/"hospital"/"financial", not on subject, so the marginal is mostly biographies and organisations. Estimated usable: **health ~17.6K, finance ~22.8K — both still short.** `ROUTE_WIDE` is NOT adopted; `draw()` defaults back to T2-3's `ROUTE`. **Next lever (registered, not yet tried): a subject-level filter on lead-sentence patterns**, since `hotpotqa-corpus` is entity intros — reject "X (born …) was a …" and "X is a company/hospital/journal …". Same judged gate before adoption. If that fails too, the levers left are relaxing `min_score` (worse precision, so unlikely to help), raising queries-per-seed against the A8 gate, or Dylan lowering the `health`/`finance` quotas | Touches the registered data recipe; quotas are Tier 3 | decide before step 8 |
 
+### `lr_at` off-by-one — the LAST step of every arm trains at PEAK LR, 2026-09-05. **Do not fix while the calibration is running.**
+
+`nano10.lr_at` computes `per = total_steps // cycles` and `within = step % per`. For
+`total_steps = 156_250`, `per = 52_083`, so three cycles cover **156,249** steps and the loop's
+final step **156,249** has `within = 0` → **LR jumps back to peak 1e-4**, immediately after
+annealing to 1e-5. §Recipe registers "3 cycles of equal example count, **each linear 1e-4 → 1e-5**",
+so this contradicts the registration; it is a defect, not a choice. Verified:
+
+| step | 156,246 | 156,247 | 156,248 | **156,249** |
+|---|---|---|---|---|
+| LR | 1.0003e-05 | 1.0002e-05 | 1.0000e-05 | **1.0000e-04** |
+
+**What it does and does not touch** (`trainer10.train_arm` evaluates *after* `opt.step()`, and
+`cycle_ends(156250,3) = [52082, 104165, 156248]`):
+
+- **Cycle-end COV evals are CLEAN** — the last one is taken at step 156,248, before the peak-LR
+  step. So **every screen verdict and the sign-stability clause are unaffected.**
+- **The final checkpoint and any post-loop encode are NOT.** `ckpt_every = 15,625` and
+  `156250 % 15625 = 0`, so a checkpoint *is* written after step 156,249. The build's exported model
+  would therefore carry one full-peak-LR AdamW update on an annealed model.
+- **The M10.0-e calibration's own COV is measured post-loop** (`calib.py` calls `cov_of(m)` after
+  `train_arm` returns), so all three P arms carry the step. Identical treatment across the three,
+  which is the same argument `calib.py` already makes for its fixed lambda, so **the paired widths
+  and the seed effect stand**; the absolute macros are of a model one peak-LR step past annealing.
+
+**Fix, and its timing constraint.** Clamp the last cycle to the end of training, e.g. carry the
+remainder into the final cycle so `within` never wraps, or clamp `within` to `per - 1` on the last
+cycle. **It must NOT be applied while the P arms are running** — P0 trained under the current
+function, so changing it mid-flight would leave P1/P2 incomparable to P0 and destroy the only
+thing the calibration exists to measure. Apply after M10.0-e completes and **before any registered
+arm**, with a test asserting the final step's LR equals `final` for a `total_steps` not divisible
+by `cycles`.
+
 ### Codex adversarial review of the screen, 2026-09-05 — ELEVEN decision-logic defects, and one of my claims withdrawn
 
 Brief `codex_out.txt` (scratchpad, high effort, read-only). Read-exclusion carried; **log audited,

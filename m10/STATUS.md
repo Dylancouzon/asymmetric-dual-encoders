@@ -15,6 +15,15 @@ P arm's JSON. The stale record is moved aside to `_SMOKE_STALE_P0.json.bak`, but
 still enforces the check. (2) `calib.py:run_arm` saves a **fresh** `AdamW` beside the model, so
 `work/m10calib/P*.pt` carry **no usable optimizer state** — never warm-start an arm from them.
 
+**`lr_at` off-by-one — the LAST step of every arm trains at PEAK LR, and it must NOT be fixed
+while the calibration runs.** `per = total_steps // cycles` leaves a remainder, so for 156,250
+steps the final step 156,249 wraps to `within = 0` and the LR jumps 1.0e-05 → **1.0e-04**.
+Cycle-end COV evals are taken at step 156,248 and are **clean**, so every screen verdict is
+unaffected; but the final checkpoint and any post-loop encode carry one peak-LR update, which is
+what the BUILD would export. The three P arms all carry it identically, so the calibration's
+paired widths stand. **Fix after M10.0-e completes and before any registered arm** — changing it
+now leaves P1/P2 incomparable to P0. LEDGER §`lr_at` off-by-one.
+
 **CPU contention is real on this box (16 cores).** Three concurrent jobs took the calibration's GPU
 from 65% to 35% and its rate from 945 to 874 ex/s; and `E-bs128` at 512 tokens **on CPU** took the
 box from 10 GB free to 2 GB, because `output_hidden_states=True` keeps every layer's states for
