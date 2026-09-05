@@ -173,7 +173,8 @@ def smoke_one(name, spec, corp, device="cpu", max_len=512, verbose=True):
         sigma = None
         if spec["loss"] == "document_covariance_weighted":
             sigma = torch.from_numpy(np.asarray(N.cov_matrix(dvecs), dtype=np.float32)).to(device)
-        r = Tr.train_arm(m, D.batch_fn(q, d), total_steps=STEPS, pattern=spec["pattern"],
+        r = Tr.train_arm(m, D.batch_fn(q, d, pattern=spec["pattern"]), total_steps=STEPS,
+                         pattern=spec["pattern"],
                          peak=1e-4, loss_name=spec["loss"], sigma=sigma, seed=0,
                          device=device, batch_size=b, log_every=0)
         rec.update(steps_run=r.get("steps_run"), stopped=r.get("stopped"),

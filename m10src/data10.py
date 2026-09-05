@@ -82,7 +82,11 @@ def length_buckets(id_lists, batch_size, seed=0):
     make every batch a fixed length band in a fixed order, which correlates batch content with
     training step; shuffling the batches breaks that while keeping the padding win.
     """
-    lens = np.array([len(x) for x in id_lists])
+    # `PackedIds` (m10src/corpus_loader) carries its lengths, so a 5.3M-row corpus does not pay
+    # 5.3M __getitem__ calls to find out what it already knows.
+    lens = getattr(id_lists, "lengths", None)
+    if lens is None:
+        lens = np.array([len(x) for x in id_lists])
     order = np.argsort(lens, kind="stable")
     batches = [order[i:i + batch_size] for i in range(0, len(order), batch_size)]
     batches = [b for b in batches if len(b) == batch_size]      # drop the ragged tail
@@ -122,16 +126,38 @@ class Stream:
         return ids, mask, torch.from_numpy(np.ascontiguousarray(self.T[idx]))
 
 
-def batch_fn(q_stream, d_stream):
+def kind_index(pattern, step):
+    """-> how many steps before `step` drew from this step's stream. O(1) in the 4-step window.
+
+    It replaces a call counter. A counter makes the stream position depend on how many times
+    `batch_fn` has been called in THIS process, so an arm resumed at step 34 restarts both streams
+    at batch 0 and trains on data the uninterrupted run had already seen -- the resume guarantee
+    `test_trainer10` exists for, broken by the data path rather than by the loop. Derived from the
+    step, the position is the same on both runs.
+    """
+    import nano10 as N
+    w = N.WINDOWS[pattern]
+    full, rem = divmod(int(step), len(w))
+    k = w[int(step) % len(w)]
+    return full * w.count(k) + w[:rem].count(k)
+
+
+def batch_fn(q_stream, d_stream, pattern="75/25"):
     """-> the callable `trainer10.train_arm` wants. Each stream advances on ITS OWN counter, so
-    changing family B's mix pattern re-weights the streams without re-ordering either of them."""
-    n = {"Q": 0, "D": 0}
+    changing family B's mix pattern re-weights the streams without re-ordering either of them.
+
+    `pattern` must be the arm's: the counter is derived from it, and a mismatch would put the
+    streams on positions the loop never asked for -- so the kind is checked, not assumed.
+    """
+    import nano10 as N
 
     def f(step, kind):
+        want = N.mix_window(pattern, step)
+        if kind != want:
+            raise ValueError(f"step {step} is a {want!r} step under pattern {pattern!r}, asked "
+                             f"for {kind!r}: batch_fn's pattern and the loop's disagree")
         s = q_stream if kind == "Q" else d_stream
-        b = s.batch(n[kind])
-        n[kind] += 1
-        return b
+        return s.batch(kind_index(pattern, step))
     return f
 
 

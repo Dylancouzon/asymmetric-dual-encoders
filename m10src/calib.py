@@ -89,7 +89,7 @@ def run_arm(name, texts, T, dose=DOSE, verbose=True):
     if verbose:
         print(f"  {name}: {steps:,} steps x {BATCH} = {steps * BATCH:,} examples, "
               f"peak {cfg['peak']}, seed {cfg['seed']}", flush=True)
-    r = Tr.train_arm(m, D.batch_fn(q, q), total_steps=steps, pattern="100/0",
+    r = Tr.train_arm(m, D.batch_fn(q, q, pattern="100/0"), total_steps=steps, pattern="100/0",
                      peak=cfg["peak"], loss_name="squared_l2", seed=cfg["seed"],
                      device="cuda", log_every=max(steps // 20, 1),
                      ckpt_path=OUT / f"{name}.pt", ckpt_every=max(steps // 10, 1))

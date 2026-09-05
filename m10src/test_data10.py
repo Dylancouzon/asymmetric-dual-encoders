@@ -73,17 +73,37 @@ def test_batches_are_shuffled_so_length_does_not_track_step():
 
 
 def test_the_two_streams_advance_independently():
-    """Family B re-weights the streams; it must not re-order either of them."""
+    """Family B re-weights the streams; it must not re-order either of them. Under 75/25 the
+    window is QQQD, so step 3 is the document step and step 4 is the fourth query batch."""
     qi, qt = _corpus(n=256, seed=1)
     di, dt = _corpus(n=256, seed=2)
     q = D.Stream(qi, qt, 0, batch_size=8, seed=0)
     d = D.Stream(di, dt, 0, batch_size=8, seed=0)
-    f = D.batch_fn(q, d)
-    seen_q = [f(0, "Q")[0], f(1, "Q")[0], f(2, "D")[0], f(3, "Q")[0]]
-    assert torch.equal(seen_q[0], q.batch(0)[0])
-    assert torch.equal(seen_q[1], q.batch(1)[0])
-    assert torch.equal(seen_q[2], d.batch(0)[0])
-    assert torch.equal(seen_q[3], q.batch(2)[0]), "a document step must not consume a query batch"
+    f = D.batch_fn(q, d, pattern="75/25")
+    seen = [f(0, "Q")[0], f(1, "Q")[0], f(3, "D")[0], f(4, "Q")[0]]
+    assert torch.equal(seen[0], q.batch(0)[0])
+    assert torch.equal(seen[1], q.batch(1)[0])
+    assert torch.equal(seen[2], d.batch(0)[0])
+    assert torch.equal(seen[3], q.batch(3)[0]), "a document step must not consume a query batch"
+
+
+def test_the_stream_position_is_derived_from_the_step_not_from_a_call_counter():
+    """A counter makes a resumed arm restart both streams at batch 0. The position must be a
+    function of the step alone, which is what the resume guarantee rests on."""
+    qi, qt = _corpus(n=256, seed=1)
+    di, dt = _corpus(n=256, seed=2)
+    q = D.Stream(qi, qt, 0, batch_size=8, seed=0)
+    d = D.Stream(di, dt, 0, batch_size=8, seed=0)
+    f = D.batch_fn(q, d, pattern="75/25")
+    assert torch.equal(f(40, "Q")[0], q.batch(D.kind_index("75/25", 40))[0])
+    assert torch.equal(f(40, "Q")[0], D.batch_fn(q, d)(40, "Q")[0]), "restarting must not shift"
+    assert D.kind_index("75/25", 40) == 30 and D.kind_index("75/25", 43) == 10
+    try:
+        f(0, "D")
+    except ValueError as e:
+        assert "disagree" in str(e)
+    else:
+        raise AssertionError("a kind that contradicts the pattern must be refused")
 
 
 if __name__ == "__main__":
