@@ -415,6 +415,13 @@ def select_lambda(X, Y, n_fit_split=50_000, seed=21):
     rule handed back the top of the grid every time. The arm smoke duly selected lambda = 1.0 for
     all eleven linear shapes, which is a near-zero head. Ratio-scaling keeps the holdout meaningful
     at any sample size and is bit-identical at the registered 60,000.
+
+    **The smoke may still select 1.0, and that is now CORRECT rather than an artifact.** At the
+    smoke's n_fit of 256 the split is 213 fit / 43 validation, and 213 rows against 1,153 ridge
+    parameters is massively underdetermined, so heavy regularisation genuinely generalises best.
+    What changed is the mechanism: the validation objectives now differ (1.9966 vs 2.0273 on a
+    random probe) instead of tying on a single row. The real arms fit 60,000 rows and are
+    overdetermined.
     """
     import warmfit
     X = np.asarray(X, dtype=np.float32)
