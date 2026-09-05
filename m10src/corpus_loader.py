@@ -507,6 +507,27 @@ def build_query_stream(arm_or_sources, tok, student, *, batch_size=32, seed=0, b
     return stream, man
 
 
+def doc_marker():
+    """M9's registered document-role student marker, read from `m9/registry.json` rather than
+    retyped. §Data: "document-role examples carry M9's fixed document-role marker"."""
+    return json.loads((REPO / "m9" / "registry.json").read_text())["templates"]["doc_student"]
+
+
+def build_doc_stream(n, tok, *, batch_size=32, seed=0, max_len=512, verbose=True):
+    """-> (stream, meta) for the document-role half of the mix, from the frozen M9 pool.
+
+    The document marker is applied HERE, once. `data10.pretokenize` used to take no prefix at all,
+    so every document reached the student as raw bytes -- the query-role policy -- while its
+    teacher target was the raw-bytes document encoding. The teacher side was right; the student
+    side dropped the marker the recipe names.
+    """
+    texts, vecs, meta = D.m9_doc_pool(n, seed=seed)
+    pre = doc_marker()
+    ids = D.pretokenize(tok, texts, max_len=max_len, prefix=pre, verbose=verbose, label="documents")
+    meta = {**meta, "student_prefix": pre, "n": len(texts), "max_len": max_len}
+    return D.Stream(ids, vecs, pad_id=tok.pad_token_id, batch_size=batch_size, seed=seed), meta
+
+
 class LengthsOnly:
     """Just enough of a pretokenized corpus to bucket and count with: the lengths. Lets the
     manifest report realized shares before a single teacher vector exists."""

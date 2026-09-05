@@ -185,7 +185,9 @@ def smoke_one(name, spec, corp, device="cpu", max_len=512, verbose=True):
         else:
             qi = D.pretokenize(m.tok, texts, max_len=max_len)
             q = D.Stream(qi, T, pad_id=m.tok.pad_token_id, batch_size=b, seed=0)
-        di = D.pretokenize(m.tok, dtexts, max_len=max_len)
+        import corpus_loader as _CL
+        # the registered document-role marker; queries are raw bytes (prompt policy (b))
+        di = D.pretokenize(m.tok, dtexts, max_len=max_len, prefix=_CL.doc_marker())
         d = D.Stream(di, dvecs, pad_id=m.tok.pad_token_id, batch_size=b, seed=0)
         sigma = None
         if spec["loss"] == "document_covariance_weighted":

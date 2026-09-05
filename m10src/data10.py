@@ -61,13 +61,18 @@ def m9_doc_pool(n, seed=0):
     return m9data.row_texts(rows), V, meta
 
 
-def pretokenize(tok, texts, max_len=512, verbose=False, label=""):
-    """-> list of int32 id arrays, no padding. Padding is a batching decision, not a corpus one."""
+def pretokenize(tok, texts, max_len=512, verbose=False, label="", prefix=""):
+    """-> list of int32 id arrays, no padding. Padding is a batching decision, not a corpus one.
+
+    `prefix` is the STUDENT-side prompt: "" for query-role examples (prompt policy (b)) and the
+    registered document-role marker for document-role ones (`corpus_loader.doc_marker`). It is a
+    parameter and not a default because the two roles genuinely differ and the mandate names both.
+    """
     import time
     t0, out = time.time(), []
     B = 2048
     for i in range(0, len(texts), B):
-        enc = tok(texts[i:i + B], truncation=True, max_length=max_len,
+        enc = tok([prefix + t for t in texts[i:i + B]], truncation=True, max_length=max_len,
                   add_special_tokens=True)["input_ids"]
         out += [np.asarray(e, dtype=np.int32) for e in enc]
         if verbose and (i // B) % 50 == 0 and i:

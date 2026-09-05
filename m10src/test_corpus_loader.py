@@ -246,3 +246,20 @@ def test_resume_reproduces_an_uninterrupted_run_on_the_new_loader():
 
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
+
+
+def test_the_document_role_marker_is_the_registered_one_and_is_actually_applied():
+    """"document-role examples carry M9's fixed document-role marker" -- `data10.pretokenize` had
+    no prefix argument at all, so documents reached the student as raw bytes."""
+    import json as _json
+    reg = _json.loads((CL.REPO / "m9" / "registry.json").read_text())
+    assert CL.doc_marker() == reg["templates"]["doc_student"] == "passage: "
+
+    class Tok:
+        pad_token_id = 0
+
+        def __call__(self, texts, **kw):
+            return {"input_ids": [[len(t)] for t in texts]}
+
+    assert D.pretokenize(Tok(), ["x"], prefix="passage: ")[0][0] == len("passage: x")
+    assert D.pretokenize(Tok(), ["x"])[0][0] == 1, "the query role stays raw bytes"
