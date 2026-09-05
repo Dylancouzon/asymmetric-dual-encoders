@@ -86,6 +86,111 @@ def body(text):
     return ""
 
 
+def lead(text):
+    """-> the article's lead section (everything BEFORE the first heading), or the whole text."""
+    lines = text.split("\n")
+    for i in range(len(lines)):
+        if is_heading(lines, i):
+            return "\n".join(lines[:i]).strip()
+    return text.strip()
+
+
+def lead_sentence(text, max_chars=400):
+    """-> the lead's first sentence. A Wikipedia lead opens with the article's DEFINITION, which
+    is why it is the subject signal: "X is a disease...", "X was an American physician...",
+    "X is a bank headquartered in...". It is used for a boolean route decision ONLY and is never
+    stored in a seed or emitted — the lead is precisely what this store exists to exclude."""
+    ld = " ".join(lead(text).split())
+    if not ld:
+        return ""
+    m = re.search(r"(?<![A-Z])(?<!\b[A-Z]\w)\.\s+(?=[A-Z])", ld[:max_chars * 2])
+    return (ld[:m.start() + 1] if m else ld)[:max_chars]
+
+
+# ---- T2-8 rung 1: the lead-sentence SUBJECT filter ----------------------------------------
+#
+# REGISTERED BEFORE IT RAN, and reject-only by design. The router already establishes topicality;
+# this removes the wrong-SUBJECT classes the four gate judges named, and nothing else. An accept
+# list would instead impose a second topicality test and would silently narrow the store.
+#
+# The classes are the judges' own words: physician and researcher biographies; hospitals,
+# journals, companies and banks as institutions; an illness inside a career biography; animal and
+# plant disease; word-sense errors ("bank" as an undersea landform, "trade" as a craft, "trades"
+# as player trades, a film titled "taxation"); and reference or category fragments.
+#
+# Ambiguous occupation words are deliberately absent: `general`, `officer`, `judge`, `player`,
+# `coach` and `engineer` all appear as ordinary nouns inside definitions and a unit case caught
+# the worst of them — "Inflation is a general increase in the prices of goods and services" was
+# rejected as a PERSON. A reject-only filter's false positives cost supply directly, so an
+# ambiguous term is worth less than the seeds it discards.
+#
+# The classes are tried in order and the recorded label is the FIRST match, so a label is a
+# reason and not a taxonomy: "Burdwood Bank is a submarine bank" rejects as `organisation`
+# before `place` reaches it. Rejection is what the filter is for; the label is reporting.
+#
+# The rule is fixed here and is NOT tuned against the 400 already-judged passages. Those verdicts
+# are reported beside it as a sanity check only; the decision comes from a FRESH judged sample of
+# the newly drawn pool, because the top 33K of a filtered store is a different population.
+# The definition's HEAD NOUN comes before the first preposition or relative pronoun. A flat
+# 70-character window instead reached into relative clauses: "Quantitative easing is a monetary
+# policy action whereby a central bank purchases assets" rejected as an ORGANISATION on the word
+# `bank`, which is a perfect finance seed thrown away. The window now stops at any clause
+# boundary, which is what "head noun" means.
+_STOP = (r"in|of|for|on|by|with|from|at|to|as|into|through|that|which|who|whom|whose|where|when|"
+         r"whereby|while|and|or|but")
+_DEF = (r"\b(?:is|was|are|were)\s+(?:an?|the)\s+"
+        r"(?:(?!\b(?:" + _STOP + r")\b)[\w'-]+\s+){0,6}?")
+SUBJECT_REJECT = {
+    "person": re.compile(
+        r"\((?:[^)]*\b(?:born|b\.)\b[^)]*|\s*\d{3,4}\s*[–—-]\s*(?:\d{3,4}|present)\s*)\)"
+        r"|" + _DEF + r"(?:physician|surgeon|doctor|nurse|psychiatrist|psychologist|dentist|"
+        r"researcher|scientist|professor|academic|historian|banker|economist|financier|"
+        r"businessman|businesswoman|entrepreneur|investor|politician|lawyer|judge|writer|author|"
+        r"poet|journalist|actor|actress|singer|musician|composer|painter|architect|engineer|"
+        r"footballer|cricketer|athlete|bishop|priest|monk)s?\b"
+        # -ologist / -iatrist covers the long tail the explicit list cannot: radiologist,
+        # cardiologist, oncologist, epidemiologist, psychiatrist. A unit case caught it --
+        # "Maurice Lenz was an American radiologist" was kept.
+        r"|" + _DEF + r"[\w-]*(?:ologist|iatrist)s?\b",
+        re.I),
+    "organisation": re.compile(
+        _DEF + r"(?:company|corporation|firm|conglomerate|bank|insurer|brokerage|hospital|clinic|"
+        r"university|college|school|academy|journal|magazine|newspaper|publisher|charity|"
+        r"foundation|association|society|organisation|organization|agency|institute|museum|"
+        r"library|club|team|band|political party|ministry|department|council|commission|"
+        r"laboratory|startup|manufacturer|retailer|chain)\b", re.I),
+    "place": re.compile(
+        _DEF + r"(?:town|city|village|hamlet|municipality|commune|county|province|prefecture|"
+        r"state|country|island|archipelago|reef|bank|shoal|seamount|river|lake|bay|mountain|peak|"
+        r"valley|desert|district|region|suburb|neighbourhood|neighborhood|station|airport|"
+        r"highway|road|street|bridge|tunnel|building|tower|arena|stadium|park|castle|church|"
+        r"cemetery|constituency|census-designated place)\b", re.I),
+    "work": re.compile(
+        _DEF + r"(?:film|movie|documentary|album|song|single|EP|novel|book|manga|anime|play|"
+        r"musical|opera|television series|TV series|sitcom|video game|painting|sculpture|poem|"
+        r"comic|magazine issue|episode|season)\b", re.I),
+    "taxon": re.compile(
+        _DEF + r"(?:species|genus|subspecies|family|order|class|phylum|plant|tree|shrub|herb|"
+        r"grass|flower|fungus|mushroom|alga|moss|bird|insect|beetle|moth|butterfly|spider|fish|"
+        r"mammal|rodent|reptile|amphibian|snail|worm|breed|cultivar|dinosaur)\b", re.I),
+}
+# health only: veterinary and plant disease is not consumer health (judges' class 4)
+NONHUMAN = re.compile(
+    r"\b(cattle|bovine|livestock|swine|porcine|pigs?|poultry|chickens?|avian|birds?|canine|dogs?|"
+    r"feline|cats?|equine|horses?|sheep|goats?|fish|shrimp|bees?|crops?|plants?|maize|wheat|rice|"
+    r"potato|tomato|citrus|grapevine|veterinary)\b", re.I)
+
+
+def subject_reject(lead1, form):
+    """-> the reject class that fired, or None. Reject-only: silence is acceptance."""
+    for name, pat in SUBJECT_REJECT.items():
+        if pat.search(lead1):
+            return name
+    if form == "health" and NONHUMAN.search(lead1):
+        return "nonhuman"
+    return None
+
+
 def chunks(text, min_words, max_words):
     """Paragraph chunks in the registered length window; adjacent short paragraphs merged.
 
@@ -174,6 +279,7 @@ def scan(limit=None, out=None, log_every=50_000):
             n_art += 1
             cs = chunks(body(r["text"]), S.MIN_WORDS, S.MAX_WORDS)
             n_chunk += len(cs)
+            l1 = lead_sentence(r["text"]) if cs else ""
             taken = {f: 0 for f in FORMS}
             for ci, c in enumerate(cs):
                 # Scored with the article TITLE prepended. `seeds._score` gives a 2x bonus to hits
@@ -196,7 +302,8 @@ def scan(limit=None, out=None, log_every=50_000):
                     per_form[f] += 1
                     n_kept += 1
                     fh.write(json.dumps({"aid": r["id"], "title": r["title"], "form": f,
-                                         "score": sc, "chunk_i": ci, "text": c}) + "\n")
+                                         "score": sc, "chunk_i": ci, "text": c,
+                                         "reject": subject_reject(l1, f)}) + "\n")
                     break
             if n_art % log_every == 0:
                 el = time.time() - t0

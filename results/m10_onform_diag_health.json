@@ -1,0 +1,77 @@
+{
+ "form": "health",
+ "admits_nothing": true,
+ "registered": "m10/LEDGER.md \u00a73 T2-7",
+ "arms": {
+  "wikipedia-body": {
+   "all": {
+    "n": 200,
+    "on_form": 156,
+    "rate": 0.78,
+    "se": 0.0293
+   },
+   "on_subject": {
+    "n": 109,
+    "on_form": 96,
+    "rate": 0.8807,
+    "se": 0.031
+   },
+   "off_subject": {
+    "n": 91,
+    "on_form": 60,
+    "rate": 0.6593,
+    "se": 0.0497
+   },
+   "diversity": {
+    "n_queries": 993,
+    "exact_duplicates": 0,
+    "near_dup_rate_16of32": 0.0,
+    "_note": "A8's threshold is a 25% near-duplicate rate; underpowered at this n and reported, not acted on. Mean pairwise stella cosine is NOT computed here -- it needs the teacher and is the manifest-time gate."
+   }
+  },
+  "incumbent": {
+   "all": {
+    "n": 200,
+    "on_form": 147,
+    "rate": 0.735,
+    "se": 0.0312
+   },
+   "on_subject": {
+    "n": 118,
+    "on_form": 98,
+    "rate": 0.8305,
+    "se": 0.0345
+   },
+   "off_subject": {
+    "n": 82,
+    "on_form": 49,
+    "rate": 0.5976,
+    "se": 0.0542
+   },
+   "diversity": {
+    "n_queries": 991,
+    "exact_duplicates": 0,
+    "near_dup_rate_16of32": 0.0,
+    "_note": "A8's threshold is a 25% near-duplicate rate; underpowered at this n and reported, not acted on. Mean pairwise stella cosine is NOT computed here -- it needs the teacher and is the manifest-time gate."
+   }
+  }
+ },
+ "contrast": {
+  "wikibody_minus_incumbent": 0.045,
+  "se": 0.0428,
+  "z": 1.05
+ },
+ "mechanism": {
+  "_what": "the question the 59%->84% argument could not answer, now measured directly: does a seed judged off-subject still yield an on-form query?",
+  "on_subject_seed": {
+   "wikipedia-body": 0.8807,
+   "incumbent": 0.8305
+  },
+  "off_subject_seed": {
+   "wikipedia-body": 0.6593,
+   "incumbent": 0.5976
+  },
+  "reading": "Seed subject precision PROPAGATES but does not determine: an off-subject seed roughly halves the odds of an on-form query (0.50-0.66 against 0.83-0.94) without destroying them. So the generator absorbs part of the damage and not all of it -- my absorption claim was too strong and the flat dismissal of it was too strong too, and neither had to be guessed."
+ },
+ "_admits_nothing": "T2-7 item 6. The ONLY action this licenses is that `wikipedia-body` reading WORSE than the incumbent would stop the subject-filter line on that store. It reads BETTER on both forms, so the filter proceeds as registered and is re-gated against the unchanged 0.80 bar."
+}
