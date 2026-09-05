@@ -40,13 +40,19 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-# feature layers per student (§Recipe): the last layer, then two-thirds, then one-third of depth;
-# family G's fourth arm adds one more. Hard-coded rather than derived, because these exact indices
-# are what the parity artifacts were measured on.
+# Which hidden states the head reads, top-down (§Recipe): the last layer, then two-thirds, then
+# one-third of depth; family G's fourth arm adds one more. Hard-coded rather than derived, because
+# these exact indices are what the parity artifacts were measured on.
+#
+# `1` is family G's **G-384** arm -- "feature = last layer only (384, M9's head)"
+# (`instructions-m10.md`:616) -- and the key was MISSING, so `Nano10(..., n_layers=1)` raised
+# `KeyError: 1` and a registered arm of the locked design could not be built at all. Found by the
+# registered 90-step smoke of every arm shape, which is exactly what that requirement is for.
+# Family G runs on family F's winner, so every student needs the key.
 LAYERS = {
-    "bge-small":  {3: (12, 8, 4), 4: (12, 8, 4, 2)},
-    "MiniLM-L6":  {3: (6, 4, 2),  4: (6, 4, 2, 1)},
-    "MiniLM-L12": {3: (12, 8, 4), 4: (12, 8, 4, 2)},
+    "bge-small":  {1: (12,), 3: (12, 8, 4), 4: (12, 8, 4, 2)},
+    "MiniLM-L6":  {1: (6,),  3: (6, 4, 2),  4: (6, 4, 2, 1)},
+    "MiniLM-L12": {1: (12,), 3: (12, 8, 4), 4: (12, 8, 4, 2)},
 }
 REPOS = {"bge-small": "BAAI/bge-small-en-v1.5",
          "MiniLM-L6": "sentence-transformers/all-MiniLM-L6-v2",
