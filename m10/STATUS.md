@@ -1,8 +1,10 @@
-# M10 status — 2026-09-05 evening. Data is BUILT, nothing registered has trained, the box is idle.
+# M10 status — 2026-09-05 evening. Data is BUILT, nothing registered has trained; the corpus→trainer path is being built by a worker.
 
-**Read this, then `m10/LEDGER.md`.** The box is now **preparation for the cloud GPU run, not a
-measurement target** (Dylan, 2026-09-05): an arm that will not fit here moves to the A100 rather
-than being re-shaped to fit. `E-bs128` is the first.
+**Read this, then `m10/LEDGER.md`.** The box is **preparation for the cloud GPU run, not a
+measurement target** (Dylan, 2026-09-05): run as much as it can here first, no re-shaping; the
+remainder moves to the A100 under the same registry. **The weekend timeline is not binding.**
+Working model (Dylan, 2026-09-05): the session is the ML lead, Opus/Sonnet subagents do the build
+work, Codex is the adversarial reviewer.
 
 ## Nothing is running. The next command is in "NEXT", below.
 
@@ -17,12 +19,12 @@ than being re-shaped to fit. `E-bs128` is the first.
 | **M10.0-e** | **COMPLETE.** P0 0.477528 · P1 0.476141 · P2 0.473892. **Same-init distance 0.00288**, seed effect 0.00139 (n=1). `results/m10_calib_report.json` |
 | **seeds** | resolved for **all seven** generated forms; health/finance 33,000 each from `wikipedia-body`, howto 37,927, the other four route `"general"` |
 
-## OPEN — needs Dylan (none blocks the next step)
+## OPEN — needs Dylan (none blocks the next step; W12/W13 ruled 2026-09-05, kept one line each)
 
 | # | what |
 |---|---|
-| **W12** | **Family A's STOP is on the wrong surface — and my first fix was worse.** COV holds none of A3's forms, so A3−A2 is expected small even if coverage is real. But `A4−A2 point ≤ 0` is a **coin flip** (fires 50% under null, and sits below the 0.00139 seed effect the query bootstrap cannot see). **Both reviewers: remove the hard STOP from a 5M one-seed COV family; let the registered C1b release gate be the real failure condition.** If a veto is mandatory, make it a HARM test — one-sided **upper** bound below a registered harm margin, or a replicated negative. Report family A on **DEV-6 CQADupStack** (M9's actual failure surface) and **FORMS-12** (mechanism), neither as the STOP |
-| **W13** | **Always-extend L12 — but for value of information, NOT validity.** Both of my validity arguments were wrong and are withdrawn: the Bonferroni one (a count bounds tests run, not bias inside a statistic) and the selection one (a pre-specified futility gate does not inflate unconditional error — rejection can only occur on the subset that passed). Real reasons: the gate can eliminate a slower-learning model, L12's 20M estimate would be winner-biased, the candidate set becomes path-dependent. **Also decide whether L12 should exist**: it is 34,540,672 params = bge-small exactly, same 12L/384H, so F2 tests *pretraining checkpoint*, not depth |
+| ~~W12~~ | **RULED: STOP removed.** Family A reports three labels and its DEV-6 CQADupStack + FORMS-12 reads; C1b is the failure condition (`instructions-m10.md` §Amendment 2026-09-05 C1) |
+| ~~W13~~ | **RULED: L12 CUT.** F = bge-small vs MiniLM-L6 at 20M, 12 contrasts, 14 trained arms (§Amendment 2026-09-05 C2) |
 | **paired row** | **Register it — as a whole-protocol RECIPE delta, not a coverage test.** M9→M10 changes dose 4.5× (3.69B → ≈16.8B), head width 384→1152, schedule, objective, mix, batch, and possibly the student. **Normalise on the TEACHER**, not M9 (`Δr_d = (S10−S9)/T_d`); never call `S10/S9` "retention". Register now: the confound list, a fixed non-causal claim sentence, the exact datasets/statistic/B/seed, a conditional "same backbone family" label (F can pick a MiniLM), and **that both six-set transactions emit aligned PER-QUERY scores and qids** — otherwise the paired row cannot be built at all |
 | **W14** | **No decision-bearing surface sees the headline forms.** COV selects on forum/medical/legal/finance; C1b is clean-4 (scientific, biomedical). The screen can optimise the build away from the release bar and nothing would notice until M10.4. Codex frames the root question: **is family A a causal experiment, a catastrophe veto, or diagnostics? It cannot be all three** |
 
@@ -41,13 +43,17 @@ than being re-shaped to fit. `E-bs128` is the first.
 5. **15-minute diversity pilot**, then **generation** (~10 box-h). `health` reads **26.50%** on the
    amended A8 gate, **above the 25% cut**, and rising with n — its prompt needs fixing first, via
    decision 15's machinery (it has used 1 of 2 revisions).
-6. §0b's `data_cut`, then **family F**.
+6. **Register the paired row** (whole-protocol recipe delta, teacher-normalised; both six-set
+   transactions must emit aligned per-query scores and qids) — before M9's close-out runs.
+7. **Disclose the own-source 5-gram screen** as not run on the harvest corpus (W11 second half;
+   near-vacuous by construction) in §1, or run it if a pass over the sources is cheap.
+8. §0b's `data_cut`, then **family F** (F1 only: bge-small vs MiniLM-L6 at 20M).
 
 ## Screen design, settled
 
 **W8 band 1** (P2 = 0.00288 ≤ 0.0056): run F · ANCHOR · A · G · B · E · D, **cut C** — `C-M9init`
-at 5M starts from 3.69B tokens and wins its own contrast by construction. `E-bs128` runs on the
-**A100**, not here.
+at 5M starts from 3.69B tokens and wins its own contrast by construction. **L12 cut, A's STOP
+removed** (2026-09-05). Both E arms run on the **A100**, together.
 
 ## Hazards a cold session will hit
 

@@ -38,7 +38,7 @@ def test_a_family_without_an_outcome_map_is_refused():
 
 
 def test_a_quantile_that_is_not_alpha_over_the_contrast_count_is_refused():
-    bad = _mut(lambda r: r["statistics"]["bootstrap"].__setitem__("quantile", 0.025 / 12))
+    bad = _mut(lambda r: r["statistics"]["bootstrap"].__setitem__("quantile", 0.025 / 13))
     assert any("alpha_family / n_contrasts" in b for b in bad), bad
 
 
@@ -144,12 +144,10 @@ def test_the_W9_fixes_are_STRUCTURALLY_present_not_just_described():
     r = L.cfg()
     # G1 keeps the mandate's orientation; only its ACTION text changed
     assert (r["contrasts"]["G1"]["a"], r["contrasts"]["G1"]["b"]) == ("G-1152", "G-384")
-    # F2 names a registered selection-aware rule, and that rule exists
-    assert r["contrasts"]["F2"]["rule"] == "F_selection_aware"
-    assert "F_selection_aware" in r["rules"]
-    # L12 carries an explicit schedule and a defined extension behaviour
+    # F2 and L12 are CUT (Dylan 2026-09-05); the retired rule stays as a record only
+    assert "F2" not in r["contrasts"] and "F2" in r["_cut_contrasts"]
     a = r["arms"]["F-MiniLM-L12"]
-    assert a.get("schedule") and a["conditional_extension"].get("on_extension")
+    assert a["trained"] is False and a.get("cut") and "conditional_extension" not in a
     # the multi-arm families all name the tie rule, and it exists
     assert "multi_arm_winner" in r["rules"]
     for cid in ("G1", "G2", "G3", "B1", "B2", "D1", "D2"):
@@ -169,20 +167,20 @@ def test_the_familywise_alpha_is_exactly_the_registered_0_025():
         tails = c.get("tails", 1)
         total += tails * c.get("quantile", q)
     assert abs(total - alpha) < 1e-12, f"familywise {total} != {alpha}"
-    assert abs(15 * q - 0.02884615384615) < 1e-9, "the pre-fix value, kept as the regression"
-    for cid in ("F1", "F2"):
+    assert b["n_contrasts"] == 12 and abs(q - 0.025 / 12) < 1e-15
+    assert abs(15 * (0.025 / 13) - 0.02884615384615) < 1e-9, "the pre-W9 value, kept as the regression"
+    for cid in ("F1",):
         assert r["contrasts"][cid]["tails"] == 2
         assert abs(r["contrasts"][cid]["quantile"] - q / 2) < 1e-15
 
 
-    """Codex finding 4. `F-winner` is chosen from F1's reading; holding it fixed ignores selection."""
+    """Codex finding 4, now retired with F2: no live contrast may name an adaptively-selected comparator."""
     r = L.cfg()
-    assert r["contrasts"]["F2"]["rule"] == "F_selection_aware"
-    rule = r["rules"]["F_selection_aware"]
-    assert "RECOMPUTED INSIDE EACH BOOTSTRAP RESAMPLE" in rule
+    for cid, c in r["contrasts"].items():
+        assert c["b"] != "F-winner", cid
 
 
-def test_C_is_CUT_and_the_denominator_still_stays_13():
+def test_C_is_CUT_and_the_denominator_is_12_after_L12():
     """W8 band 1 cuts C-M9init: it warm-starts from 3.69B tokens and wins its own contrast by
     construction. The registry and STATUS disagreed on this for several hours."""
     r = L.cfg()
@@ -190,8 +188,8 @@ def test_C_is_CUT_and_the_denominator_still_stays_13():
     assert c["trained"] is False and c.get("cut")
     assert "skipped_iff" not in c, "C is CUT, not conditionally skipped"
     assert r.get("trained_arms_if_C_skipped") is None
-    assert r["trained_arms_expected"] == 15
-    assert r["statistics"]["bootstrap"]["n_contrasts"] == 13, "the denominator stays 13"
+    assert r["trained_arms_expected"] == 14
+    assert r["statistics"]["bootstrap"]["n_contrasts"] == 12, "13 minus F2, cut with L12 (Dylan 2026-09-05)"
 
 
 def test_an_arm_marked_cut_but_still_trained_is_refused():

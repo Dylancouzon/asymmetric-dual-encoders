@@ -149,6 +149,17 @@ comparison; family order **F → A → …**; `arxiv-title` descriptive only; B 
 `inverted_cdf`; the licensing row that would have excluded BRIGHT corrected; PLANNING §5–§6 marked
 superseded; LEDGER §5's duplicate tables deleted.
 
+## Amendment 2026-09-05 — owner rulings after the verification pass (authoritative over older text)
+
+Ruled by Dylan 2026-09-05 with nothing registered trained; `m10/screen_registry.json` carries the
+executable form and `m10/LEDGER.md` §3 the record.
+
+| # | change | why |
+|---|---|---|
+| C1 | **Family A's STOP is removed.** A3−A2 keeps its three labels (resolved / positive not resolved / not positive) as REPORTED outcomes; the build proceeds in every case. Family A is also reported on DEV-6's CQADupStack components and FORMS-12, descriptive. M10's failure condition is the C1b release gate | COV holds none of A3's forms, and the contrast needed a point above ~0.0142 to resolve, so the STOP would most likely have fired under a true coverage effect (W12; both reviewers) |
+| C2 | **MiniLM-L12 and contrast F2 are cut.** F = bge-small vs MiniLM-L6 at 20M, F1 only; the Bonferroni denominator is **12** (11 one-sided at α/12, F1 two-sided at α/24 per tail = 0.025 exactly). Trained arms 14 | L12 is 12 layers / 384 hidden / 34.54M, identical to bge-small, so it tested the pretraining checkpoint, not depth; its conditional extension was an adaptive selection step (W13) |
+| C3 | **The weekend timeline is not binding.** The box runs as much of the screen as it can first; whatever remains moves to the rented GPU under the same registry, no re-shaping (E's two arms run together on the A100 so the contrast is not confounded by hardware) | Dylan: *"I don't care if we go over the weekend timeline … if things need to be delegated to cloud gpu it's fine. Though I prefer to do as much as we can here first"* |
+
 ## Delegated authority during unsupervised windows (Dylan, 2026-09-04)
 
 Dylan: *"the agent should be able to make decisions that will help us achieve our goals if something
@@ -172,7 +183,7 @@ by how urgent it feels.
 - **Tier 3 — never; Dylan only:** changing a protocol after a number it affects is observed; opening
   any six, reserved or LoTTE surface outside its registered transaction; spending cloud money;
   changing the teacher, the 35M cap, the pair, the bars, the conjuncts or their order, the datasets;
-  editing a lock after an arm has started; **overriding a registered STOP** (A3−A2, the family floor);
+  editing a lock after an arm has started; **overriding a registered STOP** (the family floor; A3−A2's STOP was removed by Dylan 2026-09-05);
   relaxing a licence or contamination rule; releasing or publishing anything; changing a registered
   constant (MDE, α, doses, seeds, quotas). A Tier-3 question stops **that branch only**: record it,
   ping, continue every other branch.
@@ -594,7 +605,7 @@ loss-form arm. Reopening condition in `m10/EXPLORED.md`.
   **No full-dose replica runs** (decision 8 withdrawn, amendment A5); the replication band is the
   selected recipe re-trained at screen dose under two further seeds, reported descriptively.
 
-## Screen — seven families, fifteen arms, thirteen contrasts, locked at M10.0-e
+## Screen — seven families, fifteen arms, thirteen contrasts, locked at M10.0-e (the registry is authoritative: C and L12 cut, A's STOP removed, 14 trained arms, 12 contrasts — §Amendment 2026-09-05)
 
 **Screen dose = 5M examples** (2.5% of the build; ≈ 420M tokens at 75/25; ≈ 2.0 GPU-hours per arm at
 the measured blended 683 examples/s), full 3-cycle schedule compressed to that dose, one seed, identical

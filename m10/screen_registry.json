@@ -1,5 +1,5 @@
 {
- "_what": "M10 screen lock (LEDGER \u00a70a), data-independent constants. Prose is not authoritative; this file is. Nothing here is chosen after seeing an arm. `m10src/screen_lock.py` validates it and is the only reader a rule may use.",
+ "_what": "M10 screen lock (LEDGER §0a), data-independent constants. Prose is not authoritative; this file is. Nothing here is chosen after seeing an arm. `m10src/screen_lock.py` validates it and is the only reader a rule may use.",
  "_registered": "2026-09-05, before any arm and before any build seed draw",
  "order": [
   "F",
@@ -55,13 +55,10 @@
    "family": "F",
    "dose_examples": 5000000,
    "student": "MiniLM-L12-v2",
-   "conditional_extension": {
-    "to_examples": 20000000,
-    "iff": "m_L12(5M) >= max(m_L6(5M), m_bge(5M)) - 0.0056",
-    "on_extension": "CONTINUES the same 20M schedule from the 5M checkpoint; it does not restart. Previously undefined (W9, Codex finding 5)."
-   },
-   "trained": true,
-   "schedule": "the 20M three-cycle schedule TRUNCATED at 5M, not a 5M schedule. W9, Codex finding 5: F-bge-small and F-MiniLM-L6 are READ at 5M inside a 20M schedule, so at that point they are ~75% through cycle 1 and un-annealed, while a genuine 5M arm would have completed three compressed annealed cycles -- the exact handicap S1 created the standalone anchor to remove, reintroduced one family over. Truncating L12's 20M schedule at 5M costs nothing extra and reads all three arms at the SAME schedule position."
+   "trained": false,
+   "schedule": "the 20M three-cycle schedule TRUNCATED at 5M, not a 5M schedule. W9, Codex finding 5: F-bge-small and F-MiniLM-L6 are READ at 5M inside a 20M schedule, so at that point they are ~75% through cycle 1 and un-annealed, while a genuine 5M arm would have completed three compressed annealed cycles -- the exact handicap S1 created the standalone anchor to remove, reintroduced one family over. Truncating L12's 20M schedule at 5M costs nothing extra and reads all three arms at the SAME schedule position.",
+   "selectable": false,
+   "cut": "CUT, Dylan 2026-09-05 (verification-pass rulings, pre-observation: nothing registered has trained). MiniLM-L12-v2 is 12 layers / 384 hidden / 34,540,672 params with the head -- identical in size and depth to bge-small -- so F2 tested the pretraining checkpoint, not depth (the hypothesis it was added for). Cutting it removes 5-20M screen examples and closes W13 (the conditional extension was an adaptive selection step)."
   },
   "A1": {
    "family": "A",
@@ -142,7 +139,7 @@
    "dose_examples": 5000000,
    "init": "the M9 candidate",
    "trained": false,
-   "head_init": "the M9 candidate keeps its 384-d head and the two extra layers' columns are ZERO-initialised (\u00a7Recipe). C1 therefore confounds backbone init with head init; that is registered and disclosed, not resolved.",
+   "head_init": "the M9 candidate keeps its 384-d head and the two extra layers' columns are ZERO-initialised (§Recipe). C1 therefore confounds backbone init with head init; that is registered and disclosed, not resolved.",
    "selectable": true,
    "cut": "**CUT under W8 band 1, 2026-09-05.** `C-M9init` at 5M warm-starts from a model already trained 3.69B tokens, so it wins its own contrast BY CONSTRUCTION and says nothing about 200M; it is separately disclosed as confounding backbone init with head init; and it would consume one of only two confirmation slots. The build init is the registered default, the off-the-shelf backbone. C1 does not run and is reported as cut. **The Bonferroni denominator STAYS 13** (`rules.C_skipped`, which already registers that for the skip path)."
   },
@@ -174,19 +171,7 @@
    "at_examples": 20000000,
    "decisive": true,
    "tails": 2,
-   "quantile": 0.0009615384615384616,
-   "family_rule": "F_tournament"
-  },
-  "F2": {
-   "a": "F-MiniLM-L12",
-   "b": "F-winner",
-   "at_examples": 20000000,
-   "decisive": true,
-   "runs_iff": "L12 extended",
-   "note": "counted in the thirteen whether or not it runs",
-   "tails": 2,
-   "quantile": 0.0009615384615384616,
-   "rule": "F_selection_aware",
+   "quantile": 0.0010416666666666667,
    "family_rule": "F_tournament"
   },
   "A3-A2": {
@@ -288,12 +273,12 @@
    "kind": "paired stratified over queries within unit",
    "B": 200000,
    "seed": 0,
-   "quantile": 0.0019230769230769232,
+   "quantile": 0.0020833333333333333,
    "quantile_method": "inverted_cdf",
    "alpha_family": 0.025,
-   "n_contrasts": 13,
+   "n_contrasts": 12,
    "chunk": 5000,
-   "alpha_accounting": "11 one-sided contrasts at alpha/13 plus F1 and F2, which are TWO-SIDED because F is oriented highest-minus-runner-up after the readings. Each F tail therefore takes alpha/26, so the union bound is 11*(0.025/13) + 4*(0.0125/13) = 0.025 EXACTLY. Before this fix every tail took alpha/13 and the familywise rate was 15*(0.025/13) = 0.02885, not 0.025 (W9, Codex finding 3).",
+   "alpha_accounting": "11 one-sided contrasts at alpha/12 plus F1, which is TWO-SIDED because F is oriented highest-minus-runner-up after the reading. F1's tails take alpha/24 each, so the union bound is 11*(0.025/12) + 2*(0.0125/12) = 0.025 EXACTLY. History: 13 contrasts until F2 was cut with L12 (Dylan 2026-09-05); before W9 every tail took alpha/13 and the familywise rate was 0.02885.",
    "_runner_contract": "`cov_macro.contrast` takes `quantile` as a parameter (default alpha/13). **The runner MUST pass each contrast's own `quantile` field**; the global default is correct only for the eleven one-sided contrasts. `screen_lock` now validates that the per-contrast quantiles sum to the registered alpha, but it cannot see the call site -- the arm runner is responsible and must be reviewed when it is written (W9 review #5)."
   },
   "MDE": 0.0056,
@@ -304,8 +289,8 @@
   "_MDE_naming": "`MDE` is a DECISION THRESHOLD, not a minimum detectable effect. `resolve_rule` requires the POINT estimate to reach it, which caps power at 50% at a true effect of exactly 0.0056 however narrow the interval; family A's rule is `lower > MDE`, stronger still. The name is kept because it is referenced throughout, but it does not mean what it says (W9, Codex finding 11)."
  },
  "outcome_to_action": {
-  "F": "winner = highest 20M COV macro if its margin over the runner-up resolves; else the cheapest to serve, labelled in the report as a product preference, not evidence. L12 eliminated at 5M unless its extension condition holds. Every later family runs on F's winner and every later verdict is labelled conditional on it.",
-  "A": "A3-A2 three outcomes: lower bound > MDE -> coverage resolved on the COV families, build proceeds; point >= MDE and lower bound > 0 but <= MDE -> positive, not resolved, build proceeds and the report says so; otherwise -> M10 STOPS before any build, ping Dylan, all four rows reported. A4-A3: if it does not resolve, the build uses A3's corpus and the generated queries are dropped from the build and reported as a measured null.",
+  "F": "F1 = MiniLM-L6 vs bge-small at 20M. Winner = the higher 20M COV macro if its margin over the other resolves under the two-sided F rule at alpha/24 per tail; else the cheapest to serve (`rules.serve_cost_order`), labelled in the report as a product preference, not evidence. L12 is cut (Dylan 2026-09-05). Every later family runs on F's winner and every later verdict is labelled conditional on it.",
+  "A": "A3-A2: three reported labels (RESOLVED / POSITIVE NOT RESOLVED / NOT POSITIVE), NO STOP, build proceeds; all four A rows and their DEV-6 CQADupStack + FORMS-12 reads are reported. A4-A3: if it does not resolve, the build uses A3's corpus and the generated queries are dropped from the build and reported as a measured null. The milestone's failure condition is C1b at M10.4.",
   "G": "resolved winner; default 1152.",
   "B": "resolved winner; default 75/25.",
   "E": "E's decision table is `rules.E_cost`: bs32 iff E1 resolves, else bs128. E is the one family whose throughput is read (amendment A7). **`E-bs128` does not run on the box at realistic sequence lengths and runs on the rented A100** -- Dylan 2026-09-05, the box is preparation for the cloud run, not a measurement target.",
@@ -333,7 +318,8 @@
   "FORMS-12": "descriptive only",
   "arxiv-title": "descriptive, no action",
   "CUREv1": "validation-only diagnostic (decision 12); never selection-bearing",
-  "LoTTE": "read #1 is decision-bearing (the veto) and happens after the recipe lock; read #2 is the audit after the freeze"
+  "LoTTE": "read #1 is decision-bearing (the veto) and happens after the recipe lock; read #2 is the audit after the freeze",
+  "family_A_diagnostics": "DEV-6 CQADupStack components and FORMS-12, reported beside every A arm; descriptive, no action (Dylan 2026-09-05, W12)"
  },
  "warm_start": {
   "G-MLP": {
@@ -355,12 +341,12 @@
   "F-winner": "the winner of contrast F1 at its 20M checkpoint (NOT of F itself: F2 is L12 - F1's winner, so the reference cannot be circular)",
   "_resolver": "every value here is an arm id EXCEPT `F-winner`, which is resolved at read time by `rules.F_selection_aware` and is prose by necessity, not oversight. `runs_iff`/`skipped_iff`/`conditional_extension.iff` are likewise human-readable conditions evaluated by the session, not by a generic engine (W9, Codex finding 9)."
  },
- "trained_arms_expected": 15,
- "_arms_note": "17 entries, 16 TRAINED: A4 is not trained separately -- it IS the ANCHOR arm. The anchor became its own arm on the S1 amendment (+2 GPU-hours). | C-M9init is CUT under W8 band 1 (not conditionally skipped), so the trained count is 15 unconditionally and the Bonferroni denominator stays 13.",
+ "trained_arms_expected": 14,
+ "_arms_note": "17 entries, 14 TRAINED: A4 is not trained separately -- it IS the ANCHOR arm. C-M9init is CUT under W8 band 1. F-MiniLM-L12 is CUT (Dylan 2026-09-05), taking contrast F2 with it: the Bonferroni denominator is 12.",
  "_amended": "2026-09-05, on a Fable adversarial pass (S1-S10), before any arm ran and with nothing trained. S1 was a structural confound: the anchor was a mid-cycle snapshot of a 20M arm and is now its own 5M arm.",
  "data_cut": {
   "_mandate": "A2, A3 and A4 are cut to the identical post-screen unique-text count",
-  "rule": "min of the three post-decontamination unique-text counts; the larger two are downsampled with seed 0; the count itself and the hashes are \u00a70b",
+  "rule": "min of the three post-decontamination unique-text counts; the larger two are downsampled with seed 0; the count itself and the hashes are §0b",
   "applies_to": [
    "A2",
    "A3",
@@ -372,28 +358,43 @@
  },
  "rules": {
   "generic": "resolves iff point >= MDE AND lower bound at the quantile > 0 AND the sign is stable across the last two cycle-end checkpoints",
-  "three_outcome": "A3-A2 only. lower > MDE -> RESOLVED, coverage established on the COV families, build proceeds. point >= MDE and 0 < lower <= MDE -> POSITIVE, NOT RESOLVED, build proceeds and the report says so. otherwise -> M10 STOPS before any build, ping Dylan, all four A rows reported.",
+  "three_outcome": "A3-A2 only. **NO STOP** (Dylan 2026-09-05, W12: both reviewers -- COV holds none of A3's forms, so a small A3-A2 is expected under a true coverage effect, and the registered STOP would most likely have fired spuriously; the contrast must read above ~0.0142 to resolve at all). Three REPORTED labels, none of which stops M10: lower > MDE -> RESOLVED, coverage established on the COV families; point >= MDE and 0 < lower <= MDE -> POSITIVE, NOT RESOLVED; otherwise -> NOT POSITIVE. The build proceeds in every case and all four A rows are reported with intervals. Family A is additionally reported on DEV-6's two CQADupStack components (M9's actual failure surface) and FORMS-12 (mechanism), both descriptive. The failure condition for M10 is the registered C1b release gate (decision 11), not a screen contrast.",
   "generated_half_in_build": "A4-A3 only. RESOLVED iff lower > MDE (the same corrected bar as three_outcome; the mandate exempts BOTH A contrasts from the generic rule). Not resolved -> the build uses A3's corpus and the ~1.0M generated queries are dropped from the build and reported as a measured null.",
   "sign_stability_exemption": "family A's two contrasts are exempt from the sign-stability clause (mandate); every other contrast is subject to it.",
-  "F_orientation": "F's contrasts are read highest-minus-runner-up, i.e. oriented AFTER the readings, so each F contrast is TWO-SIDED. Each F tail takes **alpha/26** (`contrasts.F1/F2` carry `tails: 2` and their own `quantile`), which is what makes the union bound 11(alpha/13) + 4(alpha/26) = alpha EXACTLY. An earlier version of this rule said alpha/13 in each F tail and called it conservative; it was not -- it put the familywise rate at 0.02885 (W9 #3, and the contradiction was caught by the W9 review).",
-  "serve_cost_order": "when F's margin does not resolve, the cheapest to serve wins, ordered by (1) parameter count including the head, (2) layer count, (3) **bge-small, as the retrieval-tuned backbone and the one M9 already distilled into, so the M9-vs-M10 comparison stays within one backbone family**. Measured counts (`results/m10_student_parity_box.json`): MiniLM-L6 23,893,888 < bge-small 34,540,672 = MiniLM-L12 34,540,672 (the mandate's 33.4M for L12 was an estimate; the tie is broken by rule 3, to bge-small). This tie-break is labelled in the report as a product preference, not evidence. **Rule 3's ORIGINAL rationale \u2014 'bge-small alone has an M9 warm start and so alone keeps family C' \u2014 went STALE the moment W8 band 1 cut C, and was caught by the W12/W13 validation. The re-stated rationale is not a new preference: it is why the tie was already broken this way, minus the family-C clause.**",
+  "F_orientation": "F1 is read highest-minus-runner-up, i.e. oriented AFTER the reading, so it is TWO-SIDED and takes alpha/24 per tail (`contrasts.F1` carries `tails: 2` and its own `quantile`), which makes the union bound 11(alpha/12) + 2(alpha/24) = alpha EXACTLY. History: at alpha/13 per F tail the familywise rate was 0.02885 (W9 #3).",
+  "serve_cost_order": "when F's margin does not resolve, the cheapest to serve wins, ordered by (1) parameter count including the head, (2) layer count, (3) **bge-small, as the retrieval-tuned backbone and the one M9 already distilled into, so the M9-vs-M10 comparison stays within one backbone family**. Measured counts (`results/m10_student_parity_box.json`): MiniLM-L6 23,893,888 < bge-small 34,540,672 = MiniLM-L12 34,540,672 (the mandate's 33.4M for L12 was an estimate; the tie is broken by rule 3, to bge-small). This tie-break is labelled in the report as a product preference, not evidence. **Rule 3's ORIGINAL rationale — 'bge-small alone has an M9 warm start and so alone keeps family C' — went STALE the moment W8 band 1 cut C, and was caught by the W12/W13 validation. The re-stated rationale is not a new preference: it is why the tie was already broken this way, minus the family-C clause.**",
   "E_cost": "**E's decision table, and it is an explicit EXCEPTION to `_default`.** Select **bs32 iff E1 (`bs32 - bs128`) RESOLVES**; in every other case -- unresolved, or bs128 ahead -- select **bs128**. The build's GPU-hour budget assumes bs32, so a resolved bs32 win needs no extra threshold and none is invented after the number; the GPU-hour delta is DISCLOSED beside the contrast. Three places previously disagreed (E's default said bs32, `_default` said unresolved reverts to default, this rule said an unresolved bs32 win reverts to bs128), and under the generic rule a bs128 advantage read NEGATIVE and could not resolve, so the slower arm would have been selected (W9 review #2). **Consequence for confirmation:** selecting bs128 IS a non-default outcome and is therefore eligible for a confirmation slot.",
-  "arm_failure": "an arm that crashes, OOMs or trips the \u00a7Recipe kill rule has NO final checkpoint: its contrasts are reported UNRESOLVED and revert to default, the failure is reported, and the arm is not silently re-run at different settings.",
+  "arm_failure": "an arm that crashes, OOMs or trips the §Recipe kill rule has NO final checkpoint: its contrasts are reported UNRESOLVED and revert to default, the failure is reported, and the arm is not silently re-run at different settings.",
   "confirmation_failure": "a confirmation arm that fails leaves its seed range undefined; the decision then reverts to default and is reported as unconfirmed.",
   "confirmation_eligibility": "families G, B, E, C and D only. F and A are EXCLUDED: F confirmation would cost 80M examples against the registered 45M worst case, and A's rules are already three-outcome.",
-  "C_skipped": "if F does not select bge-small, C1 is skipped and reported skipped; the denominator STAYS 13, exactly as F2 is counted whether or not it runs.",
+  "C_skipped": "C-M9init is CUT under W8 band 1; this rule is moot. Had C been merely skippable, the denominator would have stayed fixed -- a contrast's inclusion in the count is decided before any reading, never by whether it happens to run.",
   "D_tie": "if D-NORM and D-COV both resolve with margins within 1e-4, the default (squared L2) stands and the tie is reported.",
-  "A2-A1": "DESCRIPTIVE, and it triggers no build action: the build's PAQ volume is fixed unconditionally at 1.0M by \u00a7Recipe, whatever A2-A1 reads. (The mandate's 'if it resolves the build keeps volume' would have made a descriptive contrast decisive and outside the 13-way correction; it is resolved here in favour of the fixed cap.)",
-  "F_selection_aware": "F2's comparator `F-winner` is CHOSEN from F1's reading, so a bootstrap that holds the observed winner fixed ignores the selection step and under-states the interval. F1's winner is therefore RECOMPUTED INSIDE EACH BOOTSTRAP RESAMPLE and F2's statistic is formed against whichever arm wins in that resample (W9, Codex finding 4).",
+  "A2-A1": "DESCRIPTIVE, and it triggers no build action: the build's PAQ volume is fixed unconditionally at 1.0M by §Recipe, whatever A2-A1 reads. (The mandate's 'if it resolves the build keeps volume' would have made a descriptive contrast decisive and outside the 13-way correction; it is resolved here in favour of the fixed cap.)",
+  "F_selection_aware": "RETIRED with F2 (Dylan 2026-09-05): it governed F2's adaptively-selected comparator `F-winner`. Kept as a record: a bootstrap that holds an observed winner fixed ignores the selection step (W9, Codex finding 4). No live contrast uses it.",
   "multi_arm_winner": "G, B and D each offer more than one SELECTABLE alternative against the default. **Among the alternatives whose own registered default comparison RESOLVES, the highest point estimate is selected; NO inferential claim is made that it beats the other alternatives, and no alternative-vs-alternative contrast is run.** The earlier form required the winner to 'also resolve against the other alternative', which would have created five post-hoc-oriented comparisons absent from the thirteen and broken the Bonferroni accounting (W9 review #4). Ties on the point estimate go to the default. `D_tie` remains the special case.",
-  "F_tournament": "**How F1 and F2 jointly pick the student.** Read at 20M. The winner is the arm with the highest COV macro among those with a 20M reading, and it is adopted as RESOLVED only if its margin over the RUNNER-UP -- whichever arm that is, F1's loser or an extended L12 -- resolves under the two-sided F rule at alpha/26 per tail. If it does not, the cheapest to serve wins by `rules.serve_cost_order` and the report labels that a PRODUCT PREFERENCE, not evidence. Previously `F_selection_aware` defined only how F2's comparator is built, not how the two contrasts combine (W9 review #7)."
+  "F_tournament": "**How F picks the student.** Read at 20M, F1 only (L12 and F2 cut, Dylan 2026-09-05). The winner is the arm with the higher COV macro; it is adopted as RESOLVED only if its margin over the other resolves under the two-sided F rule at alpha/24 per tail. If not, the cheapest to serve wins by `rules.serve_cost_order` and the report labels that a PRODUCT PREFERENCE, not evidence."
  },
  "parity_preconditions": {
-  "_rule": "a head that fails serving parity disqualifies its arm (\u00a7Screen)",
+  "_rule": "a head that fails serving parity disqualifies its arm (§Screen)",
   "artifact": "results/m10_student_parity_box.json",
   "status": "all six heads PASS: bge-small, MiniLM-L6, MiniLM-L12 at 3 and 4 layers, min-cos >= 0.99999988 through fastembed, zero custom ONNX ops, all under the 35M cap",
   "serving_note": "MiniLM's own `tokenizer_config.json` carries max_length 128 beside model_max_length 512, and fastembed serves min(...) = 128. The exported tokenizer sets both to 512. A first run read 0.93-0.95 min-cos and would have disqualified both MiniLM students on a mis-specified check."
  },
  "_mandate_arm_count": "this file registers 16 trained arms; `instructions-m10.md`:597 still says fifteen. THIS FILE IS AUTHORITATIVE (see `_what`). The mandate predates the S1 amendment that made the anchor its own trained arm (W9, Codex finding 10).",
- "_w8_band": "W8 band 1 (M10.0-e `lr_pair.distance_raw` = 0.00288 <= 0.0056): run F, ANCHOR, A, G, B, E, D; CUT C. `E-bs128` runs on the rented A100, not the box (Dylan 2026-09-05)."
+ "_w8_band": "W8 band 1 (M10.0-e `lr_pair.distance_raw` = 0.00288 <= 0.0056): run F, ANCHOR, A, G, B, E, D; CUT C. `E-bs128` runs on the rented A100, not the box (Dylan 2026-09-05). | Dylan 2026-09-05: L12 cut (F1 only); family A's STOP removed; the weekend timeline is not binding, the box runs as much as it can first and the remainder goes to the cloud under the same registry.",
+ "_cut_contrasts": {
+  "F2": {
+   "a": "F-MiniLM-L12",
+   "b": "F-winner",
+   "at_examples": 20000000,
+   "decisive": true,
+   "runs_iff": "L12 extended",
+   "note": "counted in the thirteen whether or not it runs",
+   "tails": 2,
+   "quantile": 0.0009615384615384616,
+   "rule": "F_selection_aware",
+   "family_rule": "F_tournament",
+   "cut": "CUT with its arm, Dylan 2026-09-05 (verification-pass rulings, pre-observation: nothing registered has trained). Was counted in the thirteen whether or not it ran; the denominator is now 12."
+  }
+ }
 }
