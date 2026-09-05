@@ -818,6 +818,65 @@ The registered action is *"A3−A2 point < 0.0056 or lower ≤ 0 → M10 STOPS b
 costs are asymmetric: a wrong "proceed" costs a ~$100–200 build inside a $1,000 ceiling; a wrong
 STOP costs the milestone.** → **W12**.
 
+### SECOND OPINION (Codex) on W12 · W13 · the paired row — **agrees on W12, and CORRECTS my W13 rationale**
+
+Two reviewers, different models, same brief — the pattern that was just written into `CLAUDE.md`.
+Log audited, no reserved read. **They converge on W12 and disagree usefully twice.**
+
+**AGREED — W12's proposed remedy is REJECTED by both.** *"Replacing it with a single-seed sign test
+creates a coin-flip gate, not a meaningful safeguard."* Codex adds three points Fable did not:
+`A4−A2 point > 0` is **decorative as evidence** (any arbitrarily small positive passes) *and*
+dangerous as a stop; it sits **below the measured 0.00139 seed effect, which the query bootstrap
+cannot see**; and it is a **composite** contrast that cannot separate a harvested-text benefit from
+a generated-text one. Also a correction to my "only the ACTION changes" defence: **`A4−A2` is
+currently registered DESCRIPTIVE**, so making it stop the milestone *promotes it to
+decision-bearing*. Legitimate prospectively, but it is an amended calibration-informed design, not
+preservation of the original registration. **Both recommend removing the hard STOP from a 5M
+one-seed COV family and letting the registered C1b release gate be the real failure condition**;
+if a catastrophe veto is mandatory it must be a **harm test** (replicated negative, or a one-sided
+**upper** bound below a registered harm margin).
+
+**DISAGREEMENT 1 — better surfaces, and the synthesis is that both are right about different
+things.** Fable: don't use DEV-6 (registered *never selection-bearing*) or FORMS-12 (**A3 trained
+on harvested forms beats A2 on held-out harvested forms by construction**). Codex: DEV-6
+CQADupStack is the **best retrieval surface** because it reproduces M9's actual failure (disclose
+the dev reuse), and FORMS-12 is the **best mechanism surface** — it measures *teacher retention*,
+not retrieval quality, so it complements rather than replaces. **Resolution: neither can be the
+STOP (Fable's protocol objections stand), but both are the right surfaces to REPORT family A on** —
+and "true by construction" is what you want from a mechanism check.
+
+**DISAGREEMENT 2 — and Codex is right: MY W13 VALIDITY ARGUMENT IS WRONG.** Fable called L12's
+gate a live selection problem; Codex shows it is not: *"A pre-specified futility-only gate does not
+inflate the unconditional final-test error: rejection after 20M can occur only on the subset of
+runs that pass the 5M gate. Correlation between the 5M and 20M readings does not change that subset
+argument."* So **the claim that the conditional test is invalid is withdrawn** — that was the
+second wrong argument I made for W13, after the Bonferroni decoy. The real drawbacks are different
+and still sufficient: the gate can **eliminate a slower-learning model that crosses later**, any
+reported L12 20M estimate is **winner-biased**, and the candidate set becomes **path-dependent**.
+**Always-extend stays recommended — for value of information and cleaner comparison, NOT for
+type-I error.**
+
+**FIXED IMMEDIATELY — cutting C left a registered rule stale, and Codex caught it.**
+`rules.serve_cost_order`'s third tie-break was *"bge-small, which alone has an M9 warm start and so
+alone keeps family C"*. **W8 band 1 cut C hours earlier, so that rationale evaporated** while the
+rule still decided the build student on a tie. Re-stated on grounds that survive the cut: bge-small
+is the retrieval-tuned backbone and the one M9 already distilled into, so the M9-vs-M10 row stays
+within one backbone family. Same outcome, sound reason.
+
+**The paired row — both say register it, both say the rationale overclaims.** Codex: *"a
+whole-protocol contrast"*, not a coverage test — data, sampling, head width/form, optimizer, batch,
+loss, schedule, init, selection, dose and stopping all changed, **3.69B vs ≈16.8B tokens**. Two
+additions beyond Fable's: **"same student family" is NOT guaranteed** (F can select a MiniLM), so
+register a conditional label; and **do not call `S10/S9` "retention"** — M9 is not a ceiling.
+Normalise on the teacher: `r_9d = S_9d/T_d`, `r_10d = S_10d/T_d`, `Δr_d = (S_10d − S_9d)/T_d`, plus
+the raw paired difference. Register a **fixed claim sentence** describing a historical
+whole-protocol delta, with **no causal "coverage caused" language**. And *"zero extra access is
+true only if both transactions preserve aligned per-query contributions and qids — not merely
+aggregate rows"*, which the M10.2 lock must require **before M9's close-out runs**.
+
+**Codex's closing question, which is really W14 again:** decide *"whether family A is a causal
+experiment, a catastrophe veto, or merely diagnostics"*. It cannot be all three.
+
 ### VALIDATION of W12 · W13 · the paired row, 2026-09-05 — **all three of my recommendations corrected**
 
 Dylan asked for these validated before locking. Read-exclusion honoured, log audited. **My W12
