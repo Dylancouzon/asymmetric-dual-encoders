@@ -1,0 +1,28 @@
+{
+ "queries": {
+  "n_candidates": 10000,
+  "index_mb": 0.9,
+  "six_docs_streamed": 272117,
+  "protected_queries_streamed": 25834,
+  "hits_vs_six_docs_exact": 0,
+  "hits_vs_six_docs_near": 0,
+  "hits_vs_protected_queries_exact": 0,
+  "hits_vs_protected_queries_near": 0,
+  "seconds": 81.5,
+  "total_flagged": 0,
+  "flagged_frac": 0.0
+ },
+ "documents": {
+  "n_candidates": 47820,
+  "index_mb": 309.0,
+  "six_docs_streamed": 272117,
+  "protected_queries_streamed": 25834,
+  "hits_vs_six_docs_exact": 710,
+  "hits_vs_six_docs_near": 1,
+  "hits_vs_protected_queries_exact": 0,
+  "hits_vs_protected_queries_near": 0,
+  "seconds": 123.3,
+  "total_flagged": 711,
+  "flagged_frac": 0.01487
+ }
+}

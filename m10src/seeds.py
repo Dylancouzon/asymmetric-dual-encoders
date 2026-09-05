@@ -38,24 +38,55 @@ ROUTE = {
 }
 MIN_WORDS, MAX_WORDS = 40, 220
 
-# Widened routing, FIXED AND COMMITTED BEFORE THE SCAN THAT USES IT (headroom rung 2,
-# `m10/HEADROOM.md`; amends T2-3, logged in LEDGER §3 T2-4). The shortfall it addresses is ROUTER
-# RECALL, not corpus thinness: English Wikipedia holds ~50K medicine articles, so 8,844 health
-# seeds out of 5.23M intros is the 17-keyword list above under-matching. Widening raises recall at
-# held precision; relaxing `min_score` would instead admit passages that merely mention "blood"
-# twice, which is why it is a later rung. These lists are never tuned to the count they produce.
+# Widened routing, v2. **v1 is WITHDRAWN as defective, not revised to hit a number.** v1 kept the
+# original form `\b(alt|alt|...)\w*\b`, which appends a wildcard to EVERY alternative, so `pain`
+# matched "paints", `nurse` matched "nursery", `chronic` matched "chronicle", and on the finance
+# side `capital` matched "capital city", `credit` matched "credited", `wage` matched "wages war"
+# and `bond` matched a surname. A painter and a truck-painting business were routed as `health`
+# seeds. v1's health count (42,380) is therefore part recall gain and part precision loss, and is
+# withdrawn with it. v2 lists explicit word FORMS and anchors both ends, so a match is the word.
+#
+# Registered with v2, because v1's failure was that precision was asserted rather than measured:
+# before the widened routing is used for a build draw, a sample of passages it newly admits is
+# judged on-topic by an independent Fable subagent, and the widening is kept only if that rate
+# holds. The gate and its result live in `m10/HEADROOM.md`; the lists are never tuned to the count.
+def _words(*forms):
+    return r"\b(?:" + "|".join(forms) + r")\b"
+
+
+HEALTH_WORDS = (
+    "disease", "diseases", "symptom", "symptoms", "patient", "patients", "treatment",
+    "treatments", "therapy", "therapies", "therapeutic", "diagnosis", "diagnostic", "diagnose",
+    "diagnosed", "syndrome", "syndromes", "infection", "infections", "infectious", "cancer",
+    "cancers", "carcinoma", "vaccine", "vaccines", "vaccination", "vaccinated", "medication",
+    "medications", "clinical", "clinic", "clinics", "surgery", "surgeries", "surgical",
+    "surgeon", "surgeons", "chronic", "chronically", "virus", "viruses", "viral", "immune",
+    "immunity", "immunology", "drug", "drugs", "disorder", "disorders", "medical", "medicine",
+    "medicines", "hospital", "hospitals", "physician", "physicians", "illness", "illnesses",
+    "pain", "pains", "painful", "dose", "doses", "dosage", "pregnancy", "pregnant", "injury",
+    "injuries", "cardiac", "cardiovascular", "lung", "lungs", "pulmonary", "kidney", "kidneys",
+    "renal", "hepatic", "psychiatric", "psychiatry", "diabetes", "diabetic", "allergy",
+    "allergies", "allergic", "nutrition", "nutritional", "epidemic", "pandemic", "antibiotic",
+    "antibiotics", "tumor", "tumour", "tumors", "tumours", "inflammation", "inflammatory",
+    "fever", "fevers", "nurse", "nurses", "nursing", "health", "healthcare", "healthy",
+    "bacteria", "bacterial", "blood",
+)
+FINANCE_WORDS = (
+    "bank", "banks", "banking", "tax", "taxes", "taxation", "invest", "invests", "investment",
+    "investments", "investor", "investors", "stock", "stocks", "economy", "economic",
+    "economics", "market", "markets", "inflation", "currency", "currencies", "revenue",
+    "revenues", "mortgage", "mortgages", "pension", "pensions", "insurance", "insurer",
+    "budget", "budgets", "debt", "debts", "fiscal", "loan", "loans", "creditor", "creditors",
+    "savings", "salary", "salaries", "wages", "income", "incomes", "profit", "profits",
+    "profitable", "financial", "finance", "finances", "financing", "monetary", "equity",
+    "asset", "assets", "accounting", "audit", "audits", "payment", "payments", "money",
+    "earnings", "dividend", "dividends", "recession", "gdp", "tariff", "tariffs", "subsidy",
+    "subsidies", "shareholder", "shareholders", "capitalism", "bankruptcy", "interest rate",
+    "interest rates",
+)
 ROUTE_WIDE = dict(ROUTE)
-ROUTE_WIDE["health"] = (
-    r"\b(disease|symptom|patient|treatment|therap|diagnos|syndrome|infection|cancer|vaccin|"
-    r"medication|clinical|surgery|chronic|virus|immune|drug|disorder|medical|medicine|hospital|"
-    r"physician|illness|pain|dose|dosage|pregnan|injury|heart|lung|kidney|liver|mental health|"
-    r"diabet|allerg|nutrition|epidemic|pandemic|antibiotic|tumou?r|inflammat|fever|nurse|"
-    r"health|bacteri|blood)\w*\b")
-ROUTE_WIDE["finance"] = (
-    r"\b(bank|tax|invest|stock|econom|market|inflation|currency|revenue|mortgage|pension|"
-    r"insurance|budget|debt|interest rate|fiscal|trade|loan|credit|saving|salary|wage|price|"
-    r"income|profit|financ|monetary|bond|equity|capital|asset|accounting|audit|payment|money|"
-    r"earnings|dividend|recession|gdp|currency|tariff|subsid)\w*\b")
+ROUTE_WIDE["health"] = _words(*HEALTH_WORDS)
+ROUTE_WIDE["finance"] = _words(*FINANCE_WORDS)
 # `esci-prod` is excluded from the topical scan: product listings cannot serve howto/health/finance.
 TOPICAL_STORES = ("hotpotqa-corpus", "squad-ctx", "mrtydi-docs")
 

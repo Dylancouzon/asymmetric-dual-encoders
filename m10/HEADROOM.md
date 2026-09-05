@@ -16,14 +16,22 @@ exactly as `zero` is); **no evaluation-path change** (exact search, frozen compa
 statistics); **no new serving or scoring dependency.** `torch.compile` is a training-step speedup
 only — the rules that keep it that way are registered in §T below and bind the step-6 trainer port.
 
-## H1 RESULT — LEDGER **REFUSED** on structure; the power problem is unmitigated (`LEDGER.md` §2, §3 W5)
+## H1 RESULT — LEDGER **ADMITTED** (a refusal made, then withdrawn on fact)
 
-No `artefactory/LEDGER` repo exists; the collection's only QA member, `ledger-long-context-KPI-QA`,
-is a long-context KPI-QA set and **not a retrieval benchmark** — no qrels, no corpus, the report
-inline on every row, `answer_value` a number so only report-level relevance can be derived, reports
-~350K characters, and **409 of 500 sampled queries name their own company**. Admitting it would have
-added a near-saturated company-name-matching component that compresses between-arm differences
-rather than resolving them. Refused before any read, as the admission rule requires.
+**First refused, wrongly.** I read `load_dataset_builder(...).info.features` — a stale 8-column
+list — concluded "no qrels, no corpus, report-level relevance only", and wrote that into `LEDGER.md`
+§2 and a commit. The loaded dataset has **13 columns including `qrels`**. Every inference after that
+was sound reasoning on a false premise. **Read the artefact, not the metadata about it.**
+
+**Admitted, structure verified** (`m10src/cov_ledger.py`, `work/m10cov/ledger_structure.json`):
+10,000 queries · 494 reports → **47,820 pages** · **116,912 graded qrels**, chunk rule = the
+dataset's own `<--- Page Split --->` marker, and **all 116,912 qrel page ids resolve in the split**
+(0 missing), 96.8 pages/report, under the 100K cap without applying it. Screen: queries 0/0; pages
+0 exact / 1 near above the 8-word floor (the raw 710 is the same sub-8-word artefact as BRIGHT).
+
+**Why it mattered:** the COV surface goes **3,416 → 13,416 queries** and gains its **fourth family**.
+§Surfaces expected most B–G contrasts to be unresolved at MDE 0.0056 and named LEDGER as the one
+candidate large enough to move the surface's power. It was one stale metadata call from being lost.
 
 ## H1 — LEDGER admission (the highest-value item, and I had omitted it)
 
@@ -76,7 +84,7 @@ A form that still cannot reach quota reports its realized count; **no top-up fro
 Disclose the interaction with form-balanced sampling: a short form is drawn with replacement, so its
 texts are seen more often.
 
-## H3 RESULT — the ladder stopped at rung 2, and the precision levers were not needed
+## H3 RESULT — v1 WITHDRAWN as defective; v2 rescan in flight
 
 `results/m10_seed_supply.json`, `m10src/seeds.supply()`. Full stores, 5,348,204 documents scanned,
 5,339,995 unique after cross-store fingerprint dedup, 2,615,015 length-eligible. Controlled: both
@@ -88,11 +96,16 @@ rows are the SAME stores and the SAME `min_score = 4`, so the only variable is t
 | `finance` | 22,375 | **39,918** | 1.8× | clears |
 | `howto` | 37,927 | **37,154** | 1.0× | clears |
 
-**The diagnosis was router recall, and the review was right that it was.** health rose 4.1× at
-*unchanged* precision. So **rung 3 (relaxing `min_score`) and rung 4 (raising queries-per-seed) are
-not executed** — neither the precision cost nor a re-smoke and a new veto window is incurred.
-The extra stores contributed almost nothing (`hotpotqa-corpus` is 98% of the scan); the keyword
-list did the work.
+**The table above is WITHDRAWN.** It is v1's, and v1's widened lists kept the form
+`\b(alt|alt|…)\w*\b`, which wildcards every alternative: `pain` matched "paints", `nurse`
+"nursery", `chronic` "chronicle", `capital` "capital city", `credit` "credited". A painter and a
+truck-painting business were routed as `health` seeds, so the 4.1× is part recall gain and part
+precision loss — and I had claimed "precision held" without measuring it, which is the whole defect.
+**v2 lists explicit word forms** and is being rescanned. Registered with v2, because asserting
+precision is what failed: a sample of the passages the widening newly admits is judged on-topic by
+an independent Fable subagent before the widened routing is used for a build draw. The diagnosis
+(router recall, not corpus thinness) still stands; its size does not, and rungs 3–4 may yet be
+needed for `finance`.
 
 `howto` slips 773 seeds because health and finance now claim shared passages ahead of it in the
 fixed priority order — the `used` exclusion behaving as designed, disclosed rather than tuned away.

@@ -30,6 +30,10 @@ MIN_SHARE = 8          # >= 8/32 sketch agreement, the registered near-match thr
 def load_component(name, repo, rev):
     """-> (query_texts, doc_texts). BRIGHT is six slices under one family id."""
     from datasets import load_dataset
+    if name == "LEDGER":
+        import cov_ledger
+        qs, _qrels, _ids, texts, _rep = cov_ledger.load(verbose=False)
+        return qs, texts
     if name == "BRIGHT":
         qs, ds = [], []
         for sl in BRIGHT_SLICES:

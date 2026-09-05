@@ -1,0 +1,13 @@
+{
+ "repo": "artefactory/ledger-long-context-KPI-QA",
+ "revision": "7881df568382",
+ "n_queries": 10000,
+ "n_reports": 494,
+ "n_pages": 47820,
+ "n_qrels": 116912,
+ "qrel_ids_missing_from_split": 0,
+ "missing_examples": [],
+ "pages_per_report": 96.8,
+ "under_page_cap": true,
+ "empty_pages": 1106
+}

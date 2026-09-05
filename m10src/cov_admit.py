@@ -28,6 +28,8 @@ COMPONENTS = {
                "f43436957b41692dd3e1b06a6d7116cd09f6a1db"),
               ("LegalBenchConsumerContractsQA", "mteb/legalbench_consumer_contracts_qa",
                "f9eafd458f9c61e531d4a2510d8a11dfd2282b21")],
+    # Page-level retrieval; loader and page-split verification in `m10src/cov_ledger.py`.
+    "finance": [("LEDGER", "artefactory/ledger-long-context-KPI-QA", "7881df568382")],
 }
 BRIGHT_SLICES = ("biology", "earth_science", "economics", "psychology", "robotics",
                  "sustainable_living")
