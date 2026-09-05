@@ -448,15 +448,15 @@ class FormBalancedStream:
         return x, m, torch.from_numpy(np.ascontiguousarray(self.T[idx]))
 
     def realized_shares(self, n_batches):
-        """-> {form: share of presented EXAMPLES} over the first `n_batches` steps. §0b records
-        these; every batch is one form and one size, so batch share is example share."""
-        c = {}
-        for k in range(int(n_batches)):
-            f, _ = self._pick(k)
-            c[f] = c.get(f, 0) + 1
-        tot = max(sum(c.values()), 1)
-        return {("ALL" if f < 0 else FORMS[f]): round(v / tot, 6) for f, v in
-                sorted(c.items(), key=lambda kv: kv[0])}
+        """-> {form: share of presented EXAMPLES} over the first `n_batches` steps, which is what
+        §0b records. Counted from the rows actually drawn, so it is a measurement of the sampler
+        and not a restatement of its design -- and so the unbalanced variant reports the per-form
+        shares it produces rather than a single bucket.
+        """
+        idx = np.concatenate([self._pick(k)[1] for k in range(int(n_batches))])
+        cnt = np.bincount(self.forms[idx], minlength=len(FORMS))
+        tot = max(int(cnt.sum()), 1)
+        return {FORMS[i]: round(float(c) / tot, 6) for i, c in enumerate(cnt) if c}
 
 
 # --------------------------------------------------------------------------------- data cut ----

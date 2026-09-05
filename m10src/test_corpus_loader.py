@@ -128,13 +128,9 @@ def test_balanced_shares_are_equal_across_the_forms_present():
 def test_the_unbalanced_variant_is_proportional_to_the_corpus_and_stays_available():
     """Family A2's volume control and the reported diagnostic. It must NOT be balanced."""
     st, _ = _stream({"title": 400, "claim": 80, "keyword": 40}, balanced=False)
-    sh = st.realized_shares(100)
-    assert sh == {"ALL": 1.0}
-    forms = np.array([CL.FORM_ID["title"]] * 400 + [CL.FORM_ID["claim"]] * 80
-                     + [CL.FORM_ID["keyword"]] * 40)
-    seen = np.concatenate([st._pick(k)[1] for k in range(60)])
-    share_title = float((forms[seen] == CL.FORM_ID["title"]).mean())
-    assert 0.70 < share_title < 0.85, share_title       # ~400/520, not 1/3
+    sh = st.realized_shares(60)
+    assert 0.70 < sh["title"] < 0.85, sh                # ~400/520, not 1/3
+    assert abs(sum(sh.values()) - 1.0) < 1e-6
 
 
 def test_a_small_form_is_sampled_with_replacement_rather_than_dropped():
