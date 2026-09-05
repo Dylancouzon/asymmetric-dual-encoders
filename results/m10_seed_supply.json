@@ -1,0 +1,64 @@
+{
+  "wide_min4": {
+    "stores": [
+      "hotpotqa-corpus",
+      "squad-ctx",
+      "mrtydi-docs"
+    ],
+    "min_score": 4,
+    "route": "ROUTE_WIDE",
+    "order": [
+      "health",
+      "finance",
+      "howto"
+    ],
+    "n_docs_scanned": 5348204,
+    "n_unique_after_dedup": 5339995,
+    "n_length_eligible": 2615015,
+    "seeds_in_length_range": {
+      "health": 42380,
+      "finance": 39918,
+      "howto": 37154
+    },
+    "seeds_ignoring_length": {
+      "health": 54295,
+      "finance": 50213,
+      "howto": 47111
+    },
+    "length_window": [
+      40,
+      220
+    ]
+  },
+  "orig_min4": {
+    "stores": [
+      "hotpotqa-corpus",
+      "squad-ctx",
+      "mrtydi-docs"
+    ],
+    "min_score": 4,
+    "route": "ROUTE",
+    "order": [
+      "health",
+      "finance",
+      "howto"
+    ],
+    "n_docs_scanned": 5348204,
+    "n_unique_after_dedup": 5339995,
+    "n_length_eligible": 2615015,
+    "seeds_in_length_range": {
+      "health": 10399,
+      "finance": 22375,
+      "howto": 37927
+    },
+    "seeds_ignoring_length": {
+      "health": 12594,
+      "finance": 28093,
+      "howto": 47957
+    },
+    "length_window": [
+      40,
+      220
+    ]
+  }
+}

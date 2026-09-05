@@ -16,6 +16,15 @@ exactly as `zero` is); **no evaluation-path change** (exact search, frozen compa
 statistics); **no new serving or scoring dependency.** `torch.compile` is a training-step speedup
 only — the rules that keep it that way are registered in §T below and bind the step-6 trainer port.
 
+## H1 RESULT — LEDGER **REFUSED** on structure; the power problem is unmitigated (`LEDGER.md` §2, §3 W5)
+
+No `artefactory/LEDGER` repo exists; the collection's only QA member, `ledger-long-context-KPI-QA`,
+is a long-context KPI-QA set and **not a retrieval benchmark** — no qrels, no corpus, the report
+inline on every row, `answer_value` a number so only report-level relevance can be derived, reports
+~350K characters, and **409 of 500 sampled queries name their own company**. Admitting it would have
+added a near-saturated company-name-matching component that compresses between-arm differences
+rather than resolving them. Refused before any read, as the admission rule requires.
+
 ## H1 — LEDGER admission (the highest-value item, and I had omitted it)
 
 §Surfaces expects the screen's resolution distance at **0.009–0.0135** against an **MDE of 0.0056**,
@@ -67,10 +76,37 @@ A form that still cannot reach quota reports its realized count; **no top-up fro
 Disclose the interaction with form-balanced sampling: a short form is drawn with replacement, so its
 texts are seen more often.
 
+## H3 RESULT — the ladder stopped at rung 2, and the precision levers were not needed
+
+`results/m10_seed_supply.json`, `m10src/seeds.supply()`. Full stores, 5,348,204 documents scanned,
+5,339,995 unique after cross-store fingerprint dedup, 2,615,015 length-eligible. Controlled: both
+rows are the SAME stores and the SAME `min_score = 4`, so the only variable is the keyword list.
+
+| form | orig `ROUTE` | `ROUTE_WIDE` | gain | vs the ~32–33K need |
+|---|---|---|---|---|
+| `health` | 10,399 | **42,380** | **4.1×** | clears |
+| `finance` | 22,375 | **39,918** | 1.8× | clears |
+| `howto` | 37,927 | **37,154** | 1.0× | clears |
+
+**The diagnosis was router recall, and the review was right that it was.** health rose 4.1× at
+*unchanged* precision. So **rung 3 (relaxing `min_score`) and rung 4 (raising queries-per-seed) are
+not executed** — neither the precision cost nor a re-smoke and a new veto window is incurred.
+The extra stores contributed almost nothing (`hotpotqa-corpus` is 98% of the scan); the keyword
+list did the work.
+
+`howto` slips 773 seeds because health and finance now claim shared passages ahead of it in the
+fixed priority order — the `used` exclusion behaving as designed, disclosed rather than tuned away.
+
+**Registered consequence:** the BUILD seed draw uses `ROUTE_WIDE` (`seeds.draw(route=...)` defaults
+to it) and `SCREEN_VERSION` is bumped so any cached draw made under the old routing is invalidated.
+The smoke's seeds were drawn under the original `ROUTE`; that is unchanged and remains a gate
+artifact that never enters a build corpus.
+
 ## For Dylan — one question, default unchanged
 
 **Raise the `health` quota above ≈143K?** It is 1 of 7 generated forms but carries 2 of the 4
 headline datasets. Quotas are Tier 3, so this is his and the default is 143K. Not decided here.
+Supply is no longer the constraint: at 42,380 seeds health could support ~212K queries at 5 each.
 
 ## §T — `torch.compile` rules, registered now, binding the step-6 trainer port
 

@@ -76,7 +76,7 @@ def _score(pat, text, head_words=25):
 
 
 def draw(forms_wanted, per_form=40, pool_size=400_000, seed=0, store="hotpotqa-corpus",
-         screen=True, verbose=True, min_score=4):
+         screen=True, verbose=True, min_score=4, route=None):
     """-> {form: [(passage_id, passage_text)]}, all screened against the protected index.
 
     Two passes, because the forms are not equally choosy. Pass 1 scans the whole candidate pool
@@ -91,7 +91,8 @@ def draw(forms_wanted, per_form=40, pool_size=400_000, seed=0, store="hotpotqa-c
     if verbose:
         print(f"  store {store}: {len(texts):,} docs, {len(cand):,} candidates", flush=True)
 
-    pats = {f: (None if ROUTE[f] == "general" else re.compile(ROUTE[f], re.I))
+    route = route if route is not None else ROUTE_WIDE
+    pats = {f: (None if route[f] == "general" else re.compile(route[f], re.I))
             for f in forms_wanted}
     topical = [f for f in forms_wanted if pats[f] is not None]
     general = [f for f in forms_wanted if pats[f] is None]
@@ -166,6 +167,7 @@ def draw(forms_wanted, per_form=40, pool_size=400_000, seed=0, store="hotpotqa-c
     if verbose:
         print(f"  projected topical seeds in the full store: {projected}", flush=True)
     return kept, dict(store=store, pool_size=int(len(cand)), seed=seed, min_score=min_score,
+                      route="ROUTE_WIDE" if route is ROUTE_WIDE else "ROUTE",
                       store_size=len(texts), projected_topical_full_store=projected,
                       length_eligible=len(eligible),
                       topical_candidates={f: len(ranked[f]) for f in topical},
@@ -177,7 +179,7 @@ def draw(forms_wanted, per_form=40, pool_size=400_000, seed=0, store="hotpotqa-c
 # Bumped whenever the screen's SCOPE changes (e.g. COV joins the protected index). A cached
 # draw made under an older scope can then never be served -- the old blocker was a cache key of
 # `smoke-{per_form}-{forms}`, which ignored store, seed, min_score, pool size and the screen.
-SCREEN_VERSION = "2026-09-04-protected-queries-only"
+SCREEN_VERSION = "2026-09-04b-protected-queries-only+ROUTE_WIDE"
 
 
 def _key(forms_wanted, per_form, kw):
@@ -188,6 +190,53 @@ def _key(forms_wanted, per_form, kw):
                  lengths=[MIN_WORDS, MAX_WORDS])
     h = hashlib.blake2b(json.dumps(ident, sort_keys=True).encode(), digest_size=8).hexdigest()
     return h, ident
+
+
+def supply(forms=("health", "finance", "howto"), stores=None, min_score=4, route=None,
+           verbose=True):
+    """Realized topical seed supply per form over the FULL approved stores — not a projection.
+
+    Ordering matters and is fixed: a passage matching two forms is claimed by whichever form is
+    processed first, so `forms` is given in priority order (health first — `nfcorpus` and
+    `trec-covid`, two of the four clean-4 datasets, are biomedical). Cross-store text dedup by
+    exact fingerprint, because the three Wikipedia slices overlap.
+    """
+    import decontam
+    stores = stores or TOPICAL_STORES
+    route = route or ROUTE_WIDE
+    pats = {f: re.compile(route[f], re.I) for f in forms}
+    counts = {f: 0 for f in forms}
+    counts_nolen = {f: 0 for f in forms}
+    seen, n_docs, n_len_ok = set(), 0, 0
+    for store in stores:
+        ids, texts = _iter_store(store)
+        if verbose:
+            print(f"  {store}: {len(texts):,} docs", flush=True)
+        for t in texts:
+            n_docs += 1
+            k = int(decontam.exact_u64(t))
+            if k in seen:
+                continue
+            seen.add(k)
+            nw = len(t.split())
+            length_ok = MIN_WORDS <= nw <= MAX_WORDS
+            n_len_ok += length_ok
+            for f in forms:                     # priority order; first match claims the passage
+                if _score(pats[f], t) >= min_score:
+                    counts_nolen[f] += 1
+                    if length_ok:
+                        counts[f] += 1
+                    break
+    out = dict(stores=list(stores), min_score=min_score, route="ROUTE_WIDE" if route is ROUTE_WIDE
+               else "ROUTE", order=list(forms), n_docs_scanned=n_docs,
+               n_unique_after_dedup=len(seen), n_length_eligible=n_len_ok,
+               seeds_in_length_range=counts, seeds_ignoring_length=counts_nolen,
+               length_window=[MIN_WORDS, MAX_WORDS])
+    if verbose:
+        print(f"  scanned {n_docs:,}, unique {len(seen):,}, length-eligible {n_len_ok:,}")
+        for f in forms:
+            print(f"    {f:10s} {counts[f]:8,d} in range   ({counts_nolen[f]:,} ignoring length)")
+    return out
 
 
 def cached(forms_wanted, per_form=40, **kw):
