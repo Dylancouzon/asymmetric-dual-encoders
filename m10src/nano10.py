@@ -560,6 +560,15 @@ def warm_start_from_m9(model, ckpt_path, verbose=False):
     if hw.shape != (model.out_dim, d1):
         raise SystemExit(f"{ckpt_path}: head is {tuple(hw.shape)}, expected "
                          f"{(model.out_dim, d1)} -- M9's head is one layer wide")
+    expected = set(model.backbone.state_dict())
+    got = set(bb)
+    if not got:
+        raise SystemExit(f"{ckpt_path}: no `backbone.*` keys -- this would silently install M9's "
+                         f"head on a FRESH pretrained backbone and report it as an M9 warm start")
+    missing_bb = expected - got
+    if missing_bb:
+        raise SystemExit(f"{ckpt_path}: {len(missing_bb)} backbone keys absent "
+                         f"(e.g. {sorted(missing_bb)[:3]}) -- refusing a partial M9 init")
     missing = model.backbone.load_state_dict(bb, strict=False)
     dev = next(model.parameters()).device
     with torch.no_grad():

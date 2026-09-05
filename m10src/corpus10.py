@@ -62,28 +62,58 @@ def _kgrams(words, k=SPAN_K):
     return {tuple(words[i:i + k]) for i in range(len(words) - k + 1)}
 
 
+def _occurrences(hay, needle):
+    """-> the start indices at which `needle` appears in `hay` (both word lists)."""
+    n = len(needle)
+    if not n or n > len(hay):
+        return []
+    return [i for i in range(len(hay) - n + 1) if hay[i:i + n] == needle]
+
+
 def copied_span(query, source_text, exclude_span=None, k=SPAN_K):
     """True if the query shares a word-`k`-gram with its OWN seed passage -- a copied span is not
-    a query. `exclude_span` is the harvested string itself, removed from the source first, because
-    a harvested title IS a span of its document and would otherwise always self-match.
+    a query. `exclude_span` is the harvested string itself, because a harvested title IS a span of
+    its document and would otherwise always self-match.
 
-    The exclusion removes the span's k-grams, not the span's characters: deleting a substring would
-    splice its neighbours into k-grams that never existed in the source.
+    **The exclusion is POSITIONAL, not by gram value.** Subtracting the span's k-gram VALUES from
+    the source's set removes those grams wherever else they occur, so a query copied from a
+    different occurrence of the same five words would pass (Codex 2026-09-05, finding 8). Instead
+    the span is located in the source and only the k-gram windows lying entirely inside one of its
+    occurrences are dropped. Windows that straddle a boundary are KEPT, which is also why the
+    exclusion cannot splice new grams the way deleting characters would.
     """
     qw = decontam.norm_words(query)
     sw = decontam.norm_words(source_text)
-    src = _kgrams(sw, k)
+    if len(sw) < k:
+        return False
+    drop = set()
     if exclude_span:
-        src -= _kgrams(decontam.norm_words(exclude_span), k)
+        ew = decontam.norm_words(exclude_span)
+        for st in _occurrences(sw, ew):
+            # windows fully inside [st, st+len(ew))
+            for i in range(st, st + len(ew) - k + 1):
+                drop.add(i)
+    src = {tuple(sw[i:i + k]) for i in range(len(sw) - k + 1) if i not in drop}
     return bool(_kgrams(qw, k) & src)
 
 
-def near_dup_gate(queries, share=A8_NEAR_DUP_SHARE):
+def near_dup_gate(queries, share=A8_NEAR_DUP_SHARE, against="earlier_query"):
     """A8 gate 1 for ONE form. -> (representatives, exact_deduped, report).
 
     Sequential and order-dependent BY REGISTRATION: "a query is a near-duplicate if its
     word-8-gram bottom-32 sketch matches >= 16/32 with an EARLIER query of the same form (the
     earlier one is the representative)". So the first occurrence is always the representative.
+
+    **`against` picks between two readings of "an earlier query", and the registration is
+    ambiguous** (Codex 2026-09-05, finding 6a):
+      `"earlier_query"`   -- the LITERAL text: compare against every earlier query, dropped ones
+                             included. Catches chains (A~B, B~C, A!~C drops C), which IS template
+                             collapse, so it is both more faithful and better at the gate's stated
+                             purpose. **Default.**
+      `"representative"`  -- compare only against surviving representatives, the standard near-dup
+                             clustering reading. Retains strictly more.
+    The choice changes the reported rate and therefore whether the > 25% cut fires, so it is
+    logged as a Tier-2 reading rather than left implicit.
 
     `representatives` is what the form becomes IF the rate is above 25%; `exact_deduped` is what
     it stays otherwise. The caller applies the action, since it also depends on `A8_MIN_RETAINED`.
@@ -98,7 +128,9 @@ def near_dup_gate(queries, share=A8_NEAR_DUP_SHARE):
         seen_exact.add(h)
         order.append(i)
 
-    index = {}                      # gram -> [representative positions in `reps`]
+    if against not in ("earlier_query", "representative"):
+        raise ValueError(f"against={against!r}")
+    index = {}                      # gram -> [earlier query positions]
     reps, n_near = [], 0
     for i in order:
         sk = decontam.sketch(queries[i])
@@ -106,33 +138,42 @@ def near_dup_gate(queries, share=A8_NEAR_DUP_SHARE):
         for g in sk.tolist():
             for r in index.get(g, ()):
                 counts[r] = counts.get(r, 0) + 1
-        if any(c >= share for c in counts.values()):
+        dup = any(c >= share for c in counts.values())
+        if dup:
             n_near += 1
-            continue
-        r = len(reps)
-        reps.append(i)
+        else:
+            reps.append(i)
+        if dup and against == "representative":
+            continue                        # dropped queries do not enter the index
         for g in sk.tolist():
-            index.setdefault(g, []).append(r)
+            index.setdefault(g, []).append(i)
 
     post_exact = len(order)
     rate = n_near / max(post_exact, 1)
     rep = {"n_input": len(queries), "exact_dups_removed": exact_dups,
            "post_exact_dedup": post_exact, "near_duplicates": n_near,
+           # the RAW rate drives the action; the rounded one is for display only. 50001/200001 is
+           # 0.25000375 and rounds to 0.25, which would wrongly escape the > 0.25 cut.
+           "near_dup_rate_raw": rate,
            "near_dup_rate": round(rate, 5), "representatives": len(reps),
-           "share_threshold": f"{share}/32",
+           "share_threshold": f"{share}/32", "compared_against": against,
+           "_blind_spot": ("an N-word query has N-7 word-8-grams, so a sketch reaches this "
+                           "threshold only at N >= 23: for forms whose whole range is shorter "
+                           "(factoid, keyword, product, title, yesno) this gate CANNOT fire and "
+                           "only exact dedup applies -- see m10/LEDGER.md"),
            "_note": "sequential by registration: the first occurrence is the representative"}
     return [queries[i] for i in reps], [queries[i] for i in order], rep
 
 
-def a8_action(form, queries, share=A8_NEAR_DUP_SHARE):
+def a8_action(form, queries, share=A8_NEAR_DUP_SHARE, against="earlier_query"):
     """The registered action on A8 gate 1. -> (kept, report).
 
     Above a 25% near-duplicate rate the form keeps ONLY its representatives -- "a real cut, never
     topped up". If fewer than 50,000 remain the form is DROPPED from the build and reported.
     At or below 25% nothing is cut: the near-duplicates stay.
     """
-    reps, deduped, rep = near_dup_gate(queries, share=share)
-    if rep["near_dup_rate"] > A8_MAX_NEAR_DUP_RATE:
+    reps, deduped, rep = near_dup_gate(queries, share=share, against=against)
+    if rep["near_dup_rate_raw"] > A8_MAX_NEAR_DUP_RATE:
         kept = reps
         rep["action"] = "cut to representatives (rate above 0.25, never topped up)"
     else:
@@ -265,10 +306,12 @@ def build_form(form, seed_rows, quota, *, n_per_seed=5, gate_ids=(), base=None, 
             keep_set.discard(r["query"])
             out.append(r)
     rng.shuffle(out)                                # never a positional prefix -- see the docstring
+    out_final = out[:quota]
     report = {"form": form, "quota": quota, "seeds": prep, "seed_margin": margin, "seed": seed,
               "seeds_used": len(use), "holdout_seed_ids": sorted(r[0] for r in held),
               "generation": {k: v for k, v in g.items() if k != "queries"},
               "screens": screens, "a8": a8,
-              "final": len(out), "quota_met": len(out) >= quota,
+              "final": len(out_final), "before_quota_cut": len(out),
+              "quota_met": len(out_final) >= quota,
               "dropped_from_build": a8["dropped_from_build"]}
-    return out[:quota], report
+    return out_final, report

@@ -21,16 +21,7 @@
  "shapes_run": [
   "ANCHOR",
   "F-MiniLM-L6",
-  "F-MiniLM-L12",
-  "G-384",
-  "G-1536",
-  "G-MLP",
-  "B-100/0",
-  "B-50/50",
-  "E-bs128",
-  "D-NORM",
-  "D-COV",
-  "C-M9init"
+  "F-MiniLM-L12"
  ],
  "arms": [
   {
@@ -58,22 +49,22 @@
    "warm_start_registered": "linear",
    "warm_start_record": {
     "n_fit": 256,
-    "lambda": 0.0001,
-    "train_objective": 0.0,
+    "lambda": 1.0,
+    "train_objective": 0.10386,
     "d_in": 1152
    },
    "warm_start_implemented": true,
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 65.4,
+   "examples_per_s": 68.0,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 47.6
+   "seconds": 52.6
   },
   {
    "arm": "F-MiniLM-L6",
@@ -94,22 +85,22 @@
    "warm_start_registered": "linear",
    "warm_start_record": {
     "n_fit": 256,
-    "lambda": 0.0001,
-    "train_objective": 0.0,
+    "lambda": 1.0,
+    "train_objective": 0.09026,
     "d_in": 1152
    },
    "warm_start_implemented": true,
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 112.6,
+   "examples_per_s": 118.2,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 28.1
+   "seconds": 34.4
   },
   {
    "arm": "F-MiniLM-L12",
@@ -130,362 +121,26 @@
    "warm_start_registered": "linear",
    "warm_start_record": {
     "n_fit": 256,
-    "lambda": 0.0001,
-    "train_objective": 0.0,
+    "lambda": 1.0,
+    "train_objective": 0.09956,
     "d_in": 1152
    },
    "warm_start_implemented": true,
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 65.4,
+   "examples_per_s": 67.8,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 47.1
-  },
-  {
-   "arm": "G-384",
-   "spec": {
-    "student": "bge-small",
-    "n_layers": 1,
-    "head": "linear",
-    "pattern": "75/25",
-    "batch": 32,
-    "loss": "squared_l2"
-   },
-   "covers": [],
-   "device": "cpu",
-   "constructed": true,
-   "d_in": 384,
-   "params": 33754240,
-   "under_cap": true,
-   "warm_start_registered": "linear",
-   "warm_start_record": {
-    "n_fit": 256,
-    "lambda": 0.0001,
-    "train_objective": 0.0,
-    "d_in": 384
-   },
-   "warm_start_implemented": true,
-   "steps_run": 90,
-   "stopped": null,
-   "examples": 2880,
-   "examples_per_s": 69.4,
-   "mix": {
-    "Q": 68,
-    "D": 22,
-    "q_share": 0.7555555555555555
-   },
-   "passed": true,
-   "seconds": 43.2
-  },
-  {
-   "arm": "G-1536",
-   "spec": {
-    "student": "bge-small",
-    "n_layers": 4,
-    "head": "linear",
-    "pattern": "75/25",
-    "batch": 32,
-    "loss": "squared_l2"
-   },
-   "covers": [],
-   "device": "cpu",
-   "constructed": true,
-   "d_in": 1536,
-   "params": 34933888,
-   "under_cap": true,
-   "warm_start_registered": "linear",
-   "warm_start_record": {
-    "n_fit": 256,
-    "lambda": 0.0001,
-    "train_objective": 0.0,
-    "d_in": 1536
-   },
-   "warm_start_implemented": true,
-   "steps_run": 90,
-   "stopped": null,
-   "examples": 2880,
-   "examples_per_s": 63.4,
-   "mix": {
-    "Q": 68,
-    "D": 22,
-    "q_share": 0.7555555555555555
-   },
-   "passed": true,
-   "seconds": 48.0
-  },
-  {
-   "arm": "G-MLP",
-   "spec": {
-    "student": "bge-small",
-    "n_layers": 3,
-    "head": "mlp",
-    "pattern": "75/25",
-    "batch": 32,
-    "loss": "squared_l2",
-    "warm_start": "mlp"
-   },
-   "covers": [],
-   "device": "cpu",
-   "constructed": true,
-   "d_in": 1152,
-   "params": 34959680,
-   "under_cap": true,
-   "warm_start_registered": "mlp",
-   "warm_start_record": {
-    "n_fit": 256,
-    "lambda": 0.0001,
-    "lambda_rows": null,
-    "k": 192,
-    "d_in": 1152,
-    "n_tokens": 1744,
-    "train_objective": 0.0,
-    "train_objective_linear_only": 0.0,
-    "solves": "W_lin ridge on pooled | W1,b1 centred per-token PCA, signs fixed | W2,b2 ridge from pooled GELU features to solve 1's residual"
-   },
-   "warm_start_implemented": true,
-   "steps_run": 90,
-   "stopped": null,
-   "examples": 2880,
-   "examples_per_s": 62.9,
-   "mix": {
-    "Q": 68,
-    "D": 22,
-    "q_share": 0.7555555555555555
-   },
-   "passed": true,
-   "seconds": 59.1
-  },
-  {
-   "arm": "B-100/0",
-   "spec": {
-    "student": "bge-small",
-    "n_layers": 3,
-    "head": "linear",
-    "pattern": "100/0",
-    "batch": 32,
-    "loss": "squared_l2"
-   },
-   "covers": [],
-   "device": "cpu",
-   "constructed": true,
-   "d_in": 1152,
-   "params": 34540672,
-   "under_cap": true,
-   "warm_start_registered": "linear",
-   "warm_start_record": {
-    "n_fit": 256,
-    "lambda": 0.0001,
-    "train_objective": 0.0,
-    "d_in": 1152
-   },
-   "warm_start_implemented": true,
-   "steps_run": 90,
-   "stopped": null,
-   "examples": 2880,
-   "examples_per_s": 112.1,
-   "mix": {
-    "Q": 90,
-    "D": 0,
-    "q_share": 1.0
-   },
-   "passed": true,
-   "seconds": 28.9
-  },
-  {
-   "arm": "B-50/50",
-   "spec": {
-    "student": "bge-small",
-    "n_layers": 3,
-    "head": "linear",
-    "pattern": "50/50",
-    "batch": 32,
-    "loss": "squared_l2"
-   },
-   "covers": [],
-   "device": "cpu",
-   "constructed": true,
-   "d_in": 1152,
-   "params": 34540672,
-   "under_cap": true,
-   "warm_start_registered": "linear",
-   "warm_start_record": {
-    "n_fit": 256,
-    "lambda": 0.0001,
-    "train_objective": 0.0,
-    "d_in": 1152
-   },
-   "warm_start_implemented": true,
-   "steps_run": 90,
-   "stopped": null,
-   "examples": 2880,
-   "examples_per_s": 44.0,
-   "mix": {
-    "Q": 46,
-    "D": 44,
-    "q_share": 0.5111111111111111
-   },
-   "passed": true,
-   "seconds": 68.3
-  },
-  {
-   "arm": "E-bs128",
-   "spec": {
-    "student": "bge-small",
-    "n_layers": 3,
-    "head": "linear",
-    "pattern": "75/25",
-    "batch": 128,
-    "loss": "squared_l2"
-   },
-   "covers": [],
-   "device": "cpu",
-   "constructed": true,
-   "d_in": 1152,
-   "params": 34540672,
-   "under_cap": true,
-   "warm_start_registered": "linear",
-   "warm_start_record": {
-    "n_fit": 256,
-    "lambda": 0.0001,
-    "train_objective": 0.0,
-    "d_in": 1152
-   },
-   "warm_start_implemented": true,
-   "steps_run": 90,
-   "stopped": null,
-   "examples": 11520,
-   "examples_per_s": 91.9,
-   "mix": {
-    "Q": 68,
-    "D": 22,
-    "q_share": 0.7555555555555555
-   },
-   "passed": true,
-   "seconds": 128.7
-  },
-  {
-   "arm": "D-NORM",
-   "spec": {
-    "student": "bge-small",
-    "n_layers": 3,
-    "head": "linear",
-    "pattern": "75/25",
-    "batch": 32,
-    "loss": "leaf_norm_e2"
-   },
-   "covers": [],
-   "device": "cpu",
-   "constructed": true,
-   "d_in": 1152,
-   "params": 34540672,
-   "under_cap": true,
-   "warm_start_registered": "linear",
-   "warm_start_record": {
-    "n_fit": 256,
-    "lambda": 0.0001,
-    "train_objective": 0.0,
-    "d_in": 1152
-   },
-   "warm_start_implemented": true,
-   "steps_run": 90,
-   "stopped": null,
-   "examples": 2880,
-   "examples_per_s": 65.1,
-   "mix": {
-    "Q": 68,
-    "D": 22,
-    "q_share": 0.7555555555555555
-   },
-   "passed": true,
-   "seconds": 47.9
-  },
-  {
-   "arm": "D-COV",
-   "spec": {
-    "student": "bge-small",
-    "n_layers": 3,
-    "head": "linear",
-    "pattern": "75/25",
-    "batch": 32,
-    "loss": "document_covariance_weighted"
-   },
-   "covers": [],
-   "device": "cpu",
-   "constructed": true,
-   "d_in": 1152,
-   "params": 34540672,
-   "under_cap": true,
-   "warm_start_registered": "linear",
-   "warm_start_record": {
-    "n_fit": 256,
-    "lambda": 0.0001,
-    "train_objective": 0.0,
-    "d_in": 1152
-   },
-   "warm_start_implemented": true,
-   "steps_run": 90,
-   "stopped": null,
-   "examples": 2880,
-   "examples_per_s": 65.2,
-   "mix": {
-    "Q": 68,
-    "D": 22,
-    "q_share": 0.7555555555555555
-   },
-   "passed": true,
-   "seconds": 46.8
-  },
-  {
-   "arm": "C-M9init",
-   "spec": {
-    "student": "bge-small",
-    "n_layers": 3,
-    "head": "linear",
-    "pattern": "75/25",
-    "batch": 32,
-    "loss": "squared_l2",
-    "warm_start": "m9"
-   },
-   "covers": [],
-   "device": "cpu",
-   "constructed": true,
-   "d_in": 1152,
-   "params": 34540672,
-   "under_cap": true,
-   "warm_start_registered": "m9",
-   "warm_start_record": {
-    "ckpt": "/home/dylan/asymetric-dual-encoders/work/m9long/ckpt/step450000.pt",
-    "backbone_keys_loaded": 199,
-    "backbone_missing": 0,
-    "head_block": [
-     1024,
-     384
-    ],
-    "zeroed_columns": 768,
-    "note": "M9's 384-d head kept in the last layer's columns; the two extra layers' columns are zero, so the arm starts at M9's function"
-   },
-   "warm_start_implemented": true,
-   "steps_run": 90,
-   "stopped": null,
-   "examples": 2880,
-   "examples_per_s": 69.5,
-   "mix": {
-    "Q": 68,
-    "D": 22,
-    "q_share": 0.7555555555555555
-   },
-   "passed": true,
-   "seconds": 42.4
+   "seconds": 52.8
   }
  ],
  "failed": [],
  "warm_start_not_implemented": [],
- "all_shapes_pass": true,
- "_partial": false
+ "all_shapes_pass": false,
+ "_partial": true
 }

@@ -77,13 +77,24 @@ def _norm(q):
 def read_rows(rows, verbose=True):
     """-> [question] for the given SORTED line indices, one sequential pass over 6.2 GB."""
     want, out, k, t0 = set(int(r) for r in rows), [], 0, time.time()
+    n_lines = 0
     with SRC.open() as fh:
         for i, line in enumerate(fh):
+            n_lines = i + 1
             if i in want:
                 out.append(json.loads(line)["question"])
                 k += 1
                 if verbose and k % 500_000 == 0:
                     print(f"    read {k:,}/{len(want):,} ({time.time() - t0:.0f}s)", flush=True)
+    # A TRUNCATED extraction would silently return fewer rows, and the 5% margin would absorb it
+    # into a quota-filling but prefix-biased sample. The tarball hash is checked, but it does not
+    # prove `SRC` is a complete extraction OF that tarball -- this does.
+    if n_lines != POPULATION:
+        raise SystemExit(f"{SRC}: {n_lines:,} lines, expected the pinned {POPULATION:,} -- the "
+                         f"extraction is incomplete or the file is not the pinned release")
+    if len(out) != len(want):
+        raise SystemExit(f"read {len(out):,} of {len(want):,} requested rows -- refusing a "
+                         f"short, positionally-biased draw")
     return out
 
 

@@ -80,6 +80,7 @@ N_TEXTS = 4096
 # newest surviving weights of the M9 long run are these. Immaterial for an init, but the arm must
 # not be described as starting from "the M9 candidate" without the qualification.
 M9_CANDIDATE = REPO / "work" / "m9long" / "ckpt" / "step450000.pt"
+N_WS_FIT = 256          # warm-start fit sample for the smoke; the real arms use 60,000
 
 
 def corpus(verbose=True):
@@ -130,13 +131,18 @@ def smoke_one(name, spec, corp, device="cpu", max_len=512, verbose=True):
     ws = spec.get("warm_start", "linear")
     rec["warm_start_registered"] = ws
     try:
+        # `lam=None` on purpose: the real arms select lambda, and hardcoding 1e-4 here left the
+        # `select_lambda` -> `warmfit.select` path unexercised. At n_fit 256 the holdout is
+        # degenerate (255 fit / 1 val), so the VALUE it picks means nothing -- the point is that
+        # the path runs and returns a lambda from the locked grid.
         if ws == "mlp":
-            rec["warm_start_record"] = N.warm_start_mlp(m, texts[:256], T[:256], lam=1e-4)
+            rec["warm_start_record"] = N.warm_start_mlp(m, texts[:N_WS_FIT], T[:N_WS_FIT])
         elif ws == "m9":
             rec["warm_start_record"] = N.warm_start_from_m9(m, M9_CANDIDATE)
         else:
-            X = N.pooled_features(m, texts[:256])
-            rec["warm_start_record"] = N.warm_start_linear(m, X, T[:256], lam=1e-4)
+            X = N.pooled_features(m, texts[:N_WS_FIT])
+            lam, _rows = N.select_lambda(X, T[:N_WS_FIT])
+            rec["warm_start_record"] = N.warm_start_linear(m, X, T[:N_WS_FIT], lam=lam)
         rec["warm_start_implemented"] = True
     except Exception as e:
         rec["warm_start_implemented"] = False
@@ -158,7 +164,9 @@ def smoke_one(name, spec, corp, device="cpu", max_len=512, verbose=True):
                    examples=r.get("examples"), examples_per_s=r.get("examples_per_s"),
                    mix=r.get("mix"))
         ok = (r.get("steps_run") == STEPS and not r.get("stopped"))
-        rec["passed"] = bool(ok and m.under_cap())
+        # a shape does NOT pass if its REGISTERED warm start failed: the arm would silently train
+        # from a fresh head, which is exactly the confound this file exists to prevent.
+        rec["passed"] = bool(ok and m.under_cap() and rec.get("warm_start_implemented"))
     except Exception as e:
         import traceback
         rec.update(passed=False, error=f"{type(e).__name__}: {e}",

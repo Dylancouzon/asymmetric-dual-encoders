@@ -297,3 +297,83 @@ def test_draw_seeds_is_deterministic_and_returns_everything_when_supply_is_short
     assert C.draw_seeds(build, 40, seed=0) == C.draw_seeds(build, 40, seed=0)
     assert C.draw_seeds(build, 40, seed=1) != C.draw_seeds(build, 40, seed=0)
     assert C.draw_seeds(build, 900, seed=0) == build, "short supply returns all of it"
+
+
+def test_a8_gate_cannot_fire_below_23_words_and_the_short_forms_are_named():
+    """**A8's diversity gate is structurally inert for short forms.** An N-word text has N-7
+    word-8-grams, so a sketch reaches the registered 16/32 threshold only at N >= 23. Five of the
+    twelve registered forms have their ENTIRE range below that -- including `yesno`, a GENERATED
+    form -- so the gate decision 14 leaned on as its guard against 4-bit repetition cannot fire
+    for them. Asserted here so the blind spot cannot be forgotten or silently 'fixed' by a
+    threshold change that nobody registers."""
+    import qfilter
+    import decontam
+    assert decontam.NGRAM == 8 and C.A8_NEAR_DUP_SHARE == 16
+    floor = decontam.NGRAM + C.A8_NEAR_DUP_SHARE - 1          # 23
+    assert len(decontam.sketch(" ".join(f"w{i}" for i in range(floor - 1)))) < 16
+    assert len(decontam.sketch(" ".join(f"w{i}" for i in range(floor)))) >= 16
+    never = sorted(f for f, (lo, hi) in qfilter.RANGES.items() if hi < floor)
+    assert never == ["factoid", "keyword", "product", "title", "yesno"], never
+    # and a pile of identical short queries is NOT caught as near-duplicates -- only exact dedup
+    # removes them, which is why the retained count is 1 and not a near-dup rate
+    qs = ["is this product waterproof and safe to use outdoors"] * 40
+    _reps, _ded, rep = C.near_dup_gate(qs)
+    assert rep["near_duplicates"] == 0, "the gate is inert here; exact dedup did the work"
+    assert rep["exact_dups_removed"] == 39 and rep["post_exact_dedup"] == 1
+
+
+def test_copied_span_keeps_windows_that_straddle_the_excluded_span():
+    """Finding 8: value subtraction removed a gram wherever it occurred. Positional exclusion
+    drops only windows lying entirely inside an occurrence, so boundary windows still catch."""
+    src = "alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu"
+    span = "gamma delta epsilon zeta eta"
+    assert not C.copied_span(span, src, exclude_span=span), "the span itself must survive"
+    # a window straddling the span's right boundary is NOT part of the span and must still catch
+    straddle = "delta epsilon zeta eta theta"
+    assert C.copied_span(straddle, src, exclude_span=span)
+    straddle_left = "beta gamma delta epsilon zeta"
+    assert C.copied_span(straddle_left, src, exclude_span=span)
+
+
+def test_copied_span_multi_occurrence_hole_is_open_and_asserted_as_such():
+    """The honest limit: with the span appearing twice and no harvest offset, both occurrences are
+    excluded and a copy of the second passes. Asserted so the limitation is visible, not implied."""
+    src = "aa bb cc dd ee ff gg hh aa bb cc dd ee ii jj"
+    span = "aa bb cc dd ee"
+    assert not C.copied_span("aa bb cc dd ee", src, exclude_span=span), \
+        "known limitation: the second occurrence is excluded too (no offset is recorded)"
+
+
+def _long(prefix, n):
+    return [f"{prefix}{i}" for i in range(n)]
+
+
+def test_a8_earlier_query_reading_catches_a_chain_that_the_representative_reading_misses():
+    """Finding 6a. A~B and B~C but A!~C. The literal 'an EARLIER query' rule drops C; the
+    'earlier representative' reading keeps it, because B was removed from the index."""
+    # 39 words -> exactly 32 word-8-grams, so the bottom-32 sketch holds ALL of them. Longer
+    # texts silently drop grams from the sketch and the overlap arithmetic stops being the
+    # contiguous-run arithmetic -- which is how the first version of this fixture went wrong.
+    a = _long("a", 39)
+    A = " ".join(a)                                    # a0..a38
+    B = " ".join(a[:31] + _long("n", 8))               # shares a0..a30  -> 24 grams with A
+    Cq = " ".join(a[15:31] + _long("n", 8) + _long("z", 15))   # shares 24 words with B -> 17
+    sk = lambda t: set(decontam.sketch(t).tolist())
+    for t in (A, B, Cq):
+        assert len(t.split()) == 39 and len(sk(t)) == 32, "fixture must not overflow the sketch"
+    assert len(sk(A) & sk(B)) >= C.A8_NEAR_DUP_SHARE, "fixture: B must match A"
+    assert len(sk(B) & sk(Cq)) >= C.A8_NEAR_DUP_SHARE, "fixture: C must match B"
+    assert len(sk(A) & sk(Cq)) < C.A8_NEAR_DUP_SHARE, "fixture: C must NOT match A"
+
+    _r, _d, lit = C.near_dup_gate([A, B, Cq], against="earlier_query")
+    assert lit["near_duplicates"] == 2 and lit["representatives"] == 1
+
+    _r, _d, nar = C.near_dup_gate([A, B, Cq], against="representative")
+    assert nar["near_duplicates"] == 1 and nar["representatives"] == 2
+
+
+def test_a8_action_reads_the_RAW_rate_not_the_rounded_one():
+    """Finding 6b: 0.25000375 rounds to 0.25 and would wrongly escape the `> 0.25` cut."""
+    rep = {"near_dup_rate_raw": 0.25000375, "near_dup_rate": round(0.25000375, 5)}
+    assert rep["near_dup_rate"] == 0.25 and not (rep["near_dup_rate"] > C.A8_MAX_NEAR_DUP_RATE)
+    assert rep["near_dup_rate_raw"] > C.A8_MAX_NEAR_DUP_RATE, "the raw rate must fire the cut"

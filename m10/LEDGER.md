@@ -580,6 +580,8 @@ came from. This is a **data-recipe** gate, which `CLAUDE.md` puts explicitly on 
 | W7 | **Do `factoid` and `product` revert to generation at ≈143K each, or stay dropped?** The mandate registers both as harvested forms (~250K each) AND registers "a harvested form that falls under 100K reverts to generation"; they yield 5,605 and 40,977. Reverting costs two new prompts, two smoke gates, two veto windows and **+286K over the registered 1.0M generation cap**; not reverting means the 1.25M is carried by three forms at 417K/417K/416K rather than five at ~250K. **Registered default: excluded**, and that is what `draw()` executes. Also for ratification: the three-form quota table itself is a reallocation of the mandate's five-form split. Measured `ask` quality is in §Harvest amendment 2026-09-05 item 2 — read it before admitting anything | Every option changes a registered quota number; quotas are Tier 3 | none for the harvest (the draw runs on the registered three), but it must be settled **before the M10.2 recipe lock** |
 | W8 | **Can the screen earn its keep, and is "MDE 0.0056" the rule you want?** The registered `resolve_rule` requires the POINT estimate to reach the MDE, which caps power at 50% at a true effect of 0.0056 whatever the interval does; F and E need a true **0.0112** for ~80% power (16% at 0.0056), and **A's rule is `lower > MDE`, so A3−A2 — the contrast M10 exists to run — must read above 0.0142.** The screen costs **106–126M examples (43–51 h), 166–186M with confirmations**. Codex's recommendation, recorded not adopted: freeze the recipe on stated priors, spend the compute on the build and on seed replication, and report the recipe as prior-selected. **Three ways to go: (a) accept and report unresolved contrasts as unresolved — the registered default; (b) move the MDE or the rule; (c) cut families and spend on the build.** A 5M contrast cannot show a data advantage persists at 200M, so a causal coverage headline needs a matched near-full-dose control either way | The MDE and the resolve rule are pre-registered statistics; the screen's existence is the milestone's shape. Tier 3, and **before family F**, never after | **none for the data path** — the corpus is needed under every option and is being built now |
 | W9 | **Eleven registry decision-logic defects; five BLOCK any arm.** `E-bs32` and `G-384` **cannot win their own contrasts** (one-sided rule + orientation: their win is a negative point, and `point >= MDE` refuses it), F's post-hoc orientation makes the familywise α **0.02885 not 0.025**, F2's comparator is adaptively selected with no selection-aware bootstrap, and the **L12 5M probe is schedule-confounded** — L6/bge read at 5M inside a 20M schedule are mid-cycle and un-annealed, which is the defect S1 created the standalone anchor to fix. Plus six specification gaps (multi-arm tie-breaks in G/B/D, the confirmation revert rule only in prose, `trained_arms_expected` 16 vs 15 when C is skipped, prose-DSL "machine-readable" fields, registry 16 vs mandate 15 arms, the "MDE" wording). Full table in §Codex review 2026-09-05 | Reorienting a contrast or reallocating α changes pre-registered statistics = Tier 3. **I have deliberately not edited the design lock**, since a partial repair would leave it inconsistent and the α item is yours regardless | **none for the data path**; blocks family F |
+| W10 | **A8's diversity gate cannot fire for five of twelve forms, including the generated form `yesno`.** An N-word query has N−7 word-8-grams, so the registered **16/32** threshold is unreachable below **23 words**; `factoid`, `keyword`, `product`, `title` and `yesno` have their whole range below it, and `claim`/`comparison`/`finance`/`health` only reach it at their longest. Template collapse with one varying slot passes untouched. **Decision 14 accepted a 4-bit generator on the stated ground that this gate guards against 4-bit repetition** — for `yesno` it does not. Options: (a) accept and report the gate as inert for short forms, leaning on exact dedup and the registered mean-pairwise-cosine diagnostic; (b) scale the threshold with sketch size (e.g. ≥ half the available grams) so short forms are covered; (c) use a shorter n-gram for short forms; (d) promote the stella cosine diagnostic to the guard for forms the sketch cannot reach. **Nothing is changed here** — the implementation faithfully implements the registration | The threshold, the n-gram and the gate's ACTION (cut to representatives, drop below 50,000) are a registered quality gate. Tier 3 | **none yet** — no generation has run, so no number it governs is observed. Must be settled **before generation** |
+| W11 | **Two registered screens were never applied to the shipped harvest corpus** (Codex finding 2): the own-source word-5-gram copy check with the harvested span excluded, and the FORMS-12 hold-out. §Data requires harvested strings to get "the same screens, quotas and hold-out as a generated one". **No re-draw is needed** — `harvest_drawn.jsonl` carries each row's `doc` id, so both are a post-pass. **This is mine to execute, listed here only so it is not lost** | — | owed before the A3 corpus is trained on |
 | W3 | **Seed supply is OPEN — the widening was tried and REJECTED by its own gate.** Full-store, `min_score ≥ 4`: `health` 10,399, `finance` 22,375, `howto` 37,927 against a ~32–33K need. Widening the keyword lists raised the raw counts (health 36,284) but the registered judged-precision gate reads **28% on-topic on health's marginal and 38% on finance's**, against ≥ 80% — the router selects on the presence of "medic\*"/"hospital"/"financial", not on subject, so the marginal is mostly biographies and organisations. Estimated usable: **health ~17.6K, finance ~22.8K — both still short.** `ROUTE_WIDE` is NOT adopted; `draw()` defaults back to T2-3's `ROUTE`. **Next lever (registered, not yet tried): a subject-level filter on lead-sentence patterns**, since `hotpotqa-corpus` is entity intros — reject "X (born …) was a …" and "X is a company/hospital/journal …". Same judged gate before adoption. If that fails too, the levers left are relaxing `min_score` (worse precision, so unlikely to help), raising queries-per-seed against the A8 gate, or Dylan lowering the `health`/`finance` quotas | Touches the registered data recipe; quotas are Tier 3 | decide before step 8 |
 
 ### `lr_at` off-by-one — the LAST step of every arm trains at PEAK LR, 2026-09-05. **Do not fix while the calibration is running.**
@@ -624,6 +626,67 @@ function, so changing it mid-flight would leave P1/P2 incomparable to P0 and des
 thing the calibration exists to measure. Apply after M10.0-e completes and **before any registered
 arm**, with a test asserting the final step's LR equals `final` for a `total_steps` not divisible
 by `cycles`.
+
+### Codex CODE review, 2026-09-05 — nine findings; A8's gate is inert for five of twelve forms
+
+Log audited before reading: `frozen_eval` and `m9reserve` appear **only** in the brief's own
+exclusion text (lines 20–21), no reserved read. Every finding below I reproduced myself.
+
+**FIXED (mine, unambiguous).**
+
+| # | defect | fix |
+|---|---|---|
+| 3 | **`arm_smoke` reported PASS after a registered warm start threw** — `passed` read only steps, `stopped` and the cap, so a random MLP head running 90 finite steps printed PASS and exited 0 | `warm_start_implemented` is now part of `passed`, and so of `all_shapes_pass` and the exit code. It also hardcoded `lam=1e-4` and never exercised `select_lambda`; it now selects |
+| 4 | **PAQ accepted a truncated extraction** — `read_rows` never checked it found every requested index, and the 5% margin would absorb a short read into a quota-filling, positionally-biased sample. The tarball hash does not prove `SRC` is a complete extraction OF it | asserts the line count equals the pinned population AND that every requested index was found, before anything is written |
+| 5 | **`warm_start_from_m9` accepted a missing backbone** — `strict=False` reported `missing_keys` and never rejected them, so M9's head on a FRESH pretrained backbone would be reported as an implemented M9 warm start | refuses an empty or partial backbone key set |
+| 6b | **the A8 action read the ROUNDED rate** — 50001/200001 = 0.25000375 displays as 0.25 and escaped the `> 0.25` cut | `near_dup_rate_raw` drives the action; the rounded value is display only |
+| 8 | **`copied_span` excluded gram VALUES globally**, so a query copied from another occurrence of the same five words passed | positional exclusion: only windows lying entirely inside an occurrence are dropped, so boundary windows still catch. **NOT fully closed and cannot be from here** — with the span occurring twice, both are excluded, and telling them apart needs the offset `harvest` does not record. Asserted as a known limitation by test |
+| 9 | `build_form` reported `final` before the quota cut; its end-to-end test passed vacuously on an empty result | `final` describes what is returned; `before_quota_cut` added |
+
+**FINDING 1, CRITICAL, NOT a code bug — the registered A8 gate is structurally inert for short
+forms.** A query of N words has N−7 word-8-grams, so a bottom-32 sketch reaches the registered
+**16/32** threshold only at **N ≥ 23**. Verified across the registered ranges:
+
+| A8 gate can fire | forms |
+|---|---|
+| **never** (whole range < 23 words) | `factoid` (5,15) · `keyword` (2,4) · `product` (3,12) · `title` (6,16) · **`yesno` (6,20)** |
+| partly (only the longest queries) | `claim` · `comparison` · `finance` · `health` (upper bounds 25–30) |
+| always | `howto` (25,60) · `conversational` (30,80) · `argument` (120,220) |
+
+Codex reproduced 40 heavily templated 22-word queries: `near_duplicates=0`, `representatives=40`.
+Exact-identical strings are still removed by exact dedup, but **changing one slot defeats the
+gate entirely**. This matters beyond bookkeeping: **decision 14 accepted a 4-bit generator on the
+stated rationale that "the A8 diversity gate guards against 4-bit repetition", and for `yesno` —
+a generated form — it cannot.** Registered-gate territory, so not changed here → **W10**.
+
+**FINDING 2 — the SHIPPED harvest corpus has not had two registered screens applied.** §Data:
+"Every harvested string goes through the same screens, quotas and **hold-out** as a generated
+one", and screen (iii) is the own-source word-5-gram copy check with the harvested span excluded.
+`harvest.draw` applies the protected-query and protected-document screens and **neither of those**.
+It needs no re-draw: `harvest_drawn.jsonl` carries each row's `doc` id, so both are a post-pass
+over the shipped file. **Owed before the corpus is used** → §Open questions, and it is mine to
+execute, not to decide.
+
+**FINDING 6a — "an EARLIER query" is ambiguous and the reading changes what gets cut.** Indexing
+only representatives misses chains: with A~B and B~C but A!~C, B is dropped and C survives even
+though C matches an earlier query. `near_dup_gate` now takes `against=`, **defaulting to the
+literal `"earlier_query"`** — more faithful to the text and better at the gate's stated purpose —
+with `"representative"` available and both covered by a discriminating test. Logged as a Tier-2
+reading; if Dylan reads it the other way, one keyword flips it.
+
+**WITHDRAWN — my own claim, again.** I wrote that G-MLP's warm start "cannot start worse than the
+linear head". **False.** The second ridge solve minimises the UNNORMALISED residual, and lower raw
+error does not imply a better normalised objective; Codex produced a counterexample worsening
+0.82380 → 0.84793. The pooling algebra is exact and unaffected — G-MLP does start *at* the
+anchor's fitted head plus a fitted correction — but the fairness rationale for contrast G3 is
+weaker than I stated. The test asserted a favourable random case as if it were a theorem.
+
+**Confirmed correct, and worth not re-deriving:** the rubric-range filter before dedup and before
+`seen_n` keeps Algorithm R uniform over the eligible stream; sharing one deterministic RNG between
+reservoir and shuffle is not a defect; **the shuffle genuinely fixes the truncation bias rather
+than disguising it**; the MLP pooling identity holds exactly, `up.bias` included; `G2 − outer(mu,
+mu)` is the correct token-weighted centred covariance with padding excluded; `features[:, :384]`
+is the last layer.
 
 ### Codex adversarial review of the screen, 2026-09-05 — ELEVEN decision-logic defects, and one of my claims withdrawn
 
