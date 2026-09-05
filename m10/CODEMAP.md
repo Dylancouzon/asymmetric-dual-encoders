@@ -60,3 +60,8 @@
     open, so opening the cache read-only while an encode was appending would have cut the chunk in
     flight. Excess bytes are now repaired only by a writer holding the lock; a reader tolerates
     them (`n` is the authority) and refuses only a SHORT file.
+16. **The M9 query pool is not unique text.** Global exact dedup removes 59,162 of its 462,605
+    post-re-screen rows -- 58,927 of them in `m9-triviaqa` alone (44% of that source). Trained
+    undeduped they also doubled their own presentation weight inside `factoid`
+    (`corpus_loader.dedup_segments`).
+
