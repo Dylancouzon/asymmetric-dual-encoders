@@ -643,6 +643,21 @@ thing the calibration exists to measure. Apply after M10.0-e completes and **bef
 arm**, with a test asserting the final step's LR equals `final` for a `total_steps` not divisible
 by `cycles`.
 
+### W9 AMENDMENT — the screen lock's eleven defects. Ruled "fix and have it reviewed", Dylan 2026-09-05
+
+`m10/screen_registry.json`; validator clean; **26 `test_screen_lock` tests, 8 of them new
+regressions**. Review of the diff in flight. **Nothing has trained, so all of this is
+pre-observation.**
+
+| # | fix |
+|---|---|
+| 1 | **E1 REORIENTED** to `E-bs32 − E-bs128`. Read the old way a bs32 quality win was a NEGATIVE point and `point >= threshold` refused it, making the mandate's own action — *"a RESOLVED bs32 win is adopted"* — unreachable. The cost rule is untouched: resolve → bs32 earns its 2.2× build cost; not resolve → bs128 |
+| 2 | **G1 KEPT as `1152 − 384`** — that is the mandate's own directional hypothesis (:616) and the 384 arm exists as the paper's evidence for the M9 diagnosis, so reorienting would change a registered question, not fix a bug. **What was wrong was the action text**: only 1152 can ever win, now stated. Added: a NEGATIVE point **contradicts the M9 diagnosis** and is reported prominently, never silently defaulted |
+| 3 | **Familywise α is now exactly 0.025.** F1/F2 are two-sided (F is oriented after the readings), so at α/13 per tail the bound was **15 tails = 0.0288**. Each F tail now takes α/26: `11(0.025/13) + 4(0.0125/13) = 0.025` |
+| 4 | **`F_selection_aware`** — F1's winner is RECOMPUTED inside each bootstrap resample; holding the observed winner fixed ignored the selection step |
+| 5 | **L12 runs the 20M schedule TRUNCATED at 5M**, so all three F arms are read at the same schedule position — bge/L6 at 5M are ~75% through cycle 1 and un-annealed, the exact handicap S1 built the standalone anchor to remove. An extension **continues** that schedule (previously undefined). Costs nothing extra |
+| 6–11 | `multi_arm_winner` (higher point wins **and** must resolve against the other alternative, else the default stands) · the confirmation cap's revert-to-default moved out of prose · `trained_arms_if_C_skipped` = 15, denominator stays 13 · `F-winner` documented as resolved by rule, not by a generic engine · the registry-vs-mandate arm count recorded, **this file authoritative** · **"MDE" annotated as the decision threshold it is**, not the minimum detectable effect it is named after |
+
 ### W10 AMENDMENT — A8 gate 1, two regimes. Ruled by Dylan 2026-09-05, implemented and validated
 
 **The rule.** Below **39** words a query is a near-duplicate if its **word-4-gram set shares ≥ 50%
