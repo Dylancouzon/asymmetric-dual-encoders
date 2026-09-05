@@ -216,7 +216,12 @@ def scan(limit=None, out=None, log_every=50_000):
                n_articles=n_art, n_body_chunks=n_chunk, n_kept=n_kept, per_form=per_form,
                seconds=round(time.time() - t0, 1), path=str(out),
                bytes=out.stat().st_size)
-    (OUT / "wikibody_scan.json").write_text(json.dumps(rep, indent=1))
+    # The report lives NEXT TO its output, not at a fixed path: a `limit=` smoke writing to a
+    # scratch file had overwritten the canonical report with `complete: false`. `_load_jsonl`
+    # refused it, as designed -- but a guard firing is not a reason to leave the trap in place.
+    Path(str(out) + ".report.json").write_text(json.dumps(rep, indent=1))
+    if limit is None:
+        (OUT / "wikibody_scan.json").write_text(json.dumps(rep, indent=1))
     print(json.dumps(rep, indent=1))
     return rep
 
@@ -228,7 +233,7 @@ def _load_jsonl(path=None, require_complete=True):
     import decontam
     path = Path(path or (OUT / "wikibody_seeds.jsonl"))
     if require_complete:
-        rp = OUT / "wikibody_scan.json"
+        rp = Path(str(path) + ".report.json")
         if not rp.exists():
             raise SystemExit(f"{rp} is missing: there is no completed scan to draw from")
         rep = json.loads(rp.read_text())
@@ -315,7 +320,7 @@ def screen(rows, verbose=True):
     return kept, rep
 
 
-def draw(per_form, path=None, margin=4, verbose=True):
+def draw(per_form, path=None, margin=1.5, verbose=True, out_json=None):
     """The BUILD's seed selection: top-score-first per form over the screened store.
 
     Top-score-first is `seeds.draw`'s registered ordering and is kept, so the gate judges the
@@ -332,7 +337,7 @@ def draw(per_form, path=None, margin=4, verbose=True):
     for f in FORMS:
         rows = [r for r in dedup if r["form"] == f]          # already score-sorted
         by_form[f] = len(rows)
-        pool += rows[:margin * per_form]
+        pool += rows[:int(margin * per_form)]
     kept, srep = screen(pool, verbose=verbose)
     out, counts = {}, {}
     for f in FORMS:
@@ -340,11 +345,12 @@ def draw(per_form, path=None, margin=4, verbose=True):
         # `(passage_id, text)` pairs, the shape `seeds.draw` returns, so the two stores are
         # interchangeable downstream (Codex 2026-09-05).
         out[f] = [(f"wikipedia-body:{r['aid']}#{r['chunk_i']}", r["text"]) for r in rows[:per_form]]
-        if len(rows) < per_form and by_form[f] > margin * per_form:
+        if len(rows) < per_form and by_form[f] > int(margin * per_form):
             raise SystemExit(f"{f}: the {margin}x screening pool left only {len(rows)} of "
                              f"{per_form} after screening -- widen `margin` and re-draw rather "
                              f"than accepting a short draw")
-        counts[f] = dict(admitted_in_store=by_form[f], screened=margin * per_form,
+        counts[f] = dict(admitted_in_store=by_form[f],
+                         screened=min(by_form[f], int(margin * per_form)),
                          survived_screen=len(rows), taken=len(out[f]),
                          short=max(0, per_form - len(rows)),
                          min_score_taken=min((r["score"] for r in rows[:per_form]), default=None),
@@ -354,6 +360,9 @@ def draw(per_form, path=None, margin=4, verbose=True):
                repo=REPO_ID, config=CONFIG, revision=REVISION, licence=LICENCE,
                per_article_cap=PER_ARTICLE_CAP, min_score=MIN_SCORE, lead_excluded=True)
     (OUT / "wikibody_draw.json").write_text(json.dumps(rep, indent=1))
+    # The drawn pool is written out because the judged gate must sample the population the build
+    # uses, and re-deriving it would mean paying the ~1-hour screen twice.
+    Path(out_json or (OUT / "wikibody_gate_pool.json")).write_text(json.dumps(out))
     if verbose:
         print(json.dumps(counts, indent=1))
     return out, rep
