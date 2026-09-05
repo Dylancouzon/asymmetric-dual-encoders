@@ -1,4 +1,30 @@
-# M10 status — PLANNED and reviewed five ways on 2026-09-04; nothing has trained; the weekend runbook below is the execution order
+# M10 status — weekend window RUNNING. Steps 0a, 0b and 1 are DONE; nothing has trained; the runbook below is the execution order
+
+## Weekend progress (2026-09-04 evening, updated live)
+
+| step | state | outcome |
+|---|---|---|
+| **0a** vLLM + generator | **DONE, PASSES** | vLLM 0.28.0, attempt 1, no fallback. Health: contract 93.75% (gate 90%), **1027–1173 aggregate output tok/s** (gate 700). Generation stays on the box; the bf16 rented-GPU fallback does NOT fire. ≈1.0M queries ≈ 10 box-hours. `results/m10_gen_health_box.json` |
+| **0b** rate re-measure | **DONE** | Real corpora, real memmapped targets: bucketed + prefetched + `torch.compile` gives **914–960 ex/s** query / **792** document, blended ≈890 → **~62 GPU-h for the 200M build on the box** (vs §11's 683 bound, M9's realized 226). `results/m10_rate_bench_real_box.json`, RESULTS.md |
+| **1** generation smoke | **DONE — all 7 forms pass both gates**, but 3 are HELD | yesno 100 · conversational 96 · argument 88 · finance 86 · comparison 84 · health 84 · howto 80.0. `m10/SMOKE.md`, GitHub issue **#1**. Four forms auto-approving; **`howto`, `argument`, `conversational` held for Dylan** — three procedural defects found after the numbers were observed (LEDGER §1, §3 W1–W2) |
+| **2** COV admission | in progress | structures probed (`work/m10cov/structure.json`); licence drafts in `m10/COV_CANDIDATES.md` |
+| 3–11 | not started | — |
+
+**Reaching Dylan:** `PushNotification` is **disabled in /config**, so the phone route does not work.
+**GitHub issue #1 "M10 smoke approval" is the live channel**; he can also reply via Remote Control.
+
+**Three questions are open for Dylan and logged as `m10/LEDGER.md` §3 W1–W3.** W1 binds the rest of
+M10: §Data registers three different terminal rules for a form that fails twice (drop · ≤2
+revisions · bf16 re-smoke). None is resolvable here — the numbers they govern are already observed,
+which is Tier 3. **Nothing generates before COV admission and the build seed draw, so waiting costs
+nothing** and every other branch continues.
+
+**Serving facts a resuming session needs:** `work/m10gen/serve.sh` (port **8001**);
+`VLLM_WSL2_ENABLE_PIN_MEMORY=1` and `VLLM_USE_FLASHINFER_SAMPLER=0` are both required on this box;
+`--gpu-memory-utilization 0.88` (only 8.86 of 10 GiB is free); **never `--enforce-eager`** — it
+costs 1.69× and is the difference between failing and passing the 700 floor. vLLM lives in
+`.venv-gen`, the trainer in `.venv`. vLLM holds 8.7 GB, so it and a training arm cannot share the
+card — stop one before starting the other.
 
 Mandate `instructions-m10.md` — §Amendment 2026-09-04, §Amendment 2026-09-04b and §Delegated
 authority are authoritative over any older sentence there · evidence `m10/PLANNING.md` (§11 measured
