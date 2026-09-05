@@ -25,7 +25,9 @@
   "G-384",
   "G-1536",
   "G-MLP",
-  "B-100/0"
+  "B-100/0",
+  "B-50/50",
+  "E-bs128"
  ],
  "arms": [
   {
@@ -238,6 +240,64 @@
    },
    "passed": true,
    "seconds": 27.0
+  },
+  {
+   "arm": "B-50/50",
+   "spec": {
+    "student": "bge-small",
+    "n_layers": 3,
+    "head": "linear",
+    "pattern": "50/50",
+    "batch": 32,
+    "loss": "squared_l2"
+   },
+   "covers": [],
+   "device": "cpu",
+   "constructed": true,
+   "d_in": 1152,
+   "params": 34540672,
+   "under_cap": true,
+   "warm_start_implemented": true,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 2880,
+   "examples_per_s": 45.8,
+   "mix": {
+    "Q": 46,
+    "D": 44,
+    "q_share": 0.5111111111111111
+   },
+   "passed": true,
+   "seconds": 65.7
+  },
+  {
+   "arm": "E-bs128",
+   "spec": {
+    "student": "bge-small",
+    "n_layers": 3,
+    "head": "linear",
+    "pattern": "75/25",
+    "batch": 128,
+    "loss": "squared_l2"
+   },
+   "covers": [],
+   "device": "cpu",
+   "constructed": true,
+   "d_in": 1152,
+   "params": 34540672,
+   "under_cap": true,
+   "warm_start_implemented": true,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 11520,
+   "examples_per_s": 92.2,
+   "mix": {
+    "Q": 68,
+    "D": 22,
+    "q_share": 0.7555555555555555
+   },
+   "passed": true,
+   "seconds": 127.4
   }
  ],
  "failed": [],

@@ -424,7 +424,87 @@ came from. This is a **data-recipe** gate, which `CLAUDE.md` puts explicitly on 
 | W4 | §Surfaces requires a COV fingerprint screen "against the six **and the reserved four**". Reserved-set DOCUMENT fingerprints do not exist and creating them opens the reserved corpora — the reasoning that ruled FineWeb out on 2026-09-01 (`m9/LEDGER.md` §1.3). `m10src/cov_screen.py` therefore screens against the six's documents and the full protected QUERY index (which already covers reserved queries), and the reserved DOCUMENT side is **not** screened | Building it would open a reserved surface outside a registered transaction — Tier 3 | none: the query-side screen runs, and results so far are 0 hits |
 | ~~W6~~ | **RULED 2026-09-05 — see the section above.** Original question: **Four things to weigh, from the Fable pass.** (i) **The registered default is the worst measured option on finance** — "keep the bar, no store passes, revert to the incumbent" leaves finance at 0.315 when a store measured at 0.535 (z = 4.56) is available; a default is not neutral when it is the measured minimum. (ii) **The approved `finance` prompt was accepted at 86% on the top-tail seeds and its build-population behaviour has never been observed** — its prompt carries no subject steer, unlike `health`'s, which is consistent with its 5-of-50 entity-trivia leak even on the cleanest seeds. (iii) **Seed precision is a proxy one step removed from anything the build consumes:** the build consumes QUERIES, and the registered quality gates on queries are A8 diversity and on-form rate — so the right admission standard for a seed store may be the queries it yields, but re-registering that is yours, after the diagnostic exists. (iv) **Two "next levers" were registered in two places** and T2-8 picks a ladder. **Cost of waiting is ~zero:** nothing generates before the build seed draw at step 8. Original entry: It was registered for the MARGINAL of a keyword widening — "of the passages this widening newly admits, what share are on topic" — and a Fable pass transplanted it to a whole-population gate on a new store. Measured 2026-09-05 on a blinded, interleaved sample: the **incumbent store itself reads 0.590 (health) and 0.315 (finance)**, so the bar has never been met by anything in this project and "revert to the incumbent" is not a safe default. Three options, none taken here: keep the bar and accept that no store passes (the registered default, and it leaves finance on 0.315); re-register the bar as a RELATIVE test (a new store must beat the incumbent, which `wikipedia-body` does on finance by z = 4.56 and ties on health); or fix precision at the source with the subject filter and re-gate against 0.80 unchanged — the only option that needs no protocol change, and the one being executed | The bar is a registered constant and the numbers it governs are now observed, so re-reading it is exactly the change the protocol forbids me to make | **none if the subject filter clears 0.80.** If it does not, the build's seed precision is ~0.55/0.53 at best and Dylan chooses |
 | W7 | **Do `factoid` and `product` revert to generation at ≈143K each, or stay dropped?** The mandate registers both as harvested forms (~250K each) AND registers "a harvested form that falls under 100K reverts to generation"; they yield 5,605 and 40,977. Reverting costs two new prompts, two smoke gates, two veto windows and **+286K over the registered 1.0M generation cap**; not reverting means the 1.25M is carried by three forms at 417K/417K/416K rather than five at ~250K. **Registered default: excluded**, and that is what `draw()` executes. Also for ratification: the three-form quota table itself is a reallocation of the mandate's five-form split. Measured `ask` quality is in §Harvest amendment 2026-09-05 item 2 — read it before admitting anything | Every option changes a registered quota number; quotas are Tier 3 | none for the harvest (the draw runs on the registered three), but it must be settled **before the M10.2 recipe lock** |
+| W8 | **Can the screen earn its keep, and is "MDE 0.0056" the rule you want?** The registered `resolve_rule` requires the POINT estimate to reach the MDE, which caps power at 50% at a true effect of 0.0056 whatever the interval does; F and E need a true **0.0112** for ~80% power (16% at 0.0056), and **A's rule is `lower > MDE`, so A3−A2 — the contrast M10 exists to run — must read above 0.0142.** The screen costs **106–126M examples (43–51 h), 166–186M with confirmations**. Codex's recommendation, recorded not adopted: freeze the recipe on stated priors, spend the compute on the build and on seed replication, and report the recipe as prior-selected. **Three ways to go: (a) accept and report unresolved contrasts as unresolved — the registered default; (b) move the MDE or the rule; (c) cut families and spend on the build.** A 5M contrast cannot show a data advantage persists at 200M, so a causal coverage headline needs a matched near-full-dose control either way | The MDE and the resolve rule are pre-registered statistics; the screen's existence is the milestone's shape. Tier 3, and **before family F**, never after | **none for the data path** — the corpus is needed under every option and is being built now |
+| W9 | **Eleven registry decision-logic defects; five BLOCK any arm.** `E-bs32` and `G-384` **cannot win their own contrasts** (one-sided rule + orientation: their win is a negative point, and `point >= MDE` refuses it), F's post-hoc orientation makes the familywise α **0.02885 not 0.025**, F2's comparator is adaptively selected with no selection-aware bootstrap, and the **L12 5M probe is schedule-confounded** — L6/bge read at 5M inside a 20M schedule are mid-cycle and un-annealed, which is the defect S1 created the standalone anchor to fix. Plus six specification gaps (multi-arm tie-breaks in G/B/D, the confirmation revert rule only in prose, `trained_arms_expected` 16 vs 15 when C is skipped, prose-DSL "machine-readable" fields, registry 16 vs mandate 15 arms, the "MDE" wording). Full table in §Codex review 2026-09-05 | Reorienting a contrast or reallocating α changes pre-registered statistics = Tier 3. **I have deliberately not edited the design lock**, since a partial repair would leave it inconsistent and the α item is yours regardless | **none for the data path**; blocks family F |
 | W3 | **Seed supply is OPEN — the widening was tried and REJECTED by its own gate.** Full-store, `min_score ≥ 4`: `health` 10,399, `finance` 22,375, `howto` 37,927 against a ~32–33K need. Widening the keyword lists raised the raw counts (health 36,284) but the registered judged-precision gate reads **28% on-topic on health's marginal and 38% on finance's**, against ≥ 80% — the router selects on the presence of "medic\*"/"hospital"/"financial", not on subject, so the marginal is mostly biographies and organisations. Estimated usable: **health ~17.6K, finance ~22.8K — both still short.** `ROUTE_WIDE` is NOT adopted; `draw()` defaults back to T2-3's `ROUTE`. **Next lever (registered, not yet tried): a subject-level filter on lead-sentence patterns**, since `hotpotqa-corpus` is entity intros — reject "X (born …) was a …" and "X is a company/hospital/journal …". Same judged gate before adoption. If that fails too, the levers left are relaxing `min_score` (worse precision, so unlikely to help), raising queries-per-seed against the A8 gate, or Dylan lowering the `health`/`finance` quotas | Touches the registered data recipe; quotas are Tier 3 | decide before step 8 |
+
+### Codex adversarial review of the screen, 2026-09-05 — ELEVEN decision-logic defects, and one of my claims withdrawn
+
+Brief `codex_out.txt` (scratchpad, high effort, read-only). Read-exclusion carried; **log audited,
+no reserved read** — the only `untouched-*`/`m9reserve` strings are the brief's own exclusion text.
+It read `m10/{screen_registry.json,LEDGER,PLANNING,STATUS,SMOKE,EXPLORED}`, `instructions-m10.md`,
+`m9/{registry.json,FINAL_LOCK.md}`, `results/m10_cov_{resolution,teacher_ceiling}.json`,
+`m10src/{calib_report,head_width_parity}.py`. **Every checkable claim below I re-verified against
+the artifacts myself.**
+
+**WITHDRAWN — my own claim, and it was wrong.** I put it to the reviewer that selecting on BRIGHT
+is near-incoherent because the TEACHER scores only 0.2191 there. Rejected, and the arithmetic is
+against me: 0.2191 nDCG@10 over tens of thousands of documents per slice is not near-random, and no
+random baseline or qrel density was ever measured to support the word. The unrelated-model probe
+shows BRIGHT **can** express model differences — `abs_family_delta` **BRIGHT 0.0547 vs legal
+0.0116** at variance shares 0.4998 / 0.3254 — so **legal** is the family with 32.5% of the variance
+for 12% of the signal. This is what §5 and `STATUS.md` already said; I re-derived a worse version of
+a settled question. *"Selecting on BRIGHT is not incoherent, and point 5 overstates the case
+substantially."* The narrow criticism that survives: BRIGHT's low ceiling may weaken the link
+between distillation fidelity and qrel performance, and **that link has never been calibrated.**
+
+**Factual correction to this file and `STATUS.md`:** the implied z is **2.8516**
+(`results/m10_cov_resolution.json` `z_implied`), not the 2.93 recorded in §W5.
+
+**The power arithmetic, sharper than "0.0056 < 0.008619".** `resolve_rule` is `point >= MDE AND
+lower > 0 AND sign stable`, so requiring the POINT estimate to reach the MDE **caps power at 50% at
+a true effect of exactly 0.0056, however narrow the interval** — "MDE" is the wrong word for it.
+Consequences, all arithmetic on recorded numbers:
+
+| contrast set | read against | minimum true effect for ~80% power | power at a true 0.0056 |
+|---|---|---|---|
+| F, E | 0.008619 (unrelated) | **0.0112** = 0.008619 + 0.842(0.003022) | **~16%** |
+| B, D, G, C | the P-arm same-init pair | needs `distance_raw ≲ 0.0043`, not merely < 0.0056 | — |
+| **A (the thesis)** | rule is `lower > MDE`, **not** `lower > 0` | needs an observed point **> 0.014219** | — |
+
+So **A3−A2, the contrast M10 exists to run, must read above 0.0142 to resolve.** The calibration
+now running must land near **`distance_raw` ≤ 0.0043 and `seed_effect` ≤ 0.002–0.003** for B/D/G/C
+to work at 0.007-scale effects; it cannot rescue F/E/A, and one LR contrast on the M9 pool says
+nothing about the variance of architecture, data, objective or init changes. **This file contradicts
+itself** — it calls the calibration descriptive (§M10.0-e) and then treats `< 0.0056` as
+"adequately powered" (§W5 area). The descriptive reading is the correct one.
+
+**Eleven registry defects. Five are BLOCKING and the reviewer's recommendation is that no
+registered arm starts until they are repaired.**
+
+| # | defect | verified |
+|---|---|---|
+| 1 | **Family E has no implementable verdict.** E1 is `E-bs128 − E-bs32`; a bs32 win is NEGATIVE and can never satisfy `point >= MDE`. One field reverts an unresolved contrast to bs32, `E_cost` reverts an unresolved bs32 win to bs128 | ✅ orientation and `resolve_rule` read from the JSON |
+| 2 | **`G-384` cannot win its own contrast.** G1 is `G-1152 − G-384`, same one-sided problem — only 1152 can ever win, yet the action says "resolved winner" | ✅ |
+| 3 | **F's post-hoc orientation breaks the familywise α.** 11 ordinary tails + 4 F tails = 15 × 0.025/13 = **0.02885**, not 0.025. Needs 0.0125/13 per F tail or a max/pairwise procedure | arithmetic |
+| 4 | **F2's comparator `F-winner` is adaptively selected** with no selection-aware bootstrap: holding the observed winner fixed ignores the selection step | ✅ alias is prose |
+| 5 | **The L12 5M elimination probe is schedule-confounded.** L6/bge are READ at 5M inside a 20M three-cycle schedule (cycle ends ≈6.67M/13.33M/20M) so they are mid-cycle and un-annealed there, while a genuine 5M L12 arm completes three compressed annealed cycles — **the exact defect the standalone anchor was created to fix (S1)**. And the registry never says whether an extended L12 restarts on a 20M schedule or continues | ✅ doses/schedule |
+| 6 | Multi-arm winner selection is undefined in G, B and D: two alternatives can both resolve against the default and nothing says whether the higher point wins, whether they must resolve against each other, or what a tie does. D never tests D-NORM against D-COV | ✅ |
+| 7 | The confirmation cap's consequence — non-default winners beyond the two confirmed **revert to default** — exists only in prose, in a file that declares prose non-authoritative | ✅ |
+| 8 | `trained_arms_expected: 16` is false on an allowed path: `C-M9init` is `trained: true` **and** `skipped_iff` F does not pick bge-small, so the count is 15 | ✅ |
+| 9 | `F-winner`, `runs_iff`, `skipped_iff` and the L12 `iff` are free-text prose, not machine-readable, contradicting the file's claim to be the executable rule source | ✅ |
+| 10 | Registry says 16 trained arms; `instructions-m10.md`:597 still says fifteen | ✅ |
+| 11 | "MDE" is internally misleading — `point >= MDE` caps power at 50%, and A's `lower > MDE` is stronger still | ✅ |
+
+**My cost premise was stale** (PLANNING §5 labels itself superseded). The current registry is
+**106.25M–126.25M screen examples** before confirmations (F 45–60M, the rest 61.25–66.25M) ≈ **43–51
+raw training hours** at 683 ex/s; with confirmations and the synthesized recipe/seed pair,
+**166M–186M — almost another build.**
+
+**The reviewer's recommendation, recorded not adopted:** drop the claim that the screen selected an
+empirically superior recipe; freeze the recipe on stated engineering/literature priors, spend the
+compute on the build and on training-seed replication, and report that the recipe was
+prior-selected because the pilot surface lacked decision resolution. *"If the headline must be
+causal — 'coverage caused the gain' — the cheap solution does not exist"*: a 5M contrast cannot show
+that a data advantage persists at 200M. **Not mine to take** → W8, W9.
+
+**Also recorded: a reweighting is no longer pre-registration, even though no arm has trained.**
+*"'No registered arm has trained' is a weaker criterion than 'the numbers affected have not been
+observed.'"* The resolution contrast and the teacher ceiling were both measured on this exact
+surface, so any weighting change is now pilot-informed and must be labelled as such. Query-weighting
+would put finance at 74.5% and make COV mostly a finance benchmark; it would cut the distance to
+≈0.00497, and inverse-variance weights give ≈0.00496 with ~75% on finance — power bought by
+abandoning the coverage estimand. **The registered equal-family weighting stands.**
 
 ## §4 Dev-reuse log
 
