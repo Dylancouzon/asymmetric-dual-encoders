@@ -1,0 +1,120 @@
+{
+ "_what": "W10 evidence: registered A8 gate vs a sensitive 4-gram diagnostic",
+ "_diagnostic": "word-4-grams, near-dup if >= 50% of the smaller gram set is shared with an earlier query. NOT REGISTERED -- it establishes direction, not a verdict.",
+ "_a8_registered": "word-8-gram bottom-32 sketch, >= 16/32 with an earlier query; action cuts to representatives above a 25% rate",
+ "_floor": "an N-word query has N-7 word-8-grams, so 16/32 is unreachable below N = 23",
+ "generated_smoke": {
+  "howto": {
+   "n": 200,
+   "rubric_range": [
+    25,
+    60
+   ],
+   "gate_can_fire": "always",
+   "a8_registered_rate": 0.0,
+   "diagnostic_4gram_rate": 0.0,
+   "diagnostic_near_dups": 0
+  },
+  "argument": {
+   "n": 195,
+   "rubric_range": [
+    120,
+    220
+   ],
+   "gate_can_fire": "always",
+   "a8_registered_rate": 0.0359,
+   "diagnostic_4gram_rate": 0.0615,
+   "diagnostic_near_dups": 12
+  },
+  "finance": {
+   "n": 200,
+   "rubric_range": [
+    8,
+    30
+   ],
+   "gate_can_fire": "partly",
+   "a8_registered_rate": 0.0,
+   "diagnostic_4gram_rate": 0.01,
+   "diagnostic_near_dups": 2
+  },
+  "comparison": {
+   "n": 200,
+   "rubric_range": [
+    8,
+    25
+   ],
+   "gate_can_fire": "partly",
+   "a8_registered_rate": 0.0,
+   "diagnostic_4gram_rate": 0.035,
+   "diagnostic_near_dups": 7
+  },
+  "yesno": {
+   "n": 200,
+   "rubric_range": [
+    6,
+    20
+   ],
+   "gate_can_fire": "never",
+   "a8_registered_rate": 0.0,
+   "diagnostic_4gram_rate": 0.025,
+   "diagnostic_near_dups": 5
+  },
+  "conversational": {
+   "n": 200,
+   "rubric_range": [
+    30,
+    80
+   ],
+   "gate_can_fire": "always",
+   "a8_registered_rate": 0.0,
+   "diagnostic_4gram_rate": 0.0,
+   "diagnostic_near_dups": 0
+  },
+  "health": {
+   "n": 200,
+   "rubric_range": [
+    8,
+    30
+   ],
+   "gate_can_fire": "partly",
+   "a8_registered_rate": 0.0,
+   "diagnostic_4gram_rate": 0.205,
+   "diagnostic_near_dups": 41
+  }
+ },
+ "harvested_corpus": {
+  "keyword": {
+   "n_sampled": 60000,
+   "rubric_range": [
+    2,
+    4
+   ],
+   "gate_can_fire": "never",
+   "a8_registered_rate": 0.0,
+   "diagnostic_4gram_rate": 0.0005,
+   "diagnostic_near_dups": 32
+  },
+  "title": {
+   "n_sampled": 60000,
+   "rubric_range": [
+    6,
+    16
+   ],
+   "gate_can_fire": "never",
+   "a8_registered_rate": 0.0,
+   "diagnostic_4gram_rate": 0.0328,
+   "diagnostic_near_dups": 1968
+  },
+  "claim": {
+   "n_sampled": 60000,
+   "rubric_range": [
+    8,
+    25
+   ],
+   "gate_can_fire": "partly",
+   "a8_registered_rate": 0.0,
+   "diagnostic_4gram_rate": 0.0806,
+   "diagnostic_near_dups": 4836
+  }
+ }
+}
