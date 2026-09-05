@@ -1221,6 +1221,16 @@ Brief `codex_loader_brief.md` (scratchpad; read-exclusion carried; log audited, 
 
 Fixes dispatched to an Opus worker; **re-review of the fixes by Codex before any arm trains** (the 2026-09-05 lesson: review the fix, not the decision).
 
+### Loader fixes LANDED (Opus worker, commits …b619a34), 2026-09-05 night; Codex third pass in flight
+
+All twelve dispositions above executed; 147 → **171 tests**. The worker ran a Codex re-review of its first round (NO-GO: routes that bypassed the screen, a hold-out guard that disabled itself on a missing file, an unenforced writer lock — verbatim in `research/m10-codex-loader-2026-09-05.md`), fixed those, and the FINAL state is being reviewed for GO before any arm trains.
+
+**The M10 re-screen of the M9 pools, RUN** (`m10src/rescreen10.py`, `results/m10_rescreen10.json`, masks `work/m10cov/rescreen10/`): queries **709 / 463,314** removed (174 exact, 535 near); documents **79,630 / 6,149,679** (1.29%; hotpotqa 64,534, esci 12,204). Reading taken where the mandate names no document rule: R1's own test applied to documents (removal only). Mask identity bound into the manifest and token-cache key.
+
+**Duplicates in M9's own pool, verified by the lead:** `triviaqa` 134,665 rows → **75,654 unique** (each question twice); nqopen 85,863 all unique. M9 trained on it doubled. Global dedup now removes 59,162 of 462,605 post-rescreen M9 queries. `m10/CODEMAP.md` pitfall 16.
+
+Residual, disclosed: the cross-role collision guard (finding 9) is a helper only `arm_smoke` calls until one launcher owns both streams; a non-finite loss is still appended to `losses` (pre-existing).
+
 ## §4 Dev-reuse log
 
 | date | surface | raw score reads | artifact |
