@@ -151,3 +151,129 @@ def test_manifest_sha256_is_order_independent_over_keys():
     a = C.manifest_sha256({"x": 1, "y": [2, 3]})
     b = C.manifest_sha256({"y": [2, 3], "x": 1})
     assert a == b and len(a) == 64
+
+
+# ---- the step-8 driver, against a STUB OpenAI-compatible server -----------------------------
+#
+# Generation is a ~10-GPU-hour spend and the card is busy for hours at a time, so the glue around
+# it is tested against a fake endpoint. What this cannot test is output QUALITY -- that is the
+# decision-15 smoke's job.
+
+import json as _json
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+
+class _Stub(BaseHTTPRequestHandler):
+    REPLY = None          # set per test: a callable(form_prompt, n) -> list[str]
+
+    def log_message(self, *a):
+        pass
+
+    def do_GET(self):
+        body = _json.dumps({"data": [{"id": "Qwen/Qwen3-8B-AWQ"}]}).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_POST(self):
+        n = int(self.headers.get("Content-Length", 0))
+        req = _json.loads(self.rfile.read(n) or b"{}")
+        qs = type(self).REPLY(req)
+        body = _json.dumps({"choices": [{"message": {"content": _json.dumps(qs)},
+                                         "finish_reason": "stop"}],
+                            "usage": {"completion_tokens": 10}}).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+
+@pytest.fixture
+def stub():
+    srv = HTTPServer(("127.0.0.1", 0), _Stub)
+    t = threading.Thread(target=srv.serve_forever, daemon=True)
+    t.start()
+    yield srv, f"http://127.0.0.1:{srv.server_address[1]}/v1"
+    srv.shutdown()
+
+
+def _seed_rows(n, text="A passage of ordinary prose about some subject matter and its context."):
+    return [(f"p{i:05d}", f"{text} Instance {i}.") for i in range(n)]
+
+
+def test_partition_removes_gate_seeds_BEFORE_drawing_the_holdout():
+    rows = _seed_rows(3000)
+    gate = {r[0] for r in rows[:400]}
+    build, held, rep = C.partition_seeds(rows, gate_ids=gate, holdout_n=500)
+    assert rep["gate_seeds_excluded"] == 400 and rep["forms12_holdout"] == 500
+    assert len(build) == 3000 - 400 - 500
+    held_ids = {r[0] for r in held}
+    assert not held_ids & gate, "a gate seed must never be reported as held out"
+    assert not {r[0] for r in build} & gate
+    assert not {r[0] for r in build} & held_ids
+
+
+def test_screen_form_reports_each_screen_separately_and_in_order():
+    import qfilter
+    lo, hi = qfilter.RANGES["howto"]
+    seed_text = {"p1": "the quick brown fox jumps over the lazy dog again and again today"}
+    short = "what does the fox do in the well known typing exercise"
+    copies = ("the quick brown fox jumps over the lazy dog and then keeps going onward for a "
+              "while longer until it finally stops somewhere well beyond the far end of the field")
+    prot = ("how do I train a dog to stop chasing foxes in the garden without using any kind of "
+            "punishment based method at all and without a professional trainer present")
+    # assert the fixture is in range FIRST -- an accidentally out-of-range row would be counted by
+    # the first screen and prove nothing about the later ones
+    assert len(short.split()) < lo
+    for q in (copies, prot):
+        assert lo <= len(q.split()) <= hi, f"{len(q.split())} words, need {lo}-{hi}"
+    rows = [{"query": q, "form": "howto", "seed_id": "p1"} for q in (short, copies, prot)]
+    kept, rep = C.screen_form(rows, seed_text,
+                              protected_hit=lambda q: "punishment" in q, doc_hit=None)
+    assert rep["out_of_rubric_range"] == 1, "only the short row"
+    assert rep["copied_span"] == 1, "the second row copies a 5-gram from its own seed passage"
+    assert rep["protected_index"] == 1
+    assert rep["kept"] == 0 and kept == []
+
+
+def test_build_form_end_to_end_against_the_stub(stub):
+    srv, base = stub
+    # 30-word on-form `howto` strings, distinct per request so A8 does not collapse them
+    def reply(req):
+        s = req.get("seed", 0)
+        return [f"how do I configure setting number {s}{j} on the appliance without losing any "
+                f"of the saved values that were already present before I began the process"
+                for j in range(req.get("n", 5) if "n" in req else 5)]
+    _Stub.REPLY = lambda req: reply(req)
+    rows = _seed_rows(1200)
+    gate = {r[0] for r in rows[:400]}
+    qs, rep = C.build_form("howto", rows, quota=50, n_per_seed=5, gate_ids=gate, base=base,
+                           protected_hit=None, doc_hit=None, workers=8, margin=1.0,
+                           verbose=False)
+    assert rep["seeds"]["gate_seeds_excluded"] == 400
+    assert rep["seeds"]["forms12_holdout"] == 500
+    assert rep["generation"]["contract_rate"] == 1.0, rep["generation"]["first_failures"]
+    assert rep["screens"]["n_input"] > 0
+    assert len(rep["holdout_seed_ids"]) == 500
+    # every returned row carries its provenance, which the manifest needs
+    assert all(set(r) == {"query", "form", "seed_id"} for r in qs)
+    assert all(r["form"] == "howto" for r in qs)
+
+
+def test_build_form_drops_a_form_whose_output_is_template_collapsed(stub):
+    """The A8 diversity gate is the guard against 4-bit repetition (decision 14's rationale).
+    An identical reply for every seed must not survive as a corpus."""
+    srv, base = stub
+    _Stub.REPLY = lambda req: [
+        "how do I reset the configuration on this device without losing the saved settings "
+        "that were already stored on it before I started"] * 5
+    rows = _seed_rows(1200)
+    qs, rep = C.build_form("howto", rows, quota=50, n_per_seed=5, base=base, workers=8,
+                           margin=1.0, verbose=False)
+    # exact duplicates collapse to one, so the form cannot reach the retention floor
+    assert rep["a8"]["retained"] < C.A8_MIN_RETAINED
+    assert rep["dropped_from_build"] is True and qs == []

@@ -149,3 +149,98 @@ def a8_action(form, queries, share=A8_NEAR_DUP_SHARE):
 def manifest_sha256(parts):
     """The manifest's identity: sorted-key JSON of the counts and hashes, nothing else."""
     return hashlib.sha256(json.dumps(parts, sort_keys=True, default=str).encode()).hexdigest()
+
+
+# ---- the step-8 driver ----------------------------------------------------------------------
+#
+# Composed of small stages on purpose: the expensive one (generation) is a 10-GPU-hour spend, so
+# every stage around it is testable without a GPU, and `build_form` is exercised against a stub
+# OpenAI-compatible server in `test_corpus10`. What is NOT tested here is the model's output
+# quality -- that is what the decision-15 smoke and `m10/SMOKE.md` are for.
+
+def partition_seeds(seed_rows, gate_ids=(), holdout_n=HOLDOUT_PER_FORM, seed=0):
+    """-> (build, held, report). ORDER MATTERS and is registered.
+
+    The 400 judged gate seeds come out first (they were shown to a judge and must never enter the
+    build corpus, T2-7 ⑧), then the FORMS-12 hold-out of 500 is drawn from what remains. Drawing
+    the hold-out first would let a gate seed land in it and be reported as held-out when it is
+    really just excluded.
+    """
+    gate = set(gate_ids)
+    pool = [r for r in seed_rows if r[0] not in gate]
+    held_ids, keep_ids = holdout_seed_ids([r[0] for r in pool], n=holdout_n, seed=seed)
+    held = set(held_ids)
+    build = [r for r in pool if r[0] not in held]
+    return build, [r for r in pool if r[0] in held], {
+        "n_input": len(seed_rows), "gate_seeds_excluded": len(seed_rows) - len(pool),
+        "forms12_holdout": len(held), "build_seeds": len(build),
+        "_order": "gate seeds removed FIRST, then the hold-out drawn from the remainder"}
+
+
+def screen_form(rows, seed_text, protected_hit=None, doc_hit=None):
+    """The per-query screens, in the registered order. -> (kept, report).
+
+    `rows`: [{query, form, seed_id}]. `seed_text`: {seed_id: passage}. `protected_hit(q)` and
+    `doc_hit(q)` are injected so this is testable without a 27M-gram index; production passes
+    `lambda q: protected10.hits(q, idx)` and the six's-documents `Inverted`.
+
+    Order is cheapest-first, and each stage's removals are reported separately because §Data
+    requires "removal counts per screen, per form".
+    """
+    import qfilter
+    rep = {"n_input": len(rows), "out_of_rubric_range": 0, "copied_span": 0,
+           "protected_index": 0, "six_documents": 0}
+    kept = []
+    for r in rows:
+        q = r["query"]
+        if not qfilter.in_range(r["form"], q):
+            rep["out_of_rubric_range"] += 1
+            continue
+        src = seed_text.get(r["seed_id"])
+        if src and copied_span(q, src):
+            rep["copied_span"] += 1
+            continue
+        if protected_hit and protected_hit(q):
+            rep["protected_index"] += 1
+            continue
+        if doc_hit and doc_hit(q):
+            rep["six_documents"] += 1
+            continue
+        kept.append(r)
+    rep["kept"] = len(kept)
+    return kept, rep
+
+
+def build_form(form, seed_rows, quota, *, n_per_seed=5, gate_ids=(), base=None, seen=None,
+               protected_hit=None, doc_hit=None, workers=32, margin=1.35, verbose=True):
+    """One form end to end: partition seeds, generate, screen, A8. -> (queries, report).
+
+    `margin` over-draws seeds because the screens and A8 both remove: at 5 queries per seed a
+    143,000 quota needs 28,600 clean seeds, and the smoke's contract rate was not 100%.
+    """
+    import gen
+    build, held, prep = partition_seeds(seed_rows, gate_ids=gate_ids)
+    need = int(margin * quota / max(n_per_seed, 1))
+    use = build[:need]
+    if len(use) < need and verbose:
+        print(f"  {form}: {len(use):,} build seeds for a {need:,} target -- short", flush=True)
+    seen = seen if seen is not None else set()
+    g = gen.generate(form, [(r[0], r[1]) for r in use], n=n_per_seed,
+                     base=base or gen.BASE, workers=workers, label=form if verbose else "",
+                     seen=seen)
+    seed_text = {r[0]: r[1] for r in use}
+    kept, screens = screen_form(g["queries"], seed_text,
+                                protected_hit=protected_hit, doc_hit=doc_hit)
+    final, a8 = a8_action(form, [r["query"] for r in kept])
+    keep_set, out = set(final), []
+    for r in kept:                                  # keep the rows, not just the strings
+        if r["query"] in keep_set:
+            keep_set.discard(r["query"])
+            out.append(r)
+    report = {"form": form, "quota": quota, "seeds": prep, "seed_margin": margin,
+              "seeds_used": len(use), "holdout_seed_ids": sorted(r[0] for r in held),
+              "generation": {k: v for k, v in g.items() if k != "queries"},
+              "screens": screens, "a8": a8,
+              "final": len(out), "quota_met": len(out) >= quota,
+              "dropped_from_build": a8["dropped_from_build"]}
+    return out[:quota], report
