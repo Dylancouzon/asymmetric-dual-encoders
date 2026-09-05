@@ -96,7 +96,32 @@ rows are the SAME stores and the SAME `min_score = 4`, so the only variable is t
 | `finance` | 22,375 | ~~39,918~~ | **23,504** (1.05×) | **SHORT → rung 3** |
 | `howto` | 37,927 | ~~37,154~~ | **37,473** | clears |
 
-**What the correction shows.** `health`'s gain was mostly real — 3.5× survives, so router recall
+### The registered precision gate FAILED, and the widening is therefore NOT adopted
+
+`results/m10_route_precision.json`, verdicts `work/m10gen/route_precision_verdicts.json`. An
+independent Fable subagent judged the passages v2 newly admits, asking only whether each could
+plausibly seed a genuine question of that form:
+
+| form | base | v2 | marginal | marginal on-topic | real gain | **usable** | need |
+|---|---|---|---|---|---|---|---|
+| `health` | 10,399 | 36,284 | 25,885 | **28%** | ~7,247 | **~17,646** | 32–33K |
+| `finance` | 22,375 | 23,504 | 1,129 | **38%** | ~429 | **~22,804** | 32–33K |
+
+Gate is ≥ 80%. **Both fail, and not narrowly.** The corrected router fixed the substring bugs but
+still selects on the *presence* of "medic\*"/"hospital"/"financial", not on subject: health's
+marginal is ~3:1 noise (19 of 50 are biographies of physicians, ~14 are institutions), finance's
+~3:2 (mostly company and organisation articles). **So `ROUTE_WIDE` is not adopted**: `draw()`
+defaults back to T2-3's registered `ROUTE`, `SCREEN_VERSION` is bumped again, and the widening
+survives only as a measurement.
+
+**The seed-supply problem is therefore OPEN, not fixed** — W3 stands, and `health` at ~17.6K
+usable is the binding case. The next lever the judge identified, and the one to try, is a
+**subject-level filter** rather than more keywords: `hotpotqa-corpus` is entity intro paragraphs,
+so lead-sentence patterns ("X (born …) was a …", "X is a company/hospital/journal/organisation …")
+are highly diagnostic and would remove most of the noise in both forms while keeping the topical
+gain. Registered as the next attempt, with the same judged gate before adoption.
+
+**What the raw counts showed before the gate (kept, since the counts are what misled me twice).** `health`'s gain was mostly real — 3.5× survives, so router recall
 was genuinely the constraint there. **`finance`'s was almost entirely spurious**: v1's 39,918 falls
 to 23,504, i.e. ~93% of the apparent gain was `capital`→"capital city", `credit`→"credited",
 `bond`→a surname, `wage`→"wages war". The post-execution review predicted ~95% before the rescan

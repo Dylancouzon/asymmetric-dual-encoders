@@ -122,7 +122,10 @@ def draw(forms_wanted, per_form=40, pool_size=400_000, seed=0, store="hotpotqa-c
     if verbose:
         print(f"  store {store}: {len(texts):,} docs, {len(cand):,} candidates", flush=True)
 
-    route = route if route is not None else ROUTE_WIDE
+    # T2-3's registered routing stays the default: ROUTE_WIDE **FAILED its registered
+    # precision gate** (health marginal 28% on-topic, finance 38%, against >= 80%). It is
+    # available by explicit argument for measurement, and is not adopted for a build draw.
+    route = route if route is not None else ROUTE
     pats = {f: (None if route[f] == "general" else re.compile(route[f], re.I))
             for f in forms_wanted}
     topical = [f for f in forms_wanted if pats[f] is not None]
@@ -210,7 +213,7 @@ def draw(forms_wanted, per_form=40, pool_size=400_000, seed=0, store="hotpotqa-c
 # Bumped whenever the screen's SCOPE changes (e.g. COV joins the protected index). A cached
 # draw made under an older scope can then never be served -- the old blocker was a cache key of
 # `smoke-{per_form}-{forms}`, which ignored store, seed, min_score, pool size and the screen.
-SCREEN_VERSION = "2026-09-04b-protected-queries-only+ROUTE_WIDE"
+SCREEN_VERSION = "2026-09-04c-protected-queries-only+ROUTE(T2-3)"
 
 
 def _key(forms_wanted, per_form, kw):

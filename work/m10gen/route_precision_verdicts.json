@@ -1,0 +1,412 @@
+{
+ "health": {
+  "verdicts": [
+   {
+    "on_topic": false,
+    "why": "biography of an impostor"
+   },
+   {
+    "on_topic": false,
+    "why": "biography"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "biography"
+   },
+   {
+    "on_topic": false,
+    "why": "biography of a researcher"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "biography"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "biography"
+   },
+   {
+    "on_topic": false,
+    "why": "insurance company article"
+   },
+   {
+    "on_topic": false,
+    "why": "funding agency"
+   },
+   {
+    "on_topic": false,
+    "why": "poem"
+   },
+   {
+    "on_topic": false,
+    "why": "journal"
+   },
+   {
+    "on_topic": false,
+    "why": "biography/politician"
+   },
+   {
+    "on_topic": false,
+    "why": "biography"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "biography"
+   },
+   {
+    "on_topic": false,
+    "why": "biography"
+   },
+   {
+    "on_topic": false,
+    "why": "biography"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "policy organisation"
+   },
+   {
+    "on_topic": false,
+    "why": "polymer chemistry"
+   },
+   {
+    "on_topic": false,
+    "why": "software project"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "medical school"
+   },
+   {
+    "on_topic": false,
+    "why": "biography"
+   },
+   {
+    "on_topic": true,
+    "why": "enzyme, but influenza drug target"
+   },
+   {
+    "on_topic": false,
+    "why": "hospital institution"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": true,
+    "why": "healthcare coverage; a patient could ask what is covered"
+   },
+   {
+    "on_topic": false,
+    "why": "government agency"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "journal"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "lab testing methodology"
+   },
+   {
+    "on_topic": false,
+    "why": "play"
+   },
+   {
+    "on_topic": false,
+    "why": "biography"
+   },
+   {
+    "on_topic": false,
+    "why": "animal charity"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "bacteriophage taxonomy, not human health"
+   },
+   {
+    "on_topic": false,
+    "why": "hospital institution"
+   },
+   {
+    "on_topic": false,
+    "why": "biography"
+   },
+   {
+    "on_topic": false,
+    "why": "veterinary tumour in dogs"
+   },
+   {
+    "on_topic": false,
+    "why": "astrology, not medicine"
+   },
+   {
+    "on_topic": false,
+    "why": "hospital institution"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "clinic organisation"
+   },
+   {
+    "on_topic": false,
+    "why": "biography of a sociologist"
+   },
+   {
+    "on_topic": false,
+    "why": "historical hospital"
+   }
+  ],
+  "note": "Marginal health is mostly noise: 14/50 on-topic. Dominant failure is biographies of physicians/researchers (19) plus institutions (hospitals, journals, schools, agencies, ~14) matched on 'medicine'/'medical'/'hospital'."
+ },
+ "finance": {
+  "verdicts": [
+   {
+    "on_topic": false,
+    "why": "political movement"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "insurance company article"
+   },
+   {
+    "on_topic": false,
+    "why": "federal pay administrative body"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "biography"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "research centre"
+   },
+   {
+    "on_topic": true,
+    "why": "estate income apportionment"
+   },
+   {
+    "on_topic": false,
+    "why": "government agency"
+   },
+   {
+    "on_topic": false,
+    "why": "human trafficking"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "biography"
+   },
+   {
+    "on_topic": true,
+    "why": "historical currency"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "building history"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "street/avenue"
+   },
+   {
+    "on_topic": false,
+    "why": "hedge fund company article"
+   },
+   {
+    "on_topic": true,
+    "why": "excerpt is about Congo's oil economy and devaluation"
+   },
+   {
+    "on_topic": false,
+    "why": "NGO"
+   },
+   {
+    "on_topic": false,
+    "why": "company article"
+   },
+   {
+    "on_topic": false,
+    "why": "scholarly publishing"
+   },
+   {
+    "on_topic": false,
+    "why": "credit union organisation"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "municipal government description"
+   },
+   {
+    "on_topic": true,
+    "why": "accounting standards body/opinions"
+   },
+   {
+    "on_topic": true,
+    "why": "financial-stability regulator"
+   },
+   {
+    "on_topic": false,
+    "why": "biography"
+   },
+   {
+    "on_topic": false,
+    "why": "skyscraper"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": false,
+    "why": "company article"
+   },
+   {
+    "on_topic": false,
+    "why": "medieval records, history"
+   },
+   {
+    "on_topic": false,
+    "why": "trade association"
+   },
+   {
+    "on_topic": false,
+    "why": "credit union organisation"
+   },
+   {
+    "on_topic": false,
+    "why": "documentary film"
+   },
+   {
+    "on_topic": false,
+    "why": "college"
+   },
+   {
+    "on_topic": false,
+    "why": "company article"
+   },
+   {
+    "on_topic": false,
+    "why": "museum"
+   },
+   {
+    "on_topic": false,
+    "why": "admissions body"
+   },
+   {
+    "on_topic": false,
+    "why": "company article"
+   },
+   {
+    "on_topic": false,
+    "why": "nonprofit organisation"
+   },
+   {
+    "on_topic": false,
+    "why": "education policy centre"
+   },
+   {
+    "on_topic": true,
+    "why": "economic/monetary union proposal"
+   },
+   {
+    "on_topic": false,
+    "why": "book description"
+   },
+   {
+    "on_topic": true,
+    "why": ""
+   },
+   {
+    "on_topic": true,
+    "why": "weak: generic resource pooling"
+   }
+  ],
+  "note": "Marginal finance is mixed but majority noise: 19/50 on-topic. Dominant failure is organisation/company articles (credit unions, insurers, funds, NGOs, ~17) matched on 'financial'/'credit'/'assets', plus biographies and buildings."
+ }
+}

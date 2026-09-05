@@ -8,7 +8,7 @@
 | **0b** rate re-measure | **DONE** | Real corpora + real memmapped targets: bucketed + prefetched + `torch.compile` on fixed buckets gives **914–960 ex/s** query-bucket, **792** document-bucket, blended ≈890 → **~62 GPU-h for the 200M build on the box** (plan assumed 683 ex/s → 81 h). `results/m10_rate_bench_real_box.json` |
 | **1** generation smoke | **DONE — all 7 forms APPROVED by Dylan** | Contract 100% everywhere after 7 prompt revisions across 4 forms. On-form vs the frozen rubric: yesno 100 · conversational 100 (r1) · argument 88 · finance 86 · comparison 84 · health 84 · howto 80.0. `m10/SMOKE.md`, GitHub issue **#1**. `argument` ships with **67%** (full-output) as its honest rate |
 | **2** COV admission | **DONE — four families** | MedicalQA · BRIGHT · CorporateLobbying · ConsumerContractsQA · **LEDGER**. Surface = **13,416 queries, 4 family IDs** (STOP is <3). All screened clean vs the six. Teacher-encoded. LEDGER §2 |
-| **headroom** | partly done | LEDGER admitted (H1). Seed supply (H3): health fixed 10,399→**36,284**; **`finance` still short at 23,504** and needs rung 3. `m10/HEADROOM.md` |
+| **headroom** | H1 done; **H3 FAILED its gate** | LEDGER admitted (H1) — the big win. Seed supply (H3): widening raised raw counts but **failed the registered precision gate (health marginal 28% on-topic, finance 38%, gate 80%)**, so it is **not adopted** and `draw()` is back on T2-3's `ROUTE`. Usable supply stays **health ~17.6K, finance ~22.8K vs a ~32–33K need — W3 is OPEN**. `m10/HEADROOM.md` |
 | **3–11** | not started | §0a lock needs step 2's **resolution number**, which is the next task |
 
 ## THE NEXT THREE THINGS, in order
@@ -21,9 +21,12 @@
    implementation but is **hardcoded to 6 datasets** — a family-macro variant is needed.
    This decides whether the screen can resolve anything: §Surfaces expected 0.009–0.0135 against
    MDE 0.0056, i.e. most B–G contrasts unresolved. LEDGER was admitted precisely to move it.
-2. **`finance` rung 3**: relax `min_score` 4→3 (then →2, stopping at the first pass), gated on the
-   **full 200 queries, uniform-random, judged against the frozen `RUBRIC`** by an independent Fable
-   subagent, ≥ 80%.
+2. **Seed supply, next lever (W3 is open).** Keyword widening failed its gate. Try a
+   **subject-level filter** instead: `hotpotqa-corpus` is entity intro paragraphs, so reject
+   lead-sentence patterns like "X (born …) was a …" and "X is a company/hospital/journal …",
+   which is where ~3:1 of health's noise sits. Same judged gate (≥ 80% on the newly-admitted
+   marginal) before adoption. Relaxing `min_score` is unlikely to help — it costs precision, and
+   precision is what failed.
 3. **Wire `m10src/protected10.py`** so admitted COV queries+documents join the protected index, and
    bump `seeds.SCREEN_VERSION`, **before any build seed draw** (§Data requires it; not yet done).
 
