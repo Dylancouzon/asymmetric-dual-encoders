@@ -27,32 +27,34 @@
    ]
   ]
  },
- "m9-queries_pair": {
-  "n": 242786,
-  "kept": 242355,
-  "removed": 431,
-  "by_hit": {
-   "exact": 174,
-   "near": 257
+ "documents": {
+  "n_dropped": 79630,
+  "per_store": {
+   "esci-prod": {
+    "eligible": 808291,
+    "dropped": 12204,
+    "seconds": 580.9
+   },
+   "fever-pos": {
+    "skipped": "fever-pos, excluded from the M9 doc pool"
+   },
+   "hotpotqa-corpus": {
+    "eligible": 5226791,
+    "dropped": 64534,
+    "seconds": 1379.4
+   },
+   "mrtydi-docs": {
+    "eligible": 95758,
+    "dropped": 2036,
+    "seconds": 41.2
+   },
+   "squad-ctx": {
+    "eligible": 18839,
+    "dropped": 856,
+    "seconds": 8.6
+   }
   },
-  "seconds": 27.3
- },
- "m9-nqopen": {
-  "n": 85863,
-  "kept": 85797,
-  "removed": 66,
-  "by_hit": {
-   "near": 66
-  },
-  "seconds": 10.3
- },
- "m9-triviaqa": {
-  "n": 134665,
-  "kept": 134453,
-  "removed": 212,
-  "by_hit": {
-   "near": 212
-  },
-  "seconds": 18.8
+  "complete": true,
+  "seconds": 2010.7
  }
 }
