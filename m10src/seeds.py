@@ -88,9 +88,10 @@ FINANCE_WORDS = (
     "subsidies", "shareholder", "shareholders", "capitalism", "bankruptcy", "interest rate",
     "interest rates",
 )
-ROUTE_WIDE = dict(ROUTE)
-ROUTE_WIDE["health"] = _words(*HEALTH_WORDS)
-ROUTE_WIDE["finance"] = _words(*FINANCE_WORDS)
+# `ROUTE_WIDE` (the keyword widening) is DELETED, not carried: it FAILED its registered
+# precision gate at 28% / 38% on-topic against >= 80% and was withdrawn (LEDGER W3). It survived
+# only as dead code plus two cache-key branches. The word lists above are kept because the gate
+# result is only interpretable against them.
 # `esci-prod` is excluded from the topical scan: product listings cannot serve howto/health/finance.
 TOPICAL_STORES = ("hotpotqa-corpus", "squad-ctx", "mrtydi-docs")
 
@@ -211,7 +212,7 @@ def draw(forms_wanted, per_form=40, pool_size=400_000, seed=0, store="hotpotqa-c
     if verbose:
         print(f"  projected topical seeds in the full store: {projected}", flush=True)
     return kept, dict(store=store, pool_size=int(len(cand)), seed=seed, min_score=min_score,
-                      route="ROUTE_WIDE" if route is ROUTE_WIDE else "ROUTE",
+                      route="ROUTE",
                       store_size=len(texts), projected_topical_full_store=projected,
                       length_eligible=len(eligible),
                       topical_candidates={f: len(ranked[f]) for f in topical},
@@ -290,8 +291,8 @@ def supply(forms=("health", "finance", "howto"), stores=None, min_score=4, route
                     if length_ok:
                         counts[f] += 1
                     break
-    out = dict(stores=list(stores), min_score=min_score, route="ROUTE_WIDE" if route is ROUTE_WIDE
-               else "ROUTE", order=list(forms), n_docs_scanned=n_docs,
+    out = dict(stores=list(stores), min_score=min_score, route="ROUTE",
+               order=list(forms), n_docs_scanned=n_docs,
                n_unique_after_dedup=len(seen), n_length_eligible=n_len_ok,
                seeds_in_length_range=counts, seeds_ignoring_length=counts_nolen,
                length_window=[MIN_WORDS, MAX_WORDS])

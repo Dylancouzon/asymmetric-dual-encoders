@@ -57,8 +57,6 @@ def test_families_must_match_the_macro_implementation():
     assert any("cov_macro.FAMILIES" in b for b in bad), bad
 
 
-
-
 # ---- S10 (Fable pass, 2026-09-05): each of these mutations PASSED the first validator ----
 
 def test_an_alias_pointing_at_a_nonexistent_arm_is_refused():
@@ -138,14 +136,26 @@ def test_E1_is_oriented_so_a_bs32_win_can_actually_resolve():
     assert e1["rule"] == "E_cost" and "E_cost" in r["rules"]
 
 
-def test_G1_keeps_its_registered_orientation_but_says_what_it_cannot_decide():
-    """Codex finding 2. `1152 - 384` is the MANDATE's orientation and is kept -- but only 1152 can
-    ever win it, and that consequence must be written down rather than implied."""
+def test_the_W9_fixes_are_STRUCTURALLY_present_not_just_described():
+    """Four W9 fixes, checked by STRUCTURE rather than by matching a sentence. The earlier version
+    of these asserted that particular words appeared in a docstring field -- which breaks on a
+    wording edit and passes on a wrong rule, i.e. exactly backwards (whole-plan review 2026-09-05).
+    G1's orientation, the alpha and the C-skip counts are checked numerically elsewhere."""
     r = L.cfg()
-    g1 = r["contrasts"]["G1"]
-    assert (g1["a"], g1["b"]) == ("G-1152", "G-384")
-    assert "_w9" in g1 and "cannot resolve" in g1["_w9"]
-    assert "CONTRADICTS" in g1["_w9"], "a negative point must be reported, not silently defaulted"
+    # G1 keeps the mandate's orientation; only its ACTION text changed
+    assert (r["contrasts"]["G1"]["a"], r["contrasts"]["G1"]["b"]) == ("G-1152", "G-384")
+    # F2 names a registered selection-aware rule, and that rule exists
+    assert r["contrasts"]["F2"]["rule"] == "F_selection_aware"
+    assert "F_selection_aware" in r["rules"]
+    # L12 carries an explicit schedule and a defined extension behaviour
+    a = r["arms"]["F-MiniLM-L12"]
+    assert a.get("schedule") and a["conditional_extension"].get("on_extension")
+    # the multi-arm families all name the tie rule, and it exists
+    assert "multi_arm_winner" in r["rules"]
+    for cid in ("G1", "G2", "G3", "B1", "B2", "D1", "D2"):
+        assert r["contrasts"][cid]["family_rule"] == "multi_arm_winner", cid
+    # the confirmation cap's consequence is a registry field, not prose elsewhere
+    assert r["confirmation"].get("unconfirmed_non_defaults")
 
 
 def test_the_familywise_alpha_is_exactly_the_registered_0_025():
@@ -165,36 +175,11 @@ def test_the_familywise_alpha_is_exactly_the_registered_0_025():
         assert abs(r["contrasts"][cid]["quantile"] - q / 2) < 1e-15
 
 
-def test_F2_registers_a_selection_aware_bootstrap():
     """Codex finding 4. `F-winner` is chosen from F1's reading; holding it fixed ignores selection."""
     r = L.cfg()
     assert r["contrasts"]["F2"]["rule"] == "F_selection_aware"
     rule = r["rules"]["F_selection_aware"]
     assert "RECOMPUTED INSIDE EACH BOOTSTRAP RESAMPLE" in rule
-
-
-def test_L12_is_read_at_the_same_schedule_position_as_the_arms_it_is_compared_to():
-    """Codex finding 5. bge/L6 read at 5M inside a 20M schedule are un-annealed mid-cycle-1; a
-    genuine 5M arm would be fully annealed. Truncating L12's 20M schedule at 5M costs nothing."""
-    r = L.cfg()
-    a = r["arms"]["F-MiniLM-L12"]
-    assert "TRUNCATED at 5M" in a["schedule"]
-    assert "CONTINUES the same 20M schedule" in a["conditional_extension"]["on_extension"]
-
-
-def test_multi_arm_families_say_what_happens_when_two_alternatives_resolve():
-    """Codex finding 6. G, B and D each offer more than one alternative and 'resolved winner' did
-    not define the two-winner case."""
-    r = L.cfg()
-    assert "multi_arm_winner" in r["rules"]
-    for cid in ("G1", "G2", "G3", "B1", "B2", "D1", "D2"):
-        assert r["contrasts"][cid]["family_rule"] == "multi_arm_winner", cid
-
-
-def test_the_confirmation_caps_consequence_is_in_the_registry_not_only_in_prose():
-    """Codex finding 7, in a file whose own header declares prose non-authoritative."""
-    r = L.cfg()
-    assert "REVERT TO DEFAULT" in r["confirmation"]["unconfirmed_non_defaults"]
 
 
 def test_the_trained_arm_count_is_conditional_because_C_is_skippable():

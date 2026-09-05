@@ -644,6 +644,40 @@ thing the calibration exists to measure. Apply after M10.0-e completes and **bef
 arm**, with a test asserting the final step's LR equals `final` for a `total_steps` not divisible
 by `cycles`.
 
+### `E-bs128` DOES NOT RUN ON THE BOX at realistic sequence lengths — found by the GPU arm-shape smoke, 2026-09-05
+
+The arm-shape smoke was re-run on the **real** configuration (`--device cuda --max-len 512`) after
+the `lr_at` fix, because a code change is a new path. **11/12 passed; `E-bs128` failed**, and it
+reproduces deterministically on an idle card (337 MiB used of 10,240):
+
+| max_len | 128 | 256 | 384 | 512 |
+|---|---|---|---|---|
+| `E-bs128` | **PASS**, 2,188 ex/s | **FAIL** | **FAIL** | **FAIL** |
+
+`RuntimeError: CUDA driver error: device not ready` — a driver-level error, not a clean OOM, which
+on WSL2 is its own signature.
+
+**Why the rate table did not predict this.** `results/m10_rate_bench_box.json`'s bs128 rows are
+`bs128_query_bucket_64` (seq **64**, 2,310.8 ex/s, peak 2.11 GB) and `bs128_doc_bucket_256`
+(seq **256**, 747.5 ex/s, peak **7.03 GB**, `alloc_retries` 0) — the blended **1,517 ex/s** that
+amendment A7 and the W8 recommendation both rest on. That benchmark is **random token ids with no
+data loading, no teacher targets and no evaluation**, and its own `_what` says it "bounds the
+HARDWARE, not the pipeline". The real trainer path fails at the same shape the microbenchmark
+reported as fitting.
+
+**Consequences, both decision-bearing.** (i) **Family E cannot run as registered on the box.** The
+remedies are gradient accumulation (4 × 32 gives a mathematically identical batch-128 gradient for
+a batchnorm-free transformer, and preserves "equal examples and identical schedule" exactly), a
+sequence cap (changes the arm), or running E in the cloud. (ii) **E's entire rationale is the 2.2×
+throughput** — amendment A7: *"a bs32 win must also be worth its 2.2× build cost"* — and under
+gradient accumulation **bs128 runs at bs32 speed, so the 2.2× is not available on this hardware
+at all**. It would be on the rented A100 the build uses, so the cost argument survives for the
+BUILD; what does not survive is measuring it here. The W8 recommendation ("keep E — 0.9
+box-hours") was priced on the 1,517 figure and needs re-pricing.
+
+**This is what the registered arm-shape smoke is for**: 90 steps caught it instead of a family-E
+arm dying hours in, and it was invisible to both the CPU smoke and the microbenchmark.
+
 ### M10.0-e CALIBRATION — COMPLETE, 2026-09-05. **The screen IS viable for same-init contrasts.**
 
 Three clean full-dose arms (`total_steps` 156,250, `steps_run` 156,250, `stopped` None):
