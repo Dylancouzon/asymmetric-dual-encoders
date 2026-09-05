@@ -181,6 +181,70 @@ Copied from `instructions-m10.md` §Owner decisions as each is taken, with date 
 
 **Rung 2 is next as registered.** The residual failures the six judges named are what a definitional-pattern regex cannot reach: institutions whose lead is not definitional, bare lists of journal names and JEL codes, and word-sense errors inside a genuine-looking lead ("market" as a physical marketplace, "bank" as a riverbank, "trade" as a craft, "Banker" as a mycologist's surname). **Note for whoever runs it:** some `wikipedia-body` failures are chunks off-topic inside an ON-subject article, which a LEAD-sentence classifier of any kind cannot see. Classifying per CHUNK would reach them — but that is a different lever from the one T2-8 registered, and choosing it now, after these numbers, is an amendment that needs a Fable pass first.
 
+### M10.0-e power check — REGISTERED 2026-09-05 before it runs (COV read #2)
+
+**Why.** The resolution number 0.008619 was measured between UNRELATED models, and the mandate
+records that this over-estimates a same-init contrast's width without saying by how much. Family F
+costs ≈17 GPU-hours and every later verdict is taken on its winner, so the size of that
+over-estimate is worth ≈5 GPU-hours before the screen starts. Dylan approved 2026-09-05.
+
+**Design.** Three arms on the **M9 pool** (A1's corpus — its teacher targets already exist), at the
+full **5M screen dose** so the variance is estimated at the dose the screen actually uses:
+
+| arm | shape | what its pairing measures |
+|---|---|---|
+| P0 | anchor shape, seed 0 | — |
+| P1 | anchor shape, **seed 1** | `SD(P0−P1)` = pure seed noise, the lower bound on a contrast's width |
+| P2 | anchor shape, **peak LR 8e-5** instead of 1e-4, seed 0 | `SD(P0−P2)` = a representative CONTRAST's width, the number wanted |
+
+**The lever is peak LR precisely because it is NOT one of the thirteen registered contrasts**, so
+nothing here can leak a hint about a screen verdict. The corpus is the M9 pool and not M10's, so
+these models sit at a different quality level; disclosed, not corrected.
+
+**What it changes: nothing.** MDE 0.0056 and α 0.025/13 stay fixed, no arm is added, removed or
+reordered. It is a power disclosure exactly as the first one was, reported beside every contrast.
+**Outcome map:** a same-init distance below 0.0056 closes W5 — the screen is adequately powered as
+registered. At or above it, Dylan decides on the MDE **before family F starts**, never after.
+
+### W6 — RULED by Dylan, 2026-09-05: a seed store is admitted on the QUERIES it produces
+
+**The ruling.** Seed subject precision stops being the admission instrument. A store is admitted on
+what the build actually consumes: the generated queries' fidelity and diversity, plus supply.
+
+**The test, three conjuncts, ALL required.** Measured at M10.1 on the build manifest, per form, per
+store:
+
+1. **Supply** — the store fills the form's registered quota (≥ 33,000 screened seeds at the
+   registered 5 queries per seed for a 143K quota).
+2. **Diversity** — A8's registered gates on the generated queries: near-duplicate rate below 25% at
+   the registered 16/32 threshold, mean pairwise stella cosine disclosed.
+3. **Fidelity** — the generated queries' on-form rate, judged blinded against the frozen
+   `forms.RUBRIC` at n ≥ 200 per form per store, is **not significantly below the 0.80 at which the
+   forms were approved** (one-sided binomial, α = 0.05; at n = 200 that is a floor of **0.754**).
+
+Among stores passing all three the build uses the highest on-form rate; a tie inside one SE goes to
+the larger supply.
+
+**Why this is not the forbidden change, stated plainly rather than assumed.** The evaluation
+protocol — partitions, decontamination, the frozen comparator vectors, the single final run, the
+pre-registered statistics — is untouched, and no reported number depends on which store the seeds
+came from. This is a **data-recipe** gate, which `CLAUDE.md` puts explicitly on the list that is
+"fair game to reopen with evidence and Dylan's sign-off". The session raised it; the owner ruled it.
+
+**Four disclosures that ride with the ruling.**
+- **0.80 is not invented.** It is the same on-form bar the forms were approved at (decision 15).
+  Only the TEST is new — "cannot be ruled out at 0.80" rather than "point estimate ≥ 0.80" — and
+  the reason is on the record: the approval sample was T2-3's top-tail draw, which the mandate
+  itself flags as non-representative, so a build-population estimate is expected to sit lower.
+- **The decision reads numbers that do not yet exist.** Every on-form figure measured so far
+  (0.780 / 0.790 vs 0.735 / 0.635) is on the PRE-filter pool and is a diagnostic. Conjunct 3 is
+  re-measured on the actual post-rung-1 build corpus, so the rule genuinely precedes the numbers
+  it governs.
+- **The seed-precision gate is not deleted.** It is reported beside every store as a diagnostic.
+  It stops being the instrument that admits.
+- **Supply already decides health on its own:** the incumbent store holds 8,663 screened health
+  seeds against a 33,000 need and fails conjunct 1 outright, under any fidelity standard.
+
 ### Open questions for Dylan — raised by the weekend window, NOT resolved here
 
 | # | question | why it is not mine to answer | cost of waiting |
@@ -190,7 +254,7 @@ Copied from `instructions-m10.md` §Owner decisions as each is taken, with date 
 | W2 | Do `howto` (80.0%, at the threshold) and `argument` (88% judged / 67% full output) stand as passes? **`conversational` is RESOLVED on evidence, not interpretation:** its r1 output survived, and re-judged against the frozen rubric — executing the registered measurement, not changing it — it scores **50/50, 100%**. Its r1 transition was triggered by a genuine gate failure (22% on the frozen rubric), so `conversational` has **one** authorised revision and a clean pass. Its earlier 50% was purely the moving-rubric artefact. **Recommend reverting the active prompt to r1 `d16f3212`** (one revision, authorised, 100%) rather than keeping r2 `be4fa0ff` (two revisions, void trigger, 96%); both pass, r1 is strictly cleaner | Their gate results are sound; their *procedure* was not, and I found that only after seeing them | none, as W1 |
 | W5 | **ANSWERED 2026-09-05: the resolution distance is 0.0086, the MDE is BELOW it, and no available admission moves it.** `results/m10_cov_resolution.json`: family-weighted COV macro over the four admitted families, paired stratified bootstrap at the registered B = 200,000 / seed 0 / `inverted_cdf` / one-sided 0.025/13. Distance **0.008619**, paired SD 0.00302, implied z 2.93. The rule needs point > distance STRICTLY as well as >= MDE, so **a contrast landing at the MDE 0.0056 cannot resolve**; it lands at the bottom of §Surfaces' predicted 0.009–0.0135 band, which is what admitting LEDGER bought. **Where the width comes from, and why more data will not fix it:** BRIGHT carries 50.0% of the macro variance and legal 32.5% — 83% between them — against LEDGER's 2.7% for 10,000 of the 13,416 queries. Family-equal weighting is why: LEDGER helped by diluting the weights 1/3 -> 1/4, not by adding power, and any further admission does the same at a smaller margin. Disclosures on the record: the distance is measured between UNRELATED models, whose per-query differences are far less correlated than two same-init arms', so the mandate's expectation is that it over-estimates a real contrast's width — an expectation, not a guarantee; the artifact prices it as arithmetic (`distance_if_paired_sd_scaled`: 0.75x -> 0.0065, 0.5x -> 0.0043, so the paired SD must fall to ~0.65x before the MDE binds). §Screen's two namings of the quantile (`inverted_cdf` vs "the 384th order statistic") differ by one observation and by **1e-6** here; `inverted_cdf` runs, both are recorded. **Dylan's three options are unchanged and the registered default (accept, report unresolved contrasts as unresolved) stands unless he moves the MDE — which is Tier 3 and must happen before any arm.** Original entry: | **The screen's power — remedy RECOVERED, size to be measured.** The LEDGER refusal is withdrawn (§2): the surface is **four families and 13,416 queries** (was 3,416), LEDGER supplying 10,000 over 47,820 pages. §Surfaces already expected most B–G contrasts to be unresolved at MDE 0.0056. Options if the measured resolution number confirms it: accept and report the unresolved contrasts as unresolved (the registered default); admit a further surface; or revisit the MDE — **the last is Tier 3 and must be decided before any arm runs, not after** | Admitting a new surface or moving the MDE is Tier 3, and MDE-after-observation is forbidden outright | decide before family F starts |
 | W4 | §Surfaces requires a COV fingerprint screen "against the six **and the reserved four**". Reserved-set DOCUMENT fingerprints do not exist and creating them opens the reserved corpora — the reasoning that ruled FineWeb out on 2026-09-01 (`m9/LEDGER.md` §1.3). `m10src/cov_screen.py` therefore screens against the six's documents and the full protected QUERY index (which already covers reserved queries), and the reserved DOCUMENT side is **not** screened | Building it would open a reserved surface outside a registered transaction — Tier 3 | none: the query-side screen runs, and results so far are 0 hits |
-| W6 | **Is ≥ 0.80 the right bar for a whole seed population?** **Four things to weigh, from the Fable pass.** (i) **The registered default is the worst measured option on finance** — "keep the bar, no store passes, revert to the incumbent" leaves finance at 0.315 when a store measured at 0.535 (z = 4.56) is available; a default is not neutral when it is the measured minimum. (ii) **The approved `finance` prompt was accepted at 86% on the top-tail seeds and its build-population behaviour has never been observed** — its prompt carries no subject steer, unlike `health`'s, which is consistent with its 5-of-50 entity-trivia leak even on the cleanest seeds. (iii) **Seed precision is a proxy one step removed from anything the build consumes:** the build consumes QUERIES, and the registered quality gates on queries are A8 diversity and on-form rate — so the right admission standard for a seed store may be the queries it yields, but re-registering that is yours, after the diagnostic exists. (iv) **Two "next levers" were registered in two places** and T2-8 picks a ladder. **Cost of waiting is ~zero:** nothing generates before the build seed draw at step 8. Original entry: It was registered for the MARGINAL of a keyword widening — "of the passages this widening newly admits, what share are on topic" — and a Fable pass transplanted it to a whole-population gate on a new store. Measured 2026-09-05 on a blinded, interleaved sample: the **incumbent store itself reads 0.590 (health) and 0.315 (finance)**, so the bar has never been met by anything in this project and "revert to the incumbent" is not a safe default. Three options, none taken here: keep the bar and accept that no store passes (the registered default, and it leaves finance on 0.315); re-register the bar as a RELATIVE test (a new store must beat the incumbent, which `wikipedia-body` does on finance by z = 4.56 and ties on health); or fix precision at the source with the subject filter and re-gate against 0.80 unchanged — the only option that needs no protocol change, and the one being executed | The bar is a registered constant and the numbers it governs are now observed, so re-reading it is exactly the change the protocol forbids me to make | **none if the subject filter clears 0.80.** If it does not, the build's seed precision is ~0.55/0.53 at best and Dylan chooses |
+| ~~W6~~ | **RULED 2026-09-05 — see the section above.** Original question: **Four things to weigh, from the Fable pass.** (i) **The registered default is the worst measured option on finance** — "keep the bar, no store passes, revert to the incumbent" leaves finance at 0.315 when a store measured at 0.535 (z = 4.56) is available; a default is not neutral when it is the measured minimum. (ii) **The approved `finance` prompt was accepted at 86% on the top-tail seeds and its build-population behaviour has never been observed** — its prompt carries no subject steer, unlike `health`'s, which is consistent with its 5-of-50 entity-trivia leak even on the cleanest seeds. (iii) **Seed precision is a proxy one step removed from anything the build consumes:** the build consumes QUERIES, and the registered quality gates on queries are A8 diversity and on-form rate — so the right admission standard for a seed store may be the queries it yields, but re-registering that is yours, after the diagnostic exists. (iv) **Two "next levers" were registered in two places** and T2-8 picks a ladder. **Cost of waiting is ~zero:** nothing generates before the build seed draw at step 8. Original entry: It was registered for the MARGINAL of a keyword widening — "of the passages this widening newly admits, what share are on topic" — and a Fable pass transplanted it to a whole-population gate on a new store. Measured 2026-09-05 on a blinded, interleaved sample: the **incumbent store itself reads 0.590 (health) and 0.315 (finance)**, so the bar has never been met by anything in this project and "revert to the incumbent" is not a safe default. Three options, none taken here: keep the bar and accept that no store passes (the registered default, and it leaves finance on 0.315); re-register the bar as a RELATIVE test (a new store must beat the incumbent, which `wikipedia-body` does on finance by z = 4.56 and ties on health); or fix precision at the source with the subject filter and re-gate against 0.80 unchanged — the only option that needs no protocol change, and the one being executed | The bar is a registered constant and the numbers it governs are now observed, so re-reading it is exactly the change the protocol forbids me to make | **none if the subject filter clears 0.80.** If it does not, the build's seed precision is ~0.55/0.53 at best and Dylan chooses |
 | W3 | **Seed supply is OPEN — the widening was tried and REJECTED by its own gate.** Full-store, `min_score ≥ 4`: `health` 10,399, `finance` 22,375, `howto` 37,927 against a ~32–33K need. Widening the keyword lists raised the raw counts (health 36,284) but the registered judged-precision gate reads **28% on-topic on health's marginal and 38% on finance's**, against ≥ 80% — the router selects on the presence of "medic\*"/"hospital"/"financial", not on subject, so the marginal is mostly biographies and organisations. Estimated usable: **health ~17.6K, finance ~22.8K — both still short.** `ROUTE_WIDE` is NOT adopted; `draw()` defaults back to T2-3's `ROUTE`. **Next lever (registered, not yet tried): a subject-level filter on lead-sentence patterns**, since `hotpotqa-corpus` is entity intros — reject "X (born …) was a …" and "X is a company/hospital/journal …". Same judged gate before adoption. If that fails too, the levers left are relaxing `min_score` (worse precision, so unlikely to help), raising queries-per-seed against the A8 gate, or Dylan lowering the `health`/`finance` quotas | Touches the registered data recipe; quotas are Tier 3 | decide before step 8 |
 
 ## §4 Dev-reuse log
