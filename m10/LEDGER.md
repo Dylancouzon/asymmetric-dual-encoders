@@ -643,6 +643,46 @@ thing the calibration exists to measure. Apply after M10.0-e completes and **bef
 arm**, with a test asserting the final step's LR equals `final` for a `total_steps` not divisible
 by `cycles`.
 
+### W10 AMENDMENT — A8 gate 1, two regimes. Ruled by Dylan 2026-09-05, implemented and validated
+
+**The rule.** Below **39** words a query is a near-duplicate if its **word-4-gram set shares ≥ 50%
+of the smaller query's grams** with an earlier query of the same form. At **≥ 39 words the
+registered 8-gram bottom-32 ≥ 16/32 rule is bit-identical.** Same 25% cut / 50,000 drop action.
+**Uniform across forms.** `m10src/corpus10.py`; `A8_LONG_FLOOR`/`A8_SHORT_K`/`A8_SHORT_FRAC`.
+
+39 is the one principled boundary: it is where the bottom-32 sketch stops truncating and the test
+becomes an absolute count rather than a Jaccard estimate. The 50% constant comes from the Jaccard
+intent, **not** from any value that makes a form pass or fail.
+
+**Validated on real data — it catches what it was blind to, perturbs nothing that worked, and does
+not damage real text** (`results/m10_a8_blindspot.json`):
+
+| form | range | A8 **before** | A8 **after** | 4-gram diagnostic |
+|---|---|---|---|---|
+| `howto` | (25,60) | 0.00% | **0.00%** | 0.00% |
+| `argument` | (120,220) | 3.59% | **3.59%** | 6.15% |
+| `conversational` | (30,80) | 0.00% | **0.00%** | 0.00% |
+| `finance` | (8,30) | 0.00% | 1.00% | 1.00% |
+| `comparison` | (8,25) | 0.00% | 3.50% | 3.50% |
+| `yesno` | (6,20) | 0.00% | 2.50% | 2.50% |
+| **`health`** | (8,30) | **0.00%** | **26.50%** | 20.50% |
+| `keyword` (harvested) | (2,4) | 0.00% | 0.05% | 0.05% |
+| `title` (harvested) | (6,16) | 0.00% | 3.38% | 3.28% |
+| `claim` (harvested) | (8,25) | 0.00% | 9.15% | 8.06% |
+
+`argument`, `howto` and `conversational` are **unchanged** — the forms where the registered rule
+was already doing its job are untouched. The harvested forms stay far below the 25% cut, which is
+what made a uniform rule defensible rather than a generated-only one. The amended gate reads
+slightly *above* the standalone diagnostic because it applies **both** tests.
+
+**AND IT CHANGES THE ANSWER FOR `health`: 26.50% is ABOVE the 25% cut, on 200 queries.** The rate
+is monotone in n, so the build's 143,000 will be higher still. Under the registered action `health`
+would be **cut to representatives** — collapsing a repeated frame to one query and discarding the
+distinct medical topics with it. So the second half of Dylan's ruling is now load-bearing, not
+precautionary: **`health`'s prompt must be fixed before the build**, evidenced by the pilot, under
+decision 15's machinery (smoke, prompt-hash record, six-hour veto window). `health` has used **1 of
+its 2** registered revisions.
+
 ### Codex CODE review, 2026-09-05 — nine findings; A8's gate is inert for five of twelve forms
 
 Log audited before reading: `frozen_eval` and `m9reserve` appear **only** in the brief's own

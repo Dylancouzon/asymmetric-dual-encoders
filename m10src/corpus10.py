@@ -35,6 +35,18 @@ import decontam
 
 HOLDOUT_PER_FORM = 500          # FORMS-12
 A8_NEAR_DUP_SHARE = 16          # A8 gate 1 -- NOT decontam.DUP_SHARE (8), which the screens use
+# W10 amendment, ruled by Dylan 2026-09-05 (option (c), as the reviewer specified it). The
+# registered 8-gram/16-of-32 rule is UNREACHABLE below 23 words, identical to exact dedup below 8,
+# and cannot see a one-slot template at <= 15 words at ANY threshold, because every 8-gram window
+# covers the changed word. Below 39 -- the point where the bottom-32 sketch stops truncating and
+# the test becomes an absolute count rather than a Jaccard estimate -- a word-4-gram rule applies.
+# At and above 39 the registered rule is BIT-IDENTICAL. Uniform across forms: the harvested
+# measurements (keyword 0.05%, title 3.28%, claim 8.06%) show a uniform rule passes real text on
+# its merits, so a provenance-conditional gate would be tuning. The 50% constant comes from the
+# Jaccard intent, NOT from any value that makes a form pass or fail.
+A8_LONG_FLOOR = 39              # at/above this many words the registered rule applies unchanged
+A8_SHORT_K = 4                  # word-4-grams below the floor
+A8_SHORT_FRAC = 0.5             # >= 50% of the SMALLER query's gram set
 A8_MAX_NEAR_DUP_RATE = 0.25     # above this the form keeps only its representatives
 A8_MIN_RETAINED = 50_000        # below this the form is dropped from the build
 SPAN_K = 5                      # "any word-5-gram shared with the query's own seed passage"
@@ -130,23 +142,46 @@ def near_dup_gate(queries, share=A8_NEAR_DUP_SHARE, against="earlier_query"):
 
     if against not in ("earlier_query", "representative"):
         raise ValueError(f"against={against!r}")
-    index = {}                      # gram -> [earlier query positions]
-    reps, n_near = [], 0
+    index = {}                      # 8-gram -> [earlier query positions]      (registered rule)
+    sindex = {}                     # 4-gram -> [earlier SHORT query positions] (W10 amendment)
+    sgrams = {}                     # position -> its 4-gram set, for the "smaller set" denominator
+    reps, n_near, n_short_only = [], 0, 0
     for i in order:
+        w = decontam.norm_words(queries[i])
+        short = len(w) < A8_LONG_FLOOR
         sk = decontam.sketch(queries[i])
+
         counts = {}
         for g in sk.tolist():
             for r in index.get(g, ()):
                 counts[r] = counts.get(r, 0) + 1
         dup = any(c >= share for c in counts.values())
+
+        g4 = None
+        if short:
+            g4 = _kgrams(w, A8_SHORT_K) if len(w) > A8_SHORT_K else {tuple(w)}
+            if not dup:
+                c4 = {}
+                for x in g4:
+                    for r in sindex.get(x, ()):
+                        c4[r] = c4.get(r, 0) + 1
+                if any(c >= A8_SHORT_FRAC * min(len(g4), len(sgrams[r]))
+                       for r, c in c4.items()):
+                    dup = True
+                    n_short_only += 1
+
         if dup:
             n_near += 1
         else:
             reps.append(i)
         if dup and against == "representative":
-            continue                        # dropped queries do not enter the index
+            continue                        # dropped queries do not enter either index
         for g in sk.tolist():
             index.setdefault(g, []).append(i)
+        if short:
+            sgrams[i] = g4
+            for x in g4:
+                sindex.setdefault(x, []).append(i)
 
     post_exact = len(order)
     rate = n_near / max(post_exact, 1)
@@ -157,10 +192,13 @@ def near_dup_gate(queries, share=A8_NEAR_DUP_SHARE, against="earlier_query"):
            "near_dup_rate_raw": rate,
            "near_dup_rate": round(rate, 5), "representatives": len(reps),
            "share_threshold": f"{share}/32", "compared_against": against,
-           "_blind_spot": ("an N-word query has N-7 word-8-grams, so a sketch reaches this "
-                           "threshold only at N >= 23: for forms whose whole range is shorter "
-                           "(factoid, keyword, product, title, yesno) this gate CANNOT fire and "
-                           "only exact dedup applies -- see m10/LEDGER.md"),
+           "rule": (f"W10 (Dylan 2026-09-05): word-{A8_SHORT_K}-grams at "
+                    f">= {A8_SHORT_FRAC:.0%} of the smaller set below {A8_LONG_FLOOR} words; "
+                    f"the registered 8-gram {share}/32 rule at or above, bit-identical"),
+           "caught_only_by_short_rule": n_short_only,
+           "_was_blind": ("BEFORE the W10 amendment an N-word query had N-7 word-8-grams, so the "
+                          "16/32 threshold was unreachable below 23 words and identical to exact "
+                          "dedup below 8; `health` read 0.00% against a measured 20.5%"),
            "_note": "sequential by registration: the first occurrence is the representative"}
     return [queries[i] for i in reps], [queries[i] for i in order], rep
 

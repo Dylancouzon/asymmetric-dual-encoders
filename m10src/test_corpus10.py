@@ -125,8 +125,51 @@ def test_a8_cuts_to_representatives_only_above_25_percent():
 
 
 def test_a8_does_not_cut_a_diverse_form_but_still_removes_exact_duplicates():
-    qs = [f"an entirely different question about topic {i} phrased in its own particular way"
-          for i in range(40)]
+    # GENUINELY diverse. Two earlier versions of this fixture were not: the first varied only an
+    # index inside a fixed frame, and the second reused four suffixes across ten subjects. Both
+    # read "diverse" only because the pre-W10 gate was blind to exactly that kind of overlap.
+    qs = [
+        "how do I renew a british passport when the old one has expired",
+        "when did the war of the spanish succession actually come to an end",
+        "what is the best way to store fresh basil so it lasts",
+        "why do domestic cats knead soft blankets with their front paws",
+        "what causes a lithium laptop battery to swell up over time",
+        "who composed the piece popularly known as the moonlight sonata",
+        "roughly how much does replacing a timing belt cost these days",
+        "is sparkling water genuinely bad for dental enamel or a myth",
+        "how tall is the eiffel tower measured to its very tip",
+        "explain the difference between weather forecasting and climate modelling",
+        "can sourdough starter survive several weeks left in a fridge",
+        "which vitamins are actually absorbed better alongside dietary fat",
+        "what happens to unclaimed lottery winnings after the deadline passes",
+        "are noise cancelling headphones safe to wear all day long",
+        "how does a heat pump work in freezing outdoor temperatures",
+        "what distinguishes arabica from robusta beans in a espresso blend",
+        "why does cut avocado turn brown so quickly on the counter",
+        "how long should concrete cure before heavy vehicles drive over",
+        "what were the main causes of the eighteen forty eight revolutions",
+        "does closing unused browser tabs meaningfully reduce laptop power draw",
+        "how do migrating birds navigate accurately across an open ocean",
+        "what is the practical difference between broth and traditional stock",
+        "when should winter tyres be swapped back to summer ones",
+        "why are some antibiotics prescribed for exactly ten day courses",
+        "how much sleep do teenagers actually need on school nights",
+        "what makes cast iron cookware naturally non stick after seasoning",
+        "is it cheaper to run a dishwasher than wash manually",
+        "how did medieval stonemasons lift heavy blocks without modern cranes",
+        "what determines whether a volcano erupts explosively or effusively",
+        "why do aeroplane windows have a tiny hole near the bottom",
+        "how are olympic swimming pool lane ropes designed to reduce waves",
+        "what is the shelf life of unopened tinned tomatoes",
+        "can houseplants meaningfully improve indoor air quality in a flat",
+        "how does compound interest differ from simple interest in practice",
+        "why did the roman empire eventually abandon its british province",
+        "what should someone check before buying a used electric vehicle",
+        "how do submarines generate breathable oxygen while submerged for months",
+        "which factors most affect how quickly bread dough rises",
+        "what is the origin of the phrase red herring",
+        "how accurate are consumer smartwatch heart rate sensors during exercise",
+    ]
     qs.append(qs[0])                                   # one exact duplicate
     kept, rep = C.a8_action("comparison", qs)
     assert rep["near_dup_rate"] <= 0.25
@@ -299,7 +342,7 @@ def test_draw_seeds_is_deterministic_and_returns_everything_when_supply_is_short
     assert C.draw_seeds(build, 900, seed=0) == build, "short supply returns all of it"
 
 
-def test_a8_gate_cannot_fire_below_23_words_and_the_short_forms_are_named():
+def test_the_forms_the_OLD_gate_could_never_have_fired_for_are_named():
     """**A8's diversity gate is structurally inert for short forms.** An N-word text has N-7
     word-8-grams, so a sketch reaches the registered 16/32 threshold only at N >= 23. Five of the
     twelve registered forms have their ENTIRE range below that -- including `yesno`, a GENERATED
@@ -314,12 +357,11 @@ def test_a8_gate_cannot_fire_below_23_words_and_the_short_forms_are_named():
     assert len(decontam.sketch(" ".join(f"w{i}" for i in range(floor)))) >= 16
     never = sorted(f for f, (lo, hi) in qfilter.RANGES.items() if hi < floor)
     assert never == ["factoid", "keyword", "product", "title", "yesno"], never
-    # and a pile of identical short queries is NOT caught as near-duplicates -- only exact dedup
-    # removes them, which is why the retained count is 1 and not a near-dup rate
+    # identical strings are still exact dedup's job, not the near-dup rule's, under either regime
     qs = ["is this product waterproof and safe to use outdoors"] * 40
     _reps, _ded, rep = C.near_dup_gate(qs)
-    assert rep["near_duplicates"] == 0, "the gate is inert here; exact dedup did the work"
     assert rep["exact_dups_removed"] == 39 and rep["post_exact_dedup"] == 1
+    assert rep["near_duplicates"] == 0, "nothing left to compare after exact dedup"
 
 
 def test_copied_span_keeps_windows_that_straddle_the_excluded_span():
@@ -414,17 +456,20 @@ def test_harvest_holdout_is_deterministic(tmp_path):
     assert a == b == 50
 
 
-def test_prop_near_dup_rate_sees_a_one_slot_template_the_registered_gate_cannot():
-    """The whole point of the W10 diagnostic: an 8-gram rule cannot catch a one-slot template at
-    <= 15 words, because every window covers the changed word."""
+def test_the_W10_amendment_catches_a_one_slot_template_the_old_gate_could_not():
+    """The defect W10 fixed: an 8-gram rule cannot catch a one-slot template at <= 15 words at ANY
+    threshold, because every 8-gram window covers the changed word. Pre-amendment this read
+    exactly 0.00%; the two-regime rule must now catch it."""
     qs = [f"what should i do if my {w} keeps making a loud noise at night"
           for w in ("boiler fridge heater kettle furnace washer dryer oven mower pump "
                     "blender toaster grinder scanner printer").split()]
-    assert all(len(q.split()) <= 15 for q in qs)
+    assert all(len(q.split()) < C.A8_LONG_FLOOR for q in qs), "all in the short regime"
     _r, _d, a8 = C.near_dup_gate(qs)
-    assert a8["near_dup_rate_raw"] == 0.0, "the registered gate is blind here -- that is W10"
-    rate, n = C.prop_near_dup_rate(qs)
-    assert rate > 0.5, f"the 4-gram diagnostic must see it; got {rate:.2%}"
+    assert a8["near_dup_rate_raw"] > 0.5, \
+        f"W10 amendment must catch this; got {a8['near_dup_rate_raw']:.2%}"
+    assert a8["caught_only_by_short_rule"] > 0, "and it must be the SHORT rule that caught it"
+    rate, _n = C.prop_near_dup_rate(qs)
+    assert rate > 0.5, "the standalone diagnostic agrees"
 
 
 def test_opener_concentration_flags_frame_repetition():

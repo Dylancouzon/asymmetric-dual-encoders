@@ -47,7 +47,7 @@
     30
    ],
    "gate_can_fire": "partly",
-   "a8_registered_rate": 0.0,
+   "a8_registered_rate": 0.01,
    "diagnostic_4gram_rate": 0.01,
    "diagnostic_near_dups": 2,
    "diagnostic_rate_vs_n": {
@@ -65,7 +65,7 @@
     25
    ],
    "gate_can_fire": "partly",
-   "a8_registered_rate": 0.0,
+   "a8_registered_rate": 0.035,
    "diagnostic_4gram_rate": 0.035,
    "diagnostic_near_dups": 7,
    "diagnostic_rate_vs_n": {
@@ -83,7 +83,7 @@
     20
    ],
    "gate_can_fire": "partly",
-   "a8_registered_rate": 0.0,
+   "a8_registered_rate": 0.025,
    "diagnostic_4gram_rate": 0.025,
    "diagnostic_near_dups": 5,
    "diagnostic_rate_vs_n": {
@@ -119,7 +119,7 @@
     30
    ],
    "gate_can_fire": "partly",
-   "a8_registered_rate": 0.0,
+   "a8_registered_rate": 0.265,
    "diagnostic_4gram_rate": 0.205,
    "diagnostic_near_dups": 41,
    "diagnostic_rate_vs_n": {
@@ -139,7 +139,7 @@
     4
    ],
    "gate_can_fire": "never",
-   "a8_registered_rate": 0.0,
+   "a8_registered_rate": 0.00052,
    "diagnostic_4gram_rate": 0.0005,
    "diagnostic_near_dups": 32
   },
@@ -150,7 +150,7 @@
     16
    ],
    "gate_can_fire": "never",
-   "a8_registered_rate": 0.0,
+   "a8_registered_rate": 0.03382,
    "diagnostic_4gram_rate": 0.0328,
    "diagnostic_near_dups": 1968
   },
@@ -161,7 +161,7 @@
     25
    ],
    "gate_can_fire": "partly",
-   "a8_registered_rate": 0.0,
+   "a8_registered_rate": 0.09147,
    "diagnostic_4gram_rate": 0.0806,
    "diagnostic_near_dups": 4836
   }
