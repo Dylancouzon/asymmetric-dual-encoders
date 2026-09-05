@@ -22,7 +22,8 @@
   "ANCHOR",
   "F-MiniLM-L6",
   "F-MiniLM-L12",
-  "G-384"
+  "G-384",
+  "G-1536"
  ],
  "arms": [
   {
@@ -174,6 +175,42 @@
    },
    "passed": true,
    "seconds": 43.2
+  },
+  {
+   "arm": "G-1536",
+   "spec": {
+    "student": "bge-small",
+    "n_layers": 4,
+    "head": "linear",
+    "pattern": "75/25",
+    "batch": 32,
+    "loss": "squared_l2"
+   },
+   "covers": [],
+   "device": "cpu",
+   "constructed": true,
+   "d_in": 1536,
+   "params": 34933888,
+   "under_cap": true,
+   "warm_start_registered": "linear",
+   "warm_start_record": {
+    "n_fit": 256,
+    "lambda": 0.0001,
+    "train_objective": 0.0,
+    "d_in": 1536
+   },
+   "warm_start_implemented": true,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 2880,
+   "examples_per_s": 63.4,
+   "mix": {
+    "Q": 68,
+    "D": 22,
+    "q_share": 0.7555555555555555
+   },
+   "passed": true,
+   "seconds": 48.0
   }
  ],
  "failed": [],
