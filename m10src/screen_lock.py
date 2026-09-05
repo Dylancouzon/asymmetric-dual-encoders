@@ -104,10 +104,15 @@ def validate(r=None):
     if arms.get("G-384", {}).get("selectable") is not False:
         bad.append("G-384 must be registered selectable:false -- it is the M9 diagnostic arm")
 
-    # -- the conditional trained count must be consistent with C being skippable
+    # -- a conditionally-skippable arm needs a conditional count; a CUT arm must not be trained
     if arms.get("C-M9init", {}).get("skipped_iff"):
         if r.get("trained_arms_if_C_skipped") != r["trained_arms_expected"] - 1:
             bad.append("C is skippable but trained_arms_if_C_skipped != expected - 1")
+    for a, v in arms.items():
+        if v.get("cut") and v.get("trained"):
+            bad.append(f"arm {a} is marked cut but still trained: true")
+        if v.get("cut") and r.get("trained_arms_if_C_skipped") is not None and a == "C-M9init":
+            bad.append("C is CUT, not skippable: trained_arms_if_C_skipped is meaningless")
 
     everything = list(contrasts.values()) + list(r["descriptive_contrasts"].values())
     read = {resolve(c[s]) for c in everything for s in ("a", "b") if c.get(s)}

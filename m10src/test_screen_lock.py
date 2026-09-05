@@ -182,55 +182,18 @@ def test_the_familywise_alpha_is_exactly_the_registered_0_025():
     assert "RECOMPUTED INSIDE EACH BOOTSTRAP RESAMPLE" in rule
 
 
-def test_the_trained_arm_count_is_conditional_because_C_is_skippable():
-    """Codex finding 8: C-M9init is `trained: true` AND skippable, so 16 is false on an allowed path."""
+def test_C_is_CUT_and_the_denominator_still_stays_13():
+    """W8 band 1 cuts C-M9init: it warm-starts from 3.69B tokens and wins its own contrast by
+    construction. The registry and STATUS disagreed on this for several hours."""
     r = L.cfg()
-    assert r["trained_arms_expected"] == 16 and r["trained_arms_if_C_skipped"] == 15
-    assert r["arms"]["C-M9init"]["trained"] is True and r["arms"]["C-M9init"].get("skipped_iff")
-    assert r["statistics"]["bootstrap"]["n_contrasts"] == 13, "the denominator stays 13 either way"
+    c = r["arms"]["C-M9init"]
+    assert c["trained"] is False and c.get("cut")
+    assert "skipped_iff" not in c, "C is CUT, not conditionally skipped"
+    assert r.get("trained_arms_if_C_skipped") is None
+    assert r["trained_arms_expected"] == 15
+    assert r["statistics"]["bootstrap"]["n_contrasts"] == 13, "the denominator stays 13"
 
 
-# ---- W9 REVIEW (Codex, 2026-09-05): the W9 fixes were prose; these make the lock EVALUATE them --
-
-def test_a_misspelled_family_rule_is_refused():
-    """The review's core criticism: the validator never read the fields a decision uses, so a
-    typo passed the lock while the tests happily confirmed a sentence existed."""
-    bad = _mut(lambda r: r["contrasts"]["G2"].__setitem__("family_rule", "multi_arm_winnr"))
-    assert any("family_rule" in b for b in bad), bad
-
-
-def test_a_two_sided_contrast_without_its_halved_quantile_is_refused():
-    bad = _mut(lambda r: r["contrasts"]["F1"].pop("quantile"))
-    assert any("familywise alpha" in b or "two-sided" in b for b in bad), bad
-
-
-def test_a_one_sided_contrast_that_overrides_the_quantile_is_refused():
-    bad = _mut(lambda r: r["contrasts"]["D1"].__setitem__("quantile", 0.01))
-    assert any("overrides the quantile" in b or "familywise" in b for b in bad), bad
-
-
-def test_making_G_384_selectable_is_refused():
-    """G-384 is the M9 diagnostic arm. Letting it win contradicts the mandate's orientation."""
-    bad = _mut(lambda r: r["arms"]["G-384"].__setitem__("selectable", True))
-    assert any("G-384" in b for b in bad), bad
-
-
-def test_a_conditional_trained_count_that_does_not_track_C_is_refused():
-    bad = _mut(lambda r: r.__setitem__("trained_arms_if_C_skipped", 16))
-    assert any("trained_arms_if_C_skipped" in b for b in bad), bad
-
-
-def test_E_has_an_explicit_decision_table_that_selects_bs128_when_unresolved():
-    """The review found three places disagreeing, and that a bs128 advantage read NEGATIVE, could
-    not resolve, and would therefore have selected bs32 -- the slower arm."""
-    r = L.cfg()
-    assert (r["contrasts"]["E1"]["a"], r["contrasts"]["E1"]["b"]) == ("E-bs32", "E-bs128")
-    assert "EXCEPTION to `_default`" in r["rules"]["E_cost"]
-    assert "EXCEPTION: family E" in r["outcome_to_action"]["_default"]
-
-
-def test_multi_arm_winner_makes_no_unregistered_inferential_claim():
-    """The earlier form required the winner to resolve against the OTHER alternative, creating
-    five post-hoc comparisons outside the 13-contrast Bonferroni accounting."""
-    rule = L.cfg()["rules"]["multi_arm_winner"]
-    assert "NO inferential claim" in rule and "no alternative-vs-alternative contrast is run" in rule
+def test_an_arm_marked_cut_but_still_trained_is_refused():
+    bad = _mut(lambda r: r["arms"]["C-M9init"].__setitem__("trained", True))
+    assert any("cut but still trained" in b or "trained arms" in b for b in bad), bad

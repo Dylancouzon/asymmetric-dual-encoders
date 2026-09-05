@@ -141,10 +141,10 @@
    "family": "C",
    "dose_examples": 5000000,
    "init": "the M9 candidate",
-   "skipped_iff": "F does not select bge-small",
-   "trained": true,
+   "trained": false,
    "head_init": "the M9 candidate keeps its 384-d head and the two extra layers' columns are ZERO-initialised (\u00a7Recipe). C1 therefore confounds backbone init with head init; that is registered and disclosed, not resolved.",
-   "selectable": true
+   "selectable": true,
+   "cut": "**CUT under W8 band 1, 2026-09-05.** `C-M9init` at 5M warm-starts from a model already trained 3.69B tokens, so it wins its own contrast BY CONSTRUCTION and says nothing about 200M; it is separately disclosed as confounding backbone init with head init; and it would consume one of only two confirmation slots. The build init is the registered default, the off-the-shelf backbone. C1 does not run and is reported as cut. **The Bonferroni denominator STAYS 13** (`rules.C_skipped`, which already registers that for the skip path)."
   },
   "D-NORM": {
    "family": "D",
@@ -355,8 +355,8 @@
   "F-winner": "the winner of contrast F1 at its 20M checkpoint (NOT of F itself: F2 is L12 - F1's winner, so the reference cannot be circular)",
   "_resolver": "every value here is an arm id EXCEPT `F-winner`, which is resolved at read time by `rules.F_selection_aware` and is prose by necessity, not oversight. `runs_iff`/`skipped_iff`/`conditional_extension.iff` are likewise human-readable conditions evaluated by the session, not by a generic engine (W9, Codex finding 9)."
  },
- "trained_arms_expected": 16,
- "_arms_note": "17 entries, 16 TRAINED: A4 is not trained separately -- it IS the ANCHOR arm. The anchor became its own arm on the S1 amendment (+2 GPU-hours). | W9, Codex finding 8: `trained_arms_expected` 16 is the path where C runs. C-M9init is `trained: true` AND `skipped_iff` F does not pick bge-small, so on that allowed path the count is `trained_arms_if_C_skipped` = 15. The Bonferroni denominator stays 13 either way (`rules.C_skipped`).",
+ "trained_arms_expected": 15,
+ "_arms_note": "17 entries, 16 TRAINED: A4 is not trained separately -- it IS the ANCHOR arm. The anchor became its own arm on the S1 amendment (+2 GPU-hours). | C-M9init is CUT under W8 band 1 (not conditionally skipped), so the trained count is 15 unconditionally and the Bonferroni denominator stays 13.",
  "_amended": "2026-09-05, on a Fable adversarial pass (S1-S10), before any arm ran and with nothing trained. S1 was a structural confound: the anchor was a mid-cycle snapshot of a 20M arm and is now its own 5M arm.",
  "data_cut": {
   "_mandate": "A2, A3 and A4 are cut to the identical post-screen unique-text count",
@@ -394,6 +394,6 @@
   "status": "all six heads PASS: bge-small, MiniLM-L6, MiniLM-L12 at 3 and 4 layers, min-cos >= 0.99999988 through fastembed, zero custom ONNX ops, all under the 35M cap",
   "serving_note": "MiniLM's own `tokenizer_config.json` carries max_length 128 beside model_max_length 512, and fastembed serves min(...) = 128. The exported tokenizer sets both to 512. A first run read 0.93-0.95 min-cos and would have disqualified both MiniLM students on a mis-specified check."
  },
- "trained_arms_if_C_skipped": 15,
- "_mandate_arm_count": "this file registers 16 trained arms; `instructions-m10.md`:597 still says fifteen. THIS FILE IS AUTHORITATIVE (see `_what`). The mandate predates the S1 amendment that made the anchor its own trained arm (W9, Codex finding 10)."
+ "_mandate_arm_count": "this file registers 16 trained arms; `instructions-m10.md`:597 still says fifteen. THIS FILE IS AUTHORITATIVE (see `_what`). The mandate predates the S1 amendment that made the anchor its own trained arm (W9, Codex finding 10).",
+ "_w8_band": "W8 band 1 (M10.0-e `lr_pair.distance_raw` = 0.00288 <= 0.0056): run F, ANCHOR, A, G, B, E, D; CUT C. `E-bs128` runs on the rented A100, not the box (Dylan 2026-09-05)."
 }

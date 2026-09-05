@@ -615,6 +615,7 @@ came from. This is a **data-recipe** gate, which `CLAUDE.md` puts explicitly on 
 | W11 | **HALF DONE.** Codex finding 2: two registered screens had never been applied to the shipped harvest corpus. **The FORMS-12 hold-out is now EXECUTED** as a post-pass (`corpus10.harvest_holdout`, no re-draw): **1,500 documents held → 1,614 hold-out rows** (claim 546 · keyword 546 · title 522, each ≥ the 500 FORMS-12 needs) and **1,248,386 training rows**, in `work/m10harvest/harvest_{train,forms12}.jsonl` + `harvest_holdout.json`. It holds out by **DOCUMENT across every form**, because one Wikipedia article yields a title, headings and a claim, and holding it out for `title` alone would train on that article's `claim`. **Still owed: the own-source word-5-gram screen.** Note it is close to vacuous for harvested text once the span is excluded — the string IS a span of its document by construction, so what remains is "does this string also occur elsewhere in its own document" — and it needs a pass over every source document. Cost/benefit is worth stating before spending it | the hold-out was execution, not a decision; the remaining screen is too | the hold-out is done, so the corpus is trainable; the residual screen is a disclosure if not run |
 | W12 | **Family A's STOP rule can kill M10 for a surface mismatch — re-register it BEFORE family A runs.** `A3−A2` is the registered thesis contrast and its failure STOPS the milestone, but **COV contains none of A3's forms**: A3 adds titles, keywords and claim sentences (the clean-4 counterparts) while COV is long StackExchange posts, medical, contract and templated KPI questions. A3−A2 on COV is expected small **even if coverage is real**. A 5M dose compounds it — each query is seen ~once, and M9's failure is an asymptote over many epochs. **Recommended (reviewer, 2026-09-05): make family A descriptive triage on point estimates — STOP iff `A4−A2 point ≤ 0`** (the full corpus not even nominally beating the volume control is a genuine "something is wrong" signal), and **keep the generated half unless `A4−A3 point < 0`** (the current "unresolved → drop the 1.0M generated queries" discards 10 box-hours of correctly-labelled data on a test needing point > 0.011–0.014). All four A contrasts still reported with the registered bootstrap; only the ACTION changes, and it is labelled pilot-informed | Changes a registered outcome map and a registered STOP. Tier 3 | **must be settled before family A runs**; every A number is still unobserved, so it is pre-observation today |
 | W13 | **L12's conditional extension is an adaptive selection step.** `F-MiniLM-L12` reaches 20M *because of* its own correlated 5M COV reading, and `F_selection_aware` recomputes only F1's winner inside the bootstrap. Counting F2 in the denominator whether or not it runs does not make the conditional 20M test valid. **Clean fix: ALWAYS extend L12** (+15M examples ≈ 4.5 box-hours, or the cloud); the alternative is a selective / group-sequential analysis nobody has specified. Raised by the W9 review, finding 6 | changes a registered dose and the F family's design. Tier 3 | before family F runs |
+| W14 | **No decision-bearing surface sees the headline forms.** COV selects on forum / medical / legal / finance; the release bar C1b is **clean-4** (scientific, biomedical); `arxiv-title` is descriptive by ruling; A3−A2 is blind on COV by construction. **The screen can optimise the build away from the release bar and nothing registered would notice until M10.4.** Raised by the W12/W13 validation as the structural risk sitting under all three decisions. Options: add a clean-4-shaped decision surface (needs a licensed, protected, qrel-bearing admission); accept and disclose that recipe selection is on a different distribution from the release bar; or reduce the screen and let the final run carry the claim | needs a new surface or a disclosure that reaches the paper's headline. Tier 3 | before the M10.2 recipe lock |
 | W3 | **Seed supply is OPEN — the widening was tried and REJECTED by its own gate.** Full-store, `min_score ≥ 4`: `health` 10,399, `finance` 22,375, `howto` 37,927 against a ~32–33K need. Widening the keyword lists raised the raw counts (health 36,284) but the registered judged-precision gate reads **28% on-topic on health's marginal and 38% on finance's**, against ≥ 80% — the router selects on the presence of "medic\*"/"hospital"/"financial", not on subject, so the marginal is mostly biographies and organisations. Estimated usable: **health ~17.6K, finance ~22.8K — both still short.** `ROUTE_WIDE` is NOT adopted; `draw()` defaults back to T2-3's `ROUTE`. **Next lever (registered, not yet tried): a subject-level filter on lead-sentence patterns**, since `hotpotqa-corpus` is entity intros — reject "X (born …) was a …" and "X is a company/hospital/journal …". Same judged gate before adoption. If that fails too, the levers left are relaxing `min_score` (worse precision, so unlikely to help), raising queries-per-seed against the A8 gate, or Dylan lowering the `health`/`finance` quotas | Touches the registered data recipe; quotas are Tier 3 | decide before step 8 |
 
 ### `lr_at` off-by-one — the LAST step of every arm trains at PEAK LR, 2026-09-05. **Do not fix while the calibration is running.**
@@ -816,6 +817,73 @@ legal = 83% of variance), not by dose, so running A at 20M grows the effect but 
 The registered action is *"A3−A2 point < 0.0056 or lower ≤ 0 → M10 STOPS before any build"*. **The
 costs are asymmetric: a wrong "proceed" costs a ~$100–200 build inside a $1,000 ceiling; a wrong
 STOP costs the milestone.** → **W12**.
+
+### VALIDATION of W12 · W13 · the paired row, 2026-09-05 — **all three of my recommendations corrected**
+
+Dylan asked for these validated before locking. Read-exclusion honoured, log audited. **My W12
+proposal was a coin flip and is withdrawn.**
+
+**W12 — `A4−A2 point ≤ 0` is NOT a red flag, it is a coin.** The seed SD for a difference of two
+arms is ≈0.0017 (per-arm ≈0.0012, n=1). Under a true COV effect of zero that STOP fires **50%** of
+the time; at a true +0.001, **28%**; at +0.002, **12%**. **The regime I argued for it — "small even
+if coverage is real" — is exactly the regime where it fires by chance.** I would have replaced
+"STOP on surface mismatch" with "STOP on seed noise". **Corrected proposal: STOP iff `A4−A2`
+UPPER bound < 0** — resolved *harm*, at the same quantile, sign stable at the last two cycle ends;
+under null that fires ~0.2%. Harm on COV is harm regardless of surface. The generated half: choose
+the default **deliberately** (keep — it is the only data mapping onto COV's forum/health/finance
+forms) and deviate only on a **resolved** `A4−A3` the other way.
+
+**Also: no better surface exists, and that is the finding.** DEV-6 CQADupStack is registered
+*never selection-bearing* and is read once at the final checkpoint (no sign stability possible);
+FORMS-12 is worse — **A3 trained on the harvested forms beats A2 on held-out harvested forms by
+construction**; `arxiv-title` is descriptive by ruling. **Family A cannot carry a milestone STOP on
+any surface the plan has**, so the STOP should reduce to "resolved harm" and nothing more.
+
+**A4−A3 has a design defect nobody had named.** `data_cut` cuts A2/A3/A4 to the same count, so
+**A4's cut sample contains LESS real text than A3's** — A4−A3 measures *"swap ~15% of the mix from
+real to generated at fixed volume"*, not *"add 1.0M generated on top"*, which is what the build
+does. And **the form-balanced sampler's per-arm application is unregistered**: under balancing A4
+spends 7/12 of presentations on generated forms and the cut is nearly moot; under uniform sampling
+the cut dominates. **The two A contrasts mean different things under the two readings, and the
+sampler does not exist yet.** → register the sampler rule per arm **before** touching A's outcome map.
+
+**W13 — always-extend is half a fix, and my supporting argument was a decoy.** "It makes the
+Bonferroni denominator honest" is wrong: **a Bonferroni count bounds how many tests you run, not
+the bias inside one statistic.** The selection problem is real (L12's 5M and 20M readings are
+correlated, so conditioning on a high 5M inflates its expected 20M) but always-extending fixes only
+that step — `F_tournament` is an **argmax of three selected after the readings**, tested through two
+pairwise contrasts. Coherent fix: **one max-statistic** — resample queries, recompute argmax and
+runner-up in each resample, take the lower bound of (max − runner-up) at 2×(0.025/13). ~20 lines in
+the runner.
+
+**And the question I should have asked: is L12 worth running at all?** `MiniLM-L12 = 34,540,672
+parameters = bge-small EXACTLY`, same 12L/384H architecture, different pretraining. **So F2 tests
+"pretraining checkpoint", not depth** — depth is already carried by F1 (L6 vs bge). L12 can only
+change the build by beating both others by ~0.011; if F does not resolve, `serve_cost_order` picks
+MiniLM-L6 regardless. **Cheapest honest option: drop L12 pre-observation**, denominator stays 13.
+
+**The paired row — right to register, rationale FALSE.** "The only measurement that tests coverage"
+is wrong: M9→M10 changes data, **dose (3.69B → ≈16.8B, 4.5×)**, schedule, **head width 384 → 1152**,
+objective, mix, batch and possibly the student. **PLANNING §9's own finding — a 384-wide head cannot
+pass 90–93% once queries are diverse — predicts head width ALONE lifts scidocs/scifact more than
+fiqa/arguana, which is the exact per-dataset pattern one would want to read as "coverage".** It is a
+**recipe delta and a frontier point**; register it as that. **Normalise against the TEACHER, not
+M9** — retention-of-ceiling is the project's unit, and retention-vs-M9 is a ratio of ratios that
+explodes where M9 is weak. **Register NOW, not "the intent":** the exact M9 artifact by hash;
+**that M9's close-out emits PER-QUERY scores** (if it emits only aggregates the paired row is
+impossible and the close-out amendment must fix it); the datasets; the statistic with B and seed;
+and that the script is **committed before M9's close-out runs**, so the M10 session cannot choose
+its form after seeing M9's half.
+
+**FIXED IMMEDIATELY — the registry contradicted W8.** `STATUS.md` said "cut C" while
+`screen_registry.json` still had `C-M9init: trained: true` and `trained_arms_expected: 16`, and the
+validator passed it. C is now `trained: false` with a `cut` record, the count is **15**, the
+denominator stays **13**, and the validator refuses an arm marked cut but still trained.
+
+**THE STRUCTURAL RISK, unmitigated and named here:** **no decision-bearing surface sees the headline
+forms.** COV selects on forum/medical/legal/finance; the release bar is clean-4 (scientific,
+biomedical); `arxiv-title` is descriptive; A3−A2 is blind on COV. **The screen can optimise the
+build away from C1b and nothing registered would notice until M10.4.** → **W14**.
 
 ### W9 REVIEW (Codex, 2026-09-05) — **NO-GO, and it was right: my fixes were PROSE, not rules**
 
