@@ -50,8 +50,49 @@ def form_names():
 FORMS = form_names()
 FORM_ID = {f: i for i, f in enumerate(FORMS)}
 
-# The FORMS-12 hold-out. Never a training source; refused by path, not by convention.
+# The FORMS-12 hold-out. Refused by PATH and, since a copy defeats a path, by the CONTENT hash of
+# every one of its rows: a training row whose text is a hold-out text is refused whatever file it
+# arrived in (Codex 2026-09-05 finding 3 -- `cp harvest_forms12.jsonl generated_queries.jsonl`).
 HOLDOUT_FILES = {str((WORK / "m10harvest" / "harvest_forms12.jsonl").resolve())}
+_HOLDOUT_HASHES = {}
+
+
+def text_hash(t):
+    return hashlib.blake2b(t.encode("utf-8", "surrogatepass"), digest_size=16).digest()
+
+
+def holdout_hashes(path=None):
+    """-> {blake2b-128 of every FORMS-12 hold-out text}. Empty (and reported) if the file is not
+    built, which is a state a smoke can legitimately be in."""
+    p = Path(path) if path else (WORK / "m10harvest" / "harvest_forms12.jsonl")
+    k = str(p)
+    if k not in _HOLDOUT_HASHES:
+        out = set()
+        if p.exists():
+            with p.open() as fh:
+                for line in fh:
+                    r = json.loads(line)
+                    t = r.get("text") or r.get("query") or r.get("question")
+                    if t:
+                        out.add(text_hash(t))
+        _HOLDOUT_HASHES[k] = out
+    return _HOLDOUT_HASHES[k]
+
+
+def refuse_holdout_texts(segs, path=None):
+    """-> the count refused (always 0, or SystemExit). Applied at LOAD time, to every source."""
+    hs = holdout_hashes(path)
+    if not hs:
+        return 0
+    bad = [(s.name, i) for s in segs for i, t in enumerate(s.texts) if text_hash(t) in hs]
+    if bad:
+        where = {}
+        for n, _i in bad:
+            where[n] = where.get(n, 0) + 1
+        raise SystemExit(f"REFUSED: {len(bad):,} training rows are FORMS-12 hold-out texts "
+                         f"{where}. Queries harvested or generated from held-out documents are "
+                         f"never trained on (instructions-m10.md:454), whatever file they are in.")
+    return 0
 
 # --- AMBIGUITY (reported, not decided): neither the mandate nor the registry assigns a form to a
 # PAQ row or to an M9-pool row, and the balanced sampler needs one per row. The reading here
@@ -159,8 +200,11 @@ def source_texts(name, limit=None):
             raise SystemExit(f"source {name!r}: {p} is missing")
         texts, forms = _rows_from_jsonl(p, default_form=spec.get("form"))
         man = {"path": str(p), "sha256": sha_file(p), "bytes": p.stat().st_size}
-    if spec.get("n_expected") and len(texts) != spec["n_expected"]:
-        raise SystemExit(f"source {name!r}: {len(texts):,} rows, registered {spec['n_expected']:,}")
+    # the registered count is the pool BEFORE the M10 re-screen: the re-screen is a removal whose
+    # size is a measurement, not a constant, and it is reported in `man` instead.
+    n_reg = man.get("n_before_rescreen", len(texts))
+    if spec.get("n_expected") and n_reg != spec["n_expected"]:
+        raise SystemExit(f"source {name!r}: {n_reg:,} rows, registered {spec['n_expected']:,}")
     man.update({"source": name, "kind": spec["kind"], "what": spec["what"], "n_rows": len(texts),
                 "by_form": {f: forms.count(f) for f in sorted(set(forms))}})
     if limit:
@@ -169,8 +213,9 @@ def source_texts(name, limit=None):
     return texts, forms, man
 
 
-def _m9_texts():
-    """The 463,314 M9 real queries, labelled by source and mapped onto the form taxonomy."""
+def _m9_texts(screen=True):
+    """The 463,314 M9 real queries, labelled by source and mapped onto the form taxonomy, then
+    RE-SCREENED against the M10 protected index (`rescreen10`, instructions-m10.md:462)."""
     import data as m9data
     texts, srcs, meta = _m9_labelled()
     keep = [i for i, s in enumerate(srcs) if s not in m9data.FEVER_SOURCES]
@@ -180,11 +225,28 @@ def _m9_texts():
         t, _row = _m9_extra(name)
         out += t
         labels += [name] * len(t)
-    forms = [M9_SOURCE_FORM[s] for s in labels]
     man = {"path": "m9src/data.labelled_query_pool + work/enc9/m9long-{nqopen,triviaqa}",
-           "sha256": hashlib.sha256("\x00".join(out).encode("utf-8", "surrogatepass")).hexdigest(),
            "by_m9_source": {s: labels.count(s) for s in sorted(set(labels))},
-           "m8_manifest_sha256": meta["m8_manifest_sha256"]}
+           "m8_manifest_sha256": meta["m8_manifest_sha256"],
+           "n_before_rescreen": len(out)}
+    if screen:
+        import rescreen10
+        removed, per_seg, masks = 0, {}, []
+        # the three unscreened segments are the same three lists, in the same order, as `out`
+        for sg in _m9_segments(screen=False):
+            m, rep = rescreen10.query_keep_mask(sg.texts, sg.name, compute=False)
+            masks.append(m)
+            removed += rep["removed"]
+            per_seg[sg.name] = {"removed": rep["removed"], "by_hit": rep["by_hit"]}
+        mask = np.concatenate(masks)
+        assert len(mask) == len(out), (len(mask), len(out))
+        out = [t for t, k in zip(out, mask) if k]
+        labels = [l for l, k in zip(labels, mask) if k]
+        man["rescreen10"] = {"removed": removed, "per_segment": per_seg,
+                             "protected10": rescreen10._h(rescreen10.protected_ident())}
+    forms = [M9_SOURCE_FORM[s] for s in labels]
+    man["sha256"] = hashlib.sha256(
+        "\x00".join(out).encode("utf-8", "surrogatepass")).hexdigest()
     return out, forms, man
 
 
@@ -211,8 +273,12 @@ def _m9_extra(name):
     return _M9_EXTRA[name]
 
 
-def _m9_segments():
-    """-> segments for the M9 pool, each pointing at the stella cache that already holds it."""
+def _m9_segments(screen=True):
+    """-> segments for the M9 pool, each pointing at the stella cache that already holds it.
+
+    `screen=False` is the UNSCREENED pool and exists for exactly one caller: `rescreen10`, which
+    has to see the rows in order to decide which of them survive. Every training path screens.
+    """
     import data as m9data
     import longrun
     texts, srcs, _meta = _m9_labelled()
@@ -227,7 +293,39 @@ def _m9_segments():
         assert v.shape[0] == len(t), f"{name}: {v.shape[0]} vectors for {len(t)} texts"
         segs.append(Segment(f"m9-{name}", t, [FORM_ID[M9_SOURCE_FORM[name]]] * len(t), v,
                             np.arange(len(t), dtype=np.int64)))
+    if screen:
+        import rescreen10
+        out = []
+        for sg in segs:
+            m, _rep = rescreen10.query_keep_mask(sg.texts, sg.name, compute=False)
+            sel = np.flatnonzero(m)
+            out.append(Segment(sg.name, [sg.texts[int(i)] for i in sel], sg.forms[sel], sg.array,
+                               sg.rowmap[sel]))
+        segs = out
     return segs
+
+
+def dedup_segments(segs):
+    """-> (segments, {segment: rows removed}). EXACT text dedup, globally across sources, first
+    occurrence kept.
+
+    The registered cut is a "post-screen unique-text count" (`m10/screen_registry.json`), so both
+    the count and the cut have to be taken on unique texts: `["x", "x", "y"]` is two texts, not
+    three, and keeping both copies of `x` also doubles its presentation weight inside its form.
+    """
+    seen, out, removed = set(), [], {}
+    for s in segs:
+        keep = np.zeros(len(s), dtype=bool)
+        for i, t in enumerate(s.texts):
+            h = text_hash(t)
+            if h not in seen:
+                seen.add(h)
+                keep[i] = True
+        removed[s.name] = int((~keep).sum())
+        sel = np.flatnonzero(keep)
+        out.append(Segment(s.name, [s.texts[int(i)] for i in sel], s.forms[sel], s.array,
+                           s.rowmap[sel]))
+    return out, removed
 
 
 def load_segments(names, head_per_source=None, verbose=True):
@@ -268,6 +366,20 @@ def load_segments(names, head_per_source=None, verbose=True):
         if verbose:
             print(f"  {name}: {sum(len(s) for s in new):,} rows ({sman['seconds']:.0f}s)",
                   flush=True)
+    # the M10 re-screen identity, hoisted so the manifest hash and the token-cache key both bind
+    # it: an unscreened M9 pool cannot produce a corpus that looks like a screened one.
+    r = [sm.get("rescreen10") for sm in man["sources"] if sm.get("rescreen10")]
+    man["rescreen10"] = r[0] if r else None
+    # the FORMS-12 hold-out, by CONTENT: a copy under another name is still the hold-out
+    man["holdout_rows_refused"] = refuse_holdout_texts(segs)
+    segs, dups = dedup_segments(segs)
+    man["duplicates_removed"] = dups
+    man["n_duplicates_removed"] = int(sum(dups.values()))
+    for sm in man["sources"]:
+        sm["duplicates_removed"] = {k: dups[k] for k in sm["segments"] if k in dups}
+        sm["n_rows_deduped"] = sum(len(s) for s in segs if s.name in sm["segments"])
+    if verbose and man["n_duplicates_removed"]:
+        print(f"  dedup: {man['n_duplicates_removed']:,} duplicate texts removed", flush=True)
     man["n_rows"] = sum(len(s) for s in segs)
     by_form = {}
     for s in segs:
@@ -328,6 +440,35 @@ def pack_tokenize(tok, texts, max_len=512, prefix="", batch=20_000, label="", ve
     return PackedIds(np.concatenate(parts) if parts else np.zeros(0, dtype=np.int32), offs)
 
 
+def tokenizer_ident(tok):
+    """-> what identifies the TOKENIZER, not just the student's nickname.
+
+    `student="bge-small"` is a label; two revisions of the same repo produce different ids for the
+    same text, and a cache keyed on the label alone serves the older ones (Codex 2026-09-05
+    finding 11). Everything here is best-effort and each field is optional -- a stub tokenizer in a
+    test has none of them -- but the vocabulary is hashed in every case, which is the field that
+    actually changes the ids.
+    """
+    out = {"class": type(tok).__name__,
+           "name_or_path": str(getattr(tok, "name_or_path", "") or ""),
+           "revision": (getattr(tok, "init_kwargs", None) or {}).get("revision"),
+           "vocab_size": getattr(tok, "vocab_size", None),
+           "model_max_length": getattr(tok, "model_max_length", None)}
+    try:                                    # a fast tokenizer's `tokenizer.json`, verbatim
+        out["tokenizer_json_sha256"] = hashlib.sha256(
+            tok.backend_tokenizer.to_str().encode()).hexdigest()
+    except Exception:
+        out["tokenizer_json_sha256"] = None
+    if out["tokenizer_json_sha256"] is None:
+        try:
+            v = tok.get_vocab()
+            out["vocab_sha256"] = hashlib.sha256(
+                json.dumps(v, sort_keys=True).encode()).hexdigest()
+        except Exception:
+            out["vocab_sha256"] = None
+    return out
+
+
 def tokenize_corpus(tok, segs, man, student, max_len=512, prefix="", cache=True, verbose=True,
                     extra_ident=None):
     """-> PackedIds over every segment's texts in order, cached on the corpus identity.
@@ -338,7 +479,7 @@ def tokenize_corpus(tok, segs, man, student, max_len=512, prefix="", cache=True,
     """
     texts = [t for s in segs for t in s.texts]
     ident = {"manifest": man["sha256"], "student": student, "prefix": prefix, "max_len": max_len,
-             "n": len(texts), **(extra_ident or {})}
+             "n": len(texts), "tokenizer": tokenizer_ident(tok), **(extra_ident or {})}
     d = TOKCACHE / hashlib.sha256(json.dumps(ident, sort_keys=True).encode()).hexdigest()[:16]
     if cache and (d / "offs.npy").exists():
         if verbose:
@@ -389,20 +530,18 @@ def corpus_forms(segs):
 
 # ------------------------------------------------------------------------------- the sampler ----
 
-def _form_batches(idx, lengths, batch_size, seed):
-    """Length-bucketed batches over ONE form's rows, wrapping the ragged tail.
+def _form_draw(rows, lengths, batch_size, seed, form, occurrence):
+    """One batch of ONE form, drawn WITH REPLACEMENT, then sorted by length for the padded chunk.
 
-    Wrapping is the registered "with replacement within a form": a form smaller than a batch still
-    yields a batch, and no row is dropped for landing in the tail.
+    §Data (`instructions-m10.md`:478-485): "each form's presentation share equal, texts drawn with
+    replacement within a form". Cycling fixed length-bucketed batches is not that -- a form of
+    three rows at batch 8 yielded the identical `0,1,2,0,1,2,0,1` every time it came up, and a
+    large form cycled a fixed partition (Codex 2026-09-05 finding 7). The RNG is a pure function of
+    (seed, form, occurrence), so the draw is still addressable by step and resume is exact.
     """
-    order = idx[np.argsort(lengths[idx], kind="stable")]
-    if len(order) == 0:
-        return []
-    n = int(np.ceil(len(order) / batch_size))
-    take = np.resize(order, n * batch_size)              # wraps to the head of this form's order
-    batches = [take[i * batch_size:(i + 1) * batch_size] for i in range(n)]
-    np.random.default_rng(seed).shuffle(batches)
-    return batches
+    rng = np.random.default_rng([int(seed), int(form) + 1, int(occurrence)])
+    drawn = rng.choice(rows, size=int(batch_size), replace=True)
+    return drawn[np.argsort(lengths[drawn], kind="stable")]
 
 
 class FormBalancedStream:
@@ -424,29 +563,35 @@ class FormBalancedStream:
         lengths = getattr(ids, "lengths", None)
         if lengths is None:
             lengths = np.array([len(ids[i]) for i in range(len(ids))], dtype=np.int64)
+        self.lengths = np.asarray(lengths, dtype=np.int64)
         if balanced:
             self.present = [int(f) for f in np.unique(self.forms)]
-            self.batches = {f: _form_batches(np.flatnonzero(self.forms == f), lengths,
-                                             batch_size, seed + 1 + f) for f in self.present}
-            empty = [FORMS[f] for f in self.present if not self.batches[f]]
+            self.rows = {f: np.flatnonzero(self.forms == f) for f in self.present}
+            empty = [FORMS[f] for f in self.present if not len(self.rows[f])]
             if empty:
-                raise ValueError(f"forms with no batch: {empty}")
+                raise ValueError(f"forms with no rows: {empty}")
+            self.n_batches = sum(int(np.ceil(len(v) / batch_size)) for v in self.rows.values())
         else:
             self.present = [-1]
             self.batches = {-1: D.length_buckets(ids, batch_size, seed=seed)}
             if not self.batches[-1]:
                 raise ValueError("no full batches: corpus smaller than one batch")
+            self.n_batches = len(self.batches[-1])
 
     def __len__(self):
-        return sum(len(v) for v in self.batches.values())
+        """The batches one full presentation of the corpus costs. With replacement the stream is
+        endless, so this is a scale, not a bound -- `batch(k)` accepts any k."""
+        return self.n_batches
 
     def _pick(self, k):
         F = len(self.present)
         c, j = divmod(int(k), F)
+        if not self.balanced:
+            bl = self.batches[-1]
+            return -1, bl[c % len(bl)]
         f = self.present[int(np.random.default_rng([self.seed, c]).permutation(F)[j])] \
             if F > 1 else self.present[0]
-        bl = self.batches[f]
-        return f, bl[c % len(bl)]
+        return f, _form_draw(self.rows[f], self.lengths, self.bs, self.seed, f, c)
 
     def batch(self, k):
         _f, idx = self._pick(k)
@@ -474,6 +619,16 @@ def data_cut_count(registry=None):
     return reg.get("data_cut", {}).get("unique_text_count")
 
 
+def cut_arms(registry=None):
+    """-> the arm names the registered cut APPLIES TO, read from the registry, not retyped.
+    `A4/ANCHOR` is one registry row naming two arms."""
+    reg = registry or json.loads((REPO / "m10" / "screen_registry.json").read_text())
+    out = set()
+    for row in reg.get("data_cut", {}).get("applies_to", []):
+        out.update(x.strip() for x in str(row).split("/") if x.strip())
+    return out
+
+
 def apply_data_cut(segs, count, seed=0):
     """-> (segments, report). Uniform seed-0 downsample of the WHOLE corpus to `count` rows.
 
@@ -499,22 +654,81 @@ def apply_data_cut(segs, count, seed=0):
                  "seed": seed, "per_segment": {s.name: len(s) for s in out}}
 
 
+# ------------------------------------------------------------------------- cross-role guard ----
+
+def _id_hashes(ids):
+    """-> {blake2b-64 of the token-id bytes} for every row of a pretokenized corpus."""
+    out = set()
+    for i in range(len(ids)):
+        out.add(hashlib.blake2b(np.asarray(ids[i], dtype=np.int32).tobytes(),
+                                digest_size=8).digest())
+    return out
+
+
+def cross_role_collisions(q_ids, d_ids):
+    """-> how many student inputs appear in BOTH roles.
+
+    The same student input must never carry two different teacher targets. It can: the document
+    role prepends `passage: `, so a QUERY whose text is literally "passage: X" tokenizes exactly
+    like the DOCUMENT "X" -- one input, a query-prompt target and a raw-document target (Codex
+    2026-09-05 finding 9). The test is a hash of the id bytes, so it costs one pass and no
+    comparison of texts.
+    """
+    return len(_id_hashes(q_ids) & _id_hashes(d_ids))
+
+
+def guard_cross_role(q_ids, d_ids, skip=False):
+    """-> a report. Refuses before a step is taken; `skip=True` is for a smoke that asks."""
+    if skip:
+        return {"checked": False, "why": "explicitly skipped (smoke)"}
+    n = cross_role_collisions(q_ids, d_ids)
+    if n:
+        raise SystemExit(f"REFUSED: {n:,} student inputs appear in BOTH the query and the "
+                         f"document role, so the same input carries two different teacher "
+                         f"targets. Remove them before training.")
+    return {"checked": True, "collisions": 0, "n_query": len(q_ids), "n_document": len(d_ids)}
+
+
 # ---------------------------------------------------------------------------------- the arm ----
 
 def build_query_stream(arm_or_sources, tok, student, *, batch_size=32, seed=0, balanced=True,
-                       max_len=512, prefix="", head_per_source=None, cut=None, verbose=True):
-    """-> (stream, manifest). Everything above, in the order an arm needs it."""
+                       max_len=512, prefix="", head_per_source=None, cut=None,
+                       allow_uncut=False, verbose=True):
+    """-> (stream, manifest). Everything above, in the order an arm needs it.
+
+    A registered CUT ARM (`screen_registry.data_cut.applies_to`) refuses to build a training
+    stream while §0b has no `unique_text_count`: without the cut A2, A3 and A4 train at different
+    volumes and family A's forms contrast is confounded with volume, which is the one thing it
+    exists to separate. `allow_uncut=True` is the smoke escape and is RECORDED in the manifest
+    (`uncut: true`), so an artifact can never look like a cut arm's.
+    """
     names = ARM_SOURCES[arm_or_sources] if isinstance(arm_or_sources, str) else tuple(
         arm_or_sources)
     segs, man = load_segments(names, head_per_source=head_per_source, verbose=verbose)
     if head_per_source:
         man["head_per_source"] = head_per_source
-    cut = data_cut_count() if cut == "registered" else cut
+    is_cut_arm = isinstance(arm_or_sources, str) and arm_or_sources in cut_arms()
+    if is_cut_arm:
+        cut = data_cut_count()
+        if cut is None:
+            if not allow_uncut:
+                raise SystemExit(
+                    f"arm {arm_or_sources!r} is a registered cut arm "
+                    f"(m10/screen_registry.json data_cut.applies_to) and "
+                    f"`data_cut.unique_text_count` is not registered yet, so this stream would "
+                    f"train the FULL corpus. Register the count, or pass allow_uncut=True for a "
+                    f"smoke -- which records `uncut: true` in the manifest.")
+            man["uncut"] = True
+    else:
+        cut = data_cut_count() if cut == "registered" else cut
     segs, cut_rep = apply_data_cut(segs, cut)
     man["data_cut"] = cut_rep
+    man["is_cut_arm"] = is_cut_arm
     ids = tokenize_corpus(tok, segs, man, student, max_len=max_len, prefix=prefix,
                           verbose=verbose,
-                          extra_ident={"data_cut": cut_rep, "head_per_source": head_per_source})
+                          extra_ident={"data_cut": cut_rep, "head_per_source": head_per_source,
+                                       "rescreen10": man.get("rescreen10"),
+                                       "uncut": man.get("uncut", False)})
     stream = FormBalancedStream(ids, TargetView(segs), corpus_forms(segs),
                                 pad_id=tok.pad_token_id, batch_size=batch_size, seed=seed,
                                 balanced=balanced)
@@ -533,15 +747,51 @@ def doc_marker():
     return json.loads((REPO / "m9" / "registry.json").read_text())["templates"]["doc_student"]
 
 
-def build_doc_stream(n, tok, *, batch_size=32, seed=0, max_len=512, verbose=True):
+def _screened_doc_pool(n, seed, banned, margin=1.05, floor=2_000):
+    """-> (texts, vectors, meta) for `n` documents that survive the M10 re-screen."""
+    if not banned:
+        return D.m9_doc_pool(n, seed=seed)
+    import data as m9data
+    k = int(n * margin) + floor
+    rows, meta = m9data.doc_pool_rows(k, seed)
+    keep = np.array([int(r) not in banned for r in rows], dtype=bool)
+    surv = rows[keep][:n]
+    if len(surv) < n:
+        raise SystemExit(f"the M10 document re-screen left {len(surv):,} of a {k:,}-row draw for "
+                         f"a {n:,}-document stream -- widen `margin`")
+    import pool as poolmod
+    _index, vecs, _pmeta = poolmod.build()
+    V = np.asarray(vecs[surv], dtype=np.float32)
+    V = V / np.maximum(np.linalg.norm(V, axis=1, keepdims=True), 1e-12)
+    meta = {**meta, "n_drawn_before_rescreen": int(k), "n_removed_by_rescreen": int((~keep).sum()),
+            "n_drawn": int(len(surv))}
+    return m9data.row_texts(surv), V, meta
+
+
+def build_doc_stream(n, tok, *, batch_size=32, seed=0, max_len=512, allow_unscreened=False,
+                     verbose=True):
     """-> (stream, meta) for the document-role half of the mix, from the frozen M9 pool.
 
     The document marker is applied HERE, once. `data10.pretokenize` used to take no prefix at all,
     so every document reached the student as raw bytes -- the query-role policy -- while its
     teacher target was the raw-bytes document encoding. The teacher side was right; the student
     side dropped the marker the recipe names.
+
+    The pool is RE-SCREENED against the M10 protected index first (`rescreen10`,
+    instructions-m10.md:462: "matching pool documents are removed too"). The draw takes a margin
+    and trims after the removal, so the arm still gets `n` documents and the survivors are still a
+    uniform sample -- `doc_pool_rows` returns them in draw order, so a prefix of the survivors is
+    a uniform sample of the survivors.
     """
-    texts, vecs, meta = D.m9_doc_pool(n, seed=seed)
+    banned, screen_rep = None, {"applied": False}
+    if not allow_unscreened:
+        import rescreen10
+        rows_banned, rep = rescreen10.doc_banned_rows(compute=False, verbose=verbose)
+        banned = set(int(x) for x in rows_banned)
+        screen_rep = {"applied": True, "n_banned_in_pool": len(banned),
+                      "protected10": rescreen10._h(rescreen10.protected_ident())}
+    texts, vecs, meta = _screened_doc_pool(n, seed, banned)
+    meta["rescreen10"] = screen_rep
     pre = doc_marker()
     ids = D.pretokenize(tok, texts, max_len=max_len, prefix=pre, verbose=verbose, label="documents")
     meta = {**meta, "student_prefix": pre, "n": len(texts), "max_len": max_len}

@@ -16,7 +16,6 @@
   },
   {
    "path": "m9src/data.labelled_query_pool + work/enc9/m9long-{nqopen,triviaqa}",
-   "sha256": "777dc542abc12b61a5e1f439c3f56a228052306d64bdb7db63ddd1d9b43b7a83",
    "by_m9_source": {
     "esci-us": 73030,
     "hotpotqa-train": 81743,
@@ -26,13 +25,40 @@
     "triviaqa": 134665
    },
    "m8_manifest_sha256": "da0f208ef29bae3833ffead070eb34b61f390f9d72ed96d448d45ae6b52072c2",
+   "n_before_rescreen": 463314,
+   "rescreen10": {
+    "removed": 709,
+    "per_segment": {
+     "m9-queries_pair": {
+      "removed": 431,
+      "by_hit": {
+       "exact": 174,
+       "near": 257
+      }
+     },
+     "m9-nqopen": {
+      "removed": 66,
+      "by_hit": {
+       "near": 66
+      }
+     },
+     "m9-triviaqa": {
+      "removed": 212,
+      "by_hit": {
+       "near": 212
+      }
+     }
+    },
+    "protected10": "764ff2170d5721db9668"
+   },
+   "sha256": "61239a2e902facda2d8becffc87e779d4ae199b4e18bb67a98b7bd8fb14f9fef",
    "source": "m9-pool",
    "kind": "m9",
    "what": "M9 real queries: queries_pair (esci/hotpotqa/squad/mrtydi, fever out) + nqopen + triviaqa. Targets already exist.",
-   "n_rows": 463314,
+   "n_rows": 462605,
    "by_form": {
-    "factoid": 390284,
-    "product": 73030
+    "factoid": 389747,
+    "product": 72858
    }
   }
  ],
@@ -40,13 +66,13 @@
   "harvest",
   "m9-pool"
  ],
- "n_rows": 1711700,
+ "n_rows": 1710991,
  "by_form": {
-  "factoid": 390284,
+  "factoid": 389747,
   "claim": 415454,
   "title": 416478,
   "keyword": 416454,
-  "product": 73030
+  "product": 72858
  },
  "balanced": true,
  "realized_shares": {
@@ -58,7 +84,7 @@
  },
  "shares_over_batches": 120000,
  "word_len": {
-  "mean": 9.94,
+  "mean": 9.93,
   "p50": 9,
   "p95": 22
  }

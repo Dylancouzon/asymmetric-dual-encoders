@@ -1,0 +1,58 @@
+{
+ "_what": "the M9 pools re-screened against the M10 protected index (instructions-m10.md:462)",
+ "protected10": {
+  "version": "2026-09-05-six+dev+reserved-queries+COV(q+d)+arxiv-title",
+  "arxiv_draw": "97e1a37ae7eb678b",
+  "n_arxiv_texts": 4000,
+  "components": [
+   [
+    "BRIGHT",
+    "3066d29c9651a576c8aba4832d249807b181ecae"
+   ],
+   [
+    "LEDGER",
+    "7881df568382"
+   ],
+   [
+    "LegalBenchConsumerContractsQA",
+    "f9eafd458f9c61e531d4a2510d8a11dfd2282b21"
+   ],
+   [
+    "LegalBenchCorporateLobbying",
+    "f43436957b41692dd3e1b06a6d7116cd09f6a1db"
+   ],
+   [
+    "MedicalQARetrieval",
+    "a77efe81ec0c03aff7fecde742a5c9c4c46f6005"
+   ]
+  ]
+ },
+ "m9-queries_pair": {
+  "n": 242786,
+  "kept": 242355,
+  "removed": 431,
+  "by_hit": {
+   "exact": 174,
+   "near": 257
+  },
+  "seconds": 27.3
+ },
+ "m9-nqopen": {
+  "n": 85863,
+  "kept": 85797,
+  "removed": 66,
+  "by_hit": {
+   "near": 66
+  },
+  "seconds": 10.3
+ },
+ "m9-triviaqa": {
+  "n": 134665,
+  "kept": 134453,
+  "removed": 212,
+  "by_hit": {
+   "near": 212
+  },
+  "seconds": 18.8
+ }
+}

@@ -55,12 +55,60 @@ def test_resume_reproduces_an_uninterrupted_run():
 
     assert part["losses"] == ref["losses"], "the checkpointing run itself must not drift"
     assert rest["start_step"] == 34, rest["start_step"]
-    tail = ref["losses"][34:]
-    assert len(rest["losses"]) == len(tail)
-    for a, b in zip(rest["losses"], tail):
+    # the resumed record carries the WHOLE arm's history, the restored prefix included
+    assert rest["steps_run"] == 6 and len(rest["losses"]) == 40
+    for a, b in zip(rest["losses"], ref["losses"]):
         assert abs(a - b) < 1e-6, (a, b)
     for p, q in zip(m1.parameters(), m3.parameters()):
         assert torch.allclose(p, q, atol=1e-6), (p - q).abs().max()
+
+
+def test_a_resumed_arm_can_still_fire_the_plateau_rule():
+    """Codex 2026-09-05 finding 4: `evals`/`cycle_end_evals` were re-initialised on resume, so the
+    third cycle-end reading saw one value where the rule needs three and the registered plateau
+    could not fire on any resumed run -- i.e. on any real seven-day build."""
+    vals = [0.50, 0.60, 0.6005]                   # gain 0.0005 < 0.003 at cycle 3
+    st = {"n": 0}
+
+    def ev(model, step, kind):
+        if kind != "end":
+            return 0.40 + 0.001 * st["n"]
+        v = vals[st["n"]]; st["n"] += 1
+        return v
+
+    ends = N.cycle_ends(30, 3)
+    crash_at = ends[1] + 2                        # two cycle ends already read, then the crash
+
+    def crashing(step, kind):
+        if step >= crash_at:
+            raise RuntimeError("the box went down")
+        return make_batch_fn()(step, kind)
+
+    with tempfile.TemporaryDirectory() as d:
+        ck = Path(d) / "ck.pt"
+        try:
+            T.train_arm(Toy(), crashing, total_steps=30, seed=0, eval_fn=ev,
+                        ckpt_path=ck, ckpt_every=1)
+            raise AssertionError("the crash did not happen")
+        except RuntimeError:
+            pass
+        ck_extra = torch.load(ck, map_location="cpu", weights_only=False)["extra"]
+        assert ck_extra["cycle_end_evals"] == vals[:2], ck_extra["cycle_end_evals"]
+        rest = T.train_arm(Toy(), make_batch_fn(), total_steps=30, seed=0, eval_fn=ev,
+                           resume_from=ck)
+    # the third reading is compared against BOTH earlier cycles, so the plateau fires
+    assert rest["cycle_end_evals"] == vals, rest["cycle_end_evals"]
+    assert rest["stopped"] == "plateau at cycle 3", rest["stopped"]
+
+
+def test_a_checkpoint_is_replaced_atomically_and_leaves_no_temp_behind():
+    m = Toy()
+    opt = torch.optim.AdamW(m.parameters(), lr=1e-4)
+    with tempfile.TemporaryDirectory() as d:
+        p = Path(T.save(Path(d) / "c.pt", m, opt, 3))
+        T.save(p, m, opt, 4)                        # overwrite the sole recovery point
+        assert [x.name for x in Path(d).iterdir()] == ["c.pt"]
+        assert torch.load(p, map_location="cpu", weights_only=False)["step"] == 4
 
 
 def test_a_non_finite_loss_stops_the_arm_rather_than_training_on():

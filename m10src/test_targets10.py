@@ -92,15 +92,19 @@ def test_an_append_survives_reopening_and_grows_rather_than_replaces():
 
 
 def test_a_crash_between_the_vector_write_and_the_meta_write_loses_the_CHUNK_not_the_CACHE():
-    """`n` is the authority; trailing bytes are unreferenced and are truncated on the next open."""
+    """`n` is the authority; trailing bytes are unreferenced. A READER ignores them -- it must not
+    truncate a store another process may be appending to -- and a WRITER repairs them on refresh."""
     with tempfile.TemporaryDirectory() as d:
         c = _cache(d)
         c.append(TG.keys_of(["a", "b"]), _vecs(2).astype(np.float16))
         with open(c.vecs_p, "ab") as fh:                       # a half-written chunk
             fh.write(np.zeros((1, 8), dtype=np.float16).tobytes())
         c2 = _cache(d)
-        assert c2.n == 2 and c2.vecs_p.stat().st_size == 2 * 8 * 2
+        assert c2.n == 2 and c2.vecs_p.stat().st_size == 3 * 8 * 2, "a reader leaves the tail"
         assert (c2.rows_for(["a", "b"]) == [0, 1]).all()
+        with c2.writer_lock():
+            c2.refresh()
+        assert c2.vecs_p.stat().st_size == 2 * 8 * 2, "a writer truncates it"
 
 
 def test_a_cache_written_under_another_encoder_identity_is_refused():
@@ -157,3 +161,50 @@ def test_a_non_finite_teacher_vector_stops_the_encode_rather_than_being_stored(m
 
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
+
+
+def test_a_short_store_is_refused_rather_than_zero_padded():
+    """Codex 2026-09-05 finding 8: `truncate(want)` EXTENDS a short file, so half of a lost vector
+    was normalized and trained as a target. A partial vector is not a target."""
+    with tempfile.TemporaryDirectory() as d:
+        c = _cache(d)
+        c.append(TG.keys_of(["a", "b"]), _vecs(2).astype(np.float16))
+        with open(c.vecs_p, "r+b") as fh:                      # half of the second vector lost
+            fh.truncate(3 * 8)
+        with pytest.raises(SystemExit, match="SHORT by"):
+            _cache(d)
+
+
+def test_only_one_writer_may_append_at_a_time():
+    """Two writers can append vectors A,B and keys B,A under the same published `n`, and the
+    reopened cache then maps keyB to vectorA (Codex 2026-09-05 finding 5)."""
+    with tempfile.TemporaryDirectory() as d:
+        c = _cache(d)
+        other = _cache(d)
+        with c.writer_lock():
+            assert (c.dir / "lock").exists()
+            with pytest.raises(SystemExit, match="another process is appending"):
+                with other.writer_lock():
+                    pass
+        assert not (c.dir / "lock").exists(), "the lock is released even so"
+        with other.writer_lock():                              # and is takeable afterwards
+            pass
+
+
+def test_encode_missing_holds_the_lock_and_a_read_path_does_not(monkeypatch):
+    seen = {}
+
+    def fake_encode(texts, prefix="", max_length=512, batch_tokens=0, verbose=False):
+        seen["locked_during_encode"] = (Path(seen["dir"]) / "lock").exists()
+        return _vecs(len(texts))
+
+    import teacher
+    with tempfile.TemporaryDirectory() as d:
+        c = _cache(d)
+        seen["dir"] = c.dir
+        monkeypatch.setattr(teacher, "encode", fake_encode)
+        TG.encode_missing(["a", "b"], cache=c, verbose=False)
+        assert seen["locked_during_encode"] is True
+        assert not (c.dir / "lock").exists()
+        TG.targets(["a", "b"], cache=_cache(d))                # a read takes nothing
+        assert not (c.dir / "lock").exists()

@@ -18,6 +18,7 @@ module via `_orig_mod`, and export, parity, encode and evaluation all run eager.
 """
 import json
 import math
+import os
 import time
 from pathlib import Path
 
@@ -33,13 +34,24 @@ def eager(model):
 
 
 def save(path, model, opt, step, extra=None):
+    """Atomic: a temp file, fsynced, then `os.replace`.
+
+    The checkpoint is the ONLY recovery point of a multi-day build, and `torch.save` writing
+    straight onto it means a crash mid-write destroys the run rather than costing it one interval
+    (Codex 2026-09-05 finding 10).
+    """
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    torch.save({"model": eager(model).state_dict(), "opt": opt.state_dict(), "step": int(step),
-                "torch_rng": torch.get_rng_state(),
-                "cuda_rng": (torch.cuda.get_rng_state_all()
-                             if torch.cuda.is_available() else None),
-                "extra": extra or {}}, p)
+    tmp = p.with_name(p.name + f".tmp{os.getpid()}")
+    with open(tmp, "wb") as fh:
+        torch.save({"model": eager(model).state_dict(), "opt": opt.state_dict(),
+                    "step": int(step), "torch_rng": torch.get_rng_state(),
+                    "cuda_rng": (torch.cuda.get_rng_state_all()
+                                 if torch.cuda.is_available() else None),
+                    "extra": extra or {}}, fh)
+        fh.flush()
+        os.fsync(fh.fileno())
+    os.replace(tmp, p)
     return str(p)
 
 
@@ -65,19 +77,28 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
     loss_fn = N.LOSSES[loss_name]
     opt = torch.optim.AdamW(model.parameters(), lr=peak)
     start = 0
+    losses, evals, kinds, cycle_end_evals = [], [], [], []
+    n_examples, stopped = 0, None
     if resume_from:
-        start, _ = load(resume_from, model, opt)
+        # The EVALUATION history is part of the run state. Without it a resumed arm restarts
+        # `cycle_end_evals` empty, so the plateau rule reads one cycle where it needs three and
+        # the registered kill/plateau decision cannot fire at all (Codex 2026-09-05 finding 4).
+        start, ex = load(resume_from, model, opt)
+        losses = list(ex.get("losses", []))
+        evals = list(ex.get("evals", []))
+        kinds = list(ex.get("eval_kinds", []))
+        cycle_end_evals = list(ex.get("cycle_end_evals", []))
+        n_examples = int(ex.get("examples", 0))
+        stopped = ex.get("stopped")
     else:
         torch.manual_seed(seed)
 
     ends = set(N.cycle_ends(total_steps, cycles))
     per = max(total_steps // cycles, 1)
     mids = {c * per + per // 2 for c in range(cycles)}
-    losses, evals, kinds, cycle_end_evals = [], [], [], []
-    n_examples, t0 = 0, time.time()
-    stopped = None
+    t0, run_examples, run_steps = time.time(), 0, 0
 
-    for step in range(start, total_steps):
+    for step in range(start, total_steps if stopped is None else start):
         kind = N.mix_window(pattern, step)
         ids, mask, tgt = batch_fn(step, kind)
         lr = N.lr_at(step, total_steps, cycles, peak, final)
@@ -99,6 +120,8 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
         opt.step()
         losses.append(float(loss.detach()))
         n_examples += len(ids)
+        run_examples += len(ids)
+        run_steps += 1
 
         if eval_fn is not None and (step in ends or step in mids):
             k = "end" if step in ends else "mid"
@@ -115,17 +138,22 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
                 stopped = f"plateau at cycle {at}"
                 break
         if ckpt_path and ckpt_every and (step + 1) % ckpt_every == 0:
-            save(ckpt_path, model, opt, step + 1)
+            save(ckpt_path, model, opt, step + 1,
+                 extra={"losses": losses, "evals": evals, "eval_kinds": kinds,
+                        "cycle_end_evals": cycle_end_evals, "examples": n_examples,
+                        "stopped": stopped})
         if log_every and (step + 1) % log_every == 0:
             el = time.time() - t0
             print(f"  step {step + 1}/{total_steps} loss {np.mean(losses[-log_every:]):.4f} "
-                  f"lr {lr:.2e} {n_examples / max(el, 1e-9):.0f} ex/s", flush=True)
+                  f"lr {lr:.2e} {run_examples / max(el, 1e-9):.0f} ex/s", flush=True)
 
     el = time.time() - t0
-    return {"steps_run": len(range(start, min(total_steps, start + len(losses)))),
+    # `losses`/`evals` are the WHOLE arm's history (restored on resume); `steps_run` and the rate
+    # are this process's, because a rate measured over another machine's steps is not a rate.
+    return {"steps_run": run_steps,
             "start_step": start, "total_steps": total_steps, "pattern": pattern,
             "loss": loss_name, "losses": losses, "evals": evals, "eval_kinds": kinds,
             "cycle_end_evals": cycle_end_evals, "stopped": stopped,
-            "examples": n_examples, "seconds": round(el, 2),
-            "examples_per_s": round(n_examples / max(el, 1e-9), 1),
+            "examples": n_examples, "examples_this_run": run_examples, "seconds": round(el, 2),
+            "examples_per_s": round(run_examples / max(el, 1e-9), 1),
             "mix": N.window_shares(pattern, max(len(losses), 1))}

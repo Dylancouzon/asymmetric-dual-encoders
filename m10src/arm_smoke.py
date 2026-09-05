@@ -177,10 +177,13 @@ def smoke_one(name, spec, corp, device="cpu", max_len=512, verbose=True):
             q, qman = CL.build_query_stream(
                 list(CORPUS["sources"]), m.tok, spec["student"], batch_size=b, seed=0,
                 balanced=CORPUS["balanced"], max_len=max_len, prefix="",
-                head_per_source=CORPUS["head_per_source"] or None, verbose=verbose)
+                head_per_source=CORPUS["head_per_source"] or None, allow_uncut=True,
+                verbose=verbose)
             rec["query_corpus"] = {k: qman[k] for k in
                                    ("sources_used", "n_rows", "by_form", "sha256", "n_batches",
-                                    "mean_tokens", "balanced", "data_cut") if k in qman}
+                                    "mean_tokens", "balanced", "data_cut", "uncut",
+                                    "is_cut_arm", "rescreen10", "n_duplicates_removed")
+                                   if k in qman}
             rec["realized_shares"] = q.realized_shares(min(len(q), 4 * STEPS))
         else:
             qi = D.pretokenize(m.tok, texts, max_len=max_len)
@@ -188,6 +191,9 @@ def smoke_one(name, spec, corp, device="cpu", max_len=512, verbose=True):
         import corpus_loader as _CL
         # the registered document-role marker; queries are raw bytes (prompt policy (b))
         di = D.pretokenize(m.tok, dtexts, max_len=max_len, prefix=_CL.doc_marker())
+        # the same student input must never carry two teacher targets: "passage: X" as a QUERY
+        # tokenizes exactly like the DOCUMENT "X" once the marker is applied
+        rec["cross_role"] = _CL.guard_cross_role(q.ids, di)
         d = D.Stream(di, dvecs, pad_id=m.tok.pad_token_id, batch_size=b, seed=0)
         sigma = None
         if spec["loss"] == "document_covariance_weighted":

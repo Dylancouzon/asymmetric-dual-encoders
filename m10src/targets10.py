@@ -13,6 +13,14 @@ TEXT: `blake2b-128(text)` -> a row in an append-only fp16 memmap.
 - **Cold == warm.** `targets()` NEVER returns what the encoder just produced; it always reads the
   fp16 rows back and normalizes in fp32, so a first run and a re-run give bit-identical vectors
   (`m10/CODEMAP.md` pitfall 8).
+- **One writer at a time.** An append is refresh -> duplicate lookup -> append -> meta commit, and
+  two processes interleaving those can publish keys and vectors in different orders under the same
+  `n`. `TargetCache.writer_lock()` is held across the whole sequence; readers take nothing and
+  never truncate, so the live encode is safe to read from.
+- **A 128-bit content hash is treated as text equality**, deliberately: at 10^7 texts the
+  birthday probability of a blake2b-128 collision is ~10^-24, far below the probability of a bit
+  flip in the store itself, so no secondary digest is kept (Codex 2026-09-05 finding 12, decided
+  not to fix).
 - **Resumable.** Vectors, then keys, then `meta.json`: `n` in the meta is the only authority, and
   anything past `n` rows left by a crash is truncated on the next open. A chunk is either fully
   recorded or not recorded at all.
@@ -22,8 +30,10 @@ CLI:
     .venv/bin/python m10src/targets10.py --sources harvest paq-a2                # the full pass
 """
 import argparse
+import contextlib
 import hashlib
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -97,7 +107,7 @@ class TargetCache:
         else:
             self.n = 0
             self._write_meta()
-        self._truncate()
+        self._check_sizes(fix=False)
         self._sorted = None
 
     # -- storage -------------------------------------------------------------------------------
@@ -107,16 +117,63 @@ class TargetCache:
                                    "key_bytes": KEY_BYTES}, indent=1))
         tmp.rename(self.meta_p)
 
-    def _truncate(self):
-        """`n` is the authority. A crash between the vector write and the meta write leaves extra
-        bytes; they are unreferenced and would misalign the next append."""
-        for p, row in ((self.keys_p, KEY_BYTES), (self.vecs_p, 2 * self.dim)):
+    def _check_sizes(self, fix=False):
+        """`n` is the authority. A crash between the vector write and the meta write leaves EXTRA
+        bytes: unreferenced, and they would misalign the next append, so a writer truncates them.
+
+        A file SHORTER than `n * row_bytes` is the opposite case and is not repairable: the old
+        code zero-EXTENDED it, so half of a lost vector was normalized and trained as a target
+        (Codex 2026-09-05 finding 8). It raises with the exact sizes instead.
+
+        `fix=False` is the reader's mode -- it neither truncates nor creates, because a reader must
+        not touch a store another process is legitimately appending to.
+        """
+        for name, p, row in (("keys", self.keys_p, KEY_BYTES),
+                             ("vecs", self.vecs_p, 2 * self.dim)):
             want = self.n * row
             if not p.exists():
-                p.touch()
-            if p.stat().st_size != want:
+                if fix or want == 0:
+                    p.touch()
+                    continue
+                raise SystemExit(f"{p} is missing but meta says n={self.n:,}")
+            have = p.stat().st_size
+            if have < want:
+                raise SystemExit(
+                    f"{p}: {have:,} bytes for n={self.n:,} rows x {row} bytes = {want:,} wanted. "
+                    f"The store is SHORT by {want - have:,} bytes, which cannot be repaired by "
+                    f"padding -- a partial vector is not a target. Restore the file, or lower "
+                    f"`n` in {self.meta_p} to {have // row:,} and re-encode the rest.")
+            if have > want and fix:
                 with open(p, "r+b") as fh:
                     fh.truncate(want)
+
+    def refresh(self):
+        """Re-read the meta another writer may have advanced, then repair excess bytes. Called
+        under the writer lock, never on a read path."""
+        if self.meta_p.exists():
+            self.n = int(json.loads(self.meta_p.read_text())["n"])
+        self._check_sizes(fix=True)
+        self._sorted = None
+        return self.n
+
+    @contextlib.contextmanager
+    def writer_lock(self):
+        """The single-writer lock: one file, created O_EXCL, held across refresh -> lookup ->
+        append -> meta commit. Readers take nothing."""
+        lp = self.dir / "lock"
+        try:
+            fd = os.open(lp, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            raise SystemExit(
+                f"{lp} exists: another process is appending to {self.dir}. Two writers can "
+                f"publish keys and vectors in different orders under the same `n`. Wait for it, "
+                f"or delete the lock if you are sure no writer is alive.")
+        try:
+            os.write(fd, json.dumps({"pid": os.getpid(), "at": time.time()}).encode())
+            os.close(fd)
+            yield lp
+        finally:
+            lp.unlink(missing_ok=True)
 
     def keys(self):
         if self.n == 0:
@@ -175,7 +232,13 @@ def encode_missing(texts, cache=None, chunk=CHUNK, batch_tokens=32768, verbose=T
     drawn independently and the 12 forms overlap in nothing but they are appended into one store.
     """
     cache = cache or TargetCache()
+    with cache.writer_lock():
+        return _encode_missing_locked(texts, cache, chunk, batch_tokens, verbose, label)
+
+
+def _encode_missing_locked(texts, cache, chunk, batch_tokens, verbose, label):
     t0 = time.time()
+    cache.refresh()
     keys = keys_of(texts)
     have = cache.rows(keys) >= 0
     todo_idx = np.flatnonzero(~have)

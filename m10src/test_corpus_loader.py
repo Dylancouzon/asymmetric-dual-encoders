@@ -189,9 +189,61 @@ def test_the_data_cut_downsamples_the_whole_corpus_deterministically():
 
 
 def test_no_registered_cut_means_no_cut_and_says_so():
+    """The HELPER still reports honestly with no count -- but a cut ARM must not reach it; that is
+    `test_a_cut_arm_refuses_to_train_uncut` below. This test used to be the whole story and blessed
+    A2/A3/A4 training at three different volumes (Codex 2026-09-05 finding 1)."""
     segs = _segs([50])
     out, rep = CL.apply_data_cut(segs, None)
     assert out is segs and not rep["applied"] and "§0b" in rep["_why"]
+
+
+def test_the_cut_arms_are_read_from_the_registry_and_name_the_anchor():
+    assert CL.cut_arms() == {"A2", "A3", "A4", "ANCHOR"}, CL.cut_arms()
+
+
+class _Tok:
+    pad_token_id = 0
+
+    def __call__(self, texts, **kw):
+        return {"input_ids": [[7] * (len(t) % 5 + 2) for t in texts]}
+
+
+def _fake_corpus(monkeypatch, tmp, n=40):
+    monkeypatch.setattr(CL, "TOKCACHE", Path(tmp))
+    segs = _segs([n])
+    monkeypatch.setattr(CL, "load_segments",
+                        lambda names, head_per_source=None, verbose=True: (
+                            segs, {"sources": [], "sha256": "abc", "n_rows": n}))
+    monkeypatch.setattr(CL, "ARM_SOURCES", {**CL.ARM_SOURCES, "A3": ("harvest",)})
+    return segs
+
+
+def test_a_cut_arm_refuses_to_train_uncut(monkeypatch):
+    """A2/A3/A4 are cut to the identical post-screen unique-text count; without the count they
+    would train the full corpus and family A's forms contrast becomes a volume contrast."""
+    with tempfile.TemporaryDirectory() as d:
+        _fake_corpus(monkeypatch, d)
+        monkeypatch.setattr(CL, "data_cut_count", lambda registry=None: None)
+        with pytest.raises(SystemExit, match="registered cut arm"):
+            CL.build_query_stream("A3", _Tok(), "bge-small", batch_size=4, verbose=False)
+
+
+def test_a_smoke_may_train_uncut_only_by_saying_so_in_the_artifact(monkeypatch):
+    with tempfile.TemporaryDirectory() as d:
+        _fake_corpus(monkeypatch, d)
+        monkeypatch.setattr(CL, "data_cut_count", lambda registry=None: None)
+        _st, man = CL.build_query_stream("A3", _Tok(), "bge-small", batch_size=4,
+                                         allow_uncut=True, verbose=False)
+        assert man["uncut"] is True and man["is_cut_arm"] is True
+
+
+def test_a_registered_cut_is_applied_to_a_cut_arm_without_being_asked(monkeypatch):
+    with tempfile.TemporaryDirectory() as d:
+        _fake_corpus(monkeypatch, d)
+        monkeypatch.setattr(CL, "data_cut_count", lambda registry=None: 25)
+        _st, man = CL.build_query_stream("A3", _Tok(), "bge-small", batch_size=4, verbose=False)
+        assert man["data_cut"]["applied"] and man["data_cut"]["n_after"] == 25
+        assert "uncut" not in man
 
 
 # --------------------------------------------------------------------------- target view ----
@@ -235,8 +287,8 @@ def test_resume_reproduces_an_uninterrupted_run_on_the_new_loader():
         _m2, part = run(ckpt_path=ck, ckpt_every=17)
         m3, rest = run(resume_from=ck)
     assert part["losses"] == ref["losses"]
-    assert rest["start_step"] == 34
-    for a, b in zip(rest["losses"], ref["losses"][34:]):
+    assert rest["start_step"] == 34 and rest["steps_run"] == 6
+    for a, b in zip(rest["losses"], ref["losses"]):
         assert abs(a - b) < 1e-6, (a, b)
 
 
@@ -305,3 +357,130 @@ def test_the_manifest_identity_is_the_corpus_and_not_the_run(monkeypatch):
     a = CL.load_segments(["fake"], verbose=False)[1]
     b = CL.load_segments(["fake"], verbose=False)[1]
     assert a["sha256"] == b["sha256"] and a["by_form"] == {"claim": 1, "title": 1}
+
+
+# ------------------------------------------------------------- the FORMS-12 hold-out, by hash ----
+
+def test_a_copy_of_the_holdout_under_another_name_is_still_refused(monkeypatch):
+    """Codex 2026-09-05 finding 3: the guard protected a PATHNAME. `cp harvest_forms12.jsonl
+    generated_queries.jsonl` walked straight past it."""
+    with tempfile.TemporaryDirectory() as d:
+        hold = _jsonl(d, "holdout.jsonl", [{"text": "a held-out query", "form": "claim"}])
+        monkeypatch.setattr(CL, "_HOLDOUT_HASHES", {})
+        hs = CL.holdout_hashes(hold)
+        assert len(hs) == 1
+        segs = [CL.Segment("generated", ["fine", "a held-out query"],
+                           [CL.FORM_ID["claim"]] * 2, _targets(2, dim=8).astype(np.float16),
+                           np.arange(2))]
+        monkeypatch.setattr(CL, "holdout_hashes", lambda path=None: hs)
+        with pytest.raises(SystemExit, match="FORMS-12 hold-out"):
+            CL.refuse_holdout_texts(segs)
+        clean = [CL.Segment("generated", ["fine", "also fine"], [CL.FORM_ID["claim"]] * 2,
+                            _targets(2, dim=8).astype(np.float16), np.arange(2))]
+        assert CL.refuse_holdout_texts(clean) == 0
+
+
+# -------------------------------------------------------------------------- unique-text cut ----
+
+def test_the_cut_counts_UNIQUE_texts_across_sources():
+    """"post-screen unique-text count": `["x", "x", "y"]` is two texts, and keeping both copies of
+    `x` would also double its presentation weight inside its form."""
+    a = CL.Segment("a", ["x", "x", "y"], [CL.FORM_ID["claim"]] * 3,
+                   _targets(3, dim=8).astype(np.float16), np.arange(3))
+    b = CL.Segment("b", ["y", "z"], [CL.FORM_ID["claim"]] * 2,
+                   _targets(2, dim=8).astype(np.float16), np.arange(2))
+    segs, removed = CL.dedup_segments([a, b])
+    assert [s.texts for s in segs] == [["x", "y"], ["z"]]
+    assert removed == {"a": 1, "b": 1}
+    # the rows travel with their texts: `y` keeps segment a's row 2, `z` keeps b's row 1
+    assert segs[0].rowmap.tolist() == [0, 2] and segs[1].rowmap.tolist() == [1]
+
+
+# ----------------------------------------------------------- with-replacement within a form ----
+
+def test_a_small_form_does_not_repeat_the_identical_batch():
+    """A three-row form at batch 8 used to yield `0,1,2,0,1,2,0,1` every single time it came up."""
+    st, forms = _stream({"title": 100, "claim": 3}, batch_size=8)
+    seen = [tuple(st._pick(k)[1]) for k in range(60) if st._pick(k)[0] == CL.FORM_ID["claim"]]
+    assert len(seen) >= 3 and len(set(seen)) > 1, seen
+
+
+def test_a_drawn_batch_is_sorted_by_length_so_the_padded_chunk_is_tight():
+    st, _forms = _stream(120, batch_size=8)
+    for k in range(10):
+        idx = st._pick(k)[1]
+        L = st.lengths[idx]
+        assert list(L) == sorted(L), L
+
+
+def test_the_draw_is_a_pure_function_of_seed_and_step():
+    a, _ = _stream(120, batch_size=8, seed=0)
+    b, _ = _stream(120, batch_size=8, seed=0)
+    c, _ = _stream(120, batch_size=8, seed=1)
+    assert [tuple(a._pick(k)[1]) for k in range(20)] == [tuple(b._pick(k)[1]) for k in range(20)]
+    assert [tuple(a._pick(k)[1]) for k in range(20)] != [tuple(c._pick(k)[1]) for k in range(20)]
+
+
+# ------------------------------------------------------------------- cross-role collisions ----
+
+def test_the_same_student_input_cannot_carry_two_teacher_targets():
+    """The query "passage: X" and the document "X" tokenize identically once the document marker
+    is applied, and their teacher targets differ."""
+    tok = _Tok()
+    q = D.pretokenize(tok, ["passage: hello"], prefix="")
+    d = D.pretokenize(tok, ["hello"], prefix=CL.doc_marker())
+    assert [x.tolist() for x in q] == [x.tolist() for x in d], "the stub must actually collide"
+    assert CL.cross_role_collisions(q, d) == 1
+    with pytest.raises(SystemExit, match="BOTH the query and the document role"):
+        CL.guard_cross_role(q, d)
+    assert CL.guard_cross_role(q, d, skip=True)["checked"] is False
+    clean = D.pretokenize(tok, ["a much longer document body here"], prefix=CL.doc_marker())
+    assert CL.guard_cross_role(q, clean)["collisions"] == 0
+
+
+# ------------------------------------------------------------------- the tokenizer identity ----
+
+def test_the_token_cache_identity_binds_the_TOKENIZER_not_the_students_nickname(monkeypatch):
+    """Codex 2026-09-05 finding 11: `student="bge-small"` is a label, and two revisions of the same
+    repo give different ids for the same text."""
+    class TokA(_Tok):
+        name_or_path = "BAAI/bge-small-en-v1.5"
+
+        def get_vocab(self):
+            return {"a": 0, "b": 1}
+
+    class TokB(TokA):
+        def get_vocab(self):
+            return {"a": 0, "b": 1, "c": 2}
+
+    with tempfile.TemporaryDirectory() as d:
+        monkeypatch.setattr(CL, "TOKCACHE", Path(d))
+        segs, man = _segs([20]), {"sha256": "abc"}
+        CL.tokenize_corpus(TokA(), segs, man, "bge-small", verbose=False)
+        CL.tokenize_corpus(TokB(), segs, man, "bge-small", verbose=False)
+        assert len(list(Path(d).iterdir())) == 2, "the vocabulary must be part of the identity"
+    assert CL.tokenizer_ident(TokA())["name_or_path"] == "BAAI/bge-small-en-v1.5"
+
+
+# ------------------------------------------------------------------------- the M10 re-screen ----
+
+def test_the_m9_pools_cannot_load_without_the_M10_rescreen_mask(monkeypatch):
+    """instructions-m10.md:462 -- the M9 pools are re-screened against the COV additions. The mask
+    is computed by `rescreen10`'s CLI; a training path reads it and REFUSES if it is absent."""
+    import rescreen10
+    with tempfile.TemporaryDirectory() as d:
+        monkeypatch.setattr(rescreen10, "CACHE", Path(d))
+        monkeypatch.setattr(rescreen10, "protected_ident", lambda: {"version": "test"})
+        with pytest.raises(SystemExit, match="rescreen10.py --queries"):
+            rescreen10.query_keep_mask(["a", "b"], "m9-test", compute=False)
+        monkeypatch.setattr(rescreen10, "_screen",
+                            lambda texts, verbose=True, label="", log_every=0: (
+                                np.array([True, False]), {"near": 1}))
+        keep, rep = rescreen10.query_keep_mask(["a", "b"], "m9-test", verbose=False)
+        assert rep["removed"] == 1 and keep.tolist() == [True, False]
+        again, _ = rescreen10.query_keep_mask(["a", "b"], "m9-test", compute=False)
+        assert again.tolist() == [True, False], "the mask is cached on the pool identity"
+        # a DIFFERENT protected index invalidates it rather than serving the stale mask
+        monkeypatch.setattr(rescreen10, "protected_ident", lambda: {"version": "test+cov"})
+        with pytest.raises(SystemExit, match="rescreen10.py --queries"):
+            rescreen10.query_keep_mask(["a", "b"], "m9-test", compute=False)
