@@ -377,3 +377,38 @@ def test_a8_action_reads_the_RAW_rate_not_the_rounded_one():
     rep = {"near_dup_rate_raw": 0.25000375, "near_dup_rate": round(0.25000375, 5)}
     assert rep["near_dup_rate"] == 0.25 and not (rep["near_dup_rate"] > C.A8_MAX_NEAR_DUP_RATE)
     assert rep["near_dup_rate_raw"] > C.A8_MAX_NEAR_DUP_RATE, "the raw rate must fire the cut"
+
+
+def test_harvest_holdout_holds_a_document_out_of_EVERY_form(tmp_path):
+    """One Wikipedia article yields a title, headings and a lead claim. Holding it out for `title`
+    only would train on that same article's `claim`, and the rule is "queries generated or
+    harvested from them are never trained on" -- not "from them, in that form"."""
+    import json
+    rows = []
+    for i in range(2000):
+        d = f"doc{i:05d}"
+        rows.append({"form": "title", "text": f"title {i}", "doc": d, "src": "wiki", "rule": "title"})
+        rows.append({"form": "claim", "text": f"claim {i}", "doc": d, "src": "wiki", "rule": "claim"})
+    p = tmp_path / "drawn.jsonl"
+    p.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    train, f12, rep = C.harvest_holdout(p, per_form=100, seed=0, verbose=False)
+
+    held = {r["doc"] for r in f12}
+    assert len(train) + len(f12) == len(rows)
+    assert not held & {r["doc"] for r in train}, "a held document must appear in no training row"
+    # every held doc contributes BOTH of its forms to the hold-out, never one to each side
+    for d in held:
+        assert sum(1 for r in f12 if r["doc"] == d) == 2
+    assert rep["held_documents"] == len(held)
+    assert set(rep["forms12_by_form"]) == {"title", "claim"}
+
+
+def test_harvest_holdout_is_deterministic(tmp_path):
+    import json
+    rows = [{"form": "title", "text": f"t{i}", "doc": f"d{i}", "src": "w", "rule": "title"}
+            for i in range(1000)]
+    p = tmp_path / "d.jsonl"
+    p.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    a = C.harvest_holdout(p, per_form=50, seed=0, verbose=False)[2]["held_documents"]
+    b = C.harvest_holdout(p, per_form=50, seed=0, verbose=False)[2]["held_documents"]
+    assert a == b == 50

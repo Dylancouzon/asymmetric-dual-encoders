@@ -315,3 +315,55 @@ def build_form(form, seed_rows, quota, *, n_per_seed=5, gate_ids=(), base=None, 
               "quota_met": len(out_final) >= quota,
               "dropped_from_build": a8["dropped_from_build"]}
     return out_final, report
+
+
+def harvest_holdout(path, per_form=HOLDOUT_PER_FORM, seed=0, out_dir=None, verbose=True):
+    """FORMS-12 for the HARVESTED forms, as a post-pass over `harvest_drawn.jsonl`.
+
+    §Data requires harvested strings to get "the same screens, quotas and hold-out as a generated
+    one", and `harvest.draw` applies neither the hold-out nor the own-source screen (Codex
+    2026-09-05, finding 2 → §Open questions W11). No re-draw is needed: every drawn row carries
+    its source `doc` id.
+
+    **The hold-out is by DOCUMENT and applies across ALL forms.** One Wikipedia article yields a
+    title, several headings and a lead claim, so holding a doc out for `title` only would train on
+    that same article's `claim` — and the rule is "queries generated or harvested from them are
+    never trained on", not "from them, in that form". 500 docs are drawn per form and the UNION is
+    withheld, so a form's realized hold-out can exceed 500 rows; the numbers are reported.
+    """
+    import json
+    from pathlib import Path
+    rows = []
+    with Path(path).open() as fh:
+        for line in fh:
+            rows.append(json.loads(line))
+    by_form = {}
+    for r in rows:
+        by_form.setdefault(r["form"], set()).add(r["doc"])
+    held = set()
+    for f in sorted(by_form):
+        ids = sorted(by_form[f] - held)          # never re-draw a doc already held for another form
+        take = min(per_form, max(len(ids) - 1, 0))
+        h, _ = holdout_seed_ids(ids, n=take, seed=seed) if take else ([], [])
+        held.update(h)
+    train = [r for r in rows if r["doc"] not in held]
+    forms12 = [r for r in rows if r["doc"] in held]
+    rep = {"path": str(path), "per_form_target": per_form, "seed": seed,
+           "n_rows": len(rows), "held_documents": len(held),
+           "train_rows": len(train), "forms12_rows": len(forms12),
+           "forms12_by_form": {f: sum(1 for r in forms12 if r["form"] == f)
+                               for f in sorted(by_form)},
+           "train_by_form": {f: sum(1 for r in train if r["form"] == f) for f in sorted(by_form)},
+           "_rule": "held by DOCUMENT across all forms; a doc held for one form is held for every "
+                    "form, since one article yields a title, headings and a claim"}
+    if out_dir:
+        d = Path(out_dir)
+        d.mkdir(parents=True, exist_ok=True)
+        for name, part in (("harvest_train.jsonl", train), ("harvest_forms12.jsonl", forms12)):
+            with (d / name).open("w") as fh:
+                for r in part:
+                    fh.write(json.dumps(r) + "\n")
+        (d / "harvest_holdout.json").write_text(json.dumps(rep, indent=1))
+    if verbose:
+        print(json.dumps(rep, indent=1), flush=True)
+    return train, forms12, rep
