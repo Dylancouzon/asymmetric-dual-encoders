@@ -1,17 +1,25 @@
-# M10 status — 2026-09-05. Steps 0a, 0b, 1, 2, 3 and 4 are DONE; nothing registered has trained; three jobs are IN FLIGHT
+# M10 status — 2026-09-05. Steps 0a, 0b, 1, 2, 3, 4 and the PAQ artifact are DONE; nothing registered has trained
 
 ## IN FLIGHT right now (check these first on a cold start)
 
 | job | how to check | ETA |
 |---|---|---|
-| **M10.0-e calibration**, arms P0/P1/P2 at 5M each | `work/m10calib_run.log`, `grep "ex/s"`; artifacts `work/m10calib/P*.json` and `P*_cov.json` | ~961 ex/s, 87 min per arm, ~3h left |
+| **M10.0-e calibration**, arms P0/P1/P2 at 5M each | `work/m10calib_run.log`, `grep "ex/s"`; artifacts `work/m10calib/P*.json` and `P*_cov.json` | P0 ~70% through; **slowed to ~875 ex/s** by CPU contention with the draw (GPU 65% → 40%) |
 | ↳ **when all three land** | run **`.venv/bin/python m10src/calib_report.py`** → `results/m10_calib_report.json`. It refuses any P arm whose `total_steps != 156250` (the smoke shares the path) or that stopped early. Then record it in LEDGER §M10.0-e and RESULTS, and log **COV read #2** in §4 | ~2 min |
-| **Wikipedia harvest pass** | `work/m10harvest_wiki.log`; report at `work/m10harvest/wiki_harvest.jsonl.report.json` | ~5,400 articles/s, ~10 min left |
-| **not started, next:** the pool `ask` pass, then `harvest.draw()` | — | ~10 min + ~1h |
+| **`harvest.draw()`** — the A3 corpus | `work/m10harvest_draw.log`; artifacts `work/m10harvest/harvest_draw.json` + `harvest_drawn.jsonl` | pass 1 done in 121s; pass 2 streams ~6.3M documents, ~20 min |
+| **arm-shape smoke**, `--max-len 128`, `nice 19` | `work/m10arm_smoke128.log`; `results/m10_arm_smoke.json` is rewritten after EVERY shape | ~15 min |
 
-A stale-artifact hazard to know about: **the 90-step smoke of `calib.run_arm` wrote to the same
-`work/m10calib/P0.json` path the real run uses.** If a real arm dies, that file is a smoke record
-that looks like a result — check `total_steps == 156250` before believing any P arm's JSON.
+**Two stale-artifact hazards.** (1) The 90-step smoke of `calib.run_arm` writes to the same
+`work/m10calib/P0.json` path the real run uses — check `total_steps == 156250` before believing any
+P arm's JSON. The stale record is moved aside to `_SMOKE_STALE_P0.json.bak`, but `calib_report.py`
+still enforces the check. (2) `calib.py:run_arm` saves a **fresh** `AdamW` beside the model, so
+`work/m10calib/P*.pt` carry **no usable optimizer state** — never warm-start an arm from them.
+
+**CPU contention is real on this box (16 cores).** Three concurrent jobs took the calibration's GPU
+from 65% to 35% and its rate from 945 to 874 ex/s; and `E-bs128` at 512 tokens **on CPU** took the
+box from 10 GB free to 2 GB, because `output_hidden_states=True` keeps every layer's states for
+128x512 positions. `nice 19` on the least urgent job fixes the first, `--max-len 128` the second.
+Check `free -g` and `nvidia-smi` before adding a fourth job.
 
 ## Where the milestone actually stands
 
@@ -21,23 +29,25 @@ that looks like a result — check `total_steps == 156250` before believing any 
 | **2b** COV resolution | **DONE — W5 answered** | **0.008619**; MDE 0.0056 sits below it. Variance: BRIGHT 50.0%, legal 32.5%, consumer-health 14.7%, finance 2.7% |
 | **teacher ceiling** | **DONE** | stella's own COV macro **0.5567** — legal 0.8845, consumer-health 0.7507, finance 0.3726, **BRIGHT 0.2191**. `results/m10_cov_teacher_ceiling.json` |
 | **3** §0a design lock | DONE, amended S1–S10 | `m10/screen_registry.json` + `screen_lock.py`, 18 tests. The anchor is its own trained arm (16 arms) |
-| **4** harvest | **arXiv DONE (4,983,385 rows), Wikipedia running, pool pass next** | Draw rule registered before any count: uniform reservoir per form, quota ≈1.25M, margin 1.5, both screens, matches removed |
-| **6** trainer port | **model, data, loop and export all DONE and tested; 43+ tests green** | `nano10` · `data10` · `trainer10` · `qfilter` · full stack verified on real data at **961 ex/s**. Still missing: the 90-step smoke of EVERY arm shape (only the anchor shape is smoked) |
+| **4** harvest | **ALL THREE PASSES DONE — 21,087,043 rows.** wiki 16,057,076 (6,407,814 articles) · arXiv 4,983,385 · pool 46,582. The draw is RUNNING | Supply is 8.8x–22x quota on every form: post-range, post-dedup **title 3,559,910 · keyword 5,924,646 · claim 6,270,443** against ~625K draws. `work/m10harvest/*.report.json` |
+| **4b** the `ask` rule | **contributes ZERO rows, and that IS the registration** | The mandate registers **five** harvested forms at ~250K (`instructions-m10.md`:366); the quota table registers three. So `factoid` (5,605) and `product` (40,977) have no quota row — **and both fall under the mandate's own "under 100K reverts to generation at ≈143K"**, which is +286K over the 1.0M generation cap = Tier 3. **Default excluded; W7 is Dylan's.** LEDGER §Harvest amendment 2026-09-05 |
+| **5** PAQ | **artifact DOWNLOADED and VERIFIED; the draw still needs a margin** | `PAQ.tar.gz` sha256 `177eefb2…`, 1,447,064,073 bytes, **64,875,601 pairs**, from `dl.fbaipublicfiles.com` — never an HF mirror. The tarball ships `PAQ/LICENSE` = the CC BY-SA 3.0 legal code, which is the primary-source grant the mandate asks for. Only the `question` field is read. `m10src/paq.py` |
+| **6** trainer port | **DONE and tested; 48+ tests green. The arm-shape smoke now exists and found two blockers** | `nano10` · `data10` · `trainer10` · `qfilter` · **`arm_smoke`**. **`G-384` could not be CONSTRUCTED** — `KeyError: 1`, `LAYERS` had no 1-layer key, so a registered arm of the locked design was unbuildable; fixed as "last layer only" per `instructions-m10.md`:616. **Two registered warm starts are UNIMPLEMENTED**: G-MLP's three-solve recipe (`warm_start_linear` raises on an MLP head) and C-M9init's zero-padded 384-d head. Both arms would train from a fresh head, biasing G3 and C1 *against* the non-default — **implement before families G and C** |
 | **W6 seed store** | **RESOLVED by Dylan** | Use `wikipedia-body`, report the measured numbers, **invent no standard**. There is no admission bar. Revisitable with reviewer approval |
 | **word-range filter** | **DONE — the largest on-form win found** | Enforcing each form's own frozen-rubric range: health **0.780 → 0.857**, finance **0.790 → 0.806**. Out-of-range queries score ~0 on-form. `results/m10_qfilter_effect.json` |
 | **5, 8–11** | not started | PAQ · generation (~10 box-h) · §0b · family F (~17 GPU-h) · family A |
 
 ## THE NEXT FIVE THINGS, in order
 
-1. **Pool `ask` pass**, then **`harvest.draw()`** — the A3 corpus. ~1h, CPU.
-2. **PAQ** from Facebook's official release (NOT an HF mirror — a wrapper tag is not evidence);
-   the 1.0M build sample and the 4.037M A2 control, seed 0, hashes pinned.
-3. **Generation**, ~10 box-hours on the GPU once the calibration arms free it. Apply `qfilter`
+1. **`.venv/bin/python m10src/paq.py --pilot 200000`** for the dedup and protected-screen loss
+   rates (dedup is ~0.002% — `PAQ.filtered` is already deduped), then set the margin and run the
+   real draw: 4.037M for A2, 1.0M **nested inside it** for the build.
+2. **Generation**, ~10 box-hours on the GPU once the calibration arms free it. Apply `qfilter`
    to the output — it is the single largest quality lever measured, and it enforces a range the
    frozen rubric already specifies.
-4. **The 90-step smoke of every arm shape** before any registered arm. §Screen requires it and
-   only the anchor shape has been smoked.
-5. **§0b**, then **family F**.
+3. **Finish the arm-shape smoke** (`E-bs128`, `D-NORM`, `D-COV` remain) and **implement the two
+   missing warm starts** before families G and C.
+4. **§0b**, then **family F**.
 
 **What the calibration result licenses, and what it does not.** It produces two numbers:
 `lr_pair.distance_raw` — a same-init contrast's paired width, which **B, D, G and C** are read

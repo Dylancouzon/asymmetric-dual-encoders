@@ -107,20 +107,27 @@ def draw(a2_quota=A2_QUOTA, build_quota=BUILD_QUOTA, margin=MARGIN, pilot=None, 
 
     t1 = time.time()
     ix = protected10.build(verbose=verbose)
+    # `hits` returns the REASON ('exact' | 'near' | 'contains' | None), not a bool -- keep the
+    # breakdown, since "how PAQ overlaps protected queries" is the interesting part of this number.
     hit = [protected10.hits(q, ix) for q in deduped]
-    survivors = [q for q, h in zip(deduped, hit) if not h]
-    n_screen = sum(hit)
+    survivors = [q for q, h in zip(deduped, hit) if h is None]
+    n_screen = sum(1 for h in hit if h is not None)
+    by_reason = {}
+    for h in hit:
+        if h is not None:
+            by_reason[h] = by_reason.get(h, 0) + 1
     if verbose:
         print(f"  protected screen: {n_screen:,} of {len(deduped):,} removed "
               f"({n_screen / max(len(deduped), 1):.2%}, {time.time() - t1:.0f}s) -> "
-              f"{len(survivors):,}", flush=True)
+              f"{len(survivors):,}  by reason {by_reason}", flush=True)
 
     rng.shuffle(survivors)          # never take a positional prefix of a file-order list
     rep = {"source": "https://dl.fbaipublicfiles.com/paq/v1/PAQ.tar.gz",
            "licence": "CC BY-SA 3.0 (PAQ/LICENSE in the tarball); attribution required",
            "fields_used": ["question"], "population": POPULATION, "seed": SEED,
            "margin": margin, "drawn": n_draw, "dedup_removed": n_dup,
-           "protected_screen_removed": n_screen, "survivors": len(survivors),
+           "protected_screen_removed": n_screen,
+           "protected_screen_by_reason": by_reason, "survivors": len(survivors),
            "pilot": pilot, "seconds": round(time.time() - t0, 1)}
     if pilot:
         rep["rates"] = {"dedup": n_dup / max(len(qs), 1),

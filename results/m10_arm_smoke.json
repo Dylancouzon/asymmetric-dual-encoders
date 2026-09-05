@@ -3,7 +3,124 @@
  "steps": 90,
  "device": "cpu",
  "n_texts": 4096,
+ "max_len": 128,
+ "shapes_registered": [
+  "ANCHOR",
+  "F-MiniLM-L6",
+  "F-MiniLM-L12",
+  "G-384",
+  "G-1536",
+  "G-MLP",
+  "B-100/0",
+  "B-50/50",
+  "E-bs128",
+  "D-NORM",
+  "D-COV",
+  "C-M9init"
+ ],
+ "shapes_run": [
+  "ANCHOR",
+  "F-MiniLM-L6",
+  "F-MiniLM-L12",
+  "G-384",
+  "G-1536",
+  "G-MLP",
+  "B-100/0"
+ ],
  "arms": [
+  {
+   "arm": "ANCHOR",
+   "spec": {
+    "student": "bge-small",
+    "n_layers": 3,
+    "head": "linear",
+    "pattern": "75/25",
+    "batch": 32,
+    "loss": "squared_l2"
+   },
+   "covers": [
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "F-bge-small"
+   ],
+   "device": "cpu",
+   "constructed": true,
+   "d_in": 1152,
+   "params": 34540672,
+   "under_cap": true,
+   "warm_start_implemented": true,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 2880,
+   "examples_per_s": 65.1,
+   "mix": {
+    "Q": 68,
+    "D": 22,
+    "q_share": 0.7555555555555555
+   },
+   "passed": true,
+   "seconds": 48.0
+  },
+  {
+   "arm": "F-MiniLM-L6",
+   "spec": {
+    "student": "MiniLM-L6",
+    "n_layers": 3,
+    "head": "linear",
+    "pattern": "75/25",
+    "batch": 32,
+    "loss": "squared_l2"
+   },
+   "covers": [],
+   "device": "cpu",
+   "constructed": true,
+   "d_in": 1152,
+   "params": 23893888,
+   "under_cap": true,
+   "warm_start_implemented": true,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 2880,
+   "examples_per_s": 113.8,
+   "mix": {
+    "Q": 68,
+    "D": 22,
+    "q_share": 0.7555555555555555
+   },
+   "passed": true,
+   "seconds": 27.5
+  },
+  {
+   "arm": "F-MiniLM-L12",
+   "spec": {
+    "student": "MiniLM-L12",
+    "n_layers": 3,
+    "head": "linear",
+    "pattern": "75/25",
+    "batch": 32,
+    "loss": "squared_l2"
+   },
+   "covers": [],
+   "device": "cpu",
+   "constructed": true,
+   "d_in": 1152,
+   "params": 34540672,
+   "under_cap": true,
+   "warm_start_implemented": true,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 2880,
+   "examples_per_s": 66.0,
+   "mix": {
+    "Q": 68,
+    "D": 22,
+    "q_share": 0.7555555555555555
+   },
+   "passed": true,
+   "seconds": 46.5
+  },
   {
    "arm": "G-384",
    "spec": {
@@ -24,17 +141,109 @@
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 46.6,
+   "examples_per_s": 67.4,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 64.3
+   "seconds": 44.5
+  },
+  {
+   "arm": "G-1536",
+   "spec": {
+    "student": "bge-small",
+    "n_layers": 4,
+    "head": "linear",
+    "pattern": "75/25",
+    "batch": 32,
+    "loss": "squared_l2"
+   },
+   "covers": [],
+   "device": "cpu",
+   "constructed": true,
+   "d_in": 1536,
+   "params": 34933888,
+   "under_cap": true,
+   "warm_start_implemented": true,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 2880,
+   "examples_per_s": 64.4,
+   "mix": {
+    "Q": 68,
+    "D": 22,
+    "q_share": 0.7555555555555555
+   },
+   "passed": true,
+   "seconds": 48.1
+  },
+  {
+   "arm": "G-MLP",
+   "spec": {
+    "student": "bge-small",
+    "n_layers": 3,
+    "head": "mlp",
+    "pattern": "75/25",
+    "batch": 32,
+    "loss": "squared_l2",
+    "warm_start": "G-MLP three-solve"
+   },
+   "covers": [],
+   "device": "cpu",
+   "constructed": true,
+   "d_in": 1152,
+   "params": 34959680,
+   "under_cap": true,
+   "warm_start_registered": "G-MLP three-solve",
+   "warm_start_implemented": false,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 2880,
+   "examples_per_s": 65.0,
+   "mix": {
+    "Q": 68,
+    "D": 22,
+    "q_share": 0.7555555555555555
+   },
+   "passed": true,
+   "seconds": 44.8
+  },
+  {
+   "arm": "B-100/0",
+   "spec": {
+    "student": "bge-small",
+    "n_layers": 3,
+    "head": "linear",
+    "pattern": "100/0",
+    "batch": 32,
+    "loss": "squared_l2"
+   },
+   "covers": [],
+   "device": "cpu",
+   "constructed": true,
+   "d_in": 1152,
+   "params": 34540672,
+   "under_cap": true,
+   "warm_start_implemented": true,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 2880,
+   "examples_per_s": 121.2,
+   "mix": {
+    "Q": 90,
+    "D": 0,
+    "q_share": 1.0
+   },
+   "passed": true,
+   "seconds": 27.0
   }
  ],
  "failed": [],
- "warm_start_not_implemented": [],
- "all_shapes_pass": true
+ "warm_start_not_implemented": [
+  "G-MLP"
+ ],
+ "all_shapes_pass": false,
+ "_partial": true
 }

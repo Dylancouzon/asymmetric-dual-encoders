@@ -9,6 +9,16 @@ them smoked at 90 steps first. Only the anchor's shape had been.
 Runs on **CPU by default** so it never contends with a training arm for the card; `--device cuda`
 when the card is free. 90 steps at batch 32 is seconds per shape either way.
 
+**On CPU, cap the sequence length for the big-batch shapes.** `E-bs128` at 512 tokens took the box
+from 10 GB free to 2 GB and cost the running calibration arm 6% of its rate (945 -> 885 ex/s):
+`output_hidden_states=True` keeps every layer's states for 128x512 positions, and CPU torch has no
+device limit to push back. `--max-len` bounds it; the GPU run does not need it, and the shape being
+smoked is the head and the loop, not the sequence length. The record says which was used.
+
+**Results are written after EVERY shape**, not at the end, so a kill or an OOM leaves the shapes
+that did pass. The first run of this file was killed during `E-bs128` to protect the calibration
+and lost all eight passing records to an end-of-run write.
+
 What it checks per shape, and why each has already caught something:
   1. the model CONSTRUCTS               -- `G-384` raised `KeyError: 1`; `LAYERS` had no 1-layer key
   2. params <= the 35M cap (hard, Dylan 2026-09-01)
@@ -79,7 +89,20 @@ def corpus(verbose=True):
     return texts, T, dtexts, dvecs
 
 
-def smoke_one(name, spec, corp, device="cpu", verbose=True):
+def _write(recs, device, max_len):
+    failed = [r["arm"] for r in recs if not r.get("passed")]
+    no_ws = [r["arm"] for r in recs if not r.get("warm_start_implemented")]
+    OUT.write_text(json.dumps(
+        {"_what": f"§Screen's registered {STEPS}-step smoke of every arm shape",
+         "steps": STEPS, "device": device, "n_texts": N_TEXTS, "max_len": max_len,
+         "shapes_registered": list(SHAPES), "shapes_run": [r["arm"] for r in recs],
+         "arms": recs, "failed": failed, "warm_start_not_implemented": no_ws,
+         "all_shapes_pass": not failed and len(recs) == len(SHAPES),
+         "_partial": len(recs) != len(SHAPES)}, indent=1))
+    return failed, no_ws
+
+
+def smoke_one(name, spec, corp, device="cpu", max_len=512, verbose=True):
     import data10 as D
     import nano10 as N
     import trainer10 as Tr
@@ -101,7 +124,7 @@ def smoke_one(name, spec, corp, device="cpu", verbose=True):
         rec["warm_start_implemented"] = False
     else:
         try:
-            X = N.pooled_features(m, texts[:256])
+            X = N.pooled_features(m, texts[:256])   # noqa: the fit itself is the check
             N.warm_start_linear(m, X, T[:256], lam=1e-4)
             rec["warm_start_implemented"] = True
         except Exception as e:
@@ -110,8 +133,8 @@ def smoke_one(name, spec, corp, device="cpu", verbose=True):
 
     b = spec["batch"]
     try:
-        qi = D.pretokenize(m.tok, texts, max_len=512)
-        di = D.pretokenize(m.tok, dtexts, max_len=512)
+        qi = D.pretokenize(m.tok, texts, max_len=max_len)
+        di = D.pretokenize(m.tok, dtexts, max_len=max_len)
         q = D.Stream(qi, T, pad_id=m.tok.pad_token_id, batch_size=b, seed=0)
         d = D.Stream(di, dvecs, pad_id=m.tok.pad_token_id, batch_size=b, seed=0)
         sigma = None
@@ -146,19 +169,17 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--device", default="cpu", choices=["cpu", "cuda"])
     ap.add_argument("--only", nargs="*", default=None)
+    ap.add_argument("--max-len", type=int, default=512,
+                    help="cap tokenized length; 128 keeps E-bs128 off the CPU memory cliff")
     a = ap.parse_args()
     names = a.only or list(SHAPES)
-    print(f"90-step arm-shape smoke on {a.device}: {len(names)} shapes", flush=True)
+    print(f"{STEPS}-step arm-shape smoke on {a.device}, max_len {a.max_len}: "
+          f"{len(names)} shapes", flush=True)
     corp = corpus()
-    recs = [smoke_one(n, SHAPES[n], corp, device=a.device) for n in names]
-    failed = [r["arm"] for r in recs if not r.get("passed")]
-    no_ws = [r["arm"] for r in recs if not r.get("warm_start_implemented")]
-    blob = {"_what": f"§Screen's registered {STEPS}-step smoke of every arm shape",
-            "steps": STEPS, "device": a.device, "n_texts": N_TEXTS,
-            "arms": recs, "failed": failed,
-            "warm_start_not_implemented": no_ws,
-            "all_shapes_pass": not failed}
-    OUT.write_text(json.dumps(blob, indent=1))
+    recs = []
+    for n in names:
+        recs.append(smoke_one(n, SHAPES[n], corp, device=a.device, max_len=a.max_len))
+        failed, no_ws = _write(recs, a.device, a.max_len)     # after EVERY shape
     print(f"\n{len(recs) - len(failed)}/{len(recs)} shapes pass; wrote {OUT}")
     if no_ws:
         print(f"registered warm start NOT implemented: {', '.join(no_ws)}")
