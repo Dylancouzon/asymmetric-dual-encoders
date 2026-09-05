@@ -644,6 +644,39 @@ thing the calibration exists to measure. Apply after M10.0-e completes and **bef
 arm**, with a test asserting the final step's LR equals `final` for a `total_steps` not divisible
 by `cycles`.
 
+### M10.0-e CALIBRATION — COMPLETE, 2026-09-05. **The screen IS viable for same-init contrasts.**
+
+Three clean full-dose arms (`total_steps` 156,250, `steps_run` 156,250, `stopped` None):
+**P0 0.477528** (seed 0, peak 1e-4) · **P1 0.476141** (seed 1, peak 1e-4) · **P2 0.473892**
+(seed 0, peak 8e-5). `results/m10_calib_report.json`; COV read #2 logged in §4.
+
+| pair | delta | lower bound | **distance** | draws SD |
+|---|---|---|---|---|
+| `lr_pair` P0−P2, same seed, LR differs | 0.00364 | 0.00076 | **0.0028773** | 0.001011 |
+| `seed_pair` P0−P1, seed differs | 0.00139 | −0.00276 | **0.0041479** | 0.001419 |
+| unrelated models (prior) | — | — | 0.0086190 | 0.003022 |
+
+**The same-init distance is 0.00288 — 0.33× the unrelated-models number, and well under the
+0.0043 a reviewer said was needed.** Implied paired SE **0.00101**, so **80% power at a true
+effect of 0.0065**, and a contrast landing exactly at the MDE now satisfies both conditions
+(`point >= 0.0056` and `lower = 0.0056 − 2.852(0.00101) = 0.0028 > 0`). The MDE is reachable for
+same-init contrasts; it was not against the unrelated-models number.
+
+**Two cautions that ride with it.** (i) **The seed pair is WIDER than the LR pair** (0.00415 vs
+0.00288) — different seeds change data order as well as init, so **0.00415 is the more
+conservative same-init bracket** for B and G, whose arms also differ in data order or
+architecture; at 0.00415 the 80%-power effect is 0.0068, still workable. (ii) A previous reviewer's
+point stands: **the LR pair brackets only B and D**; two arms differing in one scalar are the
+most-correlated pair possible, so **0.00288 is a FLOOR for G, C and A**, not their width.
+
+**Sanity check that the rule behaves:** the LR contrast itself has point 0.00364 < MDE and would
+correctly NOT resolve, despite a lower bound above zero. **Seed effect 0.00139 is n = 1** (implied
+per-arm seed SD ≈ 0.0012, 3-seed range ≈ 0.002).
+
+**W8's rule applies at band 1** (d ≤ 0.0056): **run F · ANCHOR · A · G(384/1536/MLP) · B · E · D;
+CUT C.** C is cut unconditionally — `C-M9init` at 5M starts from 3.69B tokens and wins its own
+contrast by construction.
+
 ### WHOLE-PLAN REVIEW, 2026-09-05 (Dylan asked for it: deviation · over-engineering · misses)
 
 Read-exclusion honoured, scoped greps only. **It confirms W12 independently and finds four
@@ -935,7 +968,7 @@ abandoning the coverage estimand. **The registered equal-family weighting stands
 | 2026-09-01 | cqadup-programmers, cqadup-physics (Mac diagnostics) | 43 + 43 | `results/m10_rank_probe_mac.json`, `results/m10_head_width_probe_mac.json` |
 | 2026-09-04 | frozen comparator rows of `results/perquery.json` (bge-small, leaf-ir-asym, lr-dense-pertask, opensearch, bm25) on all-6 and clean-4 | comparator-only, no nano existed | amendment A3's clean-4 bars 0.5046 / 0.5233; not a dev-surface read |
 | 2026-09-05 | **COV read #3 — the teacher ceiling.** stella scoring its own documents on the admitted surface | no candidate, no selection; the denominator retention is read against | `results/m10_cov_teacher_ceiling.json` |
-| 2026-09-05 | **COV read #2 — the M10.0-e calibration arms** (P0/P1/P2) | not registered arms, no contrast verdict; COV only, no DEV-6 / FORMS-12 / CUREv1 | `work/m10calib/P*_cov.json` |
+| 2026-09-05 | **COV read #2 — the M10.0-e calibration arms** (P0/P1/P2), **COMPLETE** | not registered arms, no contrast verdict; COV only, no DEV-6 / FORMS-12 / CUREv1. Macros 0.477528 / 0.476141 / 0.473892 | `work/m10calib/P*_cov.json`, `results/m10_calib_report.json` |
 | 2026-09-05 | **COV read #1 — the resolution number** (§Surfaces). Two non-candidate probes on the admitted surface, 13,416 queries x 2 | direction discarded by construction; no candidate, no selection | `results/m10_cov_resolution.json` |
 
 ## §5 Amendments and withdrawn claims (never compressed away)
