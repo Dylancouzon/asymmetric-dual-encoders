@@ -11,6 +11,12 @@ Nothing has trained. Dev reads below total **86 raw score reads** (43 per CQADup
 | head-width probe | `results/m10_head_width_probe_mac.json` | frozen bge-small + ridge head: 384 → 768 → 1152 features retain 27 → 33 → 37% (programmers), 36 → 41 → 44% (physics) of stella | same two components, **3 raw score reads each** |
 | three-layer head serving parity | `results/m10_head_width_parity_mac.json` | fastembed 0.8.0 reproduces the pool-then-head output to 2e-7; zero custom ops; 34.5M parameters | none |
 
+## M10.0-d COV resolution number (box, 2026-09-05) — the surface's power disclosure
+
+| run | artifact | one-line reading | dev reads |
+|---|---|---|---|
+| COV resolution number | `results/m10_cov_resolution.json`, scripts `m10src/cov_probe.py` (encode + score), `m10src/cov_macro.py` (the family-macro contrast rule), `m10src/cov_resolution.py` | **distance 0.008619**, paired SD 0.00302, implied z 2.93, on 13,416 queries across four families. The registered **MDE 0.0056 is BELOW it**, so a contrast landing at the MDE cannot resolve — §Surfaces' 0.009–0.0135 expectation, at the bottom of its band. Variance share: **BRIGHT 50.0%, legal 32.5%**, consumer-health 14.7%, **finance 2.7%** for 10,000 of the queries — family-equal weighting is why LEDGER bought dilution, not power. Direction discarded by construction (the contrast is oriented on the sign of the point estimate, so every recorded quantity is identical under either ordering) | none — COV, logged as COV read #1 in `m10/LEDGER.md` §4 |
+
 ## M10.0 rate benchmark (box, 2026-09-04; `-diag`, and one rule reads it)
 
 | run | artifact | one-line reading | dev reads |

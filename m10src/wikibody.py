@@ -132,3 +132,152 @@ if __name__ == "__main__":
     for row in r["rows"][:40]:
         print(f"\n{row['title']}\n  ...lead ends: {row['last_lead_line']}\n"
               f"  heading -> {row['heading']!r}  body_words={row.get('body_words')}")
+
+
+def scan(limit=None, out=None, log_every=50_000):
+    """Full-dump pass in dump order -> JSONL of admitted seed chunks. No sampling, so no
+    sampling question: the pilot's 5x prefix bias (13.1 chunks/article on 2001-02 core articles
+    vs 4.57 on a shuffled sample) is exactly why a prefix projection is not the registered number.
+
+    One line per admitted chunk: article id and title, form, score, chunk index, text.
+    """
+    import re as _re, time
+    import seeds as S
+    pats = {f: _re.compile(S.ROUTE[f], _re.I) for f in FORMS}
+    out = Path(out or (OUT / "wikibody_seeds.jsonl"))
+    out.parent.mkdir(parents=True, exist_ok=True)
+    n_art = n_chunk = n_kept = 0
+    per_form = {f: 0 for f in FORMS}
+    t0 = time.time()
+    with out.open("w") as fh:
+        for r in stream(limit):
+            n_art += 1
+            cs = chunks(body(r["text"]), S.MIN_WORDS, S.MAX_WORDS)
+            n_chunk += len(cs)
+            taken = {f: 0 for f in FORMS}
+            for ci, c in enumerate(cs):
+                for f, p in pats.items():           # first-fit, the draw's priority order
+                    sc = S._score(p, c)
+                    if sc >= MIN_SCORE:
+                        if taken[f] < PER_ARTICLE_CAP:
+                            taken[f] += 1
+                            per_form[f] += 1
+                            n_kept += 1
+                            fh.write(json.dumps({"aid": r["id"], "title": r["title"], "form": f,
+                                                 "score": sc, "chunk_i": ci, "text": c}) + "\n")
+                        break
+            if n_art % log_every == 0:
+                el = time.time() - t0
+                print(f"  {n_art:,} articles ({n_art/el:.0f}/s, {el/60:.1f}m), "
+                      f"{n_chunk:,} chunks, kept {n_kept:,} {per_form}", flush=True)
+                fh.flush()
+    rep = dict(repo=REPO_ID, config=CONFIG, revision=REVISION, licence=LICENCE,
+               forms=list(FORMS), min_score=MIN_SCORE, per_article_cap=PER_ARTICLE_CAP,
+               length_window=[40, 220], lead_excluded=True,
+               n_articles=n_art, n_body_chunks=n_chunk, n_kept=n_kept, per_form=per_form,
+               seconds=round(time.time() - t0, 1), path=str(out))
+    (OUT / "wikibody_scan.json").write_text(json.dumps(rep, indent=1))
+    print(json.dumps(rep, indent=1))
+    return rep
+
+
+# ---- screening and the build draw ---------------------------------------------------------
+
+def _load_jsonl(path=None):
+    path = Path(path or (OUT / "wikibody_seeds.jsonl"))
+    rows = [json.loads(l) for l in path.open()]
+    seen, out = set(), []
+    rows.sort(key=lambda r: (-r["score"], r["aid"], r["chunk_i"]))
+    for r in rows:
+        k = " ".join(r["text"].split()).lower()
+        if k in seen:
+            continue
+        seen.add(k)
+        out.append(r)
+    return rows, out
+
+
+def screen(rows, verbose=True):
+    """-> (kept_rows, report). Every registered screen, and a match is REMOVED, not disclosed.
+
+    Query side: the M10 protected index (six + dev + reserved QUERIES, plus admitted COV queries
+    and documents) via `m10src/protected10`. Document side: an `Inverted` index over the
+    candidates with the six's documents, the four DEV components' documents and the admitted COV
+    components' documents streamed against it — M7's direction of travel, the same hash functions
+    and the same >= 8/32 near-match threshold the COV admission screen used.
+
+    Reserved-set DOCUMENTS are still not covered and cannot be without opening those corpora
+    (`m10/LEDGER.md` §3 W4). Lead exclusion is what bounds that exposure here: DBpedia-entity is
+    abstracts and FEVER is introductory sections, and this store carries neither.
+    """
+    import time
+    import decontam
+    import protected10
+    import cov_screen
+    from cov_admit import COMPONENTS
+
+    texts = [r["text"] for r in rows]
+    t0 = time.time()
+    idx = protected10.build(verbose=verbose)
+    q_drop = {i for i, t in enumerate(texts) if protected10.hits(t, idx)}
+    if verbose:
+        print(f"  query-side: {len(q_drop):,} of {len(texts):,} dropped "
+              f"({time.time()-t0:.0f}s)", flush=True)
+
+    inv = decontam.Inverted([decontam.all_grams(t) for t in texts],
+                            [decontam.exact_u64(t) for t in texts])
+    d_drop, per_stream = set(), {}
+    def run_stream(name, it):
+        t1, n, before = time.time(), 0, len(d_drop)
+        for d in it:
+            n += 1
+            ex, near = inv.match(d, cov_screen.MIN_SHARE)
+            d_drop.update(ex.tolist()); d_drop.update(near.tolist())
+        per_stream[name] = dict(streamed=n, new_drops=len(d_drop) - before,
+                                seconds=round(time.time() - t1, 1))
+        if verbose:
+            print(f"  {name}: {n:,} docs streamed, {per_stream[name]['new_drops']:,} new drops "
+                  f"({per_stream[name]['seconds']:.0f}s)", flush=True)
+
+    run_stream("six-docs", decontam.stream_six_docs())
+    import devsuite
+    for comp in devsuite.COMPONENTS:
+        run_stream(f"dev:{comp}", decontam.stream_dev_component_docs(comp))
+    for family, comps in COMPONENTS.items():
+        for name, repo, rev in comps:
+            _qs, ds = cov_screen.load_component(name, repo, rev)
+            run_stream(f"cov:{name}", iter(ds))
+
+    drop = q_drop | d_drop
+    kept = [r for i, r in enumerate(rows) if i not in drop]
+    rep = dict(n_candidates=len(rows), dropped_query_side=len(q_drop),
+               dropped_document_side=len(d_drop), dropped_total=len(drop),
+               kept=len(kept), per_stream=per_stream,
+               seconds=round(time.time() - t0, 1))
+    return kept, rep
+
+
+def draw(per_form, path=None, verbose=True):
+    """The BUILD's seed selection: top-score-first per form over the screened store.
+
+    Top-score-first is `seeds.draw`'s registered ordering and is kept, so the gate judges the
+    population the build actually uses (the Fable pass's condition 6). If the gate fails on it,
+    the registered next lever is category-membership routing — never a relaxed floor.
+    """
+    raw, dedup = _load_jsonl(path)
+    kept, srep = screen(dedup, verbose=verbose)
+    out, counts = {}, {}
+    for f in FORMS:
+        rows = [r for r in kept if r["form"] == f]          # already score-sorted
+        out[f] = rows[:per_form]
+        counts[f] = dict(admitted=len(rows), taken=len(out[f]),
+                         short=max(0, per_form - len(rows)),
+                         min_score_taken=min((r["score"] for r in out[f]), default=None),
+                         max_score_taken=max((r["score"] for r in out[f]), default=None))
+    rep = dict(per_form=per_form, n_raw=len(raw), n_after_exact_dedup=len(dedup),
+               screen=srep, counts=counts, store="wikipedia-body",
+               repo=REPO_ID, config=CONFIG, revision=REVISION)
+    (OUT / "wikibody_draw.json").write_text(json.dumps(rep, indent=1))
+    if verbose:
+        print(json.dumps(counts, indent=1))
+    return out, rep

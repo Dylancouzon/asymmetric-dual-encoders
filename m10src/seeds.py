@@ -149,10 +149,12 @@ def draw(forms_wanted, per_form=40, pool_size=400_000, seed=0, store="hotpotqa-c
               + ", ".join(f"{f}={len(ranked[f])}" for f in topical), flush=True)
 
     if screen:
-        import decontam
-        q_ex, q_gram, whole, counts = decontam.protected_query_index()
+        # The M10 protected index, not M7's: §Data requires the admitted COV queries AND
+        # documents to be in it before any seed is drawn (`m10src/protected10`, cached).
+        import protected10
+        q_ex, q_gram, whole, counts = protected10.build(verbose=verbose)
         if verbose:
-            print(f"  protected query index: {counts}", flush=True)
+            print(f"  protected index ({protected10.VERSION}): {counts}", flush=True)
 
     n_screened = n_dropped = 0
     def ok(i):
@@ -213,14 +215,17 @@ def draw(forms_wanted, per_form=40, pool_size=400_000, seed=0, store="hotpotqa-c
 # Bumped whenever the screen's SCOPE changes (e.g. COV joins the protected index). A cached
 # draw made under an older scope can then never be served -- the old blocker was a cache key of
 # `smoke-{per_form}-{forms}`, which ignored store, seed, min_score, pool size and the screen.
-SCREEN_VERSION = "2026-09-04c-protected-queries-only+ROUTE(T2-3)"
+SCREEN_VERSION = "2026-09-05-protected10(six+dev+reserved-q+COV-q+d)+ROUTE(T2-3)"
 
 
 def _key(forms_wanted, per_form, kw):
     ident = dict(forms=sorted(forms_wanted), per_form=per_form, screen=SCREEN_VERSION,
                  store=kw.get("store", "hotpotqa-corpus"), seed=kw.get("seed", 0),
                  pool_size=kw.get("pool_size", 400_000), min_score=kw.get("min_score", 4),
-                 screened=kw.get("screen", True), route={f: ROUTE[f] for f in sorted(forms_wanted)},
+                 screened=kw.get("screen", True),
+                 # the route ACTUALLY passed, not `ROUTE` unconditionally: a draw made under
+                 # `ROUTE_WIDE` must not be servable from a cache keyed as if it were `ROUTE`
+                 route={f: (kw.get("route") or ROUTE)[f] for f in sorted(forms_wanted)},
                  lengths=[MIN_WORDS, MAX_WORDS])
     h = hashlib.blake2b(json.dumps(ident, sort_keys=True).encode(), digest_size=8).hexdigest()
     return h, ident
