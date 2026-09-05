@@ -469,6 +469,16 @@ so this contradicts the registration; it is a defect, not a choice. Verified:
   which is the same argument `calib.py` already makes for its fixed lambda, so **the paired widths
   and the seed effect stand**; the absolute macros are of a model one peak-LR step past annealing.
 
+**Two neighbouring trainer semantics, verified while tracing this, that a screen-arm runner must
+not get wrong.** (i) The mix window is exact — `100/0` → `QQQQ`, `75/25` → `QQQD`, `50/50` → `QQDD`,
+q_share 1.0 / 0.75 / 0.50 — so families B and the anchor are what they claim. (ii) **`stopped =
+"plateau at cycle 3"` on a 3-cycle screen arm does NOT mean the arm failed.** `PLATEAU_FROM_CYCLE`
+is 3 and screen arms run 3 cycles, so the plateau rule can only ever fire at the FINAL cycle end —
+the arm has completed its dose and stops one step short. Anything that reads a non-empty `stopped`
+as "unusable arm" (as `calib_report.py` correctly does for the P arms, which pass no `eval_fn` and
+so can never trip either rule) would wrongly discard a complete screen arm. Read `stopped` together
+with the cycle index.
+
 **Fix, and its timing constraint.** Clamp the last cycle to the end of training, e.g. carry the
 remainder into the final cycle so `within` never wraps, or clamp `within` to `per - 1` on the last
 cycle. **It must NOT be applied while the P arms are running** — P0 trained under the current
