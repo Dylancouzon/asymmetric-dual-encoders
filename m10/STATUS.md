@@ -13,7 +13,10 @@
 | **protected10** | **DONE (was runbook item 3 of the next-three)** | `seeds.draw` now screens against the M10 protected index — six + dev + reserved queries **plus admitted COV queries AND documents**. 464,757 COV fingerprints cached. `SCREEN_VERSION` bumped; `_key` no longer hardcodes `ROUTE` |
 | **7 (part)** family-F parity | **DONE — all six heads PASS** | bge-small · MiniLM-L6 · MiniLM-L12 at 3 and 4 layers, min-cos ≥ **0.99999988** through fastembed, zero custom ops, all under the 35M cap. A first run read 0.93–0.95 and would have disqualified both MiniLM students; diagnosed, see the hard-won facts. `results/m10_student_parity_box.json` |
 | **W3 seed supply** | **supply SOLVED (72,826 health seeds vs a ~33K need); the gate FAILED and the CONTROL is the finding** | New store **`wikipedia-body`** (T2-5, Tier 2, Fable-reviewed, registered before its scan): body paragraphs (**lead excluded**) of `wikimedia/wikipedia@20231101.en`, **unchanged** `ROUTE` and `min_score ≥ 4`, cap 3 seeds/article/form, health and finance only. Full-dump scan running at ~2,000 articles/s. The shortfall is closed by corpus size, not by lowering any bar |
-| **4–11** | not started | next: finish the scan → draw → the judged precision gate; then step 4 harvest |
+| **4** harvest (arXiv half) | **DONE** | Dylan supplied a Kaggle token, so the registered artifact was used and no substitution was needed. 3,148,882 records → 3,148,792 unique version-stripped ids; `default_rng(0).choice(N, 100,000)`; first 2,000 are the queries; 0 empty titles/abstracts; zip sha256 in §0b. All 100,000 base ids excluded from every training role; the 2,000 queries and abstracts are **in the protected index**. `m10src/arxiv_draw.py`. The extraction rules over arXiv/Wikipedia/ESCI are still to do |
+| **T2-7** on-form diagnostic | **DONE — report-only, admits nothing** | `wikipedia-body` **0.780** vs incumbent 0.735 (health, z = +1.05) and **0.790** vs 0.635 (finance, z = **+3.48**). Mechanism measured: on-form given an ON-subject seed 0.83–0.94, given an OFF-subject seed 0.50–0.66 — seed precision propagates but does not determine. No diversity collapse in any arm. **For Dylan: the approved prompts read 0.735 / 0.635 on the REAL build population, below the 0.80 the forms were approved at** |
+| **6** trainer port | **part done, all tested** | `m10src/nano10.py` + `test_nano10.py` (14 tests, CPU): the per-token head pooled AFTER the head, with the commutation algebra proved both ways; padding proved inert; the ridge warm start on pooled features proved identical to per-token; the exact 4-step mix window; the cyclic schedule and its cycle ends; D-NORM as the norm; **D-COV rebuilt as the registered quadratic form after I had written it as a diagonal weight**; the kill and plateau rules; and the ONNX token-output export with parity **0.99999994** on a real bge-small. **Still to do: the train loop itself, `test_resume.py`, the examples/s counter, and the 90-step smoke of every arm shape** |
+| **5, 8–11** | not started | next: close the seed loop, then PAQ, then the train loop |
 
 ## THE NEXT THREE THINGS, in order
 
@@ -26,7 +29,12 @@
    is Dylan's. **Do not move the bar.** Every failure class the judges named is an article-SUBJECT
    error (physician biographies, institutions, animal disease, reference fragments, "bank" as a
    landform), so the registered next lever is the subject filter and it is aimed correctly.
-1. ~~**Finish `wikipedia-body` and gate it.**~~ DONE — see 0. `m10src/wikibody.py`: `scan()` (running) → `draw(per_form)`
+1. **Close the seed loop.** The re-scan (labelled with T2-8 rung 1's subject class per row) is
+   running; then `wikibody.draw(per_form=33000)` — which now drops every row whose article's lead
+   sentence fired a reject class — and then **re-gate against the UNCHANGED 0.80**, sampling the
+   NEW drawn pool (a filtered store's top 33K is a different population). Rung 1 rejects ~23% of
+   health and ~39% of finance rows on a prefix sample, leaving ~56K and ~102K against a 33K need.
+   If rung 1 clears 0.80, stop there — **no trying rung 2 "to see"**. `m10src/wikibody.py`: `scan()` (running) → `draw(per_form)`
    → **the judged precision gate**. The gate is the whole decision and it is what killed
    `ROUTE_WIDE`: **200 uniform-random seeds per form from the population `draw()` actually
    returns** (top-score-first), judged by an independent Fable subagent against the frozen
