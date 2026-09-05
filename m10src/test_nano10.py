@@ -120,8 +120,8 @@ def test_the_objectives_are_distinct_and_leaf_is_the_norm_not_the_square():
     sq, nm = N.loss_sq_l2(p, t), N.loss_norm_e2(p, t)
     assert abs(float(nm) - float((p - t).norm(dim=-1).mean())) < 1e-6
     assert abs(float(sq) - float(nm)) > 1e-3, "D-NORM must not collapse onto the anchor"
-    w = torch.ones(32) * 2.0
-    assert abs(float(N.loss_cov_weighted(p, t, w)) - 2 * float(sq)) < 1e-5
+    # D-COV with Σ = 2I must be exactly twice the anchor: the quadratic form's sanity check
+    assert abs(float(N.loss_cov_weighted(p, t, torch.eye(32) * 2.0)) - 2 * float(sq)) < 1e-5
 
 
 def test_layer_indices_match_the_registered_spec():
@@ -129,6 +129,74 @@ def test_layer_indices_match_the_registered_spec():
     assert N.LAYERS["MiniLM-L6"][3] == (6, 4, 2)
     assert N.LAYERS["MiniLM-L6"][4] == (6, 4, 2, 1)
     assert N.LAYERS["MiniLM-L12"][4] == (12, 8, 4, 2)
+
+
+
+
+# ---- D-COV, and the kill and plateau rules ----------------------------------------------------
+
+def test_dcov_is_a_quadratic_form_not_a_diagonal_weight():
+    """The registered loss is `(s-t)^T Σ (s-t)`. A diagonal would keep the coordinate basis, and
+    the entire claim is that error should be charged along the directions documents differ in."""
+    g = torch.Generator().manual_seed(2)
+    d = 8
+    p = torch.randn(16, d, generator=g)
+    t = torch.randn(16, d, generator=g)
+    sig = torch.eye(d)
+    assert abs(float(N.loss_cov_weighted(p, t, sig)) - float(N.loss_sq_l2(p, t))) < 1e-5
+    # a rotation with the SAME diagonal must change the loss, or it is diagonal in disguise
+    q, _ = torch.linalg.qr(torch.randn(d, d, generator=g))
+    lam = torch.linspace(0.2, 2.0, d)
+    rot = q @ torch.diag(lam) @ q.T
+    diag_only = torch.diag(torch.diagonal(rot))
+    assert abs(float(N.loss_cov_weighted(p, t, rot))
+               - float(N.loss_cov_weighted(p, t, diag_only))) > 1e-3
+
+
+def test_cov_matrix_is_unit_trace_symmetric_psd_at_every_alpha():
+    rng = np.random.default_rng(3)
+    X = rng.normal(size=(400, 12))
+    for a in (0.0, 0.1, 0.5, 1.0):
+        S = N.cov_matrix(X, alpha=a)
+        assert abs(np.trace(S) - 1.0) < 1e-9, (a, np.trace(S))
+        assert np.abs(S - S.T).max() < 1e-12
+        assert np.linalg.eigvalsh(S).min() > -1e-12
+    assert np.abs(N.cov_matrix(X, alpha=1.0) - np.eye(12) / 12).max() < 1e-12
+
+
+def test_kill_needs_two_CONSECUTIVE_drops_of_its_own_kind():
+    kind = lambda i: "mid" if i % 2 == 0 else "end"
+    # T2-9: "two consecutive" is read as consecutive IN THE SCHEDULE, so a midpoint and the cycle
+    # end after it must BOTH be below their own kind's best.
+    evals = [0.50, 0.60, 0.4900, 0.5900, 0.48, 0.58]
+    fired, why = N.kill_fires(evals, kind)
+    assert fired, why
+    # the reading that was NOT taken: two successive MIDPOINTS drop while every cycle end keeps
+    # improving. Under the schedule reading this does not fire, and that is the point of T2-9.
+    assert not N.kill_fires([0.50, 0.60, 0.4900, 0.61, 0.4800, 0.62], kind)[0]
+    # one drop, then a recovery of the same kind, must NOT fire
+    assert not N.kill_fires([0.50, 0.60, 0.49, 0.61, 0.505, 0.62], kind)[0]
+    # a drop within the 0.0056 tolerance is not a drop
+    assert not N.kill_fires([0.50, 0.60, 0.4950, 0.61, 0.4951, 0.62], kind)[0]
+    # a non-finite evaluation fires on its own
+    assert N.kill_fires([0.5, float("nan")], kind)[0]
+    assert N.kill_fires([0.5, None], kind)[0]
+
+
+def test_kill_compares_within_kind_only():
+    """Midpoints sit below cycle ends by construction; comparing across kinds would fire at once."""
+    kind = lambda i: "mid" if i % 2 == 0 else "end"
+    assert not N.kill_fires([0.40, 0.60, 0.41, 0.61, 0.42, 0.62], kind)[0]
+
+
+def test_plateau_is_best_to_best_from_cycle_three():
+    assert N.plateau_fires([0.50, 0.60, 0.70, 0.80]) == (False, None)
+    assert N.plateau_fires([0.50, 0.60, 0.6020]) == (True, 3)      # gain 0.002 < 0.003
+    assert N.plateau_fires([0.50, 0.60, 0.6031]) == (False, None)  # gain 0.0031 >= 0.003
+    # best-to-best, not last-to-last: a dip then a small recovery still plateaus
+    assert N.plateau_fires([0.50, 0.70, 0.60, 0.7010])[0] is True
+    # cycles 1 and 2 can never fire it
+    assert N.plateau_fires([0.50, 0.50]) == (False, None)
 
 
 if __name__ == "__main__":

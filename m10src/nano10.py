@@ -189,18 +189,91 @@ def loss_norm_e2(pred, target):
     return (pred - target).norm(dim=-1).mean()
 
 
-def loss_cov_weighted(pred, target, w):
-    """D-COV — document-covariance-weighted regression (§Recipe, PLANNING §13 idea 8).
+def loss_cov_weighted(pred, target, sigma):
+    """D-COV — `L = (s - t)^T Σ (s - t)`, the registered form (§Recipe).
 
-    `w` is a fixed per-dimension weight vector derived from the DOCUMENT pool's covariance, so
-    error in directions the document distribution actually uses costs more. Frozen before the arm
-    runs; it is data about the corpus, not a learned parameter.
+    Σ is the FULL covariance of the pool's frozen stella DOCUMENT vectors, unit-trace normalised
+    and shrunk as `(1-α)Σ̂ + αI/1024` with α = 0.1 fixed. Not a per-dimension weight: a diagonal
+    would keep the coordinate basis, and the whole claim is that error should be charged in the
+    directions documents actually differ along, which are not axis-aligned. Plain L2 is
+    reconstruction and spends a rank-limited output equally on every direction of the teacher's
+    query space; this spends it where nDCG is decided.
+
+    Frozen before the arm runs — it is data about the corpus, never a learned parameter.
     """
-    return (w * (pred - target) ** 2).sum(-1).mean()
+    d = pred - target
+    return ((d @ sigma) * d).sum(-1).mean()
+
+
+def cov_matrix(doc_vecs, alpha=0.10):
+    """Σ for D-COV: unit-trace normalised, shrunk toward the identity. Computed ONCE from
+    document vectors that already exist. α is fixed at 0.10 and is never tuned on a surface."""
+    X = np.asarray(doc_vecs, dtype=np.float64)
+    X = X - X.mean(0, keepdims=True)
+    S = (X.T @ X) / max(len(X) - 1, 1)
+    S = S / np.trace(S)                              # unit trace, as registered
+    d = S.shape[0]
+    # `(1-α)Σ̂ + αI/d`: the shrunk matrix also has unit trace, so α is a pure mixing weight and
+    # cannot rescale the loss. That invariance is what makes D-COV comparable to the anchor at
+    # the same learning rate, and it is asserted in `test_nano10`.
+    return (1 - alpha) * S + alpha * np.eye(d) / d
 
 
 LOSSES = {"squared_l2": loss_sq_l2, "leaf_norm_e2": loss_norm_e2,
           "document_covariance_weighted": loss_cov_weighted}
+
+
+# ---- the kill and plateau rules (§Kill) -------------------------------------------------------
+
+KILL_DROP, PLATEAU_MIN_GAIN, PLATEAU_FROM_CYCLE = 0.0056, 0.003, 3
+
+
+def kill_fires(evals, kind_of, drop=KILL_DROP):
+    """§Kill: two CONSECUTIVE scheduled evaluations more than `drop` below the best evaluation OF
+    THEIR OWN KIND — midpoints against midpoints, cycle ends against cycle ends — so the rule can
+    fire INSIDE a build and not only at its end (Opus M5).
+
+    **A registered rule with two readings, and the plain one is implemented (T2-9).**
+    "Two consecutive scheduled evaluations" can mean consecutive in the SCHEDULE (a midpoint and
+    the cycle end after it, each below its own kind's best) or consecutive WITHIN a kind (two
+    successive midpoints). The schedule reading is the plain sense of the words and is the safer
+    of the two: it demands both kinds be failing at once, where the per-kind reading kills an arm
+    on two bad midpoints alone. A false kill costs a whole arm, and the rule's stated purpose —
+    "so the rule can fire inside the build and not only at its end" — is served either way,
+    because it is satisfied by midpoints entering the comparison at all.
+
+    `evals` is the ordered list of scheduled evaluation values; `kind_of(i)` returns that
+    evaluation's kind. A non-finite value fires immediately: that is the other half of the rule.
+    -> (fired, reason)
+    """
+    best = {}
+    bad = 0
+    for i, m in enumerate(evals):
+        if m is None or not np.isfinite(m):
+            return True, f"non-finite evaluation at index {i}"
+        k = kind_of(i)
+        b = best.get(k)
+        if b is not None and m < b - drop:
+            bad += 1
+            if bad >= 2:
+                return True, (f"two consecutive evaluations more than {drop} below the best of "
+                              f"their own kind (index {i}, kind {k!r}, {m:.4f} vs best {b:.4f})")
+        else:
+            bad = 0
+        best[k] = m if b is None else max(b, m)
+    return False, None
+
+
+def plateau_fires(cycle_end_evals, min_gain=PLATEAU_MIN_GAIN, from_cycle=PLATEAU_FROM_CYCLE):
+    """§Kill: read BEST-TO-BEST on annealed checkpoints only. Fires at the first cycle end
+    k >= `from_cycle` (1-based) where `m_k - max(m_1..m_{k-1}) >= min_gain` FAILS. Independent of
+    the cycle cap (Opus M6, Codex 2026-09-04). -> (fired, cycle_index_1based or None)
+    """
+    for k in range(from_cycle, len(cycle_end_evals) + 1):
+        gain = cycle_end_evals[k - 1] - max(cycle_end_evals[:k - 1])
+        if gain < min_gain:
+            return True, k
+    return False, None
 
 
 # ---- the 4-step mix window (family B) --------------------------------------------------------
