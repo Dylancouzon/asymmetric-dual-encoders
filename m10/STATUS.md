@@ -7,7 +7,7 @@
 | **M10.0-e calibration**, arms P0/P1/P2 at 5M each | `work/m10calib_run.log`, `grep "ex/s"`; artifacts `work/m10calib/P*.json` and `P*_cov.json` | P0 ~70% through; **slowed to ~875 ex/s** by CPU contention with the draw (GPU 65% → 40%) |
 | ↳ **when all three land** | run **`.venv/bin/python m10src/calib_report.py`** → `results/m10_calib_report.json`. It refuses any P arm whose `total_steps != 156250` (the smoke shares the path) or that stopped early. Then record it in LEDGER §M10.0-e and RESULTS, and log **COV read #2** in §4 | ~2 min |
 | **`harvest.draw()`** — the A3 corpus | `work/m10harvest_draw.log`; artifacts `work/m10harvest/harvest_draw.json` + `harvest_drawn.jsonl` | pass 1 done in 121s; pass 2 streams ~6.3M documents, ~20 min |
-| **arm-shape smoke**, `--max-len 128`, `nice 19` | `work/m10arm_smoke128.log`; `results/m10_arm_smoke.json` is rewritten after EVERY shape | ~15 min |
+| **PAQ pilot** — dedup and protected-screen loss rates | `work/m10paq/pilot.log`; `work/m10paq/paq_pilot.json` | ~3 min |
 
 **Two stale-artifact hazards.** (1) The 90-step smoke of `calib.run_arm` writes to the same
 `work/m10calib/P0.json` path the real run uses — check `total_steps == 156250` before believing any
@@ -32,7 +32,7 @@ Check `free -g` and `nvidia-smi` before adding a fourth job.
 | **4** harvest | **ALL THREE PASSES DONE — 21,087,043 rows.** wiki 16,057,076 (6,407,814 articles) · arXiv 4,983,385 · pool 46,582. The draw is RUNNING | Supply is 8.8x–22x quota on every form: post-range, post-dedup **title 3,559,910 · keyword 5,924,646 · claim 6,270,443** against ~625K draws. `work/m10harvest/*.report.json` |
 | **4b** the `ask` rule | **contributes ZERO rows, and that IS the registration** | The mandate registers **five** harvested forms at ~250K (`instructions-m10.md`:366); the quota table registers three. So `factoid` (5,605) and `product` (40,977) have no quota row — **and both fall under the mandate's own "under 100K reverts to generation at ≈143K"**, which is +286K over the 1.0M generation cap = Tier 3. **Default excluded; W7 is Dylan's.** LEDGER §Harvest amendment 2026-09-05 |
 | **5** PAQ | **artifact DOWNLOADED and VERIFIED; the draw still needs a margin** | `PAQ.tar.gz` sha256 `177eefb2…`, 1,447,064,073 bytes, **64,875,601 pairs**, from `dl.fbaipublicfiles.com` — never an HF mirror. The tarball ships `PAQ/LICENSE` = the CC BY-SA 3.0 legal code, which is the primary-source grant the mandate asks for. Only the `question` field is read. `m10src/paq.py` |
-| **6** trainer port | **DONE and tested; 48+ tests green. The arm-shape smoke now exists and found two blockers** | `nano10` · `data10` · `trainer10` · `qfilter` · **`arm_smoke`**. **`G-384` could not be CONSTRUCTED** — `KeyError: 1`, `LAYERS` had no 1-layer key, so a registered arm of the locked design was unbuildable; fixed as "last layer only" per `instructions-m10.md`:616. **Two registered warm starts are UNIMPLEMENTED**: G-MLP's three-solve recipe (`warm_start_linear` raises on an MLP head) and C-M9init's zero-padded 384-d head. Both arms would train from a fresh head, biasing G3 and C1 *against* the non-default — **implement before families G and C** |
+| **6** trainer port | **DONE. The arm-shape smoke is COMPLETE — 12/12 pass, all under the 35M cap** (`results/m10_arm_smoke.json`, CPU, `max_len 128`) | `nano10` · `data10` · `trainer10` · `qfilter` · **`arm_smoke`**. **`G-384` could not be CONSTRUCTED** — `KeyError: 1`, `LAYERS` had no 1-layer key, so a registered arm of the locked design was unbuildable; fixed as "last layer only" per `instructions-m10.md`:616. **Two registered warm starts are UNIMPLEMENTED**: G-MLP's three-solve recipe (`warm_start_linear` raises on an MLP head) and C-M9init's zero-padded 384-d head. Both arms would train from a fresh head, biasing G3 and C1 *against* the non-default — **implement before families G and C** |
 | **W6 seed store** | **RESOLVED by Dylan** | Use `wikipedia-body`, report the measured numbers, **invent no standard**. There is no admission bar. Revisitable with reviewer approval |
 | **word-range filter** | **DONE — the largest on-form win found** | Enforcing each form's own frozen-rubric range: health **0.780 → 0.857**, finance **0.790 → 0.806**. Out-of-range queries score ~0 on-form. `results/m10_qfilter_effect.json` |
 | **5, 8–11** | not started | PAQ · generation (~10 box-h) · §0b · family F (~17 GPU-h) · family A |
@@ -45,8 +45,10 @@ Check `free -g` and `nvidia-smi` before adding a fourth job.
 2. **Generation**, ~10 box-hours on the GPU once the calibration arms free it. Apply `qfilter`
    to the output — it is the single largest quality lever measured, and it enforces a range the
    frozen rubric already specifies.
-3. **Finish the arm-shape smoke** (`E-bs128`, `D-NORM`, `D-COV` remain) and **implement the two
-   missing warm starts** before families G and C.
+3. **Implement the two missing warm starts** before families G and C — G-MLP's three-solve
+   recipe (`instructions-m10.md`:616 specifies it exactly) and C-M9init's zero-padded 384-d head
+   (`instructions-m10.md`:510). Until then both arms would start from a fresh head, which biases
+   G3 and C1 *against* adopting the non-default.
 4. **§0b**, then **family F**.
 
 **What the calibration result licenses, and what it does not.** It produces two numbers:
