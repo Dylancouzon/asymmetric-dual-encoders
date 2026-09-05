@@ -248,6 +248,9 @@ def load_segments(names, head_per_source=None, verbose=True):
                 new = [Segment(sg.name, sg.texts[:head_per_source], sg.forms[:head_per_source],
                                sg.array, sg.rowmap[:head_per_source]) for sg in new]
             _texts, _forms, sman = source_texts(name)
+            if head_per_source:
+                sman["head_per_source"] = head_per_source
+                sman["n_rows"] = sum(len(sg) for sg in new)
         else:
             texts, forms, sman = source_texts(name, limit=head_per_source)
             cache = cache or targets10.TargetCache()
@@ -271,8 +274,11 @@ def load_segments(names, head_per_source=None, verbose=True):
         for fid, c in zip(*np.unique(s.forms, return_counts=True)):
             by_form[FORMS[int(fid)]] = by_form.get(FORMS[int(fid)], 0) + int(c)
     man["by_form"] = dict(sorted(by_form.items()))
+    # The identity is the CORPUS, not the run: `seconds` is a wall-clock measurement and would
+    # otherwise put a fresh hash -- and so a fresh pretokenization -- on every single load.
+    stable = [{k: v for k, v in sm.items() if k != "seconds"} for sm in man["sources"]]
     man["sha256"] = hashlib.sha256(
-        json.dumps({"sources": man["sources"], "n": man["n_rows"]}, sort_keys=True,
+        json.dumps({"sources": stable, "n": man["n_rows"]}, sort_keys=True,
                    default=str).encode()).hexdigest()
     return segs, man
 

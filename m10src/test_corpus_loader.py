@@ -279,3 +279,29 @@ def test_the_token_cache_identity_binds_the_cut_not_just_the_source_list(monkeyp
                                extra_ident={"data_cut": {"applied": True, "n_after": 20}})
         assert len(a) == len(b) == 40
         assert len(list(Path(d).iterdir())) == 2, "the cut must be part of the cache identity"
+
+
+def test_the_manifest_identity_is_the_corpus_and_not_the_run(monkeypatch):
+    """`seconds` is a wall-clock measurement: leaving it inside the hashed view would put a fresh
+    identity -- and so a fresh pretokenization of 5.3M texts -- on every load."""
+    seen = {}
+
+    def fake(name, limit=None):
+        seen[name] = seen.get(name, 0) + 1
+        return ["a", "b"], ["claim", "title"], {"source": name, "sha256": "x", "n_rows": 2,
+                                                "by_form": {"claim": 1, "title": 1}}
+
+    class Cache:
+        def rows_for(self, texts):
+            return np.arange(len(texts))
+
+        def vecs(self):
+            return np.ones((2, 8), dtype=np.float16)
+
+    import targets10
+    monkeypatch.setattr(CL, "source_texts", fake)
+    monkeypatch.setattr(targets10, "TargetCache", lambda *a, **k: Cache())
+    monkeypatch.setitem(CL.SOURCES, "fake", {"kind": "jsonl", "path": "/dev/null", "what": "t"})
+    a = CL.load_segments(["fake"], verbose=False)[1]
+    b = CL.load_segments(["fake"], verbose=False)[1]
+    assert a["sha256"] == b["sha256"] and a["by_form"] == {"claim": 1, "title": 1}
