@@ -1,0 +1,17 @@
+{
+ "n_total": 404416,
+ "n_ge8": 312790,
+ "screen_ge8": {
+  "n_candidates": 312790,
+  "index_mb": 213.0,
+  "six_docs_streamed": 272117,
+  "protected_queries_streamed": 25834,
+  "hits_vs_six_docs_exact": 0,
+  "hits_vs_six_docs_near": 23,
+  "hits_vs_protected_queries_exact": 0,
+  "hits_vs_protected_queries_near": 1,
+  "seconds": 120.2,
+  "total_flagged": 24,
+  "flagged_frac": 8e-05
+ }
+}

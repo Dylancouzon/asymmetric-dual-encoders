@@ -50,6 +50,23 @@ row points at; this file records the decision, the number a rule reads, and the 
 
 ## §2 COV admission records — fill at M10.0-d, one row per component
 
+Structures verified and screened 2026-09-04 (`work/m10cov/structure.json`, `work/m10cov/screen.json`,
+`m10src/cov_admit.py`, `m10src/cov_screen.py`). Licence column is the `m10/COV_CANDIDATES.md` finding,
+unchanged. Screen = M7 fingerprints, near-match ≥ 8/32; candidate-side `Inverted`, the six's documents
+and the full protected query index streamed against it. **Reserved DOCUMENT side not screened — W4.**
+
+| component | family | repo · revision | licence at primary source | corpus / queries / qrels / metric | fingerprint screen vs the six's docs + protected queries | verdict |
+|---|---|---|---|---|---|---|
+| MedicalQARetrieval | `consumer-health` | `mteb/medical_qa` · `a77efe81` | CC BY 4.0 at MedQuAD; HF card tags CC0, mismatch disclosed | 2,048 / 2,048 / 2,048 binary; nDCG@10 | **0 exact, 0 near**, both sides | **ADMIT** |
+| BRIGHT (6 slices) | `BRIGHT` | `xlangai/BRIGHT` · `3066d29c` | CC BY 4.0 at the primary source; documents are third-party pages, caveat disclosed (Codex dissent recorded in COV_CANDIDATES) | 404,416 docs / 632 queries across biology 57,359·103, earth-science 121,249·116, economics 50,220·103, psychology 52,835·101, robotics 61,961·101, sustainable-living 60,792·108; graded; slices averaged into one family macro | queries **0/0**. Documents: the raw count is 6,123 exact, and **it is an artefact** — BRIGHT ships 91,626 documents under 8 words (23% of the corpus; 4,606 are the literal `".\n"`, 676 `"copy link"`). Restricted to the 312,790 documents at or above the 8-word fingerprint floor: **0 exact, 23 near (0.008%)** (`work/m10cov/bright_len_filtered.json`) | **ADMIT** as one family, unfiltered so it stays the published benchmark; the boilerplate share is a disclosed corpus property, not a contamination finding |
+| LegalBenchCorporateLobbying | `legal` | `mteb/legalbench_corporate_lobbying` · `f4343695` | CC BY 4.0 (LegalBench README) | 319 / 340 / 340 binary | **0 exact, 0 near** | **ADMIT** (weak component, tiny corpus) |
+| LegalBenchConsumerContractsQA | `legal` | `mteb/legalbench_consumer_contracts_qa` · `f9eafd45` | CC BY-NC 4.0 — admissible for validation under Dylan's 2026-09-04 rule; COV never enters training | 154 / 396 / 396 binary | **0 exact, 0 near** | **ADMIT** |
+| LEDGER (artefactory) | `finance` | to pin | data CC BY 4.0, code MIT | 4,999 reports / 118,048 questions; needs a chunk rule and the 100K cap | not yet run | **PENDING** — the optional fourth family |
+
+**Family floor: PASSED, at the floor.** Three family IDs admitted (`consumer-health`, `BRIGHT`,
+`legal`); the registered STOP is "fewer than three". `finance` would make four iff LEDGER verifies.
+No component shows contamination against the six.
+
 | component | family | repo · revision | licence at primary source (URL) | corpus / queries / qrels / metric | corpus-level contamination check | fingerprint screen vs six + reserved | verdict |
 |---|---|---|---|---|---|---|---|
 

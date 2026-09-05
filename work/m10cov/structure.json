@@ -1,0 +1,1141 @@
+{
+ "MedicalQARetrieval": {
+  "family": "consumer-health",
+  "repo": "mteb/medical_qa",
+  "revision": "a77efe81ec0c03aff7fecde742a5c9c4c46f6005",
+  "structure": {
+   "default": {
+    "test": {
+     "n": 2048,
+     "cols": [
+      "query-id",
+      "corpus-id",
+      "score"
+     ]
+    }
+   },
+   "corpus": {
+    "corpus": {
+     "n": 2048,
+     "cols": [
+      "_id",
+      "title",
+      "text"
+     ]
+    }
+   },
+   "queries": {
+    "queries": {
+     "n": 2048,
+     "cols": [
+      "_id",
+      "text"
+     ]
+    }
+   }
+  },
+  "seconds": 1.9
+ },
+ "BRIGHT": {
+  "family": "BRIGHT",
+  "repo": "xlangai/BRIGHT",
+  "revision": "3066d29c9651a576c8aba4832d249807b181ecae",
+  "structure": {
+   "Gemini-1.0_reason": {
+    "biology": {
+     "n": 103,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "earth_science": {
+     "n": 116,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "economics": {
+     "n": 103,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "psychology": {
+     "n": 101,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "robotics": {
+     "n": 101,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "stackoverflow": {
+     "n": 117,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "sustainable_living": {
+     "n": 108,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "leetcode": {
+     "n": 142,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "pony": {
+     "n": 112,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "aops": {
+     "n": 111,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "theoremqa_questions": {
+     "n": 194,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "theoremqa_theorems": {
+     "n": 76,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    }
+   },
+   "claude-3-opus_reason": {
+    "biology": {
+     "n": 103,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "earth_science": {
+     "n": 116,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "economics": {
+     "n": 103,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "psychology": {
+     "n": 101,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "robotics": {
+     "n": 101,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "stackoverflow": {
+     "n": 117,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "sustainable_living": {
+     "n": 108,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "leetcode": {
+     "n": 142,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "pony": {
+     "n": 112,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "aops": {
+     "n": 111,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "theoremqa_questions": {
+     "n": 194,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "theoremqa_theorems": {
+     "n": 76,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    }
+   },
+   "documents": {
+    "biology": {
+     "n": 57359,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "earth_science": {
+     "n": 121249,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "economics": {
+     "n": 50220,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "psychology": {
+     "n": 52835,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "robotics": {
+     "n": 61961,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "stackoverflow": {
+     "n": 107081,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "sustainable_living": {
+     "n": 60792,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "pony": {
+     "n": 7894,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "leetcode": {
+     "n": 413932,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "aops": {
+     "n": 188002,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "theoremqa_theorems": {
+     "n": 23839,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "theoremqa_questions": {
+     "n": 188002,
+     "cols": [
+      "id",
+      "content"
+     ]
+    }
+   },
+   "examples": {
+    "biology": {
+     "n": 103,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "earth_science": {
+     "n": 116,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "economics": {
+     "n": 103,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "psychology": {
+     "n": 101,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "robotics": {
+     "n": 101,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "stackoverflow": {
+     "n": 117,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "sustainable_living": {
+     "n": 108,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "pony": {
+     "n": 112,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "leetcode": {
+     "n": 142,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "aops": {
+     "n": 111,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "theoremqa_theorems": {
+     "n": 76,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "theoremqa_questions": {
+     "n": 194,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    }
+   },
+   "gpt4_reason": {
+    "biology": {
+     "n": 103,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "earth_science": {
+     "n": 116,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "economics": {
+     "n": 103,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "psychology": {
+     "n": 101,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "robotics": {
+     "n": 101,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "stackoverflow": {
+     "n": 117,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "sustainable_living": {
+     "n": 108,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "leetcode": {
+     "n": 142,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "pony": {
+     "n": 112,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "aops": {
+     "n": 111,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "theoremqa_questions": {
+     "n": 194,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "theoremqa_theorems": {
+     "n": 76,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    }
+   },
+   "grit_reason": {
+    "biology": {
+     "n": 103,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "earth_science": {
+     "n": 116,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "economics": {
+     "n": 103,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "psychology": {
+     "n": 101,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "robotics": {
+     "n": 101,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "stackoverflow": {
+     "n": 117,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "sustainable_living": {
+     "n": 108,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "leetcode": {
+     "n": 142,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "pony": {
+     "n": 112,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "aops": {
+     "n": 111,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "theoremqa_questions": {
+     "n": 194,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "theoremqa_theorems": {
+     "n": 76,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    }
+   },
+   "llama3-70b_reason": {
+    "biology": {
+     "n": 103,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "earth_science": {
+     "n": 116,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "economics": {
+     "n": 103,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "psychology": {
+     "n": 101,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "robotics": {
+     "n": 101,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "stackoverflow": {
+     "n": 117,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "sustainable_living": {
+     "n": 108,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "leetcode": {
+     "n": 142,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "pony": {
+     "n": 112,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "aops": {
+     "n": 111,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "theoremqa_questions": {
+     "n": 194,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    },
+    "theoremqa_theorems": {
+     "n": 76,
+     "cols": [
+      "query",
+      "reasoning",
+      "id",
+      "excluded_ids",
+      "gold_ids_long",
+      "gold_ids",
+      "gold_answer"
+     ]
+    }
+   },
+   "long_documents": {
+    "biology": {
+     "n": 524,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "earth_science": {
+     "n": 601,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "economics": {
+     "n": 516,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "psychology": {
+     "n": 512,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "robotics": {
+     "n": 508,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "stackoverflow": {
+     "n": 1858,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "sustainable_living": {
+     "n": 554,
+     "cols": [
+      "id",
+      "content"
+     ]
+    },
+    "pony": {
+     "n": 577,
+     "cols": [
+      "id",
+      "content"
+     ]
+    }
+   }
+  },
+  "seconds": 2.7
+ },
+ "LegalBenchCorporateLobbying": {
+  "family": "legal",
+  "repo": "mteb/legalbench_corporate_lobbying",
+  "revision": "f43436957b41692dd3e1b06a6d7116cd09f6a1db",
+  "structure": {
+   "default": {
+    "test": {
+     "n": 340,
+     "cols": [
+      "query-id",
+      "corpus-id",
+      "score"
+     ]
+    }
+   },
+   "corpus": {
+    "corpus": {
+     "n": 319,
+     "cols": [
+      "_id",
+      "title",
+      "text"
+     ]
+    }
+   },
+   "queries": {
+    "queries": {
+     "n": 340,
+     "cols": [
+      "_id",
+      "text"
+     ]
+    }
+   }
+  },
+  "seconds": 2.8
+ },
+ "LegalBenchConsumerContractsQA": {
+  "family": "legal",
+  "repo": "mteb/legalbench_consumer_contracts_qa",
+  "revision": "f9eafd458f9c61e531d4a2510d8a11dfd2282b21",
+  "structure": {
+   "default": {
+    "test": {
+     "n": 396,
+     "cols": [
+      "query-id",
+      "corpus-id",
+      "score"
+     ]
+    }
+   },
+   "corpus": {
+    "corpus": {
+     "n": 154,
+     "cols": [
+      "_id",
+      "title",
+      "text"
+     ]
+    }
+   },
+   "queries": {
+    "queries": {
+     "n": 396,
+     "cols": [
+      "_id",
+      "text"
+     ]
+    }
+   }
+  },
+  "seconds": 1.2
+ }
+}
