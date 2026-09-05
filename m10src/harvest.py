@@ -210,6 +210,53 @@ def arxiv_pass(out_path=None, log_every=500_000, verbose=True):
     return rep
 
 
+# routing for the `ask` rule, BY THE SOURCE CORPUS as registered. Neither Wikipedia nor arXiv is
+# question-bearing, so this rule only fires over the pool documents, and it is run rather than
+# quietly skipped: a registered rule that yields little should report a small number, not nothing.
+ASK_ROUTE = {"hotpotqa-corpus": "factoid", "squad-ctx": "factoid",
+             "mrtydi-docs": "factoid", "esci-prod": "product"}
+
+
+def pool_pass(stores=None, out_path=None, log_every=1_000_000, verbose=True):
+    """The `ask` rule over the approved pool documents: sentences ending in `?`, with the
+    preceding sentence kept as optional body, routed to a form by which store they came from."""
+    import time
+    import mix
+    OUT.mkdir(parents=True, exist_ok=True)
+    out_path = Path(out_path or (OUT / "pool_harvest.jsonl"))
+    partial = out_path.with_suffix(out_path.suffix + ".partial")
+    per_rule, n_docs = {}, 0
+    t0 = time.time()
+    with partial.open("w") as fh:
+        for store in (stores or list(ASK_ROUTE)):
+            form = ASK_ROUTE[store]
+            ids, texts = mix.load_store(store)
+            if verbose:
+                print(f"  {store}: {len(texts):,} documents -> {form}", flush=True)
+            for i, t in enumerate(texts):
+                n_docs += 1
+                if "?" not in t:                       # the cheap reject first: most documents
+                    continue
+                for q, body in asks_from(t):
+                    k = (store, form)
+                    per_rule[k] = per_rule.get(k, 0) + 1
+                    fh.write(json.dumps({"rule": "ask", "form": form, "text": q, "body": body,
+                                         "src": store, "doc": ids[i]}) + "\n")
+                if verbose and n_docs % log_every == 0:
+                    print(f"    {n_docs:,} documents ({n_docs / (time.time() - t0):.0f}/s), "
+                          f"{sum(per_rule.values()):,} rows", flush=True)
+    partial.replace(out_path)
+    rep = {"source": "pool", "stores": list(stores or ASK_ROUTE), "n_documents": n_docs,
+           "rows": sum(per_rule.values()),
+           "by_store_form": {f"{a}/{b}": c for (a, b), c in sorted(per_rule.items())},
+           "seconds": round(time.time() - t0, 1), "path": str(out_path),
+           "bytes": out_path.stat().st_size, "complete": stores is None}
+    Path(str(out_path) + ".report.json").write_text(json.dumps(rep, indent=1))
+    if verbose:
+        print(json.dumps(rep, indent=1), flush=True)
+    return rep
+
+
 if __name__ == "__main__":
     which = sys.argv[1] if len(sys.argv) > 1 else "both"
     lim = int(sys.argv[2]) if len(sys.argv) > 2 else None
@@ -217,3 +264,141 @@ if __name__ == "__main__":
         wikipedia_pass(limit=lim)
     if which in ("arxiv", "both"):
         arxiv_pass()
+    if which in ("pool", "both"):
+        pool_pass()
+
+
+# ---- the A3 draw and its screens ------------------------------------------------------------
+#
+# REGISTERED BEFORE THE DRAW RUNS. Quota ≈1.25M harvested strings across the three forms the
+# rules actually yield (`title`, `keyword`, `claim`), plus whatever the `ask` rule returns.
+#
+# **Draw rule:** for each form, a UNIFORM random sample (seed 0) over the union of every source's
+# rows for that form, after exact-text dedup — not weighted, not balanced, not scored. Harvested
+# text has no score to sort by, and uniform is the choice that preserves the corpus's own
+# distribution, which is the entire reason the arm is called "real text". **The realized source
+# mix is REPORTED, not fixed in advance**, so nobody has to defend a split nobody measured.
+#
+# **Screens, identical to a generated string's** (§Harvest: "the same screens, quotas and hold-out
+# as a generated one"): the M10 protected index on the query side, and the six's documents, the
+# four DEV components' documents and the admitted COV components' documents streamed against a
+# candidate-side `Inverted` on the document side. Matches are REMOVED. A margin is drawn so the
+# quota still fills after removals; running out raises rather than returning a short draw.
+
+QUOTA = {"title": 417_000, "keyword": 417_000, "claim": 416_000}
+DRAW_SEED, MARGIN = 0, 1.5
+
+
+def _iter_rows(paths):
+    for p in paths:
+        pp = Path(p)
+        if not pp.exists():
+            continue
+        with pp.open() as fh:
+            for line in fh:
+                yield json.loads(line)
+
+
+def draw(quota=None, margin=MARGIN, paths=None, verbose=True):
+    """-> ({form: [row]}, report). Uniform per form, deduped, then screened; matches removed."""
+    import time
+    import numpy as np
+    import decontam
+    import protected10
+    import cov_screen
+    import devsuite
+    from cov_admit import COMPONENTS
+    quota = quota or QUOTA
+    paths = paths or [OUT / "wiki_harvest.jsonl", OUT / "arxiv_harvest.jsonl",
+                      OUT / "pool_harvest.jsonl"]
+    t0 = time.time()
+
+    # pass 1: reservoir per form, so 21M rows never sit in memory at once
+    want = {f: int(margin * n) for f, n in quota.items()}
+    rng = np.random.default_rng(DRAW_SEED)
+    res, seen_n, seen_txt = {f: [] for f in want}, {f: 0 for f in want}, set()
+    src_mix = {}
+    for r in _iter_rows(paths):
+        f = r["form"]
+        if f not in want:
+            continue
+        k = " ".join(r["text"].split()).lower()
+        if k in seen_txt:
+            continue
+        seen_txt.add(k)
+        seen_n[f] += 1
+        if len(res[f]) < want[f]:
+            res[f].append(r)
+        else:                                   # Vitter's reservoir: uniform over the stream
+            j = int(rng.integers(0, seen_n[f]))
+            if j < want[f]:
+                res[f][j] = r
+    for f, rows in res.items():
+        for r in rows:
+            src_mix[(f, r["src"], r["rule"])] = src_mix.get((f, r["src"], r["rule"]), 0) + 1
+    if verbose:
+        print(f"  reservoir: " + ", ".join(f"{f}={len(v):,}/{seen_n[f]:,}"
+                                           for f, v in res.items())
+              + f"  ({time.time() - t0:.0f}s)", flush=True)
+
+    # pass 2: the screens, both directions, matches REMOVED
+    flat = [r for f in sorted(res) for r in res[f]]
+    texts = [r["text"] for r in flat]
+    idx = protected10.build(verbose=verbose)
+    q_drop = {i for i, t in enumerate(texts) if protected10.hits(t, idx)}
+    if verbose:
+        print(f"  query-side: {len(q_drop):,} of {len(texts):,} dropped", flush=True)
+    inv = decontam.Inverted([decontam.query_grams(t) for t in texts],
+                            [decontam.exact_u64(t) for t in texts])
+    d_drop, per_stream = set(), {}
+
+    def run_stream(name, it):
+        t1, n, before = time.time(), 0, len(d_drop)
+        for d in it:
+            n += 1
+            ex, near = inv.match(d, cov_screen.MIN_SHARE)
+            d_drop.update(ex.tolist()); d_drop.update(near.tolist())
+        per_stream[name] = dict(streamed=n, new_drops=len(d_drop) - before,
+                                seconds=round(time.time() - t1, 1))
+        if verbose:
+            print(f"  {name}: {n:,} streamed, {per_stream[name]['new_drops']:,} new drops "
+                  f"({per_stream[name]['seconds']:.0f}s)", flush=True)
+
+    run_stream("six-docs", decontam.stream_six_docs())
+    for comp in devsuite.COMPONENTS:
+        run_stream(f"dev:{comp}", decontam.stream_dev_component_docs(comp))
+    for _family, comps in COMPONENTS.items():
+        for name, repo, rev in comps:
+            _qs, ds = cov_screen.load_component(name, repo, rev)
+            run_stream(f"cov:{name}", iter(ds))
+
+    drop = q_drop | d_drop
+    kept = {f: [] for f in quota}
+    for i, r in enumerate(flat):
+        if i not in drop:
+            kept[r["form"]].append(r)
+    out, counts = {}, {}
+    for f, n in quota.items():
+        if len(kept[f]) < n and seen_n[f] > want[f]:
+            raise SystemExit(f"{f}: {len(kept[f]):,} survived of a {want[f]:,} draw for a "
+                             f"{n:,} quota -- widen `margin` rather than take a short draw")
+        out[f] = kept[f][:n]
+        counts[f] = dict(available=seen_n[f], drawn=want[f], survived=len(kept[f]),
+                         taken=len(out[f]), short=max(0, n - len(kept[f])))
+    rep = dict(quota=quota, margin=margin, seed=DRAW_SEED,
+               draw_rule="uniform reservoir per form over the union of sources, after exact-text "
+                         "dedup; source mix reported not fixed",
+               counts=counts,
+               source_mix={f"{a}/{b}/{c}": n for (a, b, c), n in sorted(src_mix.items())},
+               screen=dict(n_candidates=len(texts), dropped_query_side=len(q_drop),
+                           dropped_document_side=len(d_drop), dropped_total=len(drop),
+                           per_stream=per_stream),
+               seconds=round(time.time() - t0, 1))
+    (OUT / "harvest_draw.json").write_text(json.dumps(rep, indent=1))
+    with (OUT / "harvest_drawn.jsonl").open("w") as fh:
+        for f in sorted(out):
+            for r in out[f]:
+                fh.write(json.dumps(r) + "\n")
+    if verbose:
+        print(json.dumps(counts, indent=1), flush=True)
+    return out, rep

@@ -85,6 +85,41 @@ allocation and `max_extension_cycles` are neither — they are fixed at the M10.
 - Teacher-target cache keys. ~~bank, mining method, recall@64 audit~~ — struck with the ranking-aware class (amendment A1).
 - `results/m10_data_manifest.json` sha256.
 
+### §Harvest — the A3 real-text pipeline, REGISTERED 2026-09-05 before its draw ran
+
+Four extraction rules, exactly the registered set, deterministic and with no model in the loop
+(`m10src/harvest.py`, `m10src/test_harvest.py`):
+
+| rule | text | form | source |
+|---|---|---|---|
+| `title` | titles as-is | `title` / `keyword` by the frozen rubric's own ranges | Wikipedia, arXiv |
+| `heading` | section headings as-is, apparatus sections dropped | `title` / `keyword` | Wikipedia |
+| `claim` | declarative LEAD sentences, 8–40 words, a finite verb, no first person | `claim` | Wikipedia, arXiv |
+| `ask` | sentences ending in `?`, preceding sentence kept as optional body | `factoid` / `product`, routed by the SOURCE store | the pool corpora |
+
+**Draw rule, fixed before the numbers:** per form, a **uniform reservoir** (seed 0) over the union
+of every source's rows after exact-text dedup — not weighted, not balanced, not scored. Harvested
+text has no score to sort by, and uniform preserves the corpus's own distribution, which is the
+whole point of an arm called "real text". **The realized source mix is REPORTED, never fixed in
+advance.** Quota 417K / 417K / 416K ≈ 1.25M, margin 1.5.
+
+**Screens are a generated string's, verbatim:** the M10 protected index on the query side; the
+six's documents, all four DEV components' documents and every admitted COV component's documents
+streamed against a candidate-side `Inverted` on the document side. Matches REMOVED. Running out of
+margin raises rather than returning a short draw.
+
+**Disclosures.** The `claim` rule **under-fires by design**: its finite-verb test is a closed,
+explicit list after a unit case caught a regular-inflection branch firing on the plural noun in
+"nine plain nouns", admitting a bare noun phrase as a claim — English plurals and third-person
+verbs share a suffix and no regex separates them, and a parser would be the model the rule is
+registered not to have. Supply is millions and never binding; a non-sentence in the `claim` form
+is a real defect. **The reserved-DOCUMENT gap (W4) applies here exactly as to seeds**: a harvested
+Wikipedia lead sentence can be near-identical to a DBpedia-entity abstract and no fingerprint
+exists to catch it. **ESCI queries are NOT harvested** — they are real user queries already in the
+M9 pool through `esci-us`, so harvesting them would double-count arm A1's data into A3. The
+rubric's ranges leave a **gap between 4 and 6 words** (keyword ends at 4, title starts at 6), so
+5-word titles are dropped; a property of the frozen rubric, disclosed rather than patched.
+
 ## §2 COV admission records — fill at M10.0-d, one row per component
 
 Structures verified and screened 2026-09-04 (`work/m10cov/structure.json`, `work/m10cov/screen.json`,
