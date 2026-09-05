@@ -644,6 +644,54 @@ thing the calibration exists to measure. Apply after M10.0-e completes and **bef
 arm**, with a test asserting the final step's LR equals `final` for a `total_steps` not divisible
 by `cycles`.
 
+### WHOLE-PLAN REVIEW, 2026-09-05 (Dylan asked for it: deviation · over-engineering · misses)
+
+Read-exclusion honoured, scoped greps only. **It confirms W12 independently and finds four
+REQUIRED-but-unbuilt items, one of which is the actual blocker to family F.**
+
+**MISSED — required by the mandate, no artifact, and NOT on the next-five list:**
+
+| # | what | why it matters |
+|---|---|---|
+| **M1** | **The M10 corpus→trainer path DOES NOT EXIST.** `data10.py` loads only the M9 pool (`:33-53`). No loader for harvested / PAQ / generated rows, **no form-balanced sampler** (the registered anchor default, mandate `:480-485`; zero hits for `balanc` in `m10src/`), and no teacher-target encode for **~6.3M new stella query encodes**. `STATUS.md` calls the trainer port DONE — it is done **for A1's data only** | **THIS is the blocker between "data built" and "family F starts", and I had not named it** |
+| **M2** | **A8 gate 2 (MS MARCO dev distribution overlap) has no code, no sample, no plan line.** Mandate `:467-475`, required "before any arm"; `corpus10.py` explicitly punts it | it is the **one outside measurement of M9's failure mode** the plan has. ~1 h |
+| **M3** | **CUREv1 admission (decision 12) was never executed.** Mandate `:199` requires revision, licence clause, provenance, fingerprint screen, and joining the protected index | **the harvest, PAQ and seed draws were screened against an index that lacks it.** Pre-observation, so fixable: re-screen or disclose before anything is read |
+| **M4** | **M10.0-c baseline** — per-component DEV-6 read of the M9 candidate incl. `heldout-longq` (mandate `:310`, runbook step 7). Minutes on the box | it is **the denominator every retention-vs-M9 comparison needs** |
+| M5 | `arxiv-title` has a draw but no scoring path (mandate `:683-690`); §2 licence rows for arXiv CC0 and the Wikipedia attribution line | descriptive / disclosure |
+
+**OVER-ENGINEERING — verdicts, and it is right.** *Delete:* `m10src/a8_blindspot.py` (one-shot
+evidence; its numbers are frozen in `results/m10_a8_blindspot.json` and tabulated here) ·
+`near_dup_gate(against=)`'s dual reading and its test (the `"representative"` mode has no caller
+but that test) · `corpus10`'s pilot diagnostics except `diversity_report`'s rising-curve check
+(`prop_near_dup_rate` is a second copy of `a8_blindspot.prop_rate`) · the `_was_blind`/`rule`
+history prose emitted into every manifest record · `seeds.ROUTE_WIDE` (withdrawn, still carried
+with cache-key branches) · **five `test_screen_lock` prose assertions** (`"TRUNCATED at 5M" in
+schedule` etc.) which **break on a wording edit and pass on a wrong rule**. *Keep:* the two-regime
+A8 gate (~25 lines, ruled, and it changed the answer), `arm_smoke` (it found three real defects) —
+but its `SHAPES` is a **hand copy of the registry that can drift silently**; derive it or assert
+coverage. **The deeper lesson, and it is mine:** ~1,100 lines across `wikibody`/`seeds`/
+`gate_sample`/`onform_diag`, six judged gates, a three-rung ladder and two withdrawn rules, for
+two forms that are **~8% of the corpus**, ending at W6 = *no admission bar, report the numbers*.
+And **review history is written into code docstrings** — the tightness rule applies there too; a
+one-line pointer to the LEDGER entry is the fix.
+
+**HIGHEST-VALUE UNPLANNED ITEM, ZERO COMPUTE:** pre-register, in the M10.2 lock, a **paired
+M9-candidate vs M10-candidate row on the six and clean-4** — same teacher, same student family,
+same cap, same frozen comparator vectors, per-dataset retention beside it. **It is the only
+measurement anywhere in the plan that tests coverage on the surfaces coverage was designed for**
+(scidocs↔titles, scifact↔claims, nfcorpus/trec-covid↔headings), and it is the paper's frontier
+delta. Labelled confounded (the recipe changed too); the causal version is the matched
+near-full-dose control the budget can only buy if the screen is cut. **Must be registered before
+any M10 six-set number exists.**
+
+**Deviations beyond the two known** (all disclosed or ruled, listed so the mandate can be amended
+once): 16 arms vs the mandate's 15 · F1/F2 two-sided · A2−A1's build action removed in the
+registry · keyword `ROUTE` instead of "stratified by top-level category" · `max_tokens` per query
+× n · `qfilter` added to the screen list · **COV was registered as "read by no M10 decision" and
+has now been read three times pre-arm, so that property is gone** · FORMS-12 applied as a post-pass
+rather than "FIRST" · **C-M9init warm-starts `step450000.pt` = 3.69B tokens, not the 3.74B plateau
+checkpoint** — disclose in `arms.C-M9init`.
+
 ### W8 — reviewer recommendation, 2026-09-05 (Dylan: *"whatever gives us the best result without over engineering, ask reviewer for recommendations"*)
 
 **Three corrections to my framing first.** (i) **The screen costs ZERO dollars** — amendment A7
