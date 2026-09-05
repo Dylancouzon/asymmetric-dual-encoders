@@ -1,0 +1,75 @@
+{
+ "n_sample": 200,
+ "seed": 11,
+ "gate": 0.8,
+ "blinded": true,
+ "forms": {
+  "health": {
+   "wikipedia-body": {
+    "n": 200,
+    "on_topic": 131,
+    "rate": 0.655,
+    "se": 0.0336,
+    "screened_pool": 51633,
+    "can_supply_33k": true
+   },
+   "incumbent": {
+    "n": 200,
+    "on_topic": 119,
+    "rate": 0.595,
+    "se": 0.0347,
+    "screened_pool": 8663,
+    "can_supply_33k": false
+   },
+   "incumbent-filtered": {
+    "n": 200,
+    "on_topic": 154,
+    "rate": 0.77,
+    "se": 0.0298,
+    "screened_pool": 6625,
+    "can_supply_33k": false
+   },
+   "PASSES_GATE": false,
+   "gate": 0.8,
+   "filter_effect": {
+    "on_wikipedia_body": 0.11,
+    "on_incumbent": 0.175
+   }
+  },
+  "finance": {
+   "incumbent": {
+    "n": 200,
+    "on_topic": 70,
+    "rate": 0.35,
+    "se": 0.0337,
+    "screened_pool": 19466,
+    "can_supply_33k": false
+   },
+   "wikipedia-body": {
+    "n": 200,
+    "on_topic": 107,
+    "rate": 0.535,
+    "se": 0.0353,
+    "screened_pool": 97137,
+    "can_supply_33k": true
+   },
+   "incumbent-filtered": {
+    "n": 200,
+    "on_topic": 98,
+    "rate": 0.49,
+    "se": 0.0353,
+    "screened_pool": 11672,
+    "can_supply_33k": false
+   },
+   "PASSES_GATE": false,
+   "gate": 0.8,
+   "filter_effect": {
+    "on_wikipedia_body": 0.0,
+    "on_incumbent": 0.14
+   }
+  }
+ },
+ "_finding": "T2-8 rung 1 WORKS ON HEALTH AND NOT ON FINANCE, and nothing reaches 0.80. Health: the filter moves `wikipedia-body` 0.545 -> 0.655 (+0.110) and the incumbent 0.595 -> 0.770 (+0.175). Finance: it moves `wikipedia-body` 0.535 -> 0.535 (+0.000) and the incumbent 0.350 -> 0.490. The residual failure classes the six judges named are exactly what a definitional-pattern regex cannot reach: institutions whose lead is not definitional, bare lists of journal names and JEL codes, and word-sense errors inside a genuine-looking lead ('market' as a physical marketplace, 'bank' as a riverbank, 'trade' as a craft, 'Banker' as a mycologist's surname).",
+ "_the_tradeoff_for_dylan": "The highest health precision measured anywhere in this project is the FILTERED INCUMBENT at 0.770 \u2014 one SE below the bar \u2014 and its screened pool is 6,625 against a 33,000 need. The best-precision option cannot supply the build. `wikipedia-body` + rung 1 supplies 51,633 at 0.655. That is the trade Dylan is choosing between, and W6 is what decides whether either is admissible at all.",
+ "_registered_outcome": "The gate is >= 0.80 and unchanged. `wikipedia-body` is STILL NOT ADOPTED. The ladder (T2-8) says stop at the first rung that clears 0.80; rung 1 did not, so **rung 2 \u2014 LLM classification of the lead sentence \u2014 is next as registered**. Note for whoever runs it: the residual wikibody failures include chunks that are off-topic inside an ON-subject article, which a LEAD-sentence classifier of any kind cannot see. Classifying per CHUNK would reach them, but that is a different lever from the one T2-8 registered and choosing it now, after these numbers, is an amendment that needs a Fable pass first."
+}

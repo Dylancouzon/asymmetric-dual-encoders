@@ -168,6 +168,19 @@ Copied from `instructions-m10.md` §Owner decisions as each is taken, with date 
 
 | 2026-09-05 | (this commit) | **T2-10 — the RE-GATE's design, fixed before the filtered pool exists.** Three arms, not two: `wikipedia-body` **+ rung 1** (the candidate, gated at the unchanged 0.80) · the incumbent **unfiltered** (the same control as the first gate, so the two gates are comparable) · the incumbent **+ rung 1** (reported) | two arms as before; three arms | (no consultation — this adds a CONTROL to the existing instrument, not a fourth instrument, so Fable's stop rule is not touched) | three arms | Without the third arm a pass is ambiguous between "the filter works" and "`wikipedia-body` is better", and those license different next steps. An intro passage IS its article's lead, so the subject patterns apply to the incumbent's passages directly. Reported only: Fable's note stands that filtering cannot rescue the incumbent's SUPPLY (8,663 × 0.59 ≈ 5.1K against a 33K need), so this arm is about precision alone. Sampling is uniform within each arm's own pool, blinded and interleaved in one permutation, 200 per arm per form, batches of 200, the frozen `RUBRIC` the only standard — every constant unchanged from the first gate |
 
+**T2-8 rung 1 RESULT (2026-09-05, `results/m10_wikibody_precision-r1.json`).** Three arms, 600 judged items per form, six independent judges, gate unchanged at 0.80.
+
+| form | `wikipedia-body` + rung 1 | incumbent | incumbent + rung 1 | gate |
+|---|---|---|---|---|
+| health | **0.655** (was 0.545, **+0.110**) | 0.595 | **0.770** | 0.80 |
+| finance | **0.535** (was 0.535, **+0.000**) | 0.350 | 0.490 | 0.80 |
+
+**Rung 1 works on health and not on finance, and nothing reaches 0.80.** It rejected 89,215 of 238,823 rows (37%) — person 38,000 · organisation 21,249 · place 17,323 · work 6,098 · taxon 4,679 · nonhuman 1,866 — and health still fills 33,000 from 51,633 (1.56×). **`wikipedia-body` is STILL NOT ADOPTED.**
+
+**The trade-off, stated plainly because it is Dylan's to make:** the highest health precision measured anywhere in this project is the **filtered incumbent at 0.770**, one SE below the bar — and its screened pool is **6,625 against a 33,000 need**. The best-precision option cannot supply the build; `wikipedia-body` + rung 1 supplies 51,633 at 0.655. W6 decides whether either is admissible at all.
+
+**Rung 2 is next as registered.** The residual failures the six judges named are what a definitional-pattern regex cannot reach: institutions whose lead is not definitional, bare lists of journal names and JEL codes, and word-sense errors inside a genuine-looking lead ("market" as a physical marketplace, "bank" as a riverbank, "trade" as a craft, "Banker" as a mycologist's surname). **Note for whoever runs it:** some `wikipedia-body` failures are chunks off-topic inside an ON-subject article, which a LEAD-sentence classifier of any kind cannot see. Classifying per CHUNK would reach them — but that is a different lever from the one T2-8 registered, and choosing it now, after these numbers, is an amendment that needs a Fable pass first.
+
 ### Open questions for Dylan — raised by the weekend window, NOT resolved here
 
 | # | question | why it is not mine to answer | cost of waiting |

@@ -29,7 +29,15 @@
    is Dylan's. **Do not move the bar.** Every failure class the judges named is an article-SUBJECT
    error (physician biographies, institutions, animal disease, reference fragments, "bank" as a
    landform), so the registered next lever is the subject filter and it is aimed correctly.
-1. **Close the seed loop.** The re-scan (labelled with T2-8 rung 1's subject class per row) is
+1. **Rung 2 of the subject ladder** (T2-8), because rung 1 did not clear. **Rung 1's result:
+   health 0.545 → 0.655, finance 0.535 → 0.535, incumbent 0.595 → 0.770 / 0.350 → 0.490; the bar
+   is still 0.80 and nothing reaches it** (`results/m10_wikibody_precision-r1.json`). Rung 2 is
+   LLM classification of the lead sentence with the approved local generator, pinned and seeded,
+   re-gated by the same instrument against the unchanged bar. **Read the note in LEDGER §3 first:**
+   some `wikipedia-body` failures are chunks off-topic inside an ON-subject article, which no
+   lead-sentence classifier can see — a per-CHUNK variant would reach them but is a different
+   lever from the registered one, so it needs a Fable pass before it is chosen.
+   ~~**Close the seed loop.**~~ The re-scan (labelled with T2-8 rung 1's subject class per row) is
    running; then `wikibody.draw(per_form=33000)` — which now drops every row whose article's lead
    sentence fired a reject class — and then **re-gate against the UNCHANGED 0.80**, sampling the
    NEW drawn pool (a filtered store's top 33K is a different population). Rung 1 rejects ~23% of
