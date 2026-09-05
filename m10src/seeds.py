@@ -38,6 +38,27 @@ ROUTE = {
 }
 MIN_WORDS, MAX_WORDS = 40, 220
 
+# Widened routing, FIXED AND COMMITTED BEFORE THE SCAN THAT USES IT (headroom rung 2,
+# `m10/HEADROOM.md`; amends T2-3, logged in LEDGER §3 T2-4). The shortfall it addresses is ROUTER
+# RECALL, not corpus thinness: English Wikipedia holds ~50K medicine articles, so 8,844 health
+# seeds out of 5.23M intros is the 17-keyword list above under-matching. Widening raises recall at
+# held precision; relaxing `min_score` would instead admit passages that merely mention "blood"
+# twice, which is why it is a later rung. These lists are never tuned to the count they produce.
+ROUTE_WIDE = dict(ROUTE)
+ROUTE_WIDE["health"] = (
+    r"\b(disease|symptom|patient|treatment|therap|diagnos|syndrome|infection|cancer|vaccin|"
+    r"medication|clinical|surgery|chronic|virus|immune|drug|disorder|medical|medicine|hospital|"
+    r"physician|illness|pain|dose|dosage|pregnan|injury|heart|lung|kidney|liver|mental health|"
+    r"diabet|allerg|nutrition|epidemic|pandemic|antibiotic|tumou?r|inflammat|fever|nurse|"
+    r"health|bacteri|blood)\w*\b")
+ROUTE_WIDE["finance"] = (
+    r"\b(bank|tax|invest|stock|econom|market|inflation|currency|revenue|mortgage|pension|"
+    r"insurance|budget|debt|interest rate|fiscal|trade|loan|credit|saving|salary|wage|price|"
+    r"income|profit|financ|monetary|bond|equity|capital|asset|accounting|audit|payment|money|"
+    r"earnings|dividend|recession|gdp|currency|tariff|subsid)\w*\b")
+# `esci-prod` is excluded from the topical scan: product listings cannot serve howto/health/finance.
+TOPICAL_STORES = ("hotpotqa-corpus", "squad-ctx", "mrtydi-docs")
+
 
 def _iter_store(name, limit=None):
     import mix
