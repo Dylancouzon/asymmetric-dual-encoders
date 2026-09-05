@@ -341,6 +341,34 @@ came from. This is a **data-recipe** gate, which `CLAUDE.md` puts explicitly on 
 
 ## §5 Amendments and withdrawn claims (never compressed away)
 
+**BRIGHT re-weighting — considered 2026-09-05 after the teacher-ceiling read, and REJECTED. Not
+raised to Dylan.** The teacher scores 0.219 on BRIGHT while BRIGHT carries 50% of the macro's
+variance, and I took that as evidence the family was buying noise. **Both halves were wrong.**
+
+- **It is Tier 3 and it is post-observation.** The motive is the *observed* resolution distance
+  0.008619, not the ceiling — the same adaptation the Codex pass struck in amendment A4 ("an α that
+  adapts to an observed width"), with the sign flipped. The "measured on the teacher, so untunable"
+  defence fails for the reason this morning's did: the measurement is fixed, the RULE would be
+  drafted knowing which family it hits.
+- **The data says the opposite, and it was already in my own artifact.** Verified independently in
+  `results/m10_cov_resolution.json`: the four weighted family deltas sum EXACTLY to
+  `abs_macro_delta` (0.029752), so all four are **same-signed** — BRIGHT is directionally
+  concordant, not a coin flip. Signal / variance share: **BRIGHT 46% / 50%** (SNR on par with
+  consumer-health), consumer-health 24% / 15%, finance 20% / 3%, **legal 9.8% / 32.5%**. The
+  uninformative family is **legal**, not BRIGHT. That I arrived at BRIGHT — where the *teacher*
+  looked bad — and not at legal is the tell.
+- **It would not even work.** Dropping BRIGHT moves the distance 0.0086 → 0.0081, still above the
+  MDE, while losing 28% of the signal (SNR 9.8 → 7.5). It could only change which arm wins.
+- **BRIGHT is the most on-thesis family:** M10 exists because M9 failed on diverse, long,
+  non-factoid queries, and BRIGHT's long StackExchange posts are the closest COV comes to that.
+  Removing it would bias selection toward the factoid families that resemble the release surface.
+
+**Adopted instead, Tier 1, no rule touched:** every macro is reported with its per-family deltas
+(`contrast()` already returns `per_unit_delta_raw`) and, once available, the P-arm per-family seed
+noise. Descriptive rows, no action attached. **This entry was committed before any P-arm COV file
+was opened**, because reading one makes every later surface change post-observation of student
+results.
+
 **2026-09-04 amendments A1–A8 and B1–B6, and the Codex and Opus passes on them:** one home only —
 `instructions-m10.md` §Amendment 2026-09-04 / §Amendment 2026-09-04b (Opus: the copies here had already
 drifted). Dispositions: `research/m10-fable-plan-2026-09-04.md`, `research/m10-codex-feasibility-2026-09-04.md`,
