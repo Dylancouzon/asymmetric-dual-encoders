@@ -25,6 +25,12 @@ def _cache(d, dim=8):
     return TG.TargetCache(d=Path(d) / "c", ident=IDENT, dim=dim)
 
 
+def _put(c, texts, vecs):
+    """Every append goes through the writer lock -- that is the invariant, so the tests obey it."""
+    with c.writer_lock():
+        c.append(TG.keys_of(texts), vecs)
+
+
 def _vecs(n, dim=8, seed=0):
     v = np.random.default_rng(seed).normal(size=(n, dim)).astype(np.float32)
     return v / np.linalg.norm(v, axis=1, keepdims=True)
@@ -40,7 +46,7 @@ def test_a_text_encoded_once_is_never_encoded_twice():
     with tempfile.TemporaryDirectory() as d:
         c = _cache(d)
         texts = ["a", "b", "c"]
-        c.append(TG.keys_of(texts), _vecs(3))
+        _put(c, texts, _vecs(3))
         rows = c.rows_for(["b", "zzz", "a"])
         assert rows[0] == 1 and rows[2] == 0 and rows[1] == -1
 
@@ -51,7 +57,7 @@ def test_fp16_round_trip_is_identical_cold_and_warm():
         texts = [f"t{i}" for i in range(64)]
         v = _vecs(64)
         c = _cache(d)
-        c.append(TG.keys_of(texts), v.astype(np.float16))
+        _put(c, texts, v.astype(np.float16))
         cold = TG.targets(texts, cache=c)
         warm = TG.targets(texts, cache=_cache(d))              # re-opened from disk
         assert np.array_equal(cold, warm)
@@ -65,7 +71,7 @@ def test_targets_are_returned_in_the_ORDER_ASKED_not_in_cache_order():
     with tempfile.TemporaryDirectory() as d:
         c = _cache(d)
         texts = [f"t{i}" for i in range(16)]
-        c.append(TG.keys_of(texts), _vecs(16).astype(np.float16))
+        _put(c, texts, _vecs(16).astype(np.float16))
         a = TG.targets(["t9", "t0", "t9"], cache=c)
         b = TG.targets(texts, cache=c)
         assert np.array_equal(a[0], b[9]) and np.array_equal(a[1], b[0])
@@ -75,7 +81,7 @@ def test_targets_are_returned_in_the_ORDER_ASKED_not_in_cache_order():
 def test_a_missing_target_raises_with_the_command_that_fixes_it():
     with tempfile.TemporaryDirectory() as d:
         c = _cache(d)
-        c.append(TG.keys_of(["a"]), _vecs(1).astype(np.float16))
+        _put(c, ["a"], _vecs(1).astype(np.float16))
         with pytest.raises(SystemExit, match="targets10.py"):
             TG.targets(["a", "b"], cache=c)
 
@@ -83,10 +89,10 @@ def test_a_missing_target_raises_with_the_command_that_fixes_it():
 def test_an_append_survives_reopening_and_grows_rather_than_replaces():
     with tempfile.TemporaryDirectory() as d:
         c = _cache(d)
-        c.append(TG.keys_of(["a", "b"]), _vecs(2).astype(np.float16))
+        _put(c, ["a", "b"], _vecs(2).astype(np.float16))
         c2 = _cache(d)
         assert c2.n == 2
-        c2.append(TG.keys_of(["c"]), _vecs(1, seed=3).astype(np.float16))
+        _put(c2, ["c"], _vecs(1, seed=3).astype(np.float16))
         assert _cache(d).n == 3
         assert (_cache(d).rows_for(["a", "b", "c"]) == [0, 1, 2]).all()
 
@@ -96,7 +102,7 @@ def test_a_crash_between_the_vector_write_and_the_meta_write_loses_the_CHUNK_not
     truncate a store another process may be appending to -- and a WRITER repairs them on refresh."""
     with tempfile.TemporaryDirectory() as d:
         c = _cache(d)
-        c.append(TG.keys_of(["a", "b"]), _vecs(2).astype(np.float16))
+        _put(c, ["a", "b"], _vecs(2).astype(np.float16))
         with open(c.vecs_p, "ab") as fh:                       # a half-written chunk
             fh.write(np.zeros((1, 8), dtype=np.float16).tobytes())
         c2 = _cache(d)
@@ -168,7 +174,7 @@ def test_a_short_store_is_refused_rather_than_zero_padded():
     was normalized and trained as a target. A partial vector is not a target."""
     with tempfile.TemporaryDirectory() as d:
         c = _cache(d)
-        c.append(TG.keys_of(["a", "b"]), _vecs(2).astype(np.float16))
+        _put(c, ["a", "b"], _vecs(2).astype(np.float16))
         with open(c.vecs_p, "r+b") as fh:                      # half of the second vector lost
             fh.truncate(3 * 8)
         with pytest.raises(SystemExit, match="SHORT by"):
@@ -208,3 +214,20 @@ def test_encode_missing_holds_the_lock_and_a_read_path_does_not(monkeypatch):
         assert not (c.dir / "lock").exists()
         TG.targets(["a", "b"], cache=_cache(d))                # a read takes nothing
         assert not (c.dir / "lock").exists()
+
+
+def test_append_outside_the_writer_lock_is_refused():
+    """A lock nobody checks is a comment: `append` and `refresh` were public and unguarded, so a
+    second process could append with a stale `n` while another held the lock."""
+    with tempfile.TemporaryDirectory() as d:
+        c, other = _cache(d), _cache(d)
+        with pytest.raises(SystemExit, match="without the writer lock"):
+            c.append(TG.keys_of(["a"]), _vecs(1).astype(np.float16))
+        with pytest.raises(SystemExit, match="without the writer lock"):
+            c.refresh()
+        with c.writer_lock():
+            c.append(TG.keys_of(["a"]), _vecs(1).astype(np.float16))
+            # the OTHER handle still holds no lock, even while one is out
+            with pytest.raises(SystemExit, match="without the writer lock"):
+                other.append(TG.keys_of(["b"]), _vecs(1).astype(np.float16))
+        assert c.n == 1

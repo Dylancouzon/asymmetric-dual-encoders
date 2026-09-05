@@ -147,6 +147,14 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
             print(f"  step {step + 1}/{total_steps} loss {np.mean(losses[-log_every:]):.4f} "
                   f"lr {lr:.2e} {run_examples / max(el, 1e-9):.0f} ex/s", flush=True)
 
+    if stopped and ckpt_path and run_steps:
+        # the STOPPING evaluation is part of the arm's record: every `stopped` path breaks before
+        # the interval save, so without this the last checkpoint knows nothing about the kill or
+        # the plateau that ended the run (Codex re-review 2026-09-05).
+        save(ckpt_path, model, opt, start + run_steps,
+             extra={"losses": losses, "evals": evals, "eval_kinds": kinds,
+                    "cycle_end_evals": cycle_end_evals, "examples": n_examples,
+                    "stopped": stopped})
     el = time.time() - t0
     # `losses`/`evals` are the WHOLE arm's history (restored on resume); `steps_run` and the rate
     # are this process's, because a rate measured over another machine's steps is not a rate.

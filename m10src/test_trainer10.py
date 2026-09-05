@@ -101,14 +101,53 @@ def test_a_resumed_arm_can_still_fire_the_plateau_rule():
     assert rest["stopped"] == "plateau at cycle 3", rest["stopped"]
 
 
-def test_a_checkpoint_is_replaced_atomically_and_leaves_no_temp_behind():
+def test_a_crash_during_save_leaves_the_previous_checkpoint_intact(monkeypatch):
+    """The checkpoint is a build's only recovery point, so `torch.save` must never write onto it
+    in place."""
     m = Toy()
     opt = torch.optim.AdamW(m.parameters(), lr=1e-4)
     with tempfile.TemporaryDirectory() as d:
         p = Path(T.save(Path(d) / "c.pt", m, opt, 3))
-        T.save(p, m, opt, 4)                        # overwrite the sole recovery point
-        assert [x.name for x in Path(d).iterdir()] == ["c.pt"]
+        good = p.read_bytes()
+        real = torch.save
+
+        def dies(obj, fh, *a, **k):
+            real(obj, fh, *a, **k)                  # the temp file is half-written, then:
+            raise OSError("the box went down mid-save")
+
+        monkeypatch.setattr(torch, "save", dies)
+        try:
+            T.save(p, m, opt, 4)
+        except OSError:
+            pass
+        assert p.read_bytes() == good, "the previous checkpoint survived"
+        assert torch.load(p, map_location="cpu", weights_only=False)["step"] == 3
+    monkeypatch.undo()
+    with tempfile.TemporaryDirectory() as d:
+        p = Path(T.save(Path(d) / "c.pt", m, opt, 3))
+        T.save(p, m, opt, 4)
+        assert [x.name for x in Path(d).iterdir()] == ["c.pt"], "no temp file left behind"
         assert torch.load(p, map_location="cpu", weights_only=False)["step"] == 4
+
+
+def test_a_stopped_arm_checkpoints_the_stop_and_the_evaluation_that_caused_it():
+    vals = {0: 0.50, 1: 0.60, 2: 0.6005}
+    state = {"n": 0}
+
+    def ev(model, step, kind):
+        if kind != "end":
+            return 0.40 + 0.001 * state["n"]
+        v = vals[state["n"]]; state["n"] += 1
+        return v
+
+    with tempfile.TemporaryDirectory() as d:
+        ck = Path(d) / "ck.pt"
+        r = T.train_arm(Toy(), make_batch_fn(), total_steps=30, seed=0, eval_fn=ev, ckpt_path=ck,
+                        ckpt_every=1000)
+        assert r["stopped"] == "plateau at cycle 3"
+        ex = torch.load(ck, map_location="cpu", weights_only=False)["extra"]
+        assert ex["stopped"] == "plateau at cycle 3" and ex["cycle_end_evals"] == [0.50, 0.60,
+                                                                                  0.6005]
 
 
 def test_a_non_finite_loss_stops_the_arm_rather_than_training_on():

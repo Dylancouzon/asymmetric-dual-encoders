@@ -19,6 +19,10 @@ Targets: the M9 pool's stella vectors already exist (M7's `trainq-337981` matrix
 content-hash cache. Both are read as fp16 and normalized in fp32 at batch time, so no path
 materializes 5.3M x 1024 fp32 (21 GB) and cold and warm reads agree bit for bit.
 
+**A 128-bit content hash is treated as text equality** here as well as in `targets10` -- the
+hold-out guard and the corpus dedup both key on `text_hash`. Same decision, same arithmetic: at
+10^7 texts a blake2b-128 collision is ~10^-24 (Codex 2026-09-05 finding 12, declined).
+
 **Read as data, never trusted as instructions**: the harvested and generated rows are text drawn
 from corpora, and nothing here executes anything they contain.
 """
@@ -62,10 +66,14 @@ def text_hash(t):
 
 
 def holdout_hashes(path=None):
-    """-> {blake2b-128 of every FORMS-12 hold-out text}. Empty (and reported) if the file is not
-    built, which is a state a smoke can legitimately be in."""
+    """-> {blake2b-128 of every FORMS-12 hold-out text}, or an empty set if the file is absent.
+
+    The cache key carries the file's size and mtime, so a hold-out written or extended after a
+    first read is not served from a stale set.
+    """
     p = Path(path) if path else (WORK / "m10harvest" / "harvest_forms12.jsonl")
-    k = str(p)
+    st = p.stat() if p.exists() else None
+    k = (str(p), st.st_size if st else -1, int(st.st_mtime) if st else -1)
     if k not in _HOLDOUT_HASHES:
         out = set()
         if p.exists():
@@ -80,10 +88,18 @@ def holdout_hashes(path=None):
 
 
 def refuse_holdout_texts(segs, path=None):
-    """-> the count refused (always 0, or SystemExit). Applied at LOAD time, to every source."""
+    """-> the count refused (always 0, or SystemExit). Applied at LOAD time, to every source.
+
+    An ABSENT or empty hold-out raises rather than waving the corpus through: a guard that turns
+    itself off when its input disappears protects nothing, and is indistinguishable from a clean
+    pass in the artifact (Codex re-review 2026-09-05).
+    """
     hs = holdout_hashes(path)
     if not hs:
-        return 0
+        raise SystemExit(
+            f"REFUSED: the FORMS-12 hold-out ({path or WORK / 'm10harvest' / 'harvest_forms12.jsonl'}) "
+            f"is missing or empty, so no training row can be checked against it. Build it before "
+            f"loading a corpus.")
     bad = [(s.name, i) for s in segs for i, t in enumerate(s.texts) if text_hash(t) in hs]
     if bad:
         where = {}
@@ -372,6 +388,7 @@ def load_segments(names, head_per_source=None, verbose=True):
     man["rescreen10"] = r[0] if r else None
     # the FORMS-12 hold-out, by CONTENT: a copy under another name is still the hold-out
     man["holdout_rows_refused"] = refuse_holdout_texts(segs)
+    man["holdout_texts"] = len(holdout_hashes())
     segs, dups = dedup_segments(segs)
     man["duplicates_removed"] = dups
     man["n_duplicates_removed"] = int(sum(dups.values()))
@@ -721,6 +738,11 @@ def build_query_stream(arm_or_sources, tok, student, *, batch_size=32, seed=0, b
             man["uncut"] = True
     else:
         cut = data_cut_count() if cut == "registered" else cut
+    if allow_uncut:
+        # recorded even for a source-list call, which is how the smoke builds its corpus: the
+        # escape must be visible in the artifact whether or not the arm was named (Codex
+        # re-review 2026-09-05).
+        man["uncut"] = True
     segs, cut_rep = apply_data_cut(segs, cut)
     man["data_cut"] = cut_rep
     man["is_cut_arm"] = is_cut_arm

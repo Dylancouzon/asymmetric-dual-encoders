@@ -107,6 +107,7 @@ class TargetCache:
         else:
             self.n = 0
             self._write_meta()
+        self._own_lock = False
         self._check_sizes(fix=False)
         self._sorted = None
 
@@ -144,12 +145,22 @@ class TargetCache:
                     f"padding -- a partial vector is not a target. Restore the file, or lower "
                     f"`n` in {self.meta_p} to {have // row:,} and re-encode the rest.")
             if have > want and fix:
+                self._require_lock("truncate excess bytes from")
                 with open(p, "r+b") as fh:
                     fh.truncate(want)
+
+    def _require_lock(self, what):
+        """Every MUTATION goes through here. A lock nobody checks is a comment (Codex re-review
+        2026-09-05): `append` and `refresh` were public and unguarded, so a second process could
+        append with a stale `n` while another held the lock."""
+        if not self._own_lock:
+            raise SystemExit(f"refusing to {what} {self.dir} without the writer lock. Wrap the "
+                             f"call in `with cache.writer_lock():`.")
 
     def refresh(self):
         """Re-read the meta another writer may have advanced, then repair excess bytes. Called
         under the writer lock, never on a read path."""
+        self._require_lock("refresh")
         if self.meta_p.exists():
             self.n = int(json.loads(self.meta_p.read_text())["n"])
         self._check_sizes(fix=True)
@@ -171,8 +182,10 @@ class TargetCache:
         try:
             os.write(fd, json.dumps({"pid": os.getpid(), "at": time.time()}).encode())
             os.close(fd)
+            self._own_lock = True
             yield lp
         finally:
+            self._own_lock = False
             lp.unlink(missing_ok=True)
 
     def keys(self):
@@ -187,6 +200,7 @@ class TargetCache:
 
     def append(self, keys, vecs):
         """Vectors, then keys, then meta -- so a crash can only lose a chunk, never mis-pair one."""
+        self._require_lock("append to")
         v = np.ascontiguousarray(vecs, dtype=np.float16)
         k = np.ascontiguousarray(keys, dtype=np.uint8)
         assert v.shape == (len(k), self.dim) and k.shape[1] == KEY_BYTES

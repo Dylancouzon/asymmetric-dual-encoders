@@ -134,10 +134,15 @@ def test_the_unbalanced_variant_is_proportional_to_the_corpus_and_stays_availabl
 
 
 def test_a_small_form_is_sampled_with_replacement_rather_than_dropped():
-    """"texts drawn with replacement within a form" -- a form smaller than a batch still runs."""
+    """"texts drawn with replacement within a form" -- a form smaller than a batch still runs, and
+    the batch REPEATS rows rather than being short. Merely appearing is not the property: a fixed
+    cycled batch would satisfy that too (Codex re-review 2026-09-05)."""
     st, forms = _stream({"title": 100, "claim": 3}, batch_size=8)
-    idx = np.concatenate([st._pick(k)[1] for k in range(40)])
-    assert (forms[idx] == CL.FORM_ID["claim"]).sum() > 0
+    drawn = [st._pick(k)[1] for k in range(60) if st._pick(k)[0] == CL.FORM_ID["claim"]]
+    assert drawn, "the small form must still be presented"
+    for idx in drawn:
+        assert len(idx) == 8 and (forms[idx] == CL.FORM_ID["claim"]).all()
+        assert len(set(idx.tolist())) < 8, "a 3-row form at batch 8 must repeat rows"
 
 
 def test_every_batch_is_one_form_so_length_bucketing_survives_balancing():
@@ -443,23 +448,28 @@ def test_the_same_student_input_cannot_carry_two_teacher_targets():
 def test_the_token_cache_identity_binds_the_TOKENIZER_not_the_students_nickname(monkeypatch):
     """Codex 2026-09-05 finding 11: `student="bge-small"` is a label, and two revisions of the same
     repo give different ids for the same text."""
-    class TokA(_Tok):
+    class Tok(_Tok):
+        """ONE class, so the class name cannot be what separates the two caches -- the earlier
+        version of this test used two classes and would have passed with vocabulary hashing
+        removed entirely (Codex re-review 2026-09-05)."""
         name_or_path = "BAAI/bge-small-en-v1.5"
 
-        def get_vocab(self):
-            return {"a": 0, "b": 1}
+        def __init__(self, vocab):
+            self._v = vocab
 
-    class TokB(TokA):
         def get_vocab(self):
-            return {"a": 0, "b": 1, "c": 2}
+            return self._v
 
+    a, b = Tok({"a": 0, "b": 1}), Tok({"a": 0, "b": 1, "c": 2})
+    assert CL.tokenizer_ident(a)["class"] == CL.tokenizer_ident(b)["class"]
+    assert CL.tokenizer_ident(a)["vocab_sha256"] != CL.tokenizer_ident(b)["vocab_sha256"]
     with tempfile.TemporaryDirectory() as d:
         monkeypatch.setattr(CL, "TOKCACHE", Path(d))
         segs, man = _segs([20]), {"sha256": "abc"}
-        CL.tokenize_corpus(TokA(), segs, man, "bge-small", verbose=False)
-        CL.tokenize_corpus(TokB(), segs, man, "bge-small", verbose=False)
+        CL.tokenize_corpus(a, segs, man, "bge-small", verbose=False)
+        CL.tokenize_corpus(b, segs, man, "bge-small", verbose=False)
         assert len(list(Path(d).iterdir())) == 2, "the vocabulary must be part of the identity"
-    assert CL.tokenizer_ident(TokA())["name_or_path"] == "BAAI/bge-small-en-v1.5"
+    assert CL.tokenizer_ident(a)["name_or_path"] == "BAAI/bge-small-en-v1.5"
 
 
 # ------------------------------------------------------------------------- the M10 re-screen ----
@@ -527,3 +537,43 @@ def test_the_token_cache_identity_binds_the_M10_RESCREEN(monkeypatch):
             CL.tokenize_corpus(_Tok(), segs, man, "bge-small", verbose=False,
                                extra_ident={"rescreen10": r})
         assert len(list(Path(d).iterdir())) == 3
+
+
+def test_a_missing_holdout_refuses_the_corpus_rather_than_waving_it_through(monkeypatch):
+    """A guard that turns itself off when its input disappears protects nothing, and looks exactly
+    like a clean pass in the artifact."""
+    with tempfile.TemporaryDirectory() as d:
+        monkeypatch.setattr(CL, "_HOLDOUT_HASHES", {})
+        missing = Path(d) / "nope.jsonl"
+        assert CL.holdout_hashes(missing) == set()
+        with pytest.raises(SystemExit, match="missing or empty"):
+            CL.refuse_holdout_texts(_segs([3]), path=missing)
+
+
+def test_the_holdout_hash_cache_is_keyed_on_the_files_contents_not_its_name(monkeypatch):
+    import os
+    import time as _time
+    with tempfile.TemporaryDirectory() as d:
+        monkeypatch.setattr(CL, "_HOLDOUT_HASHES", {})
+        p = _jsonl(d, "h.jsonl", [{"text": "one", "form": "claim"}])
+        assert len(CL.holdout_hashes(p)) == 1
+        _jsonl(d, "h.jsonl", [{"text": "one", "form": "claim"},
+                              {"text": "two", "form": "claim"}])
+        os.utime(p, (_time.time() + 10, _time.time() + 10))
+        assert len(CL.holdout_hashes(p)) == 2, "a hold-out extended after a first read"
+
+
+def test_a_training_document_stream_refuses_without_the_rescreen_mask(monkeypatch):
+    """The enforcement, not just the helper: `build_doc_stream` asks `rescreen10` for the mask
+    before it draws a single document."""
+    import rescreen10
+    with tempfile.TemporaryDirectory() as d:
+        monkeypatch.setattr(rescreen10, "CACHE", Path(d))
+        monkeypatch.setattr(rescreen10, "protected_ident", lambda: {"version": "test"})
+        monkeypatch.setattr(rescreen10, "doc_pool_ident", lambda: {"n": 3})
+        called = {"drew": False}
+        monkeypatch.setattr(CL, "_screened_doc_pool",
+                            lambda *a, **k: called.update(drew=True) or ([], None, {}))
+        with pytest.raises(SystemExit, match="rescreen10.py --documents"):
+            CL.build_doc_stream(4, _Tok(), verbose=False)
+        assert called["drew"] is False, "it refused BEFORE drawing"

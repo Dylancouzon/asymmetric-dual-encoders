@@ -100,15 +100,26 @@ CLOUD_ONLY_MAX_LEN = 128
 
 def corpus(verbose=True):
     """A small slice of the REAL corpora -- a smoke on synthetic tensors proves nothing about the
-    data path, which is where two of M10's four launch failures were."""
+    data path, which is where two of M10's four launch failures were.
+
+    Both halves go through the M10 re-screen (`rescreen10`, instructions-m10.md:462). A smoke
+    takes optimizer steps, so "it is only a smoke" is not a reason to feed it a pool that a
+    training path is forbidden to load (Codex re-review 2026-09-05).
+    """
+    import corpus_loader as CL
     import data10 as D
+    import rescreen10
     t0 = time.time()
     texts, rows, _meta = D.m9_query_pool()
-    texts, rows = texts[:N_TEXTS], rows[:N_TEXTS]
+    keep, _rep = rescreen10.query_keep_mask(texts, "m9-queries_pair", compute=False)
+    sel = np.flatnonzero(keep)
+    texts, rows = [texts[int(i)] for i in sel][:N_TEXTS], rows[sel][:N_TEXTS]
     T = D.m9_query_targets(rows)
-    dtexts, dvecs, _dm = D.m9_doc_pool(N_TEXTS, seed=0)
+    banned = set(int(x) for x in rescreen10.doc_banned_rows(compute=False, verbose=False)[0])
+    dtexts, dvecs, _dm = CL._screened_doc_pool(N_TEXTS, 0, banned)
     if verbose:
-        print(f"  corpus: {len(texts):,} queries, {len(dtexts):,} documents "
+        print(f"  corpus: {len(texts):,} queries, {len(dtexts):,} documents, "
+              f"{int((~keep).sum()):,}+{len(banned):,} removed by the M10 re-screen "
               f"({time.time() - t0:.0f}s)", flush=True)
     return texts, T, dtexts, dvecs
 
