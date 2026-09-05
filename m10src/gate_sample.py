@@ -40,7 +40,7 @@ def build(candidate_json=None, control_json=None):
     OUT.mkdir(parents=True, exist_ok=True)
     cand = json.loads(Path(candidate_json or (REPO / "work/m10gen/wikibody_gate_pool.json"))
                       .read_text())
-    ctrl = json.loads(Path(control_json or (REPO / "work/m10gen/incumbent_control.json"))
+    ctrl = json.loads(Path(control_json or (REPO / "work/m10gen/incumbent_full.json"))
                       .read_text())["seeds"]
     rng = np.random.default_rng(SEED)
     key, manifest = {}, {}
@@ -56,11 +56,17 @@ def build(candidate_json=None, control_json=None):
             arm, pid, text = items[int(j)]
             blob.append({"i": n, "text": text})
             k[n] = {"arm": arm, "passage_id": pid}
-        (OUT / f"sample-{form}.json").write_text(json.dumps(blob, indent=1))
+        # Batched at 200 items: one judge reading 400 passages of up to 220 words is ~80K tokens
+        # of careful per-item judgement, and batches also mean no single judge's drift decides a
+        # form. Blinding and interleaving are preserved inside every batch.
+        for b0 in range(0, len(blob), N_SAMPLE):
+            (OUT / f"sample-{form}-{b0 // N_SAMPLE}.json").write_text(
+                json.dumps(blob[b0:b0 + N_SAMPLE], indent=1))
         key[form] = k
         manifest[form] = {"candidate_pool": len(c_rows), "candidate_sampled": len(ci),
                           "control_pool": len(k_rows), "control_sampled": len(ki),
-                          "total_items": len(blob)}
+                          "total_items": len(blob),
+                          "batches": (len(blob) + N_SAMPLE - 1) // N_SAMPLE}
     (OUT / "key.json").write_text(json.dumps(key, indent=1))
     (OUT / "manifest.json").write_text(json.dumps(
         dict(n_sample=N_SAMPLE, seed=SEED, gate=GATE, blinded=True, forms=manifest), indent=1))
@@ -68,10 +74,13 @@ def build(candidate_json=None, control_json=None):
     return manifest
 
 
-def score(verdicts_json):
-    """verdicts: {form: {index: true/false}} -> per-arm on-topic rate and the gate verdict."""
+def score(*verdict_files):
+    """verdicts: {form: {index: true/false}} per file -> per-arm on-topic rate and the verdict."""
     key = json.loads((OUT / "key.json").read_text())
-    v = json.loads(Path(verdicts_json).read_text())
+    v = {}
+    for f in verdict_files:
+        for form, d in json.loads(Path(f).read_text()).items():
+            v.setdefault(form, {}).update({str(k): val for k, val in d.items()})
     out = {}
     for form, ks in key.items():
         got = v.get(form, {})
@@ -97,6 +106,6 @@ def score(verdicts_json):
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "score":
-        score(sys.argv[2])
+        score(*sys.argv[2:])
     else:
         build()
