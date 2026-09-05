@@ -24,11 +24,26 @@ import numpy as np
 import decontam
 from cov_admit import COMPONENTS
 
-VERSION = "2026-09-04-six+dev+reserved-queries+COV(q+d)"
+VERSION = "2026-09-05-six+dev+reserved-queries+COV(q+d)+arxiv-title"
+ARXIV = REPO / "work" / "m10arxiv" / "arxiv_drawn.json"
+
+
+def _arxiv_texts():
+    """The 2,000 drawn `arxiv-title` queries and their abstracts. §Surfaces: "the set joins the
+    protected index before any extraction". Absence is part of the cache identity, so a session
+    without the draw cannot silently screen against less than one with it."""
+    if not ARXIV.exists():
+        return [], None
+    blob = json.loads(ARXIV.read_text())
+    t = [q["title"] for q in blob["queries"]] + [q["abstract"] for q in blob["queries"]]
+    h = hashlib.blake2b(json.dumps(sorted(q["id"] for q in blob["queries"])).encode(),
+                        digest_size=8).hexdigest()
+    return t, h
 
 
 def _ident():
-    return {"version": VERSION,
+    _t, ah = _arxiv_texts()
+    return {"version": VERSION, "arxiv_draw": ah, "n_arxiv_texts": len(_t),
             "components": sorted((n, rev) for cs in COMPONENTS.values() for n, _r, rev in cs)}
 
 
@@ -45,10 +60,19 @@ def build(verbose=True):
         z = np.load(npz)
         cov_ex, cov_gram = z["ex"], z["gram"]
         cov_short_texts = json.loads((CACHE / f"short-{h}.json").read_text())
+        ax_texts, _ = _arxiv_texts()
         counts = json.loads(meta_p.read_text())["counts"]
     else:
         from cov_screen import load_component
         ex, grams, counts = [], [], dict(counts)
+        ax_texts, _ = _arxiv_texts()
+        if ax_texts:
+            ex += [int(decontam.exact_u64(t)) for t in ax_texts]
+            grams.append(np.unique(np.concatenate([decontam.all_grams(t) for t in ax_texts])))
+            counts["arxiv-title:q+abstract"] = len(ax_texts)
+            cov_short += [t for t in ax_texts
+                          if decontam.SHORT_NGRAM <= len(decontam.norm_words(t))
+                          < decontam.NGRAM]
         for family, comps in COMPONENTS.items():
             for name, repo, rev in comps:
                 qs, ds = load_component(name, repo, rev)
@@ -85,6 +109,7 @@ def build(verbose=True):
             if k in merged_whole else v
     q_whole = merged_whole
     counts["COV:short-queries-in-containment-index"] = len(cov_short_texts)
+    counts["arxiv-title:q+abstract"] = len(ax_texts)
     if verbose:
         print(f"  protected10 {VERSION}: {len(merged_ex):,} exact keys, "
               f"{merged_gram.size:,} grams", flush=True)

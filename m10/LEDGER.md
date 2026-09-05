@@ -44,7 +44,18 @@ allocation and `max_extension_cycles` are neither — they are fixed at the M10.
 
 ## §0b Screen lock — data-dependent constants, fill at the close of M10.1, before any arm
 
-- A2, A3 and A4 post-screen unique-text counts (identical) and corpus hashes; the arXiv artifact version and sha256; the generator revision actually served and vLLM version.
+- A2, A3 and A4 post-screen unique-text counts (identical) and corpus hashes; the generator revision actually served and vLLM version.
+- **arXiv artifact, DRAWN 2026-09-05** (`work/m10arxiv/arxiv_draw.json`): the registered Kaggle
+  `Cornell-University/arxiv` · `arxiv-metadata-oai-snapshot.json`, zip sha256
+  `47cec120969d4238d67be52b960b7b851c993dc039a64f582cec97ec114443d9`, 1,820,571,144 bytes.
+  **3,148,882 records → 3,148,792 unique version-stripped ids**, sorted
+  lexicographically; `default_rng(0).choice(N, 100,000, replace=False)`; the first 2,000 drawn are
+  the queries (title → own abstract), 0 empty titles, 0 empty abstracts. All 100,000 base ids are
+  excluded from every training role (`arxiv_excluded_base_ids.json`); the 2,000 queries and their
+  abstracts are **in the protected index** (`protected10.VERSION` … `+arxiv-title`), which is what
+  §Surfaces requires before any extraction. `arxiv-title` is DESCRIPTIVE and triggers no action.
+  Credential: Dylan's Kaggle token, 2026-09-05, stored at `~/.kaggle/access_token` **outside the
+  repo**; nothing in the tree contains it.
 - Local measured rates: stella docs/s; examples/s at batch 32 on the 75/25 window, the 50/50 window and each F student, on real tokenized data with `num_alloc_retries` logged; generation output tok/s.
 - The screen's box allocation (arms, doses, order, expected hours).
 - **Cloud price, build allocation and `max_extension_cycles` are NOT §0b** (the weekend spends nothing and the provider is Dylan's choice): they are fixed at the M10.2 recipe lock (Codex B5).
