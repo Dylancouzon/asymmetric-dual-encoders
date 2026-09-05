@@ -156,3 +156,28 @@ def test_warm_start_from_m9_refuses_a_wrong_width_head(tmp_path):
     torch.save(ck, p)
     with pytest.raises(SystemExit, match="one layer wide"):
         N.warm_start_from_m9(m, p)
+
+
+def test_select_lambda_keeps_a_real_holdout_on_a_small_sample():
+    """The registered split is 50,000 of 60,000 -- five sixths. Clamping to `len - 1` left ONE
+    validation row, whose objective is noise, so `warmfit.select`'s tie rule returned the TOP of
+    the grid every time: the arm smoke selected lambda = 1.0 for all eleven linear shapes, which
+    is a near-zero head."""
+    rng = np.random.default_rng(5)
+    X = rng.normal(size=(600, 8)).astype(np.float32)
+    W = rng.normal(size=(8, N.OUT_DIM)).astype(np.float32)
+    Y = X @ W + 0.05 * rng.normal(size=(600, N.OUT_DIM))
+    Y = (Y / np.linalg.norm(Y, axis=1, keepdims=True)).astype(np.float32)
+    lam, rows = N.select_lambda(X, Y)
+    # 600 * 50000/60000 = 500 fit, 100 validation -- not 599/1
+    assert lam < 1.0, "a real holdout must not default to the top of the grid"
+    vals = [r["val_objective"] for r in rows]
+    assert len(set(round(v, 9) for v in vals)) > 1, "one validation row makes every lambda tie"
+
+
+def test_select_lambda_is_unchanged_at_the_registered_sample_size():
+    """Ratio-scaling must be bit-identical to the registration at 60,000."""
+    import warmfit
+    n_fit_split, m = 50_000, N.N_FIT_REGISTERED
+    n = n_fit_split if m >= N.N_FIT_REGISTERED else int(round(m * n_fit_split / N.N_FIT_REGISTERED))
+    assert n == 50_000 and warmfit.GRID[-1] == 1.0

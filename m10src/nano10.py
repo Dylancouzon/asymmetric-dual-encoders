@@ -403,12 +403,25 @@ def export_parity(model, out_dir, texts, max_len=512):
 # LARGER lambda. Both halves are training text, so there is no dev surface in it. `m9src/warmfit`
 # owns the procedure and is reused rather than reimplemented.
 
+N_FIT_REGISTERED = 60_000       # m9/registry.json warm_start.n_fit
+
+
 def select_lambda(X, Y, n_fit_split=50_000, seed=21):
-    """-> (lambda, rows). The registered training-only holdout, on M10's own feature space."""
+    """-> (lambda, rows). The registered training-only holdout, on M10's own feature space.
+
+    The registered split is 50,000 fit of a 60,000 sample -- five sixths. On a SMALLER sample the
+    split is scaled to the same ratio rather than clamped to `len - 1`: clamping left exactly ONE
+    validation row, whose objective is noise, so `warmfit.select`'s "ties go to the larger lambda"
+    rule handed back the top of the grid every time. The arm smoke duly selected lambda = 1.0 for
+    all eleven linear shapes, which is a near-zero head. Ratio-scaling keeps the holdout meaningful
+    at any sample size and is bit-identical at the registered 60,000.
+    """
     import warmfit
     X = np.asarray(X, dtype=np.float32)
     Xc = np.hstack([X, np.ones((X.shape[0], 1), dtype=np.float32)])
-    n = min(n_fit_split, max(X.shape[0] - 1, 1))
+    m = X.shape[0]
+    n = n_fit_split if m >= N_FIT_REGISTERED else int(round(m * n_fit_split / N_FIT_REGISTERED))
+    n = max(1, min(n, m - 1))
     return warmfit.select(Xc, np.asarray(Y, dtype=np.float32), n, seed=seed)
 
 
