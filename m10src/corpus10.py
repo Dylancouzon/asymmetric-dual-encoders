@@ -177,6 +177,21 @@ def partition_seeds(seed_rows, gate_ids=(), holdout_n=HOLDOUT_PER_FORM, seed=0):
         "_order": "gate seeds removed FIRST, then the hold-out drawn from the remainder"}
 
 
+def draw_seeds(build, need, seed=0):
+    """-> the `need` seeds to generate from, a UNIFORM draw, never a positional prefix.
+
+    `build[:need]` would take the seed store's own order, which for a Wikipedia store is dump
+    order -- the population `m10/LEDGER.md` §T2-5 measured as a 5x distortion, and the same bias
+    class that had to be fixed in `harvest.draw` and `paq.draw`. Returned in store order so
+    generation and the manifest stay reproducible; the draw is what is uniform, not the order.
+    """
+    if len(build) <= need:
+        return list(build)
+    rng = np.random.default_rng(seed)
+    pick = rng.choice(len(build), size=need, replace=False)
+    return [build[int(i)] for i in sorted(pick)]
+
+
 def screen_form(rows, seed_text, protected_hit=None, doc_hit=None):
     """The per-query screens, in the registered order. -> (kept, report).
 
@@ -212,16 +227,23 @@ def screen_form(rows, seed_text, protected_hit=None, doc_hit=None):
 
 
 def build_form(form, seed_rows, quota, *, n_per_seed=5, gate_ids=(), base=None, seen=None,
-               protected_hit=None, doc_hit=None, workers=32, margin=1.35, verbose=True):
+               protected_hit=None, doc_hit=None, workers=32, margin=1.35, seed=0, verbose=True):
     """One form end to end: partition seeds, generate, screen, A8. -> (queries, report).
 
     `margin` over-draws seeds because the screens and A8 both remove: at 5 queries per seed a
     143,000 quota needs 28,600 clean seeds, and the smoke's contract rate was not 100%.
+
+    **Neither the seed selection nor the final cut is a positional prefix.** `build[:need]` and
+    `out[:quota]` would both take a prefix of the seed store's own order, which for a Wikipedia
+    store is dump order -- the population `m10/LEDGER.md` §T2-5 measured as a 5x distortion, and
+    the same bias class that had to be fixed in `harvest.draw` and `paq.draw`. Both are uniform
+    draws at `seed`.
     """
     import gen
-    build, held, prep = partition_seeds(seed_rows, gate_ids=gate_ids)
+    build, held, prep = partition_seeds(seed_rows, gate_ids=gate_ids, seed=seed)
     need = int(margin * quota / max(n_per_seed, 1))
-    use = build[:need]
+    rng = np.random.default_rng(seed)
+    use = draw_seeds(build, need, seed=seed)
     if len(use) < need and verbose:
         print(f"  {form}: {len(use):,} build seeds for a {need:,} target -- short", flush=True)
     seen = seen if seen is not None else set()
@@ -237,7 +259,8 @@ def build_form(form, seed_rows, quota, *, n_per_seed=5, gate_ids=(), base=None, 
         if r["query"] in keep_set:
             keep_set.discard(r["query"])
             out.append(r)
-    report = {"form": form, "quota": quota, "seeds": prep, "seed_margin": margin,
+    rng.shuffle(out)                                # never a positional prefix -- see the docstring
+    report = {"form": form, "quota": quota, "seeds": prep, "seed_margin": margin, "seed": seed,
               "seeds_used": len(use), "holdout_seed_ids": sorted(r[0] for r in held),
               "generation": {k: v for k, v in g.items() if k != "queries"},
               "screens": screens, "a8": a8,

@@ -277,3 +277,23 @@ def test_build_form_drops_a_form_whose_output_is_template_collapsed(stub):
     # exact duplicates collapse to one, so the form cannot reach the retention floor
     assert rep["a8"]["retained"] < C.A8_MIN_RETAINED
     assert rep["dropped_from_build"] is True and qs == []
+
+
+def test_draw_seeds_reaches_the_whole_store_not_its_prefix():
+    """Regression for the bias class that had to be fixed in `harvest.draw` and `paq.draw`:
+    `build[:need]` takes the seed store's own order, which for a Wikipedia store is dump order."""
+    N, need = 5000, 40
+    build = _seed_rows(N)
+    use = C.draw_seeds(build, need, seed=0)
+    pos = [int(r[0][1:]) for r in use]
+    assert len(use) == need
+    assert pos == sorted(pos), "returned in store order, for reproducibility"
+    assert max(pos) > N // 2, f"highest drawn position {max(pos)} of {N} -- looks like a prefix"
+    assert sum(1 for p in pos if p < need) <= 2, "the prefix must not be over-represented"
+
+
+def test_draw_seeds_is_deterministic_and_returns_everything_when_supply_is_short():
+    build = _seed_rows(300)
+    assert C.draw_seeds(build, 40, seed=0) == C.draw_seeds(build, 40, seed=0)
+    assert C.draw_seeds(build, 40, seed=1) != C.draw_seeds(build, 40, seed=0)
+    assert C.draw_seeds(build, 900, seed=0) == build, "short supply returns all of it"
