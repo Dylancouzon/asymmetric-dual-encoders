@@ -34,7 +34,18 @@ def _pick(rows, n, rng):
     return sorted(rng.choice(len(rows), n, replace=False).tolist())
 
 
-def build(candidate_json=None, control_json=None):
+def _filtered_incumbent(rows, form):
+    """The incumbent store with T2-8 rung 1 applied. An intro passage IS its article's lead, so
+    the subject patterns apply to the passage itself — which makes this the like-for-like arm
+    that separates "the filter works" from "`wikipedia-body` is better". Reported, never gating;
+    Fable's own note stands that filtering cannot rescue the incumbent's SUPPLY (8,663 x 0.59
+    ~ 5.1K against a 33K need), so this arm is about precision only."""
+    import wikibody
+    return [r for r in rows if not wikibody.subject_reject(
+        wikibody.lead_sentence(r[1]), form)]
+
+
+def build(candidate_json=None, control_json=None, with_filtered_control=False, tag=""):
     """-> per-form blinded sample files plus the key. Nothing is judged here."""
     import wikibody
     OUT.mkdir(parents=True, exist_ok=True)
@@ -50,6 +61,11 @@ def build(candidate_json=None, control_json=None):
         ci, ki = _pick(c_rows, N_SAMPLE, rng), _pick(k_rows, N_SAMPLE, rng)
         items = ([("wikipedia-body", c_rows[i][0], c_rows[i][1]) for i in ci]
                  + [("incumbent", k_rows[i][0], k_rows[i][1]) for i in ki])
+        if with_filtered_control:
+            f_rows = _filtered_incumbent(k_rows, form)
+            fi = _pick(f_rows, N_SAMPLE, rng)
+            items += [("incumbent-filtered", f_rows[i][0], f_rows[i][1]) for i in fi]
+            manifest.setdefault(form, {})["filtered_control_pool"] = len(f_rows)
         order = rng.permutation(len(items))       # blinded AND interleaved
         blob, k = [], {}
         for n, j in enumerate(order):
@@ -60,23 +76,24 @@ def build(candidate_json=None, control_json=None):
         # of careful per-item judgement, and batches also mean no single judge's drift decides a
         # form. Blinding and interleaving are preserved inside every batch.
         for b0 in range(0, len(blob), N_SAMPLE):
-            (OUT / f"sample-{form}-{b0 // N_SAMPLE}.json").write_text(
+            (OUT / f"sample{tag}-{form}-{b0 // N_SAMPLE}.json").write_text(
                 json.dumps(blob[b0:b0 + N_SAMPLE], indent=1))
         key[form] = k
-        manifest[form] = {"candidate_pool": len(c_rows), "candidate_sampled": len(ci),
+        manifest[form] = {**manifest.get(form, {}),
+                          "candidate_pool": len(c_rows), "candidate_sampled": len(ci),
                           "control_pool": len(k_rows), "control_sampled": len(ki),
                           "total_items": len(blob),
                           "batches": (len(blob) + N_SAMPLE - 1) // N_SAMPLE}
-    (OUT / "key.json").write_text(json.dumps(key, indent=1))
-    (OUT / "manifest.json").write_text(json.dumps(
+    (OUT / f"key{tag}.json").write_text(json.dumps(key, indent=1))
+    (OUT / f"manifest{tag}.json").write_text(json.dumps(
         dict(n_sample=N_SAMPLE, seed=SEED, gate=GATE, blinded=True, forms=manifest), indent=1))
     print(json.dumps(manifest, indent=1))
     return manifest
 
 
-def score(*verdict_files):
+def score(*verdict_files, tag=""):
     """verdicts: {form: {index: true/false}} per file -> per-arm on-topic rate and the verdict."""
-    key = json.loads((OUT / "key.json").read_text())
+    key = json.loads((OUT / f"key{tag}.json").read_text())
     v = {}
     for f in verdict_files:
         for form, d in json.loads(Path(f).read_text()).items():
@@ -97,7 +114,7 @@ def score(*verdict_files):
         row["PASSES_GATE"] = bool(cand.get("rate") is not None and cand["rate"] >= GATE)
         row["gate"] = GATE
         out[form] = row
-    p = REPO / "results" / "m10_wikibody_precision.json"
+    p = REPO / "results" / f"m10_wikibody_precision{tag or ''}.json"
     p.write_text(json.dumps({"n_sample": N_SAMPLE, "seed": SEED, "gate": GATE,
                              "blinded": True, "forms": out}, indent=1))
     print(json.dumps(out, indent=1))
@@ -106,6 +123,8 @@ def score(*verdict_files):
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "score":
-        score(*sys.argv[2:])
+        score(*sys.argv[3:], tag=sys.argv[2])
+    elif len(sys.argv) > 1 and sys.argv[1] == "regate":
+        build(with_filtered_control=True, tag="-r1")
     else:
         build()
