@@ -1,64 +1,52 @@
-# M10 status — weekend window RUNNING. Steps 0a, 0b, 1, 2 and 3 are DONE; nothing has trained; the runbook below is the execution order
+# M10 status — 2026-09-05. Steps 0a, 0b, 1, 2, 3 and 4 are DONE; nothing registered has trained; three jobs are IN FLIGHT
 
-## Weekend progress — 2026-09-05. READ THIS FIRST, then the mandate.
+## IN FLIGHT right now (check these first on a cold start)
+
+| job | how to check | ETA |
+|---|---|---|
+| **M10.0-e calibration**, arms P0/P1/P2 at 5M each | `work/m10calib_run.log`, `grep "ex/s"`; artifacts `work/m10calib/P*.json` and `P*_cov.json` | ~961 ex/s, 87 min per arm, ~3h left |
+| **Wikipedia harvest pass** | `work/m10harvest_wiki.log`; report at `work/m10harvest/wiki_harvest.jsonl.report.json` | ~5,400 articles/s, ~10 min left |
+| **not started, next:** the pool `ask` pass, then `harvest.draw()` | — | ~10 min + ~1h |
+
+A stale-artifact hazard to know about: **the 90-step smoke of `calib.run_arm` wrote to the same
+`work/m10calib/P0.json` path the real run uses.** If a real arm dies, that file is a smoke record
+that looks like a result — check `total_steps == 156250` before believing any P arm's JSON.
+
+## Where the milestone actually stands
 
 | step | state | outcome |
 |---|---|---|
-| **0a** vLLM + generator | **DONE, PASSES** | vLLM 0.28.0, attempt 1, **no fallback** — generation stays on the box, no cloud spend. Contract 93.75% (gate 90%), **1,027–1,173 aggregate output tok/s** (gate 700). ≈1.0M queries ≈ 10 box-hours. `results/m10_gen_health_box.json` |
-| **0b** rate re-measure | **DONE** | bucketed + prefetched + `torch.compile` on fixed buckets gives **914–960 ex/s** query-bucket, **792** document-bucket, blended ≈890 → **~62 GPU-h for the 200M build on the box**. `results/m10_rate_bench_real_box.json` |
-| **1** generation smoke | **DONE — all 7 forms APPROVED by Dylan** | Contract 100% everywhere after 7 prompt revisions across 4 forms. `m10/SMOKE.md`, GitHub issue **#1**. `argument` ships with **67%** (full-output) as its honest rate |
-| **2** COV admission | **DONE — four families** | MedicalQA · BRIGHT (6 slices) · CorporateLobbying · ConsumerContractsQA · **LEDGER**. 13,416 queries, 4 family IDs. All screened clean. Teacher-encoded. LEDGER §2 |
-| **2b** COV **resolution number** | **DONE — W5 ANSWERED** | **0.008619**, paired SD 0.00302. The registered **MDE 0.0056 sits BELOW it**, so a contrast landing at the MDE cannot resolve — the bottom of §Surfaces' predicted band. **More data will not fix it:** BRIGHT carries 50.0% of the macro variance and legal 32.5%, against LEDGER's 2.7% for 10,000 of the 13,416 queries — family-equal weighting means LEDGER bought dilution, not power. Dylan's three options stand; the registered default (report unresolved as unresolved) holds unless he moves the MDE, which is Tier 3 and must happen before any arm. `results/m10_cov_resolution.json`, LEDGER §3 W5 and §4 |
-| **3** **§0a design lock** | **DONE, PUSHED, then AMENDED S1–S10** | The lock is **`m10/screen_registry.json`**, not prose; `m10src/screen_lock.py` validates it (18 tests). **S1 was a structural confound that would have shipped:** the anchor was "F's winner at its 5M checkpoint" — ~75% through cycle 1 of a 20M schedule, un-annealed — against genuine three-cycle 5M arms, on the `b` side of **ten** contrasts. It is now **its own trained 5M arm**: 16 trained arms, +2 GPU-h. LEDGER §0a |
-| **protected10** | **DONE (was runbook item 3 of the next-three)** | `seeds.draw` now screens against the M10 protected index — six + dev + reserved queries **plus admitted COV queries AND documents**. 464,757 COV fingerprints cached. `SCREEN_VERSION` bumped; `_key` no longer hardcodes `ROUTE` |
-| **7 (part)** family-F parity | **DONE — all six heads PASS** | bge-small · MiniLM-L6 · MiniLM-L12 at 3 and 4 layers, min-cos ≥ **0.99999988** through fastembed, zero custom ops, all under the 35M cap. A first run read 0.93–0.95 and would have disqualified both MiniLM students; diagnosed, see the hard-won facts. `results/m10_student_parity_box.json` |
-| **W3 seed supply** | **supply SOLVED (72,826 health seeds vs a ~33K need); the gate FAILED and the CONTROL is the finding** | New store **`wikipedia-body`** (T2-5, Tier 2, Fable-reviewed, registered before its scan): body paragraphs (**lead excluded**) of `wikimedia/wikipedia@20231101.en`, **unchanged** `ROUTE` and `min_score ≥ 4`, cap 3 seeds/article/form, health and finance only. Full-dump scan running at ~2,000 articles/s. The shortfall is closed by corpus size, not by lowering any bar |
-| **4** harvest (arXiv half) | **DONE** | Dylan supplied a Kaggle token, so the registered artifact was used and no substitution was needed. 3,148,882 records → 3,148,792 unique version-stripped ids; `default_rng(0).choice(N, 100,000)`; first 2,000 are the queries; 0 empty titles/abstracts; zip sha256 in §0b. All 100,000 base ids excluded from every training role; the 2,000 queries and abstracts are **in the protected index**. `m10src/arxiv_draw.py`. The extraction rules over arXiv/Wikipedia/ESCI are still to do |
-| **T2-7** on-form diagnostic | **DONE — report-only, admits nothing** | `wikipedia-body` **0.780** vs incumbent 0.735 (health, z = +1.05) and **0.790** vs 0.635 (finance, z = **+3.48**). Mechanism measured: on-form given an ON-subject seed 0.83–0.94, given an OFF-subject seed 0.50–0.66 — seed precision propagates but does not determine. No diversity collapse in any arm. **For Dylan: the approved prompts read 0.735 / 0.635 on the REAL build population, below the 0.80 the forms were approved at** |
-| **6** trainer port | **part done, all tested** | `m10src/nano10.py` + `test_nano10.py` (14 tests, CPU): the per-token head pooled AFTER the head, with the commutation algebra proved both ways; padding proved inert; the ridge warm start on pooled features proved identical to per-token; the exact 4-step mix window; the cyclic schedule and its cycle ends; D-NORM as the norm; **D-COV rebuilt as the registered quadratic form after I had written it as a diagonal weight**; the kill and plateau rules; and the ONNX token-output export with parity **0.99999994** on a real bge-small. **Still to do: the train loop itself, `test_resume.py`, the examples/s counter, and the 90-step smoke of every arm shape** |
-| **5, 8–11** | not started | next: close the seed loop, then PAQ, then the train loop |
+| **0a / 0b / 1 / 2** | DONE | vLLM + generator pass; rates re-measured; all seven generated forms approved; four COV families admitted (13,416 queries) |
+| **2b** COV resolution | **DONE — W5 answered** | **0.008619**; MDE 0.0056 sits below it. Variance: BRIGHT 50.0%, legal 32.5%, consumer-health 14.7%, finance 2.7% |
+| **teacher ceiling** | **DONE** | stella's own COV macro **0.5567** — legal 0.8845, consumer-health 0.7507, finance 0.3726, **BRIGHT 0.2191**. `results/m10_cov_teacher_ceiling.json` |
+| **3** §0a design lock | DONE, amended S1–S10 | `m10/screen_registry.json` + `screen_lock.py`, 18 tests. The anchor is its own trained arm (16 arms) |
+| **4** harvest | **arXiv DONE (4,983,385 rows), Wikipedia running, pool pass next** | Draw rule registered before any count: uniform reservoir per form, quota ≈1.25M, margin 1.5, both screens, matches removed |
+| **6** trainer port | **model, data, loop and export all DONE and tested; 43+ tests green** | `nano10` · `data10` · `trainer10` · `qfilter` · full stack verified on real data at **961 ex/s**. Still missing: the 90-step smoke of EVERY arm shape (only the anchor shape is smoked) |
+| **W6 seed store** | **RESOLVED by Dylan** | Use `wikipedia-body`, report the measured numbers, **invent no standard**. There is no admission bar. Revisitable with reviewer approval |
+| **word-range filter** | **DONE — the largest on-form win found** | Enforcing each form's own frozen-rubric range: health **0.780 → 0.857**, finance **0.790 → 0.806**. Out-of-range queries score ~0 on-form. `results/m10_qfilter_effect.json` |
+| **5, 8–11** | not started | PAQ · generation (~10 box-h) · §0b · family F (~17 GPU-h) · family A |
 
-## THE NEXT THREE THINGS, in order
+## THE NEXT FIVE THINGS, in order
 
-0. **THE GATE RESULT, read this before anything else** (`results/m10_wikibody_precision.json`).
-   Blinded, interleaved, 200 + 200 per form, four independent judges: **health 0.545 vs the
-   incumbent 0.590** (z = −0.91, indistinguishable) · **finance 0.535 vs the incumbent 0.315**
-   (z = +4.56). Gate ≥ 0.80: **BOTH FAIL.** `wikipedia-body` is **not adopted** on this evidence.
-   The incumbent's base precision had never been measured — only the `ROUTE_WIDE` marginal ever
-   was, against this same bar — so reverting is not a safe default. W6 is the Tier-3 question and
-   is Dylan's. **Do not move the bar.** Every failure class the judges named is an article-SUBJECT
-   error (physician biographies, institutions, animal disease, reference fragments, "bank" as a
-   landform), so the registered next lever is the subject filter and it is aimed correctly.
-1. **Rung 2 of the subject ladder** (T2-8), because rung 1 did not clear. **Rung 1's result:
-   health 0.545 → 0.655, finance 0.535 → 0.535, incumbent 0.595 → 0.770 / 0.350 → 0.490; the bar
-   is still 0.80 and nothing reaches it** (`results/m10_wikibody_precision-r1.json`). Rung 2 is
-   LLM classification of the lead sentence with the approved local generator, pinned and seeded,
-   re-gated by the same instrument against the unchanged bar. **Read the note in LEDGER §3 first:**
-   some `wikipedia-body` failures are chunks off-topic inside an ON-subject article, which no
-   lead-sentence classifier can see — a per-CHUNK variant would reach them but is a different
-   lever from the registered one, so it needs a Fable pass before it is chosen.
-   ~~**Close the seed loop.**~~ The re-scan (labelled with T2-8 rung 1's subject class per row) is
-   running; then `wikibody.draw(per_form=33000)` — which now drops every row whose article's lead
-   sentence fired a reject class — and then **re-gate against the UNCHANGED 0.80**, sampling the
-   NEW drawn pool (a filtered store's top 33K is a different population). Rung 1 rejects ~23% of
-   health and ~39% of finance rows on a prefix sample, leaving ~56K and ~102K against a 33K need.
-   If rung 1 clears 0.80, stop there — **no trying rung 2 "to see"**. `m10src/wikibody.py`: `scan()` (running) → `draw(per_form)`
-   → **the judged precision gate**. The gate is the whole decision and it is what killed
-   `ROUTE_WIDE`: **200 uniform-random seeds per form from the population `draw()` actually
-   returns** (top-score-first), judged by an independent Fable subagent against the frozen
-   `m10src/forms.RUBRIC`, **≥ 80% hard**, plus a **200-seed control from the incumbent `ROUTE`
-   intro seeds judged in the same run** (reported, never an escape clause). Fail → not adopted;
-   the registered next lever is **category-membership routing** over the `categorylinks` dump,
-   never a relaxed floor. **Do not adopt on the counts alone** — asserting precision instead of
-   measuring it is what sank `ROUTE_WIDE` v1.
-2. **Step 4, harvest.** §0a is on origin, so the harvest is unblocked. Download the Kaggle arXiv
-   metadata artifact, record version and sha256, **draw `arxiv-title`** (sorted version-stripped
-   ids, `default_rng(0).choice(N, 100_000, replace=False)`, first 2,000 = queries), protect and
-   encode it; then the extraction rules over arXiv, Wikipedia and ESCI, yields to LEDGER §1.
-3. **Step 6, the trainer port** — per-token heads with pooling after the head, the token-output
-   export wrapper and its parity test, the 4-step mix window, the cyclic schedule, ‖e‖₂ and D-COV,
-   the kill and plateau rules, `test_resume.py`, the examples/s counter, and a **90-step smoke of
-   every arm shape** before any arm.
+1. **Pool `ask` pass**, then **`harvest.draw()`** — the A3 corpus. ~1h, CPU.
+2. **PAQ** from Facebook's official release (NOT an HF mirror — a wrapper tag is not evidence);
+   the 1.0M build sample and the 4.037M A2 control, seed 0, hashes pinned.
+3. **Generation**, ~10 box-hours on the GPU once the calibration arms free it. Apply `qfilter`
+   to the output — it is the single largest quality lever measured, and it enforces a range the
+   frozen rubric already specifies.
+4. **The 90-step smoke of every arm shape** before any registered arm. §Screen requires it and
+   only the anchor shape has been smoked.
+5. **§0b**, then **family F**.
+
+## Three things a resuming session must NOT redo
+
+- **Do not move the seed-precision bar.** W6 is resolved: there is no bar, the numbers are
+  reported. Two reviewers already withdrew one replacement rule; the post-mortem is LEDGER §W6.
+- **Do not re-weight or drop BRIGHT.** Considered and rejected 2026-09-05 with the arithmetic in
+  LEDGER §5: BRIGHT is 46% of the signal for 50% of the variance, all four family deltas are
+  same-signed, and the uninformative family is **legal** (9.8% / 32.5%). Dropping BRIGHT moves the
+  distance 0.0086 → 0.0081 and loses 28% of the signal.
+- **Do not treat the on-form diagnostic as an admission instrument.** It admits nothing (T2-7).
 
 ## Hard-won facts a resuming session must not rediscover
 
