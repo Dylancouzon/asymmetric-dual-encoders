@@ -1,34 +1,39 @@
-# M10 status — weekend window RUNNING. Steps 0a, 0b and 1 are DONE; nothing has trained; the runbook below is the execution order
+# M10 status — weekend window RUNNING. Steps 0a, 0b, 1, 2 and 3 are DONE; nothing has trained; the runbook below is the execution order
 
-## Weekend progress — 2026-09-04 evening. READ THIS FIRST, then the mandate.
+## Weekend progress — 2026-09-05. READ THIS FIRST, then the mandate.
 
 | step | state | outcome |
 |---|---|---|
 | **0a** vLLM + generator | **DONE, PASSES** | vLLM 0.28.0, attempt 1, **no fallback** — generation stays on the box, no cloud spend. Contract 93.75% (gate 90%), **1,027–1,173 aggregate output tok/s** (gate 700). ≈1.0M queries ≈ 10 box-hours. `results/m10_gen_health_box.json` |
-| **0b** rate re-measure | **DONE** | Real corpora + real memmapped targets: bucketed + prefetched + `torch.compile` on fixed buckets gives **914–960 ex/s** query-bucket, **792** document-bucket, blended ≈890 → **~62 GPU-h for the 200M build on the box** (plan assumed 683 ex/s → 81 h). `results/m10_rate_bench_real_box.json` |
-| **1** generation smoke | **DONE — all 7 forms APPROVED by Dylan** | Contract 100% everywhere after 7 prompt revisions across 4 forms. On-form vs the frozen rubric: yesno 100 · conversational 100 (r1) · argument 88 · finance 86 · comparison 84 · health 84 · howto 80.0. `m10/SMOKE.md`, GitHub issue **#1**. `argument` ships with **67%** (full-output) as its honest rate |
-| **2** COV admission | **DONE — four families** | MedicalQA · BRIGHT · CorporateLobbying · ConsumerContractsQA · **LEDGER**. Surface = **13,416 queries, 4 family IDs** (STOP is <3). All screened clean vs the six. Teacher-encoded. LEDGER §2 |
-| **headroom** | H1 done; **H3 FAILED its gate** | LEDGER admitted (H1) — the big win. Seed supply (H3): widening raised raw counts but **failed the registered precision gate (health marginal 28% on-topic, finance 38%, gate 80%)**, so it is **not adopted** and `draw()` is back on T2-3's `ROUTE`. Usable supply stays **health ~17.6K, finance ~22.8K vs a ~32–33K need — W3 is OPEN**. `m10/HEADROOM.md` |
-| **3–11** | not started | §0a lock needs step 2's **resolution number**, which is the next task |
+| **0b** rate re-measure | **DONE** | bucketed + prefetched + `torch.compile` on fixed buckets gives **914–960 ex/s** query-bucket, **792** document-bucket, blended ≈890 → **~62 GPU-h for the 200M build on the box**. `results/m10_rate_bench_real_box.json` |
+| **1** generation smoke | **DONE — all 7 forms APPROVED by Dylan** | Contract 100% everywhere after 7 prompt revisions across 4 forms. `m10/SMOKE.md`, GitHub issue **#1**. `argument` ships with **67%** (full-output) as its honest rate |
+| **2** COV admission | **DONE — four families** | MedicalQA · BRIGHT (6 slices) · CorporateLobbying · ConsumerContractsQA · **LEDGER**. 13,416 queries, 4 family IDs. All screened clean. Teacher-encoded. LEDGER §2 |
+| **2b** COV **resolution number** | **DONE — W5 ANSWERED** | **0.008619**, paired SD 0.00302. The registered **MDE 0.0056 sits BELOW it**, so a contrast landing at the MDE cannot resolve — the bottom of §Surfaces' predicted band. **More data will not fix it:** BRIGHT carries 50.0% of the macro variance and legal 32.5%, against LEDGER's 2.7% for 10,000 of the 13,416 queries — family-equal weighting means LEDGER bought dilution, not power. Dylan's three options stand; the registered default (report unresolved as unresolved) holds unless he moves the MDE, which is Tier 3 and must happen before any arm. `results/m10_cov_resolution.json`, LEDGER §3 W5 and §4 |
+| **3** **§0a design lock** | **DONE, PUSHED, then AMENDED S1–S10** | The lock is **`m10/screen_registry.json`**, not prose; `m10src/screen_lock.py` validates it (18 tests). **S1 was a structural confound that would have shipped:** the anchor was "F's winner at its 5M checkpoint" — ~75% through cycle 1 of a 20M schedule, un-annealed — against genuine three-cycle 5M arms, on the `b` side of **ten** contrasts. It is now **its own trained 5M arm**: 16 trained arms, +2 GPU-h. LEDGER §0a |
+| **protected10** | **DONE (was runbook item 3 of the next-three)** | `seeds.draw` now screens against the M10 protected index — six + dev + reserved queries **plus admitted COV queries AND documents**. 464,757 COV fingerprints cached. `SCREEN_VERSION` bumped; `_key` no longer hardcodes `ROUTE` |
+| **7 (part)** family-F parity | **DONE — all six heads PASS** | bge-small · MiniLM-L6 · MiniLM-L12 at 3 and 4 layers, min-cos ≥ **0.99999988** through fastembed, zero custom ops, all under the 35M cap. A first run read 0.93–0.95 and would have disqualified both MiniLM students; diagnosed, see the hard-won facts. `results/m10_student_parity_box.json` |
+| **W3 seed supply** | **SOLVED in principle; the precision gate is the open item** | New store **`wikipedia-body`** (T2-5, Tier 2, Fable-reviewed, registered before its scan): body paragraphs (**lead excluded**) of `wikimedia/wikipedia@20231101.en`, **unchanged** `ROUTE` and `min_score ≥ 4`, cap 3 seeds/article/form, health and finance only. Full-dump scan running at ~2,000 articles/s. The shortfall is closed by corpus size, not by lowering any bar |
+| **4–11** | not started | next: finish the scan → draw → the judged precision gate; then step 4 harvest |
 
 ## THE NEXT THREE THINGS, in order
 
-1. **Measure the COV resolution number** (§Surfaces power disclosure): encode the admitted surface
-   with **e5-small-v2** and **gte-small** (candidates in no M10 family), score nDCG@10 with
-   `m7src/evalkit.score`, family-weighted macro over the four families (slices averaged within
-   family first), paired stratified bootstrap over queries within component, **B = 200,000, seed 0,
-   `inverted_cdf`, one-sided 0.025/13**. `m9src/final_stats.bootstrap` is the registered
-   implementation but is **hardcoded to 6 datasets** — a family-macro variant is needed.
-   This decides whether the screen can resolve anything: §Surfaces expected 0.009–0.0135 against
-   MDE 0.0056, i.e. most B–G contrasts unresolved. LEDGER was admitted precisely to move it.
-2. **Seed supply, next lever (W3 is open).** Keyword widening failed its gate. Try a
-   **subject-level filter** instead: `hotpotqa-corpus` is entity intro paragraphs, so reject
-   lead-sentence patterns like "X (born …) was a …" and "X is a company/hospital/journal …",
-   which is where ~3:1 of health's noise sits. Same judged gate (≥ 80% on the newly-admitted
-   marginal) before adoption. Relaxing `min_score` is unlikely to help — it costs precision, and
-   precision is what failed.
-3. **Wire `m10src/protected10.py`** so admitted COV queries+documents join the protected index, and
-   bump `seeds.SCREEN_VERSION`, **before any build seed draw** (§Data requires it; not yet done).
+1. **Finish `wikipedia-body` and gate it.** `m10src/wikibody.py`: `scan()` (running) → `draw(per_form)`
+   → **the judged precision gate**. The gate is the whole decision and it is what killed
+   `ROUTE_WIDE`: **200 uniform-random seeds per form from the population `draw()` actually
+   returns** (top-score-first), judged by an independent Fable subagent against the frozen
+   `m10src/forms.RUBRIC`, **≥ 80% hard**, plus a **200-seed control from the incumbent `ROUTE`
+   intro seeds judged in the same run** (reported, never an escape clause). Fail → not adopted;
+   the registered next lever is **category-membership routing** over the `categorylinks` dump,
+   never a relaxed floor. **Do not adopt on the counts alone** — asserting precision instead of
+   measuring it is what sank `ROUTE_WIDE` v1.
+2. **Step 4, harvest.** §0a is on origin, so the harvest is unblocked. Download the Kaggle arXiv
+   metadata artifact, record version and sha256, **draw `arxiv-title`** (sorted version-stripped
+   ids, `default_rng(0).choice(N, 100_000, replace=False)`, first 2,000 = queries), protect and
+   encode it; then the extraction rules over arXiv, Wikipedia and ESCI, yields to LEDGER §1.
+3. **Step 6, the trainer port** — per-token heads with pooling after the head, the token-output
+   export wrapper and its parity test, the 4-step mix window, the cyclic schedule, ‖e‖₂ and D-COV,
+   the kill and plateau rules, `test_resume.py`, the examples/s counter, and a **90-step smoke of
+   every arm shape** before any arm.
 
 ## Hard-won facts a resuming session must not rediscover
 
@@ -42,6 +47,14 @@
   refusal (8 columns listed, 13 actually present, `qrels` among the missing). Load the rows.
 - **Sub-8-word boilerplate fakes contamination.** BRIGHT's 6,123 "exact" hits and LEDGER's 710 are
   near-empty pages; above the 8-word fingerprint floor both are ~0. Always re-screen length-filtered.
+- **fastembed serves `min(model_max_length, max_length)` from `tokenizer_config.json`.**
+  `all-MiniLM-*-v2` ships `max_length` 128 beside `model_max_length` 512, so fastembed truncated at
+  128 against a 512-token torch reference and the parity check read 0.93–0.95 min-cos — a
+  mis-specified check that would have disqualified both MiniLM students and gutted family F. Every
+  text under the limit was bit-exact. The export writes the tokenizer we intend to ship. bge-small
+  ships no `max_length` key, which is why it alone read 1.0.
+- **The validator and the tests run only under `.venv/bin/python`** — the system python has no
+  numpy, and that ImportError is not a lock failure.
 - **`m10src/forms.RUBRIC` is the frozen gate standard; `forms.FORMS` is the revisable prompt.**
   Never judge against the prompt — `argument` reads 8% that way and 88% against the rubric.
 - **`torch.compile` is training-only** (rules in `m10/HEADROOM.md` §T): eager `state_dict`, eager

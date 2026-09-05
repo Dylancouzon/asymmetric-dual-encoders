@@ -257,26 +257,42 @@ def screen(rows, verbose=True):
     return kept, rep
 
 
-def draw(per_form, path=None, verbose=True):
+def draw(per_form, path=None, margin=4, verbose=True):
     """The BUILD's seed selection: top-score-first per form over the screened store.
 
     Top-score-first is `seeds.draw`'s registered ordering and is kept, so the gate judges the
     population the build actually uses (the Fable pass's condition 6). If the gate fails on it,
     the registered next lever is category-membership routing — never a relaxed floor.
+
+    Only the top `margin * per_form` per form are screened, not the whole store: the screen costs
+    ~13 ms per candidate (a measured 39 s for 3,000) and the store holds ~500K, which is 1.8 hours
+    to screen candidates that a top-score-first draw would never reach. The margin is 4x against a
+    measured ~3% query-side drop rate, and running out is an error, not a silent short draw.
     """
     raw, dedup = _load_jsonl(path)
-    kept, srep = screen(dedup, verbose=verbose)
+    pool, by_form = [], {}
+    for f in FORMS:
+        rows = [r for r in dedup if r["form"] == f]          # already score-sorted
+        by_form[f] = len(rows)
+        pool += rows[:margin * per_form]
+    kept, srep = screen(pool, verbose=verbose)
     out, counts = {}, {}
     for f in FORMS:
-        rows = [r for r in kept if r["form"] == f]          # already score-sorted
+        rows = [r for r in kept if r["form"] == f]
         out[f] = rows[:per_form]
-        counts[f] = dict(admitted=len(rows), taken=len(out[f]),
+        if len(rows) < per_form and by_form[f] > margin * per_form:
+            raise SystemExit(f"{f}: the {margin}x screening pool left only {len(rows)} of "
+                             f"{per_form} after screening -- widen `margin` and re-draw rather "
+                             f"than accepting a short draw")
+        counts[f] = dict(admitted_in_store=by_form[f], screened=margin * per_form,
+                         survived_screen=len(rows), taken=len(out[f]),
                          short=max(0, per_form - len(rows)),
                          min_score_taken=min((r["score"] for r in out[f]), default=None),
                          max_score_taken=max((r["score"] for r in out[f]), default=None))
-    rep = dict(per_form=per_form, n_raw=len(raw), n_after_exact_dedup=len(dedup),
+    rep = dict(per_form=per_form, margin=margin, n_raw=len(raw), n_after_exact_dedup=len(dedup),
                screen=srep, counts=counts, store="wikipedia-body",
-               repo=REPO_ID, config=CONFIG, revision=REVISION)
+               repo=REPO_ID, config=CONFIG, revision=REVISION, licence=LICENCE,
+               per_article_cap=PER_ARTICLE_CAP, min_score=MIN_SCORE, lead_excluded=True)
     (OUT / "wikibody_draw.json").write_text(json.dumps(rep, indent=1))
     if verbose:
         print(json.dumps(counts, indent=1))

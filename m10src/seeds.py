@@ -242,7 +242,10 @@ def supply(forms=("health", "finance", "howto"), stores=None, min_score=4, route
     """
     import decontam
     stores = stores or TOPICAL_STORES
-    route = route or ROUTE_WIDE
+    # ROUTE, not ROUTE_WIDE: the widening FAILED its registered precision gate (28% / 38%
+    # on-topic against >= 80%) and is not adopted anywhere. It had been left as this scanner's
+    # default, so a future session measuring supply would have measured under withdrawn routing.
+    route = route or ROUTE
     pats = {f: re.compile(route[f], re.I) for f in forms}
     counts = {f: 0 for f in forms}
     counts_nolen = {f: 0 for f in forms}
