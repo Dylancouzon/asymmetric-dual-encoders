@@ -514,3 +514,16 @@ def test_the_document_pool_drops_the_rescreened_rows_and_still_returns_n(monkeyp
     assert texts == ["doc3", "doc4", "doc6", "doc7", "doc8", "doc9", "doc10", "doc11"]
     assert meta["n_removed_by_rescreen"] == 4 and len(V) == 8
     assert np.allclose(np.linalg.norm(V, axis=1), 1.0, atol=1e-6)
+
+
+def test_the_token_cache_identity_binds_the_M10_RESCREEN(monkeypatch):
+    """A corpus screened against a different protected index is a different corpus, and must not
+    be served the ids the previous one cached."""
+    with tempfile.TemporaryDirectory() as d:
+        monkeypatch.setattr(CL, "TOKCACHE", Path(d))
+        segs, man = _segs([12]), {"sha256": "abc"}
+        for r in (None, {"removed": 709, "protected10": "aa"},
+                  {"removed": 709, "protected10": "bb"}):
+            CL.tokenize_corpus(_Tok(), segs, man, "bge-small", verbose=False,
+                               extra_ident={"rescreen10": r})
+        assert len(list(Path(d).iterdir())) == 3
