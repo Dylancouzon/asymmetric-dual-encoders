@@ -23,7 +23,10 @@ What it checks per shape, and why each has already caught something:
   1. the model CONSTRUCTS               -- `G-384` raised `KeyError: 1`; `LAYERS` had no 1-layer key
   2. params <= the 35M cap (hard, Dylan 2026-09-01)
   3. 90 steps run with a finite loss, through the real `trainer10.train_arm`
-  4. the arm's REGISTERED warm start actually runs -- G-MLP's three-solve recipe
+  4. the arm's REGISTERED warm start actually runs -- note its *numbers* are degenerate here:
+     256 fit texts against 1,153 ridge parameters interpolates, so G-MLP's train objective reads
+     0.0. This checks the PATH, not the fit; `test_warmstart` runs the overdetermined case.
+     G-MLP's three-solve recipe
      (`nano10.warm_start_mlp`) and C-M9init's zero-padded head (`nano10.warm_start_from_m9`) were
      missing when this file was written and are now exercised here rather than assumed
 

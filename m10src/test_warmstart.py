@@ -89,12 +89,25 @@ def test_warm_start_mlp_is_EXACT_for_the_training_form(mlp_model):
     assert cos.min() > 0.9999, f"min cos {cos.min():.8f} -- the warm start is not exact"
 
 
-def test_warm_start_mlp_starts_no_worse_than_the_linear_head(mlp_model):
+def test_warm_start_mlp_starts_no_worse_than_the_linear_head():
     """Solve 3 fits the residual of solve 1, so on the fit sample the MLP start cannot be worse.
-    A regression here means the correction is being installed wrong."""
-    Y = _targets(len(TEXTS))
-    rec = N.warm_start_mlp(mlp_model, TEXTS, Y, lam=1e-4)
+
+    This MUST be run OVERDETERMINED or it proves nothing. With `d_in = 1152` the ridge has 1,153
+    parameters per output dim, so any fit sample smaller than that interpolates and BOTH objectives
+    read exactly 0.0 -- which is what the arm smoke shows at its n_fit of 256. So use the 1-layer
+    feature (d_in 384, 385 parameters) against 600 texts and a real residual.
+    """
+    torch.manual_seed(0)
+    m = N.Nano10("bge-small", n_layers=1, head="mlp", mlp_k=16)
+    texts = [f"query {i} about {'alpha beta gamma delta'.split()[i % 4]} and some trailing words"
+             for i in range(600)]
+    Y = _targets(len(texts))
+    rec = N.warm_start_mlp(m, texts, Y, lam=1e-4)
+    assert rec["train_objective_linear_only"] > 1e-6, \
+        f"fit is degenerate ({rec['train_objective_linear_only']}) -- the test proves nothing"
     assert rec["train_objective"] <= rec["train_objective_linear_only"] + 1e-6
+    assert rec["train_objective"] < rec["train_objective_linear_only"], \
+        "a fitted rank-16 correction on a real residual should strictly improve the fit"
 
 
 def test_warm_start_mlp_refuses_a_linear_head():
