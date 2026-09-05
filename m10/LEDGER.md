@@ -174,7 +174,30 @@ allocation and `max_extension_cycles` are neither — they are fixed at the M10.
   trap as `calib.run_arm`'s 90-step smoke writing the real `P0.json`. `draw()` now takes
   `out_dir` and records it in the report; a smoke must pass one.
 - **A8 quality gates:** per-form near-duplicate rate and mean pairwise cosine with any quota cut taken; the stella-space distribution-overlap table against the MS MARCO dev sample (disclosed diagnostic, no action).
-- PAQ release files and hashes; build sample (1.0M) and A2 sample; attribution.
+- **PAQ — DRAWN 2026-09-05** (`work/m10paq/paq_draw.json`), decision 4, from Facebook's official
+  release and never an HF mirror. **Release file:** `https://dl.fbaipublicfiles.com/paq/v1/PAQ.tar.gz`
+  → `PAQ/PAQ.filtered.jsonl`, tarball sha256
+  `177eefb2ddf8ab46a8d2248c058d5be52a4f2ce7614e55c1696f69fd0fe051c3`, 1,447,064,073 bytes,
+  **population 64,875,601 pairs** (the release table says 64.9M). **Licence, primary source:** the
+  tarball ships `PAQ/LICENSE` = the CC BY-SA 3.0 Unported legal code, and the release table states
+  "The PAQ QA-pairs and metadata is licensed under CC-BY-SA"; the repo's CC-BY-NC covers the
+  GENERATION CODE, which is not used. **Attribution required on the model card.** Only the
+  `question` field is read — the answers are never used, and no objective could consume them.
+  **Draw:** uniform without replacement, seed 0, margin 1.05 (set from the pilot's measured
+  99.656% survival, `paq_pilot.json`), 4,238,850 drawn → exact-dedup **−2,172** → protected-index
+  screen **−14,677 (0.35%: near 14,503, exact 23, contains 151)** → **4,222,001 survivors**, then
+  shuffled before truncation. 767 s.
+
+| sample | n | sha256 | bytes |
+|---|---|---|---|
+| A2 (volume control, screen arm A2 only) | **4,037,000** | `8f32bcdf602ff982…` | 275,051,180 |
+| build (nested inside A2) | **1,000,000** | `5bd7b7283360caf1…` | 68,125,371 |
+
+  **The build sample is a SUBSET of the A2 sample** — A2 is the volume control, so "the build with
+  less PAQ volume" is the coherent nesting. Nothing registered specifies it; stated because it is
+  an implementation choice. **PAQ's protected overlap being only 0.35% is worth knowing on its
+  own:** PAQ is machine-generated over Wikipedia passages and NQ/TriviaQA/HotpotQA are Wikipedia
+  questions, so a large overlap was the expectation — it does not reproduce their phrasing.
 - Decontamination removals per screen, per form, per COV component; FORMS-12 hold-out seed ids.
 - Teacher-target cache keys. ~~bank, mining method, recall@64 audit~~ — struck with the ranking-aware class (amendment A1).
 - `results/m10_data_manifest.json` sha256.
