@@ -23,6 +23,7 @@
 | `arxiv_draw.py` | the registered `arxiv-title` draw from the Kaggle artifact | `work/m10arxiv/arxiv_draw.json` |
 | `nano10.py` | the M10 student (per-token head, pooled after), the family-D objectives, the mix window, the cyclic schedule, the kill and plateau rules, and the ONNX export | — |
 | `trainer10.py` | the training loop, checkpointing and resume | — |
+| `rescreen10.py` | the M9 query pool and document pool re-screened against `protected10` (`instructions-m10.md`:462); the keep mask is cached on (protected index identity, pool identity) and a training path refuses without it | `results/m10_rescreen10.json`, `work/m10cov/rescreen10/` |
 | `corpus_loader.py` | the M10 query corpora → the trainer: declared sources (M9 pool · PAQ · harvest · the generated half, unbuilt), the hashed manifest, packed pretokenization, the data cut, and the **form-balanced sampler** (`balanced=False` is A2's variant) | `results/m10_corpus_manifest.json` |
 | `targets10.py` | stella query targets keyed by **content hash** into an append-only fp16 memmap — resumable, appendable, and cold == warm by construction | `work/m10targets/`, `results/m10_targets10.json` |
 | `m10/report-draft.html` | source of the owner report artifact (https://claude.ai/code/artifact/fce61c94-5444-4c78-bb2e-46112cb7547a); republish from a session, never edit the live page | — |
@@ -50,3 +51,12 @@
 13. **`batch_tokens` above ~32768 hits `CUDA driver error: device not ready`** on this card, the
     same failure as `E-bs128`. Measured stella query-encode rates: **345 texts/s** on harvested
     text, **484** on PAQ questions, at the M9 default.
+14. **`protected10.build()` must run BEFORE anything imports `m9base`.** It reads the reserved
+    QUERY text through `decontam.protected_query_index`, and `paths_guard` (installed by `m9base`)
+    refuses that with no allowlist claim. `harvest.draw` relies on the same order; `rescreen10`'s
+    CLI builds the index as its first statement. Training paths never build it -- they read the
+    cached mask.
+15. **A reader must never truncate an append-only store.** `TargetCache._truncate` ran on every
+    open, so opening the cache read-only while an encode was appending would have cut the chunk in
+    flight. Excess bytes are now repaired only by a writer holding the lock; a reader tolerates
+    them (`n` is the authority) and refuses only a SHORT file.
