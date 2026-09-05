@@ -80,7 +80,11 @@ def encode(key, name, texts, role, batch_size=128):
         raise SystemExit(f"{key}/{name}/{role}: non-finite vectors")
     np.save(p, v.astype(np.float16))
     print(f"    {key} {name} {role}: {len(texts):,} in {time.time()-t0:.0f}s", flush=True)
-    return v
+    # Round-trip through the STORED dtype before returning. Returning fp32 on the cold path and
+    # fp16 on the warm one makes the score depend on whether the cache existed -- a resumed or
+    # re-run scoring would not reproduce the first (Codex 2026-09-05). fp16 is also what M9's
+    # teacher cache serves, so this is the project's existing precision, not a new one.
+    return np.load(p).astype(np.float32)
 
 
 def units():
@@ -114,7 +118,9 @@ def units():
         d = load_dataset("xlangai/BRIGHT", "documents", revision=brev, split=sl)
         qrels = {}
         for qid, gold in zip(e["id"], e["gold_ids"]):
-            qrels[str(qid)] = {str(g): 1 for g in gold}
+            g = {str(x): 1 for x in gold}
+            if g:                      # a query with no positive judgment cannot be scored
+                qrels[str(qid)] = g
         out.append((f"BRIGHT/{sl}", "BRIGHT", list(e["query"]), [str(x) for x in e["id"]],
                     list(d["content"]), [str(x) for x in d["id"]], qrels))
     # LEDGER: page-level, graded 0/1/2
@@ -135,6 +141,18 @@ def score_units(keys=("P1", "P2"), k=200):
     import evalkit
     per, rep = {kk: {} for kk in keys}, {}
     for uid, family, qs, qids, ds, dids, qrels in units():
+        # `evalkit.run_from_arrays` drops any retrieved document whose id EQUALS the query's, as
+        # a self-copy guard. Across separate id namespaces that would silently delete a real --
+        # possibly relevant -- document, so the disjointness is asserted per unit rather than
+        # assumed (Codex 2026-09-05). Duplicate ids would likewise collapse in the run dict.
+        if set(qids) & set(dids):
+            raise SystemExit(f"{uid}: query and document id namespaces intersect "
+                             f"({len(set(qids) & set(dids))} shared) -- evalkit's self-hit guard "
+                             f"would delete real documents")
+        if len(set(qids)) != len(qids) or len(set(dids)) != len(dids):
+            raise SystemExit(f"{uid}: duplicate query or document ids")
+        if any(not v for v in qrels.values()):
+            raise SystemExit(f"{uid}: a qrels entry with no positive judgment")
         # a query with no positive judgment cannot contribute; pytrec_eval drops it anyway
         keep = [i for i, q in enumerate(qids) if q in qrels]
         qs, qids = [qs[i] for i in keep], [qids[i] for i in keep]

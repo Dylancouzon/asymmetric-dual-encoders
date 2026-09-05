@@ -31,7 +31,7 @@ PAGE_CAP = 100_000                 # the registered cap
 def load(verbose=True):
     """-> (queries, qrels, corpus_ids, corpus_texts, report). Verifies the page split."""
     from datasets import load_dataset
-    d = load_dataset(REPO_ID, "eval", split="test")
+    d = load_dataset(REPO_ID, "eval", split="test", revision=REVISION)
     pages, seen = {}, {}
     bad, n_qrel = [], 0
     for r in d:
@@ -56,6 +56,11 @@ def load(verbose=True):
                empty_pages=sum(1 for v in pages.values() if len(v.split()) < 5))
     if verbose:
         print(json.dumps(rep, indent=1), flush=True)
+    # Reporting a failed structure check and scoring anyway is not a check (Codex 2026-09-05).
+    if rep["qrel_ids_missing_from_split"] or not rep["under_page_cap"]:
+        raise SystemExit(f"LEDGER structure does not verify, refusing to serve it: "
+                         f"{rep['qrel_ids_missing_from_split']} qrel ids missing, "
+                         f"{rep['n_pages']} pages vs cap {PAGE_CAP}")
     ids = sorted(pages)
     return ([r["query_text"] for r in d], d["qrels"], ids, [pages[i] for i in ids], rep)
 

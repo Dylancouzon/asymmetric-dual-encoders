@@ -6,9 +6,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import numpy as np
 import cov_macro as cm
 
-UF = {"MedicalQARetrieval": "consumer-health", "LEDGER": "finance",
-      "LegalBenchCorporateLobbying": "legal", "LegalBenchConsumerContractsQA": "legal",
-      **{f"BRIGHT/s{i}": "BRIGHT" for i in range(6)}}
+UF = dict(cm.SURFACE)          # the tests run on the real admitted surface, never a synthetic one
+BR0 = "BRIGHT/biology"
 
 
 def test_weights():
@@ -16,13 +15,20 @@ def test_weights():
     assert abs(sum(w.values()) - 1.0) < 1e-12
     assert abs(w["MedicalQARetrieval"] - 0.25) < 1e-12
     assert abs(w["LegalBenchCorporateLobbying"] - 0.125) < 1e-12
-    assert abs(w["BRIGHT/s0"] - 0.25 / 6) < 1e-12
-    # a family absent from the scored units must not silently reweight to a 3-family macro
-    try:
-        cm.weights({"x": "not-a-family"})
-        raise AssertionError("accepted an unregistered family")
-    except ValueError:
-        pass
+    assert abs(w[BR0] - 0.25 / 6) < 1e-12
+    # A family or unit absent from the scored set must not silently reweight the macro: a
+    # 3-family macro, or a 5-slice BRIGHT, would otherwise report as a clean number
+    # (Codex pass 2026-09-05). Every one of these must be refused.
+    for bad in ({"x": "not-a-family"},
+                {u: f for u, f in UF.items() if f != "finance"},          # a family dropped
+                {u: f for u, f in UF.items() if u != BR0},                # one slice dropped
+                {**UF, "BRIGHT/stackoverflow": "BRIGHT"},                 # an unadmitted slice
+                {**UF, BR0: "legal"}):                                    # a unit relabelled
+        try:
+            cm.weights(bad)
+            raise AssertionError(f"accepted a surface that is not the lock: {sorted(bad)[:3]}")
+        except ValueError:
+            pass
 
 
 def test_macro_is_family_weighted_not_query_weighted():
@@ -34,10 +40,12 @@ def test_macro_is_family_weighted_not_query_weighted():
 
 
 def test_align_refuses_ragged():
-    a = {"MedicalQARetrieval": {"q1": 1.0}}
-    for bad in ({"MedicalQARetrieval": {"q2": 1.0}}, {"LEDGER": {"q1": 1.0}}):
+    a = {u: {"q1": 1.0} for u in UF}
+    for bad in ({**a, "MedicalQARetrieval": {"q2": 1.0}},                 # a qid moved
+                {u: v for u, v in a.items() if u != "LEDGER"},            # a unit dropped
+                {**a, "MedicalQARetrieval": {}}):                         # a unit emptied
         try:
-            cm.align(a, bad, {"MedicalQARetrieval": "consumer-health"})
+            cm.align(a, bad, UF)
             raise AssertionError("accepted a mismatched pairing")
         except ValueError:
             pass
@@ -47,7 +55,7 @@ def test_bootstrap_matches_analytic_se_and_is_reproducible():
     rng = np.random.default_rng(7)
     ns = {"MedicalQARetrieval": 2048, "LEDGER": 10000,
           "LegalBenchCorporateLobbying": 340, "LegalBenchConsumerContractsQA": 396,
-          **{f"BRIGHT/s{i}": 100 for i in range(6)}}
+          **{u: 100 for u, f in UF.items() if f == "BRIGHT"}}
     a, b = {}, {}
     for u, n in ns.items():
         x = rng.normal(0.5, 0.2, n)

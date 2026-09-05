@@ -21,9 +21,37 @@ import numpy as np
 
 FAMILIES = ("BRIGHT", "consumer-health", "finance", "legal")
 
+# The admitted COV surface, locked (`m10/LEDGER.md` §2). This is the M9 `_assert_six` lesson
+# transplanted: checking only that observed labels are *known* lets a dropped unit or a dropped
+# family renormalise silently -- a three-family macro, or a five-slice BRIGHT, would still report
+# as a clean number. A Codex pass caught exactly that hole here (2026-09-05).
+SURFACE = {
+    "MedicalQARetrieval": "consumer-health",
+    "BRIGHT/biology": "BRIGHT", "BRIGHT/earth_science": "BRIGHT",
+    "BRIGHT/economics": "BRIGHT", "BRIGHT/psychology": "BRIGHT",
+    "BRIGHT/robotics": "BRIGHT", "BRIGHT/sustainable_living": "BRIGHT",
+    "LegalBenchCorporateLobbying": "legal", "LegalBenchConsumerContractsQA": "legal",
+    "LEDGER": "finance",
+}
+
+
+def assert_surface(unit_family):
+    """The macro is defined on exactly the admitted surface, or not at all."""
+    if dict(unit_family) != SURFACE:
+        missing = sorted(set(SURFACE) - set(unit_family))
+        extra = sorted(set(unit_family) - set(SURFACE))
+        relabelled = sorted(u for u in set(SURFACE) & set(unit_family)
+                            if unit_family[u] != SURFACE[u])
+        raise ValueError(f"COV surface does not match the admitted lock: missing={missing} "
+                         f"extra={extra} relabelled={relabelled}")
+
 
 def weights(unit_family):
-    """{unit: family} -> {unit: weight}. Families equal, units equal within family."""
+    """{unit: family} -> {unit: weight}. Families equal, units equal within family.
+
+    No bypass flag: an escape hatch on a surface lock is the lock's own defect.
+    """
+    assert_surface(unit_family)
     fams = sorted(set(unit_family.values()))
     if not set(fams) <= set(FAMILIES):
         raise ValueError(f"unknown family in {fams}; registered are {FAMILIES}")
@@ -81,18 +109,29 @@ def contrast(aligned, unit_family, B=200_000, seed=0, quantile=0.025 / 13,
         for u in units:
             n = diffs[u].size
             idx = rngs[u].integers(0, n, size=(m, n), dtype=np.int64)
-            h.update(idx[:1].tobytes())            # first row of every block, cheap and pinning
+            # First row of every block only: hashing all B x n indices is 21 GB of sha256 for
+            # a plan whose reproducibility the draws digest already establishes. Named for what
+            # it is -- a SAMPLE of the plan, not the plan (Codex 2026-09-05).
+            h.update(idx[:1].tobytes())
             acc += w[u] * diffs[u][idx].mean(axis=1)
         draws[done:done + m] = acc
         done += m
     lower = float(np.quantile(draws, quantile, method=method))
+    # §Screen names BOTH `inverted_cdf` and "the 384th order statistic", and they differ by one
+    # observation: `inverted_cdf` at B = 200,000 takes 0-based index 384, i.e. the 385th. The
+    # method name is the operative constant and is what decides; the neighbouring order statistic
+    # is returned so the size of the discrepancy is on the record (Codex 2026-09-05).
+    i0 = int(np.ceil(quantile * B)) - 1
+    prev = float(np.partition(draws, i0 - 1)[i0 - 1]) if i0 >= 1 else lower
     return {
         "delta_raw": point,
         "lower_bound_raw": lower,
         "distance_raw": point - lower,
+        "lower_bound_prev_order_statistic": prev,
+        "order_statistic_index0": i0,
         "quantile": quantile, "quantile_method": method, "B": int(B), "seed": int(seed),
         "chunk": int(chunk),
-        "plan_sha256": h.hexdigest(),
+        "plan_sample_sha256": h.hexdigest(),
         "draws_sha256": hashlib.sha256(np.ascontiguousarray(draws).tobytes()).hexdigest(),
         "draws_sd": float(draws.std(ddof=1)),
         "per_unit_delta_raw": {u: float(d.mean()) for u, d in diffs.items()},
