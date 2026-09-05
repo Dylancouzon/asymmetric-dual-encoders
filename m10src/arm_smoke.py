@@ -40,6 +40,11 @@ for p in ("m7src", "m9src", "m10src"):
     sys.path.insert(0, str(REPO / p))
 OUT = REPO / "results" / "m10_arm_smoke.json"
 STEPS = 90
+# `--corpus m10` swaps the M9-pool query stream for the real M10 corpus through
+# `corpus_loader`, form-balanced. It writes its own report: a smoke must never land on the path
+# the registered run's record lives at (§Hazards).
+M10_OUT = REPO / "results" / "m10_arm_smoke_loader.json"
+CORPUS = {"corpus": "m9", "sources": ("harvest",), "head_per_source": 0, "balanced": True}
 
 import numpy as np
 import torch
@@ -108,16 +113,17 @@ def corpus(verbose=True):
     return texts, T, dtexts, dvecs
 
 
-def _write(recs, device, max_len):
+def _write(recs, device, max_len, out=None):
     failed = [r["arm"] for r in recs if not r.get("passed")]
     no_ws = [r["arm"] for r in recs if not r.get("warm_start_implemented")]
-    OUT.write_text(json.dumps(
+    (out or OUT).write_text(json.dumps(
         {"_what": f"§Screen's registered {STEPS}-step smoke of every arm shape",
          "steps": STEPS, "device": device, "n_texts": N_TEXTS, "max_len": max_len,
          "shapes_registered": list(SHAPES), "shapes_run": [r["arm"] for r in recs],
          "arms": recs, "failed": failed, "warm_start_not_implemented": no_ws,
          "cloud_only": {k: v for k, v in CLOUD_ONLY.items()
                         if k in {r["arm"] for r in recs}},
+         "query_corpus": dict(CORPUS),
          "all_shapes_pass": not failed and len(recs) == len(SHAPES),
          "_partial": len(recs) != len(SHAPES)}, indent=1))
     return failed, no_ws
@@ -166,9 +172,20 @@ def smoke_one(name, spec, corp, device="cpu", max_len=512, verbose=True):
 
     b = spec["batch"]
     try:
-        qi = D.pretokenize(m.tok, texts, max_len=max_len)
+        if CORPUS["corpus"] == "m10":
+            import corpus_loader as CL
+            q, qman = CL.build_query_stream(
+                list(CORPUS["sources"]), m.tok, spec["student"], batch_size=b, seed=0,
+                balanced=CORPUS["balanced"], max_len=max_len, prefix="",
+                head_per_source=CORPUS["head_per_source"] or None, verbose=verbose)
+            rec["query_corpus"] = {k: qman[k] for k in
+                                   ("sources_used", "n_rows", "by_form", "sha256", "n_batches",
+                                    "mean_tokens", "balanced", "data_cut") if k in qman}
+            rec["realized_shares"] = q.realized_shares(min(len(q), 4 * STEPS))
+        else:
+            qi = D.pretokenize(m.tok, texts, max_len=max_len)
+            q = D.Stream(qi, T, pad_id=m.tok.pad_token_id, batch_size=b, seed=0)
         di = D.pretokenize(m.tok, dtexts, max_len=max_len)
-        q = D.Stream(qi, T, pad_id=m.tok.pad_token_id, batch_size=b, seed=0)
         d = D.Stream(di, dvecs, pad_id=m.tok.pad_token_id, batch_size=b, seed=0)
         sigma = None
         if spec["loss"] == "document_covariance_weighted":
@@ -207,7 +224,17 @@ def main():
     ap.add_argument("--only", nargs="*", default=None)
     ap.add_argument("--max-len", type=int, default=512,
                     help="cap tokenized length; 128 keeps E-bs128 off the CPU memory cliff")
+    ap.add_argument("--corpus", default="m9", choices=["m9", "m10"],
+                    help="m10 draws queries from corpus_loader (the real M10 corpus, balanced)")
+    ap.add_argument("--sources", nargs="*", default=["harvest"])
+    ap.add_argument("--head-per-source", type=int, default=0,
+                    help="first N rows per source in FILE order -- a smoke device, not a sample")
+    ap.add_argument("--unbalanced", action="store_true")
+    ap.add_argument("--out", default=None, help="report path; defaults per corpus")
     a = ap.parse_args()
+    CORPUS.update(corpus=a.corpus, sources=tuple(a.sources),
+                  head_per_source=a.head_per_source, balanced=not a.unbalanced)
+    out = Path(a.out) if a.out else (M10_OUT if a.corpus == "m10" else OUT)
     # SHAPES is a hand copy of the registry and can drift silently (whole-plan review): assert
     # every trained arm is covered before smoking anything.
     import json as _json
@@ -223,8 +250,8 @@ def main():
     recs = []
     for n in names:
         recs.append(smoke_one(n, SHAPES[n], corp, device=a.device, max_len=a.max_len))
-        failed, no_ws = _write(recs, a.device, a.max_len)     # after EVERY shape
-    print(f"\n{len(recs) - len(failed)}/{len(recs)} shapes pass; wrote {OUT}")
+        failed, no_ws = _write(recs, a.device, a.max_len, out=out)     # after EVERY shape
+    print(f"\n{len(recs) - len(failed)}/{len(recs)} shapes pass; wrote {out}")
     if no_ws:
         print(f"registered warm start NOT implemented: {', '.join(no_ws)}")
     if failed:

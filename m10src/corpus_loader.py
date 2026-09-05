@@ -219,8 +219,13 @@ def _m9_segments():
     return segs
 
 
-def load_segments(names, verbose=True):
-    """-> (segments, manifest). The corpus a screen arm trains on."""
+def load_segments(names, head_per_source=None, verbose=True):
+    """-> (segments, manifest). The corpus a screen arm trains on.
+
+    `head_per_source` keeps the first N rows of each source IN FILE ORDER -- a smoke device, not a
+    sample (the harvest file is grouped by form), and it is applied BEFORE the target lookup so a
+    smoke does not demand teacher vectors for 1.25M rows it will never draw.
+    """
     segs, man = [], {"sources": [], "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S")}
     import targets10
     cache = None
@@ -228,9 +233,12 @@ def load_segments(names, verbose=True):
         t0 = time.time()
         if SOURCES[name]["kind"] == "m9":
             new = _m9_segments()
+            if head_per_source:
+                new = [Segment(sg.name, sg.texts[:head_per_source], sg.forms[:head_per_source],
+                               sg.array, sg.rowmap[:head_per_source]) for sg in new]
             _texts, _forms, sman = source_texts(name)
         else:
-            texts, forms, sman = source_texts(name)
+            texts, forms, sman = source_texts(name, limit=head_per_source)
             cache = cache or targets10.TargetCache()
             rowmap = cache.rows_for(texts)
             miss = int((rowmap < 0).sum())
@@ -476,16 +484,13 @@ def apply_data_cut(segs, count, seed=0):
 # ---------------------------------------------------------------------------------- the arm ----
 
 def build_query_stream(arm_or_sources, tok, student, *, batch_size=32, seed=0, balanced=True,
-                       max_len=512, prefix="", limit_per_source=None, cut=None, verbose=True):
+                       max_len=512, prefix="", head_per_source=None, cut=None, verbose=True):
     """-> (stream, manifest). Everything above, in the order an arm needs it."""
     names = ARM_SOURCES[arm_or_sources] if isinstance(arm_or_sources, str) else tuple(
         arm_or_sources)
-    segs, man = load_segments(names, verbose=verbose)
-    if limit_per_source:
-        segs = [Segment(s.name, s.texts[:limit_per_source], s.forms[:limit_per_source], s.array,
-                        s.rowmap[:limit_per_source]) for s in segs]
-        man["limit_per_source"] = limit_per_source
-        man["n_rows"] = sum(len(s) for s in segs)
+    segs, man = load_segments(names, head_per_source=head_per_source, verbose=verbose)
+    if head_per_source:
+        man["head_per_source"] = head_per_source
     cut = data_cut_count() if cut == "registered" else cut
     segs, cut_rep = apply_data_cut(segs, cut)
     man["data_cut"] = cut_rep
@@ -502,28 +507,47 @@ def build_query_stream(arm_or_sources, tok, student, *, batch_size=32, seed=0, b
     return stream, man
 
 
+class LengthsOnly:
+    """Just enough of a pretokenized corpus to bucket and count with: the lengths. Lets the
+    manifest report realized shares before a single teacher vector exists."""
+
+    def __init__(self, lengths):
+        self.lengths = np.asarray(lengths, dtype=np.int64)
+
+    def __len__(self):
+        return len(self.lengths)
+
+
 def main():
-    """Report the manifest for a set of sources without training anything."""
+    """Report the manifest and the realized form shares. Needs no teacher targets and no GPU."""
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--sources", nargs="+", default=["harvest"])
     ap.add_argument("--batch-size", type=int, default=32)
     ap.add_argument("--shares-over", type=int, default=100_000, help="batches to realize shares on")
+    ap.add_argument("--unbalanced", action="store_true")
     ap.add_argument("--out", default=str(REPO / "results" / "m10_corpus_manifest.json"))
     a = ap.parse_args()
-    segs, man = load_segments(a.sources)
-    forms = corpus_forms(segs)
-    lengths = np.array([len(t.split()) for s in segs for t in s.texts], dtype=np.int64)
-    st = FormBalancedStream.__new__(FormBalancedStream)   # shares need no tokenizer
-    st.seed, st.present = 0, [int(f) for f in np.unique(forms)]
-    st.batches = {f: _form_batches(np.flatnonzero(forms == f), lengths, a.batch_size, 1 + f)
-                  for f in st.present}
-    man["realized_shares"] = FormBalancedStream.realized_shares(st, a.shares_over)
-    man["word_len"] = {"mean": round(float(lengths.mean()), 2),
-                       "p50": int(np.percentile(lengths, 50)),
-                       "p95": int(np.percentile(lengths, 95))}
+    man, forms, words = {"sources": [], "sources_used": a.sources}, [], []
+    for name in a.sources:
+        texts, f, sman = source_texts(name)
+        man["sources"].append(sman)
+        forms += [FORM_ID[x] for x in f]
+        words.append(np.fromiter((len(t.split()) for t in texts), dtype=np.int64, count=len(texts)))
+        print(f"  {name}: {len(texts):,} rows {sman['by_form']}", flush=True)
+    forms = np.asarray(forms, dtype=np.int16)
+    words = np.concatenate(words)
+    man["n_rows"] = int(len(forms))
+    man["by_form"] = {FORMS[int(f)]: int(c) for f, c in zip(*np.unique(forms, return_counts=True))}
+    st = FormBalancedStream(LengthsOnly(words), None, forms, pad_id=0,
+                            batch_size=a.batch_size, seed=0, balanced=not a.unbalanced)
+    man["balanced"] = not a.unbalanced
+    man["realized_shares"] = st.realized_shares(a.shares_over)
+    man["shares_over_batches"] = a.shares_over
+    man["word_len"] = {"mean": round(float(words.mean()), 2), "p50": int(np.percentile(words, 50)),
+                       "p95": int(np.percentile(words, 95))}
     Path(a.out).write_text(json.dumps(man, indent=1, default=str))
-    print(json.dumps(man, indent=1, default=str))
+    print(json.dumps({k: v for k, v in man.items() if k != "sources"}, indent=1, default=str))
 
 
 if __name__ == "__main__":

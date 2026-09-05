@@ -23,6 +23,8 @@
 | `arxiv_draw.py` | the registered `arxiv-title` draw from the Kaggle artifact | `work/m10arxiv/arxiv_draw.json` |
 | `nano10.py` | the M10 student (per-token head, pooled after), the family-D objectives, the mix window, the cyclic schedule, the kill and plateau rules, and the ONNX export | — |
 | `trainer10.py` | the training loop, checkpointing and resume | — |
+| `corpus_loader.py` | the M10 query corpora → the trainer: declared sources (M9 pool · PAQ · harvest · the generated half, unbuilt), the hashed manifest, packed pretokenization, the data cut, and the **form-balanced sampler** (`balanced=False` is A2's variant) | `results/m10_corpus_manifest.json` |
+| `targets10.py` | stella query targets keyed by **content hash** into an append-only fp16 memmap — resumable, appendable, and cold == warm by construction | `work/m10targets/`, `results/m10_targets10.json` |
 | `m10/report-draft.html` | source of the owner report artifact (https://claude.ai/code/artifact/fce61c94-5444-4c78-bb2e-46112cb7547a); republish from a session, never edit the live page | — |
 
 ## Pitfalls this milestone earned
@@ -37,3 +39,14 @@
 8. **An encode cache that stores fp16 must ROUND-TRIP on the cold path too**, or a first run and a re-run score differently (`cov_probe.encode`).
 9. **A `limit=` smoke must not write to a shared report path.** One did, leaving `complete: false` where the full scan's report belongs; `_load_jsonl` refused it, but the trap was the defect. Reports live beside their own output.
 10. **The tests and the validators run only under `.venv/bin/python`** — the system python has no numpy, and that ImportError is not a failure. `uv pip` is the installer (`.venv` has no `pip`).
+11. **A data loader that counts its own calls cannot resume.** `data10.batch_fn` advanced a
+    per-kind counter, so an arm resumed at step 34 restarted both streams at batch 0 and re-trained
+    seen data. `test_trainer10`'s resume test could not see it — its `batch_fn` is a pure function
+    of the step, so the defect lived only in the data path. The position is now derived from the
+    step (`data10.kind_index`). **Ask of any resume test what it stubs out.**
+12. **A corpus file grouped by form makes any prefix one form.** `harvest_train.jsonl` is claim,
+    then keyword, then title, so `head_per_source` is a smoke device and never a sample; every real
+    draw is uniform (`apply_data_cut`, `harvest.draw`, `paq.draw`, `corpus10.draw_seeds`).
+13. **`batch_tokens` above ~32768 hits `CUDA driver error: device not ready`** on this card, the
+    same failure as `E-bs128`. Measured stella query-encode rates: **345 texts/s** on harvested
+    text, **484** on PAQ questions, at the M9 default.
