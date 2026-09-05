@@ -168,6 +168,27 @@ allocation and `max_extension_cycles` are neither — they are fixed at the M10.
   about scientific claim text**, and if that leg matters the lever is a per-source quota on
   `claim`, which is a quota change and therefore Dylan's.
 
+  **Two measured quality disclosures on the SHIPPED corpus** (spot-checked after the draw, and
+  neither is a rule deviation — both are what the registered rules produce):
+
+  1. **`claim`: 6,827 of 416,000 rows (1.64%) are sentence-splitter artifacts**, truncated on an
+     abbreviation or initial — *"A Tight Corner is a 1932 British comedy film directed by Leslie
+     S."*, *"…first described by J."*, *"…a goalkeeper for club S.C."*, *"…produced by the U.S."*.
+     `harvest.sentences` splits on `.` and does not protect single-letter initials or `U.S.`-style
+     abbreviations. **Not re-drawn**, and the reasoning is on the record: these still satisfy the
+     registered `claim` rule (declarative, ≥ 8 words, finite verb, no first person), a truncated
+     sentence is still real text whose teacher embedding is a correct target by construction, and
+     they are **0.55% of the 1.25M corpus**. Re-drawing would cost a re-run of both harvest passes
+     plus the draw and change every number in this section for a cosmetic gain. **The fix for any
+     future harvest** is an abbreviation guard in `sentences()` — protect `[A-Z].` and the
+     `U.S.`/`S.C.` pattern before splitting.
+  2. **`keyword`: 273,189 of 417,000 rows (65.5%) are entity-name shaped** — every token
+     capitalised — and only 12.6% contain a function word. The form is registered as a "2–4-word
+     keyword query" harvested from "titles as-is", and a Wikipedia title *is* a real keyword query
+     ("Hurricane Wilma"), so this is the rule working. But **a third of A3 is proper nouns**, which
+     is narrower than "keyword query" may suggest to a reader, and it should be stated that way in
+     the report rather than left to be discovered.
+
   **Artifact-collision fix.** `draw()` wrote its outputs to the module-level `OUT` whatever
   `paths` said, so the scaled-down integration smoke produced a `harvest_draw.json` and
   `harvest_drawn.jsonl` at exactly the real paths — 900 rows that read like a 1.25M corpus. Same
