@@ -1,0 +1,293 @@
+{
+ "_what": "M10 screen lock (LEDGER \u00a70a), data-independent constants. Prose is not authoritative; this file is. Nothing here is chosen after seeing an arm. `m10src/screen_lock.py` validates it and is the only reader a rule may use.",
+ "_registered": "2026-09-05, before any arm and before any build seed draw",
+ "order": [
+  "F",
+  "A",
+  "G",
+  "B",
+  "E",
+  "C",
+  "D"
+ ],
+ "anchor": {
+  "data": "A4 (the full M10 corpus)",
+  "mix": "75/25",
+  "init": "bge-small",
+  "objective": "squared_l2",
+  "batch": 32,
+  "feature_layers": 3,
+  "feature_dim": 1152,
+  "dose_examples": 5000000,
+  "seed": 0
+ },
+ "screen_dose_examples": 5000000,
+ "seed_rule": "one seed, seed 0, for every screen arm; confirmation arms use seeds 1 and 2",
+ "arms": {
+  "F-bge-small": {
+   "family": "F",
+   "dose_examples": 20000000,
+   "read_at": [
+    5000000,
+    10000000,
+    20000000
+   ],
+   "student": "bge-small",
+   "note": "= the anchor at its 5M reading"
+  },
+  "F-MiniLM-L6": {
+   "family": "F",
+   "dose_examples": 20000000,
+   "read_at": [
+    5000000,
+    10000000,
+    20000000
+   ],
+   "student": "MiniLM-L6-v2"
+  },
+  "F-MiniLM-L12": {
+   "family": "F",
+   "dose_examples": 5000000,
+   "student": "MiniLM-L12-v2",
+   "conditional_extension": {
+    "to_examples": 20000000,
+    "iff": "m_L12(5M) >= max(m_L6(5M), m_bge(5M)) - 0.0056"
+   }
+  },
+  "A1": {
+   "family": "A",
+   "dose_examples": 5000000,
+   "data": "M9 pool (463,314 queries)"
+  },
+  "A2": {
+   "family": "A",
+   "dose_examples": 5000000,
+   "data": "M9 pool + PAQ (volume control)"
+  },
+  "A3": {
+   "family": "A",
+   "dose_examples": 5000000,
+   "data": "A2 + harvested real query-like text"
+  },
+  "A4": {
+   "family": "A",
+   "dose_examples": 5000000,
+   "data": "A3 + the generated forms (= anchor)",
+   "note": "not trained separately: A4 IS F's winner at its 5M checkpoint"
+  },
+  "G-384": {
+   "family": "G",
+   "dose_examples": 5000000,
+   "feature_layers": 1,
+   "feature_dim": 384
+  },
+  "G-1536": {
+   "family": "G",
+   "dose_examples": 5000000,
+   "feature_layers": 4,
+   "feature_dim": 1536
+  },
+  "G-MLP": {
+   "family": "G",
+   "dose_examples": 5000000,
+   "head": "W_lin*x + W2*GELU(W1*x+b1), W1 1152->192, per-token, before the pool"
+  },
+  "B-100/0": {
+   "family": "B",
+   "dose_examples": 3750000,
+   "pattern": "4Q"
+  },
+  "B-50/50": {
+   "family": "B",
+   "dose_examples": 7500000,
+   "pattern": "2Q+2D"
+  },
+  "E-bs128": {
+   "family": "E",
+   "dose_examples": 5000000,
+   "batch": 128
+  },
+  "C-M9init": {
+   "family": "C",
+   "dose_examples": 5000000,
+   "init": "the M9 candidate",
+   "skipped_iff": "F does not select bge-small"
+  },
+  "D-NORM": {
+   "family": "D",
+   "dose_examples": 5000000,
+   "objective": "leaf_norm_e2"
+  },
+  "D-COV": {
+   "family": "D",
+   "dose_examples": 5000000,
+   "objective": "document_covariance_weighted"
+  }
+ },
+ "contrasts": {
+  "F1": {
+   "a": "F-MiniLM-L6",
+   "b": "F-bge-small",
+   "at_examples": 20000000,
+   "decisive": true
+  },
+  "F2": {
+   "a": "F-MiniLM-L12",
+   "b": "F-winner",
+   "at_examples": 20000000,
+   "decisive": true,
+   "runs_iff": "L12 extended",
+   "note": "counted in the thirteen whether or not it runs"
+  },
+  "A3-A2": {
+   "a": "A3",
+   "b": "A2",
+   "decisive": true,
+   "rule": "three_outcome"
+  },
+  "A4-A3": {
+   "a": "A4",
+   "b": "A3",
+   "decisive": true,
+   "rule": "generated_half_in_build"
+  },
+  "G1": {
+   "a": "G-1152",
+   "b": "G-384",
+   "decisive": true
+  },
+  "G2": {
+   "a": "G-1536",
+   "b": "G-1152",
+   "decisive": true
+  },
+  "G3": {
+   "a": "G-MLP",
+   "b": "G-1152",
+   "decisive": true
+  },
+  "B1": {
+   "a": "B-100/0",
+   "b": "B-75/25",
+   "decisive": true
+  },
+  "B2": {
+   "a": "B-50/50",
+   "b": "B-75/25",
+   "decisive": true
+  },
+  "E1": {
+   "a": "E-bs128",
+   "b": "E-bs32",
+   "decisive": true
+  },
+  "C1": {
+   "a": "C-M9init",
+   "b": "C-fresh",
+   "decisive": true
+  },
+  "D1": {
+   "a": "D-NORM",
+   "b": "anchor",
+   "decisive": true
+  },
+  "D2": {
+   "a": "D-COV",
+   "b": "anchor",
+   "decisive": true
+  }
+ },
+ "descriptive_contrasts": {
+  "A4-A2": {
+   "a": "A4",
+   "b": "A2",
+   "decisive": false
+  },
+  "A2-A1": {
+   "a": "A2",
+   "b": "A1",
+   "decisive": false,
+   "note": "the volume effect; if it resolves the build keeps volume as well as forms"
+  },
+  "arxiv-title": {
+   "a": "arxiv-title diagnostic",
+   "b": null,
+   "decisive": false,
+   "note": "not a contrast; a descriptive surface read, no action"
+  }
+ },
+ "statistics": {
+  "surface": "COV macro, family-weighted, four family IDs at equal weight, units averaged within family",
+  "families": [
+   "BRIGHT",
+   "consumer-health",
+   "finance",
+   "legal"
+  ],
+  "bootstrap": {
+   "kind": "paired stratified over queries within unit",
+   "B": 200000,
+   "seed": 0,
+   "quantile": 0.0019230769230769232,
+   "quantile_method": "inverted_cdf",
+   "alpha_family": 0.025,
+   "n_contrasts": 13
+  },
+  "MDE": 0.0056,
+  "resolve_rule": "point >= MDE AND one-sided lower bound at the quantile > 0 AND the sign is stable across the last two cycle-end checkpoints",
+  "measured_resolution_distance": 0.008619,
+  "measured_resolution_note": "results/m10_cov_resolution.json. The MDE is BELOW the distance, so a contrast landing at the MDE cannot resolve. Power disclosure only: it sizes nothing (amendment A4's sizing struck by the Codex pass) and alpha does not move.",
+  "implementation": "m10src/cov_macro.py"
+ },
+ "outcome_to_action": {
+  "F": "winner = highest 20M COV macro if its margin over the runner-up resolves; else the cheapest to serve, labelled in the report as a product preference, not evidence. L12 eliminated at 5M unless its extension condition holds. Every later family runs on F's winner and every later verdict is labelled conditional on it.",
+  "A": "A3-A2 three outcomes: lower bound > MDE -> coverage resolved on the COV families, build proceeds; point >= MDE and lower bound > 0 but <= MDE -> positive, not resolved, build proceeds and the report says so; otherwise -> M10 STOPS before any build, ping Dylan, all four rows reported. A4-A3: if it does not resolve, the build uses A3's corpus and the generated queries are dropped from the build and reported as a measured null.",
+  "G": "resolved winner; default 1152.",
+  "B": "resolved winner; default 75/25.",
+  "E": "resolved winner; default 32. E is the one family whose throughput is read: a bs32 win must also be worth its 2.2x build cost, and a bs32 win that does not resolve reverts to bs128.",
+  "C": "resolved winner; default the off-the-shelf backbone. Skipped and reported skipped if F does not select bge-small.",
+  "D": "resolved winner with the larger margin; default squared L2.",
+  "_default": "an unresolved contrast reverts to its default and is REPORTED as unresolved, beside the measured resolution distance, so a reader can tell an unresolved verdict from an invisible one."
+ },
+ "confirmation": {
+  "max_decisions": 2,
+  "selection": "decisions whose non-default option won, largest margin first",
+  "seeds": [
+   1,
+   2
+  ],
+  "margin": "the COV macro difference between the winner's and the default's final checkpoints in the ORIGINAL screen",
+  "seed_range": "max minus min of an arm's COV macro over its three seeds",
+  "stands_iff": "the winner's margin exceeds the largest seed range observed in either arm",
+  "plus": "the synthesized selected-recipe arm (5M) and the replication seed pair (10M)"
+ },
+ "evaluation": {
+  "COV": "at every cycle end",
+  "DEV-6": "ONCE, at the final checkpoint, reported beside every COV read; never selection-bearing",
+  "FORMS-12": "descriptive only",
+  "arxiv-title": "descriptive, no action",
+  "CUREv1": "validation-only diagnostic (decision 12); never selection-bearing",
+  "LoTTE": "read #1 is decision-bearing (the veto) and happens after the recipe lock; read #2 is the audit after the freeze"
+ },
+ "warm_start": {
+  "G-MLP": {
+   "n_fit": 60000,
+   "seed": 21,
+   "lambda": "reselected on the M10 sample by m9/registry.json's locked grid on a training-only holdout, ties to the larger lambda",
+   "pca": "per-token, streamed 1152x1152 Gram matrix, each direction's sign fixed so its largest-magnitude component is positive"
+  },
+  "all_arms": "the closed-form ridge head warm start (M9's m9s1c) is retained in every arm"
+ },
+ "anchor_aliases": {
+  "_what": "the anchor appears in a contrast under the name of the axis being varied; every one of these IS the anchor arm, trained once",
+  "G-1152": "anchor",
+  "B-75/25": "anchor",
+  "E-bs32": "anchor",
+  "C-fresh": "anchor",
+  "anchor": "anchor",
+  "A4": "anchor",
+  "F-winner": "the winning F arm at its 20M checkpoint"
+ },
+ "trained_arms_expected": 15,
+ "_arms_note": "16 entries, 15 TRAINED: A4 is not trained separately -- it is F's winner at its 5M checkpoint, which is the anchor."
+}

@@ -4,17 +4,31 @@ Skeleton committed 2026-09-01 (Codex pass 5). Every section is filled by the GPU
 step it governs, and never edited after that step's output exists. Numbers live in the JSON the
 row points at; this file records the decision, the number a rule reads, and the pointer.
 
-## §0a Screen lock — design, fill at M10.0-e, before any data exists (Opus B2 split §0 in two)
+## §0a Screen lock — design, LOCKED 2026-09-05, before any arm and before any build seed draw
 
-- COV resolution number (mandate §Surfaces; power disclosure only — A4's sizing struck by the Codex pass): the measured distance for e5-small-v2 vs gte-small at 0.025/13, beside the fixed MDE 0.0056; no direction, no verdict, no effect on α.
-- Arms (fifteen) in the order **F → A → G → B → E → C → D** (A6 as amended by the Opus pass): F-bge-small (= anchor, 20M, read at 5/10/20M) F-MiniLM-L6 (20M) F-MiniLM-L12 (5M elimination probe; extended to 20M iff within the MDE of the better 5M reading) · A1 A2 A3-harvested A4-full (= the winner's 5M checkpoint) · G-384 G-1536 G-MLP (per-token residual `W_lin·x + W₂·GELU(W₁·x+b₁)`, W₁ 1152→192, B3) · B 100/0 (3.75M, pattern 4Q) B 50/50 (7.5M, 2Q+2D) (B 75/25 = anchor, 5M, 3Q+1D) · E-bs128 · C-M9init (skipped and reported skipped if F does not select bge-small) · D-NORM D-COV: per arm the mix, init, objective, batch, student, feature layers, dose in examples and tokens (5M screen dose), seed. Corpus hashes are §0b.
-- **The thirteen contrasts, by name:** F: L6−bge-small@20M · L12−winner@20M (if extended) · A: A3−A2 · A4−A3 (three-outcome rule; A4−A2 and A2−A1 descriptive) · G: 1152−384 · 1536−1152 · MLP−1152 · B: 100/0−75/25 · 50/50−75/25 · E: bs128−bs32 · C: M9init−fresh · D: NORM−anchor · COV−anchor. Thirteen, counting F's conditional second whether or not it runs (Codex 2026-09-04 corrected a count of fourteen).
-- Bound 0.025/13, **B = 200,000, `inverted_cdf`**, **MDE 0.0056 fixed**; rank-stability rule; the A4−A3 drop rule. `arxiv-title` is descriptive (no action).
-- Confirmation design: which decisions (**at most two**, A5), seeds, the margin and seed-range definitions; the replication seed pair on the selected recipe.
-- COV macro formula (family IDs `consumer-health`, `BRIGHT`, `legal`, `finance` iff LEDGER; slice averaging; equal weights); the `arxiv-title` diagnostic (100,000 papers drawn by id-without-version with `default_rng(0)` from the sorted universe, 2,000 of them queries; every version excluded from training; in the protected index; teacher denominator reported; artifact sha256 in §0b); DEV-6-once evaluation rule.
-- G-MLP warm start: one shared fit sample (n_fit 60,000, seed 21), λ reselected by the registry's locked grid on a training-only holdout, all three solves; per-token PCA via a streamed Gram matrix.
-- Outcome → action map for every family; the synthesized selected-recipe arm; LoTTE read #1 manifest and veto rule.
-- Release rule under four conjuncts (decision 11) and decision 12's ruling, copied verbatim; the gatekeeping order that follows from decision 11.
+**The lock is `m10/screen_registry.json`, not this section.** Prose is not authoritative; the
+registry is (M9's rule, `m9src/final_stats.py`). `m10src/screen_lock.py` validates it and is the
+only reader a rule may use; `m10src/test_screen_lock.py` shows it refusing a fourteenth contrast,
+a contrast naming an arm that does not exist, an arm no contrast reads, a family with no
+outcome→action entry, a quantile that is not α/13, numpy's default quantile method, a families
+list that disagrees with `m10src/cov_macro`, and a registry resolution number that has drifted
+from its artifact.
+
+| what | value | where |
+|---|---|---|
+| arms | **15 trained**, 16 entries — A4 is not trained separately, it IS F's winner at its 5M checkpoint | `arms` |
+| order | F → A → G → B → E → C → D; every family after F runs on F's winner and every later verdict is labelled conditional on it | `order` |
+| contrasts | **13 decisive** (F2 counted whether or not L12 is extended) + 3 descriptive | `contrasts`, `descriptive_contrasts` |
+| statistics | family-weighted COV macro over the four family IDs, paired stratified bootstrap over queries within unit, **B = 200,000, seed 0, `inverted_cdf`, one-sided 0.025/13**, **MDE 0.0056 fixed** | `statistics`, implemented in `m10src/cov_macro.py` |
+| resolve | point ≥ MDE **and** the lower bound > 0 **and** the sign stable across the last two cycle-end checkpoints | `statistics.resolve_rule` |
+| power | measured distance **0.008619** — the MDE is BELOW it, so a contrast landing at the MDE cannot resolve. It sizes nothing; α does not move (A4's sizing struck) | `results/m10_cov_resolution.json`, §3 W5 |
+| outcome → action | one entry per family, including A3−A2's three outcomes and its **registered STOP**, and the default that an unresolved contrast reverts to and is REPORTED as unresolved | `outcome_to_action` |
+| confirmation | at most **2** decisions, largest margin first, seeds 1 and 2; stands iff the margin exceeds the largest seed range in either arm | `confirmation` |
+| evaluation | COV every cycle end; **DEV-6 once**, at the final checkpoint, never selection-bearing; FORMS-12, `arxiv-title` and CUREv1 descriptive; LoTTE read #1 after the recipe lock | `evaluation` |
+| warm start | G-MLP: n_fit 60,000, seed 21, λ reselected on the registry's locked grid on a training-only holdout; per-token PCA by a streamed Gram matrix, direction signs fixed | `warm_start` |
+
+Corpus counts, hashes, measured rates and the box allocation are **§0b**, and cloud price, build
+allocation and `max_extension_cycles` are neither — they are fixed at the M10.2 recipe lock.
 
 ## §0b Screen lock — data-dependent constants, fill at the close of M10.1, before any arm
 
