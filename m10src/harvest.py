@@ -328,8 +328,16 @@ def _iter_rows(paths):
                 yield json.loads(line)
 
 
-def draw(quota=None, margin=MARGIN, paths=None, verbose=True):
-    """-> ({form: [row]}, report). Uniform per form, deduped, then screened; matches removed."""
+def draw(quota=None, margin=MARGIN, paths=None, out_dir=None, verbose=True):
+    """-> ({form: [row]}, report). Uniform per form, deduped, then screened; matches removed.
+
+    **`out_dir` exists because a smoke otherwise overwrites the real artifact.** The outputs used
+    to be written to the module-level `OUT` no matter what `paths` said, so a scaled-down run over
+    sampled inputs produced a `harvest_draw.json` and `harvest_drawn.jsonl` at exactly the paths a
+    real draw writes -- 900 rows that look like a 1.25M corpus. That is the same trap as
+    `calib.run_arm`'s 90-step smoke writing to the real `P0.json` (`m10/STATUS.md`), and it bit
+    here too. A smoke must pass `out_dir`; the report records which directory it wrote to.
+    """
     import time
     import numpy as np
     import decontam
@@ -448,8 +456,11 @@ def draw(quota=None, margin=MARGIN, paths=None, verbose=True):
                            dropped_document_side=len(d_drop), dropped_total=len(drop),
                            per_stream=per_stream),
                seconds=round(time.time() - t0, 1))
-    (OUT / "harvest_draw.json").write_text(json.dumps(rep, indent=1))
-    with (OUT / "harvest_drawn.jsonl").open("w") as fh:
+    out_dir = Path(out_dir) if out_dir else OUT
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rep["out_dir"] = str(out_dir)
+    (out_dir / "harvest_draw.json").write_text(json.dumps(rep, indent=1))
+    with (out_dir / "harvest_drawn.jsonl").open("w") as fh:
         for f in sorted(out):
             for r in out[f]:
                 fh.write(json.dumps(r) + "\n")

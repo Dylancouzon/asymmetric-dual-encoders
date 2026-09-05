@@ -79,6 +79,56 @@ allocation and `max_extension_cycles` are neither — they are fixed at the M10.
 - Generator (repo and revision- Generator (repo and revision — `Qwen/Qwen3-8B-AWQ` `4da05a8e…` under decision 14; hosted provider and served revision if the bf16 fallback fired), sampling parameters, seed rule, retry/dedup policy; per-form smoke results (contract %, on-form %), approver, prompt revisions (≤2 per form, each recorded here with the diff).
 - Seed sources and revisions; seed pre-filter removals; per-form quotas realized, per source (harvested vs generated, amendment A2).
 - **§Harvest:** per extraction rule, the rule text, source corpus, yield, and the form it feeds; the span-exclusion form of the seed-passage screen.
+  **EXECUTED 2026-09-05** — `work/m10harvest/harvest_draw.json`, `harvest_drawn.jsonl`
+  (**1,250,000 rows**, 189,060,152 bytes), 1,785 s wall, VmHWM **9.06 GB**.
+
+| rule | source | form fed | raw rows | in rubric range | after dedup | drawn | survived | **taken** |
+|---|---|---|---|---|---|---|---|---|
+| `title` | Wikipedia, arXiv | `title` / `keyword` by the rubric's own ranges | 4,690,821 | all (routed BY the range) | — | — | — | — |
+| `heading` | Wikipedia | `title` / `keyword` | 4,833,120 | all | — | — | — | — |
+| `claim` | Wikipedia 6,020,221 · arXiv 2,239,838 | `claim` | 8,260,059 | 6,316,837 | 6,270,443 | 624,000 | 522,747 | **416,000** |
+| `ask` | the pool corpora | `factoid` 5,605 / `product` 40,977 | 46,582 | — | — | **not drawn** | — | **0** (no quota row — §Harvest amendment item 1) |
+| — | *`title` form total* | — | — | — | 3,559,910 | 625,500 | 623,882 | **417,000** |
+| — | *`keyword` form total* | — | — | — | 5,924,646 | 625,500 | 625,174 | **417,000** |
+
+  **Rubric-range removals** (amendment item 3): `claim` **1,943,222**; `title` and `keyword`
+  **0** each, as expected — `route_by_length` assigns them BY that range. **Exact-dup removals:**
+  `keyword` **3,200,570** (35% — short strings repeat heavily across Wikipedia), `title` 95,276,
+  `claim` 46,394.
+
+  **Screens, 1,875,000 candidates, matches REMOVED:** query-side (protected index) **4,092**;
+  document-side **99,960**; total **103,197 (5.5%)**. Every document-side drop came from four
+  streams — `dev:hotpotqa` **99,544** of 5,233,329 (822 s), `cov:BRIGHT` 251, `dev:nq-250k` 118,
+  `six-docs` 47; cqadup ×2, MedicalQA, both LegalBench and LEDGER dropped **0**. This is why
+  `claim` survived only **83.8%** against `title` 99.7% and `keyword` 99.9%: a harvested Wikipedia
+  lead sentence and a `hotpotqa-corpus` document are the same text. Margin 1.5 covered it and no
+  form came up short.
+
+  **Realized source mix — REPORTED, never fixed in advance, and one row deserves attention:**
+
+| form | arXiv | Wikipedia | arXiv share |
+|---|---|---|---|
+| `title` | 307,065 | 109,935 | **73.6%** |
+| `claim` | 118,039 | 297,961 | **28.4%** |
+| `keyword` | 8,668 | 408,332 | 2.1% |
+
+  **DISCLOSURE.** arXiv was added because "harvested from [the pool], *paper title* would be
+  Wikipedia article titles and *scientific claim* would be Wikipedia lead sentences, neither of
+  which is the form scidocs and scifact test" (`instructions-m10.md`:383). The `title` form is now
+  genuinely scientific (73.6% arXiv), so the **scidocs↔titles** leg of A3's hypothesis is
+  well-served. **The `claim` form is 71.6% Wikipedia lead sentences**, so the **scifact↔claim**
+  leg is only partly served — the uniform draw preserves the corpus's own distribution, and the
+  corpus has 2.7x more Wikipedia claims than arXiv claims. The hotpotqa screen pushed the arXiv
+  share *up* (it removes Wikipedia claims preferentially). Nothing here is a protocol deviation —
+  §Harvest registers the mix as reported, not fixed — but **A3−A2 must not be read as evidence
+  about scientific claim text**, and if that leg matters the lever is a per-source quota on
+  `claim`, which is a quota change and therefore Dylan's.
+
+  **Artifact-collision fix.** `draw()` wrote its outputs to the module-level `OUT` whatever
+  `paths` said, so the scaled-down integration smoke produced a `harvest_draw.json` and
+  `harvest_drawn.jsonl` at exactly the real paths — 900 rows that read like a 1.25M corpus. Same
+  trap as `calib.run_arm`'s 90-step smoke writing the real `P0.json`. `draw()` now takes
+  `out_dir` and records it in the report; a smoke must pass one.
 - **A8 quality gates:** per-form near-duplicate rate and mean pairwise cosine with any quota cut taken; the stella-space distribution-overlap table against the MS MARCO dev sample (disclosed diagnostic, no action).
 - PAQ release files and hashes; build sample (1.0M) and A2 sample; attribution.
 - Decontamination removals per screen, per form, per COV component; FORMS-12 hold-out seed ids.

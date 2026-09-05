@@ -23,8 +23,9 @@ What it checks per shape, and why each has already caught something:
   1. the model CONSTRUCTS               -- `G-384` raised `KeyError: 1`; `LAYERS` had no 1-layer key
   2. params <= the 35M cap (hard, Dylan 2026-09-01)
   3. 90 steps run with a finite loss, through the real `trainer10.train_arm`
-  4. the arm's REGISTERED warm start is implemented -- G-MLP's three-solve recipe and C-M9init's
-     head init are registered and NOT implemented; both are reported, neither is invented here
+  4. the arm's REGISTERED warm start actually runs -- G-MLP's three-solve recipe
+     (`nano10.warm_start_mlp`) and C-M9init's zero-padded head (`nano10.warm_start_from_m9`) were
+     missing when this file was written and are now exercised here rather than assumed
 
 It writes `results/m10_arm_smoke.json` and exits non-zero if any shape fails, so it can gate.
 """
@@ -54,7 +55,7 @@ SHAPES = {
     "G-1536":       dict(student="bge-small",  n_layers=4, head="linear", pattern="75/25",
                          batch=32,  loss="squared_l2"),
     "G-MLP":        dict(student="bge-small",  n_layers=3, head="mlp",    pattern="75/25",
-                         batch=32,  loss="squared_l2", warm_start="G-MLP three-solve"),
+                         batch=32,  loss="squared_l2", warm_start="mlp"),
     "B-100/0":      dict(student="bge-small",  n_layers=3, head="linear", pattern="100/0",
                          batch=32,  loss="squared_l2"),
     "B-50/50":      dict(student="bge-small",  n_layers=3, head="linear", pattern="50/50",
@@ -66,12 +67,16 @@ SHAPES = {
     "D-COV":        dict(student="bge-small",  n_layers=3, head="linear", pattern="75/25",
                          batch=32,  loss="document_covariance_weighted"),
     "C-M9init":     dict(student="bge-small",  n_layers=3, head="linear", pattern="75/25",
-                         batch=32,  loss="squared_l2",
-                         warm_start="the M9 candidate's 384-d head, extra columns zero-init"),
+                         batch=32,  loss="squared_l2", warm_start="m9"),
 }
 # arms whose shape is covered by one of the above
 COVERS = {"ANCHOR": ["A1", "A2", "A3", "A4", "F-bge-small"]}
 N_TEXTS = 4096
+# C-M9init's init. **This is step 450,000 = 3.69B tokens, NOT the 3.74B where M9's plateau rule
+# fired**: `ckpt_every` was 15,000, so the final ~6,543 steps were never checkpointed and the
+# newest surviving weights of the M9 long run are these. Immaterial for an init, but the arm must
+# not be described as starting from "the M9 candidate" without the qualification.
+M9_CANDIDATE = REPO / "work" / "m9long" / "ckpt" / "step450000.pt"
 
 
 def corpus(verbose=True):
@@ -118,18 +123,21 @@ def smoke_one(name, spec, corp, device="cpu", max_len=512, verbose=True):
         return rec
     rec.update(constructed=True, d_in=m.d_in, params=m.n_params(), under_cap=m.under_cap())
 
-    # the registered warm start, where one is implemented for this shape
-    if spec.get("warm_start"):
-        rec["warm_start_registered"] = spec["warm_start"]
+    # the arm's REGISTERED warm start, actually run
+    ws = spec.get("warm_start", "linear")
+    rec["warm_start_registered"] = ws
+    try:
+        if ws == "mlp":
+            rec["warm_start_record"] = N.warm_start_mlp(m, texts[:256], T[:256], lam=1e-4)
+        elif ws == "m9":
+            rec["warm_start_record"] = N.warm_start_from_m9(m, M9_CANDIDATE)
+        else:
+            X = N.pooled_features(m, texts[:256])
+            rec["warm_start_record"] = N.warm_start_linear(m, X, T[:256], lam=1e-4)
+        rec["warm_start_implemented"] = True
+    except Exception as e:
         rec["warm_start_implemented"] = False
-    else:
-        try:
-            X = N.pooled_features(m, texts[:256])   # noqa: the fit itself is the check
-            N.warm_start_linear(m, X, T[:256], lam=1e-4)
-            rec["warm_start_implemented"] = True
-        except Exception as e:
-            rec["warm_start_implemented"] = False
-            rec["warm_start_error"] = f"{type(e).__name__}: {e}"
+        rec["warm_start_error"] = f"{type(e).__name__}: {e}"
 
     b = spec["batch"]
     try:
