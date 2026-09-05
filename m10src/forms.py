@@ -21,9 +21,14 @@ SYSTEM = ("You write search queries for a retrieval benchmark. Follow the form e
 FORMS = {
     "factoid": ("{n} short factual questions a person might type into a search engine about the "
                 "passage's topic, each answerable by a document like it. 5 to 15 words."),
-    "howto": ("{n} troubleshooting or how-to questions in the style of a technical forum post: a "
-              "one-line title, then one or two sentences of body describing the situation and "
-              "what was tried. 25 to 60 words each, title and body separated by a newline."),
+    # Revision 1 (2026-09-04, smoke): the original wording made the generator emit the title and
+    # the body as two SEPARATE list items, so the list held 2n strings and the strict parser
+    # rejected 55% of replies. Only the output shape is restated; the form itself is unchanged.
+    "howto": ("{n} troubleshooting or how-to questions in the style of a technical forum post. "
+              "Each list item is ONE string of 25 to 60 words containing a one-line title, then "
+              "a newline, then one or two sentences of body describing the situation and what "
+              "was tried. Never split the title and the body into separate list items: the list "
+              "has exactly {n} strings."),
     "claim": ("{n} scientific or factual claims stated as declarative sentences (not questions), "
               "of the kind a fact-checker would verify against a document like the passage. Some "
               "true, some plausible but false. 8 to 25 words."),

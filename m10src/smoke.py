@@ -66,13 +66,14 @@ def run(which=None, base=None, judge_n=JUDGE_N):
     OUT.mkdir(parents=True, exist_ok=True)
     kw = {"base": base} if base else {}
     print(gen.health(**({"base": base} if base else {})), flush=True)
+    seen = set()                       # corpus-wide exact dedup across every form
     seed_map, seed_meta = seedmod.cached(which, per_form=N_SEEDS)
     rows = {}
     for form in which:
         s = seed_map[form]
         if len(s) < N_SEEDS:      # a short draw is recorded, not a crash that loses every form
             print(f"  WARNING {form}: only {len(s)} seeds of {N_SEEDS}", flush=True)
-        r = gen.generate(form, s, n=N_PER_SEED, label=form, **kw)
+        r = gen.generate(form, s, n=N_PER_SEED, label=form, seen=seen, **kw)
         r["prompt_hash"] = prompt_hash(form)
         r["contract_pass"] = r["contract_rate"] >= CONTRACT_GATE
         r["judge_sample"] = judge_sample(r["queries"], judge_n)

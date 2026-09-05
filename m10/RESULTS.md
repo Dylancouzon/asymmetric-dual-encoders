@@ -36,3 +36,16 @@ stale caches.
 
 - The capacity probe (`m9src/capacity_probe.py`): optional and report-only since the 35M cap is hard (Dylan, 2026-09-01).
 - Any synthetic generation yet: under decision 14 the smoke and the generation run on the box with Qwen's official AWQ release; the smoke is gated by the contract rate, an independent-model on-form read and Dylan's veto window (decision 15).
+
+## M10 weekend window, steps 0a and 0b (box, 2026-09-04 evening)
+
+| run | artifact | one-line reading | dev reads |
+|---|---|---|---|
+| **0b — pipeline rate on REAL corpora** | `results/m10_rate_bench_real_box.json`, script `m10src/rate_bench_real.py` | the M10 shape on the real M9 tokenized corpora with real memmapped teacher targets: length-bucketed + prefetched + `torch.compile` on fixed buckets reaches **914–960 ex/s** on the query corpora and **792 ex/s** on the 94.5-token document bucket, zero allocator retries, peak ≤ 3.9 GB. Blended 75/25 ≈ **890 ex/s → ~62 GPU-hours for the 200M build on the box**, against PLANNING §11's 683 ex/s random-token bound and M9's realized 226. Without `torch.compile`: 616–698 ex/s, ≈ 84 h. **M9's 226 is CONSISTENT WITH the `m9 path` document arm here (249 ex/s, 79% padding waste) but that does not establish it** — M9's steps mixed every scheduled source and used a different model (Codex 2026-09-04) | none |
+| **0a — generation health assertion** | `results/m10_gen_health_box.json` | `Qwen/Qwen3-8B-AWQ` rev `4da05a8e…` on vLLM 0.28.0, 64 prompts (8 seeds × 8 forms, n=5) all in flight: contract **93.75%** (gate 90%) and **1,027–1,173 aggregate output tok/s** (gate 700). **PASS on both.** ≈1.0M queries ≈ 10 box-hours | none |
+| **step 1 — generation smoke** | `m10/SMOKE.md`, `work/m10gen/smoke/*.json` | all seven generated forms at **100% contract**, 200 queries each, zero exact duplicates, after one registered `howto` prompt revision (LEDGER §1). On-form verdicts pending the independent judge | none |
+
+**Serving fixes this box needed** (all in `work/m10gen/serve.sh`, pinned in `results/m10_gen_health_box.json`): `VLLM_WSL2_ENABLE_PIN_MEMORY=1` — WSL disables pinned memory and vLLM's buffer path then hard-fails on UVA; `VLLM_USE_FLASHINFER_SAMPLER=0` — flashinfer JIT-compiles sampling kernels and CUDA 12.6's nvcc rejects this box's gcc 15 (no older gcc installed); `--gpu-memory-utilization 0.88` — only 8.86 of 10 GiB is actually free; port 8001. **`--enforce-eager` costs 1.69×** (441 vs 745 cold tok/s) and must stay off: it disables CUDA graphs and all compilation.
+
+**Seed-supply projection (step 8 input, not a result).** At `min_score ≥ 4` over `hotpotqa-corpus`, the full store projects to **howto 36.3K, finance 21.0K, health 8.8K** topical seeds against the ~28.6K a 143K-query form needs at 5 queries per seed. `health` and `finance` cannot be seeded at build scale from this corpus alone — a Tier-2 question before generation, not a footnote.
+
