@@ -484,3 +484,33 @@ def test_the_m9_pools_cannot_load_without_the_M10_rescreen_mask(monkeypatch):
         monkeypatch.setattr(rescreen10, "protected_ident", lambda: {"version": "test+cov"})
         with pytest.raises(SystemExit, match="rescreen10.py --queries"):
             rescreen10.query_keep_mask(["a", "b"], "m9-test", compute=False)
+
+
+def test_the_document_pool_drops_the_rescreened_rows_and_still_returns_n(monkeypatch):
+    """"matching pool documents are removed too" -- and the arm still gets the `n` documents it
+    asked for, because the draw takes a margin and trims after the removal."""
+    import data10 as _D
+
+    def fake_pool_rows(k, seed):
+        return np.arange(k, dtype=np.int64), {"n_drawn": k, "seed": seed}
+
+    class FakeM9:
+        doc_pool_rows = staticmethod(fake_pool_rows)
+
+        @staticmethod
+        def row_texts(rows):
+            return [f"doc{int(r)}" for r in rows]
+
+    class FakePool:
+        @staticmethod
+        def build():
+            v = np.eye(16, 8, dtype=np.float32) + 0.5
+            return None, np.tile(v, (2000, 1)), {}
+
+    monkeypatch.setitem(sys.modules, "data", FakeM9)
+    monkeypatch.setitem(sys.modules, "pool", FakePool)
+    banned = {0, 1, 2, 5}
+    texts, V, meta = CL._screened_doc_pool(8, 0, banned, margin=1.0, floor=8)
+    assert texts == ["doc3", "doc4", "doc6", "doc7", "doc8", "doc9", "doc10", "doc11"]
+    assert meta["n_removed_by_rescreen"] == 4 and len(V) == 8
+    assert np.allclose(np.linalg.norm(V, axis=1), 1.0, atol=1e-6)
