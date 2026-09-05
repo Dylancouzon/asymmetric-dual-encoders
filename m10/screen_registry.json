@@ -11,14 +11,18 @@
   "D"
  ],
  "anchor": {
-  "data": "A4 (the full M10 corpus)",
+  "_what": "the arm every non-F contrast compares against, TRAINED IN ITS OWN RIGHT at the screen recipe. It was registered as 'F's winner at its 5M checkpoint'; a Fable pass showed that is ~75% through cycle 1 of a 20M schedule at LR ~3e-5, un-annealed, against genuine 5M arms that run three cycles annealed to 1e-5 -- a handicap on the `b` side of ten contrasts, in the direction that adopts a non-default. It also left the anchor with no second cycle end (breaking the sign-stability clause) and no DEV-6 read beside its COV reads.",
+  "arm": "ANCHOR",
+  "data": "A4, the CUT corpus (see data_cut)",
   "mix": "75/25",
-  "init": "bge-small",
+  "window_pattern": "3Q+1D",
+  "init": "F's winner backbone",
   "objective": "squared_l2",
   "batch": 32,
   "feature_layers": 3,
   "feature_dim": 1152,
   "dose_examples": 5000000,
+  "schedule": "the screen recipe: 3 cycles of equal example count, each linear 1e-4 -> 1e-5",
   "seed": 0
  },
  "screen_dose_examples": 5000000,
@@ -33,7 +37,8 @@
     20000000
    ],
    "student": "bge-small",
-   "note": "= the anchor at its 5M reading"
+   "note": "20M curve; its 5M reading is NOT the anchor (S1)",
+   "trained": true
   },
   "F-MiniLM-L6": {
    "family": "F",
@@ -43,7 +48,8 @@
     10000000,
     20000000
    ],
-   "student": "MiniLM-L6-v2"
+   "student": "MiniLM-L6-v2",
+   "trained": true
   },
   "F-MiniLM-L12": {
    "family": "F",
@@ -52,76 +58,97 @@
    "conditional_extension": {
     "to_examples": 20000000,
     "iff": "m_L12(5M) >= max(m_L6(5M), m_bge(5M)) - 0.0056"
-   }
+   },
+   "trained": true
   },
   "A1": {
    "family": "A",
    "dose_examples": 5000000,
-   "data": "M9 pool (463,314 queries)"
+   "data": "M9 pool (463,314 queries)",
+   "trained": true
   },
   "A2": {
    "family": "A",
    "dose_examples": 5000000,
-   "data": "M9 pool + PAQ (volume control)"
+   "data": "M9 pool + PAQ (volume control)",
+   "trained": true
   },
   "A3": {
    "family": "A",
    "dose_examples": 5000000,
-   "data": "A2 + harvested real query-like text"
+   "data": "A2 + harvested real query-like text",
+   "trained": true
   },
   "A4": {
    "family": "A",
    "dose_examples": 5000000,
-   "data": "A3 + the generated forms (= anchor)",
-   "note": "not trained separately: A4 IS F's winner at its 5M checkpoint"
+   "trained": false,
+   "data": "A3 + the generated forms (the full M10 corpus, cut)",
+   "note": "not trained separately: A4 IS the ANCHOR arm"
   },
   "G-384": {
    "family": "G",
    "dose_examples": 5000000,
    "feature_layers": 1,
-   "feature_dim": 384
+   "feature_dim": 384,
+   "trained": true
   },
   "G-1536": {
    "family": "G",
    "dose_examples": 5000000,
    "feature_layers": 4,
-   "feature_dim": 1536
+   "feature_dim": 1536,
+   "trained": true
   },
   "G-MLP": {
    "family": "G",
    "dose_examples": 5000000,
-   "head": "W_lin*x + W2*GELU(W1*x+b1), W1 1152->192, per-token, before the pool"
+   "head": "W_lin*x + W2*GELU(W1*x+b1), W1 1152->192, per-token, before the pool",
+   "trained": true
   },
   "B-100/0": {
    "family": "B",
    "dose_examples": 3750000,
-   "pattern": "4Q"
+   "pattern": "4Q",
+   "trained": true
   },
   "B-50/50": {
    "family": "B",
    "dose_examples": 7500000,
-   "pattern": "2Q+2D"
+   "pattern": "2Q+2D",
+   "trained": true
   },
   "E-bs128": {
    "family": "E",
    "dose_examples": 5000000,
-   "batch": 128
+   "batch": 128,
+   "trained": true
   },
   "C-M9init": {
    "family": "C",
    "dose_examples": 5000000,
    "init": "the M9 candidate",
-   "skipped_iff": "F does not select bge-small"
+   "skipped_iff": "F does not select bge-small",
+   "trained": true,
+   "head_init": "the M9 candidate keeps its 384-d head and the two extra layers' columns are ZERO-initialised (\u00a7Recipe). C1 therefore confounds backbone init with head init; that is registered and disclosed, not resolved."
   },
   "D-NORM": {
    "family": "D",
    "dose_examples": 5000000,
-   "objective": "leaf_norm_e2"
+   "objective": "leaf_norm_e2",
+   "trained": true
   },
   "D-COV": {
    "family": "D",
    "dose_examples": 5000000,
-   "objective": "document_covariance_weighted"
+   "objective": "document_covariance_weighted",
+   "trained": true
+  },
+  "ANCHOR": {
+   "family": "anchor",
+   "dose_examples": 5000000,
+   "trained": true,
+   "note": "the comparator for G, B, E, C, D and A4-A3; trained once"
   }
  },
  "contrasts": {
@@ -207,7 +234,7 @@
    "a": "A2",
    "b": "A1",
    "decisive": false,
-   "note": "the volume effect; if it resolves the build keeps volume as well as forms"
+   "note": "the volume effect; DESCRIPTIVE ONLY, no build action (rules.A2-A1)"
   },
   "arxiv-title": {
    "a": "arxiv-title diagnostic",
@@ -231,7 +258,8 @@
    "quantile": 0.0019230769230769232,
    "quantile_method": "inverted_cdf",
    "alpha_family": 0.025,
-   "n_contrasts": 13
+   "n_contrasts": 13,
+   "chunk": 5000
   },
   "MDE": 0.0056,
   "resolve_rule": "point >= MDE AND one-sided lower bound at the quantile > 0 AND the sign is stable across the last two cycle-end checkpoints",
@@ -247,7 +275,8 @@
   "E": "resolved winner; default 32. E is the one family whose throughput is read: a bs32 win must also be worth its 2.2x build cost, and a bs32 win that does not resolve reverts to bs128.",
   "C": "resolved winner; default the off-the-shelf backbone. Skipped and reported skipped if F does not select bge-small.",
   "D": "resolved winner with the larger margin; default squared L2.",
-  "_default": "an unresolved contrast reverts to its default and is REPORTED as unresolved, beside the measured resolution distance, so a reader can tell an unresolved verdict from an invisible one."
+  "_default": "an unresolved contrast reverts to its default and is REPORTED as unresolved, beside the measured resolution distance, so a reader can tell an unresolved verdict from an invisible one.",
+  "anchor": "not a decision family: ANCHOR is the comparator every non-F contrast is read against, and it has no contrast of its own."
  },
  "confirmation": {
   "max_decisions": 2,
@@ -276,18 +305,52 @@
    "lambda": "reselected on the M10 sample by m9/registry.json's locked grid on a training-only holdout, ties to the larger lambda",
    "pca": "per-token, streamed 1152x1152 Gram matrix, each direction's sign fixed so its largest-magnitude component is positive"
   },
-  "all_arms": "the closed-form ridge head warm start (M9's m9s1c) is retained in every arm"
+  "all_arms": "the closed-form ridge head warm start (M9's m9s1c) is retained in every arm EXCEPT C-M9init, which uses its own head (see arms.C-M9init.head_init)"
  },
  "anchor_aliases": {
-  "_what": "the anchor appears in a contrast under the name of the axis being varied; every one of these IS the anchor arm, trained once",
-  "G-1152": "anchor",
-  "B-75/25": "anchor",
-  "E-bs32": "anchor",
-  "C-fresh": "anchor",
-  "anchor": "anchor",
-  "A4": "anchor",
-  "F-winner": "the winning F arm at its 20M checkpoint"
+  "_what": "the anchor appears in a contrast under the name of the axis being varied; each of these resolves to the single trained ANCHOR arm. Sharing one comparator across ten contrasts does not break Bonferroni (a union bound needs no independence) nor the paired bootstrap (per-contrast); the hazard it does carry -- one unlucky anchor seed lifting every non-default at once -- is what `confirmation` exists to contain.",
+  "G-1152": "ANCHOR",
+  "B-75/25": "ANCHOR",
+  "E-bs32": "ANCHOR",
+  "C-fresh": "ANCHOR",
+  "anchor": "ANCHOR",
+  "A4": "ANCHOR",
+  "F-winner": "the winner of contrast F1 at its 20M checkpoint (NOT of F itself: F2 is L12 - F1's winner, so the reference cannot be circular)"
  },
- "trained_arms_expected": 15,
- "_arms_note": "16 entries, 15 TRAINED: A4 is not trained separately -- it is F's winner at its 5M checkpoint, which is the anchor."
+ "trained_arms_expected": 16,
+ "_arms_note": "17 entries, 16 TRAINED: A4 is not trained separately -- it IS the ANCHOR arm. The anchor became its own arm on the S1 amendment (+2 GPU-hours).",
+ "_amended": "2026-09-05, on a Fable adversarial pass (S1-S10), before any arm ran and with nothing trained. S1 was a structural confound: the anchor was a mid-cycle snapshot of a 20M arm and is now its own 5M arm.",
+ "data_cut": {
+  "_mandate": "A2, A3 and A4 are cut to the identical post-screen unique-text count",
+  "rule": "min of the three post-decontamination unique-text counts; the larger two are downsampled with seed 0; the count itself and the hashes are \u00a70b",
+  "applies_to": [
+   "A2",
+   "A3",
+   "A4/ANCHOR"
+  ],
+  "why": "without it the forms contrast is confounded with volume, which is the one thing family A exists to separate",
+  "anchor_corpus": "the CUT A4, not the full corpus -- so the anchor and A3 differ only in which text they carry, never in how much",
+  "A1": "not cut: A1 is the M9 pool and A2-A1 is the volume effect by construction"
+ },
+ "rules": {
+  "generic": "resolves iff point >= MDE AND lower bound at the quantile > 0 AND the sign is stable across the last two cycle-end checkpoints",
+  "three_outcome": "A3-A2 only. lower > MDE -> RESOLVED, coverage established on the COV families, build proceeds. point >= MDE and 0 < lower <= MDE -> POSITIVE, NOT RESOLVED, build proceeds and the report says so. otherwise -> M10 STOPS before any build, ping Dylan, all four A rows reported.",
+  "generated_half_in_build": "A4-A3 only. RESOLVED iff lower > MDE (the same corrected bar as three_outcome; the mandate exempts BOTH A contrasts from the generic rule). Not resolved -> the build uses A3's corpus and the ~1.0M generated queries are dropped from the build and reported as a measured null.",
+  "sign_stability_exemption": "family A's two contrasts are exempt from the sign-stability clause (mandate); every other contrast is subject to it.",
+  "F_orientation": "F's contrasts are read highest-minus-runner-up, i.e. oriented AFTER the readings, so each F contrast is effectively two-sided; it is registered here as 0.025/13 in EACH tail for F1 and F2, which is the conservative reading and does not move the denominator.",
+  "serve_cost_order": "when F's margin does not resolve, the cheapest to serve wins, ordered by (1) parameter count including the head, (2) layer count, (3) bge-small, which alone has an M9 warm start and so alone keeps family C. Measured counts (results/m10_student_parity_box.json): MiniLM-L6 23,893,888 < bge-small 34,540,672 = MiniLM-L12 34,540,672 (the mandate's 33.4M for L12 was an estimate; the tie is broken by rule 3, to bge-small). This tie-break is labelled in the report as a product preference, not evidence.",
+  "E_cost": "a RESOLVED bs32 win is adopted, full stop -- the build's GPU-hour budget already assumes bs32, so no threshold is needed and none is invented after the number. The GPU-hour delta is DISCLOSED beside the contrast. An unresolved bs32 win reverts to bs128. (The measured 2.2x throughput ratio is data and lives in \u00a70b.)",
+  "arm_failure": "an arm that crashes, OOMs or trips the \u00a7Recipe kill rule has NO final checkpoint: its contrasts are reported UNRESOLVED and revert to default, the failure is reported, and the arm is not silently re-run at different settings.",
+  "confirmation_failure": "a confirmation arm that fails leaves its seed range undefined; the decision then reverts to default and is reported as unconfirmed.",
+  "confirmation_eligibility": "families G, B, E, C and D only. F and A are EXCLUDED: F confirmation would cost 80M examples against the registered 45M worst case, and A's rules are already three-outcome.",
+  "C_skipped": "if F does not select bge-small, C1 is skipped and reported skipped; the denominator STAYS 13, exactly as F2 is counted whether or not it runs.",
+  "D_tie": "if D-NORM and D-COV both resolve with margins within 1e-4, the default (squared L2) stands and the tie is reported.",
+  "A2-A1": "DESCRIPTIVE, and it triggers no build action: the build's PAQ volume is fixed unconditionally at 1.0M by \u00a7Recipe, whatever A2-A1 reads. (The mandate's 'if it resolves the build keeps volume' would have made a descriptive contrast decisive and outside the 13-way correction; it is resolved here in favour of the fixed cap.)"
+ },
+ "parity_preconditions": {
+  "_rule": "a head that fails serving parity disqualifies its arm (\u00a7Screen)",
+  "artifact": "results/m10_student_parity_box.json",
+  "status": "all six heads PASS: bge-small, MiniLM-L6, MiniLM-L12 at 3 and 4 layers, min-cos >= 0.99999988 through fastembed, zero custom ONNX ops, all under the 35M cap",
+  "serving_note": "MiniLM's own `tokenizer_config.json` carries max_length 128 beside model_max_length 512, and fastembed serves min(...) = 128. The exported tokenizer sets both to 512. A first run read 0.93-0.95 min-cos and would have disqualified both MiniLM students on a mis-specified check."
+ }
 }

@@ -11,6 +11,12 @@ Nothing has trained. Dev reads below total **86 raw score reads** (43 per CQADup
 | head-width probe | `results/m10_head_width_probe_mac.json` | frozen bge-small + ridge head: 384 → 768 → 1152 features retain 27 → 33 → 37% (programmers), 36 → 41 → 44% (physics) of stella | same two components, **3 raw score reads each** |
 | three-layer head serving parity | `results/m10_head_width_parity_mac.json` | fastembed 0.8.0 reproduces the pool-then-head output to 2e-7; zero custom ops; 34.5M parameters | none |
 
+## M10.0-c family-F serving parity (box, CPU, 2026-09-05) — the gate that disqualifies an arm
+
+| run | artifact | one-line reading | dev reads |
+|---|---|---|---|
+| family-F head parity | `results/m10_student_parity_box.json`, script `m10src/student_parity.py` | **all six PASS** — bge-small, MiniLM-L6, MiniLM-L12 at 3 and 4 feature layers — min-cos ≥ **0.99999988** through fastembed, zero custom ONNX ops, params 23.89M / 34.54M / 34.54M all under the 35M cap (the mandate's 33.4M for L12 was an estimate; L12 and bge-small are identical in size, which is why the serve-cost tie-break had to be registered). **A first run read 0.93–0.95 for both MiniLM students and would have disqualified them.** Diagnosed, not accepted: `fastembed.common.preprocessor_utils.load_tokenizer` serves `min(model_max_length, max_length)` from `tokenizer_config.json`, and `all-MiniLM-*-v2` ships max_length 128 beside model_max_length 512, so fastembed ran at 128 while the torch reference ran at 512. Every text under the limit was bit-exact (median cos 0.99999998). The export now writes the tokenizer we intend to ship | none |
+
 ## M10.0-d COV resolution number (box, 2026-09-05) — the surface's power disclosure
 
 | run | artifact | one-line reading | dev reads |

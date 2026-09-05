@@ -1,0 +1,214 @@
+{
+ "_what": "M10.0-c (box, CPU): the serving-parity gate every family-F student must pass before it runs.\n\n\u00a7Recipe: \"Before F can select MiniLM, its three-layer head passes the same parity check\", and\n\"L12's three- and four-layer heads pass the parity check first\"; \u00a7Screen: a failing head\ndisqualifies that arm. The check is the one bge-small already passed\n(`results/m10_head_width_parity_mac.json`, `m10_head_mlp_parity_box.json`): export the per-token\nhead, let fastembed do the masked mean and the normalize, and require it to reproduce the\ntraining-time `normalize(mean_t(W x_t))` \u2014 because the head precedes the pool, the two are the\nsame linear map and the parity is exact up to float error, not approximate.\n\nFeature layers per student (\u00a7Recipe): bge-small and MiniLM-L12 concatenate layers 12, 8, 4\n(1152-d), MiniLM-L6 layers 6, 4, 2; family G's four-layer arm adds layer 2 (MiniLM-L6: layer 1),\n1536-d. Random head weights: parity is a property of the export path, not of the weights.\n\nDiagnostic; read by one rule only \u2014 the F-arm disqualification.\nUsage: student_parity.py [student-key ...]     (default: all three)",
+ "cap": 35000000,
+ "rows": [
+  {
+   "key": "bge-small",
+   "repo": "BAAI/bge-small-en-v1.5",
+   "n_layers": 3,
+   "layers": [
+    12,
+    8,
+    4
+   ],
+   "d_in": 1152,
+   "params_total": 34540672,
+   "under_35M_cap": true,
+   "custom_domain_ops": [],
+   "n_nodes": 1025,
+   "onnx_bytes": 137800857,
+   "n_texts": 64,
+   "served_truncation": {
+    "tokenizer.json": 512,
+    "fastembed_effective": 512
+   },
+   "ort_then_manual_pool": {
+    "min_cos": 0.9999998211860657,
+    "max_abs": 1.0826624929904938e-07
+   },
+   "fastembed": {
+    "version": "0.8.0",
+    "served": true,
+    "min_cos": 0.9999998875284813,
+    "mean_cos": 0.9999999918212203,
+    "max_abs": 1.0816780428041933e-07,
+    "seconds": 2.6
+   },
+   "PASS": true
+  },
+  {
+   "key": "bge-small",
+   "repo": "BAAI/bge-small-en-v1.5",
+   "n_layers": 4,
+   "layers": [
+    12,
+    8,
+    4,
+    2
+   ],
+   "d_in": 1536,
+   "params_total": 34933888,
+   "under_35M_cap": true,
+   "custom_domain_ops": [],
+   "n_nodes": 1025,
+   "onnx_bytes": 139373793,
+   "n_texts": 64,
+   "served_truncation": {
+    "tokenizer.json": 512,
+    "fastembed_effective": 512
+   },
+   "ort_then_manual_pool": {
+    "min_cos": 0.9999998807907104,
+    "max_abs": 1.210719347000122e-07
+   },
+   "fastembed": {
+    "version": "0.8.0",
+    "served": true,
+    "min_cos": 0.9999999343399806,
+    "mean_cos": 1.0000000015786363,
+    "max_abs": 1.2107596698059803e-07,
+    "seconds": 2.7
+   },
+   "PASS": true
+  },
+  {
+   "key": "MiniLM-L6",
+   "repo": "sentence-transformers/all-MiniLM-L6-v2",
+   "n_layers": 3,
+   "layers": [
+    6,
+    4,
+    2
+   ],
+   "d_in": 1152,
+   "params_total": 23893888,
+   "under_35M_cap": true,
+   "custom_domain_ops": [],
+   "n_nodes": 551,
+   "onnx_bytes": 95107522,
+   "n_texts": 64,
+   "served_truncation": {
+    "tokenizer.json": 512,
+    "fastembed_effective": 512
+   },
+   "ort_then_manual_pool": {
+    "min_cos": 0.9999998807907104,
+    "max_abs": 8.940696716308594e-08
+   },
+   "fastembed": {
+    "version": "0.8.0",
+    "served": true,
+    "min_cos": 0.9999999124407696,
+    "mean_cos": 0.9999999935761397,
+    "max_abs": 8.737598638283023e-08,
+    "seconds": 1.4
+   },
+   "PASS": true
+  },
+  {
+   "key": "MiniLM-L6",
+   "repo": "sentence-transformers/all-MiniLM-L6-v2",
+   "n_layers": 4,
+   "layers": [
+    6,
+    4,
+    2,
+    1
+   ],
+   "d_in": 1536,
+   "params_total": 24287104,
+   "under_35M_cap": true,
+   "custom_domain_ops": [],
+   "n_nodes": 551,
+   "onnx_bytes": 96680458,
+   "n_texts": 64,
+   "served_truncation": {
+    "tokenizer.json": 512,
+    "fastembed_effective": 512
+   },
+   "ort_then_manual_pool": {
+    "min_cos": 0.9999998807907104,
+    "max_abs": 8.568167686462402e-08
+   },
+   "fastembed": {
+    "version": "0.8.0",
+    "served": true,
+    "min_cos": 0.9999998844130886,
+    "mean_cos": 0.9999999978597327,
+    "max_abs": 8.564608419692199e-08,
+    "seconds": 1.5
+   },
+   "PASS": true
+  },
+  {
+   "key": "MiniLM-L12",
+   "repo": "sentence-transformers/all-MiniLM-L12-v2",
+   "n_layers": 3,
+   "layers": [
+    12,
+    8,
+    4
+   ],
+   "d_in": 1152,
+   "params_total": 34540672,
+   "under_35M_cap": true,
+   "custom_domain_ops": [],
+   "n_nodes": 1025,
+   "onnx_bytes": 137800857,
+   "n_texts": 64,
+   "served_truncation": {
+    "tokenizer.json": 512,
+    "fastembed_effective": 512
+   },
+   "ort_then_manual_pool": {
+    "min_cos": 0.9999998211860657,
+    "max_abs": 1.3783574104309082e-07
+   },
+   "fastembed": {
+    "version": "0.8.0",
+    "served": true,
+    "min_cos": 0.9999998870997295,
+    "mean_cos": 0.9999999996004363,
+    "max_abs": 1.1755868747215237e-07,
+    "seconds": 2.8
+   },
+   "PASS": true
+  },
+  {
+   "key": "MiniLM-L12",
+   "repo": "sentence-transformers/all-MiniLM-L12-v2",
+   "n_layers": 4,
+   "layers": [
+    12,
+    8,
+    4,
+    2
+   ],
+   "d_in": 1536,
+   "params_total": 34933888,
+   "under_35M_cap": true,
+   "custom_domain_ops": [],
+   "n_nodes": 1025,
+   "onnx_bytes": 139373793,
+   "n_texts": 64,
+   "served_truncation": {
+    "tokenizer.json": 512,
+    "fastembed_effective": 512
+   },
+   "ort_then_manual_pool": {
+    "min_cos": 0.9999998807907104,
+    "max_abs": 1.1734664440155029e-07
+   },
+   "fastembed": {
+    "version": "0.8.0",
+    "served": true,
+    "min_cos": 0.9999999208366062,
+    "mean_cos": 1.0000000013146604,
+    "max_abs": 1.1404881474982864e-07,
+    "seconds": 2.8
+   },
+   "PASS": true
+  }
+ ],
+ "disqualified": []
+}

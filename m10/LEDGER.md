@@ -16,7 +16,11 @@ from its artifact.
 
 | what | value | where |
 |---|---|---|
-| arms | **15 trained**, 16 entries — A4 is not trained separately, it IS F's winner at its 5M checkpoint | `arms` |
+| arms | **16 trained**, 17 entries — A4 is not trained separately, it IS the ANCHOR arm | `arms` |
+| **anchor** | **its own trained 5M arm** (S1 amendment). It had been "F's winner at its 5M checkpoint" — ~75% through cycle 1 of a 20M schedule, un-annealed, against genuine three-cycle 5M arms: a handicap on the `b` side of **ten** contrasts, in the direction that adopts a non-default, and it left the anchor with no second cycle end (sign-stability) and no DEV-6 read. **+2 GPU-hours** | `anchor`, `arms.ANCHOR` |
+| data cut | A2, A3 and A4 cut to the identical post-screen unique-text count, min-of-three, seed-0 downsample; **the anchor trains on the CUT A4**, so it and A3 differ in which text, never how much | `data_cut` |
+| rules | every decision path numerically registered: A's two corrected bars, F's post-hoc orientation and its serve-cost ordering, E's cost rule, arm failure, confirmation eligibility and failure, the C-skip denominator, the D tie, and A2−A1 as **descriptive with no build action** | `rules` |
+| parity | all six family-F heads PASS (bge-small · MiniLM-L6 · MiniLM-L12, 3 and 4 layers), min-cos ≥ 0.99999988, zero custom ops, all under the 35M cap | `parity_preconditions`, `results/m10_student_parity_box.json` |
 | order | F → A → G → B → E → C → D; every family after F runs on F's winner and every later verdict is labelled conditional on it | `order` |
 | contrasts | **13 decisive** (F2 counted whether or not L12 is extended) + 3 descriptive | `contrasts`, `descriptive_contrasts` |
 | statistics | family-weighted COV macro over the four family IDs, paired stratified bootstrap over queries within unit, **B = 200,000, seed 0, `inverted_cdf`, one-sided 0.025/13**, **MDE 0.0056 fixed** | `statistics`, implemented in `m10src/cov_macro.py` |
@@ -26,6 +30,14 @@ from its artifact.
 | confirmation | at most **2** decisions, largest margin first, seeds 1 and 2; stands iff the margin exceeds the largest seed range in either arm | `confirmation` |
 | evaluation | COV every cycle end; **DEV-6 once**, at the final checkpoint, never selection-bearing; FORMS-12, `arxiv-title` and CUREv1 descriptive; LoTTE read #1 after the recipe lock | `evaluation` |
 | warm start | G-MLP: n_fit 60,000, seed 21, λ reselected on the registry's locked grid on a training-only holdout; per-token PCA by a streamed Gram matrix, direction signs fixed | `warm_start` |
+
+**Amended 2026-09-05 on a Fable adversarial pass (S1–S10), before any arm ran and with nothing
+trained.** S1 above is the one that mattered. Also taken: the measured 2.2× bs128/bs32 throughput
+ratio moved OUT of §0a (it is data, so it is §0b); `bootstrap.chunk = 5000` added, since the chunk
+size is part of the draw-plan definition; C-M9init's head init registered with its confound
+disclosed; the validator hardened against twelve mutations that passed the first version, each
+with a test. **The validator runs only under `.venv/bin/python`** — the system python has no
+numpy, and that ImportError is not a lock failure.
 
 Corpus counts, hashes, measured rates and the box allocation are **§0b**, and cloud price, build
 allocation and `max_extension_cycles` are neither — they are fixed at the M10.2 recipe lock.
