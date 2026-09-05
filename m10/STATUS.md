@@ -12,12 +12,21 @@
 | **3** **§0a design lock** | **DONE, PUSHED, then AMENDED S1–S10** | The lock is **`m10/screen_registry.json`**, not prose; `m10src/screen_lock.py` validates it (18 tests). **S1 was a structural confound that would have shipped:** the anchor was "F's winner at its 5M checkpoint" — ~75% through cycle 1 of a 20M schedule, un-annealed — against genuine three-cycle 5M arms, on the `b` side of **ten** contrasts. It is now **its own trained 5M arm**: 16 trained arms, +2 GPU-h. LEDGER §0a |
 | **protected10** | **DONE (was runbook item 3 of the next-three)** | `seeds.draw` now screens against the M10 protected index — six + dev + reserved queries **plus admitted COV queries AND documents**. 464,757 COV fingerprints cached. `SCREEN_VERSION` bumped; `_key` no longer hardcodes `ROUTE` |
 | **7 (part)** family-F parity | **DONE — all six heads PASS** | bge-small · MiniLM-L6 · MiniLM-L12 at 3 and 4 layers, min-cos ≥ **0.99999988** through fastembed, zero custom ops, all under the 35M cap. A first run read 0.93–0.95 and would have disqualified both MiniLM students; diagnosed, see the hard-won facts. `results/m10_student_parity_box.json` |
-| **W3 seed supply** | **SOLVED in principle; the precision gate is the open item** | New store **`wikipedia-body`** (T2-5, Tier 2, Fable-reviewed, registered before its scan): body paragraphs (**lead excluded**) of `wikimedia/wikipedia@20231101.en`, **unchanged** `ROUTE` and `min_score ≥ 4`, cap 3 seeds/article/form, health and finance only. Full-dump scan running at ~2,000 articles/s. The shortfall is closed by corpus size, not by lowering any bar |
+| **W3 seed supply** | **supply SOLVED (72,826 health seeds vs a ~33K need); the gate FAILED and the CONTROL is the finding** | New store **`wikipedia-body`** (T2-5, Tier 2, Fable-reviewed, registered before its scan): body paragraphs (**lead excluded**) of `wikimedia/wikipedia@20231101.en`, **unchanged** `ROUTE` and `min_score ≥ 4`, cap 3 seeds/article/form, health and finance only. Full-dump scan running at ~2,000 articles/s. The shortfall is closed by corpus size, not by lowering any bar |
 | **4–11** | not started | next: finish the scan → draw → the judged precision gate; then step 4 harvest |
 
 ## THE NEXT THREE THINGS, in order
 
-1. **Finish `wikipedia-body` and gate it.** `m10src/wikibody.py`: `scan()` (running) → `draw(per_form)`
+0. **THE GATE RESULT, read this before anything else** (`results/m10_wikibody_precision.json`).
+   Blinded, interleaved, 200 + 200 per form, four independent judges: **health 0.545 vs the
+   incumbent 0.590** (z = −0.91, indistinguishable) · **finance 0.535 vs the incumbent 0.315**
+   (z = +4.56). Gate ≥ 0.80: **BOTH FAIL.** `wikipedia-body` is **not adopted** on this evidence.
+   The incumbent's base precision had never been measured — only the `ROUTE_WIDE` marginal ever
+   was, against this same bar — so reverting is not a safe default. W6 is the Tier-3 question and
+   is Dylan's. **Do not move the bar.** Every failure class the judges named is an article-SUBJECT
+   error (physician biographies, institutions, animal disease, reference fragments, "bank" as a
+   landform), so the registered next lever is the subject filter and it is aimed correctly.
+1. ~~**Finish `wikipedia-body` and gate it.**~~ DONE — see 0. `m10src/wikibody.py`: `scan()` (running) → `draw(per_form)`
    → **the judged precision gate**. The gate is the whole decision and it is what killed
    `ROUTE_WIDE`: **200 uniform-random seeds per form from the population `draw()` actually
    returns** (top-score-first), judged by an independent Fable subagent against the frozen
