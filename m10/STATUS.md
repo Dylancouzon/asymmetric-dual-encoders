@@ -4,9 +4,9 @@
 
 | job | how to check | ETA |
 |---|---|---|
-| **M10.0-e calibration**, arms P0/P1/P2 at 5M each | `work/m10calib_run.log`, `grep "ex/s"`; artifacts `work/m10calib/P*.json` and `P*_cov.json` | P0 ~70% through; **slowed to ~875 ex/s** by CPU contention with the draw (GPU 65% → 40%) |
+| **M10.0-e calibration** | `work/m10calib_run.log`; `work/m10calib/P*.json` + `P*_cov.json` | **P0 and P1 DONE and clean** (`steps_run` 156,250, `stopped` None): macro **0.477528** and **0.476141**, so the **seed effect is 0.001387** — inside the ≤0.002–0.003 the screen needs. **P2 running**, ~1.5 h; it gives the same-init paired width, which needs to land near **0.0043**, not merely under 0.0056 |
 | ↳ **when all three land** | run **`.venv/bin/python m10src/calib_report.py`** → `results/m10_calib_report.json`. It refuses any P arm whose `total_steps != 156250` (the smoke shares the path) or that stopped early. Then record it in LEDGER §M10.0-e and RESULTS, and log **COV read #2** in §4 | ~2 min |
-| **Codex code review** of today's new code | `scratchpad/codex_code.txt`; audit the log for reserved reads BEFORE reading findings | ~20 min |
+| **arm-shape smoke v4** | `work/m10arm_smoke_v4.log` | re-run after the `select_lambda` fix; ~15 min |
 
 **Two stale-artifact hazards.** (1) The 90-step smoke of `calib.run_arm` writes to the same
 `work/m10calib/P0.json` path the real run uses — check `total_steps == 156250` before believing any
@@ -28,6 +28,21 @@ from 65% to 35% and its rate from 945 to 874 ex/s; and `E-bs128` at 512 tokens *
 box from 10 GB free to 2 GB, because `output_hidden_states=True` keeps every layer's states for
 128x512 positions. `nice 19` on the least urgent job fixes the first, `--max-len 128` the second.
 Check `free -g` and `nvidia-smi` before adding a fourth job.
+
+## What this session settled, and the three things that need Dylan
+
+**Settled and pushed:** the A3 corpus (1,250,000 rows) · PAQ (A2 4,037,000 + build 1,000,000
+nested) · the FORMS-12 hold-out on the harvested corpus · the 12/12 arm-shape smoke · both missing
+warm starts · step 8's gating logic and driver (`corpus10.py`, stub-server tested) · §0b's rates
+and allocation · seeds confirmed for all seven generated forms.
+
+**Needs Dylan — none of it blocks generation:**
+
+| # | what | where |
+|---|---|---|
+| **W7** | `factoid`/`product` have no quota row and both fall under the mandate's "under 100K reverts to generation". Default excluded, which is what the code does | issue #2 |
+| **W8/W9** | The screen's power, and **eleven registry decision-logic defects, five blocking** — `G-384` and `bs32` cannot win their own contrasts; F's familywise α is 0.02885; the L12 probe is schedule-confounded | issue #2 |
+| **W10** | A8's diversity gate is inert below 39 words. `health` reads **0.00% registered / 20.50% measured and RISING** — 20.5% is a floor, not an estimate. Recommended: option (c). **Does not block generation** — A8 runs on the manifest, not during it | issue #3 |
 
 ## Where the milestone actually stands
 
