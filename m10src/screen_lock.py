@@ -74,6 +74,41 @@ def validate(r=None):
                                     + list(arm.get("read_at", []))
                                     + [arm.get("conditional_extension", {}).get("to_examples", 0)]):
                     bad.append(f"contrast {cid} reads {c[side]} at {at:,} examples, beyond its dose")
+    # -- W9 review: the W9 fixes were PROSE and the validator never evaluated them, so a
+    # misspelled `family_rule` or an ignored per-contrast quantile passed the lock. These check the
+    # fields a decision actually reads.
+    st = r["statistics"]["bootstrap"]
+    q, alpha = st["quantile"], st["alpha_family"]
+    total = 0.0
+    for cid, c in contrasts.items():
+        tails = c.get("tails", 1)
+        if tails not in (1, 2):
+            bad.append(f"contrast {cid}: tails={tails!r}, expected 1 or 2")
+        cq = c.get("quantile", q)
+        if tails == 2 and abs(cq - q / 2) > 1e-15:
+            bad.append(f"contrast {cid} is two-sided but its quantile {cq} != alpha/(2*n)")
+        if tails == 1 and "quantile" in c and abs(cq - q) > 1e-15:
+            bad.append(f"contrast {cid} overrides the quantile without being two-sided")
+        total += tails * cq
+        fr = c.get("family_rule")
+        if fr and fr not in r.get("rules", {}):
+            bad.append(f"contrast {cid} names family_rule '{fr}', which is not in `rules`")
+    if abs(total - alpha) > 1e-12:
+        bad.append(f"familywise alpha is {total}, not the registered {alpha}")
+
+    # -- an arm that cannot be selected must not be reachable as a winner
+    for a, v in arms.items():
+        if v.get("trained") and "selectable" not in v and v.get("family") not in NON_FAMILY:
+            if a not in {alias.get(k, k) for k in alias} and v.get("family") != "F":
+                bad.append(f"arm {a} has no boolean `selectable` field")
+    if arms.get("G-384", {}).get("selectable") is not False:
+        bad.append("G-384 must be registered selectable:false -- it is the M9 diagnostic arm")
+
+    # -- the conditional trained count must be consistent with C being skippable
+    if arms.get("C-M9init", {}).get("skipped_iff"):
+        if r.get("trained_arms_if_C_skipped") != r["trained_arms_expected"] - 1:
+            bad.append("C is skippable but trained_arms_if_C_skipped != expected - 1")
+
     everything = list(contrasts.values()) + list(r["descriptive_contrasts"].values())
     read = {resolve(c[s]) for c in everything for s in ("a", "b") if c.get(s)}
     for a, v in arms.items():

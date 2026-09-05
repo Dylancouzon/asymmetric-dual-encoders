@@ -67,19 +67,23 @@
    "family": "A",
    "dose_examples": 5000000,
    "data": "M9 pool (463,314 queries)",
-   "trained": true
+   "trained": true,
+   "selectable": true
   },
   "A2": {
    "family": "A",
    "dose_examples": 5000000,
    "data": "M9 pool + PAQ (volume control)",
-   "trained": true
+   "trained": true,
+   "selectable": true
   },
   "A3": {
    "family": "A",
    "dose_examples": 5000000,
    "data": "A2 + harvested real query-like text",
-   "trained": true
+   "trained": true,
+   "selectable": true,
+   "_note_selectable": "A3's corpus IS selectable as the build corpus: `rules.generated_half_in_build` says an unresolved A4-A3 makes the build use A3's corpus and drops the ~1.0M generated queries."
   },
   "A4": {
    "family": "A",
@@ -93,38 +97,45 @@
    "dose_examples": 5000000,
    "feature_layers": 1,
    "feature_dim": 384,
-   "trained": true
+   "trained": true,
+   "selectable": false,
+   "_w9r": "**DIAGNOSTIC-ONLY, never selectable.** The mandate registers the contrast as `1152 - 384` (:616) and the arm's stated purpose as 'the paper's evidence for the M9 diagnosis', so 384 is not a candidate recipe -- it is the thing the M9 diagnosis says is too narrow. Keeping the orientation AND letting 384 win were two incompatible readings the registry briefly carried at once (W9 review #3). G1 therefore tests whether 1152 beats 384 and can select only 1152; G-384 is excluded from winner selection and from confirmation."
   },
   "G-1536": {
    "family": "G",
    "dose_examples": 5000000,
    "feature_layers": 4,
    "feature_dim": 1536,
-   "trained": true
+   "trained": true,
+   "selectable": true
   },
   "G-MLP": {
    "family": "G",
    "dose_examples": 5000000,
    "head": "W_lin*x + W2*GELU(W1*x+b1), W1 1152->192, per-token, before the pool",
-   "trained": true
+   "trained": true,
+   "selectable": true
   },
   "B-100/0": {
    "family": "B",
    "dose_examples": 3750000,
    "pattern": "4Q",
-   "trained": true
+   "trained": true,
+   "selectable": true
   },
   "B-50/50": {
    "family": "B",
    "dose_examples": 7500000,
    "pattern": "2Q+2D",
-   "trained": true
+   "trained": true,
+   "selectable": true
   },
   "E-bs128": {
    "family": "E",
    "dose_examples": 5000000,
    "batch": 128,
-   "trained": true
+   "trained": true,
+   "selectable": true
   },
   "C-M9init": {
    "family": "C",
@@ -132,19 +143,22 @@
    "init": "the M9 candidate",
    "skipped_iff": "F does not select bge-small",
    "trained": true,
-   "head_init": "the M9 candidate keeps its 384-d head and the two extra layers' columns are ZERO-initialised (\u00a7Recipe). C1 therefore confounds backbone init with head init; that is registered and disclosed, not resolved."
+   "head_init": "the M9 candidate keeps its 384-d head and the two extra layers' columns are ZERO-initialised (\u00a7Recipe). C1 therefore confounds backbone init with head init; that is registered and disclosed, not resolved.",
+   "selectable": true
   },
   "D-NORM": {
    "family": "D",
    "dose_examples": 5000000,
    "objective": "leaf_norm_e2",
-   "trained": true
+   "trained": true,
+   "selectable": true
   },
   "D-COV": {
    "family": "D",
    "dose_examples": 5000000,
    "objective": "document_covariance_weighted",
-   "trained": true
+   "trained": true,
+   "selectable": true
   },
   "ANCHOR": {
    "family": "anchor",
@@ -189,7 +203,7 @@
    "a": "G-1152",
    "b": "G-384",
    "decisive": true,
-   "_w9": "Orientation `1152 - 384` is the MANDATE's (instructions-m10.md:616) and is kept: it is the directional hypothesis 'the wider head beats M9's 384', and the 384 arm exists as the paper's evidence for the M9 diagnosis. CONSEQUENCE, now stated instead of implied: G1 can only ever confirm 1152 over 384; a 384 win is a negative point and cannot resolve. If the point estimate comes out NEGATIVE that CONTRADICTS the M9 diagnosis and is reported prominently rather than silently reverting to default (W9, Codex finding 2).",
+   "_w9": "Orientation `1152 - 384` is the MANDATE's (:616) and is kept. `G-384` is registered `selectable: false` -- a diagnostic arm, not a candidate recipe -- so G1 tests whether the wider head beats M9's 384 and can select only 1152. A negative point estimate is REPORTED as evidence bearing on the M9 diagnosis; it is not an action, and an unresolved negative is noise, not a contradiction (W9 review #3).",
    "family_rule": "multi_arm_winner"
   },
   "G2": {
@@ -291,10 +305,10 @@
   "A": "A3-A2 three outcomes: lower bound > MDE -> coverage resolved on the COV families, build proceeds; point >= MDE and lower bound > 0 but <= MDE -> positive, not resolved, build proceeds and the report says so; otherwise -> M10 STOPS before any build, ping Dylan, all four rows reported. A4-A3: if it does not resolve, the build uses A3's corpus and the generated queries are dropped from the build and reported as a measured null.",
   "G": "resolved winner; default 1152.",
   "B": "resolved winner; default 75/25.",
-  "E": "resolved winner; default 32. E is the one family whose throughput is read: a bs32 win must also be worth its 2.2x build cost, and a bs32 win that does not resolve reverts to bs128.",
+  "E": "E's decision table is `rules.E_cost`: bs32 iff E1 resolves, else bs128. E is the one family whose throughput is read (amendment A7). **`E-bs128` does not run on the box at realistic sequence lengths and runs on the rented A100** -- Dylan 2026-09-05, the box is preparation for the cloud run, not a measurement target.",
   "C": "resolved winner; default the off-the-shelf backbone. Skipped and reported skipped if F does not select bge-small.",
   "D": "resolved winner with the larger margin; default squared L2.",
-  "_default": "an unresolved contrast reverts to its default and is REPORTED as unresolved, beside the measured resolution distance, so a reader can tell an unresolved verdict from an invisible one.",
+  "_default": "an unresolved contrast reverts to its default and is REPORTED as unresolved, beside the measured resolution distance, so a reader can tell an unresolved verdict from an invisible one. **EXCEPTION: family E** -- see `rules.E_cost`; an unresolved E selects bs128, not the default.",
   "anchor": "not a decision family: ANCHOR is the comparator every non-F contrast is read against, and it has no contrast of its own."
  },
  "confirmation": {
@@ -358,9 +372,9 @@
   "three_outcome": "A3-A2 only. lower > MDE -> RESOLVED, coverage established on the COV families, build proceeds. point >= MDE and 0 < lower <= MDE -> POSITIVE, NOT RESOLVED, build proceeds and the report says so. otherwise -> M10 STOPS before any build, ping Dylan, all four A rows reported.",
   "generated_half_in_build": "A4-A3 only. RESOLVED iff lower > MDE (the same corrected bar as three_outcome; the mandate exempts BOTH A contrasts from the generic rule). Not resolved -> the build uses A3's corpus and the ~1.0M generated queries are dropped from the build and reported as a measured null.",
   "sign_stability_exemption": "family A's two contrasts are exempt from the sign-stability clause (mandate); every other contrast is subject to it.",
-  "F_orientation": "F's contrasts are read highest-minus-runner-up, i.e. oriented AFTER the readings, so each F contrast is effectively two-sided; it is registered here as 0.025/13 in EACH tail for F1 and F2, which is the conservative reading and does not move the denominator.",
+  "F_orientation": "F's contrasts are read highest-minus-runner-up, i.e. oriented AFTER the readings, so each F contrast is TWO-SIDED. Each F tail takes **alpha/26** (`contrasts.F1/F2` carry `tails: 2` and their own `quantile`), which is what makes the union bound 11(alpha/13) + 4(alpha/26) = alpha EXACTLY. An earlier version of this rule said alpha/13 in each F tail and called it conservative; it was not -- it put the familywise rate at 0.02885 (W9 #3, and the contradiction was caught by the W9 review).",
   "serve_cost_order": "when F's margin does not resolve, the cheapest to serve wins, ordered by (1) parameter count including the head, (2) layer count, (3) bge-small, which alone has an M9 warm start and so alone keeps family C. Measured counts (results/m10_student_parity_box.json): MiniLM-L6 23,893,888 < bge-small 34,540,672 = MiniLM-L12 34,540,672 (the mandate's 33.4M for L12 was an estimate; the tie is broken by rule 3, to bge-small). This tie-break is labelled in the report as a product preference, not evidence.",
-  "E_cost": "a RESOLVED bs32 win is adopted, full stop -- the build's GPU-hour budget already assumes bs32, so no threshold is needed and none is invented after the number. The GPU-hour delta is DISCLOSED beside the contrast. An unresolved bs32 win reverts to bs128. (The measured 2.2x throughput ratio is data and lives in \u00a70b.)",
+  "E_cost": "**E's decision table, and it is an explicit EXCEPTION to `_default`.** Select **bs32 iff E1 (`bs32 - bs128`) RESOLVES**; in every other case -- unresolved, or bs128 ahead -- select **bs128**. The build's GPU-hour budget assumes bs32, so a resolved bs32 win needs no extra threshold and none is invented after the number; the GPU-hour delta is DISCLOSED beside the contrast. Three places previously disagreed (E's default said bs32, `_default` said unresolved reverts to default, this rule said an unresolved bs32 win reverts to bs128), and under the generic rule a bs128 advantage read NEGATIVE and could not resolve, so the slower arm would have been selected (W9 review #2). **Consequence for confirmation:** selecting bs128 IS a non-default outcome and is therefore eligible for a confirmation slot.",
   "arm_failure": "an arm that crashes, OOMs or trips the \u00a7Recipe kill rule has NO final checkpoint: its contrasts are reported UNRESOLVED and revert to default, the failure is reported, and the arm is not silently re-run at different settings.",
   "confirmation_failure": "a confirmation arm that fails leaves its seed range undefined; the decision then reverts to default and is reported as unconfirmed.",
   "confirmation_eligibility": "families G, B, E, C and D only. F and A are EXCLUDED: F confirmation would cost 80M examples against the registered 45M worst case, and A's rules are already three-outcome.",
@@ -368,7 +382,7 @@
   "D_tie": "if D-NORM and D-COV both resolve with margins within 1e-4, the default (squared L2) stands and the tie is reported.",
   "A2-A1": "DESCRIPTIVE, and it triggers no build action: the build's PAQ volume is fixed unconditionally at 1.0M by \u00a7Recipe, whatever A2-A1 reads. (The mandate's 'if it resolves the build keeps volume' would have made a descriptive contrast decisive and outside the 13-way correction; it is resolved here in favour of the fixed cap.)",
   "F_selection_aware": "F2's comparator `F-winner` is CHOSEN from F1's reading, so a bootstrap that holds the observed winner fixed ignores the selection step and under-states the interval. F1's winner is therefore RECOMPUTED INSIDE EACH BOOTSTRAP RESAMPLE and F2's statistic is formed against whichever arm wins in that resample (W9, Codex finding 4).",
-  "multi_arm_winner": "G, B and D each offer more than one alternative against the default, and 'resolved winner' did not say what happens when TWO resolve. Registered: the alternative with the higher point estimate wins, AND it must also resolve against the other alternative under the same rule; if it does not, the DEFAULT stands and the tie is reported. This makes D's existing `D_tie` the special case it always was (W9, Codex finding 6)."
+  "multi_arm_winner": "G, B and D each offer more than one SELECTABLE alternative against the default. **Among the alternatives whose own registered default comparison RESOLVES, the highest point estimate is selected; NO inferential claim is made that it beats the other alternatives, and no alternative-vs-alternative contrast is run.** The earlier form required the winner to 'also resolve against the other alternative', which would have created five post-hoc-oriented comparisons absent from the thirteen and broken the Bonferroni accounting (W9 review #4). Ties on the point estimate go to the default. `D_tie` remains the special case."
  },
  "parity_preconditions": {
   "_rule": "a head that fails serving parity disqualifies its arm (\u00a7Screen)",
