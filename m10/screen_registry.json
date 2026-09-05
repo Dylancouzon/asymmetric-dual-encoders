@@ -57,9 +57,11 @@
    "student": "MiniLM-L12-v2",
    "conditional_extension": {
     "to_examples": 20000000,
-    "iff": "m_L12(5M) >= max(m_L6(5M), m_bge(5M)) - 0.0056"
+    "iff": "m_L12(5M) >= max(m_L6(5M), m_bge(5M)) - 0.0056",
+    "on_extension": "CONTINUES the same 20M schedule from the 5M checkpoint; it does not restart. Previously undefined (W9, Codex finding 5)."
    },
-   "trained": true
+   "trained": true,
+   "schedule": "the 20M three-cycle schedule TRUNCATED at 5M, not a 5M schedule. W9, Codex finding 5: F-bge-small and F-MiniLM-L6 are READ at 5M inside a 20M schedule, so at that point they are ~75% through cycle 1 and un-annealed, while a genuine 5M arm would have completed three compressed annealed cycles -- the exact handicap S1 created the standalone anchor to remove, reintroduced one family over. Truncating L12's 20M schedule at 5M costs nothing extra and reads all three arms at the SAME schedule position."
   },
   "A1": {
    "family": "A",
@@ -156,7 +158,9 @@
    "a": "F-MiniLM-L6",
    "b": "F-bge-small",
    "at_examples": 20000000,
-   "decisive": true
+   "decisive": true,
+   "tails": 2,
+   "quantile": 0.0009615384615384616
   },
   "F2": {
    "a": "F-MiniLM-L12",
@@ -164,7 +168,10 @@
    "at_examples": 20000000,
    "decisive": true,
    "runs_iff": "L12 extended",
-   "note": "counted in the thirteen whether or not it runs"
+   "note": "counted in the thirteen whether or not it runs",
+   "tails": 2,
+   "quantile": 0.0009615384615384616,
+   "rule": "F_selection_aware"
   },
   "A3-A2": {
    "a": "A3",
@@ -181,32 +188,40 @@
   "G1": {
    "a": "G-1152",
    "b": "G-384",
-   "decisive": true
+   "decisive": true,
+   "_w9": "Orientation `1152 - 384` is the MANDATE's (instructions-m10.md:616) and is kept: it is the directional hypothesis 'the wider head beats M9's 384', and the 384 arm exists as the paper's evidence for the M9 diagnosis. CONSEQUENCE, now stated instead of implied: G1 can only ever confirm 1152 over 384; a 384 win is a negative point and cannot resolve. If the point estimate comes out NEGATIVE that CONTRADICTS the M9 diagnosis and is reported prominently rather than silently reverting to default (W9, Codex finding 2).",
+   "family_rule": "multi_arm_winner"
   },
   "G2": {
    "a": "G-1536",
    "b": "G-1152",
-   "decisive": true
+   "decisive": true,
+   "family_rule": "multi_arm_winner"
   },
   "G3": {
    "a": "G-MLP",
    "b": "G-1152",
-   "decisive": true
+   "decisive": true,
+   "family_rule": "multi_arm_winner"
   },
   "B1": {
    "a": "B-100/0",
    "b": "B-75/25",
-   "decisive": true
+   "decisive": true,
+   "family_rule": "multi_arm_winner"
   },
   "B2": {
    "a": "B-50/50",
    "b": "B-75/25",
-   "decisive": true
+   "decisive": true,
+   "family_rule": "multi_arm_winner"
   },
   "E1": {
-   "a": "E-bs128",
-   "b": "E-bs32",
-   "decisive": true
+   "a": "E-bs32",
+   "b": "E-bs128",
+   "decisive": true,
+   "rule": "E_cost",
+   "_w9": "REORIENTED 2026-09-05 (W9, Codex finding 1). It read `E-bs128 - E-bs32`, so a bs32 quality win was a NEGATIVE point estimate and `point >= threshold` refused it -- making the mandate's own action, 'a RESOLVED bs32 win is adopted', unreachable. Read `bs32 - bs128` the action is reachable with ONE tail and the cost rule is unchanged: resolve -> bs32 earns its 2.2x build cost; do not resolve -> bs128."
   },
   "C1": {
    "a": "C-M9init",
@@ -216,12 +231,14 @@
   "D1": {
    "a": "D-NORM",
    "b": "anchor",
-   "decisive": true
+   "decisive": true,
+   "family_rule": "multi_arm_winner"
   },
   "D2": {
    "a": "D-COV",
    "b": "anchor",
-   "decisive": true
+   "decisive": true,
+   "family_rule": "multi_arm_winner"
   }
  },
  "descriptive_contrasts": {
@@ -259,13 +276,15 @@
    "quantile_method": "inverted_cdf",
    "alpha_family": 0.025,
    "n_contrasts": 13,
-   "chunk": 5000
+   "chunk": 5000,
+   "alpha_accounting": "11 one-sided contrasts at alpha/13 plus F1 and F2, which are TWO-SIDED because F is oriented highest-minus-runner-up after the readings. Each F tail therefore takes alpha/26, so the union bound is 11*(0.025/13) + 4*(0.0125/13) = 0.025 EXACTLY. Before this fix every tail took alpha/13 and the familywise rate was 15*(0.025/13) = 0.02885, not 0.025 (W9, Codex finding 3)."
   },
   "MDE": 0.0056,
   "resolve_rule": "point >= MDE AND one-sided lower bound at the quantile > 0 AND the sign is stable across the last two cycle-end checkpoints",
   "measured_resolution_distance": 0.008619,
   "measured_resolution_note": "results/m10_cov_resolution.json. The MDE is BELOW the distance, so a contrast landing at the MDE cannot resolve. Power disclosure only: it sizes nothing (amendment A4's sizing struck by the Codex pass) and alpha does not move.",
-  "implementation": "m10src/cov_macro.py"
+  "implementation": "m10src/cov_macro.py",
+  "_MDE_naming": "`MDE` is a DECISION THRESHOLD, not a minimum detectable effect. `resolve_rule` requires the POINT estimate to reach it, which caps power at 50% at a true effect of exactly 0.0056 however narrow the interval; family A's rule is `lower > MDE`, stronger still. The name is kept because it is referenced throughout, but it does not mean what it says (W9, Codex finding 11)."
  },
  "outcome_to_action": {
   "F": "winner = highest 20M COV macro if its margin over the runner-up resolves; else the cheapest to serve, labelled in the report as a product preference, not evidence. L12 eliminated at 5M unless its extension condition holds. Every later family runs on F's winner and every later verdict is labelled conditional on it.",
@@ -288,7 +307,8 @@
   "margin": "the COV macro difference between the winner's and the default's final checkpoints in the ORIGINAL screen",
   "seed_range": "max minus min of an arm's COV macro over its three seeds",
   "stands_iff": "the winner's margin exceeds the largest seed range observed in either arm",
-  "plus": "the synthesized selected-recipe arm (5M) and the replication seed pair (10M)"
+  "plus": "the synthesized selected-recipe arm (5M) and the replication seed pair (10M)",
+  "unconfirmed_non_defaults": "non-default winners beyond the two confirmed REVERT TO DEFAULT and are reported as unconfirmed. This existed only in prose, in a file that declares prose non-authoritative (W9, Codex finding 7)."
  },
  "evaluation": {
   "COV": "at every cycle end",
@@ -315,10 +335,11 @@
   "C-fresh": "ANCHOR",
   "anchor": "ANCHOR",
   "A4": "ANCHOR",
-  "F-winner": "the winner of contrast F1 at its 20M checkpoint (NOT of F itself: F2 is L12 - F1's winner, so the reference cannot be circular)"
+  "F-winner": "the winner of contrast F1 at its 20M checkpoint (NOT of F itself: F2 is L12 - F1's winner, so the reference cannot be circular)",
+  "_resolver": "every value here is an arm id EXCEPT `F-winner`, which is resolved at read time by `rules.F_selection_aware` and is prose by necessity, not oversight. `runs_iff`/`skipped_iff`/`conditional_extension.iff` are likewise human-readable conditions evaluated by the session, not by a generic engine (W9, Codex finding 9)."
  },
  "trained_arms_expected": 16,
- "_arms_note": "17 entries, 16 TRAINED: A4 is not trained separately -- it IS the ANCHOR arm. The anchor became its own arm on the S1 amendment (+2 GPU-hours).",
+ "_arms_note": "17 entries, 16 TRAINED: A4 is not trained separately -- it IS the ANCHOR arm. The anchor became its own arm on the S1 amendment (+2 GPU-hours). | W9, Codex finding 8: `trained_arms_expected` 16 is the path where C runs. C-M9init is `trained: true` AND `skipped_iff` F does not pick bge-small, so on that allowed path the count is `trained_arms_if_C_skipped` = 15. The Bonferroni denominator stays 13 either way (`rules.C_skipped`).",
  "_amended": "2026-09-05, on a Fable adversarial pass (S1-S10), before any arm ran and with nothing trained. S1 was a structural confound: the anchor was a mid-cycle snapshot of a 20M arm and is now its own 5M arm.",
  "data_cut": {
   "_mandate": "A2, A3 and A4 are cut to the identical post-screen unique-text count",
@@ -345,12 +366,16 @@
   "confirmation_eligibility": "families G, B, E, C and D only. F and A are EXCLUDED: F confirmation would cost 80M examples against the registered 45M worst case, and A's rules are already three-outcome.",
   "C_skipped": "if F does not select bge-small, C1 is skipped and reported skipped; the denominator STAYS 13, exactly as F2 is counted whether or not it runs.",
   "D_tie": "if D-NORM and D-COV both resolve with margins within 1e-4, the default (squared L2) stands and the tie is reported.",
-  "A2-A1": "DESCRIPTIVE, and it triggers no build action: the build's PAQ volume is fixed unconditionally at 1.0M by \u00a7Recipe, whatever A2-A1 reads. (The mandate's 'if it resolves the build keeps volume' would have made a descriptive contrast decisive and outside the 13-way correction; it is resolved here in favour of the fixed cap.)"
+  "A2-A1": "DESCRIPTIVE, and it triggers no build action: the build's PAQ volume is fixed unconditionally at 1.0M by \u00a7Recipe, whatever A2-A1 reads. (The mandate's 'if it resolves the build keeps volume' would have made a descriptive contrast decisive and outside the 13-way correction; it is resolved here in favour of the fixed cap.)",
+  "F_selection_aware": "F2's comparator `F-winner` is CHOSEN from F1's reading, so a bootstrap that holds the observed winner fixed ignores the selection step and under-states the interval. F1's winner is therefore RECOMPUTED INSIDE EACH BOOTSTRAP RESAMPLE and F2's statistic is formed against whichever arm wins in that resample (W9, Codex finding 4).",
+  "multi_arm_winner": "G, B and D each offer more than one alternative against the default, and 'resolved winner' did not say what happens when TWO resolve. Registered: the alternative with the higher point estimate wins, AND it must also resolve against the other alternative under the same rule; if it does not, the DEFAULT stands and the tie is reported. This makes D's existing `D_tie` the special case it always was (W9, Codex finding 6)."
  },
  "parity_preconditions": {
   "_rule": "a head that fails serving parity disqualifies its arm (\u00a7Screen)",
   "artifact": "results/m10_student_parity_box.json",
   "status": "all six heads PASS: bge-small, MiniLM-L6, MiniLM-L12 at 3 and 4 layers, min-cos >= 0.99999988 through fastembed, zero custom ONNX ops, all under the 35M cap",
   "serving_note": "MiniLM's own `tokenizer_config.json` carries max_length 128 beside model_max_length 512, and fastembed serves min(...) = 128. The exported tokenizer sets both to 512. A first run read 0.93-0.95 min-cos and would have disqualified both MiniLM students on a mis-specified check."
- }
+ },
+ "trained_arms_if_C_skipped": 15,
+ "_mandate_arm_count": "this file registers 16 trained arms; `instructions-m10.md`:597 still says fifteen. THIS FILE IS AUTHORITATIVE (see `_what`). The mandate predates the S1 amendment that made the anchor its own trained arm (W9, Codex finding 10)."
 }
