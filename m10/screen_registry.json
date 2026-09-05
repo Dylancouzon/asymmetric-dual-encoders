@@ -174,7 +174,8 @@
    "at_examples": 20000000,
    "decisive": true,
    "tails": 2,
-   "quantile": 0.0009615384615384616
+   "quantile": 0.0009615384615384616,
+   "family_rule": "F_tournament"
   },
   "F2": {
    "a": "F-MiniLM-L12",
@@ -185,7 +186,8 @@
    "note": "counted in the thirteen whether or not it runs",
    "tails": 2,
    "quantile": 0.0009615384615384616,
-   "rule": "F_selection_aware"
+   "rule": "F_selection_aware",
+   "family_rule": "F_tournament"
   },
   "A3-A2": {
    "a": "A3",
@@ -291,7 +293,8 @@
    "alpha_family": 0.025,
    "n_contrasts": 13,
    "chunk": 5000,
-   "alpha_accounting": "11 one-sided contrasts at alpha/13 plus F1 and F2, which are TWO-SIDED because F is oriented highest-minus-runner-up after the readings. Each F tail therefore takes alpha/26, so the union bound is 11*(0.025/13) + 4*(0.0125/13) = 0.025 EXACTLY. Before this fix every tail took alpha/13 and the familywise rate was 15*(0.025/13) = 0.02885, not 0.025 (W9, Codex finding 3)."
+   "alpha_accounting": "11 one-sided contrasts at alpha/13 plus F1 and F2, which are TWO-SIDED because F is oriented highest-minus-runner-up after the readings. Each F tail therefore takes alpha/26, so the union bound is 11*(0.025/13) + 4*(0.0125/13) = 0.025 EXACTLY. Before this fix every tail took alpha/13 and the familywise rate was 15*(0.025/13) = 0.02885, not 0.025 (W9, Codex finding 3).",
+   "_runner_contract": "`cov_macro.contrast` takes `quantile` as a parameter (default alpha/13). **The runner MUST pass each contrast's own `quantile` field**; the global default is correct only for the eleven one-sided contrasts. `screen_lock` now validates that the per-contrast quantiles sum to the registered alpha, but it cannot see the call site -- the arm runner is responsible and must be reviewed when it is written (W9 review #5)."
   },
   "MDE": 0.0056,
   "resolve_rule": "point >= MDE AND one-sided lower bound at the quantile > 0 AND the sign is stable across the last two cycle-end checkpoints",
@@ -382,7 +385,8 @@
   "D_tie": "if D-NORM and D-COV both resolve with margins within 1e-4, the default (squared L2) stands and the tie is reported.",
   "A2-A1": "DESCRIPTIVE, and it triggers no build action: the build's PAQ volume is fixed unconditionally at 1.0M by \u00a7Recipe, whatever A2-A1 reads. (The mandate's 'if it resolves the build keeps volume' would have made a descriptive contrast decisive and outside the 13-way correction; it is resolved here in favour of the fixed cap.)",
   "F_selection_aware": "F2's comparator `F-winner` is CHOSEN from F1's reading, so a bootstrap that holds the observed winner fixed ignores the selection step and under-states the interval. F1's winner is therefore RECOMPUTED INSIDE EACH BOOTSTRAP RESAMPLE and F2's statistic is formed against whichever arm wins in that resample (W9, Codex finding 4).",
-  "multi_arm_winner": "G, B and D each offer more than one SELECTABLE alternative against the default. **Among the alternatives whose own registered default comparison RESOLVES, the highest point estimate is selected; NO inferential claim is made that it beats the other alternatives, and no alternative-vs-alternative contrast is run.** The earlier form required the winner to 'also resolve against the other alternative', which would have created five post-hoc-oriented comparisons absent from the thirteen and broken the Bonferroni accounting (W9 review #4). Ties on the point estimate go to the default. `D_tie` remains the special case."
+  "multi_arm_winner": "G, B and D each offer more than one SELECTABLE alternative against the default. **Among the alternatives whose own registered default comparison RESOLVES, the highest point estimate is selected; NO inferential claim is made that it beats the other alternatives, and no alternative-vs-alternative contrast is run.** The earlier form required the winner to 'also resolve against the other alternative', which would have created five post-hoc-oriented comparisons absent from the thirteen and broken the Bonferroni accounting (W9 review #4). Ties on the point estimate go to the default. `D_tie` remains the special case.",
+  "F_tournament": "**How F1 and F2 jointly pick the student.** Read at 20M. The winner is the arm with the highest COV macro among those with a 20M reading, and it is adopted as RESOLVED only if its margin over the RUNNER-UP -- whichever arm that is, F1's loser or an extended L12 -- resolves under the two-sided F rule at alpha/26 per tail. If it does not, the cheapest to serve wins by `rules.serve_cost_order` and the report labels that a PRODUCT PREFERENCE, not evidence. Previously `F_selection_aware` defined only how F2's comparator is built, not how the two contrasts combine (W9 review #7)."
  },
  "parity_preconditions": {
   "_rule": "a head that fails serving parity disqualifies its arm (\u00a7Screen)",
