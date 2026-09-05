@@ -44,7 +44,12 @@ TAR_SHA256 = "177eefb2ddf8ab46a8d2248c058d5be52a4f2ce7614e55c1696f69fd0fe051c3"
 TAR_BYTES = 1_447_064_073
 POPULATION = 64_875_601                 # lines in PAQ.filtered.jsonl, counted 2026-09-05
 A2_QUOTA, BUILD_QUOTA = 4_037_000, 1_000_000
-SEED, MARGIN = 0, 1.30
+# MARGIN set from the measured pilot, not guessed: `work/m10paq/paq_pilot.json` (200,000 quota,
+# 260,000 drawn) reads dedup 0.0019% and protected-screen 0.342% -- 881 near, 2 exact, 6 contains
+# -- for **99.656% survival**. So 4,037,000 / 0.99656 = 4,050,933 is the break-even draw and 1.05
+# is ~4.7% of headroom on top. PAQ's protected overlap being this small is worth knowing: the
+# questions are machine-generated over Wikipedia passages and do not reproduce NQ/TriviaQA phrasing.
+SEED, MARGIN = 0, 1.05
 
 
 def verify(strict=True):

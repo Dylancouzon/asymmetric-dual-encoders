@@ -393,3 +393,182 @@ def export_parity(model, out_dir, texts, max_len=512):
     cos = (ref * got).sum(1)
     return {"n_texts": len(texts), "min_cos": float(cos.min()),
             "max_abs": float(np.abs(ref - got).max())}
+
+
+# ---- lambda selection, and G-MLP's three-solve warm start -----------------------------------
+#
+# `m9/registry.json` warm_start registers the lambda recipe and §Recipe says it is **reselected on
+# the M10 sample**: fit on a random 50,000 of the 60,000-text warm-start sample (seed 21), score
+# the remaining 10,000 under the ACTUAL normalized objective, locked grid 1e-6..1, ties to the
+# LARGER lambda. Both halves are training text, so there is no dev surface in it. `m9src/warmfit`
+# owns the procedure and is reused rather than reimplemented.
+
+def select_lambda(X, Y, n_fit_split=50_000, seed=21):
+    """-> (lambda, rows). The registered training-only holdout, on M10's own feature space."""
+    import warmfit
+    X = np.asarray(X, dtype=np.float32)
+    Xc = np.hstack([X, np.ones((X.shape[0], 1), dtype=np.float32)])
+    n = min(n_fit_split, max(X.shape[0] - 1, 1))
+    return warmfit.select(Xc, np.asarray(Y, dtype=np.float32), n, seed=seed)
+
+
+@torch.inference_mode()
+def token_moments(model, texts, prefix="", batch_size=64, verbose=False):
+    """-> (mu, Gram, n_tokens) over PER-TOKEN features, streamed.
+
+    §Recipe: "the per-token PCA is a streamed 1152x1152 Gram matrix". Per-token features for
+    60,000 texts are ~10^7 rows of 1152 floats, so they are never materialized: one pass
+    accumulates the token count, the token sum and the token second-moment matrix in float64.
+    """
+    model.eval()
+    dev = next(model.parameters()).device
+    d = model.d_in
+    s = np.zeros(d, dtype=np.float64)
+    G = np.zeros((d, d), dtype=np.float64)
+    n = 0
+    for i in range(0, len(texts), batch_size):
+        b = model.tok([prefix + t for t in texts[i:i + batch_size]], padding=True,
+                      truncation=True, max_length=model.max_seq, return_tensors="pt").to(dev)
+        with torch.autocast("cuda", dtype=torch.bfloat16, enabled=dev.type == "cuda"):
+            f = model.features(b["input_ids"], b["attention_mask"])
+        m = b["attention_mask"].bool().reshape(-1)
+        X = f.reshape(-1, d).float()[m].double()            # real tokens only, padding excluded
+        s += X.sum(0).cpu().numpy()
+        G += (X.T @ X).cpu().numpy()
+        n += int(X.shape[0])
+        if verbose and (i // batch_size) % 100 == 0 and i:
+            print(f"    token moments {i:,}/{len(texts):,} ({n:,} tokens)", flush=True)
+    return s / max(n, 1), G / max(n, 1), n
+
+
+def top_directions(mu, G2, k=192):
+    """-> (W1, b1): the top-k principal directions of the CENTRED per-token covariance.
+
+    §Recipe: "the top-192 principal directions of the frozen backbone's per-token 1152-d states on
+    the fit set, centred (b1 = -W1 mu; sign of each direction fixed so its largest-magnitude
+    component is positive)". The sign fix makes the init deterministic -- an eigenvector is only
+    defined up to sign, and LAPACK's choice is not stable across machines or library versions.
+    """
+    C = G2 - np.outer(mu, mu)
+    C = (C + C.T) / 2
+    w, V = np.linalg.eigh(C)                      # ascending
+    idx = np.argsort(w)[::-1][:k]
+    W1 = V[:, idx].T                              # (k, d)
+    flip = np.sign(W1[np.arange(k), np.argmax(np.abs(W1), axis=1)])
+    flip[flip == 0] = 1.0
+    W1 = W1 * flip[:, None]
+    return W1.astype(np.float32), (-W1 @ mu).astype(np.float32)
+
+
+@torch.inference_mode()
+def gelu_features(model, texts, W1, b1, prefix="", batch_size=64):
+    """-> (n, k) the pooled nonlinear feature `mean_t GELU(W1 x_t + b1)`, in input order.
+
+    This is the design matrix for the third solve, and it is what makes the warm start EXACT for
+    the training form: `up` is linear, so `mean_t up(GELU(...))` = `up(mean_t GELU(...))`.
+    """
+    model.eval()
+    dev = next(model.parameters()).device
+    Wt = torch.from_numpy(np.ascontiguousarray(W1.T)).to(dev)
+    bt = torch.from_numpy(np.ascontiguousarray(b1)).to(dev)
+    out = np.empty((len(texts), W1.shape[0]), dtype=np.float32)
+    order = np.argsort([len(t) for t in texts], kind="stable")
+    for i in range(0, len(order), batch_size):
+        sel = order[i:i + batch_size]
+        b = model.tok([prefix + texts[j] for j in sel], padding=True, truncation=True,
+                      max_length=model.max_seq, return_tensors="pt").to(dev)
+        with torch.autocast("cuda", dtype=torch.bfloat16, enabled=dev.type == "cuda"):
+            f = model.features(b["input_ids"], b["attention_mask"])
+        g = F.gelu(f.float() @ Wt + bt)
+        m = b["attention_mask"].unsqueeze(-1).to(g.dtype)
+        out[sel] = ((g * m).sum(1) / m.sum(1).clamp(min=1e-9)).cpu().numpy()
+    return out
+
+
+def warm_start_mlp(model, texts, Y, lam=None, prefix="", verbose=False):
+    """G-MLP's registered THREE-SOLVE warm start (`instructions-m10.md`:616, screen_registry).
+
+    1. `W_lin` = the anchor's ridge head, on pooled features -> the same map every other arm gets.
+    2. `W1, b1` = the centred top-192 per-token principal directions, signs fixed.
+    3. `W2, b2` = ridge from the pooled `mean_t GELU(W1 x_t + b1)` to the RESIDUAL of solve 1.
+
+    All three share one fit sample. Exact for the training form, so G-MLP starts *at* the anchor's
+    fitted head plus a fitted correction rather than at a random head -- which is the point: a
+    fresh MLP head would put G3 (`G-MLP - G-1152`) at a handicap in the direction that rejects the
+    non-default.
+    """
+    if model.head_kind != "mlp":
+        raise ValueError("warm_start_mlp is for the G-MLP head; linear heads use warm_start_linear")
+    Y = np.asarray(Y, dtype=np.float32)
+    k = model.head.down.out_features
+    dev = next(model.parameters()).device
+
+    Xbar = pooled_features(model, texts, prefix=prefix)
+    rows = None
+    if lam is None:
+        lam, rows = select_lambda(Xbar, Y)
+    A, resid_lin = ridge_head(Xbar, Y, lam)
+
+    mu, G2, n_tok = token_moments(model, texts, prefix=prefix, verbose=verbose)
+    W1, b1 = top_directions(mu, G2, k=k)
+
+    Gf = gelu_features(model, texts, W1, b1, prefix=prefix)
+    Xc = np.hstack([Xbar, np.ones((Xbar.shape[0], 1), dtype=np.float32)])
+    R = Y - Xc @ A                                  # the residual the correction has to explain
+    A2, _ = ridge_head(Gf, R, lam)
+
+    with torch.no_grad():
+        model.head.lin.weight.copy_(torch.from_numpy(np.ascontiguousarray(A[:-1].T)).to(dev))
+        model.head.lin.bias.copy_(torch.from_numpy(np.ascontiguousarray(A[-1])).to(dev))
+        model.head.down.weight.copy_(torch.from_numpy(np.ascontiguousarray(W1)).to(dev))
+        model.head.down.bias.copy_(torch.from_numpy(np.ascontiguousarray(b1)).to(dev))
+        model.head.up.weight.copy_(torch.from_numpy(np.ascontiguousarray(A2[:-1].T)).to(dev))
+        model.head.up.bias.copy_(torch.from_numpy(np.ascontiguousarray(A2[-1])).to(dev))
+
+    P = Xc @ A + np.hstack([Gf, np.ones((Gf.shape[0], 1), dtype=np.float32)]) @ A2
+    P = P / np.maximum(np.linalg.norm(P, axis=1, keepdims=True), 1e-12)
+    obj = float(np.mean(np.sum((P - Y) ** 2, axis=1)))
+    return {"n_fit": int(Xbar.shape[0]), "lambda": lam, "lambda_rows": rows, "k": int(k),
+            "d_in": int(model.d_in), "n_tokens": int(n_tok),
+            "train_objective": round(obj, 5),
+            "train_objective_linear_only": round(resid_lin, 5),
+            "solves": "W_lin ridge on pooled | W1,b1 centred per-token PCA, signs fixed | "
+                      "W2,b2 ridge from pooled GELU features to solve 1's residual"}
+
+
+def warm_start_from_m9(model, ckpt_path, verbose=False):
+    """C-M9init's registered head init: the M9 candidate's 384-d head is KEPT and the extra
+    layers' columns are ZERO-initialised (`instructions-m10.md`:510, screen_registry arms.C-M9init).
+
+    M9's student read one layer (384-d); M10's anchor reads three (1152-d). The registered init
+    puts M9's fitted 384x1024 block in the columns for the layer it was fitted on -- the LAST
+    layer, which `LAYERS[...][1]` names and which is `layers[0]` here -- and zeroes the rest, so
+    the arm starts exactly at M9's function and the new capacity starts inert.
+
+    `screen_registry` already discloses that C1 therefore confounds backbone init with head init.
+    """
+    if model.head_kind != "linear":
+        raise ValueError("C-M9init is a linear-head arm")
+    ck = torch.load(ckpt_path, map_location="cpu", weights_only=False)
+    sd = ck.get("model", ck.get("state_dict", ck))
+    bb = {k.split("backbone.", 1)[1]: v for k, v in sd.items() if "backbone." in k}
+    hw = next((v for k, v in sd.items() if k.endswith("head.weight")), None)
+    hb = next((v for k, v in sd.items() if k.endswith("head.bias")), None)
+    if hw is None:
+        raise SystemExit(f"{ckpt_path}: no head.weight in the checkpoint")
+    d1 = model.backbone.config.hidden_size
+    if hw.shape != (model.out_dim, d1):
+        raise SystemExit(f"{ckpt_path}: head is {tuple(hw.shape)}, expected "
+                         f"{(model.out_dim, d1)} -- M9's head is one layer wide")
+    missing = model.backbone.load_state_dict(bb, strict=False)
+    dev = next(model.parameters()).device
+    with torch.no_grad():
+        model.head.weight.zero_()
+        model.head.weight[:, :d1].copy_(hw.to(dev))       # the LAST layer is features[:, :d1]
+        model.head.bias.copy_(hb.to(dev)) if hb is not None else model.head.bias.zero_()
+    return {"ckpt": str(ckpt_path), "backbone_keys_loaded": len(bb),
+            "backbone_missing": len(getattr(missing, "missing_keys", [])),
+            "head_block": [int(model.out_dim), int(d1)],
+            "zeroed_columns": int(model.d_in - d1),
+            "note": "M9's 384-d head kept in the last layer's columns; the two extra layers' "
+                    "columns are zero, so the arm starts at M9's function"}
