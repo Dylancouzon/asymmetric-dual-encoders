@@ -308,3 +308,82 @@ def lr_at(step, total_steps, cycles=3, peak=1e-4, final=1e-5):
 def cycle_ends(total_steps, cycles=3):
     per = max(total_steps // cycles, 1)
     return [min((c + 1) * per, total_steps) - 1 for c in range(cycles)]
+
+
+# ---- export (the serving path) ----------------------------------------------------------------
+
+def export_onnx(model, out_dir, max_len=512, opset=17):
+    """Export the TOKEN OUTPUT — `head(x_t)` per token — and the tokenizer we intend to ship.
+
+    fastembed does the masked mean and the normalize itself, so the graph must stop before the
+    pool. Two things this function exists to get right, both of which have already cost time:
+
+    - **`torch.compile` never reaches here.** `m10/HEADROOM.md` §T registers that export, parity,
+      encoding and evaluation run EAGER and that only the training step compiles; a compiled
+      wrapper's `state_dict` is also the wrong shape. `_orig_mod` is unwrapped if present.
+    - **The tokenizer's `max_length` is written explicitly.** fastembed serves
+      `min(model_max_length, max_length)` from `tokenizer_config.json`, and `all-MiniLM-*-v2`
+      ships 128 there — which made a correct export read 0.93 min-cos against a 512-token
+      reference (`results/m10_student_parity_box.json`).
+    """
+    m = getattr(model, "_orig_mod", model)
+    m = m.eval().float()
+    d = Path(out_dir)
+    d.mkdir(parents=True, exist_ok=True)
+    ex = m.tok(["a short query", "a somewhat longer example sentence for the export trace"],
+               padding=True, truncation=True, max_length=64, return_tensors="pt")
+
+    class TokenOut(torch.nn.Module):
+        def __init__(self, inner):
+            super().__init__()
+            self.inner = inner
+
+        def forward(self, input_ids, attention_mask):
+            return self.inner.token_out(input_ids, attention_mask)
+
+    p = d / "model.onnx"
+    torch.onnx.export(TokenOut(m), (ex["input_ids"], ex["attention_mask"]), str(p),
+                      input_names=["input_ids", "attention_mask"],
+                      output_names=["token_embeddings"],
+                      dynamic_axes={"input_ids": {0: "b", 1: "s"},
+                                    "attention_mask": {0: "b", 1: "s"},
+                                    "token_embeddings": {0: "b", 1: "s"}},
+                      opset_version=opset, do_constant_folding=True, dynamo=False)
+    m.tok.backend_tokenizer.enable_truncation(max_length=max_len)
+    m.tok.model_max_length = max_len
+    m.tok.save_pretrained(d)
+    m.backbone.config.save_pretrained(d)
+    tc = d / "tokenizer_config.json"
+    cfg = json.loads(tc.read_text())
+    cfg["max_length"] = cfg["model_max_length"] = max_len
+    tc.write_text(json.dumps(cfg, indent=1))
+
+    import onnx
+    g = onnx.load(str(p))
+    custom = sorted({n.domain for n in g.graph.node} - {"", "ai.onnx", "ai.onnx.ml"})
+    return {"path": str(p), "bytes": p.stat().st_size, "opset": opset,
+            "custom_domain_ops": custom, "n_nodes": len(g.graph.node),
+            "params_total": int(m.n_params()), "under_35M_cap": bool(m.under_cap()),
+            "served_max_length": max_len, "layers": list(m.layers),
+            "head": m.head_kind}
+
+
+def export_parity(model, out_dir, texts, max_len=512):
+    """-> min-cos between the training form and ORT's token output followed by an external
+    masked mean. `m10src/student_parity.py` is the end-to-end version through fastembed; this is
+    the one a trained checkpoint runs, and §T requires it on a checkpoint from a COMPILED run."""
+    import onnxruntime as ort
+    m = getattr(model, "_orig_mod", model).eval().float()
+    b = m.tok(texts, padding=True, truncation=True, max_length=max_len, return_tensors="pt")
+    with torch.inference_mode():
+        ref = m(b["input_ids"], b["attention_mask"]).cpu().numpy()
+    sess = ort.InferenceSession(str(Path(out_dir) / "model.onnx"),
+                                providers=["CPUExecutionProvider"])
+    tok = sess.run(None, {"input_ids": b["input_ids"].numpy(),
+                          "attention_mask": b["attention_mask"].numpy()})[0]
+    mm = b["attention_mask"].numpy()[..., None].astype(np.float32)
+    got = (tok * mm).sum(1) / np.maximum(mm.sum(1), 1e-9)
+    got = got / np.maximum(np.linalg.norm(got, axis=1, keepdims=True), 1e-12)
+    cos = (ref * got).sum(1)
+    return {"n_texts": len(texts), "min_cos": float(cos.min()),
+            "max_abs": float(np.abs(ref - got).max())}
