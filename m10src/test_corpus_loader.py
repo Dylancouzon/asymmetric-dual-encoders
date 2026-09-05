@@ -263,3 +263,23 @@ def test_the_document_role_marker_is_the_registered_one_and_is_actually_applied(
 
     assert D.pretokenize(Tok(), ["x"], prefix="passage: ")[0][0] == len("passage: x")
     assert D.pretokenize(Tok(), ["x"])[0][0] == 1, "the query role stays raw bytes"
+
+
+def test_the_token_cache_identity_binds_the_cut_not_just_the_source_list(monkeypatch):
+    """Two corpora that differ only in the data cut must not share pretokenized ids."""
+    class Tok:
+        pad_token_id = 0
+
+        def __call__(self, texts, **kw):
+            return {"input_ids": [[7] * (len(t) % 5 + 2) for t in texts]}
+
+    with tempfile.TemporaryDirectory() as d:
+        monkeypatch.setattr(CL, "TOKCACHE", Path(d))
+        segs = _segs([40])
+        man = {"sha256": "abc"}
+        a = CL.tokenize_corpus(Tok(), segs, man, "bge-small", verbose=False,
+                               extra_ident={"data_cut": {"applied": False}})
+        b = CL.tokenize_corpus(Tok(), segs, man, "bge-small", verbose=False,
+                               extra_ident={"data_cut": {"applied": True, "n_after": 20}})
+        assert len(a) == len(b) == 40
+        assert len(list(Path(d).iterdir())) == 2, "the cut must be part of the cache identity"

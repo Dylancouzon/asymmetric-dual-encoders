@@ -172,7 +172,7 @@ def source_texts(name, limit=None):
 def _m9_texts():
     """The 463,314 M9 real queries, labelled by source and mapped onto the form taxonomy."""
     import data as m9data
-    texts, srcs, meta = m9data.labelled_query_pool()
+    texts, srcs, meta = _m9_labelled()
     keep = [i for i, s in enumerate(srcs) if s not in m9data.FEVER_SOURCES]
     out = [texts[i] for i in keep]
     labels = [srcs[i] for i in keep]
@@ -186,6 +186,17 @@ def _m9_texts():
            "by_m9_source": {s: labels.count(s) for s in sorted(set(labels))},
            "m8_manifest_sha256": meta["m8_manifest_sha256"]}
     return out, forms, man
+
+
+_M9_POOL = {}
+
+
+def _m9_labelled():
+    """Memoized: `labelled_query_pool` rebuilds the M8/M9 derivation and is ~30 s and a few GB."""
+    if "p" not in _M9_POOL:
+        import data as m9data
+        _M9_POOL["p"] = m9data.labelled_query_pool()
+    return _M9_POOL["p"]
 
 
 _M9_EXTRA = {}
@@ -204,7 +215,7 @@ def _m9_segments():
     """-> segments for the M9 pool, each pointing at the stella cache that already holds it."""
     import data as m9data
     import longrun
-    texts, srcs, _meta = m9data.labelled_query_pool()
+    texts, srcs, _meta = _m9_labelled()
     keep = np.array([i for i, s in enumerate(srcs) if s not in m9data.FEVER_SOURCES],
                     dtype=np.int64)
     qp_forms = [FORM_ID[M9_SOURCE_FORM[srcs[int(i)]]] for i in keep]
@@ -311,7 +322,8 @@ def pack_tokenize(tok, texts, max_len=512, prefix="", batch=20_000, label="", ve
     return PackedIds(np.concatenate(parts) if parts else np.zeros(0, dtype=np.int32), offs)
 
 
-def tokenize_corpus(tok, segs, man, student, max_len=512, prefix="", cache=True, verbose=True):
+def tokenize_corpus(tok, segs, man, student, max_len=512, prefix="", cache=True, verbose=True,
+                    extra_ident=None):
     """-> PackedIds over every segment's texts in order, cached on the corpus identity.
 
     The cache key binds the manifest hash, the student (tokenizers differ), the prefix and the
@@ -320,7 +332,7 @@ def tokenize_corpus(tok, segs, man, student, max_len=512, prefix="", cache=True,
     """
     texts = [t for s in segs for t in s.texts]
     ident = {"manifest": man["sha256"], "student": student, "prefix": prefix, "max_len": max_len,
-             "n": len(texts)}
+             "n": len(texts), **(extra_ident or {})}
     d = TOKCACHE / hashlib.sha256(json.dumps(ident, sort_keys=True).encode()).hexdigest()[:16]
     if cache and (d / "offs.npy").exists():
         if verbose:
@@ -494,7 +506,9 @@ def build_query_stream(arm_or_sources, tok, student, *, batch_size=32, seed=0, b
     cut = data_cut_count() if cut == "registered" else cut
     segs, cut_rep = apply_data_cut(segs, cut)
     man["data_cut"] = cut_rep
-    ids = tokenize_corpus(tok, segs, man, student, max_len=max_len, prefix=prefix, verbose=verbose)
+    ids = tokenize_corpus(tok, segs, man, student, max_len=max_len, prefix=prefix,
+                          verbose=verbose,
+                          extra_ident={"data_cut": cut_rep, "head_per_source": head_per_source})
     stream = FormBalancedStream(ids, TargetView(segs), corpus_forms(segs),
                                 pad_id=tok.pad_token_id, batch_size=batch_size, seed=seed,
                                 balanced=balanced)
