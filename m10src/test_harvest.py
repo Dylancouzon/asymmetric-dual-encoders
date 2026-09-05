@@ -65,3 +65,120 @@ if __name__ == "__main__":
     for k, v in sorted(globals().items()):
         if k.startswith("test_"):
             v(); print("PASS", k)
+
+
+# ---- draw(): the pass-1 rules, with the screens stubbed out -----------------------------------
+#
+# `draw()` had no test at all, which is how the missing `factoid`/`product` quota row survived.
+# These exercise the four rules pass 1 is responsible for -- no-quota accounting, the frozen-rubric
+# range, dedup, and uniformity of the truncation -- with the protected/document screens stubbed,
+# since those are covered by their own modules' tests and need multi-GB corpora.
+
+import json
+import types
+
+
+def _fixture(tmp_path, rows):
+    p = tmp_path / "h.jsonl"
+    p.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    (tmp_path / "h.jsonl.report.json").write_text(json.dumps({"complete": True}))
+    return p
+
+
+def _row(form, text, src="wiki", rule="title"):
+    return {"rule": rule, "form": form, "text": text, "body": "", "src": src, "doc": "d1"}
+
+
+def _stub_screens(monkeypatch):
+    """No-op query/document screens, so what is measured is pass 1 and the truncation."""
+    monkeypatch.setitem(sys.modules, "protected10",
+                        types.SimpleNamespace(build=lambda verbose=True: None,
+                                              hits=lambda t, idx: False))
+    monkeypatch.setitem(sys.modules, "decontam", types.SimpleNamespace(
+        Inverted=lambda grams, ex: types.SimpleNamespace(
+            match=lambda d, s: (__import__("numpy").array([], dtype=int),
+                                __import__("numpy").array([], dtype=int))),
+        query_grams=lambda t: (), exact_u64=lambda t: 0, stream_six_docs=lambda: iter(())))
+    monkeypatch.setitem(sys.modules, "cov_screen",
+                        types.SimpleNamespace(MIN_SHARE=0.25,
+                                             load_component=lambda n, r, v: ((), ())))
+    monkeypatch.setitem(sys.modules, "devsuite", types.SimpleNamespace(COMPONENTS=()))
+    monkeypatch.setitem(sys.modules, "cov_admit", types.SimpleNamespace(COMPONENTS={}))
+
+
+def test_draw_counts_but_never_draws_a_form_with_no_quota_row(tmp_path, monkeypatch):
+    _stub_screens(monkeypatch)
+    monkeypatch.setattr(H, "OUT", tmp_path)
+    rows = [_row("title", f"a perfectly ordinary harvested article title number {i}")
+            for i in range(10)]
+    rows += [_row("factoid", "who wants to be a millionaire?", src="hotpotqa-corpus", rule="ask")]
+    rows += [_row("product", "what are you waiting for?", src="esci-prod", rule="ask")] * 3
+    out, rep = H.draw(quota={"title": 5}, margin=1.0,
+                      paths=[_fixture(tmp_path, rows)], verbose=False)
+    assert set(out) == {"title"}, "a form with no quota row is never drawn"
+    assert rep["skipped_no_quota"] == {"factoid": 1, "product": 3}, \
+        "and its rows are COUNTED, so the exclusion is visible in the artifact"
+
+
+def test_draw_enforces_the_frozen_rubric_range_not_the_extraction_window(tmp_path, monkeypatch):
+    _stub_screens(monkeypatch)
+    monkeypatch.setattr(H, "OUT", tmp_path)
+    import qfilter
+    lo, hi = qfilter.RANGES["claim"]
+    assert (lo, hi) == (8, 25), "the frozen rubric's claim range"
+    in_range = "The compound is a white crystalline solid used widely in modern industry today."
+    assert lo <= len(in_range.split()) <= hi
+    over = "The compound " + " ".join(["extremely"] * 30) + " is a solid."   # inside 8-40, over 25
+    assert hi < len(over.split()) <= H.CLAIM_MAX, "the case the extraction window admits"
+    rows = [_row("claim", in_range, rule="claim")] + [_row("claim", over, rule="claim")]
+    out, rep = H.draw(quota={"claim": 1}, margin=1.0,
+                      paths=[_fixture(tmp_path, rows)], verbose=False)
+    assert [r["text"] for r in out["claim"]] == [in_range]
+    assert rep["off_rubric_range"]["claim"] == 1
+    assert rep["rubric_ranges"]["claim"] == [8, 25]
+
+
+def test_draw_dedups_on_normalized_text_and_reports_it(tmp_path, monkeypatch):
+    _stub_screens(monkeypatch)
+    monkeypatch.setattr(H, "OUT", tmp_path)
+    rows = [_row("title", "The Battle of Hastings and its aftermath"),
+            _row("title", "the   BATTLE of hastings and its aftermath"),   # same, normalized
+            _row("title", "A different harvested title about something else")]
+    out, rep = H.draw(quota={"title": 2}, margin=1.0,
+                      paths=[_fixture(tmp_path, rows)], verbose=False)
+    assert len(out["title"]) == 2 and rep["exact_dups"]["title"] == 1
+
+
+def test_draw_refuses_an_incomplete_or_missing_pass(tmp_path, monkeypatch):
+    import pytest
+    _stub_screens(monkeypatch)
+    monkeypatch.setattr(H, "OUT", tmp_path)
+    with pytest.raises(SystemExit, match="missing"):
+        H.draw(quota={"title": 1}, paths=[tmp_path / "nope.jsonl"], verbose=False)
+    p = _fixture(tmp_path, [_row("title", "a title that is long enough to be in range")])
+    (tmp_path / "h.jsonl.report.json").write_text(json.dumps({"complete": False}))
+    with pytest.raises(SystemExit, match="complete"):
+        H.draw(quota={"title": 1}, paths=[p], verbose=False)
+
+
+def test_draw_truncation_is_uniform_over_the_stream_not_biased_to_its_prefix(tmp_path,
+                                                                            monkeypatch):
+    """The regression that motivated the shuffle: first-n-of-reservoir keeps the stream prefix."""
+    _stub_screens(monkeypatch)
+    monkeypatch.setattr(H, "OUT", tmp_path)
+    N, n, margin = 4000, 1000, 1.5
+    want = int(margin * n)                                            # 1500
+    rows = [_row("title", f"harvested article title number {i} of the stream") for i in range(N)]
+    path = _fixture(tmp_path, rows)
+    out, _ = H.draw(quota={"title": n}, margin=margin, paths=[path], verbose=False)
+    pos = [int(r["text"].split()[4]) for r in out["title"]]
+    assert len(pos) == n
+    # The EXACT signature of the bug: a stream item at position in [n, want) can only ever occupy
+    # reservoir slot `pos` (Algorithm R overwrites slot j with LATER items only), and those slots
+    # are precisely the ones first-n truncation discards -- so the biased draw takes ZERO of them,
+    # against n*(want-n)/N = 125 expected under a uniform draw.
+    band = sum(1 for p in pos if n <= p < want)
+    assert band > 60, f"positions [{n},{want}) drawn {band} times; 0 means truncation is biased"
+    # and the prefix is not inflated by the margin (uniform expects n*n/N = 250, biased 1.5x that)
+    prefix = sum(1 for p in pos if p < n)
+    assert prefix < 1.3 * n * n / N, f"prefix over-represented: {prefix} vs 250 expected"

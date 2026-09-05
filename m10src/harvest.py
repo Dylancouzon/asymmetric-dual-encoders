@@ -9,7 +9,7 @@ nothing else:
 | `title` | titles as-is | `title`, `keyword` (routed by length against the frozen rubric) |
 | `heading` | section headings as-is | `title`, `keyword` |
 | `claim` | declarative LEAD sentences of abstract-like passages, 8–40 words, a finite verb, no first person | `claim` |
-| `ask` | sentences ending in `?`, with the preceding sentence kept as optional body | `factoid`, `health`, `product`, routed by the SOURCE corpus |
+| `ask` | sentences ending in `?`, with the preceding sentence kept as optional body | `factoid`, `product`, routed by the SOURCE corpus |
 
 This is the arm-A3 corpus: **real query-like text**, the half of the coverage thesis that does not
 depend on a generator. Three of the four clean-4 headline datasets have a real-text counterpart
@@ -270,8 +270,20 @@ if __name__ == "__main__":
 
 # ---- the A3 draw and its screens ------------------------------------------------------------
 #
-# REGISTERED BEFORE THE DRAW RUNS. Quota ≈1.25M harvested strings across the three forms the
-# rules actually yield (`title`, `keyword`, `claim`), plus whatever the `ask` rule returns.
+# REGISTERED BEFORE THE DRAW RUNS. Quota ≈1.25M harvested strings across the three forms that
+# HAVE a registered quota row: `title`, `keyword`, `claim`.
+#
+# **`factoid` and `product` have no quota row and are therefore NOT DRAWN.** An earlier version of
+# this comment said the quota was those three "plus whatever the `ask` rule returns"; that phrase
+# was never registered in `m10/LEDGER.md` §Harvest or in `instructions-m10.md` §Data, and it is
+# struck. The mandate lists five harvested forms at ~250K each and also registers "a harvested form
+# that falls under 100K reverts to generation at ≈143K"; the `ask` rule yields 5,605 `factoid` and
+# 40,977 `product` rows, so BOTH fall under that rule. Reverting them to generation is a quota
+# decision (two new prompts, two smoke windows, +286K over the registered 1.0M generation cap) and
+# is reserved to Dylan at the M10.2 lock; the default is excluded. The rows are still harvested and
+# their yield reported -- `pool_pass` runs rather than being quietly skipped -- and the number of
+# rows dropped for having no quota row is carried in the report as `skipped_no_quota`, so the
+# exclusion is visible in the artifact and not only in a ledger entry.
 #
 # **Draw rule:** for each form, a UNIFORM random sample (seed 0) over the union of every source's
 # rows for that form, after exact-text dedup — not weighted, not balanced, not scored. Harvested
@@ -285,16 +297,33 @@ if __name__ == "__main__":
 # candidate-side `Inverted` on the document side. Matches are REMOVED. A margin is drawn so the
 # quota still fills after removals; running out raises rather than returning a short draw.
 
+# **The frozen rubric's word range is enforced on every drawn row** (`m10src/qfilter`). `title`
+# and `keyword` are already in range by construction -- `route_by_length` assigned them BY that
+# range -- so this binds only `claim`, whose extraction window (`CLAIM_MIN/CLAIM_MAX`, 8-40) is a
+# deliberate SUPERSET of the rubric's (8, 25). Extraction stays 8-40 so the constants keep matching
+# the rows already written to disk and their `*.report.json`; the draw is the authority, and the
+# per-form off-range count is reported. Enforcing each form's own frozen-rubric range is the
+# largest on-form quality lever measured in M10 (`results/m10_qfilter_effect.json`), the rubric is
+# the frozen gate standard, and the direction is safe: it only removes. Claim supply after the
+# range is ~5.9M against a 416K quota.
 QUOTA = {"title": 417_000, "keyword": 417_000, "claim": 416_000}
 DRAW_SEED, MARGIN = 0, 1.5
 
 
 def _iter_rows(paths):
+    """Every path must exist AND its pass must have completed. A silently skipped `.partial` would
+    produce a corpus missing a whole source and report it as a clean draw."""
     for p in paths:
         pp = Path(p)
         if not pp.exists():
-            continue
-        with pp.open() as fh:
+            raise SystemExit(f"{pp}: missing -- run the harvest pass that writes it before drawing")
+        rp = Path(str(pp) + ".report.json")
+        if not rp.exists():
+            raise SystemExit(f"{rp}: missing -- refusing to draw from an unreported pass")
+        if not json.loads(rp.read_text()).get("complete"):
+            raise SystemExit(f"{rp}: complete != true -- that pass did not finish; refusing to draw")
+    for p in paths:
+        with Path(p).open() as fh:
             for line in fh:
                 yield json.loads(line)
 
@@ -307,6 +336,7 @@ def draw(quota=None, margin=MARGIN, paths=None, verbose=True):
     import protected10
     import cov_screen
     import devsuite
+    import qfilter
     from cov_admit import COMPONENTS
     quota = quota or QUOTA
     paths = paths or [OUT / "wiki_harvest.jsonl", OUT / "arxiv_harvest.jsonl",
@@ -318,12 +348,20 @@ def draw(quota=None, margin=MARGIN, paths=None, verbose=True):
     rng = np.random.default_rng(DRAW_SEED)
     res, seen_n, seen_txt = {f: [] for f in want}, {f: 0 for f in want}, set()
     src_mix = {}
+    skipped_no_quota, off_range, dup = {}, {f: 0 for f in want}, {f: 0 for f in want}
     for r in _iter_rows(paths):
         f = r["form"]
         if f not in want:
+            # a harvested form with no registered quota row (`factoid`, `product`). Counted, not
+            # drawn, and REPORTED -- see the §Harvest note above; admission is Dylan's.
+            skipped_no_quota[f] = skipped_no_quota.get(f, 0) + 1
+            continue
+        if not qfilter.in_range(f, r["text"]):   # the frozen rubric's own range; binds `claim`
+            off_range[f] += 1
             continue
         k = " ".join(r["text"].split()).lower()
         if k in seen_txt:
+            dup[f] += 1
             continue
         seen_txt.add(k)
         seen_n[f] += 1
@@ -333,6 +371,7 @@ def draw(quota=None, margin=MARGIN, paths=None, verbose=True):
             j = int(rng.integers(0, seen_n[f]))
             if j < want[f]:
                 res[f][j] = r
+    del seen_txt            # ~21M normalized strings; nothing below reads it and pass 2 needs the RAM
     for f, rows in res.items():
         for r in rows:
             src_mix[(f, r["src"], r["rule"])] = src_mix.get((f, r["src"], r["rule"]), 0) + 1
@@ -377,6 +416,17 @@ def draw(quota=None, margin=MARGIN, paths=None, verbose=True):
     for i, r in enumerate(flat):
         if i not in drop:
             kept[r["form"]].append(r)
+    # **Truncating a reservoir to its first `n` slots is NOT uniform.** Algorithm R fills slots
+    # 0..want-1 with the stream's first `want` items and only ever overwrites slot j with a LATER
+    # item, so slot j can hold initial item j and no other. Taking the first n of want slots
+    # therefore over-represents stream positions [0, n) by exactly the margin (1.5x, confirmed by
+    # simulation: 75.0 observed against 50.0 expected) and excludes positions [n, want) outright
+    # (0.0 observed against 25.0 expected). The stream is Wikipedia dump order, whose prefix LEDGER
+    # §T2-5 already measured as a 5x distortion (2001-02 core articles), so the bias would land on
+    # exactly the known-skewed population. A shuffle before truncation is what the registered rule
+    # ("uniform reservoir") already promises.
+    for f in kept:
+        rng.shuffle(kept[f])
     out, counts = {}, {}
     for f, n in quota.items():
         if len(kept[f]) < n and seen_n[f] > want[f]:
@@ -386,9 +436,13 @@ def draw(quota=None, margin=MARGIN, paths=None, verbose=True):
         counts[f] = dict(available=seen_n[f], drawn=want[f], survived=len(kept[f]),
                          taken=len(out[f]), short=max(0, n - len(kept[f])))
     rep = dict(quota=quota, margin=margin, seed=DRAW_SEED,
+               skipped_no_quota=skipped_no_quota, off_rubric_range=off_range, exact_dups=dup,
+               rubric_ranges={f: list(qfilter.RANGES[f]) for f in sorted(quota)},
                draw_rule="uniform reservoir per form over the union of sources, after exact-text "
                          "dedup; source mix reported not fixed",
                counts=counts,
+               truncation="kept[] shuffled with the draw rng before truncation; see the note in "
+                          "draw() -- first-n-of-reservoir is biased toward the stream prefix",
                source_mix={f"{a}/{b}/{c}": n for (a, b, c), n in sorted(src_mix.items())},
                screen=dict(n_candidates=len(texts), dropped_query_side=len(q_drop),
                            dropped_document_side=len(d_drop), dropped_total=len(drop),
