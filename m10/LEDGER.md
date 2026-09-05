@@ -1183,6 +1183,24 @@ Also from the same pass (Dylan): the lead delegates build work to Opus/Sonnet su
 inference cost low; Codex stays the adversarial reviewer. Every subagent brief carries the reserved
 read-exclusion and the no-nested-subagents rule.
 
+### Corpus→trainer path BUILT by an Opus worker, 2026-09-05 evening (commits 3957b0f..c16ca17); readings ruled by the lead
+
+`m10src/corpus_loader.py`, `targets10.py`; 115 → 147 tests green. Two latent defects found and fixed: `data10.batch_fn` advanced a call counter, so a RESUMED arm restarted both streams at batch 0 (no artifact affected; `test_trainer10` stubbed the path); documents reached the student without the registered document-role marker (only the arm-SHAPE smoke ran on it). Teacher encode of harvest + PAQ running (`work/m10_targets_encode.log`, ~450 texts/s, ETA ≈ 20:15). Codex review of the diff in flight; **no arm trains before it returns GO.**
+
+Readings where the registry was silent — all implemented behind constants, none changes a registered number:
+
+| # | gap | reading (lead-ruled, Tier 2, pre-observation) |
+|---|---|---|
+| 1–2 | no form on PAQ / M9-pool rows | PAQ → `factoid`; `esci-us` → `product`, the five question sources → `factoid` |
+| 3 | "balanced across the 12 forms" when fewer exist | balanced over the forms PRESENT (A1 two, A3 five, A4 twelve); fixed 1/12 would silently shrink an arm's dose |
+| 4 | balancing partly neutralises A2−A1 (both arms hold the same two forms, so A2−A1 reads "more unique factoid texts", not the mandate's 37% gradient share) | accepted: A2−A1 is DESCRIPTIVE and triggers no action (`rules.A2-A1`); report it with that caveat |
+| 5 | which PAQ sample A3/A4 use | A2 → `paq-a2` 4.037M; A3/A4/ANCHOR → `paq-build` 1.0M (§1's nesting) |
+| 6 | A2's sampler | balanced, per the mandate ("the unbalanced variant is a reported diagnostic, not an arm"); the lead's brief had said otherwise and the worker followed the mandate — correct |
+| 7 | generated corpus path | `work/m10gen/generated_queries.jsonl`, same row shape, no code change |
+| 8 | `data_cut` constant | mechanism built, reports `applied: false` until §0b fills it after generation |
+
+Owed: the registered 12-shape smoke `results/m10_arm_smoke.json` predates the marker fix — re-run on CUDA after the encode (overwrites a registered record, so logged here first). CUDA anchor smoke over all encoded sources, same time.
+
 ## §4 Dev-reuse log
 
 | date | surface | raw score reads | artifact |
