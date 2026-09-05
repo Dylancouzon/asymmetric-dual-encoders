@@ -42,7 +42,14 @@ out = {"_what": "W10 evidence: registered A8 gate vs a sensitive 4-gram diagnost
                       "earlier query. NOT REGISTERED -- it establishes direction, not a verdict.",
        "_a8_registered": "word-8-gram bottom-32 sketch, >= 16/32 with an earlier query; action "
                          "cuts to representatives above a 25% rate",
-       "_floor": "an N-word query has N-7 word-8-grams, so 16/32 is unreachable below N = 23",
+       "_floor": ("an N-word query has N-7 word-8-grams (and BELOW 8 WORDS just ONE whole-text "
+                  "hash), so 16/32 is unreachable below N = 23 and is identical to exact dedup "
+                  "below 8. Worse: under 39 words the sketch IS the whole gram set and the test "
+                  "is an absolute count, so a template with k interior varying slots escapes "
+                  "whenever N-7-8k < 16 -- two-slot templates escape up to 38 words. And no "
+                  "8-gram rule can catch a one-slot template at <= 15 words at ANY threshold, "
+                  "since every window covers the changed word (Fable 2026-09-05)"),
+       "_monotone": "the rate is non-decreasing in n, so a 200-query rate is a FLOOR for 143,000",
        "generated_smoke": {}, "harvested_corpus": {}}
 
 for f in ("howto", "argument", "finance", "comparison", "yesno", "conversational", "health"):
@@ -59,11 +66,17 @@ for f in ("howto", "argument", "finance", "comparison", "yesno", "conversational
     _r, _d, a8 = C.near_dup_gate(qs)
     r4, n4 = prop_rate(qs)
     lo, hi = qfilter.RANGES[f]
+    # The RATE IS MONOTONE NON-DECREASING IN n -- each query has more earlier queries to match --
+    # so a rate measured at 200 is a FLOOR for the 143,000-query build, not an estimate of it.
+    # The slope across prefixes is therefore the number that matters, not the endpoint.
+    curve = {str(k): round(prop_rate(qs[:k])[0], 4) for k in (50, 100, 150, 200) if k <= len(qs)}
     out["generated_smoke"][f] = {
         "n": len(qs), "rubric_range": [lo, hi],
-        "gate_can_fire": "always" if lo >= 23 else ("never" if hi < 23 else "partly"),
+        "gate_can_fire": "always" if lo >= 39 else ("never" if hi < 8 else "partly"),
         "a8_registered_rate": a8["near_dup_rate"], "diagnostic_4gram_rate": round(r4, 4),
-        "diagnostic_near_dups": n4}
+        "diagnostic_near_dups": n4, "diagnostic_rate_vs_n": curve,
+        "still_rising_at_200": bool(len(curve) > 1
+                                    and list(curve.values())[-1] > list(curve.values())[0] + 0.01)}
 
 import random
 rows = collections.defaultdict(list)
