@@ -5,6 +5,7 @@
 | job | how to check | ETA |
 |---|---|---|
 | **M10.0-e calibration**, arms P0/P1/P2 at 5M each | `work/m10calib_run.log`, `grep "ex/s"`; artifacts `work/m10calib/P*.json` and `P*_cov.json` | ~961 ex/s, 87 min per arm, ~3h left |
+| ↳ **when all three land** | run **`.venv/bin/python m10src/calib_report.py`** → `results/m10_calib_report.json`. It refuses any P arm whose `total_steps != 156250` (the smoke shares the path) or that stopped early. Then record it in LEDGER §M10.0-e and RESULTS, and log **COV read #2** in §4 | ~2 min |
 | **Wikipedia harvest pass** | `work/m10harvest_wiki.log`; report at `work/m10harvest/wiki_harvest.jsonl.report.json` | ~5,400 articles/s, ~10 min left |
 | **not started, next:** the pool `ask` pass, then `harvest.draw()` | — | ~10 min + ~1h |
 
@@ -37,6 +38,15 @@ that looks like a result — check `total_steps == 156250` before believing any 
 4. **The 90-step smoke of every arm shape** before any registered arm. §Screen requires it and
    only the anchor shape has been smoked.
 5. **§0b**, then **family F**.
+
+**What the calibration result licenses, and what it does not.** It produces two numbers:
+`lr_pair.distance_raw` — a same-init contrast's paired width, which **B, D, G and C** are read
+against — and `seed_effect_point_estimate` = |macro(P0) − macro(P1)|, the seed effect, which the
+bootstrap **cannot see** because it resamples queries and not seeds. A contrast that "resolves" a
+difference smaller than that seed effect has resolved noise. **F and E are read against the
+0.008619 unrelated-models number and no LR pair speaks for them** — two students sharing only the
+teacher target ARE the unrelated case. It closes W5 for no family on its own, changes **no**
+constant, and any MDE decision is Dylan's, before family F starts, never after.
 
 ## Three things a resuming session must NOT redo
 
