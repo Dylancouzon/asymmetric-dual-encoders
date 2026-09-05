@@ -64,17 +64,26 @@ and allocation · seeds confirmed for all seven generated forms.
 
 ## THE NEXT FIVE THINGS, in order
 
-1. **`.venv/bin/python m10src/paq.py --pilot 200000`** for the dedup and protected-screen loss
-   rates (dedup is ~0.002% — `PAQ.filtered` is already deduped), then set the margin and run the
-   real draw: 4.037M for A2, 1.0M **nested inside it** for the build.
-2. **Generation**, ~10 box-hours on the GPU once the calibration arms free it. Apply `qfilter`
-   to the output — it is the single largest quality lever measured, and it enforces a range the
-   frozen rubric already specifies.
-3. **Implement the two missing warm starts** before families G and C — G-MLP's three-solve
-   recipe (`instructions-m10.md`:616 specifies it exactly) and C-M9init's zero-padded 384-d head
-   (`instructions-m10.md`:510). Until then both arms would start from a fresh head, which biases
-   G3 and C1 *against* adopting the non-default.
-4. **§0b**, then **family F**.
+1. **A 15-minute DIVERSITY PILOT before the 10-hour generation run.** `health`'s near-dup rate is
+   rising (10.0 -> 13.0 -> 17.3 -> 20.5% at n = 50/100/150/200) and the rate is monotone in n, so
+   the build rate is very likely above the 25% action threshold. Generate `health`, `finance`,
+   `comparison`, `yesno` at the build's `n_per_seed` **from the judged gate seeds** —
+   `partition_seeds` already excludes those from both the build and the hold-out, so no supply is
+   burned and nothing leaks — and report per form at n = 200/500/1000/2000: the registered gate
+   rate, the 4-gram rate at 40/50/60% (to show `health` is not knife-edge), leading-4-gram
+   concentration, distinct-2, and the registered stella mean-pairwise cosine. **15 box-minutes to
+   de-risk 10 box-hours.** If `health` reads above 25%, its prompt needs revising BEFORE the build,
+   and that is Dylan's: a revision triggered by a *diversity* finding is not a trigger the
+   decision-15 state machine registers (`health` has used 1 of its 2 revisions).
+2. **Generation**, ~10 box-hours on the GPU once the calibration arms free it. Apply `qfilter` to
+   the output — the single largest quality lever measured, enforcing a range the frozen rubric
+   already specifies. Then measure BOTH gates on the real build-representative output and post the
+   table to issue #3; that is what W10 needs to be decided on.
+3. **The A8 own-source screen still owed on the harvested corpus** (W11's remaining half), and the
+   **`lr_at` fix** — both only after M10.0-e completes.
+4. **Assemble `results/m10_data_manifest.json`** and generate FORMS-12's 500 eval queries per
+   generated form from the held-out seed ids.
+5. **§0b's data_cut**, then **family F** (blocked on W9).
 
 **What the calibration result licenses, and what it does not.** It produces two numbers:
 `lr_pair.distance_raw` — a same-init contrast's paired width, which **B, D, G and C** are read
