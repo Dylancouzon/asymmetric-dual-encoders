@@ -20,7 +20,11 @@ import numpy as np
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "m7src"))
 
+# `wikipedia-body` is admitted (T2-5) but is NOT drawn through this module: it is a JSONL of
+# pre-scored chunks, not a `work/train/stores/*.json` text store, and `m10src/wikibody.draw`
+# is its draw path. It is named here so a reader does not conclude the store is unregistered.
 ALLOWED_STORES = ("hotpotqa-corpus", "squad-ctx", "mrtydi-docs", "esci-prod")
+EXTERNAL_STORES = ("wikipedia-body",)          # drawn by m10src/wikibody.draw
 CACHE = REPO / "work" / "m10gen" / "seeds"
 
 # Deterministic topical routing for the seven generated forms. `general` = no filter.
@@ -148,13 +152,14 @@ def draw(forms_wanted, per_form=40, pool_size=400_000, seed=0, store="hotpotqa-c
         print(f"  {len(eligible):,} length-eligible; topical candidates "
               + ", ".join(f"{f}={len(ranked[f])}" for f in topical), flush=True)
 
+    idx = None
     if screen:
         # The M10 protected index, not M7's: §Data requires the admitted COV queries AND
         # documents to be in it before any seed is drawn (`m10src/protected10`, cached).
         import protected10
-        q_ex, q_gram, whole, counts = protected10.build(verbose=verbose)
+        idx = protected10.build(verbose=verbose)
         if verbose:
-            print(f"  protected index ({protected10.VERSION}): {counts}", flush=True)
+            print(f"  protected index ({protected10.VERSION}): {idx[3]}", flush=True)
 
     n_screened = n_dropped = 0
     def ok(i):
@@ -165,7 +170,10 @@ def draw(forms_wanted, per_form=40, pool_size=400_000, seed=0, store="hotpotqa-c
         # `query_grams` is documented query-side-only; on a >=8-word passage it reduces to
         # `ngram_hashes`, i.e. all the passage's 8-grams, which is exactly the test wanted here:
         # does this passage contain protected query text?
-        if decontam.query_hits(texts[i], q_ex, q_gram, whole):
+        # `protected10.hits`, NOT `decontam.query_hits`: the module-level `import decontam` went
+        # away with the protected10 wiring and this line raised NameError on every cache MISS,
+        # which a cache hit then masked (Codex 2026-09-05, blocker).
+        if protected10.hits(texts[i], idx):
             n_dropped += 1
             return False
         return True
@@ -215,17 +223,30 @@ def draw(forms_wanted, per_form=40, pool_size=400_000, seed=0, store="hotpotqa-c
 # Bumped whenever the screen's SCOPE changes (e.g. COV joins the protected index). A cached
 # draw made under an older scope can then never be served -- the old blocker was a cache key of
 # `smoke-{per_form}-{forms}`, which ignored store, seed, min_score, pool size and the screen.
-SCREEN_VERSION = "2026-09-05-protected10(six+dev+reserved-q+COV-q+d)+ROUTE(T2-3)"
+def _screen_version():
+    """DERIVED, not promised. It had been a hand-written string, so a change to the admitted COV
+    components or to `protected10`'s scope without a synchronised manual bump would have kept
+    serving an older-scope draw (Codex 2026-09-05)."""
+    import protected10
+    ident = protected10._ident()
+    h = hashlib.blake2b(json.dumps(ident, sort_keys=True).encode(), digest_size=5).hexdigest()
+    return f"{protected10.VERSION}+ROUTE(T2-3)+{h}"
+
+
+SCREEN_VERSION = _screen_version()
 
 
 def _key(forms_wanted, per_form, kw):
-    ident = dict(forms=sorted(forms_wanted), per_form=per_form, screen=SCREEN_VERSION,
+    # forms in the ORDER GIVEN, not sorted: order is priority -- the first form to claim a
+    # passage keeps it -- so ["health","finance"] and ["finance","health"] are different draws
+    # and were aliasing to one cache entry (Codex 2026-09-05).
+    ident = dict(forms=list(forms_wanted), per_form=per_form, screen=SCREEN_VERSION,
                  store=kw.get("store", "hotpotqa-corpus"), seed=kw.get("seed", 0),
                  pool_size=kw.get("pool_size", 400_000), min_score=kw.get("min_score", 4),
                  screened=kw.get("screen", True),
                  # the route ACTUALLY passed, not `ROUTE` unconditionally: a draw made under
                  # `ROUTE_WIDE` must not be servable from a cache keyed as if it were `ROUTE`
-                 route={f: (kw.get("route") or ROUTE)[f] for f in sorted(forms_wanted)},
+                 route={f: (kw.get("route") or ROUTE)[f] for f in forms_wanted},
                  lengths=[MIN_WORDS, MAX_WORDS])
     h = hashlib.blake2b(json.dumps(ident, sort_keys=True).encode(), digest_size=8).hexdigest()
     return h, ident

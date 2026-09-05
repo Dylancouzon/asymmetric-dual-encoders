@@ -50,45 +50,64 @@ MIN_SCORE = 4                        # unchanged
 _TERMINAL = ('.', '!', '?', '"', "'", ')', ']', '”', '’')
 
 
-def is_heading(line):
-    """A section heading in this dump's `text` field: a short, unterminated, capitalised line.
+def is_heading(lines, i):
+    """Is `lines[i]` a section heading in this dump's `text` field?
 
-    The dump renders sections as a bare title line between blank lines — there is no `==` marker
-    to key on — so the rule is structural. It is used ONLY to find where the lead ends, so its
-    failure mode is asymmetric by design: a missed heading keeps lead text (refused as a seed,
-    costing supply), a false heading admits body text one paragraph early (the thing to avoid),
-    which is why the test is conservative on every axis.
+    The dump renders sections as a bare title line surrounded by blank lines — there is no `==`
+    marker to key on — so the rule is STRUCTURAL, and the structure is the point. A first version
+    tested only the line's own shape, and a Codex pass showed a lead whose opening line was short,
+    capitalised and unterminated ("A Short Lead") being read as a heading, which returns the REST
+    OF THE LEAD as body. That inverts the failure mode: lead exclusion is the sole mitigation for
+    the reserved-document fingerprints that do not exist, so a false positive is the expensive
+    error, not the cheap one. Hence: blank line before, blank line after, and at least one
+    non-empty line of real lead ahead of it. A missed heading keeps lead text, which is then
+    refused as a seed and costs supply — the safe direction, on purpose.
     """
-    s = line.strip()
+    s = lines[i].strip()
     if not s or len(s.split()) > 12:
         return False
     if s.endswith(_TERMINAL) or ". " in s or "; " in s:
         return False
-    return s[0].isupper() or s[0].isdigit()
+    if not (s[0].isupper() or s[0].isdigit()):
+        return False
+    if i == 0 or lines[i - 1].strip():                       # must follow a blank line
+        return False
+    if i + 1 >= len(lines) or lines[i + 1].strip():          # must precede a blank line
+        return False
+    return any(l.strip() for l in lines[:i])                 # real lead text must precede it
 
 
 def body(text):
     """-> the article text AFTER the first heading line, or '' if the article has no heading."""
     lines = text.split("\n")
-    for i, ln in enumerate(lines):
-        if is_heading(ln):
+    for i in range(len(lines)):
+        if is_heading(lines, i):
             return "\n".join(lines[i + 1:])
     return ""
 
 
 def chunks(text, min_words, max_words):
-    """Paragraph chunks in the registered length window; adjacent short paragraphs merged."""
+    """Paragraph chunks in the registered length window; adjacent short paragraphs merged.
+
+    Overflow is carried, not discarded: emitting `buf[:max_words]` and then clearing the buffer
+    silently lost the tail of every long paragraph — a 30-word paragraph followed by a 300-word
+    one produced one 220-word chunk and dropped 110 words (Codex 2026-09-05). Successive windows
+    are emitted instead, and only a remainder below `min_words` is dropped.
+    """
     out, buf = [], []
     for para in text.split("\n"):
         w = para.split()
         if not w:
             continue
         buf += w
-        if len(buf) >= min_words:
+        while len(buf) >= max_words:
             out.append(" ".join(buf[:max_words]))
+            buf = buf[max_words:]
+        if len(buf) >= min_words:
+            out.append(" ".join(buf))
             buf = []
     if len(buf) >= min_words:
-        out.append(" ".join(buf[:max_words]))
+        out.append(" ".join(buf))
     return out
 
 
@@ -146,36 +165,57 @@ def scan(limit=None, out=None, log_every=50_000):
     pats = {f: _re.compile(S.ROUTE[f], _re.I) for f in FORMS}
     out = Path(out or (OUT / "wikibody_seeds.jsonl"))
     out.parent.mkdir(parents=True, exist_ok=True)
+    partial = out.with_suffix(out.suffix + ".partial")
     n_art = n_chunk = n_kept = 0
     per_form = {f: 0 for f in FORMS}
     t0 = time.time()
-    with out.open("w") as fh:
+    with partial.open("w") as fh:
         for r in stream(limit):
             n_art += 1
             cs = chunks(body(r["text"]), S.MIN_WORDS, S.MAX_WORDS)
             n_chunk += len(cs)
             taken = {f: 0 for f in FORMS}
             for ci, c in enumerate(cs):
+                # Scored with the article TITLE prepended. `seeds._score` gives a 2x bonus to hits
+                # in the first 25 words because an intro passage opens with its title; a body
+                # chunk's first 25 words are arbitrary, and a Codex pass showed the identical
+                # keyword multiset scoring 6 or 2 purely on where in the chunk it fell -- a
+                # positional filter, not a topical one. Prepending the title restores exactly the
+                # property the bonus was written for and makes body chunks comparable to the
+                # incumbent store's passages. The STORED text is the chunk alone, unchanged.
+                scored = f"{r['title']}. {c}"
                 for f, p in pats.items():           # first-fit, the draw's priority order
-                    sc = S._score(p, c)
-                    if sc >= MIN_SCORE:
-                        if taken[f] < PER_ARTICLE_CAP:
-                            taken[f] += 1
-                            per_form[f] += 1
-                            n_kept += 1
-                            fh.write(json.dumps({"aid": r["id"], "title": r["title"], "form": f,
-                                                 "score": sc, "chunk_i": ci, "text": c}) + "\n")
-                        break
+                    sc = S._score(p, scored)
+                    if sc < MIN_SCORE:
+                        continue
+                    if taken[f] >= PER_ARTICLE_CAP:
+                        # the cap must not block a LATER form: `break` here discarded every
+                        # health+finance chunk after health's third (Codex 2026-09-05)
+                        continue
+                    taken[f] += 1
+                    per_form[f] += 1
+                    n_kept += 1
+                    fh.write(json.dumps({"aid": r["id"], "title": r["title"], "form": f,
+                                         "score": sc, "chunk_i": ci, "text": c}) + "\n")
+                    break
             if n_art % log_every == 0:
                 el = time.time() - t0
                 print(f"  {n_art:,} articles ({n_art/el:.0f}/s, {el/60:.1f}m), "
                       f"{n_chunk:,} chunks, kept {n_kept:,} {per_form}", flush=True)
                 fh.flush()
+    # Atomic: the destination appears only when the pass finished, and the report is the
+    # completion marker `_load_jsonl` requires. Streaming into the final path left a graceful
+    # interruption looking exactly like a finished scan, and a dump PREFIX is the sampling bias
+    # T2-5 forbids (Codex 2026-09-05).
+    partial.replace(out)
     rep = dict(repo=REPO_ID, config=CONFIG, revision=REVISION, licence=LICENCE,
                forms=list(FORMS), min_score=MIN_SCORE, per_article_cap=PER_ARTICLE_CAP,
-               length_window=[40, 220], lead_excluded=True,
+               length_window=[S.MIN_WORDS, S.MAX_WORDS], lead_excluded=True,
+               scored_with_title_prefix=True, route="ROUTE (T2-3, unchanged)",
+               complete=limit is None, limit=limit,
                n_articles=n_art, n_body_chunks=n_chunk, n_kept=n_kept, per_form=per_form,
-               seconds=round(time.time() - t0, 1), path=str(out))
+               seconds=round(time.time() - t0, 1), path=str(out),
+               bytes=out.stat().st_size)
     (OUT / "wikibody_scan.json").write_text(json.dumps(rep, indent=1))
     print(json.dumps(rep, indent=1))
     return rep
@@ -183,16 +223,34 @@ def scan(limit=None, out=None, log_every=50_000):
 
 # ---- screening and the build draw ---------------------------------------------------------
 
-def _load_jsonl(path=None):
+def _load_jsonl(path=None, require_complete=True):
+    """-> (all rows, deduplicated rows). Refuses a scan that did not finish."""
+    import decontam
     path = Path(path or (OUT / "wikibody_seeds.jsonl"))
+    if require_complete:
+        rp = OUT / "wikibody_scan.json"
+        if not rp.exists():
+            raise SystemExit(f"{rp} is missing: there is no completed scan to draw from")
+        rep = json.loads(rp.read_text())
+        for k, want in (("complete", True), ("revision", REVISION), ("config", CONFIG),
+                        ("per_article_cap", PER_ARTICLE_CAP), ("min_score", MIN_SCORE),
+                        ("scored_with_title_prefix", True)):
+            if rep.get(k) != want:
+                raise SystemExit(f"scan report {k}={rep.get(k)!r}, this module expects {want!r}")
+        if str(Path(rep["path"])) != str(path) or rep["bytes"] != path.stat().st_size:
+            raise SystemExit(f"scan report describes {rep['path']} at {rep['bytes']} bytes; "
+                             f"{path} is {path.stat().st_size}")
     rows = [json.loads(l) for l in path.open()]
     seen, out = set(), []
     rows.sort(key=lambda r: (-r["score"], r["aid"], r["chunk_i"]))
     for r in rows:
-        k = " ".join(r["text"].split()).lower()
-        if k in seen:
+        # BOTH keys: the whitespace-lowercase key and M7's fingerprint. Two texts differing only
+        # in punctuation have different lowercase keys and the SAME `exact_u64`, and the external
+        # screen does not self-deduplicate (Codex 2026-09-05).
+        k = (" ".join(r["text"].split()).lower(), int(decontam.exact_u64(r["text"])))
+        if k[0] in seen or k[1] in seen:
             continue
-        seen.add(k)
+        seen.update(k)
         out.append(r)
     return rows, out
 
@@ -279,7 +337,9 @@ def draw(per_form, path=None, margin=4, verbose=True):
     out, counts = {}, {}
     for f in FORMS:
         rows = [r for r in kept if r["form"] == f]
-        out[f] = rows[:per_form]
+        # `(passage_id, text)` pairs, the shape `seeds.draw` returns, so the two stores are
+        # interchangeable downstream (Codex 2026-09-05).
+        out[f] = [(f"wikipedia-body:{r['aid']}#{r['chunk_i']}", r["text"]) for r in rows[:per_form]]
         if len(rows) < per_form and by_form[f] > margin * per_form:
             raise SystemExit(f"{f}: the {margin}x screening pool left only {len(rows)} of "
                              f"{per_form} after screening -- widen `margin` and re-draw rather "
@@ -287,8 +347,8 @@ def draw(per_form, path=None, margin=4, verbose=True):
         counts[f] = dict(admitted_in_store=by_form[f], screened=margin * per_form,
                          survived_screen=len(rows), taken=len(out[f]),
                          short=max(0, per_form - len(rows)),
-                         min_score_taken=min((r["score"] for r in out[f]), default=None),
-                         max_score_taken=max((r["score"] for r in out[f]), default=None))
+                         min_score_taken=min((r["score"] for r in rows[:per_form]), default=None),
+                         max_score_taken=max((r["score"] for r in rows[:per_form]), default=None))
     rep = dict(per_form=per_form, margin=margin, n_raw=len(raw), n_after_exact_dedup=len(dedup),
                screen=srep, counts=counts, store="wikipedia-body",
                repo=REPO_ID, config=CONFIG, revision=REVISION, licence=LICENCE,

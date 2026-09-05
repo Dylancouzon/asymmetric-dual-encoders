@@ -40,9 +40,11 @@ def build(verbose=True):
     npz, meta_p = CACHE / f"idx-{h}.npz", CACHE / f"idx-{h}.json"
 
     q_ex, q_gram, q_whole, counts = decontam.protected_query_index()
+    cov_short = []                      # COV QUERIES of 4-7 words, for the containment index
     if npz.exists():
         z = np.load(npz)
         cov_ex, cov_gram = z["ex"], z["gram"]
+        cov_short_texts = json.loads((CACHE / f"short-{h}.json").read_text())
         counts = json.loads(meta_p.read_text())["counts"]
     else:
         from cov_screen import load_component
@@ -50,6 +52,9 @@ def build(verbose=True):
         for family, comps in COMPONENTS.items():
             for name, repo, rev in comps:
                 qs, ds = load_component(name, repo, rev)
+                cov_short += [t for t in qs
+                              if decontam.SHORT_NGRAM <= len(decontam.norm_words(t))
+                              < decontam.NGRAM]
                 for role, texts in (("q", qs), ("d", ds)):
                     ex += [int(decontam.exact_u64(t)) for t in texts]
                     # documents contribute all their 8-grams; queries contribute query-side grams
@@ -62,11 +67,24 @@ def build(verbose=True):
         cov_ex = np.unique(np.asarray(ex, dtype=np.uint64))
         cov_gram = np.unique(np.concatenate(grams)) if grams else np.zeros(0, np.uint64)
         np.savez_compressed(npz, ex=cov_ex, gram=cov_gram)
+        (CACHE / f"short-{h}.json").write_text(json.dumps(cov_short))
+        cov_short_texts = cov_short
         meta_p.write_text(json.dumps({"ident": ident, "counts": counts,
                                       "n_exact": int(cov_ex.size),
                                       "n_gram": int(cov_gram.size)}, indent=1))
     merged_ex = set(q_ex) | set(int(x) for x in cov_ex)
     merged_gram = np.unique(np.concatenate([q_gram, cov_gram]))
+    # A 4-7-word COV query embedded VERBATIM in a 45-word candidate matches nothing on grams --
+    # a long candidate emits only 8-grams -- so it needs the containment index, which M7's
+    # `protected_query_index` populates from the protected queries ONLY. Without this the COV
+    # queries were half-screened (Codex 2026-09-05).
+    cov_whole = decontam.short_whole_index(cov_short_texts)
+    merged_whole = dict(q_whole)
+    for k, v in cov_whole.items():
+        merged_whole[k] = np.unique(np.concatenate([merged_whole[k], v])) \
+            if k in merged_whole else v
+    q_whole = merged_whole
+    counts["COV:short-queries-in-containment-index"] = len(cov_short_texts)
     if verbose:
         print(f"  protected10 {VERSION}: {len(merged_ex):,} exact keys, "
               f"{merged_gram.size:,} grams", flush=True)
