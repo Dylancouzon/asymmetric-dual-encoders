@@ -390,30 +390,6 @@ def _long(prefix, n):
     return [f"{prefix}{i}" for i in range(n)]
 
 
-def test_a8_earlier_query_reading_catches_a_chain_that_the_representative_reading_misses():
-    """Finding 6a. A~B and B~C but A!~C. The literal 'an EARLIER query' rule drops C; the
-    'earlier representative' reading keeps it, because B was removed from the index."""
-    # 39 words -> exactly 32 word-8-grams, so the bottom-32 sketch holds ALL of them. Longer
-    # texts silently drop grams from the sketch and the overlap arithmetic stops being the
-    # contiguous-run arithmetic -- which is how the first version of this fixture went wrong.
-    a = _long("a", 39)
-    A = " ".join(a)                                    # a0..a38
-    B = " ".join(a[:31] + _long("n", 8))               # shares a0..a30  -> 24 grams with A
-    Cq = " ".join(a[15:31] + _long("n", 8) + _long("z", 15))   # shares 24 words with B -> 17
-    sk = lambda t: set(decontam.sketch(t).tolist())
-    for t in (A, B, Cq):
-        assert len(t.split()) == 39 and len(sk(t)) == 32, "fixture must not overflow the sketch"
-    assert len(sk(A) & sk(B)) >= C.A8_NEAR_DUP_SHARE, "fixture: B must match A"
-    assert len(sk(B) & sk(Cq)) >= C.A8_NEAR_DUP_SHARE, "fixture: C must match B"
-    assert len(sk(A) & sk(Cq)) < C.A8_NEAR_DUP_SHARE, "fixture: C must NOT match A"
-
-    _r, _d, lit = C.near_dup_gate([A, B, Cq], against="earlier_query")
-    assert lit["near_duplicates"] == 2 and lit["representatives"] == 1
-
-    _r, _d, nar = C.near_dup_gate([A, B, Cq], against="representative")
-    assert nar["near_duplicates"] == 1 and nar["representatives"] == 2
-
-
 def test_a8_action_reads_the_RAW_rate_not_the_rounded_one():
     """Finding 6b: 0.25000375 rounds to 0.25 and would wrongly escape the `> 0.25` cut."""
     rep = {"near_dup_rate_raw": 0.25000375, "near_dup_rate": round(0.25000375, 5)}

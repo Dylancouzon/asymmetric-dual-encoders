@@ -82,6 +82,16 @@ N_TEXTS = 4096
 M9_CANDIDATE = REPO / "work" / "m9long" / "ckpt" / "step450000.pt"
 N_WS_FIT = 256          # warm-start fit sample for the smoke; the real arms use 60,000
 
+# Shapes that DO NOT FIT this box at full sequence length and run on the rented A100 instead
+# (Dylan 2026-09-05: "this is fine if we can't run some things here... we're preparing for the
+# cloud gpu run, not to get numbers at any cost"). `E-bs128` reproducibly raises
+# `CUDA driver error: device not ready` at max_len 256/384/512 on an idle 10 GB card and passes at
+# 128 (2,188 ex/s). Its SHAPE is therefore still smoked -- at `CLOUD_ONLY_MAX_LEN` -- because the
+# thing under test is the head, the loop and the batch, not the sequence length. NOT worked around
+# with gradient accumulation: that was explicitly not wanted.
+CLOUD_ONLY = {"E-bs128": "batch 128 above ~128 tokens: driver error on this card; runs on the A100"}
+CLOUD_ONLY_MAX_LEN = 128
+
 
 def corpus(verbose=True):
     """A small slice of the REAL corpora -- a smoke on synthetic tensors proves nothing about the
@@ -106,18 +116,24 @@ def _write(recs, device, max_len):
          "steps": STEPS, "device": device, "n_texts": N_TEXTS, "max_len": max_len,
          "shapes_registered": list(SHAPES), "shapes_run": [r["arm"] for r in recs],
          "arms": recs, "failed": failed, "warm_start_not_implemented": no_ws,
+         "cloud_only": {k: v for k, v in CLOUD_ONLY.items()
+                        if k in {r["arm"] for r in recs}},
          "all_shapes_pass": not failed and len(recs) == len(SHAPES),
          "_partial": len(recs) != len(SHAPES)}, indent=1))
     return failed, no_ws
 
 
 def smoke_one(name, spec, corp, device="cpu", max_len=512, verbose=True):
+    if name in CLOUD_ONLY and device == "cuda" and max_len > CLOUD_ONLY_MAX_LEN:
+        max_len = CLOUD_ONLY_MAX_LEN
     import data10 as D
     import nano10 as N
     import trainer10 as Tr
     texts, T, dtexts, dvecs = corp
     rec = {"arm": name, "spec": {k: v for k, v in spec.items()}, "covers": COVERS.get(name, []),
-           "device": device}
+           "device": device, "max_len": max_len}
+    if name in CLOUD_ONLY:
+        rec["cloud_only"] = CLOUD_ONLY[name]
     t0 = time.time()
     try:
         torch.manual_seed(0)
@@ -191,6 +207,14 @@ def main():
     ap.add_argument("--max-len", type=int, default=512,
                     help="cap tokenized length; 128 keeps E-bs128 off the CPU memory cliff")
     a = ap.parse_args()
+    # SHAPES is a hand copy of the registry and can drift silently (whole-plan review): assert
+    # every trained arm is covered before smoking anything.
+    import json as _json
+    _reg = _json.loads((REPO / "m10" / "screen_registry.json").read_text())
+    _covered = set(SHAPES) | {x for v in COVERS.values() for x in v}
+    _missing = sorted(k for k, v in _reg["arms"].items() if v.get("trained") and k not in _covered)
+    if _missing:
+        raise SystemExit(f"registry has trained arms this smoke does not cover: {_missing}")
     names = a.only or list(SHAPES)
     print(f"{STEPS}-step arm-shape smoke on {a.device}, max_len {a.max_len}: "
           f"{len(names)} shapes", flush=True)

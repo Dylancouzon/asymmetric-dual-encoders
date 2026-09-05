@@ -1,9 +1,7 @@
 {
- "_what": "W10 evidence: registered A8 gate vs a sensitive 4-gram diagnostic",
- "_diagnostic": "word-4-grams, near-dup if >= 50% of the smaller gram set is shared with an earlier query. NOT REGISTERED -- it establishes direction, not a verdict.",
- "_a8_registered": "word-8-gram bottom-32 sketch, >= 16/32 with an earlier query; action cuts to representatives above a 25% rate",
- "_floor": "an N-word query has N-7 word-8-grams (and BELOW 8 WORDS just ONE whole-text hash), so 16/32 is unreachable below N = 23 and is identical to exact dedup below 8. Worse: under 39 words the sketch IS the whole gram set and the test is an absolute count, so a template with k interior varying slots escapes whenever N-7-8k < 16 -- two-slot templates escape up to 38 words. And no 8-gram rule can catch a one-slot template at <= 15 words at ANY threshold, since every window covers the changed word (Fable 2026-09-05)",
- "_monotone": "the rate is non-decreasing in n, so a 200-query rate is a FLOOR for 143,000",
+ "_what": "W10 evidence: the A8 gate beside a sensitive 4-gram diagnostic",
+ "_diagnostic": "word-4-grams, near-dup at >= 50% of the smaller set. NOT REGISTERED.",
+ "_monotone": "the rate is non-decreasing in n, so every value is a FLOOR for 143,000",
  "generated_smoke": {
   "howto": {
    "n": 200,
@@ -11,17 +9,15 @@
     25,
     60
    ],
-   "gate_can_fire": "partly",
-   "a8_registered_rate": 0.0,
+   "a8_rate": 0.0,
+   "caught_only_by_short_rule": 0,
    "diagnostic_4gram_rate": 0.0,
-   "diagnostic_near_dups": 0,
    "diagnostic_rate_vs_n": {
     "50": 0.0,
     "100": 0.0,
     "150": 0.0,
     "200": 0.0
-   },
-   "still_rising_at_200": false
+   }
   },
   "argument": {
    "n": 195,
@@ -29,16 +25,14 @@
     120,
     220
    ],
-   "gate_can_fire": "always",
-   "a8_registered_rate": 0.0359,
+   "a8_rate": 0.035897435897435895,
+   "caught_only_by_short_rule": 0,
    "diagnostic_4gram_rate": 0.0615,
-   "diagnostic_near_dups": 12,
    "diagnostic_rate_vs_n": {
     "50": 0.0,
     "100": 0.02,
     "150": 0.0667
-   },
-   "still_rising_at_200": true
+   }
   },
   "finance": {
    "n": 200,
@@ -46,17 +40,15 @@
     8,
     30
    ],
-   "gate_can_fire": "partly",
-   "a8_registered_rate": 0.01,
+   "a8_rate": 0.01,
+   "caught_only_by_short_rule": 2,
    "diagnostic_4gram_rate": 0.01,
-   "diagnostic_near_dups": 2,
    "diagnostic_rate_vs_n": {
     "50": 0.02,
     "100": 0.01,
     "150": 0.0133,
     "200": 0.01
-   },
-   "still_rising_at_200": false
+   }
   },
   "comparison": {
    "n": 200,
@@ -64,17 +56,15 @@
     8,
     25
    ],
-   "gate_can_fire": "partly",
-   "a8_registered_rate": 0.035,
+   "a8_rate": 0.035,
+   "caught_only_by_short_rule": 7,
    "diagnostic_4gram_rate": 0.035,
-   "diagnostic_near_dups": 7,
    "diagnostic_rate_vs_n": {
     "50": 0.08,
     "100": 0.04,
     "150": 0.0467,
     "200": 0.035
-   },
-   "still_rising_at_200": false
+   }
   },
   "yesno": {
    "n": 200,
@@ -82,17 +72,15 @@
     6,
     20
    ],
-   "gate_can_fire": "partly",
-   "a8_registered_rate": 0.025,
+   "a8_rate": 0.025,
+   "caught_only_by_short_rule": 5,
    "diagnostic_4gram_rate": 0.025,
-   "diagnostic_near_dups": 5,
    "diagnostic_rate_vs_n": {
     "50": 0.0,
     "100": 0.04,
     "150": 0.0333,
     "200": 0.025
-   },
-   "still_rising_at_200": true
+   }
   },
   "conversational": {
    "n": 200,
@@ -100,17 +88,15 @@
     30,
     80
    ],
-   "gate_can_fire": "partly",
-   "a8_registered_rate": 0.0,
-   "diagnostic_4gram_rate": 0.0,
-   "diagnostic_near_dups": 0,
+   "a8_rate": 0.0,
+   "caught_only_by_short_rule": 0,
+   "diagnostic_4gram_rate": 0.005,
    "diagnostic_rate_vs_n": {
     "50": 0.0,
-    "100": 0.0,
-    "150": 0.0,
-    "200": 0.0
-   },
-   "still_rising_at_200": false
+    "100": 0.01,
+    "150": 0.0067,
+    "200": 0.005
+   }
   },
   "health": {
    "n": 200,
@@ -118,52 +104,65 @@
     8,
     30
    ],
-   "gate_can_fire": "partly",
-   "a8_registered_rate": 0.265,
+   "a8_rate": 0.265,
+   "caught_only_by_short_rule": 53,
    "diagnostic_4gram_rate": 0.205,
-   "diagnostic_near_dups": 41,
    "diagnostic_rate_vs_n": {
     "50": 0.1,
     "100": 0.13,
     "150": 0.1733,
     "200": 0.205
-   },
-   "still_rising_at_200": true
+   }
   }
  },
  "harvested_corpus": {
   "keyword": {
-   "n_sampled": 60000,
+   "n": 60000,
    "rubric_range": [
     2,
     4
    ],
-   "gate_can_fire": "never",
-   "a8_registered_rate": 0.00052,
+   "a8_rate": 0.0005166752779212987,
+   "caught_only_by_short_rule": 31,
    "diagnostic_4gram_rate": 0.0005,
-   "diagnostic_near_dups": 32
+   "diagnostic_rate_vs_n": {
+    "50": 0.0,
+    "100": 0.0,
+    "150": 0.0,
+    "200": 0.0
+   }
   },
   "title": {
-   "n_sampled": 60000,
+   "n": 60000,
    "rubric_range": [
     6,
     16
    ],
-   "gate_can_fire": "never",
-   "a8_registered_rate": 0.03382,
+   "a8_rate": 0.03381666666666667,
+   "caught_only_by_short_rule": 2029,
    "diagnostic_4gram_rate": 0.0328,
-   "diagnostic_near_dups": 1968
+   "diagnostic_rate_vs_n": {
+    "50": 0.0,
+    "100": 0.0,
+    "150": 0.0,
+    "200": 0.0
+   }
   },
   "claim": {
-   "n_sampled": 60000,
+   "n": 60000,
    "rubric_range": [
     8,
     25
    ],
-   "gate_can_fire": "partly",
-   "a8_registered_rate": 0.09147,
+   "a8_rate": 0.09146666666666667,
+   "caught_only_by_short_rule": 5488,
    "diagnostic_4gram_rate": 0.0806,
-   "diagnostic_near_dups": 4836
+   "diagnostic_rate_vs_n": {
+    "50": 0.02,
+    "100": 0.02,
+    "150": 0.02,
+    "200": 0.02
+   }
   }
  }
 }

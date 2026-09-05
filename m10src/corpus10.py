@@ -109,23 +109,17 @@ def copied_span(query, source_text, exclude_span=None, k=SPAN_K):
     return bool(_kgrams(qw, k) & src)
 
 
-def near_dup_gate(queries, share=A8_NEAR_DUP_SHARE, against="earlier_query"):
+def near_dup_gate(queries, share=A8_NEAR_DUP_SHARE):
     """A8 gate 1 for ONE form. -> (representatives, exact_deduped, report).
 
     Sequential and order-dependent BY REGISTRATION: "a query is a near-duplicate if its
     word-8-gram bottom-32 sketch matches >= 16/32 with an EARLIER query of the same form (the
     earlier one is the representative)". So the first occurrence is always the representative.
 
-    **`against` picks between two readings of "an earlier query", and the registration is
-    ambiguous** (Codex 2026-09-05, finding 6a):
-      `"earlier_query"`   -- the LITERAL text: compare against every earlier query, dropped ones
-                             included. Catches chains (A~B, B~C, A!~C drops C), which IS template
-                             collapse, so it is both more faithful and better at the gate's stated
-                             purpose. **Default.**
-      `"representative"`  -- compare only against surviving representatives, the standard near-dup
-                             clustering reading. Retains strictly more.
-    The choice changes the reported rate and therefore whether the > 25% cut fires, so it is
-    logged as a Tier-2 reading rather than left implicit.
+    "An earlier query" is read LITERALLY: every earlier query, dropped ones included, so chains
+    are caught (A~B, B~C, A!~C drops C) -- which IS template collapse. The narrower "earlier
+    surviving representative" reading was implemented, had no caller but its own test, and is
+    deleted; the reading and why it was chosen live in `m10/LEDGER.md`.
 
     `representatives` is what the form becomes IF the rate is above 25%; `exact_deduped` is what
     it stays otherwise. The caller applies the action, since it also depends on `A8_MIN_RETAINED`.
@@ -140,8 +134,6 @@ def near_dup_gate(queries, share=A8_NEAR_DUP_SHARE, against="earlier_query"):
         seen_exact.add(h)
         order.append(i)
 
-    if against not in ("earlier_query", "representative"):
-        raise ValueError(f"against={against!r}")
     index = {}                      # 8-gram -> [earlier query positions]      (registered rule)
     sindex = {}                     # 4-gram -> [earlier SHORT query positions] (W10 amendment)
     sgrams = {}                     # position -> its 4-gram set, for the "smaller set" denominator
@@ -174,8 +166,6 @@ def near_dup_gate(queries, share=A8_NEAR_DUP_SHARE, against="earlier_query"):
             n_near += 1
         else:
             reps.append(i)
-        if dup and against == "representative":
-            continue                        # dropped queries do not enter either index
         for g in sk.tolist():
             index.setdefault(g, []).append(i)
         if short:
@@ -191,26 +181,21 @@ def near_dup_gate(queries, share=A8_NEAR_DUP_SHARE, against="earlier_query"):
            # 0.25000375 and rounds to 0.25, which would wrongly escape the > 0.25 cut.
            "near_dup_rate_raw": rate,
            "near_dup_rate": round(rate, 5), "representatives": len(reps),
-           "share_threshold": f"{share}/32", "compared_against": against,
-           "rule": (f"W10 (Dylan 2026-09-05): word-{A8_SHORT_K}-grams at "
-                    f">= {A8_SHORT_FRAC:.0%} of the smaller set below {A8_LONG_FLOOR} words; "
-                    f"the registered 8-gram {share}/32 rule at or above, bit-identical"),
+           "share_threshold": f"{share}/32",
+           "rule": f"W10: 4-grams >= 50% below {A8_LONG_FLOOR} words, else 8-gram {share}/32",
            "caught_only_by_short_rule": n_short_only,
-           "_was_blind": ("BEFORE the W10 amendment an N-word query had N-7 word-8-grams, so the "
-                          "16/32 threshold was unreachable below 23 words and identical to exact "
-                          "dedup below 8; `health` read 0.00% against a measured 20.5%"),
            "_note": "sequential by registration: the first occurrence is the representative"}
     return [queries[i] for i in reps], [queries[i] for i in order], rep
 
 
-def a8_action(form, queries, share=A8_NEAR_DUP_SHARE, against="earlier_query"):
+def a8_action(form, queries, share=A8_NEAR_DUP_SHARE):
     """The registered action on A8 gate 1. -> (kept, report).
 
     Above a 25% near-duplicate rate the form keeps ONLY its representatives -- "a real cut, never
     topped up". If fewer than 50,000 remain the form is DROPPED from the build and reported.
     At or below 25% nothing is cut: the near-duplicates stay.
     """
-    reps, deduped, rep = near_dup_gate(queries, share=share, against=against)
+    reps, deduped, rep = near_dup_gate(queries, share=share)
     if rep["near_dup_rate_raw"] > A8_MAX_NEAR_DUP_RATE:
         kept = reps
         rep["action"] = "cut to representatives (rate above 0.25, never topped up)"
