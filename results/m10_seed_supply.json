@@ -1,5 +1,36 @@
 {
-  "wide_min4": {
+  "orig_min4": {
+    "stores": [
+      "hotpotqa-corpus",
+      "squad-ctx",
+      "mrtydi-docs"
+    ],
+    "min_score": 4,
+    "route": "ROUTE",
+    "order": [
+      "health",
+      "finance",
+      "howto"
+    ],
+    "n_docs_scanned": 5348204,
+    "n_unique_after_dedup": 5339995,
+    "n_length_eligible": 2615015,
+    "seeds_in_length_range": {
+      "health": 10399,
+      "finance": 22375,
+      "howto": 37927
+    },
+    "seeds_ignoring_length": {
+      "health": 12594,
+      "finance": 28093,
+      "howto": 47957
+    },
+    "length_window": [
+      40,
+      220
+    ]
+  },
+  "wide_v1_min4_WITHDRAWN": {
     "stores": [
       "hotpotqa-corpus",
       "squad-ctx",
@@ -30,14 +61,14 @@
       220
     ]
   },
-  "orig_min4": {
+  "wide_v2_min4": {
     "stores": [
       "hotpotqa-corpus",
       "squad-ctx",
       "mrtydi-docs"
     ],
     "min_score": 4,
-    "route": "ROUTE",
+    "route": "ROUTE_WIDE",
     "order": [
       "health",
       "finance",
@@ -47,14 +78,14 @@
     "n_unique_after_dedup": 5339995,
     "n_length_eligible": 2615015,
     "seeds_in_length_range": {
-      "health": 10399,
-      "finance": 22375,
-      "howto": 37927
+      "health": 36284,
+      "finance": 23504,
+      "howto": 37473
     },
     "seeds_ignoring_length": {
-      "health": 12594,
-      "finance": 28093,
-      "howto": 47957
+      "health": 46471,
+      "finance": 28892,
+      "howto": 47462
     },
     "length_window": [
       40,

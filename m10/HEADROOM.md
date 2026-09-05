@@ -90,11 +90,18 @@ texts are seen more often.
 5,339,995 unique after cross-store fingerprint dedup, 2,615,015 length-eligible. Controlled: both
 rows are the SAME stores and the SAME `min_score = 4`, so the only variable is the keyword list.
 
-| form | orig `ROUTE` | `ROUTE_WIDE` | gain | vs the ~32–33K need |
+| form | orig `ROUTE` | v1 (withdrawn) | **v2** | vs the ~32–33K need |
 |---|---|---|---|---|
-| `health` | 10,399 | **42,380** | **4.1×** | clears |
-| `finance` | 22,375 | **39,918** | 1.8× | clears |
-| `howto` | 37,927 | **37,154** | 1.0× | clears |
+| `health` | 10,399 | ~~42,380~~ | **36,284** (3.5×) | **clears** |
+| `finance` | 22,375 | ~~39,918~~ | **23,504** (1.05×) | **SHORT → rung 3** |
+| `howto` | 37,927 | ~~37,154~~ | **37,473** | clears |
+
+**What the correction shows.** `health`'s gain was mostly real — 3.5× survives, so router recall
+was genuinely the constraint there. **`finance`'s was almost entirely spurious**: v1's 39,918 falls
+to 23,504, i.e. ~93% of the apparent gain was `capital`→"capital city", `credit`→"credited",
+`bond`→a surname, `wage`→"wages war". The post-execution review predicted ~95% before the rescan
+ran. So **`finance` still needs rung 3** (relax `min_score` 4→3, gated on the full-200 judged
+on-form check), and the earlier claim that the precision levers were not needed was wrong for it.
 
 **The table above is WITHDRAWN.** It is v1's, and v1's widened lists kept the form
 `\b(alt|alt|…)\w*\b`, which wildcards every alternative: `pain` matched "paints", `nurse`

@@ -1,47 +1,48 @@
 # M10 status — weekend window RUNNING. Steps 0a, 0b and 1 are DONE; nothing has trained; the runbook below is the execution order
 
-## Weekend progress (2026-09-04 evening, updated live)
+## Weekend progress — 2026-09-04 evening. READ THIS FIRST, then the mandate.
 
 | step | state | outcome |
 |---|---|---|
-| **0a** vLLM + generator | **DONE, PASSES** | vLLM 0.28.0, attempt 1, no fallback. Health: contract 93.75% (gate 90%), **1027–1173 aggregate output tok/s** (gate 700). Generation stays on the box; the bf16 rented-GPU fallback does NOT fire. ≈1.0M queries ≈ 10 box-hours. `results/m10_gen_health_box.json` |
-| **0b** rate re-measure | **DONE** | Real corpora, real memmapped targets: bucketed + prefetched + `torch.compile` gives **914–960 ex/s** query / **792** document, blended ≈890 → **~62 GPU-h for the 200M build on the box** (vs §11's 683 bound, M9's realized 226). `results/m10_rate_bench_real_box.json`, RESULTS.md |
-| **1** generation smoke | **DONE — all 7 forms pass both gates**, but 3 are HELD | yesno 100 · conversational 96 · argument 88 · finance 86 · comparison 84 · health 84 · howto 80.0. `m10/SMOKE.md`, GitHub issue **#1**. Four forms auto-approving; **`howto`, `argument`, `conversational` held for Dylan** — three procedural defects found after the numbers were observed (LEDGER §1, §3 W1–W2) |
-| **2** COV admission | **screen DONE, no STOP** | MedicalQA · BRIGHT · CorporateLobbying · ConsumerContractsQA all verified and clean: **three family IDs admitted**, the registered floor. BRIGHT's raw 6,123 exact hits are boilerplate (23% of its corpus is under 8 words); above the fingerprint floor it is 0 exact / 23 near. **LEDGER ADMITTED as a fourth family** after a refusal that was withdrawn on fact (I read a stale 8-column builder listing and missed the `qrels` column): 10,000 queries, 47,820 pages, 116,912 graded qrels, page split verified against every qrel id. The surface is **13,416 queries, four families**. **Remaining in step 2:** wire `protected10` (COV into the protected index) before any build seed draw, and measure the COV resolution number. LEDGER §2 |
-| 3–11 | not started | §0a needs step 2's resolution number first |
+| **0a** vLLM + generator | **DONE, PASSES** | vLLM 0.28.0, attempt 1, **no fallback** — generation stays on the box, no cloud spend. Contract 93.75% (gate 90%), **1,027–1,173 aggregate output tok/s** (gate 700). ≈1.0M queries ≈ 10 box-hours. `results/m10_gen_health_box.json` |
+| **0b** rate re-measure | **DONE** | Real corpora + real memmapped targets: bucketed + prefetched + `torch.compile` on fixed buckets gives **914–960 ex/s** query-bucket, **792** document-bucket, blended ≈890 → **~62 GPU-h for the 200M build on the box** (plan assumed 683 ex/s → 81 h). `results/m10_rate_bench_real_box.json` |
+| **1** generation smoke | **DONE — all 7 forms APPROVED by Dylan** | Contract 100% everywhere after 7 prompt revisions across 4 forms. On-form vs the frozen rubric: yesno 100 · conversational 100 (r1) · argument 88 · finance 86 · comparison 84 · health 84 · howto 80.0. `m10/SMOKE.md`, GitHub issue **#1**. `argument` ships with **67%** (full-output) as its honest rate |
+| **2** COV admission | **DONE — four families** | MedicalQA · BRIGHT · CorporateLobbying · ConsumerContractsQA · **LEDGER**. Surface = **13,416 queries, 4 family IDs** (STOP is <3). All screened clean vs the six. Teacher-encoded. LEDGER §2 |
+| **headroom** | partly done | LEDGER admitted (H1). Seed supply (H3): health fixed 10,399→**36,284**; **`finance` still short at 23,504** and needs rung 3. `m10/HEADROOM.md` |
+| **3–11** | not started | §0a lock needs step 2's **resolution number**, which is the next task |
 
-**Reaching Dylan:** `PushNotification` is **disabled in /config**, so the phone route does not work.
-**GitHub issue #1 "M10 smoke approval" is the live channel**; he can also reply via Remote Control.
+## THE NEXT THREE THINGS, in order
 
-**Three questions are open for Dylan and logged as `m10/LEDGER.md` §3 W1–W3.** W1 binds the rest of
-M10: §Data registers three different terminal rules for a form that fails twice (drop · ≤2
-revisions · bf16 re-smoke). None is resolvable here — the numbers they govern are already observed,
-which is Tier 3. **Nothing generates before COV admission and the build seed draw, so waiting costs
-nothing** and every other branch continues.
+1. **Measure the COV resolution number** (§Surfaces power disclosure): encode the admitted surface
+   with **e5-small-v2** and **gte-small** (candidates in no M10 family), score nDCG@10 with
+   `m7src/evalkit.score`, family-weighted macro over the four families (slices averaged within
+   family first), paired stratified bootstrap over queries within component, **B = 200,000, seed 0,
+   `inverted_cdf`, one-sided 0.025/13**. `m9src/final_stats.bootstrap` is the registered
+   implementation but is **hardcoded to 6 datasets** — a family-macro variant is needed.
+   This decides whether the screen can resolve anything: §Surfaces expected 0.009–0.0135 against
+   MDE 0.0056, i.e. most B–G contrasts unresolved. LEDGER was admitted precisely to move it.
+2. **`finance` rung 3**: relax `min_score` 4→3 (then →2, stopping at the first pass), gated on the
+   **full 200 queries, uniform-random, judged against the frozen `RUBRIC`** by an independent Fable
+   subagent, ≥ 80%.
+3. **Wire `m10src/protected10.py`** so admitted COV queries+documents join the protected index, and
+   bump `seeds.SCREEN_VERSION`, **before any build seed draw** (§Data requires it; not yet done).
 
-**Serving facts a resuming session needs:** `work/m10gen/serve.sh` (port **8001**);
-`VLLM_WSL2_ENABLE_PIN_MEMORY=1` and `VLLM_USE_FLASHINFER_SAMPLER=0` are both required on this box;
-`--gpu-memory-utilization 0.88` (only 8.86 of 10 GiB is free); **never `--enforce-eager`** — it
-costs 1.69× and is the difference between failing and passing the 700 floor. vLLM lives in
-`.venv-gen`, the trainer in `.venv`. vLLM holds 8.7 GB, so it and a training arm cannot share the
-card — stop one before starting the other.
+## Hard-won facts a resuming session must not rediscover
 
-Mandate `instructions-m10.md` — §Amendment 2026-09-04, §Amendment 2026-09-04b and §Delegated
-authority are authoritative over any older sentence there · evidence `m10/PLANNING.md` (§11 measured
-rates, §12 the synthetic-data question; §5–§6 superseded) · lock `m10/LEDGER.md` §0a/§0b · runs
-`m10/RESULTS.md` · closed avenues `m10/EXPLORED.md` · surfaces `m10/COV_CANDIDATES.md` · code
-`m10/CODEMAP.md` · M9's record `m9/FINDINGS.md`.
-Owner report: https://claude.ai/code/artifact/fce61c94-5444-4c78-bb2e-46112cb7547a
-
-**Where things stand.** Budget validated 2026-09-04. The same day the plan was re-cut (A1–A8), given a
-feasibility review (B1–B6), then attacked by Codex, Opus and Codex again; every finding is actioned and
-the records are `research/m10-fable-plan-2026-09-04.md`, `research/m10-feasibility-review-2026-09-04.md`,
-`research/m10-codex-feasibility-2026-09-04.md`, `research/m10-opus-review-2026-09-04.md`,
-`research/m10-codex-soundness-2026-09-04.md`. **Read the mandate for rules, not those files.**
-Feasibility verdict: **C1a reachable if coverage works; C1b and C2a are the contest at ~91–92% uniform
-retention; C2b (~95%) is a low-prior stretch aim** (`results/m10_conjunct_arithmetic.json`). Measured
-trainer rate on the box: **683 examples/s blended** (718 query-bucket / 596 document-bucket), a hardware
-bound; M9's pipeline ran at ~10% of its roof, so the real-data re-measure (step 0b) gates every plan.
+- **Serving:** `work/m10gen/serve.sh`, **port 8001**. `VLLM_WSL2_ENABLE_PIN_MEMORY=1` and
+  `VLLM_USE_FLASHINFER_SAMPLER=0` are both **required** on this box (WSL kills pinning → vLLM fails
+  on UVA; flashinfer JITs kernels and CUDA 12.6's nvcc rejects gcc 15). `--gpu-memory-utilization
+  0.88` — only 8.86 of 10 GiB is free. **Never `--enforce-eager`**: it costs 1.69× and is the
+  difference between failing and passing the 700 tok/s floor. vLLM in `.venv-gen`, trainer in
+  `.venv`; vLLM holds 8.7 GB so it and a training arm cannot share the card.
+- **`load_dataset_builder(...).info.features` can be STALE.** It cost the LEDGER admission a wrong
+  refusal (8 columns listed, 13 actually present, `qrels` among the missing). Load the rows.
+- **Sub-8-word boilerplate fakes contamination.** BRIGHT's 6,123 "exact" hits and LEDGER's 710 are
+  near-empty pages; above the 8-word fingerprint floor both are ~0. Always re-screen length-filtered.
+- **`m10src/forms.RUBRIC` is the frozen gate standard; `forms.FORMS` is the revisable prompt.**
+  Never judge against the prompt — `argument` reads 8% that way and 88% against the rubric.
+- **`torch.compile` is training-only** (rules in `m10/HEADROOM.md` §T): eager `state_dict`, eager
+  export/eval/encode, parity test on a compiled-run checkpoint.
 
 ## Dylan — decisions (all ruled 2026-09-04 unless marked)
 
