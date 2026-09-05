@@ -171,6 +171,11 @@ def partition_seeds(seed_rows, gate_ids=(), holdout_n=HOLDOUT_PER_FORM, seed=0):
     held_ids, keep_ids = holdout_seed_ids([r[0] for r in pool], n=holdout_n, seed=seed)
     held = set(held_ids)
     build = [r for r in pool if r[0] not in held]
+    # NOTE: the held seeds are excluded from TRAINING here, which is the guarantee that matters.
+    # FORMS-12 is also an EVALUATION sample -- "12 x 500 held-out generated or harvested queries,
+    # overlap@10 between student and teacher" -- so 500 queries per form still have to be GENERATED
+    # from these held seeds by a separate call. `build_form` returns their ids in
+    # `report["holdout_seed_ids"]` for exactly that; producing the eval set is not done here.
     return build, [r for r in pool if r[0] in held], {
         "n_input": len(seed_rows), "gate_seeds_excluded": len(seed_rows) - len(pool),
         "forms12_holdout": len(held), "build_seeds": len(build),
