@@ -1231,6 +1231,10 @@ All twelve dispositions above executed; 147 → **171 tests**. The worker ran a 
 
 Residual, disclosed: the cross-role collision guard (finding 9) is a helper only `arm_smoke` calls until one launcher owns both streams; a non-finite loss is still appended to `losses` (pre-existing).
 
+### Codex THIRD pass on the loader, 2026-09-05 night — NO-GO, but 8 of 12 closed; the rest is enforcement placement + two real defects
+
+Verbatim in `research/m10-codex-loader-2026-09-05.md`; audit clean. **Closed with regression tests:** writer lock, global dedup, with-replacement draw, short-store refusal, atomic checkpoint (5–8, 10). **Real and new:** (i) the missing-form guard can never fire (`present` is built from the forms found, so an anchor missing 1 of 12 forms silently rebalances over 11); (ii) `rescreen10.main` overwrote the report — the 709-query section is gone from `results/m10_rescreen10.json` (masks intact; re-run is 1 min). **Enforcement, agreed:** the cut, the masks, the 12-form requirement and the cross-role guard were each correct but optional (a source list or a flag bypassed them); the fix is ONE mandatory `assemble_arm(name)` path for launchers — the reviewer's own recommendation, and the lead's view too. Also taken: hold-out cache keyed by digest; stop state saved on a zero-step resume; tokenizer config in the cache identity; held-out `doc` ids refused at load (light provenance; the document-level partition was already executed upstream). **Not taken:** an "immutable screened manifest" machinery for provenance (fortress; the partition + doc-id + text-hash checks cover it). Dispatched to a Sonnet worker (mechanical spec). `data_cut.unique_text_count` stays §0b — registered after generation, before any cut arm.
+
 ## §4 Dev-reuse log
 
 | date | surface | raw score reads | artifact |

@@ -157,3 +157,42 @@ The same 128-bit-equals-content policy also governs hold-out detection and suppo
 I did not execute the tests because importing this suite would read additional repository modules and data outside the hard allowlist.
 
 NO-GO.
+
+# THIRD PASS on the final state (b619a34), same day (verbatim; read-exclusion audit clean)
+
+The named files at checked-out `129f681` are identical to `b619a34`; this review is therefore valid for the requested commit. Static review only—the exclusions prevent safely running tests that import unnamed data paths.
+
+### Earlier findings
+
+| # | Status | Evidence / regression test |
+|---|---|---|
+| 1 | **OPEN** | Named arms refuse a missing cut, but `allow_uncut=True` bypasses it, and passing `ARM_SOURCES["A3"]` as a list avoids cut-arm classification entirely ([corpus_loader.py:711](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:711)). `test_a_smoke_may_train_uncut_only_by_saying_so_in_the_artifact` explicitly blesses the first bypass; no test covers the source-list bypass. Either stream can be passed to `train_arm`. |
+| 2 | **OPEN** | Default query/document builders require masks, but `build_doc_stream(..., allow_unscreened=True)` still returns training data, while an empty ban set silently calls the original pool ([corpus_loader.py:772](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:772), [corpus_loader.py:793](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:793)). Tests cover only the default refusal. |
+| 3 | **OPEN** | Missing/content-identical hold-out checks work, but provenance is discarded: `_rows_from_jsonl` returns only text/form, ignoring `seed_id`/`doc` ([corpus_loader.py:190](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:190)). A novel query with a held-out `seed_id` passes because only its query text is hashed. The copy test cannot catch this. |
+| 4 | **OPEN** | Histories and ordinary stopping checkpoints are fixed, but saving remains conditional on `run_steps` ([trainer10.py:150](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:150)). If the first attempted step after resume has a non-finite loss/gradient, the old checkpoint still says `stopped=None`; relaunch repeats it. The plateau test completes many steps and misses this. |
+| 5 | **CLOSED** | `append`, `refresh`, and truncation require the owning cache handle’s writer lock ([targets10.py:152](/home/dylan/asymetric-dual-encoders/m10src/targets10.py:152)). `test_append_outside_the_writer_lock_is_refused` and `test_only_one_writer_may_append_at_a_time` regress it. |
+| 6 | **CLOSED** | Global dedup precedes cutting and preserves `rowmap` ([corpus_loader.py:324](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:324)). `test_the_cut_counts_UNIQUE_texts_across_sources` covers duplicate removal and teacher-row preservation. |
+| 7 | **CLOSED** | `_form_draw` uses deterministic `choice(..., replace=True)` ([corpus_loader.py:550](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:550)). The small-form duplicate and varying-batch tests now catch the original fixed-cycle behavior. |
+| 8 | **CLOSED** | Short stores raise; excess truncation requires the writer lock ([targets10.py:121](/home/dylan/asymetric-dual-encoders/m10src/targets10.py:121)). The short-store and unlocked-refresh tests cover both halves. |
+| 9 | **OPEN — blocks** | Detection works, but neither `data10.batch_fn` nor `trainer10.train_arm` invokes it; only `arm_smoke` does ([data10.py:150](/home/dylan/asymetric-dual-encoders/m10src/data10.py:150), [arm_smoke.py:207](/home/dylan/asymetric-dual-encoders/m10src/arm_smoke.py:207)). The absence of a stream owner is precisely why the invariant is unenforced. The test exercises only the helper—and also blesses `skip=True`. |
+| 10 | **CLOSED** | Same-directory temporary write, fsync, and `os.replace` preserve the prior checkpoint ([trainer10.py:36](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:36)). `test_a_crash_during_save_leaves_the_previous_checkpoint_intact` would fail on direct overwrite. |
+| 11 | **OPEN** | Fast-tokenizer backend state is hashed, but the fallback hashes only vocabulary plus a few attributes ([corpus_loader.py:460](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:460)). Same class/repo/revision/vocabulary with different slow-tokenizer normalization or truncation side produces different IDs under one cache identity. The test changes vocabulary, not configuration. |
+| 12 | **OPEN, accepted/non-blocking** | Hash equality remains text equality, as documented. No secondary comparison exists. |
+
+### New findings
+
+| Rank | Severity | Finding |
+|---|---|---|
+| 1 | **BLOCKER** | The missing-form guard is impossible to fire. `present` is constructed from `np.unique(forms)`, then `empty` checks only members of `present` ([corpus_loader.py:584](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:584)). An anchor corpus missing 1 of 12 forms silently becomes an 11-form-balanced run. `test_balanced_shares_are_equal_across_the_forms_present` blesses exactly that weaker property. |
+| 2 | **BLOCKER** | The claimed 709 query removals are absent from [m10_rescreen10.json](/home/dylan/asymetric-dual-encoders/results/m10_rescreen10.json:30); it contains only the 79,630 document removals. `rescreen10.main` starts with `out={}` and rewrites the artifact, so the later `--documents` run erased the query report ([rescreen10.py:193](/home/dylan/asymetric-dual-encoders/m10src/rescreen10.py:193)). The literal `709` in a token-cache test validates nothing about the artifact. |
+| 3 | **HIGH** | The hold-out cache is not content-keyed: it uses size plus integer-second mtime ([corpus_loader.py:68](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:68)). A same-length rewrite within one second retains stale hashes and can admit the new hold-out text. The test forces mtime forward by ten seconds, so it misses this. |
+
+### Verdict: NO-GO
+
+Minimum fixes to flip it:
+
+1. Add one mandatory screen-arm assembly path that owns both streams: named arms only, no `allow_uncut`/`allow_unscreened`/source-list bypasses; require the registered cut, complete query/document masks, all 12 forms for the balanced anchor, and run the cross-role guard before returning `batch_fn`.
+2. Preserve and validate hold-out provenance (`seed_id`/document identity) against an immutable screened manifest; content hashes remain defense in depth. Key any cache by the file digest.
+3. Make the re-screen report retain both query and document sections and validate mask/report identity, completeness, and measured counts before a screen arm starts.
+4. Save stop state even when zero new steps completed, and include tokenizer behavior/configuration in token-cache identity.
+5. Register `data_cut.unique_text_count` before launching a cut arm.
