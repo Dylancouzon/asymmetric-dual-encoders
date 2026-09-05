@@ -412,3 +412,34 @@ def test_harvest_holdout_is_deterministic(tmp_path):
     a = C.harvest_holdout(p, per_form=50, seed=0, verbose=False)[2]["held_documents"]
     b = C.harvest_holdout(p, per_form=50, seed=0, verbose=False)[2]["held_documents"]
     assert a == b == 50
+
+
+def test_prop_near_dup_rate_sees_a_one_slot_template_the_registered_gate_cannot():
+    """The whole point of the W10 diagnostic: an 8-gram rule cannot catch a one-slot template at
+    <= 15 words, because every window covers the changed word."""
+    qs = [f"what should i do if my {w} keeps making a loud noise at night"
+          for w in ("boiler fridge heater kettle furnace washer dryer oven mower pump "
+                    "blender toaster grinder scanner printer").split()]
+    assert all(len(q.split()) <= 15 for q in qs)
+    _r, _d, a8 = C.near_dup_gate(qs)
+    assert a8["near_dup_rate_raw"] == 0.0, "the registered gate is blind here -- that is W10"
+    rate, n = C.prop_near_dup_rate(qs)
+    assert rate > 0.5, f"the 4-gram diagnostic must see it; got {rate:.2%}"
+
+
+def test_opener_concentration_flags_frame_repetition():
+    same = [f"what should i do about problem number {i} in my house" for i in range(50)]
+    varied = [f"topic {i} question {i} phrased {i} differently {i} each {i} time" for i in range(50)]
+    s_share, s_d2 = C.opener_concentration(same)
+    v_share, v_d2 = C.opener_concentration(varied)
+    assert s_share == 1.0, "one repeated opening 4-gram covers every query"
+    assert v_share < s_share and v_d2 > s_d2
+
+
+def test_diversity_report_curve_is_a_floor_and_flags_rising():
+    qs = [f"what should i do if my device number {i} keeps failing" for i in range(600)]
+    rep = C.diversity_report(qs, form="howto", ns=(200, 500))
+    assert set(rep["curve"]) == {"200", "500"}
+    assert set(rep["curve"]["200"]) == {"frac_40", "frac_50", "frac_60"}
+    assert rep["curve"]["500"]["frac_50"] >= rep["curve"]["200"]["frac_50"], "monotone in n"
+    assert rep["curve"]["200"]["frac_40"] >= rep["curve"]["200"]["frac_60"], "looser frac catches more"

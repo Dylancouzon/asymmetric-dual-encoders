@@ -20,7 +20,8 @@
  ],
  "shapes_run": [
   "ANCHOR",
-  "F-MiniLM-L6"
+  "F-MiniLM-L6",
+  "F-MiniLM-L12"
  ],
  "arms": [
   {
@@ -100,6 +101,42 @@
    },
    "passed": true,
    "seconds": 33.9
+  },
+  {
+   "arm": "F-MiniLM-L12",
+   "spec": {
+    "student": "MiniLM-L12",
+    "n_layers": 3,
+    "head": "linear",
+    "pattern": "75/25",
+    "batch": 32,
+    "loss": "squared_l2"
+   },
+   "covers": [],
+   "device": "cpu",
+   "constructed": true,
+   "d_in": 1152,
+   "params": 34540672,
+   "under_cap": true,
+   "warm_start_registered": "linear",
+   "warm_start_record": {
+    "n_fit": 256,
+    "lambda": 1.0,
+    "train_objective": 0.09956,
+    "d_in": 1152
+   },
+   "warm_start_implemented": true,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 2880,
+   "examples_per_s": 69.2,
+   "mix": {
+    "Q": 68,
+    "D": 22,
+    "q_share": 0.7555555555555555
+   },
+   "passed": true,
+   "seconds": 52.7
   }
  ],
  "failed": [],

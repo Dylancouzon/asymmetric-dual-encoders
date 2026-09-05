@@ -367,3 +367,85 @@ def harvest_holdout(path, per_form=HOLDOUT_PER_FORM, seed=0, out_dir=None, verbo
     if verbose:
         print(json.dumps(rep, indent=1), flush=True)
     return train, forms12, rep
+
+
+# ---- the diversity pilot's measurement (W10) -------------------------------------------------
+#
+# A8's registered gate is inert below 39 words (`m10/LEDGER.md` W10), so before the 10-box-hour
+# generation run a pilot measures BOTH the registered gate and the sensitive alternatives on real
+# output. None of this is a registered instrument: it exists so W10 is decided on numbers, and so
+# a form whose rate is heading past 25% is caught at the prompt rather than by the blunt cut.
+
+def _kgrams_k(words, k):
+    if len(words) <= k:
+        return {tuple(words)}
+    return {tuple(words[i:i + k]) for i in range(len(words) - k + 1)}
+
+
+def prop_near_dup_rate(texts, k=4, frac=0.5):
+    """Near-dup if >= `frac` of the SMALLER query's k-gram set is shared with an earlier query.
+
+    Degrades gracefully on short strings, which is exactly what the registered 16/32 absolute
+    count cannot do: below 8 words a sketch is ONE whole-text hash, and no 8-gram rule can see a
+    one-slot template at <= 15 words, since every window covers the changed word.
+    """
+    index, grams, n = {}, [], 0
+    for t in texts:
+        g = _kgrams_k(decontam.norm_words(t), k)
+        counts = {}
+        for x in g:
+            for j in index.get(x, ()):
+                counts[j] = counts.get(j, 0) + 1
+        if any(c >= frac * min(len(g), len(grams[j])) for j, c in counts.items()):
+            n += 1
+            grams.append(g)
+            continue
+        grams.append(g)
+        for x in g:
+            index.setdefault(x, []).append(len(grams) - 1)
+    return n / max(len(texts), 1), n
+
+
+def opener_concentration(texts, k=4, top=10):
+    """-> (share of queries in the `top` most common leading k-grams, distinct-2 ratio).
+
+    Frame repetition -- "what should I do if my ..." over and over -- is what a one-slot template
+    looks like, and it is invisible to an 8-gram rule. Distinct-2 is the classic diversity ratio:
+    unique bigrams / total bigrams.
+    """
+    lead, bigrams, n_bi = {}, set(), 0
+    for t in texts:
+        w = decontam.norm_words(t)
+        key = tuple(w[:k])
+        lead[key] = lead.get(key, 0) + 1
+        for i in range(len(w) - 1):
+            bigrams.add((w[i], w[i + 1]))
+            n_bi += 1
+    top_share = sum(sorted(lead.values(), reverse=True)[:top]) / max(len(texts), 1)
+    return top_share, (len(bigrams) / max(n_bi, 1))
+
+
+def diversity_report(queries, form=None, ns=(200, 500, 1000, 2000)):
+    """Everything W10 needs about one form's output, at several sample sizes.
+
+    The rate is monotone non-decreasing in n, so a single number is a floor: the CURVE is the
+    quantity. Three `frac` values are reported so no form is judged on a knife-edge constant.
+    """
+    _r, _d, a8 = near_dup_gate(queries)
+    top_share, distinct2 = opener_concentration(queries)
+    rep = {"form": form, "n": len(queries),
+           "a8_registered_rate": a8["near_dup_rate_raw"],
+           "a8_can_fire_below_39_words": False,
+           "top10_opening_4gram_share": round(top_share, 4),
+           "distinct_2": round(distinct2, 4),
+           "curve": {}}
+    for k in ns:
+        if k > len(queries):
+            continue
+        rep["curve"][str(k)] = {f"frac_{int(f * 100)}": round(prop_near_dup_rate(queries[:k], frac=f)[0], 4)
+                                for f in (0.4, 0.5, 0.6)}
+    vals = [v["frac_50"] for v in rep["curve"].values()]
+    rep["still_rising"] = bool(len(vals) > 1 and vals[-1] > vals[0] + 0.01)
+    rep["_note"] = ("unregistered diagnostics; the registered gate is the a8_ row. The rate is "
+                    "monotone in n, so every value here is a FLOOR for the build's 143,000.")
+    return rep
