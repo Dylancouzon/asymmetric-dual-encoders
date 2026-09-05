@@ -1,0 +1,21 @@
+{
+ "macro": 0.5567298791777284,
+ "by_family": {
+  "BRIGHT": 0.2191254493159646,
+  "consumer-health": 0.7507124851995739,
+  "finance": 0.37262510802250676,
+  "legal": 0.8844564741728684
+ },
+ "by_unit": {
+  "MedicalQARetrieval": 0.7507124851995739,
+  "LegalBenchCorporateLobbying": 0.9465223975635517,
+  "LegalBenchConsumerContractsQA": 0.8223905507821851,
+  "BRIGHT/biology": 0.22200470443107376,
+  "BRIGHT/earth_science": 0.317888349425091,
+  "BRIGHT/economics": 0.19827713122875787,
+  "BRIGHT/psychology": 0.2519289101658699,
+  "BRIGHT/robotics": 0.13609184751148823,
+  "BRIGHT/sustainable_living": 0.18856175313350687,
+  "LEDGER": 0.37262510802250676
+ }
+}

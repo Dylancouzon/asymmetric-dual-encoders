@@ -335,6 +335,8 @@ came from. This is a **data-recipe** gate, which `CLAUDE.md` puts explicitly on 
 |---|---|---|---|
 | 2026-09-01 | cqadup-programmers, cqadup-physics (Mac diagnostics) | 43 + 43 | `results/m10_rank_probe_mac.json`, `results/m10_head_width_probe_mac.json` |
 | 2026-09-04 | frozen comparator rows of `results/perquery.json` (bge-small, leaf-ir-asym, lr-dense-pertask, opensearch, bm25) on all-6 and clean-4 | comparator-only, no nano existed | amendment A3's clean-4 bars 0.5046 / 0.5233; not a dev-surface read |
+| 2026-09-05 | **COV read #3 — the teacher ceiling.** stella scoring its own documents on the admitted surface | no candidate, no selection; the denominator retention is read against | `results/m10_cov_teacher_ceiling.json` |
+| 2026-09-05 | **COV read #2 — the M10.0-e calibration arms** (P0/P1/P2) | not registered arms, no contrast verdict; COV only, no DEV-6 / FORMS-12 / CUREv1 | `work/m10calib/P*_cov.json` |
 | 2026-09-05 | **COV read #1 — the resolution number** (§Surfaces). Two non-candidate probes on the admitted surface, 13,416 queries x 2 | direction discarded by construction; no candidate, no selection | `results/m10_cov_resolution.json` |
 
 ## §5 Amendments and withdrawn claims (never compressed away)
