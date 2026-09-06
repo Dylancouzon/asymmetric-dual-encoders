@@ -15,7 +15,7 @@ work, Codex is the adversarial reviewer.
 | **0a/0b/1/2/3** | vLLM + generator smoke; all seven generated forms approved; four COV families admitted (13,416 queries); §0a design lock |
 | **4 harvest** | **A3 corpus = 1,250,000 rows** from 21,087,043 harvested (wiki 16.06M · arXiv 4.98M · pool 46.6K). title/keyword/claim at 417K/417K/416K, no form short. FORMS-12 hold-out applied by DOCUMENT across all forms: **1,500 docs held → 1,614 eval rows, 1,248,386 train rows** (`work/m10harvest/harvest_{train,forms12}.jsonl`) |
 | **5 PAQ** | **A2 4,037,000** (`8f32bcdf…`) + **build 1,000,000** nested inside it, from `dl.fbaipublicfiles.com`, CC BY-SA 3.0 shipped in the tarball. Protected screen removed only 0.35% |
-| **6 trainer** | `nano10` · `data10` · `trainer10` · `qfilter` · `corpus10` · `arm_smoke` · `screen_lock` · **`corpus_loader` · `targets10` (built 2026-09-05 evening, Codex review pending)**. **171 tests green.** M9 pools re-screened against the M10 protected index (709 queries / 79,630 docs removed). Arm-shape smoke **12/12 on CUDA at max_len 512** |
+| **6 trainer** | `nano10` · `data10` · `trainer10` · `qfilter` · `corpus10` · `arm_smoke` · `screen_lock` · **`corpus_loader` · `targets10` (built 2026-09-05 evening, Codex review pending)**. **190 tests green.** `assemble_arm` is the only launcher path. M9 pools re-screened against the M10 protected index (709 queries / 79,630 docs removed). Arm-shape smoke **12/12 on CUDA at max_len 512** |
 | **M10.0-e** | **COMPLETE.** P0 0.477528 · P1 0.476141 · P2 0.473892. **Same-init distance 0.00288**, seed effect 0.00139 (n=1). `results/m10_calib_report.json` |
 | **seeds** | resolved for **all seven** generated forms; health/finance 33,000 each from `wikipedia-body`, howto 37,927, the other four route `"general"` |
 
@@ -31,9 +31,8 @@ work, Codex is the adversarial reviewer.
 ## NEXT, in order
 
 1. **The M10 corpus→trainer path — BUILT 2026-09-05 evening** (`corpus_loader`, `targets10`,
-   LEDGER §3 for the eight readings). Codex first pass NO-GO → 12 fixes landed → third pass in flight. Owed: that GO; the encode to finish
-   (`work/m10_targets_encode.log`, resume = same command); the CUDA anchor smoke over all
-   sources and the 12-shape smoke re-run (marker fix).
+   LEDGER §3 for the eight readings). Encode COMPLETE (5.24M texts). A1 smoke PASS on CUDA through `assemble_arm`. Codex passes
+   1–3 NO-GO → all items closed → fourth pass in flight; **no arm trains before its GO.**
 2. **A8 gate 2** — MS MARCO dev distribution overlap (mandate :467-475, "before any arm"). ~1 h.
    It is the one outside measurement of M9's failure mode the plan has.
 3. **CUREv1 admission** (decision 12, adopted 2026-09-04, **never executed**). The harvest, PAQ and
