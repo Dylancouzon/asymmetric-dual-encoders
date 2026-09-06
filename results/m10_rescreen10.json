@@ -56,5 +56,33 @@
   },
   "complete": true,
   "seconds": 2010.7
+ },
+ "m9-queries_pair": {
+  "n": 242786,
+  "kept": 242355,
+  "removed": 431,
+  "by_hit": {
+   "exact": 174,
+   "near": 257
+  },
+  "seconds": 27.3
+ },
+ "m9-nqopen": {
+  "n": 85863,
+  "kept": 85797,
+  "removed": 66,
+  "by_hit": {
+   "near": 66
+  },
+  "seconds": 10.3
+ },
+ "m9-triviaqa": {
+  "n": 134665,
+  "kept": 134453,
+  "removed": 212,
+  "by_hit": {
+   "near": 212
+  },
+  "seconds": 18.8
  }
 }

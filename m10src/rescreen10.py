@@ -190,6 +190,67 @@ def doc_screen_ident():
     return {"protected10": _h(protected_ident()), "mask": p.name, "built": p.exists()}
 
 
+REPORT_PATH = REPO / "results" / "m10_rescreen10.json"
+# the segment names `corpus_loader._m9_segments` produces, in the order the query pass reports them
+QUERY_SEGMENTS = ("m9-queries_pair", "m9-nqopen", "m9-triviaqa")
+
+
+def merge_report(path, sections):
+    """Load the existing report at `path` (or {} if it does not exist yet) and update it BY
+    SECTION, then write it back. Re-running one pass alone (`--queries` XOR `--documents`) used to
+    start from `out = {}` and overwrite the other pass's section entirely -- `main()` ran once for
+    each and the second write erased the first (Codex 2026-09-05 finding: the 709-query section
+    was gone from the shipped report). Returns the merged dict.
+    """
+    p = Path(path)
+    out = json.loads(p.read_text()) if p.exists() else {}
+    out.update(sections)
+    p.write_text(json.dumps(out, indent=1, default=str))
+    return out
+
+
+def load_report(path=None):
+    p = Path(path) if path else REPORT_PATH
+    if not p.exists():
+        raise SystemExit(f"{p}: no M10 re-screen report -- run "
+                         f"rescreen10.py --queries --documents")
+    return json.loads(p.read_text())
+
+
+def validate(report, masks):
+    """-> None, or SystemExit. Called by `corpus_loader.assemble_arm` before a training stream is
+    handed to a launcher, so an incomplete or stale report (the merge bug above, or a re-screen
+    run against a different protected10 identity) is caught here rather than trusted silently.
+
+    `masks` is {segment name: the keep mask actually used, "documents": the banned-row array
+    actually used, "protected10": the LIVE protected10 identity} -- both query and document
+    sections must be present in `report`, each mask's length (or, for documents, its ban-row
+    count) must match what the report recorded, and the report's own `protected10` identity must
+    match the live one.
+    """
+    missing = [s for s in QUERY_SEGMENTS if s not in report]
+    if "documents" not in report:
+        missing.append("documents")
+    if missing:
+        raise SystemExit(f"the M10 re-screen report is missing sections: {missing} -- re-run "
+                         f"rescreen10.py --queries --documents")
+    live = masks.get("protected10")
+    if live is not None and _h(report.get("protected10")) != _h(live):
+        raise SystemExit("the M10 re-screen report's protected10 identity does not match the "
+                         "live one -- re-run rescreen10.py --queries --documents")
+    for seg in QUERY_SEGMENTS:
+        n = report[seg]["n"]
+        m = masks.get(seg)
+        if m is None or len(m) != n:
+            raise SystemExit(f"{seg}: mask length {0 if m is None else len(m)} != the report's "
+                             f"pool size {n}")
+    dm = masks.get("documents")
+    n_dropped = report["documents"].get("n_dropped")
+    if dm is not None and n_dropped is not None and len(dm) != n_dropped:
+        raise SystemExit(f"documents: mask length {len(dm)} != the report's n_dropped "
+                         f"{n_dropped}")
+
+
 def main():
     import argparse
     ap = argparse.ArgumentParser()
@@ -202,22 +263,23 @@ def main():
     # Same order `harvest.draw` relies on; the training paths never build the index at all
     # (`compute=False` reads the cached mask).
     index(verbose=True)
-    out = {}
+    sections = {}
     if a.queries:
         import corpus_loader as CL
         for seg in CL._m9_segments(screen=False):
             _keep, rep = query_keep_mask(seg.texts, seg.name)
-            out[seg.name] = {k: rep[k] for k in ("n", "kept", "removed", "by_hit", "seconds")}
-            print(json.dumps({seg.name: out[seg.name]}, indent=1), flush=True)
+            sections[seg.name] = {k: rep[k] for k in ("n", "kept", "removed", "by_hit", "seconds")}
+            print(json.dumps({seg.name: sections[seg.name]}, indent=1), flush=True)
     if a.documents:
         _rows, rep = doc_banned_rows(compute=True, limit_stores=a.stores)
-        out["documents"] = {k: rep[k] for k in ("n_dropped", "per_store", "complete", "seconds")}
-        print(json.dumps(out["documents"], indent=1), flush=True)
+        sections["documents"] = {k: rep[k] for k in
+                                 ("n_dropped", "per_store", "complete", "seconds")}
+        print(json.dumps(sections["documents"], indent=1), flush=True)
     if a.queries or a.documents:
-        (REPO / "results" / "m10_rescreen10.json").write_text(json.dumps(
-            {"_what": "the M9 pools re-screened against the M10 protected index "
-                      "(instructions-m10.md:462)",
-             "protected10": protected_ident(), **out}, indent=1, default=str))
+        sections["_what"] = ("the M9 pools re-screened against the M10 protected index "
+                             "(instructions-m10.md:462)")
+        sections["protected10"] = protected_ident()
+        merge_report(REPORT_PATH, sections)
 
 
 if __name__ == "__main__":
