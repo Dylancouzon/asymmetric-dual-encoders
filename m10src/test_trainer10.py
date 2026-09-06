@@ -150,6 +150,26 @@ def test_a_stopped_arm_checkpoints_the_stop_and_the_evaluation_that_caused_it():
                                                                                   0.6005]
 
 
+def test_a_resume_that_fails_on_its_very_first_step_still_checkpoints_the_stop():
+    """`if stopped and ckpt_path and run_steps:` used to skip the save whenever `run_steps == 0` --
+    exactly the resumed-and-immediately-non-finite case, since the break happens before the step
+    counter increments. A build that crashes there would lose WHY it stopped."""
+    with tempfile.TemporaryDirectory() as d:
+        ck = Path(d) / "ck.pt"
+        T.train_arm(Toy(), make_batch_fn(), total_steps=10, seed=0, ckpt_path=ck, ckpt_every=10)
+
+        def bad(step, kind):
+            ids, mask, tgt = make_batch_fn()(step, kind)
+            return ids, mask, tgt * float("inf")
+
+        r = T.train_arm(Toy(), bad, total_steps=20, seed=0, resume_from=ck, ckpt_path=ck,
+                        ckpt_every=1000)
+        assert r["steps_run"] == 0
+        assert r["stopped"] and "non-finite" in r["stopped"]
+        ex = torch.load(ck, map_location="cpu", weights_only=False)["extra"]
+        assert ex["stopped"] == r["stopped"], "the checkpoint must record the stop even at 0 steps"
+
+
 def test_a_non_finite_loss_stops_the_arm_rather_than_training_on():
     def bad(step, kind):
         ids, mask, tgt = make_batch_fn()(step, kind)

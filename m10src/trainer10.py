@@ -147,10 +147,12 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
             print(f"  step {step + 1}/{total_steps} loss {np.mean(losses[-log_every:]):.4f} "
                   f"lr {lr:.2e} {run_examples / max(el, 1e-9):.0f} ex/s", flush=True)
 
-    if stopped and ckpt_path and run_steps:
+    if stopped and ckpt_path:
         # the STOPPING evaluation is part of the arm's record: every `stopped` path breaks before
         # the interval save, so without this the last checkpoint knows nothing about the kill or
-        # the plateau that ended the run (Codex re-review 2026-09-05).
+        # the plateau that ended the run (Codex re-review 2026-09-05). This must fire even when
+        # `run_steps == 0` -- a RESUMED arm whose very first step is non-finite stops before
+        # taking one, and the checkpoint must still record why (Codex 2026-09-05, third pass).
         save(ckpt_path, model, opt, start + run_steps,
              extra={"losses": losses, "evals": evals, "eval_kinds": kinds,
                     "cycle_end_evals": cycle_end_evals, "examples": n_examples,
