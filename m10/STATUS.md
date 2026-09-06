@@ -39,9 +39,10 @@ work, Codex is the adversarial reviewer.
    seed draws were screened against an index that lacks it — re-screen or disclose before reading.
 4. **M10.0-c baseline — DONE** (`results/m10_m9_baseline_dev6.json`): DEV-6 macro 0.5568, 82.8% of
    the teacher; NQ 93.8% vs CQADupStack 50.1 / 71.0% — M9's signature, reproduced.
-5. **15-minute diversity pilot**, then **generation** (~10 box-h). `health` reads **26.50%** on the
-   amended A8 gate, **above the 25% cut**, and rising with n — its prompt needs fixing first, via
-   decision 15's machinery (it has used 1 of 2 revisions).
+5. **Pilot DONE (all six clear); generation RUNNING** (~15 h, argument last). `health`: r2 failed the
+   on-form gate (70%); r1 restored and queued LAST behind a veto window (issue #3); A8 cuts it at
+   step 8. **Then:** `assemble10.py --all` → `targets10.py --sources generated` → `--data-cut` →
+   register §0b → `--gate2` (LEDGER §3 "Step 8 assembly BUILT").
 6. **Register the paired row** (whole-protocol recipe delta, teacher-normalised; both six-set
    transactions must emit aligned per-query scores and qids) — before M9's close-out runs.
 7. **Disclose the own-source 5-gram screen** as not run on the harvest corpus (W11 second half;

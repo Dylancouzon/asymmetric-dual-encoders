@@ -1312,6 +1312,16 @@ All pass-six items closed with regressions; *"None that can change a training nu
 
 Independent judge (Fable, frozen rubric only, `results/m10_health_r2_judge_verdicts.json`): **35/50 = 0.70 < 0.80.** Clause d (under 8 words) 9 — all the template "What does <drug/procedure> treat/involve?"; clause b (deictic, no topic: "this symptom") 5; clause c 1. 40 of 50 open with "What does" (not scored). **Both revisions are spent, so r2 is ineligible; there is no third.** `forms.FORMS["health"]` restored to r1 byte-for-byte (approval hash `8c30d65e710c9a06` recomputed = the hash Dylan approved on issue #1; RUBRIC untouched). **Lead's reading (Tier 2, inside registered machinery):** r1 is the approved prompt and stays approved; its A8 near-dup rate (0.318 at n=2,000, rising) is handled by the REGISTERED A8 action at step 8 — cut to representatives, dropped only if < 50,000 remain — so health generates at r1 and the gate does its job on the manifest. Reverting to r1 is not a selection: r2 is out by the gate, r1 is the only eligible prompt. Cost if health is later dropped: ≈1.5 GPU-hours at the tail. Health is queued AFTER the six (≥ 6 h away, so the veto window on issue #3 elapses first); Dylan may veto there or by Remote Control.
 
+### Step 8 assembly BUILT (Opus worker, 9d8e9fd + 3101a74; 226 tests) — the commands that turn the generated files into the registered corpus and the §0b count
+
+`m10src/assemble10.py`: per form (a) rubric range · (b) exact dedup per form · **(c) FORMS-12 hold-out BY DOCUMENT** · (d) protected index + document streams · (e) own-seed copied span (driver-applied) · (f) A8 gate 1 amended (cut > 25% to representatives; < 50,000 → dropped) · (g) quota cut, seed 0 → `work/m10gen/generated_queries.jsonl` + `results/m10_assemble10.json`. `--data-cut` computes A2/A3/A4 post-screen unique counts through the loader → `results/m10_data_cut.json`, registers nothing. `--gate2` runs A8 gate 2 on the generated forms (a real fix: `a8_gate2.load_form_samples` had no generated branch).
+
+**Finance smoke, 20,000 rows:** hold-out by document removed **262 (1.31%)** — a real removal, which is why the reading matters; protected index 5; six's documents 0; A8 **0.0932** at 20K (0.0355 at 2K — monotone in n as the gate is designed; all 1,840 near-dups caught only by W10's short rule); no cut.
+
+**Readings taken (lead adopts):** the generated half is screened against the SAME document streams as the harvest (six + DEV + COV components; `--streams harvest`, the default) so A4's two halves are screened identically — the literal "six's documents" removal is reported separately (`dropped_by_the_six_documents_alone`). Exact dedup per form (A8's denominator), cross-form duplicates reported and removed later by the loader. Mean pairwise stella cosine left `todo` (no threshold).
+
+**Run order when the six (and health, if not vetoed) are in:** `assemble10.py --all` → `targets10.py --sources generated` (≈1M encodes, GPU, after vLLM stops) → `assemble10.py --data-cut` → the lead registers `data_cut.unique_text_count` in §0b → `assemble10.py --gate2` → §0b complete → **family F starts on the box.**
+
 ## §4 Dev-reuse log
 
 | date | surface | raw score reads | artifact |
