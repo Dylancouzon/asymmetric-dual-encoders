@@ -1,0 +1,51 @@
+{
+ "when": "2026-09-05T20:44:59-0400",
+ "base": "http://127.0.0.1:8001/v1",
+ "served": [
+  "Qwen/Qwen3-8B-AWQ"
+ ],
+ "model": "Qwen/Qwen3-8B-AWQ",
+ "revision": "4da05a8edb55c6046cce958586c33b61da07bb79",
+ "prompts": 64,
+ "shape": "8 seeds x 8 forms (7 generated + factoid), n=5, all in flight",
+ "runs": [
+  {
+   "run": 0,
+   "wall_s": 19.5,
+   "contract_ok": 64,
+   "contract_rate": 1.0,
+   "out_tok": 14004,
+   "aggregate_out_tok_per_s": 718.1,
+   "finish_reasons": {
+    "stop": 64
+   }
+  },
+  {
+   "run": 1,
+   "wall_s": 14.4,
+   "contract_ok": 64,
+   "contract_rate": 1.0,
+   "out_tok": 13778,
+   "aggregate_out_tok_per_s": 954.7,
+   "finish_reasons": {
+    "stop": 64
+   }
+  },
+  {
+   "run": 2,
+   "wall_s": 14.5,
+   "contract_ok": 64,
+   "contract_rate": 1.0,
+   "out_tok": 13794,
+   "aggregate_out_tok_per_s": 953.5,
+   "finish_reasons": {
+    "stop": 64
+   }
+  }
+ ],
+ "contract_rate": 1.0,
+ "aggregate_out_tok_per_s": 718.1,
+ "PASS_contract": true,
+ "PASS_throughput": true,
+ "_gate": ">= 90% contract and >= 700 aggregate output tok/s (results/m10_gen_health_box.json)"
+}

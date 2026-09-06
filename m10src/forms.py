@@ -56,13 +56,30 @@ FORMS = {
     # Revision 1 (2026-09-04, smoke): 17 of 50 came in under the 8-word floor (bare "What is X
     # used for?" forms) and 2 were not patient-facing. Length floor and the patient framing are
     # restated; the topic set is unchanged.
+    # Revision 2 (2026-09-05, the diversity pilot — the LAST of the two registered revisions):
+    # r1 reads 22.5% / 28.4% / 30.6% on the amended A8 gate at n = 200 / 500 / 1,000 and is still
+    # rising, against a 25% cut. The mechanism is OPENER collapse, not topic collapse: the ten
+    # commonest leading 4-grams cover 36.9% of output, "what should i do" alone opens 16.2%, and
+    # 55% of questions begin with "what". r1 named the topic set as a flat list and asked for
+    # "the detail a real patient would give", and the model converged on two frames. r2 attacks
+    # that mechanism only: one intent per position in the list, and no two questions in a batch
+    # may share their opening three words. Wording only — no topic word comes from any judged
+    # passage (T2-2), the topic set is r1's, and the 8-30 range is the frozen rubric's.
     "health": ("{n} consumer-health questions a patient or caregiver would ask about the "
-               "passage's topic — symptoms, treatments, risks, side effects, what a term means, "
-               "what to do next — in plain non-clinical language, each phrased from the "
-               "patient's or carer's point of view. **Each question must be at least 8 words "
-               "and at most 30 words** — a hard requirement: \"What is X used for?\" is too "
-               "short, so add the detail a real patient would give. Never ask about a person's "
-               "biography or about laboratory animals; the question must be about human health."),
+               "passage's topic, in plain non-clinical language, each phrased from the "
+               "patient's or carer's point of view. **Give each question a DIFFERENT intent, "
+               "in this order:** 1) what a symptom or sign means; 2) what causes it or how it "
+               "happens; 3) a treatment, procedure or medicine and how it is used; 4) a risk, "
+               "danger or side effect; 5) what to expect over time, or when to see a doctor. "
+               "If more than five are asked for, keep cycling through the five intents. "
+               "**No two questions in the list may begin with the same first three words.** "
+               "Vary the sentence shape as well: open some with \"My\", \"Is\", \"Does\", "
+               "\"How long\", \"Why\" or with the thing itself, not always with \"What\" "
+               "or \"Are there\", and use \"What should I do\" at most once. **Each "
+               "question must be at least 8 words and at most 30 words** — a hard requirement: "
+               "\"What is X used for?\" is too short, so add the detail a real patient would "
+               "give. Never ask about a person's biography or about laboratory animals; the "
+               "question must be about human health."),
     "product": ("{n} product-search queries a shopper would type to find an item related to the "
                 "passage's topic: brand-agnostic, with attributes such as size, material, use or "
                 "price range. 3 to 12 words."),
