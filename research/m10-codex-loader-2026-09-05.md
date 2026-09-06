@@ -234,3 +234,32 @@ Minimal fix set:
 - Register `data_cut.unique_text_count` and require the final cut-arm row count to equal it.
 
 Static review only; executing the tests would import/read files outside the mandatory allowlist.
+
+# FIFTH PASS (f5ceaee), same day (verbatim; read-exclusion audit clean)
+
+| Pass-four OPEN | Status | Evidence / concrete failure |
+|---|---|---|
+| 3 — provenance | **OPEN** | Missing fields now raise via `require_id` ([corpus_loader.py:136](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:136), [corpus_loader.py:212](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:212)); regression: [test_corpus_loader.py:798](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:798). But `{"doc":""}` or `{"seed_id":" "}` passes and cannot match the held-document set at line 426. A novel query derived from a held document can therefore train. |
+| New 1 — missing forms / balanced | **CLOSED** | Alias resolution precedes checks; `balanced=True` is fixed and ANCHOR requires all forms ([corpus_loader.py:984](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:984), [corpus_loader.py:1077](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1077), [corpus_loader.py:1080](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1080)). Regressions: [test_corpus_loader.py:698](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:698), [test_corpus_loader.py:751](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:751). A2’s balancing objection is **closed by ruling**. |
+| New 1 — mask validation | **OPEN** | Digest/count/range/completeness checks are real ([rescreen10.py:254](/home/dylan/asymetric-dual-encoders/m10src/rescreen10.py:254), [rescreen10.py:258](/home/dylan/asymetric-dual-encoders/m10src/rescreen10.py:258), [rescreen10.py:277](/home/dylan/asymetric-dual-encoders/m10src/rescreen10.py:277)); regressions: [test_rescreen10.py:80](/home/dylan/asymetric-dual-encoders/m10src/test_rescreen10.py:80), [test_rescreen10.py:97](/home/dylan/asymetric-dual-encoders/m10src/test_rescreen10.py:97), [test_rescreen10.py:118](/home/dylan/asymetric-dual-encoders/m10src/test_rescreen10.py:118). But they are not the exact consumed arrays: streams consume masks at lines 1080/1084, then assembly reloads them at lines 1091–1095. Wrong mask first, correct mask second → validation passes while protected rows remain in the stream. |
+| New 2 — registry contract | **OPEN** | Alias/trained/cut/pattern handling is fixed. However corpus and cut lookup do not receive `assemble_arm`’s registry: `arm_sources` uses hard-coded `ARM_SOURCES`/the on-disk registry ([corpus_loader.py:801](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:801)), and `build_query_stream` is called without `reg` ([corpus_loader.py:1080](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1080)). A supplied registry with a registered cut or changed `A1.data` is ignored downstream. |
+| New 4 — `n_docs` bypass | **CLOSED** | Override removed; count derives from registry dose and resolved mix ([corpus_loader.py:1009](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1009), [corpus_loader.py:1079](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1079)). Regressions: [test_corpus_loader.py:751](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:751), [test_corpus_loader.py:867](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:867). |
+
+### New findings, ranked
+
+1. **BLOCKER — validation reloads masks instead of validating the masks that formed the streams.** A cache swap between construction and validation can admit evaluation text.
+2. **BLOCKER — required provenance is not canonicalized.** Empty/whitespace IDs bypass held-document membership.
+3. **HIGH — registry split-brain.** The public `registry=` controls dose/pattern but not corpus/cut selection.
+
+The A1 smoke is numerically consistent: 5M × 25% = 1.25M documents, 68Q/22D over 90 steps matches 75/25, and guards are recorded. It is not HEAD-schema-consistent: current [arm_smoke.py:202](/home/dylan/asymetric-dual-encoders/m10src/arm_smoke.py:202) records `pattern` and `pattern_source`, but the shipped artifact omits both.
+
+Absent `data_cut.unique_text_count` is **closed by ruling**.
+
+## Verdict: NO-GO
+
+Minimal fixes:
+
+- Validate/cache-bind each mask at its first load and pass those exact arrays and identities through assembly; never reload for final validation.
+- Require canonical, non-empty provenance IDs and bind them to the screened generation/harvest manifest.
+- Thread one resolved registry through corpus, cut, pattern, and dose resolution.
+- Regenerate the A1 smoke at HEAD.
