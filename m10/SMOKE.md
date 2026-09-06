@@ -11,7 +11,7 @@ Generator `Qwen/Qwen3-8B-AWQ` rev `4da05a8edb55…`, vLLM 0.28.0 on the box, thi
 | `yesno` | 100% | **100%** | 0 | 100% | 99% | **6 h auto-approval clock running** |
 | `finance` | 100% | **86%** | 0 | 96% | 93% | **6 h auto-approval clock running** |
 | `comparison` | 100% | **84%** | 0 | 100% | 100% | **6 h auto-approval clock running** |
-| `health` | 100% | **84%** | 1 | 86% | 90% | **6 h auto-approval clock running** |
+| `health` | 100% | **84%** | 1 | 86% | 90% | approved (issue #1). **r2 (2026-09-05 night) judged 70% → FAILS; r1 restored; A8 will cut health to representatives at step 8** |
 | `conversational` | 100% | **100%** (r1, re-judged) | 1 | 99% | 99% | **CLEAR — resolved on evidence** |
 | `argument` | 100% | **88%** (67% full output) | 2 | 88% | 67% | **APPROVED by Dylan 2026-09-04** |
 | `howto` | 100% | **80%** | 2 | 96% | 93% | **HELD — needs Dylan's ruling** |

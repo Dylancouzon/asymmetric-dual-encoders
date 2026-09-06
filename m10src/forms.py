@@ -65,21 +65,7 @@ FORMS = {
     # that mechanism only: one intent per position in the list, and no two questions in a batch
     # may share their opening three words. Wording only — no topic word comes from any judged
     # passage (T2-2), the topic set is r1's, and the 8-30 range is the frozen rubric's.
-    "health": ("{n} consumer-health questions a patient or caregiver would ask about the "
-               "passage's topic, in plain non-clinical language, each phrased from the "
-               "patient's or carer's point of view. **Give each question a DIFFERENT intent, "
-               "in this order:** 1) what a symptom or sign means; 2) what causes it or how it "
-               "happens; 3) a treatment, procedure or medicine and how it is used; 4) a risk, "
-               "danger or side effect; 5) what to expect over time, or when to see a doctor. "
-               "If more than five are asked for, keep cycling through the five intents. "
-               "**No two questions in the list may begin with the same first three words.** "
-               "Vary the sentence shape as well: open some with \"My\", \"Is\", \"Does\", "
-               "\"How long\", \"Why\" or with the thing itself, not always with \"What\" "
-               "or \"Are there\", and use \"What should I do\" at most once. **Each "
-               "question must be at least 8 words and at most 30 words** — a hard requirement: "
-               "\"What is X used for?\" is too short, so add the detail a real patient would "
-               "give. Never ask about a person's biography or about laboratory animals; the "
-               "question must be about human health."),
+    "health": ('{n} consumer-health questions a patient or caregiver would ask about the passage\'s topic — symptoms, treatments, risks, side effects, what a term means, what to do next — in plain non-clinical language, each phrased from the patient\'s or carer\'s point of view. **Each question must be at least 8 words and at most 30 words** — a hard requirement: "What is X used for?" is too short, so add the detail a real patient would give. Never ask about a person\'s biography or about laboratory animals; the question must be about human health.'),
     "product": ("{n} product-search queries a shopper would type to find an item related to the "
                 "passage's topic: brand-agnostic, with attributes such as size, material, use or "
                 "price range. 3 to 12 words."),

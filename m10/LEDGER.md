@@ -1292,6 +1292,10 @@ Verbatim in `research/m10-codex-loader-2026-09-05.md`. Closed by pass six: consu
 
 All pass-six items closed with regressions; *"None that can change a training number or admit evaluation text to gradients."* Assumes `data_cut.unique_text_count` is registered before any cut arm (§0b). Seven passes, verbatim in `research/m10-codex-loader-2026-09-05.md`. What the seven found, in order of consequence: cut arms trained uncut → M9 pools never re-screened against the M10 index → inherited-anchor arms uncut → resume lost the plateau state → sampler not with-replacement → masks validated from a reload → registry not owning batch/pattern. **The loader is the only launcher path; no smoke flag reaches a training arm.**
 
+### `health` r2 FAILS the on-form gate (70%); r1 — the approved prompt — restored; health generates LAST, after a fresh six-hour veto window. 2026-09-05 night
+
+Independent judge (Fable, frozen rubric only, `results/m10_health_r2_judge_verdicts.json`): **35/50 = 0.70 < 0.80.** Clause d (under 8 words) 9 — all the template "What does <drug/procedure> treat/involve?"; clause b (deictic, no topic: "this symptom") 5; clause c 1. 40 of 50 open with "What does" (not scored). **Both revisions are spent, so r2 is ineligible; there is no third.** `forms.FORMS["health"]` restored to r1 byte-for-byte (approval hash `8c30d65e710c9a06` recomputed = the hash Dylan approved on issue #1; RUBRIC untouched). **Lead's reading (Tier 2, inside registered machinery):** r1 is the approved prompt and stays approved; its A8 near-dup rate (0.318 at n=2,000, rising) is handled by the REGISTERED A8 action at step 8 — cut to representatives, dropped only if < 50,000 remain — so health generates at r1 and the gate does its job on the manifest. Reverting to r1 is not a selection: r2 is out by the gate, r1 is the only eligible prompt. Cost if health is later dropped: ≈1.5 GPU-hours at the tail. Health is queued AFTER the six (≥ 6 h away, so the veto window on issue #3 elapses first); Dylan may veto there or by Remote Control.
+
 ## §4 Dev-reuse log
 
 | date | surface | raw score reads | artifact |
