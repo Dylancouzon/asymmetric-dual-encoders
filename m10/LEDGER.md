@@ -223,6 +223,21 @@ allocation and `max_extension_cycles` are neither — they are fixed at the M10.
 - Teacher-target cache keys. ~~bank, mining method, recall@64 audit~~ — struck with the ranking-aware class (amendment A1).
 - `results/m10_data_manifest.json` sha256.
 
+### A8 gate 2 — distribution overlap vs real queries, EXECUTED 2026-09-05 night for the five existing forms (`results/m10_a8_gate2.json`, `m10src/a8_gate2.py`)
+
+MS MARCO dev queries (official Microsoft blob, `queries.dev.tsv`, sha256 `757b7e93…`, 101,093 rows → 50,000 sampled seed 0), **validation only** under the 2026-09-04 rule; stored under `work/m10msmarco/` only, never a seed/target/negative/gradient. Stella query-role vectors both sides; 5,000 per form; k-NN cosine and two-sample energy distance on unit vectors. **Action: none (registered).**
+
+| form | NN cos k=1 | k=5 | energy | own-form NN k=1 |
+|---|---|---|---|---|
+| MS MARCO vs itself (floor) | 0.579 | 0.519 | 0.0005 | — |
+| factoid (PAQ ∪ M9 questions) | 0.577 | 0.536 | 0.030 | 0.546 |
+| keyword | 0.589 | 0.545 | 0.038 | 0.604 |
+| claim | 0.522 | 0.486 | 0.041 | 0.573 |
+| product | 0.607 | 0.561 | 0.041 | 0.669 |
+| title | 0.506 | 0.472 | 0.094 | 0.652 |
+
+Reading: factoid sits at the floor; titles farthest, as the mandate anticipated for a form legitimately unlike web search. The seven generated forms are `forms_pending`; the script re-runs with `--forms` after generation without re-encoding MS MARCO.
+
 ### §Harvest — the A3 real-text pipeline, REGISTERED 2026-09-05 before its draw ran
 
 Four extraction rules, exactly the registered set, deterministic and with no model in the loop

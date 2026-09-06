@@ -33,8 +33,8 @@ work, Codex is the adversarial reviewer.
 1. **The M10 corpus→trainer path — BUILT 2026-09-05 evening** (`corpus_loader`, `targets10`,
    LEDGER §3 for the eight readings). Encode COMPLETE (5.24M texts). A1 smoke PASS on CUDA through `assemble_arm`. Codex passes
    1–3 NO-GO → all items closed → fourth pass in flight; **no arm trains before its GO.**
-2. **A8 gate 2** — MS MARCO dev distribution overlap (mandate :467-475, "before any arm"). ~1 h.
-   It is the one outside measurement of M9's failure mode the plan has.
+2. **A8 gate 2 — DONE for the five existing forms** (`results/m10_a8_gate2.json`, LEDGER §1);
+   re-run with `--forms` for the seven generated forms after generation.
 3. **CUREv1 admission** (decision 12, adopted 2026-09-04, **never executed**). The harvest, PAQ and
    seed draws were screened against an index that lacks it — re-screen or disclose before reading.
 4. **M10.0-c baseline** — DEV-6 read of the M9 candidate incl. `heldout-longq`. Minutes; it is the
