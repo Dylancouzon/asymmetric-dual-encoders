@@ -263,3 +263,30 @@ Minimal fixes:
 - Require canonical, non-empty provenance IDs and bind them to the screened generation/harvest manifest.
 - Thread one resolved registry through corpus, cut, pattern, and dose resolution.
 - Regenerate the A1 smoke at HEAD.
+
+# SIXTH PASS (7261d22), same day (verbatim; read-exclusion audit clean)
+
+| Pass-five item | Status | Evidence |
+|---|---|---|
+| 3 — provenance | **OPEN** | Required IDs are checked and stripped, but extraction still prefers any non-`None` `doc` over `seed_id` ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:212)). Generated row `{"text":"novel","form":"title","seed_id":"held","doc":" "}` validates `seed_id`, then returns `" "` as its ID; it misses held ID `"held"` at the membership check ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:431)). Existing tests do not cover both fields together. |
+| New 1 — consumed masks | **CLOSED** | Query/document builders record the arrays used; assembly refuses missing records and validates that dictionary ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1099)). Digests, counts, completeness, uniqueness and range are checked ([rescreen10.py](/home/dylan/asymetric-dual-encoders/m10src/rescreen10.py:254)). Regressed by `test_assemble_arm_validates_the_masks_the_streams_consumed_not_a_reload` and `test_validate_rejects_a_mask_that_does_not_match_its_digest`. |
+| New 3 — registry split-brain | **CLOSED** | One `reg` supplies resolution, entry/dose, pattern, corpus and cut lookup ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1092)). Stub fallback is preserved. Regressed by `test_assemble_arm_never_passes_allow_uncut_or_allow_unscreened` and the family-B pattern test. |
+
+### New findings, ranked
+
+1. **BLOCKER — inherited anchor corpora are not cut.** Non-A arms return `ARM_SOURCES["ANCHOR"]` ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:815)), but cut eligibility is tested against the arm name ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:852)). With a registered count, `assemble_arm("B-50/50", …)` loads the full A4 sources yet applies no cut because `B-50/50` is absent from `data_cut.applies_to`. This affects F/G/B/E/D arms and contradicts the registered “CUT A4” anchor corpus.
+
+2. **HIGH — E’s registered batch is caller-controlled.** `E-bs128` registers batch 128 ([screen_registry.json](/home/dylan/asymetric-dual-encoders/m10/screen_registry.json:130)), but `assemble_arm("E-bs128", …)` defaults to and records batch 32 ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1069)). The override-refusal test covers only `n_docs`, `pattern`, and `balanced`.
+
+The shipped A1 smoke is numerically coherent—1.25M documents and 68Q/22D over 90 steps—but stale relative to HEAD: current smoke code records `pattern` and `pattern_source`, while the artifact omits them ([smoke JSON](/home/dylan/asymetric-dual-encoders/results/m10_arm_smoke_A1_cuda.json:56)). Regeneration is required but is not itself a training blocker.
+
+The absent HEAD cut count is **closed by ruling** and excluded from this verdict.
+
+## Verdict: NO-GO
+
+Minimal fix set:
+
+1. When `require_id` is set, return that canonicalized field—not the generic `doc`-first fallback—and regress dual-field rows.
+2. Apply the registered cut based on the resolved corpus identity, including every arm inheriting the anchor corpus.
+3. Derive batch from `arm.batch` or `anchor.batch`, or refuse a caller mismatch; regress `E-bs128`.
+4. Regenerate the A1 smoke after these fixes.

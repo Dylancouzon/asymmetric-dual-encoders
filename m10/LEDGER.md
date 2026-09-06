@@ -1275,6 +1275,10 @@ Verbatim in `research/m10-codex-loader-2026-09-05.md`; audit clean. **Closed:** 
 
 Verbatim in `research/m10-codex-loader-2026-09-05.md`. Closed by pass five: missing-forms/balanced, `n_docs` bypass. Taken and fixed directly (small enough not to spend a worker): (i) validation reloaded the masks instead of checking the arrays the streams were built from — the builders now record the exact arrays into a `consumed` dict and `validate` runs on those, a builder that records nothing is refused; (ii) `{"doc": ""}` passed the provenance check — blank ids refused, ids canonicalized on both sides; (iii) `registry=` reached dose/pattern but not corpus/cut — one resolved registry threaded through. The A1 smoke record is being regenerated at HEAD on CPU (the GPU is serving generation). **Six adversarial passes on one loader is the cost of the 2026-09-05 lesson — review the fix, not the decision — and each pass has closed more than it opened.**
 
+### Codex SIXTH pass — NO-GO; the one that mattered: inherited-anchor arms were NOT cut. Fixed by the lead (211 tests); seventh pass in flight
+
+Verbatim in `research/m10-codex-loader-2026-09-05.md`. Closed by pass six: consumed-mask validation, registry threading. **Finding 1 (real, would have confounded the whole screen):** F/G/B/E/D arms train on the anchor's corpus ("A4, the CUT corpus") but the cut was keyed on arm NAME via `data_cut.applies_to`, so once §0b registers the count, `B-50/50` etc. would have loaded the UNCUT A4 while ANCHOR trained on the cut one — a corpus confound on the `b` side of ten contrasts. Fix: `is_cut_corpus` cuts by RESOLVED corpus identity; A1 stays uncut. **Finding 2:** `E-bs128` registers batch 128 but the launcher defaulted to 32 → `arm_batch` reads `arms.<name>.batch` else `anchor.batch`; a caller mismatch is refused. **Finding 3:** a generated row with `seed_id` and a blank `doc` returned the blank → the required field IS the id. A1 smoke being regenerated at HEAD.
+
 ## §4 Dev-reuse log
 
 | date | surface | raw score reads | artifact |
