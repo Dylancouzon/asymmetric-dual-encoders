@@ -196,3 +196,41 @@ Minimum fixes to flip it:
 3. Make the re-screen report retain both query and document sections and validate mask/report identity, completeness, and measured counts before a screen arm starts.
 4. Save stop state even when zero new steps completed, and include tokenizer behavior/configuration in token-cache identity.
 5. Register `data_cut.unique_text_count` before launching a cut arm.
+
+# FOURTH PASS (9b3dec9), same day (verbatim; read-exclusion audit clean)
+
+| Third-pass OPEN | Status | Evidence / regression |
+|---|---|---|
+| 1 — cut/source-list bypass | **CLOSED** | `assemble_arm` rejects source lists and hardcodes `allow_uncut=False` ([corpus_loader.py:931](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:931), [corpus_loader.py:984](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:984)). Regressed by `test_assemble_arm_refuses_a_source_list` and `test_assemble_arm_refuses_an_uncut_cut_arm`. |
+| 2 — unscreened pools | **CLOSED** for the original bypass | Both builders receive `False`; an empty document ban set refuses ([corpus_loader.py:988](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:988), [corpus_loader.py:860](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:860)). Regressed by `test_assemble_arm_never_passes_allow_uncut_or_allow_unscreened` and `test_screened_doc_pool_refuses_an_empty_or_missing_ban_set_as_mask_missing`. Mask authenticity remains broken below. |
+| 3 — held-out provenance | **OPEN** | `{"query":"novel","form":"title"}` with no `doc`/`seed_id`, although derived from a held document, produces `id=None`; the membership test skips it and its novel text misses the hash guard ([corpus_loader.py:206](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:206), [corpus_loader.py:412](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:412)). `test_rows_from_jsonl_with_ids_is_opt_in_and_reads_doc_or_seed_id` explicitly accepts `None`; no test requires provenance. |
+| 4 — zero-step stop checkpoint | **CLOSED** | Stop state is saved without the `run_steps` condition ([trainer10.py:150](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:150)). Regressed by `test_a_resume_that_fails_on_its_very_first_step_still_checkpoints_the_stop`. |
+| 9 — cross-role guard optional | **CLOSED** on this route | `assemble_arm` invokes the guard before returning `batch_fn` ([corpus_loader.py:990](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:990)). Regressed by `test_assemble_arm_runs_the_cross_role_guard_and_propagates_a_collision`. |
+| 11 — tokenizer identity | **OPEN** | Two slow tokenizers of the same class/name/revision/vocabulary but different normalization, such as `do_lower_case`, have identical identity when `name_or_path` is not a local directory, yet emit different IDs ([corpus_loader.py:527](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:527)). The new test covers only a local `tokenizer_config.json`. |
+| New 1 — missing forms | **OPEN** | `assemble_arm("ANCHOR", …, balanced=False)` skips the entire `require_forms` branch and accepts an 11-form corpus ([corpus_loader.py:654](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:654), [corpus_loader.py:668](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:668)). Tests exercise only `balanced=True`. |
+| New 2 — report sections erased | **CLOSED** | The shipped report contains all three query sections—431+66+212 = 709 removals—and the complete document section ([m10_rescreen10.json](/home/dylan/asymetric-dual-encoders/results/m10_rescreen10.json)). `test_merge_report_preserves_the_other_sections_on_a_partial_rerun` and `test_validate_requires_both_sections` regress this. |
+| New 3 — hold-out cache staleness | **CLOSED** | Cache key includes the file digest ([corpus_loader.py:77](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:77)). Regressed by `test_holdout_hashes_is_keyed_by_content_not_size_and_mtime`. |
+
+### New findings, ranked
+
+1. **BLOCKER — mask validation validates lengths, not masks.** Replace each query keep mask with all `True` of the correct length: the 709 protected queries train and `validate` passes. Replace the document mask with 79,630 copies of `-1`: conversion to a set removes no real document, while the raw array length still matches the report ([rescreen10.py:241](/home/dylan/asymetric-dual-encoders/m10src/rescreen10.py:241), [corpus_loader.py:907](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:907)). It also never requires `documents.complete == true` or binds preserved sections to per-section identities.
+
+2. **BLOCKER — the named-arm contract is not registry-driven.** `assemble_arm("B-50/50", …)` refuses although it is a trained registry arm; `A4` bypasses its `A4 → ANCHOR` alias because `ARM_SOURCES` wins first; and default `assemble_arm("A2", …)` uses `balanced=True`, contrary to A2’s registered variant ([corpus_loader.py:934](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:934), [corpus_loader.py:961](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:961)).
+
+3. **BLOCKER — HEAD still has no registered cut count.** `data_cut.unique_text_count` is absent from [screen_registry.json](/home/dylan/asymetric-dual-encoders/m10/screen_registry.json), so A2/A3/A4/ANCHOR refuse rather than launch.
+
+4. **HIGH — document draw remains bypassable.** `assemble_arm("A1", …, n_docs=32)` returns a stream using 32 documents instead of `arm_doc_count`; no assembly-level test prevents this.
+
+## Verdict
+
+**NO-GO**
+
+Minimal fix set:
+
+- Bind every mask to its pool/protected identity and content digest; validate query sums, document uniqueness/range, and `complete=true`, using the exact masks consumed by the streams.
+- Make the registry own arm resolution and all data-affecting knobs; resolve aliases first, reject untrained arms, force A2 balancing policy and A4/ANCHOR’s balanced 12-form contract, and remove the `n_docs`/registry bypasses.
+- Require and canonicalize provenance for harvest/generated rows.
+- Fully identify slow-tokenizer behavior.
+- Register `data_cut.unique_text_count` and require the final cut-arm row count to equal it.
+
+Static review only; executing the tests would import/read files outside the mandatory allowlist.

@@ -1243,6 +1243,10 @@ Verbatim in `research/m10-codex-loader-2026-09-05.md`; audit clean. **Closed wit
 - **A1 CUDA smoke through `assemble_arm`: PASS** (`results/m10_arm_smoke_A1_cuda.json`): 403,443 queries after re-screen + dedup, 1,250,000 documents, cross-role collisions 0, 90 steps, 548 ex/s uncompiled at max_len 512. Cosmetic: the report HEADER echoes the CLI default `sources: harvest`; the per-arm record is authoritative.
 - **12-shape smoke re-run on CUDA** (marker fix) in flight; the pre-fix record is kept at `work/m10arm_smoke_pre_marker_fix.json`. Codex fourth pass (GO/NO-GO) in flight.
 
+### Codex FOURTH pass, 2026-09-05 night — NO-GO; 7 more closed; the lead REJECTS three of its remaining items
+
+Verbatim in `research/m10-codex-loader-2026-09-05.md`; audit clean. **Closed:** cut/source-list bypass, unscreened pools, zero-step stop, cross-role guard on the launcher path, report sections, hold-out cache. **Taken (Sonnet round 2):** `assemble_arm` refused `B-50/50` — a TRAINED arm — because arm resolution and the mix pattern came from a hand table, not the registry (the one finding that would have blocked the screen); mask validation compared lengths only → content digests + `complete` + range/uniqueness; `n_docs`/`pattern`/`balanced` were caller-overridable → registry-owned; harvest/generated rows must carry `doc`/`seed_id`. **Rejected, with reasons:** (1) "HEAD has no registered cut count" — that is §0b by design, filled after generation; (2) slow-tokenizer normalization in the cache identity — every student ships a fast tokenizer whose backend JSON is already hashed; (3) "A2's registered variant is unbalanced" — the mandate (§Data) says the unbalanced variant is a reported diagnostic, not an arm; A2 is balanced. Fifth pass will be told these are closed by ruling.
+
 ## §4 Dev-reuse log
 
 | date | surface | raw score reads | artifact |
