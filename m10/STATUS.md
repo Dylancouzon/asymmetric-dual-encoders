@@ -1,4 +1,4 @@
-# M10 status — 2026-09-05 evening. Data is BUILT, nothing registered has trained; the corpus→trainer path is being built by a worker.
+# M10 status — 2026-09-05 night. GENERATION RUNNING for the six approved forms (~15 h); the corpus→trainer path is built and under its seventh Codex pass.
 
 **Read this, then `m10/LEDGER.md`.** The box is **preparation for the cloud GPU run, not a
 measurement target** (Dylan, 2026-09-05): run as much as it can here first, no re-shaping; the
@@ -6,7 +6,7 @@ remainder moves to the A100 under the same registry. **The weekend timeline is n
 Working model (Dylan, 2026-09-05): the session is the ML lead, Opus/Sonnet subagents do the build
 work, Codex is the adversarial reviewer.
 
-## Nothing is running. The next command is in "NEXT", below.
+## RUNNING: generation driver PID 104715 (`work/m10gen/build_driver.log`), five-form pilot PID 107433 (`work/m10gen/pilot5.log`), vLLM on :8001. Kill by PID only.
 
 ## What is DONE and verified
 
