@@ -37,8 +37,8 @@ work, Codex is the adversarial reviewer.
    re-run with `--forms` for the seven generated forms after generation.
 3. **CUREv1 admission** (decision 12, adopted 2026-09-04, **never executed**). The harvest, PAQ and
    seed draws were screened against an index that lacks it — re-screen or disclose before reading.
-4. **M10.0-c baseline** — DEV-6 read of the M9 candidate incl. `heldout-longq`. Minutes; it is the
-   denominator every retention-vs-M9 comparison needs.
+4. **M10.0-c baseline — DONE** (`results/m10_m9_baseline_dev6.json`): DEV-6 macro 0.5568, 82.8% of
+   the teacher; NQ 93.8% vs CQADupStack 50.1 / 71.0% — M9's signature, reproduced.
 5. **15-minute diversity pilot**, then **generation** (~10 box-h). `health` reads **26.50%** on the
    amended A8 gate, **above the 25% cut**, and rising with n — its prompt needs fixing first, via
    decision 15's machinery (it has used 1 of 2 revisions).
