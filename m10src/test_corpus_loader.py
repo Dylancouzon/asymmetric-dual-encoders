@@ -701,8 +701,12 @@ def test_assemble_arm_requires_all_12_forms_for_the_anchor(monkeypatch):
     CL.assemble_arm("ANCHOR", _Tok(), "bge-small", registry={"anchor_aliases": {}}, verbose=False)
     assert calls["build_query_stream"]["require_forms"] == CL.FORMS
     calls.clear()
-    CL.assemble_arm("A4", _Tok(), "bge-small", registry={"anchor_aliases": {}}, verbose=False)
+    # A4 resolves to ANCHOR via `anchor_aliases` FIRST (item A), so the alias must be present here
+    # -- `resolve_arm_name` never checks "A4" itself, which the registry marks untrained.
+    CL.assemble_arm("A4", _Tok(), "bge-small",
+                    registry={"anchor_aliases": {"A4": "ANCHOR"}}, verbose=False)
     assert calls["build_query_stream"]["require_forms"] == CL.FORMS
+    assert calls["build_query_stream"]["name"] == "ANCHOR"
 
 
 def test_assemble_arm_runs_the_cross_role_guard_and_propagates_a_collision(monkeypatch):
@@ -716,6 +720,40 @@ def test_assemble_arm_runs_the_cross_role_guard_and_propagates_a_collision(monke
     with pytest.raises(SystemExit, match="BOTH the query and the document role"):
         CL.assemble_arm("A1", _Tok(), "bge-small", registry={"anchor_aliases": {}}, verbose=False)
     assert calls["guard"] == ("q", "d")
+
+
+# ---------------------------------------------------------------- item A: the registry-driven arm
+
+def test_resolve_arm_name_a4_resolves_to_anchor_via_the_real_registry():
+    assert CL.resolve_arm_name("A4") == "ANCHOR"
+
+
+def test_resolve_arm_name_refuses_arms_that_are_cut_or_never_trained():
+    with pytest.raises(SystemExit, match="CUT"):
+        CL.resolve_arm_name("C-M9init")
+    with pytest.raises(SystemExit, match="CUT"):
+        CL.resolve_arm_name("F-MiniLM-L12")
+
+
+def test_assemble_arm_reads_family_bs_own_mix_pattern_from_the_registry(monkeypatch):
+    """B-100/0 and B-50/50 carry their OWN `pattern` in the real registry, encoded as 'kQ[+mD]'
+    ('4Q', '2Q+2D') rather than the '100/0'/'50/50' string a stream wants -- translated by
+    counting, not hand-copied."""
+    calls = {}
+    _assemble_arm_mocks(monkeypatch, calls)
+    _bf, man = CL.assemble_arm("B-100/0", _Tok(), "bge-small", verbose=False)
+    assert man["pattern"] == "100/0" and man["pattern_source"]["raw"] == "4Q"
+    calls.clear()
+    _bf, man = CL.assemble_arm("B-50/50", _Tok(), "bge-small", verbose=False)
+    assert man["pattern"] == "50/50" and man["pattern_source"]["raw"] == "2Q+2D"
+
+
+def test_assemble_arm_refuses_caller_overrides_of_registry_knobs():
+    """`n_docs`, `pattern` and `balanced` are removed from the signature entirely: every
+    data-affecting knob comes from the registry, not the caller (item A)."""
+    for kw in ({"n_docs": 10}, {"pattern": "50/50"}, {"balanced": False}):
+        with pytest.raises(TypeError):
+            CL.assemble_arm("A1", _Tok(), "bge-small", registry={"anchor_aliases": {}}, **kw)
 
 
 # ==================================================================== held-out document ids ----
@@ -755,6 +793,26 @@ def test_rows_from_jsonl_with_ids_is_opt_in_and_reads_doc_or_seed_id():
         assert CL._rows_from_jsonl(p) == (["a", "b", "c"], ["claim"] * 3)
         texts, forms, ids = CL._rows_from_jsonl(p, with_ids=True)
         assert ids == ["d1", "s2", None]
+
+
+def test_a_harvest_row_without_doc_is_refused_by_row_index():
+    """Provenance is required for harvest (`doc`) and generated (`seed_id`) rows -- without it the
+    held-out-document check silently treats the row as clean (item C). `m9-pool` and PAQ carry no
+    such field and are exempt by source (no `require_id` on their `SOURCES` entries)."""
+    with tempfile.TemporaryDirectory() as d:
+        rows = [{"text": "a", "form": "claim", "doc": "d1"},
+               {"text": "b", "form": "claim"}]
+        p = _jsonl(d, "harvest.jsonl", rows)
+        with pytest.raises(SystemExit, match=r"row 1 carries no 'doc'"):
+            CL._rows_from_jsonl(p, with_ids=True, require_id="doc")
+        # unaffected when the source carries no requirement (PAQ / m9-pool)
+        CL._rows_from_jsonl(p, with_ids=True)
+
+        grows = [{"text": "a", "form": "claim", "seed_id": "s1"},
+                {"text": "b", "form": "claim", "doc": "not-what-generated-uses"}]
+        gp = _jsonl(d, "generated.jsonl", grows)
+        with pytest.raises(SystemExit, match=r"row 1 carries no 'seed_id'"):
+            CL._rows_from_jsonl(gp, with_ids=True, require_id="seed_id")
 
 
 def test_held_out_doc_ids_reads_the_forms12_files_own_doc_ids(monkeypatch):

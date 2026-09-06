@@ -29,6 +29,7 @@ from corpora, and nothing here executes anything they contain.
 import hashlib
 import math
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -133,10 +134,10 @@ SOURCES = {
                    "form": PAQ_FORM, "n_expected": 4_037_000,
                    "what": "the A2 volume-control PAQ sample"},
     "harvest":    {"kind": "jsonl", "path": WORK / "m10harvest" / "harvest_train.jsonl",
-                   "n_expected": 1_248_386,
+                   "n_expected": 1_248_386, "require_id": "doc",
                    "what": "A3's harvested real text, FORMS-12 hold-out already removed"},
     "generated":  {"kind": "jsonl", "path": WORK / "m10gen" / "generated_queries.jsonl",
-                   "optional": True,
+                   "optional": True, "require_id": "seed_id",
                    "what": "the seven generated forms; does not exist yet, same row shape"},
 }
 
@@ -179,12 +180,19 @@ class Segment:
 
 # --------------------------------------------------------------------------------- reading ----
 
-def _rows_from_jsonl(path, default_form=None, limit=None, with_ids=False):
+def _rows_from_jsonl(path, default_form=None, limit=None, with_ids=False, require_id=None):
     """-> (texts, form names), or (texts, form names, doc ids) when `with_ids=True`. Accepts
     `text`, `query` or `question` (PAQ's field) and `form` or the source's default, which is what
     lets the generated half land here unchanged. `with_ids` defaults False so every existing
     2-tuple caller is unaffected; a row's `doc` id (or `seed_id` if `doc` is absent) is the
-    provenance `load_segments` checks against the FORMS-12 hold-out's own document ids."""
+    provenance `load_segments` checks against the FORMS-12 hold-out's own document ids.
+
+    `require_id`, when given (`"doc"` for harvest, `"seed_id"` for generated -- item C), makes
+    that field MANDATORY: a row missing it is refused by row index rather than silently carrying
+    a `None` id, which is exactly what let the held-out-document check above be skipped. `m9-pool`
+    (a different code path entirely) and PAQ carry no such field and are exempt by source -- their
+    `SOURCES` entries pass no `require_id`.
+    """
     path = Path(path)
     if str(path.resolve()) in HOLDOUT_FILES:
         raise SystemExit(f"REFUSED: {path} is the FORMS-12 hold-out. Queries harvested or "
@@ -192,7 +200,7 @@ def _rows_from_jsonl(path, default_form=None, limit=None, with_ids=False):
                          f"(instructions-m10.md:454).")
     texts, forms, ids = [], [], []
     with path.open() as fh:
-        for line in fh:
+        for i, line in enumerate(fh):
             r = json.loads(line)
             t = r.get("text") or r.get("query") or r.get("question")
             if not t:
@@ -201,6 +209,10 @@ def _rows_from_jsonl(path, default_form=None, limit=None, with_ids=False):
             f = r.get("form", default_form)
             if f not in FORM_ID:
                 raise SystemExit(f"{path}: form {f!r} is not one of the 12 registered forms")
+            if require_id and r.get(require_id) is None:
+                raise SystemExit(f"{path}: row {i} carries no {require_id!r} field, required "
+                                 f"for provenance -- the held-out-document check cannot be "
+                                 f"skipped for this source")
             texts.append(t)
             forms.append(f)
             if with_ids:
@@ -250,7 +262,8 @@ def source_texts(name, limit=None):
             if spec.get("optional"):
                 raise SystemExit(f"source {name!r} is not built yet: {p} does not exist")
             raise SystemExit(f"source {name!r}: {p} is missing")
-        texts, forms, ids = _rows_from_jsonl(p, default_form=spec.get("form"), with_ids=True)
+        texts, forms, ids = _rows_from_jsonl(p, default_form=spec.get("form"), with_ids=True,
+                                            require_id=spec.get("require_id"))
         man = {"path": str(p), "sha256": sha_file(p), "bytes": p.stat().st_size}
     # the registered count is the pool BEFORE the M10 re-screen: the re-screen is a removal whose
     # size is a measurement, not a constant, and it is reported in `man` instead.
@@ -785,6 +798,25 @@ def guard_cross_role(q_ids, d_ids, skip=False):
 
 # ---------------------------------------------------------------------------------- the arm ----
 
+def arm_sources(name, registry=None):
+    """-> the `SOURCES` keys arm `name`'s corpus is drawn from.
+
+    Only A1-A4/ANCHOR name their own data (`ARM_SOURCES`). Every other trained arm (family
+    F/G/B/E/D/C) varies student, head, objective, dose or batch -- never data -- and trains on
+    the anchor's own corpus (`anchor.data`: "A4, the CUT corpus"), so an arm absent from
+    `ARM_SOURCES` and carrying no `data` field of its own falls back to it. An arm whose `data`
+    field names something else unrecognised is refused rather than guessed at (item A).
+    """
+    if name in ARM_SOURCES:
+        return ARM_SOURCES[name]
+    reg = registry or json.loads((REPO / "m10" / "screen_registry.json").read_text())
+    entry = (reg.get("arms") or {}).get(name)
+    if entry is not None and entry.get("data") is None:
+        return ARM_SOURCES["ANCHOR"]
+    raise SystemExit(f"arm {name!r}: no known corpus mapping onto ARM_SOURCES "
+                     f"(data={entry.get('data') if entry else None!r})")
+
+
 def build_query_stream(arm_or_sources, tok, student, *, batch_size=32, seed=0, balanced=True,
                        max_len=512, prefix="", head_per_source=None, cut=None,
                        allow_uncut=False, require_forms=None, verbose=True):
@@ -796,7 +828,7 @@ def build_query_stream(arm_or_sources, tok, student, *, batch_size=32, seed=0, b
     exists to separate. `allow_uncut=True` is the smoke escape and is RECORDED in the manifest
     (`uncut: true`), so an artifact can never look like a cut arm's.
     """
-    names = ARM_SOURCES[arm_or_sources] if isinstance(arm_or_sources, str) else tuple(
+    names = arm_sources(arm_or_sources) if isinstance(arm_or_sources, str) else tuple(
         arm_or_sources)
     segs, man = load_segments(names, head_per_source=head_per_source, verbose=verbose)
     if head_per_source:
@@ -920,33 +952,58 @@ def build_doc_stream(n, tok, *, batch_size=32, seed=0, max_len=512, allow_unscre
 REQUIRE_ALL_FORMS = {"A4", "ANCHOR"}
 
 
+def _registry_arms(reg):
+    """The registry's `arms` table, falling back to the real file's when `reg` carries none (the
+    escape a stub test registry already relied on for `n_docs` -- kept, not invented)."""
+    return reg.get("arms") or json.loads((REPO / "m10" / "screen_registry.json").read_text())["arms"]
+
+
+def _registry_anchor(reg):
+    return reg.get("anchor") or json.loads(
+        (REPO / "m10" / "screen_registry.json").read_text()).get("anchor", {})
+
+
 def resolve_arm_name(name, registry=None):
-    """-> the registered arm name `name` names, resolving one `anchor_aliases` hop if needed.
+    """-> the registered, TRAINABLE arm name `name` names, resolving one `anchor_aliases` hop
+    FIRST if needed (so `A4` -> `ANCHOR` before anything checks `A4` itself, which is never
+    trained separately).
 
     NEVER a source list: a list or tuple is refused here, before anything downstream can treat it
     as if it carried the guards a real arm name does. `F-winner` (the one alias that is prose, not
     an arm id -- resolved by `rules.F_selection_aware`, per `screen_registry.json`) is refused by
-    name rather than silently resolving to nonsense.
+    name rather than silently resolving to nonsense. Once resolved, the name must be a registry
+    `arms` entry with `trained: true` and no `cut` field -- `C-M9init` and `F-MiniLM-L12` are
+    registered arms that never ran and are refused here rather than at a training launch.
     """
     if not isinstance(name, str):
         raise SystemExit(f"assemble_arm takes a registered arm name or an anchor_aliases key, "
                          f"never a source list: got {name!r}")
-    if name in ARM_SOURCES:
-        return name
     reg = registry or json.loads((REPO / "m10" / "screen_registry.json").read_text())
     aliases = reg.get("anchor_aliases", {})
+    arms = _registry_arms(reg)
     if name in aliases and not name.startswith("_"):
         val = aliases[name]
-        if val in ARM_SOURCES:
-            return val
-        raise SystemExit(f"anchor_aliases[{name!r}] = {val!r} does not resolve to a registered "
-                         f"arm id (e.g. 'F-winner' is resolved by rules.F_selection_aware, not "
-                         f"this function) -- pass the resolved arm name instead")
-    raise SystemExit(f"{name!r} is not a registered arm name (m10/screen_registry.json `arms`) "
-                     f"or an `anchor_aliases` key")
+        if not isinstance(val, str) or (val not in arms and val not in ARM_SOURCES):
+            raise SystemExit(f"anchor_aliases[{name!r}] = {val!r} does not resolve to a "
+                             f"registered arm id (e.g. 'F-winner' is resolved by "
+                             f"rules.F_selection_aware, not this function) -- pass the resolved "
+                             f"arm name instead")
+        name = val
+    elif name not in arms and name not in ARM_SOURCES:
+        raise SystemExit(f"{name!r} is not a registered arm name (m10/screen_registry.json "
+                         f"`arms`) or an `anchor_aliases` key")
+    entry = arms.get(name)
+    if entry is not None:
+        if entry.get("cut"):
+            raise SystemExit(f"arm {name!r} is CUT (registry `cut`) and cannot be assembled")
+        if not entry.get("trained"):
+            raise SystemExit(f"arm {name!r} is not a trained arm (registry `trained` is not "
+                             f"true) and has no corpus to assemble")
+    return name
 
 
 DOC_SHARE = {"100/0": 0.0, "75/25": 0.25, "50/50": 0.5}
+DEFAULT_MIX = "75/25"          # the anchor's own mix, when a registry carries no `anchor.mix`
 
 
 def arm_doc_count(arm, pattern, batch_size=32):
@@ -958,31 +1015,70 @@ def arm_doc_count(arm, pattern, batch_size=32):
     return max(int(math.ceil(dose * DOC_SHARE[pattern])), batch_size)
 
 
-def assemble_arm(arm_name, tok, student, *, batch_size=32, seed=0, max_len=512, n_docs=None,
-                 prefix="", pattern="75/25", balanced=True, verbose=True, registry=None):
+def resolve_arm_pattern(name, entry, reg):
+    """-> (pattern, report). The document/query mix window an arm uses, read from the registry
+    rather than accepted from a caller (item A).
+
+    Family B carries its OWN mix, but encoded in its own arm entry's `pattern` field as a
+    'kQ[+mD]' shorthand (e.g. `B-50/50`'s `"pattern": "2Q+2D"`), not the `DOC_SHARE`/`WINDOWS` key
+    string ('50/50') a stream actually wants -- translated here by COUNTING the Q/D steps rather
+    than hand-copied, so a typo in either registry field cannot silently disagree. Every other
+    trained arm carries no `pattern` of its own and uses the anchor's (`anchor.mix`,
+    cross-checked against `anchor.window_pattern` for the record).
+    """
+    raw = (entry or {}).get("pattern")
+    if raw is not None:
+        m = re.match(r"^(\d+)Q(?:\+(\d+)D)?$", str(raw))
+        if not m:
+            raise SystemExit(f"arm {name!r}: pattern {raw!r} is not the registered 'kQ[+mD]' "
+                             f"shorthand")
+        q, d = int(m.group(1)), int(m.group(2) or 0)
+        pct_q = round(100 * q / max(q + d, 1))
+        resolved = f"{pct_q}/{100 - pct_q}"
+        if resolved not in DOC_SHARE:
+            raise SystemExit(f"arm {name!r}: pattern {raw!r} resolves to {resolved!r}, not one "
+                             f"of {sorted(DOC_SHARE)}")
+        return resolved, {"raw": raw, "resolved": resolved, "source": "arm.pattern"}
+    anchor = _registry_anchor(reg)
+    mix = anchor.get("mix", DEFAULT_MIX)
+    if mix not in DOC_SHARE:
+        raise SystemExit(f"registry anchor.mix {mix!r} is not one of {sorted(DOC_SHARE)}")
+    return mix, {"raw": None, "resolved": mix,
+                "source": "anchor.mix" if "mix" in anchor else "default (no anchor.mix)",
+                "anchor_window_pattern": anchor.get("window_pattern")}
+
+
+def assemble_arm(arm_name, tok, student, *, batch_size=32, seed=0, max_len=512, verbose=True,
+                 registry=None):
     """-> (batch_fn, manifest). The ONLY function a training launcher may use to build an arm's
     corpus (Codex 2026-09-05 whole-plan review: the cut, the masks, the 12-form requirement and
     the cross-role guard were each correct on their own but each OPTIONAL -- a source list or a
     flag bypassed every one of them; the fix is one mandatory path).
 
+    Every data-affecting knob comes from the REGISTRY, never the caller (item A): the corpus
+    (`arm_sources`, via the arm's `data`), the mix pattern (`resolve_arm_pattern`, via the arm's
+    own `pattern` or `anchor.mix`) and the document count (`arm_doc_count`, via `dose_examples`).
+    `balanced` is always `True` -- the mandate's unbalanced variant is `build_query_stream`'s own
+    diagnostic, never an arm.
+
     Takes a registered arm name or an `anchor_aliases` key, never a source list
-    (`resolve_arm_name`). Applies the registered cut for a cut arm, raising if
-    `data_cut.unique_text_count` is not registered yet (no `allow_uncut` here -- that escape
-    belongs to `build_query_stream` and a smoke alone). Requires the M10 re-screen masks for BOTH
-    pools (no `allow_unscreened`) and cross-checks them against `results/m10_rescreen10.json` via
-    `rescreen10.validate`. Requires the anchor/A4 arm to see all 12 forms, raising and naming any
-    missing. Runs `guard_cross_role` on the two streams before returning. Everything applied is
-    recorded in the manifest.
+    (`resolve_arm_name`, which also refuses an arm that is not `trained` or is `cut`). Applies the
+    registered cut for a cut arm, raising if `data_cut.unique_text_count` is not registered yet
+    (no `allow_uncut` here -- that escape belongs to `build_query_stream` and a smoke alone).
+    Requires the M10 re-screen masks for BOTH pools (no `allow_unscreened`) and cross-checks them
+    against `results/m10_rescreen10.json` via `rescreen10.validate`. Requires the anchor/A4 arm to
+    see all 12 forms, raising and naming any missing -- unconditionally, since `balanced` can no
+    longer be turned off here. Runs `guard_cross_role` on the two streams before returning.
+    Everything applied is recorded in the manifest.
     """
     reg = registry or json.loads((REPO / "m10" / "screen_registry.json").read_text())
     name = resolve_arm_name(arm_name, reg)
+    entry = _registry_arms(reg).get(name) or {}
     require_forms = FORMS if name in REQUIRE_ALL_FORMS else None
-    if n_docs is None:
-        arms = reg.get("arms") or json.loads(
-            (REPO / "m10" / "screen_registry.json").read_text())["arms"]
-        n_docs = arm_doc_count(arms[name], pattern, batch_size)
+    pattern, pattern_rep = resolve_arm_pattern(name, entry, reg)
+    n_docs = arm_doc_count(entry, pattern, batch_size)
     q_stream, q_man = build_query_stream(name, tok, student, batch_size=batch_size, seed=seed,
-                                        balanced=balanced, max_len=max_len, prefix=prefix,
+                                        balanced=True, max_len=max_len, prefix="",
                                         allow_uncut=False, require_forms=require_forms,
                                         verbose=verbose)
     doc_stream, doc_man = build_doc_stream(n_docs, tok, batch_size=batch_size, seed=seed,
@@ -1000,8 +1096,8 @@ def assemble_arm(arm_name, tok, student, *, batch_size=32, seed=0, max_len=512, 
     rescreen10.validate(report, masks)
 
     man = {"arm": name, "requested_as": arm_name, "student": student, "batch_size": batch_size,
-          "seed": seed, "max_len": max_len, "pattern": pattern, "n_docs": n_docs,
-          "require_forms": list(require_forms) if require_forms else None,
+          "seed": seed, "max_len": max_len, "pattern": pattern, "pattern_source": pattern_rep,
+          "n_docs": n_docs, "require_forms": list(require_forms) if require_forms else None,
           "query": q_man, "document": doc_man, "cross_role": cross,
           "rescreen10_report_validated": True}
     return D.batch_fn(q_stream, doc_stream, pattern=pattern), man
