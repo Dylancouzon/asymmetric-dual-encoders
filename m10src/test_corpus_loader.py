@@ -804,3 +804,12 @@ def test_tokenizer_identity_catches_a_hidden_max_length_the_attribute_does_not(m
         assert a["model_max_length"] == b["model_max_length"]
         assert a["tokenizer_config_sha256"] != b["tokenizer_config_sha256"]
         assert a["tokenizer_config_sha256"] is not None
+
+
+def test_arm_doc_count_is_the_document_example_count_not_a_fixed_draw():
+    """A 5M arm at 75/25 presents 1.25M document examples; drawing fewer documents than that
+    repeats them. M9 drew from every eligible pool row."""
+    import corpus_loader as C
+    assert C.arm_doc_count({"dose_examples": 5_000_000}, "75/25") == 1_250_000
+    assert C.arm_doc_count({"dose_examples": 20_000_000}, "50/50") == 10_000_000
+    assert C.arm_doc_count({"dose_examples": 5_000_000}, "100/0") == 32

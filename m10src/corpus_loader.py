@@ -27,6 +27,7 @@ hold-out guard and the corpus dedup both key on `text_hash`. Same decision, same
 from corpora, and nothing here executes anything they contain.
 """
 import hashlib
+import math
 import json
 import sys
 import time
@@ -945,7 +946,19 @@ def resolve_arm_name(name, registry=None):
                      f"or an `anchor_aliases` key")
 
 
-def assemble_arm(arm_name, tok, student, *, batch_size=32, seed=0, max_len=512, n_docs=100_000,
+DOC_SHARE = {"100/0": 0.0, "75/25": 0.25, "50/50": 0.5}
+
+
+def arm_doc_count(arm, pattern, batch_size=32):
+    """Documents an arm draws from the screened M9 pool: its document-EXAMPLE count (dose x the
+    pattern's document share), so no document is presented twice at screen dose. M9 drew from
+    every eligible pool row (`m9src/longrun.py`: `n_eligible_doc_rows`); a fixed small draw would
+    repeat each document many times and is not what "the M9 pool" means. At least one batch."""
+    dose = int(arm["dose_examples"])
+    return max(int(math.ceil(dose * DOC_SHARE[pattern])), batch_size)
+
+
+def assemble_arm(arm_name, tok, student, *, batch_size=32, seed=0, max_len=512, n_docs=None,
                  prefix="", pattern="75/25", balanced=True, verbose=True, registry=None):
     """-> (batch_fn, manifest). The ONLY function a training launcher may use to build an arm's
     corpus (Codex 2026-09-05 whole-plan review: the cut, the masks, the 12-form requirement and
@@ -964,6 +977,10 @@ def assemble_arm(arm_name, tok, student, *, batch_size=32, seed=0, max_len=512, 
     reg = registry or json.loads((REPO / "m10" / "screen_registry.json").read_text())
     name = resolve_arm_name(arm_name, reg)
     require_forms = FORMS if name in REQUIRE_ALL_FORMS else None
+    if n_docs is None:
+        arms = reg.get("arms") or json.loads(
+            (REPO / "m10" / "screen_registry.json").read_text())["arms"]
+        n_docs = arm_doc_count(arms[name], pattern, batch_size)
     q_stream, q_man = build_query_stream(name, tok, student, batch_size=batch_size, seed=seed,
                                         balanced=balanced, max_len=max_len, prefix=prefix,
                                         allow_uncut=False, require_forms=require_forms,
