@@ -219,8 +219,13 @@ def _rows_from_jsonl(path, default_form=None, limit=None, with_ids=False, requir
             texts.append(t)
             forms.append(f)
             if with_ids:
-                d = r.get("doc")
-                ids.append(d if d is not None else r.get("seed_id"))
+                if require_id:
+                    d = r[require_id]            # canonicalized above; never the generic fallback
+                else:
+                    d = r.get("doc")
+                    d = d if d is not None else r.get("seed_id")
+                    d = str(d).strip() if d is not None else None
+                ids.append(d if d else None)
             if limit and len(texts) >= limit:
                 break
     if with_ids:
@@ -750,6 +755,20 @@ def cut_arms(registry=None):
     return out
 
 
+def is_cut_corpus(name, registry=None):
+    """True when arm `name` trains on a corpus the registered cut applies to -- by RESOLVED corpus
+    identity, not by name: every F/G/B/E/D arm inherits the anchor's corpus ("A4, the CUT corpus",
+    `anchor.data`), so it is cut exactly as ANCHOR is (Codex pass 6, finding 1)."""
+    cuts = cut_arms(registry)
+    if name in cuts:
+        return True
+    cut_corpora = {tuple(ARM_SOURCES[c]) for c in cuts if c in ARM_SOURCES}
+    try:
+        return tuple(arm_sources(name, registry)) in cut_corpora
+    except SystemExit:
+        return False
+
+
 def apply_data_cut(segs, count, seed=0):
     """-> (segments, report). Uniform seed-0 downsample of the WHOLE corpus to `count` rows.
 
@@ -849,7 +868,7 @@ def build_query_stream(arm_or_sources, tok, student, *, batch_size=32, seed=0, b
                               consumed=consumed)
     if head_per_source:
         man["head_per_source"] = head_per_source
-    is_cut_arm = isinstance(arm_or_sources, str) and arm_or_sources in cut_arms(registry)
+    is_cut_arm = isinstance(arm_or_sources, str) and is_cut_corpus(arm_or_sources, registry)
     if is_cut_arm:
         cut = data_cut_count(registry)
         if cut is None:
@@ -1066,7 +1085,14 @@ def resolve_arm_pattern(name, entry, reg):
                 "anchor_window_pattern": anchor.get("window_pattern")}
 
 
-def assemble_arm(arm_name, tok, student, *, batch_size=32, seed=0, max_len=512, verbose=True,
+def arm_batch(entry, reg):
+    """The arm's registered batch (`arms.<name>.batch`, else `anchor.batch`). E-bs128 is the one
+    arm that differs (Codex pass 6, finding 2)."""
+    b = entry.get("batch")
+    return int(b if b is not None else _registry_anchor(reg).get("batch", 32))
+
+
+def assemble_arm(arm_name, tok, student, *, batch_size=None, seed=0, max_len=512, verbose=True,
                  registry=None):
     """-> (batch_fn, manifest). The ONLY function a training launcher may use to build an arm's
     corpus (Codex 2026-09-05 whole-plan review: the cut, the masks, the 12-form requirement and
@@ -1093,6 +1119,11 @@ def assemble_arm(arm_name, tok, student, *, batch_size=32, seed=0, max_len=512, 
     name = resolve_arm_name(arm_name, reg)
     entry = _registry_arms(reg).get(name) or {}
     require_forms = FORMS if name in REQUIRE_ALL_FORMS else None
+    reg_batch = arm_batch(entry, reg)
+    if batch_size is not None and int(batch_size) != reg_batch:
+        raise SystemExit(f"{name}: caller batch_size {batch_size} != the registered batch "
+                         f"{reg_batch}; the registry owns it")
+    batch_size = reg_batch
     pattern, pattern_rep = resolve_arm_pattern(name, entry, reg)
     n_docs = arm_doc_count(entry, pattern, batch_size)
     import rescreen10

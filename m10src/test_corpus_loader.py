@@ -939,3 +939,41 @@ def test_assemble_arm_validates_the_masks_the_streams_consumed_not_a_reload(monk
         assert "did not record the masks" in str(e)
     else:
         raise AssertionError("a stream with no recorded mask was validated")
+
+
+def test_arms_inheriting_the_anchor_corpus_are_cut_like_the_anchor():
+    """Codex pass 6: F/G/B/E/D arms train on 'A4, the CUT corpus' but were never in
+    data_cut.applies_to by name, so they would have loaded the uncut A4 sources."""
+    import corpus_loader as C
+    for arm in ("B-50/50", "F-bge-small", "G-MLP", "D-NORM", "E-bs128"):
+        assert C.is_cut_corpus(arm), arm
+    assert C.is_cut_corpus("A3") and C.is_cut_corpus("ANCHOR")
+    assert not C.is_cut_corpus("A1"), "A1 is the M9 pool and is registered as NOT cut"
+
+
+def test_the_registry_owns_the_batch_size(monkeypatch):
+    """Codex pass 6: E-bs128 registers batch 128; a caller default of 32 silently won."""
+    import json
+    import corpus_loader as C
+    reg = json.loads((C.REPO / "m10" / "screen_registry.json").read_text())
+    assert C.arm_batch(reg["arms"]["E-bs128"], reg) == 128
+    assert C.arm_batch(reg["arms"]["D-NORM"], reg) == 32
+    calls = {}
+    _assemble_arm_mocks(monkeypatch, calls)
+    try:
+        C.assemble_arm("E-bs128", _Tok(), "bge-small", batch_size=32, verbose=False)
+    except SystemExit as e:
+        assert "registered batch 128" in str(e)
+    else:
+        raise AssertionError("a caller batch of 32 was accepted for E-bs128")
+
+
+def test_a_generated_row_with_a_blank_doc_uses_its_seed_id_as_provenance(tmp_path):
+    """Codex pass 6: the generic doc-first fallback returned " " for a row whose required id was
+    seed_id, so a held seed slipped past the membership check."""
+    import json
+    import corpus_loader as C
+    p = tmp_path / "g.jsonl"
+    p.write_text(json.dumps({"text": "novel", "form": "title", "seed_id": "held", "doc": " "}) + "\n")
+    texts, forms, ids = C._rows_from_jsonl(p, with_ids=True, require_id="seed_id")
+    assert ids == ["held"]
