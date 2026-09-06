@@ -44,7 +44,8 @@ STEPS = 90
 # `corpus_loader`, form-balanced. It writes its own report: a smoke must never land on the path
 # the registered run's record lives at (§Hazards).
 M10_OUT = REPO / "results" / "m10_arm_smoke_loader.json"
-CORPUS = {"corpus": "m9", "sources": ("harvest",), "head_per_source": 0, "balanced": True}
+CORPUS = {"corpus": "m9", "sources": ("harvest",), "head_per_source": 0, "balanced": True,
+         "arm": None}
 
 import numpy as np
 import torch
@@ -183,33 +184,54 @@ def smoke_one(name, spec, corp, device="cpu", max_len=512, verbose=True):
 
     b = spec["batch"]
     try:
-        if CORPUS["corpus"] == "m10":
+        if CORPUS["corpus"] == "m10" and CORPUS.get("arm"):
+            # the MANDATORY path (`assemble_arm`): a registered arm name, never a source list --
+            # everything the smoke used to build by hand (the cut, both re-screen masks, the
+            # 12-form check, the cross-role guard) is applied and recorded by that one function.
             import corpus_loader as CL
-            q, qman = CL.build_query_stream(
-                list(CORPUS["sources"]), m.tok, spec["student"], batch_size=b, seed=0,
-                balanced=CORPUS["balanced"], max_len=max_len, prefix="",
-                head_per_source=CORPUS["head_per_source"] or None, allow_uncut=True,
-                verbose=verbose)
+            bf, qman = CL.assemble_arm(CORPUS["arm"], m.tok, spec["student"], batch_size=b,
+                                       seed=0, max_len=max_len, pattern=spec["pattern"],
+                                       verbose=verbose)
             rec["query_corpus"] = {k: qman[k] for k in
-                                   ("sources_used", "n_rows", "by_form", "sha256", "n_batches",
-                                    "mean_tokens", "balanced", "data_cut", "uncut",
-                                    "is_cut_arm", "rescreen10", "n_duplicates_removed")
+                                   ("arm", "requested_as", "n_docs", "require_forms",
+                                    "rescreen10_report_validated")
                                    if k in qman}
-            rec["realized_shares"] = q.realized_shares(min(len(q), 4 * STEPS))
+            rec["cross_role"] = qman.get("cross_role")
+            rec["assemble_arm"] = True
         else:
-            qi = D.pretokenize(m.tok, texts, max_len=max_len)
-            q = D.Stream(qi, T, pad_id=m.tok.pad_token_id, batch_size=b, seed=0)
-        import corpus_loader as _CL
-        # the registered document-role marker; queries are raw bytes (prompt policy (b))
-        di = D.pretokenize(m.tok, dtexts, max_len=max_len, prefix=_CL.doc_marker())
-        # the same student input must never carry two teacher targets: "passage: X" as a QUERY
-        # tokenizes exactly like the DOCUMENT "X" once the marker is applied
-        rec["cross_role"] = _CL.guard_cross_role(q.ids, di)
-        d = D.Stream(di, dvecs, pad_id=m.tok.pad_token_id, batch_size=b, seed=0)
+            if CORPUS["corpus"] == "m10":
+                import corpus_loader as CL
+                # `smoke_only`: the uncut, hand-assembled path -- a source list bypasses the cut,
+                # the 12-form check and (until the guard below) the cross-role check, which is
+                # exactly why `assemble_arm` exists and why a launcher may never take this branch.
+                q, qman = CL.build_query_stream(
+                    list(CORPUS["sources"]), m.tok, spec["student"], batch_size=b, seed=0,
+                    balanced=CORPUS["balanced"], max_len=max_len, prefix="",
+                    head_per_source=CORPUS["head_per_source"] or None, allow_uncut=True,
+                    verbose=verbose)
+                qman["smoke_only"] = True
+                rec["query_corpus"] = {k: qman[k] for k in
+                                       ("sources_used", "n_rows", "by_form", "sha256", "n_batches",
+                                        "mean_tokens", "balanced", "data_cut", "uncut",
+                                        "is_cut_arm", "rescreen10", "n_duplicates_removed",
+                                        "smoke_only")
+                                       if k in qman}
+                rec["realized_shares"] = q.realized_shares(min(len(q), 4 * STEPS))
+            else:
+                qi = D.pretokenize(m.tok, texts, max_len=max_len)
+                q = D.Stream(qi, T, pad_id=m.tok.pad_token_id, batch_size=b, seed=0)
+            import corpus_loader as _CL
+            # the registered document-role marker; queries are raw bytes (prompt policy (b))
+            di = D.pretokenize(m.tok, dtexts, max_len=max_len, prefix=_CL.doc_marker())
+            # the same student input must never carry two teacher targets: "passage: X" as a QUERY
+            # tokenizes exactly like the DOCUMENT "X" once the marker is applied
+            rec["cross_role"] = _CL.guard_cross_role(q.ids, di)
+            d = D.Stream(di, dvecs, pad_id=m.tok.pad_token_id, batch_size=b, seed=0)
+            bf = D.batch_fn(q, d, pattern=spec["pattern"])
         sigma = None
         if spec["loss"] == "document_covariance_weighted":
             sigma = torch.from_numpy(np.asarray(N.cov_matrix(dvecs), dtype=np.float32)).to(device)
-        r = Tr.train_arm(m, D.batch_fn(q, d, pattern=spec["pattern"]), total_steps=STEPS,
+        r = Tr.train_arm(m, bf, total_steps=STEPS,
                          pattern=spec["pattern"],
                          peak=1e-4, loss_name=spec["loss"], sigma=sigma, seed=0,
                          device=device, batch_size=b, log_every=0)
@@ -245,13 +267,17 @@ def main():
                     help="cap tokenized length; 128 keeps E-bs128 off the CPU memory cliff")
     ap.add_argument("--corpus", default="m9", choices=["m9", "m10"],
                     help="m10 draws queries from corpus_loader (the real M10 corpus, balanced)")
-    ap.add_argument("--sources", nargs="*", default=["harvest"])
+    ap.add_argument("--sources", nargs="*", default=["harvest"],
+                    help="smoke_only: an uncut, hand-assembled corpus. Ignored if --arm is given")
+    ap.add_argument("--arm", default=None,
+                    help="a registered arm name (or anchor_aliases key) for corpus_loader's "
+                    "mandatory assemble_arm path; takes priority over --sources")
     ap.add_argument("--head-per-source", type=int, default=0,
                     help="first N rows per source in FILE order -- a smoke device, not a sample")
     ap.add_argument("--unbalanced", action="store_true")
     ap.add_argument("--out", default=None, help="report path; defaults per corpus")
     a = ap.parse_args()
-    CORPUS.update(corpus=a.corpus, sources=tuple(a.sources),
+    CORPUS.update(corpus=a.corpus, sources=tuple(a.sources), arm=a.arm,
                   head_per_source=a.head_per_source, balanced=not a.unbalanced)
     out = Path(a.out) if a.out else (M10_OUT if a.corpus == "m10" else OUT)
     # SHAPES is a hand copy of the registry and can drift silently (whole-plan review): assert
