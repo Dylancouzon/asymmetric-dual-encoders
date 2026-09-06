@@ -189,12 +189,19 @@ def smoke_one(name, spec, corp, device="cpu", max_len=512, verbose=True):
             # everything the smoke used to build by hand (the cut, both re-screen masks, the
             # 12-form check, the cross-role guard) is applied and recorded by that one function.
             import corpus_loader as CL
+            # `assemble_arm` no longer takes `pattern` -- it derives it from the registry itself
+            # (item A). Read it back from the manifest for the record, and check it against the
+            # smoke's own declared shape rather than assume the two agree silently.
             bf, qman = CL.assemble_arm(CORPUS["arm"], m.tok, spec["student"], batch_size=b,
-                                       seed=0, max_len=max_len, pattern=spec["pattern"],
-                                       verbose=verbose)
+                                       seed=0, max_len=max_len, verbose=verbose)
+            resolved_pattern = qman.get("pattern")
+            if resolved_pattern != spec["pattern"]:
+                raise SystemExit(
+                    f"arm {CORPUS['arm']!r}: registry-resolved pattern {resolved_pattern!r} != "
+                    f"the smoke's declared pattern {spec['pattern']!r}")
             rec["query_corpus"] = {k: qman[k] for k in
                                    ("arm", "requested_as", "n_docs", "require_forms",
-                                    "rescreen10_report_validated")
+                                    "rescreen10_report_validated", "pattern", "pattern_source")
                                    if k in qman}
             rec["cross_role"] = qman.get("cross_role")
             rec["assemble_arm"] = True
