@@ -77,14 +77,14 @@
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 47.1,
+   "examples_per_s": 45.8,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 229.1
+   "seconds": 229.9
   }
  ],
  "failed": [],
