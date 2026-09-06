@@ -224,6 +224,22 @@ allocation and `max_extension_cycles` are neither — they are fixed at the M10.
 - Teacher-target cache keys. ~~bank, mining method, recall@64 audit~~ — struck with the ranking-aware class (amendment A1).
 - `results/m10_data_manifest.json` sha256.
 
+### Diversity pilot — all six approved forms CLEAR A8 gate 1 (amended), 2026-09-05 night (`results/m10_diversity_pilot.json`)
+
+2,000 queries/form (seed 777 over the post-hold-out build pool), rubric range filter applied, amended W10 rule. **Action: start** for all six (registered: cut 25%).
+
+| form | A8 @2000 | rise 500→2000 | top-10 opener share (diagnostic, no action) |
+|---|---|---|---|
+| finance | 0.0355 | +0.026 | 0.106 |
+| comparison | 0.0245 | +0.009 | 0.205 |
+| yesno | 0.0110 | +0.003 | 0.018 |
+| howto | 0.0005 | +0.001 | 0.024 |
+| conversational | **0.0000** | 0 | **0.533** |
+| argument (n=1,738 after filter) | 0.0460 | +0.014 | 0.032 |
+| *health r1 / r2 (not started)* | *0.318 / 0.3375* | *rising* | *— (opener collapse, see above)* |
+
+**Disclosed, not acted on:** `conversational` reads 0% near-duplicates yet **53% of its queries open with one of ten 4-grams** — the ≥39-word regime's 8-gram bottom-32 sketch is diluted by length and cannot see a shared opener. The registered gate has no action on opener concentration and changing it now would be post-observation; it is reported beside the form in the manifest and is a candidate for the M14 contamination/diversity row.
+
 ### A8 gate 2 — distribution overlap vs real queries, EXECUTED 2026-09-05 night for the five existing forms (`results/m10_a8_gate2.json`, `m10src/a8_gate2.py`)
 
 MS MARCO dev queries (official Microsoft blob, `queries.dev.tsv`, sha256 `757b7e93…`, 101,093 rows → 50,000 sampled seed 0), **validation only** under the 2026-09-04 rule; stored under `work/m10msmarco/` only, never a seed/target/negative/gradient. Stella query-role vectors both sides; 5,000 per form; k-NN cosine and two-sample energy distance on unit vectors. **Action: none (registered).**
