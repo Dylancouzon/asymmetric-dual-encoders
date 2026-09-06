@@ -285,6 +285,24 @@ def load_form_samples(want_forms, n=N_FORM_SAMPLE, seed=SEED):
         except Exception as e:
             skipped["product"] = f"M9 pool product load failed: {e}"
 
+    # the generated forms, once step 8 has assembled them (`m10src/assemble10.py`). Same read as
+    # the harvested branch above: texts from the assembled file, vectors read-only from the
+    # content-addressed target cache -- so `--forms` costs no re-encode of the MS MARCO side.
+    gen_forms = [f for f in want_forms if f in FORMS_PENDING]
+    if gen_forms:
+        gpath = Path(CL.SOURCES["generated"]["path"])
+        if gpath.exists():
+            g_texts, g_forms = CL._rows_from_jsonl(gpath)
+            for form in gen_forms:
+                t, v = _sample_from_cache(g_texts, g_forms, form, cache, n, seed)
+                if t is None:
+                    skipped[form] = f"no rows of form {form!r} in {gpath}"
+                else:
+                    out[form] = (t, v)
+        else:
+            for form in gen_forms:
+                skipped[form] = f"{gpath} does not exist -- run m10src/assemble10.py first"
+
     for f in want_forms:
         if f not in out and f not in skipped:
             skipped[f] = "not yet built (a generated form; see forms_pending)"
