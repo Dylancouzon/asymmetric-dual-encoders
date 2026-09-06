@@ -1266,6 +1266,10 @@ Verbatim in `research/m10-codex-loader-2026-09-05.md`; audit clean. **Closed:** 
 
 `results/m10_arm_smoke.json` (registered record, overwritten as logged above; pre-fix copy at `work/m10arm_smoke_pre_marker_fix.json`). max_len 512, every registered warm start ran. **Observation, no action:** `E-bs128` PASSED at 512 on this card (2,213 ex/s) where it failed reproducibly on 2026-09-05 morning (`CUDA driver error: device not ready`, three runs). The failure is therefore intermittent, not deterministic. Dylan's ruling stands — E's two arms run on the A100 together — and the record still carries the `cloud_only` note.
 
+### Loader round two LANDED (Sonnet, 899daa3 · 48eaa6e · c69dc67), 2026-09-05 night — 206 tests; Codex fifth pass in flight
+
+`assemble_arm` is registry-driven: aliases first (`A4 → ANCHOR`), `trained: true` and not `cut` required (refuses `C-M9init`, `F-MiniLM-L12`), corpus from the arm's `data`, **family B's mix read from its own `pattern` field** (`4Q` → 100/0, `2Q+2D` → 50/50; every other arm `anchor.mix` 75/25), `balanced`/`n_docs`/`pattern`/`prefix` no longer caller-settable. `rescreen10.validate` compares sha256 of the exact masks consumed + `complete` + per-section removed counts + document-row range/uniqueness; `results/m10_rescreen10.json` retrofitted with digests from the cached masks (no screen recomputed) and validates. Harvest rows must carry `doc`, generated rows `seed_id`. A8 gate 2 (`a8_gate2.py`) and the encode report also committed.
+
 ## §4 Dev-reuse log
 
 | date | surface | raw score reads | artifact |
