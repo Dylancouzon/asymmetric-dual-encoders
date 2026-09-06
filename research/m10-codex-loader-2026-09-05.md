@@ -290,3 +290,23 @@ Minimal fix set:
 2. Apply the registered cut based on the resolved corpus identity, including every arm inheriting the anchor corpus.
 3. Derive batch from `arm.batch` or `anchor.batch`, or refuse a caller mismatch; regress `E-bs128`.
 4. Regenerate the A1 smoke after these fixes.
+
+# SEVENTH PASS (1f67403), same day — GO (verbatim; read-exclusion audit clean)
+
+| Pass-six item | Status | Evidence / regression |
+|---|---|---|
+| 3 — provenance dual-field | **CLOSED** | `require_id` is validated, stripped, and used directly; the generic `doc`-first fallback is bypassed ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:212)). Held IDs are also canonicalized ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:236)). Regressed by `test_a_blank_provenance_id_is_refused_not_just_a_missing_one` and `test_a_generated_row_with_a_blank_doc_uses_its_seed_id_as_provenance` ([test_corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:883), [test_corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:971)). |
+| New 1 — inherited-anchor cut | **CLOSED** | `is_cut_corpus` compares resolved source tuples, so every arm inheriting ANCHOR’s corpus is cut; A1 remains uncut ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:758), [corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:871)). Regressed across F/G/B/E/D plus A1/A3/ANCHOR ([test_corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:944)). |
+| New 2 — registry-owned batch | **CLOSED** | Batch resolves from `arms.<name>.batch`, then `anchor.batch`; mismatching callers are refused before stream construction ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1088), [corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1122)). Regression checks E=128, default=32, and E/32 refusal ([test_corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:954)). |
+
+### New findings, ranked
+
+None that can change a training number or admit evaluation text to gradients through `assemble_arm`.
+
+The regenerated A1 CPU smoke is schema-current and passes: 90 steps, 2,880 examples, registered batch 32, 68Q/22D, exact-mask report validation recorded, and zero cross-role collisions ([smoke record](/home/dylan/asymetric-dual-encoders/results/m10_arm_smoke_A1_head_cpu.json:24)).
+
+Checked-out HEAD is `68de8b1`, but every permitted implementation/test/report/registry file is identical to requested `1f67403`. Static audit only; tests were not rerun under the mandatory read-exclusion.
+
+The absent `data_cut.unique_text_count` is **closed by ruling**; this verdict assumes it is registered before launching any cut arm.
+
+## Verdict: GO

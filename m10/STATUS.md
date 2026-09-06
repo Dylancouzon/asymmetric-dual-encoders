@@ -1,4 +1,4 @@
-# M10 status — 2026-09-05 night. GENERATION RUNNING for the six approved forms (~15 h); the corpus→trainer path is built and under its seventh Codex pass.
+# M10 status — 2026-09-05 night. GENERATION RUNNING for the six approved forms (~15 h); the corpus→trainer path is built and **Codex GO** (seventh pass).
 
 **Read this, then `m10/LEDGER.md`.** The box is **preparation for the cloud GPU run, not a
 measurement target** (Dylan, 2026-09-05): run as much as it can here first, no re-shaping; the
@@ -31,8 +31,8 @@ work, Codex is the adversarial reviewer.
 ## NEXT, in order
 
 1. **The M10 corpus→trainer path — BUILT 2026-09-05 evening** (`corpus_loader`, `targets10`,
-   LEDGER §3 for the eight readings). Encode COMPLETE (5.24M texts). A1 smoke PASS on CUDA through `assemble_arm`. Codex passes
-   1–3 NO-GO → all items closed → fourth pass in flight; **no arm trains before its GO.**
+   LEDGER §3 for the eight readings). Encode COMPLETE (5.24M texts). `assemble_arm` is the only launcher path; **Codex GO on the
+   seventh pass** (`research/m10-codex-loader-2026-09-05.md`). Owed before a cut arm: §0b's count.
 2. **A8 gate 2 — DONE for the five existing forms** (`results/m10_a8_gate2.json`, LEDGER §1);
    re-run with `--forms` for the seven generated forms after generation.
 3. **CUREv1 admission** (decision 12, adopted 2026-09-04, **never executed**). The harvest, PAQ and
