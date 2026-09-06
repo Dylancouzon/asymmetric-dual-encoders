@@ -56,8 +56,8 @@ removed** (2026-09-05). Both E arms run on the **A100**, together.
 
 ## Hazards a cold session will hit
 
-- **`E-bs128` fails on this box** at max_len ≥ 256 (`CUDA driver error: device not ready`),
-  reproducibly, on an idle card. Passes at 128 (2,188 ex/s). **Accepted, not worked around** — do
+- **`E-bs128` fails on this box** at max_len ≥ 256 (`CUDA driver error: device not ready`)
+  on three morning runs, then PASSED at 512 on the evening re-run — intermittent, not deterministic. Passes at 128 (2,188 ex/s). **Accepted, not worked around** — do
   NOT add gradient accumulation. The 1,517 ex/s in the rate table is a random-token microbenchmark.
 - **`arm_smoke` reaches ~8 GB RSS**; torch's CPU allocator does not release across 12 model loads.
   Run it alone. **Kill by PID** — `pkill -f arm_smoke` matches your own waiting shell.
