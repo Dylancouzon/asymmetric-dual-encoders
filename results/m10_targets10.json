@@ -1,0 +1,100 @@
+{
+ "_what": "stella query targets for the M10 corpora, content-hash keyed",
+ "identity": {
+  "model": "NovaSearch/stella_en_400M_v5",
+  "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+  "pooling": "mean-l2",
+  "dim": 1024,
+  "post_dense": "2_Dense_1024",
+  "role": "query",
+  "prefix": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
+  "max_length": 512,
+  "store_dtype": "fp16",
+  "hash": "blake2b-128"
+ },
+ "cache_dir": "/home/dylan/asymetric-dual-encoders/work/m10targets/query-stella_en_400M_v5-8e9a608b5383",
+ "cache_rows": 5285386,
+ "limit": 0,
+ "sources": [
+  {
+   "label": "harvest",
+   "n_texts": 1248386,
+   "already_cached": 22000,
+   "duplicates_collapsed": 0,
+   "to_encode": 1226386,
+   "cache_dir": "/home/dylan/asymetric-dual-encoders/work/m10targets/query-stella_en_400M_v5-8e9a608b5383",
+   "chunk": 50000,
+   "encoded": 1226386,
+   "seconds": 2721.8,
+   "texts_per_s": 450.6,
+   "cache_rows": 1268386,
+   "source_manifest": {
+    "path": "/home/dylan/asymetric-dual-encoders/work/m10harvest/harvest_train.jsonl",
+    "sha256": "a34ce58385a819cba62fdd2f15270b1448b7dd8c527557f28041d4c76c2bf334",
+    "bytes": 188817407,
+    "source": "harvest",
+    "kind": "jsonl",
+    "what": "A3's harvested real text, FORMS-12 hold-out already removed",
+    "n_rows": 1248386,
+    "by_form": {
+     "claim": 415454,
+     "keyword": 416454,
+     "title": 416478
+    }
+   }
+  },
+  {
+   "label": "paq-build",
+   "n_texts": 1000000,
+   "already_cached": 20000,
+   "duplicates_collapsed": 0,
+   "to_encode": 980000,
+   "cache_dir": "/home/dylan/asymetric-dual-encoders/work/m10targets/query-stella_en_400M_v5-8e9a608b5383",
+   "chunk": 50000,
+   "encoded": 980000,
+   "seconds": 1948.4,
+   "texts_per_s": 503.0,
+   "cache_rows": 2248386,
+   "source_manifest": {
+    "path": "/home/dylan/asymetric-dual-encoders/work/m10paq/paq_build.jsonl",
+    "sha256": "5bd7b7283360caf10748ae865b6ebdd04f2e7f27717867451a63c7693e973a66",
+    "bytes": 68125371,
+    "source": "paq-build",
+    "kind": "jsonl",
+    "what": "the build's PAQ sample, nested inside the A2 sample",
+    "n_rows": 1000000,
+    "by_form": {
+     "factoid": 1000000
+    }
+   }
+  },
+  {
+   "label": "paq-a2",
+   "n_texts": 4037000,
+   "already_cached": 1000000,
+   "duplicates_collapsed": 0,
+   "to_encode": 3037000,
+   "cache_dir": "/home/dylan/asymetric-dual-encoders/work/m10targets/query-stella_en_400M_v5-8e9a608b5383",
+   "chunk": 50000,
+   "encoded": 3037000,
+   "seconds": 6069.5,
+   "texts_per_s": 500.4,
+   "cache_rows": 5285386,
+   "source_manifest": {
+    "path": "/home/dylan/asymetric-dual-encoders/work/m10paq/paq_a2.jsonl",
+    "sha256": "8f32bcdf602ff9820436706ddf586e9b69da30b9a1e9056ffa8c5c6e05274325",
+    "bytes": 275051180,
+    "source": "paq-a2",
+    "kind": "jsonl",
+    "what": "the A2 volume-control PAQ sample",
+    "n_rows": 4037000,
+    "by_form": {
+     "factoid": 4037000
+    }
+   }
+  }
+ ],
+ "texts_per_s": 488.2,
+ "corpus_texts_named": 6285386,
+ "eta_hours_for_named_sources": 3.58
+}
