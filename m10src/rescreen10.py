@@ -44,6 +44,13 @@ def _h(obj):
                            digest_size=10).hexdigest()
 
 
+def mask_sha256(arr):
+    """-> sha256 of a mask's raw bytes (a bool keep-mask or an int64 banned-row array). What
+    `validate` recomputes against the mask a stream is ABOUT to consume, content not length --
+    two masks of the same length are not the same mask."""
+    return hashlib.sha256(np.ascontiguousarray(arr).tobytes()).hexdigest()
+
+
 def texts_ident(texts):
     """A pool's identity: its length and the hash of its own strings."""
     h = hashlib.sha256()
@@ -98,7 +105,7 @@ def query_keep_mask(texts, name, verbose=True, compute=True):
     keep, kinds = _screen(texts, verbose=verbose, label=f"q:{name}")
     rep = {"ident": ident, "n": len(texts), "kept": int(keep.sum()),
            "removed": int((~keep).sum()), "by_hit": kinds,
-           "seconds": round(time.time() - t0, 1)}
+           "mask_sha256": mask_sha256(keep), "seconds": round(time.time() - t0, 1)}
     CACHE.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(p, keep=keep)
     p.with_suffix(".json").write_text(json.dumps(rep, indent=1))
@@ -175,6 +182,7 @@ def doc_banned_rows(verbose=True, compute=False, limit_stores=None):
                   flush=True)
     rows = np.array(sorted(dropped), dtype=np.int64)
     rep = {"ident": ident, "n_dropped": int(rows.size), "per_store": per_store,
+           "mask_sha256": mask_sha256(rows),
            "complete": limit_stores is None, "seconds": round(time.time() - t0, 1)}
     if limit_stores is not None:
         return rows, rep                       # a smoke never writes the real mask
@@ -222,11 +230,16 @@ def validate(report, masks):
     handed to a launcher, so an incomplete or stale report (the merge bug above, or a re-screen
     run against a different protected10 identity) is caught here rather than trusted silently.
 
+    By CONTENT, not just length (item B): each mask's sha256 (`mask_sha256`) must match the
+    digest the report recorded for it -- a mask of the right length but the wrong bytes (all-True,
+    or an unrelated draw) passed the old length-only check silently. Also requires
+    `documents.complete == true` (a `--stores`-limited smoke report can never validate a training
+    launch), that every query section's `removed` matches what the live mask actually removes,
+    and that the document ban-row mask is a set of unique rows inside `[0, n_pool)` -- read from
+    the report's own recorded document-pool identity, not recomputed.
+
     `masks` is {segment name: the keep mask actually used, "documents": the banned-row array
-    actually used, "protected10": the LIVE protected10 identity} -- both query and document
-    sections must be present in `report`, each mask's length (or, for documents, its ban-row
-    count) must match what the report recorded, and the report's own `protected10` identity must
-    match the live one.
+    actually used, "protected10": the LIVE protected10 identity}.
     """
     missing = [s for s in QUERY_SEGMENTS if s not in report]
     if "documents" not in report:
@@ -238,17 +251,49 @@ def validate(report, masks):
     if live is not None and _h(report.get("protected10")) != _h(live):
         raise SystemExit("the M10 re-screen report's protected10 identity does not match the "
                          "live one -- re-run rescreen10.py --queries --documents")
+    if report["documents"].get("complete") is not True:
+        raise SystemExit("the M10 document re-screen report is not COMPLETE (a --stores-limited "
+                         "smoke run) and cannot validate a training launch -- re-run "
+                         "rescreen10.py --documents")
     for seg in QUERY_SEGMENTS:
-        n = report[seg]["n"]
+        sect = report[seg]
+        n = sect["n"]
         m = masks.get(seg)
         if m is None or len(m) != n:
             raise SystemExit(f"{seg}: mask length {0 if m is None else len(m)} != the report's "
                              f"pool size {n}")
+        m = np.asarray(m, dtype=bool)
+        n_removed_live = int((~m).sum())
+        if sect.get("removed") != n_removed_live:
+            raise SystemExit(f"{seg}: the live mask removes {n_removed_live:,} rows, the report "
+                             f"records {sect.get('removed')!r}")
+        want = sect.get("mask_sha256")
+        if not want:
+            raise SystemExit(f"{seg}: the report carries no mask digest to check against -- "
+                             f"re-run rescreen10.py --queries")
+        if mask_sha256(m) != want:
+            raise SystemExit(f"{seg}: the live mask does not match the report's digest -- "
+                             f"re-run rescreen10.py --queries")
+    dsect = report["documents"]
     dm = masks.get("documents")
-    n_dropped = report["documents"].get("n_dropped")
+    n_dropped = dsect.get("n_dropped")
     if dm is not None and n_dropped is not None and len(dm) != n_dropped:
         raise SystemExit(f"documents: mask length {len(dm)} != the report's n_dropped "
                          f"{n_dropped}")
+    if dm is not None:
+        dm = np.asarray(dm, dtype=np.int64)
+        if len(set(dm.tolist())) != len(dm):
+            raise SystemExit("documents: the banned-row mask contains duplicate rows")
+        n_pool = ((dsect.get("ident") or {}).get("pool") or {}).get("n")
+        if n_pool is not None and len(dm) and (int(dm.min()) < 0 or int(dm.max()) >= n_pool):
+            raise SystemExit(f"documents: banned rows out of range [0, {n_pool})")
+        want = dsect.get("mask_sha256")
+        if not want:
+            raise SystemExit("documents: the report carries no mask digest to check against -- "
+                             "re-run rescreen10.py --documents")
+        if mask_sha256(dm) != want:
+            raise SystemExit("documents: the live mask does not match the report's digest -- "
+                             "re-run rescreen10.py --documents")
 
 
 def main():
@@ -268,12 +313,15 @@ def main():
         import corpus_loader as CL
         for seg in CL._m9_segments(screen=False):
             _keep, rep = query_keep_mask(seg.texts, seg.name)
-            sections[seg.name] = {k: rep[k] for k in ("n", "kept", "removed", "by_hit", "seconds")}
+            sections[seg.name] = {k: rep[k] for k in
+                                 ("n", "kept", "removed", "by_hit", "mask_sha256", "ident",
+                                  "seconds")}
             print(json.dumps({seg.name: sections[seg.name]}, indent=1), flush=True)
     if a.documents:
         _rows, rep = doc_banned_rows(compute=True, limit_stores=a.stores)
         sections["documents"] = {k: rep[k] for k in
-                                 ("n_dropped", "per_store", "complete", "seconds")}
+                                 ("n_dropped", "per_store", "mask_sha256", "ident", "complete",
+                                  "seconds")}
         print(json.dumps(sections["documents"], indent=1), flush=True)
     if a.queries or a.documents:
         sections["_what"] = ("the M9 pools re-screened against the M10 protected index "
