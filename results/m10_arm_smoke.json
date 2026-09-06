@@ -60,21 +60,27 @@
    "warm_start_record": {
     "n_fit": 256,
     "lambda": 1.0,
-    "train_objective": 0.10386,
+    "train_objective": 0.10409,
     "d_in": 1152
    },
    "warm_start_implemented": true,
+   "cross_role": {
+    "checked": true,
+    "collisions": 0,
+    "n_query": 4096,
+    "n_document": 4096
+   },
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 679.3,
+   "examples_per_s": 599.4,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 6.0
+   "seconds": 6.8
   },
   {
    "arm": "F-MiniLM-L6",
@@ -97,21 +103,27 @@
    "warm_start_record": {
     "n_fit": 256,
     "lambda": 1.0,
-    "train_objective": 0.09027,
+    "train_objective": 0.09042,
     "d_in": 1152
    },
    "warm_start_implemented": true,
+   "cross_role": {
+    "checked": true,
+    "collisions": 0,
+    "n_query": 4096,
+    "n_document": 4096
+   },
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 1259.3,
+   "examples_per_s": 1240.0,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 4.0
+   "seconds": 5.5
   },
   {
    "arm": "F-MiniLM-L12",
@@ -134,21 +146,27 @@
    "warm_start_record": {
     "n_fit": 256,
     "lambda": 1.0,
-    "train_objective": 0.09954,
+    "train_objective": 0.09973,
     "d_in": 1152
    },
    "warm_start_implemented": true,
+   "cross_role": {
+    "checked": true,
+    "collisions": 0,
+    "n_query": 4096,
+    "n_document": 4096
+   },
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 706.4,
+   "examples_per_s": 705.6,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 5.1
+   "seconds": 5.4
   },
   {
    "arm": "G-384",
@@ -171,21 +189,27 @@
    "warm_start_record": {
     "n_fit": 256,
     "lambda": 1.0,
-    "train_objective": 0.19401,
+    "train_objective": 0.19438,
     "d_in": 384
    },
    "warm_start_implemented": true,
+   "cross_role": {
+    "checked": true,
+    "collisions": 0,
+    "n_query": 4096,
+    "n_document": 4096
+   },
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 721.6,
+   "examples_per_s": 712.3,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 4.7
+   "seconds": 4.9
   },
   {
    "arm": "G-1536",
@@ -208,14 +232,20 @@
    "warm_start_record": {
     "n_fit": 256,
     "lambda": 1.0,
-    "train_objective": 0.0818,
+    "train_objective": 0.08197,
     "d_in": 1536
    },
    "warm_start_implemented": true,
+   "cross_role": {
+    "checked": true,
+    "collisions": 0,
+    "n_query": 4096,
+    "n_document": 4096
+   },
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 707.6,
+   "examples_per_s": 701.4,
    "mix": {
     "Q": 68,
     "D": 22,
@@ -249,66 +279,72 @@
     "lambda_rows": [
      {
       "lambda": 1e-06,
-      "fit_unnormalized_sq_l2": 3.7439691347174175e-09,
-      "fit_objective": 3.733642728320774e-09,
-      "val_objective": 1.8600953817367554
+      "fit_unnormalized_sq_l2": 6.418094389282203e-10,
+      "fit_objective": 6.398156449094472e-10,
+      "val_objective": 1.7592352628707886
      },
      {
       "lambda": 1e-05,
-      "fit_unnormalized_sq_l2": 1.0951232143341372e-09,
-      "fit_objective": 1.0420408980138518e-09,
-      "val_objective": 0.8518732786178589
+      "fit_unnormalized_sq_l2": 1.4071440679330749e-09,
+      "fit_objective": 1.3588814518072923e-09,
+      "val_objective": 0.9098507165908813
      },
      {
       "lambda": 0.0001,
-      "fit_unnormalized_sq_l2": 2.624724082522789e-08,
-      "fit_objective": 2.258579989700138e-08,
-      "val_objective": 0.5544677376747131
+      "fit_unnormalized_sq_l2": 2.5984750351426555e-08,
+      "fit_objective": 2.2366050345112853e-08,
+      "val_objective": 0.575920045375824
      },
      {
       "lambda": 0.001,
-      "fit_unnormalized_sq_l2": 2.5770150386961177e-06,
-      "fit_objective": 2.2155988972372143e-06,
-      "val_objective": 0.5536331534385681
+      "fit_unnormalized_sq_l2": 2.552002797528985e-06,
+      "fit_objective": 2.1946668766759103e-06,
+      "val_objective": 0.575207531452179
      },
      {
       "lambda": 0.01,
-      "fit_unnormalized_sq_l2": 0.00021690462017431855,
-      "fit_objective": 0.00018519120931159705,
-      "val_objective": 0.5479787588119507
+      "fit_unnormalized_sq_l2": 0.0002151736116502434,
+      "fit_objective": 0.0001838089374359697,
+      "val_objective": 0.5694110989570618
      },
      {
       "lambda": 0.1,
-      "fit_unnormalized_sq_l2": 0.008971447125077248,
-      "fit_objective": 0.007520229090005159,
-      "val_objective": 0.5222295522689819
+      "fit_unnormalized_sq_l2": 0.008947128430008888,
+      "fit_objective": 0.007512345444411039,
+      "val_objective": 0.541865348815918
      },
      {
       "lambda": 1.0,
-      "fit_unnormalized_sq_l2": 0.09868417680263519,
-      "fit_objective": 0.08537150919437408,
-      "val_objective": 0.498745322227478
+      "fit_unnormalized_sq_l2": 0.09836240857839584,
+      "fit_objective": 0.08512109518051147,
+      "val_objective": 0.5155953168869019
      }
     ],
     "k": 192,
     "d_in": 1152,
-    "n_tokens": 1744,
-    "train_objective": 0.09226,
-    "train_objective_linear_only": 0.10386,
+    "n_tokens": 1745,
+    "train_objective": 0.09234,
+    "train_objective_linear_only": 0.10409,
     "solves": "W_lin ridge on pooled | W1,b1 centred per-token PCA, signs fixed | W2,b2 ridge from pooled GELU features to solve 1's residual"
    },
    "warm_start_implemented": true,
+   "cross_role": {
+    "checked": true,
+    "collisions": 0,
+    "n_query": 4096,
+    "n_document": 4096
+   },
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 700.2,
+   "examples_per_s": 692.1,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 5.5
+   "seconds": 5.9
   },
   {
    "arm": "B-100/0",
@@ -331,21 +367,27 @@
    "warm_start_record": {
     "n_fit": 256,
     "lambda": 1.0,
-    "train_objective": 0.10386,
+    "train_objective": 0.10409,
     "d_in": 1152
    },
    "warm_start_implemented": true,
+   "cross_role": {
+    "checked": true,
+    "collisions": 0,
+    "n_query": 4096,
+    "n_document": 4096
+   },
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 917.8,
+   "examples_per_s": 938.8,
    "mix": {
     "Q": 90,
     "D": 0,
     "q_share": 1.0
    },
    "passed": true,
-   "seconds": 4.4
+   "seconds": 4.1
   },
   {
    "arm": "B-50/50",
@@ -368,21 +410,27 @@
    "warm_start_record": {
     "n_fit": 256,
     "lambda": 1.0,
-    "train_objective": 0.10386,
+    "train_objective": 0.10409,
     "d_in": 1152
    },
    "warm_start_implemented": true,
+   "cross_role": {
+    "checked": true,
+    "collisions": 0,
+    "n_query": 4096,
+    "n_document": 4096
+   },
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 634.0,
+   "examples_per_s": 650.1,
    "mix": {
     "Q": 46,
     "D": 44,
     "q_share": 0.5111111111111111
    },
    "passed": true,
-   "seconds": 10.4
+   "seconds": 5.4
   },
   {
    "arm": "E-bs128",
@@ -406,21 +454,27 @@
    "warm_start_record": {
     "n_fit": 256,
     "lambda": 1.0,
-    "train_objective": 0.10386,
+    "train_objective": 0.10409,
     "d_in": 1152
    },
    "warm_start_implemented": true,
+   "cross_role": {
+    "checked": true,
+    "collisions": 0,
+    "n_query": 4096,
+    "n_document": 4096
+   },
    "steps_run": 90,
    "stopped": null,
    "examples": 11520,
-   "examples_per_s": 1973.8,
+   "examples_per_s": 2212.9,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 7.8
+   "seconds": 6.5
   },
   {
    "arm": "D-NORM",
@@ -443,21 +497,27 @@
    "warm_start_record": {
     "n_fit": 256,
     "lambda": 1.0,
-    "train_objective": 0.10386,
+    "train_objective": 0.10409,
     "d_in": 1152
    },
    "warm_start_implemented": true,
+   "cross_role": {
+    "checked": true,
+    "collisions": 0,
+    "n_query": 4096,
+    "n_document": 4096
+   },
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 704.0,
+   "examples_per_s": 694.7,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 5.6
+   "seconds": 5.2
   },
   {
    "arm": "D-COV",
@@ -480,21 +540,27 @@
    "warm_start_record": {
     "n_fit": 256,
     "lambda": 1.0,
-    "train_objective": 0.10386,
+    "train_objective": 0.10409,
     "d_in": 1152
    },
    "warm_start_implemented": true,
+   "cross_role": {
+    "checked": true,
+    "collisions": 0,
+    "n_query": 4096,
+    "n_document": 4096
+   },
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 707.5,
+   "examples_per_s": 700.8,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 5.2
+   "seconds": 5.5
   },
   {
    "arm": "C-M9init",
@@ -527,23 +593,38 @@
     "note": "M9's 384-d head kept in the last layer's columns; the two extra layers' columns are zero, so the arm starts at M9's function"
    },
    "warm_start_implemented": true,
+   "cross_role": {
+    "checked": true,
+    "collisions": 0,
+    "n_query": 4096,
+    "n_document": 4096
+   },
    "steps_run": 90,
    "stopped": null,
    "examples": 2880,
-   "examples_per_s": 707.1,
+   "examples_per_s": 695.9,
    "mix": {
     "Q": 68,
     "D": 22,
     "q_share": 0.7555555555555555
    },
    "passed": true,
-   "seconds": 4.8
+   "seconds": 5.1
   }
  ],
  "failed": [],
  "warm_start_not_implemented": [],
  "cloud_only": {
   "E-bs128": "batch 128 above ~128 tokens: driver error on this card; runs on the A100"
+ },
+ "query_corpus": {
+  "corpus": "m9",
+  "sources": [
+   "harvest"
+  ],
+  "head_per_source": 0,
+  "balanced": true,
+  "arm": null
  },
  "all_shapes_pass": true,
  "_partial": false
