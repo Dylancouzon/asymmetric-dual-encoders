@@ -1,0 +1,118 @@
+{
+ "_what": "the registered diversity pilot: 2,000 queries per form under the real generation contract, from real non-held-out build seeds",
+ "_gate": "A8 gate 1 as amended by W10 (4-grams >= 50% below 39 words, the registered 8-gram 16/32 rule at or above it); action above 0.25 is cut-to-representatives, below 50,000 retained the form is dropped",
+ "_monotone": "the rate is non-decreasing in n, so every value is a FLOOR for the build's 143,000",
+ "model": "Qwen/Qwen3-8B-AWQ",
+ "revision": "4da05a8edb55c6046cce958586c33b61da07bb79",
+ "forms": {
+  "finance": {
+   "form": "finance",
+   "seeds_in_store": 33000,
+   "gate_seeds_excluded": 317,
+   "forms12_holdout": 500,
+   "build_seeds": 32183,
+   "pilot_seeds": 500,
+   "pilot_draw_seed": 777,
+   "prompt_sha256": "ba74eb9debf21e96ce43c54b822d982a9c7ff7b0c85c823c4af67bfedf79c6c4",
+   "prompt_hash8": "d9d4623d187cc57c",
+   "generation": {
+    "form": "finance",
+    "model": "Qwen/Qwen3-8B-AWQ",
+    "revision": "4da05a8edb55c6046cce958586c33b61da07bb79",
+    "n_seeds": 500,
+    "n_per_seed": 5,
+    "max_tokens": 300,
+    "contract_ok": 500,
+    "contract_rate": 1.0,
+    "contract_rate_all_seeds": 1.0,
+    "reached": 500,
+    "retried": 0,
+    "seconds": 51.7,
+    "out_tok": 38669,
+    "out_tok_per_s": 748.1,
+    "n_queries": 2495,
+    "exact_dupes": 5,
+    "transport_failures": 0,
+    "truncated": 0,
+    "finish_reasons": {
+     "stop": 500
+    },
+    "first_failures": []
+   },
+   "rubric_range_filter": {
+    "seen": 2495,
+    "kept": 2414,
+    "short": 81,
+    "long": 0,
+    "range": [
+     8,
+     30
+    ],
+    "drop_rate": 0.0325
+   },
+   "n_after_filter": 2414,
+   "own_seed_copied_span_hits": 142,
+   "n_measured": 2000,
+   "a8_amended_curve": {
+    "200": {
+     "near_dup_rate": 0.005,
+     "near_dup_rate_raw": 0.005,
+     "near_duplicates": 1,
+     "post_exact_dedup": 200,
+     "caught_only_by_short_rule": 1
+    },
+    "500": {
+     "near_dup_rate": 0.01,
+     "near_dup_rate_raw": 0.01,
+     "near_duplicates": 5,
+     "post_exact_dedup": 500,
+     "caught_only_by_short_rule": 5
+    },
+    "1000": {
+     "near_dup_rate": 0.019,
+     "near_dup_rate_raw": 0.019,
+     "near_duplicates": 19,
+     "post_exact_dedup": 1000,
+     "caught_only_by_short_rule": 19
+    },
+    "2000": {
+     "near_dup_rate": 0.0355,
+     "near_dup_rate_raw": 0.0355,
+     "near_duplicates": 71,
+     "post_exact_dedup": 2000,
+     "caught_only_by_short_rule": 71
+    }
+   },
+   "a8_rate_at_n": 0.0355,
+   "rise_500_to_2000": 0.025499999999999995,
+   "top10_opening_4gram_share": 0.1055,
+   "distinct_2": 0.5172,
+   "unregistered_frac_diagnostics": {
+    "200": {
+     "frac_40": 0.01,
+     "frac_50": 0.005,
+     "frac_60": 0.0
+    },
+    "500": {
+     "frac_40": 0.018,
+     "frac_50": 0.01,
+     "frac_60": 0.008
+    },
+    "1000": {
+     "frac_40": 0.031,
+     "frac_50": 0.018,
+     "frac_60": 0.007
+    },
+    "2000": {
+     "frac_40": 0.0525,
+     "frac_50": 0.032,
+     "frac_60": 0.014
+    }
+   },
+   "seconds": 52.3,
+   "above_25pct_cut": false,
+   "rising_steeply": false,
+   "start_generation": true
+  }
+ }
+}
