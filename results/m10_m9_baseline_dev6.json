@@ -1,0 +1,78 @@
+{
+ "_note": "M10.0-c baseline row. DEV-6 per-component nDCG@10 of the FROZEN M9 candidate (m9/FREEZE.json, checkpoint step 457265). This is a diagnostic baseline: it is NOT the same arm as m9s1/m9s1c/m9s1b in m9/RESULTS.md (those are Stage-A anchor-curve arms at 30,349 steps; the frozen candidate is the post-cooldown longrun checkpoint at step 457265, 457,265 steps). No six-set, reserved or LoTTE data was read.",
+ "checkpoint": "work/m9long/ckpt/last.pt",
+ "checkpoint_sha256": "9d631b2c64244aff72db605e94cd973eeb4b80527f14d91fbeab5bc45fec6b52",
+ "checkpoint_step": 457265,
+ "teacher": "stella-400M-v5",
+ "student": "bge-small-en-v1.5",
+ "student_query_prefix": "",
+ "eval9_config": {
+  "surface": "DEV6",
+  "components": [
+   "nq-250k",
+   "hotpotqa",
+   "cqadup-programmers",
+   "cqadup-physics",
+   "heldout-train",
+   "heldout-longq"
+  ],
+  "chunk": {
+   "hotpotqa": 250000,
+   "heldout-train": 250000,
+   "heldout-longq": 250000
+  }
+ },
+ "per_component": {
+  "nq-250k": {
+   "candidate": 0.828857,
+   "teacher": 0.88386,
+   "retention": 0.9378
+  },
+  "hotpotqa": {
+   "candidate": 0.577998,
+   "teacher": 0.694964,
+   "retention": 0.8317
+  },
+  "cqadup-programmers": {
+   "candidate": 0.234493,
+   "teacher": 0.46807,
+   "retention": 0.501
+  },
+  "cqadup-physics": {
+   "candidate": 0.350133,
+   "teacher": 0.493137,
+   "retention": 0.71
+  },
+  "heldout-train": {
+   "candidate": 0.47194,
+   "teacher": 0.585256,
+   "retention": 0.8064
+  },
+  "heldout-longq": {
+   "candidate": 0.87749,
+   "teacher": 0.908994,
+   "retention": 0.9653
+  }
+ },
+ "dev6_macro": 0.556818,
+ "dev6_ceiling_DEV6": 0.67238,
+ "dev6_retention": 0.8281,
+ "teacher_dev6_source": "results/m9_dev_symmetric_stella-400M-v5.json",
+ "reproduction_check_vs_m9_RESULTS_md": {
+  "note": "m9/RESULTS.md's DEV-6 rows (m9s1/m9s1c/m9s1b) are a DIFFERENT arm from the frozen longrun candidate scored here (Stage-A anchor at 30,349 steps vs the frozen candidate at 457,265 steps) -- reported for context, not as an identity check. See FREEZE.json's provenance note.",
+  "candidates_reported_in_m9_RESULTS_md": {
+   "m9s1_anchor_final": 0.4806,
+   "m9s1_anchor_final_precise": 0.48041,
+   "m9s1c_random_head": 0.4562,
+   "m9s1b_seed1": 0.48271,
+   "freeze_dev_screen3_SCREEN3_not_DEV6": 0.560585
+  },
+  "this_dev6_macro": 0.556818,
+  "max_abs_diff_vs_m9s1_anchor_dev6": 0.076408
+ },
+ "wall_time_s": {
+  "checkpoint_verify_and_load": 4.6,
+  "scoring": 85.6,
+  "total": 90.2
+ }
+}
