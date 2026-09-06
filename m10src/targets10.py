@@ -330,7 +330,7 @@ def main():
     print(f"cache {cache.dir} holds {cache.n:,} rows", flush=True)
     reps, total_texts = [], 0
     for name in a.sources:
-        texts, _forms, man = CL.source_texts(name)
+        texts, _forms, _ids, man = CL.source_texts(name)
         total_texts += len(texts)
         use = texts[:a.limit] if a.limit else texts
         reps.append({**encode_missing(use, cache=cache, chunk=a.chunk,

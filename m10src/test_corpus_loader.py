@@ -345,8 +345,8 @@ def test_the_manifest_identity_is_the_corpus_and_not_the_run(monkeypatch):
 
     def fake(name, limit=None):
         seen[name] = seen.get(name, 0) + 1
-        return ["a", "b"], ["claim", "title"], {"source": name, "sha256": "x", "n_rows": 2,
-                                                "by_form": {"claim": 1, "title": 1}}
+        return ["a", "b"], ["claim", "title"], None, {"source": name, "sha256": "x", "n_rows": 2,
+                                                       "by_form": {"claim": 1, "title": 1}}
 
     class Cache:
         def rows_for(self, texts):
@@ -577,3 +577,230 @@ def test_a_training_document_stream_refuses_without_the_rescreen_mask(monkeypatc
         with pytest.raises(SystemExit, match="rescreen10.py --documents"):
             CL.build_doc_stream(4, _Tok(), verbose=False)
         assert called["drew"] is False, "it refused BEFORE drawing"
+
+
+# ============================================================== assemble_arm (the mandatory path)
+
+def test_assemble_arm_refuses_a_source_list():
+    """The ONE thing a launcher may never pass: a source list bypasses every guard registered
+    against an ARM (the cut, the 12-form check, the masks)."""
+    with pytest.raises(SystemExit, match="never a source list"):
+        CL.assemble_arm(["harvest"], _Tok(), "bge-small", registry={"anchor_aliases": {}})
+
+
+def test_resolve_arm_name_resolves_an_alias_and_refuses_a_prose_one():
+    reg = {"anchor_aliases": {"anchor": "ANCHOR",
+                              "F-winner": "the winner of contrast F1 at its 20M checkpoint"}}
+    assert CL.resolve_arm_name("A1", reg) == "A1"
+    assert CL.resolve_arm_name("anchor", reg) == "ANCHOR"
+    with pytest.raises(SystemExit, match="does not resolve"):
+        CL.resolve_arm_name("F-winner", reg)
+    with pytest.raises(SystemExit, match="not a registered arm"):
+        CL.resolve_arm_name("not-a-real-arm", reg)
+
+
+def test_assemble_arm_refuses_an_uncut_cut_arm(monkeypatch):
+    """A3 is a registered cut arm: `assemble_arm` never accepts `allow_uncut` at all."""
+    with tempfile.TemporaryDirectory() as d:
+        _fake_corpus(monkeypatch, d)
+        monkeypatch.setattr(CL, "data_cut_count", lambda registry=None: None)
+        with pytest.raises(SystemExit, match="registered cut arm"):
+            CL.assemble_arm("A3", _Tok(), "bge-small", registry={"anchor_aliases": {}},
+                            verbose=False)
+
+
+def test_screened_doc_pool_refuses_an_empty_or_missing_ban_set_as_mask_missing():
+    """An empty ban set is indistinguishable from a wiring bug that never actually screened
+    anything, so it is treated exactly like a missing mask -- refused, not "nothing to remove"."""
+    with pytest.raises(SystemExit, match="mask missing"):
+        CL._screened_doc_pool(4, 0, set())
+    with pytest.raises(SystemExit, match="mask missing"):
+        CL._screened_doc_pool(4, 0, None)
+
+
+def test_form_balanced_stream_requires_all_forms_when_asked_and_names_the_missing_ones():
+    """The old check tested only forms already in `self.present`, built FROM the forms that
+    survived `np.unique` -- so a form missing entirely could never trigger it."""
+    n = 40
+    fid = np.array([CL.FORM_ID["title"]] * (n // 2) + [CL.FORM_ID["claim"]] * (n // 2))
+    with pytest.raises(ValueError, match="keyword"):
+        CL.FormBalancedStream(_ids(n), _targets(n), fid, pad_id=0, batch_size=8, seed=0,
+                              balanced=True, require_forms=CL.FORMS)
+    # unchanged when nothing is required
+    st = CL.FormBalancedStream(_ids(n), _targets(n), fid, pad_id=0, batch_size=8, seed=0,
+                               balanced=True, require_forms=None)
+    assert len(st) > 0
+
+
+def _assemble_arm_mocks(monkeypatch, calls, guard=None):
+    """Stub out everything `assemble_arm` calls except its own orchestration logic."""
+    class FakeStream:
+        def __init__(self, tag):
+            self.ids = tag
+
+    def fake_bqs(name, tok, student, *, batch_size, seed, balanced, max_len, prefix, allow_uncut,
+                require_forms, verbose):
+        calls["build_query_stream"] = dict(name=name, allow_uncut=allow_uncut,
+                                           require_forms=require_forms)
+        return FakeStream("q"), {"n_rows": 10}
+
+    def fake_bds(n, tok, *, batch_size, seed, max_len, allow_unscreened, verbose):
+        calls["build_doc_stream"] = dict(n=n, allow_unscreened=allow_unscreened)
+        return FakeStream("d"), {"n": n}
+
+    def fake_guard(q_ids, d_ids, skip=False):
+        calls["guard"] = (q_ids, d_ids)
+        if guard:
+            return guard(q_ids, d_ids)
+        return {"checked": True, "collisions": 0}
+
+    class FakeRescreen:
+        @staticmethod
+        def load_report():
+            return {"ok": True}
+
+        @staticmethod
+        def protected_ident():
+            return {"v": 1}
+
+        @staticmethod
+        def query_keep_mask(texts, name, compute=False):
+            return np.zeros(0, dtype=bool), {}
+
+        @staticmethod
+        def doc_banned_rows(compute=False, verbose=False):
+            return np.zeros(0, dtype=np.int64), {}
+
+        @staticmethod
+        def validate(report, masks):
+            calls["validate"] = (report, masks)
+
+    monkeypatch.setattr(CL, "build_query_stream", fake_bqs)
+    monkeypatch.setattr(CL, "build_doc_stream", fake_bds)
+    monkeypatch.setattr(CL, "guard_cross_role", fake_guard)
+    monkeypatch.setattr(CL, "_m9_segments", lambda screen=True: [])
+    monkeypatch.setitem(sys.modules, "rescreen10", FakeRescreen)
+
+
+def test_assemble_arm_never_passes_allow_uncut_or_allow_unscreened(monkeypatch):
+    calls = {}
+    _assemble_arm_mocks(monkeypatch, calls)
+    bf, man = CL.assemble_arm("A1", _Tok(), "bge-small", registry={"anchor_aliases": {}},
+                              verbose=False)
+    assert calls["build_query_stream"] == {"name": "A1", "allow_uncut": False,
+                                           "require_forms": None}
+    assert calls["build_doc_stream"]["allow_unscreened"] is False
+    assert calls["validate"][0] == {"ok": True}
+    assert man["arm"] == "A1" and man["rescreen10_report_validated"] is True
+    assert callable(bf)
+
+
+def test_assemble_arm_requires_all_12_forms_for_the_anchor(monkeypatch):
+    calls = {}
+    _assemble_arm_mocks(monkeypatch, calls)
+    CL.assemble_arm("ANCHOR", _Tok(), "bge-small", registry={"anchor_aliases": {}}, verbose=False)
+    assert calls["build_query_stream"]["require_forms"] == CL.FORMS
+    calls.clear()
+    CL.assemble_arm("A4", _Tok(), "bge-small", registry={"anchor_aliases": {}}, verbose=False)
+    assert calls["build_query_stream"]["require_forms"] == CL.FORMS
+
+
+def test_assemble_arm_runs_the_cross_role_guard_and_propagates_a_collision(monkeypatch):
+    calls = {}
+
+    def collide(q_ids, d_ids):
+        raise SystemExit("REFUSED: 1 student inputs appear in BOTH the query and the "
+                         "document role")
+
+    _assemble_arm_mocks(monkeypatch, calls, guard=collide)
+    with pytest.raises(SystemExit, match="BOTH the query and the document role"):
+        CL.assemble_arm("A1", _Tok(), "bge-small", registry={"anchor_aliases": {}}, verbose=False)
+    assert calls["guard"] == ("q", "d")
+
+
+# ==================================================================== held-out document ids ----
+
+def test_a_training_row_with_a_held_out_document_id_is_refused(monkeypatch):
+    """`_rows_from_jsonl` used to drop the `doc`/`seed_id` field entirely, so a query harvested or
+    generated from a held-out document was checked only by TEXT -- a held title and its sibling
+    held heading are different strings from the same document."""
+    with tempfile.TemporaryDirectory() as d:
+        monkeypatch.setattr(CL, "TOKCACHE", Path(d))
+        rows = [{"text": "a safe row", "form": "claim", "doc": "doc-safe"},
+               {"text": "an unsafe row", "form": "claim", "doc": "doc-held"}]
+        p = _jsonl(d, "gen.jsonl", rows)
+        monkeypatch.setitem(CL.SOURCES, "fakegen", {"kind": "jsonl", "path": p, "what": "t"})
+        monkeypatch.setattr(CL, "held_out_doc_ids", lambda path=None: {"doc-held"})
+
+        class Cache:
+            def rows_for(self, texts):
+                return np.arange(len(texts))
+
+            def vecs(self):
+                return np.ones((2, 8), dtype=np.float16)
+
+        import targets10
+        monkeypatch.setattr(targets10, "TargetCache", lambda *a, **k: Cache())
+        with pytest.raises(SystemExit, match="FORMS-12 hold-out"):
+            CL.load_segments(["fakegen"], verbose=False)
+
+
+def test_rows_from_jsonl_with_ids_is_opt_in_and_reads_doc_or_seed_id():
+    with tempfile.TemporaryDirectory() as d:
+        rows = [{"text": "a", "form": "claim", "doc": "d1"},
+               {"text": "b", "form": "claim", "seed_id": "s2"},
+               {"text": "c", "form": "claim"}]
+        p = _jsonl(d, "g.jsonl", rows)
+        # default: unchanged 2-tuple
+        assert CL._rows_from_jsonl(p) == (["a", "b", "c"], ["claim"] * 3)
+        texts, forms, ids = CL._rows_from_jsonl(p, with_ids=True)
+        assert ids == ["d1", "s2", None]
+
+
+def test_held_out_doc_ids_reads_the_forms12_files_own_doc_ids(monkeypatch):
+    with tempfile.TemporaryDirectory() as d:
+        p = _jsonl(d, "forms12.jsonl", [{"text": "x", "form": "claim", "doc": "h1"},
+                                        {"text": "y", "form": "title", "doc": "h2"},
+                                        {"text": "z", "form": "title", "doc": "h1"}])
+        assert CL.held_out_doc_ids(p) == {"h1", "h2"}
+        missing = Path(d) / "nope.jsonl"
+        assert CL.held_out_doc_ids(missing) == set()
+
+
+# ============================================================= holdout cache keyed by digest ----
+
+def test_holdout_hashes_is_keyed_by_content_not_size_and_mtime(monkeypatch):
+    """A rewrite that lands at the same byte length, within the same wall-clock second, is
+    invisible to a size+mtime key but is a different corpus."""
+    with tempfile.TemporaryDirectory() as d:
+        monkeypatch.setattr(CL, "_HOLDOUT_HASHES", {})
+        p = _jsonl(d, "h.jsonl", [{"text": "aaaa", "form": "claim"}])
+        hs1 = CL.holdout_hashes(p)
+        assert CL.text_hash("aaaa") in hs1
+        p.write_text(json.dumps({"text": "bbbb", "form": "claim"}) + "\n")
+        hs2 = CL.holdout_hashes(p)
+        assert CL.text_hash("bbbb") in hs2 and CL.text_hash("aaaa") not in hs2
+
+
+# ================================================================= the tokenizer identity ----
+
+def test_tokenizer_identity_catches_a_hidden_max_length_the_attribute_does_not(monkeypatch):
+    """A `max_length` key beside `model_max_length` in `tokenizer_config.json` is not loaded onto
+    the tokenizer object by `transformers` at all -- the attribute alone is blind to it, and it is
+    the exact bug that disqualified both MiniLM ONNX exports (`m10/CODEMAP.md` pitfall 5)."""
+    with tempfile.TemporaryDirectory() as d1, tempfile.TemporaryDirectory() as d2:
+        for dd, ml in ((d1, 128), (d2, 512)):
+            (Path(dd) / "tokenizer_config.json").write_text(json.dumps({"model_max_length": ml}))
+
+        class Tok:
+            vocab_size = 100
+
+            def __init__(self, path):
+                self.name_or_path = path
+                # both instances report the SAME (default) attribute value
+                self.model_max_length = 1_000_000_000_000
+
+        a, b = CL.tokenizer_ident(Tok(d1)), CL.tokenizer_ident(Tok(d2))
+        assert a["model_max_length"] == b["model_max_length"]
+        assert a["tokenizer_config_sha256"] != b["tokenizer_config_sha256"]
+        assert a["tokenizer_config_sha256"] is not None
