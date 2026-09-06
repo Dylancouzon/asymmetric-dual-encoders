@@ -217,7 +217,7 @@ def _fake_corpus(monkeypatch, tmp, n=40):
     monkeypatch.setattr(CL, "TOKCACHE", Path(tmp))
     segs = _segs([n])
     monkeypatch.setattr(CL, "load_segments",
-                        lambda names, head_per_source=None, verbose=True: (
+                        lambda names, head_per_source=None, verbose=True, consumed=None: (
                             segs, {"sources": [], "sha256": "abc", "n_rows": n}))
     monkeypatch.setattr(CL, "ARM_SOURCES", {**CL.ARM_SOURCES, "A3": ("harvest",)})
     return segs
@@ -639,13 +639,19 @@ def _assemble_arm_mocks(monkeypatch, calls, guard=None):
             self.ids = tag
 
     def fake_bqs(name, tok, student, *, batch_size, seed, balanced, max_len, prefix, allow_uncut,
-                require_forms, verbose):
+                require_forms, verbose, registry=None, consumed=None):
         calls["build_query_stream"] = dict(name=name, allow_uncut=allow_uncut,
-                                           require_forms=require_forms)
+                                           require_forms=require_forms, registry=registry)
+        if consumed is not None:
+            import rescreen10 as _R
+            for seg in getattr(_R, "QUERY_SEGMENTS", ()):
+                consumed[seg] = np.zeros(0, dtype=bool)
         return FakeStream("q"), {"n_rows": 10}
 
-    def fake_bds(n, tok, *, batch_size, seed, max_len, allow_unscreened, verbose):
+    def fake_bds(n, tok, *, batch_size, seed, max_len, allow_unscreened, verbose, consumed=None):
         calls["build_doc_stream"] = dict(n=n, allow_unscreened=allow_unscreened)
+        if consumed is not None:
+            consumed["documents"] = np.zeros(0, dtype=np.int64)
         return FakeStream("d"), {"n": n}
 
     def fake_guard(q_ids, d_ids, skip=False):
@@ -687,8 +693,9 @@ def test_assemble_arm_never_passes_allow_uncut_or_allow_unscreened(monkeypatch):
     _assemble_arm_mocks(monkeypatch, calls)
     bf, man = CL.assemble_arm("A1", _Tok(), "bge-small", registry={"anchor_aliases": {}},
                               verbose=False)
-    assert calls["build_query_stream"] == {"name": "A1", "allow_uncut": False,
-                                           "require_forms": None}
+    bqs = calls["build_query_stream"]
+    assert (bqs["name"], bqs["allow_uncut"], bqs["require_forms"]) == ("A1", False, None)
+    assert bqs["registry"] is not None, "the resolved registry must reach the corpus/cut lookup"
     assert calls["build_doc_stream"]["allow_unscreened"] is False
     assert calls["validate"][0] == {"ok": True}
     assert man["arm"] == "A1" and man["rescreen10_report_validated"] is True
@@ -803,7 +810,7 @@ def test_a_harvest_row_without_doc_is_refused_by_row_index():
         rows = [{"text": "a", "form": "claim", "doc": "d1"},
                {"text": "b", "form": "claim"}]
         p = _jsonl(d, "harvest.jsonl", rows)
-        with pytest.raises(SystemExit, match=r"row 1 carries no 'doc'"):
+        with pytest.raises(SystemExit, match=r"row 1 carries no usable 'doc'"):
             CL._rows_from_jsonl(p, with_ids=True, require_id="doc")
         # unaffected when the source carries no requirement (PAQ / m9-pool)
         CL._rows_from_jsonl(p, with_ids=True)
@@ -811,7 +818,7 @@ def test_a_harvest_row_without_doc_is_refused_by_row_index():
         grows = [{"text": "a", "form": "claim", "seed_id": "s1"},
                 {"text": "b", "form": "claim", "doc": "not-what-generated-uses"}]
         gp = _jsonl(d, "generated.jsonl", grows)
-        with pytest.raises(SystemExit, match=r"row 1 carries no 'seed_id'"):
+        with pytest.raises(SystemExit, match=r"row 1 carries no usable 'seed_id'"):
             CL._rows_from_jsonl(gp, with_ids=True, require_id="seed_id")
 
 
@@ -871,3 +878,64 @@ def test_arm_doc_count_is_the_document_example_count_not_a_fixed_draw():
     assert C.arm_doc_count({"dose_examples": 5_000_000}, "75/25") == 1_250_000
     assert C.arm_doc_count({"dose_examples": 20_000_000}, "50/50") == 10_000_000
     assert C.arm_doc_count({"dose_examples": 5_000_000}, "100/0") == 32
+
+
+def test_a_blank_provenance_id_is_refused_not_just_a_missing_one(tmp_path):
+    """Codex pass 5: `{"doc": ""}` and `{"seed_id": " "}` passed the None check and could never
+    match the held-document set, so a query from a held document could train."""
+    import json
+    import corpus_loader as C
+    p = tmp_path / "h.jsonl"
+    p.write_text(json.dumps({"text": "a title", "form": "title", "doc": "  "}) + "\n")
+    try:
+        C._rows_from_jsonl(p, with_ids=True, require_id="doc")
+    except SystemExit as e:
+        assert "usable 'doc'" in str(e)
+    else:
+        raise AssertionError("a blank doc id was accepted")
+
+
+def test_assemble_arm_validates_the_masks_the_streams_consumed_not_a_reload(monkeypatch):
+    """Codex pass 5: validation reloaded the masks from the cache; a swap between the load that
+    built the stream and the reload would pass. Now the builders record the exact arrays they
+    used and `validate` receives those; a builder that records nothing is refused."""
+    import corpus_loader as C
+    import rescreen10 as R
+    calls = {}
+
+    class FakeStream:
+        ids = [[1, 2]]
+
+    def fake_q(name, tok, student, **kw):
+        assert "consumed" in kw and kw["consumed"] is not None
+        for seg in R.QUERY_SEGMENTS:
+            kw["consumed"][seg] = f"mask-{seg}"
+        return FakeStream(), {}
+
+    def fake_d(n, tok, **kw):
+        kw["consumed"]["documents"] = "mask-docs"
+        return FakeStream(), {}
+
+    monkeypatch.setattr(C, "build_query_stream", fake_q)
+    monkeypatch.setattr(C, "build_doc_stream", fake_d)
+    monkeypatch.setattr(C, "guard_cross_role", lambda a, b: {"checked": True, "collisions": 0})
+    monkeypatch.setattr(R, "load_report", lambda: {"report": True})
+    monkeypatch.setattr(R, "protected_ident", lambda: "pid")
+    monkeypatch.setattr(R, "validate", lambda rep, masks: calls.setdefault("masks", masks))
+    monkeypatch.setattr(C.D, "batch_fn", lambda q, d, pattern: "bf")
+
+    class Tok:
+        pad_token_id = 0
+
+    C.assemble_arm("A1", Tok(), "bge-small", verbose=False)
+    assert calls["masks"]["documents"] == "mask-docs"
+    assert all(calls["masks"][s] == f"mask-{s}" for s in R.QUERY_SEGMENTS)
+
+    # a builder that records nothing must be refused, never validated from a reload
+    monkeypatch.setattr(C, "build_doc_stream", lambda n, tok, **kw: (FakeStream(), {}))
+    try:
+        C.assemble_arm("A1", Tok(), "bge-small", verbose=False)
+    except SystemExit as e:
+        assert "did not record the masks" in str(e)
+    else:
+        raise AssertionError("a stream with no recorded mask was validated")

@@ -209,10 +209,13 @@ def _rows_from_jsonl(path, default_form=None, limit=None, with_ids=False, requir
             f = r.get("form", default_form)
             if f not in FORM_ID:
                 raise SystemExit(f"{path}: form {f!r} is not one of the 12 registered forms")
-            if require_id and r.get(require_id) is None:
-                raise SystemExit(f"{path}: row {i} carries no {require_id!r} field, required "
-                                 f"for provenance -- the held-out-document check cannot be "
-                                 f"skipped for this source")
+            if require_id:
+                v = r.get(require_id)
+                if v is None or not str(v).strip():
+                    raise SystemExit(f"{path}: row {i} carries no usable {require_id!r} value "
+                                     f"({v!r}), required for provenance -- the held-out-document "
+                                     f"check cannot be skipped for this source")
+                r[require_id] = str(v).strip()
             texts.append(t)
             forms.append(f)
             if with_ids:
@@ -243,7 +246,8 @@ def held_out_doc_ids(path=None):
         for line in fh:
             r = json.loads(line)
             d = r.get("doc") if r.get("doc") is not None else r.get("seed_id")
-            if d is not None:
+            d = str(d).strip() if d is not None else None
+            if d:
                 out.add(d)
     return out
 
@@ -340,7 +344,7 @@ def _m9_extra(name):
     return _M9_EXTRA[name]
 
 
-def _m9_segments(screen=True):
+def _m9_segments(screen=True, consumed=None):
     """-> segments for the M9 pool, each pointing at the stella cache that already holds it.
 
     `screen=False` is the UNSCREENED pool and exists for exactly one caller: `rescreen10`, which
@@ -365,6 +369,8 @@ def _m9_segments(screen=True):
         out = []
         for sg in segs:
             m, _rep = rescreen10.query_keep_mask(sg.texts, sg.name, compute=False)
+            if consumed is not None:
+                consumed[sg.name] = m          # the EXACT array this stream is built from
             sel = np.flatnonzero(m)
             out.append(Segment(sg.name, [sg.texts[int(i)] for i in sel], sg.forms[sel], sg.array,
                                sg.rowmap[sel]))
@@ -395,7 +401,7 @@ def dedup_segments(segs):
     return out, removed
 
 
-def load_segments(names, head_per_source=None, verbose=True):
+def load_segments(names, head_per_source=None, verbose=True, consumed=None):
     """-> (segments, manifest). The corpus a screen arm trains on.
 
     `head_per_source` keeps the first N rows of each source IN FILE ORDER -- a smoke device, not a
@@ -409,7 +415,7 @@ def load_segments(names, head_per_source=None, verbose=True):
     for name in names:
         t0 = time.time()
         if SOURCES[name]["kind"] == "m9":
-            new = _m9_segments()
+            new = _m9_segments(consumed=consumed)
             if head_per_source:
                 new = [Segment(sg.name, sg.texts[:head_per_source], sg.forms[:head_per_source],
                                sg.array, sg.rowmap[:head_per_source]) for sg in new]
@@ -719,19 +725,27 @@ class FormBalancedStream:
 
 # --------------------------------------------------------------------------------- data cut ----
 
+def _registry_data_cut(registry):
+    """The registry's `data_cut` table, falling back to the real file's when a (stub) registry
+    carries none -- the same escape `_registry_arms` gives test fixtures."""
+    if registry and "data_cut" in registry:
+        return registry["data_cut"]
+    return json.loads((REPO / "m10" / "screen_registry.json").read_text()).get("data_cut", {})
+
+
 def data_cut_count(registry=None):
     """The registered post-screen unique-text count A2/A3/A4 are cut to, or None while §0b is
     open. It is `min` of the three corpora and cannot be computed before generation runs."""
-    reg = registry or json.loads((REPO / "m10" / "screen_registry.json").read_text())
-    return reg.get("data_cut", {}).get("unique_text_count")
+    reg = _registry_data_cut(registry)
+    return reg.get("unique_text_count")
 
 
 def cut_arms(registry=None):
     """-> the arm names the registered cut APPLIES TO, read from the registry, not retyped.
     `A4/ANCHOR` is one registry row naming two arms."""
-    reg = registry or json.loads((REPO / "m10" / "screen_registry.json").read_text())
+    reg = _registry_data_cut(registry)
     out = set()
-    for row in reg.get("data_cut", {}).get("applies_to", []):
+    for row in reg.get("applies_to", []):
         out.update(x.strip() for x in str(row).split("/") if x.strip())
     return out
 
@@ -819,7 +833,8 @@ def arm_sources(name, registry=None):
 
 def build_query_stream(arm_or_sources, tok, student, *, batch_size=32, seed=0, balanced=True,
                        max_len=512, prefix="", head_per_source=None, cut=None,
-                       allow_uncut=False, require_forms=None, verbose=True):
+                       allow_uncut=False, require_forms=None, verbose=True,
+                       registry=None, consumed=None):
     """-> (stream, manifest). Everything above, in the order an arm needs it.
 
     A registered CUT ARM (`screen_registry.data_cut.applies_to`) refuses to build a training
@@ -828,14 +843,15 @@ def build_query_stream(arm_or_sources, tok, student, *, batch_size=32, seed=0, b
     exists to separate. `allow_uncut=True` is the smoke escape and is RECORDED in the manifest
     (`uncut: true`), so an artifact can never look like a cut arm's.
     """
-    names = arm_sources(arm_or_sources) if isinstance(arm_or_sources, str) else tuple(
+    names = arm_sources(arm_or_sources, registry) if isinstance(arm_or_sources, str) else tuple(
         arm_or_sources)
-    segs, man = load_segments(names, head_per_source=head_per_source, verbose=verbose)
+    segs, man = load_segments(names, head_per_source=head_per_source, verbose=verbose,
+                              consumed=consumed)
     if head_per_source:
         man["head_per_source"] = head_per_source
-    is_cut_arm = isinstance(arm_or_sources, str) and arm_or_sources in cut_arms()
+    is_cut_arm = isinstance(arm_or_sources, str) and arm_or_sources in cut_arms(registry)
     if is_cut_arm:
-        cut = data_cut_count()
+        cut = data_cut_count(registry)
         if cut is None:
             if not allow_uncut:
                 raise SystemExit(
@@ -846,7 +862,7 @@ def build_query_stream(arm_or_sources, tok, student, *, batch_size=32, seed=0, b
                     f"smoke -- which records `uncut: true` in the manifest.")
             man["uncut"] = True
     else:
-        cut = data_cut_count() if cut == "registered" else cut
+        cut = data_cut_count(registry) if cut == "registered" else cut
     if allow_uncut:
         # recorded even for a source-list call, which is how the smoke builds its corpus: the
         # escape must be visible in the artifact whether or not the arm was named (Codex
@@ -914,7 +930,7 @@ def _screened_doc_pool(n, seed, banned, margin=1.05, floor=2_000):
 
 
 def build_doc_stream(n, tok, *, batch_size=32, seed=0, max_len=512, allow_unscreened=False,
-                     verbose=True):
+                     verbose=True, consumed=None):
     """-> (stream, meta) for the document-role half of the mix, from the frozen M9 pool.
 
     The document marker is applied HERE, once. `data10.pretokenize` used to take no prefix at all,
@@ -936,6 +952,8 @@ def build_doc_stream(n, tok, *, batch_size=32, seed=0, max_len=512, allow_unscre
     else:
         import rescreen10
         rows_banned, rep = rescreen10.doc_banned_rows(compute=False, verbose=verbose)
+        if consumed is not None:
+            consumed["documents"] = rows_banned   # the EXACT array the ban set is built from
         banned = set(int(x) for x in rows_banned)
         screen_rep = {"applied": True, "n_banned_in_pool": len(banned),
                       "protected10": rescreen10._h(rescreen10.protected_ident())}
@@ -1077,23 +1095,25 @@ def assemble_arm(arm_name, tok, student, *, batch_size=32, seed=0, max_len=512, 
     require_forms = FORMS if name in REQUIRE_ALL_FORMS else None
     pattern, pattern_rep = resolve_arm_pattern(name, entry, reg)
     n_docs = arm_doc_count(entry, pattern, batch_size)
+    import rescreen10
+    # `consumed` collects the EXACT mask arrays the two streams are built from; validation runs
+    # on those, never on a second load (Codex pass 5: a cache swap between the load that built
+    # the stream and a reload for validation could admit evaluation text unnoticed).
+    consumed = {"protected10": rescreen10.protected_ident()}
     q_stream, q_man = build_query_stream(name, tok, student, batch_size=batch_size, seed=seed,
                                         balanced=True, max_len=max_len, prefix="",
                                         allow_uncut=False, require_forms=require_forms,
-                                        verbose=verbose)
+                                        verbose=verbose, registry=reg, consumed=consumed)
     doc_stream, doc_man = build_doc_stream(n_docs, tok, batch_size=batch_size, seed=seed,
-                                          max_len=max_len, allow_unscreened=False, verbose=verbose)
+                                          max_len=max_len, allow_unscreened=False, verbose=verbose,
+                                          consumed=consumed)
     cross = guard_cross_role(q_stream.ids, doc_stream.ids)
-
-    import rescreen10
-    report = rescreen10.load_report()
-    masks = {"protected10": rescreen10.protected_ident()}
-    for seg in _m9_segments(screen=False):
-        m, _rep = rescreen10.query_keep_mask(seg.texts, seg.name, compute=False)
-        masks[seg.name] = m
-    banned_rows, _rep = rescreen10.doc_banned_rows(compute=False, verbose=False)
-    masks["documents"] = banned_rows
-    rescreen10.validate(report, masks)
+    segs = tuple(getattr(rescreen10, "QUERY_SEGMENTS", ()))
+    missing = [k for k in (*segs, "documents") if k not in consumed]
+    if missing:
+        raise SystemExit(f"assemble_arm: the streams did not record the masks they consumed for "
+                         f"{missing} -- refusing to validate a reload instead")
+    rescreen10.validate(rescreen10.load_report(), consumed)
 
     man = {"arm": name, "requested_as": arm_name, "student": student, "batch_size": batch_size,
           "seed": seed, "max_len": max_len, "pattern": pattern, "pattern_source": pattern_rep,
