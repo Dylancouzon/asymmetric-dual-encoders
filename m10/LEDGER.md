@@ -1392,6 +1392,10 @@ Registered runs refuse non-CUDA (bf16 is the recipe); fingerprint carries device
 
 `--resume` now requires a PARSEABLE non-terminal work record and the rolling checkpoint, refuses an unparseable record (terminality unknowable), and never passes `resume_from=None`. Verbatim in `research/m10-codex-runner-2026-09-07.md`.
 
+### Runner Codex pass 4 — **GO**; **FAMILY F STARTED 2026-09-07 evening** — the first registered M10 arm
+
+`F-bge-small` (20M examples, bs 32, 75/25, the 20M three-cycle schedule with the 2,000-step warmup, ridge warm start n_fit 60,000 / seed 21, bf16 autocast on CUDA, seed 0) launched through `work/m10arms_run_F.sh` → `run_arm.py F-bge-small --device cuda`; `F-MiniLM-L6` chained after it. Corpus: the CUT A4 (2,651,572 unique texts; 59,420 cross-source duplicates removed at load) through `assemble_arm`; 5,000,000 screened documents. Reads: COV at cycle ends + midpoints, the 5M/10M/20M `read` points, DEV-6 once at the end. Logs `work/m10arms/F-bge-small.log`, chain `work/m10arms/F_chain.log`, records → `work/m10arms/<arm>/record.json` + `results/m10_arm_<arm>.json`. Four runner passes in `research/m10-codex-runner-2026-09-07.md`. **Nothing in the registry may change from here for any number these arms produce.**
+
 ## §4 Dev-reuse log
 
 | date | surface | raw score reads | artifact |

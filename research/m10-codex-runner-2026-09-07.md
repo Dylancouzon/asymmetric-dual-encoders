@@ -103,3 +103,19 @@ Minimal fix:
 - Add regressions for no record, malformed record, and missing checkpoint; prove a valid resume starts above step 0.
 
 The targeted pytest run could not start because this read-only environment has no writable temporary directory, so I did not independently reproduce the reported 315 passes.
+
+# FOURTH PASS (3a81629), same day — GO (verbatim; read-exclusion audit clean)
+
+| Pass-three open item | Status | Evidence |
+|---|---|---|
+| `--resume` becoming a fresh run | **CLOSED** | Registered resume requires a parseable, non-terminal work record and `ckpt.pt` at [run_arm.py:817](/home/dylan/asymetric-dual-encoders/m10src/run_arm.py:817), always passes that checkpoint at [run_arm.py:926](/home/dylan/asymetric-dual-encoders/m10src/run_arm.py:926), and loads its saved step at [trainer10.py:124](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:124). Regressions cover absent record, absent checkpoint, malformed record, and non-`None` handoff at [test_run_arm.py:206](/home/dylan/asymetric-dual-encoders/m10src/test_run_arm.py:206), [test_run_arm.py:226](/home/dylan/asymetric-dual-encoders/m10src/test_run_arm.py:226), [test_run_arm.py:234](/home/dylan/asymetric-dual-encoders/m10src/test_run_arm.py:234), and [test_run_arm.py:242](/home/dylan/asymetric-dual-encoders/m10src/test_run_arm.py:242). |
+
+New findings, ranked: **none within the specified training-number, evaluation-surface, or completion-label scope.**
+
+Non-gating provenance note: the supplied smoke’s `git_head` and recipe fingerprint match `70b854f`, not `3a81629` ([record.json:455](/home/dylan/asymetric-dual-encoders/work/m10arms/smoke/A1/record.json:455)). The intervening production change is resume admission, so this does not alter the F fresh-run decision.
+
+## Verdict
+
+**GO** for both `F-bge-small` and `F-MiniLM-L6` at 20M.
+
+Targeted pytest execution was unavailable because the read-only environment has no writable temporary directory; the reported 318 passes were not independently rerun.
