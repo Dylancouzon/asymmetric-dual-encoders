@@ -1299,3 +1299,19 @@ def test_tokenize_corpus_serves_the_cache_HIT_as_a_memmap_too(monkeypatch, tmp_p
     hit = CL.tokenize_corpus(FakeTok(), [seg], man, "fake", verbose=False)
     assert len(hit) == 40 and list(hit[0]) == [3, 4]
     assert isinstance(hit.flat, np.memmap), f"cache-HIT flat must be a memmap, got {type(hit.flat)}"
+
+
+def test_DOC_TEXT_CHUNK_is_bounded_and_a_bigger_chunk_is_refused():
+    """`chunk` is the only bound on `row_texts(rows[i:i+chunk])`, which materializes that many
+    408-char document strings -- 5M of them is the 19 GB that helped kill the box twice. Nothing
+    asserted it: DOC_TEXT_CHUNK could be set to 5,000,000 and the whole suite stayed green
+    (Opus 2026-09-07, open item 4)."""
+    assert 0 < CL.DOC_TEXT_CHUNK <= 200_000, (
+        f"DOC_TEXT_CHUNK={CL.DOC_TEXT_CHUNK:,} -- at ~408 chars/doc this materializes "
+        f"~{CL.DOC_TEXT_CHUNK * 408 / 2**30:.1f} GiB of Python strings per chunk")
+    with pytest.raises(SystemExit, match="must be in"):
+        CL._stream_doc_ids(np.arange(10), tok=None, prefix="", max_len=512,
+                           chunk=CL.DOC_TEXT_CHUNK + 1, verbose=False, cache=False)
+    with pytest.raises(SystemExit, match="must be in"):
+        CL._stream_doc_ids(np.arange(10), tok=None, prefix="", max_len=512, chunk=0,
+                           verbose=False, cache=False)

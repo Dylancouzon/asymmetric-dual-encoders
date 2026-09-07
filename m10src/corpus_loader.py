@@ -1191,6 +1191,14 @@ def _stream_doc_ids(rows, tok, prefix, max_len, chunk=DOC_TEXT_CHUNK, verbose=Tr
     side's token cache after the 2026-09-07 crash.
     """
     import data as m9data
+    # `chunk` bounds the only unbounded thing here: `row_texts(rows[i:i+chunk])` materializes
+    # exactly `chunk` document strings (408 chars each, so 5M of them is the 19 GB that helped
+    # kill the box twice). Nothing asserted this -- DOC_TEXT_CHUNK could have been set to
+    # 5,000,000 and the whole suite stayed green (Opus 2026-09-07).
+    if not (0 < int(chunk) <= DOC_TEXT_CHUNK):
+        raise SystemExit(f"_stream_doc_ids: chunk={chunk:,} must be in (0, {DOC_TEXT_CHUNK:,}]; "
+                         f"a larger chunk materializes that many document strings at once, which "
+                         f"is the cost this streaming path exists to avoid")
     ident = {"kind": "doc-ids", "n": int(len(rows)), "prefix": prefix, "max_len": int(max_len),
              "rows_sha256": hashlib.sha256(np.ascontiguousarray(
                  np.asarray(rows, dtype=np.int64)).tobytes()).hexdigest(),
