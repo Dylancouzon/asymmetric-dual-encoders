@@ -1328,3 +1328,30 @@ def test_the_lazy_n_produces_the_SAME_cache_key_as_flattening_first():
         lazy = sum(len(s.texts) for s in objs)
         eager = len([t for s in objs for t in s.texts])
         assert lazy == eager, f"{segs}: lazy {lazy} != eager {eager} -- cache key would change"
+
+
+def test_assemble_arm_trims_BETWEEN_the_two_stream_builds(monkeypatch):
+    """The doc build peaks at ~8.2 GB (measured at the registered 5,000,000) and runs SECOND, so
+    the code returns the query build's allocator residue BEFORE that peak rather than after it.
+    That ordering is written into a comment and was covered by no test (Codex + Opus 2026-09-07):
+    the mutation test on `release_arena` only reaches the two `_stream_doc_ids` branches, so this
+    call could be deleted, or moved after the doc build where it cannot help, with every test
+    still green."""
+    calls = {}
+    _assemble_arm_mocks(monkeypatch, calls)
+    order = []
+    monkeypatch.setattr(CL, "release_arena", lambda: (order.append("trim"), 0)[1])
+    real_bqs = CL.build_query_stream
+    real_bds = CL.build_doc_stream
+
+    def spy_bqs(*a, **k):
+        order.append("query"); return real_bqs(*a, **k)
+
+    def spy_bds(*a, **k):
+        order.append("doc"); return real_bds(*a, **k)
+
+    monkeypatch.setattr(CL, "build_query_stream", spy_bqs)
+    monkeypatch.setattr(CL, "build_doc_stream", spy_bds)
+    CL.assemble_arm("A1", _Tok(), "bge-small", registry={"anchor_aliases": {}}, verbose=False)
+    assert order == ["query", "trim", "doc"], (
+        f"the trim must sit BETWEEN the two builds, got {order}")
