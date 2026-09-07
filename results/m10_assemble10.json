@@ -1,0 +1,503 @@
+{
+ "_what": "step 8: the generated forms assembled into the registered training file",
+ "_screen_order": [
+  "out_of_rubric_range",
+  "exact_dup",
+  "forms12_holdout_doc",
+  "protected_index",
+  "six_documents",
+  "copied_span",
+  "a8_gate1",
+  "quota_cut"
+ ],
+ "_partial": false,
+ "when": "2026-09-07T13:48:46-0400",
+ "forms_requested": [
+  "howto",
+  "argument",
+  "finance",
+  "health",
+  "comparison",
+  "yesno",
+  "conversational"
+ ],
+ "gen_dir": "/home/dylan/asymetric-dual-encoders/work/m10gen",
+ "limit": null,
+ "allow_incomplete": false,
+ "forms_skipped": {},
+ "forms_dropped_by_a8": [],
+ "index_screens": {
+  "streams": "harvest",
+  "stream_limit": null,
+  "n_candidates": 978307,
+  "dropped_query_side": 1850,
+  "dropped_document_side": 0,
+  "dropped_by_the_six_documents_alone": 0,
+  "dropped_total": 1850,
+  "protected10_ident": {
+   "version": "2026-09-05-six+dev+reserved-queries+COV(q+d)+arxiv-title",
+   "arxiv_draw": "97e1a37ae7eb678b",
+   "n_arxiv_texts": 4000,
+   "components": [
+    [
+     "BRIGHT",
+     "3066d29c9651a576c8aba4832d249807b181ecae"
+    ],
+    [
+     "LEDGER",
+     "7881df568382"
+    ],
+    [
+     "LegalBenchConsumerContractsQA",
+     "f9eafd458f9c61e531d4a2510d8a11dfd2282b21"
+    ],
+    [
+     "LegalBenchCorporateLobbying",
+     "f43436957b41692dd3e1b06a6d7116cd09f6a1db"
+    ],
+    [
+     "MedicalQARetrieval",
+     "a77efe81ec0c03aff7fecde742a5c9c4c46f6005"
+    ]
+   ]
+  },
+  "min_share": 8,
+  "per_stream": {
+   "six-docs": {
+    "streamed": 272117,
+    "new_drops": 0,
+    "seconds": 77.3,
+    "truncated": false
+   },
+   "dev:nq-250k": {
+    "streamed": 250000,
+    "new_drops": 0,
+    "seconds": 39.4,
+    "truncated": false
+   },
+   "dev:hotpotqa": {
+    "streamed": 5233329,
+    "new_drops": 0,
+    "seconds": 651.7,
+    "truncated": false
+   },
+   "dev:cqadup-programmers": {
+    "streamed": 32176,
+    "new_drops": 0,
+    "seconds": 7.6,
+    "truncated": false
+   },
+   "dev:cqadup-physics": {
+    "streamed": 38316,
+    "new_drops": 0,
+    "seconds": 8.0,
+    "truncated": false
+   },
+   "cov:MedicalQARetrieval": {
+    "streamed": 2048,
+    "new_drops": 0,
+    "seconds": 0.5,
+    "truncated": false
+   },
+   "cov:BRIGHT": {
+    "streamed": 404416,
+    "new_drops": 0,
+    "seconds": 46.4,
+    "truncated": false
+   },
+   "cov:LegalBenchCorporateLobbying": {
+    "streamed": 319,
+    "new_drops": 0,
+    "seconds": 0.1,
+    "truncated": false
+   },
+   "cov:LegalBenchConsumerContractsQA": {
+    "streamed": 154,
+    "new_drops": 0,
+    "seconds": 0.1,
+    "truncated": false
+   },
+   "cov:LEDGER": {
+    "streamed": 47820,
+    "new_drops": 0,
+    "seconds": 27.9,
+    "truncated": false
+   }
+  },
+  "seconds": 1138.9
+ },
+ "per_form": {
+  "howto": {
+   "out_of_rubric_range": 0,
+   "exact_dup": 0,
+   "forms12_holdout_doc": 0,
+   "protected_index": 32,
+   "six_documents": 0,
+   "copied_span": 0,
+   "n_input": 155085,
+   "copied_span_already_applied_by_driver": true,
+   "copied_span_driver_removed": 12345,
+   "forms12_holdout_docs": 500,
+   "kept_after_local": 155085,
+   "quota_registered": 143000,
+   "prompt_sha256": "48cfbc003718675a6ad09e98085230f54cbd9d590380bd64e71abc9f0d0fbcd3",
+   "manifest_complete": true,
+   "rows_on_disk": 155085,
+   "kept_after_index_screens": 155053,
+   "a8_gate1": {
+    "n_input": 155053,
+    "exact_dups_removed": 0,
+    "post_exact_dedup": 155053,
+    "near_duplicates": 2348,
+    "near_dup_rate_raw": 0.01514320909624451,
+    "near_dup_rate": 0.01514,
+    "representatives": 152705,
+    "share_threshold": "16/32",
+    "rule": "W10: 4-grams >= 50% below 39 words, else 8-gram 16/32",
+    "caught_only_by_short_rule": 2188,
+    "_note": "sequential by registration: the first occurrence is the representative",
+    "action": "no cut (rate at or below 0.25); exact duplicates still removed",
+    "retained": 155053,
+    "dropped_from_build": false,
+    "form": "howto",
+    "mean_pairwise_stella_cosine": null,
+    "todo": "mean pairwise stella-space cosine is a diagnostic with no threshold (instructions-m10.md:466); it needs an encode and is not computed here"
+   },
+   "quota_cut": {
+    "quota": 143000,
+    "n_before": 155053,
+    "seed": 0,
+    "cut": true,
+    "n_after": 143000,
+    "removed": 12053
+   },
+   "final_rows": 143000
+  },
+  "argument": {
+   "out_of_rubric_range": 0,
+   "exact_dup": 2,
+   "forms12_holdout_doc": 0,
+   "protected_index": 629,
+   "six_documents": 0,
+   "copied_span": 0,
+   "n_input": 58032,
+   "copied_span_already_applied_by_driver": true,
+   "copied_span_driver_removed": 72256,
+   "forms12_holdout_docs": 500,
+   "kept_after_local": 58030,
+   "quota_registered": 143000,
+   "prompt_sha256": "4ec8aadd7ec3be8699d7b6c127fe286992b4eb4cedcbb42a078a776d6a4802bc",
+   "manifest_complete": true,
+   "rows_on_disk": 58032,
+   "kept_after_index_screens": 57401,
+   "a8_gate1": {
+    "n_input": 57401,
+    "exact_dups_removed": 0,
+    "post_exact_dedup": 57401,
+    "near_duplicates": 2267,
+    "near_dup_rate_raw": 0.03949408546889427,
+    "near_dup_rate": 0.03949,
+    "representatives": 55134,
+    "share_threshold": "16/32",
+    "rule": "W10: 4-grams >= 50% below 39 words, else 8-gram 16/32",
+    "caught_only_by_short_rule": 0,
+    "_note": "sequential by registration: the first occurrence is the representative",
+    "action": "no cut (rate at or below 0.25); exact duplicates still removed",
+    "retained": 57401,
+    "dropped_from_build": false,
+    "form": "argument",
+    "mean_pairwise_stella_cosine": null,
+    "todo": "mean pairwise stella-space cosine is a diagnostic with no threshold (instructions-m10.md:466); it needs an encode and is not computed here"
+   },
+   "quota_cut": {
+    "quota": 143000,
+    "n_before": 57401,
+    "seed": 0,
+    "cut": false,
+    "n_after": 57401
+   },
+   "final_rows": 57401
+  },
+  "finance": {
+   "out_of_rubric_range": 0,
+   "exact_dup": 6,
+   "forms12_holdout_doc": 1172,
+   "protected_index": 22,
+   "six_documents": 0,
+   "copied_span": 0,
+   "n_input": 146347,
+   "copied_span_already_applied_by_driver": true,
+   "copied_span_driver_removed": 7627,
+   "forms12_holdout_docs": 500,
+   "kept_after_local": 145169,
+   "quota_registered": 143000,
+   "prompt_sha256": "ba74eb9debf21e96ce43c54b822d982a9c7ff7b0c85c823c4af67bfedf79c6c4",
+   "manifest_complete": true,
+   "rows_on_disk": 146347,
+   "kept_after_index_screens": 145147,
+   "a8_gate1": {
+    "n_input": 145147,
+    "exact_dups_removed": 0,
+    "post_exact_dedup": 145147,
+    "near_duplicates": 26612,
+    "near_dup_rate_raw": 0.18334516042357057,
+    "near_dup_rate": 0.18335,
+    "representatives": 118535,
+    "share_threshold": "16/32",
+    "rule": "W10: 4-grams >= 50% below 39 words, else 8-gram 16/32",
+    "caught_only_by_short_rule": 26612,
+    "_note": "sequential by registration: the first occurrence is the representative",
+    "action": "no cut (rate at or below 0.25); exact duplicates still removed",
+    "retained": 145147,
+    "dropped_from_build": false,
+    "form": "finance",
+    "mean_pairwise_stella_cosine": null,
+    "todo": "mean pairwise stella-space cosine is a diagnostic with no threshold (instructions-m10.md:466); it needs an encode and is not computed here"
+   },
+   "quota_cut": {
+    "quota": 143000,
+    "n_before": 145147,
+    "seed": 0,
+    "cut": true,
+    "n_after": 143000,
+    "removed": 2147
+   },
+   "final_rows": 143000
+  },
+  "health": {
+   "out_of_rubric_range": 0,
+   "exact_dup": 33,
+   "forms12_holdout_doc": 2131,
+   "protected_index": 844,
+   "six_documents": 0,
+   "copied_span": 0,
+   "n_input": 135693,
+   "copied_span_already_applied_by_driver": true,
+   "copied_span_driver_removed": 1344,
+   "forms12_holdout_docs": 497,
+   "kept_after_local": 133529,
+   "quota_registered": 143000,
+   "prompt_sha256": "ece10bf623a4d58cd3b1259e3d9a7f0f8f5a6925006293a549746a2e417f40f0",
+   "manifest_complete": true,
+   "rows_on_disk": 135693,
+   "kept_after_index_screens": 132685,
+   "a8_gate1": {
+    "n_input": 132685,
+    "exact_dups_removed": 0,
+    "post_exact_dedup": 132685,
+    "near_duplicates": 70623,
+    "near_dup_rate_raw": 0.5322606172513848,
+    "near_dup_rate": 0.53226,
+    "representatives": 62062,
+    "share_threshold": "16/32",
+    "rule": "W10: 4-grams >= 50% below 39 words, else 8-gram 16/32",
+    "caught_only_by_short_rule": 70623,
+    "_note": "sequential by registration: the first occurrence is the representative",
+    "action": "cut to representatives (rate above 0.25, never topped up)",
+    "retained": 62062,
+    "dropped_from_build": false,
+    "form": "health",
+    "mean_pairwise_stella_cosine": null,
+    "todo": "mean pairwise stella-space cosine is a diagnostic with no threshold (instructions-m10.md:466); it needs an encode and is not computed here"
+   },
+   "quota_cut": {
+    "quota": 143000,
+    "n_before": 62062,
+    "seed": 0,
+    "cut": false,
+    "n_after": 62062
+   },
+   "final_rows": 62062
+  },
+  "comparison": {
+   "out_of_rubric_range": 0,
+   "exact_dup": 2,
+   "forms12_holdout_doc": 0,
+   "protected_index": 6,
+   "six_documents": 0,
+   "copied_span": 0,
+   "n_input": 176708,
+   "copied_span_already_applied_by_driver": true,
+   "copied_span_driver_removed": 14304,
+   "forms12_holdout_docs": 500,
+   "kept_after_local": 176706,
+   "quota_registered": 143000,
+   "prompt_sha256": "2389a83bb50c0bf0181650e58905f74edf310b369846a8bc8b838232b4668185",
+   "manifest_complete": true,
+   "rows_on_disk": 176708,
+   "kept_after_index_screens": 176700,
+   "a8_gate1": {
+    "n_input": 176700,
+    "exact_dups_removed": 0,
+    "post_exact_dedup": 176700,
+    "near_duplicates": 12888,
+    "near_dup_rate_raw": 0.07293718166383702,
+    "near_dup_rate": 0.07294,
+    "representatives": 163812,
+    "share_threshold": "16/32",
+    "rule": "W10: 4-grams >= 50% below 39 words, else 8-gram 16/32",
+    "caught_only_by_short_rule": 12888,
+    "_note": "sequential by registration: the first occurrence is the representative",
+    "action": "no cut (rate at or below 0.25); exact duplicates still removed",
+    "retained": 176700,
+    "dropped_from_build": false,
+    "form": "comparison",
+    "mean_pairwise_stella_cosine": null,
+    "todo": "mean pairwise stella-space cosine is a diagnostic with no threshold (instructions-m10.md:466); it needs an encode and is not computed here"
+   },
+   "quota_cut": {
+    "quota": 143000,
+    "n_before": 176700,
+    "seed": 0,
+    "cut": true,
+    "n_after": 143000,
+    "removed": 33700
+   },
+   "final_rows": 143000
+  },
+  "yesno": {
+   "out_of_rubric_range": 0,
+   "exact_dup": 2,
+   "forms12_holdout_doc": 0,
+   "protected_index": 130,
+   "six_documents": 0,
+   "copied_span": 0,
+   "n_input": 152382,
+   "copied_span_already_applied_by_driver": true,
+   "copied_span_driver_removed": 35824,
+   "forms12_holdout_docs": 500,
+   "kept_after_local": 152380,
+   "quota_registered": 143000,
+   "prompt_sha256": "f961021309343e0f6c347bb2cfc38e8459ed8cf25f9a7c4934443be049a84fc5",
+   "manifest_complete": true,
+   "rows_on_disk": 152382,
+   "kept_after_index_screens": 152250,
+   "a8_gate1": {
+    "n_input": 152250,
+    "exact_dups_removed": 0,
+    "post_exact_dedup": 152250,
+    "near_duplicates": 10634,
+    "near_dup_rate_raw": 0.0698456486042693,
+    "near_dup_rate": 0.06985,
+    "representatives": 141616,
+    "share_threshold": "16/32",
+    "rule": "W10: 4-grams >= 50% below 39 words, else 8-gram 16/32",
+    "caught_only_by_short_rule": 10634,
+    "_note": "sequential by registration: the first occurrence is the representative",
+    "action": "no cut (rate at or below 0.25); exact duplicates still removed",
+    "retained": 152250,
+    "dropped_from_build": false,
+    "form": "yesno",
+    "mean_pairwise_stella_cosine": null,
+    "todo": "mean pairwise stella-space cosine is a diagnostic with no threshold (instructions-m10.md:466); it needs an encode and is not computed here"
+   },
+   "quota_cut": {
+    "quota": 143000,
+    "n_before": 152250,
+    "seed": 0,
+    "cut": true,
+    "n_after": 143000,
+    "removed": 9250
+   },
+   "final_rows": 143000
+  },
+  "conversational": {
+   "out_of_rubric_range": 0,
+   "exact_dup": 0,
+   "forms12_holdout_doc": 0,
+   "protected_index": 187,
+   "six_documents": 0,
+   "copied_span": 0,
+   "n_input": 157408,
+   "copied_span_already_applied_by_driver": true,
+   "copied_span_driver_removed": 35548,
+   "forms12_holdout_docs": 500,
+   "kept_after_local": 157408,
+   "quota_registered": 143000,
+   "prompt_sha256": "96223e6e219507bbd9bbbf211875c73fa70bf869bf4cbe2935b2b751104d43fd",
+   "manifest_complete": true,
+   "rows_on_disk": 157408,
+   "kept_after_index_screens": 157221,
+   "a8_gate1": {
+    "n_input": 157221,
+    "exact_dups_removed": 0,
+    "post_exact_dedup": 157221,
+    "near_duplicates": 395,
+    "near_dup_rate_raw": 0.0025123870220899245,
+    "near_dup_rate": 0.00251,
+    "representatives": 156826,
+    "share_threshold": "16/32",
+    "rule": "W10: 4-grams >= 50% below 39 words, else 8-gram 16/32",
+    "caught_only_by_short_rule": 94,
+    "_note": "sequential by registration: the first occurrence is the representative",
+    "action": "no cut (rate at or below 0.25); exact duplicates still removed",
+    "retained": 157221,
+    "dropped_from_build": false,
+    "form": "conversational",
+    "mean_pairwise_stella_cosine": null,
+    "todo": "mean pairwise stella-space cosine is a diagnostic with no threshold (instructions-m10.md:466); it needs an encode and is not computed here"
+   },
+   "quota_cut": {
+    "quota": 143000,
+    "n_before": 157221,
+    "seed": 0,
+    "cut": true,
+    "n_after": 143000,
+    "removed": 14221
+   },
+   "final_rows": 143000
+  }
+ },
+ "total_rows": 834463,
+ "by_form": {
+  "argument": 57401,
+  "comparison": 143000,
+  "conversational": 143000,
+  "finance": 143000,
+  "health": 62062,
+  "howto": 143000,
+  "yesno": 143000
+ },
+ "cross_form_duplicate_texts": 1,
+ "_cross_form_note": "counted, not removed here: A8's denominator is per form and corpus_loader.dedup_segments removes duplicates globally at load",
+ "output": {
+  "path": "/home/dylan/asymetric-dual-encoders/work/m10gen/generated_queries.jsonl",
+  "sha256": "e546bd8c68bfe79fefafdaca3f085cf8f5e1c57153c36ad7053bfd3788157bfd",
+  "bytes": 314721198,
+  "row_keys": [
+   "text",
+   "form",
+   "seed_id",
+   "doc",
+   "prompt_sha256"
+  ]
+ },
+ "protected10_ident": {
+  "version": "2026-09-05-six+dev+reserved-queries+COV(q+d)+arxiv-title",
+  "arxiv_draw": "97e1a37ae7eb678b",
+  "n_arxiv_texts": 4000,
+  "components": [
+   [
+    "BRIGHT",
+    "3066d29c9651a576c8aba4832d249807b181ecae"
+   ],
+   [
+    "LEDGER",
+    "7881df568382"
+   ],
+   [
+    "LegalBenchConsumerContractsQA",
+    "f9eafd458f9c61e531d4a2510d8a11dfd2282b21"
+   ],
+   [
+    "LegalBenchCorporateLobbying",
+    "f43436957b41692dd3e1b06a6d7116cd09f6a1db"
+   ],
+   [
+    "MedicalQARetrieval",
+    "a77efe81ec0c03aff7fecde742a5c9c4c46f6005"
+   ]
+  ]
+ },
+ "seconds": 1479.1
+}

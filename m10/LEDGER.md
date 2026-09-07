@@ -240,6 +240,22 @@ allocation and `max_extension_cycles` are neither — they are fixed at the M10.
 
 **Disclosed, not acted on:** `conversational` reads 0% near-duplicates yet **53% of its queries open with one of ten 4-grams** — the ≥39-word regime's 8-gram bottom-32 sketch is diluted by length and cannot see a shared opener. The registered gate has no action on opener concentration and changing it now would be post-observation; it is reported beside the form in the manifest and is a candidate for the M14 contamination/diversity row.
 
+### Step 8 EXECUTED, 2026-09-07 13:48 — the generated corpus assembled: **834,463 rows**, health cut to representatives, argument under quota (`results/m10_assemble10.json`, output sha in the report)
+
+Screen order per form: rubric range · exact dedup · FORMS-12 by DOCUMENT · protected index · document streams (harvest parity; the six alone removed 0) · own-seed copied span (driver) · A8 gate 1 (W10) · quota cut seed 0. 24.6 min.
+
+| form | rows in | hold-out by doc | protected idx | A8 rate | A8 action | final |
+|---|---|---|---|---|---|---|
+| finance | 146,347 | 1,172 | 22 | **0.183** | none | 143,000 |
+| howto | 155,085 | 0 | 32 | 0.015 | none | 143,000 |
+| comparison | 176,708 | 0 | 6 | 0.073 | none | 143,000 |
+| yesno | 152,382 | 0 | 130 | 0.070 | none | 143,000 |
+| conversational | 157,408 | 0 | 187 | 0.003 | none | 143,000 |
+| argument | 58,032 | 0 | 629 | 0.039 | none | **57,401** (under quota; not redistributed) |
+| **health** | 135,693 | 2,131 | 844 | **0.532** | **cut to representatives** | **62,062** (≥ 50,000 → kept) |
+
+Notes: the hold-out-by-document reading bit only on the two `wikipedia-body` forms (finance, health), as predicted. `cross_form_duplicate_texts: 1` (the loader removes it globally). Mean pairwise stella cosine (no threshold) left `todo`. **No form dropped.** Twelve forms now exist for A4.
+
 ### A8 gate 2 — distribution overlap vs real queries, EXECUTED 2026-09-05 night for the five existing forms (`results/m10_a8_gate2.json`, `m10src/a8_gate2.py`)
 
 MS MARCO dev queries (official Microsoft blob, `queries.dev.tsv`, sha256 `757b7e93…`, 101,093 rows → 50,000 sampled seed 0), **validation only** under the 2026-09-04 rule; stored under `work/m10msmarco/` only, never a seed/target/negative/gradient. Stella query-role vectors both sides; 5,000 per form; k-NN cosine and two-sample energy distance on unit vectors. **Action: none (registered).**
