@@ -1,0 +1,31 @@
+#!/bin/bash
+# Tracked here, not in gitignored work/: a fresh clone needs it (CLAUDE.md, durable knowledge).
+# Survives a VM kill: append + flush every sample. Columns: ts, guest_used_MB, guest_avail_MB,
+# arm_rss_MB, gpu_MB, host_free_MB(every 6th sample only -- powershell is slow).
+# Usage: memtrace.sh [pgrep-pattern] [out.csv]
+PAT="${1:-run_arm.py F-bge-small}"
+OUT="${2:-work/memtrace.csv}"
+echo "# pattern: $PAT" >> $OUT
+echo "ts,guest_used_mb,guest_avail_mb,arm_rss_mb,gpu_mb,host_free_mb" >> $OUT
+i=0
+while true; do
+  read used avail < <(free -m | awk '/^Mem:/{print $3, $7}')
+  # `pgrep -f` also matches the tracer AND the shell that launched the arm, because the pattern
+  # sits in their argv too (same trap as `pkill -f` matching your own shell). Excluding our own
+  # pids is not enough -- the launcher is a different process. So take the LARGEST RSS among the
+  # matches: the arm outweighs any bookkeeping shell by three orders of magnitude.
+  RSS=0
+  for pid in $(pgrep -f "$PAT" | grep -vx -e "$$" -e "$PPID"); do
+    r=$(awk '/VmRSS/{print int($2/1024)}' /proc/$pid/status 2>/dev/null || echo 0)
+    [ -n "$r" ] && [ "$r" -gt "$RSS" ] && RSS=$r
+  done
+  GPU=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits 2>/dev/null | head -1)
+  HOST=""
+  if [ $((i % 6)) -eq 0 ]; then
+    HOST=$(timeout 25 powershell.exe -NoProfile -Command "[int]((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory/1024)" 2>/dev/null | tr -d '\r')
+  fi
+  echo "$(date +%H:%M:%S),$used,$avail,$RSS,$GPU,$HOST" >> $OUT
+  sync
+  i=$((i+1))
+  sleep 5
+done

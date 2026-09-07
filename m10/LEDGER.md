@@ -9,7 +9,7 @@ row points at; this file records the decision, the number a rule reads, and the 
 **Not a flaky box.** WSL went down twice, ~2 h apart, both times before family F reached a
 training step. `dmesg` does not survive a WSL restart and **Windows logged nothing at either
 time** — no error, no critical event, no sleep — so the cause was found by instrumenting a rerun
-(`work/memtrace.sh`, traces in `work/memtrace_before_fix.csv` and `work/memtrace.csv`).
+(`m10src/memtrace.sh`, traces in `work/memtrace_before_fix.csv` and `work/memtrace.csv`).
 
 | | before | after (measured 2026-09-07, see below) |
 |---|---|---|
