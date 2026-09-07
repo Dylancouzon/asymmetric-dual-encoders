@@ -68,3 +68,11 @@
     undeduped they also doubled their own presentation weight inside `factoid`
     (`corpus_loader.dedup_segments`).
 
+17. **Writing a rule in a registry does not run it, and a warm start leaves the model in eval().**
+    Codex's runner review (2026-09-07) found four registered §Recipe items with no code behind
+    them at all — bf16 autocast, wd on `dim > 1` only, the 2,000-step cycle-1 warmup, and
+    `train()` (M10.0-e's three calibration arms therefore trained in eval mode: `calib.warm_start`
+    → `nano10.pooled_features` → `model.eval()`, and `trainer10` never set it back). **Grep the
+    recipe for each clause and find the line that implements it**; `arm_smoke.SHAPES` is a hand
+    copy, so cross-check it against the RESOLVED registry recipe before anything is copied into it
+    — comparing a field you have just overwritten cannot fail (`run_arm.check_shape`).
