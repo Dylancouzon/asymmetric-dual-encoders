@@ -8,8 +8,12 @@ work, Codex is the adversarial reviewer.
 
 ## RUNNING: `work/m10arms_run_F.sh` → F-bge-small then F-MiniLM-L6, under `m10src/memtrace.sh`
 
-**10.9 h EACH** at the measured 512 ex/s eager (the old 6.2 h read the 890 ex/s
-`fixed_bucket_compile` row; `--compile` is SMOKE-ONLY for registered arms). Kill by PID only.
+**TRAINING CONFIRMED 19:53** — `step 12500/625000 loss 0.3898 lr 9.54e-05 628 ex/s`, the first
+arm to get past data prep after three crashes. **628 ex/s measured in the real arm**, 1.23× the
+registered `PLAN_RATES[32] = 512`, so **~8.8 h each**, not 10.9 (and not the old 6.2, which read
+the 890 ex/s `fixed_bucket_compile` row — `--compile` is SMOKE-ONLY for registered arms).
+`PLAN_RATES` is deliberately NOT changed mid-run: the W8 band arithmetic reads it, and 512 being
+conservative costs nothing. Re-derive it at the next planning pass. Kill by PID only.
 `--resume` needs a parseable non-terminal record AND the rolling checkpoint — it never falls back
 to a fresh run, and the arm dir was empty after the crashes, so this is a clean fresh start.
 
