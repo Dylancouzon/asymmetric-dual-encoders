@@ -1388,6 +1388,10 @@ Closed: train mode, warmup, kill-at-final-end, SHAPES check, smoke/real-eval sep
 
 Registered runs refuse non-CUDA (bf16 is the recipe); fingerprint carries device/dtype/warmup/optimizer/code sha; evidence files hashed and verified on resume; warm-start failures after start recorded; failed records `complete: false, terminal: true`, any existing record blocks a bare start; F verdict must name a trained un-cut F student with complete F records and a contrast block; duplicate COV unit ids refused. Smoke at 70b854f complete (CPU, 17.5 ex/s). **The first registered arm, F-bge-small (20M, ≈6.2 h), starts on Codex GO**, F-MiniLM-L6 chained after it.
 
+### Runner Codex pass 3 — all twelve prior items CLOSED; one new: `--resume` could silently become a fresh 20M run. Fixed by the lead (318 tests); pass 4 in flight
+
+`--resume` now requires a PARSEABLE non-terminal work record and the rolling checkpoint, refuses an unparseable record (terminality unknowable), and never passes `resume_from=None`. Verbatim in `research/m10-codex-runner-2026-09-07.md`.
+
 ## §4 Dev-reuse log
 
 | date | surface | raw score reads | artifact |

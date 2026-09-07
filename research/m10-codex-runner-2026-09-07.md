@@ -70,3 +70,36 @@ Warmup clamp: **sound for registered doses**. Family F has 208,333 steps in cycl
 ## Verdict
 
 **NO-GO** for running family F at 20M on this runner.
+
+# THIRD PASS (70b854f), same day (verbatim; read-exclusion audit clean)
+
+| Re-review item | Status | Path + regression |
+|---|---|---|
+| 2 — CUDA/bf16 | **CLOSED** | CUDA-only registered admission at [run_arm.py:846](/home/dylan/asymetric-dual-encoders/m10src/run_arm.py:846); bf16 forward/fp32 loss at [trainer10.py:168](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:168). `test_a_registered_run_refuses_a_non_cuda_device`, `test_the_cli_default_device_is_cuda`. |
+| 5 — caller knobs | **CLOSED** | Smoke-only enforcement at [run_arm.py:701](/home/dylan/asymetric-dual-encoders/m10src/run_arm.py:701). `test_a_real_arm_refuses_every_recipe_knob`. |
+| 7 — resume evidence | **CLOSED** | Evidence SHA creation/verification at [run_arm.py:493](/home/dylan/asymetric-dual-encoders/m10src/run_arm.py:493) and [run_arm.py:512](/home/dylan/asymetric-dual-encoders/m10src/run_arm.py:512). `test_a_call_records_its_own_evidence_files_hash`, `test_resume_refuses_when_an_evidence_file_is_missing_or_altered`. |
+| 8 — resume fingerprint | **CLOSED** | Device, dtype, warmup, optimizer, manifest, registry, and code identity at [run_arm.py:669](/home/dylan/asymetric-dual-encoders/m10src/run_arm.py:669). `test_the_fingerprint_carries_device_autocast_warmup_and_optimizer_settings`, `test_the_fingerprint_moves_with_the_code`. |
+| 9 — warm-start failure | **CLOSED** | Arm-start boundary and terminal failure writer at [run_arm.py:714](/home/dylan/asymetric-dual-encoders/m10src/run_arm.py:714), [run_arm.py:734](/home/dylan/asymetric-dual-encoders/m10src/run_arm.py:734), [run_arm.py:879](/home/dylan/asymetric-dual-encoders/m10src/run_arm.py:879). `test_a_warm_start_failure_through_run_writes_a_terminal_FAILED_record`. |
+| 11 — F verdict | **CLOSED** | Eligible F student, complete records, checkpoint SHA, and contrast schema at [run_arm.py:229](/home/dylan/asymetric-dual-encoders/m10src/run_arm.py:229). Tests at [test_run_arm.py:319](/home/dylan/asymetric-dual-encoders/m10src/test_run_arm.py:319), [test_run_arm.py:327](/home/dylan/asymetric-dual-encoders/m10src/test_run_arm.py:327), [test_run_arm.py:335](/home/dylan/asymetric-dual-encoders/m10src/test_run_arm.py:335), [test_run_arm.py:346](/home/dylan/asymetric-dual-encoders/m10src/test_run_arm.py:346). |
+| 12 — duplicate COV IDs | **CLOSED** | Refused before surface validation/scoring at [cov_eval10.py:52](/home/dylan/asymetric-dual-encoders/m10src/cov_eval10.py:52). `test_duplicate_unit_ids_refuse_before_any_encoding`, `test_three_way_and_cross_family_duplicates_are_both_named`. |
+| 13 — record protection | **CLOSED** | Either path, parseable or not, blocks bare start at [run_arm.py:179](/home/dylan/asymetric-dual-encoders/m10src/run_arm.py:179) and [run_arm.py:817](/home/dylan/asymetric-dual-encoders/m10src/run_arm.py:817). Tests at [test_run_arm.py:173](/home/dylan/asymetric-dual-encoders/m10src/test_run_arm.py:173)–[test_run_arm.py:212](/home/dylan/asymetric-dual-encoders/m10src/test_run_arm.py:212). |
+| New 1 — fp32 default | **CLOSED** | Same CUDA admission/default tests as item 2. |
+| New 2 — failed=`complete` | **CLOSED** | Failures are `complete:false, terminal:true` at [run_arm.py:743](/home/dylan/asymetric-dual-encoders/m10src/run_arm.py:743). `test_a_stopped_arm_is_reported_failed_and_gets_no_dev6`, `test_a_crash_writes_a_terminal_FAILED_record_and_re_raises`. |
+| New 3 — cross-precision resume | **CLOSED** | Device/dtype fingerprint at [run_arm.py:681](/home/dylan/asymetric-dual-encoders/m10src/run_arm.py:681). Fingerprint regression above. |
+| New 4 — stale smoke | **CLOSED** | Regenerated artifact records target HEAD `70b854f…` at [record.json:455](/home/dylan/asymetric-dual-encoders/work/m10arms/smoke/A1/record.json:455); named files are unchanged between that target and the enclosing repository’s later HEAD. `test_the_record_schema` covers the provenance field. |
+
+### New findings, ranked
+
+1. **P1 — `--resume` can silently become a fresh 20M run.** At [run_arm.py:817](/home/dylan/asymetric-dual-encoders/m10src/run_arm.py:817), resume does not require any record and treats malformed records as non-terminal; at [run_arm.py:914](/home/dylan/asymetric-dual-encoders/m10src/run_arm.py:914), a missing rolling checkpoint becomes `resume_from=None`. Concrete input: absent or malformed record + absent `work/m10arms/F-bge-small/ckpt.pt` + `F-bge-small --resume` → trains from step 0 and may overwrite an unknown prior outcome as complete. Existing `test_a_malformed_record_refuses_a_bare_re_run_but_permits_resume` blesses part of this unsafe path.
+
+## Verdict
+
+**NO-GO** for both `F-bge-small` and `F-MiniLM-L6` at 20M.
+
+Minimal fix:
+
+- Make `--resume` refuse unless a valid non-terminal record and rolling checkpoint both exist; never fall back to `resume_from=None`.
+- Refuse unparseable records on resume because terminality is unknowable.
+- Add regressions for no record, malformed record, and missing checkpoint; prove a valid resume starts above step 0.
+
+The targeted pytest run could not start because this read-only environment has no writable temporary directory, so I did not independently reproduce the reported 315 passes.
