@@ -6,6 +6,7 @@ a screen arm could be spent on nothing, and the two schedule tests are the famil
 — 5M inside a 20M schedule — which is the one piece of arithmetic no other test covers.
 """
 import copy
+import hashlib
 import json
 import sys
 import tempfile
@@ -78,7 +79,8 @@ def sandbox(monkeypatch):
         yield d
 
 
-def write_f_verdict(winner="bge-small", *, registry_sha=None, record_shas=None):
+def write_f_verdict(winner="bge-small", *, registry_sha=None, record_shas=None,
+                    f_record_status="complete", f_record_final_sha="0" * 64, contrast=None):
     """A stub of the file the CONTRAST step writes (`f_verdict`'s schema). Written into the
     sandbox's RESULTS, never the repo's."""
     R.RESULTS.mkdir(parents=True, exist_ok=True)
@@ -86,9 +88,13 @@ def write_f_verdict(winner="bge-small", *, registry_sha=None, record_shas=None):
     shas = []
     for n in R.f_arms(reg):
         rp = R.RESULTS / f"m10_arm_{R.slug(n)}.json"
-        rp.write_text(json.dumps({"arm": n, "status": "complete", "complete": True}))
+        rec = {"arm": n, "status": f_record_status, "complete": f_record_status == "complete"}
+        if f_record_final_sha:
+            rec["final_checkpoint_sha256"] = f_record_final_sha
+        rp.write_text(json.dumps(rec))
         shas.append(R.sha256_file(rp))
-    v = {"winner": winner, "contrast": {"F1": {"point": 0.01, "lower": 0.004}},
+    v = {"winner": winner,
+         "contrast": contrast or {"rule": "C1", "point": 0.01, "lower": 0.004, "resolved": True},
          "registry_sha256": registry_sha or R.sha256_file(R.REGISTRY),
          "sha256_of_F_records": record_shas if record_shas is not None else shas}
     p = R.RESULTS / R.F_VERDICT_NAME
@@ -168,7 +174,7 @@ def test_it_refuses_to_re_run_a_complete_record(monkeypatch, sandbox):
     d = R.WORK / "A1"
     d.mkdir(parents=True)
     (d / "record.json").write_text(json.dumps({"arm": "A1", "complete": True}))
-    with pytest.raises(SystemExit, match="already exists and is complete"):
+    with pytest.raises(SystemExit, match="already exists"):
         R.run("A1")
 
 
@@ -176,15 +182,45 @@ def test_it_refuses_when_EITHER_published_path_already_carries_a_complete_record
     """finding 13: only `work/m10arms/<arm>/record.json` was checked, so an arm whose PUBLISHED
     `results/m10_arm_<arm>.json` existed was re-run and overwrote it."""
     (R.RESULTS / "m10_arm_A1.json").write_text(json.dumps({"arm": "A1", "complete": True}))
-    with pytest.raises(SystemExit, match="already exists and is complete"):
+    with pytest.raises(SystemExit, match="already exists"):
         R.run("A1")
 
 
 def test_an_incomplete_record_does_not_block_a_run(monkeypatch, sandbox):
+    """item E, new contract: ANY record file at a published path refuses a BARE re-run --
+    parseable or not, complete or not. `--resume` is what continues a NON-terminal one (a
+    TERMINAL one, complete or failed, still refuses `--resume` -- see the tests below)."""
     mock_pipeline(monkeypatch)
     write_f_verdict()
     (R.RESULTS / "m10_arm_A1.json").write_text(json.dumps({"arm": "A1", "complete": False}))
-    assert R.run("A1", device="cpu", verbose=False)["status"] == "complete"
+    with pytest.raises(SystemExit, match="already exists"):
+        R.run("A1", device="cuda", verbose=False)
+    assert R.run("A1", device="cuda", resume=True, verbose=False)["status"] == "complete"
+
+
+def test_a_malformed_record_refuses_a_bare_re_run_but_permits_resume(monkeypatch, sandbox):
+    """item E: "parseable or not, complete or not" -- a malformed record still blocks a bare
+    re-run, and is treated as non-terminal (not proof the arm finished), so `--resume` proceeds."""
+    mock_pipeline(monkeypatch)
+    write_f_verdict()
+    (R.RESULTS / "m10_arm_A1.json").write_text("{not valid json")
+    with pytest.raises(SystemExit, match="already exists"):
+        R.run("A1", device="cuda", verbose=False)
+    assert R.run("A1", device="cuda", resume=True, verbose=False)["status"] == "complete"
+
+
+def test_resume_refuses_when_the_existing_record_is_already_terminal(monkeypatch, sandbox):
+    """item E: `--resume` only continues a NON-terminal run; a record that already carries an
+    outcome (complete success, or a FAILED record with `terminal: true`) has nothing to resume."""
+    mock_pipeline(monkeypatch)
+    write_f_verdict()
+    (R.RESULTS / "m10_arm_A1.json").write_text(json.dumps({"arm": "A1", "complete": True}))
+    with pytest.raises(SystemExit, match="TERMINAL"):
+        R.run("A1", device="cuda", resume=True, verbose=False)
+    (R.RESULTS / "m10_arm_A1.json").write_text(
+        json.dumps({"arm": "A1", "status": "failed", "complete": False, "terminal": True}))
+    with pytest.raises(SystemExit, match="TERMINAL"):
+        R.run("A1", device="cuda", resume=True, verbose=False)
 
 
 def test_the_record_is_written_atomically_to_both_published_paths(monkeypatch, sandbox):
@@ -195,7 +231,7 @@ def test_the_record_is_written_atomically_to_both_published_paths(monkeypatch, s
     monkeypatch.setattr(R.os, "replace", lambda a, b: (seen.append((str(a), str(b))), real(a, b)))
     mock_pipeline(monkeypatch)
     write_f_verdict()
-    rec = R.run("A1", device="cpu", verbose=False)
+    rec = R.run("A1", device="cuda", verbose=False)
     dests = [b for _a, b in seen]
     assert str(R.WORK / "A1" / "record.json") in dests
     assert str(R.RESULTS / "m10_arm_A1.json") in dests
@@ -217,6 +253,32 @@ def test_the_smoke_may_use_them(monkeypatch, sandbox):
     mock_pipeline(monkeypatch)
     rec = R.run("A1", device="cpu", smoke_steps=6, max_len=128, n_fit=64, verbose=False)
     assert rec["max_len"] == 128 and rec["smoke"] is True
+
+
+# --------------------------------------------- registered runs require CUDA (item A) -----------
+
+def test_a_registered_run_refuses_a_non_cuda_device(monkeypatch, sandbox):
+    """item A: §Recipe is bf16 autocast, and CPU silently trains fp32 -- a confound, not a smoke.
+    A real (non-smoke) run must REFUSE anything but `cuda`."""
+    mock_pipeline(monkeypatch)
+    write_f_verdict()
+    with pytest.raises(SystemExit, match="requires --device cuda"):
+        R.run("A1", device="cpu", verbose=False)
+
+
+def test_a_smoke_may_still_pass_cpu(monkeypatch, sandbox):
+    """item A's counterpoint: a smoke is exempt -- it is a 60-step CPU path check, not a
+    measurement, and this milestone's CPU box has no CUDA device to smoke on at all."""
+    mock_pipeline(monkeypatch)
+    rec = R.run("A1", device="cpu", smoke_steps=6, verbose=False)
+    assert rec["device"] == "cpu" and rec["smoke"] is True
+
+
+def test_the_cli_default_device_is_cuda():
+    """item A: the CLI default for `--device` becomes `cuda`; a smoke may still override it."""
+    ap = R.build_argparser()
+    assert ap.parse_args(["A1"]).device == "cuda"
+    assert ap.parse_args(["A1", "--smoke-steps", "6", "--device", "cpu"]).device == "cpu"
 
 
 def test_a_real_evaluation_is_prohibited_under_a_smoke(sandbox):
@@ -254,6 +316,39 @@ def test_a_post_F_arm_refuses_a_verdict_naming_an_unknown_student(sandbox):
         R.run("A1")
 
 
+def test_a_post_F_arm_refuses_a_verdict_naming_a_cut_untrained_student(sandbox):
+    """item F: `MiniLM-L12-v2` IS a known nano10 student (`STUDENT_ALIAS` covers it), but its only
+    registry arm, F-MiniLM-L12, is CUT and never trained -- the verdict cannot be read off it."""
+    write_f_verdict(winner="MiniLM-L12-v2")
+    with pytest.raises(SystemExit, match="TRAINED, uncut F arm"):
+        R.run("A1")
+
+
+def test_a_post_F_arm_refuses_a_verdict_whose_F_record_is_not_complete(sandbox):
+    """item F: a verdict can only be read off a COMPLETED F arm, not a failed one -- the hash
+    check alone does not catch this, since a failed record hashes just as reproducibly."""
+    write_f_verdict(f_record_status="failed")
+    with pytest.raises(SystemExit, match="not 'complete'"):
+        R.run("A1")
+
+
+def test_a_post_F_arm_refuses_a_verdict_whose_F_record_has_no_final_checkpoint_sha(sandbox):
+    write_f_verdict(f_record_final_sha=None)
+    with pytest.raises(SystemExit, match="final_checkpoint_sha256"):
+        R.run("A1")
+
+
+@pytest.mark.parametrize("bad_contrast", [
+    {"point": 0.01, "lower": 0.004, "resolved": True},          # missing `rule`
+    {"rule": "C1", "point": 0.01, "lower": 0.004},               # missing `resolved`
+    "not even a dict",
+])
+def test_a_post_F_arm_refuses_a_malformed_contrast_schema(sandbox, bad_contrast):
+    write_f_verdict(contrast=bad_contrast)
+    with pytest.raises(SystemExit, match="contrast block must carry"):
+        R.run("A1")
+
+
 def test_the_student_of_a_post_F_arm_comes_from_the_verdict_not_from_SHAPES(monkeypatch, sandbox):
     """The anchor's shape says bge-small; if F selects MiniLM-L6, every later arm must train the
     MiniLM backbone (`anchor.init: "F's winner backbone"`)."""
@@ -263,7 +358,7 @@ def test_the_student_of_a_post_F_arm_comes_from_the_verdict_not_from_SHAPES(monk
     mock_pipeline(monkeypatch)
     monkeypatch.setattr(R.N, "Nano10",
                         lambda student, **k: (seen.setdefault("student", student), FakeModel())[1])
-    rec = R.run("A1", device="cpu", verbose=False)
+    rec = R.run("A1", device="cuda", verbose=False)
     assert seen["student"] == "MiniLM-L6"
     assert rec["recipe"]["student"] == "MiniLM-L6"
     assert rec["student_source"].endswith(R.F_VERDICT_NAME)
@@ -274,7 +369,7 @@ def test_a_family_F_arm_needs_no_verdict(monkeypatch, sandbox):
     """F runs FIRST, so it cannot wait on its own verdict; its student is in the registry."""
     mock_pipeline(monkeypatch)
     monkeypatch.setattr(R.CL, "data_cut_count", lambda reg=None: 4_000_000)
-    rec = R.run("F-bge-small", device="cpu", verbose=False)
+    rec = R.run("F-bge-small", device="cuda", verbose=False)
     assert rec["recipe"]["student"] == "bge-small"
     assert rec["student_source"].startswith("registry")
 
@@ -296,6 +391,28 @@ def test_a_failed_warm_start_refuses_rather_than_training_a_fresh_head(monkeypat
         RuntimeError("shape")))
     with pytest.raises(SystemExit, match="warm start .* FAILED"):
         R.warm_start(Boom(), {"warm_start": "linear"}, object(), {"n_fit": 8, "seed": 21})
+
+
+def test_a_warm_start_failure_through_run_writes_a_terminal_FAILED_record(monkeypatch, sandbox):
+    """item D: an exception INSIDE the warm start happens after the model and corpus are already
+    built -- a FAILURE, not a pre-flight refusal (`ctx["started"]` distinguishes the two) -- so it
+    must write a terminal FAILED record and re-raise, unlike a refusal before any work starts."""
+    monkeypatch.setattr(R.N, "Nano10", lambda *a, **k: FakeModel())
+    monkeypatch.setattr(R.CL, "assemble_arm",
+                        lambda *a, **k: (make_batch_fn(), {"arm": a[0], "mocked": True}))
+    monkeypatch.setattr(R, "streams_of", lambda bf: (object(), object()))
+    monkeypatch.setattr(R, "fit_sample", lambda *a, **k: (["x"], np.zeros((1, 4), np.float32)))
+    monkeypatch.setattr(R.N, "pooled_features", lambda *a, **k: (_ for _ in ()).throw(
+        RuntimeError("pooled_features shape mismatch")))
+    write_f_verdict()
+    with pytest.raises(SystemExit, match="warm start .* FAILED"):
+        R.run("A1", device="cuda", verbose=False)
+    for path in (R.WORK / "A1" / "record.json", R.RESULTS / "m10_arm_A1.json"):
+        rec = json.loads(path.read_text())
+        assert rec["status"] == "failed" and rec["complete"] is False and rec["terminal"] is True
+        assert rec["failure"]["type"] == "SystemExit"
+        assert "pooled_features shape mismatch" in rec["failure"]["message"]
+        assert rec["final_checkpoint"] is None and rec["dev6"] is None
 
 
 # ------------------------------------------------------------------------ schedule arithmetic --
@@ -411,7 +528,7 @@ def test_every_shared_field_is_compared_not_just_the_student(arm, field, value, 
 def test_the_record_schema(monkeypatch, sandbox):
     mock_pipeline(monkeypatch)
     write_f_verdict()
-    rec = R.run("A1", device="cpu", verbose=False)
+    rec = R.run("A1", device="cuda", verbose=False)
     for k in ("arm", "family", "status", "complete", "smoke", "device", "seed", "recipe",
               "schedule", "warm_start", "cov", "dev6", "training", "throughput_ex_per_s",
               "checkpoints", "final_checkpoint", "final_checkpoint_sha256", "assemble_manifest",
@@ -432,15 +549,16 @@ def test_the_record_schema(monkeypatch, sandbox):
 def test_a_stopped_arm_is_reported_failed_and_gets_no_dev6(monkeypatch, sandbox):
     mock_pipeline(monkeypatch, cycle_ends=(0.40,), stopped="kill: two consecutive evaluations")
     write_f_verdict()
-    rec = R.run("A1", device="cpu", verbose=False)
+    rec = R.run("A1", device="cuda", verbose=False)
     assert rec["status"] == "failed" and rec["dev6"] is None
-    assert rec["complete"] is True, "the record exists so the arm is not silently re-run"
+    assert rec["complete"] is False, "item E: a failed record is not `complete`"
+    assert rec["terminal"] is True, "the record exists so the arm is not silently re-run"
 
 
 def test_plateau_at_the_final_cycle_is_completion_not_failure(monkeypatch, sandbox):
     mock_pipeline(monkeypatch, stopped="plateau at cycle 3")
     write_f_verdict()
-    rec = R.run("A1", device="cpu", verbose=False)
+    rec = R.run("A1", device="cuda", verbose=False)
     assert rec["status"] == "complete" and rec["stopped_is_completion"] is True
     assert rec["dev6"] is not None
 
@@ -547,7 +665,7 @@ def test_a_kill_at_the_FINAL_cycle_end_is_a_FAILURE_not_a_completion(monkeypatch
     mock_pipeline(monkeypatch)
     monkeypatch.setattr(R.Tr, "train_arm", lambda *a, **k: dict(r))
     write_f_verdict()
-    rec = R.run("A1", device="cpu", verbose=False)
+    rec = R.run("A1", device="cuda", verbose=False)
     assert rec["status"] == "failed" and rec["stopped_is_completion"] is False
     assert rec["dev6"] is None, "a killed arm gets no DEV-6 read"
     assert rec["final_checkpoint"] is None and rec["final_checkpoint_sha256"] is None
@@ -575,7 +693,7 @@ def test_a_failed_arm_never_labels_a_checkpoint_final(monkeypatch, sandbox):
     write_f_verdict()
     (R.WORK / "A1").mkdir(parents=True, exist_ok=True)
     (R.WORK / "A1" / "cycle3.pt").write_bytes(b"partial")
-    rec = R.run("A1", device="cpu", verbose=False)
+    rec = R.run("A1", device="cuda", verbose=False)
     assert rec["status"] == "failed"
     assert rec["final_checkpoint"] is None and rec["final_checkpoint_sha256"] is None
     assert rec["checkpoints"]["cycle3"]["sha256"], "it is still reported, under its cycle key"
@@ -591,17 +709,17 @@ def test_a_crash_writes_a_terminal_FAILED_record_and_re_raises(monkeypatch, sand
         raise RuntimeError("CUDA out of memory. Tried to allocate 2.00 GiB")
     monkeypatch.setattr(R.Tr, "train_arm", boom)
     with pytest.raises(RuntimeError, match="out of memory"):
-        R.run("A1", device="cpu", verbose=False)
+        R.run("A1", device="cuda", verbose=False)
     for path in (R.WORK / "A1" / "record.json", R.RESULTS / "m10_arm_A1.json"):
         rec = json.loads(path.read_text())
-        assert rec["status"] == "failed" and rec["complete"] is True
+        assert rec["status"] == "failed" and rec["complete"] is False and rec["terminal"] is True
         assert rec["failure"]["type"] == "RuntimeError"
         assert "out of memory" in rec["failure"]["message"]
         assert rec["final_checkpoint"] is None and rec["dev6"] is None
         assert rec["recipe"]["student"] and rec["registry_sha256"]
     # and it is not silently re-run
-    with pytest.raises(SystemExit, match="already exists and is complete"):
-        R.run("A1", device="cpu", verbose=False)
+    with pytest.raises(SystemExit, match="already exists"):
+        R.run("A1", device="cuda", verbose=False)
 
 
 def test_a_REFUSAL_writes_no_record(sandbox):
@@ -620,13 +738,17 @@ def test_the_cov_evaluator_checkpoints_and_restores_its_own_records(sandbox):
     cycles of THIS process only."""
     out = sandbox / "arm"
     out.mkdir()
+    (out / "cov_cycle1.json").write_text('{"stub": 1}')
+    (out / "cov_cycle2.json").write_text('{"stub": 2}')
     ev = R.CovEval(model=None, out_dir=out, verbose=False)
     ev.records = [{"label": "cycle1", "step": 9, "macro": 0.41,
                    "by_family": {"legal": 0.31, "finance": 0.5},
-                   "per_query_scores": "work/m10arms/A1/cov_cycle1.json"},
+                   "per_query_scores": str(out / "cov_cycle1.json"),
+                   "per_query_scores_sha256": R.sha256_file(out / "cov_cycle1.json")},
                   {"label": "cycle2", "step": 19, "macro": 0.42,
                    "by_family": {"legal": 0.33, "finance": 0.5},
-                   "per_query_scores": "work/m10arms/A1/cov_cycle2.json"}]
+                   "per_query_scores": str(out / "cov_cycle2.json"),
+                   "per_query_scores_sha256": R.sha256_file(out / "cov_cycle2.json")}]
 
     fresh = R.CovEval(model=None, out_dir=out, verbose=False)
     assert fresh.records == []
@@ -635,6 +757,53 @@ def test_the_cov_evaluator_checkpoints_and_restores_its_own_records(sandbox):
     assert fresh.records[0]["by_family"]["legal"] == 0.31
     assert fresh.records[1]["per_query_scores"].endswith("cov_cycle2.json")
     assert R.StubEval().state() == {"records": []}
+
+
+def test_a_call_records_its_own_evidence_files_hash(monkeypatch, sandbox):
+    """item C: `CovEval.__call__` writes the per-query score file BEFORE it appends the record, so
+    the hash it records is the hash of the file actually on disk."""
+    out = sandbox / "arm"
+    out.mkdir()
+
+    class M:
+        training = True
+
+        def encode_queries(self, texts, batch_size=256):
+            return texts
+
+        def train(self):
+            pass
+
+    import cov_eval10
+    monkeypatch.setattr(cov_eval10, "score_student", lambda *a, **k: {"u": {"q1": 1.0}})
+    monkeypatch.setattr(cov_eval10, "macro", lambda per, units=None: (0.5, {"legal": 0.5}, {}))
+    ev = R.CovEval(M(), out, verbose=False)
+    ev.units = lambda: []
+    ev(9, "cycle1")
+    p = out / "cov_cycle1.json"
+    assert p.exists()
+    assert ev.records[0]["per_query_scores_sha256"] == R.sha256_file(p)
+
+
+def test_resume_refuses_when_an_evidence_file_is_missing_or_altered(sandbox):
+    """item C: delete or alter a `cov_cycle1.json` after its checkpoint and resume must refuse --
+    the contrast step's per-query scores would no longer be what the checkpoint says they are."""
+    out = sandbox / "arm"
+    out.mkdir()
+    p = out / "cov_cycle1.json"
+    p.write_text('{"stub": 1}')
+    state = {"records": [{"label": "cycle1", "step": 9, "macro": 0.41,
+                          "per_query_scores": str(p), "per_query_scores_sha256": R.sha256_file(p)}]}
+
+    altered = R.CovEval(model=None, out_dir=out, verbose=False)
+    p.write_text('{"stub": "TAMPERED"}')
+    with pytest.raises(SystemExit, match="does not match|hashes to"):
+        altered.restore(state)
+
+    p.unlink()
+    deleted = R.CovEval(model=None, out_dir=out, verbose=False)
+    with pytest.raises(SystemExit, match="missing"):
+        deleted.restore(state)
 
 
 def test_the_runner_hands_the_evaluator_and_a_fingerprint_to_the_trainer(monkeypatch, sandbox):
@@ -656,10 +825,40 @@ def test_the_fingerprint_moves_with_the_recipe(sandbox):
     reg = R.SL.cfg()
     p = R.arm_plan("A1", reg)
     man = {"arm": "A1", "sources": ["harvest"]}
-    base = R.fingerprint("A1", p, man, 0, None)
-    assert base == R.fingerprint("A1", p, man, 0, None)
-    assert base != R.fingerprint("A2", p, man, 0, None)
-    assert base != R.fingerprint("A1", p, man, 1, None)
-    assert base != R.fingerprint("A1", p, {"arm": "A1", "sources": ["harvest", "gen"]}, 0, None)
+    base = R.fingerprint("A1", p, man, 0, None, "cuda")
+    assert base == R.fingerprint("A1", p, man, 0, None, "cuda")
+    assert base != R.fingerprint("A2", p, man, 0, None, "cuda")
+    assert base != R.fingerprint("A1", p, man, 1, None, "cuda")
+    assert base != R.fingerprint("A1", p, {"arm": "A1", "sources": ["harvest", "gen"]}, 0, None,
+                                 "cuda")
     other = dict(p, student="MiniLM-L6")
-    assert base != R.fingerprint("A1", other, man, 0, None)
+    assert base != R.fingerprint("A1", other, man, 0, None, "cuda")
+
+
+def test_the_fingerprint_carries_device_autocast_warmup_and_optimizer_settings(sandbox):
+    """item B: device, autocast dtype, `nano10.WARMUP_STEPS` and the optimizer settings are all
+    part of the fingerprint, so a checkpoint from one is refused a resume under another."""
+    reg = R.SL.cfg()
+    p = R.arm_plan("A1", reg)
+    man = {"arm": "A1", "sources": ["harvest"]}
+    cuda_fp = R.fingerprint("A1", p, man, 0, None, "cuda")
+    cpu_fp = R.fingerprint("A1", p, man, 0, None, "cpu")
+    assert cuda_fp != cpu_fp, "a cuda/bf16 checkpoint must not resume under cpu/fp32"
+    # deterministic and stable across two identical calls
+    assert cuda_fp == R.fingerprint("A1", p, man, 0, None, "cuda")
+
+
+def test_the_fingerprint_moves_with_the_code(monkeypatch, sandbox, tmp_path):
+    """item B: a sha256 of `run_arm.py` + `trainer10.py` + `nano10.py` is part of the fingerprint
+    (code identity), so an edit to any of the three refuses a resume."""
+    reg = R.SL.cfg()
+    p = R.arm_plan("A1", reg)
+    man = {"arm": "A1", "sources": ["harvest"]}
+    base = R.fingerprint("A1", p, man, 0, None, "cuda")
+    real = R.code_identity()
+
+    def changed():
+        return hashlib.sha256(b"not the same code at all").hexdigest()
+    monkeypatch.setattr(R, "code_identity", changed)
+    assert R.fingerprint("A1", p, man, 0, None, "cuda") != base
+    assert changed() != real

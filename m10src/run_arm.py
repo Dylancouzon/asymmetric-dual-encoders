@@ -176,13 +176,22 @@ def write_record(rec, rec_path, results_path):
     return written
 
 
-def _complete_record_at(p):
+def _record_status_at(p):
+    """-> None if no file exists at `p`, else {"parseable", "terminal", "raw"}.
+
+    A record is TERMINAL once it carries `complete: true` (a successful arm) or `terminal: true`
+    (a FAILED arm, item E: a failed record carries `complete: false, terminal: true` so a failure
+    is never mistaken for a completion). An unparseable file is treated as existing but
+    non-terminal -- it still blocks a bare re-run (below), but does not itself block `--resume`.
+    """
     if p is None or not p.exists():
-        return False
+        return None
     try:
-        return bool(json.loads(p.read_text()).get("complete"))
+        raw = json.loads(p.read_text())
     except Exception:
-        return False
+        return {"parseable": False, "terminal": False, "raw": None}
+    return {"parseable": True, "terminal": bool(raw.get("complete")) or bool(raw.get("terminal")),
+            "raw": raw}
 
 
 # ------------------------------------------------------------------------------- F's verdict ----
@@ -220,6 +229,13 @@ def f_verdict(reg, path=None):
     missing = [k for k in F_VERDICT_KEYS if k not in v]
     if missing:
         refuse(f"{p} is missing {missing}; the F verdict schema is {list(F_VERDICT_KEYS)}")
+    # item F: the `contrast` block's SCHEMA, not its semantics — no quantile is recomputed here,
+    # only that the fields the contrast runner registered are actually present.
+    contrast = v.get("contrast")
+    contrast_keys = ("rule", "point", "lower", "resolved")
+    if not isinstance(contrast, dict) or any(k not in contrast for k in contrast_keys):
+        got = sorted(contrast) if isinstance(contrast, dict) else type(contrast).__name__
+        refuse(f"{p}'s contrast block must carry {list(contrast_keys)}; got {got}")
     reg_sha = sha256_file(REGISTRY)
     if v["registry_sha256"] != reg_sha:
         refuse(f"{p} was decided under registry {v['registry_sha256'][:12]}… and the registry is "
@@ -230,6 +246,18 @@ def f_verdict(reg, path=None):
         if not rp.exists():
             refuse(f"{p} claims an F verdict but {rp} does not exist — F's own arm records are "
                    f"what the verdict is read off")
+        try:
+            rrec = json.loads(rp.read_text())
+        except Exception as e:
+            refuse(f"{rp} is not readable JSON: {type(e).__name__}: {e}")
+        # item F: only a COMPLETED F arm with a final checkpoint can back a verdict — a failed
+        # arm's record hash is just as reproducible, so the hash check alone would not catch it.
+        if rrec.get("status") != "complete":
+            refuse(f"{rp} has status {rrec.get('status')!r}, not 'complete'; F's verdict can only "
+                   f"be read off a completed arm")
+        if not rrec.get("final_checkpoint_sha256"):
+            refuse(f"{rp} carries no final_checkpoint_sha256; F's verdict can only be read off an "
+                   f"arm with a final checkpoint")
         want.append(sha256_file(rp))
     got = list(v["sha256_of_F_records"])
     if sorted(got) != sorted(want):
@@ -239,6 +267,17 @@ def f_verdict(reg, path=None):
     if student is None:
         refuse(f"{p} names winner {v['winner']!r}, which is not a known nano10 student "
                f"({sorted(set(STUDENT_ALIAS))})")
+    # item F: the winner must be the student of a family-F arm that is `trained: true` and not
+    # `cut` in the CURRENT registry — a verdict naming e.g. MiniLM-L12-v2 (cut, never trained) is
+    # refused even if some stale contrast once named it.
+    f_reg_entries = {n: e for n, e in (reg.get("arms") or {}).items() if e.get("family") == "F"}
+    named_by = [n for n, e in f_reg_entries.items() if e.get("student") == v["winner"]]
+    eligible = [n for n in named_by
+                if f_reg_entries[n].get("trained") is True and not f_reg_entries[n].get("cut")]
+    if not eligible:
+        refuse(f"{p} names winner {v['winner']!r}, but no family-F arm in the registry is both "
+               f"`trained: true` and uncut with that student (candidates: {named_by or 'none'}); "
+               f"a verdict can only name a TRAINED, uncut F arm's student")
     return {"student": student, "winner": v["winner"], "path": rel(p),
             "registry_sha256": reg_sha, "sha256_of_F_records": sorted(want)}
 
@@ -451,8 +490,12 @@ class CovEval:
         p.write_text(json.dumps({"label": label, "step": int(step), "macro": macro,
                                  "by_family": by_family, "by_unit": by_unit,
                                  "per_unit_query": per}))
+        # item C: the evidence file's own hash goes beside its path, so a resume can tell a
+        # per-query score file that has moved, been truncated or been silently rewritten from the
+        # one the run actually produced.
         rec = {"label": label, "step": int(step), "macro": macro, "by_family": by_family,
                "by_unit": by_unit, "per_query_scores": rel(p),
+               "per_query_scores_sha256": sha256_file(p),
                "seconds": round(time.time() - t0, 1)}
         self.records.append(rec)
         if self.verbose:
@@ -460,13 +503,32 @@ class CovEval:
                   f"{ {k: round(v, 4) for k, v in by_family.items()} }", flush=True)
         return macro
 
-    # The evaluator's records — per-family macros and the per-query score paths the contrast step
-    # bootstraps over — are part of the run state and go in every checkpoint (finding 7).
+    # The evaluator's records — per-family macros, the per-query score paths and their hashes the
+    # contrast step bootstraps over — are part of the run state and go in every checkpoint
+    # (finding 7). The final record carries them too, since `records` IS `cov.per_checkpoint`.
     def state(self):
         return {"records": self.records}
 
     def restore(self, d):
-        self.records = list(d.get("records") or [])
+        """Item C: every evidence file a restored record references must still exist and hash to
+        what the run wrote. A resume that silently trusted a moved or altered `cov_*.json` would
+        hand the contrast step per-query scores that no longer match the arm's own history."""
+        recs = list(d.get("records") or [])
+        for r in recs:
+            rel_path, want = r.get("per_query_scores"), r.get("per_query_scores_sha256")
+            if rel_path is None:
+                continue
+            fp = Path(rel_path)
+            fp = fp if fp.is_absolute() else REPO / fp
+            if not fp.exists():
+                refuse(f"resume: the evidence file for {r.get('label')!r} ({fp}) is missing. "
+                       f"A resume must not report an evaluation whose evidence has vanished.")
+            got = sha256_file(fp)
+            if want is not None and got != want:
+                refuse(f"resume: the evidence file for {r.get('label')!r} ({fp}) hashes to "
+                       f"{got[:12]}… but the checkpoint recorded {want[:12]}…. The arm's own "
+                       f"evidence no longer matches its history.")
+        self.records = recs
 
 
 class StubEval:
@@ -600,16 +662,39 @@ def classify(stopped, n_cycle_ends, cycles=CYCLES):
     return ("complete" if ok else "failed"), ok, plateau_at_last
 
 
-def fingerprint(arm, p, man, seed, smoke_steps):
-    """The recipe a checkpoint belongs to (finding 8): the arm, its resolved recipe, the registry
-    and the assembled corpus manifest. A resume under any other is refused by `trainer10`."""
+# The three files that decide a checkpoint's semantics (item B: code identity). Any edit to any
+# one of them must invalidate a resume, the same as an edited registry or manifest.
+CODE_IDENTITY_FILES = ("run_arm.py", "trainer10.py", "nano10.py")
+
+
+def code_identity():
+    """sha256 of `run_arm.py` + `trainer10.py` + `nano10.py`'s bytes, concatenated in that order.
+    Part of the fingerprint (item B): a code change between a checkpoint and its resume is exactly
+    as much a different recipe as a registry or manifest change, and none of the other fingerprint
+    fields would catch it."""
+    h = hashlib.sha256()
+    for name in CODE_IDENTITY_FILES:
+        h.update((REPO / "m10src" / name).read_bytes())
+    return h.hexdigest()
+
+
+def fingerprint(arm, p, man, seed, smoke_steps, device):
+    """The recipe a checkpoint belongs to (finding 8): the arm, its resolved recipe, the registry,
+    the assembled corpus manifest, the device/precision the step ran under, the optimizer settings
+    and the code that ran it (item B). A resume under any other is refused by `trainer10`."""
+    cuda = str(device) == "cuda"
     body = {"arm": arm, "seed": int(seed), "smoke_steps": smoke_steps,
+            "device": str(device), "autocast_dtype": "bf16" if cuda else "fp32",
             "recipe": {k: p[k] for k in ("dose_examples", "batch", "pattern", "student",
                                          "n_layers", "head", "objective", "warm_start",
                                          "total_steps", "cycle_end_steps")},
+            "warmup_steps": int(N.WARMUP_STEPS),
+            "optimizer": {"peak_lr": PEAK, "final_lr": FINAL, "betas": [0.9, 0.999], "eps": 1e-8,
+                          "weight_decay_groups": {"dim_gt_1": 0.01, "dim_le_1": 0.0}},
             "registry_sha256": sha256_file(REGISTRY),
             "assemble_manifest_sha256": hashlib.sha256(
-                json.dumps(man, sort_keys=True, default=str).encode()).hexdigest()}
+                json.dumps(man, sort_keys=True, default=str).encode()).hexdigest(),
+            "code_sha256": code_identity()}
     return hashlib.sha256(json.dumps(body, sort_keys=True, default=str).encode()).hexdigest()
 
 
@@ -626,14 +711,20 @@ def run(arm, *, device="cpu", resume=False, smoke_steps=None, max_len=None, ckpt
     A crash, an OOM or a kill is an OUTCOME (`rules.arm_failure`), so it is recorded and the
     exception is re-raised — never swallowed, and never with a partial checkpoint labelled final.
     """
-    ctx = {}
+    ctx = {"started": False}
     try:
         return _run(ctx, arm, device=device, resume=resume, smoke_steps=smoke_steps,
                     max_len=max_len, ckpt_every=ckpt_every, n_fit=n_fit, real_eval=real_eval,
                     compile_step=compile_step, verbose=verbose, f_verdict_path=f_verdict_path)
-    except SystemExit:
-        # a REFUSAL: the arm never started, so there is nothing to report and a record here would
-        # block the legitimate re-run after the refusal is fixed.
+    except SystemExit as e:
+        # item D: a REFUSAL raised BEFORE any work starts (screen_lock, an unregistered/untrained/
+        # cut arm, a record that already exists, a missing/stale F verdict, ...) means the arm
+        # never started, so there is nothing to report and a record here would block the
+        # legitimate re-run after the refusal is fixed. But `warm_start`'s own `refuse()` is
+        # reached only AFTER the model and corpus are built (`ctx["started"]` is set immediately
+        # before it runs) -- that is a FAILURE, not a refusal, and must be recorded like a crash.
+        if ctx.get("started"):
+            _record_failure(ctx, arm, e, verbose=verbose)
         raise
     except BaseException as e:                                          # noqa: BLE001
         _record_failure(ctx, arm, e, verbose=verbose)
@@ -651,7 +742,10 @@ def _record_failure(ctx, arm, exc, verbose=True):
         return None
     rec = {"_what": "one registered M10 screen arm that FAILED, recorded by m10src/run_arm.py",
            "arm": arm, "family": (ctx.get("plan") or {}).get("family"),
-           "status": "failed", "complete": True, "smoke": bool(ctx.get("smoke")),
+           # item E: a failed record is NOT `complete` -- `terminal` is the flag the re-run
+           # protection reads to know the arm already ran to an outcome and blocks a bare re-run.
+           "status": "failed", "complete": False, "terminal": True,
+           "smoke": bool(ctx.get("smoke")),
            "stopped": f"{type(exc).__name__}: {exc}",
            "stopped_is_completion": False,
            "failure": {"type": type(exc).__name__, "message": str(exc)[:2000],
@@ -715,10 +809,22 @@ def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, r
         reg["arms"][arm].pop("read_at", None)
     out_dir, rec_path, results_path = record_paths(arm, smoke)
     ctx.update(rec_path=rec_path, results_path=results_path, smoke=smoke)
+    # item E: ANY record file at EITHER published path blocks a bare re-run, parseable or not,
+    # complete or not -- `rules.arm_failure` is "reported, not silently re-run", and a half-written
+    # or in-progress record is exactly as much a re-run hazard as a complete one. `--resume`
+    # continues a NON-terminal record; a TERMINAL one (success or FAILED) still refuses -- there
+    # is nothing left for `--resume` to continue.
     for path in (rec_path, results_path):
-        if _complete_record_at(path):
-            refuse(f"{path} already exists and is complete. `rules.arm_failure`: an arm is "
-                   f"reported, not silently re-run. Move the record aside deliberately.")
+        st = _record_status_at(path)
+        if st is None:
+            continue
+        if not resume:
+            refuse(f"{path} already exists. `rules.arm_failure`: an arm is reported, not "
+                   f"silently re-run. Pass --resume to continue a non-terminal run, or move "
+                   f"the record aside deliberately.")
+        if st["terminal"]:
+            refuse(f"{path} already carries a TERMINAL record (complete or failed); `--resume` "
+                   f"only continues a non-terminal run. Move the record aside deliberately.")
     p = arm_plan(arm, reg)                      # re-read: a smoke changed the dose
     ctx["plan"] = p
     if p["cut_corpus"] and CL.data_cut_count(reg) is None:
@@ -736,6 +842,14 @@ def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, r
         p = arm_plan(arm, reg, verdict=verdict)
         ctx["plan"] = p
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    # A registered run REFUSES anything but CUDA (item A): §Recipe is bf16 autocast, and CPU
+    # silently trains fp32 — a confound, not a smoke. A smoke is exempt, same as every other
+    # recipe-shaping check in this file.
+    if not smoke and device != "cuda":
+        refuse(f"arm {arm!r}: a registered (non-smoke) run requires --device cuda (got {device!r})"
+               f" — the recipe is bf16 autocast and CPU silently means fp32. Pass --smoke-steps "
+               f"for a CPU path check.")
 
     ws_cfg = dict(WS_DEFAULTS)
     ws_cfg.update({k: v for k, v in ((reg.get("warm_start") or {}).get("G-MLP") or {}).items()
@@ -762,6 +876,9 @@ def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, r
     batch_fn, man = CL.assemble_arm(arm, model.tok, p["student"], batch_size=p["batch"],
                                     seed=seed, max_len=max_len, verbose=verbose, registry=reg)
     q_stream, d_stream = streams_of(batch_fn)
+    # item D: everything from here on is WORK -- a warm-start failure (or anything after) is a
+    # FAILURE to be recorded, not a pre-flight refusal.
+    ctx["started"] = True
     ws = warm_start(model, {"warm_start": p["warm_start"]}, q_stream, ws_cfg, verbose=verbose)
 
     sigma = None
@@ -790,7 +907,7 @@ def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, r
     ck = out_dir / "ckpt.pt"
     every = int(ckpt_every or max(total // 20, 1))
     train_model = torch.compile(model) if compile_step else model
-    fp = fingerprint(arm, p, man, seed, smoke_steps)
+    fp = fingerprint(arm, p, man, seed, smoke_steps, device)
     r = Tr.train_arm(train_model, batch_fn, total_steps=total, pattern=p["pattern"],
                      cycles=CYCLES, peak=PEAK, final=FINAL, loss_name=p["objective"],
                      sigma=sigma, eval_fn=eval_fn, ckpt_path=ck, ckpt_every=every,
@@ -820,7 +937,10 @@ def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, r
 
     rec = {
         "_what": "one registered M10 screen arm, trained end to end by m10src/run_arm.py",
-        "arm": arm, "family": p["family"], "status": status, "complete": True, "smoke": smoke,
+        # item E: `complete` tracks the OUTCOME (only a "complete" status is complete); `terminal`
+        # is always true once the record is written -- either outcome blocks a bare re-run.
+        "arm": arm, "family": p["family"], "status": status, "complete": ok, "terminal": True,
+        "smoke": smoke,
         "smoke_steps": smoke_steps, "device": device, "max_len": max_len,
         "seed": seed, "seed_rule": reg.get("seed_rule"),
         "recipe": {k: p[k] for k in ("dose_examples", "batch", "pattern", "pattern_source",
@@ -877,10 +997,15 @@ def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, r
     return rec
 
 
-def main(argv=None):
+def build_argparser():
+    """Factored out of `main()` so a test can check CLI defaults (item A) without launching a
+    run."""
     ap = argparse.ArgumentParser(description="run one registered M10 screen arm")
     ap.add_argument("arm", nargs="?", default=None)
-    ap.add_argument("--device", default="cpu", choices=["cpu", "cuda"])
+    # A registered (non-smoke) run REFUSES anything but cuda (Codex runner review 2026-09-07,
+    # item A): the recipe is bf16 autocast and CPU silently means fp32. A smoke may still pass
+    # `--device cpu`. The default reflects that a bare invocation is presumed registered.
+    ap.add_argument("--device", default="cuda", choices=["cpu", "cuda"])
     ap.add_argument("--resume", action="store_true",
                     help="continue from work/m10arms/<arm>/ckpt.pt (evaluation state included)")
     ap.add_argument("--smoke-steps", type=int, default=None,
@@ -899,6 +1024,11 @@ def main(argv=None):
     ap.add_argument("--compile", action="store_true",
                     help="SMOKE ONLY: torch.compile the training step (checkpoints eager, §T)")
     ap.add_argument("--quiet", action="store_true")
+    return ap
+
+
+def main(argv=None):
+    ap = build_argparser()
     a = ap.parse_args(argv)
     if a.plan:
         plan(SL.cfg())
