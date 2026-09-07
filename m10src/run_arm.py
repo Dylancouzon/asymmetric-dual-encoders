@@ -676,11 +676,11 @@ def _record_failure(ctx, arm, exc, verbose=True):
 def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, real_eval,
          compile_step, verbose, f_verdict_path=None):
     smoke = smoke_steps is not None
-    given = {k: v for k, v in (("max_len", max_len), ("ckpt_every", ckpt_every),
-                               ("n_fit", n_fit), ("compile_step", compile_step or None),
-                               ("real_eval", real_eval or None)) if v}
+    passed = {"max_len": max_len, "ckpt_every": ckpt_every, "n_fit": n_fit,
+              "compile_step": compile_step or None, "real_eval": real_eval or None}
+    given = sorted(k for k in SMOKE_ONLY_KNOBS if passed[k])
     if given and not smoke:
-        refuse(f"{sorted(given)} may only be passed with --smoke-steps: a registered arm's "
+        refuse(f"{given} may only be passed with --smoke-steps: a registered arm's "
                f"recipe comes from m10/screen_registry.json, not from the command line "
                f"(`rules.arm_failure`: an arm is never re-run at different settings)")
     if real_eval and smoke:
