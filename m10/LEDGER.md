@@ -47,6 +47,28 @@ The 300-step smoke cannot stand in for this — it shrinks `arm_doc_count`, wher
 4,150 MB (vs 1,169 for the 1M doc stream alone) is what the reviews predicted from
 `guard_cross_role`'s two live hash sets plus retained `Segment.texts` — real terms, inside this number.
 
+### Steady state DURING training, and why a host_free alarm cries wolf (2026-09-07)
+
+Measured on the live F-bge-small run, ~5 min into training at the registered 5,000,000 docs:
+
+| | value | reading |
+|---|---|---|
+| `RssAnon` | **~3,012 MB, FLAT** | the crash predicate. The kills were ~24 GB anon. No leak. |
+| `RssFile` | 10,017 → 11,212 MB, climbing | reclaimable page cache, **bounded by the mapped files**: the fp16 doc target store is 5M × 1024 = 9.8 GiB, plus 1.75 GiB of ids, paged in as training touches random rows |
+| `guest_avail` | ~21,200 MB, flat | the guest is nowhere near distress |
+| host free | 503 → 516 MB, **bottomed and recovering** | expected to sit low: the guest is AT its 26 GB cap (`MemFree` 189 MB, `Cached` 22.0 GB) and WSL2 does not return page cache to Windows without `autoMemoryReclaim`, which `.wslconfig` does not set |
+
+**A `host_free` threshold alone is the wrong alarm.** Calibrated on the anon-driven kills, it fired
+three times on a completely healthy run and nearly cost a 21.8 h arm: the response being weighed
+was `wsl --shutdown` with `autoMemoryReclaim` added — which from inside WSL also kills the session
+issuing it. The alarm now tests **`RssAnon` growth** (>8 GB against a flat 3 GB) and
+**`guest_avail`** (<3 GB against ~21 GB); those are what preceded both kills.
+
+Two instrument notes for whoever reads a trace: **`arm_hwm_mb` is a high-water mark and never comes
+down**, so it overstates current usage (14,308 while live RSS was 14.2 GB and falling back);
+and `guest_used_mb` comes from `free -m $3`, which EXCLUDES buff/cache — so it read 4,796 MB while
+the arm's own RSS was 8,204 MB. Neither is wrong; they answer different questions.
+
 ### Withdrawn claims (mine) — kept so they are not re-derived
 
 1. **"+4.3 KB/row → 20.4 GiB at 5M, so F cannot run."** Divided a FIXED cost by n from ONE point.
