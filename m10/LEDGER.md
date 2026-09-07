@@ -1380,6 +1380,10 @@ All thirteen closed with tests: `model.train()` before the loop and after every 
 
 **Disclosure — M10.0-e ran in eval mode** (`calib.py:68` → `nano10.pooled_features` → `model.eval()`, never `.train()`): P0/P1/P2 trained 5M examples each with bge-small's dropout 0.1 OFF. All three shared the regime, so the PAIRED widths they were run to measure (`lr_pair.distance_raw` 0.00288, seed effect 0.00139) are internally consistent — but they were measured WITHOUT dropout noise, so they are a **lower bound** on the seed noise of arms trained under the registered recipe. **W8 band 1 was chosen on that 0.00288 ≤ 0.0056.** Lead's reading: proceed with band 1 as ruled — the two-seed confirmations on any non-default winner measure the REAL seed range, and `stands_iff` (margin > seed range) is the registered guard against exactly this — and label the calibration "dropout-off" wherever it is cited. A re-run of the three calibration arms under the fixed trainer (~5 box-hours) is available if Dylan wants the band re-derived; not taken by default.
 
+### Runner re-review (Codex) — NO-GO on nine; one real defect (a registered run defaulted to CPU = fp32, off-recipe) plus validation gaps; Sonnet round dispatched. 2026-09-07 evening
+
+Closed: train mode, warmup, kill-at-final-end, SHAPES check, smoke/real-eval separation. Open and taken: registered runs must be CUDA (bf16 is the recipe) and the device/precision/code identity enter the resume fingerprint; evidence files hashed and verified on resume; warm-start failures recorded; failed records are `complete: false`/terminal and any existing record blocks a start without `--resume`; the F verdict must name a trained, un-cut F student with complete F records; duplicate COV unit ids refused. Verbatim in `research/m10-codex-runner-2026-09-07.md`. **Family F does not start until the third pass says GO.**
+
 ## §4 Dev-reuse log
 
 | date | surface | raw score reads | artifact |
