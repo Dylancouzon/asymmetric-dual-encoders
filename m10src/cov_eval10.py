@@ -11,6 +11,7 @@ contrast and this calibration read the same estimator.
 """
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -46,6 +47,13 @@ def score_student(encode_queries, units=None, verbose=True):
     import evalkit
     import cov_probe
     us = units if units is not None else cov_probe.units()
+    # item G: a duplicate unit id collapses silently in the dict comprehension below (the second
+    # entry just overwrites the first), so `assert_surface` would see a normal-looking surface
+    # even though `units()` returned the same unit twice. Refuse it BEFORE anything is scored.
+    dupes = sorted(u for u, n in Counter(u[0] for u in us).items() if n > 1)
+    if dupes:
+        raise SystemExit(f"cov_eval10: units() returned duplicate unit ids {dupes} -- refusing "
+                         f"before scoring")
     # The macro is defined on exactly the admitted surface, so a dropped unit or a dropped family
     # must fail BEFORE 13,416 queries and 452,757 document vectors are scored -- not after, in
     # `macro()`, having already spent the encode (Codex runner review 2026-09-07, finding 12).
