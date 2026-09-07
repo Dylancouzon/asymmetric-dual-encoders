@@ -60,9 +60,17 @@ cost by n. **A per-row cost derived from a single value of n is an assumption, n
 | 200,000 | 18,787,837 | +3,425 MB |
 | 1,000,000 | 93,812,539 | +3,454 MB |
 
-5× the tokens costs **+29 MB** — constant, so ~3.5 GB at 5M, not 20.4 GiB. Two tells ignored for
-three rounds: three runs of the *identical* 1M path gave +3,453/+3,813/+4,546 MB (deterministic id
-data cannot vary 30%), and the on-disk cache was **366 MB** against a 3,453 MB RSS rise.
+5× the tokens costs **+29 MB** — constant, so ~3.5 GB at 5M, not 20.4 GiB.
+
+**Withdrawn sub-claim (Codex + Opus, 2026-09-07):** I wrote that "three runs of the *identical* 1M
+path gave +3,453/+3,813/+4,546 MB, and deterministic id data cannot vary 30%". Those are **not
+three runs of one path** — +3,813 and +4,546 are this file's own per-*implementation* figures
+(`PackedIds` built in RAM, and the `data10.pretokenize` list; see the `_stream_doc_ids` docstring
+table). They were measured during active iteration on three different code states. The variance
+argument is void, and with it **there is no run-to-run error bar anywhere here**: one number per
+configuration, so the "+29 MB for 5× the tokens" has no noise estimate and its *precision* is
+unestablished even though its *direction* is not. The tell that does hold: the on-disk cache was
+**366 MB** against a 3,453 MB RSS rise, a 10× disagreement.
 
 **Mechanism = glibc arena retention** — freed pages held in per-thread arenas (the fast tokenizer
 runs Rust threads); neither live data nor reclaimable page cache, so nothing else returns it.
@@ -79,16 +87,88 @@ way. **Adopted: `release_arena()`** after both doc-build paths — in-process, a
 memory matters, no throughput risk. `MALLOC_ARENA_MAX=2` works but changes malloc for the whole
 10.9 h training loop at an unmeasured rate cost: validated alternative, **not adopted**.
 
-**Every n-dependent term, in closed form** — so C1 does not rest on two points alone. At
-5,000,000 documents (93.8 tokens/doc measured): `offs` int64 is **38 MiB resident**, the `lens`
-concat is **76 MiB transient**, `flat` is **1.75 GiB memmapped and never resident**, and disk peaks
-at 3.49 GiB (633 GB free). Total n-dependent RSS ~114 MiB, which is the +42 MB peak growth seen
-from 200k→1M. Nothing in this path bites only late.
+**Every n-dependent term, corrected.** At 5,000,000 documents (93.8 tokens/doc measured):
+`offs` **38 MiB** resident, `PackedIds.lengths` **38 MiB** retained, the `lens` concat **76 MiB**
+transient, row indices **38 MiB**, and disk peaking at 3.49 GiB (633 GB free).
 
-**Three wrong hypotheses before the right one**, each killed only by measuring: per-row growth
-(killed by two values of n), reclaimable page cache (killed by `RssAnon` — it was anonymous), and
-`DOC_TEXT_CHUNK` as the knob (killed by 7,371 vs 7,401 at 4× smaller chunk — `pack_tokenize` has
-its own internal `batch=20_000`, so the outer chunk never reaches the tokenizer).
+**"`flat` is 1.75 GiB memmapped and never resident" was FALSE** (Opus 2026-09-07, reproduced here).
+`np.save(tmp/"flat.npy", flat_mm)` takes `tofile`'s path and reads **every page** of the mapping.
+Measured on an 800 MB int32 memmap on the real ext4 filesystem: `VmRSS` 29 → 792, **`RssFile`
++763 MB**, `RssAnon` +0, `RssShmem` +0. So it is **~1.75 GiB at 5M, linear in n** — the term that
+"bites only late", invisible at 200k/1M because 350 MB never approached the 7.4 GB high-water mark
+(`VmHWM` bounds hidden linear terms at the peak, not at 42 MB — an instrument limit I had not
+reckoned with). It IS reclaimable page cache, not anonymous, so it does not threaten the box the
+way the 19.1 GiB anon array did — and the 5M run below measured 3,297 MB of host headroom *with*
+this term present. A first `/tmp` measurement showed the pages as neither file nor anon because
+`/tmp` is tmpfs; the category matters and the real filesystem is ext4.
+
+**The ~7.4 GB PEAK is not yet attributed, and the reason given for chunk-invariance was wrong.**
+Both reviewers rejected it independently. `pack_tokenize`'s `batch=20_000` does *not* make the
+outer chunk irrelevant: at chunk 100,000 the tokenizer runs 5 internal batches, at 25,000 it runs
+2, and `row_texts` materializes exactly `chunk` texts (46 MB vs 11 MB) — so a smaller chunk should
+give a *smaller* peak, yet 25k measured 30 MB **higher**. That sign inversion means noise is
+swamping a real 35 MB effect, which is only possible because a **≥7 GB term neither chunk nor batch
+explains** dominates. The tokenizer arithmetic falls ~15× short: one 20,000-row batch is ≲0.5 GB
+counting Python lists, `Encoding` objects, masks, offsets and token strings. `MALLOC_ARENA_MAX=2`
+agrees — it moved peak only 7,371 → 7,236, so the peak is not fragmentation either. Leading
+unexamined candidate: a fixed multi-GB load inside `m9src/data.row_texts` / `m9src/pool.build()`,
+which would be chunk-invariant and indistinguishable from a batch transient under the experiment
+actually run. **Peak attribution, now RESOLVED — it is `row_texts`, not the tokenizer.** Two measurements:
+
+- 10× smaller tokenizer batch (20,000 → 2,000) moves peak only **7,366 → 7,076 MB (−4%)**, so the
+  tokenizer accounts for ≲290 MB of 7.4 GB. My attribution was wrong; both reviewers were right.
+- `m9src/data.row_texts(np.arange(10))` — **ten rows** — costs **2,200 MB RssAnon, peak 3,572 MB**.
+  Asking for 100,000 rows instead adds **+11 MB**. It is a FIXED load, which is precisely why every
+  n- and chunk-sweep showed a constant.
+
+**Mechanism:** `row_texts` does `mix.load_store(store)`, materializing an ENTIRE store's texts to
+extract however many rows were requested — and `_stream_doc_ids` calls it **once per chunk**, so a
+5M build re-loads the stores ~50 times. That is the sawtooth in `work/memtrace_fulldose.csv` and
+the bulk of the peak.
+
+**Not fixed, deliberately.** `m9src/data.py` is guard9 **"train"** scope and `m7src/mix.py` is
+**"eval"** scope; editing either moves guard9 hashes while M9's six-set close-out is still pending.
+The fix belongs on the M10 side — sort the draw by store and load each store once — and it is not
+urgent: the whole doc build is 944 s against a 10.9 h arm (2.4%), and the pre-flight passes with
+the cost present. Worth doing before the cloud run, where it also buys wall time.
+
+**Three wrong hypotheses before the right one on the RESIDUE**, each killed only by measuring:
+per-row growth (killed by two values of n), reclaimable page cache (killed by `RssAnon` — it was
+anonymous), and `DOC_TEXT_CHUNK` as the knob (empirically true, mechanism wrong, see above).
+
+**FULL-DOSE PRE-FLIGHT: PASS (2026-09-07).** The real `assemble_arm("F-bge-small")` at the
+registered `n_docs=5,000,000`, token caches cleared, under `m10src/memtrace.sh`. This is the run
+the 300-step smoke cannot stand in for, because the smoke shrinks `arm_doc_count` — where the
+crash lived.
+
+| | pre-fix | full dose, post-fix |
+|---|---|---|
+| peak arm RSS | 24,383 MB | **8,228 MB** (`VmHWM`) |
+| peak guest used | 25,256 MB (cap 26,624) | **9,799 MB** |
+| **min host free** — the metric that actually failed | **239 MB** | **3,297 MB** |
+| RSS entering training | — | 4,150 MB |
+| wall time | — | 944 s |
+
+The 4,150 MB entering training (vs 1,169 MB for the 1M doc stream alone) is exactly what the
+reviews predicted from `guard_cross_role`'s two live hash sets and the retained `Segment.texts`;
+those terms are real, and they are inside this measured number.
+
+**Open, found by the 2026-09-07 reviews, none blocking F** (all measured or code-verified by the
+reviewers, none yet fixed):
+1. `guard_cross_role` holds **both** id-hash `set`s live — **78 MB anon per 1M rows**, ~0.8 GB at
+   5M — allocated *after* the doc trim, and it pages the whole 1.75 GiB `flat` back in. No trim
+   runs after it. Fix: vectorized/sorted-uint64 pass instead of Python `set`s, then trim.
+2. `Segment.texts` stays reachable through `TargetView` for the whole 10.9 h run (~0.5–0.9 GB of
+   **live** anon that no trim can free). `tokenize_corpus` also rebuilds the full `texts` list on
+   the **cache-hit** path just to compute `ident["n"]`.
+3. `build_doc_stream(allow_unscreened=True)` (smoke) still uses `D.m9_doc_pool` + `D.pretokenize`
+   — the two costs production was rewritten to remove — with **no upper bound on `n`**. Production
+   never sets the flag, but the smoke therefore shares no data-prep code with production. Cap `n`
+   and route it through `_stream_doc_ids`.
+4. The memmap guards test the READ artifact, not the WRITE path: a change that accumulated `parts`
+   in RAM, concatenated and `np.save`d would pass both tests and reinstate the original crash.
+   `DOC_TEXT_CHUNK` itself is unguarded — it could be set to 5,000,000 and every test still passes.
+5. `MALLOC_ARENA_MAX=2` is not adopted on an *unmeasured* rate cost; one calibration arm settles it.
 
 **The original crash, closed out.** Pre-fix peak (`work/memtrace_before_fix.csv`): `guest_used`
 **25,256 MB** against the 26,624 cap, `guest_avail` **791 MB**, `guest_used` tracking `arm_rss`

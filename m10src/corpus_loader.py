@@ -526,7 +526,15 @@ def _publish_dir(tmp, d):
 
 
 def pack_tokenize(tok, texts, max_len=512, prefix="", batch=20_000, label="", verbose=True):
-    """-> PackedIds. Chunked, so the transient heap is one batch, not the corpus."""
+    """-> PackedIds. Chunked, so the transient heap is one batch, not the corpus.
+
+    `batch` is the REAL tokenizer transient knob, and it caps the caller's chunk rather than being
+    independent of it: a caller passing fewer than `batch` texts gets ONE tokenizer call over the
+    whole block, so an outer chunk below 20,000 sets the batch itself. Measuring
+    `DOC_TEXT_CHUNK` at 100,000 vs 25,000 therefore varies nothing -- both collapse to 20,000 --
+    which is why an earlier "peak is chunk-invariant" reading was an artifact of never crossing
+    the threshold (Codex 2026-09-07).
+    """
     parts, lens, t0 = [], [], time.time()
     for i in range(0, len(texts), batch):
         ids = tok([prefix + t for t in texts[i:i + batch]], truncation=True, max_length=max_len,
@@ -1006,8 +1014,10 @@ def _screened_doc_pool(n, seed, banned, margin=1.05, floor=2_000):
     **Returns row indices, not texts.** Holding the texts is 408 chars x 5,000,000 documents = a
     measured **19 GB** (+3,804 MB on a 1,000,000-row probe), which is what remained of the
     2026-09-07 WSL kills after the targets were fixed. `build_doc_stream` streams them: a chunk of
-    rows -> texts -> ids -> the texts are dropped. Their id arrays cost only ~0.9 GB at the full
-    count, so the corpus is affordable and only its Python string form was not.
+    rows -> texts -> ids -> the texts are dropped. Their id arrays are **1.75 GiB** at the full
+    count (469,062,695 tokens int32, at the measured 93.8 tokens/doc) and live on DISK as a memmap,
+    never resident -- so the corpus is affordable and only its Python string form was not. (This
+    said "~0.9 GB" until Codex 2026-09-07 caught it: off by 2x, and the wrong storage class.)
 
     `banned` must be the REAL computed ban set. An EMPTY set is treated exactly like a missing
     mask -- refused, not "nothing to remove" -- because the two are indistinguishable from here: a
@@ -1084,30 +1094,68 @@ def build_doc_stream(n, tok, *, batch_size=32, seed=0, max_len=512, allow_unscre
 DOC_TEXT_CHUNK = 100_000
 
 
+_TRIM = None          # resolved once; None = not tried yet, False = unavailable
+_TRIM_REPORTED = False
+
+
 def release_arena():
     """Hand glibc's freed pages back to the OS, and report how much came back.
 
     The doc-id stream leaves ~3 GB of ANONYMOUS RSS behind that is not live data: the per-chunk
     texts and token lists are freed, but glibc keeps the pages in its per-thread arenas (the fast
-    tokenizer runs Rust threads, so there are several). Measured at 200k documents, chunk 100k:
-    anon 3,839 MB -> 788 MB, so `malloc_trim(0)` returns 3,051 MB and the real steady-state cost
-    of the doc build is +403 MB (LEDGER 2026-09-07). This matters because the arm goes on to
-    allocate a model and an optimizer; 3 GB of allocator residue is 3 GB Windows does not get.
+    tokenizer runs Rust threads, so there are several). Measured at 200k documents: anon
+    3,839 MB -> 788 MB, so `malloc_trim(0)` returns 3,051 MB and the real steady-state cost of the
+    doc build is +403 MB (LEDGER 2026-09-07). That matters because the arm goes on to allocate a
+    model and an optimizer; 3 GB of allocator residue is 3 GB Windows does not get.
 
-    Best-effort: returns 0 where the C library has no `malloc_trim` (musl), never raises.
+    `-> MB released`, and **0 is ambiguous on purpose only in the caller's eyes** -- it can mean
+    "nothing to trim" or "no malloc_trim here". `release_arena.status` disambiguates
+    (`"freed"` / `"nothing"` / `"unsupported"`), and the unsupported case prints ONCE, because a
+    silent 0 would let a run whose safety argument rests on trimming look identical to one where
+    the mechanism never executed (Codex 2026-09-07). Not fatal: unlike this module's semantic
+    guards, a missing trim costs memory, it does not corrupt a measurement.
     """
+    global _TRIM, _TRIM_REPORTED
+
     def _anon():
         try:
             st = open("/proc/self/status").read()
             return int(st.split("RssAnon:")[1].split()[0]) // 1024
         except Exception:
-            return 0
+            return None
+
+    if _TRIM is None:
+        try:
+            lib = ctypes.CDLL("libc.so.6")
+            fn = lib.malloc_trim
+            fn.argtypes = [ctypes.c_size_t]   # int malloc_trim(size_t) -- do not rely on defaults
+            fn.restype = ctypes.c_int
+            _TRIM = fn
+        except Exception:
+            _TRIM = False
+    if _TRIM is False:
+        if not _TRIM_REPORTED:
+            _TRIM_REPORTED = True
+            print("  note: this libc has no malloc_trim; the doc build will keep ~3 GB of "
+                  "allocator residue (set MALLOC_ARENA_MAX=2 to prevent it instead)", flush=True)
+        release_arena.status = "unsupported"
+        return 0
     before = _anon()
     try:
-        ctypes.CDLL("libc.so.6").malloc_trim(0)
+        _TRIM(0)
     except Exception:
+        release_arena.status = "failed"
         return 0
-    return max(before - _anon(), 0)
+    after = _anon()
+    if before is None or after is None:
+        release_arena.status = "unknown"   # /proc unreadable; the trim itself still ran
+        return 0
+    freed = max(before - after, 0)
+    release_arena.status = "freed" if freed else "nothing"
+    return freed
+
+
+release_arena.status = "not-run"
 
 
 def _stream_doc_ids(rows, tok, prefix, max_len, chunk=DOC_TEXT_CHUNK, verbose=True,
@@ -1366,9 +1414,13 @@ def assemble_arm(arm_name, tok, student, *, batch_size=None, seed=0, max_len=512
                                         balanced=True, max_len=max_len, prefix="",
                                         allow_uncut=False, require_forms=require_forms,
                                         verbose=verbose, registry=reg, consumed=consumed)
-    # The doc build peaks at ~7.4 GB (measured; the tokenizer's transient, chunk-invariant). It
-    # runs SECOND, so anything the query build left in the allocator is still resident underneath
-    # that peak and the two add. Hand it back before the peak, not after.
+    # The doc build peaks at ~7.4 GB (measured) and runs SECOND. Returning the query build's
+    # allocator residue first is cheap insurance, NOT a proven peak reduction: if the doc build's
+    # allocations can reuse those freed chunks, the pages go live again without raising RSS and the
+    # trim only forces them to be re-faulted (Codex 2026-09-07). What IS measured is that the trim
+    # lowers the steady-state baseline handed to the model and optimizer. The A/B that would settle
+    # the ordering -- identical assemble_arm, same cache state, this call enabled vs stubbed,
+    # comparing document VmHWM and the first optimizer-step peak -- has NOT been run.
     release_arena()
     doc_stream, doc_man = build_doc_stream(n_docs, tok, batch_size=batch_size, seed=seed,
                                           max_len=max_len, allow_unscreened=False, verbose=verbose,

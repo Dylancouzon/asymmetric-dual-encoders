@@ -7,6 +7,7 @@ present, a resumed arm that draws different data, and the FORMS-12 hold-out bein
 import json
 import os
 import sys
+import types
 import tempfile
 from pathlib import Path
 
@@ -1189,6 +1190,10 @@ def test_doc_id_cache_is_atomic_validated_and_keyed_on_the_ROW_DRAW(monkeypatch,
         "row_texts": staticmethod(lambda r: (_ for _ in ()).throw(AssertionError("re-read")))}))
     again, _ = CL._stream_doc_ids(rows_a, FakeTok(), "doc: ", 512, chunk=25, verbose=False)
     assert list(again[0]) == list(ids[0]) and len(again) == 60
+    # the CACHE-HIT load is a SEPARATE np.load from the cache-miss return, so asserting the
+    # memmap on one does not cover the other -- and the hit path is the one every arm after the
+    # first takes (Codex 2026-09-07).
+    assert isinstance(again.flat, np.memmap), f"cache-hit flat must be a memmap, got {type(again.flat)}"
 
     # a DIFFERENT row draw must miss: same n, same tokenizer, different rows
     monkeypatch.setitem(sys.modules, "data", FakeM9)
@@ -1228,10 +1233,22 @@ def test_release_arena_is_safe_and_the_doc_build_actually_calls_it(monkeypatch, 
     data and NOT reclaimable page cache, so nothing else gives it back -- if a refactor drops this
     call the arm silently carries 3 GB it does not need, which is 3 GB Windows does not get, and
     that is the shape of the two 2026-09-07 crashes. Guard the CALL, not the allocator."""
-    # never raises, always an int, even where libc has no malloc_trim
+    # never raises, always an int, and reports WHICH outcome it was
+    monkeypatch.setattr(CL, "_TRIM", None)          # force re-resolution
     assert isinstance(CL.release_arena(), int) and CL.release_arena() >= 0
+    assert CL.release_arena.status in ("freed", "nothing"), CL.release_arena.status
+
+    # no malloc_trim: must degrade to 0 AND say so. `_TRIM` is cached after the calls above, so
+    # without resetting it the monkeypatch below is a no-op and the 0 comes from "nothing to
+    # trim" -- the assertion would pass for the wrong reason (it did, until this was fixed).
+    monkeypatch.setattr(CL, "_TRIM", None)
+    monkeypatch.setattr(CL, "_TRIM_REPORTED", False)
     monkeypatch.setattr(CL.ctypes, "CDLL", lambda *a, **k: (_ for _ in ()).throw(OSError("musl")))
     assert CL.release_arena() == 0, "must degrade to 0, not raise, without malloc_trim"
+    assert CL.release_arena.status == "unsupported", (
+        "a silent 0 lets a run whose safety argument rests on trimming look identical to one "
+        f"where the mechanism never ran; got {CL.release_arena.status!r}")
+    monkeypatch.setattr(CL, "_TRIM", None)
 
     calls = []
     monkeypatch.setattr(CL, "release_arena", lambda: (calls.append(1), 7)[1])
@@ -1256,3 +1273,29 @@ def test_release_arena_is_safe_and_the_doc_build_actually_calls_it(monkeypatch, 
     CL._stream_doc_ids(np.arange(60), FakeTok(), "doc: ", 512, chunk=25, verbose=False,
                        cache=False)
     assert calls, "the in-memory path concatenates (holding flat twice) and must release too"
+
+
+def test_tokenize_corpus_serves_the_cache_HIT_as_a_memmap_too(monkeypatch, tmp_path):
+    """The query side has the same hazard as the document side and had NO guard for it: mutating
+    its cache-hit `np.load` to an eager read left the whole suite green. The corpus is 5.24M
+    texts, so an eager flat array is resident RAM for every arm after the first -- the exact class
+    of cost that took the box down twice (Codex 2026-09-07 finding 6, generalized)."""
+    class FakeTok:
+        def __call__(self, texts, truncation=None, max_length=None, add_special_tokens=None):
+            return {"input_ids": [[3, 4] for _ in texts]}
+        name_or_path = "fake"; vocab_size = 9; model_max_length = 512; truncation_side = "right"
+        def __len__(self): return 9
+
+    monkeypatch.setattr(CL, "TOKCACHE", tmp_path)
+    monkeypatch.setattr(CL, "tokenizer_ident", lambda t: {"class": "Fake"})
+    seg = types.SimpleNamespace(texts=[f"q{i}" for i in range(40)])
+    man = {"sha256": "deadbeef"}
+
+    # The MISS path builds in RAM on purpose here and that is affordable: query texts are ~20
+    # tokens, so 5.24M of them is ~419 MB (double during the concatenate). It is the HIT path --
+    # taken by every arm after the first -- that must not pull the flat array into memory.
+    miss = CL.tokenize_corpus(FakeTok(), [seg], man, "fake", verbose=False)
+    assert len(miss) == 40
+    hit = CL.tokenize_corpus(FakeTok(), [seg], man, "fake", verbose=False)
+    assert len(hit) == 40 and list(hit[0]) == [3, 4]
+    assert isinstance(hit.flat, np.memmap), f"cache-HIT flat must be a memmap, got {type(hit.flat)}"
