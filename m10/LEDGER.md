@@ -1384,6 +1384,10 @@ All thirteen closed with tests: `model.train()` before the loop and after every 
 
 Closed: train mode, warmup, kill-at-final-end, SHAPES check, smoke/real-eval separation. Open and taken: registered runs must be CUDA (bf16 is the recipe) and the device/precision/code identity enter the resume fingerprint; evidence files hashed and verified on resume; warm-start failures recorded; failed records are `complete: false`/terminal and any existing record blocks a start without `--resume`; the F verdict must name a trained, un-cut F student with complete F records; duplicate COV unit ids refused. Verbatim in `research/m10-codex-runner-2026-09-07.md`. **Family F does not start until the third pass says GO.**
 
+### Runner round two LANDED (Sonnet, 561c580 + 70b854f; 315 tests); Codex third pass in flight; family F launch script staged (`work/m10arms_run_F.sh`, not run)
+
+Registered runs refuse non-CUDA (bf16 is the recipe); fingerprint carries device/dtype/warmup/optimizer/code sha; evidence files hashed and verified on resume; warm-start failures after start recorded; failed records `complete: false, terminal: true`, any existing record blocks a bare start; F verdict must name a trained un-cut F student with complete F records and a contrast block; duplicate COV unit ids refused. Smoke at 70b854f complete (CPU, 17.5 ex/s). **The first registered arm, F-bge-small (20M, ≈6.2 h), starts on Codex GO**, F-MiniLM-L6 chained after it.
+
 ## §4 Dev-reuse log
 
 | date | surface | raw score reads | artifact |
