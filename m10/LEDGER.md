@@ -1353,6 +1353,12 @@ Independent judge (Fable, frozen rubric only, `results/m10_health_r2_judge_verdi
 
 **Health:** the scheduled launcher fired Sun 14:54 after the veto window; the DRIVER's pilot-flag rule (a worker launch-safety check, not a registered gate) read A8 0.317 at n=2,000 and refused to start. No veto arrived on issue #3 or as `VETO_HEALTH`. **Lead: started `build health` (pilot flag bypassed) 2026-09-07 morning** — the registered A8 action at step 8 is the gate that decides health's fate; ≈1.5 GPU-hours at risk.
 
+### Screen-arm RUNNER built (Opus, ff15eeb; 247 tests) → Codex NO-GO, thirteen findings, all verified; fixes dispatched. 2026-09-07 afternoon
+
+`m10src/run_arm.py`: registry-driven arm training through `assemble_arm`, COV at cycle ends (+ midpoints for the kill rule), F's 5M/10M/20M reads as non-decision `read` evals, DEV-6 once at the end, resumable, record per arm; `--plan` projects **30.0 box-hours** for W8 band 1 (F 6.24 h per 20M arm). Readings taken and recorded in the record schema: dose floor at bs128 (39,062 steps = 64 examples short); warm-start n_fit 60,000 / seed 21 / λ reselected for every arm (registry names them only for G-MLP; `warm_start.all_arms` says retained in every arm); registry `student` strings aliased to `nano10` keys.
+
+**Codex (`research/m10-codex-runner-2026-09-07.md`) — the four that would have changed every screen number:** (1) the warm start left the backbone in `eval()` and the trainer never called `train()` → **dropout off for the whole run**; (2) §Recipe's bf16 autocast and wd-on-dim>1-only groups were not implemented (fp32, decay on everything); (3) the registered **2,000-step cycle-1 warmup** was absent (step 0 at 1e-4); (4) a kill firing at the final cycle end was recorded as success. Plus: real-run knobs overridable, an ineffective SHAPES check, resume dropping the evaluator's per-family records, no recipe fingerprint on resume, crashes not recorded as failures, real eval reachable under smoke, **post-F arms hard-coded to bge-small instead of F's winner**, COV surface validated after scoring, non-atomic record. **Open question raised to the worker:** whether the M10.0-e calibration arms (`calib.run_arm`) also trained in eval mode — if so, the same-init distance 0.00288 that set W8 band 1 was measured without dropout noise and is a lower bound on the real-arm seed noise.
+
 ## §4 Dev-reuse log
 
 | date | surface | raw score reads | artifact |
