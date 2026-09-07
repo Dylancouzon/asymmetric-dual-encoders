@@ -149,6 +149,30 @@ starting, and none announced itself.
 5. **Never trust a docstring's cost estimate.** Both "a few minutes for the whole set" claims in
    `train.py` were wrong by two orders of magnitude, in the same file, on the same day.
 
+## A number from one measurement is an assumption (2026-09-07)
+
+Written after a memory bug took four wrong diagnoses and most of a session. Each was stated as
+settled and each died to the next measurement: per-row growth, page cache, the chunk size, the
+tokenizer. The bug was a fixed 2.2 GB load in `row_texts`, found only by asking it for **ten rows**.
+
+- **A per-unit rate needs two points.** "+3,453 MB at 1M → 4.3 KB/row → 20.4 GiB at 5M" was a
+  fixed cost divided by n. Two sizes showed 5× the work costs **+29 MB**. One point cannot tell a
+  constant from a slope, so it cannot support an extrapolation — and 6× wrong here nearly cancelled
+  a family.
+- **Vary the knob you are blaming.** Chunk-invariance was read as "the tokenizer's transient". A
+  10× smaller *tokenizer batch* moved the peak 4%. If you have not moved the thing you are
+  accusing, you have not tested it.
+- **Measure at the registered dose, on the metric that failed.** The 300-step smoke passes because
+  it shrinks the very count that breaks. The crashes presented as **host free 239 MB**, not as
+  process RSS — so that is the number a pre-flight has to report.
+- **Know the instrument.** `VmHWM` is monotonic; a 5-second `VmRSS` sample is a lower bound and
+  hides any transient shorter than the interval. `RssAnon` is unreclaimable, `RssFile` is page
+  cache the kernel drops — opposite consequences. A first probe wrote to `/tmp`, which is tmpfs,
+  and mis-categorized the pages entirely. And a `pgrep -f` pattern matches the *launching shell*.
+- **Reconcile a new number against the ones already written down.** Three figures got labelled
+  "three runs of one path"; two were this repo's own per-implementation measurements. That
+  fabricated an error bar where none existed.
+
 ## Durable knowledge goes in the repo, not in the assistant's memory (Dylan, 2026-08-26)
 
 The point of this repo is a reusable harness, so anything a future session would need belongs in a
