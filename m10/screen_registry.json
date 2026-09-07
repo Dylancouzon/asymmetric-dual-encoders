@@ -354,7 +354,22 @@
   ],
   "why": "without it the forms contrast is confounded with volume, which is the one thing family A exists to separate",
   "anchor_corpus": "the CUT A4, not the full corpus -- so the anchor and A3 differ only in which text they carry, never in how much",
-  "A1": "not cut: A1 is the M9 pool and A2-A1 is the volume effect by construction"
+  "A1": "not cut: A1 is the M9 pool and A2-A1 is the volume effect by construction",
+  "unique_text_count": 2651572,
+  "registered": {
+   "when": "2026-09-07T14:45-04:00",
+   "before_any_arm": true,
+   "counts": {
+    "A2": 4439407,
+    "A3": 2651572,
+    "A4": 3486034
+   },
+   "min": "A3",
+   "report": "results/m10_data_cut.json",
+   "report_sha256": "d41920dc5e7cd7654681d029bd43adaf986c2c870a08d4f52aceeb6c9ac2a326",
+   "generated_corpus": "work/m10gen/generated_queries.jsonl (834,463 rows; results/m10_assemble10.json)",
+   "note": "post-screen, post-dedup unique texts through corpus_loader.load_segments on the real sources; A3 is the min because A3 ⊂ A4 and PAQ-A2 (4.037M) > harvest (1.25M)"
+  }
  },
  "rules": {
   "generic": "resolves iff point >= MDE AND lower bound at the quantile > 0 AND the sign is stable across the last two cycle-end checkpoints",

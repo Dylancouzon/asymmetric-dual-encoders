@@ -44,9 +44,10 @@ allocation and `max_extension_cycles` are neither — they are fixed at the M10.
 
 ## §0b Screen lock — data-dependent constants, fill at the close of M10.1, before any arm
 
-- A2, A3 and A4 post-screen unique-text counts (identical) and corpus hashes — **STILL OPEN: A4
-  needs the generated half, so `data_cut` cannot be computed until generation runs.** Determinate
-  now: **A3's harvested component is 1,250,000 rows** (§1), **PAQ's A2 sample 4,037,000 with the
+- **A2/A3/A4 post-screen unique-text counts — REGISTERED 2026-09-07 14:45, before any arm:** A2
+  4,439,407 · **A3 2,651,572 (the min → `data_cut.unique_text_count`)** · A4 3,486,034
+  (`results/m10_data_cut.json`, sha in the registry's `data_cut.registered`). Generated corpus:
+  834,463 rows (`results/m10_assemble10.json`). Determinate earlier: **A3's harvested component is 1,250,000 rows** (§1), **PAQ's A2 sample 4,037,000 with the
   build's 1,000,000 nested inside it** (`work/m10paq/paq_draw.json`, hashes there), and the M9 pool
   is 463,314. **Generator and server, pinned:** `Qwen/Qwen3-8B-AWQ` revision
   `4da05a8edb55c6046cce958586c33b61da07bb79`, served by **vLLM 0.28.0** in `.venv-gen`

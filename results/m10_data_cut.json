@@ -1,0 +1,74 @@
+{
+ "_what": "\u00a70b: A2/A3/A4 post-screen unique-text counts and their min",
+ "_rule": "min of the three post-decontamination unique-text counts; the larger two are downsampled with seed 0; the count itself and the hashes are \u00a70b",
+ "_registers_nothing": "the lead registers the number in m10/screen_registry.json",
+ "head_per_source": null,
+ "when": "2026-09-07T14:41:24-0400",
+ "arms": {
+  "A2": {
+   "sources": [
+    "m9-pool",
+    "paq-a2"
+   ],
+   "unique_texts": 4439407,
+   "duplicates_removed": 60198,
+   "by_form": {
+    "factoid": 4366549,
+    "product": 72858
+   },
+   "corpus_sha256": "eac84f50cff1d26aa3f0cbd435ba1832d952da2617619b32063bedc03233c236",
+   "seconds": 45.9
+  },
+  "A3": {
+   "sources": [
+    "m9-pool",
+    "paq-build",
+    "harvest"
+   ],
+   "unique_texts": 2651572,
+   "duplicates_removed": 59419,
+   "by_form": {
+    "claim": 415454,
+    "factoid": 1330329,
+    "keyword": 416453,
+    "product": 72858,
+    "title": 416478
+   },
+   "corpus_sha256": "7a2a5ac37e291f9abd9525fc1eb7c29b0d5b086ba57d7d317c1d271cfdd4489f",
+   "seconds": 22.9
+  },
+  "A4": {
+   "sources": [
+    "m9-pool",
+    "paq-build",
+    "harvest",
+    "generated"
+   ],
+   "unique_texts": 3486034,
+   "duplicates_removed": 59420,
+   "by_form": {
+    "argument": 57401,
+    "claim": 415454,
+    "comparison": 143000,
+    "conversational": 143000,
+    "factoid": 1330329,
+    "finance": 143000,
+    "health": 62061,
+    "howto": 143000,
+    "keyword": 416453,
+    "product": 72858,
+    "title": 416478,
+    "yesno": 143000
+   },
+   "corpus_sha256": "e0c4f00521d104b02792ac9d860a0612b0dd99dcdbe9613c4d5245df52aa2940",
+   "seconds": 28.4
+  }
+ },
+ "counts": {
+  "A2": 4439407,
+  "A3": 2651572,
+  "A4": 3486034
+ },
+ "complete": true,
+ "data_cut": 2651572
+}
