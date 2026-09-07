@@ -1366,6 +1366,10 @@ def assemble_arm(arm_name, tok, student, *, batch_size=None, seed=0, max_len=512
                                         balanced=True, max_len=max_len, prefix="",
                                         allow_uncut=False, require_forms=require_forms,
                                         verbose=verbose, registry=reg, consumed=consumed)
+    # The doc build peaks at ~7.4 GB (measured; the tokenizer's transient, chunk-invariant). It
+    # runs SECOND, so anything the query build left in the allocator is still resident underneath
+    # that peak and the two add. Hand it back before the peak, not after.
+    release_arena()
     doc_stream, doc_man = build_doc_stream(n_docs, tok, batch_size=batch_size, seed=seed,
                                           max_len=max_len, allow_unscreened=False, verbose=verbose,
                                           consumed=consumed)

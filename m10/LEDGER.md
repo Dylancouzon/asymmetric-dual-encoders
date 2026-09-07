@@ -11,11 +11,12 @@ training step. `dmesg` does not survive a WSL restart and **Windows logged nothi
 time** — no error, no critical event, no sleep — so the cause was found by instrumenting a rerun
 (`work/memtrace.sh`, traces in `work/memtrace_before_fix.csv` and `work/memtrace.csv`).
 
-| | before | after |
+| | before | after (measured 2026-09-07, see below) |
 |---|---|---|
-| arm RSS peak | **24,383 MB** | **~2,100 MB** |
-| guest used peak | 25,256 MB (`.wslconfig` cap **26,624**) | ~2,800 MB |
-| host free MINIMUM | **239 MB** (from 23,268 idle) | **> 21,400 MB** |
+| arm RSS peak | **24,383 MB** | **7,371 MB** (doc build; peak, not steady state) |
+| doc-build steady cost | — | **+403 MB** after `release_arena()` |
+| guest used peak | 25,256 MB (`.wslconfig` cap **26,624**) | well inside the cap |
+| host free MINIMUM | **239 MB** (from 23,268 idle) | pending a full-dose 5M rerun |
 
 **Mechanism.** The host has **31.8 GB** and `.wslconfig` grants WSL **26 GB**, leaving Windows
 ~5.8 GB. `_screened_doc_pool` did
@@ -47,36 +48,47 @@ for nothing. The constrained box found a real defect. (ii) **The 300-step smoke 
 `arm_doc_count` of 5,000,000. A smoke that shrinks the thing that breaks does not smoke it.
 
 
-### The doc-stream residue does NOT scale with n — my 20.4 GiB projection was an artifact (2026-09-07)
+### The doc-stream residue is allocator retention, not per-row growth (2026-09-07)
 
-**Withdrawn claim (mine).** After the `DocTargetView` fix I measured `_stream_doc_ids` at 1M
-documents, saw **+3,453 MB**, divided by n to get **4.3 KB/row**, and reported **20.4 GiB at the
-registered 5,000,000** — concluding the memory bug was still unfixed and family F could not run.
-**That projection was wrong.** It divided a *fixed* cost by n. Measured on the production path
-(cache cleared between runs, so both did real work):
+**Withdrawn claim (mine), and the reasoning error.** After the `DocTargetView` fix I measured
+`_stream_doc_ids` at 1M documents (+3,453 MB), divided by n to get 4.3 KB/row, projected
+**20.4 GiB at 5,000,000**, and concluded family F still could not run. Wrong: it divided a *fixed*
+cost by n. **A per-row cost derived from a single value of n is an assumption, not a measurement.**
 
 | documents | flat tokens | RSS delta |
 |---|---|---|
-| 200,000 | 18,787,837 | **+3,425 MB** |
-| 1,000,000 | 93,812,539 | **+3,454 MB** |
+| 200,000 | 18,787,837 | +3,425 MB |
+| 1,000,000 | 93,812,539 | +3,454 MB |
 
-**5× the token volume costs +29 MB.** The cost is a constant, so at 5,000,000 it is ~3.5 GB, not
-20.4 GiB. The memmap-backed `PackedIds` is genuinely lazy; the residue is a per-chunk transient,
-whose size is set by `DOC_TEXT_CHUNK`, not by the corpus.
+5× the tokens costs **+29 MB** — constant, so ~3.5 GB at 5M, not 20.4 GiB. Two tells ignored for
+three rounds: three runs of the *identical* 1M path gave +3,453/+3,813/+4,546 MB (deterministic id
+data cannot vary 30%), and the on-disk cache was **366 MB** against a 3,453 MB RSS rise.
 
-**Two tells I ignored for three rounds.** (i) Three runs of the *identical* 1M path returned
-+3,453, +3,813 and +4,546 MB — a 30% spread across identical inputs, which deterministic id data
-cannot produce. (ii) The on-disk cache was **366 MB** for 1M documents while RSS rose by 3,453 MB;
-the two numbers disagree by 10×, so the RSS was never the id data. **A per-row cost derived from a
-single value of n is not a measurement, it is an assumption.** Any extrapolation here needs two
-points, and this one had one.
+**Mechanism = glibc arena retention** — freed pages held in per-thread arenas (the fast tokenizer
+runs Rust threads); neither live data nor reclaimable page cache, so nothing else returns it.
+Measured at 200,000 documents:
 
-**What the original crash actually was, closed out.** Pre-fix peak (`work/memtrace_before_fix.csv`):
-`guest_used` **25,256 MB** against the 26,624 cap, `guest_avail` down to **791 MB**, and
-`guest_used` tracking `arm_rss` (24,383) almost exactly — so it was **anonymous**, not reclaimable
-page cache. The 19.1 GiB target array plus a flat ~3.5 GB accounts for the whole of it, leaving no
-unexplained residual. All three `F-bge-small.crashed*.log` files stop immediately after the arm
-header, before any training step, consistent with death during data prep.
+| chunk | `MALLOC_ARENA_MAX` | anon before→after trim | freed | PEAK | net RSS |
+|---|---|---|---|---|---|
+| 100,000 | default | 3,839 → 788 | 3,051 | 7,371 | +403 |
+| 25,000 | default | 3,876 → 780 | 3,096 | 7,401 | +396 |
+| 25,000 | **2** | 783 → 782 | 1 | 7,236 | +397 |
+
+Capping arenas *prevents* it, `malloc_trim(0)` *cures* it; steady-state cost is **+403 MB** either
+way. **Adopted: `release_arena()`** after both doc-build paths — in-process, at the point the
+memory matters, no throughput risk. `MALLOC_ARENA_MAX=2` works but changes malloc for the whole
+10.9 h training loop at an unmeasured rate cost: validated alternative, **not adopted**.
+
+**Three wrong hypotheses before the right one**, each killed only by measuring: per-row growth
+(killed by two values of n), reclaimable page cache (killed by `RssAnon` — it was anonymous), and
+`DOC_TEXT_CHUNK` as the knob (killed by 7,371 vs 7,401 at 4× smaller chunk — `pack_tokenize` has
+its own internal `batch=20_000`, so the outer chunk never reaches the tokenizer).
+
+**The original crash, closed out.** Pre-fix peak (`work/memtrace_before_fix.csv`): `guest_used`
+**25,256 MB** against the 26,624 cap, `guest_avail` **791 MB**, `guest_used` tracking `arm_rss`
+(24,383) almost exactly — **anonymous**, not page cache. The 19.1 GiB target array plus a flat
+~3.5 GB accounts for all of it, no unexplained residual. All three `F-bge-small.crashed*.log` stop
+immediately after the arm header, before any training step: death during data prep.
 
 
 ## §0a Screen lock — design, LOCKED 2026-09-05, before any arm and before any build seed draw
