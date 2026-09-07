@@ -611,9 +611,13 @@ def tokenize_corpus(tok, segs, man, student, max_len=512, prefix="", cache=True,
     length cap -- the four things that change the ids. Re-tokenizing 5.3M texts for each of 16
     arms is minutes each; the cache is 100s of MB.
     """
-    texts = [t for s in segs for t in s.texts]
+    # `n` is all the KEY needs, so do not flatten 5.3M texts before knowing whether the cache
+    # hits -- that list is ~42 MB of pointers plus a full traversal, paid by every arm after the
+    # first, purely to compute a length (Opus 2026-09-07). The flatten moved to the miss path
+    # below; the key is byte-identical, so existing caches still hit.
     ident = {"manifest": man["sha256"], "student": student, "prefix": prefix, "max_len": max_len,
-             "n": len(texts), "tokenizer": tokenizer_ident(tok), **(extra_ident or {})}
+             "n": sum(len(s.texts) for s in segs), "tokenizer": tokenizer_ident(tok),
+             **(extra_ident or {})}
     d = TOKCACHE / hashlib.sha256(json.dumps(ident, sort_keys=True).encode()).hexdigest()[:16]
     if cache and (d / "meta.json").exists():
         # The guard reads meta.json, the LAST file written, and the load is VALIDATED. It used to
@@ -637,6 +641,7 @@ def tokenize_corpus(tok, segs, man, student, max_len=512, prefix="", cache=True,
         if verbose:
             print(f"  tokens: cached at {d} (validated)", flush=True)
         return PackedIds(flat, offs)
+    texts = [t for s in segs for t in s.texts]
     p = pack_tokenize(tok, texts, max_len=max_len, prefix=prefix, label="tokenize",
                       verbose=verbose)
     if cache:

@@ -1315,3 +1315,16 @@ def test_DOC_TEXT_CHUNK_is_bounded_and_a_bigger_chunk_is_refused():
     with pytest.raises(SystemExit, match="must be in"):
         CL._stream_doc_ids(np.arange(10), tok=None, prefix="", max_len=512, chunk=0,
                            verbose=False, cache=False)
+
+
+def test_the_lazy_n_produces_the_SAME_cache_key_as_flattening_first():
+    """`tokenize_corpus` stopped flattening 5.3M texts before the cache check and now computes
+    `n` as `sum(len(s.texts))`. That is a change to a CACHE KEY: if it disagreed with
+    `len([t for s in segs for t in s.texts])` by even one, every existing token cache would miss
+    and 16 arms would silently re-tokenize. Prove the two agree rather than asserting it -- the
+    ragged and empty-segment cases are where a sum and a flatten part company."""
+    for segs in ([], [[]], [["a"]], [["a", "b"], []], [[], ["c"]], [["a"], ["b", "c"], ["d"] * 7]):
+        objs = [types.SimpleNamespace(texts=list(t)) for t in segs]
+        lazy = sum(len(s.texts) for s in objs)
+        eager = len([t for s in objs for t in s.texts])
+        assert lazy == eager, f"{segs}: lazy {lazy} != eager {eager} -- cache key would change"
