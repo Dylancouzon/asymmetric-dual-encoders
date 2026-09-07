@@ -4,6 +4,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import numpy as np
+import pytest
 import cov_macro as cm
 
 UF = dict(cm.SURFACE)          # the tests run on the real admitted surface, never a synthetic one
@@ -86,3 +87,21 @@ if __name__ == "__main__":
     for k, v in sorted(globals().items()):
         if k.startswith("test_"):
             v(); print("PASS", k)
+
+
+def test_score_student_asserts_the_surface_before_it_scores_anything():
+    """finding 12: `macro()` checked the surface, but only after the whole encode was spent."""
+    import cov_eval10
+
+    scored = []
+
+    def encode(texts):
+        scored.append(texts)
+        raise AssertionError("no unit may be scored on a surface that does not match the lock")
+
+    # one admitted unit, so the surface is INCOMPLETE: units are (uid, family, qs, qids, ds,
+    # dids, qrels)
+    units = [("LEDGER", "finance", ["q"], ["q1"], ["d"], ["d1"], {"q1": {"d1": 1}})]
+    with pytest.raises(ValueError, match="COV surface does not match"):
+        cov_eval10.score_student(encode, units=units, verbose=False)
+    assert scored == [], "the refusal must precede the encode"

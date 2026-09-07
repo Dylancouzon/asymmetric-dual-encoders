@@ -78,6 +78,24 @@ def sandbox(monkeypatch):
         yield d
 
 
+def write_f_verdict(winner="bge-small", *, registry_sha=None, record_shas=None):
+    """A stub of the file the CONTRAST step writes (`f_verdict`'s schema). Written into the
+    sandbox's RESULTS, never the repo's."""
+    R.RESULTS.mkdir(parents=True, exist_ok=True)
+    reg = R.SL.cfg()
+    shas = []
+    for n in R.f_arms(reg):
+        rp = R.RESULTS / f"m10_arm_{R.slug(n)}.json"
+        rp.write_text(json.dumps({"arm": n, "status": "complete", "complete": True}))
+        shas.append(R.sha256_file(rp))
+    v = {"winner": winner, "contrast": {"F1": {"point": 0.01, "lower": 0.004}},
+         "registry_sha256": registry_sha or R.sha256_file(R.REGISTRY),
+         "sha256_of_F_records": record_shas if record_shas is not None else shas}
+    p = R.RESULTS / R.F_VERDICT_NAME
+    p.write_text(json.dumps(v))
+    return p
+
+
 def mock_pipeline(monkeypatch, *, cycle_ends=(0.40, 0.41, 0.42), stopped=None):
     """Everything below the runner: the model, the corpus, the warm start, the loop, DEV-6."""
     monkeypatch.setattr(R.N, "Nano10", lambda *a, **k: FakeModel())
@@ -139,6 +157,122 @@ def test_it_refuses_to_re_run_a_complete_record(monkeypatch, sandbox):
     (d / "record.json").write_text(json.dumps({"arm": "A1", "complete": True}))
     with pytest.raises(SystemExit, match="already exists and is complete"):
         R.run("A1")
+
+
+def test_it_refuses_when_EITHER_published_path_already_carries_a_complete_record(sandbox):
+    """finding 13: only `work/m10arms/<arm>/record.json` was checked, so an arm whose PUBLISHED
+    `results/m10_arm_<arm>.json` existed was re-run and overwrote it."""
+    (R.RESULTS / "m10_arm_A1.json").write_text(json.dumps({"arm": "A1", "complete": True}))
+    with pytest.raises(SystemExit, match="already exists and is complete"):
+        R.run("A1")
+
+
+def test_an_incomplete_record_does_not_block_a_run(monkeypatch, sandbox):
+    mock_pipeline(monkeypatch)
+    write_f_verdict()
+    (R.RESULTS / "m10_arm_A1.json").write_text(json.dumps({"arm": "A1", "complete": False}))
+    assert R.run("A1", device="cpu", verbose=False)["status"] == "complete"
+
+
+def test_the_record_is_written_atomically_to_both_published_paths(monkeypatch, sandbox):
+    """A truncated JSON on the real path is indistinguishable from an arm that reported nothing,
+    so the record lands via a temp file and `os.replace` (finding 13)."""
+    seen = []
+    real = R.os.replace
+    monkeypatch.setattr(R.os, "replace", lambda a, b: (seen.append((str(a), str(b))), real(a, b)))
+    mock_pipeline(monkeypatch)
+    write_f_verdict()
+    rec = R.run("A1", device="cpu", verbose=False)
+    dests = [b for _a, b in seen]
+    assert str(R.WORK / "A1" / "record.json") in dests
+    assert str(R.RESULTS / "m10_arm_A1.json") in dests
+    assert all(".tmp" in a for a, _b in seen), seen
+    on_disk = json.loads((R.WORK / "A1" / "record.json").read_text())
+    assert on_disk == json.loads((R.RESULTS / "m10_arm_A1.json").read_text()) == rec
+
+
+# ------------------------------------------------------------ the smoke-only knobs (finding 5) --
+
+@pytest.mark.parametrize("kw", [{"max_len": 128}, {"ckpt_every": 5}, {"n_fit": 256},
+                                {"compile_step": True}, {"real_eval": True}])
+def test_a_real_arm_refuses_every_recipe_knob(sandbox, kw):
+    with pytest.raises(SystemExit, match="only be passed with --smoke-steps"):
+        R.run("A1", **kw)
+
+
+def test_the_smoke_may_use_them(monkeypatch, sandbox):
+    mock_pipeline(monkeypatch)
+    rec = R.run("A1", device="cpu", smoke_steps=6, max_len=128, n_fit=64, verbose=False)
+    assert rec["max_len"] == 128 and rec["smoke"] is True
+
+
+def test_a_real_evaluation_is_prohibited_under_a_smoke(sandbox):
+    """finding 10: `--real-eval` reached the 13,416-query COV surface and DEV-6's ~13 GB from a
+    60-step CPU smoke. With finding 5 it is not selectable at all, and the CLI no longer has it."""
+    with pytest.raises(SystemExit, match="prohibited under --smoke-steps"):
+        R.run("A1", smoke_steps=6, real_eval=True)
+    # and it is not on the command line at all
+    with pytest.raises(SystemExit):
+        R.main(["A1", "--smoke-steps", "6", "--real-eval"])       # argparse: unknown argument
+
+
+# ---------------------------------------------------------------- F's winner (finding 11) ------
+
+def test_a_post_F_arm_refuses_without_F_s_verdict(sandbox):
+    with pytest.raises(SystemExit, match="F's WINNER backbone|does not exist"):
+        R.run("A1")
+
+
+def test_a_post_F_arm_refuses_a_verdict_from_another_registry(sandbox):
+    write_f_verdict(registry_sha="0" * 64)
+    with pytest.raises(SystemExit, match="decided under registry"):
+        R.run("A1")
+
+
+def test_a_post_F_arm_refuses_a_verdict_whose_F_records_have_moved(sandbox):
+    write_f_verdict(record_shas=["1" * 64, "2" * 64])
+    with pytest.raises(SystemExit, match="the verdict is stale"):
+        R.run("A1")
+
+
+def test_a_post_F_arm_refuses_a_verdict_naming_an_unknown_student(sandbox):
+    write_f_verdict(winner="gte-tiny")
+    with pytest.raises(SystemExit, match="not a known nano10 student"):
+        R.run("A1")
+
+
+def test_the_student_of_a_post_F_arm_comes_from_the_verdict_not_from_SHAPES(monkeypatch, sandbox):
+    """The anchor's shape says bge-small; if F selects MiniLM-L6, every later arm must train the
+    MiniLM backbone (`anchor.init: "F's winner backbone"`)."""
+    assert R.shape_for("A1")["student"] == "bge-small"
+    write_f_verdict(winner="MiniLM-L6-v2")
+    seen = {}
+    mock_pipeline(monkeypatch)
+    monkeypatch.setattr(R.N, "Nano10",
+                        lambda student, **k: (seen.setdefault("student", student), FakeModel())[1])
+    rec = R.run("A1", device="cpu", verbose=False)
+    assert seen["student"] == "MiniLM-L6"
+    assert rec["recipe"]["student"] == "MiniLM-L6"
+    assert rec["student_source"].endswith(R.F_VERDICT_NAME)
+    assert rec["f_verdict"]["winner"] == "MiniLM-L6-v2"
+
+
+def test_a_family_F_arm_needs_no_verdict(monkeypatch, sandbox):
+    """F runs FIRST, so it cannot wait on its own verdict; its student is in the registry."""
+    mock_pipeline(monkeypatch)
+    monkeypatch.setattr(R.CL, "data_cut_count", lambda reg=None: 4_000_000)
+    rec = R.run("F-bge-small", device="cpu", verbose=False)
+    assert rec["recipe"]["student"] == "bge-small"
+    assert rec["student_source"].startswith("registry")
+
+
+def test_a_smoke_needs_no_verdict(monkeypatch, sandbox):
+    """`arm_smoke` keeps hard-coded students (shapes only), and a 60-step CPU smoke is the same
+    kind of path check — the record says which student it actually ran."""
+    mock_pipeline(monkeypatch)
+    rec = R.run("A1", device="cpu", smoke_steps=6, verbose=False)
+    assert rec["recipe"]["student"] == "bge-small" and rec["f_verdict"] is None
+    assert "PENDING" in rec["student_source"]
 
 
 def test_a_failed_warm_start_refuses_rather_than_training_a_fresh_head(monkeypatch):
@@ -210,21 +344,60 @@ def test_a_dose_that_does_not_divide_by_the_batch_is_FLOORED_and_recorded():
 
 
 def test_the_shape_check_catches_a_registry_that_disagrees_with_arm_smoke():
-    with pytest.raises(SystemExit, match="student"):
-        R.check_shape("F-MiniLM-L6", {"student": "bge-small"}, R.shape_for("F-MiniLM-L6"))
-    with pytest.raises(SystemExit, match="objective"):
-        R.check_shape("D-NORM", {"objective": "squared_l2"}, R.shape_for("D-NORM"))
-    # the registry's own strings must pass, aliases included
     reg = R.SL.cfg()
+
+    def recipe(name, **over):
+        e = dict(reg["arms"][name])
+        e.update(over)
+        pat = R.CL.resolve_arm_pattern(name, e, reg)[0]
+        return R.resolved_recipe(name, e, reg, pat, R.CL.arm_batch(e, reg))
+
+    with pytest.raises(SystemExit, match="student"):
+        R.check_shape("F-MiniLM-L6", recipe("F-MiniLM-L6", student="bge-small"),
+                      R.shape_for("F-MiniLM-L6"))
+    with pytest.raises(SystemExit, match="objective"):
+        R.check_shape("D-NORM", recipe("D-NORM", objective="squared_l2"), R.shape_for("D-NORM"))
+    # the registry's own strings must pass, every band-1 arm, aliases included
     for name in R.BAND1_ORDER:
-        R.check_shape(name, reg["arms"][name], R.arm_plan(name, reg) and R.shape_for(
-            R.CL.resolve_arm_name(name, reg)))
+        R.arm_plan(name, reg)
+
+
+def test_the_shape_check_compares_the_UNTOUCHED_shape_against_the_resolved_recipe(monkeypatch):
+    """finding 6: `arm_plan` wrote the registry's batch INTO the shape and then compared the two,
+    so `SHAPES` could disagree with the registry about the batch and nothing failed."""
+    reg = R.SL.cfg()
+    shapes = {k: dict(v) for k, v in R.AS.SHAPES.items()}
+    shapes["E-bs128"]["batch"] = 32                     # the registry says 128
+    monkeypatch.setattr(R.AS, "SHAPES", shapes)
+    with pytest.raises(SystemExit, match="batch: registry 128 vs shape 32"):
+        R.arm_plan("E-bs128", reg)
+
+
+@pytest.mark.parametrize("arm,field,value,msg", [
+    ("B-50/50", "pattern", "4Q", "pattern"),
+    ("G-MLP", "head", None, "head"),
+    ("C-M9init", "head_init", None, "warm_start"),
+    ("G-1536", "feature_layers", 3, "feature_layers"),
+])
+def test_every_shared_field_is_compared_not_just_the_student(arm, field, value, msg):
+    """head, mix pattern and warm start were never cross-checked at all (finding 6)."""
+    reg = copy.deepcopy(R.SL.cfg())
+    e = reg["arms"][arm]
+    if value is None:
+        e.pop(field, None)
+    else:
+        e[field] = value
+    e["trained"] = True
+    e.pop("cut", None)
+    with pytest.raises(SystemExit, match=msg):
+        R.arm_plan(arm, reg)
 
 
 # ------------------------------------------------------------------------------- the record ----
 
 def test_the_record_schema(monkeypatch, sandbox):
     mock_pipeline(monkeypatch)
+    write_f_verdict()
     rec = R.run("A1", device="cpu", verbose=False)
     for k in ("arm", "family", "status", "complete", "smoke", "device", "seed", "recipe",
               "schedule", "warm_start", "cov", "dev6", "training", "throughput_ex_per_s",
@@ -245,6 +418,7 @@ def test_the_record_schema(monkeypatch, sandbox):
 
 def test_a_stopped_arm_is_reported_failed_and_gets_no_dev6(monkeypatch, sandbox):
     mock_pipeline(monkeypatch, cycle_ends=(0.40,), stopped="kill: two consecutive evaluations")
+    write_f_verdict()
     rec = R.run("A1", device="cpu", verbose=False)
     assert rec["status"] == "failed" and rec["dev6"] is None
     assert rec["complete"] is True, "the record exists so the arm is not silently re-run"
@@ -252,6 +426,7 @@ def test_a_stopped_arm_is_reported_failed_and_gets_no_dev6(monkeypatch, sandbox)
 
 def test_plateau_at_the_final_cycle_is_completion_not_failure(monkeypatch, sandbox):
     mock_pipeline(monkeypatch, stopped="plateau at cycle 3")
+    write_f_verdict()
     rec = R.run("A1", device="cpu", verbose=False)
     assert rec["status"] == "complete" and rec["stopped_is_completion"] is True
     assert rec["dev6"] is not None
@@ -306,7 +481,8 @@ def test_cycle_end_checkpoints_are_retained_and_resume_carries_the_evals():
 
         # a resume from the ROLLING checkpoint carries the evaluation history, reads included
         ck = d / "ckpt.pt"
-        step, extra = T.load(ck, Toy(), torch.optim.AdamW(Toy().parameters()))
+        m = Toy()
+        step, extra = T.load(ck, m, torch.optim.AdamW(T.param_groups(m)))
         assert extra["cycle_end_evals"], "a cycle-end eval must be in the rolling checkpoint"
         assert "read_evals" in extra
         rest = T.train_arm(Toy(), make_batch_fn(), total_steps=30, eval_fn=ev,
@@ -333,3 +509,144 @@ def test_streams_of_recovers_the_two_streams_assemble_arm_built():
     assert R.streams_of(bf) == (q, dd)
     with pytest.raises(SystemExit, match="could not recover"):
         R.streams_of(lambda step, kind: None)
+
+
+# --------------------------------------------- a kill is never a completion (finding 4) --------
+
+def test_a_kill_at_the_FINAL_cycle_end_is_a_FAILURE_not_a_completion(monkeypatch, sandbox):
+    """The macro sequence mid/end = .50/.50, .51/.51, .49/.49 fires the kill rule at the LAST
+    cycle end, so the arm has all three cycle ends AND a kill. `n_ends >= CYCLES` alone called
+    that complete, read DEV-6 on it and labelled `cycle3.pt` final."""
+    seq = [0.50, 0.50, 0.51, 0.51, 0.49, 0.49]
+    calls = []
+
+    def ev(_m, step, kind):
+        calls.append(kind)
+        return seq[len(calls) - 1]
+
+    # the real loop, so the real kill rule decides: total 30 -> ends [9, 19, 29], mids {5, 15, 25}
+    r = T.train_arm(Toy(), make_batch_fn(), total_steps=30, seed=0, eval_fn=ev)
+    assert calls == ["mid", "end"] * 3
+    assert r["stopped"].startswith("kill:"), r["stopped"]
+    assert len(r["cycle_end_evals"]) == 3, "the kill fired AT the final cycle end"
+
+    monkeypatch.setattr(R.Tr, "train_arm", lambda *a, **k: dict(r))
+    mock_pipeline(monkeypatch)
+    monkeypatch.setattr(R.Tr, "train_arm", lambda *a, **k: dict(r))
+    write_f_verdict()
+    rec = R.run("A1", device="cpu", verbose=False)
+    assert rec["status"] == "failed" and rec["stopped_is_completion"] is False
+    assert rec["dev6"] is None, "a killed arm gets no DEV-6 read"
+    assert rec["final_checkpoint"] is None and rec["final_checkpoint_sha256"] is None
+
+
+@pytest.mark.parametrize("stopped,n_ends,status", [
+    (None, 3, "complete"),
+    ("plateau at cycle 3", 3, "complete"),
+    ("plateau at cycle 2", 3, "failed"),
+    ("kill: two consecutive evaluations more than 0.0056 below", 3, "failed"),
+    ("non-finite loss at step 12345", 3, "failed"),
+    ("non-finite grad norm at step 9", 3, "failed"),
+    ("non-finite evaluation at index 5", 3, "failed"),
+    (None, 2, "failed"),
+])
+def test_success_is_stopped_None_or_exactly_the_final_cycle_plateau(stopped, n_ends, status):
+    got, ok, _pl = R.classify(stopped, n_ends)
+    assert got == status and ok is (status == "complete")
+
+
+def test_a_failed_arm_never_labels_a_checkpoint_final(monkeypatch, sandbox):
+    """`cycle3.pt` is on disk after a kill at the final cycle end; it is listed under its cycle
+    key and is NOT the arm's final checkpoint."""
+    mock_pipeline(monkeypatch, stopped="kill: at the last cycle end")
+    write_f_verdict()
+    (R.WORK / "A1").mkdir(parents=True, exist_ok=True)
+    (R.WORK / "A1" / "cycle3.pt").write_bytes(b"partial")
+    rec = R.run("A1", device="cpu", verbose=False)
+    assert rec["status"] == "failed"
+    assert rec["final_checkpoint"] is None and rec["final_checkpoint_sha256"] is None
+    assert rec["checkpoints"]["cycle3"]["sha256"], "it is still reported, under its cycle key"
+
+
+# ------------------------------------- a crash is an outcome, recorded (finding 9) -------------
+
+def test_a_crash_writes_a_terminal_FAILED_record_and_re_raises(monkeypatch, sandbox):
+    mock_pipeline(monkeypatch)
+    write_f_verdict()
+
+    def boom(*a, **k):
+        raise RuntimeError("CUDA out of memory. Tried to allocate 2.00 GiB")
+    monkeypatch.setattr(R.Tr, "train_arm", boom)
+    with pytest.raises(RuntimeError, match="out of memory"):
+        R.run("A1", device="cpu", verbose=False)
+    for path in (R.WORK / "A1" / "record.json", R.RESULTS / "m10_arm_A1.json"):
+        rec = json.loads(path.read_text())
+        assert rec["status"] == "failed" and rec["complete"] is True
+        assert rec["failure"]["type"] == "RuntimeError"
+        assert "out of memory" in rec["failure"]["message"]
+        assert rec["final_checkpoint"] is None and rec["dev6"] is None
+        assert rec["recipe"]["student"] and rec["registry_sha256"]
+    # and it is not silently re-run
+    with pytest.raises(SystemExit, match="already exists and is complete"):
+        R.run("A1", device="cpu", verbose=False)
+
+
+def test_a_REFUSAL_writes_no_record(sandbox):
+    """A refusal means the arm never started, and a record would block the run after the fix."""
+    with pytest.raises(SystemExit):
+        R.run("A1")                                     # no F verdict
+    assert not (R.WORK / "A1" / "record.json").exists()
+    assert not (R.RESULTS / "m10_arm_A1.json").exists()
+
+
+# --------------------------- the evaluator's records survive a resume (finding 7) --------------
+
+def test_the_cov_evaluator_checkpoints_and_restores_its_own_records(sandbox):
+    """finding 7: `CovEval.records` — per-family macros and the per-query score paths the contrast
+    step bootstraps over — lived only in the runner's memory, so a resumed arm reported the
+    cycles of THIS process only."""
+    out = sandbox / "arm"
+    out.mkdir()
+    ev = R.CovEval(model=None, out_dir=out, verbose=False)
+    ev.records = [{"label": "cycle1", "step": 9, "macro": 0.41,
+                   "by_family": {"legal": 0.31, "finance": 0.5},
+                   "per_query_scores": "work/m10arms/A1/cov_cycle1.json"},
+                  {"label": "cycle2", "step": 19, "macro": 0.42,
+                   "by_family": {"legal": 0.33, "finance": 0.5},
+                   "per_query_scores": "work/m10arms/A1/cov_cycle2.json"}]
+
+    fresh = R.CovEval(model=None, out_dir=out, verbose=False)
+    assert fresh.records == []
+    fresh.restore(ev.state())
+    assert [r["label"] for r in fresh.records] == ["cycle1", "cycle2"]
+    assert fresh.records[0]["by_family"]["legal"] == 0.31
+    assert fresh.records[1]["per_query_scores"].endswith("cov_cycle2.json")
+    assert R.StubEval().state() == {"records": []}
+
+
+def test_the_runner_hands_the_evaluator_and_a_fingerprint_to_the_trainer(monkeypatch, sandbox):
+    seen = {}
+    mock_pipeline(monkeypatch)
+    write_f_verdict()
+    real = R.Tr.train_arm
+
+    def spy(*a, **k):
+        seen.update(k)
+        return real(*a, **k)
+    monkeypatch.setattr(R.Tr, "train_arm", spy)
+    rec = R.run("A1", device="cpu", smoke_steps=4, verbose=False)
+    assert isinstance(seen["eval_state"], R.StubEval)
+    assert seen["fingerprint"] == rec["recipe_fingerprint"] and len(seen["fingerprint"]) == 64
+
+
+def test_the_fingerprint_moves_with_the_recipe(sandbox):
+    reg = R.SL.cfg()
+    p = R.arm_plan("A1", reg)
+    man = {"arm": "A1", "sources": ["harvest"]}
+    base = R.fingerprint("A1", p, man, 0, None)
+    assert base == R.fingerprint("A1", p, man, 0, None)
+    assert base != R.fingerprint("A2", p, man, 0, None)
+    assert base != R.fingerprint("A1", p, man, 1, None)
+    assert base != R.fingerprint("A1", p, {"arm": "A1", "sources": ["harvest", "gen"]}, 0, None)
+    other = dict(p, student="MiniLM-L6")
+    assert base != R.fingerprint("A1", other, man, 0, None)

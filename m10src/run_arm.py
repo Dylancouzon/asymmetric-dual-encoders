@@ -34,15 +34,28 @@ schedules are computed inside the loop and no parameter reached them:
     point that gets overwritten; the final cycle end is the arm's final checkpoint and its sha256
     goes in the record.
 
-**`stopped` is not failure** (LEDGER, §M10.0-e trace): `PLATEAU_FROM_CYCLE` is 3 and a screen arm
-runs 3 cycles, so `plateau at cycle 3` means the arm finished its dose and stopped one step short.
-Only an earlier stop is an arm failure.
+**Success is narrow** (`classify`): `stopped is None`, or exactly `plateau at cycle 3` —
+`PLATEAU_FROM_CYCLE` is 3 and a screen arm runs 3 cycles, so that plateau means the arm finished
+its dose and stopped one step short. Every KILL and every non-finite stop is FAILED, the final
+cycle end included, and a failed arm gets no DEV-6 read and no checkpoint labelled final.
+
+**A crash or an OOM is an outcome, not silence**: it writes a terminal FAILED record and re-raises
+(`rules.arm_failure`). A REFUSAL writes nothing — the arm never started.
+
+**Post-F arms take their student from F's verdict**, `results/m10_F_verdict.json`
+(`anchor.init: "F's winner backbone"`, §Recipe amendment A6), validated against the current
+registry and F's own arm records. `arm_smoke.SHAPES` holds shapes; it does not decide the student.
+
+**Every recipe knob is SMOKE-ONLY** (`--max-len`, `--ckpt-every`, `--n-fit`, `--compile`): a
+registered arm reads its recipe from the registry or does not run.
 """
 import argparse
 import copy
 import hashlib
 import json
+import os
 import subprocess
+import traceback
 import sys
 import time
 from pathlib import Path
@@ -79,6 +92,11 @@ PLAN_RATES = {32: 890.0, 128: 1517.0}
 
 CYCLES = 3
 PEAK, FINAL = 1e-4, 1e-5
+MAX_LEN = 512
+# Every arm after family F trains on F's winner backbone (`anchor.init: "F's winner backbone"`,
+# §Recipe amendment A6). The verdict file is written by the CONTRAST step, not here.
+F_VERDICT_NAME = "m10_F_verdict.json"
+F_VERDICT_KEYS = ("winner", "contrast", "registry_sha256", "sha256_of_F_records")
 # The registry names n_fit/seed only under `warm_start.G-MLP`; `warm_start.all_arms` names M9's
 # ridge warm start without a sample size. Read from the registry's G-MLP block, defaulting to
 # `m9/registry.json` `warm_start` (n_fit 60,000, seed 21) — the sample `calib.py` also used.
@@ -102,6 +120,15 @@ def slug(name):
     return name.replace("/", "-")
 
 
+def rel(p):
+    """Repo-relative when it is inside the repo, absolute otherwise (a sandboxed test path)."""
+    p = Path(p)
+    try:
+        return str(p.relative_to(REPO))
+    except ValueError:
+        return str(p)
+
+
 def sha256_file(p, chunk=1 << 22):
     h = hashlib.sha256()
     with open(p, "rb") as f:
@@ -122,6 +149,100 @@ def cfg():
     return SL.cfg()
 
 
+def record_paths(arm, smoke):
+    """-> (out_dir, record path, published results path or None). A smoke gets its OWN tree
+    (§Hazards: smokes have overwritten real artifacts in this milestone twice)."""
+    if smoke:
+        d = SMOKE_WORK / slug(arm)
+        return d, d / "record.json", None
+    d = WORK / slug(arm)
+    return d, d / "record.json", RESULTS / f"m10_arm_{slug(arm)}.json"
+
+
+def write_record(rec, rec_path, results_path):
+    """ONE canonical record, written atomically to each published path (finding 13).
+
+    `Path.write_text` on the real path leaves a truncated JSON behind if the process dies
+    mid-write, and a half-written record is indistinguishable from an arm that reported nothing.
+    """
+    blob = json.dumps(rec, indent=1, default=str)
+    written = []
+    for p in [rec_path] + ([results_path] if results_path is not None else []):
+        p.parent.mkdir(parents=True, exist_ok=True)
+        tmp = p.with_name(p.name + f".tmp{os.getpid()}")
+        tmp.write_text(blob)
+        os.replace(tmp, p)
+        written.append(p)
+    return written
+
+
+def _complete_record_at(p):
+    if p is None or not p.exists():
+        return False
+    try:
+        return bool(json.loads(p.read_text()).get("complete"))
+    except Exception:
+        return False
+
+
+# ------------------------------------------------------------------------------- F's verdict ----
+
+def f_arms(reg):
+    """The trained family-F arms, from the registry — never a hand-copied list."""
+    return sorted(n for n, e in (reg.get("arms") or {}).items()
+                  if e.get("family") == "F" and e.get("trained") is True)
+
+
+def f_verdict(reg, path=None):
+    """-> {"student", "winner", "path", ...} for `anchor.init: "F's winner backbone"`.
+
+    Family F runs FIRST and every later family is screened on its winner (§Recipe amendment A6),
+    so an arm that took its student from `arm_smoke.SHAPES` would silently screen the wrong
+    backbone (Codex runner review 2026-09-07, finding 11). The verdict FILE is produced by the
+    contrast step — not by this runner, which only validates and reads it:
+
+      {"winner": "<student key>", "contrast": {...}, "registry_sha256": "...",
+       "sha256_of_F_records": ["...", ...]}
+
+    Refused if it is absent, if it does not name the registry it was decided under, or if its
+    record hashes are not exactly the current F arm records' — a verdict is only as good as the
+    two arms it was read off.
+    """
+    p = Path(path) if path is not None else RESULTS / F_VERDICT_NAME
+    if not p.exists():
+        refuse(f"every arm after family F trains on F's WINNER backbone "
+               f"(anchor.init {(reg.get('anchor') or {}).get('init')!r}), and {p} does not exist. "
+               f"Run family F and its contrast first; this runner never guesses the student.")
+    try:
+        v = json.loads(p.read_text())
+    except Exception as e:
+        refuse(f"{p} is not readable JSON: {type(e).__name__}: {e}")
+    missing = [k for k in F_VERDICT_KEYS if k not in v]
+    if missing:
+        refuse(f"{p} is missing {missing}; the F verdict schema is {list(F_VERDICT_KEYS)}")
+    reg_sha = sha256_file(REGISTRY)
+    if v["registry_sha256"] != reg_sha:
+        refuse(f"{p} was decided under registry {v['registry_sha256'][:12]}… and the registry is "
+               f"now {reg_sha[:12]}…; re-read F's contrast under the current registry")
+    want = []
+    for n in f_arms(reg):
+        rp = RESULTS / f"m10_arm_{slug(n)}.json"
+        if not rp.exists():
+            refuse(f"{p} claims an F verdict but {rp} does not exist — F's own arm records are "
+                   f"what the verdict is read off")
+        want.append(sha256_file(rp))
+    got = list(v["sha256_of_F_records"])
+    if sorted(got) != sorted(want):
+        refuse(f"{p} names F records {[h[:12] for h in sorted(got)]} and the records on disk "
+               f"hash to {[h[:12] for h in sorted(want)]}; the verdict is stale")
+    student = STUDENT_ALIAS.get(v["winner"])
+    if student is None:
+        refuse(f"{p} names winner {v['winner']!r}, which is not a known nano10 student "
+               f"({sorted(set(STUDENT_ALIAS))})")
+    return {"student": student, "winner": v["winner"], "path": rel(p),
+            "registry_sha256": reg_sha, "sha256_of_F_records": sorted(want)}
+
+
 # ------------------------------------------------------------------------------ arm resolution --
 
 def shape_for(arm):
@@ -136,24 +257,55 @@ def shape_for(arm):
     refuse(f"arm {arm!r} has no shape in arm_smoke.SHAPES/COVERS")
 
 
-def check_shape(arm, entry, spec):
-    """Cross-check the shape against the registry fields that duplicate it, as `arm_smoke` does
-    for the mix pattern: a hand copy that has drifted must fail loudly, not train."""
+def resolved_recipe(name, entry, reg, pattern, batch):
+    """The arm's recipe as the REGISTRY resolves it — every field defaulted from `anchor` where
+    the arm's own entry is silent, which is what `arm_smoke.SHAPES` is a hand copy OF.
+
+    `student` is None for every arm after family F: the registry says `anchor.init: "F's winner
+    backbone"` and names no student, so there is nothing to cross-check and the student comes
+    from F's verdict instead (`f_verdict`).
+    """
+    a = reg.get("anchor") or {}
+    return {
+        "student": entry.get("student"),
+        "objective": entry.get("objective") or a.get("objective") or "squared_l2",
+        "feature_layers": int(entry.get("feature_layers")
+                              if entry.get("feature_layers") is not None
+                              else a.get("feature_layers", 3)),
+        # G-MLP is the one arm carrying its own `head` (a formula string); every other arm is the
+        # anchor's linear head. C-M9init is the one arm carrying `head_init`, so its warm start is
+        # M9's checkpoint and every other arm's is the ridge (`warm_start.all_arms`).
+        "head": "mlp" if entry.get("head") else "linear",
+        "warm_start": ("m9" if entry.get("head_init") else
+                       ("mlp" if entry.get("head") else "linear")),
+        "pattern": pattern,
+        "batch": int(batch),
+    }
+
+
+def check_shape(arm, recipe, spec):
+    """Cross-check the UNTOUCHED `arm_smoke.SHAPES` entry against the fully resolved registry
+    recipe, BEFORE anything is copied into it.
+
+    Finding 6 (Codex runner review 2026-09-07): `arm_plan` used to write the registry's batch INTO
+    `spec` and then compare the two, so the batch check could not fail; head, mix pattern and warm
+    start were never compared at all. Every field the two representations share is compared here.
+    """
     bad = []
-    if entry.get("student") is not None:
-        want = STUDENT_ALIAS.get(entry["student"])
+    if recipe["student"] is not None:
+        want = STUDENT_ALIAS.get(recipe["student"])
         if want is None:
-            bad.append(f"registry student {entry['student']!r} is not a known nano10 student")
+            bad.append(f"registry student {recipe['student']!r} is not a known nano10 student")
         elif want != spec["student"]:
-            bad.append(f"student: registry {entry['student']!r} -> {want!r} vs shape "
+            bad.append(f"student: registry {recipe['student']!r} -> {want!r} vs shape "
                        f"{spec['student']!r}")
-    if entry.get("objective") is not None and entry["objective"] != spec["loss"]:
-        bad.append(f"objective: registry {entry['objective']!r} vs shape {spec['loss']!r}")
-    if entry.get("feature_layers") is not None and int(entry["feature_layers"]) != spec["n_layers"]:
-        bad.append(f"feature_layers: registry {entry['feature_layers']} vs shape "
-                   f"{spec['n_layers']}")
-    if entry.get("batch") is not None and int(entry["batch"]) != spec["batch"]:
-        bad.append(f"batch: registry {entry['batch']} vs shape {spec['batch']}")
+    for field, in_spec in (("objective", "loss"), ("feature_layers", "n_layers"),
+                           ("head", "head"), ("pattern", "pattern"), ("batch", "batch")):
+        if recipe[field] != spec[in_spec]:
+            bad.append(f"{field}: registry {recipe[field]!r} vs shape {spec[in_spec]!r}")
+    if recipe["warm_start"] != spec.get("warm_start", "linear"):
+        bad.append(f"warm_start: registry {recipe['warm_start']!r} vs shape "
+                   f"{spec.get('warm_start', 'linear')!r}")
     if bad:
         refuse(f"arm {arm!r}: registry and arm_smoke.SHAPES disagree — " + "; ".join(bad))
 
@@ -187,23 +339,37 @@ def schedule(dose, batch, entry):
     return total, ends, reads, rounding
 
 
-def arm_plan(name, reg, batch_override=None):
-    """Everything `--plan` prints and the runner needs, all of it read from the registry."""
+def arm_plan(name, reg, verdict=None):
+    """Everything `--plan` prints and the runner needs, all of it read from the registry.
+
+    `verdict` is F's verdict (`f_verdict`) when one has been read: for every arm after family F it
+    is where the STUDENT comes from, `arm_smoke.SHAPES` holding only that arm's shape. Without one
+    the plan still prints, marked — a plan is not a launch.
+    """
     entry = dict((reg.get("arms") or {}).get(name) or {})
     resolved = CL.resolve_arm_name(name, reg) if entry.get("trained") else name
-    spec = shape_for(resolved)
-    batch = int(batch_override or CL.arm_batch(entry, reg))
-    spec["batch"] = batch
-    check_shape(name, entry, spec)
+    spec = shape_for(resolved)                          # UNTOUCHED until the check has passed
     pattern, pattern_rep = CL.resolve_arm_pattern(resolved, entry, reg)
+    batch = int(CL.arm_batch(entry, reg))
+    recipe = resolved_recipe(name, entry, reg, pattern, batch)
+    check_shape(name, recipe, spec)
+    student, student_source = spec["student"], "registry `arms.%s.student`" % name
+    if recipe["student"] is None:                       # a post-F arm: F's winner backbone
+        if verdict is not None:
+            student, student_source = verdict["student"], verdict["path"]
+        else:
+            student_source = "PENDING: F's verdict has not been read (shape's placeholder shown)"
     dose = int(entry["dose_examples"])
     total, ends, reads, rounding = schedule(dose, batch, entry)
     rate = PLAN_RATES.get(batch)
     return {"arm": name, "resolved": resolved, "family": entry.get("family"),
             "dose_examples": dose, "batch": batch, "pattern": pattern,
-            "pattern_source": pattern_rep, "student": spec["student"],
-            "n_layers": spec["n_layers"], "head": spec["head"], "objective": spec["loss"],
-            "warm_start": spec.get("warm_start", "linear"),
+            "pattern_source": pattern_rep, "student": student,
+            "student_source": student_source, "f_verdict": verdict,
+            # the registry is authoritative for everything but the student; `check_shape` has
+            # already proved `arm_smoke.SHAPES` agrees field by field
+            "n_layers": recipe["feature_layers"], "head": recipe["head"],
+            "objective": recipe["objective"], "warm_start": recipe["warm_start"],
             "cut_corpus": bool(CL.is_cut_corpus(resolved, reg)),
             "sources": list(CL.arm_sources(resolved, reg)),
             "n_docs": CL.arm_doc_count(entry, pattern, batch),
@@ -216,9 +382,13 @@ def arm_plan(name, reg, batch_override=None):
 
 
 def plan(reg, order=None):
+    """The band-1 plan. Post-F arms print `arm_smoke.SHAPES`'s placeholder student marked `*`
+    unless F's verdict is on disk: only a RUN reads the verdict, and only a run refuses without
+    one (finding 11)."""
+    verdict = f_verdict(reg) if (RESULTS / F_VERDICT_NAME).exists() else None
     rows = []
     for name in (order or BAND1_ORDER):
-        rows.append(arm_plan(name, reg))
+        rows.append(arm_plan(name, reg, verdict=verdict))
     cut = CL.data_cut_count(reg)
     print(f"W8 band-1 order, {len(rows)} arms. data_cut.unique_text_count = "
           f"{cut if cut is not None else 'UNREGISTERED (§0b open: every cut arm refuses)'}")
@@ -231,10 +401,15 @@ def plan(reg, order=None):
         where = r["cloud_only"] and "CLOUD" or "box"
         if r["projected_hours"] and not r["cloud_only"]:
             tot += r["projected_hours"]
+        st = r["student"] + ("*" if str(r["student_source"]).startswith("PENDING") else "")
         print(f"{r['arm']:13s} {r['dose_examples']:>10,} {r['batch']:>4d} {r['pattern']:>8s} "
-              f"{r['student']:11s} {r['objective']:28s} {r['warm_start']:6s} "
+              f"{st:11s} {r['objective']:28s} {r['warm_start']:6s} "
               f"{'yes' if r['cut_corpus'] else 'no':4s} {r['total_steps']:>8,} "
               f"{r['projected_hours']:>6.2f}  {where}")
+    if any(str(r["student_source"]).startswith("PENDING") for r in rows):
+        print("\n* the student is F's WINNER backbone and F's verdict "
+              f"({rel(RESULTS / F_VERDICT_NAME)}) has not been written: the shape's placeholder "
+              "is shown and every one of these arms REFUSES to run until it exists")
     print(f"\nprojected box hours (excluding CLOUD arms) {tot:.1f} at "
           f"{PLAN_RATES[32]:.0f}/{PLAN_RATES[128]:.0f} ex/s (bs32/bs128); a PROJECTION — every "
           f"arm records its own rate")
@@ -277,13 +452,21 @@ class CovEval:
                                  "by_family": by_family, "by_unit": by_unit,
                                  "per_unit_query": per}))
         rec = {"label": label, "step": int(step), "macro": macro, "by_family": by_family,
-               "by_unit": by_unit, "per_query_scores": str(p.relative_to(REPO)),
+               "by_unit": by_unit, "per_query_scores": rel(p),
                "seconds": round(time.time() - t0, 1)}
         self.records.append(rec)
         if self.verbose:
             print(f"  COV {label} step {step:,}: macro {macro:.4f} "
                   f"{ {k: round(v, 4) for k, v in by_family.items()} }", flush=True)
         return macro
+
+    # The evaluator's records — per-family macros and the per-query score paths the contrast step
+    # bootstraps over — are part of the run state and go in every checkpoint (finding 7).
+    def state(self):
+        return {"records": self.records}
+
+    def restore(self, d):
+        self.records = list(d.get("records") or [])
 
 
 class StubEval:
@@ -299,6 +482,12 @@ class StubEval:
         self.records.append({"label": label, "step": int(step), "macro": m, "stub": True})
         print(f"  [stub] COV {label} step {step:,}: {m:.4f}", flush=True)
         return m
+
+    def state(self):
+        return {"records": self.records}
+
+    def restore(self, d):
+        self.records = list(d.get("records") or [])
 
 
 def dev6(model, verbose=True):
@@ -398,9 +587,108 @@ def warm_start(model, spec, q_stream, ws_cfg, verbose=True):
     return rec
 
 
-def run(arm, *, device="cpu", resume=False, smoke_steps=None, max_len=512, ckpt_every=None,
-        n_fit=None, real_eval=False, compile_step=False, verbose=True):
-    """Train one registered arm and write its record. -> the record dict."""
+def classify(stopped, n_cycle_ends, cycles=CYCLES):
+    """-> (status, ok, plateau_at_last). SUCCESS is `stopped is None` or exactly "plateau at
+    cycle <CYCLES>", with all `cycles` cycle ends read.
+
+    Finding 4: `finished = n_ends >= CYCLES` alone made a KILL at the final cycle end — an arm
+    whose curve collapsed at exactly the wrong moment — indistinguishable from a clean finish, and
+    it got a DEV-6 read and a checkpoint labelled final. `rules.arm_failure` says the opposite.
+    """
+    plateau_at_last = stopped == f"plateau at cycle {cycles}"
+    ok = bool(n_cycle_ends >= cycles and (stopped is None or plateau_at_last))
+    return ("complete" if ok else "failed"), ok, plateau_at_last
+
+
+def fingerprint(arm, p, man, seed, smoke_steps):
+    """The recipe a checkpoint belongs to (finding 8): the arm, its resolved recipe, the registry
+    and the assembled corpus manifest. A resume under any other is refused by `trainer10`."""
+    body = {"arm": arm, "seed": int(seed), "smoke_steps": smoke_steps,
+            "recipe": {k: p[k] for k in ("dose_examples", "batch", "pattern", "student",
+                                         "n_layers", "head", "objective", "warm_start",
+                                         "total_steps", "cycle_end_steps")},
+            "registry_sha256": sha256_file(REGISTRY),
+            "assemble_manifest_sha256": hashlib.sha256(
+                json.dumps(man, sort_keys=True, default=str).encode()).hexdigest()}
+    return hashlib.sha256(json.dumps(body, sort_keys=True, default=str).encode()).hexdigest()
+
+
+# Knobs that would change a registered arm's recipe from the command line. They exist for the
+# SMOKE (a 60-step CPU path check needs a short sequence and a tiny warm-start fit) and for
+# nothing else: a registered arm reads its recipe from the registry or does not run (finding 5).
+SMOKE_ONLY_KNOBS = ("max_len", "ckpt_every", "n_fit", "compile_step", "real_eval")
+
+
+def run(arm, *, device="cpu", resume=False, smoke_steps=None, max_len=None, ckpt_every=None,
+        n_fit=None, real_eval=False, compile_step=False, verbose=True, f_verdict_path=None):
+    """Train one registered arm and write its record. -> the record dict.
+
+    A crash, an OOM or a kill is an OUTCOME (`rules.arm_failure`), so it is recorded and the
+    exception is re-raised — never swallowed, and never with a partial checkpoint labelled final.
+    """
+    ctx = {}
+    try:
+        return _run(ctx, arm, device=device, resume=resume, smoke_steps=smoke_steps,
+                    max_len=max_len, ckpt_every=ckpt_every, n_fit=n_fit, real_eval=real_eval,
+                    compile_step=compile_step, verbose=verbose, f_verdict_path=f_verdict_path)
+    except SystemExit:
+        # a REFUSAL: the arm never started, so there is nothing to report and a record here would
+        # block the legitimate re-run after the refusal is fixed.
+        raise
+    except BaseException as e:                                          # noqa: BLE001
+        _record_failure(ctx, arm, e, verbose=verbose)
+        raise
+
+
+def _record_failure(ctx, arm, exc, verbose=True):
+    """`rules.arm_failure`: "an arm that crashes, OOMs or trips the kill rule has NO final
+    checkpoint: its contrasts are reported UNRESOLVED and revert to default, the failure is
+    reported, and the arm is not silently re-run". Without this a crashed arm left no record at
+    all and the contrast step could not tell it apart from an arm nobody launched (finding 9).
+    """
+    rec_path, results_path = ctx.get("rec_path"), ctx.get("results_path")
+    if rec_path is None:
+        return None
+    rec = {"_what": "one registered M10 screen arm that FAILED, recorded by m10src/run_arm.py",
+           "arm": arm, "family": (ctx.get("plan") or {}).get("family"),
+           "status": "failed", "complete": True, "smoke": bool(ctx.get("smoke")),
+           "stopped": f"{type(exc).__name__}: {exc}",
+           "stopped_is_completion": False,
+           "failure": {"type": type(exc).__name__, "message": str(exc)[:2000],
+                       "traceback_tail": traceback.format_exc()[-4000:]},
+           "recipe": ctx.get("plan"), "warm_start": ctx.get("warm_start"),
+           "cov": {"per_checkpoint": ctx.get("cov_records") or []},
+           "dev6": None,
+           "final_checkpoint": None, "final_checkpoint_sha256": None,
+           "_final_checkpoint_note": "a failed arm has NO final checkpoint; any cycle checkpoint "
+                                     "on disk is a partial and is never labelled final",
+           "registry_sha256": sha256_file(REGISTRY), "git_head": git_head(),
+           "_rule": "rules.arm_failure — reported UNRESOLVED, not re-run at different settings"}
+    try:
+        write_record(rec, rec_path, results_path)
+        if verbose:
+            print(f"ARM FAILED ({type(exc).__name__}): wrote {rec_path}", flush=True)
+    except Exception as e:                                              # pragma: no cover
+        print(f"could not write the failure record: {type(e).__name__}: {e}", flush=True)
+    return rec
+
+
+def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, real_eval,
+         compile_step, verbose, f_verdict_path=None):
+    smoke = smoke_steps is not None
+    given = {k: v for k, v in (("max_len", max_len), ("ckpt_every", ckpt_every),
+                               ("n_fit", n_fit), ("compile_step", compile_step or None),
+                               ("real_eval", real_eval or None)) if v}
+    if given and not smoke:
+        refuse(f"{sorted(given)} may only be passed with --smoke-steps: a registered arm's "
+               f"recipe comes from m10/screen_registry.json, not from the command line "
+               f"(`rules.arm_failure`: an arm is never re-run at different settings)")
+    if real_eval and smoke:
+        # findings 5 and 10 together: the real COV/DEV-6 read is never caller-selectable. A smoke
+        # must not touch the 13,416-query surface or DEV-6's ~13 GB, and a real arm always does.
+        refuse("--real-eval is prohibited under --smoke-steps: a smoke never touches the COV "
+               "surface or DEV-6. Run the arm itself for a real evaluation.")
+    max_len = int(max_len or MAX_LEN)
     problems = SL.validate(SL.cfg())
     if problems:
         refuse(f"screen_lock.validate reports {len(problems)} problem(s), so §0a is not coherent "
@@ -414,8 +702,7 @@ def run(arm, *, device="cpu", resume=False, smoke_steps=None, max_len=512, ckpt_
     if entry.get("cut"):
         refuse(f"arm {arm!r} is CUT: {entry['cut']}")
 
-    smoke = smoke_steps is not None
-    base = arm_plan(arm, reg)
+    base = arm_plan(arm, reg)               # batch and CLOUD note only; the student comes below
     if base["cloud_only"] and device == "cuda" and not smoke:
         print(f"NOTE {arm}: {base['cloud_only']}", flush=True)
 
@@ -426,27 +713,28 @@ def run(arm, *, device="cpu", resume=False, smoke_steps=None, max_len=512, ckpt_
         reg = copy.deepcopy(reg)
         reg["arms"][arm]["dose_examples"] = int(smoke_steps) * base["batch"]
         reg["arms"][arm].pop("read_at", None)
-        out_dir = SMOKE_WORK / slug(arm)
-        rec_path = out_dir / "record.json"
-        results_path = None
-    else:
-        out_dir = WORK / slug(arm)
-        rec_path = out_dir / "record.json"
-        results_path = RESULTS / f"m10_arm_{slug(arm)}.json"
-    if rec_path.exists():
-        try:
-            done = json.loads(rec_path.read_text()).get("complete")
-        except Exception:
-            done = None
-        if done:
-            refuse(f"{rec_path} already exists and is complete. `rules.arm_failure`: an arm is "
+    out_dir, rec_path, results_path = record_paths(arm, smoke)
+    ctx.update(rec_path=rec_path, results_path=results_path, smoke=smoke)
+    for path in (rec_path, results_path):
+        if _complete_record_at(path):
+            refuse(f"{path} already exists and is complete. `rules.arm_failure`: an arm is "
                    f"reported, not silently re-run. Move the record aside deliberately.")
     p = arm_plan(arm, reg)                      # re-read: a smoke changed the dose
+    ctx["plan"] = p
     if p["cut_corpus"] and CL.data_cut_count(reg) is None:
         # `assemble_arm` is the enforcer (it refuses with no `allow_uncut` escape); failing here
         # first only avoids reading a 5M-row corpus to learn it.
         refuse(f"arm {arm!r} trains on the registered CUT corpus and "
                f"`data_cut.unique_text_count` is unregistered (§0b open). Register the count.")
+
+    # Every arm after family F trains on F's WINNER backbone, read from the verdict file and not
+    # from `arm_smoke.SHAPES` (finding 11). A SMOKE is exempt — it is a path check on a shape, the
+    # same exemption `arm_smoke` itself has — and its record says which student it actually ran.
+    verdict = None
+    if entry.get("family") != "F" and not smoke:
+        verdict = f_verdict(reg, f_verdict_path)
+        p = arm_plan(arm, reg, verdict=verdict)
+        ctx["plan"] = p
     out_dir.mkdir(parents=True, exist_ok=True)
 
     ws_cfg = dict(WS_DEFAULTS)
@@ -483,7 +771,8 @@ def run(arm, *, device="cpu", resume=False, smoke_steps=None, max_len=512, ckpt_
     total, ends, reads = p["total_steps"], p["cycle_end_steps"], p["read_points"]
     read_steps = {int(r["step"]): int(r["examples"]) for r in reads}
     extra_reads = sorted(s for s in read_steps if s not in set(ends))
-    ev = StubEval() if (smoke and not real_eval) else CovEval(model, out_dir, verbose=verbose)
+    ev = StubEval() if smoke else CovEval(model, out_dir, verbose=verbose)
+    ctx["cov_records"] = ev.records
 
     def eval_fn(_m, step, kind):
         if kind == "end":
@@ -501,32 +790,30 @@ def run(arm, *, device="cpu", resume=False, smoke_steps=None, max_len=512, ckpt_
     ck = out_dir / "ckpt.pt"
     every = int(ckpt_every or max(total // 20, 1))
     train_model = torch.compile(model) if compile_step else model
+    fp = fingerprint(arm, p, man, seed, smoke_steps)
     r = Tr.train_arm(train_model, batch_fn, total_steps=total, pattern=p["pattern"],
                      cycles=CYCLES, peak=PEAK, final=FINAL, loss_name=p["objective"],
                      sigma=sigma, eval_fn=eval_fn, ckpt_path=ck, ckpt_every=every,
                      resume_from=(str(ck) if resume and ck.exists() else None), seed=seed,
                      log_every=max(total // 50, 1), device=device, batch_size=p["batch"],
-                     read_steps=extra_reads, cycle_ckpt_fmt=str(out_dir / "cycle{cycle}.pt"))
+                     read_steps=extra_reads, cycle_ckpt_fmt=str(out_dir / "cycle{cycle}.pt"),
+                     eval_state=ev, fingerprint=fp)
 
-    n_ends = len(r["cycle_end_evals"])
-    finished = n_ends >= CYCLES
+    status, ok, plateau_at_last = classify(r["stopped"], len(r["cycle_end_evals"]))
     stopped = r["stopped"]
-    plateau_at_last = bool(stopped and stopped.startswith("plateau at cycle")
-                           and stopped.endswith(str(CYCLES)))
-    status = "complete" if finished else "failed"
     final_ck = out_dir / f"cycle{CYCLES}.pt"
     cks = {}
     for c in range(1, CYCLES + 1):
         pth = out_dir / f"cycle{c}.pt"
         if pth.exists():
-            cks[f"cycle{c}"] = {"path": str(pth.relative_to(REPO)), "sha256": sha256_file(pth)}
+            cks[f"cycle{c}"] = {"path": rel(pth), "sha256": sha256_file(pth)}
     if ck.exists():
-        cks["rolling"] = {"path": str(ck.relative_to(REPO)), "sha256": sha256_file(ck)}
+        cks["rolling"] = {"path": rel(ck), "sha256": sha256_file(ck)}
 
     d6 = None
-    if finished and not (smoke and not real_eval):
+    if ok and not smoke:
         d6 = dev6(model, verbose=verbose)
-    elif not finished:
+    elif not ok:
         print(f"ARM FAILED ({stopped}): no final checkpoint, so no DEV-6 read. "
               f"`rules.arm_failure`: its contrasts are reported UNRESOLVED and revert to default; "
               f"the arm is NOT re-run at different settings.", flush=True)
@@ -561,12 +848,20 @@ def run(arm, *, device="cpu", resume=False, smoke_steps=None, max_len=512, ckpt_
         "loss_tail": r["losses"][-200:],
         "stopped": stopped,
         "stopped_is_completion": plateau_at_last,
-        "_stopped_note": ("PLATEAU_FROM_CYCLE is 3 and a screen arm runs 3 cycles, so `plateau at "
-                          "cycle 3` means the arm finished its dose and stopped one step short — "
-                          "not a failure (LEDGER §M10.0-e trace)"),
+        "_stopped_note": ("SUCCESS is `stopped is None` or exactly `plateau at cycle 3`: "
+                          "PLATEAU_FROM_CYCLE is 3 and a screen arm runs 3 cycles, so that "
+                          "plateau means the arm finished its dose and stopped one step short "
+                          "(LEDGER §M10.0-e trace). EVERY kill and every non-finite stop is "
+                          "FAILED even at the final cycle end (finding 4)."),
         "checkpoints": cks,
-        "final_checkpoint": (str(final_ck.relative_to(REPO)) if final_ck.exists() else None),
-        "final_checkpoint_sha256": (cks.get(f"cycle{CYCLES}") or {}).get("sha256"),
+        # A FAILED arm has no final checkpoint, whatever is on disk: a kill at the last cycle end
+        # still leaves `cycle3.pt`, and labelling that "final" is how a killed arm gets exported
+        # (finding 4). The cycle checkpoints are listed under their own cycle keys either way.
+        "final_checkpoint": rel(final_ck) if ok and final_ck.exists() else None,
+        "final_checkpoint_sha256": ((cks.get(f"cycle{CYCLES}") or {}).get("sha256")
+                                    if ok else None),
+        "recipe_fingerprint": fp,
+        "f_verdict": p.get("f_verdict"), "student_source": p.get("student_source"),
         "assemble_manifest": man,
         "registry_sha256": sha256_file(REGISTRY),
         "registry_dose_overridden_for_smoke": (reg["arms"][arm]["dose_examples"] if smoke else None),
@@ -575,11 +870,8 @@ def run(arm, *, device="cpu", resume=False, smoke_steps=None, max_len=512, ckpt_
         "_contrasts": "NOT computed here — the contrast step reads the per-query COV files and "
                       "passes each contrast's own registered quantile",
     }
-    rec_path.write_text(json.dumps(rec, indent=1, default=str))
-    print(f"wrote {rec_path}", flush=True)
-    if results_path is not None:
-        results_path.write_text(json.dumps(rec, indent=1, default=str))
-        print(f"wrote {results_path}", flush=True)
+    for w in write_record(rec, rec_path, results_path):
+        print(f"wrote {w}", flush=True)
     print(f"{arm}: {status}  COV final {rec['cov']['final_macro']}  "
           f"{r['examples_per_s']:.0f} ex/s  {rec['wall_seconds']:.0f}s", flush=True)
     return rec
@@ -595,14 +887,17 @@ def main(argv=None):
                     help="a SMOKE: N steps, its own dose, stub evals, and its own output tree "
                          "under work/m10arms/smoke/ — never the real record path")
     ap.add_argument("--plan", action="store_true", help="print the W8-band-1 plan; train nothing")
-    ap.add_argument("--max-len", type=int, default=512)
-    ap.add_argument("--ckpt-every", type=int, default=None, help="default total_steps // 20")
+    # SMOKE-ONLY, every one of them (finding 5): a registered arm's recipe comes from the
+    # registry. `--real-eval` is gone entirely — findings 5 and 10 together make the real COV and
+    # DEV-6 reads non-selectable: a smoke never takes them and a real arm always does.
+    ap.add_argument("--max-len", type=int, default=None,
+                    help="SMOKE ONLY; a registered arm runs at %d" % MAX_LEN)
+    ap.add_argument("--ckpt-every", type=int, default=None,
+                    help="SMOKE ONLY; default total_steps // 20")
     ap.add_argument("--n-fit", type=int, default=None,
-                    help="warm-start fit sample; the registered 60,000 unless a smoke needs less")
-    ap.add_argument("--real-eval", action="store_true",
-                    help="run the REAL COV and DEV-6 reads even under --smoke-steps")
+                    help="SMOKE ONLY warm-start fit sample; a registered arm uses 60,000")
     ap.add_argument("--compile", action="store_true",
-                    help="torch.compile the training step (checkpoints stay eager, §T)")
+                    help="SMOKE ONLY: torch.compile the training step (checkpoints eager, §T)")
     ap.add_argument("--quiet", action="store_true")
     a = ap.parse_args(argv)
     if a.plan:
@@ -611,8 +906,7 @@ def main(argv=None):
     if not a.arm:
         ap.error("an arm name is required (or --plan)")
     run(a.arm, device=a.device, resume=a.resume, smoke_steps=a.smoke_steps, max_len=a.max_len,
-        ckpt_every=a.ckpt_every, n_fit=a.n_fit, real_eval=a.real_eval,
-        compile_step=a.compile, verbose=not a.quiet)
+        ckpt_every=a.ckpt_every, n_fit=a.n_fit, compile_step=a.compile, verbose=not a.quiet)
     return 0
 
 

@@ -42,9 +42,14 @@ def score_student(encode_queries, units=None, verbose=True):
     The callable is passed in rather than a model, so the same function scores a trained student,
     stella itself (the teacher ceiling) or any probe, with no branch inside the scorer.
     """
+    import cov_macro
     import evalkit
     import cov_probe
     us = units if units is not None else cov_probe.units()
+    # The macro is defined on exactly the admitted surface, so a dropped unit or a dropped family
+    # must fail BEFORE 13,416 queries and 452,757 document vectors are scored -- not after, in
+    # `macro()`, having already spent the encode (Codex runner review 2026-09-07, finding 12).
+    cov_macro.assert_surface({u[0]: u[1] for u in us})
     bright_docs, bright_off = None, {}
     if any(u[0].startswith("BRIGHT/") for u in us):
         from cov_admit import COMPONENTS, BRIGHT_SLICES
