@@ -270,7 +270,21 @@ MS MARCO dev queries (official Microsoft blob, `queries.dev.tsv`, sha256 `757b7e
 | product | 0.607 | 0.561 | 0.041 | 0.669 |
 | title | 0.506 | 0.472 | 0.094 | 0.652 |
 
-Reading: factoid sits at the floor; titles farthest, as the mandate anticipated for a form legitimately unlike web search. The seven generated forms are `forms_pending`; the script re-runs with `--forms` after generation without re-encoding MS MARCO.
+Reading: factoid sits at the floor; titles farthest, as the mandate anticipated for a form legitimately unlike web search.
+
+**Generated forms, 2026-09-07 (same MS MARCO vectors; `assemble10.py --gate2`) — action none, twelve forms now reported:**
+
+| form | NN cos k=1 | k=5 | energy | own-form NN k=1 |
+|---|---|---|---|---|
+| health (post-A8 cut) | 0.619 | 0.577 | 0.075 | 0.683 |
+| yesno | 0.546 | 0.510 | 0.063 | 0.597 |
+| conversational | 0.511 | 0.477 | 0.080 | 0.610 |
+| comparison | 0.515 | 0.480 | 0.100 | 0.616 |
+| finance | 0.570 | 0.530 | 0.110 | 0.679 |
+| howto | 0.536 | 0.501 | 0.120 | 0.659 |
+| **argument** | 0.474 | 0.443 | **0.133** | 0.661 |
+
+The generated forms sit farther from web search than the harvested ones (energy 0.06–0.13 vs 0.03–0.09), argument farthest — consistent with their design (long, non-search-shaped intents) and reported as such. Health's own-form density (0.683, highest) is the residue of its opener collapse after the A8 cut.
 
 ### §Harvest — the A3 real-text pipeline, REGISTERED 2026-09-05 before its draw ran
 
