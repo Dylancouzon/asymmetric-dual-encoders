@@ -211,14 +211,29 @@ def loss_cov_weighted(pred, target, sigma):
     return ((d @ sigma) * d).sum(-1).mean()
 
 
-def cov_matrix(doc_vecs, alpha=0.10):
+def cov_matrix(doc_vecs, alpha=0.10, chunk=100_000):
     """Σ for D-COV: unit-trace normalised, shrunk toward the identity. Computed ONCE from
-    document vectors that already exist. α is fixed at 0.10 and is never tuned on a surface."""
-    X = np.asarray(doc_vecs, dtype=np.float64)
-    X = X - X.mean(0, keepdims=True)
-    S = (X.T @ X) / max(len(X) - 1, 1)
+    document vectors that already exist. α is fixed at 0.10 and is never tuned on a surface.
+
+    **Accumulated in chunks, never materialized.** `np.asarray(doc_vecs, dtype=np.float64)` on the
+    registered 5,000,000-document stream is 1024 x 5e6 x 8 = **38 GiB** — worse than the 19.1 GiB
+    fp32 materialisation that took WSL down twice on 2026-09-07, and it would have hit D-COV the
+    same way. One pass accumulates `sum(x)` and `x^T x`; the centred Gram is
+    `x^T x − n·mean·mean^T` exactly, so nothing is approximated and the peak is one chunk
+    (100,000 x 1024 float64 = 0.8 GiB). Accepts an ndarray or any indexable view
+    (`corpus_loader.DocTargetView`).
+    """
+    n = len(doc_vecs)
+    d = int(np.asarray(doc_vecs[0:1], dtype=np.float64).shape[1])
+    s1 = np.zeros(d, dtype=np.float64)
+    S2 = np.zeros((d, d), dtype=np.float64)
+    for i in range(0, n, chunk):
+        blk = np.asarray(doc_vecs[np.arange(i, min(i + chunk, n))], dtype=np.float64)
+        s1 += blk.sum(0)
+        S2 += blk.T @ blk
+    mean = s1 / max(n, 1)
+    S = (S2 - n * np.outer(mean, mean)) / max(n - 1, 1)
     S = S / np.trace(S)                              # unit trace, as registered
-    d = S.shape[0]
     # `(1-α)Σ̂ + αI/d`: the shrunk matrix also has unit trace, so α is a pure mixing weight and
     # cannot rescale the loss. That invariance is what makes D-COV comparable to the anchor at
     # the same learning rate, and it is asserted in `test_nano10`.

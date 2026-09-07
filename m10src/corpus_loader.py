@@ -660,6 +660,57 @@ class TargetView:
         return out / n
 
 
+class DocTargetView:
+    """Row -> fp32 unit-norm document target, gathered from the frozen M9 pool store PER BATCH.
+
+    The query side has had `TargetView` since this loader was written; the document side did not,
+    and materialized the whole thing up front:
+
+        V = np.asarray(vecs[surv], dtype=np.float32)          # 5,000,000 x 1024 fp32 = 19.1 GiB
+        V = V / np.maximum(np.linalg.norm(V, 1, keepdims=True), 1e-12)   # + a copy of the same
+
+    At the registered `arm_doc_count` of 5,000,000 that is 19.1 GiB resident before a single
+    training step, and with the 5M document strings and their id arrays the arm reached a measured
+    **23.8 GiB RSS**. On a box whose `.wslconfig` grants WSL 26 GB of a 31.8 GB host, that starved
+    Windows to **239 MB** and took the VM down twice on 2026-09-07 (`work/memtrace.csv`).
+
+    Gathered per batch instead: resident cost is the pool memmap's reclaimable pages plus one
+    batch (32 x 1024 fp32 = 128 KB).
+
+    **The zero-norm floor became a refusal, deliberately.** The old code applied
+    `maximum(norm, 1e-12)`, which silently serves a ~zero target as a huge unit vector; `TargetView`
+    already refuses that ("it must never reach a trainer"). To keep the guarantee up-front rather
+    than mid-training, the norms are validated ONCE at construction in chunks -- bounded memory,
+    and an arm that would have died at step 400,000 now refuses before it starts.
+    """
+
+    VALIDATE_CHUNK = 100_000
+
+    def __init__(self, store, rows, validate=True):
+        self.store = store
+        self.rows = np.asarray(rows, dtype=np.int64)
+        self.shape = (len(self.rows), int(store.shape[1]))
+        if validate:
+            self._validate()
+
+    def _validate(self):
+        for i in range(0, len(self.rows), self.VALIDATE_CHUNK):
+            block = np.asarray(self.store[self.rows[i:i + self.VALIDATE_CHUNK]], dtype=np.float32)
+            n = np.linalg.norm(block, axis=1)
+            if not np.isfinite(n).all() or float(n.min()) < 1e-6:
+                bad = int(np.argmin(np.where(np.isfinite(n), n, -1.0)))
+                raise SystemExit(f"document target at pool row {int(self.rows[i + bad])} is "
+                                 f"~zero or non-finite; it must never reach a trainer")
+
+    def __len__(self):
+        return len(self.rows)
+
+    def __getitem__(self, idx):
+        idx = np.atleast_1d(np.asarray(idx, dtype=np.int64))
+        out = np.asarray(self.store[self.rows[idx]], dtype=np.float32)
+        return out / np.linalg.norm(out, axis=1, keepdims=True)
+
+
 def corpus_forms(segs):
     return np.concatenate([s.forms for s in segs]) if segs else np.zeros(0, dtype=np.int16)
 
@@ -967,11 +1018,9 @@ def _screened_doc_pool(n, seed, banned, margin=1.05, floor=2_000):
                          f"a {n:,}-document stream -- widen `margin`")
     import pool as poolmod
     _index, vecs, _pmeta = poolmod.build()
-    V = np.asarray(vecs[surv], dtype=np.float32)
-    V = V / np.maximum(np.linalg.norm(V, axis=1, keepdims=True), 1e-12)
     meta = {**meta, "n_drawn_before_rescreen": int(k), "n_removed_by_rescreen": int((~keep).sum()),
             "n_drawn": int(len(surv))}
-    return m9data.row_texts(surv), V, meta
+    return m9data.row_texts(surv), DocTargetView(vecs, surv), meta
 
 
 def build_doc_stream(n, tok, *, batch_size=32, seed=0, max_len=512, allow_unscreened=False,

@@ -523,7 +523,14 @@ def test_the_document_pool_drops_the_rescreened_rows_and_still_returns_n(monkeyp
     texts, V, meta = CL._screened_doc_pool(8, 0, banned, margin=1.0, floor=8)
     assert texts == ["doc3", "doc4", "doc6", "doc7", "doc8", "doc9", "doc10", "doc11"]
     assert meta["n_removed_by_rescreen"] == 4 and len(V) == 8
-    assert np.allclose(np.linalg.norm(V, axis=1), 1.0, atol=1e-6)
+    # V is now a LAZY DocTargetView, not a materialized array: it must be indexed to get vectors,
+    # and every gathered batch is unit-norm.
+    assert isinstance(V, CL.DocTargetView)
+    gathered = V[np.arange(len(V))]
+    assert gathered.shape == (8, 8) and gathered.dtype == np.float32
+    assert np.allclose(np.linalg.norm(gathered, axis=1), 1.0, atol=1e-6)
+    # and a single batch is unit-norm too, which is how `data10.Stream` consumes it
+    assert np.allclose(np.linalg.norm(V[np.array([0, 3, 7])], axis=1), 1.0, atol=1e-6)
 
 
 def test_the_token_cache_identity_binds_the_M10_RESCREEN(monkeypatch):
@@ -1034,3 +1041,51 @@ def test_the_shipped_F_token_cache_is_intact():
     assert int(offs[-1]) == len(flat)
     assert offs[0] == 0 and bool(np.all(np.diff(offs) >= 0))
     assert int(np.diff(offs).max()) <= meta["max_len"]
+
+
+# ---- document targets are gathered per batch, never materialized (2026-09-07 WSL kills) -----
+
+def test_DocTargetView_does_not_materialize_the_pool():
+    """`_screened_doc_pool` used to build `n x 1024` fp32 up front -- 19.1 GiB at the registered
+    5,000,000 documents, which with the texts and id arrays reached a measured 23.8 GiB RSS and
+    took WSL (26 GB of a 31.8 GB host) down twice. The view must hold no per-row float storage."""
+    store = np.tile(np.eye(4, 8, dtype=np.float32) + 0.5, (250, 1))     # 1000 x 8
+    rows = np.arange(0, 1000, 2)
+    v = CL.DocTargetView(store, rows)
+    assert len(v) == 500 and v.shape == (500, 8)
+    # the view's own arrays are the row index and nothing else
+    assert v.rows.nbytes == rows.astype(np.int64).nbytes
+    assert v.store is store, "the view must reference the pool store, not a copy of it"
+    # gathering is what normalizes, and only the gathered rows are touched
+    got = v[np.array([0, 1, 499])]
+    assert got.shape == (3, 8) and np.allclose(np.linalg.norm(got, axis=1), 1.0, atol=1e-6)
+
+
+def test_DocTargetView_matches_the_old_eager_normalisation():
+    """Same numbers as `V = asarray(vecs[rows], f32); V / norm(V)`, gathered instead of stored."""
+    rng = np.random.default_rng(3)
+    store = rng.normal(size=(400, 16)).astype(np.float32)
+    rows = np.sort(rng.choice(400, 120, replace=False))
+    eager = np.asarray(store[rows], dtype=np.float32)
+    eager = eager / np.maximum(np.linalg.norm(eager, axis=1, keepdims=True), 1e-12)
+    lazy = CL.DocTargetView(store, rows)[np.arange(120)]
+    assert np.allclose(lazy, eager, atol=1e-6)
+
+
+def test_DocTargetView_REFUSES_a_zero_target_up_front_instead_of_flooring_it():
+    """The old path applied `maximum(norm, 1e-12)`, which serves a ~zero target as a huge unit
+    vector. `TargetView` already refused that. Validation is chunked and happens at construction,
+    so an arm that would have died at step 400,000 refuses before it starts."""
+    store = np.ones((50, 8), dtype=np.float32)
+    store[37] = 0.0
+    with pytest.raises(SystemExit, match="row 37"):
+        CL.DocTargetView(store, np.arange(50))
+    # a chunk boundary must not hide it
+    with pytest.raises(SystemExit, match="row 37"):
+        v = CL.DocTargetView.__new__(CL.DocTargetView)
+        v.store, v.rows = store, np.arange(50)
+        v.shape = (50, 8)
+        v.VALIDATE_CHUNK = 7
+        v._validate()
+    # and rows that exclude it are fine
+    CL.DocTargetView(store, np.array([0, 1, 36, 38, 49]))

@@ -280,3 +280,35 @@ def test_a_dose_that_divides_evenly_is_unchanged():
     assert ends == [49_999, 99_999, 149_999]
     assert abs(N.lr_at(T - 1, T, 3, 1e-4, 1e-5) - 1e-5) < 1e-9
     assert abs(N.lr_at(N.WARMUP_STEPS, T, 3, 1e-4, 1e-5) - 1e-4) < 1e-9
+
+
+def test_cov_matrix_is_accumulated_in_chunks_not_materialized():
+    """`np.asarray(doc_vecs, dtype=np.float64)` on the registered 5,000,000-document stream is
+    38 GiB -- worse than the 19.1 GiB fp32 materialisation that took WSL down twice on
+    2026-09-07, and it would have hit D-COV the same way. The one-pass accumulation
+    (`x^T x - n*mean*mean^T`) is EXACT, so this asserts equality with the dense computation."""
+    rng = np.random.default_rng(11)
+    X = rng.normal(size=(3000, 32))
+    X = X / np.linalg.norm(X, axis=1, keepdims=True)
+    Xc = X - X.mean(0, keepdims=True)
+    S = (Xc.T @ Xc) / (len(X) - 1)
+    S = S / np.trace(S)
+    want = 0.9 * S + 0.1 * np.eye(32) / 32
+    got = N.cov_matrix(X)
+    assert np.abs(got - want).max() < 1e-12, "chunked accumulation must be exact, not approximate"
+    # and the answer cannot depend on where the chunk boundaries fall
+    for c in (1, 7, 999, 3000, 10_000):
+        assert np.abs(N.cov_matrix(X, chunk=c) - got).max() < 1e-12, c
+    assert abs(float(np.trace(got)) - 1.0) < 1e-12, "unit trace, as registered"
+
+
+def test_cov_matrix_accepts_a_lazy_view():
+    """D-COV reads `d_stream.T`, which is now a `DocTargetView`, not an ndarray."""
+    class View:
+        def __init__(self, a): self.a = a
+        def __len__(self): return len(self.a)
+        def __getitem__(self, i): return self.a[i]
+    rng = np.random.default_rng(5)
+    X = rng.normal(size=(500, 16))
+    X = X / np.linalg.norm(X, axis=1, keepdims=True)
+    assert np.abs(N.cov_matrix(View(X), chunk=64) - N.cov_matrix(X)).max() < 1e-12
