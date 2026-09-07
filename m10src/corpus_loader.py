@@ -27,6 +27,8 @@ hold-out guard and the corpus dedup both key on `text_hash`. Same decision, same
 from corpora, and nothing here executes anything they contain.
 """
 import hashlib
+import os
+import shutil
 import math
 import json
 import re
@@ -591,17 +593,41 @@ def tokenize_corpus(tok, segs, man, student, max_len=512, prefix="", cache=True,
     ident = {"manifest": man["sha256"], "student": student, "prefix": prefix, "max_len": max_len,
              "n": len(texts), "tokenizer": tokenizer_ident(tok), **(extra_ident or {})}
     d = TOKCACHE / hashlib.sha256(json.dumps(ident, sort_keys=True).encode()).hexdigest()[:16]
-    if cache and (d / "offs.npy").exists():
+    if cache and (d / "meta.json").exists():
+        # The guard reads meta.json, the LAST file written, and the load is VALIDATED. It used to
+        # read `offs.npy`, the second of three -- and `np.save` is not atomic, so a crash partway
+        # through writing `offs.npy` left a truncated file that still `exists()` and would be
+        # served as a complete cache, silently training the arm on a prefix of its corpus. The
+        # 2026-09-07 WSL crash landed 2 minutes into family F and proved the window is real (that
+        # cache happened to be complete -- verified -- but only by luck of timing).
+        flat = np.load(d / "flat.npy", mmap_mode="r")
+        offs = np.load(d / "offs.npy")
+        bad = None
+        if len(offs) != ident["n"] + 1:
+            bad = f"offs has {len(offs)} entries, expected n+1 = {ident['n'] + 1}"
+        elif int(offs[-1]) != len(flat):
+            bad = f"offs[-1]={int(offs[-1])} != flat length {len(flat)}"
+        elif offs[0] != 0 or not bool(np.all(np.diff(offs) >= 0)):
+            bad = "offs is not a monotone packing starting at 0"
+        if bad:
+            raise SystemExit(f"{d}: token cache is CORRUPT -- {bad}. Delete the directory and "
+                             f"re-tokenize; do not train on it.")
         if verbose:
-            print(f"  tokens: cached at {d}", flush=True)
-        return PackedIds(np.load(d / "flat.npy", mmap_mode="r"), np.load(d / "offs.npy"))
+            print(f"  tokens: cached at {d} (validated)", flush=True)
+        return PackedIds(flat, offs)
     p = pack_tokenize(tok, texts, max_len=max_len, prefix=prefix, label="tokenize",
                       verbose=verbose)
     if cache:
-        d.mkdir(parents=True, exist_ok=True)
-        np.save(d / "flat.npy", p.flat)
-        np.save(d / "offs.npy", p.offs)
-        (d / "meta.json").write_text(json.dumps(ident, indent=1))
+        # Written to a scratch sibling and renamed, so the cache directory is either absent or
+        # COMPLETE. A half-written directory can never be observed by another process or a restart.
+        tmp = d.with_name(d.name + f".partial-{os.getpid()}")
+        if tmp.exists():
+            shutil.rmtree(tmp)
+        tmp.mkdir(parents=True, exist_ok=True)
+        np.save(tmp / "flat.npy", p.flat)
+        np.save(tmp / "offs.npy", p.offs)
+        (tmp / "meta.json").write_text(json.dumps(ident, indent=1))
+        os.replace(tmp, d)
     return p
 
 

@@ -977,3 +977,60 @@ def test_a_generated_row_with_a_blank_doc_uses_its_seed_id_as_provenance(tmp_pat
     p.write_text(json.dumps({"text": "novel", "form": "title", "seed_id": "held", "doc": " "}) + "\n")
     texts, forms, ids = C._rows_from_jsonl(p, with_ids=True, require_id="seed_id")
     assert ids == ["held"]
+
+
+# ---- token cache: atomic write, validated read (2026-09-07 WSL crash) -----------------------
+
+def test_token_cache_guard_reads_the_LAST_file_written_not_the_second(tmp_path, monkeypatch):
+    """The guard used to read `offs.npy`, the SECOND of three writes. `np.save` is not atomic, so
+    a crash partway through writing it left a truncated file that still `exists()` and was served
+    as a complete cache -- silently training an arm on a prefix of its corpus. The 2026-09-07 WSL
+    crash landed 2 minutes into family F and proved the window is real."""
+    import inspect
+    src = inspect.getsource(CL.tokenize_segments) if hasattr(CL, "tokenize_segments") else ""
+    if not src:
+        import re
+        whole = (Path(CL.__file__)).read_text()
+        m = re.search(r'd = TOKCACHE / hashlib.*?\n    return p', whole, re.S)
+        src = m.group(0) if m else whole
+    assert 'if cache and (d / "meta.json").exists()' in src, \
+        "the cache-hit guard must read meta.json, the last file written"
+    assert 'os.replace(tmp, d)' in src, "the cache directory must be renamed into place, not built in place"
+    assert 'CORRUPT' in src, "a cache that fails validation must refuse, not be trained on"
+
+
+def test_a_truncated_offs_is_refused_by_the_same_predicates_the_loader_uses(tmp_path):
+    """The three predicates, exercised on a deliberately truncated cache."""
+    n = 1000
+    offs = np.arange(n + 1, dtype=np.int64) * 5
+    flat = np.zeros(int(offs[-1]), dtype=np.int32)
+
+    def check(offs, flat, n):
+        if len(offs) != n + 1:
+            return "length"
+        if int(offs[-1]) != len(flat):
+            return "offs[-1]"
+        if offs[0] != 0 or not bool(np.all(np.diff(offs) >= 0)):
+            return "monotone"
+        return None
+
+    assert check(offs, flat, n) is None, "the intact cache must pass"
+    assert check(offs[:500], flat, n) == "length", "a crash mid-offs write"
+    assert check(offs, flat[:10], n) == "offs[-1]", "a crash mid-flat write"
+    scrambled = offs.copy(); scrambled[10] = 0
+    assert check(scrambled, flat, n) == "monotone", "a non-monotone packing"
+
+
+def test_the_shipped_F_token_cache_is_intact():
+    """The cache family F wrote 2 minutes before the crash. It happened to complete -- verified
+    here rather than assumed, because the arm is being restarted onto it."""
+    d = Path("/home/dylan/asymetric-dual-encoders/work/m10tok/dfc8d12618876554")
+    if not (d / "meta.json").exists():
+        pytest.skip("that cache directory is gone")
+    meta = json.loads((d / "meta.json").read_text())
+    flat = np.load(d / "flat.npy", mmap_mode="r")
+    offs = np.load(d / "offs.npy")
+    assert len(offs) == meta["n"] + 1 == 2_651_573
+    assert int(offs[-1]) == len(flat)
+    assert offs[0] == 0 and bool(np.all(np.diff(offs) >= 0))
+    assert int(np.diff(offs).max()) <= meta["max_len"]
