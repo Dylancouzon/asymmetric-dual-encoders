@@ -30,6 +30,7 @@ import hashlib
 import os
 import shutil
 import math
+import ctypes
 import json
 import re
 import sys
@@ -511,6 +512,19 @@ class PackedIds:
         return self.flat[self.offs[i]:self.offs[i + 1]]
 
 
+def _publish_dir(tmp, d):
+    """Rename a fully-built `tmp` cache directory into place as `d`.
+
+    `os.replace` is atomic for FILES but raises ENOTEMPTY when the destination is a non-empty
+    DIRECTORY, so the "build in a sibling and rename" pattern needs this: a stale or corrupt `d`
+    (the read path validates and refuses one) is removed first. Arms run one at a time -- the
+    record guard in `run_arm` enforces it -- so there is no concurrent writer to race.
+    """
+    if Path(d).exists():
+        shutil.rmtree(d)
+    os.replace(tmp, d)
+
+
 def pack_tokenize(tok, texts, max_len=512, prefix="", batch=20_000, label="", verbose=True):
     """-> PackedIds. Chunked, so the transient heap is one batch, not the corpus."""
     parts, lens, t0 = [], [], time.time()
@@ -627,7 +641,7 @@ def tokenize_corpus(tok, segs, man, student, max_len=512, prefix="", cache=True,
         np.save(tmp / "flat.npy", p.flat)
         np.save(tmp / "offs.npy", p.offs)
         (tmp / "meta.json").write_text(json.dumps(ident, indent=1))
-        os.replace(tmp, d)
+        _publish_dir(tmp, d)
     return p
 
 
@@ -1070,40 +1084,135 @@ def build_doc_stream(n, tok, *, batch_size=32, seed=0, max_len=512, allow_unscre
 DOC_TEXT_CHUNK = 100_000
 
 
-def _stream_doc_ids(rows, tok, prefix, max_len, chunk=DOC_TEXT_CHUNK, verbose=True):
-    """-> (PackedIds, n). Texts are fetched, tokenized and DROPPED per chunk; ids are PACKED.
+def release_arena():
+    """Hand glibc's freed pages back to the OS, and report how much came back.
 
-    Both halves of this matter and each was measured on a 1,000,000-row probe:
+    The doc-id stream leaves ~3 GB of ANONYMOUS RSS behind that is not live data: the per-chunk
+    texts and token lists are freed, but glibc keeps the pages in its per-thread arenas (the fast
+    tokenizer runs Rust threads, so there are several). Measured at 200k documents, chunk 100k:
+    anon 3,839 MB -> 788 MB, so `malloc_trim(0)` returns 3,051 MB and the real steady-state cost
+    of the doc build is +403 MB (LEDGER 2026-09-07). This matters because the arm goes on to
+    allocate a model and an optimizer; 3 GB of allocator residue is 3 GB Windows does not get.
 
-    * the document texts are 408 chars x 5,000,000 = ~19 GB as Python strings (+3,804 MB/M) and
-      exist only to be tokenized, so they are fetched and dropped per chunk;
-    * `data10.pretokenize` returns a LIST of one small int32 array per document, which cost
-      **+4,546 MB/M -> 25.7 GiB** at the registered count. `PackedIds` already names this exact
-      trap -- "M9's pitfall 14: a Python list of ~20 token ids costs ~1 kB once the object headers
-      are counted" -- and the query side has used it since this loader was written. The document
-      side never did. Packed, the same corpus is one flat int32 array of ~2 GB.
+    Best-effort: returns 0 where the C library has no `malloc_trim` (musl), never raises.
+    """
+    def _anon():
+        try:
+            st = open("/proc/self/status").read()
+            return int(st.split("RssAnon:")[1].split()[0]) // 1024
+        except Exception:
+            return 0
+    before = _anon()
+    try:
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except Exception:
+        return 0
+    return max(before - _anon(), 0)
 
-    `PackedIds` exposes `__getitem__`/`__len__`/`lengths`, so `data10.collate` and
-    `data10.length_buckets` consume it unchanged.
+
+def _stream_doc_ids(rows, tok, prefix, max_len, chunk=DOC_TEXT_CHUNK, verbose=True,
+                    cache=True):
+    """-> (PackedIds over a MEMMAP, n). Streams the texts, packs the ids, and lands them on disk.
+
+    Three costs, each measured on a 1,000,000-row probe and each fixed here:
+
+    | held as | measured at 1,000,000 docs |
+    |---|---|
+    | `row_texts` Python strings (408 chars) | +3,804 MB |
+    | `data10.pretokenize` list of small arrays | +4,546 MB |
+    | `PackedIds` built in RAM (concatenate doubles it) | +3,813 MB |
+
+    Those are single-point measurements and are NOT per-row rates -- do not multiply them out.
+    The successor path below was measured at BOTH 200k and 1M documents (+3,425 MB vs +3,454 MB
+    for 5x the tokens), so the residue is a per-chunk CONSTANT set by `chunk`, not a per-row cost;
+    an earlier "20.4 GiB at 5M" projection from the 1M point alone was wrong by ~6x and is
+    withdrawn (LEDGER 2026-09-07). Nor is that residue live data: it is glibc arena retention, and
+    `release_arena()` returns ~3 GB of it, leaving the doc build costing +403 MB steady-state.
+    The number that actually constrains the box is PEAK RSS during the loop, not the final figure.
+
+    `PackedIds` already named the second one -- "M9's pitfall 14: a Python list of ~20 token ids
+    costs ~1 kB once the object headers are counted" -- and the query side has used both packing
+    AND a disk cache since this loader was written; the document side had neither. The third cost
+    is why packing alone was not enough: `np.concatenate(parts)` needs the whole flat array twice,
+    and the freed half stays in the allocator, so RSS -- which is what WSL and the Windows host
+    see -- barely moved.
+
+    Written straight to disk per chunk and memmapped back, resident cost becomes reclaimable page
+    cache. The cache is keyed on the row draw, tokenizer, prefix and max_len, written to a
+    `.partial-<pid>` sibling and renamed, and VALIDATED on read -- the same contract as the query
+    side's token cache after the 2026-09-07 crash.
     """
     import data as m9data
-    parts, lens, t0 = [], [], time.time()
-    for i in range(0, len(rows), chunk):
-        block = m9data.row_texts(rows[i:i + chunk])
-        p = pack_tokenize(tok, block, max_len=max_len, prefix=prefix, verbose=False)
-        parts.append(p.flat)
-        lens.append(p.lengths)
-        del block, p
-        done = min(i + chunk, len(rows))
+    ident = {"kind": "doc-ids", "n": int(len(rows)), "prefix": prefix, "max_len": int(max_len),
+             "rows_sha256": hashlib.sha256(np.ascontiguousarray(
+                 np.asarray(rows, dtype=np.int64)).tobytes()).hexdigest(),
+             "tokenizer": tokenizer_ident(tok)}
+    d = TOKCACHE / ("doc-" + hashlib.sha256(
+        json.dumps(ident, sort_keys=True).encode()).hexdigest()[:16])
+    if cache and (d / "meta.json").exists():
+        flat = np.load(d / "flat.npy", mmap_mode="r")
+        offs = np.load(d / "offs.npy")
+        if len(offs) != len(rows) + 1 or int(offs[-1]) != len(flat) or offs[0] != 0 \
+                or not bool(np.all(np.diff(offs) >= 0)):
+            raise SystemExit(f"{d}: document id cache is CORRUPT. Delete it and re-tokenize.")
         if verbose:
-            print(f"    documents {done:,}/{len(rows):,} "
-                  f"({done / max(time.time() - t0, 1e-9):,.0f}/s)", flush=True)
+            print(f"  documents: cached at {d} (validated)", flush=True)
+        return PackedIds(flat, offs), len(rows)
+
+    if not cache:
+        # no cache at all: stream, pack in memory, return. Used by tests and by any caller that
+        # must not touch the shared cache. `cache=False` used to skip only the READ and still
+        # write, which is not what the flag says.
+        import data as m9data_
+        parts, lens, t0 = [], [], time.time()
+        for i in range(0, len(rows), chunk):
+            block = m9data_.row_texts(rows[i:i + chunk])
+            p = pack_tokenize(tok, block, max_len=max_len, prefix=prefix, verbose=False)
+            parts.append(p.flat)
+            lens.append(p.lengths)
+            del block, p
+        L = np.concatenate(lens) if lens else np.zeros(0, dtype=np.int64)
+        offs = np.zeros(L.size + 1, dtype=np.int64)
+        np.cumsum(L, out=offs[1:])
+        flat = np.concatenate(parts) if parts else np.zeros(0, dtype=np.int32)
+        del parts
+        release_arena()   # concatenate held the flat array twice; give the freed half back
+        return PackedIds(flat, offs), len(rows)
+
+    tmp = d.with_name(d.name + f".partial-{os.getpid()}")
+    if tmp.exists():
+        shutil.rmtree(tmp)
+    tmp.mkdir(parents=True, exist_ok=True)
+    lens, t0 = [], time.time()
+    with (tmp / "flat.bin").open("wb") as fh:
+        for i in range(0, len(rows), chunk):
+            block = m9data.row_texts(rows[i:i + chunk])
+            p = pack_tokenize(tok, block, max_len=max_len, prefix=prefix, verbose=False)
+            fh.write(np.ascontiguousarray(p.flat, dtype=np.int32).tobytes())
+            lens.append(p.lengths)
+            del block, p
+            done = min(i + chunk, len(rows))
+            if verbose:
+                print(f"    documents {done:,}/{len(rows):,} "
+                      f"({done / max(time.time() - t0, 1e-9):,.0f}/s)", flush=True)
     L = np.concatenate(lens) if lens else np.zeros(0, dtype=np.int64)
+    del lens
     offs = np.zeros(L.size + 1, dtype=np.int64)
     np.cumsum(L, out=offs[1:])
-    flat = np.concatenate(parts) if parts else np.zeros(0, dtype=np.int32)
-    del parts, lens
-    return PackedIds(flat, offs), len(rows)
+    flat_mm = np.memmap(tmp / "flat.bin", dtype=np.int32, mode="r")
+    if len(flat_mm) != int(offs[-1]):
+        raise SystemExit(f"document ids: wrote {len(flat_mm):,} tokens but the offsets sum to "
+                         f"{int(offs[-1]):,}")
+    np.save(tmp / "flat.npy", flat_mm)       # .npy so the read path is identical to the query side
+    del flat_mm
+    (tmp / "flat.bin").unlink()
+    np.save(tmp / "offs.npy", offs)
+    (tmp / "meta.json").write_text(json.dumps(ident, indent=1))
+    _publish_dir(tmp, d)
+    freed = release_arena()
+    if verbose and freed:
+        print(f"  released {freed:,} MB of allocator residue back to the OS", flush=True)
+    return PackedIds(np.load(d / "flat.npy", mmap_mode="r"), offs), len(rows)
 
 
 # arms that must see all 12 registered forms: A4 IS the anchor (`ARM_SOURCES`), so both names land

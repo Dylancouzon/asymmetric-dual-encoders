@@ -5,6 +5,7 @@ another source's rows, a "balanced" sampler that is balanced only on the sources
 present, a resumed arm that draws different data, and the FORMS-12 hold-out being trainable.
 """
 import json
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -1006,7 +1007,8 @@ def test_token_cache_guard_reads_the_LAST_file_written_not_the_second(tmp_path, 
         src = m.group(0) if m else whole
     assert 'if cache and (d / "meta.json").exists()' in src, \
         "the cache-hit guard must read meta.json, the last file written"
-    assert 'os.replace(tmp, d)' in src, "the cache directory must be renamed into place, not built in place"
+    assert '_publish_dir(tmp, d)' in src, \
+        "the cache directory must be renamed into place, not built in place"
     assert 'CORRUPT' in src, "a cache that fails validation must refuse, not be trained on"
 
 
@@ -1124,15 +1126,133 @@ def test_stream_doc_ids_never_holds_the_whole_corpus(monkeypatch):
             return {"input_ids": [[7, 8, 9] for _ in texts]}
 
     rows = np.arange(250)
+    # cache=False: this test is about STREAMING, and it must not read or write the real token
+    # cache -- it did on its first run and then hit its own cache on the second, so `row_texts`
+    # was never called and the assertions below read `[]`.
     ids, n = CL._stream_doc_ids(rows, tok=FakeTok(), prefix="doc: ", max_len=512, chunk=100,
-                                verbose=False)
+                                verbose=False, cache=False)
     assert n == 250 and len(ids) == 250
     assert calls == [100, 100, 50], f"row_texts must be called per chunk, got {calls}"
     assert max(calls) == 100, "no call may ever request the whole corpus"
-    # PACKED, not a list of 250 small arrays: that list cost +4,546 MB per million documents,
-    # 25.7 GiB at the registered count (`PackedIds`: "M9's pitfall 14").
+    # PACKED, not a list of 250 small arrays ("M9's pitfall 14"). The list cost +4,546 MB at one
+    # million documents; do NOT read that as a per-row rate -- the successor memmap path was
+    # measured at BOTH 200k and 1M and the residue is a per-chunk constant, not per-row, so the
+    # "25.7 GiB at 5M" this comment used to claim was a bad one-point extrapolation (LEDGER
+    # 2026-09-07). The structural assertions below are the guard; no projected number is.
     assert isinstance(ids, CL.PackedIds)
     assert ids.flat.dtype == np.int32 and len(ids.offs) == 251
     assert int(ids.offs[-1]) == len(ids.flat)
     assert np.all(np.diff(ids.offs) >= 0) and hasattr(ids, "lengths")
     assert list(ids[0]) == [7, 8, 9]
+
+
+def test_doc_id_cache_is_atomic_validated_and_keyed_on_the_ROW_DRAW(monkeypatch, tmp_path):
+    """Same contract as the query-side token cache: renamed into place, guarded on the last file
+    written, validated on read, and a DIFFERENT row draw must not be served another draw's ids."""
+    class FakeM9:
+        @staticmethod
+        def row_texts(rows):
+            return [f"d{int(r)}" for r in rows]
+
+    class FakeTok:
+        def __call__(self, texts, truncation=None, max_length=None, add_special_tokens=None):
+            return {"input_ids": [[7, 8, 9] for _ in texts]}
+        name_or_path = "fake"
+        vocab_size = 9
+        model_max_length = 512
+        truncation_side = "right"
+        def __len__(self): return 9
+
+    monkeypatch.setitem(sys.modules, "data", FakeM9)
+    monkeypatch.setattr(CL, "TOKCACHE", tmp_path)
+    monkeypatch.setattr(CL, "tokenizer_ident", lambda t: {"class": "Fake"})
+
+    rows_a = np.arange(60)
+    ids, n = CL._stream_doc_ids(rows_a, FakeTok(), "doc: ", 512, chunk=25, verbose=False)
+    assert n == 60 and len(ids) == 60 and isinstance(ids, CL.PackedIds)
+    dirs = sorted(d.name for d in tmp_path.iterdir() if d.is_dir())
+    assert len(dirs) == 1 and dirs[0].startswith("doc-")
+    d = tmp_path / dirs[0]
+    assert (d / "meta.json").exists() and (d / "flat.npy").exists() and (d / "offs.npy").exists()
+    assert not (d / "flat.bin").exists(), "the raw append file must not be left behind"
+    assert not any(x.name.startswith(dirs[0] + ".partial") for x in tmp_path.iterdir())
+
+    # THE PROPERTY THAT MAKES THE COST CONSTANT: `flat` is memmap-backed, never resident. This is
+    # why the doc-stream residue is a per-chunk constant (+3,425 MB at 200k vs +3,454 MB at 1M,
+    # LEDGER 2026-09-07) instead of growing with the corpus. An "optimisation" that np.load()s
+    # flat.npy without mmap_mode would restore linear growth and reintroduce the crash silently,
+    # so assert the mmap rather than trusting a projected megabyte count.
+    assert isinstance(ids.flat, np.memmap), f"flat must be a memmap, got {type(ids.flat)}"
+
+    # second call hits the cache -- proven by making row_texts explode if touched
+    monkeypatch.setitem(sys.modules, "data", type("Boom", (), {
+        "row_texts": staticmethod(lambda r: (_ for _ in ()).throw(AssertionError("re-read")))}))
+    again, _ = CL._stream_doc_ids(rows_a, FakeTok(), "doc: ", 512, chunk=25, verbose=False)
+    assert list(again[0]) == list(ids[0]) and len(again) == 60
+
+    # a DIFFERENT row draw must miss: same n, same tokenizer, different rows
+    monkeypatch.setitem(sys.modules, "data", FakeM9)
+    other, _ = CL._stream_doc_ids(np.arange(100, 160), FakeTok(), "doc: ", 512, chunk=25,
+                                  verbose=False)
+    assert len(other) == 60
+    assert len([x for x in tmp_path.iterdir() if x.is_dir()]) == 2, "row draw must key the cache"
+
+    # a corrupt cache is refused, not served
+    (d / "offs.npy").unlink()
+    np.save(d / "offs.npy", np.arange(10, dtype=np.int64))
+    with pytest.raises(SystemExit, match="CORRUPT"):
+        CL._stream_doc_ids(rows_a, FakeTok(), "doc: ", 512, chunk=25, verbose=False)
+
+
+def test_publish_dir_replaces_a_NON_EMPTY_destination(tmp_path):
+    """`os.replace` is atomic for files but raises ENOTEMPTY on a non-empty directory, so the
+    build-in-a-sibling-and-rename pattern needs this. Both caches hit it the moment a stale or
+    corrupt cache directory already existed."""
+    d = tmp_path / "cache"
+    d.mkdir()
+    (d / "stale.npy").write_bytes(b"old")
+    tmp = tmp_path / "cache.partial-1"
+    tmp.mkdir()
+    (tmp / "meta.json").write_text("{}")
+    # the bare call this replaced would raise
+    with pytest.raises(OSError):
+        os.replace(tmp, d)
+    CL._publish_dir(tmp, d)
+    assert (d / "meta.json").exists() and not (d / "stale.npy").exists()
+    assert not tmp.exists(), "the partial directory must be gone once published"
+
+
+def test_release_arena_is_safe_and_the_doc_build_actually_calls_it(monkeypatch, tmp_path):
+    """`release_arena` is what turns the doc build's ~3 GB of anonymous allocator residue back
+    into host memory (anon 3,839 -> 788 MB measured, LEDGER 2026-09-07). The residue is NOT live
+    data and NOT reclaimable page cache, so nothing else gives it back -- if a refactor drops this
+    call the arm silently carries 3 GB it does not need, which is 3 GB Windows does not get, and
+    that is the shape of the two 2026-09-07 crashes. Guard the CALL, not the allocator."""
+    # never raises, always an int, even where libc has no malloc_trim
+    assert isinstance(CL.release_arena(), int) and CL.release_arena() >= 0
+    monkeypatch.setattr(CL.ctypes, "CDLL", lambda *a, **k: (_ for _ in ()).throw(OSError("musl")))
+    assert CL.release_arena() == 0, "must degrade to 0, not raise, without malloc_trim"
+
+    calls = []
+    monkeypatch.setattr(CL, "release_arena", lambda: (calls.append(1), 7)[1])
+
+    class FakeM9:
+        @staticmethod
+        def row_texts(rows): return [f"d{int(r)}" for r in rows]
+
+    class FakeTok:
+        def __call__(self, texts, truncation=None, max_length=None, add_special_tokens=None):
+            return {"input_ids": [[7, 8, 9] for _ in texts]}
+        name_or_path = "fake"; vocab_size = 9; model_max_length = 512; truncation_side = "right"
+        def __len__(self): return 9
+
+    monkeypatch.setitem(sys.modules, "data", FakeM9)
+    monkeypatch.setattr(CL, "TOKCACHE", tmp_path)
+    monkeypatch.setattr(CL, "tokenizer_ident", lambda t: {"class": "Fake"})
+
+    CL._stream_doc_ids(np.arange(60), FakeTok(), "doc: ", 512, chunk=25, verbose=False)
+    assert calls, "the cached doc build must release the allocator residue"
+    calls.clear()
+    CL._stream_doc_ids(np.arange(60), FakeTok(), "doc: ", 512, chunk=25, verbose=False,
+                       cache=False)
+    assert calls, "the in-memory path concatenates (holding flat twice) and must release too"
