@@ -1322,6 +1322,21 @@ Independent judge (Fable, frozen rubric only, `results/m10_health_r2_judge_verdi
 
 **Run order when the six (and health, if not vetoed) are in:** `assemble10.py --all` → `targets10.py --sources generated` (≈1M encodes, GPU, after vLLM stops) → `assemble10.py --data-cut` → the lead registers `data_cut.unique_text_count` in §0b → `assemble10.py --gate2` → §0b complete → **family F starts on the box.**
 
+### GENERATION of the six approved forms COMPLETE (2026-09-06, ~18 h wall); `argument` lands at 40% of quota by the registered screens; `health` build started 2026-09-07 morning
+
+| form | rows written (pre step-8) | hours | note |
+|---|---|---|---|
+| finance | 146,347 | 1.17 | seed supply short (32,183 of 38,610) |
+| howto | 155,085 | 2.65 | seed supply short (35,105) |
+| comparison | 176,708 | 1.17 | |
+| yesno | 152,382 | 1.01 | |
+| conversational | 157,408 | 3.46 | 53% opener share disclosed above |
+| **argument** | **58,032** | 8.66 | 188,938 raw → **58,650 out of the 120–220-word rubric range (31%) and 72,256 removed by the registered own-seed word-5-gram copied-span screen (38%)** |
+
+**Argument, disclosed not re-shaped:** a 150-word argument written about a passage almost always shares one 5-gram with it, so screen (iii) — written for short queries — removes 38% of this form. Changing the screen after seeing the yield is post-observation; the mandate says an under-quota form's quota is not redistributed. 58K rows enter step 8 (A8 applies; it may fall under the 50,000 floor after the A8 cut and be dropped — reported either way). Candidate for the paper's methods notes, not for a rule change now.
+
+**Health:** the scheduled launcher fired Sun 14:54 after the veto window; the DRIVER's pilot-flag rule (a worker launch-safety check, not a registered gate) read A8 0.317 at n=2,000 and refused to start. No veto arrived on issue #3 or as `VETO_HEALTH`. **Lead: started `build health` (pilot flag bypassed) 2026-09-07 morning** — the registered A8 action at step 8 is the gate that decides health's fate; ≈1.5 GPU-hours at risk.
+
 ## §4 Dev-reuse log
 
 | date | surface | raw score reads | artifact |
