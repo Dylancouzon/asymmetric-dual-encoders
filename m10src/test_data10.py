@@ -33,7 +33,8 @@ def test_streams_wrap_rather_than_run_out():
 
 
 def test_padding_is_to_the_BATCH_maximum_not_the_corpus_maximum():
-    """The whole point of bucketing: 400 examples/s vs 890 on this box."""
+    """The whole point of bucketing: 400 examples/s vs 890 in the microbenchmark (the real
+    pipeline measures ~512 eager; the RATIO is the point, not the absolute)."""
     ids, T = _corpus(n=512, lo=3, hi=200)
     s = D.Stream(ids, T, pad_id=0, batch_size=32, seed=0)
     widths = [s.batch(k)[0].shape[1] for k in range(len(s))]

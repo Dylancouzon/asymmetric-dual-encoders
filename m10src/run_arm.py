@@ -84,11 +84,18 @@ BAND1_ORDER = ["F-bge-small", "F-MiniLM-L6", "ANCHOR", "A1", "A2", "A3",
                "G-384", "G-1536", "G-MLP", "B-100/0", "B-50/50", "D-NORM", "D-COV", "E-bs128"]
 CLOUD_ONLY = dict(AS.CLOUD_ONLY)
 
-# Projected-hours rates for `--plan` ONLY. Measured, bucketed, on the box:
-# `results/m10_rate_bench_real_box.json` (bs32) and `results/m10_rate_bench_box.json` (bs128, a
-# random-token microbenchmark the box could not reproduce in the trainer — LEDGER §E-bs128). A
-# projection, never a measurement: every arm records its OWN ex/s.
-PLAN_RATES = {32: 890.0, 128: 1517.0}
+# Projected-hours rates for `--plan` ONLY. A projection, never a measurement: every arm records
+# its OWN ex/s.
+#
+# **bs32 corrected 2026-09-07 from 890 to 512, measured in THIS runner.** 890 came from
+# `results/m10_rate_bench_real_box.json`, whose fastest row (959 ex/s) is the `fixed_bucket_compile`
+# path — and `--compile` is SMOKE-ONLY here, so a registered arm runs EAGER. On the real corpus,
+# eager, at the registered max_len 512, a 300-step F-bge-small smoke with checkpointing out of the
+# way holds **~512 ex/s** (steady, still creeping up: 507 -> 512). That is 10.9 h per 20M arm, not
+# 6.24, and ~52 box hours for the 14-arm band rather than 30. The benchmark's own header always
+# said it bounds the hardware and not the pipeline; this is the pipeline.
+# bs128 stays as-is and is CLOUD-only: the box cannot reproduce it in the trainer (LEDGER §E-bs128).
+PLAN_RATES = {32: 512.0, 128: 1517.0}
 
 CYCLES = 3
 PEAK, FINAL = 1e-4, 1e-5

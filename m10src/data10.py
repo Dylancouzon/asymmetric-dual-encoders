@@ -5,7 +5,8 @@ and is not edited, but its pools are exactly what M10 needs and its stella targe
 so A1's corpus costs zero teacher compute. What is new here is the M10 batching:
 
 - **Length buckets, not a global shuffle.** The measured rate difference is large: M9's two-chunk
-  collate ran the M10 shape at 400 examples/s, bucketed single chunks at 890
+  collate ran the M10 shape at 400 examples/s, bucketed single chunks at 890 in a microbenchmark
+(the real pipeline measures ~512 eager -- see run_arm.PLAN_RATES)
   (`results/m10_rate_bench_real_box.json`). Padding to the batch maximum is the whole difference.
 - **Query and document streams are separate**, because family B's 4-step window asks for a
   specific ratio of query to document steps and `trainer10` decides which stream a step draws

@@ -480,7 +480,9 @@ def test_a_20M_family_F_arm_reads_at_5M_10M_and_20M_in_steps():
     extra = [s for _e, s in [(r["examples"], r["step"]) for r in p["read_points"]]
              if s not in set(p["cycle_end_steps"]) and s not in mids]
     assert extra == [156_249]
-    assert p["projected_hours"] == round(20_000_000 / 890.0 / 3600, 2)
+    # against the CONSTANT, not a copy of it: this line hardcoded 890.0 and broke the moment
+    # the rate was re-measured at 512 in the runner itself (2026-09-07).
+    assert p["projected_hours"] == round(20_000_000 / R.PLAN_RATES[32] / 3600, 2)
     assert p["dose_rounding"]["examples_dropped"] == 0
 
 
