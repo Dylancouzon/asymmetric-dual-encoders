@@ -94,13 +94,14 @@ draw by store, load each once) and is not urgent — the whole doc build is 944 
 3. `build_doc_stream(allow_unscreened=True)` (smoke) still uses `D.m9_doc_pool` + `D.pretokenize`
    — the two costs production removed — with **no bound on `n`**. Production never sets the flag,
    so the smoke shares no data-prep code with production. Cap `n`; route through `_stream_doc_ids`.
-4. The memmap guards test the READ artifact, not the WRITE path: accumulating `parts` in RAM,
-   concatenating and `np.save`ing would pass both and reinstate the crash. **Still open** — the
-   property to assert is that the writer never holds more than one chunk (e.g. `flat.bin` grows
-   monotonically per chunk). *(Two sub-items CLOSED: `DOC_TEXT_CHUNK` is now bounded at 200,000
-   with a runtime `SystemExit` and a bounds test — it was settable to 5,000,000 with everything
-   green; and `assemble_arm`'s inter-stream trim now has an ORDER test, mutation-verified against
-   both deleting it and moving it after the doc build.)*
+4. ~~The memmap guards test the READ artifact, not the WRITE path.~~ **CLOSED.** The writer is
+   now pinned by observing each `write` to `flat.bin`: five chunks must produce five equal writes,
+   and the accumulate-`np.concatenate`-write-once refactor the reviewers described produces a
+   single 1,200-byte write and fails. (`st_size` cannot see this — the handle is buffered and the
+   first version of the test asserted five zeros.) Also closed: `DOC_TEXT_CHUNK` is bounded at
+   200,000 with a runtime `SystemExit` (it was settable to 5,000,000 with everything green), and
+   `assemble_arm`'s inter-stream trim has an ORDER test, mutation-verified against both deleting
+   it and moving it after the doc build.
 
 **Two lessons worth more than the fix.** (i) This would have been **INVISIBLE on the cloud A100** —
 more RAM, it just works, and we would have shipped a loader allocating 19 GiB per arm for nothing.

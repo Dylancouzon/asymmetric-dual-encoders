@@ -1355,3 +1355,51 @@ def test_assemble_arm_trims_BETWEEN_the_two_stream_builds(monkeypatch):
     CL.assemble_arm("A1", _Tok(), "bge-small", registry={"anchor_aliases": {}}, verbose=False)
     assert order == ["query", "trim", "doc"], (
         f"the trim must sit BETWEEN the two builds, got {order}")
+
+
+def test_the_doc_id_WRITER_never_accumulates_the_whole_flat_array(monkeypatch, tmp_path):
+    """The memmap guards assert the READ artifact. They do NOT constrain the writer: a
+    "simplification" that appended each chunk's `parts` to a list, `np.concatenate`d them and
+    `np.save`d the result would still return a memmap on read, pass every other guard, and
+    reinstate the original crash -- `np.concatenate` holds the flat array TWICE (+3,813 MB at 1M,
+    this module's own docstring table). Codex + Opus 2026-09-07 both flagged it.
+
+    The property: `flat.bin` is written ONE CHUNK AT A TIME. Observed by wrapping the file handle
+    and recording each `write` size -- NOT by sampling `st_size`, which stays 0 until close
+    because the handle is buffered (the first version of this test asserted five zeros)."""
+    writes = []
+
+    class FakeM9:
+        @staticmethod
+        def row_texts(rows): return [f"d{int(r)}" for r in rows]
+
+    class FakeTok:
+        def __call__(self, texts, truncation=None, max_length=None, add_special_tokens=None):
+            return {"input_ids": [[1, 2, 3] for _ in texts]}
+        name_or_path = "fake"; vocab_size = 9; model_max_length = 512; truncation_side = "right"
+        def __len__(self): return 9
+
+    class Spy:
+        def __init__(self, fh): self._fh = fh
+        def write(self, b): writes.append(len(b)); return self._fh.write(b)
+        def __enter__(self): return self
+        def __exit__(self, *a): return self._fh.__exit__(*a)
+        def __getattr__(self, k): return getattr(self._fh, k)
+
+    real_open = Path.open
+
+    def spy_open(self, *a, **k):
+        fh = real_open(self, *a, **k)
+        return Spy(fh) if self.name == "flat.bin" else fh
+
+    monkeypatch.setitem(sys.modules, "data", FakeM9)
+    monkeypatch.setattr(CL, "TOKCACHE", tmp_path)
+    monkeypatch.setattr(CL, "tokenizer_ident", lambda t: {"class": "Fake"})
+    monkeypatch.setattr(Path, "open", spy_open)
+
+    ids, n = CL._stream_doc_ids(np.arange(100), FakeTok(), "doc: ", 512, chunk=20, verbose=False)
+    assert n == 100 and len(ids) == 100
+    # 5 chunks of 20 docs x 3 ids x 4 bytes: five equal writes, never one big one
+    assert writes == [240] * 5, (
+        f"flat.bin must be written one chunk at a time, got {writes} -- a single large write means "
+        f"the whole flat array was accumulated in RAM first, which is the crash this path removed")
