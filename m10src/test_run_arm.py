@@ -143,12 +143,25 @@ def test_it_refuses_a_cut_arm(monkeypatch, sandbox):
         R.run("A1")
 
 
-def test_it_refuses_a_cut_corpus_arm_while_the_data_cut_is_unregistered(sandbox):
+def test_it_refuses_a_cut_corpus_arm_while_the_data_cut_is_unregistered(sandbox, monkeypatch):
     """A2/A3/ANCHOR and every arm inheriting the anchor's corpus. `assemble_arm` is the enforcer;
-    this only fails before a 5M-row corpus is read."""
-    assert R.CL.data_cut_count(R.SL.cfg()) is None, "§0b has been filled: update this test"
+    this only fails before a 5M-row corpus is read. §0b was REGISTERED 2026-09-07
+    (2,651,572), so the unregistered state is simulated by removing the count from the registry."""
+    reg = json.loads(json.dumps(R.SL.cfg()))
+    assert reg["data_cut"].pop("unique_text_count") == 2651572, "the registered §0b count moved"
+    monkeypatch.setattr(R.SL, "cfg", lambda: reg)
+    monkeypatch.setattr(R.CL, "data_cut_count", lambda registry=None: None)
     with pytest.raises(SystemExit, match="unique_text_count"):
         R.run("A2")
+
+
+def test_the_registered_data_cut_is_the_A3_minimum():
+    """§0b, registered 2026-09-07 before any arm: A2 4,439,407 · A3 2,651,572 · A4 3,486,034."""
+    dc = R.SL.cfg()["data_cut"]
+    assert dc["unique_text_count"] == 2651572
+    c = dc["registered"]["counts"]
+    assert min(c.values()) == c["A3"] == dc["unique_text_count"]
+    assert dc["registered"]["before_any_arm"] is True
 
 
 def test_it_refuses_to_re_run_a_complete_record(monkeypatch, sandbox):
