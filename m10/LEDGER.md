@@ -4,6 +4,49 @@ Skeleton committed 2026-09-01 (Codex pass 5). Every section is filled by the GPU
 step it governs, and never edited after that step's output exists. Numbers live in the JSON the
 row points at; this file records the decision, the number a rule reads, and the pointer.
 
+## The two 2026-09-07 "box crashes" were OUR memory bug — document targets were materialized
+
+**Not a flaky box.** WSL went down twice, ~2 h apart, both times before family F reached a
+training step. `dmesg` does not survive a WSL restart and **Windows logged nothing at either
+time** — no error, no critical event, no sleep — so the cause was found by instrumenting a rerun
+(`work/memtrace.sh`, traces in `work/memtrace_before_fix.csv` and `work/memtrace.csv`).
+
+| | before | after |
+|---|---|---|
+| arm RSS peak | **24,383 MB** | **~2,100 MB** |
+| guest used peak | 25,256 MB (`.wslconfig` cap **26,624**) | ~2,800 MB |
+| host free MINIMUM | **239 MB** (from 23,268 idle) | **> 21,400 MB** |
+
+**Mechanism.** The host has **31.8 GB** and `.wslconfig` grants WSL **26 GB**, leaving Windows
+~5.8 GB. `_screened_doc_pool` did
+`V = np.asarray(vecs[surv], dtype=np.float32)` — **5,000,000 × 1024 fp32 = 19.1 GiB** — then
+divided by the norm, briefly doubling it; with the 5M document strings and their id arrays the arm
+reached 23.8 GiB, Windows was starved to 239 MB, and the VM was terminated. Nothing was logged
+anywhere because nothing faulted.
+
+**The query side already had the answer.** `TargetView` gathers fp16 memmaps per batch and its own
+docstring says *"never materialized: 5.3M x 1024 fp32 is 21 GB"*. The document side never got it
+and still ran through the old `data10` path. **`DocTargetView`** now holds the store plus a row
+index and gathers per batch: resident cost is reclaimable memmap pages plus one batch
+(32 × 1024 fp32 = **128 KB**).
+
+**`cov_matrix` had it worse and D-COV would have hit it:** `np.asarray(doc_vecs, dtype=np.float64)`
+is **38 GiB** at 5M rows. It now accumulates `sum(x)` and `xᵀx` in one chunked pass and forms the
+centred Gram as `xᵀx − n·mean·meanᵀ`, which is **exact** — equal to the dense computation to 1e-17
+and independent of chunk size.
+
+**One deliberate behaviour change, pre-observation:** the old `maximum(norm, 1e-12)` floor silently
+served a ~zero target as a huge unit vector. `TargetView` already refused that; `DocTargetView`
+validates the selected rows once at construction, in chunks, so an arm that would have died at
+step 400,000 refuses before it starts.
+
+**Two lessons worth more than the fix.** (i) **This would have been INVISIBLE on the cloud A100
+host** — more RAM, it just works, and we would have shipped a loader that allocates 19 GiB per arm
+for nothing. The constrained box found a real defect. (ii) **The 300-step smoke passed** because
+`--smoke-steps` uses `StubEval` and a smoke-sized doc count; the failure lived in the full-dose
+`arm_doc_count` of 5,000,000. A smoke that shrinks the thing that breaks does not smoke it.
+
+
 ## §0a Screen lock — design, LOCKED 2026-09-05, before any arm and before any build seed draw
 
 **The lock is `m10/screen_registry.json`, not this section.** Prose is not authoritative; the
