@@ -102,15 +102,48 @@ def test_the_mix_window_is_exact_not_expected():
 
 
 def test_the_schedule_restarts_at_every_cycle_and_ends_at_final():
+    """Cycle 1 opens with the registered warmup, so it does NOT start at peak; cycles 2 and 3 do,
+    and every cycle end is annealed to `final`."""
     total, cycles, peak, final = 300, 3, 1e-4, 1e-5
     lrs = [N.lr_at(s, total, cycles, peak, final) for s in range(total)]
-    assert abs(lrs[0] - peak) < 1e-12
     ends = N.cycle_ends(total, cycles)
     assert ends == [99, 199, 299], ends
+    w = min(N.WARMUP_STEPS, 98)                     # clamped: a 100-step cycle must still anneal
+    assert abs(lrs[0] - peak / w) < 1e-12, "cycle 1 warms UP from peak/warmup"
+    assert abs(lrs[w - 1] - peak) < 1e-12, "the last warmup step is AT peak"
     for e in ends:
         assert abs(lrs[e] - final) < 1e-9, (e, lrs[e])
         if e + 1 < total:
             assert abs(lrs[e + 1] - peak) < 1e-12, "a cycle must RESTART at peak"
+
+
+def test_cycle_one_has_the_registered_2000_step_warmup():
+    """§Recipe (instructions-m10.md:580): '2,000 warmup steps in cycle 1'. The screen dose is
+    5M/32 = 156,250 steps, so the warmup is not clamped and the exact shape is checkable."""
+    T, peak, final = 156_250, 1e-4, 1e-5
+    assert N.WARMUP_STEPS == 2000
+    assert abs(N.lr_at(0, T, 3, peak, final) - peak / 2000) < 1e-15
+    assert abs(N.lr_at(1_999, T, 3, peak, final) - peak) < 1e-15
+    assert abs(N.lr_at(2_000, T, 3, peak, final) - peak) < 1e-12, "annealing starts AT peak"
+    assert N.lr_at(2_001, T, 3, peak, final) < peak, "and decays from there"
+    # warmup is cycle 1 only, and every cycle end still anneals to final
+    for e in N.cycle_ends(T, 3):
+        assert abs(N.lr_at(e, T, 3, peak, final) - final) < 1e-9, e
+    assert abs(N.lr_at(T - 1, T, 3, peak, final) - final) < 1e-9, "the final step anneals"
+    for e in N.cycle_ends(T, 3)[:-1]:
+        assert abs(N.lr_at(e + 1, T, 3, peak, final) - peak) < 1e-15, "no warmup in cycle 2/3"
+    # monotone up through the warmup, monotone down after it
+    up = [N.lr_at(s, T, 3, peak, final) for s in range(0, 2_000)]
+    assert all(a < b for a, b in zip(up, up[1:]))
+
+
+def test_a_schedule_shorter_than_the_warmup_still_anneals():
+    """The 60-step CPU smoke: cycle 1 is 20 steps, so the 2,000-step warmup is clamped to 18 and
+    the cycle end is still `final` — the plateau rule reads annealed checkpoints only."""
+    lrs = [N.lr_at(s, 60, 3, 1e-4, 1e-5) for s in range(60)]
+    assert abs(lrs[18] - 1e-4) < 1e-12 and abs(lrs[19] - 1e-5) < 1e-12
+    for e in N.cycle_ends(60, 3):
+        assert abs(lrs[e] - 1e-5) < 1e-12, e
 
 
 def test_the_objectives_are_distinct_and_leaf_is_the_norm_not_the_square():
@@ -229,10 +262,11 @@ def test_every_cycle_end_anneals_and_every_cycle_start_is_at_peak():
         assert abs(N.lr_at(e + 1, T, 3, peak, final) - peak) < 1e-9, f"cycle start after {e}"
 
 
-def test_the_schedule_is_monotone_within_every_cycle():
+def test_the_schedule_is_monotone_within_every_cycle_after_the_warmup():
     T = 156_250
     ends = N.cycle_ends(T, 3)
-    starts = [0] + [e + 1 for e in ends[:-1]]
+    # cycle 1's decay starts after the warmup; cycles 2 and 3 decay from their first step
+    starts = [N.WARMUP_STEPS] + [e + 1 for e in ends[:-1]]
     for s, e in zip(starts, ends):
         lrs = [N.lr_at(k, T, 3, 1e-4, 1e-5) for k in range(s, min(s + 50, e + 1))]
         assert all(a >= b for a, b in zip(lrs, lrs[1:])), f"cycle {s}-{e} is not decreasing"
@@ -245,4 +279,4 @@ def test_a_dose_that_divides_evenly_is_unchanged():
     ends = N.cycle_ends(T, 3)
     assert ends == [49_999, 99_999, 149_999]
     assert abs(N.lr_at(T - 1, T, 3, 1e-4, 1e-5) - 1e-5) < 1e-9
-    assert abs(N.lr_at(0, T, 3, 1e-4, 1e-5) - 1e-4) < 1e-9
+    assert abs(N.lr_at(N.WARMUP_STEPS, T, 3, 1e-4, 1e-5) - 1e-4) < 1e-9

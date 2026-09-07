@@ -302,29 +302,41 @@ def window_shares(pattern, steps):
 
 # ---- the cyclic schedule (§Recipe) -----------------------------------------------------------
 
-def lr_at(step, total_steps, cycles=3, peak=1e-4, final=1e-5):
+WARMUP_STEPS = 2000        # §Recipe (instructions-m10.md:580): "2,000 warmup steps in cycle 1"
+
+
+def lr_at(step, total_steps, cycles=3, peak=1e-4, final=1e-5, warmup=WARMUP_STEPS):
     """LEAF's small-batch cyclic schedule: `cycles` cycles, each a linear decay from `peak` to
     `final`, restarting at `peak`. The last step of every cycle is a cycle END, which is where COV
     is read and where the sign-stability clause looks.
 
-    **The LAST cycle absorbs the remainder.** `total_steps // cycles` does not divide evenly --
-    156,250/3 leaves one step over -- and the old `within = step % per` therefore wrapped on the
-    final step, sending the LR back to `peak` immediately after it had annealed to `final`:
+    **Cycle 1 opens with `warmup` linear warmup steps** — §Recipe: "3 cycles of equal example
+    count, each linear 1e-4 -> 1e-5; 2,000 warmup steps in cycle 1". So cycle 1 ramps
+    `peak * (i+1) / warmup` for its first `warmup` steps and then anneals peak -> final over the
+    REST of the cycle; cycles 2 and 3 restart at `peak` and are unchanged. Registered but
+    unimplemented until 2026-09-07 (Codex runner review, finding 3) — the M10.0-e calibration
+    therefore ran without it, which is disclosed rather than back-fitted.
 
-        step 156,246  1.0003e-05      step 156,248  1.0000e-05
-        step 156,247  1.0002e-05      step 156,249  1.0000e-04   <-- wrapped
+    A schedule shorter than the warmup still has to anneal (a 60-step smoke), so the warmup is
+    clamped to `cycle_1_length - 2`: the cycle end must be `final` in every case, which is what
+    `cycle_ends` and the plateau rule read.
 
-    §Recipe registers "3 cycles of equal example count, **each linear 1e-4 -> 1e-5**", so that
-    contradicted the registration. Cycle-end COV reads were taken at 156,248 and were unaffected,
-    but the final checkpoint carried one full-peak-LR AdamW update on an annealed model -- which is
-    what the BUILD would have exported. Fixed after M10.0-e completed and before any registered
-    arm; changing it mid-calibration would have left P1/P2 incomparable to P0.
+    **The LAST cycle absorbs the remainder.** `total_steps // cycles` does not divide evenly
+    (156,250/3 leaves one step over), and the old `within = step % per` wrapped the final step
+    back to `peak` right after it had annealed — one full-peak update on the model the BUILD would
+    have exported. Fixed after M10.0-e and before any registered arm.
     """
     per = max(total_steps // cycles, 1)
     c = min(step // per, cycles - 1)                    # the last cycle absorbs the remainder
     start = c * per
     length = (total_steps - start) if c == cycles - 1 else per
     within = step - start
+    if c == 0:
+        w = min(int(warmup), max(length - 2, 0))
+        if within < w:
+            return peak * (within + 1) / w
+        within -= w
+        length -= w
     return peak + (final - peak) * (within / max(length - 1, 1))
 
 

@@ -653,6 +653,115 @@
    "above_25pct_cut": false,
    "rising_steeply": false,
    "start_generation": true
+  },
+  "health": {
+   "form": "health",
+   "seeds_in_store": 33000,
+   "gate_seeds_excluded": 350,
+   "forms12_holdout": 500,
+   "build_seeds": 32150,
+   "pilot_seeds": 500,
+   "pilot_draw_seed": 777,
+   "prompt_sha256": "ece10bf623a4d58cd3b1259e3d9a7f0f8f5a6925006293a549746a2e417f40f0",
+   "prompt_hash8": "8c30d65e710c9a06",
+   "generation": {
+    "form": "health",
+    "model": "Qwen/Qwen3-8B-AWQ",
+    "revision": "4da05a8edb55c6046cce958586c33b61da07bb79",
+    "n_seeds": 500,
+    "n_per_seed": 5,
+    "max_tokens": 300,
+    "contract_ok": 500,
+    "contract_rate": 1.0,
+    "contract_rate_all_seeds": 1.0,
+    "reached": 500,
+    "retried": 0,
+    "seconds": 62.8,
+    "out_tok": 36222,
+    "out_tok_per_s": 576.7,
+    "n_queries": 2482,
+    "exact_dupes": 18,
+    "transport_failures": 0,
+    "truncated": 0,
+    "finish_reasons": {
+     "stop": 500
+    },
+    "first_failures": []
+   },
+   "rubric_range_filter": {
+    "seen": 2482,
+    "kept": 2274,
+    "short": 208,
+    "long": 0,
+    "range": [
+     8,
+     30
+    ],
+    "drop_rate": 0.0838
+   },
+   "n_after_filter": 2274,
+   "own_seed_copied_span_hits": 25,
+   "n_measured": 2000,
+   "a8_amended_curve": {
+    "200": {
+     "near_dup_rate": 0.215,
+     "near_dup_rate_raw": 0.215,
+     "near_duplicates": 43,
+     "post_exact_dedup": 200,
+     "caught_only_by_short_rule": 43
+    },
+    "500": {
+     "near_dup_rate": 0.27,
+     "near_dup_rate_raw": 0.27,
+     "near_duplicates": 135,
+     "post_exact_dedup": 500,
+     "caught_only_by_short_rule": 135
+    },
+    "1000": {
+     "near_dup_rate": 0.302,
+     "near_dup_rate_raw": 0.302,
+     "near_duplicates": 302,
+     "post_exact_dedup": 1000,
+     "caught_only_by_short_rule": 302
+    },
+    "2000": {
+     "near_dup_rate": 0.317,
+     "near_dup_rate_raw": 0.317,
+     "near_duplicates": 634,
+     "post_exact_dedup": 2000,
+     "caught_only_by_short_rule": 634
+    }
+   },
+   "a8_rate_at_n": 0.317,
+   "rise_500_to_2000": 0.046999999999999986,
+   "top10_opening_4gram_share": 0.342,
+   "distinct_2": 0.4046,
+   "unregistered_frac_diagnostics": {
+    "200": {
+     "frac_40": 0.225,
+     "frac_50": 0.195,
+     "frac_60": 0.075
+    },
+    "500": {
+     "frac_40": 0.286,
+     "frac_50": 0.24,
+     "frac_60": 0.118
+    },
+    "1000": {
+     "frac_40": 0.314,
+     "frac_50": 0.256,
+     "frac_60": 0.14
+    },
+    "2000": {
+     "frac_40": 0.3415,
+     "frac_50": 0.272,
+     "frac_60": 0.151
+    }
+   },
+   "seconds": 63.4,
+   "above_25pct_cut": true,
+   "rising_steeply": true,
+   "start_generation": false
   }
  }
 }

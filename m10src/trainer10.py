@@ -33,6 +33,26 @@ def eager(model):
     return getattr(model, "_orig_mod", model)
 
 
+def param_groups(model, wd=0.01):
+    """§Recipe: "AdamW beta=(0.9, 0.999), eps 1e-8, wd 0.01 on dim>1". Biases and LayerNorm gains
+    are 1-D and take NO decay; torch's `AdamW(model.parameters())` decays them too (Codex runner
+    review 2026-09-07, finding 2)."""
+    ps = [p for p in model.parameters() if p.requires_grad]
+    return [{"params": [p for p in ps if p.dim() > 1], "weight_decay": float(wd)},
+            {"params": [p for p in ps if p.dim() <= 1], "weight_decay": 0.0}]
+
+
+def autocast_for(device, dtype=torch.bfloat16):
+    """§Recipe: "fp32 loss, bf16 autocast" — the form `rate_bench_real` measured the 910 ex/s on.
+
+    Enabled on CUDA only: bf16 autocast on CPU is a different (and on this box slower) kernel set,
+    and the screens' CPU smokes are a path check, not a rate. The loss is computed OUTSIDE this
+    context on `.float()` predictions, so only the forward is reduced precision.
+    """
+    cuda = torch.device(device).type == "cuda"
+    return torch.autocast("cuda", dtype=dtype, enabled=cuda), cuda
+
+
 def save(path, model, opt, step, extra=None):
     """Atomic: a temp file, fsynced, then `os.replace`.
 
@@ -68,7 +88,8 @@ def load(path, model, opt):
 def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1e-4, final=1e-5,
               loss_name="squared_l2", sigma=None, eval_fn=None, evals_per_cycle=2,
               ckpt_path=None, ckpt_every=0, resume_from=None, seed=0, log_every=0,
-              device="cpu", batch_size=32, read_steps=(), cycle_ckpt_fmt=None):
+              device="cpu", batch_size=32, read_steps=(), cycle_ckpt_fmt=None,
+              eval_state=None, fingerprint=None, wd=0.01):
     """Run one arm. -> a record: losses, evaluations, rates, and why it stopped.
 
     `eval_fn(model, step, kind)` returns the arm's COV macro at a scheduled evaluation; `kind` is
@@ -84,9 +105,19 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
     RETAINED — the rolling `ckpt_path` is a resume point that gets overwritten, while the final
     cycle end is the arm's final checkpoint and its sha256 goes in the arm's record. It is written
     before the kill/plateau test, so an arm that stops AT a cycle end still has that checkpoint.
+
+    `eval_state` is the CALLER'S evaluator (`run_arm.CovEval`), whose `.state()`/`.restore()` go
+    into the checkpoint beside the loop's own state: its per-family macros and per-query score
+    paths are part of the run and a resume that loses them loses the contrast step's inputs
+    (Codex runner review 2026-09-07, finding 7).
+
+    `fingerprint` binds a checkpoint to the recipe that wrote it. A resume whose fingerprint
+    differs is REFUSED rather than continuing one arm's schedule into another arm's weights
+    (finding 8). Checkpoints written without one never satisfy a fingerprinted resume.
     """
     loss_fn = N.LOSSES[loss_name]
-    opt = torch.optim.AdamW(model.parameters(), lr=peak)
+    opt = torch.optim.AdamW(param_groups(model, wd), lr=peak, betas=(0.9, 0.999), eps=1e-8)
+    amp, amp_on = autocast_for(device)
     start = 0
     losses, evals, kinds, cycle_end_evals, read_evals = [], [], [], [], []
     n_examples, stopped = 0, None
@@ -95,6 +126,13 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
         # `cycle_end_evals` empty, so the plateau rule reads one cycle where it needs three and
         # the registered kill/plateau decision cannot fire at all (Codex 2026-09-05 finding 4).
         start, ex = load(resume_from, model, opt)
+        if fingerprint is not None and ex.get("fingerprint") != fingerprint:
+            raise SystemExit(
+                f"REFUSED: {resume_from} was written by a different recipe "
+                f"(fingerprint {ex.get('fingerprint')!r} vs {fingerprint!r}). A resume continues "
+                f"ONE arm; move the checkpoint aside deliberately.")
+        if eval_state is not None and ex.get("eval_state") is not None:
+            eval_state.restore(ex["eval_state"])
         losses = list(ex.get("losses", []))
         evals = list(ex.get("evals", []))
         kinds = list(ex.get("eval_kinds", []))
@@ -104,6 +142,16 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
         stopped = ex.get("stopped")
     else:
         torch.manual_seed(seed)
+
+    model.train()               # the warm start's `pooled_features` left it in eval() (finding 1)
+
+    def extra():
+        e = {"losses": losses, "evals": evals, "eval_kinds": kinds,
+             "cycle_end_evals": cycle_end_evals, "read_evals": read_evals,
+             "examples": n_examples, "stopped": stopped, "fingerprint": fingerprint}
+        if eval_state is not None:
+            e["eval_state"] = eval_state.state()
+        return e
 
     ends = set(N.cycle_ends(total_steps, cycles))
     reads = {int(s) for s in read_steps} - ends
@@ -117,7 +165,9 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
         lr = N.lr_at(step, total_steps, cycles, peak, final)
         for g in opt.param_groups:
             g["lr"] = lr
-        pred = model(ids.to(device), mask.to(device))
+        with amp:                                       # bf16 forward on CUDA, no-op on CPU
+            pred = model(ids.to(device), mask.to(device))
+        pred = pred.float()                             # the LOSS is fp32 (§Recipe)
         loss = loss_fn(pred, tgt.to(device)) if sigma is None \
             else loss_fn(pred, tgt.to(device), sigma)
         if not torch.isfinite(loss):
@@ -139,6 +189,7 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
         if eval_fn is not None and (step in ends or step in mids or step in reads):
             k = "end" if step in ends else ("mid" if step in mids else "read")
             m = eval_fn(model, step, k)
+            model.train()               # every evaluator encodes in eval(); restore train mode
             if k == "read":
                 # a READING point, not a scheduled evaluation: recorded, and deliberately not
                 # part of the kill/plateau state (see the docstring).
@@ -149,10 +200,7 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
                     cycle_end_evals.append(m)
                     if cycle_ckpt_fmt:
                         save(str(cycle_ckpt_fmt).format(cycle=len(cycle_end_evals)), model, opt,
-                             step + 1,
-                             extra={"losses": losses, "evals": evals, "eval_kinds": kinds,
-                                    "cycle_end_evals": cycle_end_evals, "read_evals": read_evals,
-                                    "examples": n_examples, "stopped": stopped})
+                             step + 1, extra=extra())
                 fired, why = N.kill_fires(evals, lambda i: kinds[i])
                 if fired:
                     stopped = f"kill: {why}"
@@ -162,10 +210,7 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
                     stopped = f"plateau at cycle {at}"
                     break
         if ckpt_path and ckpt_every and (step + 1) % ckpt_every == 0:
-            save(ckpt_path, model, opt, step + 1,
-                 extra={"losses": losses, "evals": evals, "eval_kinds": kinds,
-                        "cycle_end_evals": cycle_end_evals, "read_evals": read_evals,
-                        "examples": n_examples, "stopped": stopped})
+            save(ckpt_path, model, opt, step + 1, extra=extra())
         if log_every and (step + 1) % log_every == 0:
             el = time.time() - t0
             print(f"  step {step + 1}/{total_steps} loss {np.mean(losses[-log_every:]):.4f} "
@@ -177,10 +222,7 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
         # the plateau that ended the run (Codex re-review 2026-09-05). This must fire even when
         # `run_steps == 0` -- a RESUMED arm whose very first step is non-finite stops before
         # taking one, and the checkpoint must still record why (Codex 2026-09-05, third pass).
-        save(ckpt_path, model, opt, start + run_steps,
-             extra={"losses": losses, "evals": evals, "eval_kinds": kinds,
-                    "cycle_end_evals": cycle_end_evals, "read_evals": read_evals,
-                    "examples": n_examples, "stopped": stopped})
+        save(ckpt_path, model, opt, start + run_steps, extra=extra())
     el = time.time() - t0
     # `losses`/`evals` are the WHOLE arm's history (restored on resume); `steps_run` and the rate
     # are this process's, because a rate measured over another machine's steps is not a rate.
@@ -190,4 +232,6 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
             "cycle_end_evals": cycle_end_evals, "read_evals": read_evals, "stopped": stopped,
             "examples": n_examples, "examples_this_run": run_examples, "seconds": round(el, 2),
             "examples_per_s": round(run_examples / max(el, 1e-9), 1),
+            "bf16_autocast": bool(amp_on), "weight_decay_on_dim_gt_1": float(wd),
+            "warmup_steps": int(N.WARMUP_STEPS),
             "mix": N.window_shares(pattern, max(len(losses), 1))}

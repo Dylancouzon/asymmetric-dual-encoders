@@ -233,3 +233,156 @@ if __name__ == "__main__":
     for k, v in sorted(globals().items()):
         if k.startswith("test_"):
             v(); print("PASS", k)
+
+
+# ---- §Recipe: train mode, the parameter groups, bf16 autocast (Codex 2026-09-07, 1/2) --------
+
+class ModeSpy(Toy):
+    """Records `self.training` at every forward — the warm start leaves the model in eval()."""
+
+    def __init__(self):
+        super().__init__()
+        self.modes = []
+        self.norm = torch.nn.LayerNorm(6)
+
+    def forward(self, ids, mask):
+        self.modes.append(self.training)
+        return self.norm(super().forward(ids, mask))
+
+
+def test_the_backbone_trains_in_TRAIN_mode_even_when_the_warm_start_left_it_in_eval():
+    """`nano10.pooled_features` calls `model.eval()`, so every warm-started arm reached the loop
+    with dropout off and (had it been a real BERT) frozen batch statistics."""
+    m = ModeSpy()
+    m.eval()                                        # exactly what the warm start leaves behind
+    r = T.train_arm(m, make_batch_fn(), total_steps=6, seed=0)
+    assert m.modes and all(m.modes), m.modes
+    assert m.training is True and r["steps_run"] == 6
+
+
+def test_an_evaluation_restores_train_mode():
+    m = ModeSpy()
+
+    def ev(model, step, kind):
+        model.eval()                                # what every real evaluator's encode does
+        return 0.4 + 0.01 * step
+    T.train_arm(m, make_batch_fn(), total_steps=30, seed=0, eval_fn=ev)
+    assert all(m.modes), "a step after an evaluation trained in eval mode"
+
+
+def test_weight_decay_is_registered_on_dim_gt_1_only():
+    m = ModeSpy()
+    gs = T.param_groups(m, 0.01)
+    assert [g["weight_decay"] for g in gs] == [0.01, 0.0]
+    assert all(p.dim() > 1 for p in gs[0]["params"]) and gs[0]["params"]
+    assert all(p.dim() <= 1 for p in gs[1]["params"]) and gs[1]["params"]
+    # every parameter is in exactly one group
+    ids = [id(p) for g in gs for p in g["params"]]
+    assert sorted(ids) == sorted(id(p) for p in m.parameters()) and len(set(ids)) == len(ids)
+    # and the loop actually uses them, at the registered betas/eps
+    r = T.train_arm(m, make_batch_fn(), total_steps=2, seed=0)
+    assert r["weight_decay_on_dim_gt_1"] == 0.01
+
+
+def test_bf16_autocast_is_requested_on_cuda_and_skipped_on_cpu():
+    cuda_ctx, on = T.autocast_for("cuda")
+    assert on is True and cuda_ctx.device == "cuda" and cuda_ctx.fast_dtype is torch.bfloat16
+    cpu_ctx, off = T.autocast_for("cpu")
+    assert off is False
+    with cpu_ctx:
+        assert not torch.is_autocast_enabled("cuda")
+    r = T.train_arm(Toy(), make_batch_fn(), total_steps=2, seed=0, device="cpu")
+    assert r["bf16_autocast"] is False
+
+
+def test_the_loss_is_fp32_even_when_the_forward_is_reduced_precision():
+    """The registered form: bf16 forward, fp32 loss. On CPU the cast is the observable half."""
+    seen = []
+
+    class Bf16(Toy):
+        def forward(self, ids, mask):
+            return super().forward(ids, mask).to(torch.bfloat16)
+
+    def loss(pred, tgt):
+        seen.append(pred.dtype)
+        return ((pred - tgt) ** 2).sum(-1).mean()
+
+    N.LOSSES["_test_dtype"] = loss
+    try:
+        T.train_arm(Bf16(), make_batch_fn(), total_steps=2, seed=0, loss_name="_test_dtype")
+    finally:
+        N.LOSSES.pop("_test_dtype")
+    assert seen == [torch.float32, torch.float32], seen
+
+
+# ---- the checkpoint carries the evaluator and its recipe (Codex 2026-09-07, 7/8) -------------
+
+class FamilyEval:
+    """A stand-in for `run_arm.CovEval`: per-family macros the contrast step needs."""
+
+    def __init__(self):
+        self.records = []
+
+    def __call__(self, model, step, kind):
+        n = len(self.records) + 1
+        self.n_end = getattr(self, "n_end", 0) + (kind == "end")
+        label = f"cycle{self.n_end}" if kind == "end" else f"{kind}{step}"
+        self.records.append({"label": label, "step": int(step), "kind": kind,
+                             "macro": 0.40 + 0.01 * n, "by_family": {"legal": 0.3 + 0.01 * n}})
+        return 0.40 + 0.01 * n
+
+    def state(self):
+        return {"records": self.records}
+
+    def restore(self, d):
+        self.records = list(d["records"])
+
+
+def test_a_resume_restores_the_evaluators_own_records():
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        fmt = str(d / "cycle{cycle}.pt")
+        first = FamilyEval()
+        T.train_arm(Toy(), make_batch_fn(), total_steps=30, seed=0, eval_fn=first,
+                    eval_state=first, cycle_ckpt_fmt=fmt, evals_per_cycle=1)
+        assert len(first.records) >= 2
+        # a FRESH evaluator resuming from the cycle-2 checkpoint must recover cycles 1 and 2
+        second = FamilyEval()
+        r = T.train_arm(Toy(), make_batch_fn(), total_steps=30, seed=0, eval_fn=second,
+                        eval_state=second, resume_from=d / "cycle2.pt")
+        ends = [x for x in second.records if x["kind"] == "end"]
+        assert [x["label"] for x in ends[:2]] == ["cycle1", "cycle2"], second.records
+        for rec in ends[:2]:
+            assert rec["by_family"]["legal"] > 0, "the per-family macro must survive a resume"
+        assert r["cycle_end_evals"][:2] == [x["macro"] for x in ends[:2]]
+
+
+def test_a_resume_refuses_a_checkpoint_written_by_another_recipe():
+    with tempfile.TemporaryDirectory() as d:
+        ck = Path(d) / "ckpt.pt"
+        T.train_arm(Toy(), make_batch_fn(), total_steps=10, seed=0, ckpt_path=ck, ckpt_every=10,
+                    fingerprint="A1:abc")
+        # same fingerprint: allowed
+        T.train_arm(Toy(), make_batch_fn(), total_steps=20, seed=0, resume_from=ck,
+                    fingerprint="A1:abc")
+        for other in ("A2:abc", "A1:def"):
+            try:
+                T.train_arm(Toy(), make_batch_fn(), total_steps=20, seed=0, resume_from=ck,
+                            fingerprint=other)
+            except SystemExit as e:
+                assert "different recipe" in str(e)
+            else:
+                raise AssertionError(f"a resume under {other} must be refused")
+
+
+def test_a_fingerprinted_resume_refuses_a_checkpoint_that_carries_none():
+    with tempfile.TemporaryDirectory() as d:
+        ck = Path(d) / "ckpt.pt"
+        T.train_arm(Toy(), make_batch_fn(), total_steps=10, seed=0, ckpt_path=ck, ckpt_every=10)
+        try:
+            T.train_arm(Toy(), make_batch_fn(), total_steps=20, seed=0, resume_from=ck,
+                        fingerprint="A1:abc")
+        except SystemExit as e:
+            assert "different recipe" in str(e)
+        else:
+            raise AssertionError("an unfingerprinted checkpoint must not satisfy a fingerprint")
