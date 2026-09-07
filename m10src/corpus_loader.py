@@ -677,30 +677,21 @@ class DocTargetView:
     Gathered per batch instead: resident cost is the pool memmap's reclaimable pages plus one
     batch (32 x 1024 fp32 = 128 KB).
 
-    **The zero-norm floor became a refusal, deliberately.** The old code applied
-    `maximum(norm, 1e-12)`, which silently serves a ~zero target as a huge unit vector; `TargetView`
-    already refuses that ("it must never reach a trainer"). To keep the guarantee up-front rather
-    than mid-training, the norms are validated ONCE at construction in chunks -- bounded memory,
-    and an arm that would have died at step 400,000 now refuses before it starts.
+    **The zero-norm floor became a refusal, validated PER BATCH.** The old code applied
+    `maximum(norm, 1e-12)`, which silently serves a ~zero target as a huge unit vector;
+    `TargetView` already refuses that ("it must never reach a trainer") and does so on each
+    gathered batch. An earlier version of this class validated all rows ONCE at construction to
+    make the guarantee up-front, and that was a **worse bug than the one it was added to**: reading
+    every one of the 5,000,000 target rows pulls the whole store through the page cache, measured
+    at **+12 GB for a 1,000,000-row probe, i.e. ~60 GiB at the registered count**. Per-batch is the
+    proven pattern and costs nothing: a bad target is caught the moment it would reach the trainer,
+    which is the only moment that matters.
     """
 
-    VALIDATE_CHUNK = 100_000
-
-    def __init__(self, store, rows, validate=True):
+    def __init__(self, store, rows):
         self.store = store
         self.rows = np.asarray(rows, dtype=np.int64)
         self.shape = (len(self.rows), int(store.shape[1]))
-        if validate:
-            self._validate()
-
-    def _validate(self):
-        for i in range(0, len(self.rows), self.VALIDATE_CHUNK):
-            block = np.asarray(self.store[self.rows[i:i + self.VALIDATE_CHUNK]], dtype=np.float32)
-            n = np.linalg.norm(block, axis=1)
-            if not np.isfinite(n).all() or float(n.min()) < 1e-6:
-                bad = int(np.argmin(np.where(np.isfinite(n), n, -1.0)))
-                raise SystemExit(f"document target at pool row {int(self.rows[i + bad])} is "
-                                 f"~zero or non-finite; it must never reach a trainer")
 
     def __len__(self):
         return len(self.rows)
@@ -708,7 +699,11 @@ class DocTargetView:
     def __getitem__(self, idx):
         idx = np.atleast_1d(np.asarray(idx, dtype=np.int64))
         out = np.asarray(self.store[self.rows[idx]], dtype=np.float32)
-        return out / np.linalg.norm(out, axis=1, keepdims=True)
+        n = np.linalg.norm(out, axis=1, keepdims=True)
+        if not np.isfinite(n).all() or float(n.min()) < 1e-6:
+            raise SystemExit("a document teacher target is ~zero or non-finite; it must never "
+                             "reach a trainer")
+        return out / n
 
 
 def corpus_forms(segs):
@@ -992,7 +987,13 @@ def doc_marker():
 
 
 def _screened_doc_pool(n, seed, banned, margin=1.05, floor=2_000):
-    """-> (texts, vectors, meta) for `n` documents that survive the M10 re-screen.
+    """-> (pool ROW INDICES, DocTargetView, meta) for `n` documents that survive the re-screen.
+
+    **Returns row indices, not texts.** Holding the texts is 408 chars x 5,000,000 documents = a
+    measured **19 GB** (+3,804 MB on a 1,000,000-row probe), which is what remained of the
+    2026-09-07 WSL kills after the targets were fixed. `build_doc_stream` streams them: a chunk of
+    rows -> texts -> ids -> the texts are dropped. Their id arrays cost only ~0.9 GB at the full
+    count, so the corpus is affordable and only its Python string form was not.
 
     `banned` must be the REAL computed ban set. An EMPTY set is treated exactly like a missing
     mask -- refused, not "nothing to remove" -- because the two are indistinguishable from here: a
@@ -1020,7 +1021,7 @@ def _screened_doc_pool(n, seed, banned, margin=1.05, floor=2_000):
     _index, vecs, _pmeta = poolmod.build()
     meta = {**meta, "n_drawn_before_rescreen": int(k), "n_removed_by_rescreen": int((~keep).sum()),
             "n_drawn": int(len(surv))}
-    return m9data.row_texts(surv), DocTargetView(vecs, surv), meta
+    return surv, DocTargetView(vecs, surv), meta
 
 
 def build_doc_stream(n, tok, *, batch_size=32, seed=0, max_len=512, allow_unscreened=False,
@@ -1043,6 +1044,7 @@ def build_doc_stream(n, tok, *, batch_size=32, seed=0, max_len=512, allow_unscre
         # refuses an empty/absent ban set outright rather than silently falling back to this.
         texts, vecs, meta = D.m9_doc_pool(n, seed=seed)
         meta["rescreen10"] = {"applied": False, "why": "allow_unscreened=True (smoke only)"}
+        rows = None
     else:
         import rescreen10
         rows_banned, rep = rescreen10.doc_banned_rows(compute=False, verbose=verbose)
@@ -1051,12 +1053,57 @@ def build_doc_stream(n, tok, *, batch_size=32, seed=0, max_len=512, allow_unscre
         banned = set(int(x) for x in rows_banned)
         screen_rep = {"applied": True, "n_banned_in_pool": len(banned),
                       "protected10": rescreen10._h(rescreen10.protected_ident())}
-        texts, vecs, meta = _screened_doc_pool(n, seed, banned)
+        rows, vecs, meta = _screened_doc_pool(n, seed, banned)
         meta["rescreen10"] = screen_rep
+        texts = None
     pre = doc_marker()
-    ids = D.pretokenize(tok, texts, max_len=max_len, prefix=pre, verbose=verbose, label="documents")
-    meta = {**meta, "student_prefix": pre, "n": len(texts), "max_len": max_len}
+    if rows is None:
+        ids = D.pretokenize(tok, texts, max_len=max_len, prefix=pre, verbose=verbose,
+                            label="documents")
+        n_docs = len(texts)
+    else:
+        ids, n_docs = _stream_doc_ids(rows, tok, pre, max_len, verbose=verbose)
+    meta = {**meta, "student_prefix": pre, "n": n_docs, "max_len": max_len}
     return D.Stream(ids, vecs, pad_id=tok.pad_token_id, batch_size=batch_size, seed=seed), meta
+
+
+DOC_TEXT_CHUNK = 100_000
+
+
+def _stream_doc_ids(rows, tok, prefix, max_len, chunk=DOC_TEXT_CHUNK, verbose=True):
+    """-> (PackedIds, n). Texts are fetched, tokenized and DROPPED per chunk; ids are PACKED.
+
+    Both halves of this matter and each was measured on a 1,000,000-row probe:
+
+    * the document texts are 408 chars x 5,000,000 = ~19 GB as Python strings (+3,804 MB/M) and
+      exist only to be tokenized, so they are fetched and dropped per chunk;
+    * `data10.pretokenize` returns a LIST of one small int32 array per document, which cost
+      **+4,546 MB/M -> 25.7 GiB** at the registered count. `PackedIds` already names this exact
+      trap -- "M9's pitfall 14: a Python list of ~20 token ids costs ~1 kB once the object headers
+      are counted" -- and the query side has used it since this loader was written. The document
+      side never did. Packed, the same corpus is one flat int32 array of ~2 GB.
+
+    `PackedIds` exposes `__getitem__`/`__len__`/`lengths`, so `data10.collate` and
+    `data10.length_buckets` consume it unchanged.
+    """
+    import data as m9data
+    parts, lens, t0 = [], [], time.time()
+    for i in range(0, len(rows), chunk):
+        block = m9data.row_texts(rows[i:i + chunk])
+        p = pack_tokenize(tok, block, max_len=max_len, prefix=prefix, verbose=False)
+        parts.append(p.flat)
+        lens.append(p.lengths)
+        del block, p
+        done = min(i + chunk, len(rows))
+        if verbose:
+            print(f"    documents {done:,}/{len(rows):,} "
+                  f"({done / max(time.time() - t0, 1e-9):,.0f}/s)", flush=True)
+    L = np.concatenate(lens) if lens else np.zeros(0, dtype=np.int64)
+    offs = np.zeros(L.size + 1, dtype=np.int64)
+    np.cumsum(L, out=offs[1:])
+    flat = np.concatenate(parts) if parts else np.zeros(0, dtype=np.int32)
+    del parts, lens
+    return PackedIds(flat, offs), len(rows)
 
 
 # arms that must see all 12 registered forms: A4 IS the anchor (`ARM_SOURCES`), so both names land

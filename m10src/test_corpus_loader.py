@@ -520,8 +520,12 @@ def test_the_document_pool_drops_the_rescreened_rows_and_still_returns_n(monkeyp
     monkeypatch.setitem(sys.modules, "data", FakeM9)
     monkeypatch.setitem(sys.modules, "pool", FakePool)
     banned = {0, 1, 2, 5}
-    texts, V, meta = CL._screened_doc_pool(8, 0, banned, margin=1.0, floor=8)
-    assert texts == ["doc3", "doc4", "doc6", "doc7", "doc8", "doc9", "doc10", "doc11"]
+    rows, V, meta = CL._screened_doc_pool(8, 0, banned, margin=1.0, floor=8)
+    # ROW INDICES, not texts: holding 5,000,000 document strings was a measured 19 GB, and they
+    # exist only to be tokenized (`_stream_doc_ids` fetches and drops them per chunk).
+    assert list(rows) == [3, 4, 6, 7, 8, 9, 10, 11]
+    assert FakeM9.row_texts(rows) == ["doc3", "doc4", "doc6", "doc7", "doc8", "doc9", "doc10",
+                                      "doc11"]
     assert meta["n_removed_by_rescreen"] == 4 and len(V) == 8
     # V is now a LAZY DocTargetView, not a materialized array: it must be indexed to get vectors,
     # and every gathered batch is unit-norm.
@@ -1072,20 +1076,63 @@ def test_DocTargetView_matches_the_old_eager_normalisation():
     assert np.allclose(lazy, eager, atol=1e-6)
 
 
-def test_DocTargetView_REFUSES_a_zero_target_up_front_instead_of_flooring_it():
-    """The old path applied `maximum(norm, 1e-12)`, which serves a ~zero target as a huge unit
-    vector. `TargetView` already refused that. Validation is chunked and happens at construction,
-    so an arm that would have died at step 400,000 refuses before it starts."""
+def test_DocTargetView_REFUSES_a_zero_target_on_the_BATCH_that_would_carry_it():
+    """The old path floored a ~zero norm with `maximum(norm, 1e-12)`, serving it as a huge unit
+    vector. Validation is PER BATCH, like `TargetView`: an earlier version checked all rows at
+    construction, which read the whole store through the page cache and cost +12 GB on a
+    1,000,000-row probe -- a worse bug than the one it was guarding."""
     store = np.ones((50, 8), dtype=np.float32)
     store[37] = 0.0
-    with pytest.raises(SystemExit, match="row 37"):
-        CL.DocTargetView(store, np.arange(50))
-    # a chunk boundary must not hide it
-    with pytest.raises(SystemExit, match="row 37"):
-        v = CL.DocTargetView.__new__(CL.DocTargetView)
-        v.store, v.rows = store, np.arange(50)
-        v.shape = (50, 8)
-        v.VALIDATE_CHUNK = 7
-        v._validate()
-    # and rows that exclude it are fine
-    CL.DocTargetView(store, np.array([0, 1, 36, 38, 49]))
+    v = CL.DocTargetView(store, np.arange(50))          # construction is free, touches nothing
+    v[np.array([0, 1, 36])]                              # a clean batch is served
+    with pytest.raises(SystemExit, match="never reach a trainer"):
+        v[np.array([36, 37, 38])]                        # the batch carrying it is refused
+    with pytest.raises(SystemExit, match="never reach a trainer"):
+        v[np.arange(50)]
+
+
+def test_DocTargetView_construction_reads_no_target_rows():
+    """Construction must not touch the store: that is the whole point."""
+    class CountingStore:
+        shape = (100, 8)
+        def __init__(self): self.reads = 0
+        def __getitem__(self, i):
+            self.reads += 1
+            return np.ones((len(np.atleast_1d(i)), 8), dtype=np.float32)
+    st = CountingStore()
+    v = CL.DocTargetView(st, np.arange(100))
+    assert st.reads == 0, "construction read the store"
+    v[np.array([0, 1])]
+    assert st.reads == 1
+
+
+def test_stream_doc_ids_never_holds_the_whole_corpus(monkeypatch):
+    """The document texts are ~19 GB as Python strings and exist only to be tokenized. Streaming
+    must fetch, tokenize and DROP them per chunk -- so `row_texts` is called once per chunk with
+    only that chunk's rows, never once with all of them."""
+    calls = []
+
+    class FakeM9:
+        @staticmethod
+        def row_texts(rows):
+            calls.append(len(rows))
+            return [f"d{int(r)}" for r in rows]
+
+    monkeypatch.setitem(sys.modules, "data", FakeM9)
+    class FakeTok:
+        def __call__(self, texts, truncation=None, max_length=None, add_special_tokens=None):
+            return {"input_ids": [[7, 8, 9] for _ in texts]}
+
+    rows = np.arange(250)
+    ids, n = CL._stream_doc_ids(rows, tok=FakeTok(), prefix="doc: ", max_len=512, chunk=100,
+                                verbose=False)
+    assert n == 250 and len(ids) == 250
+    assert calls == [100, 100, 50], f"row_texts must be called per chunk, got {calls}"
+    assert max(calls) == 100, "no call may ever request the whole corpus"
+    # PACKED, not a list of 250 small arrays: that list cost +4,546 MB per million documents,
+    # 25.7 GiB at the registered count (`PackedIds`: "M9's pitfall 14").
+    assert isinstance(ids, CL.PackedIds)
+    assert ids.flat.dtype == np.int32 and len(ids.offs) == 251
+    assert int(ids.offs[-1]) == len(ids.flat)
+    assert np.all(np.diff(ids.offs) >= 0) and hasattr(ids, "lengths")
+    assert list(ids[0]) == [7, 8, 9]
