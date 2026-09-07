@@ -195,6 +195,11 @@ def test_an_incomplete_record_does_not_block_a_run(monkeypatch, sandbox):
     (R.RESULTS / "m10_arm_A1.json").write_text(json.dumps({"arm": "A1", "complete": False}))
     with pytest.raises(SystemExit, match="already exists"):
         R.run("A1", device="cuda", verbose=False)
+    # a valid --resume needs the non-terminal WORK record and the rolling checkpoint (pass 3)
+    d = R.WORK / "A1"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "record.json").write_text(json.dumps({"arm": "A1", "complete": False}))
+    (d / "ckpt.pt").write_bytes(b"ckpt")
     assert R.run("A1", device="cuda", resume=True, verbose=False)["status"] == "complete"
 
 
@@ -206,7 +211,48 @@ def test_a_malformed_record_refuses_a_bare_re_run_but_permits_resume(monkeypatch
     (R.RESULTS / "m10_arm_A1.json").write_text("{not valid json")
     with pytest.raises(SystemExit, match="already exists"):
         R.run("A1", device="cuda", verbose=False)
-    assert R.run("A1", device="cuda", resume=True, verbose=False)["status"] == "complete"
+    # Codex pass 3: an unparseable record makes terminality UNKNOWABLE, so --resume refuses too
+    with pytest.raises(SystemExit, match="unparseable"):
+        R.run("A1", device="cuda", resume=True, verbose=False)
+
+
+def _non_terminal_record(arm="A1"):
+    d = R.WORK / arm
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "record.json").write_text(json.dumps({"arm": arm, "complete": False, "status": "running"}))
+    return d
+
+
+def test_resume_refuses_when_there_is_no_record_to_continue(monkeypatch, sandbox):
+    """Codex pass 3: `--resume` with no record silently became a fresh 20M run."""
+    mock_pipeline(monkeypatch)
+    write_f_verdict()
+    with pytest.raises(SystemExit, match="no record"):
+        R.run("A1", device="cuda", resume=True, verbose=False)
+
+
+def test_resume_refuses_when_the_rolling_checkpoint_is_missing(monkeypatch, sandbox):
+    mock_pipeline(monkeypatch)
+    write_f_verdict()
+    _non_terminal_record()
+    with pytest.raises(SystemExit, match="no rolling checkpoint"):
+        R.run("A1", device="cuda", resume=True, verbose=False)
+
+
+def test_a_valid_resume_hands_the_checkpoint_to_the_trainer_never_None(monkeypatch, sandbox):
+    mock_pipeline(monkeypatch)
+    write_f_verdict()
+    d = _non_terminal_record()
+    (d / "ckpt.pt").write_bytes(b"ckpt")
+    seen = {}
+    real = R.Tr.train_arm
+
+    def spy(*a, **k):
+        seen["resume_from"] = k.get("resume_from")
+        return real(*a, **k)
+    monkeypatch.setattr(R.Tr, "train_arm", spy)
+    R.run("A1", device="cuda", resume=True, verbose=False)
+    assert seen["resume_from"] == str(d / "ckpt.pt")
 
 
 def test_resume_refuses_when_the_existing_record_is_already_terminal(monkeypatch, sandbox):

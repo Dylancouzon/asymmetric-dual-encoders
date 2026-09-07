@@ -822,9 +822,21 @@ def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, r
             refuse(f"{path} already exists. `rules.arm_failure`: an arm is reported, not "
                    f"silently re-run. Pass --resume to continue a non-terminal run, or move "
                    f"the record aside deliberately.")
+        if not st["parseable"]:
+            refuse(f"{path} is unparseable, so whether the arm already finished is UNKNOWABLE; "
+                   f"`--resume` refuses rather than guess. Inspect and move it aside deliberately.")
         if st["terminal"]:
             refuse(f"{path} already carries a TERMINAL record (complete or failed); `--resume` "
                    f"only continues a non-terminal run. Move the record aside deliberately.")
+    if resume and not smoke:
+        # Codex pass 3: `--resume` must CONTINUE a run, never silently become a fresh one. It
+        # needs both a non-terminal work record (proof an arm started) and the rolling checkpoint.
+        if _record_status_at(rec_path) is None:
+            refuse(f"--resume: no record at {rec_path}; there is no run to continue. Start the "
+                   f"arm without --resume.")
+        if not (out_dir / "ckpt.pt").exists():
+            refuse(f"--resume: no rolling checkpoint at {out_dir / 'ckpt.pt'}; a resume never "
+                   f"falls back to a fresh run.")
     p = arm_plan(arm, reg)                      # re-read: a smoke changed the dose
     ctx["plan"] = p
     if p["cut_corpus"] and CL.data_cut_count(reg) is None:
@@ -911,7 +923,7 @@ def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, r
     r = Tr.train_arm(train_model, batch_fn, total_steps=total, pattern=p["pattern"],
                      cycles=CYCLES, peak=PEAK, final=FINAL, loss_name=p["objective"],
                      sigma=sigma, eval_fn=eval_fn, ckpt_path=ck, ckpt_every=every,
-                     resume_from=(str(ck) if resume and ck.exists() else None), seed=seed,
+                     resume_from=(str(ck) if resume else None), seed=seed,
                      log_every=max(total // 50, 1), device=device, batch_size=p["batch"],
                      read_steps=extra_reads, cycle_ckpt_fmt=str(out_dir / "cycle{cycle}.pt"),
                      eval_state=ev, fingerprint=fp)
