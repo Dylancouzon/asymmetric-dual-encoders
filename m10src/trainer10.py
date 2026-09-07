@@ -68,16 +68,27 @@ def load(path, model, opt):
 def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1e-4, final=1e-5,
               loss_name="squared_l2", sigma=None, eval_fn=None, evals_per_cycle=2,
               ckpt_path=None, ckpt_every=0, resume_from=None, seed=0, log_every=0,
-              device="cpu", batch_size=32):
+              device="cpu", batch_size=32, read_steps=(), cycle_ckpt_fmt=None):
     """Run one arm. -> a record: losses, evaluations, rates, and why it stopped.
 
     `eval_fn(model, step, kind)` returns the arm's COV macro at a scheduled evaluation; `kind` is
     'end' at a cycle end and 'mid' otherwise, which is the distinction §Kill compares within.
+
+    `read_steps` are EXTRA reading points (family F is read at 5M/10M/20M inside a 20M schedule,
+    and 5M is neither a cycle end nor a midpoint). They get `kind='read'` and are recorded in
+    `read_evals`, **outside** the kill/plateau state: §Kill compares "midpoint against midpoints,
+    cycle end against cycle ends", so a third kind entering that sequence would change a
+    registered rule rather than implement it.
+
+    `cycle_ckpt_fmt` is a path template (`.../cycle{cycle}.pt`) saved at every cycle end and
+    RETAINED — the rolling `ckpt_path` is a resume point that gets overwritten, while the final
+    cycle end is the arm's final checkpoint and its sha256 goes in the arm's record. It is written
+    before the kill/plateau test, so an arm that stops AT a cycle end still has that checkpoint.
     """
     loss_fn = N.LOSSES[loss_name]
     opt = torch.optim.AdamW(model.parameters(), lr=peak)
     start = 0
-    losses, evals, kinds, cycle_end_evals = [], [], [], []
+    losses, evals, kinds, cycle_end_evals, read_evals = [], [], [], [], []
     n_examples, stopped = 0, None
     if resume_from:
         # The EVALUATION history is part of the run state. Without it a resumed arm restarts
@@ -88,12 +99,14 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
         evals = list(ex.get("evals", []))
         kinds = list(ex.get("eval_kinds", []))
         cycle_end_evals = list(ex.get("cycle_end_evals", []))
+        read_evals = list(ex.get("read_evals", []))
         n_examples = int(ex.get("examples", 0))
         stopped = ex.get("stopped")
     else:
         torch.manual_seed(seed)
 
     ends = set(N.cycle_ends(total_steps, cycles))
+    reads = {int(s) for s in read_steps} - ends
     per = max(total_steps // cycles, 1)
     mids = {c * per + per // 2 for c in range(cycles)}
     t0, run_examples, run_steps = time.time(), 0, 0
@@ -123,25 +136,36 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
         run_examples += len(ids)
         run_steps += 1
 
-        if eval_fn is not None and (step in ends or step in mids):
-            k = "end" if step in ends else "mid"
+        if eval_fn is not None and (step in ends or step in mids or step in reads):
+            k = "end" if step in ends else ("mid" if step in mids else "read")
             m = eval_fn(model, step, k)
-            evals.append(m); kinds.append(k)
-            if k == "end":
-                cycle_end_evals.append(m)
-            fired, why = N.kill_fires(evals, lambda i: kinds[i])
-            if fired:
-                stopped = f"kill: {why}"
-                break
-            pf, at = N.plateau_fires(cycle_end_evals)
-            if pf:
-                stopped = f"plateau at cycle {at}"
-                break
+            if k == "read":
+                # a READING point, not a scheduled evaluation: recorded, and deliberately not
+                # part of the kill/plateau state (see the docstring).
+                read_evals.append({"step": int(step), "macro": m})
+            else:
+                evals.append(m); kinds.append(k)
+                if k == "end":
+                    cycle_end_evals.append(m)
+                    if cycle_ckpt_fmt:
+                        save(str(cycle_ckpt_fmt).format(cycle=len(cycle_end_evals)), model, opt,
+                             step + 1,
+                             extra={"losses": losses, "evals": evals, "eval_kinds": kinds,
+                                    "cycle_end_evals": cycle_end_evals, "read_evals": read_evals,
+                                    "examples": n_examples, "stopped": stopped})
+                fired, why = N.kill_fires(evals, lambda i: kinds[i])
+                if fired:
+                    stopped = f"kill: {why}"
+                    break
+                pf, at = N.plateau_fires(cycle_end_evals)
+                if pf:
+                    stopped = f"plateau at cycle {at}"
+                    break
         if ckpt_path and ckpt_every and (step + 1) % ckpt_every == 0:
             save(ckpt_path, model, opt, step + 1,
                  extra={"losses": losses, "evals": evals, "eval_kinds": kinds,
-                        "cycle_end_evals": cycle_end_evals, "examples": n_examples,
-                        "stopped": stopped})
+                        "cycle_end_evals": cycle_end_evals, "read_evals": read_evals,
+                        "examples": n_examples, "stopped": stopped})
         if log_every and (step + 1) % log_every == 0:
             el = time.time() - t0
             print(f"  step {step + 1}/{total_steps} loss {np.mean(losses[-log_every:]):.4f} "
@@ -155,15 +179,15 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
         # taking one, and the checkpoint must still record why (Codex 2026-09-05, third pass).
         save(ckpt_path, model, opt, start + run_steps,
              extra={"losses": losses, "evals": evals, "eval_kinds": kinds,
-                    "cycle_end_evals": cycle_end_evals, "examples": n_examples,
-                    "stopped": stopped})
+                    "cycle_end_evals": cycle_end_evals, "read_evals": read_evals,
+                    "examples": n_examples, "stopped": stopped})
     el = time.time() - t0
     # `losses`/`evals` are the WHOLE arm's history (restored on resume); `steps_run` and the rate
     # are this process's, because a rate measured over another machine's steps is not a rate.
     return {"steps_run": run_steps,
             "start_step": start, "total_steps": total_steps, "pattern": pattern,
             "loss": loss_name, "losses": losses, "evals": evals, "eval_kinds": kinds,
-            "cycle_end_evals": cycle_end_evals, "stopped": stopped,
+            "cycle_end_evals": cycle_end_evals, "read_evals": read_evals, "stopped": stopped,
             "examples": n_examples, "examples_this_run": run_examples, "seconds": round(el, 2),
             "examples_per_s": round(run_examples / max(el, 1e-9), 1),
             "mix": N.window_shares(pattern, max(len(losses), 1))}

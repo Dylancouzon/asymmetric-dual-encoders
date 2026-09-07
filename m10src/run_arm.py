@@ -1,0 +1,620 @@
+"""The registered screen-arm RUNNER: one arm, end to end, and its record.
+
+    .venv/bin/python m10src/run_arm.py <arm> [--device cuda|cpu] [--resume] [--smoke-steps N]
+    .venv/bin/python m10src/run_arm.py --plan
+
+It COMPOSES; it decides nothing. Every data-affecting and schedule-affecting constant is read
+from `m10/screen_registry.json` (§0a) through the module that owns it — `corpus_loader`
+(`assemble_arm`, the ONLY corpus path), `nano10` (student, head, losses, cycle ends, LR),
+`trainer10` (loop, checkpoint, resume, kill/plateau), `cov_eval10`/`cov_macro` (the COV macro),
+`eval9` (the DEV-6 read) — and `arm_smoke.SHAPES` is the one place an arm's *shape* is encoded, so
+it is imported rather than retyped.
+
+**What it refuses to start on** (`rules.arm_failure`: an arm is never silently re-run):
+`screen_lock.validate` reporting anything; an arm that is not `trained: true`, or is `cut`; a
+cut-corpus arm while `data_cut.unique_text_count` is unregistered (enforced by `assemble_arm`;
+checked here only to fail before the corpus is read); a record that already exists.
+
+**Evaluation, exactly as `evaluation` in the registry says and nothing else:** the COV macro at
+every cycle end (plus the schedule midpoints the trainer already reads for the kill rule), the
+family-F `read_at` curve points, and DEV-6 ONCE at the final checkpoint. No six-set, reserved or
+LoTTE surface is touched, and per-query COV scores are written per checkpoint because the
+CONTRAST step — which is not this file — needs aligned per-query vectors to bootstrap.
+
+**Contrasts are NOT computed here.** `statistics.bootstrap._runner_contract` (the per-contrast
+`quantile`) binds the contrast runner, not this one: no bootstrap is run and no quantile is read.
+
+**Two hooks `trainer10` did not have**, added there additively because the eval and checkpoint
+schedules are computed inside the loop and no parameter reached them:
+  * `read_steps` — family F is read at 5M/10M/20M inside a 20M schedule, and 5M is neither a
+    cycle end nor a midpoint. Read evals are recorded SEPARATELY and are deliberately kept out of
+    the kill/plateau state: §Kill compares "midpoint against midpoints, cycle end against cycle
+    ends", and a third kind entering that sequence would change a registered rule.
+  * `cycle_ckpt_fmt` — a RETAINED checkpoint per cycle end. The rolling checkpoint is a resume
+    point that gets overwritten; the final cycle end is the arm's final checkpoint and its sha256
+    goes in the record.
+
+**`stopped` is not failure** (LEDGER, §M10.0-e trace): `PLATEAU_FROM_CYCLE` is 3 and a screen arm
+runs 3 cycles, so `plateau at cycle 3` means the arm finished its dose and stopped one step short.
+Only an earlier stop is an arm failure.
+"""
+import argparse
+import copy
+import hashlib
+import json
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[1]
+for p in ("m7src", "m9src", "m10src"):
+    sys.path.insert(0, str(REPO / p))
+
+import numpy as np
+import torch
+
+import arm_smoke as AS
+import corpus_loader as CL
+import nano10 as N
+import screen_lock as SL
+import trainer10 as Tr
+
+WORK = REPO / "work" / "m10arms"
+SMOKE_WORK = WORK / "smoke"
+RESULTS = REPO / "results"
+REGISTRY = REPO / "m10" / "screen_registry.json"
+
+# The W8-band-1 order (`m10/STATUS.md` §Screen design, settled; `_w8_band`). `E-bs128` is in the
+# list and marked CLOUD: it does not run on this box at realistic sequence lengths.
+BAND1_ORDER = ["F-bge-small", "F-MiniLM-L6", "ANCHOR", "A1", "A2", "A3",
+               "G-384", "G-1536", "G-MLP", "B-100/0", "B-50/50", "D-NORM", "D-COV", "E-bs128"]
+CLOUD_ONLY = dict(AS.CLOUD_ONLY)
+
+# Projected-hours rates for `--plan` ONLY. Measured, bucketed, on the box:
+# `results/m10_rate_bench_real_box.json` (bs32) and `results/m10_rate_bench_box.json` (bs128, a
+# random-token microbenchmark the box could not reproduce in the trainer — LEDGER §E-bs128). A
+# projection, never a measurement: every arm records its OWN ex/s.
+PLAN_RATES = {32: 890.0, 128: 1517.0}
+
+CYCLES = 3
+PEAK, FINAL = 1e-4, 1e-5
+# The registry names n_fit/seed only under `warm_start.G-MLP`; `warm_start.all_arms` names M9's
+# ridge warm start without a sample size. Read from the registry's G-MLP block, defaulting to
+# `m9/registry.json` `warm_start` (n_fit 60,000, seed 21) — the sample `calib.py` also used.
+WS_DEFAULTS = {"n_fit": 60_000, "seed": 21}
+# A SMOKE's warm start fits 256 texts, as `arm_smoke.N_WS_FIT` does: 60,000 pooled forwards on CPU
+# is not a smoke. The lambda it selects is meaningless at that size (`nano10.select_lambda`) --
+# the PATH is what is being smoked.
+SMOKE_N_FIT = 256
+# registry `student` strings -> `nano10.REPOS`/`arm_smoke.SHAPES` keys
+STUDENT_ALIAS = {"bge-small": "bge-small", "MiniLM-L6-v2": "MiniLM-L6",
+                 "MiniLM-L12-v2": "MiniLM-L12", "MiniLM-L6": "MiniLM-L6",
+                 "MiniLM-L12": "MiniLM-L12"}
+
+
+def refuse(msg):
+    raise SystemExit(f"REFUSED: {msg}")
+
+
+def slug(name):
+    """`B-100/0` is an arm name and not a path. The record keeps the arm name verbatim."""
+    return name.replace("/", "-")
+
+
+def sha256_file(p, chunk=1 << 22):
+    h = hashlib.sha256()
+    with open(p, "rb") as f:
+        for b in iter(lambda: f.read(chunk), b""):
+            h.update(b)
+    return h.hexdigest()
+
+
+def git_head():
+    try:
+        return subprocess.run(["git", "-C", str(REPO), "rev-parse", "HEAD"],
+                              capture_output=True, text=True, check=True).stdout.strip()
+    except Exception as e:                                          # pragma: no cover
+        return f"unavailable: {type(e).__name__}"
+
+
+def cfg():
+    return SL.cfg()
+
+
+# ------------------------------------------------------------------------------ arm resolution --
+
+def shape_for(arm):
+    """The arm's registered SHAPE, from `arm_smoke.SHAPES` — the one hand-copy of the registry
+    that is already validated against it (`arm_smoke.main` refuses a trained arm it does not
+    cover). `COVERS` maps the arms that differ only in data or dose onto the shape they share."""
+    if arm in AS.SHAPES:
+        return dict(AS.SHAPES[arm])
+    for k, covered in AS.COVERS.items():
+        if arm in covered:
+            return dict(AS.SHAPES[k])
+    refuse(f"arm {arm!r} has no shape in arm_smoke.SHAPES/COVERS")
+
+
+def check_shape(arm, entry, spec):
+    """Cross-check the shape against the registry fields that duplicate it, as `arm_smoke` does
+    for the mix pattern: a hand copy that has drifted must fail loudly, not train."""
+    bad = []
+    if entry.get("student") is not None:
+        want = STUDENT_ALIAS.get(entry["student"])
+        if want is None:
+            bad.append(f"registry student {entry['student']!r} is not a known nano10 student")
+        elif want != spec["student"]:
+            bad.append(f"student: registry {entry['student']!r} -> {want!r} vs shape "
+                       f"{spec['student']!r}")
+    if entry.get("objective") is not None and entry["objective"] != spec["loss"]:
+        bad.append(f"objective: registry {entry['objective']!r} vs shape {spec['loss']!r}")
+    if entry.get("feature_layers") is not None and int(entry["feature_layers"]) != spec["n_layers"]:
+        bad.append(f"feature_layers: registry {entry['feature_layers']} vs shape "
+                   f"{spec['n_layers']}")
+    if entry.get("batch") is not None and int(entry["batch"]) != spec["batch"]:
+        bad.append(f"batch: registry {entry['batch']} vs shape {spec['batch']}")
+    if bad:
+        refuse(f"arm {arm!r}: registry and arm_smoke.SHAPES disagree — " + "; ".join(bad))
+
+
+def schedule(dose, batch, entry):
+    """-> (total_steps, cycle_end_steps, [(examples, step)] read points, rounding report).
+
+    The schedule is 3 cycles over THE ARM'S OWN dose (F's 20M arms therefore anneal over 20M and
+    are merely READ at 5M/10M/20M), so `total_steps = dose // batch` and the cycle ends are
+    `nano10.cycle_ends`, which is what `lr_at` anneals to.
+
+    **Registry ambiguity, floored.** `E-bs128`'s registered dose 5,000,000 is not a whole number
+    of batches of 128 (39,062.5), so family E's "equal examples and identical schedule" cannot be
+    exact at both batch sizes. The dose is treated as a CAP: 39,062 steps = 4,999,936 examples, 64
+    fewer than bs32's 5,000,000 (0.0013%), because the other rounding spends unregistered compute.
+    Recorded in the arm's record, never silently.
+    """
+    total = dose // batch
+    rounding = {"dose_registered": int(dose), "examples_run": int(total * batch),
+                "examples_dropped": int(dose - total * batch), "rule": "floor (the dose is a cap)"}
+    ends = N.cycle_ends(total, CYCLES)
+    reads = []
+    for r in entry.get("read_at") or []:
+        r = int(r)
+        if r > dose:
+            refuse(f"read_at {r:,} exceeds the arm's dose {dose:,}")
+        step = r // batch - 1
+        reads.append((r, step))
+        if r % batch:
+            rounding.setdefault("read_at_floored", {})[str(r)] = int((step + 1) * batch)
+    return total, ends, reads, rounding
+
+
+def arm_plan(name, reg, batch_override=None):
+    """Everything `--plan` prints and the runner needs, all of it read from the registry."""
+    entry = dict((reg.get("arms") or {}).get(name) or {})
+    resolved = CL.resolve_arm_name(name, reg) if entry.get("trained") else name
+    spec = shape_for(resolved)
+    batch = int(batch_override or CL.arm_batch(entry, reg))
+    spec["batch"] = batch
+    check_shape(name, entry, spec)
+    pattern, pattern_rep = CL.resolve_arm_pattern(resolved, entry, reg)
+    dose = int(entry["dose_examples"])
+    total, ends, reads, rounding = schedule(dose, batch, entry)
+    rate = PLAN_RATES.get(batch)
+    return {"arm": name, "resolved": resolved, "family": entry.get("family"),
+            "dose_examples": dose, "batch": batch, "pattern": pattern,
+            "pattern_source": pattern_rep, "student": spec["student"],
+            "n_layers": spec["n_layers"], "head": spec["head"], "objective": spec["loss"],
+            "warm_start": spec.get("warm_start", "linear"),
+            "cut_corpus": bool(CL.is_cut_corpus(resolved, reg)),
+            "sources": list(CL.arm_sources(resolved, reg)),
+            "n_docs": CL.arm_doc_count(entry, pattern, batch),
+            "total_steps": total, "cycle_end_steps": ends, "dose_rounding": rounding,
+            "read_points": [{"examples": e, "step": s} for e, s in reads],
+            "projected_hours": (round(rounding["examples_run"] / rate / 3600, 2)
+                                if rate else None),
+            "projected_at_ex_per_s": rate,
+            "cloud_only": CLOUD_ONLY.get(name)}
+
+
+def plan(reg, order=None):
+    rows = []
+    for name in (order or BAND1_ORDER):
+        rows.append(arm_plan(name, reg))
+    cut = CL.data_cut_count(reg)
+    print(f"W8 band-1 order, {len(rows)} arms. data_cut.unique_text_count = "
+          f"{cut if cut is not None else 'UNREGISTERED (§0b open: every cut arm refuses)'}")
+    hdr = (f"{'arm':13s} {'dose':>10s} {'bs':>4s} {'pattern':>8s} {'student':11s} "
+           f"{'objective':28s} {'warm':6s} {'cut':4s} {'steps':>8s} {'h':>6s}  where")
+    print(hdr)
+    print("-" * len(hdr))
+    tot = 0.0
+    for r in rows:
+        where = r["cloud_only"] and "CLOUD" or "box"
+        if r["projected_hours"] and not r["cloud_only"]:
+            tot += r["projected_hours"]
+        print(f"{r['arm']:13s} {r['dose_examples']:>10,} {r['batch']:>4d} {r['pattern']:>8s} "
+              f"{r['student']:11s} {r['objective']:28s} {r['warm_start']:6s} "
+              f"{'yes' if r['cut_corpus'] else 'no':4s} {r['total_steps']:>8,} "
+              f"{r['projected_hours']:>6.2f}  {where}")
+    print(f"\nprojected box hours (excluding CLOUD arms) {tot:.1f} at "
+          f"{PLAN_RATES[32]:.0f}/{PLAN_RATES[128]:.0f} ex/s (bs32/bs128); a PROJECTION — every "
+          f"arm records its own rate")
+    return rows
+
+
+# ------------------------------------------------------------------------------- the evaluators --
+
+class CovEval:
+    """The COV macro at a scheduled checkpoint, and the per-query scores the contrast step needs.
+
+    `cov_probe.units()` is loaded ONCE: it is 13,416 queries over four families of corpora and
+    reloading it per cycle end would cost more than the encode.
+    """
+
+    def __init__(self, model, out_dir, batch_size=256, verbose=True):
+        self.model, self.out_dir, self.bs, self.verbose = model, out_dir, batch_size, verbose
+        self._units = None
+        self.records = []
+
+    def units(self):
+        if self._units is None:
+            import cov_probe
+            self._units = cov_probe.units()
+        return self._units
+
+    def __call__(self, step, label):
+        import cov_eval10
+        us = self.units()
+        was_training = self.model.training
+        t0 = time.time()
+        per = cov_eval10.score_student(
+            lambda t: self.model.encode_queries(t, batch_size=self.bs), units=us,
+            verbose=self.verbose)
+        macro, by_family, by_unit = cov_eval10.macro(per, units=us)
+        if was_training:
+            self.model.train()          # encode_queries calls .eval(); the loop must go on training
+        p = self.out_dir / f"cov_{label}.json"
+        p.write_text(json.dumps({"label": label, "step": int(step), "macro": macro,
+                                 "by_family": by_family, "by_unit": by_unit,
+                                 "per_unit_query": per}))
+        rec = {"label": label, "step": int(step), "macro": macro, "by_family": by_family,
+               "by_unit": by_unit, "per_query_scores": str(p.relative_to(REPO)),
+               "seconds": round(time.time() - t0, 1)}
+        self.records.append(rec)
+        if self.verbose:
+            print(f"  COV {label} step {step:,}: macro {macro:.4f} "
+                  f"{ {k: round(v, 4) for k, v in by_family.items()} }", flush=True)
+        return macro
+
+
+class StubEval:
+    """The smoke's evaluator. The real COV read is 13,416 queries against 452,757 cached stella
+    document vectors and DEV-6 is ~13 GB of reads per pass; neither is a CPU smoke's business.
+    Returns a deterministic increasing series so the plateau rule cannot fire spuriously."""
+
+    def __init__(self):
+        self.records = []
+
+    def __call__(self, step, label):
+        m = 0.4 + 0.01 * len(self.records)
+        self.records.append({"label": label, "step": int(step), "macro": m, "stub": True})
+        print(f"  [stub] COV {label} step {step:,}: {m:.4f}", flush=True)
+        return m
+
+
+def dev6(model, verbose=True):
+    """DEV-6, ONCE, at the final checkpoint (`evaluation.DEV-6`), never selection-bearing.
+
+    Imported LAZILY: `m9base` installs `paths_guard` on import (CODEMAP pitfall 14), so it must
+    not be loaded before the corpus path has read its cached masks. Query prefix is "" — M10's
+    query-role examples are raw bytes (prompt policy (b)), which is what the student trained on.
+    """
+    import m9base                                                   # noqa: F401  (installs guard)
+    import eval9
+    import guard9
+    comps = eval9.components("DEV6")
+    if verbose:
+        print(f"DEV-6 (once, final checkpoint): {comps}", flush=True)
+    per = eval9.eval_student(model, eval9.INCUMBENT, comps=comps, query_prefix="")
+    m = eval9.macros(per, eval9.INCUMBENT)["DEV6"]
+    ceil = guard9.registry()["ceilings"][eval9.INCUMBENT]["DEV6"]
+    return {"teacher": eval9.INCUMBENT, "components": list(comps), "per_component": m["means"],
+            "macro": m["macro"], "ceiling_DEV6": ceil,
+            "retention": round(m["macro"] / ceil, 4) if ceil else None,
+            "_scope": "DEV-6 only; no six-set, reserved or LoTTE surface was read"}
+
+
+# ------------------------------------------------------------------------------------- the arm --
+
+def streams_of(batch_fn):
+    """-> (query_stream, document_stream) behind `assemble_arm`'s batch_fn.
+
+    `assemble_arm` is the ONLY corpus path a launcher may use and it returns the batch function
+    alone, but two registered things need the corpus itself: the ridge/G-MLP warm start needs the
+    arm's own fit texts and teacher targets, and D-COV's Sigma is the covariance of the pool's
+    frozen stella DOCUMENT vectors. Re-opening either pool here would be a second corpus path —
+    exactly what that function exists to prevent — so the streams it built are read off its
+    closure instead. Asserted by type, never guessed.
+    """
+    import data10 as D
+    q = d = None
+    for cell in getattr(batch_fn, "__closure__", None) or ():
+        v = cell.cell_contents
+        if isinstance(v, CL.FormBalancedStream):
+            q = v
+        elif isinstance(v, D.Stream):
+            d = v
+    if q is None or d is None:
+        refuse("could not recover the query/document streams from assemble_arm's batch_fn; "
+               "corpus_loader.assemble_arm's shape has changed and this runner must be updated")
+    return q, d
+
+
+def fit_sample(q_stream, n_fit, seed):
+    """-> (texts, targets) for the warm start, from the arm's own assembled corpus.
+
+    `TargetView` keeps the segments, so the texts behind a global row index are recoverable
+    without a second read of the corpus. Draw is `default_rng(seed).choice(n, n_fit)`, sorted —
+    the registered sample (`warm_start`, `m9/registry.json` n_fit 60,000 / seed 21).
+    """
+    tv = q_stream.T
+    n = len(tv)
+    k = min(int(n_fit), n)
+    rows = np.sort(np.random.default_rng(int(seed)).choice(n, size=k, replace=False))
+    which = np.searchsorted(tv.bounds, rows, side="right") - 1
+    texts = []
+    for r, b in zip(rows, which):
+        s = tv.segs[int(b)]
+        texts.append(s.texts[int(r - tv.bounds[int(b)])])
+    return texts, tv[rows]
+
+
+def warm_start(model, spec, q_stream, ws_cfg, verbose=True):
+    """The arm's REGISTERED warm start, actually run. It MUST have run: an arm that silently
+    trains from a fresh head is the confound `arm_smoke` exists to prevent, and G3's direction
+    depends on G-MLP starting AT the anchor's fitted head."""
+    kind = spec.get("warm_start", "linear")
+    t0 = time.time()
+    texts, Y = fit_sample(q_stream, ws_cfg["n_fit"], ws_cfg["seed"])
+    try:
+        if kind == "mlp":
+            rec = N.warm_start_mlp(model, texts, Y, verbose=verbose)
+        elif kind == "m9":
+            rec = N.warm_start_from_m9(model, AS.M9_CANDIDATE, verbose=verbose)
+        else:
+            X = N.pooled_features(model, texts)
+            lam, rows = N.select_lambda(X, Y)
+            rec = N.warm_start_linear(model, X, Y, lam=lam)
+            rec["lambda_rows"] = rows
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc()[-1500:], flush=True)
+        refuse(f"the registered warm start ({kind!r}) FAILED: {type(e).__name__}: {e}. An arm "
+               f"never trains from an un-warm-started head.")
+    rec.update(registered=kind, n_fit_requested=ws_cfg["n_fit"], fit_seed=ws_cfg["seed"],
+               n_fit_used=len(texts), seconds=round(time.time() - t0, 1))
+    if verbose:
+        print(f"  warm start {kind}: n_fit {len(texts):,} lambda {rec.get('lambda')} "
+              f"train objective {rec.get('train_objective')} ({rec['seconds']:.0f}s)", flush=True)
+    return rec
+
+
+def run(arm, *, device="cpu", resume=False, smoke_steps=None, max_len=512, ckpt_every=None,
+        n_fit=None, real_eval=False, compile_step=False, verbose=True):
+    """Train one registered arm and write its record. -> the record dict."""
+    problems = SL.validate(SL.cfg())
+    if problems:
+        refuse(f"screen_lock.validate reports {len(problems)} problem(s), so §0a is not coherent "
+               f"and no arm may run: {problems}")
+    reg = SL.cfg()
+    entry = (reg.get("arms") or {}).get(arm)
+    if entry is None:
+        refuse(f"{arm!r} is not a registered arm (m10/screen_registry.json `arms`)")
+    if entry.get("trained") is not True:
+        refuse(f"arm {arm!r} is not `trained: true` — {entry.get('note') or 'not a trained arm'}")
+    if entry.get("cut"):
+        refuse(f"arm {arm!r} is CUT: {entry['cut']}")
+
+    smoke = smoke_steps is not None
+    base = arm_plan(arm, reg)
+    if base["cloud_only"] and device == "cuda" and not smoke:
+        print(f"NOTE {arm}: {base['cloud_only']}", flush=True)
+
+    # a smoke gets its OWN registry copy, so `assemble_arm` derives a tiny document count from a
+    # tiny dose rather than 1.25M documents, and its OWN output tree (§Hazards: smokes have
+    # overwritten real artifacts in this milestone twice).
+    if smoke:
+        reg = copy.deepcopy(reg)
+        reg["arms"][arm]["dose_examples"] = int(smoke_steps) * base["batch"]
+        reg["arms"][arm].pop("read_at", None)
+        out_dir = SMOKE_WORK / slug(arm)
+        rec_path = out_dir / "record.json"
+        results_path = None
+    else:
+        out_dir = WORK / slug(arm)
+        rec_path = out_dir / "record.json"
+        results_path = RESULTS / f"m10_arm_{slug(arm)}.json"
+    if rec_path.exists():
+        try:
+            done = json.loads(rec_path.read_text()).get("complete")
+        except Exception:
+            done = None
+        if done:
+            refuse(f"{rec_path} already exists and is complete. `rules.arm_failure`: an arm is "
+                   f"reported, not silently re-run. Move the record aside deliberately.")
+    p = arm_plan(arm, reg)                      # re-read: a smoke changed the dose
+    if p["cut_corpus"] and CL.data_cut_count(reg) is None:
+        # `assemble_arm` is the enforcer (it refuses with no `allow_uncut` escape); failing here
+        # first only avoids reading a 5M-row corpus to learn it.
+        refuse(f"arm {arm!r} trains on the registered CUT corpus and "
+               f"`data_cut.unique_text_count` is unregistered (§0b open). Register the count.")
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    ws_cfg = dict(WS_DEFAULTS)
+    ws_cfg.update({k: v for k, v in ((reg.get("warm_start") or {}).get("G-MLP") or {}).items()
+                   if k in ("n_fit", "seed")})
+    if smoke and not n_fit:
+        ws_cfg["n_fit"] = SMOKE_N_FIT
+    if n_fit:
+        ws_cfg["n_fit"] = int(n_fit)
+    seed = 0 if "seed" not in reg.get("anchor", {}) else int(reg["anchor"]["seed"])   # seed_rule
+
+    t_start = time.time()
+    print(f"=== arm {arm} ({p['family']}) on {device}: {p['dose_examples']:,} examples, "
+          f"batch {p['batch']}, {p['total_steps']:,} steps, pattern {p['pattern']}, "
+          f"student {p['student']}, objective {p['objective']}, "
+          f"warm start {p['warm_start']}, seed {seed}"
+          + (f"  [SMOKE {smoke_steps} steps]" if smoke else ""), flush=True)
+
+    torch.manual_seed(seed)
+    model = N.Nano10(p["student"], n_layers=p["n_layers"], head=p["head"]).to(device)
+    if not model.under_cap():
+        refuse(f"{arm}: {model.n_params():,} parameters exceeds the {N.CAP:,} cap")
+    print(f"  student {p['student']}: d_in {model.d_in}, {model.n_params():,} params", flush=True)
+
+    batch_fn, man = CL.assemble_arm(arm, model.tok, p["student"], batch_size=p["batch"],
+                                    seed=seed, max_len=max_len, verbose=verbose, registry=reg)
+    q_stream, d_stream = streams_of(batch_fn)
+    ws = warm_start(model, {"warm_start": p["warm_start"]}, q_stream, ws_cfg, verbose=verbose)
+
+    sigma = None
+    if p["objective"] == "document_covariance_weighted":
+        sigma = torch.from_numpy(np.asarray(N.cov_matrix(d_stream.T), dtype=np.float32)).to(device)
+
+    total, ends, reads = p["total_steps"], p["cycle_end_steps"], p["read_points"]
+    read_steps = {int(r["step"]): int(r["examples"]) for r in reads}
+    extra_reads = sorted(s for s in read_steps if s not in set(ends))
+    ev = StubEval() if (smoke and not real_eval) else CovEval(model, out_dir, verbose=verbose)
+
+    def eval_fn(_m, step, kind):
+        if kind == "end":
+            label = f"cycle{ends.index(step) + 1}"
+        elif kind == "mid":
+            label = f"mid{step}"
+        else:
+            label = f"read{read_steps[step]}"
+        if kind != "read" and step in read_steps:
+            # a read point that coincides with a cycle end (20M) or a midpoint (10M): one eval,
+            # labelled as both, so the record's `reads` list finds it.
+            label = f"{label}_read{read_steps[step]}"
+        return ev(step, label)
+
+    ck = out_dir / "ckpt.pt"
+    every = int(ckpt_every or max(total // 20, 1))
+    train_model = torch.compile(model) if compile_step else model
+    r = Tr.train_arm(train_model, batch_fn, total_steps=total, pattern=p["pattern"],
+                     cycles=CYCLES, peak=PEAK, final=FINAL, loss_name=p["objective"],
+                     sigma=sigma, eval_fn=eval_fn, ckpt_path=ck, ckpt_every=every,
+                     resume_from=(str(ck) if resume and ck.exists() else None), seed=seed,
+                     log_every=max(total // 50, 1), device=device, batch_size=p["batch"],
+                     read_steps=extra_reads, cycle_ckpt_fmt=str(out_dir / "cycle{cycle}.pt"))
+
+    n_ends = len(r["cycle_end_evals"])
+    finished = n_ends >= CYCLES
+    stopped = r["stopped"]
+    plateau_at_last = bool(stopped and stopped.startswith("plateau at cycle")
+                           and stopped.endswith(str(CYCLES)))
+    status = "complete" if finished else "failed"
+    final_ck = out_dir / f"cycle{CYCLES}.pt"
+    cks = {}
+    for c in range(1, CYCLES + 1):
+        pth = out_dir / f"cycle{c}.pt"
+        if pth.exists():
+            cks[f"cycle{c}"] = {"path": str(pth.relative_to(REPO)), "sha256": sha256_file(pth)}
+    if ck.exists():
+        cks["rolling"] = {"path": str(ck.relative_to(REPO)), "sha256": sha256_file(ck)}
+
+    d6 = None
+    if finished and not (smoke and not real_eval):
+        d6 = dev6(model, verbose=verbose)
+    elif not finished:
+        print(f"ARM FAILED ({stopped}): no final checkpoint, so no DEV-6 read. "
+              f"`rules.arm_failure`: its contrasts are reported UNRESOLVED and revert to default; "
+              f"the arm is NOT re-run at different settings.", flush=True)
+
+    rec = {
+        "_what": "one registered M10 screen arm, trained end to end by m10src/run_arm.py",
+        "arm": arm, "family": p["family"], "status": status, "complete": True, "smoke": smoke,
+        "smoke_steps": smoke_steps, "device": device, "max_len": max_len,
+        "seed": seed, "seed_rule": reg.get("seed_rule"),
+        "recipe": {k: p[k] for k in ("dose_examples", "batch", "pattern", "pattern_source",
+                                     "student", "n_layers", "head", "objective", "warm_start",
+                                     "cut_corpus", "sources", "n_docs", "total_steps",
+                                     "cycle_end_steps", "read_points", "dose_rounding")},
+        "schedule": {"cycles": CYCLES, "peak": PEAK, "final": FINAL,
+                     "_what": "3 cycles of equal example count over the ARM'S OWN dose, each "
+                              "linear 1e-4 -> 1e-5 (§Recipe)"},
+        "params": model.n_params(), "under_cap": model.under_cap(),
+        "warm_start": ws,
+        "evaluation_mode": "stub" if isinstance(ev, StubEval) else "cov",
+        "cov": {"per_checkpoint": ev.records,
+                "cycle_end_macros": r["cycle_end_evals"],
+                "final_macro": (r["cycle_end_evals"][-1] if r["cycle_end_evals"] else None),
+                "reads": [x for x in ev.records if "read" in x["label"]],
+                "_scope": "COV only at every cycle end (plus the schedule midpoints the kill rule "
+                          "reads) and family F's read_at points"},
+        "dev6": d6,
+        "training": {k: r[k] for k in ("steps_run", "start_step", "total_steps", "stopped",
+                                       "examples", "examples_this_run", "seconds",
+                                       "examples_per_s", "mix", "evals", "eval_kinds",
+                                       "cycle_end_evals", "read_evals")},
+        "throughput_ex_per_s": r["examples_per_s"],
+        "loss_tail": r["losses"][-200:],
+        "stopped": stopped,
+        "stopped_is_completion": plateau_at_last,
+        "_stopped_note": ("PLATEAU_FROM_CYCLE is 3 and a screen arm runs 3 cycles, so `plateau at "
+                          "cycle 3` means the arm finished its dose and stopped one step short — "
+                          "not a failure (LEDGER §M10.0-e trace)"),
+        "checkpoints": cks,
+        "final_checkpoint": (str(final_ck.relative_to(REPO)) if final_ck.exists() else None),
+        "final_checkpoint_sha256": (cks.get(f"cycle{CYCLES}") or {}).get("sha256"),
+        "assemble_manifest": man,
+        "registry_sha256": sha256_file(REGISTRY),
+        "registry_dose_overridden_for_smoke": (reg["arms"][arm]["dose_examples"] if smoke else None),
+        "git_head": git_head(),
+        "wall_seconds": round(time.time() - t_start, 1),
+        "_contrasts": "NOT computed here — the contrast step reads the per-query COV files and "
+                      "passes each contrast's own registered quantile",
+    }
+    rec_path.write_text(json.dumps(rec, indent=1, default=str))
+    print(f"wrote {rec_path}", flush=True)
+    if results_path is not None:
+        results_path.write_text(json.dumps(rec, indent=1, default=str))
+        print(f"wrote {results_path}", flush=True)
+    print(f"{arm}: {status}  COV final {rec['cov']['final_macro']}  "
+          f"{r['examples_per_s']:.0f} ex/s  {rec['wall_seconds']:.0f}s", flush=True)
+    return rec
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description="run one registered M10 screen arm")
+    ap.add_argument("arm", nargs="?", default=None)
+    ap.add_argument("--device", default="cpu", choices=["cpu", "cuda"])
+    ap.add_argument("--resume", action="store_true",
+                    help="continue from work/m10arms/<arm>/ckpt.pt (evaluation state included)")
+    ap.add_argument("--smoke-steps", type=int, default=None,
+                    help="a SMOKE: N steps, its own dose, stub evals, and its own output tree "
+                         "under work/m10arms/smoke/ — never the real record path")
+    ap.add_argument("--plan", action="store_true", help="print the W8-band-1 plan; train nothing")
+    ap.add_argument("--max-len", type=int, default=512)
+    ap.add_argument("--ckpt-every", type=int, default=None, help="default total_steps // 20")
+    ap.add_argument("--n-fit", type=int, default=None,
+                    help="warm-start fit sample; the registered 60,000 unless a smoke needs less")
+    ap.add_argument("--real-eval", action="store_true",
+                    help="run the REAL COV and DEV-6 reads even under --smoke-steps")
+    ap.add_argument("--compile", action="store_true",
+                    help="torch.compile the training step (checkpoints stay eager, §T)")
+    ap.add_argument("--quiet", action="store_true")
+    a = ap.parse_args(argv)
+    if a.plan:
+        plan(SL.cfg())
+        return 0
+    if not a.arm:
+        ap.error("an arm name is required (or --plan)")
+    run(a.arm, device=a.device, resume=a.resume, smoke_steps=a.smoke_steps, max_len=a.max_len,
+        ckpt_every=a.ckpt_every, n_fit=a.n_fit, real_eval=a.real_eval,
+        compile_step=a.compile, verbose=not a.quiet)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
