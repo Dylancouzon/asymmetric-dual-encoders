@@ -1,4 +1,4 @@
-# M10 status — 2026-09-07 evening. **FAMILY F IS TRAINING** (first registered arm; Codex GO on the runner after four passes). §0b registered; the screen is live.
+# M10 status — 2026-09-07 evening. **FAMILY F IS NOT RUNNING** — it crashed the box twice during data prep (our memory bug, diagnosed and fixed; LEDGER §the two 2026-09-07 box crashes). §0b registered; the screen is live.
 
 **Read this, then `m10/LEDGER.md`.** The box is **preparation for the cloud GPU run, not a
 measurement target** (Dylan, 2026-09-05): run as much as it can here first, no re-shaping; the
@@ -6,7 +6,23 @@ remainder moves to the A100 under the same registry. **The weekend timeline is n
 Working model (Dylan, 2026-09-05): the session is the ML lead, Opus/Sonnet subagents do the build
 work, Codex is the adversarial reviewer.
 
-## RUNNING: `work/m10arms_run_F.sh` → F-bge-small then F-MiniLM-L6 (`work/m10arms/*.log`, ≈6.2 h each). Kill by PID only; `--resume` continues a non-terminal run.
+## NOT RUNNING: family F is relaunchable, pending the full-dose pre-flight
+
+`work/m10arms_run_F.sh` → F-bge-small then F-MiniLM-L6 (`work/m10arms/*.log`, **10.9 h each** at
+the measured 512 ex/s, not 6.2). Kill by PID only; `--resume` continues a non-terminal run.
+Crashed logs preserved as `work/m10arms/F-bge-small.crashed*.log` — all three stop right after the
+arm header, before any training step.
+
+**Memory, resolved (2026-09-07).** Two causes, both fixed: document targets were materialized
+(19.1 GiB at 5M → `DocTargetView`, per-batch gather) and the doc-id stream left ~3 GB of glibc
+arena residue (→ `release_arena()`, a `malloc_trim(0)` after both doc-build paths and between the
+two stream builds in `assemble_arm`). Measured at two corpus sizes: the doc-build cost is a
+**constant**, peak 7,374 MB at 200k vs 7,416 MB at 1M, steady +403 MB — **not** the 20.4 GiB an
+earlier one-point extrapolation of mine projected (withdrawn, LEDGER). Only ~114 MiB of the path
+is n-dependent at 5M. **Before relaunching F, run the full-dose pre-flight** — the 300-step smoke
+shrinks `arm_doc_count`, which is exactly where the crash lived:
+`.venv/bin/python -u /tmp/…/fulldose.py F-bge-small` under
+`bash work/memtrace.sh "<pattern>" work/memtrace_fulldose.csv`, and watch `host_free_mb`.
 
 ## What is DONE and verified
 

@@ -79,6 +79,12 @@ way. **Adopted: `release_arena()`** after both doc-build paths — in-process, a
 memory matters, no throughput risk. `MALLOC_ARENA_MAX=2` works but changes malloc for the whole
 10.9 h training loop at an unmeasured rate cost: validated alternative, **not adopted**.
 
+**Every n-dependent term, in closed form** — so C1 does not rest on two points alone. At
+5,000,000 documents (93.8 tokens/doc measured): `offs` int64 is **38 MiB resident**, the `lens`
+concat is **76 MiB transient**, `flat` is **1.75 GiB memmapped and never resident**, and disk peaks
+at 3.49 GiB (633 GB free). Total n-dependent RSS ~114 MiB, which is the +42 MB peak growth seen
+from 200k→1M. Nothing in this path bites only late.
+
 **Three wrong hypotheses before the right one**, each killed only by measuring: per-row growth
 (killed by two values of n), reclaimable page cache (killed by `RssAnon` — it was anonymous), and
 `DOC_TEXT_CHUNK` as the knob (killed by 7,371 vs 7,401 at 4× smaller chunk — `pack_tokenize` has
