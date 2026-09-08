@@ -97,26 +97,23 @@ M9's coverage failure showed, which makes it tempting to read as a verdict. It i
 | **paired row** | **DRAFT REGISTRATION READY for ratification: `research/m10-paired-row-registration-draft.md`** (8 numbered items, drafted from both reviewer passes, nothing new added). **Item 7 expires first** — both six-set transactions must emit aligned PER-QUERY scores and qids, and that must be in force BEFORE M9's close-out runs or the row cannot be built at all, ever. Original: **Register it — as a whole-protocol RECIPE delta, not a coverage test.** M9→M10 changes dose 4.5× (3.69B → ≈16.8B), head width 384→1152, schedule, objective, mix, batch, and possibly the student. **Normalise on the TEACHER**, not M9 (`Δr_d = (S10−S9)/T_d`); never call `S10/S9` "retention". Register now: the confound list, a fixed non-causal claim sentence, the exact datasets/statistic/B/seed, a conditional "same backbone family" label (F can pick a MiniLM), and **that both six-set transactions emit aligned PER-QUERY scores and qids** — otherwise the paired row cannot be built at all |
 | **W14** | **No decision-bearing surface sees the headline forms.** COV selects on forum/medical/legal/finance; C1b is clean-4 (scientific, biomedical). The screen can optimise the build away from the release bar and nothing would notice until M10.4. Codex frames the root question: **is family A a causal experiment, a catastrophe veto, or diagnostics? It cannot be all three** |
 
-## NEXT, in order
+## NEXT, in order — rewritten 2026-09-08; three items on the old list were already DONE
 
-1. **The M10 corpus→trainer path — BUILT 2026-09-05 evening** (`corpus_loader`, `targets10`,
-   LEDGER §3 for the eight readings). Encode COMPLETE (5.24M texts). `assemble_arm` is the only launcher path; **Codex GO on the
-   seventh pass** (`research/m10-codex-loader-2026-09-05.md`). Owed before a cut arm: §0b's count.
-2. **A8 gate 2 — DONE for the five existing forms** (`results/m10_a8_gate2.json`, LEDGER §1);
-   re-run with `--forms` for the seven generated forms after generation.
-3. **CUREv1 admission** (decision 12, adopted 2026-09-04, **never executed**). The harvest, PAQ and
-   seed draws were screened against an index that lacks it — re-screen or disclose before reading.
-4. **M10.0-c baseline — DONE** (`results/m10_m9_baseline_dev6.json`): DEV-6 macro 0.5568, 82.8% of
-   the teacher; NQ 93.8% vs CQADupStack 50.1 / 71.0% — M9's signature, reproduced.
-5. **Pilot DONE (all six clear); generation RUNNING** (~15 h, argument last). `health`: r2 failed the
-   on-form gate (70%); r1 restored and queued LAST behind a veto window (issue #3); A8 cuts it at
-   step 8. **Then:** `assemble10.py --all` → `targets10.py --sources generated` → `--data-cut` →
-   register §0b → `--gate2` (LEDGER §3 "Step 8 assembly BUILT").
-6. **Register the paired row** (whole-protocol recipe delta, teacher-normalised; both six-set
-   transactions must emit aligned per-query scores and qids) — before M9's close-out runs.
-7. **Disclose the own-source 5-gram screen** as not run on the harvest corpus (W11 second half;
-   near-vacuous by construction) in §1, or run it if a pass over the sources is cheap.
-8. §0b's `data_cut`, then **family F** (F1 only: bge-small vs MiniLM-L6 at 20M).
+**DONE, removed from this list** (they were still listed as pending and cost a re-read):
+corpus→trainer path · M10.0-c baseline · generation (finished 09-05/06, `work/m10gen/*.jsonl`;
+ANCHOR consumed 834,463 generated rows) · `data_cut.unique_text_count` = **2,651,572**, registered ·
+**A8 gate 2 re-run 09-07 across all 12 forms** (`results/m10_a8_gate2.json`) · family F, and F1
+resolved to **bge-small**.
+
+| # | open item | blocks | who |
+|---|---|---|---|
+| 1 | **The W8 band-1 remainder is RUNNING** — 3 of 11 done (ANCHOR · A1 · A2, all `exit 0`, avg 2.39 h vs 2.71 h projected). Then the registered contrasts per family | the M10.2 recipe lock | in flight |
+| 2 | **CUREv1 admission** (decision 12, adopted 2026-09-04, **never executed**). Its own precondition: the harvest, PAQ and seed draws were screened against an index lacking it — **re-screen or disclose before reading it** | nothing on the critical path; it is a reported diagnostic, never selection-bearing | session |
+| 3 | **`results/m10_data_manifest.json`** — still MISSING (§1 owes it) | the recipe lock's provenance | session |
+| 4 | **Own-source word-5-gram screen** on the harvest corpus (W11's second half): run it if a pass over the sources is cheap, else **disclose it as not run** in §1 (near-vacuous by construction) | a disclosure in the report | session |
+| 5 | **Register the paired M9-vs-M10 row** — **draft ready for ratification**, `research/m10-paired-row-registration-draft.md`. Its only conditional item (§5, backbone family) self-resolved to *within one family* when F picked bge-small. **§7 expires first:** both six-set transactions must emit aligned per-query scores AND qids before M9's close-out runs, or the row is unbuildable forever | M9's close-out | **Dylan** |
+| 6 | **W14** — is family A a causal experiment, a catastrophe veto, or diagnostics? *"It cannot be all three."* Note its first option NARROWED: a clean-4 surface can no longer be added to COV, which is now observed | the M10.2 recipe lock. Tier 3 | **Dylan** |
+| 7 | **`torch.compile` for registered arms** (~1.7×). Currently SMOKE-ONLY | screen wall-clock only | **Dylan** |
 
 ## Screen design, settled
 
