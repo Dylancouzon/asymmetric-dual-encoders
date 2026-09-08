@@ -146,7 +146,12 @@ starting, and none announced itself.
    `/proc/<pid>/stat` utime against elapsed says whether a "GPU job" is actually burning one CPU
    core; per-thread CPU time says whether it is Python or a kernel. `py-spy` needs
    `kernel.yama.ptrace_scope=0`, which needs root on this box — so these cheaper signals matter.
-5. **Never trust a docstring's cost estimate.** Both "a few minutes for the whole set" claims in
+5. **`tail -F`, never `tail -f`, and match the log's own casing.** A monitor naming a chained
+   job's log before that file exists follows nothing when it appears — plain `-f` does not retry —
+   and if the liveness check still matches the process, **silence looks exactly like progress**.
+   That cost 3.5 h of unwatched training on 2026-09-08, noticed only because Dylan asked. The same
+   monitor also missed the completion line by grepping `COMPLETE` for a log that writes `complete`.
+6. **Never trust a docstring's cost estimate.** Both "a few minutes for the whole set" claims in
    `train.py` were wrong by two orders of magnitude, in the same file, on the same day.
 
 ## A number from one measurement is an assumption (2026-09-07)

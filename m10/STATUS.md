@@ -1,4 +1,4 @@
-# M10 status — 2026-09-07 evening. **FAMILY F IS RUNNING** (relaunched 19:26 after the memory bug that crashed the box twice was diagnosed, fixed, and validated by a full-dose pre-flight at the registered 5,000,000 docs). §0b registered; the screen is live.
+# M10 status — 2026-09-08 morning. **F-bge-small COMPLETE** (first registered arm, `exit 0`, COV final 0.51595, 9.25 h). **F-MiniLM-L6 running**, ~60% at 08:12, 1,066 ex/s, ETA ~09:55. §0b registered; the screen is live.
 
 **Read this, then `m10/LEDGER.md`.** The box is **preparation for the cloud GPU run, not a
 measurement target** (Dylan, 2026-09-05): run as much as it can here first, no re-shaping; the
@@ -30,6 +30,28 @@ tokenizer — ten rows cost 2,200 MB `RssAnon` because it materializes a whole s
 close-out pending); the M10-side fix is to sort the draw by store and load each once.
 Trust `arm_hwm_mb` in the trace, not `arm_rss_mb` — a 5 s sample of an instantaneous gauge is a
 lower bound. `n_match=0` prints **-1**, so a bad pattern cannot look like an idle arm.
+
+## F chain — arm 1 done, arm 2 in flight
+
+| | F-bge-small | F-MiniLM-L6 |
+|---|---|---|
+| status | **complete, `exit 0`** 04:41:25 | running, ~60% at 08:12 |
+| rate | 624 ex/s, 33,298 s (9.25 h) | **1,066 ex/s** (6 layers vs 12), ETA ~09:55 |
+| `stopped` | **`plateau at cycle 3`** = registered SUCCESS (`_stopped_note`: PLATEAU_FROM_CYCLE is 3 and a screen arm runs 3 cycles, so it finished its dose and stopped one step short). `complete: true` | — |
+| COV cycle ends | 0.5080 → 0.5137 → **0.5160** (+0.0057, +0.0023) | 0.4923 (cycle 1) |
+| artifacts | `results/m10_arm_F-bge-small.json`, `work/m10arms/F-bge-small/{record.json,ckpt.pt,cov_*.json}` | — |
+
+**No verdict exists yet and none may be inferred here.** `f_verdict` is `null` and `_contrasts`
+says *"NOT computed here — the contrast step reads the per-query COV files and passes each
+contrast's own registered quantile"*. The raw macro gap at the four matching read points is
+**0.013–0.016 in bge-small's favour** (0.4871/0.4889/0.4923/0.4942 vs 0.4996/0.5048/0.5080/0.5075),
+wider than the 0.0086 resolution distance — but that is a **raw difference, not the registered
+statistic**, and the contrast is a separate step over the per-query files.
+
+**DEV-6 ran once at the final checkpoint** as registered (`nq-250k`, `hotpotqa`,
+`cqadup-programmers`, `cqadup-physics`, `heldout-train`, `heldout-longq`) and is **never
+selection-bearing** — it informs nothing here, and its CQADupStack components are exactly where
+M9's coverage failure showed, which makes it tempting to read as a verdict. It is not one.
 
 ## What is DONE and verified
 
