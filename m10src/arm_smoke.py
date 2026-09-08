@@ -117,12 +117,17 @@ def corpus(verbose=True):
     texts, rows = [texts[int(i)] for i in sel][:N_TEXTS], rows[sel][:N_TEXTS]
     T = D.m9_query_targets(rows)
     banned = set(int(x) for x in rescreen10.doc_banned_rows(compute=False, verbose=False)[0])
-    dtexts, dvecs, _dm = CL._screened_doc_pool(N_TEXTS, 0, banned)
+    # `_screened_doc_pool` returns ROW INDICES and a lazy `DocTargetView`, not texts -- it stopped
+    # returning texts when materializing them was found to be the 19.1 GiB that killed WSL twice
+    # (LEDGER 2026-09-07). This smoke kept unpacking the old contract and fed int64 row numbers to
+    # `pretokenize`, so ALL 12 shapes failed with "can only concatenate str (not numpy.int64)".
+    # It had been broken since that change and nobody re-ran it; STATUS still claimed 12/12.
+    drows, dvecs, _dm = CL._screened_doc_pool(N_TEXTS, 0, banned)
     if verbose:
-        print(f"  corpus: {len(texts):,} queries, {len(dtexts):,} documents, "
+        print(f"  corpus: {len(texts):,} queries, {len(drows):,} documents, "
               f"{int((~keep).sum()):,}+{len(banned):,} removed by the M10 re-screen "
               f"({time.time() - t0:.0f}s)", flush=True)
-    return texts, T, dtexts, dvecs
+    return texts, T, drows, dvecs
 
 
 def _write(recs, device, max_len, out=None):
@@ -147,7 +152,7 @@ def smoke_one(name, spec, corp, device="cpu", max_len=512, verbose=True):
     import data10 as D
     import nano10 as N
     import trainer10 as Tr
-    texts, T, dtexts, dvecs = corp
+    texts, T, drows, dvecs = corp
     rec = {"arm": name, "spec": {k: v for k, v in spec.items()}, "covers": COVERS.get(name, []),
            "device": device, "max_len": max_len}
     if name in CLOUD_ONLY:
@@ -229,7 +234,12 @@ def smoke_one(name, spec, corp, device="cpu", max_len=512, verbose=True):
                 q = D.Stream(qi, T, pad_id=m.tok.pad_token_id, batch_size=b, seed=0)
             import corpus_loader as _CL
             # the registered document-role marker; queries are raw bytes (prompt policy (b))
-            di = D.pretokenize(m.tok, dtexts, max_len=max_len, prefix=_CL.doc_marker())
+            # the PRODUCTION path (`_stream_doc_ids`), not `D.pretokenize`: the reviews' standing
+            # complaint is that a smoke which shrinks the thing that breaks does not smoke it, and
+            # the old call bypassed streaming, the id cache and the memmap entirely. cache=False so
+            # a smoke can never write or read the real token cache.
+            di, _nd = _CL._stream_doc_ids(drows, m.tok, _CL.doc_marker(), max_len,
+                                          verbose=False, cache=False)
             # the same student input must never carry two teacher targets: "passage: X" as a QUERY
             # tokenizes exactly like the DOCUMENT "X" once the marker is applied
             rec["cross_role"] = _CL.guard_cross_role(q.ids, di)

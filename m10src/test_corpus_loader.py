@@ -1403,3 +1403,34 @@ def test_the_doc_id_WRITER_never_accumulates_the_whole_flat_array(monkeypatch, t
     assert writes == [240] * 5, (
         f"flat.bin must be written one chunk at a time, got {writes} -- a single large write means "
         f"the whole flat array was accumulated in RAM first, which is the crash this path removed")
+
+
+def test_DocTargetView_accepts_a_SLICE_not_only_an_index_array():
+    """`nano10.cov_matrix` reads its width with `doc_vecs[0:1]` before the chunked pass, so a view
+    that only accepts index arrays makes D-COV -- the very arm this view was rewritten to make
+    affordable -- fail to construct. The 90-step shape smoke caught it at 11/12; without that it
+    would have surfaced as the LAST arm of the registered order, after a day of other arms."""
+    store = np.arange(40 * 4, dtype=np.float32).reshape(40, 4) + 1.0
+    v = CL.DocTargetView(store, np.arange(10, 20))
+    assert v.shape == (10, 4) and len(v) == 10
+    by_slice = v[0:1]
+    by_array = v[np.arange(1)]
+    assert by_slice.shape == (1, 4)
+    assert np.array_equal(by_slice, by_array), "slice and index-array must agree"
+    assert np.array_equal(v[2:5], v[np.array([2, 3, 4])])
+    assert np.array_equal(v[:], v[np.arange(10)]), "a bare [:] must gather every row"
+    # rows are unit-norm fp32
+    assert np.allclose(np.linalg.norm(v[0:3], axis=1), 1.0)
+
+
+def test_cov_matrix_runs_against_a_DocTargetView():
+    """The D-COV path end to end: the chunked accumulation must work on the lazy view, not just on
+    a dense array. This is the pairing that was half-fixed -- cov_matrix was made chunked while the
+    view still refused the slice it chunks with."""
+    import nano10 as N
+    store = np.random.default_rng(0).normal(size=(200, 8)).astype(np.float32)
+    v = CL.DocTargetView(store, np.arange(200))
+    sig = N.cov_matrix(v, chunk=37)
+    dense = N.cov_matrix(np.asarray([v[np.array([i])][0] for i in range(200)]), chunk=37)
+    assert sig.shape == (8, 8)
+    assert np.allclose(sig, dense, atol=1e-6), "view and dense must agree"

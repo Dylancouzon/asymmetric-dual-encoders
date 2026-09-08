@@ -724,6 +724,13 @@ class DocTargetView:
         return len(self.rows)
 
     def __getitem__(self, idx):
+        # A SLICE must work, not just an index array. `nano10.cov_matrix` reads the width with
+        # `doc_vecs[0:1]` before its chunked pass, and `np.asarray(slice, dtype=int64)` raises
+        # "int() argument must be ... not 'slice'" -- so D-COV, the arm this view was rewritten to
+        # make affordable, could not construct at all. Caught by the 90-step shape smoke; it would
+        # otherwise have failed as the LAST arm of the registered order (LEDGER 2026-09-08).
+        if isinstance(idx, slice):
+            idx = np.arange(len(self.rows), dtype=np.int64)[idx]
         idx = np.atleast_1d(np.asarray(idx, dtype=np.int64))
         out = np.asarray(self.store[self.rows[idx]], dtype=np.float32)
         n = np.linalg.norm(out, axis=1, keepdims=True)
