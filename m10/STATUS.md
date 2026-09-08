@@ -97,6 +97,27 @@ M9's coverage failure showed, which makes it tempting to read as a verdict. It i
 | **paired row** | **DRAFT REGISTRATION READY for ratification: `research/m10-paired-row-registration-draft.md`** (8 numbered items, drafted from both reviewer passes, nothing new added). **Item 7 expires first** — both six-set transactions must emit aligned PER-QUERY scores and qids, and that must be in force BEFORE M9's close-out runs or the row cannot be built at all, ever. Original: **Register it — as a whole-protocol RECIPE delta, not a coverage test.** M9→M10 changes dose 4.5× (3.69B → ≈16.8B), head width 384→1152, schedule, objective, mix, batch, and possibly the student. **Normalise on the TEACHER**, not M9 (`Δr_d = (S10−S9)/T_d`); never call `S10/S9` "retention". Register now: the confound list, a fixed non-causal claim sentence, the exact datasets/statistic/B/seed, a conditional "same backbone family" label (F can pick a MiniLM), and **that both six-set transactions emit aligned PER-QUERY scores and qids** — otherwise the paired row cannot be built at all |
 | **W14** | **No decision-bearing surface sees the headline forms.** COV selects on forum/medical/legal/finance; C1b is clean-4 (scientific, biomedical). The screen can optimise the build away from the release bar and nothing would notice until M10.4. Codex frames the root question: **is family A a causal experiment, a catastrophe veto, or diagnostics? It cannot be all three** |
 
+## gpt-6-astra whole-plan review, 2026-09-08 — 3 verified gaps, all on the COST axis
+
+Dispositions and verification: `research/m10-astra-review-dispositions-2026-09-08.md`; verbatim
+`research/m10-astra-whole-plan-2026-09-08.log`. It did NOT rediscover W14 or the frozen-tower
+debate — the brief withheld them, and it went elsewhere.
+
+| # | finding | status | owner |
+|---|---|---|---|
+| 1 | **No small-model + BM25 row exists.** `zero`+BM25 = 0.4911 is compared against OpenSearch, LR-hybrid and dense-only baselines, never against **bge-small + BM25** — the obvious hybrid of the release bar. Not recoverable from `perquery.json` (it holds per-query nDCG *values*, not score lists) | **VERIFIED** in `FINAL_MATRIX.md` | **Dylan** — adding a comparator post-hoc, but it can only WEAKEN our claim, so conservative |
+| 2 | **nano buys no compute saving.** 34,540,672 params vs bge-small's ~33.4M, same backbone forward pass. nano's claim is *quality at equal edge cost sharing stella's index*, NOT "near-zero query compute" — that is `zero`'s claim alone | **VERIFIED** from our own counts | session — a CLAIM fix owed to `CLAUDE.md`'s north star, M14 and nano's card |
+| 3 | **The cost axis is unmeasured for the two points that matter.** `m9_edge_cost_Apple_M5_Pro.json` profiles cold start, peak RSS and p50/p95 for nano variants + mdbr-leaf-ir only; `zero` itself and conventional bge-small have no such profile under one harness | **VERIFIED** | session — **do it**, Mac-only, no labels, no GPU, no protocol impact |
+| 4 | **Compile queries into the INDEX, not a student** — our 0.83M generated queries carry source doc IDs; index them as lexical aliases (doc2query-shaped). No student at all. Trades index expansion for query-model complexity | new avenue | **Dylan** to scope; needs the contamination rule re-applied to index content |
+| 5 | **Spearman ≈ 0 may mean compressibility is TRAINABLE**, not that teachers are interchangeable — no independently-trained tower was trained to be compressible. Reframes M14's headline; connects to M8's unrun `E14-LORA` | framing | **Dylan** / M14 |
+
+**Its #1 claim is wrong** — it assumed the index needs a query-time server. It does not: the edge
+client holds the index. The salvageable half is to state whether the requirement is near-zero
+**edge** or **total** compute, which finding 2 makes load-bearing.
+
+**The through-line:** *"gate further training spend on finding an operational region where
+asymmetry wins."* We have measured quality carefully and cost loosely.
+
 ## NEXT, in order — rewritten 2026-09-08; three items on the old list were already DONE
 
 **DONE, removed from this list** (they were still listed as pending and cost a re-read):
