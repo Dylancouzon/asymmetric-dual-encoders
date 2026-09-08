@@ -66,6 +66,11 @@ row carries one of two labels, decided by F's outcome, not by preference:
 - **within one backbone family** (F selects bge-small, which M9 distilled into), or
 - **across backbone families** (F selects MiniLM), in which case the backbone change joins §2.
 
+**RESOLVED 2026-09-08: within one backbone family.** F1 resolved to **bge-small**
+(delta +0.011595, lower bound +0.007221 at α/24 two-sided; `results/m10_contrast_F1.json`), so the
+backbone does NOT join §2 and the label is fixed. This item needed no ratification — it was
+conditional on a measurement that has now been made.
+
 ## 6. Reporting status — descriptive, and it costs no α
 
 The row is **descriptive**. It is reported with a paired CI at the registered machinery (paired

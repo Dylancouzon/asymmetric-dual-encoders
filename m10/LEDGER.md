@@ -4,6 +4,49 @@ Skeleton committed 2026-09-01 (Codex pass 5). Every section is filled by the GPU
 step it governs, and never edited after that step's output exists. Numbers live in the JSON the
 row points at; this file records the decision, the number a rule reads, and the pointer.
 
+## F1 RESOLVED 2026-09-08 — **the student is bge-small**, on evidence
+
+Family F complete (`F_chain.log`: bge-small `exit 0` 04:41:25 after 9.25 h at 624 ex/s;
+MiniLM-L6 `exit 0` 10:16:35 after 5.6 h at 1,066 ex/s). Both `stopped: plateau at cycle 3` =
+registered SUCCESS. `results/m10_contrast_F1.json` carries the full statistic and its digests.
+
+| | value |
+|---|---|
+| `delta_raw` (bge-small − MiniLM-L6) | **+0.011595** |
+| `lower_bound_raw`, α/24 per tail, two-sided | **+0.007221** |
+| `distance_raw` | 0.004374 |
+| point ≥ MDE 0.0056 · lower > 0 · sign stable | **all three ✓** |
+| surface | 10 units, **13,416** paired queries, B=200,000, seed 0, `inverted_cdf` |
+| macro at 20M | bge-small 0.515951 · MiniLM-L6 0.504355 |
+| cycle-end series | bge-small 0.5080→0.5137→0.5160 · MiniLM 0.4923→0.5008→0.5044 |
+
+**Winner: `bge-small`, on a RESOLVED margin — `serve_cost_order` was NOT invoked**, so this is
+evidence, not the product preference `F_tournament` falls back to. That matters because the
+fallback would have gone the other way: MiniLM-L6 is 23,893,888 params against bge-small's
+34,540,672, so an unresolved contrast would have shipped the *cheaper, lower-scoring* student.
+bge-small sits just inside the 35M hard cap.
+
+**Consequence (`outcome_to_action.F`), now binding:** every later family runs on bge-small and
+every later verdict is labelled conditional on it.
+
+**Concordance:** 8 of 10 units favour bge-small; the two exceptions are small
+(BRIGHT/economics −0.000910, BRIGHT/sustainable_living −0.005351). Largest gains
+BRIGHT/psychology +0.027366, MedicalQARetrieval +0.018716, BRIGHT/biology +0.017414,
+LEDGER +0.015429. Bootstrap SD 0.001432. Per-unit deltas are in the artifact, as §5 adopted.
+
+**The screen has more power than its registered resolution number implied — one data point.**
+`distance_raw` came in at **0.004374** against the registered **0.0086**, which was measured
+between UNRELATED models. §3 W5 expected that to over-estimate a real contrast's width and priced
+the alternatives arithmetically (`distance_if_paired_sd_scaled`: 0.75× → 0.0065, **0.5× → 0.0043**);
+this landed on the 0.5× case. **Not a general claim:** it is one contrast, F's arms differ in
+backbone (which should be among the WIDER contrasts), and P2's bracket for B/D plus the wider
+expectation for G/C/A stand until measured. It does mean contrasts expected to be unresolved may
+resolve, and the MDE stays fixed regardless — the surface is observed (§above).
+
+**Resolves the paired-row draft's §5 conditional label:** F selected bge-small, the backbone M9
+distilled into, so the M9-vs-M10 row is **within one backbone family**
+(`research/m10-paired-row-registration-draft.md` §5).
+
 ## PRE-REGISTRATION BOUNDARY CROSSED 2026-09-07 ~20:5x — the COV surface is now OBSERVED
 
 Family F (`F-bge-small`, the first registered arm) produced its first COV read at step 104,166:

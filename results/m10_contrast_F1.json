@@ -1,0 +1,104 @@
+{
+ "contrast": "F1",
+ "_what": "Family F: which student. Registered decisive contrast, read at 20M.",
+ "registered_spec": {
+  "a": "F-MiniLM-L6",
+  "b": "F-bge-small",
+  "at_examples": 20000000,
+  "decisive": true,
+  "tails": 2,
+  "quantile": 0.0010416666666666667,
+  "family_rule": "F_tournament"
+ },
+ "orientation": {
+  "rule": "F_orientation: highest-minus-runner-up, oriented AFTER the reading, hence two-sided at alpha/24 per tail",
+  "higher": "F-bge-small",
+  "runner_up": "F-MiniLM-L6",
+  "note": "the registry lists a=F-MiniLM-L6/b=F-bge-small nominally; F_orientation governs the sign"
+ },
+ "macro_at_20M": {
+  "F-bge-small": 0.5159506173533556,
+  "F-MiniLM-L6": 0.5043553825747732
+ },
+ "macro_at_cycle2": {
+  "F-bge-small": 0.5136687392421483,
+  "F-MiniLM-L6": 0.5007857108119059
+ },
+ "by_family_at_20M": {
+  "F-bge-small": {
+   "BRIGHT": 0.17826170450639434,
+   "consumer-health": 0.7065451528326812,
+   "finance": 0.3262869513184712,
+   "legal": 0.8527086607558757
+  },
+  "F-MiniLM-L6": {
+   "BRIGHT": 0.1708030118171363,
+   "consumer-health": 0.6878290082396381,
+   "finance": 0.310858038850634,
+   "legal": 0.8479314713916843
+  }
+ },
+ "resolve": {
+  "point_ge_MDE": true,
+  "MDE": 0.0056,
+  "lower_bound_gt_0": true,
+  "sign_stable_last_two_cycle_ends": true,
+  "resolved": true
+ },
+ "verdict": {
+  "winner": "F-bge-small",
+  "basis": "RESOLVED margin (evidence)",
+  "consequence": "outcome_to_action.F: every later family runs on F's winner and every later verdict is labelled conditional on it"
+ },
+ "power_note": "distance_raw 0.004374 vs the registered resolution distance 0.0086 measured between UNRELATED models; the mandate expected that to over-estimate a real contrast's width and priced 0.5x at 0.0043, which is where this landed. ONE contrast, and F's arms differ in backbone; P2's bracket for B/D and the wider expectation for G/C/A are not overturned by it.",
+ "delta_raw": 0.011595234778582406,
+ "lower_bound_raw": 0.007221227793660513,
+ "distance_raw": 0.004374006984921893,
+ "lower_bound_prev_order_statistic": 0.007221049197039072,
+ "order_statistic_index0": 208,
+ "quantile": 0.0010416666666666667,
+ "quantile_method": "inverted_cdf",
+ "B": 200000,
+ "seed": 0,
+ "chunk": 5000,
+ "plan_sample_sha256": "8091783fa66a21d8fcdd3a1c6458920c3c52442fc85cb5c5d9990f37a90e3d68",
+ "draws_sha256": "cb392db4f02aa8774afe092c20da7f11616e6fd28da189424ff60797dd5c00bd",
+ "draws_sd": 0.001432162490450929,
+ "per_unit_delta_raw": {
+  "BRIGHT/biology": 0.017413883761808812,
+  "BRIGHT/earth_science": 0.0004650772046763741,
+  "BRIGHT/economics": -0.0009096850838123615,
+  "BRIGHT/psychology": 0.02736616326076598,
+  "BRIGHT/robotics": 0.00576769828566149,
+  "BRIGHT/sustainable_living": -0.0053509812935519,
+  "LEDGER": 0.015428912467837142,
+  "LegalBenchConsumerContractsQA": 0.0038118912645741846,
+  "LegalBenchCorporateLobbying": 0.0057424874638086374,
+  "MedicalQARetrieval": 0.018716144593043008
+ },
+ "n_by_unit": {
+  "BRIGHT/biology": 103,
+  "BRIGHT/earth_science": 116,
+  "BRIGHT/economics": 103,
+  "BRIGHT/psychology": 101,
+  "BRIGHT/robotics": 101,
+  "BRIGHT/sustainable_living": 108,
+  "LEDGER": 10000,
+  "LegalBenchConsumerContractsQA": 396,
+  "LegalBenchCorporateLobbying": 340,
+  "MedicalQARetrieval": 2048
+ },
+ "weights": {
+  "MedicalQARetrieval": 0.25,
+  "BRIGHT/biology": 0.041666666666666664,
+  "BRIGHT/earth_science": 0.041666666666666664,
+  "BRIGHT/economics": 0.041666666666666664,
+  "BRIGHT/psychology": 0.041666666666666664,
+  "BRIGHT/robotics": 0.041666666666666664,
+  "BRIGHT/sustainable_living": 0.041666666666666664,
+  "LegalBenchCorporateLobbying": 0.125,
+  "LegalBenchConsumerContractsQA": 0.125,
+  "LEDGER": 0.25
+ },
+ "_note": "distance_raw = delta_raw - lower_bound_raw; a contrast resolves when delta_raw >= MDE and lower_bound_raw > 0 (sign stability checked elsewhere)"
+}
