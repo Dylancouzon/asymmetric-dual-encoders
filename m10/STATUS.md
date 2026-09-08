@@ -97,6 +97,33 @@ M9's coverage failure showed, which makes it tempting to read as a verdict. It i
 | **paired row** | **DRAFT REGISTRATION READY for ratification: `research/m10-paired-row-registration-draft.md`** (8 numbered items, drafted from both reviewer passes, nothing new added). **Item 7 expires first** — both six-set transactions must emit aligned PER-QUERY scores and qids, and that must be in force BEFORE M9's close-out runs or the row cannot be built at all, ever. Original: **Register it — as a whole-protocol RECIPE delta, not a coverage test.** M9→M10 changes dose 4.5× (3.69B → ≈16.8B), head width 384→1152, schedule, objective, mix, batch, and possibly the student. **Normalise on the TEACHER**, not M9 (`Δr_d = (S10−S9)/T_d`); never call `S10/S9` "retention". Register now: the confound list, a fixed non-causal claim sentence, the exact datasets/statistic/B/seed, a conditional "same backbone family" label (F can pick a MiniLM), and **that both six-set transactions emit aligned PER-QUERY scores and qids** — otherwise the paired row cannot be built at all |
 | **W14** | **No decision-bearing surface sees the headline forms.** COV selects on forum/medical/legal/finance; C1b is clean-4 (scientific, biomedical). The screen can optimise the build away from the release bar and nothing would notice until M10.4. Codex frames the root question: **is family A a causal experiment, a catastrophe veto, or diagnostics? It cannot be all three** |
 
+## ⚠ astra pass 2 (GROUNDED): three decision rules do not implement their intent — FIX BEFORE CONFIRMATION
+
+`research/m10-astra-v2-dispositions-2026-09-08.md` (verbatim: `…-v2-whole-plan-…md`). 147,746 tok,
+read all six named files; pass 1 read none. **All verified verbatim against the registry.**
+
+| # | defect | why it matters |
+|---|---|---|
+| 1 | `confirmation.stands_iff` compares the seed-0 margin to the range of **absolute** scores, not paired differences. **Perfect replication is REJECTED** (.020 margin vs .040 range); **a reversal on both fresh seeds is ACCEPTED** (.020 vs .014) | it can change the build |
+| 2 | `E_cost` picks bs128 when E1 is unresolved (to save build cost), but E is confirmation-eligible and confirmation needs winner−default > 0, which is **negative** for a cost-motivated pick → always reverts. **The cost branch is unreachable** | E's whole purpose |
+| 3 | `D_tie` returns to squared L2 when D-NORM and D-COV **both resolve** within 1e-4 — discarding two demonstrated improvements | throws away a win |
+
+**These are still fixable.** Every one governs a decision **not yet made** (no confirmation arm has
+run; D and E have not run), so amending them is pre-observation — the only window the protocol
+allows. **But `results/m10_F_verdict.json` pins `registry_sha256` and `run_arm` refuses post-F arms
+if it changes, so the registry CANNOT be touched until the running chain finishes.**
+Sequence: **chain finishes → amend the three rules → re-issue the F verdict → only then confirm.**
+
+**Also verified:** the Bonferroni denominator is **12** (amendment C2 + `rules.F_orientation`:
+11 at α/12 + F1 two-sided at α/24 = α exactly), while `instructions-m10.md:77/:337/:641` and ≥4
+LEDGER places still say 0.025/13. **F1 used α/24, so no number is wrong** — the stale 13 is a trap.
+`FORMS-12` is "descriptive only" yet the plateau top-up doubles its bottom-two form weights off a
+forecast labelled "never gating". `WARMUP_STEPS` is fixed in **steps**, so bs128 gets 4× the warmup
+exposure and ¼ the updates — E1 measures an optimizer policy, not batch size.
+
+**Biggest structural error, beyond W14:** the screen's isolated 5M effects are assumed to transfer
+to a 200M combined build that may change dose, data (A4→A3), batch and several components at once.
+
 ## gpt-6-astra whole-plan review, 2026-09-08 — 3 verified gaps, all on the COST axis
 
 Dispositions and verification: `research/m10-astra-review-dispositions-2026-09-08.md`; verbatim
