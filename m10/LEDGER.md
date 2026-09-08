@@ -621,7 +621,7 @@ constant (50% of the smaller set) comes from the Jaccard intent, **not** from wh
 | 2026-09-05 00:2x | 028d234 | **T2-3 is the smoke rigged?** Topical seeds are the top keyword scorers of 400K candidates; the build cannot be that selective | (i) keep, disclose; (ii) draw as the build will; (iii) both, gate on the build-representative one | *"(i) with two additions, not (ii) or (iii)"* — the gate asks whether a PROMPT is well worded, and "a health prompt on a sports biography fails for a reason unrelated to wording"; (ii) is undefined tonight because the build's seed rule is not locked; a harder unregistered gate that drops a form "would be a quota change on a measurement the gate was never registered to make". Additions: register that the build's topical draw uses the same `ROUTE` patterns and `min_score ≥ 4`; add a report-only build on-form diagnostic. Also: the judge sample must spread across all 40 seeds — `queries[:50]` was "the ~10 strongest seeds" | (i) + both additions + the judge-sample fix | Disclosed in `m10/SMOKE.md`. The judge sample is now round-robin over all 40 seeds |
 | 2026-09-05 14:xx | (this commit) | **T2-9 the `ask` rule's forms have no quota row.** `instructions-m10.md`:366 registers five harvested forms at ~250K; the §Harvest quota table registers three. Measured yield: `factoid` 5,605, `product` 40,977 — both under the mandate's 100K revert-to-generation threshold (:372) | (a) include uncapped on top of 1.25M; (b) register quotas for both; (c) five forms share 1.25M; (d) delete the rule, skip `pool_pass`; (e) `factoid` only; (f) execute the registration as written | *"Your framing is wrong in one place … the registered state is a sixth option you have not written down"* — (a)/(b)/(c)/(e) each change a registered number after observing yields, so they are **Tier 3 in disguise**; (d) is **not** conservative, since its premise ("yields nothing usable") is false and skipping `pool_pass` deletes a yield measurement the §1 template requires. (f) changes nothing = Tier 1. On the second pass, given the measured quality: *"they lower the temptation to deviate; they are not the reason the rows are out … The moment the LEDGER says 'excluded **because** the content is marketing boilerplate', you have made a quota decision on observed data and dressed it as a disclosure. That is the laundering, and it is one word away."* Projected effect of admitting them **< 0.001 against MDE 0.0056** | (f), with the exclusion attributed to the missing quota row and the quality measurement logged as a separate finding | The rows could not have been included even had the content been excellent — there is no quota row and adding one is Tier 3 — so the exclusion is registration-driven and not data-dependent. Yield + quality reported per the §1 template; admission is Dylan's at M10.2, default excluded (§Open questions W7) |
 | 2026-09-05 15:xx | (this commit) | **T2-10 `qfilter` — the frozen rubric's word range is ENFORCED, on generated output and at the harvest draw.** It was implemented and measured but **never logged as a decision** (a Fable pass flagged the gap): it changes what enters the build manifest, so it needed a §3 row before generation, not only a `STATUS.md` line | (a) enforce each form's own `RUBRIC` range; (b) leave out-of-range strings in and report the rate; (c) invent a single global length window | (a). The ranges are parsed out of the **frozen** `RUBRIC` at import, so the filter cannot drift from the text the judges score against and a rubric edit moves both together — it enforces an already-registered spec rather than adding a standard. Direction-safe: it only removes | (a) | Largest on-form lever measured in M10 (`results/m10_qfilter_effect.json`): health **0.780 → 0.857**, finance **0.790 → 0.806**, and out-of-range strings score **0.000** (wikipedia-body) and **0.0385** (incumbent) on-form — they are almost pure noise. Drop rates are small (health 8.7%, finance 3.6%) and supply pays for it (51,633 health seeds against a 33,000 need). Per-form drop counts go to the manifest, never silently absorbed. Also applied at `harvest.draw` where it binds `claim` (§Harvest amendment item 3) |
-| 2026-09-05 15:xx | (this commit) | **T2-11 does T2-8's rung 2 still have to run?** The rung-1 artifact's `_registered_outcome` says *"rung 2 — LLM classification of the lead sentence — is next as registered"* after rung 1 missed the 0.80 gate (health 0.655, finance 0.535). Generation is ~10 GPU-hours on one busy card, so the GPU goes to rung 2 or to generation | (i) run rung 2 first; (ii) rung 2 retired for admission but run as a quality lever; (iii) rung 2 does not run, generation proceeds | *"Your **conclusion** is right … your **reasoning** is wrong in a way that will bite you at the next step, because Record B is itself a withdrawn record."* I had argued from the W6 draft at `:377`; the operative section is **§W6 RESOLVED (`:280`)**, which states *"there is now no admission bar for a seed store"* and *"T2-8's rung ladder is DEMOTED to a diagnostic: rungs 2 and 3 no longer gate anything, and rung 1 stays applied because it measurably raised health precision by 0.110."* Against (ii): Dylan ruled **with rung 2 explicitly on the table** (`:312`), T2-7 ⑦ already stopped at three instruments for one store question, finance moved **0.000** under rung 1, and rung 2 cannot see off-topic chunks inside on-subject articles | (iii) | **And one of my own bullets was WRONG and is withdrawn:** I wrote that "admission is decided after generation, on the generated queries". There is **no** post-generation admission test — applying the withdrawn conjunct 3 (floor 0.754) after seeing the corpus would re-instantiate a killed rule on observed numbers, Tier 3 twice over. What gates the output is only what was already registered: the **A8 manifest gates** (near-dup > 25% → representatives only; < 50,000 retained → form dropped) and the **FORMS-12 hold-out**. Two stale pointers fixed in this commit |
+| 2026-09-05 15:xx | (this commit) | **T2-11 does T2-8's rung 2 still have to run?** The rung-1 artifact's `_registered_outcome` says *"rung 2 — LLM classification of the lead sentence — is next as registered"* after rung 1 missed the 0.80 gate (health 0.655, finance 0.535). Generation is ~10 GPU-hours on one busy card, so the GPU goes to rung 2 or to generation | (i) run rung 2 first; (ii) rung 2 retired for admission but run as a quality lever; (iii) rung 2 does not run, generation proceeds | *"Your **conclusion** is right … your **reasoning** is wrong in a way that will bite you at the next step, because Record B is itself a withdrawn record."* I had argued from the WITHDRAWN W6 draft (§"W6 — the withdrawn admission rule"); the operative section is **§"W6 — RESOLVED by Dylan, 2026-09-05"**, which states *"there is now no admission bar for a seed store"* and *"T2-8's rung ladder is DEMOTED to a diagnostic: rungs 2 and 3 no longer gate anything, and rung 1 stays applied because it measurably raised health precision by 0.110."* Against (ii): Dylan ruled **with rung 2 explicitly on the table** (same §W6 RESOLVED section), T2-7 ⑦ already stopped at three instruments for one store question, finance moved **0.000** under rung 1, and rung 2 cannot see off-topic chunks inside on-subject articles | (iii) | **And one of my own bullets was WRONG and is withdrawn:** I wrote that "admission is decided after generation, on the generated queries". There is **no** post-generation admission test — applying the withdrawn conjunct 3 (floor 0.754) after seeing the corpus would re-instantiate a killed rule on observed numbers, Tier 3 twice over. What gates the output is only what was already registered: the **A8 manifest gates** (near-dup > 25% → representatives only; < 50,000 retained → form dropped) and the **FORMS-12 hold-out**. Two stale pointers fixed in this commit |
 
 - **2026-09-04, W2 RULED by Dylan: "approve both".** `howto` (80.0%, at the threshold) and `argument` (88% on the registered 50-query sample, **67% across its full output**) are **approved into the build**, notwithstanding the procedural defects disclosed in `m10/SMOKE.md`. With `conversational` cleared on evidence, **all seven generated forms are approved**. `argument` ships with 67% reported as its honest on-form rate, and with the conditions the Fable pass attached: the build-time on-form diagnostic drawn as a **uniform random** sample (not round-robin), the A8 near-duplicate rate and mean pairwise cosine reported prominently because word-8-gram sketches cannot see template collapse, and the 5 exact duplicates in 200 long paragraphs treated as a 4-bit repetition warning. **W1 (the terminal-rule reading) remains open** and is not needed for this ruling.
 
@@ -660,7 +660,7 @@ constant (50% of the smaller set) comes from the Jaccard intent, **not** from wh
 
 **The trade-off, stated plainly because it is Dylan's to make:** the highest health precision measured anywhere in this project is the **filtered incumbent at 0.770**, one SE below the bar — and its screened pool is **6,625 against a 33,000 need**. The best-precision option cannot supply the build; `wikipedia-body` + rung 1 supplies 51,633 at 0.655. W6 decides whether either is admissible at all.
 
-**Rung 2 is next as registered.** — **SUPERSEDED the same day by §W6 RESOLVED (`:280`), which
+**Rung 2 is next as registered.** — **SUPERSEDED the same day by §"W6 — RESOLVED by Dylan, 2026-09-05", which
 DEMOTES the whole T2-8 ladder to a diagnostic: "rungs 2 and 3 no longer gate anything, and rung 1
 stays applied because it measurably raised health precision by 0.110." Rungs 2 and 3 do NOT run.**
 `results/m10_wikibody_precision-r1.json` `_registered_outcome` carries the same stale sentence and
@@ -764,54 +764,25 @@ reordered. It is a power disclosure exactly as the first one was, reported besid
 **Outcome map:** a same-init distance below 0.0056 closes W5 — the screen is adequately powered as
 registered. At or above it, Dylan decides on the MDE **before family F starts**, never after.
 
-### W6 — RULED … — **SUPERSEDED AND WITHDRAWN. See §W6 RESOLVED above (`m10/LEDGER.md:280`).**
+### W6 — the withdrawn admission rule. **Operative version: §"W6 — RESOLVED by Dylan, 2026-09-05"**
 
-> **Do not read the section below as operative.** Its three-conjunct test (supply · A8 diversity ·
-> a fidelity floor of 0.754 on generated queries) is the rule two adversarial passes withdrew, and
-> §W6 RESOLVED replaced it with **no admission bar for a seed store**. There is therefore **no
-> post-generation admission test of any kind**; re-applying conjunct 3 after seeing the generated
-> corpus would re-instantiate a killed rule on observed numbers. Kept verbatim because the failure
-> mode — a session inventing a standard to bless its own store — is the lesson.
+**Withdrawn, and must not be re-derived.** I drafted a three-conjunct admission test for a seed
+store — supply (≥33,000 screened seeds) · A8 diversity (near-dup <25% at 16/32) · **fidelity, the
+generated queries' blinded on-form rate not significantly below 0.80 at n≥200, a floor of 0.754**.
+Two adversarial passes withdrew it. §W6 RESOLVED replaced it with **no admission bar for a seed
+store at all**, so there is **no post-generation admission test of any kind**; re-applying the
+fidelity conjunct after seeing the generated corpus would re-instantiate a killed rule on observed
+numbers.
 
-#### (withdrawn) a seed store is admitted on the QUERIES it produces
+**The lesson, which is why this stays at all:** a session inventing a standard to bless its own
+store. The tell was that 0.80 came from decision 15's approval bar but the *test* was new — "cannot
+be ruled out at 0.80" instead of "point estimate ≥ 0.80" — which is a weaker bar wearing the
+stronger one's number.
 
-**The ruling.** Seed subject precision stops being the admission instrument. A store is admitted on
-what the build actually consumes: the generated queries' fidelity and diversity, plus supply.
-
-**The test, three conjuncts, ALL required.** Measured at M10.1 on the build manifest, per form, per
-store:
-
-1. **Supply** — the store fills the form's registered quota (≥ 33,000 screened seeds at the
-   registered 5 queries per seed for a 143K quota).
-2. **Diversity** — A8's registered gates on the generated queries: near-duplicate rate below 25% at
-   the registered 16/32 threshold, mean pairwise stella cosine disclosed.
-3. **Fidelity** — the generated queries' on-form rate, judged blinded against the frozen
-   `forms.RUBRIC` at n ≥ 200 per form per store, is **not significantly below the 0.80 at which the
-   forms were approved** (one-sided binomial, α = 0.05; at n = 200 that is a floor of **0.754**).
-
-Among stores passing all three the build uses the highest on-form rate; a tie inside one SE goes to
-the larger supply.
-
-**Why this is not the forbidden change, stated plainly rather than assumed.** The evaluation
-protocol — partitions, decontamination, the frozen comparator vectors, the single final run, the
-pre-registered statistics — is untouched, and no reported number depends on which store the seeds
-came from. This is a **data-recipe** gate, which `CLAUDE.md` puts explicitly on the list that is
-"fair game to reopen with evidence and Dylan's sign-off". The session raised it; the owner ruled it.
-
-**Four disclosures that ride with the ruling.**
-- **0.80 is not invented.** It is the same on-form bar the forms were approved at (decision 15).
-  Only the TEST is new — "cannot be ruled out at 0.80" rather than "point estimate ≥ 0.80" — and
-  the reason is on the record: the approval sample was T2-3's top-tail draw, which the mandate
-  itself flags as non-representative, so a build-population estimate is expected to sit lower.
-- **The decision reads numbers that do not yet exist.** Every on-form figure measured so far
-  (0.780 / 0.790 vs 0.735 / 0.635) is on the PRE-filter pool and is a diagnostic. Conjunct 3 is
-  re-measured on the actual post-rung-1 build corpus, so the rule genuinely precedes the numbers
-  it governs.
-- **The seed-precision gate is not deleted.** It is reported beside every store as a diagnostic.
-  It stops being the instrument that admits.
-- **Supply already decides health on its own:** the incumbent store holds 8,663 screened health
-  seeds against a 33,000 need and fails conjunct 1 outright, under any fidelity standard.
-
+**Two facts from it that remain true and are used elsewhere:** seed-subject precision is reported
+beside every store as a diagnostic and admits nothing; and **supply alone decides health** — the
+incumbent store holds 8,663 screened health seeds against a 33,000 need. (The full withdrawn text
+is in git history; `research/` has the two review passes.)
 ### Open questions for Dylan — raised by the weekend window, NOT resolved here
 
 | # | question | why it is not mine to answer | cost of waiting |
@@ -953,8 +924,8 @@ REQUIRED-but-unbuilt items, one of which is the actual blocker to family F.**
 |---|---|---|
 | **M1** | **The M10 corpus→trainer path DOES NOT EXIST.** `data10.py` loads only the M9 pool (`:33-53`). No loader for harvested / PAQ / generated rows, **no form-balanced sampler** (the registered anchor default, mandate `:480-485`; zero hits for `balanc` in `m10src/`), and no teacher-target encode for **~6.3M new stella query encodes**. `STATUS.md` calls the trainer port DONE — it is done **for A1's data only** | **THIS is the blocker between "data built" and "family F starts", and I had not named it** |
 | **M2** | **A8 gate 2 (MS MARCO dev distribution overlap) has no code, no sample, no plan line.** Mandate `:467-475`, required "before any arm"; `corpus10.py` explicitly punts it | it is the **one outside measurement of M9's failure mode** the plan has. ~1 h |
-| **M3** | **CUREv1 admission (decision 12) was never executed.** Mandate `:199` requires revision, licence clause, provenance, fingerprint screen, and joining the protected index | **the harvest, PAQ and seed draws were screened against an index that lacks it.** Pre-observation, so fixable: re-screen or disclose before anything is read |
-| **M4** | **M10.0-c baseline** — per-component DEV-6 read of the M9 candidate incl. `heldout-longq` (mandate `:310`, runbook step 7). Minutes on the box | it is **the denominator every retention-vs-M9 comparison needs** |
+| **M3** | **CUREv1 admission (decision 12) was never executed.** Mandate §Key decisions row 12 ("CUREv1 as a validation-only biomedical read") requires revision, licence clause, provenance, fingerprint screen, and joining the protected index | **the harvest, PAQ and seed draws were screened against an index that lacks it.** Pre-observation, so fixable: re-screen or disclose before anything is read |
+| **M4** | **M10.0-c baseline** — per-component DEV-6 read of the M9 candidate incl. `heldout-longq` (mandate runbook step (c), "Per-component DEV-6 read of the M9 candidate incl. `heldout-longq`"). Minutes on the box | it is **the denominator every retention-vs-M9 comparison needs** |
 | M5 | `arxiv-title` has a draw but no scoring path (mandate `:683-690`); §2 licence rows for arXiv CC0 and the Wikipedia attribution line | descriptive / disclosure |
 
 **OVER-ENGINEERING — verdicts, and it is right.** *Delete:* `m10src/a8_blindspot.py` (one-shot
