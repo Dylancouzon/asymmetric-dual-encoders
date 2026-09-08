@@ -4,6 +4,31 @@ Skeleton committed 2026-09-01 (Codex pass 5). Every section is filled by the GPU
 step it governs, and never edited after that step's output exists. Numbers live in the JSON the
 row points at; this file records the decision, the number a rule reads, and the pointer.
 
+## PRE-REGISTRATION BOUNDARY CROSSED 2026-09-07 ~20:5x — the COV surface is now OBSERVED
+
+Family F (`F-bge-small`, the first registered arm) produced its first COV read at step 104,166:
+**macro 0.4996** {BRIGHT 0.1678 · consumer-health 0.6758 · finance 0.3076 · legal 0.8473}
+(`work/m10arms/F-bge-small.log`).
+
+**Therefore, from this moment:**
+- **The MDE cannot move.** W5 left Dylan three options (accept and report unresolved contrasts as
+  unresolved — the registered default; admit a further surface; revisit the MDE) and recorded that
+  the last "is Tier 3 and must be decided before any arm runs, not after", with MDE-after-observation
+  "forbidden outright". An arm has now run. **The registered default stands: MDE 0.0056 fixed,
+  unresolved contrasts reported as unresolved.**
+- **No new admission to the COV surface.** Family weights, the four family IDs and the 13,416
+  queries are fixed as registered; admitting a surface now would be a post-observation change to
+  the selection instrument.
+- **W14's first option is narrowed.** "Add a clean-4-shaped decision surface" can no longer mean
+  adding it to COV. It would have to be a *separate* registered surface, declared before it is
+  read, and it still needs a licensed, protected, qrel-bearing admission (CUREv1 remains barred —
+  decision 12 makes it never selection-bearing, §2).
+
+The per-family spread is as §5 predicted and is not news: **legal 0.847 against BRIGHT 0.168**,
+legal being the uninformative family (32.5% of variance for 9.8% of signal) and BRIGHT the
+on-thesis one. **No selection reading is available from one arm** — F's contrast is bge-small vs
+MiniLM-L6 and needs both.
+
 ## The two 2026-09-07 "box crashes" were OUR memory bug. Fixed; full-dose pre-flight PASSES
 
 **Not a flaky box.** WSL died twice, ~2 h apart, both times before family F reached a training
