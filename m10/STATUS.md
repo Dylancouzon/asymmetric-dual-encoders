@@ -1,4 +1,4 @@
-# M10 status — 2026-09-08 morning. **F-bge-small COMPLETE** (first registered arm, `exit 0`, COV final 0.51595, 9.25 h). **F-MiniLM-L6 running**, ~60% at 08:12, 1,066 ex/s, ETA ~09:55. §0b registered; the screen is live.
+# M10 status — 2026-09-08. **Family F DONE and F1 RESOLVED: the student is bge-small.** **W8 band-1 remainder RUNNING** (11 arms, ~25 h, `work/m10arms_run_rest.sh`). §0b registered; the screen is live.
 
 **Read this, then `m10/LEDGER.md`.** The box is **preparation for the cloud GPU run, not a
 measurement target** (Dylan, 2026-09-05): run as much as it can here first, no re-shaping; the
@@ -30,6 +30,30 @@ tokenizer — ten rows cost 2,200 MB `RssAnon` because it materializes a whole s
 close-out pending); the M10-side fix is to sort the draw by store and load each once.
 Trust `arm_hwm_mb` in the trace, not `arm_rss_mb` — a 5 s sample of an instantaneous gauge is a
 lower bound. `n_match=0` prints **-1**, so a bad pattern cannot look like an idle arm.
+
+## RUNNING: the W8 band-1 remainder, 11 arms in registered order (~25 h)
+
+`work/m10arms_run_rest.sh` (tracked copy `m10src/run_rest.sh`), launched 10:54 after **12/12 on the
+90-step CUDA shape smoke with the current code** (`results/m10_arm_smoke.json`, `all_shapes_pass`).
+Order is the registry's: ANCHOR · A1 · A2 · A3 · G-384 · G-1536 · G-MLP · B-100/0 · B-50/50 ·
+D-NORM · D-COV. **C is CUT; E-bs128 is CLOUD_ONLY** (the A100) and `run_arm` refuses it on the box.
+
+Doses are NOT uniform — read them from `run_arm.py <arm> --plan`, not from the screen dose:
+5,000,000 for ANCHOR/A/G/D (156,250 steps), **3,750,000 for B-100/0**, **7,500,000 for B-50/50**.
+Projected 52.2 box hours for the whole band at the conservative 512 ex/s, of which F's 21.7 h are
+already spent; the remainder is ~30 h projected, ~25 h at the measured 624.
+
+**`results/m10_F_verdict.json` is what unblocks these arms.** `run_arm.f_verdict` refuses every
+post-F arm without it — *"this runner never guesses the student"* — and validates it hard: the
+schema (`winner`, `contrast{rule,point,lower,resolved}`, `registry_sha256`,
+`sha256_of_F_records`), that it was decided under the CURRENT registry hash, that each F record
+hashes exactly, that each has `status: "complete"` and a `final_checkpoint_sha256`, and that the
+winner is the student of a `trained`, uncut family-F arm. Writing the contrast to
+`m10_contrast_F1.json` alone left all 11 arms refused in 14 s.
+
+**The chain distinguishes a refusal from a failure:** non-zero within 120 s = a shared
+precondition, so it STOPS; a later non-zero is that arm's own outcome and the chain continues. The
+first version lacked this and burned all 11 arms on one missing file.
 
 ## F chain — arm 1 done, arm 2 in flight
 
