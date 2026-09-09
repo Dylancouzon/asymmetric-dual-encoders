@@ -69,19 +69,45 @@ MDE 0.0056; one-sided lower bound at α/12, F1 two-sided at α/24 per tail. Fami
 **Selected recipe:** student **bge-small** · corpus **A4** (harvest + generated) · head **1152-wide
 linear** · mix **75/25** · objective **squared L2** · batch **PENDING**.
 
+**A4−A3 is a FORM-MATCH effect, and this is the finding.** Decomposing the +0.012080:
+MedicalQARetrieval alone contributes **+0.009885 (81.8%)**; LEDGER +0.001915; legal +0.001615;
+**BRIGHT is net NEGATIVE at −0.001335**. Drop consumer-health and the three-family point is
+**+0.0029, half the MDE**. A4 adds seven generated forms to A3's five, and two of them are
+**`health`** and **`finance`** — exactly the two COV families that gained, in that order, while
+BRIGHT has no matching added form and lost. So what resolved is *adding a query form that matches
+an evaluation family*, not "generated data helps" and not "coverage helps". The build action is
+unchanged (the same 12-form allocation at ~40× dose); the CLAIM is much narrower, and the risk cuts
+both ways for clean-4, which is scientific/biomedical.
+
 Three readings that are not optional:
 
 - **A4−A3 is an exposure re-allocation, not a synthetic-data test.** The sampler is form-balanced,
   so A4's 12 forms take 312,500 presentations each against A3's 5 at 750,000, and 58.3% of A4's
   exposure is generated (`results/m10_exposure_table.json`). What resolved is *form breadth at the
   cost of per-form exposure*. The registered action follows either way.
-- **D2 does not test its own hypothesis.** D-COV's gradients are ~500× smaller than squared L2's on
-  identical batches (0.0017 vs 0.868, `results/m10_dcov_gradient_audit.json`) at the same peak LR.
-  ε is not the confound; gradient clipping is. Report D2 as confounded, never as evidence against
-  document-aware regression.
+- **D2's mechanism is UNRESOLVED.** D-COV's gradients are ~500× smaller than squared L2's on
+  identical batches (0.0017 vs 0.868) at the same peak LR, and ε is not the cause. **An earlier
+  version of this file said clipping was — that was asserted, not measured, and is retracted:** the
+  clip instrumentation landed 14:20, after the last arm finished at 14:13:48, so no registered arm
+  recorded a clip rate, and the audited 0.868 is at an init-adjacent loss implying ~0.43 at the
+  first logged training loss, under the 1.0 threshold. Two candidate mechanisms stand, neither
+  established: an optimizer-scale artifact by some other route, or a real failure of
+  document-aware regression (Σ down-weights low-pooled-variance directions — exactly what each
+  domain needs; D2 is negative in all four families). Report it as unresolved, not as a clean test
+  and not as a proven artifact.
 - **E is PENDING, not unresolved.** `rules.E_cost` selects bs128 "in every other case", and an
   unread contrast trivially fails to resolve — reading it that way would take E's decision from a
-  measurement nobody made. The lock carries E open until the A100 runs both E arms.
+  measurement nobody made. The lock carries E open until the A100 runs both E arms, and
+  **`rules.E_warmup_parity` was registered before that arm runs**: warmup was fixed in STEPS, so
+  bs128 would have had 4× the warmup exposure and ¼ the updates, handicapping the arm whose
+  selection saves 2.2× build cost.
+
+**Every interval here is a query-resampling interval.** No interval in this screen contains
+training-seed variance — confirmation was the only thing that would have measured it, and it is
+cut. The bound we do have: the calibration measured a seed effect of **0.0013869**
+(`results/m10_calib_report.json`, n=1). A shift that size moves A4−A3's lower bound to ~+0.0055,
+the MDE, and moves no other verdict. `confirmation.seed_variance_gap` carries the disclosure and
+the cheap way to close it.
 
 ## Known pre-existing test failure (not caused by any M10 work)
 
