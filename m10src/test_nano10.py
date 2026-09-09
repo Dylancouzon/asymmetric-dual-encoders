@@ -326,3 +326,17 @@ def test_warmup_is_registered_in_EXAMPLES_so_both_E_arms_get_the_same_exposure()
     for b in (32, 128):
         assert N.warmup_steps_for(b) * b == N.WARMUP_EXAMPLES
     assert N.warmup_steps_for(1_000_000) == 1, "never zero: a warmup of 0 steps divides by zero"
+
+
+def test_lr_at_s_default_warmup_is_DERIVED_from_the_screen_batch_not_a_second_constant():
+    """`cov_macro.contrast` had to make `quantile` required after a stale silent default decided
+    eleven contrasts. Same shape here: `lr_at`'s default warmup is correct only at the screen batch,
+    and there is exactly one production caller (`trainer10`), which passes a batch-derived value.
+    Deriving the default rather than repeating 2,000 means a change to either constant cannot leave
+    the two disagreeing."""
+    import inspect
+    d = inspect.signature(N.lr_at).parameters["warmup"].default
+    assert d == N.warmup_steps_for(N.SCREEN_BATCH) == N.WARMUP_STEPS
+    src = (Path(__file__).resolve().parent / "trainer10.py").read_text()
+    assert "N.lr_at(step, total_steps, cycles, peak, final, N.warmup_steps_for(batch_size))" in src, \
+        "the one production caller must pass a BATCH-DERIVED warmup, not rely on the default"

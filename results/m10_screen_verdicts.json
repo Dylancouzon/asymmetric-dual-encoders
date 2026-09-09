@@ -1,6 +1,6 @@
 {
  "_what": "the selected recipe, from the registered family rules applied to the computed contrasts. `m10src/contrasts.selection`; nothing is decided here.",
- "registry_sha256": "48771d8f83007df8ac1ed4630e99ece7f4451cbfe3188d197a3dec50c6aeafbd",
+ "registry_sha256": "8b7c4b59d7f1e688f86055e1a2f986ffde1d58b90b9cf9421297fbc967e5f77b",
  "selected": {
   "student": "bge-small",
   "corpus": "A4 (harvest + the 834,463 generated queries)",
@@ -66,7 +66,7 @@
    "label": "NOT RESOLVED",
    "resolved": false
   },
-  "E1": "E-bs128 -> E-bs128 has no cycle-end COV read: the arm has not run on this machine (`E-bs128` is CLOUD_ONLY, `outcome_to_action.E`)",
+  "E1": "E-bs128 -> E-bs128 is registered `pending: CLOUD_ONLY` and has not run; the disposition is REGISTERED, not inferred from a missing file (`arms.E-bs128._pending`)",
   "C1": "C-M9init -> C-M9init is CUT under W8 band 1 (`rules.C_skipped`); the Bonferroni denominator is unchanged at 12",
   "D1": {
    "point": -0.0002023615927666363,
@@ -82,7 +82,7 @@
   }
  },
  "not_computed": {
-  "E1": "E-bs128 -> E-bs128 has no cycle-end COV read: the arm has not run on this machine (`E-bs128` is CLOUD_ONLY, `outcome_to_action.E`)",
+  "E1": "E-bs128 -> E-bs128 is registered `pending: CLOUD_ONLY` and has not run; the disposition is REGISTERED, not inferred from a missing file (`arms.E-bs128._pending`)",
   "C1": "C-M9init -> C-M9init is CUT under W8 band 1 (`rules.C_skipped`); the Bonferroni denominator is unchanged at 12"
  },
  "missing": []

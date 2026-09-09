@@ -333,7 +333,8 @@ def warmup_steps_for(batch):
     return max(int(WARMUP_EXAMPLES) // int(batch), 1)
 
 
-def lr_at(step, total_steps, cycles=3, peak=1e-4, final=1e-5, warmup=WARMUP_STEPS):
+def lr_at(step, total_steps, cycles=3, peak=1e-4, final=1e-5,
+          warmup=WARMUP_EXAMPLES // SCREEN_BATCH):
     """LEAF's small-batch cyclic schedule: `cycles` cycles, each a linear decay from `peak` to
     `final`, restarting at `peak`. The last step of every cycle is a cycle END, which is where COV
     is read and where the sign-stability clause looks.
