@@ -1652,3 +1652,42 @@ yet" — the exact collapse the E rule forbids. A test caught it; dispositions a
 **Operational lesson:** the registry is frozen the moment a contrast is computed against it, not
 when the arms finish. One prose edit after the fact invalidated ten records (each pins
 `registry_sha256`) and cost a full recompute — bit-identical, but it need not have happened.
+
+### Fable adversarial pass on the amendment and the verdicts, 2026-09-09 — eleven findings, all applied
+
+Read-exclusion audited clean. Every claim re-derived here before acting; two of the reviewer's own
+framings were corrected in the process (its illustrative ±0.004 anchor shift is ~3× the only seed
+figure we have, 0.0013869 from `results/m10_calib_report.json`, which it did not read).
+
+**The finding, and it changes the paper's sentence, not the build.** A4−A3's +0.012080 is **81.8%
+one unit**: MedicalQARetrieval +0.009885, LEDGER +0.001915, legal +0.001615, **BRIGHT net NEGATIVE
+−0.001335**. Three-family point without consumer-health: **+0.0029, half the MDE**. A4 adds seven
+generated forms to A3's five and two are `health` and `finance` — exactly the two COV families that
+gained, in that order; BRIGHT has no matching form and lost. **A4−A3 measured a FORM-MATCH effect.**
+
+**Could have changed the build, fixed before the arm runs:** `rules.E_warmup_parity`. Warmup was
+fixed in STEPS, giving bs128 4× the warmup exposure and ~¼ the AdamW updates — E1 would have
+compared an optimizer policy while being read as a batch contrast, handicapping the arm whose
+selection saves 2.2× build cost. Now registered in EXAMPLES and implemented in
+`nano10.warmup_steps_for(batch)`; verified across all 14 arms that only `E-bs128` (never run)
+changes. `E-bs128` also carries `pending: CLOUD_ONLY` — its disposition was previously inferable
+only from a missing file.
+
+**My claims that were WRONG, kept so they are not re-derived:**
+
+- **"Gradient clipping is the D2 confound" — RETRACTED.** Asserted, never measured: the clip
+  instrumentation landed 14:20, after the last arm finished at 14:13:48, so no registered arm
+  recorded a clip rate, and the audited 0.868 norm is at an init-adjacent loss implying ~0.43 at
+  the first logged training loss, under the 1.0 threshold. D2's mechanism is UNRESOLVED.
+- **The registry carried two contradictory timing statements** — `_exposure_timing` said "no A
+  number existed" while `_amended_2026_09_09` said macros were on disk. The first is false.
+- **`budget_released` booked a worst case as realized.** No eligible non-default won, so
+  confirmation would have confirmed ZERO decisions; the freed dose is a range from −5M to +61.7M,
+  not 91.7M — and the recipe lock reads that number.
+- **SYNTH-20M compares the anchor to itself.** Its premise ("the build combines several
+  components") was removed by the data.
+
+Code, with tests: sign stability requires two cycle ends; the COV file must match the arm record's
+`per_query_scores_sha256`; multi-arm ties fall through to the default; `serve_cost_order`
+implemented; one source of truth for the family-A exemption; `lr_at`'s default warmup derived from
+the screen batch rather than repeated as a second constant.
