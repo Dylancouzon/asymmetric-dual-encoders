@@ -1691,3 +1691,34 @@ Code, with tests: sign stability requires two cycle ends; the COV file must matc
 `per_query_scores_sha256`; multi-arm ties fall through to the default; `serve_cost_order`
 implemented; one source of truth for the family-A exemption; `lr_at`'s default warmup derived from
 the screen batch rather than repeated as a second constant.
+
+### Codex adversarial pass on the FIXES, 2026-09-09 — **NO-GO on the bundle as claimed**
+
+Read-exclusion audited clean. Of the eleven fixes applied an hour earlier, **2 DID NOT WORK and 4
+were PARTIAL**. This is the second time this project's most valuable review has been a review of
+fixes rather than of decisions; it is now the rule, not an anecdote.
+
+- **The COV identity check had three holes**: it passed when the expected `per_query_scores_sha256`
+  was missing/null/empty (a guard conditional on its own expected value being truthy), and it never
+  validated the PREVIOUS cycle ends, which decide the sign-stability clause. Both closed.
+- **The D2 retraction never reached the generated verdict** — `selection()` still said D2 "is
+  confounded with an optimizer-scale difference". Registry prose that no output read.
+- **`serve_cost_order` was hardcoded**; **the tie test reimplemented `best()`** and would stay green
+  if the production function were deleted; **`selection()` accepted records from a superseded
+  registry** (nothing pinned the hash outside family F).
+
+**Three of my claims were wrong, kept so they are not re-derived:**
+
+1. **"Every already-run arm fingerprints unchanged" is FALSE.** `run_arm.fingerprint` includes
+   `code_identity()` over run_arm/trainer10/nano10 plus the registry hash; both changed. Only the
+   `warmup_steps` SUBFIELD is unchanged. Nothing is resuming, so nothing is affected.
+2. **"SYNTH-20M compares the anchor to itself" is conditional, not absolute** — `batch` is PENDING,
+   so if E selects bs128 the recipes differ.
+3. **"A4−A3 measured a FORM-MATCH effect" was over-claimed in the other direction.** One bundled
+   intervention, no per-form ablation: it cannot separate form matching from targeted semantic
+   coverage, generated-data quality, or another correlated property. Registered sentence: *the gain
+   is concentrated in consumer-health and is consistent with domain/form matching, while broad
+   cross-domain benefit is not established.*
+
+And the seed figure is **one observation**, not a "bound". Both reviewers are worth re-reading
+before the recipe lock: `research/` has neither log yet — they are in the session scratchpad only.

@@ -69,15 +69,21 @@ MDE 0.0056; one-sided lower bound at α/12, F1 two-sided at α/24 per tail. Fami
 **Selected recipe:** student **bge-small** · corpus **A4** (harvest + generated) · head **1152-wide
 linear** · mix **75/25** · objective **squared L2** · batch **PENDING**.
 
-**A4−A3 is a FORM-MATCH effect, and this is the finding.** Decomposing the +0.012080:
+**The A4−A3 gain is concentrated in one family, and that is the finding.** Decomposing the +0.012080:
 MedicalQARetrieval alone contributes **+0.009885 (81.8%)**; LEDGER +0.001915; legal +0.001615;
 **BRIGHT is net NEGATIVE at −0.001335**. Drop consumer-health and the three-family point is
 **+0.0029, half the MDE**. A4 adds seven generated forms to A3's five, and two of them are
 **`health`** and **`finance`** — exactly the two COV families that gained, in that order, while
-BRIGHT has no matching added form and lost. So what resolved is *adding a query form that matches
-an evaluation family*, not "generated data helps" and not "coverage helps". The build action is
-unchanged (the same 12-form allocation at ~40× dose); the CLAIM is much narrower, and the risk cuts
-both ways for clean-4, which is scientific/biomedical.
+BRIGHT has no matching added form and lost.
+
+**What may be claimed, and no more.** A4−A3 is ONE BUNDLED INTERVENTION — seven forms added while
+every existing form's exposure is diluted — and there is no per-form ablation anywhere in the
+screen. It cannot separate form matching from targeted semantic coverage, from generated-data
+quality, or from another correlated property of the added text. The defensible sentence: **the gain
+is concentrated in consumer-health and is consistent with domain/form matching, while broad
+cross-domain benefit is not established.** The build action is unchanged (the same 12-form
+allocation at ~40× dose); the CLAIM is much narrower, and the risk cuts both ways for clean-4,
+which is scientific/biomedical.
 
 Three readings that are not optional:
 
@@ -104,8 +110,9 @@ Three readings that are not optional:
 
 **Every interval here is a query-resampling interval.** No interval in this screen contains
 training-seed variance — confirmation was the only thing that would have measured it, and it is
-cut. The bound we do have: the calibration measured a seed effect of **0.0013869**
-(`results/m10_calib_report.json`, n=1). A shift that size moves A4−A3's lower bound to ~+0.0055,
+cut. The one figure we have: the calibration recorded a seed effect of **0.0013869**
+(`results/m10_calib_report.json`) — a single P0-vs-P1 difference, a sensitivity datum, **not a
+bound and not a distribution**. A shift that size moves A4−A3's lower bound to ~+0.0055,
 the MDE, and moves no other verdict. `confirmation.seed_variance_gap` carries the disclosure and
 the cheap way to close it.
 
