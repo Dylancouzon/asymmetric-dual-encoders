@@ -1,10 +1,11 @@
 # M10.2 — the build recipe (DRAFT, not yet locked)
 
-**Status: DRAFT.** It becomes the lock on the pushed commit that also carries
-`m10/final_run_registry.json` and `m10/LOTTE_LOCK.md`, which do not exist yet — the mandate
-requires one commit with all three (`instructions-m10.md`:346). Codex and Fable review the pushed
-lock. **Nothing in this file may be edited after that commit** except by a dated amendment that
-governs a decision not yet made.
+**Status: DRAFT.** The mandate requires ONE pushed commit carrying this file,
+`m10/final_run_registry.json` and `m10/LOTTE_LOCK.md` (`instructions-m10.md`:346). **The other two
+are now written**; what remains before the commit is listed under §Still to do — chiefly
+`m10src/final10.py`'s `decide()`, which the mandate requires written, unit-tested and reviewed
+first. Codex and Fable then review the pushed lock. **Nothing in these three files may be edited
+after that commit** except by a dated amendment that governs a decision not yet made.
 
 Every field below is read from `m10/screen_registry.json` and the committed artifacts; where this
 file states a number, the artifact is authoritative.
