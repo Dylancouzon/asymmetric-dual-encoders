@@ -146,10 +146,11 @@
   "crash": "per-system atomic outputs; resume at the first incomplete system; scores suppressed until all complete"
  },
  "implementation": {
-  "module": "m10src/final10.py \u2014 NOT YET WRITTEN",
+  "module": "m10src/final10.py \u2014 WRITTEN, 14 tests (m10src/test_final10.py)",
   "reuses": "m9src/final_stats.py for the bootstrap and sign-flip primitives; m9src/final9.py's SCORING path",
   "does_NOT_reuse": "`m9src/final9.py:decide()`, which is hard-coded to M9's TWO conjuncts under Holm-2 at 0.0125. An M10 `decide()` for four conjuncts under fixed-sequence gatekeeping at 0.025 is a different function, and reusing the M9 one would silently apply the wrong quantile and the wrong multiplicity correction.",
-  "requirement": "written, UNIT-TESTED and REVIEWED before the M10.2 recipe lock is pushed (Codex, 2026-09-04). The tests must include: the sequence stopping at the first non-rejection; a later conjunct reported NOT TESTED rather than failed; the 0.025 quantile being the 250th order statistic and not an interpolated one; and a partition with a missing dataset raising rather than renormalizing."
+  "requirement": "written, UNIT-TESTED and REVIEWED before the M10.2 recipe lock is pushed (Codex, 2026-09-04). The tests must include: the sequence stopping at the first non-rejection; a later conjunct reported NOT TESTED rather than failed; the 0.025 quantile being the 250th order statistic and not an interpolated one; and a partition with a missing dataset raising rather than renormalizing.",
+  "status": "decide(), the partition-aware bootstrap and the sequence are written and unit-tested. STILL OWED: adversarial review before the lock commit, and the SCORING path (loading the six, the bridge) which reuses m9src/final9.py."
  },
  "access_state_machine": [
   "lock + guard",

@@ -157,10 +157,16 @@ Registered before the numbers exist, so they cannot be dropped after them:
 
 ## Still to do before this is a lock
 
-- [ ] **`m10src/final10.py`** — the M10 `decide()`. `m9src/final9.py:decide()` is hard-coded to two
-      conjuncts under Holm-2 at 0.0125 and is NOT reused; reusing it would silently apply the wrong
-      quantile and the wrong multiplicity correction. Must be written, unit-tested and reviewed
-      **before this lock is pushed** (Codex, 2026-09-04).
+- [x] **`m10src/final10.py`** — WRITTEN and unit-tested (14 tests). `m9src/final9.py:decide()` is
+      hard-coded to two conjuncts under Holm-2 at 0.0125 and is NOT reused. The tests pin the
+      failure modes that are otherwise silent: the sequence stopping at the first non-rejection;
+      a later conjunct reported NOT_TESTED and **never as failed**; `linear` being the weakly more
+      permissive method and therefore banned; a partition missing a dataset RAISING instead of
+      renormalizing; both halves of the pass rule binding; and p = 0.02 rejecting at 0.025 where it
+      would not at M9's 0.0125.
+- [ ] **Adversarial review of `final10.py`** before the lock commit (Codex, 2026-09-04). Still owed,
+      and it is the one piece of code that decides an irreversible access.
+- [ ] The SCORING path (loading the six, the bridge), reusing `m9src/final9.py`.
 - [ ] `headline_verbatim` fixed in the registry, before any six-set number exists.
 - [ ] Both descriptive reads folded in (`ANCHOR-seed1` **done: +0.000712**; `A3-20M` running).
 - [ ] Codex and Fable review the pushed lock (mandate).
