@@ -386,3 +386,41 @@ def test_a_fingerprinted_resume_refuses_a_checkpoint_that_carries_none():
             assert "different recipe" in str(e)
         else:
             raise AssertionError("an unfingerprinted checkpoint must not satisfy a fingerprint")
+
+
+def test_train_arm_RECORDS_pre_clip_gradient_norms_and_the_clip_rate():
+    """The clip threshold is 1.0 and objectives differ 512x in gradient scale (measured
+    2026-09-09: D-COV's unit-trace covariance loss is 1024x smaller than squared_l2's,
+    `results/m10_dcov_gradient_audit.json`). So squared_l2 can clip while D-COV never can, and an
+    objective comparison must be able to rule that out. The screen's 13 arms computed this norm and
+    threw it away -- used only for the non-finite guard -- which is why D1/D2 carry the caveat
+    permanently. Recorded from now on so the build and any re-run can show it."""
+    r = T.train_arm(Toy(), make_batch_fn(), total_steps=8, seed=0)
+    g = r.get("grad_norm")
+    assert isinstance(g, dict), "train_arm must report grad_norm"
+    for k in ("n_steps", "mean", "max", "min", "n_clipped_at_1.0", "clip_rate"):
+        assert k in g, f"grad_norm is missing {k}"
+    assert g["n_steps"] == r["steps_run"], "one norm per optimizer step"
+    assert g["max"] >= g["mean"] >= g["min"] >= 0.0
+    assert 0.0 <= g["clip_rate"] <= 1.0
+    assert g["n_clipped_at_1.0"] <= g["n_steps"]
+
+
+def test_the_clip_COUNTER_is_not_a_no_op_when_clipping_actually_fires():
+    """The test above cannot see the counter: the toy's gradients never reach the 1.0 threshold, so
+    `n_clipped` is 0 whether or not it is incremented -- verified by mutation. Only a fixture that
+    actually clips can pin the count."""
+    class SharpToy(Toy):
+        def __init__(self):
+            super().__init__()
+            with torch.no_grad():
+                # the output is L2-NORMALIZED, so d(out)/dW carries a 1/||Wx|| factor: SHRINKING
+                # the weights amplifies the gradient. (Scaling them up does the opposite -- my
+                # first attempt at this fixture, which never clipped.)
+                self.head.weight.mul_(1e-3)
+                self.head.bias.mul_(0.0)
+    r = T.train_arm(SharpToy(), make_batch_fn(), total_steps=6, seed=0)
+    g = r["grad_norm"]
+    assert g["max"] > 1.0, f"the fixture must actually clip; max norm was {g['max']}"
+    assert g["n_clipped_at_1.0"] > 0, "clipping fired but the counter stayed at zero"
+    assert g["clip_rate"] > 0.0

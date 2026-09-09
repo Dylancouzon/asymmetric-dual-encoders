@@ -120,6 +120,7 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
     amp, amp_on = autocast_for(device)
     start = 0
     losses, evals, kinds, cycle_end_evals, read_evals = [], [], [], [], []
+    gn_stats = {"n": 0, "sum": 0.0, "max": 0.0, "min": float("inf"), "n_clipped": 0}
     n_examples, stopped = 0, None
     if resume_from:
         # The EVALUATION history is part of the run state. Without it a resumed arm restarts
@@ -180,6 +181,19 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
         if not torch.isfinite(gn):
             stopped = f"non-finite grad norm at step {step}"
             break
+        # RECORD the pre-clip norm, do not just guard on it. The clip threshold is 1.0 and
+        # objectives differ enormously in gradient scale -- measured 2026-09-09, D-COV's
+        # unit-trace covariance loss is 1024x smaller than squared_l2's and its gradients 512x
+        # smaller (`results/m10_dcov_gradient_audit.json`), so squared_l2 can clip while D-COV
+        # never can. That asymmetry is exactly what a D1/D2 reading needs to rule out, and it was
+        # unrecoverable from the screen's arms because this norm was computed and thrown away.
+        g = float(gn)
+        gn_stats["n"] += 1
+        gn_stats["sum"] += g
+        gn_stats["max"] = max(gn_stats["max"], g)
+        gn_stats["min"] = min(gn_stats["min"], g)
+        if g > 1.0:
+            gn_stats["n_clipped"] += 1
         opt.step()
         losses.append(float(loss.detach()))
         n_examples += len(ids)
@@ -226,7 +240,21 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
     el = time.time() - t0
     # `losses`/`evals` are the WHOLE arm's history (restored on resume); `steps_run` and the rate
     # are this process's, because a rate measured over another machine's steps is not a rate.
-    return {"steps_run": run_steps,
+    n = gn_stats["n"] or 1
+    grad_norm_report = {
+        "n_steps": gn_stats["n"],
+        "mean": round(gn_stats["sum"] / n, 6),
+        "max": round(gn_stats["max"], 6),
+        "min": (round(gn_stats["min"], 6) if gn_stats["n"] else None),
+        "n_clipped_at_1.0": gn_stats["n_clipped"],
+        "clip_rate": round(gn_stats["n_clipped"] / n, 6),
+        "_what": ("PRE-clip gradient norms. The clip threshold is 1.0, and objectives differ hugely "
+                  "in gradient scale (D-COV's are 512x smaller than squared_l2's), so an objective "
+                  "comparison must be able to show whether one arm clipped and the other could not. "
+                  "The screen's arms discarded this, which is why D1/D2 carry that caveat."),
+    }
+    return {"grad_norm": grad_norm_report,
+            "steps_run": run_steps,
             "start_step": start, "total_steps": total_steps, "pattern": pattern,
             "loss": loss_name, "losses": losses, "evals": evals, "eval_kinds": kinds,
             "cycle_end_evals": cycle_end_evals, "read_evals": read_evals, "stopped": stopped,
