@@ -1,6 +1,6 @@
 # M10 status — 2026-09-09. **SCREEN READ. Ten contrasts computed, the recipe is selected but one family is open.** Box idle. **NEXT ACTION: two decisions for Dylan (1a SYNTH-20M, 1b the seed arm), then push the recipe lock. E is PENDING until the A100 runs both E arms.** Both adversarial reviews have landed and every finding is applied; the next rotation slot is astra.
 
-**Selected recipe:** student **bge-small** · corpus **A4** (harvest + the ~1.0M generated queries) ·
+**Selected recipe:** student **bge-small** · corpus **A4** (harvest + the 834,463 generated queries) ·
 head **1152-wide linear** · mix **75/25** · objective **squared L2** · batch **PENDING**.
 Verdicts and the three non-optional readings: `m10/RESULTS.md` §M10.2 SCREEN VERDICTS;
 selection `results/m10_screen_verdicts.json`; driver `m10src/contrasts.py`.
