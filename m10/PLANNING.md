@@ -236,6 +236,22 @@ family G's export algebra and parameter count confirmed. 2 BLOCKER / 2 MAJOR / 2
 | # | finding | disposition |
 |---|---|---|
 | B | §9 promoted the PCA row to an upper bound on every 384-d subspace | **adopted** — reworded everywhere: the row is the reconstruction-optimal subspace's retention, the target L2 regression pushes toward; evidence, not a bound; the screen decides G |
+
+> **CORRECTED 2026-09-08 (astra, verified): PCA does not identify the optimum of the objective we
+> actually train.** The student normalizes its output and the loss compares unit vectors
+> (`m10src/nano10.py:107`, `:185`), so for a unit teacher target `t` and output subspace `S` the
+> best unit student vector gives `min ‖s−t‖² = 2 − 2‖P_S t‖` — selecting the subspace therefore
+> maximizes `E‖P_S t‖`, while ordinary unnormalized reconstruction (what PCA optimizes) maximizes
+> `E‖P_S t‖²`. Different objectives; the affine head and restricted backbone add further gaps.
+> **What the PCA experiment does show:** compressing the teacher's query representation to 384-d
+> costs retrieval quality. **What it does not show:** that normalized-L2 training is driven toward
+> that compressed representation. The existing "not an upper bound" caveat does not repair this
+> separate inference, and no claim of the form "L2 cannot push 384 past 90–93%" follows from it.
+>
+> **Related, same review:** the 1152→1024 anchor already permits FULL output rank (the teacher is
+> 1024-d), so **G-1536 cannot raise the maximum output rank** — it tests access to another layer's
+> features and a different parameterization, not the removal of a rank bottleneck. Any G-1536
+> result must be described that way.
 | B | family A's rule contradicted the generic rule | **adopted** — A3−A2 exempted explicitly; resolved requires the corrected lower bound > MDE; A3−A1 and A2−A1 descriptive |
 | M | stale counts (ten contrasts, nine arms) | **adopted** — eleven arms, thirteen contrasts everywhere |
 | m | probe JSON provenance text said 512-d head | **adopted** — text field corrected to 768/256 (numbers untouched) |

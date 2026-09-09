@@ -334,7 +334,7 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
   sizing struck by the Codex pass). The `arxiv-title` draw happens at the start of M10.1's harvest, once the artifact exists (§Surfaces).
   (e) **Screen lock**: `m10/LEDGER.md` §0 (skeleton committed 2026-09-01) fixes every arm of
   §Screen (fifteen arms), order, doses, seeds, surfaces, the thirteen contrasts, MDE 0.0056 and the
-  fixed 0.025/13 bound, confirmation design and outcome→action maps. **Pushed right after M10.0-d,
+  fixed α/12 bound (**the 0.025/13 written here is STALE — amendment C2 is operative**), confirmation design and outcome→action maps. **Pushed right after M10.0-d,
   before any harvest** (Codex B4); the data-dependent constants are §0b, pushed before the first arm.
 - **M10.1 DATA.** Harvesting of the real query-like text (§Data), generation for the non-harvestable
   forms under the §Data contract (200-query smoke per form first), PAQ samples, decontamination
@@ -638,9 +638,9 @@ its three seeds.
 
 **Rule, per contrast (families B–G):** the difference in COV macro (family-weighted, §Surfaces)
 between the two arms' final checkpoints; paired stratified bootstrap over queries within component,
-**B = 200,000**, seed 0, empirical quantile (`inverted_cdf`; at 0.025/13 that is the 384th order
+**B = 200,000**, seed 0, empirical quantile (`inverted_cdf`; **at the operative α/12 — C2, not the 0.025/13 written here** — that is the 384th order
 statistic — at B = 20,000 it would have been the 38th, Opus M9); a contrast **resolves** when the point estimate ≥ the **MDE 0.0056** **and** the
-one-sided lower bound at the **0.025/13 quantile** (Bonferroni over the thirteen contrasts — F 2 ·
+one-sided lower bound at the **α/12 quantile** (**the 0.025/13 and "thirteen contrasts" here are STALE — amendment C2 is operative: 12**) (Bonferroni over the contrasts — F 2 ·
 A 2 · G 3 · B 2 · E 1 · C 1 · D 2 — fixed whether or not F's second comparison runs; Codex
 2026-09-04 corrected a count of fourteen) is > 0, and the sign is stable across the last two
 cycle-end checkpoints. **Both constants are fixed here** — the Codex pass of 2026-09-04 struck
@@ -710,7 +710,7 @@ PLANNING §5 has the arithmetic. Every screen verdict is artifact-specific at sc
   (six-set only; FORMS-12 descriptive). **Decision 12 (adopted)**: CUREv1 as a validation-only diagnostic.
   **Resolution number (M10.0-d, before the lock) — a power disclosure, nothing more** (A4's sizing
   struck by the Codex pass). With the contrast rule's own bootstrap, measure the distance between the
-  point estimate and the one-sided 0.025/13 lower bound for the COV-macro difference between two
+  point estimate and the one-sided **α/12** lower bound (**not the 0.025/13 written here — C2**) for the COV-macro difference between two
   models that are candidates in no M10 family — **e5-small-v2 and gte-small** (`results/FINAL_MATRIX.md`
   rows, fresh COV encodes) — scored symmetrically on the admitted surface. Only the distance is
   recorded, never which led. It is the first disclosed COV read (`m10/LEDGER.md` §4) and is

@@ -35,9 +35,19 @@ pre-registered partitions, which is the one thing that would discredit the front
    trains on it and neither of ours does, so we expect to lose and losing is still informative.
    nq-250k-style build (~6,980 queries, 250K distractors, a 250K-doc stella encode, ~1h).
 
-**The number that makes this cheap** (M12, `m12/FINDINGS.md`): FUSED systems are nearly
-contamination-immune — clean-4 costs convex0 **0.0045** (0.4911 → 0.4866) and *gains* DBSF@100
-**0.0025** (0.4887 → 0.4912) — while the dense table loses **0.0241** (0.4339 → 0.4098). And on clean-4 the fused story is *stronger*: 0.4866 vs BM25's 0.4409,
+**The number that makes this cheap** (M12, `m12/FINDINGS.md`): fused systems show far less
+**PARTITION SENSITIVITY** than the dense table — clean-4 costs convex0 **0.0045**
+(0.4911 → 0.4866) and *gains* DBSF@100 **0.0025** (0.4887 → 0.4912) — while the dense table loses
+**0.0241** (0.4339 → 0.4098).
+
+> **CORRECTED 2026-09-08 (astra): this is partition sensitivity, NOT contamination immunity, and
+> the earlier "nearly contamination-immune" wording is withdrawn.** The quantity is
+> `S̄₆ − S̄₄ = ⅓(S̄_excluded-two − S̄₄)` — a difference between two *groups of datasets*, which does
+> not identify a contamination effect. A small difference is equally consistent with fusion's
+> relative strengths across those particular tasks, with BM25's contribution on them, or with
+> cancellation. **Report the partition delta and say what it is.** The claim that survives is
+> narrow and still useful: the fused system's score is far less sensitive to WHICH partition is
+> reported than the dense table's is. And on clean-4 the fused story is *stronger*: 0.4866 vs BM25's 0.4409,
 where dense-only (0.4098) sits below BM25. Honesty costs 0.0045 here and buys the whole objection.
 
 ## What the paper argues
@@ -88,3 +98,28 @@ This is measured today and needs no nano. Everything else is evidence for it or 
   cheap lead in M16.
 - No new measurement. If the paper wants a number that does not exist, that is a milestone, not a
   paragraph.
+
+## Claims this paper must NOT make (astra, 2026-09-08 — verified; `research/m10-astra-v2-dispositions-2026-09-08.md`)
+
+Each of these is currently asserted somewhere in the project's own files and is **not supported by
+the evidence cited for it.** The corrected form follows each.
+
+| do not claim | why not | claim instead |
+|---|---|---|
+| *"M9 was a coverage failure, not a capacity failure"* | reaching 93.8% on ONE distribution does not establish the capacity to reach it JOINTLY across many. The M9 table supports distribution-dependent failure and a coverage *hypothesis*; it does not isolate the cause | "M9's retention was strongly distribution-dependent (93.8% NQ vs 50–71% CQADupStack); we did not isolate the cause" |
+| *"normalized L2 cannot push a 384-wide head past 90–93%"* | the PCA argument does not establish it. The student normalizes and the loss compares unit vectors, so the relevant quantity is `E‖P_S t‖`, while ordinary reconstruction maximizes `E‖P_S t‖²` — different objectives (`m10/PLANNING.md` §9) | "compressing the teacher's query representation to 384-d costs retrieval quality" — a fact about representations, not about what training converges to |
+| *"A3−A2 establishes query-form coverage"* / *"A4−A3 measures whether synthetic data helps"* | both are **bundled training-distribution interventions**. Every arm is form-balanced, so an existing form gets ~750,000 presentations in A3 vs 312,500 in A4; and A3 already contains PAQ, which the mandate itself calls machine-generated | "A4−A3 estimates the effect of re-allocating 58% of query presentations to seven generated forms, against a corpus that already contains synthetic questions" |
+| *"unresolved means a measured null / not positive / a statistical tie"* | a failed superiority test is not evidence of absence. Choosing a default under uncertainty is a **product policy**, not a finding | report the effect estimate and its interval, and label the policy choice separately |
+| *"clean-4 is contamination-free"* | its actual property is **no *disclosed* teacher overlap**, and the mandate already concedes development-informed training design | "no disclosed overlap with the teacher's stated training data" |
+| *"fused systems are nearly contamination-immune"* | **withdrawn above** — `S̄₆ − S̄₄ = ⅓(S̄_excluded − S̄₄)` is a difference between dataset groups, not a contamination effect | "the fused system's score is far less sensitive to which partition is reported" |
+| the architecture as a **first** | the frozen-teacher lookup-table construction is prior art, as this mandate's own pyNIFE instruction requires | the contribution is the empirical evidence, the analysis, and a deployable implementation |
+| the Spearman result as a **law** | its strongest defensible form is an empirical **counterexample** to selecting a teacher by tower quality. Note also that this file quotes Spearman over **eight** and **seven** comparable rows while stating eleven teachers were measured — **keep those denominators distinct** | "over the teachers we measured, tower quality did not predict distilled-table quality (Spearman ≈ 0 over N=8 / N=7 comparable rows)" |
+
+**And the framing the review recommends for the central claim**, which survives either outcome:
+an empirical study of *replacing the query encoder while preserving a pretrained document index* —
+reporting retrieval quality and deployment cost for lookup-table and compact-transformer query
+paths over one frozen index, with the finding that performance depends strongly on task
+distribution and on the deployed retrieval configuration. A C1b pass then *strengthens* it into the
+registered whole-system superiority claim; a miss still leaves a reproducible account of the
+feasible trade-offs under the constraints.
+
