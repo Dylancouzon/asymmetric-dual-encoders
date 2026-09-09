@@ -1,0 +1,172 @@
+{
+ "_note": "M10.4 decision constants. Lives OUTSIDE `m10/screen_registry.json` for the same reason M9's did: the screen registry is pinned by every contrast record and the F verdict, so editing it invalidates them. Same authority \u2014 the executor reads THIS file, never prose, never the screen defaults.",
+ "classification": "preregistration",
+ "_classification_note": "NOT an amendment, unlike M9's, which was written after its build. Every field here is fixed BEFORE any M10 six-set number exists and before the build has run. The design it encodes is itself registered upstream in `instructions-m10.md` \u00a7Final run and \u00a7Goal (amendment A3, 2026-09-04), which is where the four conjuncts and their sequence were fixed.",
+ "ratified_by_owner": false,
+ "spec": "m10/M102_LOCK.md; design registered in instructions-m10.md \u00a7Final run",
+ "status": "DRAFT until the M10.2 lock commit; `decide()` is NOT YET WRITTEN (see `implementation`)",
+ "partitions": {
+  "clean4": [
+   "nfcorpus",
+   "scidocs",
+   "scifact",
+   "trec-covid"
+  ],
+  "all6": [
+   "scifact",
+   "nfcorpus",
+   "fiqa",
+   "arguana",
+   "scidocs",
+   "trec-covid"
+  ],
+  "_headline": "clean-4 is M14's registered headline partition for BOTH halves of the pair (Dylan, 2026-09-04), decided before any nano number existed. All six are reported beside it.",
+  "_why": "stella (the teacher) discloses ArguAna and FiQA in its training data. At a uniform 92% retention fiqa alone supplies ~73% of nano's avg-6 margin, which is why the headline cannot rest on avg-6."
+ },
+ "weights": "equal within each partition (1/4 on clean-4, 1/6 on all-6), ASSERTED; a partition with a missing dataset must be impossible, not silently renormalized (M9's `_assert_six` lesson)",
+ "comparator_source": {
+  "path": "results/perquery.json",
+  "sha256": "6b18e3dd74fd308b087d4e652c0999c9d6a2e729c78edb73f000f9b7a25fda7e",
+  "rule": "every conjunct uses ONLY these frozen rows; the freshly-scored bridge anchor is validation-only and discarded",
+  "_irreplaceable": "regenerated from caches that no longer exist. NEVER overwrite it."
+ },
+ "bridge": {
+  "phase": 1,
+  "anchor": "bge-small-en-v1.5",
+  "max_abs_per_query_delta": 0.0003,
+  "qids": "zero missing, extra or reordered",
+  "failure": "consumes the access"
+ },
+ "conjuncts": {
+  "C1b": {
+   "a": "nano-dense",
+   "b": "bge-small-en-v1.5",
+   "partition": "clean4",
+   "bar": 0.5046,
+   "gate": "release",
+   "order": 1
+  },
+  "C1a": {
+   "a": "nano-dense",
+   "b": "bge-small-en-v1.5",
+   "partition": "all6",
+   "bar": 0.5042,
+   "gate": "release",
+   "order": 2
+  },
+  "C2a": {
+   "a": "nano-dense",
+   "b": "leaf-ir-asym",
+   "partition": "all6",
+   "bar": 0.5155,
+   "gate": "aim",
+   "order": 3
+  },
+  "C2b": {
+   "a": "nano-dense",
+   "b": "leaf-ir-asym",
+   "partition": "clean4",
+   "bar": 0.5233,
+   "gate": "aim",
+   "order": 4
+  }
+ },
+ "sequence": {
+  "rule": "FIXED-SEQUENCE GATEKEEPING in the order C1b -> C1a -> C2a -> C2b, each at the FULL one-sided 0.025, STOPPING AT THE FIRST NON-REJECTION. No Holm, no alpha split: a gatekeeping sequence spends the family alpha once, in a pre-fixed order.",
+  "order": [
+   "C1b",
+   "C1a",
+   "C2a",
+   "C2b"
+  ],
+  "alpha_per_conjunct": 0.025,
+  "stop": "at the first conjunct that does not reject, every later conjunct is NOT TESTED and is reported as NOT TESTED \u2014 never as failed, and never skipped over to reach a later one",
+  "_fixed_when": "instructions-m10.md \u00a7Final run, amendment A3, 2026-09-04 \u2014 before any M10 six-set output existed and before the screen ran",
+  "_why_this_order": "the release conjunct on the headline partition is tested first, so the claim the project is actually making is the one that spends the alpha first. M9's claim-table row 'C1 fail, C2 pass -> aim permitted' is DELETED by this design: an aim conjunct is unreachable if its release conjunct did not reject."
+ },
+ "pass_rule": "a conjunct rejects only if BOTH the bootstrap bound and the sign-flip test reject at 0.025, inside the sequence. Both, not either.",
+ "bootstrap": {
+  "B": 10000,
+  "seed": 900,
+  "resample": "n_d queries with replacement within each dataset",
+  "decision_field": "lower_q025_raw",
+  "decision_field_def": "np.quantile(draws, 0.025, method='inverted_cdf'), FULL PRECISION \u2014 the EMPIRICAL quantile, i.e. the 250th order statistic at B = 10,000",
+  "requirement": "lower_q025_raw > 0",
+  "not_the_gate": [
+   "any 4dp-rounded bound",
+   "M9's Holm-2 0.0125 quantile",
+   "a two-sided endpoint"
+  ],
+  "_quantile_history": "M9 used 0.0125 under Holm-2. M10 uses 0.025 under gatekeeping, which is the whole point of a fixed sequence. The Codex pass of 2026-09-04 found the two quantiles named in different files; 0.025 is operative and is fixed here.",
+  "draw_plan": "ONE frozen plan per partition, byte-identical across every conjunct that reads that partition, digest serialized",
+  "quantile": 0.025,
+  "quantile_method": "inverted_cdf",
+  "_method_note": "`inverted_cdf`, never `linear`. NumPy's linear method interpolates toward the next order statistic and returns a weakly HIGHER, more permissive bound, which could flip an irreversible gate in the candidate's favour. This exact defect was caught in M9 by code review before any six-set number existed; it is registered here so it cannot recur."
+ },
+ "signflip": {
+  "B": 100000,
+  "seed": 901,
+  "alternative": "greater",
+  "alpha": 0.025,
+  "p": "(1 + #(T* >= T_obs)) / (B + 1)",
+  "signs": "independent Rademacher per paired query; every conjunct passes the SAME SEED \u2014 a same-seed guarantee, not a materialized shared plan. Sharing is comparability, not a condition of marginal validity."
+ },
+ "reserved": {
+  "trigger": "if ANY C-conjunct rejects, then execute, unmodified",
+  "_why_any": "so an aim claim never stands without its descriptive reserved rows (Opus, \u00a7Final run change 1). M9's trigger was `if C1 passes`.",
+  "systems_included": [
+   "nano-dense",
+   "bge-small-en-v1.5",
+   "leaf-ir-asym"
+  ],
+  "systems_omitted": "all others",
+  "datasets": [
+   "FEVER",
+   "dbpedia-entity",
+   "cqadup-android",
+   "cqadup-english"
+  ],
+  "ndo3_weights": {
+   "dbpedia": 0.5,
+   "cqadup-android": 0.25,
+   "cqadup-english": 0.25
+  },
+  "estimands": {
+   "R1": "nano - bge-small",
+   "R2": "nano - leaf-ir-asym"
+  },
+  "alpha": 0.0,
+  "gate": null,
+  "B": 10000,
+  "seed": 902,
+  "interval": "two-sided 95%, full precision",
+  "leave_one_out": "remaining weights renormalized to sum to 1",
+  "fever": "labelled a DOUBLE-CONTAMINATED sensitivity row (stella discloses FEVER; it is also a reserved set), zero alpha, never gate-relevant",
+  "_one_access": "the reserved four carry ONE confirmatory access, unspent through M9.",
+  "crash": "per-system atomic outputs; resume at the first incomplete system; scores suppressed until all complete"
+ },
+ "implementation": {
+  "module": "m10src/final10.py \u2014 NOT YET WRITTEN",
+  "reuses": "m9src/final_stats.py for the bootstrap and sign-flip primitives; m9src/final9.py's SCORING path",
+  "does_NOT_reuse": "`m9src/final9.py:decide()`, which is hard-coded to M9's TWO conjuncts under Holm-2 at 0.0125. An M10 `decide()` for four conjuncts under fixed-sequence gatekeeping at 0.025 is a different function, and reusing the M9 one would silently apply the wrong quantile and the wrong multiplicity correction.",
+  "requirement": "written, UNIT-TESTED and REVIEWED before the M10.2 recipe lock is pushed (Codex, 2026-09-04). The tests must include: the sequence stopping at the first non-rejection; a later conjunct reported NOT TESTED rather than failed; the 0.025 quantile being the 250th order statistic and not an interpolated one; and a partition with a missing dataset raising rather than renormalizing."
+ },
+ "access_state_machine": [
+  "lock + guard",
+  "ledger FINAL-RUN-BEGIN pushed",
+  "m10-six-spent tag PUSHED (before any protected read)",
+  "open six / bridge / score",
+  "decisions + digest pushed"
+ ],
+ "infra_retry_admissible_iff": "the m10-six-spent tag does not exist on origin",
+ "recover_path": "--recover recomputes decisions from results/m10_final_run.json and NEVER re-reads the six",
+ "forbidden_words": [
+  "resolved",
+  "confirmed",
+  "unrestricted"
+ ],
+ "_forbidden_note": "in the report's description of any final-run outcome. A screen contrast 'resolves'; a final-run conjunct REJECTS or does not. Keeping the vocabularies apart is what stops a screen verdict being read as a release claim.",
+ "headline_verbatim": "TO BE FIXED IN THE LOCK COMMIT, before any six-set number exists. It must name the partition (clean-4), the comparator, and the harness, in M9's shape.",
+ "origin_url": "https://github.com/Dylancouzon/asymmetric-dual-encoders.git",
+ "_origin_note": "the spend receipt's external witness. Pinned so repointing `origin` cannot manufacture an 'unspent' verdict. Derived from `git remote get-url origin`, never hand-written."
+}

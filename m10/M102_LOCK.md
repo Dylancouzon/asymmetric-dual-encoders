@@ -141,15 +141,25 @@ Registered before the numbers exist, so they cannot be dropped after them:
    That is `zero`'s claim alone; nano is 34.5M params against bge-small's ~33.4M with the same
    backbone forward pass.
 
-## Still to write before this is a lock
+## The final run and LoTTE
 
-- [ ] `m10/final_run_registry.json` — the four C-conjuncts (C1a/C1b release, C2a/C2b aim), their
-      **fixed sequence**, the bootstrap spec, the access state machine, the recover path, the
-      reserved-set rules and the headline sentence. M9's `final_run_registry.json` is the template
-      and its `forbidden_words`/`headline_verbatim` fields are the parts most worth copying.
-- [ ] `m10/LOTTE_LOCK.md` — read #1's manifest and its veto rule (M9 §7, unchanged): the selection
-      is vetoed iff the selected recipe's 7-slice macro is worse than the anchor's by more than
-      0.004 **and** the one-sided 97.5% paired-bootstrap upper bound (B = 10,000, seed 903, paired
-      within slice) on (selected − anchor) is below −0.004. Read #1 happens after this lock.
-- [ ] Both descriptive reads folded in (`ANCHOR-seed1`, `A3-20M`) — they select nothing, but the
-      lock reports them.
+- **`m10/final_run_registry.json`** — WRITTEN, 8 tests. Four conjuncts under **fixed-sequence
+  gatekeeping, C1b → C1a → C2a → C2b, each at the full one-sided 0.025, stopping at the first
+  non-rejection**; decision field `lower_q025_raw`, the 250th order statistic at B = 10,000,
+  `inverted_cdf`; sign-flip at 0.025 in the same sequence; both must reject. Reserved trigger is
+  **any** conjunct, so an aim claim never stands without its descriptive reserved rows.
+  Classified a PREREGISTRATION, not an amendment — M9's had to be the latter.
+- **`m10/LOTTE_LOCK.md`** — WRITTEN. The M9 §7 veto unchanged, plus the case M10 actually has:
+  since the screen selected no non-default, the selected and anchor recipes differ **only in
+  `batch`**, so if E selects bs32 the veto compares a recipe to itself and read #1 is **SKIPPED and
+  reported skipped**. Registered now rather than discovered later.
+
+## Still to do before this is a lock
+
+- [ ] **`m10src/final10.py`** — the M10 `decide()`. `m9src/final9.py:decide()` is hard-coded to two
+      conjuncts under Holm-2 at 0.0125 and is NOT reused; reusing it would silently apply the wrong
+      quantile and the wrong multiplicity correction. Must be written, unit-tested and reviewed
+      **before this lock is pushed** (Codex, 2026-09-04).
+- [ ] `headline_verbatim` fixed in the registry, before any six-set number exists.
+- [ ] Both descriptive reads folded in (`ANCHOR-seed1` **done: +0.000712**; `A3-20M` running).
+- [ ] Codex and Fable review the pushed lock (mandate).
