@@ -40,6 +40,31 @@
    "_what": "presentations_per_form is q_pres/n_forms because the sampler is form-balanced: every form present gets an equal share of presentations regardless of how much text backs it. available_texts_by_form is NOT exposure."
   },
   {
+   "arm": "A3",
+   "pattern": "75/25",
+   "examples": 5000000,
+   "query_presentations": 3750000,
+   "n_forms": 5,
+   "forms": [
+    "claim",
+    "factoid",
+    "keyword",
+    "product",
+    "title"
+   ],
+   "available_texts_by_form": {
+    "claim": 415454,
+    "factoid": 1330329,
+    "keyword": 416453,
+    "product": 72858,
+    "title": 416478
+   },
+   "presentations_per_form": 750000,
+   "n_generated_forms": 0,
+   "generated_share_of_query_presentations": 0.0,
+   "_what": "presentations_per_form is q_pres/n_forms because the sampler is form-balanced: every form present gets an equal share of presentations regardless of how much text backs it. available_texts_by_form is NOT exposure."
+  },
+  {
    "arm": "ANCHOR",
    "pattern": "75/25",
    "examples": 5000000,

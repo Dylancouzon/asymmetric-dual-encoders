@@ -1,4 +1,4 @@
-# M10 status — 2026-09-08. **F DONE, student = bge-small.** Screen running (4/11). **⚠ APPLY `m10/AMENDMENT_STAGED_2026-09-08.md` THE MOMENT `work/m10arms/rest_chain.log` READS COMPLETE** — it fixes 3 decision rules that can select a worse recipe, and buys 91.7M examples of dose. §0b registered.
+# M10 status — 2026-09-09. **SCREEN COMPLETE: 13/13 arms, `exit 0`, zero failures.** F1 resolved, student = **bge-small**. Box idle. **NEXT ACTION: apply `m10/AMENDMENT_STAGED_2026-09-08.md`, re-hash the registry, re-issue `results/m10_F_verdict.json`, then compute the 12 contrasts at `cov_macro.ONE_SIDED` (α/12) — family A FIRST, it decides whether the ~1.0M generated queries enter the build — then push the recipe lock.**
 
 **Read this, then `m10/LEDGER.md`.** The box is **preparation for the cloud GPU run, not a
 measurement target** (Dylan, 2026-09-05): run as much as it can here first, no re-shaping; the
@@ -31,7 +31,7 @@ close-out pending); the M10-side fix is to sort the draw by store and load each 
 Trust `arm_hwm_mb` in the trace, not `arm_rss_mb` — a 5 s sample of an instantaneous gauge is a
 lower bound. `n_match=0` prints **-1**, so a bad pattern cannot look like an idle arm.
 
-## RUNNING: the W8 band-1 remainder, 11 arms in registered order (~25 h)
+## DONE: the W8 band-1 remainder — 11 arms, all `exit 0` (was ~25 h, took 27.3 h)
 
 `work/m10arms_run_rest.sh` (tracked copy `m10src/run_rest.sh`), launched 10:54 after **12/12 on the
 90-step CUDA shape smoke with the current code** (`results/m10_arm_smoke.json`, `all_shapes_pass`).
