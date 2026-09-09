@@ -66,6 +66,12 @@ the one knob with no selection risk attached. Subject to the $1,000 cloud ceilin
 
 ## 5. Interpretation fixes that carry no compute (apply with the above)
 
+**Timing, on the record, because §5 relabels a family-A outcome:** this amendment was committed
+**20:13:07** and the exposure table **20:14:53**; **A3's record — the last family-A arm — was
+written 20:35:40**, 21 minutes later. So no A contrast could be computed, and no A number existed,
+when the relabel was written. The relabel changes no threshold and no action either way; the
+timing is recorded so it cannot be read as motivated by a result.
+
 - **MEASURED, `results/m10_exposure_table.json`** (built 2026-09-08, `m10src/exposure_table.py`):
   per-form query exposure swings **6×** across family A —
 

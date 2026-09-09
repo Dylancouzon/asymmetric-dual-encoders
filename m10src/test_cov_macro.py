@@ -63,16 +63,16 @@ def test_bootstrap_matches_analytic_se_and_is_reproducible():
         a[u] = {f"q{i}": float(v) for i, v in enumerate(x)}
         b[u] = {f"q{i}": float(v) for i, v in enumerate(x + rng.normal(0.0, 0.15, n))}
     al = cm.align(a, b, UF)
-    r = cm.contrast(al, UF, B=20_000, seed=0, chunk=5_000)
+    r = cm.contrast(al, UF, B=20_000, seed=0, chunk=5_000, quantile=cm.ONE_SIDED)
     w = cm.weights(UF)
     se = np.sqrt(sum(w[u] ** 2 * (al[u][1] - al[u][2]).var(ddof=1) / ns[u] for u in ns))
     assert abs(r["draws_sd"] - se) / se < 0.05, (r["draws_sd"], se)
     # the lower bound sits ~z*SE below the point estimate at the registered quantile
     z = 2.8907                                     # one-sided 0.025/13
     assert abs(r["distance_raw"] - z * se) / (z * se) < 0.10, (r["distance_raw"], z * se)
-    r2 = cm.contrast(al, UF, B=20_000, seed=0, chunk=5_000)
+    r2 = cm.contrast(al, UF, B=20_000, seed=0, chunk=5_000, quantile=cm.ONE_SIDED)
     assert r2["draws_sha256"] == r["draws_sha256"]
-    r3 = cm.contrast(al, UF, B=20_000, seed=1, chunk=5_000)
+    r3 = cm.contrast(al, UF, B=20_000, seed=1, chunk=5_000, quantile=cm.ONE_SIDED)
     assert r3["draws_sha256"] != r["draws_sha256"]
 
 
@@ -105,3 +105,21 @@ def test_score_student_asserts_the_surface_before_it_scores_anything():
     with pytest.raises(ValueError, match="COV surface does not match"):
         cov_eval10.score_student(encode, units=units, verbose=False)
     assert scored == [], "the refusal must precede the encode"
+
+
+def test_contrast_REFUSES_a_silent_quantile_and_the_constants_match_amendment_C2():
+    """The quantile decides 11 registered contrasts, one of which (`A4-A3`) controls whether the
+    ~1.0M generated queries enter the build. It used to default silently to 0.025/13 -- superseded
+    by amendment C2 -- and 0.025/13 sits FURTHER into the tail than ALPHA/12, so the stale value
+    was strictly HARDER to resolve and biased toward discarding data. No silent default now."""
+    rng = np.random.default_rng(0)
+    a = {u: {f"q{i}": float(v) for i, v in enumerate(rng.normal(0.5, 0.2, 40))} for u in UF}
+    b = {u: {f"q{i}": float(v) for i, v in enumerate(rng.normal(0.5, 0.2, 40))} for u in UF}
+    al = cm.align(a, b, UF)
+    with pytest.raises(TypeError, match="quantile` is required"):
+        cm.contrast(al, UF, B=1_000, seed=0)
+    # C2: 11 one-sided at ALPHA/12 + F1 two-sided at ALPHA/24 per tail = ALPHA exactly
+    assert 11 * cm.ONE_SIDED + 2 * cm.F_PER_TAIL == pytest.approx(cm.ALPHA)
+    # and the stale value does NOT close, which is why it is superseded
+    assert 11 * (cm.ALPHA / 13) + 2 * (cm.ALPHA / 26) != pytest.approx(cm.ALPHA)
+    assert cm.HISTORICAL_13 < cm.ONE_SIDED, "the stale value is stricter, hence false-negative-prone"

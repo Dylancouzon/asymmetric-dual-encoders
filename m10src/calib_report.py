@@ -55,7 +55,9 @@ def main():
                          "noise."}
     for a, b, label in (("P0", "P1", "seed_pair"), ("P0", "P2", "lr_pair")):
         al = cov_macro.align(per[a], per[b], uf)
-        r = cov_macro.contrast(al, uf)
+        # M10.0-e's distance 0.002877 was computed under the old silent default 0.025/13;
+        # passed explicitly so the completed calibration keeps reproducing exactly.
+        r = cov_macro.contrast(al, uf, quantile=cov_macro.HISTORICAL_13)
         out[label] = {k: r[k] for k in ("delta_raw", "lower_bound_raw", "distance_raw",
                                         "draws_sd", "B", "seed", "chunk", "quantile_method",
                                         "plan_sample_sha256", "draws_sha256")}

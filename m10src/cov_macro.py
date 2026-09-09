@@ -87,13 +87,36 @@ def align(a, b, unit_family):
     return out
 
 
-def contrast(aligned, unit_family, B=200_000, seed=0, quantile=0.025 / 13,
+ALPHA = 0.025
+# The OPERATIVE Bonferroni denominator is 12: amendment C2 (`instructions-m10.md:160`) and
+# `rules.F_orientation` close at 11 one-sided at ALPHA/12 plus F1 two-sided at ALPHA/24 per tail =
+# ALPHA exactly, which /13 does not. 11 of the 12 registered contrasts carry NO quantile of their
+# own, so a silent default decides them -- and it used to be 0.025/13, which sits FURTHER into the
+# tail than ALPHA/12 and is therefore HARDER to resolve. For `A4-A3`, whose rule DROPS the ~1.0M
+# generated queries from the build when it does not resolve, a stale-strict default biases toward
+# discarding real data.
+ONE_SIDED = ALPHA / 12          # the 11 ordinary contrasts
+F_PER_TAIL = ALPHA / 24         # F1 only: two-sided, oriented after the reading
+HISTORICAL_13 = ALPHA / 13      # ONLY to reproduce artifacts computed before C2
+
+
+def contrast(aligned, unit_family, B=200_000, seed=0, quantile=None,
              method="inverted_cdf", chunk=5_000):
     """Paired stratified bootstrap of the family-weighted macro difference (a - b).
 
     Returns the point estimate, the one-sided lower bound at `quantile`, and the DISTANCE
     between them, which is the quantity §Surfaces registers as the resolution number.
+
+    `quantile` is REQUIRED. It used to default to 0.025/13 -- a value C2 superseded -- on the
+    function that decides 11 registered contrasts, one of which controls whether generated data
+    enters the build. A silent constant deciding a build parameter is the same defect shape as a
+    rule nobody ran examples against. Pass `ONE_SIDED`, `F_PER_TAIL`, or `HISTORICAL_13`.
     """
+    if quantile is None:
+        raise TypeError(
+            "contrast(): `quantile` is required -- pass cov_macro.ONE_SIDED (ALPHA/12) for an "
+            "ordinary contrast, F_PER_TAIL (ALPHA/24) for F1, or HISTORICAL_13 to reproduce an "
+            "artifact computed before amendment C2. It previously defaulted to the stale 0.025/13.")
     w = weights(unit_family)
     units = sorted(aligned)
     diffs = {u: aligned[u][1] - aligned[u][2] for u in units}

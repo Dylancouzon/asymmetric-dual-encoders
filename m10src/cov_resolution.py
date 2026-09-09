@@ -22,6 +22,9 @@ import cov_macro
 SRC = REPO / "work" / "m10cov" / "probe_scores.json"
 OUT = REPO / "results" / "m10_cov_resolution.json"
 MDE = 0.0056
+# W5's resolution distance 0.008619 was computed at 0.025/13, before amendment C2 made the
+# operative denominator 12. Kept at the historical value so the recorded artifact reproduces;
+# it is a POWER DISCLOSURE, not a decision, so the denominator does not change what it means.
 B, SEED, QUANTILE = 200_000, 0, 0.025 / 13
 # `m10/LEDGER.md` §2, the admitted surface's per-unit query counts. BRIGHT's slice sizes are the
 # published ones; MedicalQA, the two LegalBench components and LEDGER are §2's rows.
