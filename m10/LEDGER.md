@@ -1616,3 +1616,39 @@ problem instead.
 B3" — B3 (cosine-space distillation) is a no-op on a normalized output, closed by algebra. The
 pyNIFE retention gap must be attributed to B4/B5.
 
+
+## §M10.2 — the screen read, 2026-09-09
+
+**Sequence, and it matters:** chain COMPLETE 14:13:48 → amendment applied → F verdict re-issued →
+contrasts computed. The amendment (`m10/AMENDMENT_STAGED_2026-09-08.md`, applied verbatim) governs
+only decisions not yet made. **Precise claim, not a stronger one:** no contrast was computed and no
+bootstrap run, but the arms' per-cycle COV macros were already on disk and visible — stated in
+`screen_registry.json._amended_2026_09_09` rather than denied.
+
+Numbers: `m10/RESULTS.md` §M10.2 SCREEN VERDICTS. Selection: `results/m10_screen_verdicts.json`.
+Driver: `m10src/contrasts.py`, which reproduces the pre-existing F1 record bit-for-bit including
+its draws digest — the only end-to-end evidence that it reads the same plan the earlier step did.
+
+**Selected:** bge-small · A4's corpus · 1152 linear · 75/25 · squared L2 · batch PENDING.
+
+Four things a later session must not re-derive:
+
+- **A4−A3 RESOLVED (+0.012080 [+0.006909])** so the ~1.0M generated queries enter the build. It is
+  an **exposure re-allocation**, not a synthetic-data test: form-balanced sampling gives A4's 12
+  forms 312,500 presentations each against A3's 5 at 750,000 (`results/m10_exposure_table.json`).
+- **A3−A2 landed at lower 0.005363 against MDE 0.0056** — 0.00024 short. POSITIVE, NOT RESOLVED.
+  The bar was not moved and must not be.
+- **D2 is confounded**, not evidence against document-aware regression: D-COV's gradients are ~500×
+  smaller on identical batches at the same peak LR (`results/m10_dcov_gradient_audit.json`); ε is
+  not the cause, clipping is.
+- **E is PENDING, not unresolved.** `rules.E_cost` reads "bs128 in every other case" and an unread
+  contrast trivially fails to resolve; taking bs128 from that decides E on a measurement nobody
+  made. `E-bs128` is CLOUD_ONLY.
+
+**Withdrawn today, so it is not re-derived:** my first `contrasts.py` returned a `not_computed`
+disposition without writing a file, so `selection()` could not tell "never read" from "no artifact
+yet" — the exact collapse the E rule forbids. A test caught it; dispositions are artifacts now.
+
+**Operational lesson:** the registry is frozen the moment a contrast is computed against it, not
+when the arms finish. One prose edit after the fact invalidated ten records (each pins
+`registry_sha256`) and cost a full recompute — bit-identical, but it need not have happened.

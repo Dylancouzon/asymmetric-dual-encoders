@@ -44,6 +44,45 @@ Nothing has trained. Dev reads below total **86 raw score reads** (43 per CQADup
 | conjunct arithmetic (2026-09-04b) | `results/m10_conjunct_arithmetic.json`, script `scripts/m10_conjunct_arithmetic.py` | uniform retention reaching each planning proxy (0.025 quantile, after the Codex pass): C1a **89.3%**, C2a 91.3%, C1b **91.6%**, C2b **94.9%**; to equal bge-small per dataset: scifact 91.4, nfcorpus 83.0, fiqa 72.9, arguana 94.7, scidocs 85.7, trec-covid 92.0%; at uniform 92% fiqa supplies 73% of the avg-6 margin; stress: one set at 65% clears nothing if it is trec-covid or scifact | none — comparator rows and the M7 ceiling only |
 | per-token nonlinear head serving parity (2026-09-04b, box CPU) | `results/m10_head_mlp_parity_box.json`, script `m10src/head_mlp_parity.py` | fastembed 0.8.0 reproduces the per-token residual head `W_lin·x + W₂·GELU(W₁·x+b₁)` (W₁ 1152→192) to min-cos **0.99999989**, max-abs 1.1e-07; zero custom ops; **34.96M** parameters. The bottleneck form `1152→512→1024` also passed (34.48M) but caps output rank at 512 (Codex M3), so the residual form is arm G-MLP | none |
 
+## M10.2 SCREEN VERDICTS (box, 2026-09-09) — the ten computable contrasts
+
+Driver `m10src/contrasts.py` (it reproduces the pre-existing F1 record bit-for-bit, draws digest
+included). Records `results/m10_contrast_<id>.json`; selection `results/m10_screen_verdicts.json`.
+MDE 0.0056; one-sided lower bound at α/12, F1 two-sided at α/24 per tail. Family A resolves on
+`lower > MDE` and is exempt from sign stability.
+
+| id | a − b | point | lower | label |
+|---|---|---:|---:|---|
+| F1 | F-bge-small − F-MiniLM-L6 @20M | +0.011595 | +0.007221 | RESOLVED |
+| **A4-A3** | **ANCHOR(A4) − A3** | **+0.012080** | **+0.006909** | **RESOLVED** → the ~1.0M generated queries enter the build |
+| A3-A2 | A3 − A2 | +0.010068 | +0.005363 | POSITIVE, NOT RESOLVED (0.00024 short of the bar) |
+| G1 | ANCHOR(1152) − G-384 | +0.021651 | +0.015273 | RESOLVED — selects nothing (`G-384.selectable: false`); it is evidence on M9's 384-wide diagnosis |
+| G2 | G-1536 − ANCHOR | +0.000335 | −0.002787 | NOT RESOLVED |
+| G3 | G-MLP − ANCHOR | +0.002415 | −0.000307 | NOT RESOLVED |
+| B1 | B-100/0 − ANCHOR | −0.001057 | −0.004704 | NOT RESOLVED |
+| B2 | B-50/50 − ANCHOR | +0.002690 | −0.000537 | NOT RESOLVED |
+| D1 | D-NORM − ANCHOR | −0.000202 | −0.001859 | NOT RESOLVED |
+| D2 | D-COV − ANCHOR | −0.018391 | −0.023786 | NOT RESOLVED, **and confounded** — see below |
+| E1 | E-bs32 − E-bs128 | — | — | NOT COMPUTED: `E-bs128` is CLOUD_ONLY and has not run |
+| C1 | C-M9init − C-fresh | — | — | NOT COMPUTED: the arm is CUT (pre-observation, W8 band 1) |
+
+**Selected recipe:** student **bge-small** · corpus **A4** (harvest + generated) · head **1152-wide
+linear** · mix **75/25** · objective **squared L2** · batch **PENDING**.
+
+Three readings that are not optional:
+
+- **A4−A3 is an exposure re-allocation, not a synthetic-data test.** The sampler is form-balanced,
+  so A4's 12 forms take 312,500 presentations each against A3's 5 at 750,000, and 58.3% of A4's
+  exposure is generated (`results/m10_exposure_table.json`). What resolved is *form breadth at the
+  cost of per-form exposure*. The registered action follows either way.
+- **D2 does not test its own hypothesis.** D-COV's gradients are ~500× smaller than squared L2's on
+  identical batches (0.0017 vs 0.868, `results/m10_dcov_gradient_audit.json`) at the same peak LR.
+  ε is not the confound; gradient clipping is. Report D2 as confounded, never as evidence against
+  document-aware regression.
+- **E is PENDING, not unresolved.** `rules.E_cost` selects bs128 "in every other case", and an
+  unread contrast trivially fails to resolve — reading it that way would take E's decision from a
+  measurement nobody made. The lock carries E open until the A100 runs both E arms.
+
 ## Known pre-existing test failure (not caused by any M10 work)
 
 `./run_tests.sh` reports `test_encoders` FAIL — **7 of 158 replayed caches**, all of them M8 `T1`

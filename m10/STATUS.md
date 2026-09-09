@@ -1,4 +1,9 @@
-# M10 status — 2026-09-09. **SCREEN COMPLETE: 13/13 arms, `exit 0`, zero failures.** F1 resolved, student = **bge-small**. Box idle. **NEXT ACTION: apply `m10/AMENDMENT_STAGED_2026-09-08.md`, re-hash the registry, re-issue `results/m10_F_verdict.json`, then compute the 12 contrasts at `cov_macro.ONE_SIDED` (α/12) — family A FIRST, it decides whether the ~1.0M generated queries enter the build — then push the recipe lock.**
+# M10 status — 2026-09-09. **SCREEN READ. Ten contrasts computed, the recipe is selected but one family is open.** Box idle. **NEXT ACTION: land the two adversarial reviews (Fable running; Codex/astra BLOCKED, the `codex` CLI's auth token is expired — `codex login`), then push the recipe lock. E is PENDING until the A100 runs both E arms.**
+
+**Selected recipe:** student **bge-small** · corpus **A4** (harvest + the ~1.0M generated queries) ·
+head **1152-wide linear** · mix **75/25** · objective **squared L2** · batch **PENDING**.
+Verdicts and the three non-optional readings: `m10/RESULTS.md` §M10.2 SCREEN VERDICTS;
+selection `results/m10_screen_verdicts.json`; driver `m10src/contrasts.py`.
 
 **Read this, then `m10/LEDGER.md`.** The box is **preparation for the cloud GPU run, not a
 measurement target** (Dylan, 2026-09-05): run as much as it can here first, no re-shaping; the
@@ -6,76 +11,22 @@ remainder moves to the A100 under the same registry. **The weekend timeline is n
 Working model (Dylan, 2026-09-05): the session is the ML lead, Opus/Sonnet subagents do the build
 work, Codex is the adversarial reviewer.
 
-## RUNNING: `work/m10arms_run_F.sh` → F-bge-small then F-MiniLM-L6, under `m10src/memtrace.sh`
+## The screen, done (2026-09-09)
 
-**TRAINING CONFIRMED 19:53** — `step 12500/625000 loss 0.3898 lr 9.54e-05 628 ex/s`, the first
-arm to get past data prep after three crashes. **628 ex/s measured in the real arm**, 1.23× the
-registered `PLAN_RATES[32] = 512`, so **~8.8 h each**, not 10.9 (and not the old 6.2, which read
-the 890 ex/s `fixed_bucket_compile` row — `--compile` is SMOKE-ONLY for registered arms).
-`PLAN_RATES` is deliberately NOT changed mid-run: the W8 band arithmetic reads it, and 512 being
-conservative costs nothing. Re-derive it at the next planning pass. Kill by PID only.
-`--resume` needs a parseable non-terminal record AND the rolling checkpoint — it never falls back
-to a fresh run, and the arm dir was empty after the crashes, so this is a clean fresh start.
+13 arms on the box, all `exit 0`, zero failures (`work/m10arms/rest_chain.log`, `F_chain.log`);
+`E-bs128` is the 14th and is CLOUD_ONLY. The staged amendment was applied AFTER the chain read
+COMPLETE and BEFORE any contrast was computed — `m10/AMENDMENT_STAGED_2026-09-08.md`, applied
+verbatim, `screen_registry.json._amended_2026_09_09` carries the precise pre-observation claim
+(no contrast computed; per-arm COV macros were visible, and that is stated rather than denied).
 
-**Memory: RESOLVED and VALIDATED (2026-09-07).** Two causes: document targets materialized
-(19.1 GiB at 5M → `DocTargetView`) and ~3 GB of glibc arena residue in the doc-id stream
-(→ `release_arena()`). **Full-dose pre-flight at the registered `n_docs=5,000,000` PASSES**:
-peak arm RSS **8,228 MB** (was 24,383), peak guest used **9,799** (cap 26,624), and the metric that
-actually failed — **min host free 3,297 MB, against 239 MB pre-fix**. LEDGER has the numbers, four
-withdrawn claims of mine, and four open non-blocking items.
+**The lesson the re-stamp taught:** the registry is frozen the moment a contrast is computed
+against it, not the moment the arms finish. Every contrast record pins `registry_sha256`, so a
+later registry edit — even a prose one — invalidates all of them and costs a full recompute.
 
-**If it crashes again, read this first:** the peak is dominated by `m9src/data.row_texts`, not the
-tokenizer — ten rows cost 2,200 MB `RssAnon` because it materializes a whole store via
-`mix.load_store`, once per chunk. Left unfixed on purpose (guard9 "train"/"eval" scope, M9's
-close-out pending); the M10-side fix is to sort the draw by store and load each once.
-Trust `arm_hwm_mb` in the trace, not `arm_rss_mb` — a 5 s sample of an instantaneous gauge is a
-lower bound. `n_match=0` prints **-1**, so a bad pattern cannot look like an idle arm.
-
-## DONE: the W8 band-1 remainder — 11 arms, all `exit 0` (was ~25 h, took 27.3 h)
-
-`work/m10arms_run_rest.sh` (tracked copy `m10src/run_rest.sh`), launched 10:54 after **12/12 on the
-90-step CUDA shape smoke with the current code** (`results/m10_arm_smoke.json`, `all_shapes_pass`).
-Order is the registry's: ANCHOR · A1 · A2 · A3 · G-384 · G-1536 · G-MLP · B-100/0 · B-50/50 ·
-D-NORM · D-COV. **C is CUT; E-bs128 is CLOUD_ONLY** (the A100) and `run_arm` refuses it on the box.
-
-Doses are NOT uniform — read them from `run_arm.py <arm> --plan`, not from the screen dose:
-5,000,000 for ANCHOR/A/G/D (156,250 steps), **3,750,000 for B-100/0**, **7,500,000 for B-50/50**.
-Projected 52.2 box hours for the whole band at the conservative 512 ex/s, of which F's 21.7 h are
-already spent; the remainder is ~30 h projected, ~25 h at the measured 624.
-
-**`results/m10_F_verdict.json` is what unblocks these arms.** `run_arm.f_verdict` refuses every
-post-F arm without it — *"this runner never guesses the student"* — and validates it hard: the
-schema (`winner`, `contrast{rule,point,lower,resolved}`, `registry_sha256`,
-`sha256_of_F_records`), that it was decided under the CURRENT registry hash, that each F record
-hashes exactly, that each has `status: "complete"` and a `final_checkpoint_sha256`, and that the
-winner is the student of a `trained`, uncut family-F arm. Writing the contrast to
-`m10_contrast_F1.json` alone left all 11 arms refused in 14 s.
-
-**The chain distinguishes a refusal from a failure:** non-zero within 120 s = a shared
-precondition, so it STOPS; a later non-zero is that arm's own outcome and the chain continues. The
-first version lacked this and burned all 11 arms on one missing file.
-
-## F chain — arm 1 done, arm 2 in flight
-
-| | F-bge-small | F-MiniLM-L6 |
-|---|---|---|
-| status | **complete, `exit 0`** 04:41:25 | running, ~60% at 08:12 |
-| rate | 624 ex/s, 33,298 s (9.25 h) | **1,066 ex/s** (6 layers vs 12), ETA ~09:55 |
-| `stopped` | **`plateau at cycle 3`** = registered SUCCESS (`_stopped_note`: PLATEAU_FROM_CYCLE is 3 and a screen arm runs 3 cycles, so it finished its dose and stopped one step short). `complete: true` | — |
-| COV cycle ends | 0.5080 → 0.5137 → **0.5160** (+0.0057, +0.0023) | 0.4923 (cycle 1) |
-| artifacts | `results/m10_arm_F-bge-small.json`, `work/m10arms/F-bge-small/{record.json,ckpt.pt,cov_*.json}` | — |
-
-**No verdict exists yet and none may be inferred here.** `f_verdict` is `null` and `_contrasts`
-says *"NOT computed here — the contrast step reads the per-query COV files and passes each
-contrast's own registered quantile"*. The raw macro gap at the four matching read points is
-**0.013–0.016 in bge-small's favour** (0.4871/0.4889/0.4923/0.4942 vs 0.4996/0.5048/0.5080/0.5075),
-wider than the 0.0086 resolution distance — but that is a **raw difference, not the registered
-statistic**, and the contrast is a separate step over the per-query files.
-
-**DEV-6 ran once at the final checkpoint** as registered (`nq-250k`, `hotpotqa`,
-`cqadup-programmers`, `cqadup-physics`, `heldout-train`, `heldout-longq`) and is **never
-selection-bearing** — it informs nothing here, and its CQADupStack components are exactly where
-M9's coverage failure showed, which makes it tempting to read as a verdict. It is not one.
+Memory: RESOLVED and VALIDATED 2026-09-07 (`DocTargetView` + `release_arena()`); full-dose
+pre-flight at `n_docs=5,000,000` passes at 8,228 MB peak arm RSS, min host free 3,297 MB. If an
+arm ever crashes again, the peak is dominated by `m9src/data.row_texts` materializing a whole
+store per chunk — LEDGER has the numbers and four withdrawn claims of mine.
 
 ## What is DONE and verified
 
@@ -97,32 +48,26 @@ M9's coverage failure showed, which makes it tempting to read as a verdict. It i
 | **paired row** | **DRAFT REGISTRATION READY for ratification: `research/m10-paired-row-registration-draft.md`** (8 numbered items, drafted from both reviewer passes, nothing new added). **Item 7 expires first** — both six-set transactions must emit aligned PER-QUERY scores and qids, and that must be in force BEFORE M9's close-out runs or the row cannot be built at all, ever. Original: **Register it — as a whole-protocol RECIPE delta, not a coverage test.** M9→M10 changes dose 4.5× (3.69B → ≈16.8B), head width 384→1152, schedule, objective, mix, batch, and possibly the student. **Normalise on the TEACHER**, not M9 (`Δr_d = (S10−S9)/T_d`); never call `S10/S9` "retention". Register now: the confound list, a fixed non-causal claim sentence, the exact datasets/statistic/B/seed, a conditional "same backbone family" label (F can pick a MiniLM), and **that both six-set transactions emit aligned PER-QUERY scores and qids** — otherwise the paired row cannot be built at all |
 | **W14** | **No decision-bearing surface sees the headline forms.** COV selects on forum/medical/legal/finance; C1b is clean-4 (scientific, biomedical). The screen can optimise the build away from the release bar and nothing would notice until M10.4. Codex frames the root question: **is family A a causal experiment, a catastrophe veto, or diagnostics? It cannot be all three** |
 
-## ⚠ astra pass 2 (GROUNDED): three decision rules do not implement their intent — FIX BEFORE CONFIRMATION
+## astra pass 2 — the three broken decision rules: **ALL FIXED 2026-09-09**
 
-`research/m10-astra-v2-dispositions-2026-09-08.md` (verbatim: `…-v2-whole-plan-…md`). 147,746 tok,
-read all six named files; pass 1 read none. **All verified verbatim against the registry.**
+`research/m10-astra-v2-dispositions-2026-09-08.md`. The fixes landed as
+`m10/AMENDMENT_STAGED_2026-09-08.md`, applied verbatim post-chain / pre-contrast; the corrected
+rules are executable in `m10src/decision_rules.py` with tests, and the registry carries them.
 
-| # | defect | why it matters |
+| # | was | now |
 |---|---|---|
-| 1 | `confirmation.stands_iff` compares the seed-0 margin to the range of **absolute** scores, not paired differences. **Perfect replication is REJECTED** (.020 margin vs .040 range); **a reversal on both fresh seeds is ACCEPTED** (.020 vs .014) | it can change the build |
-| 2 | `E_cost` picks bs128 when E1 is unresolved (to save build cost), but E is confirmation-eligible and confirmation needs winner−default > 0, which is **negative** for a cost-motivated pick → always reverts. **The cost branch is unreachable** | E's whole purpose |
-| 3 | `D_tie` returns to squared L2 when D-NORM and D-COV **both resolve** within 1e-4 — discarding two demonstrated improvements | throws away a win |
+| 1 | `confirmation.stands_iff` compared a paired margin to the range of **absolute** scores — rejecting a perfect replication, accepting a reversal on both fresh seeds | corrected to the paired rule, then **moot: the confirmation block is CUT** and replaced by SYNTH-20M |
+| 2 | `E_cost`'s cost branch was unreachable — a cost-motivated bs128 pick has a negative quality margin and always reverted | E is **exempt from quality confirmation** |
+| 3 | `D_tie` reverted to squared L2 when both alternatives resolved | **keeps a winner**, deterministic tie-break to `leaf_norm_e2`, tie reported |
 
-**These are still fixable.** Every one governs a decision **not yet made** (no confirmation arm has
-run; D and E have not run), so amending them is pre-observation — the only window the protocol
-allows. **But `results/m10_F_verdict.json` pins `registry_sha256` and `run_arm` refuses post-F arms
-if it changes, so the registry CANNOT be touched until the running chain finishes.**
-Sequence: **chain finishes → amend the three rules → re-issue the F verdict → only then confirm.**
+Also from that pass, still live: the Bonferroni denominator is **12** (F1 used α/24, so no number
+was ever wrong — the stale `/13` strings are annotated, not corrected numbers). The FORMS-12
+plateau top-up is **removed**. `WARMUP_STEPS` is fixed in steps, so **E1 measures an optimizer
+policy, not batch size** — which is a reason to read E's eventual result narrowly.
 
-**Also verified:** the Bonferroni denominator is **12** (amendment C2 + `rules.F_orientation`:
-11 at α/12 + F1 two-sided at α/24 = α exactly), while `instructions-m10.md:77/:337/:641` and ≥4
-LEDGER places still say 0.025/13. **F1 used α/24, so no number is wrong** — the stale 13 is a trap.
-`FORMS-12` is "descriptive only" yet the plateau top-up doubles its bottom-two form weights off a
-forecast labelled "never gating". `WARMUP_STEPS` is fixed in **steps**, so bs128 gets 4× the warmup
-exposure and ¼ the updates — E1 measures an optimizer policy, not batch size.
-
-**Biggest structural error, beyond W14:** the screen's isolated 5M effects are assumed to transfer
-to a 200M combined build that may change dose, data (A4→A3), batch and several components at once.
+**The structural objection stands and is now partly answered:** the screen's isolated 5M effects
+were assumed to transfer to a 200M combined build. **SYNTH-20M** measures the assembled recipe
+against the anchor at 20M — descriptive, selecting nothing. It does not close W14.
 
 ## gpt-6-astra whole-plan review, 2026-09-08 — 3 verified gaps, all on the COST axis
 
@@ -145,23 +90,22 @@ client holds the index. The salvageable half is to state whether the requirement
 **The through-line:** *"gate further training spend on finding an operational region where
 asymmetry wins."* We have measured quality carefully and cost loosely.
 
-## NEXT, in order — rewritten 2026-09-08; three items on the old list were already DONE
+## NEXT, in order — rewritten 2026-09-09
 
-**DONE, removed from this list** (they were still listed as pending and cost a re-read):
-corpus→trainer path · M10.0-c baseline · generation (finished 09-05/06, `work/m10gen/*.jsonl`;
-ANCHOR consumed 834,463 generated rows) · `data_cut.unique_text_count` = **2,651,572**, registered ·
-**A8 gate 2 re-run 09-07 across all 12 forms** (`results/m10_a8_gate2.json`) · family F, and F1
-resolved to **bge-small**.
+**DONE, removed:** the W8 band-1 chain (13/13, `exit 0`) · the staged amendment · the F verdict
+re-issue · the ten computable contrasts · the selection.
 
 | # | open item | blocks | who |
 |---|---|---|---|
-| 1 | **The W8 band-1 remainder is RUNNING** — 3 of 11 done (ANCHOR · A1 · A2, all `exit 0`, avg 2.39 h vs 2.71 h projected). Then the registered contrasts per family | the M10.2 recipe lock | in flight |
-| 2 | **CUREv1 admission** (decision 12, adopted 2026-09-04, **never executed**). Its own precondition: the harvest, PAQ and seed draws were screened against an index lacking it — **re-screen or disclose before reading it** | nothing on the critical path; it is a reported diagnostic, never selection-bearing | session |
-| 3 | **`results/m10_data_manifest.json`** — still MISSING (§1 owes it) | the recipe lock's provenance | session |
-| 4 | **Own-source word-5-gram screen** on the harvest corpus (W11's second half): run it if a pass over the sources is cheap, else **disclose it as not run** in §1 (near-vacuous by construction) | a disclosure in the report | session |
-| 5 | **Register the paired M9-vs-M10 row** — **draft ready for ratification**, `research/m10-paired-row-registration-draft.md`. Its only conditional item (§5, backbone family) self-resolved to *within one family* when F picked bge-small. **§7 expires first:** both six-set transactions must emit aligned per-query scores AND qids before M9's close-out runs, or the row is unbuildable forever | M9's close-out | **Dylan** |
-| 6 | **W14** — is family A a causal experiment, a catastrophe veto, or diagnostics? *"It cannot be all three."* Note its first option NARROWED: a clean-4 surface can no longer be added to COV, which is now observed | the M10.2 recipe lock. Tier 3 | **Dylan** |
-| 7 | **`torch.compile` for registered arms** (~1.7×). Currently SMOKE-ONLY | screen wall-clock only | **Dylan** |
+| 1 | **Land the two adversarial reviews of the amendment + verdicts.** Fable running. **Codex/astra are BLOCKED: the `codex` CLI's auth token is expired** (`HTTP 401 token_expired`) — needs `codex login` | the recipe lock | Fable in flight; **Dylan** for the re-auth |
+| 2 | **Push the M10.2 recipe lock** once the reviews land. E stays **PENDING** in it | the build | session |
+| 3 | **Family E** — `E-bs128` is CLOUD_ONLY and both E arms run on the A100 together. Until then `rules.E_cost` has no reading: an unread contrast trivially fails to resolve, and taking bs128 from that would decide E on a measurement nobody made | the build's batch size | session, on the A100 |
+| 4 | **CUREv1 admission** (decision 12, adopted 2026-09-04, **never executed**). Precondition: harvest/PAQ/seed draws were screened against an index lacking it — **re-screen or disclose before reading it** | nothing on the critical path; a reported diagnostic, never selection-bearing | session |
+| 5 | **`results/m10_data_manifest.json`** — still MISSING (§1 owes it) | the recipe lock's provenance | session |
+| 6 | **Own-source word-5-gram screen** on the harvest corpus (W11's second half): run it if a pass over the sources is cheap, else **disclose it as not run** in §1 | a disclosure in the report | session |
+| 7 | **Register the paired M9-vs-M10 row** — draft ready, `research/m10-paired-row-registration-draft.md`. Its conditional item (§5, backbone family) self-resolved when F picked bge-small. **§7 expires first:** both six-set transactions must emit aligned per-query scores AND qids before M9's close-out runs, or the row is unbuildable forever | M9's close-out | **Dylan** |
+| 8 | **W14** — is family A a causal experiment, a catastrophe veto, or diagnostics? *"It cannot be all three."* Sharpened by the result: **A4−A3 RESOLVED**, and the registry now says every family-A contrast is an exposure re-allocation, so what resolved is *form breadth at the cost of per-form exposure* | the recipe lock's interpretation, not its content | **Dylan** |
+| 9 | **`torch.compile` for registered arms** (~1.7×). Currently SMOKE-ONLY | build wall-clock | **Dylan** |
 
 ## Screen design, settled
 
