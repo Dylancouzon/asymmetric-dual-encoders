@@ -104,6 +104,33 @@ timing is recorded so it cannot be read as motivated by a result.
 - **Bonferroni denominator is 12** (amendment C2; `rules.F_orientation` closes at α exactly).
   Stale `/13` mentions annotated 2026-09-08. F1 was computed at α/24, so no number changes.
 
+## 5b. REQUIRED BEFORE READING D1/D2 — the loss-scale confound is now MEASURED, not hypothetical
+
+astra warned analytically that unit-trace normalization makes `L_COV = ‖s−t‖²/1024` in the
+isotropic case, so a negative D-COV could be an optimizer-scale artifact rather than evidence
+against document-aware regression (`m10src/nano10.py:237`). **The live arms confirm it:**
+
+| arm | objective | first logged loss (step 3,125) |
+|---|---|---|
+| ANCHOR · A3 · G-384 | `squared_l2` | 0.5015 · 0.5194 · 0.5432 |
+| D-NORM | `leaf_norm_e2` | 0.7035 |
+| **D-COV** | `document_covariance_weighted` | **0.0008** |
+
+**~612× smaller** against the 1024× isotropic prediction — the right direction and magnitude, the
+shortfall being the covariance's real structure, which is D-COV's premise. D-COV therefore trains
+at the SAME peak LR (9.80e-05) on gradients ~600× smaller. AdamW is scale-invariant in the ideal
+case, but ε (~1e-8) and gradient clipping are not: at 600× smaller gradients ε is relatively 600×
+larger and any clip threshold is never reached.
+
+**So D1/D2 must not be read as evidence about document-aware regression until this is separated.**
+The audit is cheap — gradient and update norms for both objectives on IDENTICAL batches, minutes
+not hours, and the box is free the moment D-COV finishes. If the update scales differ materially,
+D-COV's arm does not test its own hypothesis and must be reported that way rather than as a
+resolved or unresolved objective comparison.
+
+**This does not change any threshold or rule** — it is a precondition on INTERPRETATION, written
+while D-COV is still training and before any D contrast has been computed.
+
 ## 6. Deliberately NOT done
 
 - **No new COV admission, no MDE change, no re-weighting.** COV is observed; those are forbidden.
