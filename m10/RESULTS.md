@@ -116,6 +116,39 @@ bound and not a distribution**. A shift that size moves A4−A3's lower bound to
 the MDE, and moves no other verdict. `confirmation.seed_variance_gap` carries the disclosure and
 the cheap way to close it.
 
+## M10.2 DESCRIPTIVE reads (box, 2026-09-09) — astra's two rulings, selecting nothing
+
+`m10src/descriptive_reads.py`. Neither is a contrast and **no interval is computed** — the ruling
+says compare the checkpoints descriptively, and an interval beside a point estimate reads as a test
+however it is captioned. Registered as `descriptive_runs`; they resolve nothing and re-decide
+nothing.
+
+### Decision 2 — anchor seed sensitivity: **delta +0.000712** (`results/m10_descriptive_seed_sensitivity.json`)
+
+ANCHOR-seed1 **0.503097** vs ANCHOR **0.502385**, same recipe, seed 1 vs seed 0, both at the 5M
+cycle-3 end. Family contributions partly cancel: BRIGHT +0.001346, finance +0.000648,
+consumer-health −0.000794, legal −0.000488.
+
+**The registered sentence, filled:** *"At 5M examples, the second training seed changed ANCHOR's COV
+macro by delta = +0.000712; this single between-run difference describes ANCHOR SENSITIVITY, while
+the screen's query-resampling intervals condition on the trained checkpoints and exclude
+training-seed variability."*
+
+**What it does NOT license, and this is exactly the case the prohibition was written for** — the
+delta is nearly zero, which is when over-claiming is most tempting. No claim of reproducibility, of
+bounded seed noise, of seed-adjusted significance, or of confirmed verdicts. The alternatives can
+move *with* the anchor across seeds, so paired effect variability remains unknown, and n=1 is not a
+distribution. The original seed is retained regardless, as registered.
+
+For context only: it is **half** the calibration's 0.0013869 and **5.6× smaller** than the ±0.004
+anchor shift a reviewer used to illustrate the hazard — the shift that would have moved A4−A3's
+lower bound to the MDE. On this one observation that hazard did not materialise. One observation.
+
+### Decision 1 — A4's corpus vs A3's at 20M: **RUNNING** (started 18:51, ~9.4 h)
+
+`A3-20M` against the completed `F-bge-small`. Parity documented and tested: after the dose is
+matched the only difference is `sources`.
+
 ## Known pre-existing test failure (not caused by any M10 work)
 
 `./run_tests.sh` reports `test_encoders` FAIL — **7 of 158 replayed caches**, all of them M8 `T1`
