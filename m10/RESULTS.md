@@ -54,7 +54,7 @@ MDE 0.0056; one-sided lower bound at α/12, F1 two-sided at α/24 per tail. Fami
 | id | a − b | point | lower | label |
 |---|---|---:|---:|---|
 | F1 | F-bge-small − F-MiniLM-L6 @20M | +0.011595 | +0.007221 | RESOLVED |
-| **A4-A3** | **ANCHOR(A4) − A3** | **+0.012080** | **+0.006909** | **RESOLVED** → the ~1.0M generated queries enter the build |
+| **A4-A3** | **ANCHOR(A4) − A3** | **+0.012080** | **+0.006909** | **RESOLVED** → the 834,463 generated queries enter the build |
 | A3-A2 | A3 − A2 | +0.010068 | +0.005363 | POSITIVE, NOT RESOLVED (0.00024 short of the bar) |
 | G1 | ANCHOR(1152) − G-384 | +0.021651 | +0.015273 | RESOLVED — selects nothing (`G-384.selectable: false`); it is evidence on M9's 384-wide diagnosis |
 | G2 | G-1536 − ANCHOR | +0.000335 | −0.002787 | NOT RESOLVED |
