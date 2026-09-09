@@ -1633,7 +1633,7 @@ its draws digest — the only end-to-end evidence that it reads the same plan th
 
 Four things a later session must not re-derive:
 
-- **A4−A3 RESOLVED (+0.012080 [+0.006909])** so the ~1.0M generated queries enter the build. It is
+- **A4−A3 RESOLVED (+0.012080 [+0.006909])** so the 834,463 generated queries enter the build (the plan said ~1.0M). It is
   an **exposure re-allocation**, not a synthetic-data test: form-balanced sampling gives A4's 12
   forms 312,500 presentations each against A3's 5 at 750,000 (`results/m10_exposure_table.json`).
 - **A3−A2 landed at lower 0.005363 against MDE 0.0056** — 0.00024 short. POSITIVE, NOT RESOLVED.
