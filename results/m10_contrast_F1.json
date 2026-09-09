@@ -10,7 +10,7 @@
   "quantile": 0.0010416666666666667,
   "family_rule": "F_tournament"
  },
- "registry_sha256": "46fa628bc670657d56571b7bf228c0427dcbc9772c5269a1b5ffcfc95d3f59d0",
+ "registry_sha256": "433513eebedbc20ccbd1a7fc53a6811362eddb8562df031f5472478eec2b1695",
  "arms": {
   "a": "F-bge-small",
   "b": "F-MiniLM-L6",
@@ -57,6 +57,7 @@
    "legal": 0.8479314713916843
   }
  },
+ "power_note": "distance_raw 0.004374 against the registered resolution distance 0.008619 (`results/m10_cov_resolution.json`), which was measured between UNRELATED models and was expected to over-estimate a real contrast's width. Disclosure only: it sizes nothing and alpha does not move (amendment A4).",
  "delta_raw": 0.011595234778582406,
  "lower_bound_raw": 0.007221227793660513,
  "distance_raw": 0.004374006984921893,
