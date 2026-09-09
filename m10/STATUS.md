@@ -1,4 +1,4 @@
-# M10 status — 2026-09-09. **SCREEN READ. Ten contrasts computed, the recipe is selected but one family is open.** Box idle. **NEXT ACTION: land the two adversarial reviews (Fable running; Codex/astra BLOCKED, the `codex` CLI's auth token is expired — `codex login`), then push the recipe lock. E is PENDING until the A100 runs both E arms.**
+# M10 status — 2026-09-09. **SCREEN READ. Ten contrasts computed, the recipe is selected but one family is open.** Box idle. **NEXT ACTION: two decisions for Dylan (1a SYNTH-20M, 1b the seed arm), then push the recipe lock. E is PENDING until the A100 runs both E arms.** Both adversarial reviews have landed and every finding is applied; the next rotation slot is astra.
 
 **Selected recipe:** student **bge-small** · corpus **A4** (harvest + the ~1.0M generated queries) ·
 head **1152-wide linear** · mix **75/25** · objective **squared L2** · batch **PENDING**.
@@ -97,7 +97,7 @@ re-issue · the ten computable contrasts · the selection.
 
 | # | open item | blocks | who |
 |---|---|---|---|
-| 1 | **Codex review of the eleven FIXES is in flight** (Dylan re-authed the CLI). Fable's review LANDED and all eleven findings are applied — see `m10/LEDGER.md` §Fable pass | the recipe lock | in flight |
+| 1 | ~~reviews~~ **BOTH LANDED.** Fable on the amendment + verdicts (11 findings, all applied); Codex on the FIXES, which returned **NO-GO** — 2 did not work, 4 partial, all now fixed, and it overturned three of my claims. `research/m10-{fable-verdicts,codex-fixes}-review-2026-09-09.md` | — | done |
 | 1a | **DECISION: re-point or cut SYNTH-20M.** As registered it compares the anchor recipe **to itself** — the screen selected no non-default component, so its premise is gone. Candidates that measure something: A4 vs A3 at 20M, or the anchor at seeds 1/2. `confirmation.synth_20M._VACUOUS_AS_REGISTERED` | 20M examples of budget | **Dylan** |
 | 1b | **DECISION: buy the seed number?** No interval in this screen contains training-seed variance; confirmation was the only thing that would have measured it and it is cut. ANCHOR at seed 1, 5M, ~1.5 h on the idle box, zero cloud cost, selects nothing. Six contrasts sit within ±0.004 of their bar. Bound we have: 0.0013869 from the calibration (n=1). `confirmation.seed_variance_gap` | nothing; it is a reporting quality buy | **Dylan** |
 | 2 | **Push the M10.2 recipe lock** once the reviews land. E stays **PENDING** in it | the build | session |
