@@ -1,4 +1,4 @@
-# M10 status — 2026-09-09. **SCREEN READ. Ten contrasts computed, the recipe is selected but one family is open.** Box idle. **RUNNING: the two descriptive arms astra ruled for — `ANCHOR-seed1` (~2.4 h) then `A3-20M` (~10.9 h), `work/m10arms/descriptive_chain.log`. NEXT ACTION: read them with `m10src/descriptive_reads.py`, then push the recipe lock. E stays PENDING until the A100 runs both E arms.** All three reviews (Fable, Codex, astra) have landed and every finding is applied.
+# M10 status — 2026-09-09. **SCREEN READ. Ten contrasts computed, the recipe is selected but one family is open.** **RUNNING: the two descriptive arms astra ruled for — `ANCHOR-seed1` (~2.4 h) then `A3-20M` (~10.9 h), `work/m10arms/descriptive_chain.log`. NEXT ACTION: read them with `m10src/descriptive_reads.py`, then push the recipe lock. E stays PENDING until the A100 runs both E arms.** All three reviews (Fable, Codex, astra) have landed and every finding is applied.
 
 **Selected recipe:** student **bge-small** · corpus **A4** (harvest + the 834,463 generated queries) ·
 head **1152-wide linear** · mix **75/25** · objective **squared L2** · batch **PENDING**.
