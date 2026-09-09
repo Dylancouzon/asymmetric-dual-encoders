@@ -66,6 +66,21 @@ the one knob with no selection risk attached. Subject to the $1,000 cloud ceilin
 
 ## 5. Interpretation fixes that carry no compute (apply with the above)
 
+- **MEASURED, `results/m10_exposure_table.json`** (built 2026-09-08, `m10src/exposure_table.py`):
+  per-form query exposure swings **6×** across family A —
+
+  | arm | forms | presentations PER FORM | generated share of exposure |
+  |---|---:|---:|---:|
+  | A1 / A2 | 2 | **1,875,000** | 0% |
+  | A3 | 5 | 750,000 | 0% |
+  | A4 / ANCHOR | 12 | **312,500** | **58.3%** |
+  | F-bge-small / F-MiniLM-L6 | 12 | 1,250,000 | 58.3% |
+
+  The sampler is form-balanced, so every form present takes an equal share of presentations no
+  matter how much text backs it; `by_form` in the manifest is AVAILABLE TEXTS and is not exposure.
+  **So EVERY family-A contrast is an exposure re-allocation, not only A4−A3** — adding forms is
+  inseparable from cutting per-form training across the whole family. (F's contrast is clean by
+  comparison: both arms had identical per-form exposure.)
 - **`registry:377` "measured null" → "did not establish improvement under the registered test."**
   Family A's arms are all form-balanced, so an existing form gets ~750,000 presentations in A3
   against 312,500 in A4: **A4−A3 tests re-allocating 58% of query presentations to seven generated

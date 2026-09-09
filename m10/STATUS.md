@@ -1,4 +1,4 @@
-# M10 status — 2026-09-08. **Family F DONE and F1 RESOLVED: the student is bge-small.** **W8 band-1 remainder RUNNING** (11 arms, ~25 h, `work/m10arms_run_rest.sh`). §0b registered; the screen is live.
+# M10 status — 2026-09-08. **F DONE, student = bge-small.** Screen running (4/11). **⚠ APPLY `m10/AMENDMENT_STAGED_2026-09-08.md` THE MOMENT `work/m10arms/rest_chain.log` READS COMPLETE** — it fixes 3 decision rules that can select a worse recipe, and buys 91.7M examples of dose. §0b registered.
 
 **Read this, then `m10/LEDGER.md`.** The box is **preparation for the cloud GPU run, not a
 measurement target** (Dylan, 2026-09-05): run as much as it can here first, no re-shaping; the
