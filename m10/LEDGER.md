@@ -1720,5 +1720,9 @@ fixes rather than of decisions; it is now the rule, not an anecdote.
    is concentrated in consumer-health and is consistent with domain/form matching, while broad
    cross-domain benefit is not established.*
 
-And the seed figure is **one observation**, not a "bound". Both reviewers are worth re-reading
-before the recipe lock: `research/` has neither log yet — they are in the session scratchpad only.
+And the seed figure is **one observation**, not a "bound".
+
+Both passes are archived and are worth re-reading before the recipe lock:
+`research/m10-fable-verdicts-review-2026-09-09.md`,
+`research/m10-codex-fixes-review-2026-09-09.md` (verbatim), and the two briefs
+`research/m10-review-brief-{fable,codex}-2026-09-09.md`.
