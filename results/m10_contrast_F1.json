@@ -1,6 +1,6 @@
 {
  "contrast": "F1",
- "_what": "Family F: which student. Registered decisive contrast, read at 20M.",
+ "_what": "",
  "registered_spec": {
   "a": "F-MiniLM-L6",
   "b": "F-bge-small",
@@ -10,21 +10,40 @@
   "quantile": 0.0010416666666666667,
   "family_rule": "F_tournament"
  },
- "orientation": {
-  "rule": "F_orientation: highest-minus-runner-up, oriented AFTER the reading, hence two-sided at alpha/24 per tail",
-  "higher": "F-bge-small",
-  "runner_up": "F-MiniLM-L6",
-  "note": "the registry lists a=F-MiniLM-L6/b=F-bge-small nominally; F_orientation governs the sign"
+ "registry_sha256": "46fa628bc670657d56571b7bf228c0427dcbc9772c5269a1b5ffcfc95d3f59d0",
+ "arms": {
+  "a": "F-bge-small",
+  "b": "F-MiniLM-L6",
+  "orientation": "highest-minus-runner-up (F_orientation)",
+  "flipped_from_registry_order": true
  },
- "macro_at_20M": {
+ "read": {
+  "a_label": "cycle3_read20000000",
+  "b_label": "cycle3_read20000000",
+  "at_examples": 20000000,
+  "prev_cycle_end": {
+   "a": "cycle2",
+   "b": "cycle2"
+  }
+ },
+ "rule": null,
+ "family_rule": "F_tournament",
+ "resolve": {
+  "MDE": 0.0056,
+  "point_ge_MDE": true,
+  "lower_bound_gt_0": true,
+  "lower_bound_gt_MDE": true,
+  "sign_stable_last_two_cycle_ends": true,
+  "sign_stability_exempt": false,
+  "point_at_prev_cycle_end": 0.012883028430242473,
+  "resolved": true,
+  "label": "RESOLVED"
+ },
+ "macro": {
   "F-bge-small": 0.5159506173533556,
   "F-MiniLM-L6": 0.5043553825747732
  },
- "macro_at_cycle2": {
-  "F-bge-small": 0.5136687392421483,
-  "F-MiniLM-L6": 0.5007857108119059
- },
- "by_family_at_20M": {
+ "by_family": {
   "F-bge-small": {
    "BRIGHT": 0.17826170450639434,
    "consumer-health": 0.7065451528326812,
@@ -38,19 +57,6 @@
    "legal": 0.8479314713916843
   }
  },
- "resolve": {
-  "point_ge_MDE": true,
-  "MDE": 0.0056,
-  "lower_bound_gt_0": true,
-  "sign_stable_last_two_cycle_ends": true,
-  "resolved": true
- },
- "verdict": {
-  "winner": "F-bge-small",
-  "basis": "RESOLVED margin (evidence)",
-  "consequence": "outcome_to_action.F: every later family runs on F's winner and every later verdict is labelled conditional on it"
- },
- "power_note": "distance_raw 0.004374 vs the registered resolution distance 0.0086 measured between UNRELATED models; the mandate expected that to over-estimate a real contrast's width and priced 0.5x at 0.0043, which is where this landed. ONE contrast, and F's arms differ in backbone; P2's bracket for B/D and the wider expectation for G/C/A are not overturned by it.",
  "delta_raw": 0.011595234778582406,
  "lower_bound_raw": 0.007221227793660513,
  "distance_raw": 0.004374006984921893,

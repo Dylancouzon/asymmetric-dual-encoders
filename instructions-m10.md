@@ -343,7 +343,7 @@ LEAF's ~100 A100-hours, and the dev-reuse count.
   **Before any arm and recorded in the manifest**, the two A8 quality gates: per-form
   near-duplicate and dispersion metrics, and the stella-space distribution-overlap check against
   real MS MARCO dev queries (validation only).
-- **M10.2 SCREEN + RECIPE LOCK.** The arms of §Screen, the confirmation runs, then one pushed lock
+- **M10.2 SCREEN + RECIPE LOCK.** The arms of §Screen, then SYNTH-20M (confirmation CUT 2026-09-09), then one pushed lock
   commit with every field of M9's M9.2 list filled — including the objective, the best-to-best
   plateau/extension rule on annealed checkpoints, the GPU-hour allocation under the ceiling (build,
   extensions), the final-run registry with the four C-conjuncts and their fixed sequence, and
@@ -549,14 +549,16 @@ loss-form arm. Reopening condition in `m10/EXPLORED.md`.
 - **The registered plateau response [replaces the cut class] — this is what M9 finding #4 asked
   for.** M9's lesson was that a phase 2 must be specified at lock or a flat curve has no registered
   answer; cutting family D without one would recreate exactly that. So: at every cycle end the run
-  records per-form retention (FORMS-12 by form) and per-family COV. **If the plateau rule fires (§Kill) while the dev→six forecast is below the release bar and
-  `max_extension_cycles` is not exhausted, exactly one registered top-up cycle runs, pre-empting the
-  stop once; afterwards the form weights revert to balanced and the extension rule resumes** — one
-  further cycle of 66.7M examples, linear 1e-4→1e-5 as cycle 3, with the **bottom two forms by
-  FORMS-12 retention at 2× presentation weight** and everything else unchanged. It needs no new data,
-  no candidate list and no new loss; it is the plan's own coverage thesis applied to its own curve.
-  It fires at most once, costs one extension cycle, is counted against `max_extension_cycles`, and
-  the lock records the forecast formula and the tie-break for "bottom two".
+  records per-form retention (FORMS-12 by form) and per-family COV, and the plateau rule's ordinary
+  stop (§Kill) applies unchanged. **The TOP-UP CYCLE IS REMOVED, 2026-09-09**
+  (`m10/AMENDMENT_STAGED_2026-09-08.md` §3, applied post-chain, pre-contrast). It was one further
+  cycle of 66.7M examples with the bottom two FORMS-12 forms at 2× presentation weight, pre-empting
+  the stop once. Cut for two independent reasons: (i) it is **adaptive training driven by a
+  validation surface the registry calls "descriptive only"** (`screen_registry.json` `evaluation.
+  FORMS-12`), gated on a dev→six forecast this mandate itself calls *"forecasting only, never
+  gating"* (:750) — a prewritten branch does not remove the influence; (ii) even setting that aside,
+  *"worst current score"* and *"best next use of compute"* are different quantities. Its 66.7M
+  examples go to DOSE (`confirmation.budget_released`).
 - **Reopening the ranking-aware class:** only as its own milestone, never mid-M10. The condition is
   read on the **post-final six-set number** (the release bar is not observable during the build —
   Fable M4), so it is a next-milestone decision by construction: it reopens if M10's final avg-6 or
@@ -649,13 +651,19 @@ as an α that adapts to an observed width. The resolution number (§Surfaces) is
 power disclosure; an underpowered contrast is reported as unresolved and reverts to default, and
 the report names the contrasts the surface could not have resolved. **Family A's contrasts A3−A2 and A4−A3 are exempt from the
 generic rule** and use the three-outcome rule in the table (resolved requires the corrected lower
-bound > MDE); A4−A2 and A2−A1 are descriptive. **Confirmation:** for every decision whose
-non-default option won, both the winner and the default are re-trained with two more seeds at
-screen dose — **at most two such decisions, largest margins first** (amendment A5; it was four);
-the rest revert to default. The decision stands only if the winner's margin exceeds the largest
-seed range observed in either arm. Worst-case confirmation cost is now 45M examples ≈ 17
-GPU-hours, plus the synthesized selected-recipe arm (5M) and the replication seed pair (10M);
-PLANNING §5 has the arithmetic. Every screen verdict is artifact-specific at screen dose; never
+bound > MDE); A4−A2 and A2−A1 are descriptive. **Confirmation: CUT 2026-09-09** (`m10/AMENDMENT_STAGED_2026-09-08.md` §2, applied
+post-chain and pre-contrast; `screen_registry.json` `confirmation` is authoritative). It was: for
+every decision whose non-default option won, both the winner and the default re-trained with two
+more seeds at screen dose, at most two decisions, largest margins first (amendment A5), the rest
+reverting to default, standing only if the winner's margin exceeded the largest seed range observed
+in either arm — a rule that compares a paired effect to the spread of ABSOLUTE scores and therefore
+rejects a perfect replication while accepting a reversal on both fresh seeds. **Replaced by
+`SYNTH-20M`**: the ASSEMBLED selected recipe at 20M examples on its own full 3-cycle schedule
+against the anchor at the same dose, read on development surfaces, selecting NOTHING. Confirmation
+re-tested *isolated* effects at the *screen's* dose; the build combines several components at 200M,
+and that transfer is assumed, not measured. The freed 45M examples (and the 66.7M of the removed
+FORMS-12 top-up) go to dose, less SYNTH-20M's 20M — `confirmation.budget_released` has the
+arithmetic, PLANNING §5 the superseded version. Every screen verdict is artifact-specific at screen dose; never
 "resolved" in the report's sense.
 
 ## Surfaces

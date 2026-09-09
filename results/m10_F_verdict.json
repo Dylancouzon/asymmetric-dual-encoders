@@ -1,6 +1,6 @@
 {
  "winner": "bge-small",
- "_winner_note": "the registry `student` string of F-bge-small, the arm with the higher 20M COV macro whose margin RESOLVED under F_tournament; serve_cost_order was not invoked, so this is evidence and not a product preference",
+ "_winner_note": "the registry `student` string of the arm with the higher 20M COV macro whose margin RESOLVED under F_tournament; serve_cost_order was not invoked, so this is evidence and not a product preference",
  "contrast": {
   "rule": "F_tournament / F1, two-sided at alpha/24 per tail per F_orientation, read at 20,000,000 examples, oriented highest-minus-runner-up",
   "point": 0.011595234778582406,
@@ -19,7 +19,7 @@
   "plan_sample_sha256": "8091783fa66a21d8fcdd3a1c6458920c3c52442fc85cb5c5d9990f37a90e3d68",
   "artifact": "results/m10_contrast_F1.json"
  },
- "registry_sha256": "bd89c134f7d2ba38973aa09558421bdcbfa3ef49f0a41905b269be94d15aea10",
+ "registry_sha256": "46fa628bc670657d56571b7bf228c0427dcbc9772c5269a1b5ffcfc95d3f59d0",
  "sha256_of_F_records": [
   "11bd572669e9978ce343059016642ba7f20ed06ea7a9f014aa32ac164f478840",
   "5ea9f89c8093f58cd9043ed7036bb2927deb6a3640ce030cc5a586ffbbc647c1"
@@ -28,5 +28,5 @@
   "F-MiniLM-L6",
   "F-bge-small"
  ],
- "_what": "F's verdict, read by run_arm.f_verdict: every arm after family F trains on F's WINNER backbone (anchor.init 'F's winner backbone', Recipe amendment A6). Written by the CONTRAST step, never by the runner."
+ "_what": "F's verdict, read by run_arm.f_verdict: every arm after family F trains on F's WINNER backbone (anchor.init \"F's winner backbone\", Recipe amendment A6). Written by the CONTRAST step, never by the runner."
 }

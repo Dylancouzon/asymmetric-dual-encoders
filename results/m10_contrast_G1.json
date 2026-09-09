@@ -1,0 +1,109 @@
+{
+ "contrast": "G1",
+ "_what": "Orientation `1152 - 384` is the MANDATE's (:616) and is kept. `G-384` is registered `selectable: false` -- a diagnostic arm, not a candidate recipe -- so G1 tests whether the wider head beats M9's 384 and can select only 1152. A negative point estimate is REPORTED as evidence bearing on the M9 diagnosis; it is not an action, and an unresolved negative is noise, not a contradiction (W9 review #3).",
+ "registered_spec": {
+  "a": "G-1152",
+  "b": "G-384",
+  "decisive": true,
+  "_w9": "Orientation `1152 - 384` is the MANDATE's (:616) and is kept. `G-384` is registered `selectable: false` -- a diagnostic arm, not a candidate recipe -- so G1 tests whether the wider head beats M9's 384 and can select only 1152. A negative point estimate is REPORTED as evidence bearing on the M9 diagnosis; it is not an action, and an unresolved negative is noise, not a contradiction (W9 review #3).",
+  "family_rule": "multi_arm_winner"
+ },
+ "registry_sha256": "46fa628bc670657d56571b7bf228c0427dcbc9772c5269a1b5ffcfc95d3f59d0",
+ "arms": {
+  "a": "ANCHOR",
+  "b": "G-384",
+  "orientation": "registry a - b",
+  "flipped_from_registry_order": false
+ },
+ "read": {
+  "a_label": "cycle3",
+  "b_label": "cycle3",
+  "at_examples": null,
+  "prev_cycle_end": {
+   "a": "cycle2",
+   "b": "cycle2"
+  }
+ },
+ "rule": null,
+ "family_rule": "multi_arm_winner",
+ "resolve": {
+  "MDE": 0.0056,
+  "point_ge_MDE": true,
+  "lower_bound_gt_0": true,
+  "lower_bound_gt_MDE": true,
+  "sign_stable_last_two_cycle_ends": true,
+  "sign_stability_exempt": false,
+  "point_at_prev_cycle_end": 0.024698303178280694,
+  "resolved": true,
+  "label": "RESOLVED"
+ },
+ "macro": {
+  "ANCHOR": 0.5023845762649155,
+  "G-384": 0.48073336373508785
+ },
+ "by_family": {
+  "ANCHOR": {
+   "BRIGHT": 0.1671261019757689,
+   "consumer-health": 0.6829620808473836,
+   "finance": 0.31048863768659923,
+   "legal": 0.84896148454991
+  },
+  "G-384": {
+   "BRIGHT": 0.17362471609306543,
+   "consumer-health": 0.6563640820990875,
+   "finance": 0.27461613045190914,
+   "legal": 0.8183285262962894
+  }
+ },
+ "power_note": "distance_raw 0.006379 against the registered resolution distance 0.008619 (`results/m10_cov_resolution.json`), which was measured between UNRELATED models and was expected to over-estimate a real contrast's width. Disclosure only: it sizes nothing and alpha does not move (amendment A4).",
+ "delta_raw": 0.02165121252982761,
+ "lower_bound_raw": 0.015272662777440597,
+ "distance_raw": 0.006378549752387011,
+ "lower_bound_prev_order_statistic": 0.015266292371910059,
+ "order_statistic_index0": 416,
+ "quantile": 0.0020833333333333333,
+ "quantile_method": "inverted_cdf",
+ "B": 200000,
+ "seed": 0,
+ "chunk": 5000,
+ "plan_sample_sha256": "8091783fa66a21d8fcdd3a1c6458920c3c52442fc85cb5c5d9990f37a90e3d68",
+ "draws_sha256": "4ba27c2dc9ae9e1ca0c5ced7889383bf9cdcd046848d6a5b2209594dfb07c780",
+ "draws_sd": 0.0022383953041504945,
+ "per_unit_delta_raw": {
+  "BRIGHT/biology": -0.021789786392560052,
+  "BRIGHT/earth_science": 0.00011774430331503984,
+  "BRIGHT/economics": -0.009623320119180587,
+  "BRIGHT/psychology": -0.003370525419872461,
+  "BRIGHT/robotics": 0.0027943251465902216,
+  "BRIGHT/sustainable_living": -0.00712012222207134,
+  "LEDGER": 0.03587250723469007,
+  "LegalBenchConsumerContractsQA": 0.04551580189366994,
+  "LegalBenchCorporateLobbying": 0.01575011461357133,
+  "MedicalQARetrieval": 0.026597998748296256
+ },
+ "n_by_unit": {
+  "BRIGHT/biology": 103,
+  "BRIGHT/earth_science": 116,
+  "BRIGHT/economics": 103,
+  "BRIGHT/psychology": 101,
+  "BRIGHT/robotics": 101,
+  "BRIGHT/sustainable_living": 108,
+  "LEDGER": 10000,
+  "LegalBenchConsumerContractsQA": 396,
+  "LegalBenchCorporateLobbying": 340,
+  "MedicalQARetrieval": 2048
+ },
+ "weights": {
+  "MedicalQARetrieval": 0.25,
+  "BRIGHT/biology": 0.041666666666666664,
+  "BRIGHT/earth_science": 0.041666666666666664,
+  "BRIGHT/economics": 0.041666666666666664,
+  "BRIGHT/psychology": 0.041666666666666664,
+  "BRIGHT/robotics": 0.041666666666666664,
+  "BRIGHT/sustainable_living": 0.041666666666666664,
+  "LegalBenchCorporateLobbying": 0.125,
+  "LegalBenchConsumerContractsQA": 0.125,
+  "LEDGER": 0.25
+ },
+ "_note": "distance_raw = delta_raw - lower_bound_raw; a contrast resolves when delta_raw >= MDE and lower_bound_raw > 0 (sign stability checked elsewhere)"
+}
