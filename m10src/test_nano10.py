@@ -312,3 +312,17 @@ def test_cov_matrix_accepts_a_lazy_view():
     X = rng.normal(size=(500, 16))
     X = X / np.linalg.norm(X, axis=1, keepdims=True)
     assert np.abs(N.cov_matrix(View(X), chunk=64) - N.cov_matrix(X)).max() < 1e-12
+
+
+def test_warmup_is_registered_in_EXAMPLES_so_both_E_arms_get_the_same_exposure():
+    """`rules.E_warmup_parity`, registered 2026-09-09 before `E-bs128` ran. A warmup fixed in STEPS
+    gave bs128 4x the warmup exposure (256,000 examples against bs32's 64,000) and ~1/4 the AdamW
+    updates, so E1 would have compared an optimizer policy while being read as a batch contrast."""
+    assert N.WARMUP_EXAMPLES == 64_000
+    assert N.warmup_steps_for(32) == 2000 == N.WARMUP_STEPS, \
+        "at the screen batch the new rule must reproduce the old constant exactly, or every arm " \
+        "already run would fingerprint differently"
+    assert N.warmup_steps_for(128) == 500
+    for b in (32, 128):
+        assert N.warmup_steps_for(b) * b == N.WARMUP_EXAMPLES
+    assert N.warmup_steps_for(1_000_000) == 1, "never zero: a warmup of 0 steps divides by zero"

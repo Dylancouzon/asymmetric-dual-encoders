@@ -1,16 +1,16 @@
 {
  "_what": "the selected recipe, from the registered family rules applied to the computed contrasts. `m10src/contrasts.selection`; nothing is decided here.",
- "registry_sha256": "433513eebedbc20ccbd1a7fc53a6811362eddb8562df031f5472478eec2b1695",
+ "registry_sha256": "48771d8f83007df8ac1ed4630e99ece7f4451cbfe3188d197a3dec50c6aeafbd",
  "selected": {
   "student": "bge-small",
-  "corpus": "A4 (harvest + the ~1.0M generated queries)",
+  "corpus": "A4 (harvest + the 834,463 generated queries)",
   "head": "1152-wide linear (the anchor default)",
   "mix": "75/25 (the anchor default)",
   "objective": "squared_l2",
   "batch": "PENDING"
  },
  "why": {
-  "student": "F1 RESOLVED (rules.F_tournament)",
+  "student": "F1 RESOLVED (rules.F_tournament): the higher 20M COV macro, adopted as evidence",
   "corpus": "A4-A3 RESOLVED (rules.generated_half_in_build). NOTE rules.generated_half_in_build and `_interpretation.exposure`: family A's arms are form-balanced, so this contrast tests RE-ALLOCATING 58% of query presentations to seven generated forms, not 'does synthetic data help'.",
   "head": "rules.multi_arm_winner over G2/G3; G1 (1152 vs 384) is RESOLVED and `arms.G-384.selectable: false`, so G1 is evidence about M9's 384-wide diagnosis and selects nothing.",
   "mix": "rules.multi_arm_winner over B1/B2. `_interpretation.B`: B is an augmentation experiment at FIXED query exposure, so limit what its result decides.",

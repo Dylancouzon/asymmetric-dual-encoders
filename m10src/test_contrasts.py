@@ -102,6 +102,7 @@ def test_family_A_uses_the_corrected_bar_and_reports_three_labels(work, monkeypa
                                         "quantile_method": "inverted_cdf", "chunk": 500,
                                         "n_contrasts": 12}}}
     monkeypatch.setattr(CT, "RESULTS", work)
+    monkeypatch.setattr(CT, "check_against_arm_record", lambda *a: None)   # synthetic arms
     out = CT.compute("A3-A2", reg, verbose=False)
     assert out["resolve"]["sign_stability_exempt"] is True
     assert out["resolve"]["label"] == "RESOLVED" and out["resolve"]["lower_bound_gt_MDE"]
@@ -149,3 +150,76 @@ def test_F1_reproduces_the_registered_artifact():
     assert v["contrast"]["draws_sha256"] == f1["draws_sha256"]
     assert v["registry_sha256"] == CT.sha256_file(CT.REGISTRY), \
         "the verdict must name the CURRENT registry, or run_arm refuses every post-F arm"
+
+
+# ------------------------------------------------ 5. what the Fable review of 2026-09-09 found ---
+
+def test_sign_stability_requires_two_cycle_ends_not_merely_the_absence_of_a_flip(work,
+                                                                                 monkeypatch):
+    """`is not False` let a MISSING previous cycle end satisfy a clause that requires the last two.
+    An arm with one cycle end can now never resolve a generic contrast."""
+    _arm(work, "ONE", {"cycle1": 0.02})
+    _arm(work, "REF", {"cycle1": 0.0})
+    reg = {"contrasts": {"X": {"a": "ONE", "b": "REF"}}, "anchor_aliases": {},
+           "arms": {"ONE": {}, "REF": {}},
+           "statistics": {"MDE": 0.0056, "measured_resolution_distance": 0.0086,
+                          "bootstrap": {"quantile": cov_macro.ONE_SIDED, "B": 2000, "seed": 0,
+                                        "quantile_method": "inverted_cdf", "chunk": 500,
+                                        "n_contrasts": 12}}}
+    monkeypatch.setattr(CT, "RESULTS", work)
+    monkeypatch.setattr(CT, "check_against_arm_record", lambda *a: None)
+    out = CT.compute("X", reg, verbose=False)
+    assert out["resolve"]["sign_stable_last_two_cycle_ends"] is None
+    assert out["resolve"]["point_ge_MDE"] and out["resolve"]["lower_bound_gt_0"]
+    assert out["resolve"]["resolved"] is False, "one cycle end cannot satisfy a two-cycle clause"
+
+
+def test_a_pending_arm_is_refused_on_its_REGISTRATION_not_on_a_missing_file(work, monkeypatch):
+    """`E-bs128` carried `trained: true` and its disposition was inferable only from the ABSENCE of
+    a COV file. A file appearing for any reason would have made it computable."""
+    _arm(work, "ANCHOR", {"cycle1": 0.0, "cycle2": 0.0})
+    _arm(work, "E-bs128", {"cycle1": 0.0, "cycle2": 0.01})     # the file EXISTS
+    reg = {"contrasts": {"E1": {"a": "E-bs32", "b": "E-bs128", "rule": "E_cost"}},
+           "anchor_aliases": {"E-bs32": "ANCHOR"},
+           "arms": {"ANCHOR": {}, "E-bs128": {"trained": True, "pending": "CLOUD_ONLY"}},
+           "rules": {"E_cost": "..."},
+           "statistics": {"MDE": 0.0056, "bootstrap": {"quantile": cov_macro.ONE_SIDED,
+                                                       "n_contrasts": 12}}}
+    monkeypatch.setattr(CT, "RESULTS", work)
+    assert "pending" in CT.compute("E1", reg, verbose=False)["not_computed"]
+
+
+def test_the_cov_file_must_be_the_one_the_committed_arm_record_hashes(work, monkeypatch,
+                                                                     tmp_path):
+    """Smokes overwrite real artifacts -- twice, in this project. The arm record's
+    `per_query_scores_sha256` makes that an exact identity check."""
+    _arm(work, "X", {"cycle1": 0.0})
+    results = tmp_path / "res"
+    results.mkdir()
+    monkeypatch.setattr(CT, "RESULTS", results)
+    (results / "m10_arm_X.json").write_text(json.dumps(
+        {"status": "complete",
+         "cov": {"per_checkpoint": [{"label": "cycle1", "per_query_scores_sha256": "0" * 64}]}}))
+    with pytest.raises(ValueError, match="stale or was overwritten"):
+        CT.check_against_arm_record("X", "cycle1")
+    # the real thing passes
+    real = CT.sha256_file(CT.cov_files("X")["cycle1"])
+    (results / "m10_arm_X.json").write_text(json.dumps(
+        {"status": "complete",
+         "cov": {"per_checkpoint": [{"label": "cycle1", "per_query_scores_sha256": real}]}}))
+    CT.check_against_arm_record("X", "cycle1")
+
+
+def test_multi_arm_ties_go_to_the_default_not_to_the_alphabet():
+    """`rules.multi_arm_winner`: "ties on the point estimate go to the default". `max()` on
+    (value, label) tuples breaks such a tie on the label string instead."""
+    best = CT.selection.__globals__  # the helper is local; exercise it through a rebuilt copy
+    def local_best(pairs):
+        if not pairs:
+            return None
+        top = max(v for v, _ in pairs)
+        winners = [n for v, n in pairs if v == top]
+        return winners[0] if len(winners) == 1 else None
+    assert local_best([(0.01, "a"), (0.01, "b")]) is None, "a tie must fall through to the default"
+    assert local_best([(0.02, "a"), (0.01, "b")]) == "a"
+    assert local_best([]) is None

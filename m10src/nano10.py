@@ -318,6 +318,19 @@ def window_shares(pattern, steps):
 # ---- the cyclic schedule (§Recipe) -----------------------------------------------------------
 
 WARMUP_STEPS = 2000        # §Recipe (instructions-m10.md:580): "2,000 warmup steps in cycle 1"
+# ...which is 2,000 steps AT THE SCREEN BATCH OF 32, i.e. 64,000 examples. Registered in EXAMPLES
+# 2026-09-09 (`rules.E_warmup_parity`), BEFORE `E-bs128` ran, because a warmup fixed in steps gives
+# bs128 four times the warmup exposure (256,000 examples, 5.12% of a 5M arm, against bs32's 1.28%)
+# and about a quarter of the AdamW updates -- so E1 would have compared a whole optimizer policy
+# while being read as a batch-size contrast, with the handicap running against the arm whose
+# selection saves 2.2x build cost. This removes a difference; it introduces no free parameter.
+WARMUP_EXAMPLES = 64_000
+SCREEN_BATCH = 32
+
+
+def warmup_steps_for(batch):
+    """The registered warmup in STEPS for a given batch size: 2,000 at bs32, 500 at bs128."""
+    return max(int(WARMUP_EXAMPLES) // int(batch), 1)
 
 
 def lr_at(step, total_steps, cycles=3, peak=1e-4, final=1e-5, warmup=WARMUP_STEPS):

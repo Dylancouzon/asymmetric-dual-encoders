@@ -8,7 +8,7 @@
   "_w9": "Orientation `1152 - 384` is the MANDATE's (:616) and is kept. `G-384` is registered `selectable: false` -- a diagnostic arm, not a candidate recipe -- so G1 tests whether the wider head beats M9's 384 and can select only 1152. A negative point estimate is REPORTED as evidence bearing on the M9 diagnosis; it is not an action, and an unresolved negative is noise, not a contradiction (W9 review #3).",
   "family_rule": "multi_arm_winner"
  },
- "registry_sha256": "433513eebedbc20ccbd1a7fc53a6811362eddb8562df031f5472478eec2b1695",
+ "registry_sha256": "48771d8f83007df8ac1ed4630e99ece7f4451cbfe3188d197a3dec50c6aeafbd",
  "arms": {
   "a": "ANCHOR",
   "b": "G-384",

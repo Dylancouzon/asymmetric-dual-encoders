@@ -695,7 +695,10 @@ def fingerprint(arm, p, man, seed, smoke_steps, device):
             "recipe": {k: p[k] for k in ("dose_examples", "batch", "pattern", "student",
                                          "n_layers", "head", "objective", "warm_start",
                                          "total_steps", "cycle_end_steps")},
-            "warmup_steps": int(N.WARMUP_STEPS),
+            # batch-aware since 2026-09-09 (`rules.E_warmup_parity`). At the screen batch of 32
+            # this is 2,000, identical to the old constant, so EVERY arm run so far fingerprints
+            # unchanged; only `E-bs128`, which has not run, sees a different value.
+            "warmup_steps": int(N.warmup_steps_for(p["batch"])),
             "optimizer": {"peak_lr": PEAK, "final_lr": FINAL, "betas": [0.9, 0.999], "eps": 1e-8,
                           "weight_decay_groups": {"dim_gt_1": 0.01, "dim_le_1": 0.0}},
             "registry_sha256": sha256_file(REGISTRY),

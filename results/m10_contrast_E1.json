@@ -2,11 +2,8 @@
  "contrast": "E1",
  "registered_spec": {
   "a": "E-bs32",
-  "b": "E-bs128",
-  "decisive": true,
-  "rule": "E_cost",
-  "_w9": "REORIENTED 2026-09-05 (W9, Codex finding 1). It read `E-bs128 - E-bs32`, so a bs32 quality win was a NEGATIVE point estimate and `point >= threshold` refused it -- making the mandate's own action, 'a RESOLVED bs32 win is adopted', unreachable. Read `bs32 - bs128` the action is reachable with ONE tail and the cost rule is unchanged: resolve -> bs32 earns its 2.2x build cost; do not resolve -> bs128."
+  "b": "E-bs128"
  },
  "not_computed": "E-bs128 -> E-bs128 has no cycle-end COV read: the arm has not run on this machine (`E-bs128` is CLOUD_ONLY, `outcome_to_action.E`)",
- "registry_sha256": "433513eebedbc20ccbd1a7fc53a6811362eddb8562df031f5472478eec2b1695"
+ "registry_sha256": "48771d8f83007df8ac1ed4630e99ece7f4451cbfe3188d197a3dec50c6aeafbd"
 }

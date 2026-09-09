@@ -163,7 +163,7 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
     for step in range(start, total_steps if stopped is None else start):
         kind = N.mix_window(pattern, step)
         ids, mask, tgt = batch_fn(step, kind)
-        lr = N.lr_at(step, total_steps, cycles, peak, final)
+        lr = N.lr_at(step, total_steps, cycles, peak, final, N.warmup_steps_for(batch_size))
         for g in opt.param_groups:
             g["lr"] = lr
         with amp:                                       # bf16 forward on CUDA, no-op on CPU
@@ -261,5 +261,6 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
             "examples": n_examples, "examples_this_run": run_examples, "seconds": round(el, 2),
             "examples_per_s": round(run_examples / max(el, 1e-9), 1),
             "bf16_autocast": bool(amp_on), "weight_decay_on_dim_gt_1": float(wd),
-            "warmup_steps": int(N.WARMUP_STEPS),
+            "warmup_steps": int(N.warmup_steps_for(batch_size)),
+            "warmup_examples": int(N.WARMUP_EXAMPLES),
             "mix": N.window_shares(pattern, max(len(losses), 1))}

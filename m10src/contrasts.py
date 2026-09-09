@@ -4,7 +4,7 @@ This is the step `run_arm.f_verdict` refuses to do for itself -- *"this runner n
 student"* -- and the one the registry's `_runner_contract` warns about: **`cov_macro.contrast`
 takes `quantile` as a parameter and the caller MUST pass each contrast's own value.** F1 is
 two-sided at alpha/24 per tail; the other eleven are one-sided at alpha/12. A single stale default
-here decides eleven contrasts, one of which (`A4-A3`) controls whether the ~1.0M generated queries
+here decides eleven contrasts, one of which (`A4-A3`) controls whether the 834,463 generated queries
 enter the build, so the quantile is read from the registry per contrast and cross-checked against
 `cov_macro`'s constants rather than assumed.
 
@@ -86,6 +86,32 @@ def previous_cycle_end(arm, label):
     return prev, json.loads(cov_files(arm)[prev].read_text())["per_unit_query"]
 
 
+def check_against_arm_record(arm, label):
+    """The COV file being read must be the exact file the arm's COMMITTED record hashes.
+
+    `cov_files` reads whatever is in the arm directory. A re-run, a stale directory or a smoke that
+    overwrote a real artifact would be read silently -- and "smokes overwrite real artifacts" is a
+    hazard this project has been bitten by twice (`calib.run_arm` wrote the real `P0.json`;
+    `harvest.draw` wrote the real `harvest_draw.json`). The arm record stores
+    `per_query_scores_sha256` per checkpoint, so this is an exact identity check, not a heuristic.
+    """
+    p = RESULTS / f"m10_arm_{slug(arm)}.json"
+    if not p.exists():
+        raise FileNotFoundError(f"{arm}: no committed arm record at {p}")
+    rec = json.loads(p.read_text())
+    if rec.get("status") != "complete":
+        raise ValueError(f"{arm}: arm record status {rec.get('status')!r}, not 'complete'")
+    want = {c["label"]: c.get("per_query_scores_sha256")
+            for c in rec.get("cov", {}).get("per_checkpoint", []) if isinstance(c, dict)}
+    if label not in want:
+        raise ValueError(f"{arm}: the record names checkpoints {sorted(want)}, not {label!r}")
+    got = sha256_file(cov_files(arm)[label])
+    if want[label] and got != want[label]:
+        raise ValueError(f"{arm}/{label}: the file on disk hashes to {got[:12]}… and the committed "
+                         f"arm record says {want[label][:12]}…; the directory is stale or was "
+                         f"overwritten")
+
+
 # ------------------------------------------------------------------------------- the contrast ---
 
 def quantile_for(cid, c, boot):
@@ -134,6 +160,10 @@ def compute(cid, reg=None, B=None, verbose=True):
         if e.get("cut"):
             return not_computed(f"{side} -> {nm} is CUT under W8 band 1 (`rules.C_skipped`); the "
                                 f"Bonferroni denominator is unchanged at {boot['n_contrasts']}")
+        if e.get("pending"):
+            return not_computed(f"{side} -> {nm} is registered `pending: {e['pending']}` and has "
+                                f"not run; the disposition is REGISTERED, not inferred from a "
+                                f"missing file (`arms.{nm}._pending`)")
         if not cov_files(nm):
             return not_computed(f"{side} -> {nm} has no cycle-end COV read: the arm has not run on "
                                 f"this machine (`E-bs128` is CLOUD_ONLY, `outcome_to_action.E`)")
@@ -141,6 +171,8 @@ def compute(cid, reg=None, B=None, verbose=True):
     at = c.get("at_examples")
     la, sa = read_point(a_name, at)
     lb, sb = read_point(b_name, at)
+    for nm, lab in ((a_name, la), (b_name, lb)):
+        check_against_arm_record(nm, lab)
     uf = dict(cov_macro.SURFACE)
     point, aligned = point_estimate(sa, sb, uf)
 
@@ -161,19 +193,26 @@ def compute(cid, reg=None, B=None, verbose=True):
     prev_point = None
     if psa is not None and psb is not None:
         prev_point, _ = point_estimate(psa, psb, uf)
-    exempt = cid in ("A3-A2", "A4-A3")
+    # ONE source of truth for the exemption: the registered rule name, never a hardcoded id.
+    # `rules.sign_stability_exemption` names family A's two contrasts, and those two are exactly
+    # the ones carrying an A rule -- so the rule name IS the exemption.
+    A_RULES = ("three_outcome", "generated_half_in_build")
+    exempt = c.get("rule") in A_RULES
     sign_stable = None if prev_point is None else (prev_point > 0) == (point > 0)
 
     MDE = st["MDE"]
     lower = r["lower_bound_raw"]
     rule = c.get("rule")
-    if rule in ("three_outcome", "generated_half_in_build"):
+    if rule in A_RULES:
         # family A: the corrected bar is `lower > MDE`, and sign stability does not apply
         resolved = lower > MDE
         label = ("RESOLVED" if resolved else
                  "POSITIVE, NOT RESOLVED" if point >= MDE and lower > 0 else "NOT POSITIVE")
     else:
-        resolved = bool(point >= MDE and lower > 0 and sign_stable is not False)
+        # `is True`, not `is not False`: an arm with a single cycle end has sign_stable None, and
+        # a clause that requires the last TWO cycle ends is not satisfied by having one. No live
+        # effect today (all ten computed contrasts have both), and that is why it needed a test.
+        resolved = bool(point >= MDE and lower > 0 and sign_stable is True)
         label = "RESOLVED" if resolved else "NOT RESOLVED"
 
     out = {
@@ -285,15 +324,38 @@ def selection(reg=None, verbose=True):
         v = computed.get(cid)
         return v["delta_raw"] if v else None
 
+    def best(pairs):
+        """`rules.multi_arm_winner`: highest point estimate among the alternatives that RESOLVE,
+        and **ties on the point estimate go to the default** -- which means `max()` on tuples is
+        wrong, because it breaks a tie on the label string instead. No live effect today (nothing
+        in G or B resolved), which is exactly why it needed writing down."""
+        if not pairs:
+            return None
+        top = max(v for v, _ in pairs)
+        winners = [n for v, n in pairs if v == top]
+        return winners[0] if len(winners) == 1 else None      # a tie falls through to the default
+
     sel, why = {}, {}
     # F -- the student. Already read; the verdict file is the artifact run_arm enforces.
     if computed.get("F1"):
-        sel["student"] = reg["arms"][computed["F1"]["arms"]["a"]]["student"]
-        why["student"] = "F1 " + computed["F1"]["resolve"]["label"] + " (rules.F_tournament)"
+        f1 = computed["F1"]
+        if f1["resolve"]["resolved"]:
+            sel["student"] = reg["arms"][f1["arms"]["a"]]["student"]
+            why["student"] = "F1 RESOLVED (rules.F_tournament): the higher 20M COV macro, adopted "\
+                             "as evidence"
+        else:
+            # `rules.serve_cost_order`: cheapest to serve, by parameter count then layer count then
+            # bge-small. A PRODUCT PREFERENCE, and the report must label it as one.
+            sel["student"] = "MiniLM-L6-v2"
+            why["student"] = ("F1 did NOT resolve, so `rules.serve_cost_order` applies: the "
+                              "cheapest to serve is MiniLM-L6 at 23,893,888 params against "
+                              "bge-small's 34,540,672 (`results/m10_student_parity_box.json`). "
+                              "**This is a PRODUCT PREFERENCE, not evidence, and the report says "
+                              "so.**")
     # A -- the corpus. `generated_half_in_build`: not resolved -> A3's corpus, generated dropped.
     if computed.get("A4-A3"):
         keep = res("A4-A3")
-        sel["corpus"] = "A4 (harvest + the ~1.0M generated queries)" if keep else "A3 (harvest only)"
+        sel["corpus"] = "A4 (harvest + the 834,463 generated queries)" if keep else "A3 (harvest only)"
         why["corpus"] = ("A4-A3 " + computed["A4-A3"]["resolve"]["label"] +
                          " (rules.generated_half_in_build). NOTE rules.generated_half_in_build and "
                          "`_interpretation.exposure`: family A's arms are form-balanced, so this "
@@ -301,14 +363,14 @@ def selection(reg=None, verbose=True):
                          "generated forms, not 'does synthetic data help'.")
     # G -- the head. multi_arm_winner over G2/G3 against the 1152 default; G-384 is not selectable.
     g = [(pt(c), n) for c, n in (("G2", "1536-wide linear"), ("G3", "1152-wide MLP")) if res(c)]
-    sel["head"] = max(g)[1] if g else "1152-wide linear (the anchor default)"
+    sel["head"] = best(g) or "1152-wide linear (the anchor default)"
     why["head"] = ("rules.multi_arm_winner over G2/G3; G1 (1152 vs 384) is " +
                    (computed["G1"]["resolve"]["label"] if computed.get("G1") else "not computed") +
                    " and `arms.G-384.selectable: false`, so G1 is evidence about M9's 384-wide "
                    "diagnosis and selects nothing.")
     # B -- the mix.
     b = [(pt(c), n) for c, n in (("B1", "100/0"), ("B2", "50/50")) if res(c)]
-    sel["mix"] = max(b)[1] if b else "75/25 (the anchor default)"
+    sel["mix"] = best(b) or "75/25 (the anchor default)"
     why["mix"] = ("rules.multi_arm_winner over B1/B2. `_interpretation.B`: B is an augmentation "
                   "experiment at FIXED query exposure, so limit what its result decides.")
     # D -- the objective, through the AMENDED tie rule.
