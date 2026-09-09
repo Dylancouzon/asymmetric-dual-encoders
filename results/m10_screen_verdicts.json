@@ -1,6 +1,6 @@
 {
  "_what": "the selected recipe, from the registered family rules applied to the computed contrasts. `m10src/contrasts.selection`; nothing is decided here.",
- "registry_sha256": "d9a7edeb85a0ce415966ffef44945237f20479ab40626233e7ccff428d6c23e9",
+ "registry_sha256": "129b74abab863cceaae3350351af1a9ea634840c2428c41330776085efcd22e8",
  "selected": {
   "student": "bge-small",
   "corpus": "A4 (harvest + the 834,463 generated queries)",

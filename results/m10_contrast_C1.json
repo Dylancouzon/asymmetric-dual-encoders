@@ -5,5 +5,5 @@
   "b": "C-fresh"
  },
  "not_computed": "C-M9init -> C-M9init is CUT under W8 band 1 (`rules.C_skipped`); the Bonferroni denominator is unchanged at 12",
- "registry_sha256": "d9a7edeb85a0ce415966ffef44945237f20479ab40626233e7ccff428d6c23e9"
+ "registry_sha256": "129b74abab863cceaae3350351af1a9ea634840c2428c41330776085efcd22e8"
 }
