@@ -340,3 +340,15 @@ def test_lr_at_s_default_warmup_is_DERIVED_from_the_screen_batch_not_a_second_co
     src = (Path(__file__).resolve().parent / "trainer10.py").read_text()
     assert "N.lr_at(step, total_steps, cycles, peak, final, N.warmup_steps_for(batch_size))" in src, \
         "the one production caller must pass a BATCH-DERIVED warmup, not rely on the default"
+
+
+def test_the_registry_and_the_code_agree_on_the_warmup_in_examples():
+    """`arms.E-bs128.warmup_examples` and `nano10.WARMUP_EXAMPLES` are two homes for one number.
+    The registry is authoritative and the code is what runs, so they are pinned to each other --
+    otherwise the registered parity rule and the trained arm can disagree silently (Codex,
+    2026-09-09)."""
+    import json
+    reg = json.loads((Path(__file__).resolve().parents[1] / "m10" / "screen_registry.json")
+                     .read_text())
+    assert reg["arms"]["E-bs128"]["warmup_examples"] == N.WARMUP_EXAMPLES
+    assert reg["anchor"]["batch"] == N.SCREEN_BATCH

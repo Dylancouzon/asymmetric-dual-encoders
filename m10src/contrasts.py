@@ -105,8 +105,15 @@ def check_against_arm_record(arm, label):
             for c in rec.get("cov", {}).get("per_checkpoint", []) if isinstance(c, dict)}
     if label not in want:
         raise ValueError(f"{arm}: the record names checkpoints {sorted(want)}, not {label!r}")
+    if not want[label]:
+        # A guard that passes when the expected value is missing is not a guard. The first version
+        # of this check was conditional on the hash being truthy, so a record with a null or empty
+        # `per_query_scores_sha256` validated silently (Codex, 2026-09-09).
+        raise ValueError(f"{arm}/{label}: the committed arm record carries no "
+                         f"`per_query_scores_sha256`; an absent expected hash cannot be checked "
+                         f"and must not pass")
     got = sha256_file(cov_files(arm)[label])
-    if want[label] and got != want[label]:
+    if got != want[label]:
         raise ValueError(f"{arm}/{label}: the file on disk hashes to {got[:12]}… and the committed "
                          f"arm record says {want[label][:12]}…; the directory is stale or was "
                          f"overwritten")
@@ -187,9 +194,14 @@ def compute(cid, reg=None, B=None, verbose=True):
     r = cov_macro.contrast(aligned, uf, B=B or boot["B"], seed=boot["seed"], quantile=q,
                            method=boot["quantile_method"], chunk=boot["chunk"])
 
-    # -- sign stability across the last two cycle ends
+    # -- sign stability across the last two cycle ends. The PREVIOUS files decide a clause of the
+    # resolve rule, so they are checked exactly as hard as the ones the bootstrap reads: validating
+    # only the final pair was a guard with a hole in it (Codex, 2026-09-09).
     pa, psa = previous_cycle_end(a_name, la)
     pb, psb = previous_cycle_end(b_name, lb)
+    for nm, lab in ((a_name, pa), (b_name, pb)):
+        if lab is not None:
+            check_against_arm_record(nm, lab)
     prev_point = None
     if psa is not None and psb is not None:
         prev_point, _ = point_estimate(psa, psb, uf)
@@ -297,6 +309,48 @@ def f_verdict_from(f1, reg=None, verbose=True):
 
 # ------------------------------------------------------------------------------- the selection --
 
+def best(pairs):
+    """`rules.multi_arm_winner`: the highest point estimate among the alternatives that RESOLVE,
+    and **ties on the point estimate go to the default** -- so `max()` on (value, label) tuples is
+    wrong, because it breaks such a tie on the label string. Returns None for "no winner, take the
+    default".
+
+    Module level, not a closure, because a test of a closure has to reimplement it -- and a test
+    that reimplements the thing it tests stays green when the original is deleted (Codex,
+    2026-09-09, on exactly that mistake in this file's first test).
+    """
+    if not pairs:
+        return None
+    top = max(v for v, _ in pairs)
+    winners = [n for v, n in pairs if v == top]
+    return winners[0] if len(winners) == 1 else None
+
+
+def serve_cost_winner(reg, candidates, n_layers=3):
+    """`rules.serve_cost_order`: cheapest to serve -- (1) parameter count including the head,
+    (2) layer count, (3) bge-small, "as the retrieval-tuned backbone and the one M9 already
+    distilled into, so the M9-vs-M10 comparison stays within one backbone family".
+
+    Read from the MEASURED counts in `results/m10_student_parity_box.json`, never hardcoded: the
+    first version returned the literal "MiniLM-L6-v2", which is the right answer today and silently
+    the wrong one the moment a candidate or a measured count changes (Codex, 2026-09-09). The
+    screen's head is three feature layers, so the three-layer rows are the ones that describe what
+    would actually be served.
+    """
+    from run_arm import STUDENT_ALIAS
+    rows = json.loads((RESULTS / "m10_student_parity_box.json").read_text())["rows"]
+    by_key = {r["key"]: r for r in rows if r.get("n_layers") == n_layers}
+    cost = {}
+    for c in candidates:
+        r = by_key.get(STUDENT_ALIAS.get(c, c))
+        if r is None:
+            raise ValueError(f"serve_cost_order needs a measured {n_layers}-layer row for {c!r}; "
+                             f"`results/m10_student_parity_box.json` has "
+                             f"{sorted(by_key)}")
+        cost[c] = (r["params_total"], max(r["layers"]), c != "bge-small")
+    return min(candidates, key=lambda c: cost[c])
+
+
 def _read(cid):
     p = RESULTS / f"m10_contrast_{cid}.json"
     return json.loads(p.read_text()) if p.exists() else None
@@ -314,6 +368,16 @@ def selection(reg=None, verbose=True):
     import decision_rules as DR
     reg = reg or cfg()
     got = {cid: _read(cid) for cid in reg["contrasts"]}
+    # An artifact decided under a DIFFERENT registry is stale, and the selection is exactly where
+    # that would go unnoticed -- `run_arm.f_verdict` pins the registry hash for family F and
+    # nothing did for the other eleven (Codex, 2026-09-09).
+    now = sha256_file(REGISTRY)
+    stale = {cid: v.get("registry_sha256") for cid, v in got.items()
+             if v and v.get("registry_sha256") != now}
+    if stale:
+        raise ValueError(f"these contrast records were decided under a different registry and must "
+                         f"be recomputed before a selection is read off them: "
+                         f"{ {k: (v or 'none')[:12] for k, v in stale.items()} } (now {now[:12]}…)")
     computed = {cid: v for cid, v in got.items() if v and not v.get("not_computed")}
 
     def res(cid):
@@ -324,17 +388,6 @@ def selection(reg=None, verbose=True):
         v = computed.get(cid)
         return v["delta_raw"] if v else None
 
-    def best(pairs):
-        """`rules.multi_arm_winner`: highest point estimate among the alternatives that RESOLVE,
-        and **ties on the point estimate go to the default** -- which means `max()` on tuples is
-        wrong, because it breaks a tie on the label string instead. No live effect today (nothing
-        in G or B resolved), which is exactly why it needed writing down."""
-        if not pairs:
-            return None
-        top = max(v for v, _ in pairs)
-        winners = [n for v, n in pairs if v == top]
-        return winners[0] if len(winners) == 1 else None      # a tie falls through to the default
-
     sel, why = {}, {}
     # F -- the student. Already read; the verdict file is the artifact run_arm enforces.
     if computed.get("F1"):
@@ -344,14 +397,15 @@ def selection(reg=None, verbose=True):
             why["student"] = "F1 RESOLVED (rules.F_tournament): the higher 20M COV macro, adopted "\
                              "as evidence"
         else:
-            # `rules.serve_cost_order`: cheapest to serve, by parameter count then layer count then
-            # bge-small. A PRODUCT PREFERENCE, and the report must label it as one.
-            sel["student"] = "MiniLM-L6-v2"
-            why["student"] = ("F1 did NOT resolve, so `rules.serve_cost_order` applies: the "
-                              "cheapest to serve is MiniLM-L6 at 23,893,888 params against "
-                              "bge-small's 34,540,672 (`results/m10_student_parity_box.json`). "
-                              "**This is a PRODUCT PREFERENCE, not evidence, and the report says "
-                              "so.**")
+            # `rules.serve_cost_order`, computed from the measured counts, never hardcoded.
+            cands = sorted({reg["arms"][n]["student"] for n, e in reg["arms"].items()
+                            if e.get("family") == "F" and e.get("trained") and not e.get("cut")})
+            sel["student"] = serve_cost_winner(reg, cands)
+            why["student"] = ("F1 did NOT resolve, so `rules.serve_cost_order` applies: cheapest to "
+                              "serve among " + ", ".join(cands) + ", ordered by measured parameter "
+                              "count then layer count then bge-small "
+                              "(`results/m10_student_parity_box.json`). **This is a PRODUCT "
+                              "PREFERENCE, not evidence, and the report says so.**")
     # A -- the corpus. `generated_half_in_build`: not resolved -> A3's corpus, generated dropped.
     if computed.get("A4-A3"):
         keep = res("A4-A3")
@@ -377,10 +431,16 @@ def selection(reg=None, verbose=True):
     d = DR.d_selection_corrected(res("D1"), pt("D1") or 0.0, res("D2"), pt("D2") or 0.0)
     sel["objective"] = d
     why["objective"] = ("rules.D_tie as amended 2026-09-09 (`decision_rules.d_selection_corrected`)"
-                        ". REQUIRED with D2: `_interpretation.D1_D2_precondition` -- D-COV's "
-                        "gradients are ~500x smaller on identical batches "
-                        "(`results/m10_dcov_gradient_audit.json`), so D2 is confounded with an "
-                        "optimizer-scale difference and is not a clean test of its own hypothesis.")
+                        ". REQUIRED with D2, and read `_interpretation.D1_D2_precondition` in full: "
+                        "D-COV's gradients are ~500x smaller on identical batches "
+                        "(`results/m10_dcov_gradient_audit.json`) at the same peak LR, and epsilon "
+                        "is not the cause. **D2's MECHANISM IS UNRESOLVED.** An earlier version of "
+                        "this string said D2 'is confounded with an optimizer-scale difference'; "
+                        "that named a cause we never measured -- the clip instrumentation landed "
+                        "after the last arm finished, so no registered arm recorded a clip rate. "
+                        "Two candidates stand: an optimizer-scale artifact by some route other than "
+                        "clipping, or a REAL failure of document-aware regression. Report D2 as "
+                        "neither a clean test nor a proven artifact.")
     # E -- the batch, on the COST rule, and PENDING while its arm has not run.
     if computed.get("E1"):
         sel["batch"] = DR.e_after_confirmation_corrected(res("E1"), pt("E1"))

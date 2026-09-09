@@ -212,14 +212,61 @@ def test_the_cov_file_must_be_the_one_the_committed_arm_record_hashes(work, monk
 
 def test_multi_arm_ties_go_to_the_default_not_to_the_alphabet():
     """`rules.multi_arm_winner`: "ties on the point estimate go to the default". `max()` on
-    (value, label) tuples breaks such a tie on the label string instead."""
-    best = CT.selection.__globals__  # the helper is local; exercise it through a rebuilt copy
-    def local_best(pairs):
-        if not pairs:
-            return None
-        top = max(v for v, _ in pairs)
-        winners = [n for v, n in pairs if v == top]
-        return winners[0] if len(winners) == 1 else None
-    assert local_best([(0.01, "a"), (0.01, "b")]) is None, "a tie must fall through to the default"
-    assert local_best([(0.02, "a"), (0.01, "b")]) == "a"
-    assert local_best([]) is None
+    (value, label) tuples breaks such a tie on the label string instead.
+
+    This test calls the PRODUCTION `best()`. Its first version reimplemented the algorithm locally
+    and would have stayed green if `best()` were deleted -- a test that reimplements what it tests
+    is a comment (Codex, 2026-09-09).
+    """
+    assert CT.best([(0.01, "a"), (0.01, "b")]) is None, "a tie must fall through to the default"
+    assert CT.best([(0.02, "a"), (0.01, "b")]) == "a"
+    assert CT.best([(0.01, "b"), (0.02, "a")]) == "a", "order of the list must not matter"
+    assert CT.best([]) is None
+
+
+def test_serve_cost_order_is_computed_from_the_measured_counts_not_hardcoded():
+    """The branch where F1 does not resolve. It is dead on today's numbers, which is exactly why it
+    needs a test: it was a hardcoded "MiniLM-L6-v2", right today and silently wrong the moment a
+    candidate or a measured count changes."""
+    reg = CT.cfg()
+    assert CT.serve_cost_winner(reg, ["bge-small", "MiniLM-L6-v2"]) == "MiniLM-L6-v2", \
+        "23,893,888 params beats 34,540,672"
+    # rule 3: an exact tie on params and layers goes to bge-small (MiniLM-L12 is identical in size)
+    assert CT.serve_cost_winner(reg, ["bge-small", "MiniLM-L12-v2"]) == "bge-small"
+    with pytest.raises(ValueError, match="measured"):
+        CT.serve_cost_winner(reg, ["a-student-nobody-measured"])
+
+
+def test_an_absent_expected_hash_does_not_pass_the_identity_check(work, monkeypatch, tmp_path):
+    """A guard that passes when the expected value is missing is not a guard: the first version
+    compared only `if want[label]`, so a null or empty `per_query_scores_sha256` validated."""
+    _arm(work, "X", {"cycle1": 0.0})
+    results = tmp_path / "res2"
+    results.mkdir()
+    monkeypatch.setattr(CT, "RESULTS", results)
+    for bad in (None, ""):
+        (results / "m10_arm_X.json").write_text(json.dumps(
+            {"status": "complete",
+             "cov": {"per_checkpoint": [{"label": "cycle1", "per_query_scores_sha256": bad}]}}))
+        with pytest.raises(ValueError, match="cannot be checked"):
+            CT.check_against_arm_record("X", "cycle1")
+
+
+def test_the_selection_refuses_contrast_records_from_a_different_registry():
+    """`run_arm.f_verdict` pins the registry hash for family F and nothing pinned it for the other
+    eleven, so a selection could be read off records decided under a superseded registry."""
+    live = json.loads((CT.RESULTS / "m10_screen_verdicts.json").read_text())
+    assert live["registry_sha256"] == CT.sha256_file(CT.REGISTRY)
+    for cid in CT.cfg()["contrasts"]:
+        rec = json.loads((CT.RESULTS / f"m10_contrast_{cid}.json").read_text())
+        assert rec["registry_sha256"] == live["registry_sha256"], cid
+
+
+def test_the_D2_retraction_reached_the_generated_verdict():
+    """Fix 8 was registry prose that had not propagated: `selection()` still told the reader D2 was
+    "confounded with an optimizer-scale difference" -- a cause never measured."""
+    v = json.loads((CT.RESULTS / "m10_screen_verdicts.json").read_text())
+    why = v["why"]["objective"]
+    assert "MECHANISM IS UNRESOLVED" in why
+    assert "is confounded with an optimizer-scale difference" not in why.replace(
+        "'is confounded with an optimizer-scale difference'", "")

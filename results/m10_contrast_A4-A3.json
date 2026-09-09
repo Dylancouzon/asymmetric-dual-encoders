@@ -7,7 +7,7 @@
   "decisive": true,
   "rule": "generated_half_in_build"
  },
- "registry_sha256": "8b7c4b59d7f1e688f86055e1a2f986ffde1d58b90b9cf9421297fbc967e5f77b",
+ "registry_sha256": "5169d95d174c49ea7d02513daac05e22dcbb4093d067d7cfabbe580c4bc79671",
  "arms": {
   "a": "ANCHOR",
   "b": "A3",

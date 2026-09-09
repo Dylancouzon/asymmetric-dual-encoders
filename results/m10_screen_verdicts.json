@@ -1,6 +1,6 @@
 {
  "_what": "the selected recipe, from the registered family rules applied to the computed contrasts. `m10src/contrasts.selection`; nothing is decided here.",
- "registry_sha256": "8b7c4b59d7f1e688f86055e1a2f986ffde1d58b90b9cf9421297fbc967e5f77b",
+ "registry_sha256": "5169d95d174c49ea7d02513daac05e22dcbb4093d067d7cfabbe580c4bc79671",
  "selected": {
   "student": "bge-small",
   "corpus": "A4 (harvest + the 834,463 generated queries)",
@@ -14,7 +14,7 @@
   "corpus": "A4-A3 RESOLVED (rules.generated_half_in_build). NOTE rules.generated_half_in_build and `_interpretation.exposure`: family A's arms are form-balanced, so this contrast tests RE-ALLOCATING 58% of query presentations to seven generated forms, not 'does synthetic data help'.",
   "head": "rules.multi_arm_winner over G2/G3; G1 (1152 vs 384) is RESOLVED and `arms.G-384.selectable: false`, so G1 is evidence about M9's 384-wide diagnosis and selects nothing.",
   "mix": "rules.multi_arm_winner over B1/B2. `_interpretation.B`: B is an augmentation experiment at FIXED query exposure, so limit what its result decides.",
-  "objective": "rules.D_tie as amended 2026-09-09 (`decision_rules.d_selection_corrected`). REQUIRED with D2: `_interpretation.D1_D2_precondition` -- D-COV's gradients are ~500x smaller on identical batches (`results/m10_dcov_gradient_audit.json`), so D2 is confounded with an optimizer-scale difference and is not a clean test of its own hypothesis.",
+  "objective": "rules.D_tie as amended 2026-09-09 (`decision_rules.d_selection_corrected`). REQUIRED with D2, and read `_interpretation.D1_D2_precondition` in full: D-COV's gradients are ~500x smaller on identical batches (`results/m10_dcov_gradient_audit.json`) at the same peak LR, and epsilon is not the cause. **D2's MECHANISM IS UNRESOLVED.** An earlier version of this string said D2 'is confounded with an optimizer-scale difference'; that named a cause we never measured -- the clip instrumentation landed after the last arm finished, so no registered arm recorded a clip rate. Two candidates stand: an optimizer-scale artifact by some route other than clipping, or a REAL failure of document-aware regression. Report D2 as neither a clean test nor a proven artifact.",
   "batch": "E1 is NOT COMPUTED, not unresolved: `E-bs128` is CLOUD_ONLY and runs on the rented A100 (`outcome_to_action.E`). `rules.E_cost` selects bs128 in every case except a RESOLVED bs32 win, and an unread contrast cannot resolve -- but reading the rule that way would take E's decision from a measurement that was never made. The recipe lock carries E as PENDING."
  },
  "contrasts": {
