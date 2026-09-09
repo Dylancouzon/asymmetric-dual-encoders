@@ -153,6 +153,10 @@ ARM_SOURCES = {
     "A3":     ("m9-pool", "paq-build", "harvest"),
     "A4":     ("m9-pool", "paq-build", "harvest", "generated"),
     "ANCHOR": ("m9-pool", "paq-build", "harvest", "generated"),      # A4 IS the anchor arm
+    # descriptive (`descriptive_runs`): A3's corpus at 20M, read against the completed F-bge-small
+    # (A4's corpus at 20M). Same tuple as A3 -- the corpus IS the contrast, so it must not drift.
+    "A3-20M": ("m9-pool", "paq-build", "harvest"),
+    "ANCHOR-seed1": ("m9-pool", "paq-build", "harvest", "generated"),
 }
 
 

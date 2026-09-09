@@ -195,3 +195,39 @@ def test_C_is_CUT_and_the_denominator_is_12_after_L12():
 def test_an_arm_marked_cut_but_still_trained_is_refused():
     bad = _mut(lambda r: r["arms"]["C-M9init"].__setitem__("trained", True))
     assert any("cut but still trained" in b or "trained arms" in b for b in bad), bad
+
+
+def test_descriptive_arms_are_excluded_from_the_screens_own_checks():
+    """`descriptive_runs`: arms that resolve no contrast and select nothing. Folding them into the
+    screen would either inflate `trained_arms_expected` -- making a genuinely missing arm invisible
+    -- or force a fake contrast to exist for them."""
+    r = L.cfg()
+    desc = {a for a, v in r["arms"].items() if v.get("descriptive")}
+    assert desc == {"A3-20M", "ANCHOR-seed1"} == set(r["descriptive_runs"]["members"])
+    screen_trained = [a for a, v in r["arms"].items()
+                      if v.get("trained") is True and not v.get("descriptive")]
+    assert len(screen_trained) == r["trained_arms_expected"] == 14
+    assert r["statistics"]["bootstrap"]["n_contrasts"] == 12, \
+        "a descriptive arm must not move the Bonferroni denominator"
+    assert not L.validate(), "the live registry must pass with the descriptive arms registered"
+
+
+def test_a_descriptive_arm_must_declare_what_it_may_not_do():
+    """An arm that selects nothing has to SAY so in the registry, or the next session reads its
+    number as a verdict."""
+    r = L.cfg()
+    for a in r["descriptive_runs"]["members"]:
+        v = r["arms"][a]
+        assert v["selectable"] is False and v["family"] == "descriptive"
+        assert "NOTHING" in v["selects"]
+    bad = L.validate({**r, "arms": {**r["arms"],
+                                     "A3-20M": {**r["arms"]["A3-20M"], "selects": ""}}})
+    assert any("selects" in p for p in bad)
+
+
+def test_a_descriptive_arm_cannot_be_smuggled_in_unlisted():
+    r = L.cfg()
+    hidden = {**r["arms"], "X-desc": {"family": "descriptive", "descriptive": True,
+                                      "trained": True, "selectable": False,
+                                      "_what": "x", "selects": "NOTHING", "reads": "dev"}}
+    assert any("descriptive_runs.members" in p for p in L.validate({**r, "arms": hidden}))

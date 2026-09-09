@@ -35,8 +35,33 @@ def validate(r=None):
     import cov_macro
     r = r or cfg()
     bad = []
-    arms, contrasts, alias = r["arms"], r["contrasts"], r["anchor_aliases"]
+    contrasts, alias = r["contrasts"], r["anchor_aliases"]
+    # DESCRIPTIVE arms are not screen arms: they resolve no contrast, enter no Bonferroni
+    # accounting and select nothing (`descriptive_runs`). They are excluded from every check that
+    # is about the SCREEN's integrity -- the trained count, contrast coverage, outcome->action and
+    # the family order -- and are validated on their own terms below. Folding them into the screen
+    # would either inflate `trained_arms_expected` (making a real missing arm invisible) or force a
+    # fake contrast to exist for them.
+    all_arms = r["arms"]
+    arms = {a: v for a, v in all_arms.items() if not v.get("descriptive")}
     NON_FAMILY = {"anchor"}
+    for a, v in all_arms.items():
+        if not v.get("descriptive"):
+            continue
+        if v.get("family") != "descriptive":
+            bad.append(f"descriptive arm {a} has family {v.get('family')!r}, expected 'descriptive'")
+        if v.get("selectable") is not False:
+            bad.append(f"descriptive arm {a} must be registered selectable:false -- it selects "
+                       f"nothing by definition")
+        for k in ("_what", "selects", "reads"):
+            if not str(v.get(k) or "").strip():
+                bad.append(f"descriptive arm {a} has no `{k}`; an arm that selects nothing must say "
+                           f"in the registry what it is for and what it may not do")
+    members = set((r.get("descriptive_runs") or {}).get("members") or [])
+    listed = {a for a, v in all_arms.items() if v.get("descriptive")}
+    if members != listed:
+        bad.append(f"descriptive_runs.members {sorted(members)} != the arms carrying "
+                   f"`descriptive: true` {sorted(listed)}")
 
     # -- arms and the trained count. A boolean, not a note-prefix heuristic: an arm could be
     # moved into the "not trained" bucket by editing prose.

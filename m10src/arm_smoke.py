@@ -79,7 +79,7 @@ SHAPES = {
                          batch=32,  loss="squared_l2", warm_start="m9"),
 }
 # arms whose shape is covered by one of the above
-COVERS = {"ANCHOR": ["A1", "A2", "A3", "A4", "F-bge-small"]}
+COVERS = {"ANCHOR": ["A1", "A2", "A3", "A4", "F-bge-small", "A3-20M", "ANCHOR-seed1"]}
 N_TEXTS = 4096
 # C-M9init's init. **This is step 450,000 = 3.69B tokens, NOT the 3.74B where M9's plateau rule
 # fired**: `ckpt_every` was 15,000, so the final ~6,543 steps were never checkpointed and the

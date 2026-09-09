@@ -880,7 +880,13 @@ def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, r
         ws_cfg["n_fit"] = SMOKE_N_FIT
     if n_fit:
         ws_cfg["n_fit"] = int(n_fit)
-    seed = 0 if "seed" not in reg.get("anchor", {}) else int(reg["anchor"]["seed"])   # seed_rule
+    # `seed_rule`: "one seed, seed 0, for every screen arm". An ARM may carry its own `seed` and
+    # exactly one does -- `ANCHOR-seed1`, the descriptive seed-sensitivity run (astra's decision 2,
+    # 2026-09-09). Read per-arm so a seed can never be passed in at a launch: it is a registered
+    # property of the arm, like its dose.
+    entry_seed = (reg.get("arms") or {}).get(arm, {}).get("seed")
+    seed = (int(entry_seed) if entry_seed is not None
+            else (0 if "seed" not in reg.get("anchor", {}) else int(reg["anchor"]["seed"])))
 
     t_start = time.time()
     print(f"=== arm {arm} ({p['family']}) on {device}: {p['dose_examples']:,} examples, "

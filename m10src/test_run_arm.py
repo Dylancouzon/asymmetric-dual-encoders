@@ -910,3 +910,29 @@ def test_the_fingerprint_moves_with_the_code(monkeypatch, sandbox, tmp_path):
     monkeypatch.setattr(R, "code_identity", changed)
     assert R.fingerprint("A1", p, man, 0, None, "cuda") != base
     assert changed() != real
+
+
+def test_the_seed_is_a_registered_property_of_the_arm_not_a_launch_argument():
+    """`seed_rule` fixes seed 0 for every screen arm; `ANCHOR-seed1` carries its own seed 1 (the
+    descriptive seed-sensitivity run, astra's decision 2). Reading it per-arm means a seed can
+    never be supplied at a launch -- it is registered, like the dose."""
+    reg = R.cfg()
+    assert reg["arms"]["ANCHOR-seed1"]["seed"] == 1
+    assert reg["arms"]["ANCHOR"].get("seed") is None, \
+        "the anchor takes the global seed_rule; only the descriptive arm overrides"
+    assert "--seed" not in R.build_argparser().format_usage()
+
+
+def test_A3_20M_and_F_bge_small_differ_ONLY_in_the_corpus():
+    """The parity astra's decision 1 was conditional on. `n_docs` is dose-derived
+    (`corpus_loader.arm_doc_count`), so matching the dose matches the document side too; after
+    that the only difference left is `sources`, which is the contrast."""
+    reg = R.cfg()
+    v = R.f_verdict(reg)
+    a = R.arm_plan("A3-20M", reg, verdict=v)
+    b = R.arm_plan("F-bge-small", reg, verdict=v)
+    for k in ("dose_examples", "total_steps", "cycle_end_steps", "n_docs", "batch", "pattern",
+              "student", "n_layers", "head", "objective", "warm_start", "cut_corpus"):
+        assert a[k] == b[k], f"{k}: {a[k]!r} != {b[k]!r} -- parity is the ruling's precondition"
+    assert a["sources"] != b["sources"]
+    assert set(b["sources"]) - set(a["sources"]) == {"generated"}

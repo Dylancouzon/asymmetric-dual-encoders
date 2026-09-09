@@ -10,7 +10,7 @@
   "quantile": 0.0010416666666666667,
   "family_rule": "F_tournament"
  },
- "registry_sha256": "5169d95d174c49ea7d02513daac05e22dcbb4093d067d7cfabbe580c4bc79671",
+ "registry_sha256": "d9a7edeb85a0ce415966ffef44945237f20479ab40626233e7ccff428d6c23e9",
  "arms": {
   "a": "F-bge-small",
   "b": "F-MiniLM-L6",
