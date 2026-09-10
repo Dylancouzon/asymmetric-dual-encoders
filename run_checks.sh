@@ -29,6 +29,7 @@ run() {
 run "M10 data, training and decision checks" -m pytest -q -ra m10src
 run "M9 registered statistics" m9src/test_final_stats.py
 run "M12 fusion parity" m12src/test_qfusion.py
+run "M13 six-set executor (synthetic rehearsal)" -m pytest -q -ra m13src
 
 if [ "$failed" -eq 0 ]; then
   echo "All active CPU checks passed."

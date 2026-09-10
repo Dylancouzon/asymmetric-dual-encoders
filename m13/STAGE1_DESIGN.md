@@ -107,6 +107,8 @@ refused; reserved batch runs iff a conjunct rejected.
 | R6 | `ratified_by_owner` flip | In the same commit that pins the reviewed executor, not before |
 | R7 | Reserved-batch allowance and `min_free_gb` 120 in M13's allocation and registry | Add both to the M13 allocation and an M10 registry field, dated |
 | R8 | LoTTE metric, seven slices and identities | Stage 3 registration; blocks access, not code |
+| R11 | A crash after the tag but before the first persisted dataset: `score13` treats it as an outright loss (no persisted registry sha can authenticate a continuation), stricter than the registry's `_six_crash` "incomplete scores" wording | Confirm the strict reading, or amend the registry to allow a continuation from the BEGIN commit alone |
+| R12 | The conditional reserved batch needs its own `paths_guard` ALLOWLIST entry (`claim()` verifies the caller module), a LEDGER 15 amendment | Add it with R10's allowance, dated, before any reserved access |
 
 ## 4. Stage 2 findings recorded now (cloud E readiness survey, claims re-derived)
 
