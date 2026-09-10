@@ -81,12 +81,19 @@ def pretokenize(tok, texts, max_len=512, verbose=False, label="", prefix=""):
     return out
 
 
-def length_buckets(id_lists, batch_size, seed=0):
+def length_buckets(id_lists, batch_size, seed=0, keep_tail=False):
     """-> list of index arrays, each one batch, grouped so a batch pads to near its own maximum.
 
     Sorted by length into contiguous runs, then the BATCHES are shuffled. Sorting alone would
     make every batch a fixed length band in a fixed order, which correlates batch content with
     training step; shuffling the batches breaks that while keeping the padding win.
+
+    `keep_tail` (ADDITIVE, default False) keeps the ragged final batch — fewer than `batch_size`
+    rows, and by construction the LONGEST rows, since the order is sorted by length. The default
+    drops it, which for a stream that wraps every few thousand steps costs a fixed handful of
+    rows out of millions of presentations. M13's build document policy is "every eligible
+    re-screened document once per epoch" (R5), and a permanently excluded tail is not that
+    (Codex 2026-09-10, B9), so `EpochShuffledStream` passes True.
     """
     # `PackedIds` (m10src/corpus_loader) carries its lengths, so a 5.3M-row corpus does not pay
     # 5.3M __getitem__ calls to find out what it already knows.
@@ -95,7 +102,10 @@ def length_buckets(id_lists, batch_size, seed=0):
         lens = np.array([len(x) for x in id_lists])
     order = np.argsort(lens, kind="stable")
     batches = [order[i:i + batch_size] for i in range(0, len(order), batch_size)]
-    batches = [b for b in batches if len(b) == batch_size]      # drop the ragged tail
+    if not keep_tail:
+        batches = [b for b in batches if len(b) == batch_size]  # drop the ragged tail
+    else:
+        batches = [b for b in batches if len(b)]
     rng = np.random.default_rng(seed)
     rng.shuffle(batches)
     return batches
@@ -116,9 +126,9 @@ def collate(id_lists, idx, pad_id):
 class Stream:
     """One corpus (queries or documents) as an endless, step-addressable batch source."""
 
-    def __init__(self, id_lists, targets, pad_id, batch_size=32, seed=0):
+    def __init__(self, id_lists, targets, pad_id, batch_size=32, seed=0, keep_tail=False):
         self.ids, self.T, self.pad = id_lists, targets, pad_id
-        self.batches = length_buckets(id_lists, batch_size, seed=seed)
+        self.batches = length_buckets(id_lists, batch_size, seed=seed, keep_tail=keep_tail)
         if not self.batches:
             raise ValueError("no full batches: corpus smaller than one batch")
 

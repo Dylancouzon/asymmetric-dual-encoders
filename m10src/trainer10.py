@@ -195,8 +195,11 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
     def extra():
         e = {"losses": losses, "evals": evals, "eval_kinds": kinds,
              "cycle_end_evals": cycle_end_evals, "read_evals": read_evals,
-             "examples": n_examples, "stopped": stopped, "fingerprint": fingerprint,
-             "n_losses": n_losses}
+             "examples": n_examples, "stopped": stopped, "fingerprint": fingerprint}
+        if loss_log is not None:
+            # ONLY with a sidecar (B11): without one `n_losses == len(losses)` and adding the key
+            # would change every default checkpoint's schema for no information.
+            e["n_losses"] = n_losses
         if eval_state is not None:
             e["eval_state"] = eval_state.state()
         return e
@@ -332,7 +335,7 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
             "bf16_autocast": bool(amp_on), "weight_decay_on_dim_gt_1": float(wd),
             "warmup_steps": wu,
             "warmup_examples": int(N.WARMUP_EXAMPLES),
-            # `n_losses` is the TRUE step count; `losses` is the whole history unless a
-            # `loss_log` sidecar carries it, in which case it is the last LOSS_TAIL_KEEP.
-            "n_losses": n_losses, "loss_log": (str(loss_log) if loss_log else None),
+            # `n_losses` (the TRUE step count) and `loss_log` appear ONLY with a sidecar, so with
+            # the default `loss_log=None` this record is byte-identical to the pre-M13 one (B11).
+            **({"n_losses": n_losses, "loss_log": str(loss_log)} if loss_log is not None else {}),
             "mix": N.window_shares(pattern, max(n_losses, 1))}

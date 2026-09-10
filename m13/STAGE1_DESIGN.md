@@ -9,6 +9,11 @@ surface), claims re-derived in-session where they are load-bearing.
 
 ## 1. Build controller — `m13src/build13.py`, `m13/build_config.json`, `m13src/test_build13.py`
 
+> **Superseded in part by ruling R13 (2026-09-10, `m13/RULINGS.md`):** there are NO extension cycles.
+> The build is a fixed 200,000,000 examples, three cycles, kill and plateau the only stop rules; the
+> budget is a fixed allocation table (`build_lock.allocation`) with no cap formula. The extension,
+> cap and spend rows below are historical design, not the implementation.
+
 **Already implemented in `m10src` (reuse, do not rewrite):** three cycles (`run_arm.py:102`,
 `nano10.cycle_ends`), linear 1e-4 → 1e-5 (`nano10.lr_at`), warmup in EXAMPLES
 (`nano10.WARMUP_EXAMPLES = 64_000`, `warmup_steps_for(batch)`, wired at `trainer10.py:166`; so
@@ -51,6 +56,10 @@ with a different order per epoch and a position that is a pure function of the g
 512. **Cloud-only:** bs128 at real lengths (pitfall 13), the 200M dose, the day-one benchmark.
 
 ## 2. Scoring transaction — `m13src/score13.py`, `m13src/access13.py`, `m13src/rehearse13.py`
+
+> **Superseded in part by ruling R14 (2026-09-10):** no post-tag continuation. A crash after the tag
+> consumes the access and the executor reports what was persisted; `--recover` recomputes decisions
+> from persisted rows only. The continuation sentences below are historical design.
 
 `m10src/final10.py` stays a pure decision module (conjuncts, sequence, pass rule, bootstrap,
 sign-flip, registry guard, headline; ~60 tests). The executor is a sibling that imports it.

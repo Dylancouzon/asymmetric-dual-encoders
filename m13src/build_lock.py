@@ -32,6 +32,10 @@ DOSE = 200_000_000
 CYCLES = 3
 PENDING = "PENDING"
 
+# The document policy's subfields, exactly as ruling R5 registers them. `n` is the smoke-only
+# override and is checked separately.
+DOC_POLICY_REQUIRED = {"policy": CL.DOC_POLICY_ALL, "repeat": True, "reshuffle_per_epoch": True}
+
 # The only fields the build arm's registry entry may carry. Anything else would be a data or
 # recipe knob smuggled past the "equal to ANCHOR" check.
 ENTRY_KEYS = {"family", "trained", "dose_examples", "batch", "seed", "data_cut",
@@ -60,6 +64,23 @@ def verdicts(path=None):
     return json.loads(p.read_text())
 
 
+def check_verdict_binding(v, *, registry_path=None):
+    """The screen verdicts are bound to the registry BYTES they were computed from
+    (`contrasts.selection` records `registry_sha256`). Trusting `selected.batch` without checking
+    that binding reads a verdict about one registry into a build running under another — and
+    ruling R9 is a dated pre-observation commit that CHANGES the registry sha, so this is a live
+    hazard and not a hypothetical (Codex 2026-09-10, B6). -> the sha, or refuses.
+    """
+    live = R.sha256_file(Path(registry_path or R.REGISTRY))
+    got = (v or {}).get("registry_sha256")
+    if got != live:
+        refuse(f"results/m10_screen_verdicts.json is bound to registry sha {got!r} but "
+               f"m10/screen_registry.json is {live!r}. Recompute the verdicts against the live "
+               f"registry (ruling R9's commit does exactly this) before any build reads "
+               f"`selected.batch`.")
+    return live
+
+
 def resolve_batch(cfg, *, smoke=False, override=None, verdicts_path=None):
     """-> (batch, source). The batch is the E1 verdict's, never the configuration's own value.
 
@@ -72,7 +93,9 @@ def resolve_batch(cfg, *, smoke=False, override=None, verdicts_path=None):
             refuse("--batch may only be passed with --smoke-steps: the build's batch is the E1 "
                    "verdict's (results/m10_screen_verdicts.json:selected.batch)")
         return int(override), "--batch (SMOKE ONLY)"
-    sel = (verdicts(verdicts_path).get("selected") or {}).get("batch")
+    v = verdicts(verdicts_path)
+    check_verdict_binding(v)
+    sel = (v.get("selected") or {}).get("batch")
     if sel is None:
         refuse("results/m10_screen_verdicts.json carries no `selected.batch`")
     if str(sel).upper() == PENDING:
@@ -101,22 +124,20 @@ def cycle_plan(dose, batch, cycles=CYCLES):
             "sum_examples": sum(r["examples"] for r in rows)}
 
 
-def extension_plan(extension_examples, batch):
-    """-> one extension cycle in steps. bs128 floors 66,700,000 to 521,093 steps = 66,699,904
-    examples; the 96 dropped examples are recorded, never silent (the same rule as
-    `run_arm.schedule`: the dose is a cap)."""
-    steps = int(extension_examples) // int(batch)
-    ran = steps * int(batch)
-    return {"registered_examples": int(extension_examples), "steps": steps, "examples": ran,
-            "examples_dropped": int(extension_examples) - ran, "rule": "floor (the dose is a cap)"}
+def allocation(cfg, rate_ex_s, price_usd_h, *, smoke=False):
+    """-> the ALLOCATION TABLE: every mandatory line in hours and dollars at a given rate and
+    price, against the recorded $1,000 ceiling. Refuses a plan the ceiling cannot pay for.
 
-
-def cap_arithmetic(cfg, rate_ex_s, price_usd_h, *, smoke=False):
-    """The day-one cap (`archive .../M102_LOCK.md:126`): mandatory lines first at the measured
-    rate and the BILLED price, then whole extension cycles out of what is left."""
+    There is no cap formula any more. Ruling R13 (Dylan, 2026-09-10) drops extension cycles: the
+    build is a fixed 200,000,000 examples in three cycles, so the budget is a fixed table and the
+    only question it answers is whether the plan fits. The old `cap_arithmetic` divided whatever
+    was left over into extension cycles and CLAMPED a negative remainder to zero, which reported
+    an $11,724.27 plan as "max_extension_cycles 0" rather than as unaffordable (Codex
+    2026-09-10, B7).
+    """
     rate, price = float(rate_ex_s), float(price_usd_h)
     if rate <= 0 or price <= 0:
-        refuse(f"the benchmark needs a positive rate and price (got {rate!r} ex/s, ${price!r}/h)")
+        refuse(f"the allocation needs a positive rate and price (got {rate!r} ex/s, ${price!r}/h)")
     b = cfg["budget"]
     fixed_h = dict(b["mandatory_hours_fixed"])
     missing = sorted(k for k, v in fixed_h.items() if v is None)
@@ -127,28 +148,27 @@ def cap_arithmetic(cfg, rate_ex_s, price_usd_h, *, smoke=False):
                    f"starts). Register the hours in m13/build_config.json "
                    f"`budget.mandatory_hours_fixed`.")
         # a SMOKE prices an unregistered line at zero and SAYS SO, so the path can be exercised
-        # before the owner ruling lands. A registered benchmark refuses instead.
+        # before the owner ruling lands. A registered allocation refuses instead.
         fixed_h.update({k: 0.0 for k in missing})
     rate_h = {k: v / rate / 3600 for k, v in b["mandatory_examples"].items()}
     hours = {**fixed_h, **rate_h}
     fixed_usd = sum(b["fixed_usd"].values())
     mandatory_usd = price * sum(hours.values())
-    cycle_h = float(cfg["extension_examples"]) / rate / 3600
-    cycle_usd = price * cycle_h
-    remaining = float(cfg["budget_ceiling_usd"]) - fixed_usd - mandatory_usd
-    cap = max(int(remaining // cycle_usd), 0) if cycle_usd > 0 else 0
+    ceiling = float(cfg["budget_ceiling_usd"])
+    total = mandatory_usd + fixed_usd
+    if total > ceiling:
+        refuse(f"the MANDATORY plan costs ${total:,.2f} at {rate:,.0f} ex/s and ${price}/h, above "
+               f"the recorded ${ceiling:,.0f} ceiling. The build cannot start: re-measure the "
+               f"rate, re-price the instance, or take the overrun to the owner.")
     return {"rate_ex_per_s": rate, "price_usd_per_h": price,
             "mandatory_hours": {k: round(v, 3) for k, v in hours.items()},
             "mandatory_hours_total": round(sum(hours.values()), 3),
             "mandatory_usd": round(mandatory_usd, 2), "fixed_usd": round(fixed_usd, 2),
-            "committed_usd": round(mandatory_usd + fixed_usd, 2),
-            "extension_cycle_hours": round(cycle_h, 3),
-            "extension_cycle_usd": round(cycle_usd, 2),
-            "remaining_usd": round(remaining, 2),
-            "budget_ceiling_usd": float(cfg["budget_ceiling_usd"]),
-            "max_extension_cycles": cap,
+            "committed_usd": round(total, 2),
+            "headroom_usd": round(ceiling - total, 2),
+            "budget_ceiling_usd": ceiling,
             "unpriced_lines_zeroed_for_smoke": missing if smoke else [],
-            "formula": cfg["budget"]["formula"]}
+            "_extensions": "none: ruling R13 fixes the build at 200,000,000 examples"}
 
 
 def _entry_of(cfg):
@@ -179,6 +199,8 @@ def validate(cfg, reg=None, *, smoke=False, verdicts_path=None, registry_path=No
     if problems:
         refuse(f"screen_lock.validate reports {len(problems)} problem(s), so §0a is not coherent "
                f"and no build may run: {problems}")
+    v = verdicts(verdicts_path)
+    check_verdict_binding(v, registry_path=registry_path)
     arm = cfg["arm"]
     if arm in (reg.get("arms") or {}):
         refuse(f"{arm!r} is already a registered screen arm; the build arm is added to an "
@@ -200,7 +222,7 @@ def validate(cfg, reg=None, *, smoke=False, verdicts_path=None, registry_path=No
         bad.append(f"arm_entry.seed {entry.get('seed')!r} vs anchor {anchor.get('seed')!r}")
     if anchor.get("init") != "F's winner backbone":
         bad.append(f"anchor.init is {anchor.get('init')!r}; the build's student is F's winner")
-    sel = (verdicts(verdicts_path).get("selected") or {})
+    sel = (v.get("selected") or {})
     if sel.get("student") != k["student"]:
         bad.append(f"student: config {k['student']!r} vs screen verdict {sel.get('student')!r}")
     if tuple(k["sources"]) != tuple(CL.ARM_SOURCES["ANCHOR"]):
@@ -229,10 +251,17 @@ def validate(cfg, reg=None, *, smoke=False, verdicts_path=None, registry_path=No
         refuse(f"the registered build dose is {DOSE:,}; the configuration says "
                f"{int(entry['dose_examples']):,}. Any dose above 200M is an EXTENSION CYCLE under "
                f"the extension rule, never a silent increase (M102_LOCK).")
+    if not entry.get("require_all_forms"):
+        refuse("`arm_entry.require_all_forms` must be true: the build trains the FULL A4 and "
+               "`assemble_arm` only enforces the 12-form requirement for an arm that asks for it")
     pol = CL.arm_document_policy(entry)
     if pol is None:
         refuse("the build arm carries no `documents` policy, so corpus_loader.arm_doc_count would "
                "demand ceil(200,000,000 x 0.25) = 50,000,000 unique documents from a ~6.15M pool")
+    for field, want in DOC_POLICY_REQUIRED.items():
+        if pol.get(field) != want:
+            refuse(f"`documents.{field}` is {pol.get(field)!r}, not {want!r}: ruling R5 registers "
+                   f"every eligible re-screened document, repeated, reshuffled per epoch")
     if pol.get("n") is not None and not smoke:
         refuse(f"`documents.n` = {pol['n']!r} is a SMOKE-ONLY override; a registered build draws "
                f"every eligible re-screened document")
@@ -241,12 +270,16 @@ def validate(cfg, reg=None, *, smoke=False, verdicts_path=None, registry_path=No
                "screen's cut applies only to data_cut.applies_to")
     if str(cfg.get("torch_compile")) != "smoke_only":
         refuse(f"`torch_compile` is {cfg.get('torch_compile')!r}; it is registered SMOKE-ONLY")
+    if abs(float(cfg["plateau_min_gain"]) - N.PLATEAU_MIN_GAIN) > 1e-12:
+        refuse(f"`plateau_min_gain` {cfg['plateau_min_gain']!r} != the registered "
+               f"{N.PLATEAU_MIN_GAIN} (nano10.PLATEAU_MIN_GAIN)")
+    if cfg.get("extension_examples") is not None or cfg.get("max_extension_cycles") is not None:
+        refuse("`extension_examples`/`max_extension_cycles` are in the configuration, but ruling "
+               "R13 (Dylan, 2026-09-10) drops extension cycles: the build is a fixed 200,000,000 "
+               "examples in three cycles, kill and plateau the only stop rules.")
     if float(cfg["budget_ceiling_usd"]) != 1000:
         refuse(f"the recorded ceiling is $1,000; the configuration says "
                f"{cfg['budget_ceiling_usd']!r}")
-    if abs(float(cfg["extension_min_gain"]) - N.PLATEAU_MIN_GAIN) > 1e-12:
-        refuse(f"`extension_min_gain` {cfg['extension_min_gain']!r} != the registered "
-               f"{N.PLATEAU_MIN_GAIN} (nano10.PLATEAU_MIN_GAIN)")
     reg_path = Path(registry_path or R.REGISTRY)
     return {"config_arm": arm, "registry": R.rel(reg_path),
             "registry_sha256": R.sha256_file(reg_path),
@@ -256,6 +289,9 @@ def validate(cfg, reg=None, *, smoke=False, verdicts_path=None, registry_path=No
                                       "head_layers", "warm_start", "student"],
             "differs_from_anchor": list(ALLOWED_DIFFS),
             "dose_examples": DOSE, "document_policy": pol, "data_cut": "none",
+            "require_all_forms": True, "extension_cycles": "none (ruling R13)",
+            "plateau_min_gain": float(cfg["plateau_min_gain"]),
+            "verdicts_sha256": R.sha256_file(Path(verdicts_path or VERDICTS)),
             "smoke": bool(smoke)}
 
 

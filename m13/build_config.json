@@ -1,6 +1,6 @@
 {
  "_what": "the M13 200M build arm: every data knob equal to ANCHOR's except the dose, the batch, the document policy and the data cut. Validated against the LIVE m10/screen_registry.json by m13src/build_lock.validate before any run; executed by m13src/build13.py.",
- "_authority": "m10/M102_LOCK.md (inherited build contract) and research/archive/m10-cleanup-2026-09-10/m10/M102_LOCK.md:73-145 (dose, schedule, optimizer, plateau/extension/kill, the ceiling and the cap formula). m13/STAGE1_DESIGN.md §1 is the controller design.",
+ "_authority": "m10/M102_LOCK.md (inherited build contract) and research/archive/m10-cleanup-2026-09-10/m10/M102_LOCK.md:73-145 (dose, schedule, optimizer, plateau/kill, the ceiling; its extension cycles are dropped by ruling R13). m13/STAGE1_DESIGN.md §1 is the controller design.",
  "_registered": "2026-09-10",
  "arm": "BUILD-200M",
  "registry": "m10/screen_registry.json",
@@ -56,7 +56,7 @@
   "final_lr": 0.00001,
   "warmup_examples": 64000,
   "_implemented_by": "m10src/nano10.lr_at (linear peak->final per cycle, last cycle absorbs the remainder), nano10.cycle_ends (boundaries), nano10.warmup_steps_for(batch) (warmup registered in EXAMPLES, rules.E_warmup_parity), wired at m10src/trainer10.py train_arm's `lr = N.lr_at(...)` call.",
-  "_extension_lr": "an extension cycle is one further linear 1e-4 -> 1e-5, warmup=0 passed EXPLICITLY (nano10.lr_at's default warmup is 2,000 STEPS; CODEMAP pitfall 2)."
+  "_no_extension": "RULING R13 (Dylan, 2026-09-10): no extension cycles. The build is these three cycles and nothing after them; the lock's permitted extensions are not exercised."
  },
  "optimizer": {
   "name": "AdamW",
@@ -69,18 +69,14 @@
   "_implemented_by": "m10src/trainer10.param_groups (decay on dim>1 only), trainer10.train_arm (AdamW betas/eps, clip_grad_norm_ 1.0), trainer10.autocast_for (bf16 on CUDA only), m10src/data10.length_buckets."
  },
 
- "extension_examples": 66700000,
- "extension_min_gain": 0.003,
- "_extension_rule": "after every annealed cycle end k >= 3: gain = m_k - max(m_1..m_{k-1}); extend iff gain >= extension_min_gain AND extensions_run < max_extension_cycles AND spent + projected_cycle_cost <= budget_ceiling_usd. Whole cycles only. The COV macro is m10src/cov_macro.macro on cov_macro.SURFACE.",
+ "plateau_min_gain": 0.003,
  "_kill_rule": "nano10.kill_fires (non-finite, or two consecutive scheduled evaluations more than 0.0056 below the best of their own kind). A kill at any annealed end is a terminal FAILED record with no final checkpoint.",
- "_plateau_rule": "nano10.plateau_fires (gain < 0.003 at a cycle end k >= 3) — the same test as the extension rule, read as a freeze.",
-
- "max_extension_cycles": null,
- "_max_extension_cycles": "NOT a constant: fixed at the day-one benchmark from the BILLED price and the MEASURED rate, written into work/m13build/<run>/state.json by `build13.py --benchmark --rate EX_S --price USD_H`, and refused if absent. Formula in `budget`.",
+ "_plateau_rule": "nano10.plateau_fires (gain < 0.003 at a cycle end k >= 3), read as a FREEZE: the schedule's last cycle end is its last step, so a plateau there is the ordinary end of the build. Under ruling R13 nothing follows it.",
+ "_extensions": "NONE (ruling R13, Dylan 2026-09-10). `extension_examples`, `extension_min_gain` and `max_extension_cycles` are gone from this file and build_lock.validate REFUSES a configuration that reintroduces them.",
 
  "budget_ceiling_usd": 1000,
  "budget": {
-  "formula": "max_extension_cycles = floor((ceiling - fixed_usd - price * mandatory_hours) / (price * extension_examples / rate / 3600))",
+  "_what": "a fixed ALLOCATION TABLE, not a cap formula: R13 removed the extension cycles the leftover budget used to buy. build_lock.allocation prices these lines at the measured rate and the billed price and refuses a plan above the ceiling.",
   "mandatory_hours_fixed": {
    "day_one_benchmark": 1.0,
    "cloud_encodes_export_parity_final_run": 6.0,
@@ -92,8 +88,8 @@
    "build": 200000000
   },
   "fixed_usd": {"persistent_disk_and_egress": 25.0},
-  "_reserved_batch_allowance": "RULING R10 (Dylan, 2026-09-10, \"fine if needed\"): 8.0 A100-hours is an ESTIMATE for the conditional reserved batch (~10M stella passage encodes for FEVER and DBpedia-entity plus the two small cqadup components, ~60 GB of vectors within the 500 GB disk); it is re-measured on day one by timing 10,000 passages and the measured figure replaces this one before max_extension_cycles is computed. null would REFUSE the benchmark outside a smoke rather than quietly price it at zero.",
-  "_note": "the rate-derived lines (both cloud E arms, the build itself) are priced from the MEASURED examples/s at the benchmark, not from run_arm.PLAN_RATES, which are projections."
+  "_reserved_batch_allowance": "RULING R10 (Dylan, 2026-09-10, \"fine if needed\"): 8.0 A100-hours is an ESTIMATE for the conditional reserved batch (~10M stella passage encodes for FEVER and DBpedia-entity plus the two small cqadup components, ~60 GB of vectors within the 500 GB disk); it is re-measured on day one by timing 10,000 passages and the measured figure replaces this one in the allocation table. null REFUSES the allocation outside a smoke rather than quietly pricing it at zero.",
+  "_note": "the rate-derived lines (both cloud E arms, the build itself) are priced from the MEASURED examples/s on day one, not from run_arm.PLAN_RATES, which are projections. `build13.py --plan --rate EX_S --price USD_H` prints the table; a plan above the ceiling is refused."
  },
 
  "torch_compile": "smoke_only",
@@ -101,9 +97,9 @@
 
  "checkpointing": {
   "rolling_minutes": 30,
-  "retained": "cycle{k}.pt at every annealed cycle end and ext{j}.pt at every extension end",
+  "retained": "cycle{k}.pt at every annealed cycle end",
   "loss_history": "losses.jsonl beside the checkpoints (trainer10.train_arm(loss_log=...)); the checkpoint keeps only the last 200 losses and the true step count",
-  "_why_minutes": "total_steps // 20 is ~10 GPU-hours of exposure at the build's dose; the cadence is converted to a step interval with the benchmark's measured rate and recorded."
+  "_why_minutes": "total_steps // 20 is ~10 GPU-hours of exposure at the build's dose; the cadence is converted to a step interval with the measured rate passed to --rate and recorded."
  },
  "lotte_gate": "m13/LOTTE_GATE.json",
  "_lotte_gate": "written by stage 3; it may record `skipped`. Its ABSENCE refuses the build (a bs128 selection can still be vetoed in favour of bs32).",

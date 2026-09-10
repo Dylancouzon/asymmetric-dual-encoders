@@ -1095,9 +1095,17 @@ class EpochShuffledStream(D.Stream):
     epoch and the offset inside it are `divmod(k, n_batches)` and the permutation is regenerated
     from (seed, epoch), so a resume at any step draws exactly what an uninterrupted run drew. One
     permutation is cached, which is a speed-up and not state.
+
+    It also keeps the RAGGED TAIL (`data10.length_buckets(keep_tail=True)`) as a final short
+    batch. `length_buckets` sorts by length, so the dropped tail is not a random handful but the
+    longest documents in the pool, and dropping it every epoch is a permanent exclusion — which
+    the registered policy "every eligible re-screened document once per epoch" (R5) does not
+    allow (Codex 2026-09-10, B9). The short batch is shuffled in with the rest, so it is not
+    always the epoch's last step.
     """
 
     def __init__(self, *a, epoch_seed=0, **k):
+        k.setdefault("keep_tail", True)
         super().__init__(*a, **k)
         self.epoch_seed = int(epoch_seed)
         self._epoch, self._order = None, None
@@ -1154,8 +1162,11 @@ def build_doc_stream(n, tok, *, batch_size=32, seed=0, max_len=512, allow_unscre
         n_docs = len(texts)
     else:
         ids, n_docs = _stream_doc_ids(rows, tok, pre, max_len, verbose=verbose)
-    meta = {**meta, "student_prefix": pre, "n": n_docs, "max_len": max_len,
-            "epoch_shuffle": bool(epoch_shuffle)}
+    meta = {**meta, "student_prefix": pre, "n": n_docs, "max_len": max_len}
+    if epoch_shuffle:
+        # emitted ONLY when the feature is on, so a default arm's manifest is byte-identical to
+        # the pre-M13 one (B11); every screen arm's recorded manifest stays comparable.
+        meta["epoch_shuffle"] = True
     cls = EpochShuffledStream if epoch_shuffle else D.Stream
     kw = {"epoch_seed": seed} if epoch_shuffle else {}
     return cls(ids, vecs, pad_id=tok.pad_token_id, batch_size=batch_size, seed=seed, **kw), meta
@@ -1546,7 +1557,11 @@ def assemble_arm(arm_name, tok, student, *, batch_size=None, seed=0, max_len=512
 
     man = {"arm": name, "requested_as": arm_name, "student": student, "batch_size": batch_size,
           "seed": seed, "max_len": max_len, "pattern": pattern, "pattern_source": pattern_rep,
-          "n_docs": n_docs, "document_policy": doc_policy,
+          "n_docs": n_docs,
+          # `document_policy` ONLY for an arm that carries one (B11): the assemble manifest is
+          # hashed into every checkpoint's fingerprint, so an unconditional `null` would change
+          # every default arm's recipe identity without changing its recipe.
+          **({"document_policy": doc_policy} if doc_policy is not None else {}),
           "require_forms": list(require_forms) if require_forms else None,
           "query": q_man, "document": doc_man, "cross_role": cross,
           "rescreen10_report_validated": True}

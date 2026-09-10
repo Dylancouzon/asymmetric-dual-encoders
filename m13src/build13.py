@@ -1,7 +1,6 @@
 """The M13 200M BUILD CONTROLLER: one nano build, end to end, and its provenance record.
 
-    .venv/bin/python m13src/build13.py --config m13/build_config.json --plan
-    .venv/bin/python m13src/build13.py --config ... --benchmark --rate 910 --price 1.90
+    .venv/bin/python m13src/build13.py --config m13/build_config.json --plan [--rate R --price P]
     .venv/bin/python m13src/build13.py --config ... [--device cuda] [--resume] [--smoke-steps N]
 
 It COMPOSES; it decides nothing. The recipe comes from `m10/screen_registry.json` through
@@ -14,29 +13,31 @@ record writer and the recipe fingerprint from `m10src/run_arm`. What is NEW here
   * **the 200M pin.** `total_steps = dose // batch` must divide EXACTLY and the three cycles must
     sum to exactly 200,000,000 (`build_lock.check_dose`). A screen arm floors its dose; the build
     does not ("Do not silently train 200.1M", `m10/M102_LOCK.md`).
-  * **extension cycles.** After every annealed cycle end k >= 3: kill -> terminal FAILED; gain
-    < 0.003 -> PLATEAU freeze; gain >= 0.003 with cap and budget left -> ONE further cycle of
-    66,700,000 examples (linear 1e-4 -> 1e-5, `warmup=0` passed explicitly, warm-loaded from the
-    previous cycle's retained checkpoint, its data position continued from the GLOBAL example
-    count); else CAPPED freeze.
-  * **`max_extension_cycles`**, which is not a constant: it is fixed at the day-one benchmark from
-    the BILLED $/h and the MEASURED examples/s, written into `state.json`, and refused if absent.
-  * **spend accounting** against the recorded $1,000 ceiling: a cycle whose projected cost plus
-    the spend to date would exceed it does not start.
+  * **the stop rules read as the whole build.** Ruling R13 (Dylan, 2026-09-10) drops extension
+    cycles: the build is these three cycles, with `nano10.kill_fires` (terminal FAILED, no final
+    checkpoint) and `nano10.plateau_fires` (a freeze at the last cycle end) the only stop rules.
+    There is no cap, no spend accounting and no second schedule.
+  * **the LoTTE gate as a precondition** (`check_gate`): a gate record that says what it executed,
+    on which two checkpoints, against which E1 verdict — and whose `veto` selects bs32 whatever
+    the E1 verdict says.
   * **a wall-clock rolling checkpoint** (default 30 min, converted to a step interval with the
-    benchmark's rate), because `total // 20` is ~10 GPU-hours of exposure at this dose, and a
-    `losses.jsonl` sidecar, because a 6.25M-element loss list in every checkpoint is not free.
+    measured rate `--rate` reports), because `total // 20` is ~10 GPU-hours of exposure at this
+    dose, and a `losses.jsonl` sidecar, because a 6.25M-element loss list in every checkpoint is
+    not free.
   * **the freeze**: DEV-6 once, `nano10.export_onnx`, ORT and fastembed parity, and
-    `results/m13_build_record.json`.
+    `results/m13_build_record.json`. A failed export or a failed parity ends the build
+    `FROZEN_UNVERIFIED` — the checkpoint retained, `complete` false, the record non-terminal —
+    and re-running with `--resume` retries the freeze without retraining.
 
 **Refusals** mirror `run_arm`'s, and for the same reason — a registered run reads its recipe from
 the registry or does not run: `--compile` and every recipe knob are `--smoke-steps` only; non-CUDA
-outside a smoke; an invalid screen lock; a PENDING E1 batch; a missing LoTTE gate record; a
-missing cap; a dose that is not the registered 200M or does not divide by the batch; a terminal
-record that already exists.
+outside a smoke; an invalid screen lock; a PENDING E1 batch; screen verdicts not bound to the live
+registry; a missing or incomplete LoTTE gate record; a mandatory allocation above the $1,000
+ceiling; a dose that is not the registered 200M or does not divide by the batch; a terminal record
+that already exists.
 
-On disk: `work/m13build/<arm>/{state.json, receipt.json, ckpt.pt, cycle{k}.pt, ext{j}.pt,
-cov_*.json, losses.jsonl, onnx/}` (`work/m13build/smoke/<arm>/` under `--smoke-steps`).
+On disk: `work/m13build/<arm>/{state.json, receipt.json, ckpt.pt, cycle{k}.pt, cov_*.json,
+losses.jsonl, onnx/}` (`work/m13build/smoke/<arm>/` under `--smoke-steps`).
 No six-set, reserved or LoTTE surface is touched anywhere in this file.
 """
 import argparse
@@ -58,7 +59,6 @@ import torch                                    # noqa: E402
 
 import build_lock as BL                         # noqa: E402
 import corpus_loader as CL                      # noqa: E402
-import data10 as D                              # noqa: E402
 import nano10 as N                              # noqa: E402
 import run_arm as R                             # noqa: E402
 import screen_lock as SL                        # noqa: E402
@@ -114,32 +114,61 @@ def read_json(path):
         return None
 
 
-# ------------------------------------------------------------------------------- the schedule ----
+# --------------------------------------------------------------------------- the LoTTE gate ----
 
-def continued_batch_fn(q_stream, d_stream, pattern, q_offset=0, d_offset=0):
-    """`data10.batch_fn` with the stream positions CONTINUED from a global offset.
+GATE_DECISIONS = ("veto", "no_veto", "skipped")
+GATE_BRANCHES = ("bs32", "bs128")
 
-    An extension cycle is a fresh `train_arm` whose local step starts at 0, but its data must go
-    on where the build left off (`m13/STAGE1_DESIGN.md` §1, `m10/CODEMAP.md` pitfall 11). The
-    offsets are per-stream batch counts, not steps, so no alignment with the 4-step mix window is
-    required — the local step still decides the KIND (the extension's own mix is exactly the
-    arm's), and the position inside each stream is `already consumed + kind_index(local step)`.
-    With both offsets 0 this is `data10.batch_fn` exactly.
+
+def _is_sha(x):
+    return isinstance(x, str) and len(x) == 64 and all(c in "0123456789abcdef" for c in x.lower())
+
+
+def check_gate(gate_path, *, verdicts_path=None):
+    """-> the gate summary the record carries, or refuses.
+
+    `m13/LOTTE_GATE_REGISTRATION.json` registers the contract: the gate record is written by the
+    executor that PERFORMS read #1, and "a record with executed false or a missing decision must
+    be refused by build13". The version this replaces read `gate.get("decision")` off whatever
+    JSON was at the path, so `{}` passed and a recorded VETO changed nothing (Codex 2026-09-10,
+    B6). Enforced here: the execution outcome, the branch, both checkpoint identities, and that
+    the E1 verdict the gate read is the one on disk now.
     """
-    def f(step, kind):
-        want = N.mix_window(pattern, step)
-        if kind != want:
-            raise ValueError(f"step {step} is a {want!r} step under pattern {pattern!r}, asked "
-                             f"for {kind!r}: batch_fn's pattern and the loop's disagree")
-        s, off = (q_stream, q_offset) if kind == "Q" else (d_stream, d_offset)
-        return s.batch(off + D.kind_index(pattern, step))
-    return f
-
-
-def stream_offsets(pattern, global_steps):
-    """-> (query batches, document batches) consumed by `global_steps` steps of `pattern`."""
-    sh = N.window_shares(pattern, int(global_steps)) if global_steps else {"Q": 0, "D": 0}
-    return int(sh["Q"]), int(sh["D"])
+    p = Path(gate_path)
+    g = read_json(p)
+    if g is None:
+        refuse(f"no LoTTE gate record at {p}. The pre-build LoTTE handling is registered before "
+               f"the build (m10/M102_LOCK.md 'Before training' 3); the record may say `skipped`, "
+               f"but it must exist — a bs128 selection can still be vetoed.")
+    if g.get("executed") is not True:
+        refuse(f"{p} does not carry `executed: true`. m13/LOTTE_GATE_REGISTRATION.json is the "
+               f"REGISTRATION, not the gate record: the record is written by the executor that "
+               f"performs read #1 and reports what it did.")
+    dec, branch = g.get("decision"), g.get("branch")
+    if dec not in GATE_DECISIONS:
+        refuse(f"{p}: `decision` is {dec!r}, not one of {list(GATE_DECISIONS)}")
+    if branch not in GATE_BRANCHES:
+        refuse(f"{p}: `branch` is {branch!r}, not one of {list(GATE_BRANCHES)}")
+    if not _is_sha(g.get("candidate_sha256")):
+        refuse(f"{p}: `candidate_sha256` is {g.get('candidate_sha256')!r}, not a sha256 — the "
+               f"gate must name the checkpoint it actually read")
+    comp = g.get("comparator_sha256")
+    if dec == "skipped":
+        if comp is not None and not _is_sha(comp):
+            refuse(f"{p}: a `skipped` gate carries `comparator_sha256: null` (the bs32 branch has "
+                   f"no comparator: identical recipe and action), not {comp!r}")
+    elif not _is_sha(comp):
+        refuse(f"{p}: a {dec!r} decision compares two checkpoints; `comparator_sha256` is "
+               f"{comp!r}")
+    live = sha256_file(Path(verdicts_path or BL.VERDICTS))
+    if g.get("e1_verdict_sha256") != live:
+        refuse(f"{p}: `e1_verdict_sha256` is {g.get('e1_verdict_sha256')!r} but "
+               f"results/m10_screen_verdicts.json is {live!r}. The gate read one E1 verdict and "
+               f"the build would run under another.")
+    return {"path": rel(p), "sha256": sha256_file(p), "executed": True, "decision": dec,
+            "branch": branch, "candidate_sha256": g["candidate_sha256"],
+            "comparator_sha256": comp, "e1_verdict_sha256": live,
+            "read_at": g.get("read_at"), "code_identity": g.get("code_identity")}
 
 
 def build_plan(cfg, reg, batch, *, smoke_dose=None):
@@ -164,64 +193,71 @@ def build_plan(cfg, reg, batch, *, smoke_dose=None):
             "seed": int(entry.get("seed", 0))}
 
 
-def fingerprint(plan, man, seed, smoke_steps, device, phase, cfg_sha):
+LOADER_FILES = ("corpus_loader.py", "data10.py")
+
+
+def loader_identity():
+    """sha256 of the SAMPLER's bytes. `run_arm.code_identity` covers run_arm/trainer10/nano10 but
+    not the corpus path, so a change to `EpochShuffledStream`'s tail policy or to
+    `length_buckets` left an unchanged assemble manifest and a resumable checkpoint while the
+    data order had moved (Codex 2026-09-10, B10)."""
+    h = hashlib.sha256()
+    for name in LOADER_FILES:
+        h.update((REPO / "m10src" / name).read_bytes())
+    return h.hexdigest()
+
+
+def fingerprint(plan, man, seed, smoke_steps, device, cfg_sha, *, gate=None):
     """`run_arm.fingerprint` (arm, recipe, registry, corpus manifest, device, optimizer, code)
-    plus the build's own identity: the configuration's bytes, `build13.py`'s bytes, and the PHASE
-    — so an extension's checkpoint can never satisfy the base schedule's resume, or another
-    extension's."""
+    plus the build's own identity: the configuration's bytes, `build13.py`'s and
+    `build_lock.py`'s bytes, the SAMPLER's bytes (`loader_identity`) and the LoTTE gate record's
+    sha — so a resume cannot continue this build under a different recipe, a different sampler or
+    a different gate outcome."""
     base = R.fingerprint(plan["arm"], plan, man, seed, smoke_steps, device)
-    body = {"base": base, "phase": phase, "config_sha256": cfg_sha,
+    body = {"base": base, "config_sha256": cfg_sha,
             "build13_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-            "build_lock_sha256": sha256_file(REPO / "m13src" / "build_lock.py")}
+            "build_lock_sha256": sha256_file(REPO / "m13src" / "build_lock.py"),
+            "loader_sha256": loader_identity(),
+            "lotte_gate_sha256": (gate or {}).get("sha256")}
     return hashlib.sha256(json.dumps(body, sort_keys=True, default=str).encode()).hexdigest()
 
 
-# ---------------------------------------------------------------------------- the day-one cap ----
-
-def benchmark(cfg, out_dir, rate, price, *, state=None, note=None, smoke=False):
-    """Fix `max_extension_cycles` from the MEASURED examples/s and the BILLED $/h, and write it
-    into `state.json` before cycle 1. Refused later if absent — the cap is not a constant."""
-    cap = BL.cap_arithmetic(cfg, rate, price, smoke=smoke)
-    st = dict(state or {})
-    st["benchmark"] = {**cap, "when": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "note": note}
-    st["max_extension_cycles"] = int(cap["max_extension_cycles"])
-    st["spent_usd"] = float(cap["committed_usd"])
-    st["_spent_usd"] = ("the mandatory lines and the fixed disk/egress, committed at the "
-                        "benchmark; every extension cycle adds its billed cost")
-    write_json(out_dir / "state.json", st)
-    return st
-
+# ------------------------------------------------------------------------ the allocation table ----
 
 def print_plan(cfg, batch, rate=None, price=None):
-    """The cycle table and the cap arithmetic. Writes nothing, trains nothing, rents nothing."""
+    """The cycle table and the allocation table. Writes nothing, trains nothing, rents nothing.
+
+    Ruling R13 leaves no cap to compute: the allocation is a fixed list of mandatory lines priced
+    at the measured rate and the billed price, and the only judgement in it is whether the total
+    fits under the recorded ceiling. `build_lock.allocation` REFUSES a plan that does not.
+    """
     print(f"build arm {cfg['arm']}  dose {cfg['arm_entry']['dose_examples']:,}  "
           f"batch {batch if batch else 'PENDING (E1 unread)'}")
     batches = [batch] if batch else [32, 128]
     for b in batches:
         p = BL.cycle_plan(cfg["arm_entry"]["dose_examples"], b)
-        e = BL.extension_plan(cfg["extension_examples"], b)
         print(f"\n  bs{b}: {p['total_steps']:,} steps, divides exactly: {p['divides_exactly']}")
         for row in p["cycles"]:
             print(f"    cycle {row['cycle']}  steps {row['steps']:>9,}  "
                   f"[{row['start_step']:>9,}..{row['end_step']:>9,}]  "
                   f"examples {row['examples']:>12,}")
         print(f"    sum {p['sum_examples']:,} (= dose: {p['sum_examples'] == p['dose_examples']})")
-        print(f"    extension cycle: {e['steps']:,} steps = {e['examples']:,} examples "
-              f"(dropped {e['examples_dropped']})")
         rr = rate or R.PLAN_RATES.get(b)
         for pr in ([price] if price else [1.5, 2.5]):
             try:
-                cap = BL.cap_arithmetic(cfg, rr, pr)
+                al = BL.allocation(cfg, rr, pr)
             except SystemExit as exc:
-                print(f"    cap at {rr:.0f} ex/s, ${pr}/h: {exc}")
+                print(f"    allocation at {rr:.0f} ex/s, ${pr}/h: {exc}")
                 continue
-            print(f"    cap at {rr:.0f} ex/s, ${pr}/h: mandatory {cap['mandatory_hours_total']} h "
-                  f"= ${cap['mandatory_usd']}, +${cap['fixed_usd']} fixed, "
-                  f"extension ${cap['extension_cycle_usd']}/cycle -> "
-                  f"max_extension_cycles {cap['max_extension_cycles']}")
+            print(f"    allocation at {rr:.0f} ex/s, ${pr}/h: "
+                  f"{al['mandatory_hours_total']} h = ${al['mandatory_usd']} "
+                  f"+ ${al['fixed_usd']} fixed = ${al['committed_usd']} of "
+                  f"${al['budget_ceiling_usd']:.0f} (headroom ${al['headroom_usd']})")
+            for k, v in sorted(al["mandatory_hours"].items()):
+                print(f"      {k:<38} {v:>8.3f} h  ${pr * v:>8.2f}")
         if not (rate and price):
-            print("    (a PROJECTION: run_arm.PLAN_RATES and assumed prices. The cap is fixed at "
-                  "the day-one benchmark from the measured rate and the billed price.)")
+            print("    (a PROJECTION: run_arm.PLAN_RATES and assumed prices. The table that "
+                  "governs is priced from the MEASURED rate and the BILLED price on day one.)")
     return 0
 
 
@@ -230,7 +266,7 @@ def print_plan(cfg, batch, rate=None, price=None):
 class BuildEval:
     """`run_arm.CovEval` (or `StubEval` in a smoke) plus the build's own bookkeeping.
 
-    The evaluation history is what the extension, plateau and kill rules read, and it has to
+    The evaluation history is what the plateau and kill rules read, and it has to
     survive both an abrupt process loss BETWEEN phases (`state.json` carries it) and a resume
     INSIDE one (the checkpoint carries it, through `trainer10`'s `eval_state` hook). The
     checkpointed copy is authoritative on `restore`, so replaying a few steps after a crash
@@ -297,8 +333,8 @@ def _record_failure(ctx, exc, verbose=True):
                        "traceback_tail": traceback.format_exc()[-4000:]},
            "state": ctx.get("state"), "recipe": ctx.get("plan"),
            "final_checkpoint": None, "final_checkpoint_sha256": None,
-           "_final_checkpoint_note": "a failed build has NO final checkpoint; any cycle or "
-                                     "extension checkpoint on disk is a partial",
+           "_final_checkpoint_note": "a failed build has NO final checkpoint; any cycle "
+                                     "checkpoint on disk is a partial",
            "registry_sha256": ctx.get("registry_sha256"), "git_head": R.git_head(),
            "_rule": "rules.arm_failure — reported, never silently re-run"}
     try:
@@ -314,16 +350,14 @@ def _record_failure(ctx, exc, verbose=True):
 
 def run(config=None, *, device="cuda", resume=False, smoke_steps=None, batch=None, max_len=None,
         ckpt_every=None, ckpt_minutes=DEFAULT_CKPT_MINUTES, n_fit=None, compile_step=False,
-        real_eval=False, lotte_gate=None, verbose=True, benchmark_rate=None,
-        benchmark_price=None, benchmark_only=False):
+        real_eval=False, lotte_gate=None, verbose=True, rate=None, price=None):
     ctx = {"started": False}
     try:
         return _run(ctx, config, device=device, resume=resume, smoke_steps=smoke_steps,
                     batch=batch, max_len=max_len, ckpt_every=ckpt_every,
                     ckpt_minutes=ckpt_minutes, n_fit=n_fit, compile_step=compile_step,
                     real_eval=real_eval, lotte_gate=lotte_gate, verbose=verbose,
-                    benchmark_rate=benchmark_rate, benchmark_price=benchmark_price,
-                    benchmark_only=benchmark_only)
+                    rate=rate, price=price)
     except SystemExit:
         if ctx.get("started"):
             _record_failure(ctx, sys.exc_info()[1], verbose=verbose)
@@ -334,7 +368,7 @@ def run(config=None, *, device="cuda", resume=False, smoke_steps=None, batch=Non
 
 
 def _preflight(ctx, cfg, cfg_path, *, smoke, device, batch, lotte_gate, compile_step, real_eval,
-               max_len, ckpt_every, n_fit):
+               max_len, ckpt_every, n_fit, rate=None, price=None):
     """Everything that must be true before a GPU-hour is spent. Every failure here writes
     NOTHING: the build never started."""
     passed = {"max_len": max_len, "ckpt_every": ckpt_every, "n_fit": n_fit,
@@ -350,27 +384,30 @@ def _preflight(ctx, cfg, cfg_path, *, smoke, device, batch, lotte_gate, compile_
     reg = SL.cfg()
     report = BL.validate(cfg, reg, smoke=smoke)
     b, batch_source = BL.resolve_batch(cfg, smoke=smoke, override=batch)
-    gate_path = Path(lotte_gate or (REPO / cfg["lotte_gate"]))
-    gate = read_json(gate_path)
-    if gate is None:
-        refuse(f"no LoTTE gate record at {gate_path}. The pre-build LoTTE handling is registered "
-               f"before the build (m10/M102_LOCK.md 'Before training' 3); the record may say "
-               f"`skipped`, but it must exist — a bs128 selection can still be vetoed.")
+    gate = check_gate(lotte_gate or (REPO / cfg["lotte_gate"]))
+    if gate["decision"] == "veto":
+        # `m10/LOTTE_LOCK.md`: "the comparator's recipe (bs32) is what the 200M build trains".
+        # The veto OVERRIDES the E1 verdict — that is the whole point of a veto, and the version
+        # this replaces read the decision into the record and then trained bs128 anyway (B6).
+        b, batch_source = 32, (f"m13 LoTTE gate VETO ({gate['path']}): the comparator's bs32 "
+                               f"recipe, overriding {batch_source}")
+    if rate is not None and price is not None:
+        # the plain affordability check: a mandatory plan above the ceiling refuses here, before
+        # a GPU-hour is spent (B7 as narrowed by R13 — there is no cap to compute).
+        report["allocation"] = BL.allocation(cfg, rate, price, smoke=smoke)
     ctx["registry_sha256"] = report["registry_sha256"]
-    return reg, b, batch_source, {"path": rel(gate_path), "sha256": sha256_file(gate_path),
-                                  "decision": gate.get("decision", gate.get("status"))}, report
+    return reg, b, batch_source, gate, report
 
 
 def _run(ctx, config, *, device, resume, smoke_steps, batch, max_len, ckpt_every, ckpt_minutes,
-         n_fit, compile_step, real_eval, lotte_gate, verbose, benchmark_rate, benchmark_price,
-         benchmark_only):
+         n_fit, compile_step, real_eval, lotte_gate, verbose, rate, price):
     smoke = smoke_steps is not None
     cfg, cfg_path = BL.load(config)
     cfg_sha = sha256_file(cfg_path)
     reg, batch, batch_source, gate, report = _preflight(
         ctx, cfg, cfg_path, smoke=smoke, device=device, batch=batch, lotte_gate=lotte_gate,
         compile_step=compile_step, real_eval=real_eval, max_len=max_len, ckpt_every=ckpt_every,
-        n_fit=n_fit)
+        n_fit=n_fit, rate=rate, price=price)
     arm = cfg["arm"]
     ctx["arm"] = arm
     ctx["smoke"] = smoke
@@ -398,7 +435,7 @@ def _run(ctx, config, *, device, resume, smoke_steps, batch, max_len, ckpt_every
         st = R._record_status_at(path)
         if st is None:
             continue
-        if not resume and not (benchmark_only and path is receipt_path):
+        if not resume:
             refuse(f"{path} already exists. Pass --resume to continue a non-terminal run, or "
                    f"move the record aside deliberately.")
         if st["parseable"] and st["terminal"]:
@@ -408,19 +445,6 @@ def _run(ctx, config, *, device, resume, smoke_steps, batch, max_len, ckpt_every
             refuse(f"{path} is unparseable, so whether the build already finished is UNKNOWABLE.")
 
     state = read_json(out_dir / "state.json") or {}
-    if benchmark_only:
-        if benchmark_rate is None or benchmark_price is None:
-            refuse("--benchmark needs --rate EX_S and --price USD_H: the cap is fixed from the "
-                   "MEASURED rate and the BILLED price, never from a projection")
-        st = benchmark(cfg, out_dir, benchmark_rate, benchmark_price, state=state,
-                       note="smoke" if smoke else None, smoke=smoke)
-        print(json.dumps(st["benchmark"], indent=1))
-        return st
-    if state.get("max_extension_cycles") is None:
-        refuse(f"{out_dir / 'state.json'} carries no `max_extension_cycles`. It is fixed at the "
-               f"day-one benchmark from the billed price and the measured rate, not now: run "
-               f"`--benchmark --rate EX_S --price USD_H` first.")
-
     if resume:
         if R._record_status_at(receipt_path) is None:
             refuse(f"--resume: no receipt at {receipt_path}; there is no run to continue.")
@@ -431,8 +455,7 @@ def _run(ctx, config, *, device, resume, smoke_steps, batch, max_len, ckpt_every
     t_start = time.time()
     print(f"=== build {arm} on {device}: {dose:,} examples, batch {batch}, "
           f"{plan['total_steps']:,} steps, pattern {plan['pattern']}, student {plan['student']}, "
-          f"objective {plan['objective']}, seed {seed}, cap "
-          f"{state['max_extension_cycles']} extension cycle(s)"
+          f"objective {plan['objective']}, seed {seed}, no extension cycles (R13)"
           + (f"  [SMOKE {smoke_steps} steps]" if smoke else ""), flush=True)
 
     torch.manual_seed(seed)
@@ -445,7 +468,7 @@ def _run(ctx, config, *, device, resume, smoke_steps, batch, max_len, ckpt_every
     base_fn, man = CL.assemble_arm(arm, model.tok, plan["student"], batch_size=batch, seed=seed,
                                    max_len=max_len, verbose=verbose, registry=merged)
     q_stream, d_stream = R.streams_of(base_fn)
-    fp = fingerprint(plan, man, seed, smoke_steps, device, "cycles1-3", cfg_sha)
+    fp = fingerprint(plan, man, seed, smoke_steps, device, cfg_sha, gate=gate)
 
     identity = {"arm": arm, "smoke": bool(smoke), "recipe_fingerprint": fp,
                 "config_sha256": cfg_sha, "registry_sha256": ctx["registry_sha256"]}
@@ -473,8 +496,6 @@ def _run(ctx, config, *, device, resume, smoke_steps, batch, max_len, ckpt_every
     state.setdefault("cycle_macros", [])
     state.setdefault("evals", [])
     state.setdefault("eval_kinds", [])
-    state.setdefault("extensions", [])
-    state.setdefault("decisions", [])
     ctx["state"] = state
     write_json(out_dir / "state.json", state)
 
@@ -486,20 +507,14 @@ def _run(ctx, config, *, device, resume, smoke_steps, batch, max_len, ckpt_every
     inner = R.StubEval() if smoke else R.CovEval(model, out_dir, verbose=verbose)
     ev = BuildEval(inner, out_dir / "state.json", state)
     ctx["cov_records"] = ev.records
-    # ONE sidecar per PHASE: a fresh `train_arm` truncates the log it is given (so a resume does
-    # not double-log), which would erase cycles 1-3's losses when extension 1 started.
     loss_log = out_dir / "losses.jsonl"
 
-    def ext_loss_log(j):
-        return out_dir / f"losses_ext{j}.jsonl"
-
     def cadence(total):
-        """The rolling checkpoint interval in STEPS, from the wall-clock cadence and the
-        benchmark's measured rate. Without a rate it falls back to `run_arm`'s `total // 20`,
-        which at the build's dose is ~10 GPU-hours of exposure — hence the cadence."""
+        """The rolling checkpoint interval in STEPS, from the wall-clock cadence and the MEASURED
+        rate `--rate` reports. Without a rate it falls back to `run_arm`'s `total // 20`, which at
+        the build's dose is ~10 GPU-hours of exposure — hence the cadence."""
         if ckpt_every:
             return int(ckpt_every)
-        rate = ((state.get("benchmark") or {}).get("rate_ex_per_s"))
         if rate:
             return max(int(float(rate) * 60 * float(ckpt_minutes) / batch), 1)
         return max(total // 20, 1)
@@ -534,118 +549,51 @@ def _run(ctx, config, *, device, resume, smoke_steps, batch, max_len, ckpt_every
     else:
         r = state["base"]
 
-    # ---- the extension / plateau / kill loop ---------------------------------------------
-    # A SMOKE's extension is the SMOKE's dose. The registered 66,700,000 is a cloud cycle
-    # (~30 GPU-hours); a path check that started one would be a runaway, which is exactly what the
-    # first box smoke of this controller did before this line existed.
-    ext_examples = BL.extension_plan(dose if smoke else cfg["extension_examples"], batch)
-    min_gain = float(cfg["extension_min_gain"])
-    cap = int(state["max_extension_cycles"])
-    ceiling = float(cfg["budget_ceiling_usd"])
-    cycle_usd = float((state.get("benchmark") or {}).get("extension_cycle_usd") or 0.0)
-    outcome, final_ck = None, None
-    while True:
-        fired, why = N.kill_fires(state["evals"], lambda i: state["eval_kinds"][i])
-        if fired or (state.get("stopped") and not str(state["stopped"]).startswith("plateau")):
-            outcome = {"outcome": "FAILED",
-                       "why": f"kill: {why}" if fired else str(state.get("stopped"))}
-            break
-        macros = state["cycle_macros"]
-        if len(macros) < CYCLES:
-            outcome = {"outcome": "FAILED",
-                       "why": f"only {len(macros)} annealed cycle end(s) were read"}
-            break
-        gain = macros[-1] - max(macros[:-1])
-        n_ext = len(state["extensions"])
-        projected = state.get("spent_usd", 0.0) + cycle_usd
-        decision = {"after_cycle": len(macros), "macro": macros[-1],
-                    "best_previous": max(macros[:-1]), "gain": round(gain, 6),
-                    "min_gain": min_gain, "extensions_run": n_ext, "max_extension_cycles": cap,
-                    "spent_usd": round(state.get("spent_usd", 0.0), 2),
-                    "projected_cycle_usd": round(cycle_usd, 2),
-                    "budget_ceiling_usd": ceiling}
-        if gain < min_gain:
-            decision["decision"] = "PLATEAU"
-            outcome = {"outcome": "PLATEAU", "why": f"gain {gain:.6f} < {min_gain} at cycle "
-                                                    f"{len(macros)}"}
-        elif n_ext >= cap:
-            decision["decision"] = "CAPPED"
-            outcome = {"outcome": "CAPPED", "why": f"{n_ext} extension cycle(s) run, cap {cap}"}
-        elif projected > ceiling:
-            decision["decision"] = "CAPPED_BUDGET"
-            outcome = {"outcome": "CAPPED", "why": f"${projected:.2f} projected exceeds the "
-                                                   f"${ceiling:.0f} ceiling"}
-        else:
-            decision["decision"] = "EXTEND"
-        # a resume re-derives the decision it already recorded; record it once (the inputs are a
-        # pure function of the macro history and the spend, so a repeat is the same decision).
-        if not any(d["after_cycle"] == decision["after_cycle"]
-                   and d["extensions_run"] == decision["extensions_run"]
-                   for d in state["decisions"]):
-            state["decisions"].append(decision)
-        write_json(out_dir / "state.json", state)
-        if decision["decision"] != "EXTEND":
-            break
-        j = n_ext + 1
-        from_ck = out_dir / (f"ext{n_ext}.pt" if n_ext else f"cycle{CYCLES}.pt")
-        if not from_ck.exists():
-            refuse(f"an extension cycle warm-loads from {from_ck}, which does not exist")
-        global_steps = int(state["steps_run"])
-        q_off, d_off = stream_offsets(plan["pattern"], global_steps)
-        ext_fn = continued_batch_fn(q_stream, d_stream, plan["pattern"], q_off, d_off)
-        fp_ext = fingerprint(plan, man, seed, smoke_steps, device,
-                             {"extension": j, "steps": ext_examples["steps"],
-                              "from": from_ck.name, "warmup_steps": 0,
-                              "global_steps_before": global_steps}, cfg_sha)
-        ext_ck = out_dir / f"ext{j}_ckpt.pt"
-        in_flight = ext_ck.exists() and torch.load(
-            ext_ck, map_location="cpu", weights_only=False)["extra"].get("fingerprint") == fp_ext
-        if not in_flight:
-            # warm-load the previous cycle end into the model; the fresh 1-cycle schedule then
-            # owns the optimizer, exactly as a new cycle does.
-            ck = torch.load(from_ck, map_location="cpu", weights_only=False)
-            Tr.eager(model).load_state_dict(ck["model"])
-        print(f"  extension {j}: {ext_examples['steps']:,} steps = {ext_examples['examples']:,} "
-              f"examples from {from_ck.name}, data continued at step {global_steps:,}", flush=True)
-
-        def ext_eval(_m, step, kind, _j=j):
-            return ev(step, f"ext{_j}" if kind == "end" else f"ext{_j}mid{step}", kind)
-
-        re = Tr.train_arm(train_model, ext_fn, total_steps=ext_examples["steps"],
-                          pattern=plan["pattern"], cycles=1, peak=PEAK, final=FINAL,
-                          loss_name=plan["objective"], eval_fn=ext_eval, ckpt_path=ext_ck,
-                          ckpt_every=cadence(ext_examples["steps"]),
-                          resume_from=(str(ext_ck) if in_flight else None), seed=seed,
-                          log_every=max(ext_examples["steps"] // 50, 1), device=device,
-                          batch_size=batch, cycle_ckpt_fmt=str(out_dir / f"ext{j}.pt"),
-                          eval_state=ev, fingerprint=fp_ext, loss_log=str(ext_loss_log(j)),
-                          warmup_steps=0)
-        state["extensions"].append({"j": j, "from": from_ck.name, **ext_examples,
-                                    "stopped": re["stopped"], "examples": int(re["examples"]),
-                                    "start_step": int(re["start_step"]),
-                                    "macro": (state["cycle_macros"][-1]
-                                              if state["cycle_macros"] else None),
-                                    "q_offset": q_off, "d_offset": d_off,
-                                    "examples_per_s": re["examples_per_s"]})
-        state["steps_run"] = global_steps + ext_examples["steps"]
-        state["examples_run"] = int(state.get("examples_run", 0)) + ext_examples["examples"]
-        state["spent_usd"] = round(state.get("spent_usd", 0.0) + cycle_usd, 4)
-        state["stopped"] = re["stopped"]
-        write_json(out_dir / "state.json", state)
-
+    # ---- the stop rules, read over the whole build ---------------------------------------
+    # Ruling R13 (Dylan, 2026-09-10): NO extension cycles. The build is these three cycles, and
+    # `nano10.kill_fires` / `nano10.plateau_fires` are the only stop rules. The plateau rule can
+    # only fire at cycle end k >= 3, which for a 3-cycle schedule IS its last step, so a plateau
+    # here is the ordinary end of the build and not a decision about what to run next.
+    fired, why = N.kill_fires(state["evals"], lambda i: state["eval_kinds"][i])
+    macros = state["cycle_macros"]
+    stopped = state.get("stopped")
+    if fired:
+        outcome = {"outcome": "FAILED", "why": f"kill: {why}"}
+    elif stopped and not str(stopped).startswith("plateau"):
+        outcome = {"outcome": "FAILED", "why": str(stopped)}
+    elif len(macros) < CYCLES:
+        outcome = {"outcome": "FAILED",
+                   "why": f"only {len(macros)} annealed cycle end(s) were read"}
+    else:
+        pf, at = N.plateau_fires(macros)
+        outcome = {"outcome": "COMPLETE", "plateau_at": at,
+                   "why": (f"plateau at cycle {at}, the schedule's last cycle end" if pf else
+                           f"the registered {dose:,}-example schedule ran to its last cycle end"),
+                   "final_gain": (round(macros[-1] - max(macros[:-1]), 6) if len(macros) > 1
+                                  else None),
+                   "_rule": "nano10.plateau_fires / kill_fires; no extension cycles (R13)"}
     state["outcome"] = outcome
     write_json(out_dir / "state.json", state)
-    ok = outcome["outcome"] in ("PLATEAU", "CAPPED")
-    if ok:
-        final_ck = out_dir / (f"ext{len(state['extensions'])}.pt" if state["extensions"]
-                              else f"cycle{CYCLES}.pt")
-        if not final_ck.exists():
-            ok, outcome = False, {"outcome": "FAILED", "why": f"no final checkpoint at {final_ck}"}
+    ok = outcome["outcome"] == "COMPLETE"
+    final_ck = out_dir / f"cycle{CYCLES}.pt"
+    if ok and not final_ck.exists():
+        ok, outcome = False, {"outcome": "FAILED", "why": f"no final checkpoint at {final_ck}"}
+        state["outcome"] = outcome
+        write_json(out_dir / "state.json", state)
 
     # ---- freeze --------------------------------------------------------------------------
-    freeze = {}
+    freeze, verified = {}, False
     if ok:
         freeze = freeze_checkpoint(model, out_dir, final_ck, smoke=smoke, verbose=verbose)
+        verified = bool(freeze.get("verified"))
+        if not verified:
+            # B8: an export that raised, or a parity read that did not meet the bar, is NOT a
+            # complete build. The checkpoint is retained and the record is NON-terminal, so
+            # re-running with --resume retries the freeze alone: training is already done and
+            # `state["base_done"]` skips it.
+            print(f"FREEZE UNVERIFIED: {freeze.get('unverified_why')}. The checkpoint is kept "
+                  f"and the record is not `complete`; fix the export environment and re-run "
+                  f"with --resume to retry the freeze without retraining.", flush=True)
     else:
         print(f"BUILD FAILED ({outcome['why']}): no final checkpoint, so no DEV-6, no export and "
               f"no parity. `rules.arm_failure`: reported, not re-run at different settings.",
@@ -654,9 +602,12 @@ def _run(ctx, config, *, device, resume, smoke_steps, batch, max_len, ckpt_every
     cks = {}
     for pth in sorted(out_dir.glob("*.pt")):
         cks[pth.stem] = {"path": rel(pth), "sha256": sha256_file(pth)}
+    status = ("complete" if verified else "frozen_unverified") if ok else "failed"
     rec = {
         "_what": "the M13 200M nano build, trained end to end by m13src/build13.py",
-        "arm": arm, "status": ("complete" if ok else "failed"), "complete": ok, "terminal": True,
+        "arm": arm, "status": status, "complete": bool(ok and verified),
+        # a FROZEN_UNVERIFIED build is not terminal: its finalization is resumable (B8).
+        "terminal": not (ok and not verified),
         "outcome": outcome, "smoke": smoke, "smoke_steps": smoke_steps, "device": device,
         "max_len": max_len, "seed": seed,
         "config": rel(cfg_path), "config_sha256": cfg_sha, "validation": report,
@@ -664,25 +615,30 @@ def _run(ctx, config, *, device, resume, smoke_steps, batch, max_len, ckpt_every
         "recipe": plan, "warm_start": ws,
         "schedule": {"cycles": CYCLES, "peak": PEAK, "final": FINAL,
                      "cycle_plan": BL.cycle_plan(dose, batch),
-                     "extension": ext_examples,
                      "warmup_examples": int(N.WARMUP_EXAMPLES),
                      "warmup_steps_cycle1": int(N.warmup_steps_for(batch)),
-                     "extension_warmup_steps": 0},
+                     "extension_cycles": "none (ruling R13, Dylan 2026-09-10)"},
         "params": model.n_params(), "under_cap": model.under_cap(),
         "evaluation_mode": "stub" if smoke else "cov",
         "cov": {"per_checkpoint": ev.records, "cycle_macros": state["cycle_macros"],
                 "final_macro": (state["cycle_macros"][-1] if state["cycle_macros"] else None),
                 "_scope": "COV only, at every annealed cycle end and the schedule midpoints the "
                           "kill rule reads. No six-set, reserved or LoTTE surface."},
-        "extensions": state["extensions"], "decisions": state["decisions"],
-        "budget": {"benchmark": state.get("benchmark"), "spent_usd": state.get("spent_usd"),
-                   "ceiling_usd": ceiling,
-                   "max_extension_cycles": state["max_extension_cycles"]},
+        "budget": {"allocation": report.get("allocation"),
+                   "ceiling_usd": float(cfg["budget_ceiling_usd"]),
+                   "_what": "the fixed allocation table (m13/build_config.json `budget`) priced "
+                            "at --rate and --price when they were given. R13 leaves no cap "
+                            "formula and no in-run spend accounting: the bill is reconciled "
+                            "against this table in the allocation record, not by the controller."},
         "dose_run_examples": state.get("examples_run"), "steps_run": state.get("steps_run"),
         "training": state.get("base"), "loss_logs": [rel(p) for p in sorted(out_dir.glob("losses*.jsonl"))],
         "checkpoints": cks,
         "final_checkpoint": rel(final_ck) if ok else None,
         "final_checkpoint_sha256": (sha256_file(final_ck) if ok else None),
+        "_final_checkpoint": (None if verified or not ok else
+                              "RETAINED but UNVERIFIED: the export or the serving parity failed, "
+                              "so this checkpoint has not been shown to serve what it trained. "
+                              "It is not a release candidate until a --resume freeze passes."),
         "freeze": freeze,
         "recipe_fingerprint": fp,
         "assemble_manifest": man,
@@ -695,8 +651,12 @@ def _run(ctx, config, *, device, resume, smoke_steps, batch, max_len, ckpt_every
     }
     for w in R.write_record(rec, record_path, results_path):
         print(f"wrote {w}", flush=True)
-    write_json(receipt_path, {**(read_json(receipt_path) or {}), "status": rec["status"],
-                              "complete": ok, "terminal": True})
+    # the receipt stays `running` while the freeze is unverified, because that is exactly what
+    # `--resume` requires to continue the run and retry it.
+    write_json(receipt_path, {**(read_json(receipt_path) or {}),
+                              "status": ("running" if (ok and not verified) else rec["status"]),
+                              "freeze": (None if verified else "unverified"),
+                              "complete": rec["complete"], "terminal": rec["terminal"]})
     print(f"{arm}: {rec['status']} ({outcome['outcome']})  COV final {rec['cov']['final_macro']}  "
           f"{rec['wall_seconds']:.0f}s", flush=True)
     return rec
@@ -714,13 +674,27 @@ def environment(device):
     return env
 
 
+PARITY_MIN_COS = 1 - 1e-4
+
+
 def freeze_checkpoint(model, out_dir, final_ck, *, smoke=False, verbose=True):
     """DEV-6 once, the ONNX export, and the serving-parity reads. A smoke skips DEV-6 (~13 GB of
-    reads) exactly as `run_arm`'s does, and says so in the record."""
+    reads) exactly as `run_arm`'s does, and says so in the record.
+
+    Returns `verified: False` with `unverified_why` when the export RAISED or the ORT parity did
+    not reach `PARITY_MIN_COS`. The version this replaces swallowed the export exception into an
+    `export_error` field that nothing read, so a build whose ONNX never existed still published
+    `complete: true` and a final checkpoint (Codex 2026-09-10, B8). fastembed is NOT part of the
+    verdict: it is optional at this stage and reports `served: False` when unavailable, which is
+    the documented behaviour (`m10/CODEMAP.md` pitfalls 2 and 5); the ORT parity is the one this
+    build always has.
+    """
     ck = torch.load(final_ck, map_location="cpu", weights_only=False)
     Tr.eager(model).load_state_dict(ck["model"])
-    out = {"from_checkpoint": rel(final_ck), "dev6": None, "onnx": None, "ort_parity": None,
-           "fastembed_parity": None}
+    out = {"from_checkpoint": rel(final_ck),
+           "from_checkpoint_sha256": sha256_file(final_ck),
+           "dev6": None, "onnx": None, "ort_parity": None,
+           "fastembed_parity": None, "verified": False, "unverified_why": None}
     if smoke:
         out["dev6"] = {"skipped": "a smoke never reads DEV-6 (run_arm.dev6's ~13 GB)"}
     else:
@@ -737,8 +711,17 @@ def freeze_checkpoint(model, out_dir, final_ck, *, smoke=False, verbose=True):
                  "The quick brown fox jumps over the lazy dog."]
         out["ort_parity"] = N.export_parity(m, d, texts)
         out["fastembed_parity"] = fastembed_parity(m, d, texts)
-    except Exception as e:                                              # pragma: no cover
+    except Exception as e:
         out["export_error"] = f"{type(e).__name__}: {e}"
+        out["unverified_why"] = f"the ONNX export or its parity read raised: {out['export_error']}"
+        return out
+    cos = (out["ort_parity"] or {}).get("min_cos")
+    if cos is None or float(cos) < PARITY_MIN_COS:
+        out["unverified_why"] = (f"ORT serving parity min-cos {cos!r} < {PARITY_MIN_COS}: the "
+                                 f"exported graph does not reproduce the trained model")
+        return out
+    out["verified"] = True
+    out["parity_bar_min_cos"] = PARITY_MIN_COS
     return out
 
 
@@ -782,11 +765,13 @@ def build_argparser():
     ap.add_argument("--config", default=str(BL.CONFIG))
     ap.add_argument("--device", default="cuda", choices=["cpu", "cuda"])
     ap.add_argument("--plan", action="store_true",
-                    help="print the cycle table and the cap arithmetic; write nothing")
-    ap.add_argument("--benchmark", action="store_true",
-                    help="fix max_extension_cycles from --rate and --price and write state.json")
-    ap.add_argument("--rate", type=float, default=None, help="MEASURED examples/s")
-    ap.add_argument("--price", type=float, default=None, help="BILLED $/h")
+                    help="print the cycle table and the allocation table; write nothing")
+    ap.add_argument("--rate", type=float, default=None,
+                    help="MEASURED examples/s: prices the allocation table and sets the rolling "
+                         "checkpoint's step interval. Recorded, never a recipe knob.")
+    ap.add_argument("--price", type=float, default=None,
+                    help="BILLED $/h: with --rate, prices the allocation table. A mandatory plan "
+                         "above the $1,000 ceiling is REFUSED.")
     ap.add_argument("--resume", action="store_true",
                     help="continue the run in work/m13build/<arm>/ from its receipt and checkpoint")
     ap.add_argument("--smoke-steps", type=int, default=None,
@@ -821,7 +806,7 @@ def main(argv=None):
     run(a.config, device=a.device, resume=a.resume, smoke_steps=a.smoke_steps, batch=a.batch,
         max_len=a.max_len, ckpt_every=a.ckpt_every, ckpt_minutes=a.ckpt_minutes, n_fit=a.n_fit,
         compile_step=a.compile, lotte_gate=a.lotte_gate, verbose=not a.quiet,
-        benchmark_rate=a.rate, benchmark_price=a.price, benchmark_only=a.benchmark)
+        rate=a.rate, price=a.price)
     return 0
 
 
