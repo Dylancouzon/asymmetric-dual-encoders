@@ -47,19 +47,24 @@ that the budget table does not carry**. Both problems disappear once the read si
 mandate put it.
 
 **M10's specific case.** The screen selected no non-default component, so *the selected recipe and
-the anchor recipe are the same in every axis except `batch`* (`M102_LOCK.md`) — and at screen dose
-both arms already exist or are about to:
+the anchor recipe are the same in every axis except `batch`* (`M102_LOCK.md`). At screen dose:
 
 - if E selects **bs32** → the selected recipe IS the anchor recipe, so the synthesized screen-dose
-  arm IS `ANCHOR`. The veto would compare a recipe to itself and its action is invariant, so the
+  arm is `E-bs32` (the A100 arm of that same recipe; `ANCHOR` is the box-trained twin and the
+  build runs on the A100). The veto would compare a recipe to itself and its action is invariant,
+  so the
   **VETO is SKIPPED** and reported skipped. **The criterion is identical RECIPE AND ACTION, not
   identical checkpoint hashes** — my second version made the skip conditional on the two candidates
   hashing identically, and that was wrong: two stochastic builds essentially never hash alike, so
   it would have forced a vacuous veto to run while leaving the differing-hash branch with no
   mandated action. One criterion, one action.
-- if E selects **bs128** → the selected recipe at screen dose is `E-bs128` (5M) and the anchor is
-  `ANCHOR` (5M). **Both arms already exist**, the veto is well-defined, and a veto means the bs32
-  anchor recipe is what gets built. No extra training, no second build.
+- if E selects **bs128** → the selected recipe at screen dose is `E-bs128` (5M) and the comparator
+  is **`E-bs32`, the A100-trained bs32 arm — NOT the box-trained `ANCHOR`.** Corrected 2026-09-10:
+  both E arms run on the A100 together precisely so E1 carries no hardware difference
+  (`M102_LOCK.md` §The one field still open), and naming `ANCHOR` here would have re-imported that
+  same confound into the **veto** after removing it from the contrast. A veto means the bs32 recipe
+  is what gets built — no extra training and no second build, because read #1 sits before the
+  build and only chooses which recipe it is.
 - **The candidate's OBSERVATIONAL LoTTE row is NOT skipped with the veto.** Fable's point, and it is
   right: the veto being vacuous does not make the out-of-domain *observation* vacuous, and this file
   argues LoTTE-clean is the only fresh OOD surface we have before the final run. So in the bs32
@@ -87,11 +92,14 @@ Deterministic, and **may not be changed using LoTTE or any LoTTE-derived output*
 
 The candidate for read #1 is the **synthesized selected-recipe arm at screen dose (5,000,000
 examples)**, on the recipe of `m10/M102_LOCK.md` with `seed_rule`'s seed 0 — its final annealed
-cycle-end checkpoint, no dev selection. The comparator is `ANCHOR`'s final annealed cycle-end
-checkpoint at the same dose. Both hashes are committed and pushed in a second manifest commit
-**before** the evaluator may touch LoTTE.
+cycle-end checkpoint, no dev selection. The comparator is the **same-hardware** screen-dose arm of
+the recipe a veto would fall back to: `E-bs32` (A100) in the bs128 branch. Both hashes are
+committed and pushed in a second manifest commit **before** the evaluator may touch LoTTE, and
+neither arm exists yet — family E is CLOUD_ONLY and unrun, so read #1 cannot happen before the
+A100 runs it.
 
-(Read #2, the pre-freeze audit, is the one that sees the BUILD's final checkpoint. Its identity
+(Read #2, the pre-freeze audit, is the one that sees the BUILD's final checkpoint, and it is the
+only place any post-build wording belongs. Its identity
 rule: the final annealed cycle-end checkpoint if the build reaches its registered end; otherwise
 the annealed cycle end carrying the best COV macro `m_k`, disclosed as **dev-selected**.)
 
@@ -113,11 +121,12 @@ the annealed cycle end carrying the best COV macro `m_k`, disclosed as **dev-sel
 
 | field | value |
 |---|---|
-| candidate checkpoint | *pending: the synthesized selected-recipe arm at 5M. If E selects bs32 this IS `ANCHOR` and the VETO is skipped* |
+| candidate checkpoint | *pending: the synthesized selected-recipe arm at 5M, A100. If E selects bs32 this is `E-bs32` and the VETO is skipped (its observational row is still read)* |
 | candidate sha256 | *pending* |
-| comparator checkpoint | `ANCHOR`, final annealed cycle end at 5M |
+| comparator checkpoint | the A100 screen-dose arm of the fallback recipe (`E-bs32` in the bs128 branch) |
 | comparator sha256 | *pending the second manifest commit* |
 | slices | LoTTE-clean, 7 slices, macro at equal weight |
 | bootstrap | B = 10,000, seed 903, paired within slice, one-sided 97.5% upper bound |
 | veto margin | 0.004 |
-| executed | **NO — LoTTE is entirely unread for M10 as of 2026-09-09** |
+| observational row | read in BOTH branches, on the candidate, labelled a **5M-dose** number |
+| executed | **NO — LoTTE is entirely unread for M10 as of 2026-09-10** |

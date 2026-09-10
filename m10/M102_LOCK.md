@@ -165,8 +165,13 @@ Registered before the numbers exist, so they cannot be dropped after them:
   Classified a PREREGISTRATION, not an amendment — M9's had to be the latter.
 - **`m10/LOTTE_LOCK.md`** — WRITTEN. The M9 §7 veto unchanged, plus the case M10 actually has:
   since the screen selected no non-default, the selected and anchor recipes differ **only in
-  `batch`**, so if E selects bs32 the veto compares a recipe to itself and read #1 is **SKIPPED and
-  reported skipped**. Registered now rather than discovered later.
+  `batch`**, so if E selects bs32 the veto compares a recipe to itself and **the VETO is skipped and
+  reported skipped — while the candidate's OBSERVATIONAL LoTTE row is still read.** The veto being
+  vacuous does not make the out-of-domain observation vacuous, and LoTTE-clean is the only fresh
+  OOD surface before the final run (corrected 2026-09-10; an earlier version of this line said all
+  of read #1 was skipped, contradicting `LOTTE_LOCK.md` in the same commit). Read #1 sits **after
+  the lock and BEFORE the build**, on a screen-dose arm, which is what makes "a veto means the
+  anchor recipe builds" mean anything.
 
 ## Still to do before this is a lock
 

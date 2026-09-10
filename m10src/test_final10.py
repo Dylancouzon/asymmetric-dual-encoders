@@ -56,7 +56,9 @@ def _ev(**kw):
                     "signflip_unit_of": "boot.unit_key",
                     "a": c["a"], "b": c["b"], "partition": c["partition"],
                     "comparator_source_sha256": CONF["comparator_source"]["sha256"],
-                    "draw_plan_sha256": "0" * 64, "qid_sha256": "1" * 64}
+                    "draw_plan_sha256": "0" * 64, "qid_sha256": "1" * 64,
+                    "registry_sha256": F.registry_sha256(),
+                    "signflip_per_dataset_n": dict(_stat(0, cid=cid)["n_by_dataset"])}
     return out
 
 
@@ -213,7 +215,6 @@ def test_decide_REFUSES_evidence_that_does_not_match_the_registered_procedure():
             ({"quantile_method": "linear"}, "quantile_method='linear'"),
             ({"B": 9}, "B=9"),
             ({"k_datasets": 3}, "k_datasets=3"),
-            ({"n_by_dataset": {"scifact": 100}}, "scored datasets"),
             ({"bootstrap_seed": 12345}, "bootstrap_seed=12345")):
         # ONE field mutated on OTHERWISE COMPLETE evidence, and the message must name THAT field.
         # The first version of this test built evidence with no provenance at all, so every case
@@ -226,6 +227,12 @@ def test_decide_REFUSES_evidence_that_does_not_match_the_registered_procedure():
         assert needle in str(exc.value), (needle, str(exc.value))
         assert str(exc.value).count(";") == 0, \
             f"exactly ONE problem should be reported for a single mutation: {exc.value}"
+    # dropping datasets legitimately trips TWO clauses -- the partition check and the
+    # bootstrap-vs-signflip cross-check -- so it is asserted by needle, not by count.
+    ev = _ev(C1b=(0.01, 0.001))
+    ev["C1b"]["stat"]["n_by_dataset"] = {"scifact": 100}
+    with pytest.raises(ValueError, match="scored datasets"):
+        F.decide(ev)
     for p in (-1, 1.5, None, "0.01"):
         ev = _ev(C1b=(0.01, 0.001))
         ev["C1b"]["signflip_p"] = p
@@ -300,10 +307,16 @@ def test_ABSENCE_of_provenance_is_not_equality():
     """`ev.get(k, registered_value)` treated a MISSING key as a match, so evidence carrying no
     sign-flip provenance at all passed the guard."""
     for k in ("signflip_B", "signflip_seed", "signflip_alternative", "signflip_unit_of",
-              "draw_plan_sha256", "qid_sha256"):
+              "signflip_per_dataset_n"):
         ev = _ev(C1b=(0.01, 0.001))
         del ev["C1b"][k]
         with pytest.raises(ValueError, match=f"no '{k}'"):
+            F.decide(ev)
+    # the digests report their absence as a malformed value, which is the same refusal
+    for k in ("draw_plan_sha256", "qid_sha256", "registry_sha256"):
+        ev = _ev(C1b=(0.01, 0.001))
+        del ev["C1b"][k]
+        with pytest.raises(ValueError, match=f"{k}=None"):
             F.decide(ev)
 
 
@@ -468,3 +481,129 @@ def test_an_empty_or_mixed_draw_plan_is_a_ValueError_not_a_StopIteration():
     mixed = dict(good); mixed[conf["partitions"]["clean4"][0]] = short[conf["partitions"]["clean4"][0]]
     with pytest.raises(ValueError, match="replicate counts"):
         F.bootstrap(al, mixed, conf)
+
+
+# ------- the clauses Fable's mutation testing found had NO coverage (16 survivors) --------------
+
+def test_a_float_subclass_cannot_answer_its_own_comparison():
+    """`isinstance(v, float)` admits subclasses and `math.isfinite` reads the underlying C double,
+    so a subclass overriding `__gt__` passed every guard and then decided the comparison itself:
+    `GtAlways(-0.5) > 0` returned True and the conjunct REJECTED (Fable, 2026-09-10). Coercing with
+    `float(v)` returns a new plain float, so the override is never consulted."""
+    class GtAlways(float):
+        def __gt__(self, other):
+            return True
+
+    class LeAlways(float):
+        def __le__(self, other):
+            return True
+
+    ev = _ev(C1b=(0.01, 0.001), C1a=(-0.1, 0.9))
+    ev["C1b"]["stat"]["lower_q025_raw"] = GtAlways(-0.5)
+    ev["C1b"]["stat"]["delta_raw"] = GtAlways(-0.4)
+    assert F.decide(ev)["conjuncts"]["C1b"]["status"] == F.NOT_REJECTED, \
+        "a negative bound must not reject, whatever its type claims"
+    ev = _ev(C1b=(0.01, 0.001), C1a=(-0.1, 0.9))
+    ev["C1b"]["signflip_p"] = LeAlways(0.9)
+    assert F.decide(ev)["conjuncts"]["C1b"]["status"] == F.NOT_REJECTED
+
+
+def test_the_decision_field_must_be_a_plausible_nDCG_difference():
+    """1e300 was accepted and REJECTED; and a lower bound above the point estimate is not a
+    possible bootstrap output."""
+    ev = _ev(C1b=(0.01, 0.001))
+    ev["C1b"]["stat"]["lower_q025_raw"] = 1e300
+    with pytest.raises(ValueError, match=r"outside \[-1, 1\]"):
+        F.decide(ev)
+    ev = _ev(C1b=(0.01, 0.001))
+    ev["C1b"]["stat"]["lower_q025_raw"], ev["C1b"]["stat"]["delta_raw"] = 0.5, -0.3
+    with pytest.raises(ValueError, match="exceeds the point estimate"):
+        F.decide(ev)
+
+
+def test_every_type_that_must_not_be_the_decision_field():
+    from decimal import Decimal
+    from fractions import Fraction
+    for bad in (True, False, None, "0.01", Decimal("0.01"), Fraction(1, 100),
+                float("nan"), float("inf"), float("-inf"), [0.01]):
+        ev = _ev(C1b=(0.01, 0.001))
+        ev["C1b"]["stat"]["lower_q025_raw"] = bad
+        with pytest.raises(ValueError):
+            F.decide(ev)
+    # numpy's float64 IS a float subclass and is legitimate output of our own bootstrap
+    ev = _ev(C1b=(0.01, 0.001), C1a=(-0.1, 0.9))
+    ev["C1b"]["stat"]["lower_q025_raw"] = np.float64(0.01)
+    assert F.decide(ev)["conjuncts"]["C1b"]["status"] == F.REJECTED
+
+
+def test_the_evidence_must_be_labelled_with_its_own_conjunct():
+    for bad in (None, "C1a", "c1b", ""):
+        ev = _ev(C1b=(0.01, 0.001))
+        ev["C1b"]["conjunct"] = bad
+        with pytest.raises(ValueError, match="is labelled conjunct"):
+            F.decide(ev)
+
+
+def test_provenance_MISMATCH_is_refused_not_only_absence():
+    """Only absence was tested; a WRONG value survived mutation."""
+    for k, bad in (("signflip_B", 999), ("signflip_seed", 12345),
+                   ("signflip_alternative", "less"), ("signflip_unit_of", "something-else")):
+        ev = _ev(C1b=(0.01, 0.001))
+        ev["C1b"][k] = bad
+        with pytest.raises(ValueError, match=f"{k}="):
+            F.decide(ev)
+
+
+def test_a_PARTIAL_orientation_change_is_refused_not_only_a_full_swap():
+    for side in ("a", "b"):
+        ev = _ev(C1b=(0.01, 0.001))
+        ev["C1b"][side] = "some-other-system"
+        with pytest.raises(ValueError, match="oriented"):
+            F.decide(ev)
+
+
+def test_a_digest_must_be_a_sha256_not_merely_truthy():
+    for k in ("draw_plan_sha256", "qid_sha256", "registry_sha256"):
+        for bad in ("", "abc", None, 0, "0" * 63):
+            ev = _ev(C1b=(0.01, 0.001))
+            ev["C1b"][k] = bad
+            with pytest.raises(ValueError, match=f"{k}="):
+                F.decide(ev)
+
+
+def test_query_counts_must_be_positive_ints_and_present():
+    for bad in ({}, {"nfcorpus": True}, {"nfcorpus": 1.5}, {"nfcorpus": -1}):
+        ev = _ev(C1b=(0.01, 0.001))
+        ev["C1b"]["stat"]["n_by_dataset"] = bad
+        with pytest.raises(ValueError):
+            F.decide(ev)
+
+
+def test_the_two_halves_cross_check_is_REQUIRED_not_skipped_when_absent():
+    """Fable mutation S1: dropping `signflip_per_dataset_n` made the check vanish silently — the
+    exact `is not None` pattern named twenty lines above it in the same file, in the same batch."""
+    ev = _ev(C1b=(0.01, 0.001))
+    del ev["C1b"]["signflip_per_dataset_n"]
+    with pytest.raises(ValueError, match="no 'signflip_per_dataset_n'"):
+        F.decide(ev)
+
+
+def test_a_malformed_descriptive_record_on_a_NOT_TESTED_conjunct_is_still_refused():
+    """The guard runs on NOT_TESTED conjuncts too, so their descriptive numbers cannot be junk."""
+    ev = _ev(C1b=(0.01, 0.001), C1a=(-0.002, 0.4), C2a=(0.01, 0.001))
+    ev["C2a"]["stat"]["quantile"] = 0.0125
+    with pytest.raises(ValueError, match="quantile=0.0125"):
+        F.decide(ev)
+
+
+def test_the_primitives_themselves_refuse_non_finite_and_out_of_range_scores():
+    """The guard lives in `align_partition` — the one object BOTH halves consume — so no other
+    route reaches `bootstrap` or `signflip` with a NaN (Fable, 2026-09-10)."""
+    ds = F.cfg()["partitions"]["clean4"]
+    for bad in (float("nan"), float("inf"), 5.0, -3.0):
+        full = _aligned(ds, n=20)
+        a = {d: dict(zip(v[0], v[1])) for d, v in full.items()}
+        b = {d: dict(zip(v[0], v[2])) for d, v in full.items()}
+        a[ds[0]][0] = bad
+        with pytest.raises(ValueError, match="non-finite|outside"):
+            F.align_partition(a, b, ds)

@@ -120,6 +120,19 @@ def align_partition(a, b, datasets):
     for ds, (qids, x, y) in aligned.items():
         if not (len(qids) == len(x) == len(y)) or len(qids) == 0:
             raise ValueError(f"{ds}: ragged or empty aligned arrays")
+        # HERE, not in `evidence_for`: this is the one object both halves of the pass rule consume,
+        # so guarding it upstream left `bootstrap` and `signflip` reachable with NaN by any other
+        # route (Fable, 2026-09-10). A NaN makes the bound NaN — and `nan > 0` is False — while
+        # every permuted sign-flip statistic is NaN so the p-value returns its MINIMUM.
+        for side, arr in (("a", x), ("b", y)):
+            if not np.isfinite(arr).all():
+                raise ValueError(f"{ds}: side {side} has {int((~np.isfinite(arr)).sum())} "
+                                 f"non-finite per-query score(s). A NaN here silently flips a "
+                                 f"rejection to a non-rejection.")
+            if arr.min() < 0.0 or arr.max() > 1.0:
+                raise ValueError(f"{ds}: side {side} has scores outside [0, 1] "
+                                 f"(min {arr.min():.4g}, max {arr.max():.4g}); these are nDCG@10 "
+                                 f"values and a mis-scaled system would move the macro arbitrarily")
     return aligned
 
 
@@ -201,6 +214,18 @@ def assert_evidence_matches_registry(cid, ev, conf):
             problems.append(f"no {k!r} field")
         elif isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
             problems.append(f"{k}={v!r} is not a finite number")
+        elif abs(float(v)) > 1.0:
+            # every quantity here is a difference of nDCG@10 values, so |v| <= 1 by construction.
+            # 1e300 was accepted and REJECTED (Fable, 2026-09-10).
+            problems.append(f"{k}={v!r} is outside [-1, 1]; it is a difference of nDCG@10 values")
+    lo, de = st.get(b["decision_field"]), st.get("delta_raw")
+    if isinstance(lo, (int, float)) and isinstance(de, (int, float)) and not isinstance(lo, bool) \
+            and not isinstance(de, bool) and math.isfinite(lo) and math.isfinite(de) \
+            and float(lo) > float(de):
+        # a one-sided LOWER bound above the point estimate is not a possible bootstrap output;
+        # lower=0.5 with delta=-0.3 was accepted and REJECTED.
+        problems.append(f"lower bound {lo!r} exceeds the point estimate {de!r}, which no bootstrap "
+                        f"can produce")
     if ev.get("conjunct") != cid:
         problems.append(f"evidence is labelled conjunct {ev.get('conjunct')!r}, not {cid!r}")
     for k, want in (("quantile", b["quantile"]), ("quantile_method", b["quantile_method"]),
@@ -237,24 +262,39 @@ def assert_evidence_matches_registry(cid, ev, conf):
         problems.append(f"partition={ev.get('partition')!r}, registered {c['partition']!r}")
     if ev.get("comparator_source_sha256") != conf["comparator_source"]["sha256"]:
         problems.append("comparator_source_sha256 does not match the registry")
-    for k in ("draw_plan_sha256", "qid_sha256"):
-        if not ev.get(k):
-            problems.append(f"no {k!r} in the evidence")
+    for k in ("draw_plan_sha256", "qid_sha256", "registry_sha256"):
+        v = ev.get(k)
+        if not isinstance(v, str) or len(v) != 64:
+            problems.append(f"{k}={v!r} is not a sha256 hex digest")
     counts = st.get("n_by_dataset") or {}
-    if any(not isinstance(v, int) or v <= 0 for v in counts.values()):
+    if not counts:
+        problems.append("no 'n_by_dataset' in the stat")
+    if any(isinstance(v, bool) or not isinstance(v, int) or v <= 0 for v in counts.values()):
         problems.append(f"n_by_dataset has non-positive or non-integer counts: {counts}")
-    # the two halves of the pass rule must have scored the same queries
-    sf_n = ev.get("signflip_per_dataset_n")
-    if sf_n is not None and sf_n != counts:
-        problems.append(f"the bootstrap scored {counts} and the sign-flip scored {sf_n}")
+    # The two halves of the pass rule must have scored the same queries. REQUIRED, not
+    # `is not None` — dropping the field silently skipped the check, which is the exact
+    # "ABSENCE IS NOT EQUALITY" pattern named twenty lines above and re-created here in the same
+    # batch (Fable mutation S1, 2026-09-10).
+    if "signflip_per_dataset_n" not in ev:
+        problems.append("no 'signflip_per_dataset_n' in the evidence")
+    elif ev["signflip_per_dataset_n"] != counts:
+        problems.append(f"the bootstrap scored {counts} and the sign-flip scored "
+                        f"{ev['signflip_per_dataset_n']}")
     if problems:
         raise ValueError(f"{cid}: evidence does not match the registered procedure — "
                          + "; ".join(problems))
 
 
 def conjunct_rejects(stat, sf_p, alpha):
-    """The registered pass rule: BOTH the bootstrap bound and the sign-flip test, not either."""
-    return bool(stat["lower_q025_raw"] > 0 and sf_p <= alpha)
+    """The registered pass rule: BOTH the bootstrap bound and the sign-flip test, not either.
+
+    Every operand is coerced to a PLAIN float before comparison. `isinstance(v, float)` admits
+    subclasses, and `math.isfinite` reads the underlying C double, so a `float` subclass overriding
+    `__gt__` (or `__le__`) passed every guard and then answered the comparison itself:
+    `GtAlways(-0.5) > 0` returned True and the conjunct REJECTED (Fable, 2026-09-10). `float(v)`
+    returns a new plain float, so the overridden operator is never consulted.
+    """
+    return bool(float(stat["lower_q025_raw"]) > 0.0 and float(sf_p) <= float(alpha))
 
 
 def decide(evidence, conf=None, *, uncanonical_ok=False):
@@ -365,17 +405,6 @@ def evidence_for(cid, scores, conf=None):
         if sysname not in scores:
             raise ValueError(f"{cid}: no scores supplied for {sysname!r}")
     aligned = align_partition(scores[c["a"]], scores[c["b"]], datasets)
-    # NON-FINITE SCORES. A single NaN — one unscored query, a divide-by-zero nDCG, a missing qrel —
-    # propagates through `np.quantile` to a NaN bound, and `nan > 0` is False, so a true positive
-    # becomes NOT_REJECTED. Worse, every permuted sign-flip statistic is NaN too, so `t >= t_obs`
-    # never fires and the p-value comes back at its MINIMUM. No exception, no flag: it would decide
-    # the release against the candidate and the record would look valid (Fable, 2026-09-10).
-    for ds, (qids, x, y) in aligned.items():
-        for side, arr in ((c["a"], x), (c["b"], y)):
-            if not np.isfinite(arr).all():
-                bad = int((~np.isfinite(arr)).sum())
-                raise ValueError(f"{cid}/{ds}: {side} has {bad} non-finite per-query score(s). "
-                                 f"A NaN here silently flips a rejection to a non-rejection.")
     plan, plan_digest = draw_plan(aligned, B=conf["bootstrap"]["B"], seed=conf["bootstrap"]["seed"])
     stat = bootstrap(aligned, plan, conf)
     qid_digest = hashlib.sha256()
