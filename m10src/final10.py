@@ -53,6 +53,36 @@ def cfg():
     return json.loads(REGISTRY.read_text())
 
 
+def registry_sha256():
+    return hashlib.sha256(REGISTRY.read_bytes()).hexdigest()
+
+
+def canonical(conf=None, *, uncanonical_ok=False):
+    """-> the registry, refusing any configuration that is not the file on disk.
+
+    `decide(conf=...)` used to validate evidence against the CALLER'S conf. Codex set
+    `alpha_per_conjunct` to 1.0 on 2026-09-10 and a p-value of 0.9 was accepted as REJECTED — the
+    guard was checking the evidence against a doctored ruler. Every production entry point now
+    resolves its configuration through here.
+
+    `uncanonical_ok=True` exists for the tests that must mutate the registry to prove a rule fires
+    (a disagreeing sequence, a missing `selects` field). It is keyword-only and loudly named so it
+    is greppable, and no production path passes it.
+    """
+    if conf is None:
+        return cfg()
+    if uncanonical_ok:
+        return conf
+    on_disk = cfg()
+    if conf != on_disk:
+        raise ValueError(
+            "refusing a configuration that is not `m10/final_run_registry.json` on disk "
+            f"(sha256 {registry_sha256()[:12]}…). The decision constants are not caller-supplied: "
+            "validating evidence against a caller's ruler is not validation. Pass "
+            "`uncanonical_ok=True` only from a test that is proving a rule fires.")
+    return conf
+
+
 def sequence(conf=None):
     """The registered order, read from the registry and cross-checked against each conjunct's own
     `order` field — two statements of the same thing that must not be able to disagree."""
@@ -85,21 +115,22 @@ def align_partition(a, b, datasets):
     return aligned
 
 
-def bootstrap(aligned, plan, quantile, method="inverted_cdf", conf=None):
+def bootstrap(aligned, plan, conf):
     """Equal-weight macro of per-query differences over a partition of ANY size, full draw vector
     retained. `m9src.final_stats.bootstrap` raises unless k == 6, which is why this exists.
 
-    `conf=None` is permitted ONLY so a test can demonstrate the banned method's direction. Pass the
-    registry in every real call and a non-registered quantile or method is refused here rather than
-    being labelled `lower_q025_raw` regardless of how it was computed.
+    **`conf` is MANDATORY and the quantile/method come from it — they are not parameters.** The
+    previous signature took them as arguments and made enforcement optional, so the unsafe API
+    survived beside the safe one and a caller could still label an arbitrary quantile
+    `lower_q025_raw` (Codex, 2026-09-10). A value can now only carry that name if it was computed
+    the registered way; the banned method's DIRECTION is demonstrated in the tests with numpy
+    directly, which needs no unsafe path here.
     """
-    if conf is not None:
-        b = conf["bootstrap"]
-        if quantile != b["quantile"] or method != b["quantile_method"]:
-            raise ValueError(f"refusing to compute the decision field at quantile={quantile!r} "
-                             f"method={method!r}; registered {b['quantile']!r}/"
-                             f"{b['quantile_method']!r}. `linear` interpolates toward the next "
-                             f"order statistic and is weakly MORE PERMISSIVE.")
+    b = conf["bootstrap"]
+    quantile, method = b["quantile"], b["quantile_method"]
+    if int(next(iter({int(v.shape[0]) for v in plan.values()}), 0)) != int(b["B"]):
+        raise ValueError(f"draw plan has {next(iter({int(v.shape[0]) for v in plan.values()}))} "
+                         f"replicates; the registry requires B = {b['B']}")
     k = len(aligned)
     if k == 0:
         raise ValueError("empty partition")
@@ -124,6 +155,7 @@ def bootstrap(aligned, plan, quantile, method="inverted_cdf", conf=None):
         # HIGHER, more permissive bound.
         "lower_q025_raw": float(np.quantile(draws, quantile, method=method)),
         "quantile": quantile, "quantile_method": method, "B": int(B), "k_datasets": k,
+        "bootstrap_seed": int(b["seed"]),
         "draws_sha256": hashlib.sha256(np.ascontiguousarray(draws).tobytes()).hexdigest(),
         "ci95_raw_reporting_only": [float(np.quantile(draws, 0.025, method=method)),
                                     float(np.quantile(draws, 0.975, method=method))],
@@ -162,10 +194,35 @@ def assert_evidence_matches_registry(cid, ev, conf):
     if got != tuple(sorted(part)):
         problems.append(f"scored datasets {got} != partition {tuple(sorted(part))}")
     p = ev.get("signflip_p")
-    if not isinstance(p, (int, float)) or not (0.0 <= float(p) <= 1.0):
+    # `bool` is a subclass of `int`, so `isinstance(True, int)` is True and `False` behaved as
+    # p = 0 and REJECTED. Codex reproduced that on 2026-09-10.
+    if isinstance(p, bool) or not isinstance(p, (int, float)) or not (0.0 <= float(p) <= 1.0):
         problems.append(f"signflip_p={p!r} is not a probability")
-    if ev.get("signflip_B", sf["B"]) != sf["B"] or ev.get("signflip_seed", sf["seed"]) != sf["seed"]:
-        problems.append("sign-flip B/seed do not match the registry")
+    # ABSENCE IS NOT EQUALITY. `ev.get(k, registered)` accepted a missing key as a match, so
+    # evidence carrying no sign-flip provenance at all passed.
+    for k, want in (("signflip_B", sf["B"]), ("signflip_seed", sf["seed"]),
+                    ("signflip_alternative", sf["alternative"]),
+                    ("signflip_unit_of", "boot.unit_key")):
+        if k not in ev:
+            problems.append(f"no {k!r} in the evidence")
+        elif ev[k] != want:
+            problems.append(f"{k}={ev[k]!r}, registered {want!r}")
+    if st.get("bootstrap_seed") != b["seed"]:
+        problems.append(f"bootstrap_seed={st.get('bootstrap_seed')!r}, registered {b['seed']!r}")
+    # ORIENTATION. A reversed contrast with conforming metadata was otherwise indistinguishable.
+    if ev.get("a") != c["a"] or ev.get("b") != c["b"]:
+        problems.append(f"oriented {ev.get('a')!r} minus {ev.get('b')!r}, registered "
+                        f"{c['a']!r} minus {c['b']!r}")
+    if ev.get("partition") != c["partition"]:
+        problems.append(f"partition={ev.get('partition')!r}, registered {c['partition']!r}")
+    if ev.get("comparator_source_sha256") != conf["comparator_source"]["sha256"]:
+        problems.append("comparator_source_sha256 does not match the registry")
+    for k in ("draw_plan_sha256", "qid_sha256"):
+        if not ev.get(k):
+            problems.append(f"no {k!r} in the evidence")
+    counts = st.get("n_by_dataset") or {}
+    if any(not isinstance(v, int) or v <= 0 for v in counts.values()):
+        problems.append(f"n_by_dataset has non-positive or non-integer counts: {counts}")
     if problems:
         raise ValueError(f"{cid}: evidence does not match the registered procedure — "
                          + "; ".join(problems))
@@ -176,7 +233,7 @@ def conjunct_rejects(stat, sf_p, alpha):
     return bool(stat["lower_q025_raw"] > 0 and sf_p <= alpha)
 
 
-def decide(evidence, conf=None):
+def decide(evidence, conf=None, *, uncanonical_ok=False):
     """{conjunct_id: {"stat": <bootstrap dict>, "signflip_p": float}} -> the gatekeeping verdict.
 
     `evidence` need not contain every conjunct: the sequence stops at the first non-rejection, so
@@ -184,18 +241,31 @@ def decide(evidence, conf=None):
     sequence never reached it is `NOT_TESTED`; a conjunct that is absent although the sequence DID
     reach it is an error, not a silent skip.
     """
-    conf = conf or cfg()
+    conf = canonical(conf, uncanonical_ok=uncanonical_ok)
     order = sequence(conf)
     alpha = conf["sequence"]["alpha_per_conjunct"]
     out, stopped = {}, False
     for cid in order:
         if stopped:
-            out[cid] = {"status": NOT_TESTED,
-                        "partition": conf["conjuncts"][cid]["partition"],
-                        "bar_comparator": conf["conjuncts"][cid]["b"],
-                        "gate": conf["conjuncts"][cid]["gate"],
-                        "_why": "the sequence stopped at an earlier non-rejection; this conjunct "
-                                "carries NO verdict, and is never reported as failed"}
+            e = {"status": NOT_TESTED,
+                 "partition": conf["conjuncts"][cid]["partition"],
+                 "bar_comparator": conf["conjuncts"][cid]["b"],
+                 "gate": conf["conjuncts"][cid]["gate"],
+                 "_why": "the sequence stopped at an earlier non-rejection; this conjunct carries "
+                         "NO verdict, and is never reported as failed"}
+            # The executor scores all four in one transaction — the access is spent either way, so
+            # the untested conjuncts' descriptive numbers are free. Reporting them (clearly
+            # labelled) is better than a blank row a reader fills in with a failure that was never
+            # measured. This is what `implementation.executor_contract` requires, and the code
+            # agreeing with it is the fix for a contract that was otherwise fictional (Codex).
+            ev = evidence.get(cid)
+            if ev is not None:
+                assert_evidence_matches_registry(cid, ev, conf)
+                e["descriptive_delta_raw"] = ev["stat"]["delta_raw"]
+                e["descriptive_lower_q025_raw"] = ev["stat"]["lower_q025_raw"]
+                e["_descriptive_note"] = ("computed but NOT TESTED — no inferential claim, and it "
+                                          "may not be quoted as a bound")
+            out[cid] = e
             continue
         ev = evidence.get(cid)
         if ev is None:
@@ -231,25 +301,84 @@ def decide(evidence, conf=None):
     }
 
 
-def signflip_p(a, b, datasets, conf=None):
-    """The sign-flip conjunct on one partition, at the registered B/seed/alternative.
+def signflip(aligned, conf):
+    """The sign-flip conjunct, computed from the SAME validated `aligned` object the bootstrap uses.
 
-    It runs `align_partition` FIRST and scores only what that validated — the reviewers found this
-    function filtering to a subset and calling the primitive directly, so a dataset missing from
-    both inputs silently produced a p-value over three datasets while `align_partition` (the other
-    half of the same pass rule) would have refused. One invariant enforced in one place is not
-    enforced; both halves of a conjunctive rule must refuse.
+    Two holes closed here (Codex, 2026-09-10). The partition is no longer a caller argument — a
+    caller could pass a valid three-dataset list and succeed — because `aligned` arrives already
+    validated by `align_partition` against the conjunct's REGISTERED partition. And it returns the
+    primitive's full provenance instead of a bare float, so `R`, the seed, the alternative and the
+    strata are on the record rather than discarded.
     """
-    conf = conf or cfg()
     sf = conf["signflip"]
-    aligned = align_partition(a, b, datasets)                # raises on anything short or empty
     sub_a = {ds: dict(zip(v[0], v[1])) for ds, v in aligned.items()}
     sub_b = {ds: dict(zip(v[0], v[2])) for ds, v in aligned.items()}
     res = boot.signflip_dep(sub_a, sub_b, R=sf["B"], seed=sf["seed"],
                             alternative=sf["alternative"], strict=True,
                             unit_of=boot.unit_key)           # explicit, as m9src/final_stats does
-    return float(res["p"])
+    return {"signflip_p": float(res["p"]), "signflip_B": int(res["R"]),
+            "signflip_seed": int(res["seed"]), "signflip_alternative": res["alternative"],
+            "signflip_unit_of": "boot.unit_key", "signflip_strata": res["strata"],
+            "signflip_shared_units": int(res["shared_units"])}
 
 
-__all__ = ["cfg", "sequence", "align_partition", "bootstrap", "conjunct_rejects", "decide",
-           "signflip_p", "draw_plan", "REJECTED", "NOT_REJECTED", "NOT_TESTED"]
+def evidence_for(cid, scores, conf=None):
+    """**The one production path.** `{system: {dataset: {qid: score}}}` -> the evidence for `cid`.
+
+    Codex's blocking item 1, 2026-09-10: validating caller-supplied evidence is structurally weaker
+    than not letting the caller supply it. Everything that could be forged is now DERIVED from the
+    registry given `cid` — which systems, in which orientation, over which partition, at which
+    quantile, method, B and seeds. The caller supplies raw per-query scores and nothing else.
+
+    It emits complete provenance: the plan digest, the qid digest, the orientation, the partition,
+    and both statistics' full configuration.
+    """
+    conf = canonical(conf)
+    c = conf["conjuncts"][cid]
+    datasets = conf["partitions"][c["partition"]]
+    for sysname in (c["a"], c["b"]):
+        if sysname not in scores:
+            raise ValueError(f"{cid}: no scores supplied for {sysname!r}")
+    aligned = align_partition(scores[c["a"]], scores[c["b"]], datasets)
+    plan, plan_digest = draw_plan(aligned, B=conf["bootstrap"]["B"], seed=conf["bootstrap"]["seed"])
+    stat = bootstrap(aligned, plan, conf)
+    qid_digest = hashlib.sha256()
+    for ds in sorted(aligned):
+        qid_digest.update(ds.encode())
+        qid_digest.update(repr(list(aligned[ds][0])).encode())
+    ev = {"stat": stat, "conjunct": cid, "partition": c["partition"],
+          "orientation": f"{c['a']} minus {c['b']}", "a": c["a"], "b": c["b"],
+          "draw_plan_sha256": plan_digest, "qid_sha256": qid_digest.hexdigest(),
+          "comparator_source_sha256": conf["comparator_source"]["sha256"]}
+    ev.update(signflip(aligned, conf))
+    return ev
+
+
+def headline(verdict, conf=None, *, uncanonical_ok=False):
+    """-> the registered sentences the outcome permits, in sequence order, plus what is forbidden.
+
+    A production function, because "the report writer will pick the right sentence" is not a
+    control. A sentence is emitted ONLY for a conjunct whose status is REJECTED — never for one
+    that was NOT_TESTED, which is the failure mode that would claim what was never measured.
+    """
+    conf = canonical(conf, uncanonical_ok=uncanonical_ok)
+    hv = conf["headline_verbatim"]
+    out = []
+    for cid in sequence(conf):
+        if verdict["conjuncts"][cid]["status"] != REJECTED:
+            continue
+        key = next((k for k in hv if k.startswith(cid + "_")), None)
+        if key is None:
+            raise ValueError(f"{cid} REJECTED but no registered sentence exists for it")
+        out.append({"conjunct": cid, "sentence": hv[key]})
+    return {"emit": out,
+            "emit_nothing_because": None if out else "no conjunct rejected",
+            "must_not": hv["_must_not"],
+            "must_accompany": hv["_stella_disclosure"],
+            "_rule": "one sentence per REJECTED conjunct, in sequence order. A conjunct that was "
+                     "NOT_TESTED emits nothing — it has no verdict."}
+
+
+__all__ = ["cfg", "canonical", "registry_sha256", "sequence", "align_partition", "bootstrap",
+           "signflip", "evidence_for", "conjunct_rejects", "assert_evidence_matches_registry",
+           "decide", "headline", "draw_plan", "REJECTED", "NOT_REJECTED", "NOT_TESTED"]

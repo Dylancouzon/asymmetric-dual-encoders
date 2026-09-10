@@ -19,6 +19,16 @@ import final10 as F
 CONF = F.cfg()
 
 
+def _scores(cid, shift, n=40, seed=0):
+    """Synthetic per-query scores for a conjunct's two systems, on its REGISTERED partition."""
+    c = CONF["conjuncts"][cid]
+    ds = CONF["partitions"][c["partition"]]
+    rng = np.random.default_rng(seed)
+    return {c["a"]: {d: {i: float(v) for i, v in enumerate(rng.normal(0.5 + shift, 0.1, n))}
+                     for d in ds},
+            c["b"]: {d: {i: float(v) for i, v in enumerate(rng.normal(0.5, 0.1, n))} for d in ds}}
+
+
 def _stat(lower, delta=None, cid="C1b", **override):
     """A REGISTRY-CONFORMANT stat dict. It has to be, now: `assert_evidence_matches_registry`
     refuses evidence whose metadata does not match the registered procedure, and the helper that
@@ -28,14 +38,26 @@ def _stat(lower, delta=None, cid="C1b", **override):
     st = {"lower_q025_raw": lower,
           "delta_raw": delta if delta is not None else lower + 0.01,
           "quantile": b["quantile"], "quantile_method": b["quantile_method"], "B": b["B"],
+          "bootstrap_seed": b["seed"],
           "k_datasets": len(part), "n_by_dataset": {ds: 100 for ds in part}}
     st.update(override)
     return st
 
 
 def _ev(**kw):
-    """{cid: (lower, p)} -> the evidence dict."""
-    return {cid: {"stat": _stat(l, cid=cid), "signflip_p": p} for cid, (l, p) in kw.items()}
+    """{cid: (lower, p)} -> registry-conformant evidence, including every provenance field the
+    guard now requires. It has to be complete: the guard refuses absence as well as mismatch."""
+    sf, out = CONF["signflip"], {}
+    for cid, (l, p) in kw.items():
+        c = CONF["conjuncts"][cid]
+        out[cid] = {"stat": _stat(l, cid=cid), "signflip_p": p,
+                    "signflip_B": sf["B"], "signflip_seed": sf["seed"],
+                    "signflip_alternative": sf["alternative"],
+                    "signflip_unit_of": "boot.unit_key",
+                    "a": c["a"], "b": c["b"], "partition": c["partition"],
+                    "comparator_source_sha256": CONF["comparator_source"]["sha256"],
+                    "draw_plan_sha256": "0" * 64, "qid_sha256": "1" * 64}
+    return out
 
 
 # ---------------------------------------------------------------- the sequence -------------------
@@ -117,13 +139,15 @@ def _aligned(datasets, n=40, shift=0.05, seed=0):
 def test_the_bootstrap_gate_is_the_250th_order_statistic_not_an_interpolated_one():
     """`linear` interpolates toward the next order statistic and returns a weakly MORE PERMISSIVE
     bound — the defect caught in M9 by review before any six-set number existed."""
-    al = _aligned(F.cfg()["partitions"]["clean4"])
-    plan, _ = F.draw_plan(al, B=2000, seed=900)
-    inv = F.bootstrap(al, plan, 0.025, method="inverted_cdf")
-    lin = F.bootstrap(al, plan, 0.025, method="linear")
-    assert lin["lower_q025_raw"] >= inv["lower_q025_raw"], \
-        "linear must be the weakly more permissive one, which is why it is banned"
-    assert inv["quantile_method"] == "inverted_cdf"
+    # The DIRECTION is demonstrated with numpy directly. `bootstrap()` no longer takes a quantile
+    # or a method at all, so there is no unsafe path here to demonstrate it through.
+    rng = np.random.default_rng(0)
+    for _ in range(200):
+        draws = rng.normal(0.01, 0.005, 10_000)
+        inv = float(np.quantile(draws, 0.025, method="inverted_cdf"))
+        lin = float(np.quantile(draws, 0.025, method="linear"))
+        assert lin >= inv, "linear must be the weakly MORE PERMISSIVE one, which is why it is banned"
+        assert inv == float(np.sort(draws)[249]), "inverted_cdf IS the 250th order statistic"
     conf = F.cfg()["bootstrap"]
     assert int(conf["quantile"] * conf["B"]) == 250
 
@@ -133,9 +157,11 @@ def test_the_bootstrap_works_on_BOTH_partition_sizes():
     for part in ("clean4", "all6"):
         ds = F.cfg()["partitions"][part]
         al = _aligned(ds)
-        plan, _ = F.draw_plan(al, B=500, seed=900)
-        r = F.bootstrap(al, plan, 0.025)
+        conf = F.cfg()
+        plan, _ = F.draw_plan(al, B=conf["bootstrap"]["B"], seed=conf["bootstrap"]["seed"])
+        r = F.bootstrap(al, plan, conf)
         assert r["k_datasets"] == len(ds) and set(r["per_dataset_delta_raw"]) == set(ds)
+        assert r["quantile"] == 0.025 and r["quantile_method"] == "inverted_cdf"
 
 
 def test_a_partition_missing_a_dataset_RAISES_and_does_not_renormalize():
@@ -196,44 +222,34 @@ def test_decide_REFUSES_evidence_that_does_not_match_the_registered_procedure():
             F.decide({"C1b": {"stat": _stat(0.01), "signflip_p": p}})
 
 
-def test_bootstrap_REFUSES_a_non_registered_quantile_or_method_when_given_the_registry():
-    """The direction test proves `linear` is more permissive; this proves the code will not compute
-    it. A value named `lower_q025_raw` that was not computed at 0.025 by `inverted_cdf` is a lie in
-    the field name."""
+def test_bootstrap_takes_no_quantile_argument_at_all_and_refuses_a_wrong_sized_plan():
+    """The unsafe API is gone rather than guarded: there is no parameter through which an arbitrary
+    quantile or method could be labelled `lower_q025_raw`. And a plan whose replicate count is not
+    the registered B is refused, which the old test violated without noticing (it used B=200
+    against a registry requiring 10,000)."""
+    import inspect
+    params = list(inspect.signature(F.bootstrap).parameters)
+    assert params == ["aligned", "plan", "conf"], params
     al = _aligned(F.cfg()["partitions"]["clean4"])
-    plan, _ = F.draw_plan(al, B=200, seed=900)
-    conf = F.cfg()
-    for q, m in ((0.0125, "inverted_cdf"), (0.025, "linear")):
-        with pytest.raises(ValueError, match="refusing to compute"):
-            F.bootstrap(al, plan, q, method=m, conf=conf)
-    F.bootstrap(al, plan, 0.025, method="inverted_cdf", conf=conf)      # the registered pair passes
+    short, _ = F.draw_plan(al, B=200, seed=900)
+    with pytest.raises(ValueError, match="replicates"):
+        F.bootstrap(al, short, F.cfg())
 
 
-def test_signflip_p_refuses_a_short_partition_exactly_as_align_partition_does():
-    """Both halves of a conjunctive pass rule must refuse. The reviewers found `signflip_p`
-    filtering to a subset and calling the primitive directly, so a dataset missing from BOTH inputs
-    silently produced a p-value over three datasets."""
-    ds = F.cfg()["partitions"]["clean4"]
-    full = _aligned(ds, n=30)
-    a = {d: dict(zip(v[0], v[1])) for d, v in full.items()}
-    b = {d: dict(zip(v[0], v[2])) for d, v in full.items()}
-    p_ok = F.signflip_p(a, b, ds)
-    assert 0.0 <= p_ok <= 1.0
-    a.pop(ds[0]); b.pop(ds[0])
-    with pytest.raises(ValueError, match="must be impossible"):
-        F.signflip_p(a, b, ds)
-
-
-def test_signflip_p_actually_runs_the_primitive_on_both_partition_sizes():
-    """It had no executing test at all, which is how a wrong return shape would have survived."""
+def test_signflip_consumes_the_SAME_aligned_object_and_returns_full_provenance():
+    """The partition is no longer a caller argument — `aligned` arrives already validated against
+    the conjunct's REGISTERED partition, so a caller cannot pass a valid three-dataset list. And it
+    returns `R`, the seed, the alternative and the strata instead of discarding them."""
     for part in ("clean4", "all6"):
         ds = F.cfg()["partitions"][part]
-        full = _aligned(ds, n=25, shift=0.2)
-        a = {d: dict(zip(v[0], v[1])) for d, v in full.items()}
-        b = {d: dict(zip(v[0], v[2])) for d, v in full.items()}
-        p = F.signflip_p(a, b, ds)
-        assert isinstance(p, float) and 0.0 <= p <= 1.0
-        assert p < 0.5, "a large positive shift should not look null"
+        al = _aligned(ds, n=25, shift=0.2)
+        r = F.signflip(al, F.cfg())
+        assert 0.0 <= r["signflip_p"] <= 1.0 and r["signflip_p"] < 0.5
+        assert r["signflip_B"] == F.cfg()["signflip"]["B"]
+        assert r["signflip_seed"] == F.cfg()["signflip"]["seed"]
+        assert r["signflip_alternative"] == "greater"
+        assert r["signflip_unit_of"] == "boot.unit_key"
+        assert len(r["signflip_strata"]) == len(ds)
 
 
 def test_NOT_TESTED_entries_still_identify_themselves():
@@ -243,3 +259,128 @@ def test_NOT_TESTED_entries_still_identify_themselves():
     for c in d["not_tested"]:
         e = d["conjuncts"][c]
         assert e["partition"] and e["gate"] and e["bar_comparator"]
+
+
+# ------------------------- the attacks Codex REPRODUCED on 2026-09-10 ---------------------------
+
+def test_a_doctored_registry_cannot_be_handed_to_decide():
+    """Codex set `alpha_per_conjunct` to 1.0 and a p-value of 0.9 was accepted as REJECTED. The
+    guard was checking the evidence against the CALLER'S ruler."""
+    bad = F.cfg()
+    bad["sequence"]["alpha_per_conjunct"] = 1.0
+    with pytest.raises(ValueError, match="not .m10/final_run_registry.json. on disk"):
+        F.decide(_ev(C1b=(0.01, 0.9)), bad)
+    # and the same evidence is refused under the real registry
+    d = F.decide(_ev(C1b=(0.01, 0.9), C1a=(-0.1, 0.9)))
+    assert d["conjuncts"]["C1b"]["status"] == F.NOT_REJECTED, "p = 0.9 must not reject at 0.025"
+
+
+def test_False_is_not_a_probability():
+    """`bool` is a subclass of `int`, so `isinstance(True, int)` is True. `False` slipped through
+    and behaved as p = 0, i.e. it REJECTED. Codex reproduced it."""
+    for p in (False, True):
+        ev = _ev(C1b=(0.01, 0.001))
+        ev["C1b"]["signflip_p"] = p
+        with pytest.raises(ValueError, match="not a probability"):
+            F.decide(ev)
+
+
+def test_ABSENCE_of_provenance_is_not_equality():
+    """`ev.get(k, registered_value)` treated a MISSING key as a match, so evidence carrying no
+    sign-flip provenance at all passed the guard."""
+    for k in ("signflip_B", "signflip_seed", "signflip_alternative", "signflip_unit_of",
+              "draw_plan_sha256", "qid_sha256"):
+        ev = _ev(C1b=(0.01, 0.001))
+        del ev["C1b"][k]
+        with pytest.raises(ValueError, match=f"no '{k}'"):
+            F.decide(ev)
+
+
+def test_a_REVERSED_contrast_with_conforming_metadata_is_refused():
+    """The orientation was unchecked, so b-minus-a could be relabelled as a-minus-b."""
+    ev = _ev(C1b=(0.01, 0.001))
+    ev["C1b"]["a"], ev["C1b"]["b"] = ev["C1b"]["b"], ev["C1b"]["a"]
+    with pytest.raises(ValueError, match="oriented"):
+        F.decide(ev)
+
+
+def test_the_wrong_partition_and_a_stale_comparator_are_refused():
+    ev = _ev(C1b=(0.01, 0.001))
+    ev["C1b"]["partition"] = "all6"
+    with pytest.raises(ValueError, match="partition="):
+        F.decide(ev)
+    ev = _ev(C1b=(0.01, 0.001))
+    ev["C1b"]["comparator_source_sha256"] = "0" * 64
+    with pytest.raises(ValueError, match="comparator_source_sha256"):
+        F.decide(ev)
+
+
+def test_invented_query_counts_are_refused():
+    ev = _ev(C1b=(0.01, 0.001))
+    ev["C1b"]["stat"]["n_by_dataset"] = {d: 0 for d in ev["C1b"]["stat"]["n_by_dataset"]}
+    with pytest.raises(ValueError, match="non-positive"):
+        F.decide(ev)
+
+
+# ------------------------------- the one production path, end to end ----------------------------
+
+def test_evidence_for_derives_everything_from_the_registry():
+    """The structural fix: the caller supplies raw per-query scores and NOTHING else. There is no
+    parameter through which a partition, an orientation, a quantile, a method or a seed could be
+    chosen, so there is nothing to forge."""
+    import inspect
+    assert list(inspect.signature(F.evidence_for).parameters) == ["cid", "scores", "conf"]
+    ev = F.evidence_for("C1b", _scores("C1b", shift=0.05))
+    c = F.cfg()["conjuncts"]["C1b"]
+    assert ev["a"] == c["a"] and ev["b"] == c["b"] and ev["partition"] == "clean4"
+    assert ev["stat"]["quantile"] == 0.025 and ev["stat"]["quantile_method"] == "inverted_cdf"
+    assert ev["stat"]["B"] == 10_000 and ev["stat"]["k_datasets"] == 4
+    assert len(ev["draw_plan_sha256"]) == 64 and len(ev["qid_sha256"]) == 64
+    # and it passes its own guard, which is the point
+    F.assert_evidence_matches_registry("C1b", ev, F.cfg())
+
+
+def test_evidence_for_is_reproducible_and_refuses_a_missing_system():
+    a = F.evidence_for("C1b", _scores("C1b", shift=0.05))
+    b = F.evidence_for("C1b", _scores("C1b", shift=0.05))
+    assert a["draw_plan_sha256"] == b["draw_plan_sha256"]
+    assert a["stat"]["draws_sha256"] == b["stat"]["draws_sha256"]
+    with pytest.raises(ValueError, match="no scores supplied"):
+        F.evidence_for("C1b", {})
+
+
+def test_a_real_positive_effect_rejects_end_to_end():
+    """No hand-built stat dicts: scores in, verdict out, through the production path only."""
+    ev = {cid: F.evidence_for(cid, _scores(cid, shift=0.08)) for cid in F.sequence()}
+    d = F.decide(ev)
+    assert d["rejected"] == ["C1b", "C1a", "C2a", "C2b"], d["conjuncts"]
+    h = F.headline(d)
+    assert [x["conjunct"] for x in h["emit"]] == ["C1b", "C1a", "C2a", "C2b"]
+
+
+# ------------------------------------------ the headline ----------------------------------------
+
+def test_the_headline_emits_NOTHING_for_a_conjunct_that_was_not_tested():
+    """The failure mode a report writer would otherwise commit: claiming an aim result that the
+    sequence never tested."""
+    d = F.decide(_ev(C1b=(0.01, 0.001), C1a=(-0.002, 0.4)))
+    h = F.headline(d)
+    assert [x["conjunct"] for x in h["emit"]] == ["C1b"]
+    blob = " ".join(x["sentence"] for x in h["emit"]).lower()
+    assert "arctic" not in blob, "no aim sentence may be emitted when C2a/C2b were NOT_TESTED"
+    assert "clean-4" in blob and "nfcorpus" in blob.replace("NFCorpus".lower(), "nfcorpus")
+
+
+def test_the_headline_emits_nothing_at_all_when_nothing_rejected():
+    d = F.decide(_ev(C1b=(-0.01, 0.9)))
+    h = F.headline(d)
+    assert h["emit"] == [] and h["emit_nothing_because"] == "no conjunct rejected"
+
+
+def test_every_emitted_sentence_avoids_the_forbidden_vocabulary():
+    ev = {cid: F.evidence_for(cid, _scores(cid, shift=0.08)) for cid in F.sequence()}
+    h = F.headline(F.decide(ev))
+    for item in h["emit"]:
+        low = item["sentence"].lower()
+        for w in F.cfg()["forbidden_words"]:
+            assert w not in low, (item["conjunct"], w)

@@ -5,7 +5,11 @@
 are now written**; what remains before the commit is listed under §Still to do — chiefly
 `m10src/final10.py`'s `decide()`, which the mandate requires written, unit-tested and reviewed
 first. Codex and Fable then review the pushed lock. **Nothing in these three files may be edited
-after that commit** except by a dated amendment that governs a decision not yet made.
+after that commit** except by a dated amendment that governs a decision not yet made — **with one
+named exception: flipping `final_run_registry.ratified_by_owner` to true to record Dylan's
+ratification, which the executor requires before the final run may open the six.** That is not an
+amendment to any rule, and `final_run_registry._ratification` states the same thing, so the two
+files agree.
 
 Every field below is read from `m10/screen_registry.json` and the committed artifacts; where this
 file states a number, the artifact is authoritative.
@@ -153,7 +157,7 @@ Registered before the numbers exist, so they cannot be dropped after them:
 
 ## The final run and LoTTE
 
-- **`m10/final_run_registry.json`** — WRITTEN, 8 tests. Four conjuncts under **fixed-sequence
+- **`m10/final_run_registry.json`** — WRITTEN, with tests. Four conjuncts under **fixed-sequence
   gatekeeping, C1b → C1a → C2a → C2b, each at the full one-sided 0.025, stopping at the first
   non-rejection**; decision field `lower_q025_raw`, the 250th order statistic at B = 10,000,
   `inverted_cdf`; sign-flip at 0.025 in the same sequence; both must reject. Reserved trigger is
@@ -166,7 +170,7 @@ Registered before the numbers exist, so they cannot be dropped after them:
 
 ## Still to do before this is a lock
 
-- [x] **`m10src/final10.py`** — WRITTEN and unit-tested (14 tests). `m9src/final9.py:decide()` is
+- [x] **`m10src/final10.py`** — WRITTEN and unit-tested (run the suite; stated counts went stale twice in one day). `m9src/final9.py:decide()` is
       hard-coded to two conjuncts under Holm-2 at 0.0125 and is NOT reused. The tests pin the
       failure modes that are otherwise silent: the sequence stopping at the first non-rejection;
       a later conjunct reported NOT_TESTED and **never as failed**; `linear` being the weakly more
@@ -184,6 +188,8 @@ Registered before the numbers exist, so they cannot be dropped after them:
       retargeted to M10's paths and `m10-six-spent` tag.
       **Not a lock blocker** — it is needed before the final run (M10.4), which is after the build —
       but it is unwritten for BOTH milestones and M9's close-out needs it too.
-- [ ] `headline_verbatim` fixed in the registry, before any six-set number exists.
+- [x] `headline_verbatim` — one registered sentence PER OUTCOME with a `_must_not` list, and
+      `final10.headline()` is the production selector that emits a sentence ONLY for a conjunct
+      whose status is REJECTED. "The report writer will pick the right one" is not a control.
 - [ ] Both descriptive reads folded in (`ANCHOR-seed1` **done: +0.000712**; `A3-20M` running).
 - [ ] Codex and Fable review the pushed lock (mandate).

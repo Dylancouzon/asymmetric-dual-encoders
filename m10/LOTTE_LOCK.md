@@ -29,14 +29,17 @@ edit, or any change to a screen verdict.
 the anchor recipe are the same in every axis except `batch`* (`M102_LOCK.md`). Registered here
 before E1 is read, and before any LoTTE byte is:
 
-- if E selects **bs32** → the two arms are the same RECIPE. Read #1 is **SKIPPED** and reported
-  skipped **iff the two candidate checkpoints also hash identically**. That condition is the
-  review's correction and it matters: *same recipe does not mean same realized checkpoint* — two
-  stochastic builds of one recipe have a perfectly well-defined artifact-to-artifact contrast, so
-  "no estimand" was too strong. The accurate statement is **no actionable RECIPE contrast**: a veto
-  whose two arms select the same recipe cannot change what builds, whatever the artifacts do.
-  If the hashes differ and someone wants the artifact comparison, it is a descriptive row, never
-  the veto.
+- if E selects **bs32** → the two arms select the same RECIPE, so read #1 is **SKIPPED** and
+  reported skipped. **The criterion is identical RECIPE AND ACTION, not identical checkpoint
+  hashes** — corrected 2026-09-10, second Codex pass. My previous version made the skip conditional
+  on the two candidates hashing identically, and that was wrong twice over: the veto's only
+  consequence is *"the anchor recipe builds"*, which is **invariant** when both arms select the same
+  recipe however the artifacts differ; and two separate stochastic builds will essentially never
+  hash the same, so the condition would have forced a vacuous veto to run in practice while leaving
+  the differing-hash branch with no mandated action at all. There is now exactly one branch and one
+  action.
+  Differing artifacts remain a well-defined *descriptive* artifact-to-artifact contrast, and if
+  anyone wants it, it is a descriptive row — never the veto, and never decision-bearing.
 - **A skipped read is FORFEITED, not banked.** It does not become a spare access, and read #2
   remains the pre-freeze audit and nothing else. Without this sentence "we never used read #1"
   could be argued into a second decision-bearing look.
@@ -88,7 +91,7 @@ the evaluator may touch LoTTE.
 |---|---|
 | candidate checkpoint | *pending build* |
 | candidate sha256 | *pending build* |
-| anchor checkpoint | *pending E1; see the vacuity rule above* |
+| anchor checkpoint | *pending E1; if E selects bs32 there is no anchor arm and read #1 is skipped* |
 | anchor sha256 | *pending* |
 | slices | LoTTE-clean, 7 slices, macro at equal weight |
 | bootstrap | B = 10,000, seed 903, paired within slice, one-sided 97.5% upper bound |
