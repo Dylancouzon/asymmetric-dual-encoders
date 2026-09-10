@@ -79,3 +79,7 @@ references resolve to `research/archive/m10-cleanup-2026-09-10/`, not the shorte
     recipe for each clause and find the line that implements it**; `arm_smoke.SHAPES` is a hand
     copy, so cross-check it against the RESOLVED registry recipe before anything is copied into it
     — comparing a field you have just overwritten cannot fail (`run_arm.check_shape`).
+    The same gap recurred on 2026-09-10: `E-bs32` was registered as an arm in its own right but
+    never entered `arm_smoke.SHAPES`, `CLOUD_ONLY` or `run_arm.BAND1_ORDER`, so the runner refused
+    it and `--plan` priced fourteen arms. Fixed before rental (M13); `code_identity()` changed.
+    `CLOUD_ONLY_MAX_LEN` is now per arm: only `E-bs128` has the driver-error evidence.
