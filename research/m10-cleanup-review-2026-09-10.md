@@ -6,7 +6,7 @@ no protected queries/qrels or new quality outputs. Findings independently checke
 
 | Finding | Disposition |
 |---|---|
-| Arm CLI requires a nonterminal record for resume but never writes one | Fix durable running receipt; preserve caught-failure terminal policy; exercise abrupt process loss through the real caller |
+| Arm CLI requires a nonterminal record for resume but never writes one | Fixed durable running receipt; caught failures remain terminal; SIGKILL/restart through the real caller matches uninterrupted training |
 | Alleged minimum nDCG change is false | Correct rationale only; leave decision constants unchanged; preserve prior reasoning in git/archive |
 | LoTTE chooses the build recipe | Keep its applicable gate before the full build; metric/slice manifest still pending |
 | Build controller/final scorer absent | Explicit M13 prerequisites, not implied by unit-test counts |
@@ -22,3 +22,6 @@ Their difference is **0.00009788717247849466**, below 0.0003. Multiple swaps can
 equal-relevance permutations can also change rankings without changing nDCG at all.
 Thus both proposed “minimum quantum” claims are withdrawn. A stringent re-encoding bridge may
 still be operationally fragile, but its feasibility must be measured before protected execution.
+
+Final checks: 469 M10 tests, 16 M9 statistics tests and 31 fusion checks passed. No screen
+constant or result changed; the final-registry edit corrects bridge rationale only.

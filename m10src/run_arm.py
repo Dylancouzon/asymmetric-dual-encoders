@@ -41,6 +41,8 @@ cycle end included, and a failed arm gets no DEV-6 read and no checkpoint labell
 
 **A crash or an OOM is an outcome, not silence**: it writes a terminal FAILED record and re-raises
 (`rules.arm_failure`). A REFUSAL writes nothing — the arm never started.
+Before training, a durable running receipt records the arm's identity. Abrupt process loss that
+cannot write a terminal outcome can resume from that receipt and the rolling checkpoint.
 
 **Post-F arms take their student from F's verdict**, `results/m10_F_verdict.json`
 (`anchor.init: "F's winner backbone"`, §Recipe amendment A6), validated against the current
@@ -166,7 +168,7 @@ def record_paths(arm, smoke):
     return d, d / "record.json", RESULTS / f"m10_arm_{slug(arm)}.json"
 
 
-def write_record(rec, rec_path, results_path):
+def write_record(rec, rec_path, results_path, *, create_only=False):
     """ONE canonical record, written atomically to each published path (finding 13).
 
     `Path.write_text` on the real path leaves a truncated JSON behind if the process dies
@@ -177,8 +179,23 @@ def write_record(rec, rec_path, results_path):
     for p in [rec_path] + ([results_path] if results_path is not None else []):
         p.parent.mkdir(parents=True, exist_ok=True)
         tmp = p.with_name(p.name + f".tmp{os.getpid()}")
-        tmp.write_text(blob)
-        os.replace(tmp, p)
+        with open(tmp, "w") as fh:
+            fh.write(blob)
+            fh.flush()
+            os.fsync(fh.fileno())
+        if create_only:
+            # Publish a complete receipt without replacing an existing run's identity.
+            try:
+                os.link(tmp, p)
+            finally:
+                tmp.unlink()
+        else:
+            os.replace(tmp, p)
+        dfd = os.open(p.parent, os.O_RDONLY)
+        try:
+            os.fsync(dfd)
+        finally:
+            os.close(dfd)
         written.append(p)
     return written
 
@@ -196,6 +213,8 @@ def _record_status_at(p):
     try:
         raw = json.loads(p.read_text())
     except Exception:
+        return {"parseable": False, "terminal": False, "raw": None}
+    if not isinstance(raw, dict):
         return {"parseable": False, "terminal": False, "raw": None}
     return {"parseable": True, "terminal": bool(raw.get("complete")) or bool(raw.get("terminal")),
             "raw": raw}
@@ -824,6 +843,7 @@ def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, r
     # or in-progress record is exactly as much a re-run hazard as a complete one. `--resume`
     # continues a NON-terminal record; a TERMINAL one (success or FAILED) still refuses -- there
     # is nothing left for `--resume` to continue.
+    resume_records = []
     for path in (rec_path, results_path):
         st = _record_status_at(path)
         if st is None:
@@ -838,6 +858,7 @@ def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, r
         if st["terminal"]:
             refuse(f"{path} already carries a TERMINAL record (complete or failed); `--resume` "
                    f"only continues a non-terminal run. Move the record aside deliberately.")
+        resume_records.append((path, st["raw"]))
     if resume and not smoke:
         # Codex pass 3: `--resume` must CONTINUE a run, never silently become a fresh one. It
         # needs both a non-terminal work record (proof an arm started) and the rolling checkpoint.
@@ -847,6 +868,9 @@ def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, r
         if not (out_dir / "ckpt.pt").exists():
             refuse(f"--resume: no rolling checkpoint at {out_dir / 'ckpt.pt'}; a resume never "
                    f"falls back to a fresh run.")
+    elif not smoke and (out_dir / "ckpt.pt").exists():
+        refuse(f"{out_dir / 'ckpt.pt'} already exists without a running receipt; "
+               "refusing to overwrite an orphaned checkpoint with a fresh run.")
     p = arm_plan(arm, reg)                      # re-read: a smoke changed the dose
     ctx["plan"] = p
     if p["cut_corpus"] and CL.data_cut_count(reg) is None:
@@ -904,6 +928,24 @@ def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, r
     batch_fn, man = CL.assemble_arm(arm, model.tok, p["student"], batch_size=p["batch"],
                                     seed=seed, max_len=max_len, verbose=verbose, registry=reg)
     q_stream, d_stream = streams_of(batch_fn)
+    fp = fingerprint(arm, p, man, seed, smoke_steps, device)
+    if not smoke:
+        identity = {"arm": arm, "smoke": False, "recipe_fingerprint": fp,
+                    "registry_sha256": sha256_file(REGISTRY)}
+        if resume:
+            for path, receipt in resume_records:
+                if receipt.get("status") != "running" or any(
+                        receipt.get(k) != v for k, v in identity.items()):
+                    refuse(f"--resume: {path} has missing or mismatched running identity; "
+                           "refusing to continue another recipe or an unauthenticated record.")
+        else:
+            receipt = {"_what": "M10 arm started; abrupt process loss may resume its checkpoint",
+                       **identity, "status": "running", "complete": False, "terminal": False,
+                       "git_head": git_head()}
+            try:
+                write_record(receipt, rec_path, None, create_only=True)
+            except FileExistsError:
+                refuse(f"{rec_path} already exists; refusing to replace another run's receipt.")
     # item D: everything from here on is WORK -- a warm-start failure (or anything after) is a
     # FAILURE to be recorded, not a pre-flight refusal.
     ctx["started"] = True
@@ -935,7 +977,6 @@ def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, r
     ck = out_dir / "ckpt.pt"
     every = int(ckpt_every or max(total // 20, 1))
     train_model = torch.compile(model) if compile_step else model
-    fp = fingerprint(arm, p, man, seed, smoke_steps, device)
     r = Tr.train_arm(train_model, batch_fn, total_steps=total, pattern=p["pattern"],
                      cycles=CYCLES, peak=PEAK, final=FINAL, loss_name=p["objective"],
                      sigma=sigma, eval_fn=eval_fn, ckpt_path=ck, ckpt_every=every,

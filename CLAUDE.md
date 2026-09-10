@@ -17,9 +17,9 @@ Keep negative results, failed approaches, provenance and limitations alongside s
 2. The active milestone's `STATUS.md` and `instructions-m*.md` — next work and exit criteria.
 3. Its `CODEMAP.md`, then only the result or registration files needed for the task.
 
-M10 closes data preparation and the box recipe screen. Its two pending cloud E arms and the
-build belong to M13; final evaluation and costs also to M13; harness improvements remain repo maintenance. M11 (zero release)
-and M12 (fusion audit) remain closed. Nano release is M14; the paper is M15.
+M10 closes preparation. M13 owns both pending cloud E arms, the build, final evaluation and costs.
+M11 (zero release) and M12 (fusion audit) remain closed. Nano release is M14; the paper is M15.
+Harness improvements remain ordinary maintenance.
 Do not infer execution readiness from the historical phrase “half A ready to push.”
 
 ## Evidence and protocol

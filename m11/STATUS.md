@@ -184,7 +184,7 @@ New files: `m11/release/export_doc.py`, `push_doc.py`, `MODEL_CARD_DOC.md`, `doc
 
 ## Carried forward
 
-- **`nano`, its ONNX port and its FastEmbed entry are M14** — blocked on M10; **the whitepaper became its own milestone, M15** (Dylan, 2026-09-04), so it is not hostage to M10 —
+- **`nano`, its ONNX port and its FastEmbed entry are M14** — blocked on M13; **the whitepaper became its own milestone, M15** (Dylan, 2026-09-04), so it is not hostage to M10 —
   with cloud execution now owned by M13. `instructions-m14.md`.
 - **The upstream FastEmbed PR is M14** (Dylan, 2026-09-04): one clean PR adding all three model
   entries once nano exists, not a two-model PR now. The branch that exists today,

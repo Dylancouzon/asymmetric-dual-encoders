@@ -8,6 +8,9 @@ a screen arm could be spent on nothing, and the two schedule tests are the famil
 import copy
 import hashlib
 import json
+import os
+import signal
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -196,9 +199,8 @@ def test_an_incomplete_record_does_not_block_a_run(monkeypatch, sandbox):
     with pytest.raises(SystemExit, match="already exists"):
         R.run("A1", device="cuda", verbose=False)
     # a valid --resume needs the non-terminal WORK record and the rolling checkpoint (pass 3)
-    d = R.WORK / "A1"
-    d.mkdir(parents=True, exist_ok=True)
-    (d / "record.json").write_text(json.dumps({"arm": "A1", "complete": False}))
+    d = _non_terminal_record()
+    (R.RESULTS / "m10_arm_A1.json").write_bytes((d / "record.json").read_bytes())
     (d / "ckpt.pt").write_bytes(b"ckpt")
     assert R.run("A1", device="cuda", resume=True, verbose=False)["status"] == "complete"
 
@@ -219,7 +221,12 @@ def test_a_malformed_record_refuses_a_bare_re_run_but_permits_resume(monkeypatch
 def _non_terminal_record(arm="A1"):
     d = R.WORK / arm
     d.mkdir(parents=True, exist_ok=True)
-    (d / "record.json").write_text(json.dumps({"arm": arm, "complete": False, "status": "running"}))
+    reg = R.SL.cfg()
+    p = R.arm_plan(arm, reg, verdict=R.f_verdict(reg))
+    fp = R.fingerprint(arm, p, {"arm": arm, "mocked": True}, 0, None, "cuda")
+    (d / "record.json").write_text(json.dumps({
+        "arm": arm, "complete": False, "terminal": False, "status": "running", "smoke": False,
+        "recipe_fingerprint": fp, "registry_sha256": R.sha256_file(R.REGISTRY)}))
     return d
 
 
@@ -229,6 +236,26 @@ def test_resume_refuses_when_there_is_no_record_to_continue(monkeypatch, sandbox
     write_f_verdict()
     with pytest.raises(SystemExit, match="no record"):
         R.run("A1", device="cuda", resume=True, verbose=False)
+
+
+def test_a_missing_receipt_never_allows_a_fresh_run_over_an_existing_checkpoint(sandbox):
+    d = R.WORK / "A1"
+    d.mkdir(parents=True)
+    (d / "ckpt.pt").write_bytes(b"existing checkpoint")
+    with pytest.raises(SystemExit, match="orphaned checkpoint"):
+        R.run("A1", device="cuda", verbose=False)
+    assert (d / "ckpt.pt").read_bytes() == b"existing checkpoint"
+    assert not (d / "record.json").exists()
+
+
+def test_a_non_object_receipt_is_refused_without_overwriting_it(sandbox):
+    d = R.WORK / "A1"
+    d.mkdir(parents=True)
+    (d / "record.json").write_text("[]")
+    with pytest.raises(SystemExit, match="unparseable"):
+        R.run("A1", device="cuda", resume=True, verbose=False)
+    assert (d / "record.json").read_text() == "[]"
+    assert not (R.RESULTS / "m10_arm_A1.json").exists()
 
 
 def test_resume_refuses_when_the_rolling_checkpoint_is_missing(monkeypatch, sandbox):
@@ -253,6 +280,111 @@ def test_a_valid_resume_hands_the_checkpoint_to_the_trainer_never_None(monkeypat
     monkeypatch.setattr(R.Tr, "train_arm", spy)
     R.run("A1", device="cuda", resume=True, verbose=False)
     assert seen["resume_from"] == str(d / "ckpt.pt")
+
+
+@pytest.mark.parametrize("field,value", [
+    ("arm", "A2"), ("recipe_fingerprint", "0" * 64), ("registry_sha256", "0" * 64),
+    ("recipe_fingerprint", None), ("status", "unknown"), ("smoke", True),
+])
+def test_resume_refuses_mismatched_receipt_without_overwriting_it(monkeypatch, sandbox, field, value):
+    mock_pipeline(monkeypatch)
+    write_f_verdict()
+    d = _non_terminal_record()
+    receipt = json.loads((d / "record.json").read_text())
+    receipt[field] = value
+    (d / "record.json").write_text(json.dumps(receipt))
+    (d / "ckpt.pt").write_bytes(b"existing checkpoint")
+    before = (d / "record.json").read_bytes()
+    with pytest.raises(SystemExit, match="mismatched running identity"):
+        R.run("A1", device="cuda", resume=True, verbose=False)
+    assert (d / "record.json").read_bytes() == before
+    assert (d / "ckpt.pt").read_bytes() == b"existing checkpoint"
+    assert not (R.RESULTS / "m10_arm_A1.json").exists()
+
+
+def _tiny_registered_run(root, *, abrupt=False, resume=False):
+    """CPU fixture callable from a fresh interpreter, so a SIGKILL cannot kill pytest."""
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        return _tiny_registered_run_patched(monkeypatch, Path(root), abrupt=abrupt, resume=resume)
+
+
+def _tiny_registered_run_patched(monkeypatch, root, *, abrupt, resume):
+    real_train = T.train_arm
+    mock_pipeline(monkeypatch)
+    monkeypatch.setattr(R, "WORK", root / "m10arms")
+    monkeypatch.setattr(R, "RESULTS", root / "results")
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
+
+    class RunnerToy(Toy):
+        d_in = 1152
+        tok = FakeTok()
+        to = FakeModel.to
+        n_params = FakeModel.n_params
+        under_cap = FakeModel.under_cap
+
+    monkeypatch.setattr(R.N, "Nano10", lambda *a, **k: RunnerToy())
+    monkeypatch.setattr(R, "CovEval", lambda *a, **k: R.StubEval())
+    real_plan = R.arm_plan
+
+    def tiny_plan(*a, **k):
+        p = real_plan(*a, **k)
+        p.update(total_steps=30, dose_examples=960,
+                 cycle_end_steps=R.N.cycle_ends(30, 3), read_points=[])
+        return p
+
+    def cpu_train(*a, **k):
+        k["device"] = "cpu"
+        return real_train(*a, **k)
+
+    monkeypatch.setattr(R, "arm_plan", tiny_plan)
+    monkeypatch.setattr(R.Tr, "train_arm", cpu_train)
+    if not resume:
+        write_f_verdict()
+    batch = make_batch_fn(n=32)
+
+    def interrupted_batch(step, kind):
+        if step == 11 and abrupt:
+            os.kill(os.getpid(), signal.SIGKILL)
+        return batch(step, kind)
+
+    monkeypatch.setattr(R.CL, "assemble_arm",
+                        lambda *a, **k: (interrupted_batch, {"arm": a[0], "mocked": True}))
+    return R.run("A1", device="cuda", resume=resume, verbose=False)
+
+
+def test_sigkill_leaves_a_receipt_and_real_trainer_resumes_the_same_run(tmp_path):
+    """Exercise R.run in a killed process, then its actual resume path and checkpoint loader.
+
+    Registry checks run normally; model/data/evaluation and GPU placement use tiny CPU fixtures.
+    Neither process can touch a real arm or evaluation surface.
+    """
+    baseline = _tiny_registered_run(tmp_path / "baseline")
+    baseline_model = torch.load(tmp_path / "baseline/m10arms/A1/cycle3.pt",
+                                weights_only=False)["model"]
+    root = tmp_path / "interrupted"
+    child = subprocess.run(
+        [sys.executable, "-c", "import sys; from test_run_arm import _tiny_registered_run; "
+         "_tiny_registered_run(sys.argv[1], abrupt=True)", str(root)],
+        cwd=Path(__file__).resolve().parent, capture_output=True, text=True, timeout=30)
+    assert child.returncode == -signal.SIGKILL, child.stdout + child.stderr
+    d = root / "m10arms/A1"
+    receipt = json.loads((d / "record.json").read_text())
+    assert receipt["status"] == "running" and receipt["terminal"] is False
+    assert receipt["recipe_fingerprint"] == baseline["recipe_fingerprint"]
+    assert not (root / "results/m10_arm_A1.json").exists()
+    assert torch.load(d / "ckpt.pt", weights_only=False)["step"] == 11
+    with pytest.raises(SystemExit, match="already exists"):
+        _tiny_registered_run(root)
+
+    resumed = _tiny_registered_run(root, resume=True)
+    assert resumed["complete"] is True and resumed["training"]["start_step"] == 11
+    assert resumed["loss_tail"] == baseline["loss_tail"]
+    assert resumed["cov"] == baseline["cov"]
+    assert resumed["training"]["examples"] == baseline["training"]["examples"]
+    resumed_model = torch.load(d / "cycle3.pt", weights_only=False)["model"]
+    assert all(torch.equal(v, resumed_model[k]) for k, v in baseline_model.items())
+    assert json.loads((d / "record.json").read_text())["terminal"] is True
+    assert json.loads((root / "results/m10_arm_A1.json").read_text())["complete"] is True
 
 
 def test_resume_refuses_when_the_existing_record_is_already_terminal(monkeypatch, sandbox):
@@ -284,6 +416,22 @@ def test_the_record_is_written_atomically_to_both_published_paths(monkeypatch, s
     assert all(".tmp" in a for a, _b in seen), seen
     on_disk = json.loads((R.WORK / "A1" / "record.json").read_text())
     assert on_disk == json.loads((R.RESULTS / "m10_arm_A1.json").read_text()) == rec
+
+
+def test_start_receipt_cannot_replace_a_record_created_after_preflight(monkeypatch, sandbox):
+    mock_pipeline(monkeypatch)
+    write_f_verdict()
+    link = os.link
+
+    def competing_receipt(src, dst):
+        Path(dst).write_text('{"arm": "existing run"}')
+        link(src, dst)
+
+    monkeypatch.setattr(R.os, "link", competing_receipt)
+    with pytest.raises(SystemExit, match="refusing to replace"):
+        R.run("A1", device="cuda", verbose=False)
+    assert (R.WORK / "A1" / "record.json").read_text() == '{"arm": "existing run"}'
+    assert not (R.RESULTS / "m10_arm_A1.json").exists()
 
 
 # ------------------------------------------------------------ the smoke-only knobs (finding 5) --

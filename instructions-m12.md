@@ -18,7 +18,7 @@ owns the process and can fuse in their own ~20 lines with any operator. More to 
 `bench/edge_prototype_pair.py` is **dense-only — no BM25, no fusion, ever**; fusion on edge would
 mean shipping a lexical index beside the document index, which has never been built or costed.
 **That gap is a NOTE, not a requirement** (Dylan, 2026-09-04): edge numbers depend heavily on hardware
-and corpus size, so a complete edge-fusion cost row is not something M12 or M14 owes. State the
+and corpus size, so a complete edge-fusion cost row is not something M12 or M15 owes. State the
 limitation plainly and move on.
 
 ## Why this is the whole milestone
@@ -48,7 +48,7 @@ we owe users an honest correction. Either way it costs a day and needs no traini
 
 ## The fusion-aware training question is NOT in M12
 
-It moved to `instructions-m16.md` with the full list of what it would need. Killed here because:
+It moved to `instructions-m17.md` with the full list of what it would need. Killed here because:
 
 - **The trainer cannot express it.** Training samples one shared bank of 32,768 negatives that every
   query scores (`m7src/train.py:679-688`); there are no per-query candidate lists. Both miners return
@@ -165,7 +165,7 @@ counting it):
 **A shipping operator matches** if any row passes; recommend the highest-strength passing row's exact
 configuration **in Qdrant's units**. **Tier 2 is attempted iff neither Tier 1 row passes** — record
 the skip in `m12/LEDGER.md` when it happens. **None matches** if no row does; state the real cost of
-shipping-operator fusion plainly, in M14's paper and the card caveat.
+shipping-operator fusion plainly, in M15's paper and the card caveat.
 
 Report all five rows side by side (convex0, M7's unweighted RRF, RRF-over-`k`, weighted RRF, DBSF).
 **Fitting budgets must be stated**: convex0's `w` came from 8 candidates **inside a 21-point,
@@ -235,7 +235,7 @@ the teacher, cloud compute, any released artifact.
    `floor_zero=True` → `s / max(s)` per query per channel, absent doc = 0. Describe the real operator.
    A card edit is Dylan's call (2026-09-04 precedent). **Scope every rewritten sentence to the cloud
    case** and note that edge fusion is unmeasured — as a limitation line, not a promised metric.
-   Carry both into M14's paper.
+   Carry both into M15's paper.
 
 ---
 

@@ -19,7 +19,8 @@ release pass. The 200M build, both cloud E arms and final evaluation remain M13 
 - One decision constant needs one executable home. Keep registries authoritative and prose short;
   check artifact provenance without re-stamping completed experiments for cosmetic doc changes.
 - Test the production caller: a passing trainer-resume test does not prove the arm CLI can resume;
-  tested decision helpers do not provide a scoring executor. `m13/EXECUTION.md` owns the gaps.
+  the new SIGKILL/restart test covers that caller boundary. Tested decision helpers still do not
+  provide a scoring executor. `m13/EXECUTION.md` owns the remaining gaps.
 - Form balance reallocates exposure. At build dose, small generated forms repeat far more than
   the factoid pool. Report per-form exposure with the corpus intervention.
 - Short-text diversity checks need an attainable threshold; an 8-gram rule requiring 16 matches
