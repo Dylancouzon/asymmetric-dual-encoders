@@ -124,6 +124,19 @@ def align_partition(a, b, datasets):
         # so guarding it upstream left `bootstrap` and `signflip` reachable with NaN by any other
         # route (Fable, 2026-09-10). A NaN makes the bound NaN — and `nan > 0` is False — while
         # every permuted sign-flip statistic is NaN so the p-value returns its MINIMUM.
+    assert_scoreable(aligned)
+    return aligned
+
+
+def assert_scoreable(aligned):
+    """Every per-query score finite and in [0, 1] — the nDCG@10 range.
+
+    Called by `align_partition` AND by both primitives. Putting it only in the aligner left
+    `bootstrap` and `signflip` reachable with a NaN by any other route, and I nonetheless wrote a
+    test named "the primitives themselves refuse..." that only exercised the aligner (Codex,
+    2026-09-10). A claim in a test name is not a check.
+    """
+    for ds, (_qids, x, y) in aligned.items():
         for side, arr in (("a", x), ("b", y)):
             if not np.isfinite(arr).all():
                 raise ValueError(f"{ds}: side {side} has {int((~np.isfinite(arr)).sum())} "
@@ -133,7 +146,6 @@ def align_partition(a, b, datasets):
                 raise ValueError(f"{ds}: side {side} has scores outside [0, 1] "
                                  f"(min {arr.min():.4g}, max {arr.max():.4g}); these are nDCG@10 "
                                  f"values and a mis-scaled system would move the macro arbitrarily")
-    return aligned
 
 
 def bootstrap(aligned, plan, conf):
@@ -147,6 +159,7 @@ def bootstrap(aligned, plan, conf):
     the registered way; the banned method's DIRECTION is demonstrated in the tests with numpy
     directly, which needs no unsafe path here.
     """
+    assert_scoreable(aligned)
     b = conf["bootstrap"]
     quantile, method = b["quantile"], b["quantile_method"]
     if not plan:
@@ -212,20 +225,28 @@ def assert_evidence_matches_registry(cid, ev, conf):
         v = st.get(k, "__absent__")
         if v == "__absent__":
             problems.append(f"no {k!r} field")
-        elif isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+        elif type(v) is not float and type(v) is not int:
+            # EXACT type, not isinstance. `float(v)` calls `__float__`, which a subclass overrides
+            # exactly as easily as `__gt__` — my previous fix moved the override rather than
+            # closing it, and an underlying -1.0 still came back REJECTED (Codex, 2026-09-10).
+            # `bootstrap` emits plain floats (`float(np.quantile(...))`), so exact types are what
+            # the production path actually produces.
+            problems.append(f"{k} is {type(v).__name__}, not exactly int or float — a subclass can "
+                            f"override __float__ and answer its own comparison")
+        elif not math.isfinite(v):
             problems.append(f"{k}={v!r} is not a finite number")
-        elif abs(float(v)) > 1.0:
+        elif abs(v) > 1.0:
             # every quantity here is a difference of nDCG@10 values, so |v| <= 1 by construction.
             # 1e300 was accepted and REJECTED (Fable, 2026-09-10).
             problems.append(f"{k}={v!r} is outside [-1, 1]; it is a difference of nDCG@10 values")
-    lo, de = st.get(b["decision_field"]), st.get("delta_raw")
-    if isinstance(lo, (int, float)) and isinstance(de, (int, float)) and not isinstance(lo, bool) \
-            and not isinstance(de, bool) and math.isfinite(lo) and math.isfinite(de) \
-            and float(lo) > float(de):
-        # a one-sided LOWER bound above the point estimate is not a possible bootstrap output;
-        # lower=0.5 with delta=-0.3 was accepted and REJECTED.
-        problems.append(f"lower bound {lo!r} exceeds the point estimate {de!r}, which no bootstrap "
-                        f"can produce")
+    # NOT a refusal. I had `lower > delta` raise, on the reasoning that no bootstrap can put its
+    # lower bound above its point estimate. **That is not an invariant** — a percentile bootstrap
+    # on a tiny or degenerate fixture can produce it, and Codex constructed one (2026-09-10). Over
+    # 4,150 fixtures at the registered seed and B there were ZERO inversions, so it is
+    # astronomically unlikely here; but a categorical refusal on the decision path would CONSUME
+    # THE IRREVERSIBLE ACCESS on a legitimate run, which is a worse failure than the forged pair it
+    # was guarding against — and `evidence_for` being the only production path already prevents
+    # that pair. So it is REPORTED and never raised.
     if ev.get("conjunct") != cid:
         problems.append(f"evidence is labelled conjunct {ev.get('conjunct')!r}, not {cid!r}")
     for k, want in (("quantile", b["quantile"]), ("quantile_method", b["quantile_method"]),
@@ -264,12 +285,13 @@ def assert_evidence_matches_registry(cid, ev, conf):
         problems.append("comparator_source_sha256 does not match the registry")
     for k in ("draw_plan_sha256", "qid_sha256", "registry_sha256"):
         v = ev.get(k)
-        if not isinstance(v, str) or len(v) != 64:
+        if not isinstance(v, str) or len(v) != 64 or any(ch not in "0123456789abcdef" for ch in v):
+            # "g" * 64 was accepted: length and type were checked, hexadecimality was not.
             problems.append(f"{k}={v!r} is not a sha256 hex digest")
     counts = st.get("n_by_dataset") or {}
     if not counts:
         problems.append("no 'n_by_dataset' in the stat")
-    if any(isinstance(v, bool) or not isinstance(v, int) or v <= 0 for v in counts.values()):
+    if any(type(v) is not int or v <= 0 for v in counts.values()):
         problems.append(f"n_by_dataset has non-positive or non-integer counts: {counts}")
     # The two halves of the pass rule must have scored the same queries. REQUIRED, not
     # `is not None` — dropping the field silently skipped the check, which is the exact
@@ -283,6 +305,8 @@ def assert_evidence_matches_registry(cid, ev, conf):
     if problems:
         raise ValueError(f"{cid}: evidence does not match the registered procedure — "
                          + "; ".join(problems))
+    lo, de = st[b["decision_field"]], st["delta_raw"]
+    return {"lower_exceeds_point_estimate": bool(lo > de)} if lo > de else {}
 
 
 def conjunct_rejects(stat, sf_p, alpha):
@@ -374,6 +398,7 @@ def signflip(aligned, conf):
     primitive's full provenance instead of a bare float, so `R`, the seed, the alternative and the
     strata are on the record rather than discarded.
     """
+    assert_scoreable(aligned)
     sf = conf["signflip"]
     sub_a = {ds: dict(zip(v[0], v[1])) for ds, v in aligned.items()}
     sub_b = {ds: dict(zip(v[0], v[2])) for ds, v in aligned.items()}
@@ -450,6 +475,7 @@ def headline(verdict, conf=None, *, uncanonical_ok=False):
                      "NOT_TESTED emits nothing — it has no verdict."}
 
 
-__all__ = ["cfg", "canonical", "registry_sha256", "sequence", "align_partition", "bootstrap",
+__all__ = ["cfg", "canonical", "registry_sha256", "sequence", "align_partition", "assert_scoreable",
+           "bootstrap",
            "signflip", "evidence_for", "conjunct_rejects", "assert_evidence_matches_registry",
            "decide", "headline", "draw_plan", "REJECTED", "NOT_REJECTED", "NOT_TESTED"]

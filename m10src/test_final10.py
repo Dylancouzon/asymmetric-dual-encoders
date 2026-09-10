@@ -20,13 +20,15 @@ CONF = F.cfg()
 
 
 def _scores(cid, shift, n=40, seed=0):
-    """Synthetic per-query scores for a conjunct's two systems, on its REGISTERED partition."""
+    """Synthetic per-query scores for a conjunct's two systems, on its REGISTERED partition,
+    clipped into the nDCG@10 range."""
     c = CONF["conjuncts"][cid]
     ds = CONF["partitions"][c["partition"]]
     rng = np.random.default_rng(seed)
-    return {c["a"]: {d: {i: float(v) for i, v in enumerate(rng.normal(0.5 + shift, 0.1, n))}
-                     for d in ds},
-            c["b"]: {d: {i: float(v) for i, v in enumerate(rng.normal(0.5, 0.1, n))} for d in ds}}
+    return {c["a"]: {d: {i: float(v) for i, v in
+                         enumerate(np.clip(rng.normal(0.5 + shift, 0.1, n), 0.0, 1.0))} for d in ds},
+            c["b"]: {d: {i: float(v) for i, v in
+                         enumerate(np.clip(rng.normal(0.5, 0.1, n), 0.0, 1.0))} for d in ds}}
 
 
 def _stat(lower, delta=None, cid="C1b", **override):
@@ -133,8 +135,12 @@ def test_the_alpha_is_the_full_0_025_not_a_split():
 # ---------------------------------------------------------------- the statistics -----------------
 
 def _aligned(datasets, n=40, shift=0.05, seed=0):
+    """nDCG@10 values, so CLIPPED into [0, 1] — the aligner now refuses anything outside it, and a
+    fixture that generates 1.007 is not a fixture of nDCG."""
     rng = np.random.default_rng(seed)
-    return {ds: (list(range(n)), rng.normal(0.5 + shift, 0.1, n), rng.normal(0.5, 0.1, n))
+    return {ds: (list(range(n)),
+                 np.clip(rng.normal(0.5 + shift, 0.1, n), 0.0, 1.0),
+                 np.clip(rng.normal(0.5, 0.1, n), 0.0, 1.0))
             for ds in datasets}
 
 
@@ -498,14 +504,15 @@ def test_a_float_subclass_cannot_answer_its_own_comparison():
         def __le__(self, other):
             return True
 
-    ev = _ev(C1b=(0.01, 0.001), C1a=(-0.1, 0.9))
+    ev = _ev(C1b=(0.01, 0.001))
     ev["C1b"]["stat"]["lower_q025_raw"] = GtAlways(-0.5)
     ev["C1b"]["stat"]["delta_raw"] = GtAlways(-0.4)
-    assert F.decide(ev)["conjuncts"]["C1b"]["status"] == F.NOT_REJECTED, \
-        "a negative bound must not reject, whatever its type claims"
+    with pytest.raises(ValueError, match="not exactly int or float"):
+        F.decide(ev)      # refused outright, which is stronger than merely comparing correctly
     ev = _ev(C1b=(0.01, 0.001), C1a=(-0.1, 0.9))
     ev["C1b"]["signflip_p"] = LeAlways(0.9)
-    assert F.decide(ev)["conjuncts"]["C1b"]["status"] == F.NOT_REJECTED
+    assert F.decide(ev)["conjuncts"]["C1b"]["status"] == F.NOT_REJECTED, \
+        "a p-value of 0.9 must not reject, whatever its type claims"
 
 
 def test_the_decision_field_must_be_a_plausible_nDCG_difference():
@@ -515,10 +522,12 @@ def test_the_decision_field_must_be_a_plausible_nDCG_difference():
     ev["C1b"]["stat"]["lower_q025_raw"] = 1e300
     with pytest.raises(ValueError, match=r"outside \[-1, 1\]"):
         F.decide(ev)
-    ev = _ev(C1b=(0.01, 0.001))
-    ev["C1b"]["stat"]["lower_q025_raw"], ev["C1b"]["stat"]["delta_raw"] = 0.5, -0.3
-    with pytest.raises(ValueError, match="exceeds the point estimate"):
-        F.decide(ev)
+    # `lower > delta` is REPORTED, never refused: it is not a bootstrap invariant, and a
+    # categorical refusal on the decision path would consume the irreversible access on a
+    # legitimate run (Codex, 2026-09-10, constructed a fixture producing it).
+    ev = _ev(C1b=(0.01, 0.001), C1a=(-0.1, 0.9))
+    ev["C1b"]["stat"]["lower_q025_raw"], ev["C1b"]["stat"]["delta_raw"] = 0.5, 0.3
+    F.decide(ev)      # must NOT raise
 
 
 def test_every_type_that_must_not_be_the_decision_field():
@@ -530,10 +539,13 @@ def test_every_type_that_must_not_be_the_decision_field():
         ev["C1b"]["stat"]["lower_q025_raw"] = bad
         with pytest.raises(ValueError):
             F.decide(ev)
-    # numpy's float64 IS a float subclass and is legitimate output of our own bootstrap
-    ev = _ev(C1b=(0.01, 0.001), C1a=(-0.1, 0.9))
+    # numpy's float64 is ALSO refused, and that is correct: `bootstrap` emits
+    # `float(np.quantile(...))`, a plain float, so exact types are what the production path
+    # actually produces and anything else is not our own output.
+    ev = _ev(C1b=(0.01, 0.001))
     ev["C1b"]["stat"]["lower_q025_raw"] = np.float64(0.01)
-    assert F.decide(ev)["conjuncts"]["C1b"]["status"] == F.REJECTED
+    with pytest.raises(ValueError, match="not exactly int or float"):
+        F.decide(ev)
 
 
 def test_the_evidence_must_be_labelled_with_its_own_conjunct():
@@ -607,3 +619,91 @@ def test_the_primitives_themselves_refuse_non_finite_and_out_of_range_scores():
         a[ds[0]][0] = bad
         with pytest.raises(ValueError, match="non-finite|outside"):
             F.align_partition(a, b, ds)
+
+
+def test_a_float_subclass_overriding___float___is_also_refused():
+    """My previous fix coerced with `float(v)` — which calls `__float__`, so the override simply
+    moved. An underlying -1.0 still came back REJECTED (Codex, 2026-09-10). Exact types close it:
+    `bootstrap` emits plain floats, so anything else is not our own output."""
+    class Sneaky(float):
+        def __float__(self):
+            return 0.5
+
+    ev = _ev(C1b=(0.01, 0.001))
+    ev["C1b"]["stat"]["lower_q025_raw"] = Sneaky(-1.0)
+    with pytest.raises(ValueError, match="not exactly int or float"):
+        F.decide(ev)
+
+
+def test_an_inverted_bound_is_REPORTED_and_never_refused():
+    """A guard that can refuse a legitimate run is worse than the hole it closes, because the
+    access is already spent by the time `decide()` runs. 4,150 fixtures at the registered seed and
+    B produced zero inversions — but 'astronomically unlikely' is not 'impossible'."""
+    ev = _ev(C1b=(0.6, 0.001), C1a=(-0.1, 0.9))
+    ev["C1b"]["stat"]["delta_raw"] = 0.4          # lower > delta
+    d = F.decide(ev)                              # does not raise
+    assert d["conjuncts"]["C1b"]["status"] == F.REJECTED
+
+
+def test_a_64_character_non_hex_string_is_not_a_digest():
+    """`"g" * 64` was accepted: type and length were checked, hexadecimality was not."""
+    for bad in ("g" * 64, "Z" * 64, "0123456789abcdefg" + "0" * 47):
+        ev = _ev(C1b=(0.01, 0.001))
+        ev["C1b"]["qid_sha256"] = bad
+        with pytest.raises(ValueError, match="qid_sha256="):
+            F.decide(ev)
+
+
+def test_the_primitives_refuse_bad_scores_DIRECTLY_not_only_through_the_aligner():
+    """The check lived only in `align_partition`, so `bootstrap` and `signflip` stayed reachable
+    with a NaN by any other route — and I wrote a test named 'the primitives themselves refuse'
+    that only exercised the aligner. A claim in a test name is not a check."""
+    conf = F.cfg()
+    ds = conf["partitions"]["clean4"]
+    al = _aligned(ds, n=20)
+    plan, _ = F.draw_plan(al, B=conf["bootstrap"]["B"], seed=conf["bootstrap"]["seed"])
+    for bad in (float("nan"), 5.0):
+        broken = {d: (q, x.copy(), y.copy()) for d, (q, x, y) in al.items()}
+        broken[ds[0]][1][0] = bad
+        with pytest.raises(ValueError, match="non-finite|outside"):
+            F.bootstrap(broken, plan, conf)
+        with pytest.raises(ValueError, match="non-finite|outside"):
+            F.signflip(broken, conf)
+
+
+def test_the_comparator_side_is_validated_too_not_only_the_candidate():
+    ds = F.cfg()["partitions"]["clean4"]
+    full = _aligned(ds, n=20)
+    a = {d: dict(zip(v[0], v[1])) for d, v in full.items()}
+    b = {d: dict(zip(v[0], v[2])) for d, v in full.items()}
+    b[ds[0]][0] = float("nan")          # the COMPARATOR, not the candidate
+    with pytest.raises(ValueError, match="non-finite"):
+        F.align_partition(a, b, ds)
+
+
+def test_a_p_value_exactly_at_alpha_rejects():
+    """`p <= alpha`, not `p < alpha`. The mutation survived because nothing tested the boundary."""
+    alpha = F.cfg()["sequence"]["alpha_per_conjunct"]
+    d = F.decide(_ev(C1b=(0.01, alpha), C1a=(-0.1, 0.9)))
+    assert d["conjuncts"]["C1b"]["status"] == F.REJECTED
+    d = F.decide(_ev(C1b=(0.01, alpha + 1e-12), C1a=(-0.1, 0.9)))
+    assert d["conjuncts"]["C1b"]["status"] == F.NOT_REJECTED
+
+
+def test_counts_must_be_exactly_int_even_when_every_dataset_is_present():
+    """The mutation survived because the dataset-set check masked it: bools and floats slipped
+    through whenever the KEYS were still complete."""
+    part = F.cfg()["partitions"]["clean4"]
+    for bad in (True, 100.0):
+        ev = _ev(C1b=(0.01, 0.001))
+        ev["C1b"]["stat"]["n_by_dataset"] = {d: bad for d in part}
+        ev["C1b"]["signflip_per_dataset_n"] = {d: bad for d in part}
+        with pytest.raises(ValueError, match="non-positive or non-integer"):
+            F.decide(ev)
+
+
+def test_delta_raw_range_is_checked_not_only_the_bound():
+    ev = _ev(C1b=(0.01, 0.001))
+    ev["C1b"]["stat"]["delta_raw"] = 1e300
+    with pytest.raises(ValueError, match=r"delta_raw.*outside \[-1, 1\]"):
+        F.decide(ev)
