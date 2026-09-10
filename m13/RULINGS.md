@@ -15,7 +15,7 @@ inside, first after the tag (implemented as `access13.Config.payload_checks_insi
 (b) keep M7's payload-reading preflight. **Recommend (a)** and amend the registry line, dated. The
 manifest check hashes the same sorted qid list the payload carries, produced by the same script,
 so a payload failure inside is practically unreachable.
-**Ruling:**
+**Ruling (Dylan, 2026-09-10):** accepted as recommended: manifests only outside, payload checks inside after the tag; amend the registry, dated.
 
 ## R2 — Re-encoding bridge contract (blocks final six-set access)
 The bridge re-scores bge-small on the six and compares with its frozen row to show the
@@ -26,7 +26,7 @@ reports per-query movement. Options: (a) keep that; (b) add a rehearsed per-quer
 (c) demand identical hardware and dtype. **Recommend (a) plus one open-data rehearsal**: encode
 bge-small on open dev components on the box and on the A100, record the per-query envelope in the
 build record as report-only. A gate must be measured before it is registered.
-**Ruling:**
+**Ruling (Dylan, 2026-09-10):** accepted as recommended: dataset-mean 0.003 is the only hard gate; open-data re-encoding rehearsal recorded report-only.
 
 ## R3 — M9 close-out bridge (blocks M9's six-set access)
 `m9/final_run_registry.json` still carries `max_abs_per_query_delta: 0.0003` with "failure
@@ -34,7 +34,7 @@ consumes the access". Options: (a) dated M9-specific amendment adopting the data
 written before any M9 score exists; (b) run under 0.0003 and accept the likely loss of M9's only
 access; (c) close M9 descriptively without a bridge. **Recommend (a)**, disclosed beside M9's
 scores with the two-build-lock provenance note.
-**Ruling:**
+**Ruling (Dylan, 2026-09-10):** accepted as recommended: dated M9-specific amendment adopting the dataset-mean bridge before any M9 score.
 
 ## R4 — Paired M9/nano recipe-delta row (blocks either final run)
 `instructions-m13.md` requires registering the paired recipe delta before either final run and
@@ -42,7 +42,7 @@ says it is not a causal coverage experiment. **Recommend** a one-page `m13/PAIRE
 every recipe difference (student, corpus, head, dose, mix, objective, warm start, batch), stating
 the row is a paired per-query nDCG@10 delta on identical frozen qids with a bootstrap interval,
 descriptive only, with no decision attached. You ratify the page.
-**Ruling:**
+**Ruling (Dylan, 2026-09-10):** accepted as recommended: `m13/PAIRED_ROW.md`, descriptive only, ratified by Dylan.
 
 ## R5 — Build document policy and full A4 (blocks the 200M build)
 The archived lock registers "query epochs ≈ 37 over 4.0M texts, document epochs ≈ 8 over the
@@ -52,20 +52,20 @@ only to `data_cut.applies_to`) and every eligible re-screened document once per 
 per epoch, position a pure function of the global step. Options: confirm; or fixed-order replay
 each epoch (what the screen's stream does). **Recommend confirming reshuffle per epoch**: the lock
 names epochs, not order, and reshuffling is the conventional default. Disclosed in the record.
-**Ruling:**
+**Ruling (Dylan, 2026-09-10):** accepted as recommended: full uncut A4; every eligible document once per epoch, reshuffled per epoch.
 
 ## R6 — `ratified_by_owner` flip (blocks final six-set access)
 The registry permits exactly one post-commit edit: flipping this to true. The executor refuses
 to open the six without it. Options: flip now; flip in the commit that pins the reviewed executor
 and freeze. **Recommend the latter**, so your ratification covers the executor and configuration
 that actually run, not a draft.
-**Ruling:**
+**Ruling (Dylan, 2026-09-10):** accepted as recommended: flip in the commit that pins the reviewed executor and freeze.
 
 ## R7 — `min_free_gb` and reserved bookkeeping (blocks reserved access)
 M9's registry required 120 GB free before reserved encodes; M10's registry has no such field and
 no code had one. `access13` defaults to 120, configurable. **Recommend** adding
 `reserved.min_free_gb: 120` to M10's registry as dated bookkeeping, alongside R10 and R12.
-**Ruling:**
+**Ruling (Dylan, 2026-09-10):** accepted as recommended: add `reserved.min_free_gb: 120` to M10's registry, dated, with R10 and R12.
 
 ## R8 — LoTTE metric, seven slices, identities (blocks the pre-build gate)
 `instructions-m9.md`:171 registers LoTTE-clean as 7 slices, 20,122 queries, macro over slices,
@@ -78,7 +78,7 @@ against) or Success@5 (LoTTE's native metric). **Recommend nDCG@10** as the veto
 Success@5 reported beside it descriptively, and a `m13/LOTTE_GATE.json` registration listing the
 seven slice identifiers and their query counts, committed before any LoTTE read. No LoTTE content
 is read to write it: `work/lotte/inventory.json` and `PROVENANCE.md` name the slices.
-**Ruling:**
+**Ruling (Dylan, 2026-09-10):** accepted as recommended: nDCG@10 is the veto metric, Success@5 reported beside it; `m13/LOTTE_GATE.json` registers the seven slices before any read.
 
 ## R9 — Clear `pending` on both E arms (blocks E1, so blocks renting for E)
 `contrasts.compute` returns `not_computed` for any arm carrying `pending`, by registered
@@ -90,7 +90,7 @@ contrast records. Options: (a) one dated pre-observation commit that strips `pen
 byte-identical (only `registry_sha256` fields move); (b) change `contrasts.py` to compute once a
 record exists, leaving the registry alone. **Recommend (a)**: it is what the registry says the
 field means, and the numbers do not move. (b) silently redefines a registered field.
-**Ruling:**
+**Ruling (Dylan, 2026-09-10):** accepted as recommended: one dated pre-observation commit strips `pending`, re-issues the F verdict and recomputes the ten contrasts byte-identically.
 
 ## R10 — Reserved-batch allowance (blocks renting: the cap formula needs it)
 The conditional reserved batch (fires iff a conjunct rejects) needs stella document vectors for
@@ -98,7 +98,7 @@ FEVER and DBpedia-entity, about 10M passages that do not exist in `work/enc`, pl
 cqadup components. The archived budget table has no line for it. **Recommend** a named line of
 8 A100-hours (estimate; measured on day one by timing 10,000 passages) plus 60 GB of disk, reserved
 before `max_extension_cycles` is computed.
-**Ruling:**
+**Ruling (Dylan, 2026-09-10):** "fine if needed": add the reserved-batch allowance line (8 A100-hours estimate, 60 GB disk), re-measured on day one.
 
 ## R11 — Crash after the tag, before the first persisted dataset (blocks final access)
 `score13` treats this window as an outright loss: with no persisted registry sha there is nothing
@@ -109,15 +109,17 @@ registry at BEGIN, tag present, zero scores). **Recommend (b) as a dated amendme
 commit pins code and registry as firmly as a persisted sha does, and a crash in the first
 dataset's encode would otherwise forfeit the only access for a hardware hiccup. If you prefer the
 registry's literal reading, (a) is already implemented.
-**Ruling:**
+**Ruling (Dylan, 2026-09-10):** accepted as recommended: continuation authenticated by the BEGIN commit alone, as a dated amendment.
 
 ## R12 — `paths_guard` allowlist for the reserved stage (blocks reserved access)
 `paths_guard.claim()` verifies the calling module against the allowlist, so `score13`'s reserved
 stage cannot borrow `m8src.final_run`'s entry. **Recommend** adding the entry in the same dated
 commit as R7 and R10 (LEDGER 15 amendment). Bookkeeping, no protocol change.
-**Ruling:**
+**Ruling (Dylan, 2026-09-10):** accepted as recommended: allowlist entry for the reserved stage in the same dated commit as R7 and R10.
 
 ## Provider (your choice; not a registered field)
+
+**Ruling (Dylan, 2026-09-10):** decided later; RunPod Secure Cloud is the standing recommendation.
 Registered spec: one A100 80 GB (H100 only if its cost per example measures lower on the
 day-one smoke), ≥ 500 GB persistent disk that survives instance stop, SSH, a GitHub deploy key
 for the headless commit-and-push contract, the instance stopped between stages. Every price below
