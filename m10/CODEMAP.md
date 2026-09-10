@@ -1,5 +1,8 @@
 # M10 code map
 
+M13 reuses these components; experiment paths stay unchanged. Historical mandate/ledger line
+references resolve to `research/archive/m10-cleanup-2026-09-10/`, not the shortened entry files.
+
 `m10src/` imports `m7src` and `m9src` and edits neither. `m8/CODEMAP.md` and `m9/CODEMAP.md` still apply.
 
 | module | what | artifact |

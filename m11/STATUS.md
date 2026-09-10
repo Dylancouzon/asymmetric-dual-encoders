@@ -2,7 +2,7 @@
 
 **Delivered: the zero half of the pair, end to end.** Two public models, both ONNX, both served by
 FastEmbed as built-in entries, both byte-verified against the bytes the gates signed off. Everything
-that depended on M10 moved to **M13** (`instructions-m13.md`); the image model became **M15**.
+that depended on M10 moved to **M14** (`instructions-m14.md`; current numbering updated 2026-09-10); the image model became **M16**.
 
 | | |
 |---|---|
@@ -24,7 +24,7 @@ gates, 6 serving checks, negative control 4.475e-04, and 8 anonymous live-repo c
     PYTHONPATH=/home/dylan/fastembed .venv/bin/python m11/release/verify_fastembed.py
 
 **`m11/CODEMAP.md` is the reusable part** — the ONNX-port checklist, each item paid for by a real
-defect. Read it before porting nano or M15's image model, not this file.
+defect. Read it before porting nano or M16's image model, not this file.
 
 ## What shipped — `constella-zero`
 
@@ -64,7 +64,7 @@ three weight files.
 | `release/verify_published.py` | what the two live repos actually serve, checked anonymously |
 
 **`m11/CODEMAP.md` is the reusable part** — the ONNX-port checklist, 24 items, each one paid for by
-a T2 or T3 defect. Read it before porting nano (M13) or M15's image model, not this file.
+a T2 or T3 defect. Read it before porting nano (M14) or M16's image model, not this file.
 
 **Eight gates**, all re-run at every push: (1) the frozen source AND the staged `model.npz` hash to
 `FREEZE.json`, (2) lineage records unchanged, (3) `assert_releasable`, (4) conformance — the
@@ -137,8 +137,8 @@ mention on the hugging face card. Not really needed."* `m11/release/MODEL_CARD.m
 match the live card** — diffed against the live README, the paragraph is the only substantive
 difference (`REPO_ID` placeholders aside). A push from a stale source would have silently re-added it.
 
-The pyNIFE evidence stays in the repo (`CLAUDE.md` M16: the ~+0.035 cosine-space retention
-comparison on fiqa) and **must still be cited in M14's paper** — a card is not a related-work
+The cosine-loss explanation was withdrawn (see `instructions-m17.md`). The pyNIFE evidence stays in the repo (`instructions-m17.md`: the ~+0.035 recipe-retention
+comparison on fiqa) and **must still be cited in M15's paper** — a card is not a related-work
 section, and the paper is.
 
 ## Addendum 2026-09-04 — the doc graph IS a complete query encoder
@@ -184,9 +184,9 @@ New files: `m11/release/export_doc.py`, `push_doc.py`, `MODEL_CARD_DOC.md`, `doc
 
 ## Carried forward
 
-- **`nano`, its ONNX port and its FastEmbed entry are M13** — blocked on M10; **the whitepaper became its own milestone, M14** (Dylan, 2026-09-04), so it is not hostage to M10 —
-  which is blocked on the cloud GPU budget. `instructions-m13.md`.
-- **The upstream FastEmbed PR is M13** (Dylan, 2026-09-04): one clean PR adding all three model
+- **`nano`, its ONNX port and its FastEmbed entry are M14** — blocked on M10; **the whitepaper became its own milestone, M15** (Dylan, 2026-09-04), so it is not hostage to M10 —
+  with cloud execution now owned by M13. `instructions-m14.md`.
+- **The upstream FastEmbed PR is M14** (Dylan, 2026-09-04): one clean PR adding all three model
   entries once nano exists, not a two-model PR now. The branch that exists today,
   `add-constella-models`, is deliberately not mergeable — it also carries the #703 padding fix, and
   the models sit on a personal account where upstream hosts under `Qdrant/`.

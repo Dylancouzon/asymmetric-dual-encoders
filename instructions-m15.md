@@ -1,26 +1,39 @@
-# M15 — image model (noted, not scoped)
+# M15 — whitepaper and evidence package
 
-See `CLAUDE.md` M15 entry: an IMAGE asymmetric dual encoder, scoped once the text pair ships (M11 closed 2026-09-03; the nano half is M13). Do not inherit
-the text pair's architecture assumptions.
+Previously M14; moved 2026-09-10. One paper is the default. Runs after M13's measurement and
+normally M14's release; runs on the zero-only frontier if nano does not land. Release is optional,
+credible evidence is not. Working files belong under `m15/` when writing starts.
 
-## Use-case scoping (added 2026-09-02, Dylan)
+## Deliverable
 
-M15's fit is fixed vocabulary, frozen document collection: query encoder and index both baked at
-build time, no re-embedding path needed in the field. Candidates to scope against, ranked by fit:
+An empirical study of replacing the query encoder while preserving a pretrained document index:
+quality and deployment cost for a lookup table and compact transformer, with reproducible evidence,
+negative results, limitations and the comparator table intentionally kept off model cards.
 
-- **On-device camera/sensor classification against a fixed label or rule set** (Dylan's example:
-  a scooter's onboard camera checking "is this rider on a sidewalk" against a small closed set of
-  scene descriptions). Vocabulary and collection are fixed by the rule at deploy time; query
-  encoder never needs to know anything outside it.
-- **Offline field/vehicle manuals** — technician handheld or in-cab device holds one product line's
-  manual corpus, no connectivity, index frozen per firmware/hardware revision.
-- **Voice assistant intent routing on a fixed skill set** — smart-speaker or appliance firmware
-  matching an utterance against a bounded set of supported commands, re-flashed (not re-indexed) on
-  update.
-- **Regulatory/compliance lookup on embedded devices** — a fixed rule corpus (safety codes, spec
-  sheets) baked into hardware with a long refresh cycle (medical devices, industrial controllers).
+## Evidence and claims
 
-Each needs: the fixed vocabulary/collection size that's realistic for the use case, and why
-near-zero query compute matters there (battery, silicon cost, certification cycle) rather than just
-"it's on the edge." The camera/sensor case is the closest fit to M15's vision premise; the others
-are text-shaped and may belong back with the text pair instead.
+- Headline = pre-registered clean-4 (`nfcorpus`, `scidocs`, `scifact`, `trec-covid`) for both zero
+  and nano; always show all six. No re-picking after results. Disclose stella's ArguAna/FiQA/FEVER
+  exposure. Clean-4 means no disclosed overlap; all-six minus clean-four is partition sensitivity.
+- Teacher choice is an empirical counterexample to selecting on tower quality, not a universal
+  law: eleven teachers measured, Spearman over eight / seven comparable rows. Keep denominators
+  explicit (`results/m7_learnability_report.json`, `results/m7_offfamily_report.json`).
+- Include the baseline matrix, M7's missed dense bar, M8's negative probes, M9's dataset-dependent
+  retention and two-lock build provenance, M10's screen and M12's deployable fusion result.
+  `m10/FINDINGS.md` names the limits of the coverage, width, synthetic-data and seed claims.
+- Zero makes the near-zero-query-compute claim. Nano must demonstrate quality at comparable edge
+  cost while sharing the document index. Include assets, index, hydration, latency and RSS under
+  the same harness; distinguish cloud fusion from measured Edge behavior.
+- Unresolved superiority is not equivalence. Label descriptive differences and query-only
+  intervals. Do not claim zero confirmatorily beat BM25: its M7 C2 failed the Holm threshold.
+- Cite pyNIFE as prior art for the frozen-teacher lookup-table construction. Claim the empirical
+  evidence and deployable implementation, not architectural priority.
+- Any validation-only MS MARCO diagnostic carries its licence role and comparator-training
+  exposure caveat. It never enters training or replaces the headline benchmark.
+
+Every headline must trace to a committed result and its registered analysis. New measurements
+belong in a separately scoped M13 follow-up, not in an improvised paper paragraph. Finish with
+an independent review of the evidence and draft; disclose the findings and dispositions.
+
+Full prior writing rules and withdrawn claims:
+`research/archive/m10-cleanup-2026-09-10/instructions-m14.md`.

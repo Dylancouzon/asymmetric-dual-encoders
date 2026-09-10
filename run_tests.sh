@@ -19,7 +19,13 @@ for t in test_conformance test_encoders test_encode_cache test_dep_stats test_fr
   [ -f "$f" ] || { echo "SKIP  $t (missing)"; continue; }
   out=$($PY -u "$f" 2>&1); code=$?
   tail=$(echo "$out" | grep -iE "failure|FAIL|OK:|passed" | tail -1)
-  if [ $code -eq 0 ]; then echo "PASS  $t   ${tail}"; else echo "FAIL  $t (exit $code)   ${tail}"; rc=1; fi
+  if [ $code -eq 0 ]; then
+    echo "PASS  $t   ${tail}"
+  else
+    echo "FAIL  $t (exit $code)   ${tail}"
+    printf '%s\n' "$out"
+    rc=1
+  fi
 done
 echo
 [ $rc -eq 0 ] && echo "ALL SUITES PASS" || echo "SOME SUITES FAILED"

@@ -3,7 +3,7 @@
 ## 1. Fusion-aware training of the table (`constella-zero-hybrid`) — CUT 2026-09-04, before any code
 
 Proposed by Dylan; two drafts written and both broken by review the same day. Moved to
-`instructions-m16.md`. Recorded here so it is not re-proposed without the answers.
+`instructions-m17.md`. Recorded here so it is not re-proposed without the answers.
 
 **Draft 1, broken by Fable.** Framed the objective as "stop imitating stella's query vector". Wrong:
 `zero`'s final phase is objective A, **InfoNCE** against frozen doc vectors
@@ -30,7 +30,7 @@ And the power arithmetic kills it independently: fused seed SD **0.000332**, so 
 difference has SE ≈ **0.000271**; at a true effect of 0.005 — the ceiling of every table-side lever
 measured here — **P(observed ≥ 0.008) ≈ 0**. The design guaranteed its own null.
 
-**What would have to be true to reopen it** (all of them, see `instructions-m16.md`): a trainer that
+**What would have to be true to reopen it** (all of them, see `instructions-m17.md`): a trainer that
 carries per-query candidate lists with aligned lexical scores; both retrievers searching the same
 corpus; a registered operator-specific loss with the detach decisions named; a measured noise floor
 for per-arm fusion re-selection; and a bar set from that floor rather than from the historical

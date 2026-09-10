@@ -1,5 +1,8 @@
 # LoTTE read #1 — pre-LoTTE amendment for M10
 
+**Current owner: M13. Not ready for access.** Open metric/slice and execution findings:
+`m13/EXECUTION.md`. Historical clauses below remain subject to that gate.
+
 **Written 2026-09-09, while LoTTE is ENTIRELY UNREAD for M10.** M9's read #1 was withdrawn
 unexecuted at its close-out (2026-09-01) precisely so M10 would inherit a fresh surface, so this is
 a **first** access, not a repeat.

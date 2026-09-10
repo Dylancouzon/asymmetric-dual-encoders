@@ -9,7 +9,7 @@ query paths against the *same* document index, each with its quality and its cos
 | | query path | status |
 |---|---|---|
 | **`zero`** | a 30,522 × 1024 int8 lookup table. No transformer, no matmul. | **released** (below) |
-| **`nano`** | a ≤35M distilled transformer | M9 missed its bars; M10 is the retry, paused |
+| **`nano`** | a ≤35M distilled transformer | M9 dev miss; M10 prep complete, M13 cloud work pending |
 
 Document side for both: [`NovaSearch/stella_en_400M_v5`](https://huggingface.co/NovaSearch/stella_en_400M_v5),
 1024-d, frozen, revision-pinned.
@@ -18,7 +18,7 @@ Document side for both: [`NovaSearch/stella_en_400M_v5`](https://huggingface.co/
 
 ## Running `zero` (M7)
 
-The model is on the Hub: **https://huggingface.co/DylanCouzon/zero-query-encoder-v1** (private).
+The model is on the Hub: **https://huggingface.co/DylanCouzon/constella-zero** (public release recorded in M11).
 MIT, 94 MB. The query side needs `numpy` and `tokenizers` — that is the entire runtime.
 
 ```bash
@@ -30,7 +30,7 @@ pip install sentence-transformers        # document side only
 from huggingface_hub import snapshot_download
 import sys, numpy as np
 
-d = snapshot_download("DylanCouzon/zero-query-encoder-v1")
+d = snapshot_download("DylanCouzon/constella-zero")
 sys.path.insert(0, d)
 from zero_encoder import ZeroQueryEncoder
 
@@ -129,16 +129,20 @@ Protocol and every registered bar: `m7/LEDGER.md`. What ships: `m7/RECIPE.md`.
 **`results/perquery.json` must never be overwritten** — frozen comparator vectors regenerated
 from caches that no longer exist.
 
-## Repo map
+## Project status and repo map
+
+Read [ROADMAP.md](ROADMAP.md) for current scope and [PROJECT_STATUS.md](PROJECT_STATUS.md) for
+the audit. M10 closes preparation; M13 owns the remaining cloud build, evaluation and costs.
+[HARNESS.md](HARNESS.md) maps reusable components and verification commands.
 
 | path | what |
 |---|---|
 | `CLAUDE.md` | standing directives, stage plan, decision log — **read this first** |
-| `m7/` … `m11/` | per-milestone status, ledger, findings, closed avenues |
+| `m7/` … `m13/` | per-milestone status, ledger, findings, closed avenues |
 | `instructions-m*.md` | the mandate each milestone was run under |
 | `m7src/`, `m9src/`, `m10src/` | harness, training, evaluation, probes |
 | `research/` | literature, licensing, teacher shortlists, adversarial reviews |
 | `results/` | every result of record, including the frozen comparators |
 
 Findings worth reading on their own: `m7/FINDINGS.md`, `m8/FINDINGS.md` (twelve probes, no lever
-moved the table more than 0.005), `m9/FINDINGS.md` (nano's coverage failure).
+moved the table more than 0.005), `m9/FINDINGS.md` (nano's dataset-dependent failure), `m10/FINDINGS.md` (recipe screening).
