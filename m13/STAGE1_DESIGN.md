@@ -107,3 +107,37 @@ refused; reserved batch runs iff a conjunct rejected.
 | R6 | `ratified_by_owner` flip | In the same commit that pins the reviewed executor, not before |
 | R7 | Reserved-batch allowance and `min_free_gb` 120 in M13's allocation and registry | Add both to the M13 allocation and an M10 registry field, dated |
 | R8 | LoTTE metric, seven slices and identities | Stage 3 registration; blocks access, not code |
+
+## 4. Stage 2 findings recorded now (cloud E readiness survey, claims re-derived)
+
+- **`E-bs32` cannot run today.** Registered 2026-09-10 in `m10/screen_registry.json`, but absent
+  from `arm_smoke.SHAPES`, `COVERS`, `CLOUD_ONLY` and `run_arm.BAND1_ORDER`; `run_arm.shape_for`
+  refuses it and `arm_smoke.main` raises "trained arms this smoke does not cover". Fix before
+  rental (it changes `code_identity()`); it implements a registered arm, so it proceeds.
+- **E1 refusal chain.** `contrasts.compute` returns `not_computed` for any arm carrying `pending`
+  (`contrasts.py:170`), by registered semantics (`arms.E-bs128._pending`). Clearing it edits the
+  registry, changes its sha and invalidates the F verdict and the ten computed contrast records'
+  bindings. Ruling **R9**: strip `pending` from both E arms pre-observation, re-issue the F verdict
+  with `contrasts.f_verdict_from` and recompute the ten contrasts, verifying every number is
+  byte-identical, BEFORE the arms run; or register an alternative resolution mechanism. Recommend
+  the former, in one dated commit.
+- **Dose and order.** bs128 floors to 39,062 steps = 4,999,936 examples (recorded in
+  `dose_rounding`); batch grouping differs by construction. Both disclosed, neither a defect.
+- **Ship list ≈ 48–50 GB**, all gitignored: target cache 12G, pool vectors 12G, packed tokens
+  ~1.6G, PAQ/harvest/generated ~550M, M9 pool + targets ~1.5G, COV ~2.5G, DEV-6 caches ~18G.
+  `run_arm.py` runs DEV-6 unconditionally at the final checkpoint, so either ship DEV-6 or run it
+  on the box from the returned `cycle3.pt`. **Never ship `work/dev/cqadup-android.json` or
+  `cqadup-english.json`** (reserved). Use the same absolute checkout path on the instance:
+  `results/m10_corpus_manifest.json` and `results/m10_targets10.json` carry absolute paths that
+  enter the resume fingerprint.
+- **Reserved batch is unpriced.** No FEVER or DBpedia document vectors exist in `work/enc`
+  (names only); the conditional batch needs ≈10M stella passage encodes, hours on an A100.
+  Ruling **R10**: its allowance must be a named line in the M13 allocation before the build starts.
+- **Cost inputs.** Measured: ANCHOR 604.8 ex/s at bs32 on the RTX 3080 (5M in 8,663 s wall);
+  `PLAN_RATES` are projections. Prices are unverified assumptions until the day-one benchmark.
+  Cap formula: `max_extension_cycles = floor((1000 − P·H_mand − disk − egress) / (P · 66.7M / R / 3600))`
+  with `H_mand` = benchmark + both E arms + build + encodes + LoTTE + reserved allowance.
+- **Provider** is Dylan's choice and not registered: one A100 80 GB (H100 if cheaper per example
+  on the day-one smoke), ≥ 500 GB persistent disk, SSH, GitHub deploy key; no credentials live in
+  the repo. The active `m10/M102_LOCK.md` has no budget table although `m10/LOTTE_LOCK.md` cites
+  one; the archived table omits the reserved batch.
