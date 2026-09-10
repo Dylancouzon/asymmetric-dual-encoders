@@ -13,8 +13,9 @@ Three things changed on the way over, each deliberate:
    refuses: there is no path that proceeds unsealed.)
 2. **Preflight reads NO protected payload.** It checks the six's qids through
    `results/eval_manifest.json` against `results/perquery.json` — metadata and the comparator, never
-   `results/frozen_eval/`. That is ruling R1's recommendation (`m13/STAGE1_DESIGN.md` §3); the
-   payload-level checks live inside the transaction (`score13.payload_checks`), one switch away.
+   `results/frozen_eval/`. That is ruling R1's recommendation (`m13/STAGE1_DESIGN.md` §3), now
+   SETTLED: the payload-level checks live inside the transaction (`score13.payload_checks`), first
+   after the tag, and the option that let them run before it is gone (review B1).
 3. **`min_free_gb` is a Config field, defaulted to 120.** M10's registry has NO such field (M9/M7
    inherited the requirement in prose only — see `m13/EXECUTION.md`, "restore inherited 120 GB
    space requirement"). If R7 adds `min_free_gb` to the registry, `preflight` prefers it.
@@ -69,17 +70,17 @@ class Config:
     # None -> the registry's `origin_url`. The rehearsal pins its bare fixture remote here.
     origin_url: str | None = None
     min_free_gb: float = 120.0
+    # The document tower's identity, pinned (review A2). `m7src/teacher` resolves its own
+    # TEACHER/TEACHER_REV from `M7_ENCODER`; the executor refuses unless the ACTIVE encoder is
+    # this one, so a run under the default bge-base cannot consume the access. The rehearsal
+    # overrides these with whatever encoder built its fixture cache.
+    teacher_model_id: str = "NovaSearch/stella_en_400M_v5"
+    teacher_revision: str = "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20"
+    teacher_dtype: str = "fp32"
     serving_parity_artifacts: tuple[str, ...] = ("results/m10_student_parity_box.json",)
     doc_cache_fmt: str = DOC_CACHE_FMT
-    # "nano" -> m10src/final10; "m9" -> m9src/final_stats + m9src/final9.decide, untouched.
+    # "nano" -> m10src/final10; "m9" -> refused until M9's own registration is wired (review B13).
     decision_layer: str = "nano"
-    # RULING R1 is pending. True = the payload-level checks (lengths, duplicates, qid-set equality
-    # against the frozen payload) run INSIDE the transaction, first after the tag. Flip to False
-    # only if the owner rules for M7's payload-reading preflight instead.
-    payload_checks_inside: bool = True
-    # Only these paths may be dirty when a post-tag continuation re-enters. Anything else is
-    # undeclared output drift.
-    allowed_drift: tuple[str, ...] = ()
     # --- injected components (None -> the production implementation in score13) ---------------
     corpus_reader: object = None        # (ds) -> (doc_ids, doc_texts); None -> final_run's HF read
     doc_vector_loader: object = None    # (cfg, ds, doc_texts) -> (n, d) array
@@ -92,7 +93,10 @@ class Config:
 
     @property
     def state_path(self) -> Path:
-        return self.scores_dir / "run_state.json"
+        """The BEGIN-bound run manifest (review B2/B3). Written BEFORE the tag is pushed, so
+        every row this run persists carries one code, registry, comparator and checkpoint
+        identity that `--recover` re-checks."""
+        return self.scores_dir / "run_manifest.json"
 
     def score_path(self, ds: str) -> Path:
         return self.scores_dir / f"{ds}.json"
@@ -239,6 +243,31 @@ def spent_tag_exists(cfg, conf):
     return False, ""
 
 
+def remote_tag_commit(cfg):
+    """-> the COMMIT the spent tag points at on origin, or None.
+
+    `git ls-remote --tags` lists an annotated tag twice: `refs/tags/<t>` is the tag OBJECT and
+    `refs/tags/<t>^{}` is the commit it peels to. Comparing the unpeeled sha against a commit sha
+    never matches, so the peeled line is the one that answers "does the receipt point at the run's
+    BEGIN commit?" (review B2).
+    """
+    tag = cfg.spent_tag
+    r = subprocess.run(["git", "ls-remote", "--tags", "origin",
+                        f"refs/tags/{tag}", f"refs/tags/{tag}^{{}}"],
+                       cwd=cfg.repo, capture_output=True, text=True)
+    if r.returncode != 0:
+        raise SystemExit(f"REFUSED: cannot reach origin to peel {tag} "
+                         f"({(r.stderr or '').strip()[:200]}).")
+    peeled, plain = None, None
+    for line in r.stdout.splitlines():
+        sha, _, ref = line.partition("\t")
+        if ref.endswith("^{}"):
+            peeled = sha.strip()
+        elif ref.strip() == f"refs/tags/{tag}":
+            plain = sha.strip()
+    return peeled or plain
+
+
 # ---------------------------------------------------------------------------- preflight
 
 def _doc_cache_dirs(cfg, ds):
@@ -359,7 +388,8 @@ def preflight(cfg, conf, infra_retry=False):
                         f"overwritten. Use --recover to recompute decisions from it.")
     if any(cfg.scores_dir.glob("*.json")) if cfg.scores_dir.exists() else False:
         problems.append(f"{cfg.scores_dir} already holds per-dataset scores; a fresh run must not "
-                        f"start on top of them (post-tag continuation is a different mode).")
+                        f"start on top of them. There is no continuation (ruling R14): if the tag is on "
+                                f"origin too, the access is spent and the run reports and stops.")
 
     if sh(cfg, "git", "status", "--porcelain"):
         problems.append("working tree is dirty; the freeze commit must be clean.")
@@ -420,13 +450,25 @@ def ledger_append(cfg, line):
         f.write(line + "\n")
 
 
-def spend_access(cfg, freeze_sha):
+def spend_access(cfg, freeze_sha, before_tag=None):
     """Push the receipt BEFORE the first protected read. Push failure aborts before any access.
 
-    -> the BEGIN commit sha, which a post-tag continuation must later match HEAD against.
+    Two steps, because the run manifest must be BEGIN-bound and must exist before the tag (review
+    B2/B3): `before_tag(begin_commit)` runs between them, after the BEGIN commit is durable on
+    origin and before anything is spent.
+
+    -> the BEGIN commit sha, which the run manifest and every persisted row are bound to.
     """
+    head = begin_commit(cfg, freeze_sha)
+    if before_tag is not None:
+        before_tag(head)
+    push_spent_tag(cfg, freeze_sha)
+    return head
+
+
+def begin_commit(cfg, freeze_sha):
+    """The FINAL-RUN-BEGIN ledger entry, committed and verified on origin. Nothing is spent yet."""
     stamp = datetime.now(timezone.utc).isoformat()
-    tag = cfg.spent_tag
     ledger_append(cfg, f"\n- {stamp} — **{BEGIN}** freeze `{freeze_sha[:12]}` "
                        f"pid {os.getpid()} host `{os.uname().nodename}`")
     for cmd in (("git", "add", str(cfg.ledger_path)),
@@ -442,6 +484,13 @@ def spend_access(cfg, freeze_sha):
     if head != sh(cfg, "git", "rev-parse", "origin/" + branch_name(cfg)):
         raise SystemExit("ABORT before any protected read: HEAD is not the pushed origin tip after "
                          "the BEGIN commit. No access consumed.")
+    return head
+
+
+def push_spent_tag(cfg, freeze_sha):
+    """Create and push the annotated receipt. THIS is where the access is spent."""
+    stamp = datetime.now(timezone.utc).isoformat()
+    tag = cfg.spent_tag
     ok, err = sh_ok(cfg, "git", "tag", "-a", tag, "-m",
                     f"M10 six-set access spent {stamp} freeze {freeze_sha[:12]}")
     if not ok:
@@ -454,7 +503,6 @@ def spend_access(cfg, freeze_sha):
                          f"removed; no access consumed. The receipt must be durable on origin "
                          f"before the six are opened.")
     print(f"[access13] access SPENT and pushed: {tag}. Everything from here is irreversible.")
-    return head
 
 
 def commit_and_push(cfg, paths, message):

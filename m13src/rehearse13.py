@@ -28,10 +28,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+# OFFLINE, before `transformers` is imported anywhere below (review B12). The rehearsal must not
+# depend on the network — not for the tiny backbone, not for a tokenizer, not for a dataset — and
+# a fixture that quietly downloaded something would be rehearsing a different code path than the
+# cloud box will run. Every `from_pretrained` below also passes `local_files_only=True`.
+for _k in ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE", "HF_DATASETS_OFFLINE"):
+    os.environ.setdefault(_k, "1")
 
 import numpy as np
 
@@ -66,7 +74,7 @@ def materialize_tiny(root, seed=0):
     if (d / "config.json").exists() and (d / "vocab.txt").exists():
         return d
     d.mkdir(parents=True, exist_ok=True)
-    conf = AutoConfig.from_pretrained(TINY_HUB)          # cached locally; no network
+    conf = AutoConfig.from_pretrained(TINY_HUB, local_files_only=True)   # cached; no network
     conf.vocab_size = len(VOCAB)
     torch.manual_seed(seed)
     BertModel(conf).save_pretrained(d)
@@ -97,8 +105,8 @@ class TinyAnchor:
         import torch
         from transformers import AutoModel, AutoTokenizer
         self.torch = torch
-        self.tok = AutoTokenizer.from_pretrained(str(model_dir))
-        self.m = AutoModel.from_pretrained(str(model_dir)).eval()
+        self.tok = AutoTokenizer.from_pretrained(str(model_dir), local_files_only=True)
+        self.m = AutoModel.from_pretrained(str(model_dir), local_files_only=True).eval()
 
     def encode(self, texts, batch_size=128):
         torch = self.torch
@@ -112,6 +120,30 @@ class TinyAnchor:
                 out[i:i + batch_size] = torch.nn.functional.normalize(
                     h.float(), dim=-1).cpu().numpy()
         return out
+
+
+def fixture_reserved_encoder(cfg, conf, system, rows_candidate):
+    """The reserved stage's injected encoder, SYNTHETIC and fixture-only.
+
+    Production has none: the reserved four's stella vectors do not exist, so `score13.reserved_batch`
+    refuses and the run ends INCOMPLETE_RESERVED (review B13). This stand-in exists so the rehearsal
+    exercises the per-system atomic write and the COMPLETE end status too; it opens no payload,
+    reads no reserved dataset and produces no number that means anything. A test drops it to get
+    the production refusal back.
+    """
+    return {"system": system, "datasets": list(conf["reserved"]["datasets"]),
+            "n_candidate_datasets": len(rows_candidate), "written": access13.utcnow(),
+            "_fixture": "SYNTHETIC rehearsal record. No reserved payload was opened and no "
+                        "reserved score was computed; this is machinery, not a measurement."}
+
+
+def _pin_fixture_teacher(cfg):
+    """The fixture's document cache is written with whatever `M7_ENCODER` selects on this box, so
+    the executor's pinned stella identity (review A2) is overridden to match it — and only here."""
+    import teacher
+    cfg.teacher_model_id, cfg.teacher_revision = teacher.TEACHER, teacher.TEACHER_REV
+    cfg.teacher_dtype = "fp32"
+    return cfg
 
 
 # ------------------------------------------------------------------ the fixture
@@ -184,8 +216,10 @@ def build(root=DEFAULT_ROOT, n_docs=200, n_queries=30, seed=0, dim=1024, clean=T
         serving_parity_artifacts=("results/m10_student_parity_box.json",),
         corpus_reader=None,          # set below, once the corpus exists
         load_anchor=None,            # set below, once the tiny backbone exists
+        reserved_encoder=fixture_reserved_encoder,
         topk=50, chunk=10_000,
     )
+    _pin_fixture_teacher(cfg)
     (repo / "results" / "m10_student_parity_box.json").write_text(
         json.dumps({"_fixture": "serving-parity stand-in"}, indent=1))
     (repo / "m10" / "LEDGER.md").write_text("# Fixture ledger\n")
@@ -285,22 +319,29 @@ def build(root=DEFAULT_ROOT, n_docs=200, n_queries=30, seed=0, dim=1024, clean=T
 
 
 def main(argv=None):
+    """`--run` (the default) rebuilds the fixture from scratch and runs the WHOLE transaction, so
+    it is repeatable: one command, any number of times, on a world that never touches `results/`.
+    Ruling R14 removed post-tag continuation, which makes this rehearsal the reliability story."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default=str(DEFAULT_ROOT))
-    ap.add_argument("--run", action="store_true", help="build and run the whole transaction")
+    ap.add_argument("--run", action="store_true",
+                    help="build a fresh fixture and run the whole transaction (the default)")
     ap.add_argument("--recover", action="store_true", help="build nothing; --recover an existing "
                                                            "fixture run")
     ap.add_argument("--preflight-only", action="store_true")
+    ap.add_argument("--build-only", action="store_true", help="build the fixture and stop")
     a = ap.parse_args(argv)
     if a.recover:
         cfg = build(a.root, clean=False) if not (Path(a.root) / "repo").exists() else _reopen(a.root)
-        return score13.run(cfg, recover=True)
-    cfg = build(a.root)
-    if a.preflight_only:
-        return score13.run(cfg, preflight_only=True)
-    if a.run:
-        return score13.run(cfg)
-    return 0
+        code = score13.run(cfg, recover=True)
+    else:
+        cfg = build(a.root)
+        if a.build_only:
+            return 0
+        code = score13.run(cfg, preflight_only=a.preflight_only)
+    print(f"[rehearse13] exit {code} "
+          f"({'OK' if code == 0 else 'nonzero — see the report above'})")
+    return code
 
 
 def _reopen(root):
@@ -321,9 +362,11 @@ def _reopen(root):
         enc_root=repo / "work" / "enc", lock_path=repo / "work" / "m10final.lock",
         origin_url=str(root / "origin.git"), min_free_gb=0.05,
         load_anchor=lambda _d=tiny_dir: TinyAnchor(_d), topk=50, chunk=10_000,
+        reserved_encoder=fixture_reserved_encoder,
         corpus_reader=lambda ds: (lambda b: (b["doc_ids"], b["doc_texts"]))(
             json.loads((repo / "work" / "corpus" / f"{ds}.json").read_text())),
     )
+    _pin_fixture_teacher(cfg)
     cfg.load_student = lambda fz, _r=repo: score13.Nano10Student(fz, repo=_r)
     _ = freeze
     return cfg

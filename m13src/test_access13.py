@@ -163,6 +163,38 @@ def test_the_lock_is_exclusive(world):
     assert "flock-held" in (r.stdout + r.stderr)
 
 
+def test_remote_tag_commit_peels_an_annotated_tag(world):
+    """An annotated tag's own object sha is NOT the commit; only the peeled ref answers "does the
+    receipt point at the BEGIN commit?" (review B2)."""
+    head = access13.begin_commit(world, "0" * 64)
+    access13.push_spent_tag(world, "0" * 64)
+    tag_object = access13.sh(world, "git", "rev-parse", world.spent_tag)
+    assert tag_object != head                      # annotated: the object is not the commit
+    assert access13.remote_tag_commit(world) == head
+
+
+def test_spend_access_writes_the_manifest_between_begin_and_the_tag(world):
+    order = []
+
+    def before_tag(begin):
+        order.append(("callback", begin,
+                      access13.sh(world, "git", "tag", "-l", world.spent_tag)))
+
+    head = access13.spend_access(world, "0" * 64, before_tag=before_tag)
+    assert order == [("callback", head, "")]       # the tag did not exist yet
+    assert access13.remote_tag_commit(world) == head
+
+
+def test_no_tag_is_created_when_the_manifest_write_fails(world):
+    def before_tag(_begin):
+        raise RuntimeError("disk full")
+
+    with pytest.raises(RuntimeError):
+        access13.spend_access(world, "0" * 64, before_tag=before_tag)
+    assert access13.sh(world, "git", "tag", "-l", world.spent_tag) == ""
+    assert not access13.spent_tag_exists(world, _conf(world))[0]
+
+
 def test_write_atomic_leaves_no_partial_file(tmp_path):
     p = tmp_path / "x.json"
     access13.write_atomic(p, '{"a": 1}')
