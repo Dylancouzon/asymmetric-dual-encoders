@@ -50,7 +50,7 @@ def _ev(**kw):
     sf, out = CONF["signflip"], {}
     for cid, (l, p) in kw.items():
         c = CONF["conjuncts"][cid]
-        out[cid] = {"stat": _stat(l, cid=cid), "signflip_p": p,
+        out[cid] = {"stat": _stat(l, cid=cid), "signflip_p": p, "conjunct": cid,
                     "signflip_B": sf["B"], "signflip_seed": sf["seed"],
                     "signflip_alternative": sf["alternative"],
                     "signflip_unit_of": "boot.unit_key",
@@ -208,18 +208,29 @@ def test_decide_REFUSES_evidence_that_does_not_match_the_registered_procedure():
     with nothing. Both reviewers demonstrated the consequence on 2026-09-09: evidence produced at
     quantile 0.0125 with `linear` at B=9, and even `signflip_p=-1`, was accepted as REJECTED —
     because the field is NAMED `lower_q025_raw` however it was computed."""
-    for bad, match in (
-            ({"quantile": 0.0125}, "quantile"),
-            ({"quantile_method": "linear"}, "quantile_method"),
-            ({"B": 9}, "B="),
-            ({"k_datasets": 3}, "k_datasets"),
-            ({"n_by_dataset": {"scifact": 100}}, "scored datasets")):
-        ev = {"C1b": {"stat": _stat(0.01, **bad), "signflip_p": 0.001}}
-        with pytest.raises(ValueError, match="does not match the registered procedure"):
+    for bad, needle in (
+            ({"quantile": 0.0125}, "quantile=0.0125"),
+            ({"quantile_method": "linear"}, "quantile_method='linear'"),
+            ({"B": 9}, "B=9"),
+            ({"k_datasets": 3}, "k_datasets=3"),
+            ({"n_by_dataset": {"scifact": 100}}, "scored datasets"),
+            ({"bootstrap_seed": 12345}, "bootstrap_seed=12345")):
+        # ONE field mutated on OTHERWISE COMPLETE evidence, and the message must name THAT field.
+        # The first version of this test built evidence with no provenance at all, so every case
+        # raised with nine problems and matched only the generic prefix -- deleting any individual
+        # check would have left it green (Fable, 2026-09-10).
+        ev = _ev(C1b=(0.01, 0.001))
+        ev["C1b"]["stat"].update(bad)
+        with pytest.raises(ValueError) as exc:
             F.decide(ev)
+        assert needle in str(exc.value), (needle, str(exc.value))
+        assert str(exc.value).count(";") == 0, \
+            f"exactly ONE problem should be reported for a single mutation: {exc.value}"
     for p in (-1, 1.5, None, "0.01"):
+        ev = _ev(C1b=(0.01, 0.001))
+        ev["C1b"]["signflip_p"] = p
         with pytest.raises(ValueError, match="not a probability"):
-            F.decide({"C1b": {"stat": _stat(0.01), "signflip_p": p}})
+            F.decide(ev)
 
 
 def test_bootstrap_takes_no_quantile_argument_at_all_and_refuses_a_wrong_sized_plan():
@@ -232,7 +243,7 @@ def test_bootstrap_takes_no_quantile_argument_at_all_and_refuses_a_wrong_sized_p
     assert params == ["aligned", "plan", "conf"], params
     al = _aligned(F.cfg()["partitions"]["clean4"])
     short, _ = F.draw_plan(al, B=200, seed=900)
-    with pytest.raises(ValueError, match="replicates"):
+    with pytest.raises(ValueError, match="replicate counts"):
         F.bootstrap(al, short, F.cfg())
 
 
@@ -384,3 +395,76 @@ def test_every_emitted_sentence_avoids_the_forbidden_vocabulary():
         low = item["sentence"].lower()
         for w in F.cfg()["forbidden_words"]:
             assert w not in low, (item["conjunct"], w)
+
+
+def test_the_gate_is_PRODUCTION_bootstrap_s_250th_order_statistic():
+    """The previous version of this demonstrated `inverted_cdf` on `rng.normal` draws and never
+    touched `bootstrap()` — it proved a numpy property, not ours (Fable, 2026-09-10). This
+    reconstructs the draw vector from the production plan and checks the emitted field IS the
+    250th order statistic of it, and that the recorded digest matches."""
+    import hashlib
+    conf = F.cfg()
+    ds = conf["partitions"]["clean4"]
+    al = _aligned(ds, n=30)
+    plan, _ = F.draw_plan(al, B=conf["bootstrap"]["B"], seed=conf["bootstrap"]["seed"])
+    stat = F.bootstrap(al, plan, conf)
+    diffs = {d: (x - y) for d, (_q, x, y) in al.items()}
+    draws = np.zeros(conf["bootstrap"]["B"], dtype=np.float64)
+    for d, v in diffs.items():
+        draws += v[plan[d]].mean(axis=1)
+    draws /= len(diffs)
+    assert stat["lower_q025_raw"] == float(np.sort(draws)[249]), \
+        "the emitted gate must be the 250th order statistic of the production draw vector"
+    assert stat["draws_sha256"] == hashlib.sha256(
+        np.ascontiguousarray(draws).tobytes()).hexdigest()
+
+
+def test_canonical_returns_the_FILE_not_an_object_that_merely_compares_equal():
+    """`dict.__eq__` compares stored items, so a subclass overriding `__getitem__` compares equal
+    and reads differently — and the first version returned the caller's object, reopening the
+    alpha=1.0 attack it was written to close (Fable, 2026-09-10)."""
+    class Sneaky(dict):
+        def __getitem__(self, k):
+            if k == "sequence":
+                return {"order": ["C1b", "C1a", "C2a", "C2b"], "alpha_per_conjunct": 1.0}
+            return super().__getitem__(k)
+
+    sneaky = Sneaky(F.cfg())
+    assert sneaky["sequence"]["alpha_per_conjunct"] == 1.0
+    assert F.canonical(sneaky)["sequence"]["alpha_per_conjunct"] == 0.025
+    d = F.decide(_ev(C1b=(0.01, 0.9), C1a=(-0.1, 0.9)), sneaky)
+    assert d["conjuncts"]["C1b"]["status"] == F.NOT_REJECTED, \
+        "p = 0.9 must not reject, whatever alpha the caller's object reports"
+
+
+def test_a_single_non_finite_score_is_refused_rather_than_flipping_the_verdict():
+    """Not an attack — a plausible accident (an unscored query, a divide-by-zero nDCG, a missing
+    qrel). One NaN made the bound NaN, `nan > 0` False, and the sign-flip p its MINIMUM: a true
+    positive silently became NOT_REJECTED with a record that looked valid."""
+    sc = _scores("C1b", shift=0.08)
+    c = F.cfg()["conjuncts"]["C1b"]
+    ds = F.cfg()["partitions"]["clean4"][0]
+    first = next(iter(sc[c["a"]][ds]))
+    for bad in (float("nan"), float("inf")):
+        sc[c["a"]][ds][first] = bad
+        with pytest.raises(ValueError, match="non-finite per-query score"):
+            F.evidence_for("C1b", sc)
+
+
+def test_the_two_halves_of_the_pass_rule_must_have_scored_the_same_queries():
+    ev = _ev(C1b=(0.01, 0.001))
+    ev["C1b"]["signflip_per_dataset_n"] = {d: 7 for d in ev["C1b"]["stat"]["n_by_dataset"]}
+    with pytest.raises(ValueError, match="the sign-flip scored"):
+        F.decide(ev)
+
+
+def test_an_empty_or_mixed_draw_plan_is_a_ValueError_not_a_StopIteration():
+    conf = F.cfg()
+    al = _aligned(conf["partitions"]["clean4"])
+    with pytest.raises(ValueError, match="empty draw plan"):
+        F.bootstrap(al, {}, conf)
+    good, _ = F.draw_plan(al, B=conf["bootstrap"]["B"], seed=conf["bootstrap"]["seed"])
+    short, _ = F.draw_plan(al, B=50, seed=900)
+    mixed = dict(good); mixed[conf["partitions"]["clean4"][0]] = short[conf["partitions"]["clean4"][0]]
+    with pytest.raises(ValueError, match="replicate counts"):
+        F.bootstrap(al, mixed, conf)

@@ -25,25 +25,49 @@ A veto means **the anchor recipe builds**. Margin, bootstrap rule and consequenc
 other action may follow from read #1.** Adoption may not trigger any retraining choice, any recipe
 edit, or any change to a screen verdict.
 
-**M10's specific case.** The screen selected no non-default component, so *the selected recipe and
-the anchor recipe are the same in every axis except `batch`* (`M102_LOCK.md`). Registered here
-before E1 is read, and before any LoTTE byte is:
+## WHEN, and on WHICH artifact — corrected 2026-09-10 to the mandate
 
-- if E selects **bs32** → the two arms select the same RECIPE, so read #1 is **SKIPPED** and
-  reported skipped. **The criterion is identical RECIPE AND ACTION, not identical checkpoint
-  hashes** — corrected 2026-09-10, second Codex pass. My previous version made the skip conditional
-  on the two candidates hashing identically, and that was wrong twice over: the veto's only
-  consequence is *"the anchor recipe builds"*, which is **invariant** when both arms select the same
-  recipe however the artifacts differ; and two separate stochastic builds will essentially never
-  hash the same, so the condition would have forced a vacuous veto to run in practice while leaving
-  the differing-hash branch with no mandated action at all. There is now exactly one branch and one
-  action.
-  Differing artifacts remain a well-defined *descriptive* artifact-to-artifact contrast, and if
-  anyone wants it, it is a descriptive row — never the veto, and never decision-bearing.
-- **A skipped read is FORFEITED, not banked.** It does not become a spare access, and read #2
+**This was a real deviation and it is withdrawn.** My first version said read #1 happens *"after
+the recipe lock **and after the build**"*, with the candidate being the 200M final checkpoint. The
+mandate (`instructions-m10.md`:748-753) says something different and better:
+
+> **read #1 after the recipe lock.** Before LoTTE opens, the **selected recipe is trained once as a
+> single synthesized arm at screen dose** (its checkpoint hash committed); read #1 scores that
+> checkpoint and the anchor's in one atomic batch.
+
+So read #1 is **after the lock and BEFORE the build**, on a **screen-dose (5M) synthesized arm**,
+against the **anchor's screen-dose checkpoint**. That is what makes the veto's consequence — *"the
+anchor recipe builds"* — coherent: it chooses **which recipe gets the expensive build**, before the
+money is spent.
+
+My post-build version broke it in two ways Fable identified (2026-09-10): the veto would have
+compared a 200M build against a 5M arm, so it could essentially never fire and would "run"
+vacuously; and had it fired, "the anchor recipe builds" would have required a **second 200M build
+that the budget table does not carry**. Both problems disappear once the read sits where the
+mandate put it.
+
+**M10's specific case.** The screen selected no non-default component, so *the selected recipe and
+the anchor recipe are the same in every axis except `batch`* (`M102_LOCK.md`) — and at screen dose
+both arms already exist or are about to:
+
+- if E selects **bs32** → the selected recipe IS the anchor recipe, so the synthesized screen-dose
+  arm IS `ANCHOR`. The veto would compare a recipe to itself and its action is invariant, so the
+  **VETO is SKIPPED** and reported skipped. **The criterion is identical RECIPE AND ACTION, not
+  identical checkpoint hashes** — my second version made the skip conditional on the two candidates
+  hashing identically, and that was wrong: two stochastic builds essentially never hash alike, so
+  it would have forced a vacuous veto to run while leaving the differing-hash branch with no
+  mandated action. One criterion, one action.
+- if E selects **bs128** → the selected recipe at screen dose is `E-bs128` (5M) and the anchor is
+  `ANCHOR` (5M). **Both arms already exist**, the veto is well-defined, and a veto means the bs32
+  anchor recipe is what gets built. No extra training, no second build.
+- **The candidate's OBSERVATIONAL LoTTE row is NOT skipped with the veto.** Fable's point, and it is
+  right: the veto being vacuous does not make the out-of-domain *observation* vacuous, and this file
+  argues LoTTE-clean is the only fresh OOD surface we have before the final run. So in the bs32
+  branch the veto is skipped and **the observational row is still read and reported**, descriptively,
+  on the synthesized arm. It selects nothing.
+- **A skipped VETO is FORFEITED, not banked.** It does not become a spare access, and read #2
   remains the pre-freeze audit and nothing else. Without this sentence "we never used read #1"
   could be argued into a second decision-bearing look.
-- if E selects **bs128** → the veto runs as written, selected = bs128, anchor = bs32.
 
 ## Why a read happens at all
 
@@ -61,21 +85,21 @@ retroactively validate the screen selection**.
 
 Deterministic, and **may not be changed using LoTTE or any LoTTE-derived output**:
 
-1. If the build reaches its registered end (the plateau rule fires, or `max_extension_cycles` is
-   exhausted, or the dose completes), the candidate is the **final annealed cycle-end checkpoint**.
-   No dev selection.
-2. If it terminates early (kill rule, non-finite loss or gradient, operator STOP, crash), the
-   candidate is the annealed cycle-end checkpoint carrying the best COV macro `m_k`, and the report
-   must disclose that it was **dev-selected**.
+The candidate for read #1 is the **synthesized selected-recipe arm at screen dose (5,000,000
+examples)**, on the recipe of `m10/M102_LOCK.md` with `seed_rule`'s seed 0 — its final annealed
+cycle-end checkpoint, no dev selection. The comparator is `ANCHOR`'s final annealed cycle-end
+checkpoint at the same dose. Both hashes are committed and pushed in a second manifest commit
+**before** the evaluator may touch LoTTE.
 
-Training config, seed and stopping rules are those of `m10/M102_LOCK.md`, unchanged. Once training
-ends, the **actual artifact hashes** are committed and pushed in a second manifest commit **before**
-the evaluator may touch LoTTE.
+(Read #2, the pre-freeze audit, is the one that sees the BUILD's final checkpoint. Its identity
+rule: the final annealed cycle-end checkpoint if the build reaches its registered end; otherwise
+the annealed cycle end carrying the best COV macro `m_k`, disclosed as **dev-selected**.)
 
 ## Firewall
 
-- **Read #1 happens AFTER the recipe lock is pushed** and after the build, never before. Its only
-  output is the veto verdict and the observational row.
+- **Read #1 happens AFTER the recipe lock is pushed and BEFORE the build.** Its only outputs are
+  the veto verdict and the observational row — and the veto's only consequence is which recipe gets
+  built.
 - **Read #2** is the pre-freeze audit, and is audit only. **No third read.**
 - LoTTE is **not** a selection surface, a bar, a tie-break, or an input to any C-conjunct. It
   appears in the final-run registry nowhere, and that is not an oversight.
@@ -89,10 +113,10 @@ the evaluator may touch LoTTE.
 
 | field | value |
 |---|---|
-| candidate checkpoint | *pending build* |
-| candidate sha256 | *pending build* |
-| anchor checkpoint | *pending E1; if E selects bs32 there is no anchor arm and read #1 is skipped* |
-| anchor sha256 | *pending* |
+| candidate checkpoint | *pending: the synthesized selected-recipe arm at 5M. If E selects bs32 this IS `ANCHOR` and the VETO is skipped* |
+| candidate sha256 | *pending* |
+| comparator checkpoint | `ANCHOR`, final annealed cycle end at 5M |
+| comparator sha256 | *pending the second manifest commit* |
 | slices | LoTTE-clean, 7 slices, macro at equal weight |
 | bootstrap | B = 10,000, seed 903, paired within slice, one-sided 97.5% upper bound |
 | veto margin | 0.004 |

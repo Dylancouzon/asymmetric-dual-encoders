@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -74,13 +75,20 @@ def canonical(conf=None, *, uncanonical_ok=False):
     if uncanonical_ok:
         return conf
     on_disk = cfg()
-    if conf != on_disk:
+    # Compare SERIALIZED bytes, not dicts. `dict.__eq__` compares stored items, so a dict subclass
+    # overriding `__getitem__` (or `__ne__`) compares equal and reads differently — and the first
+    # version of this function then RETURNED the caller's object, which reopened the very attack it
+    # was written to close (Fable, 2026-09-10: alpha=1.0 and p=0.9 accepted as REJECTED again).
+    if (json.dumps(conf, sort_keys=True, default=str)
+            != json.dumps(on_disk, sort_keys=True, default=str)):
         raise ValueError(
             "refusing a configuration that is not `m10/final_run_registry.json` on disk "
             f"(sha256 {registry_sha256()[:12]}…). The decision constants are not caller-supplied: "
             "validating evidence against a caller's ruler is not validation. Pass "
             "`uncanonical_ok=True` only from a test that is proving a rule fires.")
-    return conf
+    # Return the FILE, never the caller's object: equality is not identity, and the object that
+    # compared equal is not necessarily the object that will be read.
+    return on_disk
 
 
 def sequence(conf=None):
@@ -128,9 +136,12 @@ def bootstrap(aligned, plan, conf):
     """
     b = conf["bootstrap"]
     quantile, method = b["quantile"], b["quantile_method"]
-    if int(next(iter({int(v.shape[0]) for v in plan.values()}), 0)) != int(b["B"]):
-        raise ValueError(f"draw plan has {next(iter({int(v.shape[0]) for v in plan.values()}))} "
-                         f"replicates; the registry requires B = {b['B']}")
+    if not plan:
+        raise ValueError("empty draw plan")
+    reps = {int(v.shape[0]) for v in plan.values()}
+    if reps != {int(b["B"])}:
+        raise ValueError(f"draw plan has replicate counts {sorted(reps)}; the registry requires "
+                         f"exactly B = {b['B']}")
     k = len(aligned)
     if k == 0:
         raise ValueError("empty partition")
@@ -181,8 +192,17 @@ def assert_evidence_matches_registry(cid, ev, conf):
     part = conf["partitions"][c["partition"]]
     st = ev.get("stat") or {}
     problems = []
-    if b["decision_field"] not in st:
-        problems.append(f"no {b['decision_field']!r} field")
+    # The DECISION FIELD. Presence was all that was checked, so `True` and `inf` REJECTED and
+    # `nan` silently did not (Fable, 2026-09-10). `conjunct_rejects` does `> 0` on this value: the
+    # bool hole was closed for the sign-flip p and left open for the number that actually decides.
+    for k in (b["decision_field"], "delta_raw"):
+        v = st.get(k, "__absent__")
+        if v == "__absent__":
+            problems.append(f"no {k!r} field")
+        elif isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+            problems.append(f"{k}={v!r} is not a finite number")
+    if ev.get("conjunct") != cid:
+        problems.append(f"evidence is labelled conjunct {ev.get('conjunct')!r}, not {cid!r}")
     for k, want in (("quantile", b["quantile"]), ("quantile_method", b["quantile_method"]),
                     ("B", b["B"])):
         if st.get(k) != want:
@@ -223,6 +243,10 @@ def assert_evidence_matches_registry(cid, ev, conf):
     counts = st.get("n_by_dataset") or {}
     if any(not isinstance(v, int) or v <= 0 for v in counts.values()):
         problems.append(f"n_by_dataset has non-positive or non-integer counts: {counts}")
+    # the two halves of the pass rule must have scored the same queries
+    sf_n = ev.get("signflip_per_dataset_n")
+    if sf_n is not None and sf_n != counts:
+        problems.append(f"the bootstrap scored {counts} and the sign-flip scored {sf_n}")
     if problems:
         raise ValueError(f"{cid}: evidence does not match the registered procedure — "
                          + "; ".join(problems))
@@ -319,7 +343,8 @@ def signflip(aligned, conf):
     return {"signflip_p": float(res["p"]), "signflip_B": int(res["R"]),
             "signflip_seed": int(res["seed"]), "signflip_alternative": res["alternative"],
             "signflip_unit_of": "boot.unit_key", "signflip_strata": res["strata"],
-            "signflip_shared_units": int(res["shared_units"])}
+            "signflip_shared_units": int(res["shared_units"]),
+            "signflip_per_dataset_n": {k: int(v) for k, v in res["per_dataset_n"].items()}}
 
 
 def evidence_for(cid, scores, conf=None):
@@ -340,6 +365,17 @@ def evidence_for(cid, scores, conf=None):
         if sysname not in scores:
             raise ValueError(f"{cid}: no scores supplied for {sysname!r}")
     aligned = align_partition(scores[c["a"]], scores[c["b"]], datasets)
+    # NON-FINITE SCORES. A single NaN — one unscored query, a divide-by-zero nDCG, a missing qrel —
+    # propagates through `np.quantile` to a NaN bound, and `nan > 0` is False, so a true positive
+    # becomes NOT_REJECTED. Worse, every permuted sign-flip statistic is NaN too, so `t >= t_obs`
+    # never fires and the p-value comes back at its MINIMUM. No exception, no flag: it would decide
+    # the release against the candidate and the record would look valid (Fable, 2026-09-10).
+    for ds, (qids, x, y) in aligned.items():
+        for side, arr in ((c["a"], x), (c["b"], y)):
+            if not np.isfinite(arr).all():
+                bad = int((~np.isfinite(arr)).sum())
+                raise ValueError(f"{cid}/{ds}: {side} has {bad} non-finite per-query score(s). "
+                                 f"A NaN here silently flips a rejection to a non-rejection.")
     plan, plan_digest = draw_plan(aligned, B=conf["bootstrap"]["B"], seed=conf["bootstrap"]["seed"])
     stat = bootstrap(aligned, plan, conf)
     qid_digest = hashlib.sha256()
@@ -349,7 +385,13 @@ def evidence_for(cid, scores, conf=None):
     ev = {"stat": stat, "conjunct": cid, "partition": c["partition"],
           "orientation": f"{c['a']} minus {c['b']}", "a": c["a"], "b": c["b"],
           "draw_plan_sha256": plan_digest, "qid_sha256": qid_digest.hexdigest(),
-          "comparator_source_sha256": conf["comparator_source"]["sha256"]}
+          "comparator_source_sha256": conf["comparator_source"]["sha256"],
+          "registry_sha256": registry_sha256(),
+          "_comparator_hash_is_a_stamp": "this field is COPIED from the registry by `evidence_for`, "
+                                         "so the guard's check of it is a tautology, not a "
+                                         "measurement of the comparator file (Fable, 2026-09-10). "
+                                         "The real check is `test_final_run_registry`'s hash of "
+                                         "`results/perquery.json`."}
     ev.update(signflip(aligned, conf))
     return ev
 
