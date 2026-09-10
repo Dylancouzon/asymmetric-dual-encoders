@@ -1,0 +1,185 @@
+{
+ "_what": "Realized query EXPOSURE per arm -- what the sampler actually presented, not what was available.",
+ "arms": [
+  {
+   "arm": "A1",
+   "pattern": "75/25",
+   "examples": 5000000,
+   "query_presentations": 3750000,
+   "n_forms": 2,
+   "forms": [
+    "factoid",
+    "product"
+   ],
+   "available_texts_by_form": {
+    "factoid": 330585,
+    "product": 72858
+   },
+   "presentations_per_form": 1875000,
+   "n_generated_forms": 0,
+   "generated_share_of_query_presentations": 0.0,
+   "_what": "presentations_per_form is q_pres/n_forms because the sampler is form-balanced: every form present gets an equal share of presentations regardless of how much text backs it. available_texts_by_form is NOT exposure."
+  },
+  {
+   "arm": "A2",
+   "pattern": "75/25",
+   "examples": 5000000,
+   "query_presentations": 3750000,
+   "n_forms": 2,
+   "forms": [
+    "factoid",
+    "product"
+   ],
+   "available_texts_by_form": {
+    "factoid": 4366549,
+    "product": 72858
+   },
+   "presentations_per_form": 1875000,
+   "n_generated_forms": 0,
+   "generated_share_of_query_presentations": 0.0,
+   "_what": "presentations_per_form is q_pres/n_forms because the sampler is form-balanced: every form present gets an equal share of presentations regardless of how much text backs it. available_texts_by_form is NOT exposure."
+  },
+  {
+   "arm": "A3",
+   "pattern": "75/25",
+   "examples": 5000000,
+   "query_presentations": 3750000,
+   "n_forms": 5,
+   "forms": [
+    "claim",
+    "factoid",
+    "keyword",
+    "product",
+    "title"
+   ],
+   "available_texts_by_form": {
+    "claim": 415454,
+    "factoid": 1330329,
+    "keyword": 416453,
+    "product": 72858,
+    "title": 416478
+   },
+   "presentations_per_form": 750000,
+   "n_generated_forms": 0,
+   "generated_share_of_query_presentations": 0.0,
+   "_what": "presentations_per_form is q_pres/n_forms because the sampler is form-balanced: every form present gets an equal share of presentations regardless of how much text backs it. available_texts_by_form is NOT exposure."
+  },
+  {
+   "arm": "ANCHOR",
+   "pattern": "75/25",
+   "examples": 5000000,
+   "query_presentations": 3750000,
+   "n_forms": 12,
+   "forms": [
+    "argument",
+    "claim",
+    "comparison",
+    "conversational",
+    "factoid",
+    "finance",
+    "health",
+    "howto",
+    "keyword",
+    "product",
+    "title",
+    "yesno"
+   ],
+   "available_texts_by_form": {
+    "argument": 57401,
+    "claim": 415454,
+    "comparison": 143000,
+    "conversational": 143000,
+    "factoid": 1330329,
+    "finance": 143000,
+    "health": 62061,
+    "howto": 143000,
+    "keyword": 416453,
+    "product": 72858,
+    "title": 416478,
+    "yesno": 143000
+   },
+   "presentations_per_form": 312500,
+   "n_generated_forms": 7,
+   "generated_share_of_query_presentations": 0.5833333333333334,
+   "_what": "presentations_per_form is q_pres/n_forms because the sampler is form-balanced: every form present gets an equal share of presentations regardless of how much text backs it. available_texts_by_form is NOT exposure."
+  },
+  {
+   "arm": "F-MiniLM-L6",
+   "pattern": "75/25",
+   "examples": 20000000,
+   "query_presentations": 15000000,
+   "n_forms": 12,
+   "forms": [
+    "argument",
+    "claim",
+    "comparison",
+    "conversational",
+    "factoid",
+    "finance",
+    "health",
+    "howto",
+    "keyword",
+    "product",
+    "title",
+    "yesno"
+   ],
+   "available_texts_by_form": {
+    "argument": 57401,
+    "claim": 415454,
+    "comparison": 143000,
+    "conversational": 143000,
+    "factoid": 1330329,
+    "finance": 143000,
+    "health": 62061,
+    "howto": 143000,
+    "keyword": 416453,
+    "product": 72858,
+    "title": 416478,
+    "yesno": 143000
+   },
+   "presentations_per_form": 1250000,
+   "n_generated_forms": 7,
+   "generated_share_of_query_presentations": 0.5833333333333334,
+   "_what": "presentations_per_form is q_pres/n_forms because the sampler is form-balanced: every form present gets an equal share of presentations regardless of how much text backs it. available_texts_by_form is NOT exposure."
+  },
+  {
+   "arm": "F-bge-small",
+   "pattern": "75/25",
+   "examples": 20000000,
+   "query_presentations": 15000000,
+   "n_forms": 12,
+   "forms": [
+    "argument",
+    "claim",
+    "comparison",
+    "conversational",
+    "factoid",
+    "finance",
+    "health",
+    "howto",
+    "keyword",
+    "product",
+    "title",
+    "yesno"
+   ],
+   "available_texts_by_form": {
+    "argument": 57401,
+    "claim": 415454,
+    "comparison": 143000,
+    "conversational": 143000,
+    "factoid": 1330329,
+    "finance": 143000,
+    "health": 62061,
+    "howto": 143000,
+    "keyword": 416453,
+    "product": 72858,
+    "title": 416478,
+    "yesno": 143000
+   },
+   "presentations_per_form": 1250000,
+   "n_generated_forms": 7,
+   "generated_share_of_query_presentations": 0.5833333333333334,
+   "_what": "presentations_per_form is q_pres/n_forms because the sampler is form-balanced: every form present gets an equal share of presentations regardless of how much text backs it. available_texts_by_form is NOT exposure."
+  }
+ ]
+}

@@ -1,0 +1,136 @@
+{
+ "what": "COV resolution number (power disclosure only; sign discarded by design)",
+ "surface": {
+  "BRIGHT/biology": {
+   "family": "BRIGHT",
+   "n_queries": 103,
+   "n_docs": 57359
+  },
+  "BRIGHT/earth_science": {
+   "family": "BRIGHT",
+   "n_queries": 116,
+   "n_docs": 121249
+  },
+  "BRIGHT/economics": {
+   "family": "BRIGHT",
+   "n_queries": 103,
+   "n_docs": 50220
+  },
+  "BRIGHT/psychology": {
+   "family": "BRIGHT",
+   "n_queries": 101,
+   "n_docs": 52835
+  },
+  "BRIGHT/robotics": {
+   "family": "BRIGHT",
+   "n_queries": 101,
+   "n_docs": 61961
+  },
+  "BRIGHT/sustainable_living": {
+   "family": "BRIGHT",
+   "n_queries": 108,
+   "n_docs": 60792
+  },
+  "LEDGER": {
+   "family": "finance",
+   "n_queries": 10000,
+   "n_docs": 47820
+  },
+  "LegalBenchConsumerContractsQA": {
+   "family": "legal",
+   "n_queries": 396,
+   "n_docs": 154
+  },
+  "LegalBenchCorporateLobbying": {
+   "family": "legal",
+   "n_queries": 340,
+   "n_docs": 319
+  },
+  "MedicalQARetrieval": {
+   "family": "consumer-health",
+   "n_queries": 2048,
+   "n_docs": 2048
+  }
+ },
+ "n_families": 4,
+ "n_units": 10,
+ "n_queries_total": 13416,
+ "weights": {
+  "MedicalQARetrieval": 0.25,
+  "LegalBenchCorporateLobbying": 0.125,
+  "LegalBenchConsumerContractsQA": 0.125,
+  "BRIGHT/biology": 0.041666666666666664,
+  "BRIGHT/earth_science": 0.041666666666666664,
+  "BRIGHT/economics": 0.041666666666666664,
+  "BRIGHT/psychology": 0.041666666666666664,
+  "BRIGHT/robotics": 0.041666666666666664,
+  "BRIGHT/sustainable_living": 0.041666666666666664,
+  "LEDGER": 0.25
+ },
+ "abs_macro_delta": 0.029752173798555923,
+ "resolution_distance": 0.008618964156860275,
+ "MDE_registered": 0.0056,
+ "mde_below_resolution": true,
+ "macro_level_mean_of_probes": 0.4400360638332642,
+ "abs_family_delta": {
+  "BRIGHT": 0.05471494939722679,
+  "consumer-health": 0.02879800366132157,
+  "finance": 0.02386790319423246,
+  "legal": 0.011627838941442814
+ },
+ "abs_unit_delta": {
+  "BRIGHT/biology": 0.07810696816477139,
+  "BRIGHT/earth_science": 0.11005684163357533,
+  "BRIGHT/economics": 0.06316204042596814,
+  "BRIGHT/psychology": 0.07038370202106681,
+  "BRIGHT/robotics": 0.032235239716262055,
+  "BRIGHT/sustainable_living": 0.03881538385424121,
+  "LEDGER": 0.02386790319423244,
+  "LegalBenchConsumerContractsQA": 0.0178384139235551,
+  "LegalBenchCorporateLobbying": 0.0054172639593307965,
+  "MedicalQARetrieval": 0.02879800366132152
+ },
+ "n_by_unit": {
+  "BRIGHT/biology": 103,
+  "BRIGHT/earth_science": 116,
+  "BRIGHT/economics": 103,
+  "BRIGHT/psychology": 101,
+  "BRIGHT/robotics": 101,
+  "BRIGHT/sustainable_living": 108,
+  "LEDGER": 10000,
+  "LegalBenchConsumerContractsQA": 396,
+  "LegalBenchCorporateLobbying": 340,
+  "MedicalQARetrieval": 2048
+ },
+ "bootstrap": {
+  "B": 200000,
+  "seed": 0,
+  "chunk": 5000,
+  "quantile": 0.0019230769230769232,
+  "quantile_method": "inverted_cdf",
+  "plan_sample_sha256": "8091783fa66a21d8fcdd3a1c6458920c3c52442fc85cb5c5d9990f37a90e3d68",
+  "draws_sha256": "f5adc93f324b4b7b287d12882464bb1165c49147c42436734fdc770f992aed45",
+  "draws_sd": 0.0030224699491580615
+ },
+ "order_statistic_disclosure": {
+  "inverted_cdf_index0": 384,
+  "prose_384th_index0": 383,
+  "distance_under_prose_reading": 0.0086198633493587
+ },
+ "implied_paired_se": 0.0030224699491580615,
+ "analytic_paired_se": 0.0030324693406533865,
+ "variance_share_by_family": {
+  "BRIGHT": 0.4998126193063116,
+  "consumer-health": 0.1472902591835677,
+  "finance": 0.02745849273497478,
+  "legal": 0.32543862877514595
+ },
+ "distance_if_paired_sd_scaled": {
+  "1.0": 0.008618964156860275,
+  "0.75": 0.006464223117645206,
+  "0.5": 0.004309482078430137,
+  "0.25": 0.0021547410392150686
+ },
+ "z_implied": 2.851629396434916,
+ "interpretation": "The rule resolves a contrast when its point estimate is >= the MDE AND the lower bound is > 0; since lower = point - distance, that needs point > 0.0086 STRICTLY, as well as >= 0.0056. The registered MDE is BELOW the distance, so a contrast landing at the MDE cannot resolve. The mandate records the EXPECTATION that a distance measured between unrelated models over-estimates a same-init contrast's width; that is an expectation about correlated per-query differences, not a guarantee -- paired variance can move either way -- and it is recorded, not corrected. The sensitivity row prices it as arithmetic."
+}

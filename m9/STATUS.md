@@ -2,8 +2,11 @@
 
 Build complete at 3.743B tokens (plateau rule → cooldown); candidate frozen (`m9/FREEZE.json`,
 sha `9d631b2c…`). SCREEN-3 0.5606 = 82.2% retention, **93.8% on NQ vs 50–71% on CQADupStack** —
-a coverage failure. Both bars need ≥87.8% on avg-6; the candidate is not released. **Read
+a distribution-dependent failure; coverage is a hypothesis. Both bars need ≥87.8% on avg-6; the candidate is not released. **Read
 `m9/FINDINGS.md`**, then `m9/EXPLORED.md`. M10 is the retry (`instructions-m10.md`).
+
+**Current owner (2026-09-10): M13** (`m13/EXECUTION.md`). A preparation merge/recipe push alone
+does not authorize close-out: all recipe choices and the reviewed executor must be ready.
 
 ## Close-out work (box required)
 

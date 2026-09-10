@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Every committed test suite, in one command, with a nonzero exit if any fails.
+# Legacy M7 suites, including checks of machine-local caches. For the active harness,
+# use ./run_checks.sh. This script does not cover M8 or later milestones.
 #
 # Exists because `test_freeze_guard.py` had been FAILING since the 2026-08-26 teacher swap and
 # nobody noticed: its fixtures named arctic-embed-l and stella's own `post_dense` value, both of
@@ -18,7 +19,13 @@ for t in test_conformance test_encoders test_encode_cache test_dep_stats test_fr
   [ -f "$f" ] || { echo "SKIP  $t (missing)"; continue; }
   out=$($PY -u "$f" 2>&1); code=$?
   tail=$(echo "$out" | grep -iE "failure|FAIL|OK:|passed" | tail -1)
-  if [ $code -eq 0 ]; then echo "PASS  $t   ${tail}"; else echo "FAIL  $t (exit $code)   ${tail}"; rc=1; fi
+  if [ $code -eq 0 ]; then
+    echo "PASS  $t   ${tail}"
+  else
+    echo "FAIL  $t (exit $code)   ${tail}"
+    printf '%s\n' "$out"
+    rc=1
+  fi
 done
 echo
 [ $rc -eq 0 ] && echo "ALL SUITES PASS" || echo "SOME SUITES FAILED"

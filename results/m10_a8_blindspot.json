@@ -1,0 +1,168 @@
+{
+ "_what": "W10 evidence: the A8 gate beside a sensitive 4-gram diagnostic",
+ "_diagnostic": "word-4-grams, near-dup at >= 50% of the smaller set. NOT REGISTERED.",
+ "_monotone": "the rate is non-decreasing in n, so every value is a FLOOR for 143,000",
+ "generated_smoke": {
+  "howto": {
+   "n": 200,
+   "rubric_range": [
+    25,
+    60
+   ],
+   "a8_rate": 0.0,
+   "caught_only_by_short_rule": 0,
+   "diagnostic_4gram_rate": 0.0,
+   "diagnostic_rate_vs_n": {
+    "50": 0.0,
+    "100": 0.0,
+    "150": 0.0,
+    "200": 0.0
+   }
+  },
+  "argument": {
+   "n": 195,
+   "rubric_range": [
+    120,
+    220
+   ],
+   "a8_rate": 0.035897435897435895,
+   "caught_only_by_short_rule": 0,
+   "diagnostic_4gram_rate": 0.0615,
+   "diagnostic_rate_vs_n": {
+    "50": 0.0,
+    "100": 0.02,
+    "150": 0.0667
+   }
+  },
+  "finance": {
+   "n": 200,
+   "rubric_range": [
+    8,
+    30
+   ],
+   "a8_rate": 0.01,
+   "caught_only_by_short_rule": 2,
+   "diagnostic_4gram_rate": 0.01,
+   "diagnostic_rate_vs_n": {
+    "50": 0.02,
+    "100": 0.01,
+    "150": 0.0133,
+    "200": 0.01
+   }
+  },
+  "comparison": {
+   "n": 200,
+   "rubric_range": [
+    8,
+    25
+   ],
+   "a8_rate": 0.035,
+   "caught_only_by_short_rule": 7,
+   "diagnostic_4gram_rate": 0.035,
+   "diagnostic_rate_vs_n": {
+    "50": 0.08,
+    "100": 0.04,
+    "150": 0.0467,
+    "200": 0.035
+   }
+  },
+  "yesno": {
+   "n": 200,
+   "rubric_range": [
+    6,
+    20
+   ],
+   "a8_rate": 0.025,
+   "caught_only_by_short_rule": 5,
+   "diagnostic_4gram_rate": 0.025,
+   "diagnostic_rate_vs_n": {
+    "50": 0.0,
+    "100": 0.04,
+    "150": 0.0333,
+    "200": 0.025
+   }
+  },
+  "conversational": {
+   "n": 200,
+   "rubric_range": [
+    30,
+    80
+   ],
+   "a8_rate": 0.0,
+   "caught_only_by_short_rule": 0,
+   "diagnostic_4gram_rate": 0.005,
+   "diagnostic_rate_vs_n": {
+    "50": 0.0,
+    "100": 0.01,
+    "150": 0.0067,
+    "200": 0.005
+   }
+  },
+  "health": {
+   "n": 200,
+   "rubric_range": [
+    8,
+    30
+   ],
+   "a8_rate": 0.265,
+   "caught_only_by_short_rule": 53,
+   "diagnostic_4gram_rate": 0.205,
+   "diagnostic_rate_vs_n": {
+    "50": 0.1,
+    "100": 0.13,
+    "150": 0.1733,
+    "200": 0.205
+   }
+  }
+ },
+ "harvested_corpus": {
+  "keyword": {
+   "n": 60000,
+   "rubric_range": [
+    2,
+    4
+   ],
+   "a8_rate": 0.0005166752779212987,
+   "caught_only_by_short_rule": 31,
+   "diagnostic_4gram_rate": 0.0005,
+   "diagnostic_rate_vs_n": {
+    "50": 0.0,
+    "100": 0.0,
+    "150": 0.0,
+    "200": 0.0
+   }
+  },
+  "title": {
+   "n": 60000,
+   "rubric_range": [
+    6,
+    16
+   ],
+   "a8_rate": 0.03381666666666667,
+   "caught_only_by_short_rule": 2029,
+   "diagnostic_4gram_rate": 0.0328,
+   "diagnostic_rate_vs_n": {
+    "50": 0.0,
+    "100": 0.0,
+    "150": 0.0,
+    "200": 0.0
+   }
+  },
+  "claim": {
+   "n": 60000,
+   "rubric_range": [
+    8,
+    25
+   ],
+   "a8_rate": 0.09146666666666667,
+   "caught_only_by_short_rule": 5488,
+   "diagnostic_4gram_rate": 0.0806,
+   "diagnostic_rate_vs_n": {
+    "50": 0.02,
+    "100": 0.02,
+    "150": 0.02,
+    "200": 0.02
+   }
+  }
+ }
+}

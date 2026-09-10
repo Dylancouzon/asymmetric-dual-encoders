@@ -99,7 +99,7 @@ before any six-set number existed, and it is the *worse* of the two — so the c
 made to flatter the comparison. We report the better number and do not claim it.
 
 **This is a TIE, not a win.** On clean-4, DBSF@100 scored 0.4912 against convex0@1000's 0.4866.
-The observed **+0.0046 is inside the project's ~0.005 lever band** (`instructions-m14.md`), and no
+The observed **+0.0046 is inside the project's ~0.005 lever band** (`instructions-m15.md`), and no
 confidence interval was computed for a six-set operator difference — so it is **no material observed
 difference**, not evidence of superiority. Likewise the −0.0024 on all six. An earlier draft of this
 file said "WINS" and "strictly better"; that broke our own tie rule and is corrected here.
@@ -134,9 +134,9 @@ partition has ZERO collisions on all four sets and is unaffected.**
   operator of record at release.
 - **C1/C2/C3 are untouched** and keep their registered convex0 basis. The OpenSearch tie claim is
   annotated with which operator it was measured under, not restated for DBSF.
-- Benchmark composition is M14's call, with the rule registered in advance
-  (`instructions-m14.md`): headline clean-4, all six beside it, no re-picking.
-- Carry into M14: the depth-dependence is the reportable result, not the headline gap.
+- Benchmark composition is M15's call, with the rule registered in advance
+  (`instructions-m15.md`): headline clean-4, all six beside it, no re-picking.
+- Carry into M15: the depth-dependence is the reportable result, not the headline gap.
 
 ## Limits
 

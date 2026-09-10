@@ -1,0 +1,515 @@
+{
+ "_what": "M10 screen lock (LEDGER §0a), data-independent constants. Prose is not authoritative; this file is. Nothing here is chosen after seeing an arm. `m10src/screen_lock.py` validates it and is the only reader a rule may use.",
+ "_registered": "2026-09-05, before any arm and before any build seed draw",
+ "order": [
+  "F",
+  "A",
+  "G",
+  "B",
+  "E",
+  "C",
+  "D"
+ ],
+ "anchor": {
+  "_what": "the arm every non-F contrast compares against, TRAINED IN ITS OWN RIGHT at the screen recipe. It was registered as 'F's winner at its 5M checkpoint'; a Fable pass showed that is ~75% through cycle 1 of a 20M schedule at LR ~3e-5, un-annealed, against genuine 5M arms that run three cycles annealed to 1e-5 -- a handicap on the `b` side of ten contrasts, in the direction that adopts a non-default. It also left the anchor with no second cycle end (breaking the sign-stability clause) and no DEV-6 read beside its COV reads.",
+  "arm": "ANCHOR",
+  "data": "A4, the CUT corpus (see data_cut)",
+  "mix": "75/25",
+  "window_pattern": "3Q+1D",
+  "init": "F's winner backbone",
+  "objective": "squared_l2",
+  "batch": 32,
+  "feature_layers": 3,
+  "feature_dim": 1152,
+  "dose_examples": 5000000,
+  "schedule": "the screen recipe: 3 cycles of equal example count, each linear 1e-4 -> 1e-5",
+  "seed": 0
+ },
+ "screen_dose_examples": 5000000,
+ "seed_rule": "one seed, seed 0, for every screen arm; confirmation arms use seeds 1 and 2",
+ "arms": {
+  "F-bge-small": {
+   "family": "F",
+   "dose_examples": 20000000,
+   "read_at": [
+    5000000,
+    10000000,
+    20000000
+   ],
+   "student": "bge-small",
+   "note": "20M curve; its 5M reading is NOT the anchor (S1)",
+   "trained": true
+  },
+  "F-MiniLM-L6": {
+   "family": "F",
+   "dose_examples": 20000000,
+   "read_at": [
+    5000000,
+    10000000,
+    20000000
+   ],
+   "student": "MiniLM-L6-v2",
+   "trained": true
+  },
+  "F-MiniLM-L12": {
+   "family": "F",
+   "dose_examples": 5000000,
+   "student": "MiniLM-L12-v2",
+   "trained": false,
+   "schedule": "the 20M three-cycle schedule TRUNCATED at 5M, not a 5M schedule. W9, Codex finding 5: F-bge-small and F-MiniLM-L6 are READ at 5M inside a 20M schedule, so at that point they are ~75% through cycle 1 and un-annealed, while a genuine 5M arm would have completed three compressed annealed cycles -- the exact handicap S1 created the standalone anchor to remove, reintroduced one family over. Truncating L12's 20M schedule at 5M costs nothing extra and reads all three arms at the SAME schedule position.",
+   "selectable": false,
+   "cut": "CUT, Dylan 2026-09-05 (verification-pass rulings, pre-observation: nothing registered has trained). MiniLM-L12-v2 is 12 layers / 384 hidden / 34,540,672 params with the head -- identical in size and depth to bge-small -- so F2 tested the pretraining checkpoint, not depth (the hypothesis it was added for). Cutting it removes 5-20M screen examples and closes W13 (the conditional extension was an adaptive selection step)."
+  },
+  "A1": {
+   "family": "A",
+   "dose_examples": 5000000,
+   "data": "M9 pool (463,314 queries)",
+   "trained": true,
+   "selectable": true
+  },
+  "A2": {
+   "family": "A",
+   "dose_examples": 5000000,
+   "data": "M9 pool + PAQ (volume control)",
+   "trained": true,
+   "selectable": true
+  },
+  "A3": {
+   "family": "A",
+   "dose_examples": 5000000,
+   "data": "A2 + harvested real query-like text",
+   "trained": true,
+   "selectable": true,
+   "_note_selectable": "A3's corpus IS selectable as the build corpus: `rules.generated_half_in_build` says an unresolved A4-A3 makes the build use A3's corpus and drops the ~1.0M generated queries."
+  },
+  "A4": {
+   "family": "A",
+   "dose_examples": 5000000,
+   "trained": false,
+   "data": "A3 + the generated forms (the full M10 corpus, cut)",
+   "note": "not trained separately: A4 IS the ANCHOR arm"
+  },
+  "G-384": {
+   "family": "G",
+   "dose_examples": 5000000,
+   "feature_layers": 1,
+   "feature_dim": 384,
+   "trained": true,
+   "selectable": false,
+   "_w9r": "**DIAGNOSTIC-ONLY, never selectable.** The mandate registers the contrast as `1152 - 384` (:616) and the arm's stated purpose as 'the paper's evidence for the M9 diagnosis', so 384 is not a candidate recipe -- it is the thing the M9 diagnosis says is too narrow. Keeping the orientation AND letting 384 win were two incompatible readings the registry briefly carried at once (W9 review #3). G1 therefore tests whether 1152 beats 384 and can select only 1152; G-384 is excluded from winner selection and from confirmation."
+  },
+  "G-1536": {
+   "family": "G",
+   "dose_examples": 5000000,
+   "feature_layers": 4,
+   "feature_dim": 1536,
+   "trained": true,
+   "selectable": true
+  },
+  "G-MLP": {
+   "family": "G",
+   "dose_examples": 5000000,
+   "head": "W_lin*x + W2*GELU(W1*x+b1), W1 1152->192, per-token, before the pool",
+   "trained": true,
+   "selectable": true
+  },
+  "B-100/0": {
+   "family": "B",
+   "dose_examples": 3750000,
+   "pattern": "4Q",
+   "trained": true,
+   "selectable": true
+  },
+  "B-50/50": {
+   "family": "B",
+   "dose_examples": 7500000,
+   "pattern": "2Q+2D",
+   "trained": true,
+   "selectable": true
+  },
+  "E-bs128": {
+   "family": "E",
+   "dose_examples": 5000000,
+   "batch": 128,
+   "trained": true,
+   "selectable": true,
+   "pending": "CLOUD_ONLY",
+   "_pending": "`trained: true` means REGISTERED TO BE TRAINED and is what `trained_arms_expected` counts; this arm has NOT run. Added 2026-09-09 (Fable adversarial review, 2026-09-09; every claim re-derived here before acting): the disposition was previously inferable only from the ABSENCE of a COV file, which is not a registration. `m10src/contrasts.py` refuses to compute a contrast naming an arm carrying `pending`.",
+   "warmup_examples": 64000
+  },
+  "C-M9init": {
+   "family": "C",
+   "dose_examples": 5000000,
+   "init": "the M9 candidate",
+   "trained": false,
+   "head_init": "the M9 candidate keeps its 384-d head and the two extra layers' columns are ZERO-initialised (§Recipe). C1 therefore confounds backbone init with head init; that is registered and disclosed, not resolved.",
+   "selectable": true,
+   "cut": "**CUT under W8 band 1, 2026-09-05.** `C-M9init` at 5M warm-starts from a model already trained 3.69B tokens, so it wins its own contrast BY CONSTRUCTION and says nothing about 200M; it is separately disclosed as confounding backbone init with head init; and it would consume one of only two confirmation slots. The build init is the registered default, the off-the-shelf backbone. C1 does not run and is reported as cut. **The Bonferroni denominator STAYS 13** (`rules.C_skipped`, which already registers that for the skip path)."
+  },
+  "D-NORM": {
+   "family": "D",
+   "dose_examples": 5000000,
+   "objective": "leaf_norm_e2",
+   "trained": true,
+   "selectable": true
+  },
+  "D-COV": {
+   "family": "D",
+   "dose_examples": 5000000,
+   "objective": "document_covariance_weighted",
+   "trained": true,
+   "selectable": true
+  },
+  "ANCHOR": {
+   "family": "anchor",
+   "dose_examples": 5000000,
+   "trained": true,
+   "note": "the comparator for G, B, E, C, D and A4-A3; trained once"
+  },
+  "A3-20M": {
+   "family": "descriptive",
+   "descriptive": true,
+   "trained": true,
+   "selectable": false,
+   "dose_examples": 20000000,
+   "seed": 0,
+   "data": "A2 + harvested real query-like text",
+   "_what": "A3's corpus at 20,000,000 examples, to be read against the COMPLETED `F-bge-small` arm (A4's corpus, same 20M three-cycle schedule). DECISION 1, ruled by astra (gpt-6-astra, 2026-09-09, ruling delegated by Dylan: 'let's allow it to make the decision on those 2 points'): SYNTH-20M is re-pointed from the assembled recipe -- which the screen made identical to the anchor -- to the one contrast that RESOLVED and the one the build's corpus rests on. Only A3 is trained; the A4 side already exists, which is why this costs 20M examples and not 40M.",
+   "_parity": "REQUIRED by the ruling and DOCUMENTED before launch, from the committed arm records: `F-bge-small` and `A3` already share batch 32, head linear, feature_layers 3, feature_dim 1152 (d_in), objective squared_l2, pattern 75/25, student bge-small, warm_start linear (ridge, n_fit 60,000, fit_seed 21, lambda 1e-3), seed 0, device cuda, max_len 512, and the same 3-cycle 1e-4->1e-5 schedule shape. They differ in dose (5M vs 20M) and in `n_docs` (1,250,000 vs 5,000,000) -- and `n_docs` is DOSE-DERIVED, `corpus_loader.arm_doc_count` = ceil(dose x DOC_SHARE), so at 20M A3 resolves to 5,000,000 documents, matching F-bge-small exactly. The warm-start head is refit per arm on the arm's own corpus by construction (A3 train_objective 0.51424 vs F-bge-small/ANCHOR 0.51233), which is part of the corpus difference under test, not a parity break. **After the dose is matched the ONLY remaining difference is `sources`, which is the contrast.**",
+   "reads": "development surfaces only (COV at cycle ends, DEV-6 once at the final checkpoint)",
+   "selects": "NOTHING. Descriptive: it enters no Bonferroni accounting, resolves no contrast, and cannot re-decide `A4-A3`, which is observed and stands on its registered rule. If it disagrees with the 5M reading, that is a DOSE-TRANSFER observation to report, not a re-decision.",
+   "cost": "20,000,000 examples, ~8.9 h on the idle box, zero cloud dollars"
+  },
+  "ANCHOR-seed1": {
+   "family": "descriptive",
+   "descriptive": true,
+   "trained": true,
+   "selectable": false,
+   "dose_examples": 5000000,
+   "seed": 1,
+   "_what": "ANCHOR re-trained at seed 1, everything else frozen. DECISION 2, ruled by astra (gpt-6-astra, 2026-09-09, ruling delegated by Dylan: 'let's allow it to make the decision on those 2 points'): yes, run it. The anchor is the comparator in ten of the twelve contrasts and no interval in this screen contains training-seed variability.",
+   "reads": "development surfaces only; report absolute scores, the signed difference and its family decomposition",
+   "selects": "NOTHING, and **the original seed is retained regardless of outcome** (astra's condition). It cannot re-decide any verdict.",
+   "_what_it_licenses": "astra's registered sentence, to be used verbatim with the measured delta: \"At 5M examples, the second training seed changed ANCHOR's COV macro by delta = [seed 1 minus original]; this single between-run difference describes ANCHOR SENSITIVITY, while the screen's query-resampling intervals condition on the trained checkpoints and exclude training-seed variability.\"",
+   "_what_it_does_NOT_license": "**Do not claim** reproducibility, bounded seed noise, seed-adjusted significance, or confirmed verdicts -- EVEN IF the delta is nearly zero. And do not call it a seed-variance estimate that 'calibrates ten contrasts': the alternatives can move WITH the anchor across seeds, so paired effect variability remains unknown. It is an anchor sensitivity observation, n=1.",
+   "cost": "5,000,000 examples, ~2.2 h on the idle box, zero cloud dollars"
+  },
+  "E-bs32": {
+   "family": "E",
+   "dose_examples": 5000000,
+   "batch": 32,
+   "trained": true,
+   "selectable": true,
+   "pending": "CLOUD_ONLY",
+   "_what": "the bs32 arm of family E, trained ON THE A100 alongside `E-bs128`. **Registered 2026-09-10 (Fable + Codex round 9, 2026-09-10), pre-observation — family E has not run.** Before this, `E-bs32` existed only as an `anchor_aliases` entry pointing at `ANCHOR`, which is BOX-trained, so `contrasts.E1` resolved to ANCHOR(box) − E-bs128(A100) and carried exactly the hardware confound that `rules.E_warmup_parity`, `_interpretation.E1`, `M102_LOCK.md` and `LOTTE_LOCK.md` all said had been removed. Four documents asserted a design the registry could not express; this is the registration that makes it true.",
+   "_pending": "`trained: true` means REGISTERED TO BE TRAINED. Neither E arm has run; both run on the rented A100 together, which is what removes the hardware difference from E1.",
+   "warmup_examples": 64000
+  }
+ },
+ "contrasts": {
+  "F1": {
+   "a": "F-MiniLM-L6",
+   "b": "F-bge-small",
+   "at_examples": 20000000,
+   "decisive": true,
+   "tails": 2,
+   "quantile": 0.0010416666666666667,
+   "family_rule": "F_tournament"
+  },
+  "A3-A2": {
+   "a": "A3",
+   "b": "A2",
+   "decisive": true,
+   "rule": "three_outcome"
+  },
+  "A4-A3": {
+   "a": "A4",
+   "b": "A3",
+   "decisive": true,
+   "rule": "generated_half_in_build"
+  },
+  "G1": {
+   "a": "G-1152",
+   "b": "G-384",
+   "decisive": true,
+   "_w9": "Orientation `1152 - 384` is the MANDATE's (:616) and is kept. `G-384` is registered `selectable: false` -- a diagnostic arm, not a candidate recipe -- so G1 tests whether the wider head beats M9's 384 and can select only 1152. A negative point estimate is REPORTED as evidence bearing on the M9 diagnosis; it is not an action, and an unresolved negative is noise, not a contradiction (W9 review #3).",
+   "family_rule": "multi_arm_winner"
+  },
+  "G2": {
+   "a": "G-1536",
+   "b": "G-1152",
+   "decisive": true,
+   "family_rule": "multi_arm_winner"
+  },
+  "G3": {
+   "a": "G-MLP",
+   "b": "G-1152",
+   "decisive": true,
+   "family_rule": "multi_arm_winner"
+  },
+  "B1": {
+   "a": "B-100/0",
+   "b": "B-75/25",
+   "decisive": true,
+   "family_rule": "multi_arm_winner"
+  },
+  "B2": {
+   "a": "B-50/50",
+   "b": "B-75/25",
+   "decisive": true,
+   "family_rule": "multi_arm_winner"
+  },
+  "E1": {
+   "a": "E-bs32",
+   "b": "E-bs128",
+   "decisive": true,
+   "rule": "E_cost",
+   "_w9": "REORIENTED 2026-09-05 (W9, Codex finding 1). It read `E-bs128 - E-bs32`, so a bs32 quality win was a NEGATIVE point estimate and `point >= threshold` refused it -- making the mandate's own action, 'a RESOLVED bs32 win is adopted', unreachable. Read `bs32 - bs128` the action is reachable with ONE tail and the cost rule is unchanged: resolve -> bs32 earns its 2.2x build cost; do not resolve -> bs128."
+  },
+  "C1": {
+   "a": "C-M9init",
+   "b": "C-fresh",
+   "decisive": true
+  },
+  "D1": {
+   "a": "D-NORM",
+   "b": "anchor",
+   "decisive": true,
+   "family_rule": "multi_arm_winner"
+  },
+  "D2": {
+   "a": "D-COV",
+   "b": "anchor",
+   "decisive": true,
+   "family_rule": "multi_arm_winner"
+  }
+ },
+ "descriptive_contrasts": {
+  "A4-A2": {
+   "a": "A4",
+   "b": "A2",
+   "decisive": false
+  },
+  "A2-A1": {
+   "a": "A2",
+   "b": "A1",
+   "decisive": false,
+   "note": "the volume effect; DESCRIPTIVE ONLY, no build action (rules.A2-A1)"
+  },
+  "arxiv-title": {
+   "a": "arxiv-title diagnostic",
+   "b": null,
+   "decisive": false,
+   "note": "not a contrast; a descriptive surface read, no action"
+  }
+ },
+ "statistics": {
+  "surface": "COV macro, family-weighted, four family IDs at equal weight, units averaged within family",
+  "families": [
+   "BRIGHT",
+   "consumer-health",
+   "finance",
+   "legal"
+  ],
+  "bootstrap": {
+   "kind": "paired stratified over queries within unit",
+   "B": 200000,
+   "seed": 0,
+   "quantile": 0.0020833333333333333,
+   "quantile_method": "inverted_cdf",
+   "alpha_family": 0.025,
+   "n_contrasts": 12,
+   "chunk": 5000,
+   "alpha_accounting": "11 one-sided contrasts at alpha/12 plus F1, which is TWO-SIDED because F is oriented highest-minus-runner-up after the reading. F1's tails take alpha/24 each, so the union bound is 11*(0.025/12) + 2*(0.0125/12) = 0.025 EXACTLY. History: 13 contrasts until F2 was cut with L12 (Dylan 2026-09-05); before W9 every tail took alpha/13 and the familywise rate was 0.02885.",
+   "_runner_contract": "`cov_macro.contrast` takes `quantile` as a parameter (default alpha/13). **The runner MUST pass each contrast's own `quantile` field**; the global default is correct only for the eleven one-sided contrasts. `screen_lock` now validates that the per-contrast quantiles sum to the registered alpha, but it cannot see the call site -- the arm runner is responsible and must be reviewed when it is written (W9 review #5)."
+  },
+  "MDE": 0.0056,
+  "resolve_rule": "point >= MDE AND one-sided lower bound at the quantile > 0 AND the sign is stable across the last two cycle-end checkpoints",
+  "measured_resolution_distance": 0.008619,
+  "measured_resolution_note": "results/m10_cov_resolution.json. The MDE is BELOW the distance, so a contrast landing at the MDE cannot resolve. Power disclosure only: it sizes nothing (amendment A4's sizing struck by the Codex pass) and alpha does not move.",
+  "implementation": "m10src/cov_macro.py",
+  "_MDE_naming": "`MDE` is a DECISION THRESHOLD, not a minimum detectable effect. `resolve_rule` requires the POINT estimate to reach it, which caps power at 50% at a true effect of exactly 0.0056 however narrow the interval; family A's rule is `lower > MDE`, stronger still. The name is kept because it is referenced throughout, but it does not mean what it says (W9, Codex finding 11)."
+ },
+ "outcome_to_action": {
+  "F": "F1 = MiniLM-L6 vs bge-small at 20M. Winner = the higher 20M COV macro if its margin over the other resolves under the two-sided F rule at alpha/24 per tail; else the cheapest to serve (`rules.serve_cost_order`), labelled in the report as a product preference, not evidence. L12 is cut (Dylan 2026-09-05). Every later family runs on F's winner and every later verdict is labelled conditional on it.",
+  "A": "A3-A2: three reported labels (RESOLVED / POSITIVE NOT RESOLVED / NOT POSITIVE), NO STOP, build proceeds; all four A rows and their DEV-6 CQADupStack + FORMS-12 reads are reported. A4-A3: if it does not resolve, the build uses A3's corpus and the generated queries are dropped from the build and reported as not having established improvement under the registered test (see `rules.generated_half_in_build`; NOT a 'measured null'). The milestone's failure condition is C1b at M10.4.",
+  "G": "resolved winner; default 1152.",
+  "B": "resolved winner; default 75/25.",
+  "E": "E's decision table is `rules.E_cost`: bs32 iff E1 resolves, else bs128. E is the one family whose throughput is read (amendment A7). **`E-bs128` does not run on the box at realistic sequence lengths and runs on the rented A100** -- Dylan 2026-09-05, the box is preparation for the cloud run, not a measurement target.",
+  "C": "resolved winner; default the off-the-shelf backbone. Skipped and reported skipped if F does not select bge-small.",
+  "D": "resolved winner with the larger margin; default squared L2.",
+  "_default": "an unresolved contrast reverts to its default and is REPORTED as unresolved, beside the measured resolution distance, so a reader can tell an unresolved verdict from an invisible one. **EXCEPTION: family E** -- see `rules.E_cost`; an unresolved E selects bs128, not the default.",
+  "anchor": "not a decision family: ANCHOR is the comparator every non-F contrast is read against, and it has no contrast of its own."
+ },
+ "confirmation": {
+  "max_decisions": 2,
+  "selection": "decisions whose non-default option won, largest margin first",
+  "seeds": [
+   1,
+   2
+  ],
+  "margin": "the COV macro difference between the winner's and the default's final checkpoints in the ORIGINAL screen",
+  "seed_range": "max minus min of an arm's COV macro over its three seeds",
+  "stands_iff": "CORRECTED then MOOT. Was: 'the winner's margin exceeds the largest seed range observed in either arm' -- which compares a paired effect to the spread of ABSOLUTE scores, so a perfect replication is REJECTED and a reversal on both fresh seeds is ACCEPTED. Corrected form (`m10src/decision_rules.confirmation_stands_corrected`): every paired difference positive AND the fresh seeds retain >= 50% of the original effect. Moot: the block is cut.",
+  "plus": "MOOT with the block (2026-09-09): it named the synthesized selected-recipe arm (5M) and the replication seed pair (10M). SYNTH-20M supersedes the first. **The replication seed pair is NOT automatically cut** -- see `seed_variance_gap`; it is the only thing that would have measured training-seed variance, and no interval in this screen contains any.",
+  "unconfirmed_non_defaults": "MOOT with the block. Was: non-default winners beyond the two confirmed REVERT TO DEFAULT and are reported as unconfirmed (W9, Codex finding 7). With no confirmation arms, every selection stands on its own registered contrast and is reported with its interval.",
+  "_amended": "AMENDED 2026-09-09 (m10/AMENDMENT_STAGED_2026-09-08.md, Dylan's 2026-09-08 delegation; applied after the W8 band-1 chain read COMPLETE and BEFORE any contrast was computed). The two-decision confirmation block is CUT (45,000,000 examples, ~20 h) and replaced by `synth_20M` below. Confirmation re-tested ISOLATED effects at the SCREEN's dose; the build combines several components at 200M and that transfer is assumed, not measured (gpt-6-astra v2, `research/m10-astra-v2-dispositions-2026-09-08.md`). The rules below are kept as a record and are MOOT: no confirmation arm runs.",
+  "status": "CUT 2026-09-09",
+  "synth_20M": {
+   "_status": "RE-POINTED (gpt-6-astra, 2026-09-09, ruling delegated by Dylan: 'let's allow it to make the decision on those 2 points'). It is no longer 'the assembled recipe vs the anchor' -- the screen selected no non-default, so that comparison was the anchor against itself whenever E selects bs32. It is now **A3-20M vs the completed F-bge-small**: A4's corpus against A3's, at 20M, on the one contrast that resolved. See `arms.A3-20M`. Cost is 20M examples, not 40M, because the A4 side already exists. The ruling's condition -- document configuration parity or cut it -- was met and is recorded in `arms.A3-20M._parity`.",
+   "_what_it_was": "the ASSEMBLED selected recipe at 20,000,000 examples on its own full 3-cycle schedule, against the anchor at the same dose, read on development surfaces. It replaced the confirmation block on the rationale that 'the build combines several components at 200M and that transfer is assumed, not measured'.",
+   "_why_suspended": "**the screen selected NO non-default component.** Selected = bge-small / A4 / 3-layer 1152 linear / 75-25 / squared_l2, which is `anchor` in every field except `batch`. There are no components to combine, so the rationale no longer holds. **Correcting my own over-claim in the same breath (Codex adversarial review of the FIXES, 2026-09-09): it is NOT unconditionally 'the anchor against itself'** -- `batch` is PENDING, and if family E selects bs128 the two recipes differ in batch after all. So the honest statement is conditional: SYNTH-20M is vacuous IF E selects bs32, and is a batch-size read at 20M IF E selects bs128.",
+   "decision_1_for_Dylan": "re-point, cut, or defer until E resolves. Candidates that measure something: A4 vs A3 at 20M (the one contrast that resolved, and the one the build's corpus rests on), or the anchor at seeds 1/2 (`seed_variance_gap`). Deferring is free: E must run before the build regardless.",
+   "examples_if_it_runs": 20000000,
+   "cost_hours_at_624_ex_s": 8.9,
+   "selects": "NOTHING in any variant. Descriptive and development-only; it enters no confirmatory accounting, because COV is already observed."
+  },
+  "budget_released": {
+   "_corrected": "REPLACED 2026-09-09 (Fable adversarial review, 2026-09-09; every claim re-derived here before acting). The staged figures were the amendment's WORST CASE, drafted 2026-09-08 before G/B/D ran, and were written into the registry today as though they were realized. The recipe lock sets dose from this block, so the error was load-bearing.",
+   "confirmation_block_worst_case_examples": 45000000,
+   "confirmation_block_REALIZED_examples": 0,
+   "_why_zero": "confirmation ran on decisions whose NON-DEFAULT option won, among the eligible families G, B, E, C and D. None resolved: G2/G3, B1/B2, D1/D2 all NOT RESOLVED, C is cut, E is unread. Zero decisions were confirmable, so cutting the block freed no quality-confirmation examples at all.",
+   "confirmation_plus_examples": 15000000,
+   "_plus": "`confirmation.plus` (the synthesized selected-recipe arm, 5M, and the replication seed pair, 10M) is the only part of the block that would actually have run. SYNTH-20M replaces the first; whether the seed pair runs is decision 2 below.",
+   "forms12_top_up_examples_CONDITIONAL": 66700000,
+   "_top_up": "conditional, not banked: it ran only if the plateau rule fired while the dev->six forecast sat below the release bar. Removing it frees 66.7M only in the branch where it fired.",
+   "spent_on_synth_20M": 20000000,
+   "to_dose_on_the_build_UNCONDITIONAL": -5000000,
+   "to_dose_on_the_build_IF_the_top_up_would_have_fired": 61700000,
+   "note": "the honest headline is a RANGE, not 91.7M: between -5M (the top-up never fires, and SYNTH-20M costs 5M more than `plus` would have) and +61.7M. Price the increment against the $1,000 cloud ceiling before committing it."
+  },
+  "seed_variance_gap": {
+   "_what": "**No interval in this screen contains training-seed variance.** `cov_macro.contrast` resamples QUERIES within unit; the confirmation block was the only design element that would have re-trained anything at a fresh seed, and it is cut. `anchor_aliases._what` names the hazard this leaves uncontained: one unlucky anchor seed lifting or sinking every non-default at once, and ANCHOR is the comparator in ten of the twelve contrasts.",
+   "how_big_it_could_be": "**ONE OBSERVATION, not a bound** (corrected (Codex adversarial review of the FIXES, 2026-09-09); the earlier wording called it a bound, which n=1 does not support). `results/m10_calib_report.json` records a seed effect of **0.0013869** on the COV macro -- a single P0-vs-P1 difference at the calibration dose, with no estimate of its own spread -- against a same-init distance of 0.00288. Used as a SENSITIVITY datum: a shift of that size moves A4-A3's lower bound from +0.006909 to ~+0.0055, i.e. to the MDE, and moves no other verdict. It is the only seed figure the project has; it is not a distribution, and the report must not present it as one.",
+   "what_it_does_NOT_license": "re-deciding anything. COV is observed; the verdicts stand on their registered rules. This is a REPORTING obligation: every interval in the report says it is a query-resampling interval and excludes training-seed variance.",
+   "decision_2_for_Dylan": "RULED YES (gpt-6-astra, 2026-09-09, ruling delegated by Dylan: 'let's allow it to make the decision on those 2 points') and registered as `arms.ANCHOR-seed1`. Read that entry for what the number licenses and, more importantly, what it does not."
+  }
+ },
+ "evaluation": {
+  "COV": "at every cycle end",
+  "DEV-6": "ONCE, at the final checkpoint, reported beside every COV read; never selection-bearing",
+  "FORMS-12": "descriptive only. **The plateau TOP-UP is REMOVED 2026-09-09** (`instructions-m10.md`:552): it doubled the presentation weights of the bottom two FORMS-12 forms for one 66,700,000-example cycle. Two independent reasons: (i) it is adaptive training driven by a validation surface this registry calls descriptive only, gated on a dev->six forecast the mandate calls 'forecasting only, never gating' -- a prewritten branch does not remove the influence; (ii) 'worst current score' and 'best next use of compute' are different quantities. The plateau rule's ordinary stop is unchanged; only the top-up cycle is cut.",
+  "arxiv-title": "descriptive, no action",
+  "CUREv1": "validation-only diagnostic (decision 12); never selection-bearing",
+  "LoTTE": "read #1 is decision-bearing (the veto) and happens after the recipe lock; read #2 is the audit after the freeze",
+  "family_A_diagnostics": "DEV-6 CQADupStack components and FORMS-12, reported beside every A arm; descriptive, no action (Dylan 2026-09-05, W12)"
+ },
+ "warm_start": {
+  "G-MLP": {
+   "n_fit": 60000,
+   "seed": 21,
+   "lambda": "reselected on the M10 sample by m9/registry.json's locked grid on a training-only holdout, ties to the larger lambda",
+   "pca": "per-token, streamed 1152x1152 Gram matrix, each direction's sign fixed so its largest-magnitude component is positive"
+  },
+  "all_arms": "the closed-form ridge head warm start (M9's m9s1c) is retained in every arm EXCEPT C-M9init, which uses its own head (see arms.C-M9init.head_init)"
+ },
+ "anchor_aliases": {
+  "_what": "the anchor appears in a contrast under the name of the axis being varied; each of these resolves to the single trained ANCHOR arm. Sharing one comparator across ten contrasts does not break Bonferroni (a union bound needs no independence) nor the paired bootstrap (per-contrast); the hazard it does carry -- one unlucky anchor seed lifting every non-default at once -- is what `confirmation` exists to contain.",
+  "G-1152": "ANCHOR",
+  "B-75/25": "ANCHOR",
+  "C-fresh": "ANCHOR",
+  "anchor": "ANCHOR",
+  "A4": "ANCHOR",
+  "F-winner": "the winner of contrast F1 at its 20M checkpoint (NOT of F itself: F2 is L12 - F1's winner, so the reference cannot be circular)",
+  "_resolver": "every value here is an arm id EXCEPT `F-winner`, which is resolved at read time by `rules.F_selection_aware` and is prose by necessity, not oversight. `runs_iff`/`skipped_iff`/`conditional_extension.iff` are likewise human-readable conditions evaluated by the session, not by a generic engine (W9, Codex finding 9).",
+  "_removed_E-bs32": "REMOVED 2026-09-10 (Fable + Codex round 9, 2026-09-10). It mapped `E-bs32` to the box-trained `ANCHOR`, which silently made E1 a cross-hardware contrast. `E-bs32` is now its own A100 arm. No computed contrast read this alias — E1 is the only contrast naming `E-bs32` and it has never been computed."
+ },
+ "trained_arms_expected": 15,
+ "_arms_note": "18 entries, 15 TRAINED (E-bs32 registered 2026-09-10; both E arms run on the A100): A4 is not trained separately -- it IS the ANCHOR arm. C-M9init is CUT under W8 band 1. F-MiniLM-L12 is CUT (Dylan 2026-09-05), taking contrast F2 with it: the Bonferroni denominator is 12.",
+ "_amended": "2026-09-05, on a Fable adversarial pass (S1-S10), before any arm ran and with nothing trained. S1 was a structural confound: the anchor was a mid-cycle snapshot of a 20M arm and is now its own 5M arm.",
+ "data_cut": {
+  "_mandate": "A2, A3 and A4 are cut to the identical post-screen unique-text count",
+  "rule": "min of the three post-decontamination unique-text counts; the larger two are downsampled with seed 0; the count itself and the hashes are §0b",
+  "applies_to": [
+   "A2",
+   "A3",
+   "A4/ANCHOR"
+  ],
+  "why": "without it the forms contrast is confounded with volume, which is the one thing family A exists to separate",
+  "anchor_corpus": "the CUT A4, not the full corpus -- so the anchor and A3 differ only in which text they carry, never in how much",
+  "A1": "not cut: A1 is the M9 pool and A2-A1 is the volume effect by construction",
+  "unique_text_count": 2651572,
+  "registered": {
+   "when": "2026-09-07T14:45-04:00",
+   "before_any_arm": true,
+   "counts": {
+    "A2": 4439407,
+    "A3": 2651572,
+    "A4": 3486034
+   },
+   "min": "A3",
+   "report": "results/m10_data_cut.json",
+   "report_sha256": "d41920dc5e7cd7654681d029bd43adaf986c2c870a08d4f52aceeb6c9ac2a326",
+   "generated_corpus": "work/m10gen/generated_queries.jsonl (834,463 rows; results/m10_assemble10.json)",
+   "note": "post-screen, post-dedup unique texts through corpus_loader.load_segments on the real sources; A3 is the min because A3 ⊂ A4 and PAQ-A2 (4.037M) > harvest (1.25M)"
+  }
+ },
+ "rules": {
+  "generic": "resolves iff point >= MDE AND lower bound at the quantile > 0 AND the sign is stable across the last two cycle-end checkpoints",
+  "three_outcome": "A3-A2 only. **NO STOP** (Dylan 2026-09-05, W12: both reviewers -- COV holds none of A3's forms, so a small A3-A2 is expected under a true coverage effect, and the registered STOP would most likely have fired spuriously; the contrast must read above ~0.0142 to resolve at all). Three REPORTED labels, none of which stops M10: lower > MDE -> RESOLVED, coverage established on the COV families; point >= MDE and 0 < lower <= MDE -> POSITIVE, NOT RESOLVED; otherwise -> NOT POSITIVE. The build proceeds in every case and all four A rows are reported with intervals. Family A is additionally reported on DEV-6's two CQADupStack components (M9's actual failure surface) and FORMS-12 (mechanism), both descriptive. The failure condition for M10 is the registered C1b release gate (decision 11), not a screen contrast.",
+  "generated_half_in_build": "A4-A3 only. RESOLVED iff lower > MDE (the same corrected bar as three_outcome; the mandate exempts BOTH A contrasts from the generic rule). Not resolved -> the build uses A3's corpus and the generated queries (834,463 rows realized against the plan's ~1.0M; `data_cut.registered.generated_corpus`) are dropped from the build and reported as HAVING NOT ESTABLISHED IMPROVEMENT UNDER THE REGISTERED TEST -- never as a 'measured null' (AMENDED 2026-09-09). Family A's arms are all form-balanced, so an existing form gets ~750,000 presentations in A3 against 312,500 in A4: A4-A3 tests RE-ALLOCATING 58% of query presentations to seven generated forms, not 'does synthetic data help'. A3 also already contains PAQ, which the mandate itself calls machine-generated. Measured: `results/m10_exposure_table.json`.",
+  "sign_stability_exemption": "family A's two contrasts are exempt from the sign-stability clause (mandate); every other contrast is subject to it.",
+  "F_orientation": "F1 is read highest-minus-runner-up, i.e. oriented AFTER the reading, so it is TWO-SIDED and takes alpha/24 per tail (`contrasts.F1` carries `tails: 2` and its own `quantile`), which makes the union bound 11(alpha/12) + 2(alpha/24) = alpha EXACTLY. History: at alpha/13 per F tail the familywise rate was 0.02885 (W9 #3).",
+  "serve_cost_order": "when F's margin does not resolve, the cheapest to serve wins, ordered by (1) parameter count including the head, (2) layer count, (3) **bge-small, as the retrieval-tuned backbone and the one M9 already distilled into, so the M9-vs-M10 comparison stays within one backbone family**. Measured counts (`results/m10_student_parity_box.json`): MiniLM-L6 23,893,888 < bge-small 34,540,672 = MiniLM-L12 34,540,672 (the mandate's 33.4M for L12 was an estimate; the tie is broken by rule 3, to bge-small). This tie-break is labelled in the report as a product preference, not evidence. **Rule 3's ORIGINAL rationale — 'bge-small alone has an M9 warm start and so alone keeps family C' — went STALE the moment W8 band 1 cut C, and was caught by the W12/W13 validation. The re-stated rationale is not a new preference: it is why the tie was already broken this way, minus the family-C clause.**",
+  "E_cost": "**E's decision table, and it is an explicit EXCEPTION to `_default`.** Select **bs32 iff E1 (`bs32 - bs128`) RESOLVES**; in every other case -- unresolved, or bs128 ahead -- select **bs128**. The build's GPU-hour budget assumes bs32, so a resolved bs32 win needs no extra threshold and none is invented after the number; the GPU-hour delta is DISCLOSED beside the contrast. Three places previously disagreed (E's default said bs32, `_default` said unresolved reverts to default, this rule said an unresolved bs32 win reverts to bs128), and under the generic rule a bs128 advantage read NEGATIVE and could not resolve, so the slower arm would have been selected (W9 review #2). **Consequence for confirmation, AMENDED 2026-09-09:** E is EXEMPT from quality confirmation and the cost rule stands alone. As registered, a cost-motivated bs128 pick had a quality margin <= 0 against the default, so no non-negative seed range could be exceeded and the branch ALWAYS reverted -- the cost branch was unreachable, which was E's whole purpose. A cost-motivated selection is not a quality claim, so it is not quality-confirmable. Moot in effect: the confirmation block is cut.",
+  "arm_failure": "an arm that crashes, OOMs or trips the §Recipe kill rule has NO final checkpoint: its contrasts are reported UNRESOLVED and revert to default, the failure is reported, and the arm is not silently re-run at different settings.",
+  "confirmation_failure": "a confirmation arm that fails leaves its seed range undefined; the decision then reverts to default and is reported as unconfirmed.",
+  "confirmation_eligibility": "families G, B, E, C and D only. F and A are EXCLUDED: F confirmation would cost 80M examples against the registered 45M worst case, and A's rules are already three-outcome.",
+  "C_skipped": "C-M9init is CUT under W8 band 1; this rule is moot. Had C been merely skippable, the denominator would have stayed fixed -- a contrast's inclusion in the count is decided before any reading, never by whether it happens to run.",
+  "D_tie": "AMENDED 2026-09-09. Was: 'if D-NORM and D-COV both resolve with margins within 1e-4, the default (squared L2) stands' -- which fired exactly when the evidence was STRONGEST (two independent alternatives both resolving against the default) and returned to the objective both of them beat. NOW: a near-exact tie between two RESOLVING winners keeps a winner, broken deterministically to `leaf_norm_e2` (the cheaper implementation change) and REPORTED as a tie; never by reverting to the loser. Otherwise `multi_arm_winner` applies unchanged. Implementation: `m10src/decision_rules.d_selection_corrected`.",
+  "A2-A1": "DESCRIPTIVE, and it triggers no build action: the build's PAQ volume is fixed unconditionally at 1.0M by §Recipe, whatever A2-A1 reads. (The mandate's 'if it resolves the build keeps volume' would have made a descriptive contrast decisive and outside the 13-way correction; it is resolved here in favour of the fixed cap.)",
+  "F_selection_aware": "RETIRED with F2 (Dylan 2026-09-05): it governed F2's adaptively-selected comparator `F-winner`. Kept as a record: a bootstrap that holds an observed winner fixed ignores the selection step (W9, Codex finding 4). No live contrast uses it.",
+  "multi_arm_winner": "G, B and D each offer more than one SELECTABLE alternative against the default. **Among the alternatives whose own registered default comparison RESOLVES, the highest point estimate is selected; NO inferential claim is made that it beats the other alternatives, and no alternative-vs-alternative contrast is run.** The earlier form required the winner to 'also resolve against the other alternative', which would have created five post-hoc-oriented comparisons absent from the thirteen and broken the Bonferroni accounting (W9 review #4). Ties on the point estimate go to the default. `D_tie` remains the special case.",
+  "F_tournament": "**How F picks the student.** Read at 20M, F1 only (L12 and F2 cut, Dylan 2026-09-05). The winner is the arm with the higher COV macro; it is adopted as RESOLVED only if its margin over the other resolves under the two-sided F rule at alpha/24 per tail. If not, the cheapest to serve wins by `rules.serve_cost_order` and the report labels that a PRODUCT PREFERENCE, not evidence.",
+  "E_warmup_parity": "**REGISTERED 2026-09-09, BEFORE `E-bs128` RUNS -- the only window the protocol allows (Fable adversarial review, 2026-09-09; every claim re-derived here before acting).** `nano10.WARMUP_STEPS` is fixed at 2,000 STEPS, so at bs32 warmup is 64,000 examples (1.28% of a 5M arm) and at bs128 it is 256,000 (5.12%) -- 4x the warmup exposure and ~1/4 the AdamW updates. E1 would therefore have compared a whole OPTIMIZER POLICY while being read as a batch-size contrast, and the handicap runs against bs128, whose selection is what saves 2.2x build cost. **Both E arms run at a warmup of 64,000 EXAMPLES** (2,000 steps at bs32; 500 steps at bs128). This is a parity fix with no free parameter, not a tuning choice: it removes a difference, it does not introduce one. The remaining confound is DISCLOSED, not removed: bs128 still takes ~1/4 the updates at the same peak LR. **CORRECTED 2026-09-10 (Codex + Fable lock review):** an earlier version of this rule added \"`E-bs32` is the box-trained ANCHOR while `E-bs128` runs on the A100, so E1 alone carries a hardware difference\". That was STALE and contradicted the settled screen design (`_w8_band`, `M102_LOCK.md`), under which **BOTH E arms run on the A100 together** -- which is precisely what removes the hardware difference. The correction was deferred until `A3-20M` finished, because that arm's resume path pins this file's sha256. If the LR is to be scaled with batch, it is a registered 2-point pair on the A100 (as M10.0-e did for bs32), never a number chosen after the fact."
+ },
+ "parity_preconditions": {
+  "_rule": "a head that fails serving parity disqualifies its arm (§Screen)",
+  "artifact": "results/m10_student_parity_box.json",
+  "status": "all six heads PASS: bge-small, MiniLM-L6, MiniLM-L12 at 3 and 4 layers, min-cos >= 0.99999988 through fastembed, zero custom ONNX ops, all under the 35M cap",
+  "serving_note": "MiniLM's own `tokenizer_config.json` carries max_length 128 beside model_max_length 512, and fastembed serves min(...) = 128. The exported tokenizer sets both to 512. A first run read 0.93-0.95 min-cos and would have disqualified both MiniLM students on a mis-specified check."
+ },
+ "_mandate_arm_count": "this file registers 16 trained arms; `instructions-m10.md`:597 still says fifteen. THIS FILE IS AUTHORITATIVE (see `_what`). The mandate predates the S1 amendment that made the anchor its own trained arm (W9, Codex finding 10).",
+ "_w8_band": "W8 band 1 (M10.0-e `lr_pair.distance_raw` = 0.00288 <= 0.0056): run F, ANCHOR, A, G, B, E, D; CUT C. **BOTH E arms run on the rented A100, together** (Dylan 2026-09-05; `E-bs32` registered as its own arm 2026-09-10 (Fable + Codex round 9, 2026-09-10) — it had been an alias to the box-trained ANCHOR, which made E1 a cross-hardware contrast the lock documents claimed it was not). | Dylan 2026-09-05: L12 cut (F1 only); family A's STOP removed; the weekend timeline is not binding, the box runs as much as it can first and the remainder goes to the cloud under the same registry.",
+ "_cut_contrasts": {
+  "F2": {
+   "a": "F-MiniLM-L12",
+   "b": "F-winner",
+   "at_examples": 20000000,
+   "decisive": true,
+   "runs_iff": "L12 extended",
+   "note": "counted in the thirteen whether or not it runs",
+   "tails": 2,
+   "quantile": 0.0009615384615384616,
+   "rule": "F_selection_aware",
+   "family_rule": "F_tournament",
+   "cut": "CUT with its arm, Dylan 2026-09-05 (verification-pass rulings, pre-observation: nothing registered has trained). Was counted in the thirteen whether or not it ran; the denominator is now 12."
+  }
+ },
+ "_interpretation": {
+  "_amended": "AMENDED 2026-09-09 (`m10/AMENDMENT_STAGED_2026-09-08.md`, Dylan's 2026-09-08 delegation; applied after the W8 band-1 chain read COMPLETE and BEFORE any contrast was computed), then extended the same day on a Fable adversarial review. Readings that carry NO compute and change no threshold, rule or action -- except `E_warmup_parity`, which is a rule and lives in `rules`.",
+  "exposure": "MEASURED, `results/m10_exposure_table.json` (`m10src/exposure_table.py`): per-form query exposure swings 6x across family A -- A1/A2 2 forms at 1,875,000 presentations per form, A3 5 forms at 750,000, A4/ANCHOR 12 forms at 312,500 (58.3% of exposure generated), F's two arms 12 forms at 1,250,000. The sampler is form-balanced, so every form present takes an equal share no matter how much text backs it; `by_form` in the manifest is AVAILABLE TEXTS, not exposure. So EVERY family-A contrast is an exposure re-allocation, not only A4-A3. F's contrast is clean by comparison: identical per-form exposure in both arms.",
+  "_exposure_timing": "On the record because §5 relabels a family-A outcome. **CORRECTED 2026-09-09 (Fable adversarial review, 2026-09-09; every claim re-derived here before acting): the earlier wording, 'no A number existed when the relabel was written', is FALSE and contradicted `_amended_2026_09_09` three keys away -- carrying both readings at once is the exact failure the review rule names.** What is true: no A CONTRAST had been computed. What was on disk when the relabel was committed (2026-09-08 20:13:07): A1, A2 and ANCHOR/A4 final cycle macros, and A3's cycle-1 and cycle-2 macros -- so an A4-A3 hit was foreseeable (the cycle-2 point is +0.012118 against the final +0.012080). A3's final record followed at 20:35:40. **The relabel runs AGAINST our interest either way** -- it withholds the 'synthetic data helps' reading from a contrast that went on to RESOLVE -- which is why it stands; but it is not pre-observation of the arms and is no longer described as such.",
+  "B": "family B is an augmentation experiment at FIXED query exposure. At a fixed 200M build, adopting 50/50 removes 50M query presentations -- a trade its contrast never tested. Limit what B's result decides.",
+  "E1": "compares more than batch size, and one of the two differences is REMOVED. **Was:** `WARMUP_STEPS` fixed in STEPS gave bs128 256,000 warmup examples (5.12% of a 5M arm) against bs32's 64,000 (1.28%). **Fixed 2026-09-09 before the arm ran** — `rules.E_warmup_parity`, implemented as `nano10.warmup_steps_for(batch)`, so both arms warm up over 64,000 examples. **Still DISCLOSED, not removed:** bs128 takes ~1/4 the AdamW updates at the same peak LR. **CORRECTED 2026-09-10:** an earlier version of this entry also claimed E1 carries a hardware difference because `E-bs32` is the box-trained ANCHOR. It does not — BOTH E arms run on the A100 together, which is what removes it. `rules.E_warmup_parity` was corrected on 2026-09-10 and this entry was missed, so the correction sat half-applied for a day (Fable, round 7). Read E1 narrowly all the same: it is an optimizer-policy comparison.",
+  "G-1536": "cannot raise output rank (the teacher is 1024-d and the 1152 anchor already permits full rank). It tests extra-layer features and parameterization.",
+  "G-384": "may not select the recipe (`arms.G-384.selectable: false`); it is evidence for or against a prescribed width, and the experiment does not 'decide' width.",
+  "bonferroni": "the denominator is 12 (amendment C2; `rules.F_orientation` closes at alpha exactly). Stale '/13' mentions in `instructions-m10.md` and `m10/LEDGER.md` are annotated. F1 was computed at alpha/24, so no number changes.",
+  "D1_D2_precondition": "REQUIRED BEFORE READING D1/D2. **MEASURED:** D-COV's first logged loss is 0.0008 against squared_l2's ~0.50 (~612x), and `results/m10_dcov_gradient_audit.json` measures grad norms 0.0017 vs 0.868 on IDENTICAL batches at the same peak LR (9.80e-05). AdamW's epsilon is NOT the cause (step fractions 0.99999 for both). **CORRECTED 2026-09-09 (Fable adversarial review, 2026-09-09; every claim re-derived here before acting): the earlier text said 'GRADIENT CLIPPING is' the confound. That was ASSERTED, not measured, and it is probably WRONG.** `trainer10.py` clips at 1.0 and now records pre-clip norms and a clip rate -- but that instrumentation landed 14:20, AFTER the last arm finished at 14:13:48, so **no registered arm recorded a clip rate**. The audited squared_l2 norm 0.868 is at loss 2.01, an init-adjacent batch; L2 gradients scale ~sqrt(loss), so at the first logged training loss (0.5015) the norm is ~0.43 and squared_l2 would rarely reach a 1.0 clip at all. **Two candidate mechanisms remain, neither established:** (i) an optimizer-scale artifact, which would need a mechanism other than clipping given the epsilon result; (ii) a REAL failure of document-aware regression -- Sigma down-weights directions with low pooled document variance, i.e. exactly the within-niche directions each domain needs, and D2 is negative in all four families (finance -0.036, legal -0.025/-0.008, health -0.017, BRIGHT -0.001). **So D2 must be reported as an objective comparison whose mechanism is UNRESOLVED -- not as a clean test, and not as a proven artifact.** What settles it, and neither selects anything: replay ~500 squared_l2 steps per cycle logging pre-clip norms to get a clip rate; and run D-COV with the loss scaled x1024 (restoring tr(Sigma)=tr(I), so the optimizer and clip see squared_l2-scale gradients and the ONLY remaining difference is the direction reweighting) -- 5M on the box, ~1.5 h.",
+  "A4_A3_is_a_FORM_MATCH_effect": "**Decomposition of the resolved A4-A3 (+0.012080), re-derived from `results/m10_contrast_A4-A3.json` and independently reproduced by two reviewers:** MedicalQARetrieval alone contributes **+0.009885 of the +0.012080 (81.8%)**; LEDGER +0.001915; legal +0.001615; **BRIGHT is NET NEGATIVE, -0.001335** (robotics -0.0257, economics -0.0178, psychology -0.0106). Drop consumer-health and the three-family point is **+0.0029, half the MDE**. A4 adds seven generated forms to A3's five and two of them are **`health`** and **`finance`** -- the two COV families that gained most, in that order; BRIGHT has no matching added form and lost (`results/m10_exposure_table.json`).\n\n**What may be claimed, and no more (Codex adversarial review of the FIXES, 2026-09-09).** An earlier version of this entry said 'A4-A3 measured a FORM-MATCH effect' -- that is OVER-CLAIMED in the other direction. A4-A3 is ONE BUNDLED INTERVENTION: it adds seven forms while diluting every existing form's exposure, and there is no per-form ablation anywhere in the screen. It cannot distinguish form matching from targeted semantic coverage, from generated-data quality, or from another correlated property of the added text. **The defensible sentence: the gain is concentrated in consumer-health and is CONSISTENT WITH domain/form matching, while broad cross-domain benefit is NOT established.** The registered action is unchanged and the build reproduces the tested 12-form allocation at ~40x dose; what changes is the claim, plus a risk the report must carry -- clean-4 is scientific/biomedical, so trec-covid and nfcorpus may inherit the concentrated gain while a reasoning-heavy surface may inherit BRIGHT's loss. Every resolved contrast is reported with a leave-one-family-out row.",
+  "repetition_at_build_dose": "**MEASURED (gpt-6-astra whole-plan review, 2026-09-09; `research/m10-astra-decisions-2026-09-09.md`), arithmetic re-derived here and exact.** The sampler is form-balanced, so at the 200,000,000-example build (75% query share) each of the 12 forms takes **12,500,000 presentations** -- and the forms are backed by wildly different amounts of text, so that is **217.8 presentations per available `argument` text, 201.4 per `health` text, 87.4 for five forms, 30.0 for title/keyword/claim, and 9.4 per `factoid` text** (`results/m10_exposure_table.json`). A 21x spread. **'40x dose' is not '40x coverage.'** These are repetition counts, not evidence of overfitting -- but the concentration lands exactly where the one resolved family-A contrast lands: `health` carries 81.8% of A4-A3's gain and its 62,061 texts are each seen ~201 times at build dose. **Report this beside the A4-A3 row.** A deeper point astra makes and it is correct: because weight follows the NUMBER OF LABELS, splitting one semantic category into two would raise its training weight without adding a single query -- **the taxonomy is itself an untested training policy**. Not reopened for M10 (the recipe selection stands); registered as its own comparison for a later milestone: allocation policies on the SAME A4 corpus, with weights attached to explicit semantic groups or an intended workload rather than to label count.",
+  "frozen_backbone_baseline_ALREADY_ANSWERED": "astra's leading 'what are you not seeing' (gpt-6-astra whole-plan review, 2026-09-09; `research/m10-astra-decisions-2026-09-09.md`) was: freeze bge-small, train ONLY the 1152->1024 alignment head against the teacher targets -- deployment needs index compatibility, not 33M updated backbone parameters -- and it may preserve much of the retrieval backbone's coverage at a fraction of the training cost. It noted, correctly, that no SCREEN ARM establishes this either way. **But it is already measured, in a file outside its read list, and the answer is decisive: NO.** `results/m10_head_width_probe_mac.json` -- frozen bge-small + closed-form ridge head at the full 1152-wide feature -- retains **36.8%** of stella on cqadup-programmers and **43.9%** on cqadup-physics; M9's own head probe put a frozen 384 head at **50.8%** of the ceiling on SCREEN-3 (`results/m9_head_probe.json`). The TRAINED anchor reaches a COV macro of 0.502385 against the measured teacher ceiling 0.5567 = **90.2%**. Backbone adaptation earns its cost by roughly a factor of two in retention. **Do not re-propose the frozen-backbone student.** The one thing that would reopen it is a different objective, not a different head width.",
+  "recovery_is_not_the_same_as_release": "**A reporting commitment, registered (gpt-6-astra whole-plan review, 2026-09-09; `research/m10-astra-decisions-2026-09-09.md`) BEFORE the final result.** M10 exists because M9 failed on COVERAGE -- 93.8% on NQ against 50-71% on two CQADupStack components. Passing the clean-4 and avg-6 release bars and REPAIRING those components are different accomplishments, and an aggregate development surface cannot make them equivalent. So: the final report identifies what counts as recovery **on each original weak component**, using teacher-normalized retention AND absolute retrieval quality together, and reports it beside the release verdict. **This is NOT a retroactive release veto** -- if the registered bars pass while those components stay weak, we ship under the registered rule and describe the outcome as *a stronger shared-index recipe*, not as demonstrated repair of M9's coverage failure. The family-A DEV-6 CQADupStack diagnostics are already registered; this fixes what they are FOR.",
+  "what_the_screen_could_not_tell_us": "**The honest limit of the whole screen, registered (gpt-6-astra whole-plan review, 2026-09-09; `research/m10-astra-decisions-2026-09-09.md`).** 'Nothing moved' is the wrong scorecard -- the screen gave evidence for corpus inclusion (A4-A3) and backbone choice (F1) and supported the prescribed head (G1). But: **it cannot establish that the retained DEFAULTS are optimal at build dose**, and a contrast failing to resolve does not establish that its alternative has no useful effect. astra would have spent the same ~52 box-hours on **A3/A4 x two training seeds x full 5M and 20M schedules** (~100M examples, ~44.5 h), trading architecture and optimizer exploration for matched evidence about corpus benefit, seed sensitivity and dose interaction. That is a real critique of the design, recorded so the next screen is built differently. **Both descriptive runs now in flight are the cheap first pieces of exactly that alternative** -- `A3-20M` is the dose-interaction read on the corpus question and `ANCHOR-seed1` the seed-sensitivity read."
+ },
+ "_amended_2026_09_09": "The staged amendment applied in full: `m10/AMENDMENT_STAGED_2026-09-08.md`. Authority: Dylan 2026-09-08 ('Take whatever decision is best and will guarantee us the best model'). Every change governs a decision NOT YET MADE -- the W8 band-1 chain had read COMPLETE and no contrast had been computed -- which is the only window the protocol allows. NO bar, partition, comparator, statistic, MDE, alpha, contrast, arm or frozen artifact is touched, and completed arms keep their records and their registered interpretation. Registry sha256 before: bd89c134f7d2ba38973aa09558421bdcbfa3ef49f0a41905b269be94d15aea10. **The precise pre-observation claim, so it is not read as more than it is:** no contrast had been computed and no bootstrap had been run when this was applied, and the amendment was drafted 2026-09-08 and applied VERBATIM. But the arms' per-cycle COV MACROS were already on disk and visible (they are in each arm record, committed c5e602b). None of the changes is keyed to an arm outcome -- the three rule fixes govern decisions with no arms run at all (confirmation, D, E), and the two cuts are budget and protocol -- but 'no number was visible' would be false and is not claimed. **Second pass the same day, on a Fable adversarial review of this amendment and the verdicts:** the D2 clipping claim corrected (asserted, never measured), the timing contradiction resolved, `budget_released` recomputed on REALIZED rather than worst-case outcomes (the freed dose is a range from -5M to +61.7M, not 91.7M), SYNTH-20M recorded as vacuous-as-registered because the screen selected no non-default, the training-seed-variance gap registered with the measured 0.0013869 bound, A4-A3 decomposed to a FORM-MATCH effect, and `E_warmup_parity` registered before `E-bs128` runs. No verdict, bar, partition, comparator or statistic is touched; the two decisions this opens for Dylan are named in `confirmation.synth_20M` and `confirmation.seed_variance_gap`. **Third pass, on a Codex adversarial review of the FIXES themselves, which returned NO-GO on the bundle as claimed and was right:** the COV identity check passed on an absent expected hash and never validated the previous cycle end that decides sign stability; the D2 retraction had not reached the generated verdict; `serve_cost_order` was hardcoded; the tie test reimplemented what it tested; `selection()` accepted contrast records from a superseded registry; SYNTH-20M's 'vacuous' note was an annotation over an unchanged live block, and my own 'anchor against itself' was itself over-claimed because `batch` is PENDING; the seed figure is one observation, not a bound; and the A4-A3 form-match reading was over-claimed in the other direction. All fixed or restated. **Also corrected: my claim that every already-run arm 'fingerprints unchanged' is FALSE** -- `run_arm.fingerprint` includes `code_identity()` over run_arm/trainer10/nano10 and the registry hash, both of which changed; only the `warmup_steps` SUBFIELD is unchanged. No arm is resuming, so nothing is affected, but the claim was wrong.",
+ "descriptive_runs": {
+  "_what": "Arms that are NOT part of the screen: they resolve no contrast, enter no Bonferroni accounting (`n_contrasts` stays 12), and select nothing. `trained_arms_expected` counts SCREEN arms only, and `screen_lock` excludes anything carrying `descriptive: true` from both the trained count and the every-arm-is-read-by-a-contrast check.",
+  "_authority": "Dylan delegated decisions 1 and 2 to gpt-6-astra on 2026-09-09 and its rulings are executed as written. Brief `research/m10-review-brief-astra-2026-09-09.md`; ruling and review `research/m10-astra-decisions-2026-09-09.md`.",
+  "members": [
+   "A3-20M",
+   "ANCHOR-seed1"
+  ],
+  "_pre_observation": "Both are registered BEFORE either runs. Neither can change a verdict: the twelve registered contrasts are computed, `results/m10_screen_verdicts.json` is written, and the recipe those verdicts select is fixed by rules that these runs are not inputs to."
+ }
+}

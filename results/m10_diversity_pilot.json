@@ -1,0 +1,767 @@
+{
+ "_what": "the registered diversity pilot: 2,000 queries per form under the real generation contract, from real non-held-out build seeds",
+ "_gate": "A8 gate 1 as amended by W10 (4-grams >= 50% below 39 words, the registered 8-gram 16/32 rule at or above it); action above 0.25 is cut-to-representatives, below 50,000 retained the form is dropped",
+ "_monotone": "the rate is non-decreasing in n, so every value is a FLOOR for the build's 143,000",
+ "model": "Qwen/Qwen3-8B-AWQ",
+ "revision": "4da05a8edb55c6046cce958586c33b61da07bb79",
+ "forms": {
+  "finance": {
+   "form": "finance",
+   "seeds_in_store": 33000,
+   "gate_seeds_excluded": 317,
+   "forms12_holdout": 500,
+   "build_seeds": 32183,
+   "pilot_seeds": 500,
+   "pilot_draw_seed": 777,
+   "prompt_sha256": "ba74eb9debf21e96ce43c54b822d982a9c7ff7b0c85c823c4af67bfedf79c6c4",
+   "prompt_hash8": "d9d4623d187cc57c",
+   "generation": {
+    "form": "finance",
+    "model": "Qwen/Qwen3-8B-AWQ",
+    "revision": "4da05a8edb55c6046cce958586c33b61da07bb79",
+    "n_seeds": 500,
+    "n_per_seed": 5,
+    "max_tokens": 300,
+    "contract_ok": 500,
+    "contract_rate": 1.0,
+    "contract_rate_all_seeds": 1.0,
+    "reached": 500,
+    "retried": 0,
+    "seconds": 51.7,
+    "out_tok": 38669,
+    "out_tok_per_s": 748.1,
+    "n_queries": 2495,
+    "exact_dupes": 5,
+    "transport_failures": 0,
+    "truncated": 0,
+    "finish_reasons": {
+     "stop": 500
+    },
+    "first_failures": []
+   },
+   "rubric_range_filter": {
+    "seen": 2495,
+    "kept": 2414,
+    "short": 81,
+    "long": 0,
+    "range": [
+     8,
+     30
+    ],
+    "drop_rate": 0.0325
+   },
+   "n_after_filter": 2414,
+   "own_seed_copied_span_hits": 142,
+   "n_measured": 2000,
+   "a8_amended_curve": {
+    "200": {
+     "near_dup_rate": 0.005,
+     "near_dup_rate_raw": 0.005,
+     "near_duplicates": 1,
+     "post_exact_dedup": 200,
+     "caught_only_by_short_rule": 1
+    },
+    "500": {
+     "near_dup_rate": 0.01,
+     "near_dup_rate_raw": 0.01,
+     "near_duplicates": 5,
+     "post_exact_dedup": 500,
+     "caught_only_by_short_rule": 5
+    },
+    "1000": {
+     "near_dup_rate": 0.019,
+     "near_dup_rate_raw": 0.019,
+     "near_duplicates": 19,
+     "post_exact_dedup": 1000,
+     "caught_only_by_short_rule": 19
+    },
+    "2000": {
+     "near_dup_rate": 0.0355,
+     "near_dup_rate_raw": 0.0355,
+     "near_duplicates": 71,
+     "post_exact_dedup": 2000,
+     "caught_only_by_short_rule": 71
+    }
+   },
+   "a8_rate_at_n": 0.0355,
+   "rise_500_to_2000": 0.025499999999999995,
+   "top10_opening_4gram_share": 0.1055,
+   "distinct_2": 0.5172,
+   "unregistered_frac_diagnostics": {
+    "200": {
+     "frac_40": 0.01,
+     "frac_50": 0.005,
+     "frac_60": 0.0
+    },
+    "500": {
+     "frac_40": 0.018,
+     "frac_50": 0.01,
+     "frac_60": 0.008
+    },
+    "1000": {
+     "frac_40": 0.031,
+     "frac_50": 0.018,
+     "frac_60": 0.007
+    },
+    "2000": {
+     "frac_40": 0.0525,
+     "frac_50": 0.032,
+     "frac_60": 0.014
+    }
+   },
+   "seconds": 52.3,
+   "above_25pct_cut": false,
+   "rising_steeply": false,
+   "start_generation": true
+  },
+  "howto": {
+   "form": "howto",
+   "seeds_in_store": 35629,
+   "gate_seeds_excluded": 24,
+   "forms12_holdout": 500,
+   "build_seeds": 35105,
+   "pilot_seeds": 500,
+   "pilot_draw_seed": 777,
+   "prompt_sha256": "48cfbc003718675a6ad09e98085230f54cbd9d590380bd64e71abc9f0d0fbcd3",
+   "prompt_hash8": "a7dae4a2ee8d67c9",
+   "generation": {
+    "form": "howto",
+    "model": "Qwen/Qwen3-8B-AWQ",
+    "revision": "4da05a8edb55c6046cce958586c33b61da07bb79",
+    "n_seeds": 500,
+    "n_per_seed": 5,
+    "max_tokens": 300,
+    "contract_ok": 495,
+    "contract_rate": 0.99,
+    "contract_rate_all_seeds": 0.99,
+    "reached": 500,
+    "retried": 27,
+    "seconds": 234.2,
+    "out_tok": 123825,
+    "out_tok_per_s": 528.8,
+    "n_queries": 2475,
+    "exact_dupes": 0,
+    "transport_failures": 0,
+    "truncated": 3,
+    "finish_reasons": {
+     "length": 3,
+     "stop": 497
+    },
+    "first_failures": [
+     "[\n  \"Power Macintosh 9600 won't boot from System 7\\nI recently purchased a Power Macintosh 9600, but it fails to boot from System 7. I tried using a System 7 floppy disk, but the machine only displays  [finish_reason=length]",
+     "[\n  \"NTLDR Not Found on Boot\",\n  I'm trying to boot my Windows XP system, but it shows an error saying NTLDR is missing. I checked the hard drive and the boot sector seems intact, but I'm not sure wha  [finish_reason=stop]",
+     "[\n  \"Aeroprediction Code Not Calculating Trajectory Correctly\\nI'm using the Aeroprediction Code to estimate a missile's trajectory, but the output seems off. I checked the input parameters and they s  [finish_reason=length]"
+    ]
+   },
+   "rubric_range_filter": {
+    "seen": 2475,
+    "kept": 2388,
+    "short": 87,
+    "long": 0,
+    "range": [
+     25,
+     60
+    ],
+    "drop_rate": 0.0352
+   },
+   "n_after_filter": 2388,
+   "own_seed_copied_span_hits": 173,
+   "n_measured": 2000,
+   "a8_amended_curve": {
+    "200": {
+     "near_dup_rate": 0.0,
+     "near_dup_rate_raw": 0.0,
+     "near_duplicates": 0,
+     "post_exact_dedup": 200,
+     "caught_only_by_short_rule": 0
+    },
+    "500": {
+     "near_dup_rate": 0.0,
+     "near_dup_rate_raw": 0.0,
+     "near_duplicates": 0,
+     "post_exact_dedup": 500,
+     "caught_only_by_short_rule": 0
+    },
+    "1000": {
+     "near_dup_rate": 0.0,
+     "near_dup_rate_raw": 0.0,
+     "near_duplicates": 0,
+     "post_exact_dedup": 1000,
+     "caught_only_by_short_rule": 0
+    },
+    "2000": {
+     "near_dup_rate": 0.0005,
+     "near_dup_rate_raw": 0.0005,
+     "near_duplicates": 1,
+     "post_exact_dedup": 2000,
+     "caught_only_by_short_rule": 1
+    }
+   },
+   "a8_rate_at_n": 0.0005,
+   "rise_500_to_2000": 0.0005,
+   "top10_opening_4gram_share": 0.0235,
+   "distinct_2": 0.4029,
+   "unregistered_frac_diagnostics": {
+    "200": {
+     "frac_40": 0.0,
+     "frac_50": 0.0,
+     "frac_60": 0.0
+    },
+    "500": {
+     "frac_40": 0.0,
+     "frac_50": 0.0,
+     "frac_60": 0.0
+    },
+    "1000": {
+     "frac_40": 0.0,
+     "frac_50": 0.0,
+     "frac_60": 0.0
+    },
+    "2000": {
+     "frac_40": 0.0025,
+     "frac_50": 0.0015,
+     "frac_60": 0.0005
+    }
+   },
+   "seconds": 238.3,
+   "above_25pct_cut": false,
+   "rising_steeply": false,
+   "start_generation": true
+  },
+  "comparison": {
+   "form": "comparison",
+   "seeds_in_store": 39200,
+   "gate_seeds_excluded": 13,
+   "forms12_holdout": 500,
+   "build_seeds": 38687,
+   "pilot_seeds": 500,
+   "pilot_draw_seed": 777,
+   "prompt_sha256": "2389a83bb50c0bf0181650e58905f74edf310b369846a8bc8b838232b4668185",
+   "prompt_hash8": "a27cdcc6b3c6e4fa",
+   "generation": {
+    "form": "comparison",
+    "model": "Qwen/Qwen3-8B-AWQ",
+    "revision": "4da05a8edb55c6046cce958586c33b61da07bb79",
+    "n_seeds": 500,
+    "n_per_seed": 5,
+    "max_tokens": 300,
+    "contract_ok": 500,
+    "contract_rate": 1.0,
+    "contract_rate_all_seeds": 1.0,
+    "reached": 500,
+    "retried": 0,
+    "seconds": 111.3,
+    "out_tok": 49342,
+    "out_tok_per_s": 443.3,
+    "n_queries": 2500,
+    "exact_dupes": 0,
+    "transport_failures": 0,
+    "truncated": 0,
+    "finish_reasons": {
+     "stop": 500
+    },
+    "first_failures": []
+   },
+   "rubric_range_filter": {
+    "seen": 2500,
+    "kept": 2465,
+    "short": 35,
+    "long": 0,
+    "range": [
+     8,
+     25
+    ],
+    "drop_rate": 0.014
+   },
+   "n_after_filter": 2465,
+   "own_seed_copied_span_hits": 179,
+   "n_measured": 2000,
+   "a8_amended_curve": {
+    "200": {
+     "near_dup_rate": 0.015,
+     "near_dup_rate_raw": 0.015,
+     "near_duplicates": 3,
+     "post_exact_dedup": 200,
+     "caught_only_by_short_rule": 3
+    },
+    "500": {
+     "near_dup_rate": 0.016,
+     "near_dup_rate_raw": 0.016,
+     "near_duplicates": 8,
+     "post_exact_dedup": 500,
+     "caught_only_by_short_rule": 8
+    },
+    "1000": {
+     "near_dup_rate": 0.027,
+     "near_dup_rate_raw": 0.027,
+     "near_duplicates": 27,
+     "post_exact_dedup": 1000,
+     "caught_only_by_short_rule": 27
+    },
+    "2000": {
+     "near_dup_rate": 0.0245,
+     "near_dup_rate_raw": 0.0245,
+     "near_duplicates": 49,
+     "post_exact_dedup": 2000,
+     "caught_only_by_short_rule": 49
+    }
+   },
+   "a8_rate_at_n": 0.0245,
+   "rise_500_to_2000": 0.0085,
+   "top10_opening_4gram_share": 0.2055,
+   "distinct_2": 0.5254,
+   "unregistered_frac_diagnostics": {
+    "200": {
+     "frac_40": 0.025,
+     "frac_50": 0.015,
+     "frac_60": 0.005
+    },
+    "500": {
+     "frac_40": 0.036,
+     "frac_50": 0.016,
+     "frac_60": 0.01
+    },
+    "1000": {
+     "frac_40": 0.043,
+     "frac_50": 0.027,
+     "frac_60": 0.016
+    },
+    "2000": {
+     "frac_40": 0.042,
+     "frac_50": 0.0245,
+     "frac_60": 0.013
+    }
+   },
+   "seconds": 112.0,
+   "above_25pct_cut": false,
+   "rising_steeply": false,
+   "start_generation": true
+  },
+  "yesno": {
+   "form": "yesno",
+   "seeds_in_store": 39200,
+   "gate_seeds_excluded": 26,
+   "forms12_holdout": 500,
+   "build_seeds": 38674,
+   "pilot_seeds": 500,
+   "pilot_draw_seed": 777,
+   "prompt_sha256": "f961021309343e0f6c347bb2cfc38e8459ed8cf25f9a7c4934443be049a84fc5",
+   "prompt_hash8": "1e1b8acc713cb357",
+   "generation": {
+    "form": "yesno",
+    "model": "Qwen/Qwen3-8B-AWQ",
+    "revision": "4da05a8edb55c6046cce958586c33b61da07bb79",
+    "n_seeds": 500,
+    "n_per_seed": 5,
+    "max_tokens": 300,
+    "contract_ok": 500,
+    "contract_rate": 1.0,
+    "contract_rate_all_seeds": 1.0,
+    "reached": 500,
+    "retried": 0,
+    "seconds": 106.6,
+    "out_tok": 38805,
+    "out_tok_per_s": 364.2,
+    "n_queries": 2500,
+    "exact_dupes": 0,
+    "transport_failures": 0,
+    "truncated": 0,
+    "finish_reasons": {
+     "stop": 500
+    },
+    "first_failures": []
+   },
+   "rubric_range_filter": {
+    "seen": 2500,
+    "kept": 2459,
+    "short": 41,
+    "long": 0,
+    "range": [
+     6,
+     20
+    ],
+    "drop_rate": 0.0164
+   },
+   "n_after_filter": 2459,
+   "own_seed_copied_span_hits": 470,
+   "n_measured": 2000,
+   "a8_amended_curve": {
+    "200": {
+     "near_dup_rate": 0.0,
+     "near_dup_rate_raw": 0.0,
+     "near_duplicates": 0,
+     "post_exact_dedup": 200,
+     "caught_only_by_short_rule": 0
+    },
+    "500": {
+     "near_dup_rate": 0.008,
+     "near_dup_rate_raw": 0.008,
+     "near_duplicates": 4,
+     "post_exact_dedup": 500,
+     "caught_only_by_short_rule": 4
+    },
+    "1000": {
+     "near_dup_rate": 0.012,
+     "near_dup_rate_raw": 0.012,
+     "near_duplicates": 12,
+     "post_exact_dedup": 1000,
+     "caught_only_by_short_rule": 12
+    },
+    "2000": {
+     "near_dup_rate": 0.011,
+     "near_dup_rate_raw": 0.011,
+     "near_duplicates": 22,
+     "post_exact_dedup": 2000,
+     "caught_only_by_short_rule": 22
+    }
+   },
+   "a8_rate_at_n": 0.011,
+   "rise_500_to_2000": 0.002999999999999999,
+   "top10_opening_4gram_share": 0.0185,
+   "distinct_2": 0.6727,
+   "unregistered_frac_diagnostics": {
+    "200": {
+     "frac_40": 0.01,
+     "frac_50": 0.0,
+     "frac_60": 0.0
+    },
+    "500": {
+     "frac_40": 0.016,
+     "frac_50": 0.004,
+     "frac_60": 0.0
+    },
+    "1000": {
+     "frac_40": 0.025,
+     "frac_50": 0.01,
+     "frac_60": 0.003
+    },
+    "2000": {
+     "frac_40": 0.024,
+     "frac_50": 0.01,
+     "frac_60": 0.0025
+    }
+   },
+   "seconds": 107.0,
+   "above_25pct_cut": false,
+   "rising_steeply": false,
+   "start_generation": true
+  },
+  "conversational": {
+   "form": "conversational",
+   "seeds_in_store": 39200,
+   "gate_seeds_excluded": 13,
+   "forms12_holdout": 500,
+   "build_seeds": 38687,
+   "pilot_seeds": 500,
+   "pilot_draw_seed": 777,
+   "prompt_sha256": "96223e6e219507bbd9bbbf211875c73fa70bf869bf4cbe2935b2b751104d43fd",
+   "prompt_hash8": "be4fa0ffdf00e394",
+   "generation": {
+    "form": "conversational",
+    "model": "Qwen/Qwen3-8B-AWQ",
+    "revision": "4da05a8edb55c6046cce958586c33b61da07bb79",
+    "n_seeds": 500,
+    "n_per_seed": 5,
+    "max_tokens": 2000,
+    "contract_ok": 499,
+    "contract_rate": 0.998,
+    "contract_rate_all_seeds": 0.998,
+    "reached": 500,
+    "retried": 1,
+    "seconds": 240.3,
+    "out_tok": 158399,
+    "out_tok_per_s": 659.2,
+    "n_queries": 2495,
+    "exact_dupes": 0,
+    "transport_failures": 0,
+    "truncated": 0,
+    "finish_reasons": {
+     "stop": 500
+    },
+    "first_failures": [
+     "[\n  \"Who is Sheikh Nimr and what role did he play in Saudi Arabia?\", \"I need to understand the impact of his arrest and execution on international relations.\", \"I want to know how his case reflects br  [finish_reason=stop]"
+    ]
+   },
+   "rubric_range_filter": {
+    "seen": 2495,
+    "kept": 2495,
+    "short": 0,
+    "long": 0,
+    "range": [
+     30,
+     80
+    ],
+    "drop_rate": 0.0
+   },
+   "n_after_filter": 2495,
+   "own_seed_copied_span_hits": 539,
+   "n_measured": 2000,
+   "a8_amended_curve": {
+    "200": {
+     "near_dup_rate": 0.0,
+     "near_dup_rate_raw": 0.0,
+     "near_duplicates": 0,
+     "post_exact_dedup": 200,
+     "caught_only_by_short_rule": 0
+    },
+    "500": {
+     "near_dup_rate": 0.0,
+     "near_dup_rate_raw": 0.0,
+     "near_duplicates": 0,
+     "post_exact_dedup": 500,
+     "caught_only_by_short_rule": 0
+    },
+    "1000": {
+     "near_dup_rate": 0.0,
+     "near_dup_rate_raw": 0.0,
+     "near_duplicates": 0,
+     "post_exact_dedup": 1000,
+     "caught_only_by_short_rule": 0
+    },
+    "2000": {
+     "near_dup_rate": 0.0,
+     "near_dup_rate_raw": 0.0,
+     "near_duplicates": 0,
+     "post_exact_dedup": 2000,
+     "caught_only_by_short_rule": 0
+    }
+   },
+   "a8_rate_at_n": 0.0,
+   "rise_500_to_2000": 0.0,
+   "top10_opening_4gram_share": 0.533,
+   "distinct_2": 0.2588,
+   "unregistered_frac_diagnostics": {
+    "200": {
+     "frac_40": 0.0,
+     "frac_50": 0.0,
+     "frac_60": 0.0
+    },
+    "500": {
+     "frac_40": 0.002,
+     "frac_50": 0.0,
+     "frac_60": 0.0
+    },
+    "1000": {
+     "frac_40": 0.002,
+     "frac_50": 0.001,
+     "frac_60": 0.0
+    },
+    "2000": {
+     "frac_40": 0.0055,
+     "frac_50": 0.001,
+     "frac_60": 0.0
+    }
+   },
+   "seconds": 244.3,
+   "above_25pct_cut": false,
+   "rising_steeply": false,
+   "start_generation": true
+  },
+  "argument": {
+   "form": "argument",
+   "seeds_in_store": 39200,
+   "gate_seeds_excluded": 11,
+   "forms12_holdout": 500,
+   "build_seeds": 38689,
+   "pilot_seeds": 500,
+   "pilot_draw_seed": 777,
+   "prompt_sha256": "4ec8aadd7ec3be8699d7b6c127fe286992b4eb4cedcbb42a078a776d6a4802bc",
+   "prompt_hash8": "8bb9258b32e16317",
+   "generation": {
+    "form": "argument",
+    "model": "Qwen/Qwen3-8B-AWQ",
+    "revision": "4da05a8edb55c6046cce958586c33b61da07bb79",
+    "n_seeds": 500,
+    "n_per_seed": 5,
+    "max_tokens": 2000,
+    "contract_ok": 500,
+    "contract_rate": 1.0,
+    "contract_rate_all_seeds": 1.0,
+    "reached": 500,
+    "retried": 5,
+    "seconds": 504.4,
+    "out_tok": 414416,
+    "out_tok_per_s": 821.6,
+    "n_queries": 2437,
+    "exact_dupes": 63,
+    "transport_failures": 0,
+    "truncated": 0,
+    "finish_reasons": {
+     "stop": 500
+    },
+    "first_failures": []
+   },
+   "rubric_range_filter": {
+    "seen": 2437,
+    "kept": 1738,
+    "short": 699,
+    "long": 0,
+    "range": [
+     120,
+     220
+    ],
+    "drop_rate": 0.2868
+   },
+   "n_after_filter": 1738,
+   "own_seed_copied_span_hits": 960,
+   "n_measured": 1738,
+   "a8_amended_curve": {
+    "200": {
+     "near_dup_rate": 0.03,
+     "near_dup_rate_raw": 0.03,
+     "near_duplicates": 6,
+     "post_exact_dedup": 200,
+     "caught_only_by_short_rule": 0
+    },
+    "500": {
+     "near_dup_rate": 0.032,
+     "near_dup_rate_raw": 0.032,
+     "near_duplicates": 16,
+     "post_exact_dedup": 500,
+     "caught_only_by_short_rule": 0
+    },
+    "1000": {
+     "near_dup_rate": 0.046,
+     "near_dup_rate_raw": 0.046,
+     "near_duplicates": 46,
+     "post_exact_dedup": 1000,
+     "caught_only_by_short_rule": 0
+    }
+   },
+   "a8_rate_at_n": 0.046,
+   "rise_500_to_2000": 0.013999999999999999,
+   "top10_opening_4gram_share": 0.0316,
+   "distinct_2": 0.3079,
+   "unregistered_frac_diagnostics": {
+    "200": {
+     "frac_40": 0.1,
+     "frac_50": 0.06,
+     "frac_60": 0.04
+    },
+    "500": {
+     "frac_40": 0.096,
+     "frac_50": 0.062,
+     "frac_60": 0.044
+    },
+    "1000": {
+     "frac_40": 0.117,
+     "frac_50": 0.083,
+     "frac_60": 0.06
+    }
+   },
+   "seconds": 507.1,
+   "above_25pct_cut": false,
+   "rising_steeply": false,
+   "start_generation": true
+  },
+  "health": {
+   "form": "health",
+   "seeds_in_store": 33000,
+   "gate_seeds_excluded": 350,
+   "forms12_holdout": 500,
+   "build_seeds": 32150,
+   "pilot_seeds": 500,
+   "pilot_draw_seed": 777,
+   "prompt_sha256": "ece10bf623a4d58cd3b1259e3d9a7f0f8f5a6925006293a549746a2e417f40f0",
+   "prompt_hash8": "8c30d65e710c9a06",
+   "generation": {
+    "form": "health",
+    "model": "Qwen/Qwen3-8B-AWQ",
+    "revision": "4da05a8edb55c6046cce958586c33b61da07bb79",
+    "n_seeds": 500,
+    "n_per_seed": 5,
+    "max_tokens": 300,
+    "contract_ok": 500,
+    "contract_rate": 1.0,
+    "contract_rate_all_seeds": 1.0,
+    "reached": 500,
+    "retried": 0,
+    "seconds": 62.8,
+    "out_tok": 36222,
+    "out_tok_per_s": 576.7,
+    "n_queries": 2482,
+    "exact_dupes": 18,
+    "transport_failures": 0,
+    "truncated": 0,
+    "finish_reasons": {
+     "stop": 500
+    },
+    "first_failures": []
+   },
+   "rubric_range_filter": {
+    "seen": 2482,
+    "kept": 2274,
+    "short": 208,
+    "long": 0,
+    "range": [
+     8,
+     30
+    ],
+    "drop_rate": 0.0838
+   },
+   "n_after_filter": 2274,
+   "own_seed_copied_span_hits": 25,
+   "n_measured": 2000,
+   "a8_amended_curve": {
+    "200": {
+     "near_dup_rate": 0.215,
+     "near_dup_rate_raw": 0.215,
+     "near_duplicates": 43,
+     "post_exact_dedup": 200,
+     "caught_only_by_short_rule": 43
+    },
+    "500": {
+     "near_dup_rate": 0.27,
+     "near_dup_rate_raw": 0.27,
+     "near_duplicates": 135,
+     "post_exact_dedup": 500,
+     "caught_only_by_short_rule": 135
+    },
+    "1000": {
+     "near_dup_rate": 0.302,
+     "near_dup_rate_raw": 0.302,
+     "near_duplicates": 302,
+     "post_exact_dedup": 1000,
+     "caught_only_by_short_rule": 302
+    },
+    "2000": {
+     "near_dup_rate": 0.317,
+     "near_dup_rate_raw": 0.317,
+     "near_duplicates": 634,
+     "post_exact_dedup": 2000,
+     "caught_only_by_short_rule": 634
+    }
+   },
+   "a8_rate_at_n": 0.317,
+   "rise_500_to_2000": 0.046999999999999986,
+   "top10_opening_4gram_share": 0.342,
+   "distinct_2": 0.4046,
+   "unregistered_frac_diagnostics": {
+    "200": {
+     "frac_40": 0.225,
+     "frac_50": 0.195,
+     "frac_60": 0.075
+    },
+    "500": {
+     "frac_40": 0.286,
+     "frac_50": 0.24,
+     "frac_60": 0.118
+    },
+    "1000": {
+     "frac_40": 0.314,
+     "frac_50": 0.256,
+     "frac_60": 0.14
+    },
+    "2000": {
+     "frac_40": 0.3415,
+     "frac_50": 0.272,
+     "frac_60": 0.151
+    }
+   },
+   "seconds": 63.4,
+   "above_25pct_cut": true,
+   "rising_steeply": true,
+   "start_generation": false
+  }
+ }
+}

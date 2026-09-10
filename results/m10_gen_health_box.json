@@ -1,0 +1,56 @@
+{
+ "step": "0a health assertion",
+ "when": "2026-09-04T20:28:00-0400",
+ "model": "Qwen/Qwen3-8B-AWQ",
+ "revision": "4da05a8edb55c6046cce958586c33b61da07bb79",
+ "base": "http://127.0.0.1:8001/v1",
+ "vllm_version": "0.28.0",
+ "launch_flags": "#!/bin/bash\ncd /home/dylan/asymetric-dual-encoders\nexport PATH=\"/home/dylan/asymetric-dual-encoders/.venv-gen/bin:$PATH\"  # inductor shells out to ninja\nexport VLLM_USE_FLASHINFER_SAMPLER=0   # flashinfer JITs sampling kernels; CUDA 12.6 nvcc rejects\n                                      # this box's gcc 15 (max 13) and only gcc-15 is installed.\n                                      # Falls back to torch sampling -- same semantics.\nexport VLLM_WSL2_ENABLE_PIN_MEMORY=1   # WSL2 kernel 6.6.87 clears vLLM's own >=4.19.121 gate;\n                                       # pinning verified working on this driver (torch pin_memory + H2D)\nexec .venv-gen/bin/vllm serve Qwen/Qwen3-8B-AWQ \\\n  --revision 4da05a8edb55c6046cce958586c33b61da07bb79 \\\n  --max-model-len 4096 \\\n  --gpu-memory-utilization 0.88 \\\n  --max-num-seqs 64 \\\n  --reasoning-parser qwen3 \\\n  --port 8001 --host 127.0.0.1\n",
+ "prompts": 64,
+ "shape": "8 seeds x 8 forms (7 generated + factoid), n=5, all in flight",
+ "concurrency": 64,
+ "runs": [
+  {
+   "run": 0,
+   "wall_s": 11.2,
+   "contract_ok": 60,
+   "contract_rate": 0.9375,
+   "out_tok": 12505,
+   "aggregate_out_tok_per_s": 1118.0,
+   "finish_reasons": {
+    "length": 1,
+    "stop": 63
+   }
+  },
+  {
+   "run": 1,
+   "wall_s": 10.6,
+   "contract_ok": 60,
+   "contract_rate": 0.9375,
+   "out_tok": 12448,
+   "aggregate_out_tok_per_s": 1173.1,
+   "finish_reasons": {
+    "length": 1,
+    "stop": 63
+   }
+  },
+  {
+   "run": 2,
+   "wall_s": 12.4,
+   "contract_ok": 60,
+   "contract_rate": 0.9375,
+   "out_tok": 12692,
+   "aggregate_out_tok_per_s": 1027.0,
+   "finish_reasons": {
+    "length": 1,
+    "stop": 63
+   }
+  }
+ ],
+ "contract_rate": 0.9375,
+ "aggregate_out_tok_per_s_cold": 1118.0,
+ "aggregate_out_tok_per_s_warm": 1100.0,
+ "PASS_contract": true,
+ "PASS_throughput": true,
+ "note": "Gate is >=90% contract and >=700 aggregate output tok/s. Both met. The floor is met even on the cold run. --enforce-eager (needed while KV memory was being sized) cost 1.69x: 441 tok/s eager vs 745 cold / ~1117 warm with CUDA graphs. Serving fixes this box needed: VLLM_WSL2_ENABLE_PIN_MEMORY=1 (WSL disables pinning, and vLLM's buffer path then fails on UVA), VLLM_USE_FLASHINFER_SAMPLER=0 (flashinfer JITs kernels and CUDA 12.6 nvcc rejects this box's gcc 15), gpu-memory-utilization 0.88 (only 8.86 of 10 GiB is free), port 8001."
+}

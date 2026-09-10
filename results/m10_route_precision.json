@@ -1,0 +1,22 @@
+{
+ "health": {
+  "base": 10399,
+  "v2": 36284,
+  "marginal": 25885,
+  "marginal_on_topic_rate": 0.28,
+  "estimated_real_gain": 7247,
+  "estimated_usable": 17646,
+  "gate": 0.8,
+  "passes_gate": false
+ },
+ "finance": {
+  "base": 22375,
+  "v2": 23504,
+  "marginal": 1129,
+  "marginal_on_topic_rate": 0.38,
+  "estimated_real_gain": 429,
+  "estimated_usable": 22804,
+  "gate": 0.8,
+  "passes_gate": false
+ }
+}

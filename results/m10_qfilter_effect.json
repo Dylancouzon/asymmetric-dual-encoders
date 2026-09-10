@@ -1,0 +1,76 @@
+{
+ "health": {
+  "filter_report": {
+   "health": {
+    "seen": 1984,
+    "kept": 1812,
+    "short": 172,
+    "long": 0,
+    "range": [
+     8,
+     30
+    ],
+    "drop_rate": 0.0867
+   }
+  },
+  "judged": {
+   "incumbent": {
+    "on_form_all": 0.735,
+    "n_all": 200,
+    "on_form_in_range": 0.8391,
+    "n_in_range": 174,
+    "on_form_out_of_range": 0.0385,
+    "n_out_of_range": 26,
+    "drop_rate": 0.13
+   },
+   "wikipedia-body": {
+    "on_form_all": 0.78,
+    "n_all": 200,
+    "on_form_in_range": 0.8571,
+    "n_in_range": 182,
+    "on_form_out_of_range": 0.0,
+    "n_out_of_range": 18,
+    "drop_rate": 0.09
+   }
+  }
+ },
+ "finance": {
+  "filter_report": {
+   "finance": {
+    "seen": 1999,
+    "kept": 1928,
+    "short": 71,
+    "long": 0,
+    "range": [
+     8,
+     30
+    ],
+    "drop_rate": 0.0355
+   }
+  },
+  "judged": {
+   "incumbent": {
+    "on_form_all": 0.635,
+    "n_all": 200,
+    "on_form_in_range": 0.672,
+    "n_in_range": 189,
+    "on_form_out_of_range": 0.0,
+    "n_out_of_range": 11,
+    "drop_rate": 0.055
+   },
+   "wikipedia-body": {
+    "on_form_all": 0.79,
+    "n_all": 200,
+    "on_form_in_range": 0.8061,
+    "n_in_range": 196,
+    "on_form_out_of_range": 0.0,
+    "n_out_of_range": 4,
+    "drop_rate": 0.02
+   }
+  }
+ },
+ "_finding": "Holding generated queries to the word range their OWN FROZEN RUBRIC already specifies takes `wikipedia-body` health from 0.780 to 0.857 on-form and finance from 0.790 to 0.806, at a cost of 9.0% and 2.0% of output. Both land ABOVE the 0.80 the forms were approved at, with no bar moved and no standard invented \u2014 the ranges are parsed out of `forms.RUBRIC` at import, so the filter cannot disagree with the judge.",
+ "_why_it_is_pure_waste_being_removed": "Out-of-range queries score 0.0385 / 0.0 / 0.0 / 0.0 on-form. An out-of-range query is essentially never on-form, so the mechanical test and the judge's verdict agree almost perfectly and the filter removes waste rather than borderline cases. That is what makes it safe to apply mechanically at build time.",
+ "_caveat_stated_first": "This is a CONDITIONAL RE-READ of the same 400 judged items per form, not a fresh measurement: the filter's effect is computed by splitting verdicts that already existed. The mechanism is unambiguous, but the confirming number is an on-form read on a FRESH sample after the filter runs at build time, and that is what the manifest will carry.",
+ "_it_is_not_a_new_standard": "Every form's registered description ends with a word range \u2014 health '8 to 30 words', yesno '6 to 20', argument '120 to 220'. `forms.parse` validates output SHAPE and never length, so the range was registered and unenforced. This enforces it. `test_qfilter` proves a rubric edit moves the filter with it, so the two cannot drift apart."
+}

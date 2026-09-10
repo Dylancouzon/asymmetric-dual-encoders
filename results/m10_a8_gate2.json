@@ -1,0 +1,178 @@
+{
+ "_what": "A8 quality gate 2 -- distribution overlap of each query form against real MS MARCO dev queries. Action: none, a disclosed diagnostic (instructions-m10.md:480-486).",
+ "manifest": {
+  "source_url": "https://msmarco.z22.web.core.windows.net/msmarcoranking/queries.tar.gz",
+  "file": "queries.dev.tsv (from queries.tar.gz)",
+  "sha256": "757b7e935ff46728be84cbf7d195c3e6ae479d6449d92bbb87b09fe56bebf5ee",
+  "licence": "MS MARCO: non-commercial research purposes only -- admissible here as VALIDATION under the 2026-09-04 rule change; never a seed, target, negative or gradient (research/m7-data-licensing.md).",
+  "seed": 0,
+  "encode": {
+   "tag": "697db72c0ffc",
+   "n": 50000,
+   "source_sha256": "757b7e935ff46728be84cbf7d195c3e6ae479d6449d92bbb87b09fe56bebf5ee",
+   "seed": 0,
+   "identity": {
+    "model": "NovaSearch/stella_en_400M_v5",
+    "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+    "pooling": "mean-l2",
+    "dim": 1024,
+    "post_dense": "2_Dense_1024",
+    "role": "query",
+    "prefix": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
+    "max_length": 512,
+    "store_dtype": "fp16",
+    "hash": "blake2b-128"
+   },
+   "encode_seconds": 94.4,
+   "texts_per_s": 529.8
+  }
+ },
+ "seed": 0,
+ "k": [
+  1,
+  5
+ ],
+ "n_form_sample": 5000,
+ "n_msmarco_sample": 50000,
+ "forms": {
+  "title": {
+   "mean_cos_k1": 0.5060566067695618,
+   "mean_cos_k5": 0.4715087115764618,
+   "energy_distance_vs_msmarco": 0.09437763690948486,
+   "own_form_nn": {
+    "mean_cos_k1": 0.6514643430709839,
+    "mean_cos_k5": 0.6130992770195007
+   },
+   "n": 5000
+  },
+  "keyword": {
+   "mean_cos_k1": 0.5893731713294983,
+   "mean_cos_k5": 0.5452892184257507,
+   "energy_distance_vs_msmarco": 0.03786778450012207,
+   "own_form_nn": {
+    "mean_cos_k1": 0.6034740209579468,
+    "mean_cos_k5": 0.5518414974212646
+   },
+   "n": 5000
+  },
+  "claim": {
+   "mean_cos_k1": 0.5215047597885132,
+   "mean_cos_k5": 0.48566102981567383,
+   "energy_distance_vs_msmarco": 0.040535926818847656,
+   "own_form_nn": {
+    "mean_cos_k1": 0.5725317597389221,
+    "mean_cos_k5": 0.529087483882904
+   },
+   "n": 5000
+  },
+  "factoid": {
+   "mean_cos_k1": 0.576506495475769,
+   "mean_cos_k5": 0.5361771583557129,
+   "energy_distance_vs_msmarco": 0.029785752296447754,
+   "own_form_nn": {
+    "mean_cos_k1": 0.5459227561950684,
+    "mean_cos_k5": 0.5017927289009094
+   },
+   "n": 5000
+  },
+  "product": {
+   "mean_cos_k1": 0.6072797775268555,
+   "mean_cos_k5": 0.5606390833854675,
+   "energy_distance_vs_msmarco": 0.041181206703186035,
+   "own_form_nn": {
+    "mean_cos_k1": 0.6693554520606995,
+    "mean_cos_k5": 0.6079333424568176
+   },
+   "n": 5000
+  },
+  "conversational": {
+   "mean_cos_k1": 0.5112510919570923,
+   "mean_cos_k5": 0.4765055179595947,
+   "energy_distance_vs_msmarco": 0.07999944686889648,
+   "own_form_nn": {
+    "mean_cos_k1": 0.6095696091651917,
+    "mean_cos_k5": 0.5553774833679199
+   },
+   "n": 5000
+  },
+  "argument": {
+   "mean_cos_k1": 0.47422242164611816,
+   "mean_cos_k5": 0.4430882930755615,
+   "energy_distance_vs_msmarco": 0.1327723264694214,
+   "own_form_nn": {
+    "mean_cos_k1": 0.6610774397850037,
+    "mean_cos_k5": 0.5932342410087585
+   },
+   "n": 5000
+  },
+  "finance": {
+   "mean_cos_k1": 0.5697216987609863,
+   "mean_cos_k5": 0.5298290848731995,
+   "energy_distance_vs_msmarco": 0.10973048210144043,
+   "own_form_nn": {
+    "mean_cos_k1": 0.6794038414955139,
+    "mean_cos_k5": 0.6333341002464294
+   },
+   "n": 5000
+  },
+  "howto": {
+   "mean_cos_k1": 0.5355006456375122,
+   "mean_cos_k5": 0.5005872845649719,
+   "energy_distance_vs_msmarco": 0.12037801742553711,
+   "own_form_nn": {
+    "mean_cos_k1": 0.6589921712875366,
+    "mean_cos_k5": 0.6166765093803406
+   },
+   "n": 5000
+  },
+  "comparison": {
+   "mean_cos_k1": 0.5145241618156433,
+   "mean_cos_k5": 0.4795234501361847,
+   "energy_distance_vs_msmarco": 0.09988653659820557,
+   "own_form_nn": {
+    "mean_cos_k1": 0.6162337064743042,
+    "mean_cos_k5": 0.5682764649391174
+   },
+   "n": 5000
+  },
+  "health": {
+   "mean_cos_k1": 0.6193554401397705,
+   "mean_cos_k5": 0.5771511197090149,
+   "energy_distance_vs_msmarco": 0.07488715648651123,
+   "own_form_nn": {
+    "mean_cos_k1": 0.6830449104309082,
+    "mean_cos_k5": 0.6325283050537109
+   },
+   "n": 5000
+  },
+  "yesno": {
+   "mean_cos_k1": 0.5459628105163574,
+   "mean_cos_k5": 0.5094932913780212,
+   "energy_distance_vs_msmarco": 0.06336867809295654,
+   "own_form_nn": {
+    "mean_cos_k1": 0.5971381068229675,
+    "mean_cos_k5": 0.5457897782325745
+   },
+   "n": 5000
+  }
+ },
+ "skipped": {},
+ "baselines": {
+  "msmarco_self": {
+   "mean_cos_k1": 0.5794314742088318,
+   "mean_cos_k5": 0.5192712545394897,
+   "energy_distance": 0.0005077123641967773,
+   "n": 5000,
+   "what": "two disjoint MS MARCO dev subsamples against each other -- the floor"
+  }
+ },
+ "forms_pending": [
+  "howto",
+  "argument",
+  "finance",
+  "health",
+  "comparison",
+  "yesno",
+  "conversational"
+ ]
+}

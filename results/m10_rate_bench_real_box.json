@@ -1,0 +1,287 @@
+{
+ "when": "2026-09-04T20:37:25-0400",
+ "bs": 32,
+ "steps": 200,
+ "device": "NVIDIA GeForce RTX 3080",
+ "torch": "2.8.0+cu126",
+ "corpora": {
+  "nqopen": {
+   "n": 85863,
+   "mean_tokens": 11.74,
+   "role": "query",
+   "target_shape": [
+    85863,
+    1024
+   ]
+  },
+  "triviaqa": {
+   "n": 134665,
+   "mean_tokens": 19.94,
+   "role": "query",
+   "target_shape": [
+    134665,
+    1024
+   ]
+  },
+  "pseudoq": {
+   "n": 923408,
+   "mean_tokens": 41.39,
+   "role": "doc_span",
+   "target_shape": [
+    923408,
+    1024
+   ]
+  },
+  "documents": {
+   "n": 6149679,
+   "mean_tokens": 94.55,
+   "role": "doc",
+   "target_shape": [
+    6149679,
+    1024
+   ]
+  }
+ },
+ "results": {
+  "nqopen/m9_path": {
+   "label": "nqopen m9 path (random batch)",
+   "steps_per_s": 19.99,
+   "examples_per_s": 639.7,
+   "real_tok_per_s": 7503,
+   "padded_tok_per_s": 11354,
+   "pad_waste": 0.339,
+   "step_wall_frac": 0.933,
+   "peak_gb": 0.62,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 86.8
+  },
+  "nqopen/bucket": {
+   "label": "nqopen length-bucketed",
+   "steps_per_s": 22.89,
+   "examples_per_s": 732.4,
+   "real_tok_per_s": 8658,
+   "padded_tok_per_s": 8660,
+   "pad_waste": 0.0,
+   "step_wall_frac": 0.981,
+   "peak_gb": 0.61,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 75.9
+  },
+  "nqopen/bucket_prefetch": {
+   "label": "nqopen bucketed + prefetch(2) + pinned",
+   "steps_per_s": 20.79,
+   "examples_per_s": 665.2,
+   "real_tok_per_s": 7865,
+   "padded_tok_per_s": 7866,
+   "pad_waste": 0.0,
+   "step_wall_frac": 0.997,
+   "peak_gb": 0.61,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 83.5
+  },
+  "nqopen/fixed_bucket_prefetch": {
+   "label": "nqopen fixed buckets + prefetch",
+   "steps_per_s": 20.65,
+   "examples_per_s": 660.8,
+   "real_tok_per_s": 7813,
+   "padded_tok_per_s": 11049,
+   "pad_waste": 0.293,
+   "step_wall_frac": 0.997,
+   "peak_gb": 0.66,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 84.1
+  },
+  "nqopen/fixed_bucket_compile": {
+   "label": "nqopen fixed buckets + compile",
+   "steps_per_s": 29.99,
+   "examples_per_s": 959.5,
+   "real_tok_per_s": 11311,
+   "padded_tok_per_s": 16043,
+   "pad_waste": 0.295,
+   "step_wall_frac": 0.995,
+   "peak_gb": 0.63,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 57.9
+  },
+  "triviaqa/m9_path": {
+   "label": "triviaqa m9 path (random batch)",
+   "steps_per_s": 20.1,
+   "examples_per_s": 643.3,
+   "real_tok_per_s": 12873,
+   "padded_tok_per_s": 30936,
+   "pad_waste": 0.584,
+   "step_wall_frac": 0.908,
+   "peak_gb": 1.73,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 86.4
+  },
+  "triviaqa/bucket": {
+   "label": "triviaqa length-bucketed",
+   "steps_per_s": 22.79,
+   "examples_per_s": 729.2,
+   "real_tok_per_s": 14829,
+   "padded_tok_per_s": 14876,
+   "pad_waste": 0.003,
+   "step_wall_frac": 0.977,
+   "peak_gb": 1.18,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 76.2
+  },
+  "triviaqa/bucket_prefetch": {
+   "label": "triviaqa bucketed + prefetch(2) + pinned",
+   "steps_per_s": 21.94,
+   "examples_per_s": 702.0,
+   "real_tok_per_s": 14275,
+   "padded_tok_per_s": 14320,
+   "pad_waste": 0.003,
+   "step_wall_frac": 0.997,
+   "peak_gb": 1.18,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 79.1
+  },
+  "triviaqa/fixed_bucket_prefetch": {
+   "label": "triviaqa fixed buckets + prefetch",
+   "steps_per_s": 21.44,
+   "examples_per_s": 686.2,
+   "real_tok_per_s": 13955,
+   "padded_tok_per_s": 20093,
+   "pad_waste": 0.306,
+   "step_wall_frac": 0.996,
+   "peak_gb": 1.3,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 81.0
+  },
+  "triviaqa/fixed_bucket_compile": {
+   "label": "triviaqa fixed buckets + compile",
+   "steps_per_s": 28.56,
+   "examples_per_s": 913.9,
+   "real_tok_per_s": 18507,
+   "padded_tok_per_s": 26760,
+   "pad_waste": 0.308,
+   "step_wall_frac": 0.996,
+   "peak_gb": 1.13,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 60.8
+  },
+  "pseudoq/m9_path": {
+   "label": "pseudoq m9 path (random batch)",
+   "steps_per_s": 16.48,
+   "examples_per_s": 527.5,
+   "real_tok_per_s": 21788,
+   "padded_tok_per_s": 43803,
+   "pad_waste": 0.503,
+   "step_wall_frac": 0.77,
+   "peak_gb": 3.58,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 105.3
+  },
+  "pseudoq/bucket": {
+   "label": "pseudoq length-bucketed",
+   "steps_per_s": 20.2,
+   "examples_per_s": 646.4,
+   "real_tok_per_s": 27255,
+   "padded_tok_per_s": 27265,
+   "pad_waste": 0.0,
+   "step_wall_frac": 0.893,
+   "peak_gb": 1.86,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 85.9
+  },
+  "pseudoq/bucket_prefetch": {
+   "label": "pseudoq bucketed + prefetch(2) + pinned",
+   "steps_per_s": 22.12,
+   "examples_per_s": 707.9,
+   "real_tok_per_s": 29848,
+   "padded_tok_per_s": 29858,
+   "pad_waste": 0.0,
+   "step_wall_frac": 0.997,
+   "peak_gb": 1.86,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 78.5
+  },
+  "pseudoq/fixed_bucket_prefetch": {
+   "label": "pseudoq fixed buckets + prefetch",
+   "steps_per_s": 21.82,
+   "examples_per_s": 698.1,
+   "real_tok_per_s": 29437,
+   "padded_tok_per_s": 41497,
+   "pad_waste": 0.291,
+   "step_wall_frac": 0.998,
+   "peak_gb": 2.16,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 79.6
+  },
+  "pseudoq/fixed_bucket_compile": {
+   "label": "pseudoq fixed buckets + compile",
+   "steps_per_s": 29.68,
+   "examples_per_s": 949.9,
+   "real_tok_per_s": 40014,
+   "padded_tok_per_s": 56613,
+   "pad_waste": 0.293,
+   "step_wall_frac": 0.995,
+   "peak_gb": 1.78,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 58.5
+  },
+  "documents/m9_path": {
+   "label": "documents m9 path (random batch)",
+   "steps_per_s": 7.79,
+   "examples_per_s": 249.1,
+   "real_tok_per_s": 23036,
+   "padded_tok_per_s": 106974,
+   "pad_waste": 0.785,
+   "step_wall_frac": 0.77,
+   "peak_gb": 3.94,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 223.0
+  },
+  "documents/bucket": {
+   "label": "documents length-bucketed",
+   "steps_per_s": 14.53,
+   "examples_per_s": 465.0,
+   "real_tok_per_s": 46653,
+   "padded_tok_per_s": 46656,
+   "pad_waste": 0.0,
+   "step_wall_frac": 0.733,
+   "peak_gb": 3.75,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 119.5
+  },
+  "documents/bucket_prefetch": {
+   "label": "documents bucketed + prefetch(2) + pinned",
+   "steps_per_s": 20.29,
+   "examples_per_s": 649.3,
+   "real_tok_per_s": 65140,
+   "padded_tok_per_s": 65144,
+   "pad_waste": 0.0,
+   "step_wall_frac": 0.996,
+   "peak_gb": 3.75,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 85.6
+  },
+  "documents/fixed_bucket_prefetch": {
+   "label": "documents fixed buckets + prefetch",
+   "steps_per_s": 19.26,
+   "examples_per_s": 616.4,
+   "real_tok_per_s": 61832,
+   "padded_tok_per_s": 81408,
+   "pad_waste": 0.24,
+   "step_wall_frac": 0.997,
+   "peak_gb": 3.94,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 90.1
+  },
+  "documents/fixed_bucket_compile": {
+   "label": "documents fixed buckets + compile",
+   "steps_per_s": 24.76,
+   "examples_per_s": 792.2,
+   "real_tok_per_s": 78222,
+   "padded_tok_per_s": 103868,
+   "pad_waste": 0.247,
+   "step_wall_frac": 0.996,
+   "peak_gb": 3.14,
+   "alloc_retries": 0,
+   "gpu_hours_200m": 70.1
+  }
+ }
+}

@@ -1,0 +1,90 @@
+{
+ "_what": "`health` prompt revision 2 of 2 (the last): the registered 200-query smoke, the 2,000-query diversity pilot on the BUILD population, and an r1 control on the SAME seeds.",
+ "_not_done_here": "on-form judging is the lead's (independent judge); the veto window is the lead's; health generation is NOT started.",
+ "when": "2026-09-05T20:51:57-0400",
+ "model": "Qwen/Qwen3-8B-AWQ",
+ "revision": "4da05a8edb55c6046cce958586c33b61da07bb79",
+ "prompt_sha256": "7d22a480b2687248b64274b3448bcf4389c6e67302b6dcbd79c2b529d421c1ad",
+ "prompt_hash8_registered": "1a88671fae1da153",
+ "prompt_r1_sha256": "ece10bf623a4d58cd3b1259e3d9a7f0f8f5a6925006293a549746a2e417f40f0",
+ "prompt_r1_hash8": "8c30d65e710c9a06",
+ "prompt_r2": "N consumer-health questions a patient or caregiver would ask about the passage's topic, in plain non-clinical language, each phrased from the patient's or carer's point of view. **Give each question a DIFFERENT intent, in this order:** 1) what a symptom or sign means; 2) what causes it or how it happens; 3) a treatment, procedure or medicine and how it is used; 4) a risk, danger or side effect; 5) what to expect over time, or when to see a doctor. If more than five are asked for, keep cycling through the five intents. **No two questions in the list may begin with the same first three words.** Vary the sentence shape as well: open some with \"My\", \"Is\", \"Does\", \"How long\", \"Why\" or with the thing itself, not always with \"What\" or \"Are there\", and use \"What should I do\" at most once. **Each question must be at least 8 words and at most 30 words** \u2014 a hard requirement: \"What is X used for?\" is too short, so add the detail a real patient would give. Never ask about a person's biography or about laboratory animals; the question must be about human health.",
+ "rubric_frozen_untouched": "N consumer-health questions a patient or caregiver might ask about the passage's topic (symptoms, treatments, risks, what a term means), in plain language. 8 to 30 words.",
+ "diagnosis": {
+  "mechanism": "OPENER collapse, not topic collapse. On 1,812 in-range r1 queries the ten commonest leading word-4-grams cover 36.9% of output; 'what should i do' opens 16.2%; 'what should i' + 'what are the' + 'are there any' cover 41.7%; 55% of questions begin with 'what'. distinct-2 0.388.",
+  "why_the_gate_fires": "every near-duplicate health flags is caught by the W10 SHORT rule (word-4-grams >= 50% of the smaller set); the registered 8-gram 16/32 rule reads 0.00% at every n. finance shares health's (8,30) range and reads 0.0355 at n=2,000, so this is health's output and not a rule artefact.",
+  "evidence": "work/m10gen/gate/onform-raw-health.json (1,984 r1 queries, 400 judged seeds)"
+ },
+ "smoke": {
+  "seeds": "hotpotqa-corpus, the same 40 seeds r1 was approved on",
+  "n_queries": 198,
+  "contract_rate": 1.0,
+  "PASS_contract": true,
+  "contract_gate": 0.9,
+  "rubric_range_filter": {
+   "seen": 198,
+   "kept": 169,
+   "short": 29,
+   "long": 0,
+   "range": [
+    8,
+    30
+   ],
+   "drop_rate": 0.1465
+  },
+  "judge_sample": "work/m10gen/smoke/judge_input_health_r2.json (50, round-robin over the 40 seeds, scored against the FROZEN rubric)"
+ },
+ "pilot_a8_amended_curve": {
+  "_population": "wikipedia-body build seeds, gate seeds and the 500-doc FORMS-12 hold-out removed",
+  "_seeds": 500,
+  "_note": "monotone in n, so every value is a FLOOR for the build's 143,000",
+  "r1_control": {
+   "200": 0.215,
+   "500": 0.268,
+   "1000": 0.302,
+   "2000": 0.318
+  },
+  "r2": {
+   "200": 0.145,
+   "500": 0.212,
+   "1000": 0.282,
+   "2000": 0.3375
+  }
+ },
+ "opener_concentration": {
+  "r1_top10_leading_4gram_share": 0.3445,
+  "r2_top10_leading_4gram_share": 0.302,
+  "r1_distinct_2": 0.4046,
+  "r2_distinct_2": 0.3479
+ },
+ "rubric_range_drop": {
+  "r1": {
+   "seen": 2480,
+   "kept": 2276,
+   "short": 204,
+   "long": 0,
+   "range": [
+    8,
+    30
+   ],
+   "drop_rate": 0.0823
+  },
+  "r2": {
+   "seen": 2371,
+   "kept": 2009,
+   "short": 362,
+   "long": 0,
+   "range": [
+    8,
+    30
+   ],
+   "drop_rate": 0.1527
+  }
+ },
+ "outcome": "r2 improves the small-n rate (0.215->0.145 at 200, 0.268->0.212 at 500, 0.302->0.282 at 1,000) but converges and ends marginally WORSE at n=2,000 (0.318 -> 0.3375), and its under-8-word drop rate doubles (8.2% -> 15.3%). BOTH prompts sit far above the 0.25 cut and both are still rising. health has now spent both registered revisions; what happens to the form is a Tier-2/3 question for the lead, not resolved here.",
+ "files": [
+  "work/m10gen/smoke/health_r2.json",
+  "work/m10gen/smoke/judge_input_health_r2.json",
+  "work/m10gen/smoke/health_r1_control.json"
+ ]
+}

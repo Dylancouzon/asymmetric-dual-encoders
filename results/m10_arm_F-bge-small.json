@@ -1,0 +1,961 @@
+{
+ "_what": "one registered M10 screen arm, trained end to end by m10src/run_arm.py",
+ "arm": "F-bge-small",
+ "family": "F",
+ "status": "complete",
+ "complete": true,
+ "terminal": true,
+ "smoke": false,
+ "smoke_steps": null,
+ "device": "cuda",
+ "max_len": 512,
+ "seed": 0,
+ "seed_rule": "one seed, seed 0, for every screen arm; confirmation arms use seeds 1 and 2",
+ "recipe": {
+  "dose_examples": 20000000,
+  "batch": 32,
+  "pattern": "75/25",
+  "pattern_source": {
+   "raw": null,
+   "resolved": "75/25",
+   "source": "anchor.mix",
+   "anchor_window_pattern": "3Q+1D"
+  },
+  "student": "bge-small",
+  "n_layers": 3,
+  "head": "linear",
+  "objective": "squared_l2",
+  "warm_start": "linear",
+  "cut_corpus": true,
+  "sources": [
+   "m9-pool",
+   "paq-build",
+   "harvest",
+   "generated"
+  ],
+  "n_docs": 5000000,
+  "total_steps": 625000,
+  "cycle_end_steps": [
+   208332,
+   416665,
+   624999
+  ],
+  "read_points": [
+   {
+    "examples": 5000000,
+    "step": 156249
+   },
+   {
+    "examples": 10000000,
+    "step": 312499
+   },
+   {
+    "examples": 20000000,
+    "step": 624999
+   }
+  ],
+  "dose_rounding": {
+   "dose_registered": 20000000,
+   "examples_run": 20000000,
+   "examples_dropped": 0,
+   "rule": "floor (the dose is a cap)"
+  }
+ },
+ "schedule": {
+  "cycles": 3,
+  "peak": 0.0001,
+  "final": 1e-05,
+  "_what": "3 cycles of equal example count over the ARM'S OWN dose, each linear 1e-4 -> 1e-5 (\u00a7Recipe)"
+ },
+ "params": 34540672,
+ "under_cap": true,
+ "warm_start": {
+  "n_fit": 60000,
+  "lambda": 0.001,
+  "train_objective": 0.51233,
+  "d_in": 1152,
+  "lambda_rows": [
+   {
+    "lambda": 1e-06,
+    "fit_unnormalized_sq_l2": 0.4437530040740967,
+    "fit_objective": 0.5095224380493164,
+    "val_objective": 0.5397064685821533
+   },
+   {
+    "lambda": 1e-05,
+    "fit_unnormalized_sq_l2": 0.44375303387641907,
+    "fit_objective": 0.5095227360725403,
+    "val_objective": 0.5396988987922668
+   },
+   {
+    "lambda": 0.0001,
+    "fit_unnormalized_sq_l2": 0.44375649094581604,
+    "fit_objective": 0.5095292329788208,
+    "val_objective": 0.5396289825439453
+   },
+   {
+    "lambda": 0.001,
+    "fit_unnormalized_sq_l2": 0.44389015436172485,
+    "fit_objective": 0.5097178220748901,
+    "val_objective": 0.5391382575035095
+   },
+   {
+    "lambda": 0.01,
+    "fit_unnormalized_sq_l2": 0.44722577929496765,
+    "fit_objective": 0.5140729546546936,
+    "val_objective": 0.5395883321762085
+   },
+   {
+    "lambda": 0.1,
+    "fit_unnormalized_sq_l2": 0.4674220383167267,
+    "fit_objective": 0.5399251580238342,
+    "val_objective": 0.5573028326034546
+   },
+   {
+    "lambda": 1.0,
+    "fit_unnormalized_sq_l2": 0.5284543633460999,
+    "fit_objective": 0.6180490851402283,
+    "val_objective": 0.6273517608642578
+   }
+  ],
+  "registered": "linear",
+  "n_fit_requested": 60000,
+  "fit_seed": 21,
+  "n_fit_used": 60000,
+  "seconds": 34.4
+ },
+ "evaluation_mode": "cov",
+ "cov": {
+  "per_checkpoint": [
+   {
+    "label": "mid104166",
+    "step": 104166,
+    "macro": 0.49962639819016735,
+    "by_family": {
+     "BRIGHT": 0.16777814704095348,
+     "consumer-health": 0.6758104679631783,
+     "finance": 0.3075836660868269,
+     "legal": 0.8473333116697107
+    },
+    "by_unit": {
+     "MedicalQARetrieval": 0.6758104679631783,
+     "LegalBenchCorporateLobbying": 0.9327521481991254,
+     "LegalBenchConsumerContractsQA": 0.761914475140296,
+     "BRIGHT/biology": 0.17133572513292603,
+     "BRIGHT/earth_science": 0.2852835677311502,
+     "BRIGHT/economics": 0.13201810166732023,
+     "BRIGHT/psychology": 0.17868165833236455,
+     "BRIGHT/robotics": 0.08678757278037443,
+     "BRIGHT/sustainable_living": 0.1525622566015855,
+     "LEDGER": 0.3075836660868269
+    },
+    "per_query_scores": "work/m10arms/F-bge-small/cov_mid104166.json",
+    "per_query_scores_sha256": "6ff0d4310e8767d571b4ddb4b1a879c1b5922d471b2153dd7875d86e2713d2b3",
+    "seconds": 20.9
+   },
+   {
+    "label": "read5000000",
+    "step": 156249,
+    "macro": 0.5047744132681645,
+    "by_family": {
+     "BRIGHT": 0.17185037280257767,
+     "consumer-health": 0.682732436920119,
+     "finance": 0.31596558498508864,
+     "legal": 0.8485492583648728
+    },
+    "by_unit": {
+     "MedicalQARetrieval": 0.682732436920119,
+     "LegalBenchCorporateLobbying": 0.930678279632018,
+     "LegalBenchConsumerContractsQA": 0.7664202370977276,
+     "BRIGHT/biology": 0.17686064972896018,
+     "BRIGHT/earth_science": 0.2830959074413587,
+     "BRIGHT/economics": 0.1444098550955133,
+     "BRIGHT/psychology": 0.1784029614999812,
+     "BRIGHT/robotics": 0.08930447662857142,
+     "BRIGHT/sustainable_living": 0.15902838642108125,
+     "LEDGER": 0.31596558498508864
+    },
+    "per_query_scores": "work/m10arms/F-bge-small/cov_read5000000.json",
+    "per_query_scores_sha256": "308d56ac61c50782b1a86585c87dd5478290e74886a557513450d005cbdb1354",
+    "seconds": 40.8
+   },
+   {
+    "label": "cycle1",
+    "step": 208332,
+    "macro": 0.5079818559526736,
+    "by_family": {
+     "BRIGHT": 0.1766871183544104,
+     "consumer-health": 0.6869237442468257,
+     "finance": 0.31824889226985104,
+     "legal": 0.8500676689396074
+    },
+    "by_unit": {
+     "MedicalQARetrieval": 0.6869237442468257,
+     "LegalBenchCorporateLobbying": 0.9348880555220352,
+     "LegalBenchConsumerContractsQA": 0.7652472823571795,
+     "BRIGHT/biology": 0.1792609973875368,
+     "BRIGHT/earth_science": 0.2940328801605913,
+     "BRIGHT/economics": 0.14849176211925982,
+     "BRIGHT/psychology": 0.18141969668493463,
+     "BRIGHT/robotics": 0.09749297386386746,
+     "BRIGHT/sustainable_living": 0.1594243999102723,
+     "LEDGER": 0.31824889226985104
+    },
+    "per_query_scores": "work/m10arms/F-bge-small/cov_cycle1.json",
+    "per_query_scores_sha256": "f75d34ac210c3f59dd6e8983419a517003ec1c139e0cc6f8d0e3854d6c09b845",
+    "seconds": 22.3
+   },
+   {
+    "label": "mid312499_read10000000",
+    "step": 312499,
+    "macro": 0.5075112068881515,
+    "by_family": {
+     "BRIGHT": 0.1759568957076325,
+     "consumer-health": 0.6885091155823457,
+     "finance": 0.31746997488604345,
+     "legal": 0.8481088413765845
+    },
+    "by_unit": {
+     "MedicalQARetrieval": 0.6885091155823457,
+     "LegalBenchCorporateLobbying": 0.931696504316294,
+     "LegalBenchConsumerContractsQA": 0.764521178436875,
+     "BRIGHT/biology": 0.18610790718322487,
+     "BRIGHT/earth_science": 0.2888350893613952,
+     "BRIGHT/economics": 0.14185022543990838,
+     "BRIGHT/psychology": 0.17640612893701912,
+     "BRIGHT/robotics": 0.09941182138652317,
+     "BRIGHT/sustainable_living": 0.16313020193772435,
+     "LEDGER": 0.31746997488604345
+    },
+    "per_query_scores": "work/m10arms/F-bge-small/cov_mid312499_read10000000.json",
+    "per_query_scores_sha256": "dcd90e67e66c3915948134196e7e349920ef83a7574b613d14fe4eaf339e2ce8",
+    "seconds": 22.9
+   },
+   {
+    "label": "cycle2",
+    "step": 416665,
+    "macro": 0.5136687392421483,
+    "by_family": {
+     "BRIGHT": 0.17922530382030044,
+     "consumer-health": 0.6981983381095438,
+     "finance": 0.3250414887735202,
+     "legal": 0.8522098262652289
+    },
+    "by_unit": {
+     "MedicalQARetrieval": 0.6981983381095438,
+     "LegalBenchCorporateLobbying": 0.9338009940563096,
+     "LegalBenchConsumerContractsQA": 0.7706186584741482,
+     "BRIGHT/biology": 0.19059493968169097,
+     "BRIGHT/earth_science": 0.2923870121225778,
+     "BRIGHT/economics": 0.1441770009676451,
+     "BRIGHT/psychology": 0.18733275827641518,
+     "BRIGHT/robotics": 0.10002846952090083,
+     "BRIGHT/sustainable_living": 0.1608316423525728,
+     "LEDGER": 0.3250414887735202
+    },
+    "per_query_scores": "work/m10arms/F-bge-small/cov_cycle2.json",
+    "per_query_scores_sha256": "ae1137ac23bdd26ad9e33cfac0eeb9ba56bc6a5ad9462cb9c0c4e0603eacf19c",
+    "seconds": 22.3
+   },
+   {
+    "label": "mid520832",
+    "step": 520832,
+    "macro": 0.5121311546000182,
+    "by_family": {
+     "BRIGHT": 0.1745282668616793,
+     "consumer-health": 0.6989136299072165,
+     "finance": 0.32207568970022815,
+     "legal": 0.8530070319309491
+    },
+    "by_unit": {
+     "MedicalQARetrieval": 0.6989136299072165,
+     "LegalBenchCorporateLobbying": 0.9352893138088575,
+     "LegalBenchConsumerContractsQA": 0.7707247500530408,
+     "BRIGHT/biology": 0.18894817764508873,
+     "BRIGHT/earth_science": 0.28884022808461335,
+     "BRIGHT/economics": 0.13953251893549423,
+     "BRIGHT/psychology": 0.17361947853936258,
+     "BRIGHT/robotics": 0.0980307206471388,
+     "BRIGHT/sustainable_living": 0.1581984773183782,
+     "LEDGER": 0.32207568970022815
+    },
+    "per_query_scores": "work/m10arms/F-bge-small/cov_mid520832.json",
+    "per_query_scores_sha256": "cd45a1b1391933e388c72a6b5dfda689a97671aa6e0f46303ae671f2b695f840",
+    "seconds": 21.3
+   },
+   {
+    "label": "cycle3_read20000000",
+    "step": 624999,
+    "macro": 0.5159506173533556,
+    "by_family": {
+     "BRIGHT": 0.17826170450639434,
+     "consumer-health": 0.7065451528326812,
+     "finance": 0.3262869513184712,
+     "legal": 0.8527086607558757
+    },
+    "by_unit": {
+     "MedicalQARetrieval": 0.7065451528326812,
+     "LegalBenchCorporateLobbying": 0.9354693124578735,
+     "LegalBenchConsumerContractsQA": 0.769948009053878,
+     "BRIGHT/biology": 0.19098601945031418,
+     "BRIGHT/earth_science": 0.28493934485107153,
+     "BRIGHT/economics": 0.13757207871647317,
+     "BRIGHT/psychology": 0.19443025079654955,
+     "BRIGHT/robotics": 0.10243568450430579,
+     "BRIGHT/sustainable_living": 0.15920684871965185,
+     "LEDGER": 0.3262869513184712
+    },
+    "per_query_scores": "work/m10arms/F-bge-small/cov_cycle3_read20000000.json",
+    "per_query_scores_sha256": "6db82105063cca578f92b7141ed3eb14c62ef08077e17d8edb87bdd16a0214b7",
+    "seconds": 54.1
+   }
+  ],
+  "cycle_end_macros": [
+   0.5079818559526736,
+   0.5136687392421483,
+   0.5159506173533556
+  ],
+  "final_macro": 0.5159506173533556,
+  "reads": [
+   {
+    "label": "read5000000",
+    "step": 156249,
+    "macro": 0.5047744132681645,
+    "by_family": {
+     "BRIGHT": 0.17185037280257767,
+     "consumer-health": 0.682732436920119,
+     "finance": 0.31596558498508864,
+     "legal": 0.8485492583648728
+    },
+    "by_unit": {
+     "MedicalQARetrieval": 0.682732436920119,
+     "LegalBenchCorporateLobbying": 0.930678279632018,
+     "LegalBenchConsumerContractsQA": 0.7664202370977276,
+     "BRIGHT/biology": 0.17686064972896018,
+     "BRIGHT/earth_science": 0.2830959074413587,
+     "BRIGHT/economics": 0.1444098550955133,
+     "BRIGHT/psychology": 0.1784029614999812,
+     "BRIGHT/robotics": 0.08930447662857142,
+     "BRIGHT/sustainable_living": 0.15902838642108125,
+     "LEDGER": 0.31596558498508864
+    },
+    "per_query_scores": "work/m10arms/F-bge-small/cov_read5000000.json",
+    "per_query_scores_sha256": "308d56ac61c50782b1a86585c87dd5478290e74886a557513450d005cbdb1354",
+    "seconds": 40.8
+   },
+   {
+    "label": "mid312499_read10000000",
+    "step": 312499,
+    "macro": 0.5075112068881515,
+    "by_family": {
+     "BRIGHT": 0.1759568957076325,
+     "consumer-health": 0.6885091155823457,
+     "finance": 0.31746997488604345,
+     "legal": 0.8481088413765845
+    },
+    "by_unit": {
+     "MedicalQARetrieval": 0.6885091155823457,
+     "LegalBenchCorporateLobbying": 0.931696504316294,
+     "LegalBenchConsumerContractsQA": 0.764521178436875,
+     "BRIGHT/biology": 0.18610790718322487,
+     "BRIGHT/earth_science": 0.2888350893613952,
+     "BRIGHT/economics": 0.14185022543990838,
+     "BRIGHT/psychology": 0.17640612893701912,
+     "BRIGHT/robotics": 0.09941182138652317,
+     "BRIGHT/sustainable_living": 0.16313020193772435,
+     "LEDGER": 0.31746997488604345
+    },
+    "per_query_scores": "work/m10arms/F-bge-small/cov_mid312499_read10000000.json",
+    "per_query_scores_sha256": "dcd90e67e66c3915948134196e7e349920ef83a7574b613d14fe4eaf339e2ce8",
+    "seconds": 22.9
+   },
+   {
+    "label": "cycle3_read20000000",
+    "step": 624999,
+    "macro": 0.5159506173533556,
+    "by_family": {
+     "BRIGHT": 0.17826170450639434,
+     "consumer-health": 0.7065451528326812,
+     "finance": 0.3262869513184712,
+     "legal": 0.8527086607558757
+    },
+    "by_unit": {
+     "MedicalQARetrieval": 0.7065451528326812,
+     "LegalBenchCorporateLobbying": 0.9354693124578735,
+     "LegalBenchConsumerContractsQA": 0.769948009053878,
+     "BRIGHT/biology": 0.19098601945031418,
+     "BRIGHT/earth_science": 0.28493934485107153,
+     "BRIGHT/economics": 0.13757207871647317,
+     "BRIGHT/psychology": 0.19443025079654955,
+     "BRIGHT/robotics": 0.10243568450430579,
+     "BRIGHT/sustainable_living": 0.15920684871965185,
+     "LEDGER": 0.3262869513184712
+    },
+    "per_query_scores": "work/m10arms/F-bge-small/cov_cycle3_read20000000.json",
+    "per_query_scores_sha256": "6db82105063cca578f92b7141ed3eb14c62ef08077e17d8edb87bdd16a0214b7",
+    "seconds": 54.1
+   }
+  ],
+  "_scope": "COV only at every cycle end (plus the schedule midpoints the kill rule reads) and family F's read_at points"
+ },
+ "dev6": {
+  "teacher": "stella-400M-v5",
+  "components": [
+   "nq-250k",
+   "hotpotqa",
+   "cqadup-programmers",
+   "cqadup-physics",
+   "heldout-train",
+   "heldout-longq"
+  ],
+  "per_component": {
+   "nq-250k": 0.838641,
+   "hotpotqa": 0.579798,
+   "cqadup-programmers": 0.393592,
+   "cqadup-physics": 0.430548,
+   "heldout-train": 0.464766,
+   "heldout-longq": 0.869634
+  },
+  "macro": 0.596163,
+  "ceiling_DEV6": 0.67238,
+  "retention": 0.8866,
+  "_scope": "DEV-6 only; no six-set, reserved or LoTTE surface was read"
+ },
+ "training": {
+  "steps_run": 625000,
+  "start_step": 0,
+  "total_steps": 625000,
+  "stopped": "plateau at cycle 3",
+  "examples": 20000000,
+  "examples_this_run": 20000000,
+  "seconds": 32064.95,
+  "examples_per_s": 623.7,
+  "mix": {
+   "Q": 468750,
+   "D": 156250,
+   "q_share": 0.75
+  },
+  "evals": [
+   0.49962639819016735,
+   0.5079818559526736,
+   0.5075112068881515,
+   0.5136687392421483,
+   0.5121311546000182,
+   0.5159506173533556
+  ],
+  "eval_kinds": [
+   "mid",
+   "end",
+   "mid",
+   "end",
+   "mid",
+   "end"
+  ],
+  "cycle_end_evals": [
+   0.5079818559526736,
+   0.5136687392421483,
+   0.5159506173533556
+  ],
+  "read_evals": [
+   {
+    "step": 156249,
+    "macro": 0.5047744132681645
+   }
+  ]
+ },
+ "throughput_ex_per_s": 623.7,
+ "loss_tail": [
+  0.06840866804122925,
+  0.10335934907197952,
+  0.08397979289293289,
+  0.08299025893211365,
+  0.08485192060470581,
+  0.08503064513206482,
+  0.09291073679924011,
+  0.09894455969333649,
+  0.10624855756759644,
+  0.09262266755104065,
+  0.08442232757806778,
+  0.07741695642471313,
+  0.08262607455253601,
+  0.08336162567138672,
+  0.09779150784015656,
+  0.07389526069164276,
+  0.08239291608333588,
+  0.10833700746297836,
+  0.1185138002038002,
+  0.07088729739189148,
+  0.07883124053478241,
+  0.06692016869783401,
+  0.08244580030441284,
+  0.08967065811157227,
+  0.09306888282299042,
+  0.08109855651855469,
+  0.07371827960014343,
+  0.08016148209571838,
+  0.09043397009372711,
+  0.10607144236564636,
+  0.09936729073524475,
+  0.07744696736335754,
+  0.09998390078544617,
+  0.08179418742656708,
+  0.09072453528642654,
+  0.0791839063167572,
+  0.06484948098659515,
+  0.08257359266281128,
+  0.08568650484085083,
+  0.07729417085647583,
+  0.11389778554439545,
+  0.0987466424703598,
+  0.12476242333650589,
+  0.09992781281471252,
+  0.08917279541492462,
+  0.08798865973949432,
+  0.0847761332988739,
+  0.0778048038482666,
+  0.06355195492506027,
+  0.09100832790136337,
+  0.11497237533330917,
+  0.08121490478515625,
+  0.08718568831682205,
+  0.08729925751686096,
+  0.11343954503536224,
+  0.08349281549453735,
+  0.10784498602151871,
+  0.08594892919063568,
+  0.08945173770189285,
+  0.08784078061580658,
+  0.0967850461602211,
+  0.08511342853307724,
+  0.08344896137714386,
+  0.07054676860570908,
+  0.08724572509527206,
+  0.09630808234214783,
+  0.06818698346614838,
+  0.07536906003952026,
+  0.1056559830904007,
+  0.09284834563732147,
+  0.08216942846775055,
+  0.09945743530988693,
+  0.09009110182523727,
+  0.07925111055374146,
+  0.08181394636631012,
+  0.07539843022823334,
+  0.11428216844797134,
+  0.09799262881278992,
+  0.1267160177230835,
+  0.08490803092718124,
+  0.09085993468761444,
+  0.0671900063753128,
+  0.09133865684270859,
+  0.07236479222774506,
+  0.09358907490968704,
+  0.09002351760864258,
+  0.09284608066082001,
+  0.08131538331508636,
+  0.07931675761938095,
+  0.11693091690540314,
+  0.09281662851572037,
+  0.08044634759426117,
+  0.08021272718906403,
+  0.11012119054794312,
+  0.11244441568851471,
+  0.0867062509059906,
+  0.06043536588549614,
+  0.10213427245616913,
+  0.08374647796154022,
+  0.08453524112701416,
+  0.08806085586547852,
+  0.09928351640701294,
+  0.08851336687803268,
+  0.08289004862308502,
+  0.07615423947572708,
+  0.08851554989814758,
+  0.11703865230083466,
+  0.08717777580022812,
+  0.0862642303109169,
+  0.08056893199682236,
+  0.09172224998474121,
+  0.08382957428693771,
+  0.10390227288007736,
+  0.09874539822340012,
+  0.06655364483594894,
+  0.07911022007465363,
+  0.1027299165725708,
+  0.10684503614902496,
+  0.08290275931358337,
+  0.08509771525859833,
+  0.09685356914997101,
+  0.0891839936375618,
+  0.11087863147258759,
+  0.08563771843910217,
+  0.0855528861284256,
+  0.08723396062850952,
+  0.10276545584201813,
+  0.07577471435070038,
+  0.11974494159221649,
+  0.0923277959227562,
+  0.09547203779220581,
+  0.08309128880500793,
+  0.08788619190454483,
+  0.08952436596155167,
+  0.09382819384336472,
+  0.07287732511758804,
+  0.11558634787797928,
+  0.09269910305738449,
+  0.08972737193107605,
+  0.07314421981573105,
+  0.061646103858947754,
+  0.1252494603395462,
+  0.07607762515544891,
+  0.07904627919197083,
+  0.0806741937994957,
+  0.08205319941043854,
+  0.08109419792890549,
+  0.07296794652938843,
+  0.10404039919376373,
+  0.09420022368431091,
+  0.08414747565984726,
+  0.07423049211502075,
+  0.09181876480579376,
+  0.11694228649139404,
+  0.06465654075145721,
+  0.07599160075187683,
+  0.13024193048477173,
+  0.09070226550102234,
+  0.10046214610338211,
+  0.0785660594701767,
+  0.09853839874267578,
+  0.06561002135276794,
+  0.11025042831897736,
+  0.07617197930812836,
+  0.1001492589712143,
+  0.08710134774446487,
+  0.10432519018650055,
+  0.07520431280136108,
+  0.08375555276870728,
+  0.09517791122198105,
+  0.08291086554527283,
+  0.07922638952732086,
+  0.10516408085823059,
+  0.09487011283636093,
+  0.08583452552556992,
+  0.07698604464530945,
+  0.0872139111161232,
+  0.11978985369205475,
+  0.09016020596027374,
+  0.06924796104431152,
+  0.07804174721240997,
+  0.08807405829429626,
+  0.08692651987075806,
+  0.07251538336277008,
+  0.09707450121641159,
+  0.109099380671978,
+  0.06492587178945541,
+  0.08293552696704865,
+  0.0826331377029419,
+  0.09813084453344345,
+  0.0903329998254776,
+  0.0793742910027504,
+  0.09477009624242783,
+  0.06607159972190857,
+  0.0882200300693512,
+  0.07785935699939728,
+  0.08410140872001648,
+  0.1147521436214447,
+  0.10561772435903549,
+  0.08602609485387802
+ ],
+ "stopped": "plateau at cycle 3",
+ "stopped_is_completion": true,
+ "_stopped_note": "SUCCESS is `stopped is None` or exactly `plateau at cycle 3`: PLATEAU_FROM_CYCLE is 3 and a screen arm runs 3 cycles, so that plateau means the arm finished its dose and stopped one step short (LEDGER \u00a7M10.0-e trace). EVERY kill and every non-finite stop is FAILED even at the final cycle end (finding 4).",
+ "checkpoints": {
+  "cycle1": {
+   "path": "work/m10arms/F-bge-small/cycle1.pt",
+   "sha256": "d71024d49fc3c4ee2837f91bf604de0783349d0c16d4b606a277203e4c5276ac"
+  },
+  "cycle2": {
+   "path": "work/m10arms/F-bge-small/cycle2.pt",
+   "sha256": "7566cbd9244750260711a1d392f55b8592180f83b705573c60f0c0dc35db714e"
+  },
+  "cycle3": {
+   "path": "work/m10arms/F-bge-small/cycle3.pt",
+   "sha256": "08aa899dda110df9a5c46f0382e36c4d2dcd9f20e97929510b11a282866cfdc0"
+  },
+  "rolling": {
+   "path": "work/m10arms/F-bge-small/ckpt.pt",
+   "sha256": "59351291ccd45ee50dcef1af213913c2a462d8ea7527d84e42c7855b2cecc16c"
+  }
+ },
+ "final_checkpoint": "work/m10arms/F-bge-small/cycle3.pt",
+ "final_checkpoint_sha256": "08aa899dda110df9a5c46f0382e36c4d2dcd9f20e97929510b11a282866cfdc0",
+ "recipe_fingerprint": "856cc09b0d20ca2d7dc326141a4bf14e39229e243c735dce424c855f34a2fedb",
+ "f_verdict": null,
+ "student_source": "registry `arms.F-bge-small.student`",
+ "assemble_manifest": {
+  "arm": "F-bge-small",
+  "requested_as": "F-bge-small",
+  "student": "bge-small",
+  "batch_size": 32,
+  "seed": 0,
+  "max_len": 512,
+  "pattern": "75/25",
+  "pattern_source": {
+   "raw": null,
+   "resolved": "75/25",
+   "source": "anchor.mix",
+   "anchor_window_pattern": "3Q+1D"
+  },
+  "n_docs": 5000000,
+  "require_forms": null,
+  "query": {
+   "sources": [
+    {
+     "path": "m9src/data.labelled_query_pool + work/enc9/m9long-{nqopen,triviaqa}",
+     "by_m9_source": {
+      "esci-us": 73030,
+      "hotpotqa-train": 81743,
+      "mrtydi-en": 3300,
+      "nqopen": 85863,
+      "squad-train": 84713,
+      "triviaqa": 134665
+     },
+     "m8_manifest_sha256": "da0f208ef29bae3833ffead070eb34b61f390f9d72ed96d448d45ae6b52072c2",
+     "n_before_rescreen": 463314,
+     "rescreen10": {
+      "removed": 709,
+      "per_segment": {
+       "m9-queries_pair": {
+        "removed": 431,
+        "by_hit": {
+         "exact": 174,
+         "near": 257
+        }
+       },
+       "m9-nqopen": {
+        "removed": 66,
+        "by_hit": {
+         "near": 66
+        }
+       },
+       "m9-triviaqa": {
+        "removed": 212,
+        "by_hit": {
+         "near": 212
+        }
+       }
+      },
+      "protected10": "764ff2170d5721db9668"
+     },
+     "sha256": "61239a2e902facda2d8becffc87e779d4ae199b4e18bb67a98b7bd8fb14f9fef",
+     "source": "m9-pool",
+     "kind": "m9",
+     "what": "M9 real queries: queries_pair (esci/hotpotqa/squad/mrtydi, fever out) + nqopen + triviaqa. Targets already exist.",
+     "n_rows": 462605,
+     "by_form": {
+      "factoid": 389747,
+      "product": 72858
+     },
+     "segments": [
+      "m9-queries_pair",
+      "m9-nqopen",
+      "m9-triviaqa"
+     ],
+     "seconds": 11.4,
+     "duplicates_removed": {
+      "m9-queries_pair": 235,
+      "m9-nqopen": 0,
+      "m9-triviaqa": 58927
+     },
+     "n_rows_deduped": 403443
+    },
+    {
+     "path": "/home/dylan/asymetric-dual-encoders/work/m10paq/paq_build.jsonl",
+     "sha256": "5bd7b7283360caf10748ae865b6ebdd04f2e7f27717867451a63c7693e973a66",
+     "bytes": 68125371,
+     "source": "paq-build",
+     "kind": "jsonl",
+     "what": "the build's PAQ sample, nested inside the A2 sample",
+     "n_rows": 1000000,
+     "by_form": {
+      "factoid": 1000000
+     },
+     "held_out_doc_ids_refused": 0,
+     "segments": [
+      "paq-build"
+     ],
+     "seconds": 10.5,
+     "duplicates_removed": {
+      "paq-build": 256
+     },
+     "n_rows_deduped": 999744
+    },
+    {
+     "path": "/home/dylan/asymetric-dual-encoders/work/m10harvest/harvest_train.jsonl",
+     "sha256": "a34ce58385a819cba62fdd2f15270b1448b7dd8c527557f28041d4c76c2bf334",
+     "bytes": 188817407,
+     "source": "harvest",
+     "kind": "jsonl",
+     "what": "A3's harvested real text, FORMS-12 hold-out already removed",
+     "n_rows": 1248386,
+     "by_form": {
+      "claim": 415454,
+      "keyword": 416454,
+      "title": 416478
+     },
+     "held_out_doc_ids_refused": 0,
+     "segments": [
+      "harvest"
+     ],
+     "seconds": 6.7,
+     "duplicates_removed": {
+      "harvest": 1
+     },
+     "n_rows_deduped": 1248385
+    },
+    {
+     "path": "/home/dylan/asymetric-dual-encoders/work/m10gen/generated_queries.jsonl",
+     "sha256": "e546bd8c68bfe79fefafdaca3f085cf8f5e1c57153c36ad7053bfd3788157bfd",
+     "bytes": 314721198,
+     "source": "generated",
+     "kind": "jsonl",
+     "what": "the seven generated forms; does not exist yet, same row shape",
+     "n_rows": 834463,
+     "by_form": {
+      "argument": 57401,
+      "comparison": 143000,
+      "conversational": 143000,
+      "finance": 143000,
+      "health": 62062,
+      "howto": 143000,
+      "yesno": 143000
+     },
+     "held_out_doc_ids_refused": 0,
+     "segments": [
+      "generated"
+     ],
+     "seconds": 5.4,
+     "duplicates_removed": {
+      "generated": 1
+     },
+     "n_rows_deduped": 834462
+    }
+   ],
+   "generated_at": "2026-09-07T19:26:21",
+   "rescreen10": {
+    "removed": 709,
+    "per_segment": {
+     "m9-queries_pair": {
+      "removed": 431,
+      "by_hit": {
+       "exact": 174,
+       "near": 257
+      }
+     },
+     "m9-nqopen": {
+      "removed": 66,
+      "by_hit": {
+       "near": 66
+      }
+     },
+     "m9-triviaqa": {
+      "removed": 212,
+      "by_hit": {
+       "near": 212
+      }
+     }
+    },
+    "protected10": "764ff2170d5721db9668"
+   },
+   "holdout_rows_refused": 0,
+   "holdout_texts": 1614,
+   "duplicates_removed": {
+    "m9-queries_pair": 235,
+    "m9-nqopen": 0,
+    "m9-triviaqa": 58927,
+    "paq-build": 256,
+    "harvest": 1,
+    "generated": 1
+   },
+   "n_duplicates_removed": 59420,
+   "n_rows": 3486034,
+   "by_form": {
+    "argument": 57401,
+    "claim": 415454,
+    "comparison": 143000,
+    "conversational": 143000,
+    "factoid": 1330329,
+    "finance": 143000,
+    "health": 62061,
+    "howto": 143000,
+    "keyword": 416453,
+    "product": 72858,
+    "title": 416478,
+    "yesno": 143000
+   },
+   "sha256": "e0c4f00521d104b02792ac9d860a0612b0dd99dcdbe9613c4d5245df52aa2940",
+   "data_cut": {
+    "applied": true,
+    "n_before": 3486034,
+    "n_after": 2651572,
+    "seed": 0,
+    "per_segment": {
+     "m9-queries_pair": 183980,
+     "m9-nqopen": 65177,
+     "m9-triviaqa": 57662,
+     "paq-build": 760597,
+     "harvest": 949088,
+     "generated": 635068
+    }
+   },
+   "is_cut_arm": true,
+   "arm": "F-bge-small",
+   "sources_used": [
+    "m9-pool",
+    "paq-build",
+    "harvest",
+    "generated"
+   ],
+   "student": "bge-small",
+   "max_len": 512,
+   "student_prefix": "",
+   "batch_size": 32,
+   "seed": 0,
+   "balanced": true,
+   "n_batches": 82867,
+   "n_tokens": 54975199,
+   "mean_tokens": 20.73,
+   "require_forms": null
+  },
+  "document": {
+   "n_eligible": 6149679,
+   "n_drawn": 5000000,
+   "seed": 0,
+   "excluded_store": "fever-pos",
+   "n_banned": 7190,
+   "rows_sha256": "7f13984a1c77e63bef5d7f250925dd571657b61148234f38ad77e8d41e97c57d",
+   "n_drawn_before_rescreen": 5252000,
+   "n_removed_by_rescreen": 68124,
+   "rescreen10": {
+    "applied": true,
+    "n_banned_in_pool": 79630,
+    "protected10": "764ff2170d5721db9668"
+   },
+   "student_prefix": "passage: ",
+   "n": 5000000,
+   "max_len": 512
+  },
+  "cross_role": {
+   "checked": true,
+   "collisions": 0,
+   "n_query": 2651572,
+   "n_document": 5000000
+  },
+  "rescreen10_report_validated": true
+ },
+ "registry_sha256": "bd89c134f7d2ba38973aa09558421bdcbfa3ef49f0a41905b269be94d15aea10",
+ "registry_dose_overridden_for_smoke": null,
+ "git_head": "7019382ba420c82e3158e72ed13a659242b11cb8",
+ "wall_seconds": 33298.1,
+ "_contrasts": "NOT computed here \u2014 the contrast step reads the per-query COV files and passes each contrast's own registered quantile"
+}

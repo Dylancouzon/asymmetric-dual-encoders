@@ -1,0 +1,134 @@
+{
+ "MedicalQARetrieval": {
+  "family": "consumer-health",
+  "repo": "mteb/medical_qa",
+  "revision": "a77efe81ec0c03aff7fecde742a5c9c4c46f6005",
+  "n_queries": 2048,
+  "n_docs": 2048,
+  "queries": {
+   "n_candidates": 2048,
+   "index_mb": 0.1,
+   "six_docs_streamed": 272117,
+   "protected_queries_streamed": 25834,
+   "hits_vs_six_docs_exact": 0,
+   "hits_vs_six_docs_near": 0,
+   "hits_vs_protected_queries_exact": 0,
+   "hits_vs_protected_queries_near": 0,
+   "seconds": 79.3,
+   "total_flagged": 0,
+   "flagged_frac": 0.0
+  },
+  "documents": {
+   "n_candidates": 2048,
+   "index_mb": 4.0,
+   "six_docs_streamed": 272117,
+   "protected_queries_streamed": 25834,
+   "hits_vs_six_docs_exact": 0,
+   "hits_vs_six_docs_near": 0,
+   "hits_vs_protected_queries_exact": 0,
+   "hits_vs_protected_queries_near": 0,
+   "seconds": 78.8,
+   "total_flagged": 0,
+   "flagged_frac": 0.0
+  }
+ },
+ "BRIGHT": {
+  "family": "BRIGHT",
+  "repo": "xlangai/BRIGHT",
+  "revision": "3066d29c9651a576c8aba4832d249807b181ecae",
+  "n_queries": 632,
+  "n_docs": 404416,
+  "queries": {
+   "n_candidates": 632,
+   "index_mb": 0.9,
+   "six_docs_streamed": 272117,
+   "protected_queries_streamed": 25834,
+   "hits_vs_six_docs_exact": 0,
+   "hits_vs_six_docs_near": 0,
+   "hits_vs_protected_queries_exact": 0,
+   "hits_vs_protected_queries_near": 0,
+   "seconds": 79.6,
+   "total_flagged": 0,
+   "flagged_frac": 0.0
+  },
+  "documents": {
+   "n_candidates": 404416,
+   "index_mb": 215.1,
+   "six_docs_streamed": 272117,
+   "protected_queries_streamed": 25834,
+   "hits_vs_six_docs_exact": 6123,
+   "hits_vs_six_docs_near": 23,
+   "hits_vs_protected_queries_exact": 20,
+   "hits_vs_protected_queries_near": 1,
+   "seconds": 120.5,
+   "total_flagged": 6166,
+   "flagged_frac": 0.01525
+  }
+ },
+ "LegalBenchCorporateLobbying": {
+  "family": "legal",
+  "repo": "mteb/legalbench_corporate_lobbying",
+  "revision": "f43436957b41692dd3e1b06a6d7116cd09f6a1db",
+  "n_queries": 340,
+  "n_docs": 319,
+  "queries": {
+   "n_candidates": 340,
+   "index_mb": 0.1,
+   "six_docs_streamed": 272117,
+   "protected_queries_streamed": 25834,
+   "hits_vs_six_docs_exact": 0,
+   "hits_vs_six_docs_near": 0,
+   "hits_vs_protected_queries_exact": 0,
+   "hits_vs_protected_queries_near": 0,
+   "seconds": 76.5,
+   "total_flagged": 0,
+   "flagged_frac": 0.0
+  },
+  "documents": {
+   "n_candidates": 319,
+   "index_mb": 0.6,
+   "six_docs_streamed": 272117,
+   "protected_queries_streamed": 25834,
+   "hits_vs_six_docs_exact": 0,
+   "hits_vs_six_docs_near": 0,
+   "hits_vs_protected_queries_exact": 0,
+   "hits_vs_protected_queries_near": 0,
+   "seconds": 77.2,
+   "total_flagged": 0,
+   "flagged_frac": 0.0
+  }
+ },
+ "LegalBenchConsumerContractsQA": {
+  "family": "legal",
+  "repo": "mteb/legalbench_consumer_contracts_qa",
+  "revision": "f9eafd458f9c61e531d4a2510d8a11dfd2282b21",
+  "n_queries": 396,
+  "n_docs": 154,
+  "queries": {
+   "n_candidates": 396,
+   "index_mb": 0.0,
+   "six_docs_streamed": 272117,
+   "protected_queries_streamed": 25834,
+   "hits_vs_six_docs_exact": 0,
+   "hits_vs_six_docs_near": 0,
+   "hits_vs_protected_queries_exact": 0,
+   "hits_vs_protected_queries_near": 0,
+   "seconds": 77.4,
+   "total_flagged": 0,
+   "flagged_frac": 0.0
+  },
+  "documents": {
+   "n_candidates": 154,
+   "index_mb": 0.8,
+   "six_docs_streamed": 272117,
+   "protected_queries_streamed": 25834,
+   "hits_vs_six_docs_exact": 0,
+   "hits_vs_six_docs_near": 0,
+   "hits_vs_protected_queries_exact": 0,
+   "hits_vs_protected_queries_near": 0,
+   "seconds": 79.6,
+   "total_flagged": 0,
+   "flagged_frac": 0.0
+  }
+ }
+}

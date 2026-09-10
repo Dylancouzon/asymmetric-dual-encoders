@@ -1,0 +1,47 @@
+{
+ "n_sample": 200,
+ "seed": 11,
+ "gate": 0.8,
+ "blinded": true,
+ "forms": {
+  "health": {
+   "incumbent": {
+    "n": 200,
+    "on_topic": 118,
+    "rate": 0.59
+   },
+   "wikipedia-body": {
+    "n": 200,
+    "on_topic": 109,
+    "rate": 0.545
+   },
+   "PASSES_GATE": false,
+   "gate": 0.8,
+   "candidate_minus_incumbent": -0.045,
+   "diff_se": 0.0495,
+   "diff_z": -0.91,
+   "incumbent_passes_gate": false
+  },
+  "finance": {
+   "wikipedia-body": {
+    "n": 200,
+    "on_topic": 107,
+    "rate": 0.535
+   },
+   "incumbent": {
+    "n": 200,
+    "on_topic": 63,
+    "rate": 0.315
+   },
+   "PASSES_GATE": false,
+   "gate": 0.8,
+   "candidate_minus_incumbent": 0.22,
+   "diff_se": 0.0482,
+   "diff_z": 4.56,
+   "incumbent_passes_gate": false
+  }
+ },
+ "_finding": "BOTH stores fail the >= 0.80 gate, and the CONTROL is the finding: the incumbent `ROUTE` intro store \u2014 the store the approved smoke prompts were built on and the store the build would otherwise use \u2014 reads 0.590 on health and 0.315 on finance. Its base precision had never been measured; only the MARGINAL of a widening ever was, against the same 0.80 bar. On the judged standard `wikipedia-body` is indistinguishable from the incumbent on health (-0.045, z = -0.91) and much better on finance (+0.220, z = 4.44). So 'not adopted' does not return the build to a store that meets the bar; it returns it to one that is worse on finance and no better on health.",
+ "_registered_outcome": "The gate is >= 0.80 and it was registered before the scan. `wikipedia-body` is NOT ADOPTED on this evidence. Whether an 80% bar written for the marginal of a keyword widening is the right bar for a whole seed population is a Tier-3 question and is Dylan's, not mine \u2014 and it must not be answered by moving the bar now that the numbers are observed.",
+ "_next_lever": "Registered, and aimed precisely at what the judges named: a SUBJECT-level filter, never a relaxed floor. Every failure class is an article-subject error \u2014 physician and researcher biographies, hospitals/journals/companies/banks as institutions, an illness inside a career biography, animal and plant disease, reference and category fragments, and word-sense errors ('bank' as a landform, 'trade' as a craft, 'trades' as player trades). The lead sentence of a Wikipedia article is its definition and is already excluded from the seeds, so routing on it costs nothing and leaks nothing."
+}

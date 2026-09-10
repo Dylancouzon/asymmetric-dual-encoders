@@ -1,0 +1,56 @@
+{
+ "_what": "\u00a70b: A2/A3/A4 post-screen unique-text counts and their min",
+ "_rule": "min of the three post-decontamination unique-text counts; the larger two are downsampled with seed 0; the count itself and the hashes are \u00a70b",
+ "_registers_nothing": "the lead registers the number in m10/screen_registry.json",
+ "head_per_source": 2000,
+ "when": "2026-09-05T21:16:09-0400",
+ "arms": {
+  "A2": {
+   "sources": [
+    "m9-pool",
+    "paq-a2"
+   ],
+   "unique_texts": 8000,
+   "duplicates_removed": 0,
+   "by_form": {
+    "factoid": 6000,
+    "product": 2000
+   },
+   "corpus_sha256": "dad7b045b715196438471a380e2ad0136f568206a4b133bda2db5c4ebd3ddc06",
+   "seconds": 26.3
+  },
+  "A3": {
+   "sources": [
+    "m9-pool",
+    "paq-build",
+    "harvest"
+   ],
+   "unique_texts": 10000,
+   "duplicates_removed": 0,
+   "by_form": {
+    "claim": 2000,
+    "factoid": 6000,
+    "product": 2000
+   },
+   "corpus_sha256": "6ede59af7b4fb880db13a0a2be82ad59f8281b87047154ccb5c232453252b0cc",
+   "seconds": 11.2
+  },
+  "A4": {
+   "sources": [
+    "m9-pool",
+    "paq-build",
+    "harvest",
+    "generated"
+   ],
+   "error": "source 'generated' is not built yet: /home/dylan/asymetric-dual-encoders/work/m10gen/generated_queries.jsonl does not exist",
+   "seconds": 11.1
+  }
+ },
+ "counts": {
+  "A2": 8000,
+  "A3": 10000
+ },
+ "complete": false,
+ "data_cut": null,
+ "_why_no_number": "a head-limited or incomplete read is a smoke, not the count; every arm must load in full and generation must be done"
+}

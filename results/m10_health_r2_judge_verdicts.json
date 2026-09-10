@@ -1,0 +1,360 @@
+{
+ "health": {
+  "rubric": "N consumer-health questions a patient or caregiver might ask about the passage's topic (symptoms, treatments, risks, what a term means), in plain language. 8 to 30 words.",
+  "n": 50,
+  "on_form": 35,
+  "rate": 0.7,
+  "verdicts": [
+   {
+    "i": 0,
+    "query": "What does being immunocompromised mean for my health?",
+    "on_form": true,
+    "clause": null,
+    "note": "term meaning, 8 words"
+   },
+   {
+    "i": 1,
+    "query": "What does VZV antibodies do for my immune system?",
+    "on_form": true,
+    "clause": null,
+    "note": "VZV borderline jargon; lab-report term, passes"
+   },
+   {
+    "i": 2,
+    "query": "What does expedited partner therapy mean for my partner's health?",
+    "on_form": true,
+    "clause": null,
+    "note": "term meaning, plain"
+   },
+   {
+    "i": 3,
+    "query": "What does the flu vaccine do to help me?",
+    "on_form": true,
+    "clause": null,
+    "note": "treatment question"
+   },
+   {
+    "i": 4,
+    "query": "What does it mean if I have a rash after a tick bite?",
+    "on_form": true,
+    "clause": null,
+    "note": "symptom question"
+   },
+   {
+    "i": 5,
+    "query": "What does infectious mononucleosis look like in symptoms?",
+    "on_form": true,
+    "clause": null,
+    "note": "symptoms, 8 words, awkward phrasing"
+   },
+   {
+    "i": 6,
+    "query": "What does the rash look like on the hands and mouth?",
+    "on_form": true,
+    "clause": null,
+    "note": "symptom description"
+   },
+   {
+    "i": 7,
+    "query": "What does tingling before blisters mean for my condition?",
+    "on_form": true,
+    "clause": null,
+    "note": "symptom meaning"
+   },
+   {
+    "i": 8,
+    "query": "What does thickened skin mean for my condition?",
+    "on_form": true,
+    "clause": null,
+    "note": "symptom meaning, 8 words"
+   },
+   {
+    "i": 9,
+    "query": "What does post-exertional malaise feel like?",
+    "on_form": false,
+    "clause": "d",
+    "note": "6 words"
+   },
+   {
+    "i": 10,
+    "query": "What does it mean if I get a fever from the vaccine?",
+    "on_form": true,
+    "clause": null,
+    "note": "vaccine side effect"
+   },
+   {
+    "i": 11,
+    "query": "What does natalizumab do for my body?",
+    "on_form": false,
+    "clause": "d",
+    "note": "7 words"
+   },
+   {
+    "i": 12,
+    "query": "What does platelet clumping mean for my blood?",
+    "on_form": true,
+    "clause": null,
+    "note": "test finding meaning, 8 words"
+   },
+   {
+    "i": 13,
+    "query": "What does it mean if I have chronic hepatitis?",
+    "on_form": true,
+    "clause": null,
+    "note": "condition meaning"
+   },
+   {
+    "i": 14,
+    "query": "What does muscle weakness mean for my condition?",
+    "on_form": true,
+    "clause": null,
+    "note": "symptom meaning, 8 words"
+   },
+   {
+    "i": 15,
+    "query": "What does a prodrome mean for my health?",
+    "on_form": true,
+    "clause": null,
+    "note": "term meaning, 8 words"
+   },
+   {
+    "i": 16,
+    "query": "What does a fever mean for my health?",
+    "on_form": true,
+    "clause": null,
+    "note": "symptom, 8 words, thin but specific"
+   },
+   {
+    "i": 17,
+    "query": "What does Kaposi’s Sarcoma mean for my health?",
+    "on_form": true,
+    "clause": null,
+    "note": "condition meaning, 8 words"
+   },
+   {
+    "i": 18,
+    "query": "What does this virus do to cancer cells in the body?",
+    "on_form": true,
+    "clause": null,
+    "note": "specific topic: virus vs cancer cells"
+   },
+   {
+    "i": 19,
+    "query": "What does gene therapy actually do for my body?",
+    "on_form": true,
+    "clause": null,
+    "note": "treatment question"
+   },
+   {
+    "i": 20,
+    "query": "What does the painful swelling on my face mean?",
+    "on_form": true,
+    "clause": null,
+    "note": "symptom question"
+   },
+   {
+    "i": 21,
+    "query": "What does severe itching mean for my condition?",
+    "on_form": true,
+    "clause": null,
+    "note": "symptom meaning, 8 words"
+   },
+   {
+    "i": 22,
+    "query": "What does a drug holiday mean for my treatment plan?",
+    "on_form": true,
+    "clause": null,
+    "note": "term meaning"
+   },
+   {
+    "i": 23,
+    "query": "What does the DPT vaccine protect against?",
+    "on_form": false,
+    "clause": "d",
+    "note": "7 words"
+   },
+   {
+    "i": 24,
+    "query": "What does a red and swollen ear mean?",
+    "on_form": true,
+    "clause": null,
+    "note": "symptom, 8 words"
+   },
+   {
+    "i": 25,
+    "query": "What does cisplatin treat in cancer patients?",
+    "on_form": false,
+    "clause": "d",
+    "note": "7 words"
+   },
+   {
+    "i": 26,
+    "query": "What does polyarthritis feel like during the illness?",
+    "on_form": true,
+    "clause": null,
+    "note": "symptom, 8 words"
+   },
+   {
+    "i": 27,
+    "query": "What does fludarabine treat exactly?",
+    "on_form": false,
+    "clause": "d",
+    "note": "5 words"
+   },
+   {
+    "i": 28,
+    "query": "What does the lung disease feel like?",
+    "on_form": false,
+    "clause": "d",
+    "note": "7 words; also vague topic"
+   },
+   {
+    "i": 29,
+    "query": "What does this virus do to my body?",
+    "on_form": false,
+    "clause": "b",
+    "note": "generic: 'this virus' names no topic"
+   },
+   {
+    "i": 30,
+    "query": "What does a full-body CT scan show about my health?",
+    "on_form": true,
+    "clause": null,
+    "note": "test question"
+   },
+   {
+    "i": 31,
+    "query": "What does restricted range of motion mean for my body?",
+    "on_form": true,
+    "clause": null,
+    "note": "symptom meaning"
+   },
+   {
+    "i": 32,
+    "query": "What does this symptom mean for my mental health?",
+    "on_form": false,
+    "clause": "b",
+    "note": "generic: 'this symptom' names no topic"
+   },
+   {
+    "i": 33,
+    "query": "What does hypertrophic cardiomyopathy feel like?",
+    "on_form": false,
+    "clause": "d",
+    "note": "6 words"
+   },
+   {
+    "i": 34,
+    "query": "What does Frey's procedure involve?",
+    "on_form": false,
+    "clause": "d",
+    "note": "5 words"
+   },
+   {
+    "i": 35,
+    "query": "What does angioedema feel like during an attack?",
+    "on_form": true,
+    "clause": null,
+    "note": "symptom, 8 words"
+   },
+   {
+    "i": 36,
+    "query": "What does hormone replacement therapy do for my body?",
+    "on_form": true,
+    "clause": null,
+    "note": "treatment question"
+   },
+   {
+    "i": 37,
+    "query": "What does swelling in my legs mean for my health?",
+    "on_form": true,
+    "clause": null,
+    "note": "symptom question"
+   },
+   {
+    "i": 38,
+    "query": "What does inflammation of the heart feel like?",
+    "on_form": true,
+    "clause": null,
+    "note": "symptom, 8 words"
+   },
+   {
+    "i": 39,
+    "query": "What does this symptom mean for my health?",
+    "on_form": false,
+    "clause": "b",
+    "note": "generic: 'this symptom' names no topic"
+   },
+   {
+    "i": 40,
+    "query": "How can HIV or other factors cause a weakened immune system?",
+    "on_form": true,
+    "clause": null,
+    "note": "risk/cause question"
+   },
+   {
+    "i": 41,
+    "query": "How does VZV infection spread from one person to another?",
+    "on_form": true,
+    "clause": null,
+    "note": "VZV borderline jargon; passes as lab-report term"
+   },
+   {
+    "i": 42,
+    "query": "How does PDT work when treating partners for chlamydia?",
+    "on_form": false,
+    "clause": "c",
+    "note": "'PDT' unexpanded program abbreviation, not lay usage"
+   },
+   {
+    "i": 43,
+    "query": "How often do I need to get a flu shot?",
+    "on_form": true,
+    "clause": null,
+    "note": "treatment schedule"
+   },
+   {
+    "i": 44,
+    "query": "How do tick bites lead to diseases in humans?",
+    "on_form": true,
+    "clause": null,
+    "note": "risk question"
+   },
+   {
+    "i": 45,
+    "query": "How does the Epstein-Barr virus cause long-term infection?",
+    "on_form": true,
+    "clause": null,
+    "note": "condition mechanism, 8 words"
+   },
+   {
+    "i": 46,
+    "query": "How does the virus spread to cause this illness?",
+    "on_form": false,
+    "clause": "b",
+    "note": "generic: 'the virus'/'this illness' unnamed"
+   },
+   {
+    "i": 47,
+    "query": "How does the virus spread from one part of the body to another?",
+    "on_form": false,
+    "clause": "b",
+    "note": "generic: 'the virus' unnamed topic"
+   },
+   {
+    "i": 48,
+    "query": "How does scleroderma affect blood flow in my fingers?",
+    "on_form": true,
+    "clause": null,
+    "note": "condition/symptom question"
+   },
+   {
+    "i": 49,
+    "query": "How does physical activity trigger PEM symptoms?",
+    "on_form": false,
+    "clause": "d",
+    "note": "7 words"
+   }
+  ]
+ }
+}

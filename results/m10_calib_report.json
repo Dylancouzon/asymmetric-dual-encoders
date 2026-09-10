@@ -1,0 +1,52 @@
+{
+ "_what": "M10.0-e same-init calibration. Brackets B, D, G and C ONLY.",
+ "_f_and_e": "read against the unrelated-models distance 0.008619, not this",
+ "_changes": "no constant; MDE 0.0056 and alpha 0.025/13 untouched",
+ "macro": {
+  "P0": 0.47752795346253507,
+  "P1": 0.47614103191078433,
+  "P2": 0.4738919632001084
+ },
+ "seed_effect_point_estimate": 0.0013869215517507416,
+ "_seed_note": "the SEED effect is a point estimate; the bootstrap resamples QUERIES and cannot see it. A screen that resolves less than this has resolved noise.",
+ "seed_pair": {
+  "delta_raw": 0.0013869215517507644,
+  "lower_bound_raw": -0.00276096580013143,
+  "distance_raw": 0.004147887351882195,
+  "draws_sd": 0.001419113480192664,
+  "B": 200000,
+  "seed": 0,
+  "chunk": 5000,
+  "quantile_method": "inverted_cdf",
+  "plan_sample_sha256": "8091783fa66a21d8fcdd3a1c6458920c3c52442fc85cb5c5d9990f37a90e3d68",
+  "draws_sha256": "5a2a4b687f6045f60cba941bdc2d91b7c93fcced9d962121ad7a4af50b26a1e9",
+  "per_family_delta": {
+   "BRIGHT": 0.00260343697525285,
+   "consumer-health": 0.0041850955601164955,
+   "finance": -0.001665033318789806,
+   "legal": 0.00042418699042351816
+  }
+ },
+ "lr_pair": {
+  "delta_raw": 0.0036359902624266867,
+  "lower_bound_raw": 0.0007586538468388103,
+  "distance_raw": 0.0028773364155878765,
+  "draws_sd": 0.0010107934977571485,
+  "B": 200000,
+  "seed": 0,
+  "chunk": 5000,
+  "quantile_method": "inverted_cdf",
+  "plan_sample_sha256": "8091783fa66a21d8fcdd3a1c6458920c3c52442fc85cb5c5d9990f37a90e3d68",
+  "draws_sha256": "7e6efb05a500cba8029c1d0dbef85483bf4d1247ac0a2a9bb084f04167230dd4",
+  "per_family_delta": {
+   "BRIGHT": 0.0027951801074408184,
+   "consumer-health": 0.002777557500422136,
+   "finance": 0.00483775866386807,
+   "legal": 0.004133464777975722
+  }
+ },
+ "unrelated_models_distance": 0.008618964156860275,
+ "ratio_lr_pair_to_unrelated": 0.333837844458102,
+ "MDE": 0.0056,
+ "reading": "A same-init contrast's distance is 0.00288 against 0.00862 between unrelated models (0.33x). The seed effect is 0.00139. Both are DISCLOSURES: B/D/G/C are read against the first, F and E against the second, and the MDE decision is Dylan's before family F."
+}

@@ -1,0 +1,261 @@
+{
+ "_what": "the M9 pools re-screened against the M10 protected index (instructions-m10.md:462)",
+ "protected10": {
+  "version": "2026-09-05-six+dev+reserved-queries+COV(q+d)+arxiv-title",
+  "arxiv_draw": "97e1a37ae7eb678b",
+  "n_arxiv_texts": 4000,
+  "components": [
+   [
+    "BRIGHT",
+    "3066d29c9651a576c8aba4832d249807b181ecae"
+   ],
+   [
+    "LEDGER",
+    "7881df568382"
+   ],
+   [
+    "LegalBenchConsumerContractsQA",
+    "f9eafd458f9c61e531d4a2510d8a11dfd2282b21"
+   ],
+   [
+    "LegalBenchCorporateLobbying",
+    "f43436957b41692dd3e1b06a6d7116cd09f6a1db"
+   ],
+   [
+    "MedicalQARetrieval",
+    "a77efe81ec0c03aff7fecde742a5c9c4c46f6005"
+   ]
+  ]
+ },
+ "documents": {
+  "n_dropped": 79630,
+  "per_store": {
+   "esci-prod": {
+    "eligible": 808291,
+    "dropped": 12204,
+    "seconds": 580.9
+   },
+   "fever-pos": {
+    "skipped": "fever-pos, excluded from the M9 doc pool"
+   },
+   "hotpotqa-corpus": {
+    "eligible": 5226791,
+    "dropped": 64534,
+    "seconds": 1379.4
+   },
+   "mrtydi-docs": {
+    "eligible": 95758,
+    "dropped": 2036,
+    "seconds": 41.2
+   },
+   "squad-ctx": {
+    "eligible": 18839,
+    "dropped": 856,
+    "seconds": 8.6
+   }
+  },
+  "complete": true,
+  "seconds": 2010.7,
+  "mask_sha256": "777bd64114a2d4cde6b60f78ab83c00858779caad301bb34a2208edb20b87f19",
+  "ident": {
+   "role": "document",
+   "protected10": {
+    "version": "2026-09-05-six+dev+reserved-queries+COV(q+d)+arxiv-title",
+    "arxiv_draw": "97e1a37ae7eb678b",
+    "n_arxiv_texts": 4000,
+    "components": [
+     [
+      "BRIGHT",
+      "3066d29c9651a576c8aba4832d249807b181ecae"
+     ],
+     [
+      "LEDGER",
+      "7881df568382"
+     ],
+     [
+      "LegalBenchConsumerContractsQA",
+      "f9eafd458f9c61e531d4a2510d8a11dfd2282b21"
+     ],
+     [
+      "LegalBenchCorporateLobbying",
+      "f43436957b41692dd3e1b06a6d7116cd09f6a1db"
+     ],
+     [
+      "MedicalQARetrieval",
+      "a77efe81ec0c03aff7fecde742a5c9c4c46f6005"
+     ]
+    ]
+   },
+   "pool": {
+    "encoder": "stella-400M-v5",
+    "n": 6169142,
+    "id_sha256": {
+     "esci-prod": "4de2384a2b39f49733e7aa19efcc6655dbbc9965c609373a0e9903a439b4638f",
+     "fever-pos": "7f11d4186c8ed1f6661bc0df497ac2e20dc3ec833922fb9d58511aa1c369bf73",
+     "hotpotqa-corpus": "be799419ebc5b1589229a161083f93aa7d3871ba0afe7c42c896a0ce1fb7c853",
+     "mrtydi-docs": "31aa0fc7673eddd75100c4cc32be0b8a074afd33c2796676265aec0d575830fb",
+     "squad-ctx": "b5f3e48f22f1b9cb8c1ef0c48f5f4a2b7fe3793dd7aebfb86c06afa127126e9a"
+    },
+    "spans": {
+     "esci-prod": [
+      0,
+      808389
+     ],
+     "fever-pos": [
+      808389,
+      820938
+     ],
+     "hotpotqa-corpus": [
+      820938,
+      6054267
+     ],
+     "mrtydi-docs": [
+      6054267,
+      6150251
+     ],
+     "squad-ctx": [
+      6150251,
+      6169142
+     ]
+    },
+    "banned_sha256": "40c632bce17bf3c48a1a6a05c3b0c39344aac130ac4d26e720854f38b2b93f2d"
+   }
+  }
+ },
+ "m9-queries_pair": {
+  "n": 242786,
+  "kept": 242355,
+  "removed": 431,
+  "by_hit": {
+   "exact": 174,
+   "near": 257
+  },
+  "seconds": 27.3,
+  "mask_sha256": "c7553352fe7c38df0f7bd8d33ad55cfebd4706bfba4ccbd9f062b860b4c79467",
+  "ident": {
+   "role": "query",
+   "name": "m9-queries_pair",
+   "protected10": {
+    "version": "2026-09-05-six+dev+reserved-queries+COV(q+d)+arxiv-title",
+    "arxiv_draw": "97e1a37ae7eb678b",
+    "n_arxiv_texts": 4000,
+    "components": [
+     [
+      "BRIGHT",
+      "3066d29c9651a576c8aba4832d249807b181ecae"
+     ],
+     [
+      "LEDGER",
+      "7881df568382"
+     ],
+     [
+      "LegalBenchConsumerContractsQA",
+      "f9eafd458f9c61e531d4a2510d8a11dfd2282b21"
+     ],
+     [
+      "LegalBenchCorporateLobbying",
+      "f43436957b41692dd3e1b06a6d7116cd09f6a1db"
+     ],
+     [
+      "MedicalQARetrieval",
+      "a77efe81ec0c03aff7fecde742a5c9c4c46f6005"
+     ]
+    ]
+   },
+   "pool": {
+    "n": 242786,
+    "sha256": "33fad491adebeda8f785900b4b1bf385960f8284a2b6fb2fc84bd65ab5b3edb8"
+   }
+  }
+ },
+ "m9-nqopen": {
+  "n": 85863,
+  "kept": 85797,
+  "removed": 66,
+  "by_hit": {
+   "near": 66
+  },
+  "seconds": 10.3,
+  "mask_sha256": "9336ba2380e1b36a1a0a9a7eb56f58f6af5d3c821b42838f72f9eedc8f0eae0a",
+  "ident": {
+   "role": "query",
+   "name": "m9-nqopen",
+   "protected10": {
+    "version": "2026-09-05-six+dev+reserved-queries+COV(q+d)+arxiv-title",
+    "arxiv_draw": "97e1a37ae7eb678b",
+    "n_arxiv_texts": 4000,
+    "components": [
+     [
+      "BRIGHT",
+      "3066d29c9651a576c8aba4832d249807b181ecae"
+     ],
+     [
+      "LEDGER",
+      "7881df568382"
+     ],
+     [
+      "LegalBenchConsumerContractsQA",
+      "f9eafd458f9c61e531d4a2510d8a11dfd2282b21"
+     ],
+     [
+      "LegalBenchCorporateLobbying",
+      "f43436957b41692dd3e1b06a6d7116cd09f6a1db"
+     ],
+     [
+      "MedicalQARetrieval",
+      "a77efe81ec0c03aff7fecde742a5c9c4c46f6005"
+     ]
+    ]
+   },
+   "pool": {
+    "n": 85863,
+    "sha256": "576493177168743aad5e01b92d3d1bbb044285cf75838b8eba6404498c870c3f"
+   }
+  }
+ },
+ "m9-triviaqa": {
+  "n": 134665,
+  "kept": 134453,
+  "removed": 212,
+  "by_hit": {
+   "near": 212
+  },
+  "seconds": 18.8,
+  "mask_sha256": "9f19d3358767ed1cd2bc5745188e80ee73e66f021988fe05c391237cda0d4e71",
+  "ident": {
+   "role": "query",
+   "name": "m9-triviaqa",
+   "protected10": {
+    "version": "2026-09-05-six+dev+reserved-queries+COV(q+d)+arxiv-title",
+    "arxiv_draw": "97e1a37ae7eb678b",
+    "n_arxiv_texts": 4000,
+    "components": [
+     [
+      "BRIGHT",
+      "3066d29c9651a576c8aba4832d249807b181ecae"
+     ],
+     [
+      "LEDGER",
+      "7881df568382"
+     ],
+     [
+      "LegalBenchConsumerContractsQA",
+      "f9eafd458f9c61e531d4a2510d8a11dfd2282b21"
+     ],
+     [
+      "LegalBenchCorporateLobbying",
+      "f43436957b41692dd3e1b06a6d7116cd09f6a1db"
+     ],
+     [
+      "MedicalQARetrieval",
+      "a77efe81ec0c03aff7fecde742a5c9c4c46f6005"
+     ]
+    ]
+   },
+   "pool": {
+    "n": 134665,
+    "sha256": "de1367672afa2a760ce2aa212a888ce9231581cb6a1c0fd6dca46c61fc080441"
+   }
+  }
+ }
+}

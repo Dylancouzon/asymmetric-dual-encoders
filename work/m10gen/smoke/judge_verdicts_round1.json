@@ -1,0 +1,1437 @@
+{
+ "howto": {
+  "verdicts": [
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": false,
+    "why": "no title/newline/body structure (single run-on string); title joined to body with a colon, body three sentences"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "no title/newline/body structure (single run-on string); body four sentences"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": false,
+    "why": "no title/newline/body structure (single run-on string); body three sentences"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "8 words (min 25); a bare one-line question, no title/body structure"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body is four sentences"
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": false,
+    "why": "12 words (min 25); title only, no newline or body"
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": false,
+    "why": "no title/newline/body structure (single run-on string); body three sentences"
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": false,
+    "why": "no title/newline/body structure (single run-on string); title joined to body with a colon, body three sentences"
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "body is three sentences (description allows one or two)"
+   }
+  ],
+  "note": "Length is almost always right (43/50 in 25-60 words with a title/newline/body shape), but 23 bodies run to three or four sentences (situation, what was tried, then a closing question) against the registered 'one or two sentences', and 7 items have no title/newline structure at all (colon-joined or run-on, two are bare one-liners under 25 words)."
+ },
+ "argument": {
+  "verdicts": [
+   {
+    "on_form": false,
+    "why": "117 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "105 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "100 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "105 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "111 words (min 120); descriptive summary, does not take a side"
+   },
+   {
+    "on_form": false,
+    "why": "101 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "102 words (min 120)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "101 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "100 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "104 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "117 words (min 120)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "116 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "118 words (min 120)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "117 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "107 words (min 120)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "118 words (min 120)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "99 words (min 120)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "91 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "106 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "112 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "105 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "93 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "110 words (min 120)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "94 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "hedges both ways (praises the EP, then questions the band's commitment) rather than taking one side"
+   },
+   {
+    "on_form": false,
+    "why": "115 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "98 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "86 words (min 120)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "110 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "79 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "97 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "106 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "95 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "100 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "99 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "83 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "103 words (min 120)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "87 words (min 120)"
+   },
+   {
+    "on_form": false,
+    "why": "105 words (min 120)"
+   }
+  ],
+  "note": "Dominant failure is length: 38 of 50 paragraphs fall short of the 120-word minimum (typically 85-118 words). Of the 12 that reach 120 words, 11 take a clear side as a debater would; one hedges both ways."
+ },
+ "finance": {
+  "verdicts": [
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "7 words (min 8)"
+   },
+   {
+    "on_form": false,
+    "why": "about how a broadcast studio displays data, not a money/prices/taxes/investing/markets/policy question"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "corporate history question, not a personal-finance or economics question"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "7 words (min 8)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "management/career question about a CEO's role, not about money, prices, taxes, investing, markets or policy"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "job-title comparison, not a money/prices/taxes/investing/markets/policy question"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "historical significance of a building, not a personal-finance or economics question"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   }
+  ],
+  "note": "Mostly on-form: lengths 8-15 words and topics squarely on taxes, markets, banking and policy. Failures are two 7-word questions and five entity-trivia questions (corporate history, a building's significance, job roles) that are not money/economics questions."
+ },
+ "comparison": {
+  "verdicts": [
+   {
+    "on_form": false,
+    "why": "imperative 'Compare X and Y.' statement, not a question"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "imperative 'Compare X and Y.' statement, not a question"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "imperative 'Compare X and Y.' statement, not a question"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "imperative 'Compare X and Y.' statement, not a question"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "imperative 'Compare X and Y.' statement, not a question"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "imperative 'Compare X and Y.' statement, not a question"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "imperative 'Compare X and Y.' statement, not a question"
+   },
+   {
+    "on_form": false,
+    "why": "trailing literal template text 'X vs Y' leaked from the prompt; not a plausible query"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   }
+  ],
+  "note": "All items compare two or more things within 8-25 words. Failures are seven imperative 'Compare X with Y.' sentences that are not questions, and one item with the literal template fragment 'X vs Y' appended."
+ },
+ "yesno": {
+  "verdicts": [
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   }
+  ],
+  "note": "All 50 are yes/no verification questions of 6-13 words answerable by a passage; several rely on an antecedent ('the show', 'the match', 'this theory') but the description permits that."
+ },
+ "conversational": {
+  "verdicts": [
+   {
+    "on_form": false,
+    "why": "27 words (min 30)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "28 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "23 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "21 words (min 30)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "21 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "22 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "26 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "25 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "27 words (min 30)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "21 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "25 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "26 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "20 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "28 words (min 30)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "28 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "28 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "28 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "28 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "25 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "27 words (min 30)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "27 words (min 30)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "24 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "21 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "27 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "27 words (min 30)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "28 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "24 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "23 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "19 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "22 words (min 30)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "29 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "26 words (min 30)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "25 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "21 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "16 words (min 30)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "18 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "25 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "25 words (min 30)"
+   },
+   {
+    "on_form": false,
+    "why": "25 words (min 30)"
+   }
+  ],
+  "note": "Register is right (multi-sentence, situation then request, addressed to an assistant) but 40 of 50 are under the 30-word minimum, mostly 20-28 words. Length is the only failure mode."
+ },
+ "health": {
+  "verdicts": [
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "7 words (min 8)"
+   },
+   {
+    "on_form": false,
+    "why": "4 words (min 8)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "7 words (min 8)"
+   },
+   {
+    "on_form": false,
+    "why": "6 words (min 8)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "7 words (min 8); biographical question about a scientist, not a patient-facing health question"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "7 words (min 8)"
+   },
+   {
+    "on_form": false,
+    "why": "4 words (min 8)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "6 words (min 8)"
+   },
+   {
+    "on_form": false,
+    "why": "6 words (min 8)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "6 words (min 8)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "5 words (min 8)"
+   },
+   {
+    "on_form": false,
+    "why": "5 words (min 8)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "5 words (min 8)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "about a virus in mice, not a question a patient or caregiver would ask"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "5 words (min 8)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "7 words (min 8)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "6 words (min 8)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": true,
+    "why": ""
+   },
+   {
+    "on_form": false,
+    "why": "5 words (min 8)"
+   },
+   {
+    "on_form": false,
+    "why": "7 words (min 8)"
+   },
+   {
+    "on_form": true,
+    "why": ""
+   }
+  ],
+  "note": "Topic and plain-language register are right, but 18 of 50 are under the 8-word minimum ('What is X used for?', 'What are the symptoms of X?'); one is a biography question and one is about a mouse virus, neither patient-facing."
+ }
+}

@@ -1,0 +1,32 @@
+{
+ "winner": "bge-small",
+ "_winner_note": "the registry `student` string of the arm with the higher 20M COV macro whose margin RESOLVED under F_tournament; serve_cost_order was not invoked, so this is evidence and not a product preference",
+ "contrast": {
+  "rule": "F_tournament / F1, two-sided at alpha/24 per tail per F_orientation, read at 20,000,000 examples, oriented highest-minus-runner-up",
+  "point": 0.011595234778582406,
+  "lower": 0.007221227793660513,
+  "resolved": true,
+  "distance": 0.004374006984921893,
+  "MDE": 0.0056,
+  "sign_stable_last_two_cycle_ends": true,
+  "B": 200000,
+  "seed": 0,
+  "quantile": 0.0010416666666666667,
+  "quantile_method": "inverted_cdf",
+  "n_units": 10,
+  "n_paired_queries": 13416,
+  "draws_sha256": "cb392db4f02aa8774afe092c20da7f11616e6fd28da189424ff60797dd5c00bd",
+  "plan_sample_sha256": "8091783fa66a21d8fcdd3a1c6458920c3c52442fc85cb5c5d9990f37a90e3d68",
+  "artifact": "results/m10_contrast_F1.json"
+ },
+ "registry_sha256": "679e0574d19e24550aace4d488c9ca848a82ad2a2271a77972b8bd78f5ba5f60",
+ "sha256_of_F_records": [
+  "11bd572669e9978ce343059016642ba7f20ed06ea7a9f014aa32ac164f478840",
+  "5ea9f89c8093f58cd9043ed7036bb2927deb6a3640ce030cc5a586ffbbc647c1"
+ ],
+ "_f_arms": [
+  "F-MiniLM-L6",
+  "F-bge-small"
+ ],
+ "_what": "F's verdict, read by run_arm.f_verdict: every arm after family F trains on F's WINNER backbone (anchor.init \"F's winner backbone\", Recipe amendment A6). Written by the CONTRAST step, never by the runner."
+}

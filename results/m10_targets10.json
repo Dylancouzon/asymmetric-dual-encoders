@@ -1,0 +1,54 @@
+{
+ "_what": "stella query targets for the M10 corpora, content-hash keyed",
+ "identity": {
+  "model": "NovaSearch/stella_en_400M_v5",
+  "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+  "pooling": "mean-l2",
+  "dim": 1024,
+  "post_dense": "2_Dense_1024",
+  "role": "query",
+  "prefix": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
+  "max_length": 512,
+  "store_dtype": "fp16",
+  "hash": "blake2b-128"
+ },
+ "cache_dir": "/home/dylan/asymetric-dual-encoders/work/m10targets/query-stella_en_400M_v5-8e9a608b5383",
+ "cache_rows": 6119848,
+ "limit": 0,
+ "sources": [
+  {
+   "label": "generated",
+   "n_texts": 834463,
+   "already_cached": 0,
+   "duplicates_collapsed": 1,
+   "to_encode": 834462,
+   "cache_dir": "/home/dylan/asymetric-dual-encoders/work/m10targets/query-stella_en_400M_v5-8e9a608b5383",
+   "chunk": 50000,
+   "encoded": 834462,
+   "seconds": 3081.6,
+   "texts_per_s": 270.8,
+   "cache_rows": 6119848,
+   "source_manifest": {
+    "path": "/home/dylan/asymetric-dual-encoders/work/m10gen/generated_queries.jsonl",
+    "sha256": "e546bd8c68bfe79fefafdaca3f085cf8f5e1c57153c36ad7053bfd3788157bfd",
+    "bytes": 314721198,
+    "source": "generated",
+    "kind": "jsonl",
+    "what": "the seven generated forms; does not exist yet, same row shape",
+    "n_rows": 834463,
+    "by_form": {
+     "argument": 57401,
+     "comparison": 143000,
+     "conversational": 143000,
+     "finance": 143000,
+     "health": 62062,
+     "howto": 143000,
+     "yesno": 143000
+    }
+   }
+  }
+ ],
+ "texts_per_s": 270.8,
+ "corpus_texts_named": 834463,
+ "eta_hours_for_named_sources": 0.86
+}

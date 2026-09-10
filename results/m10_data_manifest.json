@@ -1,0 +1,446 @@
+{
+ "_what": "M10 data provenance (\u00a7M10.1). Hashes the corpus the arms trained on, and cites every already-committed measurement about it. Built by `m10src/data_manifest.py`; the recipe lock cites THIS file's sha256 rather than a dozen others.",
+ "_not_a_measurement": "Nothing here is measured for the first time. If a number appears both here and in a cited artifact, the artifact is authoritative.",
+ "corpus": {
+  "harvest_train": {
+   "path": "work/m10harvest/harvest_train.jsonl",
+   "bytes": 188817407,
+   "sha256": "a34ce58385a819cba62fdd2f15270b1448b7dd8c527557f28041d4c76c2bf334",
+   "_hash": "cached"
+  },
+  "harvest_forms12_holdout": {
+   "path": "work/m10harvest/harvest_forms12.jsonl",
+   "bytes": 242745,
+   "sha256": "9303f7b333859fbdb36e3d48d679e0ac91b24be460164b0128cc64b6867d0c62",
+   "_hash": "cached"
+  },
+  "harvest_drawn": {
+   "path": "work/m10harvest/harvest_drawn.jsonl",
+   "bytes": 189060152,
+   "sha256": "175d9c3322ce6e920805c84267b8e61fb8d12b4c55bcfafaded768694fed293b",
+   "_hash": "cached"
+  },
+  "harvest_pool_wikipedia": {
+   "path": "work/m10harvest/wiki_harvest.jsonl",
+   "bytes": 2358782687,
+   "sha256": "b2ce5fcf6c5faa2a56c7ebac2f2ce2562f7b3ae005161d4ea97d74167d79424f",
+   "_hash": "computed",
+   "_key": "work/m10harvest/wiki_harvest.jsonl:2358782687:1788619045"
+  },
+  "harvest_pool_arxiv": {
+   "path": "work/m10harvest/arxiv_harvest.jsonl",
+   "bytes": 970290223,
+   "sha256": "1cbf554bc1d9a0956e6612a2ef421f7c5dd462e6460e9e6ee772c4ef668a98b6",
+   "_hash": "computed",
+   "_key": "work/m10harvest/arxiv_harvest.jsonl:970290223:1788618050"
+  },
+  "harvest_pool_licensed": {
+   "path": "work/m10harvest/pool_harvest.jsonl",
+   "bytes": 14759606,
+   "sha256": "6739b796947ea22fe8b4d1e8e774a87945c46e1aa00504e6fa746f68836ee710",
+   "_hash": "computed",
+   "_key": "work/m10harvest/pool_harvest.jsonl:14759606:1788619100"
+  },
+  "generated_queries": {
+   "path": "work/m10gen/generated_queries.jsonl",
+   "bytes": 314721198,
+   "sha256": "e546bd8c68bfe79fefafdaca3f085cf8f5e1c57153c36ad7053bfd3788157bfd",
+   "_hash": "cached"
+  },
+  "generated_seeds_wikibody": {
+   "path": "work/m10gen/wikibody_seeds.jsonl",
+   "bytes": 173299306,
+   "sha256": "4c2816c0e78ed4585e53de0cc79741e53b3e833e4eb2cc9b8240ed001dce2855",
+   "_hash": "cached"
+  }
+ },
+ "generated_by_form": {
+  "argument": {
+   "path": "work/m10gen/generated_argument.jsonl",
+   "bytes": 63744605,
+   "sha256": "fb3882cb74db886b44b5a27434fc7df676ee6fad80c71fdd11342e1ebd8464dc",
+   "_hash": "cached"
+  },
+  "comparison": {
+   "path": "work/m10gen/generated_comparison.jsonl",
+   "bytes": 47671000,
+   "sha256": "ea08e285abab015386c24e26d620bebe1dfcf1089eaa6f92a809910e9a026c20",
+   "_hash": "cached"
+  },
+  "conversational": {
+   "path": "work/m10gen/generated_conversational.jsonl",
+   "bytes": 76807390,
+   "sha256": "2e3a39a908afa0d2d0a31e8305a6a31cb149cade0dcbd9bb13c72d883e446c16",
+   "_hash": "cached"
+  },
+  "finance": {
+   "path": "work/m10gen/generated_finance.jsonl",
+   "bytes": 38012423,
+   "sha256": "68a0f047ad1d27da73e10a28182e3d84e38543fa6f9c75d0c4fe8c1800591e17",
+   "_hash": "cached"
+  },
+  "health": {
+   "path": "work/m10gen/generated_health.jsonl",
+   "bytes": 33408850,
+   "sha256": "b0030ba6a3881c03af43f2e7340e201c0194146ae30b2b4fff3e500c5657b3f7",
+   "_hash": "cached"
+  },
+  "howto": {
+   "path": "work/m10gen/generated_howto.jsonl",
+   "bytes": 61758777,
+   "sha256": "f6131ae5b3d56c54580520a814774cd9e557edfbac7daeb5c1cd69e64ea11538",
+   "_hash": "cached"
+  },
+  "yesno": {
+   "path": "work/m10gen/generated_yesno.jsonl",
+   "bytes": 36206457,
+   "sha256": "d2fe2a807e0d3c3b29f2f6583eb9c3c4392cba1d91a9025c07b168a73d5094d7",
+   "_hash": "cached"
+  }
+ },
+ "cited_measurements": {
+  "corpus_manifest": {
+   "file": "results/m10_corpus_manifest.json",
+   "sha256": "ba0a7133bb6e6f4c8e0da63b8ca65fcdf7a0cb0d0667050d93229889e443d207"
+  },
+  "assembly": {
+   "file": "results/m10_assemble10.json",
+   "sha256": "b4972f7d7751ac26ce4e06b9f5028ab2545003bd8c39f720410d20945867a115"
+  },
+  "data_cut": {
+   "file": "results/m10_data_cut.json",
+   "sha256": "d41920dc5e7cd7654681d029bd43adaf986c2c870a08d4f52aceeb6c9ac2a326"
+  },
+  "teacher_targets": {
+   "file": "results/m10_targets10.json",
+   "sha256": "fdfae538ec7574ad66dda0287e459b71d429abecb902af46d5f34b34607f74d3"
+  },
+  "decontamination_rescreen": {
+   "file": "results/m10_rescreen10.json",
+   "sha256": "64f28fe0350059cbb47c3c3b6034af2083d8769e9d936527edf979d9711cdb11"
+  },
+  "a8_gate1_diversity": {
+   "file": "results/m10_diversity_pilot.json",
+   "sha256": "4ce2e770059bfe19ee3254e5ad24a4d343d4c40e8119b78bea5c1f2312ecd4ed"
+  },
+  "a8_gate2_msmarco_overlap": {
+   "file": "results/m10_a8_gate2.json",
+   "sha256": "72294cc71132f4362bf6ecfab90b377febb14aeace42da9f05121716ee9bbaa2"
+  },
+  "a8_blindspot": {
+   "file": "results/m10_a8_blindspot.json",
+   "sha256": "e94fe61e0c479e6795508d180ec2851b2a326ff48cde49bcba339cb774101e91"
+  },
+  "qfilter_effect": {
+   "file": "results/m10_qfilter_effect.json",
+   "sha256": "1f411aecbd688bb4897a7c7ca09d8d410cc4d7ed89d4a48134bbe2c93e0fa596"
+  },
+  "exposure_table": {
+   "file": "results/m10_exposure_table.json",
+   "sha256": "b2387b10a387004cb8276de3c9bd16513dd5c35254f65d854d56bb5797320a1c"
+  },
+  "seed_supply": {
+   "file": "results/m10_seed_supply.json",
+   "sha256": "76b0081e534154fc83569fc4dcefd12deb1c827c8b2c25c4ac63cb0e19b28424"
+  },
+  "route_precision": {
+   "file": "results/m10_route_precision.json",
+   "sha256": "b69878bbe73275bd6fe00bd7314c31dc4023dad0351bfff77acf2320ec04b632"
+  }
+ },
+ "provenance": {
+  "sources": {
+   "m9-pool": "the M9 training pool, re-screened against the M10 protected index",
+   "paq-a2": "PAQ, 4,037,000 rows (screen arm A2, the volume control)",
+   "paq-build": "PAQ, 1,000,000 rows, NESTED INSIDE the A2 sample",
+   "harvest": "real titles / headings / claim sentences mined from Wikipedia, arXiv and the licensed pool",
+   "generated": "the seven forms no corpus contains, generated under the \u00a7Data contract"
+  },
+  "licences": "CC BY-SA sources (NQ, SQuAD, HotpotQA, FEVER, MIRACL, Mr.TyDi) carry model-card attribution; PAQ is CC BY-SA 3.0 shipped in its tarball. MS MARCO is EXCLUDED from training in every role and appears only as a validation surface (`research/m7-data-licensing.md` \u00a7Rule change 2026-09-04). FineWeb is out of M10 in every role.",
+  "data_cut": 2651572,
+  "unique_text_count": 2651572,
+  "generated_rows_realized": 834463,
+  "generated_by_form": {
+   "argument": 57401,
+   "comparison": 143000,
+   "conversational": 143000,
+   "finance": 143000,
+   "health": 62062,
+   "howto": 143000,
+   "yesno": 143000
+  },
+  "forms12_holdout": "by DOCUMENT across all forms: 1,500 documents held out -> 1,614 eval rows and 1,248,386 train rows (`work/m10harvest/harvest_{train,forms12}.jsonl`). Descriptive only; `evaluation.FORMS-12`.",
+  "decontamination": {
+   "_what": "every training source screened against the M10 protected index, which includes the six's documents and the COV components",
+   "artifact": "results/m10_rescreen10.json",
+   "m9_pool_rescreen": {
+    "protected10": {
+     "version": "2026-09-05-six+dev+reserved-queries+COV(q+d)+arxiv-title",
+     "arxiv_draw": "97e1a37ae7eb678b",
+     "n_arxiv_texts": 4000,
+     "components": [
+      [
+       "BRIGHT",
+       "3066d29c9651a576c8aba4832d249807b181ecae"
+      ],
+      [
+       "LEDGER",
+       "7881df568382"
+      ],
+      [
+       "LegalBenchConsumerContractsQA",
+       "f9eafd458f9c61e531d4a2510d8a11dfd2282b21"
+      ],
+      [
+       "LegalBenchCorporateLobbying",
+       "f43436957b41692dd3e1b06a6d7116cd09f6a1db"
+      ],
+      [
+       "MedicalQARetrieval",
+       "a77efe81ec0c03aff7fecde742a5c9c4c46f6005"
+      ]
+     ]
+    },
+    "documents": {
+     "n_dropped": 79630,
+     "per_store": {
+      "esci-prod": {
+       "eligible": 808291,
+       "dropped": 12204,
+       "seconds": 580.9
+      },
+      "fever-pos": {
+       "skipped": "fever-pos, excluded from the M9 doc pool"
+      },
+      "hotpotqa-corpus": {
+       "eligible": 5226791,
+       "dropped": 64534,
+       "seconds": 1379.4
+      },
+      "mrtydi-docs": {
+       "eligible": 95758,
+       "dropped": 2036,
+       "seconds": 41.2
+      },
+      "squad-ctx": {
+       "eligible": 18839,
+       "dropped": 856,
+       "seconds": 8.6
+      }
+     },
+     "complete": true,
+     "seconds": 2010.7,
+     "mask_sha256": "777bd64114a2d4cde6b60f78ab83c00858779caad301bb34a2208edb20b87f19",
+     "ident": {
+      "role": "document",
+      "protected10": {
+       "version": "2026-09-05-six+dev+reserved-queries+COV(q+d)+arxiv-title",
+       "arxiv_draw": "97e1a37ae7eb678b",
+       "n_arxiv_texts": 4000,
+       "components": [
+        [
+         "BRIGHT",
+         "3066d29c9651a576c8aba4832d249807b181ecae"
+        ],
+        [
+         "LEDGER",
+         "7881df568382"
+        ],
+        [
+         "LegalBenchConsumerContractsQA",
+         "f9eafd458f9c61e531d4a2510d8a11dfd2282b21"
+        ],
+        [
+         "LegalBenchCorporateLobbying",
+         "f43436957b41692dd3e1b06a6d7116cd09f6a1db"
+        ],
+        [
+         "MedicalQARetrieval",
+         "a77efe81ec0c03aff7fecde742a5c9c4c46f6005"
+        ]
+       ]
+      },
+      "pool": {
+       "encoder": "stella-400M-v5",
+       "n": 6169142,
+       "id_sha256": {
+        "esci-prod": "4de2384a2b39f49733e7aa19efcc6655dbbc9965c609373a0e9903a439b4638f",
+        "fever-pos": "7f11d4186c8ed1f6661bc0df497ac2e20dc3ec833922fb9d58511aa1c369bf73",
+        "hotpotqa-corpus": "be799419ebc5b1589229a161083f93aa7d3871ba0afe7c42c896a0ce1fb7c853",
+        "mrtydi-docs": "31aa0fc7673eddd75100c4cc32be0b8a074afd33c2796676265aec0d575830fb",
+        "squad-ctx": "b5f3e48f22f1b9cb8c1ef0c48f5f4a2b7fe3793dd7aebfb86c06afa127126e9a"
+       },
+       "spans": {
+        "esci-prod": [
+         0,
+         808389
+        ],
+        "fever-pos": [
+         808389,
+         820938
+        ],
+        "hotpotqa-corpus": [
+         820938,
+         6054267
+        ],
+        "mrtydi-docs": [
+         6054267,
+         6150251
+        ],
+        "squad-ctx": [
+         6150251,
+         6169142
+        ]
+       },
+       "banned_sha256": "40c632bce17bf3c48a1a6a05c3b0c39344aac130ac4d26e720854f38b2b93f2d"
+      }
+     }
+    },
+    "m9-queries_pair": {
+     "n": 242786,
+     "kept": 242355,
+     "removed": 431,
+     "by_hit": {
+      "exact": 174,
+      "near": 257
+     },
+     "seconds": 27.3,
+     "mask_sha256": "c7553352fe7c38df0f7bd8d33ad55cfebd4706bfba4ccbd9f062b860b4c79467",
+     "ident": {
+      "role": "query",
+      "name": "m9-queries_pair",
+      "protected10": {
+       "version": "2026-09-05-six+dev+reserved-queries+COV(q+d)+arxiv-title",
+       "arxiv_draw": "97e1a37ae7eb678b",
+       "n_arxiv_texts": 4000,
+       "components": [
+        [
+         "BRIGHT",
+         "3066d29c9651a576c8aba4832d249807b181ecae"
+        ],
+        [
+         "LEDGER",
+         "7881df568382"
+        ],
+        [
+         "LegalBenchConsumerContractsQA",
+         "f9eafd458f9c61e531d4a2510d8a11dfd2282b21"
+        ],
+        [
+         "LegalBenchCorporateLobbying",
+         "f43436957b41692dd3e1b06a6d7116cd09f6a1db"
+        ],
+        [
+         "MedicalQARetrieval",
+         "a77efe81ec0c03aff7fecde742a5c9c4c46f6005"
+        ]
+       ]
+      },
+      "pool": {
+       "n": 242786,
+       "sha256": "33fad491adebeda8f785900b4b1bf385960f8284a2b6fb2fc84bd65ab5b3edb8"
+      }
+     }
+    },
+    "m9-nqopen": {
+     "n": 85863,
+     "kept": 85797,
+     "removed": 66,
+     "by_hit": {
+      "near": 66
+     },
+     "seconds": 10.3,
+     "mask_sha256": "9336ba2380e1b36a1a0a9a7eb56f58f6af5d3c821b42838f72f9eedc8f0eae0a",
+     "ident": {
+      "role": "query",
+      "name": "m9-nqopen",
+      "protected10": {
+       "version": "2026-09-05-six+dev+reserved-queries+COV(q+d)+arxiv-title",
+       "arxiv_draw": "97e1a37ae7eb678b",
+       "n_arxiv_texts": 4000,
+       "components": [
+        [
+         "BRIGHT",
+         "3066d29c9651a576c8aba4832d249807b181ecae"
+        ],
+        [
+         "LEDGER",
+         "7881df568382"
+        ],
+        [
+         "LegalBenchConsumerContractsQA",
+         "f9eafd458f9c61e531d4a2510d8a11dfd2282b21"
+        ],
+        [
+         "LegalBenchCorporateLobbying",
+         "f43436957b41692dd3e1b06a6d7116cd09f6a1db"
+        ],
+        [
+         "MedicalQARetrieval",
+         "a77efe81ec0c03aff7fecde742a5c9c4c46f6005"
+        ]
+       ]
+      },
+      "pool": {
+       "n": 85863,
+       "sha256": "576493177168743aad5e01b92d3d1bbb044285cf75838b8eba6404498c870c3f"
+      }
+     }
+    },
+    "m9-triviaqa": {
+     "n": 134665,
+     "kept": 134453,
+     "removed": 212,
+     "by_hit": {
+      "near": 212
+     },
+     "seconds": 18.8,
+     "mask_sha256": "9f19d3358767ed1cd2bc5745188e80ee73e66f021988fe05c391237cda0d4e71",
+     "ident": {
+      "role": "query",
+      "name": "m9-triviaqa",
+      "protected10": {
+       "version": "2026-09-05-six+dev+reserved-queries+COV(q+d)+arxiv-title",
+       "arxiv_draw": "97e1a37ae7eb678b",
+       "n_arxiv_texts": 4000,
+       "components": [
+        [
+         "BRIGHT",
+         "3066d29c9651a576c8aba4832d249807b181ecae"
+        ],
+        [
+         "LEDGER",
+         "7881df568382"
+        ],
+        [
+         "LegalBenchConsumerContractsQA",
+         "f9eafd458f9c61e531d4a2510d8a11dfd2282b21"
+        ],
+        [
+         "LegalBenchCorporateLobbying",
+         "f43436957b41692dd3e1b06a6d7116cd09f6a1db"
+        ],
+        [
+         "MedicalQARetrieval",
+         "a77efe81ec0c03aff7fecde742a5c9c4c46f6005"
+        ]
+       ]
+      },
+      "pool": {
+       "n": 134665,
+       "sha256": "de1367672afa2a760ce2aa212a888ce9231581cb6a1c0fd6dca46c61fc080441"
+      }
+     }
+    }
+   }
+  },
+  "teacher_targets": "stella_en_400M_v5, frozen; cache identity in results/m10_targets10.json"
+ },
+ "disclosures": {
+  "own_source_5gram_screen": "NOT RUN. W11's second half: a word-5-gram screen of the harvest corpus against ITS OWN sources. It is near-vacuous by construction -- the harvest is titles, headings and lead claim sentences COPIED from those documents, so it would report near-total overlap with the corpus the text came from, which is what harvesting means. The screen that matters is against the PROTECTED index (the six's documents and the COV components), and that one RAN: `results/m10_rescreen10.json`. Disclosed rather than run, per the registered option.",
+  "cure_v1": "Decision 12 (CUREv1 as a validation-only diagnostic) was ADOPTED 2026-09-04 and NEVER EXECUTED. Its own precondition is unmet: the harvest, PAQ and seed draws were screened against an index that did not contain it. If it is ever read, either re-screen first or disclose the gap beside the number. Never selection-bearing.",
+  "generated_count": "the plan said ~1.0M generated queries; 834,463 were realized and used (`results/m10_assemble10.json`). Every registry sentence has been corrected to the realized figure."
+ },
+ "complete": true,
+ "holes": []
+}

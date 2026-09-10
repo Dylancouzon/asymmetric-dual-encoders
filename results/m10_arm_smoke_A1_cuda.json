@@ -1,0 +1,97 @@
+{
+ "_what": "\u00a7Screen's registered 90-step smoke of every arm shape",
+ "steps": 90,
+ "device": "cuda",
+ "n_texts": 4096,
+ "max_len": 512,
+ "shapes_registered": [
+  "ANCHOR",
+  "F-MiniLM-L6",
+  "F-MiniLM-L12",
+  "G-384",
+  "G-1536",
+  "G-MLP",
+  "B-100/0",
+  "B-50/50",
+  "E-bs128",
+  "D-NORM",
+  "D-COV",
+  "C-M9init"
+ ],
+ "shapes_run": [
+  "ANCHOR"
+ ],
+ "arms": [
+  {
+   "arm": "ANCHOR",
+   "spec": {
+    "student": "bge-small",
+    "n_layers": 3,
+    "head": "linear",
+    "pattern": "75/25",
+    "batch": 32,
+    "loss": "squared_l2"
+   },
+   "covers": [
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "F-bge-small"
+   ],
+   "device": "cuda",
+   "max_len": 512,
+   "constructed": true,
+   "d_in": 1152,
+   "params": 34540672,
+   "under_cap": true,
+   "warm_start_registered": "linear",
+   "warm_start_record": {
+    "n_fit": 256,
+    "lambda": 1.0,
+    "train_objective": 0.10409,
+    "d_in": 1152
+   },
+   "warm_start_implemented": true,
+   "query_corpus": {
+    "arm": "A1",
+    "requested_as": "A1",
+    "n_docs": 1250000,
+    "require_forms": null,
+    "rescreen10_report_validated": true
+   },
+   "cross_role": {
+    "checked": true,
+    "collisions": 0,
+    "n_query": 403443,
+    "n_document": 1250000
+   },
+   "assemble_arm": true,
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 2880,
+   "examples_per_s": 547.5,
+   "mix": {
+    "Q": 68,
+    "D": 22,
+    "q_share": 0.7555555555555555
+   },
+   "passed": true,
+   "seconds": 219.1
+  }
+ ],
+ "failed": [],
+ "warm_start_not_implemented": [],
+ "cloud_only": {},
+ "query_corpus": {
+  "corpus": "m10",
+  "sources": [
+   "harvest"
+  ],
+  "head_per_source": 0,
+  "balanced": true,
+  "arm": "A1"
+ },
+ "all_shapes_pass": false,
+ "_partial": true
+}

@@ -1,0 +1,312 @@
+# Codex adversarial review — M10 corpus→trainer path, 2026-09-05 (verbatim; read-exclusion audit clean)
+
+## Findings
+
+1. **BLOCKER — cut arms silently train uncut.** [corpus_loader.py:470](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:470), [corpus_loader.py:504](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:504): current registry has no `unique_text_count`; `build_query_stream("ANCHOR", ...)` defaults to `cut=None`, and even `cut="registered"` becomes a no-op. A2/A3/A4 therefore train at different volumes. Fix: require the registered cut for A2/A3/A4 and raise when absent.
+
+2. **BLOCKER — required M10 decontamination is absent.** [corpus_loader.py:172](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:172), [corpus_loader.py:536](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:536), [m9src/data.py:71](/home/dylan/asymetric-dual-encoders/m9src/data.py:71), [m9src/data.py:102](/home/dylan/asymetric-dual-encoders/m9src/data.py:102): an M9 query/document newly matching admitted COV remains eligible, leaking evaluation text into gradients. Fix: require and bind both pools to the M10 protected-index rescreen and its identity.
+
+3. **BLOCKER — the hold-out guard protects a pathname, not the data.** [corpus_loader.py:53](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:53), [corpus_loader.py:123](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:123): copy or hard-link `harvest_forms12.jsonl` to `generated_queries.jsonl`; it is accepted as A4 training data because generated has no expected count and origin fields are ignored. Fix: verify a screened immutable manifest/protected fingerprint set, including seed/document provenance.
+
+4. **BLOCKER — resume loses kill/plateau state.** [trainer10.py:35](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:35), [trainer10.py:68](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:68), [trainer10.py:76](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:76): resume after two cycle-end evaluations resets `evals` and `cycle_end_evals`; the third reading cannot fire the registered plateau/top-up decision. Fix: checkpoint and restore evaluation histories, kinds, counters, and extension state.
+
+5. **HIGH — concurrent target writers can silently swap keys and vectors.** [targets10.py:131](/home/dylan/asymetric-dual-encoders/m10src/targets10.py:131): writers A/B can append vectors as A,B but keys as B,A; both publish the same stale `n`, and reopen retains `keyB → vectorA`. Fix: enforce a single-writer lock spanning refresh, duplicate lookup, append, and metadata commit.
+
+6. **HIGH — “unique-text” cutting operates on raw rows.** [corpus_loader.py:123](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:123), [corpus_loader.py:477](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:477): `["x","x","y"]` counts as three and may retain duplicate `x`, changing both the cut and presentation weights. Fix: exact-deduplicate globally before computing or applying the three-corpus cut.
+
+7. **HIGH — balanced sampling is not with-replacement sampling.** [corpus_loader.py:392](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:392), [corpus_loader.py:443](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:443): a three-row form at batch eight always produces the same `0,1,2,0,1,2,0,1` batch; larger forms cycle fixed batches without replacement. Fix: derive a per-form RNG from `(seed, form-occurrence)` and call `choice(..., replace=True)`.
+
+8. **HIGH — short cache files are padded, not refused.** [targets10.py:110](/home/dylan/asymetric-dual-encoders/m10src/targets10.py:110): with authoritative `n=2` and half of vector two missing, `truncate(want)` zero-extends it; its nonzero surviving half is normalized and trained as a corrupted target. Fix: reject sizes below `n * row_bytes`; truncate only excess bytes.
+
+9. **HIGH — query/document student inputs can collide.** [corpus_loader.py:308](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:308), [corpus_loader.py:530](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:530): query `"passage: X"` and document `"X"` tokenize identically, but receive query-prompt and raw-document teacher targets. Fix: detect and reject cross-role student-input collisions before training.
+
+10. **MEDIUM — checkpoints overwrite the sole recovery point non-atomically.** [trainer10.py:35](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:35): a crash during `torch.save` corrupts the only checkpoint. Fix: write/fsync a temporary checkpoint and atomically replace the prior file.
+
+11. **MEDIUM — token-cache identity does not identify the tokenizer.** [corpus_loader.py:331](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:331): change tokenizer revision/config while retaining `student="bge-small"`; stale token IDs are reused. Fix: include tokenizer repository, revision, vocabulary/config hashes, and selected-row hash.
+
+12. **LOW — hash collisions are treated as text equality.** [targets10.py:48](/home/dylan/asymetric-dual-encoders/m10src/targets10.py:48), [targets10.py:152](/home/dylan/asymetric-dual-encoders/m10src/targets10.py:152): two distinct texts sharing the 128-bit digest collapse to one target without comparison. Fix: store enough text/secondary digest to verify equality on hits.
+
+Tests miss or bless these failures: [test_corpus_loader.py:191](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:191) explicitly expects an absent cut to proceed; line 136 only proves a small form is not dropped; [test_targets10.py:94](/home/dylan/asymetric-dual-encoders/m10src/test_targets10.py:94) tests excess bytes, not short files or concurrency; [test_trainer10.py:41](/home/dylan/asymetric-dual-encoders/m10src/test_trainer10.py:41) resumes without evaluations. The self-comparison at `test_targets10.py:34` and pathname assertion at line 123 are partly vacuous.
+
+The narrow step-to-stream arithmetic and wall-clock exclusion look correct. Requested `m9src/teacher.py` does not exist at either reviewed endpoint.
+
+**NO-GO** for training a screen arm on this loader.
+
+---
+
+# RE-REVIEW of the fixes, same day (verbatim; read-exclusion audit clean)
+
+Brief: the eleven fixes claimed done, with the attack surface named. Verdict below; the
+gaps it found in the fixes were closed in `d6bc3d6`, and the two residuals it names are
+recorded there.
+
+NO-GO. Several fixes are real, but the “1–11 fixed” claim is too strong. The principal failures are unscreened training routes, a hold-out guard that silently disables itself, and an unenforced writer lock.
+
+1. LOW — cut-arm refusal is real
+
+[corpus_loader.py:710](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:710) identifies registered named arms, and [corpus_loader.py:713](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:713) refuses a missing cut unless `allow_uncut=True`; the latter records `uncut` at line 721.
+
+Caveat: passing the equivalent source list instead of an arm name bypasses cut-arm classification. That is how the smoke calls it at [arm_smoke.py:177](/home/dylan/asymetric-dual-encoders/m10src/arm_smoke.py:177). This is acceptable only if every real launcher must pass the arm name; that invariant is not enforced here.
+
+2. BLOCKER — unscreened M9 training routes remain
+
+The default corpus and document builders do screen correctly:
+
+- Query masks are required at [corpus_loader.py:300](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:300).
+- `load_segments` uses screened `_m9_segments()` at [corpus_loader.py:344](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:344).
+- Document masks are required by default at [corpus_loader.py:787](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:787).
+
+But unscreened optimization paths still exist:
+
+- `build_doc_stream(..., allow_unscreened=True)` explicitly bypasses screening at [corpus_loader.py:771](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:771).
+- `_screened_doc_pool` treats a falsey ban set as permission to load the original pool at [corpus_loader.py:752](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:752).
+- The arm smoke directly loads unscreened M9 queries and documents at [arm_smoke.py:106](/home/dylan/asymetric-dual-encoders/m10src/arm_smoke.py:106) and [arm_smoke.py:109](/home/dylan/asymetric-dual-encoders/m10src/arm_smoke.py:109), then performs optimizer steps at [arm_smoke.py:201](/home/dylan/asymetric-dual-encoders/m10src/arm_smoke.py:201). Even `--corpus m10` continues using those directly loaded documents.
+
+The tests do not close this gap. The query test exercises only `query_keep_mask`, not `_m9_texts`, `_m9_segments`, or `load_segments`, at [test_corpus_loader.py:467](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:467). The document test calls `_screened_doc_pool` directly with a hand-supplied nonempty set at [test_corpus_loader.py:513](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:513), so it would pass even if `build_doc_stream` never requested a mask.
+
+The claimed “709 of 463,314” is not validated in the permitted code. The `709` at [test_corpus_loader.py:525](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:525) is merely dummy cache-key input.
+
+3. HIGH — hold-out protection silently turns off
+
+Content checking is genuinely integrated into `load_segments` at [corpus_loader.py:374](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:374), and pathname refusal is real at [corpus_loader.py:168](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:168).
+
+However, if the hold-out file is missing, `holdout_hashes` returns an empty set at [corpus_loader.py:71](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:71), and training proceeds at [corpus_loader.py:85](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:85). There is no registered-run refusal or recorded “hold-out unavailable” escape.
+
+The cache is also keyed only by pathname at [corpus_loader.py:68](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:68). If the file is created or changed after its first read, the process retains stale hashes.
+
+The test calls `refuse_holdout_texts` directly at [test_corpus_loader.py:376](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:376); it does not prove that a copied source is rejected through `load_segments`.
+
+4. HIGH — most resume state is fixed, but `stopped` is never checkpointed when true
+
+Loss, evaluation, kind, cycle-end, and example histories are saved at [trainer10.py:141](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:141) and restored at [trainer10.py:87](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:87). On ordinary resume, examples are not double-counted, and `steps_run` intentionally counts only the current process.
+
+But every path that makes `stopped` non-null breaks before the save block:
+
+- Non-finite loss: [trainer10.py:110](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:110)
+- Non-finite gradient: [trainer10.py:117](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:117)
+- Kill: [trainer10.py:132](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:132)
+- Plateau: [trainer10.py:136](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:136)
+- Save block only afterward: [trainer10.py:140](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:140)
+
+Thus `stopped` is serialized syntactically but, through `train_arm`, only while it is `None`. A stopping evaluation is also absent from the latest checkpoint.
+
+For successful resumes, `examples`, steps, and mix are not double-counted. `mix` is reconstructed from the whole restored loss count at [trainer10.py:159](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:159). One minor accounting defect remains: a non-finite loss is appended even though no step completed, so that failed attempt is included in `mix`.
+
+5. BLOCKER — the writer lock is optional and bypassed throughout the API
+
+`encode_missing` correctly holds the lock across refresh, lookup, encoding, append, and commit at [targets10.py:235](/home/dylan/asymetric-dual-encoders/m10src/targets10.py:235).
+
+But `TargetCache.append` itself neither acquires nor verifies the lock at [targets10.py:188](/home/dylan/asymetric-dual-encoders/m10src/targets10.py:188). A second process can call it while another owns the lock. A stale `TargetCache` can also append with an obsolete `self.n`, publish the wrong count, and leave committed rows as “excess” for the next refresh to truncate.
+
+The tests normalize this bypass: for example, they append outside any lock at [test_targets10.py:43](/home/dylan/asymetric-dual-encoders/m10src/test_targets10.py:43). The concurrency test at [test_targets10.py:178](/home/dylan/asymetric-dual-encoders/m10src/test_targets10.py:178) proves only that two callers cannot both create the lock file; it never attempts `other.append()` while the first lock is held.
+
+Read paths are not literally non-mutating either: constructing an absent cache writes `meta.json` at [targets10.py:107](/home/dylan/asymetric-dual-encoders/m10src/targets10.py:107) and creates zero-length store files at [targets10.py:134](/home/dylan/asymetric-dual-encoders/m10src/targets10.py:134).
+
+6. LOW — dedup and teacher-row preservation are implemented
+
+Dedup occurs before the cut at [corpus_loader.py:375](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:375). Segment order and row order determine the first occurrence, and `forms` plus `rowmap` are sliced by the same selection at [corpus_loader.py:326](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:326). The surviving text therefore retains the correct teacher row.
+
+The test at [test_corpus_loader.py:395](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:395) meaningfully checks this.
+
+Strictly, it is hash-equivalence dedup, not exact-text dedup: only the 128-bit hash is stored in `seen` at [corpus_loader.py:320](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:320). That falls under the declined item 12 decision.
+
+7. LOW — sampler behavior is real; one named test is weak
+
+`_pick(k)` is a pure function of seed and step/cycle at [corpus_loader.py:586](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:586). Resume at the same global step produces the same form and row draw.
+
+Each complete `F`-step sampler cycle contains each present form exactly once, with identical batch sizes, so example shares are exactly equal. The within-form call uses replacement at [corpus_loader.py:543](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:543).
+
+Sorting occurs only after membership has been sampled at [corpus_loader.py:544](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:544). It changes order, not selection probabilities or form shares, so it does not reintroduce sampling bias.
+
+The test named “sampled with replacement” at [test_corpus_loader.py:136](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:136) is effectively non-probative: it merely checks that the small form appears. A deterministic repeated batch would pass it. The later varying-batch test is better, though it still does not directly assert within-batch duplicates.
+
+8. HIGH — short-store refusal is real, but “only a writer truncates” is unenforced
+
+Short files raise correctly at [targets10.py:140](/home/dylan/asymetric-dual-encoders/m10src/targets10.py:140), and ordinary construction uses `fix=False`.
+
+However, `refresh()` is public and does not verify lock ownership at [targets10.py:150](/home/dylan/asymetric-dual-encoders/m10src/targets10.py:150); `_check_sizes(fix=True)` likewise has no ownership check. Any caller can truncate excess data without holding the lock. Combined with the unlocked public `append`, one caller can truncate bytes another caller is appending.
+
+On the blessed `encode_missing` path, an old reader and the writer are safe: the reader maps only the `n` published in metadata, while metadata advances after vectors and keys. The safety is convention, not enforced storage semantics.
+
+9. HIGH — collision detection works, but it is not a mandatory corpus→trainer invariant
+
+The hashing and refusal implementation is real at [corpus_loader.py:659](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:659) and [corpus_loader.py:680](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:680).
+
+But neither `build_query_stream`, `build_doc_stream`, nor `train_arm` requires the guard. The only reviewed training caller that invokes it does so manually in the smoke at [arm_smoke.py:196](/home/dylan/asymetric-dual-encoders/m10src/arm_smoke.py:196). Another caller can combine the two streams and train without checking, or pass `skip=True`.
+
+The test at [test_corpus_loader.py:434](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:434) tests the helper explicitly; it does not test enforcement on a launch path.
+
+10. LOW — atomic replacement is implemented, but the test does not prove it
+
+The implementation writes a same-directory temporary file, flushes, fsyncs, and calls `os.replace` at [trainer10.py:45](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:45). That protects the prior checkpoint from a process crash during serialization.
+
+The test at [test_trainer10.py:104](/home/dylan/asymetric-dual-encoders/m10src/test_trainer10.py:104) would also pass if `save` overwrote `c.pt` directly; it observes neither interruption nor the temporary/replace operations. Also, the parent directory is not fsynced, so durability across abrupt power loss is not guaranteed, although replacement atomicity is.
+
+11. LOW — tokenizer identity is implemented; the vocabulary test passes for the wrong reason
+
+The key includes class, path, revision, size, and either backend JSON or vocabulary hash at [corpus_loader.py:452](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:452), and that identity enters the cache key at [corpus_loader.py:481](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:481).
+
+But the test compares `TokA` and `TokB`, which are different class names at [test_corpus_loader.py:446](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:446) and [test_corpus_loader.py:452](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:452). Since class name is already part of the key, the two cache directories at lines 459–461 would differ even if vocabulary hashing were removed entirely. The property named by the test is therefore untested.
+
+12. LOW — declined and documented, with broader scope than the target-cache prose suggests
+
+The decision is documented at [targets10.py:20](/home/dylan/asymetric-dual-encoders/m10src/targets10.py:20). No secondary equality check exists.
+
+The same 128-bit-equals-content policy also governs hold-out detection and supposedly “exact” corpus dedup through [corpus_loader.py:60](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:60) and [corpus_loader.py:320](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:320). Thus the accepted decision is not confined to the teacher cache.
+
+I did not execute the tests because importing this suite would read additional repository modules and data outside the hard allowlist.
+
+NO-GO.
+
+# THIRD PASS on the final state (b619a34), same day (verbatim; read-exclusion audit clean)
+
+The named files at checked-out `129f681` are identical to `b619a34`; this review is therefore valid for the requested commit. Static review only—the exclusions prevent safely running tests that import unnamed data paths.
+
+### Earlier findings
+
+| # | Status | Evidence / regression test |
+|---|---|---|
+| 1 | **OPEN** | Named arms refuse a missing cut, but `allow_uncut=True` bypasses it, and passing `ARM_SOURCES["A3"]` as a list avoids cut-arm classification entirely ([corpus_loader.py:711](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:711)). `test_a_smoke_may_train_uncut_only_by_saying_so_in_the_artifact` explicitly blesses the first bypass; no test covers the source-list bypass. Either stream can be passed to `train_arm`. |
+| 2 | **OPEN** | Default query/document builders require masks, but `build_doc_stream(..., allow_unscreened=True)` still returns training data, while an empty ban set silently calls the original pool ([corpus_loader.py:772](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:772), [corpus_loader.py:793](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:793)). Tests cover only the default refusal. |
+| 3 | **OPEN** | Missing/content-identical hold-out checks work, but provenance is discarded: `_rows_from_jsonl` returns only text/form, ignoring `seed_id`/`doc` ([corpus_loader.py:190](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:190)). A novel query with a held-out `seed_id` passes because only its query text is hashed. The copy test cannot catch this. |
+| 4 | **OPEN** | Histories and ordinary stopping checkpoints are fixed, but saving remains conditional on `run_steps` ([trainer10.py:150](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:150)). If the first attempted step after resume has a non-finite loss/gradient, the old checkpoint still says `stopped=None`; relaunch repeats it. The plateau test completes many steps and misses this. |
+| 5 | **CLOSED** | `append`, `refresh`, and truncation require the owning cache handle’s writer lock ([targets10.py:152](/home/dylan/asymetric-dual-encoders/m10src/targets10.py:152)). `test_append_outside_the_writer_lock_is_refused` and `test_only_one_writer_may_append_at_a_time` regress it. |
+| 6 | **CLOSED** | Global dedup precedes cutting and preserves `rowmap` ([corpus_loader.py:324](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:324)). `test_the_cut_counts_UNIQUE_texts_across_sources` covers duplicate removal and teacher-row preservation. |
+| 7 | **CLOSED** | `_form_draw` uses deterministic `choice(..., replace=True)` ([corpus_loader.py:550](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:550)). The small-form duplicate and varying-batch tests now catch the original fixed-cycle behavior. |
+| 8 | **CLOSED** | Short stores raise; excess truncation requires the writer lock ([targets10.py:121](/home/dylan/asymetric-dual-encoders/m10src/targets10.py:121)). The short-store and unlocked-refresh tests cover both halves. |
+| 9 | **OPEN — blocks** | Detection works, but neither `data10.batch_fn` nor `trainer10.train_arm` invokes it; only `arm_smoke` does ([data10.py:150](/home/dylan/asymetric-dual-encoders/m10src/data10.py:150), [arm_smoke.py:207](/home/dylan/asymetric-dual-encoders/m10src/arm_smoke.py:207)). The absence of a stream owner is precisely why the invariant is unenforced. The test exercises only the helper—and also blesses `skip=True`. |
+| 10 | **CLOSED** | Same-directory temporary write, fsync, and `os.replace` preserve the prior checkpoint ([trainer10.py:36](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:36)). `test_a_crash_during_save_leaves_the_previous_checkpoint_intact` would fail on direct overwrite. |
+| 11 | **OPEN** | Fast-tokenizer backend state is hashed, but the fallback hashes only vocabulary plus a few attributes ([corpus_loader.py:460](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:460)). Same class/repo/revision/vocabulary with different slow-tokenizer normalization or truncation side produces different IDs under one cache identity. The test changes vocabulary, not configuration. |
+| 12 | **OPEN, accepted/non-blocking** | Hash equality remains text equality, as documented. No secondary comparison exists. |
+
+### New findings
+
+| Rank | Severity | Finding |
+|---|---|---|
+| 1 | **BLOCKER** | The missing-form guard is impossible to fire. `present` is constructed from `np.unique(forms)`, then `empty` checks only members of `present` ([corpus_loader.py:584](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:584)). An anchor corpus missing 1 of 12 forms silently becomes an 11-form-balanced run. `test_balanced_shares_are_equal_across_the_forms_present` blesses exactly that weaker property. |
+| 2 | **BLOCKER** | The claimed 709 query removals are absent from [m10_rescreen10.json](/home/dylan/asymetric-dual-encoders/results/m10_rescreen10.json:30); it contains only the 79,630 document removals. `rescreen10.main` starts with `out={}` and rewrites the artifact, so the later `--documents` run erased the query report ([rescreen10.py:193](/home/dylan/asymetric-dual-encoders/m10src/rescreen10.py:193)). The literal `709` in a token-cache test validates nothing about the artifact. |
+| 3 | **HIGH** | The hold-out cache is not content-keyed: it uses size plus integer-second mtime ([corpus_loader.py:68](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:68)). A same-length rewrite within one second retains stale hashes and can admit the new hold-out text. The test forces mtime forward by ten seconds, so it misses this. |
+
+### Verdict: NO-GO
+
+Minimum fixes to flip it:
+
+1. Add one mandatory screen-arm assembly path that owns both streams: named arms only, no `allow_uncut`/`allow_unscreened`/source-list bypasses; require the registered cut, complete query/document masks, all 12 forms for the balanced anchor, and run the cross-role guard before returning `batch_fn`.
+2. Preserve and validate hold-out provenance (`seed_id`/document identity) against an immutable screened manifest; content hashes remain defense in depth. Key any cache by the file digest.
+3. Make the re-screen report retain both query and document sections and validate mask/report identity, completeness, and measured counts before a screen arm starts.
+4. Save stop state even when zero new steps completed, and include tokenizer behavior/configuration in token-cache identity.
+5. Register `data_cut.unique_text_count` before launching a cut arm.
+
+# FOURTH PASS (9b3dec9), same day (verbatim; read-exclusion audit clean)
+
+| Third-pass OPEN | Status | Evidence / regression |
+|---|---|---|
+| 1 — cut/source-list bypass | **CLOSED** | `assemble_arm` rejects source lists and hardcodes `allow_uncut=False` ([corpus_loader.py:931](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:931), [corpus_loader.py:984](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:984)). Regressed by `test_assemble_arm_refuses_a_source_list` and `test_assemble_arm_refuses_an_uncut_cut_arm`. |
+| 2 — unscreened pools | **CLOSED** for the original bypass | Both builders receive `False`; an empty document ban set refuses ([corpus_loader.py:988](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:988), [corpus_loader.py:860](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:860)). Regressed by `test_assemble_arm_never_passes_allow_uncut_or_allow_unscreened` and `test_screened_doc_pool_refuses_an_empty_or_missing_ban_set_as_mask_missing`. Mask authenticity remains broken below. |
+| 3 — held-out provenance | **OPEN** | `{"query":"novel","form":"title"}` with no `doc`/`seed_id`, although derived from a held document, produces `id=None`; the membership test skips it and its novel text misses the hash guard ([corpus_loader.py:206](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:206), [corpus_loader.py:412](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:412)). `test_rows_from_jsonl_with_ids_is_opt_in_and_reads_doc_or_seed_id` explicitly accepts `None`; no test requires provenance. |
+| 4 — zero-step stop checkpoint | **CLOSED** | Stop state is saved without the `run_steps` condition ([trainer10.py:150](/home/dylan/asymetric-dual-encoders/m10src/trainer10.py:150)). Regressed by `test_a_resume_that_fails_on_its_very_first_step_still_checkpoints_the_stop`. |
+| 9 — cross-role guard optional | **CLOSED** on this route | `assemble_arm` invokes the guard before returning `batch_fn` ([corpus_loader.py:990](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:990)). Regressed by `test_assemble_arm_runs_the_cross_role_guard_and_propagates_a_collision`. |
+| 11 — tokenizer identity | **OPEN** | Two slow tokenizers of the same class/name/revision/vocabulary but different normalization, such as `do_lower_case`, have identical identity when `name_or_path` is not a local directory, yet emit different IDs ([corpus_loader.py:527](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:527)). The new test covers only a local `tokenizer_config.json`. |
+| New 1 — missing forms | **OPEN** | `assemble_arm("ANCHOR", …, balanced=False)` skips the entire `require_forms` branch and accepts an 11-form corpus ([corpus_loader.py:654](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:654), [corpus_loader.py:668](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:668)). Tests exercise only `balanced=True`. |
+| New 2 — report sections erased | **CLOSED** | The shipped report contains all three query sections—431+66+212 = 709 removals—and the complete document section ([m10_rescreen10.json](/home/dylan/asymetric-dual-encoders/results/m10_rescreen10.json)). `test_merge_report_preserves_the_other_sections_on_a_partial_rerun` and `test_validate_requires_both_sections` regress this. |
+| New 3 — hold-out cache staleness | **CLOSED** | Cache key includes the file digest ([corpus_loader.py:77](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:77)). Regressed by `test_holdout_hashes_is_keyed_by_content_not_size_and_mtime`. |
+
+### New findings, ranked
+
+1. **BLOCKER — mask validation validates lengths, not masks.** Replace each query keep mask with all `True` of the correct length: the 709 protected queries train and `validate` passes. Replace the document mask with 79,630 copies of `-1`: conversion to a set removes no real document, while the raw array length still matches the report ([rescreen10.py:241](/home/dylan/asymetric-dual-encoders/m10src/rescreen10.py:241), [corpus_loader.py:907](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:907)). It also never requires `documents.complete == true` or binds preserved sections to per-section identities.
+
+2. **BLOCKER — the named-arm contract is not registry-driven.** `assemble_arm("B-50/50", …)` refuses although it is a trained registry arm; `A4` bypasses its `A4 → ANCHOR` alias because `ARM_SOURCES` wins first; and default `assemble_arm("A2", …)` uses `balanced=True`, contrary to A2’s registered variant ([corpus_loader.py:934](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:934), [corpus_loader.py:961](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:961)).
+
+3. **BLOCKER — HEAD still has no registered cut count.** `data_cut.unique_text_count` is absent from [screen_registry.json](/home/dylan/asymetric-dual-encoders/m10/screen_registry.json), so A2/A3/A4/ANCHOR refuse rather than launch.
+
+4. **HIGH — document draw remains bypassable.** `assemble_arm("A1", …, n_docs=32)` returns a stream using 32 documents instead of `arm_doc_count`; no assembly-level test prevents this.
+
+## Verdict
+
+**NO-GO**
+
+Minimal fix set:
+
+- Bind every mask to its pool/protected identity and content digest; validate query sums, document uniqueness/range, and `complete=true`, using the exact masks consumed by the streams.
+- Make the registry own arm resolution and all data-affecting knobs; resolve aliases first, reject untrained arms, force A2 balancing policy and A4/ANCHOR’s balanced 12-form contract, and remove the `n_docs`/registry bypasses.
+- Require and canonicalize provenance for harvest/generated rows.
+- Fully identify slow-tokenizer behavior.
+- Register `data_cut.unique_text_count` and require the final cut-arm row count to equal it.
+
+Static review only; executing the tests would import/read files outside the mandatory allowlist.
+
+# FIFTH PASS (f5ceaee), same day (verbatim; read-exclusion audit clean)
+
+| Pass-four OPEN | Status | Evidence / concrete failure |
+|---|---|---|
+| 3 — provenance | **OPEN** | Missing fields now raise via `require_id` ([corpus_loader.py:136](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:136), [corpus_loader.py:212](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:212)); regression: [test_corpus_loader.py:798](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:798). But `{"doc":""}` or `{"seed_id":" "}` passes and cannot match the held-document set at line 426. A novel query derived from a held document can therefore train. |
+| New 1 — missing forms / balanced | **CLOSED** | Alias resolution precedes checks; `balanced=True` is fixed and ANCHOR requires all forms ([corpus_loader.py:984](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:984), [corpus_loader.py:1077](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1077), [corpus_loader.py:1080](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1080)). Regressions: [test_corpus_loader.py:698](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:698), [test_corpus_loader.py:751](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:751). A2’s balancing objection is **closed by ruling**. |
+| New 1 — mask validation | **OPEN** | Digest/count/range/completeness checks are real ([rescreen10.py:254](/home/dylan/asymetric-dual-encoders/m10src/rescreen10.py:254), [rescreen10.py:258](/home/dylan/asymetric-dual-encoders/m10src/rescreen10.py:258), [rescreen10.py:277](/home/dylan/asymetric-dual-encoders/m10src/rescreen10.py:277)); regressions: [test_rescreen10.py:80](/home/dylan/asymetric-dual-encoders/m10src/test_rescreen10.py:80), [test_rescreen10.py:97](/home/dylan/asymetric-dual-encoders/m10src/test_rescreen10.py:97), [test_rescreen10.py:118](/home/dylan/asymetric-dual-encoders/m10src/test_rescreen10.py:118). But they are not the exact consumed arrays: streams consume masks at lines 1080/1084, then assembly reloads them at lines 1091–1095. Wrong mask first, correct mask second → validation passes while protected rows remain in the stream. |
+| New 2 — registry contract | **OPEN** | Alias/trained/cut/pattern handling is fixed. However corpus and cut lookup do not receive `assemble_arm`’s registry: `arm_sources` uses hard-coded `ARM_SOURCES`/the on-disk registry ([corpus_loader.py:801](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:801)), and `build_query_stream` is called without `reg` ([corpus_loader.py:1080](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1080)). A supplied registry with a registered cut or changed `A1.data` is ignored downstream. |
+| New 4 — `n_docs` bypass | **CLOSED** | Override removed; count derives from registry dose and resolved mix ([corpus_loader.py:1009](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1009), [corpus_loader.py:1079](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1079)). Regressions: [test_corpus_loader.py:751](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:751), [test_corpus_loader.py:867](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:867). |
+
+### New findings, ranked
+
+1. **BLOCKER — validation reloads masks instead of validating the masks that formed the streams.** A cache swap between construction and validation can admit evaluation text.
+2. **BLOCKER — required provenance is not canonicalized.** Empty/whitespace IDs bypass held-document membership.
+3. **HIGH — registry split-brain.** The public `registry=` controls dose/pattern but not corpus/cut selection.
+
+The A1 smoke is numerically consistent: 5M × 25% = 1.25M documents, 68Q/22D over 90 steps matches 75/25, and guards are recorded. It is not HEAD-schema-consistent: current [arm_smoke.py:202](/home/dylan/asymetric-dual-encoders/m10src/arm_smoke.py:202) records `pattern` and `pattern_source`, but the shipped artifact omits both.
+
+Absent `data_cut.unique_text_count` is **closed by ruling**.
+
+## Verdict: NO-GO
+
+Minimal fixes:
+
+- Validate/cache-bind each mask at its first load and pass those exact arrays and identities through assembly; never reload for final validation.
+- Require canonical, non-empty provenance IDs and bind them to the screened generation/harvest manifest.
+- Thread one resolved registry through corpus, cut, pattern, and dose resolution.
+- Regenerate the A1 smoke at HEAD.
+
+# SIXTH PASS (7261d22), same day (verbatim; read-exclusion audit clean)
+
+| Pass-five item | Status | Evidence |
+|---|---|---|
+| 3 — provenance | **OPEN** | Required IDs are checked and stripped, but extraction still prefers any non-`None` `doc` over `seed_id` ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:212)). Generated row `{"text":"novel","form":"title","seed_id":"held","doc":" "}` validates `seed_id`, then returns `" "` as its ID; it misses held ID `"held"` at the membership check ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:431)). Existing tests do not cover both fields together. |
+| New 1 — consumed masks | **CLOSED** | Query/document builders record the arrays used; assembly refuses missing records and validates that dictionary ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1099)). Digests, counts, completeness, uniqueness and range are checked ([rescreen10.py](/home/dylan/asymetric-dual-encoders/m10src/rescreen10.py:254)). Regressed by `test_assemble_arm_validates_the_masks_the_streams_consumed_not_a_reload` and `test_validate_rejects_a_mask_that_does_not_match_its_digest`. |
+| New 3 — registry split-brain | **CLOSED** | One `reg` supplies resolution, entry/dose, pattern, corpus and cut lookup ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1092)). Stub fallback is preserved. Regressed by `test_assemble_arm_never_passes_allow_uncut_or_allow_unscreened` and the family-B pattern test. |
+
+### New findings, ranked
+
+1. **BLOCKER — inherited anchor corpora are not cut.** Non-A arms return `ARM_SOURCES["ANCHOR"]` ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:815)), but cut eligibility is tested against the arm name ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:852)). With a registered count, `assemble_arm("B-50/50", …)` loads the full A4 sources yet applies no cut because `B-50/50` is absent from `data_cut.applies_to`. This affects F/G/B/E/D arms and contradicts the registered “CUT A4” anchor corpus.
+
+2. **HIGH — E’s registered batch is caller-controlled.** `E-bs128` registers batch 128 ([screen_registry.json](/home/dylan/asymetric-dual-encoders/m10/screen_registry.json:130)), but `assemble_arm("E-bs128", …)` defaults to and records batch 32 ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1069)). The override-refusal test covers only `n_docs`, `pattern`, and `balanced`.
+
+The shipped A1 smoke is numerically coherent—1.25M documents and 68Q/22D over 90 steps—but stale relative to HEAD: current smoke code records `pattern` and `pattern_source`, while the artifact omits them ([smoke JSON](/home/dylan/asymetric-dual-encoders/results/m10_arm_smoke_A1_cuda.json:56)). Regeneration is required but is not itself a training blocker.
+
+The absent HEAD cut count is **closed by ruling** and excluded from this verdict.
+
+## Verdict: NO-GO
+
+Minimal fix set:
+
+1. When `require_id` is set, return that canonicalized field—not the generic `doc`-first fallback—and regress dual-field rows.
+2. Apply the registered cut based on the resolved corpus identity, including every arm inheriting the anchor corpus.
+3. Derive batch from `arm.batch` or `anchor.batch`, or refuse a caller mismatch; regress `E-bs128`.
+4. Regenerate the A1 smoke after these fixes.
+
+# SEVENTH PASS (1f67403), same day — GO (verbatim; read-exclusion audit clean)
+
+| Pass-six item | Status | Evidence / regression |
+|---|---|---|
+| 3 — provenance dual-field | **CLOSED** | `require_id` is validated, stripped, and used directly; the generic `doc`-first fallback is bypassed ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:212)). Held IDs are also canonicalized ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:236)). Regressed by `test_a_blank_provenance_id_is_refused_not_just_a_missing_one` and `test_a_generated_row_with_a_blank_doc_uses_its_seed_id_as_provenance` ([test_corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:883), [test_corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:971)). |
+| New 1 — inherited-anchor cut | **CLOSED** | `is_cut_corpus` compares resolved source tuples, so every arm inheriting ANCHOR’s corpus is cut; A1 remains uncut ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:758), [corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:871)). Regressed across F/G/B/E/D plus A1/A3/ANCHOR ([test_corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:944)). |
+| New 2 — registry-owned batch | **CLOSED** | Batch resolves from `arms.<name>.batch`, then `anchor.batch`; mismatching callers are refused before stream construction ([corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1088), [corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/corpus_loader.py:1122)). Regression checks E=128, default=32, and E/32 refusal ([test_corpus_loader.py](/home/dylan/asymetric-dual-encoders/m10src/test_corpus_loader.py:954)). |
+
+### New findings, ranked
+
+None that can change a training number or admit evaluation text to gradients through `assemble_arm`.
+
+The regenerated A1 CPU smoke is schema-current and passes: 90 steps, 2,880 examples, registered batch 32, 68Q/22D, exact-mask report validation recorded, and zero cross-role collisions ([smoke record](/home/dylan/asymetric-dual-encoders/results/m10_arm_smoke_A1_head_cpu.json:24)).
+
+Checked-out HEAD is `68de8b1`, but every permitted implementation/test/report/registry file is identical to requested `1f67403`. Static audit only; tests were not rerun under the mandatory read-exclusion.
+
+The absent `data_cut.unique_text_count` is **closed by ruling**; this verdict assumes it is registered before launching any cut arm.
+
+## Verdict: GO

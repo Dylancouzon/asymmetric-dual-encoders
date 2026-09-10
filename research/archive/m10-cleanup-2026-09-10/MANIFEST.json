@@ -1,0 +1,18 @@
+{
+  "source_commit": "46ea18df534ade4255faa052a7a858d84e4bfec8",
+  "files": {
+    "CLAUDE.md": "82d8c4a5469b48f7fca9aab11ef08505bf1141656954f2792ec117f304fc5e6f",
+    "instructions-m10.md": "23039e4e12ed579e8384b6acef2cf26ca7ad48878acc4c13dade81a6f8103ae2",
+    "instructions-m13.md": "cf5bdc1ec77772d6996b05fe68751fa72954d4e06194c38a9fa6aa49a1165af6",
+    "instructions-m14.md": "a9953569e694385ba641c4ddeaee0c63cdcc16ba90f608b3124a852e75c01470",
+    "instructions-m15.md": "35b6e6a2e1e197262cfe66e1ef4794893b21a1dad82e52f9784fc752fe1a242d",
+    "instructions-m16.md": "984ecac4169c320f334e38cfe0bd86aa2f9009affa4d21239ad5c8f76b69ccc6",
+    "m10/STATUS.md": "927d6e4c685846eb6db54f8962d651987ca591f9e74812ed0b61d14409059744",
+    "m10/LEDGER.md": "1a8686ea33dff0c663b85e4010e71a51f35ad753d409535537d89ebc15815ed6",
+    "m10/PLANNING.md": "807d0517c4587560249d6916d5c899afa4f2031f2684618a7742fc368c19ea59",
+    "m10/M102_LOCK.md": "37563545360f05030fcb80d7962f95756ad474286192967aaab79cd32ac8be38",
+    "m10/M10_4_DECISION_LOCK.md": "5a3dd53a158f7f1aa8f042ae48f1324df82a798c2571bfa3bd51a6f51a3c6fad",
+    "m10/RESULTS.md": "64b0dd0611186606499c1ed8c109c91d415b252b9c82fc04eba6dc13dfa820ba",
+    "m10/final_run_registry.json": "87202619bc6805f0364e21f4abbc9a7061239f4af1bb6f81e1872795ff36339c"
+  }
+}

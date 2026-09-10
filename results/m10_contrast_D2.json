@@ -1,0 +1,108 @@
+{
+ "contrast": "D2",
+ "_what": "",
+ "registered_spec": {
+  "a": "D-COV",
+  "b": "anchor",
+  "decisive": true,
+  "family_rule": "multi_arm_winner"
+ },
+ "registry_sha256": "679e0574d19e24550aace4d488c9ca848a82ad2a2271a77972b8bd78f5ba5f60",
+ "arms": {
+  "a": "D-COV",
+  "b": "ANCHOR",
+  "orientation": "registry a - b",
+  "flipped_from_registry_order": false
+ },
+ "read": {
+  "a_label": "cycle3",
+  "b_label": "cycle3",
+  "at_examples": null,
+  "prev_cycle_end": {
+   "a": "cycle2",
+   "b": "cycle2"
+  }
+ },
+ "rule": null,
+ "family_rule": "multi_arm_winner",
+ "resolve": {
+  "MDE": 0.0056,
+  "point_ge_MDE": false,
+  "lower_bound_gt_0": false,
+  "lower_bound_gt_MDE": false,
+  "sign_stable_last_two_cycle_ends": true,
+  "sign_stability_exempt": false,
+  "point_at_prev_cycle_end": -0.029201045446289337,
+  "resolved": false,
+  "label": "NOT RESOLVED"
+ },
+ "macro": {
+  "D-COV": 0.48399366574160657,
+  "ANCHOR": 0.5023845762649155
+ },
+ "by_family": {
+  "D-COV": {
+   "BRIGHT": 0.16315889339432993,
+   "consumer-health": 0.6661347184368082,
+   "finance": 0.27442999754867414,
+   "legal": 0.8322510535866141
+  },
+  "ANCHOR": {
+   "BRIGHT": 0.1671261019757689,
+   "consumer-health": 0.6829620808473836,
+   "finance": 0.31048863768659923,
+   "legal": 0.84896148454991
+  }
+ },
+ "power_note": "distance_raw 0.005395 against the registered resolution distance 0.008619 (`results/m10_cov_resolution.json`), which was measured between UNRELATED models and was expected to over-estimate a real contrast's width. Disclosure only: it sizes nothing and alpha does not move (amendment A4).",
+ "delta_raw": -0.01839091052330881,
+ "lower_bound_raw": -0.023785649829698708,
+ "distance_raw": 0.005394739306389899,
+ "lower_bound_prev_order_statistic": -0.023788377848297217,
+ "order_statistic_index0": 416,
+ "quantile": 0.0020833333333333333,
+ "quantile_method": "inverted_cdf",
+ "B": 200000,
+ "seed": 0,
+ "chunk": 5000,
+ "plan_sample_sha256": "8091783fa66a21d8fcdd3a1c6458920c3c52442fc85cb5c5d9990f37a90e3d68",
+ "draws_sha256": "e3f9315788f24db965740ea528b3f17a95926c36f32fb9058b3ba4816aabcd4b",
+ "draws_sd": 0.0018678149711837686,
+ "per_unit_delta_raw": {
+  "BRIGHT/biology": -0.01602893223399469,
+  "BRIGHT/earth_science": 0.0052660644547930496,
+  "BRIGHT/economics": 0.003975216452889914,
+  "BRIGHT/psychology": -0.015989375310943396,
+  "BRIGHT/robotics": 0.0009994538326266221,
+  "BRIGHT/sustainable_living": -0.0020256786840053688,
+  "LEDGER": -0.0360586401379251,
+  "LegalBenchConsumerContractsQA": -0.025163252359169053,
+  "LegalBenchCorporateLobbying": -0.008257609567422493,
+  "MedicalQARetrieval": -0.016827362410575385
+ },
+ "n_by_unit": {
+  "BRIGHT/biology": 103,
+  "BRIGHT/earth_science": 116,
+  "BRIGHT/economics": 103,
+  "BRIGHT/psychology": 101,
+  "BRIGHT/robotics": 101,
+  "BRIGHT/sustainable_living": 108,
+  "LEDGER": 10000,
+  "LegalBenchConsumerContractsQA": 396,
+  "LegalBenchCorporateLobbying": 340,
+  "MedicalQARetrieval": 2048
+ },
+ "weights": {
+  "MedicalQARetrieval": 0.25,
+  "BRIGHT/biology": 0.041666666666666664,
+  "BRIGHT/earth_science": 0.041666666666666664,
+  "BRIGHT/economics": 0.041666666666666664,
+  "BRIGHT/psychology": 0.041666666666666664,
+  "BRIGHT/robotics": 0.041666666666666664,
+  "BRIGHT/sustainable_living": 0.041666666666666664,
+  "LegalBenchCorporateLobbying": 0.125,
+  "LegalBenchConsumerContractsQA": 0.125,
+  "LEDGER": 0.25
+ },
+ "_note": "distance_raw = delta_raw - lower_bound_raw; a contrast resolves when delta_raw >= MDE and lower_bound_raw > 0 (sign stability checked elsewhere)"
+}

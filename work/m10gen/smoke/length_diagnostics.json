@@ -1,0 +1,79 @@
+{
+ "howto": {
+  "full_in_range": 0.93,
+  "sample_in_range": 0.96,
+  "n_unique": 200,
+  "exact_dupes": 0,
+  "prompt_hash": "a7dae4a2ee8d67c9",
+  "word_range": [
+   25,
+   60
+  ]
+ },
+ "argument": {
+  "full_in_range": 0.6667,
+  "sample_in_range": 0.88,
+  "n_unique": 195,
+  "exact_dupes": 5,
+  "prompt_hash": "8bb9258b32e16317",
+  "word_range": [
+   120,
+   220
+  ]
+ },
+ "finance": {
+  "full_in_range": 0.93,
+  "sample_in_range": 0.96,
+  "n_unique": 200,
+  "exact_dupes": 0,
+  "prompt_hash": "d9d4623d187cc57c",
+  "word_range": [
+   8,
+   30
+  ]
+ },
+ "comparison": {
+  "full_in_range": 0.995,
+  "sample_in_range": 1.0,
+  "n_unique": 200,
+  "exact_dupes": 0,
+  "prompt_hash": "a27cdcc6b3c6e4fa",
+  "word_range": [
+   8,
+   25
+  ]
+ },
+ "yesno": {
+  "full_in_range": 0.99,
+  "sample_in_range": 1.0,
+  "n_unique": 200,
+  "exact_dupes": 0,
+  "prompt_hash": "1e1b8acc713cb357",
+  "word_range": [
+   6,
+   20
+  ]
+ },
+ "conversational": {
+  "full_in_range": 1.0,
+  "sample_in_range": 1.0,
+  "n_unique": 200,
+  "exact_dupes": 0,
+  "prompt_hash": "be4fa0ffdf00e394",
+  "word_range": [
+   30,
+   80
+  ]
+ },
+ "health": {
+  "full_in_range": 0.895,
+  "sample_in_range": 0.86,
+  "n_unique": 200,
+  "exact_dupes": 0,
+  "prompt_hash": "8c30d65e710c9a06",
+  "word_range": [
+   8,
+   30
+  ]
+ }
+}

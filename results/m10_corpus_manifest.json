@@ -1,0 +1,91 @@
+{
+ "sources": [
+  {
+   "path": "/home/dylan/asymetric-dual-encoders/work/m10harvest/harvest_train.jsonl",
+   "sha256": "a34ce58385a819cba62fdd2f15270b1448b7dd8c527557f28041d4c76c2bf334",
+   "bytes": 188817407,
+   "source": "harvest",
+   "kind": "jsonl",
+   "what": "A3's harvested real text, FORMS-12 hold-out already removed",
+   "n_rows": 1248386,
+   "by_form": {
+    "claim": 415454,
+    "keyword": 416454,
+    "title": 416478
+   }
+  },
+  {
+   "path": "m9src/data.labelled_query_pool + work/enc9/m9long-{nqopen,triviaqa}",
+   "by_m9_source": {
+    "esci-us": 73030,
+    "hotpotqa-train": 81743,
+    "mrtydi-en": 3300,
+    "nqopen": 85863,
+    "squad-train": 84713,
+    "triviaqa": 134665
+   },
+   "m8_manifest_sha256": "da0f208ef29bae3833ffead070eb34b61f390f9d72ed96d448d45ae6b52072c2",
+   "n_before_rescreen": 463314,
+   "rescreen10": {
+    "removed": 709,
+    "per_segment": {
+     "m9-queries_pair": {
+      "removed": 431,
+      "by_hit": {
+       "exact": 174,
+       "near": 257
+      }
+     },
+     "m9-nqopen": {
+      "removed": 66,
+      "by_hit": {
+       "near": 66
+      }
+     },
+     "m9-triviaqa": {
+      "removed": 212,
+      "by_hit": {
+       "near": 212
+      }
+     }
+    },
+    "protected10": "764ff2170d5721db9668"
+   },
+   "sha256": "61239a2e902facda2d8becffc87e779d4ae199b4e18bb67a98b7bd8fb14f9fef",
+   "source": "m9-pool",
+   "kind": "m9",
+   "what": "M9 real queries: queries_pair (esci/hotpotqa/squad/mrtydi, fever out) + nqopen + triviaqa. Targets already exist.",
+   "n_rows": 462605,
+   "by_form": {
+    "factoid": 389747,
+    "product": 72858
+   }
+  }
+ ],
+ "sources_used": [
+  "harvest",
+  "m9-pool"
+ ],
+ "n_rows": 1710991,
+ "by_form": {
+  "factoid": 389747,
+  "claim": 415454,
+  "title": 416478,
+  "keyword": 416454,
+  "product": 72858
+ },
+ "balanced": true,
+ "realized_shares": {
+  "factoid": 0.2,
+  "claim": 0.2,
+  "title": 0.2,
+  "keyword": 0.2,
+  "product": 0.2
+ },
+ "shares_over_batches": 120000,
+ "word_len": {
+  "mean": 9.93,
+  "p50": 9,
+  "p95": 22
+ }
+}

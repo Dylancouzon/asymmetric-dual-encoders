@@ -1,0 +1,95 @@
+{
+ "read": "seed_sensitivity",
+ "_what": "ANCHOR re-trained at seed 1, everything else frozen. DECISION 2, ruled by astra (gpt-6-astra, 2026-09-09, ruling delegated by Dylan: 'let's allow it to make the decision on those 2 points'): yes, run it. The anchor is the comparator in ten of the twelve contrasts and no interval in this screen contains training-seed variability.",
+ "arms": {
+  "a": "ANCHOR-seed1",
+  "b": "ANCHOR",
+  "at_examples": null,
+  "read_labels": {
+   "ANCHOR-seed1": "cycle3",
+   "ANCHOR": "cycle3"
+  }
+ },
+ "absolute": {
+  "ANCHOR-seed1": 0.5030966845110264,
+  "ANCHOR": 0.5023845762649155
+ },
+ "signed_difference": 0.0007121082461110143,
+ "_orientation": "ANCHOR-seed1 minus ANCHOR",
+ "by_family_absolute": {
+  "ANCHOR-seed1": {
+   "BRIGHT": 0.1725083168371513,
+   "consumer-health": 0.6797845875174398,
+   "finance": 0.31308238494403856,
+   "legal": 0.8470114487454763
+  },
+  "ANCHOR": {
+   "BRIGHT": 0.1671261019757689,
+   "consumer-health": 0.6829620808473836,
+   "finance": 0.31048863768659923,
+   "legal": 0.84896148454991
+  }
+ },
+ "by_family_contribution_to_the_difference": {
+  "BRIGHT": 0.001345553715345596,
+  "consumer-health": -0.0007943733324859844,
+  "finance": 0.0006484368143598246,
+  "legal": -0.0004875089511084218
+ },
+ "by_unit_difference": {
+  "BRIGHT/biology": -0.002666818655266774,
+  "BRIGHT/earth_science": -0.00974059600277331,
+  "BRIGHT/economics": 0.003921421910336102,
+  "BRIGHT/psychology": 0.013662618768118985,
+  "BRIGHT/robotics": 0.021751708176754314,
+  "BRIGHT/sustainable_living": 0.005364954971124986,
+  "LEDGER": 0.0025937472574392986,
+  "LegalBenchConsumerContractsQA": -0.004091509018558038,
+  "LegalBenchCorporateLobbying": 0.00019143740969066378,
+  "MedicalQARetrieval": -0.0031774933299439376
+ },
+ "by_unit_absolute": {
+  "ANCHOR-seed1": {
+   "MedicalQARetrieval": 0.6797845875174398,
+   "LegalBenchCorporateLobbying": 0.9303546487714965,
+   "LegalBenchConsumerContractsQA": 0.7636682487194559,
+   "BRIGHT/biology": 0.17516279909820287,
+   "BRIGHT/earth_science": 0.27825815897815154,
+   "BRIGHT/economics": 0.14426359698990016,
+   "BRIGHT/psychology": 0.1876636891269984,
+   "BRIGHT/robotics": 0.09687170280667147,
+   "BRIGHT/sustainable_living": 0.15282995402298324,
+   "LEDGER": 0.31308238494403856
+  },
+  "ANCHOR": {
+   "MedicalQARetrieval": 0.6829620808473836,
+   "LegalBenchCorporateLobbying": 0.9301632113618058,
+   "LegalBenchConsumerContractsQA": 0.7677597577380143,
+   "BRIGHT/biology": 0.17782961775346964,
+   "BRIGHT/earth_science": 0.2879987549809249,
+   "BRIGHT/economics": 0.14034217507956406,
+   "BRIGHT/psychology": 0.17400107035887946,
+   "BRIGHT/robotics": 0.07511999462991717,
+   "BRIGHT/sustainable_living": 0.14746499905185825,
+   "LEDGER": 0.31048863768659923
+  }
+ },
+ "weights": {
+  "MedicalQARetrieval": 0.25,
+  "BRIGHT/biology": 0.041666666666666664,
+  "BRIGHT/earth_science": 0.041666666666666664,
+  "BRIGHT/economics": 0.041666666666666664,
+  "BRIGHT/psychology": 0.041666666666666664,
+  "BRIGHT/robotics": 0.041666666666666664,
+  "BRIGHT/sustainable_living": 0.041666666666666664,
+  "LegalBenchCorporateLobbying": 0.125,
+  "LegalBenchConsumerContractsQA": 0.125,
+  "LEDGER": 0.25
+ },
+ "no_interval": "DELIBERATE. This read selects nothing and is not a contrast, so no bootstrap interval is computed: an interval printed beside a point estimate is read as a test whatever the prose says. The twelve registered contrasts are in `results/m10_contrast_*.json`.",
+ "selects": "NOTHING, and **the original seed is retained regardless of outcome** (astra's condition). It cannot re-decide any verdict.",
+ "registry_sha256": "679e0574d19e24550aace4d488c9ca848a82ad2a2271a77972b8bd78f5ba5f60",
+ "_what_it_licenses": "astra's registered sentence, to be used verbatim with the measured delta: \"At 5M examples, the second training seed changed ANCHOR's COV macro by delta = [seed 1 minus original]; this single between-run difference describes ANCHOR SENSITIVITY, while the screen's query-resampling intervals condition on the trained checkpoints and exclude training-seed variability.\"",
+ "_what_it_does_NOT_license": "**Do not claim** reproducibility, bounded seed noise, seed-adjusted significance, or confirmed verdicts -- EVEN IF the delta is nearly zero. And do not call it a seed-variance estimate that 'calibrates ten contrasts': the alternatives can move WITH the anchor across seeds, so paired effect variability remains unknown. It is an anchor sensitivity observation, n=1.",
+ "registered_sentence_filled": "At 5M examples, the second training seed changed ANCHOR's COV macro by delta = +0.000712; this single between-run difference describes ANCHOR SENSITIVITY, while the screen's query-resampling intervals condition on the trained checkpoints and exclude training-seed variability."
+}

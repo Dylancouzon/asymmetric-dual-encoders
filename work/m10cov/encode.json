@@ -1,0 +1,58 @@
+{
+ "MedicalQARetrieval": {
+  "family": "consumer-health",
+  "n_queries": 2048,
+  "n_docs": 2048,
+  "q_shape": [
+   2048,
+   1024
+  ],
+  "d_shape": [
+   2048,
+   1024
+  ],
+  "seconds": 18.8
+ },
+ "BRIGHT": {
+  "family": "BRIGHT",
+  "n_queries": 632,
+  "n_docs": 404416,
+  "q_shape": [
+   632,
+   1024
+  ],
+  "d_shape": [
+   404416,
+   1024
+  ],
+  "seconds": 1373.0
+ },
+ "LegalBenchCorporateLobbying": {
+  "family": "legal",
+  "n_queries": 340,
+  "n_docs": 319,
+  "q_shape": [
+   340,
+   1024
+  ],
+  "d_shape": [
+   319,
+   1024
+  ],
+  "seconds": 2.6
+ },
+ "LegalBenchConsumerContractsQA": {
+  "family": "legal",
+  "n_queries": 396,
+  "n_docs": 154,
+  "q_shape": [
+   396,
+   1024
+  ],
+  "d_shape": [
+   154,
+   1024
+  ],
+  "seconds": 2.3
+ }
+}

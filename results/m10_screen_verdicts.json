@@ -1,0 +1,89 @@
+{
+ "_what": "the selected recipe, from the registered family rules applied to the computed contrasts. `m10src/contrasts.selection`; nothing is decided here.",
+ "registry_sha256": "679e0574d19e24550aace4d488c9ca848a82ad2a2271a77972b8bd78f5ba5f60",
+ "selected": {
+  "student": "bge-small",
+  "corpus": "A4 (harvest + the 834,463 generated queries)",
+  "head": "1152-wide linear (the anchor default)",
+  "mix": "75/25 (the anchor default)",
+  "objective": "squared_l2",
+  "batch": "PENDING"
+ },
+ "why": {
+  "student": "F1 RESOLVED (rules.F_tournament): the higher 20M COV macro, adopted as evidence",
+  "corpus": "A4-A3 RESOLVED (rules.generated_half_in_build). NOTE rules.generated_half_in_build and `_interpretation.exposure`: family A's arms are form-balanced, so this contrast tests RE-ALLOCATING 58% of query presentations to seven generated forms, not 'does synthetic data help'.",
+  "head": "rules.multi_arm_winner over G2/G3; G1 (1152 vs 384) is RESOLVED and `arms.G-384.selectable: false`, so G1 is evidence about M9's 384-wide diagnosis and selects nothing.",
+  "mix": "rules.multi_arm_winner over B1/B2. `_interpretation.B`: B is an augmentation experiment at FIXED query exposure, so limit what its result decides.",
+  "objective": "rules.D_tie as amended 2026-09-09 (`decision_rules.d_selection_corrected`). REQUIRED with D2, and read `_interpretation.D1_D2_precondition` in full: D-COV's gradients are ~500x smaller on identical batches (`results/m10_dcov_gradient_audit.json`) at the same peak LR, and epsilon is not the cause. **D2's MECHANISM IS UNRESOLVED.** An earlier version of this string said D2 'is confounded with an optimizer-scale difference'; that named a cause we never measured -- the clip instrumentation landed after the last arm finished, so no registered arm recorded a clip rate. Two candidates stand: an optimizer-scale artifact by some route other than clipping, or a REAL failure of document-aware regression. Report D2 as neither a clean test nor a proven artifact.",
+  "batch": "E1 is NOT COMPUTED, not unresolved: `E-bs128` is CLOUD_ONLY and runs on the rented A100 (`outcome_to_action.E`). `rules.E_cost` selects bs128 in every case except a RESOLVED bs32 win, and an unread contrast cannot resolve -- but reading the rule that way would take E's decision from a measurement that was never made. The recipe lock carries E as PENDING."
+ },
+ "contrasts": {
+  "F1": {
+   "point": 0.011595234778582406,
+   "lower": 0.007221227793660513,
+   "label": "RESOLVED",
+   "resolved": true
+  },
+  "A3-A2": {
+   "point": 0.010068314203781792,
+   "lower": 0.005363052602203814,
+   "label": "POSITIVE, NOT RESOLVED",
+   "resolved": false
+  },
+  "A4-A3": {
+   "point": 0.012080425670350328,
+   "lower": 0.006909037979509494,
+   "label": "RESOLVED",
+   "resolved": true
+  },
+  "G1": {
+   "point": 0.02165121252982761,
+   "lower": 0.015272662777440597,
+   "label": "RESOLVED",
+   "resolved": true
+  },
+  "G2": {
+   "point": 0.00033489000120362884,
+   "lower": -0.0027873756348568215,
+   "label": "NOT RESOLVED",
+   "resolved": false
+  },
+  "G3": {
+   "point": 0.002414862278703284,
+   "lower": -0.0003071982191625766,
+   "label": "NOT RESOLVED",
+   "resolved": false
+  },
+  "B1": {
+   "point": -0.0010568151942321573,
+   "lower": -0.004704275101156783,
+   "label": "NOT RESOLVED",
+   "resolved": false
+  },
+  "B2": {
+   "point": 0.002689714529798966,
+   "lower": -0.0005374099371705357,
+   "label": "NOT RESOLVED",
+   "resolved": false
+  },
+  "E1": "E-bs32 -> E-bs32 is registered `pending: CLOUD_ONLY` and has not run; the disposition is REGISTERED, not inferred from a missing file (`arms.E-bs32._pending`)",
+  "C1": "C-M9init -> C-M9init is CUT under W8 band 1 (`rules.C_skipped`); the Bonferroni denominator is unchanged at 12",
+  "D1": {
+   "point": -0.0002023615927666363,
+   "lower": -0.0018592091426112849,
+   "label": "NOT RESOLVED",
+   "resolved": false
+  },
+  "D2": {
+   "point": -0.01839091052330881,
+   "lower": -0.023785649829698708,
+   "label": "NOT RESOLVED",
+   "resolved": false
+  }
+ },
+ "not_computed": {
+  "E1": "E-bs32 -> E-bs32 is registered `pending: CLOUD_ONLY` and has not run; the disposition is REGISTERED, not inferred from a missing file (`arms.E-bs32._pending`)",
+  "C1": "C-M9init -> C-M9init is CUT under W8 band 1 (`rules.C_skipped`); the Bonferroni denominator is unchanged at 12"
+ },
+ "missing": []
+}

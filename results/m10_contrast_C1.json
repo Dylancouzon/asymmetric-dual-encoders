@@ -1,0 +1,9 @@
+{
+ "contrast": "C1",
+ "registered_spec": {
+  "a": "C-M9init",
+  "b": "C-fresh"
+ },
+ "not_computed": "C-M9init -> C-M9init is CUT under W8 band 1 (`rules.C_skipped`); the Bonferroni denominator is unchanged at 12",
+ "registry_sha256": "679e0574d19e24550aace4d488c9ca848a82ad2a2271a77972b8bd78f5ba5f60"
+}
