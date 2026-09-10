@@ -175,7 +175,15 @@ Registered before the numbers exist, so they cannot be dropped after them:
       would not at M9's 0.0125.
 - [ ] **Adversarial review of `final10.py`** before the lock commit (Codex, 2026-09-04). Still owed,
       and it is the one piece of code that decides an irreversible access.
-- [ ] The SCORING path (loading the six, the bridge), reusing `m9src/final9.py`.
+- [ ] **The SCORING path (encode the six, bridge, score).** *Correction, 2026-09-09:* I wrote that
+      it "reuses `m9src/final9.py`". **There is nothing to reuse** — `m9src/final9.py`:348 raises
+      `SCORING PATH NOT IMPLEMENTED`; M9 left step 4's encoding deliberately unwritten until a GPU
+      was free, and M9's close-out has not run. What IS reusable: `m7src/final_run.py`'s
+      `verify_and_load`/`score_set` (the only implemented scoring), and final9's ACCESS machinery
+      (`seal_protected_paths`, `acquire_lock`, `spent_tag_exists`, `preflight`, `spend_access`)
+      retargeted to M10's paths and `m10-six-spent` tag.
+      **Not a lock blocker** — it is needed before the final run (M10.4), which is after the build —
+      but it is unwritten for BOTH milestones and M9's close-out needs it too.
 - [ ] `headline_verbatim` fixed in the registry, before any six-set number exists.
 - [ ] Both descriptive reads folded in (`ANCHOR-seed1` **done: +0.000712**; `A3-20M` running).
 - [ ] Codex and Fable review the pushed lock (mandate).
