@@ -80,10 +80,15 @@ SMOKE_WORK = WORK / "smoke"
 RESULTS = REPO / "results"
 REGISTRY = REPO / "m10" / "screen_registry.json"
 
-# The W8-band-1 order (`m10/STATUS.md` §Screen design, settled; `_w8_band`). `E-bs128` is in the
-# list and marked CLOUD: it does not run on this box at realistic sequence lengths.
+# The W8-band-1 order (`m10/STATUS.md` §Screen design, settled; `_w8_band`). Both E arms are in
+# the list and marked CLOUD: `E-bs128` does not run on this box at realistic sequence lengths, and
+# `E-bs32` runs beside it on the A100 so E1 carries no hardware difference. The registry's `order`
+# is by FAMILY ("F, A, G, B, E, C, D") and names no arm, and `_w8_band` names no per-arm order
+# either, so `E-bs32` is placed immediately before `E-bs128` — the E pair, kept adjacent, in the
+# tail this list already gives family E.
 BAND1_ORDER = ["F-bge-small", "F-MiniLM-L6", "ANCHOR", "A1", "A2", "A3",
-               "G-384", "G-1536", "G-MLP", "B-100/0", "B-50/50", "D-NORM", "D-COV", "E-bs128"]
+               "G-384", "G-1536", "G-MLP", "B-100/0", "B-50/50", "D-NORM", "D-COV",
+               "E-bs32", "E-bs128"]
 CLOUD_ONLY = dict(AS.CLOUD_ONLY)
 
 # Projected-hours rates for `--plan` ONLY. A projection, never a measurement: every arm records

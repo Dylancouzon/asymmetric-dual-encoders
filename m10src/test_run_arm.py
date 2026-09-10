@@ -653,11 +653,53 @@ def test_the_bs128_arm_carries_its_own_batch_and_rate():
 def test_the_plan_covers_the_w8_band_1_order():
     rows = R.plan(R.SL.cfg())
     assert [r["arm"] for r in rows] == R.BAND1_ORDER
-    assert {r["arm"] for r in rows if r["cloud_only"]} == {"E-bs128"}
+    # BOTH E arms are cloud-only: bs128 cannot run on this box, and bs32 runs beside it on the
+    # A100 so E1 is not a cross-hardware contrast (`_w8_band`, `rules.E_warmup_parity`).
+    assert {r["arm"] for r in rows if r["cloud_only"]} == {"E-bs32", "E-bs128"}
     # every band-1 arm is registered, trained and not cut
     arms = R.SL.cfg()["arms"]
     for r in rows:
         assert arms[r["arm"]]["trained"] is True and "cut" not in arms[r["arm"]], r["arm"]
+
+
+def test_the_plan_prices_E_bs32_the_registered_A100_partner_of_E_bs128():
+    """`E-bs32` was registered 2026-09-10 as an arm in its own right (before that it was an
+    `anchor_aliases` entry pointing at the BOX-trained ANCHOR, which made E1 cross-hardware), but
+    no code knew it: it was absent from `SHAPES`, `COVERS`, `CLOUD_ONLY` and `BAND1_ORDER`, so
+    `shape_for` refused it and `--plan` priced fourteen arms."""
+    rows = R.plan(R.SL.cfg())
+    by = {r["arm"]: r for r in rows}
+    assert "E-bs32" in by, "the registered bs32 arm of family E must be planned"
+    p = by["E-bs32"]
+    assert p["batch"] == 32 and p["dose_examples"] == 5_000_000
+    assert p["total_steps"] == 5_000_000 // 32 and p["dose_rounding"]["examples_dropped"] == 0
+    assert p["projected_at_ex_per_s"] == R.PLAN_RATES[32]
+    assert p["projected_hours"] == round(5_000_000 / R.PLAN_RATES[32] / 3600, 2)
+    assert p["cloud_only"] and "parity" in p["cloud_only"]
+    # cloud arms are excluded from the projected BOX hours, so adding this arm must not inflate it
+    assert R.BAND1_ORDER.index("E-bs32") == R.BAND1_ORDER.index("E-bs128") - 1
+
+
+def test_E_bs32s_shape_is_ANCHORs_exactly_and_E_bs128s_but_for_the_batch():
+    """Its registry entry carries only `batch` and `dose_examples`; every other field defaults
+    from `anchor`, so the shape must differ from ANCHOR's in NOTHING and from `E-bs128`'s in the
+    batch alone -- that single difference is what E1 reads."""
+    a, b32, b128 = (R.shape_for(n) for n in ("ANCHOR", "E-bs32", "E-bs128"))
+    assert b32 == a, "E-bs32 is the anchor recipe at the screen batch"
+    assert {k for k in set(b32) | set(b128) if b32.get(k) != b128.get(k)} == {"batch"}
+    assert (b32["batch"], b128["batch"]) == (32, 128)
+
+
+def test_every_registered_TRAINED_arm_has_a_shape_or_a_cover():
+    """The check `arm_smoke.main` runs, as a test, so a registry-only registration cannot sit
+    unimplemented until the smoke is next launched (this is exactly how `E-bs32` was missed)."""
+    reg = R.SL.cfg()
+    covered = set(R.AS.SHAPES) | {x for v in R.AS.COVERS.values() for x in v}
+    missing = sorted(k for k, v in reg["arms"].items() if v.get("trained") and k not in covered)
+    assert not missing, f"registered trained arms with no shape or cover: {missing}"
+    assert set(R.AS.CLOUD_ONLY) <= covered
+    # a cloud-only arm is capped in the smoke only if it NEEDS a cap; bs32 fits the box
+    assert set(R.AS.CLOUD_ONLY_MAX_LEN) == {"E-bs128"}
 
 
 def test_a_dose_that_does_not_divide_by_the_batch_is_FLOORED_and_recorded():
