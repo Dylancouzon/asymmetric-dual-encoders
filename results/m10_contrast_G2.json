@@ -7,7 +7,7 @@
   "decisive": true,
   "family_rule": "multi_arm_winner"
  },
- "registry_sha256": "2bb97f9d1bce9a88be55a314f37bc2303279a7b45521c4a0a053f16025dd4125",
+ "registry_sha256": "35da3316bf66904d9daffc8b676cb91a6fa6a9cc11de7b9be49490c4ce1d2e2b",
  "arms": {
   "a": "G-1536",
   "b": "ANCHOR",

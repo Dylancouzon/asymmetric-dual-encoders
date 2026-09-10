@@ -40,14 +40,11 @@ lengths, so **both** E arms run on the rented A100 together — both, not just b
 box-trained bs32 against an A100-trained bs128 would put a hardware difference inside the one
 contrast that decides a build parameter.
 
-> **A contradiction to correct, flagged by review 2026-09-09 and NOT yet fixed in the screen
-> registry.** `rules.E_warmup_parity` still ends "…`E-bs32` is the box-trained ANCHOR while
-> `E-bs128` runs on the A100, so E1 alone carries a hardware difference". That clause is STALE:
-> under the settled screen design both E arms run on the A100 together, which is what removes the
-> hardware difference. **The registry text is wrong and this file is right.** It is deliberately
-> not corrected yet: `A3-20M` is mid-run and its resume path pins `screen_registry.json`'s sha256,
-> so editing the registry now would block a restart of a 9-hour job. Correct it once that arm
-> finishes, before E runs.
+> **CORRECTED 2026-09-10**, in both `rules.E_warmup_parity` and `_interpretation.E1` — the first
+> was fixed once `A3-20M` finished (its resume path pinned the registry hash) and the second was
+> missed, leaving the correction half-applied for a day until round 7 caught it. Both now say the
+> same thing: **both E arms run on the A100 together**, which is what removes the hardware
+> difference E1 would otherwise carry.
 
 - **The rule is fixed and pre-registered:** `rules.E_cost` — select bs32 iff E1 (`bs32 − bs128`)
   RESOLVES; in every other case bs128. E is exempt from quality confirmation (amended 2026-09-09).
@@ -182,8 +179,8 @@ Registered before the numbers exist, so they cannot be dropped after them:
       permissive method and therefore banned; a partition missing a dataset RAISING instead of
       renormalizing; both halves of the pass rule binding; and p = 0.02 rejecting at 0.025 where it
       would not at M9's 0.0125.
-- [ ] **Adversarial review of `final10.py`** before the lock commit (Codex, 2026-09-04). Still owed,
-      and it is the one piece of code that decides an irreversible access.
+- [x] **Adversarial review of `final10.py`** — done repeatedly through 2026-09-09/10, Codex and
+      Fable alternating, each round's findings applied. `m10/LEDGER.md` has the record.
 - [ ] **The SCORING path (encode the six, bridge, score).** *Correction, 2026-09-09:* I wrote that
       it "reuses `m9src/final9.py`". **There is nothing to reuse** — `m9src/final9.py`:348 raises
       `SCORING PATH NOT IMPLEMENTED`; M9 left step 4's encoding deliberately unwritten until a GPU
@@ -196,5 +193,6 @@ Registered before the numbers exist, so they cannot be dropped after them:
 - [x] `headline_verbatim` — one registered sentence PER OUTCOME with a `_must_not` list, and
       `final10.headline()` is the production selector that emits a sentence ONLY for a conjunct
       whose status is REJECTED. "The report writer will pick the right one" is not a control.
-- [ ] Both descriptive reads folded in (`ANCHOR-seed1` **done: +0.000712**; `A3-20M` running).
+- [x] Both descriptive reads folded in — `ANCHOR-seed1` **+0.000712**, `A3-20M` **+0.016453 at 20M
+      against +0.012080 at 5M** (`m10/RESULTS.md` §M10.2 DESCRIPTIVE reads).
 - [ ] Codex and Fable review the pushed lock (mandate).

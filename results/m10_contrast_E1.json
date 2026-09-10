@@ -5,5 +5,5 @@
   "b": "E-bs128"
  },
  "not_computed": "E-bs128 -> E-bs128 has no cycle-end COV read: the arm has not run on this machine (`E-bs128` is CLOUD_ONLY, `outcome_to_action.E`)",
- "registry_sha256": "2bb97f9d1bce9a88be55a314f37bc2303279a7b45521c4a0a053f16025dd4125"
+ "registry_sha256": "35da3316bf66904d9daffc8b676cb91a6fa6a9cc11de7b9be49490c4ce1d2e2b"
 }

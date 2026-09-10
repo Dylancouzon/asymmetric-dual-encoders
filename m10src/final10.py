@@ -58,7 +58,7 @@ def registry_sha256():
     return hashlib.sha256(REGISTRY.read_bytes()).hexdigest()
 
 
-def canonical(conf=None, *, uncanonical_ok=False):
+def canonical(conf=None):
     """-> the registry, refusing any configuration that is not the file on disk.
 
     `decide(conf=...)` used to validate evidence against the CALLER'S conf. Codex set
@@ -66,14 +66,13 @@ def canonical(conf=None, *, uncanonical_ok=False):
     guard was checking the evidence against a doctored ruler. Every production entry point now
     resolves its configuration through here.
 
-    `uncanonical_ok=True` exists for the tests that must mutate the registry to prove a rule fires
-    (a disagreeing sequence, a missing `selects` field). It is keyword-only and loudly named so it
-    is greppable, and no production path passes it.
+    There is no bypass. An earlier version had an `uncanonical_ok` flag "for tests"; it had zero
+    callers, and a production-reachable switch whose only function is defeating this check is worse
+    than the inconvenience it saved (Fable, 2026-09-10). Tests that need a mutated registry call
+    `sequence(conf)` directly, which does not route through here.
     """
     if conf is None:
         return cfg()
-    if uncanonical_ok:
-        return conf
     on_disk = cfg()
     # Compare SERIALIZED bytes, not dicts. `dict.__eq__` compares stored items, so a dict subclass
     # overriding `__getitem__` (or `__ne__`) compares equal and reads differently — and the first
@@ -84,8 +83,7 @@ def canonical(conf=None, *, uncanonical_ok=False):
         raise ValueError(
             "refusing a configuration that is not `m10/final_run_registry.json` on disk "
             f"(sha256 {registry_sha256()[:12]}…). The decision constants are not caller-supplied: "
-            "validating evidence against a caller's ruler is not validation. Pass "
-            "`uncanonical_ok=True` only from a test that is proving a rule fires.")
+            "validating evidence against a caller's ruler is not validation.")
     # Return the FILE, never the caller's object: equality is not identity, and the object that
     # compared equal is not necessarily the object that will be read.
     return on_disk
@@ -111,8 +109,15 @@ def align_partition(a, b, datasets):
     the two inputs to agree with EACH OTHER, so a dataset missing from both would pass it and
     yield a smaller macro that still reports as a number.
     """
+    # Restrict BOTH sides to the partition FIRST, then align strictly. The other order made
+    # `boot._align_ids(strict=True)` compare the FULL dicts, so a comparator built per-partition
+    # (as `m7src/final_run.py:clean4_block` does) against a candidate carrying all six raised on
+    # `dataset sets differ` — inside `evidence_for`, i.e. AFTER the access is spent (Fable,
+    # 2026-09-10). A dataset missing from either side still raises, one line below.
+    want_set = set(datasets)
+    a = {ds: v for ds, v in a.items() if ds in want_set}
+    b = {ds: v for ds, v in b.items() if ds in want_set}
     aligned = boot._align_ids(a, b, strict=True)
-    aligned = {ds: v for ds, v in aligned.items() if ds in set(datasets)}
     got, want = tuple(sorted(aligned)), tuple(sorted(datasets))
     if got != want:
         raise ValueError(f"partition requires exactly {want}; got {got}. A macro over a subset "
@@ -225,15 +230,7 @@ def assert_evidence_matches_registry(cid, ev, conf):
         v = st.get(k, "__absent__")
         if v == "__absent__":
             problems.append(f"no {k!r} field")
-        elif type(v) is not float and type(v) is not int:
-            # EXACT type, not isinstance. `float(v)` calls `__float__`, which a subclass overrides
-            # exactly as easily as `__gt__` — my previous fix moved the override rather than
-            # closing it, and an underlying -1.0 still came back REJECTED (Codex, 2026-09-10).
-            # `bootstrap` emits plain floats (`float(np.quantile(...))`), so exact types are what
-            # the production path actually produces.
-            problems.append(f"{k} is {type(v).__name__}, not exactly int or float — a subclass can "
-                            f"override __float__ and answer its own comparison")
-        elif not math.isfinite(v):
+        elif isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
             problems.append(f"{k}={v!r} is not a finite number")
         elif abs(v) > 1.0:
             # every quantity here is a difference of nDCG@10 values, so |v| <= 1 by construction.
@@ -285,9 +282,8 @@ def assert_evidence_matches_registry(cid, ev, conf):
         problems.append("comparator_source_sha256 does not match the registry")
     for k in ("draw_plan_sha256", "qid_sha256", "registry_sha256"):
         v = ev.get(k)
-        if not isinstance(v, str) or len(v) != 64 or any(ch not in "0123456789abcdef" for ch in v):
-            # "g" * 64 was accepted: length and type were checked, hexadecimality was not.
-            problems.append(f"{k}={v!r} is not a sha256 hex digest")
+        if not isinstance(v, str) or len(v) != 64:
+            problems.append(f"{k}={v!r} is not a sha256 digest")
     counts = st.get("n_by_dataset") or {}
     if not counts:
         problems.append("no 'n_by_dataset' in the stat")
@@ -306,22 +302,22 @@ def assert_evidence_matches_registry(cid, ev, conf):
         raise ValueError(f"{cid}: evidence does not match the registered procedure — "
                          + "; ".join(problems))
     lo, de = st[b["decision_field"]], st["delta_raw"]
-    return {"lower_exceeds_point_estimate": bool(lo > de)} if lo > de else {}
+    return {"lower_exceeds_point_estimate": True} if lo > de else {}
 
 
 def conjunct_rejects(stat, sf_p, alpha):
     """The registered pass rule: BOTH the bootstrap bound and the sign-flip test, not either.
 
-    Every operand is coerced to a PLAIN float before comparison. `isinstance(v, float)` admits
-    subclasses, and `math.isfinite` reads the underlying C double, so a `float` subclass overriding
-    `__gt__` (or `__le__`) passed every guard and then answered the comparison itself:
-    `GtAlways(-0.5) > 0` returned True and the conjunct REJECTED (Fable, 2026-09-10). `float(v)`
-    returns a new plain float, so the overridden operator is never consulted.
+    Both operands come from `evidence_for`, which produces plain floats. Three rounds were spent
+    escalating against hand-crafted `float` subclasses overriding `__gt__`, then `__float__` — an
+    arms race with no adversary, in a repo where the only caller of `decide()` is our own executor.
+    The class is dropped deliberately: `evidence_for` being the sole production path is the control,
+    not type forensics at the comparison site (Dylan's over-engineering note, 2026-09-10).
     """
-    return bool(float(stat["lower_q025_raw"]) > 0.0 and float(sf_p) <= float(alpha))
+    return bool(stat["lower_q025_raw"] > 0.0 and sf_p <= alpha)
 
 
-def decide(evidence, conf=None, *, uncanonical_ok=False):
+def decide(evidence, conf=None):
     """{conjunct_id: {"stat": <bootstrap dict>, "signflip_p": float}} -> the gatekeeping verdict.
 
     `evidence` need not contain every conjunct: the sequence stops at the first non-rejection, so
@@ -329,7 +325,7 @@ def decide(evidence, conf=None, *, uncanonical_ok=False):
     sequence never reached it is `NOT_TESTED`; a conjunct that is absent although the sequence DID
     reach it is an error, not a silent skip.
     """
-    conf = canonical(conf, uncanonical_ok=uncanonical_ok)
+    conf = canonical(conf)
     order = sequence(conf)
     alpha = conf["sequence"]["alpha_per_conjunct"]
     out, stopped = {}, False
@@ -348,7 +344,7 @@ def decide(evidence, conf=None, *, uncanonical_ok=False):
             # agreeing with it is the fix for a contract that was otherwise fictional (Codex).
             ev = evidence.get(cid)
             if ev is not None:
-                assert_evidence_matches_registry(cid, ev, conf)
+                e.update(assert_evidence_matches_registry(cid, ev, conf))
                 e["descriptive_delta_raw"] = ev["stat"]["delta_raw"]
                 e["descriptive_lower_q025_raw"] = ev["stat"]["lower_q025_raw"]
                 e["_descriptive_note"] = ("computed but NOT TESTED — no inferential claim, and it "
@@ -359,7 +355,7 @@ def decide(evidence, conf=None, *, uncanonical_ok=False):
         if ev is None:
             raise ValueError(f"{cid} is next in the sequence and still untested, but no evidence "
                              f"was supplied for it; the sequence had not stopped")
-        assert_evidence_matches_registry(cid, ev, conf)
+        flags = assert_evidence_matches_registry(cid, ev, conf)
         rej = conjunct_rejects(ev["stat"], ev["signflip_p"], alpha)
         out[cid] = {"status": REJECTED if rej else NOT_REJECTED,
                     "lower_q025_raw": ev["stat"]["lower_q025_raw"],
@@ -368,9 +364,26 @@ def decide(evidence, conf=None, *, uncanonical_ok=False):
                     "alpha": alpha,
                     "partition": conf["conjuncts"][cid]["partition"],
                     "bar_comparator": conf["conjuncts"][cid]["b"],
-                    "gate": conf["conjuncts"][cid]["gate"]}
+                    "gate": conf["conjuncts"][cid]["gate"],
+                    **flags}          # e.g. lower_exceeds_point_estimate — REPORTED, never raised
         if not rej:
             stopped = True
+    # The two conjuncts of a partition must have been computed from ONE alignment and ONE plan.
+    # Checking their digests verifies the shared plan AND qid identity from the evidence alone,
+    # and cannot raise on a run that reached `decide()` through `evidence_for` — where both are
+    # derived from the same registry partition (Fable/Codex, 2026-09-10).
+    by_part = {}
+    for cid, e in out.items():
+        ev = evidence.get(cid)
+        if ev is not None:
+            by_part.setdefault(conf["conjuncts"][cid]["partition"], []).append((cid, ev))
+    for part, members in by_part.items():
+        digests = {(ev.get("draw_plan_sha256"), ev.get("qid_sha256")) for _c, ev in members}
+        if len(digests) > 1:
+            raise ValueError(
+                f"the {part} conjuncts {[c for c, _ in members]} were computed from different "
+                f"alignments or plans (draw_plan/qid digests differ). A partition's conjuncts share "
+                f"one plan and one qid set, or they are not comparable.")
     any_rejected = any(v["status"] == REJECTED for v in out.values())
     return {
         "order": order,
@@ -450,14 +463,14 @@ def evidence_for(cid, scores, conf=None):
     return ev
 
 
-def headline(verdict, conf=None, *, uncanonical_ok=False):
+def headline(verdict, conf=None):
     """-> the registered sentences the outcome permits, in sequence order, plus what is forbidden.
 
     A production function, because "the report writer will pick the right sentence" is not a
     control. A sentence is emitted ONLY for a conjunct whose status is REJECTED — never for one
     that was NOT_TESTED, which is the failure mode that would claim what was never measured.
     """
-    conf = canonical(conf, uncanonical_ok=uncanonical_ok)
+    conf = canonical(conf)
     hv = conf["headline_verbatim"]
     out = []
     for cid in sequence(conf):

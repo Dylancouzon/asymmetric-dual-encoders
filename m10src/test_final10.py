@@ -489,32 +489,6 @@ def test_an_empty_or_mixed_draw_plan_is_a_ValueError_not_a_StopIteration():
         F.bootstrap(al, mixed, conf)
 
 
-# ------- the clauses Fable's mutation testing found had NO coverage (16 survivors) --------------
-
-def test_a_float_subclass_cannot_answer_its_own_comparison():
-    """`isinstance(v, float)` admits subclasses and `math.isfinite` reads the underlying C double,
-    so a subclass overriding `__gt__` passed every guard and then decided the comparison itself:
-    `GtAlways(-0.5) > 0` returned True and the conjunct REJECTED (Fable, 2026-09-10). Coercing with
-    `float(v)` returns a new plain float, so the override is never consulted."""
-    class GtAlways(float):
-        def __gt__(self, other):
-            return True
-
-    class LeAlways(float):
-        def __le__(self, other):
-            return True
-
-    ev = _ev(C1b=(0.01, 0.001))
-    ev["C1b"]["stat"]["lower_q025_raw"] = GtAlways(-0.5)
-    ev["C1b"]["stat"]["delta_raw"] = GtAlways(-0.4)
-    with pytest.raises(ValueError, match="not exactly int or float"):
-        F.decide(ev)      # refused outright, which is stronger than merely comparing correctly
-    ev = _ev(C1b=(0.01, 0.001), C1a=(-0.1, 0.9))
-    ev["C1b"]["signflip_p"] = LeAlways(0.9)
-    assert F.decide(ev)["conjuncts"]["C1b"]["status"] == F.NOT_REJECTED, \
-        "a p-value of 0.9 must not reject, whatever its type claims"
-
-
 def test_the_decision_field_must_be_a_plausible_nDCG_difference():
     """1e300 was accepted and REJECTED; and a lower bound above the point estimate is not a
     possible bootstrap output."""
@@ -539,13 +513,12 @@ def test_every_type_that_must_not_be_the_decision_field():
         ev["C1b"]["stat"]["lower_q025_raw"] = bad
         with pytest.raises(ValueError):
             F.decide(ev)
-    # numpy's float64 is ALSO refused, and that is correct: `bootstrap` emits
-    # `float(np.quantile(...))`, a plain float, so exact types are what the production path
-    # actually produces and anything else is not our own output.
-    ev = _ev(C1b=(0.01, 0.001))
+    # numpy's float64 IS accepted, deliberately: the exact-type/`__float__` arms race was dropped
+    # as over-engineering (2026-09-10). `evidence_for` being the only production path is the
+    # control, not type forensics at the comparison site.
+    ev = _ev(C1b=(0.01, 0.001), C1a=(-0.1, 0.9))
     ev["C1b"]["stat"]["lower_q025_raw"] = np.float64(0.01)
-    with pytest.raises(ValueError, match="not exactly int or float"):
-        F.decide(ev)
+    assert F.decide(ev)["conjuncts"]["C1b"]["status"] == F.REJECTED
 
 
 def test_the_evidence_must_be_labelled_with_its_own_conjunct():
@@ -621,20 +594,6 @@ def test_the_primitives_themselves_refuse_non_finite_and_out_of_range_scores():
             F.align_partition(a, b, ds)
 
 
-def test_a_float_subclass_overriding___float___is_also_refused():
-    """My previous fix coerced with `float(v)` — which calls `__float__`, so the override simply
-    moved. An underlying -1.0 still came back REJECTED (Codex, 2026-09-10). Exact types close it:
-    `bootstrap` emits plain floats, so anything else is not our own output."""
-    class Sneaky(float):
-        def __float__(self):
-            return 0.5
-
-    ev = _ev(C1b=(0.01, 0.001))
-    ev["C1b"]["stat"]["lower_q025_raw"] = Sneaky(-1.0)
-    with pytest.raises(ValueError, match="not exactly int or float"):
-        F.decide(ev)
-
-
 def test_an_inverted_bound_is_REPORTED_and_never_refused():
     """A guard that can refuse a legitimate run is worse than the hole it closes, because the
     access is already spent by the time `decide()` runs. 4,150 fixtures at the registered seed and
@@ -643,15 +602,6 @@ def test_an_inverted_bound_is_REPORTED_and_never_refused():
     ev["C1b"]["stat"]["delta_raw"] = 0.4          # lower > delta
     d = F.decide(ev)                              # does not raise
     assert d["conjuncts"]["C1b"]["status"] == F.REJECTED
-
-
-def test_a_64_character_non_hex_string_is_not_a_digest():
-    """`"g" * 64` was accepted: type and length were checked, hexadecimality was not."""
-    for bad in ("g" * 64, "Z" * 64, "0123456789abcdefg" + "0" * 47):
-        ev = _ev(C1b=(0.01, 0.001))
-        ev["C1b"]["qid_sha256"] = bad
-        with pytest.raises(ValueError, match="qid_sha256="):
-            F.decide(ev)
 
 
 def test_the_primitives_refuse_bad_scores_DIRECTLY_not_only_through_the_aligner():
@@ -707,3 +657,71 @@ def test_delta_raw_range_is_checked_not_only_the_bound():
     ev["C1b"]["stat"]["delta_raw"] = 1e300
     with pytest.raises(ValueError, match=r"delta_raw.*outside \[-1, 1\]"):
         F.decide(ev)
+
+
+# ---------- the two halves of the pass rule, PINNED (Fable round 7: both were unpinned) --------
+
+def test_the_signflip_p_is_pinned_at_both_ends_of_its_range():
+    """A mutant that halved `signflip_p` survived all 54 tests: the bootstrap half had the
+    order-statistic test and the sign-flip half had nothing checking its VALUE. These two
+    identities are exact, so an accidental edit to `signflip()` cannot pass."""
+    conf = F.cfg()
+    ds = conf["partitions"]["clean4"]
+    n = 25
+    # identical systems -> every paired difference is 0 -> every sign-flip statistic equals the
+    # observed one -> p is exactly 1.0
+    same = {d: (list(range(n)), np.full(n, 0.5), np.full(n, 0.5)) for d in ds}
+    assert F.signflip(same, conf)["signflip_p"] == 1.0
+    # a large uniform positive shift -> no permutation reaches the observed statistic -> p is the
+    # Monte Carlo floor, 1/(B+1)
+    big = {d: (list(range(n)), np.full(n, 0.9), np.full(n, 0.1)) for d in ds}
+    assert F.signflip(big, conf)["signflip_p"] == 1.0 / (conf["signflip"]["B"] + 1)
+
+
+def test_delta_raw_is_the_mean_of_the_per_dataset_deltas():
+    """A mutant that dropped the division by k survived: `delta_raw` decides nothing, but it is the
+    point estimate the headline quotes."""
+    conf = F.cfg()
+    ds = conf["partitions"]["all6"]
+    al = _aligned(ds, n=30)
+    plan, _ = F.draw_plan(al, B=conf["bootstrap"]["B"], seed=conf["bootstrap"]["seed"])
+    stat = F.bootstrap(al, plan, conf)
+    per = list(stat["per_dataset_delta_raw"].values())
+    assert stat["delta_raw"] == pytest.approx(sum(per) / len(per), abs=1e-15)
+
+
+def test_an_inverted_bound_actually_REACHES_the_verdict():
+    """I wrote that `lower > delta` is "REPORTED, never raised" — and then dropped the flag on the
+    floor: the guard returned it and `decide()` ignored it. The code and the claim must agree."""
+    ev = _ev(C1b=(0.6, 0.001), C1a=(-0.1, 0.9))
+    ev["C1b"]["stat"]["delta_raw"] = 0.4
+    d = F.decide(ev)
+    assert d["conjuncts"]["C1b"]["lower_exceeds_point_estimate"] is True
+    d2 = F.decide(_ev(C1b=(0.01, 0.001), C1a=(-0.1, 0.9)))
+    assert "lower_exceeds_point_estimate" not in d2["conjuncts"]["C1b"]
+
+
+def test_a_partitions_two_conjuncts_must_share_one_plan_and_one_qid_set():
+    """Otherwise they were computed from different alignments and are not comparable. Free to
+    check from the evidence alone, and it cannot fire on a run that came through `evidence_for`."""
+    ev = {cid: F.evidence_for(cid, _scores(cid, shift=0.08)) for cid in F.sequence()}
+    assert ev["C1b"]["draw_plan_sha256"] == ev["C2b"]["draw_plan_sha256"], "clean4 shares a plan"
+    assert ev["C1a"]["draw_plan_sha256"] == ev["C2a"]["draw_plan_sha256"], "all6 shares a plan"
+    F.decide(ev)
+    ev["C2b"]["qid_sha256"] = "b" * 64
+    with pytest.raises(ValueError, match="different alignments or plans"):
+        F.decide(ev)
+
+
+def test_a_comparator_scored_on_only_its_own_partition_does_not_raise():
+    """`align_partition` used to demand dataset-set equality BEFORE restricting to the partition,
+    so a comparator built per-partition against a candidate carrying all six raised — inside
+    `evidence_for`, i.e. after the access is spent."""
+    all6 = F.cfg()["partitions"]["all6"]
+    clean4 = F.cfg()["partitions"]["clean4"]
+    c = F.cfg()["conjuncts"]["C1b"]
+    full = _scores("C1a", shift=0.05)              # C1a's partition is all6
+    scores = {c["a"]: full[c["a"]], c["b"]: {d: v for d, v in full[c["b"]].items() if d in clean4}}
+    assert set(scores[c["a"]]) == set(all6) and set(scores[c["b"]]) == set(clean4)
+    ev = F.evidence_for("C1b", scores)             # must not raise
+    assert ev["stat"]["k_datasets"] == 4
