@@ -36,6 +36,15 @@ lengths, so **both** E arms run on the rented A100 together — both, not just b
 box-trained bs32 against an A100-trained bs128 would put a hardware difference inside the one
 contrast that decides a build parameter.
 
+> **A contradiction to correct, flagged by review 2026-09-09 and NOT yet fixed in the screen
+> registry.** `rules.E_warmup_parity` still ends "…`E-bs32` is the box-trained ANCHOR while
+> `E-bs128` runs on the A100, so E1 alone carries a hardware difference". That clause is STALE:
+> under the settled screen design both E arms run on the A100 together, which is what removes the
+> hardware difference. **The registry text is wrong and this file is right.** It is deliberately
+> not corrected yet: `A3-20M` is mid-run and its resume path pins `screen_registry.json`'s sha256,
+> so editing the registry now would block a restart of a 9-hour job. Correct it once that arm
+> finishes, before E runs.
+
 - **The rule is fixed and pre-registered:** `rules.E_cost` — select bs32 iff E1 (`bs32 − bs128`)
   RESOLVES; in every other case bs128. E is exempt from quality confirmation (amended 2026-09-09).
 - **The parity fix is in the code, not the prose:** `rules.E_warmup_parity` — warmup is registered

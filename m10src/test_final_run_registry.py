@@ -84,7 +84,7 @@ def test_the_M9_decide_is_explicitly_not_reused():
     would apply the wrong quantile AND the wrong multiplicity correction, silently."""
     impl = REG["implementation"]
     assert "final9.py:decide()" in impl["does_NOT_reuse"]
-    assert "NOT YET WRITTEN" in impl["module"]
+    assert "final10.py" in impl["module"]
     for required in ("first non-rejection", "NOT TESTED", "250th order statistic"):
         assert required in impl["requirement"], required
 
@@ -103,4 +103,25 @@ def test_it_is_a_preregistration_not_an_amendment():
     is fixed before the build has run, and the distinction must not blur."""
     assert REG["classification"] == "preregistration"
     assert "before" in REG["_classification_note"].lower()
-    assert REG["ratified_by_owner"] is False
+
+
+def test_ratification_is_the_one_permitted_post_commit_edit():
+    """The review found a deadlock: the lock forbids post-commit edits, the executor refuses to run
+    unless `ratified_by_owner` is true, and an earlier version of THIS test asserted it must stay
+    false. Asserting the flag is a boolean and that the registry names the flip as permitted
+    resolves it without licensing any other edit."""
+    assert isinstance(REG["ratified_by_owner"], bool)
+    assert "permitted post-commit edit" in REG["_ratification"]
+    assert "nothing else about the file may move" in REG["_ratification"]
+
+
+def test_the_headline_is_one_registered_sentence_per_outcome():
+    """A single string cannot cover two comparators x two partitions, and a sentence emitted for a
+    conjunct that was NOT_TESTED would claim what was never measured."""
+    h = REG["headline_verbatim"]
+    for cid in REG["conjuncts"]:
+        assert any(k.startswith(cid + "_") for k in h), cid
+    for banned in ("resolved", "confirmed", "unrestricted"):
+        assert any(banned in m for m in h["_must_not"])
+    assert "NOT_TESTED" in h["_what"]
+    assert "ArguAna and FiQA" in h["_stella_disclosure"]

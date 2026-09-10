@@ -16,13 +16,26 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import final10 as F
 
 
-def _stat(lower, delta=None):
-    return {"lower_q025_raw": lower, "delta_raw": delta if delta is not None else lower + 0.01}
+CONF = F.cfg()
+
+
+def _stat(lower, delta=None, cid="C1b", **override):
+    """A REGISTRY-CONFORMANT stat dict. It has to be, now: `assert_evidence_matches_registry`
+    refuses evidence whose metadata does not match the registered procedure, and the helper that
+    builds test evidence must therefore build the real shape or every test is testing the guard."""
+    part = CONF["partitions"][CONF["conjuncts"][cid]["partition"]]
+    b = CONF["bootstrap"]
+    st = {"lower_q025_raw": lower,
+          "delta_raw": delta if delta is not None else lower + 0.01,
+          "quantile": b["quantile"], "quantile_method": b["quantile_method"], "B": b["B"],
+          "k_datasets": len(part), "n_by_dataset": {ds: 100 for ds in part}}
+    st.update(override)
+    return st
 
 
 def _ev(**kw):
     """{cid: (lower, p)} -> the evidence dict."""
-    return {cid: {"stat": _stat(l), "signflip_p": p} for cid, (l, p) in kw.items()}
+    return {cid: {"stat": _stat(l, cid=cid), "signflip_p": p} for cid, (l, p) in kw.items()}
 
 
 # ---------------------------------------------------------------- the sequence -------------------
@@ -160,3 +173,73 @@ def test_the_reserved_batch_runs_iff_ANY_conjunct_rejected():
     """So an aim claim never stands without its descriptive reserved rows."""
     assert F.decide(_ev(C1b=(0.01, 0.001), C1a=(-0.1, 0.9)))["reserved_batch_runs"] is True
     assert F.decide(_ev(C1b=(-0.1, 0.9)))["reserved_batch_runs"] is False
+
+
+# ------------------------------------- the guard both reviewers said was missing -----------------
+
+def test_decide_REFUSES_evidence_that_does_not_match_the_registered_procedure():
+    """M9 had `final_stats._assert_matches_registry`; M10 removed that protection and replaced it
+    with nothing. Both reviewers demonstrated the consequence on 2026-09-09: evidence produced at
+    quantile 0.0125 with `linear` at B=9, and even `signflip_p=-1`, was accepted as REJECTED —
+    because the field is NAMED `lower_q025_raw` however it was computed."""
+    for bad, match in (
+            ({"quantile": 0.0125}, "quantile"),
+            ({"quantile_method": "linear"}, "quantile_method"),
+            ({"B": 9}, "B="),
+            ({"k_datasets": 3}, "k_datasets"),
+            ({"n_by_dataset": {"scifact": 100}}, "scored datasets")):
+        ev = {"C1b": {"stat": _stat(0.01, **bad), "signflip_p": 0.001}}
+        with pytest.raises(ValueError, match="does not match the registered procedure"):
+            F.decide(ev)
+    for p in (-1, 1.5, None, "0.01"):
+        with pytest.raises(ValueError, match="not a probability"):
+            F.decide({"C1b": {"stat": _stat(0.01), "signflip_p": p}})
+
+
+def test_bootstrap_REFUSES_a_non_registered_quantile_or_method_when_given_the_registry():
+    """The direction test proves `linear` is more permissive; this proves the code will not compute
+    it. A value named `lower_q025_raw` that was not computed at 0.025 by `inverted_cdf` is a lie in
+    the field name."""
+    al = _aligned(F.cfg()["partitions"]["clean4"])
+    plan, _ = F.draw_plan(al, B=200, seed=900)
+    conf = F.cfg()
+    for q, m in ((0.0125, "inverted_cdf"), (0.025, "linear")):
+        with pytest.raises(ValueError, match="refusing to compute"):
+            F.bootstrap(al, plan, q, method=m, conf=conf)
+    F.bootstrap(al, plan, 0.025, method="inverted_cdf", conf=conf)      # the registered pair passes
+
+
+def test_signflip_p_refuses_a_short_partition_exactly_as_align_partition_does():
+    """Both halves of a conjunctive pass rule must refuse. The reviewers found `signflip_p`
+    filtering to a subset and calling the primitive directly, so a dataset missing from BOTH inputs
+    silently produced a p-value over three datasets."""
+    ds = F.cfg()["partitions"]["clean4"]
+    full = _aligned(ds, n=30)
+    a = {d: dict(zip(v[0], v[1])) for d, v in full.items()}
+    b = {d: dict(zip(v[0], v[2])) for d, v in full.items()}
+    p_ok = F.signflip_p(a, b, ds)
+    assert 0.0 <= p_ok <= 1.0
+    a.pop(ds[0]); b.pop(ds[0])
+    with pytest.raises(ValueError, match="must be impossible"):
+        F.signflip_p(a, b, ds)
+
+
+def test_signflip_p_actually_runs_the_primitive_on_both_partition_sizes():
+    """It had no executing test at all, which is how a wrong return shape would have survived."""
+    for part in ("clean4", "all6"):
+        ds = F.cfg()["partitions"][part]
+        full = _aligned(ds, n=25, shift=0.2)
+        a = {d: dict(zip(v[0], v[1])) for d, v in full.items()}
+        b = {d: dict(zip(v[0], v[2])) for d, v in full.items()}
+        p = F.signflip_p(a, b, ds)
+        assert isinstance(p, float) and 0.0 <= p <= 1.0
+        assert p < 0.5, "a large positive shift should not look null"
+
+
+def test_NOT_TESTED_entries_still_identify_themselves():
+    """A tabulating report writer gets blanks otherwise, and a blank row invites a reader to fill
+    it in with the failure that was never measured."""
+    d = F.decide(_ev(C1b=(0.01, 0.001), C1a=(-0.002, 0.4)))
+    for c in d["not_tested"]:
+        e = d["conjuncts"][c]
+        assert e["partition"] and e["gate"] and e["bar_comparator"]

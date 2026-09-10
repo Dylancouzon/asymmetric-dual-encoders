@@ -4,7 +4,7 @@
  "_classification_note": "NOT an amendment, unlike M9's, which was written after its build. Every field here is fixed BEFORE any M10 six-set number exists and before the build has run. The design it encodes is itself registered upstream in `instructions-m10.md` \u00a7Final run and \u00a7Goal (amendment A3, 2026-09-04), which is where the four conjuncts and their sequence were fixed.",
  "ratified_by_owner": false,
  "spec": "m10/M102_LOCK.md; design registered in instructions-m10.md \u00a7Final run",
- "status": "DRAFT until the M10.2 lock commit; `decide()` is NOT YET WRITTEN (see `implementation`)",
+ "status": "DRAFT until the M10.2 lock commit. `m10src/final10.py` is WRITTEN and unit-tested (19 tests); the SCORING path (loading the six, the bridge) is not.",
  "partitions": {
   "clean4": [
    "nfcorpus",
@@ -109,11 +109,12 @@
   "alternative": "greater",
   "alpha": 0.025,
   "p": "(1 + #(T* >= T_obs)) / (B + 1)",
-  "signs": "independent Rademacher per paired query; every conjunct passes the SAME SEED \u2014 a same-seed guarantee, not a materialized shared plan. Sharing is comparability, not a condition of marginal validity."
+  "signs": "independent Rademacher per paired query; every conjunct passes the SAME SEED \u2014 a same-seed guarantee, not a materialized shared plan. Sharing is comparability, not a condition of marginal validity.",
+  "_alpha_note": "`alpha` here and `sequence.alpha_per_conjunct` are the same number by construction: the sign-flip is a conjunct of the same test, at the same level. `decide()` reads the sequence value; this one is documentation and must never diverge."
  },
  "reserved": {
   "trigger": "if ANY C-conjunct rejects, then execute, unmodified",
-  "_why_any": "so an aim claim never stands without its descriptive reserved rows (Opus, \u00a7Final run change 1). M9's trigger was `if C1 passes`.",
+  "_why_any": "so an aim claim never stands without its descriptive reserved rows (Opus, \u00a7Final run change 1). M9's trigger was `if C1 passes`. **Note, (Codex + Fable adversarial review of the lock, 2026-09-09; both returned DO NOT PUSH): under fixed-sequence gatekeeping 'ANY conjunct rejects' is EQUIVALENT to 'C1b rejects', because C1b is first and nothing later is tested unless it rejected.** The wording is kept as 'any' because it is robust to a future re-ordering, but no reader should think it is a weaker condition than it is.",
   "systems_included": [
    "nano-dense",
    "bge-small-en-v1.5",
@@ -150,7 +151,14 @@
   "reuses": "m9src/final_stats.py for the bootstrap and sign-flip primitives; m9src/final9.py's SCORING path",
   "does_NOT_reuse": "`m9src/final9.py:decide()`, which is hard-coded to M9's TWO conjuncts under Holm-2 at 0.0125. An M10 `decide()` for four conjuncts under fixed-sequence gatekeeping at 0.025 is a different function, and reusing the M9 one would silently apply the wrong quantile and the wrong multiplicity correction.",
   "requirement": "written, UNIT-TESTED and REVIEWED before the M10.2 recipe lock is pushed (Codex, 2026-09-04). The tests must include: the sequence stopping at the first non-rejection; a later conjunct reported NOT TESTED rather than failed; the 0.025 quantile being the 250th order statistic and not an interpolated one; and a partition with a missing dataset raising rather than renormalizing.",
-  "status": "decide(), the partition-aware bootstrap and the sequence are written and unit-tested. STILL OWED: adversarial review before the lock commit, and the SCORING path (loading the six, the bridge) which reuses m9src/final9.py."
+  "status": "decide(), the partition-aware bootstrap, the sign-flip wrapper and the registry guard are written and unit-tested (19 tests). REVIEWED 2026-09-09 by Codex and Fable, both of which returned DO NOT PUSH; every finding is applied. STILL OWED: the SCORING path (loading the six, the bridge), which reuses m9src/final9.py's scoring but NEVER its `decide()`, `SPENT_TAG`, `RESULT`, `LEDGER` or `FREEZE` paths \u2014 those are M9's.",
+  "executor_contract": [
+   "build EXACTLY ONE draw plan per partition and reuse it byte-identically across both conjuncts that read that partition; serialize its digest. The clean-4 plan is NOT the all-6 plan restricted \u2014 it is its own plan over 4 datasets, and the two are not comparable draw-for-draw.",
+   "assert the qid arrays are identical across the two conjuncts of a partition before sharing a plan; a shared plan over different qids is not sharing.",
+   "compute the bootstrap AND the sign-flip from the SAME `align_partition` output, so both halves of the pass rule see the same validated partition.",
+   "score all four conjuncts in ONE transaction regardless of where the sequence stops \u2014 the access is spent either way, and the untested conjuncts' descriptive deltas cost nothing.",
+   "never call `m9src/final9.py:main()`."
+  ]
  },
  "access_state_machine": [
   "lock + guard",
@@ -167,7 +175,26 @@
   "unrestricted"
  ],
  "_forbidden_note": "in the report's description of any final-run outcome. A screen contrast 'resolves'; a final-run conjunct REJECTS or does not. Keeping the vocabularies apart is what stops a screen verdict being read as a release claim.",
- "headline_verbatim": "TO BE FIXED IN THE LOCK COMMIT, before any six-set number exists. It must name the partition (clean-4), the comparator, and the harness, in M9's shape.",
+ "headline_verbatim": {
+  "_what": "One registered sentence PER OUTCOME, not one string (Codex + Fable adversarial review of the lock, 2026-09-09; both returned DO NOT PUSH): the claim table has two comparators and two partitions, so a single sentence cannot cover it. Each is emitted ONLY if its own conjunct REJECTED, and never if that conjunct was NOT_TESTED.",
+  "C1b_release_clean4": "the selected-teacher-document + nano-query asymmetric system outperformed the bge-small symmetric system on the pre-registered clean-4 partition \u2014 NFCorpus, SCIDOCS, SciFact and TREC-COVID \u2014 for nDCG@10 in the frozen exact-search harness.",
+  "C1a_release_avg6": "\u2026and on all six development-informed datasets, which additionally include FiQA and ArguAna, both disclosed in the teacher's training data.",
+  "C2a_aim_avg6": "the selected-teacher-document + nano-query asymmetric system outperformed the arctic-document + leaf-query system on the six development-informed datasets in our frozen exact-search harness.",
+  "C2b_aim_clean4": "the selected-teacher-document + nano-query asymmetric system outperformed the arctic-document + leaf-query system on the pre-registered clean-4 partition \u2014 NFCorpus, SCIDOCS, SciFact and TREC-COVID \u2014 for nDCG@10 in the frozen exact-search harness.",
+  "_must_not": [
+   "'resolved', 'confirmed' or 'unrestricted'",
+   "any claim about general or untouched retrieval quality",
+   "any all-six superiority claim when only a clean-4 conjunct rejected, or the reverse",
+   "any aim claim when C2a/C2b were NOT_TESTED",
+   "any statement comparing nano's QUERY TOWER to LEAF's \u2014 the claim is about the SYSTEM PAIR",
+   "retention percentages as the claim; they are a lens, and retention is distribution-specific",
+   "the reserved four presented as confirmatory \u2014 they are descriptive, at zero alpha"
+  ],
+  "_stella_disclosure": "every sentence carries, in the same paragraph, that the teacher discloses ArguAna and FiQA (2 of the six) in its training data \u2014 which is why clean-4 is the headline."
+ },
  "origin_url": "https://github.com/Dylancouzon/asymmetric-dual-encoders.git",
- "_origin_note": "the spend receipt's external witness. Pinned so repointing `origin` cannot manufacture an 'unspent' verdict. Derived from `git remote get-url origin`, never hand-written."
+ "_origin_note": "the spend receipt's external witness. Pinned so repointing `origin` cannot manufacture an 'unspent' verdict. Derived from `git remote get-url origin`, never hand-written.",
+ "_guard": "`final10.assert_evidence_matches_registry` checks quantile, quantile_method, B, k_datasets, the scored dataset set and the sign-flip p-value AT the decision boundary. M9 had `final_stats._assert_matches_registry`; the first draft of M10 removed that protection and replaced it with nothing, and both reviewers demonstrated evidence tagged quantile=0.0125, method='linear', B=9 and even signflip_p=-1 being accepted as REJECTED (Codex + Fable adversarial review of the lock, 2026-09-09; both returned DO NOT PUSH).",
+ "forbidden_words_scope": "The banned words apply to the REPORT'S CHARACTERISATION OF A FINAL-RUN OUTCOME \u2014 never to the screen, whose registered vocabulary is exactly 'resolved' / 'did not resolve' / 'unresolved' (`instructions-m10.md` claim table). Flagged (Codex + Fable adversarial review of the lock, 2026-09-09; both returned DO NOT PUSH) as a contradiction; it is a scoping question, not a conflict: a SCREEN contrast resolves or does not, a FINAL-RUN conjunct rejects or does not, and the report must not swap the two vocabularies.",
+ "_ratification": "**The one permitted post-commit edit to this file**, and it is not an amendment to any rule: flipping `ratified_by_owner` to true records Dylan's ratification, which the executor requires before the final run may open the six. Registered here explicitly because the review found a deadlock (Codex + Fable adversarial review of the lock, 2026-09-09; both returned DO NOT PUSH) \u2014 the lock forbids post-commit edits, the executor refuses to run unless this is true, and a test asserted it must stay false. The test now asserts it is a BOOLEAN and that this clause names the flip as permitted; nothing else about the file may move."
 }

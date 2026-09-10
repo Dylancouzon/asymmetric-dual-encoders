@@ -1,13 +1,17 @@
-# LoTTE read #1 — pre-registration for M10
+# LoTTE read #1 — pre-LoTTE amendment for M10
 
 **Written 2026-09-09, while LoTTE is ENTIRELY UNREAD for M10.** M9's read #1 was withdrawn
 unexecuted at its close-out (2026-09-01) precisely so M10 would inherit a fresh surface, so this is
 a **first** access, not a repeat.
 
-**Classification: PREREGISTRATION**, not an amendment. It is fixed before the build has run, before
-any M10 checkpoint exists, and before any LoTTE byte is read. M9's equivalent had to be classified
-an amendment because it was written during M9.3; this one does not, and the distinction must not
-blur.
+**Classification: a dated PRE-LoTTE AMENDMENT, and the vacuity branch below is POST-SCREEN.**
+
+This was my own error and the review caught it (Codex, 2026-09-09). I first classified the whole
+file a preregistration. It is not: the original rule (`instructions-m10.md`:748) says the veto
+RUNS, and the skip branch below **relies on an observed screen outcome** — that no non-default
+component was selected. So it is pre-LoTTE and pre-build, which is what protects the *veto*, but it
+is a post-screen amendment and must never be described as the original registration executed
+unchanged. M9's equivalent was likewise an amendment, for a different reason.
 
 ## The veto rule — unchanged from M9 §7, deliberately
 
@@ -22,13 +26,20 @@ other action may follow from read #1.** Adoption may not trigger any retraining 
 edit, or any change to a screen verdict.
 
 **M10's specific case.** The screen selected no non-default component, so *the selected recipe and
-the anchor recipe are the same in every axis except `batch`* (`M102_LOCK.md`). If family E selects
-bs32, they are identical and the veto is vacuous — it can only compare a recipe to itself. **That is
-registered here as the expected outcome, not discovered later:**
+the anchor recipe are the same in every axis except `batch`* (`M102_LOCK.md`). Registered here
+before E1 is read, and before any LoTTE byte is:
 
-- if E selects **bs32** → the two arms of the veto are the same recipe. Read #1 is **SKIPPED** and
-  reported skipped, with this paragraph as the reason. Skipping a vacuous comparison is not
-  discretion; running it would manufacture a number with no estimand.
+- if E selects **bs32** → the two arms are the same RECIPE. Read #1 is **SKIPPED** and reported
+  skipped **iff the two candidate checkpoints also hash identically**. That condition is the
+  review's correction and it matters: *same recipe does not mean same realized checkpoint* — two
+  stochastic builds of one recipe have a perfectly well-defined artifact-to-artifact contrast, so
+  "no estimand" was too strong. The accurate statement is **no actionable RECIPE contrast**: a veto
+  whose two arms select the same recipe cannot change what builds, whatever the artifacts do.
+  If the hashes differ and someone wants the artifact comparison, it is a descriptive row, never
+  the veto.
+- **A skipped read is FORFEITED, not banked.** It does not become a spare access, and read #2
+  remains the pre-freeze audit and nothing else. Without this sentence "we never used read #1"
+  could be argued into a second decision-bearing look.
 - if E selects **bs128** → the veto runs as written, selected = bs128, anchor = bs32.
 
 ## Why a read happens at all

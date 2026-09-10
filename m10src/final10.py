@@ -85,9 +85,21 @@ def align_partition(a, b, datasets):
     return aligned
 
 
-def bootstrap(aligned, plan, quantile, method="inverted_cdf"):
+def bootstrap(aligned, plan, quantile, method="inverted_cdf", conf=None):
     """Equal-weight macro of per-query differences over a partition of ANY size, full draw vector
-    retained. `m9src.final_stats.bootstrap` raises unless k == 6, which is why this exists."""
+    retained. `m9src.final_stats.bootstrap` raises unless k == 6, which is why this exists.
+
+    `conf=None` is permitted ONLY so a test can demonstrate the banned method's direction. Pass the
+    registry in every real call and a non-registered quantile or method is refused here rather than
+    being labelled `lower_q025_raw` regardless of how it was computed.
+    """
+    if conf is not None:
+        b = conf["bootstrap"]
+        if quantile != b["quantile"] or method != b["quantile_method"]:
+            raise ValueError(f"refusing to compute the decision field at quantile={quantile!r} "
+                             f"method={method!r}; registered {b['quantile']!r}/"
+                             f"{b['quantile_method']!r}. `linear` interpolates toward the next "
+                             f"order statistic and is weakly MORE PERMISSIVE.")
     k = len(aligned)
     if k == 0:
         raise ValueError("empty partition")
@@ -121,6 +133,44 @@ def bootstrap(aligned, plan, quantile, method="inverted_cdf"):
     }
 
 
+def assert_evidence_matches_registry(cid, ev, conf):
+    """Every registered constant, checked AT the boundary where it decides.
+
+    M9 had `final_stats._assert_matches_registry`; M10 removed that protection and replaced it with
+    nothing, so `decide()` trusted whatever `stat` dict it was handed. Both reviewers demonstrated
+    the consequence on 2026-09-09: evidence produced with `quantile=0.0125`, `method="linear"`,
+    `B=9`, an arbitrary plan seed and even `signflip_p=-1` was accepted as REJECTED, because the
+    field is NAMED `lower_q025_raw` no matter how it was computed.
+
+    A guard one function upstream is not a guard: `align_partition` refuses a short partition, and
+    `bootstrap` would happily consume a plan built some other way.
+    """
+    c, b, sf = conf["conjuncts"][cid], conf["bootstrap"], conf["signflip"]
+    part = conf["partitions"][c["partition"]]
+    st = ev.get("stat") or {}
+    problems = []
+    if b["decision_field"] not in st:
+        problems.append(f"no {b['decision_field']!r} field")
+    for k, want in (("quantile", b["quantile"]), ("quantile_method", b["quantile_method"]),
+                    ("B", b["B"])):
+        if st.get(k) != want:
+            problems.append(f"{k}={st.get(k)!r}, registered {want!r}")
+    if st.get("k_datasets") != len(part):
+        problems.append(f"k_datasets={st.get('k_datasets')!r}, partition "
+                        f"{c['partition']} has {len(part)}")
+    got = tuple(sorted(st.get("n_by_dataset") or {}))
+    if got != tuple(sorted(part)):
+        problems.append(f"scored datasets {got} != partition {tuple(sorted(part))}")
+    p = ev.get("signflip_p")
+    if not isinstance(p, (int, float)) or not (0.0 <= float(p) <= 1.0):
+        problems.append(f"signflip_p={p!r} is not a probability")
+    if ev.get("signflip_B", sf["B"]) != sf["B"] or ev.get("signflip_seed", sf["seed"]) != sf["seed"]:
+        problems.append("sign-flip B/seed do not match the registry")
+    if problems:
+        raise ValueError(f"{cid}: evidence does not match the registered procedure — "
+                         + "; ".join(problems))
+
+
 def conjunct_rejects(stat, sf_p, alpha):
     """The registered pass rule: BOTH the bootstrap bound and the sign-flip test, not either."""
     return bool(stat["lower_q025_raw"] > 0 and sf_p <= alpha)
@@ -141,6 +191,9 @@ def decide(evidence, conf=None):
     for cid in order:
         if stopped:
             out[cid] = {"status": NOT_TESTED,
+                        "partition": conf["conjuncts"][cid]["partition"],
+                        "bar_comparator": conf["conjuncts"][cid]["b"],
+                        "gate": conf["conjuncts"][cid]["gate"],
                         "_why": "the sequence stopped at an earlier non-rejection; this conjunct "
                                 "carries NO verdict, and is never reported as failed"}
             continue
@@ -148,6 +201,7 @@ def decide(evidence, conf=None):
         if ev is None:
             raise ValueError(f"{cid} is next in the sequence and still untested, but no evidence "
                              f"was supplied for it; the sequence had not stopped")
+        assert_evidence_matches_registry(cid, ev, conf)
         rej = conjunct_rejects(ev["stat"], ev["signflip_p"], alpha)
         out[cid] = {"status": REJECTED if rej else NOT_REJECTED,
                     "lower_q025_raw": ev["stat"]["lower_q025_raw"],
@@ -178,14 +232,23 @@ def decide(evidence, conf=None):
 
 
 def signflip_p(a, b, datasets, conf=None):
-    """The sign-flip conjunct on one partition, at the registered B/seed/alternative."""
+    """The sign-flip conjunct on one partition, at the registered B/seed/alternative.
+
+    It runs `align_partition` FIRST and scores only what that validated — the reviewers found this
+    function filtering to a subset and calling the primitive directly, so a dataset missing from
+    both inputs silently produced a p-value over three datasets while `align_partition` (the other
+    half of the same pass rule) would have refused. One invariant enforced in one place is not
+    enforced; both halves of a conjunctive rule must refuse.
+    """
     conf = conf or cfg()
     sf = conf["signflip"]
-    sub = ({ds: v for ds, v in a.items() if ds in set(datasets)},
-           {ds: v for ds, v in b.items() if ds in set(datasets)})
-    res = boot.signflip_dep(sub[0], sub[1], R=sf["B"], seed=sf["seed"],
-                            alternative=sf["alternative"], strict=True)
-    return float(res["p"] if isinstance(res, dict) else res)
+    aligned = align_partition(a, b, datasets)                # raises on anything short or empty
+    sub_a = {ds: dict(zip(v[0], v[1])) for ds, v in aligned.items()}
+    sub_b = {ds: dict(zip(v[0], v[2])) for ds, v in aligned.items()}
+    res = boot.signflip_dep(sub_a, sub_b, R=sf["B"], seed=sf["seed"],
+                            alternative=sf["alternative"], strict=True,
+                            unit_of=boot.unit_key)           # explicit, as m9src/final_stats does
+    return float(res["p"])
 
 
 __all__ = ["cfg", "sequence", "align_partition", "bootstrap", "conjunct_rejects", "decide",
