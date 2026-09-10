@@ -1753,3 +1753,37 @@ arm's registered dose is the requested count.
 difference because `E-bs32` is box-trained. Under the settled design both E arms run on the A100
 together, which is what removes it. Deferred until A3-20M finished because that arm's resume path
 pinned the registry hash.
+
+## §The lock is SPLIT — Dylan, 2026-09-10
+
+**Half A** `m10/M102_LOCK.md` — the recipe. Ready to push; it is what the cloud spend needs.
+**Half B** `m10/M10_4_DECISION_LOCK.md` — the judging. NOT locked, 14 open findings, hard-gated:
+no six-set evaluation, no `m10-six-spent` tag, no LoTTE read until it is locked and reviewed clean.
+
+An explicit dated deviation from `instructions-m10.md`:346 (one lock commit), on Dylan's ruling.
+**The protocol is not weakened**: half B is still fixed before any six-set number exists.
+
+**Why:** the scoring path that calls half B's decision code does not exist — `m9src/final9.py`:348
+raises `SCORING PATH NOT IMPLEMENTED`, for M9 as well as M10. Nine adversarial rounds found gaps in
+code whose only caller is unwritten. Ordering problem, not a care problem.
+
+### The nine review rounds, and what they cost
+
+Rounds 1–9, Codex and Fable alternating, every finding through round 8 applied. The two that
+mattered most were both **inherited rules nobody had ever executed**:
+
+- **The bridge could not be satisfied by a correct run.** M9's `max_abs_per_query_delta` 0.0003
+  against an nDCG@10 quantum of 0.001317 (linear gain; 0.002633 binary) — 4.4× impossible — and
+  failing it consumes the irreversible access. Amended pre-observation to a qid-set check plus a
+  dataset-mean bound of 0.003. **M9's copy is still armed** and M10's lock push is M9's close-out
+  trigger (half B finding 6).
+- **`E-bs32` was an alias to the box-trained anchor**, so E1 was silently a cross-hardware
+  contrast while four documents said the confound had been removed. Now a registered A100 arm.
+
+**This session's own failure mode, recorded because the next session will hit it.** A defect was
+introduced in most of the fixes, by two specific mechanisms: (i) one fact lives in four places and a
+fix touches three — the same bug three times; (ii) editing an invariant together with its test
+silently removes the check. **The guard worth building before more fixes: a test asserting the lock
+documents and the registry agree on the facts they share.** And: run the full suite before every
+commit — this session once claimed "406 tests green" in a message after editing a registry field
+post-run.
