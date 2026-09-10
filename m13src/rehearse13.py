@@ -236,6 +236,13 @@ def build(root=DEFAULT_ROOT, n_docs=200, n_queries=30, seed=0, dim=1024, clean=T
               "student_key": TINY_KEY, "n_layers": 3, "head": "linear", "max_seq": 64,
               "out_dim": dim, "query_prefix": "", "system": "nano-dense"}
     (repo / "m10" / "FREEZE.json").write_text(json.dumps(freeze, indent=1))
+    # the fixture's build record: what build13 would have written at a verified freeze of this
+    # exact checkpoint (preflight binds the parity evidence to the candidate, review B8)
+    (repo / "results" / "m13_build_record.json").write_text(json.dumps({
+        "fixture": True, "arm": "BUILD-200M", "status": "complete", "complete": True,
+        "final_checkpoint": "work/student.pt", "final_checkpoint_sha256": freeze["checkpoint_sha256"],
+        "freeze": {"verified": True, "ort_parity": {"min_cos": 1.0},
+                   "fastembed_parity": {"served": True, "pass_min_cos_1e-4": True}}}, indent=1))
     cfg.load_student = lambda fz: score13.Nano10Student(fz, repo=repo)
     cfg.load_anchor = lambda _d=tiny_dir: TinyAnchor(_d)
 

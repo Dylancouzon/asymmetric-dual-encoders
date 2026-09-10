@@ -201,3 +201,28 @@ def test_write_atomic_leaves_no_partial_file(tmp_path):
     access13.write_atomic(p, '{"a": 2}')
     assert json.loads(p.read_text()) == {"a": 2}
     assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_preflight_refuses_a_teacher_other_than_the_pinned_one(world, monkeypatch):
+    """Codex re-check 2026-09-10 (new P1): the default teacher is bge-base; discovering that after
+    the tag is an irreversible loss under R14, so preflight must catch it."""
+    import teacher
+    monkeypatch.setattr(teacher, "TEACHER", "not/the-pinned-document-tower")
+    problems = access13.preflight(world, _conf(world))
+    assert any("active teacher" in q for q in problems), problems
+
+
+def test_preflight_requires_a_verified_build_record_bound_to_the_checkpoint(world):
+    """Review B8: an old parity artifact must not stand in for the shipped path of THIS checkpoint."""
+    assert not [q for q in access13.preflight(world, _conf(world)) if "build record" in q]
+    p = world.repo / world.build_record_path
+    rec = json.loads(p.read_text())
+    rec["final_checkpoint_sha256"] = "0" * 64
+    p.write_text(json.dumps(rec))
+    assert any("another checkpoint" in q for q in access13.preflight(world, _conf(world)))
+    rec["final_checkpoint_sha256"] = json.loads(Path(world.freeze_path).read_text())["checkpoint_sha256"]
+    rec["freeze"]["verified"] = False
+    p.write_text(json.dumps(rec))
+    assert any("verified freeze" in q for q in access13.preflight(world, _conf(world)))
+    p.unlink()
+    assert any("is missing" in q and "build record" in q for q in access13.preflight(world, _conf(world)))

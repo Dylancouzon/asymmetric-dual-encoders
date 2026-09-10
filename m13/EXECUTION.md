@@ -1,7 +1,9 @@
 # M13 execution backlog — 2026-09-10
 
-**Next:** build and rehearse the nano scoring transaction. Decision helpers already have tests;
-there is no production nano scorer. `m9src/final9.py` stops at `SCORING PATH NOT IMPLEMENTED`.
+**Next (2026-09-10, stage 1 closed):** stage 2 — LoTTE gate script (R16), DEV-6-from-checkpoint or
+ship the DEV-6 caches, allocation table on day one, provider (Dylan). The nano scorer is
+`m13src/score13.py` (rehearsed on the synthetic fixture); M9's path in `final9.py` is still the stub
+and is wired last, behind the recipe-decision gate.
 
 | Work package | Completion condition |
 |---|---|

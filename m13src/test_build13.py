@@ -266,6 +266,18 @@ class FakeTok:
     pad_token_id = 0
 
 
+@pytest.fixture(autouse=True)
+def _fake_e_records(tmp_path_factory, monkeypatch):
+    """Published E arm records do not exist yet (family E is CLOUD_ONLY and unrun), and
+    `check_gate` refuses without them outside a smoke. Every controller test therefore sees a fake
+    results dir whose cycle-3 shas match `_gate`'s defaults: E-bs32 -> "a"*64, E-bs128 -> "c"*64."""
+    d = tmp_path_factory.mktemp("e_records")
+    (d / "m10_arm_E-bs32.json").write_text(json.dumps({"checkpoints": {"cycle3": {"sha256": "a" * 64}}}))
+    (d / "m10_arm_E-bs128.json").write_text(json.dumps({"checkpoints": {"cycle3": {"sha256": "c" * 64}}}))
+    monkeypatch.setattr(BD, "ARM_RECORDS_DIR", d)
+    return d
+
+
 class Toy(torch.nn.Module):
     """The stand-in `test_run_arm` and `test_trainer10` use: exercises the loop, not the model."""
     d_in = 1152
@@ -376,7 +388,9 @@ def _config(root, *, dose=200_000_000, reserved_hours=None, gate=True, lotte_gat
     cfg["budget"]["mandatory_hours_fixed"]["reserved_batch_allowance"] = reserved_hours
     cfg["budget"]["mandatory_examples"]["build"] = dose
     if lotte_gate is None and gate:
-        lotte_gate = str(_gate(root))
+        lotte_gate = str(_gate(root) if BS == 32 else
+                         _gate(root, decision="no_veto", branch="bs128",
+                               candidate_sha256="c" * 64, comparator_sha256="a" * 64))
     cfg["lotte_gate"] = lotte_gate or str(Path(root) / "missing_gate.json")
     p = Path(root) / "build_config.json"
     p.write_text(json.dumps(cfg, indent=1))
@@ -407,6 +421,13 @@ def _tiny_build_run_patched(mp, root, scenario, *, abrupt_after=None, resume=Fal
     mp.setattr(BD, "WORK", root / "m13build")
     mp.setattr(BD, "SMOKE_WORK", root / "m13build" / "smoke")
     mp.setattr(BD, "RESULTS", root / "results")
+    # the published E arm records the gate check authenticates against (fake, matching `_gate`),
+    # kept OUT of root/results so "a smoke never publishes a record" stays checkable
+    (root / "e_records").mkdir(parents=True, exist_ok=True)
+    for arm, sha in (("E-bs32", "a" * 64), ("E-bs128", "c" * 64)):
+        (root / "e_records" / f"m10_arm_{arm}.json").write_text(
+            json.dumps({"checkpoints": {"cycle3": {"sha256": sha}}}))
+    mp.setattr(BD, "ARM_RECORDS_DIR", root / "e_records")
     mp.setattr(BD.BL, "DOSE", dose)
     mp.setattr(BD.BL, "verdicts", lambda path=None: SELECTED)
     mp.setattr(BD.N, "Nano10", lambda *a, **k: Toy())
@@ -549,7 +570,8 @@ def test_the_freeze_exports_on_the_cpu_after_dev6(tmp_path, monkeypatch):
         return {"path": str(d)}
     monkeypatch.setattr(BD.N, "export_onnx", fake_export)
     monkeypatch.setattr(BD.N, "export_parity", lambda m, d, t: {"min_cos": 1.0})
-    monkeypatch.setattr(BD, "fastembed_parity", lambda m, d, t: {"served": False})
+    monkeypatch.setattr(BD, "fastembed_parity",
+                        lambda m, d, t: {"served": True, "min_cos": 1.0, "pass_min_cos_1e-4": True})
     monkeypatch.setattr(BD, "sha256_file", lambda p: "0" * 64)
     out = BD.freeze_checkpoint(model, tmp_path, ck, smoke=False, verbose=False)
     assert "export_error" not in out and out["verified"] is True
@@ -695,9 +717,9 @@ def test_every_required_gate_field_is_enforced(tmp_path, over, match):
 
 def test_a_complete_gate_record_is_accepted_and_summarised(tmp_path):
     g = BD.check_gate(_gate(tmp_path / "ok", decision="no_veto", branch="bs128",
-                            comparator_sha256="b" * 64))
+                            candidate_sha256="c" * 64, comparator_sha256="a" * 64))
     assert g["executed"] is True and g["decision"] == "no_veto" and g["branch"] == "bs128"
-    assert g["candidate_sha256"] == "a" * 64 and g["comparator_sha256"] == "b" * 64
+    assert g["candidate_sha256"] == "c" * 64 and g["comparator_sha256"] == "a" * 64
     assert g["e1_verdict_sha256"] == VERDICTS_SHA and BD._is_sha(g["sha256"])
 
 
@@ -705,7 +727,8 @@ def test_a_recorded_veto_selects_bs32_whatever_e1_says(tmp_path):
     """m10/LOTTE_LOCK.md: "the comparator's recipe (bs32) is what the 200M build trains". The
     version this replaces recorded the veto and trained bs128 anyway (B6)."""
     root = tmp_path / "v"
-    _gate(root, decision="veto", branch="bs128", comparator_sha256="b" * 64)
+    _gate(root, decision="veto", branch="bs128", candidate_sha256="c" * 64,
+          comparator_sha256="a" * 64)
     with pytest.MonkeyPatch.context() as mp:
         mp.setattr(BD.BL, "verdicts", lambda path=None: {
             "registry_sha256": REGISTRY_SHA,
@@ -847,3 +870,70 @@ def test_the_real_config_validates_against_the_live_registry():
     assert rep["registry_sha256"] == BL.R.sha256_file(BL.R.REGISTRY)
     assert rep["dose_examples"] == 200_000_000 and rep["data_cut"] == "none"
     assert cfg["arm_entry"]["batch"] == "PENDING", "the batch comes from the E1 verdict"
+
+
+def test_the_gate_must_match_the_e1_selection(tmp_path):
+    """Codex re-check 2026-09-10 (B6): a `skipped` gate under a bs128 selection is the bypass the
+    veto exists to prevent; a gate for the other branch is a gate for a different build."""
+    with pytest.raises(SystemExit):
+        BD.check_gate(_gate(tmp_path / "a"), e1_batch=128, smoke=True,
+                      arm_records_dir=tmp_path / "none")                          # skipped under bs128
+    with pytest.raises(SystemExit):
+        BD.check_gate(_gate(tmp_path / "b", decision="no_veto", branch="bs128",
+                            comparator_sha256="b" * 64), e1_batch=32, smoke=True,
+                      arm_records_dir=tmp_path / "none")                          # ran for bs128, E1 said 32
+    with pytest.raises(SystemExit):
+        BD.check_gate(_gate(tmp_path / "c", decision="veto", branch="bs32",
+                            comparator_sha256="b" * 64), e1_batch=32, smoke=True,
+                      arm_records_dir=tmp_path / "none")                          # a veto in the skipped branch
+    assert BD.check_gate(_gate(tmp_path / "d"), e1_batch=32, smoke=True,
+                         arm_records_dir=tmp_path / "none")["e1_batch"] == 32
+    g = BD.check_gate(_gate(tmp_path / "e", decision="no_veto", branch="bs128",
+                            comparator_sha256="b" * 64), e1_batch=128, smoke=True,
+                      arm_records_dir=tmp_path / "none")
+    assert g["branch"] == "bs128" and g["arm_records_checked"] is False
+
+
+def test_the_gate_checkpoints_must_be_the_registered_e_checkpoints(tmp_path):
+    """Codex re-check 2026-09-10 (B6): sha-shaped is not enough; the gate must name the two A100 E
+    checkpoints the published arm records carry, and outside a smoke both records must exist."""
+    recs = tmp_path / "results"
+    recs.mkdir()
+    c32, c128 = "1" * 64, "2" * 64
+    (recs / "m10_arm_E-bs32.json").write_text(json.dumps({"checkpoints": {"cycle3": {"sha256": c32}}}))
+    (recs / "m10_arm_E-bs128.json").write_text(json.dumps({"checkpoints": {"cycle3": {"sha256": c128}}}))
+    with pytest.raises(SystemExit):                       # default candidate "a"*64 is nobody's
+        BD.check_gate(_gate(tmp_path / "a"), e1_batch=32, arm_records_dir=recs)
+    g = BD.check_gate(_gate(tmp_path / "b", candidate_sha256=c32), e1_batch=32, arm_records_dir=recs)
+    assert g["arm_records_checked"] is True
+    with pytest.raises(SystemExit):                       # comparator must be E-bs32's
+        BD.check_gate(_gate(tmp_path / "c", decision="veto", branch="bs128", candidate_sha256=c128,
+                            comparator_sha256="9" * 64), e1_batch=128, arm_records_dir=recs)
+    g = BD.check_gate(_gate(tmp_path / "d", decision="veto", branch="bs128", candidate_sha256=c128,
+                            comparator_sha256=c32), e1_batch=128, arm_records_dir=recs)
+    assert g["decision"] == "veto"
+    with pytest.raises(SystemExit):                       # no records outside a smoke
+        BD.check_gate(_gate(tmp_path / "e", candidate_sha256=c32), e1_batch=32,
+                      arm_records_dir=tmp_path / "nowhere")
+    assert BD.check_gate(_gate(tmp_path / "f", candidate_sha256=c32), e1_batch=32,
+                         arm_records_dir=tmp_path / "nowhere", smoke=True)["arm_records_checked"] is False
+
+
+def test_a_failing_fastembed_parity_leaves_the_freeze_unverified(tmp_path, monkeypatch):
+    """Codex re-check 2026-09-10 (B8): fastembed is the shipped serving path, so a served result
+    below the bar, or no served result, must not verify the freeze even when ORT passes."""
+    model = Toy()
+    ck = tmp_path / "cycle3.pt"
+    torch.save({"model": model.state_dict()}, ck)
+    monkeypatch.setattr(BD.R, "dev6", lambda m, verbose=True: {"macro": 0.5})
+    monkeypatch.setattr(BD, "sha256_file", lambda p: "0" * 64)
+    monkeypatch.setattr(BD.N, "export_onnx", lambda m, d, max_len=512: {"path": str(d)})
+    monkeypatch.setattr(BD.N, "export_parity", lambda m, d, t: {"min_cos": 1.0})
+    for fe in ({"served": False, "error": "no fastembed"},
+               {"served": True, "min_cos": 0.9, "pass_min_cos_1e-4": False}):
+        monkeypatch.setattr(BD, "fastembed_parity", lambda m, d, t, _fe=fe: _fe)
+        out = BD.freeze_checkpoint(model, tmp_path, ck, smoke=False, verbose=False)
+        assert out["verified"] is False and "fastembed" in out["unverified_why"]
+    monkeypatch.setattr(BD, "fastembed_parity",
+                        lambda m, d, t: {"served": True, "min_cos": 1.0, "pass_min_cos_1e-4": True})
+    assert BD.freeze_checkpoint(model, tmp_path, ck, smoke=False, verbose=False)["verified"] is True

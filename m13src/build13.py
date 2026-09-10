@@ -124,7 +124,32 @@ def _is_sha(x):
     return isinstance(x, str) and len(x) == 64 and all(c in "0123456789abcdef" for c in x.lower())
 
 
-def check_gate(gate_path, *, verdicts_path=None):
+ARM_RECORDS_DIR = None      # None -> RESULTS; tests point it at a directory of fake E arm records
+
+
+def _registered_e_checkpoints(records_dir, *, smoke):
+    """-> {arm: cycle-3 checkpoint sha} for both E arms from their published records, or None in a
+    smoke when a record is missing. Outside a smoke a missing record refuses: the gate cannot have
+    read a checkpoint that was never published (Codex re-check 2026-09-10, B6)."""
+    d = Path(records_dir) if records_dir is not None else (ARM_RECORDS_DIR or RESULTS)
+    out = {}
+    for arm in ("E-bs32", "E-bs128"):
+        rec = read_json(d / f"m10_arm_{arm}.json")
+        sha = None
+        if rec:
+            sha = ((rec.get("checkpoints") or {}).get("cycle3") or {}).get("sha256") or \
+                  rec.get("final_checkpoint_sha256")
+        if not _is_sha(sha):
+            if smoke:
+                return None
+            refuse(f"no published record with a cycle-3 checkpoint for {arm} under {d} — the LoTTE "
+                   f"gate compares the two A100 E checkpoints, so both records must exist before it "
+                   f"can have run (m13/LOTTE_GATE_REGISTRATION.json).")
+        out[arm] = sha
+    return out
+
+
+def check_gate(gate_path, *, verdicts_path=None, e1_batch=None, arm_records_dir=None, smoke=False):
     """-> the gate summary the record carries, or refuses.
 
     `m13/LOTTE_GATE_REGISTRATION.json` registers the contract: the gate record is written by the
@@ -160,6 +185,30 @@ def check_gate(gate_path, *, verdicts_path=None):
     elif not _is_sha(comp):
         refuse(f"{p}: a {dec!r} decision compares two checkpoints; `comparator_sha256` is "
                f"{comp!r}")
+    # The gate must be the one E1's selection calls for (Codex re-check 2026-09-10, B6): in the
+    # bs128 branch the veto RUNS, so `skipped` is the bypass the veto exists to prevent; in the
+    # bs32 branch the selected recipe IS the anchor recipe and the veto is SKIPPED and forfeited
+    # (m10/LOTTE_LOCK.md). A gate for the other branch is a gate for a different build.
+    if e1_batch is not None:
+        want = "bs128" if int(e1_batch) == 128 else "bs32"
+        if branch != want:
+            refuse(f"{p}: the gate is for branch {branch!r} but E1 selected {want}; the gate that "
+                   f"was read is not the gate this build needs.")
+        if want == "bs128" and dec == "skipped":
+            refuse(f"{p}: E1 selected bs128, so the veto RUNS; a `skipped` gate cannot license a "
+                   f"bs128 build (m10/LOTTE_LOCK.md, m13/LOTTE_GATE_REGISTRATION.json).")
+        if want == "bs32" and dec != "skipped":
+            refuse(f"{p}: E1 selected bs32, where the veto is registered SKIPPED (identical recipe "
+                   f"and action); a {dec!r} decision means the gate compared something else.")
+    expected = _registered_e_checkpoints(arm_records_dir, smoke=smoke)
+    if expected is not None:
+        cand_arm = "E-bs128" if branch == "bs128" else "E-bs32"
+        if g["candidate_sha256"] != expected[cand_arm]:
+            refuse(f"{p}: `candidate_sha256` {g['candidate_sha256'][:12]} is not {cand_arm}'s "
+                   f"published cycle-3 checkpoint {expected[cand_arm][:12]}.")
+        if dec != "skipped" and comp != expected["E-bs32"]:
+            refuse(f"{p}: `comparator_sha256` {str(comp)[:12]} is not E-bs32's published cycle-3 "
+                   f"checkpoint {expected['E-bs32'][:12]}.")
     live = sha256_file(Path(verdicts_path or BL.VERDICTS))
     if g.get("e1_verdict_sha256") != live:
         refuse(f"{p}: `e1_verdict_sha256` is {g.get('e1_verdict_sha256')!r} but "
@@ -168,7 +217,8 @@ def check_gate(gate_path, *, verdicts_path=None):
     return {"path": rel(p), "sha256": sha256_file(p), "executed": True, "decision": dec,
             "branch": branch, "candidate_sha256": g["candidate_sha256"],
             "comparator_sha256": comp, "e1_verdict_sha256": live,
-            "read_at": g.get("read_at"), "code_identity": g.get("code_identity")}
+            "read_at": g.get("read_at"), "code_identity": g.get("code_identity"),
+            "e1_batch": e1_batch, "arm_records_checked": expected is not None}
 
 
 def build_plan(cfg, reg, batch, *, smoke_dose=None):
@@ -384,7 +434,7 @@ def _preflight(ctx, cfg, cfg_path, *, smoke, device, batch, lotte_gate, compile_
     reg = SL.cfg()
     report = BL.validate(cfg, reg, smoke=smoke)
     b, batch_source = BL.resolve_batch(cfg, smoke=smoke, override=batch)
-    gate = check_gate(lotte_gate or (REPO / cfg["lotte_gate"]))
+    gate = check_gate(lotte_gate or (REPO / cfg["lotte_gate"]), e1_batch=b, smoke=smoke)
     if gate["decision"] == "veto":
         # `m10/LOTTE_LOCK.md`: "the comparator's recipe (bs32) is what the 200M build trains".
         # The veto OVERRIDES the E1 verdict — that is the whole point of a veto, and the version
@@ -684,9 +734,7 @@ def freeze_checkpoint(model, out_dir, final_ck, *, smoke=False, verbose=True):
     Returns `verified: False` with `unverified_why` when the export RAISED or the ORT parity did
     not reach `PARITY_MIN_COS`. The version this replaces swallowed the export exception into an
     `export_error` field that nothing read, so a build whose ONNX never existed still published
-    `complete: true` and a final checkpoint (Codex 2026-09-10, B8). fastembed is NOT part of the
-    verdict: it is optional at this stage and reports `served: False` when unavailable, which is
-    the documented behaviour (`m10/CODEMAP.md` pitfalls 2 and 5); the ORT parity is the one this
+    `complete: true` and a final checkpoint (Codex 2026-09-10, B8). fastembed serving parity IS part of the bar (Codex re-check 2026-09-10, B8): `pass_min_cos_1e-4` must be true, so a box without fastembed leaves the freeze unverified until it is re-run where fastembed serves it.md` pitfalls 2 and 5); the ORT parity is the one this
     build always has.
     """
     ck = torch.load(final_ck, map_location="cpu", weights_only=False)
@@ -719,6 +767,15 @@ def freeze_checkpoint(model, out_dir, final_ck, *, smoke=False, verbose=True):
     if cos is None or float(cos) < PARITY_MIN_COS:
         out["unverified_why"] = (f"ORT serving parity min-cos {cos!r} < {PARITY_MIN_COS}: the "
                                  f"exported graph does not reproduce the trained model")
+        return out
+    fe = out.get("fastembed_parity") or {}
+    if not fe.get("served") or not fe.get("pass_min_cos_1e-4"):
+        # fastembed IS the shipped serving path (M11's release contract), so it is part of the
+        # bar (Codex re-check 2026-09-10, B8): an unavailable or failing fastembed read leaves the
+        # freeze unverified until the freeze is re-run where fastembed serves it.
+        out["unverified_why"] = ("fastembed serving parity did not pass: "
+                                 + json.dumps({k: fe.get(k) for k in ("served", "error", "min_cos",
+                                                                     "pass_min_cos_1e-4")}))
         return out
     out["verified"] = True
     out["parity_bar_min_cos"] = PARITY_MIN_COS

@@ -78,6 +78,10 @@ class Config:
     teacher_revision: str = "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20"
     teacher_dtype: str = "fp32"
     serving_parity_artifacts: tuple[str, ...] = ("results/m10_student_parity_box.json",)
+    # The build record `m13src/build13.py` writes at the freeze. Preflight requires it to be
+    # `complete` with a verified freeze and to name THIS candidate's checkpoint sha, so an old or
+    # unrelated parity artifact cannot stand in for the shipped path (Codex re-check, B8).
+    build_record_path: str | None = "results/m13_build_record.json"
     doc_cache_fmt: str = DOC_CACHE_FMT
     # "nano" -> m10src/final10; "m9" -> refused until M9's own registration is wired (review B13).
     decision_layer: str = "nano"
@@ -434,6 +438,43 @@ def preflight(cfg, conf, infra_retry=False):
         if not (cfg.repo / rel).exists():
             problems.append(f"serving-parity artifact {rel} is missing; the shipped path was never "
                             f"shown to reproduce the scored one.")
+
+    # The active teacher must be the pinned document tower BEFORE anything is spent: `m7src.teacher`
+    # defaults to bge-base when M7_ENCODER is unset, and `score13.cache_record` only discovers that
+    # after the tag, which under R14 is an irreversible loss (Codex re-check 2026-09-10, new P1).
+    try:
+        import teacher as _teacher
+        active = (_teacher.TEACHER, _teacher.TEACHER_REV)
+    except Exception as e:                                  # pragma: no cover - import failure
+        problems.append(f"cannot resolve the active teacher ({e!r}); set M7_ENCODER and retry.")
+    else:
+        if active != (cfg.teacher_model_id, cfg.teacher_revision):
+            problems.append(f"the active teacher is {active[0]}@{str(active[1])[:12]}, not the pinned "
+                            f"{cfg.teacher_model_id}@{cfg.teacher_revision[:12]}: set M7_ENCODER to "
+                            f"the document tower the index was built with before preflight.")
+
+    if cfg.build_record_path is not None:
+        rp = cfg.repo / cfg.build_record_path
+        try:
+            want = json.loads(Path(cfg.freeze_path).read_text()).get("checkpoint_sha256")
+        except Exception:
+            want = None
+        try:
+            rec = json.loads(rp.read_text()) if rp.exists() else None
+        except Exception as e:
+            rec, want = None, want
+            problems.append(f"build record {cfg.build_record_path} is unreadable ({e!r}).")
+        if rec is None:
+            problems.append(f"build record {cfg.build_record_path} is missing: the candidate was "
+                            f"never frozen by build13 with a verified serving parity.")
+        else:
+            if rec.get("complete") is not True or not (rec.get("freeze") or {}).get("verified"):
+                problems.append(f"build record {cfg.build_record_path} is not a complete build with "
+                                f"a verified freeze (status {rec.get('status')!r}).")
+            if want is None or rec.get("final_checkpoint_sha256") != want:
+                problems.append(f"build record {cfg.build_record_path} names checkpoint "
+                                f"{str(rec.get('final_checkpoint_sha256'))[:12]} but the freeze names "
+                                f"{str(want)[:12]}: the parity evidence is for another checkpoint.")
 
     datasets = conf["partitions"]["all6"]
     for ds in datasets:
