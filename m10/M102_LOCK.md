@@ -1,15 +1,30 @@
-# M10.2 — the build recipe (DRAFT, not yet locked)
+# M10.2 — THE RECIPE LOCK (half A). Ready to push.
 
-**Status: DRAFT.** The mandate requires ONE pushed commit carrying this file,
-`m10/final_run_registry.json` and `m10/LOTTE_LOCK.md` (`instructions-m10.md`:346). **The other two
-are now written**; what remains before the commit is listed under §Still to do — chiefly
-`m10src/final10.py`'s `decide()`, which the mandate requires written, unit-tested and reviewed
-first. Codex and Fable then review the pushed lock. **Nothing in these three files may be edited
-after that commit** except by a dated amendment that governs a decision not yet made — **with one
-named exception: flipping `final_run_registry.ratified_by_owner` to true to record Dylan's
-ratification, which the executor requires before the final run may open the six.** That is not an
-amendment to any rule, and `final_run_registry._ratification` states the same thing, so the two
-files agree.
+**THE LOCK IS SPLIT IN TWO (Dylan, 2026-09-10).** The mandate (`instructions-m10.md`:346) asks for
+ONE pushed commit carrying the recipe, the final-run registry and the LoTTE manifest. That bundling
+made the cloud spend wait on decision code for a step three weeks away, so it is split — **an
+explicit, dated deviation from the mandate, on Dylan's ruling, not a quiet one.**
+
+| half | what it decides | status |
+|---|---|---|
+| **A — THIS FILE** | which model to build, on what data, for how long, at what cost | **READY** — stable for two days, and the only half the cloud spend needs |
+| **B — `m10/M10_4_DECISION_LOCK.md`** | how the finished model is judged on the six datasets | **DEFERRED to M10.4**, before the final run |
+
+**What the split does NOT change.** The protocol requires a decision to be fixed BEFORE the numbers
+it affects exist. Half B is still locked and reviewed clean before a single six-dataset number is
+computed — the split changes *when it is written*, not *whether it precedes the result*.
+
+**The hard gate that makes that true:** no six-dataset evaluation, no `m10-six-spent` tag and no
+LoTTE read may happen until half B is locked and a review returns clean. Half B is NOT nearly done;
+its open findings are listed in its own file.
+
+**Why half B was deferred rather than finished.** The scoring path that will CALL its decision code
+does not exist (`m9src/final9.py`:348 raises `SCORING PATH NOT IMPLEMENTED`). Nine adversarial
+rounds kept finding gaps in code whose only caller is unwritten — reviewing it now is premature in
+a way care does not fix. It gets written during the build, beside the executor that uses it.
+
+**Nothing in half A may be edited after its push** except by a dated amendment governing a decision
+not yet made.
 
 Every field below is read from `m10/screen_registry.json` and the committed artifacts; where this
 file states a number, the artifact is authoritative.
@@ -171,47 +186,17 @@ Registered before the numbers exist, so they cannot be dropped after them:
    That is `zero`'s claim alone; nano is 34.5M params against bge-small's ~33.4M with the same
    backbone forward pass.
 
-## The final run and LoTTE
+## The final run and LoTTE — MOVED TO HALF B
 
-- **`m10/final_run_registry.json`** — WRITTEN, with tests. Four conjuncts under **fixed-sequence
-  gatekeeping, C1b → C1a → C2a → C2b, each at the full one-sided 0.025, stopping at the first
-  non-rejection**; decision field `lower_q025_raw`, the 250th order statistic at B = 10,000,
-  `inverted_cdf`; sign-flip at 0.025 in the same sequence; both must reject. Reserved trigger is
-  **any** conjunct, so an aim claim never stands without its descriptive reserved rows.
-  Classified a PREREGISTRATION, not an amendment — M9's had to be the latter.
-- **`m10/LOTTE_LOCK.md`** — WRITTEN. The M9 §7 veto unchanged, plus the case M10 actually has:
-  since the screen selected no non-default, the selected and anchor recipes differ **only in
-  `batch`**, so if E selects bs32 the veto compares a recipe to itself and **the VETO is skipped and
-  reported skipped — while the candidate's OBSERVATIONAL LoTTE row is still read.** The veto being
-  vacuous does not make the out-of-domain observation vacuous, and LoTTE-clean is the only fresh
-  OOD surface before the final run (corrected 2026-09-10; an earlier version of this line said all
-  of read #1 was skipped, contradicting `LOTTE_LOCK.md` in the same commit). Read #1 sits **after
-  the lock and BEFORE the build**, on a screen-dose arm, which is what makes "a veto means the
-  anchor recipe builds" mean anything.
+`m10/final_run_registry.json`, `m10/LOTTE_LOCK.md` and `m10src/final10.py` are half B's artifacts.
+They are written and heavily reviewed but **NOT locked**, and their open findings are recorded in
+`m10/M10_4_DECISION_LOCK.md`. **Half A makes no claim about them.**
 
-## Still to do before this is a lock
+## Still to do before THIS half is pushed
 
-- [x] **`m10src/final10.py`** — WRITTEN and unit-tested (run the suite; stated counts went stale twice in one day). `m9src/final9.py:decide()` is
-      hard-coded to two conjuncts under Holm-2 at 0.0125 and is NOT reused. The tests pin the
-      failure modes that are otherwise silent: the sequence stopping at the first non-rejection;
-      a later conjunct reported NOT_TESTED and **never as failed**; `linear` being the weakly more
-      permissive method and therefore banned; a partition missing a dataset RAISING instead of
-      renormalizing; both halves of the pass rule binding; and p = 0.02 rejecting at 0.025 where it
-      would not at M9's 0.0125.
-- [x] **Adversarial review of `final10.py`** — done repeatedly through 2026-09-09/10, Codex and
-      Fable alternating, each round's findings applied. `m10/LEDGER.md` has the record.
-- [ ] **The SCORING path (encode the six, bridge, score).** *Correction, 2026-09-09:* I wrote that
-      it "reuses `m9src/final9.py`". **There is nothing to reuse** — `m9src/final9.py`:348 raises
-      `SCORING PATH NOT IMPLEMENTED`; M9 left step 4's encoding deliberately unwritten until a GPU
-      was free, and M9's close-out has not run. What IS reusable: `m7src/final_run.py`'s
-      `verify_and_load`/`score_set` (the only implemented scoring), and final9's ACCESS machinery
-      (`seal_protected_paths`, `acquire_lock`, `spent_tag_exists`, `preflight`, `spend_access`)
-      retargeted to M10's paths and `m10-six-spent` tag.
-      **Not a lock blocker** — it is needed before the final run (M10.4), which is after the build —
-      but it is unwritten for BOTH milestones and M9's close-out needs it too.
-- [x] `headline_verbatim` — one registered sentence PER OUTCOME with a `_must_not` list, and
-      `final10.headline()` is the production selector that emits a sentence ONLY for a conjunct
-      whose status is REJECTED. "The report writer will pick the right one" is not a control.
-- [x] Both descriptive reads folded in — `ANCHOR-seed1` **+0.000712**, `A3-20M` **+0.016453 at 20M
-      against +0.012080 at 5M** (`m10/RESULTS.md` §M10.2 DESCRIPTIVE reads).
-- [ ] Codex and Fable review the pushed lock (mandate).
+- [x] every recipe field filled from the registry and the committed artifacts
+- [x] both descriptive reads folded in (`ANCHOR-seed1` +0.000712; `A3-20M` +0.016453 at 20M)
+- [x] `E-bs32` registered as a real A100 arm, so E1 is not a cross-hardware contrast
+- [x] the GPU-hour table, including family E and the LoTTE-clean encode
+- [ ] **Dylan's approval of the split, recorded here** — he ruled for it 2026-09-10; this line is
+      the placeholder for the push commit that records it

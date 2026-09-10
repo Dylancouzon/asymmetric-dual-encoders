@@ -1,16 +1,45 @@
-# M10 status — 2026-09-09. **SCREEN READ. Ten contrasts computed, the recipe is selected but one family is open.** **RUNNING: the two descriptive arms astra ruled for — `ANCHOR-seed1` (~2.4 h) then `A3-20M` (~10.9 h), `work/m10arms/descriptive_chain.log`. NEXT ACTION: read them with `m10src/descriptive_reads.py`, then push the recipe lock. E stays PENDING until the A100 runs both E arms.** All three reviews (Fable, Codex, astra) have landed and every finding is applied.
+# M10 status — 2026-09-10. **SCREEN READ AND RECIPE SELECTED. The lock is SPLIT; half A is ready to push.** Box idle. **NEXT ACTION: push the recipe lock (half A, `m10/M102_LOCK.md`), then rent the A100 and run family E — both arms, which resolves the one open recipe field.**
 
-**Selected recipe:** student **bge-small** · corpus **A4** (harvest + the 834,463 generated queries) ·
-head **1152-wide linear** · mix **75/25** · objective **squared L2** · batch **PENDING**.
-Verdicts and the three non-optional readings: `m10/RESULTS.md` §M10.2 SCREEN VERDICTS;
-selection `results/m10_screen_verdicts.json`; driver `m10src/contrasts.py`.
+**Selected recipe:** student **bge-small** · corpus **A4** (harvest + the 834,463 generated
+queries) · head **1152-wide linear** · mix **75/25** · objective **squared L2** · batch **PENDING
+until family E runs on the A100**.
 
-**Read this, then `m10/LEDGER.md`.** The box is **preparation for the cloud GPU run, not a
-measurement target** (Dylan, 2026-09-05): run as much as it can here first, no re-shaping; the
-remainder moves to the A100 under the same registry. **The weekend timeline is not binding.**
-Working model (Dylan, 2026-09-05): the session is the ML lead, Opus/Sonnet subagents do the build
-work, Codex is the adversarial reviewer.
+## THE LOCK IS SPLIT (Dylan, 2026-09-10) — read this before touching anything
 
+The mandate wants one lock commit. It is split, on Dylan's explicit ruling, because half B was
+holding the cloud spend hostage:
+
+| half | file | state |
+|---|---|---|
+| **A — the recipe** | `m10/M102_LOCK.md` | **READY TO PUSH.** What to build, on what, for how long, at what cost |
+| **B — the judging** | `m10/M10_4_DECISION_LOCK.md` | **NOT LOCKED, NOT NEARLY DONE.** 14 open findings listed there |
+
+**The hard gate:** no six-dataset evaluation, no `m10-six-spent` tag and no LoTTE read until half B
+is locked and reviewed clean. That is what keeps every decision ahead of the numbers it governs.
+
+**Half B was deferred because the scoring path does not exist** — `m9src/final9.py`:348 raises
+`SCORING PATH NOT IMPLEMENTED`, for M9 as well as M10. Nine adversarial rounds kept finding gaps in
+decision code whose only caller is unwritten. Write the executor first, then lock half B.
+
+## A WARNING TO THE NEXT SESSION, from this one's failure mode
+
+This session introduced a defect in most of its own fixes, and the mechanism was specific, not
+general carelessness. **Both patterns will bite you too:**
+
+1. **One fact lives in four places** (screen registry, `M102_LOCK.md`, `M10_4_DECISION_LOCK.md`,
+   `LOTTE_LOCK.md`) and a fix touches three. That produced the same class of bug three times: the
+   `E_warmup_parity` correction, the `score_set` claim, and `E-bs32` — where four documents asserted
+   "both E arms run on the A100" while the registry had no such arm, only an alias to the
+   box-trained anchor, so E1 was silently a cross-hardware contrast.
+2. **Editing an invariant and its test together silently removes the check.** Removing the `E-bs32`
+   alias deleted `screen_lock`'s only assertion that the anchor is batch 32; the test went red and
+   the honest fix was to restore the invariant, not delete the assertion.
+
+**The guard worth building before more fixes:** a test asserting the lock documents and the registry
+agree on the facts they share. It would have caught three of this session's errors.
+
+**And run the full suite before every commit.** This session once committed a message claiming "406
+tests green" after editing a registry field post-run; the claim was false when made.
 ## The screen, done (2026-09-09)
 
 13 arms on the box, all `exit 0`, zero failures (`work/m10arms/rest_chain.log`, `F_chain.log`);
@@ -97,10 +126,10 @@ re-issue · the ten computable contrasts · the selection.
 
 | # | open item | blocks | who |
 |---|---|---|---|
-| 1 | ~~reviews~~ **BOTH LANDED.** Fable on the amendment + verdicts (11 findings, all applied); Codex on the FIXES, which returned **NO-GO** — 2 did not work, 4 partial, all now fixed, and it overturned three of my claims. `research/m10-{fable-verdicts,codex-fixes}-review-2026-09-09.md` | — | done |
+| ~~1~~ | ~~reviews~~ **NINE ROUNDS RUN.** Rounds 1-9 Codex/Fable alternating; every finding through round 8 applied, round 9's applied only for half A. Half B's remainder is its own backlog. Fable on the amendment + verdicts (11 findings, all applied); Codex on the FIXES, which returned **NO-GO** — 2 did not work, 4 partial, all now fixed, and it overturned three of my claims. `research/m10-{fable-verdicts,codex-fixes}-review-2026-09-09.md` | — | done |
 | ~~1a~~ | **RULED by astra, executing:** SYNTH-20M is RE-POINTED to `A3-20M` vs the completed `F-bge-small` — A4's corpus against A3's at 20M, the one contrast that resolved. Costs 20M examples, not 40M, because the A4 side already exists. Parity documented and tested (`arms.A3-20M._parity`): after the dose is matched the only difference is `sources`. ~~DECISION: re-point or cut SYNTH-20M.~~ As registered it compares the anchor recipe **to itself** — the screen selected no non-default component, so its premise is gone. Candidates that measure something: A4 vs A3 at 20M, or the anchor at seeds 1/2. `confirmation.synth_20M._VACUOUS_AS_REGISTERED` | 20M examples of budget | **Dylan** |
 | ~~1b~~ | **RULED YES by astra, running:** `ANCHOR-seed1`, 5M, seed 1, ~2.4 h on the box. Report absolute scores, the signed difference and its family decomposition; call it an ANCHOR SENSITIVITY observation, keep the original seed regardless of outcome, and claim none of reproducibility / bounded seed noise / seed-adjusted significance **even if the delta is ~0** (`arms.ANCHOR-seed1`). ~~DECISION: buy the seed number?~~ No interval in this screen contains training-seed variance; confirmation was the only thing that would have measured it and it is cut. ANCHOR at seed 1, 5M, ~1.5 h on the idle box, zero cloud cost, selects nothing. Six contrasts sit within ±0.004 of their bar. Bound we have: 0.0013869 from the calibration (n=1). `confirmation.seed_variance_gap` | nothing; it is a reporting quality buy | **Dylan** |
-| 2 | **Push the M10.2 recipe lock.** All three artifacts written (`M102_LOCK.md`, `final_run_registry.json`, `LOTTE_LOCK.md`) and `final10.py` written + reviewed by Codex AND Fable (both said DO NOT PUSH; every finding applied, 413 tests green). **Remaining: fold in `A3-20M`, then fix the stale `rules.E_warmup_parity` clause — which needs `screen_registry.json` edited, and A3-20M's resume path pins its hash, so it waits for that arm** | the build | session |
+| 2 | **Push HALF A** (`m10/M102_LOCK.md`) — the recipe lock. Ready. Half B is deferred with its own file and a hard gate | the cloud spend | session |
 | 2a | **The SCORING path is UNWRITTEN for both milestones.** `m9src/final9.py`:348 raises `SCORING PATH NOT IMPLEMENTED` — M9 left step 4's encoding unwritten and its close-out has not run, so there is no asset to reuse. `m7src/final_run.py`'s `verify_and_load`/`score_set` is the only implemented scoring; final9's ACCESS machinery is reusable. **Not a lock blocker** (needed before M10.4, after the build) but M9's close-out needs it too | the final run, and M9's close-out | session |
 | 3 | **Family E** — `E-bs128` is CLOUD_ONLY and both E arms run on the A100 together. Until then `rules.E_cost` has no reading: an unread contrast trivially fails to resolve, and taking bs128 from that would decide E on a measurement nobody made | the build's batch size | session, on the A100 |
 | 4 | **CUREv1 admission** (decision 12, adopted 2026-09-04, **never executed**). Precondition: harvest/PAQ/seed draws were screened against an index lacking it — **re-screen or disclose before reading it** | nothing on the critical path; a reported diagnostic, never selection-bearing | session |
