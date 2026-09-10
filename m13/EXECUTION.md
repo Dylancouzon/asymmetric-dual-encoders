@@ -11,6 +11,8 @@ there is no production nano scorer. `m9src/final9.py` stops at `SCORING PATH NOT
 | Preflight / M9 | No protected query/qrel reads in preflight; restore inherited 120 GB space requirement; resolve M9's legacy bridge and ratification before close-out |
 | Review and budgets | Rehearse the real caller; clean independent reviews; include conditional reserved cost in M13 allocation; register paired M9/nano row before either final run |
 | Cost frontier | Same-machine zero/bge-small/nano serving costs and complete system/index costs; Edge fusion still unmeasured |
+| Build controller (found 2026-09-10) | 200M pin, extension rule and cap, ONNX/parity at freeze, spend accounting have no code; `arm_doc_count` demands 50M unique documents at 200M against a ~6.15M pool; wall-clock checkpoint cadence; full uncut A4 for the build. Design and owner questions: `m13/STAGE1_DESIGN.md` |
+| Scoring executor (found 2026-09-10) | No access machinery under M10 paths yet; registry cites M7's payload-reading preflight while this file requires manifests only (ruling R1); `min_free_gb` 120 absent from M10's registry and code; M9 still carries the withdrawn 0.0003 bridge (R3) |
 
 Original findings: `research/archive/m10-cleanup-2026-09-10/m10/M10_4_DECISION_LOCK.md`.
 The missing ±1.5 decision-range test is now covered. Scope/freeze prose and budget-range errors

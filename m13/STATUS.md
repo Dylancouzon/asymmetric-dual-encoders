@@ -1,11 +1,13 @@
-# M13 status — cloud work not started, 2026-09-10
+# M13 status — stage 1 in progress, 2026-09-10
 
-**Next:** implement and smoke the build controller and scoring transaction before renting the GPU.
+**Next:** implement `m13src/build13.py` and `m13src/score13.py` per `m13/STAGE1_DESIGN.md`, rehearse both
+on synthetic inputs, then Codex review. Branch `m13-stage1-execution-prep`. Owner rulings R1–R8 are
+listed in the design; none blocks the code, all block protected access.
 M10's prepared data, completed screen and selected components are the input, not work to repeat.
 
 | Stage | State / exit |
 |---|---|
-| Execution preparation | Reuse trainer/loader; implement build config, extension controller and final scorer; rehearse resume and access recovery |
+| Execution preparation | Surveys done, design written (`m13/STAGE1_DESIGN.md`, `m13/CODEMAP.md`); controller and scorer not yet written |
 | Cloud E comparison | Both E-bs32 and E-bs128 pending; apply existing E1 rule after both finish |
 | Pre-build gate | Lock/review LoTTE handling and run or skip under its registered branch; batch may still be vetoed |
 | Build | Actual rate/price and complete allocation under $1,000; then 200M examples plus permitted extensions, freeze/provenance |
