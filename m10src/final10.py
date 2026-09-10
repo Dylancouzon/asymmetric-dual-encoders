@@ -48,6 +48,7 @@ REGISTRY = REPO / "m10" / "final_run_registry.json"
 REJECTED = "REJECTED"
 NOT_REJECTED = "NOT_REJECTED"
 NOT_TESTED = "NOT_TESTED"
+UNSCORABLE = "UNSCORABLE"
 
 
 def cfg():
@@ -311,10 +312,16 @@ def conjunct_rejects(stat, sf_p, alpha):
 def decide(evidence, conf=None):
     """{conjunct_id: {"stat": <bootstrap dict>, "signflip_p": float}} -> the gatekeeping verdict.
 
-    `evidence` need not contain every conjunct: the sequence stops at the first non-rejection, so
-    the executor is entitled to stop SCORING there too. A conjunct that is absent because the
-    sequence never reached it is `NOT_TESTED`; a conjunct that is absent although the sequence DID
-    reach it is an error, not a silent skip.
+    The executor scores ALL FOUR conjuncts in one transaction (`implementation.executor_contract`)
+    — the access is spent either way. Absent evidence is therefore CRASH TOLERANCE, not an
+    entitlement to stop scoring: an earlier docstring said the latter and contradicted the registry
+    (Codex, round 9).
+
+    A conjunct the sequence never reached is `NOT_TESTED`. A conjunct the sequence DID reach may
+    arrive as the sentinel `{"unscorable": "<reason>"}` — its status is `UNSCORABLE`, the sequence
+    stops there, and **every verdict already established stands**. Raising instead would discard
+    real rejections: one NaN in a comparator row made C2a unscorable and the whole call raised,
+    after the access was spent, with C1b and C1a already REJECTED (Fable, round 9).
     """
     conf = canonical(conf)
     order = sequence(conf)
@@ -346,6 +353,16 @@ def decide(evidence, conf=None):
         if ev is None:
             raise ValueError(f"{cid} is next in the sequence and still untested, but no evidence "
                              f"was supplied for it; the sequence had not stopped")
+        if isinstance(ev, dict) and "unscorable" in ev:
+            out[cid] = {"status": UNSCORABLE, "reason": ev["unscorable"],
+                        "partition": conf["conjuncts"][cid]["partition"],
+                        "bar_comparator": conf["conjuncts"][cid]["b"],
+                        "gate": conf["conjuncts"][cid]["gate"],
+                        "_why": "this conjunct could not be scored, so the sequence stops here and "
+                                "every verdict already established STANDS. It is not a rejection "
+                                "and not a non-rejection — it carries no verdict at all."}
+            stopped = True
+            continue
         flags = assert_evidence_matches_registry(cid, ev, conf)
         rej = conjunct_rejects(ev["stat"], ev["signflip_p"], alpha)
         out[cid] = {"status": REJECTED if rej else NOT_REJECTED,
@@ -366,7 +383,7 @@ def decide(evidence, conf=None):
     by_part = {}
     for cid, e in out.items():
         ev = evidence.get(cid)
-        if ev is not None:
+        if ev is not None and "unscorable" not in ev:      # a sentinel carries no digests
             by_part.setdefault(conf["conjuncts"][cid]["partition"], []).append((cid, ev))
     for part, members in by_part.items():
         digests = {(ev.get("draw_plan_sha256"), ev.get("qid_sha256")) for _c, ev in members}
@@ -384,6 +401,7 @@ def decide(evidence, conf=None):
         "conjuncts": out,
         "rejected": [c for c in order if out[c]["status"] == REJECTED],
         "not_tested": [c for c in order if out[c]["status"] == NOT_TESTED],
+        "unscorable": [c for c in order if out[c]["status"] == UNSCORABLE],
         "reserved_batch_runs": any_rejected,
         "_reserved_trigger": conf["reserved"]["trigger"],
         "_vocabulary": "a final-run conjunct REJECTS or does not. It never 'resolves' and is never "
@@ -480,6 +498,6 @@ def headline(verdict, conf=None):
 
 
 __all__ = ["cfg", "canonical", "registry_sha256", "sequence", "align_partition", "assert_scoreable",
-           "bootstrap",
+           "UNSCORABLE", "bootstrap",
            "signflip", "evidence_for", "conjunct_rejects", "assert_evidence_matches_registry",
            "decide", "headline", "draw_plan", "REJECTED", "NOT_REJECTED", "NOT_TESTED"]

@@ -148,8 +148,13 @@ def validate(r=None):
 
     # -- the anchor's own settings must agree with every axis it stands in for
     anc = r["anchor"]
-    for k, field, want in (("E-bs32", "batch", 32), ("G-1152", "feature_dim", 1152),
-                           ("B-75/25", "mix", "75/25")):
+    # `E-bs32` stopped being an alias on 2026-09-10 (it is its own A100 arm now), which silently
+    # removed the cross-check that the anchor really is batch 32. Restored against the ARM.
+    e32 = arms.get("E-bs32", {})
+    if e32 and e32.get("batch") != anc.get("batch"):
+        bad.append(f"arms.E-bs32.batch = {e32.get('batch')!r} but anchor.batch = "
+                   f"{anc.get('batch')!r}; E-bs32 is the anchor recipe on the A100")
+    for k, field, want in (("G-1152", "feature_dim", 1152), ("B-75/25", "mix", "75/25")):
         if k in alias and anc.get(field) != want:
             bad.append(f"alias {k} claims the anchor is {want}, but anchor.{field} = "
                        f"{anc.get(field)!r}")

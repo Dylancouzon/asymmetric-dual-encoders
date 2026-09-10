@@ -88,7 +88,7 @@
  },
  "no_interval": "DELIBERATE. This read selects nothing and is not a contrast, so no bootstrap interval is computed: an interval printed beside a point estimate is read as a test whatever the prose says. The twelve registered contrasts are in `results/m10_contrast_*.json`.",
  "selects": "NOTHING, and **the original seed is retained regardless of outcome** (astra's condition). It cannot re-decide any verdict.",
- "registry_sha256": "35da3316bf66904d9daffc8b676cb91a6fa6a9cc11de7b9be49490c4ce1d2e2b",
+ "registry_sha256": "679e0574d19e24550aace4d488c9ca848a82ad2a2271a77972b8bd78f5ba5f60",
  "_what_it_licenses": "astra's registered sentence, to be used verbatim with the measured delta: \"At 5M examples, the second training seed changed ANCHOR's COV macro by delta = [seed 1 minus original]; this single between-run difference describes ANCHOR SENSITIVITY, while the screen's query-resampling intervals condition on the trained checkpoints and exclude training-seed variability.\"",
  "_what_it_does_NOT_license": "**Do not claim** reproducibility, bounded seed noise, seed-adjusted significance, or confirmed verdicts -- EVEN IF the delta is nearly zero. And do not call it a seed-variance estimate that 'calibrates ten contrasts': the alternatives can move WITH the anchor across seeds, so paired effect variability remains unknown. It is an anchor sensitivity observation, n=1.",
  "registered_sentence_filled": "At 5M examples, the second training seed changed ANCHOR's COV macro by delta = +0.000712; this single between-run difference describes ANCHOR SENSITIVITY, while the screen's query-resampling intervals condition on the trained checkpoints and exclude training-seed variability."

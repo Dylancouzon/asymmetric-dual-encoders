@@ -193,6 +193,17 @@
    "_what_it_licenses": "astra's registered sentence, to be used verbatim with the measured delta: \"At 5M examples, the second training seed changed ANCHOR's COV macro by delta = [seed 1 minus original]; this single between-run difference describes ANCHOR SENSITIVITY, while the screen's query-resampling intervals condition on the trained checkpoints and exclude training-seed variability.\"",
    "_what_it_does_NOT_license": "**Do not claim** reproducibility, bounded seed noise, seed-adjusted significance, or confirmed verdicts -- EVEN IF the delta is nearly zero. And do not call it a seed-variance estimate that 'calibrates ten contrasts': the alternatives can move WITH the anchor across seeds, so paired effect variability remains unknown. It is an anchor sensitivity observation, n=1.",
    "cost": "5,000,000 examples, ~2.2 h on the idle box, zero cloud dollars"
+  },
+  "E-bs32": {
+   "family": "E",
+   "dose_examples": 5000000,
+   "batch": 32,
+   "trained": true,
+   "selectable": true,
+   "pending": "CLOUD_ONLY",
+   "_what": "the bs32 arm of family E, trained ON THE A100 alongside `E-bs128`. **Registered 2026-09-10 (Fable + Codex round 9, 2026-09-10), pre-observation — family E has not run.** Before this, `E-bs32` existed only as an `anchor_aliases` entry pointing at `ANCHOR`, which is BOX-trained, so `contrasts.E1` resolved to ANCHOR(box) − E-bs128(A100) and carried exactly the hardware confound that `rules.E_warmup_parity`, `_interpretation.E1`, `M102_LOCK.md` and `LOTTE_LOCK.md` all said had been removed. Four documents asserted a design the registry could not express; this is the registration that makes it true.",
+   "_pending": "`trained: true` means REGISTERED TO BE TRAINED. Neither E arm has run; both run on the rented A100 together, which is what removes the hardware difference from E1.",
+   "warmup_examples": 64000
   }
  },
  "contrasts": {
@@ -396,15 +407,15 @@
   "_what": "the anchor appears in a contrast under the name of the axis being varied; each of these resolves to the single trained ANCHOR arm. Sharing one comparator across ten contrasts does not break Bonferroni (a union bound needs no independence) nor the paired bootstrap (per-contrast); the hazard it does carry -- one unlucky anchor seed lifting every non-default at once -- is what `confirmation` exists to contain.",
   "G-1152": "ANCHOR",
   "B-75/25": "ANCHOR",
-  "E-bs32": "ANCHOR",
   "C-fresh": "ANCHOR",
   "anchor": "ANCHOR",
   "A4": "ANCHOR",
   "F-winner": "the winner of contrast F1 at its 20M checkpoint (NOT of F itself: F2 is L12 - F1's winner, so the reference cannot be circular)",
-  "_resolver": "every value here is an arm id EXCEPT `F-winner`, which is resolved at read time by `rules.F_selection_aware` and is prose by necessity, not oversight. `runs_iff`/`skipped_iff`/`conditional_extension.iff` are likewise human-readable conditions evaluated by the session, not by a generic engine (W9, Codex finding 9)."
+  "_resolver": "every value here is an arm id EXCEPT `F-winner`, which is resolved at read time by `rules.F_selection_aware` and is prose by necessity, not oversight. `runs_iff`/`skipped_iff`/`conditional_extension.iff` are likewise human-readable conditions evaluated by the session, not by a generic engine (W9, Codex finding 9).",
+  "_removed_E-bs32": "REMOVED 2026-09-10 (Fable + Codex round 9, 2026-09-10). It mapped `E-bs32` to the box-trained `ANCHOR`, which silently made E1 a cross-hardware contrast. `E-bs32` is now its own A100 arm. No computed contrast read this alias — E1 is the only contrast naming `E-bs32` and it has never been computed."
  },
- "trained_arms_expected": 14,
- "_arms_note": "17 entries, 14 TRAINED: A4 is not trained separately -- it IS the ANCHOR arm. C-M9init is CUT under W8 band 1. F-MiniLM-L12 is CUT (Dylan 2026-09-05), taking contrast F2 with it: the Bonferroni denominator is 12.",
+ "trained_arms_expected": 15,
+ "_arms_note": "18 entries, 15 TRAINED (E-bs32 registered 2026-09-10; both E arms run on the A100): A4 is not trained separately -- it IS the ANCHOR arm. C-M9init is CUT under W8 band 1. F-MiniLM-L12 is CUT (Dylan 2026-09-05), taking contrast F2 with it: the Bonferroni denominator is 12.",
  "_amended": "2026-09-05, on a Fable adversarial pass (S1-S10), before any arm ran and with nothing trained. S1 was a structural confound: the anchor was a mid-cycle snapshot of a 20M arm and is now its own 5M arm.",
  "data_cut": {
   "_mandate": "A2, A3 and A4 are cut to the identical post-screen unique-text count",
@@ -459,7 +470,7 @@
   "serving_note": "MiniLM's own `tokenizer_config.json` carries max_length 128 beside model_max_length 512, and fastembed serves min(...) = 128. The exported tokenizer sets both to 512. A first run read 0.93-0.95 min-cos and would have disqualified both MiniLM students on a mis-specified check."
  },
  "_mandate_arm_count": "this file registers 16 trained arms; `instructions-m10.md`:597 still says fifteen. THIS FILE IS AUTHORITATIVE (see `_what`). The mandate predates the S1 amendment that made the anchor its own trained arm (W9, Codex finding 10).",
- "_w8_band": "W8 band 1 (M10.0-e `lr_pair.distance_raw` = 0.00288 <= 0.0056): run F, ANCHOR, A, G, B, E, D; CUT C. `E-bs128` runs on the rented A100, not the box (Dylan 2026-09-05). | Dylan 2026-09-05: L12 cut (F1 only); family A's STOP removed; the weekend timeline is not binding, the box runs as much as it can first and the remainder goes to the cloud under the same registry.",
+ "_w8_band": "W8 band 1 (M10.0-e `lr_pair.distance_raw` = 0.00288 <= 0.0056): run F, ANCHOR, A, G, B, E, D; CUT C. **BOTH E arms run on the rented A100, together** (Dylan 2026-09-05; `E-bs32` registered as its own arm 2026-09-10 (Fable + Codex round 9, 2026-09-10) — it had been an alias to the box-trained ANCHOR, which made E1 a cross-hardware contrast the lock documents claimed it was not). | Dylan 2026-09-05: L12 cut (F1 only); family A's STOP removed; the weekend timeline is not binding, the box runs as much as it can first and the remainder goes to the cloud under the same registry.",
  "_cut_contrasts": {
   "F2": {
    "a": "F-MiniLM-L12",

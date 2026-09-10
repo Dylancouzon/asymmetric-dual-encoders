@@ -774,3 +774,47 @@ def test_the_plan_must_cover_every_dataset_at_the_right_width():
     wrong_width[ds[0]] = plan[ds[0]][:, :-1]
     with pytest.raises(ValueError, match="plan width"):
         F.bootstrap(al, wrong_width, conf)
+
+
+def test_an_unscorable_conjunct_does_not_discard_the_verdicts_already_established():
+    """One NaN in a comparator row made C2a unscorable and `decide()` raised — after the access was
+    spent, with C1b and C1a already REJECTED. Real rejections must not be thrown away by a later
+    conjunct's data problem (Fable, round 9)."""
+    ev = _ev(C1b=(0.02, 0.001), C1a=(0.02, 0.001), C2b=(0.01, 0.001))
+    ev["C2a"] = {"unscorable": "leaf-ir-asym's fiqa row has a non-finite score"}
+    d = F.decide(ev)
+    assert d["rejected"] == ["C1b", "C1a"], "the established rejections stand"
+    assert d["conjuncts"]["C2a"]["status"] == F.UNSCORABLE
+    assert "fiqa" in d["conjuncts"]["C2a"]["reason"]
+    assert d["conjuncts"]["C2b"]["status"] == F.NOT_TESTED, "the sequence stops at the unscorable"
+    assert d["unscorable"] == ["C2a"] and d["reserved_batch_runs"] is True
+
+
+def test_the_registry_hash_in_evidence_is_the_live_one():
+    """`registry_sha256` is recover's only drift anchor and was a stamped constant no test pinned."""
+    ev = F.evidence_for("C1b", _scores("C1b", shift=0.05))
+    assert ev["registry_sha256"] == F.registry_sha256()
+
+
+def test_the_draw_plan_covers_every_query_index():
+    """A mutant drawing `0..n-2` — never selecting the last query of each dataset — survived. The
+    m9 tolerance is too loose to catch it by inspection."""
+    conf = F.cfg()
+    ds = conf["partitions"]["clean4"]
+    al = _aligned(ds, n=12)
+    plan, _ = F.draw_plan(al, B=conf["bootstrap"]["B"], seed=conf["bootstrap"]["seed"])
+    for d in ds:
+        n = len(al[d][0])
+        assert set(np.unique(plan[d])) == set(range(n)), \
+            f"{d}: the plan never draws index {sorted(set(range(n)) - set(np.unique(plan[d])))}"
+
+
+def test_the_qid_digest_actually_depends_on_the_qids():
+    a = F.evidence_for("C1b", _scores("C1b", shift=0.05))
+    sc = _scores("C1b", shift=0.05)
+    c = F.cfg()["conjuncts"]["C1b"]
+    for side in (c["a"], c["b"]):                       # relabel every qid
+        for dset in sc[side]:
+            sc[side][dset] = {f"q{k}": v for k, v in sc[side][dset].items()}
+    b = F.evidence_for("C1b", sc)
+    assert a["qid_sha256"] != b["qid_sha256"], "the digest must depend on the qids themselves"

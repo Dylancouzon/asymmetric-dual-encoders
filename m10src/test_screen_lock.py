@@ -86,7 +86,7 @@ def test_a_contrast_read_beyond_its_arms_dose_is_refused():
 
 def test_an_anchor_field_contradicting_the_axis_it_stands_in_for_is_refused():
     bad = _mut(lambda r: r["anchor"].__setitem__("batch", 128))
-    assert any("alias E-bs32 claims" in b for b in bad), bad
+    assert any("anchor.batch" in b for b in bad), bad
 
 
 def test_an_arm_moved_into_the_untrained_bucket_is_refused():
@@ -132,7 +132,10 @@ def test_E1_is_oriented_so_a_bs32_win_can_actually_resolve():
     e1 = r["contrasts"]["E1"]
     assert (e1["a"], e1["b"]) == ("E-bs32", "E-bs128"), \
         "a bs32 win must be a POSITIVE point estimate or it can never resolve"
-    assert r["anchor_aliases"]["E-bs32"] == "ANCHOR"
+    assert "E-bs32" not in r["anchor_aliases"], \
+        "E-bs32 is its own A100 arm since 2026-09-10; the alias to the box-trained ANCHOR is what " \
+        "made E1 a cross-hardware contrast four lock documents said it was not"
+    assert r["arms"]["E-bs32"]["pending"] == "CLOUD_ONLY"
     assert e1["rule"] == "E_cost" and "E_cost" in r["rules"]
 
 
@@ -188,7 +191,7 @@ def test_C_is_CUT_and_the_denominator_is_12_after_L12():
     assert c["trained"] is False and c.get("cut")
     assert "skipped_iff" not in c, "C is CUT, not conditionally skipped"
     assert r.get("trained_arms_if_C_skipped") is None
-    assert r["trained_arms_expected"] == 14
+    assert r["trained_arms_expected"] == 15
     assert r["statistics"]["bootstrap"]["n_contrasts"] == 12, "13 minus F2, cut with L12 (Dylan 2026-09-05)"
 
 
@@ -206,7 +209,7 @@ def test_descriptive_arms_are_excluded_from_the_screens_own_checks():
     assert desc == {"A3-20M", "ANCHOR-seed1"} == set(r["descriptive_runs"]["members"])
     screen_trained = [a for a, v in r["arms"].items()
                       if v.get("trained") is True and not v.get("descriptive")]
-    assert len(screen_trained) == r["trained_arms_expected"] == 14
+    assert len(screen_trained) == r["trained_arms_expected"] == 15
     assert r["statistics"]["bootstrap"]["n_contrasts"] == 12, \
         "a descriptive arm must not move the Bonferroni denominator"
     assert not L.validate(), "the live registry must pass with the descriptive arms registered"

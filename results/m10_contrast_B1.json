@@ -7,7 +7,7 @@
   "decisive": true,
   "family_rule": "multi_arm_winner"
  },
- "registry_sha256": "35da3316bf66904d9daffc8b676cb91a6fa6a9cc11de7b9be49490c4ce1d2e2b",
+ "registry_sha256": "679e0574d19e24550aace4d488c9ca848a82ad2a2271a77972b8bd78f5ba5f60",
  "arms": {
   "a": "B-100/0",
   "b": "ANCHOR",
