@@ -868,7 +868,17 @@ def cut_arms(registry=None):
 def is_cut_corpus(name, registry=None):
     """True when arm `name` trains on a corpus the registered cut applies to -- by RESOLVED corpus
     identity, not by name: every F/G/B/E/D arm inherits the anchor's corpus ("A4, the CUT corpus",
-    `anchor.data`), so it is cut exactly as ANCHOR is (Codex pass 6, finding 1)."""
+    `anchor.data`), so it is cut exactly as ANCHOR is (Codex pass 6, finding 1).
+
+    An arm entry may declare `"data_cut": "none"` to opt OUT (additive; no screen arm carries it).
+    The cut exists so A2/A3/A4 differ in WHICH text they carry and never in how much
+    (`data_cut.applies_to`), which is a SCREEN comparison; M13's 200M build trains the full uncut
+    A4 -- the archived recipe lock's "query epochs ~ 37 over 4.0M texts" is that corpus. Declared
+    per arm and recorded in the manifest, never inferred.
+    """
+    entry = ((registry or {}).get("arms") or {}).get(name) or {}
+    if str(entry.get("data_cut", "")).lower() == "none":
+        return False
     cuts = cut_arms(registry)
     if name in cuts:
         return True
@@ -1050,13 +1060,24 @@ def _screened_doc_pool(n, seed, banned, margin=1.05, floor=2_000):
             "pass its real ban set, or call build_doc_stream(allow_unscreened=True) for an "
             "explicit smoke.")
     import data as m9data
-    k = int(n * margin) + floor
-    rows, meta = m9data.doc_pool_rows(k, seed)
-    keep = np.array([int(r) not in banned for r in rows], dtype=bool)
-    surv = rows[keep][:n]
-    if len(surv) < n:
-        raise SystemExit(f"the M10 document re-screen left {len(surv):,} of a {k:,}-row draw for "
-                         f"a {n:,}-document stream -- widen `margin`")
+    if n == ALL_ELIGIBLE:
+        # EVERY eligible pool row, in draw order, minus the M10 re-screen. `doc_pool_rows` needs
+        # the count up front and owns the eligibility mask, so a 1-row probe reads `n_eligible`
+        # off its own meta rather than reimplementing that mask here.
+        _probe, pmeta0 = m9data.doc_pool_rows(1, seed)
+        k = int(pmeta0["n_eligible"])
+        rows, meta = m9data.doc_pool_rows(k, seed)
+        keep = np.array([int(r) not in banned for r in rows], dtype=bool)
+        surv = rows[keep]
+        meta = {**meta, "policy": DOC_POLICY_ALL, "n_eligible_before_rescreen": k}
+    else:
+        k = int(n * margin) + floor
+        rows, meta = m9data.doc_pool_rows(k, seed)
+        keep = np.array([int(r) not in banned for r in rows], dtype=bool)
+        surv = rows[keep][:n]
+        if len(surv) < n:
+            raise SystemExit(f"the M10 document re-screen left {len(surv):,} of a {k:,}-row draw "
+                             f"for a {n:,}-document stream -- widen `margin`")
     import pool as poolmod
     _index, vecs, _pmeta = poolmod.build()
     meta = {**meta, "n_drawn_before_rescreen": int(k), "n_removed_by_rescreen": int((~keep).sum()),
@@ -1064,8 +1085,38 @@ def _screened_doc_pool(n, seed, banned, margin=1.05, floor=2_000):
     return surv, DocTargetView(vecs, surv), meta
 
 
+class EpochShuffledStream(D.Stream):
+    """`D.Stream` with the batch ORDER reshuffled every epoch, from a seed derived from
+    (seed, epoch). Registered document policy for M13's build (`arm_document_policy`): the pool is
+    repeated ~8 times over the dose, and `D.Stream.batch(k)` alone would replay the identical
+    batch sequence on every pass.
+
+    `batch(k)` stays a PURE FUNCTION of the global position (`m10/CODEMAP.md` pitfall 11): the
+    epoch and the offset inside it are `divmod(k, n_batches)` and the permutation is regenerated
+    from (seed, epoch), so a resume at any step draws exactly what an uninterrupted run drew. One
+    permutation is cached, which is a speed-up and not state.
+    """
+
+    def __init__(self, *a, epoch_seed=0, **k):
+        super().__init__(*a, **k)
+        self.epoch_seed = int(epoch_seed)
+        self._epoch, self._order = None, None
+
+    def epoch_order(self, epoch):
+        if epoch != self._epoch:
+            rng = np.random.default_rng([self.epoch_seed, int(epoch)])
+            self._epoch, self._order = epoch, rng.permutation(len(self.batches))
+        return self._order
+
+    def batch(self, k):
+        epoch, i = divmod(int(k), len(self.batches))
+        idx = self.batches[int(self.epoch_order(epoch)[i])]
+        ids, mask = D.collate(self.ids, idx, self.pad)
+        return ids, mask, torch.from_numpy(np.ascontiguousarray(self.T[idx]))
+
+
 def build_doc_stream(n, tok, *, batch_size=32, seed=0, max_len=512, allow_unscreened=False,
-                     verbose=True, consumed=None):
+                     verbose=True, consumed=None, epoch_shuffle=False):
     """-> (stream, meta) for the document-role half of the mix, from the frozen M9 pool.
 
     The document marker is applied HERE, once. `data10.pretokenize` used to take no prefix at all,
@@ -1103,8 +1154,11 @@ def build_doc_stream(n, tok, *, batch_size=32, seed=0, max_len=512, allow_unscre
         n_docs = len(texts)
     else:
         ids, n_docs = _stream_doc_ids(rows, tok, pre, max_len, verbose=verbose)
-    meta = {**meta, "student_prefix": pre, "n": n_docs, "max_len": max_len}
-    return D.Stream(ids, vecs, pad_id=tok.pad_token_id, batch_size=batch_size, seed=seed), meta
+    meta = {**meta, "student_prefix": pre, "n": n_docs, "max_len": max_len,
+            "epoch_shuffle": bool(epoch_shuffle)}
+    cls = EpochShuffledStream if epoch_shuffle else D.Stream
+    kw = {"epoch_seed": seed} if epoch_shuffle else {}
+    return cls(ids, vecs, pad_id=tok.pad_token_id, batch_size=batch_size, seed=seed, **kw), meta
 
 
 DOC_TEXT_CHUNK = 100_000
@@ -1346,11 +1400,39 @@ DOC_SHARE = {"100/0": 0.0, "75/25": 0.25, "50/50": 0.5}
 DEFAULT_MIX = "75/25"          # the anchor's own mix, when a registry carries no `anchor.mix`
 
 
+ALL_ELIGIBLE = "all-eligible-rescreened"
+DOC_POLICY_ALL = "all_eligible_rescreened"
+
+
+def arm_document_policy(arm):
+    """-> the arm entry's `documents` policy dict, or None (the default draw).
+
+    ADDITIVE and registry-driven (M13's 200M build). `arm_doc_count` scales unique documents with
+    dose, so 200M examples at 75/25 asks for 50,000,000 unique documents from a pool of ~6.15M and
+    the draw cannot be satisfied. The archived recipe lock registers "document epochs ~ 8 over the
+    6.15M pool" instead, i.e. the whole eligible pool repeated -- a policy, not a bigger draw
+    (`m10/CODEMAP.md` pitfall 1, `m13/STAGE1_DESIGN.md` §1). No screen arm carries `documents`.
+    """
+    pol = (arm or {}).get("documents")
+    if pol is None:
+        return None
+    if not isinstance(pol, dict) or pol.get("policy") != DOC_POLICY_ALL:
+        raise SystemExit(f"unknown document policy {pol!r}: the only registered non-default "
+                         f"policy is {DOC_POLICY_ALL!r}")
+    return pol
+
+
 def arm_doc_count(arm, pattern, batch_size=32):
     """Documents an arm draws from the screened M9 pool: its document-EXAMPLE count (dose x the
     pattern's document share), so no document is presented twice at screen dose. M9 drew from
     every eligible pool row (`m9src/longrun.py`: `n_eligible_doc_rows`); a fixed small draw would
-    repeat each document many times and is not what "the M9 pool" means. At least one batch."""
+    repeat each document many times and is not what "the M9 pool" means. At least one batch.
+
+    An arm carrying the `all_eligible_rescreened` document policy returns `ALL_ELIGIBLE` instead
+    (or the policy's explicit smoke-only `n`) -- see `arm_document_policy`."""
+    pol = arm_document_policy(arm)
+    if pol is not None:
+        return int(pol["n"]) if pol.get("n") is not None else ALL_ELIGIBLE
     dose = int(arm["dose_examples"])
     return max(int(math.ceil(dose * DOC_SHARE[pattern])), batch_size)
 
@@ -1421,7 +1503,9 @@ def assemble_arm(arm_name, tok, student, *, batch_size=None, seed=0, max_len=512
     reg = registry or json.loads((REPO / "m10" / "screen_registry.json").read_text())
     name = resolve_arm_name(arm_name, reg)
     entry = _registry_arms(reg).get(name) or {}
-    require_forms = FORMS if name in REQUIRE_ALL_FORMS else None
+    require_forms = (FORMS if (name in REQUIRE_ALL_FORMS or entry.get("require_all_forms"))
+                     else None)
+    doc_policy = arm_document_policy(entry)
     reg_batch = arm_batch(entry, reg)
     if batch_size is not None and int(batch_size) != reg_batch:
         raise SystemExit(f"{name}: caller batch_size {batch_size} != the registered batch "
@@ -1446,9 +1530,12 @@ def assemble_arm(arm_name, tok, student, *, batch_size=None, seed=0, max_len=512
     # the ordering -- identical assemble_arm, same cache state, this call enabled vs stubbed,
     # comparing document VmHWM and the first optimizer-step peak -- has NOT been run.
     release_arena()
+    # `epoch_shuffle` is passed ONLY by an arm carrying the document policy, so the default call
+    # is byte-for-byte the one every screen arm (and every existing test) already makes.
+    doc_kw = {"epoch_shuffle": True} if doc_policy is not None else {}
     doc_stream, doc_man = build_doc_stream(n_docs, tok, batch_size=batch_size, seed=seed,
                                           max_len=max_len, allow_unscreened=False, verbose=verbose,
-                                          consumed=consumed)
+                                          consumed=consumed, **doc_kw)
     cross = guard_cross_role(q_stream.ids, doc_stream.ids)
     segs = tuple(getattr(rescreen10, "QUERY_SEGMENTS", ()))
     missing = [k for k in (*segs, "documents") if k not in consumed]
@@ -1459,7 +1546,8 @@ def assemble_arm(arm_name, tok, student, *, batch_size=None, seed=0, max_len=512
 
     man = {"arm": name, "requested_as": arm_name, "student": student, "batch_size": batch_size,
           "seed": seed, "max_len": max_len, "pattern": pattern, "pattern_source": pattern_rep,
-          "n_docs": n_docs, "require_forms": list(require_forms) if require_forms else None,
+          "n_docs": n_docs, "document_policy": doc_policy,
+          "require_forms": list(require_forms) if require_forms else None,
           "query": q_man, "document": doc_man, "cross_role": cross,
           "rescreen10_report_validated": True}
     return D.batch_fn(q_stream, doc_stream, pattern=pattern), man

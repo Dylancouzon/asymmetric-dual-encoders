@@ -5,8 +5,9 @@ behavior. `m10/CODEMAP.md` and its pitfalls still apply. Design: `m13/STAGE1_DES
 
 | module | what | artifact |
 |---|---|---|
-| `build13.py` (planned) | the 200M build controller: 200M pin, batch from E1, extension cycles and cap, kill/plateau, provenance, ONNX + parity at freeze | `work/m13build/<run>/`, `results/m13_build_record.json` |
-| `m13/build_config.json` (planned) | the build arm: every data knob equal to ANCHOR's except dose, batch, document policy and cut; validated before any run | — |
+| `build13.py` | the 200M build controller: the 200M pin, the batch from E1, cycles 1-3 as ONE `trainer10.train_arm` schedule, the extension/plateau/kill loop under the day-one cap and the $1,000 ceiling, a wall-clock rolling checkpoint and per-phase `losses*.jsonl`, resume with `run_arm`'s semantics, and the freeze (DEV-6, ONNX, ORT + fastembed parity, provenance). `--plan` / `--benchmark --rate --price` / `--resume` / `--smoke-steps` | `work/m13build/<arm>/`, `results/m13_build_record.json` |
+| `m13/build_config.json` · `build_lock.py` | the build arm (every data knob equal to ANCHOR's except dose, batch, document policy and cut) and its validator against the LIVE screen registry: the anchor comparison field by field, the E1 batch, the cycle arithmetic, the extension floor and the cap formula | — |
+| `test_build13.py` | the controller's checks: cycle arithmetic at bs32/bs128, the refusals, extension accept/reject/cap/budget, a kill at an extension end, SIGKILL-and-resume equivalence, and the document policy | — |
 | `access13.py` | `m9src/final9.py`'s access machinery retargeted: one `Config` object, flock, fail-closed spent tag with a pinned origin, ledger, atomic writes, **fatal** `seal_protected_paths`, manifest-only preflight | `results/m10_final_run.json`, tag `m10-six-spent` |
 | `score13.py` | the six-set scoring transaction for a nano or M9 checkpoint: frozen document caches, exact search, per-query nDCG@10 on the frozen qids, dataset-mean bridge, `final10` decision layer, post-tag continuation, `--recover`, the conditional reserved stage | `results/m10_final_scores/<ds>.json` beside the run record |
 | `rehearse13.py` | the synthetic six-set, fake comparator, real encode cache and bare origin that let the real executor run end to end with zero protected access | `work/m13rehearse/` |
@@ -29,3 +30,6 @@ behavior. `m10/CODEMAP.md` and its pitfalls still apply. Design: `m13/STAGE1_DES
    checked there.
 9. `final10.REGISTRY` and `teacher.ENC` are module-level paths; the rehearsal rebinds them from
    `Config` rather than copying either module.
+10. A SMOKE must scale the EXTENSION too. The first box smoke of `build13.py` cleared the gain bar at 20 steps and started a 2,084,375-step (30 GPU-hour) extension cycle, because only the dose was smoke-scaled.
+11. Export runs on the CPU. `nano10.export_onnx` builds its trace inputs on the CPU, so freezing a CUDA-resident model raises "Expected all tensors to be on the same device" — after the build has finished.
+12. `trainer10.train_arm(loss_log=...)` TRUNCATES the sidecar it is given on a fresh run (so a resume cannot double-log). One shared file across phases therefore erases cycles 1-3's losses when extension 1 starts; each phase gets its own.
