@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Every committed test suite, in one command, with a nonzero exit if any fails.
+# Legacy M7 suites, including checks of machine-local caches. For the active harness,
+# use ./run_checks.sh. This script does not cover M8 or later milestones.
 #
 # Exists because `test_freeze_guard.py` had been FAILING since the 2026-08-26 teacher swap and
 # nobody noticed: its fixtures named arctic-embed-l and stella's own `post_dense` value, both of

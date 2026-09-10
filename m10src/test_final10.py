@@ -496,12 +496,13 @@ def test_an_empty_or_mixed_draw_plan_is_a_ValueError_not_a_StopIteration():
 
 
 def test_the_decision_field_must_be_a_plausible_nDCG_difference():
-    """1e300 was accepted and REJECTED; and a lower bound above the point estimate is not a
-    possible bootstrap output."""
-    ev = _ev(C1b=(0.01, 0.001))
-    ev["C1b"]["stat"]["lower_q025_raw"] = 1e300
-    with pytest.raises(ValueError, match=r"outside \[-1, 1\]"):
-        F.decide(ev)
+    """Both decision numbers must stay within the range of nDCG differences."""
+    for field in ("lower_q025_raw", "delta_raw"):
+        for value in (-1.5, 1.5, 1e300):
+            ev = _ev(C1b=(0.01, 0.001))
+            ev["C1b"]["stat"][field] = value
+            with pytest.raises(ValueError, match=r"outside \[-1, 1\]"):
+                F.decide(ev)
     # `lower > delta` is REPORTED, never refused: it is not a bootstrap invariant, and a
     # categorical refusal on the decision path would consume the irreversible access on a
     # legitimate run (Codex, 2026-09-10, constructed a fixture producing it).
