@@ -100,8 +100,9 @@ does not start.
 | **family E, both arms, 2 × 5M examples** — new mandatory line; the mandate's table predates the ruling that both E arms run on the A100 | 3–6 | 5–15 |
 | build, 200M examples (bs128 → bs32) | 37–81 | 55–205 |
 | cloud-side encodes + export, parity, final run | 6 | 9–15 |
+| **LoTTE-clean encode for read #1** — ~2.8M passages with stella, mandate :748; was missing from this table | 1.3 | 2–4 |
 | persistent disk, egress | — | ≈ 25 |
-| **mandatory total** | **47–94** | **≈ $96–263** |
+| **mandatory total** | **48–95** | **≈ $98–267** |
 | each extension cycle, 66.7M examples | 13–25 | 20–63 |
 
 **`max_extension_cycles` is fixed by this formula at the day-one benchmark, not now**, because the
@@ -123,8 +124,26 @@ under the rule above, never a silent increase.
 - **Data:** `results/m10_data_manifest.json` — 4.57 GB hashed on disk including the raw harvest
   pools, 12 cited measurements, and it refuses to emit with a hole. Cite this file's sha256; it
   inherits the rest.
-- **Registry:** `m10/screen_registry.json`. Every contrast record and the F verdict pin its
-  sha256 — the registry is frozen the moment a contrast is computed against it.
+- **Registry:** `m10/screen_registry.json`. Every contrast record and the F verdict pin its sha256.
+
+  **The freeze rule, restated honestly 2026-09-10 (Codex round 8).** I wrote "the registry is
+  frozen the moment a contrast is computed against it" and then edited it repeatedly — prose
+  corrections, interpretation entries, the `E_warmup_parity` fix — recomputing all twelve contrasts
+  and re-stamping their `registry_sha256` each time. The statistics never moved; the provenance
+  string did. Written as an absolute, the rule was one I was breaking, and a rule nobody keeps is
+  worse than a narrower one that holds. So:
+
+  - **DECISION-BEARING fields are frozen** once any contrast is computed: `contrasts`, `arms`,
+    `statistics`, `anchor`, `data_cut`, `order`, `rules`, `outcome_to_action`, `anchor_aliases`.
+    A change to any of these invalidates the screen and is not a re-stamp, it is a re-run.
+  - **PROSE fields may be corrected** — `_interpretation`, `_what`, `_amended*`, and the narrative
+    halves of `rules.*` — because a stale or contradictory explanation beside a correct number is
+    itself a defect, and three of this session's reviews found exactly that. Every such correction
+    is dated in the field it touches, the contrasts are recomputed (they are deterministic, so the
+    numbers reproduce bit-for-bit), and the re-stamp is recorded below.
+  - **Re-stamps so far:** six, all prose-only, all with every `delta_raw`, `lower_bound_raw` and
+    `draws_sha256` unchanged. That reproduction IS the evidence the edits were non-decisional; the
+    audit is `git log -p m10/screen_registry.json`.
 - **Verdicts:** `results/m10_screen_verdicts.json`, `results/m10_contrast_*.json`.
 - **Teacher:** `NovaSearch/stella_en_400M_v5`, frozen, 1024d. Discloses ArguAna and FiQA (2 of the
   six) and FEVER (1 of the reserved four) in its training data; every stella-based claim carries

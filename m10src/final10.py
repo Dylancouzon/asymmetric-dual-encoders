@@ -174,18 +174,13 @@ def bootstrap(aligned, plan, conf):
         raise ValueError(f"draw plan has replicate counts {sorted(reps)}; the registry requires "
                          f"exactly B = {b['B']}")
     k = len(aligned)
-    if k == 0:
-        raise ValueError("empty partition")
     diffs = {ds: (x - y) for ds, (_, x, y) in aligned.items()}
     if set(plan) != set(diffs):
         raise ValueError("draw plan does not cover exactly the aligned datasets")
     for ds, d in diffs.items():
         if plan[ds].shape[1] != d.size:
             raise ValueError(f"{ds}: plan width {plan[ds].shape[1]} != n {d.size}")
-    Bs = {ds: int(v.shape[0]) for ds, v in plan.items()}
-    if len(set(Bs.values())) != 1:
-        raise ValueError(f"draw plan has inconsistent replicate counts: {Bs}")
-    B = next(iter(Bs.values()))
+    B = int(b["B"])
     draws = np.zeros(B, dtype=np.float64)
     for ds, d in diffs.items():
         draws += d[plan[ds]].mean(axis=1)
@@ -278,15 +273,11 @@ def assert_evidence_matches_registry(cid, ev, conf):
                         f"{c['a']!r} minus {c['b']!r}")
     if ev.get("partition") != c["partition"]:
         problems.append(f"partition={ev.get('partition')!r}, registered {c['partition']!r}")
-    if ev.get("comparator_source_sha256") != conf["comparator_source"]["sha256"]:
-        problems.append("comparator_source_sha256 does not match the registry")
     for k in ("draw_plan_sha256", "qid_sha256", "registry_sha256"):
         v = ev.get(k)
         if not isinstance(v, str) or len(v) != 64:
             problems.append(f"{k}={v!r} is not a sha256 digest")
     counts = st.get("n_by_dataset") or {}
-    if not counts:
-        problems.append("no 'n_by_dataset' in the stat")
     if any(type(v) is not int or v <= 0 for v in counts.values()):
         problems.append(f"n_by_dataset has non-positive or non-integer counts: {counts}")
     # The two halves of the pass rule must have scored the same queries. REQUIRED, not

@@ -31,6 +31,12 @@ def _scores(cid, shift, n=40, seed=0):
                          enumerate(np.clip(rng.normal(0.5, 0.1, n), 0.0, 1.0))} for d in ds}}
 
 
+def _aligned_from_scores(scores, cid, conf):
+    """The same alignment `evidence_for` builds, so a test can redraw the plan independently."""
+    c = conf["conjuncts"][cid]
+    return F.align_partition(scores[c["a"]], scores[c["b"]], conf["partitions"][c["partition"]])
+
+
 def _stat(lower, delta=None, cid="C1b", **override):
     """A REGISTRY-CONFORMANT stat dict. It has to be, now: `assert_evidence_matches_registry`
     refuses evidence whose metadata does not match the registered procedure, and the helper that
@@ -334,14 +340,14 @@ def test_a_REVERSED_contrast_with_conforming_metadata_is_refused():
         F.decide(ev)
 
 
-def test_the_wrong_partition_and_a_stale_comparator_are_refused():
+def test_the_wrong_partition_is_refused():
+    """The comparator-hash half of this test is gone with the check: `evidence_for` STAMPS that
+    field from the registry, so verifying it against the registry was a tautology, not a
+    measurement (both reviewers, round 8). Verifying the real comparator FILE is executor work,
+    registered as such."""
     ev = _ev(C1b=(0.01, 0.001))
     ev["C1b"]["partition"] = "all6"
     with pytest.raises(ValueError, match="partition="):
-        F.decide(ev)
-    ev = _ev(C1b=(0.01, 0.001))
-    ev["C1b"]["comparator_source_sha256"] = "0" * 64
-    with pytest.raises(ValueError, match="comparator_source_sha256"):
         F.decide(ev)
 
 
@@ -725,3 +731,46 @@ def test_a_comparator_scored_on_only_its_own_partition_does_not_raise():
     assert set(scores[c["a"]]) == set(all6) and set(scores[c["b"]]) == set(clean4)
     ev = F.evidence_for("C1b", scores)             # must not raise
     assert ev["stat"]["k_datasets"] == 4
+
+
+# ---- the meaningful mutation survivors, round 8 (both reviewers found the same ones) ----------
+
+def test_a_qid_missing_on_ONE_side_raises():
+    """`strict=True` in the aligner had no test: only the missing-DATASET case was covered, so a
+    mutant flipping it to strict=False survived. A silently-dropped query changes the macro."""
+    ds = F.cfg()["partitions"]["clean4"]
+    full = _aligned(ds, n=20)
+    a = {d: dict(zip(v[0], v[1])) for d, v in full.items()}
+    b = {d: dict(zip(v[0], v[2])) for d, v in full.items()}
+    b[ds[0]].pop(0)                       # one query missing from the comparator only
+    with pytest.raises(Exception):
+        F.align_partition(a, b, ds)
+
+
+def test_evidence_for_uses_the_REGISTERED_plan_seed():
+    """`bootstrap_seed` is COPIED from the registry, not measured from the plan that was drawn, so
+    a mutant drawing at seed 901 while reporting 900 survived — and it flipped a verdict. Pinning
+    the plan digest against an independently drawn plan is what makes the seed observable."""
+    conf = F.cfg()
+    ev = F.evidence_for("C1b", _scores("C1b", shift=0.05))
+    ds = conf["partitions"]["clean4"]
+    al = _aligned_from_scores(_scores("C1b", shift=0.05), "C1b", conf)
+    want, want_digest = F.draw_plan(al, B=conf["bootstrap"]["B"], seed=conf["bootstrap"]["seed"])
+    assert ev["draw_plan_sha256"] == want_digest, \
+        "the plan `evidence_for` drew is not the plan the registered seed produces"
+    wrong, wrong_digest = F.draw_plan(al, B=conf["bootstrap"]["B"], seed=901)
+    assert wrong_digest != want_digest, "the digest must actually distinguish seeds"
+
+
+def test_the_plan_must_cover_every_dataset_at_the_right_width():
+    conf = F.cfg()
+    ds = conf["partitions"]["clean4"]
+    al = _aligned(ds, n=20)
+    plan, _ = F.draw_plan(al, B=conf["bootstrap"]["B"], seed=conf["bootstrap"]["seed"])
+    short = {d: v for d, v in plan.items() if d != ds[0]}
+    with pytest.raises(ValueError, match="does not cover"):
+        F.bootstrap(al, short, conf)
+    wrong_width = dict(plan)
+    wrong_width[ds[0]] = plan[ds[0]][:, :-1]
+    with pytest.raises(ValueError, match="plan width"):
+        F.bootstrap(al, wrong_width, conf)

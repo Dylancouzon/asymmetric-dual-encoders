@@ -93,10 +93,15 @@ Deterministic, and **may not be changed using LoTTE or any LoTTE-derived output*
 The candidate for read #1 is the **synthesized selected-recipe arm at screen dose (5,000,000
 examples)**, on the recipe of `m10/M102_LOCK.md` with `seed_rule`'s seed 0 — its final annealed
 cycle-end checkpoint, no dev selection. The comparator is the **same-hardware** screen-dose arm of
-the recipe a veto would fall back to: `E-bs32` (A100) in the bs128 branch. Both hashes are
-committed and pushed in a second manifest commit **before** the evaluator may touch LoTTE, and
-neither arm exists yet — family E is CLOUD_ONLY and unrun, so read #1 cannot happen before the
-A100 runs it.
+the recipe a veto would fall back to: `E-bs32` (A100) in the bs128 branch. Both hashes are committed and pushed in a second manifest commit **after both 5M E arms finish and
+before the build** — never "after training ends", which is the post-build wording of the ordering
+error this file already withdrew (Codex round 8). Neither arm exists yet: family E is CLOUD_ONLY
+and unrun, so read #1 cannot happen before the A100 runs it.
+
+**That second commit is a BOUNDED, PRE-CLASSIFIED amendment**, and it is the only edit this file
+permits after the lock: it fills the four `*pending*` cells of the manifest table below with
+measured checkpoint hashes, and changes nothing else. Naming it here is what stops it being an
+unclassified later edit against `M102_LOCK.md`'s no-post-lock-edits rule.
 
 (Read #2, the pre-freeze audit, is the one that sees the BUILD's final checkpoint, and it is the
 only place any post-build wording belongs. Its identity
@@ -130,3 +135,4 @@ the annealed cycle end carrying the best COV macro `m_k`, disclosed as **dev-sel
 | veto margin | 0.004 |
 | observational row | read in BOTH branches, on the candidate, labelled a **5M-dose** number |
 | executed | **NO — LoTTE is entirely unread for M10 as of 2026-09-10** |
+| encode cost | LoTTE-clean's ~2.8M passages, stella once, ≈1.3 GPU-hours (mandate :748) — a named line in `M102_LOCK.md`'s budget table |
