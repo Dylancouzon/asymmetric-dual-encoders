@@ -1468,3 +1468,12 @@ PRF being a poor fit for a bag query specifically: feedback assumes the first pa
 trust, and the table's first pass is precisely what is weak.
 
 **Consequence:** a `qualifying_system` route closes. `R-LIST` and `B10` remain before the exit.
+
+## 15 — amendment 2026-09-10: allowlist entry for M13's reserved stage (ruling R12)
+
+`paths_guard.ALLOWLIST` gains `m13src.score13` (`score13.py`), kinds `{untouched_labels}`: the
+conditional reserved batch inside M13's six-set scoring transaction (`m13src/score13.py`), class d
+(confirmatory access after the freeze). `claim()` verifies the caller module, so `m8src.final_run`'s
+entry could not be borrowed. The stage runs only if a conjunct rejects, only after the tag, and refuses
+without the FEVER/DBpedia document vectors (ruling R10 prices those encodes). Dylan's ruling:
+`m13/RULINGS.md` R12, 2026-09-10. No other entry, kind or rule changed.

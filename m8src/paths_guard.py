@@ -138,6 +138,13 @@ ALLOWLIST = {
         "kinds": {"untouched_labels"},
         "why": "the confirmatory access, only after the freeze (LEDGER G2 class d)",
     },
+    "m13src.score13": {
+        "kinds": {"untouched_labels"},
+        "why": "M13's conditional reserved batch inside the six-set scoring transaction, only after "
+               "the nano freeze and only if a conjunct rejects (LEDGER 15 amendment, 2026-09-10, "
+               "ruling R12 in m13/RULINGS.md; LEDGER G2 class d). The stage refuses without the "
+               "FEVER/DBpedia document vectors and never runs pre-tag.",
+    },
     "m8src.pre_encode": {
         # Registered NOW, at leisure, rather than discovered at pipeline step 13 under time
         # pressure. It needs NO protected KIND: the reserved CORPORA are ordinary public BEIR

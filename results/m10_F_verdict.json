@@ -19,7 +19,7 @@
   "plan_sample_sha256": "8091783fa66a21d8fcdd3a1c6458920c3c52442fc85cb5c5d9990f37a90e3d68",
   "artifact": "results/m10_contrast_F1.json"
  },
- "registry_sha256": "679e0574d19e24550aace4d488c9ca848a82ad2a2271a77972b8bd78f5ba5f60",
+ "registry_sha256": "41ff54c33dd88e5adedbe0855dd97c61e4ce19f635e1326320409d97bc71c9ec",
  "sha256_of_F_records": [
   "11bd572669e9978ce343059016642ba7f20ed06ea7a9f014aa32ac164f478840",
   "5ea9f89c8093f58cd9043ed7036bb2927deb6a3640ce030cc5a586ffbbc647c1"

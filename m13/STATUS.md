@@ -1,15 +1,15 @@
-# M13 status — stage 1 in progress, 2026-09-10
+# M13 status — stage 1 code written, rulings applied, review in progress (2026-09-10)
 
-**Next:** implement `m13src/build13.py` and `m13src/score13.py` per `m13/STAGE1_DESIGN.md`, rehearse both
-on synthetic inputs, then Codex review. Branch `m13-stage1-execution-prep`. Owner rulings R1–R8 are
-listed in the design; none blocks the code, all block protected access.
+**Next:** close the Codex implementation review's findings, then the stage-2 checklist: ship list,
+allocation table with the measured price, provider (Dylan). Branch `m13-stage1-execution-prep`.
+Rulings R1–R12 are recorded and applied (`m13/RULINGS.md`); R6 flips at the pinning commit.
 M10's prepared data, completed screen and selected components are the input, not work to repeat.
 
 | Stage | State / exit |
 |---|---|
-| Execution preparation | Surveys done, design written (`m13/STAGE1_DESIGN.md`, `m13/CODEMAP.md`); controller and scorer not yet written |
-| Cloud E comparison | Both E-bs32 and E-bs128 pending; apply existing E1 rule after both finish |
-| Pre-build gate | Lock/review LoTTE handling and run or skip under its registered branch; batch may still be vetoed |
+| Execution preparation | `build13` (38 tests, box smoke with ONNX/fastembed parity 1.0) and `score13`/`access13` (33 tests, synthetic rehearsal) written; E-bs32 runner fix; Codex review pending |
+| Cloud E comparison | `pending` cleared under R9, F verdict and twelve contrasts re-bound byte-identically; both arms unrun; E1 applies after both finish |
+| Pre-build gate | Registered (`m13/LOTTE_GATE_REGISTRATION.json`: seven slices, nDCG@10 veto, Success@5 descriptive); executor and gate record still owed |
 | Build | Actual rate/price and complete allocation under $1,000; then 200M examples plus permitted extensions, freeze/provenance |
 | Evaluation | Locked/reviewed six-set executor, M9 close-out, nano decisions and conditional reserved access |
 | Cost frontier | Comparable zero/bge-small/nano serving and index costs on the reference hardware |

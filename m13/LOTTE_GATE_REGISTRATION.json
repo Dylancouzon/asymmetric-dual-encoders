@@ -1,0 +1,101 @@
+{
+ "_what": "REGISTRATION of M13's pre-build LoTTE read #1 (ruling R8, Dylan 2026-09-10; m13/RULINGS.md), written while LoTTE is entirely unread for M10/M13. This file is NOT the gate record: m13/LOTTE_GATE.json is written only by the executor that performs the read, and m13src/build13.py must refuse a gate record that lacks an execution outcome.",
+ "authority": [
+  "m10/LOTTE_LOCK.md",
+  "instructions-m9.md:171 (LoTTE-clean: 7 slices, macro over slices, never pooled)",
+  "results/m8_lotte_remedy.json (surviving slices after the E10 remedy and re-screen)"
+ ],
+ "surface": {
+  "name": "LoTTE-clean",
+  "slices": {
+   "lifestyle/dev": {
+    "queries_after_remedy": 2074,
+    "docs_after_remedy": 268890,
+    "qrels_pairs_after_remedy": 12811
+   },
+   "lifestyle/test": {
+    "queries_after_remedy": 1993,
+    "docs_after_remedy": 119458,
+    "qrels_pairs_after_remedy": 10200
+   },
+   "recreation/dev": {
+    "queries_after_remedy": 1994,
+    "docs_after_remedy": 263000,
+    "qrels_pairs_after_remedy": 12686
+   },
+   "recreation/test": {
+    "queries_after_remedy": 1990,
+    "docs_after_remedy": 166975,
+    "qrels_pairs_after_remedy": 6892
+   },
+   "science/dev": {
+    "queries_after_remedy": 2002,
+    "docs_after_remedy": 343634,
+    "qrels_pairs_after_remedy": 12210
+   },
+   "technology/dev": {
+    "queries_after_remedy": 1993,
+    "docs_after_remedy": 1276195,
+    "qrels_pairs_after_remedy": 15648
+   },
+   "writing/dev": {
+    "queries_after_remedy": 1988,
+    "docs_after_remedy": 277049,
+    "qrels_pairs_after_remedy": 15021
+   }
+  },
+  "n_slices": 7,
+  "total_queries": 14034,
+  "remedy_record_sha256": "f2a878d0acd068d2aaa59f4799b2d8556711ea203e9348908dbed43b7253174a",
+  "macro": "equal weight over the seven slices, never pooled",
+  "note": "instructions-m9.md quotes 20,122 queries before the remedy; the remediated surface carries 14,034."
+ },
+ "metric": {
+  "veto": "nDCG@10 (exact search over each slice's remediated collection), macro over slices",
+  "descriptive": "Success@5, LoTTE's native metric, reported beside the veto metric and attached to no decision",
+  "why": "every registered bar, contrast and the 0.004 veto margin in this repository are in nDCG@10 units"
+ },
+ "veto": {
+  "margin": 0.004,
+  "bootstrap": {
+   "B": 10000,
+   "seed": 903,
+   "paired_within_slice": true,
+   "interval": "one-sided 97.5% upper bound on (selected - anchor)"
+  },
+  "fires_iff": "selected macro is worse than the comparator's by more than 0.004 AND the upper bound is below -0.004",
+  "consequence": "the comparator's recipe (bs32) is what the 200M build trains; no retraining, no second build"
+ },
+ "identities": {
+  "bs128_branch": {
+   "candidate": "E-bs128 final annealed cycle-end checkpoint (5M, A100)",
+   "comparator": "E-bs32 final annealed cycle-end checkpoint (5M, A100)",
+   "veto": "RUNS"
+  },
+  "bs32_branch": {
+   "candidate": "E-bs32 final annealed cycle-end checkpoint (5M, A100)",
+   "comparator": "none: identical recipe and action",
+   "veto": "SKIPPED and forfeited; the observational row is still read and reported as a 5M-dose number"
+  },
+  "checkpoint_sha256": "pending the second manifest commit after both E arms finish and before the build (m10/LOTTE_LOCK.md)"
+ },
+ "executed": false,
+ "gate_record_contract": {
+  "path": "m13/LOTTE_GATE.json",
+  "required_fields": [
+   "executed: true",
+   "branch (bs32|bs128)",
+   "e1_verdict_sha256 (results/m10_screen_verdicts.json at read time)",
+   "candidate_sha256",
+   "comparator_sha256 or null",
+   "decision (veto|no_veto|skipped)",
+   "macro_ndcg10 per slice and overall for candidate and comparator",
+   "success_at_5 per slice (descriptive)",
+   "bootstrap upper bound",
+   "read_at",
+   "code_identity"
+  ],
+  "note": "a record with executed false or a missing decision must be refused by build13"
+ },
+ "firewall": "LoTTE is not a selection surface, bar, tie-break or C-conjunct input; read #1's only outputs are the veto verdict and the observational row; read #2 is the pre-freeze audit; no third read."
+}
