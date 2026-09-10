@@ -138,3 +138,16 @@ Plan for the disk: 500 GB for three to four weeks is roughly $35–100, above th
 disk and egress" line; the allocation table carries the measured figure. Start on an A100 for
 the benchmark and both E arms; choose the build's hardware from measured cost per example at the
 selected batch (at bs32 the step is launch-bound and an H100 gains little; at bs128 it may win).
+
+## Scope cut — Dylan, 2026-09-10 (after the implementation review)
+
+Asked plainly whether stage 1 was over-engineered, the lead answered yes in two places: the
+extension cycles and the crash-recovery machinery around the one-shot access. Dylan agreed with all
+four recommendations below.
+
+| # | Ruling (Dylan, 2026-09-10) |
+|---|---|
+| R13 | **No extension cycles.** The build is a fixed 200,000,000 examples, three cycles, kill and plateau the only stop rules. The lock's "permitted extensions" are not exercised; the budget becomes a fixed allocation table with no cap formula. |
+| R14 | **No post-tag continuation.** The registry's original wording stands: a crash after the tag consumes the access and the executor reports what was persisted. The R11 amendment is withdrawn unexecuted. `--recover` recomputes decisions from persisted scores only, with zero protected reads. Reliability comes from rehearsing the exact scoring code on open data until it is boring. |
+| R15 | **One more review, P1s only.** Finish the two fix passes, keep the fixes that survive R13/R14, one short Codex re-check of the P1 findings, then stop reviewing and rent the GPU. |
+| R16 | **LoTTE gate as a small script**, since it is registered and costs about an hour of GPU; no general executor. |

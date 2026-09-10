@@ -1,5 +1,9 @@
 # Stage 1 review triage — 2026-09-10
 
+**Superseded in part by rulings R13–R16 (same day):** extension cycles and post-tag continuation are
+DELETED rather than fixed. B4, B5 and B7 fall away with the extensions; B2/B3's continuation and the
+R11 zero-score path fall away with R14. Everything else in the two tables stands.
+
 Source: `research/m13-codex-impl-review-2026-09-10.md` (Part A re-checks the design review's 13
 findings; Part B is 13 new findings, B1–B8 P1). Rule applied (`m11/STATUS.md` §Scope note): keep a
 finding where the fix also catches a plausible accident by one researcher on one box; drop the
