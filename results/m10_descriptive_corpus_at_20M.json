@@ -1,0 +1,93 @@
+{
+ "read": "corpus_at_20M",
+ "_what": "A3's corpus at 20,000,000 examples, to be read against the COMPLETED `F-bge-small` arm (A4's corpus, same 20M three-cycle schedule). DECISION 1, ruled by astra (gpt-6-astra, 2026-09-09, ruling delegated by Dylan: 'let's allow it to make the decision on those 2 points'): SYNTH-20M is re-pointed from the assembled recipe -- which the screen made identical to the anchor -- to the one contrast that RESOLVED and the one the build's corpus rests on. Only A3 is trained; the A4 side already exists, which is why this costs 20M examples and not 40M.",
+ "arms": {
+  "a": "A3-20M",
+  "b": "F-bge-small",
+  "at_examples": 20000000,
+  "read_labels": {
+   "A3-20M": "cycle3",
+   "F-bge-small": "cycle3_read20000000"
+  }
+ },
+ "absolute": {
+  "A3-20M": 0.4994973407214077,
+  "F-bge-small": 0.5159506173533556
+ },
+ "signed_difference": -0.01645327663194783,
+ "_orientation": "A3-20M minus F-bge-small",
+ "by_family_absolute": {
+  "A3-20M": {
+   "BRIGHT": 0.17487536034497442,
+   "consumer-health": 0.6598965104377481,
+   "finance": 0.3154589606513199,
+   "legal": 0.8477585314515883
+  },
+  "F-bge-small": {
+   "BRIGHT": 0.17826170450639434,
+   "consumer-health": 0.7065451528326812,
+   "finance": 0.3262869513184712,
+   "legal": 0.8527086607558757
+  }
+ },
+ "by_family_contribution_to_the_difference": {
+  "BRIGHT": -0.0008465860403549719,
+  "consumer-health": -0.011662160598733233,
+  "finance": -0.0027069976667878177,
+  "legal": -0.0012375323260718067
+ },
+ "by_unit_difference": {
+  "BRIGHT/biology": -0.008778885924114225,
+  "BRIGHT/earth_science": -0.014082972291375666,
+  "BRIGHT/economics": 0.019212958400700177,
+  "BRIGHT/psychology": -0.01068238334138205,
+  "BRIGHT/robotics": -0.0066531940776078,
+  "BRIGHT/sustainable_living": 0.0006664122652602336,
+  "LEDGER": -0.010827990667151271,
+  "LegalBenchConsumerContractsQA": -0.007502615556756703,
+  "LegalBenchCorporateLobbying": -0.0023976430518177503,
+  "MedicalQARetrieval": -0.04664864239493293
+ },
+ "by_unit_absolute": {
+  "A3-20M": {
+   "MedicalQARetrieval": 0.6598965104377481,
+   "LegalBenchCorporateLobbying": 0.9330716694060557,
+   "LegalBenchConsumerContractsQA": 0.762445393497121,
+   "BRIGHT/biology": 0.1822071335262,
+   "BRIGHT/earth_science": 0.2708563725596958,
+   "BRIGHT/economics": 0.15678503711717331,
+   "BRIGHT/psychology": 0.1837478674551675,
+   "BRIGHT/robotics": 0.09578249042669798,
+   "BRIGHT/sustainable_living": 0.15987326098491206,
+   "LEDGER": 0.3154589606513199
+  },
+  "F-bge-small": {
+   "MedicalQARetrieval": 0.7065451528326812,
+   "LegalBenchCorporateLobbying": 0.9354693124578735,
+   "LegalBenchConsumerContractsQA": 0.769948009053878,
+   "BRIGHT/biology": 0.19098601945031418,
+   "BRIGHT/earth_science": 0.28493934485107153,
+   "BRIGHT/economics": 0.13757207871647317,
+   "BRIGHT/psychology": 0.19443025079654955,
+   "BRIGHT/robotics": 0.10243568450430579,
+   "BRIGHT/sustainable_living": 0.15920684871965185,
+   "LEDGER": 0.3262869513184712
+  }
+ },
+ "weights": {
+  "MedicalQARetrieval": 0.25,
+  "BRIGHT/biology": 0.041666666666666664,
+  "BRIGHT/earth_science": 0.041666666666666664,
+  "BRIGHT/economics": 0.041666666666666664,
+  "BRIGHT/psychology": 0.041666666666666664,
+  "BRIGHT/robotics": 0.041666666666666664,
+  "BRIGHT/sustainable_living": 0.041666666666666664,
+  "LegalBenchCorporateLobbying": 0.125,
+  "LegalBenchConsumerContractsQA": 0.125,
+  "LEDGER": 0.25
+ },
+ "no_interval": "DELIBERATE. This read selects nothing and is not a contrast, so no bootstrap interval is computed: an interval printed beside a point estimate is read as a test whatever the prose says. The twelve registered contrasts are in `results/m10_contrast_*.json`.",
+ "selects": "NOTHING. Descriptive: it enters no Bonferroni accounting, resolves no contrast, and cannot re-decide `A4-A3`, which is observed and stands on its registered rule. If it disagrees with the 5M reading, that is a DOSE-TRANSFER observation to report, not a re-decision.",
+ "registry_sha256": "2bb97f9d1bce9a88be55a314f37bc2303279a7b45521c4a0a053f16025dd4125",
+ "_parity": "REQUIRED by the ruling and DOCUMENTED before launch, from the committed arm records: `F-bge-small` and `A3` already share batch 32, head linear, feature_layers 3, feature_dim 1152 (d_in), objective squared_l2, pattern 75/25, student bge-small, warm_start linear (ridge, n_fit 60,000, fit_seed 21, lambda 1e-3), seed 0, device cuda, max_len 512, and the same 3-cycle 1e-4->1e-5 schedule shape. They differ in dose (5M vs 20M) and in `n_docs` (1,250,000 vs 5,000,000) -- and `n_docs` is DOSE-DERIVED, `corpus_loader.arm_doc_count` = ceil(dose x DOC_SHARE), so at 20M A3 resolves to 5,000,000 documents, matching F-bge-small exactly. The warm-start head is refit per arm on the arm's own corpus by construction (A3 train_objective 0.51424 vs F-bge-small/ANCHOR 0.51233), which is part of the corpus difference under test, not a parity break. **After the dose is matched the ONLY remaining difference is `sources`, which is the contrast.**"
+}

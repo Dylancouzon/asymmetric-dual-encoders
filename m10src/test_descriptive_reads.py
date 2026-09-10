@@ -61,3 +61,23 @@ def test_main_skips_an_arm_that_has_not_finished(capsys):
         assert rc == 0 and "delta" in out
     else:
         assert rc == 1 and "skipped" in out
+
+
+def test_a_read_point_resolves_under_EITHER_label_convention():
+    """The bug this caught in flight: an arm with registered `read_at` points carries them in the
+    label (`cycle3_read20000000`), while an arm whose DOSE is that number just has `cycle3`. Both
+    are the same read, and requiring the tag made the 20M comparison fail on the arm trained
+    specifically for it."""
+    reg = DRD.cfg()
+    la, sa = DRD.read_at("A3-20M", 20_000_000, reg)
+    lb, sb = DRD.read_at("F-bge-small", 20_000_000, reg)
+    assert la == "cycle3" and lb == "cycle3_read20000000"
+    assert set(sa) == set(sb)
+
+
+def test_it_refuses_a_read_at_a_count_the_arm_never_reached():
+    """The fallback accepts the final cycle end ONLY when the arm's registered dose IS the
+    requested count -- never on the assumption that the last checkpoint is close enough."""
+    reg = DRD.cfg()
+    with pytest.raises(ValueError, match="no read at|no cycle end tagged"):
+        DRD.read_at("ANCHOR-seed1", 20_000_000, reg)      # a 5M arm

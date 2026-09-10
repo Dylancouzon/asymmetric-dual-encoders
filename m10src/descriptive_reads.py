@@ -25,7 +25,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import cov_macro
-from contrasts import cfg, check_against_arm_record, point_estimate, read_point
+from contrasts import cfg, check_against_arm_record, cov_files, point_estimate, read_point
 from run_arm import REGISTRY, RESULTS, sha256_file
 
 # (arm, comparator, at_examples on BOTH sides, registry key holding the labels)
@@ -33,6 +33,28 @@ READS = {
     "seed_sensitivity": ("ANCHOR-seed1", "ANCHOR", None),
     "corpus_at_20M": ("A3-20M", "F-bge-small", 20_000_000),
 }
+
+
+def read_at(arm, at_examples, reg):
+    """The arm's cycle end at `at_examples`, under EITHER label convention.
+
+    An arm with registered `read_at` points carries them in the label (`cycle3_read20000000`); an
+    arm whose DOSE is that number just has `cycle3`. Both are the same read, and requiring the tag
+    made the 20M comparison fail on the arm that was trained specifically for it. So: prefer the
+    tagged read, and otherwise accept the final cycle end only when the arm's registered dose IS
+    the requested count — never on the assumption that the last checkpoint is close enough.
+    """
+    if at_examples is None:
+        return read_point(arm)
+    labels = list(cov_files(arm))
+    tagged = [l for l in labels if l.endswith(f"read{int(at_examples)}")]
+    if tagged:
+        return read_point(arm, at_examples)
+    dose = int(reg["arms"][arm]["dose_examples"])
+    if dose != int(at_examples):
+        raise ValueError(f"{arm}: no cycle end tagged read{int(at_examples)} and its dose is "
+                         f"{dose:,}, not {int(at_examples):,}; there is no read at that count")
+    return read_point(arm)
 
 
 def read(name, reg=None, verbose=True):
@@ -44,11 +66,18 @@ def read(name, reg=None, verbose=True):
         raise ValueError(f"{arm} is not registered `descriptive: true`; this module reads only "
                          f"`descriptive_runs` members, never a screen arm")
     uf = dict(cov_macro.SURFACE)
-    la, sa = read_point(arm, at)
-    lb, sb = read_point(comparator, at)
+    la, sa = read_at(arm, at, reg)
+    lb, sb = read_at(comparator, at, reg)
     for nm, lab in ((arm, la), (comparator, lb)):
         check_against_arm_record(nm, lab)          # the same identity check the contrasts use
     delta, aligned = point_estimate(sa, sb, uf)
+    if at is not None:                       # both sides must be the SAME example count
+        for nm in (arm, comparator):
+            d = int(reg["arms"][nm]["dose_examples"])
+            reads = [int(x) for x in (reg["arms"][nm].get("read_at") or [])]
+            if int(at) != d and int(at) not in reads:
+                raise ValueError(f"{nm} has no read at {int(at):,} examples (dose {d:,}, "
+                                 f"read_at {reads})")
     ma, fa, ua = cov_macro.macro(sa, uf)
     mb, fb, ub = cov_macro.macro(sb, uf)
     w = cov_macro.weights(uf)

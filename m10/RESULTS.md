@@ -144,10 +144,30 @@ For context only: it is **half** the calibration's 0.0013869 and **5.6× smaller
 anchor shift a reviewer used to illustrate the hazard — the shift that would have moved A4−A3's
 lower bound to the MDE. On this one observation that hazard did not materialise. One observation.
 
-### Decision 1 — A4's corpus vs A3's at 20M: **RUNNING** (started 18:51, ~9.4 h)
+### Decision 1 — A4's corpus vs A3's at 20M: **the effect GROWS with dose** (`results/m10_descriptive_corpus_at_20M.json`)
 
-`A3-20M` against the completed `F-bge-small`. Parity documented and tested: after the dose is
-matched the only difference is `sources`.
+`A3-20M` **0.499497** vs `F-bge-small` **0.515951**, both at their 20M cycle-3 end, parity
+documented and tested (after the dose is matched the only difference is `sources`).
+
+Oriented as the registered A4−A3: **+0.016453 at 20M against +0.012080 at 5M** — the corpus effect
+is 36% larger at 4× the dose, so the A4 decision holds and strengthens rather than washing out.
+
+| family | A4−A3 @5M | A4−A3 @20M | change |
+|---|---:|---:|---:|
+| consumer-health | +0.009885 | +0.011662 | +0.001777 |
+| finance | +0.001915 | +0.002707 | +0.000792 |
+| legal | +0.001615 | +0.001238 | −0.000377 |
+| **BRIGHT** | **−0.001335** | **+0.000847** | **+0.002181** |
+| total | +0.012080 | +0.016453 | |
+
+**Two things the 5M screen got wrong about itself, and this is why the read was worth 9 hours.**
+(i) **BRIGHT flips sign.** The family that looked *harmed* by adding seven forms at 5M is helped at
+20M, and it is the largest single change in the table. The exposure-dilution cost is therefore
+**dose-dependent** — it is what a short arm sees, not what the build will. (ii) **The
+concentration falls**, 81.8% → 70.9% of the gain in consumer-health. Still concentrated, less so.
+
+Descriptive and n=1: it selects nothing, re-decides nothing, and carries no interval. A4−A3 had
+already resolved in this direction under its registered rule; this cannot and does not change it.
 
 ## Known pre-existing test failure (not caused by any M10 work)
 

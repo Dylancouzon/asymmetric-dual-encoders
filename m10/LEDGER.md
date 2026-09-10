@@ -1726,3 +1726,30 @@ Both passes are archived and are worth re-reading before the recipe lock:
 `research/m10-fable-verdicts-review-2026-09-09.md`,
 `research/m10-codex-fixes-review-2026-09-09.md` (verbatim), and the two briefs
 `research/m10-review-brief-{fable,codex}-2026-09-09.md`.
+
+### The two descriptive reads, 2026-09-10 — astra's rulings executed
+
+- **Anchor seed sensitivity: +0.000712** (`m10_descriptive_seed_sensitivity.json`). Half the
+  calibration's 0.0013869 and 5.6× smaller than the ±0.004 shift a reviewer used to illustrate the
+  shared-comparator hazard. astra's prohibition applies **because** the delta is near zero, not
+  despite it: no claim of reproducibility, bounded seed noise, seed-adjusted significance or
+  confirmed verdicts.
+- **A4−A3 at 20M: +0.016453, against +0.012080 at 5M** (`m10_descriptive_corpus_at_20M.json`). The
+  corpus effect GROWS 36% at 4× dose. **BRIGHT flips from −0.001335 to +0.000847** — the family
+  that looked harmed by the added forms at 5M is helped at 20M — and consumer-health's share of the
+  gain falls 81.8% → 70.9%. **So the exposure-dilution cost is DOSE-DEPENDENT: it is what a short
+  arm sees, not what the build will.** That is the single most useful correction the screen's own
+  isolated-5M-effects worry has received, and it went in our favour.
+
+Both are descriptive, n=1, no interval, select nothing.
+
+**A bug the read caught in flight:** `descriptive_reads` required the read point to carry a
+`read<N>` label tag, which only arms with registered `read_at` points have. `A3-20M`'s dose IS 20M
+so its final cycle end is plain `cycle3` — the comparison failed on the arm trained specifically
+for it. `read_at()` now accepts either convention, and accepts the final cycle end ONLY when the
+arm's registered dose is the requested count.
+
+**Also corrected:** `rules.E_warmup_parity` carried a stale clause claiming E1 alone has a hardware
+difference because `E-bs32` is box-trained. Under the settled design both E arms run on the A100
+together, which is what removes it. Deferred until A3-20M finished because that arm's resume path
+pinned the registry hash.
