@@ -375,6 +375,13 @@ def _gate(root, **over):
          "e1_verdict_sha256": VERDICTS_SHA, "read_at": "2026-09-10T00:00:00+0000",
          "_what": "test gate record"}
     g.update(over)
+    # the bootstrap the decision is recomputed from, consistent with the decision unless a test
+    # overrides it to check the refusal
+    boots = {"skipped": (None, None), "veto": ({"delta_macro_raw": -0.02, "upper_q975_raw": -0.01}, True),
+             "no_veto": ({"delta_macro_raw": 0.0, "upper_q975_raw": 0.0}, False)}
+    if g["decision"] in boots:
+        g.setdefault("delta_candidate_minus_comparator", boots[g["decision"]][0])
+        g.setdefault("veto_fired", boots[g["decision"]][1])
     man_p = _manifest_path(root)
     man_p.parent.mkdir(parents=True, exist_ok=True)
     man_p.write_text(json.dumps({
@@ -445,6 +452,7 @@ def _tiny_build_run_patched(mp, root, scenario, *, abrupt_after=None, resume=Fal
             json.dumps({"checkpoints": {"cycle3": {"sha256": sha}}}))
     mp.setattr(BD, "ARM_RECORDS_DIR", root / "e_records")
     mp.setattr(BD, "MANIFEST_PATH", _manifest_path(root))
+    mp.setattr(BD, "REQUIRE_COMMITTED", False)              # a tmp tree is not a repository
     mp.setattr(BD.BL, "DOSE", dose)
     mp.setattr(BD.BL, "verdicts", lambda path=None: SELECTED)
     mp.setattr(BD.N, "Nano10", lambda *a, **k: Toy())
@@ -680,6 +688,7 @@ def _run_refusing(root, **kw):
         mp.setattr(BD.BL, "DOSE", TINY_DOSE)
         mp.setattr(BD.BL, "verdicts", lambda path=None: SELECTED)
         mp.setattr(BD, "MANIFEST_PATH", _manifest_path(root))
+        mp.setattr(BD, "REQUIRE_COMMITTED", False)
         cfg_kw = {k: kw.pop(k) for k in ("gate", "dose") if k in kw}
         _cfg, p = _config(root, dose=cfg_kw.get("dose", TINY_DOSE), reserved_hours=1.0,
                           gate=cfg_kw.get("gate", True))
@@ -755,6 +764,7 @@ def test_a_recorded_veto_selects_bs32_whatever_e1_says(tmp_path):
                           lotte_gate=str(root / "lotte_gate.json"))
         mp.setattr(BD.BL, "DOSE", TINY_DOSE)
         mp.setattr(BD, "MANIFEST_PATH", _manifest_path(root))
+        mp.setattr(BD, "REQUIRE_COMMITTED", False)
         cfg, _q = BL.load(p)
         ctx = {}
         _reg, batch, source, gate, _rep = BD._preflight(
@@ -765,9 +775,37 @@ def test_a_recorded_veto_selects_bs32_whatever_e1_says(tmp_path):
     assert gate["manifest"]["branch"] == "bs128" and gate["manifest"]["sha256"] == gate["manifest_sha256"]
 
 
-def test_the_gate_must_be_bound_to_the_committed_manifest(tmp_path):
+def test_the_decision_is_recomputed_from_the_recorded_bootstrap(tmp_path):
+    """Sol 2026-09-10, finding 6: an edited `decision` enum with intact numbers must not pass."""
+    kw = dict(branch="bs128", candidate_sha256="c" * 64, comparator_sha256="a" * 64)
+    with pytest.raises(SystemExit, match="do not follow from the recorded bootstrap"):
+        BD.check_gate(_gate(tmp_path / "a", decision="veto", veto_fired=True,
+                            delta_candidate_minus_comparator={"delta_macro_raw": 0.0, "upper_q975_raw": 0.0},
+                            **kw), smoke=True)
+    with pytest.raises(SystemExit, match="do not follow from the recorded bootstrap"):
+        BD.check_gate(_gate(tmp_path / "b", decision="no_veto", veto_fired=False,
+                            delta_candidate_minus_comparator={"delta_macro_raw": -0.02, "upper_q975_raw": -0.01},
+                            **kw), smoke=True)
+    with pytest.raises(SystemExit, match="do not follow"):                 # the flag disagrees
+        BD.check_gate(_gate(tmp_path / "c", decision="veto", veto_fired=False, **kw), smoke=True)
+    with pytest.raises(SystemExit, match="must carry the bootstrap"):
+        BD.check_gate(_gate(tmp_path / "d", decision="veto", delta_candidate_minus_comparator=None,
+                            **kw), smoke=True)
+    with pytest.raises(SystemExit, match="carries no bootstrap"):
+        BD.check_gate(_gate(tmp_path / "e", delta_candidate_minus_comparator={"delta_macro_raw": 0.0,
+                                                                              "upper_q975_raw": 0.0}),
+                      smoke=True)
+    # only one side of the rule holding is no veto
+    g = BD.check_gate(_gate(tmp_path / "f", decision="no_veto", veto_fired=False,
+                            delta_candidate_minus_comparator={"delta_macro_raw": -0.02, "upper_q975_raw": -0.003},
+                            **kw), smoke=True)
+    assert g["decision"] == "no_veto"
+
+
+def test_the_gate_must_be_bound_to_the_committed_manifest(tmp_path, monkeypatch):
     """Astra 2026-09-10, finding 2: the arm records are mutable; the committed manifest is the
     anchor. Outside a smoke a missing manifest refuses; a stale or disagreeing one refuses."""
+    monkeypatch.setattr(BD, "REQUIRE_COMMITTED", False)     # the git provenance is the gate's test
     root = tmp_path / "m"
     g = BD.check_gate(_gate(root, decision="no_veto", branch="bs128", candidate_sha256="c" * 64,
                             comparator_sha256="a" * 64), smoke=True)

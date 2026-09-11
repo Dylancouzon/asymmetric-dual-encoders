@@ -54,10 +54,12 @@ and monitor `Traceback|Error|FAILED|OOM|Killed|assert`; read the first progress 
 
 1. Clone at `/home/dylan/asymetric-dual-encoders`, build `.venv` per `HARNESS.md`, rsync per
    `m13/SHIP_LIST.md` without the DEV-6 group, `sha256sum results/perquery.json` must match.
-2. `./run_checks.sh`; `.venv/bin/python m10src/arm_smoke.py --device cuda`; `m10src/run_arm.py --plan`.
+2. `./run_checks.sh`; `.venv/bin/python m10src/arm_smoke.py --device cuda`;
+   `.venv/bin/python m10src/run_arm.py --plan`.
 3. Benchmark hour: examples/s at bs32 and bs128 from the smoke, billed $/h from the provider, then
-   `m13src/build13.py --config m13/build_config.json --plan --rate EX_S --price USD_H`. Record rate,
-   price and the printed allocation in this file, dated; the build record captures them again.
+   `.venv/bin/python m13src/build13.py --config m13/build_config.json --plan --rate EX_S --price USD_H`.
+   Record rate, price and the printed allocation in this file, dated; the build record captures
+   them again.
 4. `.venv/bin/python m10src/run_arm.py E-bs32 --device cuda --dev6 defer`, then the same for
    `E-bs128`; commit and push both records from the instance; copy `work/m10arms/E-bs32/` and
    `E-bs128/` (record and `cycle3.pt`) back to the same paths on the box.
@@ -69,6 +71,8 @@ and monitor `Traceback|Error|FAILED|OOM|Killed|assert`; read the first progress 
    `m13/LOTTE_GATE_MANIFEST.json` (the lock's second manifest commit); `.venv/bin/python
    m8src/freeze_lotte.py pin`, commit and push `results/m8_lotte_pin.json` (R18, same day);
    `.venv/bin/python m13src/lotte_gate13.py --preflight-only`; then the read, once. If it crashes,
-   `--recover` completes it; nothing else re-opens the surface. Commit and push `m13/LOTTE_GATE.json`.
+   `--recover` completes it after the crashed process has exited; nothing else re-opens the
+   surface. Commit and push `m13/LOTTE_GATE.json`: the build refuses a gate record or manifest
+   that is not committed and pushed, and recomputes the decision from the recorded bootstrap.
 7. Build, on the instance after `git pull`: `.venv/bin/python m13src/build13.py --config
    m13/build_config.json --device cuda --rate EX_S --price USD_H`.

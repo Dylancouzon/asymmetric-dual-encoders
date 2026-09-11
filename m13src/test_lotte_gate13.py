@@ -1,13 +1,15 @@
 """What LoTTE read #1's executor must refuse, and the arithmetic it must get right — on a synthetic
-git tree. No test opens `work/lotte`; the fixture writes seven tiny "remediated" slices under a tmp
-path, pins them with `freeze_lotte`'s hash scheme, writes the two E arm records with real checkpoint
-bytes, a committed checkpoint manifest, injects a deterministic document encoder in place of stella,
-and hands the executor stub students whose quality is a parameter — so both branches, both veto
-outcomes, the crash-and-recover path and every refusal run on a CPU in seconds. The one real-path
-check (the guard claim) runs in a subprocess and only CLASSIFIES a protected path; it opens nothing.
+git tree with a bare origin. No test opens `work/lotte`; the fixture writes seven tiny "remediated"
+slices under a tmp path, pins them with `freeze_lotte`'s hash scheme, writes the two E arm records
+with real checkpoint bytes, commits and pushes the manifest and pin, injects a deterministic document
+encoder in place of stella and a constant dependency identity, and hands the executor stub students
+whose quality is a parameter — so both branches, both veto outcomes, the crash-and-recover path and
+every refusal run on a CPU in seconds. The one real-path check (the guard claim) runs in a
+subprocess and only CLASSIFIES a protected path; it opens nothing.
 """
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import json
 import os
@@ -30,6 +32,7 @@ import lotte_gate13 as G                                                  # noqa
 DIM = 32
 REAL_REG = json.loads((REPO / "m13" / "LOTTE_GATE_REGISTRATION.json").read_text())
 SLICES = list(REAL_REG["surface"]["slices"])
+DEP = {"repo": "fixture/bge-small", "sha256": "d" * 64}
 
 
 # --------------------------------------------------------------------------------- fixture ----
@@ -110,19 +113,27 @@ def write_slice(d, key, n_docs, n_queries):
 
 
 def _git(repo, *a):
-    r = subprocess.run(("git",) + a, cwd=repo, capture_output=True, text=True)
+    r = subprocess.run(("git", "-c", "user.email=t@t", "-c", "user.name=t") + a, cwd=repo,
+                       capture_output=True, text=True)
     assert r.returncode == 0, f"git {' '.join(a)}: {r.stderr}"
     return r.stdout.strip()
 
 
+def commit_and_push(repo, msg="fixture"):
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", msg)
+    _git(repo, "push", "-q", "origin", "HEAD")
+
+
 def build_world(root, *, e1_batch, quality=None, n_queries=12, count_error=None,
-                write_manifest=True, commit_manifest=True):
-    """-> a Config over a synthetic GIT tree: the REAL registration's structure with the fixture's
-    counts, a copy of the real screen registry, an E1 verdict bound to it, two complete E arm
-    records with real checkpoint bytes, seven tiny slices of different sizes, their pin, and the
-    checkpoint manifest written by the executor itself and committed."""
+                write_manifest=True, publish=True):
+    """-> a Config over a synthetic GIT tree with a bare origin: the REAL registration's structure
+    with the fixture's counts, a copy of the real screen registry and build config, an E1 verdict
+    bound to the registry, two complete E arm records carrying the registered recipe and real
+    checkpoint bytes, seven tiny slices of different sizes, their pin, and (by default) the
+    manifest written by the executor itself, all committed and pushed."""
     quality = quality or {"E-bs32": 1.0, "E-bs128": 1.0}
-    repo = Path(root) / "repo"
+    repo, origin = Path(root) / "repo", Path(root) / "origin.git"
     for d in ("m13", "m10", "results", "work/lotte/remediated", "work/m10arms"):
         (repo / d).mkdir(parents=True, exist_ok=True)
     reg = json.loads(json.dumps(REAL_REG))
@@ -138,6 +149,7 @@ def build_world(root, *, e1_batch, quality=None, n_queries=12, count_error=None,
     reg["surface"]["total_queries"] = sum(s["queries_after_remedy"]
                                           for s in reg["surface"]["slices"].values())
     (repo / "m13" / "LOTTE_GATE_REGISTRATION.json").write_text(json.dumps(reg, indent=1))
+    shutil.copy(REPO / "m13" / "build_config.json", repo / "m13" / "build_config.json")
     (repo / "results" / "m8_lotte_pin.json").write_text(json.dumps(pin, indent=1))
     shutil.copy(REPO / "m10" / "screen_registry.json", repo / "m10" / "screen_registry.json")
     reg_sha = G.sha256_file(repo / "m10" / "screen_registry.json")
@@ -153,6 +165,7 @@ def build_world(root, *, e1_batch, quality=None, n_queries=12, count_error=None,
             {"arm": arm, "status": "complete", "complete": True, "terminal": True, "smoke": False,
              "seed": 0, "registry_sha256": reg_sha,
              "recipe": {"student": "bge-small", "n_layers": 3, "head": "linear",
+                        "objective": "squared_l2", "pattern": "75/25",
                         "dose_examples": 5_000_000, "batch": batch},
              "params": 33_000_000, "device": "cuda", "git_head": "f" * 40,
              "checkpoints": {"cycle3": {"path": f"work/m10arms/{arm}/cycle3.pt", "sha256": sha}},
@@ -162,6 +175,7 @@ def build_world(root, *, e1_batch, quality=None, n_queries=12, count_error=None,
     cfg = G.Config(
         repo=repo,
         registration_path=repo / "m13" / "LOTTE_GATE_REGISTRATION.json",
+        build_config_path=repo / "m13" / "build_config.json",
         record_path=repo / "m13" / "LOTTE_GATE.json",
         manifest_path=repo / "m13" / "LOTTE_GATE_MANIFEST.json",
         pin_path=repo / "results" / "m8_lotte_pin.json",
@@ -174,16 +188,17 @@ def build_world(root, *, e1_batch, quality=None, n_queries=12, count_error=None,
         device="cpu", allow_cpu=True, topk=100, chunk=1000,
         doc_encoder=enc,
         load_student=lambda ar, data, device: students[ar["arm"]],
+        dependency_identity=lambda key: dict(DEP),
         claim_guard=False)
     cfg.students, cfg.enc = students, enc
     (repo / ".gitignore").write_text("work/\n")
     _git(repo, "init", "-q")
-    _git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "root")
+    _git(origin.parent, "init", "-q", "--bare", str(origin))
+    _git(repo, "remote", "add", "origin", str(origin))
     if write_manifest and str(e1_batch).upper() != "PENDING":
         G.write_manifest(cfg, verbose=False)
-        if commit_manifest:
-            _git(repo, "add", "-A")
-            _git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "manifest")
+    if publish:
+        commit_and_push(repo)
     return cfg
 
 
@@ -191,6 +206,15 @@ def _rewrite(path, **over):
     d = json.loads(Path(path).read_text())
     d.update(over)
     Path(path).write_text(json.dumps(d))
+
+
+def _crash_then_recover_world(root, quality=None):
+    cfg = build_world(root, e1_batch=128, quality=quality or {"E-bs32": 1.0, "E-bs128": 0.5})
+    cfg.enc.crash_on = "science-dev"                       # the fifth slice by size
+    with pytest.raises(RuntimeError, match="injected crash"):
+        G.run(cfg, verbose=False)
+    cfg.enc.crash_on = None
+    return cfg
 
 
 # ------------------------------------------------------------------------------ registration ----
@@ -201,6 +225,9 @@ def test_the_real_registration_validates_without_opening_lotte():
     assert reg["veto"]["margin"] == 0.004 and reg["veto"]["bootstrap"]["seed"] == 903
     assert reg["veto"]["bootstrap"]["quantile_method"] == "inverted_cdf", "ruling R17"
     assert sha == G.sha256_file(REPO / "m13" / "LOTTE_GATE_REGISTRATION.json")
+    assert G.registered_recipe(G.Config()) == {"student": "bge-small", "n_layers": 3,
+                                               "head": "linear", "objective": "squared_l2",
+                                               "pattern": "75/25"}
 
 
 def test_the_registration_is_held_to_the_locked_constants(tmp_path):
@@ -211,10 +238,11 @@ def test_the_registration_is_held_to_the_locked_constants(tmp_path):
     with pytest.raises(SystemExit, match="veto.margin"):
         G.registration(cfg)
     reg["veto"]["margin"] = 0.004
-    reg["veto"]["bootstrap"].pop("quantile_method")
-    cfg.registration_path.write_text(json.dumps(reg))
-    with pytest.raises(SystemExit, match="R17"):
-        G.registration(cfg)
+    for method in (None, "higher", "linear"):               # R17 admits inverted_cdf and nothing else
+        reg["veto"]["bootstrap"]["quantile_method"] = method
+        cfg.registration_path.write_text(json.dumps(reg))
+        with pytest.raises(SystemExit, match="R17"):
+            G.registration(cfg)
     reg["veto"]["bootstrap"]["quantile_method"] = "inverted_cdf"
     reg["executed"] = True
     cfg.registration_path.write_text(json.dumps(reg))
@@ -233,7 +261,7 @@ def test_preflight_opens_no_lotte_path_and_orders_slices_smallest_first(tmp_path
     sizes = [json.loads(cfg.registration_path.read_text())["surface"]["slices"][k]["docs_after_remedy"]
              for k in plan["slice_order"]]
     assert sizes == sorted(sizes) and len(sizes) == 7
-    assert plan["manifest_commit"] and plan["pin_sha256"] and plan["code_identity"] == G.code_identity()
+    assert plan["manifest_commit"] and plan["pin_commit"] and plan["code_identity"] == G.code_identity()
     assert not cfg.record_path.exists() and not cfg.gate_work_dir.exists()
     assert cfg.enc.calls == [] and all(s.calls == 0 for s in cfg.students.values())
 
@@ -269,6 +297,23 @@ def test_an_arm_record_that_is_not_this_complete_registered_arm_refuses(tmp_path
         G.run(cfg, preflight_only=True, verbose=False)
 
 
+@pytest.mark.parametrize("field, value", [("student", "MiniLM-L6-v2"), ("n_layers", 4),
+                                          ("head", "mlp"), ("objective", "leaf_norm_e2"),
+                                          ("pattern", "50/50")])
+def test_a_record_whose_recipe_is_not_the_registered_one_refuses(tmp_path, field, value):
+    """Sol 2026-09-10, finding 3: a wrong-recipe checkpoint labelled with the right arm, seed and
+    registry sha must not be frozen into a manifest or read."""
+    cfg = build_world(tmp_path, e1_batch=128, write_manifest=False)
+    p = cfg.arm_records_dir / "m10_arm_E-bs128.json"
+    rec = json.loads(p.read_text())
+    rec["recipe"][field] = value
+    p.write_text(json.dumps(rec))
+    with pytest.raises(SystemExit, match="differs from the registered knobs"):
+        G.write_manifest(cfg, verbose=False)
+    with pytest.raises(SystemExit, match="differs from the registered knobs"):
+        G.run(cfg, preflight_only=True, verbose=False)
+
+
 def test_both_e_records_are_required_even_in_the_bs32_branch(tmp_path):
     cfg = build_world(tmp_path, e1_batch=32)
     (cfg.arm_records_dir / "m10_arm_E-bs128.json").unlink()
@@ -284,14 +329,13 @@ def test_a_checkpoint_whose_bytes_moved_refuses(tmp_path):
 
 
 def test_the_student_is_loaded_from_the_bytes_that_were_hashed(tmp_path):
-    """Finding 3: hash-then-load must not reopen the file. The loader receives the exact bytes the
-    hash was computed on; swapping the file after preflight is caught at load time."""
+    """Hash-then-load must not reopen the file. The loader receives the exact bytes the hash was
+    computed on; swapping the file after preflight is caught at load time."""
     cfg = build_world(tmp_path, e1_batch=32)
     seen = {}
     cfg.load_student = lambda ar, data, device: seen.setdefault(ar["arm"], data) and cfg.students[ar["arm"]]
     rec = G.run(cfg, verbose=False)
     assert hashlib.sha256(seen["E-bs32"]).hexdigest() == rec["candidate_sha256"]
-    # a swap between preflight and load refuses (the second read re-hashes)
     cfg2 = build_world(tmp_path / "b", e1_batch=32)
     real_preflight = G.preflight
 
@@ -306,6 +350,17 @@ def test_the_student_is_loaded_from_the_bytes_that_were_hashed(tmp_path):
     assert not cfg2.record_path.exists()
 
 
+def test_a_changed_dependency_refuses_at_load(tmp_path):
+    """Sol 2026-09-10, finding 4: `Nano10` loads its tokenizer and backbone configuration by
+    repository name. The manifest records their identity; the read re-derives and compares it."""
+    cfg = build_world(tmp_path, e1_batch=32)
+    assert json.loads(cfg.manifest_path.read_text())["candidate"]["dependencies"] == DEP
+    cfg.dependency_identity = lambda key: {"repo": DEP["repo"], "sha256": "e" * 64}
+    with pytest.raises(SystemExit, match="not the one the manifest recorded"):
+        G.run(cfg, verbose=False)
+    assert not cfg.record_path.exists()
+
+
 def test_an_existing_gate_record_refuses_a_second_execution(tmp_path):
     cfg = build_world(tmp_path, e1_batch=32)
     G.run(cfg, verbose=False)
@@ -315,31 +370,34 @@ def test_an_existing_gate_record_refuses_a_second_execution(tmp_path):
             G.run(cfg, verbose=False, **kw)
 
 
-# ---------------------------------------------------------------------------------- manifest ----
+# ------------------------------------------------------------------------- manifest and pin ----
 
-def test_the_read_refuses_without_the_committed_manifest(tmp_path):
+def test_the_read_refuses_without_the_committed_and_pushed_manifest(tmp_path):
     cfg = build_world(tmp_path, e1_batch=128, write_manifest=False)
     with pytest.raises(SystemExit, match="second manifest commit"):
         G.run(cfg, preflight_only=True, verbose=False)
     G.write_manifest(cfg, verbose=False)                      # written but NOT committed
     with pytest.raises(SystemExit, match="not tracked by git"):
         G.run(cfg, preflight_only=True, verbose=False)
-    _git(cfg.repo, "add", "-A")
-    _git(cfg.repo, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "manifest")
+    _git(cfg.repo, "add", "-A")                               # staged is not committed
+    with pytest.raises(SystemExit, match="uncommitted changes"):
+        G.run(cfg, preflight_only=True, verbose=False)
+    _git(cfg.repo, "commit", "-q", "-m", "manifest")          # committed is not pushed
+    with pytest.raises(SystemExit, match="not on any remote branch"):
+        G.run(cfg, preflight_only=True, verbose=False)
+    _git(cfg.repo, "push", "-q", "origin", "HEAD")
     plan = G.run(cfg, preflight_only=True, verbose=False)
     assert plan["manifest_commit"] == _git(cfg.repo, "rev-parse", "HEAD")
-    # a manifest edited after its commit refuses
-    _rewrite(cfg.manifest_path, written_at="later")
+    _rewrite(cfg.manifest_path, written_at="later")           # edited after its commit
     with pytest.raises(SystemExit, match="uncommitted changes"):
         G.run(cfg, preflight_only=True, verbose=False)
 
 
 def test_a_manifest_that_disagrees_with_the_live_records_refuses(tmp_path):
-    """Finding 2: a swapped record and checkpoint (same dose, same batch) must not pass merely
+    """A swapped record and checkpoint (same dose, same batch, same recipe) must not pass merely
     because they are self-consistent; the committed manifest is the anchor."""
     cfg = build_world(tmp_path, e1_batch=128)
-    arm_dir = cfg.repo / "work" / "m10arms" / "E-bs128"
-    ck = arm_dir / "cycle3.pt"
+    ck = cfg.repo / "work" / "m10arms" / "E-bs128" / "cycle3.pt"
     ck.write_bytes(b"a different but complete run's checkpoint")
     sha = G.sha256_file(ck)
     _rewrite(cfg.arm_records_dir / "m10_arm_E-bs128.json", final_checkpoint_sha256=sha,
@@ -355,21 +413,26 @@ def test_write_manifest_records_both_arms_for_bs128_and_one_for_bs32(tmp_path):
     m = json.loads(cfg.manifest_path.read_text())
     assert m["branch"] == "bs128" and m["candidate"]["arm"] == "E-bs128"
     assert m["comparator"]["arm"] == "E-bs32" and m["e1_verdict_sha256"] == G.sha256_file(cfg.verdicts_path)
-    assert set(m["candidate"]) >= {"arm", "checkpoint", "sha256", "record_sha256", "recipe", "seed"}
+    assert set(m["candidate"]) >= {"arm", "checkpoint", "sha256", "record_sha256", "recipe", "seed",
+                                   "dependencies"}
+    assert set(m["candidate"]["recipe"]) == set(G.RECIPE_FIELDS)
     cfg32 = build_world(tmp_path / "b", e1_batch=32)
     m32 = json.loads(cfg32.manifest_path.read_text())
     assert m32["branch"] == "bs32" and m32["candidate"]["arm"] == "E-bs32" and m32["comparator"] is None
 
 
-# --------------------------------------------------------------------------------------- pin ----
-
-def test_the_read_refuses_without_the_pin_and_on_a_pin_mismatch(tmp_path):
+def test_the_read_refuses_without_a_committed_pin_and_on_a_pin_mismatch(tmp_path):
     cfg = build_world(tmp_path, e1_batch=32)
     pin = json.loads(cfg.pin_path.read_text())
     cfg.pin_path.unlink()
     with pytest.raises(SystemExit, match="R18"):
         G.run(cfg, preflight_only=True, verbose=False)
-    cfg.pin_path.write_text(json.dumps(pin))
+    cfg.pin_path.write_text(json.dumps(pin, indent=1))        # restored byte-identically: clean
+    G.run(cfg, preflight_only=True, verbose=False)
+    cfg.pin_path.write_text(json.dumps(pin))                  # same content, different bytes
+    with pytest.raises(SystemExit, match="LoTTE pin .* uncommitted changes"):
+        G.run(cfg, preflight_only=True, verbose=False)
+    cfg.pin_path.write_text(json.dumps(pin, indent=1))
     # the slice's text changes but its counts do not: only the pin can see it
     d = cfg.remediated_dir / "science" / "dev"
     lines = (d / "collection.tsv").read_text().splitlines()
@@ -412,9 +475,7 @@ def test_read_slice_hashes_match_the_freeze_lotte_scheme(tmp_path):
     pin = json.loads(cfg.pin_path.read_text())
     sl = G.read_slice(cfg, "writing/dev", reg["surface"]["slices"]["writing/dev"],
                       pin["slices"]["writing/dev"])
-    assert sl["n_queries"] == 12 and set(sl["hashes"]) == {
-        "doc_ids_sha256", "doc_texts_sha256", "query_ids_sha256", "query_texts_sha256",
-        "qrels_sha256"}
+    assert sl["n_queries"] == 12 and set(sl["hashes"]) == set(G.HASH_FIELDS)
     # sorted-key JSON of the doc id list, exactly as m8src/freeze_lotte.sha hashes it
     assert sl["hashes"]["doc_ids_sha256"] == hashlib.sha256(
         json.dumps(sl["doc_ids"], sort_keys=True).encode()).hexdigest()
@@ -442,7 +503,6 @@ def test_queries_whose_ids_equal_their_positives_are_still_scored(tmp_path):
 
 
 def test_a_missing_query_refusal_prints_a_count_not_identifiers(tmp_path, monkeypatch):
-    """Finding 6: nothing from the surface, not even a qid, leaves the protected tree in stderr."""
     cfg = build_world(tmp_path, e1_batch=32)
     reg = json.loads(cfg.registration_path.read_text())
     pin = json.loads(cfg.pin_path.read_text())
@@ -483,6 +543,7 @@ def test_the_paired_bootstrap_is_paired_deterministic_and_slice_macro():
     pooled = (50 * 0.01 + 30 * 0.01 + 80 * 0.04) / 160
     assert abs(a["delta_macro_raw"] - pooled) > 1e-3
     assert abs(a["upper_q975_raw"] - 0.02) < 1e-9, "constant paired deltas have no spread"
+    assert a["quantile_method"] == "inverted_cdf"
     c = G.paired_bootstrap(cand, comp, B=2000, seed=904)
     assert c["plan_sha256"] != a["plan_sha256"] and c["delta_macro_raw"] == a["delta_macro_raw"]
     shuffled = {k: dict(reversed(list(v.items()))) for k, v in comp.items()}
@@ -495,17 +556,14 @@ def test_the_paired_bootstrap_is_paired_deterministic_and_slice_macro():
         G.paired_bootstrap(cand, {"s1": comp["s1"]}, B=10, seed=903)
 
 
-def test_the_upper_bound_uses_the_registered_quantile_method():
-    """R17: the method is a registered choice, read from the registration, and it matters at the
-    boundary — `inverted_cdf` takes order statistic 9,750 of 10,000, `higher` takes 9,751."""
+def test_the_upper_bound_method_matters_at_the_boundary_which_is_why_r17_pins_it():
     rng = np.random.default_rng(3)
     q = [f"{i}" for i in range(40)]
     x = rng.uniform(size=40)
     cand = {"s": dict(zip(q, x))}
     comp = {"s": dict(zip(q, x + rng.normal(scale=0.05, size=40)))}
-    a = G.paired_bootstrap(cand, comp, B=10000, seed=903, method="inverted_cdf")
+    a = G.paired_bootstrap(cand, comp, B=10000, seed=903)
     b = G.paired_bootstrap(cand, comp, B=10000, seed=903, method="higher")
-    assert a["quantile_method"] == "inverted_cdf" and b["quantile_method"] == "higher"
     assert b["upper_q975_raw"] >= a["upper_q975_raw"]
     assert a["draws_sha256"] == b["draws_sha256"], "the draws are identical; only the read-out differs"
 
@@ -533,11 +591,12 @@ def test_the_bs32_branch_skips_the_veto_and_still_reads_the_observational_row(tm
     assert rec["surface"]["n_slices"] == 7 and rec["surface"]["total_queries"] == 7 * 12
     assert cfg.students["E-bs128"].calls == 0, "the bs32 branch loads one student"
     assert rec["manifest_sha256"] == G.sha256_file(cfg.manifest_path)
-    assert rec["pin_sha256"] == G.sha256_file(cfg.pin_path)
+    assert rec["pin_sha256"] == G.sha256_file(cfg.pin_path) and rec["pin_commit"]
+    assert rec["dependencies"] == {"candidate": DEP}
     g = BD.check_gate(cfg.record_path, verdicts_path=cfg.verdicts_path, e1_batch=32,
                       arm_records_dir=cfg.arm_records_dir)
     assert g["decision"] == "skipped" and g["arm_records_checked"] is True
-    assert BD.check_gate_manifest(g, manifest_path=cfg.manifest_path)["sha256"] == rec["manifest_sha256"]
+    assert BD.check_gate_manifest(g, manifest_path=cfg.manifest_path, smoke=True)["sha256"] == rec["manifest_sha256"]
     with pytest.raises(SystemExit, match="E1 selected bs128"):
         BD.check_gate(cfg.record_path, verdicts_path=cfg.verdicts_path, e1_batch=128,
                       arm_records_dir=cfg.arm_records_dir)
@@ -558,7 +617,7 @@ def test_the_bs128_branch_vetoes_a_clearly_worse_candidate(tmp_path):
     g = BD.check_gate(cfg.record_path, verdicts_path=cfg.verdicts_path, e1_batch=128,
                       arm_records_dir=cfg.arm_records_dir)
     assert g["decision"] == "veto" and g["comparator_sha256"] == rec["comparator_sha256"]
-    assert BD.check_gate_manifest(g, manifest_path=cfg.manifest_path)["branch"] == "bs128"
+    assert BD.check_gate_manifest(g, manifest_path=cfg.manifest_path, smoke=True)["branch"] == "bs128"
 
 
 def test_the_bs128_branch_does_not_veto_an_equal_candidate(tmp_path):
@@ -573,17 +632,16 @@ def test_the_bs128_branch_does_not_veto_an_equal_candidate(tmp_path):
     assert g["decision"] == "no_veto"
 
 
-# ------------------------------------------------------------------------- receipt and recovery
+# ------------------------------------------------------------------- lock, receipt and recovery
 
 def test_a_crashed_read_leaves_a_receipt_and_refuses_a_plain_rerun(tmp_path):
-    cfg = build_world(tmp_path, e1_batch=128, quality={"E-bs32": 1.0, "E-bs128": 0.5})
-    cfg.enc.crash_on = cfg.students and "science-dev"           # the 5th slice by size
-    with pytest.raises(RuntimeError, match="injected crash"):
-        G.run(cfg, verbose=False)
+    cfg = _crash_then_recover_world(tmp_path)
     receipt = cfg.gate_work_dir / "receipt.json"
     assert receipt.exists() and not cfg.record_path.exists()
     persisted = sorted(p.name for p in cfg.gate_work_dir.glob("slice-*.json"))
     assert len(persisted) == 4, persisted
+    journal = (cfg.gate_work_dir / "slices.jsonl").read_text().splitlines()
+    assert len(journal) == 4
     with pytest.raises(SystemExit, match="a read has already STARTED"):
         G.run(cfg, verbose=False)
     with pytest.raises(SystemExit, match="a read has already STARTED"):
@@ -591,13 +649,9 @@ def test_a_crashed_read_leaves_a_receipt_and_refuses_a_plain_rerun(tmp_path):
 
 
 def test_recover_completes_the_same_read_without_re_reading_finished_slices(tmp_path):
-    cfg = build_world(tmp_path, e1_batch=128, quality={"E-bs32": 1.0, "E-bs128": 0.5})
-    cfg.enc.crash_on = "science-dev"
-    with pytest.raises(RuntimeError):
-        G.run(cfg, verbose=False)
+    cfg = _crash_then_recover_world(tmp_path)
     calls_before = list(cfg.enc.calls)
     assert len(calls_before) == 5                                # four scored, the fifth crashed
-    cfg.enc.crash_on = None
     rec = G.run(cfg, recover=True, verbose=False)
     new_calls = cfg.enc.calls[len(calls_before):]
     assert len(new_calls) == 3 and not any("lifestyle-test" in c for c in new_calls), \
@@ -605,7 +659,6 @@ def test_recover_completes_the_same_read_without_re_reading_finished_slices(tmp_
     assert rec["receipt"]["recovered"] is True and len(rec["receipt"]["recovered_slices"]) == 4
     assert rec["receipt"]["attempts_including_this"] == 2
     assert set(rec["macro_ndcg10"]["candidate"]["per_slice"]) == set(SLICES)
-    assert rec["decision"] in ("veto", "no_veto")
     # the recovered record is what an uninterrupted read would have produced
     cfg2 = build_world(tmp_path / "clean", e1_batch=128, quality={"E-bs32": 1.0, "E-bs128": 0.5})
     rec2 = G.run(cfg2, verbose=False)
@@ -616,27 +669,54 @@ def test_recover_completes_the_same_read_without_re_reading_finished_slices(tmp_
 
 
 def test_recover_refuses_a_different_identity(tmp_path):
-    cfg = build_world(tmp_path, e1_batch=128, quality={"E-bs32": 1.0, "E-bs128": 0.5})
-    cfg.enc.crash_on = "science-dev"
-    with pytest.raises(RuntimeError):
-        G.run(cfg, verbose=False)
-    cfg.enc.crash_on = None
+    cfg = _crash_then_recover_world(tmp_path)
     with pytest.MonkeyPatch.context() as mp:
         mp.setattr(G, "code_identity", lambda: "9" * 64)
         with pytest.raises(SystemExit, match="identity differs .*code_identity"):
             G.run(cfg, recover=True, verbose=False)
-    cfg.device = "cpu"
     cfg2 = build_world(tmp_path / "fresh", e1_batch=128)
     with pytest.raises(SystemExit, match="no receipt"):
         G.run(cfg2, recover=True, verbose=False)
 
 
-def test_two_processes_cannot_both_start_the_read(tmp_path):
-    cfg = build_world(tmp_path, e1_batch=32)
-    plan = G.preflight(cfg, verbose=False)
-    G._create_receipt(cfg, plan)
+def test_recover_refuses_an_edited_or_unjournaled_slice_file(tmp_path):
+    """Sol 2026-09-10, finding 8: a persisted slice is evidence only if its digest was journaled
+    when it was written and its content is well-formed."""
+    cfg = _crash_then_recover_world(tmp_path)
+    p = G._slice_path(cfg, "lifestyle/test")
+    s = json.loads(p.read_text())
+    s["per_role"]["candidate"]["ndcg10"][next(iter(s["per_role"]["candidate"]["ndcg10"]))] = 0.0
+    p.write_text(json.dumps(s))                                # valid JSON, unjournaled bytes
+    with pytest.raises(SystemExit, match="not the file this read journaled"):
+        G.run(cfg, recover=True, verbose=False)
+    # a journaled but malformed file (a score out of range) also refuses
+    cfg2 = _crash_then_recover_world(tmp_path / "b")
+    p2 = G._slice_path(cfg2, "lifestyle/test")
+    s2 = json.loads(p2.read_text())
+    s2["per_role"]["candidate"]["ndcg10"][next(iter(s2["per_role"]["candidate"]["ndcg10"]))] = 1.5
+    G.write_atomic(p2, s2)
+    G._journal(cfg2, "lifestyle/test", G.sha256_file(p2))
+    with pytest.raises(SystemExit, match="rows are malformed"):
+        G.run(cfg2, recover=True, verbose=False)
+
+
+def test_a_second_process_cannot_read_or_recover_while_the_first_holds_the_lock(tmp_path):
+    """Sol 2026-09-10, finding 1: O_EXCL protects creation only; the flock protects the attempt."""
+    cfg = _crash_then_recover_world(tmp_path)
+    fd = os.open(cfg.gate_work_dir / "lock", os.O_CREAT | os.O_RDWR)
+    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)             # "the first process is still reading"
+    try:
+        with pytest.raises(SystemExit, match="another gate process holds"):
+            G.run(cfg, recover=True, verbose=False)
+    finally:
+        os.close(fd)
+    rec = G.run(cfg, recover=True, verbose=False)              # released: the recovery proceeds
+    assert rec["receipt"]["recovered"] is True
+    cfg2 = build_world(tmp_path / "b", e1_batch=32)
+    plan = G.preflight(cfg2, verbose=False)
+    G._create_receipt(cfg2, plan)
     with pytest.raises(FileExistsError):
-        G._create_receipt(cfg, plan)
+        G._create_receipt(cfg2, plan)
 
 
 def test_a_code_change_during_the_read_writes_no_record(tmp_path):
@@ -670,7 +750,7 @@ def test_the_record_carries_no_query_text_and_the_per_query_rows_stay_in_the_tre
         assert G._slice_path(cfg, key).exists()
     for f in ("e1_verdict_sha256", "candidate_sha256", "comparator_sha256", "read_at",
               "code_identity", "registration_sha256", "manifest_sha256", "manifest_commit",
-              "pin_sha256", "git_head", "environment"):
+              "pin_sha256", "pin_commit", "git_head", "environment"):
         assert rec[f], f
     assert rec["e1_verdict_sha256"] == G.sha256_file(cfg.verdicts_path)
     assert rec["registration_sha256"] == G.sha256_file(cfg.registration_path)

@@ -19,6 +19,21 @@ All nine findings accepted. Fixes in `lotte_gate13.py`, `dev6_from_checkpoint.py
 | unverified: quantile method | R17 pins `inverted_cdf` in the registration; the gate refuses without the field |
 | unverified: code identity at the end | computed at preflight into the receipt and again before the record; a change refuses |
 
+Second review (Sol, `research/m13-codex-gate-rereview-2026-09-10.md`): NO-GO, seven P1s. All accepted.
+
+| Finding | Fix |
+|---|---|
+| 1 P1 concurrent `--recover` while the first process reads | non-blocking exclusive `flock` under `work/lotte/gate13/` held for the whole attempt; recovery needs the lock |
+| 2 P1 registration accepted any numpy quantile method | equality to `inverted_cdf` required (R17 admits nothing else) |
+| 3 P1 recipe fields only required to exist | student, layers, head, objective and mix compared against `m13/build_config.json`'s registered knobs; the manifest carries the full recipe |
+| 4 P1 tokenizer and backbone configuration loaded by repository name | the dependency identity (repo, tokenizer and config hashes) is recorded in the manifest and re-derived at load; a mismatch refuses. `nano10` still pins no revision; that is M10 code, disclosed |
+| 5 P1 manifest committed but not pushed; pin unchecked | both must be tracked, unmodified, committed and on a remote branch; the pin's counts are required |
+| 6 P1 build trusts the gate's `decision` enum | `check_gate` recomputes the veto rule from the recorded bootstrap under the registered margin; the gate record and the manifest must be committed and pushed (`REQUIRE_COMMITTED`) |
+| 7 P1 receipt directory not fsynced | directory fsynced after the receipt and after every atomic write |
+| 8 P2 recovery trusts persisted slice content | slice digests journaled when written; recovery accepts only a journaled digest, the pin's hashes, the right counts and finite in-range rows |
+| 9 P2 two runbook commands without the interpreter | prefixed |
+| 10 P3 `check_gate_manifest` reported the wrong commit | reports the gate's `manifest_commit` and verifies it against the live `git log` |
+
 ## Stage 1 review triage
 
 **Superseded in part by rulings R13–R16 (same day):** extension cycles and post-tag continuation are

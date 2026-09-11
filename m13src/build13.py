@@ -59,6 +59,7 @@ import torch                                    # noqa: E402
 
 import build_lock as BL                         # noqa: E402
 import corpus_loader as CL                      # noqa: E402
+from lotte_gate13 import committed_and_pushed   # noqa: E402
 import nano10 as N                              # noqa: E402
 import run_arm as R                             # noqa: E402
 import screen_lock as SL                        # noqa: E402
@@ -214,15 +215,42 @@ def check_gate(gate_path, *, verdicts_path=None, e1_batch=None, arm_records_dir=
         refuse(f"{p}: `e1_verdict_sha256` is {g.get('e1_verdict_sha256')!r} but "
                f"results/m10_screen_verdicts.json is {live!r}. The gate read one E1 verdict and "
                f"the build would run under another.")
+    # The decision is RECOMPUTED from the recorded bootstrap under the registered margin, never
+    # trusted as an enum: a record whose `decision` was edited while its numbers stayed intact
+    # would otherwise change a $1,000 build (Sol 2026-09-10, finding 6).
+    boot = g.get("delta_candidate_minus_comparator")
+    if dec == "skipped":
+        if boot is not None:
+            refuse(f"{p}: a `skipped` gate carries no bootstrap; this one does")
+    else:
+        margin = ((read_json(REGISTRATION_PATH or (REPO / "m13" / "LOTTE_GATE_REGISTRATION.json"))
+                   or {}).get("veto") or {}).get("margin")
+        if not isinstance(margin, (int, float)):
+            refuse("m13/LOTTE_GATE_REGISTRATION.json carries no numeric veto.margin")
+        nums = (boot or {}) if isinstance(boot, dict) else {}
+        if not all(isinstance(nums.get(k), (int, float)) for k in ("delta_macro_raw", "upper_q975_raw")):
+            refuse(f"{p}: a {dec!r} decision must carry the bootstrap it was computed from "
+                   f"(delta_macro_raw, upper_q975_raw)")
+        fires = nums["delta_macro_raw"] < -margin and nums["upper_q975_raw"] < -margin
+        if fires != (dec == "veto") or g.get("veto_fired") is not fires:
+            refuse(f"{p}: `decision` {dec!r} / `veto_fired` {g.get('veto_fired')!r} do not follow "
+                   f"from the recorded bootstrap (delta {nums['delta_macro_raw']:+.6f}, upper "
+                   f"{nums['upper_q975_raw']:+.6f}, margin {margin}); the veto rule is recomputed "
+                   f"here, not trusted")
     return {"path": rel(p), "sha256": sha256_file(p), "executed": True, "decision": dec,
             "branch": branch, "candidate_sha256": g["candidate_sha256"],
             "comparator_sha256": comp, "e1_verdict_sha256": live,
             "read_at": g.get("read_at"), "code_identity": g.get("code_identity"),
-            "manifest_sha256": g.get("manifest_sha256"),
+            "manifest_sha256": g.get("manifest_sha256"), "manifest_commit": g.get("manifest_commit"),
             "e1_batch": e1_batch, "arm_records_checked": expected is not None}
 
 
 MANIFEST_PATH = None        # None -> REPO/m13/LOTTE_GATE_MANIFEST.json; tests point it at a fixture
+REGISTRATION_PATH = None    # None -> REPO/m13/LOTTE_GATE_REGISTRATION.json
+# A registered build binds to COMMITTED AND PUSHED gate artifacts (the gate record and the manifest,
+# checked by `lotte_gate13.committed_and_pushed`); tests run in tmp trees that are not repositories
+# and switch this off.
+REQUIRE_COMMITTED = True
 
 
 def check_gate_manifest(gate, *, manifest_path=None, smoke=False):
@@ -250,8 +278,14 @@ def check_gate_manifest(gate, *, manifest_path=None, smoke=False):
         refuse(f"{p} names branch {m.get('branch')!r}, candidate {str(cand)[:12]}, comparator "
                f"{str(comp)[:12]}; the gate record says {gate['branch']!r}, "
                f"{gate['candidate_sha256'][:12]}, {str(gate['comparator_sha256'])[:12]}")
-    return {"path": rel(p), "sha256": live, "branch": m.get("branch"),
-            "commit": m.get("git_head")}
+    commit = gate.get("manifest_commit")
+    if REQUIRE_COMMITTED and not smoke:
+        live_commit = committed_and_pushed(p, "the checkpoint manifest")
+        if commit != live_commit:
+            refuse(f"the gate record names manifest commit {str(commit)[:12]} but {p}'s last commit "
+                   f"is {live_commit[:12]}; the gate read one committed manifest and the build sees "
+                   f"another")
+    return {"path": rel(p), "sha256": live, "branch": m.get("branch"), "commit": commit}
 
 
 def build_plan(cfg, reg, batch, *, smoke_dose=None):
@@ -467,8 +501,11 @@ def _preflight(ctx, cfg, cfg_path, *, smoke, device, batch, lotte_gate, compile_
     reg = SL.cfg()
     report = BL.validate(cfg, reg, smoke=smoke)
     b, batch_source = BL.resolve_batch(cfg, smoke=smoke, override=batch)
-    gate = check_gate(lotte_gate or (REPO / cfg["lotte_gate"]), e1_batch=b, smoke=smoke)
+    gate_path = lotte_gate or (REPO / cfg["lotte_gate"])
+    gate = check_gate(gate_path, e1_batch=b, smoke=smoke)
     gate["manifest"] = check_gate_manifest(gate, smoke=smoke)
+    if REQUIRE_COMMITTED and not smoke:
+        gate["commit"] = committed_and_pushed(gate_path, "the LoTTE gate record")
     if gate["decision"] == "veto":
         # `m10/LOTTE_LOCK.md`: "the comparator's recipe (bs32) is what the 200M build trains".
         # The veto OVERRIDES the E1 verdict — that is the whole point of a veto, and the version
