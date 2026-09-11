@@ -126,3 +126,17 @@ metadata; identity changes still refuse. Passing records live in `results/m13_cl
 and `results/m13_cloud_resume_smoke.json`; prior failed receipts remain alongside them.
 No registered E run, protected evaluation or full build has started. Measure remaining mandatory
 encode allowances and the budget allocation before progressing through `EXECUTION.md`.
+
+## Prepared local handoff and cheaper-path measurement
+
+The isolated M13 checkout now reuses exact DEV-6/source/pool files and encoded binaries from
+the original checkout through 131 individual file links, with nine independent metadata copies.
+No broad directory links or M17 edits. Manifest: `work/m13cloud-dev6-links.json`. Parent verified
+all destinations, sizes and link targets; metadata copies agree. No DEV-6 scoring has run.
+
+`scripts/m13_encode_benchmark.py --dtype fp16` measures the actual LoTTE encoding kernel on the
+same 1k/10k admitted training passages and writes `results/m13_encode_benchmark_fp16.json`.
+Default fp32 and original receipts remain preserved. Independent source review and synthetic
+argument/routing/refusal checks passed. This small addition stays local until the E run ends;
+there is no concurrent GPU benchmark and no change to the active recipe. Its generic 10M
+projection must be rescaled for the 2.7M LoTTE allowance, not read as LoTTE hours directly.

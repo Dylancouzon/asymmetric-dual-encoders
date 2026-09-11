@@ -4,7 +4,10 @@
 No evaluation, gradients, vector-cache writes or protected-corpus reads. The
 10M estimate is a planning surrogate, not a measured reserved-corpus runtime.
 Run under the cloud supervisor, which owns backup and Pod shutdown.
+Default fp32 preserves the original benchmark; --dtype fp16 times the LoTTE
+encode kernel on the same training passages and writes a separate receipt.
 """
+import argparse
 import hashlib
 import json
 import math
@@ -61,30 +64,33 @@ def select_texts(payload):
     return selected
 
 
-def save(record):
-    temporary = RESULT.with_suffix('.pending.json')
+def save(record, result):
+    temporary = result.with_suffix('.pending.json')
     with temporary.open('w') as f:
         json.dump(record, f, indent=2, allow_nan=False)
         f.write('\n')
         f.flush()
         os.fsync(f.fileno())
-    temporary.replace(RESULT)
+    temporary.replace(result)
 
 
 def terminated(signum, _frame):
     raise RuntimeError(f'Encode benchmark interrupted by signal {signum}')
 
 
-def main():
+def main(argv=None):
     # No arbitrary data/output path options: this executable cannot be repointed at
     # protected evaluation data or historical result files through its CLI.
-    if len(sys.argv) != 1:
-        raise SystemExit('Usage: .venv/bin/python scripts/m13_encode_benchmark.py')
-    RESULT.parent.mkdir(exist_ok=True)
-    with RESULT.open('x') as f:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--dtype', choices=('fp32', 'fp16'), default='fp32')
+    args = parser.parse_args(argv)
+    result = (RESULT if args.dtype == 'fp32'
+              else RESULT.with_name('m13_encode_benchmark_fp16.json'))
+    result.parent.mkdir(exist_ok=True)
+    with result.open('x') as f:
         f.write('{"status": "STARTING"}\n')
     record = {'status': 'RUNNING', 'measurements': [],
-              'source': str(SOURCE.relative_to(REPO)),
+              'source': str(SOURCE.relative_to(REPO)), 'encode_dtype': args.dtype,
               'protected_evaluation_access': False,
               'started_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
               'timeout_seconds': TIMEOUT_SECONDS}
@@ -101,6 +107,7 @@ def main():
         import torch
         import teacher
 
+        dtype = torch.float32 if args.dtype == 'fp32' else torch.float16
         if not torch.cuda.is_available() or torch.cuda.device_count() != 1:
             raise RuntimeError('Exactly one CUDA GPU required')
         props = torch.cuda.get_device_properties(0)
@@ -121,21 +128,25 @@ def main():
                       teacher={'model': teacher.SPEC.repo, 'revision': teacher.SPEC.revision,
                                'pooling': teacher.SPEC.pooling, 'post_dense': teacher.SPEC.post_dense,
                                'config_kwargs': teacher.SPEC.config_kwargs,
-                               'prefix': teacher.SPEC.doc_prefix, 'dtype': 'fp32',
+                               'prefix': teacher.SPEC.doc_prefix, 'dtype': args.dtype,
                                'max_length': MAX_LENGTH, 'batch_tokens': BATCH_TOKENS,
                                'path': 'm7src.teacher.encode (uncached, fp32 CPU output)',
-                               'comparison_path': 'teacher.encode_cached uses the same encode '
+                               'comparison_path': ('lotte_gate13.encode_docs calls '
+                                   'teacher.encode_cached(dtype=torch.float16), using the same '
+                                   'encode kernel; cache IO excluded. Training passages only; '
+                                   'no LoTTE access.' if args.dtype == 'fp16' else
+                                   'teacher.encode_cached uses the same encode '
                                    'kernel; cache IO excluded. score13 six-set document caches '
-                                   'are fp32; the conditional reserved executor remains separate.'},
+                                   'are fp32; the conditional reserved executor remains separate.')},
                       code_sha256={p: hashlib.sha256((REPO / p).read_bytes()).hexdigest()
                                    for p in ('scripts/m13_encode_benchmark.py',
                                              'm7src/teacher.py', 'm7src/encoders.py')})
         del raw
-        tok, _ = teacher.load_teacher(dtype=torch.float32, device='cuda')
+        tok, _ = teacher.load_teacher(dtype=dtype, device='cuda')
         teacher.load_post_dense(teacher.SPEC, 'cuda')
         # Small explicit warmup; not included in either per-passage estimate.
         kwargs = dict(prefix=teacher.SPEC.doc_prefix, max_length=MAX_LENGTH,
-                      batch_tokens=BATCH_TOKENS, dtype=torch.float32, device='cuda')
+                      batch_tokens=BATCH_TOKENS, dtype=dtype, device='cuda')
         teacher.encode(texts[:32], **kwargs)
         torch.cuda.synchronize()
         setup_seconds = time.monotonic() - started
@@ -164,7 +175,7 @@ def main():
                         'allocator_retries': torch.cuda.memory_stats().get('num_alloc_retries'),
                         'output_sha256': hashlib.sha256(vectors.tobytes()).hexdigest()}
             record['measurements'].append(measured)
-            save(record)
+            save(record, result)
             print(json.dumps(measured), flush=True)
             del vectors
         record['allocation'] = allowance(record['measurements'], setup_seconds)
@@ -175,7 +186,7 @@ def main():
     finally:
         signal.alarm(0)
         record['wall_seconds'] = time.monotonic() - started
-        save(record)
+        save(record, result)
     print(json.dumps(record['allocation']), flush=True)
 
 

@@ -1,0 +1,9 @@
+{
+  "sha256": "675371a2f75b5e54b119617a365de2fbbd668207fac44a92a68c7dacde30239c",
+  "bytes": 413702847,
+  "copied_utc": "2026-09-11T19:44:35.707813+00:00",
+  "source": "work/m10arms/E-bs32/ckpt.pt",
+  "scope": "Extra early rolling-checkpoint backup; no interruption or resume",
+  "step": 15624,
+  "recipe_fingerprint": "0674696ce8e82502034cca49b87ff9a78854459a26600c2252ea9fba671d4c90"
+}

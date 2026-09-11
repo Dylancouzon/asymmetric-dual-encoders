@@ -15,12 +15,13 @@ reserve is $39.93. `results/m13_cloud_allocation.json` binds all passing receipt
 allowance is a conservative surrogate and must be replaced with matched-path timing before
 expensive encoding. No protected evaluation or full build has run.
 
-**Next:** inspect the stage-0 receipt/evidence, measure the remaining encode allowance, put
-measured rate and billed price into the allocation table (`build13.py --plan --rate --price`),
-then both E arms with
-`run_arm.py <arm> --dev6 defer`; DEV-6 on the box from the returned `cycle3.pt` via
-`m13src/dev6_from_checkpoint.py`. Stage 3: `m13src/lotte_gate13.py --preflight-only`, then the read,
-once. Ship list: `m13/SHIP_LIST.md`. Branch `m13-stage1-execution-prep`.
+**Next:** finish both E arms, verify the final local backups and STOP receipt, commit their
+records, then fill deferred DEV-6 locally and compute E1. Local DEV-6 dependencies are ready:
+`work/m13cloud-dev6-links.json` lists exact binary/data links with independent metadata copies.
+An extra rolling E-bs32 checkpoint at step15,624 is verified in `work/m13cloud-e-live/`.
+The existing encode benchmark now accepts `--dtype fp16` with a separate receipt, ready for
+matched-path timing after E; it is not deployed to the active Pod. Then follow the registered
+LoTTE manifest/pin/preflight/gate sequence. Ship list: `m13/SHIP_LIST.md`.
 Rulings R1–R16 are recorded and applied (`m13/RULINGS.md`); R6 flips at the pinning commit.
 M10's prepared data, completed screen and selected components are the input, not work to repeat.
 
