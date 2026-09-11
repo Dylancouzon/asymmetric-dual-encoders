@@ -239,3 +239,45 @@ in both runs; the anchor observation is in `m17/FINDINGS.md`.
 **Owner:** M17 implementing session. **Exit:** step 5 timings regenerated from the fixed
 builder, the smoke/resume run recorded, then the step-5 close-out. This is one review of the
 step-5 builder; it is not the second independent review that expensive execution requires.
+
+## Codex Sol step-5 review (2026-09-11)
+
+The SECOND independent review of the step-5 builder, after the Astra fixes. Brief:
+[m17-sol-step5-brief](../research/m17-sol-step5-brief-2026-09-11.md) (addendum to Astra's).
+Log: `research/m17-sol-step5-review-2026-09-11.log` (gitignored; the report is its last
+section). Read-only, on `m17src` plus the two timed prepared directories; its sandbox again
+could not run pytest, so its coverage notes describe the reviewed tests, not executions. 4 P1,
+4 P2, 3 P3, plus one owner decision. Of Astra's 21 findings it confirms P1-1, P1-4, P1-6, P1-7,
+P1-9 and P1-10 closed and leaves P1-2/3/5/8 partly open through the fail-open and after-screen
+paths below. All 290 `m17src` tests pass; all three sizes were rebuilt with the fixed builder.
+
+| Finding | Disposition and exit |
+|---|---|
+| P1-1 required step-2c exclusions fail open when the artifact is absent | Fixed: `prepare_data.require_exclusions` refuses a missing `alias_test_families.json` and verifies its sha256 against `results/m17_alias_test_manifest.json:files.exclusions_sha256`. `support_manifest.load_exclusions` keeps its permissive empty-set behaviour, which step 2b needs (it runs before step 2c exists) and the builder no longer uses. Test: missing file, wrong bytes, and the matching case. |
+| P1-2 the builder neither fills the registered query cap nor refuses a four-pass shortfall after the screen | Fixed under ruling **A5** (`data.cap_fill_priority`): each bucket takes its four-pass minimum, general takes every distinct admitted query the cap allows, then the remaining slots go to `alias_all_distinct` (all 15,393 pairs) and `coverage_fill`. The realized full pool is now 600,000 rows, not 574,229. The coverage views the trim did not take are kept as a RESERVE, screened with the pool, and refill the bucket to target after the protected screen; a bucket that cannot be refilled records its shortfall, `support_manifest.dose_rule` is re-applied to state the resulting passes, and a bucket below one batch still refuses. Tests: exhausted-general cap fill, unknown priority step, after-screen refill, and the below-one-batch refusal. |
+| P1-3 a fresh run can train on arrays from two builds | Fixed: `cache.load` recomputes `artifact_sha256` from the arrays on disk (one `artifact_digest` shared with `save`) and refuses a sidecar that does not describe them; every hash recorded in `prepared.json` is now REQUIRED (`if exp` removed); `_check_cache_belongs_here` compares the sidecar's identity and artifact digests with the manifest and its `artifact_inputs` with this directory's `teacher_q.npy`/`bank.npy`/`bank_ids.json` and the manifest's v1 digest. Test: `candidates.npz` + `cache.json` copied from build B into directory A load cleanly and are refused. |
+| P1-4 a locked candidate recipe can silently reuse and train an older recipe | Fixed: `train._check_locked_recipe` (real runs) compares the loaded cache's mixes, K, RNG rule and recipe version, teacher revision and query preprocessing with the locked registry/FREEZE; `prepare_data.recipe_identity` puts a digest of those inputs (plus temperature, dose, cap, cap-fill priority, bank cap and the FREEZE fingerprints) into every stage marker's `_identity`, so a changed recipe rebuilds instead of resuming. Tests both halves; verified against the rebuilt `s2000/ext`. |
+| P2-5 `--force` dependency invalidation is only in memory | Fixed: a rebuilt stage renames every dependent marker to `*.stale` on disk, and `--force` applies to the REQUESTED stages only, so an unrequested valid ancestor is rehydrated instead of being treated as non-reusable. `dependent_markers_invalidated_on_disk` is in the build record. Test on a marker fixture. |
+| P2-6 the preprocessing binding trusts pre-existing vectors without evidence | Fixed: a manifest is stamped only on an EMPTY cache directory; a populated cache without one refuses. The two existing caches were stamped BY HAND on 2026-09-11 (`stamped_by_hand` in each `manifest.json`, pitfall in `m17/CODEMAP.md`): both were created and filled by this same builder from commit `5fe24b9` under exactly the preprocessing they record, so the stamp asserts nothing the git history does not already show. The test that expected adoption now expects the refusal. |
+| P2-7 the 12.4 GiB peak and full-pool memory safety | Measured first, as asked. The 12.4 GiB was a **VmHWM**: on the rebuilt s10000 the peak occurs in `bank_pool_lookup` with `RssFile` 8.42 GiB (the frozen document memmap, reclaimable) while `RssAnon` never exceeds 3.07 GiB. Every stage now records `RssAnon`/`RssFile`/`VmHWM`. Cheap fixes applied: `PoolReader.rows_for` streams and hashes the id list instead of materializing 5.23M Python strings, and both population-sized `seen_groups` sets use 64-bit int keys — `bank_sample` fell from 4.54-4.64 GiB to 2.21 GiB anonymous. Three sizes were then built (2k/10k/50k) and the anonymous slope per query is fitted and projected at the full pool in `results/m17_prepare_timing.json:extrapolation.anonymous_memory`, beside the 8-9 GiB of other residents on the 25 GiB box. |
+| P2-8 a missing alias evidence-group join silently fabricates its domain | Fixed: `_require_alias_groups` refuses by pair id any alias pair whose evidence group does not resolve in its source's group table; query-text-only sources (ruling A4) and the new source, whose group id IS its document key, are excepted. Test. |
+| P3-9 `grad_shares` divides by the sum of component norms | Fixed: the denominator is `‖∇rows Σ terms‖`; the per-term proportions are kept separately as `component_norm_fraction` and shares need not sum to one. Test: aligned (0.5/0.5), orthogonal (shares sum to √2) and exactly cancelling (total norm 0, shares `None`, not 50/50). |
+| P3-10 `--checkpoint-minutes nan` bypasses the maximum | Fixed: `math.isfinite` before the bounds check. Test for `nan` and `inf`. |
+| P3-11 the forecast omits query-scaled serialization; the document "upper bound" is not one | Fixed: `cache_save` and the pool/spec/teacher/bank writes are inside named timers and enter the extrapolation; the projection is renamed `document_stage_sensitivity_estimate` and its note says the clamped, noisy per-document slopes do not bound a slower full-pool rate. |
+
+**Owner decision raised (not decided here).** Sol raised one, reproduced verbatim as raised:
+
+- "The original four Astra decisions are ratified by A4. One new protocol choice remains: after
+  guaranteeing each bucket's four-pass minimum, the registry does not specify whether the
+  remaining 25,771 slots should go first to coverage, the remaining 393 alias pairs, or another
+  deterministic mixture. Because that changes pool composition, the owner should register the
+  allocation priority before the cap-filling fix."
+
+Dylan registered it as **A5** on 2026-09-11 while this batch was in flight:
+`data.cap_fill_priority = ["alias_all_distinct", "coverage_fill"]` with
+`accepted_plan_revision_a5`. The builder reads `data.cap_fill_priority` directly and refuses a
+priority step it does not implement; the recommended default it was written against is the
+registered order.
+
+**Owner:** M17 implementing session. **Exit:** the rebuilt three sizes, the regenerated timing
+result and the re-run resume smoke below; then the step-5 close-out.
