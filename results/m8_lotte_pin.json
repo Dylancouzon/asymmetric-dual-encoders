@@ -1,0 +1,134 @@
+{
+  "_note": "LEDGER 2026-08-29 E10-REMEDY PIN. The hash authority: computed fresh from the files remedy() wrote, never from a number carried over inside remedy()'s own process -- see the module docstring.",
+  "remedy_source": "results/m8_lotte_remedy.json",
+  "pinned_slices": [
+    "lifestyle/dev",
+    "lifestyle/test",
+    "recreation/dev",
+    "recreation/test",
+    "science/dev",
+    "technology/dev",
+    "writing/dev"
+  ],
+  "slices": {
+    "lifestyle/dev": {
+      "n_docs": 268890,
+      "n_queries": 2074,
+      "n_qrels_pairs": 12811,
+      "hashes": {
+        "doc_ids_sha256": "5d94ae0f0a12ff9284ca660ae455ee33031e9e7c2f12a0dff600aaca30b0083f",
+        "doc_texts_sha256": "576ba2a55a3916c3847119750a4a9dd235613bb3b07d9147943d166300082b72",
+        "query_ids_sha256": "a72c017e3e37d34e02a738ce98e796707932588c3b5ef6a5aba49f56a07cc58e",
+        "query_texts_sha256": "9b7abb78d97252cbed0f7fd08a8c40082f5f56471e46361dbd4de98bbe17b19d",
+        "qrels_sha256": "7895d5b83d1b0412a60847921e7680e31c6e02c73aa6fef132374d349798cfd0"
+      },
+      "read_relpath": "work/lotte/remediated/lifestyle/dev"
+    },
+    "lifestyle/test": {
+      "n_docs": 119458,
+      "n_queries": 1993,
+      "n_qrels_pairs": 10200,
+      "hashes": {
+        "doc_ids_sha256": "a4871ec2e69c2a20cf9b381bf793b3764df974fd0c8fcc290909b8a9415c7340",
+        "doc_texts_sha256": "e30cdb210ab378ed258750eb511af1110d6e8b64e40778c02de75bdb85e41016",
+        "query_ids_sha256": "e61cb31be32b4846c854d82500ccd6a4eae9d7a4a6c8981ee8c7fa23260debfe",
+        "query_texts_sha256": "a394ebc0fc2924443f2d5622512a97f496298c2c4a13fdff8908b9900637a743",
+        "qrels_sha256": "a0df873e12702edbadc141a56e56e1bdd27dabb64bfecf58cb1ee51e22f35268"
+      },
+      "read_relpath": "work/lotte/remediated/lifestyle/test"
+    },
+    "recreation/dev": {
+      "n_docs": 263000,
+      "n_queries": 1994,
+      "n_qrels_pairs": 12686,
+      "hashes": {
+        "doc_ids_sha256": "8114d60b7955d4692a781f3166d7e759ccbab041634aa70e2267ca74276bf2e7",
+        "doc_texts_sha256": "25e7e6dda0c2c12fb75bc2cadd248ac335ca0148f14776f9ff27b3d853c13ae3",
+        "query_ids_sha256": "52aa8c55f0ae7eef3e611959b6e1c40ecd3bf9de02e014e92511d81a6da04906",
+        "query_texts_sha256": "de016e8e6cc3eb04224ffcde267bc062902bc7b9c845a746885ba0472725e9fd",
+        "qrels_sha256": "7b87fb8e21083e27e9af2b25876d4e7e21f91b9c26476f9ac1ed32ebccc391bb"
+      },
+      "read_relpath": "work/lotte/remediated/recreation/dev"
+    },
+    "recreation/test": {
+      "n_docs": 166975,
+      "n_queries": 1990,
+      "n_qrels_pairs": 6892,
+      "hashes": {
+        "doc_ids_sha256": "e9cbcffa8d5de1b892a3b2cfd0aa504fc9901c5023468e1523d1468ee2421559",
+        "doc_texts_sha256": "e92c9fdf11baada28717ffefd68fdfaf51baf4115d644f00924f223e183a8bfc",
+        "query_ids_sha256": "7d1602d091c5ea45ca8eeb853422a471b7cd7f093b05c00bdce0e6b2e0b61de8",
+        "query_texts_sha256": "0845d027da7f19a37b89baeefc20486955fb8c4b9b8b37baef294c4018dfebcc",
+        "qrels_sha256": "86d3bbcbb30bee299532e6050353a977b6d97a1a451efa51e982039c715f1c0b"
+      },
+      "read_relpath": "work/lotte/remediated/recreation/test"
+    },
+    "science/dev": {
+      "n_docs": 343634,
+      "n_queries": 2002,
+      "n_qrels_pairs": 12210,
+      "hashes": {
+        "doc_ids_sha256": "e81dd130acef30da08ff40cb13bb218c33ab5706e27014938c8db0551474b618",
+        "doc_texts_sha256": "48a832bb413fc6d6f57b47dc92ae062ab82a3b8c2bd9a901f6da5b3b0472563f",
+        "query_ids_sha256": "5e5752135b74e766d2b5bd84d2aaf8fbe1a8fc57ade693f46620e856164b58e1",
+        "query_texts_sha256": "5edc093dee2d988a192d26991f58e5ca083f204d0ae3c915ab3cc0fec03539c0",
+        "qrels_sha256": "aa514ea4ebabcc5d539dd1eeb859d7582e768c7bb7d3525be7f3bb551684c1ad"
+      },
+      "read_relpath": "work/lotte/remediated/science/dev"
+    },
+    "technology/dev": {
+      "n_docs": 1276195,
+      "n_queries": 1993,
+      "n_qrels_pairs": 15648,
+      "hashes": {
+        "doc_ids_sha256": "d5435524ef1ade81d1f12c6fa9532be59657547bcecbac68d3a68e4bbb5dd7f4",
+        "doc_texts_sha256": "8eabbb89cb243f9ac44e4222dda73a8f55f6fbc08f0a75f40ef20b080a583f93",
+        "query_ids_sha256": "dc72b96dfe5df54226def7fb69854aea2f0c1af47fef39ab8070f1d947d2a68f",
+        "query_texts_sha256": "077ffb1584049b1759e9232915e27288db8e9878d69b3e4ec48eb6e81f64e4d0",
+        "qrels_sha256": "ef0b075cf85bdc55da2739e215aa7d1b3b3a492539a35c795db31d12163b31cf"
+      },
+      "read_relpath": "work/lotte/remediated/technology/dev"
+    },
+    "writing/dev": {
+      "n_docs": 277049,
+      "n_queries": 1988,
+      "n_qrels_pairs": 15021,
+      "hashes": {
+        "doc_ids_sha256": "fc6b32aeee738f24d41307ff6deef1aac1879c4f51150cf602fdb21102986596",
+        "doc_texts_sha256": "10295fbb2403e6a615ad9e8b15cbb5ec0359c3d430b6cefd6dd02d43f6fe9c6c",
+        "query_ids_sha256": "344dee11b505741b8f83b8d3000b71c62e47fef0afbbcbef4f0e7edbc30d9acc",
+        "query_texts_sha256": "ef119790cc8d5f114dec1798c88ac02775bfd376a4af9a027d9c2b7470172085",
+        "qrels_sha256": "80ea6e87d0114d022651a3f9ff16ebf605fb32046b26fefbddf26296b6ff7dd2"
+      },
+      "read_relpath": "work/lotte/remediated/writing/dev"
+    }
+  },
+  "seconds": 32.3,
+  "_registration": {
+    "probe": "E10-REMEDY",
+    "row": {
+      "wave": 1,
+      "title": "the LoTTE shadow, remediated per-question and re-screened to zero",
+      "question": "After dropping the leaked queries and the near-duplicate documents from the seven surviving slices, is the shadow ACTUALLY clean -- or did removal merely appear to work?",
+      "lever": "per-item removal, then a re-screen with the same two instruments S0 used: protected_filter._cqa_index() over the four protected CQADupStack corpora for documents, decontam.protected_query_index() for queries.",
+      "slices": "the SEVEN survivors of S0 (writing/dev, recreation/dev, recreation/test, science/dev, technology/dev, lifestyle/dev, lifestyle/test), ~14,034 queries. The three community-overlap slices (writing/test, science/test, technology/test) stay DEAD -- no remedy applies to a community that overlaps a protected set.",
+      "also_drops": "qrels entries orphaned by a removed document, and any query thereby left with ZERO positives. Not in the ruling's spec; added because a query whose positives no longer exist is unanswerable by construction and would depress the shadow for reasons unrelated to any candidate. It shrinks the shadow and cannot admit a contaminated item.",
+      "endpoint": "per-slice residual hit counts on documents and queries after remediation",
+      "comparator": "none -- this is a screen, not a comparison",
+      "bar": "ZERO exact and ZERO near hits, on documents AND queries, per slice. Stricter than S0's own bar, which dropped a slice above a 0.5% document near-duplicate rate. A slice that still hits is DROPPED.",
+      "multiplicity": "none -- per-slice screening, no inference",
+      "no_survivor": "if no slice survives the re-screen, E10 reopens with Dylan again; the shadow is mandatory and STOP-on-failure (LEDGER 2.3).",
+      "adopts": "the surviving slices as a hash-pinned PROTECTED partition: never trained on, entered into protected_filter's index, and the fit list regenerated (the current 337,981 predates them).",
+      "use_limit": "THE SHADOW IS A CHECK, NEVER A SELECTION SURFACE. It may not be used to choose between candidates, to rank arms, or to break a tie. The moment it is optimised against it becomes a second dev set and stops doing its job.",
+      "noise_floor_exempt": true,
+      "exempt_reason": "a screen with a zero-tolerance bar reads no effect size, so no floor applies",
+      "authorised_by": "Dylan 2026-08-29, E10 ruling (per-question remedy on the seven clean-community slices); spec at LEDGER 15, 2026-08-29.",
+      "plan_status": "REOPENED and TIME-BOXED (2026-08-29 audit). The artifact may not be pinned, served or grandfathered. A shadow can stop a bad artifact shipping; by its own ruling it may never be a selection surface, so it cannot raise the number and does not gate D2."
+    },
+    "wave": 1,
+    "registry_sha256": "7f74f4141c51ec286fd653c7616bface597e5e20a49f3ce0ebe4dc21ddff5f52",
+    "ledger_sha256": "52cb072883cff2be458f8ea92ba3a7ff3ae8a591e341d2e5d54510f03615c335",
+    "ledger_commit": "8c30e082cf7a4a54070b455df19c927691786cdf",
+    "_note": "LEDGER G1 stamp. A result artifact without this block did not run under a registration and may not be cited."
+  }
+}
