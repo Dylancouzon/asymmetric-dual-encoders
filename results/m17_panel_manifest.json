@@ -1,0 +1,571 @@
+{
+ "classifier_min_score": 3,
+ "classifier_threshold_choice": "Measured before choosing, over the 3,576 held-out candidates: thresholds 2/3/4/5/6 label {science, medicine, finance, legal} as {142,133,149,215} / {75,75,85,101} / {34,56,38,61} / {17,35,24,40} / {8,24,12,25}. 3 was chosen as the loosest threshold that still needs a strong term plus corroboration; 2 would have reached ~100 per domain on a single weak term pair and was rejected as a looser label, not as an unavailable one. The four small domains are therefore SHORT of the ~100 target and that shortfall is a recorded gap, not a reason to draw from an unapproved source or from the training slice.",
+ "classifier_threshold_yield": {
+  "2": {
+   "finance": 149,
+   "general": 2937,
+   "legal": 215,
+   "medicine": 133,
+   "science-engineering": 142
+  },
+  "3": {
+   "finance": 85,
+   "general": 3240,
+   "legal": 101,
+   "medicine": 75,
+   "science-engineering": 75
+  },
+  "4": {
+   "finance": 38,
+   "general": 3387,
+   "legal": 61,
+   "medicine": 56,
+   "science-engineering": 34
+  },
+  "5": {
+   "finance": 24,
+   "general": 3460,
+   "legal": 40,
+   "medicine": 35,
+   "science-engineering": 17
+  },
+  "6": {
+   "finance": 12,
+   "general": 3507,
+   "legal": 25,
+   "medicine": 24,
+   "science-engineering": 8
+  }
+ },
+ "corpus": {
+  "distractor_budget": {
+   "hotpotqa-train": 6000,
+   "mrtydi-en": 3000,
+   "squad-train": 3000
+  },
+  "documents": 14198,
+  "file": "work/m17/panel/corpus.jsonl",
+  "note": "document ids only; text is resolved at evaluation time from work/train/stores/* and work/m17/sources/k8s_docs_en.jsonl. Exact dense retrieval runs over this full declared corpus.",
+  "per_role": {
+   "candidate-or-distractor": 1648,
+   "distractor": 12000,
+   "gold": 550
+  },
+  "per_source": {
+   "hotpotqa-train": 6254,
+   "k8s-docs-en": 1648,
+   "mrtydi-en": 3011,
+   "squad-train": 3285
+  },
+  "sha256": "9aeafe162302176f79499647a3aa93a9e5bd8c7401063cd7dcccf7843915331d",
+  "stratification": "seeded stratified by the keyword classifier's label over a seeded pool of at most 60,000 documents per store"
+ },
+ "date": "2026-09-11",
+ "domain_availability_at_chosen_threshold": {
+  "cloud-software": 120,
+  "finance": 85,
+  "general": 3242,
+  "legal": 101,
+  "medicine": 75,
+  "science-engineering": 73
+ },
+ "domain_label_method": "HEURISTIC. Source-to-domain map (m17src/support_manifest.SOURCE_DOMAIN) gives 'general' for every admitted labelled source and 'cloud-software' for the Kubernetes slice. Within the Wikipedia-derived sources a keyword classifier over the query text plus its gold document text re-labels science-engineering / medicine / finance / legal when the winning domain scores at least the recorded classifier_min_score (strong term 2 points, weak term 1, counted once per distinct term; module default 4) and strictly beats the runner-up. These are topical hints, not adjudicated domain labels, and per-domain numbers inherit that imprecision.",
+ "draw_rule": "held-out only: m7src/trainmix.heldout (sha256(source:qid) %% 50 == 0), the registered M7 rule, plus removal of any held-out query whose normalized text also occurs as a training query in step 2b's family manifest",
+ "expected_standard_error": {
+  "assumption": "Expected standard error of the per-domain paired nDCG@10 difference.\n\n    ASSUMPTION, stated because no observation exists: the per-query paired difference\n    (candidate - control) has a standard deviation between 0.15 and 0.25 on a binary-relevance\n    panel of this kind, and families are the independent unit, so n is the FAMILY count, not the\n    query count. SE = sd / sqrt(n_families). A single system's own nDCG@10 has a larger spread\n    (sd ~0.3-0.4) and therefore a larger SE; the paired difference is what the screen would read.",
+  "per_domain_selection": {
+   "cloud-software": {
+    "n_families": 60,
+    "sd_assumed": [
+     0.15,
+     0.25
+    ],
+    "se_paired_ndcg10": [
+     0.0194,
+     0.0323
+    ],
+    "se_single_system_ndcg10": [
+     0.0387,
+     0.0516
+    ]
+   },
+   "finance": {
+    "n_families": 42,
+    "sd_assumed": [
+     0.15,
+     0.25
+    ],
+    "se_paired_ndcg10": [
+     0.0231,
+     0.0386
+    ],
+    "se_single_system_ndcg10": [
+     0.0463,
+     0.0617
+    ]
+   },
+   "general": {
+    "n_families": 50,
+    "sd_assumed": [
+     0.15,
+     0.25
+    ],
+    "se_paired_ndcg10": [
+     0.0212,
+     0.0354
+    ],
+    "se_single_system_ndcg10": [
+     0.0424,
+     0.0566
+    ]
+   },
+   "legal": {
+    "n_families": 48,
+    "sd_assumed": [
+     0.15,
+     0.25
+    ],
+    "se_paired_ndcg10": [
+     0.0217,
+     0.0361
+    ],
+    "se_single_system_ndcg10": [
+     0.0433,
+     0.0577
+    ]
+   },
+   "medicine": {
+    "n_families": 36,
+    "sd_assumed": [
+     0.15,
+     0.25
+    ],
+    "se_paired_ndcg10": [
+     0.025,
+     0.0417
+    ],
+    "se_single_system_ndcg10": [
+     0.05,
+     0.0667
+    ]
+   },
+   "science-engineering": {
+    "n_families": 37,
+    "sd_assumed": [
+     0.15,
+     0.25
+    ],
+    "se_paired_ndcg10": [
+     0.0247,
+     0.0411
+    ],
+    "se_single_system_ndcg10": [
+     0.0493,
+     0.0658
+    ]
+   }
+  },
+  "registry_registered_range": {
+   "basis": "n\u224850 queries per domain, typical per-query nDCG spread; record the measured bootstrap SE beside it after the audit",
+   "paired_ndcg10_se_per_domain_approx": [
+    0.02,
+    0.04
+   ]
+  }
+ },
+ "exposure_labels": {
+  "all_expected_streams_present": true,
+  "counts": {
+   "exposure-known-clean": 120,
+   "exposure-known-exposed": 433
+  },
+  "definitions": {
+   "exposure-known-clean": "screened against every available ancestor manifest with no exact or near hit, and its documents are in no ancestor store",
+   "exposure-known-exposed": "the query text matched an ancestor training manifest, or a training query shares its gold document group, or its gold documents sat in M7's document pool",
+   "exposure-unknown": "an ancestor manifest could not be streamed, so ancestry cannot be established (registry.data.ancestor_decontamination)"
+  },
+  "not_screened": "the six, the reserved four and LoTTE. Deferred to the M17 executor exactly as results/m17_k8s_source_manifest.json records; every interface reaching them materializes protected payloads.",
+  "reasons": {
+   "ancestor-query-text-matched-exactly": 4,
+   "ancestor-query-text-near-matched": 10,
+   "gold-documents-were-in-the-ancestor-document-pool": 41,
+   "screened-against-every-available-ancestor-manifest-no-hit": 120,
+   "training-query-shares-this-gold-document": 378
+  },
+  "screen": {
+   "interface": "m7src/decontam.query_grams + Inverted(...).match(text, min_share, want_sketch=False); candidate-side index, ancestor text streamed",
+   "min_share": 4,
+   "n_candidates": 953,
+   "per_stream": {
+    "m10-generated": {
+     "hits_exact": 0,
+     "hits_near": 0,
+     "n_streamed": 834463,
+     "path": "/home/dylan/asymetric-dual-encoders/work/m10gen/generated_queries.jsonl"
+    },
+    "m10-harvest": {
+     "hits_exact": 11,
+     "hits_near": 0,
+     "n_streamed": 1248386,
+     "path": "/home/dylan/asymetric-dual-encoders/work/m10harvest/harvest_train.jsonl"
+    },
+    "m7-pseudoq-2m": {
+     "hits_exact": 0,
+     "hits_near": 5,
+     "n_streamed": 924704,
+     "path": "/home/dylan/asymetric-dual-encoders/work/pseudoq/pseudoq-2000000-0.json"
+    },
+    "m7-querytext:nqopen": {
+     "hits_exact": 0,
+     "hits_near": 0,
+     "n_streamed": 86112,
+     "path": "/home/dylan/asymetric-dual-encoders/work/train/querytext/nqopen.json"
+    },
+    "m7-querytext:triviaqa": {
+     "hits_exact": 0,
+     "hits_near": 0,
+     "n_streamed": 135651,
+     "path": "/home/dylan/asymetric-dual-encoders/work/train/querytext/triviaqa.json"
+    },
+    "m7-train-queries:esci-us": {
+     "hits_exact": 2,
+     "hits_near": 0,
+     "n_streamed": 73290,
+     "path": "/home/dylan/asymetric-dual-encoders/work/train/sources/esci-us.json"
+    },
+    "m7-train-queries:fever-train": {
+     "hits_exact": 0,
+     "hits_near": 0,
+     "n_streamed": 107659,
+     "path": "/home/dylan/asymetric-dual-encoders/work/train/sources/fever-train.json"
+    },
+    "m7-train-queries:hotpotqa-train": {
+     "hits_exact": 0,
+     "hits_near": 2,
+     "n_streamed": 83283,
+     "path": "/home/dylan/asymetric-dual-encoders/work/train/sources/hotpotqa-train.json"
+    },
+    "m7-train-queries:mrtydi-en": {
+     "hits_exact": 0,
+     "hits_near": 0,
+     "n_streamed": 3478,
+     "path": "/home/dylan/asymetric-dual-encoders/work/train/sources/mrtydi-en.json"
+    },
+    "m7-train-queries:squad-train": {
+     "hits_exact": 4,
+     "hits_near": 4,
+     "n_streamed": 85809,
+     "path": "/home/dylan/asymetric-dual-encoders/work/train/sources/squad-train.json"
+    }
+   }
+  },
+  "teacher_pretraining": "stella's own pretraining exposure is not screenable from this repository and is not claimed either way."
+ },
+ "gpu_used": false,
+ "judgment_semantics": {
+  "DATASET_QRELS": "the dataset's own annotator judgments, carried over. They judge the dataset's corpus, not this panel's mixed corpus: an unjudged distractor from another source may also be relevant, which biases measured nDCG@10 downward by an unknown amount, equally for every system scored on the same corpus.",
+  "PENDING_HUMAN": "candidate documents only, from a lexical tf-idf neighbourhood. No judgment exists yet. Teacher rankings and seed-document identity are not judgments (m17/PLANNING.md)."
+ },
+ "limitations": [
+  "Domain labels are heuristic keyword labels, not adjudicated ones.",
+  "Sealed is not unseen: exposure labels above say what was established.",
+  "Dataset qrels are incomplete on a mixed corpus; unjudged relevant distractors bias every system's nDCG@10 downward together.",
+  "At these family counts the panel cannot resolve the registry's screening bands; it is descriptive and audit evidence only (registry.data.panel_role)."
+ ],
+ "milestone": "M17",
+ "n_families": 542,
+ "n_queries": 553,
+ "panel_jsonl": {
+  "bytes": 369728,
+  "file": "work/m17/panel/panel.jsonl",
+  "sha256": "04a27d35ffd65000ac197884922efb350081ec3c8a60f783effd3c32363010c1"
+ },
+ "partitions": {
+  "audit": {
+   "families": 269,
+   "file": "work/m17/panel/audit.jsonl",
+   "queries": 274,
+   "sha256": "17e635368d34588b431498eeacc01cd121979ffe6834d22964e45e6aa631108a",
+   "text_stays_in_work": true
+  },
+  "selection": {
+   "bytes": 186148,
+   "families": 273,
+   "file": "work/m17/panel/selection.jsonl",
+   "mirror": "results/m17_panel_selection.jsonl",
+   "mirrored_to_results": true,
+   "queries": 279,
+   "sha256": "71074fb2324962c9c1b6765f1bd107ad1cbd5f791a1e8ddad2c0839b84077270"
+  }
+ },
+ "pending_judgments": {
+  "alias_pair_rows": 59,
+  "candidates_per_query": 3,
+  "file": "results/m17_panel_pending_judgments.jsonl",
+  "format": "one JSONL row per (query, candidate) for kind=panel-candidate and per ambiguous pair for kind=alias-pair; fill relevant_yes_no and judge",
+  "items": 419,
+  "panel_candidate_rows": 360,
+  "queries": 120,
+  "sha256": "c9272c740986677e62aae9eb78fcb40d420ab7b4974630931eb833a8a03be224"
+ },
+ "per_domain": {
+  "cloud-software": {
+   "audit": {
+    "families": 59,
+    "queries": 60
+   },
+   "expected_se": {
+    "n_families": 60,
+    "sd_assumed": [
+     0.15,
+     0.25
+    ],
+    "se_paired_ndcg10": [
+     0.0194,
+     0.0323
+    ],
+    "se_single_system_ndcg10": [
+     0.0387,
+     0.0516
+    ]
+   },
+   "exposure": {
+    "exposure-known-clean": 120
+   },
+   "exposure_reasons": {
+    "screened-against-every-available-ancestor-manifest-no-hit": 120
+   },
+   "families_total": 119,
+   "pending_human_queries": 120,
+   "queries": 120,
+   "queries_with_judgments": 0,
+   "relevant_documents": 0,
+   "selection": {
+    "families": 60,
+    "queries": 60
+   }
+  },
+  "finance": {
+   "audit": {
+    "families": 42,
+    "queries": 42
+   },
+   "expected_se": {
+    "n_families": 42,
+    "sd_assumed": [
+     0.15,
+     0.25
+    ],
+    "se_paired_ndcg10": [
+     0.0231,
+     0.0386
+    ],
+    "se_single_system_ndcg10": [
+     0.0463,
+     0.0617
+    ]
+   },
+   "exposure": {
+    "exposure-known-exposed": 85
+   },
+   "exposure_reasons": {
+    "ancestor-query-text-near-matched": 2,
+    "gold-documents-were-in-the-ancestor-document-pool": 13,
+    "training-query-shares-this-gold-document": 70
+   },
+   "families_total": 84,
+   "pending_human_queries": 0,
+   "queries": 85,
+   "queries_with_judgments": 85,
+   "relevant_documents": 114,
+   "selection": {
+    "families": 42,
+    "queries": 43
+   }
+  },
+  "general": {
+   "audit": {
+    "families": 49,
+    "queries": 50
+   },
+   "expected_se": {
+    "n_families": 50,
+    "sd_assumed": [
+     0.15,
+     0.25
+    ],
+    "se_paired_ndcg10": [
+     0.0212,
+     0.0354
+    ],
+    "se_single_system_ndcg10": [
+     0.0424,
+     0.0566
+    ]
+   },
+   "exposure": {
+    "exposure-known-exposed": 100
+   },
+   "exposure_reasons": {
+    "ancestor-query-text-near-matched": 3,
+    "gold-documents-were-in-the-ancestor-document-pool": 9,
+    "training-query-shares-this-gold-document": 88
+   },
+   "families_total": 99,
+   "pending_human_queries": 0,
+   "queries": 100,
+   "queries_with_judgments": 100,
+   "relevant_documents": 145,
+   "selection": {
+    "families": 50,
+    "queries": 50
+   }
+  },
+  "legal": {
+   "audit": {
+    "families": 47,
+    "queries": 49
+   },
+   "expected_se": {
+    "n_families": 48,
+    "sd_assumed": [
+     0.15,
+     0.25
+    ],
+    "se_paired_ndcg10": [
+     0.0217,
+     0.0361
+    ],
+    "se_single_system_ndcg10": [
+     0.0433,
+     0.0577
+    ]
+   },
+   "exposure": {
+    "exposure-known-exposed": 100
+   },
+   "exposure_reasons": {
+    "ancestor-query-text-matched-exactly": 1,
+    "ancestor-query-text-near-matched": 4,
+    "gold-documents-were-in-the-ancestor-document-pool": 6,
+    "training-query-shares-this-gold-document": 89
+   },
+   "families_total": 95,
+   "pending_human_queries": 0,
+   "queries": 100,
+   "queries_with_judgments": 100,
+   "relevant_documents": 123,
+   "selection": {
+    "families": 48,
+    "queries": 51
+   }
+  },
+  "medicine": {
+   "audit": {
+    "families": 36,
+    "queries": 37
+   },
+   "expected_se": {
+    "n_families": 36,
+    "sd_assumed": [
+     0.15,
+     0.25
+    ],
+    "se_paired_ndcg10": [
+     0.025,
+     0.0417
+    ],
+    "se_single_system_ndcg10": [
+     0.05,
+     0.0667
+    ]
+   },
+   "exposure": {
+    "exposure-known-exposed": 75
+   },
+   "exposure_reasons": {
+    "ancestor-query-text-matched-exactly": 2,
+    "gold-documents-were-in-the-ancestor-document-pool": 4,
+    "training-query-shares-this-gold-document": 69
+   },
+   "families_total": 72,
+   "pending_human_queries": 0,
+   "queries": 75,
+   "queries_with_judgments": 75,
+   "relevant_documents": 87,
+   "selection": {
+    "families": 36,
+    "queries": 38
+   }
+  },
+  "science-engineering": {
+   "audit": {
+    "families": 36,
+    "queries": 36
+   },
+   "expected_se": {
+    "n_families": 37,
+    "sd_assumed": [
+     0.15,
+     0.25
+    ],
+    "se_paired_ndcg10": [
+     0.0247,
+     0.0411
+    ],
+    "se_single_system_ndcg10": [
+     0.0493,
+     0.0658
+    ]
+   },
+   "exposure": {
+    "exposure-known-exposed": 73
+   },
+   "exposure_reasons": {
+    "ancestor-query-text-matched-exactly": 1,
+    "ancestor-query-text-near-matched": 1,
+    "gold-documents-were-in-the-ancestor-document-pool": 9,
+    "training-query-shares-this-gold-document": 62
+   },
+   "families_total": 73,
+   "pending_human_queries": 0,
+   "queries": 73,
+   "queries_with_judgments": 73,
+   "relevant_documents": 91,
+   "selection": {
+    "families": 37,
+    "queries": 37
+   }
+  }
+ },
+ "protected_payloads_opened": false,
+ "provisional_reason": "360 cloud-software candidate judgments and 59 ambiguous alias pairs are PENDING_HUMAN. Until they are resolved the cloud-software domain has no relevance judgments and the panel may not be scored as a six-domain panel. Resolving them re-seals this manifest with a new panel hash; the 72-hour clock starts from the sealed hash (registry.data.panel_timing).",
+ "reader_contract": "each row: query_id, query, source, domain, slice, family_id, partition, qrels {doc_id: grade}, judgment_status, exposure. m17src/evaluate.py takes qrels, domains and families keyed by the same query key, which is query_id here.",
+ "registry_targets": {
+  "m17_panel_target_queries": 600,
+  "panel_selection_fraction": 0.5,
+  "panel_split_unit": "source document and near-duplicate query family"
+ },
+ "scored_anything": false,
+ "script": "m17src/panel_build.py",
+ "seed": 17,
+ "source_licences": {
+  "hotpotqa-train": "CC BY-SA 4.0, training-approved",
+  "k8s-docs-en": "CC BY 4.0, attribution required (research/m17-k8s-attribution.md)",
+  "mrtydi-en": "Apache 2.0, training-approved",
+  "squad-train": "CC BY-SA 4.0 (research/m7-data-licensing.md), training-approved"
+ },
+ "sources_drawn": [
+  "squad-train",
+  "hotpotqa-train",
+  "mrtydi-en",
+  "k8s-docs-en"
+ ],
+ "sources_excluded": {
+  "esci-us": "Apache 2.0 and clean, but e-commerce product relevance maps to none of the six declared panel domains.",
+  "fever-train": "reserved-adjacent: FEVER is one of the reserved four and a disclosed stella exposure; its train claims share the reserved evaluation's Wikipedia surface. Licensing (CC BY-SA 3.0) permits it; protocol caution does not."
+ },
+ "status": "PROVISIONAL \u2014 pending human judgments unresolved",
+ "step": "2c"
+}

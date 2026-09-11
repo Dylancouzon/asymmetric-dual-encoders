@@ -1,0 +1,63 @@
+{
+ "ambiguous_sense_pairs": 59,
+ "by_domain": {
+  "cloud-software": 100,
+  "general": 99,
+  "medicine": 1
+ },
+ "by_judgment_status": {
+  "PENDING_HUMAN": 59,
+  "VERIFIED_BY_SOURCE": 141
+ },
+ "by_kind": {
+  "acronym-expansion": 171,
+  "alias-canonical": 29
+ },
+ "by_source": {
+  "k8s-docs-en": 100,
+  "mrtydi-en": 80,
+  "squad-train": 20
+ },
+ "date": "2026-09-11",
+ "distinct_equivalences": 6015,
+ "extraction": {
+  "acronym_rule": "parenthetical 'Expansion (ABBR)' where every acronym letter, in order, starts a non-stop word of the expansion; 2-6 letters; digits/URLs rejected",
+  "alias_rule": "'also known as' / 'also called' / 'short for' / 'abbreviated as'",
+  "ambiguity": "a short form with more than one distinct normalized expansion across the scanned text is flagged and left PENDING_HUMAN"
+ },
+ "files": {
+  "exclusions": "work/m17/manifest/alias_test_families.json",
+  "exclusions_sha256": "5efda7709246f88933c60e8f8e8881ac11ff00adfc0c5d8324e12f6024cd9c20",
+  "pairs": "work/m17/alias/alias_test.jsonl",
+  "pairs_sha256": "c4e244bd1ee34c3e7a2b9c96b336bfe0fc74687ff1de448397b3be7b3789f71b",
+  "pending_review": "results/m17_panel_pending_judgments.jsonl"
+ },
+ "gpu_used": false,
+ "limitations": [
+  "A source-stated equivalence is not a relevance judgment: the pair asserts that two query forms mean the same thing, not which documents answer them.",
+  "Domain labels are the panel's heuristic keyword labels.",
+  "Query-side ancestry screening is m17src/panel_build.py --stage screen; the six, the reserved four and LoTTE stay deferred to the executor."
+ ],
+ "milestone": "M17",
+ "n_families": 164,
+ "n_pairs": 200,
+ "protected_payloads_opened": false,
+ "raw_equivalences_found": 8501,
+ "role": "read once per screen arm and once per final form beside the ordinary metrics; routes no selection (registry.data.alias_heldout_test.reads)",
+ "scored_anything": false,
+ "script": "m17src/alias_test_build.py",
+ "seed": 17,
+ "status": "PROVISIONAL \u2014 ambiguous-sense pairs pending human judgment",
+ "step": "2c",
+ "stores_not_scanned": {
+  "esci-prod": "excluded source (see panel manifest)",
+  "fever-pos": "excluded source (reserved-adjacent)",
+  "hotpotqa-corpus": "5.2M abstracts; yield already over target"
+ },
+ "stores_scanned": [
+  "work/m17/sources/k8s_docs_en.jsonl",
+  "squad-ctx",
+  "mrtydi-docs"
+ ],
+ "target_pairs": 200
+}

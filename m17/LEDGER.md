@@ -173,3 +173,85 @@ snapshot window) are recorded field by field in the result under `scaled_constan
 This certifies that the modules run and refuse; it certifies nothing about quality, throughput
 or the real data path, which is still unwritten. Step 4 (two independent implementation reviews)
 and step 5 (measured allocation at two sizes) remain the entry conditions for the lock.
+
+## Step 2c — the judged panel and the held-out alias test, sealed provisional (2026-09-11)
+
+Pre-clock, no GPU, no protected access, nothing scored. `m17src/panel_build.py` and
+`m17src/alias_test_build.py` built **553 panel queries in 542 families** across the six declared
+domains — cloud-software 120, general 100, legal 100, finance 85, medicine 75,
+science-engineering 73 — split by family into **279 selection and 274 audit** queries over a
+**14,198-document** declared corpus (550 golds, 12,000 seeded stratified distractors, all 1,648
+admitted Kubernetes documents). Manifest, hashes and every limitation:
+`results/m17_panel_manifest.json`, marked **PROVISIONAL**. The selection partition is mirrored to
+`results/m17_panel_selection.jsonl` (182 KB, under the 2 MB rule); the audit partition's text
+stays in `work/m17/panel/audit.jsonl` with only its hash published.
+
+Queries are drawn **held-out only** — `m7src/trainmix.heldout`'s registered mod-50 rule — from
+SQuAD, HotpotQA and Mr. TyDi English, whose licences are affirmative in
+`research/m7-data-licensing.md`, plus the step-2a Kubernetes slice. Two admitted sources were
+deliberately not drawn from and the reasons are in the manifest: **`fever-train`** because FEVER
+is one of the reserved four *and* a disclosed stella exposure, so its training claims sit on the
+reserved evaluation's own Wikipedia surface (licensing permits it; protocol caution does not —
+reversible by an owner ruling, which would also owe those families the executor's protected
+screen), and **`esci-us`** because e-commerce product relevance maps to none of the six domains.
+
+Domain labels are **heuristic**: the source map gives `general`/`cloud-software`, and a keyword
+classifier over query plus gold text re-labels the four specialist domains. The threshold was
+measured before it was chosen — over the 3,576 held-out candidates, thresholds 2/3/4/5/6 yield
+{science, medicine, finance, legal} = {142,133,149,215} / {75,75,85,101} / {34,56,38,61} /
+{17,35,24,40} / {8,24,12,25}. Threshold 3 was taken as the loosest that still needs a strong term
+plus corroboration; four domains therefore sit **short of the ~100 target**, recorded as a gap
+rather than filled from the training slice or an unapproved source. The yield table is in the
+manifest.
+
+**No judgment was fabricated and no teacher ranking was used as a label.** The 433 non-k8s
+queries carry their datasets' own annotator qrels (`DATASET_QRELS`), which judge each dataset's
+own corpus and are therefore incomplete on this mixed one — an unjudged relevant distractor
+depresses every system's nDCG@10 together. All 120 cloud-software queries are `PENDING_HUMAN`
+with candidate documents from a **lexical tf-idf** neighbourhood over titles and lead text:
+**360 (query, candidate) rows** in `results/m17_panel_pending_judgments.jsonl`, alongside the
+**59 ambiguous alias pairs**, 419 review rows in one sheet with empty `relevant_yes_no`/`judge`
+fields. **Who judges the technical queries, and to what instructions, is Dylan's decision**; the
+panel cannot be read as a six-domain result until it is made.
+
+The alias test is **200 pairs in 164 families** — 100 Kubernetes, 80 Mr. TyDi, 20 SQuAD; 171
+acronym/expansion and 29 alias/canonical; **141 VERIFIED_BY_SOURCE** (the source document states
+the equivalence, quoted verbatim in the record's citation, acronym initials checked against the
+expansion's words) and **59 PENDING_HUMAN** where the short form has several expansions in the
+admitted text and the intended sense is a judgment — for example `PVC` as *persistent volume
+claim* or *posterior vegetal cytoplasm*. `work/m17/manifest/alias_test_families.json` carries the
+708 family ids and 942 normalized-text keys the training-pair builder must exclude, written in
+step 2b's `group_id` convention so the two scripts interoperate without importing each other.
+
+**Ancestry screen** (`work/m17/panel/ancestry_screen.json`), through the approved fingerprint
+interface in step 2a's direction — `decontam.query_grams` + `Inverted(...).match`, candidate-side
+index, ancestor text streamed — at `min_share=4` rather than 8, because the candidate side here is
+query text and an 8-gram vote is unreachable for a six-word question. Streams: M7 TRAIN queries
+for all five pair sources (the superset the M9 pool and M10's `m9-pool` segment derive from),
+`nqopen`/`triviaqa` query text, the `pseudoq-2000000-0` pool named in the warm start's own run id,
+M10 harvest and M10 generated queries — **3.5 million ancestor texts**. Every stream applies the
+same mod-50 rule, added after a first pass reported 299 self-matches against squad-train: an
+ancestor stream that includes the held-out slice makes every panel query match itself.
+
+Result: **433 exposure-known-exposed, 120 exposure-known-clean, 0 exposure-unknown**, with the
+reason recorded per query — 378 have a *training query on the same gold document*, 14 matched
+ancestor query text (4 exact, 10 near), 41 are exposed only through the ancestor document pool,
+and the 120 Kubernetes queries screened clean against every available manifest. **Sealed is not
+unseen, and clean is not unseen either**: stella's own pretraining is not screenable here and is
+claimed neither way, and the six, the reserved four and LoTTE stay **deferred to the executor**,
+exactly as `results/m17_k8s_source_manifest.json` records.
+
+Registered expected standard error, stated as an assumption because no observation exists: the
+paired per-domain nDCG@10 SE is `sd/sqrt(n_families)` with the per-query paired difference's sd
+assumed between 0.15 and 0.25 and **families, not queries, as the independent unit** — 0.019-0.032
+(cloud-software, 60 selection families) to 0.025-0.042 (medicine, 36). That brackets the registry's
+registered 0.02-0.04 and sits far above the screening bands, so the panel stays descriptive and
+audit evidence: it routes no arm selection. A single system's own nDCG@10 SE is larger still and
+is recorded beside it.
+
+Checks: `.venv/bin/python -m pytest -q m17src` — 137 passed, 24 of them new in
+`m17src/test_panel.py`, on synthetic fixtures only. The sealing step refuses a family that
+straddles the two partitions, a judged document missing from the declared corpus, and a corpus
+whose size has moved under the manifest. `panel.jsonl` is byte-identical across repeated draft
+runs at the same seed. Nothing here starts the clock: the manifest is provisional, and resolving
+the pending judgments re-seals it with a new panel hash.
