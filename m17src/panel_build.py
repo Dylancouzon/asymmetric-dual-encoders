@@ -996,6 +996,8 @@ def seal(verbose=True):
             "queries_with_judgments": sum(1 for r in rs if r["qrels"]),
             "pending_human_queries": sum(1 for r in rs
                                          if r["judgment_status"] == "PENDING_HUMAN"),
+            "model_judged_queries": sum(1 for r in rs
+                                        if r["judgment_status"] == "MODEL_JUDGED"),
             "exposure": dict(Counter(r["exposure"] for r in rs)),
             "exposure_reasons": dict(Counter(r["exposure_reason"] for r in rs)),
             "families_total": len({r["family_id"] for r in rs}),
@@ -1016,19 +1018,28 @@ def seal(verbose=True):
     # ambiguous alias pairs; both kinds are counted, neither is overwritten
     panel_pending = [p for p in pending if p.get("kind", "panel-candidate") == "panel-candidate"]
     alias_pending = [p for p in pending if p.get("kind") == "alias-pair"]
+    n_unjudged = sum(1 for p in pending if p.get("relevant_yes_no") in (None, ""))
+    model_judged = sum(1 for r in records if r["judgment_status"] == "MODEL_JUDGED")
     manifest = {
         "milestone": "M17", "step": "2c", "date": "2026-09-11",
         "script": "m17src/panel_build.py",
         "script_sha256": sha_file(Path(__file__).resolve()),
         "registry_sha256": sha_file(REPO / "m17" / "registry.json"),
-        "status": "PROVISIONAL — pending human judgments unresolved",
+        "status": ("FINAL — sealed; cloud-software relevance is MODEL-JUDGED (ruling A6)"
+                   if not n_unjudged else "PROVISIONAL — pending judgments unresolved"),
         "provisional_reason": (
-            f"{len(panel_pending)} cloud-software candidate judgments and {len(alias_pending)} "
-            "ambiguous alias pairs are PENDING_HUMAN. Until they are "
-            "resolved the cloud-software domain has no relevance judgments and the panel may not "
-            "be scored as a six-domain panel. Resolving them re-seals this manifest with a new "
-            "panel hash; the 72-hour clock starts from the sealed hash "
-            "(registry.data.panel_timing)."),
+            f"{n_unjudged} sheet rows are still unjudged ({len(panel_pending)} cloud-software "
+            f"candidate rows and {len(alias_pending)} alias senses in the sheet in total). Until "
+            "they are resolved the cloud-software domain has no relevance judgments and the panel "
+            "may not be scored as a six-domain panel. Resolving them re-seals this manifest with a "
+            "new panel hash; the 72-hour clock starts from the sealed hash "
+            "(registry.data.panel_timing)." if n_unjudged else None),
+        "model_judged_disclosure": (
+            "Ruling A6 (Dylan, 2026-09-11): the cloud-software domain's relevance labels were "
+            "produced by Codex gpt-6-astra from the row text alone and ingested by "
+            "m17src/judgments_ingest.py; a seeded human double-check slice is reported beside "
+            "them when judged. Descriptive only: the panel never routes selection."
+            if model_judged else None),
         "gpu_used": False, "protected_payloads_opened": False, "scored_anything": False,
         "seed": draft_rec["seed"],
         "registry_targets": {"m17_panel_target_queries": reg["data"]["m17_panel_target_queries"],
@@ -1065,7 +1076,11 @@ def seal(verbose=True):
                               "system scored on the same corpus."),
             "PENDING_HUMAN": ("candidate documents only, from a lexical tf-idf neighbourhood. No "
                               "judgment exists yet. Teacher rankings and seed-document identity "
-                              "are not judgments (m17/PLANNING.md).")},
+                              "are not judgments (m17/PLANNING.md)."),
+            "MODEL_JUDGED": ("the three lexical candidates were judged relevant/not by Codex "
+                             "gpt-6-astra from the row text alone (ruling A6); an empty qrels "
+                             "under this status means no candidate was judged relevant. "
+                             "Model-derived labels, disclosed as such; descriptive only.")},
         "n_queries": len(records),
         "n_families": len({r["family_id"] for r in records}),
         "per_domain": per_domain,
