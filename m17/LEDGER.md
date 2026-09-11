@@ -305,3 +305,23 @@ Open for Dylan, neither actioned here: the four unpopulated panel domains, and t
 alias pool is 94% general Wikipedia with only 432 Kubernetes pairs. Checks:
 `.venv/bin/python -m pytest -q m17src` — 141 passed, 51 of them new in
 `m17src/test_support_manifest.py` and `m17src/test_alias_pairs.py`, synthetic fixtures only.
+
+## A3 — checkpoint 1 rulings (Dylan, 2026-09-11)
+
+Three rulings recorded after steps 2 and 3, before any review or observation:
+
+1. **Panel judging.** Dylan judges the 60 selection-partition cloud-software queries (about 180
+   rows of `results/m17_panel_pending_judgments.jsonl`) before the screen; a second engineer
+   double-judges 20 of those queries and agreement is reported. The 60 audit-partition queries
+   may be judged later without touching the clock. Dylan also judges the 59 ambiguous alias senses.
+2. **Alias spot check.** Dylan checks the 311-pair 2% sample. More than 5% wrong tightens the
+   abbreviation filter and rebuilds the pool before lock.
+3. **Domain map.** Documents from sources mapped to `general` are sub-assigned per document by the
+   panel builder's heuristic keyword classifier, same threshold, so the four empty domains can
+   populate for vocabulary breadth. No new source. Labels remain heuristic and recorded as such.
+   The panel's exclusion of FEVER-train and ESCI is confirmed. The step 4 Astra brief asks whether
+   this map could bias term selection or leak panel construction into training.
+
+Registry fields changed: `vocabulary_ranking.domain_assignment`, `data.source_domain_map_note`,
+`data.panel_exclusions_confirmed`, `data.panel_judging_plan`, `data.alias_spotcheck_rule`.
+Implementation of ruling 3 in `m17src/vocab.py`/`support_manifest.py` is step 4 work.

@@ -13,7 +13,7 @@ driver, cache, vocabulary, export, numpy loader and evaluator are in `m17src/`; 
 passes (141) and the synthetic rehearsal ran clean on the RTX 3080. No candidate trained, no
 development-suite or panel read, nothing published. Result JSONs: `results/m17_*`.
 
-**Waiting on Dylan (do not re-ask what is already answered here):**
+**Rulings A3 recorded (see `LEDGER.md`); Dylan owes the judgments and spot check below, nothing else:**
 
 - Judge the 360 Kubernetes query/candidate rows and 59 ambiguous alias senses in
   `results/m17_panel_pending_judgments.jsonl` (options: Dylan alone; Dylan plus a second engineer
