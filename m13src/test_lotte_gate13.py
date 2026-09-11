@@ -361,6 +361,18 @@ def test_a_changed_dependency_refuses_at_load(tmp_path):
     assert not cfg.record_path.exists()
 
 
+def test_the_two_dependency_identity_derivations_agree_for_the_real_student():
+    """Astra closing re-check, P3: the manifest hashes the tokenizer and config loaded by name, the
+    read hashes the constructed student's own objects. They must be the same bytes for bge-small,
+    or the real read would refuse falsely. Offline, from the cached weights (HARNESS.md)."""
+    import nano10 as N
+    cfg = G.Config()
+    by_name = G.dependency_identity(cfg, "bge-small")
+    from_model = G.dependency_identity(cfg, "bge-small",
+                                       model=N.Nano10("bge-small", n_layers=3, head="linear"))
+    assert by_name == from_model and by_name["repo"] == "BAAI/bge-small-en-v1.5"
+
+
 def test_an_existing_gate_record_refuses_a_second_execution(tmp_path):
     cfg = build_world(tmp_path, e1_batch=32)
     G.run(cfg, verbose=False)

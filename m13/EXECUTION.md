@@ -45,7 +45,7 @@ PENDING verdict, as it must).
 | Spend | Owed | Owner |
 |---|---|---|
 | Renting | provider, account, ≥ 500 GB persistent disk, SSH, GitHub deploy key (`m13/RULINGS.md` Provider) | Dylan |
-| LoTTE read #1 | two independent reviews of `m13src/lotte_gate13.py` (Astra 2026-09-10 done, nine findings fixed; the re-review must return GO); both E records pushed; the committed manifest and the pin (R18); `--preflight-only` clean | lead |
+| LoTTE read #1 | reviews done (GO, 2026-09-10); both E records pushed; the manifest and the pin committed and pushed (R18); `--preflight-only` clean | lead |
 | 200M build | `m13/LOTTE_GATE.json`; allocation at the measured rate and billed price under $1,000; reserved-batch allowance re-measured (R10) | lead |
 | Final six-set access | frozen candidate; R6 flip in the commit that pins the reviewed executor; M9's dated R3 amendment before any M9 score | Dylan, lead |
 

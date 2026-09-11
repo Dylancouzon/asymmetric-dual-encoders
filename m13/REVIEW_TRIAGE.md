@@ -44,6 +44,11 @@ downgraded to P2, two new P1s, NO-GO. All fixed, each in a few lines.
 | P2 dependency identity hashed separately loaded objects, `Nano10` loaded again | re-derived from the constructed student's own tokenizer and config |
 | unverified: recovery checked `n_queries` only, qids not held to the pin | `n_docs`, `n_qrels_pairs` and the pin's `query_ids_sha256` checked |
 
+Closing re-check (Astra, `research/m13-codex-gate-close-2026-09-10.md`): **VERDICT: GO**, all four
+items closed, one P3 (the by-name and constructed-student dependency hashes were unverified equal)
+closed the same day by measurement on the real bge-small student and pinned as a test. Reviewing the
+gate is finished; further code needs a new finding, not a new round.
+
 ## Stage 1 review triage
 
 **Superseded in part by rulings R13–R16 (same day):** extension cycles and post-tag continuation are
