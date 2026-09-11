@@ -278,6 +278,7 @@
  "gpu_used": false,
  "judgment_semantics": {
   "DATASET_QRELS": "the dataset's own annotator judgments, carried over. They judge the dataset's corpus, not this panel's mixed corpus: an unjudged distractor from another source may also be relevant, which biases measured nDCG@10 downward by an unknown amount, equally for every system scored on the same corpus.",
+  "MODEL_JUDGED": "the three lexical candidates were judged relevant/not by Codex gpt-6-astra from the row text alone (ruling A6); an empty qrels under this status means no candidate was judged relevant. Model-derived labels, disclosed as such; descriptive only.",
   "PENDING_HUMAN": "candidate documents only, from a lexical tf-idf neighbourhood. No judgment exists yet. Teacher rankings and seed-document identity are not judgments (m17/PLANNING.md)."
  },
  "limitations": [
@@ -287,29 +288,30 @@
   "At these family counts the panel cannot resolve the registry's screening bands; it is descriptive and audit evidence only (registry.data.panel_role)."
  ],
  "milestone": "M17",
+ "model_judged_disclosure": "Ruling A6 (Dylan, 2026-09-11): the cloud-software domain's relevance labels were produced by Codex gpt-6-astra from the row text alone and ingested by m17src/judgments_ingest.py; a seeded human double-check slice is reported beside them when judged. Descriptive only: the panel never routes selection.",
  "n_families": 542,
  "n_queries": 553,
  "panel_jsonl": {
-  "bytes": 369728,
+  "bytes": 388079,
   "file": "work/m17/panel/panel.jsonl",
-  "sha256": "04a27d35ffd65000ac197884922efb350081ec3c8a60f783effd3c32363010c1"
+  "sha256": "d1b017a8a7a770acfba4b83874669cb0e02cbdb455347f80cd17024eb9995d52"
  },
  "partitions": {
   "audit": {
    "families": 269,
    "file": "work/m17/panel/audit.jsonl",
    "queries": 274,
-   "sha256": "17e635368d34588b431498eeacc01cd121979ffe6834d22964e45e6aa631108a",
+   "sha256": "d13071d9db77c183a80ec5eb1484593809dbfc8f233f1a2ed5ba5e03e5428980",
    "text_stays_in_work": true
   },
   "selection": {
-   "bytes": 186148,
+   "bytes": 195400,
    "families": 273,
    "file": "work/m17/panel/selection.jsonl",
    "mirror": "results/m17_panel_selection.jsonl",
    "mirrored_to_results": true,
    "queries": 279,
-   "sha256": "71074fb2324962c9c1b6765f1bd107ad1cbd5f791a1e8ddad2c0839b84077270"
+   "sha256": "2c686669cf03601398a5514022d7d36ce585afc82fb3bc61b1d3ccfa1d4222e0"
   }
  },
  "pending_judgments": {
@@ -320,7 +322,7 @@
   "items": 440,
   "panel_candidate_rows": 360,
   "queries": 120,
-  "sha256": "ab91fa5340192c8b8e0d9099788d396de2ff50b4ff6e955cc89e17dc09bda4a2"
+  "sha256": "a04b949ec1a88ff1b0dbec128baea466977bf590798ac0c22ec0a93262d76070"
  },
  "per_domain": {
   "cloud-software": {
@@ -350,10 +352,11 @@
     "screened-against-every-available-ancestor-manifest-no-hit": 120
    },
    "families_total": 119,
-   "pending_human_queries": 120,
+   "model_judged_queries": 120,
+   "pending_human_queries": 0,
    "queries": 120,
-   "queries_with_judgments": 0,
-   "relevant_documents": 0,
+   "queries_with_judgments": 118,
+   "relevant_documents": 205,
    "selection": {
     "families": 60,
     "queries": 60
@@ -388,6 +391,7 @@
     "training-query-shares-this-gold-document": 70
    },
    "families_total": 84,
+   "model_judged_queries": 0,
    "pending_human_queries": 0,
    "queries": 85,
    "queries_with_judgments": 85,
@@ -426,6 +430,7 @@
     "training-query-shares-this-gold-document": 88
    },
    "families_total": 99,
+   "model_judged_queries": 0,
    "pending_human_queries": 0,
    "queries": 100,
    "queries_with_judgments": 100,
@@ -465,6 +470,7 @@
     "training-query-shares-this-gold-document": 89
    },
    "families_total": 95,
+   "model_judged_queries": 0,
    "pending_human_queries": 0,
    "queries": 100,
    "queries_with_judgments": 100,
@@ -503,6 +509,7 @@
     "training-query-shares-this-gold-document": 69
    },
    "families_total": 72,
+   "model_judged_queries": 0,
    "pending_human_queries": 0,
    "queries": 75,
    "queries_with_judgments": 75,
@@ -542,6 +549,7 @@
     "training-query-shares-this-gold-document": 62
    },
    "families_total": 73,
+   "model_judged_queries": 0,
    "pending_human_queries": 0,
    "queries": 73,
    "queries_with_judgments": 73,
@@ -553,9 +561,9 @@
   }
  },
  "protected_payloads_opened": false,
- "provisional_reason": "360 cloud-software candidate judgments and 80 ambiguous alias pairs are PENDING_HUMAN. Until they are resolved the cloud-software domain has no relevance judgments and the panel may not be scored as a six-domain panel. Resolving them re-seals this manifest with a new panel hash; the 72-hour clock starts from the sealed hash (registry.data.panel_timing).",
+ "provisional_reason": null,
  "reader_contract": "each row: query_id, query, source, domain, slice, family_id, partition, qrels {doc_id: grade}, judgment_status, exposure. m17src/evaluate.py takes qrels, domains and families keyed by the same query key, which is query_id here.",
- "registry_sha256": "2c4693a8cc0ba65d487ca59865a9f0cc7d296bab99c851ebcd06f389755f40f1",
+ "registry_sha256": "c16af1f408f180f4faa43fb165b9f8fc3c79b0ea20b766fdcd2d6d467c69bacf",
  "registry_targets": {
   "m17_panel_target_queries": 600,
   "panel_selection_fraction": 0.5,
@@ -563,7 +571,7 @@
  },
  "scored_anything": false,
  "script": "m17src/panel_build.py",
- "script_sha256": "063ae3a5db36e0ab861b8cf56743d7ac29ea60ced4e0f87c3a0d4205e20a6c87",
+ "script_sha256": "e9b43f47248ec1311a0bcdadc961310692a44ce793caa2038842eb506e23dc9b",
  "seed": 17,
  "source_licences": {
   "hotpotqa-train": "CC BY-SA 4.0, training-approved",
@@ -581,6 +589,6 @@
   "esci-us": "Apache 2.0 and clean, but e-commerce product relevance maps to none of the six declared panel domains.",
   "fever-train": "reserved-adjacent: FEVER is one of the reserved four and a disclosed stella exposure; its train claims share the reserved evaluation's Wikipedia surface. Licensing (CC BY-SA 3.0) permits it; protocol caution does not."
  },
- "status": "PROVISIONAL \u2014 pending human judgments unresolved",
+ "status": "FINAL \u2014 sealed; cloud-software relevance is MODEL-JUDGED (ruling A6)",
  "step": "2c"
 }

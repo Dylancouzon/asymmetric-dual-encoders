@@ -7,7 +7,8 @@
   "science-engineering": 3
  },
  "by_judgment_status": {
-  "PENDING_HUMAN": 80,
+  "REJECTED_BY_MODEL": 23,
+  "VERIFIED_BY_MODEL": 57,
   "VERIFIED_BY_SOURCE": 120
  },
  "by_kind": {
@@ -32,7 +33,7 @@
   "exclusions": "work/m17/manifest/alias_test_families.json",
   "exclusions_sha256": "a3cc09ff6a7affcf17c263553e8711ac4ec468ecd42d2968935d16a195f57c26",
   "pairs": "work/m17/alias/alias_test.jsonl",
-  "pairs_sha256": "6682f2acf60cb3553b765573dd9ad502389868e816f07d9e00f02e6ea8353104",
+  "pairs_sha256": "43397a105d797e2b4b628b40aab662b5d64a008cbf916d92e141e5cb1ff0841f",
   "pending_review": "results/m17_panel_pending_judgments.jsonl"
  },
  "gpu_used": false,
@@ -42,6 +43,15 @@
   "Query-side ancestry screening is m17src/panel_build.py --stage screen; the six, the reserved four and LoTTE stay deferred to the executor."
  ],
  "milestone": "M17",
+ "model_judging_a6": {
+  "by_status": {
+   "REJECTED_BY_MODEL": 23,
+   "VERIFIED_BY_MODEL": 57
+  },
+  "judge": "codex-gpt-6-astra",
+  "report_log_sha256": "fc7ee718035cc0c38aeab484554f56eb87ff068f4ccc6f74340cf5ff27b9e486",
+  "senses_judged": 80
+ },
  "n_families": 164,
  "n_pairs": 200,
  "protected_payloads_opened": false,
@@ -52,7 +62,7 @@
  "script": "m17src/alias_test_build.py",
  "script_sha256": "b5f742abb88b3d1d5b8fce12c646f02aaaf90de561c753e4f09ce15ae51eb442",
  "seed": 17,
- "status": "PROVISIONAL \u2014 ambiguous-sense pairs pending human judgment",
+ "status": "FINAL \u2014 pending senses model-judged (A6); 23 pairs rejected",
  "step": "2c",
  "stores_not_scanned": {
   "esci-prod": "excluded source (see panel manifest)",

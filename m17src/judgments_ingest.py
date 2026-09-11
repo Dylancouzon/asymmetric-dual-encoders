@@ -122,7 +122,7 @@ def apply_panel(records, sheet, judge):
             yes[r["query_id"]][r["candidate_doc_id"]] = 1
     n_q = n_rel = 0
     for rec in records:
-        if rec.get("judgment_status") != "PENDING_HUMAN":
+        if rec.get("judgment_status") not in ("PENDING_HUMAN", "MODEL_JUDGED"):
             continue
         if rec["query_id"] not in yes:
             raise SystemExit(f"M17 INGEST REFUSED: panel query {rec['query_id']} has no judged rows")
@@ -143,7 +143,8 @@ def apply_alias(records, sheet, judge):
     ans = {r["pair_id"]: r["relevant_yes_no"] for r in sheet if r["kind"] == "alias-pair"}
     n = Counter()
     for rec in records:
-        if rec.get("judgment_status") != "PENDING_HUMAN":
+        if rec.get("judgment_status") not in ("PENDING_HUMAN", "VERIFIED_BY_MODEL",
+                                              "REJECTED_BY_MODEL"):
             continue
         if rec["pair_id"] not in ans:
             raise SystemExit(f"M17 INGEST REFUSED: alias pair {rec['pair_id']} has no judged row")
@@ -200,12 +201,43 @@ def rebind_screen(before, after):
     scr = json.loads(admit_read(P.SCREEN_JSON).read_text())
     if not P.PANEL_JSONL.exists():
         raise SystemExit("panel.jsonl missing")
+    # The receipt also binds the alias-test bytes. Prove the alias file differs from the screened
+    # one ONLY by the model judgments: reverting them must reproduce the recorded hash exactly.
+    alias_now = sha_file(ALIAS_JSONL)
+    if alias_now != scr.get("alias_sha256"):
+        reverted = _revert_alias_judgments(P.read_jsonl(ALIAS_JSONL))
+        if _jsonl_sha(reverted) != scr.get("alias_sha256"):
+            raise SystemExit("M17 INGEST REFUSED: the alias test differs from the screened bytes "
+                             "by more than the model judgments; re-run the screen instead.")
+        scr.setdefault("rebound_after_judgment_ingest", []).append(
+            {"from_alias_sha256": scr.get("alias_sha256"), "to_alias_sha256": alias_now,
+             "proof": "reverting judgment_status/judge reproduces the screened bytes",
+             "judge": JUDGE})
+        scr["alias_sha256"] = alias_now
     old_ok = scr.get("panel_sha256_sealed") or scr.get("panel_sha256")
-    scr.setdefault("rebound_after_judgment_ingest", []).append(
-        {"from_panel_sha256": old_ok, "to_panel_sha256": sha_file(P.PANEL_JSONL),
-         "fields_allowed_to_change": sorted(JUDGMENT_FIELDS), "judge": JUDGE})
-    scr["panel_sha256_sealed"] = sha_file(P.PANEL_JSONL)
+    if sha_file(P.PANEL_JSONL) != old_ok:
+        scr.setdefault("rebound_after_judgment_ingest", []).append(
+            {"from_panel_sha256": old_ok, "to_panel_sha256": sha_file(P.PANEL_JSONL),
+             "fields_allowed_to_change": sorted(JUDGMENT_FIELDS), "judge": JUDGE})
+        scr["panel_sha256_sealed"] = sha_file(P.PANEL_JSONL)
     write_json(P.SCREEN_JSON, scr)
+
+
+def _revert_alias_judgments(records):
+    out = []
+    for r in records:
+        r = dict(r)
+        if r.get("judgment_status") in ("VERIFIED_BY_MODEL", "REJECTED_BY_MODEL"):
+            r["judgment_status"] = "PENDING_HUMAN"
+            r.pop("judge", None)
+        out.append(r)
+    return out
+
+
+def _jsonl_sha(rows):
+    """sha256 of the bytes `panel_build._write_jsonl` would write for `rows`."""
+    return hashlib.sha256("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows)
+                          .encode("utf-8")).hexdigest()
 
 
 def doublecheck_slice(sheet, sample, seed):
@@ -229,8 +261,10 @@ def doublecheck_slice(sheet, sample, seed):
 def ingest(panel_log, senses_log, spot_log, judge=JUDGE, seed=17, verbose=True):
     log = (lambda *a: print(*a, flush=True)) if verbose else (lambda *a: None)
     sheet = P.read_jsonl(PENDING)
-    if any(r.get("judge") for r in sheet):
-        raise SystemExit("M17 INGEST REFUSED: the review sheet already carries judgments")
+    judged = [r for r in sheet if r.get("judge")]
+    if judged and any(r.get("judge") != judge for r in judged):
+        raise SystemExit("M17 INGEST REFUSED: the review sheet carries judgments by another judge; "
+                         "it is never overwritten")
     panel_rows = parse_report(panel_log)
     sense_rows = parse_report(senses_log)
     spot_rows = parse_report(spot_log)
@@ -240,8 +274,17 @@ def ingest(panel_log, senses_log, spot_log, judge=JUDGE, seed=17, verbose=True):
     sample = P.read_jsonl(SPOT_SAMPLE)
     spot_result, _ = apply_spotcheck(sample, spot_rows)
 
-    apply_sheet(sheet, panel_ans, judge)
-    apply_sheet(sheet, sense_ans, judge)
+    if judged:
+        # Re-run after an interrupted first pass: the sheet must already say exactly what the
+        # reports say; then the sheet step is a no-op and the rest is idempotent.
+        for line, (ans, _) in {**panel_ans, **sense_ans}.items():
+            if sheet[line - 1].get("relevant_yes_no") != ans:
+                raise SystemExit(f"M17 INGEST REFUSED: sheet line {line} says "
+                                 f"{sheet[line - 1].get('relevant_yes_no')!r}, report says {ans!r}")
+        log(f"[ingest] sheet already carries these {len(judged)} judgments by {judge}; re-run")
+    else:
+        apply_sheet(sheet, panel_ans, judge)
+        apply_sheet(sheet, sense_ans, judge)
 
     records = P.read_jsonl(P.PANEL_JSONL)
     before = [dict(r) for r in records]

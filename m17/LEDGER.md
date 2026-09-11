@@ -460,3 +460,19 @@ consequence (tighten the abbreviation filter, rebuild the pool before lock) stan
 `data.judging_amendment_a6` and `accepted_plan_revision_a6`; A3's human-judging plan is
 superseded and retained in the registry text. Briefs: `research/m17-astra-judge-*-brief-2026-09-11.md`;
 logs: `research/m17-astra-judge-*-2026-09-11.log`.
+
+## A6 executed — the three sheets model-judged and ingested (2026-09-11)
+
+Codex gpt-6-astra, read-only, from the row text alone (`research/m17-astra-judge-*-2026-09-11.log`).
+Panel rows: 205 yes / 155 no over 360 (selection 102/78, audit 103/77; 26 `unsure` notes, all
+answered `no`); 118 of 120 Kubernetes queries have at least one relevant candidate. Alias
+senses: 57 verified / 23 rejected (18 of the 21 truncated extractions rejected). Spot check:
+2 of 308 training pairs wrong (0.65 %), both incomplete R2 expansions; under the 5 % rule, the
+pool stands. `m17src/judgments_ingest.py` wrote the answers into the sheet
+(`judge = codex-gpt-6-astra`), the panel qrels (`MODEL_JUDGED`) and the alias statuses
+(`VERIFIED_BY_MODEL` / `REJECTED_BY_MODEL`), rebound the ancestry-screen receipt with a
+field-level proof that only judgment fields changed, and re-sealed the panel:
+`results/m17_panel_manifest.json` is **FINAL**, panel sha256 `d1b017a8a7a770ac…`, with the
+model-judged disclosure. Dylan's seeded double-check slice (20 rows, 10 senses, 20 pairs, model
+answers hidden) is `results/m17_human_doublecheck_slice.jsonl`; not a clock dependency.
+Record: `results/m17_judgments_ingest.json`. No development, protected or vector read.
