@@ -12,6 +12,10 @@
 | `research/m17-plan-review-loss-*.md`, `m17-plan-review-data-*.md` | The two Luna planning reviews behind `REVIEW.md` |
 | `research/m17-additional-avenues-*.md` | Follow-up idea shortlist that led to A1 |
 | `research/m17-astra-plan-review-*.md`, `m17-astra-plan-brief-*.md` | Codex Astra whole-plan review after A2, and its brief |
+| `research/m7-data-licensing.md` (Kubernetes row) | The completed step-2a licensing row: pinned SHA, clone route, quoted CC BY 4.0 text and carve-outs, acquisition-terms finding, decontamination coverage. The source is admitted for download only because this row is complete |
+| `research/m17-k8s-attribution.md` | The CC BY 4.0 attribution notice, source, pinned revision and modification statement. **Ships with any derived weights**; update the modification statement if the processing changes |
+| `results/m17_k8s_source_manifest.json` | Step-2a acquisition record: counts, bytes, JSONL sha256, dev-suite screen result and the deferred protected-screen blocker. No document text |
+| `work/m17/sources/kubernetes-website`, `work/m17/sources/k8s_docs_en.jsonl` | Gitignored clone at the pinned SHA and the extracted English docs (path, title, stripped text, sha256). Not admitted training data until the executor's protected screen passes |
 
 Reproduce diagnostics from the repository root using `.venv/bin/python
 m17src/planning_probe.py --gpu` or `--followup`. Both refuse to overwrite their existing result.

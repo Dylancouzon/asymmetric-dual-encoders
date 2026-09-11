@@ -109,3 +109,33 @@ none required an owner ruling beyond the ones already recorded. The Kubernetes s
 proposal until its licensing row is completed. Still planning only.
 
 Still planning only. Nothing trained, downloaded, scored or published; no protected access.
+
+## Step 2a — Kubernetes documentation licensing row and acquisition (2026-09-11)
+
+Pre-clock, no GPU, no protected access. The licensing row in `research/m7-data-licensing.md` is
+complete, so the source is **admitted for download**; the earlier draft's "code samples Apache
+2.0" claim was wrong and is corrected in the row — a recursive listing of the pinned tree
+(15,566 paths) holds exactly one licence file, the root CC BY 4.0 `LICENSE`, and `content/en/
+examples` carries no separate grant. Licence text and the publisher's own footer statement are
+quoted with URLs; the CC BY 4.0 trademark and no-endorsement carve-outs are quoted verbatim.
+Revision pinned by `git ls-remote`: `17133089068629ec12ca15c1bdf36a60d2671a74`. Attribution
+artifact to ship with derived weights: `research/m17-k8s-attribution.md`. Acquisition-terms
+finding: none restricting training — an anonymous `git clone` presents no clickwrap and no
+separate download agreement, unlike the 2024 StackExchange dump terms.
+
+Acquired with `git clone --filter=blob:none` then checkout of that SHA into gitignored
+`work/m17/sources/kubernetes-website` (submodules not fetched). English `content/en/docs` only
+was extracted to `work/m17/sources/k8s_docs_en.jsonl`; counts, bytes and hashes are in
+`results/m17_k8s_source_manifest.json`. This admits nothing to training: every document must
+still pass the executor's protected screen and the registry's new-source share and per-domain
+caps.
+
+Decontamination: screened against the development suite through the approved fingerprint
+interface, in `m10src/cov_screen.py::screen`'s direction and at its threshold. Over 5,553,821
+dev documents and 12,772 dev queries: 0 exact and 5 near-matched k8s documents (0.302%), all on
+the document side; the flagged paths are named in the manifest and must be dropped or held out
+before training. One of them is the repository's own `content/en/docs/test.md`. The six, the
+reserved four and LoTTE are **deferred, not waived** — every interface reaching them
+materializes protected payloads in-process, which pre-clock development may not do; that screen
+belongs inside the M17 executor via `protected10.build()` + `protected10.hits`. Recorded as a
+blocker in the manifest.
