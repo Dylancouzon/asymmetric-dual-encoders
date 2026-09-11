@@ -183,7 +183,8 @@ def test_excluded_families_are_removed_when_the_file_exists(tmp_path, monkeypatc
     s = A.build(seed=0, sample_fraction=0.02, exclude_path=None)
     fams = sorted({json.loads(l)["family_id"] for l in open(A.POOL, encoding="utf-8")})
     ex = root / "exclude.json"
-    ex.write_text(json.dumps({"families": fams}))
+    ex.write_text(json.dumps({"families": fams, "excluded_alias_terms": [],
+                              "excluded_evidence_doc_groups": []}))
     s2 = A.build(seed=0, sample_fraction=0.02, exclude_path=str(ex))
     assert s["pairs"] > 0 and s2["pairs"] == 0
     assert s2["counters"]["pairs_removed_by_excluded_families"] == s["pairs"]
@@ -224,10 +225,50 @@ def test_heldout_text_shas_remove_pairs_even_when_family_ids_differ(tmp_path, mo
             for l in open(A.POOL, encoding="utf-8")]
     ex = root / "exclude.json"
     ex.write_text(json.dumps({"excluded_family_ids": ["fam:unrelated"],
-                              "excluded_text_shas": shas}))
+                              "excluded_text_shas": shas, "excluded_alias_terms": [],
+                              "excluded_evidence_doc_groups": []}))
     s2 = A.build(seed=0, sample_fraction=0.02, exclude_path=str(ex))
     assert s["pairs"] > 0 and s2["pairs"] == 0
     assert s2["excluded_families"]["text_shas"] == len(shas)
+
+
+def test_the_builders_exclusion_file_actually_removes_training_pairs(tmp_path, monkeypatch):
+    """End to end through the real producer and consumer: `alias_test_build.write_exclusions`
+    writes the file and `alias_pairs.build` reads it. Family ids and full-view shas alone
+    removed nothing (`pairs_removed_by_excluded_families: 0` in the real summary); the held-out
+    TERMS and the evidence document group are what must bite."""
+    import alias_test_build as AT
+
+    doc = "The Pod Disruption Budget (PDB) limits how many pods go down at once."
+    other = "Every Pod Disruption Budget is evaluated by the eviction API before a drain."
+    root = _world(tmp_path, monkeypatch, docs={"squad-train": [doc, other]})
+    before = A.build(seed=0, sample_fraction=0.02, exclude_path=None)
+    assert before["pairs"] > 0
+
+    held_out = [{
+        "family_id": "fam:heldout", "view_a": "Pod Disruption Budget", "view_b": "PDB",
+        "view_a_sha": S.group_id(S.normalize("Pod Disruption Budget")),
+        "view_b_sha": S.group_id(S.normalize("PDB")),
+        "citation": {"doc_id": "d0", "sentence": doc},
+        # a document that is NOT one of the training carriers, so only the terms can match
+        "evidence_doc_group": S.group_id(S.normalize("some other evidence document")),
+    }]
+    ex = root / "exclusions.json"
+    blob = AT.write_exclusions(held_out, [], path=ex)
+    assert blob["excluded_alias_terms"] == ["pdb", "pod disruption budget"]
+    assert blob["excluded_evidence_doc_groups"] == [held_out[0]["evidence_doc_group"]]
+
+    after = A.build(seed=0, sample_fraction=0.02, exclude_path=str(ex))
+    assert after["pairs"] == 0
+    assert after["counters"]["pairs_removed_by_excluded_families"] == before["pairs"]
+    assert after["excluded_families"]["alias_terms"] == 2
+
+    # and the evidence document group alone also removes its carriers
+    held_out[0]["view_a"] = held_out[0]["view_b"] = "unrelated phrase"
+    held_out[0]["evidence_doc_group"] = S.group_id(S.normalize(doc))
+    AT.write_exclusions(held_out, [], path=ex)
+    by_doc = A.build(seed=0, sample_fraction=0.02, exclude_path=str(ex))
+    assert by_doc["counters"]["pairs_removed_by_excluded_families"] >= 1
 
 
 def test_space_padded_parentheses_are_still_definitions():

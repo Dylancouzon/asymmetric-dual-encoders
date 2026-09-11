@@ -41,23 +41,45 @@ def _check_path(p):
 
 # ---- exact dense retrieval -----------------------------------------------------------------
 
-def search(query_vecs, doc_vecs, k=10, doc_ids=None, block=4096):
-    """Exact inner product over L2-normalized vectors. Returns a run dict {qi: {docid: score}}.
+DOC_BLOCK = 65536       # 4096 queries x 65536 documents of float32 is 1 GiB per score block
 
-    Blocked over queries so a large corpus is one pass per block rather than one materialized
-    (n_queries x n_docs) score matrix.
+
+def search(query_vecs, doc_vecs, k=10, doc_ids=None, block=4096, doc_block=DOC_BLOCK,
+           query_ids=None):
+    """Exact inner product over L2-normalized vectors. Returns a run dict {qkey: {docid: score}}.
+
+    Blocked over queries AND over documents: a 4096 x 5.2M score matrix is 85 GB, so the corpus
+    is walked in `doc_block` slices and each slice's top-k is merged. The merge is exact —
+    every block contributes its own top-k, so no document that belongs in the global top-k can
+    be dropped — and ties are broken by ascending document id, the same rule the cache builder
+    uses, so the result does not depend on the block size.
+
+    `query_ids` keys the run by the caller's own query ids instead of positional integers; the
+    panel's qrels/domains/families are keyed that way (`results/m17_panel_manifest.json`
+    reader_contract).
     """
     q = np.asarray(query_vecs, dtype=np.float32)
     d = np.asarray(doc_vecs, dtype=np.float32)
     ids = list(doc_ids) if doc_ids is not None else list(range(d.shape[0]))
+    if query_ids is not None and len(query_ids) != q.shape[0]:
+        raise ValueError(f"{len(query_ids)} query_ids for {q.shape[0]} query vectors")
     kk = min(k, d.shape[0])
     run = {}
     for lo in range(0, q.shape[0], block):
-        s = q[lo:lo + block] @ d.T
-        top = np.argpartition(-s, kk - 1, axis=1)[:, :kk]
-        for r in range(s.shape[0]):
-            idx = top[r][np.argsort(-s[r, top[r]], kind="stable")]
-            run[lo + r] = {ids[j]: float(s[r, j]) for j in idx}
+        qb = q[lo:lo + block]
+        cand = [[] for _ in range(qb.shape[0])]
+        for dlo in range(0, d.shape[0], doc_block):
+            s = qb @ d[dlo:dlo + doc_block].T
+            m = min(kk, s.shape[1])
+            if m <= 0:
+                continue
+            top = np.argpartition(-s, m - 1, axis=1)[:, :m]
+            for r in range(s.shape[0]):
+                cand[r].extend((float(s[r, j]), ids[dlo + j]) for j in top[r])
+        for r in range(qb.shape[0]):
+            key = query_ids[lo + r] if query_ids is not None else lo + r
+            best = sorted(cand[r], key=lambda t: (-t[0], t[1]))[:kk]
+            run[key] = {doc: sc for sc, doc in best}
     return run
 
 
@@ -100,15 +122,34 @@ def per_domain(values, domains):
 
 def paired_family_bootstrap(a, b, families, replicates=10000, confidence=0.95, seed=0,
                             domains=None):
-    """Interval on mean(a) - mean(b), resampling FAMILIES with replacement.
+    """Interval on the reported statistic's difference, resampling FAMILIES with replacement.
 
-    `domains` stratifies the resample when given, so a domain does not vanish from a replicate.
+    With `domains`, the statistic is the EQUAL-WEIGHT DOMAIN MACRO — the same quantity
+    `per_domain()` reports — recomputed inside every replicate, not the query mean. The two
+    differ badly whenever domains have unequal sizes: 100 queries improving by 1.0 in one domain
+    and one query worsening by 1.0 in another is a macro difference of 0 and a query mean of
+    0.98. The query-weighted estimate is kept beside it, labelled.
+
+    `domains` also stratifies the resample, so a domain does not vanish from a replicate.
     A wide interval here is a statement about this panel's size, not evidence of equivalence.
     """
     keys = sorted(set(a) & set(b))
     if not keys:
         return {"delta": 0.0, "ci": [None, None], "n_families": 0}
     delta = np.asarray([a[k] - b[k] for k in keys], dtype=np.float64)
+    if domains:
+        dom_names = sorted({domains.get(k, "general") for k in keys})
+        dom_ix = {d: i for i, d in enumerate(dom_names)}
+        dom_of = np.asarray([dom_ix[domains.get(k, "general")] for k in keys], dtype=np.int64)
+
+        def statistic(idx):
+            sums = np.bincount(dom_of[idx], weights=delta[idx], minlength=len(dom_names))
+            cnts = np.bincount(dom_of[idx], minlength=len(dom_names))
+            hit = cnts > 0
+            return float((sums[hit] / cnts[hit]).mean())
+    else:
+        def statistic(idx):
+            return float(delta[idx].mean())
     fam = np.asarray([families.get(k, k) for k in keys], dtype=object)
     groups = {}
     for i, f in enumerate(fam):
@@ -124,10 +165,14 @@ def paired_family_bootstrap(a, b, families, replicates=10000, confidence=0.95, s
         for fams in strata.values():
             sel = rng.integers(0, len(fams), size=len(fams))
             picked.extend(fams[i] for i in sel)
-        draws[r] = delta[np.concatenate(picked)].mean()
+        draws[r] = statistic(np.concatenate(picked))
     lo = float(np.percentile(draws, 100 * (1 - confidence) / 2))
     hi = float(np.percentile(draws, 100 * (1 + confidence) / 2))
-    return {"delta": float(delta.mean()), "ci": [lo, hi], "confidence": confidence,
+    all_idx = np.arange(len(keys))
+    return {"delta": statistic(all_idx),
+            "statistic": "equal-weight domain macro" if domains else "query mean",
+            "delta_query_mean": float(delta.mean()),
+            "ci": [lo, hi], "confidence": confidence,
             "replicates": replicates, "n_families": len(groups), "n_queries": len(keys),
             "_note": "paired over query families; excludes training-seed variation"}
 
@@ -183,11 +228,28 @@ def _rankdata(a):
 # ---- one evaluation ------------------------------------------------------------------------
 
 def evaluate(query_vecs, doc_vecs, qrels, domains, families=None, doc_ids=None, bm25_run=None,
-             baseline_ndcg=None, reg=None, k=10, seed=0):
-    """One artifact, one declared corpus. Returns the full descriptive block."""
+             baseline_ndcg=None, reg=None, k=10, seed=0, query_ids=None):
+    """One artifact, one declared corpus. Returns the full descriptive block.
+
+    `query_ids` (the panel's own `query_id` strings) keys the run, so qrels/domains/families
+    keyed that way line up. A key-set mismatch raises here rather than silently scoring every
+    query as unjudged and every domain as 'general'.
+    """
     reg = reg or registry()
     prefetch = int(reg["serving"]["prefetch"])
-    run = search(query_vecs, doc_vecs, k=max(k, prefetch), doc_ids=doc_ids)
+    if query_ids is not None:
+        keys = list(query_ids)
+        if len(set(keys)) != len(keys):
+            raise ValueError("query_ids contains duplicates; each query needs one key")
+        supplied = [("qrels", qrels), ("domains", domains)]
+        if families:
+            supplied.append(("families", families))
+        for name, m in supplied:
+            if set(m) != set(keys):
+                miss, extra = sorted(set(keys) - set(m))[:3], sorted(set(m) - set(keys))[:3]
+                raise ValueError(f"{name} keys do not match query_ids: missing {miss}, "
+                                 f"unexpected {extra}")
+    run = search(query_vecs, doc_vecs, k=max(k, prefetch), doc_ids=doc_ids, query_ids=query_ids)
     nd = ndcg_at_k(run, qrels, k)
     rc = recall_at_k(run, qrels, k)
     out = {"n_queries": len(run), "n_docs": int(np.asarray(doc_vecs).shape[0]),

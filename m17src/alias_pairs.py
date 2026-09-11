@@ -47,8 +47,9 @@ import re
 import sys
 from pathlib import Path
 
-from support_manifest import (MANIFEST_DIR, REPO, TRAIN, WORK, group_id, iter_k8s, iter_store,
-                              k8s_excluded_paths, load_exclusions, normalize, rel, sha256_file)
+from support_manifest import (MANIFEST_DIR, REPO, TRAIN, WORK, admit_read, group_id, iter_k8s,
+                              iter_store, k8s_excluded_paths, load_exclusions, normalize, rel,
+                              sha256_file)
 
 K8S_CLONE = WORK / "m17" / "sources" / "kubernetes-website"
 GLOSSARY = K8S_CLONE / "content" / "en" / "docs" / "reference" / "glossary"
@@ -172,7 +173,7 @@ def glossary_aliases():
     if not GLOSSARY.is_dir():
         return out
     for p in sorted(GLOSSARY.glob("*.md")):
-        head = p.read_text(encoding="utf-8").split("---\n")
+        head = admit_read(p).read_text(encoding="utf-8").split("---\n")
         if len(head) < 3:
             continue
         fm = head[1]
@@ -293,16 +294,29 @@ def build(seed, sample_fraction, exclude_path):
     counters["duplicate_pairs_dropped"] = len(pairs) - len(deduped)
 
     ep = Path(exclude_path) if exclude_path else EXCLUDE_DEFAULT
-    fams, shas = load_exclusions(ep)
-    if fams or shas:
-        kept = [p for p in deduped
-                if p["family_id"] not in fams
-                and group_id(normalize(p["view_a"])) not in shas
-                and group_id(normalize(p["view_b"])) not in shas]
+    ex = load_exclusions(ep)
+    fams, shas = ex["families"], ex["text_shas"]
+    terms, docgroups = ex["terms"], ex["doc_groups"]
+
+    def held_out(p):
+        """A training pair is held out if it shares a family, a whole view text, the alias
+        TERM ITSELF (either form), or the evidence document of a held-out judged pair. The
+        first two alone removed nothing: a judged "PDB"/"Pod Disruption Budget" pair and a
+        carrier sentence mined from the same document share no full-text sha."""
+        return (p["family_id"] in fams
+                or group_id(normalize(p["view_a"])) in shas
+                or group_id(normalize(p["view_b"])) in shas
+                or normalize(p["form_a"]) in terms
+                or normalize(p["form_b"]) in terms
+                or p["doc_group"] in docgroups)
+
+    if fams or shas or terms or docgroups:
+        kept = [p for p in deduped if not held_out(p)]
         counters["pairs_removed_by_excluded_families"] = len(deduped) - len(kept)
         deduped = kept
-        exclusion_note = (f"applied {ep}: {len(fams)} family ids and {len(shas)} normalized-text "
-                          "shas; the text shas are the interoperable key when family ids differ")
+        exclusion_note = (f"applied {ep}: {len(fams)} family ids, {len(shas)} normalized-text "
+                          f"shas, {len(terms)} held-out alias terms and {len(docgroups)} "
+                          "evidence document groups")
     else:
         exclusion_note = (f"{ep} absent or empty: no held-out alias test families exist yet; the "
                           "pool is unfiltered and MUST be re-filtered after that step writes it")
@@ -332,8 +346,11 @@ def build(seed, sample_fraction, exclude_path):
                             for s in sorted({p["source"] for p in deduped})},
         "counters": counters,
         "rule_gaps": gaps,
-        "excluded_families": {"path": rel(ep), "applied": bool(fams or shas),
+        "excluded_families": {"path": rel(ep),
+                              "applied": bool(fams or shas or terms or docgroups),
                               "family_ids": len(fams), "text_shas": len(shas),
+                              "alias_terms": len(terms),
+                              "evidence_doc_groups": len(docgroups),
                               "note": exclusion_note},
         "spotcheck": {"path": rel(SPOTCHECK), "seed": seed,
                       "fraction": sample_fraction, "n": len(sample),
@@ -356,7 +373,8 @@ def main(argv=None):
     ap.add_argument("--seed", type=int, default=0, help="spot-check sample seed (default 0)")
     ap.add_argument("--sample-fraction", type=float, default=0.02)
     ap.add_argument("--exclude-families", default=None,
-                    help="JSON with {'families': [...]} of held-out alias test families to remove; "
+                    help="the exclusion file m17src/alias_test_build.py writes (family ids, "
+                         "view-text shas, held-out alias terms and evidence document groups); "
                          f"defaults to {EXCLUDE_DEFAULT}, and proceeds with a note if absent")
     a = ap.parse_args(argv)
     build(a.seed, a.sample_fraction, a.exclude_families)

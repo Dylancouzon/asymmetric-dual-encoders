@@ -61,7 +61,8 @@ for _p in (REPO, REPO / "m17src"):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from common import RESULTS, WORK, registry, sha_file, sha_json, write_json  # noqa: E402
+from common import (RESULTS, WORK, admit_read, registry, sha_file, sha_json,  # noqa: E402
+                    write_json)
 
 TRAIN = REPO / "work" / "train"
 MANIFEST_DIR = WORK / "manifest"
@@ -243,11 +244,11 @@ def classify(text, source_domain="general", min_score=MIN_SCORE):
 # --------------------------------------------------------------------- inputs
 
 def load_source(name):
-    return json.loads(_check_path(TRAIN / "sources" / f"{name}.json").read_text())
+    return json.loads(admit_read(_check_path(TRAIN / "sources" / f"{name}.json")).read_text())
 
 
 def load_store(name):
-    b = json.loads(_check_path(TRAIN / "stores" / f"{name}.json").read_text())
+    b = json.loads(admit_read(_check_path(TRAIN / "stores" / f"{name}.json")).read_text())
     return b["ids"], b["texts"]
 
 
@@ -644,6 +645,7 @@ def draft(seed=SEED, verbose=True, min_score=MIN_SCORE, reuse_cache=False):
     _write_jsonl(SELECTION_JSONL, [r for r in records if r["partition"] == "selection"])
     _write_jsonl(AUDIT_JSONL, [r for r in records if r["partition"] == "audit"])
     _write_jsonl(CORPUS_JSONL, corpus)
+    assert_pending_unjudged(PENDING_OUT)
     _write_jsonl(PENDING_OUT, pending)
     draft_rec = {
         "seed": seed, "panel_sources": PANEL_SOURCES,
@@ -697,8 +699,29 @@ def _write_jsonl(path, rows):
 
 
 def read_jsonl(path):
-    with open(path) as f:
+    with open(admit_read(_check_path(path))) as f:
         return [json.loads(line) for line in f if line.strip()]
+
+
+def assert_pending_unjudged(path=None):
+    """Refuse to rewrite the human review sheet once anyone has answered a row.
+
+    Rebuilding the panel or the alias test rewrites `relevant_yes_no`/`judge` as empty, which
+    destroys judging work that cannot be recovered from any other artifact. There is no merge
+    flag: move or archive the answered sheet deliberately, then rebuild.
+    """
+    path = Path(path or PENDING_OUT)
+    if not path.exists():
+        return 0
+    rows = read_jsonl(path)
+    judged = [r for r in rows
+              if r.get("relevant_yes_no") not in (None, "") or r.get("judge") not in (None, "")]
+    if judged:
+        raise SystemExit(
+            f"M17 PANEL REFUSED: {path} already carries {len(judged)} answered review rows "
+            "(relevant_yes_no or judge filled in). Rebuilding would erase them. Move the sheet "
+            "aside deliberately if the panel really must be rebuilt.")
+    return len(rows)
 
 
 # --------------------------------------------------------------------- ancestry screen
@@ -857,6 +880,10 @@ def run_screen(verbose=True):
     out = screen(items, verbose=verbose)
     out["n_panel_queries"] = len(records)
     out["n_alias_views"] = len(items) - len(records)
+    # Bind the receipt to the exact files it screened: a rebuilt panel whose new queries were
+    # never streamed must not inherit this screen's "clean" labels (`seal` checks these).
+    out["panel_sha256"] = sha_file(PANEL_JSONL)
+    out["alias_sha256"] = sha_file(alias) if alias.exists() else None
     write_json(SCREEN_JSON, out)
     if verbose:
         print(f"[screen] written {SCREEN_JSON}")
@@ -883,6 +910,28 @@ def expected_se(n_families, sd_delta=(0.15, 0.25)):
                                         for sd in (0.30, 0.40)]}
 
 
+def _assert_screen_matches(scr):
+    """The screen must be the one that ran on THESE files.
+
+    `panel_sha256_sealed` is the hash sealing itself leaves behind after it writes the exposure
+    labels into `panel.jsonl`, so re-sealing an unchanged panel is idempotent while a redrafted
+    panel is refused.
+    """
+    alias = WORK / "alias" / "alias_test.jsonl"
+    now = sha_file(PANEL_JSONL)
+    if now not in (scr.get("panel_sha256"), scr.get("panel_sha256_sealed")):
+        raise SystemExit(
+            f"M17 PANEL REFUSED: {SCREEN_JSON} was written for panel sha256 "
+            f"{str(scr.get('panel_sha256'))[:16]}, but {PANEL_JSONL} is now {now[:16]}. Re-run "
+            "--stage screen: a stale receipt would certify unscreened queries as clean.")
+    alias_now = sha_file(alias) if alias.exists() else None
+    if alias_now != scr.get("alias_sha256"):
+        raise SystemExit(
+            f"M17 PANEL REFUSED: {SCREEN_JSON} was written for alias sha256 "
+            f"{str(scr.get('alias_sha256'))[:16]}, but the alias test is now "
+            f"{str(alias_now)[:16]}. Re-run --stage screen.")
+
+
 def seal(verbose=True):
     reg = registry()
     log = (lambda *a: print(*a, flush=True)) if verbose else (lambda *a: None)
@@ -904,7 +953,9 @@ def seal(verbose=True):
     if missing:
         raise SystemExit(f"M17 PANEL REFUSED: {len(missing)} judged documents are not in the "
                          f"declared corpus, e.g. {missing[:3]}.")
-    scr = json.loads(SCREEN_JSON.read_text()) if SCREEN_JSON.exists() else None
+    scr = json.loads(admit_read(SCREEN_JSON).read_text()) if SCREEN_JSON.exists() else None
+    if scr:
+        _assert_screen_matches(scr)
     all_streams = bool(scr) and all(
         any(name.startswith(exp) for name in scr["per_stream"])
         for exp in scr["streams_expected"])
@@ -917,6 +968,9 @@ def seal(verbose=True):
     _write_jsonl(PANEL_JSONL, records)
     _write_jsonl(SELECTION_JSONL, [r for r in records if r["partition"] == "selection"])
     _write_jsonl(AUDIT_JSONL, [r for r in records if r["partition"] == "audit"])
+    if scr:      # sealing rewrote panel.jsonl; keep the receipt bound to the sealed bytes
+        scr["panel_sha256_sealed"] = sha_file(PANEL_JSONL)
+        write_json(SCREEN_JSON, scr)
 
     per_domain = {}
     for dom in reg["data"]["panel_domains"]:

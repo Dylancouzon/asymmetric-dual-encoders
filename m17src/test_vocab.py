@@ -30,6 +30,46 @@ def test_discovery_skips_already_single_tokens(tok_and_vocab):
     assert "k8s" in stats and "storage" in single and "storage" not in stats
 
 
+def test_a_single_unk_piece_is_a_candidate_not_an_existing_token(tok_and_vocab):
+    """`[UNK]` means the base vocabulary cannot represent the term at all — the strongest case
+    for a row, not a reason to record it as already covered."""
+    tok, _ = tok_and_vocab
+    assert tok.encode("zzqq", add_special_tokens=False).tokens == ["[UNK]"]
+    qs = [{"text": "zzqq storage", "qid": "q1", "source_doc": "d1", "domain": "general"}]
+    stats, single = V.discover(qs, [0.5], tok)
+    assert "zzqq" in stats and "zzqq" not in single
+    assert "storage" in single
+
+
+def test_discovery_requires_the_source_document(tok_and_vocab):
+    tok, _ = tok_and_vocab
+    with pytest.raises(ValueError, match="source_doc"):
+        V.discover([{"text": "k8s ingress", "qid": "q1", "domain": "general"}], [0.5], tok)
+
+
+def test_discovery_refuses_two_domains_for_one_document(tok_and_vocab):
+    """A document's domain comes from its own text; two labels mean it came from the query."""
+    tok, _ = tok_and_vocab
+    qs = [{"text": "k8s alpha", "qid": "q0", "source_doc": "dA", "domain": "medicine"},
+          {"text": "k8s beta", "qid": "q1", "source_doc": "dA", "domain": "finance"}]
+    with pytest.raises(ValueError, match="labelled"):
+        V.discover(qs, [0.5, 0.5], tok)
+
+
+def test_a_supplied_abbreviation_inventory_is_the_authority(reg):
+    """`iam` carries vowels and no digit, so the fallback regex misses it and it would slip
+    past the twice-minima policy; the mined inventory must decide."""
+    assert not V.is_abbreviation("iam")
+    stats = {"iam": _stats(term="iam", docs=range(3), contexts=range(5), residual=0.9)}
+    small = {**reg, "data": {**reg["data"], "new_term_min_distinct_source_documents": 2,
+                             "new_term_min_distinct_training_contexts": 3}}
+    loose = V.select(stats, small, single_token=())
+    assert "iam" in [t["term"] for t in loose["terms"]]        # fallback heuristic misses it
+    strict = V.select(stats, small, abbreviations={"iam"}, single_token=())
+    assert "iam" in strict["dropped"]["abbreviation_dropped"]
+    assert "iam" not in [t["term"] for t in strict["terms"]]
+
+
 def test_discovery_deduplicates_repeated_query_text(tok_and_vocab):
     tok, _ = tok_and_vocab
     qs = [{"text": f"k8s ingress {w}", "qid": f"q{i}", "source_doc": f"d{i}",

@@ -69,6 +69,7 @@ ABBR_RE = re.compile(r"\(([A-Z][A-Za-z]{1,6}s?)\)")
 MARKER_RE = re.compile(r"\b(?:also known as|also called|short for|abbreviated as|"
                        r"sometimes called)\b", re.I)
 MAX_EXPANSION_WORDS = 6
+MARKER_PHRASE_WORDS = 4          # words kept either side of an "also known as" marker
 BAD_EXPANSION = re.compile(r"\d|[/.]|^v\d|http|www|^see$|^the$")
 # Markdown link targets sit between an expansion and its acronym ("[Node Feature Discovery]
 # (https://...) (NFD)") and would be read as the expansion. Dropped before extraction.
@@ -129,19 +130,32 @@ def extract(doc_id, text, source, domain_hint="general"):
                 break
     for m in MARKER_RE.finditer(body):
         lo = max(body.rfind(". ", 0, m.start()), body.rfind("(", 0, m.start())) + 1
-        canon = " ".join(WORD_RE.findall(body[lo:m.start()])[-4:])
+        avail = WORD_RE.findall(body[lo:m.start()])
+        canon_words = avail[-MARKER_PHRASE_WORDS:]
+        canon = " ".join(canon_words)
         seg = body[m.end():m.end() + 80]
         cut = min([i for i in (seg.find(c) for c in ",.;)") if i >= 0] or [len(seg)])
-        alias = " ".join(WORD_RE.findall(seg[:cut])[:4])
+        alias_words = WORD_RE.findall(seg[:cut])
+        alias = " ".join(alias_words[:MARKER_PHRASE_WORDS])
         if not canon or not alias:
             continue
         if (not alias or not canon or P.normalize(alias) == P.normalize(canon)
                 or BAD_EXPANSION.search(alias.lower()) or BAD_EXPANSION.search(canon.lower())):
             continue
+        # The phrase is recovered by word slicing, so a canonical name longer than the cap is
+        # silently beheaded: "Balanced Random Access Distributed Storage System, also known as
+        # BRADSS" yields "Access Distributed Storage System", an equivalence the source never
+        # stated. Truncated (or mid-phrase) extractions are routed to a human, not verified.
+        truncated = (len(avail) > MARKER_PHRASE_WORDS
+                     or len(alias_words) > MARKER_PHRASE_WORDS
+                     or not canon_words[0][:1].isupper())
         out.append({"short": alias, "long": canon, "kind": "alias-canonical",
+                    "truncated": truncated,
                     "citation_sentence": sentence_of(body, m.start())})
     for o in out:
-        o.update({"doc_id": doc_id, "source": source, "domain_hint": domain_hint})
+        o.setdefault("truncated", False)
+        o.update({"doc_id": doc_id, "source": source, "domain_hint": domain_hint,
+                  "evidence_doc_group": P.group_id(P.normalize(text))})
     return out
 
 
@@ -160,6 +174,48 @@ def gather(verbose=True):
         log(f"[alias] {store}: {len(found) - n0} raw equivalences from {len(ids):,} documents")
         del ids, texts
     return found
+
+
+def write_exclusions(records, panel_rows, path=None):
+    """Write the file `alias_pairs.py` and `support_manifest.py` read, and return it.
+
+    Family ids and whole-view-text shas alone excluded NOTHING from the real training pool
+    (`pairs_removed_by_excluded_families: 0`): a training carrier sentence shares neither with a
+    held-out bare pair. So each held-out pair also contributes its normalized short form and
+    expansion, and its evidence document's group id — `group_id(normalize(document text))`,
+    the same key `support_manifest.document_pass` writes.
+    """
+    fam_ids = sorted({r["family_id"] for r in records})
+    panel_fams = sorted({r["family_id"] for r in panel_rows})
+    panel_shas = sorted({r["normalized_text_sha"] for r in panel_rows})
+    text_shas = sorted({r["view_a_sha"] for r in records} | {r["view_b_sha"] for r in records})
+    doc_ids = sorted({r["citation"]["doc_id"] for r in records})
+    terms = sorted({P.normalize(r["view_a"]) for r in records}
+                   | {P.normalize(r["view_b"]) for r in records})
+    doc_groups = sorted({r["evidence_doc_group"] for r in records})
+    blob = {
+        "milestone": "M17", "step": "2c", "date": "2026-09-11",
+        "purpose": ("Families and keys that must NOT appear in M17 training pairs or training "
+                    "queries: the held-out alias test and the judged panel. Read by "
+                    "m17src/alias_pairs.py and m17src/support_manifest.py."),
+        "key_conventions": ("family_id = 'fam:' + sha256(union-find root)[:16] (this script's "
+                            "own ids). The interoperable keys are the sha256(normalized text)[:16] "
+                            "lists, which use m17src/support_manifest.group_id exactly: match on "
+                            "those if the family ids differ. `excluded_alias_terms` are "
+                            "normalized short forms and expansions; "
+                            "`excluded_evidence_doc_groups` are group_id(normalize(document "
+                            "text)) of the documents that evidence a held-out pair."),
+        "excluded_family_ids": sorted(set(fam_ids) | set(panel_fams)),
+        "alias_test": {"family_ids": fam_ids, "n_pairs": len(records),
+                       "excluded_text_shas": text_shas, "citation_doc_ids": doc_ids},
+        "panel": {"family_ids": panel_fams, "excluded_text_shas": panel_shas,
+                  "n_queries": len(panel_rows)},
+        "excluded_text_shas": sorted(set(text_shas) | set(panel_shas)),
+        "excluded_alias_terms": terms,
+        "excluded_evidence_doc_groups": doc_groups,
+    }
+    write_json(path or FAMILIES_OUT, blob)
+    return blob
 
 
 def build(seed=SEED, target=TARGET_PAIRS, verbose=True):
@@ -209,6 +265,7 @@ def build(seed=SEED, target=TARGET_PAIRS, verbose=True):
     records, pending = [], []
     for i, p in enumerate(picked):
         ambiguous = len(senses[P.normalize(p["short"])]) > 1
+        truncated = bool(p.get("truncated"))
         domain = p["domain_hint"]
         if domain == "general":
             domain, _ = P.classify(p["long"] + " " + p["citation_sentence"])
@@ -223,54 +280,44 @@ def build(seed=SEED, target=TARGET_PAIRS, verbose=True):
             "family_id": P.family_id(uf.find(f"pair:{i:04d}")),
             "source": p["source"],
             "citation": {"doc_id": p["doc_id"], "sentence": p["citation_sentence"]},
-            "judgment_status": "PENDING_HUMAN" if ambiguous else "VERIFIED_BY_SOURCE",
+            "judgment_status": ("PENDING_HUMAN" if (ambiguous or truncated)
+                                else "VERIFIED_BY_SOURCE"),
             "ambiguous_sense": ambiguous,
+            "extraction_truncated": truncated,
+            "evidence_doc_group": p["evidence_doc_group"],
             "distinct_expansions_seen": sorted(senses[P.normalize(p["short"])])[:6],
             "view_a_sha": P.group_id(P.normalize(p["long"])),
             "view_b_sha": P.group_id(P.normalize(p["short"])),
             "held_out_of_training": True,
         }
         records.append(rec)
-        if ambiguous:
+        if ambiguous or truncated:
+            question = (f"Does the bare query {p['short']!r} mean {p['long']!r} here? "
+                        f"Other expansions seen: "
+                        f"{sorted(senses[P.normalize(p['short'])])[:4]}") if ambiguous else (
+                f"The extracted phrase {p['long']!r} hit the {MARKER_PHRASE_WORDS}-word cap or "
+                "does not start at a phrase boundary. Is it the complete name the sentence "
+                "states?")
             pending.append({
                 "kind": "alias-pair", "pair_id": pid, "query": p["short"],
                 "domain": domain, "partition": "alias-test",
+                "reason": "ambiguous-sense" if ambiguous else "truncated-extraction",
                 "candidate_doc_id": p["doc_id"],
                 "candidate_title": p["long"],
                 "candidate_first_300_chars": p["citation_sentence"],
-                "question": (f"Does the bare query {p['short']!r} mean {p['long']!r} here? "
-                             f"Other expansions seen: "
-                             f"{sorted(senses[P.normalize(p['short'])])[:4]}"),
+                "question": question,
                 "relevant_yes_no": None, "judge": None, "notes": ""})
 
     ALIAS_DIR.mkdir(parents=True, exist_ok=True)
     P._write_jsonl(ALIAS_JSONL, records)
 
     # ---- the exclusion file the training-pair builder reads
-    fam_ids = sorted({r["family_id"] for r in records})
     panel_rows = P.read_jsonl(P.PANEL_JSONL) if P.PANEL_JSONL.exists() else []
-    panel_fams = sorted({r["family_id"] for r in panel_rows})
-    panel_shas = sorted({r["normalized_text_sha"] for r in panel_rows})
-    text_shas = sorted({r["view_a_sha"] for r in records} | {r["view_b_sha"] for r in records})
-    doc_ids = sorted({r["citation"]["doc_id"] for r in records})
-    write_json(FAMILIES_OUT, {
-        "milestone": "M17", "step": "2c", "date": "2026-09-11",
-        "purpose": ("Families and keys that must NOT appear in M17 training pairs or training "
-                    "queries: the held-out alias test and the judged panel. Read by "
-                    "m17src/alias_pairs.py and m17src/support_manifest.py."),
-        "key_conventions": ("family_id = 'fam:' + sha256(union-find root)[:16] (this script's "
-                            "own ids). The interoperable keys are the sha256(normalized text)[:16] "
-                            "lists, which use m17src/support_manifest.group_id exactly: match on "
-                            "those if the family ids differ."),
-        "excluded_family_ids": sorted(set(fam_ids) | set(panel_fams)),
-        "alias_test": {"family_ids": fam_ids, "n_pairs": len(records),
-                       "excluded_text_shas": text_shas, "citation_doc_ids": doc_ids},
-        "panel": {"family_ids": panel_fams, "excluded_text_shas": panel_shas,
-                  "n_queries": len(panel_rows)},
-        "excluded_text_shas": sorted(set(text_shas) | set(panel_shas)),
-    })
+    exclusions = write_exclusions(records, panel_rows)
+    fam_ids = exclusions["alias_test"]["family_ids"]
 
     # ---- append the ambiguous pairs to the one human review sheet
+    P.assert_pending_unjudged(PENDING)
     rows = [r for r in (P.read_jsonl(PENDING) if PENDING.exists() else [])
             if r.get("kind") != "alias-pair"]
     for r in rows:
@@ -288,6 +335,7 @@ def build(seed=SEED, target=TARGET_PAIRS, verbose=True):
         "by_domain": dict(Counter(r["domain"] for r in records)),
         "by_judgment_status": dict(Counter(r["judgment_status"] for r in records)),
         "ambiguous_sense_pairs": sum(1 for r in records if r["ambiguous_sense"]),
+        "truncated_extraction_pairs": sum(1 for r in records if r["extraction_truncated"]),
         "n_families": len(fam_ids),
         "raw_equivalences_found": len(found),
         "distinct_equivalences": len(pairs),

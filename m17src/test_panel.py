@@ -203,6 +203,48 @@ def test_pending_review_rows_carry_no_judgment(tmp_path):
     assert set(("query", "candidate_title", "candidate_first_300_chars")) <= set(back)
 
 
+def test_rebuilding_refuses_to_erase_answered_review_rows(tmp_path):
+    """A rebuilt sheet arrives with empty answers; overwriting a judged one destroys work no
+    other artifact holds."""
+    sheet = tmp_path / "pending.jsonl"
+    rows = [{"kind": "panel-candidate", "query_id": "k:1", "relevant_yes_no": None,
+             "judge": None, "notes": ""}]
+    P._write_jsonl(sheet, rows)
+    assert P.assert_pending_unjudged(sheet) == 1
+    assert P.assert_pending_unjudged(tmp_path / "absent.jsonl") == 0
+    P._write_jsonl(sheet, [dict(rows[0], relevant_yes_no="yes", judge="dylan")])
+    with pytest.raises(SystemExit, match="answered review rows"):
+        P.assert_pending_unjudged(sheet)
+
+
+def test_a_stale_ancestry_screen_cannot_certify_a_rebuilt_panel(tmp_path, monkeypatch):
+    monkeypatch.setattr(P, "PANEL_JSONL", tmp_path / "panel.jsonl")
+    monkeypatch.setattr(P, "SCREEN_JSON", tmp_path / "ancestry_screen.json")
+    monkeypatch.setattr(P, "WORK", tmp_path)                 # no alias_test.jsonl beside it
+    P._write_jsonl(P.PANEL_JSONL, [{"query_id": "s:1", "query": "q"}])
+    scr = {"panel_sha256": P.sha_file(P.PANEL_JSONL), "alias_sha256": None}
+    P._assert_screen_matches(scr)                            # the panel it screened
+    P._write_jsonl(P.PANEL_JSONL, [{"query_id": "s:2", "query": "different"}])
+    with pytest.raises(SystemExit, match="Re-run --stage screen"):
+        P._assert_screen_matches(scr)
+    # the hash sealing leaves behind keeps re-sealing an unchanged panel idempotent
+    scr["panel_sha256_sealed"] = P.sha_file(P.PANEL_JSONL)
+    P._assert_screen_matches(scr)
+
+
+def test_a_truncated_alias_phrase_is_not_verified_by_source():
+    """"Balanced Random Access Distributed Storage System, also known as BRADSS" must not be
+    recorded as the source stating "Access Distributed Storage System" = BRADSS."""
+    text = ("Balanced Random Access Distributed Storage System, also known as BRADSS, "
+            "stores files.")
+    got = [g for g in A.extract("d", text, "s") if g["kind"] == "alias-canonical"]
+    assert got and got[0]["long"] == "Access Distributed Storage System"
+    assert got[0]["truncated"] is True
+    short = A.extract("d", "A Widget Controller, also known as WC, reconciles state.", "s")
+    short = [g for g in short if g["kind"] == "alias-canonical"]
+    assert short and short[0]["truncated"] is False
+
+
 def test_exposure_label_never_calls_a_dataset_query_clean():
     rec = {"query_id": "squad-train:5", "source": "squad-train",
            "sibling_trained_document_groups": 0}
@@ -255,11 +297,12 @@ def test_panel_rows_feed_evaluate_without_translation(tmp_path):
     families = {r["query_id"]: r["family_id"] for r in back}
     doc_ids = sorted({d for r in back for d in r["qrels"]})
     vecs = np.eye(len(doc_ids), dtype=np.float32)
-    run = E.search(vecs, vecs, k=2, doc_ids=doc_ids)
-    keyed = {back[i]["query_id"]: v for i, v in run.items()}
-    nd = E.ndcg_at_k(keyed, qrels, k=10)
-    assert set(nd) == set(domains) == set(families)
-    assert E.per_domain(nd, domains)["n_per_domain"] == {"general": 2, "medicine": 2}
+    # through the PUBLIC evaluator, keyed by the panel's own query_id — no hand translation
+    rep = E.evaluate(vecs, vecs, qrels, domains, families=families, doc_ids=doc_ids,
+                     query_ids=[r["query_id"] for r in back])
+    assert rep["ndcg@10"]["macro"] == pytest.approx(1.0)
+    assert rep["ndcg@10"]["n_per_domain"] == {"general": 2, "medicine": 2}
+    assert set(rep["per_query_ndcg@10"]) == set(domains) == set(families)
 
 
 def test_written_jsonl_is_sorted_and_round_trips(tmp_path):

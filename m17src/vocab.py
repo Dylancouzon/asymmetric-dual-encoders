@@ -73,8 +73,10 @@ class TermStat:
 
 
 def is_abbreviation(term: str) -> bool:
-    """Heuristic used when the caller supplies no explicit set: short, and either carrying a
-    digit or vowel-free. `k8s`, `s3`, `tls`, `iam` match; `kubernetes`, `kubectl` do not."""
+    """FALLBACK heuristic, used only when the caller supplies no abbreviation inventory: short,
+    and either carrying a digit or vowel-free. `k8s`, `s3`, `tls` match; `kubernetes`, `kubectl`
+    do not — and neither does a vowel-carrying abbreviation such as `iam`, which is exactly why
+    a supplied inventory is the authority in `select`."""
     t = term.lower()
     if len(t) > 6:
         return False
@@ -103,19 +105,34 @@ def discover(queries, residuals, tokenizer, min_len=2, abbreviations=None):
     stats: dict[str, TermStat] = {}
     seen_text = set()
     single_token = set()
+    doc_domain: dict[str, str] = {}
+    unk = _unk_id(tokenizer)
     for i, q in enumerate(queries):
         text = _get(q, "text")
         if text in seen_text:            # deduplicated training queries only
             continue
         seen_text.add(text)
         qid = _get(q, "qid", str(i))
-        doc = _get(q, "source_doc", _get(q, "source", "unknown"))
+        doc = _get(q, "source_doc")
+        if doc is None:
+            raise ValueError(
+                f"query {qid!r} carries no `source_doc`. Ruling A3 counts one vote per distinct "
+                "supporting DOCUMENT and takes the domain from that document, so a record "
+                "without its document identity cannot be counted at all.")
         domain = _get(q, "domain", "general")
+        if doc_domain.setdefault(doc, domain) != domain:
+            raise ValueError(
+                f"document {doc!r} is labelled {doc_domain[doc]!r} on one query and {domain!r} "
+                "on another. A document's domain comes from its own text "
+                "(support_manifest.document_domain), so two labels mean the caller derived one "
+                "from the query.")
         for term in {m.group(0).lower() for m in TERM_RE.finditer(text)}:
             if len(term) < min_len:
                 continue
             pieces = tokenize_term(tokenizer, term)
-            if len(pieces) <= 1:
+            # A single `[UNK]` is not an existing vocabulary token: the base tokenizer cannot
+            # represent the term at all, which makes it a candidate row, not a diagnostic.
+            if len(pieces) <= 1 and not (unk is not None and pieces == [unk]):
                 single_token.add(term)
                 continue
             st = stats.setdefault(term, TermStat(term))
@@ -126,6 +143,14 @@ def discover(queries, residuals, tokenizer, min_len=2, abbreviations=None):
             st.residual_sum += float(residuals[i])
             st.residual_n += 1
     return stats, single_token
+
+
+def _unk_id(tokenizer):
+    """The base tokenizer's `[UNK]` id, or None if it has no unknown token."""
+    try:
+        return tokenizer.token_to_id("[UNK]")
+    except AttributeError:                            # pragma: no cover - exotic tokenizers
+        return None
 
 
 def _get(obj, name, default=None):
@@ -176,7 +201,15 @@ def select(stats, reg, expansions=None, abbreviations=None, single_token=(),
     cap_tech = int(reg["technical_priority_slots_max"])
     pinned = [t.lower() for t in reg["owner_pinned_terms"]["terms"]]
     expansions = {k.lower(): v.lower() for k, v in (expansions or {}).items()}
-    is_abbr = (lambda t: t in abbreviations) if abbreviations is not None else is_abbreviation
+    # A supplied inventory (the mined/verified abbreviations) is the AUTHORITY: the regex
+    # heuristic is only the fallback for callers that have none, and it misses vowel-carrying
+    # abbreviations such as `iam`, which would then bypass the twice-minima policy.
+    if abbreviations is not None:
+        _abbrs = {t.lower() for t in abbreviations}
+        def is_abbr(t):
+            return t.lower() in _abbrs
+    else:
+        is_abbr = is_abbreviation
 
     ranked = rank(stats)
     present = {s.term for s in ranked}

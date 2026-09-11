@@ -111,8 +111,18 @@ def test_general_source_with_bland_text_stays_general():
     assert S.document_domain("squad-train", "") == "general"
 
 
-def test_document_domain_matches_the_panel_classifier_at_the_same_threshold():
+def _pin(monkeypatch, tmp_path, min_score):
+    p = tmp_path / "panel_manifest.json"
+    p.write_text(json.dumps({"classifier_min_score": min_score}))
+    monkeypatch.setattr(S, "PANEL_MANIFEST", p)
+    monkeypatch.setattr(S, "_PINNED_MIN_SCORE", None)
+    return p
+
+
+def test_document_domain_matches_the_panel_classifier_at_the_same_threshold(tmp_path,
+                                                                            monkeypatch):
     import panel_build as P
+    _pin(monkeypatch, tmp_path, P.MIN_SCORE)
     assert S.classifier_min_score() == P.MIN_SCORE
     assert S.domain_method() == P.DOMAIN_METHOD
     for text in (MEDICAL, BLAND, "inflation and monetary policy raised the interest rate"):
@@ -120,6 +130,29 @@ def test_document_domain_matches_the_panel_classifier_at_the_same_threshold():
     # and the threshold is honoured, not hard-coded: an unreachable one falls back to the map
     assert S.document_domain("squad-train", MEDICAL, min_score=1000) == "general"
     assert S.document_domain("squad-train", MEDICAL, min_score=2) == "medicine"
+
+
+def test_the_pinned_panel_threshold_wins_over_the_module_default(tmp_path, monkeypatch):
+    """Ruling A3's "same threshold" is the one the sealed panel pinned, not panel_build's own
+    default: at 3 a document the default (4) leaves 'general' is labelled."""
+    import panel_build as P
+    text = "A treaty on trade law was signed."          # legal scores exactly 3
+    _pin(monkeypatch, tmp_path, 4)
+    assert S.classifier_min_score() == 4
+    default_label = S.document_domain("squad-train", text)
+    _pin(monkeypatch, tmp_path, 3)
+    ms, src = S.classifier_min_score_with_source()
+    assert ms == 3 and src.endswith("panel_manifest.json")
+    assert S.document_domain("squad-train", text) == P.classify(text, "general", 3)[0]
+    assert S.document_domain("squad-train", text) != default_label
+
+
+def test_absent_panel_manifest_falls_back_to_the_module_default(tmp_path, monkeypatch):
+    import panel_build as P
+    monkeypatch.setattr(S, "PANEL_MANIFEST", tmp_path / "absent.json")
+    monkeypatch.setattr(S, "_PINNED_MIN_SCORE", None)
+    ms, src = S.classifier_min_score_with_source()
+    assert ms == P.MIN_SCORE and "module default" in src
 
 
 def test_unmapped_source_falls_back_to_the_general_branch():
@@ -361,10 +394,33 @@ def test_missing_decontamination_survivors_fail_loudly(tmp_path, monkeypatch):
 def test_load_exclusions_accepts_the_panel_steps_schema(tmp_path):
     f = tmp_path / "alias_test_families.json"
     f.write_text(json.dumps({"excluded_family_ids": ["fam:a"], "excluded_text_shas": ["abc"],
+                             "excluded_alias_terms": ["Pod Disruption Budget", "PDB"],
+                             "excluded_evidence_doc_groups": ["deadbeefdeadbeef"],
                              "key_conventions": "sha256(normalized text)[:16]"}))
-    fams, shas = S.load_exclusions(f)
-    assert fams == {"fam:a"} and shas == {"abc"}
-    assert S.load_exclusions(tmp_path / "absent.json") == (set(), set())
+    ex = S.load_exclusions(f)
+    assert ex["families"] == {"fam:a"} and ex["text_shas"] == {"abc"}
+    assert ex["terms"] == {"pod disruption budget", "pdb"}       # normalized on load
+    assert ex["doc_groups"] == {"deadbeefdeadbeef"}
+    absent = S.load_exclusions(tmp_path / "absent.json")
+    assert all(v == set() for v in absent.values())
+
+
+def test_an_exclusion_file_without_the_term_keys_is_refused(tmp_path):
+    """Family ids and view shas alone removed nothing from the real pool; a file that carries
+    only them is a silent no-op, so it is refused instead of applied."""
+    f = tmp_path / "old.json"
+    f.write_text(json.dumps({"excluded_family_ids": ["fam:a"], "excluded_text_shas": ["abc"]}))
+    with pytest.raises(SystemExit, match="excluded_alias_terms"):
+        S.load_exclusions(f)
+
+
+def test_iter_store_refuses_ms_marco_by_name(tmp_path, monkeypatch):
+    monkeypatch.setattr(S, "TRAIN", tmp_path)
+    (tmp_path / "stores").mkdir()
+    (tmp_path / "stores" / "MSMARCO-pos.json").write_text(
+        json.dumps({"ids": ["d0"], "texts": ["never a training input"]}))
+    with pytest.raises(SystemExit, match="MS MARCO"):
+        list(S.iter_store("MSMARCO-pos"))
 
 
 def test_heldout_query_text_is_removed_from_the_training_population(tmp_path, monkeypatch):
@@ -374,9 +430,28 @@ def test_heldout_query_text_is_removed_from_the_training_population(tmp_path, mo
                                         {"qid": "3", "query": "hold me out", "pos": ["d1"]}]})
     out.mkdir(parents=True, exist_ok=True)
     (out / "alias_test_families.json").write_text(json.dumps(
-        {"excluded_text_shas": [S.group_id(S.normalize("hold me out"))]}))
+        {"excluded_text_shas": [S.group_id(S.normalize("hold me out"))],
+         "excluded_alias_terms": [], "excluded_evidence_doc_groups": []}))
     per_source, doc_group = S.document_pass(out, hub_fanout=50)
     per_source, stats = S.query_pass(out, per_source, doc_group, hub_fanout=50)
     assert stats["queries_removed_as_heldout"] == 1
     assert per_source["squad-train"]["queries_train"] == 1
     assert stats["heldout_keys_available"] is True
+
+
+def test_a_bare_held_out_alias_term_is_dropped_from_the_training_queries(tmp_path, monkeypatch):
+    """A training query that IS the held-out short form or expansion is held-out material even
+    though its text sha is not in the pair list."""
+    out = _world(tmp_path, monkeypatch,
+                 docs={"squad-train": [("d1", "one")]},
+                 pairs={"squad-train": [{"qid": "1", "query": "keep me", "pos": ["d1"]},
+                                        {"qid": "2", "query": "Pod Disruption Budget",
+                                         "pos": ["d1"]}]})
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "alias_test_families.json").write_text(json.dumps(
+        {"excluded_text_shas": [], "excluded_evidence_doc_groups": [],
+         "excluded_alias_terms": ["Pod Disruption Budget", "PDB"]}))
+    per_source, doc_group = S.document_pass(out, hub_fanout=50)
+    per_source, stats = S.query_pass(out, per_source, doc_group, hub_fanout=50)
+    assert stats["queries_removed_as_heldout_alias_term"] == 1
+    assert per_source["squad-train"]["queries_train"] == 1

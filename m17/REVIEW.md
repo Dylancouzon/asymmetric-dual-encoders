@@ -57,3 +57,42 @@ A2 non-executable. Dispositions:
 
 **Owner:** M17 implementing session. **Exit:** unchanged; the executor and its two independent
 implementation reviews remain owed. This planning review does not certify an unwritten executor.
+
+## Codex Astra implementation review of `m17src/` — 2026-09-11 (step 4, review 1 of 2)
+
+Brief: [m17-astra-impl-brief](../research/m17-astra-impl-brief-2026-09-11.md). Log:
+`research/m17-astra-impl-review-2026-09-11.log` (gitignored, local). Read-only, xhigh effort. A
+first attempt read nothing because the brief permitted only two Python commands; the second read
+the 37 named files and the two permitted `work/m17/manifest` summaries, nothing else. Its pytest
+and `py_compile` runs failed inside Codex's read-only sandbox (no writable temp directory), so
+the 141-test pass was ours to confirm; it was. Astra found the loss terms, KL direction,
+temperature, masking, anchor rows and learning-rate schedule correct for valid inputs, no
+document-tower training, no `torch.compile`, no change to M11's gates. It would not authorize
+execution: 18 P1, 8 P2, 3 P3, mostly in how inputs are constructed, validated and resumed.
+
+Dylan (2026-09-11): "make sure we don't over-engineer, this is supposed to be a fairly easy
+re-training." Dispositions therefore keep the fixes a careless researcher would need and record
+what was dropped as adversarial-only. Fixes landed in two Opus passes: driver/cache/export/loader
+(`e2db77e`), then the builders and evaluator (next commit).
+
+| Finding | Disposition and exit |
+|---|---|
+| P1-1 batch dose 192/32/16 instead of the measured 204/32/10 | Fixed: `RunCfg` consumes `data.measured_dose_after_pre_lock_rule`; the test that enshrined the old fractions now asserts the registered dose. |
+| P1-2 prepared-data path not arm-aware, hashes empty, arbitrary post-lock steps/seeds | Fixed: `_load_prepared` refuses `new_rows` for C/L and requires them for V/VL/VL-A, fills tokenizer/vocabulary/cache hashes from the files, and real runs refuse an unregistered steps/batch/seed. |
+| P1-3 held-out alias pairs enter the alias stream; short batches on empty buckets | Fixed: pairs only from training-bucket rows with exactly two views (a/b) of one family; an undersupplied bucket raises. |
+| P1-4 resume accepts a different experiment | Fixed, minimal: checkpoint carries arm, seed, phase, steps, composition, temperature, lrs, anchor weight, hashes, table shape and the anchor init; any difference refuses; stream population length checked. No digest framework. |
+| P1-5 warm start not verified against the freeze | Fixed: file sha checked against `m7/FREEZE.json:training_checkpoint_sha256` (the unfolded checkpoint), explicit fold metadata and one finite positive scalar per row required; `--rehearsal` announces its bypass. |
+| P1-6 averaging accepts a fourth snapshot / missing identities | Fixed: exactly three, complete identities, one unique registered step each. |
+| P1-7 cache identity ignores v1 identity and per-query metadata; arrays trusted on load | Fixed: empty v1/preprocessing refused, ordered per-query record hash added, per-array sha verified on load. |
+| P1-8 labeled queries silently become query-only | Fixed: refused by qid; the eligible subset must be chosen before the cache. |
+| P1-9 partial ranking breaks the tie rule | Fixed: one full lexsort by (-score, bank id); tie test across block boundaries. |
+| P1-11 protected-path checks not at every open site; `run()` bypasses the status gate | Fixed, minimal: a 15-line `common.admit_read` (realpath, forbidden substrings; admitted FEVER training stores stay admitted) at the real open sites; `train.run()` calls `require_executable`. Dropped: canonical artifact-type admission layer (adversarial-only). |
+| P1-12 writers can hit `results/perquery.json`; rehearsal `rmtree` on any dir | Fixed: `common.admit_write` refuses the three frozen destinations; rehearsal deletes only an empty dir or one carrying its own marker. |
+| P1-14 gates check internal consistency, not the locked artifact | Fixed: all provenance hashes, `config_kwargs`, dim 1024, row count, 35M cap with scalars, directory entries; Kubernetes attribution copied into the bundle when provenance lists `k8s-docs-en`. |
+| P1-15 conformance fails open on NaN | Fixed: non-finite rows/scales/outputs/errors and bad scales refused before the tolerance; 1e-5 torch-vs-numpy bound recorded in provenance, distinct from the 1e-6 loader bound. |
+| P2-19 fp16 snapshot rows before folding/averaging | Fixed: fp32 rows saved beside the legacy table; export prefers them. |
+| P2-20 RNG recipe differs from the registered one | Fixed: implemented literally with a golden-value test; recipe and version in identity. |
+| P2-23 divergence check mixes objectives, resets on resume | Fixed: separate cosine/listwise accumulators in state, same components both sides, 2,000 unique disjoint held-out queries for real runs. |
+| P3-28 vacuous assertions; no numerical KL/anchor test | Fixed: assertion replaced; hand-computed KL and anchor fixtures added. |
+| P3-29 entropy block flattens B2's `arms` nesting | Accepted as registered: only the inner metric block is shared with B2; noted in CODEMAP. No code change. |
+| Rehearsal could not run as a script (`import train` resolved to M7's driver) | Found during the fix pass: `common.py` path order corrected. Pytest had hidden it. |

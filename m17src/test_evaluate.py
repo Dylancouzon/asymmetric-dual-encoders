@@ -19,6 +19,27 @@ def test_exact_search_ranks_by_inner_product():
     assert list(run[0]) == ["a", "b"]
 
 
+def test_document_blocking_is_exact_and_tie_broken_by_document_id():
+    """A 4096 x 5.2M score matrix is 85 GB, so the corpus is blocked; blocking must not change
+    the answer, including where scores tie."""
+    rng = np.random.default_rng(0)
+    docs = rng.normal(size=(37, 6)).astype(np.float32)
+    docs[5] = docs[11] = docs[23] = docs[2]          # deliberate exact ties across blocks
+    docs /= np.linalg.norm(docs, axis=1, keepdims=True)
+    q = docs[[2, 30]] * 1.0
+    ids = [f"doc{i:03d}" for i in range(37)]
+    ref = E.search(q, docs, k=5, doc_ids=ids, doc_block=10_000)
+    for db in (1, 3, 8, 37):
+        got = E.search(q, docs, k=5, doc_ids=ids, doc_block=db)
+        assert list(got[0]) == list(ref[0]) and list(got[1]) == list(ref[1])
+    brute = []
+    for r in range(2):
+        scored = sorted(((float(q[r] @ docs[j]), ids[j]) for j in range(37)),
+                        key=lambda t: (-t[0], t[1]))[:5]
+        brute.append([d for _, d in scored])
+    assert [list(ref[0]), list(ref[1])] == brute
+
+
 def test_ndcg_and_recall():
     run = {0: {"a": 3.0, "b": 2.0, "c": 1.0}}
     assert E.ndcg_at_k(run, {0: {"a": 1}}, k=10)[0] == pytest.approx(1.0)
@@ -46,6 +67,38 @@ def test_family_bootstrap_resamples_families_not_queries():
     assert tied["n_families"] == 2 and loose["n_families"] == 12
     assert (tied["ci"][1] - tied["ci"][0]) > (loose["ci"][1] - loose["ci"][0])
     assert tied["delta"] == pytest.approx(0.5)
+
+
+def test_the_bootstrap_estimates_the_domain_macro_not_the_query_mean():
+    """100 queries improving by 1.0 in one domain against one worsening by 1.0 in another: the
+    macro difference is 0, the query mean is 0.98. The interval must be about the macro."""
+    a = {i: 1.0 for i in range(100)}
+    a[100] = 0.0
+    b = {i: 0.0 for i in range(100)}
+    b[100] = 1.0
+    fams = {i: f"f{i}" for i in range(101)}
+    doms = {i: ("A" if i < 100 else "B") for i in range(101)}
+    out = E.paired_family_bootstrap(a, b, fams, replicates=500, seed=0, domains=doms)
+    assert out["delta"] == pytest.approx(0.0)
+    assert out["delta_query_mean"] == pytest.approx(99 / 101, abs=1e-6)
+    assert out["statistic"] == "equal-weight domain macro"
+    assert out["ci"][0] < 0.5 < out["ci"][1] or out["ci"][1] <= 0.5
+    plain = E.paired_family_bootstrap(a, b, fams, replicates=500, seed=0)
+    assert plain["delta"] == pytest.approx(99 / 101, abs=1e-6)
+    assert plain["statistic"] == "query mean"
+
+
+def test_evaluate_accepts_panel_query_ids_and_refuses_a_key_mismatch():
+    docs = np.eye(4, dtype=np.float32)
+    qids = [f"s:{i}" for i in range(4)]
+    doc_ids = [f"d{i}" for i in range(4)]
+    qrels = {q: {f"d{i}": 1} for i, q in enumerate(qids)}
+    domains = {q: ("general" if i % 2 else "medicine") for i, q in enumerate(qids)}
+    rep = E.evaluate(docs, docs, qrels, domains, doc_ids=doc_ids, query_ids=qids)
+    assert rep["ndcg@10"]["macro"] == pytest.approx(1.0)      # perfect retrieval
+    assert rep["ndcg@10"]["n_per_domain"] == {"general": 2, "medicine": 2}
+    with pytest.raises(ValueError, match="qrels keys"):
+        E.evaluate(docs, docs, {0: {"d0": 1}}, domains, doc_ids=doc_ids, query_ids=qids)
 
 
 def test_dbsf_uses_the_m12_operator():

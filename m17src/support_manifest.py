@@ -53,6 +53,10 @@ import sys
 import unicodedata
 from pathlib import Path
 
+if str(Path(__file__).resolve().parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+from common import admit_read                                              # noqa: E402
+
 REPO = Path(__file__).resolve().parent.parent
 WORK = REPO / "work"
 TRAIN = WORK / "train"
@@ -100,9 +104,42 @@ def _panel_build():
     return _PANEL_BUILD
 
 
+PANEL_MANIFEST = REPO / "results" / "m17_panel_manifest.json"
+
+
 def classifier_min_score():
-    """`panel_build.MIN_SCORE`: the one threshold both the panel and this manifest use."""
-    return _panel_build().MIN_SCORE
+    """The threshold the SEALED PANEL pinned, not the module default.
+
+    Ruling A3 says "the same threshold the panel builder uses"; the panel manifest records
+    `classifier_min_score` (3), while `panel_build.MIN_SCORE` is only the module's own default
+    (4). Reading the pinned value is what makes the two labellings the same procedure. The
+    default is used only when no panel manifest exists yet, and which one was used is recorded
+    in the result's `domain_assignment`.
+    """
+    return classifier_min_score_with_source()[0]
+
+
+_PINNED_MIN_SCORE = None
+
+
+def classifier_min_score_with_source():
+    """-> (min_score, source string). Read once per process; the classifier runs per document."""
+    global _PINNED_MIN_SCORE
+    if _PINNED_MIN_SCORE is None:
+        _PINNED_MIN_SCORE = _read_pinned_min_score()
+    return _PINNED_MIN_SCORE
+
+
+def _read_pinned_min_score():
+    try:
+        blob = json.loads(admit_read(PANEL_MANIFEST).read_text())
+        ms = blob.get("classifier_min_score")
+        if ms is not None:
+            return int(ms), rel(PANEL_MANIFEST)
+    except FileNotFoundError:
+        pass
+    return _panel_build().MIN_SCORE, "m17src/panel_build.MIN_SCORE (module default; no pinned "\
+                                     "panel manifest)"
 
 
 def domain_method():
@@ -127,7 +164,7 @@ def document_domain(source, doc_text, min_score=None):
         return mapped
     pb = _panel_build()
     return pb.classify(doc_text or "", mapped,
-                       pb.MIN_SCORE if min_score is None else min_score)[0]
+                       classifier_min_score() if min_score is None else min_score)[0]
 
 # Never a training input. Named explicitly so an accidental re-admission fails loudly.
 DENIED_SOURCES = {"msmarco-train", "msmarco-pos", "msmarco"}
@@ -205,12 +242,15 @@ class Union:
 def load_kept():
     """Fingerprint-decontamination survivors from M7. No silent fallback: an undecontaminated
     count would be a different measurement wearing this one's name."""
-    kept = json.loads((WORK / "decontam" / "kept.json").read_text())
-    kept_qt = json.loads((WORK / "decontam" / "kept_querytext.json").read_text())
+    kept = json.loads(admit_read(WORK / "decontam" / "kept.json").read_text())
+    kept_qt = json.loads(admit_read(WORK / "decontam" / "kept_querytext.json").read_text())
     for name in list(kept) + list(kept_qt):
         if name in DENIED_SOURCES and name in PAIR_SOURCES + QUERYTEXT_SOURCES:
             raise SystemExit(f"{name} is non-commercial: validation only, never training")
     return kept, kept_qt
+
+
+EXCLUSION_REQUIRED_KEYS = ("excluded_alias_terms", "excluded_evidence_doc_groups")
 
 
 def load_exclusions(path):
@@ -218,32 +258,57 @@ def load_exclusions(path):
 
     That file's own family ids are rooted in its own union-find, so they need not equal this
     script's; its `key_conventions` field names `sha256(normalized text)[:16]` -- this module's
-    `group_id` -- as the interoperable key, and that is what is matched on. Returns (families,
-    text shas); both empty when the file is absent, which is a reported state, not an error.
+    `group_id` -- as the interoperable key. Family ids and full-view-text shas alone removed
+    NOTHING from the real pool (`pairs_removed_by_excluded_families: 0`), because a held-out
+    "PDB"/"Pod Disruption Budget" pair and a training carrier sentence built from the same
+    document share neither. The contract therefore also carries the normalized short form and
+    expansion of every held-out pair and its evidence document's group id, and a file without
+    those keys is refused rather than silently applied.
+
+    Returns {families, text_shas, terms, doc_groups}; all empty when the file is absent, which
+    is a reported state, not an error.
     """
     path = Path(path)
+    empty = {"families": set(), "text_shas": set(), "terms": set(), "doc_groups": set()}
     if not path.exists():
-        return set(), set()
-    blob = json.loads(path.read_text())
-    fams = set(blob.get("excluded_family_ids") or blob.get("families") or [])
-    shas = set(blob.get("excluded_text_shas") or [])
-    return fams, shas
+        return empty
+    blob = json.loads(admit_read(path).read_text())
+    missing = [k for k in EXCLUSION_REQUIRED_KEYS if k not in blob]
+    if missing:
+        raise SystemExit(
+            f"M17 REFUSED: {path} lacks {missing}. An exclusion file that carries only family "
+            "ids and view-text shas removes nothing from the training pool; regenerate it with "
+            "m17src/alias_test_build.py.")
+    return {
+        "families": set(blob.get("excluded_family_ids") or blob.get("families") or []),
+        "text_shas": set(blob.get("excluded_text_shas") or []),
+        "terms": {normalize(t) for t in (blob["excluded_alias_terms"] or [])},
+        "doc_groups": set(blob["excluded_evidence_doc_groups"] or []),
+    }
 
 
 def iter_store(store_name):
-    blob = json.loads((TRAIN / "stores" / f"{store_name}.json").read_text())
+    path = TRAIN / "stores" / f"{store_name}.json"
+    # MS MARCO is affirmatively licensed non-commercial: validation only, never a training
+    # input. Refused at the READER, not only in the configured source lists, so no caller can
+    # reach it by spelling (`work/train/stores/msmarco-pos.json` exists on this box).
+    if "msmarco" in f"{store_name} {path}".lower():
+        raise SystemExit(f"M17 REFUSED: {store_name!r} names MS MARCO, which is validation only "
+                         "(research/m7-data-licensing.md): never gradients, targets, negatives "
+                         "or generation seeds.")
+    blob = json.loads(admit_read(path).read_text())
     ids, texts = blob["ids"], blob["texts"]
     for i, t in zip(ids, texts):
         yield str(i), t
 
 
 def k8s_excluded_paths():
-    step2a = json.loads(K8S_STEP2A.read_text())
+    step2a = json.loads(admit_read(K8S_STEP2A).read_text())
     return set(step2a["decontamination"]["result"]["flagged_paths"])
 
 
 def iter_k8s(excluded):
-    with open(K8S_JSONL, encoding="utf-8") as f:
+    with open(admit_read(K8S_JSONL), encoding="utf-8") as f:
         for line in f:
             rec = json.loads(line)
             if rec["path"] in excluded:
@@ -263,6 +328,8 @@ def document_pass(out_dir, hub_fanout, min_score=None):
     group is seen), so the counts stay a partition of `documents_deduplicated`.
     """
     (out_dir / "doc_groups").mkdir(parents=True, exist_ok=True)
+    if min_score is None:
+        min_score = classifier_min_score()
     per_source = {}
     doc_group = {}  # source -> {doc_id: group_id}, only for sources with positives
     for src in PAIR_SOURCES:
@@ -316,8 +383,10 @@ def query_pass(out_dir, per_source, doc_group, hub_fanout):
     kept, kept_qt = load_kept()
     # Queries held out for the judged panel or the 200-pair alias test are not training
     # population. Absent file = nothing excluded, reported in the result.
-    _ex_fams, ex_shas = load_exclusions(out_dir / "alias_test_families.json")
+    ex = load_exclusions(out_dir / "alias_test_families.json")
+    ex_shas, ex_terms = ex["text_shas"], ex["terms"]
     n_excluded = 0
+    n_excluded_term = 0      # a bare held-out alias term used verbatim as a training query
     uf = Union()
     rows = []            # (source, qid, uid, norm_hash)
     by_text = {}         # normalized query text hash -> first uid
@@ -334,8 +403,9 @@ def query_pass(out_dir, per_source, doc_group, hub_fanout):
                 continue
             nt = normalize(p["query"])
             h = group_id(nt)
-            if h in ex_shas:
+            if h in ex_shas or nt in ex_terms:
                 n_excluded += 1
+                n_excluded_term += nt in ex_terms
                 continue
             n_train += 1
             texts.add(nt)
@@ -361,8 +431,9 @@ def query_pass(out_dir, per_source, doc_group, hub_fanout):
                 continue
             nt = normalize(qs[i])
             h = group_id(nt)
-            if h in ex_shas:
+            if h in ex_shas or nt in ex_terms:
                 n_excluded += 1
+                n_excluded_term += nt in ex_terms
                 continue
             n_train += 1
             texts.add(nt)
@@ -418,8 +489,9 @@ def query_pass(out_dir, per_source, doc_group, hub_fanout):
         "hub_documents_excluded_from_linking": hubs,
         "hub_fanout": hub_fanout,
         "queries_removed_as_heldout": n_excluded,
+        "queries_removed_as_heldout_alias_term": n_excluded_term,
         "heldout_key_source": rel(out_dir / "alias_test_families.json"),
-        "heldout_keys_available": bool(ex_shas),
+        "heldout_keys_available": bool(ex_shas or ex_terms),
     }
     print(f"  families: {stats['families']:,}, largest {stats['largest_family']:,}, "
           f"{hubs:,} hub documents", flush=True)
@@ -666,7 +738,8 @@ def build(hub_fanout, reuse_counts):
                     "follows its source document inside m17src/vocab.discover. Labels are "
                     "heuristic (Dylan, 2026-09-11).",
             "method": domain_method(),
-            "classifier_min_score": classifier_min_score(),
+            "classifier_min_score": classifier_min_score_with_source()[0],
+            "classifier_min_score_source": classifier_min_score_with_source()[1],
             "applied_per_document": complete,
             "fallback": None if complete else
             "counts_cache.json predates ruling A3; per_domain is the source-level view",
