@@ -114,3 +114,45 @@ attribution copy, judgment ingestion before judgments exist, `.NET`-style punctu
 
 **Owner:** M17 implementing session. **Exit:** Codex Sol implementation review (2 of 2) on the
 fixed code, then one P1-only re-check if Sol finds P1s; then step 5 timings.
+
+## Codex Sol implementation review of `m17src/` — 2026-09-11 (step 4, review 2 of 2)
+
+Brief: [m17-sol-impl-brief](../research/m17-sol-impl-brief-2026-09-11.md) (the Astra brief with
+the review number changed; Sol did not see Astra's report). Log:
+`research/m17-sol-impl-review-2026-09-11.log` (gitignored). Read-only, high effort, on the code
+after the Astra fixes and the step-4d regeneration. Access log: the 37 named files and the two
+permitted `work/m17/manifest` summaries; one non-recursive grep of `LEDGER.md` returned three
+lines outside the requested sections; no protected path. Codex's sandbox again could not run
+pytest or `py_compile` (no writable temp dir); the 206-test pass is ours. Sol confirmed the
+KL/cosine/anchor/alias arithmetic, warm-up and decay, the held-out cadence, the cache walk and
+tie-break, the RNG recipe, fold-once averaging over fp32 rows, numpy/torch loader parity,
+`domain_of`, DBSF via M12 and the domain-macro bootstrap. 10 P1, 8 P2, 4 P3.
+
+| Finding | Disposition and exit |
+|---|---|
+| P1-8 exact search not exact for ties wider than k (per-block argpartition) | Fixed: full (-score, doc id) ordering inside each block before the cut; test with >k ties across blocks. |
+| P1-9 evaluation intersects keys (BM25 run, bootstrap baseline, alias views) | Fixed: exact key equality required, mismatch raises. |
+| P1-4 export accepts a same-size tokenizer that is not the snapshot's; endpoint export needs no identity | Fixed: tokenizer sha compared with the snapshot's record; endpoint export requires the same identity fields as averaging; `gate_artifact` claim narrowed to what it checks. |
+| P1-5 fixture marker inferred from a non-CLS fallback id bypasses dim/cap checks | Fixed: explicit `fixture` provenance flag set only by the rehearsal; fallback id range checked in every mode. |
+| P1-7 seal accepts a prefix-matched ancestor stream set | Fixed: exact stream names required, set equality. |
+| P1-3 resume binding omits cadence, held-out size, snapshot steps, held-out slice | Fixed: those four added to the binding. Dropped: prepared-manifest and code-hash binding (adversarial-only). |
+| P1-6 protected reads/writes bypassable at some openers | Fixed in part: `sha_file`, the synthetic-fixture check and `loader_np --json` go through the helpers. Dropped: universal admission at every builder `open` and rglob removal; the builders read admitted training stores only, by name. |
+| P1-1 status string is not a lock receipt; `run()` accepts any config | Dropped as framework: the step-6 lock commits protocol, hashes and seeds in git; the registry status flip is that commit. `run()` refuses unregistered steps/batch/seed via `_load_prepared` on the real path. Screen-before-final ordering is the operator's registered procedure, not a code gate. |
+| P1-2 prepared inputs not bound by one manifest; no old-vocab parity on the real path | Deferred to step 5: the prepared-data builder is deliberately unwritten; its output will carry the bank/teacher/tokenizer hashes and run `verify_old_vocab_parity` before extension. Recorded in `execution_entry_missing`. |
+| P1-10 document→domain map is a caller assertion | Deferred to step 5 with P1-2: the data builder emits the (source, doc id) → domain join from the document pass. |
+| P2-1 non-alias arms skip the alias supply check | Fixed: alias requirement for every arm. |
+| P2-5 alias-test families merge on bare doc id; domains at threshold 4 | Fixed: source-qualified keys; pinned threshold passed and recorded. Alias test regenerated. |
+| P2-6 abbreviation "replacement" not atomic | Fixed: the expansion is admitted at the abbreviation's rank if eligible. |
+| P2-7 panel/alias manifests carry no script or registry hash | Fixed: both added. |
+| P2-8 uniform draws stop after a 65-batch guard | Fixed: sampling without replacement from remaining ids. |
+| P2-2 cache identity does not require source/alias manifests | Dropped: manifests are always hashed when computed (Astra P1-7 fix); requiring separate manifest files is step-5 builder work. |
+| P2-3 entropy block vs B2 nesting | Already dispositioned (Astra P3-29): shared inner fields only, by decision. |
+| P2-4 loader validation and the fresh-process benchmark harness | Deferred: the benchmark is the registered loader phase after the final runs, not step 4. |
+| P3-1 rehearsal resume is post-schedule; parity check tautological | Accepted as limitation (Astra P3-27); the step-5 smoke interrupts an active run. |
+| P3-2 cosmetic assertions | Fixed: `or True` removed. |
+| P3-3 tokenizer gate truncation claim | Fixed: serialized truncation length and CLS/SEP ids checked. |
+| P3-4 classifier method string says query+document | Fixed: document-only method string for the training map; bias described as a heuristic topical preference. |
+| Drift: registry fraction fields, bucket views, panel/alias statuses, STATUS pair count, CODEMAP claims | Fixed in the registry, STATUS and CODEMAP. |
+
+**Owner:** M17 implementing session. **Exit:** one P1-only re-check by Codex Sol of the fixed
+files, then step 5 timings. Deferred items are step-5 entry conditions, listed in the registry.

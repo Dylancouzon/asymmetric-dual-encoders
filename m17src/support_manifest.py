@@ -143,7 +143,19 @@ def _read_pinned_min_score():
 
 
 def domain_method():
-    """`panel_build.DOMAIN_METHOD`: the method string recorded beside every heuristic label."""
+    """Step 2b's OWN method string. The panel classifies query text plus gold document text;
+    support discovery classifies the DOCUMENT TEXT ALONE, so it may not borrow the panel's
+    wording. Same classifier, same keywords, same pinned threshold, different input."""
+    return ("HEURISTIC, DOCUMENT TEXT ONLY. Source-to-domain map "
+            "(m17src/support_manifest.SOURCE_DOMAIN) first; within a 'general'-mapped source "
+            "the panel builder's keyword classifier (m17src/panel_build.classify) reads the "
+            "deduplicated DOCUMENT text alone — never the query that retrieved it — at the "
+            "threshold pinned by results/m17_panel_manifest.json (see classifier_min_score and "
+            "classifier_min_score_source). Topical hints, not adjudicated labels.")
+
+
+def panel_domain_method():
+    """`panel_build.DOMAIN_METHOD`: the panel's query-plus-document wording, for reference."""
     return _panel_build().DOMAIN_METHOD
 
 

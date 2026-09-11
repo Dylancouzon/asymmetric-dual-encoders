@@ -69,9 +69,10 @@
   "training_query_cap_note": "Raised from 300000 to reduce repeated passes; use as many distinct admitted queries as exist up to the cap. Fewer distinct queries is recorded, not silently compensated with more steps.",
   "bucket_populations_and_dose_rule": {
    "buckets_per_final_run_at_6000x256": {
-    "general_views": 1152000,
+    "general_views": 1224000,
     "unpaired_coverage_views": 192000,
-    "alias_pair_draws": 96000
+    "alias_pair_draws": 60000,
+    "note": "at the applied dose (204/32/10 per batch). The earlier 1152000/192000/96000 was the pre-dose-rule figure, superseded by measured_dose_after_pre_lock_rule"
    },
    "distinct_needed_for_max_4_passes": {
     "general": 288000,
@@ -119,9 +120,12 @@
    "interpretation": "slots freed by the alias shrink go to general replay; general passes were re-checked and steps were not reduced"
   },
   "general_replay_fraction": 0.75,
+  "general_replay_fraction_note": "superseded by measured_dose_after_pre_lock_rule (204/32/10)",
   "targeted_coverage_fraction": 0.25,
+  "targeted_coverage_fraction_note": "superseded by measured_dose_after_pre_lock_rule (204/32/10)",
   "alias_query_views_fraction_of_batch": 0.125,
-  "alias_sampling": "Half of the targeted-coverage slots are paired equivalent views: 16 pairs/32 views at batch 256, 8 pairs/16 views at batch 128. Same views, pair IDs and order in every arm; both views count toward the query cap and exposure.",
+  "alias_query_views_fraction_of_batch_note": "superseded by measured_dose_after_pre_lock_rule (204/32/10)",
+  "alias_sampling": "Half of the targeted-coverage slots are paired equivalent views: 16 pairs/32 views at batch 256, 8 pairs/16 views at batch 128. Same views, pair IDs and order in every arm; both views count toward the query cap and exposure. SUPERSEDED by measured_dose_after_pre_lock_rule (204/32/10): the applied dose is 10 pairs / 20 views at batch 256 after the pre-lock alias shrink.",
   "alias_heldout_test": {
    "target_pairs": 200,
    "definition": "Independently judged same-intent pairs held out of all training, split from training pairs by query family; metric is top-10 overlap and rank correlation between the two views' exact dense results over the panel corpus, plus each view's nDCG@10 where judged",
@@ -143,8 +147,8 @@
    "legal"
   ],
   "panel_split_unit": "source document and near-duplicate query family",
-  "panel_status": "built-provisional (2026-09-11, step 2c): 553 queries in 542 families over the six domains (cloud-software 120, general 100, legal 100, finance 85, medicine 75, science-engineering 73), split 50/50 by family into 279 selection and 274 sealed-audit queries, over a 14,198-document declared corpus; manifest and hashes in results/m17_panel_manifest.json. PROVISIONAL because 419 human judgments are outstanding in results/m17_panel_pending_judgments.jsonl — 360 Kubernetes (query, candidate) rows covering all 120 cloud-software queries, plus 59 ambiguous alias pairs. Until they are resolved the cloud-software domain has no relevance judgments, no six-domain quality claim may be made, and the panel hash that starts the 72-hour clock is not final. Non-k8s queries carry the datasets' own qrels, which are incomplete on this mixed corpus.",
-  "alias_test_status": "built-provisional (2026-09-11, step 2c): 200 pairs, 164 families, 141 VERIFIED_BY_SOURCE and 59 PENDING_HUMAN ambiguous-sense pairs; results/m17_alias_test_manifest.json. Excluded families and text keys for the training-pair builder: work/m17/manifest/alias_test_families.json.",
+  "panel_status": "built-provisional (2026-09-11, step 2c): 553 queries in 542 families over the six domains (cloud-software 120, general 100, legal 100, finance 85, medicine 75, science-engineering 73), split 50/50 by family into 279 selection and 274 sealed-audit queries, over a 14,198-document declared corpus; manifest and hashes in results/m17_panel_manifest.json. PROVISIONAL because 440 human judgments are outstanding in results/m17_panel_pending_judgments.jsonl — 360 Kubernetes (query, candidate) rows covering all 120 cloud-software queries, plus 80 pending alias senses (59 ambiguous plus 21 truncated extractions). Until they are resolved the cloud-software domain has no relevance judgments, no six-domain quality claim may be made, and the panel hash that starts the 72-hour clock is not final. Non-k8s queries carry the datasets' own qrels, which are incomplete on this mixed corpus.",
+  "alias_test_status": "built-provisional (2026-09-11, step 2c): 200 pairs, 164 families, 120 VERIFIED_BY_SOURCE and 80 PENDING_HUMAN (59 ambiguous-sense plus 21 truncated extractions); results/m17_alias_test_manifest.json. Excluded families and text keys for the training-pair builder: work/m17/manifest/alias_test_families.json.",
   "panel_timing": "Built and sealed BEFORE the 72-hour clock starts, as separate pre-clock work; the clock does not begin until the panel manifest hash is recorded",
   "ancestor_decontamination": "Panel, held-out alias pairs and the 2000-query continuation holdout are screened not only against M17 inputs but against every available ancestor training manifest of p35w-2m-s2500 (M7 sources, pseudo-query pools and generated-query lineage) through the approved fingerprint interfaces. Where ancestry cannot be established, the family is labeled exposure-unknown and any generalization claim about it is limited accordingly. A sealed panel is not automatically unseen by the warm start (Astra P1).",
   "panel_role": "Descriptive and audit only. At ~50 audit queries per domain the paired nDCG@10 standard error is roughly 0.02 to 0.04, far above the screening bands, so the panel does not route arm selection.",
@@ -156,8 +160,8 @@
    "basis": "n≈50 queries per domain, typical per-query nDCG spread; record the measured bootstrap SE beside it after the audit"
   },
   "panel_exclusions_confirmed": "FEVER-train (reserved four, disclosed Stella exposure) and ESCI (no panel domain) excluded from the panel; confirmed by Dylan 2026-09-11 (A3).",
-  "panel_judging_plan": "A3 (Dylan, 2026-09-11): Dylan judges the 60 selection-partition cloud-software queries (about 180 rows) before the screen; a second engineer double-judges 20 of those queries and agreement is reported; the 60 audit-partition queries may be judged later without touching the clock, since the audit is read once at the end. The 59 ambiguous alias senses are judged by Dylan with the alias spot check.",
-  "alias_spotcheck_rule": "A3 (Dylan, 2026-09-11): Dylan checks the 311-pair 2% sample; if more than 5% of pairs are wrong, the abbreviation filter is tightened and the pool rebuilt before lock."
+  "panel_judging_plan": "A3 (Dylan, 2026-09-11): Dylan judges the 60 selection-partition cloud-software queries (about 180 rows) before the screen; a second engineer double-judges 20 of those queries and agreement is reported; the 60 audit-partition queries may be judged later without touching the clock, since the audit is read once at the end. The 80 pending alias senses (59 ambiguous plus 21 truncated extractions) are judged by Dylan with the alias spot check.",
+  "alias_spotcheck_rule": "A3 (Dylan, 2026-09-11): Dylan checks the 308-pair 2% sample; if more than 5% of pairs are wrong, the abbreviation filter is tightened and the pool rebuilt before lock."
  },
  "training": {
   "init": "M7 p35w-2m-s2500 unfolded checkpoint, lineage verified; new run IDs and optimizer",
@@ -426,7 +430,9 @@
   "licence evidence for Kubernetes documentation and any second project-documentation source recorded in research/m7-data-licensing.md before download: exact source/revision and acquisition route, content licence and exceptions, attribution artifact, any acquisition terms restricting training, decontamination coverage against dev and protected surfaces",
   "measured preparation costs at two sizes: teacher cache hit rate and encode rate, document encodes, mining, alias-pair verification and evaluation, replacing the placeholder hours before lock",
   "real pipeline throughput at two sizes and a schedule fitting the allocation; synthetic P0 is not that forecast",
-  "training implementation and smoke/resume validation, reviewed independently twice before expensive execution"
+  "training implementation and smoke/resume validation, reviewed independently twice before expensive execution",
+  "prepared-data builder (step 5) output must carry bank/teacher/tokenizer/preprocessing hashes and the (source, document id) -> domain join from the support manifest's document pass, and must run verify_old_vocab_parity on the effective base rows before extension (Sol P1-2, P1-10; deferred from step 4 by decision)",
+  "loader benchmark harness: five fresh processes per loader, registered strata, RSS/cold-start/p50/p95, built in the loader phase after the final runs (Sol P2-4)"
  ],
  "protected_access": "none: M13 six, reserved four and LoTTE are not M17 development surfaces"
 }

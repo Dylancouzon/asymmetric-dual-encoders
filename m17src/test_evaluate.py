@@ -40,6 +40,47 @@ def test_document_blocking_is_exact_and_tie_broken_by_document_id():
     assert [list(ref[0]), list(ref[1])] == brute
 
 
+def test_a_tie_wider_than_k_is_still_exact_and_block_independent():
+    """`argpartition` used to discard all but an arbitrary k inside each block, so a tie of
+    more than k documents lost smaller document ids before the ascending-id sort."""
+    docs = np.zeros((40, 4), dtype=np.float32)
+    docs[:, 0] = 1.0                                  # all 40 documents score identically
+    q = np.asarray([[1.0, 0.0, 0.0, 0.0]], dtype=np.float32)
+    ids = [f"doc{i:03d}" for i in range(40)]
+    want = ids[:5]                                    # the five smallest ids win the tie
+    for db in (1, 3, 7, 40, 10_000):
+        got = E.search(q, docs, k=5, doc_ids=ids, doc_block=db)
+        assert list(got[0]) == want, f"doc_block={db} changed the answer"
+    # a zero query: every score is 0.0, the tie spans the whole corpus
+    z = np.zeros((1, 4), dtype=np.float32)
+    assert list(E.search(z, docs, k=5, doc_ids=ids, doc_block=6)[0]) == want
+
+
+def test_search_refuses_duplicate_document_ids():
+    docs = np.eye(3, dtype=np.float32)
+    with pytest.raises(ValueError, match="doc_ids contains duplicates"):
+        E.search(docs[:1], docs, k=2, doc_ids=["a", "a", "b"])
+
+
+def test_comparison_surfaces_must_have_identical_keys():
+    a, b = {0: 1.0, 1: 0.5}, {0: 0.9}
+    with pytest.raises(ValueError, match="baseline keys do not match"):
+        E.paired_family_bootstrap(a, b, {}, replicates=10)
+    with pytest.raises(ValueError, match="alias views do not cover the same pairs"):
+        E.alias_test({0: {"d": 1.0}, 1: {"d": 1.0}}, {0: {"d": 1.0}})
+
+
+def test_bm25_run_keys_must_match_the_dense_run(reg):
+    docs = np.eye(4, dtype=np.float32)
+    q = docs[:2]
+    ids = list("abcd")
+    with pytest.raises(ValueError, match="bm25_run keys do not match"):
+        E.evaluate(q, docs, {"q0": {"a": 1}, "q1": {"b": 1}},
+                   {"q0": "general", "q1": "general"}, doc_ids=ids,
+                   bm25_run={0: {"a": 1.0}, 1: {"b": 1.0}}, reg=reg,
+                   query_ids=["q0", "q1"])
+
+
 def test_ndcg_and_recall():
     run = {0: {"a": 3.0, "b": 2.0, "c": 1.0}}
     assert E.ndcg_at_k(run, {0: {"a": 1}}, k=10)[0] == pytest.approx(1.0)

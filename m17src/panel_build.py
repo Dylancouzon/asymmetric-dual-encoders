@@ -726,6 +726,18 @@ def assert_pending_unjudged(path=None):
 
 # --------------------------------------------------------------------- ancestry screen
 
+# The ancestor manifests that must ALL be streamed before any family may be called
+# exposure-known-clean, by exact stream identity. Broad prefixes used to satisfy the seal:
+# four surviving `m7-train-queries:*` streams made a missing `fever-train` invisible, so a
+# no-hit query was labelled clean against a manifest that was never read.
+STREAMS_EXPECTED = (
+    "m7-train-queries:squad-train", "m7-train-queries:hotpotqa-train",
+    "m7-train-queries:mrtydi-en", "m7-train-queries:fever-train",
+    "m7-train-queries:esci-us", "m7-querytext:nqopen", "m7-querytext:triviaqa",
+    "m7-pseudoq-2m", "m10-harvest", "m10-generated",
+)
+
+
 def ancestor_streams():
     """The available ancestor training manifests of the warm start, as (name, iterator) pairs.
 
@@ -840,8 +852,7 @@ def screen(items, min_share=4, limit_per_stream=None, verbose=True):
             "hits_near": {k: sorted(v) for k, v in hits_near.items()},
             "interface": ("m7src/decontam.query_grams + Inverted(...).match(text, min_share, "
                           "want_sketch=False); candidate-side index, ancestor text streamed"),
-            "streams_expected": ["m7-train-queries", "m7-querytext", "m7-pseudoq-2m",
-                                 "m10-harvest", "m10-generated"]}
+            "streams_expected": list(STREAMS_EXPECTED)}
 
 
 def exposure_label(rec, screen_hits_exact, screen_hits_near, all_streams_present):
@@ -956,9 +967,9 @@ def seal(verbose=True):
     scr = json.loads(admit_read(SCREEN_JSON).read_text()) if SCREEN_JSON.exists() else None
     if scr:
         _assert_screen_matches(scr)
-    all_streams = bool(scr) and all(
-        any(name.startswith(exp) for name in scr["per_stream"])
-        for exp in scr["streams_expected"])
+    # Set EQUALITY against the registered stream identities: a missing stream is a gap that
+    # turns every family exposure-unknown, never a prefix another stream happens to satisfy.
+    all_streams = bool(scr) and set(scr["per_stream"]) == set(STREAMS_EXPECTED)
     he = set(scr["hits_exact"]) if scr else set()
     hn = set(scr["hits_near"]) if scr else set()
     for r in records:
@@ -1008,6 +1019,8 @@ def seal(verbose=True):
     manifest = {
         "milestone": "M17", "step": "2c", "date": "2026-09-11",
         "script": "m17src/panel_build.py",
+        "script_sha256": sha_file(Path(__file__).resolve()),
+        "registry_sha256": sha_file(REPO / "m17" / "registry.json"),
         "status": "PROVISIONAL — pending human judgments unresolved",
         "provisional_reason": (
             f"{len(panel_pending)} cloud-software candidate judgments and {len(alias_pending)} "
@@ -1104,6 +1117,9 @@ def seal(verbose=True):
             "screen": scr and {k: scr[k] for k in ("min_share", "n_candidates", "per_stream",
                                                    "interface")},
             "all_expected_streams_present": all_streams,
+            "expected_streams": list(STREAMS_EXPECTED),
+            "missing_expected_streams": sorted(set(STREAMS_EXPECTED) -
+                                               set(scr["per_stream"] if scr else {})),
             "not_screened": ("the six, the reserved four and LoTTE. Deferred to the M17 executor "
                              "exactly as results/m17_k8s_source_manifest.json records; every "
                              "interface reaching them materializes protected payloads."),

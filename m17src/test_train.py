@@ -268,18 +268,18 @@ def _resume_fixture(rehearsal, **over):
     saved = torch.load(ck, map_location="cpu", weights_only=False)
     model = QueryTable(np.zeros((saved["vocab"], saved["dim"]), dtype=np.float32),
                        weight_init=np.ones(saved["vocab"], dtype=np.float32))
-    cfg = T.RunCfg(**{**saved["cfg"], **over,
-                      "snapshot_steps": tuple(saved["cfg"]["snapshot_steps"])})
+    cfg = T.RunCfg(**{**saved["cfg"],
+                      "snapshot_steps": tuple(saved["cfg"]["snapshot_steps"]), **over})
     opt = torch.optim.Adam([{"params": [model.rows]}, {"params": [model.w_raw]}])
     eff = torch.zeros(saved["vocab"], saved["dim"])
-    return ck, model, opt, cfg, eff
+    return ck, model, opt, cfg, eff, saved["heldout_sha256"]
 
 
 def test_resume_refuses_a_different_tokenizer(rehearsal):
     """A resume across tokenizers would continue a schedule for a different table."""
-    ck, model, opt, cfg, eff = _resume_fixture(rehearsal, tokenizer_sha256="deadbeef")
+    ck, model, opt, cfg, eff, ho = _resume_fixture(rehearsal, tokenizer_sha256="deadbeef")
     with pytest.raises(SystemExit, match="tokenizer"):
-        T._resume(ck, model, opt, {}, cfg, eff, lambda *a: None)
+        T._resume(ck, model, opt, {}, cfg, eff, lambda *a: None, ho)
 
 
 @pytest.mark.parametrize("field,value", [("arm", "C"), ("seed", 1), ("alias_pairs", 3),
@@ -287,16 +287,52 @@ def test_resume_refuses_a_different_tokenizer(rehearsal):
                                          ("cache_sha256", "0" * 64)])
 def test_resume_refuses_a_different_experiment(rehearsal, field, value):
     """Row count, tokenizer and step budget alone let another arm, seed or dose resume."""
-    ck, model, opt, cfg, eff = _resume_fixture(rehearsal, **{field: value})
+    ck, model, opt, cfg, eff, ho = _resume_fixture(rehearsal, **{field: value})
     with pytest.raises(SystemExit, match="configuration differs"):
-        T._resume(ck, model, opt, {}, cfg, eff, lambda *a: None)
+        T._resume(ck, model, opt, {}, cfg, eff, lambda *a: None, ho)
+
+
+def test_resume_refuses_a_different_heldout_slice(rehearsal):
+    """Same length, different queries: the divergence history would be incomparable."""
+    ck, model, opt, cfg, eff, ho = _resume_fixture(rehearsal)
+    with pytest.raises(SystemExit, match="held-out slice hashes to"):
+        T._resume(ck, model, opt, {}, cfg, eff, lambda *a: None, "0" * 64)
+
+
+@pytest.mark.parametrize("field,value", [("check_every", 7), ("heldout_queries", 3),
+                                         ("snapshot_steps", (1, 2, 3))])
+def test_resume_binds_the_divergence_and_snapshot_protocol(rehearsal, field, value):
+    ck, model, opt, cfg, eff, ho = _resume_fixture(rehearsal, **{field: value})
+    with pytest.raises(SystemExit, match="configuration differs"):
+        T._resume(ck, model, opt, {}, cfg, eff, lambda *a: None, ho)
+
+
+def test_every_arm_requires_the_registered_alias_supply(tmp_path):
+    """Every arm DRAWS the alias pairs; only VL-A adds their loss. A C run with too few pairs
+    used to wrap the same handful inside one batch instead of refusing the dose."""
+    from table import QueryTable
+    n = 8
+    model = QueryTable(np.zeros((4, 3), dtype=np.float32),
+                       weight_init=np.ones(4, dtype=np.float32))
+    data = {"model": model, "ids": [[0]] * n,
+            "teacher_q": np.zeros((n, 3), dtype=np.float32),
+            "bank": np.zeros((2, 3), dtype=np.float32),
+            "candidate_ids": np.zeros((n, 2), dtype=np.int64),
+            "teacher_scores": np.zeros((n, 2), dtype=np.float32),
+            "buckets": ["general"] * 6 + ["coverage"] * 2,
+            "alias_pair_ids": [""] * n, "alias_views": [""] * n,
+            "families": [f"f{i}" for i in range(n)], "heldout_idx": [0]}
+    cfg = T.RunCfg(arm="C", batch=8, general_views=4, coverage_views=2, alias_pairs=1,
+                   rehearsal=True, device="cpu")
+    with pytest.raises(SystemExit, match="bucket 'alias' holds 0 rows"):
+        T.run(cfg, data, tmp_path / "out", resume=False, log=lambda *a: None)
 
 
 def test_resume_restores_the_anchor_initialization(rehearsal):
     """The anchor must measure drift from where the RUN started, not from the resumed rows."""
-    ck, model, opt, cfg, eff = _resume_fixture(rehearsal)
+    ck, model, opt, cfg, eff, ho = _resume_fixture(rehearsal)
     saved = torch.load(ck, map_location="cpu", weights_only=False)
-    state, restored = T._resume(ck, model, opt, {}, cfg, eff, lambda *a: None)
+    state, restored = T._resume(ck, model, opt, {}, cfg, eff, lambda *a: None, ho)
     assert torch.allclose(restored, saved["eff_init"])
     assert not torch.allclose(restored, eff), "a zero anchor would have been silently accepted"
     assert state["step"] and "train_running" in state

@@ -28,7 +28,9 @@ def test_heldout_is_the_registered_mod_50_rule():
     """One in fifty, and a function of (source, qid) only — m7src/trainmix.heldout."""
     n = sum(1 for i in range(5000) if P.heldout("squad-train", str(i)))
     assert 50 < n < 150
-    assert P.heldout("squad-train", "7") != P.heldout("hotpotqa-train", "7") or True
+    # a function of (source, qid), not of qid alone: the same qid falls differently per source
+    assert any(P.heldout("squad-train", str(i)) != P.heldout("hotpotqa-train", str(i))
+               for i in range(5000))
 
 
 def test_forbidden_paths_are_refused_by_name():

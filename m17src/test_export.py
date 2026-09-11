@@ -111,6 +111,36 @@ def test_average_is_the_equal_mean_of_effective_rows(rehearsal, reg):
     assert all(d["rms"] > 0 for d in diag["snapshots"])
 
 
+def test_a_wrong_fallback_id_is_no_longer_a_cap_bypass(rehearsal, reg, tmp_path):
+    """`fallback_id != frozen CLS` used to mark the bundle a fixture and skip the dim / added
+    row / 35M checks. Only the explicit `fixture=True` provenance flag may do that."""
+    from tokenizers import Tokenizer
+    rows, _ = export.effective_rows(rehearsal["root"] / "run" / "endpoint.npz")
+    tok = Tokenizer.from_file(str(rehearsal["root"] / "data" / "tokenizer_ext.json"))
+    with pytest.raises(SystemExit, match="dimensions"):
+        export.build_bundle(tmp_path / "b", rows, tok, {}, reg, fallback_id=2)
+    with pytest.raises(SystemExit, match="outside a table of"):
+        export.build_bundle(tmp_path / "n", rows, tok, {}, reg, fallback_id=-1, fixture=True)
+
+
+def test_endpoint_export_needs_the_identity_averaging_needs():
+    with pytest.raises(SystemExit, match="does not record its run, tokenizer"):
+        export.snapshot_identity({"m17_step": 3, "m17_run_id": "r"}, "endpoint.npz")
+    with pytest.raises(SystemExit, match="records no `m17_step`"):
+        export.snapshot_identity({f: "x" for f in export.IDENTITY_FIELDS}, "endpoint.npz")
+
+
+def test_export_main_refuses_a_tokenizer_that_is_not_the_trained_one(rehearsal, tmp_path):
+    """Conformance compares the bundle tokenizer against itself, so a same-sized tokenizer
+    with different ids passed every gate."""
+    src = rehearsal["root"] / "data" / "tokenizer_ext.json"
+    bad = tmp_path / "tokenizer.json"
+    bad.write_text(src.read_text() + " ")
+    with pytest.raises(SystemExit, match="--tokenizer hashes to"):
+        export.main(["--endpoint", str(rehearsal["root"] / "run" / "endpoint.npz"),
+                     "--tokenizer", str(bad), "--out", str(tmp_path / "b")])
+
+
 def test_gate_artifact_catches_a_stale_staging_dir(bundle):
     z = dict(np.load(bundle / "model.npz"))
     z["rows_int8"] = np.zeros_like(z["rows_int8"])
@@ -242,7 +272,7 @@ def test_kubernetes_attribution_ships_with_the_bundle(rehearsal, reg, tmp_path):
         tmp_path / "attr", rows,
         Tokenizer.from_file(str(rehearsal["root"] / "data" / "tokenizer_ext.json")),
         {"vocabulary_sources": ["k8s-docs-en", "synthetic-general"], "rehearsal": True},
-        reg, fallback_id=2)
+        reg, fallback_id=2, fixture=True)
     assert (out / export.ATTRIBUTION_NAME).exists()
     assert (out / export.ATTRIBUTION_NAME).read_text() == \
         (common.REPO / export.ATTRIBUTION_SRC).read_text()

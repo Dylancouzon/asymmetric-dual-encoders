@@ -64,6 +64,26 @@ def effective_rows(npz_path):
     return rows, {"path": str(npz_path), "rms": rms, "rows_stored_as": stored, "meta": meta}
 
 
+IDENTITY_FIELDS = ("m17_run_id", "tokenizer_sha256", "vocabulary_sha256",
+                   "candidate_cache_sha256")
+
+
+def snapshot_identity(meta, path):
+    """The run/tokenizer/vocabulary/cache identity a snapshot must record, for EITHER form.
+
+    Endpoint export used to skip this: a table with no recorded lineage could be published as
+    long as its bytes hashed to themselves.
+    """
+    ident = {f: meta.get(f) for f in IDENTITY_FIELDS}
+    if any(v in (None, "") for v in ident.values()):
+        raise SystemExit(f"M17 EXPORT REFUSED: {path} does not record its run, tokenizer, "
+                         "vocabulary and cache identities; a missing field is not a match.")
+    if meta.get("m17_step") is None:
+        raise SystemExit(f"M17 EXPORT REFUSED: {path} records no `m17_step`; an unstepped "
+                         "snapshot cannot be checked against the registered window.")
+    return ident
+
+
 def average_snapshots(paths, reg=None):
     """Equal mean of effective float32 rows. Refuses to mix tokenizers, runs or scales."""
     reg = reg or registry()
@@ -78,14 +98,8 @@ def average_snapshots(paths, reg=None):
     for p in paths:
         r, d = effective_rows(p)
         m = d["meta"]
-        key = tuple(m.get(f) for f in ("m17_run_id", "tokenizer_sha256", "vocabulary_sha256",
-                                       "candidate_cache_sha256")) + (r.shape,)
-        if any(v in (None, "") for v in key[:4]):
-            raise SystemExit(f"M17 AVERAGING REFUSED: {p} does not record its run, tokenizer, "
-                             "vocabulary and cache identities; a missing field is not a match.")
-        if m.get("m17_step") is None:
-            raise SystemExit(f"M17 AVERAGING REFUSED: {p} records no `m17_step`; an unstepped "
-                             "snapshot cannot be checked against the registered window.")
+        ident_fields = snapshot_identity(m, p)
+        key = tuple(ident_fields[f] for f in IDENTITY_FIELDS) + (r.shape,)
         if ident is None:
             ident = key
         elif key != ident:
@@ -101,7 +115,8 @@ def average_snapshots(paths, reg=None):
                          "permission to average a different window.")
     mean = np.mean(np.stack(rows, 0), axis=0).astype(np.float32)
     diag.append({"step": "mean_last_three", "rms": float(np.sqrt((mean ** 2).mean()))})
-    return mean, {"snapshots": diag, "operation": reg["checkpoint_averaging"]["operation"]}
+    return mean, {"snapshots": diag, "operation": reg["checkpoint_averaging"]["operation"],
+                  "identity": dict(zip(IDENTITY_FIELDS, ident))}
 
 
 def assert_encoder_spec(spec, reg=None):
@@ -146,13 +161,14 @@ def check_table_limits(eff_rows, reg=None):
 
 
 def build_bundle(out_dir, eff_rows, tokenizer, provenance, reg=None, form="endpoint",
-                 fallback_id=None):
+                 fallback_id=None, fixture=False):
     """Write the M17 candidate bundle. `eff_rows` are already folded effective float32 rows.
 
     `fallback_id` defaults to the frozen `encoder_spec.cls_id` (101 in this WordPiece
-    vocabulary) and any other value is recorded in the config as a fixture table, which is the
-    only situation it can legitimately arise in — the rehearsal's toy vocabulary is smaller
-    than 101 rows.
+    vocabulary). `fixture=True` is the EXPLICIT rehearsal provenance flag and the only way to
+    skip the dimension/added-row/35M checks; only `m17src/rehearse17.py` sets it. It used to be
+    inferred from "fallback_id differs from the frozen CLS", which turned any wrong fallback id
+    into a silent cap bypass. The fallback id itself is range-checked in every mode.
     """
     from table import quantize_int8
     reg = reg or registry()
@@ -160,7 +176,7 @@ def build_bundle(out_dir, eff_rows, tokenizer, provenance, reg=None, form="endpo
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     spec = assert_encoder_spec(dict(fz["encoder_spec"]), reg)
-    fixture = fallback_id is not None and int(fallback_id) != int(fz["encoder_spec"]["cls_id"])
+    fixture = bool(fixture)
     if not fixture:
         check_table_limits(eff_rows, reg)
 
@@ -175,9 +191,9 @@ def build_bundle(out_dir, eff_rows, tokenizer, provenance, reg=None, form="endpo
     tokenizer.save(str(out / "tokenizer.json"))
     spec_cls = int(fz["encoder_spec"]["cls_id"])
     fb = spec_cls if fallback_id is None else int(fallback_id)
-    if fb >= eff_rows.shape[0]:
+    if not 0 <= fb < eff_rows.shape[0]:
         raise SystemExit(f"M17 BUILD REFUSED: fallback token id {fb} is outside a table of "
-                         f"{eff_rows.shape[0]} rows.")
+                         f"{eff_rows.shape[0]} rows (a negative id would index from the end).")
     # CC BY 4.0 attribution ships WITH the derived weights whenever the vocabulary was mined
     # from the Kubernetes documentation (research/m7-data-licensing.md, Kubernetes row).
     sources = provenance.get("vocabulary_sources") or provenance.get("sources") or []
@@ -193,7 +209,7 @@ def build_bundle(out_dir, eff_rows, tokenizer, provenance, reg=None, form="endpo
         **({"attribution": attribution} if attribution else {}),
         "preproc": fz["preproc"], "preproc_fingerprint": fz["preproc_fingerprint"],
         "fallback_token_id": fb,
-        **({"fixture_table": True, "frozen_cls_id": spec_cls} if fb != spec_cls else {}),
+        **({"fixture_table": True, "frozen_cls_id": spec_cls} if fixture else {}),
         "vocab": int(eff_rows.shape[0]), "dim": int(eff_rows.shape[1]),
         "weights_folded": True, "form": form,
         "document_encoder": spec,
@@ -246,7 +262,13 @@ def gate_files(bundle):
 
 
 def gate_artifact(bundle):
-    """EVERY hash provenance records must be the hash of the staged bytes."""
+    """The four GENERATED-BYTE hashes must equal the hash of what is staged.
+
+    Exactly `model_npz_sha256`, `tokenizer_sha256`, `config_sha256` and, when the bundle ships
+    one, `attribution_sha256`. It does NOT verify external provenance — run, cache, bank,
+    vocabulary or lock hashes are self-reported by whoever built the bundle and are checked
+    where they are produced, not here.
+    """
     b = Path(bundle)
     prov = json.loads(admit_read(b / "provenance.json").read_text())
     cfg = json.loads(admit_read(b / "config.json").read_text())
@@ -283,7 +305,12 @@ def gate_encoder_spec(bundle):
 
 
 def gate_tokenizer(bundle):
-    """Padding off, truncation at the frozen max_length, vocabulary size equal to the rows."""
+    """Padding off and vocabulary size equal to the rows.
+
+    Truncation is NOT gated here: both runtime paths (`loader_np` and `_torch_encode`) call
+    `enable_truncation(max_length=preproc.max_length)` themselves, so the serialized
+    `truncation` field is inert. It is reported for the record, not checked.
+    """
     from tokenizers import Tokenizer
     b = Path(bundle)
     cfg = json.loads(admit_read(b / "config.json").read_text())
@@ -295,7 +322,8 @@ def gate_tokenizer(bundle):
     n = tok.get_vocab_size(with_added_tokens=True)
     if n != cfg["vocab"]:
         raise SystemExit(f"M17 GATE tokenizer: {n} tokens vs {cfg['vocab']} rows")
-    return {"vocab": n, "truncation_in_file": raw.get("truncation")}
+    return {"vocab": n, "truncation_in_file": raw.get("truncation"),
+            "truncation_note": "imposed by the loader at preproc.max_length; not gated here"}
 
 
 def gate_conformance(bundle, tol=None):
@@ -405,7 +433,17 @@ def main(argv=None):
         rows, diag = average_snapshots(args.snapshots, reg)
     else:
         rows, d = effective_rows(args.endpoint)
-        diag = {"snapshots": [{"step": d["meta"].get("m17_step"), "rms": d["rms"]}]}
+        # the endpoint form must record the SAME identity averaging requires
+        ident = snapshot_identity(d["meta"], args.endpoint)
+        diag = {"snapshots": [{"step": d["meta"].get("m17_step"), "rms": d["rms"]}],
+                "identity": ident}
+    tok_sha = sha_file(args.tokenizer)
+    if tok_sha != diag["identity"]["tokenizer_sha256"]:
+        raise SystemExit(
+            f"M17 EXPORT REFUSED: --tokenizer hashes to {tok_sha[:12]} but the checkpoint was "
+            f"trained with {str(diag['identity']['tokenizer_sha256'])[:12]}. A same-sized "
+            "tokenizer with different ids would pass every gate, because conformance compares "
+            "the bundle tokenizer against itself.")
     prov = json.loads(admit_read(args.provenance).read_text()) if args.provenance else {}
     out = build_bundle(args.out, rows, Tokenizer.from_file(str(admit_read(args.tokenizer))),
                        {**prov, "averaging": diag}, reg, form=args.form)

@@ -214,6 +214,7 @@ def select(stats, reg, expansions=None, abbreviations=None, single_token=(),
     ranked = rank(stats)
     present = {s.term for s in ranked}
     chosen, per_domain, notes = [], defaultdict(int), []
+    chosen_terms = set()
     dropped = {"below_minima": [], "abbreviation_dropped": [], "abbreviation_expanded": [],
                "domain_cap": [], "total_cap": []}
 
@@ -232,6 +233,7 @@ def select(stats, reg, expansions=None, abbreviations=None, single_token=(),
                        "distinct_source_documents": stat.n_docs,
                        "distinct_training_contexts": stat.n_contexts,
                        "abbreviation": bool(is_abbr(stat.term))})
+        chosen_terms.add(stat.term)
         return True
 
     # Owner-pinned rows first: exempt from the minima, not from the caps, and recorded with
@@ -244,12 +246,23 @@ def select(stats, reg, expansions=None, abbreviations=None, single_token=(),
         admit(st, "owner_pinned")
 
     for st in ranked:
-        if st.term in pinned:
+        if st.term in pinned or st.term in chosen_terms:
             continue
         if is_abbr(st.term) and (st.n_docs < 2 * minima_docs or st.n_contexts < 2 * minima_ctx):
             exp = expansions.get(st.term)
             if exp and exp in present and exp not in pinned:
-                dropped["abbreviation_expanded"].append({"abbrev": st.term, "expanded": exp})
+                rec = {"abbrev": st.term, "expanded": exp}
+                dropped["abbreviation_expanded"].append(rec)
+                # Replacement is atomic: the expansion is admitted HERE, at the abbreviation's
+                # own rank position. Left to its own later position a tight cap could be
+                # exhausted first and the named replacement would never be selected.
+                ex = stats[exp]
+                if exp in chosen_terms:
+                    pass
+                elif ex.n_docs < minima_docs or ex.n_contexts < minima_ctx:
+                    rec["expansion_below_minima"] = True
+                elif not admit(ex, "abbreviation_expansion"):
+                    rec["expansion_dropped"] = True
             else:
                 dropped["abbreviation_dropped"].append(st.term)
             continue

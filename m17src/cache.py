@@ -220,8 +220,23 @@ def build(queries, bank: Bank, teacher_q, v1_q, reg, cache_seed=0, manifests=Non
                     break
             guard += 1
             if guard > 64:
-                counters["shortfall_uniform"] += want
+                # Rejection sampling has stopped paying: draw the rest WITHOUT REPLACEMENT from
+                # the ids actually left, with the same per-query RNG. The old guard turned a
+                # thin remainder into a probabilistic shortfall even though enough unused
+                # documents existed; a shortfall now means the bank really is too small.
+                left = np.setdiff1d(np.arange(len(bank.doc_ids), dtype=np.int64),
+                                    np.fromiter(chosen, dtype=np.int64, count=len(chosen)),
+                                    assume_unique=True)
+                take = min(want, len(left))
+                for i in (rng.choice(left, size=take, replace=False) if take else ()):
+                    i = int(i)
+                    chosen.add(i)
+                    idx.append(i)
+                    src.append(SRC_UNIFORM)
+                want -= take
                 break
+        if want > 0:
+            counters["shortfall_uniform"] += want
 
         # A bank smaller than K leaves trailing -1 slots; they are masked out of the teacher
         # distribution and counted in the shortfall counters rather than padded with a document.

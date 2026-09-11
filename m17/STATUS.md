@@ -7,7 +7,7 @@ API and frozen document index; Nano/M13 stays unchanged. Branch: `m17-zero-v1.1-
 **Done (2026-09-11, checkpoint 1):** steps 2 and 3 of the execution checklist. Kubernetes docs
 licensing row completed (CC BY 4.0 whole repository, pinned SHA, 1,648 admitted docs, dev-suite
 screen clean; attribution file `research/m17-k8s-attribution.md` ships with derived weights, kept
-as registered by Dylan). Support manifest, alias training pool (15,573 pairs), provisional judged
+as registered by Dylan). Support manifest, alias training pool (15,393 pairs), provisional judged
 panel (553 queries, six domains, sealed audit partition) and 200-pair alias test built. The one
 driver, cache, vocabulary, export, numpy loader and evaluator are in `m17src/`; `pytest -q m17src`
 passes (206 after step 4) and the synthetic rehearsal ran clean on the RTX 3080. No candidate trained, no

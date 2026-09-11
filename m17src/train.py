@@ -460,16 +460,19 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
     g_n, c_n, p_n = cfg.batch_shape()
     streams, pair_index, alias_report = build_streams(
         data["buckets"], data["alias_pair_ids"], data["alias_views"], data["families"], cfg.seed,
-        need={"general": g_n, "coverage": c_n,
-              "alias": p_n if arm["alias_consistency"] else 0})
+        # Every arm DRAWS the registered alias pairs; only VL-A adds their loss term. So the
+        # undersupply refusal applies to every arm, or a C run would quietly wrap a handful of
+        # pairs several times inside one batch and call it the registered dose.
+        need={"general": g_n, "coverage": c_n, "alias": p_n})
     heldout = np.asarray(data["heldout_idx"], dtype=np.int64)[:cfg.heldout_queries]
     _check_heldout(heldout, streams, pair_index, cfg)
+    heldout_sha = _heldout_sha(heldout)
 
     state = {"step": 0, "history": [], "flags": [], "snapshots": {},
              "train_running": {"cosine": None, "listwise": None}}
     ck = out / "recovery.pt"
     if resume and ck.exists():
-        state, eff_init = _resume(ck, model, opt, streams, cfg, eff_init, log)
+        state, eff_init = _resume(ck, model, opt, streams, cfg, eff_init, log, heldout_sha)
 
     def set_lr(step):
         f = min(1.0, step / max(1, cfg.warmup_steps))
@@ -559,7 +562,7 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
             log(f"  [{cfg.run_id}] step-bound snapshot {p.name}")
 
         if (time.time() - last_ck) / 60.0 >= cfg.checkpoint_minutes_max or s == cfg.steps:
-            _checkpoint(ck, model, opt, streams, state, cfg, data, eff_init)
+            _checkpoint(ck, model, opt, streams, state, cfg, data, eff_init, heldout_sha)
             last_ck = time.time()
 
     record = {
@@ -664,16 +667,25 @@ RESUME_BOUND_FIELDS = ("arm", "seed", "phase", "steps", "batch", "general_views"
                        "coverage_views", "alias_pairs", "warmup_steps", "temperature",
                        "cosine_weight", "listwise_weight", "alias_weight", "init_anchor_weight",
                        "rows_lr", "weights_lr", "tokenizer_sha256", "vocabulary_sha256",
-                       "cache_sha256")
+                       "cache_sha256",
+                       # the divergence read is part of the protocol: its cadence, its size and
+                       # the registered snapshot window all change what a resumed run reports.
+                       "check_every", "heldout_queries", "snapshot_steps")
 
 
-def _checkpoint(path, model, opt, streams, state, cfg, data, eff_init):
+def _heldout_sha(heldout):
+    """Sha of the ORDERED held-out slice: same length, different queries is a different read."""
+    return sha_array(np.asarray(heldout, dtype=np.int64))
+
+
+def _checkpoint(path, model, opt, streams, state, cfg, data, eff_init, heldout_sha):
     tmp = Path(str(path) + ".tmp")
     torch.save({"model": model.state_dict(), "opt": opt.state_dict(),
                 "streams": {k: v.state() for k, v in streams.items()},
                 "state": state, "cfg": asdict(cfg),
                 "torch_rng": torch.get_rng_state(),
                 "tokenizer_sha256": cfg.tokenizer_sha256,
+                "heldout_sha256": heldout_sha,
                 "bound": {k: getattr(cfg, k) for k in RESUME_BOUND_FIELDS},
                 "eff_init": eff_init.detach().cpu(),
                 "vocab": int(model.rows.shape[0]),
@@ -681,7 +693,7 @@ def _checkpoint(path, model, opt, streams, state, cfg, data, eff_init):
     tmp.replace(path)
 
 
-def _resume(path, model, opt, streams, cfg, eff_init, log):
+def _resume(path, model, opt, streams, cfg, eff_init, log, heldout_sha):
     """Restore a run — and refuse a checkpoint that belongs to a different one.
 
     Returns `(state, eff_init)`: the anchor initialization comes BACK from the checkpoint, so
@@ -709,6 +721,11 @@ def _resume(path, model, opt, streams, cfg, eff_init, log):
         raise SystemExit(f"M17 RESUME REFUSED: the checkpoint's configuration differs on "
                          f"{differ}; recovery continues one experiment, it does not adopt "
                          "another arm, seed, dose or cache.")
+    if ck.get("heldout_sha256") != heldout_sha:
+        raise SystemExit(
+            f"M17 RESUME REFUSED: the held-out slice hashes to {heldout_sha[:12]} but the checkpoint "
+            f"was written for {str(ck.get('heldout_sha256'))[:12]}. A same-length slice of "
+            "different queries makes the divergence history incomparable.")
     model.load_state_dict(ck["model"])
     opt.load_state_dict(ck["opt"])
     for k, v in streams.items():

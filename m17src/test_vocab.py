@@ -143,6 +143,42 @@ def test_abbreviation_policy_expands_or_drops(reg):
     assert "kubernetes" in [t["term"] for t in sel["terms"]]
 
 
+def test_a_replaced_abbreviations_expansion_is_admitted_at_that_position(reg):
+    """Under a tight cap the named expansion used to lose its slot to an intervening term,
+    so the pool recorded 'abbreviation_expanded' and shipped neither of the two."""
+    stats = {
+        "k9s": _stats(term="k9s", docs=range(3), contexts=range(5), residual=0.99),
+        "kubernetes": _stats(term="kubernetes", docs=range(30), contexts=range(80),
+                             residual=0.01),                       # ranked LAST
+        "filler": _stats(term="filler", docs=range(30), contexts=range(80), residual=0.5),
+    }
+    small = {**reg, "added_rows_max": 2, "per_domain_added_rows_max": 2,
+             "technical_priority_slots_max": 2, "owner_pinned_terms": {"terms": []},
+             "data": {**reg["data"], "new_term_min_distinct_source_documents": 2,
+                      "new_term_min_distinct_training_contexts": 3}}
+    sel = V.select(stats, small, expansions={"k9s": "kubernetes"}, single_token=())
+    terms = [t["term"] for t in sel["terms"]]
+    assert "kubernetes" in terms and "k9s" not in terms
+    assert sel["dropped"]["abbreviation_expanded"][0]["expanded"] == "kubernetes"
+    assert terms.count("kubernetes") == 1, "the expansion must not be admitted twice"
+
+
+def test_an_expansion_that_cannot_fit_is_recorded_as_dropped(reg):
+    stats = {
+        "aaa": _stats(term="aaa", docs=range(30), contexts=range(80), residual=0.9),
+        "k9s": _stats(term="k9s", docs=range(3), contexts=range(5), residual=0.5),
+        "kubernetes": _stats(term="kubernetes", docs=range(30), contexts=range(80),
+                             residual=0.01),
+    }
+    small = {**reg, "added_rows_max": 1, "per_domain_added_rows_max": 1,
+             "technical_priority_slots_max": 1, "owner_pinned_terms": {"terms": []},
+             "data": {**reg["data"], "new_term_min_distinct_source_documents": 2,
+                      "new_term_min_distinct_training_contexts": 3}}
+    sel = V.select(stats, small, expansions={"k9s": "kubernetes"}, single_token=())
+    assert [t["term"] for t in sel["terms"]] == ["aaa"]
+    assert sel["dropped"]["abbreviation_expanded"][0].get("expansion_dropped") is True
+
+
 def test_domain_of_needs_a_majority():
     s = _stats(term="x", domains={"a": 3, "b": 3})
     assert V.domain_of(s) == "general"

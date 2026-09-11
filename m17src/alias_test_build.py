@@ -258,9 +258,16 @@ def build(seed=SEED, target=TARGET_PAIRS, verbose=True):
             t = "txt:" + P.group_id(P.normalize(p[k]))
             uf.add(t)
             uf.union(uid, t)
-        d = "doc:" + P.group_id(P.normalize(p["doc_id"]))
+        # SOURCE-QUALIFIED: raw document ids collide across datasets, and an unqualified key
+        # would merge two unrelated pairs into one family and one held-out split unit.
+        d = "doc:" + P.group_id(p["source"] + "\x00" + P.normalize(p["doc_id"]))
         uf.add(d)
         uf.union(uid, d)
+
+    # The panel's PINNED classifier threshold, not panel_build's module default: the manifest
+    # says these are the panel's heuristic labels, so they must be the panel's procedure.
+    import support_manifest as SM
+    min_score, min_score_source = SM.classifier_min_score_with_source()
 
     records, pending = [], []
     for i, p in enumerate(picked):
@@ -268,7 +275,7 @@ def build(seed=SEED, target=TARGET_PAIRS, verbose=True):
         truncated = bool(p.get("truncated"))
         domain = p["domain_hint"]
         if domain == "general":
-            domain, _ = P.classify(p["long"] + " " + p["citation_sentence"])
+            domain, _ = P.classify(p["long"] + " " + p["citation_sentence"], "general", min_score)
         pid = f"alias-{i:04d}"
         rec = {
             "pair_id": pid,
@@ -327,12 +334,16 @@ def build(seed=SEED, target=TARGET_PAIRS, verbose=True):
     manifest = {
         "milestone": "M17", "step": "2c", "date": "2026-09-11",
         "script": "m17src/alias_test_build.py",
+        "script_sha256": sha_file(Path(__file__).resolve()),
+        "registry_sha256": sha_file(REPO / "m17" / "registry.json"),
         "status": "PROVISIONAL — ambiguous-sense pairs pending human judgment",
         "gpu_used": False, "protected_payloads_opened": False, "scored_anything": False,
         "seed": seed, "target_pairs": target, "n_pairs": len(records),
         "by_source": dict(Counter(r["source"] for r in records)),
         "by_kind": dict(Counter(r["kind"] for r in records)),
         "by_domain": dict(Counter(r["domain"] for r in records)),
+        "classifier_min_score": min_score,
+        "classifier_min_score_source": min_score_source,
         "by_judgment_status": dict(Counter(r["judgment_status"] for r in records)),
         "ambiguous_sense_pairs": sum(1 for r in records if r["ambiguous_sense"]),
         "truncated_extraction_pairs": sum(1 for r in records if r["extraction_truncated"]),

@@ -25,18 +25,19 @@ from pathlib import Path
 
 import numpy as np
 
-from common import registry, require_executable, write_json
+from common import admit_read, registry, require_executable, write_json
 
 FORBIDDEN = ("frozen_eval/untouched-", "m9reserve", "reserved_qrels", "lotte")
 
 
 def _check_path(p):
+    """Spelling check plus `common.admit_read`, which resolves symlinks before refusing."""
     s = str(p).replace("\\", "/").lower()
     for bad in FORBIDDEN:
         if bad in s:
             raise SystemExit(f"M17 EVAL REFUSED: {p} names a protected surface ({bad!r}). "
                              "M17 has no protected access (registry.protected_access).")
-    return p
+    return admit_read(p)
 
 
 # ---- exact dense retrieval -----------------------------------------------------------------
@@ -49,10 +50,12 @@ def search(query_vecs, doc_vecs, k=10, doc_ids=None, block=4096, doc_block=DOC_B
     """Exact inner product over L2-normalized vectors. Returns a run dict {qkey: {docid: score}}.
 
     Blocked over queries AND over documents: a 4096 x 5.2M score matrix is 85 GB, so the corpus
-    is walked in `doc_block` slices and each slice's top-k is merged. The merge is exact —
-    every block contributes its own top-k, so no document that belongs in the global top-k can
-    be dropped — and ties are broken by ascending document id, the same rule the cache builder
-    uses, so the result does not depend on the block size.
+    is walked in `doc_block` slices and each slice's top-k is merged. The merge is exact — each
+    block keeps its WHOLE cutoff tie (every document scoring at least the block's k-th largest
+    score) and then selects by (-score, ascending document id), the same rule the global merge
+    and the cache builder use. Taking only `argpartition`'s arbitrary k would discard smaller
+    document ids from a tie wider than k and make the answer depend on the block size.
+    Document ids must therefore be unique.
 
     `query_ids` keys the run by the caller's own query ids instead of positional integers; the
     panel's qrels/domains/families are keyed that way (`results/m17_panel_manifest.json`
@@ -61,6 +64,9 @@ def search(query_vecs, doc_vecs, k=10, doc_ids=None, block=4096, doc_block=DOC_B
     q = np.asarray(query_vecs, dtype=np.float32)
     d = np.asarray(doc_vecs, dtype=np.float32)
     ids = list(doc_ids) if doc_ids is not None else list(range(d.shape[0]))
+    if len(set(ids)) != len(ids):
+        raise ValueError("doc_ids contains duplicates; the ascending-id tie rule needs one key "
+                         "per document, and a duplicate key would silently drop a document")
     if query_ids is not None and len(query_ids) != q.shape[0]:
         raise ValueError(f"{len(query_ids)} query_ids for {q.shape[0]} query vectors")
     kk = min(k, d.shape[0])
@@ -75,7 +81,11 @@ def search(query_vecs, doc_vecs, k=10, doc_ids=None, block=4096, doc_block=DOC_B
                 continue
             top = np.argpartition(-s, m - 1, axis=1)[:, :m]
             for r in range(s.shape[0]):
-                cand[r].extend((float(s[r, j]), ids[dlo + j]) for j in top[r])
+                cut = float(s[r, top[r]].min())          # the block's k-th largest score
+                tied = np.flatnonzero(s[r] >= cut)       # the whole cutoff tie, not a subset
+                block = sorted(((float(s[r, j]), ids[dlo + int(j)]) for j in tied),
+                               key=lambda t: (-t[0], t[1]))
+                cand[r].extend(block[:m])
         for r in range(qb.shape[0]):
             key = query_ids[lo + r] if query_ids is not None else lo + r
             best = sorted(cand[r], key=lambda t: (-t[0], t[1]))[:kk]
@@ -133,7 +143,12 @@ def paired_family_bootstrap(a, b, families, replicates=10000, confidence=0.95, s
     `domains` also stratifies the resample, so a domain does not vanish from a replicate.
     A wide interval here is a statement about this panel's size, not evidence of equivalence.
     """
-    keys = sorted(set(a) & set(b))
+    if set(a) != set(b):
+        miss, extra = sorted(set(a) - set(b))[:3], sorted(set(b) - set(a))[:3]
+        raise ValueError(f"baseline keys do not match the candidate's: missing {miss}, "
+                         f"unexpected {extra}. Intersecting would silently drop queries from "
+                         "one side and report the paired interval as if they were compared.")
+    keys = sorted(a)
     if not keys:
         return {"delta": 0.0, "ci": [None, None], "n_families": 0}
     delta = np.asarray([a[k] - b[k] for k in keys], dtype=np.float64)
@@ -194,8 +209,12 @@ def dbsf_at(dense_run, bm25_run, prefetch=100):
 
 def alias_test(run_a, run_b, k=10):
     """Top-10 overlap and rank correlation between the two views of each held-out pair."""
+    if set(run_a) != set(run_b):
+        miss, extra = sorted(set(run_a) - set(run_b))[:3], sorted(set(run_b) - set(run_a))[:3]
+        raise ValueError(f"the two alias views do not cover the same pairs: missing {miss}, "
+                         f"unexpected {extra}. Every declared pair needs one result per view.")
     overlaps, rhos = [], []
-    for key in sorted(set(run_a) & set(run_b)):
+    for key in sorted(run_a):
         ra = [d for d, _ in sorted(run_a[key].items(), key=lambda kv: -kv[1])[:k]]
         rb = [d for d, _ in sorted(run_b[key].items(), key=lambda kv: -kv[1])[:k]]
         overlaps.append(len(set(ra) & set(rb)) / max(1, k))
@@ -256,6 +275,12 @@ def evaluate(query_vecs, doc_vecs, qrels, domains, families=None, doc_ids=None, 
            "ndcg@10": per_domain(nd, domains), "recall@10": per_domain(rc, domains),
            "per_query_ndcg@10": nd}
     if bm25_run is not None:
+        if set(bm25_run) != set(run):
+            miss = sorted(set(run) - set(bm25_run), key=str)[:3]
+            extra = sorted(set(bm25_run) - set(run), key=str)[:3]
+            raise ValueError(f"bm25_run keys do not match the dense run: missing {miss}, "
+                             f"unexpected {extra}. Positional keys against string query ids "
+                             "would fuse unrelated queries and report them as fused.")
         fused = dbsf_at(run, bm25_run, prefetch)
         fnd = ndcg_at_k(fused, qrels, k)
         out["fused_dbsf@100"] = {**per_domain(fnd, domains), "prefetch": prefetch}

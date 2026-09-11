@@ -28,7 +28,7 @@ from pathlib import Path
 import numpy as np
 from tokenizers import Tokenizer
 
-from common import admit_read
+from common import admit_read, admit_write
 
 EPS = 1e-6
 MODES = ("eager_fp32", "resident_int8")
@@ -201,7 +201,7 @@ def main(argv=None):
     rep = parity(args.bundle)
     print(json.dumps(rep, indent=1, sort_keys=True))
     if args.json:
-        Path(args.json).write_text(json.dumps(rep, indent=1, sort_keys=True))
+        admit_write(args.json).write_text(json.dumps(rep, indent=1, sort_keys=True))
     return 0 if rep["pass"] else 1
 
 

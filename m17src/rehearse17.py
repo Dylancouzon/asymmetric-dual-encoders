@@ -287,7 +287,8 @@ def build(root, seed=0, device="cpu", log=print):
                                   Tokenizer.from_file(str(root / "data" / "tokenizer_ext.json")),
                                   {"bank": bank.identity(), "vocabulary_sha256":
                                    sel["vocabulary_sha256"], "averaging": diag,
-                                   "rehearsal": True}, reg, form=form, fallback_id=2)
+                                   "rehearsal": True}, reg, form=form, fallback_id=2,
+                                  fixture=True)
         gates = export.run_gates(out, log=log)
         bundles[form] = {"dir": str(out), "gates": {k: True for k in gates},
                          "rms": diag["snapshots"][-1]["rms"],

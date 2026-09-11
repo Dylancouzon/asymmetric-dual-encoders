@@ -124,7 +124,10 @@ def test_document_domain_matches_the_panel_classifier_at_the_same_threshold(tmp_
     import panel_build as P
     _pin(monkeypatch, tmp_path, P.MIN_SCORE)
     assert S.classifier_min_score() == P.MIN_SCORE
-    assert S.domain_method() == P.DOMAIN_METHOD
+    # step 2b has its OWN method string: same classifier and threshold, document text only
+    assert S.panel_domain_method() == P.DOMAIN_METHOD
+    assert "DOCUMENT TEXT ONLY" in S.domain_method()
+    assert "query text" not in S.domain_method()
     for text in (MEDICAL, BLAND, "inflation and monetary policy raised the interest rate"):
         assert S.document_domain("squad-train", text) == P.classify(text, "general")[0]
     # and the threshold is honoured, not hard-coded: an unreachable one falls back to the map
