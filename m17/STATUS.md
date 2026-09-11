@@ -1,33 +1,50 @@
-# M17 status — planning, 2026-09-11
+# M17 status — pre-clock execution, 2026-09-11
 
 **Planned:** a supported vocabulary extension, joint table/listwise training, and the owner-approved
 alias consistency, late-checkpoint averaging and int8 resident-row loading comparisons. Same query
 API and frozen document index; Nano/M13 stays unchanged. Branch: `m17-zero-v1.1-planning`.
 
-**Done:** three Luna research notes, local tokenizer/resource diagnostics, and a bounded plan
-for the owner-confirmed local RTX 3080. No candidate trained, quality benchmark scored or model
-published. Research conclusions and diagnostic limitations: [FINDINGS.md](FINDINGS.md).
+**Done (2026-09-11, checkpoint 1):** steps 2 and 3 of the execution checklist. Kubernetes docs
+licensing row completed (CC BY 4.0 whole repository, pinned SHA, 1,648 admitted docs, dev-suite
+screen clean; attribution file `research/m17-k8s-attribution.md` ships with derived weights, kept
+as registered by Dylan). Support manifest, alias training pool (15,573 pairs), provisional judged
+panel (553 queries, six domains, sealed audit partition) and 200-pair alias test built. The one
+driver, cache, vocabulary, export, numpy loader and evaluator are in `m17src/`; `pytest -q m17src`
+passes (141) and the synthetic rehearsal ran clean on the RTX 3080. No candidate trained, no
+development-suite or panel read, nothing published. Result JSONs: `results/m17_*`.
 
-**Next (execution session, in this order):** the registry is `DRAFT_NOT_EXECUTABLE` until
-step 6 is done; nothing below the pre-clock line touches the 72-hour budget.
+**Waiting on Dylan (do not re-ask what is already answered here):**
 
-1. Read `PLANNING.md`, `registry.json` (especially `decision_protocol`, `candidate_construction`,
-   `bucket_populations_and_dose_rule`, `vocabulary_ranking`) and `REVIEW.md`.
-2. Pre-clock, no GPU: complete the Kubernetes licensing row in `research/m7-data-licensing.md`
-   (revision, clone route, licence text, attribution artifact, decontamination) before any
-   download; build the admitted-source support manifest with per-domain counts; build and seal
-   the judged panel and the 200-pair alias test, screened against M7 ancestry.
-3. Pre-clock: write the one M17 driver, cache schema, averaging export helper and numpy loader
-   in `m17src/`; run the tiny synthetic end-to-end rehearsal under `work/m17/rehearsal`.
-4. Pre-clock: two independent implementation reviews (Codex Astra plus one other); fix P1s.
-5. Time teacher encoding, mining and evaluation at two sizes; apply the dose rule; write the
-   measured allocation into the registry.
-6. Commit the lock: protocol, vocabulary hash, tokenizer hash, seeds, cache identity. Flip the
-   registry status. Only then start the clock and read V0.
+- Judge the 360 Kubernetes query/candidate rows and 59 ambiguous alias senses in
+  `results/m17_panel_pending_judgments.jsonl` (options: Dylan alone; Dylan plus a second engineer
+  on a double-judged subset with agreement reported; or a narrower ~60-query panel). Until then
+  cloud-software has zero judgments and the panel hash is provisional.
+- Spot-check the 2% alias sample `results/m17_alias_spotcheck_sample.jsonl` (311 pairs).
+- Ruling: science-engineering, medicine, finance and legal are unpopulated in the source-to-domain
+  map, so vocabulary breadth is predetermined "narrow". The panel already assigns those domains
+  per passage with a keyword classifier. Allowing the same document-level classifier in the
+  training source-to-domain map is a pre-lock protocol refinement (no new source); accepting
+  "narrow" is the alternative. Also confirm the panel's exclusion of FEVER-train (reserved four,
+  Stella exposure) and ESCI (no panel domain).
+- Dose rule applied: alias share 16 to 10 pairs per batch, freed slots to general replay, steps
+  stay 6,000. No ruling needed; recorded in the registry and `LEDGER.md`.
 
-Owner rulings already recorded and not to be re-asked: A1 additions, A2 recommendations, `k8s`
-pinned, Kubernetes docs in principle. Any new source, cap, teacher or release change still needs
-Dylan.
+**Next (in this order):** the registry stays `DRAFT_NOT_EXECUTABLE` until step 6.
+
+4. Pre-clock: two independent implementation reviews of `m17src/` (Codex Astra, then Codex Sol),
+   briefs naming files, forbidding recursive searches, with the reserved read-exclusion; audit
+   access logs; fix P1s with one Opus agent; one P1 re-check. Cap at two reviews plus one re-check.
+5. Time teacher encoding, mining and evaluation at two sizes; write the measured allocation into
+   the registry. Protected-surface screening (six, reserved four, LoTTE) belongs inside the
+   executor via `protected10.build()` before importing `m9base`; see the step 2a `LEDGER.md` entry.
+6. Commit the lock: protocol, vocabulary hash, tokenizer hash, seeds, cache identity, final panel
+   hash. Flip the registry status. Only then start the clock and read V0.
+
+**Working model for every M17 session (Dylan, 2026-09-11):** Fable orchestrates; Opus subagents
+do execution; at most two subagents run concurrently; subagents never spawn subagents. Codex
+Astra and Sol are the reviewers. Commit and push after every coherent batch. Plan a context clear
+at each checkpoint: update this file first, push, then Dylan clears. Checkpoints: after step 4
+reviews and fixes; after step 5 timings; before the lock and clock start.
 
 **Open dependencies:** supported training terms, independently judged evaluation panel, measured
 end-to-end allocation, implementation and two independent execution reviews. No existing rule
