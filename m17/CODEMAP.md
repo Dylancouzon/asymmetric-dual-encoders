@@ -35,6 +35,7 @@
 | `results/m17_alias_spotcheck_sample.jsonl` | The seeded random 2% sample of the alias pool for Dylan's human spot check; the only step-2b file that carries text |
 | `work/m17/manifest/` | Gitignored step-2b artifacts: `doc_groups/*.tsv.gz`, `query_families.tsv.gz`, `alias_pairs.jsonl`, `alias_pairs_summary.json`, `counts_cache.json`, and step 2c's `alias_test_families.json`. Hashes are published in the result |
 | `work/m17/panel/`, `work/m17/alias/` | Gitignored panel and alias text: `panel.jsonl`, `selection.jsonl`, `audit.jsonl`, `corpus.jsonl`, the two classifier caches, `ancestry_screen.json`, `alias_test.jsonl` |
+| `m17src/prepare_data.py` | **Step 5. The one prepared-data builder.** Ten stages, each cached under `<out>/stages/<name>.json` and resumable: admitted query pool (general / unpaired-coverage / alias buckets, the caps, the seeded stratified `--size` subsample and the whole-family held-out slice), the `(source, document id) -> domain` join (`doc_domain.tsv.gz`, `join_domain` refuses two labels for one document or text group), the protected screen (OFF pre-clock, recorded `deferred_to_clock`), teacher query encoding, the bank, v1 query vectors, old-vocabulary parity, vocabulary selection/extension, the candidate cache with its two pre-lock diagnostics, and the two `prepared.json` manifests. Output layout: `<out>/shared/` holds the one cache, bank, teacher vectors and warm start; `<out>/base/` (arms C/L, no `new_rows`) and `<out>/ext/` (V/VL/VL-A) hold their own tokenizer, `student_ids.json` and manifest and symlink the shared files. Timings and rates are in `results/m17_prepare_timing.json` |
 | `m17src/rehearse17.py`, `m17src/conftest.py`, `m17src/test_*.py` | The tiny synthetic end-to-end rehearsal and the pytest checks that run on it and on fixture-scale inputs. The rehearsal deletes an existing `--out` only when it is empty or carries the `.m17_rehearsal` marker it wrote itself |
 | `results/m17_rehearsal.json`, `results/m17_rehearsal_step4.json` | The step-3 and post-review (step 4) pre-clock rehearsal records: stages, scaled fixture constants, gate results, loader parity, synthetic-only evaluation. Not a quality observation or a rate forecast |
 
@@ -55,6 +56,40 @@ real data path (teacher encoding, the admitted-source query pool, bank mining, t
 dev-suite readers) is deliberately unwritten — `train.py --data` expects a prepared directory
 that step 5 produces. Run the checks with `.venv/bin/python -m pytest -q -ra m17src` and the
 rehearsal with `.venv/bin/python m17src/rehearse17.py` (see `HARNESS.md`).
+
+## Step-5 builder pitfalls (measured, 2026-09-11)
+
+- stella's serialized tokenizer arrives with **padding enabled**. `Tokenizer.from_file(...)` /
+  `backend_tokenizer` must be given `no_padding()` and `enable_truncation(512)` before a single
+  id is taken, or every student bag is filled with `[PAD]` rows. The HF wrapper hides this, so
+  the builder asserts the backend reproduces `m7src/table.tokenize`'s ids under the FREEZE
+  preproc before using it.
+- `work/runs/p35w-2m-s2500.meta.json` (the unfolded warm start) **does not state
+  `weights_folded`**, which `train.load_warm_start` requires explicitly. `prepare_data` copies
+  the npz verbatim (the bytes still hash to `training_checkpoint_sha256`) and writes an
+  augmented sidecar whose `weights_folded: false` is derived from the checkpoint's non-empty
+  per-token scalars and then *proved* by the parity stage. Never edit the original sidecar.
+- Do not call `m7src/pool.build()` to reach the frozen document vectors: it REBUILDS a stale
+  cache, and that cache is a 12.6 GiB artifact. `prepare_data.PoolReader` reads
+  `work/pool/stella-400M-v5/meta.json` + `vecs.f16` directly and refuses a wrong
+  encoder/revision/shape.
+- `cache.build` scores the whole bank per query in numpy (two 262,144 x 1024 mat-vecs plus two
+  full `lexsort`s). It is the dominant preparation cost and it is CPU-bound; see
+  `results/m17_prepare_timing.json` for the measured per-query seconds and the extrapolation.
+- Query-text-only sources (nqopen, triviaqa) ship no document, so `vocab.discover`'s
+  `source_doc` is one sentinel unit per source. Ruling A3 counts one vote per distinct
+  supporting DOCUMENT; treating each query as its own document would restore per-occurrence
+  counting. The consequence is deliberate: a term supported only by those sources cannot reach
+  the 20-document minimum.
+- The registered bank cap cannot hold every positive of every admitted labeled query (~390k
+  distinct positives against a 262,144-row bank). The builder therefore chooses the eligible
+  LABELED subset before the bank exists, in a seeded order, up to half the bank, and records
+  `query_only_by_bank_budget`. Queries outside that subset enter the pool as query-only
+  examples by selection; `cache.build` still refuses, by qid, any labeled query whose positive
+  is outside the bank.
+- `train.py --rehearsal` **with** `--data` now smokes the real prepared directory instead of
+  dispatching to `rehearse17`; without `--data` it is still the synthetic fixture world. The
+  bypass covers the status gate and the FREEZE hash only, and the checkpoint sha is printed.
 
 ## Reuse hazards to resolve before training
 

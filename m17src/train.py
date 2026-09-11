@@ -767,7 +767,11 @@ def main(argv=None):
     status = require_executable(reg, args.rehearsal, what=f"arm {args.arm}")
     device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
 
-    if args.rehearsal:
+    # `--rehearsal` without `--data` is the synthetic fixture world. `--rehearsal` WITH a
+    # prepared directory is the pre-lock smoke of the REAL data path (m17/STATUS.md step 5):
+    # it bypasses the status gate and the FREEZE hash only, and `load_warm_start` still prints
+    # the checkpoint's own sha so the smoke is never mistaken for a lineage-verified run.
+    if args.rehearsal and not args.data:
         import rehearse17
         return rehearse17.main(["--out", args.out or str(WORK / "rehearsal"),
                                 "--device", device])
@@ -777,6 +781,8 @@ def main(argv=None):
                          "training arrays (see m17src/cache.py and m17/STATUS.md step 5).")
     over = {k: v for k, v in (("steps", args.steps), ("batch", args.batch),
                               ("device", device)) if v is not None}
+    if args.rehearsal:
+        over["rehearsal"] = True
     cfg = RunCfg.from_registry(reg, args.arm, seed=args.seed, **over)
     data = json.loads(admit_read(Path(args.data) / "prepared.json").read_text())
     data["registry_status"] = status
