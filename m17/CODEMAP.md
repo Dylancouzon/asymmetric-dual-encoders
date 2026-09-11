@@ -80,10 +80,12 @@ rehearsal with `.venv/bin/python m17src/rehearse17.py` (see `HARNESS.md`).
   its boundary, falling back to the full lexsort otherwise, so the yielded order is provably the
   full one. The first two-size timing (per-query mat-vec plus two full sorts) forecast ~20 h for
   the full pool; the blocked path measured 1.6 h (`results/m17_prepare_timing.json`). Blocked fp32
-  BLAS sums in a different order than a mat-vec: teacher scores move by up to ~4e-7, so a cache
-  built before this change has different `teacher_scores`/`candidate_ids` array hashes even with
-  an identical identity hash. The cache on disk is the artifact of record; never mix caches built
-  by the two paths within one experiment.
+  BLAS sums in a different order than a mat-vec: teacher scores move by up to 4.8e-7. Measured
+  exhaustively on the real 2,000/10,000 builds (`work/m17/logs/cache_fullcmp.log`): out of 11,693
+  queries, 1 teacher list and 2 v1 lists changed, each a near-tie. So a cache built before this
+  change has different `teacher_scores`/`candidate_ids` array hashes even with an identical
+  recipe identity; the sidecar's `artifact_sha256` tells them apart. The cache on disk is the
+  artifact of record; never mix caches built by the two paths within one experiment.
 - Query-text-only sources (nqopen, triviaqa) ship no document, so their `source_doc` is
   **`None`**: no distinct-document vote at all (`data.documentless_sources_vote == "none"`,
   ruling A4). Contexts and residuals still count. The earlier one-sentinel-per-source spelling
