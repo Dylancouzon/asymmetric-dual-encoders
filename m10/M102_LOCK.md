@@ -2,7 +2,8 @@
 
 Scope updated 2026-09-10; original half-A lock preserved in
 `research/archive/m10-cleanup-2026-09-10/m10/M102_LOCK.md`. This concise handoff changes no
-selected component or registered decision. **Batch and execution readiness are still pending.**
+selected component or registered decision. **E1 selected batch32 on 2026-09-11; the pre-build
+gate and remaining execution requirements still apply.**
 
 | Axis | Selected | Authority |
 |---|---|---|
@@ -11,11 +12,11 @@ selected component or registered decision. **Batch and execution readiness are s
 | Head | 1152-wide linear, layers 12/8/4 | G2/G3 defaults; G1 descriptive for selection |
 | Mix / objective | 75/25 query/document; squared L2 | B/D registered defaults |
 | Warm start / seed | Ridge head, 60,000 fit rows, fit seed 21; training seed 0 | screen registry |
-| Batch | Pending E1; both E-bs32 and E-bs128 on the same cloud GPU | `rules.E_cost` |
+| Batch | bs32; both E arms completed on the same A100, E1 resolved | `rules.E_cost`, `results/m10_contrast_E1.json` |
 
 Screen authority: `m10/screen_registry.json`. Outputs: `results/m10_screen_verdicts.json`.
 Data authority: `results/m10_data_manifest.json`. The screen chose no non-default component
-among the computed selection contrasts; E remains uncomputed.
+among the computed selection contrasts; E1 now resolves for the anchor's batch32.
 
 ## Inherited build contract
 

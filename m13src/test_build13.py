@@ -156,9 +156,11 @@ def test_a_smoke_only_document_count_is_refused_outside_a_smoke(tmp_path):
         BL.validate(cfg, smoke=False)
 
 
-def test_a_pending_E1_batch_is_refused_outside_a_smoke(tmp_path):
+def test_a_pending_E1_batch_is_refused_outside_a_smoke(tmp_path, monkeypatch):
     """`selected.batch` is 'PENDING' until both E arms have run on the cloud GPU."""
     cfg = _config(tmp_path)[0]
+    monkeypatch.setattr(BL, "verdicts", lambda path=None: {
+        "registry_sha256": REGISTRY_SHA, "selected": {"batch": "PENDING"}})
     with pytest.raises(SystemExit, match="E1 verdict is PENDING"):
         BL.resolve_batch(cfg)
     assert BL.resolve_batch(cfg, smoke=True, override=32)[0] == 32
@@ -851,6 +853,9 @@ def test_the_pending_batch_refusal_reaches_the_controller(tmp_path):
     with pytest.MonkeyPatch.context() as mp:
         mp.setattr(BD, "WORK", root / "m13build")
         mp.setattr(BD.BL, "DOSE", TINY_DOSE)
+        mp.setattr(BL, "verdicts", lambda path=None: {
+            "registry_sha256": REGISTRY_SHA,
+            "selected": {"batch": "PENDING", "student": "bge-small"}})
         _cfg, p = _config(root, dose=TINY_DOSE, reserved_hours=1.0)
         with pytest.raises(SystemExit, match="E1 verdict is PENDING"):
             BD.run(str(p), device="cuda")

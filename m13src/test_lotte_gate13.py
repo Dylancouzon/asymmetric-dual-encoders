@@ -35,6 +35,39 @@ SLICES = list(REAL_REG["surface"]["slices"])
 DEP = {"repo": "fixture/bge-small", "sha256": "d" * 64}
 
 
+@pytest.mark.parametrize("resolved,expected", [(True, 32), (False, 128)])
+def test_actual_selector_output_reaches_manifest_gate_and_build(tmp_path, monkeypatch,
+                                                               resolved, expected):
+    import contrasts as C
+    import build_lock as BL
+    # Exercise the real selection writer, with only synthetic E evidence. Never
+    # replace the published verdict or rerun a real contrast.
+    output = tmp_path / "selection"
+    output.mkdir()
+    monkeypatch.setattr(C, "RESULTS", output)
+    monkeypatch.setattr(C, "_read", lambda cid: {
+        "registry_sha256": C.sha256_file(C.REGISTRY), "delta_raw": .01,
+        "lower_bound_raw": .005 if resolved else -.005,
+        "resolve": {"resolved": resolved, "label": "fixture"}} if cid == "E1" else None)
+    selected = C.selection(verbose=False)["selected"]["batch"]
+    assert selected == f"bs{expected}"
+    cfg = build_world(tmp_path / "world", e1_batch=selected)
+    plan = G.preflight(cfg, verbose=False)
+    assert plan["e1_batch"] == expected
+    assert plan["branch"] == selected
+    batch, _ = BL.resolve_batch({}, verdicts_path=cfg.verdicts_path)
+    assert batch == expected
+    rec = G.run(cfg, verbose=False)
+    assert rec["decision"] == ("skipped" if expected == 32 else "no_veto")
+
+
+@pytest.mark.parametrize("value", ["bs64", "64", 64, 32.5, True, None, "bs32junk"])
+def test_batch_decoder_refuses_unregistered_values(value):
+    import build_lock as BL
+    with pytest.raises(SystemExit, match="registered branches"):
+        BL.selected_batch(value)
+
+
 # --------------------------------------------------------------------------------- fixture ----
 
 def _unit(text, dim=DIM):

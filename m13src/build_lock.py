@@ -81,6 +81,15 @@ def check_verdict_binding(v, *, registry_path=None):
     return live
 
 
+def selected_batch(value):
+    """Decode the selector's bs32/bs128 labels; retain numeric legacy records."""
+    if isinstance(value, str) and value in ("bs32", "bs128", "32", "128"):
+        return int(value.removeprefix("bs"))
+    if type(value) is int and value in (32, 128):
+        return value
+    refuse(f"`selected.batch` is {value!r}; the registered branches are bs32 and bs128")
+
+
 def resolve_batch(cfg, *, smoke=False, override=None, verdicts_path=None):
     """-> (batch, source). The batch is the E1 verdict's, never the configuration's own value.
 
@@ -103,10 +112,7 @@ def resolve_batch(cfg, *, smoke=False, override=None, verdicts_path=None):
                "is not a batch size. Both E arms run on the cloud GPU and `rules.E_cost` is read "
                "BEFORE the build starts (m10/M102_LOCK.md). Pass --smoke-steps with --batch for a "
                "path check.")
-    try:
-        return int(sel), "results/m10_screen_verdicts.json:selected.batch"
-    except (TypeError, ValueError):
-        refuse(f"`selected.batch` is {sel!r}, not a batch size")
+    return selected_batch(sel), "results/m10_screen_verdicts.json:selected.batch"
 
 
 def cycle_plan(dose, batch, cycles=CYCLES):

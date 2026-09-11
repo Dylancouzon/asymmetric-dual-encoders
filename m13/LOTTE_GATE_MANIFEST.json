@@ -1,0 +1,32 @@
+{
+ "_what": "LoTTE read #1 checkpoint manifest \u2014 m10/LOTTE_LOCK.md's second manifest commit, written by m13src/lotte_gate13.py --write-manifest from the published E arm records after both finished and before the build. Commit and push it; the gate refuses to read without the pushed file and re-checks every field.",
+ "written_at": "2026-09-11T23:22:02+0000",
+ "branch": "bs32",
+ "e1_batch": 32,
+ "e1_verdict_sha256": "6690c8af5e7288cd31870e27c7bf62d7be1aa0fb19ad0bd651f0f35f0bc4f4c5",
+ "registry_sha256": "41ff54c33dd88e5adedbe0855dd97c61e4ce19f635e1326320409d97bc71c9ec",
+ "registration_sha256": "a46b66037ae92fcf7ed0d7ce99c5f3e6d17ea0c6ee86ac0c59f957a0e1f99950",
+ "candidate": {
+  "arm": "E-bs32",
+  "checkpoint": "work/m10arms/E-bs32/cycle3.pt",
+  "sha256": "36152c3a564f35ba72b1a3fb7f3e0ca272c43a833764be2102580c73ccc2266b",
+  "record_sha256": "c90bd6515425c634c41ea41c38c29ad87aa8877f71d8e52709e636e36b8cb70e",
+  "recipe": {
+   "student": "bge-small",
+   "n_layers": 3,
+   "head": "linear",
+   "objective": "squared_l2",
+   "pattern": "75/25",
+   "dose_examples": 5000000,
+   "batch": 32
+  },
+  "seed": 0,
+  "git_head": "2ec2f0a05f91a90b698e5648e6739f0715afc8ff",
+  "dependencies": {
+   "repo": "BAAI/bge-small-en-v1.5",
+   "sha256": "8e08d63492ee912f8a8d5ff90968a0b72c3cd2c2a380ee21f42922d2187aab2d"
+  }
+ },
+ "comparator": null,
+ "git_head": "6893a2adb2c6211133ee0b4203fbe8b39a7614fb"
+}

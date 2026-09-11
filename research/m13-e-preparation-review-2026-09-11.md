@@ -88,3 +88,21 @@ Independent e_selection_check review returned GO: the selector returns batch str
 subtraction and weighted unit deltas reproduce E1, registry bindings agree, and bs32 satisfies
 the registered rule. Review accessed only the named controller, selector, decision helper and
 two decision JSONs; no protected payloads or cloud access.
+
+## Post-E gate preparation and fp16 timing
+
+Both e_selection_check and fp16_launch independently cleared the narrow shared batch parser
+fix: the selector emits bs32/bs128, now accepted by gate/build while retaining strict numeric
+legacy support and registry binding. Across the affected suites and final fixture correction,
+116 cases passed; the independent selector/parser subset passed nine cases. Tests now inject
+PENDING rather than depending on the formerly uncomputed live verdict. No decision changed.
+The checkpoint manifest was generated from the completed E records; the lock table now carries
+its candidate identity and the bs32 branch has no comparator.
+
+The operational fp16 launcher is retained at work/m13cloud-launchers/fp16.py. Both gate_next
+and e_selection_check returned GO. It starts only the existing stopped Pod at <=$1.59/hour,
+deploys exact committed HEAD, runs only the admitted SQuAD fp16 benchmark, verifies its copied
+receipt and confirms STOP. Execution cap30minutes plus bounded cleanup; remote benchmark cap
+10minutes. Synthetic archive checks passed for tracked/untracked E records and refusal of
+unrelated edits. Receipt-write failure cannot bypass STOP. All reviewer access was named
+source and allowed metadata/synthetic fixtures, without credentials/cloud/protected payloads.
