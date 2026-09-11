@@ -1,11 +1,12 @@
-# M13 status — Runpod setup running (2026-09-11)
+# M13 status — Checkpoint restart repair (2026-09-11)
 
-**Now:** Runpod Pod `k3aee2m68765em`, one A100 SXM 80 GB, $1.59/GPU-hour, 500 GB persistent
-Pod disk. Pinned environment/CUDA bf16 validation and all active CPU checks passed on cloud
-(M13 170 tests). The reviewed WSL controller is uploading admitted artifacts, then verifying
-checksums and running 512-token shape and restart smokes; it backs up evidence and stops the Pod.
-Live receipt `results/m13_cloud_stage0.json`, logs `logs/m13-cloud-*.log`, operational details
-`m13/CLOUD_READINESS.md`. WSL must remain awake. This job launches no registered E run.
+**Now:** Initial cloud validation uploaded and verified all 266 artifacts; CPU checks and both
+512-token E shape smokes passed. The checkpoint restart smoke failed because recipe identity
+included loader timestamps/timings. Evidence was backed up and the Pod stopped automatically
+(about $3.94 through shutdown). The narrow fingerprint fix passes 151 runner/build tests;
+independent reviews and a fresh cloud restart check are next. Initial receipt:
+`results/m13_cloud_stage0_attempt1.json`; full local evidence: `work/m13cloud-attempt1/`.
+No registered E training or protected evaluation has run. M17 keeps the original checkout.
 
 **Next:** inspect the stage-0 receipt/evidence, measure the remaining encode allowance, put
 measured rate and billed price into the allocation table (`build13.py --plan --rate --price`),

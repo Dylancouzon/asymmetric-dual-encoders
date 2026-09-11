@@ -31,3 +31,14 @@ executors; the observations table starts with the first cloud record.
   gate script is newer than those reviews and performs a one-shot protected read, so it still owes
   the two independent reviews `CLAUDE.md` requires before irreversible execution — before stage 3,
   not before renting.
+
+## Cloud restart smoke — 2026-09-11
+
+The initial 512-token E-bs32 smoke was interrupted at step 100, then correctly refused a
+mismatched fingerprint. Root cause: `run_arm.fingerprint` hashed query `generated_at` and
+per-source `seconds` from the loader. These operational fields change despite identical data.
+The fix excludes only these exact nested fields, without mutating the evidence manifest;
+source hashes, row counts, recipe fields and code identity remain checked. `build13` uses the
+same fingerprint and inherits the repair. Old checkpoints are not migrated or bypassed.
+Both registered E arms remain unrun. Failure receipt: `results/m13_cloud_stage0_attempt1.json`;
+checkpoint and logs: `work/m13cloud-attempt1/m13cloud-evidence/`.

@@ -1,0 +1,64 @@
+{
+  "pod_id": "k3aee2m68765em",
+  "started_utc": "2026-09-11T16:29:36.838141+00:00",
+  "stage": "finished",
+  "registered_training": false,
+  "protected_evaluation": false,
+  "steps": [
+    {
+      "name": "preflight",
+      "exit_code": 0,
+      "elapsed_seconds": 0.62,
+      "log": "logs/m13-cloud-preflight.log"
+    },
+    {
+      "name": "upload",
+      "exit_code": 0,
+      "elapsed_seconds": 6778.65,
+      "log": "logs/m13-cloud-upload.log"
+    },
+    {
+      "name": "checksums",
+      "exit_code": 0,
+      "elapsed_seconds": 241.08,
+      "log": "logs/m13-cloud-checksums.log"
+    },
+    {
+      "name": "checks",
+      "exit_code": 0,
+      "elapsed_seconds": 225.45,
+      "log": "logs/m13-cloud-checks.log"
+    },
+    {
+      "name": "plan",
+      "exit_code": 0,
+      "elapsed_seconds": 5.18,
+      "log": "logs/m13-cloud-plan.log"
+    },
+    {
+      "name": "shapes",
+      "exit_code": 0,
+      "elapsed_seconds": 81.75,
+      "log": "logs/m13-cloud-shapes.log"
+    },
+    {
+      "name": "resume",
+      "exit_code": 1,
+      "elapsed_seconds": 211.1,
+      "log": "logs/m13-cloud-resume.log"
+    },
+    {
+      "name": "evidence",
+      "exit_code": 0,
+      "elapsed_seconds": 30.18,
+      "log": "logs/m13-cloud-evidence.log"
+    }
+  ],
+  "status": "FAILED",
+  "code_commit": "d3be2cb4bdd2a55697a38253251688c740af1187",
+  "error": "RuntimeError: resume failed with exit 1; inspect /home/dylan/asymetric-dual-encoders/work/m13cloud/logs/m13-cloud-resume.log",
+  "backup_verified": true,
+  "stop_http_status": 200,
+  "pod_final_status": "EXITED",
+  "finished_utc": "2026-09-11T18:35:55.944700+00:00"
+}

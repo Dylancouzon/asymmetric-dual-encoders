@@ -1118,6 +1118,37 @@ def test_the_fingerprint_moves_with_the_recipe(sandbox):
     assert base != R.fingerprint("A1", other, man, 0, None, "cuda")
 
 
+def test_fingerprint_ignores_only_query_loader_clock_fields(sandbox):
+    p = R.arm_plan("A1", R.SL.cfg())
+    man = {"arm": "A1", "query": {
+        "generated_at": "2026-09-11T18:00:00", "sha256": "corpus-hash", "n_rows": 10,
+        "sources": [{"name": "harvest", "sha256": "source-hash", "n": 10, "seconds": 15.0}]},
+        "document": {"sha256": "document-hash"}, "max_len": 512}
+    original = copy.deepcopy(man)
+    fp = lambda m: R.fingerprint("A1", p, m, 0, 600, "cuda")
+    base = fp(man)
+    resumed = copy.deepcopy(man)
+    resumed["query"]["generated_at"] = "2026-09-11T18:05:00"
+    resumed["query"]["sources"][0]["seconds"] = 1.0
+    assert fp(resumed) == base
+    assert man == original, "fingerprinting must preserve evidence metadata"
+    assert resumed["query"]["sources"][0]["seconds"] == 1.0
+    for path, value in [(("query", "sha256"), "changed"),
+                        (("query", "n_rows"), 11),
+                        (("query", "sources", 0, "sha256"), "changed"),
+                        (("query", "sources", 0, "n"), 11),
+                        (("document", "sha256"), "changed"),
+                        (("document", "seconds"), 2),
+                        (("max_len",), 128),
+                        (("generated_at",), "not-a-query-clock")]:
+        changed = copy.deepcopy(man)
+        parent = changed
+        for key in path[:-1]:
+            parent = parent[key]
+        parent[path[-1]] = value
+        assert fp(changed) != base, path
+
+
 def test_the_fingerprint_carries_device_autocast_warmup_and_optimizer_settings(sandbox):
     """item B: device, autocast dtype, `nano10.WARMUP_STEPS` and the optimizer settings are all
     part of the fingerprint, so a checkpoint from one is refused a resume under another."""
