@@ -4,6 +4,8 @@
 E-bs32 started 2026-09-11T19:30:14Z, with its registered 5M examples, batch32, bf16, 60k
 warmstart; E-bs128 follows unchanged. DEV-6 is deferred to the box. Reviewed local controller
 has a 24h work cap (11.5h per arm), full checkpoint/COV backups with hashes, and STOP cleanup.
+First scheduled COV evaluation completed at step26,041 without errors; training rate before
+that evaluation was 827 ex/s (early cumulative rate, not a final cost).
 Live receipt `results/m13_cloud_e.json`; logs `logs/m13-cloud-e-*.log`, wrapper
 `logs/m13-e-launch.log`. Keep WSL awake. M17 keeps the original checkout.
 
