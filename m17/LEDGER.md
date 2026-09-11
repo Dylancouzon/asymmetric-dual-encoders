@@ -72,3 +72,30 @@ The session is still **planning only**. No model training, corpus access, qualit
 new data rights, teacher/index change, M13 change, release-policy change or publication follows
 from this amendment. Input/panel manifests, real timing, implementation reviews and execution
 authorization remain future work. Prior diagnostic artifacts retain their original provenance.
+
+## 2026-09-11 — A2: plan review, six recommendations accepted
+
+A Fable review of the plan verified the registry arithmetic (parameter cap, byte sizes,
+candidate mixes, alias slots, allocation total, read counts) and confirmed the listwise arm is
+new relative to M7's uniform-distractor KL. It raised six concerns; Dylan: **“Go with all your
+recommendations.”** Dylan also clarified that the S3/k8s vocabulary is an internal request, not
+a headline, and that new rows must stay broad rather than overly specific.
+
+Pre-observation changes, all in `m17/registry.json` and `PLANNING.md`, previous values at `b9d355e`:
+
+1. Screen routing moves to the pinned development suite; the M17 panel is descriptive, with its
+   expected standard error registered.
+2. The judged panel is built and sealed before the 72-hour clock; a pre-clock row is added.
+3. **New-source ruling in principle:** official Kubernetes documentation (CC BY 4.0) is admitted
+   as a small technical slice, capped at 10% of training queries; one further CC BY / Apache
+   project-documentation source may be named at the manifest stage. Licence evidence must be
+   recorded in `research/m7-data-licensing.md` before download. AWS pages remain out.
+4. Final dose cut from 16,000 to 6,000 steps; query cap raised to 600k and bank to 262,144
+   documents; a train/held-out divergence check is logged.
+5. Anchor documented as inherited and inert; averaging snapshots moved to 4,500/5,250/6,000.
+6. Candidate entropy recorded at cache build in the B2 format.
+
+Two additions from the same review: an untrained sum-init export V0 read once, and a per-domain
+cap of 1,024 new rows so no field dominates the vocabulary.
+
+Still planning only. Nothing trained, downloaded, scored or published; no protected access.

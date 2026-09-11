@@ -8,6 +8,15 @@ counting preparation and validation in that window.
 The likely deliverable is better coverage with a modest quality improvement, if measured;
 matching the teacher on every query type is an aspiration, not an established attainable bar.
 
+**Revision A2, 2026-09-11.** Dylan accepted all six review recommendations: route the screen on
+the pinned development suite and keep the small M17 panel descriptive; build the judged panel
+before the 72-hour clock; admit Kubernetes documentation in principle as a small technical slice;
+cut the final dose and add a train/held-out divergence check; treat the anchor as inherited and
+spread the averaged snapshots; record candidate entropy at cache build. Two extras were added:
+an untrained sum-init export (V0) and a per-domain cap on new rows for breadth. The S3/k8s
+vocabulary is an **internal need, not a headline claim**; new rows must stay broad across domains.
+The earlier constants remain in git at `b9d355e`.
+
 This session is planning only. The proposed constants live in [registry.json](registry.json),
 marked `DRAFT_NOT_EXECUTABLE`. No trained candidate or quality result exists. Small diagnostic
 observations live in `results/m17_*.json`; [FINDINGS.md](FINDINGS.md) explains their limits.
@@ -75,7 +84,8 @@ their remedy may be better examples and row updates, with no vocabulary addition
 
 Rank candidates deterministically by support-weighted teacher residual, then document support,
 then lexical tie-break. Apply the registry's support minima and technical priority allocation;
-fill remaining slots from all domains. Count distinct source documents and query contexts after
+fill remaining slots from all domains. No single domain, cloud/software included, may supply
+more than the registry's per-domain cap: the technical allocation is a ceiling, not a target. Count distinct source documents and query contexts after
 deduplication, not repeated template exposures. Add fewer rows when support is thin. Do not fill
 the cap with obscure terms, reassign `[unused]` IDs, or select words from the audit panel.
 
@@ -97,6 +107,11 @@ pooling, constituents shared with other terms break universal sum-initialization
 record such drift before training. Repetition of an isolated phrase alone need not break it.
 For unfolded checkpoints, account for learned scalars exactly once; initialize each new scalar
 to one. The historical frozen-row D2 experiment remains closed.
+
+Before any training, export the extended tokenizer with sum-initialized rows exactly as a
+release would be folded and quantized (**V0**) and read it once on the development suite. It
+costs minutes and separates what tokenization alone does from what joint training adds. V0 is
+descriptive and never a shippable candidate.
 
 ## Data and training: reuse first
 
@@ -130,11 +145,15 @@ approved interfaces; do not open protected payloads to rebuild those products. I
 cannot safely screen new data, defer those inputs until a separately authorized process exists.
 No non-commercial text may become a target, negative, training input or generation seed.
 
-Approved Wikipedia/dataset material is the default. Official Kubernetes documentation is a
-plausible **optional new-source proposal** in the licensing research note, not an admitted
-corpus. AWS public pages are not presumed licensed training material. This plan needs no source
-exception to proceed to implementation. If admitted data cannot support a promised domain,
-report the coverage gap before seeking a specific new-source ruling.
+Approved Wikipedia/dataset material is the default and supplies the general replay. The
+currently admitted sources (HotpotQA, SQuAD, FEVER-train, Mr.TyDi, ESCI) are unlikely to give
+terms such as `k8s` or `kubectl` twenty distinct documents, so on 2026-09-11 Dylan **admitted in
+principle** official Kubernetes documentation (CC BY 4.0, attribution required) as a small
+technical slice, capped by the registry's new-source share. One further CC BY or Apache
+project-documentation source may be named at the support-manifest stage under the same
+standard. Licence evidence is recorded in `research/m7-data-licensing.md` before any download.
+AWS public pages are not presumed licensed training material. If admitted data still cannot
+support a domain, report the coverage gap rather than filling it from unapproved sources.
 
 Use a fixed admitted document-vector bank, sampled across sources and including every known
 positive used by the selected labeled-query subset **inside** the bank's document cap. Choose
@@ -147,8 +166,10 @@ relevance label. Dedupe and fill to the fixed size. The bank is a training
 approximation: its top hits are not necessarily the full corpus's hard neighbors.
 
 Store candidate **IDs and teacher scores**, not a copy of every document vector per query.
-The maximum bank's fp16 vectors occupy 256 MiB; query-specific candidate vectors can otherwise
-grow to tens of GB. Gather by ID in batches. Score with the teacher's existing query vector dot
+The maximum bank's fp16 vectors occupy 512 MiB; query-specific candidate vectors can otherwise
+grow to tens of GB. Gather by ID in batches. The bank is still about eight times smaller than
+M7's, so candidates are softer than the B2 top-200 measurement; record teacher entropy and
+p_max quantiles at cache build in the B2 format regardless of the stop rule. Score with the teacher's existing query vector dot
 frozen document vector. No new cross-encoder or late-interaction teacher.
 
 For the listwise arm, use normalized-query cosine loss plus KL from the teacher distribution
@@ -156,7 +177,9 @@ to the student distribution over that identical candidate list, with one fixed t
 The registry states the logits, KL direction/reduction, cosine target and effective-row anchor
 exactly. Both losses use normalized query vectors and the same frozen document-vector cache;
 the cosine target is Stella's query, not a positive document or document centroid.
-Keep an initialization anchor to limit drift. Soft distributions may assign mass to several
+Keep the initialization anchor inherited from M7's recipe for continuity of the control; at
+the registered weight and the table's row scale it is effectively inert and is not drift
+protection. Soft distributions may assign mass to several
 relevant documents: do not relabel every nonpositive candidate as a hard negative or blindly
 apply the old InfoNCE false-negative mask to the soft target. Reject known contradictory labels
 or invalid/self documents under the admitted dataset's rules. If candidate distributions remain
@@ -190,6 +213,11 @@ could erase a small gain. C is a matched continuation control, not a claimed rep
 M7's entire historical training recipe. Compare V−C, L−C, VL−V, VL−L and VL-A−VL descriptively,
 and each against frozen v1. These are exploratory comparisons, not confirmatory superiority tests.
 
+Screen decisions are read on the **pinned development suite**: its software components for
+technical routing and its full macro for general regression. The M17 panel's selection half is
+read once per arm and reported beside it, but with about fifty queries per domain its paired
+standard error is roughly ten times the tie band, so it does not decide.
+
 At the short-run endpoint choose at most one expanded candidate and its closest simpler
 control, using the registry's fixed control map (VL-A pairs with VL). Prefer fewer rows/fewer
 loss terms inside the declared tie band. VL-A must improve technical retrieval over VL beyond
@@ -203,15 +231,19 @@ model is a partial outcome, not completion of the requested vocabulary upgrade.
 Run the chosen candidate and matched control under the same longer schedule, with seed 0 and
 one independent seed. Restart both from their declared initialization for that longer schedule;
 do not append steps to an exhausted scheduler. The final budget is the registry's step count
-per fresh full run; the five short screen runs are a separate, already spent allocation. Keep the
-endpoint fixed and require repeatable direction. Each full run contributes only the ordinary
+per fresh full run, cut on 2026-09-11 from 16,000 to 6,000 steps so each query is seen about
+two to three times rather than fourteen; a lookup table can memorize repeated queries. Log the
+training and a fixed held-out training-source loss at the registry's interval and flag
+divergence; the flag is reported, not acted on after lock. The five short screen runs are a
+separate, already spent allocation. Keep the endpoint fixed and require repeatable direction. Each full run contributes only the ordinary
 endpoint and the fixed averaged form described below. No checkpoint shopping on the untouched
 audit. A stopped/failed arm keeps its result record.
 
 ## Fixed checkpoint averaging
 
-For each finalist/control full run and each seed, save the registry's three late step-bound
-snapshots in addition to recovery checkpoints. Fold each snapshot's learned scalar into its
+For each finalist/control full run and each seed, save the registry's three step-bound
+snapshots, spread over the last quarter of the schedule so they actually differ, in addition to
+recovery checkpoints. Fold each snapshot's learned scalar into its
 row, average effective rows in float32 with equal weights, then quantize once. Never average
 rows and scalars separately, mix tokenizers/runs, or tune the averaging window after scoring.
 Use the original effective-row units without per-row or global rescaling; record their RMS to
@@ -258,8 +290,11 @@ adjacency and M7/M8 accumulated hundreds of reads. It cannot certify universal i
 Do not score the six, reserved four or LoTTE, or alter any of their locks/access receipts.
 
 Build a modest M17 panel across the declared domains, split by source document/query family
-into selection and a sealed audit before vocabulary mining or training. The registry sets a
-target size, not an assertion that this panel already exists. Use affirmatively licensed QA
+into selection and a sealed audit, **before the 72-hour clock starts**. Judging hundreds of
+queries is days of human work and does not belong inside the training window; the clock begins
+only once the panel manifest hash is committed. The registry sets a target size, not an
+assertion that this panel already exists. The panel is descriptive and audit evidence; the
+registry records its expected standard error so nobody reads a coin flip as a result. Use affirmatively licensed QA
 labels where suitable and independently checked search-query relevance judgments for technical
 material. Include acronyms, expanded forms, context and ambiguous senses. Every query needs a
 preassigned slice/family label; count variant families together in sampling and uncertainty.
@@ -295,6 +330,7 @@ the GPU for the entire period. Source selection and all costly work count agains
 
 | Elapsed window | Work | Exit |
 |---|---|---|
+| Pre-clock | Judged panel built, split and sealed; new-source licence evidence recorded; manifest hashes committed | Clock may start |
 | 0–8 h | Bounded M17 driver/loader design, manifests, tokenizer and real-path smoke, two reviews | Verified warm start, pair handling, checkpoint/resume, tokenizer and measured rates; otherwise no long run |
 | 8–24 h | Coverage and verified alias pairs, reusable teacher targets, one candidate cache | Support and provenance recorded; price both views and reduce draft dose before lock if needed |
 | 24–36 h | Five matched short runs and one endpoint comparison each | Choose a candidate/control under the fixed alias comparison or stop for no useful signal |

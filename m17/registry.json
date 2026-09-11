@@ -8,20 +8,30 @@
     "features": ["alias consistency", "late-checkpoint averaging", "int8 resident-row loading"],
     "scope": "Included in the plan; no training execution, publication or protected access authorized"
   },
+  "accepted_plan_revision_a2": {
+    "date": "2026-09-11",
+    "owner_instruction": "Go with all your recommendations",
+    "changes": ["screen routed on the pinned dev suite, M17 panel descriptive", "judged panel built before the 72-hour clock", "Kubernetes documentation admitted in principle as a technical slice, licence evidence owed before use", "final dose cut to 6000 steps with a train/held-out divergence check", "anchor described as inherited, averaging snapshots spread over the last quarter", "candidate entropy recorded at cache build", "untrained sum-init vocabulary export V0 scored once", "per-domain cap on new rows for breadth"],
+    "scope": "Planning only; no training execution, publication or protected access authorized"
+  },
   "hardware": "local RTX 3080 10 GiB",
   "wall_clock_hours": 72,
   "student_parameter_cap": 35000000,
   "base_vocab": 30522,
   "added_rows_max": 3072,
   "technical_priority_slots_max": 1024,
+  "per_domain_added_rows_max": 1024,
+  "breadth_note": "No single audited domain, including cloud/software, may supply more than per_domain_added_rows_max new rows; the technical priority allocation is a ceiling, not a target. Internal need, not a headline claim.",
   "dim": 1024,
   "teacher": "NovaSearch/stella_en_400M_v5",
   "teacher_revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
   "document_encoder_spec_source": "m7/FREEZE.json:encoder_spec",
   "serving": {"pool_mode": "sqrt", "max_length": 512, "prefix": "", "add_special_tokens": true, "artifact": "int8", "fusion": "DBSF", "prefetch": 100},
   "data": {
-    "sources": "existing admitted commercial-training sources only",
-    "training_query_cap": 300000,
+    "sources": "existing admitted commercial-training sources, plus official Kubernetes documentation (CC BY 4.0, attribution required) admitted in principle by Dylan on 2026-09-11 as a small technical slice; one further CC BY / Apache project-documentation source may be named at the support-manifest stage under the same standard. Licence evidence must be recorded in research/m7-data-licensing.md before any such text is downloaded or used.",
+    "new_source_share_max_of_training_queries": 0.1,
+    "training_query_cap": 600000,
+    "training_query_cap_note": "Raised from 300000 to reduce repeated passes; use as many distinct admitted queries as exist up to the cap. Fewer distinct queries is recorded, not silently compensated with more steps.",
     "general_replay_fraction": 0.75,
     "targeted_coverage_fraction": 0.25,
     "alias_query_views_fraction_of_batch": 0.125,
@@ -34,7 +44,10 @@
     "panel_selection_fraction": 0.5,
     "panel_domains": ["cloud-software", "general", "science-engineering", "medicine", "finance", "legal"],
     "panel_split_unit": "source document and near-duplicate query family",
-    "panel_status": "UNBUILT; relevance judgments and source manifest required before quality claims"
+    "panel_status": "UNBUILT; relevance judgments and source manifest required before quality claims",
+    "panel_timing": "Built and sealed BEFORE the 72-hour clock starts, as separate pre-clock work; the clock does not begin until the panel manifest hash is recorded",
+    "panel_role": "Descriptive and audit only. At ~50 audit queries per domain the paired nDCG@10 standard error is roughly 0.02 to 0.04, far above the screening bands, so the panel does not route arm selection.",
+    "panel_expected_se_registered": {"paired_ndcg10_se_per_domain_approx": [0.02, 0.04], "basis": "n≈50 queries per domain, typical per-query nDCG spread; record the measured bootstrap SE beside it after the audit"}
   },
   "training": {
     "init": "M7 p35w-2m-s2500 unfolded checkpoint, lineage verified; new run IDs and optimizer",
@@ -43,7 +56,9 @@
     "batch": 256,
     "fallback_batch_before_recipe_lock_only": 128,
     "screen_steps": 4000,
-    "final_steps_per_fresh_run": 16000,
+    "final_steps_per_fresh_run": 6000,
+    "final_steps_note": "Cut from 16000 on 2026-09-11: 6000 x 256 = 1.54M query views, about 2.6 passes over a 600k pool and comparable to M7's final phase A dose (2500 x 512). Avoids ~14 passes over few queries with a memorizing lookup table.",
+    "overfit_divergence_check": {"every_steps": 500, "train_metric": "running mean cosine and listwise loss on the training stream", "heldout_metric": "same losses on a fixed 2000-query held-out slice of the training sources, never the panel", "flag_rule": "flag if held-out loss rises for two consecutive reads while train loss falls; a flag is recorded and reported, it does not change the schedule after lock"},
     "rows_lr": 0.0003,
     "weights_lr": 0.001,
     "warmup_steps": 200,
@@ -53,7 +68,10 @@
     "listwise_weight_when_enabled": 1.0,
     "temperature": 0.05,
     "init_anchor_weight": 0.001,
-    "candidate_bank_max_docs": 131072,
+    "init_anchor_note": "Inherited from M7's reg_init. With row element RMS about 0.39, a 100% drift of every element adds about 1.5e-4 to the loss, so this term is effectively inert. Kept for continuity of the C control; it is not drift protection.",
+    "candidate_bank_max_docs": 262144,
+    "candidate_bank_note": "Raised from 131072 so more labeled queries keep their positives inside the bank; fp16 vectors occupy 512 MiB. Still 8x smaller than M7's 2M bank, so candidates are softer than the B2 top-200 measurement.",
+    "candidate_entropy_diagnostic": "At cache build, record teacher-distribution entropy and p_max quantiles over each query's 64-candidate list at the registered temperature, in the same format as results/m8_b2_entropy.json; recorded regardless of the stop rule.",
     "positive_bank_policy": "All known positives of the selected labeled-query subset fit inside this bank cap; choose eligible query subset before lock, never silently convert a labeled query to query-only",
     "candidate_k": 64,
     "candidate_mix_labeled": {"known_positive": 1, "teacher_top": 31, "zero_v1_top": 16, "uniform": 16},
@@ -73,6 +91,7 @@
     },
     "alias_weight_when_enabled": 0.1,
     "uninformative_list_stop": {"teacher_pmax_threshold": 0.999, "fraction_queries_above_threshold": 0.8},
+    "untrained_vocab_export_v0": {"id": "V0", "trained": false, "definition": "Extended tokenizer with sum-initialized new rows and unchanged old rows, folded and quantized exactly like a release; no optimizer step", "reads": 1, "purpose": "Separates the effect of tokenization alone from joint training; costs minutes. Descriptive only, never a shippable candidate."},
     "arms": [
       {"id": "C", "vocab_extension": false, "listwise": false, "alias_consistency": false},
       {"id": "V", "vocab_extension": true, "listwise": false, "alias_consistency": false},
@@ -81,6 +100,7 @@
       {"id": "VL-A", "vocab_extension": true, "listwise": true, "alias_consistency": true}
     ],
     "screen_contrasts": ["V-C", "L-C", "VL-V", "VL-L", "VL-A-VL"],
+    "screen_routing_surface": "The pinned M7/M8 development suite (heavily reused selection evidence). Technical routing uses its software components, for example cqadup-programmers; general regression uses its full macro. The M17 panel selection half is read once per arm and reported beside it, but does not decide.",
     "alias_selection": "VL-A must clear the existing simple-arm tie band versus VL on technical nDCG, remain within general dense/fused regression tolerances versus v1, and not worsen the independently judged ambiguous-sense slice versus VL; ties choose VL. This measures alias supervision conditional on expanded vocab and listwise loss, not every combination.",
     "matched_control": {"V": "C", "L": "C", "VL": "L", "VL-A": "VL"},
     "checkpoint_minutes_max": 15,
@@ -91,7 +111,8 @@
   },
   "checkpoint_averaging": {
     "enabled_in_plan": true,
-    "checkpoint_steps": [14000, 15000, 16000],
+    "checkpoint_steps": [4500, 5250, 6000],
+    "checkpoint_steps_note": "Spread over the last quarter of the 6000-step schedule so the snapshots differ; the earlier 14000/15000/16000 window under decay-to-zero would have averaged near-identical tables.",
     "scope": "Each finalist/control full run, each seed; no averaging during short-arm selection",
     "operation": "Equal arithmetic mean of effective float32 folded rows; no separate scalar average, per-row/global rescaling or cross-run/tokenizer averaging; quantize the result once",
     "snapshot_policy": "Keep these step-bound snapshots in addition to time-bound recovery checkpoints; preserve schedule/step identity on resume",
@@ -125,6 +146,7 @@
     "no_new_release_authority": true
   },
   "allocation_hours": [
+    {"phase": "PRE-CLOCK (not counted): judged M17 panel built, split and sealed; new-source licence evidence recorded; manifest hashes committed", "hours": 0},
     {"phase": "bounded driver/loader design, data manifests, tokenizer and real smoke, reviews", "hours": 8},
     {"phase": "coverage and verified alias pairs, teacher targets and candidate cache", "hours": 16},
     {"phase": "five matched short screen arms and selection", "hours": 12},
@@ -141,7 +163,8 @@
   },
   "execution_entry_missing": [
     "owner ratification of the prospective M17 protocol and any new release criteria; this plan changes no historical bar",
-    "admitted input/cache identities, document-group splits, new-token support audit and judged M17 panel manifest",
+    "admitted input/cache identities, document-group splits, new-token support audit and judged M17 panel manifest (panel sealed pre-clock)",
+    "licence evidence for Kubernetes documentation and any second project-documentation source recorded in research/m7-data-licensing.md before download",
     "real pipeline throughput at two sizes and a schedule fitting the allocation; synthetic P0 is not that forecast",
     "training implementation and smoke/resume validation, reviewed independently twice before expensive execution"
   ],

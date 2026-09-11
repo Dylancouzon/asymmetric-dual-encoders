@@ -25,3 +25,8 @@ Authority/probes: [LEDGER.md](LEDGER.md). Paths and pitfalls: [CODEMAP.md](CODEM
 The three follow-up additions are included in the draft registry and rebalanced local budget;
 the total and recovery reserve are unchanged. Evidence:
 [additional avenues](../research/m17-additional-avenues-2026-09-11.md).
+
+**Revision A2 (2026-09-11):** plan review accepted in full; see `LEDGER.md` A2. Screen routes on
+the development suite, the judged panel is pre-clock work, Kubernetes docs are admitted in
+principle pending licence evidence, the final dose is 6,000 steps, and V0 plus a per-domain
+row cap were added. Vocabulary breadth across domains is a requirement, not the S3/k8s headline.
