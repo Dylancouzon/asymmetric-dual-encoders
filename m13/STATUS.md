@@ -13,13 +13,15 @@ fixed; the original failed receipt is preserved, and the existing outputs were v
 rerunning observations. Receipts: `results/m13_cloud_e.json`, `results/m13_after_e.json`,
 `results/m13_after_e_recovery.json`; decision: `results/m10_contrast_E1.json`.
 
-**Next (active preparation):** checkpoint manifest and seven-slice pin are committed and
-pushed; metadata-only gate preflight passed for bs32. The fp16 timing restart hit Runpod host
-capacity exhaustion twice (failure receipts retained). A replacement A100 at the same quoted
-$1.59 GPU/hour is being prepared with minimal benchmark/gate inputs; original Pod stays
-stopped with its disk retained. After measured timing: reconcile the allocation, run the
-registered observational LoTTE gate, then the fixed 200M build. No LoTTE score or full build
-has run. M17 keeps the original checkout and local GPU; M13 uses `work/m13cloud`.
+**Next (active launch):** the checkpoint manifest and seven-slice pin are committed and
+pushed; metadata-only gate preflight passed for bs32. Prior Pod restarts failed on host GPU
+capacity. The twice-reviewed combined launcher now retains one replacement A100 through
+setup, fp16 timing and the registered observational LoTTE read, then verifies backups and
+stops. Live receipt `results/m13_cloud_gate_chain.json`, log `logs/m13-gate-chain.log` and
+`logs/m13-lotte-gate.log`. It owns no full build or final six/reserved evaluation.
+Stage ceiling$28.29; revised conservative project allocation$669.52 under$1,000, including
+three retained disks. `results/m13_gate_chain_allocation.json` binds the prerequisites.
+M17 keeps the original checkout and local GPU; M13 uses `work/m13cloud`.
 
 Independent monitoring is active as `m13-monitor.service`: five-minute checks, local Windows
 alerts, and durable health/transition records. Add each next job before launch; configuration,

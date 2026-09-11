@@ -106,9 +106,9 @@
    "build": 200000000
   },
   "fixed_usd": {
-   "persistent_disk_and_egress": 103.0
+   "persistent_disk_and_egress": 309.0
   },
-  "_storage_allocation": "2026-09-11 initial Runpod US-MD-1 setup: 500 GB Pod volume, $0.10/GB/month running or $0.20 stopped; 30 GB container $0.10/GB/month running; no provider transfer fee. Reserve $103 for up to 30 days at conservative storage rates, replacing the stale $25 estimate. Reconcile actual charges and elapsed storage duration before each stage; the total ceiling stays $1,000.",
+  "_storage_allocation": "2026-09-11 conservative 30-day reserve for three 500GB Pod disks/container storage after two stopped-host GPU capacity losses; retains both prior disks. Running storage is also priced hourly, intentionally conservative. Reconcile paid charges and retire storage only after authorized verified backup cleanup.",
   "_reserved_batch_allowance": "2026-09-11 R10 measured surrogate: pinned stella fp32, 512 max tokens, 32768 padded tokens/batch, 1000 and 10000 evenly spread admitted SQuAD training passages. Slower measured rate times 10M passages, doubled plus setup and rounded upward gives 55.2 hours. Source: results/m13_encode_benchmark.json. No reserved content read; lengths average153 tokens, so this is a planning allowance, not guaranteed target runtime. Actual reserved executor and final access remain separate gates.",
   "_note": "the rate-derived lines (both cloud E arms, the build itself) are priced from the MEASURED examples/s on day one, not from run_arm.PLAN_RATES, which are projections. `build13.py --plan --rate EX_S --price USD_H` prints the table; a plan above the ceiling is refused.",
   "_lotte_encode_allowance": "2026-09-11: 2.7M-passage allowance scaled conservatively from the same fp32 surrogate including twofold headroom, rounded upward to 15 hours; actual LoTTE encoding path/lengths may differ. No LoTTE content read."

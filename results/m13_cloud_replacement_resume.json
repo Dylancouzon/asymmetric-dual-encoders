@@ -1,0 +1,14 @@
+{
+  "status": "FAILED",
+  "stage": "finished",
+  "pid": 125943,
+  "pod_id": "exulxoxelug5um",
+  "started_at": 1789170277.7624836,
+  "code_commit": "cc5159eea421f85372f4044c2727d45672af7372",
+  "maximum_execution_seconds": 7200,
+  "updated_at": 1789170279.656358,
+  "gpu_price_usd_h": 1.59,
+  "error": "HTTPError: HTTP Error 500: Internal Server Error",
+  "pod_final_status": "EXITED",
+  "finished_at": 1789170279.6563566
+}

@@ -134,3 +134,19 @@ CUDA allocation checks passed, but the bootstrap SSH transport remained open aft
 remote command exited. Operator interrupted the launcher; EXITED confirmed and failure
 receipt preserved. Continue on the same persistent Pod using a fresh noninteractive SSH
 command path; no benchmark or protected evaluation had begun.
+
+The same-Pod resume also failed to start (EXITED confirmed), so neither fp16 timing nor the
+gate had run. To avoid further between-stage capacity loss, the combined gate_chain launcher
+retains ONE new A100 through setup, timing and read. Both independent reviewers returned GO
+on the launcher and allocation:17h maximum at$28.29, 15h gate ceiling, dynamic measuredfp16
+admission before access, exact10 committed artifact bindings, single owned read, full SHA
+backup and bounded STOP. Day-of-read checks use the user's America/New_York calendar; R18
+does not specify UTC. Pin remains the same pre-observation seven-slice artifact.
+
+Independent arithmetic gives$669.52 total, $330.48 headroom, including$309 conservative
+30-day storage reserve for allthree disks, $9.1531 paid, 441.9ex/s planning rate and2h extra
+setup beyond the15h gate line. Reserved55.2h unchanged. The timing guard requires the slower
+1k/10k fp16 measurement times2,715,201 documents, doubled plus1h, to fit15h and the remaining
+execution time. Reviewers accessed only named code and allowed metadata, not protected
+payloads, credentials or cloud.
+Combined operational launcher sha256 `9a131f8bb59e01a567136b58f0fc08380ba0b1f227fb46763ab72e4f9e9adcc1`.
