@@ -174,3 +174,58 @@ dozen lines plus three tests; 223 tests pass; rehearsal re-run to `results/m17_r
 | The rehearsal skipped the teacher/revision check | Checked in every mode; the synthetic warm start carries the registered teacher; mismatch test. |
 
 **Exit:** step 4 closed. Review loop capped here (two reviews plus one re-check). Step 5 next.
+
+## Codex Astra step-5 review (2026-09-11)
+
+Brief: [m17-step5-review-brief](../research/m17-step5-review-brief-2026-09-11.md). Log:
+`research/m17-astra-step5-review-2026-09-11.log` (gitignored; the report is its last section).
+Read-only, on the step-5 builder, the cache, the driver and the two timed prepared directories.
+Astra's sandbox again could not run pytest, so its coverage notes describe the reviewed tests,
+not executions. 10 P1, 8 P2, 3 P3, plus four owner decisions. Owner ruling A4 (LEDGER.md)
+settled the four before this batch; the fixes below implement it. All 275 `m17src` tests pass and
+both timed sizes were rebuilt with the fixed builder.
+
+| Finding | Disposition and exit |
+|---|---|
+| P1-1 `--protected-screen` reaches `protected10.build()` without the status gate | Fixed: `require_executable(reg, rehearsal=False, ...)` runs before the import, including under `--stages protected`; test asserts `protected10` is never imported while the registry is a draft. |
+| P1-2 the screen never reads Kubernetes document text | Fixed: the full text of every new-source document is screened, `protected_receipt.json` records the admitted path + sha + group, and the bank, coverage views and alias views are filtered through that receipt; pre-clock the filter is a no-op and the manifest states `unscreened_new_source_rows`. Test with a stub screen: an innocent view whose document matched is dropped. |
+| P1-3 training accepts a deferred screen | Fixed: `_load_prepared` refuses `state != "complete"` on a real run; `--rehearsal --data` proceeds with one loud line naming the unscreened pool and bank row counts (ruling A4). Test both branches. |
+| P1-4 the screened pool is neither persisted nor reindexed | Fixed: `_apply_screen` rewrites `pool.jsonl`, rebuilds `heldout_idx`, `source_doc` and `positives`, drops BOTH views of an affected pair, and `_rehydrate("protected")` re-reads the screened pool. Drop-and-resume test on a fixture. |
+| P1-5 the exclusion contract is only partly applied | Fixed: one `Exclusions` predicate applied by role (general: family, text sha, alias term, positive document group; coverage: source document group, view text sha/term; alias: family, both view shas, both terms, evidence group). `exclusions_applied` now reports realized drops per category; the inventory sizes moved to `exclusion_inventory`. Fixture with one excluded item per category. On the real pool it realizes 98 general, 115 coverage and 2 text-sha drops where the old code reported inventory only. |
+| P1-6 the divergence split does not isolate families across buckets | Fixed: `heldout_document_groups` is computed once, after the held-out families are drawn, and any coverage view or alias pair whose supporting document group backs a held-out query is dropped and counted. Test on the helper. |
+| P1-7 both document samplers are biased toward file prefixes | Fixed: `_lowest_hash_pick` — lowest `sha256(seed‖key)` over the whole eligible population, memory bounded by the quota. Test: the last decile of a 10,000-key population is drawn as often as the first. |
+| P1-8 four passes are not enforced against the realized coverage population | Fixed: enough documents are drawn for one view each, the bucket is filled from realized deduplicated views and trimmed to target, and `_validate_buckets` records every realized population against the dose, the four-pass minimum and the query cap, refusing a bucket that cannot supply one batch. The plan test now asserts the minimum direction. |
+| P1-9 v1 mining used the fp16 rows | Fixed: `_load_v1_table` loads `variant="int8"` and refuses anything else; the cache identity carries `variant` and the folded-rows sha. Test that the two variants differ. |
+| P1-10 supporting-document identities inflate or collapse support | Fixed: one canonical `"<source>:doc-group:<gid>"` key per document in every role and under the budget; documentless sources map to `None` (ruling A4, `data.documentless_sources_vote`). `vocab.discover` counts no vote for `None` and still refuses two domains for one real document. Test: 18 real documents plus nqopen and triviaqa do not reach 20. |
+| P2-11 stage reuse is not bound to its inputs | Fixed: each marker carries `_identity` (seed, size, bank cap, protected flag, exclusion/alias/k8s/kept/support-manifest/family shas); a mismatch refuses unless `--force`, and a forced stage invalidates every later stage in the fixed `STAGES` order. Test: a changed seed refuses. Observed on the real directories before the rebuild. |
+| P2-12 prepared hashes recorded but never verified | Fixed: `_verify_prepared_hashes` checks `student_ids`, tokenizer, `teacher_q`, `bank` and `new_rows` against `prepared.json` and requires candidate rows = teacher rows = student id lists, before the model is built. Test: a corrupted `teacher_q.npy` refuses. |
+| P2-13 pool document ids are not authenticated | Fixed: `PoolReader.rows_for` verifies the pool meta's `id_sha256` (legacy `sha_stream_list`) and the span length. Test with a reordered and a truncated id file. |
+| P2-14 vector caches have no preprocessing identity | Fixed: both caches carry a `manifest.json`; a mismatch refuses. The existing caches adopt the current manifest once and the stage record says `cache_manifest_adopted`. Test. |
+| P2-15 the teacher manifest misstates precision | Fixed: `encode_dtype: float32` and `storage_dtype: float16` recorded separately and bound into the cache identity. The precision itself is unchanged. Test. |
+| P2-16 fresh and resumed v1 stages differ numerically | Fixed: the stage rounds to fp16 once, before any use, and hashes exactly the stored representation. Test. |
+| P2-17 the recipe identity cannot enforce the artifact-of-record rule | Fixed: `cache.save` stamps `artifact_sha256` over the array hashes plus the teacher/bank/v1 input digests; `train` records both and binds resume to the artifact digest. Test: two caches with one recipe, different digests. |
+| P2-18 missing document joins silently erase labels | Fixed: `select_labeled_subset` refuses, by qid, a labeled query whose positives are all missing from the join. Test. Both timed sizes build without tripping it. |
+| P3-19 repeated set copies in the labeled selection | Fixed: `new = set(pos) - positives` against the budget, and the stage is timed (`labeled_subset_select`). |
+| P3-20 the timing forecast omits work and misclassifies scaling | Fixed in part: `student_tokenize` extrapolates at its own work factor (two encodings per query); label selection, the pre-lock diagnostics and the manifests are timed; each size records whether its wall clock is a full build or a partial rebuild. `domain_store_pass` stays a carried fixed cost, with an explicit `document_stage_growth_upper_bound` beside the estimate rather than a per-query re-classification — the assumption is stated, not hidden. |
+| P3-21 more than twenty flagged alias pairs cannot be identified | Fixed: the complete flagged list is written to `alias_flagged_pairs.json` and hashed in the diagnostic; the summary keeps the sample. |
+
+**Owner decisions raised (not decided here).** Astra's report lists four; Dylan ruled on all
+four in LEDGER.md A4 on 2026-09-11 and the registry records them as
+`accepted_plan_revision_a4`. They are reproduced verbatim as raised:
+
+- The 0.5 positive-budget share needs ratification before lock. It determines which examples
+  receive positive injection and the bank's composition, and eligibility was computed over all
+  `general` records before their final buckets were assigned, so the divergence holdout took
+  part. Register how holdout positives interact with the budget.
+- Reserving every Kubernetes document needs an explicit bank-allocation rule: those 1,648 rows
+  are reserved before proportional sampling, which the registry's general description of uniform
+  stratified sampling does not specify.
+- The documentless-source convention needs correction, not merely documentation: preventing
+  nqopen/triviaqa alone from reaching twenty is conservative, but adding two fictional document
+  votes to eighteen real documents is not.
+- Pre-clock training on deferred Kubernetes inputs requires resolution against the ledger; the
+  real-data rehearsal switch does not itself authorize the admission exception.
+
+**Owner:** M17 implementing session. **Exit:** step 5 timings regenerated from the fixed
+builder, the smoke/resume run recorded, then the step-5 close-out. This is one review of the
+step-5 builder; it is not the second independent review that expensive execution requires.

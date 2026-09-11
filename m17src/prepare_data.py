@@ -1969,7 +1969,15 @@ def timing_report(dirs, full_total=None):
                 # large-size cost is carried forward as a fixed cost of the full build, and the
                 # growth that IS query-driven is reported as a separate upper bound below.
                 total_fixed += max(0.0, b["seconds"] - fixed)
-                doc_growth.append((name, per_row, fixed, na, nb))
+                # Only a stage whose ROW COUNT actually GREW with the pool can be projected from
+                # two points. The bank stages are held at the registered cap: `bank_pool_lookup`
+                # differs by a single document between the two sizes and `bank_sample` shrinks
+                # as the labeled positives grow. Fitting a line through those two points
+                # produces an arbitrary slope, not a forecast.
+                grew = nb >= 1.25 * max(1, na)
+                rec["scales_with_the_query_pool"] = bool(grew)
+                if grew:
+                    doc_growth.append((name, per_row, fixed, na, nb))
         else:
             rec.update(fixed_seconds=b["seconds"], per_row_seconds=0.0,
                        note="row count identical at both sizes: a fixed cost, not a per-row one")
@@ -2022,8 +2030,17 @@ def timing_report(dirs, full_total=None):
                               "here rather than re-measured, because re-encoding would change "
                               "the bank vectors the candidate caches were built from."},
             "cold_teacher_query_encode": {
-                "what": "the small build encoded its whole pool cold (hit rate 0.0); the large "
-                        "build reused it (hit rate 0.199). Both rates are in stages."}},
+                "measured_rate_texts_per_second": 248,
+                "provenance": "the first s2000 build of this session encoded its whole pool "
+                              "cold: 1,949 texts in 7.868 s (commit 6fc3b6a's timing result). "
+                              "BOTH builds above reused that cache (hit rates 0.79 and 0.83), "
+                              "so teacher_encode contributes almost nothing to the per-query "
+                              "coefficient here.",
+                "full_pool_cold_seconds_if_nothing_is_cached": round(target / 248.0, 1),
+                "full_pool_cold_hours_if_nothing_is_cached": round(target / 248.0 / 3600, 2),
+                "what": "the headline extrapolation is the cost with the teacher cache WARM. A "
+                        "full-pool build encodes almost every query text once; add this term "
+                        "for the cold case. It is stated, never folded in silently."}},
         "extrapolation": {
             "full_pool_queries": target,
             "fixed_seconds": round(total_fixed, 1),
@@ -2035,9 +2052,12 @@ def timing_report(dirs, full_total=None):
                 "additional_seconds_if_document_counts_scale_with_queries": round(max(0.0, extra), 1),
                 "estimated_hours_with_that_upper_bound":
                     round((est + max(0.0, extra)) / 3600, 2),
-                "note": "document-unit stages (notably domain_store_pass, which also classifies "
-                        "every selected positive) are carried as fixed costs; this is what they "
-                        "would add if their document counts grew linearly with the query pool"},
+                "note": "document-unit stages are carried as fixed costs of the full build. The "
+                        "ones whose document count actually moved with the pool (notably "
+                        "domain_store_pass, which also classifies every selected positive) are "
+                        "projected here, linearly in queries, as an upper bound beside the "
+                        "estimate. The bank stages are excluded: the bank is held at the "
+                        "registered cap, so their row count does not grow with the pool"},
             "query_counts_measured": {"small": q_small, "large": q_large},
             "fixed_costs_subtracted": sorted(
                 n for n, r in stages.items()
@@ -2047,7 +2067,9 @@ def timing_report(dirs, full_total=None):
                 "held at the registered cap in both measurements, so its per-query cost is the "
                 "real one",
                 "the teacher and document encode caches were warm for repeated text; the "
-                "measured `encoded` counts say how much was actually paid",
+                "measured `encoded` counts say how much was actually paid, and "
+                "`separately_observed.cold_teacher_query_encode` states the cold-case term the "
+                "headline does not include",
                 "single process, no parallelism; the cache stage is CPU-bound numpy",
                 "student_tokenize is extrapolated at its own work factor (two encodings per "
                 "query), not one",
