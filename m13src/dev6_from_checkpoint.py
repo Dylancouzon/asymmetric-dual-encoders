@@ -98,23 +98,42 @@ def check_record(rec, arm):
 
 
 def verify_checkpoint(rec, arm):
+    """-> (path, bytes). The bytes are read ONCE and hashed; `rebuild_student` deserialises that
+    same buffer, so a file replaced between hashing and loading cannot be scored (Astra
+    2026-09-10, finding 3)."""
     ck, sha = rec["final_checkpoint"], rec["final_checkpoint_sha256"]
     p = REPO / ck
     if not p.exists():
         refuse(f"{arm}: checkpoint {p} is not on this machine; copy the arm's `cycle3.pt` back to "
                f"the same relative path first")
-    got = sha256_file(p)
+    data = p.read_bytes()
+    got = hashlib.sha256(data).hexdigest()
     if got != sha:
         refuse(f"{arm}: {p} hashes {got[:12]}, the record says {sha[:12]}; refusing to read DEV-6 "
                f"on bytes that are not the published final checkpoint")
-    return p
+    return p, data
 
 
-def rebuild_student(rec, ck_path, device):
+def note_attempt(rec_path, arm, sha):
+    """A DEV-6 attempt line beside the record, written BEFORE the read: a crash between the read
+    and the rewrite leaves the deferral in place, and the next fill discloses that it is the
+    second attempt rather than silently looking like the first (finding 7). DEV-6 is a
+    development surface, so a repeated read is disclosed, not refused."""
+    p = Path(rec_path).with_name("dev6_attempts.jsonl")
+    with open(p, "a") as fh:
+        fh.write(json.dumps({"arm": arm, "checkpoint_sha256": sha, "host": platform.node(),
+                             "started_at": datetime.now(timezone.utc).strftime(
+                                 "%Y-%m-%dT%H:%M:%S%z")}) + "\n")
+    with open(p) as fh:
+        return sum(1 for _ in fh)
+
+
+def rebuild_student(rec, data, device):
+    import io
     import torch
     r = rec["recipe"]
     model = N.Nano10(r["student"], n_layers=int(r["n_layers"]), head=r["head"])
-    blob = torch.load(ck_path, map_location="cpu", weights_only=False)
+    blob = torch.load(io.BytesIO(data), map_location="cpu", weights_only=False)
     sd = blob.get("model", blob) if isinstance(blob, dict) else blob
     model.load_state_dict(sd)
     if not model.under_cap():
@@ -133,18 +152,24 @@ def run(arm, *, device="cuda", verbose=True):
         refuse("--device cuda but no CUDA device is visible; a CUDA torch installation is not a GPU")
     rec, rec_path, results_path = load_records(arm)
     check_record(rec, arm)
-    ck_path = verify_checkpoint(rec, arm)
+    ck_path, data = verify_checkpoint(rec, arm)
     deferral = rec["dev6"]
     t0 = time.time()
-    model = rebuild_student(rec, ck_path, device)
+    model = rebuild_student(rec, data, device)
+    del data
     if verbose:
         print(f"{arm}: student {rec['recipe']['student']} rebuilt from {ck_path.name} "
               f"({rec['final_checkpoint_sha256'][:12]}), {model.n_params():,} params on {device}",
+              flush=True)
+    attempts = note_attempt(rec_path, arm, rec["final_checkpoint_sha256"])
+    if attempts > 1 and verbose:
+        print(f"{arm}: DEV-6 attempt {attempts}; an earlier attempt did not rewrite the record",
               flush=True)
     d6 = R.dev6(model, verbose=verbose)
     d6["filled_from_checkpoint"] = {
         "deferred_by_runner": deferral,
         "script": "m13src/dev6_from_checkpoint.py",
+        "attempts_including_this": attempts,
         "host": platform.node(), "device": device,
         "git_head": R.git_head(),
         "read_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S%z"),

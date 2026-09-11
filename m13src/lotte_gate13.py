@@ -1,46 +1,65 @@
 """M13 — LoTTE read #1 as a small script (ruling R16): the pre-build veto and the observational row.
 
-    .venv/bin/python m13src/lotte_gate13.py --preflight-only      # opens no LoTTE path, writes nothing
-    .venv/bin/python m13src/lotte_gate13.py [--device cuda]       # THE read; writes m13/LOTTE_GATE.json
+    .venv/bin/python m13src/lotte_gate13.py --write-manifest    # after both E records: writes m13/LOTTE_GATE_MANIFEST.json to commit
+    .venv/bin/python m13src/lotte_gate13.py --preflight-only    # opens no LoTTE path, writes nothing
+    .venv/bin/python m13src/lotte_gate13.py [--device cuda]     # THE read; writes m13/LOTTE_GATE.json
+    .venv/bin/python m13src/lotte_gate13.py --recover           # complete a crashed read from its persisted slices
 
 What it executes is registered, not decided here: `m13/LOTTE_GATE_REGISTRATION.json` (ruling R8)
 names the seven remediated slices and their counts, nDCG@10 as the veto metric with Success@5 beside
 it, the veto constants (margin 0.004, paired bootstrap B = 10,000 seed 903, one-sided 97.5% upper
-bound) and the identities; `m10/LOTTE_LOCK.md` fixes WHEN (after both 5M E arms, before the build)
-and the two branches:
+bound, quantile method pinned by R17) and the identities; `m10/LOTTE_LOCK.md` fixes WHEN (after both
+5M E arms, before the build) and the two branches:
 
   * E1 selected **bs32** -> the selected recipe IS the anchor recipe: the veto is SKIPPED and
     forfeited, and the observational row is still read on `E-bs32`'s cycle-3 checkpoint.
   * E1 selected **bs128** -> the veto RUNS: candidate `E-bs128`, comparator `E-bs32`, both the A100
-    cycle-3 checkpoints their published arm records name. A veto means the 200M build trains bs32
-    (`build13.check_gate` reads `decision` and overrides the E1 batch).
+    cycle-3 checkpoints. A veto means the 200M build trains bs32 (`build13.check_gate` reads
+    `decision` and overrides the E1 batch).
 
-The record it writes is the one `m13src/build13.check_gate` refuses without: `executed: true`, the
-branch, the decision, both checkpoint shas, the E1 verdict sha it read, `read_at`, `code_identity`,
-and the per-slice numbers. It carries NO query text, no label and no per-query row; per-query scores
-stay under `work/lotte/gate13/` inside the protected tree, and so do the stella document vectors
-(`work/lotte/enc/`), so nothing derived from LoTTE leaves `work/lotte`.
+Three committed artifacts bind the read, and the read refuses without any of them:
 
-Access. This module claims its own `m8src/paths_guard` allowlist entry (`m13src.lotte_gate13`,
-LEDGER 15 amendment 2026-09-10) and opens only `collection.tsv`, `questions.forum.tsv` and
-`qas.forum.jsonl` under `work/lotte/remediated/<topic>/<split>/` — never the GooAQ-licensed search
-split, never the raw archive. Preflight reads the registration, the E1 verdict, the two arm records
-and the two checkpoints, and touches no LoTTE path. An existing gate record refuses: read #1 is one
-access and there is no third read. A crash before the record exists leaves resumable encode shards
-and an `attempts.jsonl` line; re-running completes the same read (no verdict or row was produced).
+  * **the manifest** `m13/LOTTE_GATE_MANIFEST.json` — the lock's "second manifest commit": both
+    checkpoint shas, the arm records' shas, the branch and the E1 verdict sha, written by
+    `--write-manifest` from the published arm records and then COMMITTED AND PUSHED by the operator.
+    The gate requires the file to be tracked and unmodified and re-checks every field against the
+    live records and the bytes on disk, so a swapped record or checkpoint cannot pass (Astra
+    2026-09-10, finding 2);
+  * **the pin** `results/m8_lotte_pin.json` — `m8src/freeze_lotte.py pin`'s five hashes per slice
+    (ruling R18: run immediately before the gate). Every slice is compared hash by hash before it
+    is scored; counts alone authenticate nothing (finding 4);
+  * **the registration**, whose sha the record carries.
 
-Two pitfalls this file exists to get right: LoTTE's qids and pids are BOTH small integers, and
-`evalkit.run_from_arrays` drops a hit whose doc id equals the query id (the BEIR self-hit rule), so
-queries are scored under a `q:` namespace; and `pytrec_eval` silently omits a run qid without qrels,
-so the scored qid set is asserted against the slice's every time (M13 CODEMAP pitfall 4).
+The read itself: under this module's own `m8src/paths_guard` entry (`m13src.lotte_gate13`, LEDGER 15
+amendment 2026-09-10) it opens only `collection.tsv`, `questions.forum.tsv` and `qas.forum.jsonl` under
+`work/lotte/remediated/<topic>/<split>/` — never the GooAQ-licensed search split, never the raw
+archive. Stella encodes each collection once, shard-resumable and VERIFIED on reuse, into
+`work/lotte/enc/`; the students are rebuilt from the exact checkpoint bytes that were hashed (one
+read of the file, hashed and deserialised from the same buffer — finding 3). Exact search, per-query
+nDCG@10 and Success@5, the paired within-slice bootstrap and the veto rule.
+
+One read. Before the first LoTTE open an EXCLUSIVE receipt is created under `work/lotte/gate13/`
+binding every input (branch, both shas, verdict/registration/manifest/pin shas, code identity,
+device). Each slice's outputs are persisted as it completes. A crash therefore leaves a receipt and
+some slice files; a plain re-run REFUSES, and `--recover` completes the same read under the identical
+identity by scoring only the slices that have no persisted output — completed slices are never
+re-read (finding 1). An existing `m13/LOTTE_GATE.json` refuses everything: there is no third read.
+
+The record carries no query text, label or per-query row (those stay under `work/lotte/gate13/`),
+and no refusal message prints an identifier from the surface (finding 6). Two pitfalls this file
+exists to get right: LoTTE's qids and pids are BOTH small integers, and `evalkit.run_from_arrays`
+drops a hit whose doc id equals the query id, so queries are scored under a `q:` namespace; and
+`pytrec_eval` silently omits a run qid without qrels, so the scored qid set is asserted every slice.
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import os
 import platform
+import subprocess
 import sys
 import time
 from dataclasses import dataclass
@@ -68,16 +87,24 @@ SLICE_FILES = ("collection.tsv", "questions.forum.tsv", "qas.forum.jsonl")
 CODE_IDENTITY_FILES = ("m13src/lotte_gate13.py", "m10src/nano10.py", "m7src/evalkit.py",
                        "m7src/teacher.py")
 QNS = "q:"                                      # the query-id namespace (see the module docstring)
+QUANTILE_METHODS = ("inverted_cdf", "higher", "lower", "nearest", "linear", "averaged_inverted_cdf",
+                    "closest_observation", "interpolated_inverted_cdf", "hazen", "weibull",
+                    "median_unbiased", "normal_unbiased", "midpoint")
+IDENTITY_FIELDS = ("branch", "e1_batch", "e1_verdict_sha256", "candidate_sha256", "comparator_sha256",
+                   "registration_sha256", "manifest_sha256", "manifest_commit", "pin_sha256",
+                   "code_identity", "device", "slice_order")
 
 
 @dataclass
 class Config:
     """Every path and injected component the read touches. Production defaults are the real ones;
-    the tests build one pointing at a synthetic tree with an injected document encoder."""
+    the tests build one pointing at a synthetic git tree with an injected document encoder."""
 
     repo: Path = REPO
     registration_path: Path = REPO / "m13" / "LOTTE_GATE_REGISTRATION.json"
     record_path: Path = REPO / "m13" / "LOTTE_GATE.json"
+    manifest_path: Path = REPO / "m13" / "LOTTE_GATE_MANIFEST.json"
+    pin_path: Path = REPO / "results" / "m8_lotte_pin.json"
     verdicts_path: Path = REPO / "results" / "m10_screen_verdicts.json"
     registry_path: Path = REPO / "m10" / "screen_registry.json"
     arm_records_dir: Path = REPO / "results"
@@ -91,7 +118,8 @@ class Config:
     chunk: int = 250_000
     # (cache name, doc_texts) -> (vectors, cache record). None -> stella through teacher.encode_cached
     doc_encoder: object = None
-    # (arm record summary, device) -> object with encode_queries(texts). None -> nano10 from the recipe
+    # (arm record summary, checkpoint bytes, device) -> object with encode_queries(texts).
+    # None -> nano10 from the recipe, loaded from the hashed bytes
     load_student: object = None
     claim_guard: bool = True                     # a synthetic tree has no protected path to claim
     # the document tower's identity, the same pin `access13.Config` carries
@@ -105,13 +133,25 @@ def utcnow():
 
 def sha_obj(obj):
     """`m8src/freeze_lotte.sha`: sha256 of the sorted-key JSON encoding, so the slice hashes here
-    are comparable with a pin written by that module."""
+    are comparable with the pin that module writes."""
     return hashlib.sha256(json.dumps(obj, sort_keys=True).encode()).hexdigest()
+
+
+def slice_hashes(doc_ids, doc_texts, q_ids, q_texts, qrels_sorted):
+    """`m8src/freeze_lotte._hash_slice`, reimplemented byte-for-byte (that module claims its guard
+    entry at import and cannot be imported beside this one): doc-side lists in file order,
+    query-side lists by sorted qid, qrels as {qid: sorted pids}."""
+    q_by_id = dict(zip(q_ids, q_texts))
+    return {"doc_ids_sha256": sha_obj(list(doc_ids)), "doc_texts_sha256": sha_obj(list(doc_texts)),
+            "query_ids_sha256": sha_obj(sorted(q_ids)),
+            "query_texts_sha256": sha_obj([q_by_id[q] for q in sorted(q_ids)]),
+            "qrels_sha256": sha_obj(qrels_sorted)}
 
 
 def code_identity():
     """sha256 of the bytes of the code that RUNS the read — always this source tree, never a
-    fixture's `cfg.repo`."""
+    fixture's `cfg.repo`. Computed at preflight (into the receipt) and again before the record is
+    written; a difference refuses."""
     h = hashlib.sha256()
     for name in CODE_IDENTITY_FILES:
         h.update((REPO / name).read_bytes())
@@ -134,10 +174,16 @@ def _is_sha(x):
     return isinstance(x, str) and len(x) == 64 and all(c in "0123456789abcdef" for c in x)
 
 
+def _git(repo, *args):
+    r = subprocess.run(["git", "-C", str(repo)] + list(args), capture_output=True, text=True)
+    return r.returncode, r.stdout.strip(), r.stderr.strip()
+
+
 # ------------------------------------------------------------------------------- preflight ----
 
 def registration(cfg):
-    """-> (the registration, its sha). Refuses a file that is not the R8 registration."""
+    """-> (the registration, its sha). Refuses a file that is not the R8 registration, or one whose
+    upper-bound quantile method is not pinned (ruling R17)."""
     p = Path(cfg.registration_path)
     if not p.exists():
         refuse(f"no LoTTE gate registration at {p} (ruling R8)")
@@ -161,12 +207,15 @@ def registration(cfg):
         refuse(f"{p}: the veto metric is not nDCG@10 (ruling R8)")
     veto = reg.get("veto") or {}
     boot = veto.get("bootstrap") or {}
-    for f, want in (("margin", 0.004),):
-        if veto.get(f) != want:
-            refuse(f"{p}: veto.{f} is {veto.get(f)!r}, not the locked {want}")
+    if veto.get("margin") != 0.004:
+        refuse(f"{p}: veto.margin is {veto.get('margin')!r}, not the locked 0.004")
     for f, want in (("B", 10000), ("seed", 903), ("paired_within_slice", True)):
         if boot.get(f) != want:
             refuse(f"{p}: veto.bootstrap.{f} is {boot.get(f)!r}, not the locked {want}")
+    if boot.get("quantile_method") not in QUANTILE_METHODS:
+        refuse(f"{p}: veto.bootstrap.quantile_method is {boot.get('quantile_method')!r}. Ruling R17 "
+               f"pins the upper bound's quantile method BEFORE any read; the 9,750th and 9,751st "
+               f"order statistics can disagree at the margin. Register it (m13/RULINGS.md R17).")
     contract = (reg.get("gate_record_contract") or {}).get("path")
     if contract and (Path(cfg.repo) / contract).resolve() != Path(cfg.record_path).resolve():
         refuse(f"{p}: the registration's record path is {contract!r}, not {cfg.record_path}")
@@ -193,12 +242,15 @@ def branch_of(cfg):
 
 def arm_record(cfg, arm, registry):
     """-> the summary of one E arm's published record, or refuses. The checkpoint the gate reads
-    is the one `build13._registered_e_checkpoints` will hold it to: the record's cycle-3 sha."""
+    is the one `build13._registered_e_checkpoints` will hold it to: the record's cycle-3 sha. The
+    record must be THIS arm's (name, seed, registry binding), not merely a complete same-dose one."""
     p = Path(cfg.arm_records_dir) / f"m10_arm_{slug(arm)}.json"
     if not p.exists():
         refuse(f"no published arm record at {p}: read #1 happens after BOTH 5M E arms finish "
                f"(m10/LOTTE_LOCK.md), and the gate compares their cycle-3 checkpoints")
     rec = json.loads(p.read_text())
+    if rec.get("arm") != arm:
+        refuse(f"{p}: the record is for arm {rec.get('arm')!r}, not {arm!r}")
     if rec.get("status") != "complete" or rec.get("complete") is not True:
         refuse(f"{p}: status {rec.get('status')!r}, complete {rec.get('complete')!r}; a failed or "
                f"unfinished arm has no final checkpoint to read")
@@ -214,47 +266,148 @@ def arm_record(cfg, arm, registry):
         if f not in recipe:
             refuse(f"{p}: recipe lacks {f!r}; the student cannot be rebuilt from the record")
     entry = (registry.get("arms") or {}).get(arm) or {}
-    if int(recipe["dose_examples"]) != int(entry.get("dose_examples", SCREEN_DOSE)) or \
-            int(recipe["dose_examples"]) != SCREEN_DOSE:
-        refuse(f"{p}: dose {recipe['dose_examples']} is not the registered screen dose "
-               f"{SCREEN_DOSE} (the candidate is 'the 5M A100 arm', m10/LOTTE_LOCK.md)")
+    if int(recipe["dose_examples"]) != SCREEN_DOSE or \
+            int(entry.get("dose_examples", -1)) != SCREEN_DOSE:
+        refuse(f"{p}: dose {recipe['dose_examples']} / registry {entry.get('dose_examples')} is not "
+               f"the registered screen dose {SCREEN_DOSE} (m10/LOTTE_LOCK.md)")
     if int(recipe["batch"]) != int(entry.get("batch")):
         refuse(f"{p}: batch {recipe['batch']} is not the registry's {entry.get('batch')} for {arm}")
+    want_seed = int(entry["seed"]) if entry.get("seed") is not None else 0     # seed_rule: seed 0
+    if int(rec.get("seed", -1)) != want_seed:
+        refuse(f"{p}: seed {rec.get('seed')!r} is not the registered {want_seed} for {arm}")
+    live_reg = sha256_file(Path(cfg.registry_path))
+    if rec.get("registry_sha256") != live_reg:
+        refuse(f"{p}: the arm trained under registry sha {str(rec.get('registry_sha256'))[:12]} but "
+               f"the live m10/screen_registry.json is {live_reg[:12]}; a record about one registry "
+               f"cannot feed a gate under another")
     return {"arm": arm, "record": str(p), "record_sha256": sha256_file(p), "checkpoint": ck,
             "sha256": sha, "recipe": {k: recipe[k] for k in ("student", "n_layers", "head",
                                                                 "dose_examples", "batch")},
-            "params": rec.get("params"), "device": rec.get("device"),
+            "seed": want_seed, "params": rec.get("params"), "device": rec.get("device"),
             "git_head": rec.get("git_head")}
 
 
-def verify_checkpoint(cfg, ar):
+def checkpoint_bytes(cfg, ar):
+    """-> the checkpoint's bytes, read ONCE and hashed; the student is deserialised from this very
+    buffer, so a file replaced between hashing and loading cannot be scored (finding 3)."""
     p = Path(cfg.repo) / ar["checkpoint"]
     if not p.exists():
         refuse(f"{ar['arm']}: checkpoint {p} is not on this machine; the gate reads the exact "
                f"bytes the arm record names")
-    got = sha256_file(p)
+    data = p.read_bytes()
+    got = hashlib.sha256(data).hexdigest()
     if got != ar["sha256"]:
         refuse(f"{ar['arm']}: {p} hashes {got[:12]}, the record says {ar['sha256'][:12]}; "
                f"refusing to read a checkpoint that is not the published one")
-    return p
+    return data
 
 
-def preflight(cfg, verbose=True):
-    """Everything that must be true before a LoTTE path is opened. Opens none."""
+def manifest_of(cfg, arms, branch, vsha, *, require_committed=True):
+    """-> (manifest, sha, commit). `m13/LOTTE_GATE_MANIFEST.json` is the lock's second manifest
+    commit. It must exist, be tracked and unmodified in git, and agree field by field with the live
+    arm records, the branch and the E1 verdict sha."""
+    p = Path(cfg.manifest_path)
+    if not p.exists():
+        refuse(f"no checkpoint manifest at {p}. After BOTH E records are pushed, run "
+               f"`lotte_gate13.py --write-manifest`, then commit and push the file (the second "
+               f"manifest commit, m10/LOTTE_LOCK.md); the read refuses without it.")
+    m = json.loads(p.read_text())
+    cand_arm = "E-bs128" if branch == "bs128" else "E-bs32"
+    problems = []
+    if m.get("branch") != branch:
+        problems.append(f"branch {m.get('branch')!r} vs E1 {branch!r}")
+    if m.get("e1_verdict_sha256") != vsha:
+        problems.append("e1_verdict_sha256 differs from the live verdict")
+    live_reg = sha256_file(Path(cfg.registry_path))
+    if m.get("registry_sha256") != live_reg:
+        problems.append("registry_sha256 differs from the live registry")
+    cand = m.get("candidate") or {}
+    ar = arms[cand_arm]
+    for f in ("arm", "sha256", "record_sha256", "checkpoint"):
+        if cand.get(f) != ar[f if f != "arm" else "arm"]:
+            problems.append(f"candidate.{f} differs from the live {cand_arm} record")
+    comp = m.get("comparator")
+    if branch == "bs128":
+        if not isinstance(comp, dict):
+            problems.append("bs128 branch without a comparator")
+        else:
+            for f in ("arm", "sha256", "record_sha256", "checkpoint"):
+                if comp.get(f) != arms["E-bs32"][f]:
+                    problems.append(f"comparator.{f} differs from the live E-bs32 record")
+    elif comp is not None:
+        problems.append("bs32 branch with a comparator")
+    if problems:
+        refuse(f"{p} does not describe the live inputs: " + "; ".join(problems) +
+               ". A manifest is written once from the published records and committed; if the "
+               "records legitimately changed, that is a new second manifest commit, not a silent read.")
+    commit = None
+    if require_committed:
+        rc, _o, err = _git(cfg.repo, "ls-files", "--error-unmatch", str(p))
+        if rc != 0:
+            refuse(f"{p} is not tracked by git ({err.splitlines()[0] if err else 'untracked'}); "
+                   f"commit and push the second manifest commit before the read")
+        _rc, status, _e = _git(cfg.repo, "status", "--porcelain", "--", str(p))
+        if status.strip():
+            refuse(f"{p} has uncommitted changes; the manifest the read binds to must be the "
+                   f"committed one")
+        _rc, commit, _e = _git(cfg.repo, "log", "-1", "--format=%H", "--", str(p))
+        if not commit:
+            refuse(f"{p} has no commit in this repository's history")
+    return m, sha256_file(p), commit
+
+
+def pin_of(cfg, reg):
+    """-> (pin, sha). `results/m8_lotte_pin.json` (m8src/freeze_lotte.py pin) must cover every
+    registered slice (ruling R18: run it immediately before the gate)."""
+    p = Path(cfg.pin_path)
+    if not p.exists():
+        refuse(f"no LoTTE pin at {p}. Ruling R18: run `.venv/bin/python m8src/freeze_lotte.py pin` "
+               f"immediately before the gate and commit the pin; the gate compares every slice's "
+               f"five hashes against it, and counts alone authenticate nothing.")
+    pin = json.loads(p.read_text())
+    slices = pin.get("slices") or {}
+    missing = [k for k in reg["surface"]["slices"] if k not in slices]
+    if missing:
+        refuse(f"{p} does not pin {missing}; every registered slice must be pinned")
+    for k, s in slices.items():
+        if k in reg["surface"]["slices"]:
+            for f in ("doc_ids_sha256", "doc_texts_sha256", "query_ids_sha256",
+                      "query_texts_sha256", "qrels_sha256"):
+                if not _is_sha((s.get("hashes") or {}).get(f)):
+                    refuse(f"{p}: slice {k} lacks a sha256 for {f}")
+    return pin, sha256_file(p)
+
+
+def identity_of(plan):
+    return {k: plan[k] for k in IDENTITY_FIELDS}
+
+
+def preflight(cfg, *, recover=False, verbose=True):
+    """Everything that must be true before a LoTTE path is opened. Opens none (the receipt's
+    EXISTENCE is a stat, not an open; its contents are compared after the claim)."""
     rec_p = Path(cfg.record_path)
     if rec_p.exists():
         refuse(f"{rec_p} already exists. Read #1 is ONE access and there is no third read "
                f"(m10/LOTTE_LOCK.md); a re-run is a protocol change, not a retry. Move the record "
                f"aside deliberately if it is not the executed gate.")
+    receipt_p = Path(cfg.gate_work_dir) / "receipt.json"
+    if receipt_p.exists() and not recover:
+        refuse(f"{receipt_p} exists: a read has already STARTED. If it crashed, pass --recover to "
+               f"complete it from its persisted slices under the identical identity; nothing else "
+               f"may open the surface again.")
+    if recover and not receipt_p.exists():
+        refuse(f"--recover: no receipt at {receipt_p}; there is no started read to complete")
     reg, reg_sha = registration(cfg)
     branch, batch, vsha = branch_of(cfg)
     registry = json.loads(Path(cfg.registry_path).read_text())
     arms = {a: arm_record(cfg, a, registry) for a in E_ARMS}
     cand = arms["E-bs128" if branch == "bs128" else "E-bs32"]
     comp = arms["E-bs32"] if branch == "bs128" else None
-    verify_checkpoint(cfg, cand)
-    if comp is not None:
-        verify_checkpoint(cfg, comp)
+    for ar in (cand, comp):
+        if ar is not None:
+            checkpoint_bytes(cfg, ar)            # exists and hashes now; the bytes are re-read at load
+    man, man_sha, man_commit = manifest_of(cfg, arms, branch, vsha)
+    pin, pin_sha = pin_of(cfg, reg)
     import torch
     if cfg.device == "cuda" and not torch.cuda.is_available():
         refuse("--device cuda but no CUDA device is visible; a CUDA torch installation is not a GPU")
@@ -271,24 +424,69 @@ def preflight(cfg, verbose=True):
         teacher = {"model_id": T.TEACHER, "revision": T.TEACHER_REV, "encode_dtype": "fp16",
                    "doc_prefix": "", "max_length": 512}
     veto = reg["veto"]
-    order = sorted(reg["surface"]["slices"], key=lambda k: reg["surface"]["slices"][k]["docs_after_remedy"])
+    order = sorted(reg["surface"]["slices"],
+                   key=lambda k: reg["surface"]["slices"][k]["docs_after_remedy"])
     plan = {"branch": branch, "e1_batch": batch, "e1_verdict_sha256": vsha,
             "candidate": cand, "comparator": comp,
+            "candidate_sha256": cand["sha256"],
+            "comparator_sha256": comp["sha256"] if comp else None,
             "veto_runs": comp is not None,
             "registration_sha256": reg_sha, "registration": reg,
+            "manifest": man, "manifest_sha256": man_sha, "manifest_commit": man_commit,
+            "pin": pin, "pin_sha256": pin_sha,
+            "code_identity": code_identity(),
             "slice_order": order, "veto": veto, "device": cfg.device, "teacher": teacher,
-            "record_path": str(rec_p)}
+            "record_path": str(rec_p), "receipt_path": str(receipt_p), "recover": recover}
     if verbose:
         print(f"LoTTE read #1 preflight: branch {branch} (E1 batch {batch}); veto "
-              f"{'RUNS' if comp else 'SKIPPED and forfeited (identical recipe and action)'}")
+              f"{'RUNS' if comp else 'SKIPPED and forfeited (identical recipe and action)'}"
+              + ("; RECOVER from a started read" if recover else ""))
         print(f"  candidate  {cand['arm']}: {cand['checkpoint']} {cand['sha256'][:12]}")
         if comp:
             print(f"  comparator {comp['arm']}: {comp['checkpoint']} {comp['sha256'][:12]}")
+        print(f"  manifest {man_sha[:12]} @ {str(man_commit)[:12]}; pin {pin_sha[:12]}; "
+              f"registration {reg_sha[:12]}; code {plan['code_identity'][:12]}")
         print(f"  slices (smallest first): {order}")
         print(f"  veto: margin {veto['margin']}, B {veto['bootstrap']['B']}, seed "
-              f"{veto['bootstrap']['seed']}, {veto['bootstrap']['interval']}")
+              f"{veto['bootstrap']['seed']}, {veto['bootstrap']['interval']}, quantile method "
+              f"{veto['bootstrap']['quantile_method']}")
         print(f"  device {cfg.device}; teacher {teacher}; no LoTTE path opened", flush=True)
     return plan
+
+
+def write_manifest(cfg, verbose=True):
+    """`--write-manifest`: the lock's second manifest commit, materialised from the published arm
+    records and the E1 verdict, after both E arms finished and before the read. Opens no LoTTE
+    path, claims nothing. The operator commits and pushes the file; the gate then binds to it."""
+    p = Path(cfg.manifest_path)
+    if p.exists():
+        refuse(f"{p} already exists; a manifest is written once. If the E records legitimately "
+               f"changed, move it aside deliberately and record why in m13/EXECUTION.md.")
+    reg, reg_sha = registration(cfg)
+    branch, batch, vsha = branch_of(cfg)
+    registry = json.loads(Path(cfg.registry_path).read_text())
+    arms = {a: arm_record(cfg, a, registry) for a in E_ARMS}
+    for ar in arms.values():
+        checkpoint_bytes(cfg, ar)
+    cand = arms["E-bs128" if branch == "bs128" else "E-bs32"]
+    comp = arms["E-bs32"] if branch == "bs128" else None
+    fields = ("arm", "checkpoint", "sha256", "record_sha256", "recipe", "seed", "git_head")
+    man = {"_what": "LoTTE read #1 checkpoint manifest — m10/LOTTE_LOCK.md's second manifest commit, "
+                    "written by m13src/lotte_gate13.py --write-manifest from the published E arm "
+                    "records after both finished and before the build. Commit and push it; the "
+                    "gate refuses to read without the committed file and re-checks every field.",
+           "written_at": utcnow(), "branch": branch, "e1_batch": batch,
+           "e1_verdict_sha256": vsha, "registry_sha256": sha256_file(Path(cfg.registry_path)),
+           "registration_sha256": reg_sha,
+           "candidate": {k: cand[k] for k in fields},
+           "comparator": None if comp is None else {k: comp[k] for k in fields},
+           "git_head": R.git_head()}
+    write_atomic(p, man)
+    if verbose:
+        print(f"wrote {p} (branch {branch}; candidate {cand['arm']} {cand['sha256'][:12]}"
+              + (f"; comparator E-bs32 {comp['sha256'][:12]}" if comp else "")
+              + "). Now: git add, commit and push it — the second manifest commit.", flush=True)
+    return man
 
 
 # ------------------------------------------------------------------------------ the guard ----
@@ -314,10 +512,10 @@ def _read_tsv(path):
     return ids, texts
 
 
-def read_slice(cfg, key, expected):
-    """-> the remediated slice, checked against the registration's counts, with the five hashes
-    `m8src/freeze_lotte._hash_slice` would compute. Refuses on any mismatch: a slice that is not
-    the registered one is not read further."""
+def read_slice(cfg, key, expected, pinned):
+    """-> the remediated slice, checked against the registration's counts AND the pin's five hashes.
+    Refuses on any mismatch, duplicate qrel row or duplicate positive: a slice that is not the
+    registered, pinned one is not read further."""
     topic, split = key.split("/")
     d = Path(cfg.remediated_dir) / topic / split
     for name in SLICE_FILES:
@@ -325,15 +523,21 @@ def read_slice(cfg, key, expected):
             refuse(f"{key}: {d / name} is missing; refusing to skip a registered slice")
     doc_ids, doc_texts = _read_tsv(d / "collection.tsv")
     q_ids, q_texts = _read_tsv(d / "questions.forum.tsv")
-    rows = []
+    qrels, problems = {}, []
     with open(d / "qas.forum.jsonl") as fh:
         for line in fh:
             line = line.strip()
-            if line:
-                rows.append(json.loads(line))
-    qrels = {str(r["qid"]): sorted(str(p) for p in r["answer_pids"]) for r in rows}
+            if not line:
+                continue
+            r = json.loads(line)
+            qid = str(r["qid"])
+            pids = [str(p) for p in r["answer_pids"]]
+            if qid in qrels:
+                problems.append("duplicate qrel rows for one query")
+            if len(set(pids)) != len(pids):
+                problems.append("duplicate positives within one qrel row")
+            qrels[qid] = sorted(pids)
     n_pairs = sum(len(v) for v in qrels.values())
-    problems = []
     if len(doc_ids) != expected["docs_after_remedy"]:
         problems.append(f"{len(doc_ids)} documents, registered {expected['docs_after_remedy']}")
     if len(q_ids) != expected["queries_after_remedy"]:
@@ -352,12 +556,16 @@ def read_slice(cfg, key, expected):
     if any(len(v) == 0 for v in qrels.values()):
         problems.append("a query has no positive")
     if problems:
-        refuse(f"{key} under {d} is not the registered slice: " + "; ".join(problems))
-    q_by_id = dict(zip(q_ids, q_texts))
-    hashes = {"doc_ids_sha256": sha_obj(doc_ids), "doc_texts_sha256": sha_obj(doc_texts),
-              "query_ids_sha256": sha_obj(sorted(q_ids)),
-              "query_texts_sha256": sha_obj([q_by_id[q] for q in sorted(q_ids)]),
-              "qrels_sha256": sha_obj(qrels)}
+        refuse(f"{key} under {d} is not the registered slice: " + "; ".join(sorted(set(problems))))
+    hashes = slice_hashes(doc_ids, doc_texts, q_ids, q_texts, qrels)
+    want = pinned.get("hashes") or {}
+    bad = [f for f, v in hashes.items() if want.get(f) != v]
+    for f, v in (("n_docs", len(doc_ids)), ("n_queries", len(q_ids)), ("n_qrels_pairs", n_pairs)):
+        if pinned.get(f) is not None and int(pinned[f]) != v:
+            bad.append(f)
+    if bad:
+        refuse(f"{key}: the slice on disk does not match results/m8_lotte_pin.json on {sorted(bad)}; "
+               f"the bytes changed since the pin, and a changed slice is not the registered one")
     return {"key": key, "doc_ids": doc_ids, "doc_texts": doc_texts, "q_ids": q_ids,
             "q_texts": q_texts, "qrels": {q: {p: 1 for p in v} for q, v in qrels.items()},
             "n_docs": len(doc_ids), "n_queries": len(q_ids), "n_qrels_pairs": n_pairs,
@@ -367,7 +575,8 @@ def read_slice(cfg, key, expected):
 def encode_docs(cfg, key, doc_texts, verbose=True):
     """-> (document vectors, cache record). stella once per slice, shard-resumable, cached INSIDE
     the protected tree (`teacher.ENC` is rebound to `cfg.enc_root`), prefix "" like the shared
-    index's own caches, stored fp16 like the DEV-6 caches."""
+    index's own caches, stored fp16 like the DEV-6 caches. `verify=True`: a shard or combined file
+    reused from an earlier attempt is re-hashed, and an unrecorded one refuses (finding 5)."""
     topic, split = key.split("/")
     name = f"lotte-{topic}-{split}-docs"
     t0 = time.time()
@@ -378,7 +587,7 @@ def encode_docs(cfg, key, doc_texts, verbose=True):
         import teacher as T
         T.ENC = Path(cfg.enc_root)
         vecs = T.encode_cached(name, doc_texts, prefix="", dtype=torch.float16, verbose=verbose,
-                               device=cfg.device)
+                               device=cfg.device, verify=True)
         rec = dict(T.PROVENANCE.get(name) or {})
         rec.pop("shard_sha256", None)             # the combined sha carries the identity
     sec = time.time() - t0
@@ -392,16 +601,16 @@ def encode_docs(cfg, key, doc_texts, verbose=True):
 
 # ------------------------------------------------------------------------------- scoring ----
 
-def load_student(cfg, ar):
-    """The nano student the arm record describes, loaded from the exact checkpoint bytes it
-    names. `trainer10.save` writes {"model": state_dict, ...}."""
+def load_student(cfg, ar, data):
+    """The nano student the arm record describes, deserialised from the hashed BYTES (`data`),
+    never from a second read of the file. `trainer10.save` writes {"model": state_dict, ...}."""
     if cfg.load_student is not None:
-        return cfg.load_student(ar, cfg.device)
+        return cfg.load_student(ar, data, cfg.device)
     import torch
     import nano10 as N
     r = ar["recipe"]
     model = N.Nano10(r["student"], n_layers=int(r["n_layers"]), head=r["head"])
-    blob = torch.load(Path(cfg.repo) / ar["checkpoint"], map_location="cpu", weights_only=False)
+    blob = torch.load(io.BytesIO(data), map_location="cpu", weights_only=False)
     sd = blob.get("model", blob) if isinstance(blob, dict) else blob
     model.load_state_dict(sd)
     if not model.under_cap():
@@ -433,9 +642,9 @@ def score_slice(cfg, student, sl, dv):
     qrels = {QNS + q: rels for q, rels in sl["qrels"].items()}
     ndcg = per_query_ndcg(run, qrels)
     if set(ndcg) != set(ns_ids):
-        missing = sorted(set(ns_ids) - set(ndcg))[:5]
-        refuse(f"{sl['key']}: {len(ns_ids) - len(ndcg)} queries were not scored (e.g. {missing}); "
-               f"pytrec_eval omits a qid without qrels (CODEMAP pitfall 4)")
+        # no identifier leaves the protected tree, not even in a refusal (finding 6)
+        refuse(f"{sl['key']}: {len(set(ns_ids) - set(ndcg))} of {len(ns_ids)} queries were not "
+               f"scored; pytrec_eval omits a qid without qrels (CODEMAP pitfall 4)")
     return {"ndcg10": {q: float(ndcg[QNS + q]) for q in q_ids},
             "success5": {q: success_at_k(run[QNS + q], sl["qrels"][q], 5) for q in q_ids}}
 
@@ -449,8 +658,8 @@ def slice_means(per_slice):
 def paired_bootstrap(cand, comp, B, seed, quantile=0.975, method="inverted_cdf"):
     """The registered veto interval: per-query (candidate - comparator) deltas on identical qids,
     resampled WITHIN each slice, the macro of the slice means per draw, and the one-sided upper
-    bound as the empirical quantile (`inverted_cdf`, the repo's registered quantile method,
-    `m9src/final_stats.bootstrap`). Slices enter the RNG stream in sorted order."""
+    bound as the quantile under the method the registration pins (R17). Slices enter the RNG
+    stream in sorted order."""
     keys = sorted(cand)
     if set(comp) != set(keys):
         raise ValueError(f"slices differ: {sorted(cand)} vs {sorted(comp)}")
@@ -512,41 +721,105 @@ def _environment(device):
     return env
 
 
-def run(cfg=None, *, preflight_only=False, verbose=True):
+def _create_receipt(cfg, plan):
+    """The EXCLUSIVE receipt: O_EXCL, so two processes cannot both start the read, and a crashed
+    read leaves it behind for `--recover` to authenticate against."""
+    p = Path(cfg.gate_work_dir) / "receipt.json"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    body = {"_what": "LoTTE read #1 receipt: the read STARTED with these inputs; a plain re-run "
+                     "refuses while this exists, --recover requires the identical identity",
+            "identity": identity_of(plan), "started_at": utcnow(), "git_head": R.git_head(),
+            "host": platform.node()}
+    fd = os.open(p, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+    with os.fdopen(fd, "w") as fh:
+        json.dump(body, fh, indent=1, default=str)
+        fh.flush()
+        os.fsync(fh.fileno())
+    return body
+
+
+def _load_receipt(cfg, plan):
+    p = Path(cfg.gate_work_dir) / "receipt.json"
+    body = json.loads(p.read_text())
+    want, got = identity_of(plan), body.get("identity") or {}
+    diff = sorted(k for k in IDENTITY_FIELDS if want.get(k) != got.get(k))
+    if diff:
+        refuse(f"--recover: the started read's identity differs from today's on {diff}; a recovery "
+               f"completes THE SAME read or nothing. Restore those inputs (checkout the receipt's "
+               f"code identity, the same records, device and verdict) or stop.")
+    return body
+
+
+def _slice_path(cfg, key):
+    topic, split = key.split("/")
+    return Path(cfg.gate_work_dir) / f"slice-{topic}-{split}.json"
+
+
+def _persisted_slice(cfg, key, plan, roles):
+    p = _slice_path(cfg, key)
+    if not p.exists():
+        return None
+    s = json.loads(p.read_text())
+    if s.get("identity") != identity_of(plan) or s.get("key") != key or \
+            set(s.get("per_role") or {}) != set(roles):
+        refuse(f"{p} was written under a different identity or role set; it cannot complete this "
+               f"read. Inspect it before deciding anything.")
+    return s
+
+
+def run(cfg=None, *, preflight_only=False, recover=False, verbose=True):
     """Read #1, end to end. -> the gate record (or the preflight plan under `preflight_only`)."""
     cfg = cfg or Config()
-    plan = preflight(cfg, verbose=verbose)
+    plan = preflight(cfg, recover=recover, verbose=verbose)
     if preflight_only:
         return plan
     if cfg.claim_guard:
         claim_lotte()
     t_start = time.time()
     read_at = utcnow()
-    n_attempts = _attempt(cfg, {"started_at": read_at, "branch": plan["branch"],
-                                "git_head": R.git_head(), "candidate": plan["candidate"]["sha256"]})
-    students = {"candidate": load_student(cfg, plan["candidate"])}
-    if plan["comparator"] is not None:
-        students["comparator"] = load_student(cfg, plan["comparator"])
+    receipt = _load_receipt(cfg, plan) if recover else _create_receipt(cfg, plan)
+    n_attempts = _attempt(cfg, {"started_at": read_at, "recover": recover, "branch": plan["branch"],
+                                "git_head": R.git_head(), "candidate": plan["candidate_sha256"]})
+    roles = ["candidate"] + (["comparator"] if plan["comparator"] is not None else [])
+    students = {role: load_student(cfg, plan[role], checkpoint_bytes(cfg, plan[role]))
+                for role in roles}
     reg = plan["registration"]
-    per = {role: {"ndcg10": {}, "success5": {}} for role in students}
-    surface, caches = {}, {}
+    per = {role: {"ndcg10": {}, "success5": {}} for role in roles}
+    surface, caches, recovered = {}, {}, []
     for key in plan["slice_order"]:
-        sl = read_slice(cfg, key, reg["surface"]["slices"][key])
+        done = _persisted_slice(cfg, key, plan, roles) if recover else None
+        if done is not None:
+            for role in roles:
+                per[role]["ndcg10"][key] = done["per_role"][role]["ndcg10"]
+                per[role]["success5"][key] = done["per_role"][role]["success5"]
+            surface[key], caches[key] = done["surface"], done["cache"]
+            recovered.append(key)
+            if verbose:
+                print(f"  [{key}] recovered from {_slice_path(cfg, key).name}; not re-read", flush=True)
+            continue
+        sl = read_slice(cfg, key, reg["surface"]["slices"][key], plan["pin"]["slices"][key])
         dv, cache = encode_docs(cfg, key, sl["doc_texts"], verbose=verbose)
+        scored = {}
         for role, st in students.items():
             s = score_slice(cfg, st, sl, dv)
+            scored[role] = s
             per[role]["ndcg10"][key] = s["ndcg10"]
             per[role]["success5"][key] = s["success5"]
         del dv
         surface[key] = {k: sl[k] for k in ("n_docs", "n_queries", "n_qrels_pairs", "hashes",
                                             "read_relpath")}
         caches[key] = cache
+        write_atomic(_slice_path(cfg, key), {
+            "_what": "LoTTE read #1: one slice's outputs, persisted as it completed so a crashed read "
+                     "can be completed without re-reading this slice; per-query rows stay here",
+            "identity": identity_of(plan), "key": key, "surface": surface[key], "cache": cache,
+            "per_role": scored, "scored_at": utcnow()})
         if verbose:
             row = " ".join(f"{role} nDCG@10 {np.mean(list(per[role]['ndcg10'][key].values())):.4f}"
-                           for role in students)
+                           for role in roles)
             print(f"  [{key}] {row}", flush=True)
     rows = {}
-    for role in students:
+    for role in roles:
         n_means, n_macro = slice_means(per[role]["ndcg10"])
         s_means, s_macro = slice_means(per[role]["success5"])
         rows[role] = {"arm": plan[role]["arm"], "checkpoint_sha256": plan[role]["sha256"],
@@ -556,9 +829,13 @@ def run(cfg=None, *, preflight_only=False, verbose=True):
     boot = None
     if "comparator" in students:
         boot = paired_bootstrap(per["candidate"]["ndcg10"], per["comparator"]["ndcg10"],
-                                veto["bootstrap"]["B"], veto["bootstrap"]["seed"])
+                                veto["bootstrap"]["B"], veto["bootstrap"]["seed"],
+                                method=veto["bootstrap"]["quantile_method"])
     decision, fired = decide(plan, boot, veto["margin"])
-    # per-query rows stay inside the protected tree; the record carries their hash only
+    code_now = code_identity()
+    if code_now != plan["code_identity"]:
+        refuse(f"the code identity changed during the read ({plan['code_identity'][:12]} -> "
+               f"{code_now[:12]}); no record is written. Restore the code and --recover.")
     pq_path = Path(cfg.gate_work_dir) / f"perquery-{plan['branch']}.json"
     write_atomic(pq_path, {"_what": "LoTTE read #1 per-query nDCG@10 and Success@5 by slice; "
                                     "derived from LoTTE, kept under work/lotte",
@@ -573,10 +850,15 @@ def run(cfg=None, *, preflight_only=False, verbose=True):
         "veto_fired": fired,
         "e1_batch": plan["e1_batch"],
         "e1_verdict_sha256": plan["e1_verdict_sha256"],
-        "candidate_sha256": plan["candidate"]["sha256"],
-        "comparator_sha256": plan["comparator"]["sha256"] if plan["comparator"] else None,
+        "candidate_sha256": plan["candidate_sha256"],
+        "comparator_sha256": plan["comparator_sha256"],
         "candidate": plan["candidate"],
         "comparator": plan["comparator"],
+        "manifest_path": str(Path(cfg.manifest_path)),
+        "manifest_sha256": plan["manifest_sha256"],
+        "manifest_commit": plan["manifest_commit"],
+        "pin_path": str(Path(cfg.pin_path)),
+        "pin_sha256": plan["pin_sha256"],
         "macro_ndcg10": {role: rows[role]["ndcg10"] for role in rows},
         "success_at_5": {role: rows[role]["success5"] for role in rows},
         "delta_candidate_minus_comparator": boot,
@@ -595,11 +877,13 @@ def run(cfg=None, *, preflight_only=False, verbose=True):
         "registration_path": str(Path(cfg.registration_path)),
         "registration_sha256": plan["registration_sha256"],
         "perquery": {"path": str(pq_path), "sha256": sha256_file(pq_path)},
-        "attempts_before_this_record": n_attempts,
+        "receipt": {"started_at": receipt["started_at"], "git_head_at_start": receipt["git_head"],
+                    "recovered": recover, "recovered_slices": recovered,
+                    "attempts_including_this": n_attempts},
         "read_at": read_at,
         "seconds": round(time.time() - t_start, 1),
         "environment": _environment(cfg.device),
-        "code_identity": code_identity(),
+        "code_identity": code_now,
         "code_identity_files": list(CODE_IDENTITY_FILES),
         "git_head": R.git_head(),
         "firewall": reg.get("firewall"),
@@ -614,7 +898,9 @@ def run(cfg=None, *, preflight_only=False, verbose=True):
               + (f" (delta {boot['delta_macro_raw']:+.4f}, upper {boot['upper_q975_raw']:+.4f}, "
                  f"margin {veto['margin']})" if boot else "")
               + f"; candidate macro nDCG@10 {rows['candidate']['ndcg10']['macro']:.4f}, "
-                f"Success@5 {rows['candidate']['success5']['macro']:.4f}; wrote {rec_p}", flush=True)
+                f"Success@5 {rows['candidate']['success5']['macro']:.4f}"
+              + (f"; recovered {len(recovered)} slice(s)" if recovered else "")
+              + f"; wrote {rec_p}", flush=True)
     return record
 
 
@@ -622,16 +908,26 @@ def build_argparser():
     ap = argparse.ArgumentParser(description="LoTTE read #1: the pre-build veto and observational "
                                              "row (m13/LOTTE_GATE_REGISTRATION.json, ruling R16)")
     ap.add_argument("--device", default="cuda", choices=["cuda", "cpu"])
+    ap.add_argument("--write-manifest", action="store_true",
+                    help="write m13/LOTTE_GATE_MANIFEST.json from the published E arm records (the "
+                         "lock's second manifest commit); opens no LoTTE path; you commit and push it")
     ap.add_argument("--preflight-only", action="store_true",
-                    help="check the registration, E1 verdict, arm records and checkpoints; open "
-                         "no LoTTE path and write nothing")
+                    help="check the registration, E1 verdict, arm records, checkpoints, manifest "
+                         "and pin; open no LoTTE path and write nothing")
+    ap.add_argument("--recover", action="store_true",
+                    help="complete a read that crashed after its receipt was written: identical "
+                         "identity required, only slices without a persisted output are read")
     ap.add_argument("--quiet", action="store_true")
     return ap
 
 
 def main(argv=None):
     a = build_argparser().parse_args(argv)
-    run(Config(device=a.device), preflight_only=a.preflight_only, verbose=not a.quiet)
+    cfg = Config(device=a.device)
+    if a.write_manifest:
+        write_manifest(cfg, verbose=not a.quiet)
+        return 0
+    run(cfg, preflight_only=a.preflight_only, recover=a.recover, verbose=not a.quiet)
     return 0
 
 

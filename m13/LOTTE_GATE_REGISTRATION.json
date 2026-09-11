@@ -61,7 +61,9 @@
    "B": 10000,
    "seed": 903,
    "paired_within_slice": true,
-   "interval": "one-sided 97.5% upper bound on (selected - anchor)"
+   "interval": "one-sided 97.5% upper bound on (selected - anchor)",
+   "quantile_method": "inverted_cdf",
+   "_quantile_method": "RULING R17 (Dylan, 2026-09-10), registered BEFORE any LoTTE read: the empirical quantile, numpy method `inverted_cdf`, i.e. order statistic 9,750 of 10,000 draws for the 97.5% upper bound. The repo's registered convention (m9src/final_stats.bootstrap, m10/final_run_registry.json). The 9,751st order statistic (`higher`) can disagree at the margin; pinning the method removes that freedom (Astra review, 2026-09-10)."
   },
   "fires_iff": "selected macro is worse than the comparator's by more than 0.004 AND the upper bound is below -0.004",
   "consequence": "the comparator's recipe (bs32) is what the 200M build trains; no retraining, no second build"
@@ -77,7 +79,21 @@
    "comparator": "none: identical recipe and action",
    "veto": "SKIPPED and forfeited; the observational row is still read and reported as a 5M-dose number"
   },
-  "checkpoint_sha256": "pending the second manifest commit after both E arms finish and before the build (m10/LOTTE_LOCK.md)"
+  "checkpoint_sha256": "pending the second manifest commit after both E arms finish and before the build (m10/LOTTE_LOCK.md); materialised as m13/LOTTE_GATE_MANIFEST.json (see _amended_2026_09_10)"
+ },
+ "_amended_2026_09_10": {
+  "_what": "dated pre-observation amendment, LoTTE still entirely unread; the original registration is preserved in git (commit c7caaf2 and earlier)",
+  "R17_quantile_method": "veto.bootstrap.quantile_method = inverted_cdf pinned; the executor refuses a registration without it",
+  "R18_pin": {
+   "path": "results/m8_lotte_pin.json",
+   "rule": "m8src/freeze_lotte.py pin (M8's registered E10-REMEDY PIN, never executed) runs immediately before the gate on the day of the read and its output is committed; the executor compares every slice's five hashes and counts against it and refuses without it. Counts alone authenticate nothing (Astra review, finding 4)."
+  },
+  "manifest": {
+   "path": "m13/LOTTE_GATE_MANIFEST.json",
+   "rule": "the second manifest commit of m10/LOTTE_LOCK.md, written by m13src/lotte_gate13.py --write-manifest from the published E arm records after both finished, committed and pushed before the read; the executor requires it tracked, unmodified and agreeing field by field with the live records and bytes; build13.check_gate_manifest binds the gate record to it (Astra review, finding 2)."
+  },
+  "receipt_and_recovery": "before the first LoTTE open the executor creates an exclusive receipt under work/lotte/gate13/ binding every input; each slice's outputs are persisted as it completes; a plain re-run refuses while the receipt exists and --recover completes THE SAME read under the identical identity, reading only slices without a persisted output (Astra review, finding 1). This is completion of read #1, not a second read.",
+  "executor": "m13src/lotte_gate13.py (ruling R16); reviews: research/m13-codex-gate-review-2026-09-10.md and the re-review that follows the fixes"
  },
  "executed": false,
  "gate_record_contract": {

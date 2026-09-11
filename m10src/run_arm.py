@@ -844,6 +844,14 @@ def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, r
     if dev6_mode == "defer" and smoke:
         refuse("--dev6 defer is meaningless under --smoke-steps: a smoke never reads DEV-6, so "
                "there is nothing to defer")
+    if dev6_mode == "defer":
+        # Family F's records are hashed into the F verdict (`contrasts.py` `sha256_of_F_records`),
+        # so filling their DEV-6 later would change a bound artifact; the deferral is registered
+        # for the two cloud E arms only (Astra 2026-09-10, finding 8).
+        fam = ((SL.cfg().get("arms") or {}).get(arm) or {}).get("family")
+        if fam != "E":
+            refuse(f"--dev6 defer is registered for the cloud E arms only; {arm!r} is family "
+                   f"{fam!r}, whose record may be hashed into a verdict binding")
     max_len = int(max_len or MAX_LEN)
     problems = SL.validate(SL.cfg())
     if problems:

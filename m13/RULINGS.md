@@ -117,6 +117,27 @@ stage cannot borrow `m8src.final_run`'s entry. **Recommend** adding the entry in
 commit as R7 and R10 (LEDGER 15 amendment). Bookkeeping, no protocol change.
 **Ruling (Dylan, 2026-09-10):** accepted as recommended: allowlist entry for the reserved stage in the same dated commit as R7 and R10.
 
+## R17 — LoTTE upper-bound quantile method (blocks the LoTTE read)
+`m10/LOTTE_LOCK.md` registers a one-sided 97.5% upper bound (B = 10,000, seed 903) but not the
+quantile METHOD. `inverted_cdf`, the repo's convention (`m9src/final_stats.bootstrap`,
+`m10/final_run_registry.json`), takes the 9,750th order statistic; the reflected convention takes
+the 9,751st. The Astra review (2026-09-10) built a boundary case where the two disagree on the veto.
+**Recommend** pinning `inverted_cdf` in `m13/LOTTE_GATE_REGISTRATION.json` before any read; the
+executor refuses a registration without the field.
+**Ruling (Dylan, 2026-09-10):** accepted as recommended — "Fully fix and review everything until
+we're at a full GO" — pinned in the registration's dated amendment.
+
+## R18 — Slice pin and checkpoint manifest before the LoTTE read (blocks the LoTTE read)
+Counts alone do not authenticate a slice, and the arm records the gate reads are mutable files. Two
+committed artifacts close both: `results/m8_lotte_pin.json` from `m8src/freeze_lotte.py pin` (M8's
+registered E10-REMEDY PIN, allowlisted, never executed — it hashes the remediated files and reads no
+score), run immediately before the gate on the day of the read; and `m13/LOTTE_GATE_MANIFEST.json`,
+the lock's second manifest commit, written by `lotte_gate13.py --write-manifest` from the published
+E records and committed before the read. The executor refuses without either and compares every
+field. **Recommend** both.
+**Ruling (Dylan, 2026-09-10):** accepted as recommended, same words as R17. The pin runs on the day
+of the read, not before; nothing under `work/lotte` is opened during development or review.
+
 ## Provider (your choice; not a registered field)
 
 **Ruling (Dylan, 2026-09-10):** decided later; RunPod Secure Cloud is the standing recommendation.

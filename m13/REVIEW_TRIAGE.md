@@ -1,4 +1,25 @@
-# Stage 1 review triage — 2026-09-10
+# Review triage — 2026-09-10
+
+## Stage 2: the LoTTE gate script and the deferred DEV-6 read (Astra, `research/m13-codex-gate-review-2026-09-10.md`)
+
+All nine findings accepted. Fixes in `lotte_gate13.py`, `dev6_from_checkpoint.py`, `run_arm.py`,
+`build13.py` and their tests; rulings R17 and R18 (`m13/RULINGS.md`); registration amendment.
+
+| Finding | Fix |
+|---|---|
+| 1 P1 read repeatable after a crash | exclusive receipt (O_EXCL) binding every input before the first LoTTE open; per-slice outputs persisted; plain re-run refuses; `--recover` completes the same read under the identical identity, reading only unfinished slices |
+| 2 P1 mutable arm records stand in for the manifest | `--write-manifest` materialises the lock's second manifest commit as `m13/LOTTE_GATE_MANIFEST.json`; the gate requires it tracked, unmodified and field-equal to the live records; arm name, seed and registry binding checked; `build13.check_gate_manifest` binds the gate record to it |
+| 3 P1 hash-then-load reopens the file | bytes read once, hashed, deserialised from the same buffer (gate and DEV-6 filler) |
+| 4 P1 slice hashes authenticate nothing | R18: `results/m8_lotte_pin.json` required; five hashes and counts compared per slice; duplicate qrel rows and positives refuse. Correction: no pin existed; the M8 pin step is run on the day |
+| 5 P1 resumed caches unverified | `encode_cached(verify=True)` |
+| 6 P1 refusal leaks qids | count only |
+| 7 P2 DEV-6 fill repeatable after a crash | attempt line before the read; `attempts_including_this` disclosed (a development read; disclosed, not refused) |
+| 8 P2 `--dev6 defer` on family F | refused for every family but E |
+| 9 P2 runbook handoffs and commands | `git pull` steps, interpreter prefixes, manifest and pin steps (`m13/EXECUTION.md`) |
+| unverified: quantile method | R17 pins `inverted_cdf` in the registration; the gate refuses without the field |
+| unverified: code identity at the end | computed at preflight into the receipt and again before the record; a change refuses |
+
+## Stage 1 review triage
 
 **Superseded in part by rulings R13–R16 (same day):** extension cycles and post-tag continuation are
 DELETED rather than fixed. B4, B5 and B7 fall away with the extensions; B2/B3's continuation and the

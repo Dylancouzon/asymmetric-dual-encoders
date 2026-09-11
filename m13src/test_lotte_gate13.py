@@ -1,9 +1,10 @@
 """What LoTTE read #1's executor must refuse, and the arithmetic it must get right — on a synthetic
-tree. No test opens `work/lotte`; the fixture writes seven tiny "remediated" slices under a tmp
-path, injects a deterministic document encoder in place of stella, and hands the executor stub
-students whose quality is a parameter, so both branches, both veto outcomes and every refusal run
-on a CPU in seconds. The one real-path check (the guard claim) runs in a subprocess and only
-CLASSIFIES a protected path; it opens nothing.
+git tree. No test opens `work/lotte`; the fixture writes seven tiny "remediated" slices under a tmp
+path, pins them with `freeze_lotte`'s hash scheme, writes the two E arm records with real checkpoint
+bytes, a committed checkpoint manifest, injects a deterministic document encoder in place of stella,
+and hands the executor stub students whose quality is a parameter — so both branches, both veto
+outcomes, the crash-and-recover path and every refusal run on a CPU in seconds. The one real-path
+check (the guard claim) runs in a subprocess and only CLASSIFIES a protected path; it opens nothing.
 """
 from __future__ import annotations
 
@@ -43,12 +44,21 @@ def doc_vec(doc_text):
     return _unit("doc|" + doc_text)
 
 
-def fixture_doc_encoder(name, texts):
+class DocEncoder:
     """Stands in for `teacher.encode_cached`: deterministic unit vectors, stored fp16 like the
-    real caches, plus a cache record."""
-    vecs = np.stack([doc_vec(t) for t in texts]).astype(np.float16)
-    return vecs, {"fixture": True, "cache_key": name,
-                  "combined_sha256": hashlib.sha256(vecs.tobytes()).hexdigest()}
+    real caches, plus a cache record. Counts calls and can be told to crash on a given slice."""
+
+    def __init__(self):
+        self.calls = []
+        self.crash_on = None
+
+    def __call__(self, name, texts):
+        self.calls.append(name)
+        if self.crash_on and self.crash_on in name:
+            raise RuntimeError("injected crash during the document encode")
+        vecs = np.stack([doc_vec(t) for t in texts]).astype(np.float16)
+        return vecs, {"fixture": True, "cache_key": name,
+                      "combined_sha256": hashlib.sha256(vecs.tobytes()).hexdigest()}
 
 
 class Student:
@@ -77,49 +87,62 @@ class Student:
 def write_slice(d, key, n_docs, n_queries):
     """Docs `0..n_docs-1`, queries `0..n_queries-1` — the SAME integer ids on both sides, as in
     LoTTE, so a scorer that keeps BEIR's self-hit rule drops every query's first positive. Query j
-    is relevant to doc j, and every even j also to doc j + n_queries."""
+    is relevant to doc j, and every even j also to doc j + n_queries. -> (counts, pin entry)."""
     d.mkdir(parents=True, exist_ok=True)
     docs = {str(i): f"passage {key} {i} {'lorem' if i % 3 else 'ipsum'}" for i in range(n_docs)}
     with open(d / "collection.tsv", "w") as fh:
         for pid, text in docs.items():
             fh.write(f"{pid}\t{text}\n")
-    qas, pairs = [], 0
-    with open(d / "questions.forum.tsv", "w") as fh:
+    q_ids, q_texts, qrels, pairs = [], [], {}, 0
+    with open(d / "questions.forum.tsv", "w") as fh, open(d / "qas.forum.jsonl", "w") as qa:
         for j in range(n_queries):
             pos = [str(j)] + ([str(j + n_queries)] if j % 2 == 0 and j + n_queries < n_docs else [])
-            fh.write(f"{j}\tquestion {key} {j} about " + " || ".join(docs[p] for p in pos) + "\n")
-            qas.append({"qid": j, "answer_pids": [int(p) for p in pos]})
-            pairs += len(pos)
-    with open(d / "qas.forum.jsonl", "w") as fh:
-        for row in qas:
-            fh.write(json.dumps(row) + "\n")
-    return {"queries_after_remedy": n_queries, "docs_after_remedy": n_docs,
-            "qrels_pairs_after_remedy": pairs}
+            text = f"question {key} {j} about " + " || ".join(docs[p] for p in pos)
+            fh.write(f"{j}\t{text}\n")
+            qa.write(json.dumps({"qid": j, "answer_pids": [int(p) for p in pos]}) + "\n")
+            q_ids.append(str(j)); q_texts.append(text); qrels[str(j)] = sorted(pos); pairs += len(pos)
+    counts = {"queries_after_remedy": n_queries, "docs_after_remedy": n_docs,
+              "qrels_pairs_after_remedy": pairs}
+    pin = {"n_docs": n_docs, "n_queries": n_queries, "n_qrels_pairs": pairs,
+           "hashes": G.slice_hashes(list(docs), list(docs.values()), q_ids, q_texts, qrels),
+           "read_relpath": str(d)}
+    return counts, pin
 
 
-def build_world(root, *, e1_batch, quality=None, n_queries=12, count_error=None):
-    """-> a Config over a synthetic tree: the REAL registration's structure with the fixture's
+def _git(repo, *a):
+    r = subprocess.run(("git",) + a, cwd=repo, capture_output=True, text=True)
+    assert r.returncode == 0, f"git {' '.join(a)}: {r.stderr}"
+    return r.stdout.strip()
+
+
+def build_world(root, *, e1_batch, quality=None, n_queries=12, count_error=None,
+                write_manifest=True, commit_manifest=True):
+    """-> a Config over a synthetic GIT tree: the REAL registration's structure with the fixture's
     counts, a copy of the real screen registry, an E1 verdict bound to it, two complete E arm
-    records with real checkpoint bytes, and seven tiny slices of different sizes."""
+    records with real checkpoint bytes, seven tiny slices of different sizes, their pin, and the
+    checkpoint manifest written by the executor itself and committed."""
     quality = quality or {"E-bs32": 1.0, "E-bs128": 1.0}
     repo = Path(root) / "repo"
     for d in ("m13", "m10", "results", "work/lotte/remediated", "work/m10arms"):
         (repo / d).mkdir(parents=True, exist_ok=True)
     reg = json.loads(json.dumps(REAL_REG))
+    pin = {"_note": "fixture pin, freeze_lotte's scheme", "slices": {}}
     for i, key in enumerate(SLICES):
         topic, split = key.split("/")
-        counts = write_slice(repo / "work" / "lotte" / "remediated" / topic / split, key,
-                             n_docs=40 + 7 * i, n_queries=n_queries)
+        counts, p = write_slice(repo / "work" / "lotte" / "remediated" / topic / split, key,
+                                n_docs=40 + 7 * i, n_queries=n_queries)
         if count_error == key:
             counts["docs_after_remedy"] += 1
         reg["surface"]["slices"][key] = counts
+        pin["slices"][key] = p
     reg["surface"]["total_queries"] = sum(s["queries_after_remedy"]
                                           for s in reg["surface"]["slices"].values())
     (repo / "m13" / "LOTTE_GATE_REGISTRATION.json").write_text(json.dumps(reg, indent=1))
+    (repo / "results" / "m8_lotte_pin.json").write_text(json.dumps(pin, indent=1))
     shutil.copy(REPO / "m10" / "screen_registry.json", repo / "m10" / "screen_registry.json")
+    reg_sha = G.sha256_file(repo / "m10" / "screen_registry.json")
     (repo / "results" / "m10_screen_verdicts.json").write_text(json.dumps(
-        {"selected": {"batch": e1_batch},
-         "registry_sha256": G.sha256_file(repo / "m10" / "screen_registry.json")}))
+        {"selected": {"batch": e1_batch}, "registry_sha256": reg_sha}))
     for arm, batch in (("E-bs32", 32), ("E-bs128", 128)):
         d = repo / "work" / "m10arms" / arm
         d.mkdir(parents=True, exist_ok=True)
@@ -128,16 +151,20 @@ def build_world(root, *, e1_batch, quality=None, n_queries=12, count_error=None)
         sha = G.sha256_file(ck)
         (repo / "results" / f"m10_arm_{arm}.json").write_text(json.dumps(
             {"arm": arm, "status": "complete", "complete": True, "terminal": True, "smoke": False,
+             "seed": 0, "registry_sha256": reg_sha,
              "recipe": {"student": "bge-small", "n_layers": 3, "head": "linear",
                         "dose_examples": 5_000_000, "batch": batch},
              "params": 33_000_000, "device": "cuda", "git_head": "f" * 40,
              "checkpoints": {"cycle3": {"path": f"work/m10arms/{arm}/cycle3.pt", "sha256": sha}},
              "final_checkpoint": f"work/m10arms/{arm}/cycle3.pt", "final_checkpoint_sha256": sha}))
     students = {arm: Student(q) for arm, q in quality.items()}
+    enc = DocEncoder()
     cfg = G.Config(
         repo=repo,
         registration_path=repo / "m13" / "LOTTE_GATE_REGISTRATION.json",
         record_path=repo / "m13" / "LOTTE_GATE.json",
+        manifest_path=repo / "m13" / "LOTTE_GATE_MANIFEST.json",
+        pin_path=repo / "results" / "m8_lotte_pin.json",
         verdicts_path=repo / "results" / "m10_screen_verdicts.json",
         registry_path=repo / "m10" / "screen_registry.json",
         arm_records_dir=repo / "results",
@@ -145,10 +172,18 @@ def build_world(root, *, e1_batch, quality=None, n_queries=12, count_error=None)
         enc_root=repo / "work" / "lotte" / "enc",
         gate_work_dir=repo / "work" / "lotte" / "gate13",
         device="cpu", allow_cpu=True, topk=100, chunk=1000,
-        doc_encoder=fixture_doc_encoder,
-        load_student=lambda ar, device: students[ar["arm"]],
+        doc_encoder=enc,
+        load_student=lambda ar, data, device: students[ar["arm"]],
         claim_guard=False)
-    cfg.students = students
+    cfg.students, cfg.enc = students, enc
+    (repo / ".gitignore").write_text("work/\n")
+    _git(repo, "init", "-q")
+    _git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "root")
+    if write_manifest and str(e1_batch).upper() != "PENDING":
+        G.write_manifest(cfg, verbose=False)
+        if commit_manifest:
+            _git(repo, "add", "-A")
+            _git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "manifest")
     return cfg
 
 
@@ -164,6 +199,7 @@ def test_the_real_registration_validates_without_opening_lotte():
     reg, sha = G.registration(G.Config())
     assert len(reg["surface"]["slices"]) == 7 and reg["executed"] is False
     assert reg["veto"]["margin"] == 0.004 and reg["veto"]["bootstrap"]["seed"] == 903
+    assert reg["veto"]["bootstrap"]["quantile_method"] == "inverted_cdf", "ruling R17"
     assert sha == G.sha256_file(REPO / "m13" / "LOTTE_GATE_REGISTRATION.json")
 
 
@@ -175,6 +211,11 @@ def test_the_registration_is_held_to_the_locked_constants(tmp_path):
     with pytest.raises(SystemExit, match="veto.margin"):
         G.registration(cfg)
     reg["veto"]["margin"] = 0.004
+    reg["veto"]["bootstrap"].pop("quantile_method")
+    cfg.registration_path.write_text(json.dumps(reg))
+    with pytest.raises(SystemExit, match="R17"):
+        G.registration(cfg)
+    reg["veto"]["bootstrap"]["quantile_method"] = "inverted_cdf"
     reg["executed"] = True
     cfg.registration_path.write_text(json.dumps(reg))
     with pytest.raises(SystemExit, match="never flips"):
@@ -192,13 +233,17 @@ def test_preflight_opens_no_lotte_path_and_orders_slices_smallest_first(tmp_path
     sizes = [json.loads(cfg.registration_path.read_text())["surface"]["slices"][k]["docs_after_remedy"]
              for k in plan["slice_order"]]
     assert sizes == sorted(sizes) and len(sizes) == 7
+    assert plan["manifest_commit"] and plan["pin_sha256"] and plan["code_identity"] == G.code_identity()
     assert not cfg.record_path.exists() and not cfg.gate_work_dir.exists()
+    assert cfg.enc.calls == [] and all(s.calls == 0 for s in cfg.students.values())
 
 
 def test_a_pending_e1_verdict_refuses(tmp_path):
     cfg = build_world(tmp_path, e1_batch="PENDING")
     with pytest.raises(SystemExit, match="PENDING"):
         G.run(cfg, preflight_only=True, verbose=False)
+    with pytest.raises(SystemExit, match="PENDING"):
+        G.write_manifest(cfg, verbose=False)
 
 
 def test_a_verdict_bound_to_another_registry_refuses(tmp_path):
@@ -211,10 +256,13 @@ def test_a_verdict_bound_to_another_registry_refuses(tmp_path):
 @pytest.mark.parametrize("over, match", [
     ({"status": "failed", "complete": False}, "failed or unfinished"),
     ({"smoke": True}, "SMOKE record"),
+    ({"arm": "E-bs32"}, "not 'E-bs128'"),
+    ({"seed": 1}, "seed 1 is not the registered 0"),
+    ({"registry_sha256": "0" * 64}, "cannot feed a gate under another"),
     ({"final_checkpoint_sha256": "1" * 64}, "do not name one cycle-3 checkpoint"),
     ({"recipe": {"student": "bge-small"}}, "recipe lacks"),
 ])
-def test_an_arm_record_that_is_not_a_complete_registered_arm_refuses(tmp_path, over, match):
+def test_an_arm_record_that_is_not_this_complete_registered_arm_refuses(tmp_path, over, match):
     cfg = build_world(tmp_path, e1_batch=32)
     _rewrite(cfg.arm_records_dir / "m10_arm_E-bs128.json", **over)   # the OTHER arm in bs32, too
     with pytest.raises(SystemExit, match=match):
@@ -235,37 +283,142 @@ def test_a_checkpoint_whose_bytes_moved_refuses(tmp_path):
         G.run(cfg, preflight_only=True, verbose=False)
 
 
+def test_the_student_is_loaded_from_the_bytes_that_were_hashed(tmp_path):
+    """Finding 3: hash-then-load must not reopen the file. The loader receives the exact bytes the
+    hash was computed on; swapping the file after preflight is caught at load time."""
+    cfg = build_world(tmp_path, e1_batch=32)
+    seen = {}
+    cfg.load_student = lambda ar, data, device: seen.setdefault(ar["arm"], data) and cfg.students[ar["arm"]]
+    rec = G.run(cfg, verbose=False)
+    assert hashlib.sha256(seen["E-bs32"]).hexdigest() == rec["candidate_sha256"]
+    # a swap between preflight and load refuses (the second read re-hashes)
+    cfg2 = build_world(tmp_path / "b", e1_batch=32)
+    real_preflight = G.preflight
+
+    def swap_after_preflight(*a, **k):
+        plan = real_preflight(*a, **k)
+        (cfg2.repo / "work" / "m10arms" / "E-bs32" / "cycle3.pt").write_bytes(b"swapped")
+        return plan
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(G, "preflight", swap_after_preflight)
+        with pytest.raises(SystemExit, match="not the published one"):
+            G.run(cfg2, verbose=False)
+    assert not cfg2.record_path.exists()
+
+
 def test_an_existing_gate_record_refuses_a_second_execution(tmp_path):
     cfg = build_world(tmp_path, e1_batch=32)
     G.run(cfg, verbose=False)
     assert cfg.record_path.exists()
-    with pytest.raises(SystemExit, match="ONE access"):
-        G.run(cfg, verbose=False)
-    with pytest.raises(SystemExit, match="ONE access"):
+    for kw in ({}, {"preflight_only": True}, {"recover": True}):
+        with pytest.raises(SystemExit, match="ONE access"):
+            G.run(cfg, verbose=False, **kw)
+
+
+# ---------------------------------------------------------------------------------- manifest ----
+
+def test_the_read_refuses_without_the_committed_manifest(tmp_path):
+    cfg = build_world(tmp_path, e1_batch=128, write_manifest=False)
+    with pytest.raises(SystemExit, match="second manifest commit"):
+        G.run(cfg, preflight_only=True, verbose=False)
+    G.write_manifest(cfg, verbose=False)                      # written but NOT committed
+    with pytest.raises(SystemExit, match="not tracked by git"):
+        G.run(cfg, preflight_only=True, verbose=False)
+    _git(cfg.repo, "add", "-A")
+    _git(cfg.repo, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "manifest")
+    plan = G.run(cfg, preflight_only=True, verbose=False)
+    assert plan["manifest_commit"] == _git(cfg.repo, "rev-parse", "HEAD")
+    # a manifest edited after its commit refuses
+    _rewrite(cfg.manifest_path, written_at="later")
+    with pytest.raises(SystemExit, match="uncommitted changes"):
         G.run(cfg, preflight_only=True, verbose=False)
 
 
-# ----------------------------------------------------------------------------------- slices ----
+def test_a_manifest_that_disagrees_with_the_live_records_refuses(tmp_path):
+    """Finding 2: a swapped record and checkpoint (same dose, same batch) must not pass merely
+    because they are self-consistent; the committed manifest is the anchor."""
+    cfg = build_world(tmp_path, e1_batch=128)
+    arm_dir = cfg.repo / "work" / "m10arms" / "E-bs128"
+    ck = arm_dir / "cycle3.pt"
+    ck.write_bytes(b"a different but complete run's checkpoint")
+    sha = G.sha256_file(ck)
+    _rewrite(cfg.arm_records_dir / "m10_arm_E-bs128.json", final_checkpoint_sha256=sha,
+             checkpoints={"cycle3": {"path": "work/m10arms/E-bs128/cycle3.pt", "sha256": sha}})
+    with pytest.raises(SystemExit, match="does not describe the live inputs.*candidate.sha256"):
+        G.run(cfg, preflight_only=True, verbose=False)
+    with pytest.raises(SystemExit, match="already exists"):
+        G.write_manifest(cfg, verbose=False)
+
+
+def test_write_manifest_records_both_arms_for_bs128_and_one_for_bs32(tmp_path):
+    cfg = build_world(tmp_path, e1_batch=128)
+    m = json.loads(cfg.manifest_path.read_text())
+    assert m["branch"] == "bs128" and m["candidate"]["arm"] == "E-bs128"
+    assert m["comparator"]["arm"] == "E-bs32" and m["e1_verdict_sha256"] == G.sha256_file(cfg.verdicts_path)
+    assert set(m["candidate"]) >= {"arm", "checkpoint", "sha256", "record_sha256", "recipe", "seed"}
+    cfg32 = build_world(tmp_path / "b", e1_batch=32)
+    m32 = json.loads(cfg32.manifest_path.read_text())
+    assert m32["branch"] == "bs32" and m32["candidate"]["arm"] == "E-bs32" and m32["comparator"] is None
+
+
+# --------------------------------------------------------------------------------------- pin ----
+
+def test_the_read_refuses_without_the_pin_and_on_a_pin_mismatch(tmp_path):
+    cfg = build_world(tmp_path, e1_batch=32)
+    pin = json.loads(cfg.pin_path.read_text())
+    cfg.pin_path.unlink()
+    with pytest.raises(SystemExit, match="R18"):
+        G.run(cfg, preflight_only=True, verbose=False)
+    cfg.pin_path.write_text(json.dumps(pin))
+    # the slice's text changes but its counts do not: only the pin can see it
+    d = cfg.remediated_dir / "science" / "dev"
+    lines = (d / "collection.tsv").read_text().splitlines()
+    lines[3] = lines[3].split("\t")[0] + "\tan altered passage"
+    (d / "collection.tsv").write_text("\n".join(lines) + "\n")
+    with pytest.raises(SystemExit, match="science/dev: the slice on disk does not match .*doc_texts_sha256"):
+        G.run(cfg, verbose=False)
+    assert not cfg.record_path.exists()
+
 
 def test_a_slice_whose_counts_differ_from_the_registration_refuses_before_scoring(tmp_path):
     cfg = build_world(tmp_path, e1_batch=32, count_error="science/dev")
     with pytest.raises(SystemExit, match="science/dev .* is not the registered slice"):
         G.run(cfg, verbose=False)
     assert not cfg.record_path.exists()
-    assert all(s.calls == 0 for s in cfg.students.values()) or \
-        cfg.students["E-bs32"].calls < 7, "scoring must stop at the bad slice"
+    assert cfg.students["E-bs32"].calls < 7, "scoring must stop at the bad slice"
+
+
+def test_duplicate_qrel_rows_or_positives_refuse(tmp_path):
+    cfg = build_world(tmp_path, e1_batch=32)
+    d = cfg.remediated_dir / "lifestyle" / "test"
+    rows = (d / "qas.forum.jsonl").read_text().splitlines()
+    (d / "qas.forum.jsonl").write_text("\n".join(rows + [rows[0]]) + "\n")
+    reg = json.loads(cfg.registration_path.read_text())
+    pin = json.loads(cfg.pin_path.read_text())
+    with pytest.raises(SystemExit, match="duplicate qrel rows"):
+        G.read_slice(cfg, "lifestyle/test", reg["surface"]["slices"]["lifestyle/test"],
+                     pin["slices"]["lifestyle/test"])
+    r0 = json.loads(rows[0])
+    r0["answer_pids"] = r0["answer_pids"] + [r0["answer_pids"][0]]
+    (d / "qas.forum.jsonl").write_text("\n".join([json.dumps(r0)] + rows[1:]) + "\n")
+    with pytest.raises(SystemExit, match="duplicate positives"):
+        G.read_slice(cfg, "lifestyle/test", reg["surface"]["slices"]["lifestyle/test"],
+                     pin["slices"]["lifestyle/test"])
 
 
 def test_read_slice_hashes_match_the_freeze_lotte_scheme(tmp_path):
     cfg = build_world(tmp_path, e1_batch=32)
     reg = json.loads(cfg.registration_path.read_text())
-    sl = G.read_slice(cfg, "writing/dev", reg["surface"]["slices"]["writing/dev"])
+    pin = json.loads(cfg.pin_path.read_text())
+    sl = G.read_slice(cfg, "writing/dev", reg["surface"]["slices"]["writing/dev"],
+                      pin["slices"]["writing/dev"])
     assert sl["n_queries"] == 12 and set(sl["hashes"]) == {
         "doc_ids_sha256", "doc_texts_sha256", "query_ids_sha256", "query_texts_sha256",
         "qrels_sha256"}
     # sorted-key JSON of the doc id list, exactly as m8src/freeze_lotte.sha hashes it
     assert sl["hashes"]["doc_ids_sha256"] == hashlib.sha256(
         json.dumps(sl["doc_ids"], sort_keys=True).encode()).hexdigest()
+    assert sl["hashes"] == pin["slices"]["writing/dev"]["hashes"]
     assert all(isinstance(v, dict) and set(v.values()) == {1} for v in sl["qrels"].values())
 
 
@@ -276,14 +429,35 @@ def test_queries_whose_ids_equal_their_positives_are_still_scored(tmp_path):
     `evalkit.run_from_arrays` would drop query j's positive j. The `q:` namespace keeps it."""
     cfg = build_world(tmp_path, e1_batch=32)
     reg = json.loads(cfg.registration_path.read_text())
-    sl = G.read_slice(cfg, "lifestyle/dev", reg["surface"]["slices"]["lifestyle/dev"])
-    dv, _ = fixture_doc_encoder("x", sl["doc_texts"])
+    pin = json.loads(cfg.pin_path.read_text())
+    sl = G.read_slice(cfg, "lifestyle/dev", reg["surface"]["slices"]["lifestyle/dev"],
+                      pin["slices"]["lifestyle/dev"])
+    dv, _ = DocEncoder()("x", sl["doc_texts"])
     s = G.score_slice(cfg, Student(1.0), sl, dv)
     assert set(s["ndcg10"]) == set(sl["q_ids"]) and set(s["success5"]) == set(sl["q_ids"])
     assert all(v == 1.0 for v in s["ndcg10"].values()), s["ndcg10"]
     assert all(v == 1.0 for v in s["success5"].values())
     bad = G.score_slice(cfg, Student(0.0), sl, dv)
     assert np.mean(list(bad["ndcg10"].values())) < 0.5
+
+
+def test_a_missing_query_refusal_prints_a_count_not_identifiers(tmp_path, monkeypatch):
+    """Finding 6: nothing from the surface, not even a qid, leaves the protected tree in stderr."""
+    cfg = build_world(tmp_path, e1_batch=32)
+    reg = json.loads(cfg.registration_path.read_text())
+    pin = json.loads(cfg.pin_path.read_text())
+    sl = G.read_slice(cfg, "lifestyle/dev", reg["surface"]["slices"]["lifestyle/dev"],
+                      pin["slices"]["lifestyle/dev"])
+    dv, _ = DocEncoder()("x", sl["doc_texts"])
+    import evalkit
+    real = evalkit.per_query_ndcg
+    monkeypatch.setattr(evalkit, "per_query_ndcg",
+                        lambda run, qrels, cut=10: {k: v for k, v in real(run, qrels, cut).items()
+                                                    if not k.endswith(":3")})
+    with pytest.raises(SystemExit) as e:
+        G.score_slice(cfg, Student(1.0), sl, dv)
+    msg = str(e.value)
+    assert "1 of 12 queries were not scored" in msg and "q:" not in msg
 
 
 def test_success_at_k_reads_the_top_k_by_score():
@@ -296,20 +470,21 @@ def test_success_at_k_reads_the_top_k_by_score():
 def test_the_paired_bootstrap_is_paired_deterministic_and_slice_macro():
     rng = np.random.default_rng(0)
     cand, comp = {}, {}
-    for k in ("s1", "s2", "s3"):
-        q = [f"{i}" for i in range(50)]
-        x = rng.uniform(size=50)
+    for k, n in (("s1", 50), ("s2", 30), ("s3", 80)):          # unequal sizes: slice weighting
+        q = [f"{i}" for i in range(n)]
+        x = rng.uniform(size=n)
         cand[k] = dict(zip(q, x))
-        comp[k] = dict(zip(q, x - 0.01))                  # every query exactly +0.01
+        comp[k] = dict(zip(q, x - (0.01 if k != "s3" else 0.04)))
     a = G.paired_bootstrap(cand, comp, B=2000, seed=903)
     b = G.paired_bootstrap(cand, comp, B=2000, seed=903)
     assert a == b and a["plan_sha256"] == b["plan_sha256"] and a["draws_sha256"] == b["draws_sha256"]
-    assert abs(a["delta_macro_raw"] - 0.01) < 1e-12
-    assert abs(a["upper_q975_raw"] - 0.01) < 1e-9, "a constant paired delta has no spread"
-    # a different seed is a different plan; the point estimate does not move
+    # the estimand is the MACRO of slice means (0.01, 0.01, 0.04 -> 0.02), not the pooled mean
+    assert abs(a["delta_macro_raw"] - 0.02) < 1e-12
+    pooled = (50 * 0.01 + 30 * 0.01 + 80 * 0.04) / 160
+    assert abs(a["delta_macro_raw"] - pooled) > 1e-3
+    assert abs(a["upper_q975_raw"] - 0.02) < 1e-9, "constant paired deltas have no spread"
     c = G.paired_bootstrap(cand, comp, B=2000, seed=904)
     assert c["plan_sha256"] != a["plan_sha256"] and c["delta_macro_raw"] == a["delta_macro_raw"]
-    # dict order does not matter: pairing is by qid, slices enter sorted
     shuffled = {k: dict(reversed(list(v.items()))) for k, v in comp.items()}
     assert G.paired_bootstrap(cand, shuffled, B=2000, seed=903)["draws_sha256"] == a["draws_sha256"]
     with pytest.raises(ValueError, match="different qids"):
@@ -318,6 +493,21 @@ def test_the_paired_bootstrap_is_paired_deterministic_and_slice_macro():
         G.paired_bootstrap(cand, comp2, B=10, seed=903)
     with pytest.raises(ValueError, match="slices differ"):
         G.paired_bootstrap(cand, {"s1": comp["s1"]}, B=10, seed=903)
+
+
+def test_the_upper_bound_uses_the_registered_quantile_method():
+    """R17: the method is a registered choice, read from the registration, and it matters at the
+    boundary — `inverted_cdf` takes order statistic 9,750 of 10,000, `higher` takes 9,751."""
+    rng = np.random.default_rng(3)
+    q = [f"{i}" for i in range(40)]
+    x = rng.uniform(size=40)
+    cand = {"s": dict(zip(q, x))}
+    comp = {"s": dict(zip(q, x + rng.normal(scale=0.05, size=40)))}
+    a = G.paired_bootstrap(cand, comp, B=10000, seed=903, method="inverted_cdf")
+    b = G.paired_bootstrap(cand, comp, B=10000, seed=903, method="higher")
+    assert a["quantile_method"] == "inverted_cdf" and b["quantile_method"] == "higher"
+    assert b["upper_q975_raw"] >= a["upper_q975_raw"]
+    assert a["draws_sha256"] == b["draws_sha256"], "the draws are identical; only the read-out differs"
 
 
 def test_the_veto_rule_needs_both_the_point_and_the_bound():
@@ -342,10 +532,12 @@ def test_the_bs32_branch_skips_the_veto_and_still_reads_the_observational_row(tm
     assert set(rec["macro_ndcg10"]["candidate"]["per_slice"]) == set(SLICES)
     assert rec["surface"]["n_slices"] == 7 and rec["surface"]["total_queries"] == 7 * 12
     assert cfg.students["E-bs128"].calls == 0, "the bs32 branch loads one student"
-    # the record is what build13 reads, and it passes check_gate for the branch E1 selected
+    assert rec["manifest_sha256"] == G.sha256_file(cfg.manifest_path)
+    assert rec["pin_sha256"] == G.sha256_file(cfg.pin_path)
     g = BD.check_gate(cfg.record_path, verdicts_path=cfg.verdicts_path, e1_batch=32,
                       arm_records_dir=cfg.arm_records_dir)
     assert g["decision"] == "skipped" and g["arm_records_checked"] is True
+    assert BD.check_gate_manifest(g, manifest_path=cfg.manifest_path)["sha256"] == rec["manifest_sha256"]
     with pytest.raises(SystemExit, match="E1 selected bs128"):
         BD.check_gate(cfg.record_path, verdicts_path=cfg.verdicts_path, e1_batch=128,
                       arm_records_dir=cfg.arm_records_dir)
@@ -358,6 +550,7 @@ def test_the_bs128_branch_vetoes_a_clearly_worse_candidate(tmp_path):
     assert rec["candidate"]["arm"] == "E-bs128" and rec["comparator"]["arm"] == "E-bs32"
     boot = rec["delta_candidate_minus_comparator"]
     assert boot["B"] == 10000 and boot["seed"] == 903 and boot["paired_within_slice"] is True
+    assert boot["quantile_method"] == "inverted_cdf"
     assert boot["delta_macro_raw"] < -0.004 and boot["upper_q975_raw"] < -0.004
     assert rec["bootstrap_upper_bound"] == boot["upper_q975_raw"]
     assert set(boot["n_by_slice"]) == set(SLICES) and all(n == 12 for n in boot["n_by_slice"].values())
@@ -365,6 +558,7 @@ def test_the_bs128_branch_vetoes_a_clearly_worse_candidate(tmp_path):
     g = BD.check_gate(cfg.record_path, verdicts_path=cfg.verdicts_path, e1_batch=128,
                       arm_records_dir=cfg.arm_records_dir)
     assert g["decision"] == "veto" and g["comparator_sha256"] == rec["comparator_sha256"]
+    assert BD.check_gate_manifest(g, manifest_path=cfg.manifest_path)["branch"] == "bs128"
 
 
 def test_the_bs128_branch_does_not_veto_an_equal_candidate(tmp_path):
@@ -379,15 +573,80 @@ def test_the_bs128_branch_does_not_veto_an_equal_candidate(tmp_path):
     assert g["decision"] == "no_veto"
 
 
-def test_a_no_veto_that_is_worse_but_not_resolved_does_not_fire(tmp_path):
-    """Worse by less than the margin, or worse with a bound above -margin: the E1 selection
-    stands. The margin and the bound are both required (m10/LOTTE_LOCK.md)."""
-    cfg = build_world(tmp_path, e1_batch=128, quality={"E-bs32": 1.0, "E-bs128": 0.98})
-    rec = G.run(cfg, verbose=False)
-    boot = rec["delta_candidate_minus_comparator"]
-    assert boot["delta_macro_raw"] <= 0.0
-    assert rec["decision"] == ("veto" if (boot["delta_macro_raw"] < -0.004 and
-                                          boot["upper_q975_raw"] < -0.004) else "no_veto")
+# ------------------------------------------------------------------------- receipt and recovery
+
+def test_a_crashed_read_leaves_a_receipt_and_refuses_a_plain_rerun(tmp_path):
+    cfg = build_world(tmp_path, e1_batch=128, quality={"E-bs32": 1.0, "E-bs128": 0.5})
+    cfg.enc.crash_on = cfg.students and "science-dev"           # the 5th slice by size
+    with pytest.raises(RuntimeError, match="injected crash"):
+        G.run(cfg, verbose=False)
+    receipt = cfg.gate_work_dir / "receipt.json"
+    assert receipt.exists() and not cfg.record_path.exists()
+    persisted = sorted(p.name for p in cfg.gate_work_dir.glob("slice-*.json"))
+    assert len(persisted) == 4, persisted
+    with pytest.raises(SystemExit, match="a read has already STARTED"):
+        G.run(cfg, verbose=False)
+    with pytest.raises(SystemExit, match="a read has already STARTED"):
+        G.run(cfg, preflight_only=True, verbose=False)
+
+
+def test_recover_completes_the_same_read_without_re_reading_finished_slices(tmp_path):
+    cfg = build_world(tmp_path, e1_batch=128, quality={"E-bs32": 1.0, "E-bs128": 0.5})
+    cfg.enc.crash_on = "science-dev"
+    with pytest.raises(RuntimeError):
+        G.run(cfg, verbose=False)
+    calls_before = list(cfg.enc.calls)
+    assert len(calls_before) == 5                                # four scored, the fifth crashed
+    cfg.enc.crash_on = None
+    rec = G.run(cfg, recover=True, verbose=False)
+    new_calls = cfg.enc.calls[len(calls_before):]
+    assert len(new_calls) == 3 and not any("lifestyle-test" in c for c in new_calls), \
+        "only the three unfinished slices are read"
+    assert rec["receipt"]["recovered"] is True and len(rec["receipt"]["recovered_slices"]) == 4
+    assert rec["receipt"]["attempts_including_this"] == 2
+    assert set(rec["macro_ndcg10"]["candidate"]["per_slice"]) == set(SLICES)
+    assert rec["decision"] in ("veto", "no_veto")
+    # the recovered record is what an uninterrupted read would have produced
+    cfg2 = build_world(tmp_path / "clean", e1_batch=128, quality={"E-bs32": 1.0, "E-bs128": 0.5})
+    rec2 = G.run(cfg2, verbose=False)
+    for f in ("decision", "macro_ndcg10", "success_at_5", "bootstrap_upper_bound"):
+        assert rec[f] == rec2[f], f
+    with pytest.raises(SystemExit, match="ONE access"):
+        G.run(cfg, recover=True, verbose=False)
+
+
+def test_recover_refuses_a_different_identity(tmp_path):
+    cfg = build_world(tmp_path, e1_batch=128, quality={"E-bs32": 1.0, "E-bs128": 0.5})
+    cfg.enc.crash_on = "science-dev"
+    with pytest.raises(RuntimeError):
+        G.run(cfg, verbose=False)
+    cfg.enc.crash_on = None
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(G, "code_identity", lambda: "9" * 64)
+        with pytest.raises(SystemExit, match="identity differs .*code_identity"):
+            G.run(cfg, recover=True, verbose=False)
+    cfg.device = "cpu"
+    cfg2 = build_world(tmp_path / "fresh", e1_batch=128)
+    with pytest.raises(SystemExit, match="no receipt"):
+        G.run(cfg2, recover=True, verbose=False)
+
+
+def test_two_processes_cannot_both_start_the_read(tmp_path):
+    cfg = build_world(tmp_path, e1_batch=32)
+    plan = G.preflight(cfg, verbose=False)
+    G._create_receipt(cfg, plan)
+    with pytest.raises(FileExistsError):
+        G._create_receipt(cfg, plan)
+
+
+def test_a_code_change_during_the_read_writes_no_record(tmp_path):
+    cfg = build_world(tmp_path, e1_batch=32)
+    ids = iter([G.code_identity(), "8" * 64, "8" * 64])
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(G, "code_identity", lambda: next(ids))
+        with pytest.raises(SystemExit, match="code identity changed during the read"):
+            G.run(cfg, verbose=False)
+    assert not cfg.record_path.exists()
 
 
 # ----------------------------------------------------------------------------------- record ----
@@ -408,13 +667,15 @@ def test_the_record_carries_no_query_text_and_the_per_query_rows_stay_in_the_tre
         assert set(rec["surface"]["slices"][key]) == {"n_docs", "n_queries", "n_qrels_pairs",
                                                       "hashes", "read_relpath"}
         assert rec["surface"]["doc_caches"][key]["n_rows"] == rec["surface"]["slices"][key]["n_docs"]
+        assert G._slice_path(cfg, key).exists()
     for f in ("e1_verdict_sha256", "candidate_sha256", "comparator_sha256", "read_at",
-              "code_identity", "registration_sha256", "git_head", "environment"):
+              "code_identity", "registration_sha256", "manifest_sha256", "manifest_commit",
+              "pin_sha256", "git_head", "environment"):
         assert rec[f], f
     assert rec["e1_verdict_sha256"] == G.sha256_file(cfg.verdicts_path)
     assert rec["registration_sha256"] == G.sha256_file(cfg.registration_path)
     assert rec["code_identity"] == G.code_identity()
-    assert rec["attempts_before_this_record"] == 1
+    assert rec["receipt"]["attempts_including_this"] == 1 and rec["receipt"]["recovered"] is False
     lines = (cfg.gate_work_dir / "attempts.jsonl").read_text().splitlines()
     assert len(lines) == 2 and json.loads(lines[1])["decision"] == rec["decision"]
 
@@ -471,8 +732,10 @@ def test_the_allowlist_entry_is_named_in_the_ledger():
     assert "lotte_gate13" in (REPO / "m8" / "LEDGER.md").read_text()
 
 
-def test_the_cli_defaults_to_cuda_and_offers_preflight_only():
+def test_the_cli_defaults_to_cuda_and_offers_the_three_modes():
     ap = G.build_argparser()
     a = ap.parse_args([])
-    assert a.device == "cuda" and a.preflight_only is False
+    assert a.device == "cuda" and not a.preflight_only and not a.recover and not a.write_manifest
     assert ap.parse_args(["--preflight-only"]).preflight_only is True
+    assert ap.parse_args(["--recover"]).recover is True
+    assert ap.parse_args(["--write-manifest"]).write_manifest is True

@@ -492,17 +492,29 @@ def test_dev6_defer_records_the_deferral_and_reads_no_dev6(monkeypatch, sandbox)
     calls = []
     monkeypatch.setattr(R, "dev6", lambda m, verbose=True: calls.append(1) or {"macro": 0.55})
     write_f_verdict()
-    ck = R.WORK / "A1" / "cycle3.pt"
+    ck = R.WORK / "E-bs32" / "cycle3.pt"
     ck.parent.mkdir(parents=True, exist_ok=True)
     ck.write_bytes(b"the final checkpoint bytes")
-    rec = R.run("A1", device="cuda", verbose=False, dev6_mode="defer")
+    rec = R.run("E-bs32", device="cuda", verbose=False, dev6_mode="defer")
     assert calls == [], "a deferred read never touches DEV-6 on this machine"
     assert rec["status"] == "complete" and rec["complete"] is True
     assert rec["dev6"]["deferred"] is True and rec["dev6"]["macro"] is None
     assert rec["dev6"]["checkpoint_sha256"] == rec["final_checkpoint_sha256"] == R.sha256_file(ck)
-    assert rec["dev6"]["fill_with"].endswith("m13src/dev6_from_checkpoint.py A1")
-    on_disk = json.loads((R.RESULTS / "m10_arm_A1.json").read_text())
+    assert rec["dev6"]["fill_with"].endswith("m13src/dev6_from_checkpoint.py E-bs32")
+    on_disk = json.loads((R.RESULTS / "m10_arm_E-bs32.json").read_text())
     assert on_disk["dev6"] == rec["dev6"]
+
+
+def test_dev6_defer_is_for_the_e_arms_only(monkeypatch, sandbox):
+    """Astra 2026-09-10, finding 8: family F's records are hashed into the F verdict, so a later
+    DEV-6 fill would change a bound artifact. The deferral is refused for every other family."""
+    mock_pipeline(monkeypatch)
+    write_f_verdict()
+    with pytest.raises(SystemExit, match="cloud E arms only"):
+        R.run("A1", device="cuda", verbose=False, dev6_mode="defer")
+    with pytest.raises(SystemExit, match="cloud E arms only"):
+        R.run("F-bge-small", device="cuda", verbose=False, dev6_mode="defer")
+    assert not (R.RESULTS / "m10_arm_A1.json").exists(), "a refusal writes nothing"
 
 
 def test_dev6_inline_is_the_default_and_defer_is_refused_under_a_smoke(monkeypatch, sandbox):
@@ -510,12 +522,12 @@ def test_dev6_inline_is_the_default_and_defer_is_refused_under_a_smoke(monkeypat
     write_f_verdict()
     assert R.run("A1", device="cuda", verbose=False)["dev6"]["macro"] == 0.55
     with pytest.raises(SystemExit, match="meaningless under --smoke-steps"):
-        R.run("A1", smoke_steps=6, device="cpu", dev6_mode="defer")
+        R.run("E-bs32", smoke_steps=6, device="cpu", dev6_mode="defer")
     with pytest.raises(SystemExit, match="choose from"):
         R.run("A2", device="cuda", dev6_mode="later")
     ap = R.build_argparser()
     assert ap.parse_args(["A1"]).dev6 == "inline"
-    assert ap.parse_args(["A1", "--dev6", "defer"]).dev6 == "defer"
+    assert ap.parse_args(["E-bs32", "--dev6", "defer"]).dev6 == "defer"
 
 
 # ---------------------------------------------------------------- F's winner (finding 11) ------

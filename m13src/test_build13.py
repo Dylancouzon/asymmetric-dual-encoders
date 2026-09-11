@@ -366,17 +366,33 @@ SCENARIOS = {
 
 
 def _gate(root, **over):
-    """A gate record carrying everything `build13.check_gate` requires. The default is the bs32
-    branch, where the veto is SKIPPED and forfeited (m13/LOTTE_GATE_REGISTRATION.json)."""
+    """A gate record carrying everything `build13.check_gate` requires, plus the committed
+    checkpoint manifest it is bound to (`check_gate_manifest`), written under `root/e_records/` so
+    `_tiny_build_run_patched` can point `MANIFEST_PATH` at it. The default is the bs32 branch,
+    where the veto is SKIPPED and forfeited (m13/LOTTE_GATE_REGISTRATION.json)."""
     g = {"executed": True, "decision": "skipped", "branch": "bs32",
          "candidate_sha256": "a" * 64, "comparator_sha256": None,
          "e1_verdict_sha256": VERDICTS_SHA, "read_at": "2026-09-10T00:00:00+0000",
          "_what": "test gate record"}
     g.update(over)
+    man_p = _manifest_path(root)
+    man_p.parent.mkdir(parents=True, exist_ok=True)
+    man_p.write_text(json.dumps({
+        "_what": "test manifest", "branch": g["branch"],
+        "candidate": {"arm": "E-bs128" if g["branch"] == "bs128" else "E-bs32",
+                      "sha256": g["candidate_sha256"]},
+        "comparator": (None if g["comparator_sha256"] is None
+                       else {"arm": "E-bs32", "sha256": g["comparator_sha256"]}),
+        "e1_verdict_sha256": g["e1_verdict_sha256"], "git_head": "f" * 40}))
+    g.setdefault("manifest_sha256", BD.sha256_file(man_p))
     p = Path(root) / "lotte_gate.json"
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(g))
     return p
+
+
+def _manifest_path(root):
+    return Path(root) / "e_records" / "LOTTE_GATE_MANIFEST.json"
 
 
 def _config(root, *, dose=200_000_000, reserved_hours=None, gate=True, lotte_gate=None):
@@ -428,6 +444,7 @@ def _tiny_build_run_patched(mp, root, scenario, *, abrupt_after=None, resume=Fal
         (root / "e_records" / f"m10_arm_{arm}.json").write_text(
             json.dumps({"checkpoints": {"cycle3": {"sha256": sha}}}))
     mp.setattr(BD, "ARM_RECORDS_DIR", root / "e_records")
+    mp.setattr(BD, "MANIFEST_PATH", _manifest_path(root))
     mp.setattr(BD.BL, "DOSE", dose)
     mp.setattr(BD.BL, "verdicts", lambda path=None: SELECTED)
     mp.setattr(BD.N, "Nano10", lambda *a, **k: Toy())
@@ -662,6 +679,7 @@ def _run_refusing(root, **kw):
         mp.setattr(BD, "RESULTS", Path(root) / "results")
         mp.setattr(BD.BL, "DOSE", TINY_DOSE)
         mp.setattr(BD.BL, "verdicts", lambda path=None: SELECTED)
+        mp.setattr(BD, "MANIFEST_PATH", _manifest_path(root))
         cfg_kw = {k: kw.pop(k) for k in ("gate", "dose") if k in kw}
         _cfg, p = _config(root, dose=cfg_kw.get("dose", TINY_DOSE), reserved_hours=1.0,
                           gate=cfg_kw.get("gate", True))
@@ -736,6 +754,7 @@ def test_a_recorded_veto_selects_bs32_whatever_e1_says(tmp_path):
         _cfg, p = _config(root, dose=TINY_DOSE, reserved_hours=1.0,
                           lotte_gate=str(root / "lotte_gate.json"))
         mp.setattr(BD.BL, "DOSE", TINY_DOSE)
+        mp.setattr(BD, "MANIFEST_PATH", _manifest_path(root))
         cfg, _q = BL.load(p)
         ctx = {}
         _reg, batch, source, gate, _rep = BD._preflight(
@@ -743,6 +762,31 @@ def test_a_recorded_veto_selects_bs32_whatever_e1_says(tmp_path):
             compile_step=False, real_eval=False, max_len=None, ckpt_every=None, n_fit=None)
     assert batch == 32, "a veto selects the comparator's bs32 recipe"
     assert "VETO" in source and gate["decision"] == "veto"
+    assert gate["manifest"]["branch"] == "bs128" and gate["manifest"]["sha256"] == gate["manifest_sha256"]
+
+
+def test_the_gate_must_be_bound_to_the_committed_manifest(tmp_path):
+    """Astra 2026-09-10, finding 2: the arm records are mutable; the committed manifest is the
+    anchor. Outside a smoke a missing manifest refuses; a stale or disagreeing one refuses."""
+    root = tmp_path / "m"
+    g = BD.check_gate(_gate(root, decision="no_veto", branch="bs128", candidate_sha256="c" * 64,
+                            comparator_sha256="a" * 64), smoke=True)
+    assert BD.check_gate_manifest(g, manifest_path=_manifest_path(root))["branch"] == "bs128"
+    assert BD.check_gate_manifest(g, manifest_path=root / "missing.json", smoke=True) is None
+    with pytest.raises(SystemExit, match="no checkpoint manifest"):
+        BD.check_gate_manifest(g, manifest_path=root / "missing.json")
+    # the manifest changed after the gate read it
+    man = json.loads(_manifest_path(root).read_text())
+    man["written_at"] = "later"
+    _manifest_path(root).write_text(json.dumps(man))
+    with pytest.raises(SystemExit, match="would run under another"):
+        BD.check_gate_manifest(g, manifest_path=_manifest_path(root))
+    # a manifest for another checkpoint, with the record's sha pointing at it
+    man["candidate"]["sha256"] = "d" * 64
+    _manifest_path(root).write_text(json.dumps(man))
+    g2 = dict(g, manifest_sha256=BD.sha256_file(_manifest_path(root)))
+    with pytest.raises(SystemExit, match="the gate record says"):
+        BD.check_gate_manifest(g2, manifest_path=_manifest_path(root))
 
 
 def test_an_unaffordable_allocation_refuses_before_any_training(tmp_path):

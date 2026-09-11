@@ -45,7 +45,7 @@ PENDING verdict, as it must).
 | Spend | Owed | Owner |
 |---|---|---|
 | Renting | provider, account, ≥ 500 GB persistent disk, SSH, GitHub deploy key (`m13/RULINGS.md` Provider) | Dylan |
-| LoTTE read #1 | two independent reviews of `m13src/lotte_gate13.py` (it post-dates the stage 1 reviews and performs a one-shot read; `CLAUDE.md` Reviews); both E records pushed; `--preflight-only` clean | lead |
+| LoTTE read #1 | two independent reviews of `m13src/lotte_gate13.py` (Astra 2026-09-10 done, nine findings fixed; the re-review must return GO); both E records pushed; the committed manifest and the pin (R18); `--preflight-only` clean | lead |
 | 200M build | `m13/LOTTE_GATE.json`; allocation at the measured rate and billed price under $1,000; reserved-batch allowance re-measured (R10) | lead |
 | Final six-set access | frozen candidate; R6 flip in the commit that pins the reviewed executor; M9's dated R3 amendment before any M9 score | Dylan, lead |
 
@@ -58,10 +58,17 @@ and monitor `Traceback|Error|FAILED|OOM|Killed|assert`; read the first progress 
 3. Benchmark hour: examples/s at bs32 and bs128 from the smoke, billed $/h from the provider, then
    `m13src/build13.py --config m13/build_config.json --plan --rate EX_S --price USD_H`. Record rate,
    price and the printed allocation in this file, dated; the build record captures them again.
-4. `m10src/run_arm.py E-bs32 --device cuda --dev6 defer`, then the same for `E-bs128`; commit and
-   push both records from the instance; copy `work/m10arms/E-bs32/` and `E-bs128/` back to the box.
-5. On the box: `m13src/dev6_from_checkpoint.py E-bs32` and `E-bs128`; compute E1 and re-issue
-   `results/m10_screen_verdicts.json` with `m10src/contrasts.py`; commit.
-6. Stage 3: the two reviews, then `m13src/lotte_gate13.py --preflight-only`, then the read once
-   (instance or box), commit `m13/LOTTE_GATE.json`.
-7. Build: `m13src/build13.py --config m13/build_config.json --device cuda --rate EX_S --price USD_H`.
+4. `.venv/bin/python m10src/run_arm.py E-bs32 --device cuda --dev6 defer`, then the same for
+   `E-bs128`; commit and push both records from the instance; copy `work/m10arms/E-bs32/` and
+   `E-bs128/` (record and `cycle3.pt`) back to the same paths on the box.
+5. On the box, after `git pull`: `.venv/bin/python m13src/dev6_from_checkpoint.py E-bs32` and
+   `E-bs128`; compute E1 and re-issue `results/m10_screen_verdicts.json` with
+   `m10src/contrasts.py`; commit and push.
+6. Stage 3, on whichever machine holds both `cycle3.pt` files and the stella weights, after
+   `git pull`: `.venv/bin/python m13src/lotte_gate13.py --write-manifest`, commit and push
+   `m13/LOTTE_GATE_MANIFEST.json` (the lock's second manifest commit); `.venv/bin/python
+   m8src/freeze_lotte.py pin`, commit and push `results/m8_lotte_pin.json` (R18, same day);
+   `.venv/bin/python m13src/lotte_gate13.py --preflight-only`; then the read, once. If it crashes,
+   `--recover` completes it; nothing else re-opens the surface. Commit and push `m13/LOTTE_GATE.json`.
+7. Build, on the instance after `git pull`: `.venv/bin/python m13src/build13.py --config
+   m13/build_config.json --device cuda --rate EX_S --price USD_H`.

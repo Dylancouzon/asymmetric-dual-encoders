@@ -218,7 +218,40 @@ def check_gate(gate_path, *, verdicts_path=None, e1_batch=None, arm_records_dir=
             "branch": branch, "candidate_sha256": g["candidate_sha256"],
             "comparator_sha256": comp, "e1_verdict_sha256": live,
             "read_at": g.get("read_at"), "code_identity": g.get("code_identity"),
+            "manifest_sha256": g.get("manifest_sha256"),
             "e1_batch": e1_batch, "arm_records_checked": expected is not None}
+
+
+MANIFEST_PATH = None        # None -> REPO/m13/LOTTE_GATE_MANIFEST.json; tests point it at a fixture
+
+
+def check_gate_manifest(gate, *, manifest_path=None, smoke=False):
+    """The gate record must be bound to the COMMITTED checkpoint manifest — `m10/LOTTE_LOCK.md`'s
+    second manifest commit, materialised as `m13/LOTTE_GATE_MANIFEST.json` by
+    `lotte_gate13.py --write-manifest` — and not only to the mutable arm records, which a swapped
+    record and checkpoint could satisfy together (Astra 2026-09-10, finding 2). -> the manifest's
+    identity, or None in a smoke without one."""
+    p = Path(manifest_path or MANIFEST_PATH or (REPO / "m13" / "LOTTE_GATE_MANIFEST.json"))
+    m = read_json(p)
+    if m is None:
+        if smoke:
+            return None
+        refuse(f"no checkpoint manifest at {p}: the LoTTE gate binds to the committed manifest "
+               f"(m10/LOTTE_LOCK.md's second manifest commit; lotte_gate13.py --write-manifest).")
+    live = sha256_file(p)
+    if gate.get("manifest_sha256") != live:
+        refuse(f"{gate.get('path')}: `manifest_sha256` is {str(gate.get('manifest_sha256'))[:12]!r} "
+               f"but {p} is {live[:12]}; the gate read one manifest and the build would run under "
+               f"another")
+    cand = (m.get("candidate") or {}).get("sha256")
+    comp = (m.get("comparator") or {}).get("sha256") if m.get("comparator") else None
+    if m.get("branch") != gate["branch"] or cand != gate["candidate_sha256"] or \
+            comp != gate["comparator_sha256"]:
+        refuse(f"{p} names branch {m.get('branch')!r}, candidate {str(cand)[:12]}, comparator "
+               f"{str(comp)[:12]}; the gate record says {gate['branch']!r}, "
+               f"{gate['candidate_sha256'][:12]}, {str(gate['comparator_sha256'])[:12]}")
+    return {"path": rel(p), "sha256": live, "branch": m.get("branch"),
+            "commit": m.get("git_head")}
 
 
 def build_plan(cfg, reg, batch, *, smoke_dose=None):
@@ -435,6 +468,7 @@ def _preflight(ctx, cfg, cfg_path, *, smoke, device, batch, lotte_gate, compile_
     report = BL.validate(cfg, reg, smoke=smoke)
     b, batch_source = BL.resolve_batch(cfg, smoke=smoke, override=batch)
     gate = check_gate(lotte_gate or (REPO / cfg["lotte_gate"]), e1_batch=b, smoke=smoke)
+    gate["manifest"] = check_gate_manifest(gate, smoke=smoke)
     if gate["decision"] == "veto":
         # `m10/LOTTE_LOCK.md`: "the comparator's recipe (bs32) is what the 200M build trains".
         # The veto OVERRIDES the E1 verdict — that is the whole point of a veto, and the version
