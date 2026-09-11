@@ -18,7 +18,7 @@
 | `work/m17/sources/kubernetes-website`, `work/m17/sources/k8s_docs_en.jsonl` | Gitignored clone at the pinned SHA and the extracted English docs (path, title, stripped text, sha256). Not admitted training data until the executor's protected screen passes |
 | `m17src/common.py` | Paths, registry/freeze loading, hashes and `require_executable` — the status gate every entry point calls. Sets `M7_ENCODER=stella-400M-v5` before legacy imports |
 | `m17src/cache.py` | Candidate-cache schema, deterministic construction (quota walk, backfill, tie-break, per-query RNG), provenance counts, identity hash and the B2-format entropy block |
-| `m17src/vocab.py` | Term discovery, ranking, selection (minima, abbreviation policy, caps, owner pins), count-weighted row init, `single_word` tokenizer extension, old-vocabulary parity and the P0b drift report |
+| `m17src/vocab.py` | Term discovery, ranking, selection (minima, abbreviation policy, caps, owner pins), count-weighted row init, `single_word` tokenizer extension, old-vocabulary parity and the P0b drift report. Ruling A3: a term's domain counts are one vote per DISTINCT supporting document (not per query occurrence), and a query record's `domain` is its source document's `support_manifest.document_domain` |
 | `m17src/train.py` | **The one M17 driver.** Arms C/V/L/VL/VL-A, warm-start lineage checks, per-bucket without-replacement streams, the four loss terms, snapshots/recovery/resume, run record. Refuses a real run while the registry is a draft |
 | `m17src/export.py` | Fold-once effective rows, registered snapshot averaging, bundle build with the copied frozen `encoder_spec`, and the five M17 gates (separate from M11's, which stay bound to `m7/FREEZE.json`) |
 | `m17src/loader_np.py` | Standalone numpy loader: eager fp32 vs resident int8 codes/scales with per-query dequantization, parity check, weight bytes reported separately from process RSS |
@@ -29,7 +29,7 @@
 | `results/m17_panel_selection.jsonl` | The selection partition mirrored out of `work/` because it is under 2 MB. The audit partition's text stays in `work/m17/panel/audit.jsonl`; only its hash is published |
 | `results/m17_panel_pending_judgments.jsonl` | The one human review sheet: 360 Kubernetes (query, candidate) rows and the ambiguous alias pairs. `relevant_yes_no` and `judge` arrive empty and must stay empty until a person fills them |
 | `results/m17_alias_test_manifest.json` | Alias-test counts by source/kind/domain/judgment status, the extraction rules and the file hashes. No pair text |
-| `m17src/support_manifest.py` | **Step 2b.** Deduplicated document/query counts per admitted source, the fixed source-to-domain map (mirrored into `registry.data.source_domain_map`), document-group and query-family IDs, the measured bucket populations and the applied `pre_lock_rule`. Drops queries whose normalized-text sha appears in step 2c's exclusion file. MS MARCO is refused by name. `--reuse-counts` re-applies the dose rule from `counts_cache.json` without re-reading 2.9 GB of stores |
+| `m17src/support_manifest.py` | **Step 2b.** Deduplicated document/query counts per admitted source, the fixed source-to-domain map (mirrored into `registry.data.source_domain_map`) plus ruling A3's `document_domain`, which sub-assigns each deduplicated document of a `general`-mapped source with `panel_build.classify` at the same threshold (`per_domain` is per-document, `per_domain_source_level` keeps the step-2b view; a pre-A3 `counts_cache.json` prints a re-run notice and falls back), document-group and query-family IDs, the measured bucket populations and the applied `pre_lock_rule`. Drops queries whose normalized-text sha appears in step 2c's exclusion file. MS MARCO is refused by name. `--reuse-counts` re-applies the dose rule from `counts_cache.json` without re-reading 2.9 GB of stores |
 | `m17src/alias_pairs.py` | **Step 2b.** Bulk structural alias pairs: Kubernetes glossary `aka` forms and initial-matched `Expansion (ABBR)` definitions evidenced in the same admitted document, substituted into a carrier sentence so each pair is two query *views*. Ambiguous short forms are dropped, ESCI is not mined, and `--exclude-families` removes step 2c's held-out families (matching on normalized-text shas, the interoperable key) |
 | `results/m17_support_manifest.json` | Step-2b counts, per-domain totals, unpopulated-domain gaps, family concentration, bucket populations, passes at 6000x256, the dose-rule outcome and file hashes. No document or query text |
 | `results/m17_alias_spotcheck_sample.jsonl` | The seeded random 2% sample of the alias pool for Dylan's human spot check; the only step-2b file that carries text |
@@ -66,6 +66,12 @@ rehearsal with `.venv/bin/python m17src/rehearse17.py` (see `HARNESS.md`).
 - Query families are not uniform: three families hold 108,922 of 561,480 training queries after
   the 50-document hub cutoff, because chains of sub-cutoff documents still connect. Draw held-out
   slices, the panel split and the alias test outside them.
+- A document's domain must be computed from the DOCUMENT text alone (`support_manifest.document_domain`),
+  never from the query that retrieved it, or the same document votes differently in different
+  terms. The query record `vocab.discover` reads carries that document's domain, and each
+  supporting document votes once — do not re-introduce per-occurrence domain counting.
+- `panel_build` must not import `support_manifest` at import time: `support_manifest` imports the
+  classifier from it (lazily), and a top-level import back would make the pair circular.
 - `m7src/train.py` hardcodes tokenizer/init/data assumptions and invokes development scoring;
   `sweep.one` also appends to M7 reporting files. Do not call old drivers as an M17 launcher.
 - `m7src/table.py::QueryTable`, ragged bags, sqrt occurrence weights, folding and normalization

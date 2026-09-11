@@ -40,6 +40,29 @@ def test_discovery_deduplicates_repeated_query_text(tok_and_vocab):
     assert stats["k8s"].n_docs == 3, "the repeated query text must not add support"
 
 
+def test_domains_are_counted_once_per_supporting_document(tok_and_vocab):
+    """Ruling A3: one vote per distinct source document, not one per query occurrence.
+
+    Two queries hang off one medicine document and one query off each of two finance documents.
+    Per document that is finance 2 / medicine 1 -> finance. Per occurrence it would have been
+    2/2, a tie, which `domain_of` resolves to 'general' — a different answer.
+    """
+    tok, _ = tok_and_vocab
+    qs = [{"text": "k8s alpha", "qid": "q0", "source_doc": "dA", "domain": "medicine"},
+          {"text": "k8s beta", "qid": "q1", "source_doc": "dA", "domain": "medicine"},
+          {"text": "k8s gamma", "qid": "q2", "source_doc": "dB", "domain": "finance"},
+          {"text": "k8s delta", "qid": "q3", "source_doc": "dC", "domain": "finance"}]
+    stats, _ = V.discover(qs, [0.5] * 4, tok)
+    st = stats["k8s"]
+    assert dict(st.domains) == {"medicine": 1, "finance": 2}
+    assert sum(st.domains.values()) == st.n_docs == 3
+    assert st.n_contexts == 4, "contexts still count distinct queries"
+    assert V.domain_of(st) == "finance"
+    per_occurrence = _stats(term="k8s", domains={"medicine": 2, "finance": 2})
+    assert V.domain_of(per_occurrence) == "general", (
+        "the old per-occurrence counting would have given a different domain")
+
+
 def test_ranking_order_is_score_then_support_then_lexical():
     a = _stats(term="bbb", docs=range(10), contexts=range(50), residual=0.5)
     b = _stats(term="aaa", docs=range(10), contexts=range(50), residual=0.5)

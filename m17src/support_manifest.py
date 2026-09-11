@@ -5,6 +5,11 @@ source plus the step-2a Kubernetes slice, assigns each source to one panel domai
 fixed map below, emits the group/family identifiers the registry's split rules need, and applies
 `data.bucket_populations_and_dose_rule.pre_lock_rule` to the measured populations.
 
+Ruling A3 (Dylan, 2026-09-11) refines only the domain step: documents of a source mapped to
+'general' are sub-assigned per document by the panel builder's heuristic keyword classifier at the
+same threshold (`document_domain`), so the four empty panel domains can populate. The old
+source-level view is kept beside it as `per_domain_source_level`.
+
 What this script is NOT allowed to do, and does not do:
 
 * It reads no protected surface. The six, the reserved four and LoTTE are screened inside the
@@ -72,6 +77,57 @@ SOURCE_DOMAIN = {
     "k8s-docs-en": "cloud-software",  # step-2a Kubernetes documentation slice
 }
 DEFAULT_DOMAIN = "general"
+
+
+# Ruling A3 (Dylan, 2026-09-11): the source map still fixes the domain of a document, EXCEPT for
+# sources mapped to 'general', whose documents are sub-assigned one at a time by the panel
+# builder's heuristic keyword classifier at the same threshold, so science-engineering, medicine,
+# finance and legal can populate at all. The classifier lives in `m17src/panel_build.py` and is
+# imported lazily: `panel_build` must never import this module at import time (it restates
+# `normalize`/`group_id` for exactly that reason), and the lazy import keeps that direction
+# one-way even if someone later adds a top-level import there.
+_PANEL_BUILD = None
+
+
+def _panel_build():
+    global _PANEL_BUILD
+    if _PANEL_BUILD is None:
+        import sys as _sys
+        if str(Path(__file__).resolve().parent) not in _sys.path:
+            _sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import panel_build
+        _PANEL_BUILD = panel_build
+    return _PANEL_BUILD
+
+
+def classifier_min_score():
+    """`panel_build.MIN_SCORE`: the one threshold both the panel and this manifest use."""
+    return _panel_build().MIN_SCORE
+
+
+def domain_method():
+    """`panel_build.DOMAIN_METHOD`: the method string recorded beside every heuristic label."""
+    return _panel_build().DOMAIN_METHOD
+
+
+def document_domain(source, doc_text, min_score=None):
+    """The domain of ONE document under ruling A3.
+
+    The source map wins wherever it says something other than 'general' (`k8s-docs-en` is
+    cloud-software whatever its text says). For a 'general'-mapped source the panel builder's
+    keyword classifier reads the DOCUMENT TEXT ONLY and returns science-engineering / medicine /
+    finance / legal when it clears the shared threshold, otherwise 'general'.
+
+    Document text only is the point: a document's domain must not depend on which query happened
+    to retrieve it, or the same document would carry different domains in different term counts.
+    Labels from this function are heuristic; `domain_method()` is recorded next to them.
+    """
+    mapped = SOURCE_DOMAIN.get(source, DEFAULT_DOMAIN)
+    if mapped != DEFAULT_DOMAIN:
+        return mapped
+    pb = _panel_build()
+    return pb.classify(doc_text or "", mapped,
+                       pb.MIN_SCORE if min_score is None else min_score)[0]
 
 # Never a training input. Named explicitly so an accidental re-admission fails loudly.
 DENIED_SOURCES = {"msmarco-train", "msmarco-pos", "msmarco"}
@@ -197,9 +253,15 @@ def iter_k8s(excluded):
 
 # --------------------------------------------------------------------------- passes
 
-def document_pass(out_dir, hub_fanout):
+def document_pass(out_dir, hub_fanout, min_score=None):
     """One pass per document store. Writes doc_id -> group_id and returns per-source counts plus
-    the positive-document group lookup the family pass needs."""
+    the positive-document group lookup the family pass needs.
+
+    Ruling A3: each DEDUPLICATED document of a 'general'-mapped source is classified once, on its
+    own text, by `document_domain`, and the per-source `documents_by_domain` counts that result
+    are what the per-domain rollup uses. Duplicates are classified once (the first time their
+    group is seen), so the counts stay a partition of `documents_deduplicated`.
+    """
     (out_dir / "doc_groups").mkdir(parents=True, exist_ok=True)
     per_source = {}
     doc_group = {}  # source -> {doc_id: group_id}, only for sources with positives
@@ -210,15 +272,21 @@ def document_pass(out_dir, hub_fanout):
         n_docs = 0
         groups = set()
         mapping = {}
+        by_domain = {}
         path = out_dir / "doc_groups" / f"{src}.tsv.gz"
         with gzip.open(path, "wt", encoding="utf-8") as w:
             for doc_id, text in iter_store(store):
                 g = group_id(normalize(text))
                 n_docs += 1
-                groups.add(g)
+                if g not in groups:
+                    groups.add(g)
+                    d = document_domain(src, text, min_score)
+                    by_domain[d] = by_domain.get(d, 0) + 1
                 mapping[doc_id] = g
                 w.write(f"{doc_id}\t{g}\n")
-        per_source[src] = {"store": store, "documents": n_docs, "documents_deduplicated": len(groups)}
+        per_source[src] = {"store": store, "documents": n_docs,
+                           "documents_deduplicated": len(groups),
+                           "documents_by_domain": dict(sorted(by_domain.items()))}
         doc_group[src] = mapping
         print(f"  {src}: {n_docs:,} documents, {len(groups):,} deduplicated", flush=True)
 
@@ -234,6 +302,8 @@ def document_pass(out_dir, hub_fanout):
         "store": "work/m17/sources/k8s_docs_en.jsonl",
         "documents": n_docs,
         "documents_deduplicated": len(groups),
+        # Mapped away from 'general', so every document takes the map's domain unclassified.
+        "documents_by_domain": {SOURCE_DOMAIN["k8s-docs-en"]: len(groups)} if groups else {},
         "excluded_near_duplicate_paths": sorted(excluded),
         "admission": "candidate only; the executor's protected screen has not run",
     }
@@ -304,6 +374,7 @@ def query_pass(out_dir, per_source, doc_group, hub_fanout):
             "store": None,
             "documents": 0,
             "documents_deduplicated": 0,
+            "documents_by_domain": {},
             "queries_train": n_train,
             "queries_deduplicated": len(texts),
             "note": "query text only; no positives, so families come from normalized text alone",
@@ -353,6 +424,63 @@ def query_pass(out_dir, per_source, doc_group, hub_fanout):
     print(f"  families: {stats['families']:,}, largest {stats['largest_family']:,}, "
           f"{hubs:,} hub documents", flush=True)
     return per_source, stats
+
+
+# --------------------------------------------------------------------------- domain rollups
+
+def _empty_domains():
+    return {d: {"sources": [], "documents_deduplicated": 0, "queries_deduplicated": 0}
+            for d in PANEL_DOMAINS}
+
+
+def rollup_source_level(per_source):
+    """The step-2b view: every document and query of a source lands in the source's map domain.
+
+    Kept beside the per-document rollup so the numbers the ledger already cites stay readable.
+    """
+    per_domain = _empty_domains()
+    for src, rec in per_source.items():
+        d = SOURCE_DOMAIN.get(src, DEFAULT_DOMAIN)
+        per_domain[d]["sources"].append(src)
+        per_domain[d]["documents_deduplicated"] += rec.get("documents_deduplicated", 0)
+        per_domain[d]["queries_deduplicated"] += rec.get("queries_deduplicated", 0)
+    gaps = [d for d in PANEL_DOMAINS if not per_domain[d]["sources"]]
+    return per_domain, gaps
+
+
+def rollup_per_document(per_source):
+    """Ruling A3: documents by their own classified domain, queries still by source.
+
+    Returns `(per_domain, gaps, complete)`. `complete` is False when any source that has
+    deduplicated documents carries no `documents_by_domain` — the shape a `counts_cache.json`
+    written before this ruling has. The caller falls back to the source-level rollup then; this
+    function never invents counts for a source it was not given.
+
+    Queries stay on the source map on purpose: ruling A3 assigns DOCUMENTS, and a query's own
+    domain follows its source document inside `vocab.discover`, not this aggregate.
+    """
+    per_domain = _empty_domains()
+    complete = True
+    for src, rec in per_source.items():
+        by_domain = rec.get("documents_by_domain")
+        n_docs = rec.get("documents_deduplicated", 0)
+        if by_domain is None and n_docs:
+            complete = False
+            by_domain = {SOURCE_DOMAIN.get(src, DEFAULT_DOMAIN): n_docs}
+        for d, n in (by_domain or {}).items():
+            per_domain.setdefault(d, {"sources": [], "documents_deduplicated": 0,
+                                      "queries_deduplicated": 0})
+            per_domain[d]["documents_deduplicated"] += n
+            if src not in per_domain[d]["sources"]:
+                per_domain[d]["sources"].append(src)
+        qd = SOURCE_DOMAIN.get(src, DEFAULT_DOMAIN)
+        per_domain[qd]["queries_deduplicated"] += rec.get("queries_deduplicated", 0)
+        if rec.get("queries_deduplicated", 0) and src not in per_domain[qd]["sources"]:
+            per_domain[qd]["sources"].append(src)
+    gaps = [d for d in PANEL_DOMAINS
+            if not per_domain[d]["documents_deduplicated"]
+            and not per_domain[d]["queries_deduplicated"]]
+    return per_domain, gaps, complete
 
 
 # --------------------------------------------------------------------------- dose rule
@@ -485,14 +613,14 @@ def build(hub_fanout, reuse_counts):
         del doc_group
         cache.write_text(json.dumps({"per_source": per_source, "family_stats": family_stats}))
 
-    per_domain = {d: {"sources": [], "documents_deduplicated": 0, "queries_deduplicated": 0}
-                  for d in PANEL_DOMAINS}
-    for src, rec in per_source.items():
-        d = SOURCE_DOMAIN.get(src, DEFAULT_DOMAIN)
-        per_domain[d]["sources"].append(src)
-        per_domain[d]["documents_deduplicated"] += rec.get("documents_deduplicated", 0)
-        per_domain[d]["queries_deduplicated"] += rec.get("queries_deduplicated", 0)
-    gaps = [d for d in PANEL_DOMAINS if not per_domain[d]["sources"]]
+    per_domain_source, gaps_source = rollup_source_level(per_source)
+    per_domain, gaps, complete = rollup_per_document(per_source)
+    if not complete:
+        print("counts_cache.json predates ruling A3: it carries no per-document domain counts, "
+              "so per_domain falls back to the SOURCE-LEVEL view. Re-run the document pass "
+              "(drop --reuse-counts) to get per-document domains.", flush=True)
+        per_domain, gaps = per_domain_source, gaps_source
+    populated = [d for d in PANEL_DOMAINS if per_domain[d]["documents_deduplicated"]]
 
     general_pop = min(family_stats["queries_deduplicated_total"], 600000)
     cov = coverage_population(per_source)
@@ -526,10 +654,29 @@ def build(hub_fanout, reuse_counts):
         "panel_domains": PANEL_DOMAINS,
         "per_source": per_source,
         "per_domain": per_domain,
+        "per_domain_source_level": per_domain_source,
         "unpopulated_domains_gap": gaps,
+        "unpopulated_domains_gap_source_level": gaps_source,
+        "domain_assignment": {
+            "rule": "A3 per-document classifier: the source-to-domain map fixes the domain of a "
+                    "document except for sources mapped to 'general', whose documents are "
+                    "sub-assigned one at a time by the panel builder's keyword classifier "
+                    "(m17src/panel_build.classify) on the DOCUMENT TEXT ONLY, at the same "
+                    "threshold. Queries stay on the source map here; a query's own domain "
+                    "follows its source document inside m17src/vocab.discover. Labels are "
+                    "heuristic (Dylan, 2026-09-11).",
+            "method": domain_method(),
+            "classifier_min_score": classifier_min_score(),
+            "applied_per_document": complete,
+            "fallback": None if complete else
+            "counts_cache.json predates ruling A3; per_domain is the source-level view",
+        },
         "breadth_note": "registry vocabulary_ranking.breadth_completion needs three domains at 64 "
-                        "rows each; with this map only two domains are populated, so the "
-                        "vocabulary outcome can only be recorded as 'narrow'",
+                        f"rows each; under the A3 per-document assignment {len(populated)} of "
+                        f"{len(PANEL_DOMAINS)} panel domains have supporting documents "
+                        f"({', '.join(populated) or 'none'}), so 'broad' is arithmetically "
+                        "reachable only if three of them also supply 64 selected rows each, "
+                        "which vocabulary selection decides, not this manifest",
         "query_families": family_stats,
         "bucket_populations": {
             "general": {"population": general_pop,

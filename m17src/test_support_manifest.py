@@ -90,6 +90,91 @@ def test_every_mapped_domain_is_a_panel_domain():
     assert S.DEFAULT_DOMAIN in S.PANEL_DOMAINS
 
 
+# ------------------------------------------------------------- ruling A3 document domains
+
+MEDICAL = "The patient's disease required clinical therapy from a physician."
+BLAND = "A short note about a thing that happened somewhere on a day."
+
+
+def test_mapped_source_keeps_its_domain_whatever_the_text_says():
+    assert S.document_domain("k8s-docs-en", MEDICAL) == "cloud-software"
+    assert S.document_domain("k8s-docs-en", BLAND) == "cloud-software"
+
+
+def test_general_source_with_medical_text_is_classified_as_medicine():
+    assert S.SOURCE_DOMAIN["squad-train"] == "general"
+    assert S.document_domain("squad-train", MEDICAL) == "medicine"
+
+
+def test_general_source_with_bland_text_stays_general():
+    assert S.document_domain("squad-train", BLAND) == "general"
+    assert S.document_domain("squad-train", "") == "general"
+
+
+def test_document_domain_matches_the_panel_classifier_at_the_same_threshold():
+    import panel_build as P
+    assert S.classifier_min_score() == P.MIN_SCORE
+    assert S.domain_method() == P.DOMAIN_METHOD
+    for text in (MEDICAL, BLAND, "inflation and monetary policy raised the interest rate"):
+        assert S.document_domain("squad-train", text) == P.classify(text, "general")[0]
+    # and the threshold is honoured, not hard-coded: an unreachable one falls back to the map
+    assert S.document_domain("squad-train", MEDICAL, min_score=1000) == "general"
+    assert S.document_domain("squad-train", MEDICAL, min_score=2) == "medicine"
+
+
+def test_unmapped_source_falls_back_to_the_general_branch():
+    assert "brand-new-source" not in S.SOURCE_DOMAIN
+    assert S.document_domain("brand-new-source", MEDICAL) == "medicine"
+
+
+def test_document_pass_assigns_deduplicated_documents_one_at_a_time(tmp_path, monkeypatch):
+    out = _world(tmp_path, monkeypatch,
+                 docs={"squad-train": [("a", MEDICAL), ("b", MEDICAL.upper()), ("c", BLAND)]})
+    per_source, _ = S.document_pass(out, hub_fanout=50)
+    rec = per_source["squad-train"]
+    assert rec["documents_by_domain"] == {"general": 1, "medicine": 1}, (
+        "the duplicate must be classified once, so the counts partition the deduplicated total")
+    assert sum(rec["documents_by_domain"].values()) == rec["documents_deduplicated"] == 2
+    k8s = per_source["k8s-docs-en"]
+    assert k8s["documents_by_domain"] == {"cloud-software": k8s["documents_deduplicated"]}
+
+
+def test_per_document_rollup_populates_a_domain_the_source_map_cannot(tmp_path, monkeypatch):
+    _world(tmp_path, monkeypatch,
+           docs={"squad-train": [("a", MEDICAL), ("c", BLAND)]})
+    res = S.build(hub_fanout=50, reuse_counts=False)
+    assert res["per_domain"]["medicine"]["documents_deduplicated"] == 1
+    assert "medicine" not in res["unpopulated_domains_gap"]
+    # the step-2b view is still readable beside it
+    assert res["per_domain_source_level"]["medicine"]["documents_deduplicated"] == 0
+    assert "medicine" in res["unpopulated_domains_gap_source_level"]
+    assert res["domain_assignment"]["applied_per_document"] is True
+    assert res["domain_assignment"]["classifier_min_score"] == S.classifier_min_score()
+    assert "HEURISTIC" in res["domain_assignment"]["method"]
+    assert "medicine" in res["breadth_note"]
+
+
+def test_reuse_counts_without_the_new_key_falls_back_instead_of_crashing(
+        tmp_path, monkeypatch, capsys):
+    out = _world(tmp_path, monkeypatch)
+    S.build(hub_fanout=50, reuse_counts=False)
+    # a counts_cache.json written before ruling A3: no documents_by_domain anywhere
+    (out / "counts_cache.json").write_text(json.dumps({
+        "per_source": dict(
+            {s: {"documents_deduplicated": 3, "queries_deduplicated": 1} for s in S.PAIR_SOURCES},
+            **{"k8s-docs-en": {"documents_deduplicated": 5, "queries_deduplicated": 0}}),
+        "family_stats": {"queries_deduplicated_total": 100, "families": 100,
+                         "queries_total_train": 100, "largest_family": 1,
+                         "hub_documents_excluded_from_linking": 0, "hub_fanout": 50}}))
+    monkeypatch.setattr(S, "TRAIN", tmp_path / "does-not-exist")
+    res = S.build(hub_fanout=50, reuse_counts=True)
+    assert "document pass" in capsys.readouterr().out
+    assert res["domain_assignment"]["applied_per_document"] is False
+    assert res["domain_assignment"]["fallback"]
+    assert res["per_domain"] == res["per_domain_source_level"], "fallback is the source-level view"
+    assert res["per_domain"]["general"]["documents_deduplicated"] == 3 * len(S.PAIR_SOURCES)
+
+
 # --------------------------------------------------------------------------- passes
 
 def test_document_pass_deduplicates_and_drops_flagged_k8s_paths(tmp_path, monkeypatch):

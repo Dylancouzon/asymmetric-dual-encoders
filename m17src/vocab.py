@@ -51,6 +51,10 @@ class TermStat:
     term: str
     docs: set = field(default_factory=set)        # distinct source document ids
     contexts: set = field(default_factory=set)    # distinct deduplicated query ids
+    # Domain counts are PER DISTINCT SUPPORTING DOCUMENT, not per query occurrence: a document
+    # that fifty queries ask about votes once, exactly as it contributes one to `docs`. The domain
+    # of a document is `support_manifest.document_domain` (ruling A3) and depends on the document
+    # text alone, never on the query.
     domains: "defaultdict" = field(default_factory=lambda: defaultdict(int))
     residual_sum: float = 0.0
     residual_n: int = 0
@@ -83,6 +87,18 @@ def discover(queries, residuals, tokenizer, min_len=2, abbreviations=None):
     `queries` are `cache.QuerySpec`-shaped records carrying `text`, `domain` and a
     `source_doc` attribute or key (the document the query came from); `residuals[i]` is
     `1 - dot(q_teacher, q_v1)` for `queries[i]`, already deduplicated by the caller.
+
+    **The `domain` field is the domain of the query's SOURCE DOCUMENT**, as
+    `support_manifest.document_domain(source, document_text)` computes it under ruling A3: the
+    source-to-domain map, except that a 'general'-mapped source's documents are classified one at
+    a time by the panel builder's keyword classifier on the document text alone. It is not a
+    property of the query text, and a caller must not derive it from the query.
+
+    Domains are therefore counted once per DISTINCT supporting document, not once per query
+    occurrence: `st.domains[domain]` is incremented only the first time a given `source_doc` is
+    added to `st.docs`, so `sum(st.domains.values()) == st.n_docs` and `domain_of`'s majority is a
+    majority of documents. Counting occurrences instead would let one heavily queried document
+    outvote many documents from another domain.
     """
     stats: dict[str, TermStat] = {}
     seen_text = set()
@@ -103,9 +119,10 @@ def discover(queries, residuals, tokenizer, min_len=2, abbreviations=None):
                 single_token.add(term)
                 continue
             st = stats.setdefault(term, TermStat(term))
-            st.docs.add(doc)
+            if doc not in st.docs:            # one vote per distinct supporting document
+                st.docs.add(doc)
+                st.domains[domain] += 1
             st.contexts.add(qid)
-            st.domains[domain] += 1
             st.residual_sum += float(residuals[i])
             st.residual_n += 1
     return stats, single_token
