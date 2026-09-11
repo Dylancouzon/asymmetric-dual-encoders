@@ -74,3 +74,17 @@ despite zero CLI exit. Parent inspected the final script and actual passing depe
 independent reviewers inspected named source files and parsed the scripts, without cloud,
 credential or protected-content access. Operational preflight copy is retained in
 `work/m13cloud-launchers/dev6_preflight.py`.
+
+## Completed E and local handoff correction
+
+Both cloud arms and local DEV-6 completed successfully; backup hashes and STOP passed.
+E1 computed once and resolved for bs32. The follow-on then falsely refused publication because
+its batch postcondition accepted integers while the existing selector returns `bs32`/`bs128`.
+The narrow schema correction changes no decision rule. The failed receipt is retained, with a
+separate recovery receipt binding the existing outputs. Parent checked registry hashes, the
+registered decision helper, all recorded subprocess exits and both local record twins; no
+training, DEV-6 or contrast was repeated.
+Independent e_selection_check review returned GO: the selector returns batch strings; macro
+subtraction and weighted unit deltas reproduce E1, registry bindings agree, and bs32 satisfies
+the registered rule. Review accessed only the named controller, selector, decision helper and
+two decision JSONs; no protected payloads or cloud access.

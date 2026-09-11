@@ -180,7 +180,7 @@ def main():
         selection_ready()
         run("select", [PYTHON, "m10src/contrasts.py", "--select"], 300)
         selected = json.loads((REPO / "results/m10_screen_verdicts.json").read_text())
-        if selected.get("selected", {}).get("batch") not in (32, 128) or selected.get("registry_sha256") != allocation["registry_sha256"]:
+        if selected.get("selected", {}).get("batch") not in ("bs32", "bs128") or selected.get("registry_sha256") != allocation["registry_sha256"]:
             raise RuntimeError("Selection did not resolve the registered E batch")
         publish("selection", ["results/m10_contrast_E1.json", "results/m10_screen_verdicts.json"],
                 "Resolve E1 and apply the registered recipe selection")

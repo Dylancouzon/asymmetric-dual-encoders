@@ -1,0 +1,78 @@
+{
+  "status": "FAILED",
+  "stage": "finished",
+  "started_utc": "2026-09-11T20:03:46.215875+00:00",
+  "protected_evaluation": false,
+  "steps": [
+    {
+      "name": "trained-add",
+      "exit_code": 0,
+      "log": "logs/m13-after-e-trained-add.log"
+    },
+    {
+      "name": "trained-commit",
+      "exit_code": 0,
+      "log": "logs/m13-after-e-trained-commit.log"
+    },
+    {
+      "name": "trained-push",
+      "exit_code": 0,
+      "log": "logs/m13-after-e-trained-push.log"
+    },
+    {
+      "name": "E-bs32-cuda",
+      "exit_code": 0,
+      "log": "logs/m13-after-e-E-bs32-cuda.log"
+    },
+    {
+      "name": "E-bs32-dev6",
+      "exit_code": 0,
+      "log": "logs/m13-after-e-E-bs32-dev6.log"
+    },
+    {
+      "name": "E-bs128-cuda",
+      "exit_code": 0,
+      "log": "logs/m13-after-e-E-bs128-cuda.log"
+    },
+    {
+      "name": "E-bs128-dev6",
+      "exit_code": 0,
+      "log": "logs/m13-after-e-E-bs128-dev6.log"
+    },
+    {
+      "name": "dev6-add",
+      "exit_code": 0,
+      "log": "logs/m13-after-e-dev6-add.log"
+    },
+    {
+      "name": "dev6-commit",
+      "exit_code": 0,
+      "log": "logs/m13-after-e-dev6-commit.log"
+    },
+    {
+      "name": "dev6-push",
+      "exit_code": 0,
+      "log": "logs/m13-after-e-dev6-push.log"
+    },
+    {
+      "name": "contrast",
+      "exit_code": 0,
+      "log": "logs/m13-after-e-contrast.log"
+    },
+    {
+      "name": "select",
+      "exit_code": 0,
+      "log": "logs/m13-after-e-select.log"
+    }
+  ],
+  "selection_source_sha256": {
+    "m10src/contrasts.py": "1e77be5b4120c73e237ef7e37a8cbec971c67478e41cd14e3ff6024f4e3fcdf4",
+    "m10src/cov_macro.py": "faf32edc5848e0ea2fd310f8d31a26d93b5539191c9ad83d304b270a6b23f585",
+    "m10src/decision_rules.py": "6d315734c6c61f8ee7474f5a38ef1c7d2d6ba088cd90b0e0c02ee078e8ee2dda"
+  },
+  "dev6_preflight_sha256": "e4163abf03cbabf45c95b58f34021d3e9d801c68a6bf82c7ce1f801d15631ca3",
+  "cloud_receipt_sha256": "3776140c4a7547ed527fac07836c2292778691996d78e372f9ced55d908ee84b",
+  "local_code_commit": "67d6e21afe3f517bcc303a13219952d4dce040ba",
+  "error": "RuntimeError: Selection did not resolve the registered E batch",
+  "finished_utc": "2026-09-11T21:53:42.145835+00:00"
+}
