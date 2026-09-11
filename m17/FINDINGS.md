@@ -58,11 +58,16 @@ The registry asked for this to be measured rather than asserted (`training.init_
 `training.optimizer.note`). In the pre-clock smoke on the real 10,000-query prepared directory,
 the anchor term's gradient norm on the rows is exactly 0 at step 1 (the effective rows ARE their
 initialization) and still rounds to 0 at 8 decimals after 400 VL-A steps and 100 C steps, against
-a total per-step row-gradient norm of 2.3e-2 to 3.2e-2. At the registered weight 1e-3 the anchor
+a total per-step row-gradient norm of 2.3e-2 to 3.2e-2 (2.99e-2 to 2.66e-2 in the re-run below). At the registered weight 1e-3 the anchor
 contributes no measurable share of the row gradient at these step counts; it is not drift
 protection, exactly as the registry's note says. The anchor's share of the row UPDATE norm is not
 observable after Adam's per-parameter scaling, so the run record carries the gradient share and
-says so. In the same reads the listwise term carries 0.78 of the row-gradient norm at step 1 and
-0.76 at step 400, the teacher cosine 0.21 to 0.24, and the alias consistency term 0.004 — the
-alias term is a small nudge on top of the two fit terms, not a competitor to them. These are
-rehearsal numbers on a subsampled pool, not a registered observation.
+says so. The first reading of the other three terms used a wrong denominator (the sum of the
+per-term norms, Sol step-5 P3-9); re-measured against the norm of the TOTAL row gradient on the
+rebuilt 10,000-query directory (100 VL-A steps, batch 256), the listwise term carries 0.887 of it
+at step 1 and 0.883 at step 100, the teacher cosine 0.251 to 0.268, and the alias consistency
+term 0.0032 to 0.0024, against a total row-gradient norm of 2.99e-2 falling to 2.66e-2. The
+shares sum slightly above one because the cosine and listwise gradients partly oppose each other,
+which the old denominator hid. The alias term is a small nudge on top of the two fit terms, not a
+competitor to them. These are rehearsal numbers on a subsampled pool, not a registered
+observation.

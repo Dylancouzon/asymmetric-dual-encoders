@@ -279,5 +279,39 @@ Dylan registered it as **A5** on 2026-09-11 while this batch was in flight:
 priority step it does not implement; the recommended default it was written against is the
 registered order.
 
-**Owner:** M17 implementing session. **Exit:** the rebuilt three sizes, the regenerated timing
-result and the re-run resume smoke below; then the step-5 close-out.
+**Rebuilds, timing and memory after the fixes.** All three sizes were built with the fixed
+builder (`--force` for 2,000 and 10,000, whose stage identities changed; 50,000 fresh):
+129.9 s, 142.3 s and 518.5 s, all full builds. `results/m17_prepare_timing.json` now fits the
+smallest against the largest and reports 82.7 s fixed plus 0.009078 s per query, **5,529.7 s
+(1.54 h)** for the 600,000-query pool, 1.57 h with the document-stage sensitivity estimate. It
+is higher than the previous 0.94 h for four measured reasons: the pool is now 600,000 rows
+rather than 574,229 (A5), the 50,000 build encoded 39,477 queries COLD so a cold teacher encode
+is inside the fitted slope, `cache_save` and the pool/spec/teacher/bank writes are now timed,
+and a stage whose row count did not grow by 25% between the two fitted sizes is carried as a
+fixed cost instead of being fitted (a 47.8 s cold `bank_pool_lookup` against a 10.4 s warm one
+otherwise projected a 9.7-million-second intercept — the latent hazard the third size exposed).
+
+Memory, measured rather than argued: peak `RssAnon` / `RssFile` / `VmHWM` are 3.03/8.43/12.18,
+3.07/8.42/12.21 and 3.44/7.44/11.41 GiB at 2k/10k/50k. The 12.4 GiB of the earlier record is a
+VmHWM reached in `bank_pool_lookup`, where `RssFile` alone is 8.4 GiB of frozen-document memmap
+that the OS reclaims; anonymous memory never exceeded 3.44 GiB. The fitted anonymous slope is
+8.5e-6 GiB per query on a 3.01 GiB base, projecting **8.11 GiB anonymous at the full pool**;
+with the 8-9 GiB of other residents on the 25 GiB box that is about 17 GiB, below the ~20 GiB
+line, so nothing about the bank or the pool is being changed on memory grounds.
+
+**Smoke and resume after the fixes** (pre-clock, `--rehearsal --data`, on the rebuilt `s10000`
+`ext` directory; `work/m17/runs/smoke-resume-VL-A-2`). VL-A, 100 steps at batch 256: the driver
+printed the unscreened-row warning (11 pool rows, 1,648 bank documents) and passed the new
+cache-belongs-here check. Launched with `--checkpoint-minutes 0.0`, killed once `recovery.pt`
+existed, and relaunched with the registered smoke interval `--checkpoint-minutes 0.2`: the
+relaunch printed `resumed at step 1 from recovery.pt`, carried the step-1 history entry across
+the restart and finished at step 100 at 24 ms/step — under a CHANGED interval, which is the
+evidence that the interval is not a resume-bound field. Corrected `grad_shares` (denominator
+`‖∇rows Σ terms‖`): listwise 0.887 at step 1 and 0.883 at step 100, teacher cosine 0.251 to
+0.268, alias consistency 0.0032 to 0.0024, anchor exactly 0, against a total row-gradient norm
+of 2.99e-2 falling to 2.66e-2. The shares sum slightly above one because the cosine and listwise
+gradients partly oppose, which the old denominator hid; `m17/FINDINGS.md` carries the corrected
+numbers.
+
+**Owner:** M17 implementing session. **Exit:** done — the three sizes are rebuilt, the timing
+result regenerated and the resume smoke re-run. Step-5 close-out next.

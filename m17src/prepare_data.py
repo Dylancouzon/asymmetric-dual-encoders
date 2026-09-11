@@ -2331,7 +2331,15 @@ def timing_report(dirs, full_total=None):
                          "rss_high_water_gib": b.get("rss_high_water_gib"),
                          "gpu_peak_gib": b.get("gpu_peak_gib")}}
         work = b.get("per_query_work") or a.get("per_query_work")
-        if nb != na:
+        # Only a stage whose row count actually GREW between the two measured sizes can be
+        # fitted from them. The bank stages are held at the registered cap: `bank_pool_lookup`
+        # differs by a single document and `bank_sample` shrinks as the labeled positives grow,
+        # so a line through those two points has an arbitrary slope — and a negative one turns
+        # into an absurd intercept (a 47.8 s cold lookup against a 10.4 s warm one projected a
+        # 9.7-million-second fixed cost once a third size was added).
+        grew = nb >= 1.25 * max(1, na)
+        rec["scales_with_the_query_pool"] = bool(grew)
+        if grew:
             per_row = (b["seconds"] - a["seconds"]) / (nb - na)
             fixed = max(0.0, a["seconds"] - per_row * na)
             rec.update(per_row_seconds=round(per_row, 6), fixed_seconds=round(fixed, 3),
@@ -2345,20 +2353,14 @@ def timing_report(dirs, full_total=None):
             else:
                 # documents/rows stages do not scale one-for-one with the query pool; their
                 # large-size cost is carried forward as a fixed cost of the full build, and the
-                # growth that IS query-driven is reported as a separate upper bound below.
+                # growth that IS query-driven is reported as a sensitivity estimate below.
                 total_fixed += max(0.0, b["seconds"] - fixed)
-                # Only a stage whose ROW COUNT actually GREW with the pool can be projected from
-                # two points. The bank stages are held at the registered cap: `bank_pool_lookup`
-                # differs by a single document between the two sizes and `bank_sample` shrinks
-                # as the labeled positives grow. Fitting a line through those two points
-                # produces an arbitrary slope, not a forecast.
-                grew = nb >= 1.25 * max(1, na)
-                rec["scales_with_the_query_pool"] = bool(grew)
-                if grew:
-                    doc_growth.append((name, per_row, fixed, na, nb))
+                doc_growth.append((name, per_row, fixed, na, nb))
         else:
             rec.update(fixed_seconds=b["seconds"], per_row_seconds=0.0,
-                       note="row count identical at both sizes: a fixed cost, not a per-row one")
+                       note=f"row count did not grow materially between the measured sizes "
+                            f"({na} -> {nb}): carried as a fixed cost of the full build, not "
+                            "fitted as a per-row one")
             total_fixed += b["seconds"]
         stages[name] = rec
     est = total_fixed + total_per_row * target
@@ -2412,14 +2414,14 @@ def timing_report(dirs, full_total=None):
                 "measured_rate_texts_per_second": 248,
                 "provenance": "the first s2000 build of this session encoded its whole pool "
                               "cold: 1,949 texts in 7.868 s (commit 6fc3b6a's timing result). "
-                              "BOTH builds above reused that cache (hit rates 0.79 and 0.83), "
-                              "so teacher_encode contributes almost nothing to the per-query "
-                              "coefficient here.",
+                              "The 50,000-query build encoded 39,477 texts cold in 112.7 s "
+                              "(350/s), which is the `teacher_encode` slope FITTED ABOVE.",
                 "full_pool_cold_seconds_if_nothing_is_cached": round(target / 248.0, 1),
                 "full_pool_cold_hours_if_nothing_is_cached": round(target / 248.0 / 3600, 2),
-                "what": "the headline extrapolation is the cost with the teacher cache WARM. A "
-                        "full-pool build encodes almost every query text once; add this term "
-                        "for the cold case. It is stated, never folded in silently."}},
+                "what": "the headline extrapolation now INCLUDES a cold teacher encode, because "
+                        "the largest measured build encoded most of its pool cold and that "
+                        "per-query slope is in the fit. This slower 248/s figure is the earlier "
+                        "cold measurement, kept as the conservative alternative."}},
         "extrapolation": {
             "full_pool_queries": target,
             "fixed_seconds": round(total_fixed, 1),
@@ -2449,10 +2451,14 @@ def timing_report(dirs, full_total=None):
                 "linear in queries; the candidate cache is O(queries x bank) and the bank is "
                 "held at the registered cap in both measurements, so its per-query cost is the "
                 "real one",
-                "the teacher and document encode caches were warm for repeated text; the "
-                "measured `encoded` counts say how much was actually paid, and "
-                "`separately_observed.cold_teacher_query_encode` states the cold-case term the "
-                "headline does not include",
+                "the largest measured build encoded most of its queries cold (39,477 of "
+                "50,000), so the fitted `teacher_encode` slope — and therefore the headline — "
+                "includes a cold teacher encode; the document cache was warm and its encode is "
+                "a separately observed fixed cost",
+                "the fit uses the SMALLEST and LARGEST builds; a stage whose row count did not "
+                "grow by at least 25% between them is carried as a fixed cost rather than "
+                "fitted, because a line through two nearly identical points has an arbitrary "
+                "slope",
                 "single process, no parallelism; the cache stage is CPU-bound numpy",
                 "student_tokenize is extrapolated at its own work factor (two encodings per "
                 "query), not one",
