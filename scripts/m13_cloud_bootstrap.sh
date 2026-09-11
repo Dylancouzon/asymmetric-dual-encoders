@@ -71,6 +71,11 @@ for module in ('transformers', 'sentence_transformers', 'datasets', 'numpy',
     importlib.import_module(module)
 import torch
 assert torch.cuda.is_available(), 'CUDA unavailable: check pod GPU and driver'
+assert torch.cuda.device_count() == 1, 'Expected exactly one visible GPU'
+gpu = torch.cuda.get_device_properties(0)
+assert 'A100' in gpu.name, f'Expected A100, got {gpu.name}'
+assert 79 * 1024**3 <= gpu.total_memory <= 81 * 1024**3, (
+    'Expected approximately 80 GiB GPU memory', gpu.total_memory)
 assert torch.version.cuda == '12.6', torch.version.cuda
 assert torch.cuda.is_bf16_supported(), 'Registered training requires CUDA bf16'
 x = torch.ones((32, 32), device='cuda', dtype=torch.bfloat16)

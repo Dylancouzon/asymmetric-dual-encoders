@@ -56,6 +56,8 @@ def test_the_allocation_table_prices_every_mandatory_line(tmp_path):
     """Ruling R13 leaves no cap formula: the budget is a fixed table and the only judgement in it
     is whether the total fits under the recorded ceiling."""
     cfg = _config(tmp_path, reserved_hours=2.0)[0]
+    # Test arithmetic against an explicit fixture quote, independent of live provider prices.
+    cfg["budget"]["fixed_usd"] = {"persistent_disk_and_egress": 25.0}
     al = BL.allocation(cfg, 1000.0, 2.0)
     hours = al["mandatory_hours"]
     assert hours["build"] == pytest.approx(200_000_000 / 1000 / 3600, abs=1e-3)
