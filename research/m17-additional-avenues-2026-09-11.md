@@ -1,5 +1,11 @@
 # M17 — additional avenues after the first plan
 
+**Subsequent decision, 2026-09-11:** Dylan accepted alias consistency, late-checkpoint averaging
+and int8 resident-row loading for the plan. Current definitions and the rebalanced allocation
+are in [the registry](../m17/registry.json), [plan](../m17/PLANNING.md) and
+[ledger A1](../m17/LEDGER.md). No training execution is authorized. The research snapshot below
+records the proposals before that decision; interpolation and lower-priority ideas remain deferred.
+
 2026-09-11. Dylan asked whether any other ideas are worth exploring. Two Luna research passes
 and a parent primary-source check produced the shortlist below. These are **proposals**, not
 additional registered arms or measured improvements. M17 remains planning only; its current

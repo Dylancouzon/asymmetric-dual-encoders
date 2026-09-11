@@ -1,8 +1,8 @@
 # M17 status — planning, 2026-09-11
 
-**Proposed:** a supported vocabulary extension across domains, joint table training, and one
-hard-candidate distillation comparison. Same query API and frozen document index; Nano/M13 stays
-unchanged. Branch: `m17-zero-v1.1-planning`.
+**Planned:** a supported vocabulary extension, joint table/listwise training, and the owner-approved
+alias consistency, late-checkpoint averaging and int8 resident-row loading comparisons. Same query
+API and frozen document index; Nano/M13 stays unchanged. Branch: `m17-zero-v1.1-planning`.
 
 **Done:** three Luna research notes, local tokenizer/resource diagnostics, and a bounded plan
 for the owner-confirmed local RTX 3080. No candidate trained, quality benchmark scored or model
@@ -22,5 +22,6 @@ frozen artifact/lineage hashes, JSON/arithmetic, Python syntax and documentation
 Plan: [PLANNING.md](PLANNING.md). Constants: [registry.json](registry.json).
 Authority/probes: [LEDGER.md](LEDGER.md). Paths and pitfalls: [CODEMAP.md](CODEMAP.md).
 
-Follow-up idea research: [additional avenues](../research/m17-additional-avenues-2026-09-11.md).
-Alias consistency and checkpoint averaging lead; no extra experiment or budget change adopted.
+The three follow-up additions are included in the draft registry and rebalanced local budget;
+the total and recovery reserve are unchanged. Evidence:
+[additional avenues](../research/m17-additional-avenues-2026-09-11.md).

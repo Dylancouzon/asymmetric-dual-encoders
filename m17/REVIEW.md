@@ -20,3 +20,12 @@ reserved or six-set/LoTTE payload reads. These reviews do not certify an unwritt
 **Owner:** M17 implementing session. **Execution exit:** real inputs/panel, measured allocation,
 ratified prospective protocol, working driver and two independent implementation reviews.
 Planning fixes do not remove those dependencies.
+
+## A1 scope update
+
+Dylan's subsequent adoption of alias consistency, checkpoint averaging and int8 resident
+loading is recorded in `LEDGER.md` A1. The earlier Luna reviews covered the preceding draft;
+they are not represented as reviews of this amendment or its future implementation. A1's
+planning check covers the matched alias views, fixed forms/read counts, budget arithmetic,
+audit isolation, links and preservation of the original results. Implementation reviews must
+cover the pair sampler/loss, snapshot/resume/export path and selected-row dequantization too.

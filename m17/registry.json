@@ -2,6 +2,12 @@
   "status": "DRAFT_NOT_EXECUTABLE",
   "date": "2026-09-11",
   "purpose": "Zero v1.1 vocabulary and modest retrieval-quality improvement; planning only",
+  "accepted_plan_additions": {
+    "date": "2026-09-11",
+    "owner_instruction": "These look like great ideas, add them to the plan, commit and push",
+    "features": ["alias consistency", "late-checkpoint averaging", "int8 resident-row loading"],
+    "scope": "Included in the plan; no training execution, publication or protected access authorized"
+  },
   "hardware": "local RTX 3080 10 GiB",
   "wall_clock_hours": 72,
   "student_parameter_cap": 35000000,
@@ -18,6 +24,9 @@
     "training_query_cap": 300000,
     "general_replay_fraction": 0.75,
     "targeted_coverage_fraction": 0.25,
+    "alias_query_views_fraction_of_batch": 0.125,
+    "alias_sampling": "Half of the targeted-coverage slots are paired equivalent views: 16 pairs/32 views at batch 256, 8 pairs/16 views at batch 128. Same views, pair IDs and order in every arm; both views count toward the query cap and exposure.",
+    "alias_admission": "Context-valid independently checked equivalences from admitted sources; group source documents, near duplicates and same-intent query/alias-view families before discovery/training; teacher agreement alone is not a label",
     "new_term_min_distinct_source_documents": 20,
     "new_term_min_distinct_training_contexts": 50,
     "discovery": "training partition only; frequency and teacher residual; no audit mining",
@@ -50,7 +59,7 @@
     "candidate_mix_labeled": {"known_positive": 1, "teacher_top": 31, "zero_v1_top": 16, "uniform": 16},
     "candidate_mix_query_only": {"known_positive": 0, "teacher_top": 32, "zero_v1_top": 16, "uniform": 16},
     "candidate_note": "Cache has_label and nullable positive_id explicitly. Teacher hits are never relevance labels. Deduplicate in positive/teacher/v1/uniform order, fill deterministically from unused bank IDs. Same bank/lists for all arms; admitted vectors only.",
-    "cache_identity": ["raw query text hash", "source/split manifest", "teacher revision and query preprocessing", "document bank IDs/vector bytes/dtype", "v1 artifact and preprocessing", "candidate mixes/K/seed"],
+    "cache_identity": ["raw query text hash", "source/split manifest", "alias-view/pair manifest and query-family split", "teacher revision and query preprocessing", "document bank IDs/vector bytes/dtype", "v1 artifact and preprocessing", "candidate mixes/K/seed"],
     "loss_definition": {
       "q_t": "L2-normalized frozen Stella query vector for raw text with its pinned instruction",
       "q_s": "L2-normalized student query from sqrt-count pooling",
@@ -59,18 +68,49 @@
       "cosine": "mean_queries(1 - dot(q_s,q_t)); no positive-document centroid target",
       "listwise": "mean_queries(sum_candidates(p_teacher * (log(p_teacher) - log(p_student)))); stable log_softmax; no extra T squared factor",
       "anchor": "mean_squared_deviation of effective folded token rows from their M17 initialization, across rows and dimensions; same definition in all arms",
-      "total": "cosine_weight*cosine + listwise_weight_when_enabled*listwise + init_anchor_weight*anchor; C/V omit listwise"
+      "alias": "mean_verified_pairs(1 - dot(q_s(view_a), q_s(view_b))); both views retain their own ordinary teacher/candidate targets; no positive-document label is inferred",
+      "total": "cosine_weight*cosine + enabled_listwise_weight*listwise + init_anchor_weight*anchor + enabled_alias_weight*alias; C/V omit listwise, only VL-A enables alias"
     },
+    "alias_weight_when_enabled": 0.1,
     "uninformative_list_stop": {"teacher_pmax_threshold": 0.999, "fraction_queries_above_threshold": 0.8},
     "arms": [
-      {"id": "C", "vocab_extension": false, "listwise": false},
-      {"id": "V", "vocab_extension": true, "listwise": false},
-      {"id": "L", "vocab_extension": false, "listwise": true},
-      {"id": "VL", "vocab_extension": true, "listwise": true}
+      {"id": "C", "vocab_extension": false, "listwise": false, "alias_consistency": false},
+      {"id": "V", "vocab_extension": true, "listwise": false, "alias_consistency": false},
+      {"id": "L", "vocab_extension": false, "listwise": true, "alias_consistency": false},
+      {"id": "VL", "vocab_extension": true, "listwise": true, "alias_consistency": false},
+      {"id": "VL-A", "vocab_extension": true, "listwise": true, "alias_consistency": true}
     ],
+    "screen_contrasts": ["V-C", "L-C", "VL-V", "VL-L", "VL-A-VL"],
+    "alias_selection": "VL-A must clear the existing simple-arm tie band versus VL on technical nDCG, remain within general dense/fused regression tolerances versus v1, and not worsen the independently judged ambiguous-sense slice versus VL; ties choose VL. This measures alias supervision conditional on expanded vocab and listwise loss, not every combination.",
+    "matched_control": {"V": "C", "L": "C", "VL": "L", "VL-A": "VL"},
     "checkpoint_minutes_max": 15,
     "quality_reads_per_screen_arm": 1,
-    "quality_reads_per_final_seed_arm": 1
+    "quality_reads_per_final_seed_arm": 2,
+    "full_run_count_max": 4,
+    "final_selection_reads_max": 8
+  },
+  "checkpoint_averaging": {
+    "enabled_in_plan": true,
+    "checkpoint_steps": [14000, 15000, 16000],
+    "scope": "Each finalist/control full run, each seed; no averaging during short-arm selection",
+    "operation": "Equal arithmetic mean of effective float32 folded rows; no separate scalar average, per-row/global rescaling or cross-run/tokenizer averaging; quantize the result once",
+    "snapshot_policy": "Keep these step-bound snapshots in addition to time-bound recovery checkpoints; preserve schedule/step identity on resume",
+    "scale_diagnostic": "Record effective-table RMS at each checkpoint; same initialization and row units, no data-dependent scale adjustment",
+    "forms": ["endpoint", "mean_last_three"],
+    "selection": "Choose mean_last_three only when its technical nDCG gain over endpoint is positive in each candidate seed and the mean gain exceeds screening_preferences_not_release_bars.simple_arm_tie_band; both seeds must satisfy general dense/fused regression tolerances versus v1 and the ambiguous-sense non-regression versus their endpoint. Otherwise choose endpoint. No window/weight sweep.",
+    "audit_form": "Ship seed 0 using the selected form; apply that same form to seed-0 matched control. Freeze both hashes before audit; no audit-driven fallback to the other form. Seed 1 is sensitivity evidence."
+  },
+  "int8_resident_loading": {
+    "enabled_in_plan": true,
+    "implementation_scope": "Standalone M17 numpy loader: keep codes/scales resident, gather unique query token IDs, dequantize only gathered rows to float32, preserve sqrt pooling/normalization/fallback/API",
+    "comparator": "Eager-fp32-row numpy loader on identical selected int8 artifact and tokenizer",
+    "parity_max_abs": 0.000001,
+    "batch_sizes": [1, 32, 256],
+    "query_token_lengths": [8, 32, 128, 512],
+    "repeats_per_stratum": 20,
+    "measurement": "Separate fresh processes for load/steady/peak RSS and cold start; warmed alternating-order repeated latency batches, report p50/p95 of batch latency and throughput by stratum; no ANN or quality reselection",
+    "selection": "Adopt only if all conformance/fallback/empty/truncation/special-token fixtures pass, steady process RSS is lower, and each stratum's p95 ratio versus eager is <= screening_preferences_not_release_bars.query_p95_latency_ratio_max. Otherwise retain eager loader and record the failed probe.",
+    "ports": "Verify existing ONNX/FastEmbed parity on the selected artifact; do not infer their memory/latency savings from numpy measurements or redesign their runtimes"
   },
   "screening_preferences_not_release_bars": {
     "technical_ndcg_gain_vs_v1_target": 0.01,
@@ -85,12 +125,12 @@
     "no_new_release_authority": true
   },
   "allocation_hours": [
-    {"phase": "implementation, data manifests, tokenizer and real smoke, reviews", "hours": 6},
-    {"phase": "coverage data, teacher targets and candidate cache", "hours": 18},
-    {"phase": "four matched short screen arms and selection", "hours": 10},
-    {"phase": "selected arm and simpler control, complete schedules and seed replication", "hours": 16},
-    {"phase": "locked audit and exact dense/fused evaluation", "hours": 10},
-    {"phase": "int8 export, numpy/ONNX parity and serving costs", "hours": 6},
+    {"phase": "bounded driver/loader design, data manifests, tokenizer and real smoke, reviews", "hours": 8},
+    {"phase": "coverage and verified alias pairs, teacher targets and candidate cache", "hours": 16},
+    {"phase": "five matched short screen arms and selection", "hours": 12},
+    {"phase": "candidate/control full runs, seed replication and fixed endpoint/averaged-form selection", "hours": 16},
+    {"phase": "locked audit and exact dense/fused evaluation", "hours": 8},
+    {"phase": "int8 resident/eager loader comparison, numpy/ONNX parity and serving costs", "hours": 6},
     {"phase": "failure recovery reserve", "hours": 6}
   ],
   "budget_policy": {

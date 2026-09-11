@@ -3,7 +3,7 @@
 | Path | Purpose |
 |---|---|
 | `m17/PLANNING.md`, `registry.json` | Prospective design and draft constants; no runnable training protocol |
-| `m17/LEDGER.md` | Owner scope and pre-observation diagnostic definitions |
+| `m17/LEDGER.md` | Owner scope, pre-observation diagnostics and A1 adoption of the three follow-up comparisons |
 | `m17src/planning_probe.py` | P0 resource/tokenization check; `--followup` runs P0b only. Hand-authored text, disposable random GPU weights, offline Nano tokenizer comparison. |
 | `results/m17_planning_probe.json` | Original P0 observation; original source preserved at `2bca40d` |
 | `results/m17_tokenizer_followup.json` | P0b: shared-piece counterexamples, broader illustrative terms, Nano vocabulary equality |
@@ -32,6 +32,12 @@ fit; no generic experiment framework or legacy-path rename. No M17 training driv
   into the rows. Verify old-vocabulary parity before constructing new rows; never fold twice.
 - New-token IDs belong only to the student. Feed the unchanged raw text through the teacher's
   own tokenizer for targets. Reuse cached targets for unchanged text/teacher preprocessing.
+- Alias views share a same-intent query-family split and carry verified pair IDs in the same
+  cache schema. Both views count as examples in every arm; only VL-A adds their consistency
+  loss. Preserve individual teacher targets and nullable positive labels for each view.
+- Keep the registry's late step-bound snapshots as well as time-bound recovery checkpoints.
+  Average effective float32 folded rows only; no separate averaging of rows/scalars or mixing
+  tokenizers, runs or row scales. Each full run is read as endpoint and fixed average only.
 - New whole-word rows change sqrt-count sharing with constituent subwords elsewhere in a query.
   Sum initialization is not universally output-preserving; P0b demonstrates the mechanism.
 - `single_word=True` uses word boundaries; underscores and punctuation deserve fixtures.
@@ -39,6 +45,10 @@ fit; no generic experiment framework or legacy-path rename. No M17 training driv
   the serialized tokenizer, ONNX and the intended FastEmbed loader.
 - The numpy int8 path materializes the whole table as fp32. Report process RSS separately from
   compressed weight bytes. P0 GPU rates used synthetic resident tensors and are not a forecast.
+- M17 plans resident int8 codes/scales with per-query dequantization. Compare isolated fresh
+  processes on identical model bytes; preserve float32 math, unique-ID/count order, fallback and
+  truncation. Bench the registry's length/batch strata and retain eager loading if adoption
+  checks fail. This does not redesign ONNX/FastEmbed or change the public query API.
 - M11's v1 gates are deliberately tied to `m7/FREEZE.json`. Reuse their parity approach for a
   separate M17 bundle; never weaken the old gates so new bytes can masquerade as the v1 freeze.
 - Copy the frozen `encoder_spec` into the candidate bundle's document-encoder metadata and

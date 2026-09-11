@@ -8,7 +8,10 @@ No rule exception, training execution, publication or protected evaluation acces
 
 Start at `m17/STATUS.md`, `m17/PLANNING.md`, `m17/registry.json` (draft), and `m17/CODEMAP.md`.
 The recommendation is a bounded, jointly trained vocabulary extension and one hard-candidate
-distillation comparison. Static late interaction is researched for compatibility, not adopted.
+distillation comparison. **Dylan accepted three additions on 2026-09-11:** alias consistency,
+fixed late-checkpoint averaging and int8 resident-row loading. Their comparisons and rebalanced
+allocation are in the draft registry and `m17/LEDGER.md` A1; planning-only scope still applies.
+Static late interaction is researched for compatibility, not adopted.
 
 Previously M16; moved 2026-09-10. Read `m8/FINDINGS.md` and
 `m8/EXPLORED.md` before proposing a probe. Historical ideas, arithmetic and reopening conditions remain

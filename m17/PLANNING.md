@@ -1,8 +1,10 @@
 # M17 — Zero v1.1 plan
 
 **Recommendation: keep Zero's serving design, add a small supported vocabulary across domains,
-and compare joint table training with and without hard-candidate listwise distillation.** Spend
-the future 72 hours on the local RTX 3080, counting preparation and validation in that window.
+and compare joint table training with and without hard-candidate listwise distillation.** The
+owner-approved plan also includes alias consistency training, fixed late-checkpoint averaging
+and an int8 resident-row loader comparison. Spend the future 72 hours on the local RTX 3080,
+counting preparation and validation in that window.
 The likely deliverable is better coverage with a modest quality improvement, if measured;
 matching the teacher on every query type is an aspiration, not an established attainable bar.
 
@@ -29,12 +31,15 @@ The quality goal is retrieval, with latency and memory as regression checks. Mor
 their bytes through useful behavior. Keep the existing M12 DBSF@100 product fusion unchanged
 and measure its effect with the new table; no fusion sweep.
 
-## Why these two levers
+## Planned levers
 
 | Option | Evidence and decision |
 |---|---|
 | Supported vocabulary + joint row training | Priority. M8 tested frozen-row closed-form extensions and lost. A trained joint tokenizer/table variant remains unrun in `instructions-m17.md`. It changes the experiment rather than overturning that result. |
 | Hard-candidate listwise distillation (`R-LIST`) | The best supported quality hypothesis. M8's actual entropy artifact shows nearly one-hot teacher distributions under the old uniform bank; teacher-neighbor candidates carry more information. No measured gain from training this variant yet. |
+| Alias consistency | Added to the plan by Dylan, 2026-09-11. One matched extra arm teaches independently verified equivalent query forms to agree, with no inference rewriting. |
+| Late-checkpoint averaging | Added to the plan. Compare one fixed average with the ordinary final checkpoint; export one table, with no runtime ensemble. |
+| Int8 resident-row loading | Added to the plan. Decode only queried rows; retain the implementation only after parity and measured RAM/latency checks. |
 | More general data with the old objective alone | Included as the matched continuation control. M8's data-only gains were small; do not use the entire budget merely repeating an exhausted loss. |
 | Wholesale tokenizer replacement / 64K rows | Defer. More retraining and matching risk; 64K full-width rows exceed the current parameter cap. It would not mathematically require a new document index, but is unnecessary for the first bounded extension. |
 | Prefix changes, pooling search, projections, additive frozen n-grams | Defer. Preserve existing behavior; several are closed or absorbable. No broad hyperparameter sweep. |
@@ -46,7 +51,8 @@ candidate lists in a different teacher/student setup. The local reason to test i
 [M8's entropy audit](../results/m8_b2_entropy.json), not borrowing its benchmark gains.
 Source notes: [vocabulary](../research/m17-vocabulary-2026-09-11.md),
 [interaction/loss](../research/m17-static-interaction-2026-09-11.md),
-[data/training](../research/m17-data-training-2026-09-11.md).
+[data/training](../research/m17-data-training-2026-09-11.md),
+[accepted follow-up ideas](../research/m17-additional-avenues-2026-09-11.md).
 
 ## Vocabulary: coverage beyond DevOps
 
@@ -107,6 +113,15 @@ queries and varied title/heading/span views of admitted documents. The latter su
 targets, not automatically trustworthy relevance labels. Reuse existing admitted generated
 queries only with their lineage and filtering intact; no large LLM-generation project.
 
+Include independently checked, context-valid pairs such as `k8s ingress` / `Kubernetes ingress`
+and `S3 bucket policy` / `Amazon S3 bucket policy`. Half the targeted-coverage slots are paired
+views, as defined in the registry; the general replay share stays unchanged. Both views count
+toward the query cap and total exposure, and **every arm sees the same views in the same order**.
+Keep both views of a same-intent query family in one split; different held-out contexts may
+use an alias that appeared in training. Do not infer equivalence from teacher agreement alone,
+relabel a teacher hit as relevant, or expand ambiguous acronyms globally. Pair admission,
+provenance, decontamination and per-domain/sense counts are part of the data exit.
+
 The first data exit is an admitted-source support manifest with per-domain document and query
 counts after deduplication. An unpopulated domain is a recorded gap, not grounds to silently
 fill from unapproved sources. Source-group and near-duplicate separation must precede training, vocabulary discovery and
@@ -148,9 +163,17 @@ or invalid/self documents under the admitted dataset's rules. If candidate distr
 near-one-hot under the registered diagnostic, stop the listwise branch; do not spend hours on
 an inert loss or tune temperature repeatedly on evaluation data.
 
+Only the alias arm adds the registry's fixed-weight mean pairwise cosine disagreement between
+the two student query vectors. Both views retain ordinary teacher and candidate-list losses.
+Paired views occupy existing batch slots, so this requires no separate student forward; their
+teacher encodes and candidate construction still count against preparation time. Pair IDs and
+the admitted equivalence manifest are included in cache/resume provenance. This is a bounded
+loss comparison conditional on vocabulary expansion and listwise supervision, not a full
+three-factor sweep.
+
 ## Small experiment matrix and decisions
 
-The frozen int8 v1 is the product baseline. Four short runs share raw examples, order, seeds,
+The frozen int8 v1 is the product baseline. Five short runs share raw examples, order, seeds,
 step budget, warm start, pooling, optimizer and candidate cache:
 
 | Arm | Vocabulary | Loss | Question |
@@ -159,26 +182,73 @@ step budget, warm start, pooling, optimizer and candidate cache:
 | V | Extended | Same as C | Does joint vocabulary training add value over C? |
 | L | Original | C + informative listwise KL | Does candidate supervision help over C? |
 | VL | Extended | Same as L | Does their combination beat simpler choices? |
+| VL-A | Extended | VL + alias consistency | Does explicit equivalence supervision help over VL? |
 
-All rows and scalars can update; V/VL do not freeze the original table. No automatic return to
+All rows and scalars can update; V/VL/VL-A do not freeze the original table. No automatic return to
 the historical B→A schedule or final contrastive A phase: that would confound the new loss and
 could erase a small gain. C is a matched continuation control, not a claimed reproduction of
-M7's entire historical training recipe. Compare V−C, L−C, VL−V and VL−L descriptively, and each
-against frozen v1. These are exploratory comparisons, not four confirmatory superiority tests.
+M7's entire historical training recipe. Compare V−C, L−C, VL−V, VL−L and VL-A−VL descriptively,
+and each against frozen v1. These are exploratory comparisons, not confirmatory superiority tests.
 
 At the short-run endpoint choose at most one expanded candidate and its closest simpler
-control. Prefer fewer rows/no listwise term inside the declared tie band. A vocabulary arm
-must help technical retrieval or a predeclared independently labeled coverage slice, while
+control, using the registry's fixed control map (VL-A pairs with VL). Prefer fewer rows/fewer
+loss terms inside the declared tie band. VL-A must improve technical retrieval over VL beyond
+that band, satisfy general dense/fused tolerances against v1, and avoid a drop on the independently
+judged ambiguous-sense selection slice versus VL. A vocabulary arm must help technical retrieval
+or a predeclared independently labeled coverage slice, while
 staying inside general regression tolerances; fewer tokens or higher embedding cosine alone
-do not qualify it. If V/VL lose to C/L, record that vocabulary expansion failed; a better L-only
+do not qualify it. If V/VL/VL-A lose to C/L, record that vocabulary expansion failed; a better L-only
 model is a partial outcome, not completion of the requested vocabulary upgrade.
 
 Run the chosen candidate and matched control under the same longer schedule, with seed 0 and
 one independent seed. Restart both from their declared initialization for that longer schedule;
 do not append steps to an exhausted scheduler. The final budget is the registry's step count
-per fresh full run; the four short screen runs are a separate, already spent allocation. Keep the
-endpoint fixed, read selection metrics once per endpoint, and require repeatable direction.
-No checkpoint shopping on the untouched audit. A stopped/failed arm keeps its result record.
+per fresh full run; the five short screen runs are a separate, already spent allocation. Keep the
+endpoint fixed and require repeatable direction. Each full run contributes only the ordinary
+endpoint and the fixed averaged form described below. No checkpoint shopping on the untouched
+audit. A stopped/failed arm keeps its result record.
+
+## Fixed checkpoint averaging
+
+For each finalist/control full run and each seed, save the registry's three late step-bound
+snapshots in addition to recovery checkpoints. Fold each snapshot's learned scalar into its
+row, average effective rows in float32 with equal weights, then quantize once. Never average
+rows and scalars separately, mix tokenizers/runs, or tune the averaging window after scoring.
+Use the original effective-row units without per-row or global rescaling; record their RMS to
+make scale drift visible. This is late-checkpoint averaging, not a reproduction of SWA's
+different optimizer schedule or an ensemble of normalized query embeddings.
+
+Read selection metrics once for each endpoint and each averaged form: two forms per run,
+eight reads at most across the candidate/control and two seeds. Choose the averaged candidate
+only under the registry's fixed rule: positive technical gain in both seeds, mean gain above
+the existing tie band, general dense/fused tolerances against v1, and no ambiguous-sense drop
+versus the endpoint in either seed. Otherwise retain the endpoint. Missing snapshots or
+measurements are an incomplete comparison, not permission to pick a different window.
+
+Keep seed 0 as the artifact. Apply the chosen endpoint/averaged form to its matched seed-0
+control as well, and bind both hashes before the audit. Seed 1 reports training sensitivity.
+An audit miss does not reopen endpoint-versus-average selection. The inference model is still
+one table and one pooled query vector.
+
+## Int8 resident-row loader
+
+Implement this comparison in the standalone M17 numpy loader: retain int8 codes and per-row
+scales, gather the query's unique token IDs, and reconstruct only those rows in float32 before
+the existing sqrt pooling. Keep the same bundle format, tokenizer, API, normalization and
+empty/degenerate fallback. Do not edit the frozen M11 release implementation.
+
+Compare with eager full-table fp32 loading using the **same selected artifact**. Use fresh
+processes for cold-start and steady/peak RSS, and the registry's fixed length/batch strata for
+warmed p50/p95 latency and throughput. Exercise repeated tokens, punctuation, special tokens,
+truncation, empty input and near-degenerate sums. Adopt resident int8 only if conformance passes,
+measured steady RSS falls, and every stratum stays within the existing p95 latency ratio limit.
+Otherwise retain eager loading and record the outcome. Array-size arithmetic alone is not the
+RSS result, and no inference speedup is assumed.
+
+This is an implementation comparison, not a quality-selection arm. Perform fixture conformance
+before any benchmark use; the final post-audit serving check uses the already locked artifact
+and cannot select different model weights. Existing ONNX/FastEmbed parity remains required,
+but numpy memory results do not imply savings in those runtimes or authorize a new port design.
 
 ## Measurement without consuming M13's evidence
 
@@ -192,12 +262,14 @@ into selection and a sealed audit before vocabulary mining or training. The regi
 target size, not an assertion that this panel already exists. Use affirmatively licensed QA
 labels where suitable and independently checked search-query relevance judgments for technical
 material. Include acronyms, expanded forms, context and ambiguous senses. Every query needs a
-defined corpus and relevant-document IDs. Teacher rankings and seed-document identity alone
+preassigned slice/family label; count variant families together in sampling and uncertainty.
+Each query also needs a defined corpus and relevant-document IDs. Teacher rankings and seed-document identity alone
 are not human relevance judgments. Log zero-shot v1/teacher performance on the panel only after
 its definitions are fixed, and only expose the selection partition during development.
 
-At the final audit, score the chosen seed-0 artifact, its fixed matched control, v1, and Stella
-on the same query IDs with **exact dense retrieval** over the panel's full declared corpus.
+At the final audit, score the chosen seed-0 artifact/form, its fixed matched control in that
+same form, v1, and Stella on the same query IDs with **exact dense retrieval** over the panel's
+full declared corpus.
 Predeclare seed 0 as the artifact rather than choosing a lucky seed. Report nDCG@10 and Recall@10
 per domain, general and technical macros, plus teacher-to-student agreement as a separate
 diagnostic. For DBSF, fuse exact dense top-100 and fixed BM25 top-100 runs using the existing M12
@@ -223,16 +295,17 @@ the GPU for the entire period. Source selection and all costly work count agains
 
 | Elapsed window | Work | Exit |
 |---|---|---|
-| 0–6 h | Minimal M17 driver, data/split manifests, tokenizer and real-path smoke, two reviews | Verified warm start, correct tokenizer, resume, measured rate at two sizes; otherwise no long run |
-| 6–24 h | Coverage examples, reusable teacher targets, one candidate cache | Support and provenance recorded; reduce data dose before lock if measured time will exceed the allocation |
-| 24–34 h | Four matched short runs and one endpoint comparison each | Choose a candidate/control or stop for no useful signal |
-| 34–50 h | Longer candidate/control runs and seed replication | Fixed schedules completed, direction checked |
-| 50–60 h | Seal final artifact and run M17 audit; exact dense and DBSF checks | Report gains/regressions and uncertainty; no M13 access |
-| 60–66 h | Separate int8/ONNX candidate bundle, parity, latency and RSS | Same API/index, measured footprint and artifact quality |
+| 0–8 h | Bounded M17 driver/loader design, manifests, tokenizer and real-path smoke, two reviews | Verified warm start, pair handling, checkpoint/resume, tokenizer and measured rates; otherwise no long run |
+| 8–24 h | Coverage and verified alias pairs, reusable teacher targets, one candidate cache | Support and provenance recorded; price both views and reduce draft dose before lock if needed |
+| 24–36 h | Five matched short runs and one endpoint comparison each | Choose a candidate/control under the fixed alias comparison or stop for no useful signal |
+| 36–52 h | Candidate/control full runs, seed replication, fixed endpoint/average comparisons | Complete schedules and all declared selection reads; fix form and seed-0 hashes |
+| 52–60 h | Locked M17 audit; exact dense and DBSF checks | Report gains/regressions and uncertainty; no M13 access or form reselection |
+| 60–66 h | Int8 resident/eager loader comparison, separate bundle and numpy/ONNX parity | Same API/index; measured RSS/latency decides loader, not model weights |
 | 66–72 h | Recovery reserve | Repair an interrupted planned phase; no new hypothesis search |
 
-Keep implementation to one M17 driver and one candidate-cache schema using existing table,
-retrieval and fusion primitives. Defer optional card/UI polish if preparation slips; missing
+Keep implementation to one M17 driver, one candidate-cache schema with pair IDs, a fixed
+averaging export helper and the bounded numpy loader change, using existing table/retrieval/
+fusion primitives. Defer optional card/UI polish if preparation slips; missing
 mandatory parity or judgments means an incomplete development artifact, not a release.
 
 If the first implementation/review phase overruns, account for it and recompute the remaining
@@ -267,11 +340,11 @@ supervision while keeping the shipped query path simple.
 
 ## Ready for the next session
 
-Additional research requested after this draft is in
-[the follow-up shortlist](../research/m17-additional-avenues-2026-09-11.md): explicit alias
-consistency, compatible checkpoint averaging, and optional int8 resident-row loading. These
-are proposed additions, not extra registered arms. Quality probes need a pre-observation
-registry/allocation amendment; the current matrix, recovery reserve and access rules stand.
+The [follow-up shortlist](../research/m17-additional-avenues-2026-09-11.md) supplies the evidence
+for the three additions Dylan accepted on 2026-09-11. Their comparisons, constants and rebalanced
+allocation now live in this plan and the draft registry. Their inclusion needs no further
+approval; implementation, measured feasibility and the future execution go remain outstanding.
+The recovery reserve, frozen index, M13 scope and protected-access rules stand.
 
 Follow [STATUS.md](STATUS.md) and [CODEMAP.md](CODEMAP.md). Ratify the prospective M17 protocol,
 pin admitted data and a real measured allocation, implement the small driver, and obtain the

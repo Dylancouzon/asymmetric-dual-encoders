@@ -50,3 +50,25 @@ check actual shared-piece fixtures (`s3 s`, `k8s eks`, `kubernetes kubectl`), il
 from other domains, and persist the Nano tokenizer comparison. No quality inference, data
 access or training follows. Output: `results/m17_tokenizer_followup.json`. P0's original code
 and observation are preserved in commit `2bca40d`; this is a supplemental diagnostic.
+
+## 2026-09-11 — A1: add the three follow-up ideas to the plan
+
+Dylan: **“These look like great ideas, add them to the plan, commit and push.”** This accepts
+alias consistency, compatible late-checkpoint averaging and retaining int8 rows in memory as
+planned comparisons. Their inclusion is authorized and does not need to be asked again.
+
+This pre-observation amendment adds one matched alias arm to the unrun screen, fixes a single
+checkpoint-averaging window and selection rule, and defines an int8 loader comparison on the
+same model bytes. `m17/registry.json` owns the loss/sample/window constants, comparison/read
+counts and rebalanced allocation. Total local time and the recovery reserve stay unchanged.
+The earlier four-arm draft and idea shortlist remain in git at `fe68910`.
+
+All arms see the same admitted alias views; the new arm alone enables the equivalence loss.
+The finalist's endpoint/average choice is fixed before the audit, with its control using the
+same form. Loader choice depends on fixture parity and measured RAM/latency, not new quality
+selection. No snapshot-window sweep, runtime query expansion or inference ensemble is added.
+
+The session is still **planning only**. No model training, corpus access, quality measurement,
+new data rights, teacher/index change, M13 change, release-policy change or publication follows
+from this amendment. Input/panel manifests, real timing, implementation reviews and execution
+authorization remain future work. Prior diagnostic artifacts retain their original provenance.
