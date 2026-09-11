@@ -14,6 +14,10 @@ query paths against the *same* document index, each with its quality and its cos
 Document side for both: [`NovaSearch/stella_en_400M_v5`](https://huggingface.co/NovaSearch/stella_en_400M_v5),
 1024-d, frozen, revision-pinned.
 
+New here? [`research/constella-in-plain-english.md`](research/constella-in-plain-english.md) explains
+the whole programme, M1 to M13, in plain English: what was tested, what came out, where the pair
+pays off and why the protocol is strict.
+
 ---
 
 ## Running `zero` (M7)
