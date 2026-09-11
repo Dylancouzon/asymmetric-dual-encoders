@@ -18,3 +18,10 @@ and both E smoke directories; commit/push, deploy exact HEAD; rerun the existing
 It rechecks uploaded bytes and CPU tests, runs both 512-token shapes and real interrupted/resumed
 600-step smokes, verifies local backups and stops the Pod. No registered training or protected
 evaluation is authorized by this diagnostic.
+
+Both reviewers re-reviewed the container-restart dependency correction and returned GO:
+bootstrap installs rsync if missing; stage-0 requires it in preflight. Parent shell/Python
+syntax checks passed. Bootstrap is bounded by the outer launcher's timeout and STOP cleanup.
+The reviewers read only the two script diffs/relevant contents; one repeated syntax checks.
+No cloud, credentials, protected access or edits. Attempt 2 stopped before training; its
+receipt is preserved as `results/m13_cloud_stage0_attempt2.json`.

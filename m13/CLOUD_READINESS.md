@@ -106,3 +106,13 @@ open; advertised prices are not an account-specific quote or a capacity guarante
    then the registered gate and final recipe/review requirements before the fixed 200M build.
 5. Final scoring still owes the executor pin/R6 flip and M9's amendment and executor wiring.
    Final evaluation and comparable serving costs remain milestone work.
+
+## Restart dependency correction
+
+STOP/restart rebuilds container disk. Run `scripts/m13_cloud_bootstrap.sh` after each restart
+to restore rsync and revalidate the persistent pinned environment/CUDA allocation. GitHub's
+scoped deploy key, when needed, must also be restored to `/root/.ssh` with mode 600; never put
+a private key on the Pod volume, which ignores restrictive modes. An offline Git bundle can
+deploy committed code without a remote private key. Stage-0 preflight now requires rsync.
+The first repair retry stopped before transfer/training because rsync was missing; receipt
+`results/m13_cloud_stage0_attempt2.json`. Original GPU failure evidence remains preserved.

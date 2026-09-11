@@ -1,0 +1,34 @@
+{
+  "pod_id": "k3aee2m68765em",
+  "started_utc": "2026-09-11T18:49:08.537241+00:00",
+  "stage": "finished",
+  "registered_training": false,
+  "protected_evaluation": false,
+  "steps": [
+    {
+      "name": "preflight",
+      "exit_code": 0,
+      "elapsed_seconds": 0.78,
+      "log": "logs/m13-cloud-preflight.log"
+    },
+    {
+      "name": "upload",
+      "exit_code": 12,
+      "elapsed_seconds": 0.52,
+      "log": "logs/m13-cloud-upload.log"
+    },
+    {
+      "name": "evidence",
+      "exit_code": 12,
+      "elapsed_seconds": 0.53,
+      "log": "logs/m13-cloud-evidence.log"
+    }
+  ],
+  "status": "FAILED",
+  "code_commit": "af736bd3311ce840ad0c01c20d8c191b5af125d4",
+  "error": "RuntimeError: upload failed with exit 12; inspect /home/dylan/asymetric-dual-encoders/work/m13cloud/logs/m13-cloud-upload.log",
+  "backup_error": "RuntimeError: evidence failed with exit 12; inspect /home/dylan/asymetric-dual-encoders/work/m13cloud/logs/m13-cloud-evidence.log",
+  "stop_http_status": 200,
+  "pod_final_status": "EXITED",
+  "finished_utc": "2026-09-11T18:49:13.618200+00:00"
+}

@@ -18,6 +18,12 @@ mountpoint -q /home/dylan || {
   echo '/home/dylan must be the persistent storage mount, not container disk.' >&2; exit 2;
 }
 
+# STOP/restart rebuilds container disk; transfer tooling must be restored each time.
+if ! command -v rsync >/dev/null; then
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends rsync
+fi
+
 export UV_CACHE_DIR=/home/dylan/.cache/uv
 export UV_PYTHON_INSTALL_DIR=/home/dylan/.local/share/uv/python
 export HF_HOME=/home/dylan/.cache/huggingface

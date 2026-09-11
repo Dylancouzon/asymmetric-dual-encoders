@@ -90,6 +90,7 @@ def main():
         subprocess.run(["git", "diff", "--exit-code", "HEAD", "--"] + local_inputs,
                        cwd=REPO, check=True, stdout=subprocess.DEVNULL)
         remote("preflight", "set -eu; "
+               "command -v rsync >/dev/null; "
                "mountpoint -q /home/dylan; "
                "findmnt -rn -o SOURCE /home/dylan | grep -F -- " + shlex.quote(pod_id) + "; "
                "grep -q 'Pinned packages, imports and CUDA bf16 allocation passed.' "
