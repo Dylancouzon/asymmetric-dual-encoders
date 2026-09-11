@@ -30,3 +30,38 @@ The bridge's 0.0003 per-query tolerance was never validated for re-encoding. Its
 nDCG quantum is false: multiple rank changes can cancel. See
 `research/m10-cleanup-review-2026-09-10.md`. Resolve the intended parity contract before execution;
 do not copy a changed tolerance into M9 without its pre-observation amendment.
+
+## Readiness and day-one runbook (recorded 2026-09-10, session closed)
+
+**Ready now, verified on the box with `./run_checks.sh` (M10 474, M9 16, M12, M13 144 tests):**
+both E arms in the runner (`E-bs32` shape, `pending` cleared under R9, `--dev6 defer`); the ship
+list with the recommended split; `build13.py --plan --rate --price`, which prints both batch tables
+and the allocation under a PENDING E1 batch; the fixed 200M controller; the six-set executor with
+its synthetic rehearsal; the LoTTE gate script with `--preflight-only` (today it refuses at the
+PENDING verdict, as it must).
+
+**Owed before each spend:**
+
+| Spend | Owed | Owner |
+|---|---|---|
+| Renting | provider, account, ≥ 500 GB persistent disk, SSH, GitHub deploy key (`m13/RULINGS.md` Provider) | Dylan |
+| LoTTE read #1 | two independent reviews of `m13src/lotte_gate13.py` (it post-dates the stage 1 reviews and performs a one-shot read; `CLAUDE.md` Reviews); both E records pushed; `--preflight-only` clean | lead |
+| 200M build | `m13/LOTTE_GATE.json`; allocation at the measured rate and billed price under $1,000; reserved-batch allowance re-measured (R10) | lead |
+| Final six-set access | frozen candidate; R6 flip in the commit that pins the reviewed executor; M9's dated R3 amendment before any M9 score | Dylan, lead |
+
+**Day one, in order** (stop the instance between stages; detach anything long with `setsid nohup`
+and monitor `Traceback|Error|FAILED|OOM|Killed|assert`; read the first progress line's rate):
+
+1. Clone at `/home/dylan/asymetric-dual-encoders`, build `.venv` per `HARNESS.md`, rsync per
+   `m13/SHIP_LIST.md` without the DEV-6 group, `sha256sum results/perquery.json` must match.
+2. `./run_checks.sh`; `.venv/bin/python m10src/arm_smoke.py --device cuda`; `m10src/run_arm.py --plan`.
+3. Benchmark hour: examples/s at bs32 and bs128 from the smoke, billed $/h from the provider, then
+   `m13src/build13.py --config m13/build_config.json --plan --rate EX_S --price USD_H`. Record rate,
+   price and the printed allocation in this file, dated; the build record captures them again.
+4. `m10src/run_arm.py E-bs32 --device cuda --dev6 defer`, then the same for `E-bs128`; commit and
+   push both records from the instance; copy `work/m10arms/E-bs32/` and `E-bs128/` back to the box.
+5. On the box: `m13src/dev6_from_checkpoint.py E-bs32` and `E-bs128`; compute E1 and re-issue
+   `results/m10_screen_verdicts.json` with `m10src/contrasts.py`; commit.
+6. Stage 3: the two reviews, then `m13src/lotte_gate13.py --preflight-only`, then the read once
+   (instance or box), commit `m13/LOTTE_GATE.json`.
+7. Build: `m13src/build13.py --config m13/build_config.json --device cuda --rate EX_S --price USD_H`.
