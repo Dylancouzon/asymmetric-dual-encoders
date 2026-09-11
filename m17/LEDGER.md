@@ -401,3 +401,36 @@ hand and the rehearsal re-run after the re-check fixes: `results/m17_rehearsal_s
 all gates pass, resume exercised. The step-3 record `results/m17_rehearsal.json` is retained.
 
 Step 4 is closed. No development-suite, panel-quality or protected read occurred.
+
+## Step 5a–5d — the prepared-data builder, two-size timings and the cache speed-up (2026-09-11)
+
+Pre-clock, no protected access, no development-suite or panel read, no quality number.
+`m17src/prepare_data.py` builds the directories `train.py --data` consumes (pool, domain join,
+deferred protected screen, teacher cache, bank, v1 vectors, old-vocabulary parity, vocabulary,
+candidate cache, manifests) at a requested size; `results/m17_prepare_timing.json` holds the
+measured cost at 2,000 and 10,000 real queries. The first extrapolation was 20.4 h for the full
+574,327-query pool, almost all in `cache.build`'s per-query mat-vec and full sort; commit `6fc3b6a`
+blocked the scoring and partial-ordered the walk (order provably unchanged; teacher scores move by
+at most 4.2e-7 from the summation order — one v1 near-tie flipped in 1,949 queries) and the rebuilt
+caches extrapolate to 1.6 h. Old-vocabulary parity: max deviation 9.76e-4 against the released table
+(tol 5e-3) under the real FREEZE hash. Warm-start KL median 0.26 nats, ~80 % of queries above 0.1
+(reported only). Codex Astra reviewed the builder (`research/m17-astra-step5-review-2026-09-11.log`,
+21 findings, 10 P1); a parallel Sol pass was aborted at Dylan's instruction (reviewers alternate;
+`...-aborted-parallel.log`) and Sol reviews the fixed code instead.
+
+## A4 — step-5 owner rulings (Dylan, 2026-09-11)
+
+Dylan: "agree on your recommendations. Just on number 4 the Kubernetes vocabulary is just an
+addition that was requested as a nice to have, this shouldn't be that much of a thing."
+
+1. **Labeled positive budget** — `training.labeled_positive_budget_share = 0.5`; the held-out
+   divergence slice is excluded from the budget. `positive_bank_policy` unchanged.
+2. **Kubernetes documents in the bank** — reserved before the uniform stratified sample, inside
+   the cap (`candidate_construction.bank_sampling_amendment_a4`).
+3. **Documentless sources** — nqopen/triviaqa cast no distinct-document vote in term discovery
+   (`data.documentless_sources_vote = "none"`); contexts and residuals still count.
+4. **Pre-clock smoke on unscreened Kubernetes text** — allowed for `--rehearsal --data` only,
+   with the driver printing the unscreened row counts; real runs refuse a deferred protected
+   screen. Nothing more is built around this: the slice is a nice-to-have.
+
+Registered as `accepted_plan_revision_a4`. No bar, cap, teacher, licence or protocol change.
