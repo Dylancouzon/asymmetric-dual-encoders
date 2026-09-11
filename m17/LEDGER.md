@@ -325,3 +325,26 @@ Three rulings recorded after steps 2 and 3, before any review or observation:
 Registry fields changed: `vocabulary_ranking.domain_assignment`, `data.source_domain_map_note`,
 `data.panel_exclusions_confirmed`, `data.panel_judging_plan`, `data.alias_spotcheck_rule`.
 Implementation of ruling 3 in `m17src/vocab.py`/`support_manifest.py` is step 4 work.
+
+## Step 4a — ruling A3-3 implemented and the support manifest re-run (2026-09-11)
+
+`support_manifest.document_domain(source, doc_text)` returns the source-map domain except for
+`general`-mapped sources, whose documents are classified one at a time by
+`panel_build.classify` on the document text only (same `KEYWORDS`, same `MIN_SCORE`); the
+document pass records `documents_by_domain` per source and `build()` reports the per-document
+roll-up as `per_domain` beside the old `per_domain_source_level`. `vocab.discover` now counts a
+term's domains once per distinct supporting document rather than per query occurrence, and the
+query record's `domain` is defined as its source document's domain. Queries in the manifest stay
+on the source map (the manifest has no query-to-document join for the two query-text-only
+sources); a term's domain is decided from documents in `vocab.py`, as the ruling says.
+Nine tests added (150 pass).
+
+The real document pass re-ran on the RTX 3080 box (`work/m17/logs/support_manifest_a3.log`).
+Per-document counts of deduplicated general-source documents: science-engineering 20,227,
+medicine 42,157, finance 10,655, legal 22,782; 6,067,837 stay `general`. All six panel domains
+now have supporting documents, so `breadth_completion` is arithmetically reachable; whether three
+domains supply 64 selected rows each is decided by vocabulary selection. Every count, family
+statistic, dose outcome and text hash in `results/m17_support_manifest.json` is unchanged from
+the step-2b record (git `930f198`); only the new domain blocks, `script_sha256` and the
+`*.tsv.gz` hashes moved, the latter because gzip stores a write timestamp in its header.
+No panel, dev-suite or protected read; no text published.

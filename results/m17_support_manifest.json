@@ -3,7 +3,7 @@
  "step": "2b",
  "date": "2026-09-11",
  "script": "m17src/support_manifest.py",
- "script_sha256": "2b11c8f5f836cc2bc04e8c5690b1105eff4e6a137bd221e18075d93b80eda361",
+ "script_sha256": "5cbe07ab740c84e5c81422ff3e6799950ef8b34da6dfd35ea3a73da3d345bfd5",
  "gpu_used": false,
  "protected_payloads_opened": false,
  "methods": {
@@ -36,6 +36,13 @@
    "store": "hotpotqa-corpus",
    "documents": 5233329,
    "documents_deduplicated": 5233315,
+   "documents_by_domain": {
+    "finance": 9151,
+    "general": 5160087,
+    "legal": 20467,
+    "medicine": 28248,
+    "science-engineering": 15362
+   },
    "queries_train": 81780,
    "queries_deduplicated": 81773
   },
@@ -43,6 +50,13 @@
    "store": "fever-pos",
    "documents": 12549,
    "documents_deduplicated": 12549,
+   "documents_by_domain": {
+    "finance": 282,
+    "general": 11670,
+    "legal": 301,
+    "medicine": 193,
+    "science-engineering": 103
+   },
    "queries_train": 97708,
    "queries_deduplicated": 91907
   },
@@ -50,6 +64,13 @@
    "store": "squad-ctx",
    "documents": 18891,
    "documents_deduplicated": 18891,
+   "documents_by_domain": {
+    "finance": 329,
+    "general": 17552,
+    "legal": 426,
+    "medicine": 338,
+    "science-engineering": 246
+   },
    "queries_train": 84956,
    "queries_deduplicated": 84689
   },
@@ -57,6 +78,13 @@
    "store": "esci-prod",
    "documents": 808389,
    "documents_deduplicated": 802938,
+   "documents_by_domain": {
+    "finance": 271,
+    "general": 787607,
+    "legal": 284,
+    "medicine": 11049,
+    "science-engineering": 3727
+   },
    "queries_train": 73094,
    "queries_deduplicated": 73094
   },
@@ -64,6 +92,13 @@
    "store": "mrtydi-docs",
    "documents": 95984,
    "documents_deduplicated": 95965,
+   "documents_by_domain": {
+    "finance": 622,
+    "general": 90921,
+    "legal": 1304,
+    "medicine": 2329,
+    "science-engineering": 789
+   },
    "queries_train": 3310,
    "queries_deduplicated": 3308
   },
@@ -71,6 +106,9 @@
    "store": "work/m17/sources/k8s_docs_en.jsonl",
    "documents": 1648,
    "documents_deduplicated": 1648,
+   "documents_by_domain": {
+    "cloud-software": 1648
+   },
    "excluded_near_duplicate_paths": [
     "content/en/docs/reference/access-authn-authz/abac.md",
     "content/en/docs/reference/access-authn-authz/authorization.md",
@@ -84,6 +122,7 @@
    "store": null,
    "documents": 0,
    "documents_deduplicated": 0,
+   "documents_by_domain": {},
    "queries_train": 85871,
    "queries_deduplicated": 85871,
    "note": "query text only; no positives, so families come from normalized text alone"
@@ -92,12 +131,79 @@
    "store": null,
    "documents": 0,
    "documents_deduplicated": 0,
+   "documents_by_domain": {},
    "queries_train": 134761,
    "queries_deduplicated": 75709,
    "note": "query text only; no positives, so families come from normalized text alone"
   }
  },
  "per_domain": {
+  "cloud-software": {
+   "sources": [
+    "k8s-docs-en"
+   ],
+   "documents_deduplicated": 1648,
+   "queries_deduplicated": 0
+  },
+  "general": {
+   "sources": [
+    "hotpotqa-train",
+    "fever-train",
+    "squad-train",
+    "esci-us",
+    "mrtydi-en",
+    "nqopen",
+    "triviaqa"
+   ],
+   "documents_deduplicated": 6067837,
+   "queries_deduplicated": 496351
+  },
+  "science-engineering": {
+   "sources": [
+    "hotpotqa-train",
+    "fever-train",
+    "squad-train",
+    "esci-us",
+    "mrtydi-en"
+   ],
+   "documents_deduplicated": 20227,
+   "queries_deduplicated": 0
+  },
+  "medicine": {
+   "sources": [
+    "hotpotqa-train",
+    "fever-train",
+    "squad-train",
+    "esci-us",
+    "mrtydi-en"
+   ],
+   "documents_deduplicated": 42157,
+   "queries_deduplicated": 0
+  },
+  "finance": {
+   "sources": [
+    "hotpotqa-train",
+    "fever-train",
+    "squad-train",
+    "esci-us",
+    "mrtydi-en"
+   ],
+   "documents_deduplicated": 10655,
+   "queries_deduplicated": 0
+  },
+  "legal": {
+   "sources": [
+    "hotpotqa-train",
+    "fever-train",
+    "squad-train",
+    "esci-us",
+    "mrtydi-en"
+   ],
+   "documents_deduplicated": 22782,
+   "queries_deduplicated": 0
+  }
+ },
+ "per_domain_source_level": {
   "cloud-software": {
    "sources": [
     "k8s-docs-en"
@@ -139,13 +245,21 @@
    "queries_deduplicated": 0
   }
  },
- "unpopulated_domains_gap": [
+ "unpopulated_domains_gap": [],
+ "unpopulated_domains_gap_source_level": [
   "science-engineering",
   "medicine",
   "finance",
   "legal"
  ],
- "breadth_note": "registry vocabulary_ranking.breadth_completion needs three domains at 64 rows each; with this map only two domains are populated, so the vocabulary outcome can only be recorded as 'narrow'",
+ "domain_assignment": {
+  "rule": "A3 per-document classifier: the source-to-domain map fixes the domain of a document except for sources mapped to 'general', whose documents are sub-assigned one at a time by the panel builder's keyword classifier (m17src/panel_build.classify) on the DOCUMENT TEXT ONLY, at the same threshold. Queries stay on the source map here; a query's own domain follows its source document inside m17src/vocab.discover. Labels are heuristic (Dylan, 2026-09-11).",
+  "method": "HEURISTIC. Source-to-domain map (m17src/support_manifest.SOURCE_DOMAIN) gives 'general' for every admitted labelled source and 'cloud-software' for the Kubernetes slice. Within the Wikipedia-derived sources a keyword classifier over the query text plus its gold document text re-labels science-engineering / medicine / finance / legal when the winning domain scores at least the recorded classifier_min_score (strong term 2 points, weak term 1, counted once per distinct term; module default 4) and strictly beats the runner-up. These are topical hints, not adjudicated domain labels, and per-domain numbers inherit that imprecision.",
+  "classifier_min_score": 4,
+  "applied_per_document": true,
+  "fallback": null
+ },
+ "breadth_note": "registry vocabulary_ranking.breadth_completion needs three domains at 64 rows each; under the A3 per-document assignment 6 of 6 panel domains have supporting documents (cloud-software, general, science-engineering, medicine, finance, legal), so 'broad' is arithmetically reachable only if three of them also supply 64 selected rows each, which vocabulary selection decides, not this manifest",
  "query_families": {
   "queries_total_train": 561480,
   "queries_deduplicated_total": 496327,
@@ -257,13 +371,13 @@
   "m17/manifest/alias_pairs.jsonl": "4420ecccee25c1984c63b17b5d525c2d5a79dfe6229f3d465bac3c48cbd8ea94",
   "m17/manifest/alias_pairs_summary.json": "ce2987a461b494c3c7d61474d70609878c4842e5726b6357a731e403ae514451",
   "m17/manifest/alias_test_families.json": "5efda7709246f88933c60e8f8e8881ac11ff00adfc0c5d8324e12f6024cd9c20",
-  "m17/manifest/doc_groups/esci-us.tsv.gz": "9044551c970963f7e11fb3dfa88e13b1350bca7405997e4b14d5dbeb4cb30f5a",
-  "m17/manifest/doc_groups/fever-train.tsv.gz": "3c96ffb91fef09831728c10e05fcf9dbcd116881c477403cee274fb90622255a",
-  "m17/manifest/doc_groups/hotpotqa-train.tsv.gz": "ada6c9e1d2f2916e66790fea1f829e60376d79a98f6af6125822de79f2bb7116",
-  "m17/manifest/doc_groups/k8s-docs-en.tsv.gz": "88799e3345279ab9a010701b69619a4d0cd23c21ebfcf7eae8fd71a3e83ec45a",
-  "m17/manifest/doc_groups/mrtydi-en.tsv.gz": "308d552c0d648aa12f9fe8782401824d1316812b24a254fa3c5ed3e5eccb6c2c",
-  "m17/manifest/doc_groups/squad-train.tsv.gz": "8d5bd7f15e11a2e88c05430fb01ee79692b98046f5dd00b8bc63893092961f2e",
-  "m17/manifest/query_families.tsv.gz": "657f748d4a18113f6639f51fb11c22af3ebb1a94a4e11d52c193f67935b0b233"
+  "m17/manifest/doc_groups/esci-us.tsv.gz": "bc2d86579342e2a6df80c705dc301b5859a6447272549555e179b9776c6d5f45",
+  "m17/manifest/doc_groups/fever-train.tsv.gz": "1a67699da271e88c3fbe8918166087b6fbd36abd254bc25f39cef108ee88be2e",
+  "m17/manifest/doc_groups/hotpotqa-train.tsv.gz": "c49fd61581409ac51ef7cbbb04ae933605d49bedaa528c13573e581b2b64b76b",
+  "m17/manifest/doc_groups/k8s-docs-en.tsv.gz": "3a76886a1b8aa60b89818c1a3f27f6edc72da6f7ae37f14bd6c68789277f9a7b",
+  "m17/manifest/doc_groups/mrtydi-en.tsv.gz": "4f14932447560a339a0f9a3fbbb0e68e1cbc74a42c291cc73f015779fd57b9ec",
+  "m17/manifest/doc_groups/squad-train.tsv.gz": "6553161bbeff67a5d80ab1421e91c4d9c3cf709c8aa49572d1e5936a0fdb0e9f",
+  "m17/manifest/query_families.tsv.gz": "d25d8df5f6ce3f7383115a2577635504e5ffe9b3239e3f591271ff4e8710a766"
  },
  "deferred": {
   "protected_screen": "six, reserved four and LoTTE: executor only, via m10src/protected10 (results/m17_k8s_source_manifest.json)"

@@ -34,10 +34,14 @@ open anything under `work/` at all except the two file names given below.
 
 ## You may run
 
-Only these, from the repository root, and nothing else:
+Read-only viewing of the files named in this brief with `cat`, `sed -n`, `nl -ba`, `head`,
+`tail`, `wc`, `ls` on a named path, and `grep`/`awk` **without** `-r`/`-R` and only over
+explicitly named files (a non-recursive glob such as `m17src/test_*.py` or `m17src/*.py` is
+fine). Plus exactly two Python commands, from the repository root:
 `.venv/bin/python -m pytest -q -ra m17src` and `.venv/bin/python -m py_compile m17src/*.py`.
-Do not run `rehearse17.py`, `support_manifest.py`, `panel_build.py`, `alias_pairs.py`,
-`alias_test_build.py`, `train.py` or `export.py`.
+Nothing else: do not run `rehearse17.py`, `support_manifest.py`, `panel_build.py`,
+`alias_pairs.py`, `alias_test_build.py`, `train.py` or `export.py`, and do not list or read
+directories under `work/`, `results/frozen_eval/` or `results/` beyond the files named here.
 
 ## What this code is for
 
