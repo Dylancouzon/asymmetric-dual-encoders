@@ -21,3 +21,6 @@ frozen artifact/lineage hashes, JSON/arithmetic, Python syntax and documentation
 
 Plan: [PLANNING.md](PLANNING.md). Constants: [registry.json](registry.json).
 Authority/probes: [LEDGER.md](LEDGER.md). Paths and pitfalls: [CODEMAP.md](CODEMAP.md).
+
+Follow-up idea research: [additional avenues](../research/m17-additional-avenues-2026-09-11.md).
+Alias consistency and checkpoint averaging lead; no extra experiment or budget change adopted.

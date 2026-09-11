@@ -267,6 +267,12 @@ supervision while keeping the shipped query path simple.
 
 ## Ready for the next session
 
+Additional research requested after this draft is in
+[the follow-up shortlist](../research/m17-additional-avenues-2026-09-11.md): explicit alias
+consistency, compatible checkpoint averaging, and optional int8 resident-row loading. These
+are proposed additions, not extra registered arms. Quality probes need a pre-observation
+registry/allocation amendment; the current matrix, recovery reserve and access rules stand.
+
 Follow [STATUS.md](STATUS.md) and [CODEMAP.md](CODEMAP.md). Ratify the prospective M17 protocol,
 pin admitted data and a real measured allocation, implement the small driver, and obtain the
 two required independent reviews before expensive execution. No `CLAUDE.md` exception is
