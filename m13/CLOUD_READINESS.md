@@ -44,6 +44,29 @@ GPU quote is $1.59/hour, so the initial running configuration is about $1.664/ho
 storage at a 720-hour monthly conversion. Stop compute between stages and monitor balance/spend.
 Source: [Runpod Pod pricing](https://docs.runpod.io/pods/pricing).
 
+## Initial validation job
+
+`scripts/m13_cloud_stage0.py` runs on WSL after provisioning/bootstrap. It uploads only the
+audited list, verifies every SHA-256, runs active checks and the plan, smokes E-bs32/E-bs128 at
+512 tokens, and invokes `scripts/m13_cloud_smoke.py` for checkpoint interruption/resume.
+It copies and verifies smoke checkpoints/records locally and requests STOP, with bounded retries
+and confirmation of the provider's desired `EXITED` state. Six-hour overall limit; four-hour upload
+limit. It never launches registered arms or protected evaluation. Receipt:
+`results/m13_cloud_stage0.json`; local logs: `logs/m13-cloud-*.log`; downloaded evidence:
+`work/m13cloud-evidence/`. Keep WSL and Windows awake while this local upload/controller runs.
+
+Two independent reviews cleared this job after fixes to signal/process cleanup, exact remote
+commit checks, complete backup verification, and STOP retries. The transfer reviewer checked
+the 266 allowlisted paths and matching checksum entries. The smoke reviewer checked the real
+600-step checkpoint interruption/resume caller; evaluations are the runner's smoke stubs.
+
+Cloud bootstrap passed on the actual A100: Python 3.12.14, torch 2.8.0+cu126, CUDA 12.6, driver
+580.126.16, A100-SXM4-80GB (81920 MiB in nvidia-smi), one GPU, 250 GB advertised host RAM and
+16 vCPUs. Captured all 95 resolved package pins, including dependency extras. Initial CPU checks
+exposed that noninteractive SSH does not inherit the Pod's HF cache environment; the controller
+now exports the persistent HF paths explicitly. The initial failing log is retained beside the
+subsequent corrected run; no protected evaluation was performed.
+
 ## Original supplier comparison (network-volume preference)
 
 Recommend Runpod Secure Cloud, on-demand, one A100 SXM 80 GB, a 500 GB standard network volume
