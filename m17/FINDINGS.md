@@ -47,6 +47,21 @@ the old bank produces nearly one-hot teacher targets, while teacher-neighbor lis
 distributional information. This supports testing listwise supervision, not expecting a gain.
 See `results/m8_b2_entropy.json` and the three `research/m17-*-2026-09-11.md` notes.
 
+## The init anchor is inert at the optimizer level (step-5 smoke, 2026-09-11)
+
+The registry asked for this to be measured rather than asserted (`training.init_anchor_note`,
+`training.optimizer.note`). In the pre-clock smoke on the real 10,000-query prepared directory,
+the anchor term's gradient norm on the rows is exactly 0 at step 1 (the effective rows ARE their
+initialization) and still rounds to 0 at 8 decimals after 400 VL-A steps and 100 C steps, against
+a total per-step row-gradient norm of 2.3e-2 to 3.2e-2. At the registered weight 1e-3 the anchor
+contributes no measurable share of the row gradient at these step counts; it is not drift
+protection, exactly as the registry's note says. The anchor's share of the row UPDATE norm is not
+observable after Adam's per-parameter scaling, so the run record carries the gradient share and
+says so. In the same reads the listwise term carries 0.78 of the row-gradient norm at step 1 and
+0.76 at step 400, the teacher cosine 0.21 to 0.24, and the alias consistency term 0.004 — the
+alias term is a small nudge on top of the two fit terms, not a competitor to them. These are
+rehearsal numbers on a subsampled pool, not a registered observation.
+
 True ColBERT-style late interaction needs document token representations. Summing weighted token
 dots against one existing document vector just moves the pooling operation after the dot product.
 This is why M17 prioritizes richer training targets while preserving the shipped scorer. No new

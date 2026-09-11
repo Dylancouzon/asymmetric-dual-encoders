@@ -226,6 +226,16 @@ four in LEDGER.md A4 on 2026-09-11 and the registry records them as
 - Pre-clock training on deferred Kubernetes inputs requires resolution against the ledger; the
   real-data rehearsal switch does not itself authorize the admission exception.
 
+**Smoke and resume after the fixes** (pre-clock, `--rehearsal --data`, both on the rebuilt
+`s10000` directory; run records under `work/m17/runs/`). VL-A on `ext`, 400 steps at batch 256:
+the driver printed the unscreened-row warning (11 pool rows, 1,648 bank documents), the
+warm-start sha `0f544275cbce` matching `m7/FREEZE.json`, and ran at 21-22 ms/step. Interrupted at
+step 18 with `--checkpoint-minutes 0.0`, the relaunch reported `resumed at step 18 from
+recovery.pt` and finished at step 400 with the step-1 history entry carried across the restart —
+and it resumed under `--checkpoint-minutes 0.5`, confirming the interval is not a resume-bound
+field. C on `base`, 100 steps, ran clean. `grad_shares` is present at step 1 and at the last read
+in both runs; the anchor observation is in `m17/FINDINGS.md`.
+
 **Owner:** M17 implementing session. **Exit:** step 5 timings regenerated from the fixed
 builder, the smoke/resume run recorded, then the step-5 close-out. This is one review of the
 step-5 builder; it is not the second independent review that expensive execution requires.
