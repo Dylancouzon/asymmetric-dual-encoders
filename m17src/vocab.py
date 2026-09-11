@@ -96,6 +96,10 @@ def discover(queries, residuals, tokenizer, min_len=2, abbreviations=None):
     a time by the panel builder's keyword classifier on the document text alone. It is not a
     property of the query text, and a caller must not derive it from the query.
 
+    An example whose `source_doc` is explicitly `None` ships no document and casts NO document
+    vote (`data.documentless_sources_vote == "none"`, ruling A4); it still contributes contexts
+    and residuals. A MISSING `source_doc` key remains an error.
+
     Domains are therefore counted once per DISTINCT supporting document, not once per query
     occurrence: `st.domains[domain]` is incremented only the first time a given `source_doc` is
     added to `st.docs`, so `sum(st.domains.values()) == st.n_docs` and `domain_of`'s majority is a
@@ -113,14 +117,15 @@ def discover(queries, residuals, tokenizer, min_len=2, abbreviations=None):
             continue
         seen_text.add(text)
         qid = _get(q, "qid", str(i))
-        doc = _get(q, "source_doc")
-        if doc is None:
+        doc = _get(q, "source_doc", _MISSING)
+        if doc is _MISSING:
             raise ValueError(
                 f"query {qid!r} carries no `source_doc`. Ruling A3 counts one vote per distinct "
                 "supporting DOCUMENT and takes the domain from that document, so a record "
-                "without its document identity cannot be counted at all.")
+                "without its document identity cannot be counted at all. Pass `source_doc=None` "
+                "explicitly for an example that ships no document.")
         domain = _get(q, "domain", "general")
-        if doc_domain.setdefault(doc, domain) != domain:
+        if doc is not None and doc_domain.setdefault(doc, domain) != domain:
             raise ValueError(
                 f"document {doc!r} is labelled {doc_domain[doc]!r} on one query and {domain!r} "
                 "on another. A document's domain comes from its own text "
@@ -136,7 +141,10 @@ def discover(queries, residuals, tokenizer, min_len=2, abbreviations=None):
                 single_token.add(term)
                 continue
             st = stats.setdefault(term, TermStat(term))
-            if doc not in st.docs:            # one vote per distinct supporting document
+            # `source_doc=None` means NO DOCUMENT VOTE (`data.documentless_sources_vote ==
+            # "none"`, ruling A4): nqopen and triviaqa ship no document, so they still supply
+            # contexts and residuals but cannot push a term toward the 20-document minimum.
+            if doc is not None and doc not in st.docs:   # one vote per distinct document
                 st.docs.add(doc)
                 st.domains[domain] += 1
             st.contexts.add(qid)
@@ -151,6 +159,9 @@ def _unk_id(tokenizer):
         return tokenizer.token_to_id("[UNK]")
     except AttributeError:                            # pragma: no cover - exotic tokenizers
         return None
+
+
+_MISSING = object()
 
 
 def _get(obj, name, default=None):

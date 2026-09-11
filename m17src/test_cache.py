@@ -183,6 +183,24 @@ def test_load_verifies_the_stored_arrays(tiny_world, reg, tmp_path):
         cache.load(tmp_path / "c")
 
 
+def test_the_artifact_digest_separates_two_caches_sharing_one_recipe(tiny_world, reg, tmp_path):
+    """Astra step-5 P2-17: the recipe identity cannot enforce the artifact-of-record rule."""
+    arrays, side = _build(tiny_world, reg)
+    inputs = {"teacher_q_sha256": "a" * 64, "v1_q_sha256": "b" * 64}
+    one = cache.save(tmp_path / "c1", arrays, side, artifact_inputs=inputs)
+    other = dict(arrays)
+    other["teacher_scores"] = arrays["teacher_scores"] + np.float32(4e-7)
+    two = cache.save(tmp_path / "c2", other, side, artifact_inputs=inputs)
+    # identical recipe, different bytes -> different artifact digest
+    assert one["identity"]["sha256"] == two["identity"]["sha256"]
+    assert one["artifact_sha256"] != two["artifact_sha256"]
+    # and the same bytes scored from other teacher vectors are a different artifact too
+    three = cache.save(tmp_path / "c3", arrays, side,
+                       artifact_inputs={**inputs, "teacher_q_sha256": "c" * 64})
+    assert three["artifact_sha256"] != one["artifact_sha256"]
+    assert cache.load(tmp_path / "c1")[1]["artifact_sha256"] == one["artifact_sha256"]
+
+
 def test_bad_mix_is_refused(tiny_world, reg):
     bad = {**reg, "training": {**reg["training"],
                                "candidate_mix_labeled": {"known_positive": 1, "teacher_top": 1,

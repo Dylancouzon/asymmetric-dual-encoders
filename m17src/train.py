@@ -117,6 +117,7 @@ class RunCfg:
     tokenizer_sha256: str = ""
     vocabulary_sha256: str = ""
     cache_sha256: str = ""
+    cache_artifact_sha256: str = ""
     warm_start: str = ""
 
     @classmethod
@@ -319,10 +320,16 @@ def forward(model, ids_list, device):
 
 def losses(model, q_s, q_t, cand_vecs, cand_mask, teacher_scores, eff_init, pair_slots, cfg,
            arm):
-    """The registry's `training.loss_definition`, term by term. Returns (total, parts)."""
-    parts = {}
+    """The registry's `training.loss_definition`, term by term.
+
+    Returns `(total, parts, terms)`: `parts` are the unweighted floats the history records,
+    `terms` the WEIGHTED tensors as they enter the total, so the pre-lock diagnostic can take
+    each term's gradient on the rows without a second forward pass.
+    """
+    parts, terms = {}, {}
     cos = (1.0 - (q_s * q_t).sum(1)).mean()
     parts["cosine"] = float(cos.detach())
+    terms["cosine"] = cfg.cosine_weight * cos
     total = cfg.cosine_weight * cos
 
     if arm["listwise"]:
@@ -336,6 +343,7 @@ def losses(model, q_s, q_t, cand_vecs, cand_mask, teacher_scores, eff_init, pair
         pt = lt.exp()
         kl = (pt * (lt - ls)).masked_fill(~cand_mask, 0.0).sum(1).mean()
         parts["listwise_kl"] = float(kl.detach())
+        terms["listwise"] = cfg.listwise_weight * kl
         total = total + cfg.listwise_weight * kl
 
     if cfg.init_anchor_weight > 0:
@@ -343,14 +351,41 @@ def losses(model, q_s, q_t, cand_vecs, cand_mask, teacher_scores, eff_init, pair
             model.token_weights().unsqueeze(1) * model.rows
         anchor = (eff - eff_init).pow(2).mean()
         parts["anchor"] = float(anchor.detach())
+        terms["anchor"] = cfg.init_anchor_weight * anchor
         total = total + cfg.init_anchor_weight * anchor
 
     if arm["alias_consistency"] and pair_slots is not None and len(pair_slots):
         a, b = pair_slots[:, 0], pair_slots[:, 1]
         alias = (2.0 / q_s.shape[0]) * (1.0 - (q_s[a] * q_s[b]).sum(1)).sum()
         parts["alias"] = float(alias.detach())
+        terms["alias"] = cfg.alias_weight * alias
         total = total + cfg.alias_weight * alias
-    return total, parts
+    return total, parts, terms
+
+
+def grad_shares(model, terms):
+    """Each loss term's gradient norm ON THE ROWS, and its share of the total.
+
+    `training.alias_pre_lock_diagnostic` asks for the alias term's share of the total row
+    gradient norm, and `training.optimizer.note` for the anchor's share of the row UPDATE norm.
+    The update norm is NOT observable after Adam's per-parameter scaling, so what is recorded is
+    the anchor's gradient share, and this note says so rather than implying the other number.
+    """
+    norms = {}
+    for name, t in terms.items():
+        if t is None or not getattr(t, "requires_grad", False):
+            norms[name] = 0.0
+            continue
+        g = torch.autograd.grad(t, model.rows, retain_graph=True, allow_unused=True)[0]
+        norms[name] = 0.0 if g is None else float(g.detach().norm())
+    tot = sum(norms.values())
+    return {"row_grad_norms": {k: round(v, 8) for k, v in norms.items()},
+            "shares": {k: (round(v / tot, 6) if tot else None) for k, v in norms.items()},
+            "sum_of_term_norms": round(tot, 8),
+            "note": "shares are of the SUM of the per-term row-gradient norms, on this step's "
+                    "batch, with the registered weights applied. The anchor's share of the row "
+                    "UPDATE norm is not observable after Adam's per-parameter scaling; this is "
+                    "its gradient share."}
 
 
 # ---- warm start -----------------------------------------------------------------------------
@@ -520,7 +555,7 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
             sl = heldout[lo:lo + cfg.batch]
             if not len(sl):
                 break
-            _, parts = step_losses(sl, None)
+            _, parts, _terms = step_losses(sl, None)
             tot["cosine"] += parts["cosine"] * len(sl)
             tot["listwise"] += parts.get("listwise_kl", 0.0) * len(sl)
             n += len(sl)
@@ -534,7 +569,11 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
         s = state["step"]
         lr_factor = set_lr(s)
         idx, slots = batch_indices()
-        loss, parts = step_losses(idx, slots)
+        loss, parts, terms = step_losses(idx, slots)
+        # The registered pre-lock diagnostic, at step 1 and at every divergence read: each
+        # term's gradient norm on the rows, from this step's own graph, no extra forward.
+        read = (s == 1 or s % cfg.check_every == 0 or s == cfg.steps)
+        gshares = grad_shares(model, terms) if read else None
         opt.zero_grad(set_to_none=True)
         loss.backward()
         opt.step()
@@ -544,12 +583,13 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
                          ("listwise", parts.get("listwise_kl", 0.0))):
             rm[key] = val if rm.get(key) is None else 0.99 * rm[key] + 0.01 * val
 
-        if s % cfg.check_every == 0 or s == cfg.steps:
+        if read:
             tr, ho = _monitored(rm), heldout_components()
             state["history"].append({"step": s, "train_running_mean": tr["monitored"],
                                      "heldout": ho["monitored"],
                                      "train_components": tr, "heldout_components": ho,
                                      "parts": parts, "lr_factor": lr_factor,
+                                     "grad_shares": gshares,
                                      "passes": {k: v.passes for k, v in streams.items()}})
             _flag_divergence(state, log)
             log(f"  [{cfg.run_id}] step {s}/{cfg.steps} train {tr['monitored']:.5f} heldout "
@@ -575,7 +615,8 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
         "warm_start_lineage": data.get("lineage"),
         "identity": {"tokenizer_sha256": cfg.tokenizer_sha256,
                      "vocabulary_sha256": cfg.vocabulary_sha256,
-                     "candidate_cache_sha256": cfg.cache_sha256},
+                     "candidate_cache_sha256": cfg.cache_sha256,
+                     "candidate_cache_artifact_sha256": cfg.cache_artifact_sha256},
         "batch_composition": {"general": g_n, "unpaired_coverage": c_n, "alias_pairs": p_n,
                               "batch": cfg.batch},
         "bucket_passes": {k: v.state() for k, v in streams.items()},
@@ -668,7 +709,9 @@ RESUME_BOUND_FIELDS = ("arm", "seed", "phase", "steps", "batch", "general_views"
                        "coverage_views", "alias_pairs", "warmup_steps", "temperature",
                        "cosine_weight", "listwise_weight", "alias_weight", "init_anchor_weight",
                        "rows_lr", "weights_lr", "tokenizer_sha256", "vocabulary_sha256",
-                       "cache_sha256",
+                       # the recipe identity AND the artifact digest: two internally valid
+                       # caches can share the recipe (P2-17)
+                       "cache_sha256", "cache_artifact_sha256",
                        # the divergence read is part of the protocol: its cadence, its size and
                        # the registered snapshot window all change what a resumed run reports.
                        "check_every", "heldout_queries", "snapshot_steps")
@@ -759,6 +802,9 @@ def main(argv=None):
     ap.add_argument("--out", default=None)
     ap.add_argument("--device", default=None)
     ap.add_argument("--no-resume", action="store_true")
+    ap.add_argument("--checkpoint-minutes", type=float, default=None,
+                    help="recovery-checkpoint interval in minutes; may only LOWER the "
+                         "registered training.checkpoint_minutes_max")
     ap.add_argument("--rehearsal", action="store_true",
                     help="synthetic tiny end-to-end rehearsal under work/m17/rehearsal")
     args = ap.parse_args(argv)
@@ -781,6 +827,17 @@ def main(argv=None):
                          "training arrays (see m17src/cache.py and m17/STATUS.md step 5).")
     over = {k: v for k, v in (("steps", args.steps), ("batch", args.batch),
                               ("device", device)) if v is not None}
+    if args.checkpoint_minutes is not None:
+        # A shorter recovery interval is an operational choice (the resume smoke needs one);
+        # a longer one would weaken the registered maximum, so it is refused. The interval is
+        # deliberately NOT on RESUME_BOUND_FIELDS: it changes no step the optimizer takes.
+        cap = float(reg["training"]["checkpoint_minutes_max"])
+        if args.checkpoint_minutes > cap:
+            raise SystemExit(f"M17 REFUSED: --checkpoint-minutes {args.checkpoint_minutes} is "
+                             f"above the registered checkpoint_minutes_max {cap}.")
+        if args.checkpoint_minutes < 0:
+            raise SystemExit("M17 REFUSED: --checkpoint-minutes must not be negative.")
+        over["checkpoint_minutes_max"] = float(args.checkpoint_minutes)
     if args.rehearsal:
         over["rehearsal"] = True
     cfg = RunCfg.from_registry(reg, args.arm, seed=args.seed, **over)
@@ -809,6 +866,67 @@ def _check_locked_config(cfg, reg):
         raise SystemExit(f"M17 REFUSED: seed {cfg.seed} is not a registered seed {seeds}.")
 
 
+def _check_protected_screen(d, manifest, cfg):
+    """A prepared directory is trainable only with a COMPLETED protected screen.
+
+    Astra step-5 P1-3: `state: deferred_to_clock` stayed usable after the registry became
+    executable. Ruling A4 allows exactly one exception — the pre-clock `--rehearsal --data`
+    smoke — and requires it to say, loudly, how many unscreened new-source rows it is training
+    on, so the smoke is never mistaken for admitted training.
+    """
+    screen = manifest.get("protected_screen") or {}
+    state = screen.get("state")
+    if state == "complete":
+        return screen
+    rows = screen.get("unscreened_new_source_rows") or {}
+    if not cfg.rehearsal:
+        raise SystemExit(
+            f"M17 REFUSED: {d}/prepared.json records protected_screen.state={state!r}, not "
+            "'complete'. A real run trains only on inputs the m10 protected screen admitted; "
+            "re-run prepare_data.py --protected-screen inside the executor.")
+    print(f"[m17] *** PRE-CLOCK SMOKE ON UNSCREENED DATA: protected_screen.state={state!r}. "
+          f"{rows.get('pool', '?')} pool rows and {rows.get('bank', '?')} bank documents come "
+          "from the deferred new source and NO protected screen has seen them. This is a "
+          "rehearsal of the real data path (ruling A4), not admitted training, and it produces "
+          "no registered observation. ***", flush=True)
+    return screen
+
+
+def _verify_prepared_hashes(d, manifest, arrays, arm):
+    """Verify the recorded artifact hashes and cross-artifact alignment BEFORE the model.
+
+    Astra step-5 P2-12: the hashes were recorded and never checked, so a same-shaped `bank.npy`,
+    `teacher_q.npy`, `student_ids.json` or `new_rows.npy` was accepted, and array verification
+    alone proved nothing about alignment with those files.
+    """
+    want = manifest.get("hashes") or {}
+    if not want:
+        raise SystemExit(f"M17 REFUSED: {d}/prepared.json records no artifact hashes.")
+    ids = json.loads(admit_read(d / "student_ids.json").read_text())
+    teacher_q = np.load(admit_read(d / "teacher_q.npy"))
+    bank = np.load(admit_read(d / "bank.npy"))
+    checks = [("student_ids", sha_file(d / "student_ids.json")),
+              ("tokenizer", sha_file(admit_read(d / manifest["tokenizer"]))),
+              ("teacher_q", sha_array(teacher_q)),
+              ("bank_vector_bytes", sha_array(bank))]
+    if arm["vocab_extension"] and manifest.get("new_rows"):
+        checks.append(("new_rows", sha_array(np.load(admit_read(d / manifest["new_rows"])))))
+    for name, got in checks:
+        exp = want.get(name)
+        if exp and got != exp:
+            raise SystemExit(
+                f"M17 REFUSED: {name} in {d} hashes {got[:12]} but prepared.json records "
+                f"{str(exp)[:12]}; these are not the artifacts this data directory describes.")
+    n = arrays["candidate_ids"].shape[0]
+    if not (len(ids) == teacher_q.shape[0] == n):
+        raise SystemExit(
+            f"M17 REFUSED: {d} holds {n} candidate rows, {teacher_q.shape[0]} teacher vectors "
+            f"and {len(ids)} student id lists; the three must describe the same queries.")
+    if bank.shape[0] and arrays["candidate_ids"].max() >= bank.shape[0]:
+        raise SystemExit(f"M17 REFUSED: {d} candidate ids reach row "
+                         f"{int(arrays['candidate_ids'].max())} of a {bank.shape[0]}-row bank.")
+
+
 def _load_prepared(data_dir, manifest, cfg, reg):
     """Materialize the arrays `prepared.json` points at, arm-aware, with verified identities.
 
@@ -827,8 +945,10 @@ def _load_prepared(data_dir, manifest, cfg, reg):
         raise SystemExit(f"M17 REFUSED: arm {cfg.arm} is a control with no vocabulary extension "
                          f"but {d} carries `new_rows`; prepare the control's own data.")
 
+    _check_protected_screen(d, manifest, cfg)
     import cache as m17cache
     arrays, sidecar = m17cache.load(d)             # verifies the stored per-array hashes
+    _verify_prepared_hashes(d, manifest, arrays, arm)
     out = dict(manifest)
     out.update({
         "ids": json.loads(admit_read(d / "student_ids.json").read_text()),
@@ -843,6 +963,13 @@ def _load_prepared(data_dir, manifest, cfg, reg):
     })
     # Identity comes from the verified artifacts, never from whatever the manifest claims.
     cfg.cache_sha256 = sidecar["identity"]["sha256"]
+    # The recipe identity says which cache this is MEANT to be; two internally valid caches
+    # built by different scoring paths share it. Resume binds to the artifact digest, which
+    # covers the stored arrays and the teacher/bank/v1 inputs they were scored from (P2-17).
+    cfg.cache_artifact_sha256 = str(sidecar.get("artifact_sha256") or "")
+    if not cfg.rehearsal and not cfg.cache_artifact_sha256:
+        raise SystemExit(f"M17 REFUSED: {d}/cache.json records no `artifact_sha256`; it predates "
+                         "the artifact binding and cannot identify which cache bytes were used.")
     cfg.tokenizer_sha256 = sha_file(admit_read(d / manifest["tokenizer"]))
     # Controls keep the base vocabulary; they need a stable NON-EMPTY identity or the export's
     # completeness rule (a missing field is not a match) would refuse the matched control.

@@ -18,15 +18,36 @@ import train as m17train
 
 # --------------------------------------------------------------------------- pool planning
 
-def test_plan_respects_the_query_cap_and_four_pass_ceiling(reg):
+def test_plan_respects_the_query_cap_and_the_four_pass_minimum(reg):
+    """The four-pass population is a MINIMUM to check against the dose, never a cap."""
     avail = {"general": 10 ** 7, "coverage_views": 10 ** 7, "alias_pairs": 10 ** 6}
     plan, total, factor = pd._plan(reg, avail, None)
     dose = reg["data"]["measured_dose_after_pre_lock_rule"]
     assert factor == 1.0
     assert total <= int(reg["data"]["training_query_cap"])
-    # no bucket holds more distinct rows than four passes at the registered dose need
-    assert plan["coverage"] <= dose["unpaired_coverage_views_per_batch"] * dose["steps"] / 4 + 1
-    assert plan["alias_pairs"] <= dose["alias_pairs_per_batch"] * dose["steps"] / 4 + 1
+    # each bucket holds AT LEAST the distinct rows four passes at the registered dose need
+    assert plan["coverage"] >= dose["unpaired_coverage_views_per_batch"] * dose["steps"] / 4
+    assert plan["alias_pairs"] >= dose["alias_pairs_per_batch"] * dose["steps"] / 4
+    # and the general bucket takes everything the cap still allows, not a four-pass slice
+    assert plan["general"] == int(reg["data"]["training_query_cap"]) - plan["coverage"] \
+        - 2 * plan["alias_pairs"]
+
+
+def test_the_uniform_sampler_does_not_favour_the_head_of_the_file():
+    """Lowest-seeded-hash selection over the whole population (P1-7).
+
+    The old streaming sampler accepted with probability ~4*quota/population and stopped at the
+    quota, so it usually ended around the first quarter of the file.
+    """
+    keys = [f"doc-{i:06d}" for i in range(10000)]
+    picked = pd._lowest_hash_pick(keys, 1000, 0, "bank", "src")
+    assert len(picked) == len(set(picked)) == 1000
+    assert picked == pd._lowest_hash_pick(reversed(keys), 1000, 0, "bank", "src")
+    deciles = pd._tally(f"d{keys.index(k) // 1000}" for k in picked)
+    first, last = deciles["d0"], deciles["d9"]
+    # both deciles hold ~100 of the 1000 draws; +-4 sd of a binomial(1000, 0.1) is +-38
+    assert abs(first - 100) < 38 and abs(last - 100) < 38
+    assert set(deciles) == {f"d{i}" for i in range(10)}
 
 
 def test_plan_subsamples_every_bucket_proportionally(reg):
@@ -248,25 +269,58 @@ def test_base_and_ext_forms_match_the_arms_they_claim():
     assert sorted(a for arms in pd.ARMS_FOR_FORM.values() for a in arms) == sorted(m17train.ARMS)
 
 
-def test_source_doc_is_the_supporting_document_not_the_query():
+def test_source_doc_is_one_canonical_key_per_supporting_document():
+    """P1-10: the same document keeps ONE identity in every role, and documentless is None."""
     specs = [
         m17cache.QuerySpec(qid="squad-train:1", text="q", source="squad-train",
                            positive_ids=("squad-train:d7",)),
+        m17cache.QuerySpec(qid="squad-train:2", text="q2", source="squad-train"),   # budget-bound
         m17cache.QuerySpec(qid="nqopen:5", text="q", source="nqopen"),
-        m17cache.QuerySpec(qid="cov:k8s-docs-en:content/en/x.md:title", text="v",
-                           source="k8s-docs-en", bucket="coverage"),
-        *pd.alias_specs({"pair_id": "p", "family_id": "f", "source": "hotpotqa-train",
+        m17cache.QuerySpec(qid="cov:squad-train:d7:title", text="v", source="squad-train",
+                           bucket="coverage"),
+        *pd.alias_specs({"pair_id": "p", "family_id": "f", "source": "squad-train",
                          "view_a": "a", "view_b": "b"}, "general"),
     ]
-    overrides = {s.qid: "hotpotqa-train:doc-group:gg" for s in specs if s.alias_pair_id}
-    m = pd._source_doc_map(specs, overrides)
-    assert m["squad-train:1"] == "squad-train:d7"
-    # one sentinel unit per query-text-only source, not one per query
-    assert m["nqopen:5"] == "nqopen:querytext-no-document"
-    assert m["cov:k8s-docs-en:content/en/x.md:title"] == "k8s-docs-en:content/en/x.md"
-    # both alias views point at the same EVIDENCE DOCUMENT GROUP, never at the family
-    alias = {m[s.qid] for s in specs if s.alias_pair_id}
-    assert alias == {"hotpotqa-train:doc-group:gg"}
+    groups = {"squad-train:1": ("squad-train", "g7"), "squad-train:2": ("squad-train", "g7"),
+              "cov:squad-train:d7:title": ("squad-train", "g7")}
+    groups.update({s.qid: ("squad-train", "g7") for s in specs if s.alias_pair_id})
+    m = pd._source_doc_map(specs, groups)
+    # one document, one key: general (labeled and budget-bound), coverage and alias agree
+    assert len({m[q] for q in m if q != "nqopen:5"}) == 1
+    assert m["squad-train:1"] == "squad-train:doc-group:g7"
+    # a documentless source casts NO vote (data.documentless_sources_vote == "none", A4)
+    assert m["nqopen:5"] is None
+
+
+def test_documentless_sources_cannot_reach_the_document_minimum(tok_and_vocab):
+    """18 real documents plus nqopen and triviaqa must NOT count as 20 (P1-10)."""
+    tok, _n = tok_and_vocab
+    term = "kubectl"
+    records = [{"text": f"{term} context {i}", "qid": f"q{i}", "domain": "cloud-software",
+                "source_doc": f"squad-train:doc-group:g{i}"} for i in range(18)]
+    records += [{"text": f"{term} open question", "qid": "nqopen:1", "domain": "general",
+                 "source_doc": None},
+                {"text": f"{term} trivia question", "qid": "triviaqa:1", "domain": "general",
+                 "source_doc": None}]
+    stats, _single = pd.m17vocab.discover(records, np.full(len(records), 0.5), tok)
+    st = stats[term]
+    assert st.n_docs == 18                      # not 20: the two sentinels cast no vote
+    assert st.n_contexts == 20                  # contexts and residuals still count
+    assert st.residual_n == 20
+
+
+def test_discover_still_refuses_two_domains_for_one_real_document(tok_and_vocab):
+    tok, _n = tok_and_vocab
+    records = [{"text": "kubectl a", "qid": "a", "domain": "cloud-software",
+                "source_doc": "squad-train:doc-group:g1"},
+               {"text": "kubectl b", "qid": "b", "domain": "medicine",
+                "source_doc": "squad-train:doc-group:g1"}]
+    with pytest.raises(ValueError) as e:
+        pd.m17vocab.discover(records, np.full(2, 0.5), tok)
+    assert "labelled" in str(e.value)
+    # and a MISSING key is still an error, unlike an explicit None
+    with pytest.raises(ValueError):
+        pd.m17vocab.discover([{"text": "kubectl a", "qid": "a"}], np.full(1, 0.5), tok)
 
 
 def test_document_views_are_deterministic_and_deduplicated():
@@ -285,3 +339,299 @@ def test_abbreviation_inventory_prefers_the_single_word_form():
     abbrs, exp = pd.abbreviation_inventory(pairs)
     assert "piaa" in abbrs and exp["piaa"].startswith("pennsylvania")
     assert "kube-apiserver" in abbrs and exp["kube-apiserver"] == "api server"
+
+
+# --------------------------------------------------------------------------- exclusions
+
+def _exclusion_world():
+    """One excluded item per category, and one admitted control for each."""
+    ex = {"families": {"famX"}, "text_shas": {pd.sm.group_id(pd.sm.normalize("held out text"))},
+          "terms": {pd.sm.normalize("PDB")},
+          "doc_groups": {"gX"}}
+    return pd.Exclusions(ex, doc_ids={"squad-train": {"dX"}})
+
+
+def test_one_exclusion_predicate_applies_by_role_and_counts_realized_drops():
+    e = _exclusion_world()
+    assert e.general("famX", "an ordinary query", "squad-train", ["d1"])          # family
+    assert e.general("fam1", "held out text", "squad-train", ["d1"])              # text sha
+    assert e.general("fam1", "pdb", "squad-train", ["d1"])                        # alias term
+    assert e.general("fam1", "an ordinary query", "squad-train", ["dX"])          # positive group
+    assert not e.general("fam1", "an ordinary query", "squad-train", ["d1"])
+    assert e.coverage_document("squad-train", "d2", "gX")                         # source group
+    assert e.coverage_document("squad-train", "dX", "g2")
+    assert not e.coverage_document("squad-train", "d2", "g2")
+    assert e.coverage_view("held out text") and e.coverage_view("PDB")
+    assert not e.coverage_view("an ordinary coverage view")
+    pair = {"family_id": "f1", "doc_group": "g1", "view_a": "a view", "view_b": "b view",
+            "form_a": "x", "form_b": "y"}
+    assert e.alias_pair({**pair, "family_id": "famX"})
+    assert e.alias_pair({**pair, "doc_group": "gX"})
+    assert e.alias_pair({**pair, "view_b": "held out text"})
+    assert e.alias_pair({**pair, "form_b": "PDB"})
+    assert not e.alias_pair(pair)
+    # every category realized exactly the drops above -- these are counts, not inventory sizes
+    assert e.realized == {"general_family": 1, "general_text_sha": 1, "general_alias_term": 1,
+                          "general_positive_doc_group": 1, "coverage_doc_group": 2,
+                          "coverage_text_sha": 1, "coverage_alias_term": 1, "alias_family": 1,
+                          "alias_doc_group": 1, "alias_view_sha": 1, "alias_term": 1}
+
+
+# --------------------------------------------------------------------------- cross-bucket split
+
+def test_a_document_supporting_a_heldout_family_is_excluded_from_the_other_buckets():
+    general = [{"src": "squad-train", "qid": "1", "pos": ["d1"], "family": "f1"},
+               {"src": "squad-train", "qid": "2", "pos": ["d2"], "family": "f2"}]
+    doc_group = {"squad-train:d1": "g1", "squad-train:d2": "g2"}
+    held = pd.heldout_document_groups(general, [True, False], doc_group)
+    assert held == {"g1"}                       # only the held-out query's document
+    assert "g2" not in held
+
+
+# --------------------------------------------------------------------------- labeled subset
+
+def _general(n, per_query_positives=1):
+    return [{"src": "squad-train", "qid": str(i), "family": f"f{i}",
+             "pos": [f"d{i}-{j}" for j in range(per_query_positives)]} for i in range(n)]
+
+
+def test_labeled_subset_excludes_the_heldout_slice_and_respects_the_budget():
+    general = _general(10)
+    doc_domain = {f"squad-train:{d}": "general" for r in general for d in r["pos"]}
+    is_heldout = [i < 3 for i in range(10)]
+    eligible, positives, q_only = pd.select_labeled_subset(
+        general, doc_domain, is_heldout, bank_budget=4, seed=0)
+    assert not (eligible & {0, 1, 2})           # the divergence slice never spends the budget
+    assert len(positives) == 4 and len(eligible) == 4
+    assert q_only == 3                          # the remaining seven: four admitted, three not
+
+
+def test_a_labeled_query_whose_positives_never_joined_is_refused_by_qid():
+    general = _general(3)
+    doc_domain = {"squad-train:d0-0": "general", "squad-train:d2-0": "general"}
+    with pytest.raises(SystemExit) as e:
+        pd.select_labeled_subset(general, doc_domain, [False] * 3, bank_budget=99, seed=0)
+    assert "squad-train:1" in str(e.value)
+
+
+# --------------------------------------------------------------------------- protected screen
+
+class _Ctx:
+    """The handful of `Ctx` attributes the screen stages touch."""
+
+    def __init__(self, tmp_path, reg, protected=False):
+        self.out = tmp_path
+        self.reg = reg
+        self.protected_screen = protected
+        self.stages, self.timings, self.notes, self.cache_state = {}, {}, {}, {}
+
+
+def test_the_protected_screen_gates_on_the_registry_before_importing_protected10(tmp_path,
+                                                                                 monkeypatch):
+    """P1-1: the flag must not reach protected10.build() while the registry is a draft."""
+    import common
+    real = json.loads((pd.REPO / "m17" / "registry.json").read_text())
+    assert real["status"] not in common.EXECUTABLE_STATUSES
+    ctx = _Ctx(tmp_path, real, protected=True)
+    ctx.cache_state["specs"] = []
+    monkeypatch.delitem(__import__("sys").modules, "protected10", raising=False)
+    with pytest.raises(common.NotExecutable):
+        pd.stage_protected(ctx)
+    assert "protected10" not in __import__("sys").modules
+
+
+def test_the_deferred_screen_counts_the_unscreened_new_source_rows(tmp_path, reg):
+    ctx = _Ctx(tmp_path, reg)
+    ctx.cache_state["specs"] = [
+        m17cache.QuerySpec(qid="k8s-docs-en:1", text="a", source="k8s-docs-en"),
+        m17cache.QuerySpec(qid="squad-train:1", text="b", source="squad-train")]
+    rec = pd.stage_protected(ctx)
+    assert rec["state"] == "deferred_to_clock" and rec["unscreened_new_source_rows"] == 1
+
+
+def _screen_specs():
+    a, b = pd.alias_specs({"pair_id": "p1", "family_id": "f1", "source": "k8s-docs-en",
+                           "view_a": "view a", "view_b": "view b"}, "cloud-software")
+    return [m17cache.QuerySpec(qid="q0", text="protected text", source="squad-train",
+                               bucket="heldout", family="q:f0"),
+            m17cache.QuerySpec(qid="q1", text="ordinary", source="squad-train",
+                               bucket="heldout", family="q:f9"),
+            m17cache.QuerySpec(qid="q2", text="ordinary two", source="squad-train",
+                               positive_ids=("squad-train:d1",), family="q:f2"),
+            a, b]
+
+
+def test_a_screen_drop_rebuilds_the_pool_and_survives_a_restart(tmp_path, reg):
+    """P1-4: persist the screened pool, rebuild the indices, drop BOTH views of a pair."""
+    ctx = _Ctx(tmp_path, reg)
+    specs = _screen_specs()
+    ctx.cache_state["specs"] = specs
+    ctx.cache_state["heldout_idx"] = [0, 1]
+    ctx.cache_state["source_doc"] = {s.qid: "k8s-docs-en:doc-group:g1" for s in specs}
+    ctx.cache_state["positives"] = ["squad-train:d1"]
+    rec = pd._apply_screen(ctx, {"q0", "alias:p1:a"})
+    assert rec["rows_dropped"] == 3 and rec["alias_pairs_dropped"] == 1
+    kept = ctx.cache_state["specs"]
+    assert [s.qid for s in kept] == ["q1", "q2"]
+    assert ctx.cache_state["heldout_idx"] == [0]          # rebuilt, not stale positions
+    assert ctx.cache_state["positives"] == ["squad-train:d1"]
+    # and a restart rehydrates the SCREENED pool from disk, never the original one
+    fresh = _Ctx(tmp_path, reg)
+    pd._rehydrate(fresh, "protected")
+    assert [s.qid for s in fresh.cache_state["specs"]] == ["q1", "q2"]
+    assert fresh.cache_state["heldout_idx"] == [0]
+
+
+class _FakeProtected:
+    """A stand-in for `m10src/protected10.py`: nothing protected is opened in a test."""
+    VERSION = "fixture"
+
+    @staticmethod
+    def build(verbose=False):
+        return ("idx",)
+
+    @staticmethod
+    def hits(text, idx):
+        return "exact" if "PROTECTED" in text else None
+
+
+def test_the_screen_reads_full_document_text_and_the_bank_follows_the_receipt(tmp_path,
+                                                                             monkeypatch, reg):
+    """P1-2: a document can match while every view sampled from it does not."""
+    import sys as _sys
+    docs = [("content/en/a.md", "A", "ordinary admitted document text"),
+            ("content/en/b.md", "B", "this body contains PROTECTED payload text")]
+    monkeypatch.setattr(pd.sm, "k8s_excluded_paths", lambda: set())
+    monkeypatch.setattr(pd.sm, "iter_k8s", lambda excluded: iter(docs))
+    monkeypatch.setitem(_sys.modules, "protected10", _FakeProtected)
+    groups = {p: pd.sm.group_id(pd.sm.normalize(t)) for p, _t2, t in docs}
+    specs = [m17cache.QuerySpec(qid=f"cov:k8s-docs-en:{p}:title", text=f"view of {p}",
+                                source="k8s-docs-en", bucket="coverage") for p, _t, _x in docs]
+    ctx = _Ctx(tmp_path, {**reg, "status": "EXECUTABLE"}, protected=True)
+    ctx.cache_state["specs"] = specs
+    ctx.cache_state["heldout_idx"] = []
+    ctx.cache_state["positives"] = []
+    ctx.cache_state["source_doc"] = {s.qid: f"k8s-docs-en:doc-group:{groups[p]}"
+                                     for s, (p, _t, _x) in zip(specs, docs)}
+    rec = pd.stage_protected(ctx)
+    assert rec["state"] == "complete"
+    assert rec["documents_screened"] == 2 and rec["documents_dropped"] == 1
+    # the view text itself is innocent; the row goes because its DOCUMENT was not admitted
+    assert rec["dropped_by_text"] == 0 and rec["dropped_by_document_receipt"] == 1
+    assert [s.qid for s in ctx.cache_state["specs"]] == ["cov:k8s-docs-en:content/en/a.md:title"]
+    ctx.stages["protected"] = rec
+    assert pd._screen_receipt(ctx) == {"content/en/a.md"}
+    assert rec["unscreened_new_source_rows"] == 0
+
+
+def test_a_deferred_receipt_is_no_receipt_at_all(tmp_path, reg):
+    ctx = _Ctx(tmp_path, reg)
+    ctx.stages["protected"] = {"state": "deferred_to_clock"}
+    assert pd._screen_receipt(ctx) is None       # the bank filter is a no-op pre-clock
+
+
+# --------------------------------------------------------------------------- pool layout
+
+def test_pool_ids_are_authenticated_against_the_vector_layout(tmp_path, monkeypatch):
+    """P2-13: reordering `ids-<store>.json` beside the memmap must not pass."""
+    from hashing import sha_stream_list
+    ids = ["d0", "d1", "d2"]
+    d = tmp_path / "stella-400M-v5"
+    d.mkdir(parents=True)
+    meta = {"encoder": "stella-400M-v5",
+            "encoder_revision": pd.registry()["teacher_revision"], "dim": 2, "n": 3,
+            "spans": {"squad-ctx": [0, 3]}, "id_sha256": {"squad-ctx": sha_stream_list(ids)}}
+    (d / "meta.json").write_text(json.dumps(meta))
+    (d / "vecs.f16").write_bytes(np.zeros((3, 2), dtype=np.float16).tobytes())
+    (tmp_path / "ids-squad-ctx.json").write_text(json.dumps(ids))
+    monkeypatch.setattr(pd, "POOL_DIR", tmp_path)
+    r = pd.PoolReader()
+    assert r.rows_for("squad-ctx", ["d1"]) == {"d1": 1}
+    (tmp_path / "ids-squad-ctx.json").write_text(json.dumps(["d2", "d1", "d0"]))
+    with pytest.raises(SystemExit, match="do not describe the stored vectors"):
+        r.rows_for("squad-ctx", ["d1"])
+    (tmp_path / "ids-squad-ctx.json").write_text(json.dumps(["d0", "d1"]))
+    with pytest.raises(SystemExit, match="span"):
+        r.rows_for("squad-ctx", ["d1"])
+
+
+# --------------------------------------------------------------------------- stage identity
+
+def test_a_changed_seed_refuses_a_cached_stage_unless_forced():
+    prev = {"_identity": {"seed": 0, "size": 2000}}
+    ident = {"seed": 1, "size": 2000}
+    assert pd._check_stage_identity({"_identity": ident}, ident, "pool", False)
+    with pytest.raises(SystemExit) as e:
+        pd._check_stage_identity(prev, ident, "pool", False)
+    assert "different inputs" in str(e.value) and "seed" in str(e.value)
+    assert pd._check_stage_identity(prev, ident, "pool", True) is False   # --force rebuilds
+
+
+def test_forcing_a_stage_invalidates_its_dependents():
+    """The fixed dependency order: everything after a rebuilt stage is rebuilt."""
+    i = pd.STAGES.index("teacher")
+    assert pd.STAGES[i + 1:] == ("bank", "v1", "parity", "vocab", "cache", "manifests")
+
+
+# --------------------------------------------------------------------------- v1 variant
+
+def test_v1_mining_refuses_anything_but_the_released_int8_table(tmp_path):
+    assert pd.V1_VARIANT == "int8"
+    with pytest.raises(SystemExit) as e:
+        pd._load_v1_table(tmp_path / "x.npz", "cpu", variant="fp16")
+    assert "int8" in str(e.value)
+
+
+def test_int8_and_fp16_rows_are_different_encoders(tmp_path):
+    """The npz hash cannot distinguish the variants; the rows can (P1-9)."""
+    from table import dequantize_int8, load_table
+    rng = np.random.default_rng(0)
+    rows = rng.normal(size=(8, 4)).astype(np.float32)
+    scale = np.abs(rows).max(1) / 127.0
+    codes = np.round(rows / scale[:, None]).astype(np.int8)
+    p = tmp_path / "t.npz"
+    np.savez(p, rows_fp16=rows.astype(np.float16), rows_int8=codes,
+             int8_scale=scale.astype(np.float32), token_weights=np.zeros(0, np.float32))
+    int8 = pd._load_v1_table(p, "cpu").rows.detach().numpy()
+    fp16 = load_table(p, variant="fp16", device="cpu").rows.detach().numpy()
+    assert np.allclose(int8, dequantize_int8(codes, scale.astype(np.float32)))
+    assert not np.array_equal(int8, fp16)
+
+
+# --------------------------------------------------------------------------- vector caches
+
+def test_a_text_vector_cache_refuses_a_changed_preprocessing_manifest(tmp_path):
+    m = {"instruction": "one", "encode_dtype": "float32", "storage_dtype": "float16"}
+    c = pd.TextVectorCache(tmp_path / "tc", 4, manifest=m)
+    assert c.manifest_adopted
+    c.get(["x"], lambda ts: np.ones((len(ts), 4)))
+    pd.TextVectorCache(tmp_path / "tc", 4, manifest=m)               # same manifest: reused
+    with pytest.raises(SystemExit) as e:
+        pd.TextVectorCache(tmp_path / "tc", 4, manifest={**m, "instruction": "two"})
+    assert "preprocessing manifest" in str(e.value)
+
+
+def test_the_teacher_manifest_states_encode_and_storage_precision_separately(reg):
+    ctx = type("C", (), {})()
+    ctx.reg = reg
+    import teacher as m7teacher
+    ctx.freeze = {"encoder_spec": {"query_prefix": m7teacher.QUERY_PREFIX, "max_length": 512,
+                                   "pooling": "cls", "tokenizer_id": "fixture", "dim": 8}}
+    pre = pd.teacher_preprocessing(ctx)
+    assert pre["encode_dtype"] == "float32" and pre["storage_dtype"] == "float16"
+    assert "dtype" not in pre
+
+
+# --------------------------------------------------------------------------- v1 rounding
+
+def test_fresh_and_resumed_v1_vectors_are_identical(tmp_path):
+    """P2-16: the stage rounds to fp16 before any use and hashes that representation."""
+    rng = np.random.default_rng(3)
+    v1 = rng.normal(size=(16, 8)).astype(np.float32)
+    v1 /= np.maximum(np.linalg.norm(v1, axis=1, keepdims=True), 1e-9)
+    fresh = v1.astype(np.float16)
+    np.save(tmp_path / "v1_q.npy", fresh)
+    resumed = np.load(tmp_path / "v1_q.npy").astype(np.float32)
+    assert np.array_equal(fresh.astype(np.float32), resumed)
+    assert pd.sha_array(fresh) == pd.sha_array(np.load(tmp_path / "v1_q.npy"))
+    assert pd.sha_array(v1) != pd.sha_array(fresh)      # the old fp32 digest was not the stored one

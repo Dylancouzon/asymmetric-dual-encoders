@@ -53,8 +53,9 @@ from pathlib import Path
 
 import numpy as np
 
-from common import (RESULTS, WORK, admit_read, admit_write, freeze, registry, sha_array,
-                    sha_file, sha_json, sha_text, sha_texts, write_json)
+from common import (RESULTS, WORK, admit_read, admit_write, freeze, registry,
+                    require_executable, sha_array, sha_file, sha_json, sha_text, sha_texts,
+                    write_json)
 
 import cache as m17cache                                                     # noqa: E402
 import support_manifest as sm                                                # noqa: E402
@@ -78,8 +79,6 @@ STAGES = ("pool", "domain", "protected", "teacher", "bank", "v1", "parity", "voc
 
 # The 2000-query divergence slice (`training.overfit_divergence_check.heldout_metric`).
 HELDOUT_SLICE = 2000
-# Share of the bank reserved for the labeled subset's positives; the rest is the uniform draw.
-LABELED_POSITIVE_BUDGET_SHARE = 0.5
 
 
 # --------------------------------------------------------------------------- small helpers
@@ -167,11 +166,40 @@ def document_views(doc_key, title, text, max_views=3):
     return out[:max_views]
 
 
-class Timer:
-    """One timed stage, with its own row/unit counts and rate."""
+def _lowest_hash_pick(keys, want, *seed_parts):
+    """Deterministic UNIFORM selection: the `want` keys with the lowest `sha256(seed || key)`.
 
-    def __init__(self, ctx, name, unit="rows"):
+    Replaces the streaming "accept with probability p, stop at the quota" samplers, which
+    stopped around the first quarter of a file and therefore gave later documents a much lower
+    inclusion probability (Astra step-5 P1-7). Every eligible key is hashed; only the `want`
+    smallest are kept, so the memory cost is the quota, not the population.
+    """
+    import heapq
+    want = max(0, int(want))
+    if not want:
+        return []
+    heap = []                                   # max-heap on the hash value, size <= want
+    for key in keys:
+        u = _stable_unit(*seed_parts, key)
+        if len(heap) < want:
+            heapq.heappush(heap, (-u, key))
+        elif -heap[0][0] > u:
+            heapq.heapreplace(heap, (-u, key))
+    return [k for _u, k in sorted((-u, k) for u, k in heap)]
+
+
+class Timer:
+    """One timed stage, with its own row/unit counts and rate.
+
+    `per_query_work` says how many units this stage does PER POOL QUERY, for the timing
+    extrapolation: `student_tokenize` encodes every query twice, so its unit count is not the
+    query count (Astra step-5 P3-20). `None` means the stage does not scale with the pool.
+    """
+
+    def __init__(self, ctx, name, unit="rows", per_query_work=None):
         self.ctx, self.name, self.unit, self.n = ctx, name, unit, 0
+        self.per_query_work = 1 if (per_query_work is None and unit == "queries") \
+            else per_query_work
 
     def __enter__(self):
         self.t0 = time.time()
@@ -181,6 +209,7 @@ class Timer:
         secs = round(time.time() - self.t0, 3)
         rec = {"seconds": secs, "unit": self.unit, self.unit: int(self.n),
                f"{self.unit}_per_second": round(self.n / secs, 2) if secs > 0 and self.n else None,
+               "per_query_work": self.per_query_work,
                "rss_high_water_gib": _rss_gib(), "gpu_peak_gib": _gpu_peak_gib()}
         self.ctx.timings[self.name] = rec
         print(f"[stage {self.name}] {secs}s, {self.n} {self.unit}, RSS hwm "
@@ -225,14 +254,110 @@ def abbreviation_inventory(pairs):
     return abbrs, exp
 
 
+# --------------------------------------------------------------------------- exclusions
+
+EXCLUSION_CATEGORIES = ("general_family", "general_text_sha", "general_alias_term",
+                        "general_positive_doc_group", "coverage_doc_group", "coverage_text_sha",
+                        "coverage_alias_term", "alias_family", "alias_doc_group",
+                        "alias_view_sha", "alias_term")
+
+
+def _excluded_doc_ids(ex):
+    """{source: {document id}} for every document inside an EXCLUDED document group.
+
+    A general query is excluded by its POSITIVE DOCUMENT GROUP, and a query record carries
+    document ids, not group ids; the registered `doc_groups/*.tsv.gz` is the join.
+    """
+    out = {}
+    if not ex["doc_groups"]:
+        return {s: set() for s in sm.PAIR_SOURCES}
+    for src in sm.PAIR_SOURCES:
+        hit = set()
+        p = MANIFEST_DIR / "doc_groups" / f"{src}.tsv.gz"
+        if p.exists():
+            with gzip.open(admit_read(p), "rt") as f:
+                for line in f:
+                    did, gid = line.rstrip("\n").split("\t")
+                    if gid in ex["doc_groups"]:
+                        hit.add(did)
+        out[src] = hit
+    return out
+
+
+class Exclusions:
+    """ONE exclusion predicate, applied to every admitted record BY ROLE.
+
+    Astra step-5 P1-5: a general query survived an excluded family or positive document group
+    whenever its text differed, coverage sampling applied none of the four categories, and the
+    reported `exclusions_applied` numbers were inventory sizes rather than evidence that any
+    filter ran. `realized` counts actual drops, per category.
+    """
+
+    def __init__(self, ex, doc_ids=None):
+        self.ex = ex
+        self.doc_ids = doc_ids if doc_ids is not None else _excluded_doc_ids(ex)
+        self.realized = {k: 0 for k in EXCLUSION_CATEGORIES}
+
+    def _drop(self, category):
+        self.realized[category] += 1
+        return True
+
+    def general(self, family, text, src, positives):
+        """family, normalized-text sha, alias term, positive document group."""
+        nt = sm.normalize(text)
+        if family in self.ex["families"]:
+            return self._drop("general_family")
+        if sm.group_id(nt) in self.ex["text_shas"]:
+            return self._drop("general_text_sha")
+        if nt in self.ex["terms"]:
+            return self._drop("general_alias_term")
+        bad = self.doc_ids.get(src) or set()
+        if any(str(d) in bad for d in positives):
+            return self._drop("general_positive_doc_group")
+        return False
+
+    def coverage_document(self, src, doc_id, group_id):
+        """A coverage view's SOURCE DOCUMENT group (checked while the documents are sampled)."""
+        if group_id in self.ex["doc_groups"] or str(doc_id) in (self.doc_ids.get(src) or set()):
+            return self._drop("coverage_doc_group")
+        return False
+
+    def coverage_view(self, text):
+        """A coverage view's own text sha / alias term."""
+        nt = sm.normalize(text)
+        if sm.group_id(nt) in self.ex["text_shas"]:
+            return self._drop("coverage_text_sha")
+        if nt in self.ex["terms"]:
+            return self._drop("coverage_alias_term")
+        return False
+
+    def alias_pair(self, pair):
+        """family, BOTH view shas, BOTH alias terms, evidence document group."""
+        if pair["family_id"] in self.ex["families"]:
+            return self._drop("alias_family")
+        if pair["doc_group"] in self.ex["doc_groups"]:
+            return self._drop("alias_doc_group")
+        for v in ("view_a", "view_b"):
+            if sm.group_id(sm.normalize(pair[v])) in self.ex["text_shas"]:
+                return self._drop("alias_view_sha")
+        for f in ("form_a", "form_b"):
+            if f in pair and sm.normalize(pair[f]) in self.ex["terms"]:
+                return self._drop("alias_term")
+        return False
+
+
 # --------------------------------------------------------------------------- stage 1: pool
 
 def _plan(reg, avail, size):
-    """Bucket targets at the full pool and, with `--size`, their proportional subsample."""
+    """Bucket targets at the full pool and, with `--size`, their proportional subsample.
+
+    The four-pass population is a MINIMUM to check against the dose, never a cap on distinct
+    examples (Astra step-5 P1-8): the query cap is the only ceiling, and each bucket takes as
+    many distinct admitted rows as exist up to it.
+    """
     dose = reg["data"]["measured_dose_after_pre_lock_rule"]
     steps, batch = int(dose["steps"]), int(dose["batch"])
     cap = int(reg["data"]["training_query_cap"])
-    # Four passes is the registered ceiling; a bucket never needs more distinct rows than that.
     cov_target = min(avail["coverage_views"],
                      -(-int(dose["unpaired_coverage_views_per_batch"]) * steps // 4))
     alias_target = min(avail["alias_pairs"], -(-int(dose["alias_pairs_per_batch"]) * steps // 4))
@@ -284,6 +409,10 @@ def stage_pool(ctx):
     ex = sm.load_exclusions(EXCLUSIONS)
     fam = load_families()
     pairs = load_alias_pairs()
+    with Timer(ctx, "pool_exclusion_join", "documents") as t:
+        excl = Exclusions(ex)
+        t.n = sum(len(v) for v in excl.doc_ids.values())
+    ctx.cache_state["exclusions"] = excl
 
     with Timer(ctx, "pool_general_scan", "queries") as t:
         general, seen_text = [], set()
@@ -298,7 +427,9 @@ def stage_pool(ctx):
                     continue
                 nt = sm.normalize(p["query"])
                 h = sm.group_id(nt)
-                if h in ex["text_shas"] or nt in ex["terms"] or h in seen_text:
+                if h in seen_text:
+                    continue
+                if excl.general(fam.get(f"{src}:{qid}", h), p["query"], src, p["pos"]):
                     continue
                 seen_text.add(h)
                 general.append({"src": src, "qid": qid, "text": p["query"],
@@ -315,7 +446,9 @@ def stage_pool(ctx):
                     continue
                 nt = sm.normalize(qs[i])
                 h = sm.group_id(nt)
-                if h in ex["text_shas"] or nt in ex["terms"] or h in seen_text:
+                if h in seen_text:
+                    continue
+                if excl.general(fam.get(f"{src}:{qid}", h), qs[i], src, ()):
                     continue
                 seen_text.add(h)
                 general.append({"src": src, "qid": qid, "text": qs[i], "pos": [],
@@ -323,8 +456,7 @@ def stage_pool(ctx):
             del qs
         t.n = len(general)
 
-    alias_ok = [p for p in pairs
-                if p["family_id"] not in ex["families"] and p["doc_group"] not in ex["doc_groups"]]
+    alias_ok = [p for p in pairs if not excl.alias_pair(p)]
     avail = {"general": len(general), "alias_pairs": len(alias_ok),
              "coverage_views": int(json.loads(admit_read(RESULTS / "m17_support_manifest.json")
                                               .read_text())["bucket_populations"]
@@ -356,14 +488,17 @@ def stage_pool(ctx):
     # Persisted so `--stages domain` can resume without redoing the source scan.
     write_json(ctx.out / "pool_selection.json",
                {"general": general, "alias": alias_sel,
-                "heldout_families": sorted(heldout_fams), "coverage_docs": cov_docs},
+                "heldout_families": sorted(heldout_fams), "coverage_docs": cov_docs,
+                "exclusions_realized": excl.realized},
                indent=None)
     return {"plan": plan, "available": avail, "full_pool_total": full_total,
             "size_factor": factor,
             "selected": {"general": len(general), "alias_pairs": len(alias_sel),
                          "coverage_documents": sum(len(v) for v in cov_docs.values()),
                          "heldout_families": len(heldout_fams)},
-            "exclusions_applied": {k: len(v) for k, v in ex.items()},
+            # REALIZED drops per category, not inventory sizes (Astra step-5 P1-5).
+            "exclusions_applied": dict(excl.realized),
+            "exclusion_inventory": {k: len(v) for k, v in ex.items()},
             "per_source_general": _tally(r["src"] for r in general),
             "per_source_alias": _tally(r["source"] for r in alias_sel)}
 
@@ -385,9 +520,11 @@ def _sample_coverage_documents(ctx, target_views):
     """
     man = json.loads(admit_read(RESULTS / "m17_support_manifest.json").read_text())
     per_source = man["per_source"]
-    # Two views per document on average is the planning assumption; the view pass trims to the
-    # exact target afterwards, so this only has to be close.
-    want_docs = max(1, target_views // 2)
+    # One usable view per document is the only honest lower bound (`bucket_populations_and_
+    # dose_rule`), so enough documents are drawn to reach the target even then; the view pass
+    # fills from the REALIZED deduplicated views and trims to the exact target (P1-8). Assuming
+    # two views per document silently realized ~70% of the coverage target.
+    want_docs = max(1, target_views)
     k8s_pop = per_source["k8s-docs-en"]["documents_deduplicated"]
     dose = ctx.reg["data"]["measured_dose_after_pre_lock_rule"]
     total_views_per_run = int(dose["steps"]) * int(dose["batch"])
@@ -409,26 +546,29 @@ def _sample_coverage_documents(ctx, target_views):
     k8s_cap = int(k8s_bucket_share_max * want_docs)
     quota["k8s-docs-en"] = min(quota["k8s-docs-en"], k8s_cap, k8s_pop)
 
-    out = {}
-    for src in sm.PAIR_SOURCES:
-        want = quota[src]
-        seen_groups, picked = set(), []
-        thresh = min(1.0, 4.0 * want / max(1, pops[src]))
+    excl = ctx.cache_state["exclusions"]
+
+    def eligible(src):
+        """Deduplicated by document group, with the excluded groups removed."""
+        seen_groups = set()
         with gzip.open(admit_read(MANIFEST_DIR / "doc_groups" / f"{src}.tsv.gz"), "rt") as f:
             for line in f:
-                if len(picked) >= want:
-                    break
                 did, gid = line.rstrip("\n").split("\t")
-                if gid in seen_groups or _stable_unit(ctx.seed, "cov", src, did) >= thresh:
+                if gid in seen_groups:
                     continue
                 seen_groups.add(gid)
-                picked.append(did)
-        out[src] = picked
+                if excl.coverage_document(src, did, gid):
+                    continue
+                yield did
+
+    out = {}
+    for src in sm.PAIR_SOURCES:
+        # Uniform over the WHOLE eligible population: lowest seeded hash wins (P1-7).
+        out[src] = _lowest_hash_pick(eligible(src), quota[src], ctx.seed, "cov", src)
     excluded = sm.k8s_excluded_paths()
     k8s = [p for p, _t, _x in sm.iter_k8s(excluded)]
-    out["k8s-docs-en"] = _stratified([{"d": d} for d in k8s], lambda r: "k8s",
-                                     quota["k8s-docs-en"], (ctx.seed, "cov-k8s"))
-    out["k8s-docs-en"] = [r["d"] for r in out["k8s-docs-en"]]
+    out["k8s-docs-en"] = _lowest_hash_pick(k8s, quota["k8s-docs-en"], ctx.seed, "cov-k8s",
+                                           "k8s-docs-en")
     return out
 
 
@@ -497,6 +637,62 @@ def alias_specs(pair, domain):
 # The prepared directory each arm reads. A control pointed at the extended directory is a
 # different experiment; `train._load_prepared` refuses the wrong pairing and this is its half.
 ARMS_FOR_FORM = {"base": ["C", "L"], "ext": ["V", "VL", "VL-A"]}
+
+
+def heldout_document_groups(general, is_heldout, doc_group):
+    """The document groups that support a HELD-OUT general query (Astra step-5 P1-6).
+
+    Held-out families were drawn from general queries only, and the other buckets were never
+    filtered against them: a document supporting a held-out query could independently supply a
+    coverage view or an alias pair, so the optimizer saw the divergence read's document.
+    """
+    out = set()
+    for i, r in enumerate(general):
+        if not is_heldout[i]:
+            continue
+        for d in r["pos"]:
+            g = doc_group.get(f"{r['src']}:{d}")
+            if g:
+                out.add(g)
+    return out
+
+
+def select_labeled_subset(general, doc_domain, is_heldout, bank_budget, seed):
+    """-> (eligible indices, positive document keys, queries made query-only by the budget).
+
+    The eligible LABELED subset, chosen in a seeded order BEFORE the bank exists, so that every
+    selected query's positives fit `labeled_positive_budget_share` of the bank cap. Ruling A4
+    excludes the held-out divergence slice from the budget. A labeled query whose positives are
+    ALL missing from the document join is refused by qid rather than silently converted to a
+    query-only example with a fallback domain (Astra step-5 P2-18).
+    """
+    order = sorted((i for i in range(len(general)) if not is_heldout[i]),
+                   key=lambda i: _stable_unit(seed, "labeled", general[i]["src"],
+                                              general[i]["qid"]))
+    positives, eligible, missing, q_only = set(), set(), [], 0
+    for i in order:
+        r = general[i]
+        if not r["pos"]:
+            continue
+        pos = [f"{r['src']}:{d}" for d in r["pos"] if f"{r['src']}:{d}" in doc_domain]
+        if not pos:
+            missing.append(f"{r['src']}:{r['qid']}")
+            continue
+        # `new` first: `positives | set(pos)` copied the whole accumulated set once per labeled
+        # query, including every query rejected after the budget bound (Astra step-5 P3-19).
+        new = set(pos) - positives
+        if len(positives) + len(new) > bank_budget:
+            q_only += 1
+            continue
+        positives |= new
+        eligible.add(i)
+    if missing:
+        raise SystemExit(
+            f"M17 REFUSED: {len(missing)} labeled queries have known positives but NONE of them "
+            f"joined the document store, e.g. {missing[:5]}. Such a query would become a "
+            "query-only example with a fallback domain and the cache builder could never refuse "
+            "a positive it was not given; fix the join or drop the source.")
+    return eligible, positives, q_only
 
 
 def stage_domain(ctx):
@@ -573,74 +769,92 @@ def stage_domain(ctx):
             w.write(f"{src}\t{did}\t{doc_group[key]}\t{doc_domain[key]}\n")
 
     # The pool rows, in their final order: general, coverage, alias views, held-out.
+    excl = ctx.cache_state.get("exclusions") or Exclusions(sm.load_exclusions(EXCLUSIONS),
+                                                          doc_ids={})
     heldout_fams = set(ctx.cache_state["heldout_families"])
-    specs, heldout_idx = [], []
-    q_only_by_budget = 0
-    bank_budget = int(LABELED_POSITIVE_BUDGET_SHARE * ctx.bank_docs)
-    positives, labeled_order = set(), sorted(
-        range(len(general)), key=lambda i: _stable_unit(ctx.seed, "labeled", general[i]["src"],
-                                                        general[i]["qid"]))
-    eligible = set()
-    for i in labeled_order:
-        r = general[i]
-        pos = [f"{r['src']}:{d}" for d in r["pos"] if f"{r['src']}:{d}" in doc_domain]
-        if not pos:
-            continue
-        if len(positives | set(pos)) > bank_budget:
-            q_only_by_budget += 1
-            continue
-        positives.update(pos)
-        eligible.add(i)
+    is_heldout = [r["family"] in heldout_fams for r in general]
+    # ONE document/family split across every bucket (Astra step-5 P1-6).
+    heldout_doc_groups = heldout_document_groups(general, is_heldout, doc_group)
+
+    specs, heldout_idx, groups = [], [], {}
+    # `training.labeled_positive_budget_share` (A4): the HELD-OUT slice is excluded from the
+    # budget, so the monitoring slice never shapes the training bank.
+    share = float(ctx.reg["training"]["labeled_positive_budget_share"])
+    bank_budget = int(share * ctx.bank_docs)
+    with Timer(ctx, "labeled_subset_select", "queries") as t:
+        eligible, positives, q_only_by_budget = select_labeled_subset(
+            general, doc_domain, is_heldout, bank_budget, ctx.seed)
+        t.n = sum(1 for h in is_heldout if not h)
 
     for i, r in enumerate(general):
         pos = tuple(f"{r['src']}:{d}" for d in r["pos"]) if i in eligible else ()
-        src_doc = pos[0] if pos else (f"{r['src']}:querytext-no-document"
-                                      if r["src"] in sm.QUERYTEXT_SOURCES
-                                      else f"{r['src']}:{r['pos'][0]}" if r["pos"] else
-                                      f"{r['src']}:querytext-no-document")
-        dom = doc_domain.get(src_doc, "general")
-        bucket = "heldout" if r["family"] in heldout_fams else "general"
+        # The canonical supporting document is the query's own first joined positive, whether
+        # or not the labeled budget admitted it.
+        joined = next((f"{r['src']}:{d}" for d in r["pos"]
+                       if f"{r['src']}:{d}" in doc_group), None)
+        qid = f"{r['src']}:{r['qid']}"
+        if joined:
+            groups[qid] = (r["src"], doc_group[joined])
+        dom = doc_domain.get(joined, "general") if joined else "general"
+        bucket = "heldout" if is_heldout[i] else "general"
         if bucket == "heldout":
             heldout_idx.append(len(specs))
         specs.append(m17cache.QuerySpec(
-            qid=f"{r['src']}:{r['qid']}", text=r["text"], source=r["src"], domain=dom,
+            qid=qid, text=r["text"], source=r["src"], domain=dom,
             bucket=bucket, family="q:" + r["family"], positive_ids=pos))
 
-    cov_views = []
+    cov_views, cov_drops = [], {"heldout_document": 0, "excluded_view": 0}
     for src, ds in cov_docs.items():
         for did in ds:
             key = f"{src}:{did}"
             if key not in texts:
                 continue
+            if doc_group.get(key) in heldout_doc_groups:
+                cov_drops["heldout_document"] += 1
+                continue
             for v in document_views(key, titles.get(key, ""), texts[key]):
+                if excl.coverage_view(v["text"]):
+                    cov_drops["excluded_view"] += 1
+                    continue
                 cov_views.append((key, src, v))
+    # Filled from the REALIZED deduplicated views, then trimmed to the exact target (P1-8).
     target = ctx.stages["pool"]["plan"]["coverage"]
+    cov_realized = len(cov_views)
     cov_views = _stratified(cov_views, lambda r: r[1], target, (ctx.seed, "cov-views"))
     for key, src, v in cov_views:
+        gid = doc_group.get(key, key)
+        qid = f"cov:{key}:{v['kind']}"
+        groups[qid] = (src, gid)
         specs.append(m17cache.QuerySpec(
-            qid=f"cov:{key}:{v['kind']}", text=v["text"], source=src,
+            qid=qid, text=v["text"], source=src,
             domain=doc_domain.get(key, "general"), bucket="coverage",
-            family="doc:" + doc_group.get(key, key)))
+            family="doc:" + gid))
 
-    alias_source_doc = {}
+    alias_dropped_heldout_doc = 0
     for p in alias:
         src = p["source"]
         key = (f"k8s-docs-en:{p['doc_group']}" if src == "k8s-docs-en"
                else f"{src}:{group_rep.get((src, p['doc_group']), '')}")
+        gid = doc_group.get(key, p["doc_group"])
+        if gid in heldout_doc_groups:
+            alias_dropped_heldout_doc += 1
+            continue
         dom = ("cloud-software" if src == "k8s-docs-en"
                else doc_domain.get(key, "general"))
         for s in alias_specs(p, dom):
             # The supporting unit of an alias view is its EVIDENCE DOCUMENT GROUP, not its
             # query family: two pairs from different documents can share a family, and their
             # documents may carry different domains.
-            alias_source_doc[s.qid] = f"{src}:doc-group:{p['doc_group']}"
+            groups[s.qid] = (src, gid)
             specs.append(s)
 
     ctx.cache_state["specs"] = specs
     ctx.cache_state["heldout_idx"] = heldout_idx
-    ctx.cache_state["source_doc"] = _source_doc_map(specs, alias_source_doc)
+    ctx.cache_state["source_doc"] = _source_doc_map(
+        specs, groups, ctx.reg["data"].get("documentless_sources_vote", "none"))
     ctx.cache_state["positives"] = sorted(positives)
     _write_specs(ctx, specs, heldout_idx)
+    dose = _validate_buckets(ctx, specs)
     return {
         "doc_domain_tsv": {"path": sm.rel(join), "sha256": sha_file(join),
                            "documents": len(doc_domain)},
@@ -653,39 +867,97 @@ def stage_domain(ctx):
         "labeled_queries": sum(1 for s in specs if s.positive_ids),
         "distinct_positives": len(positives),
         "labeled_positive_budget": bank_budget,
+        "labeled_positive_budget_share": share,
+        "heldout_excluded_from_positive_budget": sum(
+            1 for i, r in enumerate(general) if is_heldout[i] and r["pos"]),
         "query_only_by_bank_budget": q_only_by_budget,
         "query_only_note": (
             "registry positive_bank_policy: the eligible LABELED subset is chosen here, before "
             "the bank is built, so every selected labeled query's positives fit the cap. The "
             "queries outside it enter the pool as query-only examples BY SELECTION; no labeled "
-            "query is converted to query-only later, and the count is recorded."),
+            "query is converted to query-only later, and the count is recorded. Ruling A4 "
+            "excludes the held-out divergence slice from the budget."),
         "heldout_queries": len(heldout_idx),
+        "heldout_document_groups": len(heldout_doc_groups),
+        "cross_bucket_heldout_drops": {"coverage_documents": cov_drops["heldout_document"],
+                                       "alias_pairs": alias_dropped_heldout_doc},
+        "exclusions_applied_in_views": {k: excl.realized[k] for k in
+                                        ("coverage_text_sha", "coverage_alias_term")},
+        "coverage_views_realized_before_trim": cov_realized,
         "coverage_views": sum(1 for s in specs if s.bucket == "coverage" and not s.alias_pair_id),
-        "alias_views": sum(1 for s in specs if s.alias_pair_id)}
+        "alias_views": sum(1 for s in specs if s.alias_pair_id),
+        "bucket_dose_check": dose}
 
 
-def _source_doc_map(specs, overrides=None):
-    """`vocab.discover`'s `source_doc` per query: the SOURCE-QUALIFIED supporting document.
+def _source_doc_map(specs, groups, documentless_vote="none"):
+    """`vocab.discover`'s `source_doc` per query: ONE canonical joined document-group key.
 
-    Query-text-only sources (nqopen, triviaqa) ship no document at all. They are given one
-    sentinel unit per source, deliberately: ruling A3 counts one vote per distinct supporting
-    DOCUMENT, and treating each query as its own document would re-introduce exactly the
-    per-occurrence counting the ruling removed. The consequence is recorded: a term supported
-    only by those sources cannot reach the 20-document minimum.
+    `groups` maps qid -> (source, document group id) for every example that HAS a supporting
+    document. The same document yields the same key whether it appears through a general query,
+    a coverage view or an alias pair, and whether or not the labeled positive budget bound it
+    (Astra step-5 P1-10); the old mapping spelled the same document three ways and collapsed
+    budget-bound documents onto one `source:unlabeled` key.
+
+    An example with no supporting document at all maps to `None`: under
+    `data.documentless_sources_vote == "none"` (ruling A4) nqopen and triviaqa contribute
+    contexts and residuals to discovery but cast no distinct-document vote.
     """
+    if documentless_vote != "none":
+        raise SystemExit("M17 REFUSED: this builder implements only "
+                         f"data.documentless_sources_vote == 'none'; the registry says "
+                         f"{documentless_vote!r}.")
     out = {}
-    overrides = overrides or {}
     for s in specs:
-        if s.qid in overrides:
-            out[s.qid] = overrides[s.qid]
-        elif s.bucket == "coverage" and not s.alias_pair_id:
-            out[s.qid] = s.qid.split(":", 1)[1].rsplit(":", 1)[0]
-        elif s.positive_ids:
-            out[s.qid] = s.positive_ids[0]
-        elif s.source in sm.QUERYTEXT_SOURCES:
-            out[s.qid] = f"{s.source}:querytext-no-document"
-        else:
-            out[s.qid] = f"{s.source}:unlabeled"
+        g = groups.get(s.qid)
+        out[s.qid] = f"{g[0]}:doc-group:{g[1]}" if g else None
+    return out
+
+
+def _validate_buckets(ctx, specs):
+    """Realized bucket populations against the registered dose and the query cap (P1-8).
+
+    The four-pass population is the MINIMUM each bucket needs; a shortfall is recorded (and,
+    for a bucket that cannot even supply one batch, refused) rather than silently accepted.
+    """
+    dose = ctx.reg["data"]["measured_dose_after_pre_lock_rule"]
+    steps, batch = int(dose["steps"]), int(dose["batch"])
+    per_batch = {"general": int(dose["general_views_per_batch"]),
+                 "coverage": int(dose["unpaired_coverage_views_per_batch"]),
+                 "alias_pairs": int(dose["alias_pairs_per_batch"])}
+    realized = {
+        "general": sum(1 for s in specs if s.bucket == "general"),
+        "coverage": sum(1 for s in specs if s.bucket == "coverage" and not s.alias_pair_id),
+        "alias_pairs": len({s.alias_pair_id for s in specs if s.alias_pair_id})}
+    n_heldout = sum(1 for s in specs if s.bucket == "heldout")
+    plan = dict(ctx.stages["pool"]["plan"])
+    # The held-out slice is drawn OUT of the general bucket, so the planned training general
+    # count is the plan minus the realized slice.
+    plan["general"] = max(0, plan["general"] - n_heldout)
+    factor = float(ctx.stages["pool"]["size_factor"])
+    out = {"realized": realized, "planned": {k: plan[k] for k in realized},
+           "per_batch": per_batch, "steps": steps, "batch": batch,
+           "size_factor": factor, "buckets": {}}
+    for name, n in realized.items():
+        need_4pass = -(-per_batch[name] * steps // 4)
+        short = plan[name] - n
+        out["buckets"][name] = {
+            "realized": n, "planned": plan[name], "shortfall_vs_plan": max(0, short),
+            "four_pass_minimum_at_full_pool": need_4pass,
+            "passes_at_the_registered_dose": round(per_batch[name] * steps / n, 3) if n else None,
+            # A subsampled build is a timing measurement, not the registered dose.
+            "meets_four_pass_minimum": (factor >= 1.0 and n >= need_4pass)}
+        if n < per_batch[name]:
+            raise SystemExit(
+                f"M17 REFUSED: the {name} bucket realized {n} distinct rows but one batch of the "
+                f"registered dose needs {per_batch[name]}. A short batch is a different dose "
+                "(registry bucket_populations_and_dose_rule.pre_lock_rule).")
+    total = realized["general"] + realized["coverage"] + 2 * realized["alias_pairs"] + n_heldout
+    cap = int(ctx.reg["data"]["training_query_cap"])
+    out["total_rows"] = total
+    out["training_query_cap"] = cap
+    if factor >= 1.0 and total > cap:
+        raise SystemExit(f"M17 REFUSED: the realized pool holds {total} rows, above "
+                         f"training_query_cap {cap}.")
     return out
 
 
@@ -729,36 +1001,143 @@ SCREEN_DEFERRAL = (
     "document texts and every new query view text; hits are dropped and counted.")
 
 
+NEW_SOURCE = "k8s-docs-en"
+
+
+def _new_source_rows(specs):
+    """The pool rows a DEFERRED screen leaves unscreened: every row from the new source."""
+    return [s for s in specs if s.source == NEW_SOURCE]
+
+
+def _apply_screen(ctx, drop_qids):
+    """Persist the SCREENED pool and rebuild every index derived from it (Astra step-5 P1-4).
+
+    Dropping an early row moved every later position, so `heldout_idx` had to be rebuilt;
+    dropping ONE alias view left an incomplete pair, so both views go together; and the stage
+    only updated in-memory `specs`, so a restart reloaded the unscreened `pool.jsonl` while
+    skipping the successful marker.
+    """
+    specs = ctx.cache_state["specs"]
+    pairs_hit = {s.alias_pair_id for s in specs if s.alias_pair_id and s.qid in drop_qids}
+    kept = [s for s in specs if s.qid not in drop_qids
+            and not (s.alias_pair_id and s.alias_pair_id in pairs_hit)]
+    heldout_idx = [i for i, s in enumerate(kept) if s.bucket == "heldout"]
+    src_doc = ctx.cache_state["source_doc"]
+    ctx.cache_state["specs"] = kept
+    ctx.cache_state["heldout_idx"] = heldout_idx
+    ctx.cache_state["source_doc"] = {s.qid: src_doc.get(s.qid) for s in kept}
+    ctx.cache_state["positives"] = sorted({p for s in kept for p in s.positive_ids})
+    _write_specs(ctx, kept, heldout_idx)
+    return {"rows_before": len(specs), "rows_kept": len(kept),
+            "rows_dropped": len(specs) - len(kept), "alias_pairs_dropped": len(pairs_hit),
+            "heldout_rebuilt_to": len(heldout_idx),
+            "positives_kept": len(ctx.cache_state["positives"])}
+
+
 def stage_protected(ctx):
+    specs = ctx.cache_state["specs"]
     if not ctx.protected_screen:
+        # The filter is a no-op pre-clock, and the manifest says so in as many words.
         return {"state": "deferred_to_clock", "reason": SCREEN_DEFERRAL, "screened": 0,
-                "dropped": 0}
+                "dropped": 0, "receipt": None,
+                "unscreened_new_source_rows": len(_new_source_rows(specs)),
+                "unscreened_note": (
+                    f"the bank and the pool contain {NEW_SOURCE} rows that no protected screen "
+                    "has seen; a real run refuses this state (train._load_prepared) and only "
+                    "`--rehearsal --data` may smoke it, loudly (ruling A4)")}
+    # The status gate BEFORE `protected10` is imported at all: building its index materializes
+    # the protected payloads in-process (Astra step-5 P1-1). `--stages protected` lands here too.
+    require_executable(ctx.reg, rehearsal=False, what="the m10 protected screen")
     sys.path.insert(0, str(REPO / "m10src"))
     import protected10                                      # noqa: E402  (deliberately late)
     idx = protected10.build()
-    specs = ctx.cache_state["specs"]
-    kept, dropped = [], []
+
+    # 1. every NEW-SOURCE DOCUMENT, screened on its FULL TEXT (Astra step-5 P1-2). A document
+    #    can match a protected surface while the views sampled from it do not.
+    admitted, dropped_docs, admitted_groups = [], [], set()
+    with Timer(ctx, "protected_document_screen", "documents") as t:
+        for path, _title, text in sm.iter_k8s(sm.k8s_excluded_paths()):
+            gid = sm.group_id(sm.normalize(text))
+            if protected10.hits(text, idx):
+                dropped_docs.append(path)
+            else:
+                admitted.append({"path": path, "sha256": sha_text(text), "group_id": gid})
+                admitted_groups.add(gid)
+            t.n += 1
+    receipt = ctx.out / "protected_receipt.json"
+    write_json(receipt, {"_schema": "m17-protected-receipt-v1", "source": NEW_SOURCE,
+                         "screen_version": getattr(protected10, "VERSION", ""),
+                         "admitted_documents": admitted,
+                         "dropped_document_paths": dropped_docs}, indent=None)
+
+    # 2. every query view text, and every row whose supporting new-source document was dropped.
+    src_doc = ctx.cache_state["source_doc"]
+    drop_qids, by_text, by_document = set(), 0, 0
     with Timer(ctx, "protected_screen", "texts") as t:
         for s in specs:
             if protected10.hits(s.text, idx):
-                dropped.append(s.qid)
-            else:
-                kept.append(s)
+                drop_qids.add(s.qid)
+                by_text += 1
+            elif s.source == NEW_SOURCE:
+                g = (src_doc.get(s.qid) or "").rsplit(":", 1)[-1]
+                if g and g not in admitted_groups:
+                    drop_qids.add(s.qid)
+                    by_document += 1
             t.n += 1
-    ctx.cache_state["specs"] = kept
-    return {"state": "run", "screened": len(specs), "dropped": len(dropped),
-            "dropped_qids_sample": dropped[:20]}
+    applied = _apply_screen(ctx, drop_qids)
+    return {"state": "complete", "screened": len(specs), "dropped": len(drop_qids),
+            "dropped_by_text": by_text, "dropped_by_document_receipt": by_document,
+            "documents_screened": len(admitted) + len(dropped_docs),
+            "documents_admitted": len(admitted), "documents_dropped": len(dropped_docs),
+            "dropped_document_paths_sample": dropped_docs[:20],
+            "receipt": {"path": sm.rel(receipt), "sha256": sha_file(receipt)},
+            "pool_after_screen": applied,
+            "unscreened_new_source_rows": 0,
+            "dropped_qids_sample": sorted(drop_qids)[:20]}
+
+
+def _screen_receipt(ctx):
+    """-> {admitted new-source document paths} or None when the screen is deferred."""
+    rec = ctx.stages.get("protected") or {}
+    if rec.get("state") != "complete" or not rec.get("receipt"):
+        return None
+    blob = json.loads(admit_read(ctx.out / "protected_receipt.json").read_text())
+    return {d["path"] for d in blob["admitted_documents"]}
 
 
 # --------------------------------------------------------------------------- stage 4: teacher
 
 class TextVectorCache:
-    """sha256(text) -> fp16 vector, on disk, reused across runs and across pool sizes."""
+    """sha256(text) -> fp16 vector, on disk, reused across runs and across pool sizes.
 
-    def __init__(self, root, dim):
+    The cache namespace is BOUND to the encoder/preprocessing manifest it was built under
+    (Astra step-5 P2-14): changing the teacher's compute settings, tokenizer or preprocessing
+    and then reusing these vectors because the text hashes still match would label old vectors
+    with the new manifest. A mismatch refuses; a cache that predates this binding adopts the
+    current manifest once and says so.
+    """
+
+    def __init__(self, root, dim, manifest=None):
         self.root = Path(admit_write(root))
         self.root.mkdir(parents=True, exist_ok=True)
         self.dim = dim
+        self.manifest_sha = sha_json(manifest) if manifest is not None else None
+        self.manifest_adopted = False
+        if manifest is not None:
+            p = self.root / "manifest.json"
+            if p.exists():
+                prev = json.loads(admit_read(p).read_text())
+                if prev.get("sha256") != self.manifest_sha:
+                    raise SystemExit(
+                        f"M17 REFUSED: the text-vector cache {self.root} was built under "
+                        f"preprocessing manifest {str(prev.get('sha256'))[:12]} but this run "
+                        f"uses {self.manifest_sha[:12]}. Matching text hashes are not matching "
+                        "vectors; build a new cache directory or restore the preprocessing.")
+            else:
+                self.manifest_adopted = True
+                write_json(p, {"sha256": self.manifest_sha, "manifest": manifest,
+                               "note": "adopted by the first build that bound this cache to a "
+                                       "preprocessing manifest; the vectors predate the binding"})
         self.index_p, self.vec_p = self.root / "index.json", self.root / "vecs.f16.npy"
         self.index = (json.loads(admit_read(self.index_p).read_text())
                       if self.index_p.exists() else {})
@@ -800,10 +1179,13 @@ def teacher_preprocessing(ctx):
         raise SystemExit("M17 REFUSED: the active teacher module's query instruction differs "
                          "from m7/FREEZE.json's encoder_spec.query_prefix; the pinned "
                          "instruction is part of the cache identity.")
+    # ENCODE precision and STORAGE precision are different facts (Astra step-5 P2-15): the
+    # teacher runs in float32 and only the cached vectors are rounded to float16. One `dtype`
+    # field could not state both, and both are cache identity inputs.
     return {"teacher": ctx.reg["teacher"], "revision": ctx.reg["teacher_revision"],
             "instruction": spec["query_prefix"], "max_length": int(spec["max_length"]),
             "pooling": spec["pooling"], "post_dense": spec.get("post_dense"),
-            "dtype": "fp16", "normalized": "l2",
+            "encode_dtype": "float32", "storage_dtype": "float16", "normalized": "l2",
             "tokenizer": "the teacher's own tokenizer (" + spec["tokenizer_id"] + ")"}
 
 
@@ -812,7 +1194,8 @@ def stage_teacher(ctx):
     import teacher as m7teacher
     pre = teacher_preprocessing(ctx)
     specs = ctx.cache_state["specs"]
-    cache = TextVectorCache(TEACHER_CACHE, int(ctx.freeze["encoder_spec"]["dim"]))
+    cache = TextVectorCache(TEACHER_CACHE, int(ctx.freeze["encoder_spec"]["dim"]),
+                            manifest={"role": "query", **pre})
 
     def encode(texts):
         return m7teacher.encode(texts, prefix=pre["instruction"], max_length=pre["max_length"],
@@ -824,6 +1207,8 @@ def stage_teacher(ctx):
     np.save(admit_write(ctx.shared / "teacher_q.npy"), vecs)
     ctx.cache_state["teacher_q"] = vecs
     return {"preprocessing": pre, "cache_dir": sm.rel(TEACHER_CACHE), **rep,
+            "cache_manifest_sha256": cache.manifest_sha,
+            "cache_manifest_adopted": cache.manifest_adopted,
             "queries": len(specs), "teacher_q_sha256": sha_array(vecs)}
 
 
@@ -856,11 +1241,30 @@ class PoolReader:
         self.spans = self.meta["spans"]
 
     def rows_for(self, store, doc_ids):
-        """-> {doc_id: global row}. Builds the id map for one store and drops it afterwards."""
+        """-> {doc_id: global row}. Builds the id map for one store and drops it afterwards.
+
+        The ordered id list is AUTHENTICATED against the pool's own `id_sha256` and its span
+        length before a single row is resolved (Astra step-5 P2-13): reordering an
+        `ids-<store>.json` beside an unchanged memmap would otherwise attach every document id
+        to another document's vector, silently.
+        """
+        from hashing import sha_stream_list                 # the legacy digest convention
         ids = json.loads(admit_read(POOL_DIR / f"ids-{_denied(store)}.json").read_text())
-        off = self.spans[store][0]
+        lo, hi = self.spans[store]
+        if len(ids) != hi - lo:
+            raise SystemExit(f"M17 REFUSED: ids-{store}.json holds {len(ids)} ids but the pool "
+                             f"span for {store} is {hi - lo} rows.")
+        want_sha = (self.meta.get("id_sha256") or {}).get(store)
+        got_sha = sha_stream_list(ids)
+        if want_sha and got_sha != want_sha:
+            raise SystemExit(
+                f"M17 REFUSED: ids-{store}.json hashes {got_sha[:12]} but the pool meta records "
+                f"{want_sha[:12]}; these ids do not describe the stored vectors.")
+        if not want_sha:
+            raise SystemExit(f"M17 REFUSED: the pool meta records no id_sha256 for {store}; the "
+                             "id-to-vector layout cannot be authenticated.")
         want = set(doc_ids)
-        out = {d: off + i for i, d in enumerate(ids) if d in want}
+        out = {d: lo + i for i, d in enumerate(ids) if d in want}
         del ids
         return out
 
@@ -878,9 +1282,14 @@ def stage_bank(ctx):
         src, did = key.split(":", 1)
         need.setdefault(src, set()).add(did)
     # k8s documents are admitted but absent from the frozen pool: every one of them joins the
-    # bank and is encoded below with the frozen document tower. They are counted INSIDE
-    # `candidate_bank_max_docs`, not added on top of it.
-    k8s_texts = {f"k8s-docs-en:{p}": t for p, _title, t in sm.iter_k8s(sm.k8s_excluded_paths())}
+    # bank and is encoded below with the frozen document tower. They are RESERVED before the
+    # uniform stratified sample and counted INSIDE `candidate_bank_max_docs`, never on top of it
+    # (`training.candidate_construction.bank_sampling_amendment_a4`). Only the documents the
+    # protected screen admitted enter the bank; pre-clock the receipt is absent and the filter
+    # is a no-op, which `protected_screen.unscreened_new_source_rows` records.
+    receipt = _screen_receipt(ctx)
+    k8s_texts = {f"k8s-docs-en:{p}": t for p, _title, t in sm.iter_k8s(sm.k8s_excluded_paths())
+                 if receipt is None or p in receipt}
     reserved = len(positives) + len(k8s_texts)
     if reserved > ctx.bank_docs:
         raise SystemExit(
@@ -897,19 +1306,20 @@ def stage_bank(ctx):
         for src in sm.PAIR_SOURCES:
             want = int(want_uniform * pops[src] / total)
             have = need.get(src, set())
-            picked, seen_groups = [], set()
-            thresh = min(1.0, 4.0 * want / max(1, pops[src]))
-            with gzip.open(admit_read(MANIFEST_DIR / "doc_groups" / f"{src}.tsv.gz"), "rt") as f:
-                for line in f:
-                    if len(picked) >= want:
-                        break
-                    did, gid = line.rstrip("\n").split("\t")
-                    if did in have or gid in seen_groups:
-                        continue
-                    if _stable_unit(ctx.seed, "bank", src, did) >= thresh:
-                        continue
-                    seen_groups.add(gid)
-                    picked.append(did)
+
+            def eligible(src=src, have=have):
+                seen_groups = set()
+                with gzip.open(admit_read(MANIFEST_DIR / "doc_groups" / f"{src}.tsv.gz"),
+                               "rt") as f:
+                    for line in f:
+                        did, gid = line.rstrip("\n").split("\t")
+                        if did in have or gid in seen_groups:
+                            continue
+                        seen_groups.add(gid)
+                        yield did
+            # Uniform over the WHOLE eligible population: lowest seeded hash wins (P1-7). The
+            # old probability-then-stop walk ended around the first quarter of the file.
+            picked = _lowest_hash_pick(eligible(), want, ctx.seed, "bank", src)
             uniform_ids[src] = picked
             t.n += len(picked)
 
@@ -946,8 +1356,13 @@ def stage_bank(ctx):
             t.n += len(items)
 
     enc_report = {"encoded": 0, "hit_rate": 1.0}
+    doc_manifest = {"role": "document", "teacher": ctx.reg["teacher"],
+                    "revision": ctx.reg["teacher_revision"], "instruction": spec["doc_prefix"],
+                    "max_length": int(spec["max_length"]), "pooling": spec["pooling"],
+                    "post_dense": spec.get("post_dense"), "encode_dtype": "float32",
+                    "storage_dtype": "float16", "normalized": "l2"}
     if missing:
-        dcache = TextVectorCache(DOC_CACHE, reader.dim)
+        dcache = TextVectorCache(DOC_CACHE, reader.dim, manifest=doc_manifest)
         texts = [k8s_texts.get(ordered[i], "") for i, _d in missing]
         blank = [ordered[i] for (i, _d), t in zip(missing, texts) if not t]
         if blank:
@@ -972,17 +1387,34 @@ def stage_bank(ctx):
     return {"n_docs": len(ordered), "from_pool": len(ordered) - len(missing),
             "encoded_with_document_tower": len(missing),
             "document_encode": enc_report,
+            "document_cache_manifest_sha256": sha_json(doc_manifest),
             "positives": len(positives), "uniform": sum(len(v) for v in uniform_ids.values()),
-            "k8s": len(k8s_texts), "per_source": _tally(sources),
+            "k8s": len(k8s_texts), "k8s_screen_receipt_applied": receipt is not None,
+            "per_source": _tally(sources),
             "encoder_spec_source": "m7/FREEZE.json:encoder_spec",
             "identity": bank.identity()}
 
 
 # --------------------------------------------------------------------------- stage 6: v1
 
+# The released zero-v1 encoder IS the int8 folded table; `variant="fp16"` loads a different
+# set of rows from the same npz and the npz hash cannot tell the two apart (Astra step-5 P1-9).
+V1_VARIANT = "int8"
+
+
+def _load_v1_table(path, device, variant=V1_VARIANT):
+    from table import load_table
+    if variant != V1_VARIANT:
+        raise SystemExit(
+            f"M17 REFUSED: v1 mining must use the released {V1_VARIANT} table, not {variant!r}. "
+            "The v1 candidate lists and the vocabulary residuals are defined against the "
+            "encoder that shipped, dequantized exactly as the released loader does.")
+    return load_table(admit_read(path), variant=variant, device=device)
+
+
 def stage_v1(ctx):
     import torch
-    from table import Preproc, load_table
+    from table import Preproc
     specs = ctx.cache_state["specs"]
     art_sha = sha_file(RELEASE_TABLE)
     if art_sha != ctx.freeze["table_sha256"]:
@@ -992,7 +1424,8 @@ def stage_v1(ctx):
     if pre.fingerprint() != ctx.freeze["preproc_fingerprint"]:
         raise SystemExit("M17 REFUSED: the FREEZE preproc does not reproduce its own fingerprint.")
     with Timer(ctx, "v1_encode", "queries") as t:
-        model = load_table(admit_read(RELEASE_TABLE), variant="fp16", device=ctx.device)
+        model = _load_v1_table(RELEASE_TABLE, ctx.device)
+        folded_sha = sha_array(model.rows.detach().cpu().numpy())
         v1 = model.encode([s.text for s in specs], pre, batch=2048)
         t.n = len(specs)
         del model
@@ -1000,12 +1433,18 @@ def stage_v1(ctx):
             torch.cuda.empty_cache()
     v1 = np.asarray(v1, dtype=np.float32)
     v1 /= np.maximum(np.linalg.norm(v1, axis=1, keepdims=True), 1e-9)
-    np.save(admit_write(ctx.out / "v1_q.npy"), v1.astype(np.float16))
-    ctx.cache_state["v1_q"] = v1
+    # Round ONCE, before any use, and hash exactly the representation that is stored, so a
+    # resumed build reads back the same numbers a fresh build used (Astra step-5 P2-16).
+    v1_16 = v1.astype(np.float16)
+    np.save(admit_write(ctx.out / "v1_q.npy"), v1_16)
+    ctx.cache_state["v1_q"] = v1_16.astype(np.float32)
     return {"artifact": sm.rel(RELEASE_TABLE), "artifact_sha256": art_sha,
+            "variant": V1_VARIANT, "folded_rows_sha256": folded_sha,
             "preprocessing": ctx.freeze["preproc"],
             "preproc_fingerprint": ctx.freeze["preproc_fingerprint"],
-            "weights_folded": True, "queries": len(specs), "v1_q_sha256": sha_array(v1)}
+            "stored_dtype": "float16",
+            "weights_folded": True, "queries": len(specs),
+            "v1_q_sha256": sha_array(v1_16)}
 
 
 # --------------------------------------------------------------------------- stage 7: parity
@@ -1114,7 +1553,9 @@ def stage_vocab(ctx):
     write_json(ctx.out / "vocab_terms.json",
                {"terms": sel["terms"], "new_ids": new_ids, "pieces_per_new_row": pieces})
 
-    with Timer(ctx, "student_tokenize", "queries") as t:
+    # TWO encodings per query (base and extended): the unit is encodings and the full-pool work
+    # count is two per query, not one (Astra step-5 P3-20).
+    with Timer(ctx, "student_tokenize", "encodings", per_query_work=2) as t:
         base_ids = [base.encode(s.text).ids for s in specs]
         ext_ids = [ext.encode(s.text).ids for s in specs]
         t.n = 2 * len(specs)
@@ -1157,8 +1598,8 @@ def stage_cache(ctx):
     v1 = ctx.cache_state["v1_q"]
     manifests = {
         "v1_artifact": {k: ctx.stages["v1"][k] for k in
-                        ("artifact", "artifact_sha256", "preprocessing",
-                         "preproc_fingerprint", "weights_folded")},
+                        ("artifact", "artifact_sha256", "variant", "folded_rows_sha256",
+                         "preprocessing", "preproc_fingerprint", "weights_folded")},
         "teacher_query_preprocessing": ctx.stages["teacher"]["preprocessing"],
         "source_split": {"manifest_sha256": sha_file(RESULTS / "m17_support_manifest.json"),
                          "doc_domain_sha256": ctx.stages["domain"]["doc_domain_tsv"]["sha256"],
@@ -1173,20 +1614,31 @@ def stage_cache(ctx):
                                          cache_seed=ctx.seed, manifests=manifests,
                                          progress=max(200, len(specs) // 20))
         t.n = len(specs)
-    m17cache.save(ctx.shared, arrays, sidecar)
+    # The recipe identity cannot tell two internally valid caches apart when the scoring path
+    # changed (m17/CODEMAP.md, blocked-BLAS note). The ARTIFACT digest can: it covers the
+    # per-array hashes and the teacher/bank/v1 realizations the lists were scored from
+    # (Astra step-5 P2-17).
+    sidecar = m17cache.save(ctx.shared, arrays, sidecar, artifact_inputs={
+        "teacher_q_sha256": ctx.stages["teacher"]["teacher_q_sha256"],
+        "bank_vector_bytes_sha256": ctx.stages["bank"]["identity"]["vector_bytes_sha256"],
+        "bank_doc_ids_sha256": ctx.stages["bank"]["identity"]["doc_ids_sha256"],
+        "v1_q_sha256": ctx.stages["v1"]["v1_q_sha256"]})
     ctx.cache_state["cache"] = (arrays, sidecar)
 
-    diag = {"alias_pre_lock_diagnostic": _alias_diagnostic(specs, teacher_q),
-            "uninformative_list_stop": _warm_start_kl(arrays, bank, v1, ctx.reg)}
+    with Timer(ctx, "prelock_diagnostics", "queries") as t:
+        diag = {"alias_pre_lock_diagnostic": _alias_diagnostic(ctx, specs, teacher_q),
+                "uninformative_list_stop": _warm_start_kl(arrays, bank, v1, ctx.reg)}
+        t.n = len(specs)
     ctx.cache_state["diagnostics"] = diag
-    return {"identity_sha256": sidecar["identity"]["sha256"], "counts": sidecar["counts"],
+    return {"identity_sha256": sidecar["identity"]["sha256"],
+            "artifact_sha256": sidecar["artifact_sha256"], "counts": sidecar["counts"],
             "entropy_diagnostic": sidecar["entropy_diagnostic"],
             "provenance_totals": sidecar["provenance_counts"]["total"],
             "teacher_v1_list_overlap": sidecar["provenance_counts"]["teacher_v1_list_overlap"],
             **diag}
 
 
-def _alias_diagnostic(specs, teacher_q, floor=0.7):
+def _alias_diagnostic(ctx, specs, teacher_q, floor=0.7):
     """Teacher cosine between the two views of each admitted pair; pairs below `floor` flagged."""
     by_pair = {}
     for i, s in enumerate(specs):
@@ -1201,12 +1653,18 @@ def _alias_diagnostic(specs, teacher_q, floor=0.7):
         if c < floor:
             flagged.append({"pair_id": pid, "teacher_cosine": round(c, 4)})
     from common import quantiles
+    # The COMPLETE flagged list is persisted beside the build; the summary keeps a sample, so
+    # more than twenty flagged pairs stay individually re-verifiable (Astra step-5 P3-21).
+    sidecar = ctx.out / "alias_flagged_pairs.json"
+    write_json(sidecar, {"_schema": "m17-alias-flagged-v1", "floor": floor,
+                         "pairs_checked": len(cos), "flagged": flagged}, indent=None)
     return {"pairs": len(cos), "floor": floor,
             "mean": float(np.mean(cos)) if cos else None,
             "quantiles": quantiles(cos) if cos else {},
             "flagged_below_floor": len(flagged),
             "flagged_share": round(len(flagged) / len(cos), 4) if cos else None,
             "flagged_sample": flagged[:20],
+            "flagged_file": {"path": sm.rel(sidecar), "sha256": sha_file(sidecar)},
             "note": "report only; no pair is dropped and no threshold is decided here"}
 
 
@@ -1245,9 +1703,30 @@ def _warm_start_kl(arrays, bank, v1, reg):
 
 # --------------------------------------------------------------------------- stage 10
 
+def _protected_block(ctx, specs):
+    """The protected-screen receipt as the training driver reads it.
+
+    Pre-clock the screen is OFF and the bank carries new-source rows nothing has screened; the
+    count is stated here rather than left to be inferred (Astra step-5 P1-2/P1-3, ruling A4).
+    """
+    rec = dict(ctx.stages["protected"])
+    if rec.get("state") == "complete":
+        rec["unscreened_new_source_rows"] = {"pool": 0, "bank": 0}
+        return rec
+    bank = ctx.cache_state.get("bank")
+    rec["unscreened_new_source_rows"] = {
+        "pool": len(_new_source_rows(specs)),
+        "bank": sum(1 for d in (bank.doc_ids if bank else []) if str(d).startswith(NEW_SOURCE))}
+    return rec
+
+
 def stage_manifests(ctx):
     specs = ctx.cache_state["specs"]
     out = {}
+    protected = _protected_block(ctx, specs)
+    timer = Timer(ctx, "manifests", "queries")
+    timer.__enter__()
+    timer.n = len(specs)
     for form, d in (("base", ctx.base), ("ext", ctx.ext)):
         for name in ("candidates.npz", "cache.json", "teacher_q.npy", "bank.npy",
                      "bank_ids.json"):
@@ -1278,6 +1757,7 @@ def stage_manifests(ctx):
                 "student_ids": sha_file(d / "student_ids.json"),
                 "vocabulary": ctx.stages["vocab"]["vocabulary_sha256"],
                 "cache_identity": ctx.stages["cache"]["identity_sha256"],
+                "cache_artifact": ctx.stages["cache"]["artifact_sha256"],
                 "doc_domain_join": ctx.stages["domain"]["doc_domain_tsv"]["sha256"],
                 "query_pool": sha_file(ctx.out / "pool.jsonl"),
                 "k8s_jsonl": sha_file(K8S_JSONL),
@@ -1286,13 +1766,14 @@ def stage_manifests(ctx):
                 "support_manifest": sha_file(RESULTS / "m17_support_manifest.json"),
                 "freeze": sha_file(REPO / "m7" / "FREEZE.json"),
             },
-            "protected_screen": ctx.stages["protected"],
+            "protected_screen": protected,
         }
         if form == "ext":
             manifest["new_rows"] = "new_rows.npy"
             manifest["hashes"]["new_rows"] = ctx.stages["vocab"]["new_rows_sha256"]
         write_json(d / "prepared.json", manifest)
         out[form] = sm.rel(d / "prepared.json")
+    timer.__exit__()
     return out
 
 
@@ -1329,7 +1810,9 @@ def _rehydrate(ctx, name):
                                heldout_families=sel["heldout_families"],
                                coverage_docs=sel["coverage_docs"])
         return
-    if name == "domain":
+    if name in ("domain", "protected"):
+        # `protected` re-reads the SCREENED pool: a restart must not resume with the
+        # unscreened rows just because the marker was already written (P1-4).
         _read_specs(ctx)
     elif name == "teacher":
         ctx.cache_state["teacher_q"] = np.load(admit_read(ctx.shared / "teacher_q.npy"))
@@ -1351,26 +1834,67 @@ def _rehydrate(ctx, name):
         ctx.cache_state["cache"] = m17cache.load(ctx.shared)
 
 
+def stage_identity(ctx):
+    """The INPUT identity every stage marker is stamped with (Astra step-5 P2-11).
+
+    Reusing an output directory with a changed seed, size, bank cap, exclusion file, protected
+    flag or source manifest silently kept markers built from other inputs. A marker whose
+    identity does not match is refused unless `--force`, and forcing a stage invalidates the
+    stages that depend on it (they follow it in `STAGES`).
+    """
+    return {"seed": ctx.seed, "size": ctx.size, "bank_docs": ctx.bank_docs,
+            "protected_screen": bool(ctx.protected_screen),
+            "exclusions_sha256": sha_file(EXCLUSIONS) if EXCLUSIONS.exists() else None,
+            "alias_pairs_sha256": sha_file(ALIAS_PAIRS) if ALIAS_PAIRS.exists() else None,
+            "k8s_jsonl_sha256": sha_file(K8S_JSONL) if K8S_JSONL.exists() else None,
+            "kept_sha256": sha_file(REPO / "work" / "decontam" / "kept.json"),
+            "support_manifest_sha256": sha_file(RESULTS / "m17_support_manifest.json"),
+            "query_families_sha256": sha_file(QUERY_FAMILIES) if QUERY_FAMILIES.exists() else None}
+
+
+def _check_stage_identity(prev, ident, name, force):
+    """-> True when the cached marker may be reused. Refuses a changed input without --force."""
+    got = (prev or {}).get("_identity")
+    if got == ident:
+        return True
+    if force:
+        return False
+    differ = sorted(k for k in ident if (got or {}).get(k) != ident[k]) if got else ["<absent>"]
+    raise SystemExit(
+        f"M17 REFUSED: the cached `{name}` stage was built under different inputs ({differ}). "
+        "A prepared directory is one experiment; re-run with --force to rebuild this stage and "
+        "its dependents, or build into a new --out.")
+
+
 def build(args, log=print):
     ctx = Ctx(args)
     want = args.stages.split(",") if args.stages else list(STAGES)
+    ident = stage_identity(ctx)
     t0 = time.time()
+    ran = []
+    invalidated = set()
     for name in STAGES:
         marker = ctx.out / "stages" / f"{name}.json"
+        prev = json.loads(admit_read(marker).read_text()) if marker.exists() else None
+        reusable = marker.exists() and name not in invalidated and \
+            _check_stage_identity(prev, ident, name, args.force)
         if name not in want:
-            if marker.exists():
-                ctx.stages[name] = json.loads(admit_read(marker).read_text())
+            if reusable:
+                ctx.stages[name] = prev
                 _rehydrate(ctx, name)
             continue
-        if marker.exists() and not args.force:
+        if reusable and not args.force:
             log(f"[stage {name}] cached, skipped")
-            ctx.stages[name] = json.loads(admit_read(marker).read_text())
+            ctx.stages[name] = prev
             _rehydrate(ctx, name)
             continue
         log(f"[stage {name}] running")
         rec = STAGE_FN[name](ctx)
         ctx.stages[name] = rec
-        write_json(marker, rec)
+        write_json(marker, {**rec, "_identity": ident})
+        ran.append(name)
+        # A rebuilt stage invalidates everything downstream of it, in the fixed stage order.
+        invalidated.update(STAGES[STAGES.index(name) + 1:])
     # A partial re-run (`--stages domain,vocab`) must not erase the measurements the earlier
     # invocations paid for; the carried names are listed so no reader mistakes them for fresh.
     prev_path = ctx.out / "build_record.json"
@@ -1381,10 +1905,16 @@ def build(args, log=print):
             if k not in ctx.timings:
                 ctx.timings[k] = v
                 carried.append(k)
+    complete = ran == list(STAGES)
     record = {"timings_carried_from_a_previous_build": sorted(carried),
               "_schema": "m17-prepared-build-v1", "out": sm.rel(ctx.out), "size": ctx.size,
               "seed": ctx.seed, "bank_docs": ctx.bank_docs, "device": ctx.device,
+              "stage_identity": ident,
+              "stages_run_this_invocation": ran,
+              "complete_build": complete,
+              # A partial rebuild's wall clock is not the cost of preparing this size.
               "wall_clock_seconds": round(time.time() - t0, 3),
+              "wall_clock_kind": "full build" if complete else "partial rebuild",
               "rss_high_water_gib": _rss_gib(), "gpu_peak_gib": _gpu_peak_gib(),
               "timings": ctx.timings, "stages": ctx.stages, "notes": ctx.notes,
               "source_sha256": sha_text(Path(__file__).read_text())}
@@ -1405,6 +1935,9 @@ def timing_report(dirs, full_total=None):
     small, large = recs
     target = full_total or large["stages"]["pool"]["full_pool_total"]
     stages, total_fixed, total_per_row = {}, 0.0, 0.0
+    doc_growth = []
+    q_small = sum(small["stages"]["domain"]["queries_by_bucket"].values())
+    q_large = sum(large["stages"]["domain"]["queries_by_bucket"].values())
     for name in sorted(set(small["timings"]) | set(large["timings"])):
         a, b = small["timings"].get(name), large["timings"].get(name)
         if not a or not b:
@@ -1419,23 +1952,44 @@ def timing_report(dirs, full_total=None):
                "large": {"n": nb, "seconds": b["seconds"], "rate": b.get(f"{unit}_per_second"),
                          "rss_high_water_gib": b.get("rss_high_water_gib"),
                          "gpu_peak_gib": b.get("gpu_peak_gib")}}
+        work = b.get("per_query_work") or a.get("per_query_work")
         if nb != na:
             per_row = (b["seconds"] - a["seconds"]) / (nb - na)
             fixed = max(0.0, a["seconds"] - per_row * na)
             rec.update(per_row_seconds=round(per_row, 6), fixed_seconds=round(fixed, 3),
-                       scales_with="queries" if unit == "queries" else unit)
-            total_per_row += max(0.0, per_row) if unit == "queries" else 0.0
+                       per_query_work=work,
+                       scales_with="queries" if work else unit)
             total_fixed += fixed
-            if unit != "queries":
-                # documents/rows stages do not scale with the query pool; their large-size
-                # cost is carried forward as a fixed cost of the full build instead.
+            if work:
+                # `student_tokenize` does TWO encodings per query: the full-pool work count is
+                # the query count times this stage's own work factor (P3-20).
+                total_per_row += max(0.0, per_row) * float(work)
+            else:
+                # documents/rows stages do not scale one-for-one with the query pool; their
+                # large-size cost is carried forward as a fixed cost of the full build, and the
+                # growth that IS query-driven is reported as a separate upper bound below.
                 total_fixed += max(0.0, b["seconds"] - fixed)
+                doc_growth.append((name, per_row, fixed, na, nb))
         else:
             rec.update(fixed_seconds=b["seconds"], per_row_seconds=0.0,
                        note="row count identical at both sizes: a fixed cost, not a per-row one")
             total_fixed += b["seconds"]
         stages[name] = rec
     est = total_fixed + total_per_row * target
+    # `domain_store_pass` and the other document-unit stages are carried as fixed costs, but
+    # their document counts DO grow with the query pool (more selected positives to classify).
+    # The upper bound projects each such stage's document count linearly in queries and is
+    # reported beside the estimate rather than folded into it (P3-20).
+    growth = []
+    for name, per_row, fixed, na, nb in doc_growth:
+        projected = nb * (target / max(1, q_large))
+        growth.append({"stage": name, "documents_at_large": nb,
+                       "projected_documents_at_full_pool": int(projected),
+                       "seconds_if_documents_scale_with_queries":
+                           round(fixed + max(0.0, per_row) * projected, 1)})
+    extra = sum(g["seconds_if_documents_scale_with_queries"] for g in growth) - \
+        sum(r["large"]["seconds"] for n, r in stages.items()
+            if isinstance(r, dict) and any(g["stage"] == n for g in growth))
     return {
         "_schema": "m17-prepare-timing-v1",
         "_note": "Measured pre-clock preparation cost at two real sizes on the RTX 3080 box. "
@@ -1446,6 +2000,9 @@ def timing_report(dirs, full_total=None):
         "host": {"gpu": "RTX 3080 10 GiB", "ram_gib": 25},
         "sizes": [{"out": r["out"], "size": r["size"], "queries": r["stages"]["domain"]
                    ["queries_by_bucket"], "wall_clock_seconds": r["wall_clock_seconds"],
+                   "wall_clock_kind": r.get("wall_clock_kind", "unknown"),
+                   "complete_build": r.get("complete_build"),
+                   "stages_run_this_invocation": r.get("stages_run_this_invocation"),
                    "rss_high_water_gib": r["rss_high_water_gib"],
                    "gpu_peak_gib": r["gpu_peak_gib"],
                    "teacher_cache": {k: r["stages"]["teacher"][k]
@@ -1473,6 +2030,15 @@ def timing_report(dirs, full_total=None):
             "per_query_seconds": round(total_per_row, 6),
             "estimated_seconds": round(est, 1),
             "estimated_hours": round(est / 3600, 2),
+            "document_stage_growth_upper_bound": {
+                "stages": growth,
+                "additional_seconds_if_document_counts_scale_with_queries": round(max(0.0, extra), 1),
+                "estimated_hours_with_that_upper_bound":
+                    round((est + max(0.0, extra)) / 3600, 2),
+                "note": "document-unit stages (notably domain_store_pass, which also classifies "
+                        "every selected positive) are carried as fixed costs; this is what they "
+                        "would add if their document counts grew linearly with the query pool"},
+            "query_counts_measured": {"small": q_small, "large": q_large},
             "fixed_costs_subtracted": sorted(
                 n for n, r in stages.items()
                 if isinstance(r, dict) and r.get("unit") in ("documents", "rows")),
@@ -1482,7 +2048,11 @@ def timing_report(dirs, full_total=None):
                 "real one",
                 "the teacher and document encode caches were warm for repeated text; the "
                 "measured `encoded` counts say how much was actually paid",
-                "single process, no parallelism; the cache stage is CPU-bound numpy"]},
+                "single process, no parallelism; the cache stage is CPU-bound numpy",
+                "student_tokenize is extrapolated at its own work factor (two encodings per "
+                "query), not one",
+                "each size's wall clock states whether it was a full build or a partial "
+                "rebuild; only a full build is the cost of preparing that size"]},
         "source_sha256": sha_text(Path(__file__).read_text()),
     }
 

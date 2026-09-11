@@ -417,15 +417,27 @@ def identity(queries, bank: Bank, reg, cache_seed, manifests=None):
     return {"parts": parts, "sha256": sha_json(parts)}
 
 
-def save(out_dir, arrays, sidecar):
+def save(out_dir, arrays, sidecar, artifact_inputs=None):
+    """Write the cache and stamp its ARTIFACT digest beside its recipe identity.
+
+    The recipe identity says which cache this is meant to be; two internally valid caches built
+    by different scoring implementations share it (m17/CODEMAP.md). `artifact_sha256` covers the
+    per-array hashes plus the teacher/bank/v1 realizations the lists were actually scored from,
+    so training and resume can bind to the bytes on disk (Astra step-5 P2-17).
+    """
     out = Path(admit_write(out_dir))
     out.mkdir(parents=True, exist_ok=True)
     stored = {k: (v if v.dtype != object else np.asarray([str(x) for x in v]))
               for k, v in arrays.items()}
-    sidecar = {**sidecar, "arrays_sha256": {k: sha_array(v) for k, v in stored.items()}}
+    arrays_sha = {k: sha_array(v) for k, v in stored.items()}
+    inputs = dict(artifact_inputs or {})
+    sidecar = {**sidecar, "arrays_sha256": arrays_sha,
+               "artifact_inputs": inputs,
+               "artifact_sha256": sha_json({"arrays": arrays_sha, "inputs": inputs,
+                                            "identity": sidecar["identity"]["sha256"]})}
     np.savez(out / "candidates.npz", **stored)
     write_json(out / "cache.json", sidecar)
-    return out
+    return sidecar
 
 
 def load(out_dir):

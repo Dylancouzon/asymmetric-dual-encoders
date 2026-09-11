@@ -233,7 +233,7 @@ def test_alias_term_is_batch_normalized():
     slots = torch.tensor([[0, 1], [2, 3]])
     model = QueryTable(np.zeros((3, 4), dtype=np.float32), learned_weights=False)
     cfg = T.RunCfg(alias_weight=1.0, cosine_weight=0.0, init_anchor_weight=0.0)
-    total, parts = T.losses(model, q, q, None, None, None, None, slots, cfg,
+    total, parts, _terms = T.losses(model, q, q, None, None, None, None, slots, cfg,
                             {"listwise": False, "alias_consistency": True})
     assert parts["alias"] == pytest.approx(2.0 / B * 1.0)
 
@@ -381,7 +381,7 @@ def test_listwise_kl_matches_a_hand_computed_value():
     model = QueryTable(np.zeros((2, 2), dtype=np.float32), learned_weights=False)
     cfg = T.RunCfg(cosine_weight=0.0, init_anchor_weight=0.0, listwise_weight=1.0,
                    temperature=T_)
-    _, parts = T.losses(model, q_s, q_s, cand, mask, tsc, None, None, cfg,
+    _, parts, _terms = T.losses(model, q_s, q_s, cand, mask, tsc, None, None, cfg,
                         {"listwise": True, "alias_consistency": False})
 
     def softmax2(a, b):
@@ -405,7 +405,7 @@ def test_anchor_is_the_mean_square_deviation_of_effective_rows():
     eff_init = eff - torch.tensor([[1.0, 0.0], [0.0, 3.0]])            # deviations 1 and 3
     q = torch.tensor([[1.0, 0.0]])
     cfg = T.RunCfg(cosine_weight=0.0, init_anchor_weight=1.0)
-    _, parts = T.losses(model, q, q, None, None, None, eff_init, None, cfg,
+    _, parts, _terms = T.losses(model, q, q, None, None, None, eff_init, None, cfg,
                         {"listwise": False, "alias_consistency": False})
     assert parts["anchor"] == pytest.approx((1.0 ** 2 + 3.0 ** 2) / 4, rel=1e-5)
 
@@ -504,3 +504,87 @@ def test_rehearsal_mode_still_checks_the_teacher_identity(tmp_path):
                meta={"weights_folded": False, "teacher": "someone/else", "teacher_revision": "0" * 40})
     with pytest.raises(SystemExit, match="was distilled from someone/else"):
         T.load_warm_start(tmp_path / "ck.npz", expect_vocab=V, device="cpu", rehearsal=True)
+
+
+# ---- the protected screen, the prepared hashes and the diagnostics ------------------------
+
+def test_a_deferred_protected_screen_refuses_a_real_run_and_shouts_in_a_rehearsal(tmp_path,
+                                                                                  capsys):
+    """Astra step-5 P1-3 / ruling A4."""
+    manifest = {"protected_screen": {"state": "deferred_to_clock",
+                                     "unscreened_new_source_rows": {"pool": 12, "bank": 1648}}}
+    real = T.RunCfg(rehearsal=False)
+    with pytest.raises(SystemExit, match="not 'complete'"):
+        T._check_protected_screen(tmp_path, manifest, real)
+    T._check_protected_screen(tmp_path, manifest, T.RunCfg(rehearsal=True))
+    out = capsys.readouterr().out
+    assert "UNSCREENED" in out and "12 pool rows" in out and "1648 bank documents" in out
+    # a completed screen passes in both modes and says nothing
+    T._check_protected_screen(tmp_path, {"protected_screen": {"state": "complete"}}, real)
+
+
+def _prepared_fixture(tmp_path, n=4, dim=3, bank_rows=5):
+    ids = [[1, 2] for _ in range(n)]
+    teacher_q = np.full((n, dim), 0.5, dtype=np.float16)
+    bank = np.full((bank_rows, dim), 0.25, dtype=np.float16)
+    (tmp_path / "student_ids.json").write_text(json.dumps(ids))
+    np.save(tmp_path / "teacher_q.npy", teacher_q)
+    np.save(tmp_path / "bank.npy", bank)
+    (tmp_path / "tokenizer.json").write_text("{}")
+    arrays = {"candidate_ids": np.zeros((n, 2), dtype=np.int32)}
+    manifest = {"tokenizer": "tokenizer.json",
+                "hashes": {"student_ids": common.sha_file(tmp_path / "student_ids.json"),
+                           "tokenizer": common.sha_file(tmp_path / "tokenizer.json"),
+                           "teacher_q": common.sha_array(teacher_q),
+                           "bank_vector_bytes": common.sha_array(bank)}}
+    return manifest, arrays
+
+
+def test_prepared_artifact_hashes_are_verified_before_the_model(tmp_path):
+    """Astra step-5 P2-12: a same-shaped replacement was accepted."""
+    manifest, arrays = _prepared_fixture(tmp_path)
+    arm = T.ARMS["C"]
+    T._verify_prepared_hashes(tmp_path, manifest, arrays, arm)          # must not raise
+    np.save(tmp_path / "teacher_q.npy", np.full((4, 3), 0.75, dtype=np.float16))
+    with pytest.raises(SystemExit, match="teacher_q"):
+        T._verify_prepared_hashes(tmp_path, manifest, arrays, arm)
+
+
+def test_prepared_row_counts_must_agree(tmp_path):
+    manifest, arrays = _prepared_fixture(tmp_path)
+    arrays = {"candidate_ids": np.zeros((3, 2), dtype=np.int32)}        # one row short
+    with pytest.raises(SystemExit, match="the same queries"):
+        T._verify_prepared_hashes(tmp_path, manifest, arrays, T.ARMS["C"])
+
+
+def test_the_checkpoint_interval_may_be_lowered_but_never_raised(monkeypatch):
+    reg = common.registry()
+    cap = float(reg["training"]["checkpoint_minutes_max"])
+    with pytest.raises(SystemExit, match="above the registered"):
+        T.main(["--arm", "C", "--rehearsal", "--data", "x", "--checkpoint-minutes",
+                str(cap + 1)])
+
+
+def test_grad_shares_sum_to_one_and_name_every_term():
+    from table import QueryTable
+    rng = np.random.default_rng(0)
+    model = QueryTable(rng.normal(size=(8, 4)).astype(np.float32),
+                       weight_init=np.ones(8, dtype=np.float32), learned_weights=True)
+    cfg = T.RunCfg(rehearsal=True, batch=2)
+    ids = [[1, 2], [3, 4]]
+    q_s = T.forward(model, ids, "cpu")
+    q_t = torch.nn.functional.normalize(torch.as_tensor(
+        rng.normal(size=(2, 4)), dtype=torch.float32), dim=1)
+    eff_init = (model.token_weights().detach().unsqueeze(1) * model.rows.detach()).clone()
+    cand = torch.as_tensor(rng.normal(size=(2, 3, 4)), dtype=torch.float32)
+    mask = torch.ones(2, 3, dtype=torch.bool)
+    tsc = torch.as_tensor(rng.normal(size=(2, 3)), dtype=torch.float32)
+    slots = torch.as_tensor([[0, 1]])
+    _total, parts, terms = T.losses(model, q_s, q_t, cand, mask, tsc, eff_init, slots, cfg,
+                                    T.ARMS["VL-A"])
+    gs = T.grad_shares(model, terms)
+    assert set(gs["shares"]) == {"cosine", "listwise", "anchor", "alias"} == set(terms)
+    assert abs(sum(gs["shares"].values()) - 1.0) < 1e-6
+    assert all(v >= 0 for v in gs["row_grad_norms"].values())
+    assert "not observable after Adam" in gs["note"]
+    assert set(parts) == {"cosine", "listwise_kl", "anchor", "alias"}
