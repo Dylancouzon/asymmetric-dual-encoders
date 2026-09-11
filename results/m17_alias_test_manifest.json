@@ -2,8 +2,9 @@
  "ambiguous_sense_pairs": 59,
  "by_domain": {
   "cloud-software": 100,
-  "general": 99,
-  "medicine": 1
+  "general": 94,
+  "medicine": 3,
+  "science-engineering": 3
  },
  "by_judgment_status": {
   "PENDING_HUMAN": 80,
@@ -18,6 +19,8 @@
   "mrtydi-en": 80,
   "squad-train": 20
  },
+ "classifier_min_score": 3,
+ "classifier_min_score_source": "results/m17_panel_manifest.json",
  "date": "2026-09-11",
  "distinct_equivalences": 6015,
  "extraction": {
@@ -27,9 +30,9 @@
  },
  "files": {
   "exclusions": "work/m17/manifest/alias_test_families.json",
-  "exclusions_sha256": "ed1f7a24a216dbbe09c64787820f17de0a0510e102134f3975d3a4eb2fe44ebf",
+  "exclusions_sha256": "a3cc09ff6a7affcf17c263553e8711ac4ec468ecd42d2968935d16a195f57c26",
   "pairs": "work/m17/alias/alias_test.jsonl",
-  "pairs_sha256": "77279fb4ccfab5ca2614caab2d2d70e8b2ae48a78b8ff9653b4ab032a12aedfa",
+  "pairs_sha256": "6682f2acf60cb3553b765573dd9ad502389868e816f07d9e00f02e6ea8353104",
   "pending_review": "results/m17_panel_pending_judgments.jsonl"
  },
  "gpu_used": false,
@@ -43,9 +46,11 @@
  "n_pairs": 200,
  "protected_payloads_opened": false,
  "raw_equivalences_found": 8501,
+ "registry_sha256": "2c4693a8cc0ba65d487ca59865a9f0cc7d296bab99c851ebcd06f389755f40f1",
  "role": "read once per screen arm and once per final form beside the ordinary metrics; routes no selection (registry.data.alias_heldout_test.reads)",
  "scored_anything": false,
  "script": "m17src/alias_test_build.py",
+ "script_sha256": "b5f742abb88b3d1d5b8fce12c646f02aaaf90de561c753e4f09ce15ae51eb442",
  "seed": 17,
  "status": "PROVISIONAL \u2014 ambiguous-sense pairs pending human judgment",
  "step": "2c",

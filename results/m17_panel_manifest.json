@@ -185,6 +185,19 @@
    "exposure-known-exposed": "the query text matched an ancestor training manifest, or a training query shares its gold document group, or its gold documents sat in M7's document pool",
    "exposure-unknown": "an ancestor manifest could not be streamed, so ancestry cannot be established (registry.data.ancestor_decontamination)"
   },
+  "expected_streams": [
+   "m7-train-queries:squad-train",
+   "m7-train-queries:hotpotqa-train",
+   "m7-train-queries:mrtydi-en",
+   "m7-train-queries:fever-train",
+   "m7-train-queries:esci-us",
+   "m7-querytext:nqopen",
+   "m7-querytext:triviaqa",
+   "m7-pseudoq-2m",
+   "m10-harvest",
+   "m10-generated"
+  ],
+  "missing_expected_streams": [],
   "not_screened": "the six, the reserved four and LoTTE. Deferred to the M17 executor exactly as results/m17_k8s_source_manifest.json records; every interface reaching them materializes protected payloads.",
   "reasons": {
    "ancestor-query-text-matched-exactly": 4,
@@ -307,7 +320,7 @@
   "items": 440,
   "panel_candidate_rows": 360,
   "queries": 120,
-  "sha256": "09d9f0aca326c9f9fdbcfe076b40af07f92d3f800512f77bc088ee5ebf19626a"
+  "sha256": "ab91fa5340192c8b8e0d9099788d396de2ff50b4ff6e955cc89e17dc09bda4a2"
  },
  "per_domain": {
   "cloud-software": {
@@ -542,6 +555,7 @@
  "protected_payloads_opened": false,
  "provisional_reason": "360 cloud-software candidate judgments and 80 ambiguous alias pairs are PENDING_HUMAN. Until they are resolved the cloud-software domain has no relevance judgments and the panel may not be scored as a six-domain panel. Resolving them re-seals this manifest with a new panel hash; the 72-hour clock starts from the sealed hash (registry.data.panel_timing).",
  "reader_contract": "each row: query_id, query, source, domain, slice, family_id, partition, qrels {doc_id: grade}, judgment_status, exposure. m17src/evaluate.py takes qrels, domains and families keyed by the same query key, which is query_id here.",
+ "registry_sha256": "2c4693a8cc0ba65d487ca59865a9f0cc7d296bab99c851ebcd06f389755f40f1",
  "registry_targets": {
   "m17_panel_target_queries": 600,
   "panel_selection_fraction": 0.5,
@@ -549,6 +563,7 @@
  },
  "scored_anything": false,
  "script": "m17src/panel_build.py",
+ "script_sha256": "063ae3a5db36e0ab861b8cf56743d7ac29ea60ced4e0f87c3a0d4205e20a6c87",
  "seed": 17,
  "source_licences": {
   "hotpotqa-train": "CC BY-SA 4.0, training-approved",

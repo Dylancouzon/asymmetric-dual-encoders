@@ -3,7 +3,7 @@
  "step": "2b",
  "date": "2026-09-11",
  "script": "m17src/support_manifest.py",
- "script_sha256": "4d0d7d4b136cb24c5505e3f3d5a89f46d1237bec12c4c91b23198ff1c345282e",
+ "script_sha256": "f32930234fe15e343ce4a6eb06161549579ae62b2b6b8f758731d70348787a9d",
  "gpu_used": false,
  "protected_payloads_opened": false,
  "methods": {
@@ -254,7 +254,7 @@
  ],
  "domain_assignment": {
   "rule": "A3 per-document classifier: the source-to-domain map fixes the domain of a document except for sources mapped to 'general', whose documents are sub-assigned one at a time by the panel builder's keyword classifier (m17src/panel_build.classify) on the DOCUMENT TEXT ONLY, at the same threshold. Queries stay on the source map here; a query's own domain follows its source document inside m17src/vocab.discover. Labels are heuristic (Dylan, 2026-09-11).",
-  "method": "HEURISTIC. Source-to-domain map (m17src/support_manifest.SOURCE_DOMAIN) gives 'general' for every admitted labelled source and 'cloud-software' for the Kubernetes slice. Within the Wikipedia-derived sources a keyword classifier over the query text plus its gold document text re-labels science-engineering / medicine / finance / legal when the winning domain scores at least the recorded classifier_min_score (strong term 2 points, weak term 1, counted once per distinct term; module default 4) and strictly beats the runner-up. These are topical hints, not adjudicated domain labels, and per-domain numbers inherit that imprecision.",
+  "method": "HEURISTIC, DOCUMENT TEXT ONLY. Source-to-domain map (m17src/support_manifest.SOURCE_DOMAIN) first; within a 'general'-mapped source the panel builder's keyword classifier (m17src/panel_build.classify) reads the deduplicated DOCUMENT text alone \u2014 never the query that retrieved it \u2014 at the threshold pinned by results/m17_panel_manifest.json (see classifier_min_score and classifier_min_score_source). Topical hints, not adjudicated labels.",
   "classifier_min_score": 3,
   "classifier_min_score_source": "results/m17_panel_manifest.json",
   "applied_per_document": true,
@@ -372,14 +372,14 @@
  "manifest_files": {
   "m17/manifest/alias_pairs.jsonl": "33c4a5ecd7653ceaf8949ceca021094c5cf59f2cadf335a3058f4848d5a390c9",
   "m17/manifest/alias_pairs_summary.json": "724e5f7be84097ccdda4f7d664bbd89fc5370b83534e9d4050603831a01cc17e",
-  "m17/manifest/alias_test_families.json": "ed1f7a24a216dbbe09c64787820f17de0a0510e102134f3975d3a4eb2fe44ebf",
-  "m17/manifest/doc_groups/esci-us.tsv.gz": "72f2f05de497768c90fa86752694a1f8dbe77a76511c9013088593d9ab95390e",
-  "m17/manifest/doc_groups/fever-train.tsv.gz": "4532510820eef0506f5cbccd0428dc172ad438d54f9c30108b27fe7766ba6094",
-  "m17/manifest/doc_groups/hotpotqa-train.tsv.gz": "5047fde28bcf7544c309dfa7a1ce92724fd3ee4003b5849224e81a5ab7a07599",
-  "m17/manifest/doc_groups/k8s-docs-en.tsv.gz": "47329039ca83340f31767282d98756e8664aaeab1ab6ba8e0a928b10034884d8",
-  "m17/manifest/doc_groups/mrtydi-en.tsv.gz": "d0e92ee9686b4a4b47711521922693804b0e2dd079fec1a995bfcb529dcccc83",
-  "m17/manifest/doc_groups/squad-train.tsv.gz": "542260a8497f19a1f5e9ba0ca5532c8531ead95f335e45e806e5b49e51420637",
-  "m17/manifest/query_families.tsv.gz": "2686e984197c67a0f0e71be6bd1001ca18eb084b8ac3d92e9605745d1a17cca6"
+  "m17/manifest/alias_test_families.json": "a3cc09ff6a7affcf17c263553e8711ac4ec468ecd42d2968935d16a195f57c26",
+  "m17/manifest/doc_groups/esci-us.tsv.gz": "348d50c4742aab38b1b369d2c235834ba28fd2f68c5ccecd83301687d86cc89b",
+  "m17/manifest/doc_groups/fever-train.tsv.gz": "13f0851e20c7c65963c02d3bb3cff28640a915f57bd31a2c141b602ec8f5dc0b",
+  "m17/manifest/doc_groups/hotpotqa-train.tsv.gz": "284919b80b3e2bf6ca56ac21a773c19ef1cc8a57ce54a567a73b522d71b12a01",
+  "m17/manifest/doc_groups/k8s-docs-en.tsv.gz": "7d1d9b457228d9e273d349ea78ac8e63286acf810766c3f8cd6f53adebaa9a50",
+  "m17/manifest/doc_groups/mrtydi-en.tsv.gz": "8b973f45f9080237f12ac11b91c1da05a97d62ab37900a1528025211d7eca0dc",
+  "m17/manifest/doc_groups/squad-train.tsv.gz": "61ff086592f5553e4d3c2f8354251275fab322865e60a7232f9c7b4fbe7d1896",
+  "m17/manifest/query_families.tsv.gz": "d540e21da8de55cba383c8409b90e487450b568663ee990a9fa03448c6ba9573"
  },
  "deferred": {
   "protected_screen": "six, reserved four and LoTTE: executor only, via m10src/protected10 (results/m17_k8s_source_manifest.json)"

@@ -45,7 +45,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from common import (WORK, admit_read, freeze, registry, require_executable, sha_array, sha_file,
+from common import (WORK, admit_read, admit_write, freeze, registry, require_executable, sha_array, sha_file,
                     sha_json, sha_text, write_json)
 
 ARMS = {
@@ -380,7 +380,8 @@ def load_warm_start(path, expect_vocab=None, device="cpu", rehearsal=False):
         raise SystemExit(f"M17 REFUSED: {path} has no learned scalars; the registered warm start "
                          "is the unfolded p35w-2m-s2500 checkpoint.")
     t, rev = meta.get("teacher"), meta.get("teacher_revision")
-    if not rehearsal and (t, rev) != (reg["teacher"], reg["teacher_revision"]):
+    # Checked in EVERY mode: the rehearsal bypasses only the status gate and the FREEZE hash.
+    if (t, rev) != (reg["teacher"], reg["teacher_revision"]):
         raise SystemExit(f"M17 REFUSED: warm start was distilled from {t}@{str(rev)[:12]} but the "
                          f"registry pins {reg['teacher']}@{reg['teacher_revision'][:12]}.")
     fz = freeze()
@@ -435,7 +436,7 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
     # The status gate belongs to the callable driver, not only to the CLI: a caller that
     # imports `run()` must meet the same bar as `python m17src/train.py`.
     require_executable(registry(), cfg.rehearsal, what=f"arm {cfg.arm} ({cfg.run_id})")
-    out = Path(out_dir)
+    out = Path(admit_write(out_dir))   # before anything is created under it
     out.mkdir(parents=True, exist_ok=True)
     arm = ARMS[cfg.arm]
     device = cfg.device
@@ -837,8 +838,10 @@ def _load_prepared(data_dir, manifest, cfg, reg):
     # Identity comes from the verified artifacts, never from whatever the manifest claims.
     cfg.cache_sha256 = sidecar["identity"]["sha256"]
     cfg.tokenizer_sha256 = sha_file(admit_read(d / manifest["tokenizer"]))
+    # Controls keep the base vocabulary; they need a stable NON-EMPTY identity or the export's
+    # completeness rule (a missing field is not a match) would refuse the matched control.
     cfg.vocabulary_sha256 = (sha_file(admit_read(d / manifest["new_rows"]))
-                             if arm["vocab_extension"] else "")
+                             if arm["vocab_extension"] else "base-vocab:" + cfg.tokenizer_sha256)
     cfg.warm_start = str(manifest["warm_start"])
 
     model, lineage = load_warm_start(d / manifest["warm_start"], expect_vocab=int(reg["base_vocab"]),

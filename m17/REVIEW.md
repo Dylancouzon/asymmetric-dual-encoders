@@ -156,3 +156,21 @@ tie-break, the RNG recipe, fold-once averaging over fp32 rows, numpy/torch loade
 
 **Owner:** M17 implementing session. **Exit:** one P1-only re-check by Codex Sol of the fixed
 files, then step 5 timings. Deferred items are step-5 entry conditions, listed in the registry.
+
+## Codex Sol P1-only re-check — 2026-09-11 (the single re-check)
+
+Brief: [m17-sol-recheck-brief](../research/m17-sol-recheck-brief-2026-09-11.md). Log:
+`research/m17-sol-recheck-2026-09-11.log` (gitignored). Read-only on commit `cc88fc1`; access
+log: `REVIEW.md`, `registry.json` and the 22 `m17src` modules, nothing under `work/` or
+`results/`. Of the 28 P1s across both reviews, 25 were confirmed fixed with the refusing line and
+its test named; the dropped and deferred P1s were judged to have no plausible careless-researcher
+trigger before step 5. Three remained, fixed directly in the same session (`m17src` diff of a
+dozen lines plus three tests; 223 tests pass; rehearsal re-run to `results/m17_rehearsal_step4.json`):
+
+| Remaining P1 | Fix |
+|---|---|
+| Control arms recorded an empty vocabulary identity, so the new completeness rule refused the matched control's export | Controls record `base-vocab:<tokenizer sha>`; test on `snapshot_identity`. |
+| `train.run`, `export.build_bundle` and the rehearsal root created directories before the write guard | `admit_write` on the output root first, in all three; test with a `results/frozen_eval` root. |
+| The rehearsal skipped the teacher/revision check | Checked in every mode; the synthetic warm start carries the registered teacher; mismatch test. |
+
+**Exit:** step 4 closed. Review loop capped here (two reviews plus one re-check). Step 5 next.

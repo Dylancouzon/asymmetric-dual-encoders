@@ -321,3 +321,12 @@ def test_bundle_carries_the_frozen_encoder_spec(bundle):
     prov = json.loads((bundle / "provenance.json").read_text())
     assert prov["bank"]["doc_ids_sha256"] and prov["bank"]["vector_bytes_sha256"]
     assert "corpus" not in prov, "a production corpus hash is deliberately NOT required"
+
+
+def test_a_control_arm_records_a_non_empty_base_vocabulary_identity():
+    """Sol re-check P1: C/L used to record vocabulary_sha256 = "" and the completeness rule
+    then refused the matched control's export. Controls carry `base-vocab:<tokenizer sha>`."""
+    ident = {f: "x" for f in export.IDENTITY_FIELDS}
+    ident["vocabulary_sha256"] = "base-vocab:" + "ab" * 32
+    ident["m17_step"] = 6000
+    assert export.snapshot_identity(ident, "c-endpoint.npz")["vocabulary_sha256"].startswith("base-vocab:")

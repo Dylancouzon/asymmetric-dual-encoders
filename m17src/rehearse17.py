@@ -30,7 +30,7 @@ from pathlib import Path
 
 import numpy as np
 
-from common import RESULTS, WORK, registry, sha_text, write_json
+from common import RESULTS, WORK, admit_write, registry, sha_text, write_json
 
 DIM = 16
 SPECIALS = ["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]"]
@@ -166,7 +166,7 @@ def build(root, seed=0, device="cpu", log=print):
     from tokenizers import Tokenizer
     from table import Preproc, QueryTable, save_table
 
-    root = Path(root)
+    root = Path(admit_write(root))   # before anything is deleted or created under it
     _clear_rehearsal_dir(root)
     (root / "data").mkdir(parents=True)
     (root / MARKER).write_text(
@@ -185,7 +185,9 @@ def build(root, seed=0, device="cpu", log=print):
     pre = Preproc(prefix="", add_special_tokens=True, max_length=512, pool_mode="sqrt")
     warm = QueryTable(rows, weight_init=weights, learned_weights=True, fallback_id=2)
     save_table(root / "data" / "warm_start.npz", warm, pre,
-               meta={"m17_fixture": True, "source": "rehearsal synthetic", "weights_folded": False})
+               meta={"m17_fixture": True, "source": "rehearsal synthetic", "weights_folded": False,
+                     # teacher identity is checked in every mode, the rehearsal included
+                     "teacher": reg["teacher"], "teacher_revision": reg["teacher_revision"]})
     eff = m17vocab.effective_rows(rows, warm.token_weights().detach().numpy())
     # the "v1 release" this fixture stands in for: the same rows, folded once
     dev = m17vocab.verify_old_vocab_parity(eff, eff)

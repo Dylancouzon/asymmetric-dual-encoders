@@ -36,7 +36,7 @@
 | `work/m17/manifest/` | Gitignored step-2b artifacts: `doc_groups/*.tsv.gz`, `query_families.tsv.gz`, `alias_pairs.jsonl`, `alias_pairs_summary.json`, `counts_cache.json`, and step 2c's `alias_test_families.json`. Hashes are published in the result |
 | `work/m17/panel/`, `work/m17/alias/` | Gitignored panel and alias text: `panel.jsonl`, `selection.jsonl`, `audit.jsonl`, `corpus.jsonl`, the two classifier caches, `ancestry_screen.json`, `alias_test.jsonl` |
 | `m17src/rehearse17.py`, `m17src/conftest.py`, `m17src/test_*.py` | The tiny synthetic end-to-end rehearsal and the pytest checks that run on it and on fixture-scale inputs. The rehearsal deletes an existing `--out` only when it is empty or carries the `.m17_rehearsal` marker it wrote itself |
-| `results/m17_rehearsal.json` | The pre-clock rehearsal record: stages, scaled fixture constants, gate results, loader parity, synthetic-only evaluation. Not a quality observation or a rate forecast |
+| `results/m17_rehearsal.json`, `results/m17_rehearsal_step4.json` | The step-3 and post-review (step 4) pre-clock rehearsal records: stages, scaled fixture constants, gate results, loader parity, synthetic-only evaluation. Not a quality observation or a rate forecast |
 
 Reproduce diagnostics from the repository root using `.venv/bin/python
 m17src/planning_probe.py --gpu` or `--followup`. Both refuse to overwrite their existing result.

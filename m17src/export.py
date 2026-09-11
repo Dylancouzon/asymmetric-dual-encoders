@@ -27,7 +27,7 @@ from pathlib import Path
 
 import numpy as np
 
-from common import admit_read, freeze, registry, sha_file, sha_json, write_json
+from common import admit_read, admit_write, freeze, registry, sha_file, sha_json, write_json
 
 BUNDLE_FILES = ("model.npz", "config.json", "tokenizer.json", "provenance.json")
 ATTRIBUTION_SRC = "research/m17-k8s-attribution.md"
@@ -173,7 +173,7 @@ def build_bundle(out_dir, eff_rows, tokenizer, provenance, reg=None, form="endpo
     from table import quantize_int8
     reg = reg or registry()
     fz = freeze()
-    out = Path(out_dir)
+    out = Path(admit_write(out_dir))   # before anything is created under it
     out.mkdir(parents=True, exist_ok=True)
     spec = assert_encoder_spec(dict(fz["encoder_spec"]), reg)
     fixture = bool(fixture)

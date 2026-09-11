@@ -375,3 +375,29 @@ alias test → panel screen and seal → alias pool → support manifest.
   registry `measured_bucket_populations.alias_pairs` and the passes figure updated.
 
 No development-suite, panel-quality or protected read. Next: Codex Sol review (2 of 2).
+
+## Step 4e–4f — Sol review, fixes, re-check and second regeneration (2026-09-11)
+
+Codex Sol reviewed the fixed tree independently (22 findings, `REVIEW.md`). Fixes kept to the
+accident-prone bugs under Dylan's ruling: exact search kept whole cutoff ties per document block
+(the per-block partial selection was block-size dependent for ties wider than k); evaluation
+requires identical keys across dense, BM25, baseline and alias views; export checks the supplied
+tokenizer against the snapshot and requires identity for both forms; fixture status is an
+explicit flag set only by the rehearsal; the seal requires the exact ten ancestor streams; every
+arm requires the alias supply; alias-test families are source-qualified at the pinned threshold
+3; a thin abbreviation's expansion is admitted at its rank; uniform candidate draws are without
+replacement. The lock-receipt, prepared-manifest and universal-admission items were dropped or
+deferred to the step-5 data builder and recorded in `execution_entry_missing`. The single P1
+re-check (Sol) confirmed 25 P1 fixes and found three small remaining ones, fixed directly.
+Tests 206 → 223. Commits `cc88fc1` and the step-4f commit.
+
+Second regeneration chain (`work/m17/logs/regen_chain2.log`): alias test (same 120/80 split;
+source-qualified families; threshold 3 recorded), panel screen and seal (ten streams present by
+exact name; script and registry hashes recorded; 440 pending rows unchanged), alias pool
+(unchanged: 15,393 pairs, 180 excluded; spot-check sample unchanged), support manifest
+(document-only method string; counts unchanged). The chain's rehearsal stage correctly refused
+to delete the step-3 output directory, which predates the marker; that directory was removed by
+hand and the rehearsal re-run after the re-check fixes: `results/m17_rehearsal_step4.json`,
+all gates pass, resume exercised. The step-3 record `results/m17_rehearsal.json` is retained.
+
+Step 4 is closed. No development-suite, panel-quality or protected read occurred.

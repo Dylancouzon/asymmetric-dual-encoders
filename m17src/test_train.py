@@ -476,3 +476,31 @@ def test_run_refuses_a_draft_registry_even_when_called_directly():
     cfg = T.RunCfg.from_registry(common.registry(), "VL-A")
     with pytest.raises(SystemExit, match="registry status"):
         T.run(cfg, {}, "/tmp/does-not-matter", resume=False, log=lambda *a: None)
+
+
+def test_output_roots_are_guarded_before_anything_is_created(tmp_path):
+    """Sol re-check: `run()`, `build_bundle()` and the rehearsal root all go through
+    `admit_write` first, not only `write_json` at the end."""
+    import export
+    import rehearse17
+    cfg = T.RunCfg.from_registry(common.registry(), "C", rehearsal=True)
+    bad = common.REPO / "results" / "frozen_eval" / "untouched-x"
+    with pytest.raises(common.ProtectedWrite):
+        T.run(cfg, data=None, out_dir=bad)
+    with pytest.raises(common.ProtectedWrite):
+        export.build_bundle(bad, None, None, {}, fixture=True)
+    with pytest.raises(common.ProtectedWrite):
+        rehearse17.build(bad)
+    assert not bad.exists()
+
+
+def test_rehearsal_mode_still_checks_the_teacher_identity(tmp_path):
+    """Only the status gate and the FREEZE hash are rehearsal bypasses."""
+    from table import Preproc, QueryTable, save_table
+    V = 8
+    m = QueryTable(np.random.default_rng(0).normal(size=(V, 4)).astype(np.float32),
+                   weight_init=np.ones(V, dtype=np.float32), learned_weights=True)
+    save_table(tmp_path / "ck.npz", m, Preproc(pool_mode="sqrt"),
+               meta={"weights_folded": False, "teacher": "someone/else", "teacher_revision": "0" * 40})
+    with pytest.raises(SystemExit, match="was distilled from someone/else"):
+        T.load_warm_start(tmp_path / "ck.npz", expect_vocab=V, device="cpu", rehearsal=True)
