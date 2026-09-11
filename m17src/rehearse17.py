@@ -325,11 +325,25 @@ def main(argv=None):
     ap.add_argument("--out", default=str(WORK / "rehearsal"))
     ap.add_argument("--device", default="cpu")
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--result", default=str(RESULTS / "m17_rehearsal.json"))
+    ap.add_argument("--result", default=None,
+                    help="default: results/m17_rehearsal.json for the canonical --out, "
+                         "otherwise <out>/rehearsal.json")
+    ap.add_argument("--force", action="store_true",
+                    help="overwrite an existing committed result (record why)")
     args = ap.parse_args(argv)
-    rec = build(args.out, seed=args.seed, device=args.device)
-    write_json(args.result, rec)
-    print(f"rehearsal OK -> {args.result} ({rec['wall_clock_seconds']}s)")
+    out = Path(args.out)
+    # Only the CANONICAL rehearsal directory writes the committed record. A rehearsal pointed
+    # somewhere else keeps its record beside its own outputs, so a scratch run cannot quietly
+    # replace the observation the ledger cites.
+    result = Path(args.result) if args.result else (
+        RESULTS / "m17_rehearsal.json" if out.resolve() == (WORK / "rehearsal").resolve()
+        else out / "rehearsal.json")
+    if result.exists() and not args.force:
+        raise SystemExit(f"REFUSED: {result} already records a rehearsal. Re-run with --force "
+                         "only when you mean to replace it, and say why in the commit.")
+    rec = build(out, seed=args.seed, device=args.device)
+    write_json(result, rec)
+    print(f"rehearsal OK -> {result} ({rec['wall_clock_seconds']}s)")
     return 0
 
 
