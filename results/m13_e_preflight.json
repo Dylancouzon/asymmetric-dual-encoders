@@ -1,0 +1,159 @@
+{
+  "status": "PASSED",
+  "scope": "dependency checks only; no scoring or training",
+  "git_head": "3c163453c90d5934fad907c29f4c029b1bb9e080",
+  "registry_sha256": "41ff54c33dd88e5adedbe0855dd97c61e4ce19f635e1326320409d97bc71c9ec",
+  "warm_start": {
+    "n_fit": 60000,
+    "seed": 21
+  },
+  "plans": {
+    "E-bs32": {
+      "arm": "E-bs32",
+      "resolved": "E-bs32",
+      "family": "E",
+      "dose_examples": 5000000,
+      "batch": 32,
+      "pattern": "75/25",
+      "pattern_source": {
+        "raw": null,
+        "resolved": "75/25",
+        "source": "anchor.mix",
+        "anchor_window_pattern": "3Q+1D"
+      },
+      "student": "bge-small",
+      "student_source": "results/m10_F_verdict.json",
+      "f_verdict": {
+        "student": "bge-small",
+        "winner": "bge-small",
+        "path": "results/m10_F_verdict.json",
+        "registry_sha256": "41ff54c33dd88e5adedbe0855dd97c61e4ce19f635e1326320409d97bc71c9ec",
+        "sha256_of_F_records": [
+          "11bd572669e9978ce343059016642ba7f20ed06ea7a9f014aa32ac164f478840",
+          "5ea9f89c8093f58cd9043ed7036bb2927deb6a3640ce030cc5a586ffbbc647c1"
+        ]
+      },
+      "n_layers": 3,
+      "head": "linear",
+      "objective": "squared_l2",
+      "warm_start": "linear",
+      "cut_corpus": true,
+      "sources": [
+        "m9-pool",
+        "paq-build",
+        "harvest",
+        "generated"
+      ],
+      "n_docs": 1250000,
+      "total_steps": 156250,
+      "cycle_end_steps": [
+        52082,
+        104165,
+        156249
+      ],
+      "dose_rounding": {
+        "dose_registered": 5000000,
+        "examples_run": 5000000,
+        "examples_dropped": 0,
+        "rule": "floor (the dose is a cap)"
+      },
+      "read_points": [],
+      "projected_hours": 2.71,
+      "projected_at_ex_per_s": 512.0,
+      "cloud_only": "hardware parity: runs on the A100 beside `E-bs128` so E1 is not a cross-hardware contrast (not a memory limit; bs32 fits this box)"
+    },
+    "E-bs128": {
+      "arm": "E-bs128",
+      "resolved": "E-bs128",
+      "family": "E",
+      "dose_examples": 5000000,
+      "batch": 128,
+      "pattern": "75/25",
+      "pattern_source": {
+        "raw": null,
+        "resolved": "75/25",
+        "source": "anchor.mix",
+        "anchor_window_pattern": "3Q+1D"
+      },
+      "student": "bge-small",
+      "student_source": "results/m10_F_verdict.json",
+      "f_verdict": {
+        "student": "bge-small",
+        "winner": "bge-small",
+        "path": "results/m10_F_verdict.json",
+        "registry_sha256": "41ff54c33dd88e5adedbe0855dd97c61e4ce19f635e1326320409d97bc71c9ec",
+        "sha256_of_F_records": [
+          "11bd572669e9978ce343059016642ba7f20ed06ea7a9f014aa32ac164f478840",
+          "5ea9f89c8093f58cd9043ed7036bb2927deb6a3640ce030cc5a586ffbbc647c1"
+        ]
+      },
+      "n_layers": 3,
+      "head": "linear",
+      "objective": "squared_l2",
+      "warm_start": "linear",
+      "cut_corpus": true,
+      "sources": [
+        "m9-pool",
+        "paq-build",
+        "harvest",
+        "generated"
+      ],
+      "n_docs": 1250000,
+      "total_steps": 39062,
+      "cycle_end_steps": [
+        13019,
+        26039,
+        39061
+      ],
+      "dose_rounding": {
+        "dose_registered": 5000000,
+        "examples_run": 4999936,
+        "examples_dropped": 64,
+        "rule": "floor (the dose is a cap)"
+      },
+      "read_points": [],
+      "projected_hours": 0.92,
+      "projected_at_ex_per_s": 1517.0,
+      "cloud_only": "batch 128 above ~128 tokens: driver error on this card; runs on the A100"
+    }
+  },
+  "cov_units": 10,
+  "cov_queries": 13416,
+  "cov_caches": [
+    {
+      "path": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-MedicalQARetrieval-d-stella-400M-v5-10e9f29435bd",
+      "documents": 2048,
+      "chunks": 1,
+      "identity": "10e9f29435bd",
+      "verified": true
+    },
+    {
+      "path": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchCorporateLobbying-d-stella-400M-v5-1557641d6093",
+      "documents": 319,
+      "chunks": 1,
+      "identity": "1557641d6093",
+      "verified": true
+    },
+    {
+      "path": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchConsumerContractsQA-d-stella-400M-v5-9eba3c192f04",
+      "documents": 154,
+      "chunks": 1,
+      "identity": "9eba3c192f04",
+      "verified": true
+    },
+    {
+      "path": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LEDGER-d-stella-400M-v5-b4e164c82cfb",
+      "documents": 47820,
+      "chunks": 1,
+      "identity": "b4e164c82cfb",
+      "verified": true
+    },
+    {
+      "path": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005",
+      "documents": 404416,
+      "chunks": 9,
+      "identity": "09a709ba1005",
+      "verified": true
+    }
+  ]
+}

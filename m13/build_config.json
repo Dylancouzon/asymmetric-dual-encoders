@@ -1,12 +1,11 @@
 {
  "_what": "the M13 200M build arm: every data knob equal to ANCHOR's except the dose, the batch, the document policy and the data cut. Validated against the LIVE m10/screen_registry.json by m13src/build_lock.validate before any run; executed by m13src/build13.py.",
- "_authority": "m10/M102_LOCK.md (inherited build contract) and research/archive/m10-cleanup-2026-09-10/m10/M102_LOCK.md:73-145 (dose, schedule, optimizer, plateau/kill, the ceiling; its extension cycles are dropped by ruling R13). m13/STAGE1_DESIGN.md §1 is the controller design.",
+ "_authority": "m10/M102_LOCK.md (inherited build contract) and research/archive/m10-cleanup-2026-09-10/m10/M102_LOCK.md:73-145 (dose, schedule, optimizer, plateau/kill, the ceiling; its extension cycles are dropped by ruling R13). m13/STAGE1_DESIGN.md \u00a71 is the controller design.",
  "_registered": "2026-09-10",
  "arm": "BUILD-200M",
  "registry": "m10/screen_registry.json",
  "registry_sha256": null,
  "_registry_sha256": "RECORDED at validation, not pinned: ruling R9 (strip `pending` from both E arms, re-issue the F verdict) changes the registry sha before the build starts, and a pin here would refuse the very registry the build is supposed to run under. The sha actually validated against goes into results/m13_build_record.json.",
-
  "arm_entry": {
   "family": "build",
   "trained": true,
@@ -25,77 +24,97 @@
   },
   "note": "the M13 build arm. Not a screen arm and not a contrast: it is added to an in-memory copy of the screen registry by build13.py and never written into m10/screen_registry.json."
  },
-
  "batch_source": {
   "file": "results/m10_screen_verdicts.json",
   "key": "selected.batch",
-  "rule": "rules.E_cost — select bs32 iff E1 (bs32 - bs128) RESOLVES; in every other case bs128",
+  "rule": "rules.E_cost \u2014 select bs32 iff E1 (bs32 - bs128) RESOLVES; in every other case bs128",
   "refuse": "a 'PENDING' batch is refused outside --smoke-steps; both E arms run on the cloud GPU first"
  },
-
  "data_knobs_equal_to_anchor": {
   "student": "bge-small",
-  "sources": ["m9-pool", "paq-build", "harvest", "generated"],
+  "sources": [
+   "m9-pool",
+   "paq-build",
+   "harvest",
+   "generated"
+  ],
   "mix": "75/25",
   "window_pattern": "3Q+1D",
   "objective": "squared_l2",
   "feature_layers": 3,
   "feature_dim": 1152,
   "head": "linear",
-  "head_layers": [12, 8, 4],
+  "head_layers": [
+   12,
+   8,
+   4
+  ],
   "seed": 0,
-  "warm_start": {"kind": "linear", "n_fit": 60000, "fit_seed": 21},
+  "warm_start": {
+   "kind": "linear",
+   "n_fit": 60000,
+   "fit_seed": 21
+  },
   "_checked_by": "m13src/build_lock.validate against registry `anchor`, `warm_start`, corpus_loader.ARM_SOURCES, nano10.LAYERS and results/m10_screen_verdicts.json:selected"
  },
- "differs_from_anchor": ["dose_examples", "batch", "documents", "data_cut"],
+ "differs_from_anchor": [
+  "dose_examples",
+  "batch",
+  "documents",
+  "data_cut"
+ ],
  "_data_cut": "NO cut. The screen's cut applies only to data_cut.applies_to (A2, A3, A4/ANCHOR) and exists so family A's forms contrast is not confounded with volume. The lock's 'query epochs ~ 37 over 4.0M texts' is the FULL A4 (3,486,034 unique texts uncut vs 2,651,572 cut). Ruling R5 confirms this reading.",
-
  "schedule": {
   "cycles": 3,
   "peak_lr": 0.0001,
-  "final_lr": 0.00001,
+  "final_lr": 1e-05,
   "warmup_examples": 64000,
   "_implemented_by": "m10src/nano10.lr_at (linear peak->final per cycle, last cycle absorbs the remainder), nano10.cycle_ends (boundaries), nano10.warmup_steps_for(batch) (warmup registered in EXAMPLES, rules.E_warmup_parity), wired at m10src/trainer10.py train_arm's `lr = N.lr_at(...)` call.",
   "_no_extension": "RULING R13 (Dylan, 2026-09-10): no extension cycles. The build is these three cycles and nothing after them; the lock's permitted extensions are not exercised."
  },
  "optimizer": {
   "name": "AdamW",
-  "betas": [0.9, 0.999],
-  "eps": 1e-8,
-  "weight_decay": {"dim_gt_1": 0.01, "dim_le_1": 0.0},
+  "betas": [
+   0.9,
+   0.999
+  ],
+  "eps": 1e-08,
+  "weight_decay": {
+   "dim_gt_1": 0.01,
+   "dim_le_1": 0.0
+  },
   "grad_clip": 1.0,
   "precision": "bf16 autocast on CUDA, fp32 loss",
   "batching": "length-bucketed single-chunk",
   "_implemented_by": "m10src/trainer10.param_groups (decay on dim>1 only), trainer10.train_arm (AdamW betas/eps, clip_grad_norm_ 1.0), trainer10.autocast_for (bf16 on CUDA only), m10src/data10.length_buckets."
  },
-
  "plateau_min_gain": 0.003,
  "_kill_rule": "nano10.kill_fires (non-finite, or two consecutive scheduled evaluations more than 0.0056 below the best of their own kind). A kill at any annealed end is a terminal FAILED record with no final checkpoint.",
  "_plateau_rule": "nano10.plateau_fires (gain < 0.003 at a cycle end k >= 3), read as a FREEZE: the schedule's last cycle end is its last step, so a plateau there is the ordinary end of the build. Under ruling R13 nothing follows it.",
  "_extensions": "NONE (ruling R13, Dylan 2026-09-10). `extension_examples`, `extension_min_gain` and `max_extension_cycles` are gone from this file and build_lock.validate REFUSES a configuration that reintroduces them.",
-
  "budget_ceiling_usd": 1000,
  "budget": {
   "_what": "a fixed ALLOCATION TABLE, not a cap formula: R13 removed the extension cycles the leftover budget used to buy. build_lock.allocation prices these lines at the measured rate and the billed price and refuses a plan above the ceiling.",
   "mandatory_hours_fixed": {
    "day_one_benchmark": 1.0,
    "cloud_encodes_export_parity_final_run": 6.0,
-   "lotte_clean_encode": 1.3,
-   "reserved_batch_allowance": 8.0
+   "lotte_clean_encode": 15.0,
+   "reserved_batch_allowance": 55.2
   },
   "mandatory_examples": {
    "cloud_E_arms": 10000000,
    "build": 200000000
   },
-  "fixed_usd": {"persistent_disk_and_egress": 103.0},
+  "fixed_usd": {
+   "persistent_disk_and_egress": 103.0
+  },
   "_storage_allocation": "2026-09-11 initial Runpod US-MD-1 setup: 500 GB Pod volume, $0.10/GB/month running or $0.20 stopped; 30 GB container $0.10/GB/month running; no provider transfer fee. Reserve $103 for up to 30 days at conservative storage rates, replacing the stale $25 estimate. Reconcile actual charges and elapsed storage duration before each stage; the total ceiling stays $1,000.",
-  "_reserved_batch_allowance": "RULING R10 (Dylan, 2026-09-10, \"fine if needed\"): 8.0 A100-hours is an ESTIMATE for the conditional reserved batch (~10M stella passage encodes for FEVER and DBpedia-entity plus the two small cqadup components, ~60 GB of vectors within the 500 GB disk); it is re-measured on day one by timing 10,000 passages and the measured figure replaces this one in the allocation table. null REFUSES the allocation outside a smoke rather than quietly pricing it at zero.",
-  "_note": "the rate-derived lines (both cloud E arms, the build itself) are priced from the MEASURED examples/s on day one, not from run_arm.PLAN_RATES, which are projections. `build13.py --plan --rate EX_S --price USD_H` prints the table; a plan above the ceiling is refused."
+  "_reserved_batch_allowance": "2026-09-11 R10 measured surrogate: pinned stella fp32, 512 max tokens, 32768 padded tokens/batch, 1000 and 10000 evenly spread admitted SQuAD training passages. Slower measured rate times 10M passages, doubled plus setup and rounded upward gives 55.2 hours. Source: results/m13_encode_benchmark.json. No reserved content read; lengths average153 tokens, so this is a planning allowance, not guaranteed target runtime. Actual reserved executor and final access remain separate gates.",
+  "_note": "the rate-derived lines (both cloud E arms, the build itself) are priced from the MEASURED examples/s on day one, not from run_arm.PLAN_RATES, which are projections. `build13.py --plan --rate EX_S --price USD_H` prints the table; a plan above the ceiling is refused.",
+  "_lotte_encode_allowance": "2026-09-11: 2.7M-passage allowance scaled conservatively from the same fp32 surrogate including twofold headroom, rounded upward to 15 hours; actual LoTTE encoding path/lengths may differ. No LoTTE content read."
  },
-
  "torch_compile": "smoke_only",
- "_torch_compile": "registered smoke-only for registered arms unless separately authorized (m10/HEADROOM.md §T, m10/M102_LOCK.md). build13.py refuses --compile outside --smoke-steps.",
-
+ "_torch_compile": "registered smoke-only for registered arms unless separately authorized (m10/HEADROOM.md \u00a7T, m10/M102_LOCK.md). build13.py refuses --compile outside --smoke-steps.",
  "checkpointing": {
   "rolling_minutes": 30,
   "retained": "cycle{k}.pt at every annealed cycle end",

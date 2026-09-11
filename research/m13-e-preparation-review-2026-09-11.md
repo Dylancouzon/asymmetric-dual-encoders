@@ -32,3 +32,24 @@ and actual rendered cleanup against owned and unowned sleeping local processes. 
 protected access in these checks. The controller is fresh-launch only, with no automatic rerun.
 It copies entire E output trees and published records, verifies remote manifest plus checkpoint
 and COV references locally, and stops compute on completion/failure. WSL must remain awake.
+
+## Launcher and measured allocation
+
+Both reviewers cleared the outer E launcher after replacing subprocess.run with retained Popen:
+interruptions send the controller SIGTERM and allow 1,800 seconds for its bounded evidence/STOP
+cleanup before forced kill and outer STOP. The startup wrapper refuses tracked prep receipts
+before archiving the two untracked originals, deploys exact HEAD, and bootstraps under timeout.
+Operational wrapper copy: `work/m13cloud-launchers/e.py` (no embedded credentials).
+
+The cloud preflight passed all ten admitted COV units and five teacher caches. The encode
+benchmark passed both sizes with no allocator retries. Parent validation: all 55 build-controller
+tests passed; build13 printed the measured allocation; E controller verified receipt/hash gates.
+The numerical review recomputed the base $719.09, E runtime topup $16.70 and $4.74 paid, yielding
+$740.53 and $259.47 ceiling headroom. Allowances use explicit conservative surrogates and do not
+authorize build or protected access. No recipe/schedule/protocol fields changed.
+
+Both e_launch_audit and encode_benchmark independently recomputed the final allocation and
+returned GO for E only. Both confirmed all six artifact bindings and three benchmark code
+hashes, the 199 ex/s safety rate, reserved55.2h/LoTTE15h allowances, $740.53 total and $259.47
+headroom. Their access audits covered only named source/receipt/config/plan metadata; no cloud,
+credentials or protected payloads.
