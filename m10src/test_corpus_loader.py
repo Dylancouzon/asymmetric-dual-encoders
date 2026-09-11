@@ -340,7 +340,7 @@ def test_the_token_cache_identity_binds_the_cut_not_just_the_source_list(monkeyp
         assert len(list(Path(d).iterdir())) == 2, "the cut must be part of the cache identity"
 
 
-def test_the_manifest_identity_is_the_corpus_and_not_the_run(monkeypatch):
+def test_the_manifest_identity_is_the_corpus_and_not_the_run(monkeypatch, tmp_path):
     """`seconds` is a wall-clock measurement: leaving it inside the hashed view would put a fresh
     identity -- and so a fresh pretokenization of 5.3M texts -- on every load."""
     seen = {}
@@ -358,6 +358,12 @@ def test_the_manifest_identity_is_the_corpus_and_not_the_run(monkeypatch):
             return np.ones((2, 8), dtype=np.float16)
 
     import targets10
+    # Exercise the real holdout guard without depending on gitignored box artifacts.
+    holdout_dir = tmp_path / "m10harvest"
+    holdout_dir.mkdir()
+    _jsonl(holdout_dir, "harvest_forms12.jsonl",
+           [{"text": "a held-out query", "form": "claim"}])
+    monkeypatch.setattr(CL, "WORK", tmp_path)
     monkeypatch.setattr(CL, "source_texts", fake)
     monkeypatch.setattr(targets10, "TargetCache", lambda *a, **k: Cache())
     monkeypatch.setitem(CL.SOURCES, "fake", {"kind": "jsonl", "path": "/dev/null", "what": "t"})
