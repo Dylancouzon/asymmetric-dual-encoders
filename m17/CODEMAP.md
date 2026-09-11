@@ -37,6 +37,8 @@
 | `work/m17/panel/`, `work/m17/alias/` | Gitignored panel and alias text: `panel.jsonl`, `selection.jsonl`, `audit.jsonl`, `corpus.jsonl`, the two classifier caches, `ancestry_screen.json`, `alias_test.jsonl` |
 | `m17src/prepare_data.py` | **Step 5. The one prepared-data builder.** Ten stages, each cached under `<out>/stages/<name>.json` and resumable: admitted query pool (general / unpaired-coverage / alias buckets, the caps, the seeded stratified `--size` subsample and the whole-family held-out slice), the `(source, document id) -> domain` join (`doc_domain.tsv.gz`, `join_domain` refuses two labels for one document or text group), the protected screen (OFF pre-clock, recorded `deferred_to_clock`), teacher query encoding, the bank, v1 query vectors, old-vocabulary parity, vocabulary selection/extension, the candidate cache with its two pre-lock diagnostics, and the two `prepared.json` manifests. Output layout: `<out>/shared/` holds the one cache, bank, teacher vectors and warm start; `<out>/base/` (arms C/L, no `new_rows`) and `<out>/ext/` (V/VL/VL-A) hold their own tokenizer, `student_ids.json` and manifest and symlink the shared files. Timings and rates are in `results/m17_prepare_timing.json` |
 | `m17src/rehearse17.py`, `m17src/conftest.py`, `m17src/test_*.py` | The tiny synthetic end-to-end rehearsal and the pytest checks that run on it and on fixture-scale inputs. The rehearsal deletes an existing `--out` only when it is empty or carries the `.m17_rehearsal` marker it wrote itself |
+| `results/m17_prepare_timing.json` | Step 5's measured preparation cost at two real sizes (2,000 and 10,000 queries) on the RTX 3080 box: per-stage seconds, rates, teacher/document cache hit rates, RSS high-water and GPU peak, and the linear extrapolation to the full 574,327-query pool with the fixed costs named. Not a quality number and not a training-throughput forecast |
+| `work/m17/prepared/` | Gitignored prepared directories (`s2000`, `s10000`, later the full pool) plus the two cross-run text-vector caches, `teacher_cache/` and `doc_cache/`, keyed by sha256(text) |
 | `results/m17_rehearsal.json`, `results/m17_rehearsal_step4.json` | The step-3 and post-review (step 4) pre-clock rehearsal records: stages, scaled fixture constants, gate results, loader parity, synthetic-only evaluation. Not a quality observation or a rate forecast |
 
 Reproduce diagnostics from the repository root using `.venv/bin/python
@@ -87,6 +89,11 @@ rehearsal with `.venv/bin/python m17src/rehearse17.py` (see `HARNESS.md`).
   `query_only_by_bank_budget`. Queries outside that subset enter the pool as query-only
   examples by selection; `cache.build` still refuses, by qid, any labeled query whose positive
   is outside the bank.
+- Teacher encoding is **not bit-reproducible run to run** on this GPU: re-encoding the same
+  texts with the same batching produced different `teacher_q.npy` bytes. The teacher cache is
+  therefore the artifact of record — reuse, not re-encoding, is what makes a prepared directory
+  reproducible — and a cache rebuild must follow any re-encode, because the cached candidate
+  lists were scored from the vectors that existed when they were built.
 - `train.py --rehearsal` **with** `--data` now smokes the real prepared directory instead of
   dispatching to `rehearse17`; without `--data` it is still the synthetic fixture world. The
   bypass covers the status gate and the FREEZE hash only, and the checkpoint sha is printed.

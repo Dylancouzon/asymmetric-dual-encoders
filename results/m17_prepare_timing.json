@@ -1,0 +1,330 @@
+{
+ "_note": "Measured pre-clock preparation cost at two real sizes on the RTX 3080 box. No quality number, no development or panel read, no protected surface. The extrapolation is linear in the query count; stages measured in documents or rows are carried as fixed costs of the full build, not divided by queries.",
+ "_schema": "m17-prepare-timing-v1",
+ "date": "2026-09-11",
+ "extrapolation": {
+  "caveats": [
+   "linear in queries; the candidate cache is O(queries x bank) and the bank is held at the registered cap in both measurements, so its per-query cost is the real one",
+   "the teacher and document encode caches were warm for repeated text; the measured `encoded` counts say how much was actually paid",
+   "single process, no parallelism; the cache stage is CPU-bound numpy"
+  ],
+  "estimated_hours": 20.44,
+  "estimated_seconds": 73599.9,
+  "fixed_costs_subtracted": [
+   "bank_document_encode",
+   "bank_pool_lookup",
+   "bank_sample",
+   "domain_store_pass",
+   "parity",
+   "pool_coverage_sample"
+  ],
+  "fixed_seconds": 59.8,
+  "full_pool_queries": 574327,
+  "per_query_seconds": 0.128046
+ },
+ "host": {
+  "gpu": "RTX 3080 10 GiB",
+  "ram_gib": 25
+ },
+ "separately_observed": {
+  "cold_document_tower_encode": {
+   "documents": 1648,
+   "documents_per_second": 36.1,
+   "provenance": "measured on the first build of this session; both timed builds above reused that cache and therefore report 0 encodes. Recorded here rather than re-measured, because re-encoding would change the bank vectors the candidate caches were built from.",
+   "seconds": 45.701,
+   "what": "the admitted Kubernetes slice encoded with the frozen document tower (m7/FREEZE.json encoder_spec, fp16), the one-off cost of filling work/m17/prepared/doc_cache"
+  },
+  "cold_teacher_query_encode": {
+   "what": "the small build encoded its whole pool cold (hit rate 0.0); the large build reused it (hit rate 0.199). Both rates are in stages."
+  }
+ },
+ "sizes": [
+  {
+   "bank": {
+    "encoded_with_document_tower": 1648,
+    "from_pool": 260493,
+    "n_docs": 262141
+   },
+   "gpu_peak_gib": 0.0,
+   "out": "work/m17/prepared/s2000",
+   "queries": {
+    "coverage": 221,
+    "general": 1721,
+    "heldout": 7
+   },
+   "rss_high_water_gib": 3.404,
+   "size": 2000,
+   "teacher_cache": {
+    "cache_rows": 1949,
+    "encoded": 1949,
+    "hit_rate": 0.0
+   },
+   "wall_clock_seconds": 279.333
+  },
+  {
+   "bank": {
+    "encoded_with_document_tower": 1648,
+    "from_pool": 260494,
+    "n_docs": 262142
+   },
+   "gpu_peak_gib": 0.0,
+   "out": "work/m17/prepared/s10000",
+   "queries": {
+    "coverage": 1102,
+    "general": 8607,
+    "heldout": 35
+   },
+   "rss_high_water_gib": 3.511,
+   "size": 10000,
+   "teacher_cache": {
+    "cache_rows": 9750,
+    "encoded": 7801,
+    "hit_rate": 0.1994
+   },
+   "wall_clock_seconds": 1254.892
+  }
+ ],
+ "source_sha256": "eb768c2dd23755d03285af8fe0e7f6ff8eb8b351ba88cc387d84040408e6120c",
+ "stages": {
+  "bank_document_encode": {
+   "fixed_seconds": 0.03,
+   "large": {
+    "gpu_peak_gib": 0.0,
+    "n": 0,
+    "rate": null,
+    "rss_high_water_gib": 4.666,
+    "seconds": 0.03
+   },
+   "note": "row count identical at both sizes: a fixed cost, not a per-row one",
+   "per_row_seconds": 0.0,
+   "small": {
+    "gpu_peak_gib": 0.0,
+    "n": 0,
+    "rate": null,
+    "rss_high_water_gib": 4.372,
+    "seconds": 0.03
+   },
+   "unit": "documents"
+  },
+  "bank_pool_lookup": {
+   "fixed_seconds": 0.0,
+   "large": {
+    "gpu_peak_gib": 0.0,
+    "n": 260494,
+    "rate": 127944.01,
+    "rss_high_water_gib": 4.666,
+    "seconds": 2.036
+   },
+   "per_row_seconds": 0.138,
+   "scales_with": "documents",
+   "small": {
+    "gpu_peak_gib": 0.0,
+    "n": 260493,
+    "rate": 137246.05,
+    "rss_high_water_gib": 4.372,
+    "seconds": 1.898
+   },
+   "unit": "documents"
+  },
+  "bank_sample": {
+   "fixed_seconds": 3.165,
+   "large": {
+    "gpu_peak_gib": 0.0,
+    "n": 238363,
+    "rate": 89174.34,
+    "rss_high_water_gib": 0.782,
+    "seconds": 2.673
+   },
+   "per_row_seconds": -2e-06,
+   "scales_with": "documents",
+   "small": {
+    "gpu_peak_gib": 0.0,
+    "n": 255816,
+    "rate": 97010.24,
+    "rss_high_water_gib": 0.754,
+    "seconds": 2.637
+   },
+   "unit": "documents"
+  },
+  "cache_build": {
+   "fixed_seconds": 31.831,
+   "large": {
+    "gpu_peak_gib": 0.0,
+    "n": 9744,
+    "rate": 7.79,
+    "rss_high_water_gib": 3.511,
+    "seconds": 1250.805
+   },
+   "per_row_seconds": 0.1251,
+   "scales_with": "queries",
+   "small": {
+    "gpu_peak_gib": 0.0,
+    "n": 1949,
+    "rate": 7.07,
+    "rss_high_water_gib": 3.404,
+    "seconds": 275.651
+   },
+   "unit": "queries"
+  },
+  "domain_store_pass": {
+   "fixed_seconds": 9.812,
+   "large": {
+    "gpu_peak_gib": 0.0,
+    "n": 24448,
+    "rate": 1944.02,
+    "rss_high_water_gib": 4.505,
+    "seconds": 12.576
+   },
+   "per_row_seconds": 0.000113,
+   "scales_with": "documents",
+   "small": {
+    "gpu_peak_gib": 0.0,
+    "n": 6459,
+    "rate": 612.69,
+    "rss_high_water_gib": 4.5,
+    "seconds": 10.542
+   },
+   "unit": "documents"
+  },
+  "parity": {
+   "fixed_seconds": 0.579,
+   "large": {
+    "gpu_peak_gib": 2.959,
+    "n": 30522,
+    "rate": 52715.03,
+    "rss_high_water_gib": 2.885,
+    "seconds": 0.579
+   },
+   "note": "row count identical at both sizes: a fixed cost, not a per-row one",
+   "per_row_seconds": 0.0,
+   "small": {
+    "gpu_peak_gib": 2.959,
+    "n": 30522,
+    "rate": 55293.48,
+    "rss_high_water_gib": 2.814,
+    "seconds": 0.552
+   },
+   "unit": "rows"
+  },
+  "pool_coverage_sample": {
+   "fixed_seconds": 2.605,
+   "large": {
+    "gpu_peak_gib": 0.0,
+    "n": 417,
+    "rate": 164.43,
+    "rss_high_water_gib": 0.985,
+    "seconds": 2.536
+   },
+   "per_row_seconds": -0.000165,
+   "scales_with": "documents",
+   "small": {
+    "gpu_peak_gib": 0.0,
+    "n": 84,
+    "rate": 32.42,
+    "rss_high_water_gib": 0.985,
+    "seconds": 2.591
+   },
+   "unit": "documents"
+  },
+  "pool_general_scan": {
+   "fixed_seconds": 4.061,
+   "large": {
+    "gpu_peak_gib": 0.0,
+    "n": 496327,
+    "rate": 122217.93,
+    "rss_high_water_gib": 0.984,
+    "seconds": 4.061
+   },
+   "note": "row count identical at both sizes: a fixed cost, not a per-row one",
+   "per_row_seconds": 0.0,
+   "small": {
+    "gpu_peak_gib": 0.0,
+    "n": 496327,
+    "rate": 123834.08,
+    "rss_high_water_gib": 0.983,
+    "seconds": 4.008
+   },
+   "unit": "queries"
+  },
+  "student_tokenize": {
+   "fixed_seconds": 0.006,
+   "large": {
+    "gpu_peak_gib": 0.0,
+    "n": 19488,
+    "rate": 31947.54,
+    "rss_high_water_gib": 4.505,
+    "seconds": 0.61
+   },
+   "per_row_seconds": 3.1e-05,
+   "scales_with": "queries",
+   "small": {
+    "gpu_peak_gib": 0.0,
+    "n": 3898,
+    "rate": 30692.91,
+    "rss_high_water_gib": 4.5,
+    "seconds": 0.127
+   },
+   "unit": "queries"
+  },
+  "teacher_encode": {
+   "fixed_seconds": 2.441,
+   "large": {
+    "gpu_peak_gib": 2.959,
+    "n": 7801,
+    "rate": 322.85,
+    "rss_high_water_gib": 2.802,
+    "seconds": 24.163
+   },
+   "per_row_seconds": 0.002785,
+   "scales_with": "queries",
+   "small": {
+    "gpu_peak_gib": 2.959,
+    "n": 1949,
+    "rate": 247.71,
+    "rss_high_water_gib": 2.792,
+    "seconds": 7.868
+   },
+   "unit": "queries"
+  },
+  "v1_encode": {
+   "fixed_seconds": 0.431,
+   "large": {
+    "gpu_peak_gib": 2.959,
+    "n": 9744,
+    "rate": 11136.0,
+    "rss_high_water_gib": 2.802,
+    "seconds": 0.875
+   },
+   "per_row_seconds": 4.6e-05,
+   "scales_with": "queries",
+   "small": {
+    "gpu_peak_gib": 2.959,
+    "n": 1949,
+    "rate": 3748.08,
+    "rss_high_water_gib": 2.792,
+    "seconds": 0.52
+   },
+   "unit": "queries"
+  },
+  "vocab_discover": {
+   "fixed_seconds": 0.0,
+   "large": {
+    "gpu_peak_gib": 0.0,
+    "n": 9709,
+    "rate": 12166.67,
+    "rss_high_water_gib": 4.505,
+    "seconds": 0.798
+   },
+   "per_row_seconds": 8.5e-05,
+   "scales_with": "queries",
+   "small": {
+    "gpu_peak_gib": 0.0,
+    "n": 1942,
+    "rate": 13871.43,
+    "rss_high_water_gib": 4.5,
+    "seconds": 0.14
+   },
+   "unit": "queries"
+  }
+ }
+}

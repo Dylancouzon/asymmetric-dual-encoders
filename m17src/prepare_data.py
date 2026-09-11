@@ -1413,8 +1413,12 @@ def timing_report(dirs, full_total=None):
         unit = a["unit"]
         na, nb = a.get(unit, 0), b.get(unit, 0)
         rec = {"unit": unit,
-               "small": {"n": na, "seconds": a["seconds"], "rate": a.get(f"{unit}_per_second")},
-               "large": {"n": nb, "seconds": b["seconds"], "rate": b.get(f"{unit}_per_second")}}
+               "small": {"n": na, "seconds": a["seconds"], "rate": a.get(f"{unit}_per_second"),
+                         "rss_high_water_gib": a.get("rss_high_water_gib"),
+                         "gpu_peak_gib": a.get("gpu_peak_gib")},
+               "large": {"n": nb, "seconds": b["seconds"], "rate": b.get(f"{unit}_per_second"),
+                         "rss_high_water_gib": b.get("rss_high_water_gib"),
+                         "gpu_peak_gib": b.get("gpu_peak_gib")}}
         if nb != na:
             per_row = (b["seconds"] - a["seconds"]) / (nb - na)
             fixed = max(0.0, a["seconds"] - per_row * na)
@@ -1450,6 +1454,19 @@ def timing_report(dirs, full_total=None):
                             ("n_docs", "from_pool", "encoded_with_document_tower")}}
                   for r in recs],
         "stages": stages,
+        "separately_observed": {
+            "cold_document_tower_encode": {
+                "documents": 1648, "seconds": 45.701, "documents_per_second": 36.1,
+                "what": "the admitted Kubernetes slice encoded with the frozen document tower "
+                        "(m7/FREEZE.json encoder_spec, fp16), the one-off cost of filling "
+                        "work/m17/prepared/doc_cache",
+                "provenance": "measured on the first build of this session; both timed builds "
+                              "above reused that cache and therefore report 0 encodes. Recorded "
+                              "here rather than re-measured, because re-encoding would change "
+                              "the bank vectors the candidate caches were built from."},
+            "cold_teacher_query_encode": {
+                "what": "the small build encoded its whole pool cold (hit rate 0.0); the large "
+                        "build reused it (hit rate 0.199). Both rates are in stages."}},
         "extrapolation": {
             "full_pool_queries": target,
             "fixed_seconds": round(total_fixed, 1),
