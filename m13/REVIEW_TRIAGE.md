@@ -34,6 +34,16 @@ Second review (Sol, `research/m13-codex-gate-rereview-2026-09-10.md`): NO-GO, se
 | 9 P2 two runbook commands without the interpreter | prefixed |
 | 10 P3 `check_gate_manifest` reported the wrong commit | reports the gate's `manifest_commit` and verifies it against the live `git log` |
 
+Final P1 re-check (Astra, `research/m13-codex-gate-final-2026-09-10.md`): nine of ten closed, one
+downgraded to P2, two new P1s, NO-GO. All fixed, each in a few lines.
+
+| Finding | Fix |
+|---|---|
+| P1 a journaled slice whose file went missing was re-read on recovery | recovery refuses a missing file whose key is journaled |
+| P1 the new `gate13/` directory's parent entry was not fsynced | parent fsynced after `mkdir`, under the lock, before any payload open |
+| P2 dependency identity hashed separately loaded objects, `Nano10` loaded again | re-derived from the constructed student's own tokenizer and config |
+| unverified: recovery checked `n_queries` only, qids not held to the pin | `n_docs`, `n_qrels_pairs` and the pin's `query_ids_sha256` checked |
+
 ## Stage 1 review triage
 
 **Superseded in part by rulings R13–R16 (same day):** extension cycles and post-tag continuation are

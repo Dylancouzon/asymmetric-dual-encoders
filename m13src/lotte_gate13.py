@@ -354,18 +354,21 @@ def checkpoint_bytes(cfg, ar):
     return data
 
 
-def dependency_identity(cfg, student_key):
+def dependency_identity(cfg, student_key, model=None):
     """-> {"repo", "sha256"}: what `nano10.Nano10` loads BY REPOSITORY NAME beside the checkpoint
-    — the tokenizer and the backbone configuration. Recorded in the manifest at write time and
-    compared at load time, so a changed dependency cannot change the scoring under an unchanged
-    checkpoint sha (Sol 2026-09-10, finding 4). `nano10` itself pins no revision; that is M10 code."""
+    — the tokenizer and the backbone configuration. Recorded in the manifest at write time (loaded
+    by name, no checkpoint) and re-derived at load time FROM THE STUDENT'S OWN OBJECTS, so the
+    objects that score are the objects that were checked (Sol finding 4; Astra re-check P2).
+    `nano10` itself pins no revision; that is M10 code."""
     if cfg.dependency_identity is not None:
         return cfg.dependency_identity(student_key)
     import nano10 as N
-    from transformers import AutoConfig, AutoTokenizer
     repo = N.REPOS[student_key]
-    tok = AutoTokenizer.from_pretrained(repo)
-    conf = AutoConfig.from_pretrained(repo)
+    if model is None:
+        from transformers import AutoConfig, AutoTokenizer
+        tok, conf = AutoTokenizer.from_pretrained(repo), AutoConfig.from_pretrained(repo)
+    else:
+        tok, conf = model.tok, model.backbone.config
     h = hashlib.sha256()
     h.update(repo.encode())
     h.update(tok.backend_tokenizer.to_str().encode())
@@ -667,17 +670,21 @@ def load_student(cfg, ar, data, want_dependencies):
     """The nano student the arm record describes, deserialised from the hashed BYTES (`data`),
     never from a second read of the file, with the dependency identity re-derived and held to the
     manifest's. `trainer10.save` writes {"model": state_dict, ...}."""
-    dep = dependency_identity(cfg, ar["recipe"]["student"])
-    if dep.get("sha256") != (want_dependencies or {}).get("sha256"):
-        refuse(f"{ar['arm']}: the tokenizer/backbone configuration loaded now ({dep['sha256'][:12]}) "
-               f"is not the one the manifest recorded ({str((want_dependencies or {}).get('sha256'))[:12]}); "
-               f"a changed dependency changes the scoring under an unchanged checkpoint")
+    def check(dep):
+        if dep.get("sha256") != (want_dependencies or {}).get("sha256"):
+            refuse(f"{ar['arm']}: the tokenizer/backbone configuration loaded now ({dep['sha256'][:12]}) "
+                   f"is not the one the manifest recorded "
+                   f"({str((want_dependencies or {}).get('sha256'))[:12]}); a changed dependency "
+                   f"changes the scoring under an unchanged checkpoint")
+        return dep
     if cfg.load_student is not None:
+        dep = check(dependency_identity(cfg, ar["recipe"]["student"]))
         return cfg.load_student(ar, data, cfg.device), dep
     import torch
     import nano10 as N
     r = ar["recipe"]
     model = N.Nano10(r["student"], n_layers=int(r["n_layers"]), head=r["head"])
+    dep = check(dependency_identity(cfg, r["student"], model=model))   # the objects that will score
     blob = torch.load(io.BytesIO(data), map_location="cpu", weights_only=False)
     sd = blob.get("model", blob) if isinstance(blob, dict) else blob
     model.load_state_dict(sd)
@@ -794,6 +801,7 @@ def acquire_lock(cfg):
     reading — cannot open the surface concurrently (Sol 2026-09-10, finding 1)."""
     d = Path(cfg.gate_work_dir)
     d.mkdir(parents=True, exist_ok=True)
+    _fsync_dir(d.parent)                        # the new directory's own entry must survive a crash
     fd = os.open(d / "lock", os.O_CREAT | os.O_RDWR, 0o644)
     try:
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -869,6 +877,9 @@ def _persisted_slice(cfg, key, plan, roles, journal):
     evidence, not a suggestion."""
     p = _slice_path(cfg, key)
     if not p.exists():
+        if key in journal:
+            refuse(f"{p} is missing but this read journaled it as completed; a completed slice is "
+                   f"never re-read. Restore the file (its digest is in slices.jsonl) or stop.")
         return None
     if sha256_file(p) not in journal.get(key, set()):
         refuse(f"{p} is not the file this read journaled when it wrote it; a slice file that was "
@@ -879,11 +890,11 @@ def _persisted_slice(cfg, key, plan, roles, journal):
     ok = (s.get("identity") == identity_of(plan) and s.get("key") == key
           and set(s.get("per_role") or {}) == set(roles)
           and surf.get("hashes") == pinned["hashes"]
-          and surf.get("n_queries") == pinned["n_queries"])
+          and all(surf.get(f) == pinned[f] for f in ("n_docs", "n_queries", "n_qrels_pairs")))
     if ok:
-        q_ids = set(surf_q for surf_q in (s["per_role"][roles[0]]["ndcg10"]))
-        ok = len(q_ids) == pinned["n_queries"] and all(
-            _valid_scores(s["per_role"][r][m], q_ids) for r in roles for m in ("ndcg10", "success5"))
+        q_ids = set(s["per_role"][roles[0]]["ndcg10"])
+        ok = (sha_obj(sorted(q_ids)) == pinned["hashes"]["query_ids_sha256"] and all(
+            _valid_scores(s["per_role"][r][m], q_ids) for r in roles for m in ("ndcg10", "success5")))
     if not ok:
         refuse(f"{p} was written under a different identity, role set or slice, or its rows are "
                f"malformed; it cannot complete this read. Inspect it before deciding anything.")

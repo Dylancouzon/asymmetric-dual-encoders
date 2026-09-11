@@ -700,6 +700,16 @@ def test_recover_refuses_an_edited_or_unjournaled_slice_file(tmp_path):
         G.run(cfg2, recover=True, verbose=False)
 
 
+def test_recover_refuses_when_a_journaled_slice_file_is_missing(tmp_path):
+    """Astra 2026-09-10 re-check, P1: a completed slice whose file was lost is never re-read."""
+    cfg = _crash_then_recover_world(tmp_path)
+    G._slice_path(cfg, "lifestyle/test").unlink()
+    calls = len(cfg.enc.calls)
+    with pytest.raises(SystemExit, match="journaled it as completed; a completed slice is never re-read"):
+        G.run(cfg, recover=True, verbose=False)
+    assert len(cfg.enc.calls) == calls, "nothing was re-read"
+
+
 def test_a_second_process_cannot_read_or_recover_while_the_first_holds_the_lock(tmp_path):
     """Sol 2026-09-10, finding 1: O_EXCL protects creation only; the flock protects the attempt."""
     cfg = _crash_then_recover_world(tmp_path)
