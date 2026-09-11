@@ -248,6 +248,27 @@ def test_base_and_ext_forms_match_the_arms_they_claim():
     assert sorted(a for arms in pd.ARMS_FOR_FORM.values() for a in arms) == sorted(m17train.ARMS)
 
 
+def test_source_doc_is_the_supporting_document_not_the_query():
+    specs = [
+        m17cache.QuerySpec(qid="squad-train:1", text="q", source="squad-train",
+                           positive_ids=("squad-train:d7",)),
+        m17cache.QuerySpec(qid="nqopen:5", text="q", source="nqopen"),
+        m17cache.QuerySpec(qid="cov:k8s-docs-en:content/en/x.md:title", text="v",
+                           source="k8s-docs-en", bucket="coverage"),
+        *pd.alias_specs({"pair_id": "p", "family_id": "f", "source": "hotpotqa-train",
+                         "view_a": "a", "view_b": "b"}, "general"),
+    ]
+    overrides = {s.qid: "hotpotqa-train:doc-group:gg" for s in specs if s.alias_pair_id}
+    m = pd._source_doc_map(specs, overrides)
+    assert m["squad-train:1"] == "squad-train:d7"
+    # one sentinel unit per query-text-only source, not one per query
+    assert m["nqopen:5"] == "nqopen:querytext-no-document"
+    assert m["cov:k8s-docs-en:content/en/x.md:title"] == "k8s-docs-en:content/en/x.md"
+    # both alias views point at the same EVIDENCE DOCUMENT GROUP, never at the family
+    alias = {m[s.qid] for s in specs if s.alias_pair_id}
+    assert alias == {"hotpotqa-train:doc-group:gg"}
+
+
 def test_document_views_are_deterministic_and_deduplicated():
     text = " ".join(f"w{i}" for i in range(200))
     a = pd.document_views("k8s-docs-en:x", "Cluster Architecture", text)

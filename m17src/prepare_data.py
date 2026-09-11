@@ -622,17 +622,23 @@ def stage_domain(ctx):
             domain=doc_domain.get(key, "general"), bucket="coverage",
             family="doc:" + doc_group.get(key, key)))
 
+    alias_source_doc = {}
     for p in alias:
         src = p["source"]
         key = (f"k8s-docs-en:{p['doc_group']}" if src == "k8s-docs-en"
                else f"{src}:{group_rep.get((src, p['doc_group']), '')}")
         dom = ("cloud-software" if src == "k8s-docs-en"
                else doc_domain.get(key, "general"))
-        specs.extend(alias_specs(p, dom))
+        for s in alias_specs(p, dom):
+            # The supporting unit of an alias view is its EVIDENCE DOCUMENT GROUP, not its
+            # query family: two pairs from different documents can share a family, and their
+            # documents may carry different domains.
+            alias_source_doc[s.qid] = f"{src}:doc-group:{p['doc_group']}"
+            specs.append(s)
 
     ctx.cache_state["specs"] = specs
     ctx.cache_state["heldout_idx"] = heldout_idx
-    ctx.cache_state["source_doc"] = _source_doc_map(specs, doc_group, group_rep)
+    ctx.cache_state["source_doc"] = _source_doc_map(specs, alias_source_doc)
     ctx.cache_state["positives"] = sorted(positives)
     _write_specs(ctx, specs, heldout_idx)
     return {
@@ -658,7 +664,7 @@ def stage_domain(ctx):
         "alias_views": sum(1 for s in specs if s.alias_pair_id)}
 
 
-def _source_doc_map(specs, doc_group, group_rep):
+def _source_doc_map(specs, overrides=None):
     """`vocab.discover`'s `source_doc` per query: the SOURCE-QUALIFIED supporting document.
 
     Query-text-only sources (nqopen, triviaqa) ship no document at all. They are given one
@@ -668,10 +674,11 @@ def _source_doc_map(specs, doc_group, group_rep):
     only by those sources cannot reach the 20-document minimum.
     """
     out = {}
+    overrides = overrides or {}
     for s in specs:
-        if s.alias_pair_id:
-            out[s.qid] = "alias:" + s.family.split(":", 1)[1]
-        elif s.bucket == "coverage":
+        if s.qid in overrides:
+            out[s.qid] = overrides[s.qid]
+        elif s.bucket == "coverage" and not s.alias_pair_id:
             out[s.qid] = s.qid.split(":", 1)[1].rsplit(":", 1)[0]
         elif s.positive_ids:
             out[s.qid] = s.positive_ids[0]
@@ -870,8 +877,18 @@ def stage_bank(ctx):
     for key in positives:
         src, did = key.split(":", 1)
         need.setdefault(src, set()).add(did)
-    # Uniform admitted documents, stratified by source, to the cap.
-    want_uniform = max(0, ctx.bank_docs - len(positives))
+    # k8s documents are admitted but absent from the frozen pool: every one of them joins the
+    # bank and is encoded below with the frozen document tower. They are counted INSIDE
+    # `candidate_bank_max_docs`, not added on top of it.
+    k8s_texts = {f"k8s-docs-en:{p}": t for p, _title, t in sm.iter_k8s(sm.k8s_excluded_paths())}
+    reserved = len(positives) + len(k8s_texts)
+    if reserved > ctx.bank_docs:
+        raise SystemExit(
+            f"M17 REFUSED: the selected labeled subset's {len(positives)} positives plus the "
+            f"{len(k8s_texts)} admitted k8s documents exceed candidate_bank_max_docs "
+            f"({ctx.bank_docs}). Shrink the labeled subset before the bank, never afterwards.")
+    # Uniform admitted documents, stratified by source, filling the rest of the cap.
+    want_uniform = ctx.bank_docs - reserved
     man = json.loads(admit_read(RESULTS / "m17_support_manifest.json").read_text())
     pops = {s: man["per_source"][s]["documents_deduplicated"] for s in sm.PAIR_SOURCES}
     total = sum(pops.values())
@@ -904,9 +921,6 @@ def stage_bank(ctx):
         for did in uniform_ids.get(src, []):
             ordered.append(f"{src}:{did}")
             sources.append(src)
-    # k8s documents are admitted but absent from the frozen pool: every one of them joins the
-    # bank and is encoded below with the frozen document tower.
-    k8s_texts = {f"k8s-docs-en:{p}": t for p, _title, t in sm.iter_k8s(sm.k8s_excluded_paths())}
     for key in sorted(k8s_texts):
         ordered.append(key)
         sources.append("k8s-docs-en")
@@ -1357,7 +1371,18 @@ def build(args, log=print):
         rec = STAGE_FN[name](ctx)
         ctx.stages[name] = rec
         write_json(marker, rec)
-    record = {"_schema": "m17-prepared-build-v1", "out": sm.rel(ctx.out), "size": ctx.size,
+    # A partial re-run (`--stages domain,vocab`) must not erase the measurements the earlier
+    # invocations paid for; the carried names are listed so no reader mistakes them for fresh.
+    prev_path = ctx.out / "build_record.json"
+    carried = []
+    if prev_path.exists():
+        prev = json.loads(admit_read(prev_path).read_text()).get("timings", {})
+        for k, v in prev.items():
+            if k not in ctx.timings:
+                ctx.timings[k] = v
+                carried.append(k)
+    record = {"timings_carried_from_a_previous_build": sorted(carried),
+              "_schema": "m17-prepared-build-v1", "out": sm.rel(ctx.out), "size": ctx.size,
               "seed": ctx.seed, "bank_docs": ctx.bank_docs, "device": ctx.device,
               "wall_clock_seconds": round(time.time() - t0, 3),
               "rss_high_water_gib": _rss_gib(), "gpu_peak_gib": _gpu_peak_gib(),
