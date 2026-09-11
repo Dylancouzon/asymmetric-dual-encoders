@@ -128,3 +128,9 @@ registered files, requires pushed manifest/pin and reviewed stage allocation, ex
 and bounds checksum backup with reserved STOP time. Neither launcher was executed in review.
 Operational source `work/m13cloud-launchers/replacement.py` sha256 `84d9eb464a1baec2dcee478175943bb7cb40b953c4e331f6ca46be56e23f468b`.
 Operational source `work/m13cloud-launchers/lotte.py` sha256 `711324b9047049d18b9c7d861d947d21683a7545d24a3dce981d385bc0eb3905`.
+
+Replacement Pod exulxoxelug5um provisioned at $1.59/hour. Its pinned environment and A100
+CUDA allocation checks passed, but the bootstrap SSH transport remained open after its
+remote command exited. Operator interrupted the launcher; EXITED confirmed and failure
+receipt preserved. Continue on the same persistent Pod using a fresh noninteractive SSH
+command path; no benchmark or protected evaluation had begun.
