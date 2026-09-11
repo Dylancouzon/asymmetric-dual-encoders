@@ -486,7 +486,8 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
     """`data` is the dict `prepare_data` returns (or the rehearsal fixture builds)."""
     # The status gate belongs to the callable driver, not only to the CLI: a caller that
     # imports `run()` must meet the same bar as `python m17src/train.py`.
-    require_executable(registry(), cfg.rehearsal, what=f"arm {cfg.arm} ({cfg.run_id})")
+    require_executable(registry(), cfg.rehearsal, what=f"arm {cfg.arm} ({cfg.run_id})",
+                       training=True)
     out = Path(admit_write(out_dir))   # before anything is created under it
     out.mkdir(parents=True, exist_ok=True)
     arm = ARMS[cfg.arm]
@@ -711,6 +712,11 @@ def _save_table(path, model, cfg, data, step):
         "tokenizer_sha256": cfg.tokenizer_sha256,
         "vocabulary_sha256": cfg.vocabulary_sha256,
         "candidate_cache_sha256": cfg.cache_sha256,
+        # real runs refuse an empty artifact digest in `_load_prepared`; the rehearsal's
+        # in-memory cache has none and says so instead of leaving the identity field blank
+        "candidate_cache_artifact_sha256": (cfg.cache_artifact_sha256 or
+                                            ("rehearsal-no-artifact:" + str(cfg.cache_sha256)
+                                             if cfg.rehearsal else "")),
         "teacher": data.get("teacher"), "teacher_revision": data.get("teacher_revision"),
         "weights_folded": False, "rows_fp32_present": True})
     z = dict(np.load(path))
@@ -826,7 +832,7 @@ def main(argv=None):
     args = ap.parse_args(argv)
 
     reg = registry()
-    status = require_executable(reg, args.rehearsal, what=f"arm {args.arm}")
+    status = require_executable(reg, args.rehearsal, what=f"arm {args.arm}", training=True)
     device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
 
     # `--rehearsal` without `--data` is the synthetic fixture world. `--rehearsal` WITH a
@@ -885,6 +891,26 @@ def _check_locked_config(cfg, reg):
     seeds = (int(tr["seed_screen"]), int(tr["seed_replication"]))
     if cfg.seed not in seeds:
         raise SystemExit(f"M17 REFUSED: seed {cfg.seed} is not a registered seed {seeds}.")
+
+
+def _check_executed_lock(manifest, reg, d):
+    """A real run trains the prepared directory the executed lock half recorded, in the form it
+    recorded (Astra lock review P1-2/P1-4): `prepared.json`'s hashes are compared with
+    `lock.executed.{ext,base}_hashes`; the arrays themselves are verified against the same
+    manifest further down, so the chain is lock -> manifest -> bytes."""
+    ex = (reg.get("lock") or {}).get("executed")
+    if not ex:
+        raise SystemExit("M17 REFUSED: the registry has no `lock.executed`; real training needs "
+                         "the executed lock half (m17src/lock.py --phase executed).")
+    form = manifest.get("form")
+    want = ex.get(f"{form}_hashes")
+    if not want:
+        raise SystemExit(f"M17 REFUSED: `lock.executed` records no `{form}_hashes` for {d}.")
+    got = manifest.get("hashes") or {}
+    differ = sorted(k for k in want if want[k] != got.get(k))
+    if differ:
+        raise SystemExit(f"M17 REFUSED: {d}/prepared.json hashes {differ} differ from the executed "
+                         "lock; this is not the locked prepared directory.")
 
 
 def _check_locked_recipe(d, sidecar, reg, fz=None):
@@ -1062,6 +1088,7 @@ def _load_prepared(data_dir, manifest, cfg, reg):
     arm = ARMS[cfg.arm]
     if not cfg.rehearsal:
         _check_locked_config(cfg, reg)
+        _check_executed_lock(manifest, reg, d)
     if arm["vocab_extension"] and not manifest.get("new_rows"):
         raise SystemExit(f"M17 REFUSED: arm {cfg.arm} extends the vocabulary but {d} carries no "
                          "`new_rows`; an unextended table is a different arm.")

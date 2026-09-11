@@ -1361,6 +1361,14 @@ class TextVectorCache:
                       if self.index_p.exists() else {})
         self.vecs = (np.load(admit_read(self.vec_p)) if self.vec_p.exists()
                      else np.zeros((0, dim), dtype=np.float16))
+        if self.vecs.shape[0] > len(self.index) and (not self.vecs.size or
+                                                     self.vecs.shape[1] == dim):
+            # A crash between the vector replace and the index write leaves a vector suffix no
+            # key points at (Astra lock review P2-10). The committed prefix is exactly what the
+            # index describes; the suffix is dropped and its texts are re-encoded as misses.
+            print(f"  [cache] {self.root}: dropping {self.vecs.shape[0] - len(self.index)} "
+                  "uncommitted vector rows (index written after a crash)", flush=True)
+            self.vecs = np.ascontiguousarray(self.vecs[:len(self.index)])
         if self.vecs.shape[0] != len(self.index) or (self.vecs.size and
                                                      self.vecs.shape[1] != dim):
             raise SystemExit(f"M17 REFUSED: text-vector cache {self.root} is inconsistent "

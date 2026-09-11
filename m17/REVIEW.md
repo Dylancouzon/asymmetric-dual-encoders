@@ -332,3 +332,35 @@ named; two remained and were fixed directly in the same session:
 The re-check also confirmed the A5 cap-fill order (general, all distinct alias pairs, coverage
 to exactly the cap, deterministic). The review loop is closed here: two reviews plus one
 re-check. **Exit:** step 5 closed; step 6 (full-pool build and lock) next.
+
+## Codex Astra step-6 lock review (2026-09-11)
+
+Brief: [m17-astra-lock-brief](../research/m17-astra-lock-brief-2026-09-11.md). Log:
+`research/m17-astra-lock-review-2026-09-11.log` (gitignored). Read-only on commit `7f96762`;
+access log: `m17src` modules and tests, `m7src/teacher.py`, `m7src/table.py`, the five `m17/`
+documents, `git show --stat`; nothing under `work/` or `results/`. Eleven findings on
+`m17src/lock.py` (new), the training gate and the chunked teacher-cache flush. Triage rule
+(owner, 2026-09-11): smallest fix per real bug; findings whose only trigger is an adversary
+editing files behind the manifests are dropped.
+
+| Finding | Disposition and exit |
+|---|---|
+| P1-1 executed hashes copied from the manifest, never checked against the bytes V0 folds | Fixed for V0: `export_v0` hashes the tokenizer, `new_rows` (`sha_array`, the builder's convention) and warm start and refuses a mismatch; training already verifies the same bytes in `_load_prepared`. Ordered term→row-id verification beyond the size check: dropped (adversarial substitution of a same-size tokenizer). |
+| P1-2 training never checks the executed lock; `EXECUTABLE` admitted real training | Fixed: `require_executable(training=True)` needs `LOCKED_EXECUTABLE` for a real arm (`EXECUTABLE` admits preparation only); `train._check_executed_lock` compares the loaded `prepared.json` hashes with `lock.executed.{ext,base}_hashes` for the form being trained. Tests in `test_lock.py`. |
+| P1-3 a receipt's existence does not prove THIS build was screened | Partly fixed: the receipt bytes must hash to the manifest's recorded `sha256` (production shape `{path, sha256}`). Binding the receipt to the pool identity: dropped (needs a forged manifest). |
+| P1-4 base form bound only by its tokenizer; held-out slice unbound | Fixed for the base form: `lock.executed.base_hashes` records every `EXECUTED_HASHES` field for the control arms and training compares per form. Held-out subset substitution: dropped (adversarial; the slice sits in the cache identity's inputs). |
+| P1-5 a complete `--size` build or another seed would lock | Fixed: `_check_full_build` refuses `size != None` and a seed other than the locked prepared seed in both halves. Tests. `kept`/family hashes: covered transitively by `query_pool`/`doc_domain_join` and the recipe/exclusion hashes; not added. |
+| P1-6 tie band, learning rates, vocabulary caps outside the bound block; fixed files not rechecked at execution | Fixed: `protocol_identity` binds the whole registry minus `status`/`lock`/`allocation_hours`; the executed half rehashes the fixed manifests and refuses a change. Tests (tie band → 0; edited support manifest). |
+| P1-7 export identity lacks the cache ARTIFACT digest, so snapshots from two runs sharing a recipe could be averaged | Fixed: `candidate_cache_artifact_sha256` joins `export.IDENTITY_FIELDS` and every snapshot's metadata; the rehearsal's in-memory cache records a stated `rehearsal-no-artifact:` value instead of a blank (a real run refuses a blank digest already). |
+| P1-8 the clock definition (first full-pool `--protected-screen`) exempts charged work and permits resets | Removed from the code: `lock.clock` now says the start rule is an OWNER ruling recorded in LEDGER.md before the first `--protected-screen` invocation; raised to Dylan (STATUS). |
+| P2-9 the builder's receipt is a dict, `Path(dict)` crashed the executed half | Fixed (with P1-3); `_fake_build` now uses the production shape. |
+| P2-10 the flush is not atomic across `vecs`/`index` | Fixed: the constructor drops an uncommitted vector suffix (rows beyond the index) and re-encodes those texts as misses; test. Chunking changing the teacher's length-sorted batches: accepted — the encode is float32 and normalized per row, and identity binds to the realized bytes, never to a byte-exact re-encode. |
+| P2-11 executed `--dry-run` exported V0 | Fixed: `--dry-run` refuses for the executed half. |
+
+Astra's verdict on the two-half sequencing: "defensible" — the registry's lock text and
+PLANNING's observation boundary allow executed identities on the clock before any read; neither
+the pre half's reads nor the V0 gates are a development or panel read; replacing the placeholder
+hours is expressly permitted; ×2 is a chosen ceiling, not a demonstrated bound, and exceeding it
+triggers the registered stop/recovery policy. STATUS step 6's older wording ("lock, then clock")
+is superseded by this section. **Owner:** M17 implementing session. **Exit:** fixes landed;
+Codex Sol reviews the fixed code next (alternating rule), then at most one P1 re-check.

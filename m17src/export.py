@@ -64,8 +64,10 @@ def effective_rows(npz_path):
     return rows, {"path": str(npz_path), "rms": rms, "rows_stored_as": stored, "meta": meta}
 
 
+# `candidate_cache_artifact_sha256` too: two fresh runs can share run id, tokenizer, vocabulary
+# and cache RECIPE identity while their realized candidate arrays differ (Astra lock review P1-7).
 IDENTITY_FIELDS = ("m17_run_id", "tokenizer_sha256", "vocabulary_sha256",
-                   "candidate_cache_sha256")
+                   "candidate_cache_sha256", "candidate_cache_artifact_sha256")
 
 
 def snapshot_identity(meta, path):

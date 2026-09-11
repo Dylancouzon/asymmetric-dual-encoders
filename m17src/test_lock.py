@@ -16,23 +16,27 @@ import lock
 from common import registry, sha_json
 
 
-def _fake_build(root: Path, screened: bool, status="DRAFT_NOT_EXECUTABLE", seed_hash="a"):
+def _fake_build(root: Path, screened: bool, status="DRAFT_NOT_EXECUTABLE", seed_hash="a",
+                seed=0, size=None):
     hashes = {k: sha_json([k, seed_hash]) for k in lock.EXECUTED_HASHES + lock.INVARIANT_HASHES}
+    (root / "ext").mkdir(parents=True)
+    (root / "protected_receipt.json").write_text('{"admitted_documents": []}')
+    receipt_sha = lock.sha_file(root / "protected_receipt.json")
     scr = ({"state": "complete", "screened": 10, "dropped": 1, "dropped_by_text": 1,
             "dropped_by_document_receipt": 0, "documents_screened": 3,
-            "receipt": "protected_receipt.json"} if screened else
+            "receipt": {"path": str(root / "protected_receipt.json"),   # the builder's shape
+                        "sha256": receipt_sha}} if screened else
            {"state": "deferred_to_clock", "screened": 0, "dropped": 0, "receipt": None,
             "unscreened_new_source_rows": {"bank": 5, "pool": 2}})
     for form in ("ext", "base"):
-        (root / form).mkdir(parents=True)
-        man = {"hashes": dict(hashes), "queries": 600000, "seed": 0,
+        (root / form).mkdir(parents=True, exist_ok=True)
+        man = {"hashes": dict(hashes), "queries": 600000, "seed": seed, "size": size, "form": form,
                "registry_status_at_build": status, "protected_screen": scr,
                "stages": {"vocab": {"selected": 3}}}
         if form == "base":
             man["hashes"]["tokenizer"] = "base-tok"
             man["hashes"]["new_rows"] = None
         (root / form / "prepared.json").write_text(json.dumps(man))
-    (root / "protected_receipt.json").write_text('{"admitted_documents": []}')
     (root / "build_record.json").write_text(json.dumps(
         {"complete_build": True, "wall_clock_kind": "full build", "wall_clock_seconds": 5400.0,
          "rss_high_water_gib": 11.0, "gpu_peak_gib": 3.0, "size": None,
@@ -72,6 +76,13 @@ def test_pre_half_binds_protocol_allocation_and_flips_status(tmp_path, fixed):
     reg2 = copy.deepcopy(registry())
     with pytest.raises(SystemExit, match="UNSCREENED"):
         lock.lock_pre(reg2, _fake_build(tmp_path / "scr", screened=True), fixed_files=fixed)
+    # a complete --size build and a seed-7 build are not the full pool at the locked seed
+    with pytest.raises(SystemExit, match="subsample"):
+        lock.lock_pre(copy.deepcopy(registry()), _fake_build(tmp_path / "sz", False, size=50000),
+                      fixed_files=fixed)
+    with pytest.raises(SystemExit, match="seed 7"):
+        lock.lock_pre(copy.deepcopy(registry()), _fake_build(tmp_path / "sd", False, seed=7),
+                      fixed_files=fixed)
 
 
 def test_pre_half_refuses_a_partial_rebuild_and_a_non_final_panel(tmp_path, fixed):
@@ -104,36 +115,56 @@ def test_executed_half_needs_the_screened_build_under_the_same_protocol(tmp_path
     with pytest.raises(SystemExit, match="SCREENED"):
         lock.lock_executed(copy.deepcopy(reg), _fake_build(tmp_path / "u", screened=False,
                                                             status="EXECUTABLE"),
-                           tmp_path / "v0", "2026-09-12T09:00:00", export=_fake_export(tmp_path))
+                           tmp_path / "v0", "2026-09-12T09:00:00", export=_fake_export(tmp_path), fixed_files=fixed)
     # screened but built under the draft status -> refused
     with pytest.raises(SystemExit, match="ran under status"):
         lock.lock_executed(copy.deepcopy(reg), _fake_build(tmp_path / "d", screened=True),
-                           tmp_path / "v0", "2026-09-12T09:00:00", export=_fake_export(tmp_path))
+                           tmp_path / "v0", "2026-09-12T09:00:00", export=_fake_export(tmp_path), fixed_files=fixed)
     # an invariant input moved -> refused
     with pytest.raises(SystemExit, match="invariant build inputs changed"):
         lock.lock_executed(copy.deepcopy(reg), _fake_build(tmp_path / "m", screened=True,
                                                             status="EXECUTABLE", seed_hash="b"),
-                           tmp_path / "v0", "2026-09-12T09:00:00", export=_fake_export(tmp_path))
+                           tmp_path / "v0", "2026-09-12T09:00:00", export=_fake_export(tmp_path), fixed_files=fixed)
     # the protocol moved since the pre half -> refused
     moved = copy.deepcopy(reg)
     moved["training"]["decision_protocol"]["eligibility"] += " (amended)"
     with pytest.raises(SystemExit, match="protocol/recipe identity moved"):
         lock.lock_executed(moved, _fake_build(tmp_path / "p", screened=True, status="EXECUTABLE"),
-                           tmp_path / "v0", "2026-09-12T09:00:00", export=_fake_export(tmp_path))
+                           tmp_path / "v0", "2026-09-12T09:00:00", export=_fake_export(tmp_path), fixed_files=fixed)
+    # an operative setting outside the decision_protocol block moved -> refused
+    band = copy.deepcopy(reg)
+    band["screening_preferences_not_release_bars"]["simple_arm_tie_band"] = 0
+    with pytest.raises(SystemExit, match="protocol/recipe identity moved"):
+        lock.lock_executed(band, _fake_build(tmp_path / "tb", screened=True, status="EXECUTABLE"),
+                           tmp_path / "v0", "x", export=_fake_export(tmp_path), fixed_files=fixed)
+    # a fixed manifest edited after the pre half -> refused
+    fixed["support_manifest"].write_text('{"edited": true}')
+    with pytest.raises(SystemExit, match="fixed manifests changed"):
+        lock.lock_executed(copy.deepcopy(reg), _fake_build(tmp_path / "fm", screened=True,
+                                                            status="EXECUTABLE"),
+                           tmp_path / "v0", "x", export=_fake_export(tmp_path), fixed_files=fixed)
+    fixed["support_manifest"].write_text(json.dumps({"support_manifest": 1}))
+    # a receipt whose bytes do not hash to the manifest's record -> refused
+    bad = _fake_build(tmp_path / "rc", screened=True, status="EXECUTABLE")
+    (bad / "protected_receipt.json").write_text('{"admitted_documents": ["swapped"]}')
+    with pytest.raises(SystemExit, match="manifest records"):
+        lock.lock_executed(copy.deepcopy(reg), bad, tmp_path / "v0", "x",
+                           export=_fake_export(tmp_path), fixed_files=fixed)
     # the real thing: screened, same inputs, executed under EXECUTABLE
     good = _fake_build(tmp_path / "g", screened=True, status="EXECUTABLE")
     ext = json.loads((good / "ext" / "prepared.json").read_text())
     ext["hashes"]["vocabulary"] = "v" * 64                       # the screen changed the list
     (good / "ext" / "prepared.json").write_text(json.dumps(ext))
     out = lock.lock_executed(copy.deepcopy(reg), good, tmp_path / "v0", "2026-09-12T09:00:00",
-                             date="2026-09-12", export=_fake_export(tmp_path))
+                             date="2026-09-12", export=_fake_export(tmp_path), fixed_files=fixed)
     ex = out["lock"]["executed"]
     assert out["status"] == "LOCKED_EXECUTABLE"
     assert ex["changed_since_pre_screen"] == ["vocabulary"]
+    assert ex["base_hashes"]["tokenizer"] == "base-tok" and ex["base_hashes"]["new_rows"] is None
     assert ex["v0_export"]["model_npz_sha256"] == "m" * 64 and ex["v0_export"]["read"] is False
     assert ex["protected_screen"]["dropped"] == 1 and len(ex["protected_receipt_sha256"]) == 64
     with pytest.raises(SystemExit, match="already exists|needs the pre half"):
-        lock.lock_executed(out, good, tmp_path / "v0", "x", export=_fake_export(tmp_path))
+        lock.lock_executed(out, good, tmp_path / "v0", "x", export=_fake_export(tmp_path), fixed_files=fixed)
 
 
 def test_measured_allocation_rounds_the_ceiling_up_and_never_below_one_hour(tmp_path):
@@ -143,3 +174,26 @@ def test_measured_allocation_rounds_the_ceiling_up_and_never_below_one_hour(tmp_
         rec["wall_clock_seconds"] = secs
         (build / "build_record.json").write_text(json.dumps(rec))
         assert lock.measured_allocation(build)["phase_ceiling_hours"] == want
+
+
+def test_training_needs_the_executed_half_and_the_locked_directory(tmp_path):
+    import common
+    import train
+    reg = copy.deepcopy(registry())
+    reg["status"] = "EXECUTABLE"
+    assert common.require_executable(reg, rehearsal=False) == "EXECUTABLE"      # preparation
+    with pytest.raises(SystemExit, match="real training needs 'LOCKED_EXECUTABLE'"):
+        common.require_executable(reg, rehearsal=False, training=True)
+    assert common.require_executable(reg, rehearsal=True, training=True) == "EXECUTABLE"
+    reg["status"] = "LOCKED_EXECUTABLE"
+    assert common.require_executable(reg, rehearsal=False, training=True) == "LOCKED_EXECUTABLE"
+    man = {"form": "ext", "hashes": {k: "h" for k in lock.EXECUTED_HASHES}}
+    with pytest.raises(SystemExit, match="no `lock.executed`"):
+        train._check_executed_lock(man, reg, tmp_path)
+    reg["lock"] = {"executed": {"ext_hashes": {k: "h" for k in lock.EXECUTED_HASHES}}}
+    train._check_executed_lock(man, reg, tmp_path)
+    man["hashes"]["cache_artifact"] = "other"
+    with pytest.raises(SystemExit, match="cache_artifact"):
+        train._check_executed_lock(man, reg, tmp_path)
+    with pytest.raises(SystemExit, match="no `base_hashes`"):
+        train._check_executed_lock({"form": "base", "hashes": {}}, reg, tmp_path)

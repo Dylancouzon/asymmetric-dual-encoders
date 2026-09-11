@@ -154,14 +154,23 @@ def sha_array(a) -> str:
     return sha_bytes(a.tobytes() + str(a.dtype).encode() + str(a.shape).encode())
 
 
-def require_executable(reg, rehearsal: bool, what="this run"):
+def require_executable(reg, rehearsal: bool, what="this run", training=False):
     """The registry status gate. `--rehearsal` is the only bypass, and it is not silent.
 
     A rehearsal writes under `work/m17/rehearsal` with synthetic inputs; it may never be
     pointed at a development component, the M17 panel or any protected surface.
+
+    `EXECUTABLE` (the pre-clock lock half) admits PREPARATION — the on-clock protected screen
+    and rebuild. Real TRAINING needs `LOCKED_EXECUTABLE`: the executed identities and the V0
+    hash committed (`m17src/lock.py --phase executed`; Astra lock review P1-2).
     """
     status = reg.get("status")
     if status in EXECUTABLE_STATUSES:
+        if training and not rehearsal and status != EXECUTABLE_STATUSES[-1]:
+            raise NotExecutable(
+                f"M17 REFUSED: registry status is {status!r}; real training needs "
+                f"{EXECUTABLE_STATUSES[-1]!r} (the executed lock half, m17src/lock.py). "
+                f"{status!r} admits the on-clock preparation only.")
         return status
     if rehearsal:
         print(f"[m17] registry status {status!r}: {what} runs in REHEARSAL mode "

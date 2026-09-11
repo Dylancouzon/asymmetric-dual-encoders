@@ -247,6 +247,19 @@ def test_teacher_cache_flushes_each_chunk_so_a_crash_keeps_the_encoded_rows(tmp_
     assert not (tmp_path / "tc" / "vecs.f16.tmp.npy").exists()
 
 
+def test_teacher_cache_recovers_an_uncommitted_vector_suffix(tmp_path):
+    """Crash between the vector replace and the index write: the suffix nobody indexed is
+    dropped and re-encoded; the committed prefix is kept."""
+    c = pd.TextVectorCache(tmp_path / "tc", 4)
+    c.get(["a", "b"], lambda ts: np.ones((len(ts), 4)))
+    vecs = np.load(tmp_path / "tc" / "vecs.f16.npy")
+    np.save(tmp_path / "tc" / "vecs.f16.npy", np.concatenate([vecs, np.full((3, 4), 0.5, np.float16)]))
+    c2 = pd.TextVectorCache(tmp_path / "tc", 4)
+    assert c2.vecs.shape[0] == 2 and len(c2.index) == 2
+    _v, rep = c2.get(["a", "b", "c"], lambda ts: np.ones((len(ts), 4)))
+    assert rep["encoded"] == 1 and rep["cache_rows"] == 3
+
+
 def test_teacher_cache_refuses_an_inconsistent_store(tmp_path):
     c = pd.TextVectorCache(tmp_path / "tc", 4)
     c.get(["x"], lambda ts: np.ones((len(ts), 4)))

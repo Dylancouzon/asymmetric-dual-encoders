@@ -86,7 +86,27 @@ def protocol_identity(reg, fz=None):
         "steps": {"screen": int(tr["screen_steps"]), "final": int(tr["final_steps_per_fresh_run"])},
         "batch": int(tr["batch"]),
         "snapshot_steps": list(reg["checkpoint_averaging"]["checkpoint_steps"]),
+        # every operative setting the protocol refers to (tie band, tolerances, learning rates,
+        # vocabulary caps, ...) — the whole registry minus the fields the lock itself writes
+        # (Astra lock review P1-6)
+        "registry_sha256_excluding_lock_fields": sha_json(
+            {k: v for k, v in reg.items() if k not in ("status", "lock", "allocation_hours")}),
     }
+
+
+def _check_full_build(ext, proto):
+    """The locked build is the FULL pool at the locked seed: a `--size` build is complete too
+    (all ten stages ran) but is not what trains (Astra lock review P1-5)."""
+    if ext.get("size") is not None:
+        raise SystemExit(f"M17 LOCK REFUSED: the build is a --size {ext['size']} subsample, not "
+                         "the full pool.")
+    if int(ext.get("seed", -1)) != int(proto["seeds"]["prepared"]):
+        raise SystemExit(f"M17 LOCK REFUSED: the build's seed {ext.get('seed')} is not the locked "
+                         f"prepared seed {proto['seeds']['prepared']}.")
+
+
+def _fixed_sha(fixed_files):
+    return {k: sha_file(admit_read(p)) for k, p in fixed_files.items()}
 
 
 def measured_allocation(build: Path):
@@ -122,8 +142,10 @@ def lock_pre(reg, build: Path, date=None, fixed_files=None):
     panel = json.loads(admit_read(fixed_files["panel_manifest"]).read_text())
     if panel.get("status") != "FINAL":
         raise SystemExit(f"M17 LOCK REFUSED: panel manifest status {panel.get('status')!r} != FINAL.")
+    proto = protocol_identity(reg)
+    _check_full_build(ext, proto)
     alloc = measured_allocation(build)
-    fixed = {k: sha_file(admit_read(p)) for k, p in fixed_files.items()}
+    fixed = _fixed_sha(fixed_files)
     lock = {
         "_note": "step-6 lock, PRE-CLOCK half. Binds protocol, recipe, seeds, fixed manifests "
                  "and the measured allocation. `pre_screen_build` prices the preparation; the "
@@ -132,7 +154,7 @@ def lock_pre(reg, build: Path, date=None, fixed_files=None):
                  "this block.",
         "date": date or _today(),
         "status_set": PRE_STATUS,
-        "protocol": protocol_identity(reg),
+        "protocol": proto,
         "fixed_files_sha256": fixed,
         "panel_sha256": panel["sha256"],
         "invariant_build_inputs_sha256": {k: ext["hashes"][k] for k in INVARIANT_HASHES},
@@ -147,9 +169,11 @@ def lock_pre(reg, build: Path, date=None, fixed_files=None):
                     "and is superseded by `lock.executed`",
         },
         "measured_allocation": alloc,
-        "clock": {"starts_with": "the first `prepare_data.py --protected-screen` invocation on "
-                                 "the full pool; its start time is recorded in "
-                                 "`lock.executed.clock_started`", "hard_total_hours": 72},
+        "clock": {"hard_total_hours": 72,
+                  "start": "an owner ruling (which invocation starts the 72 h, and what pre-clock "
+                           "work is exempt) is recorded in LEDGER.md before the first "
+                           "--protected-screen invocation; `lock.executed.clock_started` "
+                           "records the timestamp under that ruling"},
     }
     # the allocation row the measurement replaces (placeholder 16 h -> measured ceiling)
     rows = reg["allocation_hours"]
@@ -176,11 +200,22 @@ def export_v0(build: Path, out: Path, reg=None, log=print):
     reg = reg or registry()
     ext = _manifest(build, "ext")
     d = build / "ext"
+    # The bytes V0 folds must be the bytes the manifest (and therefore the lock) names
+    # (Astra lock review P1-1); `train._load_prepared` does the same for training.
+    from common import sha_array
+    new_rows = np.load(admit_read(d / ext["new_rows"])).astype(np.float32)
+    # the builder's conventions: files by bytes, `new_rows` by `sha_array` (array bytes, dtype,
+    # shape — `prepare_data.stage_vocab`), as `train._load_prepared` also compares them
+    for key, got in (("tokenizer", sha_file(admit_read(d / ext["tokenizer"]))),
+                     ("new_rows", sha_array(np.load(admit_read(d / ext["new_rows"])))),
+                     ("warm_start_npz", sha_file(admit_read(d / ext["warm_start"])))):
+        if got != ext["hashes"][key]:
+            raise SystemExit(f"M17 V0 REFUSED: {d}/{key} hashes {got[:12]} but prepared.json "
+                             f"records {str(ext['hashes'][key])[:12]}.")
     eff, diag = export.effective_rows(d / ext["warm_start"])
     if eff.shape[0] != int(reg["base_vocab"]):
         raise SystemExit(f"M17 V0 REFUSED: warm start has {eff.shape[0]} rows, not "
                          f"base_vocab {reg['base_vocab']}.")
-    new_rows = np.load(admit_read(d / ext["new_rows"])).astype(np.float32)
     rows = np.concatenate([eff, new_rows], 0)
     tok = Tokenizer.from_file(str(admit_read(d / ext["tokenizer"])))
     cache = json.loads(admit_read(d / "cache.json").read_text())
@@ -204,7 +239,7 @@ def export_v0(build: Path, out: Path, reg=None, log=print):
 
 
 def lock_executed(reg, build: Path, v0_out: Path, clock_started: str, date=None, log=print,
-                  export=None):
+                  export=None, fixed_files=None):
     if reg.get("status") != PRE_STATUS or "lock" not in reg:
         raise SystemExit(f"M17 LOCK REFUSED: status {reg.get('status')!r}; the executed half "
                          f"needs the pre half ({PRE_STATUS}).")
@@ -217,6 +252,7 @@ def lock_executed(reg, build: Path, v0_out: Path, clock_started: str, date=None,
                          f"(protected_screen.state={scr.get('state')!r}, receipt={scr.get('receipt')!r}).")
     lock = reg["lock"]
     proto = protocol_identity(reg)
+    _check_full_build(ext, proto)
     if proto != lock["protocol"]:
         raise SystemExit("M17 LOCK REFUSED: the protocol/recipe identity moved since the pre "
                          "half; that is a dated amendment, not an execution.")
@@ -227,7 +263,21 @@ def lock_executed(reg, build: Path, v0_out: Path, clock_started: str, date=None,
     if ext["registry_status_at_build"] != PRE_STATUS:
         raise SystemExit(f"M17 LOCK REFUSED: the screened build ran under status "
                          f"{ext['registry_status_at_build']!r}, not {PRE_STATUS}.")
-    receipt = build / scr["receipt"] if not Path(scr["receipt"]).is_absolute() else Path(scr["receipt"])
+    fixed_now = _fixed_sha(fixed_files or FIXED_FILES)
+    moved = sorted(k for k in fixed_now if fixed_now[k] != lock["fixed_files_sha256"].get(k))
+    if moved:
+        raise SystemExit(f"M17 LOCK REFUSED: fixed manifests changed since the pre half: {moved}")
+    # The builder records the receipt as {"path": <repo-relative>, "sha256": ...}
+    # (`prepare_data.stage_protected`); the bytes must still hash to what the screen wrote.
+    rec = scr["receipt"]
+    rel = rec["path"] if isinstance(rec, dict) else rec
+    receipt = Path(rel) if Path(rel).is_absolute() else REGISTRY_PATH.parents[1] / rel
+    if not receipt.exists():
+        receipt = build / Path(rel).name
+    receipt_sha = sha_file(admit_read(receipt))
+    if isinstance(rec, dict) and rec.get("sha256") != receipt_sha:
+        raise SystemExit(f"M17 LOCK REFUSED: {receipt} hashes {receipt_sha[:12]} but the manifest "
+                         f"records {str(rec.get('sha256'))[:12]}.")
     bundle, gates = (export or export_v0)(build, v0_out, reg, log=log)
     prov = json.loads((bundle / "provenance.json").read_text())   # a failed gate raised already
     lock["executed"] = {
@@ -237,12 +287,14 @@ def lock_executed(reg, build: Path, v0_out: Path, clock_started: str, date=None,
         "status_set": EXEC_STATUS,
         "build": _rel(build),
         "ext_hashes": {k: ext["hashes"][k] for k in EXECUTED_HASHES},
-        "base_tokenizer_sha256": base["hashes"]["tokenizer"],
+        # the control arms (C, L) train the base form: bind it whole, not only its tokenizer
+        # (Astra lock review P1-4); `train._check_executed_lock` compares per form
+        "base_hashes": {k: base["hashes"].get(k) for k in EXECUTED_HASHES},
         "vocabulary_terms": ext["stages"]["vocab"]["selected"],
         "protected_screen": {k: scr.get(k) for k in ("state", "screened", "dropped", "dropped_by_text",
                                                       "dropped_by_document_receipt",
                                                       "documents_screened", "receipt")},
-        "protected_receipt_sha256": sha_file(admit_read(receipt)),
+        "protected_receipt_sha256": receipt_sha,
         "v0_export": {"bundle": str(bundle), "model_npz_sha256": prov["model_npz_sha256"],
                       "tokenizer_sha256": prov["tokenizer_sha256"],
                       "config_sha256": prov["config_sha256"], "gates": gates,
@@ -272,6 +324,9 @@ def main(argv=None):
         reg = lock_pre(reg, build)
         shown = reg["lock"]
     else:
+        if args.dry_run:
+            raise SystemExit("--dry-run is for the pre half only: the executed half exports V0, "
+                             "which writes a bundle (Astra lock review P2-11).")
         if not (args.v0_out and args.clock_started):
             raise SystemExit("--v0-out and --clock-started are required for the executed half")
         reg = lock_executed(reg, build, Path(args.v0_out), args.clock_started)
