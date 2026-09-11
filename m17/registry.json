@@ -136,6 +136,8 @@
   "new_term_min_distinct_source_documents": 20,
   "new_term_min_distinct_training_contexts": 50,
   "discovery": "training partition only; frequency and teacher residual; no audit mining",
+  "documentless_sources_vote": "none",
+  "documentless_sources_vote_note": "A4 (Dylan, 2026-09-11): nqopen and triviaqa ship no document, so they contribute contexts and residuals to term discovery but no distinct-supporting-document vote toward new_term_min_distinct_source_documents.",
   "m17_panel_target_queries": 600,
   "panel_selection_fraction": 0.5,
   "panel_domains": [
@@ -192,6 +194,8 @@
   "candidate_bank_note": "Raised from 131072 so more labeled queries keep their positives inside the bank; fp16 vectors occupy 512 MiB. Still 8x smaller than M7's 2M bank, so candidates are softer than the B2 top-200 measurement.",
   "candidate_entropy_diagnostic": "At cache build, record teacher-distribution entropy and p_max quantiles over each query's 64-candidate list at the registered temperature, in the same format as results/m8_b2_entropy.json; recorded regardless of the stop rule.",
   "positive_bank_policy": "All known positives of the selected labeled-query subset fit inside this bank cap; choose eligible query subset before lock, never silently convert a labeled query to query-only",
+  "labeled_positive_budget_share": 0.5,
+  "labeled_positive_budget_note": "A4 (Dylan, 2026-09-11): the eligible labeled subset is chosen in seeded order before the bank exists so that all its positives fit in this share of candidate_bank_max_docs; the remainder are query-only and counted as query_only_by_bank_budget. Held-out (divergence-slice) queries are excluded from the positive budget so the training bank is not shaped by the monitoring slice. positive_bank_policy is unchanged.",
   "candidate_k": 64,
   "candidate_mix_labeled": {
    "known_positive": 1,
@@ -213,6 +217,7 @@
    "score_ties": "Break by ascending bank document ID",
    "rng": "Uniform draws use numpy default_rng seeded with SHA-256(cache_seed || raw query text hash) truncated to 64 bits; recorded in cache identity",
    "bank_sampling": "Bank = all known positives of the selected labeled subset, then uniform admitted documents stratified by source to the cap, seed recorded",
+   "bank_sampling_amendment_a4": "A4 (Dylan, 2026-09-11): the admitted new-source (Kubernetes) documents are reserved in the bank before the uniform stratified sample, inside the cap; the original bank_sampling text is retained above.",
    "provenance_counts": "Record realized per-source candidate counts (positive/teacher/v1/uniform/backfill) over the whole cache and their distribution; overlap between teacher and v1 lists is reported"
   },
   "cache_identity": [
@@ -423,6 +428,17 @@
   "after_lock": "Honor phase ceilings; incomplete required phase stops dependent work, with checkpointed recovery only inside remaining reserve; no silent dose/seed/arm cuts",
   "screen_overrun": "No selection from an accidentally incomplete matrix; report incomplete screen and stop unless all registered arms complete within the existing reserve",
   "unused_time": "May move forward to the same registered work, never a new hypothesis; hard total remains 72h"
+ },
+ "accepted_plan_revision_a4": {
+  "date": "2026-09-11",
+  "owner_instruction": "agree on your recommendations; the Kubernetes vocabulary is a nice-to-have, not a big thing",
+  "changes": [
+   "training.labeled_positive_budget_share (0.5, held-out slice excluded from the budget)",
+   "training.candidate_construction.bank_sampling_amendment_a4",
+   "data.documentless_sources_vote",
+   "pre-clock smoke: --rehearsal --data may run on a prepared directory with a deferred protected screen and prints the unscreened row counts; real runs refuse a deferred screen"
+  ],
+  "scope": "implementation-level rulings on the step-5 builder; no bar, cap, teacher, licence or protocol change"
  },
  "execution_entry_missing": [
   "owner ratification of the prospective M17 protocol and any new release criteria; this plan changes no historical bar",
