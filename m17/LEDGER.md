@@ -476,3 +476,42 @@ field-level proof that only judgment fields changed, and re-sealed the panel:
 model-judged disclosure. Dylan's seeded double-check slice (20 rows, 10 senses, 20 pairs, model
 answers hidden) is `results/m17_human_doublecheck_slice.jsonl`; not a clock dependency.
 Record: `results/m17_judgments_ingest.json`. No development, protected or vector read.
+
+## Step 6 — the full-pool build and the lock code (2026-09-11)
+
+Pre-clock, no protected access, no development-suite, panel or quality read. The full pool
+(`work/m17/prepared/full`, no `--size`, seed 0) was built in two invocations of the same output
+directory: attempt 1 built pool/domain (146.2 s of stage time: pool 24.3 s, domain 121.9 s,
+protected deferred 0 s; `work/m17/logs/prepare_full_crash1.log`) and died at 120,096 of 549,931
+teacher texts with `torch.AcceleratorError: CUDA error: an illegal memory access was
+encountered`, losing every encoded vector because `TextVectorCache.get` flushed only at the end.
+The flush was made chunked (25,000 texts) and atomic, with recovery of an uncommitted vector
+suffix; attempt 2 resumed the cached stages and ran teacher→manifests in 5,240.2 s without a
+fault, passing the crash point at the same text order (the fault is recorded as transient on the
+WSL box, not as a data-dependent bug: nothing about the batch changed). Summed wall clock
+**5,386.4 s = 1.496 h** for 600,000 queries; RSS high-water 12.1 GiB (anonymous 9.5 GiB peak at
+`student_tokenize`, 8.7 GiB at `cache_build`), GPU peak 3.0 GiB. Stage costs: teacher encode
+1,360 s for 549,931 cold texts (404/s), cache build 3,483 s, everything else under 3 min. Pool
+plan exactly A5 (496,229 / 72,985 / 15,393 pairs = 600,000; 2,000 held out). Discovery: 210,447
+candidates, 445 selected (441 general, 3 cloud-software, 1 legal; 199,763 below the support
+minima, 10,239 abbreviations dropped, no cap touched). Protected screen deferred to the clock
+with 629 pool rows and 1,648 bank documents from `k8s-docs-en` unscreened. Vocabulary term list
+and every downstream identity from this build are a PRICE, not the executed artifact: the
+on-clock screen re-derives them (see the lock design below). No quality surface was read.
+
+**The lock (`m17src/lock.py`) is two dated halves**, because `protected_screen` is part of every
+stage marker's identity and the screened rebuild re-runs teacher→manifests: the pre half binds
+protocol/recipe/seeds/fixed manifests/invariant inputs and the measured allocation and sets
+`EXECUTABLE` (preparation only); the executed half, on the clock and BEFORE the V0 read or any
+development read, binds the executed vocabulary/tokenizer/new-rows/cache/bank/teacher identities
+for both forms, exports V0 through the five gates and sets `LOCKED_EXECUTABLE`, which real
+training requires. Two reviews (Codex Astra 11 findings → fixes; Codex Sol: all confirmed,
+nothing remaining; `REVIEW.md`). Astra's verdict on the sequencing: defensible under the
+registry's lock text and PLANNING's observation boundary; ×2 is a chosen ceiling, not a bound.
+The pre half was dry-run against the full build (`--prior-seconds 146.211 --prior-stages
+pool,domain,protected`): measured 1.496 h, phase ceiling 3 h (placeholder 16), allocation total
+59 h, 13 h unallocated and recorded; registry untouched. **Not yet committed as the lock:** the
+checkpoint before the lock and clock start is Dylan's.
+
+**Open owner ruling (Astra P1-8):** which invocation starts the 72 h and what pre-clock work is
+exempt. The code records `clock_started` as given and points here; nothing starts the clock.

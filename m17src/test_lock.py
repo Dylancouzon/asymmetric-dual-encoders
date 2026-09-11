@@ -49,7 +49,9 @@ def fixed(tmp_path):
     files = {}
     for k in lock.FIXED_FILES:
         p = tmp_path / f"{k}.json"
-        body = {"status": "FINAL", "sha256": "d1b0" + "0" * 60} if k == "panel_manifest" else {k: 1}
+        body = ({"status": "FINAL — sealed; cloud-software relevance is MODEL-JUDGED (ruling A6)",
+                 "panel_jsonl": {"sha256": "d1b0" + "0" * 60}}       # the real manifest's shape
+                if k == "panel_manifest" else {k: 1})
         p.write_text(json.dumps(body))
         files[k] = p
     return files
@@ -94,7 +96,8 @@ def test_pre_half_refuses_a_partial_rebuild_and_a_non_final_panel(tmp_path, fixe
         lock.lock_pre(copy.deepcopy(registry()), build, fixed_files=fixed)
     rec["wall_clock_kind"], rec["complete_build"] = "full build", True
     (build / "build_record.json").write_text(json.dumps(rec))
-    fixed["panel_manifest"].write_text(json.dumps({"status": "SEALED_PENDING", "sha256": "x"}))
+    fixed["panel_manifest"].write_text(json.dumps({"status": "SEALED_PENDING",
+                                                    "panel_jsonl": {"sha256": "x"}}))
     with pytest.raises(SystemExit, match="FINAL"):
         lock.lock_pre(copy.deepcopy(registry()), build, fixed_files=fixed)
 
@@ -165,6 +168,24 @@ def test_executed_half_needs_the_screened_build_under_the_same_protocol(tmp_path
     assert ex["protected_screen"]["dropped"] == 1 and len(ex["protected_receipt_sha256"]) == 64
     with pytest.raises(SystemExit, match="already exists|needs the pre half"):
         lock.lock_executed(out, good, tmp_path / "v0", "x", export=_fake_export(tmp_path), fixed_files=fixed)
+
+
+def test_measured_allocation_accepts_a_resumed_build_only_with_prior_seconds_for_the_gap(tmp_path):
+    import prepare_data
+    build = _fake_build(tmp_path / "b", screened=False)
+    rec = json.loads((build / "build_record.json").read_text())
+    rec.update({"complete_build": False, "wall_clock_kind": "partial rebuild",
+                "stages_run_this_invocation": list(prepare_data.STAGES[3:]), "wall_clock_seconds": 5240.0})
+    (build / "build_record.json").write_text(json.dumps(rec))
+    with pytest.raises(SystemExit, match="did not run"):
+        lock.measured_allocation(build)
+    with pytest.raises(SystemExit, match="did not run"):          # the wrong gap
+        lock.measured_allocation(build, {"seconds": 146.0, "stages": ["pool", "domain"], "source": "log"})
+    a = lock.measured_allocation(build, {"seconds": 146.0, "stages": ["pool", "domain", "protected"],
+                                         "source": "attempt-1 log"})
+    assert a["full_build_wall_clock_seconds"] == 5386.0 and a["phase_ceiling_hours"] == 3
+    assert a["summed_across_invocations"]["prior_stages"] == ["pool", "domain", "protected"]
+    assert a["summed_across_invocations"]["prior_source"] == "attempt-1 log"
 
 
 def test_measured_allocation_rounds_the_ceiling_up_and_never_below_one_hour(tmp_path):

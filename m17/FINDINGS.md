@@ -71,3 +71,25 @@ shares sum slightly above one because the cosine and listwise gradients partly o
 which the old denominator hid. The alias term is a small nudge on top of the two fit terms, not a
 competitor to them. These are rehearsal numbers on a subsampled pool, not a registered
 observation.
+
+## A long GPU stage must be durable in chunks (2026-09-11, step 6)
+
+The full pool's teacher stage encodes ~550k texts in ~23 min. Attempt 1 died at 120k with a CUDA
+illegal-memory-access and lost every vector, because the cache wrote nothing until the whole
+missing set was encoded. The fix is small — encode misses in 25k chunks, flush each with a tmp +
+replace and drop an unindexed vector suffix on reopen — and it changed the failure cost from "the
+stage" to "one chunk". The same fault did not recur at the same text order on the retry, so it is
+recorded as transient (WSL2 GPU), not diagnosed; the measurement that would change that is a
+second fault at the same position under the same chunking. Lesson generalized: before any run
+longer than a few minutes, ask where the first durable write is.
+
+## Support, not slots, bounds the vocabulary extension (2026-09-11, step 6)
+
+Over the full 600,000-query pool, discovery produced 210,447 candidate terms and selected 445:
+199,763 fell below the registered support minima (20 distinct source documents, 50 training
+contexts), 10,239 abbreviations were dropped, and neither the 3,072 total nor the 1,024
+per-domain row caps was reached. A tenfold vocabulary would need ~275k rows (~280M parameters,
+8× the 35M cap) AND a pool large enough to support them; the cap is the premise of the cost
+comparison and the pool is bounded by commercially licensed sources. Breadth is `narrow`
+(441 general, 3 cloud-software, 1 legal) — the Kubernetes slice contributed `k8s`,
+`kube-apiserver`, `kubernetes`. Pre-screen numbers; the on-clock screen re-derives the list.

@@ -109,17 +109,35 @@ def _fixed_sha(fixed_files):
     return {k: sha_file(admit_read(p)) for k, p in fixed_files.items()}
 
 
-def measured_allocation(build: Path):
+def measured_allocation(build: Path, prior=None):
     """The unscreened full build's wall clock, and the ceiling it implies for the on-clock
-    screened rebuild (teacher/document caches warm, every stage after `protected` re-run)."""
+    screened rebuild (teacher/document caches warm, every stage after `protected` re-run).
+
+    `prior` = `{"seconds": float, "stages": [...], "source": str}` prices the stages an earlier
+    invocation of the SAME output directory built and this one resumed (the 2026-09-11 full
+    build: attempt 1 built pool/domain/protected, died in teacher, attempt 2 resumed). It is
+    accepted only when those are exactly the stages this record did not run, and it is recorded
+    beside the measurement, never folded into `wall_clock_kind`."""
+    import prepare_data
     rec = json.loads(admit_read(build / "build_record.json").read_text())
-    if not rec.get("complete_build") or rec.get("wall_clock_kind") != "full build":
+    ran = rec.get("stages_run_this_invocation") or []
+    not_run = [st for st in prepare_data.STAGES if st not in ran]
+    if rec.get("complete_build") and rec.get("wall_clock_kind") == "full build":
+        seconds, summed = float(rec["wall_clock_seconds"]), None
+    elif prior and sorted(prior.get("stages") or []) == sorted(not_run) and not_run:
+        seconds = float(rec["wall_clock_seconds"]) + float(prior["seconds"])
+        summed = {"this_invocation_seconds": rec["wall_clock_seconds"], "this_invocation_ran": ran,
+                  "prior_seconds": float(prior["seconds"]), "prior_stages": not_run,
+                  "prior_source": str(prior.get("source") or "")}
+    else:
         raise SystemExit(f"M17 LOCK REFUSED: {build}/build_record.json is a "
-                         f"{rec.get('wall_clock_kind')!r}; only a complete full build prices "
-                         "the preparation phase.")
-    hours = rec["wall_clock_seconds"] / 3600
-    return {"full_build_wall_clock_seconds": rec["wall_clock_seconds"],
+                         f"{rec.get('wall_clock_kind')!r} that did not run {not_run}; only a "
+                         "complete full build, or a resumed one plus --prior-seconds for exactly "
+                         "those stages, prices the preparation phase.")
+    hours = seconds / 3600
+    return {"full_build_wall_clock_seconds": round(seconds, 3),
             "full_build_hours": round(hours, 3),
+            "summed_across_invocations": summed,
             "rss_high_water_gib": rec.get("rss_high_water_gib"),
             "memory_gib": rec.get("memory_gib"), "gpu_peak_gib": rec.get("gpu_peak_gib"),
             "queries": rec.get("size") or _manifest(build, "ext")["queries"],
@@ -128,7 +146,7 @@ def measured_allocation(build: Path):
             "phase_ceiling_hours": max(1, math.ceil(2 * hours))}
 
 
-def lock_pre(reg, build: Path, date=None, fixed_files=None):
+def lock_pre(reg, build: Path, date=None, fixed_files=None, prior=None):
     fixed_files = fixed_files or FIXED_FILES
     if reg.get("status") != "DRAFT_NOT_EXECUTABLE":
         raise SystemExit(f"M17 LOCK REFUSED: status is {reg.get('status')!r}; the pre half "
@@ -140,11 +158,12 @@ def lock_pre(reg, build: Path, date=None, fixed_files=None):
         raise SystemExit("M17 LOCK REFUSED: the pre half prices the UNSCREENED build; this one "
                          f"records protected_screen.state={ext['protected_screen']['state']!r}.")
     panel = json.loads(admit_read(fixed_files["panel_manifest"]).read_text())
-    if panel.get("status") != "FINAL":
+    # the sealed manifest reads "FINAL — sealed; cloud-software relevance is MODEL-JUDGED (A6)"
+    if not str(panel.get("status") or "").startswith("FINAL"):
         raise SystemExit(f"M17 LOCK REFUSED: panel manifest status {panel.get('status')!r} != FINAL.")
     proto = protocol_identity(reg)
     _check_full_build(ext, proto)
-    alloc = measured_allocation(build)
+    alloc = measured_allocation(build, prior)
     fixed = _fixed_sha(fixed_files)
     lock = {
         "_note": "step-6 lock, PRE-CLOCK half. Binds protocol, recipe, seeds, fixed manifests "
@@ -156,7 +175,7 @@ def lock_pre(reg, build: Path, date=None, fixed_files=None):
         "status_set": PRE_STATUS,
         "protocol": proto,
         "fixed_files_sha256": fixed,
-        "panel_sha256": panel["sha256"],
+        "panel_sha256": panel["panel_jsonl"]["sha256"],   # the sealed panel.jsonl bytes
         "invariant_build_inputs_sha256": {k: ext["hashes"][k] for k in INVARIANT_HASHES},
         "pre_screen_build": {
             "out": _rel(build),
@@ -315,13 +334,20 @@ def main(argv=None):
     ap.add_argument("--v0-out", default=None, help="executed: where the V0 bundle is written")
     ap.add_argument("--clock-started", default=None,
                     help="executed: ISO timestamp of the first --protected-screen invocation")
+    ap.add_argument("--prior-seconds", type=float, default=None,
+                    help="pre: wall clock of the stages an earlier invocation built and this "
+                         "one resumed (see measured_allocation)")
+    ap.add_argument("--prior-stages", default=None, help="pre: comma-separated, e.g. pool,domain,protected")
+    ap.add_argument("--prior-source", default=None, help="pre: where those seconds were read")
     ap.add_argument("--dry-run", action="store_true", help="print the block, write nothing")
     args = ap.parse_args(argv)
     path = Path(args.registry)
     reg = json.loads(admit_read(path).read_text())
     build = Path(args.build).resolve()
     if args.phase == "pre":
-        reg = lock_pre(reg, build)
+        prior = ({"seconds": args.prior_seconds, "stages": args.prior_stages.split(","),
+                  "source": args.prior_source} if args.prior_seconds is not None else None)
+        reg = lock_pre(reg, build, prior=prior)
         shown = reg["lock"]
     else:
         if args.dry_run:
