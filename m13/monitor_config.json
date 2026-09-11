@@ -1,0 +1,23 @@
+{
+  "health_path": "work/m13-monitor/health.json",
+  "alerts_path": "work/m13-monitor/alerts.jsonl",
+  "notification_command": ["/usr/bin/python3", "scripts/m13_windows_alert.py"],
+  "jobs": [
+    {
+      "name": "cloud E",
+      "receipt": "results/m13_cloud_e.json",
+      "pid_file": "work/m13cloud-launchers/e.pid",
+      "logs": ["logs/m13-e-launch.log", "logs/m13-cloud-e-E-bs32.log", "logs/m13-cloud-e-E-bs128.log"],
+      "stale_seconds": 900
+    },
+    {
+      "name": "local DEV6 and E1",
+      "receipt": "results/m13_after_e.json",
+      "recovery_receipt": "results/m13_after_e_recovery.json",
+      "pid_file": "work/m13cloud-launchers/after-e.pid",
+      "logs": ["logs/m13-after-e-controller.log", "logs/m13-after-e-E-bs32-dev6.log", "logs/m13-after-e-E-bs128-dev6.log"],
+      "wait_for": "cloud E",
+      "stale_seconds": 900
+    }
+  ]
+}

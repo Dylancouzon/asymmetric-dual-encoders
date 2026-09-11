@@ -20,6 +20,10 @@ update it from actual selected-arm throughput and matched-path encoding measurem
 No protected evaluation or full build has run. Runpod compute is stopped; its disk is retained.
 M17 keeps the original checkout; M13 uses `work/m13cloud`.
 
+Independent monitoring is active as `m13-monitor.service`: 30-second checks, local Windows
+alerts, and durable health/transition records. Add each next job before launch; configuration,
+operating limits and verified failure tests are documented in `m13/MONITORING.md`.
+
 | Stage | State / exit |
 |---|---|
 | Execution preparation | Done. Fixed 200M `build13` (53 tests, GPU smoke) and `score13`/`access13` (49 tests, rehearsal with crash and recover). Two Codex reviews plus a P1 re-check; its three residual P1s (gate/E1 consistency and registered checkpoints, fastembed in the freeze bar with a checkpoint-bound build record, teacher pin before spend) closed with tests. Reviews and triage: `research/m13-codex-*-2026-09-10.md`, `m13/REVIEW_TRIAGE.md` |
