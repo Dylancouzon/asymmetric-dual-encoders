@@ -53,3 +53,24 @@ returned GO for E only. Both confirmed all six artifact bindings and three bench
 hashes, the 199 ex/s safety rate, reserved55.2h/LoTTE15h allowances, $740.53 total and $259.47
 headroom. Their access audits covered only named source/receipt/config/plan metadata; no cloud,
 credentials or protected payloads.
+
+## Local E follow-on
+
+Both e_launch_audit and encode_benchmark returned GO for `scripts/m13_after_e.py`,
+conditional on the actual dependency preflight passing. It passed all six DEV-6 components
+(`results/m13_dev6_preflight.json`) without scoring or teacher encoding. The four text caches'
+current shard and combined bytes match their recorded hashes. Their historical trust-on-first-use
+labels remain intact; this is not an upgrade to authenticated provenance. An initial stricter
+check refused those legacy labels, as expected; both attempt logs are retained locally.
+
+The one-shot follow-on requires successful cloud completion, confirmed STOP, and verified
+backups bound to the cloud receipt before restoring independent local copies. It publishes
+the original records, fills descriptive DEV-6 only if the local GPU is idle, then computes
+E1 and applies the registered selection. It refuses existing evidence, source/registry drift,
+unrelated tracked edits and incomplete contrast results. Failures preserve outputs without
+automatic retries. The scope ends at E1; no build or protected evaluation is launched.
+Author synthetic checks covered success, busy GPU, prior computed E1 and an uncomputed result
+despite zero CLI exit. Parent inspected the final script and actual passing dependency receipt;
+independent reviewers inspected named source files and parsed the scripts, without cloud,
+credential or protected-content access. Operational preflight copy is retained in
+`work/m13cloud-launchers/dev6_preflight.py`.

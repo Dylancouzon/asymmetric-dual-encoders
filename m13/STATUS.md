@@ -20,6 +20,10 @@ expensive encoding. No protected evaluation or full build has run.
 **Next:** finish both E arms, verify the final local backups and STOP receipt, commit their
 records, then fill deferred DEV-6 locally and compute E1. Local DEV-6 dependencies are ready:
 `work/m13cloud-dev6-links.json` lists exact binary/data links with independent metadata copies.
+All six dependency checks passed (`results/m13_dev6_preflight.json`), with historical cache
+provenance preserved. The twice-reviewed `scripts/m13_after_e.py` automates the local handoff
+after verified cloud completion and STOP, ending at E1 selection. Its live receipt is
+`results/m13_after_e.json`; a busy local GPU stops the handoff for manual continuation.
 An extra rolling E-bs32 checkpoint at step15,624 is verified in `work/m13cloud-e-live/`.
 The existing encode benchmark now accepts `--dtype fp16` with a separate receipt, ready for
 matched-path timing after E; it is not deployed to the active Pod. Then follow the registered
