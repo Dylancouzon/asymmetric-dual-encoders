@@ -12,7 +12,12 @@ import pytest
 import cache
 
 
+MANIFESTS = {"v1_artifact": {"fixture": "test v1 rows"},
+             "teacher_query_preprocessing": "fixture: raw text, no prefix"}
+
+
 def _build(w, reg, **kw):
+    kw.setdefault("manifests", MANIFESTS)
     return cache.build(w["queries"], w["bank"], w["teacher_q"], w["v1_q"], reg, **kw)
 
 
@@ -65,6 +70,55 @@ def test_ranking_tie_break_is_ascending_document_id(tiny_world, reg):
     assert [bank.doc_ids[i] for i in got] == sorted(bank.doc_ids)[:5]
 
 
+def test_ties_spanning_block_boundaries_on_shuffled_ids(tiny_world):
+    """A tie wider than any partition block, with ids permuted independently of row order.
+
+    A partial `argpartition` selects the cutoff on score alone, so it can drop the smaller
+    bank id a tie requires; the full ordering cannot.
+    """
+    import cache as C
+    rng = np.random.default_rng(11)
+    n = 400
+    doc_ids = [f"d{i:04d}" for i in range(n)]
+    rng.shuffle(doc_ids)                                   # ids unrelated to row order
+    vecs = np.zeros((n, 4), dtype=np.float32)
+    vecs[:, 0] = 1.0
+    bank = C.Bank(doc_ids, vecs, ["synthetic"] * n, seed=0)
+    scores = np.zeros(n, dtype=np.float32)                 # one giant tie
+    order = list(C._ranked(scores, bank.id_rank))
+    assert [bank.doc_ids[i] for i in order] == sorted(bank.doc_ids)
+    # and the same holds for a tie band straddling several block sizes
+    scores = np.zeros(n, dtype=np.float32)
+    scores[:70] = 1.0
+    top = [bank.doc_ids[i] for _, i in zip(range(70), C._ranked(scores, bank.id_rank))]
+    assert top == sorted(bank.doc_ids[i] for i in range(70))
+
+
+def test_positives_outside_the_bank_are_refused_by_qid(tiny_world, reg):
+    """registry positive_bank_policy: never silently converted to a query-only example."""
+    w = dict(tiny_world)
+    qs = list(w["queries"])
+    victim = next(i for i, q in enumerate(qs) if q.positive_ids)
+    qs[victim] = cache.QuerySpec(**{**qs[victim].__dict__,
+                                    "positive_ids": qs[victim].positive_ids + ("not-in-bank",)})
+    w["queries"] = qs
+    with pytest.raises(ValueError, match=f"{qs[victim].qid}.*outside the bank"):
+        _build(w, reg)
+
+
+def test_uniform_rng_matches_an_independently_computed_golden_seed():
+    """`training.candidate_construction.rng`, recomputed here from hashlib, not from cache.py."""
+    import hashlib
+    seed, text = 7, "s3 bucket policy"
+    text_sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    digest = hashlib.sha256(b"7" + b"\x00" + text_sha.encode("utf-8")).digest()
+    want = np.random.default_rng(int.from_bytes(digest[:8], "big")).integers(0, 1000, size=5)
+    got = cache._query_rng(seed, text).integers(0, 1000, size=5)
+    assert np.array_equal(got, want)
+    # the recipe and its version are recorded, so a later change is visible in the identity
+    assert "SHA-256(raw query text as UTF-8) hex digest" in cache.RNG_RECIPE
+
+
 def test_uniform_rng_is_per_query_and_reproducible(tiny_world, reg):
     a, _ = _build(tiny_world, reg, cache_seed=3)
     b, _ = _build(tiny_world, reg, cache_seed=3)
@@ -96,6 +150,37 @@ def test_entropy_block_has_the_m8_shape(tiny_world, reg):
                         "share_of_queries_below_1e-2_nats"}
     assert set(ent["entropy_nats"]) >= {"mean", "p50", "p95"}
     assert 0.0 <= ent["entropy_as_fraction_of_ceiling"] <= 1.0
+
+
+def test_identity_refuses_empty_v1_and_preprocessing(tiny_world, reg):
+    with pytest.raises(ValueError, match="v1_artifact"):
+        cache.identity(tiny_world["queries"], tiny_world["bank"], reg, 0, manifests={})
+    with pytest.raises(ValueError, match="teacher_query_preprocessing"):
+        cache.identity(tiny_world["queries"], tiny_world["bank"], reg, 0,
+                       manifests={"v1_artifact": {"x": 1}})
+
+
+def test_identity_notices_swapped_per_query_metadata(tiny_world, reg):
+    """Aggregate sets and counts survive a swap of two queries' source/bucket; the hash must not."""
+    _, side = _build(tiny_world, reg)
+    qs = list(tiny_world["queries"])
+    i, j = 0, next(k for k, q in enumerate(qs) if q.source != qs[0].source)
+    qs[i], qs[j] = (cache.QuerySpec(**{**qs[i].__dict__, "source": qs[j].source}),
+                    cache.QuerySpec(**{**qs[j].__dict__, "source": qs[i].source}))
+    _, side2 = _build({**tiny_world, "queries": qs}, reg)
+    assert side2["identity"]["parts"]["source_split_manifest"]["sources"] == \
+        side["identity"]["parts"]["source_split_manifest"]["sources"]
+    assert side2["identity"]["sha256"] != side["identity"]["sha256"]
+
+
+def test_load_verifies_the_stored_arrays(tiny_world, reg, tmp_path):
+    arrays, side = _build(tiny_world, reg)
+    cache.save(tmp_path / "c", arrays, side)
+    z = dict(np.load(tmp_path / "c" / "candidates.npz", allow_pickle=False))
+    z["candidate_ids"] = np.zeros_like(z["candidate_ids"])
+    np.savez(tmp_path / "c" / "candidates.npz", **z)
+    with pytest.raises(SystemExit, match="has been altered"):
+        cache.load(tmp_path / "c")
 
 
 def test_bad_mix_is_refused(tiny_world, reg):

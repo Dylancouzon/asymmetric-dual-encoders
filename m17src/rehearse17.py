@@ -133,6 +133,28 @@ def rehearsal_registry():
     return reg, {k: {"registry": v[0], "rehearsal": v[1]} for k, v in scaled.items()}
 
 
+MARKER = ".m17_rehearsal"
+
+
+def _clear_rehearsal_dir(root):
+    """Delete only a directory this script itself created (or an empty one).
+
+    `--out` is a path a human typed. A recursive delete of an arbitrary directory is one
+    typo away from a live M13 work tree, so the marker file is the only licence to remove one.
+    """
+    root = Path(root)
+    if not root.exists():
+        return
+    if not root.is_dir():
+        raise SystemExit(f"REFUSED: {root} is not a directory.")
+    if any(root.iterdir()) and not (root / MARKER).exists():
+        raise SystemExit(
+            f"REFUSED: {root} is not empty and carries no {MARKER} marker, so it was not "
+            "written by a previous rehearsal. Choose an empty or fresh --out directory; the "
+            "rehearsal never deletes work it did not create.")
+    shutil.rmtree(root)
+
+
 def build(root, seed=0, device="cpu", log=print):
     """Build the world and run every stage. Returns the rehearsal record."""
     import cache
@@ -145,9 +167,11 @@ def build(root, seed=0, device="cpu", log=print):
     from table import Preproc, QueryTable, save_table
 
     root = Path(root)
-    if root.exists():
-        shutil.rmtree(root)
+    _clear_rehearsal_dir(root)
     (root / "data").mkdir(parents=True)
+    (root / MARKER).write_text(
+        "Disposable M17 rehearsal output. rehearse17.py may delete this directory because it "
+        "wrote this marker; it deletes nothing else.\n")
     reg, scaled = rehearsal_registry()
     rng = np.random.default_rng(seed)
     t0 = time.time()
@@ -202,8 +226,10 @@ def build(root, seed=0, device="cpu", log=print):
                        "p0b_drift": drift, "pieces_per_new_row": pieces[:3]}
 
     # --- candidate cache --------------------------------------------------------------------
-    arrays, sidecar = cache.build(queries, bank, teacher_q, v1_q, reg, cache_seed=seed,
-                                  manifests={"v1_artifact": {"fixture": "rehearsal"}})
+    arrays, sidecar = cache.build(
+        queries, bank, teacher_q, v1_q, reg, cache_seed=seed,
+        manifests={"v1_artifact": {"fixture": "rehearsal synthetic v1 rows", "dim": DIM},
+                   "teacher_query_preprocessing": "rehearsal fixture: raw text, no prefix"})
     cache.save(root / "data", arrays, sidecar)
     stages["cache"] = {"identity_sha256": sidecar["identity"]["sha256"],
                        "counts": sidecar["counts"],
@@ -221,6 +247,7 @@ def build(root, seed=0, device="cpu", log=print):
     data = {"model": model, "ids": student_ids, "teacher_q": teacher_q, "bank": bank_vecs,
             "candidate_ids": arrays["candidate_ids"], "teacher_scores": arrays["teacher_scores"],
             "buckets": arrays["buckets"], "alias_pair_ids": arrays["alias_pair_ids"],
+            "alias_views": arrays["alias_views"], "families": arrays["families"],
             "heldout_idx": heldout_idx, "preproc": {"prefix": "", "add_special_tokens": True,
                                                     "max_length": 512, "pool_mode": "sqrt"},
             "teacher": reg["teacher"], "teacher_revision": reg["teacher_revision"],

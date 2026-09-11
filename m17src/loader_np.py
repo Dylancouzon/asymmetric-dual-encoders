@@ -28,6 +28,8 @@ from pathlib import Path
 import numpy as np
 from tokenizers import Tokenizer
 
+from common import admit_read
+
 EPS = 1e-6
 MODES = ("eager_fp32", "resident_int8")
 
@@ -39,7 +41,7 @@ class M17QueryEncoder:
         if mode not in MODES:
             raise ValueError(f"mode must be one of {MODES}, got {mode!r}")
         d = Path(model_dir)
-        self.config = json.loads((d / "config.json").read_text())
+        self.config = json.loads(admit_read(d / "config.json").read_text())
         pre = self.config["preproc"]
         if pre["pool_mode"] != "sqrt" or pre["prefix"] != "" or not pre["add_special_tokens"]:
             raise ValueError(f"this loader implements the frozen M7 query rule only, got {pre}")
@@ -47,7 +49,7 @@ class M17QueryEncoder:
         self.fallback_id = int(self.config["fallback_token_id"])
         self.variant, self.mode = variant, mode
 
-        z = np.load(d / "model.npz")
+        z = np.load(admit_read(d / "model.npz"))
         if variant == "int8":
             self.codes = z["rows_int8"]
             self.scales = z["int8_scale"].astype(np.float32)
@@ -67,7 +69,7 @@ class M17QueryEncoder:
             self.rows = None
             n_rows = self.codes.shape[0]
 
-        self.tokenizer = Tokenizer.from_file(str(d / "tokenizer.json"))
+        self.tokenizer = Tokenizer.from_file(str(admit_read(d / "tokenizer.json")))
         n = self.tokenizer.get_vocab_size(with_added_tokens=True)
         if n != n_rows:
             raise ValueError(f"tokenizer has {n} tokens but the table has {n_rows} rows; a token "
@@ -153,7 +155,7 @@ def parity(model_dir, texts=None, float_rows=None, tol=None):
            "weight_bytes": {"eager_fp32": a.weight_bytes, "resident_int8": b.weight_bytes},
            "rss_kb_after_load": rss_kb(), "n_fixtures": len(texts)}
     if float_rows is not None:
-        cfg = json.loads((Path(model_dir) / "config.json").read_text())
+        cfg = json.loads(admit_read(Path(model_dir) / "config.json").read_text())
         ref = _reference_encode(np.asarray(float_rows, dtype=np.float32),
                                 Path(model_dir) / "tokenizer.json", cfg, texts)
         out["vs_exported_float_rows_max_abs"] = float(np.abs(ref - va).max())
@@ -164,7 +166,7 @@ def parity(model_dir, texts=None, float_rows=None, tol=None):
 
 
 def _reference_encode(rows, tokenizer_json, cfg, texts):
-    tok = Tokenizer.from_file(str(tokenizer_json))
+    tok = Tokenizer.from_file(str(admit_read(tokenizer_json)))
     tok.enable_truncation(max_length=int(cfg["preproc"]["max_length"]))
     tok.no_padding()
     fb_id = int(cfg["fallback_token_id"])

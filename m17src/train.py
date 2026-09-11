@@ -16,8 +16,9 @@ What the loop implements, from `m17/registry.json`:
 
 * warm start from the M7 `p35w-2m-s2500` **unfolded** checkpoint, lineage verified against
   `m7/FREEZE.json`, with new run ids and a fresh optimizer;
-* batch composition 0.75 general / 0.25 coverage, with alias PAIRS occupying 0.125 of the batch
-  (16 pairs = 32 views at batch 256), identical views in the same order in every arm;
+* the MEASURED batch composition (`data.measured_dose_after_pre_lock_rule`): 204 general, 32
+  unpaired coverage and 10 alias pairs = 20 views at batch 256, after the pre-lock alias
+  shrink; identical views in the same order in every arm;
 * without-replacement sampling inside each bucket, reshuffled per pass with the run seed, and a
   per-bucket pass counter (never an overall one);
 * losses: cosine to the frozen teacher query vector, listwise KL(teacher || student) over the
@@ -44,7 +45,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from common import WORK, freeze, registry, require_executable, sha_json, sha_text, write_json
+from common import (WORK, admit_read, freeze, registry, require_executable, sha_array, sha_file,
+                    sha_json, sha_text, write_json)
 
 ARMS = {
     "C":    {"vocab_extension": False, "listwise": False, "alias_consistency": False},
@@ -53,6 +55,35 @@ ARMS = {
     "VL":   {"vocab_extension": True,  "listwise": True,  "alias_consistency": False},
     "VL-A": {"vocab_extension": True,  "listwise": True,  "alias_consistency": True},
 }
+
+
+def resolve_dose(data_reg, batch):
+    """(general, coverage, alias pairs) per batch from `measured_dose_after_pre_lock_rule`.
+
+    At the dose's own batch the registered numbers are used verbatim (204 / 32 / 10 at 256).
+    Another batch size — the pre-lock 128 fallback, or a fixture-scale rehearsal batch — is
+    derived proportionally, with the `pre_lock_rule`'s floors (16 coverage views, 4 pairs)
+    applied whenever they still fit. General absorbs the remainder so the sum is exact.
+    """
+    dose = data_reg["measured_dose_after_pre_lock_rule"]
+    batch = int(batch)
+    d_batch = int(dose["batch"])
+    g0 = int(dose["general_views_per_batch"])
+    c0 = int(dose["unpaired_coverage_views_per_batch"])
+    p0 = int(dose["alias_pairs_per_batch"])
+    if g0 + c0 + 2 * p0 != d_batch:
+        raise ValueError(f"registry dose {g0}/{c0}/{p0} does not sum to batch {d_batch}")
+    if batch == d_batch:
+        return g0, c0, p0
+    scale = batch / d_batch
+    c = max(1, int(round(c0 * scale)))
+    p = max(1, int(round(p0 * scale)))
+    if 16 + 2 * 4 < batch:                      # the pre_lock_rule floors, where they fit
+        c, p = max(c, 16), max(p, 4)
+    g = batch - c - 2 * p
+    if g <= 0:
+        raise ValueError(f"batch={batch} is too small for the registered dose shape")
+    return g, c, p
 
 
 @dataclass
@@ -69,9 +100,13 @@ class RunCfg:
     listwise_weight: float = 1.0
     alias_weight: float = 0.1
     init_anchor_weight: float = 1e-3
-    general_fraction: float = 0.75
-    coverage_fraction: float = 0.25
-    alias_views_fraction: float = 0.125
+    # Batch composition is the MEASURED dose (`data.measured_dose_after_pre_lock_rule`), not
+    # the superseded fractions: 204 general / 32 coverage / 10 alias pairs at batch 256.
+    general_views: int = 204
+    coverage_views: int = 32
+    alias_pairs: int = 10
+    dose_source: str = "data.measured_dose_after_pre_lock_rule"
+    phase: str = ""
     check_every: int = 500
     heldout_queries: int = 2000
     snapshot_steps: tuple = (4500, 5250, 6000)
@@ -88,6 +123,8 @@ class RunCfg:
     def from_registry(cls, reg, arm, seed=None, **over):
         tr = reg["training"]
         d = reg["data"]
+        batch = int(over.get("batch", tr["batch"]))
+        g, c, p = resolve_dose(d, batch)
         cfg = cls(
             arm=arm,
             seed=int(tr["seed_screen"] if seed is None else seed),
@@ -101,9 +138,9 @@ class RunCfg:
             listwise_weight=float(tr["listwise_weight_when_enabled"]),
             alias_weight=float(tr["alias_weight_when_enabled"]),
             init_anchor_weight=float(tr["init_anchor_weight"]),
-            general_fraction=float(d["general_replay_fraction"]),
-            coverage_fraction=float(d["targeted_coverage_fraction"]),
-            alias_views_fraction=float(d["alias_query_views_fraction_of_batch"]),
+            general_views=g,
+            coverage_views=c,
+            alias_pairs=p,
             check_every=int(tr["overfit_divergence_check"]["every_steps"]),
             heldout_queries=2000,
             snapshot_steps=tuple(reg["checkpoint_averaging"]["checkpoint_steps"]),
@@ -111,24 +148,26 @@ class RunCfg:
         )
         for k, v in over.items():
             setattr(cfg, k, v)
+        if not cfg.phase:
+            cfg.phase = ("screen" if cfg.steps == int(tr["screen_steps"])
+                         else "final" if cfg.steps == int(tr["final_steps_per_fresh_run"])
+                         else "custom")
         if not cfg.run_id:
-            cfg.run_id = f"m17-{cfg.arm.lower()}-s{cfg.seed}"
+            # The phase is part of the identity: a fresh screen and a fresh final run of the
+            # same arm and seed are different experiments and must not share a run directory.
+            cfg.run_id = f"m17-{cfg.arm.lower()}-{cfg.phase}-s{cfg.seed}"
         return cfg
 
     def batch_shape(self):
         """(general views, unpaired coverage views, alias pairs) for one step.
 
-        Alias PAIRS take `alias_views_fraction` of the batch as VIEWS, i.e. half that many
-        pairs, and they come out of the coverage share — "half of the targeted-coverage slots
-        are paired equivalent views".
+        The registered dose, validated: the views must add up to exactly the batch.
         """
-        alias_views = int(round(self.batch * self.alias_views_fraction))
-        alias_views -= alias_views % 2
-        coverage = int(round(self.batch * self.coverage_fraction)) - alias_views
-        general = self.batch - coverage - alias_views
-        if coverage < 0 or general < 0:
-            raise ValueError(f"batch composition does not fit batch={self.batch}")
-        return general, coverage, alias_views // 2
+        g, c, p = int(self.general_views), int(self.coverage_views), int(self.alias_pairs)
+        if min(g, c, p) < 0 or g + c + 2 * p != int(self.batch):
+            raise ValueError(f"batch composition {g} general + {c} coverage + 2x{p} alias views "
+                             f"does not sum to batch={self.batch}")
+        return g, c, p
 
 
 # ---- data ------------------------------------------------------------------------------
@@ -161,6 +200,11 @@ class Stream:
         self.pos = 0
 
     def draw(self, n):
+        if n and len(self.population) == 0:
+            raise SystemExit(
+                f"M17 REFUSED: bucket {self.name!r} is empty but the registered batch "
+                f"composition asks for {n} of it. A short batch is a different dose, not a "
+                "recoverable shortage.")
         if len(self.population) == 0:
             return np.zeros(0, dtype=np.int64)
         out = []
@@ -179,34 +223,75 @@ class Stream:
                 "n": int(len(self.population))}
 
     def load_state(self, st):
+        if int(st.get("n", len(self.population))) != len(self.population):
+            raise SystemExit(
+                f"M17 RESUME REFUSED: bucket {self.name!r} held {st.get('n')} rows when the "
+                f"checkpoint was written and holds {len(self.population)} now; the saved "
+                "position would select different queries.")
         self.passes = int(st["passes"])
         self._reshuffle()
         self.pos = int(st["pos"])
 
 
-def build_streams(buckets, alias_pair_ids, seed):
+TRAINING_BUCKETS = ("general", "coverage")
+
+
+def build_streams(buckets, alias_pair_ids, alias_views, families, seed, need=None):
     """General / unpaired-coverage / alias-pair streams from the cache's own bucket labels.
 
-    Only the two training buckets are drawn from. Anything else the cache carries — notably the
-    fixed held-out slice — is deliberately NOT a stream: the divergence read must never sample
-    rows the optimizer is also seeing.
+    Only the two TRAINING buckets are drawn from. Anything else the cache carries — notably
+    the fixed held-out slice — is deliberately not a stream, and an alias pair whose rows sit
+    outside the training buckets is refused rather than quietly trained on: the divergence
+    read must never sample rows the optimizer is also seeing.
+
+    An alias pair must be exactly two rows, views `a` and `b`, in one query family. `need` is
+    the per-batch demand `{"general": g, "coverage": c, "alias": p}`; a bucket that cannot
+    supply one batch is refused here rather than producing a short batch in the loop.
     """
     buckets = np.asarray([str(b) for b in buckets])
     pair_ids = np.asarray([str(p) for p in alias_pair_ids])
+    views = np.asarray([str(v) for v in alias_views])
+    fams = np.asarray([str(f) for f in families])
+    if not (len(buckets) == len(pair_ids) == len(views) == len(fams)):
+        raise SystemExit("M17 REFUSED: bucket / pair-id / view / family arrays disagree on length")
     is_alias = pair_ids != ""
+    trainable = np.isin(buckets, TRAINING_BUCKETS)
     general = np.flatnonzero((buckets == "general") & ~is_alias)
     coverage = np.flatnonzero((buckets == "coverage") & ~is_alias)
+
     pairs = {}
     for i in np.flatnonzero(is_alias):
         pairs.setdefault(pair_ids[i], []).append(int(i))
-    ordered = sorted(p for p, v in pairs.items() if len(v) == 2)
-    incomplete = sorted(p for p, v in pairs.items() if len(v) != 2)
-    pair_index = np.asarray([pairs[p] for p in ordered], dtype=np.int64).reshape(-1, 2) \
-        if ordered else np.zeros((0, 2), dtype=np.int64)
-    return ({"general": Stream("general", general, seed),
-             "coverage": Stream("coverage", coverage, seed),
-             "alias": Stream("alias", np.arange(len(pair_index)), seed)},
-            pair_index, incomplete)
+    bad = {}
+    for pid, rows in pairs.items():
+        if not all(trainable[i] for i in rows):
+            bad[pid] = f"rows in buckets {sorted({buckets[i] for i in rows})}, not training rows"
+        elif len(rows) != 2:
+            bad[pid] = f"{len(rows)} rows, expected exactly two views"
+        elif sorted(views[i] for i in rows) != ["a", "b"]:
+            bad[pid] = f"views {sorted(views[i] for i in rows)}, expected ['a', 'b']"
+        elif len({fams[i] for i in rows}) != 1:
+            bad[pid] = f"two query families {sorted({fams[i] for i in rows})}, expected one"
+    if bad:
+        raise SystemExit("M17 REFUSED: malformed alias pairs " + json.dumps(bad, sort_keys=True))
+    ordered = sorted(pairs)
+    pair_index = np.asarray([sorted(pairs[p], key=lambda i: views[i]) for p in ordered],
+                            dtype=np.int64).reshape(-1, 2) if ordered \
+        else np.zeros((0, 2), dtype=np.int64)
+
+    streams = {"general": Stream("general", general, seed),
+               "coverage": Stream("coverage", coverage, seed),
+               "alias": Stream("alias", np.arange(len(pair_index)), seed)}
+    for name, want in (need or {}).items():
+        have = len(streams[name].population)
+        if want and have < want:
+            raise SystemExit(
+                f"M17 REFUSED: bucket {name!r} holds {have} rows but one batch needs {want}. "
+                "An undersupplied bucket is a dose the pre-lock rule has to shrink, not a "
+                "batch to shorten silently.")
+    return streams, pair_index, {"n_pairs": len(pair_index),
+                                 "n_alias_rows": int(is_alias.sum()),
+                                 "views_checked": True}
 
 
 # ---- model path ---------------------------------------------------------------------------
@@ -281,7 +366,12 @@ def load_warm_start(path, expect_vocab=None, device="cpu", rehearsal=False):
     """
     from table import QueryTable, read_meta
     reg = registry()
+    path = admit_read(path)
     meta = read_meta(path)
+    if "weights_folded" not in meta or "learned_weights" not in meta:
+        raise SystemExit(f"M17 REFUSED: {path} does not state `weights_folded` and "
+                         "`learned_weights` explicitly; an unmarked artifact is not evidence "
+                         "that it is the unfolded checkpoint.")
     if meta.get("weights_folded"):
         raise SystemExit(f"M17 REFUSED: {path} is a FOLDED release artifact. The warm start must "
                          "be the unfolded training checkpoint; a folded table cannot resume "
@@ -293,19 +383,35 @@ def load_warm_start(path, expect_vocab=None, device="cpu", rehearsal=False):
     if not rehearsal and (t, rev) != (reg["teacher"], reg["teacher_revision"]):
         raise SystemExit(f"M17 REFUSED: warm start was distilled from {t}@{str(rev)[:12]} but the "
                          f"registry pins {reg['teacher']}@{reg['teacher_revision'][:12]}.")
+    fz = freeze()
+    want_sha = fz.get("training_checkpoint_sha256")
+    got_sha = sha_file(path)
+    if rehearsal:
+        print(f"[m17] REHEARSAL: warm-start FREEZE hash check BYPASSED for {path} "
+              f"(file sha {got_sha[:12]}, m7/FREEZE.json records {str(want_sha)[:12]})")
+    elif got_sha != want_sha:
+        raise SystemExit(
+            f"M17 REFUSED: warm start {path} hashes {got_sha[:12]} but m7/FREEZE.json's "
+            f"training_checkpoint_sha256 is {str(want_sha)[:12]}. Matching teacher strings are "
+            "not lineage; only these bytes are p35w-2m-s2500's unfolded checkpoint.")
+
     z = np.load(path)
     rows = z["rows_fp16"].astype(np.float32)
     w = z["token_weights"]
     if expect_vocab is not None and rows.shape[0] != expect_vocab:
         raise SystemExit(f"M17 REFUSED: warm start has {rows.shape[0]} rows, expected "
                          f"{expect_vocab} base rows before the extension.")
-    model = QueryTable(rows, weight_init=(w if w.size else None), learned_weights=bool(w.size))
+    if w.shape != (rows.shape[0],) or not np.isfinite(w).all() or (w <= 0).any():
+        raise SystemExit(f"M17 REFUSED: warm start scalars have shape {w.shape} for "
+                         f"{rows.shape[0]} rows, or are not finite and positive; the unfolded "
+                         "checkpoint carries one positive scalar per row.")
+    model = QueryTable(rows, weight_init=w, learned_weights=True)
     lineage = {"path": str(path), "meta": meta, "vocab": int(rows.shape[0]),
-               "dim": int(rows.shape[1])}
-    if not rehearsal:
-        fz = freeze()
-        lineage["freeze_run_id"] = fz.get("run_id")
-        lineage["freeze_training_checkpoint_sha256"] = fz.get("training_checkpoint_sha256")
+               "dim": int(rows.shape[1]), "checkpoint_sha256": got_sha,
+               "freeze_run_id": fz.get("run_id"),
+               "freeze_training_checkpoint_sha256": want_sha,
+               "freeze_hash_verified": (not rehearsal) and got_sha == want_sha,
+               "rehearsal_bypass": bool(rehearsal)}
     return model.to(device), lineage
 
 
@@ -326,6 +432,9 @@ def extend_model(model, new_rows, device):
 
 def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
     """`data` is the dict `prepare_data` returns (or the rehearsal fixture builds)."""
+    # The status gate belongs to the callable driver, not only to the CLI: a caller that
+    # imports `run()` must meet the same bar as `python m17src/train.py`.
+    require_executable(registry(), cfg.rehearsal, what=f"arm {cfg.arm} ({cfg.run_id})")
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     arm = ARMS[cfg.arm]
@@ -348,15 +457,19 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
     bank = torch.as_tensor(data["bank"], dtype=torch.float32, device=device)
     cand = torch.as_tensor(data["candidate_ids"], dtype=torch.long, device=device)
     tsc = torch.as_tensor(data["teacher_scores"], dtype=torch.float32, device=device)
-    streams, pair_index, incomplete = build_streams(data["buckets"], data["alias_pair_ids"],
-                                                    cfg.seed)
-    heldout = np.asarray(data["heldout_idx"], dtype=np.int64)[:cfg.heldout_queries]
     g_n, c_n, p_n = cfg.batch_shape()
+    streams, pair_index, alias_report = build_streams(
+        data["buckets"], data["alias_pair_ids"], data["alias_views"], data["families"], cfg.seed,
+        need={"general": g_n, "coverage": c_n,
+              "alias": p_n if arm["alias_consistency"] else 0})
+    heldout = np.asarray(data["heldout_idx"], dtype=np.int64)[:cfg.heldout_queries]
+    _check_heldout(heldout, streams, pair_index, cfg)
 
-    state = {"step": 0, "history": [], "flags": [], "snapshots": {}}
+    state = {"step": 0, "history": [], "flags": [], "snapshots": {},
+             "train_running": {"cosine": None, "listwise": None}}
     ck = out / "recovery.pt"
     if resume and ck.exists():
-        state = _resume(ck, model, opt, streams, cfg, log)
+        state, eff_init = _resume(ck, model, opt, streams, cfg, eff_init, log)
 
     def set_lr(step):
         f = min(1.0, step / max(1, cfg.warmup_steps))
@@ -389,22 +502,29 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
         return losses(model, q_s, q_t[ii], vecs, mask, tsc[ii], eff_init, slots, cfg, arm)
 
     @torch.no_grad()
-    def heldout_loss():
+    def heldout_components():
+        """The SAME components the training accumulator tracks: cosine and listwise only.
+
+        The anchor is a regularizer on the rows, not a fit statistic, and the alias term needs
+        paired slots the held-out slice does not have; including either would make the
+        divergence comparison depend on a term the two sides do not share.
+        """
         model.eval()
-        tot, n = 0.0, 0
+        tot = {"cosine": 0.0, "listwise": 0.0}
+        n = 0
         for lo in range(0, len(heldout), cfg.batch):
             sl = heldout[lo:lo + cfg.batch]
             if not len(sl):
                 break
-            loss, _ = step_losses(sl, None)       # alias term excluded: not a paired slice
-            tot += float(loss) * len(sl)
+            _, parts = step_losses(sl, None)
+            tot["cosine"] += parts["cosine"] * len(sl)
+            tot["listwise"] += parts.get("listwise_kl", 0.0) * len(sl)
             n += len(sl)
         model.train()
-        return tot / max(1, n)
+        return _monitored({k: v / max(1, n) for k, v in tot.items()})
 
     t0 = time.time()
     last_ck = t0
-    run_mean = None
     while state["step"] < cfg.steps:
         state["step"] += 1
         s = state["step"]
@@ -414,18 +534,22 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
         opt.zero_grad(set_to_none=True)
         loss.backward()
         opt.step()
-        lv = float(loss.detach())
-        run_mean = lv if run_mean is None else 0.99 * run_mean + 0.01 * lv
+        # Separate running accumulators, carried in `state` so they survive a resume.
+        rm = state["train_running"]
+        for key, val in (("cosine", parts["cosine"]),
+                         ("listwise", parts.get("listwise_kl", 0.0))):
+            rm[key] = val if rm.get(key) is None else 0.99 * rm[key] + 0.01 * val
 
         if s % cfg.check_every == 0 or s == cfg.steps:
-            h = heldout_loss()
-            state["history"].append({"step": s, "train_running_mean": run_mean,
-                                     "heldout": h, "parts": parts,
-                                     "lr_factor": lr_factor,
+            tr, ho = _monitored(rm), heldout_components()
+            state["history"].append({"step": s, "train_running_mean": tr["monitored"],
+                                     "heldout": ho["monitored"],
+                                     "train_components": tr, "heldout_components": ho,
+                                     "parts": parts, "lr_factor": lr_factor,
                                      "passes": {k: v.passes for k, v in streams.items()}})
             _flag_divergence(state, log)
-            log(f"  [{cfg.run_id}] step {s}/{cfg.steps} train {run_mean:.5f} heldout {h:.5f} "
-                f"{ {k: round(v, 5) for k, v in parts.items()} } "
+            log(f"  [{cfg.run_id}] step {s}/{cfg.steps} train {tr['monitored']:.5f} heldout "
+                f"{ho['monitored']:.5f} { {k: round(v, 5) for k, v in parts.items()} } "
                 f"{(time.time() - t0) / s * 1000:.0f} ms/step")
 
         if s in tuple(cfg.snapshot_steps):
@@ -435,7 +559,7 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
             log(f"  [{cfg.run_id}] step-bound snapshot {p.name}")
 
         if (time.time() - last_ck) / 60.0 >= cfg.checkpoint_minutes_max or s == cfg.steps:
-            _checkpoint(ck, model, opt, streams, state, cfg, data)
+            _checkpoint(ck, model, opt, streams, state, cfg, data, eff_init)
             last_ck = time.time()
 
     record = {
@@ -451,7 +575,8 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
         "batch_composition": {"general": g_n, "unpaired_coverage": c_n, "alias_pairs": p_n,
                               "batch": cfg.batch},
         "bucket_passes": {k: v.state() for k, v in streams.items()},
-        "incomplete_alias_pairs": incomplete,
+        "alias_pairs": alias_report,
+        "heldout": {"n": int(len(heldout)), "metric": "cosine + listwise, no anchor, no alias"},
         "history": state["history"], "divergence_flags": state["flags"],
         "snapshots": state["snapshots"],
         "wall_clock_seconds": round(time.time() - t0, 3),
@@ -460,6 +585,36 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
     write_json(out / "run_record.json", record)
     _save_table(out / "endpoint.npz", model, cfg, data, step=state["step"])
     return record
+
+
+def _monitored(components):
+    """The divergence statistic: the two shared fit components, summed."""
+    c = {k: float(v or 0.0) for k, v in components.items() if k in ("cosine", "listwise")}
+    return {**c, "monitored": sum(c.values())}
+
+
+def _check_heldout(heldout, streams, pair_index, cfg):
+    """The registered held-out slice: 2000 unique training-source queries, disjoint from training.
+
+    A rehearsal runs on tens of queries and says so; a real run may not silently report a
+    zero-loss divergence read taken over an empty slice.
+    """
+    if len(heldout) == 0:
+        raise SystemExit("M17 REFUSED: the held-out slice is empty; the divergence check would "
+                         "report zero loss forever (registry overfit_divergence_check).")
+    if len(set(heldout.tolist())) != len(heldout):
+        raise SystemExit("M17 REFUSED: the held-out slice repeats queries; the registered slice "
+                         "is 2000 UNIQUE queries.")
+    # The alias stream's population is PAIR indices; its rows are the pair map's entries.
+    training = {int(i) for k in ("general", "coverage") for i in streams[k].population}
+    training.update(int(i) for i in np.asarray(pair_index).reshape(-1))
+    overlap = training & set(heldout.tolist())
+    if overlap:
+        raise SystemExit(f"M17 REFUSED: {len(overlap)} held-out queries are also in a training "
+                         "bucket; the divergence read must not see rows the optimizer sees.")
+    if not cfg.rehearsal and len(heldout) != int(cfg.heldout_queries):
+        raise SystemExit(f"M17 REFUSED: held-out slice has {len(heldout)} queries, the registry "
+                         f"pins {cfg.heldout_queries}.")
 
 
 def _flag_divergence(state, log):
@@ -479,43 +634,81 @@ def _flag_divergence(state, log):
 
 
 def _save_table(path, model, cfg, data, step):
-    """Unfolded training-shape table plus the M17 identity sidecar (`m7src.table.save_table`)."""
+    """Unfolded training-shape table plus the M17 identity sidecar (`m7src.table.save_table`).
+
+    `save_table` keeps the unfolded rows as FP16 only. The step-bound snapshots are averaged
+    later, and two genuinely different snapshots can round to the same FP16 rows, so this
+    writes the FP32 unfolded rows alongside them (`rows_fp32`); `export.effective_rows` folds
+    those when they are present. The FP16 array stays for the legacy readers.
+    """
     from table import Preproc, save_table
+    path = Path(path)
     pre = Preproc(**data["preproc"])
-    save_table(Path(path), model, pre, meta={
+    save_table(path, model, pre, meta={
         "m17_run_id": cfg.run_id, "m17_arm": cfg.arm, "m17_step": int(step),
         "m17_seed": cfg.seed, "m17_rehearsal": bool(cfg.rehearsal),
         "tokenizer_sha256": cfg.tokenizer_sha256,
         "vocabulary_sha256": cfg.vocabulary_sha256,
         "candidate_cache_sha256": cfg.cache_sha256,
         "teacher": data.get("teacher"), "teacher_revision": data.get("teacher_revision"),
-        "weights_folded": False})
+        "weights_folded": False, "rows_fp32_present": True})
+    z = dict(np.load(path))
+    z["rows_fp32"] = model.rows.detach().float().cpu().numpy()
+    np.savez(path, **z)
 
 
-def _checkpoint(path, model, opt, streams, state, cfg, data):
+# The configuration fields a resume must agree on: a checkpoint written under a different
+# arm, seed, dose, temperature, learning rate or cache is a DIFFERENT experiment, not a run to
+# continue. (`device`, `rehearsal`, `checkpoint_minutes_max` and `run_id` are not on this list.)
+RESUME_BOUND_FIELDS = ("arm", "seed", "phase", "steps", "batch", "general_views",
+                       "coverage_views", "alias_pairs", "warmup_steps", "temperature",
+                       "cosine_weight", "listwise_weight", "alias_weight", "init_anchor_weight",
+                       "rows_lr", "weights_lr", "tokenizer_sha256", "vocabulary_sha256",
+                       "cache_sha256")
+
+
+def _checkpoint(path, model, opt, streams, state, cfg, data, eff_init):
     tmp = Path(str(path) + ".tmp")
     torch.save({"model": model.state_dict(), "opt": opt.state_dict(),
                 "streams": {k: v.state() for k, v in streams.items()},
                 "state": state, "cfg": asdict(cfg),
                 "torch_rng": torch.get_rng_state(),
                 "tokenizer_sha256": cfg.tokenizer_sha256,
-                "vocab": int(model.rows.shape[0])}, tmp)
+                "bound": {k: getattr(cfg, k) for k in RESUME_BOUND_FIELDS},
+                "eff_init": eff_init.detach().cpu(),
+                "vocab": int(model.rows.shape[0]),
+                "dim": int(model.rows.shape[1])}, tmp)
     tmp.replace(path)
 
 
-def _resume(path, model, opt, streams, cfg, log):
+def _resume(path, model, opt, streams, cfg, eff_init, log):
+    """Restore a run — and refuse a checkpoint that belongs to a different one.
+
+    Returns `(state, eff_init)`: the anchor initialization comes BACK from the checkpoint, so
+    the anchor keeps measuring drift from where this run started rather than from wherever the
+    resumed model happens to be.
+    """
     ck = torch.load(path, map_location="cpu", weights_only=False)
-    if ck.get("vocab") != int(model.rows.shape[0]):
-        raise SystemExit(f"M17 RESUME REFUSED: checkpoint has {ck.get('vocab')} rows, this run "
-                         f"has {int(model.rows.shape[0])}; a different table is a different run.")
+    shape = (int(model.rows.shape[0]), int(model.rows.shape[1]))
+    if (ck.get("vocab"), ck.get("dim")) != shape:
+        raise SystemExit(f"M17 RESUME REFUSED: checkpoint table is "
+                         f"{(ck.get('vocab'), ck.get('dim'))}, this run's is {shape}; a "
+                         "different table is a different run.")
     if ck.get("tokenizer_sha256", "") != cfg.tokenizer_sha256:
         raise SystemExit(
             f"M17 RESUME REFUSED: checkpoint tokenizer {ck.get('tokenizer_sha256', '')[:12]!r} "
             f"!= this run's {cfg.tokenizer_sha256[:12]!r}. Schedule and step identity are only "
             "meaningful for the same tokenizer and table.")
-    if ck.get("cfg", {}).get("steps") != cfg.steps:
-        raise SystemExit("M17 RESUME REFUSED: the checkpoint was written under a different step "
-                         "budget; do not append steps to an exhausted scheduler.")
+    bound = ck.get("bound") or {}
+    differ = [k for k in RESUME_BOUND_FIELDS if bound.get(k) != getattr(cfg, k)]
+    if not bound:
+        raise SystemExit("M17 RESUME REFUSED: the checkpoint records no bound configuration; "
+                         "it predates the resume identity check and cannot be trusted to be "
+                         "this experiment.")
+    if differ:
+        raise SystemExit(f"M17 RESUME REFUSED: the checkpoint's configuration differs on "
+                         f"{differ}; recovery continues one experiment, it does not adopt "
+                         "another arm, seed, dose or cache.")
     model.load_state_dict(ck["model"])
     opt.load_state_dict(ck["opt"])
     for k, v in streams.items():
@@ -523,8 +716,16 @@ def _resume(path, model, opt, streams, cfg, log):
             v.load_state(ck["streams"][k])
     torch.set_rng_state(ck["torch_rng"].to(torch.uint8) if hasattr(ck["torch_rng"], "to")
                         else ck["torch_rng"])
-    log(f"  resumed at step {ck['state']['step']} from {path.name}")
-    return ck["state"]
+    saved_init = ck.get("eff_init")
+    if saved_init is None or tuple(saved_init.shape) != shape:
+        raise SystemExit("M17 RESUME REFUSED: the checkpoint carries no usable anchor "
+                         "initialization; recomputing it from the resumed model would silently "
+                         "reset the anchor to the current rows.")
+    eff_init = saved_init.to(eff_init.device).to(eff_init.dtype)
+    state = ck["state"]
+    state.setdefault("train_running", {"cosine": None, "listwise": None})
+    log(f"  resumed at step {state['step']} from {path.name}")
+    return state, eff_init
 
 
 # ---- CLI ------------------------------------------------------------------------------------
@@ -559,32 +760,74 @@ def main(argv=None):
     over = {k: v for k, v in (("steps", args.steps), ("batch", args.batch),
                               ("device", device)) if v is not None}
     cfg = RunCfg.from_registry(reg, args.arm, seed=args.seed, **over)
-    data = json.loads((Path(args.data) / "prepared.json").read_text())
+    data = json.loads(admit_read(Path(args.data) / "prepared.json").read_text())
     data["registry_status"] = status
     out = Path(args.out or (WORK / "runs" / cfg.run_id))
-    rec = run(cfg, _load_prepared(Path(args.data), data), out, resume=not args.no_resume)
+    prepared = _load_prepared(Path(args.data), data, cfg, reg)
+    rec = run(cfg, prepared, out, resume=not args.no_resume)
     print(f"run record: {out / 'run_record.json'} ({rec['wall_clock_seconds']}s)")
     return 0
 
 
-def _load_prepared(data_dir, manifest):
-    """Materialize the arrays `prepared.json` points at. Kept separate so tests can bypass it."""
+def _check_locked_config(cfg, reg):
+    """A real run uses the registered phase dose and seeds; nothing else is a registered arm."""
+    tr = reg["training"]
+    ok_steps = (int(tr["screen_steps"]), int(tr["final_steps_per_fresh_run"]))
+    if cfg.steps not in ok_steps:
+        raise SystemExit(f"M17 REFUSED: --steps {cfg.steps} is neither the registered screen "
+                         f"{ok_steps[0]} nor the final {ok_steps[1]} dose.")
+    if cfg.batch != int(tr["batch"]):
+        raise SystemExit(f"M17 REFUSED: --batch {cfg.batch} is not the locked batch "
+                         f"{tr['batch']} (the {tr['fallback_batch_before_recipe_lock_only']} "
+                         "fallback is pre-lock only).")
+    seeds = (int(tr["seed_screen"]), int(tr["seed_replication"]))
+    if cfg.seed not in seeds:
+        raise SystemExit(f"M17 REFUSED: seed {cfg.seed} is not a registered seed {seeds}.")
+
+
+def _load_prepared(data_dir, manifest, cfg, reg):
+    """Materialize the arrays `prepared.json` points at, arm-aware, with verified identities.
+
+    The arm decides the table: a control arm (C/L) pointed at an expanded prepared directory
+    must NOT silently get the extended table and extended ids, and an expanded arm (V/VL/VL-A)
+    without new rows is not that arm at all.
+    """
     d = Path(data_dir)
-    z = np.load(d / "candidates.npz", allow_pickle=False)
-    arrays = {k: z[k] for k in z.files}
+    arm = ARMS[cfg.arm]
+    if not cfg.rehearsal:
+        _check_locked_config(cfg, reg)
+    if arm["vocab_extension"] and not manifest.get("new_rows"):
+        raise SystemExit(f"M17 REFUSED: arm {cfg.arm} extends the vocabulary but {d} carries no "
+                         "`new_rows`; an unextended table is a different arm.")
+    if not arm["vocab_extension"] and manifest.get("new_rows"):
+        raise SystemExit(f"M17 REFUSED: arm {cfg.arm} is a control with no vocabulary extension "
+                         f"but {d} carries `new_rows`; prepare the control's own data.")
+
+    import cache as m17cache
+    arrays, sidecar = m17cache.load(d)             # verifies the stored per-array hashes
     out = dict(manifest)
     out.update({
-        "ids": json.loads((d / "student_ids.json").read_text()),
-        "teacher_q": np.load(d / "teacher_q.npy"),
-        "bank": np.load(d / "bank.npy"),
+        "ids": json.loads(admit_read(d / "student_ids.json").read_text()),
+        "teacher_q": np.load(admit_read(d / "teacher_q.npy")),
+        "bank": np.load(admit_read(d / "bank.npy")),
         "candidate_ids": arrays["candidate_ids"],
         "teacher_scores": arrays["teacher_scores"],
         "buckets": arrays["buckets"],
         "alias_pair_ids": arrays["alias_pair_ids"],
+        "alias_views": arrays["alias_views"],
+        "families": arrays["families"],
     })
-    model, lineage = load_warm_start(d / manifest["warm_start"], device="cpu")
-    if manifest.get("new_rows"):
-        model = extend_model(model, np.load(d / manifest["new_rows"]), "cpu")
+    # Identity comes from the verified artifacts, never from whatever the manifest claims.
+    cfg.cache_sha256 = sidecar["identity"]["sha256"]
+    cfg.tokenizer_sha256 = sha_file(admit_read(d / manifest["tokenizer"]))
+    cfg.vocabulary_sha256 = (sha_file(admit_read(d / manifest["new_rows"]))
+                             if arm["vocab_extension"] else "")
+    cfg.warm_start = str(manifest["warm_start"])
+
+    model, lineage = load_warm_start(d / manifest["warm_start"], expect_vocab=int(reg["base_vocab"]),
+                                     device="cpu", rehearsal=cfg.rehearsal)
+    if arm["vocab_extension"]:
+        model = extend_model(model, np.load(admit_read(d / manifest["new_rows"])), "cpu")
     out["model"], out["lineage"] = model, lineage
     return out
 

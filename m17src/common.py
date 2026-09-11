@@ -16,9 +16,13 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+# Order matters and must be re-established even for entries Python already put on the path:
+# run as a script, `m17src` is sys.path[0], and inserting `m7src` in front of it would make
+# `import train` resolve to the LEGACY M7 driver.
 for _p in (REPO, REPO / "m7src", REPO / "m17src"):
-    if str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
+    if str(_p) in sys.path:
+        sys.path.remove(str(_p))
+    sys.path.insert(0, str(_p))
 
 # Legacy teacher modules default to bge-base; M17 lives in stella's document space only
 # (m17/CODEMAP.md, "Reuse hazards"). Set before anything imports `teacher`.
@@ -37,8 +41,74 @@ class NotExecutable(SystemExit):
     """The registry is still a draft and no `--rehearsal` flag was given."""
 
 
+class ProtectedRead(SystemExit):
+    """An M17 module tried to open a protected evaluation surface."""
+
+
+class ProtectedWrite(SystemExit):
+    """An M17 module tried to write outside its own output boundary."""
+
+
+# Substrings that are never admitted, whatever the caller believes it is opening
+# (CLAUDE.md, "Evidence and protocol"; m17/CODEMAP.md, last reuse hazard).
+FORBIDDEN_READ_SUBSTRINGS = (
+    "frozen_eval/untouched-",
+    "m9reserve",
+    "reserved_qrels",
+    "lotte",
+)
+# The reserved four by dataset name. These names also spell legitimately admitted TRAINING
+# material (`work/train/stores/fever-train.json`), so they are refused only where they can
+# only mean the reserved evaluation surface: under `results/frozen_eval` or in a qrels path.
+RESERVED_DATASET_NAMES = ("fever", "dbpedia", "cqadup-android", "cqadup-english")
+RESERVED_NAME_CONTEXTS = ("results/frozen_eval", "qrels")
+
+
+def admit_read(path):
+    """Read admission. `p = common.admit_read(p)` before opening anything, everywhere.
+
+    Resolves symlinks first: a benign-looking link into a protected cache must not pass
+    because its own spelling is innocent. Returns the resolved `Path`.
+    """
+    try:
+        rp = Path(path).resolve()
+    except OSError:                                   # pragma: no cover - exotic filesystems
+        rp = Path(path).absolute()
+    s = rp.as_posix().lower()
+    for bad in FORBIDDEN_READ_SUBSTRINGS:
+        if bad in s:
+            raise ProtectedRead(
+                f"M17 READ REFUSED: {rp} resolves into protected content ({bad!r}). "
+                "No six-set, reserved-four or LoTTE payload is an M17 development surface.")
+    if any(ctx in s for ctx in RESERVED_NAME_CONTEXTS):
+        for name in RESERVED_DATASET_NAMES:
+            if name in s:
+                raise ProtectedRead(
+                    f"M17 READ REFUSED: {rp} names reserved set {name!r} inside an evaluation "
+                    "path. Reserved qrels stay inside their registered transaction; admitted "
+                    "training stores are unaffected.")
+    return rp
+
+
+# The three destinations no M17 writer may ever land on: the frozen comparator vectors, the
+# frozen-eval caches and the M7 freeze itself (CLAUDE.md, "Evidence and protocol").
+IMMUTABLE_WRITE_TARGETS = ("results/perquery.json", "results/frozen_eval/", "m7/freeze.json")
+
+
+def admit_write(path):
+    """Refuse the three immutable destinations. Returns the resolved path."""
+    rp = Path(path).absolute()
+    low = rp.as_posix().lower()
+    for bad in IMMUTABLE_WRITE_TARGETS:
+        if bad in low or low.endswith(bad.rstrip("/")):
+            raise ProtectedWrite(
+                f"M17 WRITE REFUSED: {rp} is immutable evidence ({bad}); its frozen vectors "
+                "cannot be rebuilt from the remaining caches.")
+    return rp
+
+
 def load_json(path):
-    return json.loads(Path(path).read_text())
+    return json.loads(admit_read(path).read_text())
 
 
 def registry(path=None):
@@ -104,7 +174,7 @@ def require_executable(reg, rehearsal: bool, what="this run"):
 
 
 def write_json(path, obj, indent=1):
-    path = Path(path)
+    path = admit_write(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(obj, indent=indent, sort_keys=True))

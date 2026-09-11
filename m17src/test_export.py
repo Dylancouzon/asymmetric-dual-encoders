@@ -44,7 +44,46 @@ def test_fold_twice_is_refused(rehearsal, tmp_path):
 def test_averaging_refuses_a_missing_snapshot(rehearsal, reg):
     run = rehearsal["root"] / "run"
     paths = [run / f"snapshot_{s:06d}.npz" for s in (15, 18)]
-    with pytest.raises(SystemExit, match="snapshots at steps"):
+    with pytest.raises(SystemExit, match="2 snapshots supplied"):
+        export.average_snapshots(paths, reg)
+
+
+def test_averaging_refuses_a_fourth_snapshot_and_a_missing_step(rehearsal, reg, tmp_path):
+    """The registered mean is of exactly three snapshots with three distinct registered steps.
+
+    A fourth table whose identity matches but whose `m17_step` is absent used to be dropped
+    from the window check and still averaged in.
+    """
+    run = rehearsal["root"] / "run"
+    paths = []
+    for s in (15, 18, 20):
+        for ext in (".npz", ".meta.json"):
+            shutil.copy(run / f"snapshot_{s:06d}{ext}", tmp_path / f"snapshot_{s:06d}{ext}")
+        paths.append(tmp_path / f"snapshot_{s:06d}.npz")
+    for ext in (".npz", ".meta.json"):
+        shutil.copy(run / f"snapshot_{s:06d}{ext}", tmp_path / f"extra{ext}")
+    m = json.loads((tmp_path / "extra.meta.json").read_text())
+    m.pop("m17_step")
+    (tmp_path / "extra.meta.json").write_text(json.dumps(m))
+    with pytest.raises(SystemExit, match="4 snapshots supplied"):
+        export.average_snapshots(paths + [tmp_path / "extra.npz"], reg)
+    # and a three-input set with one unstepped snapshot is refused too
+    with pytest.raises(SystemExit, match="records no `m17_step`"):
+        export.average_snapshots(paths[:2] + [tmp_path / "extra.npz"], reg)
+
+
+def test_averaging_refuses_an_incomplete_identity(rehearsal, reg, tmp_path):
+    run = rehearsal["root"] / "run"
+    paths = []
+    for s in (15, 18, 20):
+        for ext in (".npz", ".meta.json"):
+            shutil.copy(run / f"snapshot_{s:06d}{ext}", tmp_path / f"snapshot_{s:06d}{ext}")
+        paths.append(tmp_path / f"snapshot_{s:06d}.npz")
+    for s in (15, 18, 20):                       # a missing field must not read as "equal"
+        m = json.loads((tmp_path / f"snapshot_{s:06d}.meta.json").read_text())
+        m.pop("vocabulary_sha256")
+        (tmp_path / f"snapshot_{s:06d}.meta.json").write_text(json.dumps(m))
+    with pytest.raises(SystemExit, match="does not record its run, tokenizer"):
         export.average_snapshots(paths, reg)
 
 
@@ -76,8 +115,72 @@ def test_gate_artifact_catches_a_stale_staging_dir(bundle):
     z = dict(np.load(bundle / "model.npz"))
     z["rows_int8"] = np.zeros_like(z["rows_int8"])
     np.savez(bundle / "model.npz", **z)
-    with pytest.raises(SystemExit, match="staged model.npz hashes"):
+    with pytest.raises(SystemExit, match="staged model_npz_sha256"):
         export.gate_artifact(bundle)
+
+
+def test_gate_artifact_checks_the_tokenizer_and_config_hashes_too(bundle):
+    """A same-size tokenizer with different ids used to pass every gate."""
+    raw = json.loads((bundle / "tokenizer.json").read_text())
+    raw["model"]["vocab"] = {k: v for k, v in raw["model"]["vocab"].items()}
+    raw["added_tokens"] = raw.get("added_tokens", [])
+    (bundle / "tokenizer.json").write_text(json.dumps(raw) + " ")     # same tokens, new bytes
+    with pytest.raises(SystemExit, match="staged tokenizer_sha256"):
+        export.gate_artifact(bundle)
+
+
+def test_gate_encoder_spec_checks_config_kwargs_and_the_actual_dimension(bundle):
+    assert "config_kwargs" in export.SPEC_FIELDS
+    cfg = json.loads((bundle / "config.json").read_text())
+    cfg["document_encoder"]["config_kwargs"] = {"unpad_inputs": True}
+    (bundle / "config.json").write_text(json.dumps(cfg))
+    with pytest.raises(SystemExit, match="encoder_spec fields"):
+        export.gate_encoder_spec(bundle)
+
+
+def test_table_limits_refuse_a_wrong_dimension_and_an_oversized_table():
+    reg = common.registry()
+    with pytest.raises(SystemExit, match="dimensions"):
+        export.check_table_limits(np.zeros((reg["base_vocab"], 16), dtype=np.float32), reg)
+    too_many = reg["base_vocab"] + reg["added_rows_max"] + 1
+    with pytest.raises(SystemExit, match="added rows"):
+        export.check_table_limits(np.zeros((too_many, reg["dim"]), dtype=np.float32), reg)
+    ok = export.check_table_limits(
+        np.zeros((reg["base_vocab"] + reg["added_rows_max"], reg["dim"]), dtype=np.float32), reg)
+    assert ok["parameters"] == 34433850 <= reg["student_parameter_cap"]
+    small = {**reg, "student_parameter_cap": 1000}
+    with pytest.raises(SystemExit, match="student cap"):
+        export.check_table_limits(np.zeros((reg["base_vocab"], reg["dim"]), dtype=np.float32),
+                                  small)
+
+
+def test_gate_conformance_refuses_non_finite_rows(bundle):
+    """`nan > tol` is False: a NaN table must be rejected before the comparison."""
+    z = dict(np.load(bundle / "model.npz"))
+    z["rows_fp16"] = np.full_like(z["rows_fp16"], np.nan)
+    np.savez(bundle / "model.npz", **z)
+    with pytest.raises(SystemExit, match="non-finite"):
+        export.gate_conformance(bundle)
+
+
+def test_gate_conformance_refuses_a_bad_scale(bundle):
+    z = dict(np.load(bundle / "model.npz"))
+    z["int8_scale"] = np.zeros_like(z["int8_scale"])
+    np.savez(bundle / "model.npz", **z)
+    with pytest.raises(SystemExit, match="finite and strictly positive"):
+        export.gate_conformance(bundle)
+    z["int8_scale"] = np.ones(3, dtype=np.float32)
+    np.savez(bundle / "model.npz", **z)
+    with pytest.raises(SystemExit, match="one positive scale per row"):
+        export.gate_conformance(bundle)
+
+
+def test_conformance_tolerance_is_recorded_in_provenance(bundle):
+    prov = json.loads((bundle / "provenance.json").read_text())
+    assert prov["conformance_tolerance_max_abs"] == export.CONFORMANCE_TOL == 1e-5
+    assert "loader-vs-loader" in prov["conformance_tolerance_note"]
+    rep = export.gate_conformance(bundle)
+    assert rep["tolerance"] == export.CONFORMANCE_TOL
 
 
 def test_gate_encoder_spec_catches_a_drifted_document_space(bundle):
@@ -129,6 +232,55 @@ def test_gate_conformance_catches_a_wrong_loader_rule(bundle, monkeypatch):
     monkeypatch.setattr(loader_np.M17QueryEncoder, "_encode_ids", broken)
     with pytest.raises(SystemExit, match="does not reproduce the torch query path"):
         export.gate_conformance(bundle)
+
+
+def test_kubernetes_attribution_ships_with_the_bundle(rehearsal, reg, tmp_path):
+    """CC BY 4.0: the attribution notice ships WITH any weights derived from k8s-docs-en."""
+    from tokenizers import Tokenizer
+    rows, _ = export.effective_rows(rehearsal["root"] / "run" / "endpoint.npz")
+    out = export.build_bundle(
+        tmp_path / "attr", rows,
+        Tokenizer.from_file(str(rehearsal["root"] / "data" / "tokenizer_ext.json")),
+        {"vocabulary_sources": ["k8s-docs-en", "synthetic-general"], "rehearsal": True},
+        reg, fallback_id=2)
+    assert (out / export.ATTRIBUTION_NAME).exists()
+    assert (out / export.ATTRIBUTION_NAME).read_text() == \
+        (common.REPO / export.ATTRIBUTION_SRC).read_text()
+    export.run_gates(out, log=lambda *a: None)
+    (out / export.ATTRIBUTION_NAME).unlink()
+    with pytest.raises(SystemExit, match="missing"):
+        export.gate_files(out)
+
+
+def test_fp32_snapshots_average_differently_from_their_fp16_truncations(rehearsal, reg,
+                                                                        tmp_path):
+    """FP16 rounding before folding can collapse genuinely different snapshots.
+
+    Three snapshots differing by 1e-4 near 1.0 — below FP16's ~1e-3 spacing there — must
+    average to something the FP16-only tables cannot reproduce.
+    """
+    import shutil as sh
+    run = rehearsal["root"] / "run"
+    src = run / "snapshot_000015.npz"
+    z = dict(np.load(src))
+    fp32, fp16 = [], []
+    for k, s in enumerate((15, 18, 20)):
+        rows = np.full(z["rows_fp16"].shape, 1.0, dtype=np.float32) + k * 1e-4
+        for tag, rows_fp32 in (("fp32", rows), ("fp16", None)):
+            d = tmp_path / tag
+            d.mkdir(exist_ok=True)
+            arrs = {**z, "rows_fp16": rows.astype(np.float16),
+                    "token_weights": np.ones(rows.shape[0], dtype=np.float32)}
+            if rows_fp32 is not None:
+                arrs["rows_fp32"] = rows
+            np.savez(d / f"snapshot_{s:06d}.npz", **arrs)
+            sh.copy(run / f"snapshot_{s:06d}.meta.json", d / f"snapshot_{s:06d}.meta.json")
+        fp32.append(tmp_path / "fp32" / f"snapshot_{s:06d}.npz")
+        fp16.append(tmp_path / "fp16" / f"snapshot_{s:06d}.npz")
+    a, _ = export.average_snapshots(fp32, reg)
+    b, _ = export.average_snapshots(fp16, reg)
+    assert np.allclose(a, 1.0 + 1e-4)                     # the true FP32 mean
+    assert not np.allclose(a, b), "FP16 truncation collapsed three distinct snapshots"
 
 
 def test_bundle_carries_the_frozen_encoder_spec(bundle):

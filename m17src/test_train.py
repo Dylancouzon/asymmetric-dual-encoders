@@ -25,6 +25,55 @@ def test_registry_gate_refuses_a_draft_and_names_the_bypass():
     assert common.require_executable({"status": "EXECUTABLE"}, rehearsal=False) == "EXECUTABLE"
 
 
+def test_admit_read_refuses_protected_paths_including_symlinks(tmp_path):
+    protected = tmp_path / "results" / "frozen_eval" / "untouched-final"
+    protected.mkdir(parents=True)
+    (protected / "x.json").write_text("{}")
+    with pytest.raises(common.ProtectedRead, match="protected content"):
+        common.admit_read(protected / "x.json")
+    link = tmp_path / "innocent.json"
+    link.symlink_to(protected / "x.json")
+    with pytest.raises(common.ProtectedRead, match="protected content"):
+        common.admit_read(link)                    # the spelling is benign, the target is not
+    for bad in ("work/m9reserve/a.json", "caches/reserved_qrels/b.json", "lotte/c.json",
+                "results/frozen_eval/fever.json", "work/qrels/cqadup-android.json"):
+        p = tmp_path / bad
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("{}")
+        with pytest.raises(common.ProtectedRead):
+            common.admit_read(p)
+    # admitted FEVER TRAINING material stays admitted
+    ok = tmp_path / "work" / "train" / "stores" / "fever-train.json"
+    ok.parent.mkdir(parents=True)
+    ok.write_text("{}")
+    assert common.admit_read(ok) == ok.resolve()
+
+
+def test_writers_refuse_the_frozen_destinations(tmp_path):
+    for bad in ("results/perquery.json", "results/frozen_eval/untouched-final.json",
+                "m7/FREEZE.json"):
+        with pytest.raises(common.ProtectedWrite, match="immutable evidence"):
+            common.write_json(common.REPO / bad, {"x": 1})
+    assert common.write_json(tmp_path / "ok.json", {"x": 1}).exists()
+
+
+def test_the_rehearsal_deletes_only_its_own_output(tmp_path):
+    import rehearse17
+    someone_elses = tmp_path / "m13work"
+    someone_elses.mkdir()
+    (someone_elses / "precious.json").write_text("{}")
+    with pytest.raises(SystemExit, match="carries no .m17_rehearsal marker"):
+        rehearse17._clear_rehearsal_dir(someone_elses)
+    assert (someone_elses / "precious.json").exists()
+    mine = tmp_path / "rehearsal"
+    mine.mkdir()
+    (mine / rehearse17.MARKER).write_text("x")
+    (mine / "old.json").write_text("{}")
+    rehearse17._clear_rehearsal_dir(mine)
+    assert not mine.exists()
+    rehearse17._clear_rehearsal_dir(tmp_path / "empty")        # absent: nothing to refuse
+
+
 def test_the_real_registry_is_still_a_draft():
     """If this ever fails, the lock landed — and step 6, not this test, is what changed."""
     assert common.registry()["status"] == "DRAFT_NOT_EXECUTABLE"
@@ -35,13 +84,38 @@ def test_cli_refuses_a_real_arm_while_the_registry_is_a_draft():
         T.main(["--arm", "VL-A", "--data", "nowhere"])
 
 
-def test_batch_composition_matches_the_registry(reg):
-    cfg = T.RunCfg.from_registry(common.registry(), "VL-A")
+def test_batch_composition_is_the_measured_dose(reg):
+    """`data.measured_dose_after_pre_lock_rule`, not the superseded fractions."""
+    real = common.registry()
+    dose = real["data"]["measured_dose_after_pre_lock_rule"]
+    cfg = T.RunCfg.from_registry(real, "VL-A")
     g, c, p = cfg.batch_shape()
-    assert (g, c, p) == (192, 32, 16)          # 0.75 / 0.25 with 0.125 of the batch as views
-    assert g + c + 2 * p == cfg.batch
+    assert (g, c, p) == (204, 32, 10) == (dose["general_views_per_batch"],
+                                          dose["unpaired_coverage_views_per_batch"],
+                                          dose["alias_pairs_per_batch"])
+    assert g + c + 2 * p == cfg.batch == dose["batch"]
+    # the pre-lock fallback batch derives proportionally, floors applied, sum exact
+    half = T.RunCfg.from_registry(real, "VL-A", batch=128)
+    g2, c2, p2 = half.batch_shape()
+    assert (g2, c2, p2) == (102, 16, 5) and g2 + c2 + 2 * p2 == 128
     small = T.RunCfg.from_registry(reg, "VL-A")
-    assert sum(small.batch_shape()[:2]) + 2 * small.batch_shape()[2] == small.batch
+    sg, sc, sp = small.batch_shape()
+    assert sg + sc + 2 * sp == small.batch
+
+
+def test_batch_shape_refuses_a_composition_that_does_not_sum(reg):
+    cfg = T.RunCfg.from_registry(common.registry(), "VL-A")
+    cfg.general_views = 200
+    with pytest.raises(ValueError, match="does not sum to batch"):
+        cfg.batch_shape()
+
+
+def test_run_id_carries_the_phase(reg):
+    real = common.registry()
+    screen = T.RunCfg.from_registry(real, "VL", steps=real["training"]["screen_steps"])
+    final = T.RunCfg.from_registry(real, "VL")
+    assert screen.phase == "screen" and final.phase == "final"
+    assert screen.run_id != final.run_id and "screen" in screen.run_id
 
 
 def test_arms_match_the_registry():
@@ -72,20 +146,47 @@ def test_stream_order_is_stable_across_processes():
     assert np.array_equal(a, b)
 
 
+def _streams(buckets, pids=None, views=None, fams=None, **kw):
+    n = len(buckets)
+    return T.build_streams(buckets, pids or [""] * n, views or [""] * n,
+                           fams or [f"f{i}" for i in range(n)], seed=0, **kw)
+
+
 def test_heldout_bucket_is_never_sampled():
     buckets = ["general"] * 5 + ["coverage"] * 3 + ["heldout"] * 4
-    streams, pairs, incomplete = T.build_streams(buckets, [""] * len(buckets), seed=0)
-    drawn = set(streams["general"].draw(20).tolist()) | set(streams["coverage"].draw(20).tolist())
+    streams, pairs, report = _streams(buckets)
+    drawn = set(streams["general"].draw(5).tolist()) | set(streams["coverage"].draw(3).tolist())
     assert drawn.isdisjoint(range(8, 12))
-    assert len(pairs) == 0 and incomplete == []
+    assert len(pairs) == 0 and report["n_pairs"] == 0
 
 
-def test_alias_pairs_are_paired_and_incomplete_pairs_are_reported():
-    buckets = ["coverage"] * 5
-    pids = ["p0", "p0", "p1", "p1", "p2"]
-    streams, pairs, incomplete = T.build_streams(buckets, pids, seed=0)
-    assert pairs.shape == (2, 2) and incomplete == ["p2"]
-    assert len(streams["coverage"].population) == 0
+def test_heldout_alias_pairs_never_enter_training():
+    """Two `heldout` rows sharing a pair id used to be sampled for gradients."""
+    buckets = ["coverage", "coverage", "heldout", "heldout"]
+    with pytest.raises(SystemExit, match="not training rows"):
+        _streams(buckets, pids=["p0", "p0", "p1", "p1"], views=["a", "b", "a", "b"],
+                 fams=["f0", "f0", "f1", "f1"])
+
+
+def test_alias_pairs_must_be_two_views_of_one_family():
+    with pytest.raises(SystemExit, match="expected exactly two views"):
+        _streams(["coverage"] * 3, pids=["p0", "p0", "p0"], views=["a", "b", "a"],
+                 fams=["f0"] * 3)
+    with pytest.raises(SystemExit, match=r"expected \['a', 'b'\]"):
+        _streams(["coverage"] * 2, pids=["p0", "p0"], views=["a", "a"], fams=["f0", "f0"])
+    with pytest.raises(SystemExit, match="expected one"):
+        _streams(["coverage"] * 2, pids=["p0", "p0"], views=["a", "b"], fams=["f0", "f1"])
+    streams, pairs, _ = _streams(["coverage"] * 2, pids=["p0", "p0"], views=["b", "a"],
+                                 fams=["f0", "f0"])
+    assert pairs.tolist() == [[1, 0]], "view a first, then view b"
+
+
+def test_an_undersupplied_bucket_is_refused_not_shortened():
+    with pytest.raises(SystemExit, match="one batch needs"):
+        _streams(["general"] * 3 + ["coverage"] * 2, need={"general": 8, "coverage": 1})
+    s = T.Stream("coverage", np.zeros(0, dtype=np.int64), seed=0)
+    with pytest.raises(SystemExit, match="is empty but the registered batch"):
+        s.draw(4)
 
 
 def test_warm_start_refuses_a_folded_release(tmp_path):
@@ -161,15 +262,181 @@ def test_run_record_and_snapshots(rehearsal):
         assert (rehearsal["root"] / "run" / s).exists()
 
 
-def test_resume_refuses_a_different_tokenizer(rehearsal, tmp_path):
-    """A resume across tokenizers would continue a schedule for a different table."""
+def _resume_fixture(rehearsal, **over):
     from table import QueryTable
     ck = rehearsal["root"] / "run" / "recovery.pt"
     saved = torch.load(ck, map_location="cpu", weights_only=False)
-    model = QueryTable(np.zeros((saved["vocab"], 16), dtype=np.float32),
+    model = QueryTable(np.zeros((saved["vocab"], saved["dim"]), dtype=np.float32),
                        weight_init=np.ones(saved["vocab"], dtype=np.float32))
-    cfg = T.RunCfg(**{**saved["cfg"], "tokenizer_sha256": "deadbeef",
+    cfg = T.RunCfg(**{**saved["cfg"], **over,
                       "snapshot_steps": tuple(saved["cfg"]["snapshot_steps"])})
     opt = torch.optim.Adam([{"params": [model.rows]}, {"params": [model.w_raw]}])
+    eff = torch.zeros(saved["vocab"], saved["dim"])
+    return ck, model, opt, cfg, eff
+
+
+def test_resume_refuses_a_different_tokenizer(rehearsal):
+    """A resume across tokenizers would continue a schedule for a different table."""
+    ck, model, opt, cfg, eff = _resume_fixture(rehearsal, tokenizer_sha256="deadbeef")
     with pytest.raises(SystemExit, match="tokenizer"):
-        T._resume(ck, model, opt, {}, cfg, lambda *a: None)
+        T._resume(ck, model, opt, {}, cfg, eff, lambda *a: None)
+
+
+@pytest.mark.parametrize("field,value", [("arm", "C"), ("seed", 1), ("alias_pairs", 3),
+                                         ("temperature", 0.1), ("rows_lr", 1e-4),
+                                         ("cache_sha256", "0" * 64)])
+def test_resume_refuses_a_different_experiment(rehearsal, field, value):
+    """Row count, tokenizer and step budget alone let another arm, seed or dose resume."""
+    ck, model, opt, cfg, eff = _resume_fixture(rehearsal, **{field: value})
+    with pytest.raises(SystemExit, match="configuration differs"):
+        T._resume(ck, model, opt, {}, cfg, eff, lambda *a: None)
+
+
+def test_resume_restores_the_anchor_initialization(rehearsal):
+    """The anchor must measure drift from where the RUN started, not from the resumed rows."""
+    ck, model, opt, cfg, eff = _resume_fixture(rehearsal)
+    saved = torch.load(ck, map_location="cpu", weights_only=False)
+    state, restored = T._resume(ck, model, opt, {}, cfg, eff, lambda *a: None)
+    assert torch.allclose(restored, saved["eff_init"])
+    assert not torch.allclose(restored, eff), "a zero anchor would have been silently accepted"
+    assert state["step"] and "train_running" in state
+
+
+def test_resume_refuses_a_changed_stream_population():
+    s = T.Stream("general", np.arange(10), seed=0)
+    st = s.state()
+    with pytest.raises(SystemExit, match="would select different queries"):
+        T.Stream("general", np.arange(9), seed=0).load_state(st)
+
+
+def test_heldout_slice_must_be_unique_disjoint_and_non_empty():
+    streams, pairs, _ = _streams(["general"] * 4 + ["coverage"] * 2)
+    cfg = T.RunCfg(rehearsal=True, heldout_queries=2000)
+    with pytest.raises(SystemExit, match="held-out slice is empty"):
+        T._check_heldout(np.zeros(0, dtype=np.int64), streams, pairs, cfg)
+    with pytest.raises(SystemExit, match="repeats queries"):
+        T._check_heldout(np.array([7, 7]), streams, pairs, cfg)
+    with pytest.raises(SystemExit, match="also in a training bucket"):
+        T._check_heldout(np.array([0, 9]), streams, pairs, cfg)
+    T._check_heldout(np.array([9, 10]), streams, pairs, cfg)          # rehearsal: any size
+    with pytest.raises(SystemExit, match="the registry pins 2000"):
+        T._check_heldout(np.array([9, 10]), streams, pairs, T.RunCfg(heldout_queries=2000))
+
+
+def test_divergence_monitors_the_same_components_on_both_sides(rehearsal):
+    rec = json.loads((rehearsal["root"] / "run" / "run_record.json").read_text())
+    h = rec["history"][-1]
+    for side in ("train_components", "heldout_components"):
+        assert set(h[side]) == {"cosine", "listwise", "monitored"}
+        assert h[side]["monitored"] == pytest.approx(h[side]["cosine"] + h[side]["listwise"])
+    assert "anchor" not in h["train_components"] and "alias" not in h["heldout_components"]
+    assert rec["heldout"]["n"] > 0
+
+
+def test_listwise_kl_matches_a_hand_computed_value():
+    """Three candidates, one masked. KL(teacher || student) over the two live slots only."""
+    from table import QueryTable
+    import math
+    T_ = 0.5
+    q_s = torch.tensor([[1.0, 0.0]])
+    cand = torch.tensor([[[1.0, 0.0], [0.0, 1.0], [0.0, -1.0]]])       # third slot is masked
+    mask = torch.tensor([[True, True, False]])
+    tsc = torch.tensor([[0.5, 0.1, 9.0]])                              # 9.0 must not count
+    model = QueryTable(np.zeros((2, 2), dtype=np.float32), learned_weights=False)
+    cfg = T.RunCfg(cosine_weight=0.0, init_anchor_weight=0.0, listwise_weight=1.0,
+                   temperature=T_)
+    _, parts = T.losses(model, q_s, q_s, cand, mask, tsc, None, None, cfg,
+                        {"listwise": True, "alias_consistency": False})
+
+    def softmax2(a, b):
+        m = max(a, b)
+        ea, eb = math.exp(a - m), math.exp(b - m)
+        return ea / (ea + eb), eb / (ea + eb)
+
+    pt = softmax2(0.5 / T_, 0.1 / T_)                                  # teacher scores / T
+    ps = softmax2(1.0 / T_, 0.0 / T_)                                  # dot(q_s, d) / T
+    want = sum(p * (math.log(p) - math.log(s)) for p, s in zip(pt, ps))
+    assert parts["listwise_kl"] == pytest.approx(want, rel=1e-6)
+
+
+def test_anchor_is_the_mean_square_deviation_of_effective_rows():
+    """Effective rows are softplus(w) * rows; the anchor is their MSE against the init."""
+    from table import QueryTable
+    rows = np.array([[1.0, 0.0], [0.0, 2.0]], dtype=np.float32)
+    model = QueryTable(rows, weight_init=np.array([2.0, 0.5], dtype=np.float32))
+    eff = (model.token_weights().detach().unsqueeze(1) * model.rows.detach())
+    assert torch.allclose(eff, torch.tensor([[2.0, 0.0], [0.0, 1.0]]), atol=1e-5)
+    eff_init = eff - torch.tensor([[1.0, 0.0], [0.0, 3.0]])            # deviations 1 and 3
+    q = torch.tensor([[1.0, 0.0]])
+    cfg = T.RunCfg(cosine_weight=0.0, init_anchor_weight=1.0)
+    _, parts = T.losses(model, q, q, None, None, None, eff_init, None, cfg,
+                        {"listwise": False, "alias_consistency": False})
+    assert parts["anchor"] == pytest.approx((1.0 ** 2 + 3.0 ** 2) / 4, rel=1e-5)
+
+
+def test_warm_start_verifies_the_freeze_hash_and_explicit_metadata(tmp_path):
+    """Matching teacher strings are not lineage: only the frozen bytes are p35w-2m-s2500."""
+    from table import Preproc, QueryTable, save_table
+    rng = np.random.default_rng(0)
+    V = 30522
+    m = QueryTable(rng.normal(size=(V, 4)).astype(np.float32),
+                   weight_init=np.ones(V, dtype=np.float32))
+    pre = Preproc(pool_mode="sqrt")
+    save_table(tmp_path / "ck.npz", m, pre, meta={"weights_folded": False})
+    with pytest.raises(SystemExit, match="training_checkpoint_sha256"):
+        T.load_warm_start(tmp_path / "ck.npz", expect_vocab=V, device="cpu", rehearsal=False)
+    # unmarked fold state is refused outright
+    meta = json.loads((tmp_path / "ck.meta.json").read_text())
+    meta.pop("weights_folded")
+    (tmp_path / "ck.meta.json").write_text(json.dumps(meta))
+    with pytest.raises(SystemExit, match="does not state"):
+        T.load_warm_start(tmp_path / "ck.npz", device="cpu", rehearsal=True)
+
+
+def test_warm_start_refuses_missing_or_misshapen_scalars(tmp_path):
+    from table import Preproc, QueryTable, save_table
+    m = QueryTable(np.ones((8, 4), dtype=np.float32), learned_weights=False)
+    save_table(tmp_path / "nw.npz", m, Preproc(pool_mode="sqrt"),
+               meta={"weights_folded": False})
+    with pytest.raises(SystemExit, match="no learned scalars"):
+        T.load_warm_start(tmp_path / "nw.npz", device="cpu", rehearsal=True)
+    m2 = QueryTable(np.ones((8, 4), dtype=np.float32),
+                    weight_init=np.ones(8, dtype=np.float32))
+    save_table(tmp_path / "bad.npz", m2, Preproc(pool_mode="sqrt"),
+               meta={"weights_folded": False})
+    z = dict(np.load(tmp_path / "bad.npz"))
+    z["token_weights"] = np.ones(3, dtype=np.float32)
+    np.savez(tmp_path / "bad.npz", **z)
+    with pytest.raises(SystemExit, match="one positive scalar per row"):
+        T.load_warm_start(tmp_path / "bad.npz", device="cpu", rehearsal=True)
+
+
+def test_load_prepared_is_arm_aware(tmp_path):
+    """A control arm pointed at expanded prepared data must not get the extended table."""
+    reg = common.registry()
+    cfg = T.RunCfg.from_registry(reg, "C", rehearsal=True)
+    with pytest.raises(SystemExit, match="carries `new_rows`"):
+        T._load_prepared(tmp_path, {"new_rows": "new_rows.npy", "warm_start": "w.npz",
+                                    "tokenizer": "t.json"}, cfg, reg)
+    cfg_v = T.RunCfg.from_registry(reg, "VL", rehearsal=True)
+    with pytest.raises(SystemExit, match="carries no `new_rows`"):
+        T._load_prepared(tmp_path, {"warm_start": "w.npz", "tokenizer": "t.json"}, cfg_v, reg)
+
+
+def test_a_real_run_refuses_an_unregistered_dose_or_seed():
+    reg = common.registry()
+    cfg = T.RunCfg.from_registry(reg, "VL", steps=123)
+    with pytest.raises(SystemExit, match="neither the registered screen"):
+        T._check_locked_config(cfg, reg)
+    with pytest.raises(SystemExit, match="not the locked batch"):
+        T._check_locked_config(T.RunCfg.from_registry(reg, "VL", batch=64), reg)
+    with pytest.raises(SystemExit, match="not a registered seed"):
+        T._check_locked_config(T.RunCfg.from_registry(reg, "VL", seed=7), reg)
+    T._check_locked_config(T.RunCfg.from_registry(reg, "VL", seed=1), reg)
+
+
+def test_run_refuses_a_draft_registry_even_when_called_directly():
+    """`train.run()` is a driver, not a helper: it meets the same bar as the CLI."""
+    cfg = T.RunCfg.from_registry(common.registry(), "VL-A")
+    with pytest.raises(SystemExit, match="registry status"):
+        T.run(cfg, {}, "/tmp/does-not-matter", resume=False, log=lambda *a: None)

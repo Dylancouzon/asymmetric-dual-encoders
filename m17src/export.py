@@ -27,11 +27,18 @@ from pathlib import Path
 
 import numpy as np
 
-from common import freeze, registry, sha_file, sha_json, write_json
+from common import admit_read, freeze, registry, sha_file, sha_json, write_json
 
 BUNDLE_FILES = ("model.npz", "config.json", "tokenizer.json", "provenance.json")
+ATTRIBUTION_SRC = "research/m17-k8s-attribution.md"
+ATTRIBUTION_NAME = "ATTRIBUTION.md"
+ATTRIBUTION_TRIGGER = "k8s-docs-en"
 SPEC_FIELDS = ("repo", "revision", "dim", "pooling", "post_dense", "query_prefix", "doc_prefix",
-               "max_length", "tokenizer_id", "cls_id")
+               "max_length", "tokenizer_id", "cls_id", "config_kwargs")
+# The torch-vs-numpy conformance bound. It is NOT the registry's loader-vs-loader
+# `int8_resident_loading.parity_max_abs` (1e-6): the two paths differ in accumulation order,
+# so this bound is looser and is recorded in the bundle's provenance.
+CONFORMANCE_TOL = 1e-5
 
 
 def effective_rows(npz_path):
@@ -39,33 +46,46 @@ def effective_rows(npz_path):
 
     `m7src.table.save_table` stores `token_weights` as `softplus(w_raw)` — already the
     positive scalar the forward multiplies by — so the fold is one multiply, not a second
-    softplus.
+    softplus. `rows_fp32` (written by `train._save_table`) is preferred over the legacy
+    `rows_fp16` array: FP16 rounding before folding can collapse two different snapshots.
     """
-    p = Path(npz_path)
-    meta = json.loads((p.parent / (p.stem + ".meta.json")).read_text())
+    p = admit_read(npz_path)
+    meta = json.loads(admit_read(p.parent / (p.stem + ".meta.json")).read_text())
     if meta.get("weights_folded"):
         raise SystemExit(f"M17 EXPORT REFUSED: {npz_path} is already folded; folding twice "
                          "multiplies every row by its scalar a second time.")
     z = np.load(p)
-    rows = z["rows_fp16"].astype(np.float32)
+    stored = "rows_fp32" if "rows_fp32" in z.files else "rows_fp16"
+    rows = z[stored].astype(np.float32)
     w = z["token_weights"]
     if w.size:
         rows = np.asarray(w, dtype=np.float32)[:, None] * rows
     rms = float(np.sqrt((rows ** 2).mean()))
-    return rows, {"path": str(npz_path), "rms": rms, "meta": meta}
+    return rows, {"path": str(npz_path), "rms": rms, "rows_stored_as": stored, "meta": meta}
 
 
 def average_snapshots(paths, reg=None):
     """Equal mean of effective float32 rows. Refuses to mix tokenizers, runs or scales."""
     reg = reg or registry()
     want = [int(s) for s in reg["checkpoint_averaging"]["checkpoint_steps"]]
+    paths = list(paths)
+    if len(paths) != len(want):
+        raise SystemExit(f"M17 AVERAGING REFUSED: {len(paths)} snapshots supplied, the registry "
+                         f"registers exactly {len(want)} ({sorted(want)}). A fourth table is "
+                         "not the registered mean.")
     rows, diag = [], []
     ident = None
     for p in paths:
         r, d = effective_rows(p)
         m = d["meta"]
-        key = (m.get("m17_run_id"), m.get("tokenizer_sha256"), m.get("vocabulary_sha256"),
-               r.shape)
+        key = tuple(m.get(f) for f in ("m17_run_id", "tokenizer_sha256", "vocabulary_sha256",
+                                       "candidate_cache_sha256")) + (r.shape,)
+        if any(v in (None, "") for v in key[:4]):
+            raise SystemExit(f"M17 AVERAGING REFUSED: {p} does not record its run, tokenizer, "
+                             "vocabulary and cache identities; a missing field is not a match.")
+        if m.get("m17_step") is None:
+            raise SystemExit(f"M17 AVERAGING REFUSED: {p} records no `m17_step`; an unstepped "
+                             "snapshot cannot be checked against the registered window.")
         if ident is None:
             ident = key
         elif key != ident:
@@ -73,9 +93,9 @@ def average_snapshots(paths, reg=None):
                              f"snapshot has {ident}; no cross-run, cross-tokenizer or "
                              "cross-shape averaging.")
         rows.append(r)
-        diag.append({"step": m.get("m17_step"), **{k: v for k, v in d.items() if k != "meta"}})
-    got = sorted(int(d["step"]) for d in diag if d["step"] is not None)
-    if got != sorted(want):
+        diag.append({"step": int(m["m17_step"]), **{k: v for k, v in d.items() if k != "meta"}})
+    got = sorted(int(d["step"]) for d in diag)
+    if len(set(got)) != len(got) or got != sorted(want):
         raise SystemExit(f"M17 AVERAGING REFUSED: snapshots at steps {got}, registry requires "
                          f"{sorted(want)}. A missing snapshot is an incomplete comparison, not "
                          "permission to average a different window.")
@@ -99,6 +119,32 @@ def assert_encoder_spec(spec, reg=None):
     return fz_spec
 
 
+def check_table_limits(eff_rows, reg=None):
+    """Actual shape against the frozen space and the registered caps.
+
+    A table can be internally consistent and still be the wrong artifact: 16 dimensions
+    stamped with the 1024-dimensional document spec, more added rows than the cap allows, or
+    a parameter count over the 35M student cap. Rows AND their scalars count.
+    """
+    reg = reg or registry()
+    rows, dim = int(eff_rows.shape[0]), int(eff_rows.shape[1])
+    base, add_max = int(reg["base_vocab"]), int(reg["added_rows_max"])
+    if dim != int(reg["dim"]):
+        raise SystemExit(f"M17 BUILD REFUSED: the table has {dim} dimensions, the frozen "
+                         f"document space is {reg['dim']}-dimensional.")
+    added = rows - base
+    if added < 0 or added > add_max:
+        raise SystemExit(f"M17 BUILD REFUSED: {rows} rows is base_vocab {base} + {added} added; "
+                         f"the registered range is 0..{add_max} added rows.")
+    params = rows * (dim + 1)                       # rows plus one learned scalar per row
+    cap = int(reg["student_parameter_cap"])
+    if params > cap:
+        raise SystemExit(f"M17 BUILD REFUSED: {params} parameters (rows plus scalars) exceeds "
+                         f"the {cap} student cap.")
+    return {"rows": rows, "dim": dim, "added_rows": added, "parameters": params,
+            "parameter_cap": cap}
+
+
 def build_bundle(out_dir, eff_rows, tokenizer, provenance, reg=None, form="endpoint",
                  fallback_id=None):
     """Write the M17 candidate bundle. `eff_rows` are already folded effective float32 rows.
@@ -114,6 +160,9 @@ def build_bundle(out_dir, eff_rows, tokenizer, provenance, reg=None, form="endpo
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     spec = assert_encoder_spec(dict(fz["encoder_spec"]), reg)
+    fixture = fallback_id is not None and int(fallback_id) != int(fz["encoder_spec"]["cls_id"])
+    if not fixture:
+        check_table_limits(eff_rows, reg)
 
     n_tok = tokenizer.get_vocab_size(with_added_tokens=True)
     if n_tok != eff_rows.shape[0]:
@@ -129,9 +178,19 @@ def build_bundle(out_dir, eff_rows, tokenizer, provenance, reg=None, form="endpo
     if fb >= eff_rows.shape[0]:
         raise SystemExit(f"M17 BUILD REFUSED: fallback token id {fb} is outside a table of "
                          f"{eff_rows.shape[0]} rows.")
+    # CC BY 4.0 attribution ships WITH the derived weights whenever the vocabulary was mined
+    # from the Kubernetes documentation (research/m7-data-licensing.md, Kubernetes row).
+    sources = provenance.get("vocabulary_sources") or provenance.get("sources") or []
+    attribution = None
+    if ATTRIBUTION_TRIGGER in list(sources):
+        src = admit_read(Path(__file__).resolve().parents[1] / ATTRIBUTION_SRC)
+        (out / ATTRIBUTION_NAME).write_text(src.read_text())
+        attribution = ATTRIBUTION_NAME
+
     config = {
         "_note": "M17 zero v1.1 CANDIDATE bundle. Not a release; no release authority is "
                  "implied by its existence (m17/registry.json screening_preferences...).",
+        **({"attribution": attribution} if attribution else {}),
         "preproc": fz["preproc"], "preproc_fingerprint": fz["preproc_fingerprint"],
         "fallback_token_id": fb,
         **({"fixture_table": True, "frozen_cls_id": spec_cls} if fb != spec_cls else {}),
@@ -146,6 +205,15 @@ def build_bundle(out_dir, eff_rows, tokenizer, provenance, reg=None, form="endpo
     prov["model_npz_sha256"] = sha_file(out / "model.npz")
     prov["tokenizer_sha256"] = sha_file(out / "tokenizer.json")
     prov["config_sha256"] = sha_json(config)
+    if attribution:
+        prov["attribution_sha256"] = sha_file(out / ATTRIBUTION_NAME)
+        prov["attribution_source"] = ATTRIBUTION_SRC
+    prov["table_limits"] = ({"fixture_table": True} if fixture
+                            else check_table_limits(eff_rows, reg))
+    prov["conformance_tolerance_max_abs"] = CONFORMANCE_TOL
+    prov["conformance_tolerance_note"] = (
+        "torch-vs-numpy query-path bound for gate_conformance; the loader-vs-loader bound is "
+        "the registry's int8_resident_loading.parity_max_abs and is measured separately.")
     write_json(out / "provenance.json", prov)
     return out
 
@@ -161,60 +229,100 @@ FIXTURES = [
 
 
 def gate_files(bundle):
-    got = sorted(p.name for p in Path(bundle).iterdir() if p.is_file())
-    want = sorted(BUNDLE_FILES)
-    extra, missing = sorted(set(got) - set(want)), sorted(set(want) - set(got))
+    """EVERY directory entry, not only the ones the allowlist expects."""
+    b = Path(bundle)
+    cfg = (json.loads(admit_read(b / "config.json").read_text())
+           if (b / "config.json").exists() else {})
+    want = set(BUNDLE_FILES) | ({ATTRIBUTION_NAME} if cfg.get("attribution") else set())
+    entries = sorted(p.name for p in b.iterdir())
+    nonfiles = sorted(p.name for p in b.iterdir() if not p.is_file())
+    if nonfiles:
+        raise SystemExit(f"M17 GATE files: {nonfiles} are not plain files; a bundle is a flat "
+                         "set of known artifacts.")
+    extra, missing = sorted(set(entries) - want), sorted(want - set(entries))
     if missing or extra:
         raise SystemExit(f"M17 GATE files: missing {missing}, unexpected {extra}")
-    return {"files": got}
+    return {"files": entries}
 
 
 def gate_artifact(bundle):
-    """The staged bytes must be the bytes provenance claims (M11 gate 1's failure mode)."""
+    """EVERY hash provenance records must be the hash of the staged bytes."""
     b = Path(bundle)
-    prov = json.loads((b / "provenance.json").read_text())
-    got = sha_file(b / "model.npz")
-    if got != prov.get("model_npz_sha256"):
-        raise SystemExit(f"M17 GATE artifact: staged model.npz hashes {got[:12]} but provenance "
-                         f"records {str(prov.get('model_npz_sha256'))[:12]}")
-    return {"model_npz_sha256": got}
+    prov = json.loads(admit_read(b / "provenance.json").read_text())
+    cfg = json.loads(admit_read(b / "config.json").read_text())
+    got = {"model_npz_sha256": sha_file(b / "model.npz"),
+           "tokenizer_sha256": sha_file(b / "tokenizer.json"),
+           "config_sha256": sha_json(cfg)}
+    if cfg.get("attribution"):
+        got["attribution_sha256"] = sha_file(b / cfg["attribution"])
+    for k, v in got.items():
+        if v != prov.get(k):
+            raise SystemExit(f"M17 GATE artifact: staged {k} is {v[:12]} but provenance records "
+                             f"{str(prov.get(k))[:12]}")
+    return got
 
 
 def gate_encoder_spec(bundle):
-    cfg = json.loads((Path(bundle) / "config.json").read_text())
+    cfg = json.loads(admit_read(Path(bundle) / "config.json").read_text())
     fz = freeze()
     if cfg["preproc"] != fz["preproc"] or cfg["preproc_fingerprint"] != fz["preproc_fingerprint"]:
         raise SystemExit("M17 GATE preproc: bundle preprocessing differs from m7/FREEZE.json; "
                          "the query rule is frozen and the same for v1 and any v1.1 candidate.")
     assert_encoder_spec(cfg["document_encoder"])
-    return {"preproc_fingerprint": cfg["preproc_fingerprint"]}
+    z = np.load(admit_read(Path(bundle) / "model.npz"))
+    rows = z["rows_int8"]
+    out = {"preproc_fingerprint": cfg["preproc_fingerprint"], "shape": list(rows.shape)}
+    if int(rows.shape[0]) != int(cfg["vocab"]) or int(rows.shape[1]) != int(cfg["dim"]):
+        raise SystemExit(f"M17 GATE encoder_spec: the staged table is {rows.shape} but the "
+                         f"config declares {(cfg['vocab'], cfg['dim'])}.")
+    if cfg.get("fixture_table"):
+        out["fixture_table"] = True                # a rehearsal table, recorded as such
+        return out
+    out["limits"] = check_table_limits(np.zeros((rows.shape[0], rows.shape[1]), dtype=np.float32))
+    return out
 
 
 def gate_tokenizer(bundle):
     """Padding off, truncation at the frozen max_length, vocabulary size equal to the rows."""
     from tokenizers import Tokenizer
     b = Path(bundle)
-    cfg = json.loads((b / "config.json").read_text())
-    raw = json.loads((b / "tokenizer.json").read_text())
+    cfg = json.loads(admit_read(b / "config.json").read_text())
+    raw = json.loads(admit_read(b / "tokenizer.json").read_text())
     if raw.get("padding") is not None:
         raise SystemExit("M17 GATE tokenizer: padding is enabled; ~500 [PAD] rows would enter "
                          "every bag (the v1 sanitisation exists for this).")
-    tok = Tokenizer.from_file(str(b / "tokenizer.json"))
+    tok = Tokenizer.from_file(str(admit_read(b / "tokenizer.json")))
     n = tok.get_vocab_size(with_added_tokens=True)
     if n != cfg["vocab"]:
         raise SystemExit(f"M17 GATE tokenizer: {n} tokens vs {cfg['vocab']} rows")
     return {"vocab": n, "truncation_in_file": raw.get("truncation")}
 
 
-def gate_conformance(bundle, tol=1e-5):
-    """The shipped numpy loader must reproduce the torch query path on both variants."""
+def gate_conformance(bundle, tol=None):
+    """The shipped numpy loader must reproduce the torch query path on both variants.
+
+    Non-finite values are rejected BEFORE any tolerance comparison: `nan > tol` is False, so a
+    NaN table would otherwise pass the gate it exists to fail.
+    """
     from table import Preproc, QueryTable
     import loader_np
+    tol = CONFORMANCE_TOL if tol is None else float(tol)
     b = Path(bundle)
-    cfg = json.loads((b / "config.json").read_text())
+    cfg = json.loads(admit_read(b / "config.json").read_text())
     pre = Preproc(**cfg["preproc"])
-    z = np.load(b / "model.npz")
-    out = {}
+    z = np.load(admit_read(b / "model.npz"))
+    scale = z["int8_scale"]
+    if scale.shape != (z["rows_int8"].shape[0],):
+        raise SystemExit(f"M17 GATE conformance: int8_scale has shape {scale.shape} for "
+                         f"{z['rows_int8'].shape[0]} rows; one positive scale per row is "
+                         "required.")
+    if not np.isfinite(scale).all() or (scale <= 0).any():
+        raise SystemExit("M17 GATE conformance: int8_scale is not finite and strictly positive.")
+    for name in ("rows_fp16", "rows_int8"):
+        if not np.isfinite(z[name].astype(np.float32)).all():
+            raise SystemExit(f"M17 GATE conformance: {name} contains non-finite values; a NaN "
+                             "table cannot be compared against a tolerance.")
+    out = {"tolerance": tol, "tolerance_source": "export.CONFORMANCE_TOL (torch vs numpy)"}
     for variant in ("fp16", "int8"):
         rows = (z["rows_fp16"].astype(np.float32) if variant == "fp16"
                 else z["rows_int8"].astype(np.float32) * z["int8_scale"][:, None])
@@ -226,10 +334,16 @@ def gate_conformance(bundle, tol=1e-5):
                 continue
             enc = loader_np.M17QueryEncoder(b, variant=variant, mode=mode)
             c = enc.encode(FIXTURES)
+            if not (np.isfinite(a).all() and np.isfinite(c).all()):
+                raise SystemExit(f"M17 GATE conformance: {variant}/{mode} produced non-finite "
+                                 "query vectors; there is nothing to compare.")
             dev = float(np.abs(a - c).max())
             solo = max(float(np.abs(enc.encode(t)[0] - a[i]).max())
                        for i, t in enumerate(FIXTURES))
             out[f"{variant}/{mode}"] = {"max_abs": dev, "b1_max_abs": solo}
+            if not (np.isfinite(dev) and np.isfinite(solo)):
+                raise SystemExit(f"M17 GATE conformance: {variant}/{mode} error statistic is not "
+                                 "finite; `nan > tol` is False and would pass this gate.")
             if dev > tol or solo > tol:
                 raise SystemExit(f"M17 GATE conformance: {variant}/{mode} does not reproduce the "
                                  f"torch query path (max-abs {dev:.3e}, b=1 {solo:.3e})")
@@ -246,7 +360,7 @@ def _torch_encode(model, tokenizer_json, pre, texts):
     from tokenizers import Tokenizer
     from table import EPS, _bag_index, occurrence_weights, ragged
     import torch.nn.functional as F
-    tok = Tokenizer.from_file(str(tokenizer_json))
+    tok = Tokenizer.from_file(str(admit_read(tokenizer_json)))
     tok.no_padding()
     tok.enable_truncation(max_length=pre.max_length)
     ids = [e.ids for e in tok.encode_batch(list(texts))]
@@ -292,8 +406,8 @@ def main(argv=None):
     else:
         rows, d = effective_rows(args.endpoint)
         diag = {"snapshots": [{"step": d["meta"].get("m17_step"), "rms": d["rms"]}]}
-    prov = json.loads(Path(args.provenance).read_text()) if args.provenance else {}
-    out = build_bundle(args.out, rows, Tokenizer.from_file(args.tokenizer),
+    prov = json.loads(admit_read(args.provenance).read_text()) if args.provenance else {}
+    out = build_bundle(args.out, rows, Tokenizer.from_file(str(admit_read(args.tokenizer))),
                        {**prov, "averaging": diag}, reg, form=args.form)
     if args.gates:
         run_gates(out)

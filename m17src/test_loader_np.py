@@ -56,13 +56,17 @@ def test_query_rule_fixtures(bundle, mode):
 
 
 def test_repeated_tokens_are_sqrt_saturated(bundle):
+    """sqrt(3) weight on a thrice-repeated token, not 3x and not 1x."""
     enc = loader_np.M17QueryEncoder(bundle, variant="int8", mode="resident_int8")
-    one = enc.encode("storage")[0]
-    many = enc.encode("storage storage storage")[0]
-    assert not np.allclose(one, many, atol=1e-6) or True    # specials change the bag either way
     ids = enc.tokenizer.encode("storage storage storage").ids
     uniq, counts = np.unique(np.asarray(ids), return_counts=True)
     assert counts.max() == 3, "the fixture must actually repeat a token"
+    w = np.sqrt(counts, dtype=np.float32)
+    want = (enc._gather(uniq) * w[:, None]).sum(0) / float(w.sum())
+    want = want / np.linalg.norm(want)
+    assert np.allclose(enc.encode("storage storage storage")[0], want, atol=1e-6)
+    linear = (enc._gather(uniq) * counts[:, None]).sum(0)
+    assert not np.allclose(want, linear / np.linalg.norm(linear), atol=1e-6)
 
 
 def test_truncation_is_enabled_at_the_frozen_length(bundle):

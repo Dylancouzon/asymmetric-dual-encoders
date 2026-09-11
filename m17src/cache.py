@@ -33,7 +33,8 @@ from pathlib import Path
 
 import numpy as np
 
-from common import quantiles, sha_array, sha_json, sha_texts, write_json
+from common import (admit_read, admit_write, quantiles, sha_array, sha_json, sha_texts,
+                    write_json)
 
 # candidate provenance codes, stored per (query, slot)
 SRC_POSITIVE, SRC_TEACHER, SRC_V1, SRC_UNIFORM = 0, 1, 2, 3
@@ -93,29 +94,34 @@ class QuerySpec:
         return bool(self.positive_ids)
 
 
+RNG_RECIPE_VERSION = "m17-uniform-rng-v1"
+RNG_RECIPE = ("numpy default_rng seeded with the first 8 bytes, big-endian, of "
+              "SHA-256(decimal cache_seed as UTF-8 || 0x00 || "
+              "SHA-256(raw query text as UTF-8) hex digest as UTF-8)")
+
+
 def _query_rng(cache_seed: int, text: str):
-    h = hashlib.sha256(f"{cache_seed}".encode() + b"\x00"
-                       + text.encode("utf-8", "surrogatepass")).digest()
+    """`training.candidate_construction.rng`, serialized literally (see `RNG_RECIPE`).
+
+    The registry says the seed is hashed with the raw query text's HASH, not with the raw
+    text itself: the text hash is the identity the cache records, so the draw is reproducible
+    from the recorded identity alone.
+    """
+    text_sha = hashlib.sha256(text.encode("utf-8", "surrogatepass")).hexdigest()
+    h = hashlib.sha256(str(int(cache_seed)).encode("utf-8") + b"\x00"
+                       + text_sha.encode("utf-8")).digest()
     return np.random.default_rng(int.from_bytes(h[:8], "big"))
 
 
-def _ranked(scores, id_rank, first_block=64):
-    """Bank indices best-first, materializing the ranking lazily.
+def _ranked(scores, id_rank):
+    """Bank indices in the FULL registered order: descending score, ascending bank id.
 
-    Only as much of the list as a quota (plus any backfill) actually consumes is sorted, so
-    continuing past the nominal depth costs another block rather than a full sort per query.
+    One `lexsort` per query over the whole bank. A partial `argpartition` would decide the
+    cutoff on score alone, so a tie spanning the boundary could drop the smaller bank id the
+    tie-break requires; at the registered 262,144-row bank a full sort is affordable.
     """
-    n = scores.shape[0]
-    m = min(n, max(first_block, 1))
-    seen = 0
-    while True:
-        idx = np.arange(n) if m >= n else np.argpartition(-scores, m - 1)[:m]
-        idx = idx[np.lexsort((id_rank[idx], -scores[idx]))]
-        for i in idx[seen:]:
-            yield int(i)
-        if m >= n:
-            return
-        seen, m = m, min(n, m * 4)
+    for i in np.lexsort((id_rank, -np.asarray(scores))):
+        yield int(i)
 
 
 def _take(gen, quota, chosen, out_idx, out_src, code, counters):
@@ -172,11 +178,16 @@ def build(queries, bank: Bank, teacher_q, v1_q, reg, cache_seed=0, manifests=Non
         vs = bank_f32 @ np.asarray(v1_q[qi], dtype=np.float32)
         chosen, idx, src = set(), [], []
 
-        pos = None
-        for d in q.positive_ids:
-            if d in bank.index:
-                pos = bank.index[d]
-                break
+        outside = [d for d in q.positive_ids if d not in bank.index]
+        if outside:
+            # registry positive_bank_policy: the eligible labeled subset is chosen BEFORE the
+            # bank is built, so a positive outside it is a selection error, never a query-only
+            # example wearing has_label=False.
+            raise ValueError(
+                f"M17 cache REFUSED: labeled query {q.qid!r} has positives outside the bank "
+                f"({outside}). All known positives of the selected labeled subset must fit "
+                "inside the bank cap; choose the eligible subset before building the cache.")
+        pos = bank.index[q.positive_ids[0]] if q.positive_ids else None
         labeled = pos is not None
         has_label[qi] = labeled
         mix = mix_l if labeled else mix_q
@@ -187,13 +198,9 @@ def build(queries, bank: Bank, teacher_q, v1_q, reg, cache_seed=0, manifests=Non
             chosen.add(pos)
             idx.append(pos)
             src.append(SRC_POSITIVE)
-        elif q.has_label:
-            # a labeled query whose positives all fell outside the bank: recorded, never
-            # silently converted (registry positive_bank_policy)
-            counters["shortfall_positive"] += 1
 
-        t_gen = _ranked(ts, bank.id_rank, first_block=max(64, mix["teacher_top"] * 4))
-        v_gen = _ranked(vs, bank.id_rank, first_block=max(64, mix["zero_v1_top"] * 4))
+        t_gen = _ranked(ts, bank.id_rank)
+        v_gen = _ranked(vs, bank.id_rank)
         _take(t_gen, mix["teacher_top"], chosen, idx, src, SRC_TEACHER, counters)
         _take(v_gen, mix["zero_v1_top"], chosen, idx, src, SRC_V1, counters)
 
@@ -251,6 +258,7 @@ def build(queries, bank: Bank, teacher_q, v1_q, reg, cache_seed=0, manifests=Non
               "qids": np.asarray([q.qid for q in queries], dtype=object),
               "alias_pair_ids": np.asarray([q.alias_pair_id for q in queries], dtype=object),
               "alias_views": np.asarray([q.alias_view for q in queries], dtype=object),
+              "families": np.asarray([q.family for q in queries], dtype=object),
               "buckets": np.asarray([q.bucket for q in queries], dtype=object)}
     return arrays, sidecar
 
@@ -308,43 +316,84 @@ def entropy_diagnostic(teacher_scores, cand_ids, temp, K):
     }
 
 
+def _query_records_sha(queries):
+    """Ordered per-query metadata, so swapping two queries' source/bucket/positives shows up.
+
+    Aggregate sets and counts are preserved by such a swap; this hash is not.
+    """
+    return sha_texts(["\x1f".join([q.qid, sha_texts([q.text]), q.source, q.domain, q.bucket,
+                                   q.family, q.alias_pair_id, q.alias_view,
+                                   "\x1e".join(map(str, q.positive_ids))])
+                      for q in queries])
+
+
 def identity(queries, bank: Bank, reg, cache_seed, manifests=None):
-    """The registry's `training.cache_identity`, hashed. Every field is named, not folded in."""
+    """The registry's `training.cache_identity`, hashed. Every field is named, not folded in.
+
+    The v1 artifact identity and the teacher's query preprocessing MUST be supplied: an empty
+    v1 identity would let a different `v1_q` (and so different candidates) keep the same
+    cache hash.
+    """
     tr = reg["training"]
     man = manifests or {}
+    v1 = man.get("v1_artifact")
+    pre = man.get("teacher_query_preprocessing")
+    if not v1:
+        raise ValueError("M17 cache identity REFUSED: manifests['v1_artifact'] is required and "
+                         "must be non-empty; the v1 ranking is a cache input.")
+    if not pre:
+        raise ValueError("M17 cache identity REFUSED: manifests['teacher_query_preprocessing'] "
+                         "is required; the teacher's prompt and truncation are cache inputs.")
     parts = {
         "raw_query_text_sha256": sha_texts([q.text for q in queries]),
-        "source_split_manifest": man.get("source_split", {
+        "query_records_sha256": _query_records_sha(queries),
+        "source_split_manifest": {
             "sources": sorted({q.source for q in queries}),
             "families_sha256": sha_texts([q.family for q in queries]),
-            "buckets": _tally(q.bucket for q in queries)}),
-        "alias_manifest": man.get("alias", {
+            "buckets": _tally(q.bucket for q in queries),
+            **(man.get("source_split") or {})},
+        "alias_manifest": {
             "pair_ids_sha256": sha_texts([q.alias_pair_id for q in queries]),
-            "views_sha256": sha_texts([q.alias_view for q in queries])}),
+            "views_sha256": sha_texts([q.alias_view for q in queries]),
+            **(man.get("alias") or {})},
         "teacher": {"model": reg["teacher"], "revision": reg["teacher_revision"],
-                    "query_preprocessing": man.get("teacher_query_preprocessing",
-                                                   "stella instruct prefix, max_length 512")},
+                    "query_preprocessing": pre},
         "bank": bank.identity(),
-        "v1_artifact": man.get("v1_artifact", {}),
+        "v1_artifact": v1,
         "candidates": {"k": tr["candidate_k"], "mix_labeled": tr["candidate_mix_labeled"],
                        "mix_query_only": tr["candidate_mix_query_only"], "seed": cache_seed,
-                       "rng": tr["candidate_construction"]["rng"]},
+                       "rng": tr["candidate_construction"]["rng"],
+                       "rng_recipe": RNG_RECIPE, "rng_recipe_version": RNG_RECIPE_VERSION},
     }
     return {"parts": parts, "sha256": sha_json(parts)}
 
 
 def save(out_dir, arrays, sidecar):
-    out = Path(out_dir)
+    out = Path(admit_write(out_dir))
     out.mkdir(parents=True, exist_ok=True)
-    np.savez(out / "candidates.npz",
-             **{k: v for k, v in arrays.items() if v.dtype != object},
-             **{k: np.asarray([str(x) for x in v]) for k, v in arrays.items()
-                if v.dtype == object})
+    stored = {k: (v if v.dtype != object else np.asarray([str(x) for x in v]))
+              for k, v in arrays.items()}
+    sidecar = {**sidecar, "arrays_sha256": {k: sha_array(v) for k, v in stored.items()}}
+    np.savez(out / "candidates.npz", **stored)
     write_json(out / "cache.json", sidecar)
     return out
 
 
 def load(out_dir):
+    """Load and VERIFY: a cache whose arrays no longer hash to the sidecar is not the cache."""
     out = Path(out_dir)
-    z = np.load(out / "candidates.npz", allow_pickle=False)
-    return {k: z[k] for k in z.files}, json.loads((out / "cache.json").read_text())
+    z = np.load(admit_read(out / "candidates.npz"), allow_pickle=False)
+    arrays = {k: z[k] for k in z.files}
+    sidecar = json.loads(admit_read(out / "cache.json").read_text())
+    want = sidecar.get("arrays_sha256")
+    if not want:
+        raise SystemExit(f"M17 CACHE REFUSED: {out}/cache.json records no per-array hashes; "
+                         "it was not written by cache.save.")
+    for k, w in want.items():
+        if k not in arrays:
+            raise SystemExit(f"M17 CACHE REFUSED: array {k!r} is missing from {out}.")
+        got = sha_array(arrays[k])
+        if got != w:
+            raise SystemExit(f"M17 CACHE REFUSED: array {k!r} hashes {got[:12]} but the sidecar "
+                             f"records {w[:12]}; the stored cache has been altered.")
+    return arrays, sidecar
