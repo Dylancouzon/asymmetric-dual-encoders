@@ -16,6 +16,15 @@
 | `research/m17-k8s-attribution.md` | The CC BY 4.0 attribution notice, source, pinned revision and modification statement. **Ships with any derived weights**; update the modification statement if the processing changes |
 | `results/m17_k8s_source_manifest.json` | Step-2a acquisition record: counts, bytes, JSONL sha256, dev-suite screen result and the deferred protected-screen blocker. No document text |
 | `work/m17/sources/kubernetes-website`, `work/m17/sources/k8s_docs_en.jsonl` | Gitignored clone at the pinned SHA and the extracted English docs (path, title, stripped text, sha256). Not admitted training data until the executor's protected screen passes |
+| `m17src/common.py` | Paths, registry/freeze loading, hashes and `require_executable` — the status gate every entry point calls. Sets `M7_ENCODER=stella-400M-v5` before legacy imports |
+| `m17src/cache.py` | Candidate-cache schema, deterministic construction (quota walk, backfill, tie-break, per-query RNG), provenance counts, identity hash and the B2-format entropy block |
+| `m17src/vocab.py` | Term discovery, ranking, selection (minima, abbreviation policy, caps, owner pins), count-weighted row init, `single_word` tokenizer extension, old-vocabulary parity and the P0b drift report |
+| `m17src/train.py` | **The one M17 driver.** Arms C/V/L/VL/VL-A, warm-start lineage checks, per-bucket without-replacement streams, the four loss terms, snapshots/recovery/resume, run record. Refuses a real run while the registry is a draft |
+| `m17src/export.py` | Fold-once effective rows, registered snapshot averaging, bundle build with the copied frozen `encoder_spec`, and the five M17 gates (separate from M11's, which stay bound to `m7/FREEZE.json`) |
+| `m17src/loader_np.py` | Standalone numpy loader: eager fp32 vs resident int8 codes/scales with per-query dequantization, parity check, weight bytes reported separately from process RSS |
+| `m17src/evaluate.py` | Exact dense retrieval, per-domain nDCG@10/Recall@10, paired family bootstrap, DBSF@100 through `m12src/qfusion.py`, alias overlap/rank correlation. Dev-suite and panel surfaces are flag-gated and unwired pre-clock |
+| `m17src/rehearse17.py`, `m17src/conftest.py`, `m17src/test_*.py` | The tiny synthetic end-to-end rehearsal and the 66 pytest checks that run on it and on fixture-scale inputs |
+| `results/m17_rehearsal.json` | The pre-clock rehearsal record: stages, scaled fixture constants, gate results, loader parity, synthetic-only evaluation. Not a quality observation or a rate forecast |
 
 Reproduce diagnostics from the repository root using `.venv/bin/python
 m17src/planning_probe.py --gpu` or `--followup`. Both refuse to overwrite their existing result.
@@ -26,7 +35,14 @@ expected; git retains the version bound to that observation.
 
 Future M17 implementation belongs in `m17src/`, small mutable artifacts in `results/m17_*`,
 and heavy caches/checkpoints/bundles in gitignored `work/m17/`. Reuse existing modules where they
-fit; no generic experiment framework or legacy-path rename. No M17 training driver exists yet.
+fit; no generic experiment framework or legacy-path rename.
+
+The step-3 implementation now exists and rehearses end to end, but it is **not** an executable
+experiment: the registry is still `DRAFT_NOT_EXECUTABLE`, `train.py` refuses a real arm, and the
+real data path (teacher encoding, the admitted-source query pool, bank mining, the panel and
+dev-suite readers) is deliberately unwritten — `train.py --data` expects a prepared directory
+that step 5 produces. Run the checks with `.venv/bin/python -m pytest -q -ra m17src` and the
+rehearsal with `.venv/bin/python m17src/rehearse17.py` (see `HARNESS.md`).
 
 ## Reuse hazards to resolve before training
 

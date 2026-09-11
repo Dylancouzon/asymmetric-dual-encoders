@@ -1,0 +1,365 @@
+{
+ "_note": "Pre-clock synthetic rehearsal of the M17 pipeline. Random rows, constructed qrels, scaled constants: NOT a quality observation and not a forecast of any rate. It certifies that the modules run end to end and refuse what they must.",
+ "_schema": "m17-rehearsal-v1",
+ "date": "2026-09-11",
+ "device": "cuda",
+ "registry_status_at_rehearsal": "DRAFT_NOT_EXECUTABLE",
+ "root": "work/m17/rehearsal",
+ "scaled_constants": {
+  "checkpoint_averaging.checkpoint_steps": {
+   "registry": [
+    4500,
+    5250,
+    6000
+   ],
+   "rehearsal": [
+    15,
+    18,
+    20
+   ]
+  },
+  "data.new_term_min_distinct_source_documents": {
+   "registry": 20,
+   "rehearsal": 2
+  },
+  "data.new_term_min_distinct_training_contexts": {
+   "registry": 50,
+   "rehearsal": 3
+  },
+  "training.batch": {
+   "registry": 256,
+   "rehearsal": 16
+  },
+  "training.candidate_k": {
+   "registry": 64,
+   "rehearsal": 16
+  },
+  "training.candidate_mix_labeled": {
+   "registry": {
+    "known_positive": 1,
+    "teacher_top": 31,
+    "uniform": 16,
+    "zero_v1_top": 16
+   },
+   "rehearsal": {
+    "known_positive": 1,
+    "teacher_top": 7,
+    "uniform": 4,
+    "zero_v1_top": 4
+   }
+  },
+  "training.candidate_mix_query_only": {
+   "registry": {
+    "known_positive": 0,
+    "teacher_top": 32,
+    "uniform": 16,
+    "zero_v1_top": 16
+   },
+   "rehearsal": {
+    "known_positive": 0,
+    "teacher_top": 8,
+    "uniform": 4,
+    "zero_v1_top": 4
+   }
+  },
+  "training.final_steps_per_fresh_run": {
+   "registry": 6000,
+   "rehearsal": 20
+  },
+  "training.overfit_divergence_check.every_steps": {
+   "registry": 500,
+   "rehearsal": 5
+  },
+  "training.warmup_steps": {
+   "registry": 200,
+   "rehearsal": 4
+  }
+ },
+ "seed": 0,
+ "source_sha256": "95ceca00dd7d63e4c1110bc6dfd6ea9bb133f064297e98bb0b178aa78f2718cb",
+ "stages": {
+  "cache": {
+   "counts": {
+    "alias_pairs": 8,
+    "alias_views": 16,
+    "buckets": {
+     "coverage": 40,
+     "general": 60,
+     "heldout": 12
+    },
+    "labeled": 76,
+    "query_only": 36
+   },
+   "entropy_mean_nats": 1.3768647074214957,
+   "identity_sha256": "51795959e2ae4851b2750301c362bec2d1d0669176c32aed08348c0e8017c202",
+   "p_max_mean": 0.5261600847817317,
+   "provenance_totals": {
+    "backfill_positive": 0,
+    "backfill_teacher": 1,
+    "backfill_uniform": 0,
+    "backfill_v1": 80,
+    "count_positive": 76,
+    "count_teacher": 820,
+    "count_uniform": 448,
+    "count_v1": 448,
+    "shortfall_positive": 0,
+    "shortfall_teacher": 0,
+    "shortfall_uniform": 0,
+    "shortfall_v1": 0
+   }
+  },
+  "evaluate": {
+   "alias_test": {
+    "_role": "descriptive; appears in no selection predicate",
+    "n_pairs": 8,
+    "n_pairs_with_rank_correlation": 8,
+    "rank_correlation_mean": 0.25,
+    "top10_overlap_mean": 0.4375
+   },
+   "fused_dbsf@100_macro": 0.7222222222222222,
+   "ndcg@10": {
+    "macro": 0.024670656974590793,
+    "n_per_domain": {
+     "cloud-software": 32,
+     "general": 60,
+     "science-engineering": 8
+    },
+    "per_domain": {
+     "cloud-software": 0.019716554799108048,
+     "general": 0.016666666666666666,
+     "science-engineering": 0.03762874945799765
+    }
+   },
+   "recall@10": {
+    "macro": 0.057638888888888885,
+    "n_per_domain": {
+     "cloud-software": 32,
+     "general": 60,
+     "science-engineering": 8
+    },
+    "per_domain": {
+     "cloud-software": 0.03125,
+     "general": 0.016666666666666666,
+     "science-engineering": 0.125
+    }
+   },
+   "surface": "synthetic fixtures only",
+   "vs_baseline": {
+    "_note": "paired over query families; excludes training-seed variation",
+    "ci": [
+     0.0,
+     0.04725438524052508
+    ],
+    "confidence": 0.95,
+    "delta": 0.019319597492354387,
+    "n_families": 92,
+    "n_queries": 100,
+    "replicates": 10000
+   }
+  },
+  "export": {
+   "endpoint": {
+    "dir": "work/m17/rehearsal/bundle-endpoint",
+    "gates": {
+     "gate_artifact": true,
+     "gate_conformance": true,
+     "gate_encoder_spec": true,
+     "gate_files": true,
+     "gate_tokenizer": true
+    },
+    "model_npz_sha256": "548374151ca80f8060367921e91e9e8fa49f6ee003ae4bdffdbcf8b57ac38b9b",
+    "rms": 0.10930310189723969
+   },
+   "mean_last_three": {
+    "dir": "work/m17/rehearsal/bundle-mean_last_three",
+    "gates": {
+     "gate_artifact": true,
+     "gate_conformance": true,
+     "gate_encoder_spec": true,
+     "gate_files": true,
+     "gate_tokenizer": true
+    },
+    "model_npz_sha256": "3c72ca2dfd441957136bf4cf85a349e58b10ab3389376d8d987753d195eecf60",
+    "rms": 0.1093025654554367
+   }
+  },
+  "loader": {
+   "_note_quantization": "the float-row comparison measures int8 quantization, not loader parity; only loader_parity_max_abs is bounded by int8_resident_loading.parity_max_abs",
+   "loader_parity_max_abs": 0.0,
+   "n_fixtures": 14,
+   "pass": true,
+   "rss_kb_after_load": 1592912,
+   "tolerance": 1e-06,
+   "vs_exported_float_rows_max_abs": 0.002942398190498352,
+   "weight_bytes": {
+    "eager_fp32": 2432,
+    "resident_int8": 760
+   }
+  },
+  "resume": {
+   "note": "recovery checkpoint restored; the exhausted schedule adds no steps",
+   "resumed_at_step": 20,
+   "steps_after_resume": 20
+  },
+  "train": {
+   "arm": "VL-A",
+   "batch_composition": {
+    "alias_pairs": 1,
+    "batch": 16,
+    "general": 12,
+    "unpaired_coverage": 2
+   },
+   "bucket_passes": {
+    "alias": {
+     "n": 8,
+     "name": "alias",
+     "passes": 2,
+     "pos": 4
+    },
+    "coverage": {
+     "n": 24,
+     "name": "coverage",
+     "passes": 1,
+     "pos": 16
+    },
+    "general": {
+     "n": 60,
+     "name": "general",
+     "passes": 4,
+     "pos": 0
+    }
+   },
+   "divergence_flags": [],
+   "first_history": {
+    "heldout": 6.720572471618652,
+    "lr_factor": 0.9375,
+    "parts": {
+     "alias": 0.038489118218421936,
+     "anchor": 1.294452260935941e-07,
+     "cosine": 0.649204671382904,
+     "listwise_kl": 7.906771183013916
+    },
+    "passes": {
+     "alias": 0,
+     "coverage": 0,
+     "general": 1
+    },
+    "step": 5,
+    "train_running_mean": 8.478791555586454
+   },
+   "last_history": {
+    "heldout": 6.684296607971191,
+    "lr_factor": 0.0,
+    "parts": {
+     "alias": 0.03912021219730377,
+     "anchor": 1.4142945019557374e-06,
+     "cosine": 0.6514779329299927,
+     "listwise_kl": 7.699175834655762
+    },
+    "passes": {
+     "alias": 2,
+     "coverage": 1,
+     "general": 4
+    },
+    "step": 20,
+    "train_running_mean": 8.506111097274081
+   },
+   "run_id": "m17-rehearsal-vla-s0",
+   "snapshots": {
+    "15": "snapshot_000015.npz",
+    "18": "snapshot_000018.npz",
+    "20": "snapshot_000020.npz"
+   },
+   "wall_clock_seconds": 0.955
+  },
+  "vocab": {
+   "already_single_token": [
+    "amazon",
+    "and",
+    "bucket",
+    "cluster",
+    "data",
+    "for",
+    "index",
+    "ingress",
+    "kubernetes",
+    "network"
+   ],
+   "breadth": "narrow",
+   "n_added": 3,
+   "n_candidates": 3,
+   "n_selected": 3,
+   "p0b_drift": [
+    {
+     "cosine": 1.0,
+     "max_abs": 5.960464477539063e-08,
+     "query": "s3 bucket policy"
+    },
+    {
+     "cosine": 0.9927855730056763,
+     "max_abs": 0.052551060914993286,
+     "query": "s3 storage s cluster"
+    },
+    {
+     "cosine": 0.9930892586708069,
+     "max_abs": 0.05467606708407402,
+     "query": "kubectl kube cluster"
+    }
+   ],
+   "per_domain": {
+    "cloud-software": 2,
+    "science-engineering": 1
+   },
+   "pieces_per_new_row": [
+    {
+     "counts": [
+      1,
+      1,
+      1
+     ],
+     "piece_ids": [
+      23,
+      24,
+      25
+     ],
+     "term": "k8s"
+    },
+    {
+     "counts": [
+      1,
+      1
+     ],
+     "piece_ids": [
+      26,
+      27
+     ],
+     "term": "s3"
+    },
+    {
+     "counts": [
+      1,
+      1
+     ],
+     "piece_ids": [
+      28,
+      29
+     ],
+     "term": "kubectl"
+    }
+   ],
+   "terms": [
+    "k8s",
+    "s3",
+    "kubectl"
+   ],
+   "tokenizer_sha256": "f54e1daa03b5af17715f3d8aea657b924e617df7489ae2053893d3e5f48e5d38",
+   "vocabulary_sha256": "2205049ec84b7d36fa5f487938060ed419001d705d512da3d76a9faad2fc8063"
+  },
+  "warm_start": {
+   "dim": 16,
+   "old_vocab_parity_max_abs": 0.0,
+   "vocab": 35
+  }
+ },
+ "wall_clock_seconds": 2.327
+}

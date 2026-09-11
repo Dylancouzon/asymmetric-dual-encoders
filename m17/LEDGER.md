@@ -139,3 +139,37 @@ reserved four and LoTTE are **deferred, not waived** — every interface reachin
 materializes protected payloads in-process, which pre-clock development may not do; that screen
 belongs inside the M17 executor via `protected10.build()` + `protected10.hits`. Recorded as a
 blocker in the manifest.
+
+## Step 3 — the one M17 driver, its companions and the synthetic rehearsal (2026-09-11)
+
+Pre-clock, no protected access, no registered observation. `m17src/` now holds `common.py`
+(paths, registry/freeze, hashes, the `require_executable` status gate), `cache.py`, `vocab.py`,
+`train.py`, `export.py`, `loader_np.py`, `evaluate.py`, `rehearse17.py` and six pytest modules.
+Constants are read from `registry.json` rather than restated, so the lock in step 6 binds the
+code as well as the plan. Reuse is limited to the primitives the codemap marks safe —
+`QueryTable`, ragged bags, `occurrence_weights`, `quantize_int8`, `save_table`, `qfusion` —
+and no old driver is invoked: `m7src/train.py` and `sweep.one` are never called.
+
+Refusals implemented, each with a test that breaks the bundle or checkpoint it exists to catch:
+a real arm while the registry says `DRAFT_NOT_EXECUTABLE` (only `--rehearsal` bypasses, and it
+prints that it did); a folded release offered as the warm start, or a warm start from another
+teacher/revision or vocabulary size; a resume across a different tokenizer, table size or step
+budget; averaging a wrong snapshot window or mixing runs, tokenizers or shapes; a staged
+`model.npz` whose bytes differ from provenance; a drifted `encoder_spec` or `preproc`; an
+unsanitised padding setting; a loader that stops reproducing the torch query path; and, by name,
+any path containing `frozen_eval/untouched-`, `m9reserve`, reserved qrels or LoTTE. The M17
+gates are a separate set: M11's stay bound to `m7/FREEZE.json` and are untouched.
+
+The tiny synthetic rehearsal (`work/m17/rehearsal`, gitignored; record in
+`results/m17_rehearsal.json`) ran the production modules end to end on the RTX 3080 in 2.3 s:
+vocabulary discovery and selection, count-weighted initialization, the extended tokenizer,
+a 112-query candidate cache with its entropy block, 20 VL-A steps with the three step-bound
+snapshots and a resume, both export forms through all five gates, loader parity, and evaluation
+on synthetic fixtures only. Loader parity was exact (0.0 against a 1e-6 bound). The P0b probe
+reproduced the hazard it was written for: cosine 1.0 where the new term shares no piece with the
+rest of the query, 0.993 where it does. Fixture-scale constants (minima, K, batch, steps,
+snapshot window) are recorded field by field in the result under `scaled_constants`.
+
+This certifies that the modules run and refuse; it certifies nothing about quality, throughput
+or the real data path, which is still unwritten. Step 4 (two independent implementation reviews)
+and step 5 (measured allocation at two sizes) remain the entry conditions for the lock.
