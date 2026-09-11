@@ -99,7 +99,7 @@
    "source": "results/m17_support_manifest.json",
    "general": 496327,
    "unpaired_coverage_min": 6165306,
-   "alias_pairs": 15573,
+   "alias_pairs": 15393,
    "note": "measured deduplicated populations required before lock by bucket_populations_and_dose_rule.pre_lock_rule"
   },
   "measured_dose_after_pre_lock_rule": {
@@ -111,7 +111,7 @@
    "passes": {
     "general": 2.466,
     "unpaired_coverage": 0.031,
-    "alias_pairs": 3.853
+    "alias_pairs": 3.898
    },
    "shrunk": [
     "alias"

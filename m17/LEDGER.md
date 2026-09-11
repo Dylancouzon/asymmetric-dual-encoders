@@ -220,7 +220,7 @@ the equivalence, quoted verbatim in the record's citation, acronym initials chec
 expansion's words) and **59 PENDING_HUMAN** where the short form has several expansions in the
 admitted text and the intended sense is a judgment — for example `PVC` as *persistent volume
 claim* or *posterior vegetal cytoplasm*. `work/m17/manifest/alias_test_families.json` carries the
-708 family ids and 942 normalized-text keys the training-pair builder must exclude, written in
+706 family ids and 940 normalized-text keys (the ledger first said 708/942; the file holds 706/940, corrected 2026-09-11 step 4) the training-pair builder must exclude, written in
 step 2b's `group_id` convention so the two scripts interoperate without importing each other.
 
 **Ancestry screen** (`work/m17/panel/ancestry_screen.json`), through the approved fingerprint
@@ -348,3 +348,30 @@ statistic, dose outcome and text hash in `results/m17_support_manifest.json` is 
 the step-2b record (git `930f198`); only the new domain blocks, `script_sha256` and the
 `*.tsv.gz` hashes moved, the latter because gzip stores a write timestamp in its header.
 No panel, dev-suite or protected read; no text published.
+
+## Step 4b–4d — Astra implementation review, fixes and artifact regeneration (2026-09-11)
+
+Codex Astra reviewed all of `m17src/` read-only (brief and dispositions in `REVIEW.md`; 29
+findings). Fixes landed in two Opus passes under Dylan's ruling of the day, "make sure we don't
+over-engineer, this is supposed to be a fairly easy re-training": smallest fix per real bug,
+adversarial-only findings dropped and listed. Tests 150 → 206. Commits `e2db77e`, `a2a08b9`.
+
+Four fixes invalidated provisional step-2b/2c artifacts, which were regenerated in one chain
+(`work/m17/logs/regen_chain.log`), before any human judgment existed, in this order:
+alias test → panel screen and seal → alias pool → support manifest.
+
+- Alias test: 200 pairs, 120 `VERIFIED_BY_SOURCE` / 80 `PENDING_HUMAN` (was 141/59); the 21 new
+  pending pairs are extractions that hit the phrase cap or started mid-phrase. The exclusion
+  file now carries normalized held-out terms and evidence document groups.
+- Panel: same 553 queries and split; the ancestry screen is now bound to the panel and alias file
+  hashes; new manifest hash. The pending sheet holds 440 rows: 360 Kubernetes candidates plus 80
+  alias senses (was 419). Dylan's A3 judging plan is unchanged in substance.
+- Alias pool: 15,393 pairs, 14,469 families, **180 pairs removed by the held-out exclusion**
+  (the step-2b build removed 0, which was the defect). Spot-check sample regenerated: 308 pairs.
+- Support manifest: per-document domains at the panel's pinned threshold 3 (step 4a used the
+  module default 4): science-engineering 60,002, medicine 63,476, finance 24,557, legal 43,579
+  documents; two training queries dropped as bare held-out alias terms; general population
+  496,327 unchanged. Dose rule outcome unchanged at 204/32/10 with alias passes 3.898 (was 3.853);
+  registry `measured_bucket_populations.alias_pairs` and the passes figure updated.
+
+No development-suite, panel-quality or protected read. Next: Codex Sol review (2 of 2).

@@ -10,30 +10,27 @@ screen clean; attribution file `research/m17-k8s-attribution.md` ships with deri
 as registered by Dylan). Support manifest, alias training pool (15,573 pairs), provisional judged
 panel (553 queries, six domains, sealed audit partition) and 200-pair alias test built. The one
 driver, cache, vocabulary, export, numpy loader and evaluator are in `m17src/`; `pytest -q m17src`
-passes (141) and the synthetic rehearsal ran clean on the RTX 3080. No candidate trained, no
+passes (206 after step 4) and the synthetic rehearsal ran clean on the RTX 3080. No candidate trained, no
 development-suite or panel read, nothing published. Result JSONs: `results/m17_*`.
 
 **Rulings A3 recorded (see `LEDGER.md`); Dylan owes the judgments and spot check below, nothing else:**
 
-- Judge the 360 Kubernetes query/candidate rows and 59 ambiguous alias senses in
-  `results/m17_panel_pending_judgments.jsonl` (options: Dylan alone; Dylan plus a second engineer
+- Judge the 360 Kubernetes query/candidate rows and 80 pending alias senses (59 ambiguous plus
+  21 truncated extractions) in `results/m17_panel_pending_judgments.jsonl` (options: Dylan alone; Dylan plus a second engineer
   on a double-judged subset with agreement reported; or a narrower ~60-query panel). Until then
   cloud-software has zero judgments and the panel hash is provisional.
-- Spot-check the 2% alias sample `results/m17_alias_spotcheck_sample.jsonl` (311 pairs).
-- Ruling: science-engineering, medicine, finance and legal are unpopulated in the source-to-domain
-  map, so vocabulary breadth is predetermined "narrow". The panel already assigns those domains
-  per passage with a keyword classifier. Allowing the same document-level classifier in the
-  training source-to-domain map is a pre-lock protocol refinement (no new source); accepting
-  "narrow" is the alternative. Also confirm the panel's exclusion of FEVER-train (reserved four,
-  Stella exposure) and ESCI (no panel domain).
+- Spot-check the 2% alias sample `results/m17_alias_spotcheck_sample.jsonl` (308 pairs; regenerated
+  in step 4d after the held-out exclusion fix, so the earlier 311-pair file is superseded).
+- Ruling A3-3 (per-document domain classifier) is implemented and applied: all six domains now
+  have supporting documents (`results/m17_support_manifest.json`, step 4d).
 - Dose rule applied: alias share 16 to 10 pairs per batch, freed slots to general replay, steps
   stay 6,000. No ruling needed; recorded in the registry and `LEDGER.md`.
 
 **Next (in this order):** the registry stays `DRAFT_NOT_EXECUTABLE` until step 6.
 
-4. Pre-clock: two independent implementation reviews of `m17src/` (Codex Astra, then Codex Sol),
-   briefs naming files, forbidding recursive searches, with the reserved read-exclusion; audit
-   access logs; fix P1s with one Opus agent; one P1 re-check. Cap at two reviews plus one re-check.
+4. Pre-clock reviews: Astra done (29 findings, fixed or dispositioned in `REVIEW.md`; provisional
+   artifacts regenerated, `LEDGER.md` step 4b–4d). Sol review running; then one P1-only re-check
+   if Sol finds P1s. Dylan (2026-09-11): do not over-engineer, this is a fairly easy re-training.
 5. Time teacher encoding, mining and evaluation at two sizes; write the measured allocation into
    the registry. Protected-surface screening (six, reserved four, LoTTE) belongs inside the
    executor via `protected10.build()` before importing `m9base`; see the step 2a `LEDGER.md` entry.

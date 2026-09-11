@@ -96,3 +96,21 @@ what was dropped as adversarial-only. Fixes landed in two Opus passes: driver/ca
 | P3-28 vacuous assertions; no numerical KL/anchor test | Fixed: assertion replaced; hand-computed KL and anchor fixtures added. |
 | P3-29 entropy block flattens B2's `arms` nesting | Accepted as registered: only the inner metric block is shared with B2; noted in CODEMAP. No code change. |
 | Rehearsal could not run as a script (`import train` resolved to M7's driver) | Found during the fix pass: `common.py` path order corrected. Pytest had hidden it. |
+| P1-10 held-out alias families never excluded from training (0 pairs removed) | Fixed: the exclusion file carries normalized held-out terms and evidence document groups; the pair builder and the manifest's query pass drop matches; an old-format file is refused. Artifacts regenerated (step 4d). |
+| P1-13 MS MARCO refusal only by three exact names in configured lists | Fixed: the store reader refuses any name or path containing `msmarco`. |
+| P1-16 evaluator keyed by position while the panel contract keys by query id | Fixed: `evaluate(query_ids=...)` with key-set validation; the panel test goes through the public evaluator. |
+| P1-17 stale ancestry screen could certify a rebuilt panel | Fixed: the screen records panel and alias hashes; `seal()` refuses a mismatch. |
+| P1-18 alias extraction can verify a truncated phrase | Fixed: phrases that hit the word cap or start mid-phrase are `PENDING_HUMAN`. Regenerated alias test: 120 verified, 80 pending (was 141/59). |
+| P2-21 classifier threshold 4 vs the panel's pinned 3; query domain not guaranteed document-derived | Fixed: the pinned threshold is read from the panel manifest and recorded; discovery requires a source document and refuses conflicting labels for one document. Support manifest regenerated. |
+| P2-22 abbreviation detection / `[UNK]` | Fixed in part: `[UNK]` piece counts as a candidate; the supplied inventory is documented as authoritative (the "ignored inventory" half did not reproduce). Punctuation-led units such as `.NET` remain unsupported, recorded. |
+| P2-24 bootstrap estimates the query mean, report shows the domain macro | Fixed: domain macro recomputed inside each replicate; query mean kept and labelled. |
+| P2-25 exact search allocates 4096 × corpus | Fixed: document blocking with exact merged top-k, ties by document id. |
+| P2-26 rebuilding erases human judgments; seal ignores them | Fixed in part: builders refuse to overwrite answered review rows. Judgment ingestion into qrels is built when the judgments exist, not before. |
+| P3-27 rehearsal parity/resume claims overstated | Accepted as a limitation, no code change: the rehearsal certifies that the modules run and refuse, not lineage parity; the real smoke in step 5 interrupts an active run. |
+
+**Dropped as adversarial-only (Dylan's over-engineering ruling):** a canonical artifact-type read
+admission layer, config digests beyond the fields listed, packaging contracts beyond the
+attribution copy, judgment ingestion before judgments exist, `.NET`-style punctuation units.
+
+**Owner:** M17 implementing session. **Exit:** Codex Sol implementation review (2 of 2) on the
+fixed code, then one P1-only re-check if Sol finds P1s; then step 5 timings.

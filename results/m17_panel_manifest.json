@@ -300,14 +300,14 @@
   }
  },
  "pending_judgments": {
-  "alias_pair_rows": 59,
+  "alias_pair_rows": 80,
   "candidates_per_query": 3,
   "file": "results/m17_panel_pending_judgments.jsonl",
   "format": "one JSONL row per (query, candidate) for kind=panel-candidate and per ambiguous pair for kind=alias-pair; fill relevant_yes_no and judge",
-  "items": 419,
+  "items": 440,
   "panel_candidate_rows": 360,
   "queries": 120,
-  "sha256": "c9272c740986677e62aae9eb78fcb40d420ab7b4974630931eb833a8a03be224"
+  "sha256": "09d9f0aca326c9f9fdbcfe076b40af07f92d3f800512f77bc088ee5ebf19626a"
  },
  "per_domain": {
   "cloud-software": {
@@ -540,7 +540,7 @@
   }
  },
  "protected_payloads_opened": false,
- "provisional_reason": "360 cloud-software candidate judgments and 59 ambiguous alias pairs are PENDING_HUMAN. Until they are resolved the cloud-software domain has no relevance judgments and the panel may not be scored as a six-domain panel. Resolving them re-seals this manifest with a new panel hash; the 72-hour clock starts from the sealed hash (registry.data.panel_timing).",
+ "provisional_reason": "360 cloud-software candidate judgments and 80 ambiguous alias pairs are PENDING_HUMAN. Until they are resolved the cloud-software domain has no relevance judgments and the panel may not be scored as a six-domain panel. Resolving them re-seals this manifest with a new panel hash; the 72-hour clock starts from the sealed hash (registry.data.panel_timing).",
  "reader_contract": "each row: query_id, query, source, domain, slice, family_id, partition, qrels {doc_id: grade}, judgment_status, exposure. m17src/evaluate.py takes qrels, domains and families keyed by the same query key, which is query_id here.",
  "registry_targets": {
   "m17_panel_target_queries": 600,
