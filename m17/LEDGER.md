@@ -434,3 +434,12 @@ addition that was requested as a nice to have, this shouldn't be that much of a 
    screen. Nothing more is built around this: the slice is a nice-to-have.
 
 Registered as `accepted_plan_revision_a4`. No bar, cap, teacher, licence or protocol change.
+
+## A5 — pool cap-fill priority (Dylan, 2026-09-11)
+
+Codex Sol's step-5 review noted the registry says "use as many distinct admitted queries as
+exist up to the cap" but not which bucket takes the remainder once general is exhausted
+(496,229 distinct general queries; pool 574,229 of 600,000). Ruling: the alias bucket takes all
+distinct admitted pairs (15,393, not the 15,000 four-pass minimum) and unpaired-coverage views
+fill the rest of the cap. Registered as `data.cap_fill_priority` and `accepted_plan_revision_a5`.
+Deterministic; the dose rule states the resulting passes. No bar, cap or protocol change.

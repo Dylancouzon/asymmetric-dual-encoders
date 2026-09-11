@@ -67,6 +67,11 @@
   "new_source_share_max_of_training_queries": 0.1,
   "training_query_cap": 600000,
   "training_query_cap_note": "Raised from 300000 to reduce repeated passes; use as many distinct admitted queries as exist up to the cap. Fewer distinct queries is recorded, not silently compensated with more steps.",
+  "cap_fill_priority": [
+   "alias_all_distinct",
+   "coverage_fill"
+  ],
+  "cap_fill_priority_note": "A5 (Dylan, 2026-09-11): after every distinct admitted general query is in the pool, the alias bucket takes ALL distinct admitted pairs (not the four-pass minimum) and unpaired-coverage views fill the remaining slots up to training_query_cap. Deterministic; the dose rule then states the resulting passes.",
   "bucket_populations_and_dose_rule": {
    "buckets_per_final_run_at_6000x256": {
     "general_views": 1224000,
@@ -428,6 +433,14 @@
   "after_lock": "Honor phase ceilings; incomplete required phase stops dependent work, with checkpointed recovery only inside remaining reserve; no silent dose/seed/arm cuts",
   "screen_overrun": "No selection from an accidentally incomplete matrix; report incomplete screen and stop unless all registered arms complete within the existing reserve",
   "unused_time": "May move forward to the same registered work, never a new hypothesis; hard total remains 72h"
+ },
+ "accepted_plan_revision_a5": {
+  "date": "2026-09-11",
+  "owner_instruction": "agree with A5, register it",
+  "changes": [
+   "data.cap_fill_priority: alias bucket = all distinct admitted pairs, coverage views fill the remainder of training_query_cap once general is exhausted"
+  ],
+  "scope": "pool-composition rule for the step-5 builder; no bar, cap, teacher, licence or protocol change"
  },
  "accepted_plan_revision_a4": {
   "date": "2026-09-11",
