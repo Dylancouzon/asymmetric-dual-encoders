@@ -45,6 +45,7 @@ import gzip
 import hashlib
 import json
 import os
+import re
 import resource
 import shutil
 import sys
@@ -64,6 +65,8 @@ import vocab as m17vocab                                                     # n
 REPO = Path(__file__).resolve().parents[1]
 MANIFEST_DIR = REPO / "work" / "m17" / "manifest"
 EXCLUSIONS = MANIFEST_DIR / "alias_test_families.json"
+# The published record of the exclusion artifact's bytes (step 2c wrote both).
+ALIAS_TEST_MANIFEST = RESULTS / "m17_alias_test_manifest.json"
 ALIAS_PAIRS = MANIFEST_DIR / "alias_pairs.jsonl"
 QUERY_FAMILIES = MANIFEST_DIR / "query_families.tsv.gz"
 K8S_JSONL = REPO / "work" / "m17" / "sources" / "k8s_docs_en.jsonl"
@@ -101,6 +104,18 @@ def _rng(*parts):
     return np.random.default_rng(int.from_bytes(h[:8], "big"))
 
 
+def _group_key(gid):
+    """A 64-bit key for a document-group id, for population-sized dedup sets (Sol P2-7).
+
+    `support_manifest.group_id` is `sha256(normalized text)[:16]` — already 64 bits of hex, so
+    the int is exact, not a second hash. Anything else falls back to its own 64-bit digest.
+    """
+    try:
+        return int(gid, 16)
+    except ValueError:                                  # pragma: no cover - non-hex group ids
+        return int.from_bytes(hashlib.sha256(gid.encode()).digest()[:8], "big")
+
+
 def _stable_unit(*parts) -> float:
     """A deterministic value in [0, 1) for hash-threshold sampling."""
     h = hashlib.sha256("\x1f".join(str(p) for p in parts).encode()).digest()
@@ -109,6 +124,27 @@ def _stable_unit(*parts) -> float:
 
 def _rss_gib():
     return round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / (1024 ** 2), 3)
+
+
+# RSS high-water marks, ANONYMOUS pages and file-backed pages answer different questions
+# (CLAUDE.md, "Before a long run"): a 12.4 GiB high-water that is mostly the frozen document
+# memmap's file cache is not 12.4 GiB of memory this process needs. Sol step-5 P2-7 asked for
+# the measurement before any redesign, so every stage records all three.
+_MEM_FIELDS = ("RssAnon", "RssFile", "RssShmem", "VmHWM", "VmRSS")
+
+
+def _mem_gib():
+    """-> {RssAnon, RssFile, VmHWM, ...} in GiB from `/proc/self/status`, or {} elsewhere."""
+    out = {}
+    try:
+        with open("/proc/self/status") as f:
+            for line in f:
+                k, _, rest = line.partition(":")
+                if k in _MEM_FIELDS:
+                    out[k] = round(int(rest.split()[0]) / (1024 ** 2), 3)
+    except OSError:                                     # pragma: no cover - non-Linux
+        return {}
+    return out
 
 
 def _gpu_peak_gib():
@@ -210,10 +246,13 @@ class Timer:
         rec = {"seconds": secs, "unit": self.unit, self.unit: int(self.n),
                f"{self.unit}_per_second": round(self.n / secs, 2) if secs > 0 and self.n else None,
                "per_query_work": self.per_query_work,
-               "rss_high_water_gib": _rss_gib(), "gpu_peak_gib": _gpu_peak_gib()}
+               "rss_high_water_gib": _rss_gib(), "gpu_peak_gib": _gpu_peak_gib(),
+               "memory_gib": _mem_gib()}
         self.ctx.timings[self.name] = rec
+        mem = rec["memory_gib"]
         print(f"[stage {self.name}] {secs}s, {self.n} {self.unit}, RSS hwm "
-              f"{rec['rss_high_water_gib']} GiB", flush=True)
+              f"{rec['rss_high_water_gib']} GiB, anon {mem.get('RssAnon')} GiB, file "
+              f"{mem.get('RssFile')} GiB, VmHWM {mem.get('VmHWM')} GiB", flush=True)
 
 
 # --------------------------------------------------------------------------- inputs
@@ -284,6 +323,36 @@ def _excluded_doc_ids(ex):
     return out
 
 
+def require_exclusions():
+    """The step-2c exclusion artifact, MANDATORY and hash-verified (Sol step-5 P1-1).
+
+    `support_manifest.load_exclusions` returns four empty sets when the gitignored
+    `alias_test_families.json` is absent, which is the right permissive behaviour for the
+    step-2b script (it runs before step 2c exists). For the training-pair builder it is a
+    fail-open: on a box where the file was never regenerated, every held-out family, alias
+    term, view text and evidence group would be admitted into training. The builder therefore
+    refuses a missing file and refuses bytes that are not the ones `results/
+    m17_alias_test_manifest.json` published.
+    """
+    if not EXCLUSIONS.exists():
+        raise SystemExit(
+            f"M17 REFUSED: the step-2c exclusion artifact {EXCLUSIONS} is missing. Without it "
+            "the held-out alias test's families, terms, view texts and evidence document "
+            "groups would be admitted into the training pool. Regenerate it with "
+            "m17src/alias_test_build.py; empty exclusions are not an acceptable default here.")
+    got = sha_file(EXCLUSIONS)
+    man = json.loads(admit_read(ALIAS_TEST_MANIFEST).read_text())
+    want = (man.get("files") or {}).get("exclusions_sha256")
+    if not want:
+        raise SystemExit(f"M17 REFUSED: {ALIAS_TEST_MANIFEST} records no "
+                         "files.exclusions_sha256; the exclusion bytes cannot be authenticated.")
+    if got != want:
+        raise SystemExit(
+            f"M17 REFUSED: {EXCLUSIONS} hashes {got[:12]} but the alias-test manifest records "
+            f"{want[:12]}. These are not the exclusions the held-out alias test was built from.")
+    return sm.load_exclusions(EXCLUSIONS)
+
+
 class Exclusions:
     """ONE exclusion predicate, applied to every admitted record BY ROLE.
 
@@ -348,20 +417,47 @@ class Exclusions:
 
 # --------------------------------------------------------------------------- stage 1: pool
 
+# The order in which the slots left under `training_query_cap` are handed out once the general
+# bucket is exhausted, read from `data.cap_fill_priority` (ruling A5). `alias_all_distinct`
+# raises the alias bucket from its four-pass minimum to EVERY distinct admitted pair;
+# `coverage_fill` raises coverage toward its population (Sol step-5 P1-2).
+CAP_FILL_STEPS = ("alias_all_distinct", "coverage_fill")
+
+
 def _plan(reg, avail, size):
     """Bucket targets at the full pool and, with `--size`, their proportional subsample.
 
     The four-pass population is a MINIMUM to check against the dose, never a cap on distinct
-    examples (Astra step-5 P1-8): the query cap is the only ceiling, and each bucket takes as
-    many distinct admitted rows as exist up to it.
+    examples (Astra step-5 P1-8): the query cap is the only ceiling. Each bucket first takes
+    its four-pass minimum, general then takes every distinct admitted query the cap still
+    allows, and the slots that remain are handed out in the registered `cap_fill_priority`
+    order until the cap is FULL (Sol step-5 P1-2) — 574,229 of a 600,000 cap was 25,771
+    admitted rows left unused.
     """
     dose = reg["data"]["measured_dose_after_pre_lock_rule"]
     steps, batch = int(dose["steps"]), int(dose["batch"])
     cap = int(reg["data"]["training_query_cap"])
+    priority = list(reg["data"]["cap_fill_priority"])                       # ruling A5
+    unknown = [p for p in priority if p not in CAP_FILL_STEPS]
+    if unknown:
+        raise SystemExit(f"M17 REFUSED: data.cap_fill_priority names {unknown}, which this "
+                         f"builder does not implement (known: {list(CAP_FILL_STEPS)}).")
     cov_target = min(avail["coverage_views"],
                      -(-int(dose["unpaired_coverage_views_per_batch"]) * steps // 4))
     alias_target = min(avail["alias_pairs"], -(-int(dose["alias_pairs_per_batch"]) * steps // 4))
-    gen_target = min(avail["general"], cap - cov_target - 2 * alias_target)
+    gen_target = max(0, min(avail["general"], cap - cov_target - 2 * alias_target))
+    free = cap - gen_target - cov_target - 2 * alias_target
+    for step in priority:                      # general is exhausted; hand out what is left
+        if free <= 0:
+            break
+        if step == "alias_all_distinct":       # every distinct admitted pair, two rows each
+            take = min(free // 2, avail["alias_pairs"] - alias_target)
+            alias_target += max(0, take)
+            free -= 2 * max(0, take)
+        elif step == "coverage_fill":
+            take = min(free, avail["coverage_views"] - cov_target)
+            cov_target += max(0, take)
+            free -= max(0, take)
     full = {"general": gen_target, "coverage": cov_target, "alias_pairs": alias_target,
             "heldout": min(HELDOUT_SLICE, gen_target // 4)}
     full_total = full["general"] + full["coverage"] + 2 * full["alias_pairs"]
@@ -406,7 +502,7 @@ def stage_pool(ctx):
     """The admitted query pool: general, unpaired coverage and alias buckets."""
     reg, out = ctx.reg, ctx.out
     kept, kept_qt = sm.load_kept()
-    ex = sm.load_exclusions(EXCLUSIONS)
+    ex = require_exclusions()
     fam = load_families()
     pairs = load_alias_pairs()
     with Timer(ctx, "pool_exclusion_join", "documents") as t:
@@ -485,14 +581,18 @@ def stage_pool(ctx):
     ctx.cache_state["alias"] = alias_sel
     ctx.cache_state["heldout_families"] = sorted(heldout_fams)
     ctx.cache_state["coverage_docs"] = cov_docs
-    # Persisted so `--stages domain` can resume without redoing the source scan.
-    write_json(ctx.out / "pool_selection.json",
-               {"general": general, "alias": alias_sel,
-                "heldout_families": sorted(heldout_fams), "coverage_docs": cov_docs,
-                "exclusions_realized": excl.realized},
-               indent=None)
+    # Persisted so `--stages domain` can resume without redoing the source scan. Timed: writing
+    # the selection scales with the pool and was outside every named timer (Sol step-5 P3-11).
+    with Timer(ctx, "pool_serialize", "queries") as t:
+        write_json(ctx.out / "pool_selection.json",
+                   {"general": general, "alias": alias_sel,
+                    "heldout_families": sorted(heldout_fams), "coverage_docs": cov_docs,
+                    "exclusions_realized": excl.realized},
+                   indent=None)
+        t.n = len(general) + 2 * len(alias_sel)
     return {"plan": plan, "available": avail, "full_pool_total": full_total,
             "size_factor": factor,
+            "cap_fill_priority": list(reg["data"]["cap_fill_priority"]),    # ruling A5
             "selected": {"general": len(general), "alias_pairs": len(alias_sel),
                          "coverage_documents": sum(len(v) for v in cov_docs.values()),
                          "heldout_families": len(heldout_fams)},
@@ -550,13 +650,17 @@ def _sample_coverage_documents(ctx, target_views):
 
     def eligible(src):
         """Deduplicated by document group, with the excluded groups removed."""
+        # Group ids are `sha256(normalized text)[:16]`: keeping them as 64-bit INTS rather
+        # than as a population-sized set of Python strings is the same deduplication at about
+        # half the memory (Sol step-5 P2-7).
         seen_groups = set()
         with gzip.open(admit_read(MANIFEST_DIR / "doc_groups" / f"{src}.tsv.gz"), "rt") as f:
             for line in f:
                 did, gid = line.rstrip("\n").split("\t")
-                if gid in seen_groups:
+                key = _group_key(gid)
+                if key in seen_groups:
                     continue
-                seen_groups.add(gid)
+                seen_groups.add(key)
                 if excl.coverage_document(src, did, gid):
                     continue
                 yield did
@@ -733,6 +837,7 @@ def stage_domain(ctx):
                     if not want:
                         break
         need[src].update(group_rep[(src, g)] for g in groups if (src, g) in group_rep)
+    _require_alias_groups(alias, group_rep)
 
     doc_domain, doc_group, texts, titles = {}, {}, {}, {}
     group_domain = {}
@@ -769,8 +874,7 @@ def stage_domain(ctx):
             w.write(f"{src}\t{did}\t{doc_group[key]}\t{doc_domain[key]}\n")
 
     # The pool rows, in their final order: general, coverage, alias views, held-out.
-    excl = ctx.cache_state.get("exclusions") or Exclusions(sm.load_exclusions(EXCLUSIONS),
-                                                          doc_ids={})
+    excl = ctx.cache_state.get("exclusions") or Exclusions(require_exclusions(), doc_ids={})
     heldout_fams = set(ctx.cache_state["heldout_families"])
     is_heldout = [r["family"] in heldout_fams for r in general]
     # ONE document/family split across every bucket (Astra step-5 P1-6).
@@ -818,17 +922,24 @@ def stage_domain(ctx):
                     continue
                 cov_views.append((key, src, v))
     # Filled from the REALIZED deduplicated views, then trimmed to the exact target (P1-8).
+    # The views the trim did NOT take are kept as the coverage RESERVE: the protected screen
+    # drops rows, and a bucket that stays short of its registered target after the screen is a
+    # different dose. The reserve is screened with the pool and refills it (Sol step-5 P1-2).
     target = ctx.stages["pool"]["plan"]["coverage"]
     cov_realized = len(cov_views)
-    cov_views = _stratified(cov_views, lambda r: r[1], target, (ctx.seed, "cov-views"))
+    selected = _stratified(cov_views, lambda r: r[1], target, (ctx.seed, "cov-views"))
+    chosen = {id(x) for x in selected}
+    reserve_views = [x for x in cov_views if id(x) not in chosen]
+    cov_views = selected
     for key, src, v in cov_views:
-        gid = doc_group.get(key, key)
-        qid = f"cov:{key}:{v['kind']}"
-        groups[qid] = (src, gid)
-        specs.append(m17cache.QuerySpec(
-            qid=qid, text=v["text"], source=src,
-            domain=doc_domain.get(key, "general"), bucket="coverage",
-            family="doc:" + gid))
+        s, g = _coverage_spec(key, src, v, doc_group, doc_domain)
+        groups[s.qid] = g
+        specs.append(s)
+    reserve = []
+    for key, src, v in reserve_views:
+        s, g = _coverage_spec(key, src, v, doc_group, doc_domain)
+        reserve.append((s, g))
+    ctx.cache_state["coverage_reserve"] = reserve
 
     alias_dropped_heldout_doc = 0
     for p in alias:
@@ -853,7 +964,9 @@ def stage_domain(ctx):
     ctx.cache_state["source_doc"] = _source_doc_map(
         specs, groups, ctx.reg["data"].get("documentless_sources_vote", "none"))
     ctx.cache_state["positives"] = sorted(positives)
-    _write_specs(ctx, specs, heldout_idx)
+    with Timer(ctx, "spec_serialize", "queries") as t:
+        _write_specs(ctx, specs, heldout_idx)
+        t.n = len(specs)
     dose = _validate_buckets(ctx, specs)
     return {
         "doc_domain_tsv": {"path": sm.rel(join), "sha256": sha_file(join),
@@ -887,6 +1000,36 @@ def stage_domain(ctx):
         "coverage_views": sum(1 for s in specs if s.bucket == "coverage" and not s.alias_pair_id),
         "alias_views": sum(1 for s in specs if s.alias_pair_id),
         "bucket_dose_check": dose}
+
+
+def _require_alias_groups(alias, group_rep, documentless=None):
+    """Refuse, by pair id, an alias pair whose evidence group does not join (Sol step-5 P2-8).
+
+    A missing join left `group_rep` without the pair's document, so the pair kept its supplied
+    group id, fell back to the `general` domain and carried a support identity that was never
+    derived from a document. Query-text-only sources ship no document at all (ruling A4) and
+    are excepted, as is the new source, whose group id IS its document key.
+    """
+    documentless = set(documentless if documentless is not None else sm.QUERYTEXT_SOURCES)
+    bad = [p["pair_id"] for p in alias
+           if p["source"] not in documentless and p["source"] != NEW_SOURCE
+           and (p["source"], p["doc_group"]) not in group_rep]
+    if bad:
+        raise SystemExit(
+            f"M17 REFUSED: {len(bad)} alias pairs name an evidence document group that does not "
+            f"resolve in their source's group table, e.g. {bad[:5]}. Such a pair would train "
+            "with a fabricated `general` domain and a support identity no document backs; fix "
+            "the join or drop the pairs.")
+    return True
+
+
+def _coverage_spec(key, src, view, doc_group, doc_domain):
+    """One unpaired-coverage row and its supporting (source, document group)."""
+    gid = doc_group.get(key, key)
+    return m17cache.QuerySpec(
+        qid=f"cov:{key}:{view['kind']}", text=view["text"], source=src,
+        domain=doc_domain.get(key, "general"), bucket="coverage",
+        family="doc:" + gid), (src, gid)
 
 
 def _source_doc_map(specs, groups, documentless_vote="none"):
@@ -973,6 +1116,13 @@ def _write_specs(ctx, specs, heldout_idx):
     write_json(ctx.out / "heldout_idx.json", heldout_idx)
     write_json(ctx.out / "source_doc.json", ctx.cache_state["source_doc"])
     write_json(ctx.out / "positives.json", ctx.cache_state["positives"])
+    reserve = ctx.cache_state.get("coverage_reserve")
+    if reserve is not None:
+        with open(admit_write(ctx.out / "coverage_reserve.jsonl"), "w", encoding="utf-8") as f:
+            for s, g in reserve:
+                f.write(json.dumps({"qid": s.qid, "text": s.text, "source": s.source,
+                                    "domain": s.domain, "family": s.family,
+                                    "group": list(g)}) + "\n")
 
 
 def _read_specs(ctx):
@@ -989,6 +1139,16 @@ def _read_specs(ctx):
     ctx.cache_state["heldout_idx"] = json.loads(admit_read(ctx.out / "heldout_idx.json").read_text())
     ctx.cache_state["source_doc"] = json.loads(admit_read(ctx.out / "source_doc.json").read_text())
     ctx.cache_state["positives"] = json.loads(admit_read(ctx.out / "positives.json").read_text())
+    p = ctx.out / "coverage_reserve.jsonl"
+    reserve = []
+    if p.exists():
+        with open(admit_read(p), encoding="utf-8") as f:
+            for line in f:
+                d = json.loads(line)
+                reserve.append((m17cache.QuerySpec(
+                    qid=d["qid"], text=d["text"], source=d["source"], domain=d["domain"],
+                    bucket="coverage", family=d["family"]), tuple(d["group"])))
+    ctx.cache_state["coverage_reserve"] = reserve
     return specs
 
 
@@ -1021,17 +1181,48 @@ def _apply_screen(ctx, drop_qids):
     pairs_hit = {s.alias_pair_id for s in specs if s.alias_pair_id and s.qid in drop_qids}
     kept = [s for s in specs if s.qid not in drop_qids
             and not (s.alias_pair_id and s.alias_pair_id in pairs_hit)]
+    dropped = len(specs) - len(kept)
+    src_doc = dict(ctx.cache_state["source_doc"])
+
+    # REFILL the coverage bucket from the screened reserve, up to its registered target
+    # (Sol step-5 P1-2). A bucket that cannot be refilled — the alias bucket holds every
+    # distinct admitted pair already — records its shortfall instead, and the dose rule is
+    # re-applied below to state the passes the screened populations actually support.
+    reserve = [(s, g) for s, g in (ctx.cache_state.get("coverage_reserve") or [])
+               if s.qid not in drop_qids]
+    target = int(ctx.stages["pool"]["plan"]["coverage"])
+    have = sum(1 for s in kept if s.bucket == "coverage" and not s.alias_pair_id)
+    short = max(0, target - have)
+    refill = _stratified([r for r in reserve], lambda r: r[0].source, short,
+                         (ctx.seed, "cov-refill")) if short else []
+    for s, g in refill:
+        src_doc[s.qid] = f"{g[0]}:doc-group:{g[1]}"
+        kept.append(s)
+    used = {id(r) for r in refill}
+    ctx.cache_state["coverage_reserve"] = [r for r in reserve if id(r) not in used]
+
     heldout_idx = [i for i, s in enumerate(kept) if s.bucket == "heldout"]
-    src_doc = ctx.cache_state["source_doc"]
     ctx.cache_state["specs"] = kept
     ctx.cache_state["heldout_idx"] = heldout_idx
     ctx.cache_state["source_doc"] = {s.qid: src_doc.get(s.qid) for s in kept}
     ctx.cache_state["positives"] = sorted({p for s in kept for p in s.positive_ids})
     _write_specs(ctx, kept, heldout_idx)
+    # Refuses a bucket that can no longer supply one batch of the registered dose.
+    dose_check = _validate_buckets(ctx, kept)
+    realized = dose_check["realized"]
     return {"rows_before": len(specs), "rows_kept": len(kept),
-            "rows_dropped": len(specs) - len(kept), "alias_pairs_dropped": len(pairs_hit),
+            "rows_dropped": dropped, "alias_pairs_dropped": len(pairs_hit),
             "heldout_rebuilt_to": len(heldout_idx),
-            "positives_kept": len(ctx.cache_state["positives"])}
+            "positives_kept": len(ctx.cache_state["positives"]),
+            "coverage_refill": {"target": target, "after_screen": have,
+                                "refilled_from_reserve": len(refill),
+                                "reserve_left": len(ctx.cache_state["coverage_reserve"]),
+                                "remaining_shortfall": max(0, target - have - len(refill))},
+            "bucket_shortfalls_after_screen": {
+                k: v["shortfall_vs_plan"] for k, v in dose_check["buckets"].items()},
+            "dose_rule_reapplied": sm.dose_rule(realized["general"], realized["coverage"],
+                                                realized["alias_pairs"]),
+            "bucket_dose_check_after_screen": dose_check}
 
 
 def stage_protected(ctx):
@@ -1071,10 +1262,15 @@ def stage_protected(ctx):
                          "dropped_document_paths": dropped_docs}, indent=None)
 
     # 2. every query view text, and every row whose supporting new-source document was dropped.
-    src_doc = ctx.cache_state["source_doc"]
+    src_doc = dict(ctx.cache_state["source_doc"])
+    # The coverage RESERVE is screened with the pool: rows that refill the bucket after the
+    # screen must have passed the same screen (Sol step-5 P1-2).
+    reserve = ctx.cache_state.get("coverage_reserve") or []
+    for s, g in reserve:
+        src_doc.setdefault(s.qid, f"{g[0]}:doc-group:{g[1]}")
     drop_qids, by_text, by_document = set(), 0, 0
     with Timer(ctx, "protected_screen", "texts") as t:
-        for s in specs:
+        for s in list(specs) + [r[0] for r in reserve]:
             if protected10.hits(s.text, idx):
                 drop_qids.add(s.qid)
                 by_text += 1
@@ -1113,8 +1309,10 @@ class TextVectorCache:
     The cache namespace is BOUND to the encoder/preprocessing manifest it was built under
     (Astra step-5 P2-14): changing the teacher's compute settings, tokenizer or preprocessing
     and then reusing these vectors because the text hashes still match would label old vectors
-    with the new manifest. A mismatch refuses; a cache that predates this binding adopts the
-    current manifest once and says so.
+    with the new manifest. A mismatch refuses. A manifest is STAMPED only on an EMPTY cache:
+    stamping a populated one relabels vectors nothing authenticated (Sol step-5 P2-6). The two
+    caches in `work/m17/prepared` were stamped by hand on 2026-09-11, with the evidence
+    recorded in `m17/CODEMAP.md`.
     """
 
     def __init__(self, root, dim, manifest=None):
@@ -1122,7 +1320,7 @@ class TextVectorCache:
         self.root.mkdir(parents=True, exist_ok=True)
         self.dim = dim
         self.manifest_sha = sha_json(manifest) if manifest is not None else None
-        self.manifest_adopted = False
+        self.manifest_stamped = False
         if manifest is not None:
             p = self.root / "manifest.json"
             if p.exists():
@@ -1133,11 +1331,17 @@ class TextVectorCache:
                         f"preprocessing manifest {str(prev.get('sha256'))[:12]} but this run "
                         f"uses {self.manifest_sha[:12]}. Matching text hashes are not matching "
                         "vectors; build a new cache directory or restore the preprocessing.")
+            elif (self.root / "index.json").exists() or (self.root / "vecs.f16.npy").exists():
+                raise SystemExit(
+                    f"M17 REFUSED: the text-vector cache {self.root} holds vectors but no "
+                    "`manifest.json`. Stamping the current preprocessing on rows nobody "
+                    "authenticated would relabel vectors that may have been encoded under "
+                    "another tokenizer or configuration. Re-encode into a new cache directory, "
+                    "or stamp the manifest deliberately and record why.")
             else:
-                self.manifest_adopted = True
+                self.manifest_stamped = True
                 write_json(p, {"sha256": self.manifest_sha, "manifest": manifest,
-                               "note": "adopted by the first build that bound this cache to a "
-                                       "preprocessing manifest; the vectors predate the binding"})
+                               "note": "stamped when this cache directory was created empty"})
         self.index_p, self.vec_p = self.root / "index.json", self.root / "vecs.f16.npy"
         self.index = (json.loads(admit_read(self.index_p).read_text())
                       if self.index_p.exists() else {})
@@ -1204,15 +1408,47 @@ def stage_teacher(ctx):
     with Timer(ctx, "teacher_encode", "queries") as t:
         vecs, rep = cache.get([s.text for s in specs], encode)
         t.n = rep["encoded"]
-    np.save(admit_write(ctx.shared / "teacher_q.npy"), vecs)
+    with Timer(ctx, "teacher_serialize", "queries") as t:
+        np.save(admit_write(ctx.shared / "teacher_q.npy"), vecs)
+        t.n = len(specs)
     ctx.cache_state["teacher_q"] = vecs
     return {"preprocessing": pre, "cache_dir": sm.rel(TEACHER_CACHE), **rep,
             "cache_manifest_sha256": cache.manifest_sha,
-            "cache_manifest_adopted": cache.manifest_adopted,
+            "cache_manifest_stamped_on_empty_cache": cache.manifest_stamped,
             "queries": len(specs), "teacher_q_sha256": sha_array(vecs)}
 
 
 # --------------------------------------------------------------------------- stage 5: bank
+
+_JSON_STRING = re.compile(r'"(?:[^"\\]|\\.)*"')
+
+
+def _stream_json_strings(path, chunk=1 << 22):
+    """Yield `(index, value)` for every string in a JSON array file, without loading the array.
+
+    The pool's `ids-<store>.json` files are flat `["a", "b", ...]` arrays written by json.dump;
+    the largest holds 5.23M ids. `read_text()` + `json.loads` cost about half a gigabyte of
+    Python str objects to authenticate a digest and resolve a few thousand rows (Sol step-5
+    P2-7). This scans block by block and decodes one token at a time.
+    """
+    i, tail = 0, ""
+    with open(admit_read(path), encoding="utf-8") as f:
+        while True:
+            block = f.read(chunk)
+            if not block:
+                break
+            buf, pos = tail + block, 0
+            for m in _JSON_STRING.finditer(buf):
+                tok = m.group(0)
+                yield i, (tok[1:-1] if "\\" not in tok else json.loads(tok))
+                i += 1
+                pos = m.end()
+            tail = buf[pos:]
+    for m in _JSON_STRING.finditer(tail):
+        tok = m.group(0)
+        yield i, (tok[1:-1] if "\\" not in tok else json.loads(tok))
+        i += 1
+
 
 class PoolReader:
     """The existing frozen stella document-vector memmap (`m7src/pool.py`'s `VEC_DIR`).
@@ -1248,14 +1484,30 @@ class PoolReader:
         `ids-<store>.json` beside an unchanged memmap would otherwise attach every document id
         to another document's vector, silently.
         """
-        from hashing import sha_stream_list                 # the legacy digest convention
-        ids = json.loads(admit_read(POOL_DIR / f"ids-{_denied(store)}.json").read_text())
         lo, hi = self.spans[store]
-        if len(ids) != hi - lo:
-            raise SystemExit(f"M17 REFUSED: ids-{store}.json holds {len(ids)} ids but the pool "
+        want = set(doc_ids)
+        # STREAMED: `read_text()` + `json.loads` materialized the whole 5.23M-id list as Python
+        # strings (about 0.5 GiB for the largest store) purely to hash it and look a few
+        # thousand ids up (Sol step-5 P2-7). One pass hashes the ids in the legacy convention
+        # and keeps only the rows this call asked for.
+        n, out = 0, {}
+        from hashing import sha_stream_list                 # the legacy digest convention
+        h = hashlib.sha256()
+        h.update(b"[")
+        for i, doc in _stream_json_strings(POOL_DIR / f"ids-{_denied(store)}.json"):
+            if i:
+                h.update(b", ")
+            h.update(json.dumps(doc).encode())
+            if doc in want:
+                out[doc] = lo + i
+            n = i + 1
+        h.update(b"]")
+        got_sha = h.hexdigest()
+        assert sha_stream_list([]) == hashlib.sha256(b"[]").hexdigest()   # same convention
+        if n != hi - lo:
+            raise SystemExit(f"M17 REFUSED: ids-{store}.json holds {n} ids but the pool "
                              f"span for {store} is {hi - lo} rows.")
         want_sha = (self.meta.get("id_sha256") or {}).get(store)
-        got_sha = sha_stream_list(ids)
         if want_sha and got_sha != want_sha:
             raise SystemExit(
                 f"M17 REFUSED: ids-{store}.json hashes {got_sha[:12]} but the pool meta records "
@@ -1263,9 +1515,6 @@ class PoolReader:
         if not want_sha:
             raise SystemExit(f"M17 REFUSED: the pool meta records no id_sha256 for {store}; the "
                              "id-to-vector layout cannot be authenticated.")
-        want = set(doc_ids)
-        out = {d: lo + i for i, d in enumerate(ids) if d in want}
-        del ids
         return out
 
 
@@ -1308,14 +1557,15 @@ def stage_bank(ctx):
             have = need.get(src, set())
 
             def eligible(src=src, have=have):
-                seen_groups = set()
+                seen_groups = set()                     # 64-bit int keys (Sol step-5 P2-7)
                 with gzip.open(admit_read(MANIFEST_DIR / "doc_groups" / f"{src}.tsv.gz"),
                                "rt") as f:
                     for line in f:
                         did, gid = line.rstrip("\n").split("\t")
-                        if did in have or gid in seen_groups:
+                        key = _group_key(gid)
+                        if did in have or key in seen_groups:
                             continue
-                        seen_groups.add(gid)
+                        seen_groups.add(key)
                         yield did
             # Uniform over the WHOLE eligible population: lowest seeded hash wins (P1-7). The
             # old probability-then-stop walk ended around the first quarter of the file.
@@ -1381,8 +1631,10 @@ def stage_bank(ctx):
             vecs[i] = v
 
     bank = m17cache.Bank(ordered, vecs, sources, seed=ctx.seed)
-    np.save(admit_write(ctx.shared / "bank.npy"), vecs)
-    write_json(ctx.shared / "bank_ids.json", ordered)
+    with Timer(ctx, "bank_serialize", "documents") as t:
+        np.save(admit_write(ctx.shared / "bank.npy"), vecs)
+        write_json(ctx.shared / "bank_ids.json", ordered)
+        t.n = len(ordered)
     ctx.cache_state["bank"] = bank
     return {"n_docs": len(ordered), "from_pool": len(ordered) - len(missing),
             "encoded_with_document_tower": len(missing),
@@ -1618,11 +1870,15 @@ def stage_cache(ctx):
     # changed (m17/CODEMAP.md, blocked-BLAS note). The ARTIFACT digest can: it covers the
     # per-array hashes and the teacher/bank/v1 realizations the lists were scored from
     # (Astra step-5 P2-17).
-    sidecar = m17cache.save(ctx.shared, arrays, sidecar, artifact_inputs={
-        "teacher_q_sha256": ctx.stages["teacher"]["teacher_q_sha256"],
-        "bank_vector_bytes_sha256": ctx.stages["bank"]["identity"]["vector_bytes_sha256"],
-        "bank_doc_ids_sha256": ctx.stages["bank"]["identity"]["doc_ids_sha256"],
-        "v1_q_sha256": ctx.stages["v1"]["v1_q_sha256"]})
+    # Writing the candidate arrays is query-scaled work and was outside every named timer, so
+    # the extrapolation did not include it (Sol step-5 P3-11).
+    with Timer(ctx, "cache_save", "queries") as t:
+        sidecar = m17cache.save(ctx.shared, arrays, sidecar, artifact_inputs={
+            "teacher_q_sha256": ctx.stages["teacher"]["teacher_q_sha256"],
+            "bank_vector_bytes_sha256": ctx.stages["bank"]["identity"]["vector_bytes_sha256"],
+            "bank_doc_ids_sha256": ctx.stages["bank"]["identity"]["doc_ids_sha256"],
+            "v1_q_sha256": ctx.stages["v1"]["v1_q_sha256"]})
+        t.n = len(specs)
     ctx.cache_state["cache"] = (arrays, sidecar)
 
     with Timer(ctx, "prelock_diagnostics", "queries") as t:
@@ -1834,6 +2090,42 @@ def _rehydrate(ctx, name):
         ctx.cache_state["cache"] = m17cache.load(ctx.shared)
 
 
+def recipe_identity(reg, fz):
+    """A digest of the registry/FREEZE inputs the prepared arrays are defined against.
+
+    Sol step-5 P1-4: none of these changed a stage marker's identity, so a prepared directory
+    built under one candidate recipe could be reused, and trained on, after the registry moved.
+    The training driver checks the same inputs against the CACHE it loads; this is the builder's
+    half, so a re-run under a changed recipe rebuilds instead of resuming.
+    """
+    tr = reg["training"]
+    spec = fz["encoder_spec"]
+    parts = {
+        "candidate_k": tr["candidate_k"],
+        "candidate_mix_labeled": tr["candidate_mix_labeled"],
+        "candidate_mix_query_only": tr["candidate_mix_query_only"],
+        "candidate_construction": tr["candidate_construction"],
+        "rng_recipe_version": m17cache.RNG_RECIPE_VERSION,
+        "rng_recipe": m17cache.RNG_RECIPE,
+        "temperature": tr["temperature"],
+        "labeled_positive_budget_share": tr["labeled_positive_budget_share"],
+        "candidate_bank_max_docs": tr["candidate_bank_max_docs"],
+        "teacher": reg["teacher"], "teacher_revision": reg["teacher_revision"],
+        "dose": reg["data"]["measured_dose_after_pre_lock_rule"],
+        "training_query_cap": reg["data"]["training_query_cap"],
+        "cap_fill_priority": reg["data"]["cap_fill_priority"],
+        "documentless_sources_vote": reg["data"]["documentless_sources_vote"],
+        "new_source_share_max": reg["data"]["new_source_share_max_of_training_queries"],
+        "teacher_preprocessing": {k: spec.get(k) for k in
+                                  ("query_prefix", "doc_prefix", "max_length", "pooling",
+                                   "post_dense", "tokenizer_id", "dim", "revision")},
+        "preproc_fingerprint": fz["preproc_fingerprint"],
+        "table_sha256": fz["table_sha256"],
+        "training_checkpoint_sha256": fz["training_checkpoint_sha256"],
+    }
+    return {"parts": parts, "sha256": sha_json(parts)}
+
+
 def stage_identity(ctx):
     """The INPUT identity every stage marker is stamped with (Astra step-5 P2-11).
 
@@ -1844,6 +2136,10 @@ def stage_identity(ctx):
     """
     return {"seed": ctx.seed, "size": ctx.size, "bank_docs": ctx.bank_docs,
             "protected_screen": bool(ctx.protected_screen),
+            # The registered RECIPE the stages are built under (Sol step-5 P1-4): changing a
+            # candidate mix, K, the temperature, the RNG rule, the cap-fill priority or the
+            # frozen teacher preprocessing must not leave the cached markers reusable.
+            "recipe_sha256": recipe_identity(ctx.reg, ctx.freeze)["sha256"],
             "exclusions_sha256": sha_file(EXCLUSIONS) if EXCLUSIONS.exists() else None,
             "alias_pairs_sha256": sha_file(ALIAS_PAIRS) if ALIAS_PAIRS.exists() else None,
             "k8s_jsonl_sha256": sha_file(K8S_JSONL) if K8S_JSONL.exists() else None,
@@ -1866,6 +2162,27 @@ def _check_stage_identity(prev, ident, name, force):
         "its dependents, or build into a new --out.")
 
 
+def _invalidate_dependents(out, name):
+    """Persistently invalidate every stage after `name` by renaming its marker to `*.stale`.
+
+    Sol step-5 P2-5: invalidation lived only in the in-memory `invalidated` set, so
+    `--force --stages pool` rebuilt the pool and left every downstream marker on disk with a
+    matching global identity — the next ordinary invocation reused stages built from the
+    replaced pool. A dependent stage rewrites its own artifacts when it re-runs; what had to
+    become persistent is the marker that says it need not.
+    """
+    moved = []
+    for later in STAGES[STAGES.index(name) + 1:]:
+        m = out / "stages" / f"{later}.json"
+        if m.exists():
+            stale = m.with_name(f"{later}.json.stale")
+            if stale.exists():
+                stale.unlink()
+            m.rename(stale)
+            moved.append(later)
+    return moved
+
+
 def build(args, log=print):
     ctx = Ctx(args)
     want = args.stages.split(",") if args.stages else list(STAGES)
@@ -1873,11 +2190,14 @@ def build(args, log=print):
     t0 = time.time()
     ran = []
     invalidated = set()
+    stale = []
     for name in STAGES:
         marker = ctx.out / "stages" / f"{name}.json"
         prev = json.loads(admit_read(marker).read_text()) if marker.exists() else None
+        # `--force` applies to the REQUESTED stages only: an unrequested ancestor whose inputs
+        # still match is rehydrated rather than treated as non-reusable (Sol step-5 P2-5).
         reusable = marker.exists() and name not in invalidated and \
-            _check_stage_identity(prev, ident, name, args.force)
+            _check_stage_identity(prev, ident, name, args.force and name in want)
         if name not in want:
             if reusable:
                 ctx.stages[name] = prev
@@ -1893,8 +2213,10 @@ def build(args, log=print):
         ctx.stages[name] = rec
         write_json(marker, {**rec, "_identity": ident})
         ran.append(name)
-        # A rebuilt stage invalidates everything downstream of it, in the fixed stage order.
+        # A rebuilt stage invalidates everything downstream of it, in the fixed stage order —
+        # in memory AND on disk, so a later invocation cannot reuse a dependent marker.
         invalidated.update(STAGES[STAGES.index(name) + 1:])
+        stale.extend(_invalidate_dependents(ctx.out, name))
     # A partial re-run (`--stages domain,vocab`) must not erase the measurements the earlier
     # invocations paid for; the carried names are listed so no reader mistakes them for fresh.
     prev_path = ctx.out / "build_record.json"
@@ -1911,15 +2233,69 @@ def build(args, log=print):
               "seed": ctx.seed, "bank_docs": ctx.bank_docs, "device": ctx.device,
               "stage_identity": ident,
               "stages_run_this_invocation": ran,
+              "dependent_markers_invalidated_on_disk": sorted(set(stale)),
               "complete_build": complete,
               # A partial rebuild's wall clock is not the cost of preparing this size.
               "wall_clock_seconds": round(time.time() - t0, 3),
               "wall_clock_kind": "full build" if complete else "partial rebuild",
               "rss_high_water_gib": _rss_gib(), "gpu_peak_gib": _gpu_peak_gib(),
+              "memory_gib": _mem_gib(),
               "timings": ctx.timings, "stages": ctx.stages, "notes": ctx.notes,
               "source_sha256": sha_text(Path(__file__).read_text())}
     write_json(ctx.out / "build_record.json", record)
     return record
+
+
+OTHER_RESIDENTS_GIB = "8-9"        # measured free/used on the 25 GiB box outside this build
+
+
+def _peak_memory(rec):
+    """The highest RssAnon / RssFile / VmHWM any stage of one build recorded."""
+    seen = [t.get("memory_gib") or {} for t in rec.get("timings", {}).values()]
+    seen.append(rec.get("memory_gib") or {})
+    out = {}
+    for field in ("RssAnon", "RssFile", "VmHWM"):
+        vals = [m[field] for m in seen if m.get(field) is not None]
+        out[field] = max(vals) if vals else None
+    return out
+
+
+def _memory_projection(recs, target):
+    """ANONYMOUS high-water measured at every built size, and projected at the full pool.
+
+    Sol step-5 P2-7: the reported 12.4 GiB was an RSS high-water dominated by the frozen
+    document memmap's file-backed pages. What decides whether the full build fits is the
+    ANONYMOUS high-water plus the other residents of the box, so all three numbers are measured
+    at three sizes and the anonymous slope per query is fitted, never argued.
+    """
+    series = []
+    for r in recs:
+        q = sum(r["stages"]["domain"]["queries_by_bucket"].values())
+        series.append({"out": r["out"], "queries": q, "rss_high_water_gib":
+                       r.get("rss_high_water_gib"), **_peak_memory(r)})
+    usable = [s for s in series if s.get("RssAnon") is not None]
+    projection = None
+    if len(usable) >= 2:
+        a, b = usable[0], usable[-1]
+        per_query = ((b["RssAnon"] - a["RssAnon"]) / (b["queries"] - a["queries"])
+                     if b["queries"] != a["queries"] else 0.0)
+        fixed = a["RssAnon"] - per_query * a["queries"]
+        projection = {
+            "fitted_from": [a["queries"], b["queries"]],
+            "fixed_gib": round(fixed, 3),
+            "per_query_gib": round(per_query, 9),
+            "projected_anonymous_high_water_gib_at_full_pool":
+                round(fixed + per_query * target, 2),
+            "other_residents_gib": OTHER_RESIDENTS_GIB,
+            "host_ram_gib": 25}
+    return {
+        "measured": series,
+        "projection": projection,
+        "note": "RssAnon is the process's own pages; RssFile is mostly the frozen document "
+                "memmap and the OS reclaims it under pressure; VmHWM is the high-water of both "
+                "and is the number the earlier record reported. Compare the projected anonymous "
+                f"high-water plus the {OTHER_RESIDENTS_GIB} GiB of other residents against the "
+                "25 GiB host before scheduling the full-pool build."}
 
 
 def timing_report(dirs, full_total=None):
@@ -1932,7 +2308,9 @@ def timing_report(dirs, full_total=None):
     """
     recs = [json.loads(admit_read(Path(d) / "build_record.json").read_text()) for d in dirs]
     recs.sort(key=lambda r: r["stages"]["pool"]["plan"]["general"])
-    small, large = recs
+    # The fit uses the SMALLEST and LARGEST measured builds; any middle size is reported beside
+    # them (and carries the memory series, Sol step-5 P2-7).
+    small, large = recs[0], recs[-1]
     target = full_total or large["stages"]["pool"]["full_pool_total"]
     stages, total_fixed, total_per_row = {}, 0.0, 0.0
     doc_growth = []
@@ -2012,6 +2390,7 @@ def timing_report(dirs, full_total=None):
                    "complete_build": r.get("complete_build"),
                    "stages_run_this_invocation": r.get("stages_run_this_invocation"),
                    "rss_high_water_gib": r["rss_high_water_gib"],
+                   "peak_memory_gib": _peak_memory(r),
                    "gpu_peak_gib": r["gpu_peak_gib"],
                    "teacher_cache": {k: r["stages"]["teacher"][k]
                                      for k in ("encoded", "hit_rate", "cache_rows")},
@@ -2047,17 +2426,21 @@ def timing_report(dirs, full_total=None):
             "per_query_seconds": round(total_per_row, 6),
             "estimated_seconds": round(est, 1),
             "estimated_hours": round(est / 3600, 2),
-            "document_stage_growth_upper_bound": {
+            "document_stage_sensitivity_estimate": {
                 "stages": growth,
                 "additional_seconds_if_document_counts_scale_with_queries": round(max(0.0, extra), 1),
-                "estimated_hours_with_that_upper_bound":
+                "estimated_hours_with_that_sensitivity":
                     round((est + max(0.0, extra)) / 3600, 2),
                 "note": "document-unit stages are carried as fixed costs of the full build. The "
                         "ones whose document count actually moved with the pool (notably "
                         "domain_store_pass, which also classifies every selected positive) are "
-                        "projected here, linearly in queries, as an upper bound beside the "
-                        "estimate. The bank stages are excluded: the bank is held at the "
+                        "projected here, linearly in queries. This is a SENSITIVITY ESTIMATE, "
+                        "not an upper bound: the per-document slopes are noisy and were clamped "
+                        "at zero where a larger build measured faster, so a genuinely slower "
+                        "per-document rate at the full pool is not bounded by it (Sol step-5 "
+                        "P3-11). The bank stages are excluded: the bank is held at the "
                         "registered cap, so their row count does not grow with the pool"},
+            "anonymous_memory": _memory_projection(recs, target),
             "query_counts_measured": {"small": q_small, "large": q_large},
             "fixed_costs_subtracted": sorted(
                 n for n, r in stages.items()

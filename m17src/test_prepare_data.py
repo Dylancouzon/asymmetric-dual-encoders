@@ -50,6 +50,24 @@ def test_the_uniform_sampler_does_not_favour_the_head_of_the_file():
     assert set(deciles) == {f"d{i}" for i in range(10)}
 
 
+def test_the_cap_is_filled_when_the_general_bucket_is_exhausted(reg):
+    """Sol step-5 P1-2 / ruling A5: alias takes every pair, coverage fills the remainder."""
+    avail = {"general": 496229, "coverage_views": 6165306, "alias_pairs": 15393}
+    plan, total, factor = pd._plan(reg, avail, None)
+    cap = int(reg["data"]["training_query_cap"])
+    assert reg["data"]["cap_fill_priority"] == ["alias_all_distinct", "coverage_fill"]
+    assert plan["general"] == avail["general"]              # every distinct admitted query
+    assert plan["alias_pairs"] == avail["alias_pairs"]      # ALL distinct admitted pairs
+    assert total == cap and factor == 1.0                   # and the cap is FULL
+    assert plan["coverage"] == cap - plan["general"] - 2 * plan["alias_pairs"]
+
+
+def test_an_unknown_cap_fill_step_is_refused(reg):
+    bad = {**reg, "data": {**reg["data"], "cap_fill_priority": ["general_fill"]}}
+    with pytest.raises(SystemExit, match="cap_fill_priority"):
+        pd._plan(bad, {"general": 10, "coverage_views": 10, "alias_pairs": 10}, None)
+
+
 def test_plan_subsamples_every_bucket_proportionally(reg):
     avail = {"general": 500000, "coverage_views": 10 ** 6, "alias_pairs": 20000}
     full, total, _ = pd._plan(reg, avail, None)
@@ -416,14 +434,28 @@ def test_a_labeled_query_whose_positives_never_joined_is_refused_by_qid():
 
 # --------------------------------------------------------------------------- protected screen
 
+def _tiny_dose(reg, general=1, coverage=1, alias=1, cov_target=2):
+    """A registry whose registered dose and coverage plan fit a handful of fixture rows."""
+    data = {**reg["data"],
+            "measured_dose_after_pre_lock_rule": {
+                "steps": 4, "batch": 4, "general_views_per_batch": general,
+                "unpaired_coverage_views_per_batch": coverage, "alias_pairs_per_batch": alias}}
+    return {**reg, "data": data}, {"general": 1, "coverage": cov_target, "alias_pairs": 1,
+                                   "heldout": 1}
+
+
 class _Ctx:
     """The handful of `Ctx` attributes the screen stages touch."""
 
-    def __init__(self, tmp_path, reg, protected=False):
+    def __init__(self, tmp_path, reg, protected=False, plan=None, factor=0.01):
         self.out = tmp_path
         self.reg = reg
+        self.seed = 0
         self.protected_screen = protected
         self.stages, self.timings, self.notes, self.cache_state = {}, {}, {}, {}
+        self.stages["pool"] = {"plan": plan or {"general": 1, "coverage": 1, "alias_pairs": 1,
+                                                "heldout": 1},
+                               "size_factor": factor}
 
 
 def test_the_protected_screen_gates_on_the_registry_before_importing_protected10(tmp_path,
@@ -452,34 +484,77 @@ def test_the_deferred_screen_counts_the_unscreened_new_source_rows(tmp_path, reg
 def _screen_specs():
     a, b = pd.alias_specs({"pair_id": "p1", "family_id": "f1", "source": "k8s-docs-en",
                            "view_a": "view a", "view_b": "view b"}, "cloud-software")
+    c, d = pd.alias_specs({"pair_id": "p2", "family_id": "f3", "source": "k8s-docs-en",
+                           "view_a": "view c", "view_b": "view d"}, "cloud-software")
     return [m17cache.QuerySpec(qid="q0", text="protected text", source="squad-train",
                                bucket="heldout", family="q:f0"),
             m17cache.QuerySpec(qid="q1", text="ordinary", source="squad-train",
                                bucket="heldout", family="q:f9"),
             m17cache.QuerySpec(qid="q2", text="ordinary two", source="squad-train",
                                positive_ids=("squad-train:d1",), family="q:f2"),
-            a, b]
+            m17cache.QuerySpec(qid="cov:a", text="coverage a", source="squad-train",
+                               bucket="coverage", family="doc:g1"),
+            m17cache.QuerySpec(qid="cov:b", text="coverage b", source="squad-train",
+                               bucket="coverage", family="doc:g2"),
+            a, b, c, d]
 
 
-def test_a_screen_drop_rebuilds_the_pool_and_survives_a_restart(tmp_path, reg):
-    """P1-4: persist the screened pool, rebuild the indices, drop BOTH views of a pair."""
-    ctx = _Ctx(tmp_path, reg)
+def _screen_ctx(tmp_path, reg, reserve=(), **dose):
+    reg2, plan = _tiny_dose(reg, **dose)
+    ctx = _Ctx(tmp_path, reg2, plan=plan)
     specs = _screen_specs()
     ctx.cache_state["specs"] = specs
     ctx.cache_state["heldout_idx"] = [0, 1]
     ctx.cache_state["source_doc"] = {s.qid: "k8s-docs-en:doc-group:g1" for s in specs}
     ctx.cache_state["positives"] = ["squad-train:d1"]
+    ctx.cache_state["coverage_reserve"] = list(reserve)
+    return ctx
+
+
+def test_a_screen_drop_rebuilds_the_pool_and_survives_a_restart(tmp_path, reg):
+    """P1-4: persist the screened pool, rebuild the indices, drop BOTH views of a pair."""
+    ctx = _screen_ctx(tmp_path, reg)
     rec = pd._apply_screen(ctx, {"q0", "alias:p1:a"})
     assert rec["rows_dropped"] == 3 and rec["alias_pairs_dropped"] == 1
     kept = ctx.cache_state["specs"]
-    assert [s.qid for s in kept] == ["q1", "q2"]
+    assert [s.qid for s in kept] == ["q1", "q2", "cov:a", "cov:b", "alias:p2:a", "alias:p2:b"]
     assert ctx.cache_state["heldout_idx"] == [0]          # rebuilt, not stale positions
     assert ctx.cache_state["positives"] == ["squad-train:d1"]
     # and a restart rehydrates the SCREENED pool from disk, never the original one
     fresh = _Ctx(tmp_path, reg)
     pd._rehydrate(fresh, "protected")
-    assert [s.qid for s in fresh.cache_state["specs"]] == ["q1", "q2"]
+    assert [s.qid for s in fresh.cache_state["specs"]] == \
+        ["q1", "q2", "cov:a", "cov:b", "alias:p2:a", "alias:p2:b"]
     assert fresh.cache_state["heldout_idx"] == [0]
+
+
+def test_the_coverage_bucket_is_refilled_from_the_reserve_after_the_screen(tmp_path, reg):
+    """Sol step-5 P1-2: a screen drop must not leave the bucket short of its target."""
+    reserve = [(m17cache.QuerySpec(qid=f"cov:r{i}", text=f"reserve {i}", source="squad-train",
+                                   bucket="coverage", family=f"doc:r{i}"),
+                ("squad-train", f"r{i}")) for i in range(3)]
+    ctx = _screen_ctx(tmp_path, reg, reserve=reserve)
+    rec = pd._apply_screen(ctx, {"cov:a", "cov:r0"})            # one pool row, one reserve row
+    fill = rec["coverage_refill"]
+    assert fill["target"] == 2 and fill["after_screen"] == 1
+    assert fill["refilled_from_reserve"] == 1 and fill["remaining_shortfall"] == 0
+    kept = [s.qid for s in ctx.cache_state["specs"]]
+    assert "cov:a" not in kept and sum(1 for q in kept if q.startswith("cov:")) == 2
+    refilled = next(q for q in kept if q.startswith("cov:r"))
+    assert q_src_doc(ctx, refilled).startswith("squad-train:doc-group:")
+    assert rec["dose_rule_reapplied"]["passes_per_bucket"]["unpaired_coverage"] is not None
+    # a screened-out reserve row is never used to refill
+    assert "cov:r0" not in kept
+
+
+def q_src_doc(ctx, qid):
+    return ctx.cache_state["source_doc"][qid]
+
+
+def test_a_bucket_that_falls_below_one_batch_after_the_screen_is_refused(tmp_path, reg):
+    ctx = _screen_ctx(tmp_path, reg, general=2)
+    with pytest.raises(SystemExit, match="one batch of the"):
+        pd._apply_screen(ctx, {"q2"})           # the only training general row
 
 
 class _FakeProtected:
@@ -507,7 +582,8 @@ def test_the_screen_reads_full_document_text_and_the_bank_follows_the_receipt(tm
     groups = {p: pd.sm.group_id(pd.sm.normalize(t)) for p, _t2, t in docs}
     specs = [m17cache.QuerySpec(qid=f"cov:k8s-docs-en:{p}:title", text=f"view of {p}",
                                 source="k8s-docs-en", bucket="coverage") for p, _t, _x in docs]
-    ctx = _Ctx(tmp_path, {**reg, "status": "EXECUTABLE"}, protected=True)
+    reg2, plan = _tiny_dose(reg, general=0, coverage=1, alias=0, cov_target=1)
+    ctx = _Ctx(tmp_path, {**reg2, "status": "EXECUTABLE"}, protected=True, plan=plan)
     ctx.cache_state["specs"] = specs
     ctx.cache_state["heldout_idx"] = []
     ctx.cache_state["positives"] = []
@@ -573,6 +649,74 @@ def test_forcing_a_stage_invalidates_its_dependents():
     assert pd.STAGES[i + 1:] == ("bank", "v1", "parity", "vocab", "cache", "manifests")
 
 
+def test_invalidating_dependents_is_persistent_on_disk(tmp_path):
+    """Sol step-5 P2-5: in-memory invalidation left reusable markers behind for the next run."""
+    (tmp_path / "stages").mkdir()
+    ident = {"seed": 0}
+    for name in pd.STAGES:
+        pd.write_json(tmp_path / "stages" / f"{name}.json", {"_identity": ident})
+    moved = pd._invalidate_dependents(tmp_path, "pool")
+    assert moved == list(pd.STAGES[1:])
+    assert (tmp_path / "stages" / "pool.json").exists()
+    for name in pd.STAGES[1:]:
+        # no marker for the next ordinary invocation to reuse, and the old one is kept as
+        # evidence rather than deleted
+        assert not (tmp_path / "stages" / f"{name}.json").exists()
+        assert (tmp_path / "stages" / f"{name}.json.stale").exists()
+    # a forced stage is applied to the requested stages only: an unrequested ancestor whose
+    # inputs still match stays reusable and is rehydrated
+    assert pd._check_stage_identity({"_identity": ident}, ident, "pool", False) is True
+
+
+def test_the_registered_recipe_is_part_of_the_stage_identity():
+    """Sol step-5 P1-4: a changed candidate mix must not leave the markers reusable."""
+    import common
+    reg, fz = common.registry(), common.freeze()
+    base = pd.recipe_identity(reg, fz)["sha256"]
+    other = {**reg, "training": {**reg["training"],
+                                 "candidate_mix_labeled": {"known_positive": 1,
+                                                           "teacher_top": 30,
+                                                           "zero_v1_top": 17, "uniform": 16}}}
+    assert pd.recipe_identity(other, fz)["sha256"] != base
+    assert pd.recipe_identity({**reg, "teacher_revision": "other"}, fz)["sha256"] != base
+    assert pd.recipe_identity(reg, {**fz, "preproc_fingerprint": "other"})["sha256"] != base
+
+
+def test_an_alias_pair_whose_evidence_group_does_not_join_is_refused_by_id():
+    """Sol step-5 P2-8: the pair kept a fabricated `general` domain instead."""
+    alias = [{"pair_id": "p1", "source": "squad-train", "doc_group": "g1"},
+             {"pair_id": "p2", "source": "squad-train", "doc_group": "missing"},
+             {"pair_id": "p3", "source": "k8s-docs-en", "doc_group": "content/en/a.md"},
+             {"pair_id": "p4", "source": "nqopen", "doc_group": "g9"}]
+    rep = {("squad-train", "g1"): "d1"}
+    with pytest.raises(SystemExit) as e:
+        pd._require_alias_groups(alias, rep, documentless={"nqopen"})
+    assert "p2" in str(e.value) and "p1" not in str(e.value)
+    assert pd._require_alias_groups([p for p in alias if p["pair_id"] != "p2"], rep,
+                                    documentless={"nqopen"})
+
+
+def test_the_exclusion_artifact_is_mandatory_and_hash_verified(tmp_path, monkeypatch):
+    """Sol step-5 P1-1: a missing exclusion file admitted every held-out family."""
+    monkeypatch.setattr(pd, "EXCLUSIONS", tmp_path / "absent.json")
+    with pytest.raises(SystemExit) as e:
+        pd.require_exclusions()
+    assert "exclusion artifact" in str(e.value)
+    # present but not the published bytes
+    p = tmp_path / "alias_test_families.json"
+    p.write_text(json.dumps({"excluded_family_ids": [], "excluded_text_shas": [],
+                             "excluded_alias_terms": [], "excluded_evidence_doc_groups": []}))
+    man = tmp_path / "manifest.json"
+    man.write_text(json.dumps({"files": {"exclusions_sha256": "0" * 64}}))
+    monkeypatch.setattr(pd, "EXCLUSIONS", p)
+    monkeypatch.setattr(pd, "ALIAS_TEST_MANIFEST", man)
+    with pytest.raises(SystemExit) as e:
+        pd.require_exclusions()
+    assert "alias-test manifest records" in str(e.value)
+    man.write_text(json.dumps({"files": {"exclusions_sha256": pd.sha_file(p)}}))
+    assert set(pd.require_exclusions()) == {"families", "text_shas", "terms", "doc_groups"}
+
+
 # --------------------------------------------------------------------------- v1 variant
 
 def test_v1_mining_refuses_anything_but_the_released_int8_table(tmp_path):
@@ -603,12 +747,23 @@ def test_int8_and_fp16_rows_are_different_encoders(tmp_path):
 def test_a_text_vector_cache_refuses_a_changed_preprocessing_manifest(tmp_path):
     m = {"instruction": "one", "encode_dtype": "float32", "storage_dtype": "float16"}
     c = pd.TextVectorCache(tmp_path / "tc", 4, manifest=m)
-    assert c.manifest_adopted
+    assert c.manifest_stamped                       # stamped on an EMPTY cache directory
     c.get(["x"], lambda ts: np.ones((len(ts), 4)))
-    pd.TextVectorCache(tmp_path / "tc", 4, manifest=m)               # same manifest: reused
+    assert not pd.TextVectorCache(tmp_path / "tc", 4, manifest=m).manifest_stamped
     with pytest.raises(SystemExit) as e:
         pd.TextVectorCache(tmp_path / "tc", 4, manifest={**m, "instruction": "two"})
     assert "preprocessing manifest" in str(e.value)
+
+
+def test_a_populated_cache_without_a_manifest_is_refused_not_adopted(tmp_path):
+    """Sol step-5 P2-6: stamping a populated cache relabels vectors nobody authenticated."""
+    m = {"instruction": "one", "encode_dtype": "float32", "storage_dtype": "float16"}
+    c = pd.TextVectorCache(tmp_path / "tc", 4, manifest=m)
+    c.get(["x"], lambda ts: np.ones((len(ts), 4)))
+    (tmp_path / "tc" / "manifest.json").unlink()
+    with pytest.raises(SystemExit) as e:
+        pd.TextVectorCache(tmp_path / "tc", 4, manifest=m)
+    assert "holds vectors but no" in str(e.value)
 
 
 def test_the_teacher_manifest_states_encode_and_storage_precision_separately(reg):

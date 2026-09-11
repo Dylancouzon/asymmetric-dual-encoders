@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -46,7 +47,7 @@ import torch
 import torch.nn.functional as F
 
 from common import (WORK, admit_read, admit_write, freeze, registry, require_executable, sha_array, sha_file,
-                    sha_json, sha_text, write_json)
+                    sha_json, sha_text, sha_texts, write_json)
 
 ARMS = {
     "C":    {"vocab_extension": False, "listwise": False, "alias_consistency": False},
@@ -371,21 +372,36 @@ def grad_shares(model, terms):
     The update norm is NOT observable after Adam's per-parameter scaling, so what is recorded is
     the anchor's gradient share, and this note says so rather than implying the other number.
     """
-    norms = {}
+    norms, live = {}, []
     for name, t in terms.items():
         if t is None or not getattr(t, "requires_grad", False):
             norms[name] = 0.0
             continue
+        live.append(t)
         g = torch.autograd.grad(t, model.rows, retain_graph=True, allow_unused=True)[0]
         norms[name] = 0.0 if g is None else float(g.detach().norm())
-    tot = sum(norms.values())
+    # The DENOMINATOR is the norm of the total row gradient, `||grad_rows sum(terms)||`, which
+    # is what `training.alias_pre_lock_diagnostic` asks for (Sol step-5 P3-9). Dividing by the
+    # sum of the per-term norms reported 50/50 for two exactly opposed terms whose total
+    # gradient is zero. The per-term norms are kept, and their proportions are reported
+    # separately as `component_norm_fraction`.
+    total = 0.0
+    if live:
+        g = torch.autograd.grad(sum(live), model.rows, retain_graph=True, allow_unused=True)[0]
+        total = 0.0 if g is None else float(g.detach().norm())
+    comp = sum(norms.values())
     return {"row_grad_norms": {k: round(v, 8) for k, v in norms.items()},
-            "shares": {k: (round(v / tot, 6) if tot else None) for k, v in norms.items()},
-            "sum_of_term_norms": round(tot, 8),
-            "note": "shares are of the SUM of the per-term row-gradient norms, on this step's "
-                    "batch, with the registered weights applied. The anchor's share of the row "
-                    "UPDATE norm is not observable after Adam's per-parameter scaling; this is "
-                    "its gradient share."}
+            "shares": {k: (round(v / total, 6) if total else None) for k, v in norms.items()},
+            "total_row_grad_norm": round(total, 8),
+            "component_norm_fraction": {k: (round(v / comp, 6) if comp else None)
+                                        for k, v in norms.items()},
+            "sum_of_term_norms": round(comp, 8),
+            "note": "each share is that term's row-gradient norm divided by the norm of the "
+                    "TOTAL row gradient on this step's batch, with the registered weights "
+                    "applied; shares need not sum to one, and exceed one where terms cancel. "
+                    "`component_norm_fraction` is the per-term norm's share of their sum. The "
+                    "anchor's share of the row UPDATE norm is not observable after Adam's "
+                    "per-parameter scaling; this is its gradient share."}
 
 
 # ---- warm start -----------------------------------------------------------------------------
@@ -832,6 +848,11 @@ def main(argv=None):
         # a longer one would weaken the registered maximum, so it is refused. The interval is
         # deliberately NOT on RESUME_BOUND_FIELDS: it changes no step the optimizer takes.
         cap = float(reg["training"]["checkpoint_minutes_max"])
+        # `nan` compares false against every bound, so it passed both checks and disabled
+        # time-based checkpoints for the whole run (Sol step-5 P3-10).
+        if not math.isfinite(args.checkpoint_minutes):
+            raise SystemExit(f"M17 REFUSED: --checkpoint-minutes {args.checkpoint_minutes} is "
+                             "not a finite number of minutes.")
         if args.checkpoint_minutes > cap:
             raise SystemExit(f"M17 REFUSED: --checkpoint-minutes {args.checkpoint_minutes} is "
                              f"above the registered checkpoint_minutes_max {cap}.")
@@ -864,6 +885,50 @@ def _check_locked_config(cfg, reg):
     seeds = (int(tr["seed_screen"]), int(tr["seed_replication"]))
     if cfg.seed not in seeds:
         raise SystemExit(f"M17 REFUSED: seed {cfg.seed} is not a registered seed {seeds}.")
+
+
+def _check_locked_recipe(d, sidecar, reg, fz=None):
+    """The loaded cache's RECIPE must be the locked one (Sol step-5 P1-4).
+
+    `_check_locked_config` compares steps, batch and seed; nothing compared the candidate mixes,
+    K, temperature, RNG recipe version or the teacher revision and query preprocessing the cache
+    was actually built under. A cache built at 31/16/16 could therefore train after the lock said
+    30/17/16, because none of those inputs changes the prepared directory's stage identity.
+    """
+    import cache as m17cache
+    parts = (sidecar.get("identity") or {}).get("parts") or {}
+    cand = parts.get("candidates") or {}
+    tr = reg["training"]
+    fz = fz or freeze()
+    want = {
+        "candidate_k": int(tr["candidate_k"]),
+        "candidate_mix_labeled": tr["candidate_mix_labeled"],
+        "candidate_mix_query_only": tr["candidate_mix_query_only"],
+        "rng": tr["candidate_construction"]["rng"],
+        "rng_recipe_version": m17cache.RNG_RECIPE_VERSION,
+    }
+    got = {"candidate_k": cand.get("k"), "candidate_mix_labeled": cand.get("mix_labeled"),
+           "candidate_mix_query_only": cand.get("mix_query_only"), "rng": cand.get("rng"),
+           "rng_recipe_version": cand.get("rng_recipe_version")}
+    teacher = parts.get("teacher") or {}
+    want["teacher"] = {"model": reg["teacher"], "revision": reg["teacher_revision"]}
+    got["teacher"] = {"model": teacher.get("model"), "revision": teacher.get("revision")}
+    pre = teacher.get("query_preprocessing") or {}
+    spec = fz["encoder_spec"]
+    want["teacher_query_preprocessing"] = {"instruction": spec["query_prefix"],
+                                           "max_length": int(spec["max_length"]),
+                                           "pooling": spec["pooling"],
+                                           "revision": reg["teacher_revision"]}
+    got["teacher_query_preprocessing"] = {
+        "instruction": pre.get("instruction"), "max_length": pre.get("max_length"),
+        "pooling": pre.get("pooling"), "revision": pre.get("revision")}
+    differ = sorted(k for k in want if want[k] != got[k])
+    if differ:
+        raise SystemExit(
+            f"M17 REFUSED: the candidate cache in {d} was built under a different registered "
+            f"recipe than the locked registry ({differ}): built {[got[k] for k in differ]}, "
+            f"locked {[want[k] for k in differ]}. Rebuild the prepared directory with "
+            "prepare_data.py; a locked recipe is not a relabelling of old lists.")
 
 
 def _check_protected_screen(d, manifest, cfg):
@@ -913,7 +978,13 @@ def _verify_prepared_hashes(d, manifest, arrays, arm):
         checks.append(("new_rows", sha_array(np.load(admit_read(d / manifest["new_rows"])))))
     for name, got in checks:
         exp = want.get(name)
-        if exp and got != exp:
+        # Sol step-5 P1-3: `if exp` let a manifest with a MISSING hash pass unverified, which
+        # is the state a hand-edited or cross-build manifest is in. Every check is required.
+        if not exp:
+            raise SystemExit(
+                f"M17 REFUSED: {d}/prepared.json records no `{name}` hash; an unverifiable "
+                "artifact is not a prepared directory this driver trains from.")
+        if got != exp:
             raise SystemExit(
                 f"M17 REFUSED: {name} in {d} hashes {got[:12]} but prepared.json records "
                 f"{str(exp)[:12]}; these are not the artifacts this data directory describes.")
@@ -925,6 +996,49 @@ def _verify_prepared_hashes(d, manifest, arrays, arm):
     if bank.shape[0] and arrays["candidate_ids"].max() >= bank.shape[0]:
         raise SystemExit(f"M17 REFUSED: {d} candidate ids reach row "
                          f"{int(arrays['candidate_ids'].max())} of a {bank.shape[0]}-row bank.")
+
+
+def _check_cache_belongs_here(d, manifest, sidecar):
+    """The loaded cache must be the one THIS prepared directory was built with.
+
+    Sol step-5 P1-3: `candidates.npz` + `cache.json` copied from another build verified against
+    their own sidecar and were then trained on beside this directory's student ids, teacher
+    vectors and bank. The sidecar's recipe identity and artifact digest are compared with what
+    `prepared.json` recorded, and the artifact INPUTS with the teacher/bank bytes actually
+    present here plus the manifest's v1 digest.
+    """
+    want = manifest.get("hashes") or {}
+    for name, got in (("cache_identity", sidecar["identity"]["sha256"]),
+                      ("cache_artifact", str(sidecar.get("artifact_sha256") or ""))):
+        exp = want.get(name)
+        if not exp:
+            raise SystemExit(f"M17 REFUSED: {d}/prepared.json records no `{name}`; the cache in "
+                             "this directory cannot be tied to the manifest that describes it.")
+        if got != exp:
+            raise SystemExit(
+                f"M17 REFUSED: the cache in {d} reports {name} {got[:12]} but prepared.json "
+                f"records {str(exp)[:12]}; this is not this directory's cache.")
+    inputs = sidecar.get("artifact_inputs") or {}
+    if not inputs:
+        raise SystemExit(f"M17 REFUSED: {d}/cache.json records no `artifact_inputs`; the "
+                         "teacher, bank and v1 realizations its lists were scored from are "
+                         "unknown.")
+    actual = {
+        "teacher_q_sha256": sha_array(np.load(admit_read(d / "teacher_q.npy"))),
+        "bank_vector_bytes_sha256": sha_array(np.load(admit_read(d / "bank.npy"))),
+        "bank_doc_ids_sha256": sha_texts(
+            json.loads(admit_read(d / "bank_ids.json").read_text())),
+        "v1_q_sha256": want.get("v1_q"),
+    }
+    for name, got in actual.items():
+        exp = inputs.get(name)
+        if not exp or not got:
+            raise SystemExit(f"M17 REFUSED: {d}/cache.json does not state `{name}`; the cache "
+                             "cannot be bound to the arrays in this directory.")
+        if got != exp:
+            raise SystemExit(
+                f"M17 REFUSED: the cache in {d} was scored from {name} {str(exp)[:12]} but this "
+                f"directory holds {got[:12]}; training would mix two builds.")
 
 
 def _load_prepared(data_dir, manifest, cfg, reg):
@@ -949,6 +1063,9 @@ def _load_prepared(data_dir, manifest, cfg, reg):
     import cache as m17cache
     arrays, sidecar = m17cache.load(d)             # verifies the stored per-array hashes
     _verify_prepared_hashes(d, manifest, arrays, arm)
+    _check_cache_belongs_here(d, manifest, sidecar)
+    if not cfg.rehearsal:
+        _check_locked_recipe(d, sidecar, reg)
     out = dict(manifest)
     out.update({
         "ids": json.loads(admit_read(d / "student_ids.json").read_text()),

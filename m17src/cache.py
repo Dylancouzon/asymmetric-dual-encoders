@@ -417,6 +417,12 @@ def identity(queries, bank: Bank, reg, cache_seed, manifests=None):
     return {"parts": parts, "sha256": sha_json(parts)}
 
 
+def artifact_digest(arrays_sha, inputs, identity_sha):
+    """The one definition of `artifact_sha256`, used by both `save` and `load`."""
+    return sha_json({"arrays": arrays_sha, "inputs": dict(inputs or {}),
+                     "identity": identity_sha})
+
+
 def save(out_dir, arrays, sidecar, artifact_inputs=None):
     """Write the cache and stamp its ARTIFACT digest beside its recipe identity.
 
@@ -433,8 +439,8 @@ def save(out_dir, arrays, sidecar, artifact_inputs=None):
     inputs = dict(artifact_inputs or {})
     sidecar = {**sidecar, "arrays_sha256": arrays_sha,
                "artifact_inputs": inputs,
-               "artifact_sha256": sha_json({"arrays": arrays_sha, "inputs": inputs,
-                                            "identity": sidecar["identity"]["sha256"]})}
+               "artifact_sha256": artifact_digest(arrays_sha, inputs,
+                                                  sidecar["identity"]["sha256"])}
     np.savez(out / "candidates.npz", **stored)
     write_json(out / "cache.json", sidecar)
     return sidecar
@@ -457,4 +463,18 @@ def load(out_dir):
         if got != w:
             raise SystemExit(f"M17 CACHE REFUSED: array {k!r} hashes {got[:12]} but the sidecar "
                              f"records {w[:12]}; the stored cache has been altered.")
+    # The artifact digest is RECOMPUTED from the arrays on disk, the recorded inputs and the
+    # recipe identity (Sol step-5 P1-3): verifying the arrays against their own sidecar proves
+    # only that the pair is internally consistent, not that the digest describes them.
+    want_art = sidecar.get("artifact_sha256")
+    if not want_art:
+        raise SystemExit(f"M17 CACHE REFUSED: {out}/cache.json records no `artifact_sha256`; "
+                         "it predates the artifact binding and cannot identify these bytes.")
+    got_art = artifact_digest(want, sidecar.get("artifact_inputs"),
+                              sidecar["identity"]["sha256"])
+    if got_art != want_art:
+        raise SystemExit(
+            f"M17 CACHE REFUSED: {out}/cache.json records artifact_sha256 {want_art[:12]} but "
+            f"its own array hashes, inputs and identity produce {got_art[:12]}; the sidecar "
+            "does not describe this cache.")
     return arrays, sidecar

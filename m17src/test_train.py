@@ -557,6 +557,100 @@ def test_prepared_row_counts_must_agree(tmp_path):
         T._verify_prepared_hashes(tmp_path, manifest, arrays, T.ARMS["C"])
 
 
+def _prepared_with_cache(d, tag="A"):
+    """A prepared directory with a saved cache bound to its own arrays (Sol step-5 P1-3)."""
+    import cache as m17cache
+    d.mkdir(parents=True, exist_ok=True)
+    manifest, _arrays = _prepared_fixture(d)
+    ids = [f"{tag}-doc-{i}" for i in range(5)]
+    (d / "bank_ids.json").write_text(json.dumps(ids))
+    arrays = {"candidate_ids": np.zeros((4, 2), dtype=np.int32)}
+    inputs = {"teacher_q_sha256": common.sha_array(np.load(d / "teacher_q.npy")),
+              "bank_vector_bytes_sha256": common.sha_array(np.load(d / "bank.npy")),
+              "bank_doc_ids_sha256": common.sha_texts(ids),
+              "v1_q_sha256": f"v1-{tag}"}
+    side = m17cache.save(d, arrays, {"identity": {"sha256": f"identity-{tag}"}},
+                         artifact_inputs=inputs)
+    manifest["hashes"].update({"cache_identity": side["identity"]["sha256"],
+                               "cache_artifact": side["artifact_sha256"],
+                               "v1_q": f"v1-{tag}"})
+    return manifest
+
+
+def test_a_cache_copied_from_another_build_is_refused(tmp_path):
+    """Sol step-5 P1-3: same shapes, in-range ids, and its own sidecar verified fine."""
+    import shutil
+
+    import cache as m17cache
+    a, b = tmp_path / "A", tmp_path / "B"
+    man_a = _prepared_with_cache(a, "A")
+    _prepared_with_cache(b, "B")
+    arrays, side = m17cache.load(a)
+    T._check_cache_belongs_here(a, man_a, side)                       # must not raise
+    for name in ("candidates.npz", "cache.json"):
+        shutil.copyfile(b / name, a / name)
+    arrays, side = m17cache.load(a)      # B's arrays and B's sidecar are self-consistent
+    with pytest.raises(SystemExit, match="this is not this directory's cache"):
+        T._check_cache_belongs_here(a, man_a, side)
+
+
+def test_a_cache_whose_artifact_digest_does_not_describe_it_is_refused(tmp_path):
+    import cache as m17cache
+    d = tmp_path / "A"
+    _prepared_with_cache(d, "A")
+    side = json.loads((d / "cache.json").read_text())
+    side["artifact_inputs"]["teacher_q_sha256"] = "z" * 64        # digest no longer matches
+    (d / "cache.json").write_text(json.dumps(side))
+    with pytest.raises(SystemExit, match="does not describe this cache"):
+        m17cache.load(d)
+
+
+def test_a_missing_recorded_hash_is_not_a_pass(tmp_path):
+    manifest, arrays = _prepared_fixture(tmp_path)
+    manifest["hashes"].pop("teacher_q")
+    with pytest.raises(SystemExit, match="records no `teacher_q` hash"):
+        T._verify_prepared_hashes(tmp_path, manifest, arrays, T.ARMS["C"])
+
+
+def _recipe_sidecar(reg, fz):
+    tr = reg["training"]
+    spec = fz["encoder_spec"]
+    import cache as m17cache
+    return {"identity": {"sha256": "x", "parts": {
+        "candidates": {"k": tr["candidate_k"], "mix_labeled": tr["candidate_mix_labeled"],
+                       "mix_query_only": tr["candidate_mix_query_only"], "seed": 0,
+                       "rng": tr["candidate_construction"]["rng"],
+                       "rng_recipe_version": m17cache.RNG_RECIPE_VERSION},
+        "teacher": {"model": reg["teacher"], "revision": reg["teacher_revision"],
+                    "query_preprocessing": {
+                        "instruction": spec["query_prefix"],
+                        "max_length": int(spec["max_length"]), "pooling": spec["pooling"],
+                        "revision": reg["teacher_revision"]}}}}}
+
+
+def test_a_cache_built_under_another_candidate_recipe_is_refused(tmp_path):
+    """Sol step-5 P1-4: only steps, batch and seed were compared with the locked registry."""
+    reg, fz = common.registry(), common.freeze()
+    side = _recipe_sidecar(reg, fz)
+    T._check_locked_recipe(tmp_path, side, reg, fz)                  # must not raise
+    moved = {**reg, "training": {**reg["training"],
+                                 "candidate_mix_labeled": {"known_positive": 1,
+                                                           "teacher_top": 30,
+                                                           "zero_v1_top": 17, "uniform": 16}}}
+    with pytest.raises(SystemExit, match="candidate_mix_labeled"):
+        T._check_locked_recipe(tmp_path, side, moved, fz)
+    with pytest.raises(SystemExit, match="teacher"):
+        T._check_locked_recipe(tmp_path, side, {**reg, "teacher_revision": "other"}, fz)
+
+
+def test_the_checkpoint_interval_must_be_a_finite_number(monkeypatch):
+    """Sol step-5 P3-10: `nan` compares false against both bounds and disabled checkpoints."""
+    with pytest.raises(SystemExit, match="not a finite number"):
+        T.main(["--arm", "C", "--rehearsal", "--data", "x", "--checkpoint-minutes", "nan"])
+    with pytest.raises(SystemExit, match="not a finite number"):
+        T.main(["--arm", "C", "--rehearsal", "--data", "x", "--checkpoint-minutes", "inf"])
+
+
 def test_the_checkpoint_interval_may_be_lowered_but_never_raised(monkeypatch):
     reg = common.registry()
     cap = float(reg["training"]["checkpoint_minutes_max"])
@@ -584,7 +678,36 @@ def test_grad_shares_sum_to_one_and_name_every_term():
                                     T.ARMS["VL-A"])
     gs = T.grad_shares(model, terms)
     assert set(gs["shares"]) == {"cosine", "listwise", "anchor", "alias"} == set(terms)
-    assert abs(sum(gs["shares"].values()) - 1.0) < 1e-6
     assert all(v >= 0 for v in gs["row_grad_norms"].values())
+    assert abs(sum(gs["component_norm_fraction"].values()) - 1.0) < 1e-6
     assert "not observable after Adam" in gs["note"]
     assert set(parts) == {"cosine", "listwise_kl", "anchor", "alias"}
+
+
+def _shares_for(coeffs):
+    """`grad_shares` on hand-built linear terms whose row gradients are exactly `coeffs`."""
+    from table import QueryTable
+    model = QueryTable(np.zeros((2, 3), dtype=np.float32),
+                       weight_init=np.ones(2, dtype=np.float32), learned_weights=False)
+    terms = {name: (model.rows * torch.as_tensor(np.asarray(c, dtype=np.float32))).sum()
+             for name, c in coeffs.items()}
+    return T.grad_shares(model, terms)
+
+
+def test_grad_shares_divide_by_the_total_row_gradient_norm():
+    """Sol step-5 P3-9: the denominator is ||grad_rows sum(terms)||, not the sum of norms."""
+    ones = np.ones((2, 3))
+    # aligned: two identical gradients; each term is half of the total
+    gs = _shares_for({"a": ones, "b": ones})
+    assert gs["shares"]["a"] == pytest.approx(0.5, abs=1e-6)
+    assert gs["shares"]["b"] == pytest.approx(0.5, abs=1e-6)
+    # orthogonal: the total norm is sqrt(2) times each term's, so the shares sum to sqrt(2)
+    e0, e1 = np.zeros((2, 3)), np.zeros((2, 3))
+    e0[0, 0], e1[0, 1] = 1.0, 1.0
+    gs = _shares_for({"a": e0, "b": e1})
+    assert sum(gs["shares"].values()) == pytest.approx(2 ** 0.5, abs=1e-5)
+    # cancelling: the total row gradient is ZERO, so no share is reported as 50/50
+    gs = _shares_for({"a": ones, "b": -ones})
+    assert gs["total_row_grad_norm"] == pytest.approx(0.0, abs=1e-6)
+    assert gs["shares"] == {"a": None, "b": None}
+    assert gs["component_norm_fraction"]["a"] == pytest.approx(0.5, abs=1e-6)

@@ -47,6 +47,11 @@ the old bank produces nearly one-hot teacher targets, while teacher-neighbor lis
 distributional information. This supports testing listwise supervision, not expecting a gain.
 See `results/m8_b2_entropy.json` and the three `research/m17-*-2026-09-11.md` notes.
 
+True ColBERT-style late interaction needs document token representations. Summing weighted token
+dots against one existing document vector just moves the pooling operation after the dot product.
+This is why M17 prioritizes richer training targets while preserving the shipped scorer. No new
+empirical closure of late interaction, tokenizer families or model capacity is claimed.
+
 ## The init anchor is inert at the optimizer level (step-5 smoke, 2026-09-11)
 
 The registry asked for this to be measured rather than asserted (`training.init_anchor_note`,
@@ -61,8 +66,3 @@ says so. In the same reads the listwise term carries 0.78 of the row-gradient no
 0.76 at step 400, the teacher cosine 0.21 to 0.24, and the alias consistency term 0.004 — the
 alias term is a small nudge on top of the two fit terms, not a competitor to them. These are
 rehearsal numbers on a subsampled pool, not a registered observation.
-
-True ColBERT-style late interaction needs document token representations. Summing weighted token
-dots against one existing document vector just moves the pooling operation after the dot product.
-This is why M17 prioritizes richer training targets while preserving the shipped scorer. No new
-empirical closure of late interaction, tokenizer families or model capacity is claimed.
