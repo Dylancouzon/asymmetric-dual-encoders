@@ -8,8 +8,8 @@
    "the teacher and document encode caches were warm for repeated text; the measured `encoded` counts say how much was actually paid",
    "single process, no parallelism; the cache stage is CPU-bound numpy"
   ],
-  "estimated_hours": 20.44,
-  "estimated_seconds": 73599.9,
+  "estimated_hours": 1.58,
+  "estimated_seconds": 5700.7,
   "fixed_costs_subtracted": [
    "bank_document_encode",
    "bank_pool_lookup",
@@ -18,9 +18,9 @@
    "parity",
    "pool_coverage_sample"
   ],
-  "fixed_seconds": 59.8,
+  "fixed_seconds": 30.3,
   "full_pool_queries": 574327,
-  "per_query_seconds": 0.128046
+  "per_query_seconds": 0.009873
  },
  "host": {
   "gpu": "RTX 3080 10 GiB",
@@ -52,14 +52,14 @@
     "general": 1721,
     "heldout": 7
    },
-   "rss_high_water_gib": 3.404,
+   "rss_high_water_gib": 3.718,
    "size": 2000,
    "teacher_cache": {
     "cache_rows": 1949,
     "encoded": 1949,
     "hit_rate": 0.0
    },
-   "wall_clock_seconds": 279.333
+   "wall_clock_seconds": 19.918
   },
   {
    "bank": {
@@ -74,14 +74,14 @@
     "general": 8607,
     "heldout": 35
    },
-   "rss_high_water_gib": 3.511,
+   "rss_high_water_gib": 3.548,
    "size": 10000,
    "teacher_cache": {
     "cache_rows": 9750,
     "encoded": 7801,
     "hit_rate": 0.1994
    },
-   "wall_clock_seconds": 1254.892
+   "wall_clock_seconds": 74.292
   }
  ],
  "source_sha256": "eb768c2dd23755d03285af8fe0e7f6ff8eb8b351ba88cc387d84040408e6120c",
@@ -147,22 +147,22 @@
    "unit": "documents"
   },
   "cache_build": {
-   "fixed_seconds": 31.831,
+   "fixed_seconds": 2.395,
    "large": {
     "gpu_peak_gib": 0.0,
     "n": 9744,
-    "rate": 7.79,
-    "rss_high_water_gib": 3.511,
-    "seconds": 1250.805
+    "rate": 139.41,
+    "rss_high_water_gib": 3.548,
+    "seconds": 69.894
    },
-   "per_row_seconds": 0.1251,
+   "per_row_seconds": 0.006927,
    "scales_with": "queries",
    "small": {
     "gpu_peak_gib": 0.0,
     "n": 1949,
-    "rate": 7.07,
-    "rss_high_water_gib": 3.404,
-    "seconds": 275.651
+    "rate": 122.61,
+    "rss_high_water_gib": 3.718,
+    "seconds": 15.896
    },
    "unit": "queries"
   },

@@ -113,15 +113,43 @@ def _query_rng(cache_seed: int, text: str):
     return np.random.default_rng(int.from_bytes(h[:8], "big"))
 
 
-def _ranked(scores, id_rank):
+HEAD = 1024         # partial-order head; the walk needs ~32-64 admissions, backfill rarely more
+SCORE_BLOCK = 256   # queries scored per matmul: 256 x 262,144 fp32 = 256 MiB per source
+
+
+def _ranked(scores, id_rank, head=HEAD):
     """Bank indices in the FULL registered order: descending score, ascending bank id.
 
-    One `lexsort` per query over the whole bank. A partial `argpartition` would decide the
-    cutoff on score alone, so a tie spanning the boundary could drop the smaller bank id the
-    tie-break requires; at the registered 262,144-row bank a full sort is affordable.
+    The order is defined by one `lexsort` over the whole bank. A partial `argpartition` alone
+    would decide the cutoff on score alone, so a tie spanning the boundary could drop the
+    smaller bank id the tie-break requires. This yields the same sequence at a fraction of
+    the cost: the `head` highest scores are partitioned off and lexsorted ONLY when no score
+    outside the head ties the head's minimum (then the head IS the first `head` positions of
+    the full order); a boundary tie, or a walk that runs past the head, falls back to the full
+    lexsort and continues from where the head stopped. The 2,000/10,000-query timings put the
+    per-query full sort at most of the 20 h preparation forecast (step 5c).
     """
-    for i in np.lexsort((id_rank, -np.asarray(scores))):
+    s = -np.asarray(scores)
+    n = s.shape[0]
+    if n > head:
+        part = np.argpartition(s, head - 1)
+        top, rest = part[:head], part[head:]
+        if s[rest].min() > s[top].max():          # strict: no tie across the boundary
+            for i in top[np.lexsort((id_rank[top], s[top]))]:
+                yield int(i)
+            for i in np.lexsort((id_rank, s))[head:]:
+                yield int(i)
+            return
+    for i in np.lexsort((id_rank, s)):
         yield int(i)
+
+
+def _score_blocks(bank_f32, q, block):
+    """(n, N) scores as consecutive row blocks: one BLAS matmul per block instead of one
+    mat-vec per query. Returns an iterator of (start, scores_block)."""
+    q = np.asarray(q, dtype=np.float32)
+    for b0 in range(0, q.shape[0], block):
+        yield b0, q[b0:b0 + block] @ bank_f32.T
 
 
 def _take(gen, quota, chosen, out_idx, out_src, code, counters):
@@ -173,9 +201,13 @@ def build(queries, bank: Bank, teacher_q, v1_q, reg, cache_seed=0, manifests=Non
                 for s in SRC_NAMES.values()}
     per_source = {}
 
+    ts_blocks = _score_blocks(bank_f32, teacher_q, SCORE_BLOCK)
+    vs_blocks = _score_blocks(bank_f32, v1_q, SCORE_BLOCK)
+    ts_blk = vs_blk = None
     for qi, q in enumerate(queries):
-        ts = bank_f32 @ np.asarray(teacher_q[qi], dtype=np.float32)
-        vs = bank_f32 @ np.asarray(v1_q[qi], dtype=np.float32)
+        if qi % SCORE_BLOCK == 0:
+            (_, ts_blk), (_, vs_blk) = next(ts_blocks), next(vs_blocks)
+        ts, vs = ts_blk[qi % SCORE_BLOCK], vs_blk[qi % SCORE_BLOCK]
         chosen, idx, src = set(), [], []
 
         outside = [d for d in q.positive_ids if d not in bank.index]
@@ -296,9 +328,11 @@ def _overlap_report(queries, bank_f32, teacher_q, v1_q, mix_l, mix_q, id_rank, d
     d_t = depth or max(mix_l["teacher_top"], mix_q["teacher_top"])
     d_v = depth or max(mix_l["zero_v1_top"], mix_q["zero_v1_top"])
     sizes = []
-    for qi in range(min(len(queries), sample)):
-        ts = bank_f32 @ np.asarray(teacher_q[qi], dtype=np.float32)
-        vs = bank_f32 @ np.asarray(v1_q[qi], dtype=np.float32)
+    m = min(len(queries), sample)
+    ts_all = np.asarray(teacher_q[:m], dtype=np.float32) @ bank_f32.T
+    vs_all = np.asarray(v1_q[:m], dtype=np.float32) @ bank_f32.T
+    for qi in range(m):
+        ts, vs = ts_all[qi], vs_all[qi]
         a = {i for _, i in zip(range(d_t), _ranked(ts, id_rank))}
         b = {i for _, i in zip(range(d_v), _ranked(vs, id_rank))}
         sizes.append(len(a & b) / max(1, min(d_t, d_v)))

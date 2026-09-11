@@ -197,3 +197,27 @@ def test_roundtrip(tiny_world, reg, tmp_path):
     back, side2 = cache.load(tmp_path / "c")
     assert np.array_equal(back["candidate_ids"], arrays["candidate_ids"])
     assert side2["identity"]["sha256"] == side["identity"]["sha256"]
+
+
+def test_partial_order_equals_full_lexsort_with_boundary_ties_and_past_head():
+    """`_ranked`'s head/fallback path must yield exactly the full-lexsort sequence: with
+    random scores, with a tie band straddling the head boundary, and when the walk runs past
+    the head into the fallback."""
+    import cache as C
+    rng = np.random.default_rng(3)
+    n, head = 5000, 64
+    id_rank = rng.permutation(n).astype(np.int64)
+
+    def full(s):
+        return [int(i) for i in np.lexsort((id_rank, -s))]
+
+    s = rng.normal(size=n).astype(np.float32)
+    assert list(C._ranked(s, id_rank, head=head)) == full(s)
+    s = rng.integers(0, 5, size=n).astype(np.float32)          # ties everywhere, incl. boundary
+    assert list(C._ranked(s, id_rank, head=head)) == full(s)
+    s = rng.normal(size=n).astype(np.float32)
+    s[:200] = s.max() + 1.0                                     # exact tie band wider than head
+    assert list(C._ranked(s, id_rank, head=head)) == full(s)
+    s = rng.normal(size=n).astype(np.float32)                   # no boundary tie: head path
+    got = [i for _, i in zip(range(head + 300), C._ranked(s, id_rank, head=head))]
+    assert got == full(s)[:head + 300]

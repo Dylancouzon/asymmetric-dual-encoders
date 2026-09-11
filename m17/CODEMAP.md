@@ -75,9 +75,15 @@ rehearsal with `.venv/bin/python m17src/rehearse17.py` (see `HARNESS.md`).
   cache, and that cache is a 12.6 GiB artifact. `prepare_data.PoolReader` reads
   `work/pool/stella-400M-v5/meta.json` + `vecs.f16` directly and refuses a wrong
   encoder/revision/shape.
-- `cache.build` scores the whole bank per query in numpy (two 262,144 x 1024 mat-vecs plus two
-  full `lexsort`s). It is the dominant preparation cost and it is CPU-bound; see
-  `results/m17_prepare_timing.json` for the measured per-query seconds and the extrapolation.
+- `cache.build` scores queries in blocks of `SCORE_BLOCK` (one BLAS matmul against the whole
+  bank per block) and `_ranked` lexsorts only a `HEAD`-sized partition when no score ties across
+  its boundary, falling back to the full lexsort otherwise, so the yielded order is provably the
+  full one. The first two-size timing (per-query mat-vec plus two full sorts) forecast ~20 h for
+  the full pool; the blocked path measured 1.6 h (`results/m17_prepare_timing.json`). Blocked fp32
+  BLAS sums in a different order than a mat-vec: teacher scores move by up to ~4e-7, so a cache
+  built before this change has different `teacher_scores`/`candidate_ids` array hashes even with
+  an identical identity hash. The cache on disk is the artifact of record; never mix caches built
+  by the two paths within one experiment.
 - Query-text-only sources (nqopen, triviaqa) ship no document, so `vocab.discover`'s
   `source_doc` is one sentinel unit per source. Ruling A3 counts one vote per distinct
   supporting DOCUMENT; treating each query as its own document would restore per-occurrence
