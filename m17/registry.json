@@ -21,6 +21,8 @@
   "added_rows_max": 3072,
   "technical_priority_slots_max": 1024,
   "per_domain_added_rows_max": 1024,
+  "owner_pinned_terms": {"terms": ["k8s"], "ruling": "Direct CTO request relayed by Dylan, 2026-09-11: k8s receives a row regardless of the support minima. Its measured support, sum-init drift and training exposure are recorded honestly; a pinned row with thin data is a known limitation, not a defect."},
+  "abbreviation_policy": "When a term barely clears the support minima, prefer its whole-word expanded form over the abbreviation, because abbreviations are ambiguous and rare in text. Owner-pinned terms are exempt.",
   "breadth_note": "No single audited domain, including cloud/software, may supply more than per_domain_added_rows_max new rows; the technical priority allocation is a ceiling, not a target. Internal need, not a headline claim.",
   "dim": 1024,
   "teacher": "NovaSearch/stella_en_400M_v5",
@@ -36,6 +38,7 @@
     "targeted_coverage_fraction": 0.25,
     "alias_query_views_fraction_of_batch": 0.125,
     "alias_sampling": "Half of the targeted-coverage slots are paired equivalent views: 16 pairs/32 views at batch 256, 8 pairs/16 views at batch 128. Same views, pair IDs and order in every arm; both views count toward the query cap and exposure.",
+    "alias_heldout_test": {"target_pairs": 200, "definition": "Independently judged same-intent pairs held out of all training, split from training pairs by query family; metric is top-10 overlap and rank correlation between the two views' exact dense results over the panel corpus, plus each view's nDCG@10 where judged", "reads": "once per screen arm and once per final form, alongside the ordinary reads; descriptive, does not route selection", "built": "pre-clock, with the panel"},
     "alias_admission": "Context-valid independently checked equivalences from admitted sources; group source documents, near duplicates and same-intent query/alias-view families before discovery/training; teacher agreement alone is not a label",
     "new_term_min_distinct_source_documents": 20,
     "new_term_min_distinct_training_contexts": 50,
@@ -146,7 +149,7 @@
     "no_new_release_authority": true
   },
   "allocation_hours": [
-    {"phase": "PRE-CLOCK (not counted): judged M17 panel built, split and sealed; new-source licence evidence recorded; manifest hashes committed", "hours": 0},
+    {"phase": "PRE-CLOCK (not counted): judged M17 panel and held-out alias pairs built, split and sealed; new-source licence evidence recorded; manifest hashes committed; one end-to-end rehearsal of the whole pipeline on a tiny slice (tens of queries, hundreds of bank documents, tens of steps) through export, scoring and loader, using disposable outputs under work/m17/rehearsal", "hours": 0},
     {"phase": "bounded driver/loader design, data manifests, tokenizer and real smoke, reviews", "hours": 8},
     {"phase": "coverage and verified alias pairs, teacher targets and candidate cache", "hours": 16},
     {"phase": "five matched short screen arms and selection", "hours": 12},

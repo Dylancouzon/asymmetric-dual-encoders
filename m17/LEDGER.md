@@ -98,4 +98,9 @@ Pre-observation changes, all in `m17/registry.json` and `PLANNING.md`, previous 
 Two additions from the same review: an untrained sum-init export V0 read once, and a per-domain
 cap of 1,024 new rows so no field dominates the vocabulary.
 
+Dylan then accepted three further ideas, with one exception: a tiny pre-clock end-to-end
+rehearsal, a held-out judged alias test set of about 200 pairs, and preferring whole words over
+abbreviations when support is thin. **`k8s` is exempt and pinned**: it is a direct CTO request
+and receives a row regardless of support, with that support recorded honestly.
+
 Still planning only. Nothing trained, downloaded, scored or published; no protected access.

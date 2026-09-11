@@ -3,11 +3,15 @@
 | Path | Purpose |
 |---|---|
 | `m17/PLANNING.md`, `registry.json` | Prospective design and draft constants; no runnable training protocol |
-| `m17/LEDGER.md` | Owner scope, pre-observation diagnostics and A1 adoption of the three follow-up comparisons |
+| `m17/LEDGER.md` | Owner scope, pre-observation diagnostics, A1 adoption of the three follow-up comparisons, A2 plan-review revision |
+| `m17/REVIEW.md` | Dispositions of the two Luna planning reviews |
 | `m17src/planning_probe.py` | P0 resource/tokenization check; `--followup` runs P0b only. Hand-authored text, disposable random GPU weights, offline Nano tokenizer comparison. |
 | `results/m17_planning_probe.json` | Original P0 observation; original source preserved at `2bca40d` |
 | `results/m17_tokenizer_followup.json` | P0b: shared-piece counterexamples, broader illustrative terms, Nano vocabulary equality |
-| `research/m17-*-2026-09-11.md` | Three primary-source Luna research notes and exact access logs |
+| `research/m17-vocabulary-*.md`, `m17-static-interaction-*.md`, `m17-data-training-*.md` | Three primary-source Luna research notes with exact access logs |
+| `research/m17-plan-review-loss-*.md`, `m17-plan-review-data-*.md` | The two Luna planning reviews behind `REVIEW.md` |
+| `research/m17-additional-avenues-*.md` | Follow-up idea shortlist that led to A1 |
+| `research/m17-astra-plan-review-*.md`, `m17-astra-plan-brief-*.md` | Codex Astra whole-plan review after A2, and its brief |
 
 Reproduce diagnostics from the repository root using `.venv/bin/python
 m17src/planning_probe.py --gpu` or `--followup`. Both refuse to overwrite their existing result.

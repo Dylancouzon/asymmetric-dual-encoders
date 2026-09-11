@@ -85,7 +85,10 @@ their remedy may be better examples and row updates, with no vocabulary addition
 Rank candidates deterministically by support-weighted teacher residual, then document support,
 then lexical tie-break. Apply the registry's support minima and technical priority allocation;
 fill remaining slots from all domains. No single domain, cloud/software included, may supply
-more than the registry's per-domain cap: the technical allocation is a ceiling, not a target. Count distinct source documents and query contexts after
+more than the registry's per-domain cap: the technical allocation is a ceiling, not a target.
+When a term barely clears the minima, prefer its whole-word form over the abbreviation.
+`k8s` is the one owner-pinned exception: a direct CTO request, so it receives a row regardless
+of support, with its thin support and drift recorded rather than hidden. Count distinct source documents and query contexts after
 deduplication, not repeated template exposures. Add fewer rows when support is thin. Do not fill
 the cap with obscure terms, reassign `[unused]` IDs, or select words from the audit panel.
 
@@ -136,6 +139,11 @@ Keep both views of a same-intent query family in one split; different held-out c
 use an alias that appeared in training. Do not infer equivalence from teacher agreement alone,
 relabel a teacher hit as relevant, or expand ambiguous acronyms globally. Pair admission,
 provenance, decontamination and per-domain/sense counts are part of the data exit.
+
+Keep a separate **held-out alias test set** of about two hundred judged pairs, built pre-clock
+with the panel and split from training pairs by query family. It measures directly whether the
+two forms of a query retrieve the same documents after training, which training pairs cannot
+show. It is read beside the ordinary metrics and does not route selection.
 
 The first data exit is an admitted-source support manifest with per-domain document and query
 counts after deduplication. An unpopulated domain is a recorded gap, not grounds to silently
@@ -330,7 +338,7 @@ the GPU for the entire period. Source selection and all costly work count agains
 
 | Elapsed window | Work | Exit |
 |---|---|---|
-| Pre-clock | Judged panel built, split and sealed; new-source licence evidence recorded; manifest hashes committed | Clock may start |
+| Pre-clock | Judged panel and held-out alias pairs built, split and sealed; new-source licence evidence recorded; manifest hashes committed; one tiny end-to-end rehearsal of the whole pipeline with disposable outputs | Rehearsal passes through export, scoring and loader; clock may start |
 | 0–8 h | Bounded M17 driver/loader design, manifests, tokenizer and real-path smoke, two reviews | Verified warm start, pair handling, checkpoint/resume, tokenizer and measured rates; otherwise no long run |
 | 8–24 h | Coverage and verified alias pairs, reusable teacher targets, one candidate cache | Support and provenance recorded; price both views and reduce draft dose before lock if needed |
 | 24–36 h | Five matched short runs and one endpoint comparison each | Choose a candidate/control under the fixed alias comparison or stop for no useful signal |
