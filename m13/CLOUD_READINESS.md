@@ -15,6 +15,14 @@ one optional cache skip and the holdout-fixture failure above. After fixing that
 corpus-loader tests passed. The full runner was not repeated after the fixture-only fix.
 No cloud GPU smoke or throughput measurement has been performed in this session.
 
+Account connection verified on 2026-09-11: Runpod reports $505 credit, no Pods and no network
+volumes. Dylan confirms that this is initial funding and can be refilled; the $1,000 ceiling
+is unchanged. The authenticated Secure Cloud quote for one A100 SXM 80 GB is $1.59/hour,
+stock Low. The data-center query reports Low A100 SXM stock in US-MD-1; the other listed
+A100 SXM locations returned null stock, which is not a capacity confirmation. Recheck matching
+network-volume support, full SSH and live capacity before creating storage or compute.
+Credentials are kept outside Git in the user's WSL configuration directory and are never shipped.
+
 ## Supplier and deployment
 
 Recommend Runpod Secure Cloud, on-demand, one A100 SXM 80 GB, a 500 GB standard network volume
@@ -42,7 +50,10 @@ open; advertised prices are not an account-specific quote or a capacity guarante
 
 1. Provider/account access, actual GPU quote, persistent mount, SSH and scoped Git push credentials.
 2. Restore the approximately 35 GB training/COV ship set plus required model weights; validate
-   identities and environment on the instance. The repo lacks a validated fresh-install bootstrap.
+   identities and environment on the instance. Include the locally cached
+   `hf-internal-testing/tiny-random-BertModel` configuration required by `run_checks.sh`; the ship
+   list's weights rows omit it. Use an explicit training/COV allowlist rather than the example
+   rsync's optional DEV/final paths. The repo lacks a validated fresh-install bootstrap.
 3. Run instance checks, real CUDA smoke and resume checks; measure both batch rates and the
    reserved-encode allowance using permitted inputs. Replace the stale $25 storage allowance in
    `build_config.json` with the actual planned storage/transfer cost, include applicable charges,
