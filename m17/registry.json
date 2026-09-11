@@ -168,7 +168,16 @@
   },
   "panel_exclusions_confirmed": "FEVER-train (reserved four, disclosed Stella exposure) and ESCI (no panel domain) excluded from the panel; confirmed by Dylan 2026-09-11 (A3).",
   "panel_judging_plan": "A3 (Dylan, 2026-09-11): Dylan judges the 60 selection-partition cloud-software queries (about 180 rows) before the screen; a second engineer double-judges 20 of those queries and agreement is reported; the 60 audit-partition queries may be judged later without touching the clock, since the audit is read once at the end. The 80 pending alias senses (59 ambiguous plus 21 truncated extractions) are judged by Dylan with the alias spot check.",
-  "alias_spotcheck_rule": "A3 (Dylan, 2026-09-11): Dylan checks the 308-pair 2% sample; if more than 5% of pairs are wrong, the abbreviation filter is tightened and the pool rebuilt before lock."
+  "alias_spotcheck_rule": "A3 (Dylan, 2026-09-11): Dylan checks the 308-pair 2% sample; if more than 5% of pairs are wrong, the abbreviation filter is tightened and the pool rebuilt before lock.",
+  "judging_amendment_a6": {
+   "date": "2026-09-11",
+   "supersedes": ["panel_judging_plan", "alias_spotcheck_rule (the judge only; the 5% threshold stands)"],
+   "judge": "Codex gpt-6-astra, read-only, one pass per sheet from the row text alone (query, candidate title and first 300 characters, or the two alias forms with their carrier sentences); its output is ingested by m17src/judgments_ingest.py and every ingested row carries judge='codex-gpt-6-astra'",
+   "human_double_check": "Dylan re-judges a fixed seeded slice: 20 Kubernetes rows, 10 alias senses, 20 spot-check pairs; agreement is reported beside the model judgments, whenever convenient, without touching the clock",
+   "cloud_software_panel_status": "MODEL-JUDGED: the cloud-software domain's relevance labels are model-derived; reported as such in the panel manifest and the paper, descriptive only (the panel never routes selection)",
+   "clock": "the panel is sealed final once the model judgments are ingested; the human double-check is not a clock dependency",
+   "rationale": "Kubernetes is a nice-to-have coverage slice requested informally; dedicated human relevance judging is disproportionate (Dylan, 2026-09-11)"
+  }
  },
  "training": {
   "init": "M7 p35w-2m-s2500 unfolded checkpoint, lineage verified; new run IDs and optimizer",
@@ -433,6 +442,15 @@
   "after_lock": "Honor phase ceilings; incomplete required phase stops dependent work, with checkpointed recovery only inside remaining reserve; no silent dose/seed/arm cuts",
   "screen_overrun": "No selection from an accidentally incomplete matrix; report incomplete screen and stop unless all registered arms complete within the existing reserve",
   "unused_time": "May move forward to the same registered work, never a new hypothesis; hard total remains 72h"
+ },
+ "accepted_plan_revision_a6": {
+  "date": "2026-09-11",
+  "owner_instruction": "agree with A6, register it and run Astra on 2 and 3. Could Astra do 1 too while at it?",
+  "changes": [
+   "data.judging_amendment_a6: the 360 Kubernetes panel rows, the 80 pending alias senses and the 308-pair spot check are judged by Codex gpt-6-astra with disclosure and a seeded human double-check slice",
+   "the panel seals final after ingestion; cloud-software relevance is labelled model-judged"
+  ],
+  "scope": "judging protocol for descriptive surfaces only; the panel and alias test never route selection; no bar, cap, teacher, licence or training-protocol change"
  },
  "accepted_plan_revision_a5": {
   "date": "2026-09-11",

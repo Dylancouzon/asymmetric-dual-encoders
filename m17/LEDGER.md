@@ -443,3 +443,20 @@ exist up to the cap" but not which bucket takes the remainder once general is ex
 distinct admitted pairs (15,393, not the 15,000 four-pass minimum) and unpaired-coverage views
 fill the rest of the cap. Registered as `data.cap_fill_priority` and `accepted_plan_revision_a5`.
 Deterministic; the dose rule states the resulting passes. No bar, cap or protocol change.
+
+## A6 — model-judged descriptive surfaces (Dylan, 2026-09-11)
+
+Dylan: "1 - Is that even necessary? The Kubernetes was just a mention from a coworker who tested
+it, a nice to have, I'm not sure if we need dedicated tests. 2 and 3 Can this be done by Astra?"
+then "agree with A6, register it and run Astra on 2 and 3. Could Astra do 1 too while at it?"
+
+Ruling: the 360 Kubernetes panel rows, the 80 pending alias senses and the 308-pair alias spot
+check are judged by Codex gpt-6-astra (read-only, from the row text alone), ingested by a script
+that stamps `judge = codex-gpt-6-astra`. The cloud-software panel domain is labelled
+MODEL-JUDGED in the manifest and the paper; the panel remains descriptive and never routes
+selection. Dylan re-judges a seeded slice (20 rows, 10 senses, 20 pairs) whenever convenient and
+agreement is reported; that slice is not a clock dependency. The 5 % spot-check threshold and its
+consequence (tighten the abbreviation filter, rebuild the pool before lock) stand. Registered as
+`data.judging_amendment_a6` and `accepted_plan_revision_a6`; A3's human-judging plan is
+superseded and retained in the registry text. Briefs: `research/m17-astra-judge-*-brief-2026-09-11.md`;
+logs: `research/m17-astra-judge-*-2026-09-11.log`.
