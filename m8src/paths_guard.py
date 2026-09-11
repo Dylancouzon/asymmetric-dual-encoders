@@ -145,6 +145,15 @@ ALLOWLIST = {
                "ruling R12 in m13/RULINGS.md; LEDGER G2 class d). The stage refuses without the "
                "FEVER/DBpedia document vectors and never runs pre-tag.",
     },
+    "m13src.lotte_gate13": {
+        "kinds": {"lotte"},
+        "why": "M13's LoTTE read #1: the registered pre-build veto and observational row over the "
+               "seven remediated slices (m13/LOTTE_GATE_REGISTRATION.json, m10/LOTTE_LOCK.md), the "
+               "M10/M13 counterpart of `m8src.shadow_cross`'s single crossing (LEDGER 15 amendment, "
+               "2026-09-10, rulings R8 and R16 in m13/RULINGS.md). It opens only the three remediated "
+               "files per slice and its own encode cache under work/lotte/enc, never the search split "
+               "or raw LoTTE, and refuses a second execution.",
+    },
     "m8src.pre_encode": {
         # Registered NOW, at leisure, rather than discovered at pipeline step 13 under time
         # pressure. It needs NO protected KIND: the reserved CORPORA are ordinary public BEIR

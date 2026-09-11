@@ -485,6 +485,39 @@ def test_a_real_evaluation_is_prohibited_under_a_smoke(sandbox):
         R.main(["A1", "--smoke-steps", "6", "--real-eval"])       # argparse: unknown argument
 
 
+def test_dev6_defer_records_the_deferral_and_reads_no_dev6(monkeypatch, sandbox):
+    """`--dev6 defer` (M13, the cloud E arms): the record is complete, says DEV-6 was NOT read
+    here, and names the final checkpoint bytes `m13src/dev6_from_checkpoint.py` must consume."""
+    mock_pipeline(monkeypatch)
+    calls = []
+    monkeypatch.setattr(R, "dev6", lambda m, verbose=True: calls.append(1) or {"macro": 0.55})
+    write_f_verdict()
+    ck = R.WORK / "A1" / "cycle3.pt"
+    ck.parent.mkdir(parents=True, exist_ok=True)
+    ck.write_bytes(b"the final checkpoint bytes")
+    rec = R.run("A1", device="cuda", verbose=False, dev6_mode="defer")
+    assert calls == [], "a deferred read never touches DEV-6 on this machine"
+    assert rec["status"] == "complete" and rec["complete"] is True
+    assert rec["dev6"]["deferred"] is True and rec["dev6"]["macro"] is None
+    assert rec["dev6"]["checkpoint_sha256"] == rec["final_checkpoint_sha256"] == R.sha256_file(ck)
+    assert rec["dev6"]["fill_with"].endswith("m13src/dev6_from_checkpoint.py A1")
+    on_disk = json.loads((R.RESULTS / "m10_arm_A1.json").read_text())
+    assert on_disk["dev6"] == rec["dev6"]
+
+
+def test_dev6_inline_is_the_default_and_defer_is_refused_under_a_smoke(monkeypatch, sandbox):
+    mock_pipeline(monkeypatch)
+    write_f_verdict()
+    assert R.run("A1", device="cuda", verbose=False)["dev6"]["macro"] == 0.55
+    with pytest.raises(SystemExit, match="meaningless under --smoke-steps"):
+        R.run("A1", smoke_steps=6, device="cpu", dev6_mode="defer")
+    with pytest.raises(SystemExit, match="choose from"):
+        R.run("A2", device="cuda", dev6_mode="later")
+    ap = R.build_argparser()
+    assert ap.parse_args(["A1"]).dev6 == "inline"
+    assert ap.parse_args(["A1", "--dev6", "defer"]).dev6 == "defer"
+
+
 # ---------------------------------------------------------------- F's winner (finding 11) ------
 
 def test_a_post_F_arm_refuses_without_F_s_verdict(sandbox):

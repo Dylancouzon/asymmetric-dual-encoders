@@ -116,9 +116,17 @@ After the copy, on the instance: `sha256sum results/perquery.json` must read
   beside the current ones: only the identities the current code derives are needed. Resolve them on
   the box before copying (`teacher.cache_key` for the DEV-6 caches; the `work/m10tok/<id>/meta.json`
   the assemble manifest names) and copy those alone.
-- **Recommended split:** ship the training groups plus COV (about 35 GB) for the two E arms, and run
-  DEV-6 on the box afterwards from the returned `cycle3.pt` (415 MB per arm) instead of shipping
-  35 GB of DEV-6 caches. `run_arm.py` reads DEV-6 at the end of an arm on the same machine, so this
-  needs a small `dev6-from-checkpoint` entry point; otherwise ship the DEV-6 group.
+- **Recommended split (implemented 2026-09-10):** ship the training groups plus COV (about 35 GB)
+  for the two E arms and do NOT ship the DEV-6 group. Run each E arm on the instance with
+  `run_arm.py <arm> --dev6 defer`, which keeps the record `complete` (E1 reads the COV files) and
+  records `dev6: {deferred: true, checkpoint_sha256}`; copy `work/m10arms/<arm>/` (record and
+  `cycle3.pt`, 415 MB per arm) back to the same path on the box and run
+  `.venv/bin/python m13src/dev6_from_checkpoint.py <arm>`, which re-hashes the checkpoint and fills
+  the record's `dev6` once. The rsync command above still lists the DEV-6 caches; drop the four
+  `./work/enc/dev-*` patterns and the five `./work/dev/*.json` entries under this split.
+- **LoTTE read #1** runs wherever the stella weights and both E checkpoints are: on the instance
+  (about 1.3 A100-hours for the 2.7M-passage encode, budgeted) or on the box afterwards from the
+  two returned `cycle3.pt` files. `work/lotte` is never copied to the instance; if the read runs
+  there, the remediated slices go across separately and are deleted with the instance.
 - The six-set document vectors (about 1 GB) and the stella weights are needed on the instance only
   if the final scoring transaction and the LoTTE encode run there.

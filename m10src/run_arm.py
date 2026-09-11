@@ -50,6 +50,11 @@ registry and F's own arm records. `arm_smoke.SHAPES` holds shapes; it does not d
 
 **Every recipe knob is SMOKE-ONLY** (`--max-len`, `--ckpt-every`, `--n-fit`, `--compile`): a
 registered arm reads its recipe from the registry or does not run.
+
+**`--dev6 defer` is not a recipe knob.** DEV-6 is still read once at the final checkpoint; the
+runner records that the read did not happen on this machine and which checkpoint bytes it must
+consume, and `m13src/dev6_from_checkpoint.py` fills the record's `dev6` field on the box from the
+identical checkpoint. For the cloud E arms, whose ~35 GB of DEV-6 caches are not shipped.
 """
 import argparse
 import copy
@@ -605,6 +610,22 @@ def dev6(model, verbose=True):
             "_scope": "DEV-6 only; no six-set, reserved or LoTTE surface was read"}
 
 
+DEV6_MODES = ("inline", "defer")
+
+
+def dev6_deferred(final_ck, arm):
+    """`--dev6 defer`: the runner records that it did NOT read DEV-6 and which checkpoint bytes the
+    read must consume; `m13src/dev6_from_checkpoint.py` fills this field on the box from the
+    identical final checkpoint, once. Registered use: the two cloud E arms, whose ~35 GB of DEV-6
+    document caches are not shipped to the instance (m13/SHIP_LIST.md). DEV-6 stays a read ONCE at
+    the final checkpoint and never selection-bearing; only the machine changes."""
+    return {"deferred": True, "macro": None, "per_component": None,
+            "checkpoint_sha256": (final_ck or {}).get("sha256"),
+            "fill_with": f".venv/bin/python m13src/dev6_from_checkpoint.py {arm}",
+            "_scope": "DEV-6 NOT read by the runner (deferred to the box); no six-set, reserved or "
+                      "LoTTE surface was read either"}
+
+
 # ------------------------------------------------------------------------------------- the arm --
 
 def streams_of(batch_fn):
@@ -739,7 +760,8 @@ SMOKE_ONLY_KNOBS = ("max_len", "ckpt_every", "n_fit", "compile_step", "real_eval
 
 
 def run(arm, *, device="cpu", resume=False, smoke_steps=None, max_len=None, ckpt_every=None,
-        n_fit=None, real_eval=False, compile_step=False, verbose=True, f_verdict_path=None):
+        n_fit=None, real_eval=False, compile_step=False, verbose=True, f_verdict_path=None,
+        dev6_mode="inline"):
     """Train one registered arm and write its record. -> the record dict.
 
     A crash, an OOM or a kill is an OUTCOME (`rules.arm_failure`), so it is recorded and the
@@ -749,7 +771,8 @@ def run(arm, *, device="cpu", resume=False, smoke_steps=None, max_len=None, ckpt
     try:
         return _run(ctx, arm, device=device, resume=resume, smoke_steps=smoke_steps,
                     max_len=max_len, ckpt_every=ckpt_every, n_fit=n_fit, real_eval=real_eval,
-                    compile_step=compile_step, verbose=verbose, f_verdict_path=f_verdict_path)
+                    compile_step=compile_step, verbose=verbose, f_verdict_path=f_verdict_path,
+                    dev6_mode=dev6_mode)
     except SystemExit as e:
         # item D: a REFUSAL raised BEFORE any work starts (screen_lock, an unregistered/untrained/
         # cut arm, a record that already exists, a missing/stale F verdict, ...) means the arm
@@ -802,7 +825,7 @@ def _record_failure(ctx, arm, exc, verbose=True):
 
 
 def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, real_eval,
-         compile_step, verbose, f_verdict_path=None):
+         compile_step, verbose, f_verdict_path=None, dev6_mode="inline"):
     smoke = smoke_steps is not None
     passed = {"max_len": max_len, "ckpt_every": ckpt_every, "n_fit": n_fit,
               "compile_step": compile_step or None, "real_eval": real_eval or None}
@@ -816,6 +839,11 @@ def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, r
         # must not touch the 13,416-query surface or DEV-6's ~13 GB, and a real arm always does.
         refuse("--real-eval is prohibited under --smoke-steps: a smoke never touches the COV "
                "surface or DEV-6. Run the arm itself for a real evaluation.")
+    if dev6_mode not in DEV6_MODES:
+        refuse(f"--dev6 {dev6_mode!r}: choose from {list(DEV6_MODES)}")
+    if dev6_mode == "defer" and smoke:
+        refuse("--dev6 defer is meaningless under --smoke-steps: a smoke never reads DEV-6, so "
+               "there is nothing to defer")
     max_len = int(max_len or MAX_LEN)
     problems = SL.validate(SL.cfg())
     if problems:
@@ -1003,7 +1031,12 @@ def _run(ctx, arm, *, device, resume, smoke_steps, max_len, ckpt_every, n_fit, r
 
     d6 = None
     if ok and not smoke:
-        d6 = dev6(model, verbose=verbose)
+        if dev6_mode == "defer":
+            d6 = dev6_deferred(cks.get(f"cycle{CYCLES}"), arm)
+            print(f"DEV-6 DEFERRED to the box (--dev6 defer): fill it with `{d6['fill_with']}` "
+                  f"from checkpoint {str(d6['checkpoint_sha256'])[:12]}", flush=True)
+        else:
+            d6 = dev6(model, verbose=verbose)
     elif not ok:
         print(f"ARM FAILED ({stopped}): no final checkpoint, so no DEV-6 read. "
               f"`rules.arm_failure`: its contrasts are reported UNRESOLVED and revert to default; "
@@ -1097,6 +1130,13 @@ def build_argparser():
                     help="SMOKE ONLY warm-start fit sample; a registered arm uses 60,000")
     ap.add_argument("--compile", action="store_true",
                     help="SMOKE ONLY: torch.compile the training step (checkpoints eager, §T)")
+    # Not a recipe knob: DEV-6 is read ONCE at the final checkpoint either way. `defer` records
+    # that the read did not happen HERE and names the checkpoint bytes it must consume;
+    # `m13src/dev6_from_checkpoint.py` performs it on the box (the cloud E arms, whose DEV-6
+    # caches are not shipped — m13/SHIP_LIST.md). Meaningless under --smoke-steps and refused there.
+    ap.add_argument("--dev6", default="inline", choices=list(DEV6_MODES),
+                    help="inline (default): read DEV-6 at the final checkpoint here; defer: record "
+                         "the deferral and fill it later with m13src/dev6_from_checkpoint.py")
     ap.add_argument("--quiet", action="store_true")
     return ap
 
@@ -1110,7 +1150,8 @@ def main(argv=None):
     if not a.arm:
         ap.error("an arm name is required (or --plan)")
     run(a.arm, device=a.device, resume=a.resume, smoke_steps=a.smoke_steps, max_len=a.max_len,
-        ckpt_every=a.ckpt_every, n_fit=a.n_fit, compile_step=a.compile, verbose=not a.quiet)
+        ckpt_every=a.ckpt_every, n_fit=a.n_fit, compile_step=a.compile, verbose=not a.quiet,
+        dev6_mode=a.dev6)
     return 0
 
 
