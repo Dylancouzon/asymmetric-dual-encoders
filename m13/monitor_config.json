@@ -32,10 +32,11 @@
     },
     {
       "name": "fp16 benchmark",
-      "receipt": "results/m13_cloud_fp16.json",
-      "pid_file": "work/m13cloud-launchers/fp16.pid",
+      "receipt": "results/m13_cloud_replacement.json",
+      "pid_file": "work/m13cloud-launchers/replacement.pid",
       "logs": [
-        "logs/m13-fp16-launch.log",
+        "logs/m13-replacement-launch.log",
+        "logs/m13-replacement-upload.log",
         "logs/m13-fp16-encode.log"
       ],
       "stale_seconds": 900

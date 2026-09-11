@@ -13,12 +13,13 @@ fixed; the original failed receipt is preserved, and the existing outputs were v
 rerunning observations. Receipts: `results/m13_cloud_e.json`, `results/m13_after_e.json`,
 `results/m13_after_e_recovery.json`; decision: `results/m10_contrast_E1.json`.
 
-**Next:** carry the resolved E choice into the required recipe/LoTTE manifest and pin sequence,
-measure the actual fp16 encoder path, and complete the registered pre-build gate before the
-fixed 200M build. The $740.53 allocation remains a conservative allowance, not expected spend;
-update it from actual selected-arm throughput and matched-path encoding measurements.
-No protected evaluation or full build has run. Runpod compute is stopped; its disk is retained.
-M17 keeps the original checkout; M13 uses `work/m13cloud`.
+**Next (active preparation):** checkpoint manifest and seven-slice pin are committed and
+pushed; metadata-only gate preflight passed for bs32. The fp16 timing restart hit Runpod host
+capacity exhaustion twice (failure receipts retained). A replacement A100 at the same quoted
+$1.59 GPU/hour is being prepared with minimal benchmark/gate inputs; original Pod stays
+stopped with its disk retained. After measured timing: reconcile the allocation, run the
+registered observational LoTTE gate, then the fixed 200M build. No LoTTE score or full build
+has run. M17 keeps the original checkout and local GPU; M13 uses `work/m13cloud`.
 
 Independent monitoring is active as `m13-monitor.service`: five-minute checks, local Windows
 alerts, and durable health/transition records. Add each next job before launch; configuration,

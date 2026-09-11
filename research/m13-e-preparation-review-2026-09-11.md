@@ -106,3 +106,14 @@ receipt and confirms STOP. Execution cap30minutes plus bounded cleanup; remote b
 10minutes. Synthetic archive checks passed for tracked/untracked E records and refusal of
 unrelated edits. Receipt-write failure cannot bypass STOP. All reviewer access was named
 source and allowed metadata/synthetic fixtures, without credentials/cloud/protected payloads.
+
+Runpod restart failed twice before encoding; the second response identified no free GPU on
+the original physical host. Both receipts confirm EXITED. The replacement plan retains that
+Pod and deploys one same-SKU secure A100 with prequote and post-create price checks, loading
+only benchmark/gate dependencies. Official provider guidance: stopped-Pod GPUs can be rented
+by other users; a new Pod is required to move hosts.
+https://docs.runpod.io/pods/troubleshooting/pod-migration
+
+After the pushed checkpoint manifest, exactly21 registered remediated files were independently
+copied to this worktree. The authorized freeze_lotte PIN module hashed all seven slices; pin
+was committed/pushed. Gate metadata preflight passed, without opening LoTTE paths or scoring.
