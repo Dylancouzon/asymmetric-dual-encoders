@@ -87,7 +87,8 @@
    "cloud_E_arms": 10000000,
    "build": 200000000
   },
-  "fixed_usd": {"persistent_disk_and_egress": 25.0},
+  "fixed_usd": {"persistent_disk_and_egress": 103.0},
+  "_storage_allocation": "2026-09-11 initial Runpod US-MD-1 setup: 500 GB Pod volume, $0.10/GB/month running or $0.20 stopped; 30 GB container $0.10/GB/month running; no provider transfer fee. Reserve $103 for up to 30 days at conservative storage rates, replacing the stale $25 estimate. Reconcile actual charges and elapsed storage duration before each stage; the total ceiling stays $1,000.",
   "_reserved_batch_allowance": "RULING R10 (Dylan, 2026-09-10, \"fine if needed\"): 8.0 A100-hours is an ESTIMATE for the conditional reserved batch (~10M stella passage encodes for FEVER and DBpedia-entity plus the two small cqadup components, ~60 GB of vectors within the 500 GB disk); it is re-measured on day one by timing 10,000 passages and the measured figure replaces this one in the allocation table. null REFUSES the allocation outside a smoke rather than quietly pricing it at zero.",
   "_note": "the rate-derived lines (both cloud E arms, the build itself) are priced from the MEASURED examples/s on day one, not from run_arm.PLAN_RATES, which are projections. `build13.py --plan --rate EX_S --price USD_H` prints the table; a plan above the ceiling is refused."
  },

@@ -23,7 +23,28 @@ A100 SXM locations returned null stock, which is not a capacity confirmation. Re
 network-volume support, full SSH and live capacity before creating storage or compute.
 Credentials are kept outside Git in the user's WSL configuration directory and are never shipped.
 
-## Supplier and deployment
+## Selected deployment — 2026-09-11
+
+Dylan authorized starting cloud setup. Live matching A100 SXM/network-volume capacity was absent
+in US-CA-2, EU-RO-1 and EUR-IS-1; the Maryland A100 SXM is available but its data center reports
+`storageSupport=false`. The initial deployment therefore uses a **Pod volume disk**, 500 GB,
+mounted at `/home/dylan`, with one Secure Cloud on-demand A100 SXM 80 GB in US-MD-1.
+Exact request: `runpod_pod_config.json`; PUBLIC_KEY is injected from the local SSH public key.
+The official Runpod image is pinned by digest; bootstrap installs the separately pinned Python
+3.12 environment on the persistent mount. Scoped GitHub deploy access is configured separately.
+
+**STOP preserves this disk; TERMINATE DELETES it.** Do not terminate until required artifacts
+are backed up and verified locally. GPU capacity on restart is not guaranteed. No network volume
+is created. Keep every unique checkpoint on the local box as well as the Pod disk.
+
+Published disk rates are $50/month while running, $100/month while stopped, plus up to $3/month
+for the 30 GB container disk while running. Reserve $103 for a conservative 30-day storage
+window in the allocation; data transfer has no provider fee. Measure and record actual charges.
+GPU quote is $1.59/hour, so the initial running configuration is about $1.664/hour including
+storage at a 720-hour monthly conversion. Stop compute between stages and monitor balance/spend.
+Source: [Runpod Pod pricing](https://docs.runpod.io/pods/pricing).
+
+## Original supplier comparison (network-volume preference)
 
 Recommend Runpod Secure Cloud, on-demand, one A100 SXM 80 GB, a 500 GB standard network volume
 in a data center with matching GPU capacity, and full SSH via public IP. Provider choice is still
