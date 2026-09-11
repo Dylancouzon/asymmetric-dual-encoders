@@ -50,3 +50,16 @@ confirmed. `results/m13_cloud_stage0.json` and `results/m13_cloud_resume_smoke.j
 the evidence. Stub COV values are synthetic smoke checks, not retrieval-quality observations.
 Short smoke rates vary across attempts and include instrumentation/checkpoint effects; they
 are not yet the measured allocation needed to authorize the full build.
+
+## Encoding throughput is path-specific — 2026-09-11
+
+The admitted-SQuAD benchmark measured 100.76/110.81 passages/s for 1k/10k with Stella fp32,
+TF32 disabled in the pinned runtime, memory-efficient attention/unpadding disabled, and CPU
+output copies. It is not the A100's throughput ceiling. The fp32 requirement in score13 binds
+the frozen six-set caches; those caches are not regenerated. LoTTE's actual encoder already
+passes dtype=torch.float16 (lotte_gate13.encode_docs), and COV's teacher9 uses bf16. The reserved
+encoder is still a separate unimplemented injection. Generalizing fp32 timing to their runtime
+would overstate what was measured; the allocation explicitly remains conservative surrogate
+headroom, not a speed forecast. Before spending those encode allowances, benchmark the actual
+allowed path on admitted training passages, separating tokenization/forward/transfer and testing
+batch token size with output parity checks. Do not alter either active registered E recipe.

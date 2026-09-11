@@ -1,16 +1,19 @@
-# M13 status — Cloud recovery validated (2026-09-11)
+# M13 status — Registered E running (2026-09-11)
 
-**Now:** Cloud setup and recovery validation **PASSED** on committed code `ca9ccdc`.
-All 266 transferred artifacts match SHA-256; active CPU checks passed (M10 483, M13 170,
-M9 16, M12 parity). Both E batch sizes passed 512-token shape tests and real 600-step smokes,
-each deliberately killed at step 100 and resumed through step 600. The fingerprint repair
-excludes loader clock metadata only; two independent reviews cleared it and the restart setup.
-Local checkpoint/record backups verified; Pod `k3aee2m68765em` STOP confirmed, volume retained.
-Balance $500.49, about $4.51 spent from initial $505; stopped storage continues to accrue.
-Receipts: `results/m13_cloud_stage0.json`, `results/m13_cloud_resume_smoke.json`.
-Initial failures remain in `results/m13_cloud_stage0_attempt{1,2}.json` and local
-`work/m13cloud-attempt{1,2}/`; passing full evidence: `work/m13cloud-evidence/`.
-No registered E training or protected evaluation has run. M17 keeps the original checkout.
+**Now:** Registered E execution is RUNNING on Runpod, pinned to `2ec2f0a`.
+E-bs32 started 2026-09-11T19:30:14Z, with its registered 5M examples, batch32, bf16, 60k
+warmstart; E-bs128 follows unchanged. DEV-6 is deferred to the box. Reviewed local controller
+has a 24h work cap (11.5h per arm), full checkpoint/COV backups with hashes, and STOP cleanup.
+Live receipt `results/m13_cloud_e.json`; logs `logs/m13-cloud-e-*.log`, wrapper
+`logs/m13-e-launch.log`. Keep WSL awake. M17 keeps the original checkout.
+
+Both full-shape restart smokes passed. Dependency preflight verified all ten COV units and
+five teacher document caches. The measured allocation is $740.53 including contingencies,
+not expected spend; about $4.74 was paid before E launch, with $500.26 credit. E's full24h
+reserve is $39.93. `results/m13_cloud_allocation.json` binds all passing receipts. Stella's
+101–111 passage/s benchmark was fp32 with TF32 off; actual LoTTE uses fp16, so the 15h LoTTE
+allowance is a conservative surrogate and must be replaced with matched-path timing before
+expensive encoding. No protected evaluation or full build has run.
 
 **Next:** inspect the stage-0 receipt/evidence, measure the remaining encode allowance, put
 measured rate and billed price into the allocation table (`build13.py --plan --rate --price`),
