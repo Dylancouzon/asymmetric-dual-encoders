@@ -1366,23 +1366,40 @@ class TextVectorCache:
             raise SystemExit(f"M17 REFUSED: text-vector cache {self.root} is inconsistent "
                              f"({self.vecs.shape} vs {len(self.index)} keys).")
 
-    def get(self, texts, encode):
+    FLUSH_EVERY = 25_000    # texts encoded between durable flushes
+
+    def _flush(self):
+        # tmp + replace: a crash mid-write must not leave `vecs` and `index` disagreeing (the
+        # constructor refuses an inconsistent cache, which would cost the whole cache).
+        tmp = self.vec_p.with_suffix(".tmp.npy")
+        np.save(tmp, self.vecs)
+        tmp.replace(self.vec_p)
+        write_json(self.index_p, self.index)
+
+    def get(self, texts, encode, flush_every=None):
+        """Vectors for `texts` in order, encoding the misses in chunks of `flush_every` and
+        flushing after each: the full pool's teacher stage encodes ~550k texts and a CUDA fault
+        at 120k once lost all of them (2026-09-11), because nothing was written until the end."""
         keys = [sha_text(t) for t in texts]
         missing, seen = [], set()
         for k, t in zip(keys, texts):
             if k not in self.index and k not in seen:
                 seen.add(k)
                 missing.append((k, t))
-        if missing:
-            new = encode([t for _k, t in missing])
+        step = int(flush_every or self.FLUSH_EVERY)
+        for start in range(0, len(missing), step):
+            chunk = missing[start:start + step]
+            new = encode([t for _k, t in chunk])
             new = np.asarray(new, dtype=np.float32)
             new /= np.maximum(np.linalg.norm(new, axis=1, keepdims=True), 1e-9)
             base = self.vecs.shape[0]
             self.vecs = np.concatenate([self.vecs, new.astype(np.float16)], 0)
-            for j, (k, _t) in enumerate(missing):
+            for j, (k, _t) in enumerate(chunk):
                 self.index[k] = base + j
-            np.save(self.vec_p, self.vecs)
-            write_json(self.index_p, self.index)
+            self._flush()
+            if len(missing) > step:
+                print(f"  [cache] {min(start + step, len(missing))}/{len(missing)} encoded, "
+                      f"{self.vecs.shape[0]} rows durable", flush=True)
         return (self.vecs[[self.index[k] for k in keys]],
                 {"requested": len(texts), "encoded": len(missing),
                  "hit_rate": round(1 - len(missing) / max(1, len(texts)), 4),

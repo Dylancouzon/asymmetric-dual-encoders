@@ -25,6 +25,7 @@ M17 also has two direct commands:
 ```bash
 .venv/bin/python -m pytest -q -ra m17src            # cache, vocabulary, driver, gates, loader, eval
 .venv/bin/python m17src/rehearse17.py --device cuda # tiny synthetic end-to-end rehearsal
+.venv/bin/python m17src/lock.py --phase pre --build work/m17/prepared/full --dry-run   # step-6 lock preview
 ```
 
 The rehearsal writes disposable outputs to gitignored `work/m17/rehearsal` and a small record to

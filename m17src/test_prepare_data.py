@@ -218,6 +218,35 @@ def test_teacher_cache_reuses_vectors_by_text_sha(tmp_path):
     assert r3["encoded"] == 1 and r3["hit_rate"] == 0.5
 
 
+def test_teacher_cache_flushes_each_chunk_so_a_crash_keeps_the_encoded_rows(tmp_path):
+    """The full pool's teacher stage encodes ~550k texts; a CUDA fault at 120k once lost all of
+    them because nothing was flushed until the end (2026-09-11)."""
+    calls, crash = [], [True]
+
+    def encode(texts):
+        calls.append(list(texts))
+        if len(calls) == 2 and crash:
+            crash.clear()
+            raise RuntimeError("CUDA error: an illegal memory access was encountered")
+        return np.stack([np.full(8, float(len(t))) for t in texts])
+
+    texts = [f"t{i:03d}" + "x" * i for i in range(7)]
+    c = pd.TextVectorCache(tmp_path / "tc", 8)
+    with pytest.raises(RuntimeError):
+        c.get(texts, encode, flush_every=3)
+    assert [len(x) for x in calls] == [3, 3]                     # chunked, crashed in chunk 2
+    c2 = pd.TextVectorCache(tmp_path / "tc", 8)                  # a fresh process resumes
+    assert c2.vecs.shape[0] == 3 and len(c2.index) == 3           # chunk 1 is durable
+    calls.clear()
+    vecs, rep = c2.get(texts, encode, flush_every=3)
+    assert rep["encoded"] == 4 and rep["cache_rows"] == 7         # only the lost 4 re-encoded
+    assert [len(x) for x in calls] == [3, 1]
+    assert [c2.index[pd.sha_text(t)] for t in texts] == list(range(7))   # order preserved
+    assert vecs.shape == (7, 8)
+    assert np.allclose(np.linalg.norm(vecs.astype(np.float32), axis=1), 1.0, atol=1e-3)
+    assert not (tmp_path / "tc" / "vecs.f16.tmp.npy").exists()
+
+
 def test_teacher_cache_refuses_an_inconsistent_store(tmp_path):
     c = pd.TextVectorCache(tmp_path / "tc", 4)
     c.get(["x"], lambda ts: np.ones((len(ts), 4)))
