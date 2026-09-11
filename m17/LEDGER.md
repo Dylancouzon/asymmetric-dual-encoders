@@ -37,3 +37,16 @@ logs are recorded in each `research/m17-*-2026-09-11.md` note.
 
 The future experiment design and decision thresholds will be explicitly marked **draft**;
 planning measurements do not ratify a training protocol or establish a quality gain.
+
+## 2026-09-11 — scope clarification and P0b
+
+Dylan confirmed the local RTX 3080 and requested broad query-domain coverage in addition to
+cloud/software terms. Nano/M13 remains unchanged. A read-only local tokenizer comparison in
+response to Dylan's question found Nano's cached bge-small vocabulary map equal to Zero v1's.
+
+P0's repetition fixtures did not actually share constituent IDs across different lexical units
+(`3` and `##3` are distinct). They cannot establish general sum-initialization parity. P0b will
+check actual shared-piece fixtures (`s3 s`, `k8s eks`, `kubernetes kubectl`), illustrative terms
+from other domains, and persist the Nano tokenizer comparison. No quality inference, data
+access or training follows. Output: `results/m17_tokenizer_followup.json`. P0's original code
+and observation are preserved in commit `2bca40d`; this is a supplemental diagnostic.

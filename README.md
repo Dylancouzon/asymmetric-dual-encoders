@@ -139,6 +139,9 @@ Read [ROADMAP.md](ROADMAP.md) for current scope and [PROJECT_STATUS.md](PROJECT_
 the audit. M10 closes preparation; M13 owns the remaining cloud build, evaluation and costs.
 [HARNESS.md](HARNESS.md) maps reusable components and verification commands.
 
+[M17 plans Zero v1.1](m17/PLANNING.md): broader vocabulary and a modest quality improvement on
+the same document index, with a local 72-hour budget. Planning only; Nano/M13 remains unchanged.
+
 | path | what |
 |---|---|
 | `CLAUDE.md` | standing directives, stage plan, decision log — **read this first** |

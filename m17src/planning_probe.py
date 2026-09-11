@@ -141,27 +141,69 @@ def gpu_probe():
             "limitations": "Synthetic resident tensors, uniform token IDs and mean pooling; excludes real sqrt counts, I/O, teacher encoding, candidate mining, regularization, evaluation and checkpointing. Feasibility only, not an end-to-end training forecast."}
 
 
+def followup_probe():
+    from transformers import AutoTokenizer
+    old = Tokenizer.from_file(str(BUNDLE / "tokenizer.json"))
+    old.no_padding()
+    nano = AutoTokenizer.from_pretrained("BAAI/bge-small-en-v1.5", local_files_only=True)
+    terms = ["s3", "k8s", "kubernetes", "kubectl", "eks"]
+    new = Tokenizer.from_str(old.to_str())
+    added = new.add_tokens([AddedToken(t, single_word=True, normalized=True) for t in terms])
+    z = np.load(BUNDLE / "model.npz")
+    base = z["rows_int8"].astype(np.float32) * z["int8_scale"][:, None]
+    rows = np.concatenate([base, np.zeros((added, 1024), np.float32)])
+    for t in terms:
+        rows[new.token_to_id(t)] = base[old.encode(t, add_special_tokens=False).ids].sum(0)
+
+    def pooled(ids):
+        ids, counts = np.unique(ids, return_counts=True)
+        v = (rows[ids] * np.sqrt(counts)[:, None]).sum(0)
+        return v / max(np.linalg.norm(v), 1e-6)
+
+    sharing = []
+    for text in ["s3 s bucket", "k8s eks networking", "kubernetes kubectl networking"]:
+        a, b = pooled(old.encode(text).ids), pooled(new.encode(text).ids)
+        sharing.append({"text": text, "old": old.encode(text).tokens,
+                        "new": new.encode(text).tokens, "cosine": float(a @ b),
+                        "max_abs": float(np.max(np.abs(a-b)))})
+    domains = {"science": ["photolithography", "superconductivity", "stoichiometry"],
+               "medicine": ["myocarditis", "immunotherapy", "HbA1c"],
+               "finance": ["ebitda", "amortization", "securitization"],
+               "legal": ["indemnification", "estoppel", "jurisdiction"],
+               "general": ["dishwasher", "itinerary", "mortgage"]}
+    return {"nano_vocab": len(nano), "zero_vocab": old.get_vocab_size(),
+            "nano_zero_vocab_mapping_equal": nano.get_vocab() == old.get_vocab(),
+            "nano_vocab_sha256": hashlib.sha256(json.dumps(nano.get_vocab(), sort_keys=True).encode()).hexdigest(),
+            "shared_piece_fixtures": sharing,
+            "illustrative_domains": {domain: [{"term": t, "tokens": old.encode(t, add_special_tokens=False).tokens}
+                                               for t in ts] for domain, ts in domains.items()},
+            "limitations": "Hand-authored examples, not corpus coverage or model-quality evidence. Nano tokenizer loaded offline; M13 recipe unchanged."}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--gpu", action="store_true")
+    parser.add_argument("--followup", action="store_true", help="P0b tokenizer-only supplement")
     args = parser.parse_args()
+    if args.followup and args.gpu:
+        parser.error("--followup and --gpu are separate diagnostics")
+    output = ROOT / ("results/m17_tokenizer_followup.json" if args.followup else "results/m17_planning_probe.json")
+    if output.exists():
+        raise FileExistsError(f"Preserve the existing observation: {output}")
     inputs = [BUNDLE / "model.npz", BUNDLE / "tokenizer.json", BUNDLE / "config.json",
               ROOT / "m11/release/zero_encoder.py", ROOT / "m17/LEDGER.md", Path(__file__)]
-    result = {"diagnostic": "M17-P0", "date": "2026-09-11", "python": platform.python_version(),
+    result = {"diagnostic": "M17-P0b" if args.followup else "M17-P0", "date": "2026-09-11", "python": platform.python_version(),
               "numpy": np.__version__, "tokenizers": tokenizers.__version__,
               "git_head": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
-              "input_sha256": {str(p.relative_to(ROOT)): digest(p) for p in inputs},
-              "cpu": cpu_probe()}
+              "input_sha256": {str(p.relative_to(ROOT)): digest(p) for p in inputs}}
+    result["followup" if args.followup else "cpu"] = followup_probe() if args.followup else cpu_probe()
     if args.gpu:
         result["gpu"] = gpu_probe()
     for p in inputs:
         assert digest(p) == result["input_sha256"][str(p.relative_to(ROOT))], p
-    output = ROOT / "results/m17_planning_probe.json"
-    if output.exists():
-        raise FileExistsError(f"Preserve the existing observation: {output}")
     output.write_text(json.dumps(result, indent=2) + "\n")
-    print(json.dumps({"output": str(output), "cpu_timing": result["cpu"]["cpu_timing"],
-                      "gpu": result.get("gpu")}, indent=2))
+    print(json.dumps({"output": str(output), "cpu_timing": result.get("cpu", {}).get("cpu_timing"),
+                      "gpu": result.get("gpu"), "followup": result.get("followup")}, indent=2))
 
 
 if __name__ == "__main__":

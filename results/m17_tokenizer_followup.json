@@ -1,0 +1,231 @@
+{
+  "diagnostic": "M17-P0b",
+  "date": "2026-09-11",
+  "python": "3.12.14",
+  "numpy": "2.3.5",
+  "tokenizers": "0.22.2",
+  "git_head": "2bca40d8863545106a21518c5be60d5beaca16fc",
+  "input_sha256": {
+    "work/release/zero-v1/model.npz": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
+    "work/release/zero-v1/tokenizer.json": "997eaeff157a7d4db899b8f2278ad3db6e323e609ae956b9c5035550f581eeee",
+    "work/release/zero-v1/config.json": "fd784397925e9ec32b6f1412af85b46faea79bb618b17197dc6d3a0068669636",
+    "m11/release/zero_encoder.py": "92e93ee40b061556f294974bcf384b9a14163d94ee4e57818ee34d193e8cc754",
+    "m17/LEDGER.md": "668cb928feede460355fafb3599b2ca4efc35824bea7e285b115ba2c7da1a8af",
+    "m17src/planning_probe.py": "31572c1f603077126d541dcd4aeb38b63020465d1f763f65d611c620de1e7d57"
+  },
+  "followup": {
+    "nano_vocab": 30522,
+    "zero_vocab": 30522,
+    "nano_zero_vocab_mapping_equal": true,
+    "nano_vocab_sha256": "f21ba7d9e039a58203c4dcbab3b89aacd44946d8dba15c12b61666cf93b786c1",
+    "shared_piece_fixtures": [
+      {
+        "text": "s3 s bucket",
+        "old": [
+          "[CLS]",
+          "s",
+          "##3",
+          "s",
+          "bucket",
+          "[SEP]"
+        ],
+        "new": [
+          "[CLS]",
+          "s3",
+          "s",
+          "bucket",
+          "[SEP]"
+        ],
+        "cosine": 0.9956081877361451,
+        "max_abs": 0.010579343335929501
+      },
+      {
+        "text": "k8s eks networking",
+        "old": [
+          "[CLS]",
+          "k",
+          "##8",
+          "##s",
+          "ek",
+          "##s",
+          "networking",
+          "[SEP]"
+        ],
+        "new": [
+          "[CLS]",
+          "k8s",
+          "eks",
+          "networking",
+          "[SEP]"
+        ],
+        "cosine": 0.9985162250958823,
+        "max_abs": 0.005030627480354245
+      },
+      {
+        "text": "kubernetes kubectl networking",
+        "old": [
+          "[CLS]",
+          "ku",
+          "##ber",
+          "##net",
+          "##es",
+          "ku",
+          "##be",
+          "##ct",
+          "##l",
+          "networking",
+          "[SEP]"
+        ],
+        "new": [
+          "[CLS]",
+          "kubernetes",
+          "kubectl",
+          "networking",
+          "[SEP]"
+        ],
+        "cosine": 0.9857736397547552,
+        "max_abs": 0.016834709730005087
+      }
+    ],
+    "illustrative_domains": {
+      "science": [
+        {
+          "term": "photolithography",
+          "tokens": [
+            "photo",
+            "##lit",
+            "##hog",
+            "##raphy"
+          ]
+        },
+        {
+          "term": "superconductivity",
+          "tokens": [
+            "super",
+            "##con",
+            "##du",
+            "##ct",
+            "##ivity"
+          ]
+        },
+        {
+          "term": "stoichiometry",
+          "tokens": [
+            "st",
+            "##oic",
+            "##hi",
+            "##ome",
+            "##try"
+          ]
+        }
+      ],
+      "medicine": [
+        {
+          "term": "myocarditis",
+          "tokens": [
+            "my",
+            "##oca",
+            "##rdi",
+            "##tis"
+          ]
+        },
+        {
+          "term": "immunotherapy",
+          "tokens": [
+            "im",
+            "##mun",
+            "##oth",
+            "##era",
+            "##py"
+          ]
+        },
+        {
+          "term": "HbA1c",
+          "tokens": [
+            "h",
+            "##ba",
+            "##1",
+            "##c"
+          ]
+        }
+      ],
+      "finance": [
+        {
+          "term": "ebitda",
+          "tokens": [
+            "e",
+            "##bit",
+            "##da"
+          ]
+        },
+        {
+          "term": "amortization",
+          "tokens": [
+            "amor",
+            "##ti",
+            "##zation"
+          ]
+        },
+        {
+          "term": "securitization",
+          "tokens": [
+            "sec",
+            "##uri",
+            "##ti",
+            "##zation"
+          ]
+        }
+      ],
+      "legal": [
+        {
+          "term": "indemnification",
+          "tokens": [
+            "ind",
+            "##em",
+            "##ni",
+            "##fication"
+          ]
+        },
+        {
+          "term": "estoppel",
+          "tokens": [
+            "est",
+            "##op",
+            "##pel"
+          ]
+        },
+        {
+          "term": "jurisdiction",
+          "tokens": [
+            "jurisdiction"
+          ]
+        }
+      ],
+      "general": [
+        {
+          "term": "dishwasher",
+          "tokens": [
+            "dish",
+            "##wash",
+            "##er"
+          ]
+        },
+        {
+          "term": "itinerary",
+          "tokens": [
+            "it",
+            "##iner",
+            "##ary"
+          ]
+        },
+        {
+          "term": "mortgage",
+          "tokens": [
+            "mortgage"
+          ]
+        }
+      ]
+    },
+    "limitations": "Hand-authored examples, not corpus coverage or model-quality evidence. Nano tokenizer loaded offline; M13 recipe unchanged."
+  }
+}
