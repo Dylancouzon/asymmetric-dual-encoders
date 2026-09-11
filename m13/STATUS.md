@@ -20,7 +20,7 @@ update it from actual selected-arm throughput and matched-path encoding measurem
 No protected evaluation or full build has run. Runpod compute is stopped; its disk is retained.
 M17 keeps the original checkout; M13 uses `work/m13cloud`.
 
-Independent monitoring is active as `m13-monitor.service`: 30-second checks, local Windows
+Independent monitoring is active as `m13-monitor.service`: five-minute checks, local Windows
 alerts, and durable health/transition records. Add each next job before launch; configuration,
 operating limits and verified failure tests are documented in `m13/MONITORING.md`.
 

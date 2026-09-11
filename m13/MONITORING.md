@@ -1,7 +1,7 @@
 # M13 job monitoring
 
 `scripts/m13_monitor.py` checks the explicit jobs in `m13/monitor_config.json` every
-30 seconds. It reads receipts, controller process identities and log activity. Failures,
+five minutes. It reads receipts, controller process identities and log activity. Failures,
 dead controllers, missing evidence and 15-minute inactivity are visible in
 `work/m13-monitor/health.json`; state changes append to `alerts.jsonl` beside it.
 Waiting for an active upstream job is handled separately from a stalled handoff.

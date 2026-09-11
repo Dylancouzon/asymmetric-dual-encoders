@@ -173,7 +173,7 @@ def main():
         poll(config)
         if args.once:
             break
-        time.sleep(30)
+        time.sleep(300)
 
 
 if __name__ == "__main__":
