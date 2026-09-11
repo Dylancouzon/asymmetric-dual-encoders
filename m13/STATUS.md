@@ -1,7 +1,15 @@
-# M13 status — stage 2 code ready; waiting on the provider (2026-09-10)
+# M13 status — Runpod setup running (2026-09-11)
 
-**Next:** Dylan: provider and account. Day one on the instance: measured rate and billed price
-into the allocation table (`build13.py --plan --rate --price`), then both E arms with
+**Now:** Runpod Pod `k3aee2m68765em`, one A100 SXM 80 GB, $1.59/GPU-hour, 500 GB persistent
+Pod disk. Pinned environment/CUDA bf16 validation and all active CPU checks passed on cloud
+(M13 170 tests). The reviewed WSL controller is uploading admitted artifacts, then verifying
+checksums and running 512-token shape and restart smokes; it backs up evidence and stops the Pod.
+Live receipt `results/m13_cloud_stage0.json`, logs `logs/m13-cloud-*.log`, operational details
+`m13/CLOUD_READINESS.md`. WSL must remain awake. This job launches no registered E run.
+
+**Next:** inspect the stage-0 receipt/evidence, measure the remaining encode allowance, put
+measured rate and billed price into the allocation table (`build13.py --plan --rate --price`),
+then both E arms with
 `run_arm.py <arm> --dev6 defer`; DEV-6 on the box from the returned `cycle3.pt` via
 `m13src/dev6_from_checkpoint.py`. Stage 3: `m13src/lotte_gate13.py --preflight-only`, then the read,
 once. Ship list: `m13/SHIP_LIST.md`. Branch `m13-stage1-execution-prep`.
@@ -18,7 +26,7 @@ M10's prepared data, completed screen and selected components are the input, not
 | Cost frontier | Comparable zero/bge-small/nano serving and index costs on the reference hardware |
 
 Detailed execution defects and the day-one runbook have one home: `m13/EXECUTION.md`. Recipe:
-`m10/M102_LOCK.md`. Lessons: `m13/FINDINGS.md`. Session closed 2026-09-10; the box is idle.
+`m10/M102_LOCK.md`. Lessons: `m13/FINDINGS.md`. M13 worktree: `work/m13cloud`; M17 owns the original checkout.
 A recipe push alone triggers neither M9 close-out nor final access. M9's rows must not inform
 an open recipe decision. LoTTE handling belongs before the expensive build when its veto applies.
 
