@@ -27,6 +27,13 @@ development-suite or panel read, nothing published.
 pairs, model answers hidden; fill `human_relevant_yes_no` / `human_wrong` and `human_judge`.
 Agreement is reported beside the model judgments whenever it arrives.
 
+**Running at the clear (2026-09-11 ~18:10):** the full-pool build, detached:
+`work/m17/prepared/full`, log `work/m17/logs/prepare_full.log`, expected ~1.5 h. Its pool plan
+matched A5 exactly (496,229 general, 72,985 coverage, 15,393 alias pairs = 600,000). First thing
+next session: `tail -n 20` the log and `grep -iE 'Traceback|Error|FAILED|OOM|Killed'`; if it
+died, resume with the same command (stages are cached and identity-bound). Do not read any
+quality surface from it.
+
 **Next (in this order):** the registry stays `DRAFT_NOT_EXECUTABLE` until step 6.
 
 6. Full-pool build (`prepare_data.py` without `--size`, ~1.5 h, detached, monitored), then the
