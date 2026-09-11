@@ -21,12 +21,18 @@ The paths enter corpus/resume fingerprints; do not run from the local M13 worktr
 Run rsync from the source box, with the committed allowlist path adjusted if needed:
 
 ```bash
-rsync -an --info=progress2 \
+rsync -an --no-owner --no-group --no-perms --info=progress2 \
   --files-from=/home/dylan/asymetric-dual-encoders/work/m13cloud/m13/cloud_transfer_files.txt \
   / root@HOST:/
 ```
 
 Inspect that dry run, then remove only `n` from `-an`. Configure SSH host/port/key separately.
+For the measured home uplink, add `--partial --append-verify --compress
+--compress-choice=zstd --compress-level=3` to resume interrupted uploads and compress tokens/JSON.
+The Runpod volume rejects chown and does not preserve restrictive file permissions; the explicit
+no-owner/group/perms options avoid attribute-only failures. Store the scoped GitHub private key
+in `/root/.ssh` on container storage, mode 600, and restore it from the local copy after a stop.
+Do not store private keys on the persistent volume. The API key remains exclusively local.
 No `--delete`, wildcards or directory-recursive flags are needed: each file is enumerated.
 `-a` preserves HF snapshot symlinks; all their blob referents are also in the allowlist.
 Do not use `-L`, which duplicates the model bytes. Never transfer a credential directory or
@@ -80,3 +86,8 @@ Use `--dev6 defer` for both E arms and return checkpoints for the registered box
 After transfer, verify the frozen comparator digest from the clone, run the prescribed checks,
 validate real assembly and COV dataset/cache availability, and smoke both registered shapes and
 resume before E execution. Do not interpret transfer success as experiment readiness.
+
+`cloud_transfer_sha256.txt` authenticates all 266 allowlisted files, including the bytes referenced
+by model snapshot symlinks. Verify on the Pod with `cd / && sha256sum -c
+/home/dylan/asymetric-dual-encoders/m13/cloud_transfer_sha256.txt`; every line must pass before
+using the transferred corpus. Inventory creation hashed 48,175,693,973 bytes in 131.301 seconds.
