@@ -364,3 +364,22 @@ hours is expressly permitted; ×2 is a chosen ceiling, not a demonstrated bound,
 triggers the registered stop/recovery policy. STATUS step 6's older wording ("lock, then clock")
 is superseded by this section. **Owner:** M17 implementing session. **Exit:** fixes landed;
 Codex Sol reviews the fixed code next (alternating rule), then at most one P1 re-check.
+
+## Codex Sol step-6 lock review (2026-09-11, second review)
+
+Brief: [m17-sol-lock-brief](../research/m17-sol-lock-brief-2026-09-11.md). Log:
+`research/m17-sol-lock-review-2026-09-11.log` (gitignored). Read-only on commit `2c157be`;
+access log: twelve `m17src` modules/tests read directly, the rest scanned by one permitted
+non-recursive grep, `REVIEW.md`, `registry.json`; nothing under `work/` or `results/`. Every
+Astra fix confirmed with the refusing line and the former trigger named; **no remaining P1, no
+new P1/P2**. Sol also checked the real builder's manifest shape field by field (`size`
+integer-or-null, `seed`, receipt `{path: sm.rel, sha256}`, `build_record.json` types, base
+manifest without `new_rows` compared as `None` on both sides), that the whole-registry protocol
+hash cannot invalidate its own pre half, that V0's hash conventions match the builder's and its
+table equals step 0 of `train.extend_model`, and that the suffix recovery cannot drop committed
+rows. Coverage gaps noted and accepted (owner's no-over-engineering rule): `export_v0` is
+exercised by the manual smoke on `work/m17/prepared/s2000` (five gates pass), not by a test;
+no test averages two snapshots with differing cache-artifact digests; the executed
+`--dry-run` refusal has no test. **Exit:** review loop closed (Astra → fixes → Sol, nothing
+remaining, no re-check needed). Step 6 proceeds to the pre half once the full build's
+`build_record.json` says `full build`.
