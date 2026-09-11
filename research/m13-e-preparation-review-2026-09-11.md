@@ -19,3 +19,16 @@ start only the existing stopped Pod at the quoted price; restore bootstrap under
 deploy exact committed HEAD via Git bundle; run dependency preflight and benchmark under separate
 1,200-second remote deadlines; copy successful/failure receipts before bounded STOP retries;
 raise if shutdown is unconfirmed. No registered E training is launched by preparation.
+
+## Registered E controller
+
+Both independent reviewers returned GO for `scripts/m13_cloud_e.py`, conditional on committed
+passing preflight/encode receipts and a reviewed measured allocation below $1,000. Fixed findings:
+receipt hash/PASS/registry binding; live Pod price/state; zero-exit terminal FAILED arm outcomes
+reported explicitly while both registered arms remain scheduled unchanged; partial running
+backups need no nonexistent published terminal twin; exact owned process marker parsing.
+Synthetic verification covered good/bad/stale allocations, complete/corrupt/partial backups,
+and actual rendered cleanup against owned and unowned sleeping local processes. No cloud or
+protected access in these checks. The controller is fresh-launch only, with no automatic rerun.
+It copies entire E output trees and published records, verifies remote manifest plus checkpoint
+and COV references locally, and stops compute on completion/failure. WSL must remain awake.
