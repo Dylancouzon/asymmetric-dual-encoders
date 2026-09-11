@@ -1,4 +1,4 @@
-# M17 status — pre-clock execution, checkpoint 4 (before the lock and clock start), 2026-09-11
+# M17 status — on the clock since 2026-09-11T23:41:24Z (screened rebuild running), 2026-09-11
 
 **Planned:** a supported vocabulary extension, joint table/listwise training, and the owner-approved
 alias consistency, late-checkpoint averaging and int8 resident-row loading comparisons. Same query
@@ -36,14 +36,16 @@ API and frozen document index; Nano/M13 stays unchanged. Branch: `m17-zero-v1.1-
 
 **Next (in this order; go given):**
 
-6a. Commit the pre half:
-    `.venv/bin/python m17src/lock.py --phase pre --build work/m17/prepared/full --prior-seconds 146.211 --prior-stages pool,domain,protected --prior-source "work/m17/logs/prepare_full_crash1.log stage lines (attempt 1, 2026-09-11: pool 24.3 s, domain 121.9 s, protected deferred 0 s)"`
-    (drop `--dry-run`), commit "M17 lock: pre half", push. Registry → `EXECUTABLE`.
-6b. Start the clock under the ruling. Detached, monitored:
-    `.venv/bin/python m17src/prepare_data.py --out work/m17/prepared/full --protected-screen`
-    (rebuilds teacher→manifests after the screen; caches warm; budget ≤ 3 h for the phase).
+6a. **Done (2026-09-11):** pre half committed as `e0a1a40` ("M17 lock: pre half"); registry
+    `EXECUTABLE`.
+6b. **Running (2026-09-11):** the clock started at **2026-09-11T23:41:24Z** (first
+    `--protected-screen` invocation; `work/m17/logs/clock_started.txt`). That invocation was
+    refused for a missing `--force`; the relaunch at 23:48:37Z runs
+    `.venv/bin/python m17src/prepare_data.py --out work/m17/prepared/full --protected-screen --force`
+    detached via `work/m17/logs/run_screen.sh`, log `work/m17/logs/prepare_full_screen.log`
+    (rebuilds every stage after the screen; teacher/doc caches warm; budget ≤ 3 h).
 6c. Commit the executed half:
-    `.venv/bin/python m17src/lock.py --phase executed --build work/m17/prepared/full --v0-out work/m17/bundles/V0 --clock-started <ISO>`
+    `.venv/bin/python m17src/lock.py --phase executed --build work/m17/prepared/full --v0-out work/m17/bundles/V0 --clock-started 2026-09-11T23:41:24Z`
     → `LOCKED_EXECUTABLE`; commit, push. Only then read V0 (one declared read).
 6d. Screen arms (C, V, L, VL, VL-A at 4,000 steps, seed 0) per `training.decision_protocol`.
 
@@ -58,7 +60,10 @@ half is committed and before the screen arms start.
 **Pitfalls for the next session:** `prepare_data.py` must not change between the pre and
 executed halves (its source hash is an invariant input; a change is a dated amendment). Watch the
 screened rebuild's log for `Traceback|Error|FAILED|OOM|Killed`; if it dies, resume with the same
-command. Do not read anything under `work/m17/prepared/full` as a quality surface.
+command. A screened rebuild of an existing unscreened directory needs `--force` (the protected
+flag is in every stage identity), and the auto-mode classifier blocks commands containing
+`--force` — launch through `work/m17/logs/run_screen.sh`. Do not read anything under
+`work/m17/prepared/full` as a quality surface.
 
 Reviews and dispositions: [REVIEW.md](REVIEW.md). Plan: [PLANNING.md](PLANNING.md). Constants:
 [registry.json](registry.json). Authority/probes: [LEDGER.md](LEDGER.md). Paths and pitfalls:

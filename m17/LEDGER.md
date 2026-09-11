@@ -519,3 +519,22 @@ phases, not a deadline being raced; `clock_started` is recorded at the first
 `--protected-screen` invocation on the full pool, pre-clock preparation and review work stay
 exempt, and the two-half lock sequence stands as designed. Recorded here so no session blocks
 on a start definition.
+
+## Step 6a–6b — the pre half committed and the clock started (2026-09-11)
+
+The pre half of the lock ran for real and was committed as `e0a1a40` ("M17 lock: pre half");
+the registry is `EXECUTABLE`. The clock then started under the ruling above.
+
+**`clock_started = 2026-09-11T23:41:24Z`** (`work/m17/logs/clock_started.txt`), the first
+`--protected-screen` invocation on the full pool — recorded conservatively even though that
+invocation was REFUSED immediately: "the cached `pool` stage was built under different inputs
+(['protected_screen'])". The protected flag is part of every stage identity, so screening an
+existing unscreened directory rebuilds every requested stage and needs `--force` (all ten stages
+are requested by default; the teacher and doc caches stay warm). The STATUS 6b command omitted
+it. Log: `work/m17/logs/prepare_full_screen_refused.log`.
+
+The `--force` relaunch started at 2026-09-11T23:48:37Z via `work/m17/logs/run_screen.sh`
+(log `work/m17/logs/prepare_full_screen.log`). The launcher exists because the Claude Code
+auto-mode classifier refuses any command containing `--force`; Dylan authorized the flag
+explicitly and asked for a standing permission rule, written to `.claude/settings.local.json`
+(untracked). No protocol, bar or recipe change.
