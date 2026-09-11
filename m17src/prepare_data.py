@@ -1190,9 +1190,19 @@ def _apply_screen(ctx, drop_qids):
     # re-applied below to state the passes the screened populations actually support.
     reserve = [(s, g) for s, g in (ctx.cache_state.get("coverage_reserve") or [])
                if s.qid not in drop_qids]
-    target = int(ctx.stages["pool"]["plan"]["coverage"])
+    # The refill restores the PLANNED TOTAL under A5's order (general, all alias pairs, then
+    # coverage to the cap): a screened-out general row or alias pair is replaced by a coverage
+    # view too, not only a screened-out coverage view (Sol re-check P1-2). The reserve is the
+    # only bucket with spare distinct population, so coverage is the only bucket that can grow.
+    plan = ctx.stages["pool"]["plan"]        # heldout rows are drawn FROM the general count
+    # In a real build the pool IS the planned total; restoring the pre-screen row count is the
+    # same statement and also holds for fixtures whose plan is smaller than their rows.
+    target_total = max(int(plan["general"]) + int(plan["coverage"]) + 2 * int(plan["alias_pairs"]),
+                       len(specs))
+    target = int(plan["coverage"])
     have = sum(1 for s in kept if s.bucket == "coverage" and not s.alias_pair_id)
-    short = max(0, target - have)
+    rows_after_screen = len(kept)
+    short = max(0, target_total - rows_after_screen)
     refill = _stratified([r for r in reserve], lambda r: r[0].source, short,
                          (ctx.seed, "cov-refill")) if short else []
     for s, g in refill:
@@ -1215,9 +1225,13 @@ def _apply_screen(ctx, drop_qids):
             "heldout_rebuilt_to": len(heldout_idx),
             "positives_kept": len(ctx.cache_state["positives"]),
             "coverage_refill": {"target": target, "after_screen": have,
+                                "target_total": target_total,
+                                "rows_after_screen": rows_after_screen,
                                 "refilled_from_reserve": len(refill),
                                 "reserve_left": len(ctx.cache_state["coverage_reserve"]),
-                                "remaining_shortfall": max(0, target - have - len(refill))},
+                                "remaining_shortfall": max(0, target_total - len(kept)),
+                                "rule": "A5: coverage restores the planned total, replacing "
+                                        "screened-out rows of ANY bucket"},
             "bucket_shortfalls_after_screen": {
                 k: v["shortfall_vs_plan"] for k, v in dose_check["buckets"].items()},
             "dose_rule_reapplied": sm.dose_rule(realized["general"], realized["coverage"],

@@ -551,6 +551,30 @@ def q_src_doc(ctx, qid):
     return ctx.cache_state["source_doc"][qid]
 
 
+def test_the_refill_restores_the_planned_total_after_general_and_alias_losses(tmp_path, reg):
+    """Sol re-check P1-2: a screened-out general row or alias pair is replaced by coverage too,
+    so the pool returns to the A5 planned total, not only to the coverage target."""
+    reserve = [(m17cache.QuerySpec(qid=f"cov:r{i}", text=f"reserve {i}", source="squad-train",
+                                   bucket="coverage", family=f"doc:r{i}"),
+                ("squad-train", f"r{i}")) for i in range(6)]
+    ctx = _screen_ctx(tmp_path, reg, reserve=reserve)
+    plan = ctx.stages["pool"]["plan"]
+    total = int(plan["general"]) + int(plan["coverage"]) + 2 * int(plan["alias_pairs"])
+    before = len(ctx.cache_state["specs"])
+    # one alias VIEW hit (both views go) plus one coverage row: three non-refillable-in-kind rows
+    # (the fixture's only training general row cannot be dropped without the one-batch refusal)
+    rec = pd._apply_screen(ctx, {"alias:p1:a", "cov:a"})
+    fill = rec["coverage_refill"]
+    assert rec["rows_dropped"] == 3 and rec["alias_pairs_dropped"] == 1
+    assert fill["target_total"] == max(total, before)
+    assert fill["refilled_from_reserve"] == 3 + max(0, total - before)
+    assert fill["remaining_shortfall"] == 0
+    assert len(ctx.cache_state["specs"]) == max(total, before)
+    kept = [s.qid for s in ctx.cache_state["specs"]]
+    assert "alias:p1:a" not in kept and "alias:p1:b" not in kept and "cov:a" not in kept
+    assert sum(1 for q in kept if q.startswith("cov:")) == 1 + 3      # coverage absorbed the loss
+
+
 def test_a_bucket_that_falls_below_one_batch_after_the_screen_is_refused(tmp_path, reg):
     ctx = _screen_ctx(tmp_path, reg, general=2)
     with pytest.raises(SystemExit, match="one batch of the"):

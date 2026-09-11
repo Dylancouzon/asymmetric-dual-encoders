@@ -620,12 +620,36 @@ def _recipe_sidecar(reg, fz):
         "candidates": {"k": tr["candidate_k"], "mix_labeled": tr["candidate_mix_labeled"],
                        "mix_query_only": tr["candidate_mix_query_only"], "seed": 0,
                        "rng": tr["candidate_construction"]["rng"],
+                       "construction": tr["candidate_construction"],
                        "rng_recipe_version": m17cache.RNG_RECIPE_VERSION},
         "teacher": {"model": reg["teacher"], "revision": reg["teacher_revision"],
                     "query_preprocessing": {
+                        "teacher": reg["teacher"], "revision": reg["teacher_revision"],
                         "instruction": spec["query_prefix"],
                         "max_length": int(spec["max_length"]), "pooling": spec["pooling"],
-                        "revision": reg["teacher_revision"]}}}}}
+                        "post_dense": spec.get("post_dense"),
+                        "encode_dtype": "float32", "storage_dtype": "float16",
+                        "normalized": "l2",
+                        "tokenizer": "the teacher's own tokenizer (" + spec["tokenizer_id"] + ")"}}}}}
+
+
+def test_the_whole_construction_block_and_preprocessing_are_bound(tmp_path):
+    """Sol re-check P1-4: tie breaking, backfill and the Dense head were not compared."""
+    reg, fz = common.registry(), common.freeze()
+    side = _recipe_sidecar(reg, fz)
+    T._check_locked_recipe(tmp_path, side, reg, fz)
+    cc = {**reg["training"]["candidate_construction"], "score_ties": "descending bank id"}
+    moved = {**reg, "training": {**reg["training"], "candidate_construction": cc}}
+    with pytest.raises(SystemExit, match="candidate_construction"):
+        T._check_locked_recipe(tmp_path, side, moved, fz)
+    fz2 = {**fz, "encoder_spec": {**fz["encoder_spec"], "post_dense": "other"}}
+    with pytest.raises(SystemExit, match="teacher_query_preprocessing"):
+        T._check_locked_recipe(tmp_path, side, reg, fz2)
+    import copy
+    side2 = copy.deepcopy(side)
+    side2["identity"]["parts"]["teacher"]["query_preprocessing"]["extra_flag"] = 1
+    with pytest.raises(SystemExit, match="fields the locked recipe does not know"):
+        T._check_locked_recipe(tmp_path, side2, reg, fz)
 
 
 def test_a_cache_built_under_another_candidate_recipe_is_refused(tmp_path):

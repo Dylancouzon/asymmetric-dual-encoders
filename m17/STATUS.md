@@ -14,8 +14,9 @@ anonymous memory ≈ 8 GiB projected (`results/m17_prepare_timing.json`). The ca
 made ninefold faster with the registered ordering provably unchanged. Resume smoke: VL-A interrupted
 and resumed under a changed checkpoint interval; `grad_shares` show listwise ≈ 0.88, cosine ≈ 0.25,
 alias ≈ 0.003, anchor 0 of the row-gradient norm (anchor inert, `FINDINGS.md`). Reviews: Codex Astra
-(21 findings) → fixes → Codex Sol (11) → fixes → one Sol P1-only re-check; dispositions in
-`REVIEW.md`; 296 `m17src` tests pass. Owner rulings A4–A6 (`LEDGER.md`, registry
+(21 findings) → fixes → Codex Sol (11) → fixes → one Sol P1-only re-check (12 of 14 P1s
+confirmed, the two remaining fixed directly: after-screen refill to the planned total, full
+recipe binding); dispositions in `REVIEW.md`; 298 `m17src` tests pass. Review loop closed. Owner rulings A4–A6 (`LEDGER.md`, registry
 `accepted_plan_revision_a4/5/6`). The three descriptive sheets were **model-judged** under A6 and
 ingested: panel FINAL, sha `d1b017a8a7a770ac…`, cloud-software disclosed as model-judged; alias test
 57 verified / 23 rejected senses; spot check 2/308 wrong, pool stands. No candidate trained, no

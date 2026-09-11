@@ -315,3 +315,20 @@ numbers.
 
 **Owner:** M17 implementing session. **Exit:** done — the three sizes are rebuilt, the timing
 result regenerated and the resume smoke re-run. Step-5 close-out next.
+
+## Codex Sol step-5 P1-only re-check (2026-09-11, the single re-check)
+
+Brief: [m17-sol-step5-recheck-brief](../research/m17-sol-step5-recheck-brief-2026-09-11.md).
+Log: `research/m17-sol-step5-recheck-2026-09-11.log`. Read-only; its sandbox could not run
+pytest, so its coverage notes describe the tests, not executions. Of the 14 step-5 P1s (Astra
+P1-1…P1-10, Sol P1-1…P1-4), 12 confirmed fixed with the refusing line and the covering test
+named; two remained and were fixed directly in the same session:
+
+| Remaining P1 | Disposition and exit |
+|---|---|
+| Sol P1-2 the after-screen refill restored only the coverage target, so a screened-out general row or alias pair left the pool below the A5 planned total | Fixed: `_apply_screen` refills coverage from the screened reserve until the pre-screen row count (= the planned total in a real build) is restored; the record carries `target_total`, `rows_after_screen` and the rule. Test: an alias-view hit plus a coverage row → three coverage rows return. |
+| Sol P1-4 the locked-recipe check compared only mixes, K, RNG, model/revision and three preprocessing fields, so an older cache differing in `score_ties`, backfill, tokenizer or `post_dense` passed | Fixed: the cache identity now carries the whole registered `candidate_construction` block and `train._check_locked_recipe` compares it and the COMPLETE preprocessing object (`prepare_data.teacher_preprocessing`'s fields, incl. `post_dense`, tokenizer and both precisions) with the registry/FREEZE; unknown extra fields refuse. Tests: `score_ties`, `post_dense`, an extra field. |
+
+The re-check also confirmed the A5 cap-fill order (general, all distinct alias pairs, coverage
+to exactly the cap, deterministic). The review loop is closed here: two reviews plus one
+re-check. **Exit:** step 5 closed; step 6 (full-pool build and lock) next.

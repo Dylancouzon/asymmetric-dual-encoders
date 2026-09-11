@@ -412,6 +412,9 @@ def identity(queries, bank: Bank, reg, cache_seed, manifests=None):
         "candidates": {"k": tr["candidate_k"], "mix_labeled": tr["candidate_mix_labeled"],
                        "mix_query_only": tr["candidate_mix_query_only"], "seed": cache_seed,
                        "rng": tr["candidate_construction"]["rng"],
+                       # the WHOLE registered construction block, so a locked change to tie
+                       # breaking, positive choice or backfill changes the identity (Sol re-check P1-4)
+                       "construction": tr["candidate_construction"],
                        "rng_recipe": RNG_RECIPE, "rng_recipe_version": RNG_RECIPE_VERSION},
     }
     return {"parts": parts, "sha256": sha_json(parts)}

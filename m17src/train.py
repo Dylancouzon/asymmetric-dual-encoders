@@ -906,22 +906,32 @@ def _check_locked_recipe(d, sidecar, reg, fz=None):
         "candidate_mix_query_only": tr["candidate_mix_query_only"],
         "rng": tr["candidate_construction"]["rng"],
         "rng_recipe_version": m17cache.RNG_RECIPE_VERSION,
+        # the whole registered construction block (tie breaking, positive choice, backfill,
+        # bank sampling): a locked change to any of it is a different cache (Sol re-check P1-4)
+        "candidate_construction": tr["candidate_construction"],
     }
     got = {"candidate_k": cand.get("k"), "candidate_mix_labeled": cand.get("mix_labeled"),
            "candidate_mix_query_only": cand.get("mix_query_only"), "rng": cand.get("rng"),
-           "rng_recipe_version": cand.get("rng_recipe_version")}
+           "rng_recipe_version": cand.get("rng_recipe_version"),
+           "candidate_construction": cand.get("construction")}
     teacher = parts.get("teacher") or {}
     want["teacher"] = {"model": reg["teacher"], "revision": reg["teacher_revision"]}
     got["teacher"] = {"model": teacher.get("model"), "revision": teacher.get("revision")}
     pre = teacher.get("query_preprocessing") or {}
     spec = fz["encoder_spec"]
-    want["teacher_query_preprocessing"] = {"instruction": spec["query_prefix"],
-                                           "max_length": int(spec["max_length"]),
-                                           "pooling": spec["pooling"],
-                                           "revision": reg["teacher_revision"]}
-    got["teacher_query_preprocessing"] = {
-        "instruction": pre.get("instruction"), "max_length": pre.get("max_length"),
-        "pooling": pre.get("pooling"), "revision": pre.get("revision")}
+    # the COMPLETE preprocessing object the builder records (`prepare_data.teacher_preprocessing`),
+    # including the Dense head, tokenizer and both precisions — not a hand-picked subset
+    want["teacher_query_preprocessing"] = {
+        "teacher": reg["teacher"], "revision": reg["teacher_revision"],
+        "instruction": spec["query_prefix"], "max_length": int(spec["max_length"]),
+        "pooling": spec["pooling"], "post_dense": spec.get("post_dense"),
+        "encode_dtype": "float32", "storage_dtype": "float16", "normalized": "l2",
+        "tokenizer": "the teacher's own tokenizer (" + spec["tokenizer_id"] + ")"}
+    got["teacher_query_preprocessing"] = {k: pre.get(k) for k in want["teacher_query_preprocessing"]}
+    extra = sorted(set(pre) - set(want["teacher_query_preprocessing"]))
+    if extra:
+        raise SystemExit(f"M17 REFUSED: the cache's teacher preprocessing carries fields the locked "
+                         f"recipe does not know ({extra}); rebuild the prepared directory.")
     differ = sorted(k for k in want if want[k] != got[k])
     if differ:
         raise SystemExit(
