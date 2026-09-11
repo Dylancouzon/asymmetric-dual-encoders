@@ -8,9 +8,26 @@ API and frozen document index; Nano/M13 stays unchanged. Branch: `m17-zero-v1.1-
 for the owner-confirmed local RTX 3080. No candidate trained, quality benchmark scored or model
 published. Research conclusions and diagnostic limitations: [FINDINGS.md](FINDINGS.md).
 
-**Next:** review/ratify the prospective M17 protocol, identify admitted data and panel manifests,
-then implement and time the real path. The registry is deliberately `DRAFT_NOT_EXECUTABLE`:
-the current planning-only authorization does not start the future training run.
+**Next (execution session, in this order):** the registry is `DRAFT_NOT_EXECUTABLE` until
+step 6 is done; nothing below the pre-clock line touches the 72-hour budget.
+
+1. Read `PLANNING.md`, `registry.json` (especially `decision_protocol`, `candidate_construction`,
+   `bucket_populations_and_dose_rule`, `vocabulary_ranking`) and `REVIEW.md`.
+2. Pre-clock, no GPU: complete the Kubernetes licensing row in `research/m7-data-licensing.md`
+   (revision, clone route, licence text, attribution artifact, decontamination) before any
+   download; build the admitted-source support manifest with per-domain counts; build and seal
+   the judged panel and the 200-pair alias test, screened against M7 ancestry.
+3. Pre-clock: write the one M17 driver, cache schema, averaging export helper and numpy loader
+   in `m17src/`; run the tiny synthetic end-to-end rehearsal under `work/m17/rehearsal`.
+4. Pre-clock: two independent implementation reviews (Codex Astra plus one other); fix P1s.
+5. Time teacher encoding, mining and evaluation at two sizes; apply the dose rule; write the
+   measured allocation into the registry.
+6. Commit the lock: protocol, vocabulary hash, tokenizer hash, seeds, cache identity. Flip the
+   registry status. Only then start the clock and read V0.
+
+Owner rulings already recorded and not to be re-asked: A1 additions, A2 recommendations, `k8s`
+pinned, Kubernetes docs in principle. Any new source, cap, teacher or release change still needs
+Dylan.
 
 **Open dependencies:** supported training terms, independently judged evaluation panel, measured
 end-to-end allocation, implementation and two independent execution reviews. No existing rule
