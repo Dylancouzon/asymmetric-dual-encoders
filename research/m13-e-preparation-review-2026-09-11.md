@@ -117,3 +117,14 @@ https://docs.runpod.io/pods/troubleshooting/pod-migration
 After the pushed checkpoint manifest, exactly21 registered remediated files were independently
 copied to this worktree. The authorized freeze_lotte PIN module hashed all seven slices; pin
 was committed/pushed. Gate metadata preflight passed, without opening LoTTE paths or scoring.
+
+Replacement and LoTTE launchers received two independent GO reviews each. Replacement
+uses one creation request, repeated bounded discovery on ambiguous creation, the same secure
+A100 SKU and <=$1.59 quote/created-price checks, exact pushed HEAD, 69 minimal transferred
+files with checksum verification, fixed fp16 timing, and STOP. Its 108-minute work cap reserves
+12minutes for cleanup within a two-hour allocation. HF symlinks are preserved; all26 targets
+are included. LoTTE binds the successful benchmark to the selected Pod, limits staging to21
+registered files, requires pushed manifest/pin and reviewed stage allocation, executes once,
+and bounds checksum backup with reserved STOP time. Neither launcher was executed in review.
+Operational source `work/m13cloud-launchers/replacement.py` sha256 `84d9eb464a1baec2dcee478175943bb7cb40b953c4e331f6ca46be56e23f468b`.
+Operational source `work/m13cloud-launchers/lotte.py` sha256 `711324b9047049d18b9c7d861d947d21683a7545d24a3dce981d385bc0eb3905`.
