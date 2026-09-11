@@ -42,3 +42,11 @@ source hashes, row counts, recipe fields and code identity remain checked. `buil
 same fingerprint and inherits the repair. Old checkpoints are not migrated or bypassed.
 Both registered E arms remain unrun. Failure receipt: `results/m13_cloud_stage0_attempt1.json`;
 checkpoint and logs: `work/m13cloud-attempt1/m13cloud-evidence/`.
+
+Fresh retry on `ca9ccdc` passed both 512-token, 600-step real E smokes: each resumed from
+step 100, preserved prior loss history and finished all remaining steps with matching checkpoint
+identity/counters/hashes. Cloud CPU checks also passed. Local backups were verified and STOP
+confirmed. `results/m13_cloud_stage0.json` and `results/m13_cloud_resume_smoke.json` contain
+the evidence. Stub COV values are synthetic smoke checks, not retrieval-quality observations.
+Short smoke rates vary across attempts and include instrumentation/checkpoint effects; they
+are not yet the measured allocation needed to authorize the full build.

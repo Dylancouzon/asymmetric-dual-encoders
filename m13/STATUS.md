@@ -1,11 +1,15 @@
-# M13 status — Checkpoint restart repair (2026-09-11)
+# M13 status — Cloud recovery validated (2026-09-11)
 
-**Now:** Initial cloud validation uploaded and verified all 266 artifacts; CPU checks and both
-512-token E shape smokes passed. The checkpoint restart smoke failed because recipe identity
-included loader timestamps/timings. Evidence was backed up and the Pod stopped automatically
-(about $3.94 through shutdown). The narrow fingerprint fix passes 151 runner/build tests;
-independent reviews and a fresh cloud restart check are next. Initial receipt:
-`results/m13_cloud_stage0_attempt1.json`; full local evidence: `work/m13cloud-attempt1/`.
+**Now:** Cloud setup and recovery validation **PASSED** on committed code `ca9ccdc`.
+All 266 transferred artifacts match SHA-256; active CPU checks passed (M10 483, M13 170,
+M9 16, M12 parity). Both E batch sizes passed 512-token shape tests and real 600-step smokes,
+each deliberately killed at step 100 and resumed through step 600. The fingerprint repair
+excludes loader clock metadata only; two independent reviews cleared it and the restart setup.
+Local checkpoint/record backups verified; Pod `k3aee2m68765em` STOP confirmed, volume retained.
+Balance $500.49, about $4.51 spent from initial $505; stopped storage continues to accrue.
+Receipts: `results/m13_cloud_stage0.json`, `results/m13_cloud_resume_smoke.json`.
+Initial failures remain in `results/m13_cloud_stage0_attempt{1,2}.json` and local
+`work/m13cloud-attempt{1,2}/`; passing full evidence: `work/m13cloud-evidence/`.
 No registered E training or protected evaluation has run. M17 keeps the original checkout.
 
 **Next:** inspect the stage-0 receipt/evidence, measure the remaining encode allowance, put

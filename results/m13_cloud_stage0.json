@@ -1,0 +1,63 @@
+{
+  "pod_id": "k3aee2m68765em",
+  "started_utc": "2026-09-11T18:51:52.094264+00:00",
+  "stage": "finished",
+  "registered_training": false,
+  "protected_evaluation": false,
+  "steps": [
+    {
+      "name": "preflight",
+      "exit_code": 0,
+      "elapsed_seconds": 0.73,
+      "log": "logs/m13-cloud-preflight.log"
+    },
+    {
+      "name": "upload",
+      "exit_code": 0,
+      "elapsed_seconds": 0.88,
+      "log": "logs/m13-cloud-upload.log"
+    },
+    {
+      "name": "checksums",
+      "exit_code": 0,
+      "elapsed_seconds": 238.36,
+      "log": "logs/m13-cloud-checksums.log"
+    },
+    {
+      "name": "checks",
+      "exit_code": 0,
+      "elapsed_seconds": 207.91,
+      "log": "logs/m13-cloud-checks.log"
+    },
+    {
+      "name": "plan",
+      "exit_code": 0,
+      "elapsed_seconds": 4.83,
+      "log": "logs/m13-cloud-plan.log"
+    },
+    {
+      "name": "shapes",
+      "exit_code": 0,
+      "elapsed_seconds": 92.44,
+      "log": "logs/m13-cloud-shapes.log"
+    },
+    {
+      "name": "resume",
+      "exit_code": 0,
+      "elapsed_seconds": 528.78,
+      "log": "logs/m13-cloud-resume.log"
+    },
+    {
+      "name": "evidence",
+      "exit_code": 0,
+      "elapsed_seconds": 150.34,
+      "log": "logs/m13-cloud-evidence.log"
+    }
+  ],
+  "status": "PASSED",
+  "code_commit": "ca9ccdce77fd4f2ed4ac78e8d8ca20ff58434241",
+  "backup_verified": true,
+  "stop_http_status": 200,
+  "pod_final_status": "EXITED",
+  "finished_utc": "2026-09-11T19:12:35.132826+00:00"
+}

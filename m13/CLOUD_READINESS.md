@@ -116,3 +116,13 @@ a private key on the Pod volume, which ignores restrictive modes. An offline Git
 deploy committed code without a remote private key. Stage-0 preflight now requires rsync.
 The first repair retry stopped before transfer/training because rsync was missing; receipt
 `results/m13_cloud_stage0_attempt2.json`. Original GPU failure evidence remains preserved.
+
+## Completed validation
+
+The fresh attempt on `ca9ccdc` passed all 266 SHA-256 checks, active CPU suites, both 512-token
+shape smokes and both 600-step interrupted/resumed E smokes. Local backups verified; STOP
+confirmed at 2026-09-11T19:12:35Z. The restart fingerprint repair excludes only loader clock
+metadata; identity changes still refuse. Passing records live in `results/m13_cloud_stage0.json`
+and `results/m13_cloud_resume_smoke.json`; prior failed receipts remain alongside them.
+No registered E run, protected evaluation or full build has started. Measure remaining mandatory
+encode allowances and the budget allocation before progressing through `EXECUTION.md`.
