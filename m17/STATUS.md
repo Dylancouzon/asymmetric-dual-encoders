@@ -30,3 +30,6 @@ the total and recovery reserve are unchanged. Evidence:
 the development suite, the judged panel is pre-clock work, Kubernetes docs are admitted in
 principle pending licence evidence, the final dose is 6,000 steps, and V0 plus a per-domain
 row cap were added. Vocabulary breadth across domains is a requirement, not the S3/k8s headline.
+A Codex Astra whole-plan review followed; its fourteen findings are dispositioned in `REVIEW.md`
+and all planning-level fixes are in the registry. Kubernetes docs remain a proposal until the
+licensing row in `research/m7-data-licensing.md` is completed.

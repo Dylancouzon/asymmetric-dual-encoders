@@ -86,7 +86,9 @@ Rank candidates deterministically by support-weighted teacher residual, then doc
 then lexical tie-break. Apply the registry's support minima and technical priority allocation;
 fill remaining slots from all domains. No single domain, cloud/software included, may supply
 more than the registry's per-domain cap: the technical allocation is a ceiling, not a target.
-When a term barely clears the minima, prefer its whole-word form over the abbreviation.
+The ranking score, support weight, domain assignment and the breadth condition for calling
+the outcome broad are fixed in the registry's `vocabulary_ranking` block. An abbreviation with
+support below twice the minima is replaced by its whole-word form.
 `k8s` is the one owner-pinned exception: a direct CTO request, so it receives a row regardless
 of support, with its thin support and drift recorded rather than hidden. Count distinct source documents and query contexts after
 deduplication, not repeated template exposures. Add fewer rows when support is thin. Do not fill
@@ -104,8 +106,11 @@ and ambiguous senses such as an S3 heart sound versus storage. Do not globally r
 to “Amazon storage”: that would discard legitimate meanings. A static row cannot disambiguate
 all senses by itself. Existing context rows and mixed-sense training examples still matter.
 
-Initialize a new row from the **sum of effective constituent rows**, then jointly update old
-and new rows. This is an inexpensive warm start, not an accuracy improvement. Under sqrt-count
+Initialize a new row as the **count-weighted sum of effective constituent rows**, each piece's
+row times the square root of its count in the isolated term, so that a term such as `C++`
+reproduces what the original pool computed for it (plain summation would double the `+` row
+where the pool used root two). Then jointly update old and new rows. This is an inexpensive
+warm start, not an accuracy improvement. Under sqrt-count
 pooling, constituents shared with other terms break universal sum-initialization equivalence;
 record such drift before training. Repetition of an isolated phrase alone need not break it.
 For unfolded checkpoints, account for learned scalars exactly once; initialize each new scalar
@@ -139,6 +144,13 @@ Keep both views of a same-intent query family in one split; different held-out c
 use an alias that appeared in training. Do not infer equivalence from teacher agreement alone,
 relabel a teacher hit as relevant, or expand ambiguous acronyms globally. Pair admission,
 provenance, decontamination and per-domain/sense counts are part of the data exit.
+
+Training alias pairs come in bulk from structural equivalences inside admitted sources, such as
+redirect titles in Wikipedia-derived datasets and dataset-provided paraphrases, filtered by rule
+and spot-checked by a human on a small random sample. Judging tens of thousands of pairs one by
+one would cost more reviewer hours than the whole window, so individually judged pairs are
+reserved for the test set below. If fewer than the registry's distinct-pair population exists,
+the alias batch share shrinks before lock rather than repeating a few pairs dozens of times.
 
 Keep a separate **held-out alias test set** of about two hundred judged pairs, built pre-clock
 with the panel and split from training pairs by query family. It measures directly whether the
@@ -191,8 +203,16 @@ protection. Soft distributions may assign mass to several
 relevant documents: do not relabel every nonpositive candidate as a hard negative or blindly
 apply the old InfoNCE false-negative mask to the soft target. Reject known contradictory labels
 or invalid/self documents under the admitted dataset's rules. If candidate distributions remain
-near-one-hot under the registered diagnostic, stop the listwise branch; do not spend hours on
-an inert loss or tune temperature repeatedly on evaluation data.
+near-one-hot, that alone is not grounds to stop: a one-hot teacher still pushes the student
+wherever the student disagrees. The registered stop is the **warm-start student-teacher KL** on
+the built cache; if the v1 rows already reproduce the teacher's candidate distribution, the term
+has nothing to teach and the listwise arms are dropped, leaving C and V. Do not tune the
+temperature repeatedly on evaluation data.
+
+The alias term is batch-normalized so that a paired view's alias coefficient is the registered
+weight times its own cosine coefficient. The earlier per-pair mean quietly gave each paired view
+1.6 times its teacher weight. Before lock, report the teacher cosine between the two views of
+each admitted pair and the alias term's share of the row gradient in the smoke.
 
 Only the alias arm adds the registry's fixed-weight mean pairwise cosine disagreement between
 the two student query vectors. Both views retain ordinary teacher and candidate-list losses.
@@ -221,26 +241,36 @@ could erase a small gain. C is a matched continuation control, not a claimed rep
 M7's entire historical training recipe. Compare V−C, L−C, VL−V, VL−L and VL-A−VL descriptively,
 and each against frozen v1. These are exploratory comparisons, not confirmatory superiority tests.
 
-Screen decisions are read on the **pinned development suite**: its software components for
-technical routing and its full macro for general regression. The M17 panel's selection half is
-read once per arm and reported beside it, but with about fifty queries per domain its paired
-standard error is roughly ten times the tie band, so it does not decide.
+Screen decisions are read on the **pinned development suite** named in the registry: the
+`cqadup-programmers` component is the technical metric, the six-component dense macro and the
+four-component fused macro are the general regression checks. Every read is of the folded int8
+table that would ship. The registry's `decision_protocol` block is the complete rule: eligibility
+against v1, a fixed walk of the control map from the most complex arm down, the tie band, what
+happens when the control wins in either seed, and what happens when nothing is eligible. The M17
+panel and the held-out alias test appear in no predicate; with about fifty queries per domain
+their paired standard error is roughly ten times the tie band. The earlier ambiguous-sense veto
+and coverage-slice alternative were removed after the Astra review, because a small-slice veto
+can reject a harmless change by sampling noise.
 
-At the short-run endpoint choose at most one expanded candidate and its closest simpler
-control, using the registry's fixed control map (VL-A pairs with VL). Prefer fewer rows/fewer
-loss terms inside the declared tie band. VL-A must improve technical retrieval over VL beyond
-that band, satisfy general dense/fused tolerances against v1, and avoid a drop on the independently
-judged ambiguous-sense selection slice versus VL. A vocabulary arm must help technical retrieval
-or a predeclared independently labeled coverage slice, while
-staying inside general regression tolerances; fewer tokens or higher embedding cosine alone
-do not qualify it. If V/VL/VL-A lose to C/L, record that vocabulary expansion failed; a better L-only
-model is a partial outcome, not completion of the requested vocabulary upgrade.
+At the short-run endpoint the finalist is the most complex arm that beat every matched control on
+its path, and its matched control goes to the full runs with it. Prefer fewer rows and fewer loss
+terms inside the tie band. Fewer tokens or a higher embedding cosine alone qualify nothing. If
+V/VL/VL-A lose to C/L, record that vocabulary expansion failed; a better L-only model is a
+partial outcome, not completion of the requested vocabulary upgrade. If C is the finalist or no
+arm is eligible, stop before the full runs and record no useful signal.
+
+The protocol, vocabulary list hash, tokenizer hash, sampler seed and cache identity are committed
+**before** the V0 read or any other real development read. Seeing V0 does not license editing the
+vocabulary; a change after that is a dated amendment that keeps the first observation.
 
 Run the chosen candidate and matched control under the same longer schedule, with seed 0 and
 one independent seed. Restart both from their declared initialization for that longer schedule;
 do not append steps to an exhausted scheduler. The final budget is the registry's step count
-per fresh full run, cut on 2026-09-11 from 16,000 to 6,000 steps so each query is seen about
-two to three times rather than fourteen; a lookup table can memorize repeated queries. Log the
+per fresh full run, cut on 2026-09-11 from 16,000 to 6,000 steps. "About 2.6 passes" is the
+average over the whole pool; the general, coverage and alias buckets are sampled separately, so
+each has its own pass count. The registry's dose rule computes those from the deduplicated
+populations after the support manifest and shrinks the alias and coverage shares, then steps,
+until no bucket exceeds four passes; a lookup table can memorize repeated queries. Log the
 training and a fixed held-out training-source loss at the registry's interval and flag
 divergence; the flag is reported, not acted on after lock. The five short screen runs are a
 separate, already spent allocation. Keep the endpoint fixed and require repeatable direction. Each full run contributes only the ordinary
@@ -260,9 +290,10 @@ different optimizer schedule or an ensemble of normalized query embeddings.
 
 Read selection metrics once for each endpoint and each averaged form: two forms per run,
 eight reads at most across the candidate/control and two seeds. Choose the averaged candidate
-only under the registry's fixed rule: positive technical gain in both seeds, mean gain above
-the existing tie band, general dense/fused tolerances against v1, and no ambiguous-sense drop
-versus the endpoint in either seed. Otherwise retain the endpoint. Missing snapshots or
+only under the registry's fixed rule: the averaged form is itself eligible against v1 in both
+seeds, its technical gain over the endpoint is positive in both seeds, and the mean gain is above
+the existing tie band. Otherwise retain the endpoint, which must itself be eligible; if neither
+form is eligible the run has no shippable form. No panel or alias-test read enters this rule. Missing snapshots or
 measurements are an incomplete comparison, not permission to pick a different window.
 
 Keep seed 0 as the artifact. Apply the chosen endpoint/averaged form to its matched seed-0
@@ -279,7 +310,9 @@ empty/degenerate fallback. Do not edit the frozen M11 release implementation.
 
 Compare with eager full-table fp32 loading using the **same selected artifact**. Use fresh
 processes for cold-start and steady/peak RSS, and the registry's fixed length/batch strata for
-warmed p50/p95 latency and throughput. Exercise repeated tokens, punctuation, special tokens,
+warmed p50/p95 latency and throughput, with enough timed batches across several processes that
+the p95 ratio is not decided by one slow batch. These are Linux measurements; the Mac reference
+device is a separate later gate. Exercise repeated tokens, punctuation, special tokens,
 truncation, empty input and near-degenerate sums. Adopt resident int8 only if conformance passes,
 measured steady RSS falls, and every stratum stays within the existing p95 latency ratio limit.
 Otherwise retain eager loading and record the outcome. Array-size arithmetic alone is not the
@@ -298,7 +331,11 @@ adjacency and M7/M8 accumulated hundreds of reads. It cannot certify universal i
 Do not score the six, reserved four or LoTTE, or alter any of their locks/access receipts.
 
 Build a modest M17 panel across the declared domains, split by source document/query family
-into selection and a sealed audit, **before the 72-hour clock starts**. Judging hundreds of
+into selection and a sealed audit, **before the 72-hour clock starts**. Seal is not the same
+as unseen: the warm start was trained on M7's sources and pseudo-queries, so panel, alias-test
+and continuation-holdout families are also screened against every available ancestor training
+manifest through the approved fingerprint interfaces, and families whose ancestry cannot be
+established are labeled exposure-unknown. Judging hundreds of
 queries is days of human work and does not belong inside the training window; the clock begins
 only once the panel manifest hash is committed. The registry sets a target size, not an
 assertion that this panel already exists. The panel is descriptive and audit evidence; the

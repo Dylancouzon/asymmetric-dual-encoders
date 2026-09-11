@@ -103,4 +103,9 @@ rehearsal, a held-out judged alias test set of about 200 pairs, and preferring w
 abbreviations when support is thin. **`k8s` is exempt and pinned**: it is a direct CTO request
 and receives a row regardless of support, with that support recorded honestly.
 
+Dylan then asked for a full Codex Astra review of the plan. Its five P1, eight P2 and one P3
+findings and their dispositions are in `REVIEW.md`; all were adopted at the planning level and
+none required an owner ruling beyond the ones already recorded. The Kubernetes source remains a
+proposal until its licensing row is completed. Still planning only.
+
 Still planning only. Nothing trained, downloaded, scored or published; no protected access.
