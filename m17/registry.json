@@ -49,6 +49,10 @@
       "new_source_cap_basis": "The 10% cap applies to processed views per run, not only to unique queries",
       "alias_training_pairs_source": "Bulk structural equivalences from admitted sources (for example Wikipedia redirect titles to their target titles within admitted Wikipedia-derived datasets, and dataset-provided paraphrases), filtered by rule and spot-checked on a random 2% sample by a human. Individually judged pairs are reserved for the 200-pair held-out test. If fewer than 24000 distinct training pairs exist, the pre_lock_rule shrinks the alias share; it does not authorize new sources."
     },
+    "source_domain_map": {"hotpotqa-train": "general", "fever-train": "general", "squad-train": "general", "mrtydi-en": "general", "esci-us": "general", "nqopen": "general", "triviaqa": "general", "k8s-docs-en": "cloud-software"},
+    "source_domain_map_note": "Fixed map required by vocabulary_ranking.domain_assignment; mirrored from m17src/support_manifest.SOURCE_DOMAIN. Measured 2026-09-11 (step 2b): only 'general' and 'cloud-software' are populated, so science-engineering, medicine, finance and legal are recorded gaps and breadth_completion can only report 'narrow' unless Dylan admits a source for them.",
+    "measured_bucket_populations": {"date": "2026-09-11", "source": "results/m17_support_manifest.json", "general": 496327, "unpaired_coverage_min": 6165306, "alias_pairs": 15573, "note": "measured deduplicated populations required before lock by bucket_populations_and_dose_rule.pre_lock_rule"},
+    "measured_dose_after_pre_lock_rule": {"steps": 6000, "batch": 256, "general_views_per_batch": 204, "unpaired_coverage_views_per_batch": 32, "alias_pairs_per_batch": 10, "passes": {"general": 2.466, "unpaired_coverage": 0.031, "alias_pairs": 3.853}, "shrunk": ["alias"], "interpretation": "slots freed by the alias shrink go to general replay; general passes were re-checked and steps were not reduced"},
     "general_replay_fraction": 0.75,
     "targeted_coverage_fraction": 0.25,
     "alias_query_views_fraction_of_batch": 0.125,

@@ -29,6 +29,11 @@
 | `results/m17_panel_selection.jsonl` | The selection partition mirrored out of `work/` because it is under 2 MB. The audit partition's text stays in `work/m17/panel/audit.jsonl`; only its hash is published |
 | `results/m17_panel_pending_judgments.jsonl` | The one human review sheet: 360 Kubernetes (query, candidate) rows and the ambiguous alias pairs. `relevant_yes_no` and `judge` arrive empty and must stay empty until a person fills them |
 | `results/m17_alias_test_manifest.json` | Alias-test counts by source/kind/domain/judgment status, the extraction rules and the file hashes. No pair text |
+| `m17src/support_manifest.py` | **Step 2b.** Deduplicated document/query counts per admitted source, the fixed source-to-domain map (mirrored into `registry.data.source_domain_map`), document-group and query-family IDs, the measured bucket populations and the applied `pre_lock_rule`. Drops queries whose normalized-text sha appears in step 2c's exclusion file. MS MARCO is refused by name. `--reuse-counts` re-applies the dose rule from `counts_cache.json` without re-reading 2.9 GB of stores |
+| `m17src/alias_pairs.py` | **Step 2b.** Bulk structural alias pairs: Kubernetes glossary `aka` forms and initial-matched `Expansion (ABBR)` definitions evidenced in the same admitted document, substituted into a carrier sentence so each pair is two query *views*. Ambiguous short forms are dropped, ESCI is not mined, and `--exclude-families` removes step 2c's held-out families (matching on normalized-text shas, the interoperable key) |
+| `results/m17_support_manifest.json` | Step-2b counts, per-domain totals, unpopulated-domain gaps, family concentration, bucket populations, passes at 6000x256, the dose-rule outcome and file hashes. No document or query text |
+| `results/m17_alias_spotcheck_sample.jsonl` | The seeded random 2% sample of the alias pool for Dylan's human spot check; the only step-2b file that carries text |
+| `work/m17/manifest/` | Gitignored step-2b artifacts: `doc_groups/*.tsv.gz`, `query_families.tsv.gz`, `alias_pairs.jsonl`, `alias_pairs_summary.json`, `counts_cache.json`, and step 2c's `alias_test_families.json`. Hashes are published in the result |
 | `work/m17/panel/`, `work/m17/alias/` | Gitignored panel and alias text: `panel.jsonl`, `selection.jsonl`, `audit.jsonl`, `corpus.jsonl`, the two classifier caches, `ancestry_screen.json`, `alias_test.jsonl` |
 | `m17src/rehearse17.py`, `m17src/conftest.py`, `m17src/test_*.py` | The tiny synthetic end-to-end rehearsal and the 66 pytest checks that run on it and on fixture-scale inputs |
 | `results/m17_rehearsal.json` | The pre-clock rehearsal record: stages, scaled fixture constants, gate results, loader parity, synthetic-only evaluation. Not a quality observation or a rate forecast |
@@ -53,6 +58,14 @@ rehearsal with `.venv/bin/python m17src/rehearse17.py` (see `HARNESS.md`).
 
 ## Reuse hazards to resolve before training
 
+- `work/train/stores/msmarco-pos.json` exists and `work/decontam/kept.json` still carries
+  `msmarco-train`. MS MARCO is validation only; `support_manifest.DENIED_SOURCES` refuses it by
+  name and any new data path must do the same.
+- FEVER's store is pre-tokenized with spaces inside parentheses (`( EP )`). A definition pattern
+  written for `(EP)` silently mines zero pairs from it; that was the diagnosis, not an absence.
+- Query families are not uniform: three families hold 108,922 of 561,480 training queries after
+  the 50-document hub cutoff, because chains of sub-cutoff documents still connect. Draw held-out
+  slices, the panel split and the alias test outside them.
 - `m7src/train.py` hardcodes tokenizer/init/data assumptions and invokes development scoring;
   `sweep.one` also appends to M7 reporting files. Do not call old drivers as an M17 launcher.
 - `m7src/table.py::QueryTable`, ragged bags, sqrt occurrence weights, folding and normalization

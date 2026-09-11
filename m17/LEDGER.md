@@ -255,3 +255,53 @@ straddles the two partitions, a judged document missing from the declared corpus
 whose size has moved under the manifest. `panel.jsonl` is byte-identical across repeated draft
 runs at the same seed. Nothing here starts the clock: the manifest is provisional, and resolving
 the pending judgments re-seals it with a new panel hash.
+
+## Step 2b — admitted-source support manifest and alias training-pair pool (2026-09-11)
+
+Pre-clock, no GPU, no protected access. `m17src/support_manifest.py` counted every currently
+admitted commercial-training source plus the step-2a Kubernetes slice, and `m17src/alias_pairs.py`
+built the bulk alias pool; `results/m17_support_manifest.json` carries the numbers and every file
+hash, with the group and family artifacts in gitignored `work/m17/manifest/`. Documents are
+grouped by exact-normalized text sha; query families are union-find over identical normalized
+query text and shared positive document groups, with a 50-query hub cutoff so one multi-hop
+corpus cannot collapse into a single family. MS MARCO is on this box in both
+`work/train/stores/` and `work/decontam/kept.json`; it is refused by name, validation only.
+
+Measured: 6,165,306 deduplicated documents and 496,327 deduplicated training queries after
+decontamination and the mod-50 held-out rule, minus the two queries step 2c holds out. Against
+the registered source-to-domain map only two panel domains are populated — **general** (496,327
+queries, 6,163,658 documents) and **cloud-software** (0 queries, 1,648 documents). Science and
+engineering, medicine, finance and legal are **recorded gaps**: under
+`vocabulary_ranking.breadth_completion` the vocabulary outcome cannot reach 'broad' with the
+current sources, and closing that needs an owner ruling on a new source, not a manifest change.
+
+Dose rule, applied as `pre_lock_rule` requires and written into the registry's `data` block: at
+the registered 6000x256 the general bucket is 2.32 passes and coverage 0.03, but alias pair draws
+would be 6.17 passes over 15,573 distinct pairs. The alias share therefore shrinks from 16 to 10
+pairs per batch (3.85 passes), the 24 freed slots go to general replay (2.47 passes, re-checked),
+coverage is untouched and **steps stay at 6,000** — no reduction was needed. The 10% new-source
+ceiling is not the binding constraint on Kubernetes: 1,648 documents would need 93 passes to fill
+a 153,600-view share, so the honest allocation is the four-pass figure, 6,592 views, 0.43%.
+
+Two of the four registered alias rules have no material and are reported rather than substituted:
+no admitted source ships a paraphrase field, and the admitted Wikipedia-derived datasets carry
+passages, not the redirect graph. The pool is therefore the Kubernetes glossary's own `aka`
+statements (414 pairs from 11 alias forms) and initial-matched `Expansion (ABBR)` definitions
+evidenced in the same admitted document (15,159), each substituted into a carrier sentence so a
+pair is two query *views*, not two bare terms. 11,669 ambiguous abbreviations and 122 ambiguous
+expansions were dropped rather than expanded globally; ESCI is deliberately not mined. Step 2c's
+exclusion file is applied by normalized-text sha, its stated interoperable key, since its family
+ids are rooted in its own union-find. A seeded 2% sample, 311 pairs, is in
+`results/m17_alias_spotcheck_sample.jsonl` for Dylan's human check; the pool is unusable until
+that check happens.
+
+Two measurements that corrected a diagnosis. The first alias pass ran at ~1,950 documents/second,
+45 minutes for HotpotQA alone; anchoring the pattern on the parenthesis and slicing a fixed lead
+window made it ~886,000/second, and the mined-document count rose rather than fell. FEVER then
+mined zero definitions — not an absence but a pre-tokenized store writing `( EP )`, and tolerating
+the inner spaces recovered 1,146 documents. Both are recorded in `CODEMAP.md`.
+
+Open for Dylan, neither actioned here: the four unpopulated panel domains, and the fact that the
+alias pool is 94% general Wikipedia with only 432 Kubernetes pairs. Checks:
+`.venv/bin/python -m pytest -q m17src` — 141 passed, 51 of them new in
+`m17src/test_support_manifest.py` and `m17src/test_alias_pairs.py`, synthetic fixtures only.
