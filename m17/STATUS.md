@@ -28,13 +28,13 @@ API and frozen document index; Nano/M13 stays unchanged. Branch: `m17-zero-v1.1-
 
 **Dylan owes:**
 
-1. **Clock-start ruling (Astra P1-8, blocks the clock, not the pre half):** which invocation
-   starts the 72 h and what pre-clock work is exempt. Record it in `LEDGER.md`; the code stores
-   `clock_started` as given.
-2. Go/no-go on committing the pre half and starting the clock (this checkpoint).
+1. ~~Clock-start ruling~~ — ruled 2026-09-11: the clock is a ceiling, not a hard requirement;
+   `clock_started` = first `--protected-screen` invocation on the full pool (`LEDGER.md`).
+2. Go/no-go on committing the pre half — given 2026-09-11 ("this is fine"). Next session
+   proceeds with 6a–6c without asking again.
 3. Optional: the human double-check slice `results/m17_human_doublecheck_slice.jsonl`.
 
-**Next (in this order), after Dylan's go:**
+**Next (in this order; go given):**
 
 6a. Commit the pre half:
     `.venv/bin/python m17src/lock.py --phase pre --build work/m17/prepared/full --prior-seconds 146.211 --prior-stages pool,domain,protected --prior-source "work/m17/logs/prepare_full_crash1.log stage lines (attempt 1, 2026-09-11: pool 24.3 s, domain 121.9 s, protected deferred 0 s)"`

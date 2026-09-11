@@ -513,5 +513,9 @@ pool,domain,protected`): measured 1.496 h, phase ceiling 3 h (placeholder 16), a
 59 h, 13 h unallocated and recorded; registry untouched. **Not yet committed as the lock:** the
 checkpoint before the lock and clock start is Dylan's.
 
-**Open owner ruling (Astra P1-8):** which invocation starts the 72 h and what pre-clock work is
-exempt. The code records `clock_started` as given and points here; nothing starts the clock.
+**Owner ruling on the clock (Dylan, 2026-09-11, closing Astra P1-8):** "The clock isn't a hard
+requirement, this is fine." The 72 h stays the registered ceiling and stop policy for the
+phases, not a deadline being raced; `clock_started` is recorded at the first
+`--protected-screen` invocation on the full pool, pre-clock preparation and review work stay
+exempt, and the two-half lock sequence stands as designed. Recorded here so no session blocks
+on a start definition.
