@@ -281,12 +281,48 @@
   "_scope": "COV only at every cycle end (plus the schedule midpoints the kill rule reads) and family F's read_at points"
  },
  "dev6": {
-  "deferred": true,
-  "macro": null,
-  "per_component": null,
-  "checkpoint_sha256": "be9dabe5d752aa77a700c5441b9f8972c039a3967e02d4c3a3210283634a4de7",
-  "fill_with": ".venv/bin/python m13src/dev6_from_checkpoint.py E-bs128",
-  "_scope": "DEV-6 NOT read by the runner (deferred to the box); no six-set, reserved or LoTTE surface was read either"
+  "teacher": "stella-400M-v5",
+  "components": [
+   "nq-250k",
+   "hotpotqa",
+   "cqadup-programmers",
+   "cqadup-physics",
+   "heldout-train",
+   "heldout-longq"
+  ],
+  "per_component": {
+   "nq-250k": 0.801601,
+   "hotpotqa": 0.501105,
+   "cqadup-programmers": 0.369149,
+   "cqadup-physics": 0.403388,
+   "heldout-train": 0.402897,
+   "heldout-longq": 0.840222
+  },
+  "macro": 0.55306,
+  "ceiling_DEV6": 0.67238,
+  "retention": 0.8225,
+  "_scope": "DEV-6 only; no six-set, reserved or LoTTE surface was read",
+  "filled_from_checkpoint": {
+   "deferred_by_runner": {
+    "deferred": true,
+    "macro": null,
+    "per_component": null,
+    "checkpoint_sha256": "be9dabe5d752aa77a700c5441b9f8972c039a3967e02d4c3a3210283634a4de7",
+    "fill_with": ".venv/bin/python m13src/dev6_from_checkpoint.py E-bs128",
+    "_scope": "DEV-6 NOT read by the runner (deferred to the box); no six-set, reserved or LoTTE surface was read either"
+   },
+   "script": "m13src/dev6_from_checkpoint.py",
+   "attempts_including_this": 1,
+   "host": "Str0keWtf",
+   "device": "cuda",
+   "git_head": "67d6e21afe3f517bcc303a13219952d4dce040ba",
+   "read_at": "2026-09-11T21:53:21+0000",
+   "checkpoint": "work/m10arms/E-bs128/cycle3.pt",
+   "checkpoint_sha256": "be9dabe5d752aa77a700c5441b9f8972c039a3967e02d4c3a3210283634a4de7",
+   "code_sha256": "208ec800dde1423f2c2badeb20b19a43f465f8ffc2a7af04134d33159c4ff8cb",
+   "seconds": 102.7,
+   "_note": "DEV-6 read ONCE, on the box, from the identical final checkpoint bytes the runner published; the runner itself read no DEV-6 (`--dev6 defer`)."
+  }
  },
  "training": {
   "steps_run": 39062,
