@@ -694,6 +694,39 @@ def _verify_screen_bundle(bundle_dir, reg):
     return {k: got[k] for k in V0_EXPORT_DIGESTS}
 
 
+SCREEN_RUN_FIELDS = ("m17_run_id", "m17_arm", "m17_seed", "m17_step", "form")
+
+
+def _screen_bundle_provenance(bundle_dir, run_id):
+    """The bundle must SAY which run, arm, seed and step/form produced it, and say this one.
+
+    Gate-valid bytes alone left every trained bundle interchangeable: V's export could be scored
+    under C's run id, or one bundle read twice at two run directories (Sol 6d screen-read review
+    P1). `export.run_identity` records the fields; here they must match the destination run
+    directory, and they are recorded in the receipt and the report.
+    """
+    p = _check_path(Path(bundle_dir) / "provenance.json")
+    try:
+        prov = json.loads(p.read_text())
+    except (OSError, ValueError) as exc:
+        raise SystemExit(f"M17 EVAL REFUSED: {p} is unreadable ({exc}); a screen read binds the "
+                         "bundle's own recorded run identity to its run directory.")
+    run = prov.get("run") or {}
+    got = {k: (prov.get("form") if k == "form" else run.get(k)) for k in SCREEN_RUN_FIELDS}
+    missing = [k for k, v in got.items() if v is None or v == ""]
+    if missing:
+        raise SystemExit(f"M17 EVAL REFUSED: {bundle_dir} records no {missing} in its "
+                         "provenance, so it cannot be checked against the run directory it is "
+                         "being scored into. Re-export it with the current m17src/export.py.")
+    if str(got["m17_run_id"]) != str(run_id):
+        raise SystemExit(f"M17 EVAL REFUSED: {bundle_dir} was exported from run "
+                         f"{got['m17_run_id']!r} (arm {got['m17_arm']!r}, seed "
+                         f"{got['m17_seed']!r}), but the destination run directory is "
+                         f"{run_id!r}. A screen arm is read once, from its own bundle, into its "
+                         "own run directory.")
+    return got
+
+
 def _screen_read_dest(out):
     """`work/m17/runs/<run>/screen.json` — the arm's own run directory, never the V0 read's.
 
@@ -723,7 +756,9 @@ def screen_read(bundle_dir, out=None, *, allow_dev_suite=False):
     rows through the released QueryTable path, the tree must be clean and the receipt is claimed
     atomically. It differs in exactly two ways, both forced by what it reads: the bundle is the
     arm's own trained export rather than the locked V0 one, and the destination is that arm's run
-    directory rather than the V0 read's canonical path. `v0_export.read` is untouched.
+    directory rather than the V0 read's canonical path. `v0_export.read` is untouched. The
+    bundle's own recorded run identity (run id, arm, seed, step/form) must name THIS run
+    directory, so one arm's export cannot be scored as another's.
     """
     if not allow_dev_suite:
         raise SystemExit(DEV_SUITE_REFUSAL)
@@ -732,8 +767,14 @@ def screen_read(bundle_dir, out=None, *, allow_dev_suite=False):
     if dest.resolve() == _v0_read_path(reg).resolve():       # defensive; the shape already differs
         raise SystemExit("M17 EVAL REFUSED: a screen read may not write the V0 read's path.")
     _require_clean_tree()
-    return _dev_suite_read(bundle_dir, dest, reg=reg, fixture=False,
-                           verify_bundle=_verify_screen_bundle)
+
+    def verify(bundle, registry_):
+        """Digests AND the bundle's own recorded run identity, checked against this run dir."""
+        got = _verify_screen_bundle(bundle, registry_)
+        got["run"] = _screen_bundle_provenance(bundle, dest.parent.name)
+        return got
+
+    return _dev_suite_read(bundle_dir, dest, reg=reg, fixture=False, verify_bundle=verify)
 
 
 def _dev_suite_read_fixture(bundle_dir, out=None, *, allow_dev_suite=False, reg=None, names=None,

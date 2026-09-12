@@ -488,3 +488,22 @@ SHA-256 and the ruling string. Test: `test_only_a_disclosed_tofu_cache_is_accept
 **Owner:** M17 executing session. **Exit:** `pytest m17src/test_evaluate.py` = 34 passed;
 `pytest -q m17src` = 322 passed, 4 failed (the pre-existing registry-status four). The V0 read is
 unspent (`read: false`) and unblocked; the launcher is `work/m17/logs/run_v0_read.sh`.
+
+## Codex Sol — 6d screen-read review (2026-09-12)
+
+Log: `work/m17/logs/sol_screenread_review.log` (gitignored). Read-only over `screen_read`,
+`_verify_screen_bundle`, `_screen_read_dest`, the screen test and `work/m17/logs/run_6d.sh`.
+Last code round before the five screen arms run.
+
+| Finding | Disposition and exit |
+|---|---|
+| P1-1 any gate-valid bundle could be scored under any run id (V's export as C's; one bundle read twice at two run directories) | **Fixed.** `export.run_identity` records the bundle's own run id, arm, seed and step/form in `provenance.json:run` (endpoint and `mean_last_three`); `evaluate._screen_bundle_provenance` requires those fields and refuses unless `m17_run_id` equals the destination run directory's name, and records them in the receipt and the report under `bundle_digests.run`. A bundle exported before this change records no `run` and is refused. Test: the mismatch, match and pre-fix cases in `test_a_screen_arm_reads_its_own_bundle_into_its_own_run_directory`. `m17src/export.py`, `m17src/evaluate.py`, `m17src/test_evaluate.py` |
+| P1-2 two launchers can race the receipt claim during the long preflight | **Partially fixed — operational.** The reader's claim/reclaim logic is unchanged (the zero-byte reclaim is the Astra P1-2 fix and the only way an orphaned claim is released). `run_6d.sh` is now single-instance under `flock` on `work/m17/logs/6d.lock`: the worker holds the lock for the whole sequence and a second launcher exits immediately with a message. One sanctioned launcher, one sequence. |
+| P1-3 a symlinked run directory could redirect the write into `results/` | **DROPPED — adversarial.** Run directories are created by `m17src/train.py` under `work/m17/runs/<run_id>` in the same sequence that then reads them; nobody plants a symlink there. `common.admit_write` and the `_screen_read_dest` shape rule stand. |
+| P2-4 a stale, truncated or crash-window `screen.json` made the launcher silently skip an arm | **Fixed.** `run_6d.sh` skips an arm only when `screen.json` exists AND its receipt's `state` is `complete`; any other half-state stops the sequence loudly, names the arm and the state, and deletes nothing. An arm with no `screen.json` still runs, so train.py's recovery checkpoint and the reader's continuable receipt keep their documented resume paths. |
+| P2-5 HEAD is `6c6e5d8`, not the brief's `7ea4180` | **DROPPED — spurious.** The brief itself was committed after the reviewed commit; the audited files are identical between the two, as the review's own diff confirms. |
+
+**Owner:** M17 executing session. **Exit:** fixes landed; `bash -n work/m17/logs/run_6d.sh`
+clean, `pytest m17src/test_evaluate.py` = 35 passed, `pytest m17src/test_export.py` = 26 passed
+(the pre-existing registry-status failures in `test_train.py`/`test_lock.py` are untouched). The
+five arms are launched with `bash work/m17/logs/run_6d.sh` from a clean tree.

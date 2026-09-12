@@ -86,6 +86,24 @@ def snapshot_identity(meta, path):
     return ident
 
 
+# WHICH registered run produced the table. `snapshot_identity` binds it to a tokenizer/cache
+# lineage; this binds it to the run directory, so a screen read can refuse V's bundle presented
+# under C's run id (Sol 6d screen-read review P1).
+RUN_FIELDS = ("m17_run_id", "m17_arm", "m17_seed")
+
+
+def run_identity(meta, path, step=None):
+    """The run id, arm, seed and step/form a bundle must carry in its own provenance."""
+    run = {f: meta.get(f) for f in RUN_FIELDS}
+    if any(v is None or v == "" for v in run.values()):
+        raise SystemExit(f"M17 EXPORT REFUSED: {path} does not record its run id, arm and seed "
+                         f"({run}); a reader could not then check the bundle against the run "
+                         "directory it is being scored into.")
+    run["m17_seed"] = int(run["m17_seed"])
+    run["m17_step"] = "mean_last_three" if step is None else int(step)
+    return run
+
+
 def average_snapshots(paths, reg=None):
     """Equal mean of effective float32 rows. Refuses to mix tokenizers, runs or scales."""
     reg = reg or registry()
@@ -96,10 +114,12 @@ def average_snapshots(paths, reg=None):
                          f"registers exactly {len(want)} ({sorted(want)}). A fourth table is "
                          "not the registered mean.")
     rows, diag = [], []
-    ident = None
+    ident, run = None, None
     for p in paths:
         r, d = effective_rows(p)
         m = d["meta"]
+        if run is None:
+            run = run_identity(m, p)
         ident_fields = snapshot_identity(m, p)
         key = tuple(ident_fields[f] for f in IDENTITY_FIELDS) + (r.shape,)
         if ident is None:
@@ -118,7 +138,7 @@ def average_snapshots(paths, reg=None):
     mean = np.mean(np.stack(rows, 0), axis=0).astype(np.float32)
     diag.append({"step": "mean_last_three", "rms": float(np.sqrt((mean ** 2).mean()))})
     return mean, {"snapshots": diag, "operation": reg["checkpoint_averaging"]["operation"],
-                  "identity": dict(zip(IDENTITY_FIELDS, ident))}
+                  "identity": dict(zip(IDENTITY_FIELDS, ident)), "run": run}
 
 
 def assert_encoder_spec(spec, reg=None):
@@ -433,12 +453,14 @@ def main(argv=None):
     reg = registry()
     if args.form == "mean_last_three":
         rows, diag = average_snapshots(args.snapshots, reg)
+        run = diag["run"]
     else:
         rows, d = effective_rows(args.endpoint)
         # the endpoint form must record the SAME identity averaging requires
         ident = snapshot_identity(d["meta"], args.endpoint)
         diag = {"snapshots": [{"step": d["meta"].get("m17_step"), "rms": d["rms"]}],
                 "identity": ident}
+        run = run_identity(d["meta"], args.endpoint, step=d["meta"].get("m17_step"))
     tok_sha = sha_file(args.tokenizer)
     if tok_sha != diag["identity"]["tokenizer_sha256"]:
         raise SystemExit(
@@ -448,7 +470,7 @@ def main(argv=None):
             "the bundle tokenizer against itself.")
     prov = json.loads(admit_read(args.provenance).read_text()) if args.provenance else {}
     out = build_bundle(args.out, rows, Tokenizer.from_file(str(admit_read(args.tokenizer))),
-                       {**prov, "averaging": diag}, reg, form=args.form)
+                       {**prov, "averaging": diag, "run": run}, reg, form=args.form)
     if args.gates:
         run_gates(out)
     print(f"bundle: {out}")

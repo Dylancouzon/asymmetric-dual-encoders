@@ -439,6 +439,17 @@ def test_a_screen_arm_reads_its_own_bundle_into_its_own_run_directory(v0_world, 
                 E.SCREEN_RUNS_DIR / "a" / "b" / "screen.json", E.V0_READ_PATH):
         with pytest.raises(SystemExit, match="needs its output path|another destination"):
             E._screen_read_dest(bad)
+    # the bundle's own recorded run identity must name the destination run directory
+    b = tmp_path / "arm-bundle"
+    b.mkdir()
+    run = {"m17_run_id": "m17-v-screen-s0", "m17_arm": "V", "m17_seed": 0, "m17_step": 4000}
+    (b / "provenance.json").write_text(json.dumps({"form": "endpoint", "run": run}))
+    with pytest.raises(SystemExit, match="was exported from run 'm17-v-screen-s0'"):
+        E._screen_bundle_provenance(b, "m17-c-screen-s0")
+    assert E._screen_bundle_provenance(b, "m17-v-screen-s0") == dict(run, form="endpoint")
+    (b / "provenance.json").write_text(json.dumps({"form": "endpoint"}))   # pre-fix export
+    with pytest.raises(SystemExit, match="records no"):
+        E._screen_bundle_provenance(b, "m17-v-screen-s0")
     monkeypatch.setattr(E, "registry", lambda *a, **k: trained)
     with pytest.raises(SystemExit, match="needs its explicit"):
         E.screen_read(v0_world["bundle"], E.SCREEN_RUNS_DIR / "x" / "screen.json")
