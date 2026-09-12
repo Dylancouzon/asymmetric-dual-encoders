@@ -233,3 +233,12 @@ Both reviewers gave finalGO for the corrected DEV6 hook, historical replay, retr
 and unique monitoring. Published54eb078 then live read-only allocationPASSED134.8888889h/
 $224.4026543, balance482.0799693/project721.36. Allocationpushedee1bd66. LaunchedPID50427;
 exactoneA100resume succeeded and deploymentactive. No trainingsteps observed yet.
+
+## Training confirmed
+
+Correctedpreflight PASSED all394inputhashes, fulluncutassembly, COVintegrity and allDEV6
+cachechecks. Completed6.07Mdocument cache reused. Registeredwarmstart60000examples
+finished in74seconds. PID50427 executionee1bd66 reachedoptimizerstep4142, 132544examples,
+reported1010ex/s. Observation recorded separately from mutablelive receipt. Monitoractive/
+enabled; rollingbackup/finalbackup/STOP ownedby supervisor. Remainingtrainingprojection
+about55.0h excludingevaluations/finalization. No final/reserved access.

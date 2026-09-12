@@ -1,3 +1,20 @@
+# TRAINING ACTIVE on original E A100 — 2026-09-12
+
+Confirmed optimizer progress: step4,142/6,250,000, batch32, 132,544 examples,
+reported1,010ex/s. Projected remaining training~55.0h excluding
+evaluations/finalization. Observationresults/m13_training_started_observation.json.
+Fullbuildpreflight PASSED, published results/m13_build_preflight.json. Executioncommit
+ee1bd6617c4fec7f4c97c73e7c6eed52f66ff50a. SupervisorPID50427 on originalEtarget k3aee2m68765em;
+other PodsSTOPPED. Mainlive receiptresults/m13_cloud_build_preflight_retry.json remains
+mutable/untracked until terminal. PIDwork/m13cloud-launchers/build_preflight_retry.pid,
+logs/m13-build-preflight-retry.log and logs/m13-build-preflight-retry-controller.log.
+Monitor user service active/enabled. Supervisor owns hourly rolling backups (latesttwo),
+final verified backup and STOP. Automatic fixedthreecycle200M run; no extensions.
+Do not restart, modify bound code, move remoteHEAD, or run final/reserved evaluation.
+Fresh pretraining allowance134.79194h/$224.24138; originalceilings unchanged.
+
+Historical state follows.
+
 # Active preflight retry on original E A100
 
 SupervisorPID50427 is RUNNING from pushedee1bd66 on k3aee2m68765em, exactoneA100.

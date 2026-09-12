@@ -1,0 +1,18 @@
+{
+  "status": "OBSERVED_RUNNING",
+  "observed_at": 1789222751.3287535,
+  "supervisor_pid": 50427,
+  "pod_id": "k3aee2m68765em",
+  "execution_commit": "ee1bd6617c4fec7f4c97c73e7c6eed52f66ff50a",
+  "receipt": "results/m13_cloud_build_preflight_retry.json",
+  "preflight_sha256": "126ecb3e0767cb701c50a572c9740be78b5620f6d2672071b900f5a611503ee9",
+  "step": 4142,
+  "total_steps": 6250000,
+  "batch": 32,
+  "examples_observed": 132544,
+  "reported_examples_per_second": 1010,
+  "estimated_remaining_training_hours": 54.96904730473047,
+  "estimate_excludes_evaluations_and_finalization": true,
+  "monitor_service": "m13-monitor.service",
+  "monitor_enabled": true
+}
