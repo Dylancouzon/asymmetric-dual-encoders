@@ -74,6 +74,15 @@
         "logs/m13-build-resume.log"
       ],
       "stale_seconds": 1800
+    },
+    {
+      "name": "zero GPU build input upload",
+      "receipt": "results/m13_cpu_upload.json",
+      "pid_file": "work/m13cloud-launchers/cpu_upload.pid",
+      "logs": [
+        "logs/m13-cpu-upload.log"
+      ],
+      "stale_seconds": 1800
     }
   ]
 }

@@ -32,3 +32,20 @@ accounting and original bindings verified. The tentative STOP finding was retrac
 AST/indentation inspection: STOP is in the inner finally outside `if ready`. Both independent
 reviews are GO for the concrete continuation, conditional on fresh live checks (allocation
 PASSED and pushed in c8dc2bb). No P1 remains.
+
+## Same-Pod capacity failure and zero-GPU staging
+
+The reviewed GPU restart failed with HTTP500 before SSH/staging. The supervisor confirmed
+EXITED; `results/m13_cloud_build_resume.json` is preserved. A read-only provider GraphQL
+query reports `machine.gpuAvailable: 0` on all three retained hosts. No new Pod was created.
+Runpod documents zero-GPU restart for storage access:
+https://docs.runpod.io/pods/troubleshooting/zero-gpus . The GraphQL `podResume` API accepts
+`gpuCount: 0`; the upload helper requires the returned count to be exactly zero.
+
+`scripts/m13_upload_only.py` resumes only the same persistent Pod for exact input staging.
+It bounds upload to at most10 hours and also reserves the conservative planned training
+plus4 hours inside the remaining original144h/$239.56 cap. Failed restart wall time and
+paid storage are deducted by the same reviewed allocation helper. It verifies the current
+quote against the prior GPU+storage ceiling, all394 local source hashes and destination
+hashes, and STOPs unconditionally. No runtime bootstrap, preflight, training or scoring.
+Separate receipt/log/PID and monitor job preserve the failed GPU attempt unchanged.
