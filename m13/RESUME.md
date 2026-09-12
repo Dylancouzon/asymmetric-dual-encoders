@@ -26,7 +26,8 @@ as a passed receipt. No GPU bootstrap, preflight, training or quality read in th
 receipt, then read `scripts/m13_after_cpu_allocation.py`. It is prepared/reviewed code but
 cannot admit anything until the complete receipt and free GPU capacity exist. It accounts
 both failed resumes plus the entire storage-upload interval. The reviewed supervisor draft
-is `work/m13cloud-launchers/build_after_cpu.draft.py`; apply it to
+is `work/m13cloud-launchers/build_after_cpu.draft.py`, also preserved durably as
+`m13/after_cpu_supervisor.patch`; apply it to
 `scripts/m13_resume_build.py` only after the storage controller has finished, and recheck
 before launch. It adds explicit --after-cpu, new output paths, GPU1 resume, current capacity
 and price checks, all394 destination hashes, pinned bootstrap and full preflight before a
