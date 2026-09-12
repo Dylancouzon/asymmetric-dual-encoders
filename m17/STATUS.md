@@ -43,8 +43,17 @@ both given; see `LEDGER.md`.)
    teacher cache's shard digests are trust-on-first-use (read would be refused under
    `verify=True`), and pinning ordered (qid, text) digests for the four text-backed components
    (a manifest amendment). Then at most one Astra P1 re-check, then the read.
+   Astra P1 re-check done; two real items fixed, three dropped with dispositions (`REVIEW.md`).
+   Dylan's rulings (2026-09-12, `LEDGER.md`): TOFU teacher caches accepted through the dated
+   `m17/tofu_disclosure.json` gate (spot-check `results/m17_teacher_spotcheck.json`); text-component
+   query texts recorded-only. Reader final at `39e1ddf`, 34 tests passing. **Ready to read.**
 2. **The V0 read** (registry `untrained_vocab_export_v0`: one read, descriptive, on the
-   development suite). Record it as a result JSON `results/m17_v0_read.json` with `reads: 1`.
+   development suite). Launch: `bash work/m17/logs/run_v0_read.sh` on a clean tracked tree; the
+   auto-mode classifier blocks the launch, so Dylan runs it. Log `work/m17/logs/v0_read.log` is
+   silent until the final JSON; progress is `completed_components` in
+   `results/m17_v0_read.receipt.json`. Expect 20–45 min. Afterwards: set `v0_export.read` to
+   `true` in the registry as a dated entry, commit the result and receipt, ask Astra for the A6
+   descriptive sheet.
 3. **6d screen arms** (C, V, L, VL, VL-A at 4,000 steps, seed 0) per `training.decision_protocol`.
 
 **Working model for every M17 session (Dylan, 2026-09-11):** Fable orchestrates; Opus subagents
