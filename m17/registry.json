@@ -424,7 +424,16 @@
      }
     },
     "model_npz_sha256": "e2a234cd842cced45d6913394ced201ec0801b83dd27f669baa7e75041359b63",
-    "read": false,
+    "read": true,
+    "read_record": {
+     "date": "2026-09-12",
+     "result": "results/m17_v0_read.json",
+     "result_sha256": "5c6a9955ce9115bf012d478cd89f051850125ccb334f0fcc0a226acd0bccc231",
+     "receipt": "results/m17_v0_read.receipt.json",
+     "commit": "f8ba8a8",
+     "reads": 1,
+     "note": "the one declared descriptive read on the pinned development suite; flag flipped after the fact as a dated entry"
+    },
     "tokenizer_sha256": "ad2bec317be36a5dd0160a73e7f0a23d8941b197bcdda95c29ff830671107cfd"
    },
    "vocabulary_terms": 446
