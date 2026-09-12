@@ -1,0 +1,387 @@
+{
+ "milestone": "M17",
+ "step": "2b",
+ "date": "2026-09-11",
+ "script": "m17src/support_manifest.py",
+ "script_sha256": "f32930234fe15e343ce4a6eb06161549579ae62b2b6b8f758731d70348787a9d",
+ "gpu_used": false,
+ "protected_payloads_opened": false,
+ "methods": {
+  "normalization": "NFKC, casefold, whitespace runs collapsed to one space, stripped",
+  "document_group_id": "sha256(normalized document text)[:16]; exact-normalized grouping, not MinHash near-duplicate detection",
+  "query_family_id": "union-find: identical normalized query text, or a shared positive document group whose fan-out is at most the hub cutoff; family_id = sha256(root uid)[:16]",
+  "train_split": "M7 fingerprint-decontamination survivors (work/decontam/kept.json, kept_querytext.json) minus the sha256 mod-50 held-out slice",
+  "denied": "MS MARCO is non-commercial: validation only, excluded by name"
+ },
+ "source_domain_map": {
+  "hotpotqa-train": "general",
+  "fever-train": "general",
+  "squad-train": "general",
+  "mrtydi-en": "general",
+  "esci-us": "general",
+  "nqopen": "general",
+  "triviaqa": "general",
+  "k8s-docs-en": "cloud-software"
+ },
+ "panel_domains": [
+  "cloud-software",
+  "general",
+  "science-engineering",
+  "medicine",
+  "finance",
+  "legal"
+ ],
+ "per_source": {
+  "hotpotqa-train": {
+   "store": "hotpotqa-corpus",
+   "documents": 5233329,
+   "documents_deduplicated": 5233315,
+   "documents_by_domain": {
+    "finance": 21250,
+    "general": 5086445,
+    "legal": 39193,
+    "medicine": 41222,
+    "science-engineering": 45205
+   },
+   "queries_train": 81780,
+   "queries_deduplicated": 81773
+  },
+  "fever-train": {
+   "store": "fever-pos",
+   "documents": 12549,
+   "documents_deduplicated": 12549,
+   "documents_by_domain": {
+    "finance": 455,
+    "general": 11167,
+    "legal": 470,
+    "medicine": 250,
+    "science-engineering": 207
+   },
+   "queries_train": 97708,
+   "queries_deduplicated": 91907
+  },
+  "squad-train": {
+   "store": "squad-ctx",
+   "documents": 18891,
+   "documents_deduplicated": 18891,
+   "documents_by_domain": {
+    "finance": 571,
+    "general": 16573,
+    "legal": 732,
+    "medicine": 462,
+    "science-engineering": 553
+   },
+   "queries_train": 84956,
+   "queries_deduplicated": 84689
+  },
+  "esci-us": {
+   "store": "esci-prod",
+   "documents": 808389,
+   "documents_deduplicated": 802938,
+   "documents_by_domain": {
+    "finance": 1002,
+    "general": 770551,
+    "legal": 805,
+    "medicine": 18422,
+    "science-engineering": 12158
+   },
+   "queries_train": 73094,
+   "queries_deduplicated": 73094
+  },
+  "mrtydi-en": {
+   "store": "mrtydi-docs",
+   "documents": 95984,
+   "documents_deduplicated": 95965,
+   "documents_by_domain": {
+    "finance": 1279,
+    "general": 87308,
+    "legal": 2379,
+    "medicine": 3120,
+    "science-engineering": 1879
+   },
+   "queries_train": 3310,
+   "queries_deduplicated": 3308
+  },
+  "k8s-docs-en": {
+   "store": "work/m17/sources/k8s_docs_en.jsonl",
+   "documents": 1648,
+   "documents_deduplicated": 1648,
+   "documents_by_domain": {
+    "cloud-software": 1648
+   },
+   "excluded_near_duplicate_paths": [
+    "content/en/docs/reference/access-authn-authz/abac.md",
+    "content/en/docs/reference/access-authn-authz/authorization.md",
+    "content/en/docs/reference/glossary/cgroup.md",
+    "content/en/docs/tasks/administer-cluster/ip-masq-agent.md",
+    "content/en/docs/test.md"
+   ],
+   "admission": "candidate only; the executor's protected screen has not run"
+  },
+  "nqopen": {
+   "store": null,
+   "documents": 0,
+   "documents_deduplicated": 0,
+   "documents_by_domain": {},
+   "queries_train": 85871,
+   "queries_deduplicated": 85871,
+   "note": "query text only; no positives, so families come from normalized text alone"
+  },
+  "triviaqa": {
+   "store": null,
+   "documents": 0,
+   "documents_deduplicated": 0,
+   "documents_by_domain": {},
+   "queries_train": 134761,
+   "queries_deduplicated": 75709,
+   "note": "query text only; no positives, so families come from normalized text alone"
+  }
+ },
+ "per_domain": {
+  "cloud-software": {
+   "sources": [
+    "k8s-docs-en"
+   ],
+   "documents_deduplicated": 1648,
+   "queries_deduplicated": 0
+  },
+  "general": {
+   "sources": [
+    "hotpotqa-train",
+    "fever-train",
+    "squad-train",
+    "esci-us",
+    "mrtydi-en",
+    "nqopen",
+    "triviaqa"
+   ],
+   "documents_deduplicated": 5972044,
+   "queries_deduplicated": 496351
+  },
+  "science-engineering": {
+   "sources": [
+    "hotpotqa-train",
+    "fever-train",
+    "squad-train",
+    "esci-us",
+    "mrtydi-en"
+   ],
+   "documents_deduplicated": 60002,
+   "queries_deduplicated": 0
+  },
+  "medicine": {
+   "sources": [
+    "hotpotqa-train",
+    "fever-train",
+    "squad-train",
+    "esci-us",
+    "mrtydi-en"
+   ],
+   "documents_deduplicated": 63476,
+   "queries_deduplicated": 0
+  },
+  "finance": {
+   "sources": [
+    "hotpotqa-train",
+    "fever-train",
+    "squad-train",
+    "esci-us",
+    "mrtydi-en"
+   ],
+   "documents_deduplicated": 24557,
+   "queries_deduplicated": 0
+  },
+  "legal": {
+   "sources": [
+    "hotpotqa-train",
+    "fever-train",
+    "squad-train",
+    "esci-us",
+    "mrtydi-en"
+   ],
+   "documents_deduplicated": 43579,
+   "queries_deduplicated": 0
+  }
+ },
+ "per_domain_source_level": {
+  "cloud-software": {
+   "sources": [
+    "k8s-docs-en"
+   ],
+   "documents_deduplicated": 1648,
+   "queries_deduplicated": 0
+  },
+  "general": {
+   "sources": [
+    "hotpotqa-train",
+    "fever-train",
+    "squad-train",
+    "esci-us",
+    "mrtydi-en",
+    "nqopen",
+    "triviaqa"
+   ],
+   "documents_deduplicated": 6163658,
+   "queries_deduplicated": 496351
+  },
+  "science-engineering": {
+   "sources": [],
+   "documents_deduplicated": 0,
+   "queries_deduplicated": 0
+  },
+  "medicine": {
+   "sources": [],
+   "documents_deduplicated": 0,
+   "queries_deduplicated": 0
+  },
+  "finance": {
+   "sources": [],
+   "documents_deduplicated": 0,
+   "queries_deduplicated": 0
+  },
+  "legal": {
+   "sources": [],
+   "documents_deduplicated": 0,
+   "queries_deduplicated": 0
+  }
+ },
+ "unpopulated_domains_gap": [],
+ "unpopulated_domains_gap_source_level": [
+  "science-engineering",
+  "medicine",
+  "finance",
+  "legal"
+ ],
+ "domain_assignment": {
+  "rule": "A3 per-document classifier: the source-to-domain map fixes the domain of a document except for sources mapped to 'general', whose documents are sub-assigned one at a time by the panel builder's keyword classifier (m17src/panel_build.classify) on the DOCUMENT TEXT ONLY, at the same threshold. Queries stay on the source map here; a query's own domain follows its source document inside m17src/vocab.discover. Labels are heuristic (Dylan, 2026-09-11).",
+  "method": "HEURISTIC, DOCUMENT TEXT ONLY. Source-to-domain map (m17src/support_manifest.SOURCE_DOMAIN) first; within a 'general'-mapped source the panel builder's keyword classifier (m17src/panel_build.classify) reads the deduplicated DOCUMENT text alone \u2014 never the query that retrieved it \u2014 at the threshold pinned by results/m17_panel_manifest.json (see classifier_min_score and classifier_min_score_source). Topical hints, not adjudicated labels.",
+  "classifier_min_score": 3,
+  "classifier_min_score_source": "results/m17_panel_manifest.json",
+  "applied_per_document": true,
+  "fallback": null
+ },
+ "breadth_note": "registry vocabulary_ranking.breadth_completion needs three domains at 64 rows each; under the A3 per-document assignment 6 of 6 panel domains have supporting documents (cloud-software, general, science-engineering, medicine, finance, legal), so 'broad' is arithmetically reachable only if three of them also supply 64 selected rows each, which vocabulary selection decides, not this manifest",
+ "query_families": {
+  "queries_total_train": 561480,
+  "queries_deduplicated_total": 496327,
+  "families": 258808,
+  "largest_family": 49312,
+  "largest_family_sizes_top10": [
+   49312,
+   41041,
+   18569,
+   1240,
+   504,
+   463,
+   383,
+   355,
+   309,
+   260
+  ],
+  "singleton_families": 164118,
+  "families_over_1000": 4,
+  "queries_in_families_over_1000": 110162,
+  "concentration_note": "a few giant families survive the hub cutoff through chains of sub-cutoff documents; a family-level split must place each of them wholly on one side, so the held-out slice, the panel split and the 200-pair alias test should be drawn outside them",
+  "hub_documents_excluded_from_linking": 444,
+  "hub_fanout": 50,
+  "queries_removed_as_heldout": 2,
+  "queries_removed_as_heldout_alias_term": 2,
+  "heldout_key_source": "work/m17/manifest/alias_test_families.json",
+  "heldout_keys_available": true
+ },
+ "bucket_populations": {
+  "general": {
+   "population": 496327,
+   "basis": "distinct normalized admitted training queries, capped at training_query_cap 600000",
+   "uncapped": 496327
+  },
+  "unpaired_coverage": {
+   "population": 6165306,
+   "components": {
+    "new_source_views_min": 1648,
+    "existing_source_views_min": 6163658,
+    "total_min": 6165306
+   },
+   "basis": "one document-derived view per deduplicated admitted document is the lower bound on the view population"
+  },
+  "alias_pairs": {
+   "population": 15393,
+   "source": {
+    "file": "work/m17/manifest/alias_pairs.jsonl",
+    "sha256": "33c4a5ecd7653ceaf8949ceca021094c5cf59f2cadf335a3058f4848d5a390c9"
+   },
+   "basis": "distinct structural pairs from m17src/alias_pairs.py"
+  }
+ },
+ "passes_at_registered_6000x256": {
+  "views": {
+   "general_views": 1152000,
+   "unpaired_coverage_views": 192000,
+   "alias_pair_draws": 96000
+  },
+  "general": 2.321,
+  "unpaired_coverage": 0.031,
+  "alias_pairs": 6.237,
+  "exceeds_four_passes": [
+   "alias_pairs"
+  ]
+ },
+ "dose_rule_outcome": {
+  "registered_shares_at_256": {
+   "general_views": 192,
+   "coverage_views": 32,
+   "alias_pairs": 16
+  },
+  "resulting_shares": {
+   "steps": 6000,
+   "batch": 256,
+   "general_views_per_batch": 204,
+   "unpaired_coverage_views_per_batch": 32,
+   "alias_pairs_per_batch": 10,
+   "general_views": 1224000,
+   "unpaired_coverage_views": 192000,
+   "alias_pair_draws": 60000,
+   "alias_views": 120000,
+   "total_processed_views": 1536000
+  },
+  "passes_per_bucket": {
+   "general": 2.466,
+   "unpaired_coverage": 0.031,
+   "alias_pairs": 3.898
+  },
+  "shrunk": {
+   "alias": true,
+   "coverage": false,
+   "steps": false
+  },
+  "freed_slot_interpretation": "slots freed by an alias or coverage shrink go to general replay; general passes are re-checked before steps fall"
+ },
+ "new_source_share": {
+  "share_max_of_processed_views": 0.1,
+  "processed_views_per_run": 1536000,
+  "new_source_view_cap": 153600,
+  "coverage_views_per_run": 192000,
+  "new_source_distinct_views_min": 1648,
+  "cap_binds_before_the_coverage_bucket": true,
+  "passes_over_the_new_source_if_it_filled_the_cap": 93.2,
+  "new_source_views_at_four_passes": 6592,
+  "new_source_share_at_four_passes": 0.0043,
+  "rule": "k8s-derived views are drawn only inside the coverage bucket and are capped at new_source_view_cap; the remainder of the coverage bucket comes from existing admitted documents",
+  "finding": "the 10% ceiling is not the binding constraint: the slice is too small to supply it without dozens of passes, so the honest allocation is the four-pass figure above, far below the cap"
+ },
+ "manifest_files": {
+  "m17/manifest/alias_pairs.jsonl": "33c4a5ecd7653ceaf8949ceca021094c5cf59f2cadf335a3058f4848d5a390c9",
+  "m17/manifest/alias_pairs_summary.json": "724e5f7be84097ccdda4f7d664bbd89fc5370b83534e9d4050603831a01cc17e",
+  "m17/manifest/alias_test_families.json": "a3cc09ff6a7affcf17c263553e8711ac4ec468ecd42d2968935d16a195f57c26",
+  "m17/manifest/doc_groups/esci-us.tsv.gz": "348d50c4742aab38b1b369d2c235834ba28fd2f68c5ccecd83301687d86cc89b",
+  "m17/manifest/doc_groups/fever-train.tsv.gz": "13f0851e20c7c65963c02d3bb3cff28640a915f57bd31a2c141b602ec8f5dc0b",
+  "m17/manifest/doc_groups/hotpotqa-train.tsv.gz": "284919b80b3e2bf6ca56ac21a773c19ef1cc8a57ce54a567a73b522d71b12a01",
+  "m17/manifest/doc_groups/k8s-docs-en.tsv.gz": "7d1d9b457228d9e273d349ea78ac8e63286acf810766c3f8cd6f53adebaa9a50",
+  "m17/manifest/doc_groups/mrtydi-en.tsv.gz": "8b973f45f9080237f12ac11b91c1da05a97d62ab37900a1528025211d7eca0dc",
+  "m17/manifest/doc_groups/squad-train.tsv.gz": "61ff086592f5553e4d3c2f8354251275fab322865e60a7232f9c7b4fbe7d1896",
+  "m17/manifest/query_families.tsv.gz": "d540e21da8de55cba383c8409b90e487450b568663ee990a9fa03448c6ba9573"
+ },
+ "deferred": {
+  "protected_screen": "six, reserved four and LoTTE: executor only, via m10src/protected10 (results/m17_k8s_source_manifest.json)"
+ }
+}

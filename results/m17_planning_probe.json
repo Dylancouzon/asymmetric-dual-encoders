@@ -1,0 +1,907 @@
+{
+  "diagnostic": "M17-P0",
+  "date": "2026-09-11",
+  "python": "3.12.14",
+  "numpy": "2.3.5",
+  "tokenizers": "0.22.2",
+  "git_head": "3006eab1ccfb43e77daf1358c95e63e2496cdb3f",
+  "input_sha256": {
+    "work/release/zero-v1/model.npz": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
+    "work/release/zero-v1/tokenizer.json": "997eaeff157a7d4db899b8f2278ad3db6e323e609ae956b9c5035550f581eeee",
+    "work/release/zero-v1/config.json": "fd784397925e9ec32b6f1412af85b46faea79bb618b17197dc6d3a0068669636",
+    "m11/release/zero_encoder.py": "92e93ee40b061556f294974bcf384b9a14163d94ee4e57818ee34d193e8cc754",
+    "m17/LEDGER.md": "14b8764ddaa72a1edfa87ce9b0ed2278db1956f224eaa53a0b78540e51cdc197",
+    "m17src/planning_probe.py": "7fe3d22c620d3aaec34d3fb74ba8913858562196f48fbe28ded889f4d6742e9a"
+  },
+  "cpu": {
+    "original_vocab": 30522,
+    "fixture_added_rows": 35,
+    "segmentation": [
+      {
+        "text": "s3",
+        "old": [
+          "s",
+          "##3"
+        ],
+        "extended": [
+          "s3"
+        ]
+      },
+      {
+        "text": "k8s",
+        "old": [
+          "k",
+          "##8",
+          "##s"
+        ],
+        "extended": [
+          "k8s"
+        ]
+      },
+      {
+        "text": "kubernetes",
+        "old": [
+          "ku",
+          "##ber",
+          "##net",
+          "##es"
+        ],
+        "extended": [
+          "kubernetes"
+        ]
+      },
+      {
+        "text": "kubectl",
+        "old": [
+          "ku",
+          "##be",
+          "##ct",
+          "##l"
+        ],
+        "extended": [
+          "kubectl"
+        ]
+      },
+      {
+        "text": "eks",
+        "old": [
+          "ek",
+          "##s"
+        ],
+        "extended": [
+          "eks"
+        ]
+      },
+      {
+        "text": "gke",
+        "old": [
+          "g",
+          "##ke"
+        ],
+        "extended": [
+          "gke"
+        ]
+      },
+      {
+        "text": "aks",
+        "old": [
+          "ak",
+          "##s"
+        ],
+        "extended": [
+          "aks"
+        ]
+      },
+      {
+        "text": "iam",
+        "old": [
+          "ia",
+          "##m"
+        ],
+        "extended": [
+          "iam"
+        ]
+      },
+      {
+        "text": "ec2",
+        "old": [
+          "ec",
+          "##2"
+        ],
+        "extended": [
+          "ec2"
+        ]
+      },
+      {
+        "text": "terraform",
+        "old": [
+          "terra",
+          "##form"
+        ],
+        "extended": [
+          "terraform"
+        ]
+      },
+      {
+        "text": "helm",
+        "old": [
+          "helm"
+        ],
+        "extended": [
+          "helm"
+        ]
+      },
+      {
+        "text": "istio",
+        "old": [
+          "ist",
+          "##io"
+        ],
+        "extended": [
+          "istio"
+        ]
+      },
+      {
+        "text": "prometheus",
+        "old": [
+          "prom",
+          "##eth",
+          "##eus"
+        ],
+        "extended": [
+          "prometheus"
+        ]
+      },
+      {
+        "text": "grafana",
+        "old": [
+          "graf",
+          "##ana"
+        ],
+        "extended": [
+          "grafana"
+        ]
+      },
+      {
+        "text": "postgresql",
+        "old": [
+          "post",
+          "##gre",
+          "##s",
+          "##q",
+          "##l"
+        ],
+        "extended": [
+          "postgresql"
+        ]
+      },
+      {
+        "text": "redis",
+        "old": [
+          "red",
+          "##is"
+        ],
+        "extended": [
+          "redis"
+        ]
+      },
+      {
+        "text": "nginx",
+        "old": [
+          "ng",
+          "##in",
+          "##x"
+        ],
+        "extended": [
+          "nginx"
+        ]
+      },
+      {
+        "text": "grpc",
+        "old": [
+          "gr",
+          "##pc"
+        ],
+        "extended": [
+          "grpc"
+        ]
+      },
+      {
+        "text": "oauth2",
+        "old": [
+          "o",
+          "##au",
+          "##th",
+          "##2"
+        ],
+        "extended": [
+          "oauth2"
+        ]
+      },
+      {
+        "text": "oidc",
+        "old": [
+          "o",
+          "##id",
+          "##c"
+        ],
+        "extended": [
+          "oidc"
+        ]
+      },
+      {
+        "text": "jwt",
+        "old": [
+          "j",
+          "##wt"
+        ],
+        "extended": [
+          "jwt"
+        ]
+      },
+      {
+        "text": "vpc",
+        "old": [
+          "vp",
+          "##c"
+        ],
+        "extended": [
+          "vpc"
+        ]
+      },
+      {
+        "text": "cidr",
+        "old": [
+          "cid",
+          "##r"
+        ],
+        "extended": [
+          "cidr"
+        ]
+      },
+      {
+        "text": "dns",
+        "old": [
+          "d",
+          "##ns"
+        ],
+        "extended": [
+          "dns"
+        ]
+      },
+      {
+        "text": "coredns",
+        "old": [
+          "core",
+          "##d",
+          "##ns"
+        ],
+        "extended": [
+          "coredns"
+        ]
+      },
+      {
+        "text": "etcd",
+        "old": [
+          "etc",
+          "##d"
+        ],
+        "extended": [
+          "etcd"
+        ]
+      },
+      {
+        "text": "containerd",
+        "old": [
+          "container",
+          "##d"
+        ],
+        "extended": [
+          "containerd"
+        ]
+      },
+      {
+        "text": "argocd",
+        "old": [
+          "ar",
+          "##go",
+          "##cd"
+        ],
+        "extended": [
+          "argocd"
+        ]
+      },
+      {
+        "text": "crd",
+        "old": [
+          "cr",
+          "##d"
+        ],
+        "extended": [
+          "crd"
+        ]
+      },
+      {
+        "text": "ingress",
+        "old": [
+          "ing",
+          "##ress"
+        ],
+        "extended": [
+          "ingress"
+        ]
+      },
+      {
+        "text": "c++",
+        "old": [
+          "c",
+          "+",
+          "+"
+        ],
+        "extended": [
+          "c++"
+        ]
+      },
+      {
+        "text": "c#",
+        "old": [
+          "c",
+          "#"
+        ],
+        "extended": [
+          "c#"
+        ]
+      },
+      {
+        "text": ".net",
+        "old": [
+          ".",
+          "net"
+        ],
+        "extended": [
+          ".net"
+        ]
+      },
+      {
+        "text": "s3://",
+        "old": [
+          "s",
+          "##3",
+          ":",
+          "/",
+          "/"
+        ],
+        "extended": [
+          "s3://"
+        ]
+      },
+      {
+        "text": "CrashLoopBackOff",
+        "old": [
+          "crash",
+          "##lo",
+          "##op",
+          "##back",
+          "##off"
+        ],
+        "extended": [
+          "crashloopbackoff"
+        ]
+      },
+      {
+        "text": "aws_s3_bucket",
+        "old": [
+          "aw",
+          "##s",
+          "_",
+          "s",
+          "##3",
+          "_",
+          "bucket"
+        ],
+        "extended": [
+          "aws_s3_bucket"
+        ]
+      },
+      {
+        "text": "S3 bucket policy",
+        "old": [
+          "s",
+          "##3",
+          "bucket",
+          "policy"
+        ],
+        "extended": [
+          "s3",
+          "bucket",
+          "policy"
+        ]
+      },
+      {
+        "text": "s3-compatible storage",
+        "old": [
+          "s",
+          "##3",
+          "-",
+          "compatible",
+          "storage"
+        ],
+        "extended": [
+          "s3",
+          "-",
+          "compatible",
+          "storage"
+        ]
+      },
+      {
+        "text": "s3://my-bucket/path",
+        "old": [
+          "s",
+          "##3",
+          ":",
+          "/",
+          "/",
+          "my",
+          "-",
+          "bucket",
+          "/",
+          "path"
+        ],
+        "extended": [
+          "s",
+          "##3",
+          ":",
+          "/",
+          "/",
+          "my",
+          "-",
+          "bucket",
+          "/",
+          "path"
+        ]
+      },
+      {
+        "text": "s3client",
+        "old": [
+          "s",
+          "##3",
+          "##cl",
+          "##ient"
+        ],
+        "extended": [
+          "s",
+          "##3",
+          "##cl",
+          "##ient"
+        ]
+      },
+      {
+        "text": "xs3",
+        "old": [
+          "x",
+          "##s",
+          "##3"
+        ],
+        "extended": [
+          "x",
+          "##s",
+          "##3"
+        ]
+      },
+      {
+        "text": "s3_bucket",
+        "old": [
+          "s",
+          "##3",
+          "_",
+          "bucket"
+        ],
+        "extended": [
+          "s",
+          "##3",
+          "_",
+          "bucket"
+        ]
+      },
+      {
+        "text": "k8s deployment",
+        "old": [
+          "k",
+          "##8",
+          "##s",
+          "deployment"
+        ],
+        "extended": [
+          "k8s",
+          "deployment"
+        ]
+      },
+      {
+        "text": "K8S networking",
+        "old": [
+          "k",
+          "##8",
+          "##s",
+          "networking"
+        ],
+        "extended": [
+          "k8s",
+          "networking"
+        ]
+      },
+      {
+        "text": "k8s-client",
+        "old": [
+          "k",
+          "##8",
+          "##s",
+          "-",
+          "client"
+        ],
+        "extended": [
+          "k8s",
+          "-",
+          "client"
+        ]
+      },
+      {
+        "text": "k8sclient",
+        "old": [
+          "k",
+          "##8",
+          "##sc",
+          "##lie",
+          "##nt"
+        ],
+        "extended": [
+          "k",
+          "##8",
+          "##sc",
+          "##lie",
+          "##nt"
+        ]
+      },
+      {
+        "text": "k8s_cluster",
+        "old": [
+          "k",
+          "##8",
+          "##s",
+          "_",
+          "cluster"
+        ],
+        "extended": [
+          "k",
+          "##8",
+          "##s",
+          "_",
+          "cluster"
+        ]
+      },
+      {
+        "text": "C++ compiler",
+        "old": [
+          "c",
+          "+",
+          "+",
+          "compiler"
+        ],
+        "extended": [
+          "c++",
+          "compiler"
+        ]
+      },
+      {
+        "text": "C# code",
+        "old": [
+          "c",
+          "#",
+          "code"
+        ],
+        "extended": [
+          "c#",
+          "code"
+        ]
+      },
+      {
+        "text": ".NET runtime",
+        "old": [
+          ".",
+          "net",
+          "run",
+          "##time"
+        ],
+        "extended": [
+          ".net",
+          "run",
+          "##time"
+        ]
+      },
+      {
+        "text": "oauth2 vs oauth20",
+        "old": [
+          "o",
+          "##au",
+          "##th",
+          "##2",
+          "vs",
+          "o",
+          "##au",
+          "##th",
+          "##20"
+        ],
+        "extended": [
+          "oauth2",
+          "vs",
+          "o",
+          "##au",
+          "##th",
+          "##20"
+        ]
+      },
+      {
+        "text": "S3 heart sound",
+        "old": [
+          "s",
+          "##3",
+          "heart",
+          "sound"
+        ],
+        "extended": [
+          "s3",
+          "heart",
+          "sound"
+        ]
+      },
+      {
+        "text": "S3 galaxy phone",
+        "old": [
+          "s",
+          "##3",
+          "galaxy",
+          "phone"
+        ],
+        "extended": [
+          "s3",
+          "galaxy",
+          "phone"
+        ]
+      }
+    ],
+    "composition": [
+      {
+        "text": "configure s3 bucket",
+        "max_abs": 1.4301989315068653e-09,
+        "cosine": 1.0,
+        "old_tokens": [
+          "[CLS]",
+          "con",
+          "##fi",
+          "##gur",
+          "##e",
+          "s",
+          "##3",
+          "bucket",
+          "[SEP]"
+        ],
+        "new_tokens": [
+          "[CLS]",
+          "con",
+          "##fi",
+          "##gur",
+          "##e",
+          "s3",
+          "bucket",
+          "[SEP]"
+        ]
+      },
+      {
+        "text": "s3 s3 bucket",
+        "max_abs": 2.609536281505953e-09,
+        "cosine": 0.9999999999999994,
+        "old_tokens": [
+          "[CLS]",
+          "s",
+          "##3",
+          "s",
+          "##3",
+          "bucket",
+          "[SEP]"
+        ],
+        "new_tokens": [
+          "[CLS]",
+          "s3",
+          "s3",
+          "bucket",
+          "[SEP]"
+        ]
+      },
+      {
+        "text": "s3 k8s bucket",
+        "max_abs": 5.411339820682315e-09,
+        "cosine": 0.9999999999999998,
+        "old_tokens": [
+          "[CLS]",
+          "s",
+          "##3",
+          "k",
+          "##8",
+          "##s",
+          "bucket",
+          "[SEP]"
+        ],
+        "new_tokens": [
+          "[CLS]",
+          "s3",
+          "k8s",
+          "bucket",
+          "[SEP]"
+        ]
+      },
+      {
+        "text": "s3 3 bucket",
+        "max_abs": 1.512543534865074e-09,
+        "cosine": 0.9999999999999998,
+        "old_tokens": [
+          "[CLS]",
+          "s",
+          "##3",
+          "3",
+          "bucket",
+          "[SEP]"
+        ],
+        "new_tokens": [
+          "[CLS]",
+          "s3",
+          "3",
+          "bucket",
+          "[SEP]"
+        ]
+      },
+      {
+        "text": "k8s k8s networking",
+        "max_abs": 7.227725001834884e-09,
+        "cosine": 0.9999999999999997,
+        "old_tokens": [
+          "[CLS]",
+          "k",
+          "##8",
+          "##s",
+          "k",
+          "##8",
+          "##s",
+          "networking",
+          "[SEP]"
+        ],
+        "new_tokens": [
+          "[CLS]",
+          "k8s",
+          "k8s",
+          "networking",
+          "[SEP]"
+        ]
+      },
+      {
+        "text": "k8s kubernetes networking",
+        "max_abs": 4.350997992452754e-09,
+        "cosine": 0.9999999999999993,
+        "old_tokens": [
+          "[CLS]",
+          "k",
+          "##8",
+          "##s",
+          "ku",
+          "##ber",
+          "##net",
+          "##es",
+          "networking",
+          "[SEP]"
+        ],
+        "new_tokens": [
+          "[CLS]",
+          "k8s",
+          "kubernetes",
+          "networking",
+          "[SEP]"
+        ]
+      }
+    ],
+    "load_seconds": 0.15699619099996198,
+    "cpu_timing": [
+      {
+        "batch": 32,
+        "repeats": 7,
+        "batch_seconds": [
+          0.0027740570000105436,
+          0.0023040799999307637,
+          0.002399094999987028,
+          0.002614230999938627,
+          0.0022771760000068753,
+          0.002437001999965105,
+          0.002335785000013857
+        ],
+        "median_ms_per_query": 0.07497171874959463
+      },
+      {
+        "batch": 256,
+        "repeats": 7,
+        "batch_seconds": [
+          0.015040880000015022,
+          0.014664418999927875,
+          0.014155134000020553,
+          0.01378377300000011,
+          0.013871287000029042,
+          0.014062719000094148,
+          0.013622246999943854
+        ],
+        "median_ms_per_query": 0.054932496094117766
+      }
+    ],
+    "resident_rows_bytes": 125018112,
+    "size_arithmetic": [
+      {
+        "rows": 30522,
+        "table_parameters": 31254528,
+        "with_learned_scalar_parameters": 31285050,
+        "int8_codes_and_fp32_scales_bytes": 31376616,
+        "fp32_resident_rows_bytes": 125018112
+      },
+      {
+        "rows": 33594,
+        "table_parameters": 34400256,
+        "with_learned_scalar_parameters": 34433850,
+        "int8_codes_and_fp32_scales_bytes": 34534632,
+        "fp32_resident_rows_bytes": 137601024
+      },
+      {
+        "rows": 34179,
+        "table_parameters": 34999296,
+        "with_learned_scalar_parameters": 35033475,
+        "int8_codes_and_fp32_scales_bytes": 35136012,
+        "fp32_resident_rows_bytes": 139997184
+      },
+      {
+        "rows": 65536,
+        "table_parameters": 67108864,
+        "with_learned_scalar_parameters": 67174400,
+        "int8_codes_and_fp32_scales_bytes": 67371008,
+        "fp32_resident_rows_bytes": 268435456
+      }
+    ],
+    "interpretation": "Illustrative fixtures only; no coverage or quality estimate."
+  },
+  "gpu": {
+    "available": true,
+    "device": "NVIDIA GeForce RTX 3080",
+    "torch": "2.8.0+cu126",
+    "shapes": [
+      {
+        "batch": 128,
+        "tokens_per_query": 24,
+        "candidates": 64,
+        "steps": 20,
+        "seconds": 0.09813317900000129,
+        "ms_per_step": 4.906658950000065,
+        "examples_per_second": 26086.997548504634,
+        "peak_allocated_bytes": 727017472,
+        "peak_reserved_bytes": 836763648,
+        "allocator_retries": 0,
+        "loss_finite": true
+      },
+      {
+        "batch": 256,
+        "tokens_per_query": 24,
+        "candidates": 64,
+        "steps": 20,
+        "seconds": 0.10131730399996286,
+        "ms_per_step": 5.065865199998143,
+        "examples_per_second": 50534.30951934802,
+        "peak_allocated_bytes": 744934400,
+        "peak_reserved_bytes": 840957952,
+        "allocator_retries": 0,
+        "loss_finite": true
+      }
+    ],
+    "limitations": "Synthetic resident tensors, uniform token IDs and mean pooling; excludes real sqrt counts, I/O, teacher encoding, candidate mining, regularization, evaluation and checkpointing. Feasibility only, not an end-to-end training forecast."
+  }
+}

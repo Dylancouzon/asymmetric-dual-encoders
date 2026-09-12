@@ -19,9 +19,19 @@
  },
  "bridge": {
   "anchor": "bge-small-en-v1.5",
-  "max_abs_per_query_delta": 0.0003,
   "qids": "zero missing, extra or reordered",
-  "failure": "consumes the access"
+  "failure": "consumes the access",
+  "max_abs_per_query_delta_WITHDRAWN": 0.0003,
+  "dataset_mean_abs_delta_max": 0.003,
+  "hard_fail_on": [
+   "qid SET inequality on any dataset",
+   "dataset-level |mean delta| > 0.003 on any dataset"
+  ],
+  "report_never_fail": [
+   "max |per-query delta| and the count of changed queries, per dataset",
+   "the mean delta per dataset, signed"
+  ],
+  "_amended_2026_09_10": "Ruling R3 (Dylan, 2026-09-10; m13/RULINGS.md), written BEFORE any M9 six-set score exists: M9 adopts the dataset-mean bridge M10 registered on 2026-09-10. The inherited 0.0003 per-query tolerance rested on a false 'minimum nDCG quantum' rationale (research/m10-cleanup-review-2026-09-10.md) and was never rehearsed for re-encoding; a hard per-query gate would have consumed M9's only access on a numerical artefact. Anchor, qid rule and 'failure consumes the access' are unchanged. ORIGINAL: {\"anchor\": \"bge-small-en-v1.5\", \"max_abs_per_query_delta\": 0.0003, \"qids\": \"zero missing, extra or reordered\", \"failure\": \"consumes the access\"}"
  },
  "contrasts": {
   "C1": {

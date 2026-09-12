@@ -16,7 +16,7 @@ This changes scope and navigation, not results, registered constants or access r
 | M14 | Nano release and combined FastEmbed PR | After M13; `instructions-m14.md` |
 | M15 | Whitepaper and evidence package | After measurements, nano optional; `instructions-m15.md` |
 | M16 | Image-model scoping | Unscheduled; `instructions-m16.md` |
-| M17 | Better-zero ideas | Parked; `instructions-m17.md` |
+| M17 | Zero v1.1: vocabulary and modest quality improvement | **Closed 2026-09-12, negative result** (`no_survivor`: no screen arm met eligibility vs v1; zero v1 stays shipped); `m17/STATUS.md` |
 
 ## Migration map
 

@@ -1468,3 +1468,24 @@ PRF being a poor fit for a bag query specifically: feedback assumes the first pa
 trust, and the table's first pass is precisely what is weak.
 
 **Consequence:** a `qualifying_system` route closes. `R-LIST` and `B10` remain before the exit.
+
+## 15 — amendment 2026-09-10: allowlist entry for M13's reserved stage (ruling R12)
+
+`paths_guard.ALLOWLIST` gains `m13src.score13` (`score13.py`), kinds `{untouched_labels}`: the
+conditional reserved batch inside M13's six-set scoring transaction (`m13src/score13.py`), class d
+(confirmatory access after the freeze). `claim()` verifies the caller module, so `m8src.final_run`'s
+entry could not be borrowed. The stage runs only if a conjunct rejects, only after the tag, and refuses
+without the FEVER/DBpedia document vectors (ruling R10 prices those encodes). Dylan's ruling:
+`m13/RULINGS.md` R12, 2026-09-10. No other entry, kind or rule changed.
+
+## 15 — amendment 2026-09-10: allowlist entry for M13's LoTTE gate script (rulings R8, R16)
+
+`paths_guard.ALLOWLIST` gains `m13src.lotte_gate13` (`lotte_gate13.py`), kinds `{lotte}`: LoTTE
+read #1, the pre-build veto and observational row registered in `m13/LOTTE_GATE_REGISTRATION.json`
+and `m10/LOTTE_LOCK.md`, the M10/M13 counterpart of `m8src.shadow_cross`'s single mandatory crossing
+(LEDGER 2.3; that module was never written). The script opens only `collection.tsv`,
+`questions.forum.tsv` and `qas.forum.jsonl` under `work/lotte/remediated/<topic>/<split>/` and its
+own stella encode cache under `work/lotte/enc/`, never the GooAQ-licensed search split or the raw
+archive; it writes the aggregate record `m13/LOTTE_GATE.json` and refuses to execute twice. Dylan's
+rulings: `m13/RULINGS.md` R8 (metric, slices, identities) and R16 (a small script, no general
+executor), 2026-09-10. No other entry, kind or rule changed.

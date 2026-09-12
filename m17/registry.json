@@ -1,0 +1,769 @@
+{
+ "abbreviation_policy": "An abbreviation whose support is below twice both minima (fewer than 40 documents or 100 contexts) is replaced by its whole-word expanded form if that form is itself a candidate; otherwise it is dropped. Owner-pinned terms are exempt.",
+ "accepted_plan_additions": {
+  "date": "2026-09-11",
+  "features": [
+   "alias consistency",
+   "late-checkpoint averaging",
+   "int8 resident-row loading"
+  ],
+  "owner_instruction": "These look like great ideas, add them to the plan, commit and push",
+  "scope": "Included in the plan; no training execution, publication or protected access authorized"
+ },
+ "accepted_plan_revision_a2": {
+  "changes": [
+   "screen routed on the pinned dev suite, M17 panel descriptive",
+   "judged panel built before the 72-hour clock",
+   "Kubernetes documentation admitted in principle as a technical slice, licence evidence owed before use",
+   "final dose cut to 6000 steps with a train/held-out divergence check",
+   "anchor described as inherited, averaging snapshots spread over the last quarter",
+   "candidate entropy recorded at cache build",
+   "untrained sum-init vocabulary export V0 scored once",
+   "per-domain cap on new rows for breadth"
+  ],
+  "date": "2026-09-11",
+  "owner_instruction": "Go with all your recommendations",
+  "scope": "Planning only; no training execution, publication or protected access authorized"
+ },
+ "accepted_plan_revision_a4": {
+  "changes": [
+   "training.labeled_positive_budget_share (0.5, held-out slice excluded from the budget)",
+   "training.candidate_construction.bank_sampling_amendment_a4",
+   "data.documentless_sources_vote",
+   "pre-clock smoke: --rehearsal --data may run on a prepared directory with a deferred protected screen and prints the unscreened row counts; real runs refuse a deferred screen"
+  ],
+  "date": "2026-09-11",
+  "owner_instruction": "agree on your recommendations; the Kubernetes vocabulary is a nice-to-have, not a big thing",
+  "scope": "implementation-level rulings on the step-5 builder; no bar, cap, teacher, licence or protocol change"
+ },
+ "accepted_plan_revision_a5": {
+  "changes": [
+   "data.cap_fill_priority: alias bucket = all distinct admitted pairs, coverage views fill the remainder of training_query_cap once general is exhausted"
+  ],
+  "date": "2026-09-11",
+  "owner_instruction": "agree with A5, register it",
+  "scope": "pool-composition rule for the step-5 builder; no bar, cap, teacher, licence or protocol change"
+ },
+ "accepted_plan_revision_a6": {
+  "changes": [
+   "data.judging_amendment_a6: the 360 Kubernetes panel rows, the 80 pending alias senses and the 308-pair spot check are judged by Codex gpt-6-astra with disclosure and a seeded human double-check slice",
+   "the panel seals final after ingestion; cloud-software relevance is labelled model-judged"
+  ],
+  "date": "2026-09-11",
+  "owner_instruction": "agree with A6, register it and run Astra on 2 and 3. Could Astra do 1 too while at it?",
+  "scope": "judging protocol for descriptive surfaces only; the panel and alias test never route selection; no bar, cap, teacher, licence or training-protocol change"
+ },
+ "added_rows_max": 3072,
+ "allocation_hours": [
+  {
+   "hours": 0,
+   "phase": "PRE-CLOCK (not counted): judged M17 panel and held-out alias pairs built, split and sealed; new-source licence evidence recorded; manifest hashes committed; one end-to-end rehearsal of the whole pipeline on a tiny slice (tens of queries, hundreds of bank documents, tens of steps) through export, scoring and loader, using disposable outputs under work/m17/rehearsal; rehearsal scoring runs against synthetic fixture queries and documents only, never a development or panel component"
+  },
+  {
+   "hours": 8,
+   "phase": "bounded driver/loader design, data manifests, tokenizer and real smoke, reviews"
+  },
+  {
+   "hours": 3,
+   "measured": {
+    "full_build_hours": 1.496,
+    "full_build_wall_clock_seconds": 5386.395,
+    "gpu_peak_gib": 2.959,
+    "queries": 600000,
+    "rss_high_water_gib": 12.111
+   },
+   "phase": "coverage and verified alias pairs, teacher targets and candidate cache",
+   "placeholder_hours_before_measurement": 16
+  },
+  {
+   "hours": 12,
+   "phase": "five matched short screen arms and selection"
+  },
+  {
+   "hours": 16,
+   "phase": "candidate/control full runs, seed replication and fixed endpoint/averaged-form selection"
+  },
+  {
+   "hours": 8,
+   "phase": "locked audit and exact dense/fused evaluation"
+  },
+  {
+   "hours": 6,
+   "phase": "int8 resident/eager loader comparison, numpy/ONNX parity and serving costs"
+  },
+  {
+   "hours": 6,
+   "phase": "failure recovery reserve"
+  }
+ ],
+ "base_vocab": 30522,
+ "breadth_note": "No single audited domain, including cloud/software, may supply more than per_domain_added_rows_max new rows; the technical priority allocation is a ceiling, not a target. Internal need, not a headline claim.",
+ "budget_policy": {
+  "after_lock": "Honor phase ceilings; incomplete required phase stops dependent work, with checkpointed recovery only inside remaining reserve; no silent dose/seed/arm cuts",
+  "before_lock": "Measure complete pipeline stages at two sizes; reduce draft dose/batch and re-budget before quality observations if needed",
+  "screen_overrun": "No selection from an accidentally incomplete matrix; report incomplete screen and stop unless all registered arms complete within the existing reserve",
+  "unused_time": "May move forward to the same registered work, never a new hypothesis; hard total remains 72h"
+ },
+ "checkpoint_averaging": {
+  "audit_form": "Ship seed 0 using the selected form; apply that same form to seed-0 matched control. Freeze both hashes before audit; no audit-driven fallback to the other form. Seed 1 is sensitivity evidence.",
+  "checkpoint_steps": [
+   4500,
+   5250,
+   6000
+  ],
+  "checkpoint_steps_note": "Spread over the last quarter of the 6000-step schedule so the snapshots differ; the earlier 14000/15000/16000 window under decay-to-zero would have averaged near-identical tables.",
+  "enabled_in_plan": true,
+  "forms": [
+   "endpoint",
+   "mean_last_three"
+  ],
+  "operation": "Equal arithmetic mean of effective float32 folded rows; no separate scalar average, per-row/global rescaling or cross-run/tokenizer averaging; quantize the result once",
+  "scale_diagnostic": "Record effective-table RMS at each checkpoint; same initialization and row units, no data-dependent scale adjustment",
+  "scope": "Each finalist/control full run, each seed; no averaging during short-arm selection",
+  "selection": "See training.decision_protocol.averaging_rule; dev-suite predicates only, endpoint eligibility checked, no panel veto. No window/weight sweep.",
+  "snapshot_policy": "Keep these step-bound snapshots in addition to time-bound recovery checkpoints; preserve schedule/step identity on resume"
+ },
+ "closed": {
+  "date": "2026-09-12",
+  "decision_file": "m17/screen_decision_2026-09-12.json",
+  "ruling": "Dylan: Let's close v1.1",
+  "verdict": "no_survivor"
+ },
+ "data": {
+  "alias_admission": "Context-valid independently checked equivalences from admitted sources; group source documents, near duplicates and same-intent query/alias-view families before discovery/training; teacher agreement alone is not a label",
+  "alias_heldout_test": {
+   "built": "pre-clock, with the panel",
+   "definition": "Independently judged same-intent pairs held out of all training, split from training pairs by query family; metric is top-10 overlap and rank correlation between the two views' exact dense results over the panel corpus, plus each view's nDCG@10 where judged",
+   "reads": "once per screen arm and once per final form, alongside the ordinary reads; descriptive, does not route selection",
+   "target_pairs": 200
+  },
+  "alias_query_views_fraction_of_batch": 0.125,
+  "alias_query_views_fraction_of_batch_note": "superseded by measured_dose_after_pre_lock_rule (204/32/10)",
+  "alias_sampling": "Half of the targeted-coverage slots are paired equivalent views: 16 pairs/32 views at batch 256, 8 pairs/16 views at batch 128. Same views, pair IDs and order in every arm; both views count toward the query cap and exposure. SUPERSEDED by measured_dose_after_pre_lock_rule (204/32/10): the applied dose is 10 pairs / 20 views at batch 256 after the pre-lock alias shrink.",
+  "alias_spotcheck_rule": "A3 (Dylan, 2026-09-11): Dylan checks the 308-pair 2% sample; if more than 5% of pairs are wrong, the abbreviation filter is tightened and the pool rebuilt before lock.",
+  "alias_test_status": "built-provisional (2026-09-11, step 2c): 200 pairs, 164 families, 120 VERIFIED_BY_SOURCE and 80 PENDING_HUMAN (59 ambiguous-sense plus 21 truncated extractions); results/m17_alias_test_manifest.json. Excluded families and text keys for the training-pair builder: work/m17/manifest/alias_test_families.json.",
+  "ancestor_decontamination": "Panel, held-out alias pairs and the 2000-query continuation holdout are screened not only against M17 inputs but against every available ancestor training manifest of p35w-2m-s2500 (M7 sources, pseudo-query pools and generated-query lineage) through the approved fingerprint interfaces. Where ancestry cannot be established, the family is labeled exposure-unknown and any generalization claim about it is limited accordingly. A sealed panel is not automatically unseen by the warm start (Astra P1).",
+  "bucket_populations_and_dose_rule": {
+   "alias_training_pairs_source": "Bulk structural equivalences from admitted sources (for example Wikipedia redirect titles to their target titles within admitted Wikipedia-derived datasets, and dataset-provided paraphrases), filtered by rule and spot-checked on a random 2% sample by a human. Individually judged pairs are reserved for the 200-pair held-out test. If fewer than 24000 distinct training pairs exist, the pre_lock_rule shrinks the alias share; it does not authorize new sources.",
+   "buckets_per_final_run_at_6000x256": {
+    "alias_pair_draws": 60000,
+    "general_views": 1224000,
+    "note": "at the applied dose (204/32/10 per batch). The earlier 1152000/192000/96000 was the pre-dose-rule figure, superseded by measured_dose_after_pre_lock_rule",
+    "unpaired_coverage_views": 192000
+   },
+   "distinct_needed_for_max_4_passes": {
+    "alias_pairs": 24000,
+    "general": 288000,
+    "unpaired_coverage": 48000
+   },
+   "new_source_cap_basis": "The 10% cap applies to processed views per run, not only to unique queries",
+   "pre_lock_rule": "After the support manifest, compute each bucket's deduplicated population. If any bucket would exceed 4 passes at the registered dose, first shrink that bucket's batch share (alias then coverage) down to a floor of 4 pairs/8 views and 16 coverage views per batch; if general still exceeds 4 passes, reduce final steps so it does not. Record the resulting numbers before lock. Never raise steps above 6000.",
+   "sampling": "Without replacement within a pass, reshuffled per pass with the run seed; passes counted per bucket, not overall"
+  },
+  "cap_fill_priority": [
+   "alias_all_distinct",
+   "coverage_fill"
+  ],
+  "cap_fill_priority_note": "A5 (Dylan, 2026-09-11): after every distinct admitted general query is in the pool, the alias bucket takes ALL distinct admitted pairs (not the four-pass minimum) and unpaired-coverage views fill the remaining slots up to training_query_cap. Deterministic; the dose rule then states the resulting passes.",
+  "discovery": "training partition only; frequency and teacher residual; no audit mining",
+  "documentless_sources_vote": "none",
+  "documentless_sources_vote_note": "A4 (Dylan, 2026-09-11): nqopen and triviaqa ship no document, so they contribute contexts and residuals to term discovery but no distinct-supporting-document vote toward new_term_min_distinct_source_documents.",
+  "general_replay_fraction": 0.75,
+  "general_replay_fraction_note": "superseded by measured_dose_after_pre_lock_rule (204/32/10)",
+  "judging_amendment_a6": {
+   "clock": "the panel is sealed final once the model judgments are ingested; the human double-check is not a clock dependency",
+   "cloud_software_panel_status": "MODEL-JUDGED: the cloud-software domain's relevance labels are model-derived; reported as such in the panel manifest and the paper, descriptive only (the panel never routes selection)",
+   "date": "2026-09-11",
+   "human_double_check": "Dylan re-judges a fixed seeded slice: 20 Kubernetes rows, 10 alias senses, 20 spot-check pairs; agreement is reported beside the model judgments, whenever convenient, without touching the clock",
+   "judge": "Codex gpt-6-astra, read-only, one pass per sheet from the row text alone (query, candidate title and first 300 characters, or the two alias forms with their carrier sentences); its output is ingested by m17src/judgments_ingest.py and every ingested row carries judge='codex-gpt-6-astra'",
+   "rationale": "Kubernetes is a nice-to-have coverage slice requested informally; dedicated human relevance judging is disproportionate (Dylan, 2026-09-11)",
+   "supersedes": [
+    "panel_judging_plan",
+    "alias_spotcheck_rule (the judge only; the 5% threshold stands)"
+   ]
+  },
+  "m17_panel_target_queries": 600,
+  "measured_bucket_populations": {
+   "alias_pairs": 15393,
+   "date": "2026-09-11",
+   "general": 496327,
+   "note": "measured deduplicated populations required before lock by bucket_populations_and_dose_rule.pre_lock_rule",
+   "source": "results/m17_support_manifest.json",
+   "unpaired_coverage_min": 6165306
+  },
+  "measured_dose_after_pre_lock_rule": {
+   "alias_pairs_per_batch": 10,
+   "batch": 256,
+   "general_views_per_batch": 204,
+   "interpretation": "slots freed by the alias shrink go to general replay; general passes were re-checked and steps were not reduced",
+   "passes": {
+    "alias_pairs": 3.898,
+    "general": 2.466,
+    "unpaired_coverage": 0.031
+   },
+   "shrunk": [
+    "alias"
+   ],
+   "steps": 6000,
+   "unpaired_coverage_views_per_batch": 32
+  },
+  "new_source_share_max_of_training_queries": 0.1,
+  "new_term_min_distinct_source_documents": 20,
+  "new_term_min_distinct_training_contexts": 50,
+  "panel_domains": [
+   "cloud-software",
+   "general",
+   "science-engineering",
+   "medicine",
+   "finance",
+   "legal"
+  ],
+  "panel_exclusions_confirmed": "FEVER-train (reserved four, disclosed Stella exposure) and ESCI (no panel domain) excluded from the panel; confirmed by Dylan 2026-09-11 (A3).",
+  "panel_expected_se_registered": {
+   "basis": "n\u224850 queries per domain, typical per-query nDCG spread; record the measured bootstrap SE beside it after the audit",
+   "paired_ndcg10_se_per_domain_approx": [
+    0.02,
+    0.04
+   ]
+  },
+  "panel_judging_plan": "A3 (Dylan, 2026-09-11): Dylan judges the 60 selection-partition cloud-software queries (about 180 rows) before the screen; a second engineer double-judges 20 of those queries and agreement is reported; the 60 audit-partition queries may be judged later without touching the clock, since the audit is read once at the end. The 80 pending alias senses (59 ambiguous plus 21 truncated extractions) are judged by Dylan with the alias spot check.",
+  "panel_role": "Descriptive and audit only. At ~50 audit queries per domain the paired nDCG@10 standard error is roughly 0.02 to 0.04, far above the screening bands, so the panel does not route arm selection.",
+  "panel_selection_fraction": 0.5,
+  "panel_split_unit": "source document and near-duplicate query family",
+  "panel_status": "built-provisional (2026-09-11, step 2c): 553 queries in 542 families over the six domains (cloud-software 120, general 100, legal 100, finance 85, medicine 75, science-engineering 73), split 50/50 by family into 279 selection and 274 sealed-audit queries, over a 14,198-document declared corpus; manifest and hashes in results/m17_panel_manifest.json. PROVISIONAL because 440 human judgments are outstanding in results/m17_panel_pending_judgments.jsonl \u2014 360 Kubernetes (query, candidate) rows covering all 120 cloud-software queries, plus 80 pending alias senses (59 ambiguous plus 21 truncated extractions). Until they are resolved the cloud-software domain has no relevance judgments, no six-domain quality claim may be made, and the panel hash that starts the 72-hour clock is not final. Non-k8s queries carry the datasets' own qrels, which are incomplete on this mixed corpus.",
+  "panel_timing": "Built and sealed BEFORE the 72-hour clock starts, as separate pre-clock work; the clock does not begin until the panel manifest hash is recorded",
+  "source_domain_map": {
+   "esci-us": "general",
+   "fever-train": "general",
+   "hotpotqa-train": "general",
+   "k8s-docs-en": "cloud-software",
+   "mrtydi-en": "general",
+   "nqopen": "general",
+   "squad-train": "general",
+   "triviaqa": "general"
+  },
+  "source_domain_map_note": "Source-level map; documents from 'general' sources are sub-assigned per document by the panel keyword classifier under ruling A3 (2026-09-11).",
+  "sources": "existing admitted commercial-training sources, plus official Kubernetes documentation (CC BY 4.0, attribution required) admitted in principle by Dylan on 2026-09-11 as a small technical slice; one further CC BY / Apache project-documentation source may be named at the support-manifest stage under the same standard. Licence evidence must be recorded in research/m7-data-licensing.md before any such text is downloaded or used.",
+  "targeted_coverage_fraction": 0.25,
+  "targeted_coverage_fraction_note": "superseded by measured_dose_after_pre_lock_rule (204/32/10)",
+  "training_query_cap": 600000,
+  "training_query_cap_note": "Raised from 300000 to reduce repeated passes; use as many distinct admitted queries as exist up to the cap. Fewer distinct queries is recorded, not silently compensated with more steps."
+ },
+ "date": "2026-09-11",
+ "dim": 1024,
+ "document_encoder_spec_source": "m7/FREEZE.json:encoder_spec",
+ "execution_entry_missing": [
+  "owner ratification of the prospective M17 protocol and any new release criteria; this plan changes no historical bar",
+  "admitted input/cache identities, document-group splits, new-token support audit and judged M17 panel manifest (panel sealed pre-clock)",
+  "licence evidence for Kubernetes documentation and any second project-documentation source recorded in research/m7-data-licensing.md before download: exact source/revision and acquisition route, content licence and exceptions, attribution artifact, any acquisition terms restricting training, decontamination coverage against dev and protected surfaces",
+  "measured preparation costs at two sizes: teacher cache hit rate and encode rate, document encodes, mining, alias-pair verification and evaluation, replacing the placeholder hours before lock",
+  "real pipeline throughput at two sizes and a schedule fitting the allocation; synthetic P0 is not that forecast",
+  "training implementation and smoke/resume validation, reviewed independently twice before expensive execution",
+  "prepared-data builder (step 5) output must carry bank/teacher/tokenizer/preprocessing hashes and the (source, document id) -> domain join from the support manifest's document pass, and must run verify_old_vocab_parity on the effective base rows before extension (Sol P1-2, P1-10; deferred from step 4 by decision)",
+  "loader benchmark harness: five fresh processes per loader, registered strata, RSS/cold-start/p50/p95, built in the loader phase after the final runs (Sol P2-4)"
+ ],
+ "hardware": "local RTX 3080 10 GiB",
+ "int8_resident_loading": {
+  "batch_sizes": [
+   1,
+   32,
+   256
+  ],
+  "comparator": "Eager-fp32-row numpy loader on identical selected int8 artifact and tokenizer",
+  "enabled_in_plan": true,
+  "environment": "Linux WSL box, CPU governor and thread count recorded; results are labeled Linux measurements. The Mac M5 Pro reference-device measurement is a separate later gate, not inferred from these",
+  "fixtures": "Query fixtures drawn from admitted training text with natural token reuse, plus the registered edge fixtures; same fixture file for both loaders",
+  "implementation_scope": "Standalone M17 numpy loader: keep codes/scales resident, gather unique query token IDs, dequantize only gathered rows to float32, preserve sqrt pooling/normalization/fallback/API",
+  "measurement": "Separate fresh processes for load/steady/peak RSS and cold start; warmed alternating-order repeated latency batches, report p50/p95 of batch latency and throughput by stratum; no ANN or quality reselection",
+  "parity_max_abs": 1e-06,
+  "ports": "Verify existing ONNX/FastEmbed parity on the selected artifact; do not infer their memory/latency savings from numpy measurements or redesign their runtimes",
+  "processes_per_loader": 5,
+  "quantile_method": "nearest-rank over all 1000 timed batches per stratum (200 per process x 5 processes), after 20 untimed warm-up batches per process",
+  "query_token_lengths": [
+   8,
+   32,
+   128,
+   512
+  ],
+  "repeats_per_stratum": 200,
+  "selection": "Adopt only if all conformance/fallback/empty/truncation/special-token fixtures pass, steady process RSS is lower, and each stratum's p95 ratio versus eager is <= screening_preferences_not_release_bars.query_p95_latency_ratio_max. Otherwise retain eager loader and record the failed probe."
+ },
+ "lock": {
+  "_note": "step-6 lock, PRE-CLOCK half. Binds protocol, recipe, seeds, fixed manifests and the measured allocation. `pre_screen_build` prices the preparation; the executed vocabulary/tokenizer/cache identities are committed by the on-clock half (`lock.executed`) before the V0 read. Amendments are dated and preserve this block.",
+  "allocation_hours_total": 59,
+  "allocation_unallocated_hours": 13,
+  "amendments": [
+   {
+    "date": "2026-09-11",
+    "field": "invariant_build_inputs_sha256.prepare_data_py",
+    "new": "aefcf585a25170d52d96929563816f3761a7284ce67811a091c94dcde30b4506",
+    "observations_governed_before_amendment": "none (build did not reach vocab/cache/manifests)",
+    "old": "f4010c28ee94d8de63ed5061a99462c38100374e634c1bb072b730f0e12d5420",
+    "pre_half_commit": "e0a1a40",
+    "reason": "The first on-clock screened rebuild died at `parity` with `module 'train' has no attribute 'load_warm_start'`: `m10src/protected10` inserts m7src at sys.path[0] on import and the later lazy `import train` in `stage_parity` resolved to the legacy M7 driver. Fix: `common.reassert_path_order()` called right after `import protected10` in `stage_protected`. Import-order only; no recipe, constant, stage logic or identity field changed. No quality surface was read."
+   },
+   {
+    "authority": "Dylan's conditional pre-approval, recorded in m17/LEDGER.md 2026-09-12, option (a): take the count from the lock-bound data and record a dated amendment.",
+    "date": "2026-09-12",
+    "field": "training.overfit_divergence_check.heldout_metric",
+    "new": "the held-out slice of the lock-bound build: 1994 queries (`prepared.json` stages.protected.pool_after_screen.heldout_rebuilt_to = 1994); `m17src/train.py` takes the count from that `prepared.json` instead of a 2000 literal, and the length check becomes a data-vs-cache consistency check (slice = heldout_idx = cache `heldout` bucket tally)",
+    "observations_governed_before_amendment": "none (no arm has trained; the first arm-C run refused at this preflight before any step)",
+    "old": "same losses on a fixed 2000-query held-out slice of the training sources, never the panel (original text preserved in `training.overfit_divergence_check.heldout_metric`, unchanged)",
+    "reason": "The protected screen dropped six held-out rows and the A5 coverage refill (which restores the planned TRAINING total) did not refill them, so the screened build holds 1994 held-out queries. That 1,994-row slice is already bound inside the lock's `cache_identity`, which this amendment does not change. The held-out read is monitoring-only: it is logged and can raise a recorded divergence flag, and no decision predicate reads it. Changing the data to match the literal would change the locked build; the count follows the locked data instead."
+   }
+  ],
+  "clock": {
+   "hard_total_hours": 72,
+   "start": "an owner ruling (which invocation starts the 72 h, and what pre-clock work is exempt) is recorded in LEDGER.md before the first --protected-screen invocation; `lock.executed.clock_started` records the timestamp under that ruling"
+  },
+  "date": "2026-09-11",
+  "executed": {
+   "_note": "step-6 lock, ON-CLOCK half, committed after the screened rebuild and BEFORE the V0 read or any development read. These are the identities that train.",
+   "base_hashes": {
+    "bank_ids": "66fd1067e726de171e41f5dcc8ef51521f6e27b48a2f77a806a14fdaef2e7070",
+    "bank_vector_bytes": "c478be19bed5d11a4666353e4b4c28863e99d7d5ca80e1ac69225acc5b6e1585",
+    "cache_artifact": "579041f77f4f20dd505afe243c768e209b5627ee371cc0306b0991f05985d117",
+    "cache_identity": "a517244956705f7600e278292ce3467ae30053fce8f7970b4b753ef2efd57fac",
+    "doc_domain_join": "5c1d695619a79dc2f03c46a8cae531231191e68f9921625ae3076f79f5b58918",
+    "new_rows": null,
+    "query_pool": "0fc32dc46637e3690a5509add9ab10c385784a3b8b72a9c1e8730475d8a696c4",
+    "student_ids": "bb0b6e1ca4b4e80dbb722f95c5490ea30c20b4fe8e893a67b7073436d413adb6",
+    "teacher_q": "4dd48b4cd13425379352c1ac3c1af3332c2413916764198c439c4995ae9a4080",
+    "tokenizer": "435667fab0c06c165b1283ecb422497c37124f2d6a35b2ac73dc876332fc9518",
+    "v1_q": "3d2ff31991ebc080f3593385e25e875162a7a5c68e80f2ec24cd236b8ebf633a",
+    "vocabulary": "7eeced010531a5efc439d9b34615226b34db21c39ec78a4b363432650183250e"
+   },
+   "build": "work/m17/prepared/full",
+   "changed_since_pre_screen": [
+    "bank_ids",
+    "bank_vector_bytes",
+    "cache_artifact",
+    "cache_identity",
+    "doc_domain_join",
+    "new_rows",
+    "query_pool",
+    "student_ids",
+    "teacher_q",
+    "tokenizer",
+    "v1_q",
+    "vocabulary"
+   ],
+   "clock_started": "2026-09-11T23:41:24Z",
+   "date": "2026-09-11",
+   "ext_hashes": {
+    "bank_ids": "66fd1067e726de171e41f5dcc8ef51521f6e27b48a2f77a806a14fdaef2e7070",
+    "bank_vector_bytes": "c478be19bed5d11a4666353e4b4c28863e99d7d5ca80e1ac69225acc5b6e1585",
+    "cache_artifact": "579041f77f4f20dd505afe243c768e209b5627ee371cc0306b0991f05985d117",
+    "cache_identity": "a517244956705f7600e278292ce3467ae30053fce8f7970b4b753ef2efd57fac",
+    "doc_domain_join": "5c1d695619a79dc2f03c46a8cae531231191e68f9921625ae3076f79f5b58918",
+    "new_rows": "77aa3a39f51928a69dde6b2949cf5b26da73af8330caa0fd45c0b5d4cf1071e3",
+    "query_pool": "0fc32dc46637e3690a5509add9ab10c385784a3b8b72a9c1e8730475d8a696c4",
+    "student_ids": "6d042d76a7202b1cead25a857fd6f70004a2110793f8581b6c000ed12a0359d6",
+    "teacher_q": "4dd48b4cd13425379352c1ac3c1af3332c2413916764198c439c4995ae9a4080",
+    "tokenizer": "ad2bec317be36a5dd0160a73e7f0a23d8941b197bcdda95c29ff830671107cfd",
+    "v1_q": "3d2ff31991ebc080f3593385e25e875162a7a5c68e80f2ec24cd236b8ebf633a",
+    "vocabulary": "7eeced010531a5efc439d9b34615226b34db21c39ec78a4b363432650183250e"
+   },
+   "protected_receipt_sha256": "7c268a5f1e268a96a408abbdecd765cc5df77d5c3d16e05020f9bf027493685f",
+   "protected_screen": {
+    "documents_screened": 1648,
+    "dropped": 1512,
+    "dropped_by_document_receipt": 44,
+    "dropped_by_text": 1468,
+    "receipt": {
+     "path": "work/m17/prepared/full/protected_receipt.json",
+     "sha256": "7c268a5f1e268a96a408abbdecd765cc5df77d5c3d16e05020f9bf027493685f"
+    },
+    "screened": 600000,
+    "state": "complete"
+   },
+   "status_set": "LOCKED_EXECUTABLE",
+   "v0_export": {
+    "bundle": "/home/dylan/asymetric-dual-encoders/work/m17/bundles/V0",
+    "config_sha256": "aada7c6b02687a5525ec420d55204065046426bd8fb81d749c7153524e93e7c7",
+    "gates": {
+     "gate_artifact": {
+      "attribution_sha256": "a76f278dcbdfc78e587f1b8b186c7c016e6429e983fecb1f5536a7afeaf1840f",
+      "config_sha256": "aada7c6b02687a5525ec420d55204065046426bd8fb81d749c7153524e93e7c7",
+      "model_npz_sha256": "e2a234cd842cced45d6913394ced201ec0801b83dd27f669baa7e75041359b63",
+      "tokenizer_sha256": "ad2bec317be36a5dd0160a73e7f0a23d8941b197bcdda95c29ff830671107cfd"
+     },
+     "gate_conformance": {
+      "fp16/eager_fp32": {
+       "b1_max_abs": 3.0547380447387695e-07,
+       "max_abs": 3.0547380447387695e-07
+      },
+      "int8/eager_fp32": {
+       "b1_max_abs": 5.513429641723633e-07,
+       "max_abs": 5.513429641723633e-07
+      },
+      "int8/resident_int8": {
+       "b1_max_abs": 5.513429641723633e-07,
+       "max_abs": 5.513429641723633e-07
+      },
+      "tolerance": 1e-05,
+      "tolerance_source": "export.CONFORMANCE_TOL (torch vs numpy)"
+     },
+     "gate_encoder_spec": {
+      "limits": {
+       "added_rows": 446,
+       "dim": 1024,
+       "parameter_cap": 35000000,
+       "parameters": 31742200,
+       "rows": 30968
+      },
+      "preproc_fingerprint": "adb24fb2e8cad66f",
+      "shape": [
+       30968,
+       1024
+      ]
+     },
+     "gate_files": {
+      "files": [
+       "ATTRIBUTION.md",
+       "config.json",
+       "model.npz",
+       "provenance.json",
+       "tokenizer.json"
+      ]
+     },
+     "gate_tokenizer": {
+      "truncation_in_file": {
+       "direction": "Right",
+       "max_length": 512,
+       "strategy": "LongestFirst",
+       "stride": 0
+      },
+      "truncation_note": "imposed by the loader at preproc.max_length; not gated here",
+      "vocab": 30968
+     }
+    },
+    "model_npz_sha256": "e2a234cd842cced45d6913394ced201ec0801b83dd27f669baa7e75041359b63",
+    "read": true,
+    "read_record": {
+     "date": "2026-09-12",
+     "result": "results/m17_v0_read.json",
+     "result_sha256": "5c6a9955ce9115bf012d478cd89f051850125ccb334f0fcc0a226acd0bccc231",
+     "receipt": "results/m17_v0_read.receipt.json",
+     "commit": "f8ba8a8",
+     "reads": 1,
+     "note": "the one declared descriptive read on the pinned development suite; flag flipped after the fact as a dated entry"
+    },
+    "tokenizer_sha256": "ad2bec317be36a5dd0160a73e7f0a23d8941b197bcdda95c29ff830671107cfd"
+   },
+   "vocabulary_terms": 446
+  },
+  "fixed_files_sha256": {
+   "alias_test_manifest": "d96b2fcb2e74a42d601a79a0fc372d0d74d368fdf3afc35dccbb674c4942bb25",
+   "judgments_ingest": "31aa6c6ef48619729c324f2fed0ea040f5d30a0eb49067cb67b59ec7aebcecd0",
+   "k8s_source_manifest": "d02ec48bad5815f62829a6ec4126796a939a702b4771c82384da6b30f593c0c0",
+   "panel_manifest": "56de125043bdbe8a8cd147fd21d2933c85a34c7c4422338a5c17c41035bd7a0e",
+   "prepare_timing": "2a0aaeb3d177885ae9d0ff372e12642887e7dc7fd4381e7239a7628e3d5f0d67",
+   "support_manifest": "762339e4720717bb0dae381a8df9595d429b0b29b6c7fc66e7325dc57e5bea78"
+  },
+  "invariant_build_inputs_sha256": {
+   "alias_pairs_jsonl": "33c4a5ecd7653ceaf8949ceca021094c5cf59f2cadf335a3058f4848d5a390c9",
+   "exclusion_file": "a3cc09ff6a7affcf17c263553e8711ac4ec468ecd42d2968935d16a195f57c26",
+   "freeze": "3a349016782021155ee8a07ba912a6bc28430c90bd42e7d92e49efca7c37eccc",
+   "k8s_jsonl": "09c2cb2119332bab30ce852bc797cb7607620df67cc4cee14e2bd9ffc70f1295",
+   "prepare_data_py": "aefcf585a25170d52d96929563816f3761a7284ce67811a091c94dcde30b4506",
+   "support_manifest": "762339e4720717bb0dae381a8df9595d429b0b29b6c7fc66e7325dc57e5bea78",
+   "warm_start_npz": "0f544275cbce0c22763d4cacad7078fb7e6107459a7ec5453501449e0444a204"
+  },
+  "measured_allocation": {
+   "full_build_hours": 1.496,
+   "full_build_wall_clock_seconds": 5386.395,
+   "gpu_peak_gib": 2.959,
+   "memory_gib": {
+    "RssAnon": 6.411,
+    "RssFile": 0.275,
+    "RssShmem": 0.08,
+    "VmHWM": 12.111,
+    "VmRSS": 6.766
+   },
+   "phase_ceiling_hours": 3,
+   "queries": 600000,
+   "rss_high_water_gib": 12.111,
+   "summed_across_invocations": {
+    "prior_seconds": 146.211,
+    "prior_source": "work/m17/logs/prepare_full_crash1.log stage lines (attempt 1, 2026-09-11: pool 24.3 s, domain 121.9 s, protected deferred 0 s)",
+    "prior_stages": [
+     "pool",
+     "domain",
+     "protected"
+    ],
+    "this_invocation_ran": [
+     "teacher",
+     "bank",
+     "v1",
+     "parity",
+     "vocab",
+     "cache",
+     "manifests"
+    ],
+    "this_invocation_seconds": 5240.184
+   }
+  },
+  "panel_sha256": "d1b017a8a7a770acfba4b83874669cb0e02cbdb455347f80cd17024eb9995d52",
+  "pre_screen_build": {
+   "base_tokenizer_sha256": "435667fab0c06c165b1283ecb422497c37124f2d6a35b2ac73dc876332fc9518",
+   "ext_hashes": {
+    "bank_ids": "df33c5cb1bfe7b634842f32edcf51e1ef7d0c21ff5073417b3cbe7b578682511",
+    "bank_vector_bytes": "370b94efda411aa477f61cba62c196fa2a31046949318c787942693ccbeed13f",
+    "cache_artifact": "f03f6ae5c0f9d380a59b1973caa2f95ee23a8f9a03b87da509588fd53a780fa1",
+    "cache_identity": "dc5876310d53e00ed1797f9c4bcce79bc0453bce63d890dc52c20c1becbf6e6a",
+    "doc_domain_join": "98a7d42fc7cef719a532daae257928d9d2da27ccb02364f2b25eb675e3062506",
+    "new_rows": "f0b3b4e5b4f233bf3690690eaa6be46b9b815e360d22bced562f856434337f1f",
+    "query_pool": "cd05c129b57ebe5eb9ffac125d81fea7d512e6f07bed3663d366943d261fcb95",
+    "student_ids": "1189603d32c669efecf3919c2b530171012374ffde8d535d5b30923fc09789b7",
+    "teacher_q": "586b66e287147f1c99ad1ce043682123bc820482b191f3ecf7428e93409f426a",
+    "tokenizer": "07fcd95aabae2de3e2ce6e508b70612cca96971749d5403118faa98e761f6416",
+    "v1_q": "0e1ce02da9b9489a7f9d429bedbbe98d23ee36a4ccb8bf76573f8145515b98b4",
+    "vocabulary": "c17f8dc4c8517b7279cae319af6c04568d986d54c64c7427886fcf6302aeda51"
+   },
+   "note": "unscreened; every hash here may change under the on-clock protected screen and is superseded by `lock.executed`",
+   "out": "work/m17/prepared/full",
+   "queries": 600000,
+   "seed": 0,
+   "unscreened_new_source_rows": {
+    "bank": 1648,
+    "pool": 629
+   },
+   "vocabulary_terms": 445
+  },
+  "protocol": {
+   "arms_sha256": "433605739bb45e2fd52f0a4b5c80946543be0f771a8650a1472015ea0536c743",
+   "batch": 256,
+   "decision_protocol_sha256": "ff60e5c3bd787958a2c45e4783199312ead2a38e0df3afcb04e193a9f9139eb4",
+   "recipe_sha256": "1a54ba3ebc9b524b9f0d6bf4e3f63083ba782468ce2bcaf05c50338c72d7719f",
+   "registry_sha256_excluding_lock_fields": "f6462463bd66a2c8d2a04722de0e1790e5f1cb6add2e4ca8058ad857ea903b7c",
+   "screen_contrasts_sha256": "9677f360fda7650e227457871937fd817b419027d98f956b2254028b7081da45",
+   "seeds": {
+    "prepared": 0,
+    "replication": 1,
+    "screen": 0
+   },
+   "snapshot_steps": [
+    4500,
+    5250,
+    6000
+   ],
+   "steps": {
+    "final": 6000,
+    "screen": 4000
+   }
+  },
+  "status_set": "EXECUTABLE"
+ },
+ "owner_pinned_terms": {
+  "ruling": "Direct CTO request relayed by Dylan, 2026-09-11: k8s receives a row regardless of the support minima. Its measured support, sum-init drift and training exposure are recorded honestly; a pinned row with thin data is a known limitation, not a defect.",
+  "terms": [
+   "k8s"
+  ]
+ },
+ "per_domain_added_rows_max": 1024,
+ "protected_access": "none: M13 six, reserved four and LoTTE are not M17 development surfaces",
+ "purpose": "Zero v1.1 vocabulary and modest retrieval-quality improvement; planning only",
+ "screening_preferences_not_release_bars": {
+  "audit_bootstrap_replicates": 10000,
+  "audit_interval_confidence": 0.95,
+  "general_macro_ndcg_loss_tolerance": 0.003,
+  "individual_general_component_loss_tolerance": 0.01,
+  "no_new_release_authority": true,
+  "query_p95_latency_ratio_max": 1.1,
+  "ram_ratio_max": 1.15,
+  "require_same_sign_replication_for_quality_claim": true,
+  "simple_arm_tie_band": 0.003,
+  "technical_ndcg_gain_vs_v1_target": 0.01
+ },
+ "serving": {
+  "add_special_tokens": true,
+  "artifact": "int8",
+  "fusion": "DBSF",
+  "max_length": 512,
+  "pool_mode": "sqrt",
+  "prefetch": 100,
+  "prefix": ""
+ },
+ "status": "CLOSED_NEGATIVE_RESULT",
+ "student_parameter_cap": 35000000,
+ "teacher": "NovaSearch/stella_en_400M_v5",
+ "teacher_revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+ "technical_priority_slots_max": 1024,
+ "training": {
+  "alias_pre_lock_diagnostic": "Report teacher cosine between the two views of each admitted pair (distribution) and the alias term's share of the total gradient norm on the rows in the real smoke; pairs whose teacher cosine is below 0.7 are flagged for re-verification, not silently kept",
+  "alias_selection": "Superseded by decision_protocol.screen_ordering: VL-A beats VL only on the technical metric beyond the tie band while eligible; ties choose VL. The ambiguous-sense predicate was removed in A2 (Astra P1). This measures alias supervision conditional on expanded vocab and listwise loss, not every combination.",
+  "alias_weight_when_enabled": 0.1,
+  "arms": [
+   {
+    "alias_consistency": false,
+    "id": "C",
+    "listwise": false,
+    "vocab_extension": false
+   },
+   {
+    "alias_consistency": false,
+    "id": "V",
+    "listwise": false,
+    "vocab_extension": true
+   },
+   {
+    "alias_consistency": false,
+    "id": "L",
+    "listwise": true,
+    "vocab_extension": false
+   },
+   {
+    "alias_consistency": false,
+    "id": "VL",
+    "listwise": true,
+    "vocab_extension": true
+   },
+   {
+    "alias_consistency": true,
+    "id": "VL-A",
+    "listwise": true,
+    "vocab_extension": true
+   }
+  ],
+  "batch": 256,
+  "cache_identity": [
+   "raw query text hash",
+   "source/split manifest",
+   "alias-view/pair manifest and query-family split",
+   "teacher revision and query preprocessing",
+   "document bank IDs/vector bytes/dtype",
+   "v1 artifact and preprocessing",
+   "candidate mixes/K/seed"
+  ],
+  "candidate_bank_max_docs": 262144,
+  "candidate_bank_note": "Raised from 131072 so more labeled queries keep their positives inside the bank; fp16 vectors occupy 512 MiB. Still 8x smaller than M7's 2M bank, so candidates are softer than the B2 top-200 measurement.",
+  "candidate_construction": {
+   "backfill": "If teacher or v1 ranks are exhausted before their quota (bank smaller than needed), continue that source's ranked list beyond the nominal depth before moving on; uniform draws never fill a teacher/v1 quota",
+   "bank_sampling": "Bank = all known positives of the selected labeled subset, then uniform admitted documents stratified by source to the cap, seed recorded",
+   "bank_sampling_amendment_a4": "A4 (Dylan, 2026-09-11): the admitted new-source (Kubernetes) documents are reserved in the bank before the uniform stratified sample, inside the cap; the original bank_sampling text is retained above.",
+   "positive_choice": "If a labeled query has several known positives inside the bank, inject the one that appears first in the admitted dataset's own qrels order; the others stay eligible as teacher/v1 hits and are marked in has_label metadata",
+   "provenance_counts": "Record realized per-source candidate counts (positive/teacher/v1/uniform/backfill) over the whole cache and their distribution; overlap between teacher and v1 lists is reported",
+   "quota_counting": "Quotas count newly admitted unique documents. Walk teacher ranks in order, skipping the positive and duplicates, until 31 (or 32) new IDs; then v1 ranks the same way until 16 new IDs; then uniform draws until 16 new IDs",
+   "rng": "Uniform draws use numpy default_rng seeded with SHA-256(cache_seed || raw query text hash) truncated to 64 bits; recorded in cache identity",
+   "score_ties": "Break by ascending bank document ID"
+  },
+  "candidate_entropy_diagnostic": "At cache build, record teacher-distribution entropy and p_max quantiles over each query's 64-candidate list at the registered temperature, in the same format as results/m8_b2_entropy.json; recorded regardless of the stop rule.",
+  "candidate_k": 64,
+  "candidate_mix_labeled": {
+   "known_positive": 1,
+   "teacher_top": 31,
+   "uniform": 16,
+   "zero_v1_top": 16
+  },
+  "candidate_mix_query_only": {
+   "known_positive": 0,
+   "teacher_top": 32,
+   "uniform": 16,
+   "zero_v1_top": 16
+  },
+  "candidate_note": "Cache has_label and nullable positive_id explicitly. Teacher hits are never relevance labels. Same bank/lists for all arms; admitted vectors only.",
+  "checkpoint_minutes_max": 15,
+  "cosine_weight": 1.0,
+  "decision_protocol": {
+   "artifact_binding": "Every quality read is of the folded, quantized int8 table that would ship, never the unfolded training checkpoint",
+   "averaging_rule": "mean_last_three is chosen only if it is itself eligible in both seeds and its technical gain over the endpoint is > 0 in both seeds with mean gain > simple_arm_tie_band. Otherwise endpoint, provided endpoint is eligible; if neither form is eligible the run has no shippable form",
+   "eligibility": "An arm is eligible if general_macro loss vs v1 <= general_macro_ndcg_loss_tolerance AND every component loss vs v1 <= individual_general_component_loss_tolerance AND fused_macro loss vs v1 <= general_macro_ndcg_loss_tolerance",
+   "final_seed_rule": "Quality claim only if candidate minus control has the same sign in both seeds and the seed-0 gain exceeds simple_arm_tie_band. If the control wins in either seed, the artifact is the control's seed-0 table and the result is recorded as 'candidate did not beat control'",
+   "general_metric": "all_component_macro dense nDCG@10 over the six pinned components, plus the existing four-component fused_macro (fused reads do not exist for the two heldout components)",
+   "lock": "This block, the vocabulary list hash, tokenizer hash, sampler seed, candidate-cache identity and V0 export hash are committed before the V0 read or any real development read. Later changes are dated amendments that preserve and disclose prior observations",
+   "no_survivor": "If no arm is eligible, or C is the finalist, record 'no useful signal from this screen' and stop before full runs; the reserve is not spent on a second screen",
+   "panel_and_alias_test_role": "Never appear in any predicate above. They are reported beside the decision, with their registered expected standard error, and cannot veto or rescue an arm. The earlier ambiguous-sense veto and coverage-slice alternative are removed by this revision",
+   "screen_ordering": "Among eligible arms, an expanded/complex arm beats its matched control only if technical gain over that control > simple_arm_tie_band; otherwise the control is chosen. Walk the control map from the most complex arm: VL-A vs VL, then VL vs L and VL vs V (VL must beat both), then L vs C and V vs C. The finalist is the most complex arm that beat every matched control on its path; its matched control is the comparison arm for the full runs.",
+   "technical_metric": "dense nDCG@10 on cqadup-programmers only; the single software component in the pinned suite"
+  },
+  "fallback_batch_before_recipe_lock_only": 128,
+  "final_selection_reads_max": 8,
+  "final_steps_note": "Cut from 16000 on 2026-09-11: 6000 x 256 = 1.54M query views, about 2.6 passes over a 600k pool and comparable to M7's final phase A dose (2500 x 512). Avoids ~14 passes over few queries with a memorizing lookup table.",
+  "final_steps_per_fresh_run": 6000,
+  "full_run_count_max": 4,
+  "init": "M7 p35w-2m-s2500 unfolded checkpoint, lineage verified; new run IDs and optimizer",
+  "init_anchor_note": "Coefficient inherited from M7's reg_init; the functional form (uniform MSE on effective folded rows) is not M7's update-count-scaled penalty, so this is coefficient continuity only. With row element RMS about 0.39, a 100% drift of every element adds about 1.5e-4 to the loss; it is intentionally weak and is not drift protection. Whether it is inert at the optimizer level is measured in the smoke, not asserted.",
+  "init_anchor_weight": 0.001,
+  "labeled_positive_budget_note": "A4 (Dylan, 2026-09-11): the eligible labeled subset is chosen in seeded order before the bank exists so that all its positives fit in this share of candidate_bank_max_docs; the remainder are query-only and counted as query_only_by_bank_budget. Held-out (divergence-slice) queries are excluded from the positive budget so the training bank is not shaped by the monitoring slice. positive_bank_policy is unchanged.",
+  "labeled_positive_budget_share": 0.5,
+  "listwise_weight_when_enabled": 1.0,
+  "loss_definition": {
+   "alias": "(2/B) * sum_verified_pairs_in_batch(1 - dot(q_s(view_a), q_s(view_b))), B = batch size; batch-normalized so a paired view's alias coefficient equals alias_weight times its per-view cosine coefficient (A2, Astra P2: the earlier per-pair mean gave each paired view 1.6x its teacher-cosine coefficient at weight 0.1). Both views retain their own ordinary teacher/candidate targets; no positive-document label is inferred",
+   "anchor": "mean_squared_deviation of effective folded token rows from their M17 initialization, across rows and dimensions; same definition in all arms",
+   "cosine": "mean_queries(1 - dot(q_s,q_t)); no positive-document centroid target",
+   "d": "frozen normalized Stella document vectors, stored cache dtype recorded; no retraining or change to document preprocessing",
+   "listwise": "mean_queries(sum_candidates(p_teacher * (log(p_teacher) - log(p_student)))); stable log_softmax; no extra T squared factor",
+   "logits": "float32 dot(q_t,d)/T and dot(q_s,d)/T using the same T",
+   "q_s": "L2-normalized student query from sqrt-count pooling",
+   "q_t": "L2-normalized frozen Stella query vector for raw text with its pinned instruction",
+   "total": "cosine_weight*cosine + enabled_listwise_weight*listwise + init_anchor_weight*anchor + enabled_alias_weight*alias; C/V omit listwise, only VL-A enables alias"
+  },
+  "matched_control": {
+   "L": "C",
+   "V": "C",
+   "VL": "L",
+   "VL-A": "VL"
+  },
+  "new_row_initialization": "new_row = sum_j sqrt(c_j) * R_eff_j over the lexical unit's own constituent pieces with their counts c_j as the original tokenizer produced them in isolation, excluding [CLS]/[SEP]; new scalar = 1. Plain summation over occurrences would initialize C++ as R_c + 2 R_+ where the original pool gave R_c + sqrt(2) R_+ (Astra P2). Cross-term sharing drift (P0b) remains and is measured by V0",
+  "optimizer": {
+   "betas": [
+    0.9,
+    0.999
+   ],
+   "eps": 1e-08,
+   "grad_clip": "none",
+   "note": "Pinned so the anchor's weakness is an empirical claim under these settings; the smoke records the anchor's share of the row update norm",
+   "param_groups": "rows at rows_lr, learned scalars at weights_lr, as in m7src/train.py",
+   "type": "torch.optim.Adam",
+   "weight_decay": 0.0
+  },
+  "overfit_divergence_check": {
+   "every_steps": 500,
+   "flag_rule": "flag if held-out loss rises for two consecutive reads while train loss falls; a flag is recorded and reported, it does not change the schedule after lock",
+   "heldout_metric": "same losses on a fixed 2000-query held-out slice of the training sources, never the panel",
+   "train_metric": "running mean cosine and listwise loss on the training stream"
+  },
+  "pool_mode": "sqrt",
+  "positive_bank_policy": "All known positives of the selected labeled-query subset fit inside this bank cap; choose eligible query subset before lock, never silently convert a labeled query to query-only",
+  "quality_reads_per_final_seed_arm": 2,
+  "quality_reads_per_screen_arm": 1,
+  "rows_lr": 0.0003,
+  "schedule": "linear decay; screen and final are separate predeclared schedules",
+  "screen_contrasts": [
+   "V-C",
+   "L-C",
+   "VL-V",
+   "VL-L",
+   "VL-A-VL"
+  ],
+  "screen_routing_surface": "The pinned M7/M8 development suite exactly as results/m7_dev_manifest.json _pinned.components lists it: nq-250k, hotpotqa, cqadup-programmers, cqadup-physics, heldout-train, heldout-longq (heavily reused selection evidence; hotpotqa and heldout-train are training-adjacent by construction). All reads are int8 folded artifacts through the released QueryTable path, exact dense retrieval.",
+  "screen_steps": 4000,
+  "seed_replication": 1,
+  "seed_screen": 0,
+  "temperature": 0.05,
+  "uninformative_list_stop": {
+   "rule": "Before the screen, compute on the built cache the student-teacher KL at the warm start (v1 rows) per query. Stop the listwise arms only if the median warm-start KL is below 0.01 nats AND fewer than 20% of queries exceed 0.1 nats, meaning the student already reproduces the teacher's candidate distribution and the term has nothing to teach.",
+   "status": "REPLACED in A2 (Astra P2): teacher entropy alone is descriptive; a one-hot teacher still gives gradient (p_s - p_t)/T when the student disagrees",
+   "surviving_matrix_if_stopped": "C and V only, control map V->C, no full-run listwise arm; recorded as 'listwise inert at warm start'"
+  },
+  "untrained_vocab_export_v0": {
+   "definition": "Extended tokenizer with count-weighted sum-initialized new rows and unchanged old rows, folded and quantized exactly like a release; no optimizer step",
+   "id": "V0",
+   "observation_boundary": "Read only after decision_protocol.lock is committed. The vocabulary list may not be changed in response to the V0 read; a change is a dated amendment that keeps the V0 observation and reruns V0 as a second declared read",
+   "purpose": "Separates the effect of tokenization alone from joint training; costs minutes. Descriptive only, never a shippable candidate.",
+   "reads": 1,
+   "trained": false
+  },
+  "warmup_steps": 200,
+  "weights_lr": 0.001
+ },
+ "vocabulary_ranking": {
+  "breadth_completion": "The vocabulary outcome is 'broad' only if at least three domains contribute at least 64 rows each; otherwise it is recorded as 'narrow', which is a reported gap and not a failure of the run",
+  "domain_assignment": "Majority domain of the term's supporting source documents. Domain of a document = the source-to-domain map (k8s-docs-en is cloud-software) except that documents from sources mapped to 'general' are assigned per document by the same heuristic keyword classifier the panel builder uses (m17src/panel_build.py, same threshold), so science-engineering, medicine, finance and legal can populate; labels are heuristic and recorded as such. A term with no majority is 'general'; each term counts toward exactly one domain cap. Ruling A3 (Dylan, 2026-09-11), pre-lock protocol refinement, no new source.",
+  "residual": "For each candidate term, over the deduplicated training queries containing it, mean of (1 - dot(q_teacher, q_v1)) where q_v1 is the frozen v1 query vector; higher means v1 represents those queries worse",
+  "score": "residual * support_weight; sort descending, then distinct_source_documents descending, then lexical ascending",
+  "support_weight": "log(1 + distinct_source_documents)"
+ },
+ "wall_clock_hours": 72
+}

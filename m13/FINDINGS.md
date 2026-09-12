@@ -1,0 +1,33 @@
+# M13 findings — cloud build and evaluation
+
+Read with `m13/STATUS.md` and `m13/EXECUTION.md`; result JSONs are authoritative. As of 2026-09-10
+no M13 observation exists: both E arms are unrun, LoTTE is unread, no build has started and no
+protected surface has been opened. This file holds the harness lessons from preparing the
+executors; the observations table starts with the first cloud record.
+
+| Observation | Supported interpretation / limit | Evidence |
+|---|---|---|
+| — | none yet | — |
+
+## Harness lessons worth carrying forward (2026-09-10)
+
+- **Scope cut before spend, not after.** Asked plainly, the lead called the extension cycles and the
+  post-tag crash-recovery machinery over-engineered; rulings R13 to R16 removed them and replaced
+  reliability-by-recovery with rehearsal on open data. The build is a fixed 200M with two stop
+  rules; the LoTTE gate is a script, not an executor family.
+- **A gate record is written by the code that performed the read, and the consumer enforces the
+  contract.** `build13.check_gate` once accepted `{}`; it now refuses anything without
+  `executed: true`, a decision, a branch, both checkpoint shas and the live E1 verdict sha, and a
+  record for the branch E1 did not select.
+- **Shared id spaces break silent assumptions.** LoTTE's qids and pids are both small integers, so
+  the repo's BEIR self-hit rule would have dropped every query's same-numbered positive without any
+  error. `m13/CODEMAP.md` pitfall 16.
+- **One protected-access claim per process; claim at run time.** `m13/CODEMAP.md` pitfall 17.
+- **A code identity hashes the tree that runs.** `m13/CODEMAP.md` pitfall 18.
+- **Deferring a descriptive read is not skipping it.** DEV-6 for the cloud E arms moves to the box,
+  from the identical checkpoint bytes, with the deferral and the fill both recorded.
+  `m13/CODEMAP.md` pitfall 19.
+- **Reviews are counted.** Two Codex passes plus one P1 re-check closed stage 1 (R15). The LoTTE
+  gate script is newer than those reviews and performs a one-shot protected read, so it still owes
+  the two independent reviews `CLAUDE.md` requires before irreversible execution — before stage 3,
+  not before renting.

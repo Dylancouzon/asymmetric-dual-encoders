@@ -14,6 +14,10 @@ query paths against the *same* document index, each with its quality and its cos
 Document side for both: [`NovaSearch/stella_en_400M_v5`](https://huggingface.co/NovaSearch/stella_en_400M_v5),
 1024-d, frozen, revision-pinned.
 
+New here? [`research/constella-in-plain-english.md`](research/constella-in-plain-english.md) explains
+the whole programme, M1 to M13, in plain English: what was tested, what came out, where the pair
+pays off and why the protocol is strict.
+
 ---
 
 ## Running `zero` (M7)
@@ -134,6 +138,9 @@ from caches that no longer exist.
 Read [ROADMAP.md](ROADMAP.md) for current scope and [PROJECT_STATUS.md](PROJECT_STATUS.md) for
 the audit. M10 closes preparation; M13 owns the remaining cloud build, evaluation and costs.
 [HARNESS.md](HARNESS.md) maps reusable components and verification commands.
+
+[M17 plans Zero v1.1](m17/PLANNING.md): broader vocabulary and a modest quality improvement on
+the same document index, with a local 72-hour budget. Planning only; Nano/M13 remains unchanged.
 
 | path | what |
 |---|---|

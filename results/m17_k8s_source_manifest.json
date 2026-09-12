@@ -1,0 +1,132 @@
+{
+ "milestone": "M17",
+ "step": "2a",
+ "date": "2026-09-11",
+ "source": "kubernetes/website \u2014 official Kubernetes documentation, English only",
+ "licence": "CC BY 4.0 (repository LICENSE); no separate code licence in the tree",
+ "licence_row": "research/m7-data-licensing.md (Kubernetes documentation row)",
+ "attribution_artifact": "research/m17-k8s-attribution.md",
+ "acquisition": {
+  "repository": "https://github.com/kubernetes/website.git",
+  "revision": "17133089068629ec12ca15c1bdf36a60d2671a74",
+  "revision_resolved_by": "git ls-remote refs/heads/main, 2026-09-11",
+  "route": "git clone --filter=blob:none, then git checkout <revision>; submodules not fetched",
+  "local_path": "work/m17/sources/kubernetes-website (gitignored)",
+  "subset": "content/en/docs",
+  "acquisition_terms_restricting_training": "none found (anonymous git clone; no clickwrap, unlike the 2024 StackExchange dump terms)"
+ },
+ "extraction": {
+  "output": "work/m17/sources/k8s_docs_en.jsonl",
+  "fields": [
+   "path",
+   "title",
+   "text",
+   "sha256"
+  ],
+  "stripping": "YAML front matter, Hugo shortcodes ({{< >}} and {{% %}}), HTML comments; Go-template examples inside the prose ({{ }}) are content and are kept",
+  "markdown_files_found": 1718,
+  "documents": 1653,
+  "skipped_empty_after_strip": 65,
+  "skipped_reason": "front-matter-only section index stubs",
+  "unique_text_sha256": 1653,
+  "documents_without_front_matter_title": 143,
+  "total_text_bytes": 15106413,
+  "jsonl_bytes": 15867404,
+  "jsonl_sha256": "09c2cb2119332bab30ce852bc797cb7607620df67cc4cee14e2bd9ffc70f1295",
+  "documents_per_top_section": {
+   "_top": 1,
+   "concepts": 185,
+   "contribute": 44,
+   "doc-contributor-tools": 1,
+   "home": 1,
+   "reference": 1161,
+   "setup": 20,
+   "tasks": 206,
+   "tutorials": 34
+  }
+ },
+ "decontamination": {
+  "interface": "m7src/decontam.Inverted(all_grams, exact_u64).match(text, min_share=8) \u2014 the candidate-side index streamed against protected-side text, the direction and threshold of m10src/cov_screen.py::screen",
+  "development_suite_screened": [
+   "nq-250k",
+   "hotpotqa",
+   "cqadup-programmers",
+   "cqadup-physics"
+  ],
+  "streams": "each component's documents and its queries (m7src/devsuite.load)",
+  "result": {
+   "min_share": 8,
+   "n_candidates": 1653,
+   "per_stream": {
+    "nq-250k:documents": {
+     "n_streamed": 250000,
+     "hits_exact": 0,
+     "hits_near": 1,
+     "seconds": 32.5
+    },
+    "nq-250k:queries": {
+     "n_streamed": 3452,
+     "hits_exact": 0,
+     "hits_near": 0,
+     "seconds": 0.1
+    },
+    "hotpotqa:documents": {
+     "n_streamed": 5233329,
+     "hits_exact": 0,
+     "hits_near": 4,
+     "seconds": 528.0
+    },
+    "hotpotqa:queries": {
+     "n_streamed": 7405,
+     "hits_exact": 0,
+     "hits_near": 0,
+     "seconds": 0.4
+    },
+    "cqadup-programmers:documents": {
+     "n_streamed": 32176,
+     "hits_exact": 0,
+     "hits_near": 0,
+     "seconds": 6.7
+    },
+    "cqadup-programmers:queries": {
+     "n_streamed": 876,
+     "hits_exact": 0,
+     "hits_near": 0,
+     "seconds": 0.0
+    },
+    "cqadup-physics:documents": {
+     "n_streamed": 38316,
+     "hits_exact": 0,
+     "hits_near": 0,
+     "seconds": 6.9
+    },
+    "cqadup-physics:queries": {
+     "n_streamed": 1039,
+     "hits_exact": 0,
+     "hits_near": 0,
+     "seconds": 0.0
+    }
+   },
+   "total_flagged_documents": 5,
+   "flagged_fraction": 0.00302,
+   "flagged_paths": [
+    "content/en/docs/reference/access-authn-authz/abac.md",
+    "content/en/docs/reference/access-authn-authz/authorization.md",
+    "content/en/docs/reference/glossary/cgroup.md",
+    "content/en/docs/tasks/administer-cluster/ip-masq-agent.md",
+    "content/en/docs/test.md"
+   ],
+   "seconds": 584.7
+  },
+  "blocker": {
+   "surface": "the six, the reserved four (FEVER, DBpedia-entity, cqadup-android, cqadup-english) and LoTTE",
+   "state": "NOT screened in this step \u2014 deferred, not waived",
+   "reason": "every approved interface reaching those surfaces (decontam.stream_six_docs, decontam.protected_queries / protected_query_index, hence m10src/protected10.build + protected10.hits, and the m9src/extended_screen.py CLI) materializes protected payloads in-process. Pre-clock development and review may not open them, and no payload-free cached protected-query fingerprint product exists: work/m10cov/protected10/idx-*.npz caches only the COV half, while the six/dev/reserved half is rebuilt from payload on every call",
+   "exit": "the M17 executor runs protected10.build() BEFORE importing m9base (m10/CODEMAP pitfall 14) and admits each document through protected10.hits(text, idx) before it becomes a training input, vocabulary-discovery context or candidate-bank row",
+   "owner": "M17 execution session"
+  }
+ },
+ "admission_state": "Downloaded and extracted under a completed licence row. NOT admitted training data: the protected screen above, the registry's new_source_share_max_of_training_queries (0.10 of processed views) and the 1,024-row per-domain cap all still apply.",
+ "gpu_used": false,
+ "protected_payloads_opened": false
+}

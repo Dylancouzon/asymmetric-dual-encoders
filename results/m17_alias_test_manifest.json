@@ -1,0 +1,79 @@
+{
+ "ambiguous_sense_pairs": 59,
+ "by_domain": {
+  "cloud-software": 100,
+  "general": 94,
+  "medicine": 3,
+  "science-engineering": 3
+ },
+ "by_judgment_status": {
+  "REJECTED_BY_MODEL": 23,
+  "VERIFIED_BY_MODEL": 57,
+  "VERIFIED_BY_SOURCE": 120
+ },
+ "by_kind": {
+  "acronym-expansion": 171,
+  "alias-canonical": 29
+ },
+ "by_source": {
+  "k8s-docs-en": 100,
+  "mrtydi-en": 80,
+  "squad-train": 20
+ },
+ "classifier_min_score": 3,
+ "classifier_min_score_source": "results/m17_panel_manifest.json",
+ "date": "2026-09-11",
+ "distinct_equivalences": 6015,
+ "extraction": {
+  "acronym_rule": "parenthetical 'Expansion (ABBR)' where every acronym letter, in order, starts a non-stop word of the expansion; 2-6 letters; digits/URLs rejected",
+  "alias_rule": "'also known as' / 'also called' / 'short for' / 'abbreviated as'",
+  "ambiguity": "a short form with more than one distinct normalized expansion across the scanned text is flagged and left PENDING_HUMAN"
+ },
+ "files": {
+  "exclusions": "work/m17/manifest/alias_test_families.json",
+  "exclusions_sha256": "a3cc09ff6a7affcf17c263553e8711ac4ec468ecd42d2968935d16a195f57c26",
+  "pairs": "work/m17/alias/alias_test.jsonl",
+  "pairs_sha256": "43397a105d797e2b4b628b40aab662b5d64a008cbf916d92e141e5cb1ff0841f",
+  "pending_review": "results/m17_panel_pending_judgments.jsonl"
+ },
+ "gpu_used": false,
+ "limitations": [
+  "A source-stated equivalence is not a relevance judgment: the pair asserts that two query forms mean the same thing, not which documents answer them.",
+  "Domain labels are the panel's heuristic keyword labels.",
+  "Query-side ancestry screening is m17src/panel_build.py --stage screen; the six, the reserved four and LoTTE stay deferred to the executor."
+ ],
+ "milestone": "M17",
+ "model_judging_a6": {
+  "by_status": {
+   "REJECTED_BY_MODEL": 23,
+   "VERIFIED_BY_MODEL": 57
+  },
+  "judge": "codex-gpt-6-astra",
+  "report_log_sha256": "fc7ee718035cc0c38aeab484554f56eb87ff068f4ccc6f74340cf5ff27b9e486",
+  "senses_judged": 80
+ },
+ "n_families": 164,
+ "n_pairs": 200,
+ "protected_payloads_opened": false,
+ "raw_equivalences_found": 8501,
+ "registry_sha256": "2c4693a8cc0ba65d487ca59865a9f0cc7d296bab99c851ebcd06f389755f40f1",
+ "role": "read once per screen arm and once per final form beside the ordinary metrics; routes no selection (registry.data.alias_heldout_test.reads)",
+ "scored_anything": false,
+ "script": "m17src/alias_test_build.py",
+ "script_sha256": "b5f742abb88b3d1d5b8fce12c646f02aaaf90de561c753e4f09ce15ae51eb442",
+ "seed": 17,
+ "status": "FINAL \u2014 pending senses model-judged (A6); 23 pairs rejected",
+ "step": "2c",
+ "stores_not_scanned": {
+  "esci-prod": "excluded source (see panel manifest)",
+  "fever-pos": "excluded source (reserved-adjacent)",
+  "hotpotqa-corpus": "5.2M abstracts; yield already over target"
+ },
+ "stores_scanned": [
+  "work/m17/sources/k8s_docs_en.jsonl",
+  "squad-ctx",
+  "mrtydi-docs"
+ ],
+ "target_pairs": 200,
+ "truncated_extraction_pairs": 21
+}

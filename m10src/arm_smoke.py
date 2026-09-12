@@ -1,6 +1,7 @@
 """The registered 90-step smoke of EVERY arm shape (§Screen), before any registered arm runs.
 
-`m10/screen_registry.json` locks 16 trained arms. They share one trainer, so the arms that differ
+`m10/screen_registry.json` locks 15 trained arms (`trained_arms_expected`; it said 16 here, which
+was never any registry field -- 15 since `E-bs32`'s registration on 2026-09-10). They share one trainer, so the arms that differ
 only in DATA or DOSE share a code shape, but the ones that differ in student, feature width, head
 form, mix pattern, batch size, objective or head init do not — and a shape error in any of them
 surfaces at step 1 of a run that was going to cost GPU-hours. §Screen therefore requires all of
@@ -69,6 +70,12 @@ SHAPES = {
                          batch=32,  loss="squared_l2"),
     "B-50/50":      dict(student="bge-small",  n_layers=3, head="linear", pattern="50/50",
                          batch=32,  loss="squared_l2"),
+    # Family E's two arms. `E-bs32` was registered 2026-09-10 as an arm in its own right (it had
+    # been an `anchor_aliases` entry pointing at the BOX-trained ANCHOR, which made E1 a
+    # cross-hardware contrast); its registry entry carries only `batch` and `dose_examples`, so
+    # every other field defaults from `anchor` and its shape is ANCHOR's exactly.
+    "E-bs32":       dict(student="bge-small",  n_layers=3, head="linear", pattern="75/25",
+                         batch=32,  loss="squared_l2"),
     "E-bs128":      dict(student="bge-small",  n_layers=3, head="linear", pattern="75/25",
                          batch=128, loss="squared_l2"),
     "D-NORM":       dict(student="bge-small",  n_layers=3, head="linear", pattern="75/25",
@@ -95,8 +102,18 @@ N_WS_FIT = 256          # warm-start fit sample for the smoke; the real arms use
 # 128 (2,188 ex/s). Its SHAPE is therefore still smoked -- at `CLOUD_ONLY_MAX_LEN` -- because the
 # thing under test is the head, the loop and the batch, not the sequence length. NOT worked around
 # with gradient accumulation: that was explicitly not wanted.
-CLOUD_ONLY = {"E-bs128": "batch 128 above ~128 tokens: driver error on this card; runs on the A100"}
-CLOUD_ONLY_MAX_LEN = 128
+#
+# `E-bs32` is cloud-only for a DIFFERENT reason: it FITS this box (it is the anchor recipe at the
+# screen batch), but E1 reads `bs32 - bs128`, so both arms run on the A100 TOGETHER and E1 carries
+# no hardware difference (`_w8_band`, `rules.E_warmup_parity`). Parity, not memory.
+CLOUD_ONLY = {"E-bs128": "batch 128 above ~128 tokens: driver error on this card; runs on the A100",
+              "E-bs32": "hardware parity: runs on the A100 beside `E-bs128` so E1 is not a "
+                        "cross-hardware contrast (not a memory limit; bs32 fits this box)"}
+# Per-arm CPU/GPU sequence-length cap for a cloud-only shape, and only where the arm needs one.
+# It was a single int applied to every `CLOUD_ONLY` name; `E-bs32` is cloud-only for PARITY, so
+# capping it would have silently smoked a shorter sequence than the arm runs for no reason at all.
+# Absent from this map = smoked at the requested `--max-len`.
+CLOUD_ONLY_MAX_LEN = {"E-bs128": 128}
 
 
 def corpus(verbose=True):
@@ -147,8 +164,9 @@ def _write(recs, device, max_len, out=None):
 
 
 def smoke_one(name, spec, corp, device="cpu", max_len=512, verbose=True):
-    if name in CLOUD_ONLY and device == "cuda" and max_len > CLOUD_ONLY_MAX_LEN:
-        max_len = CLOUD_ONLY_MAX_LEN
+    cap = CLOUD_ONLY_MAX_LEN.get(name)
+    if cap is not None and device == "cuda" and max_len > cap:
+        max_len = cap
     import data10 as D
     import nano10 as N
     import trainer10 as Tr

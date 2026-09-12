@@ -133,8 +133,7 @@
    "batch": 128,
    "trained": true,
    "selectable": true,
-   "pending": "CLOUD_ONLY",
-   "_pending": "`trained: true` means REGISTERED TO BE TRAINED and is what `trained_arms_expected` counts; this arm has NOT run. Added 2026-09-09 (Fable adversarial review, 2026-09-09; every claim re-derived here before acting): the disposition was previously inferable only from the ABSENCE of a COV file, which is not a registration. `m10src/contrasts.py` refuses to compute a contrast naming an arm carrying `pending`.",
+   "_pending": "`trained: true` means REGISTERED TO BE TRAINED and is what `trained_arms_expected` counts; this arm has NOT run. Added 2026-09-09 (Fable adversarial review, 2026-09-09; every claim re-derived here before acting): the disposition was previously inferable only from the ABSENCE of a COV file, which is not a registration. `m10src/contrasts.py` refuses to compute a contrast naming an arm carrying `pending`. **Cleared 2026-09-10 under ruling R9 (m13/RULINGS.md), pre-observation: family E has still not run.** `pending` was removed from both E arms so `contrasts.E1` can compute once their records exist; until then E1 reads `not_computed` because no cycle-end COV read exists, and THIS sentence is the registration of that disposition. The F verdict and every computed contrast were re-issued under the new registry hash with byte-identical numbers.",
    "warmup_examples": 64000
   },
   "C-M9init": {
@@ -200,9 +199,8 @@
    "batch": 32,
    "trained": true,
    "selectable": true,
-   "pending": "CLOUD_ONLY",
    "_what": "the bs32 arm of family E, trained ON THE A100 alongside `E-bs128`. **Registered 2026-09-10 (Fable + Codex round 9, 2026-09-10), pre-observation — family E has not run.** Before this, `E-bs32` existed only as an `anchor_aliases` entry pointing at `ANCHOR`, which is BOX-trained, so `contrasts.E1` resolved to ANCHOR(box) − E-bs128(A100) and carried exactly the hardware confound that `rules.E_warmup_parity`, `_interpretation.E1`, `M102_LOCK.md` and `LOTTE_LOCK.md` all said had been removed. Four documents asserted a design the registry could not express; this is the registration that makes it true.",
-   "_pending": "`trained: true` means REGISTERED TO BE TRAINED. Neither E arm has run; both run on the rented A100 together, which is what removes the hardware difference from E1.",
+   "_pending": "`trained: true` means REGISTERED TO BE TRAINED. Neither E arm has run; both run on the rented A100 together, which is what removes the hardware difference from E1. **Cleared 2026-09-10 under ruling R9 (m13/RULINGS.md), pre-observation: family E has still not run.** `pending` was removed from both E arms so `contrasts.E1` can compute once their records exist; until then E1 reads `not_computed` because no cycle-end COV read exists, and THIS sentence is the registration of that disposition. The F verdict and every computed contrast were re-issued under the new registry hash with byte-identical numbers.",
    "warmup_examples": 64000
   }
  },
@@ -511,5 +509,6 @@
    "ANCHOR-seed1"
   ],
   "_pre_observation": "Both are registered BEFORE either runs. Neither can change a verdict: the twelve registered contrasts are computed, `results/m10_screen_verdicts.json` is written, and the recipe those verdicts select is fixed by rules that these runs are not inputs to."
- }
+ },
+ "_amended_2026_09_10": "Ruling R9 (Dylan, 2026-09-10; m13/RULINGS.md): `pending` removed from `arms.E-bs32` and `arms.E-bs128` before family E runs. No rule, constant, contrast input or arm recipe changed; `results/m10_F_verdict.json`, the twelve `results/m10_contrast_*.json` records and `results/m10_screen_verdicts.json` were re-issued under the new hash with byte-identical numbers (verified in the same commit). The original registration is the previous commit."
 }

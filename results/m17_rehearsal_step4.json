@@ -1,0 +1,387 @@
+{
+ "_note": "Pre-clock synthetic rehearsal of the M17 pipeline. Random rows, constructed qrels, scaled constants: NOT a quality observation and not a forecast of any rate. It certifies that the modules run end to end and refuse what they must.",
+ "_schema": "m17-rehearsal-v1",
+ "date": "2026-09-11",
+ "device": "cuda",
+ "registry_status_at_rehearsal": "DRAFT_NOT_EXECUTABLE",
+ "root": "/home/dylan/asymetric-dual-encoders/work/m17/rehearsal",
+ "scaled_constants": {
+  "checkpoint_averaging.checkpoint_steps": {
+   "registry": [
+    4500,
+    5250,
+    6000
+   ],
+   "rehearsal": [
+    15,
+    18,
+    20
+   ]
+  },
+  "data.new_term_min_distinct_source_documents": {
+   "registry": 20,
+   "rehearsal": 2
+  },
+  "data.new_term_min_distinct_training_contexts": {
+   "registry": 50,
+   "rehearsal": 3
+  },
+  "training.batch": {
+   "registry": 256,
+   "rehearsal": 16
+  },
+  "training.candidate_k": {
+   "registry": 64,
+   "rehearsal": 16
+  },
+  "training.candidate_mix_labeled": {
+   "registry": {
+    "known_positive": 1,
+    "teacher_top": 31,
+    "uniform": 16,
+    "zero_v1_top": 16
+   },
+   "rehearsal": {
+    "known_positive": 1,
+    "teacher_top": 7,
+    "uniform": 4,
+    "zero_v1_top": 4
+   }
+  },
+  "training.candidate_mix_query_only": {
+   "registry": {
+    "known_positive": 0,
+    "teacher_top": 32,
+    "uniform": 16,
+    "zero_v1_top": 16
+   },
+   "rehearsal": {
+    "known_positive": 0,
+    "teacher_top": 8,
+    "uniform": 4,
+    "zero_v1_top": 4
+   }
+  },
+  "training.final_steps_per_fresh_run": {
+   "registry": 6000,
+   "rehearsal": 20
+  },
+  "training.overfit_divergence_check.every_steps": {
+   "registry": 500,
+   "rehearsal": 5
+  },
+  "training.warmup_steps": {
+   "registry": 200,
+   "rehearsal": 4
+  }
+ },
+ "seed": 0,
+ "source_sha256": "7bbe396f72310184bcca4bccac78fd49d89d69bfe3aa5fffd98de7e7b48560c8",
+ "stages": {
+  "cache": {
+   "counts": {
+    "alias_pairs": 8,
+    "alias_views": 16,
+    "buckets": {
+     "coverage": 40,
+     "general": 60,
+     "heldout": 12
+    },
+    "labeled": 76,
+    "query_only": 36
+   },
+   "entropy_mean_nats": 1.3795589931972534,
+   "identity_sha256": "1ab7c4858804c72136c02bb5abca3268e275cbb33ffcecaef7b4106c65851757",
+   "p_max_mean": 0.5258867951576922,
+   "provenance_totals": {
+    "backfill_positive": 0,
+    "backfill_teacher": 1,
+    "backfill_uniform": 0,
+    "backfill_v1": 80,
+    "count_positive": 76,
+    "count_teacher": 820,
+    "count_uniform": 448,
+    "count_v1": 448,
+    "shortfall_positive": 0,
+    "shortfall_teacher": 0,
+    "shortfall_uniform": 0,
+    "shortfall_v1": 0
+   }
+  },
+  "evaluate": {
+   "alias_test": {
+    "_role": "descriptive; appears in no selection predicate",
+    "n_pairs": 8,
+    "n_pairs_with_rank_correlation": 8,
+    "rank_correlation_mean": 0.25,
+    "top10_overlap_mean": 0.4375
+   },
+   "fused_dbsf@100_macro": 0.7222222222222222,
+   "ndcg@10": {
+    "macro": 0.02627657267635683,
+    "n_per_domain": {
+     "cloud-software": 32,
+     "general": 60,
+     "science-engineering": 8
+    },
+    "per_domain": {
+     "cloud-software": 0.019716554799108048,
+     "general": 0.0214844137719648,
+     "science-engineering": 0.03762874945799765
+    }
+   },
+   "recall@10": {
+    "macro": 0.06319444444444444,
+    "n_per_domain": {
+     "cloud-software": 32,
+     "general": 60,
+     "science-engineering": 8
+    },
+    "per_domain": {
+     "cloud-software": 0.03125,
+     "general": 0.03333333333333333,
+     "science-engineering": 0.125
+    }
+   },
+   "surface": "synthetic fixtures only",
+   "vs_baseline": {
+    "_note": "paired over query families; excludes training-seed variation",
+    "ci": [
+     0.0016059157017660438,
+     0.05856422176186401
+    ],
+    "confidence": 0.95,
+    "delta": 0.02627657267635683,
+    "delta_query_mean": 0.022210245755533268,
+    "n_families": 92,
+    "n_queries": 100,
+    "replicates": 10000,
+    "statistic": "equal-weight domain macro"
+   }
+  },
+  "export": {
+   "endpoint": {
+    "dir": "/home/dylan/asymetric-dual-encoders/work/m17/rehearsal/bundle-endpoint",
+    "gates": {
+     "gate_artifact": true,
+     "gate_conformance": true,
+     "gate_encoder_spec": true,
+     "gate_files": true,
+     "gate_tokenizer": true
+    },
+    "model_npz_sha256": "cb8b03f1b5e03f0169c842d2f23b68a674835544be1f736f76fa65eea5fd06de",
+    "rms": 0.10930178314447403
+   },
+   "mean_last_three": {
+    "dir": "/home/dylan/asymetric-dual-encoders/work/m17/rehearsal/bundle-mean_last_three",
+    "gates": {
+     "gate_artifact": true,
+     "gate_conformance": true,
+     "gate_encoder_spec": true,
+     "gate_files": true,
+     "gate_tokenizer": true
+    },
+    "model_npz_sha256": "82a36719bea2d1c060efb5545721b235eb02a8a2c44289830fd354ee40917eea",
+    "rms": 0.10930094867944717
+   }
+  },
+  "loader": {
+   "_note_quantization": "the float-row comparison measures int8 quantization, not loader parity; only loader_parity_max_abs is bounded by int8_resident_loading.parity_max_abs",
+   "loader_parity_max_abs": 0.0,
+   "n_fixtures": 14,
+   "pass": true,
+   "rss_kb_after_load": 1603692,
+   "tolerance": 1e-06,
+   "vs_exported_float_rows_max_abs": 0.002869644667953253,
+   "weight_bytes": {
+    "eager_fp32": 2432,
+    "resident_int8": 760
+   }
+  },
+  "resume": {
+   "note": "recovery checkpoint restored; the exhausted schedule adds no steps",
+   "resumed_at_step": 20,
+   "steps_after_resume": 20
+  },
+  "train": {
+   "arm": "VL-A",
+   "batch_composition": {
+    "alias_pairs": 1,
+    "batch": 16,
+    "general": 12,
+    "unpaired_coverage": 2
+   },
+   "bucket_passes": {
+    "alias": {
+     "n": 8,
+     "name": "alias",
+     "passes": 2,
+     "pos": 4
+    },
+    "coverage": {
+     "n": 24,
+     "name": "coverage",
+     "passes": 1,
+     "pos": 16
+    },
+    "general": {
+     "n": 60,
+     "name": "general",
+     "passes": 4,
+     "pos": 0
+    }
+   },
+   "divergence_flags": [],
+   "first_history": {
+    "heldout": 6.719456374645233,
+    "heldout_components": {
+     "cosine": 0.5997855067253113,
+     "listwise": 6.119670867919922,
+     "monitored": 6.719456374645233
+    },
+    "lr_factor": 0.9375,
+    "parts": {
+     "alias": 0.03848777711391449,
+     "anchor": 1.288107682739792e-07,
+     "cosine": 0.6491983532905579,
+     "listwise_kl": 7.922744274139404
+    },
+    "passes": {
+     "alias": 0,
+     "coverage": 0,
+     "general": 1
+    },
+    "step": 5,
+    "train_components": {
+     "cosine": 0.6095325823996233,
+     "listwise": 7.860689941987692,
+     "monitored": 8.470222524387315
+    },
+    "train_running_mean": 8.470222524387315
+   },
+   "last_history": {
+    "heldout": 6.683779954910278,
+    "heldout_components": {
+     "cosine": 0.6007249355316162,
+     "listwise": 6.083055019378662,
+     "monitored": 6.683779954910278
+    },
+    "lr_factor": 0.0,
+    "parts": {
+     "alias": 0.03912060707807541,
+     "anchor": 1.4116878901404561e-06,
+     "cosine": 0.6514743566513062,
+     "listwise_kl": 7.6837239265441895
+    },
+    "passes": {
+     "alias": 2,
+     "coverage": 1,
+     "general": 4
+    },
+    "step": 20,
+    "train_components": {
+     "cosine": 0.6134228854149824,
+     "listwise": 7.884509692787924,
+     "monitored": 8.497932578202906
+    },
+    "train_running_mean": 8.497932578202906
+   },
+   "run_id": "m17-rehearsal-vla-s0",
+   "snapshots": {
+    "15": "snapshot_000015.npz",
+    "18": "snapshot_000018.npz",
+    "20": "snapshot_000020.npz"
+   },
+   "wall_clock_seconds": 0.751
+  },
+  "vocab": {
+   "already_single_token": [
+    "amazon",
+    "and",
+    "bucket",
+    "cluster",
+    "data",
+    "for",
+    "index",
+    "ingress",
+    "kubernetes",
+    "network"
+   ],
+   "breadth": "narrow",
+   "n_added": 3,
+   "n_candidates": 3,
+   "n_selected": 3,
+   "p0b_drift": [
+    {
+     "cosine": 1.0,
+     "max_abs": 5.960464477539063e-08,
+     "query": "s3 bucket policy"
+    },
+    {
+     "cosine": 0.9927855730056763,
+     "max_abs": 0.052551060914993286,
+     "query": "s3 storage s cluster"
+    },
+    {
+     "cosine": 0.9930892586708069,
+     "max_abs": 0.05467606708407402,
+     "query": "kubectl kube cluster"
+    }
+   ],
+   "per_domain": {
+    "cloud-software": 2,
+    "science-engineering": 1
+   },
+   "pieces_per_new_row": [
+    {
+     "counts": [
+      1,
+      1,
+      1
+     ],
+     "piece_ids": [
+      23,
+      24,
+      25
+     ],
+     "term": "k8s"
+    },
+    {
+     "counts": [
+      1,
+      1
+     ],
+     "piece_ids": [
+      26,
+      27
+     ],
+     "term": "s3"
+    },
+    {
+     "counts": [
+      1,
+      1
+     ],
+     "piece_ids": [
+      28,
+      29
+     ],
+     "term": "kubectl"
+    }
+   ],
+   "terms": [
+    "k8s",
+    "s3",
+    "kubectl"
+   ],
+   "tokenizer_sha256": "f54e1daa03b5af17715f3d8aea657b924e617df7489ae2053893d3e5f48e5d38",
+   "vocabulary_sha256": "2205049ec84b7d36fa5f487938060ed419001d705d512da3d76a9faad2fc8063"
+  },
+  "warm_start": {
+   "dim": 16,
+   "old_vocab_parity_max_abs": 0.0,
+   "vocab": 35
+  }
+ },
+ "wall_clock_seconds": 2.286
+}

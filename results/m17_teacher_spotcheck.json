@@ -1,0 +1,168 @@
+{
+ "seed": 20260911,
+ "n_sample": 400,
+ "git_sha": "6d617090a3e7b738cd8f89ab3f4db29aa47b9b54",
+ "utc": "2026-09-12T02:14:29Z",
+ "encode_settings": {
+  "model": "NovaSearch/stella_en_400M_v5",
+  "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+  "pooling": "mean-l2",
+  "post_dense": "2_Dense_1024",
+  "prefix": "",
+  "max_length": 512,
+  "dim": 1024,
+  "encode_dtype": "fp16",
+  "batch_tokens": 32768,
+  "config_kwargs": {
+   "use_memory_efficient_attention": false,
+   "unpad_inputs": false
+  },
+  "device": "cuda"
+ },
+ "components": {
+  "nq-250k": {
+   "cache_key": "dev-nq-250k-docs-fp16-75da16dd9f8c",
+   "scored_path": "/home/dylan/asymetric-dual-encoders/work/enc/dev-nq-250k-docs-fp16-75da16dd9f8c/combined.f16",
+   "n_rows_cache": 250000,
+   "n_docs_in_dev_json": 250000,
+   "corpus_sha256_meta": "0197888616b82aeba1cb9e58c8772388b1c48735b49fba34afe112fe843c461b",
+   "corpus_sha256_recomputed": "0197888616b82aeba1cb9e58c8772388b1c48735b49fba34afe112fe843c461b",
+   "corpus_sha_match": true,
+   "meta": {
+    "model": "NovaSearch/stella_en_400M_v5",
+    "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+    "pooling": "mean-l2",
+    "prefix": "",
+    "max_length": 512,
+    "post_dense": "2_Dense_1024",
+    "encode_dtype": "fp16",
+    "store_dtype": "fp16",
+    "tokenizer": "bert-wordpiece-30522",
+    "config_kwargs": {
+     "unpad_inputs": false,
+     "use_memory_efficient_attention": false
+    }
+   },
+   "n": 400,
+   "cos_min": 0.9999994039535522,
+   "cos_median": 0.9999997615814209,
+   "cos_mean": 0.9999998211860657,
+   "cos_below_0999": 0,
+   "max_abs_delta": 0.00014963746070861816,
+   "max_delta_in_f16_ulps": 1309.005126953125,
+   "median_abs_delta": 1.3984506949782372e-05,
+   "encode_seconds_400": 3.51,
+   "docs_per_second": 114.02,
+   "est_full_reencode_hours": 0.61,
+   "text_stream_seconds": 8.3
+  },
+  "hotpotqa": {
+   "cache_key": "dev-hotpotqa-docs-fp16-88798cdf67ec",
+   "scored_path": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/combined.f16",
+   "n_rows_cache": 5233329,
+   "n_docs_in_dev_json": 5233329,
+   "corpus_sha256_meta": "9d36e03d6ccbd408e09cae0adc3b2b5bb2b7a698916cff722bd6d345de9d334b",
+   "corpus_sha256_recomputed": "9d36e03d6ccbd408e09cae0adc3b2b5bb2b7a698916cff722bd6d345de9d334b",
+   "corpus_sha_match": true,
+   "meta": {
+    "model": "NovaSearch/stella_en_400M_v5",
+    "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+    "pooling": "mean-l2",
+    "prefix": "",
+    "max_length": 512,
+    "post_dense": "2_Dense_1024",
+    "encode_dtype": "fp16",
+    "store_dtype": "fp16",
+    "tokenizer": "bert-wordpiece-30522",
+    "config_kwargs": {
+     "unpad_inputs": false,
+     "use_memory_efficient_attention": false
+    }
+   },
+   "n": 400,
+   "cos_min": 0.999999463558197,
+   "cos_median": 0.9999997019767761,
+   "cos_mean": 0.9999998211860657,
+   "cos_below_0999": 0,
+   "max_abs_delta": 0.00013301149010658264,
+   "max_delta_in_f16_ulps": 1241.3153076171875,
+   "median_abs_delta": 1.6247853636741638e-05,
+   "encode_seconds_400": 1.67,
+   "docs_per_second": 238.89,
+   "est_full_reencode_hours": 6.09,
+   "text_stream_seconds": 106.7
+  },
+  "cqadup-programmers": {
+   "cache_key": "dev-cqadup-programmers-docs-fp16-c5ec186bbda9",
+   "scored_path": "/home/dylan/asymetric-dual-encoders/work/enc/dev-cqadup-programmers-docs-fp16-c5ec186bbda9/shard_00000.npy",
+   "n_rows_cache": 32176,
+   "n_docs_in_dev_json": 32176,
+   "corpus_sha256_meta": "1b2b2f4f70b88bfe9775126e40795327a0fecb738278250e132d07b336ea82a2",
+   "corpus_sha256_recomputed": "1b2b2f4f70b88bfe9775126e40795327a0fecb738278250e132d07b336ea82a2",
+   "corpus_sha_match": true,
+   "meta": {
+    "model": "NovaSearch/stella_en_400M_v5",
+    "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+    "pooling": "mean-l2",
+    "prefix": "",
+    "max_length": 512,
+    "post_dense": "2_Dense_1024",
+    "encode_dtype": "fp16",
+    "store_dtype": "fp16",
+    "tokenizer": "bert-wordpiece-30522",
+    "config_kwargs": {
+     "unpad_inputs": false,
+     "use_memory_efficient_attention": false
+    }
+   },
+   "n": 400,
+   "cos_min": 0.9999989867210388,
+   "cos_median": 0.9999998211860657,
+   "cos_mean": 0.9999998211860657,
+   "cos_below_0999": 0,
+   "max_abs_delta": 0.00015238672494888306,
+   "max_delta_in_f16_ulps": 1710.05322265625,
+   "median_abs_delta": 1.3310462236404419e-05,
+   "encode_seconds_400": 2.99,
+   "docs_per_second": 133.57,
+   "est_full_reencode_hours": 0.07,
+   "text_stream_seconds": 2.1
+  },
+  "cqadup-physics": {
+   "cache_key": "dev-cqadup-physics-docs-fp16-88f29df31f25",
+   "scored_path": "/home/dylan/asymetric-dual-encoders/work/enc/dev-cqadup-physics-docs-fp16-88f29df31f25/shard_00000.npy",
+   "n_rows_cache": 38316,
+   "n_docs_in_dev_json": 38316,
+   "corpus_sha256_meta": "d2f1ca394cfb416c317d0313bddc2e0798459c123d3cb73379bd568b9b131357",
+   "corpus_sha256_recomputed": "d2f1ca394cfb416c317d0313bddc2e0798459c123d3cb73379bd568b9b131357",
+   "corpus_sha_match": true,
+   "meta": {
+    "model": "NovaSearch/stella_en_400M_v5",
+    "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+    "pooling": "mean-l2",
+    "prefix": "",
+    "max_length": 512,
+    "post_dense": "2_Dense_1024",
+    "encode_dtype": "fp16",
+    "store_dtype": "fp16",
+    "tokenizer": "bert-wordpiece-30522",
+    "config_kwargs": {
+     "unpad_inputs": false,
+     "use_memory_efficient_attention": false
+    }
+   },
+   "n": 400,
+   "cos_min": 0.999995768070221,
+   "cos_median": 0.9999998211860657,
+   "cos_mean": 0.9999998211860657,
+   "cos_below_0999": 0,
+   "max_abs_delta": 0.00031496956944465637,
+   "max_delta_in_f16_ulps": 2147.3056640625,
+   "median_abs_delta": 1.385807991027832e-05,
+   "encode_seconds_400": 2.79,
+   "docs_per_second": 143.59,
+   "est_full_reencode_hours": 0.07,
+   "text_stream_seconds": 2.0
+  }
+ }
+}

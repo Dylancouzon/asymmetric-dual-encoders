@@ -1,0 +1,51 @@
+{
+ "_schema": "m17-judgments-ingest-v1",
+ "alias_senses": {
+  "REJECTED_BY_MODEL": 23,
+  "VERIFIED_BY_MODEL": 57
+ },
+ "alias_test_sha256": "43397a105d797e2b4b628b40aab662b5d64a008cbf916d92e141e5cb1ff0841f",
+ "date": "2026-09-11",
+ "human_doublecheck_slice": {
+  "model_answers_hidden": true,
+  "path": "results/m17_human_doublecheck_slice.jsonl",
+  "seed": 17,
+  "sizes": {
+   "alias-pair": 10,
+   "panel-candidate": 20,
+   "spotcheck": 20
+  }
+ },
+ "judge": "codex-gpt-6-astra",
+ "panel": {
+  "queries": 120,
+  "queries_without_relevant": 2,
+  "relevant_documents": 205
+ },
+ "panel_manifest_sha256": "56de125043bdbe8a8cd147fd21d2933c85a34c7c4422338a5c17c41035bd7a0e",
+ "panel_sha256": "d1b017a8a7a770acfba4b83874669cb0e02cbdb455347f80cd17024eb9995d52",
+ "reports": {
+  "panel": {
+   "path": "research/m17-astra-judge-panel-2026-09-11.log",
+   "sha256": "487d06fb9c1f8e2f1efb7aafd349c3b0a4893d8c619bb961130cc6fbd28c95f8"
+  },
+  "senses": {
+   "path": "research/m17-astra-judge-senses-2026-09-11.log",
+   "sha256": "fc7ee718035cc0c38aeab484554f56eb87ff068f4ccc6f74340cf5ff27b9e486"
+  },
+  "spotcheck": {
+   "path": "research/m17-astra-judge-spotcheck-2026-09-11.log",
+   "sha256": "fdd4744d9cd66f52073bc5888d92806d243d963537fe5291f7032ca9e8efed3a"
+  }
+ },
+ "ruling": "A6",
+ "script_sha256": "ab3d22c5deece6e16648cf8a4b99181d6dac1e3f3cc363cb73d1516933e4ed5e",
+ "sheet_sha256": "a04b949ec1a88ff1b0dbec128baea466977bf590798ac0c22ec0a93262d76070",
+ "spotcheck": {
+  "consequence": "none: the pool stands",
+  "exceeds_threshold": false,
+  "n_pairs": 308,
+  "wrong": 2,
+  "wrong_share": 0.0065
+ }
+}

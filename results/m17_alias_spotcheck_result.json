@@ -1,0 +1,34 @@
+{
+ "consequence": "none: the pool stands",
+ "exceeds_threshold": false,
+ "judge": "codex-gpt-6-astra",
+ "n_pairs": 308,
+ "report_log_sha256": "fdd4744d9cd66f52073bc5888d92806d243d963537fe5291f7032ca9e8efed3a",
+ "sample": "results/m17_alias_spotcheck_sample.jsonl",
+ "sample_sha256": "1a26fa9f88dca075f7e2e97bf6a2304ac098e285b7d09af977a9923be9c4027a",
+ "threshold_share": 0.05,
+ "wrong": 2,
+ "wrong_by_rule": {
+  "R2_abbreviation_expansion": 2
+ },
+ "wrong_by_source": {
+  "hotpotqa-train": 2
+ },
+ "wrong_pairs": [
+  {
+   "form_a": "Lyric Opera Virginia",
+   "form_b": "LOV",
+   "note": "Expansion omits 'of' from name shown in row.",
+   "pair_id": "4cc4c6e71191144e",
+   "rule": "R2_abbreviation_expansion"
+  },
+  {
+   "form_a": "of School Hours Care",
+   "form_b": "OSHC",
+   "note": "Truncated expansion omits 'Out'; substitution leaves 'Out OSHC'.",
+   "pair_id": "672c171bc0d31d6f",
+   "rule": "R2_abbreviation_expansion"
+  }
+ ],
+ "wrong_share": 0.0065
+}

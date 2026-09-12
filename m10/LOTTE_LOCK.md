@@ -106,6 +106,12 @@ permits after the lock: it fills the four `*pending*` cells of the manifest tabl
 measured checkpoint hashes, and changes nothing else. Naming it here is what stops it being an
 unclassified later edit against `M102_LOCK.md`'s no-post-lock-edits rule.
 
+*Materialisation (2026-09-10, rulings R17/R18, pre-observation):* the second commit's content is
+the machine-readable file `m13/LOTTE_GATE_MANIFEST.json`, written by
+`m13src/lotte_gate13.py --write-manifest` from the two published E arm records and committed; the
+table cells below are filled by copying its two hashes. The executor refuses to read without that
+file tracked and unmodified, and `build13.check_gate_manifest` binds the gate record to it.
+
 (Read #2, the pre-freeze audit, is the one that sees the BUILD's final checkpoint, and it is the
 only place any post-build wording belongs. Its identity
 rule: the final annealed cycle-end checkpoint if the build reaches its registered end; otherwise

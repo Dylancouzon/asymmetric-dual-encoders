@@ -350,5 +350,11 @@ def test_the_registry_and_the_code_agree_on_the_warmup_in_examples():
     import json
     reg = json.loads((Path(__file__).resolve().parents[1] / "m10" / "screen_registry.json")
                      .read_text())
-    assert reg["arms"]["E-bs128"]["warmup_examples"] == N.WARMUP_EXAMPLES
+    # BOTH E arms carry the registered warmup in EXAMPLES -- the parity rule is a statement about
+    # the PAIR, so a test that reads only bs128 would pass while bs32 drifted (E-bs32 was
+    # registered 2026-09-10, after this test was written).
+    for arm, batch, steps in (("E-bs32", 32, 2000), ("E-bs128", 128, 500)):
+        e = reg["arms"][arm]
+        assert e["warmup_examples"] == N.WARMUP_EXAMPLES == 64_000, arm
+        assert e["batch"] == batch and N.warmup_steps_for(batch) == steps, arm
     assert reg["anchor"]["batch"] == N.SCREEN_BATCH

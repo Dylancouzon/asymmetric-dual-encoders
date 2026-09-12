@@ -135,7 +135,13 @@ def test_E1_is_oriented_so_a_bs32_win_can_actually_resolve():
     assert "E-bs32" not in r["anchor_aliases"], \
         "E-bs32 is its own A100 arm since 2026-09-10; the alias to the box-trained ANCHOR is what " \
         "made E1 a cross-hardware contrast four lock documents said it was not"
-    assert r["arms"]["E-bs32"]["pending"] == "CLOUD_ONLY"
+    # Ruling R9 (2026-09-10, m13/RULINGS.md): `pending` was CLEARED from both E arms pre-observation
+    # so `contrasts.E1` can compute once their records exist; the disposition now lives in the
+    # `_pending` note and `_amended_2026_09_10`, not in a field that refuses the contrast.
+    for n in ("E-bs32", "E-bs128"):
+        assert "pending" not in r["arms"][n], f"{n}: R9 removed `pending`; it must not return"
+        assert "R9" in r["arms"][n]["_pending"]
+    assert "R9" in r["_amended_2026_09_10"]
     assert e1["rule"] == "E_cost" and "E_cost" in r["rules"]
 
 

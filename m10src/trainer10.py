@@ -85,11 +85,39 @@ def load(path, model, opt):
     return int(ck["step"]), ck.get("extra", {})
 
 
+LOSS_TAIL_KEEP = 200        # how many per-step losses stay in memory (and in the checkpoint)
+                            # once a `loss_log` sidecar carries the full history.
+
+
+def _truncate_loss_log(path, start):
+    """Drop sidecar lines at or after `start`, so a resume does not double-log the steps the
+    checkpoint has already replayed. Rewritten atomically: the sidecar is evidence."""
+    p = Path(path)
+    if not p.exists():
+        return 0
+    kept = []
+    with open(p) as fh:
+        for line in fh:
+            try:
+                if int(json.loads(line)["step"]) < int(start):
+                    kept.append(line)
+            except Exception:
+                continue
+    tmp = p.with_name(p.name + f".tmp{os.getpid()}")
+    with open(tmp, "w") as fh:
+        fh.writelines(kept)
+        fh.flush()
+        os.fsync(fh.fileno())
+    os.replace(tmp, p)
+    return len(kept)
+
+
 def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1e-4, final=1e-5,
               loss_name="squared_l2", sigma=None, eval_fn=None, evals_per_cycle=2,
               ckpt_path=None, ckpt_every=0, resume_from=None, seed=0, log_every=0,
               device="cpu", batch_size=32, read_steps=(), cycle_ckpt_fmt=None,
-              eval_state=None, fingerprint=None, wd=0.01):
+              eval_state=None, fingerprint=None, wd=0.01, loss_log=None,
+              warmup_steps=None):
     """Run one arm. -> a record: losses, evaluations, rates, and why it stopped.
 
     `eval_fn(model, step, kind)` returns the arm's COV macro at a scheduled evaluation; `kind` is
@@ -114,14 +142,27 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
     `fingerprint` binds a checkpoint to the recipe that wrote it. A resume whose fingerprint
     differs is REFUSED rather than continuing one arm's schedule into another arm's weights
     (finding 8). Checkpoints written without one never satisfy a fingerprinted resume.
+
+    `warmup_steps` (ADDITIVE, default `nano10.warmup_steps_for(batch_size)` — the registered
+    64,000 warmup EXAMPLES) overrides the cycle-1 warmup in STEPS. An M13 extension cycle passes 0
+    explicitly: it is one further anneal from an already-warm model, and `nano10.lr_at`'s own
+    default is 2,000 steps (`m10/CODEMAP.md` pitfall 2).
+
+    `loss_log` (ADDITIVE, default off — added for M13's 200M build, `m13src/build13.py`) is a
+    path to a JSONL sidecar that takes the per-step loss history. With it set, only the last
+    `LOSS_TAIL_KEEP` losses stay in memory and in `extra()`, and `n_losses` carries the true
+    count: a 6,250,000-step build otherwise puts a 6.25M-element Python list into EVERY rolling
+    checkpoint, tens of megabytes rewritten every interval and growing linearly. With it unset
+    nothing changes — `n_losses == len(losses)`, and the same list is checkpointed and returned.
     """
     loss_fn = N.LOSSES[loss_name]
+    wu = int(N.warmup_steps_for(batch_size) if warmup_steps is None else warmup_steps)
     opt = torch.optim.AdamW(param_groups(model, wd), lr=peak, betas=(0.9, 0.999), eps=1e-8)
     amp, amp_on = autocast_for(device)
     start = 0
     losses, evals, kinds, cycle_end_evals, read_evals = [], [], [], [], []
     gn_stats = {"n": 0, "sum": 0.0, "max": 0.0, "min": float("inf"), "n_clipped": 0}
-    n_examples, stopped = 0, None
+    n_examples, stopped, n_losses = 0, None, 0
     if resume_from:
         # The EVALUATION history is part of the run state. Without it a resumed arm restarts
         # `cycle_end_evals` empty, so the plateau rule reads one cycle where it needs three and
@@ -140,16 +181,25 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
         cycle_end_evals = list(ex.get("cycle_end_evals", []))
         read_evals = list(ex.get("read_evals", []))
         n_examples = int(ex.get("examples", 0))
+        n_losses = int(ex.get("n_losses", len(losses)))
         stopped = ex.get("stopped")
+        if loss_log is not None:
+            _truncate_loss_log(loss_log, start)
     else:
         torch.manual_seed(seed)
+        if loss_log is not None:
+            _truncate_loss_log(loss_log, 0)      # a fresh run owns its sidecar
 
-    model.train()               # the warm start's `pooled_features` left it in eval() (finding 1)
+    model.train()              # the warm start's `pooled_features` left it in eval() (finding 1)
 
     def extra():
         e = {"losses": losses, "evals": evals, "eval_kinds": kinds,
              "cycle_end_evals": cycle_end_evals, "read_evals": read_evals,
              "examples": n_examples, "stopped": stopped, "fingerprint": fingerprint}
+        if loss_log is not None:
+            # ONLY with a sidecar (B11): without one `n_losses == len(losses)` and adding the key
+            # would change every default checkpoint's schema for no information.
+            e["n_losses"] = n_losses
         if eval_state is not None:
             e["eval_state"] = eval_state.state()
         return e
@@ -159,11 +209,17 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
     per = max(total_steps // cycles, 1)
     mids = {c * per + per // 2 for c in range(cycles)}
     t0, run_examples, run_steps = time.time(), 0, 0
+    lf = open(loss_log, "a") if loss_log is not None else None
 
     for step in range(start, total_steps if stopped is None else start):
         kind = N.mix_window(pattern, step)
         ids, mask, tgt = batch_fn(step, kind)
-        lr = N.lr_at(step, total_steps, cycles, peak, final, N.warmup_steps_for(batch_size))
+        # the DEFAULT warmup is batch-derived (`rules.E_warmup_parity`, and `test_nano10`
+        # reads this very call); `warmup_steps` overrides it only where a caller passes one.
+        if warmup_steps is None:
+            lr = N.lr_at(step, total_steps, cycles, peak, final, N.warmup_steps_for(batch_size))
+        else:
+            lr = N.lr_at(step, total_steps, cycles, peak, final, wu)
         for g in opt.param_groups:
             g["lr"] = lr
         with amp:                                       # bf16 forward on CUDA, no-op on CPU
@@ -174,6 +230,7 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
         if not torch.isfinite(loss):
             stopped = f"non-finite loss at step {step}"
             losses.append(float("nan"))
+            n_losses += 1
             break
         opt.zero_grad(set_to_none=True)
         loss.backward()
@@ -196,6 +253,11 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
             gn_stats["n_clipped"] += 1
         opt.step()
         losses.append(float(loss.detach()))
+        n_losses += 1
+        if lf is not None:
+            lf.write(json.dumps({"step": int(step), "loss": losses[-1]}) + "\n")
+            if len(losses) > LOSS_TAIL_KEEP:
+                del losses[:-LOSS_TAIL_KEEP]
         n_examples += len(ids)
         run_examples += len(ids)
         run_steps += 1
@@ -213,6 +275,9 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
                 if k == "end":
                     cycle_end_evals.append(m)
                     if cycle_ckpt_fmt:
+                        if lf is not None:
+                            lf.flush()
+                            os.fsync(lf.fileno())
                         save(str(cycle_ckpt_fmt).format(cycle=len(cycle_end_evals)), model, opt,
                              step + 1, extra=extra())
                 fired, why = N.kill_fires(evals, lambda i: kinds[i])
@@ -224,12 +289,19 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
                     stopped = f"plateau at cycle {at}"
                     break
         if ckpt_path and ckpt_every and (step + 1) % ckpt_every == 0:
+            if lf is not None:
+                lf.flush()          # the sidecar must be at least as current as the checkpoint
+                os.fsync(lf.fileno())
             save(ckpt_path, model, opt, step + 1, extra=extra())
         if log_every and (step + 1) % log_every == 0:
             el = time.time() - t0
             print(f"  step {step + 1}/{total_steps} loss {np.mean(losses[-log_every:]):.4f} "
                   f"lr {lr:.2e} {run_examples / max(el, 1e-9):.0f} ex/s", flush=True)
 
+    if lf is not None:
+        lf.flush()
+        os.fsync(lf.fileno())
+        lf.close()
     if stopped and ckpt_path:
         # the STOPPING evaluation is part of the arm's record: every `stopped` path breaks before
         # the interval save, so without this the last checkpoint knows nothing about the kill or
@@ -261,6 +333,9 @@ def train_arm(model, batch_fn, total_steps, *, pattern="75/25", cycles=3, peak=1
             "examples": n_examples, "examples_this_run": run_examples, "seconds": round(el, 2),
             "examples_per_s": round(run_examples / max(el, 1e-9), 1),
             "bf16_autocast": bool(amp_on), "weight_decay_on_dim_gt_1": float(wd),
-            "warmup_steps": int(N.warmup_steps_for(batch_size)),
+            "warmup_steps": wu,
             "warmup_examples": int(N.WARMUP_EXAMPLES),
-            "mix": N.window_shares(pattern, max(len(losses), 1))}
+            # `n_losses` (the TRUE step count) and `loss_log` appear ONLY with a sidecar, so with
+            # the default `loss_log=None` this record is byte-identical to the pre-M13 one (B11).
+            **({"n_losses": n_losses, "loss_log": str(loss_log)} if loss_log is not None else {}),
+            "mix": N.window_shares(pattern, max(n_losses, 1))}
