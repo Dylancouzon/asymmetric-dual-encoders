@@ -44,6 +44,22 @@ def _fake_build(root: Path, screened: bool, status="DRAFT_NOT_EXECUTABLE", seed_
     return root
 
 
+def _draft():
+    """The real registry as it stood before step 6a flipped it (the pre half needs a draft).
+
+    Only the fields `lock_pre` itself writes are undone: the status, the `lock` block and the
+    prepare row's measured allocation. Everything else is the registered registry.
+    """
+    reg = copy.deepcopy(registry())
+    reg.pop("lock", None)
+    reg["status"] = "DRAFT_NOT_EXECUTABLE"
+    for row in reg["allocation_hours"]:
+        if "placeholder_hours_before_measurement" in row:
+            row["hours"] = row.pop("placeholder_hours_before_measurement")
+            row.pop("measured", None)
+    return reg
+
+
 @pytest.fixture
 def fixed(tmp_path):
     files = {}
@@ -58,7 +74,7 @@ def fixed(tmp_path):
 
 
 def test_pre_half_binds_protocol_allocation_and_flips_status(tmp_path, fixed):
-    reg = copy.deepcopy(registry())
+    reg = _draft()
     assert reg["status"] == "DRAFT_NOT_EXECUTABLE"
     build = _fake_build(tmp_path / "full", screened=False)
     out = lock.lock_pre(reg, build, date="2026-09-11", fixed_files=fixed)
@@ -75,15 +91,15 @@ def test_pre_half_binds_protocol_allocation_and_flips_status(tmp_path, fixed):
     # never twice, never on a screened build, never on a non-draft registry
     with pytest.raises(SystemExit, match="already exists|applies to"):
         lock.lock_pre(copy.deepcopy(out), build, fixed_files=fixed)
-    reg2 = copy.deepcopy(registry())
+    reg2 = _draft()
     with pytest.raises(SystemExit, match="UNSCREENED"):
         lock.lock_pre(reg2, _fake_build(tmp_path / "scr", screened=True), fixed_files=fixed)
     # a complete --size build and a seed-7 build are not the full pool at the locked seed
     with pytest.raises(SystemExit, match="subsample"):
-        lock.lock_pre(copy.deepcopy(registry()), _fake_build(tmp_path / "sz", False, size=50000),
+        lock.lock_pre(_draft(), _fake_build(tmp_path / "sz", False, size=50000),
                       fixed_files=fixed)
     with pytest.raises(SystemExit, match="seed 7"):
-        lock.lock_pre(copy.deepcopy(registry()), _fake_build(tmp_path / "sd", False, seed=7),
+        lock.lock_pre(_draft(), _fake_build(tmp_path / "sd", False, seed=7),
                       fixed_files=fixed)
 
 
@@ -93,13 +109,13 @@ def test_pre_half_refuses_a_partial_rebuild_and_a_non_final_panel(tmp_path, fixe
     rec["wall_clock_kind"], rec["complete_build"] = "partial rebuild", False
     (build / "build_record.json").write_text(json.dumps(rec))
     with pytest.raises(SystemExit, match="complete full build"):
-        lock.lock_pre(copy.deepcopy(registry()), build, fixed_files=fixed)
+        lock.lock_pre(_draft(), build, fixed_files=fixed)
     rec["wall_clock_kind"], rec["complete_build"] = "full build", True
     (build / "build_record.json").write_text(json.dumps(rec))
     fixed["panel_manifest"].write_text(json.dumps({"status": "SEALED_PENDING",
                                                     "panel_jsonl": {"sha256": "x"}}))
     with pytest.raises(SystemExit, match="FINAL"):
-        lock.lock_pre(copy.deepcopy(registry()), build, fixed_files=fixed)
+        lock.lock_pre(_draft(), build, fixed_files=fixed)
 
 
 def _fake_export(bundle_root):
@@ -112,7 +128,7 @@ def _fake_export(bundle_root):
 
 
 def test_executed_half_needs_the_screened_build_under_the_same_protocol(tmp_path, fixed):
-    reg = lock.lock_pre(copy.deepcopy(registry()), _fake_build(tmp_path / "pre", screened=False),
+    reg = lock.lock_pre(_draft(), _fake_build(tmp_path / "pre", screened=False),
                         date="2026-09-11", fixed_files=fixed)
     # not screened -> refused
     with pytest.raises(SystemExit, match="SCREENED"):

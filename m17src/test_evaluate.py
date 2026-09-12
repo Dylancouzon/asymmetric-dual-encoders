@@ -172,9 +172,12 @@ def test_protected_paths_are_refused_by_name():
     E._check_path("work/m17/rehearsal/fixtures")
 
 
-def test_dev_suite_and_panel_need_their_flag_and_the_lock():
+def test_dev_suite_and_panel_need_their_flag_and_the_lock(monkeypatch):
     with pytest.raises(SystemExit, match="needs its explicit"):
         E.main(["--fixtures", "x", "--surface", "dev-suite"])
+    # the status gate, on a draft copy: the real registry reached EXECUTABLE at step 6a
+    draft = dict(E.registry(), status="DRAFT_NOT_EXECUTABLE")
+    monkeypatch.setattr(E, "registry", lambda *a, **k: draft)
     with pytest.raises(SystemExit, match="registry status"):
         E.main(["--fixtures", "x", "--surface", "panel", "--allow-panel"])
 

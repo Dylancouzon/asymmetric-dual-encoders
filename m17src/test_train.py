@@ -74,9 +74,12 @@ def test_the_rehearsal_deletes_only_its_own_output(tmp_path):
     rehearse17._clear_rehearsal_dir(tmp_path / "empty")        # absent: nothing to refuse
 
 
-def test_the_real_registry_is_still_a_draft():
-    """If this ever fails, the lock landed — and step 6, not this test, is what changed."""
-    assert common.registry()["status"] == "DRAFT_NOT_EXECUTABLE"
+def test_the_real_registry_has_not_reached_the_executed_half():
+    """Step 6a flipped the status to EXECUTABLE (preparation only). Real training still needs
+    the on-clock executed half, so `lock.executed` must stay absent until step 6c."""
+    real = common.registry()
+    assert real["status"] in ("DRAFT_NOT_EXECUTABLE", "EXECUTABLE")
+    assert "executed" not in (real.get("lock") or {})
 
 
 def test_cli_refuses_a_real_arm_while_the_registry_is_a_draft():
