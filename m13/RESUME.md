@@ -1,3 +1,13 @@
+# Same-suite M9 quality diagnostic completed
+
+`results/m13_m9_cov_diagnostic.json` PASSED in130.1seconds on localCPU only; no paid
+compute, no new training, no active supervisor modification. FrozenM9 COVmacro0.450986
+versus currentM13 midpoint0.519857; teacher0.556730. Teacher retention81.01% versus93.38%.
+All four families improved. This is descriptive development evidence, not fresh validation
+or a new stopping rule. Summary: `m13/QUALITY_PROGRESS.md`. Budget explanation:
+`m13/BUDGET_EXPLAINED.md` (conservative ~$721 allowance versus ~$88 observed-rate
+training-only estimate). Keep the pending two-idle-Pod cleanup task below.
+
 # Published quality progress
 
 First scheduled COV evaluation is saved in `results/m13_cov_mid1041666.json` with

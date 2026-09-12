@@ -18,3 +18,32 @@ Artifact: `results/m13_cov_mid1041666.json`, copied byte-for-byte from the train
 `1f8627196f45bd9cd9feadaa559c93dd1743223327c55d80288445366be9f689`.
 
 Teacher baseline: `results/m10_cov_teacher_ceiling.json`. Execution commit: `ee1bd6617c4fec7f4c97c73e7c6eed52f66ff50a`. No DEV-6, final six-set, reserved or LoTTE evaluation was performed for this checkpoint.
+
+## Frozen M9 comparison on the same COV suite
+
+Post-hoc CPU-only diagnostic completed in130.1seconds. Current M13 uses the published
+33.3M-example midpoint evaluation; M9 uses its hash-verified final checkpoint at
+step457265. Same admitted COV queries, teacher document embeddings, scorer and equal-family
+macro. No extra Runpod charge; active training continued throughout.
+
+| Family | Frozen M9 | Current M13 | M13 minus M9 |
+|---|---:|---:|---:|
+| BRIGHT | 0.160192 | 0.184328 | +0.024136 |
+| consumer-health | 0.606373 | 0.713016 | +0.106643 |
+| finance | 0.246139 | 0.325429 | +0.079290 |
+| legal | 0.791242 | 0.856656 | +0.065414 |
+| **Overall** | **0.450986** | **0.519857** | **+0.068871** |
+
+Teacher-score retention: M9 **81.01%**, current M13 **93.38%**. All four family
+point estimates improved. This supports continued training; no stopping rule changed.
+
+Caveats: COV informed M13 selection, so this is not unrelated or fresh validation.
+M9 predates the COV training-data rescreen; overlap protection differs. M9 is a final
+checkpoint and M13 is intermediate with different training dose/recipe. M9 was evaluated
+on CPU fp32 versus the current CUDA evaluation; this is not a precision-parity test.
+No confidence interval is claimed, and this is not a causal recipe-effect estimate.
+
+Full diagnostic: `results/m13_m9_cov_diagnostic.json`. Plan: `m13/COV_DIAGNOSTIC.json`.
+Code: `scripts/m13_m9_cov_diagnostic.py`. The initial attempt failed before scoring
+because it looked for caches in the worktree; its log/failure receipt are preserved.
+The successful attempt used the existing shared cache directory after integrity checks.
