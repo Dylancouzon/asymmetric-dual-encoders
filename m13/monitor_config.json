@@ -112,6 +112,15 @@
         "logs/m13-build-after-cpu.log"
       ],
       "stale_seconds": 1800
+    },
+    {
+      "name": "verification only upload recovery",
+      "receipt": "results/m13_storage_verification.json",
+      "pid_file": "work/m13cloud-launchers/storage_verification.pid",
+      "logs": [
+        "logs/m13-storage-verification.log"
+      ],
+      "stale_seconds": 300
     }
   ]
 }

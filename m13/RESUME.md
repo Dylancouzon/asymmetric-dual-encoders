@@ -1,3 +1,20 @@
+# Verification timeout recovery — 2026-09-12
+
+The full rsync transfer completed, but silent destination hashing exceeded1800s. Original
+storage receipt FAILED with verified STOP; preserved at `results/m13_storage_upload.json`
+(SHA256413c7856c1d6c53473c425fdf51b4f373bbc346e4c70d09c7a312310ce4bfcdc).
+The old handoff also failed safely; `results/m13_after_upload.json` is preserved. No training.
+
+Verification-only recovery: `scripts/m13_verify_uploaded.py`, new receipt
+`results/m13_storage_verification.json`, log `logs/m13-storage-verification.log`, PID file
+`work/m13cloud-launchers/storage_verification.pid`. It reuses the394 uploaded files, streams
+hashes with progress, and caps paid zero-GPU work at3h while preserving training+4h and the
+original cumulative allowance. Monitor job covers the durable progress log. STOP only.
+Before any GPU handoff the cumulative allocation MUST include both failed storage and the
+new verification interval; the older coordinator must not be rerun unchanged.
+
+Earlier overnight state below is historical and superseded by this timeout recovery.
+
 # Current overnight continuation — 2026-09-12
 
 The storage upload is active on the SAME retained Pod `wnzk8eeqrrkw4m`, through the

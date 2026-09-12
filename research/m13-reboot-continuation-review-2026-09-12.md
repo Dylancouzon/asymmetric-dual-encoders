@@ -112,3 +112,23 @@ Published8c11ce6 and launched coordinatorPID14853. Confirmed WAITING receipt and
 monitor waiting state with live process identity. Storage supervisorPID11028 remains RUNNING
 with advancing transfer. Windows AC automatic sleep is already disabled (read-only query).
 No GPU training has started. Automatic handoff requires no further user interaction.
+
+
+## Completed transfer, verification timeout
+
+Both rsync groups finished; destination sha256 --status exceeded its1800s command timeout.
+No checksum mismatch was observed, but verification did not pass. Storage receipt413c7856
+and coordinator receipt2fcad24c are preserved; Pod EXITED, no training. Transfer averaged
+roughly2–3MB/s, explaining the hours to move tens of GB. The silent checker provided no
+read-rate diagnosis; do not claim a specific network or disk bottleneck without measurements.
+
+Verification-only continuation streams the exact394 manifest files with15-second byte progress
+and per-file completion, using a transferred hash-bound stdlib helper and manifest. No large
+retransfer, runtime setup or evaluation. Caps3h and totalstorage10h, fresh balance and original
+training+4h preserved. Live read-only reconciliation:136.1397h remaining, conservative stage
+consumption$13.0760, project projection$719.28. Budget reviewer GO; launcher review addresses
+durable log capture. Synthetic394-file pass, same-size corruption and size mismatch tests plus
+prior allocation/upload tests:18 passed. Downstream chain update required before GPU launch.
+
+Launcher final GO with exclusive stdout/stderr log and PID reservation before dispatch;
+monitor tracks that log. Both reviews cleared verification-only paid restart.
