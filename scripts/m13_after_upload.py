@@ -89,6 +89,32 @@ def stop_failed_dispatch():
     raise RuntimeError('Failed dispatch STOP unconfirmed: '+str(last))
 
 
+def restore_container():
+    """Restore only ephemeral runtime capacity while all retained Pods are stopped."""
+    pods,_=recovery.live()
+    if any(p['desiredStatus']!='EXITED' for p in pods):raise RuntimeError('Container restoration requires all Pods stopped')
+    pod=pods[-1]
+    if (pod['id']!=recovery.PODS[-1] or pod.get('volumeInGb')!=500
+        or pod.get('volumeMountPath')!='/home/dylan' or pod.get('containerDiskInGb') not in (5,30)):
+        raise RuntimeError('Unexpected retained disk configuration')
+    if pod['containerDiskInGb']==30:return {'changed':False,'containerDiskInGb':30,'pod_status':'EXITED'}
+    headers={'Authorization':'Bearer '+(recovery.KEYS/'api_key').read_text().strip(),
+             'Content-Type':'application/json','User-Agent':'m13-container-restore/1.0'}
+    url='https://rest.runpod.io/v1/pods/'+recovery.PODS[-1]
+    try:
+        # Exact single-field update; never resize, replace or detach persistent storage.
+        req=urllib.request.Request(url,headers=headers,data=json.dumps({'containerDiskInGb':30}).encode(),method='PATCH')
+        with urllib.request.urlopen(req,timeout=30) as response:response.read()
+        with urllib.request.urlopen(urllib.request.Request(url,headers=headers),timeout=30) as response:current=json.load(response)
+        if (current.get('id')!=pod['id'] or current.get('desiredStatus')!='EXITED'
+            or current.get('volumeInGb')!=500 or current.get('volumeMountPath')!='/home/dylan'
+            or current.get('containerDiskInGb')!=30):raise RuntimeError('Container restoration not confirmed stopped and intact')
+    except BaseException:
+        stop_failed_dispatch()
+        raise
+    return {'changed':True,'containerDiskInGb':30,'pod_status':'EXITED','restored_at':time.time()}
+
+
 def main():
     if RESULT.exists() or GPU_RESULT.exists() or GPU_PID.exists() or GPU_LOG.exists() or admission.OUTPUT.exists():
         raise RuntimeError('Existing handoff/build evidence; no automatic retry')
@@ -126,6 +152,9 @@ def main():
         save('publishing-verified-upload')
         publish([admission.CPU], 'Record verified M13 storage upload and STOP')
         unchanged()
+        save('restoring-runtime-container')
+        receipt['container_restoration']=restore_container()
+        save()
         # The reviewed patch is applied only after upload completion, never during its bundle.
         subprocess.run(['git','apply','--check',PATCH],cwd=REPO,check=True,timeout=30)
         subprocess.run(['git','apply',PATCH],cwd=REPO,check=True,timeout=30)

@@ -145,3 +145,13 @@ final draft846e93b7. Both reviewers GO. The first verification launcher refused 
 paid resume: provider reports container5GB (persistent500GB mount unchanged). Preserved
 prestart refusal receipt/log/PID. Narrow verification-only guard permits5or30GB, still priced
 at the original530GB bound; reviewers recheck. GPU still requires explicit30GB restoration.
+
+Both reviewers GO on the narrow5or30GB verification-only guard; new controllerPID27527
+launched fromfd84d45 with exclusive retry log/PID. No prior verification receipt overwritten.
+For GPU readiness, the coordinator now restores only containerDiskInGb30 via PATCH while
+all retained Pods are EXITED, verifies persistent500GB mount unchanged and stopped status,
+and STOPs on any uncertain update. Official API documents this single-field update:
+https://docs.runpod.io/api-reference/pods/POST/pods/podId/update . Three synthetic tests cover
+exact field, active-Pod refusal and STOP on uncertain update;29 affected tests pass.
+
+Both reviewers issued final GO for concrete stopped-container restoration and coordinator.

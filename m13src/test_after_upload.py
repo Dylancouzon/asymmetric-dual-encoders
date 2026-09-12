@@ -97,3 +97,37 @@ def test_stop_still_attempted_after_termination_error(monkeypatch):
     with pytest.raises(RuntimeError,match='child termination unconfirmed'):
         handoff.cancel_unconfirmed(Child())
     assert events==['kill','kill','stop']
+
+
+def test_container_restore_only_ephemeral_field(tmp_path,monkeypatch):
+    import io
+    import json
+    pod={'id':handoff.recovery.PODS[-1],'desiredStatus':'EXITED','volumeInGb':500,'volumeMountPath':'/home/dylan','containerDiskInGb':5}
+    monkeypatch.setattr(handoff.recovery,'live',lambda:([pod],0))
+    (tmp_path/'api_key').write_text('test-only');monkeypatch.setattr(handoff.recovery,'KEYS',tmp_path)
+    seen=[]
+    def urlopen(req,timeout):
+        seen.append(req.get_method())
+        if req.get_method()=='PATCH':
+            assert json.loads(req.data)=={'containerDiskInGb':30}
+            return io.BytesIO(b'{}')
+        return io.BytesIO(json.dumps({**pod,'containerDiskInGb':30}).encode())
+    monkeypatch.setattr(handoff.urllib.request,'urlopen',urlopen)
+    assert handoff.restore_container()['changed'] is True
+    assert seen==['PATCH','GET']
+
+
+def test_container_restore_refuses_running_pod(monkeypatch):
+    monkeypatch.setattr(handoff.recovery,'live',lambda:([{'desiredStatus':'RUNNING'}],0))
+    with pytest.raises(RuntimeError,match='all Pods stopped'):handoff.restore_container()
+
+
+def test_container_restore_failure_always_stops(tmp_path,monkeypatch):
+    pod={'id':handoff.recovery.PODS[-1],'desiredStatus':'EXITED','volumeInGb':500,'volumeMountPath':'/home/dylan','containerDiskInGb':5}
+    monkeypatch.setattr(handoff.recovery,'live',lambda:([pod],0))
+    (tmp_path/'api_key').write_text('test-only');monkeypatch.setattr(handoff.recovery,'KEYS',tmp_path)
+    def fail(*args,**kwargs):raise OSError('injected uncertain update')
+    monkeypatch.setattr(handoff.urllib.request,'urlopen',fail)
+    stopped=[];monkeypatch.setattr(handoff,'stop_failed_dispatch',lambda:stopped.append(True))
+    with pytest.raises(OSError):handoff.restore_container()
+    assert stopped==[True]

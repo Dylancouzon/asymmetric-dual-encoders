@@ -10,7 +10,9 @@ Verification-only recovery: `scripts/m13_verify_uploaded.py`, new receipt
 `work/m13cloud-launchers/storage_verification_retry.pid`. It reuses the394 uploaded files, streams
 hashes with progress, and caps paid zero-GPU work at3h while preserving training+4h and the
 original cumulative allowance. Initial prestart refused provider-reported5GB container;
-refusal preserved. Verification-only permits5or30GB; GPU must restore30GB while stopped.
+refusal preserved. Verification-only permits5or30GB; retryPID27527 launched fromfd84d45.
+The coordinator restores only containerDiskInGb30 while all Pods are stopped, verifies
+persistent volume identity, and STOPs on an uncertain update before any GPU handoff.
 Monitor job covers the durable progress log. STOP only.
 The downstream allocation now includes both failed storage and successful verification.
 The updated coordinator uses separate receipt `results/m13_after_verification.json`, log
