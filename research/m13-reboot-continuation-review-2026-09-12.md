@@ -26,3 +26,9 @@ active after reboot and now includes the unique continuation job, logs and PID f
 
 The 56 existing build-controller tests also passed. Refreshed live allocation:142.2828h,
 $236.7032 stage cap, $709.06 conservative project projection, $486.7241 balance.
+
+Final budget reviewer GO: archive reuse, consumed-cost projection, continuation elapsed
+accounting and original bindings verified. The tentative STOP finding was retracted after
+AST/indentation inspection: STOP is in the inner finally outside `if ready`. Both independent
+reviews are GO for the concrete continuation, conditional on fresh live checks (allocation
+PASSED and pushed in c8dc2bb). No P1 remains.
