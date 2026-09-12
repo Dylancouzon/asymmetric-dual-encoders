@@ -1,0 +1,32 @@
+{
+  "status": "RUNNING",
+  "stage": "gate-read",
+  "pid": 136163,
+  "started_at": 1789170672.323684,
+  "takeover_at": 1789172321.6098557,
+  "code_commit": "0dfd2262075b7b1a4283117352eacd107af7811f",
+  "original_controller_receipt_sha256": "3c46809bdda488f37a5a3ce904b9666e1b40dbf1fcdfd54331cf8841128df58e",
+  "original_controller_pid": 132901,
+  "original_controller_receipt": "results/m13_cloud_gate_chain_resume.json",
+  "original_code_commit": "0dfd2262075b7b1a4283117352eacd107af7811f",
+  "controller_code_commit": "697acf168882357a100a5d54764b45cad2fc3444",
+  "original_pod_id": "k3aee2m68765em",
+  "name": "m13-gate-chain-20260911",
+  "maximum_execution_seconds": 61200,
+  "allocation_sha256": "1905252e1e0010c8d9d186467b879d89ec952de68ed681bdebdc313f5d55306e",
+  "owned_pod_ids": [
+    "wnzk8eeqrrkw4m"
+  ],
+  "updated_at": 1789174452.631528,
+  "pod_id": "wnzk8eeqrrkw4m",
+  "gpu_price_usd_h": 1.59,
+  "previous_controller_killed": true,
+  "prior_runtime_bootstrap_original_sha256": "d2cb437d60a20cc4816698ea58835ba99558739f0636a91eb6b5af1be87d6fdf",
+  "prior_runtime_bootstrap_local_disk_sha256": "e4330f7aeeefa36aa6210f500c7c9a7b931da6e28844b07e32ccd10e766a963e",
+  "uploaded_file_count": 69,
+  "transfer_verified": true,
+  "benchmark_sha256": "071366a1e16644dac1bc0860770c5044d53973b1e77b715832ba18962d981e8d",
+  "fp16_backup_verified": true,
+  "measured_gate_allowance_hours": 4.395929380504407,
+  "remote_job_id": "0dfd2262075b-136163"
+}

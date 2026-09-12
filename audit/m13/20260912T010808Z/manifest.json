@@ -1,0 +1,18 @@
+{
+  "captured_utc": "20260912T010808Z",
+  "source_commit": "1f0cda0520f8cdd7418a7f28ea5ec705fe3f1feb",
+  "scope": "Immutable point-in-time audit snapshot. RUNNING receipts remain in-progress evidence, not completion claims. No protected evaluation payloads or credentials included.",
+  "files": {
+    "work/m13cloud-launchers/gate_chain.py": "9a131f8bb59e01a567136b58f0fc08380ba0b1f227fb46763ab72e4f9e9adcc1",
+    "work/m13cloud-launchers/gate_chain_resume.py": "1e6f82a0e63e52b4222d2c3c93574fc0448cc600e8876cc8c2e2a993fefbc944",
+    "work/m13cloud-launchers/gate_chain_upload.py": "0d891b1f7671adb105aa1215d3e385d987df179afd8732366bce3ef26f690134",
+    "work/m13cloud-launchers/build.py": "16e6b2f2240962e1073174654ebc9cd99e9e51596b9b5900d7cf8039e021e74b",
+    "work/m13cloud-launchers/build_allocation.py": "7e07fe1cf9a577c268e04c1f29a66fac22fc577a018e7ec85228e4493354df26",
+    "work/m13cloud-launchers/after_gate.py": "607a1006b5bcb706656e1ee8b105ec3477614fad69e0e1b2d6ca837743ba8f9c",
+    "results/m13_encode_benchmark_fp16.json": "071366a1e16644dac1bc0860770c5044d53973b1e77b715832ba18962d981e8d",
+    "results/m13_cloud_gate_chain_upload.json": "820e5615097dc1c6da546442ab3731454c53fbffba8d6692be020a9f32069bff",
+    "results/m13_after_gate.json": "70102ff4aaa50813041591a16953ae48e4d0177e6938c7a3df89bff8e4e34342",
+    "results/m13_gate_chain_upload_active_pod.json": "59ddcaf09fb37d1a109574687fc31b1eabd3af3521d9d0554fd6906b650a4e8a",
+    "work/m13-monitor/health.json": "ce6394785adf5d80512c2c80d1e759bedaee8a2d1e623da6eb7e2e41f0c1f4e2"
+  }
+}
