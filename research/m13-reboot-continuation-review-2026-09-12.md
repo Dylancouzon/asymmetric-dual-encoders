@@ -23,3 +23,6 @@ credentials, protected six/reserved data, frozen comparator payloads or LoTTE pa
 Validation: 28 synthetic allocation, preflight and monitor checks passed, including delayed
 billing, interrupted runtime, insufficient funds and changed balances. Existing monitor is
 active after reboot and now includes the unique continuation job, logs and PID file.
+
+The 56 existing build-controller tests also passed. Refreshed live allocation:142.2828h,
+$236.7032 stage cap, $709.06 conservative project projection, $486.7241 balance.

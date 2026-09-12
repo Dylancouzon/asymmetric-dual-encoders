@@ -1,11 +1,22 @@
-# M13 status — paused safely for user reboot (2026-09-12)
+# M13 status — upload continuation ready (2026-09-12)
 
-**Resume entry point:** `m13/RESUME.md`. User requested a session clear and Windows reboot.
-All three Pods are verified EXITED; the build controller exited during input upload, before
-preflight or training. Completed uploads remain on persistent storage. Preserve the intentional
-interruption record `results/m13_cloud_build.json`; `results/m13_reboot_pause.json` verifies
-the requested pause. A reviewed continuation must use new receipts and refresh remaining
-budget before renting again. Do not blindly rerun the original launchers.
+The reboot pause remains preserved in `m13/RESUME.md` and its original receipts. The
+reviewed continuation is `scripts/m13_resume_build.py`, with separate receipt
+`results/m13_cloud_build_resume.json`, controller log `logs/m13-build-resume-controller.log`,
+training log `logs/m13-build-resume.log`, and backups `work/m13cloud-build-resume-backup`.
+It restarts only the same retained Pod, resumes the exact 394-file upload, verifies every
+hash, runs full preflight, and checks live remaining funds before the first training step.
+
+Refreshed allocation: 142.2828 hours / $236.7032 remaining, project projection $709.06,
+account balance $486.7241. Source: `results/m13_build_resume_allocation.json`; later live
+checks may only reduce the allowance. Both original elapsed setup and pause storage are
+charged, with no reset of the original 144-hour/$239.56 ceiling. No training existed at
+pause, so this is upload recovery followed by a fresh registered build.
+
+Independent monitoring is active and includes the continuation. The supervisor enforces
+stage deadlines, hourly verified rolling backups, final checksums and unconditional STOP.
+Reviews: `research/m13-reboot-continuation-review-2026-09-12.md`. Validation: 28 recovery/
+preflight/monitor and 56 existing build-controller tests passed. No final evaluation access.
 
 Both registered cloud E arms completed, their full backups verified, and Runpod
 STOP confirmed at 21:45 UTC. Both deferred DEV-6 evaluations completed locally and their
