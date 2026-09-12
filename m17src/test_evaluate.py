@@ -411,6 +411,43 @@ def test_dev_suite_read_refuses_a_bundle_that_is_not_the_locked_v0(v0_world, tmp
     assert not out.exists() and not E._receipt_path(out).exists()
 
 
+def test_a_screen_arm_reads_its_own_bundle_into_its_own_run_directory(v0_world, tmp_path,
+                                                                      monkeypatch):
+    """Step 6d: one registered read per screen arm, off the V0 paths (`quality_reads_per_screen
+    _arm` = 1). Same surface, gate, receipt and no-overwrite rule; a trained bundle, its own
+    destination, and `v0_export.read` never consulted."""
+    trained = json.loads(json.dumps(v0_world["reg"]))       # the arm's table is not V0's
+    trained["lock"]["executed"]["v0_export"] = dict(
+        {k: "0" * 64 for k in E.V0_EXPORT_DIGESTS}, read=True)
+    out = tmp_path / "screen.json"
+    rep = E._dev_suite_read_fixture(v0_world["bundle"], out, allow_dev_suite=True, reg=trained,
+                                    manifest_path=v0_world["manifest_path"],
+                                    verify_bundle=E._verify_screen_bundle)
+    assert rep["bundle_digests"] == {k: v0_world["digests"][k] for k in E.V0_EXPORT_DIGESTS}
+    assert rep["ndcg@10"]["macro"] == pytest.approx(0.5)
+    assert json.loads(E._receipt_path(out).read_text())["state"] == "complete"
+    with pytest.raises(SystemExit, match="already exists"):        # one read, no --force
+        E._dev_suite_read_fixture(v0_world["bundle"], out, allow_dev_suite=True, reg=trained,
+                                  manifest_path=v0_world["manifest_path"],
+                                  verify_bundle=E._verify_screen_bundle)
+    # the locked V0 export itself is not a screen arm
+    with pytest.raises(SystemExit, match="IS the locked V0 export"):
+        E._verify_screen_bundle(v0_world["bundle"], v0_world["reg"])
+    # destinations: the arm's run directory only
+    assert E._screen_read_dest(E.SCREEN_RUNS_DIR / "m17-c-screen-s0" / "screen.json")
+    for bad in (None, tmp_path / "screen.json", E.SCREEN_RUNS_DIR / "screen.json",
+                E.SCREEN_RUNS_DIR / "a" / "b" / "screen.json", E.V0_READ_PATH):
+        with pytest.raises(SystemExit, match="needs its output path|another destination"):
+            E._screen_read_dest(bad)
+    monkeypatch.setattr(E, "registry", lambda *a, **k: trained)
+    with pytest.raises(SystemExit, match="needs its explicit"):
+        E.screen_read(v0_world["bundle"], E.SCREEN_RUNS_DIR / "x" / "screen.json")
+    monkeypatch.setattr(E, "_git_porcelain", lambda: " M m17src/evaluate.py")
+    with pytest.raises(SystemExit, match="uncommitted tracked changes"):
+        E.screen_read(v0_world["bundle"], E.SCREEN_RUNS_DIR / "x" / "screen.json",
+                      allow_dev_suite=True)
+
+
 def test_the_production_surface_cannot_be_redefined_by_arguments(v0_world, tmp_path):
     import inspect
     reg, man = v0_world["reg"], v0_world["man"]

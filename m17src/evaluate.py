@@ -26,6 +26,9 @@ EXECUTED lock half and an unread `v0_export`, refuses a dirty tree, verifies the
 component before the first score, writes only to the registry's canonical read path, and claims a
 durable receipt there atomically. The production entry point (`dev_suite_read`) takes no manifest,
 subset, loader or depth override: those live in the test-only `_dev_suite_read_fixture`.
+`screen_read` is the same read for ONE step-6d screen arm (`--screen`): same surface, gate,
+clean-tree rule and receipt discipline, but it binds the arm's own TRAINED bundle (refusing the
+locked V0 export) and writes `work/m17/runs/<run_id>/screen.json`, never the V0 read's paths.
 The panel reader is still unwritten.
 """
 from __future__ import annotations
@@ -39,7 +42,7 @@ from pathlib import Path
 
 import numpy as np
 
-from common import (REPO, RESULTS, admit_read, admit_write, registry, require_executable,
+from common import (REPO, RESULTS, WORK, admit_read, admit_write, registry, require_executable,
                     sha_file, sha_json, write_json)
 
 FORBIDDEN = ("frozen_eval/untouched-", "m9reserve", "reserved_qrels", "lotte")
@@ -670,18 +673,81 @@ def dev_suite_read(bundle_dir, out=None, *, allow_dev_suite=False):
     return _dev_suite_read(bundle_dir, dest, reg=reg, fixture=False)
 
 
+SCREEN_READ_NAME = "screen.json"
+SCREEN_RUNS_DIR = WORK / "runs"
+
+
+def _verify_screen_bundle(bundle_dir, reg):
+    """A screen arm reads a TRAINED bundle, so it cannot be bound to `lock.executed.v0_export`.
+
+    The digests are still recomputed with the exporter's own conventions and recorded, and the
+    bundle is refused if it IS the locked V0 export: V0 has its own single registered read
+    (`training.untrained_vocab_export_v0.reads = 1`) and must not be re-read as a screen arm.
+    """
+    import export
+    got = export.gate_artifact(_check_path(bundle_dir))
+    want = _executed_v0_export(reg)
+    if all(got.get(k) == want.get(k) for k in V0_EXPORT_DIGESTS):
+        raise SystemExit(f"M17 EVAL REFUSED: {bundle_dir} IS the locked V0 export, not a trained "
+                         "screen arm. The V0 read is registered once and already has its own "
+                         "entry point; a screen read is of an arm's own exported table.")
+    return {k: got[k] for k in V0_EXPORT_DIGESTS}
+
+
+def _screen_read_dest(out):
+    """`work/m17/runs/<run>/screen.json` — the arm's own run directory, never the V0 read's.
+
+    The screen read is the registered ONE quality read of a screen arm
+    (`training.quality_reads_per_screen_arm = 1`); like the V0 read it refuses to overwrite its
+    result or its receipt, so each arm's read lives at its own registered path.
+    """
+    if not out:
+        raise SystemExit("M17 EVAL REFUSED: a screen read needs its output path "
+                         f"({SCREEN_RUNS_DIR}/<run_id>/{SCREEN_READ_NAME}); a read whose numbers "
+                         "are not written is a spent read with no evidence.")
+    p = Path(out).expanduser().absolute()
+    ok = (p.name == SCREEN_READ_NAME and p.parent.parent == SCREEN_RUNS_DIR
+          and p.parent.name not in ("", ".", ".."))
+    if not ok:
+        raise SystemExit(f"M17 EVAL REFUSED: a screen read writes to "
+                         f"{SCREEN_RUNS_DIR}/<run_id>/{SCREEN_READ_NAME}; {out} is another "
+                         "destination. The screen arms never write the V0 read's paths.")
+    return p
+
+
+def screen_read(bundle_dir, out=None, *, allow_dev_suite=False):
+    """THE production entry point for ONE screen arm's registered dev-suite read.
+
+    Same surface, same gate and the same provenance/receipt discipline as `dev_suite_read`: the
+    registry is loaded here, the complete pinned `screen_routing_surface` is read as int8 folded
+    rows through the released QueryTable path, the tree must be clean and the receipt is claimed
+    atomically. It differs in exactly two ways, both forced by what it reads: the bundle is the
+    arm's own trained export rather than the locked V0 one, and the destination is that arm's run
+    directory rather than the V0 read's canonical path. `v0_export.read` is untouched.
+    """
+    if not allow_dev_suite:
+        raise SystemExit(DEV_SUITE_REFUSAL)
+    reg = registry()
+    dest = _screen_read_dest(out)
+    if dest.resolve() == _v0_read_path(reg).resolve():       # defensive; the shape already differs
+        raise SystemExit("M17 EVAL REFUSED: a screen read may not write the V0 read's path.")
+    _require_clean_tree()
+    return _dev_suite_read(bundle_dir, dest, reg=reg, fixture=False,
+                           verify_bundle=_verify_screen_bundle)
+
+
 def _dev_suite_read_fixture(bundle_dir, out=None, *, allow_dev_suite=False, reg=None, names=None,
                             manifest=None, manifest_path=None, variant="int8",
-                            mode="resident_int8", k=None):
+                            mode="resident_int8", k=None, verify_bundle=None):
     """TEST-ONLY: the same reader with the surface overridable. Never called in production."""
     return _dev_suite_read(bundle_dir, out, allow_dev_suite=allow_dev_suite, reg=reg, names=names,
                            manifest=manifest, manifest_path=manifest_path, variant=variant,
-                           mode=mode, k=k, fixture=True)
+                           mode=mode, k=k, fixture=True, verify_bundle=verify_bundle)
 
 
 def _dev_suite_read(bundle_dir, out=None, *, allow_dev_suite=True, reg=None, names=None,
                     manifest=None, manifest_path=None, variant="int8", mode="resident_int8",
-                    k=None, fixture=False):
+                    k=None, fixture=False, verify_bundle=None):
     """ONE registered dev-suite read of ONE exported bundle: per-component nDCG@10 and
     Recall@10 and the equal-weight component macro of each (`_pinned.macro`).
 
@@ -726,7 +792,7 @@ def _dev_suite_read(bundle_dir, out=None, *, allow_dev_suite=True, reg=None, nam
     try:
         from evalkit import macro, topk_ids_scores
         from loader_np import M17QueryEncoder
-        bundle_digests = _verify_v0_bundle(bundle_dir, reg)
+        bundle_digests = (verify_bundle or _verify_v0_bundle)(bundle_dir, reg)
         enc = M17QueryEncoder(_check_path(bundle_dir), variant=variant, mode=mode)
         comps = []
         for name in names:
@@ -1067,6 +1133,9 @@ def main(argv=None):
     ap.add_argument("--allow-dev-suite", action="store_true")
     ap.add_argument("--allow-panel", action="store_true")
     ap.add_argument("--bundle", default=None, help="exported bundle to read the dev suite with")
+    ap.add_argument("--screen", action="store_true",
+                    help="read a trained SCREEN ARM's bundle into its own run directory "
+                         "(work/m17/runs/<run_id>/screen.json) instead of the V0 read")
     ap.add_argument("--out", default=None)
     args = ap.parse_args(argv)
     reg = registry()
@@ -1089,7 +1158,8 @@ def main(argv=None):
                              f"destination of the read (it is {V0_READ_PATH} for the V0 read). "
                              "The reader writes the result and its receipt itself and refuses to "
                              "overwrite either.")
-        rep = dev_suite_read(args.bundle, args.out, allow_dev_suite=True)
+        rep = (screen_read if args.screen else dev_suite_read)(args.bundle, args.out,
+                                                               allow_dev_suite=True)
         rep.pop("per_query_ndcg@10", None)
         rep.pop("component_identities", None)
         print(json.dumps(rep, indent=1, sort_keys=True))
