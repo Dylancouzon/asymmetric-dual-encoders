@@ -183,3 +183,8 @@ restoration after container reset, matching verifier manifest paths, exclusive a
 and cleanup before sourceSTOP. Transfer deadline reserves a bounded build-claim lease; target
 stays running only after the separately reviewed build takes responsibility for STOP. Budget
 reviewer GO, final integration recheck underway.23 focused synthetic checks passed.
+
+Both reviewers issued final GO after source pre-resume all-in quote and committed migration
+reserve checks. Real read-only preallocation passed:134.53694h/$223.817 remaining after the
+full worst-case1h concurrent migration reserve, project$721.95, balance$483.9475. Original
+allowance is not reset.23 focused checks rerun after final edits; reviewer broader38pass.

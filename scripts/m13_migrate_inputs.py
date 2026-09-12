@@ -363,6 +363,9 @@ def main():
             or target_row.get('desiredStatus')!='EXITED'
             or (target_row.get('machine') or {}).get('gpuAvailable',0)<1):
             raise RuntimeError('No free exact retained A100 target')
+        source_quote=float(source['costPerHr'])+STORAGE_PRICE
+        if not math.isfinite(source_quote) or not 0<=source_quote<=SOURCE_ALL_IN_CEILING+1e-9:
+            raise RuntimeError('Source all-in quote exceeds admission before resume')
         target_gpu_price=float(target['costPerHr'])
         if not math.isfinite(target_gpu_price) or not 0<target_gpu_price<=1.59:
             raise RuntimeError('Target GPU quote exceeds admission')
@@ -396,7 +399,10 @@ def main():
         original=json.loads((REPO/recovery.ORIGINAL).read_text())
         for name,digest in original['artifact_sha256'].items():
             if sha(REPO/name)!=digest:raise RuntimeError('Registered input changed')
-        full_reserve=prior_allocation.chain_hours(REPO)+allocation_module.migration_cost(1,1)['equivalent_hours']
+        planned=preallocation['migration']
+        expected_plan=allocation_module.migration_cost(1,1,planned['source_price_usd_per_h'],planned['target_price_usd_per_h'])
+        if planned!=expected_plan:raise RuntimeError('Committed migration reserve arithmetic changed')
+        full_reserve=prior_allocation.chain_hours(REPO)+planned['equivalent_hours']
         receipt['fresh_migration_reserve']=allocation_module._remaining(REPO,balance,full_reserve)
         receipt.update(target_model=target_model, target_gpu_count=1,
                        source_volume_in_gb=source.get('volumeInGb'), target_volume_in_gb=target.get('volumeInGb'),
