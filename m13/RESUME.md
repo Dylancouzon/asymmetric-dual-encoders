@@ -1,3 +1,23 @@
+# Pending cleanup: retire the two idle Pods
+
+User requested this reminder on 2026-09-12 after discussing idle storage costs.
+Carry this task forward at every handoff until resolved; revisit at the next safe
+maintenance point, no later than completion of the current training run.
+
+- [ ] Verify that unique earlier-run artifacts on stopped Pods `exulxoxelug5um`
+  (replacement) and `wnzk8eeqrrkw4m` (gate-chain/upload source) have verified backups.
+  Use artifact inventories and hashes; do not open protected evaluation payloads.
+- [ ] Update and review recovery/accounting code that assumes all three Pod IDs exist,
+  preserving historical receipts and cumulative costs. Do not modify the active run.
+- [ ] After those checks, resolve retirement of these two idle Pods and record the
+  outcome. This reminder does not itself authorize immediate destructive deletion;
+  reconcile the existing STOP-only instruction before terminating their disks.
+
+Both were confirmed stopped, each retaining a 500 GB volume. Estimated combined
+storage cost is $6.67/day at $0.20/GB/month (Runpod billing documentation checked
+2026-09-12). Current training does not use them. Keep the active original E Pod
+`k3aee2m68765em` out of this cleanup task.
+
 # Review handoff — 2026-09-12T14:56:52.578992+00:00
 
 Use branch `m13-stage1-execution-prep` in this worktree:
