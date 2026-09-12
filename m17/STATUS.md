@@ -34,8 +34,15 @@ both given; see `LEDGER.md`.)
    the read: unbound document vectors and query texts, V0 bundle digests not compared to the lock,
    gate accepting the pre half only, validation after scoring starts, no receipt / no-overwrite
    boundary, surface redefinable by arguments, Recall@10 missing, no success-path test.
-   **In progress:** Opus fix of all nine, then Sol review of the fix, at most one Astra P1
-   re-check, then the read.
+   Fixed in `4824f84`. Sol review of the fix (`work/m17/logs/sol_devreader_fix_review.log`):
+   seven P1 / three P2, read still blocked. Dropped one (HEAD moved because a brief was
+   committed). **In progress:** Opus fix (production entry point without fixture overrides,
+   canonical out path with an atomic receipt claim, per-component atomic persistence with an
+   identity-checked resume, dirty-tree refusal, one pytrec_eval run for both metrics, pool
+   identity parity, real cache-verification tests). Two items may need Dylan: whether the M7
+   teacher cache's shard digests are trust-on-first-use (read would be refused under
+   `verify=True`), and pinning ordered (qid, text) digests for the four text-backed components
+   (a manifest amendment). Then at most one Astra P1 re-check, then the read.
 2. **The V0 read** (registry `untrained_vocab_export_v0`: one read, descriptive, on the
    development suite). Record it as a result JSON `results/m17_v0_read.json` with `reads: 1`.
 3. **6d screen arms** (C, V, L, VL, VL-A at 4,000 steps, seed 0) per `training.decision_protocol`.
