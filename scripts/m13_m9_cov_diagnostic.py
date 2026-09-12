@@ -42,6 +42,8 @@ def main():
     import cov_probe
     import cov_eval10
     import teacher9
+    # COV caches are shared in the parent checkout, like the frozen M9 checkpoint.
+    teacher9.ENC9 = Path("/home/dylan/asymetric-dual-encoders/work/enc9")
     import nano
     import datasets
     import huggingface_hub.constants

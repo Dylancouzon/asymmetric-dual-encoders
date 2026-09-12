@@ -1,0 +1,7 @@
+{
+  "status": "FAILED_BEFORE_SCORING",
+  "reason": "M13 worktree has no work/enc9; verified caches reside in parent checkout",
+  "log": "logs/m13-m9-cov-diagnostic.log",
+  "paid_compute_started": false,
+  "checkpoint_or_training_modified": false
+}
