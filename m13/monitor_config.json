@@ -64,6 +64,16 @@
       "wait_for": "gate to build handoff",
       "stale_seconds": 900,
       "recovery_receipt": "results/m13_reboot_pause.json"
+    },
+    {
+      "name": "200M build reboot continuation",
+      "receipt": "results/m13_cloud_build_resume.json",
+      "pid_file": "work/m13cloud-launchers/build_resume.pid",
+      "logs": [
+        "logs/m13-build-resume-controller.log",
+        "logs/m13-build-resume.log"
+      ],
+      "stale_seconds": 1800
     }
   ]
 }
