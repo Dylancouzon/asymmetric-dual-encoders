@@ -16,6 +16,12 @@ selection predicate (`registry.training.decision_protocol.panel_and_alias_test_r
 M17 panel each require their explicit flag AND an executable registry, and neither is to be run
 during implementation. Nothing here can reach `results/frozen_eval/untouched-*`, the reserved
 qrels caches, `work/m9reserve` or any six-set/LoTTE payload: those paths are refused by name.
+
+The dev-suite reader below is wired (`--surface dev-suite --allow-dev-suite`, or
+`allow_dev_suite=True` in-process). It serves the pinned M7/M8 suite EXACTLY as
+`results/m7_dev_manifest.json:_pinned.components` lists it, through the M7 loaders, and aborts on
+a missing or hash-mismatched component: the suite may never silently shrink. The panel reader
+is still unwritten.
 """
 from __future__ import annotations
 
@@ -25,7 +31,7 @@ from pathlib import Path
 
 import numpy as np
 
-from common import admit_read, registry, require_executable, write_json
+from common import REPO, admit_read, registry, require_executable, sha_file, write_json
 
 FORBIDDEN = ("frozen_eval/untouched-", "m9reserve", "reserved_qrels", "lotte")
 
@@ -38,6 +44,172 @@ def _check_path(p):
             raise SystemExit(f"M17 EVAL REFUSED: {p} names a protected surface ({bad!r}). "
                              "M17 has no protected access (registry.protected_access).")
     return admit_read(p)
+
+
+# ---- the pinned development suite -----------------------------------------------------------
+
+DEV_MANIFEST = REPO / "results" / "m7_dev_manifest.json"
+DEV_SUITE_REFUSAL = ("M17 EVAL REFUSED: surface 'dev-suite' needs its explicit --allow-dev-suite "
+                     "flag (allow_dev_suite=True in-process); it is a registered read, not a "
+                     "development convenience.")
+
+
+def dev_manifest(path=None):
+    """The pinned M7/M8 dev manifest. `path` is for fixtures only."""
+    return json.loads(_check_path(Path(path) if path else DEV_MANIFEST).read_text())
+
+
+def dev_components(manifest=None, path=None):
+    """`_pinned.components`, AUTHORITATIVE and in manifest order (6 components).
+
+    `dev_eval.dev_components()`'s rule: the suite may never shrink silently, so an unpinned
+    manifest is an error here rather than a smaller suite."""
+    man = dev_manifest(path) if manifest is None else manifest
+    names = (man.get("_pinned") or {}).get("components")
+    if not names:
+        raise SystemExit(f"M17 EVAL REFUSED: {DEV_MANIFEST} has no _pinned.components; the "
+                         "development suite is defined by that pinned list only.")
+    return list(names)
+
+
+def _require_dev_suite(allow_dev_suite, reg=None):
+    """The gate: an explicit opt-in AND an executable registry. No rehearsal bypass — a
+    rehearsal is synthetic and may never be pointed at a development component (common.py)."""
+    if not allow_dev_suite:
+        raise SystemExit(DEV_SUITE_REFUSAL)
+    return require_executable(reg or registry(), rehearsal=False, what="a dev-suite read")
+
+
+def _check_identity(name, entry, got):
+    """Every pinned field the loaded component can reproduce must match, or refuse by field."""
+    bad = [f"{k}: loaded {v!r}, manifest {entry[k]!r}"
+           for k, v in got.items() if k in entry and entry[k] != v]
+    if bad:
+        raise SystemExit(f"M17 EVAL REFUSED: pinned dev component {name} does not match "
+                         f"{DEV_MANIFEST}: " + "; ".join(bad) + ". A dev component may not "
+                         "change under a selection; restore it or re-pin deliberately.")
+
+
+def load_dev_component(name, *, allow_dev_suite=False, reg=None, manifest=None,
+                       manifest_path=None, with_doc_vecs=False, verify=True):
+    """One pinned component -> {doc_ids, doc_texts, q_ids, q_texts, qrels, doc_vecs, ...}.
+
+    The four text-backed components come from `m7src/devsuite.load` (its `work/dev` cache) and
+    their documents from the teacher encode cache. The two held-out slices are read from their
+    pinned JSON directly and their corpus IS the frozen pool memmap, read through
+    `prepare_data.PoolReader` — never `m7src/pool.build()`, which REBUILDS a 12.6 GiB artifact
+    (m17/CODEMAP.md). `doc_texts` is None for them; they carry pool row indices, not text.
+    """
+    man = dev_manifest(manifest_path) if manifest is None else manifest
+    names = dev_components(man)
+    if name not in names:
+        raise SystemExit(f"M17 EVAL REFUSED: {name!r} is not a pinned dev component {names}.")
+    _require_dev_suite(allow_dev_suite, reg)
+    entry = man[name]
+    comp = (_load_heldout if entry.get("corpus") == "full-pool" else _load_text_component)(
+        name, entry, verify)
+    comp["name"] = name
+    comp["n_docs"] = len(comp["doc_ids"])
+    comp["n_queries"] = len(comp["q_ids"])
+    if set(comp["qrels"]) - set(comp["q_ids"]):
+        raise SystemExit(f"M17 EVAL REFUSED: {name} has qrels for queries it does not serve.")
+    if len(comp["q_ids"]) != len(comp["q_texts"]):
+        raise SystemExit(f"M17 EVAL REFUSED: {name} has {len(comp['q_ids'])} qids and "
+                         f"{len(comp['q_texts'])} query texts.")
+    comp["doc_vecs"] = _dev_doc_vecs(comp) if with_doc_vecs else None
+    return comp
+
+
+def _load_text_component(name, entry, verify):
+    import devsuite                     # the M7 builder/cache: nq-250k, hotpotqa, the two cqadup
+    from hashing import sha, sha_stream_list
+    p = _check_path(devsuite.CACHE / f"{name}.json")
+    if not p.exists():
+        raise SystemExit(f"M17 EVAL REFUSED: pinned dev component {name} is missing ({p}). "
+                         "Rebuild it with m7src/devsuite.py; the suite may not shrink silently.")
+    doc_ids, doc_texts, q_ids, q_texts, qrels = devsuite.load(name)
+    if verify:
+        _check_identity(name, entry, {
+            "n_docs": len(doc_ids), "n_queries": len(q_ids),
+            "corpus_ids_sha256": sha_stream_list(doc_ids),
+            "corpus_text_sha256": sha_stream_list(doc_texts),
+            "qids_sha256": sha(sorted(q_ids)), "qrels_sha256": sha(qrels)})
+    return {"doc_ids": doc_ids, "doc_texts": doc_texts, "q_ids": q_ids, "q_texts": q_texts,
+            "qrels": qrels, "corpus": "text"}
+
+
+def _load_heldout(name, entry, verify):
+    # `heldout` is imported for its pinned path and the ONE shared pool-id list (both held-out
+    # components address the same 6.17M rows; a per-component copy is ~400 MB of strings and
+    # makes two callers unable to prove they share a corpus). `heldout.load` is NOT called: it
+    # rebuilds from the training mix and verifies the pool through `pool.build()`.
+    import heldout
+    from hashing import sha, sha_stream_list
+    p = _check_path(heldout.HELD / f"{name}.json")
+    if not p.exists():
+        raise SystemExit(f"M17 EVAL REFUSED: pinned dev component {name} is missing ({p}). "
+                         "Rebuild it with m7src/heldout.py; the suite may not shrink silently.")
+    b = json.loads(p.read_text())
+    if verify:
+        _check_identity(name, entry, {
+            "json_sha256": sha_file(p), "n_docs": int(b["n_docs"]),
+            "n_queries": len(b["q_ids"]), "qids_ordered_sha256": sha_stream_list(b["q_ids"]),
+            "qids_sha256": sha(sorted(b["q_ids"])),
+            "qtexts_ordered_sha256": sha_stream_list(b["q_texts"]),
+            "qrels_sha256": sha(b["qrels"])})
+    return {"doc_ids": heldout.pool_doc_ids(int(b["n_docs"])), "doc_texts": None,
+            "q_ids": b["q_ids"], "q_texts": b["q_texts"], "qrels": b["qrels"],
+            "corpus": "full-pool"}
+
+
+def _dev_doc_vecs(comp):
+    """Frozen stella document vectors: the pool memmap for the held-out slices, the M7 teacher
+    encode cache for the text-backed components (a cache hit; this is not an encode request)."""
+    if comp["corpus"] == "full-pool":
+        import prepare_data
+        pool = prepare_data.PoolReader()
+        if len(pool.vecs) != len(comp["doc_ids"]):
+            raise SystemExit(f"M17 EVAL REFUSED: the pool holds {len(pool.vecs)} rows but "
+                             f"{comp['name']} pins {len(comp['doc_ids'])}.")
+        return pool.vecs
+    import torch
+    from teacher import encode_cached
+    return encode_cached(f"dev-{comp['name']}-docs", comp["doc_texts"], prefix="",
+                         dtype=torch.float16, verbose=False)
+
+
+def dev_suite_read(bundle_dir, *, allow_dev_suite=False, reg=None, names=None, manifest=None,
+                   manifest_path=None, variant="int8", mode="resident_int8", k=100):
+    """ONE registered dev-suite read of ONE exported bundle: per-component nDCG@10 and the
+    equal-weight component macro (`_pinned.macro`).
+
+    Queries go through the released QueryTable path as int8 folded rows (`loader_np`), the
+    registered `screen_routing_surface`. Retrieval is exact dense over each component's declared
+    corpus, through the same M7 scorer (`evalkit`) every pinned dev number was computed with.
+    """
+    man = dev_manifest(manifest_path) if manifest is None else manifest
+    names = list(names or dev_components(man))
+    status = _require_dev_suite(allow_dev_suite, reg)
+    from evalkit import macro
+    from evalkit import score as evalkit_score
+    from loader_np import M17QueryEncoder
+    enc = M17QueryEncoder(_check_path(bundle_dir), variant=variant, mode=mode)
+    per_component = {}
+    for name in names:
+        c = load_dev_component(name, allow_dev_suite=True, reg=reg, manifest=man,
+                               with_doc_vecs=True)
+        per_component[name] = evalkit_score(enc.encode(c["q_texts"]), c["q_ids"], c["doc_vecs"],
+                                            c["doc_ids"], c["qrels"], k=k)
+        c["doc_vecs"] = None
+    m, means = macro(per_component)
+    return {"surface": "m7/m8 pinned development suite",
+            "components": names, "registry_status": status,
+            "bundle": str(bundle_dir), "loader": {"variant": variant, "mode": mode},
+            "ndcg@10": {"macro": m, "per_component": means,
+                        "n_queries": {n: len(v) for n, v in per_component.items()}},
+            "per_query_ndcg@10": per_component,
+            "_macro": (man.get("_pinned") or {}).get("macro"),
+            "_note": "exact dense retrieval; ANN measurements are never mixed in"}
 
 
 # ---- exact dense retrieval -----------------------------------------------------------------
@@ -294,11 +466,12 @@ def evaluate(query_vecs, doc_vecs, qrels, domains, families=None, doc_ids=None, 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--fixtures", required=True,
+    ap.add_argument("--fixtures", default=None,
                     help="directory of synthetic .npy/.json fixtures to evaluate")
     ap.add_argument("--surface", choices=("synthetic", "dev-suite", "panel"), default="synthetic")
     ap.add_argument("--allow-dev-suite", action="store_true")
     ap.add_argument("--allow-panel", action="store_true")
+    ap.add_argument("--bundle", default=None, help="exported bundle to read the dev suite with")
     ap.add_argument("--out", default=None)
     args = ap.parse_args(argv)
     reg = registry()
@@ -309,9 +482,21 @@ def main(argv=None):
                              f"--allow-{args.surface} flag; it is a registered read, not a "
                              "development convenience.")
         require_executable(reg, rehearsal=False, what=f"a {args.surface} read")
-        raise SystemExit(f"M17 EVAL REFUSED: the {args.surface} reader is not wired up in this "
-                         "pre-clock implementation. It is registered work for the execution "
-                         "session (m17/STATUS.md steps 5-6), after the lock.")
+        if args.surface == "panel":
+            raise SystemExit("M17 EVAL REFUSED: the panel reader is not wired up in this "
+                             "pre-clock implementation. It is registered work for the execution "
+                             "session (m17/STATUS.md steps 5-6), after the lock.")
+        if not args.bundle:
+            raise SystemExit("M17 EVAL REFUSED: --surface dev-suite needs --bundle, the exported "
+                             "artifact whose registered read this is.")
+        rep = dev_suite_read(args.bundle, allow_dev_suite=True, reg=reg)
+        if args.out:
+            write_json(args.out, rep)
+        rep.pop("per_query_ndcg@10", None)
+        print(json.dumps(rep, indent=1, sort_keys=True))
+        return 0
+    if not args.fixtures:
+        raise SystemExit("--fixtures is required for the synthetic surface")
     d = _check_path(Path(args.fixtures))
     fx = json.loads((d / "fixtures.json").read_text())
     rep = evaluate(np.load(d / "query_vecs.npy"), np.load(d / "doc_vecs.npy"),

@@ -6,6 +6,8 @@ development convenience.
 """
 from __future__ import annotations
 
+import json
+
 import numpy as np
 import pytest
 
@@ -180,6 +182,95 @@ def test_dev_suite_and_panel_need_their_flag_and_the_lock(monkeypatch):
     monkeypatch.setattr(E, "registry", lambda *a, **k: draft)
     with pytest.raises(SystemExit, match="registry status"):
         E.main(["--fixtures", "x", "--surface", "panel", "--allow-panel"])
+
+
+@pytest.fixture
+def synthetic_dev_suite(tmp_path, monkeypatch):
+    """A two-component pinned suite in tmp_path: one text-backed, one 'full-pool' slice.
+
+    The real components are never opened: `devsuite.CACHE` and `heldout.HELD` are redirected, and
+    the manifest the reader is pointed at is this fixture's own.
+    """
+    import devsuite
+    import heldout
+    from hashing import sha, sha_stream_list
+    monkeypatch.setattr(devsuite, "CACHE", tmp_path)
+    monkeypatch.setattr(heldout, "HELD", tmp_path)
+    text = {"doc_ids": [f"d{i}" for i in range(5)],
+            "doc_texts": [f"document {i}" for i in range(5)],
+            "q_ids": ["q0", "q1"], "q_texts": ["first query", "second query"],
+            "qrels": {"q0": {"d0": 1}, "q1": {"d3": 1}}}
+    held = {"corpus": "full-pool", "n_docs": 7, "q_ids": ["s:1", "s:2"],
+            "q_texts": ["held out one", "held out two"],
+            "qrels": {"s:1": {"4": 1}, "s:2": {"0": 1}}, "n_tokens": [3, 3], "by_source": {"s": 2}}
+    (tmp_path / "syn-text.json").write_text(json.dumps(text))
+    held_p = tmp_path / "syn-held.json"
+    held_p.write_text(json.dumps(held))
+    man = {
+        "syn-text": {"n_docs": 5, "n_queries": 2,
+                     "corpus_ids_sha256": sha(text["doc_ids"]),
+                     "corpus_text_sha256": sha(text["doc_texts"]),
+                     "qids_sha256": sha(sorted(text["q_ids"])),
+                     "qrels_sha256": sha(text["qrels"])},
+        "syn-held": {"corpus": "full-pool", "n_docs": 7, "n_queries": 2,
+                     "qids_ordered_sha256": sha_stream_list(held["q_ids"]),
+                     "qids_sha256": sha(sorted(held["q_ids"])),
+                     "qtexts_ordered_sha256": sha_stream_list(held["q_texts"]),
+                     "qrels_sha256": sha(held["qrels"]),
+                     "json_sha256": E.sha_file(held_p)},
+        "_pinned": {"components": ["syn-text", "syn-held"],
+                    "macro": "equal weight per component"},
+    }
+    p = tmp_path / "m7_dev_manifest.json"
+    p.write_text(json.dumps(man))
+    return {"manifest_path": p, "dir": tmp_path, "man": man, "text": text, "held": held}
+
+
+def test_dev_suite_reader_needs_its_opt_in_flag(synthetic_dev_suite):
+    """The gate is on the reader itself, not only on the CLI."""
+    with pytest.raises(SystemExit, match="needs its explicit --allow-dev-suite"):
+        E.load_dev_component("syn-text", manifest_path=synthetic_dev_suite["manifest_path"])
+    with pytest.raises(SystemExit, match="needs its explicit --allow-dev-suite"):
+        E.dev_suite_read("some/bundle", manifest_path=synthetic_dev_suite["manifest_path"])
+
+
+def test_dev_suite_reader_serves_the_pinned_components(synthetic_dev_suite):
+    mp = synthetic_dev_suite["manifest_path"]
+    assert E.dev_components(path=mp) == ["syn-text", "syn-held"]
+    txt = E.load_dev_component("syn-text", allow_dev_suite=True, manifest_path=mp)
+    assert (txt["n_docs"], txt["n_queries"]) == (5, 2)
+    assert txt["doc_texts"] == synthetic_dev_suite["text"]["doc_texts"]
+    assert set(txt["qrels"]) <= set(txt["q_ids"])
+    held = E.load_dev_component("syn-held", allow_dev_suite=True, manifest_path=mp)
+    assert (held["n_docs"], held["n_queries"]) == (7, 2)
+    assert held["corpus"] == "full-pool" and held["doc_texts"] is None
+    assert held["doc_ids"] == [str(i) for i in range(7)]     # pool row indices, as the qrels are
+    assert {d for v in held["qrels"].values() for d in v} <= set(held["doc_ids"])
+    assert txt["doc_vecs"] is None and held["doc_vecs"] is None    # not requested, not loaded
+
+
+def test_dev_suite_reader_refuses_a_component_that_changed_under_it(synthetic_dev_suite):
+    mp = synthetic_dev_suite["manifest_path"]
+    for name, field in (("syn-text", "corpus_text_sha256"), ("syn-held", "json_sha256")):
+        man = json.loads(mp.read_text())
+        man[name][field] = "0" * 64
+        with pytest.raises(SystemExit, match=f"pinned dev component {name} does not match"):
+            E.load_dev_component(name, allow_dev_suite=True, manifest=man)
+    # ... and the hashes are what makes it pass, so an unverified load still works
+    assert E.load_dev_component("syn-text", allow_dev_suite=True, manifest_path=mp,
+                                verify=False)["n_queries"] == 2
+
+
+def test_dev_suite_may_not_shrink_silently(synthetic_dev_suite):
+    mp = synthetic_dev_suite["manifest_path"]
+    (synthetic_dev_suite["dir"] / "syn-held.json").unlink()
+    with pytest.raises(SystemExit, match="missing"):
+        E.load_dev_component("syn-held", allow_dev_suite=True, manifest_path=mp)
+    with pytest.raises(SystemExit, match="not a pinned dev component"):
+        E.load_dev_component("cqadup-android", allow_dev_suite=True, manifest_path=mp)
+    unpinned = {k: v for k, v in json.loads(mp.read_text()).items() if k != "_pinned"}
+    with pytest.raises(SystemExit, match="no _pinned.components"):
+        E.dev_components(manifest=unpinned)
 
 
 def test_rehearsal_evaluation_stayed_synthetic(rehearsal):
