@@ -203,3 +203,9 @@ restored. The first waiting coordinator correctly failed on source binding chang
 any child dispatch. Its immutable failure is preserved. A fresh coordinator differs only
 in receipt/self-binding paths and keeps the original budget and build admission checks.
 Focused handoff/allocation checks:15 passed. Independent budget review GO (40 checks).
+
+Both independent reviewers cleared the recovery coordinator. Published39ab12d and launched
+PID43732; it published READY7b563ed and actual cumulative allocation8ed37ed, then handed
+off to buildPID43900. Migration supervisor confirmed the claim and exited PASSED. Runtime
+bootstrap passed on the original E A100; build input rehash394/72.62GB passed in57seconds.
+Full-build-preflight active. No training steps observed at this update.

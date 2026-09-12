@@ -1,3 +1,20 @@
+# Active build on original E host — 2026-09-12
+
+Build supervisor PID43900 successfully adopted k3aee2m68765em (one A100-SXM4-80GB).
+Execution commit8ed37ed. Sourcewnzk8eeqrrkw4m STOP confirmed. Migration and recovery
+handoff PASSED. Runtime bootstrap passed and final394-file rehash passed in57seconds.
+Current stage: full-build-preflight, then automatic fixed200M training. No training
+progress observed at this update. Check results/m13_cloud_build_migrated.json and
+logs/m13-build-migrated-controller.log plus logs/m13-build-migrated.log. Monitor user
+service is active. Hourly rolling backups and final backup/STOP belong to PID43900.
+Do not launch another supervisor, alter bound sources, or move the running remote HEAD.
+
+Published cumulative allocation:135.29694h/$225.0815 remaining at admission, before
+runtime/preflight deductions. Original144h/$239.56 stage allowance and$1000 ceiling
+remain unchanged. Fresh pretraining reconciliation is mandatory and automatic.
+
+Historical state follows.
+
 # Verified migration — fresh build handoff recovery
 
 All 394 destination files passed hashing; source STOP confirmed. Original E target
