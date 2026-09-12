@@ -193,3 +193,13 @@ Published8b67154, launched migrationPID38227 and waiting handoffPID38228. Exact 
 and target1GPU resumes succeeded. Remote nvidia-smi confirmsA100-SXM4-80GB/81920MiB. Shared
 root cache group reused all but6.7KB; tree group direct transfer averages roughly19MB/s.
 No training yet; target remains reserved for automatic adoption.
+
+## Completed migration and fresh handoff
+
+The direct transfer completed with about24.45GB actually transferred, reusing remaining
+files. All394 destination hashes passed and source STOP was confirmed. A proposed longer
+migration allowance/takeover was abandoned without execution; temporary source edits were
+restored. The first waiting coordinator correctly failed on source binding change before
+any child dispatch. Its immutable failure is preserved. A fresh coordinator differs only
+in receipt/self-binding paths and keeps the original budget and build admission checks.
+Focused handoff/allocation checks:15 passed. Independent budget review GO (40 checks).

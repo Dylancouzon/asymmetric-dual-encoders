@@ -160,6 +160,16 @@
         "logs/m13-build-migrated.log"
       ],
       "stale_seconds": 1800
+    },
+    {
+      "name": "migration build handoff recovery",
+      "receipt": "results/m13_after_migration_recovery.json",
+      "pid_file": "work/m13cloud-launchers/after_migration_recovery.pid",
+      "logs": [
+        "logs/m13-after-migration-recovery.log"
+      ],
+      "wait_for": "cloud to cloud input migration",
+      "stale_seconds": 300
     }
   ]
 }

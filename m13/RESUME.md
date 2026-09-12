@@ -1,3 +1,18 @@
+# Verified migration — fresh build handoff recovery
+
+All 394 destination files passed hashing; source STOP confirmed. Original E target
+k3aee2m68765em retains its A100 under migration PID38227's bounded handoff lease.
+The first coordinator PID38228 failed before dispatch because temporary extension
+preparation changed its bound source. Those edits were restored; no extension or
+migration takeover ran. The original migration completed within its reviewed cap.
+
+Fresh scripts/m13_after_migration_recovery.py changes only the coordinator's receipt
+and self-binding paths. It uses results/m13_after_migration_recovery.json, PID file
+work/m13cloud-launchers/after_migration_recovery.pid and its matching log. Read actual
+receipts before action. The allocator and build supervisor remain the reviewed versions.
+
+Historical state follows.
+
 # Active migration — source zero GPU, original E host A100 reserved
 
 MigrationPID38227 and automatic build handoffPID38228 are active from pushed8b67154.
