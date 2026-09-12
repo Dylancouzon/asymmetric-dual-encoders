@@ -47,13 +47,9 @@ both given; see `LEDGER.md`.)
    Dylan's rulings (2026-09-12, `LEDGER.md`): TOFU teacher caches accepted through the dated
    `m17/tofu_disclosure.json` gate (spot-check `results/m17_teacher_spotcheck.json`); text-component
    query texts recorded-only. Reader final at `39e1ddf`, 34 tests passing. **Ready to read.**
-2. **The V0 read** (registry `untrained_vocab_export_v0`: one read, descriptive, on the
-   development suite). Launch: `bash work/m17/logs/run_v0_read.sh` on a clean tracked tree; the
-   auto-mode classifier blocks the launch, so Dylan runs it. Log `work/m17/logs/v0_read.log` is
-   silent until the final JSON; progress is `completed_components` in
-   `results/m17_v0_read.receipt.json`. Expect 20–45 min. Afterwards: set `v0_export.read` to
-   `true` in the registry as a dated entry, commit the result and receipt, ask Astra for the A6
-   descriptive sheet.
+2. **The V0 read — DONE 2026-09-12** (`f8ba8a8`, registry read_record `c687268`). Descriptive
+   only; numbers in `results/m17_v0_read.json` (nDCG@10 macro 0.615, Recall@10 macro 0.701 over
+   the six pinned components). Not a bar, not a comparison. `reads: 1`; no further V0 read.
 3. **6d screen arms** (C, V, L, VL, VL-A at 4,000 steps, seed 0) per `training.decision_protocol`.
 
 **Working model for every M17 session (Dylan, 2026-09-11):** Fable orchestrates; Opus subagents
