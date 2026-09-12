@@ -574,3 +574,33 @@ invocations (refused, crash, resume), inside the 3 h ceiling.
 **Reviews.** Codex Astra reviewed the fix (brief/report
 `research/m17-astra-6b-fix-brief-2026-09-11.md`, `…-review-…md`): two P2s, both fixed in `bfa7644`.
 A re-check with a wider read list is running; its verdict is **pending** and gates 6c.
+
+## Step 6c — executed half committed (2026-09-12)
+
+The Codex Astra re-check (`research/m17-astra-6b-recheck-review-2026-09-11.md`) cleared 6c: the
+reused stage markers are sound, no live comparison holds the old builder hash, the dated amendment
+is sufficient, nothing downstream refuses the partial-rebuild record. Verdict: proceed.
+
+Command (exit 0, log `work/m17/logs/lock_executed.log`):
+
+```
+.venv/bin/python m17src/lock.py --phase executed --build work/m17/prepared/full \
+  --v0-out work/m17/bundles/V0 --clock-started 2026-09-11T23:41:24Z
+```
+
+All five V0 gates PASS (files, artifact, encoder_spec, tokenizer, conformance). 446 vocabulary
+terms after the protected screen (445 unscreened). V0 exported with `read: false`; registry status
+`LOCKED_EXECUTABLE`. Committed and pushed as `badb048` ("M17 lock: executed half"). **V0 has not
+been read**; the one declared descriptive read on the development suite is still pending and needs
+the dev-suite reader wired in `m17src/evaluate.py` first.
+
+**On-clock preparation cost (both invocations).** The crashed `--force` invocation's stage timers
+sum to **339.9 s**, a lower bound only — `protected10.build()` runs outside those timers — plus
+**3,779.4 s** for the resume. Wall clock from clock start (2026-09-11T23:41:24Z) to build
+completion ≈ **1 h 25 m**, inside the 3 h preparation ceiling.
+
+**Owner-level note — deferred Astra P2.** On a protected-index cache miss, `protected10.build()`
+lazily imports `m10src/cov_screen.py`, which re-inserts m7src at the front of `sys.path` after our
+repair. Not fixed now: the fix touches `prepare_data.py`, whose sha the lock binds, and the finished
+build is what trains. It is a **required amendment before any future screened rebuild** — reassert
+the path order after `build()` as well, recorded as a dated `lock.amendments` entry.

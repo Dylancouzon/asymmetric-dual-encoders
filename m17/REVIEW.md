@@ -395,6 +395,18 @@ Brief: [m17-astra-6b-fix-brief](../research/m17-astra-6b-fix-brief-2026-09-11.md
 | P2-1 a legacy `train` already cached in `sys.modules` survives a path-only fix | Fixed: `common.reassert_path_order()` evicts a cached m7src `train`. |
 | P2-2 the regression test covered the helper, not the call site | Fixed: a call-site test with a stub `protected10` that fails when the production call is removed (mutation-checked). |
 
-Astra could not answer its Q1–4 on the first pass (the read list was too narrow). A re-check with
-a wider list is running: [m17-astra-6b-recheck-brief](../research/m17-astra-6b-recheck-brief-2026-09-11.md).
-**re-check: pending** — step 6c waits on its verdict.
+Astra could not answer its Q1–4 on the first pass (the read list was too narrow). A re-check with a
+wider list followed: [m17-astra-6b-recheck-brief](../research/m17-astra-6b-recheck-brief-2026-09-11.md),
+report `research/m17-astra-6b-recheck-review-2026-09-11.md`.
+
+**Re-check outcome (2026-09-12).** Q1: the only shared basenames are `train` (m7src/m17src) and
+`run_arm` (m7src/m10src); none spans all three trees. Q2: no shared-name import happens before
+`parity`, so the six reused stage markers are sound. Q3: no live comparison holds the old
+`prepare_data.py` hash — the lock compares against the amended value and the whole `lock` block is
+excluded from the registry identity — so the dated amendment is sufficient. Q4: nothing downstream
+reads or refuses the `partial rebuild` build record. **Verdict: proceed to the executed half**, with
+no fix required first.
+
+| Finding | Disposition and exit |
+|---|---|
+| P2-3 (new) on a protected-index cache miss `protected10.build()` lazily imports `m10src/cov_screen.py`, which puts m7src first again after our repair | **DEFERRED, not fixed now.** The fix changes `prepare_data.py`, whose sha the lock binds, and the finished build is what trains. Exit: required before any FUTURE screened rebuild — reassert the path order after `build()` as well (and cover path mutation during `build()` in the test), as a dated amendment. |
