@@ -28,11 +28,14 @@ both given; see `LEDGER.md`.)
 
 **Next (in order):**
 
-1. **Wire the dev-suite reader in `m17src/evaluate.py`**, which still answers
-   `M17 EVAL REFUSED: the dev-suite reader is not wired up`. This is flag-gated, registered work
-   for the execution session and is what the one declared V0 read needs. Build the real data path,
-   smoke it on the synthetic surface first, and get a Codex Astra review before the read — the
-   read is irreversible.
+1. **Dev-suite reader** — wired in `2c5321c` (gated by `--allow-dev-suite` plus the executable
+   registry; load-only real-path smoke matched all six pinned components; V0 unread). Astra review
+   (2026-09-12, `work/m17/logs/astra_devreader_review.log`) returned six P1 / three P2 that block
+   the read: unbound document vectors and query texts, V0 bundle digests not compared to the lock,
+   gate accepting the pre half only, validation after scoring starts, no receipt / no-overwrite
+   boundary, surface redefinable by arguments, Recall@10 missing, no success-path test.
+   **In progress:** Opus fix of all nine, then Sol review of the fix, at most one Astra P1
+   re-check, then the read.
 2. **The V0 read** (registry `untrained_vocab_export_v0`: one read, descriptive, on the
    development suite). Record it as a result JSON `results/m17_v0_read.json` with `reads: 1`.
 3. **6d screen arms** (C, V, L, VL, VL-A at 4,000 steps, seed 0) per `training.decision_protocol`.
