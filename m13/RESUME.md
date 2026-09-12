@@ -1,3 +1,16 @@
+# Active preflight retry on original E A100
+
+SupervisorPID50427 is RUNNING from pushedee1bd66 on k3aee2m68765em, exactoneA100.
+Receiptresults/m13_cloud_build_preflight_retry.json; controllerlog
+logs/m13-build-preflight-retry-controller.log, traininglog
+logs/m13-build-preflight-retry.log, PIDwork/m13cloud-launchers/build_preflight_retry.pid.
+Read live evidence before action; do not rerun or change bound sources. Monitor active.
+Both independent reviewers gave finalGO. Actual allocation134.8888889h/$224.4026543,
+balance482.0799693, project721.36; original ceilings unchanged. Prior attempt STOP and
+empty backup preserved. Correctedpreflight will reuse completed6.07Mdocument token cache.
+
+Historical state follows.
+
 # Preflight-only failure fixed; preparing cumulative retry
 
 PID43900 stopped target k3aee2m68765em after DEV-6 hook bookkeeping failed, before

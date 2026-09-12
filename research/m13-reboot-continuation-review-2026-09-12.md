@@ -228,3 +228,8 @@ time through validate_ready; the one-hour migration cap is unchanged. Actual pri
 replays to7.747302977812561h before the original pause interval. Failed receipt exact SHA
 2089ceb3769a9779541d14c6c3b0c4820426eb4a379d795ed5d73c93c28e750a is pinned.
 Focused22 tests passed; reviewer broader42passed. Monitor has unique retry job/receipt/PID.
+
+Both reviewers gave finalGO for the corrected DEV6 hook, historical replay, retry supervisor
+and unique monitoring. Published54eb078 then live read-only allocationPASSED134.8888889h/
+$224.4026543, balance482.0799693/project721.36. Allocationpushedee1bd66. LaunchedPID50427;
+exactoneA100resume succeeded and deploymentactive. No trainingsteps observed yet.
