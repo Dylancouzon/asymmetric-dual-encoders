@@ -49,3 +49,7 @@ paid storage are deducted by the same reviewed allocation helper. It verifies th
 quote against the prior GPU+storage ceiling, all394 local source hashes and destination
 hashes, and STOPs unconditionally. No runtime bootstrap, preflight, training or scoring.
 Separate receipt/log/PID and monitor job preserve the failed GPU attempt unchanged.
+
+CPU-only budget reviewer final GO after exact zero-GPU response validation; all original
+runtime/paid-charge bounds remain. Synthetic upload inventory (including duplicate and
+protected-path refusals), allocation and monitoring:25 tests passed.
