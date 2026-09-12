@@ -634,3 +634,17 @@ disclosed. Both rulings are Dylan's (protocol / evidence integrity); the night s
 dated disclosure keyed to the spot-check above; the reader accepts a TOFU cache only when its
 disclosure entry exists. Ruling 2: text-component query texts stay recorded-only, disclosed in the
 receipt and result; no manifest amendment. Both are recorded here before the V0 read.
+
+## 2026-09-12 — 6d launch refused: held-out slice 1,994 vs registry pin 2,000
+
+`bash work/m17/logs/run_6d.sh` (code `7292882`) started arm C; `train.py` refused at preflight:
+"held-out slice has 1994 queries, the registry pins 2000" (`work/m17/logs/6d_C.log`). Nothing
+trained, no read spent. Diagnosis dispatched read-only (cause expected: the protected screen dropped
+six held-out rows from the lock-bound build without refilling them; `training.heldout_metric` is a
+monitoring loss).
+
+**Conditional pre-approval (Dylan, 2026-09-12, before going offline):** if the diagnosis confirms
+the screen caused the shortfall and the held-out slice feeds monitoring only, the orchestrator may
+(1) make `train.py` take the held-out count from the lock-bound build manifest instead of the
+literal 2,000, (2) record a dated `lock.amendments` entry in the registry stating 1,994 after the
+screen, and (3) relaunch the screen. Otherwise hold and stop the night here.
