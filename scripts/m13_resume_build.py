@@ -37,28 +37,46 @@ def run(cmd, timeout=60, **kwargs):
 
 
 def main():
+    import argparse
     import m13_resume_allocation as recovery
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--after-cpu',action='store_true')
+    args=parser.parse_args()
+    global RESULT, ALLOC, BACKUP
+    prior_hours=0
+    log_path=REPO/'logs/m13-build-resume.log'
+    chain=(recovery.ORIGINAL,recovery.ATTEMPT,recovery.PAUSE)
+    if args.after_cpu:
+        import m13_after_cpu_allocation as after_cpu
+        RESULT=REPO/'results/m13_cloud_build_after_cpu.json'
+        ALLOC=REPO/'results/m13_build_after_cpu_allocation.json'
+        BACKUP=REPO/'work/m13cloud-build-after-cpu-backup'
+        log_path=REPO/'logs/m13-build-after-cpu.log'
+        prior_hours=after_cpu.chain_hours(REPO)
+        chain=after_cpu.CHAIN
     previous = REPO/recovery.ATTEMPT
     if sha(previous) != recovery.ATTEMPT_SHA:
         raise RuntimeError('Original interruption changed')
     prior = json.loads(previous.read_text())
     if prior.get('pid') and Path('/proc', str(prior['pid'])).exists():
         raise RuntimeError('Prior controller PID exists; inspect identity before continuing')
-    if RESULT.exists() or BACKUP.exists() or (REPO/'logs/m13-build-resume.log').exists() or (REPO/'results/m13_build_preflight.json').exists() or any((REPO/p).exists() for p in ROOTS):
+    if RESULT.exists() or BACKUP.exists() or log_path.exists() or (REPO/'results/m13_build_preflight.json').exists() or any((REPO/p).exists() for p in ROOTS):
         raise RuntimeError('Existing build evidence; no automatic rerun')
     run(['git','diff','--quiet','HEAD'], cwd=REPO)
     head = subprocess.check_output(['git','rev-parse','HEAD'], cwd=REPO,text=True).strip()
     pushed = subprocess.check_output(['git','ls-remote','--exit-code','origin','refs/heads/'+BRANCH],cwd=REPO,text=True,timeout=30).split()[0]
     if head != pushed: raise RuntimeError('Require exact pushed execution HEAD')
     allocation = json.loads(ALLOC.read_text())
-    for name in (recovery.ORIGINAL, recovery.ATTEMPT, recovery.PAUSE):
+    for name in chain:
         if allocation.get('continuation_of', {}).get(name) != sha(REPO/name):
             raise RuntimeError('Continuation does not bind preserved evidence')
     original = json.loads((REPO/recovery.ORIGINAL).read_text())
     if allocation.get('artifact_sha256') != original['artifact_sha256']:
         raise RuntimeError('Continuation bindings differ from original')
     pause = json.loads((REPO/recovery.PAUSE).read_text())
-    calculated = recovery.remaining(original, prior, pause, allocation['account_balance_usd'])
+    calculated = recovery.remaining(original, prior, pause, allocation['account_balance_usd'], continuation_hours=prior_hours)
+    if args.after_cpu and allocation.get('prior_continuation_hours') != prior_hours:
+        raise RuntimeError('Prior CPU duration differs from allocation')
     if any(allocation.get(k) != v for k,v in calculated.items()):
         raise RuntimeError('Continuation allowance arithmetic changed')
     required = ('m13/LOTTE_GATE.json','m13/LOTTE_GATE_MANIFEST.json','results/m8_lotte_pin.json',
@@ -107,18 +125,35 @@ def main():
         pods, balance = recovery.live()
         if any(p['desiredStatus'] != 'EXITED' for p in pods):
             raise RuntimeError('Require all retained Pods stopped before continuation')
-        fresh = recovery.remaining(original, prior, pause, balance)
+        fresh = recovery.remaining(original, prior, pause, balance, continuation_hours=prior_hours)
         hours = min(hours, fresh['max_hours'])
         deadline = time.monotonic()+hours*3600
         signal.alarm(int(hours*3600)-3600)
         receipt['launch_reconciliation'] = fresh
         pod=api()
-        if pod.get('desiredStatus')!='EXITED' or not 0<float(pod['costPerHr'])<=1.59: raise RuntimeError('Require stopped admitted-price Pod')
+        if pod.get('desiredStatus')!='EXITED' or not 0<=float(pod['costPerHr'])<=1.59: raise RuntimeError('Require stopped admitted-price Pod')
+        if pod.get('volumeInGb')!=500 or pod.get('containerDiskInGb')!=30 or pod.get('volumeMountPath')!='/home/dylan':
+            raise RuntimeError('Persistent volume changed')
         if float(pod['costPerHr'])+530*.1/720 > price+1e-9: raise RuntimeError('Live GPU plus storage exceeds allocated price')
-        started=True; launch_monotonic=time.monotonic(); save(); api('/start','POST')
+        if args.after_cpu:
+            capacity,count=after_cpu.gpu_capacity()
+            if capacity['desiredStatus']!='EXITED' or count<1:
+                raise RuntimeError('Retained host has no free GPU; no paid resume')
+        started=True; launch_monotonic=time.monotonic(); save()
+        if args.after_cpu:
+            payload={'query':'mutation { podResume(input: { podId: "'+pod_id+'", gpuCount: 1 }) { id desiredStatus gpuCount } }'}
+            req=urllib.request.Request('https://api.runpod.io/graphql',headers={**headers,'Content-Type':'application/json'},data=json.dumps(payload).encode())
+            with urllib.request.urlopen(req,timeout=30) as response: resumed=json.load(response)
+            resumed=(resumed.get('data') or {}).get('podResume') or {}
+            if resumed.get('id')!=pod_id or resumed.get('gpuCount')!=1:
+                raise RuntimeError('GPU resume did not return the exact one-GPU Pod')
+        else: api('/start','POST')
         endpoint_deadline=time.monotonic()+600
         while time.monotonic()<endpoint_deadline:
             pod=api(); port=(pod.get('portMappings') or {}).get('22')
+            actual_price=float(pod['costPerHr'])+530*.1/720
+            if not math.isfinite(actual_price) or actual_price>price+1e-9:
+                raise RuntimeError('Resumed GPU price exceeds allocation')
             if pod.get('publicIp') and port:
                 ssh_config.write_text('\n'.join('  HostName '+pod['publicIp'] if line.strip().startswith('HostName ') else '  Port '+str(port) if line.strip().startswith('Port ') else line for line in ssh_config.read_text().splitlines())+'\n')
                 r=subprocess.run(ssh+['true'],timeout=20,capture_output=True)
@@ -187,7 +222,13 @@ for name,want in KNOWN.items():
             run(['rsync','-a','--no-owner','--no-group','--info=progress2','--partial-dir=/home/dylan/.m13-build-partial-'+label,*flags,'--files-from='+str(listing),'-e','ssh -F '+shlex.quote(str(ssh_config)),source,dest],timeout=max(1,int(staging_deadline-time.monotonic())))
         sums=REPO/'work/m13cloud-launchers/build-resume-input-sha256.txt'; sums.write_text('\n'.join(h+'  '+p for p,h in expected.items())+'\n')
         run(scp+[str(sums),alias+':/tmp/m13-build-input-sha256.txt'])
-        run(ssh+['timeout --kill-after=30s 1800s sha256sum --check --status /tmp/m13-build-input-sha256.txt'],timeout=1840)
+        from m13_verify_uploaded import REMOTE_CODE
+        verifier=REPO/'work/m13cloud-launchers/build-verify-remote.py'; verifier.write_text(REMOTE_CODE)
+        run(scp+[str(verifier),alias+':/tmp/m13-verify-uploaded.py'])
+        run(scp+[str(REPO/'m13/build_transfer_manifest.json'),alias+':/tmp/m13-verify-manifest.json'])
+        remote_check='import hashlib,pathlib; assert hashlib.sha256(pathlib.Path("/tmp/m13-verify-uploaded.py").read_bytes()).hexdigest()=='+repr(sha(verifier))+'; assert hashlib.sha256(pathlib.Path("/tmp/m13-verify-manifest.json").read_bytes()).hexdigest()=='+repr(sha(REPO/'m13/build_transfer_manifest.json'))
+        run(ssh+['python3 -c '+shlex.quote(remote_check)])
+        run(ssh+['timeout --kill-after=30s 5400s python3 -u /tmp/m13-verify-uploaded.py'],timeout=5440)
         receipt['transfer_verified']=True; receipt['transfer_manifest_sha256']=sha(sums)
         save('full-build-preflight')
         command=ENV+'cd '+REMOTE+'; .venv/bin/python -u scripts/m13_build_preflight.py'
@@ -211,7 +252,7 @@ for name,want in KNOWN.items():
         run(ssh+['timeout --kill-after=30s 120s bash -c '+shlex.quote(check)],timeout=160)
         _, current_balance = recovery.live()
         fresh = recovery.remaining(original, prior, pause, current_balance,
-            continuation_hours=(time.monotonic()-launch_monotonic)/3600)
+            continuation_hours=prior_hours+(time.monotonic()-launch_monotonic)/3600)
         if current_balance > balance: raise RuntimeError('Funding changed during staging')
         # Deduct staging wall time AND any larger actual charges; never extend deadline.
         deadline = min(deadline, time.monotonic()+fresh['max_cost_usd']/price*3600)
@@ -222,7 +263,7 @@ for name,want in KNOWN.items():
         cmd=ENV+'cd '+REMOTE+'; .venv/bin/python -u m13src/build13.py --config m13/build_config.json --device cuda --rate '+str(rate)+' --price '+str(price)
         owned='env M13_BUILD_JOB_ID='+job+' setsid bash -c '+shlex.quote('echo $$ > '+pidfile+'; exec timeout --kill-after=30s '+str(seconds)+'s bash -c '+shlex.quote(cmd))
         BACKUP.mkdir(); (BACKUP/'rolling').mkdir(); save('training')
-        with (REPO/'logs/m13-build-resume.log').open('x') as log:
+        with log_path.open('x') as log:
             process=subprocess.Popen(ssh+[owned],stdout=log,stderr=subprocess.STDOUT)
             last_backup=time.monotonic()-3600
             backup_failures=0
@@ -275,7 +316,7 @@ for name,want in KNOWN.items():
                 'recipe_fingerprint':record['recipe_fingerprint'],'final_checkpoint_sha256':record['final_checkpoint_sha256'],'training_repeated':False}
             save('freeze-retry')
             retry='env M13_BUILD_JOB_ID='+job+' setsid bash -c '+shlex.quote('echo $$ > '+pidfile+'; exec timeout --kill-after=30s '+str(retry_seconds)+'s bash -c '+shlex.quote(cmd+' --resume'))
-            with (REPO/'logs/m13-build-resume.log').open('a') as log:
+            with log_path.open('a') as log:
                 run(ssh+[retry],timeout=retry_seconds+40,stdout=log,stderr=subprocess.STDOUT)
         success=True
     except BaseException as e: receipt['error']=type(e).__name__+': '+str(e)
