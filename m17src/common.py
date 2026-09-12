@@ -27,6 +27,10 @@ def reassert_path_order():
         if str(_p) in sys.path:
             sys.path.remove(str(_p))
         sys.path.insert(0, str(_p))
+    # A legacy `train` already cached in sys.modules would win over the path order (Astra 6b P2).
+    cached = sys.modules.get("train")
+    if cached is not None and str(getattr(cached, "__file__", "")).startswith(str(REPO / "m7src")):
+        del sys.modules["train"]
 
 
 reassert_path_order()

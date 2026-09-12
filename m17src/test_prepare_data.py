@@ -7,6 +7,7 @@ artifact or depends on a local checkpoint.
 from __future__ import annotations
 
 import json
+import types
 
 import numpy as np
 import pytest
@@ -868,10 +869,47 @@ def test_train_resolves_to_m17_after_a_legacy_module_puts_m7src_first():
     import common
     m7 = str(common.REPO / "m7src")
     saved = list(sys.path)
+    saved_train = sys.modules.get("train")
     try:
         sys.path.insert(0, m7)                          # what protected10 does at import
         assert PathFinder.find_spec("train").origin.startswith(m7)
+        legacy = types.ModuleType("train")              # ...and a legacy module already cached
+        legacy.__file__ = f"{m7}/train.py"
+        sys.modules["train"] = legacy
         common.reassert_path_order()
         assert PathFinder.find_spec("train").origin.startswith(str(common.REPO / "m17src"))
+        assert sys.modules.get("train") is not legacy   # Astra 6b P2: the cached legacy is evicted
+    finally:
+        sys.path[:] = saved
+        if saved_train is not None:
+            sys.modules["train"] = saved_train
+
+
+def test_stage_protected_restores_the_path_order_after_importing_protected10(tmp_path,
+                                                                             monkeypatch):
+    """Astra 6b P2: the call site itself. A stub `protected10` stands in for the real module
+    (whose import materializes protected payloads); m7src is put first as its import does, and
+    `build()` stops the stage right after the point where the production fix must have run."""
+    import sys
+
+    import common
+
+    class Stop(Exception):
+        pass
+
+    stub = types.ModuleType("protected10")
+    stub.build = lambda: (_ for _ in ()).throw(Stop())
+    monkeypatch.setitem(sys.modules, "protected10", stub)
+    reg = json.loads((pd.REPO / "m17" / "registry.json").read_text())
+    reg["status"] = "EXECUTABLE"
+    ctx = _Ctx(tmp_path, reg, protected=True)
+    ctx.cache_state["specs"] = []
+    m7, m17 = str(common.REPO / "m7src"), str(common.REPO / "m17src")
+    saved = list(sys.path)
+    try:
+        sys.path.insert(0, m7)
+        with pytest.raises(Stop):
+            pd.stage_protected(ctx)
+        assert sys.path.index(m17) < sys.path.index(m7)
     finally:
         sys.path[:] = saved
