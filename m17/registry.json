@@ -123,6 +123,12 @@
   "selection": "See training.decision_protocol.averaging_rule; dev-suite predicates only, endpoint eligibility checked, no panel veto. No window/weight sweep.",
   "snapshot_policy": "Keep these step-bound snapshots in addition to time-bound recovery checkpoints; preserve schedule/step identity on resume"
  },
+ "closed": {
+  "date": "2026-09-12",
+  "decision_file": "m17/screen_decision_2026-09-12.json",
+  "ruling": "Dylan: Let's close v1.1",
+  "verdict": "no_survivor"
+ },
  "data": {
   "alias_admission": "Context-valid independently checked equivalences from admitted sources; group source documents, near duplicates and same-intent query/alias-view families before discovery/training; teacher agreement alone is not a label",
   "alias_heldout_test": {
@@ -579,7 +585,7 @@
   "prefetch": 100,
   "prefix": ""
  },
- "status": "LOCKED_EXECUTABLE",
+ "status": "CLOSED_NEGATIVE_RESULT",
  "student_parameter_cap": 35000000,
  "teacher": "NovaSearch/stella_en_400M_v5",
  "teacher_revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",

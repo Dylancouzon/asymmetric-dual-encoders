@@ -694,3 +694,44 @@ table away from v1 on this surface. This is an undiagnosed failure, not evidence
 (CLAUDE.md). The measurement that would distinguish "objective regresses the table" from "endpoint
 artifact" is reading one arm's intermediate checkpoints (e.g. C at 500/1000/2000) on the suite —
 a new dev-suite read that needs a registered allocation. Night stopped here per STATUS.
+
+## 2026-09-12 — M17 CLOSED with the negative result recorded
+
+**Ruling (Dylan, 2026-09-12):** "Let's close v1.1." M17 closes on the registered STOP: the 6d
+screen verdict is `no_survivor` (`m17/screen_decision_2026-09-12.json`, arithmetic in the
+2026-09-12 entries above). No further reads, training or protected access. The released zero v1
+stays the shipped table; registry `status` is now `CLOSED_NEGATIVE_RESULT` with a dated `closed`
+object naming the ruling, the verdict and the decision file.
+
+**Clock.** The 72 h allocation started 2026-09-11T23:41:24Z and is **released unspent** beyond the
+screen: five screen arms (4,000 steps each) plus the single V0 read. No full run, no reserve spend.
+
+**What M17 leaves behind (reusable, all committed):**
+
+- `m17src/evaluate.py` — the dev-suite reader with its receipt/no-overwrite boundary, atomic
+  per-component persistence with identity-checked resume, dirty-tree refusal, registry status gate
+  and pinned-component parity. The read-allocation design is the durable part.
+- The one V0 read (`results/m17_v0_read.json`, registry `read_record`): untrained sum-init
+  vocabulary export, nDCG@10 macro 0.615, Recall@10 macro 0.701 over the six pinned components.
+- Five screen reads under `work/m17/runs/m17-<arm>-screen-s0/screen.json` (C, V, L, VL, VL-A).
+- The decision file `m17/screen_decision_2026-09-12.json` and its reference disclosure.
+- The TOFU teacher-cache disclosure gate `m17/tofu_disclosure.json` plus the spot-check
+  `results/m17_teacher_spotcheck.json`.
+- The dated held-out amendment (1,994 after the protected screen) in `lock.amendments`, and
+  `train.py` taking the held-out count from the lock-bound build manifest.
+- `m17/FINDINGS.md` lessons, `m17/REVIEW.md` dispositions, `m17/CODEMAP.md` pitfalls.
+
+**Owed if anyone reopens v1.1:**
+
+1. A **dated v1 eligibility reference with numbers** — the registry's
+   `training.decision_protocol.eligibility` says "vs v1" but names no file or values; the screen
+   used `results/m7_dev_audit_full.json` `per_component_unrounded["p35w-2m-s2500|int8|pool-sqrt"]`
+   (macro 0.615318) under a disclosure, not a registration.
+2. A **registered diagnostic read allocation for intermediate checkpoints** (e.g. arm C at
+   500/1000/2000 on the pinned suite). All screen reads are spent; this is the measurement that
+   separates "the registered objective regresses the table" from an endpoint artifact. Cheaper
+   non-read checks first: evaluate the objective on the V0 table itself, and compare the cached
+   teacher query targets against stella's live query encoding on a sample.
+3. A **recipe anchor weight set from measured drift** — at 1e-3 the anchor was inert
+   (1.6e-6 of the loss) while arm C drifted 10.1 % of element RMS by step 4,000. Any second screen
+   needs the weight derived from that measurement and pre-registered with a date before the run.
