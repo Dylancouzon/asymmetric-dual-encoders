@@ -242,6 +242,11 @@ def _load_heldout(name, entry, verify):
             "corpus": "full-pool"}
 
 
+# Ruling 2 (Dylan, 2026-09-12, m17/LEDGER.md): the four text-backed components' ordered query
+# texts stay RECORDED-ONLY — the manifest is not amended to pin a digest to itself.
+QUERY_TEXT_RECORDED_ONLY = "recorded_only (owner ruling 2026-09-12, LEDGER)"
+
+
 def _query_identity(name, entry, comp):
     """The ordered (qid, text) pairs this read actually scores.
 
@@ -260,12 +265,21 @@ def _query_identity(name, entry, comp):
             "query_pairs_sha256": sha_stream_list(f"{q}\x00{t}" for q, t
                                                   in zip(comp["q_ids"], comp["q_texts"])),
             "pinned_fields_verified": verified,
+            "query_text_binding": ("verified" if "qtexts_ordered_sha256" in entry
+                                   else QUERY_TEXT_RECORDED_ONLY),
             "_note": ("ordered query identity verified against the manifest" if verified else
                       "the manifest pins no ordered query identity for this component; the "
                       "digests above are RECORDED, not verified")}
 
 
 _POOL_VERIFIED = {}
+
+
+def _reset_pool_memo():
+    """Every read ATTEMPT re-hashes the pool. The digest is shared by the two held-out
+    components of one attempt only: an in-process retry after a same-size pool replacement used
+    to be answered from the previous attempt's digest (Astra dev-reader re-check P1)."""
+    _POOL_VERIFIED.clear()
 
 
 def _pool_identity(man, n_docs):
@@ -322,6 +336,55 @@ def _pool_identity(man, n_docs):
                        "verified_against": "results/m7_dev_manifest.json:_pinned.pool"}
 
 
+# ---- Ruling 1: the disclosed trust-on-first-use teacher caches ------------------------------
+
+TOFU_DISCLOSURE = REPO / "m17" / "tofu_disclosure.json"
+# The two refusals `m7src/teacher.py` raises for trust-on-first-use bytes (shards, then the
+# stitched combined.f16). Nothing else is accepted here: a changed shard, a bad stitch, a shard
+# layout change or a missing shard is still a refusal.
+TOFU_MARKS = ("predate hash recording", "predates hash recording")
+
+
+def _is_tofu_refusal(exc):
+    msg = str(getattr(exc, "code", exc) or "")
+    return msg.startswith("ENCODE CACHE REFUSED:") and any(m in msg for m in TOFU_MARKS)
+
+
+def _disclosed_tofu(exc, d, n_shards):
+    """The dated owner disclosure for cache dir `d`, or a re-raise of `exc`.
+
+    Ruling 1 (Dylan, 2026-09-12, m17/LEDGER.md) accepts the four stella dev caches whose shard
+    and stitch digests were adopted from their own bytes, keyed to the spot-check recorded in
+    `m17/tofu_disclosure.json`. The disclosure is an ANCHOR, not a new "trusted" digest: it
+    carries the digests as `shards.json` recorded them, every shard of the cache must still
+    equal its disclosed digest, and the bytes actually scored are re-hashed against the
+    disclosure by the caller. An undisclosed cache, a disclosure that no longer matches the
+    cache's own manifest, or any other refusal reason still refuses.
+    """
+    if not _is_tofu_refusal(exc) or not TOFU_DISCLOSURE.exists():
+        raise exc
+    disc = json.loads(_check_path(TOFU_DISCLOSURE).read_text())
+    entry = (disc.get("caches") or {}).get(d.name)
+    if not entry:
+        raise exc
+    man = json.loads((d / "shards.json").read_text())
+    now = {f"shard_{sid}.npy": rec.get("sha256") for sid, rec in (man.get("shards") or {}).items()
+           if int(sid) < n_shards}
+    if entry.get("shards") != now:
+        raise SystemExit(f"M17 EVAL REFUSED: {d} is disclosed in {TOFU_DISCLOSURE} but its shard "
+                         "digests are no longer the disclosed ones. The disclosure covers the "
+                         "bytes the spot-check examined, not whatever the cache holds now.")
+    expected = (entry.get("combined") if n_shards > 1
+                else entry["shards"]["shard_00000.npy"])
+    if not expected:
+        raise SystemExit(f"M17 EVAL REFUSED: {TOFU_DISCLOSURE} discloses no digest for the bytes "
+                         f"{d} would actually score ({n_shards} shards).")
+    return {"disclosure": str(TOFU_DISCLOSURE),
+            "disclosure_sha256": sha_file(TOFU_DISCLOSURE),
+            "ruling": disc.get("ruling"), "expected_sha256": expected,
+            "spotcheck": disc.get("spotcheck")}
+
+
 def _teacher_doc_vecs(comp, man=None):
     """The M7 teacher encode cache for a text-backed component: a cache HIT, never an encode.
 
@@ -332,7 +395,10 @@ def _teacher_doc_vecs(comp, man=None):
     `verify=True` (Sol dev-reader-fix review P1): `encode_cached` REFUSES a shard or a stitched
     `combined.f16` that predates hash recording (trust-on-first-use) and re-hashes every
     pre-existing shard, so the vectors behind a registered number cannot be bytes that nothing
-    ever checked. The teacher identity is pinned too: the cache key already binds model,
+    ever checked. The ONE exception is a cache named in `m17/tofu_disclosure.json` under Ruling 1
+    (Dylan, 2026-09-12): its disclosed digests must still equal the cache's own `shards.json`,
+    and the bytes scored are re-hashed against the disclosed digest here.
+    The teacher identity is pinned too: the cache key already binds model,
     revision, pooling, prefix and max_length, and the manifest's `_pinned.active_encoder` repo,
     revision and dimension are compared here.
     """
@@ -353,8 +419,16 @@ def _teacher_doc_vecs(comp, man=None):
         raise SystemExit(f"M17 EVAL REFUSED: the teacher encode cache {d} is missing "
                          f"{len(absent)} of {n_shards} shards for {comp['name']}. The registered "
                          "read consumes cached document vectors; it does not encode them.")
-    vecs = teacher.encode_cached(name, texts, prefix="", dtype=torch.float16, verbose=False,
-                                 verify=True)
+    try:
+        vecs = teacher.encode_cached(name, texts, prefix="", dtype=torch.float16, verbose=False,
+                                     verify=True)
+        disclosed = None
+    except SystemExit as exc:
+        # ONLY a disclosed trust-on-first-use cache may continue; `_disclosed_tofu` re-raises
+        # every other refusal, and the disclosed digests are checked against the bytes below.
+        disclosed = _disclosed_tofu(exc, d, n_shards)
+        vecs = teacher.encode_cached(name, texts, prefix="", dtype=torch.float16, verbose=False,
+                                     verify=False)
     if int(vecs.shape[0]) != len(comp["doc_ids"]):
         raise SystemExit(f"M17 EVAL REFUSED: {comp['name']} has {len(comp['doc_ids'])} documents "
                          f"but its encode cache holds {vecs.shape[0]} rows.")
@@ -373,13 +447,27 @@ def _teacher_doc_vecs(comp, man=None):
         raise SystemExit(f"M17 EVAL REFUSED: {path} hashes {digest[:12]} but the encode cache "
                          f"records {str(recorded)[:12]}. The cache is mutable and gitignored; a "
                          "registered number may not rest on bytes that changed under it.")
-    return vecs, {"source": "m7 teacher encode cache", "path": str(path),
-                  "vectors_sha256": digest, "cache_key": prov.get("cache_key"),
-                  "n_rows": int(vecs.shape[0]),
-                  "verified_against": ("teacher shards.json" if recorded else None),
-                  "_note": ("cache identity verified" if recorded else
-                            "the cache records no digest for these bytes; RECORDED, not "
-                            "verified")}
+    if disclosed and digest != disclosed["expected_sha256"]:
+        raise SystemExit(f"M17 EVAL REFUSED: {path} hashes {digest[:12]} but "
+                         f"{TOFU_DISCLOSURE} discloses "
+                         f"{str(disclosed['expected_sha256'])[:12]}. The owner ruling accepts "
+                         "the bytes the spot-check examined, not bytes that changed since.")
+    ident = {"source": "m7 teacher encode cache", "path": str(path),
+             "vectors_sha256": digest, "cache_key": prov.get("cache_key"),
+             "n_rows": int(vecs.shape[0]),
+             "verified_against": ("teacher shards.json" if recorded else None),
+             "_note": ("cache identity verified" if recorded else
+                       "the cache records no digest for these bytes; RECORDED, not verified")}
+    if disclosed:
+        ident.update(tofu_disclosed=True, tofu_disclosure=disclosed["disclosure"],
+                     tofu_disclosure_sha256=disclosed["disclosure_sha256"],
+                     tofu_ruling=disclosed["ruling"], tofu_spotcheck=disclosed["spotcheck"],
+                     verified_against=f"{disclosed['disclosure']} (owner ruling)",
+                     _note="trust-on-first-use cache accepted under the dated owner disclosure; "
+                           "the scored bytes were re-hashed against the disclosed digest")
+    else:
+        ident["tofu_disclosed"] = False
+    return vecs, ident
 
 
 def _dev_doc_vecs(comp, man):
@@ -463,12 +551,21 @@ def _claim_receipt(receipt_p):
     """Claim the one read ATOMICALLY. `O_CREAT|O_EXCL` cannot be raced the way an existence
     test can: exactly one process creates the receipt (Sol dev-reader-fix review P1)."""
     receipt_p.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        fd = os.open(receipt_p, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
-    except FileExistsError:
-        return False
-    os.close(fd)
-    return True
+    for attempt in (0, 1):
+        try:
+            fd = os.open(receipt_p, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+        except FileExistsError:
+            # A ZERO-BYTE receipt is an abandoned claim: a refused or killed preflight created it
+            # and never persisted a receipt, so it records no read and blocks every later attempt
+            # (Astra dev-reader re-check P1). `O_EXCL` cannot truncate-and-continue, so the empty
+            # file is removed and the claim retried exactly once.
+            if attempt == 0 and receipt_p.exists() and receipt_p.stat().st_size == 0:
+                receipt_p.unlink(missing_ok=True)
+                continue
+            return False
+        os.close(fd)
+        return True
+    return False
 
 
 # Everything a continuation must reproduce EXACTLY. Anything else is a different read.
@@ -602,6 +699,7 @@ def _dev_suite_read(bundle_dir, out=None, *, allow_dev_suite=True, reg=None, nam
     in `started` or `failed` by an interrupted attempt is CONTINUED — the remaining components
     only — when every recorded identity matches this preflight, and refused otherwise.
     """
+    _reset_pool_memo()       # a pool digest is shared WITHIN one attempt only (re-check P1)
     status = _require_dev_suite(allow_dev_suite, reg)
     reg = reg or registry()
     man = dev_manifest(manifest_path) if manifest is None else manifest
@@ -636,34 +734,35 @@ def _dev_suite_read(bundle_dir, out=None, *, allow_dev_suite=True, reg=None, nam
                                    with_doc_vecs=True, strict=not fixture)
             c["doc_texts"] = None        # the vectors are loaded; the texts are not scored
             comps.append(c)
+        components = {c["name"]: {"manifest_entry_sha256": sha_json(man[c["name"]]),
+                                  "manifest_hashes": {kk: vv for kk, vv in man[c["name"]].items()
+                                                      if kk.endswith("_sha256")},
+                                  "n_docs": c["n_docs"], "n_queries": c["n_queries"],
+                                  "queries": c["queries"],
+                                  "document_vectors": c["doc_vec_identity"]} for c in comps}
+        receipt = {"_schema": "m17-dev-suite-read-receipt-v1", "state": "started", "reads": 1,
+                   "surface": "m7/m8 pinned development suite", "components": names,
+                   "registry_status": status, "bundle": str(bundle_dir),
+                   "bundle_digests": bundle_digests,
+                   "loader": {"variant": variant, "mode": mode}, "retrieval_depth": depth,
+                   "dev_manifest_sha256": (None if fixture else sha_file(DEV_MANIFEST)),
+                   "component_identities": components, "fixture": bool(fixture),
+                   "git_sha": _git_sha(), "git_porcelain": ("" if fixture else _git_porcelain()),
+                   "started_utc": _utc(), "out": str(out),
+                   "completed_components": [], "metrics": {}}
+        if prior is not None:
+            done = _check_resumable(prior, receipt, receipt_p)
+            receipt.update(metrics=done, completed_components=[n for n in names if n in done],
+                           started_utc=prior.get("started_utc") or receipt["started_utc"],
+                           resumed_utc=_utc(), resumed_from=prior.get("state"))
+        write_json(receipt_p, receipt)          # the first persistence; the claim is now a read
     except BaseException:
         # An empty claim is not a spent read: release it so the refusal can be fixed and the
-        # read attempted again.
+        # read attempted again. EVERY refusal between the claim and that first persistence is
+        # covered — the git-status and resume checks included (Astra dev-reader re-check P1).
         if claimed and receipt_p.exists() and receipt_p.stat().st_size == 0:
-            receipt_p.unlink()
+            receipt_p.unlink(missing_ok=True)
         raise
-    components = {c["name"]: {"manifest_entry_sha256": sha_json(man[c["name"]]),
-                              "manifest_hashes": {kk: vv for kk, vv in man[c["name"]].items()
-                                                  if kk.endswith("_sha256")},
-                              "n_docs": c["n_docs"], "n_queries": c["n_queries"],
-                              "queries": c["queries"],
-                              "document_vectors": c["doc_vec_identity"]} for c in comps}
-    receipt = {"_schema": "m17-dev-suite-read-receipt-v1", "state": "started", "reads": 1,
-               "surface": "m7/m8 pinned development suite", "components": names,
-               "registry_status": status, "bundle": str(bundle_dir),
-               "bundle_digests": bundle_digests,
-               "loader": {"variant": variant, "mode": mode}, "retrieval_depth": depth,
-               "dev_manifest_sha256": (None if fixture else sha_file(DEV_MANIFEST)),
-               "component_identities": components, "fixture": bool(fixture),
-               "git_sha": _git_sha(), "git_porcelain": ("" if fixture else _git_porcelain()),
-               "started_utc": _utc(), "out": str(out),
-               "completed_components": [], "metrics": {}}
-    if prior is not None:
-        done = _check_resumable(prior, receipt, receipt_p)
-        receipt.update(metrics=done, completed_components=[n for n in names if n in done],
-                       started_utc=prior.get("started_utc") or receipt["started_utc"],
-                       resumed_utc=_utc(), resumed_from=prior.get("state"))
-    write_json(receipt_p, receipt)
 
     # ---- scoring: one retrieval run per component, both metrics from it ----
     try:

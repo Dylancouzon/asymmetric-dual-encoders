@@ -458,3 +458,33 @@ Six P1s, three P2s, one P3 (retain). All dispositioned below; every code change 
 passed, `pytest -q m17src` = 320 passed, 4 failed (the pre-existing registry-status four). The V0
 read stays unspent (`read: false`) and is now blocked on TWO owner decisions: the TOFU teacher
 caches (P1-3) and whether the four text components' query texts are pinned (P1-2).
+
+## Codex Astra — dev-suite reader re-check (2026-09-12)
+
+Log: `work/m17/logs/astra_devreader_recheck.log` (gitignored). Read-only, over the Astra and Sol
+fixes above. Three P1s, two P2s, plus a disposition table for the original nine. Both owner
+rulings landed in `m17/LEDGER.md` the same day; this round is the last code before the V0 read.
+
+| Finding | Disposition and exit |
+|---|---|
+| P1-1 a concurrent process could "resume" a live read and overwrite its checkpoints | **NOT FIXED — operational.** The V0 read is one orchestrated detached process (`work/m17/logs/run_v0_read.sh`); no second process is started, and the launcher is the only sanctioned entry. An advisory whole-run lock would be new machinery for a risk the operating procedure already excludes. |
+| P1-2 an orphaned EMPTY claim blocks the read forever; a git-status refusal escapes cleanup | **Fixed.** `_claim_receipt` treats a zero-byte receipt as an abandoned claim: it removes it and re-claims once under the same `O_CREAT\|O_EXCL` semantics (`O_EXCL` cannot truncate-and-continue). The preflight `try` now extends through receipt construction — `_git_sha`, `_git_porcelain`, `_check_resumable` — to the FIRST `write_json` of the receipt, so every refusal in between releases the empty claim. Test: `test_an_orphaned_empty_claim_is_reclaimed_and_a_late_refusal_releases_it`. `m17src/evaluate.py`, `m17src/test_evaluate.py` |
+| P1-3 the pool digest memo survives across attempts | **Fixed.** `_reset_pool_memo()` is called at the start of every `_dev_suite_read` attempt, so the 12.6 GiB digest is shared by the two held-out components of ONE attempt only. The end-to-end test poisons `_POOL_VERIFIED` and asserts the reader clears it (it fails without the production call); `test_pool_identity_refuses_a_changed_pool_…` now uses that production reset instead of a test-only `clear()`. `m17src/evaluate.py`, `m17src/test_evaluate.py` |
+| P2-4 no operative protocol-hash matching before the claim | **NOT FIXED.** `m17/registry.json` is committed and the read refuses a dirty tree, so a post-lock protocol change is a visible commit recorded in the receipt's `git_sha`; protocol changes are owner-only and dated (CLAUDE.md). A second digest comparison would restate the lock, not add a check. |
+| P2-5 receipt writes are atomic but not fsynced | **NOT FIXED.** Single-box run with resume: a machine crash loses at most the components since the last persisted checkpoint, which the continuation re-scores under the identity comparison. Durability against power loss buys nothing the resume path does not already provide. |
+| Original nine (Astra dev-reader review) | Re-check dispositions: P1-1 **partial** (residual = P2-4 above, not fixed); P1-2 **closed**; P1-3 **partial** (TOFU refusal stands; now gated by the dated disclosure under Ruling 1, and the memo issue is P1-3 above); P1-4 **owner-ruled** — Ruling 2 keeps the four text components' query texts recorded-only, labelled `query_text_binding: "recorded_only (owner ruling 2026-09-12, LEDGER)"` in the receipt and the result, with the two held-out components `"verified"`; P1-5 **closed**; P1-6 **closed** by P1-2 above (P2-5 not fixed); P2-7, P2-8, P2-9 **closed**. |
+
+**Ruling 1 implementation.** `m17/tofu_disclosure.json` names the four stella dev caches, their
+per-shard digests and (where stitched) the `combined.f16` digest, copied from each cache's own
+`shards.json`, plus the SHA-256 of the spot-check summary (tracked as
+`results/m17_teacher_spotcheck.json`). `_teacher_doc_vecs` still calls
+`encode_cached(verify=True)` FIRST; only the two trust-on-first-use refusals from
+`m7src/teacher.py` are caught, and only for a cache whose disclosure entry still equals its
+current `shards.json` — then the bytes actually scored are re-hashed and compared to the
+disclosed digest. An undisclosed TOFU cache, a changed cache, or any other refusal still refuses.
+`component_identities[*].document_vectors` records `tofu_disclosed`, the disclosure file's
+SHA-256 and the ruling string. Test: `test_only_a_disclosed_tofu_cache_is_accepted`.
+
+**Owner:** M17 executing session. **Exit:** `pytest m17src/test_evaluate.py` = 34 passed;
+`pytest -q m17src` = 322 passed, 4 failed (the pre-existing registry-status four). The V0 read is
+unspent (`read: false`) and unblocked; the launcher is `work/m17/logs/run_v0_read.sh`.

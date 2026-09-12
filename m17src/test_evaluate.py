@@ -350,11 +350,13 @@ def write_teacher_cache(enc_dir, name, texts, vecs, tofu=False, corrupt=False):
 
 def test_dev_suite_read_scores_through_the_loader_and_the_m7_scorer(v0_world, tmp_path):
     out = tmp_path / "read.json"
+    E._POOL_VERIFIED["stale"] = "0" * 64   # a previous attempt's pool digest may not survive
     rep = E._dev_suite_read_fixture(v0_world["bundle"], out, allow_dev_suite=True,
                                     reg=v0_world["reg"],
                                     manifest_path=v0_world["manifest_path"])
     # "q1" retrieves its own text exactly; "d0"'s only judged document is its own self-hit,
     # which `evalkit.run_from_arrays` drops — so it is unreachable, not rank 1.
+    assert "stale" not in E._POOL_VERIFIED
     assert rep["per_query_ndcg@10"]["syn-a"] == pytest.approx({"d0": 0.0, "q1": 1.0})
     assert rep["ndcg@10"]["macro"] == pytest.approx(0.5)
     assert rep["recall@10"]["per_component"]["syn-a"] == pytest.approx(0.5)
@@ -494,6 +496,30 @@ def test_an_interrupted_receipt_continues_only_when_every_identity_matches(v0_wo
         E._dev_suite_read_fixture(v0_world["bundle"], out, **kw)
 
 
+def _boom(*a, **k):
+    raise SystemExit("M17 EVAL REFUSED: no git here")
+
+
+def test_an_orphaned_empty_claim_is_reclaimed_and_a_late_refusal_releases_it(
+        v0_world, tmp_path, monkeypatch):
+    """A zero-byte receipt records no read: it is an abandoned claim from a refused or killed
+    preflight, and every refusal before the first persistence releases it (Astra re-check P1)."""
+    out = tmp_path / "o.json"
+    kw = dict(allow_dev_suite=True, reg=v0_world["reg"],
+              manifest_path=v0_world["manifest_path"])
+    rp = E._receipt_path(out)
+    rp.write_bytes(b"")                                   # a killed preflight left this
+    assert E._claim_receipt(rp) is True                   # reclaimed, not refused
+    assert E._dev_suite_read_fixture(v0_world["bundle"], out,
+                                     **kw)["ndcg@10"]["macro"] == pytest.approx(0.5)
+    assert json.loads(rp.read_text())["state"] == "complete"
+    out2 = tmp_path / "o2.json"
+    monkeypatch.setattr(E, "_git_sha", _boom)             # refuses while the receipt is built
+    with pytest.raises(SystemExit, match="no git here"):
+        E._dev_suite_read_fixture(v0_world["bundle"], out2, **kw)
+    assert not E._receipt_path(out2).exists()
+
+
 def test_teacher_doc_vecs_serves_the_verified_cache_it_scores(v0_world):
     comp = dict(v0_world["comp"], name="syn-a", corpus="text")
     vecs, ident = E._teacher_doc_vecs(comp, v0_world["man"])
@@ -537,6 +563,37 @@ def test_teacher_doc_vecs_refuses_tofu_corrupted_wrong_shape_and_another_teacher
         E._teacher_doc_vecs(_text_comp("ok", texts), {})
 
 
+def test_only_a_disclosed_tofu_cache_is_accepted(tmp_path, monkeypatch):
+    """Ruling 1 (Dylan, 2026-09-12): a trust-on-first-use cache named in the dated disclosure is
+    loaded and its scored bytes re-hashed against the disclosed digest; a disclosure that no
+    longer matches the cache's own shards.json refuses."""
+    import teacher
+    enc = tmp_path / "enc"
+    monkeypatch.setattr(teacher, "ENC", enc)
+    texts = ["alpha document", "beta document"]
+    d = write_teacher_cache(enc, "dev-tofu-docs", texts,
+                            np.arange(2 * 4, dtype=np.float16).reshape(2, 4), tofu=True)
+    digest = teacher.sha_file(d / "shard_00000.npy")
+    disc = tmp_path / "tofu_disclosure.json"
+
+    def disclose(sha):
+        disc.write_text(json.dumps({
+            "ruling": "Dylan, 2026-09-12: accept with dated disclosure (LEDGER)",
+            "spotcheck": {"path": "work/m17/scratch/teacher_spotcheck/summary.json",
+                          "sha256": "0" * 64},
+            "caches": {d.name: {"component": "tofu", "combined": None,
+                                "shards": {"shard_00000.npy": sha}}}}))
+    monkeypatch.setattr(E, "TOFU_DISCLOSURE", disc)
+    disclose(digest)
+    _, ident = E._teacher_doc_vecs(_text_comp("tofu", texts), {})
+    assert ident["tofu_disclosed"] is True and ident["vectors_sha256"] == digest
+    assert ident["tofu_disclosure_sha256"] == E.sha_file(disc)
+    assert "2026-09-12" in ident["tofu_ruling"]
+    disclose("f" * 64)                       # the cache is no longer the disclosed bytes
+    with pytest.raises(SystemExit, match="no longer the disclosed ones"):
+        E._teacher_doc_vecs(_text_comp("tofu", texts), {})
+
+
 @pytest.fixture
 def tiny_pool(tmp_path, monkeypatch):
     """A 4-row stand-in for the frozen pool memmap, pinned exactly as `_pinned.pool` pins it."""
@@ -577,7 +634,7 @@ def test_pool_identity_refuses_a_changed_pool_and_another_active_encoder(tiny_po
         E._pool_identity(swapped, n)
     p = tiny_pool["dir"] / "vecs.f16"
     p.write_bytes(np.full(4 * 8, 7, dtype=np.float16).tobytes())      # same size, new content
-    E._POOL_VERIFIED.clear()
+    E._reset_pool_memo()        # the PRODUCTION per-attempt reset, not a test-only clear
     with pytest.raises(SystemExit, match="same size, different content"):
         E._pool_identity(man, n)
     p.write_bytes(b"\x00" * 8)                                        # and a truncated file
