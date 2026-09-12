@@ -628,6 +628,50 @@ def test_a_failed_export_or_parity_is_not_a_verified_freeze(tmp_path, monkeypatc
     assert out["verified"] is False and out["unverified_why"]
 
 
+def test_a_dev6_exception_preserves_training_and_resume_retries_only_freeze(tmp_path, monkeypatch):
+    """Exercise the real freeze path with synthetic DEV-6 and serving dependencies."""
+    real_freeze = BD.freeze_checkpoint
+    calls = {"dev6": 0, "export": 0}
+
+    def flaky_dev6(model, verbose=True):
+        calls["dev6"] += 1
+        if calls["dev6"] == 1:
+            raise FileNotFoundError("synthetic missing DEV-6 cache")
+        return {"macro": 0.5}
+
+    def fake_export(model, directory, max_len=512):
+        calls["export"] += 1
+        directory.mkdir(parents=True, exist_ok=True)
+        (directory / "model.onnx").write_bytes(b"synthetic ONNX artifact")
+        return {"path": str(directory)}
+
+    monkeypatch.setattr(BD.R, "dev6", flaky_dev6)
+    monkeypatch.setattr(BD.N, "export_onnx", fake_export)
+    monkeypatch.setattr(BD.N, "export_parity", lambda *a: {"min_cos": 1.0})
+    monkeypatch.setattr(BD, "fastembed_parity",
+                        lambda *a: {"served": True, "pass_min_cos_1e-4": True})
+    root = tmp_path / "dev6-retry"
+    first = _tiny_build_run(root, freeze=real_freeze)
+    assert first["status"] == "frozen_unverified"
+    assert first["complete"] is False and first["terminal"] is False
+    assert first["final_checkpoint_sha256"]
+    assert first["freeze"]["dev6_error"] == "FileNotFoundError: synthetic missing DEV-6 cache"
+    assert calls == {"dev6": 1, "export": 0}
+    receipt = root / "m13build" / "BUILD-200M" / "receipt.json"
+    assert json.loads(receipt.read_text())["status"] == "running"
+
+    def unexpected_training(*a, **k):
+        pytest.fail("completed training must not run during DEV-6 finalization retry")
+
+    monkeypatch.setattr(BD.Tr, "train_arm", unexpected_training)
+    second = _tiny_build_run(root, resume=True, freeze=real_freeze)
+    assert second["status"] == "complete" and second["complete"] and second["terminal"]
+    assert second["final_checkpoint_sha256"] == first["final_checkpoint_sha256"]
+    assert second["dose_run_examples"] == first["dose_run_examples"]
+    assert second["freeze"]["dev6"] == {"macro": 0.5}
+    assert calls == {"dev6": 2, "export": 1}
+
+
 def test_an_unverified_freeze_ends_frozen_unverified_and_the_retry_does_not_retrain(tmp_path):
     """The checkpoint is retained, `complete` is false, the record is NOT terminal, and a
     --resume run retries the freeze alone."""

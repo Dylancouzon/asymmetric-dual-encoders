@@ -169,3 +169,10 @@ Operational source `work/m13cloud-launchers/gate_chain_resume.py` sha256
 Both independent reviewers returned GO on the final takeover including the old-writer guard;
 syntax and diff checks passed. Reviews accessed only named code and metadata, with no cloud
 actions, credentials or protected payload reads. Five-minute monitoring targets the new receipt.
+
+Build readiness review found that a DEV-6 exception after training escaped the freeze guard
+and marked the completed build terminal FAILED. The narrow fix returns the existing
+FROZEN_UNVERIFIED state, preserving the checkpoint for finalization-only resume. No recipe
+or verification bar changes. All56 build tests passed; an independent reviewer ran four
+focused cases and returned GO. Parent review also GO. The new synthetic regression proves
+that resume performs no training and retains checkpoint hash and dose while retrying DEV-6.
