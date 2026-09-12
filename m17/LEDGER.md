@@ -662,3 +662,35 @@ became a data-vs-cache consistency check (slice = `heldout_idx` = cache `heldout
 `m17src/test_train.py`, `m17/registry.json`, `m17/CODEMAP.md`, this ledger. `pytest
 m17src/test_train.py -q`: 3 failed, 56 passed — the same three pre-existing registry-status
 failures. Next: relaunch the 6d screen.
+
+## 2026-09-12 — 6d screen complete; decision protocol verdict `no_survivor` (registered STOP)
+
+Screen matrix complete 2026-09-11T23:47 local (`46b37ac`; first launch refused on the held-out
+count, amended under Dylan's pre-approval above). Five arms, 4,000 steps each, seed 0, no
+divergence flag, all export gates PASS, one read each under `work/m17/runs/m17-<arm>-screen-s0/`.
+Decision file: `m17/screen_decision_2026-09-12.json`.
+
+**Reference disclosure.** The registry's `training.decision_protocol.eligibility` says "vs v1" in
+words but names no v1 numbers or file; no v1 read exists in M17. The decision used
+`results/m7_dev_audit_full.json` `per_component_unrounded["p35w-2m-s2500|int8|pool-sqrt"]` (the
+released table, `m7/FREEZE.json` sha, shipped preproc, same six components). V0 reproduces that row
+to 2.1e-5 macro, so the reference choice changes no verdict. v1 macro 0.615318.
+
+**Predicates (nDCG@10, loss vs v1; eligibility needs macro loss ≤ 0.003 and no component loss
+> 0.01).** C 0.5807 (+0.0346, 3 components fail); V 0.5810 (+0.0343, 4 fail); L 0.5936 (+0.0217,
+3 fail); VL 0.5938 (+0.0215, 3 fail); VL-A 0.5938 (+0.0215, 3 fail). Fused predicate not
+computable from the reads (no run dicts) and could not rescue a conjunction already failed. No arm
+eligible; `screen_ordering` not reached. Verdict per the registered clause: "no useful signal from
+this screen"; stop before full runs; the reserve is not spent on a second screen. Descriptive
+contrasts (decide nothing): L−C +0.0074, V−C +0.0015, VL−V +0.0055, VL−L −0.0004, VL-A−VL −0.0002.
+
+**Non-quality diagnosis (facts, no re-decision).** Same loader (`resident_int8`), same manifest,
+same fold-and-quantize call as V0; V/VL/VL-A config sha byte-identical to V0's. C starts from v1's
+unfolded checkpoint (FREEZE sha verified) and drifts 10.1 % of element RMS by step 4,000; the anchor
+weight 1e-3 contributes 1.6e-6 to the loss (inert, as registered). The screen schedule is complete
+(warmup 200, linear decay to 0 at step 4,000), not a truncated slice of the 6,000-step one. Train and
+held-out losses fall monotonically while retrieval quality falls: the registered objective moves the
+table away from v1 on this surface. This is an undiagnosed failure, not evidence against the method
+(CLAUDE.md). The measurement that would distinguish "objective regresses the table" from "endpoint
+artifact" is reading one arm's intermediate checkpoints (e.g. C at 500/1000/2000) on the suite —
+a new dev-suite read that needs a registered allocation. Night stopped here per STATUS.

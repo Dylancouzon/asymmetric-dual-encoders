@@ -1,0 +1,173 @@
+{
+  "_schema": "m17-screen-decision-v1",
+  "_what": "Mechanical application of m17/registry.json:training.decision_protocol to the complete 6d screen matrix (arms C, V, L, VL, VL-A; seed 0; 4000 steps). No new quality read was taken; every number here comes from the already-spent reads listed under `inputs`.",
+  "decided_utc": "2026-09-12T03:52:43Z",
+  "git_sha": "d10c8fbfb79f5b64dea3343ecf423459e652862e",
+  "git_sha_of_the_reads": "46b37ac4dbe1cd4eacbcdb10da7742b44fec27fd",
+  "registry_status": "LOCKED_EXECUTABLE",
+  "surface": "m7/m8 pinned development suite (six components), exact dense retrieval, int8 folded table, loader resident_int8, dev_manifest_sha256 4f991015db4407080ed9c8d1d2a85541d34b1e676aa593e510296eedca77e2ea",
+
+  "inputs": {
+    "m17/registry.json": "bbf15f0f85de141711ed5c6b60ba58c79442b7615487a077b7ac4c2738bf3eaa",
+    "results/m17_v0_read.json": "5c6a9955ce9115bf012d478cd89f051850125ccb334f0fcc0a226acd0bccc231",
+    "results/m7_dev_audit_full.json": "30284a6096c8fa1b59baa8cac0e5d0d84c04c7da52f0e0279e71e861e2105832",
+    "work/m17/runs/m17-c-screen-s0/screen.json": "1b6b6ebcc80481d61b91cb7c25283b2f487804c88ffdf4edb7dc9e2d457a50bc",
+    "work/m17/runs/m17-v-screen-s0/screen.json": "a36adf1e86674d9ee888876d607a88bbab6234dd95e404b0f75a538c6227b236",
+    "work/m17/runs/m17-l-screen-s0/screen.json": "cddae01dd5eab5a0a571c9008027acb4745441dd11952054d16b88f33c6f1f8d",
+    "work/m17/runs/m17-vl-screen-s0/screen.json": "abedd1a74f961dcbe00f0375e96f8083ab1f04e1ae73344d3882d8480bdfb5a4",
+    "work/m17/runs/m17-vl-a-screen-s0/screen.json": "3bdd4032c49ab3741849a9fb87d9ced3b06c16d4a3781975791225b098e003ff",
+    "work/m17/runs/m17-c-screen-s0/screen.receipt.json": "7d6e48fb664a4d0625239696a0e3919006db528b3630adf1b75dfde93bfd1f9b",
+    "work/m17/runs/m17-v-screen-s0/screen.receipt.json": "926496f48701184f3176b8f49924e2c470aba015b5f2fc195da0b00f3119e48d",
+    "work/m17/runs/m17-l-screen-s0/screen.receipt.json": "ceb7414113a582bcc727ce6d7c19a879c5460a0f3c2b765c17f0292efb45a589",
+    "work/m17/runs/m17-vl-screen-s0/screen.receipt.json": "8185a794457137ec4269c3f532109867fe797cabddd0302a4047dee34b3007e2",
+    "work/m17/runs/m17-vl-a-screen-s0/screen.receipt.json": "e3a7454142b32ae9867aa304631e8de1e03620258943247cf4965d6ad600caac"
+  },
+
+  "thresholds": {
+    "source": "m17/registry.json:screening_preferences_not_release_bars",
+    "general_macro_ndcg_loss_tolerance": 0.003,
+    "individual_general_component_loss_tolerance": 0.01,
+    "simple_arm_tie_band": 0.003,
+    "technical_ndcg_gain_vs_v1_target": 0.01
+  },
+
+  "reference": {
+    "question": "Which registered v1 numbers do the eligibility predicates compare against?",
+    "registry_names_no_v1_reference_file": true,
+    "registry_evidence": "m17/registry.json states the predicates only in words ('loss vs v1', training.decision_protocol.eligibility) and names no results/ file, no per-component reference set and no v1 dev-suite read record. m17/PLANNING.md likewise says 'eligibility against v1' without naming numbers. No v1 read was taken or budgeted inside M17 (no v1 bundle under work/m17/bundles/, no v1 entry in the read ledger).",
+    "used": {
+      "path": "results/m7_dev_audit_full.json",
+      "field": "per_component_unrounded[\"p35w-2m-s2500|int8|pool-sqrt\"]",
+      "why_this_row": "p35w-2m-s2500 is the released Zero v1 run (m7/FREEZE.json:run_id); results/m7_dev_audit_full.json:tables['p35w-2m-s2500'].sha256 = a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf equals m7/FREEZE.json:table_sha256; the released serving variant is int8 with preproc pool_mode 'sqrt' (m7/FREEZE.json:preproc.pool_mode), so |int8|pool-sqrt is the shipped configuration; the audit covers exactly the same six pinned components with the same query counts.",
+      "per_component_set": true,
+      "caveats": [
+        "This file is NOT named by m17/registry.json; it is the M7 audit that happens to hold the released table's read on the identical pinned suite. It is labelled exploratory selection evidence in its own _status field.",
+        "results/m7_dev_audit_full.json:tables['p35w-2m-s2500'].meta_sha256 (7eb5c066...) differs from m7/FREEZE.json:table_meta_sha256 (14f117b8...); the table bytes match, the metadata sidecar of the pool-variant sweep does not.",
+        "Corroboration: the untrained V0 export (v1 rows unchanged plus 446 sum-init rows) reproduces this reference to 2.1e-5 macro and <= 8.0e-5 on every component, which is what V0's definition predicts. The choice of reference therefore does not change any verdict below."
+      ]
+    },
+    "substitute_if_the_above_is_rejected": {
+      "path": "results/m17_v0_read.json",
+      "field": "ndcg@10",
+      "label": "SUBSTITUTE, not a registered v1 reference: V0 is the untrained extended export, explicitly 'descriptive only, never a shippable candidate' (registry training.untrained_vocab_export_v0). Deciding against it is not what the protocol says.",
+      "macro": 0.615297,
+      "note": "Every per-arm verdict below is identical under this substitute, because V0 and the v1 reference differ by <= 8.0e-5 per component."
+    },
+    "v1_macro": 0.615318,
+    "v1_per_component": {
+      "nq-250k": 0.800648,
+      "hotpotqa": 0.61282,
+      "cqadup-programmers": 0.338917,
+      "cqadup-physics": 0.39571,
+      "heldout-train": 0.631744,
+      "heldout-longq": 0.912068
+    }
+  },
+
+  "fused_macro_predicate": {
+    "required_by": "training.decision_protocol.eligibility ('AND fused_macro loss vs v1 <= general_macro_ndcg_loss_tolerance') and general_metric ('the existing four-component fused_macro')",
+    "computed": false,
+    "reason": "The five screen.json reads carry only macro/per-component nDCG@10, recall@10 and per-query nDCG@10. They contain no ranked run dicts, no retrieval scores and no BM25 runs. m12src/qfusion.py (and m7src/fusion.py) need runs of the form {qid: {docid: score}} for both the dense and the lexical side; nothing in the spent reads supplies them. Re-scoring to produce them would be a new dev-suite read, which is forbidden.",
+    "operator_note": "The registered confirmatory fusion operator for this predicate is M7's convex0 at param 0.8 (m7/FREEZE.json:fusion, dev_macro 0.5726634997854769 over the four text components). M12's DBSF@100 is a disclosed product-policy override, not this predicate.",
+    "effect_on_the_verdict": "None. Eligibility is a conjunction; every arm already fails both the dense macro term and the per-component term, so the missing fused term cannot rescue any arm."
+  },
+
+  "per_arm": {
+    "C": {
+      "macro": 0.580682,
+      "macro_loss_vs_v1": 0.034636,
+      "macro_predicate_pass": false,
+      "per_component": {"nq-250k": 0.797439, "hotpotqa": 0.556289, "cqadup-programmers": 0.322952, "cqadup-physics": 0.392721, "heldout-train": 0.512461, "heldout-longq": 0.90223},
+      "per_component_loss_vs_v1": {"nq-250k": 0.003209, "hotpotqa": 0.056531, "cqadup-programmers": 0.015966, "cqadup-physics": 0.002989, "heldout-train": 0.119284, "heldout-longq": 0.009838},
+      "components_over_0.01_loss": ["hotpotqa", "cqadup-programmers", "heldout-train"],
+      "component_predicate_pass": false,
+      "fused_macro_predicate": "not computable",
+      "technical_cqadup_programmers": 0.322952,
+      "technical_gain_vs_v1": -0.015966,
+      "eligible": false
+    },
+    "V": {
+      "macro": 0.581033,
+      "macro_loss_vs_v1": 0.034285,
+      "macro_predicate_pass": false,
+      "per_component": {"nq-250k": 0.797936, "hotpotqa": 0.556781, "cqadup-programmers": 0.324409, "cqadup-physics": 0.392958, "heldout-train": 0.513344, "heldout-longq": 0.90077},
+      "per_component_loss_vs_v1": {"nq-250k": 0.002712, "hotpotqa": 0.056039, "cqadup-programmers": 0.014508, "cqadup-physics": 0.002752, "heldout-train": 0.1184, "heldout-longq": 0.011298},
+      "components_over_0.01_loss": ["hotpotqa", "cqadup-programmers", "heldout-train", "heldout-longq"],
+      "component_predicate_pass": false,
+      "fused_macro_predicate": "not computable",
+      "technical_cqadup_programmers": 0.324409,
+      "technical_gain_vs_v1": -0.014508,
+      "eligible": false
+    },
+    "L": {
+      "macro": 0.593624,
+      "macro_loss_vs_v1": 0.021694,
+      "macro_predicate_pass": false,
+      "per_component": {"nq-250k": 0.813369, "hotpotqa": 0.589712, "cqadup-programmers": 0.330331, "cqadup-physics": 0.393411, "heldout-train": 0.541257, "heldout-longq": 0.893665},
+      "per_component_loss_vs_v1": {"nq-250k": -0.012721, "hotpotqa": 0.023108, "cqadup-programmers": 0.008586, "cqadup-physics": 0.002299, "heldout-train": 0.090487, "heldout-longq": 0.018403},
+      "components_over_0.01_loss": ["hotpotqa", "heldout-train", "heldout-longq"],
+      "component_predicate_pass": false,
+      "fused_macro_predicate": "not computable",
+      "technical_cqadup_programmers": 0.330331,
+      "technical_gain_vs_v1": -0.008586,
+      "eligible": false
+    },
+    "VL": {
+      "macro": 0.593834,
+      "macro_loss_vs_v1": 0.021484,
+      "macro_predicate_pass": false,
+      "per_component": {"nq-250k": 0.813402, "hotpotqa": 0.590185, "cqadup-programmers": 0.329888, "cqadup-physics": 0.394641, "heldout-train": 0.541227, "heldout-longq": 0.893665},
+      "per_component_loss_vs_v1": {"nq-250k": -0.012753, "hotpotqa": 0.022635, "cqadup-programmers": 0.00903, "cqadup-physics": 0.001069, "heldout-train": 0.090517, "heldout-longq": 0.018403},
+      "components_over_0.01_loss": ["hotpotqa", "heldout-train", "heldout-longq"],
+      "component_predicate_pass": false,
+      "fused_macro_predicate": "not computable",
+      "technical_cqadup_programmers": 0.329888,
+      "technical_gain_vs_v1": -0.00903,
+      "eligible": false
+    },
+    "VL-A": {
+      "macro": 0.593785,
+      "macro_loss_vs_v1": 0.021533,
+      "macro_predicate_pass": false,
+      "per_component": {"nq-250k": 0.813416, "hotpotqa": 0.590162, "cqadup-programmers": 0.329696, "cqadup-physics": 0.394639, "heldout-train": 0.541132, "heldout-longq": 0.893665},
+      "per_component_loss_vs_v1": {"nq-250k": -0.012768, "hotpotqa": 0.022659, "cqadup-programmers": 0.009222, "cqadup-physics": 0.001071, "heldout-train": 0.090613, "heldout-longq": 0.018403},
+      "components_over_0.01_loss": ["hotpotqa", "heldout-train", "heldout-longq"],
+      "component_predicate_pass": false,
+      "fused_macro_predicate": "not computable",
+      "technical_cqadup_programmers": 0.329696,
+      "technical_gain_vs_v1": -0.009222,
+      "eligible": false
+    }
+  },
+
+  "screen_ordering_walk": {
+    "clause": "training.decision_protocol.screen_ordering",
+    "status": "not reached",
+    "why": "screen_ordering ranks 'Among eligible arms'. The eligible set is empty, so the control-map walk (VL-A vs VL, then VL vs L and VL vs V, then L vs C and V vs C) selects nothing and no finalist exists.",
+    "descriptive_only_technical_contrasts_cqadup_programmers": {
+      "_note": "Recorded for the record; these decide nothing because no arm is eligible. Tie band 0.003.",
+      "VL-A minus VL": -0.000192,
+      "VL minus L": -0.000443,
+      "VL minus V": 0.005479,
+      "L minus C": 0.007379,
+      "V minus C": 0.001457
+    },
+    "descriptive_only_note": "Even if eligibility were set aside, VL-A does not beat VL (negative) and VL does not beat L (negative), so the walk would stop at L, and L's matched control is C."
+  },
+
+  "verdict": {
+    "outcome": "no_survivor",
+    "clause": "training.decision_protocol.no_survivor",
+    "clause_text": "If no arm is eligible, or C is the finalist, record 'no useful signal from this screen' and stop before full runs; the reserve is not spent on a second screen",
+    "record": "no useful signal from this screen",
+    "consequences_as_written": [
+      "Stop before the full runs.",
+      "The reserve is not spent on a second screen."
+    ],
+    "arithmetic": "Every arm's six-component dense macro loss vs v1 is between 0.0215 and 0.0347, i.e. 7x to 11x the 0.003 tolerance; every arm also loses more than 0.01 on at least three components (worst: heldout-train, 0.090 to 0.119). The eligibility conjunction fails on two independent terms for all five arms; the third term (fused_macro) is not computable from the spent reads and cannot change a conjunction that has already failed.",
+    "not_decided_here": [
+      "Why the trained arms sit below the untrained export. See the non-quality diagnosis in the accompanying report; no protocol change, re-decision or new read is implied by this file.",
+      "Whether the missing registered v1 reference is itself a protocol gap that the owner must rule on."
+    ]
+  }
+}
