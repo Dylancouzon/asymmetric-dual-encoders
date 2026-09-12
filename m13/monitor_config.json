@@ -31,11 +31,11 @@
       "stale_seconds": 900
     },
     {
-      "name": "fp16 and LoTTE runtime repair",
-      "receipt": "results/m13_cloud_gate_chain_resume.json",
-      "pid_file": "work/m13cloud-launchers/gate_chain_resume.pid",
+      "name": "fp16 and LoTTE transfer continuation",
+      "receipt": "results/m13_cloud_gate_chain_upload.json",
+      "pid_file": "work/m13cloud-launchers/gate_chain_upload.pid",
       "logs": [
-        "logs/m13-gate-chain-resume.log",
+        "logs/m13-gate-chain-upload-continuation.log",
         "logs/m13-gate-chain-upload.log",
         "logs/m13-fp16-encode.log",
         "logs/m13-lotte-gate.log"

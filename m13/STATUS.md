@@ -20,7 +20,10 @@ setup, fp16 timing and the registered observational LoTTE read, then verifies ba
 stops. Persistent-volume package installation failed with a stale file handle before encoding.
 A bounded takeover repairs the runtime on container-local disk with identical package pins;
 the original receipt remains preserved and its 17-hour deadline is not reset.
-Live receipt `results/m13_cloud_gate_chain_resume.json`, log `logs/m13-gate-chain-resume.log` and
+Runtime repair passed all pinned package/GPU checks. Transfer then encountered MFS
+file-ownership restrictions; the continuation disables ownership preservation, with file
+content still verified by SHA. Live receipt `results/m13_cloud_gate_chain_upload.json`,
+log `logs/m13-gate-chain-upload-continuation.log` and
 `logs/m13-lotte-gate.log`. It owns no full build or final six/reserved evaluation.
 Stage ceiling$28.29; revised conservative project allocation$669.52 under$1,000, including
 three retained disks. `results/m13_gate_chain_allocation.json` binds the prerequisites.

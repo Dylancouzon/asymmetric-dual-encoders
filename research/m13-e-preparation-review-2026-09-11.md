@@ -176,3 +176,18 @@ FROZEN_UNVERIFIED state, preserving the checkpoint for finalization-only resume.
 or verification bar changes. All56 build tests passed; an independent reviewer ran four
 focused cases and returned GO. Parent review also GO. The new synthetic regression proves
 that resume performs no training and retains checkpoint hash and dose while retrying DEV-6.
+
+Runtime repair passed all pinned package/import/CUDA checks. Subsequent rsync failed to
+preserve local UID/GID on MFS (`chown: Operation not permitted`). The operator paused the
+verified controller before its failure cleanup could release the GPU. A second bounded
+takeover preserves that receipt/hash and the original deadline, verifies the old process
+group and rsync child (including zombie identity), kills only the owned group, checks that
+the remote receiver exited, and reuses the already verified runtime and exact cloud HEAD
+0dfd2262075b7b1a4283117352eacd107af7811f. No bootstrap or experiment is repeated.
+
+All three rsync paths add `--no-owner --no-group --info=progress2`; content hashes remain
+mandatory. A tiny transfer of the requirements file to setup-logs passed on the actual MFS
+mount with these flags. Both independent reviewers returned GO; syntax and diff checks pass.
+Original 17-hour deadline and $28.29 cap remain unchanged. Source
+`work/m13cloud-launchers/gate_chain_upload.py` sha256
+`0d891b1f7671adb105aa1215d3e385d987df179afd8732366bce3ef26f690134`.
