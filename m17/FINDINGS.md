@@ -93,3 +93,10 @@ per-domain row caps was reached. A tenfold vocabulary would need ~275k rows (~28
 comparison and the pool is bounded by commercially licensed sources. Breadth is `narrow`
 (441 general, 3 cloud-software, 1 legal) — the Kubernetes slice contributed `k8s`,
 `kube-apiserver`, `kubernetes`. Pre-screen numbers; the on-clock screen re-derives the list.
+
+## A rehearsal that stubs the only on-clock import proves nothing about it (2026-09-12, step 6b)
+
+A pre-clock rehearsal that stubs the only on-clock import does not exercise the on-clock import
+order; the first screened build died at `parity` on it. Smoke the real import chain at least once
+before binding a source hash — the fix was one line, but it cost a dated amendment to an invariant
+build input already bound by the pre half.

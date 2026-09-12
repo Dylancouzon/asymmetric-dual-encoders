@@ -383,3 +383,18 @@ no test averages two snapshots with differing cache-artifact digests; the execut
 `--dry-run` refusal has no test. **Exit:** review loop closed (Astra → fixes → Sol, nothing
 remaining, no re-check needed). Step 6 proceeds to the pre half once the full build's
 `build_record.json` says `full build`.
+
+## Codex Astra — step 6b import fix (2026-09-11)
+
+Brief: [m17-astra-6b-fix-brief](../research/m17-astra-6b-fix-brief-2026-09-11.md). Report:
+`research/m17-astra-6b-fix-review-2026-09-11.md`. Read-only, on the `d8f2b43` fix for the
+`parity` crash. No P1; two P2s, both fixed in `bfa7644`.
+
+| Finding | Disposition and exit |
+|---|---|
+| P2-1 a legacy `train` already cached in `sys.modules` survives a path-only fix | Fixed: `common.reassert_path_order()` evicts a cached m7src `train`. |
+| P2-2 the regression test covered the helper, not the call site | Fixed: a call-site test with a stub `protected10` that fails when the production call is removed (mutation-checked). |
+
+Astra could not answer its Q1–4 on the first pass (the read list was too narrow). A re-check with
+a wider list is running: [m17-astra-6b-recheck-brief](../research/m17-astra-6b-recheck-brief-2026-09-11.md).
+**re-check: pending** — step 6c waits on its verdict.

@@ -538,3 +538,39 @@ The `--force` relaunch started at 2026-09-11T23:48:37Z via `work/m17/logs/run_sc
 auto-mode classifier refuses any command containing `--force`; Dylan authorized the flag
 explicitly and asked for a standing permission rule, written to `.claude/settings.local.json`
 (untracked). No protocol, bar or recipe change.
+
+## Step 6b — the screened rebuild, an import-order crash and a dated invariant amendment (2026-09-12)
+
+The `--force` screened build (23:48:37Z) died at the `parity` stage:
+`AttributeError: module 'train' has no attribute 'load_warm_start'`. Importing `m10src/protected10`
+inserts m7src at `sys.path[0]`, so the later lazy `import train` in `stage_parity` resolved to the
+legacy M7 driver. The unscreened build never imported protected10 and the synthetic rehearsal never
+runs the real screen, so the path had never been exercised. Log:
+`work/m17/logs/prepare_full_screen_crash1.log`.
+
+Fix `d8f2b43`: `common.reassert_path_order()` (the module-load path-ordering loop, made callable)
+is called immediately after `import protected10` in `stage_protected`. `bfa7644` added the two
+Codex Astra P2 fixes (evict a cached m7src `train`; a call-site regression test). `9dff737` updated
+five tests that assumed the real registry was still `DRAFT_NOT_EXECUTABLE` to build a draft copy;
+307 → 308 tests pass.
+
+**Amendment (dated, not a re-decision).** `prepare_data.py`'s sha is an invariant build input bound
+by the pre half, so `lock.invariant_build_inputs_sha256.prepare_data_py` was amended BY HAND from
+`f4010c28…` to `aefcf585…`, with a dated `lock.amendments` entry recording old, new, reason and the
+pre-half commit `e0a1a40`; the original block is preserved in git at `e0a1a40`. It is an amendment
+and not a re-decision because the change is import order only — no recipe, constant, protocol or
+identity changed — and it governs no observation: the crash happened before vocabulary, cache and
+manifests, and no quality surface was read.
+
+**Resume** at 2026-09-12T00:00:56Z WITHOUT `--force`: pool, domain, protected, teacher, bank and v1
+were reused (`stage_identity` does not include the builder source), `parity` → `manifests` ran, and
+`prepared -> work/m17/prepared/full` finished in 3779.4 s this invocation, RSS high-water 10.95 GiB,
+zero `Traceback|Error|FAILED|REFUSED` lines. Screen state `complete` with receipt, 1,512 rows
+dropped and refilled to 600,000; seed 0; size null; `registry_status_at_build` EXECUTABLE; manifest
+`hashes.prepare_data_py = aefcf585…`, matching the amendment. Log:
+`work/m17/logs/prepare_full_screen.log`. On-clock preparation so far ≈ 1 h 25 m across the three
+invocations (refused, crash, resume), inside the 3 h ceiling.
+
+**Reviews.** Codex Astra reviewed the fix (brief/report
+`research/m17-astra-6b-fix-brief-2026-09-11.md`, `…-review-…md`): two P2s, both fixed in `bfa7644`.
+A re-check with a wider read list is running; its verdict is **pending** and gates 6c.
