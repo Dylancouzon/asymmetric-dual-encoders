@@ -37,3 +37,8 @@ m13/monitor_config.json` as the command, `Restart=on-failure`, `RestartSec=5`, a
 `UMask=0077`. Enabled for the user session. Ten synthetic tests passed, independently
 reviewed to GO. A deliberate SIGKILL of the monitor produced one automatic restart and
 a fresh health receipt. Windows toast API calls succeeded; visual delivery was not verified.
+
+The full build now logs at most one sixth of its rolling-checkpoint step interval: about
+five minutes at the supplied planning rate, rather than total_steps/50 (about75 minutes
+at the measured rate). This changes only diagnostic printing. LoTTE already flushes shard
+starts and progress around each20,000 passages, so it needs no additional heartbeat.

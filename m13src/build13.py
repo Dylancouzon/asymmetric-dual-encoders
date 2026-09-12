@@ -656,7 +656,9 @@ def _run(ctx, config, *, device, resume, smoke_steps, batch, max_len, ckpt_every
                          loss_name=plan["objective"], eval_fn=base_eval, ckpt_path=base_ck,
                          ckpt_every=cadence(plan["total_steps"]),
                          resume_from=(str(base_ck) if resume and base_ck.exists() else None),
-                         seed=seed, log_every=max(plan["total_steps"] // 50, 1), device=device,
+                         # Keep progress visible between rolling checkpoints on multi-day builds.
+                         seed=seed, log_every=max(min(plan["total_steps"] // 50,
+                                                     cadence(plan["total_steps"]) // 6), 1), device=device,
                          batch_size=batch, cycle_ckpt_fmt=str(out_dir / "cycle{cycle}.pt"),
                          eval_state=ev, fingerprint=fp, loss_log=str(loss_log))
         state["base"] = {k: r[k] for k in ("steps_run", "start_step", "total_steps", "stopped",
