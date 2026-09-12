@@ -19,10 +19,17 @@ REPO = Path(__file__).resolve().parents[1]
 # Order matters and must be re-established even for entries Python already put on the path:
 # run as a script, `m17src` is sys.path[0], and inserting `m7src` in front of it would make
 # `import train` resolve to the LEGACY M7 driver.
-for _p in (REPO, REPO / "m7src", REPO / "m17src"):
-    if str(_p) in sys.path:
-        sys.path.remove(str(_p))
-    sys.path.insert(0, str(_p))
+def reassert_path_order():
+    """Put `m17src` back in front of `m7src`. Call after importing any legacy module that
+    inserts `m7src` at sys.path[0] (`m10src/protected10` does), or a later lazy `import train`
+    resolves to the legacy driver (the 2026-09-11 screened full build died this way at parity)."""
+    for _p in (REPO, REPO / "m7src", REPO / "m17src"):
+        if str(_p) in sys.path:
+            sys.path.remove(str(_p))
+        sys.path.insert(0, str(_p))
+
+
+reassert_path_order()
 
 # Legacy teacher modules default to bge-base; M17 lives in stella's document space only
 # (m17/CODEMAP.md, "Reuse hazards"). Set before anything imports `teacher`.

@@ -504,9 +504,9 @@ def test_the_protected_screen_gates_on_the_registry_before_importing_protected10
                                                                                  monkeypatch):
     """P1-1: the flag must not reach protected10.build() while the registry is a draft."""
     import common
-    real = json.loads((pd.REPO / "m17" / "registry.json").read_text())
-    assert real["status"] not in common.EXECUTABLE_STATUSES
-    ctx = _Ctx(tmp_path, real, protected=True)
+    draft = json.loads((pd.REPO / "m17" / "registry.json").read_text())
+    draft["status"] = "DRAFT_NOT_EXECUTABLE"     # the real registry is EXECUTABLE since 6a
+    ctx = _Ctx(tmp_path, draft, protected=True)
     ctx.cache_state["specs"] = []
     monkeypatch.delitem(__import__("sys").modules, "protected10", raising=False)
     with pytest.raises(common.NotExecutable):
@@ -856,3 +856,22 @@ def test_fresh_and_resumed_v1_vectors_are_identical(tmp_path):
     assert np.array_equal(fresh.astype(np.float32), resumed)
     assert pd.sha_array(fresh) == pd.sha_array(np.load(tmp_path / "v1_q.npy"))
     assert pd.sha_array(v1) != pd.sha_array(fresh)      # the old fp32 digest was not the stored one
+
+
+def test_train_resolves_to_m17_after_a_legacy_module_puts_m7src_first():
+    """The 2026-09-11 screened full build died at parity: `protected10` inserts m7src at
+    sys.path[0] and the lazy `import train` then found the legacy driver. `stage_protected`
+    now calls `reassert_path_order()` right after that import."""
+    import sys
+    from importlib.machinery import PathFinder      # ignores the already-imported sys.modules entry
+
+    import common
+    m7 = str(common.REPO / "m7src")
+    saved = list(sys.path)
+    try:
+        sys.path.insert(0, m7)                          # what protected10 does at import
+        assert PathFinder.find_spec("train").origin.startswith(m7)
+        common.reassert_path_order()
+        assert PathFinder.find_spec("train").origin.startswith(str(common.REPO / "m17src"))
+    finally:
+        sys.path[:] = saved

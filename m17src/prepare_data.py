@@ -54,9 +54,9 @@ from pathlib import Path
 
 import numpy as np
 
-from common import (RESULTS, WORK, admit_read, admit_write, freeze, registry,
-                    require_executable, sha_array, sha_file, sha_json, sha_text, sha_texts,
-                    write_json)
+from common import (RESULTS, WORK, admit_read, admit_write, freeze, reassert_path_order,
+                    registry, require_executable, sha_array, sha_file, sha_json, sha_text,
+                    sha_texts, write_json)
 
 import cache as m17cache                                                     # noqa: E402
 import support_manifest as sm                                                # noqa: E402
@@ -1255,6 +1255,7 @@ def stage_protected(ctx):
     require_executable(ctx.reg, rehearsal=False, what="the m10 protected screen")
     sys.path.insert(0, str(REPO / "m10src"))
     import protected10                                      # noqa: E402  (deliberately late)
+    reassert_path_order()   # protected10 put m7src first; a later `import train` must stay M17's
     idx = protected10.build()
 
     # 1. every NEW-SOURCE DOCUMENT, screened on its FULL TEXT (Astra step-5 P1-2). A document

@@ -286,6 +286,17 @@
   "_note": "step-6 lock, PRE-CLOCK half. Binds protocol, recipe, seeds, fixed manifests and the measured allocation. `pre_screen_build` prices the preparation; the executed vocabulary/tokenizer/cache identities are committed by the on-clock half (`lock.executed`) before the V0 read. Amendments are dated and preserve this block.",
   "allocation_hours_total": 59,
   "allocation_unallocated_hours": 13,
+  "amendments": [
+   {
+    "date": "2026-09-11",
+    "field": "invariant_build_inputs_sha256.prepare_data_py",
+    "new": "aefcf585a25170d52d96929563816f3761a7284ce67811a091c94dcde30b4506",
+    "observations_governed_before_amendment": "none (build did not reach vocab/cache/manifests)",
+    "old": "f4010c28ee94d8de63ed5061a99462c38100374e634c1bb072b730f0e12d5420",
+    "pre_half_commit": "e0a1a40",
+    "reason": "The first on-clock screened rebuild died at `parity` with `module 'train' has no attribute 'load_warm_start'`: `m10src/protected10` inserts m7src at sys.path[0] on import and the later lazy `import train` in `stage_parity` resolved to the legacy M7 driver. Fix: `common.reassert_path_order()` called right after `import protected10` in `stage_protected`. Import-order only; no recipe, constant, stage logic or identity field changed. No quality surface was read."
+   }
+  ],
   "clock": {
    "hard_total_hours": 72,
    "start": "an owner ruling (which invocation starts the 72 h, and what pre-clock work is exempt) is recorded in LEDGER.md before the first --protected-screen invocation; `lock.executed.clock_started` records the timestamp under that ruling"
@@ -304,7 +315,7 @@
    "exclusion_file": "a3cc09ff6a7affcf17c263553e8711ac4ec468ecd42d2968935d16a195f57c26",
    "freeze": "3a349016782021155ee8a07ba912a6bc28430c90bd42e7d92e49efca7c37eccc",
    "k8s_jsonl": "09c2cb2119332bab30ce852bc797cb7607620df67cc4cee14e2bd9ffc70f1295",
-   "prepare_data_py": "f4010c28ee94d8de63ed5061a99462c38100374e634c1bb072b730f0e12d5420",
+   "prepare_data_py": "aefcf585a25170d52d96929563816f3761a7284ce67811a091c94dcde30b4506",
    "support_manifest": "762339e4720717bb0dae381a8df9595d429b0b29b6c7fc66e7325dc57e5bea78",
    "warm_start_npz": "0f544275cbce0c22763d4cacad7078fb7e6107459a7ec5453501449e0444a204"
   },
