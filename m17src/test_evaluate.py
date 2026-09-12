@@ -7,6 +7,7 @@ development convenience.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -271,6 +272,138 @@ def test_dev_suite_may_not_shrink_silently(synthetic_dev_suite):
     unpinned = {k: v for k, v in json.loads(mp.read_text()).items() if k != "_pinned"}
     with pytest.raises(SystemExit, match="no _pinned.components"):
         E.dev_components(manifest=unpinned)
+
+
+@pytest.fixture
+def v0_world(tmp_path, monkeypatch, rehearsal):
+    """One tiny suite read end to end: the rehearsal's REAL exported bundle through `loader_np`,
+    the M7 scorer, and a two-query text component whose documents that same bundle encodes.
+
+    Nothing real is opened: `devsuite.CACHE` is redirected, the manifest is this fixture's own,
+    and `_dev_doc_vecs` is replaced so neither the teacher encode cache nor the frozen pool is
+    touched. The corpus carries an exact duplicate pair (a tie) and one query whose id IS a
+    document id (the self-hit the M7 scorer drops).
+    """
+    import devsuite
+    import export
+    from hashing import sha
+    from loader_np import M17QueryEncoder
+    bundle = Path(rehearsal["root"]) / "bundle-endpoint"
+    digests = export.gate_artifact(bundle)
+    reg = json.loads(json.dumps(E.registry()))
+    reg["status"] = "LOCKED_EXECUTABLE"
+    reg.setdefault("lock", {})["executed"] = {
+        "v0_export": {k: digests[k] for k in E.V0_EXPORT_DIGESTS}}
+    monkeypatch.setattr(devsuite, "CACHE", tmp_path)
+    comp = {"doc_ids": ["d0", "d1", "d2", "d3", "d4"],
+            "doc_texts": ["storage bucket", "cluster ingress", "cluster ingress",
+                          "vector index", "network service"],       # d1 == d2: an exact tie
+            "q_ids": ["d0", "q1"],                                  # "d0" is a self-hit
+            "q_texts": ["storage bucket", "vector index"],
+            "qrels": {"d0": {"d0": 1}, "q1": {"d3": 1}}}
+    (tmp_path / "syn-a.json").write_text(json.dumps(comp))
+    man = {"syn-a": {"n_docs": 5, "n_queries": 2,
+                     "corpus_ids_sha256": sha(comp["doc_ids"]),
+                     "corpus_text_sha256": sha(comp["doc_texts"]),
+                     "qids_sha256": sha(sorted(comp["q_ids"])),
+                     "qrels_sha256": sha(comp["qrels"])},
+           "_pinned": {"components": ["syn-a"], "macro": "equal weight per component"}}
+    mp = tmp_path / "man.json"
+    mp.write_text(json.dumps(man))
+
+    def synthetic_doc_vecs(c, m):
+        enc = M17QueryEncoder(bundle, variant="int8", mode="resident_int8")
+        return enc.encode(c["doc_texts"]), {"source": "synthetic fixture vectors"}
+
+    monkeypatch.setattr(E, "_dev_doc_vecs", synthetic_doc_vecs)
+    return {"bundle": bundle, "reg": reg, "manifest_path": mp, "man": man, "dir": tmp_path,
+            "digests": digests}
+
+
+def test_dev_suite_read_scores_through_the_loader_and_the_m7_scorer(v0_world, tmp_path):
+    out = tmp_path / "read.json"
+    rep = E.dev_suite_read(v0_world["bundle"], out, allow_dev_suite=True, reg=v0_world["reg"],
+                           manifest_path=v0_world["manifest_path"], fixture=True)
+    # "q1" retrieves its own text exactly; "d0"'s only judged document is its own self-hit,
+    # which `evalkit.run_from_arrays` drops — so it is unreachable, not rank 1.
+    assert rep["per_query_ndcg@10"]["syn-a"] == pytest.approx({"d0": 0.0, "q1": 1.0})
+    assert rep["ndcg@10"]["macro"] == pytest.approx(0.5)
+    assert rep["recall@10"]["per_component"]["syn-a"] == pytest.approx(0.5)
+    assert rep["recall@10"]["macro"] == pytest.approx(0.5)
+    assert rep["reads"] == 1 and rep["bundle_digests"] == {k: v0_world["digests"][k]
+                                                           for k in E.V0_EXPORT_DIGESTS}
+    q = rep["component_identities"]["syn-a"]["queries"]
+    assert len(q["query_pairs_sha256"]) == 64 and q["pinned_fields_verified"] == []
+    assert json.loads(out.read_text())["ndcg@10"]["macro"] == pytest.approx(0.5)
+    rc = json.loads(E._receipt_path(out).read_text())
+    assert rc["state"] == "complete" and rc["reads"] == 1
+    assert rc["completed_components"] == ["syn-a"] and rc["git_sha"]
+    assert rc["bundle_digests"] == rep["bundle_digests"] and rc["started_utc"].endswith("Z")
+    assert rc["ndcg_at_10"]["macro"] == pytest.approx(0.5)
+    # the single-read boundary: no overwrite, no --force
+    with pytest.raises(SystemExit, match="already exists"):
+        E.dev_suite_read(v0_world["bundle"], out, allow_dev_suite=True, reg=v0_world["reg"],
+                         manifest_path=v0_world["manifest_path"], fixture=True)
+
+
+def test_dev_suite_read_needs_an_output_path(v0_world):
+    with pytest.raises(SystemExit, match="needs its output path"):
+        E.dev_suite_read(v0_world["bundle"], allow_dev_suite=True, reg=v0_world["reg"],
+                         manifest_path=v0_world["manifest_path"], fixture=True)
+
+
+def test_dev_suite_read_needs_the_executed_lock_half(v0_world, tmp_path):
+    """`{"status": "EXECUTABLE"}` used to pass the gate."""
+    pre = json.loads(json.dumps(v0_world["reg"]))
+    pre["status"] = "EXECUTABLE"
+    with pytest.raises(SystemExit, match="needs 'LOCKED_EXECUTABLE'"):
+        E.dev_suite_read(v0_world["bundle"], tmp_path / "a.json", allow_dev_suite=True, reg=pre,
+                         manifest_path=v0_world["manifest_path"], fixture=True)
+    no_exec = json.loads(json.dumps(v0_world["reg"]))
+    no_exec["lock"].pop("executed")
+    with pytest.raises(SystemExit, match="lock.executed.v0_export is missing"):
+        E.dev_suite_read(v0_world["bundle"], tmp_path / "b.json", allow_dev_suite=True,
+                         reg=no_exec, manifest_path=v0_world["manifest_path"], fixture=True)
+    assert not (tmp_path / "a.json").exists() and not (tmp_path / "b.json").exists()
+
+
+def test_dev_suite_read_refuses_a_bundle_that_is_not_the_locked_v0(v0_world, tmp_path):
+    swapped = json.loads(json.dumps(v0_world["reg"]))
+    swapped["lock"]["executed"]["v0_export"]["tokenizer_sha256"] = "0" * 64
+    with pytest.raises(SystemExit, match="is not the locked V0 export"):
+        E.dev_suite_read(v0_world["bundle"], tmp_path / "c.json", allow_dev_suite=True,
+                         reg=swapped, manifest_path=v0_world["manifest_path"], fixture=True)
+    assert not (tmp_path / "c.json").exists()
+
+
+def test_the_production_surface_cannot_be_redefined_by_arguments(v0_world, tmp_path):
+    reg, man = v0_world["reg"], v0_world["man"]
+    # an alternative manifest is fixture-only, and it refuses before the real manifest is opened
+    with pytest.raises(SystemExit, match="fixture-only argument"):
+        E.dev_suite_read(v0_world["bundle"], tmp_path / "d.json", allow_dev_suite=True, reg=reg,
+                         manifest=man)
+    full = ["syn-a", "syn-b"]
+    man2 = dict(man, **{"syn-b": {}}, _pinned={"components": full})
+    with pytest.raises(SystemExit, match="the complete pinned list"):
+        E._enforce_production_surface(reg, ["syn-a"], man2, None, None, "int8",
+                                      "resident_int8", None)
+    for variant, mode in (("fp16", "eager_fp32"), ("int8", "eager_fp32")):
+        with pytest.raises(SystemExit, match="the registered read is"):
+            E._enforce_production_surface(reg, full, man2, None, None, variant, mode, None)
+    with pytest.raises(SystemExit, match="registered retrieval depth"):
+        E._enforce_production_surface(reg, full, man2, None, None, "int8", "resident_int8", 10)
+    assert E._enforce_production_surface(reg, full, man2, None, None, "int8", "resident_int8",
+                                         None) == int(reg["serving"]["prefetch"])
+
+
+def test_a_missing_pinned_hash_field_refuses_instead_of_skipping_its_check(v0_world):
+    entry = dict(v0_world["man"]["syn-a"])
+    entry.pop("corpus_text_sha256")
+    with pytest.raises(SystemExit, match="has no \\['corpus_text_sha256'\\]"):
+        E._require_pinned_fields("syn-a", entry)
+    with pytest.raises(SystemExit, match="qtexts_ordered_sha256"):
+        E._require_pinned_fields("heldout-x", {"corpus": "full-pool"})
+    E._require_pinned_fields("syn-a", v0_world["man"]["syn-a"])
 
 
 def test_rehearsal_evaluation_stayed_synthetic(rehearsal):

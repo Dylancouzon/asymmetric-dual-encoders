@@ -17,21 +17,26 @@ M17 panel each require their explicit flag AND an executable registry, and neith
 during implementation. Nothing here can reach `results/frozen_eval/untouched-*`, the reserved
 qrels caches, `work/m9reserve` or any six-set/LoTTE payload: those paths are refused by name.
 
-The dev-suite reader below is wired (`--surface dev-suite --allow-dev-suite`, or
+The dev-suite reader below is wired (`--surface dev-suite --allow-dev-suite --out`, or
 `allow_dev_suite=True` in-process). It serves the pinned M7/M8 suite EXACTLY as
 `results/m7_dev_manifest.json:_pinned.components` lists it, through the M7 loaders, and aborts on
-a missing or hash-mismatched component: the suite may never silently shrink. The panel reader
-is still unwritten.
+a missing or hash-mismatched component: the suite may never silently shrink. It needs the
+EXECUTED lock half, verifies the bundle against `lock.executed.v0_export`, binds the query pairs
+and the document-vector bytes, preflights every component before the first score, and writes a
+durable receipt beside a result it will not overwrite. The panel reader is still unwritten.
 """
 from __future__ import annotations
 
 import argparse
+import datetime as _dt
 import json
+import subprocess
 from pathlib import Path
 
 import numpy as np
 
-from common import REPO, admit_read, registry, require_executable, sha_file, write_json
+from common import (REPO, RESULTS, admit_read, admit_write, registry, require_executable,
+                    sha_file, sha_json, write_json)
 
 FORBIDDEN = ("frozen_eval/untouched-", "m9reserve", "reserved_qrels", "lotte")
 
@@ -72,12 +77,59 @@ def dev_components(manifest=None, path=None):
     return list(names)
 
 
+V0_EXPORT_DIGESTS = ("model_npz_sha256", "tokenizer_sha256", "config_sha256")
+LOCKED = "LOCKED_EXECUTABLE"
+
+
+def _executed_v0_export(reg):
+    """`lock.executed.v0_export` with its three digests present, or a refusal."""
+    v0 = (((reg.get("lock") or {}).get("executed") or {}).get("v0_export")) or {}
+    missing = [k for k in V0_EXPORT_DIGESTS if not v0.get(k)]
+    if missing:
+        raise SystemExit(f"M17 EVAL REFUSED: lock.executed.v0_export is missing {missing}. A "
+                         "dev-suite read needs the EXECUTED lock half (m17src/lock.py --phase "
+                         "executed): the identities that were exported are what the read binds.")
+    return v0
+
+
 def _require_dev_suite(allow_dev_suite, reg=None):
-    """The gate: an explicit opt-in AND an executable registry. No rehearsal bypass — a
-    rehearsal is synthetic and may never be pointed at a development component (common.py)."""
+    """The gate: an explicit opt-in AND the EXECUTED lock half. No rehearsal bypass — a
+    rehearsal is synthetic and may never be pointed at a development component (common.py).
+
+    `EXECUTABLE` (the pre-clock half) admits preparation only; a development read is downstream
+    of the V0 export, so it needs `LOCKED_EXECUTABLE` and the executed identities themselves
+    (Astra dev-reader review P1: `{"status": "EXECUTABLE"}` used to pass).
+    """
     if not allow_dev_suite:
         raise SystemExit(DEV_SUITE_REFUSAL)
-    return require_executable(reg or registry(), rehearsal=False, what="a dev-suite read")
+    reg = reg or registry()
+    status = require_executable(reg, rehearsal=False, what="a dev-suite read")
+    if status != LOCKED:
+        raise SystemExit(f"M17 EVAL REFUSED: registry status is {status!r}; a dev-suite read "
+                         f"needs {LOCKED!r}, the executed lock half. {status!r} admits the "
+                         "on-clock preparation only.")
+    _executed_v0_export(reg)
+    return status
+
+
+def _verify_v0_bundle(bundle_dir, reg):
+    """The bundle being read must BE the locked V0 export.
+
+    `export.gate_artifact` recomputes the three digests with the exporter's own conventions
+    (file bytes for model.npz/tokenizer.json, `sha_json` of the parsed config) and checks them
+    against the bundle's provenance; this compares the same digests against
+    `lock.executed.v0_export`, so a replaced bundle, tokenizer or config cannot be read.
+    """
+    import export
+    want = _executed_v0_export(reg)
+    got = export.gate_artifact(_check_path(bundle_dir))
+    bad = [f"{k}: bundle {str(got.get(k))[:12]}, lock {str(want.get(k))[:12]}"
+           for k in V0_EXPORT_DIGESTS if got.get(k) != want.get(k)]
+    if bad:
+        raise SystemExit(f"M17 EVAL REFUSED: {bundle_dir} is not the locked V0 export: "
+                         + "; ".join(bad) + ". The registered read is of the artifact the lock "
+                         "names, not of a bundle that happens to sit at that path.")
+    return {k: got[k] for k in V0_EXPORT_DIGESTS}
 
 
 def _check_identity(name, entry, got):
@@ -90,8 +142,28 @@ def _check_identity(name, entry, got):
                          "change under a selection; restore it or re-pin deliberately.")
 
 
+# Pinned fields a production read REQUIRES. `_check_identity` only compares the fields a
+# manifest happens to carry, so a missing field used to disable its own check silently
+# (Astra dev-reader review P2).
+REQUIRED_FIELDS = {
+    "text": ("n_docs", "n_queries", "corpus_ids_sha256", "corpus_text_sha256", "qids_sha256",
+             "qrels_sha256"),
+    "full-pool": ("json_sha256", "n_docs", "n_queries", "qids_ordered_sha256", "qids_sha256",
+                  "qtexts_ordered_sha256", "qrels_sha256"),
+}
+
+
+def _require_pinned_fields(name, entry):
+    kind = "full-pool" if entry.get("corpus") == "full-pool" else "text"
+    missing = [f for f in REQUIRED_FIELDS[kind] if f not in entry]
+    if missing:
+        raise SystemExit(f"M17 EVAL REFUSED: pinned dev component {name} has no {missing} in "
+                         f"{DEV_MANIFEST}; a missing pinned field is an unverifiable component, "
+                         "not a skipped check.")
+
+
 def load_dev_component(name, *, allow_dev_suite=False, reg=None, manifest=None,
-                       manifest_path=None, with_doc_vecs=False, verify=True):
+                       manifest_path=None, with_doc_vecs=False, verify=True, strict=False):
     """One pinned component -> {doc_ids, doc_texts, q_ids, q_texts, qrels, doc_vecs, ...}.
 
     The four text-backed components come from `m7src/devsuite.load` (its `work/dev` cache) and
@@ -106,6 +178,8 @@ def load_dev_component(name, *, allow_dev_suite=False, reg=None, manifest=None,
         raise SystemExit(f"M17 EVAL REFUSED: {name!r} is not a pinned dev component {names}.")
     _require_dev_suite(allow_dev_suite, reg)
     entry = man[name]
+    if strict:
+        _require_pinned_fields(name, entry)
     comp = (_load_heldout if entry.get("corpus") == "full-pool" else _load_text_component)(
         name, entry, verify)
     comp["name"] = name
@@ -116,7 +190,9 @@ def load_dev_component(name, *, allow_dev_suite=False, reg=None, manifest=None,
     if len(comp["q_ids"]) != len(comp["q_texts"]):
         raise SystemExit(f"M17 EVAL REFUSED: {name} has {len(comp['q_ids'])} qids and "
                          f"{len(comp['q_texts'])} query texts.")
-    comp["doc_vecs"] = _dev_doc_vecs(comp) if with_doc_vecs else None
+    comp["queries"] = _query_identity(name, entry, comp)
+    comp["doc_vecs"], comp["doc_vec_identity"] = (_dev_doc_vecs(comp, man) if with_doc_vecs
+                                                  else (None, None))
     return comp
 
 
@@ -162,54 +238,275 @@ def _load_heldout(name, entry, verify):
             "corpus": "full-pool"}
 
 
-def _dev_doc_vecs(comp):
-    """Frozen stella document vectors: the pool memmap for the held-out slices, the M7 teacher
-    encode cache for the text-backed components (a cache hit; this is not an encode request)."""
-    if comp["corpus"] == "full-pool":
-        import prepare_data
-        pool = prepare_data.PoolReader()
-        if len(pool.vecs) != len(comp["doc_ids"]):
-            raise SystemExit(f"M17 EVAL REFUSED: the pool holds {len(pool.vecs)} rows but "
-                             f"{comp['name']} pins {len(comp['doc_ids'])}.")
-        return pool.vecs
+def _query_identity(name, entry, comp):
+    """The ordered (qid, text) pairs this read actually scores.
+
+    Replacing or permuting `q_texts` while keeping the ids, counts, documents and qrels used to
+    pass every check (Astra dev-reader review P1). The two held-out components pin the ordered
+    qids AND ordered query texts, so they are VERIFIED here; the four text-backed components pin
+    only `qids_sha256` over SORTED ids, so their pair digest is recorded in the receipt and the
+    result, and the manifest is not edited to add one.
+    """
+    from hashing import sha_stream_list
+    got = {"qids_ordered_sha256": sha_stream_list(comp["q_ids"]),
+           "qtexts_ordered_sha256": sha_stream_list(comp["q_texts"])}
+    _check_identity(name, entry, got)          # verifies whichever of the two the manifest pins
+    verified = sorted(k for k in got if k in entry)
+    return {**got,
+            "query_pairs_sha256": sha_stream_list(f"{q}\x00{t}" for q, t
+                                                  in zip(comp["q_ids"], comp["q_texts"])),
+            "pinned_fields_verified": verified,
+            "_note": ("ordered query identity verified against the manifest" if verified else
+                      "the manifest pins no ordered query identity for this component; the "
+                      "digests above are RECORDED, not verified")}
+
+
+_POOL_VERIFIED = {}
+
+
+def _pool_identity(man, n_docs):
+    """`m7src/heldout._verify_pool`'s pinned-pool verification, without `pool.build()`.
+
+    The held-out corpora ARE `_pinned.pool`'s vector file plus the store layout that indexes it,
+    so the pool's own `meta.json` is compared field by field against the pinned block and the
+    12.6 GiB file is checked by SIZE and by SHA-256 — "same size, different content" is exactly
+    the failure the row-count check could not see. `pool.build()` is never called: it rebuilds
+    the artifact (m17/CODEMAP.md). The digest is computed once per read and shared by both
+    held-out components, which address the same rows.
+    """
+    import prepare_data
+    pin = ((man.get("_pinned") or {}).get("pool")) or {}
+    if not pin.get("vectors_sha256"):
+        raise SystemExit(f"M17 EVAL REFUSED: {DEV_MANIFEST} pins no pool vector identity "
+                         "(_pinned.pool.vectors_sha256); the held-out corpora cannot be bound.")
+    pool = prepare_data.PoolReader(pin["encoder"])
+    for pin_key, meta_key in (("n", "n"), ("dim", "dim"), ("encoder", "encoder"),
+                              ("encoder_revision", "encoder_revision"), ("stores", "stores"),
+                              ("spans", "spans"), ("counts", "counts"),
+                              ("store_id_sha256", "id_sha256")):
+        if pin_key in pin and pool.meta.get(meta_key) != pin[pin_key]:
+            raise SystemExit(f"M17 EVAL REFUSED: pinned pool identity changed: {meta_key} is "
+                             f"{pool.meta.get(meta_key)!r}, {DEV_MANIFEST} says {pin[pin_key]!r}.")
+    p = _check_path(prepare_data.POOL_DIR / pin["encoder"] / "vecs.f16")
+    if p.stat().st_size != pin.get("vectors_bytes"):
+        raise SystemExit(f"M17 EVAL REFUSED: {p} is {p.stat().st_size} bytes, the manifest pins "
+                         f"{pin.get('vectors_bytes')}.")
+    key = str(p)
+    if key not in _POOL_VERIFIED:
+        _POOL_VERIFIED[key] = sha_file(p)
+    if _POOL_VERIFIED[key] != pin["vectors_sha256"]:
+        raise SystemExit("M17 EVAL REFUSED: the pinned pool vectors changed: same size, "
+                         "different content. Every held-out dev number is scored against these "
+                         "vectors.")
+    if len(pool.vecs) != n_docs:
+        raise SystemExit(f"M17 EVAL REFUSED: the pool holds {len(pool.vecs)} rows but the "
+                         f"component pins {n_docs}.")
+    return pool.vecs, {"source": "frozen pool memmap", "path": str(p),
+                       "vectors_sha256": _POOL_VERIFIED[key],
+                       "vectors_bytes": int(pin["vectors_bytes"]),
+                       "verified_against": "results/m7_dev_manifest.json:_pinned.pool"}
+
+
+def _teacher_doc_vecs(comp):
+    """The M7 teacher encode cache for a text-backed component: a cache HIT, never an encode.
+
+    The bytes are hashed and compared against the cache's own recorded identity
+    (`shards.json`, surfaced as `teacher.PROVENANCE[name]`), so a cache file that changed under
+    us cannot be accepted on its row count alone.
+    """
     import torch
-    from teacher import encode_cached
-    return encode_cached(f"dev-{comp['name']}-docs", comp["doc_texts"], prefix="",
-                         dtype=torch.float16, verbose=False)
+    import teacher
+    name, texts = f"dev-{comp['name']}-docs", comp["doc_texts"]
+    key, _ = teacher.cache_key(name, "", 512, teacher.TEACHER, teacher.TEACHER_REV,
+                               teacher.sha_texts(texts), torch.float16)
+    d = _check_path(teacher.ENC / key)
+    n_shards = (len(texts) + teacher.SHARD - 1) // teacher.SHARD
+    absent = [s for s in range(n_shards) if not (d / f"shard_{s:05d}.npy").exists()]
+    if absent:
+        raise SystemExit(f"M17 EVAL REFUSED: the teacher encode cache {d} is missing "
+                         f"{len(absent)} of {n_shards} shards for {comp['name']}. The registered "
+                         "read consumes cached document vectors; it does not encode them.")
+    vecs = teacher.encode_cached(name, texts, prefix="", dtype=torch.float16, verbose=False)
+    if int(vecs.shape[0]) != len(comp["doc_ids"]):
+        raise SystemExit(f"M17 EVAL REFUSED: {comp['name']} has {len(comp['doc_ids'])} documents "
+                         f"but its encode cache holds {vecs.shape[0]} rows.")
+    prov = teacher.PROVENANCE.get(name) or {}
+    shards = prov.get("shard_sha256") or {}
+    recorded = prov.get("combined_sha256") or (shards.get("00000") if n_shards == 1 else None)
+    path = getattr(vecs, "filename", None)
+    if not path:
+        raise SystemExit(f"M17 EVAL REFUSED: {comp['name']}'s document vectors are not backed by "
+                         "a file, so the bytes actually scored cannot be hashed.")
+    digest = sha_file(path)
+    if recorded and digest != recorded:
+        raise SystemExit(f"M17 EVAL REFUSED: {path} hashes {digest[:12]} but the encode cache "
+                         f"records {str(recorded)[:12]}. The cache is mutable and gitignored; a "
+                         "registered number may not rest on bytes that changed under it.")
+    return vecs, {"source": "m7 teacher encode cache", "path": str(path),
+                  "vectors_sha256": digest, "cache_key": prov.get("cache_key"),
+                  "n_rows": int(vecs.shape[0]),
+                  "verified_against": ("teacher shards.json" if recorded else None),
+                  "_note": ("cache identity verified" if recorded else
+                            "the cache records no digest for these bytes; RECORDED, not "
+                            "verified")}
 
 
-def dev_suite_read(bundle_dir, *, allow_dev_suite=False, reg=None, names=None, manifest=None,
-                   manifest_path=None, variant="int8", mode="resident_int8", k=100):
-    """ONE registered dev-suite read of ONE exported bundle: per-component nDCG@10 and the
-    equal-weight component macro (`_pinned.macro`).
+def _dev_doc_vecs(comp, man):
+    """Frozen stella document vectors plus the identity of the bytes actually scored."""
+    if comp["corpus"] == "full-pool":
+        return _pool_identity(man, len(comp["doc_ids"]))
+    return _teacher_doc_vecs(comp)
+
+
+# The registered destination of the ONE V0 read, and the production surface it must use.
+V0_READ_PATH = RESULTS / "m17_v0_read.json"
+PROD_LOADER = {"variant": "int8", "mode": "resident_int8"}
+
+
+def _git_sha():
+    try:
+        return subprocess.run(["git", "-C", str(REPO), "rev-parse", "HEAD"],
+                              capture_output=True, text=True, timeout=30).stdout.strip() or None
+    except (OSError, subprocess.SubprocessError):        # pragma: no cover - no git
+        return None
+
+
+def _utc():
+    return _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _receipt_path(out):
+    return out.with_name(out.stem + ".receipt.json")
+
+
+def _enforce_production_surface(reg, names, man, manifest, manifest_path, variant, mode, k):
+    """The registered surface, not the caller's arguments (Astra dev-reader review P2).
+
+    `training.decision_protocol.screen_routing_surface` is the COMPLETE pinned component list
+    read as int8 folded artifacts through the released QueryTable path; the retrieval depth is
+    the registered `serving.prefetch`. A subset, fp16/eager loading, another depth or another
+    manifest are reachable only from `fixture=True`, which no production caller sets.
+    """
+    if manifest is not None or manifest_path is not None:
+        raise SystemExit("M17 EVAL REFUSED: a production dev-suite read uses "
+                         f"{DEV_MANIFEST}; an alternative manifest is a fixture-only argument.")
+    pinned = dev_components(man)
+    if list(names) != list(pinned):
+        raise SystemExit(f"M17 EVAL REFUSED: the registered surface is the complete pinned list "
+                         f"{pinned}; {list(names)} is a different surface, not a selection.")
+    if {"variant": variant, "mode": mode} != PROD_LOADER:
+        raise SystemExit(f"M17 EVAL REFUSED: the registered read is {PROD_LOADER}, not "
+                         f"{ {'variant': variant, 'mode': mode} }.")
+    depth = int(reg["serving"]["prefetch"])
+    if k is not None and int(k) != depth:
+        raise SystemExit(f"M17 EVAL REFUSED: the registered retrieval depth is {depth} "
+                         f"(serving.prefetch), not {k}.")
+    return depth
+
+
+def dev_suite_read(bundle_dir, out=None, *, allow_dev_suite=False, reg=None, names=None,
+                   manifest=None, manifest_path=None, variant="int8", mode="resident_int8",
+                   k=None, fixture=False):
+    """ONE registered dev-suite read of ONE exported bundle: per-component nDCG@10 and
+    Recall@10 and the equal-weight component macro of each (`_pinned.macro`).
 
     Queries go through the released QueryTable path as int8 folded rows (`loader_np`), the
     registered `screen_routing_surface`. Retrieval is exact dense over each component's declared
-    corpus, through the same M7 scorer (`evalkit`) every pinned dev number was computed with.
+    corpus, through the same M7 scorer (`evalkit`) every pinned dev number was computed with;
+    both metrics come from that ONE retrieval run.
+
+    The read is single-use and provenanced. `out` is mandatory; the read refuses if `out` or its
+    receipt already exists (there is no `--force`). A receipt is written BEFORE the first score
+    and updated at the end, so a failure mid-read still records what the attempt consumed. Every
+    identity — registry status, the locked V0 digests, the per-component manifest hashes, the
+    ordered query digests and the document-vector digests — is established in a preflight over
+    all components before any scoring begins.
     """
+    status = _require_dev_suite(allow_dev_suite, reg)
+    reg = reg or registry()
     man = dev_manifest(manifest_path) if manifest is None else manifest
     names = list(names or dev_components(man))
-    status = _require_dev_suite(allow_dev_suite, reg)
-    from evalkit import macro
-    from evalkit import score as evalkit_score
+    if fixture:
+        depth = int(k if k is not None else reg["serving"]["prefetch"])
+    else:
+        depth = _enforce_production_surface(reg, names, man, manifest, manifest_path,
+                                            variant, mode, k)
+    if not out:
+        raise SystemExit("M17 EVAL REFUSED: a dev-suite read needs its output path (the "
+                         f"registered destination is {V0_READ_PATH}); a read whose numbers are "
+                         "not written is a spent read with no evidence.")
+    out = Path(admit_write(out))
+    receipt_p = _receipt_path(out)
+    for p in (out, receipt_p):
+        if p.exists():
+            raise SystemExit(f"M17 EVAL REFUSED: {p} already exists. The V0 read is registered "
+                             "once (training.untrained_vocab_export_v0.reads = 1); it is not "
+                             "overwritten, and there is no --force.")
+
+    # ---- preflight: everything that can refuse, before the first score ----
+    from evalkit import macro, per_query_ndcg, topk_ids_scores
     from loader_np import M17QueryEncoder
+    bundle_digests = _verify_v0_bundle(bundle_dir, reg)
     enc = M17QueryEncoder(_check_path(bundle_dir), variant=variant, mode=mode)
-    per_component = {}
+    comps = []
     for name in names:
         c = load_dev_component(name, allow_dev_suite=True, reg=reg, manifest=man,
-                               with_doc_vecs=True)
-        per_component[name] = evalkit_score(enc.encode(c["q_texts"]), c["q_ids"], c["doc_vecs"],
-                                            c["doc_ids"], c["qrels"], k=k)
-        c["doc_vecs"] = None
-    m, means = macro(per_component)
-    return {"surface": "m7/m8 pinned development suite",
-            "components": names, "registry_status": status,
-            "bundle": str(bundle_dir), "loader": {"variant": variant, "mode": mode},
-            "ndcg@10": {"macro": m, "per_component": means,
-                        "n_queries": {n: len(v) for n, v in per_component.items()}},
-            "per_query_ndcg@10": per_component,
-            "_macro": (man.get("_pinned") or {}).get("macro"),
-            "_note": "exact dense retrieval; ANN measurements are never mixed in"}
+                               with_doc_vecs=True, strict=not fixture)
+        c["doc_texts"] = None            # the vectors are loaded; the texts are not scored
+        comps.append(c)
+    components = {c["name"]: {"manifest_entry_sha256": sha_json(man[c["name"]]),
+                              "manifest_hashes": {kk: vv for kk, vv in man[c["name"]].items()
+                                                  if kk.endswith("_sha256")},
+                              "n_docs": c["n_docs"], "n_queries": c["n_queries"],
+                              "queries": c["queries"],
+                              "document_vectors": c["doc_vec_identity"]} for c in comps}
+    receipt = {"_schema": "m17-dev-suite-read-receipt-v1", "state": "started", "reads": 1,
+               "surface": "m7/m8 pinned development suite", "components": names,
+               "registry_status": status, "bundle": str(bundle_dir),
+               "bundle_digests": bundle_digests,
+               "loader": {"variant": variant, "mode": mode}, "retrieval_depth": depth,
+               "dev_manifest_sha256": (None if fixture else sha_file(DEV_MANIFEST)),
+               "component_identities": components, "fixture": bool(fixture),
+               "git_sha": _git_sha(), "started_utc": _utc(), "out": str(out),
+               "completed_components": []}
+    write_json(receipt_p, receipt)
+
+    # ---- scoring: one retrieval run per component, both metrics from it ----
+    nd_all, rc_all = {}, {}
+    try:
+        for c in comps:
+            run = topk_ids_scores(enc.encode(c["q_texts"]), c["doc_vecs"], c["doc_ids"],
+                                  k=depth, qids=c["q_ids"])
+            nd_all[c["name"]] = per_query_ndcg(run, c["qrels"], cut=10)
+            rc_all[c["name"]] = recall_at_k(run, c["qrels"], k=10)
+            c["doc_vecs"] = None
+            receipt["completed_components"].append(c["name"])
+            write_json(receipt_p, receipt)
+    except BaseException as exc:                     # a spent attempt still leaves its receipt
+        receipt.update(state="failed", failed_utc=_utc(), error=f"{type(exc).__name__}: {exc}")
+        write_json(receipt_p, receipt)
+        raise
+    nd_macro, nd_means = macro(nd_all)
+    rc_macro, rc_means = macro(rc_all)
+    rep = {"surface": "m7/m8 pinned development suite",
+           "components": names, "registry_status": status,
+           "bundle": str(bundle_dir), "bundle_digests": bundle_digests,
+           "loader": {"variant": variant, "mode": mode}, "retrieval_depth": depth,
+           "ndcg@10": {"macro": nd_macro, "per_component": nd_means,
+                       "n_queries": {n: len(v) for n, v in nd_all.items()}},
+           "recall@10": {"macro": rc_macro, "per_component": rc_means},
+           "per_query_ndcg@10": nd_all,
+           "reads": 1, "git_sha": receipt["git_sha"], "read_utc": receipt["started_utc"],
+           "dev_manifest_sha256": receipt["dev_manifest_sha256"],
+           "component_identities": components, "receipt": str(receipt_p),
+           "_macro": (man.get("_pinned") or {}).get("macro"),
+           "_note": "exact dense retrieval; ANN measurements are never mixed in"}
+    write_json(out, rep)
+    receipt.update(state="complete", completed_utc=_utc(),
+                   ndcg_at_10={"macro": nd_macro, "per_component": nd_means},
+                   recall_at_10={"macro": rc_macro, "per_component": rc_means})
+    write_json(receipt_p, receipt)
+    return rep
 
 
 # ---- exact dense retrieval -----------------------------------------------------------------
@@ -489,10 +786,14 @@ def main(argv=None):
         if not args.bundle:
             raise SystemExit("M17 EVAL REFUSED: --surface dev-suite needs --bundle, the exported "
                              "artifact whose registered read this is.")
-        rep = dev_suite_read(args.bundle, allow_dev_suite=True, reg=reg)
-        if args.out:
-            write_json(args.out, rep)
+        if not args.out:
+            raise SystemExit("M17 EVAL REFUSED: --surface dev-suite needs --out, the registered "
+                             f"destination of the read (it is {V0_READ_PATH} for the V0 read). "
+                             "The reader writes the result and its receipt itself and refuses to "
+                             "overwrite either.")
+        rep = dev_suite_read(args.bundle, args.out, allow_dev_suite=True, reg=reg)
         rep.pop("per_query_ndcg@10", None)
+        rep.pop("component_identities", None)
         print(json.dumps(rep, indent=1, sort_keys=True))
         return 0
     if not args.fixtures:

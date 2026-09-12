@@ -410,3 +410,25 @@ no fix required first.
 | Finding | Disposition and exit |
 |---|---|
 | P2-3 (new) on a protected-index cache miss `protected10.build()` lazily imports `m10src/cov_screen.py`, which puts m7src first again after our repair | **DEFERRED, not fixed now.** The fix changes `prepare_data.py`, whose sha the lock binds, and the finished build is what trains. Exit: required before any FUTURE screened rebuild — reassert the path order after `build()` as well (and cover path mutation during `build()` in the test), as a dated amendment. |
+
+## Codex Astra — dev-suite reader review (2026-09-12)
+
+Brief: [m17-astra-devreader-brief](../research/m17-astra-devreader-brief-2026-09-12.md). Log:
+`work/m17/logs/astra_devreader_review.log` (gitignored). Read-only on the newly wired dev-suite
+reader; six P1s (all blocking the one irreversible V0 read) and three P2s. All fixed in
+`m17src/evaluate.py` and `m17src/test_evaluate.py`; no other module changed.
+
+| Finding | Disposition and exit |
+|---|---|
+| P1-1 the gate accepts an incomplete or altered lock (`{"status": "EXECUTABLE"}` passed) | Fixed: `_require_dev_suite` requires `LOCKED_EXECUTABLE` **and** `lock.executed.v0_export`'s three digests (`_executed_v0_export`). Protocol-hash matching beyond `require_executable`: not added (the executed half already refuses a moved protocol). `m17src/evaluate.py` |
+| P1-2 the locked V0 artifact is never verified before the encoder is built | Fixed: `_verify_v0_bundle` recomputes model/tokenizer/config digests with the exporter's own conventions (`export.gate_artifact`, not a reimplementation) and refuses unless all three equal `lock.executed.v0_export`. `m17src/evaluate.py` |
+| P1-3 document-vector identity unbound (held-out checked by row count; text vectors accepted from `encode_cached`) | Fixed: `_pool_identity` reproduces `m7src/heldout._verify_pool`'s pinned-pool verification against `_pinned.pool` — meta fields, byte size and the 12.6 GiB `vecs.f16` SHA-256, computed once per read — **without** `pool.build()` (which rebuilds the artifact); `_teacher_doc_vecs` hashes the encode-cache file actually memmapped and compares it to the cache's own recorded digest (`teacher.PROVENANCE`/`shards.json`), refuses a cache missing shards rather than encoding, and records both digests in the receipt. `m17src/evaluate.py` |
+| P1-4 text-component queries are not bound (permuted `q_texts` passed every check) | Fixed: `_query_identity` hashes the ordered `(qid, text)` pairs per component and verifies the ordered qid/qtext digests wherever the manifest pins them. The two held-out components are therefore VERIFIED; the four text-backed components pin no ordered query identity, so their pair digest is RECORDED in the receipt and the result and labelled as such — the manifest was not edited to add one (owner ruling required to pin it). `m17src/evaluate.py` |
+| P1-5 validation happened after scoring had begun | Fixed: `dev_suite_read` preflights the output destination, the bundle digests, all components (identities, queries and both vector sources) before the first score; a failure after scoring starts still writes a `state: failed` receipt naming the components already completed. `m17src/evaluate.py` |
+| P1-6 neither provenance nor the single-read boundary survives | Fixed: `out` is mandatory, the read refuses if the result or `*.receipt.json` exists (no `--force`), and the receipt is written `started` before scoring and updated to `complete` — registry status, bundle digests, per-component manifest hashes, query and vector digests, git sha, UTC timestamps, `reads: 1`. The result JSON carries the same provenance; `--surface dev-suite` now requires `--out`. `m17src/evaluate.py` |
+| P2-7 production arguments could redefine the registered surface | Fixed: `_enforce_production_surface` requires the complete pinned list, int8/resident loading, the registered `serving.prefetch` depth and the registered manifest; `_require_pinned_fields` refuses a component whose pinned hash fields are missing instead of skipping their checks. Subset/fp16/eager/other-k are reachable only under `fixture=True`. `m17src/evaluate.py` |
+| P2-8 Recall@10 was lost | Fixed: one `evalkit.topk_ids_scores` run per component feeds both `per_query_ndcg` and `recall_at_k`; per-component values and the equal-weight component macro of each are kept in the result and the receipt. `m17src/evaluate.py` |
+| P2-9 tests never exercised successful reader scoring | Fixed: `test_dev_suite_read_scores_through_the_loader_and_the_m7_scorer` runs the reader end to end on the rehearsal's real exported bundle through `loader_np` and the M7 scorer (tie pair, a dropped self-hit), asserting both metrics, the receipt fields and the no-overwrite refusal; plus refusal tests for the gate, the bundle digests, the surface arguments and the missing pinned field. `m17src/test_evaluate.py` |
+
+**Owner:** M17 executing session. **Exit:** fixes landed; `pytest m17src` = 314 passed with only
+the four pre-existing registry-status failures. The V0 read remains unspent (`read: false`).
