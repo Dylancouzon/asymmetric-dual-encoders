@@ -72,3 +72,8 @@ with only podId). The CLI now exposes a narrowly guarded `--storage-retry` for e
 failure, writing `results/m13_storage_upload.json` and adding the failed interval and hash.
 Same inputs, cap, zero-GPU response check and STOP. Budget reviewer final GO;25 synthetic
 checks rerun and passed. No alternative Pod was created.
+
+Launcher recheck also GO with the failed CPU receipt SHA256 pinned explicitly; that guard
+is now present (`bfffcac4…462002b`). This prevents altered timestamps from entering the
+retry allowance. The public console operation, response validation and all prior limits
+were reviewed; neither reviewer accessed credentials or protected payloads.

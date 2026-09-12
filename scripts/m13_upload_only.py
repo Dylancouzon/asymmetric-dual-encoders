@@ -60,6 +60,8 @@ def main():
     extra_hours=0; extra_bindings={}
     if args.storage_retry:
         old='results/m13_cpu_upload.json'
+        if budget.sha(REPO/old) != 'bfffcac46eb87c62459db12f763da00b29d9a4d9f4dbb3897c5f96164462002b':
+            raise RuntimeError('Captured failed CPU receipt changed')
         failed_cpu=json.loads((REPO/old).read_text())
         if (failed_cpu.get('status')!='FAILED' or failed_cpu.get('pod_final_status')!='EXITED'
             or failed_cpu.get('pod_id')!=POD or failed_cpu.get('training_started') is not False
