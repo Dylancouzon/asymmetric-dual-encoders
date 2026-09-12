@@ -15,16 +15,16 @@ import m13_after_cpu_allocation as admission
 import m13_resume_allocation as recovery
 
 REPO=Path(__file__).resolve().parents[1]
-RESULT=REPO/'results/m13_after_upload.json'
+RESULT=REPO/'results/m13_after_verification.json'
 GPU_RESULT=REPO/'results/m13_cloud_build_after_cpu.json'
 GPU_PID=REPO/'work/m13cloud-launchers/build_after_cpu.pid'
 GPU_LOG=REPO/'logs/m13-build-after-cpu-controller.log'
 PATCH='m13/after_cpu_supervisor.patch'
 SUPERVISOR='scripts/m13_resume_build.py'
-AFTER_SHA='c6bef95f84051410546b30afc043fe6249880a31731892fde8fa3785959fa861'
+AFTER_SHA='846e93b71fca78f6b4174b9dfc0e667175db11cb0bc453046e50b8d5d49c67d7'
 CODE=('scripts/m13_after_upload.py','scripts/m13_after_cpu_allocation.py',
       'scripts/m13_resume_allocation.py',SUPERVISOR,PATCH,'scripts/m13_upload_only.py',
-      'm13/monitor_config.json')
+      'm13/monitor_config.json','scripts/m13_verify_uploaded.py')
 
 
 def git(*args):
@@ -94,6 +94,9 @@ def main():
         raise RuntimeError('Existing handoff/build evidence; no automatic retry')
     if git('diff','--name-only','HEAD'):raise RuntimeError('Require clean tracked tree')
     require_pushed()
+    previous=REPO/'results/m13_after_upload.json'
+    if recovery.sha(previous)!='2fcad24c9ed0cb6130e8af4a2bfcfdf7fbadab0876b23a9a55d99f5b2e407ec6':
+        raise RuntimeError('Previous stopped handoff changed')
     bound={p:recovery.sha(REPO/p) for p in CODE}
     original_inputs=json.loads((REPO/recovery.ORIGINAL).read_text())['artifact_sha256']
     def unchanged():
@@ -109,7 +112,7 @@ def main():
     process=None
     try:
         # No admission until the source controller finishes with verified hashes and STOP.
-        upload_deadline=time.monotonic()+11*3600
+        upload_deadline=time.monotonic()+4*3600
         while time.monotonic()<upload_deadline:
             unchanged()
             if (REPO/admission.CPU).exists():

@@ -6,12 +6,19 @@ storage receipt FAILED with verified STOP; preserved at `results/m13_storage_upl
 The old handoff also failed safely; `results/m13_after_upload.json` is preserved. No training.
 
 Verification-only recovery: `scripts/m13_verify_uploaded.py`, new receipt
-`results/m13_storage_verification.json`, log `logs/m13-storage-verification.log`, PID file
-`work/m13cloud-launchers/storage_verification.pid`. It reuses the394 uploaded files, streams
+`results/m13_storage_verification.json`, log `logs/m13-storage-verification-retry.log`, PID file
+`work/m13cloud-launchers/storage_verification_retry.pid`. It reuses the394 uploaded files, streams
 hashes with progress, and caps paid zero-GPU work at3h while preserving training+4h and the
-original cumulative allowance. Monitor job covers the durable progress log. STOP only.
-Before any GPU handoff the cumulative allocation MUST include both failed storage and the
-new verification interval; the older coordinator must not be rerun unchanged.
+original cumulative allowance. Initial prestart refused provider-reported5GB container;
+refusal preserved. Verification-only permits5or30GB; GPU must restore30GB while stopped.
+Monitor job covers the durable progress log. STOP only.
+The downstream allocation now includes both failed storage and successful verification.
+The updated coordinator uses separate receipt `results/m13_after_verification.json`, log
+`logs/m13-after-verification.log`, PID `work/m13cloud-launchers/after_verification.pid`.
+It pins the previous failed coordinator and waits for verification PASS/STOP before applying
+the reviewed supervisor patch (SHA256846e93b71fca78f6b4174b9dfc0e667175db11cb0bc453046e50b8d5d49c67d7).
+GPU-side verification also streams progress with a90-minute command limit, still inside the
+original stage alarm and fresh pretraining budget gate. No duplicate retry or new allowance.
 
 Earlier overnight state below is historical and superseded by this timeout recovery.
 

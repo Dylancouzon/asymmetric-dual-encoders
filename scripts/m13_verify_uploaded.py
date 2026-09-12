@@ -75,7 +75,7 @@ def main():
               10-(json.loads((REPO/FAILED).read_text())['finished_at']-json.loads((REPO/FAILED).read_text())['started_at'])/3600)
     if hours<=.5:raise RuntimeError('Insufficient bounded verification time')
     pod=pods[-1]
-    if pod['id']!=upload.POD or pod.get('volumeInGb')!=500 or pod.get('containerDiskInGb')!=30 or pod.get('volumeMountPath')!='/home/dylan':raise RuntimeError('Retained disk changed')
+    if pod['id']!=upload.POD or pod.get('volumeInGb')!=500 or pod.get('containerDiskInGb') not in (5,30) or pod.get('volumeMountPath')!='/home/dylan':raise RuntimeError('Retained disk changed')
     bound=dict(json.loads((REPO/FAILED).read_text())['artifact_sha256']);bound[FAILED]=FAILED_SHA
     receipt={'status':'RUNNING','stage':'starting-zero-gpu','pid':os.getpid(),'pod_id':upload.POD,
              'code_commit':head,'started_at':time.time(),'maximum_hours':hours,

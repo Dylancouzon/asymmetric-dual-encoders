@@ -116,11 +116,21 @@
     {
       "name": "verification only upload recovery",
       "receipt": "results/m13_storage_verification.json",
-      "pid_file": "work/m13cloud-launchers/storage_verification.pid",
+      "pid_file": "work/m13cloud-launchers/storage_verification_retry.pid",
       "logs": [
-        "logs/m13-storage-verification.log"
+        "logs/m13-storage-verification-retry.log"
       ],
       "stale_seconds": 300
+    },
+    {
+      "name": "verified recovery to GPU handoff",
+      "receipt": "results/m13_after_verification.json",
+      "pid_file": "work/m13cloud-launchers/after_verification.pid",
+      "logs": [
+        "logs/m13-after-verification.log"
+      ],
+      "wait_for": "verification only upload recovery",
+      "stale_seconds": 900
     }
   ]
 }

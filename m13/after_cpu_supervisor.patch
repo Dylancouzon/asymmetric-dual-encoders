@@ -89,7 +89,22 @@
              if pod.get('publicIp') and port:
                  ssh_config.write_text('\n'.join('  HostName '+pod['publicIp'] if line.strip().startswith('HostName ') else '  Port '+str(port) if line.strip().startswith('Port ') else line for line in ssh_config.read_text().splitlines())+'\n')
                  r=subprocess.run(ssh+['true'],timeout=20,capture_output=True)
-@@ -211,7 +246,7 @@
+@@ -187,7 +222,13 @@
+             run(['rsync','-a','--no-owner','--no-group','--info=progress2','--partial-dir=/home/dylan/.m13-build-partial-'+label,*flags,'--files-from='+str(listing),'-e','ssh -F '+shlex.quote(str(ssh_config)),source,dest],timeout=max(1,int(staging_deadline-time.monotonic())))
+         sums=REPO/'work/m13cloud-launchers/build-resume-input-sha256.txt'; sums.write_text('\n'.join(h+'  '+p for p,h in expected.items())+'\n')
+         run(scp+[str(sums),alias+':/tmp/m13-build-input-sha256.txt'])
+-        run(ssh+['timeout --kill-after=30s 1800s sha256sum --check --status /tmp/m13-build-input-sha256.txt'],timeout=1840)
++        from m13_verify_uploaded import REMOTE_CODE
++        verifier=REPO/'work/m13cloud-launchers/build-verify-remote.py'; verifier.write_text(REMOTE_CODE)
++        run(scp+[str(verifier),alias+':/tmp/m13-verify-uploaded.py'])
++        run(scp+[str(REPO/'m13/build_transfer_manifest.json'),alias+':/tmp/m13-verify-manifest.json'])
++        remote_check='import hashlib,pathlib; assert hashlib.sha256(pathlib.Path("/tmp/m13-verify-uploaded.py").read_bytes()).hexdigest()=='+repr(sha(verifier))+'; assert hashlib.sha256(pathlib.Path("/tmp/m13-verify-manifest.json").read_bytes()).hexdigest()=='+repr(sha(REPO/'m13/build_transfer_manifest.json'))
++        run(ssh+['python3 -c '+shlex.quote(remote_check)])
++        run(ssh+['timeout --kill-after=30s 5400s python3 -u /tmp/m13-verify-uploaded.py'],timeout=5440)
+         receipt['transfer_verified']=True; receipt['transfer_manifest_sha256']=sha(sums)
+         save('full-build-preflight')
+         command=ENV+'cd '+REMOTE+'; .venv/bin/python -u scripts/m13_build_preflight.py'
+@@ -211,7 +252,7 @@
          run(ssh+['timeout --kill-after=30s 120s bash -c '+shlex.quote(check)],timeout=160)
          _, current_balance = recovery.live()
          fresh = recovery.remaining(original, prior, pause, current_balance,
@@ -98,7 +113,7 @@
          if current_balance > balance: raise RuntimeError('Funding changed during staging')
          # Deduct staging wall time AND any larger actual charges; never extend deadline.
          deadline = min(deadline, time.monotonic()+fresh['max_cost_usd']/price*3600)
-@@ -222,7 +257,7 @@
+@@ -222,7 +263,7 @@
          cmd=ENV+'cd '+REMOTE+'; .venv/bin/python -u m13src/build13.py --config m13/build_config.json --device cuda --rate '+str(rate)+' --price '+str(price)
          owned='env M13_BUILD_JOB_ID='+job+' setsid bash -c '+shlex.quote('echo $$ > '+pidfile+'; exec timeout --kill-after=30s '+str(seconds)+'s bash -c '+shlex.quote(cmd))
          BACKUP.mkdir(); (BACKUP/'rolling').mkdir(); save('training')
@@ -107,7 +122,7 @@
              process=subprocess.Popen(ssh+[owned],stdout=log,stderr=subprocess.STDOUT)
              last_backup=time.monotonic()-3600
              backup_failures=0
-@@ -275,7 +310,7 @@
+@@ -275,7 +316,7 @@
                  'recipe_fingerprint':record['recipe_fingerprint'],'final_checkpoint_sha256':record['final_checkpoint_sha256'],'training_repeated':False}
              save('freeze-retry')
              retry='env M13_BUILD_JOB_ID='+job+' setsid bash -c '+shlex.quote('echo $$ > '+pidfile+'; exec timeout --kill-after=30s '+str(retry_seconds)+'s bash -c '+shlex.quote(cmd+' --resume'))

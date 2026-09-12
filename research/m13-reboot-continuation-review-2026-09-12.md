@@ -132,3 +132,16 @@ prior allocation/upload tests:18 passed. Downstream chain update required before
 
 Launcher final GO with exclusive stdout/stderr log and PID reservation before dispatch;
 monitor tracks that log. Both reviews cleared verification-only paid restart.
+
+Verification-only controllerPID25534 launched from6c75510, exclusive log/PID reserved first.
+Downstream allocation now includes failed storage and successful verification intervals; exact
+failed receipt pin and combined10h storage ceiling remain enforced. The new handoff receipt is
+m13_after_verification, with the previous failure pinned and preserved. GPU supervisor draft
+24cbc20e uses the same progress verifier with90-minute command cap inside its existing stage
+alarm, then fresh training admission. Budget reviewer GO. Combined synthetic suite:41 passed.
+
+Launcher required remote helper/manifest SHA assertions before GPU rehash; implemented in
+final draft846e93b7. Both reviewers GO. The first verification launcher refused before any
+paid resume: provider reports container5GB (persistent500GB mount unchanged). Preserved
+prestart refusal receipt/log/PID. Narrow verification-only guard permits5or30GB, still priced
+at the original530GB bound; reviewers recheck. GPU still requires explicit30GB restoration.
