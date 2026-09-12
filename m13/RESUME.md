@@ -1,4 +1,9 @@
-# Active migration preparation — user authorized returning to E host
+# Active migration — source zero GPU, original E host A100 reserved
+
+MigrationPID38227 and automatic build handoffPID38228 are active from pushed8b67154.
+Both Pods resumed successfully; exactA100-SXM4-80GB/81920MiB confirmed on target.
+Direct transfer is running around19MB/s, reusing nearly all shared root caches.
+Inspect results/m13_migration.json and logs/m13-migrate-inputs.log before action.
 
 User explicitly authorized moving to the available retained original E host and starting
 training. Source `wnzk8eeqrrkw4m` has the verified394 inputs; target `k3aee2m68765em` is the

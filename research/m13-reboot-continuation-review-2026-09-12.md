@@ -188,3 +188,8 @@ Both reviewers issued final GO after source pre-resume all-in quote and committe
 reserve checks. Real read-only preallocation passed:134.53694h/$223.817 remaining after the
 full worst-case1h concurrent migration reserve, project$721.95, balance$483.9475. Original
 allowance is not reset.23 focused checks rerun after final edits; reviewer broader38pass.
+
+Published8b67154, launched migrationPID38227 and waiting handoffPID38228. Exact source0GPU
+and target1GPU resumes succeeded. Remote nvidia-smi confirmsA100-SXM4-80GB/81920MiB. Shared
+root cache group reused all but6.7KB; tree group direct transfer averages roughly19MB/s.
+No training yet; target remains reserved for automatic adoption.
