@@ -302,6 +302,133 @@
    "start": "an owner ruling (which invocation starts the 72 h, and what pre-clock work is exempt) is recorded in LEDGER.md before the first --protected-screen invocation; `lock.executed.clock_started` records the timestamp under that ruling"
   },
   "date": "2026-09-11",
+  "executed": {
+   "_note": "step-6 lock, ON-CLOCK half, committed after the screened rebuild and BEFORE the V0 read or any development read. These are the identities that train.",
+   "base_hashes": {
+    "bank_ids": "66fd1067e726de171e41f5dcc8ef51521f6e27b48a2f77a806a14fdaef2e7070",
+    "bank_vector_bytes": "c478be19bed5d11a4666353e4b4c28863e99d7d5ca80e1ac69225acc5b6e1585",
+    "cache_artifact": "579041f77f4f20dd505afe243c768e209b5627ee371cc0306b0991f05985d117",
+    "cache_identity": "a517244956705f7600e278292ce3467ae30053fce8f7970b4b753ef2efd57fac",
+    "doc_domain_join": "5c1d695619a79dc2f03c46a8cae531231191e68f9921625ae3076f79f5b58918",
+    "new_rows": null,
+    "query_pool": "0fc32dc46637e3690a5509add9ab10c385784a3b8b72a9c1e8730475d8a696c4",
+    "student_ids": "bb0b6e1ca4b4e80dbb722f95c5490ea30c20b4fe8e893a67b7073436d413adb6",
+    "teacher_q": "4dd48b4cd13425379352c1ac3c1af3332c2413916764198c439c4995ae9a4080",
+    "tokenizer": "435667fab0c06c165b1283ecb422497c37124f2d6a35b2ac73dc876332fc9518",
+    "v1_q": "3d2ff31991ebc080f3593385e25e875162a7a5c68e80f2ec24cd236b8ebf633a",
+    "vocabulary": "7eeced010531a5efc439d9b34615226b34db21c39ec78a4b363432650183250e"
+   },
+   "build": "work/m17/prepared/full",
+   "changed_since_pre_screen": [
+    "bank_ids",
+    "bank_vector_bytes",
+    "cache_artifact",
+    "cache_identity",
+    "doc_domain_join",
+    "new_rows",
+    "query_pool",
+    "student_ids",
+    "teacher_q",
+    "tokenizer",
+    "v1_q",
+    "vocabulary"
+   ],
+   "clock_started": "2026-09-11T23:41:24Z",
+   "date": "2026-09-11",
+   "ext_hashes": {
+    "bank_ids": "66fd1067e726de171e41f5dcc8ef51521f6e27b48a2f77a806a14fdaef2e7070",
+    "bank_vector_bytes": "c478be19bed5d11a4666353e4b4c28863e99d7d5ca80e1ac69225acc5b6e1585",
+    "cache_artifact": "579041f77f4f20dd505afe243c768e209b5627ee371cc0306b0991f05985d117",
+    "cache_identity": "a517244956705f7600e278292ce3467ae30053fce8f7970b4b753ef2efd57fac",
+    "doc_domain_join": "5c1d695619a79dc2f03c46a8cae531231191e68f9921625ae3076f79f5b58918",
+    "new_rows": "77aa3a39f51928a69dde6b2949cf5b26da73af8330caa0fd45c0b5d4cf1071e3",
+    "query_pool": "0fc32dc46637e3690a5509add9ab10c385784a3b8b72a9c1e8730475d8a696c4",
+    "student_ids": "6d042d76a7202b1cead25a857fd6f70004a2110793f8581b6c000ed12a0359d6",
+    "teacher_q": "4dd48b4cd13425379352c1ac3c1af3332c2413916764198c439c4995ae9a4080",
+    "tokenizer": "ad2bec317be36a5dd0160a73e7f0a23d8941b197bcdda95c29ff830671107cfd",
+    "v1_q": "3d2ff31991ebc080f3593385e25e875162a7a5c68e80f2ec24cd236b8ebf633a",
+    "vocabulary": "7eeced010531a5efc439d9b34615226b34db21c39ec78a4b363432650183250e"
+   },
+   "protected_receipt_sha256": "7c268a5f1e268a96a408abbdecd765cc5df77d5c3d16e05020f9bf027493685f",
+   "protected_screen": {
+    "documents_screened": 1648,
+    "dropped": 1512,
+    "dropped_by_document_receipt": 44,
+    "dropped_by_text": 1468,
+    "receipt": {
+     "path": "work/m17/prepared/full/protected_receipt.json",
+     "sha256": "7c268a5f1e268a96a408abbdecd765cc5df77d5c3d16e05020f9bf027493685f"
+    },
+    "screened": 600000,
+    "state": "complete"
+   },
+   "status_set": "LOCKED_EXECUTABLE",
+   "v0_export": {
+    "bundle": "/home/dylan/asymetric-dual-encoders/work/m17/bundles/V0",
+    "config_sha256": "aada7c6b02687a5525ec420d55204065046426bd8fb81d749c7153524e93e7c7",
+    "gates": {
+     "gate_artifact": {
+      "attribution_sha256": "a76f278dcbdfc78e587f1b8b186c7c016e6429e983fecb1f5536a7afeaf1840f",
+      "config_sha256": "aada7c6b02687a5525ec420d55204065046426bd8fb81d749c7153524e93e7c7",
+      "model_npz_sha256": "e2a234cd842cced45d6913394ced201ec0801b83dd27f669baa7e75041359b63",
+      "tokenizer_sha256": "ad2bec317be36a5dd0160a73e7f0a23d8941b197bcdda95c29ff830671107cfd"
+     },
+     "gate_conformance": {
+      "fp16/eager_fp32": {
+       "b1_max_abs": 3.0547380447387695e-07,
+       "max_abs": 3.0547380447387695e-07
+      },
+      "int8/eager_fp32": {
+       "b1_max_abs": 5.513429641723633e-07,
+       "max_abs": 5.513429641723633e-07
+      },
+      "int8/resident_int8": {
+       "b1_max_abs": 5.513429641723633e-07,
+       "max_abs": 5.513429641723633e-07
+      },
+      "tolerance": 1e-05,
+      "tolerance_source": "export.CONFORMANCE_TOL (torch vs numpy)"
+     },
+     "gate_encoder_spec": {
+      "limits": {
+       "added_rows": 446,
+       "dim": 1024,
+       "parameter_cap": 35000000,
+       "parameters": 31742200,
+       "rows": 30968
+      },
+      "preproc_fingerprint": "adb24fb2e8cad66f",
+      "shape": [
+       30968,
+       1024
+      ]
+     },
+     "gate_files": {
+      "files": [
+       "ATTRIBUTION.md",
+       "config.json",
+       "model.npz",
+       "provenance.json",
+       "tokenizer.json"
+      ]
+     },
+     "gate_tokenizer": {
+      "truncation_in_file": {
+       "direction": "Right",
+       "max_length": 512,
+       "strategy": "LongestFirst",
+       "stride": 0
+      },
+      "truncation_note": "imposed by the loader at preproc.max_length; not gated here",
+      "vocab": 30968
+     }
+    },
+    "model_npz_sha256": "e2a234cd842cced45d6913394ced201ec0801b83dd27f669baa7e75041359b63",
+    "read": false,
+    "tokenizer_sha256": "ad2bec317be36a5dd0160a73e7f0a23d8941b197bcdda95c29ff830671107cfd"
+   },
+   "vocabulary_terms": 446
+  },
   "fixed_files_sha256": {
    "alias_test_manifest": "d96b2fcb2e74a42d601a79a0fc372d0d74d368fdf3afc35dccbb674c4942bb25",
    "judgments_ingest": "31aa6c6ef48619729c324f2fed0ea040f5d30a0eb49067cb67b59ec7aebcecd0",
@@ -434,7 +561,7 @@
   "prefetch": 100,
   "prefix": ""
  },
- "status": "EXECUTABLE",
+ "status": "LOCKED_EXECUTABLE",
  "student_parameter_cap": 35000000,
  "teacher": "NovaSearch/stella_en_400M_v5",
  "teacher_revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
