@@ -158,3 +158,9 @@ Both reviewers issued final GO for concrete stopped-container restoration and co
 
 Published01ba410 and launched replacement coordinatorPID28201; confirmedWAITING receipt.
 VerifierPID27527 completed local checks and reachedRUNNING starting-zero-gpu.
+
+Remote verification completed394files/72,623,148,280bytes in259.6s, no mismatch. Verified
+receiptPASSED andSTOP confirmed. Coordinator published it (0e51d83), restored container30
+whileSTOPPED, applied/published exactreviewed supervisor (a15cf1e), then reachedwaiting_gpu
+with0available. The previous silent timeout has no proven specific bottleneck; the new
+measurement disproves any claim that hashing this payload necessarily needs30minutes.

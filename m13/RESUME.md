@@ -1,3 +1,15 @@
+# Current state: upload verified, waiting for GPU — 2026-09-12
+
+Verification PASSED: all394 files,72,623,148,280bytes,259.6seconds remote hashing.
+`results/m13_storage_verification.json` is published; retained Pod STOP confirmed.
+The active coordinatorPID28201 (`results/m13_after_verification.json`) restored the
+stopped container to30GB, applied/published the reviewed supervisor in commit a15cf1e,
+and is polling GPU availability read-only. Last observed count0. No training has started.
+Do not race or rerun the coordinator. It has a12-hour capacity wait and a fresh cumulative
+budget gate before its single GPU dispatch. Independent monitor service remains active.
+
+The recovery history below preserves prior failures and their evidence.
+
 # Verification timeout recovery — 2026-09-12
 
 The full rsync transfer completed, but silent destination hashing exceeded1800s. Original
