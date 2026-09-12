@@ -164,3 +164,22 @@ receiptPASSED andSTOP confirmed. Coordinator published it (0e51d83), restored co
 whileSTOPPED, applied/published exactreviewed supervisor (a15cf1e), then reachedwaiting_gpu
 with0available. The previous silent timeout has no proven specific bottleneck; the new
 measurement disproves any claim that hashing this payload necessarily needs30minutes.
+
+
+## User-authorized return to the original E host
+
+New provider checks found originalEhost k3aee2m68765em with6 then5 free GPUs while the
+uploaded source stayed0. Exact model matchesNVIDIA A100-SXM4-80GB and quotedGPUprice1.59.
+The earlier Ehost switch was justified by two no-capacity restarts, documented in
+research/m13-e-preparation-review-2026-09-11.md. Today's capacity wait was too narrow;
+all retained hosts should have been rechecked sooner. User authorized migration and training.
+Old waiting coordinator stopped before dispatch and receipt preserved. Concrete migration,
+cumulative allowance and direct build-adoption supervisors prepared with two inexpensive
+reviewers. Runtime-preservation and isolated handoff tests:9passed, no real payload access.
+
+Migration integration review corrected startup timestamps, all-in source/target pricing,
+preallocation ancestor binding after publication, exact GraphQL model/count checks, rsync
+restoration after container reset, matching verifier manifest paths, exclusive atomic READY,
+and cleanup before sourceSTOP. Transfer deadline reserves a bounded build-claim lease; target
+stays running only after the separately reviewed build takes responsibility for STOP. Budget
+reviewer GO, final integration recheck underway.23 focused synthetic checks passed.

@@ -1,0 +1,29 @@
+{
+  "status": "FAILED",
+  "stage": "finished",
+  "pid": 28201,
+  "started_at": 1789216063.9971528,
+  "initial_commit": "01ba410baa5c188cce9027d1d5f2bf4e649c6bac",
+  "source_sha256": {
+    "scripts/m13_after_upload.py": "a37e7ec5cbd6b0d17e18515e3b7136de17cf5c1009dc7ac821dc42c8bb91a562",
+    "scripts/m13_after_cpu_allocation.py": "7104f44b10795b77aa346208595b5ea422817141b5531471dd3515f61a8a1aa5",
+    "scripts/m13_resume_allocation.py": "b5374ecac92d4b34933c337ea97faefc37f8f316e90212d903afabf8e831f5c2",
+    "scripts/m13_resume_build.py": "c02bfa49e32d4ab6d884414a22f17866ff62652f9b1834bf2b625726fb2c03b0",
+    "m13/after_cpu_supervisor.patch": "94ca7ae2b5f6f8ef981cf07a607a4eab448b8a729dde21a43efe5d9361824213",
+    "scripts/m13_upload_only.py": "679a94c36002cf5e69204dda2d245a64f6b3aa4a8852651c6ebbb01d2c678d6c",
+    "m13/monitor_config.json": "f4503f4b7f761f142afdf5f1107884067f04d287bad7d58f7ccaea98384aec52",
+    "scripts/m13_verify_uploaded.py": "ab7bde8f70f5231ff9b029721c0463f4ab40986563607d6e76ce97d281f4ceb1"
+  },
+  "updated_at": 1789216730.5495422,
+  "storage_upload_sha256": "c66750826b16efa261eac55de2795685e7fa10495a0f8bff7dd6eb11f8aa05ac",
+  "container_restoration": {
+    "changed": true,
+    "containerDiskInGb": 30,
+    "pod_status": "EXITED",
+    "restored_at": 1789216428.7610571
+  },
+  "applied_supervisor_sha256": "846e93b71fca78f6b4174b9dfc0e667175db11cb0bc453046e50b8d5d49c67d7",
+  "available_gpus": 0,
+  "finished_at": 1789216945.4379482,
+  "error": "User-authorized migration supersedes read-only capacity wait; stopped before any build dispatch"
+}

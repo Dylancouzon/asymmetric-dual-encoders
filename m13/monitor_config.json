@@ -131,6 +131,35 @@
       ],
       "wait_for": "verification only upload recovery",
       "stale_seconds": 900
+    },
+    {
+      "name": "cloud to cloud input migration",
+      "receipt": "results/m13_migration.json",
+      "pid_file": "work/m13cloud-launchers/migrate_inputs.pid",
+      "logs": [
+        "logs/m13-migrate-inputs.log"
+      ],
+      "stale_seconds": 600
+    },
+    {
+      "name": "migration to build handoff",
+      "receipt": "results/m13_after_migration.json",
+      "pid_file": "work/m13cloud-launchers/after_migration.pid",
+      "logs": [
+        "logs/m13-after-migration.log"
+      ],
+      "wait_for": "cloud to cloud input migration",
+      "stale_seconds": 300
+    },
+    {
+      "name": "200M migrated A100 build",
+      "receipt": "results/m13_cloud_build_migrated.json",
+      "pid_file": "work/m13cloud-launchers/build_migrated.pid",
+      "logs": [
+        "logs/m13-build-migrated-controller.log",
+        "logs/m13-build-migrated.log"
+      ],
+      "stale_seconds": 1800
     }
   ]
 }

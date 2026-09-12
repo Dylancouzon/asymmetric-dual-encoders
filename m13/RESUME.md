@@ -1,3 +1,25 @@
+# Active migration preparation — user authorized returning to E host
+
+User explicitly authorized moving to the available retained original E host and starting
+training. Source `wnzk8eeqrrkw4m` has the verified394 inputs; target `k3aee2m68765em` is the
+same A100-SXM4-80GB model at quoted$1.59/h, persistent500GB, container30GB. No new Pod.
+Old capacity coordinatorPID28201 was terminated while waiting_gpu, before any build dispatch;
+its final superseded receipt is preserved at results/m13_after_verification.json.
+
+New direct cloud migration uses an ephemeral read key, exact manifest paths, destination
+hashes, sourceSTOP, and a bounded target-GPU lease through adoption by the build supervisor.
+No inputs pass back through the home upload connection. Prior E outputs and runtime are
+preserved before deployment. The unchanged200M recipe, preflight, finalization and backups
+remain mandatory. New allocation must include both Pods' concurrent charges and all prior
+elapsed intervals; original144h/$239.56 stage and$1000 ceiling remain unchanged.
+
+Operational paths: scripts/m13_migrate_inputs.py, scripts/m13_migration_allocation.py,
+scripts/m13_after_migration.py, scripts/m13_build_migrated.py. Corresponding receipts:
+results/m13_migration.json (mutable), results/m13_migration_ready.json (immutable),
+results/m13_after_migration.json, results/m13_cloud_build_migrated.json. Check them and
+PID files before action; never race a live migration or build. Independent reviews and
+checks must clear the concrete code before paid resume. Historical state follows.
+
 # Current state: upload verified, waiting for GPU — 2026-09-12
 
 Verification PASSED: all394 files,72,623,148,280bytes,259.6seconds remote hashing.
