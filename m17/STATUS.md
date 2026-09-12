@@ -56,12 +56,27 @@ both given; see `LEDGER.md`.)
    divergence flag, all export gates PASS, one read each:
    `work/m17/runs/m17-<arm>-screen-s0/screen.json`. nDCG@10 macros C 0.5807, V 0.5810,
    L 0.5936, VL 0.5938, VL-A 0.5938; the untrained V0 read was 0.6153 on the same surface.
-   Decision protocol being applied exactly as registered (`m17/screen_decision_2026-09-12.json`
-   when written); a non-quality diagnosis of the trained-below-untrained gap runs beside it.
-4. **After the screen:** apply `training.decision_protocol` (eligibility vs v1, `screen_ordering`
-   walk VL-A→VL→{L,V}→C, `simple_arm_tie_band`); record the verdict in `LEDGER.md`. `no_survivor`
-   is a registered STOP. Otherwise the registered full runs follow under the same launcher rule
-   unless Dylan says "stop after the screen".
+4. **Decision — `no_survivor`, registered STOP (2026-09-12, `532f7e4`).** No arm meets the
+   eligibility predicate against v1 (every arm loses ≥ 0.021 macro; three or four components lose
+   > 0.01). Full runs not started; reserve not spent. Decision file
+   `m17/screen_decision_2026-09-12.json`; arithmetic, reference disclosure and the non-quality
+   diagnosis in `LEDGER.md`.
+
+**NIGHT STOPPED HERE (registered STOP). Dylan decides next.** Facts for that decision:
+
+- The registry names no v1 reference numbers for `eligibility`; the M7 audit row for the released
+  table was used and V0 reproduces it to 2e-5. A dated registration of that reference is owed.
+- Trained arms read below the untrained V0 on the same loader, manifest and quantization path.
+  Train and held-out losses fall while retrieval falls; the schedule is complete (decays to 0 at
+  4,000); the anchor is inert at weight 1e-3. Undiagnosed failure, not evidence against the method.
+- The distinguishing measurement is a read of one arm's intermediate checkpoints on the suite,
+  which needs a registered allocation (all screen reads are spent). Cheaper non-read checks first:
+  reproduce the training objective on the V0 table itself (is v1 already near the objective's
+  optimum, or does the objective disagree with retrieval?), and check the teacher query targets in
+  the cache against stella's live query encoding for a sample.
+- Options are Dylan's: register a diagnostic read allocation; amend the recipe (objective or anchor
+  weight) as a dated pre-registration for a second screen inside the 72 h clock; or close v1.1 with
+  the negative result recorded. Clock started 2026-09-11T23:41:24Z.
 
 **Working model for every M17 session (Dylan, 2026-09-11):** Fable orchestrates; Opus subagents
 do execution; at most two subagents run concurrently; subagents never spawn subagents. Codex

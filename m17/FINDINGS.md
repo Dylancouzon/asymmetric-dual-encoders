@@ -100,3 +100,16 @@ A pre-clock rehearsal that stubs the only on-clock import does not exercise the 
 order; the first screened build died at `parity` on it. Smoke the real import chain at least once
 before binding a source hash — the fix was one line, but it cost a dated amendment to an invariant
 build input already bound by the pre half.
+
+## 2026-09-12 — screen `no_survivor`: the registered objective moved v1 away from itself
+
+All five 4,000-step screen arms read 0.021–0.035 nDCG@10 macro below the untrained V0 export on the
+same loader, manifest and quantization path, while train and held-out losses fell monotonically and
+the schedule completed. Lessons: (1) a warm start from a released table needs a registered
+eligibility reference with numbers, not the word "v1"; (2) an anchor at weight 1e-3 contributes
+1e-6 to the loss and constrains nothing — if the anchor is meant to bind, its weight must be set from
+the measured drift, not assumed; (3) monitoring losses on training sources cannot detect a retrieval
+regression on the dev suite, so a warm-start recipe should budget an early read of an intermediate
+checkpoint before spending a full screen; (4) the protected screen can shrink a fixed-size held-out
+slice — pins should reference the lock-bound manifest, not a literal. Details: `LEDGER.md`
+2026-09-12 entries, `screen_decision_2026-09-12.json`.
