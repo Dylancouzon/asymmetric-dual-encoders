@@ -1,0 +1,21 @@
+{
+  "status": "RUNNING",
+  "stage": "bootstrap",
+  "pid": 128121,
+  "started_at": 1789170672.323684,
+  "code_commit": "1b83e81ba7b63eace36c402dcac0590a63959302",
+  "original_pod_id": "k3aee2m68765em",
+  "name": "m13-gate-chain-20260911",
+  "maximum_execution_seconds": 61200,
+  "allocation_sha256": "1905252e1e0010c8d9d186467b879d89ec952de68ed681bdebdc313f5d55306e",
+  "owned_pod_ids": [
+    "wnzk8eeqrrkw4m"
+  ],
+  "updated_at": 1789170711.5976832,
+  "quote": {
+    "stockStatus": "Low",
+    "uninterruptablePrice": 1.59
+  },
+  "pod_id": "wnzk8eeqrrkw4m",
+  "gpu_price_usd_h": 1.59
+}

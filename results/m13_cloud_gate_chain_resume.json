@@ -1,0 +1,32 @@
+{
+  "status": "RUNNING",
+  "stage": "uploading",
+  "pid": 132901,
+  "started_at": 1789170672.323684,
+  "takeover_at": 1789171924.9207034,
+  "code_commit": "0dfd2262075b7b1a4283117352eacd107af7811f",
+  "original_controller_receipt_sha256": "9891ba005da42312432bbe82636d3b9185294450ddd1e4aac88a50c019d7a708",
+  "original_controller_pid": 128121,
+  "original_controller_receipt": "results/m13_cloud_gate_chain.json",
+  "original_code_commit": "1b83e81ba7b63eace36c402dcac0590a63959302",
+  "original_pod_id": "k3aee2m68765em",
+  "name": "m13-gate-chain-20260911",
+  "maximum_execution_seconds": 61200,
+  "allocation_sha256": "1905252e1e0010c8d9d186467b879d89ec952de68ed681bdebdc313f5d55306e",
+  "owned_pod_ids": [
+    "wnzk8eeqrrkw4m"
+  ],
+  "updated_at": 1789172046.3425186,
+  "pod_id": "wnzk8eeqrrkw4m",
+  "gpu_price_usd_h": 1.59,
+  "previous_controller_killed": true,
+  "old_remote_writer_absence_verified": true,
+  "runtime_bootstrap_original_sha256": "d2cb437d60a20cc4816698ea58835ba99558739f0636a91eb6b5af1be87d6fdf",
+  "runtime_bootstrap_local_disk_sha256": "e4330f7aeeefa36aa6210f500c7c9a7b931da6e28844b07e32ccd10e766a963e",
+  "runtime_replacements": {
+    "UV_CACHE_DIR=/home/dylan/.cache/uv": "UV_CACHE_DIR=/opt/m13-runtime/uv-cache",
+    "UV_PYTHON_INSTALL_DIR=/home/dylan/.local/share/uv/python": "UV_PYTHON_INSTALL_DIR=/opt/m13-runtime/python",
+    "uv_tools=/home/dylan/.local/share/m13-uv-0.12.5": "uv_tools=/opt/m13-runtime/uv-tools",
+    "venv=\"$repo/.venv\"": "venv=/opt/m13-runtime/venv"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "pod_id": "wnzk8eeqrrkw4m",
+  "status": "PROVISIONED",
+  "gpu_price_ceiling_usd_h": 1.59,
+  "name": "m13-gate-chain-20260911",
+  "ssh_config": "/home/dylan/.config/runpod/m13_gate_chain_ssh_config",
+  "ssh_alias": "m13-gate-chain"
+}
