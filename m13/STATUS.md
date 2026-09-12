@@ -29,6 +29,13 @@ Stage ceiling$28.29; revised conservative project allocation$669.52 under$1,000,
 three retained disks. `results/m13_gate_chain_allocation.json` binds the prerequisites.
 M17 keeps the original checkout and local GPU; M13 uses `work/m13cloud`.
 
+The reviewed success-only handoff (`results/m13_after_gate.json`) will publish the verified
+gate, reconcile funding, and launch the fixed build without another owner prompt. Build
+receipt: `results/m13_cloud_build.json`; logs: `logs/m13-build-controller.log` and
+`logs/m13-build.log`. The144-hour maximum costs$239.56 and includes setup, training,
+finalization and backup; the actual training extrapolation remains62.86 hours. Full project
+allocation refreshes to$690.78 plus paid spend, preserving all future evaluation reserves.
+
 Independent monitoring is active as `m13-monitor.service`: five-minute checks, local Windows
 alerts, and durable health/transition records. Add each next job before launch; configuration,
 operating limits and verified failure tests are documented in `m13/MONITORING.md`.

@@ -41,6 +41,27 @@
         "logs/m13-lotte-gate.log"
       ],
       "stale_seconds": 900
+    },
+    {
+      "name": "gate to build handoff",
+      "receipt": "results/m13_after_gate.json",
+      "pid_file": "work/m13cloud-launchers/after_gate.pid",
+      "logs": [
+        "logs/m13-after-gate.log"
+      ],
+      "wait_for": "fp16 and LoTTE transfer continuation",
+      "stale_seconds": 900
+    },
+    {
+      "name": "full 200M build",
+      "receipt": "results/m13_cloud_build.json",
+      "pid_file": "work/m13cloud-launchers/build.pid",
+      "logs": [
+        "logs/m13-build-controller.log",
+        "logs/m13-build.log"
+      ],
+      "wait_for": "gate to build handoff",
+      "stale_seconds": 900
     }
   ]
 }

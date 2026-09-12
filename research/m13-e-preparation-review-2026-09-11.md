@@ -191,3 +191,43 @@ mount with these flags. Both independent reviewers returned GO; syntax and diff 
 Original 17-hour deadline and $28.29 cap remain unchanged. Source
 `work/m13cloud-launchers/gate_chain_upload.py` sha256
 `0d891b1f7671adb105aa1215d3e385d987df179afd8732366bce3ef26f690134`.
+
+Unattended build preparation: the exact394 admitted training/COV/HF/DEV-6 files are now
+pinned by content SHA in `m13/build_transfer_manifest.json` (72,623,148,280 logical bytes).
+Only those named admitted inputs were hashed; final-six/reserved/LoTTE payloads are excluded.
+Source size, modification time and inode were checked for stability during hashing.
+
+`scripts/m13_build_preflight.py` exercises the full uncut registered CPU assembly and
+existing COV/DEV-6 caches with teacher encoding and model loading disabled. It binds HEAD,
+metadata and code, preserves legacy trust-on-first-use labels, and runs only after the
+controller verifies every transferred content hash. Five synthetic tests passed, rerun
+independently; both source reviews GO. No actual cloud preflight was run in review.
+
+The reviewed build supervisor restores container-local pinned runtime, stages394 inputs
+under a shared10-hour transfer allowance, and requires enough time for planned training
+and finalization before starting. Its maximum144 hours costs$239.56 at the fixed quote.
+The project allocation formula retains the complete existing model and309-dollar storage
+reserve, adds the prior2-hour setup supplement plus18.28 build hours, then actual paid spend:
+$690.78 plus paid spend, freshly reconciled after the gate. This is a conservative ceiling,
+not an expected duration or bill. No new Pod creation or additional training cycles.
+
+Build backups retain the latest two checksum-verified rolling copies and every final output.
+A transient optional rolling-copy failure receives a bounded retry and warning. One retry
+is allowed only for explicit frozen_unverified finalization with completed200M training;
+checkpoint, recipe and code identities remain fixed. Full backup and bounded STOP apply
+on every terminal path. Two independent build-supervisor and allocation reviews GO.
+
+The success-only coordinator waits for the exact gate controller, verifies gate/benchmark/
+backup metadata and STOP, requires unchanged initially reviewed HEAD and launcher hashes,
+commits/pushes only intended gate artifacts, runs the reviewed allocation reconciliation,
+commits/pushes it, and confirms a live build receipt before reporting PASSED/handed_off.
+Three synthetic Git checks verified precise commit/push and rejection of unrelated tracked
+or staged edits; unrelated untracked evidence stays untouched. Both coordinator reviews GO.
+The existing five-minute monitor covers gate, handoff and build. Same-Pod restart still
+depends on GPU capacity; this workflow makes no unsupported availability guarantee.
+
+Operational source `work/m13cloud-launchers/build.py` SHA256 `16e6b2f2240962e1073174654ebc9cd99e9e51596b9b5900d7cf8039e021e74b`.
+
+Operational source `work/m13cloud-launchers/build_allocation.py` SHA256 `7e07fe1cf9a577c268e04c1f29a66fac22fc577a018e7ec85228e4493354df26`.
+
+Operational source `work/m13cloud-launchers/after_gate.py` SHA256 `607a1006b5bcb706656e1ee8b105ec3477614fad69e0e1b2d6ca837743ba8f9c`.

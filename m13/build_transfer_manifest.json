@@ -1,0 +1,2779 @@
+{
+  "status": "HASH_PINNED_NOT_LAUNCH_APPROVAL",
+  "scope": "Fixed existing training/COV/HF inputs plus exact admitted DEV6 cache dependencies; no protected evaluation payloads.",
+  "entries": [
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/artefactory___ledger-long-context-kpi-qa/eval/0.0.0/7881df56838231a4ff30279b5755da7837d8f637/dataset_info.json",
+      "destination": "/home/dylan/.cache/huggingface/datasets/artefactory___ledger-long-context-kpi-qa/eval/0.0.0/7881df56838231a4ff30279b5755da7837d8f637/dataset_info.json",
+      "group": "hf_dependencies",
+      "bytes": 1327,
+      "sha256": "c3ea984eab337c8e2fe12227e4f107b771e7cb813f2fe1935f447dd3396159f8"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/artefactory___ledger-long-context-kpi-qa/eval/0.0.0/7881df56838231a4ff30279b5755da7837d8f637/ledger-long-context-kpi-qa-test-00000-of-00005.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/artefactory___ledger-long-context-kpi-qa/eval/0.0.0/7881df56838231a4ff30279b5755da7837d8f637/ledger-long-context-kpi-qa-test-00000-of-00005.arrow",
+      "group": "hf_dependencies",
+      "bytes": 779204856,
+      "sha256": "1907f986417f77e5f2e842f4e6f4cf75cbfa8c222b3e4774051a108453696ef2"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/artefactory___ledger-long-context-kpi-qa/eval/0.0.0/7881df56838231a4ff30279b5755da7837d8f637/ledger-long-context-kpi-qa-test-00001-of-00005.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/artefactory___ledger-long-context-kpi-qa/eval/0.0.0/7881df56838231a4ff30279b5755da7837d8f637/ledger-long-context-kpi-qa-test-00001-of-00005.arrow",
+      "group": "hf_dependencies",
+      "bytes": 721315960,
+      "sha256": "0e4bbb9381ea58ee613cdcbf8aeaf3808c3a44e110fc7565d740ee975ddb5819"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/artefactory___ledger-long-context-kpi-qa/eval/0.0.0/7881df56838231a4ff30279b5755da7837d8f637/ledger-long-context-kpi-qa-test-00002-of-00005.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/artefactory___ledger-long-context-kpi-qa/eval/0.0.0/7881df56838231a4ff30279b5755da7837d8f637/ledger-long-context-kpi-qa-test-00002-of-00005.arrow",
+      "group": "hf_dependencies",
+      "bytes": 713956816,
+      "sha256": "c5a602f2fdb7cbbe0f7bd82cd989a4d85024e752a905aadc02b737741ee7c3f8"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/artefactory___ledger-long-context-kpi-qa/eval/0.0.0/7881df56838231a4ff30279b5755da7837d8f637/ledger-long-context-kpi-qa-test-00003-of-00005.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/artefactory___ledger-long-context-kpi-qa/eval/0.0.0/7881df56838231a4ff30279b5755da7837d8f637/ledger-long-context-kpi-qa-test-00003-of-00005.arrow",
+      "group": "hf_dependencies",
+      "bytes": 711857824,
+      "sha256": "dda1612490aa701ec893aa1544123a5f91601a4518c1aabaebc052b0f977ba46"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/artefactory___ledger-long-context-kpi-qa/eval/0.0.0/7881df56838231a4ff30279b5755da7837d8f637/ledger-long-context-kpi-qa-test-00004-of-00005.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/artefactory___ledger-long-context-kpi-qa/eval/0.0.0/7881df56838231a4ff30279b5755da7837d8f637/ledger-long-context-kpi-qa-test-00004-of-00005.arrow",
+      "group": "hf_dependencies",
+      "bytes": 696449176,
+      "sha256": "95b5ad98d923cca129808d358ba122c4e8fdbe449a58ad66915597f6815a8432"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_consumer_contracts_qa/corpus/0.0.0/f9eafd458f9c61e531d4a2510d8a11dfd2282b21/dataset_info.json",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_consumer_contracts_qa/corpus/0.0.0/f9eafd458f9c61e531d4a2510d8a11dfd2282b21/dataset_info.json",
+      "group": "hf_dependencies",
+      "bytes": 605,
+      "sha256": "0256bea0d88f637db297bee8e30a3517bf42434e7379f7953045c84a218138a0"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_consumer_contracts_qa/corpus/0.0.0/f9eafd458f9c61e531d4a2510d8a11dfd2282b21/legalbench_consumer_contracts_qa-corpus.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_consumer_contracts_qa/corpus/0.0.0/f9eafd458f9c61e531d4a2510d8a11dfd2282b21/legalbench_consumer_contracts_qa-corpus.arrow",
+      "group": "hf_dependencies",
+      "bytes": 427008,
+      "sha256": "007656495d6566ca669e75ebd7581c3f668ce726bb8a621aa224a9653007b647"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_consumer_contracts_qa/default/0.0.0/f9eafd458f9c61e531d4a2510d8a11dfd2282b21/dataset_info.json",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_consumer_contracts_qa/default/0.0.0/f9eafd458f9c61e531d4a2510d8a11dfd2282b21/dataset_info.json",
+      "group": "hf_dependencies",
+      "bytes": 609,
+      "sha256": "2197654be8395eb55cb89e760c12c8868df30787777476a903da86138d9d9a34"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_consumer_contracts_qa/default/0.0.0/f9eafd458f9c61e531d4a2510d8a11dfd2282b21/legalbench_consumer_contracts_qa-test.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_consumer_contracts_qa/default/0.0.0/f9eafd458f9c61e531d4a2510d8a11dfd2282b21/legalbench_consumer_contracts_qa-test.arrow",
+      "group": "hf_dependencies",
+      "bytes": 13040,
+      "sha256": "c0979345fb19a201bc5e69a9679c2f8362f90353fd2d7f1add6c0df2d3333444"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_consumer_contracts_qa/queries/0.0.0/f9eafd458f9c61e531d4a2510d8a11dfd2282b21/dataset_info.json",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_consumer_contracts_qa/queries/0.0.0/f9eafd458f9c61e531d4a2510d8a11dfd2282b21/dataset_info.json",
+      "group": "hf_dependencies",
+      "bytes": 556,
+      "sha256": "6bed8f54dea0e77b19365223d4ac3de9adc3132e30f60e2b9d9f39b3b6f93103"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_consumer_contracts_qa/queries/0.0.0/f9eafd458f9c61e531d4a2510d8a11dfd2282b21/legalbench_consumer_contracts_qa-queries.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_consumer_contracts_qa/queries/0.0.0/f9eafd458f9c61e531d4a2510d8a11dfd2282b21/legalbench_consumer_contracts_qa-queries.arrow",
+      "group": "hf_dependencies",
+      "bytes": 42336,
+      "sha256": "c0ab5acb24ba6faaf442ba4cf8c43d95ba744f0ca344d70bed703f5b82337c24"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_corporate_lobbying/corpus/0.0.0/f43436957b41692dd3e1b06a6d7116cd09f6a1db/dataset_info.json",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_corporate_lobbying/corpus/0.0.0/f43436957b41692dd3e1b06a6d7116cd09f6a1db/dataset_info.json",
+      "group": "hf_dependencies",
+      "bytes": 599,
+      "sha256": "4eaa14bb793b27cdf7a94961d5f43b86fc98ad87bce1934d22a5a2660dd77347"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_corporate_lobbying/corpus/0.0.0/f43436957b41692dd3e1b06a6d7116cd09f6a1db/legalbench_corporate_lobbying-corpus.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_corporate_lobbying/corpus/0.0.0/f43436957b41692dd3e1b06a6d7116cd09f6a1db/legalbench_corporate_lobbying-corpus.arrow",
+      "group": "hf_dependencies",
+      "bytes": 377104,
+      "sha256": "5120e14d9c06fc1a222abaeec9ee3a7332240f409622084959b1941decd73c7b"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_corporate_lobbying/default/0.0.0/f43436957b41692dd3e1b06a6d7116cd09f6a1db/dataset_info.json",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_corporate_lobbying/default/0.0.0/f43436957b41692dd3e1b06a6d7116cd09f6a1db/dataset_info.json",
+      "group": "hf_dependencies",
+      "bytes": 603,
+      "sha256": "4327718573775f1e77d50de693005377ffbeb9da2b14864ed96268803ae2a023"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_corporate_lobbying/default/0.0.0/f43436957b41692dd3e1b06a6d7116cd09f6a1db/legalbench_corporate_lobbying-test.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_corporate_lobbying/default/0.0.0/f43436957b41692dd3e1b06a6d7116cd09f6a1db/legalbench_corporate_lobbying-test.arrow",
+      "group": "hf_dependencies",
+      "bytes": 11304,
+      "sha256": "393c6e65000b3bdcea7572b0087fd7b353f285bae3cafa0643acbccfb3eedc68"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_corporate_lobbying/queries/0.0.0/f43436957b41692dd3e1b06a6d7116cd09f6a1db/dataset_info.json",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_corporate_lobbying/queries/0.0.0/f43436957b41692dd3e1b06a6d7116cd09f6a1db/dataset_info.json",
+      "group": "hf_dependencies",
+      "bytes": 551,
+      "sha256": "9293849f726007ab8c463687c89d374c7ea5d0ebd4525699f1f2cb832234ba3d"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_corporate_lobbying/queries/0.0.0/f43436957b41692dd3e1b06a6d7116cd09f6a1db/legalbench_corporate_lobbying-queries.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___legalbench_corporate_lobbying/queries/0.0.0/f43436957b41692dd3e1b06a6d7116cd09f6a1db/legalbench_corporate_lobbying-queries.arrow",
+      "group": "hf_dependencies",
+      "bytes": 65488,
+      "sha256": "e040d4e536d7c22c375766986a13f86cffbc14b33f60735c0be010757226d40a"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___medical_qa/corpus/0.0.0/a77efe81ec0c03aff7fecde742a5c9c4c46f6005/dataset_info.json",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___medical_qa/corpus/0.0.0/a77efe81ec0c03aff7fecde742a5c9c4c46f6005/dataset_info.json",
+      "group": "hf_dependencies",
+      "bytes": 566,
+      "sha256": "bea4e6276f88420ced9e3a00d0f682ce8f456733c9c14d10d61c42b814810fba"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___medical_qa/corpus/0.0.0/a77efe81ec0c03aff7fecde742a5c9c4c46f6005/medical_qa-corpus.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___medical_qa/corpus/0.0.0/a77efe81ec0c03aff7fecde742a5c9c4c46f6005/medical_qa-corpus.arrow",
+      "group": "hf_dependencies",
+      "bytes": 2462608,
+      "sha256": "80e834f5c60e0f1b459d97ce4de826c9c1d0dfde527c4dadec4dc1cc63cfaf6b"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___medical_qa/default/0.0.0/a77efe81ec0c03aff7fecde742a5c9c4c46f6005/dataset_info.json",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___medical_qa/default/0.0.0/a77efe81ec0c03aff7fecde742a5c9c4c46f6005/dataset_info.json",
+      "group": "hf_dependencies",
+      "bytes": 570,
+      "sha256": "f61aaa86b566f487b108de4d95788df7c843245ac95a720277919fa25dcc5f2a"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___medical_qa/default/0.0.0/a77efe81ec0c03aff7fecde742a5c9c4c46f6005/medical_qa-test.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___medical_qa/default/0.0.0/a77efe81ec0c03aff7fecde742a5c9c4c46f6005/medical_qa-test.arrow",
+      "group": "hf_dependencies",
+      "bytes": 181688,
+      "sha256": "4a91b6c967db8f0a375780e91941134908a5aac3f37d0b9e3a8521d8f0421fee"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___medical_qa/queries/0.0.0/a77efe81ec0c03aff7fecde742a5c9c4c46f6005/dataset_info.json",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___medical_qa/queries/0.0.0/a77efe81ec0c03aff7fecde742a5c9c4c46f6005/dataset_info.json",
+      "group": "hf_dependencies",
+      "bytes": 517,
+      "sha256": "6dd2386c45c33df2c190433d63a4d1726d17f23d8294467a49c18efaf963c091"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/mteb___medical_qa/queries/0.0.0/a77efe81ec0c03aff7fecde742a5c9c4c46f6005/medical_qa-queries.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/mteb___medical_qa/queries/0.0.0/a77efe81ec0c03aff7fecde742a5c9c4c46f6005/medical_qa-queries.arrow",
+      "group": "hf_dependencies",
+      "bytes": 198792,
+      "sha256": "5df199e18911f36aa14ed6bfc68682a24b26f9efc5a712471695f42fb5b2bc2c"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/documents/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-biology.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/documents/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-biology.arrow",
+      "group": "hf_dependencies",
+      "bytes": 21998384,
+      "sha256": "9968648c1be8e6fee3bfe0cde220b6755f6b894f834f7c4521892eda0e53fcb5"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/documents/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-earth_science.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/documents/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-earth_science.arrow",
+      "group": "hf_dependencies",
+      "bytes": 46982808,
+      "sha256": "92fac948530363c4da55fac3f8af11c47b41fe0d865089c922bbdac9a4379a88"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/documents/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-economics.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/documents/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-economics.arrow",
+      "group": "hf_dependencies",
+      "bytes": 22784320,
+      "sha256": "93075754b1b65225c0e78c1b1ca28d366ce8aade49f9dba3ee1ef233522961e4"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/documents/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-psychology.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/documents/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-psychology.arrow",
+      "group": "hf_dependencies",
+      "bytes": 23180896,
+      "sha256": "304ac7a8c0b08b24ffc615f4aa4b2413771269376e5bb90efb27ba5aeb7f9e6c"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/documents/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-robotics.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/documents/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-robotics.arrow",
+      "group": "hf_dependencies",
+      "bytes": 20734032,
+      "sha256": "968d853d964af60420719c9a5b19369bc608bdd4afd2a5e4a82ea2b1bdc7deff"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/documents/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-sustainable_living.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/documents/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-sustainable_living.arrow",
+      "group": "hf_dependencies",
+      "bytes": 24389160,
+      "sha256": "60828a866a339753e7e5ddb9e4b660c3a10e741d9fdb00b9ec2b1dcbe7e93ecf"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/documents/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/dataset_info.json",
+      "destination": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/documents/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/dataset_info.json",
+      "group": "hf_dependencies",
+      "bytes": 1775,
+      "sha256": "f696c9080d9b5a633742f1e7e7369f5c4ff97428a642f4f3822da5fff194da75"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/examples/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-biology.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/examples/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-biology.arrow",
+      "group": "hf_dependencies",
+      "bytes": 328256,
+      "sha256": "2f4550041d08ea2732656c275612f33874cf326d05fd366e7c69dcc46278a21b"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/examples/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-earth_science.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/examples/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-earth_science.arrow",
+      "group": "hf_dependencies",
+      "bytes": 282616,
+      "sha256": "1ffcac811410009dc056a6bde91ae8e822b170308db589d8dbeed162943bad41"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/examples/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-economics.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/examples/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-economics.arrow",
+      "group": "hf_dependencies",
+      "bytes": 345016,
+      "sha256": "b229536d4a0e6163594fa7677968ea933e2f6914872d797b7ffbf92851e2038d"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/examples/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-psychology.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/examples/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-psychology.arrow",
+      "group": "hf_dependencies",
+      "bytes": 287904,
+      "sha256": "9b9992d35829736cb24982c4fcb1616af6218de1c9635518d21041fa55a80688"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/examples/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-robotics.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/examples/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-robotics.arrow",
+      "group": "hf_dependencies",
+      "bytes": 368704,
+      "sha256": "3a683388593fdb83a205620b112c42c7a0cb4d3fab259c6352f146262ee2e633"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/examples/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-sustainable_living.arrow",
+      "destination": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/examples/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/bright-sustainable_living.arrow",
+      "group": "hf_dependencies",
+      "bytes": 338424,
+      "sha256": "508809a1eeb017142a1a1e5d3500cbed88471274a6d3e692aa1d321ff1faee10"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/examples/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/dataset_info.json",
+      "destination": "/home/dylan/.cache/huggingface/datasets/xlangai___bright/examples/0.0.0/3066d29c9651a576c8aba4832d249807b181ecae/dataset_info.json",
+      "group": "hf_dependencies",
+      "bytes": 2073,
+      "sha256": "94df5bfe7151374fc81627d65990f6415aa4d61f9e85a509fa4cc1c1f5f704ed"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/.no_exist/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/adapter_config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/.no_exist/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/adapter_config.json",
+      "group": "hf_dependencies",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/.no_exist/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/added_tokens.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/.no_exist/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/added_tokens.json",
+      "group": "hf_dependencies",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/.no_exist/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/chat_template.jinja",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/.no_exist/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/chat_template.jinja",
+      "group": "hf_dependencies",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/.no_exist/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/preprocessor_config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/.no_exist/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/preprocessor_config.json",
+      "group": "hf_dependencies",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/.no_exist/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/processor_config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/.no_exist/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/processor_config.json",
+      "group": "hf_dependencies",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/.no_exist/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/video_preprocessor_config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/.no_exist/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/video_preprocessor_config.json",
+      "group": "hf_dependencies",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/1da070f0993788c8851a652170ff013aa54dd519",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/1da070f0993788c8851a652170ff013aa54dd519",
+      "group": "hf_dependencies",
+      "bytes": 190,
+      "sha256": "d1caf60c96f5fba2157c0c26b76d80818fad6cf0b8eb5e73ec372ff9818eba5c"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/37fca74771bc76a8e01178ce3a6055a0995f8093",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/37fca74771bc76a8e01178ce3a6055a0995f8093",
+      "group": "hf_dependencies",
+      "bytes": 366,
+      "sha256": "9261e7d79b44c8195c1cada2b453e55b00aeb81e907a6664974b4d7776172ab3"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/3992bf890728a92476c700e6e657fd696eb94160",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/3992bf890728a92476c700e6e657fd696eb94160",
+      "group": "hf_dependencies",
+      "bytes": 743,
+      "sha256": "094f8e891b932f2000c92cfc663bac4c62069f5d8af5b5278c4306aef3084750"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/3c9f31665447c8911517620762200d2245a2518d6e7208acc78cd9db317e21ad",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/3c9f31665447c8911517620762200d2245a2518d6e7208acc78cd9db317e21ad",
+      "group": "hf_dependencies",
+      "bytes": 133466304,
+      "sha256": "3c9f31665447c8911517620762200d2245a2518d6e7208acc78cd9db317e21ad"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/688882a79f44442ddc1f60d70334a7ff5df0fb47",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/688882a79f44442ddc1f60d70334a7ff5df0fb47",
+      "group": "hf_dependencies",
+      "bytes": 711396,
+      "sha256": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/8b8567d75ffa619486d9590cb0eb76d66ad46c49",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/8b8567d75ffa619486d9590cb0eb76d66ad46c49",
+      "group": "hf_dependencies",
+      "bytes": 94783,
+      "sha256": "ddb964361a55c6e5dfca6361615854b260c9c960205d04c7520151aaa1d75837"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/952a9b81c0bfd99800fabf352f69c7ccd46c5e43",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/952a9b81c0bfd99800fabf352f69c7ccd46c5e43",
+      "group": "hf_dependencies",
+      "bytes": 349,
+      "sha256": "84e40c8e006c9b1d6c122e02cba9b02458120b5fb0c87b746c41e0207cf642cf"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/a8b3208c2884c4efb86e49300fdd3dc877220cdf",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/a8b3208c2884c4efb86e49300fdd3dc877220cdf",
+      "group": "hf_dependencies",
+      "bytes": 125,
+      "sha256": "b6d346be366a7d1d48332dbc9fdf3bf8960b5d879522b7799ddba59e76237ee3"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/dcb0c0d97d09b930d13600b1a773ddb27e441aab",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/dcb0c0d97d09b930d13600b1a773ddb27e441aab",
+      "group": "hf_dependencies",
+      "bytes": 124,
+      "sha256": "940d5f50db195fa6e5e6a4f122c095f77880de259d74b14a65779ed48bdd7c56"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/ea85692bff64b0d1917833c31ddbca8ab10f5455",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/ea85692bff64b0d1917833c31ddbca8ab10f5455",
+      "group": "hf_dependencies",
+      "bytes": 52,
+      "sha256": "84e39fda68ccbff05bfa723ae9c0e70e23e2ec373b76e0f8c6e71af72a693cbf"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/fb140275c155a9c7c5a3b3e0e77a9e839594a938",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/blobs/fb140275c155a9c7c5a3b3e0e77a9e839594a938",
+      "group": "hf_dependencies",
+      "bytes": 231508,
+      "sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/refs/main",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/refs/main",
+      "group": "hf_dependencies",
+      "bytes": 40,
+      "sha256": "ffab3e52cd5ee4392d8f18ad15b92958ec7613845a17e0497125d282fe8b3827"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/1_Pooling/config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/1_Pooling/config.json",
+      "group": "hf_dependencies",
+      "bytes": 190,
+      "sha256": "d1caf60c96f5fba2157c0c26b76d80818fad6cf0b8eb5e73ec372ff9818eba5c"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/README.md",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/README.md",
+      "group": "hf_dependencies",
+      "bytes": 94783,
+      "sha256": "ddb964361a55c6e5dfca6361615854b260c9c960205d04c7520151aaa1d75837"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/config.json",
+      "group": "hf_dependencies",
+      "bytes": 743,
+      "sha256": "094f8e891b932f2000c92cfc663bac4c62069f5d8af5b5278c4306aef3084750"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/config_sentence_transformers.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/config_sentence_transformers.json",
+      "group": "hf_dependencies",
+      "bytes": 124,
+      "sha256": "940d5f50db195fa6e5e6a4f122c095f77880de259d74b14a65779ed48bdd7c56"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/model.safetensors",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/model.safetensors",
+      "group": "hf_dependencies",
+      "bytes": 133466304,
+      "sha256": "3c9f31665447c8911517620762200d2245a2518d6e7208acc78cd9db317e21ad"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/modules.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/modules.json",
+      "group": "hf_dependencies",
+      "bytes": 349,
+      "sha256": "84e40c8e006c9b1d6c122e02cba9b02458120b5fb0c87b746c41e0207cf642cf"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/sentence_bert_config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/sentence_bert_config.json",
+      "group": "hf_dependencies",
+      "bytes": 52,
+      "sha256": "84e39fda68ccbff05bfa723ae9c0e70e23e2ec373b76e0f8c6e71af72a693cbf"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/special_tokens_map.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/special_tokens_map.json",
+      "group": "hf_dependencies",
+      "bytes": 125,
+      "sha256": "b6d346be366a7d1d48332dbc9fdf3bf8960b5d879522b7799ddba59e76237ee3"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/tokenizer.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/tokenizer.json",
+      "group": "hf_dependencies",
+      "bytes": 711396,
+      "sha256": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/tokenizer_config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/tokenizer_config.json",
+      "group": "hf_dependencies",
+      "bytes": 366,
+      "sha256": "9261e7d79b44c8195c1cada2b453e55b00aeb81e907a6664974b4d7776172ab3"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/vocab.txt",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/snapshots/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/vocab.txt",
+      "group": "hf_dependencies",
+      "bytes": 231508,
+      "sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/.no_exist/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/adapter_config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/.no_exist/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/adapter_config.json",
+      "group": "hf_dependencies",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/.no_exist/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/added_tokens.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/.no_exist/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/added_tokens.json",
+      "group": "hf_dependencies",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/.no_exist/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/chat_template.jinja",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/.no_exist/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/chat_template.jinja",
+      "group": "hf_dependencies",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/.no_exist/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/preprocessor_config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/.no_exist/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/preprocessor_config.json",
+      "group": "hf_dependencies",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/.no_exist/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/processor_config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/.no_exist/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/processor_config.json",
+      "group": "hf_dependencies",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/.no_exist/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/video_preprocessor_config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/.no_exist/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/video_preprocessor_config.json",
+      "group": "hf_dependencies",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/17e549d16172a548a3115739b55575968eb6523653daad76c46b0758e9425032",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/17e549d16172a548a3115739b55575968eb6523653daad76c46b0758e9425032",
+      "group": "hf_dependencies",
+      "bytes": 1740785344,
+      "sha256": "17e549d16172a548a3115739b55575968eb6523653daad76c46b0758e9425032"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/3649e51e584ff0b2142ce39facbe844025ba4e1a",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/3649e51e584ff0b2142ce39facbe844025ba4e1a",
+      "group": "hf_dependencies",
+      "bytes": 122,
+      "sha256": "cc74bf19ea6e14816f175a114d3101b9ec236b831ad8706c0f89c5b0517e33a0"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/3e207933f2139cecaa9b086b7de94a9e8ee88c4a",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/3e207933f2139cecaa9b086b7de94a9e8ee88c4a",
+      "group": "hf_dependencies",
+      "bytes": 57500,
+      "sha256": "41ce2703d91c4bf5ba18bf6616d40f26ef350fa793d81b27a457f3526f01ef42"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/5116148bff3b077908431eba25e9f8541bc17469",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/5116148bff3b077908431eba25e9f8541bc17469",
+      "group": "hf_dependencies",
+      "bytes": 51,
+      "sha256": "d9c158879ebdc946201519a154e8f2006d66ac633a8f3fa5de95da20fdd14729"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/633454d5fdd32d07ed2a1762e56485220ef20095",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/633454d5fdd32d07ed2a1762e56485220ef20095",
+      "group": "hf_dependencies",
+      "bytes": 1384,
+      "sha256": "9f0bb2a01bb9555bee3a8e3711cfa85bd34370d00a7c67e9745cebc7901e1085"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/7d82c9665180ef0c67906d749ca441470d35d8b9",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/7d82c9665180ef0c67906d749ca441470d35d8b9",
+      "group": "hf_dependencies",
+      "bytes": 316,
+      "sha256": "4145357aafae913f78ca56d1b398e862c5cbeb482b4d418cf9f5e1d147bf416b"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/84d9584bf16bc694eb85c2a2177e5cb980b028c7",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/84d9584bf16bc694eb85c2a2177e5cb980b028c7",
+      "group": "hf_dependencies",
+      "bytes": 397,
+      "sha256": "9dfc0a2ca6ccc6f9da7734df0404206ae745cb08ca138d257714bfd9257355fb"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/8f778e7d950e055b18b53222c75d2c54c3732df5",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/8f778e7d950e055b18b53222c75d2c54c3732df5",
+      "group": "hf_dependencies",
+      "bytes": 711661,
+      "sha256": "cb374d6bc042c22455946f4e09a89d29882a199fdaf8fb25be00dc8b8857a448"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/8f8b2bd73f37c270aed02826ed1dee44a8691a0a",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/8f8b2bd73f37c270aed02826ed1dee44a8691a0a",
+      "group": "hf_dependencies",
+      "bytes": 7127,
+      "sha256": "3411088045ffb8a9a0aa9936eae275896b39983a2ee5b08f091b44e6289e4fe4"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/9bbecc17cabbcbd3112c14d6982b51403b264bfa",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/9bbecc17cabbcbd3112c14d6982b51403b264bfa",
+      "group": "hf_dependencies",
+      "bytes": 695,
+      "sha256": "5d5b662e421ea9fac075174bb0688ee0d9431699900b90662acd44b2a350503a"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/bd283dcd8bf51e525bd22c9e2c0601a7e88e562f",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/bd283dcd8bf51e525bd22c9e2c0601a7e88e562f",
+      "group": "hf_dependencies",
+      "bytes": 169941,
+      "sha256": "9e8da1ad6f2063ce0f060a904d91338378d9a87cd6c5da3e8da091351c00aaf9"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/c6332c48ecac9d3a7dd12527fe6573d24507bf27",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/c6332c48ecac9d3a7dd12527fe6573d24507bf27",
+      "group": "hf_dependencies",
+      "bytes": 892,
+      "sha256": "6ef7d87b6f011a3a2ae4612fca7767a0cab58c754648931acb8f61c4f52f24ae"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/caed226f6fc2317d1dde81540cbc2cc40055ab27dbf8e4377facfb281ac16fdd",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/caed226f6fc2317d1dde81540cbc2cc40055ab27dbf8e4377facfb281ac16fdd",
+      "group": "hf_dependencies",
+      "bytes": 4198592,
+      "sha256": "caed226f6fc2317d1dde81540cbc2cc40055ab27dbf8e4377facfb281ac16fdd"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/d57ca9b2d2b8be6b04cdb2687073c89c22053081",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/d57ca9b2d2b8be6b04cdb2687073c89c22053081",
+      "group": "hf_dependencies",
+      "bytes": 186,
+      "sha256": "d58b19f64c2bd0ff30fdc4e45103ef8e5fcec974923c433db59b50ab01595ee7"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/fb140275c155a9c7c5a3b3e0e77a9e839594a938",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/blobs/fb140275c155a9c7c5a3b3e0e77a9e839594a938",
+      "group": "hf_dependencies",
+      "bytes": 231508,
+      "sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/refs/main",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/refs/main",
+      "group": "hf_dependencies",
+      "bytes": 40,
+      "sha256": "c09bbde8805a94447a48546fb052a2aa3b1c6275d95081a1c5460f0d59c79c17"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/1_Pooling/config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/1_Pooling/config.json",
+      "group": "hf_dependencies",
+      "bytes": 186,
+      "sha256": "d58b19f64c2bd0ff30fdc4e45103ef8e5fcec974923c433db59b50ab01595ee7"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/2_Dense_1024/config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/2_Dense_1024/config.json",
+      "group": "hf_dependencies",
+      "bytes": 122,
+      "sha256": "cc74bf19ea6e14816f175a114d3101b9ec236b831ad8706c0f89c5b0517e33a0"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/2_Dense_1024/model.safetensors",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/2_Dense_1024/model.safetensors",
+      "group": "hf_dependencies",
+      "bytes": 4198592,
+      "sha256": "caed226f6fc2317d1dde81540cbc2cc40055ab27dbf8e4377facfb281ac16fdd"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/README.md",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/README.md",
+      "group": "hf_dependencies",
+      "bytes": 169941,
+      "sha256": "9e8da1ad6f2063ce0f060a904d91338378d9a87cd6c5da3e8da091351c00aaf9"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/config.json",
+      "group": "hf_dependencies",
+      "bytes": 892,
+      "sha256": "6ef7d87b6f011a3a2ae4612fca7767a0cab58c754648931acb8f61c4f52f24ae"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/config_sentence_transformers.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/config_sentence_transformers.json",
+      "group": "hf_dependencies",
+      "bytes": 397,
+      "sha256": "9dfc0a2ca6ccc6f9da7734df0404206ae745cb08ca138d257714bfd9257355fb"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/configuration.py",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/configuration.py",
+      "group": "hf_dependencies",
+      "bytes": 7127,
+      "sha256": "3411088045ffb8a9a0aa9936eae275896b39983a2ee5b08f091b44e6289e4fe4"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/model.safetensors",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/model.safetensors",
+      "group": "hf_dependencies",
+      "bytes": 1740785344,
+      "sha256": "17e549d16172a548a3115739b55575968eb6523653daad76c46b0758e9425032"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/modeling.py",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/modeling.py",
+      "group": "hf_dependencies",
+      "bytes": 57500,
+      "sha256": "41ce2703d91c4bf5ba18bf6616d40f26ef350fa793d81b27a457f3526f01ef42"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/modules.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/modules.json",
+      "group": "hf_dependencies",
+      "bytes": 316,
+      "sha256": "4145357aafae913f78ca56d1b398e862c5cbeb482b4d418cf9f5e1d147bf416b"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/sentence_bert_config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/sentence_bert_config.json",
+      "group": "hf_dependencies",
+      "bytes": 51,
+      "sha256": "d9c158879ebdc946201519a154e8f2006d66ac633a8f3fa5de95da20fdd14729"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/special_tokens_map.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/special_tokens_map.json",
+      "group": "hf_dependencies",
+      "bytes": 695,
+      "sha256": "5d5b662e421ea9fac075174bb0688ee0d9431699900b90662acd44b2a350503a"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/tokenizer.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/tokenizer.json",
+      "group": "hf_dependencies",
+      "bytes": 711661,
+      "sha256": "cb374d6bc042c22455946f4e09a89d29882a199fdaf8fb25be00dc8b8857a448"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/tokenizer_config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/tokenizer_config.json",
+      "group": "hf_dependencies",
+      "bytes": 1384,
+      "sha256": "9f0bb2a01bb9555bee3a8e3711cfa85bd34370d00a7c67e9745cebc7901e1085"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/vocab.txt",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20/vocab.txt",
+      "group": "hf_dependencies",
+      "bytes": 231508,
+      "sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--hf-internal-testing--tiny-random-BertModel/blobs/2a4280fe2ed30e03d6cd9b3402aaeb3ee28b143f",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--hf-internal-testing--tiny-random-BertModel/blobs/2a4280fe2ed30e03d6cd9b3402aaeb3ee28b143f",
+      "group": "hf_dependencies",
+      "bytes": 631,
+      "sha256": "8feeb7fe8bdbc49754e178ae88da4a3f065c53a282a0398e2e384e230872faef"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--hf-internal-testing--tiny-random-BertModel/refs/main",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--hf-internal-testing--tiny-random-BertModel/refs/main",
+      "group": "hf_dependencies",
+      "bytes": 40,
+      "sha256": "244a494110c37456a76189a6c2eba687989bc2d2d7dbf4ba39b28e6918729d1b"
+    },
+    {
+      "source": "/home/dylan/.cache/huggingface/hub/models--hf-internal-testing--tiny-random-BertModel/snapshots/fc08ad9cc33be9aef4f55cc80e16ef5ae3d5981c/config.json",
+      "destination": "/home/dylan/.cache/huggingface/hub/models--hf-internal-testing--tiny-random-BertModel/snapshots/fc08ad9cc33be9aef4f55cc80e16ef5ae3d5981c/config.json",
+      "group": "hf_dependencies",
+      "bytes": 631,
+      "sha256": "8feeb7fe8bdbc49754e178ae88da4a3f065c53a282a0398e2e384e230872faef"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/decontam/banned_pool_rows.meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/decontam/banned_pool_rows.meta.json",
+      "group": "training_and_cov",
+      "bytes": 535,
+      "sha256": "56e8e1dae59194f66a93712aace5246f0197c5b3c8b8c3084c6cdc6ff6a1ad0a"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/decontam/banned_pool_rows.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/decontam/banned_pool_rows.npy",
+      "group": "training_and_cov",
+      "bytes": 57648,
+      "sha256": "ba5a1c629e71cb189177e2c9f7d508c58f3ef31acca934c69a77fdeaf4653272"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/decontam/kept.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/decontam/kept.json",
+      "group": "training_and_cov",
+      "bytes": 11201398,
+      "sha256": "e7753041893963d5d1f6169f9d1f2c7cca9f82807cbbff1bb9aab4b2dbb869d4"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/decontam/m9_kept_nqopen.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/decontam/m9_kept_nqopen.json",
+      "group": "training_and_cov",
+      "bytes": 590190,
+      "sha256": "1518b0d396d1ef97400c86a479d32dc974113f0d57b2692b40ea71f0a30ded8c"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/decontam/m9_kept_pseudoq.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/decontam/m9_kept_pseudoq.json",
+      "group": "training_and_cov",
+      "bytes": 7276170,
+      "sha256": "d8abcfdbeb7c87aebdeb191743d154cb9926ae726945d49f5ffcf5ccc8913de9"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/decontam/m9_kept_triviaqa.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/decontam/m9_kept_triviaqa.json",
+      "group": "training_and_cov",
+      "bytes": 969164,
+      "sha256": "7dae108bd211fa517621950bc35c4fd54c916e768ea1aacae76026cb10070f6f"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/dev/cqadup-physics.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/dev/cqadup-physics.json",
+      "group": "dev6_existing_cache",
+      "bytes": 32370755,
+      "sha256": "0c4cca861b59641f5ecd95c6f893d5297de362ea8d24dee6b3a09868e9441ec8"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/dev/cqadup-programmers.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/dev/cqadup-programmers.json",
+      "group": "dev6_existing_cache",
+      "bytes": 34615597,
+      "sha256": "f7a07fdbc38e48a255f861edce266584e03baaa3660446c0e8d02602bd51cb5f"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/dev/heldout-longq.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/dev/heldout-longq.json",
+      "group": "dev6_existing_cache",
+      "bytes": 25667,
+      "sha256": "7227b24dba4336b31ad565223c08bdf5c011871f6fab90dc6cc5d20009932251"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/dev/heldout-train.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/dev/heldout-train.json",
+      "group": "dev6_existing_cache",
+      "bytes": 1318133,
+      "sha256": "9d2cbd6ef45ac43342df173426b21a22f182cf70d5f19c71a5bf144896b0caab"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/dev/hotpotqa.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/dev/hotpotqa.json",
+      "group": "dev6_existing_cache",
+      "bytes": 1644824759,
+      "sha256": "9d71f0d928fb493a6f0416f02d9f6d3cf31d7de69dac94ae86c8efb02aad1e76"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/dev/nq-250k.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/dev/nq-250k.json",
+      "group": "dev6_existing_cache",
+      "bytes": 130174431,
+      "sha256": "0f6fbb583c0fc1da25c4785a9b684759b40e3721cd6e98c93143af2e6c8ee1ab"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-cqadup-physics-docs-fp16-88f29df31f25/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-cqadup-physics-docs-fp16-88f29df31f25/meta.json",
+      "group": "dev6_existing_cache",
+      "bytes": 469,
+      "sha256": "88f29df31f257a972bb6de0e9e15ac665a3832dea18e0379f224b3add6f3fa28"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-cqadup-physics-docs-fp16-88f29df31f25/shard_00000.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-cqadup-physics-docs-fp16-88f29df31f25/shard_00000.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 78471296,
+      "sha256": "2dcd20d85113f5678f041562bec123170ad0f63752d4ddc5eabbb800652bae50"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-cqadup-physics-docs-fp16-88f29df31f25/shards.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-cqadup-physics-docs-fp16-88f29df31f25/shards.json",
+      "group": "dev6_existing_cache",
+      "bytes": 171,
+      "sha256": "375b260d558e75abd6f61884fd91e7653bc57171659f13111ce098d20ac42780"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-cqadup-programmers-docs-fp16-c5ec186bbda9/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-cqadup-programmers-docs-fp16-c5ec186bbda9/meta.json",
+      "group": "dev6_existing_cache",
+      "bytes": 473,
+      "sha256": "c5ec186bbda9544dfa536560450b01478c1fcf171647bcc4555ea34d98def122"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-cqadup-programmers-docs-fp16-c5ec186bbda9/shard_00000.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-cqadup-programmers-docs-fp16-c5ec186bbda9/shard_00000.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 65896576,
+      "sha256": "faa77abce55e640ef5e2546c0a8edbb9590976bcf9469b0507d73139cbd18728"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-cqadup-programmers-docs-fp16-c5ec186bbda9/shards.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-cqadup-programmers-docs-fp16-c5ec186bbda9/shards.json",
+      "group": "dev6_existing_cache",
+      "bytes": 171,
+      "sha256": "07b3957837429f2575a03b1ec4ad66261d7fe2f8ac99d0ec4198354fb64e721a"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/combined.f16",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/combined.f16",
+      "group": "dev6_existing_cache",
+      "bytes": 10717857792,
+      "sha256": "0aad23dab9e30bd5f29cd298831a8af660e46221666e8594e043d67f8768b036"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/meta.json",
+      "group": "dev6_existing_cache",
+      "bytes": 463,
+      "sha256": "88798cdf67ec2f6ba2c8fb38598925a1c65ab54ea97fc0ac7a8dcf6086091729"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00000.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00000.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "28c81001ea7b069550c67f2d6a0dd735c1463b0e687622ae1ef03116c44be4c0"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00001.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00001.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "0056ebe319aaf8aff41e9d99680a2f4054bb4b99694b50e1dcceec47db85af1d"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00002.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00002.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "9df871abfeda60ed56533af0c37b01ef77d323a4e3540037b43f8bf787527142"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00003.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00003.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "e5231b71559b41545b594634b0efe1365c44857f9efec24a97cf1cb84a7f1646"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00004.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00004.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "d138f318eaa437f839893ab047ad0c380b105bdf56552358f4c71faa92f60e3d"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00005.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00005.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "5e7c6832dcd18736f027dde1c70babdc400dca4fc39ec7b2ed30059cc84a45fd"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00006.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00006.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "48a3e4b6a8ed34655d7c7607003ee3c63a24e46efb78071a6d5a7613505b7c2e"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00007.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00007.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "ef5ca3aff6c7be2d7f7f5aebd5fa7de80f54ca52159f3fdb42aaf078a1cedc55"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00008.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00008.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "07feae78eea190072e2ccdf2a947550a9dd9ba032cd100db4855b91c5163a826"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00009.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00009.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "0ee8f69995571441f41223b8389c55fae8fad30a6c64eaf558f88a8274c0176e"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00010.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00010.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "6011191a8c5bd55bc49fcf349772d7087ea34218dd45cd00d77cc2bc51e8c46b"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00011.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00011.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "384b41aff87e94f2ccaa9c36d209bf5f68f2d0c3cc47a09e0171ab1891dc8aa0"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00012.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00012.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "71c43dd61387f496b83b01470f02b3849f536947029f49ffc8a442610c0fb6eb"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00013.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00013.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "fdb17b67080d198c52d5c7001e42c675c2900883a39aade240bedfce2ecce0a5"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00014.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00014.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "46988f5ab1cebb764efd60ebf178cd20b75699b61b707253121fb43719fb245d"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00015.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00015.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "333857267c3c3eee029c1c2d9f12b0b4b02ebad66ad149e850e8fbed9579d63b"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00016.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00016.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "17bed64744b26da68ebd0cc6a62fe537dab0b053f0adaa310a24d67f7545fb84"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00017.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00017.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "902db20c5109355653393d3012900c1531e9eed86ce52cad725e5e2bf7b01502"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00018.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00018.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "6e94a4e963c77f9188ded9801e530b3e0def66508ccbf60bddf84b2caba8c438"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00019.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00019.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "3b95907653a4f8b1f01af985863fe4b73eaf47e96f55f74d487e8ed82e2ff131"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00020.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00020.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "3f6f556603697f61303eb2062a78706a5e88e2192302149f9f485582bd7bbd22"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00021.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00021.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "a754685e5c08d0ed3b2892f40b52877e104022a92f1a358a67b6d0c342714ec0"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00022.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00022.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "9e480df2479e762a19b5090ccf1037efe4d679402b0ffc5ce5d987430ef8eed2"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00023.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00023.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "6f132377d6a837b5ee94e46c077d057646589882ddc851a78dcb8cc03d94c568"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00024.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00024.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "392519a62c034f4f8c8b67295b3c065a37a11001341ca3588ce19689537d2fb7"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00025.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00025.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "356a8cf1efdabb4f4980ced05f8155513498287b8d93325cd52dcfd7b0fa5167"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00026.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00026.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "6637f4052955dce4caa8766b5aba0d3c308fce03e5fd4b20e3d49ba408ec82a0"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00027.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00027.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "5ab8d6a7885b0b6b0806ccdc3716d2f94b2c74588dd06f9c9ff1d6cb1f75e1ba"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00028.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00028.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "ebd5f58cb27912f754b574537c7887d1c357d1d3ca4ee23c3db14dad48b125d4"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00029.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00029.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "a1a7ef37b8a63c172b5ab4e360fbe0db0d7c71fd9067edf6fa11f0c4b7c8868a"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00030.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00030.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "71a4ef462f24625df38224d19d1a8c22339473816ca0390aa5455680e41e83f6"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00031.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00031.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "0aa9b2f4863dff4d04e91a4c8302d71bf1fb4b7cea3a9bc9292e4b77c9e509c4"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00032.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00032.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "525d3673d9e7c1e061be24f9e1408c45969da4593471f5921dfccecafcfc1204"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00033.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00033.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "7d9b1a14eca56baecd724f5217b2bb643d8500966fcdc272c5ccab9ff8fc785a"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00034.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00034.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "1b9429993044bb69d6fb7f46cb25da283184e03096c84d5a5c61ac322ae8d501"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00035.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00035.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "1fad68c9d7d0a736300361296169aaf19701091509d187db0c957612207d905b"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00036.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00036.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "a1e7ce42a69b2a54c9916f315f66448abd9fe1f90f4d4acc99a2afebd2e6a03e"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00037.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00037.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "d29c270cc88f69187e4aa5fa048a19fc4423ab02ffb02572c53e76b85c3c50e9"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00038.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00038.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "0c2113f6a0516605d46990ae67b0ea0f47aad3a37dec86ca7f0b94371d244823"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00039.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00039.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "23b296cd03fac4b042fa2480b9855e6331e183828b0dc73ebbb5b5d58365c0ca"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00040.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00040.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "7b50324d34ac75d9891de698a03d1ef7bae7051c553a8a98963bfda2cce36489"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00041.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00041.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "cb7aa9ef7467078a56af94ecf125257b2fa4a0552c2e7026aef647bc1bb1769e"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00042.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00042.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "38a9100efba5fabba1443f33642b3a4e955605989838741d740be6b37c62e808"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00043.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00043.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "84a59454be5eafa647aa9ecb4031778d6243c62c3a3f5ba30ef5ebcdae8d36b6"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00044.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00044.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "d2a07ffd9a59bf340051980b2b1384a123069fe0a374f03162f4768fb69d36ce"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00045.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00045.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "13b350faaad661cd1db4d5bfebb00eaf9f12987fdb38dd78916254e3d3a61c13"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00046.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00046.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "9751bc212c63b664177c0131176fc0188e9801a5a2843e5462499cd5eb24b8a3"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00047.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00047.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "eb382e739974d20450c8cdc6623b38ff744710c440b0629237e65bb2cf9a82b3"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00048.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00048.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "36395dbf16157b66f33b90bedaac21d8be08a3338bdce4b370065755759b6c85"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00049.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00049.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "299770585bee5fd099d69c973d30a962cd82bbc4b6f5ec8ee5b6d9e79595bbe9"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00050.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00050.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "c9f09c1b95fb80faed699a806c115fbf8ba7d33c398ed3d8e976c4dd16035415"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00051.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00051.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "3e29cd2501aa77f34dff2495577104b6a77bada9803deedf4929d6571832ab70"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00052.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00052.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "d6dee93cb44c0539a29a9f7ec40e66093125a7aa6b0b4adb0723d90cc1326ff7"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00053.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00053.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "c09b9d940b158891d6a10e69b56c9086f77c6b9e619432f06561e6877025bacf"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00054.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00054.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "67b8cbcbda0dbc28c98c11fd4f2538513bb7fe76a033b18d34184271e7768df0"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00055.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00055.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "2a2ab33f150ca44354bd1ce12c1629b06bf2ff8b27a94b2eda51f561835fc0e3"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00056.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00056.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "d957082332944983ca6d5bdeeb9eb127bf3778db9883f337f630ef0f4c7aecbe"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00057.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00057.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "43c4553b1908b3c613939bc24d0ead4b6f6bb038e949e9ed654edf4afa858758"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00058.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00058.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "0b7b2ddcecbb384b2358610da1a073fa66c30cfb7496212e0b0871173fc2f0b5"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00059.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00059.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "4cfd420ff8c38734a2406270a424e1573cd7205bf5e31ee1033f596ace202045"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00060.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00060.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "d8793e47ee373a3792b21a8f68483f7167be105dbde47a14531952f346914c9b"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00061.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00061.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "2b2fec4fb66690df2c4a17b0bf97cffef00ad7bf2acb8d04da55fb81e04cd56f"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00062.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00062.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "545c2d2b790780500df4cc954bafc2c9981426535b16adaf93f530f2177e38b3"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00063.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00063.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "56dc26921ceec62556ae2380a751a415031134d135c82722b961c5b425a5d5a3"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00064.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00064.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "684b0005a4fc8a39a294f60ab907cac62fa0bdd6090f7f2ce7f1cb8621a2e214"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00065.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00065.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "4d6b449bbdcd58ba1700bf87522de86d754d9adbb1db5eefde2d7331de67054c"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00066.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00066.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "49d9f27a9eb9868d05ec6edc73fd963fcf85eb4d18f5ee7ecca621fc7d2ffa35"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00067.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00067.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "417015319a11b06a8f1ac226c83355c5a57d828810b84b823f9ab76e4702579d"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00068.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00068.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "2a34c7c1c15befcfb48a289bcac2a4b157929f486920ac0b9d3faa60cc1387c6"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00069.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00069.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "afa71164f0dd66513e14c07d4ce1e4bc2a3f56b3ae239a8245e02ecfdf154211"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00070.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00070.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "d6e4750300e5894395157a1b1f52fe32493fa7b379e59723f911f6c80452fa80"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00071.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00071.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "822b30c8313f3595f4e03bdcf2d6a4228f8403c2ed69a6689e5d0858cab9137e"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00072.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00072.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "14617fabd5c89bc07693cbd9bc07b7a9a7169921ada5de343dbb6dcedc401798"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00073.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00073.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "b1b8130a5e60971a8624f80ad470fe0f32a2982de46b08ee5a18eed31252c564"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00074.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00074.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "f8ac667b502892f2e01881060d7fb09fe5f25a126dc7d29f50425e588bc9e9b1"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00075.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00075.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "8854996e45523ec48ca936065a1dc85cf0b1d90556cf6111714e1f4d327483a1"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00076.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00076.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "5e69ab0ee887c62fa13030802b49a674da496f133bf485cc826522ce019c03ac"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00077.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00077.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "e8bce44cf322324cfc6388e424e9d95476bec6d69a41f3cbcc53121c368d2f68"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00078.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00078.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "316b91a6e05ded4c5bd81668c7ebb8838da6354e5b30d622fd7dd1c3428f0b85"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00079.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00079.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "3f7b85218b37a32d06ba8581d891b23ed72590cfb74678f0e64f9474d53c1e0a"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00080.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00080.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "f649b2ca84505199c20720881a74b14e5f60a56ae3af670fdd203f57cc1ff3d8"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00081.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00081.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "0c901070fd664f36822dfd19131332e77312befb72c9faaa2daf29e1967aef1b"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00082.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00082.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "402910f9eedb1ee04c9c5b0ea5c13d6b1ed317d416ff578f93c98c1046ec73fa"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00083.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00083.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "128025c8f62b69f302fcd7134eb1d213a525cb755f8ac76c437b156212a81fd1"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00084.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00084.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "70cbb3acefb065e4aba2dcbb8b32b84b3d7e400d27a6e33bb993383401213302"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00085.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00085.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "4e606c919c3cb1e405ec500fe4fd6c6513e9ab40ce34e397253c0f93b56d39db"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00086.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00086.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "42712ce905f9c599250ca9ac65cd574a28980957ad9df2c59e6c820801b42937"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00087.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00087.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "ef89fe6e8b428c5eeaad1ce1e16c80775708adf7952cd6e51957e3cdfb9e7059"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00088.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00088.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "e9f9ee8a89f9bf6a49b3bd97b1fc953b59c44c7706c5f9f611f312ea24c7cbfa"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00089.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00089.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "343b21870983af5131b06dd15d25b3648f32e8770127e909407160c94bc337f5"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00090.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00090.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "050a5ce71794b2489ccc9917caa53f3b8499374034a60be10dccc1ac658a1056"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00091.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00091.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "cb25b8b2d960109a6c96ac43bdb9bed5bd5b9dd6856047b15a8c44b9c118cd10"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00092.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00092.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "e13d78ff612c6a9cb74f339880ebf2d29d20aa7d87041c18d9c4d64075e96043"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00093.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00093.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "a9b95988c643a4c6cc0076967ba7592743ee990b128ae51e9075dc88e4591df1"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00094.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00094.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "2e8d207a89b197f79614f416ecc6422c9ab9a8ec31739a10dfbcb4a7c6ae14a7"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00095.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00095.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "dbc6ec54efe87e07b7112dc1095aaabe7c5bf744aec76738d67069d87fd3e5c2"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00096.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00096.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "14cce284aa26c0cfc384a8736e159b16261618d2b68a13e4cf512a5562b8f5fb"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00097.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00097.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "4b618f63beb199ca06f6724b21e1a0ec04fa2c1d1c537db27b481d6c54fa3b25"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00098.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00098.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "f6cad1644c6a6d3929c89e30e4b9784ddf0fdec225e1bb04784f3e16658cf106"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00099.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00099.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "3f78bc92c057c12bc89b82f70d5f21ac39a4641d85ba89fb1dec1870a212bb78"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00100.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00100.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "8147539f30f5eacfe9e043b28115d262b7795bfd7b7af2d16f87c0a73d9ad153"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00101.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00101.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "7db0df76e3cf5d15cafbad22e91e2bc03b3c9f1ca499d69425d44b9626f7c1eb"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00102.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00102.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "3db69facc2a7d222fd36641e8daa5a87aed707e63d566cc1e96926468750e894"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00103.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00103.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "deea6fa6b528ef0777ed38dbc7431654dd79b7136f22856260ef0db45ad48aaa"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00104.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shard_00104.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 68257920,
+      "sha256": "64101e9b67e01b92c240ed39be41363fa3c7bab2346ff1f1c9f49de9d7b8a4a8"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shards.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-hotpotqa-docs-fp16-88798cdf67ec/shards.json",
+      "group": "dev6_existing_cache",
+      "bytes": 23861,
+      "sha256": "fc1916eb40da5bb04e8521660297ee4b9032b96df59dfc8f5850615413bdadfe"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-nq-250k-docs-fp16-75da16dd9f8c/combined.f16",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-nq-250k-docs-fp16-75da16dd9f8c/combined.f16",
+      "group": "dev6_existing_cache",
+      "bytes": 512000000,
+      "sha256": "77fba18226aec6d091a53d9e34305ea2bf3a655e91b13bf5bb22bdc0303912ea"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-nq-250k-docs-fp16-75da16dd9f8c/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-nq-250k-docs-fp16-75da16dd9f8c/meta.json",
+      "group": "dev6_existing_cache",
+      "bytes": 462,
+      "sha256": "75da16dd9f8c4d10934d26c89e995b0b2fe8406f6543a886a3b83cba5f9d619a"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-nq-250k-docs-fp16-75da16dd9f8c/shard_00000.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-nq-250k-docs-fp16-75da16dd9f8c/shard_00000.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "55e9253fe6c0e3df8abe2c3f8b77cf5eddb2e2d5dbe3add647e8ea7a6b5b6f62"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-nq-250k-docs-fp16-75da16dd9f8c/shard_00001.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-nq-250k-docs-fp16-75da16dd9f8c/shard_00001.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "3e18b67a6ccefc368914e9a43777eeef1f8ae1c86ed908fa4afb744a71ec2786"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-nq-250k-docs-fp16-75da16dd9f8c/shard_00002.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-nq-250k-docs-fp16-75da16dd9f8c/shard_00002.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "7e0d4f840a0b3d04260d3921827cd46539c7dca2e81523e5dee0ba1752b52d8d"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-nq-250k-docs-fp16-75da16dd9f8c/shard_00003.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-nq-250k-docs-fp16-75da16dd9f8c/shard_00003.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "df5cc20eedbd399384e03a09121911022e5e6724b7e7075050f0ef16b6766efc"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-nq-250k-docs-fp16-75da16dd9f8c/shard_00004.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-nq-250k-docs-fp16-75da16dd9f8c/shard_00004.npy",
+      "group": "dev6_existing_cache",
+      "bytes": 102400128,
+      "sha256": "761846a2795a252e62f75036dde5e1d1a076dce8b52a0d7d022be4a1080bbd80"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/enc/dev-nq-250k-docs-fp16-75da16dd9f8c/shards.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/dev-nq-250k-docs-fp16-75da16dd9f8c/shards.json",
+      "group": "dev6_existing_cache",
+      "bytes": 1359,
+      "sha256": "6c1f5d9221212c418d2314c6b81079dd8e16ee66d1c434535b77006eb12b6b3e"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/combined.f16",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/combined.f16",
+      "group": "training_and_cov",
+      "bytes": 692185088,
+      "sha256": "21ee9a6dfec620e24fbd87112d556faab8175567e7786916e7431fc542b5eed3"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/meta.json",
+      "group": "training_and_cov",
+      "bytes": 553,
+      "sha256": "7423fa42cd3e686e402d698cc4cd73cd92818b3116dccb44e0387d40886ea985"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/shard_00000.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/shard_00000.npy",
+      "group": "training_and_cov",
+      "bytes": 102400128,
+      "sha256": "f335c645ad4123ad2382bafbb09cb50007e30b8bd983a5098372a45297445aee"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/shard_00001.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/shard_00001.npy",
+      "group": "training_and_cov",
+      "bytes": 102400128,
+      "sha256": "f2ba0847190e15f926a73817b1bfe51e8d08c29a8e7634ab3633125391817697"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/shard_00002.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/shard_00002.npy",
+      "group": "training_and_cov",
+      "bytes": 102400128,
+      "sha256": "65dfd43d9035f56798695f72cecea4c40cf29fd943c8601f0af5301b19923d5f"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/shard_00003.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/shard_00003.npy",
+      "group": "training_and_cov",
+      "bytes": 102400128,
+      "sha256": "dd16c09079de6853842583f23f4bae8e416f263dffb1da2cab9f9c548368a9b5"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/shard_00004.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/shard_00004.npy",
+      "group": "training_and_cov",
+      "bytes": 102400128,
+      "sha256": "31a4c947c93b3a4bba3e2e0bb0dbcb2efc7edea9417c723c2aeeb9b862a9c3f8"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/shard_00005.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/shard_00005.npy",
+      "group": "training_and_cov",
+      "bytes": 102400128,
+      "sha256": "731105c90879ac94524feb2d6df25c4cd645b525844302dcd41177ff320e906d"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/shard_00006.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/shard_00006.npy",
+      "group": "training_and_cov",
+      "bytes": 77785216,
+      "sha256": "f8a31fe113f5ba402157d0ddaf950cec61a89cf376b5f6d2c20ed17f7ad2ad6c"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/shards.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc/trainq-337981-fp16-7423fa42cd3e/shards.json",
+      "group": "training_and_cov",
+      "bytes": 2110,
+      "sha256": "1c536991c6db2f100ed48d885e17412ead22a07c2edf5b58c5df1b1c436f5146"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00000.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00000.npy",
+      "group": "training_and_cov",
+      "bytes": 102400128,
+      "sha256": "3032dc79e0d088d6312c9abb1289b3040848a7cbb3a9f14a52a47fc9454439a9"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00001.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00001.npy",
+      "group": "training_and_cov",
+      "bytes": 102400128,
+      "sha256": "3c285e8cac1479ff3e32df3885330106a3d2e223d650f2408c6a047805a28ae1"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00002.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00002.npy",
+      "group": "training_and_cov",
+      "bytes": 102400128,
+      "sha256": "d106efd438e07a78d0d5657f01cd322ac05f1b4ff510e7163d7edb020d580c43"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00003.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00003.npy",
+      "group": "training_and_cov",
+      "bytes": 102400128,
+      "sha256": "c907f3a0b3babed6dee37a73b3e3ce290cfd8a03b50fe089f80239ff0379ad65"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00004.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00004.npy",
+      "group": "training_and_cov",
+      "bytes": 102400128,
+      "sha256": "8e684078112811b6550b983213377a6aaaa00b8e9c3d7b009a58a96f0116fc57"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00005.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00005.npy",
+      "group": "training_and_cov",
+      "bytes": 102400128,
+      "sha256": "44e545cd580551810c7a5120044dbeedc1eb94c57a26564841b0d53eb7406cbf"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00006.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00006.npy",
+      "group": "training_and_cov",
+      "bytes": 102400128,
+      "sha256": "2f695f7f506a657fb17fc491d7b08411345f356df84d0c1aca63e1f382ae2b5b"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00007.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00007.npy",
+      "group": "training_and_cov",
+      "bytes": 102400128,
+      "sha256": "aef61ef3de8ca2434a530bb7bfa51ff1a47a406f2f824116e6bb4266bdd52dd8"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00008.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunk_00008.npy",
+      "group": "training_and_cov",
+      "bytes": 9044096,
+      "sha256": "76240a67f215b2d70019d5568c03adc92098b7b286c4f984357ab77cd3214a15"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunks.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/chunks.json",
+      "group": "training_and_cov",
+      "bytes": 1099,
+      "sha256": "b40a46138fc0cfc9dfdf2eb916cdb58c44d63786ca98453ede6949811efe203d"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/combined.f16",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/combined.f16",
+      "group": "training_and_cov",
+      "bytes": 828243968,
+      "sha256": "62054b735d16a85c525c8633e82c4c778c0d548c7170d58248b331f3f177c02b"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005/meta.json",
+      "group": "training_and_cov",
+      "bytes": 535,
+      "sha256": "b5ce49ea97f3cca5facda587572ec1a99aae4a9969528064544215544c7d23cb"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LEDGER-d-stella-400M-v5-b4e164c82cfb/chunk_00000.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LEDGER-d-stella-400M-v5-b4e164c82cfb/chunk_00000.npy",
+      "group": "training_and_cov",
+      "bytes": 97935488,
+      "sha256": "a17f185c4c7f9d19e3a4a293f550d797f4da115aa09122890ccbbebcf1ab3917"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LEDGER-d-stella-400M-v5-b4e164c82cfb/chunks.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LEDGER-d-stella-400M-v5-b4e164c82cfb/chunks.json",
+      "group": "training_and_cov",
+      "bytes": 124,
+      "sha256": "c501e581174cc021728466387bde8507b89eda43dbc551f1f6a8bef4740711bb"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LEDGER-d-stella-400M-v5-b4e164c82cfb/combined.f16",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LEDGER-d-stella-400M-v5-b4e164c82cfb/combined.f16",
+      "group": "training_and_cov",
+      "bytes": 97935360,
+      "sha256": "6be00443ec3c48b4811fb2efcb08fc5d414e033e0ed60393e6d644570ea74e20"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LEDGER-d-stella-400M-v5-b4e164c82cfb/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LEDGER-d-stella-400M-v5-b4e164c82cfb/meta.json",
+      "group": "training_and_cov",
+      "bytes": 535,
+      "sha256": "6d06782fa4955b12bd831d4f6074bdece4821b2a31eb066bb9bb2b9611f4b195"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchConsumerContractsQA-d-stella-400M-v5-9eba3c192f04/chunk_00000.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchConsumerContractsQA-d-stella-400M-v5-9eba3c192f04/chunk_00000.npy",
+      "group": "training_and_cov",
+      "bytes": 315520,
+      "sha256": "436697c25e0a8210f01cee509b7b74e1c88db2335ee97eca904671146909069f"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchConsumerContractsQA-d-stella-400M-v5-9eba3c192f04/chunks.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchConsumerContractsQA-d-stella-400M-v5-9eba3c192f04/chunks.json",
+      "group": "training_and_cov",
+      "bytes": 122,
+      "sha256": "80073b97c2fcad8271f0c1551d57a18e8b6f815bafb7ee018ce622bd572a0cef"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchConsumerContractsQA-d-stella-400M-v5-9eba3c192f04/combined.f16",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchConsumerContractsQA-d-stella-400M-v5-9eba3c192f04/combined.f16",
+      "group": "training_and_cov",
+      "bytes": 315392,
+      "sha256": "3975f2f92777858fe8d04b0a0ad0e8890878e11f2cd906b8d22649e882f748a5"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchConsumerContractsQA-d-stella-400M-v5-9eba3c192f04/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchConsumerContractsQA-d-stella-400M-v5-9eba3c192f04/meta.json",
+      "group": "training_and_cov",
+      "bytes": 558,
+      "sha256": "9af19f83303325e895e40466bd934885afb783d91c91dac2d31d44b6eda1cb29"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchCorporateLobbying-d-stella-400M-v5-1557641d6093/chunk_00000.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchCorporateLobbying-d-stella-400M-v5-1557641d6093/chunk_00000.npy",
+      "group": "training_and_cov",
+      "bytes": 653440,
+      "sha256": "afb3aaac5460d81169eb0c024a2bd6877743bdb60bc5c53603a20c74f29f7432"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchCorporateLobbying-d-stella-400M-v5-1557641d6093/chunks.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchCorporateLobbying-d-stella-400M-v5-1557641d6093/chunks.json",
+      "group": "training_and_cov",
+      "bytes": 122,
+      "sha256": "e6bcc3730ddd112dfd986c501893a12bc7e55c7fd091a77ee21741830b6054d0"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchCorporateLobbying-d-stella-400M-v5-1557641d6093/combined.f16",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchCorporateLobbying-d-stella-400M-v5-1557641d6093/combined.f16",
+      "group": "training_and_cov",
+      "bytes": 653312,
+      "sha256": "515f4d82146e4a0724a16b166f6e90c05d74820abc63c9834e1d88b49cb05099"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchCorporateLobbying-d-stella-400M-v5-1557641d6093/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchCorporateLobbying-d-stella-400M-v5-1557641d6093/meta.json",
+      "group": "training_and_cov",
+      "bytes": 556,
+      "sha256": "b8f11d0ad612fa5e317fb07ed49db136acbe18797f26d7d76de8906c408dbba5"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-MedicalQARetrieval-d-stella-400M-v5-10e9f29435bd/chunk_00000.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-MedicalQARetrieval-d-stella-400M-v5-10e9f29435bd/chunk_00000.npy",
+      "group": "training_and_cov",
+      "bytes": 4194432,
+      "sha256": "abb825696f451354fc036ba028b4f09cb179f66679b9115f0853fe216af78621"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-MedicalQARetrieval-d-stella-400M-v5-10e9f29435bd/chunks.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-MedicalQARetrieval-d-stella-400M-v5-10e9f29435bd/chunks.json",
+      "group": "training_and_cov",
+      "bytes": 123,
+      "sha256": "d757daade9d4eb229efee39612846cc019f05d08527a7da17cfb75bcde9395e9"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-MedicalQARetrieval-d-stella-400M-v5-10e9f29435bd/combined.f16",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-MedicalQARetrieval-d-stella-400M-v5-10e9f29435bd/combined.f16",
+      "group": "training_and_cov",
+      "bytes": 4194304,
+      "sha256": "d4c915c0e74433a5d941b0ba6c56087586a77d13e7b57e94227dcacf58a0d574"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-MedicalQARetrieval-d-stella-400M-v5-10e9f29435bd/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-MedicalQARetrieval-d-stella-400M-v5-10e9f29435bd/meta.json",
+      "group": "training_and_cov",
+      "bytes": 547,
+      "sha256": "244480f0b94e2bafbf7507f9f875b9c2660a7e9fbaa94aeb9b0ac13fd68e4339"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m9long-nqopen/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m9long-nqopen/meta.json",
+      "group": "training_and_cov",
+      "bytes": 276,
+      "sha256": "1d1bb42e61bdf209ecac3689c45d25f2aef4fc539340d2beb09b055a834c482a"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m9long-nqopen/vecs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m9long-nqopen/vecs.npy",
+      "group": "training_and_cov",
+      "bytes": 175847552,
+      "sha256": "42ea0c28e2e844753a8e1891d006657401aeb51fb2aa0cb462312b3a9c53d494"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m9long-triviaqa/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m9long-triviaqa/meta.json",
+      "group": "training_and_cov",
+      "bytes": 278,
+      "sha256": "eccefc492115724fd36c56d9d858b5bbac8d9703a529f1d75e636e5438c9f360"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/enc9/m9long-triviaqa/vecs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/enc9/m9long-triviaqa/vecs.npy",
+      "group": "training_and_cov",
+      "bytes": 275794048,
+      "sha256": "dbfae1e2b4a2cb59b0be1763824fd4956616fb4aad460aa663e998c5ed897718"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10arxiv/arxiv_drawn.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10arxiv/arxiv_drawn.json",
+      "group": "training_and_cov",
+      "bytes": 3728223,
+      "sha256": "df04fc1a03d7f933dd5c14d53477d2634a6a96b563b7e23f1a4b9ae0113f0750"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10cov/rescreen10/d-8a84127d1118107cae25.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10cov/rescreen10/d-8a84127d1118107cae25.json",
+      "group": "training_and_cov",
+      "bytes": 2026,
+      "sha256": "930d4d9aec1954fc5de8b34c264b4292808a08fcfc34a357f48090f28e17026f"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10cov/rescreen10/d-8a84127d1118107cae25.npz",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10cov/rescreen10/d-8a84127d1118107cae25.npz",
+      "group": "training_and_cov",
+      "bytes": 152681,
+      "sha256": "91168ae14ab6aec6804990efbab5483eeade763667fa45247e6b7a03fd373512"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10cov/rescreen10/q-m9-nqopen-dbdb2f16e0d17fe01526.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10cov/rescreen10/q-m9-nqopen-dbdb2f16e0d17fe01526.json",
+      "group": "training_and_cov",
+      "bytes": 856,
+      "sha256": "bfef61c0e0f83b25f163c8e3c0715805e54dc8a3009b25aaac0497f5741bd535"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10cov/rescreen10/q-m9-nqopen-dbdb2f16e0d17fe01526.npz",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10cov/rescreen10/q-m9-nqopen-dbdb2f16e0d17fe01526.npz",
+      "group": "training_and_cov",
+      "bytes": 524,
+      "sha256": "63a04cf6c96ab6faf3ed34b93c21184b2a19dca739851a1e373584383754e358"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10cov/rescreen10/q-m9-queries_pair-7ce546afb6f10ec839c8.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10cov/rescreen10/q-m9-queries_pair-7ce546afb6f10ec839c8.json",
+      "group": "training_and_cov",
+      "bytes": 883,
+      "sha256": "710d7279e8c01c28a8b95cc80a9ae4abf037fcef819ff17483e83ef3f6c3ca15"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10cov/rescreen10/q-m9-queries_pair-7ce546afb6f10ec839c8.npz",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10cov/rescreen10/q-m9-queries_pair-7ce546afb6f10ec839c8.npz",
+      "group": "training_and_cov",
+      "bytes": 1532,
+      "sha256": "ba35682f3c543f03b079a7f3fb2c2538edeba5342aa006c4f6093bbd4028b987"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10cov/rescreen10/q-m9-triviaqa-048eb942d111394eacb6.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10cov/rescreen10/q-m9-triviaqa-048eb942d111394eacb6.json",
+      "group": "training_and_cov",
+      "bytes": 863,
+      "sha256": "a76886075e95dca4544626c6d21ab3c1bee9face7803e7769a6b1f477ef1a421"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10cov/rescreen10/q-m9-triviaqa-048eb942d111394eacb6.npz",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10cov/rescreen10/q-m9-triviaqa-048eb942d111394eacb6.npz",
+      "group": "training_and_cov",
+      "bytes": 959,
+      "sha256": "6a6a0ea78a91a45561df3090086d37596de1fc1e7358e38cab7164ae62788ef2"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10gen/generated_queries.jsonl",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10gen/generated_queries.jsonl",
+      "group": "training_and_cov",
+      "bytes": 314721198,
+      "sha256": "e546bd8c68bfe79fefafdaca3f085cf8f5e1c57153c36ad7053bfd3788157bfd"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10harvest/harvest_forms12.jsonl",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10harvest/harvest_forms12.jsonl",
+      "group": "training_and_cov",
+      "bytes": 242745,
+      "sha256": "9303f7b333859fbdb36e3d48d679e0ac91b24be460164b0128cc64b6867d0c62"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10harvest/harvest_train.jsonl",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10harvest/harvest_train.jsonl",
+      "group": "training_and_cov",
+      "bytes": 188817407,
+      "sha256": "a34ce58385a819cba62fdd2f15270b1448b7dd8c527557f28041d4c76c2bf334"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10paq/paq_build.jsonl",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10paq/paq_build.jsonl",
+      "group": "training_and_cov",
+      "bytes": 68125371,
+      "sha256": "5bd7b7283360caf10748ae865b6ebdd04f2e7f27717867451a63c7693e973a66"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10targets/query-stella_en_400M_v5-8e9a608b5383/keys.u8",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10targets/query-stella_en_400M_v5-8e9a608b5383/keys.u8",
+      "group": "training_and_cov",
+      "bytes": 97917568,
+      "sha256": "b9d1dd32e2fb8fb89533110e795726e0b49d460136fc320544b8735cb472eb57"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10targets/query-stella_en_400M_v5-8e9a608b5383/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10targets/query-stella_en_400M_v5-8e9a608b5383/meta.json",
+      "group": "training_and_cov",
+      "bytes": 439,
+      "sha256": "d08d6fcf6bbbd1870b1a6024ffd910e32d3e7d017e6bb1cad641105ff3dea5be"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10targets/query-stella_en_400M_v5-8e9a608b5383/vecs.f16",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10targets/query-stella_en_400M_v5-8e9a608b5383/vecs.f16",
+      "group": "training_and_cov",
+      "bytes": 12533448704,
+      "sha256": "718ab5c4849e8dcc5b0a19d4e11dbc3030e6f5af6af6ac83d09386fc91e70d8f"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/0e3faedfca0dcb85/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/0e3faedfca0dcb85/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 156139724,
+      "sha256": "0af8b311094a4412bf3ade918f24664e6ce3dcf38494dd95b1905cce7ad57939"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/0e3faedfca0dcb85/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/0e3faedfca0dcb85/meta.json",
+      "group": "training_and_cov",
+      "bytes": 1058,
+      "sha256": "c013162c2ed6c7506591a24cd2afd4bbf7c8f8246fcd4859259ba84657b70ad0"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/0e3faedfca0dcb85/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/0e3faedfca0dcb85/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 21212712,
+      "sha256": "93209fad41fa1932dca3f4b5953794b7f800a2d6c4ed055cb783962ab0a8c9dd"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/17c579633c71a68e/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/17c579633c71a68e/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 136616424,
+      "sha256": "82f1bd681e1e9a836f72c9b70a81cce44600cc7915cad5be2d3643174b131b30"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/17c579633c71a68e/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/17c579633c71a68e/meta.json",
+      "group": "training_and_cov",
+      "bytes": 1154,
+      "sha256": "c46a76aefb5f39b8308c59704ecead4b0c2b511cc070d471978abd4c132091b9"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/17c579633c71a68e/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/17c579633c71a68e/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 21212712,
+      "sha256": "803b4e5b661fcbf996dffff5348e174a7f705f6524128b5fdfafb2757fd718e6"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/349632ccd0812a3d/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/349632ccd0812a3d/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 24861344,
+      "sha256": "e8c64748cb44384df42a8e509b62c93d4f46e5a2e8f43dfba9dc27a454d4d33c"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/349632ccd0812a3d/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/349632ccd0812a3d/meta.json",
+      "group": "training_and_cov",
+      "bytes": 1054,
+      "sha256": "0cc55c2dcbe744a89faa847aec0f478a2ce86793067272f5af1dfdbd438824e4"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/349632ccd0812a3d/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/349632ccd0812a3d/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 3227680,
+      "sha256": "59ea92d19046bd9998845b3ec744e2d2d5e9589b0f0d6ade57445b1e0186f066"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/4be68413c76130db/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/4be68413c76130db/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 24861344,
+      "sha256": "e8c64748cb44384df42a8e509b62c93d4f46e5a2e8f43dfba9dc27a454d4d33c"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/4be68413c76130db/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/4be68413c76130db/meta.json",
+      "group": "training_and_cov",
+      "bytes": 1054,
+      "sha256": "bbc5f09a4fbd8f2e500947fd9412189ce65d66da033d10d11cd8d94f7fd4f0f6"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/4be68413c76130db/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/4be68413c76130db/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 3227680,
+      "sha256": "59ea92d19046bd9998845b3ec744e2d2d5e9589b0f0d6ade57445b1e0186f066"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/502524efe74d3310/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/502524efe74d3310/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 53021324,
+      "sha256": "f5d30814e3b671d65cc94fca7f98df9a0fb6b95145ed41d3a22dcba3b3805f6c"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/502524efe74d3310/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/502524efe74d3310/meta.json",
+      "group": "training_and_cov",
+      "bytes": 301,
+      "sha256": "0a916c6a76cfebc49224d9c1f22eaa446e86b1f0d9106ef3f0666ddb2cf026a1"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/502524efe74d3310/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/502524efe74d3310/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 6400136,
+      "sha256": "1e507a2574eaed6dc8474e9b3b80cabe1a1bac0089b94a0ec35aac952815dc3b"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/6f1b4d4a1a9710f6/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/6f1b4d4a1a9710f6/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 219900924,
+      "sha256": "9c42168cd998dc76e9a0f7ae73da4fa56ec9aa5eb782159b0af95cb5a70d3f4d"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/6f1b4d4a1a9710f6/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/6f1b4d4a1a9710f6/meta.json",
+      "group": "training_and_cov",
+      "bytes": 1218,
+      "sha256": "70babbe393d4118fb4d8d6eb067840ecfe96f1ce5016c1505f6a7374f6ed35cf"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/6f1b4d4a1a9710f6/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/6f1b4d4a1a9710f6/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 21212712,
+      "sha256": "cc56705bb77971c6efc9912f4b4f39ec271d76b0d420537dee5deb3529c355c8"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/8fff14c8784b6e3a/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/8fff14c8784b6e3a/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 24858992,
+      "sha256": "30794696ee1661ad06d12faaa233a3d80a9368c101a92208b11c6d7785773ad1"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/8fff14c8784b6e3a/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/8fff14c8784b6e3a/meta.json",
+      "group": "training_and_cov",
+      "bytes": 1054,
+      "sha256": "1020eec4f87c7e05bf045754141674deb948556836e53a2d6181efe2ed9d49bb"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/8fff14c8784b6e3a/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/8fff14c8784b6e3a/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 3227680,
+      "sha256": "0ddc13709357389dd33d9cf3b2b898b0fc027b865263c05b04984943a09db80d"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/9015f47ddc9a50c0/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/9015f47ddc9a50c0/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 288979992,
+      "sha256": "5d539a866358872930ba268f845eab57beb48a505b517bd14e32f24c6e47ee93"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/9015f47ddc9a50c0/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/9015f47ddc9a50c0/meta.json",
+      "group": "training_and_cov",
+      "bytes": 1056,
+      "sha256": "30b4d6a0a7a7e581e950e71717b945e9ee5bc2165d165cb2d343dc0c52d74933"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/9015f47ddc9a50c0/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/9015f47ddc9a50c0/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 27888408,
+      "sha256": "e2627e7ceb08151cbafb2d1c069ebe0102fb4c65a8419ab09cad43d6519c1f2e"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/a776fdeac6479ba5/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/a776fdeac6479ba5/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 6182024,
+      "sha256": "8433bc2b70051d7fadce7958e68e145ab6d79e53949b1e303b89828e15cf6152"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/a776fdeac6479ba5/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/a776fdeac6479ba5/meta.json",
+      "group": "training_and_cov",
+      "bytes": 153,
+      "sha256": "e3d73e74c57408e010c48ff97dd81e5cdbf39d30d946fb4507807d6ac90f9458"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/a776fdeac6479ba5/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/a776fdeac6479ba5/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 480136,
+      "sha256": "ed8bf3b087c1a1d741b21013aba55eab673d436abf706759c67106113d203ca4"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/b4ba0d9e8b29a3de/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/b4ba0d9e8b29a3de/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 6182024,
+      "sha256": "8433bc2b70051d7fadce7958e68e145ab6d79e53949b1e303b89828e15cf6152"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/b4ba0d9e8b29a3de/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/b4ba0d9e8b29a3de/meta.json",
+      "group": "training_and_cov",
+      "bytes": 298,
+      "sha256": "f9817c8351db0c7f801ec5c8215e0d55454e81dd9d9bb60ce15d8bfe47251e62"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/b4ba0d9e8b29a3de/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/b4ba0d9e8b29a3de/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 480136,
+      "sha256": "ed8bf3b087c1a1d741b21013aba55eab673d436abf706759c67106113d203ca4"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/dfc8d12618876554/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/dfc8d12618876554/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 219900924,
+      "sha256": "9c42168cd998dc76e9a0f7ae73da4fa56ec9aa5eb782159b0af95cb5a70d3f4d"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/dfc8d12618876554/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/dfc8d12618876554/meta.json",
+      "group": "training_and_cov",
+      "bytes": 1202,
+      "sha256": "542faff5ed1684d77e52236015f54e4c36cf63982d8f6c2e74c780d710b5e9b5"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/dfc8d12618876554/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/dfc8d12618876554/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 21212712,
+      "sha256": "cc56705bb77971c6efc9912f4b4f39ec271d76b0d420537dee5deb3529c355c8"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-70eb728d077f5c21/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-70eb728d077f5c21/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 469153068,
+      "sha256": "e1147f8e162098934133eafa3742f90412f05e9d559ad36b4b110423700ca2c5"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-70eb728d077f5c21/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-70eb728d077f5c21/meta.json",
+      "group": "training_and_cov",
+      "bytes": 524,
+      "sha256": "8141c662513bbfaeae3196e01dc2aaf896806fdf892bb86cddf010d69f88707d"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-70eb728d077f5c21/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-70eb728d077f5c21/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 10000136,
+      "sha256": "1bda7afbc5ba376bdb46e9d2d4f2d8b899a903873438cd18388a64651f94bd27"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-7924d9ea0c256409/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-7924d9ea0c256409/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 8724,
+      "sha256": "591c1af95fb572c3aa1286cc4f1d7595a2c9c425951fab93342e2366c4ec29bf"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-7924d9ea0c256409/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-7924d9ea0c256409/meta.json",
+      "group": "training_and_cov",
+      "bytes": 519,
+      "sha256": "1793ced12f1768896d8b86a839c840ffbe2675218605d2fa76422fbda1779f26"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-7924d9ea0c256409/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-7924d9ea0c256409/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 392,
+      "sha256": "134c183d129a228fd5deb91975a8dca6ce9457a6767d924dc04b3e4cd1401c98"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-936707b7a386a778/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-936707b7a386a778/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 1407299512,
+      "sha256": "0489bf57d03a9f83009a1a3635a041997ec3359b8a022365e0bd0d9a8edd64b8"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-936707b7a386a778/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-936707b7a386a778/meta.json",
+      "group": "training_and_cov",
+      "bytes": 524,
+      "sha256": "067980819f90d1b6bb44c7396a55cc527cedd2ab16379123fb70a83608be7807"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-936707b7a386a778/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-936707b7a386a778/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 30000136,
+      "sha256": "3274dc37869f6a4494e7a8f3a5ec1d068341ed5eb6e93350400ba9fa7106b1b0"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-c31a7ca9cbbae3bc/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-c31a7ca9cbbae3bc/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 1876339968,
+      "sha256": "c3199671fd404584b02185c1e1845c96bf6e79a0bb69986764dc3427c348995d"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-c31a7ca9cbbae3bc/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-c31a7ca9cbbae3bc/meta.json",
+      "group": "training_and_cov",
+      "bytes": 524,
+      "sha256": "e3c7d410eaf4fd08f9973e063a7d86a4acb9948a4c725123b4c305c7228648af"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-c31a7ca9cbbae3bc/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-c31a7ca9cbbae3bc/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 40000136,
+      "sha256": "27029946d6ed9034a085288c153db49fed61e30fa85f31c350a87509ab2aee6b"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-c9b7fab38bd788ad/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-c9b7fab38bd788ad/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 1876339968,
+      "sha256": "c3199671fd404584b02185c1e1845c96bf6e79a0bb69986764dc3427c348995d"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-c9b7fab38bd788ad/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-c9b7fab38bd788ad/meta.json",
+      "group": "training_and_cov",
+      "bytes": 540,
+      "sha256": "85043f2c055aa0b225c3a47233650ef3c29e265ea392a489bb0c3380a5601b81"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-c9b7fab38bd788ad/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-c9b7fab38bd788ad/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 40000136,
+      "sha256": "27029946d6ed9034a085288c153db49fed61e30fa85f31c350a87509ab2aee6b"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d137715651880b38/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d137715651880b38/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 273440,
+      "sha256": "9384de67d2ae10343fedb93cc54eccbeb396895c3be6743ce3df9f7dc7e66bff"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d137715651880b38/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d137715651880b38/meta.json",
+      "group": "training_and_cov",
+      "bytes": 520,
+      "sha256": "051f2f704e668c118827fc98b0581f2ff0b0788045fd011c58e1b42ac438c00e"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d137715651880b38/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d137715651880b38/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 5896,
+      "sha256": "8860f242502be3f83582397236f5126232e9d62a23f2b23b4e1b2f49e6f95f03"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d35395d911558b56/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d35395d911558b56/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 55576,
+      "sha256": "9841fe9ce54a40b0655a0bf0c2d5e27e78f45b5d43556a1bd63ee9d6e1d9ca8a"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d35395d911558b56/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d35395d911558b56/meta.json",
+      "group": "training_and_cov",
+      "bytes": 520,
+      "sha256": "7a3bc1006cc7b5b6a0e255a0a08fb7874f03545328f378eea5ddf947140182b2"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d35395d911558b56/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d35395d911558b56/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 1416,
+      "sha256": "bda34f68145754064da1599bec3f6495f556214e2ee964e9b952fa4b96b98c7c"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d8f9989c5e786fba/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d8f9989c5e786fba/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 469293608,
+      "sha256": "862633d47179596df07ecb83e21a8842d25b8ccfbe6e9f2c17683cdeedb57208"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d8f9989c5e786fba/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d8f9989c5e786fba/meta.json",
+      "group": "training_and_cov",
+      "bytes": 524,
+      "sha256": "2283311dbd4a276eff6a6900c3b06725d8abbd3b86ead8bef2edf67b5810d885"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d8f9989c5e786fba/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-d8f9989c5e786fba/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 10000136,
+      "sha256": "87e6213d8a5dceb983ab7d12e73e435a9919cadc7a7eb99ecca7fa0d36ef82ef"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-e1b9909facbb4078/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-e1b9909facbb4078/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 55576,
+      "sha256": "9841fe9ce54a40b0655a0bf0c2d5e27e78f45b5d43556a1bd63ee9d6e1d9ca8a"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-e1b9909facbb4078/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-e1b9909facbb4078/meta.json",
+      "group": "training_and_cov",
+      "bytes": 520,
+      "sha256": "b46611b772c89590146982e8755358b5bb31b6d1c87f9a033338f28a550dba22"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-e1b9909facbb4078/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-e1b9909facbb4078/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 1416,
+      "sha256": "bda34f68145754064da1599bec3f6495f556214e2ee964e9b952fa4b96b98c7c"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-e8ad20d5ae96cd12/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-e8ad20d5ae96cd12/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 469293608,
+      "sha256": "862633d47179596df07ecb83e21a8842d25b8ccfbe6e9f2c17683cdeedb57208"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-e8ad20d5ae96cd12/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-e8ad20d5ae96cd12/meta.json",
+      "group": "training_and_cov",
+      "bytes": 524,
+      "sha256": "811ad5e29449cc4e55eb4747b2bc8d013591142c2851709be35578a7a79620bd"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-e8ad20d5ae96cd12/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-e8ad20d5ae96cd12/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 10000136,
+      "sha256": "87e6213d8a5dceb983ab7d12e73e435a9919cadc7a7eb99ecca7fa0d36ef82ef"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-f90bcf54a2b617f8/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-f90bcf54a2b617f8/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 269456,
+      "sha256": "5405e09a759ab76a4628e4d80001b3e3214d8e367b15552498b961bd40e53e62"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-f90bcf54a2b617f8/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-f90bcf54a2b617f8/meta.json",
+      "group": "training_and_cov",
+      "bytes": 520,
+      "sha256": "74290f77ef76aae1695bd2bed7e642504760f6526a16b00e5b1adad9fd8bbead"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-f90bcf54a2b617f8/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m10tok/doc-f90bcf54a2b617f8/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 5896,
+      "sha256": "36b6630be4539108dbf7f4fc100ca17d29188d050ad46595c5b6099b0cc89adb"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m8_trainq_texts.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m8_trainq_texts.json",
+      "group": "training_and_cov",
+      "bytes": 21327603,
+      "sha256": "da0f208ef29bae3833ffead070eb34b61f390f9d72ed96d448d45ae6b52072c2"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m9_screen_queries.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m9_screen_queries.json",
+      "group": "training_and_cov",
+      "bytes": 16348346,
+      "sha256": "77c7ce118feab016bd9991c295b15859ba6af582e557d3dbd98508433fc49238"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m9_screen_rows.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m9_screen_rows.npy",
+      "group": "training_and_cov",
+      "bytes": 1942416,
+      "sha256": "af15cdbb9b712a03f771e33f0be9fd47c0d87c244a39f9e4f8464347d218b8e7"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m9long/corpora/nqopen/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m9long/corpora/nqopen/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 4032536,
+      "sha256": "6d766d6fedcfdff1d6282754664f5c17f055304bbdc0ec38f834b135775460af"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m9long/corpora/nqopen/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m9long/corpora/nqopen/meta.json",
+      "group": "training_and_cov",
+      "bytes": 582,
+      "sha256": "c9c80bf55fdde21c9f03ea8e04746551bf13d728ae94a33050a11d37d151d12d"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m9long/corpora/nqopen/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m9long/corpora/nqopen/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 687040,
+      "sha256": "6cac3e95d1ffdf50a66e13012325c9d1a514cf3388ae84704143cd693cae4908"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m9long/corpora/triviaqa/flat.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m9long/corpora/triviaqa/flat.npy",
+      "group": "training_and_cov",
+      "bytes": 10741568,
+      "sha256": "1cd86284f938d45c68bb651d75173b3fd8b6621ec3d5ed4862e77685d08e53ce"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m9long/corpora/triviaqa/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m9long/corpora/triviaqa/meta.json",
+      "group": "training_and_cov",
+      "bytes": 546,
+      "sha256": "8879d659260d1e22f5d305cd8cae4fb14d7853d958c9fdfbe1c423c9f8f5f617"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m9long/corpora/triviaqa/offs.npy",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/m9long/corpora/triviaqa/offs.npy",
+      "group": "training_and_cov",
+      "bytes": 1077456,
+      "sha256": "d173415eacae58035846aff055b5579b8d89882e6f167c9fdb49d84cfebcf49c"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/pool/ids-esci-prod.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/pool/ids-esci-prod.json",
+      "group": "dev6_existing_cache",
+      "bytes": 11317446,
+      "sha256": "4de2384a2b39f49733e7aa19efcc6655dbbc9965c609373a0e9903a439b4638f"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/pool/ids-fever-pos.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/pool/ids-fever-pos.json",
+      "group": "dev6_existing_cache",
+      "bytes": 270467,
+      "sha256": "7f11d4186c8ed1f6661bc0df497ac2e20dc3ec833922fb9d58511aa1c369bf73"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/pool/ids-hotpotqa-corpus.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/pool/ids-hotpotqa-corpus.json",
+      "group": "dev6_existing_cache",
+      "bytes": 61007707,
+      "sha256": "be799419ebc5b1589229a161083f93aa7d3871ba0afe7c42c896a0ce1fb7c853"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/pool/ids-mrtydi-docs.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/pool/ids-mrtydi-docs.json",
+      "group": "dev6_existing_cache",
+      "bytes": 1289624,
+      "sha256": "31aa0fc7673eddd75100c4cc32be0b8a074afd33c2796676265aec0d575830fb"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/pool/ids-squad-ctx.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/pool/ids-squad-ctx.json",
+      "group": "dev6_existing_cache",
+      "bytes": 272255,
+      "sha256": "b5f3e48f22f1b9cb8c1ef0c48f5f4a2b7fe3793dd7aebfb86c06afa127126e9a"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/pool/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/pool/meta.json",
+      "group": "training_and_cov",
+      "bytes": 946,
+      "sha256": "53f015da827103f1f7a0c5637bdb6ae17d7b0a17182290e841a1719712aa3999"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/pool/stella-400M-v5/meta.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/pool/stella-400M-v5/meta.json",
+      "group": "dev6_existing_cache",
+      "bytes": 1091,
+      "sha256": "b120102f001e1e8f5c849b64c0fd0b75a625828022f4cd146df99362c7aea61c"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/pool/stella-400M-v5/vecs.f16",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/pool/stella-400M-v5/vecs.f16",
+      "group": "dev6_existing_cache",
+      "bytes": 12634402816,
+      "sha256": "ddae0d7fa620e7b0f0ca9d698dc434c9553cd9dbcc3301b1b47ac67d0bf59fda"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/pseudoq/pseudoq-2000000-0.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/pseudoq/pseudoq-2000000-0.json",
+      "group": "training_and_cov",
+      "bytes": 152832623,
+      "sha256": "e424558509326f6900e6c8391c6bbc97de97c7b83073d79a24f6fc5c7fb59adf"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/train/querytext/nqopen.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/train/querytext/nqopen.json",
+      "group": "training_and_cov",
+      "bytes": 4487796,
+      "sha256": "0348ba5308e41d3021a419ac8443f2726fe68fb841b777b92c7ed2dc6f33e432"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/train/querytext/triviaqa.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/train/querytext/triviaqa.json",
+      "group": "training_and_cov",
+      "bytes": 11709187,
+      "sha256": "b579ef3c7c4b9229ff8641744d720839a55fcd3646f055fada34b5437711341e"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/train/sources/esci-us.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/train/sources/esci-us.json",
+      "group": "dev6_existing_cache",
+      "bytes": 21198735,
+      "sha256": "614a578c8020293c1da1723c1771e98def5dc22c64c9abe09ed8c249c2a04f2e"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/train/sources/fever-train.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/train/sources/fever-train.json",
+      "group": "dev6_existing_cache",
+      "bytes": 12354265,
+      "sha256": "3349e3743e352e9bff4559ac1499a6ea6e0e841e583b53d9d81f1ce41193b85d"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/train/sources/hotpotqa-train.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/train/sources/hotpotqa-train.json",
+      "group": "dev6_existing_cache",
+      "bytes": 15911423,
+      "sha256": "ea31dc013db97febbe7df8f7204c174b6458d47d7649d0e03366adf52d9c8cef"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/train/sources/mrtydi-en.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/train/sources/mrtydi-en.json",
+      "group": "dev6_existing_cache",
+      "bytes": 1779803,
+      "sha256": "25552c9df9b332975a4b3dea0a892140bf9fc6cd1063c2d78a593b86b2a01ccf"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/m13cloud/work/train/sources/squad-train.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/train/sources/squad-train.json",
+      "group": "dev6_existing_cache",
+      "bytes": 11655941,
+      "sha256": "6542bd7f8745f7a64092f10bf0eca1d35eb5675b6993454073d22232afa32fbe"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/train/stores/esci-prod.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/train/stores/esci-prod.json",
+      "group": "training_and_cov",
+      "bytes": 980901362,
+      "sha256": "7a379cb58ed67f96a7e9677607f1c36ab01cb5afa7b61cfc3ea154b1c4293cea"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/train/stores/hotpotqa-corpus.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/train/stores/hotpotqa-corpus.json",
+      "group": "training_and_cov",
+      "bytes": 1643472300,
+      "sha256": "5e2ac12c315582fa0080a47b4774fc9166d217aa120496f5e535aba2ce40443a"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/train/stores/mrtydi-docs.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/train/stores/mrtydi-docs.json",
+      "group": "training_and_cov",
+      "bytes": 64690893,
+      "sha256": "b4c0255bfc048393e37ddd6697ef05c608127aee0441c3c948336e81a0d51f4d"
+    },
+    {
+      "source": "/home/dylan/asymetric-dual-encoders/work/train/stores/squad-ctx.json",
+      "destination": "/home/dylan/asymetric-dual-encoders/work/train/stores/squad-ctx.json",
+      "group": "training_and_cov",
+      "bytes": 14374564,
+      "sha256": "1e7d7f13feeeed8ca4e4c638436eb1a89d9b70daa4748f259cb8312a525f8729"
+    }
+  ],
+  "files": 394,
+  "logical_bytes": 72623148280,
+  "source_manifests": [
+    "m13/cloud_transfer_files.txt",
+    "work/m13cloud-dev6-links.json"
+  ],
+  "preflight_owed": [
+    "Remote SHA256 transfer verification",
+    "Full uncut BUILD-200M assemble with all eligible documents and registered masks, no training",
+    "Actual DEV6 doc_vecs cache reuse with encoder disabled",
+    "Passed committed LoTTE gate and fixed budget reconciliation",
+    "Runtime validation after any Pod restart; container-local runtime is ephemeral"
+  ],
+  "hashed_at": 1789172901.635096,
+  "inventory_sha256": "d25069bba4d1e2ed98e95c3c469a1d1693d7b409c4d832979f6421adabcc7478"
+}
