@@ -358,8 +358,29 @@ def test_heldout_slice_must_be_unique_disjoint_and_non_empty():
     with pytest.raises(SystemExit, match="also in a training bucket"):
         T._check_heldout(np.array([0, 9]), streams, pairs, cfg)
     T._check_heldout(np.array([9, 10]), streams, pairs, cfg)          # rehearsal: any size
-    with pytest.raises(SystemExit, match="the registry pins 2000"):
+    with pytest.raises(SystemExit, match="the prepared build records 2000"):
         T._check_heldout(np.array([9, 10]), streams, pairs, T.RunCfg(heldout_queries=2000))
+    # the slice, prepared.json and the cache's own bucket tally must all agree
+    with pytest.raises(SystemExit, match="the cache tallies 3"):
+        T._check_heldout(np.array([9, 10]), streams, pairs, T.RunCfg(heldout_queries=2),
+                         cache_heldout=3)
+    T._check_heldout(np.array([9, 10]), streams, pairs, T.RunCfg(heldout_queries=2),
+                     cache_heldout=2)
+
+
+def test_heldout_count_comes_from_the_lock_bound_build(tmp_path):
+    """The screened build holds 1994 held-out rows, not the 2000 of the registration text
+    (registry `lock.amendments`, 2026-09-12); the count follows the data that is locked."""
+    (tmp_path / "prepared.json").write_text(json.dumps({"heldout_idx": list(range(1994))}))
+    reg = common.registry()
+    assert T.RunCfg.from_registry(reg, "VL-A", data_dir=str(tmp_path)).heldout_queries == 1994
+    # no data directory (rehearsal, unit tests): the registered number stands
+    assert T.RunCfg.from_registry(reg, "VL-A").heldout_queries == 2000
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    (empty / "prepared.json").write_text(json.dumps({"heldout_idx": []}))
+    with pytest.raises(SystemExit, match="records no held-out slice"):
+        T.RunCfg.from_registry(reg, "VL-A", data_dir=str(empty))
 
 
 def test_divergence_monitors_the_same_components_on_both_sides(rehearsal):

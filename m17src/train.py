@@ -26,8 +26,9 @@ What the loop implements, from `m17/registry.json`:
   rows, and the batch-normalized alias consistency term (VL-A only);
 * Adam with rows and learned scalars in separate parameter groups, linear warmup then linear
   decay, both schedules predeclared;
-* an overfit/divergence read every 500 steps on a fixed 2000-query held-out slice of the
-  TRAINING sources (never the panel), flagged and reported, never acted on after lock;
+* an overfit/divergence read every 500 steps on the lock-bound held-out slice of the TRAINING
+  sources (never the panel; 2000 at registration, 1994 after the protected screen — registry
+  `lock.amendments` 2026-09-12), flagged and reported, never acted on after lock;
 * step-bound late snapshots (`checkpoint_averaging.checkpoint_steps`) in addition to time-bound
   recovery checkpoints, and a resume that restores optimizer, scheduler, RNG, per-bucket stream
   position and tokenizer identity;
@@ -87,6 +88,29 @@ def resolve_dose(data_reg, batch):
     return g, c, p
 
 
+HELDOUT_QUERIES_AT_REGISTRATION = 2000
+
+
+def _registered_heldout_queries(data_dir):
+    """The held-out slice size, taken from the lock-bound build rather than a literal.
+
+    The registration wrote "a fixed 2000-query held-out slice"; the protected screen removed
+    six of those rows and the A5 coverage refill did not refill them, so the build bound into
+    the lock's `cache_identity` holds 1994 (registry `lock.amendments`, 2026-09-12). The read
+    is monitoring-only — it is logged and can raise a recorded divergence flag, and no decision
+    predicate reads it — so the count follows the data that is actually locked. With no data
+    directory (rehearsal, unit tests) the registered number stands.
+    """
+    if data_dir is None:
+        return HELDOUT_QUERIES_AT_REGISTRATION
+    manifest = json.loads(admit_read(Path(data_dir) / "prepared.json").read_text())
+    n = len(manifest.get("heldout_idx") or [])
+    if n <= 0:
+        raise SystemExit(f"M17 REFUSED: {data_dir}/prepared.json records no held-out slice; the "
+                         "divergence check would read an empty slice.")
+    return n
+
+
 @dataclass
 class RunCfg:
     arm: str = "VL-A"
@@ -122,7 +146,7 @@ class RunCfg:
     warm_start: str = ""
 
     @classmethod
-    def from_registry(cls, reg, arm, seed=None, **over):
+    def from_registry(cls, reg, arm, seed=None, data_dir=None, **over):
         tr = reg["training"]
         d = reg["data"]
         batch = int(over.get("batch", tr["batch"]))
@@ -144,7 +168,7 @@ class RunCfg:
             coverage_views=c,
             alias_pairs=p,
             check_every=int(tr["overfit_divergence_check"]["every_steps"]),
-            heldout_queries=2000,
+            heldout_queries=_registered_heldout_queries(data_dir),
             snapshot_steps=tuple(reg["checkpoint_averaging"]["checkpoint_steps"]),
             checkpoint_minutes_max=float(tr["checkpoint_minutes_max"]),
         )
@@ -518,7 +542,8 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
         # pairs several times inside one batch and call it the registered dose.
         need={"general": g_n, "coverage": c_n, "alias": p_n})
     heldout = np.asarray(data["heldout_idx"], dtype=np.int64)[:cfg.heldout_queries]
-    _check_heldout(heldout, streams, pair_index, cfg)
+    _check_heldout(heldout, streams, pair_index, cfg,
+                   cache_heldout=sum(1 for b in data["buckets"] if str(b) == "heldout"))
     heldout_sha = _heldout_sha(heldout)
 
     state = {"step": 0, "history": [], "flags": [], "snapshots": {},
@@ -655,8 +680,13 @@ def _monitored(components):
     return {**c, "monitored": sum(c.values())}
 
 
-def _check_heldout(heldout, streams, pair_index, cfg):
-    """The registered held-out slice: 2000 unique training-source queries, disjoint from training.
+def _check_heldout(heldout, streams, pair_index, cfg, cache_heldout=None):
+    """The registered held-out slice: unique training-source queries, disjoint from training.
+
+    `cfg.heldout_queries` comes from the lock-bound build's `prepared.json` (1994 after the
+    protected screen; registry `lock.amendments`, 2026-09-12), so the length check below is a
+    data-vs-cache consistency check: the slice, `prepared.json`'s `heldout_idx` and the cache's
+    own `heldout` bucket tally must all agree.
 
     A rehearsal runs on tens of queries and says so; a real run may not silently report a
     zero-loss divergence read taken over an empty slice.
@@ -675,8 +705,11 @@ def _check_heldout(heldout, streams, pair_index, cfg):
         raise SystemExit(f"M17 REFUSED: {len(overlap)} held-out queries are also in a training "
                          "bucket; the divergence read must not see rows the optimizer sees.")
     if not cfg.rehearsal and len(heldout) != int(cfg.heldout_queries):
-        raise SystemExit(f"M17 REFUSED: held-out slice has {len(heldout)} queries, the registry "
-                         f"pins {cfg.heldout_queries}.")
+        raise SystemExit(f"M17 REFUSED: held-out slice has {len(heldout)} queries, the prepared "
+                         f"build records {cfg.heldout_queries}.")
+    if not cfg.rehearsal and cache_heldout is not None and len(heldout) != int(cache_heldout):
+        raise SystemExit(f"M17 REFUSED: held-out slice has {len(heldout)} queries but the cache "
+                         f"tallies {cache_heldout} rows in the `heldout` bucket.")
 
 
 def _flag_divergence(state, log):
@@ -867,7 +900,7 @@ def main(argv=None):
         over["checkpoint_minutes_max"] = float(args.checkpoint_minutes)
     if args.rehearsal:
         over["rehearsal"] = True
-    cfg = RunCfg.from_registry(reg, args.arm, seed=args.seed, **over)
+    cfg = RunCfg.from_registry(reg, args.arm, seed=args.seed, data_dir=args.data, **over)
     data = json.loads(admit_read(Path(args.data) / "prepared.json").read_text())
     data["registry_status"] = status
     out = Path(args.out or (WORK / "runs" / cfg.run_id))

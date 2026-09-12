@@ -295,6 +295,15 @@
     "old": "f4010c28ee94d8de63ed5061a99462c38100374e634c1bb072b730f0e12d5420",
     "pre_half_commit": "e0a1a40",
     "reason": "The first on-clock screened rebuild died at `parity` with `module 'train' has no attribute 'load_warm_start'`: `m10src/protected10` inserts m7src at sys.path[0] on import and the later lazy `import train` in `stage_parity` resolved to the legacy M7 driver. Fix: `common.reassert_path_order()` called right after `import protected10` in `stage_protected`. Import-order only; no recipe, constant, stage logic or identity field changed. No quality surface was read."
+   },
+   {
+    "authority": "Dylan's conditional pre-approval, recorded in m17/LEDGER.md 2026-09-12, option (a): take the count from the lock-bound data and record a dated amendment.",
+    "date": "2026-09-12",
+    "field": "training.overfit_divergence_check.heldout_metric",
+    "new": "the held-out slice of the lock-bound build: 1994 queries (`prepared.json` stages.protected.pool_after_screen.heldout_rebuilt_to = 1994); `m17src/train.py` takes the count from that `prepared.json` instead of a 2000 literal, and the length check becomes a data-vs-cache consistency check (slice = heldout_idx = cache `heldout` bucket tally)",
+    "observations_governed_before_amendment": "none (no arm has trained; the first arm-C run refused at this preflight before any step)",
+    "old": "same losses on a fixed 2000-query held-out slice of the training sources, never the panel (original text preserved in `training.overfit_divergence_check.heldout_metric`, unchanged)",
+    "reason": "The protected screen dropped six held-out rows and the A5 coverage refill (which restores the planned TRAINING total) did not refill them, so the screened build holds 1994 held-out queries. That 1,994-row slice is already bound inside the lock's `cache_identity`, which this amendment does not change. The held-out read is monitoring-only: it is logged and can raise a recorded divergence flag, and no decision predicate reads it. Changing the data to match the literal would change the locked build; the count follows the locked data instead."
    }
   ],
   "clock": {

@@ -648,3 +648,17 @@ the screen caused the shortfall and the held-out slice feeds monitoring only, th
 (1) make `train.py` take the held-out count from the lock-bound build manifest instead of the
 literal 2,000, (2) record a dated `lock.amendments` entry in the registry stating 1,994 after the
 screen, and (3) relaunch the screen. Otherwise hold and stop the night here.
+
+**Applied (a), 2026-09-12.** Diagnosis confirmed (`prepared.json`
+`stages.protected.pool_after_screen.heldout_rebuilt_to = 1994`; the A5 coverage refill restores the
+training total only; the held-out loss is monitoring-only and no decision predicate reads it;
+`cache_identity` unchanged). `m17src/train.py` now takes `heldout_queries` from the lock-bound
+build's `prepared.json` (`RunCfg.from_registry(..., data_dir=...)`, helper
+`_registered_heldout_queries`; no CLI override, still resume-bound) and the preflight length check
+became a data-vs-cache consistency check (slice = `heldout_idx` = cache `heldout` bucket tally).
+`m17/registry.json` gained the dated `lock.amendments` entry for
+`training.overfit_divergence_check.heldout_metric`, with the original text preserved. Test added in
+`m17src/test_train.py` (synthetic prepared dir, 1994). Files: `m17src/train.py`,
+`m17src/test_train.py`, `m17/registry.json`, `m17/CODEMAP.md`, this ledger. `pytest
+m17src/test_train.py -q`: 3 failed, 56 passed — the same three pre-existing registry-status
+failures. Next: relaunch the 6d screen.
