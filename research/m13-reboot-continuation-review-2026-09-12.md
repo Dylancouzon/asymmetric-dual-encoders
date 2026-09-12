@@ -87,3 +87,23 @@ After-upload allocation helper and supervisor draft received both code-readiness
 conditional on a passed394-file storage receipt with STOP, exact prior receipt bindings,
 current free GPU capacity and fresh balance. Helper scratch tests cover all elapsed intervals
 and incomplete/changed receipts. Apply the supervisor draft only after upload completion.
+
+
+## Independent overnight transition
+
+The after-upload coordinator publishes only the final verified storage receipt, applies the
+reviewed supervisor patch with exact SHA verification, polls retained-host capacity without
+resuming compute, then calculates/publishes a fresh cumulative allowance and dispatches once.
+Source and original input bindings remain checked while waiting. Monitor-active verification
+is required before dispatch. It never allocates a new Pod or opens quality payloads.
+
+Budget review caught a startup-timeout race leaving an unconfirmed child alive. The fix
+terminates the owned process group, waits, escalates if needed, and only after quiescence
+issues a bounded STOP fallback to the exact retained Pod. Budget recheck GO. Meaningful tests
+exercise actual process-group cancellation before mocked provider STOP and forced-kill order,
+as well as isolated Git publication and refusals. Combined handoff, allocation, upload,
+recovery and monitor suite:37 passed. Launcher final review recorded before launch.
+
+Launcher review additionally required STOP in finally and guarded receipt I/O so cleanup
+errors cannot bypass the provider fallback. Implemented, with injected termination-error
+coverage;38 tests pass. Both reviewers issued final GO on the concrete final coordinator.

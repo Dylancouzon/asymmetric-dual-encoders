@@ -92,6 +92,26 @@
         "logs/m13-storage-upload.log"
       ],
       "stale_seconds": 1800
+    },
+    {
+      "name": "storage upload to GPU handoff",
+      "receipt": "results/m13_after_upload.json",
+      "pid_file": "work/m13cloud-launchers/after_upload.pid",
+      "logs": [
+        "logs/m13-after-upload.log"
+      ],
+      "wait_for": "storage only build input upload",
+      "stale_seconds": 900
+    },
+    {
+      "name": "200M build after verified storage upload",
+      "receipt": "results/m13_cloud_build_after_cpu.json",
+      "pid_file": "work/m13cloud-launchers/build_after_cpu.pid",
+      "logs": [
+        "logs/m13-build-after-cpu-controller.log",
+        "logs/m13-build-after-cpu.log"
+      ],
+      "stale_seconds": 1800
     }
   ]
 }

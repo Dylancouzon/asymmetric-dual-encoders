@@ -22,16 +22,22 @@ with planned training plus4h preserved within the original144h/$239.56 stage all
 All failed intervals and paid storage enter that allowance. Do not treat transfer bytes
 as a passed receipt. No GPU bootstrap, preflight, training or quality read in this job.
 
-**After this upload:** require PASSED, transfer_verified,394 files and EXITED, publish the
-receipt, then read `scripts/m13_after_cpu_allocation.py`. It is prepared/reviewed code but
-cannot admit anything until the complete receipt and free GPU capacity exist. It accounts
-both failed resumes plus the entire storage-upload interval. The reviewed supervisor draft
-is `work/m13cloud-launchers/build_after_cpu.draft.py`, also preserved durably as
-`m13/after_cpu_supervisor.patch`; apply it to
-`scripts/m13_resume_build.py` only after the storage controller has finished, and recheck
-before launch. It adds explicit --after-cpu, new output paths, GPU1 resume, current capacity
-and price checks, all394 destination hashes, pinned bootstrap and full preflight before a
-fresh200M build. There is NO training checkpoint yet, so no scientific --resume.
+**Automatic handoff:** `scripts/m13_after_upload.py` waits for PASSED,
+transfer_verified,394 files and EXITED, publishes the receipt, applies the reviewed
+`m13/after_cpu_supervisor.patch` and verifies its exact SHA. It then waits read-only for
+retained-host GPU capacity (up to12h), reconciles all elapsed intervals and current paid
+charges, publishes the new allowance and starts the build once. Receipt
+`results/m13_after_upload.json`; log `logs/m13-after-upload.log`; PID file
+`work/m13cloud-launchers/after_upload.pid`. Check these before any manual action; do not
+race a live coordinator. Bound source/configuration files must remain unchanged while it waits.
+
+The next build uses explicit --after-cpu, separate receipt
+`results/m13_cloud_build_after_cpu.json`, GPU1 resume, current capacity and price checks,
+all394 destination hashes, pinned bootstrap and full preflight before a fresh200M build.
+There is NO training checkpoint yet, so no scientific --resume. Its supervisor owns backups
+and unconditional STOP. An unconfirmed child startup is terminated before the coordinator's
+STOP-only fallback, preventing a late paid start. The monitor service covers upload, handoff
+and build independently. Failed receipts are retained; no automatic repeated launch.
 
 Two inexpensive independent reviewers cleared the concrete storage retry and the next-step
 code conditionally; details `research/m13-reboot-continuation-review-2026-09-12.md`.
