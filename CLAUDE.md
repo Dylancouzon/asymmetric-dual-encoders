@@ -47,8 +47,12 @@ Do not infer execution readiness from the historical phrase “half A ready to p
 
 ## Constraints and authority
 
-- Student cap **35M**; document tower frozen; one shared index. No larger student experiment or
-  change of premise inferred from a diagnostic. Prefer lower cost under a registered tie policy.
+- **Nano** parameter cap **35M**; document tower frozen; one shared index. No larger student
+  experiment or change of premise inferred from a diagnostic. Prefer lower cost under a registered
+  tie policy. **The 35M cap does not apply to zero** (Dylan, 2026-09-12): zero is a lookup table
+  whose rows are storage, not per-query compute; its budgets are resident size and latency, and the
+  count of its rows is bounded by licensed training support, not by a parameter count. M17's
+  `student_parameter_cap` on the table was a misreading and is closed history.
 - Training sources must permit commercial derived weights. Approved CC BY-SA sources require
   attribution. MS MARCO and other affirmatively licensed non-commercial sources are validation
   only: never gradients, targets, negatives or generation seeds. No-license sources remain out.

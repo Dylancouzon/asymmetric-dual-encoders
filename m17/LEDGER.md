@@ -735,3 +735,10 @@ screen: five screen arms (4,000 steps each) plus the single V0 read. No full run
 3. A **recipe anchor weight set from measured drift** — at 1e-3 the anchor was inert
    (1.6e-6 of the loss) while arm C drifted 10.1 % of element RMS by step 4,000. Any second screen
    needs the weight derived from that measurement and pre-registered with a date before the run.
+
+**Ruling (Dylan, 2026-09-12, post-closure): the 35M parameter cap is nano's and never applied to
+zero.** M17 read the repository's "student cap 35M" as binding the zero table (rows plus scalars),
+registered `student_parameter_cap` 35,000,000 and `added_rows_max` 3,072, and rejected a 64K-row
+tokenizer on that basis (`PLANNING.md`). That was a misreading: zero's rows are storage, not
+per-query compute. Recorded in `CLAUDE.md`; the closed registry is left as history. Any reopened
+vocabulary work registers a resident-size/latency budget and a licensed-support rule instead.

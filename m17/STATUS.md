@@ -31,6 +31,10 @@ protected access. **The released zero v1 remains the shipped table.** The 72 h c
   element RMS); pre-register it dated before any second screen.
 - Trained arms reading below the untrained V0 is an **undiagnosed failure, not evidence against
   the method**.
+- **The 35M parameter cap never applied to zero** (Dylan, 2026-09-12; `CLAUDE.md`). M17's
+  `student_parameter_cap`, `added_rows_max` 3,072 and the "64K rows exceed the cap" planning note
+  rest on a misreading of nano's cap. Zero's row count is bounded by licensed training support
+  and a resident-size/latency budget; re-register those before any vocabulary work.
 
 **Pitfalls (still true of this code):**
 
