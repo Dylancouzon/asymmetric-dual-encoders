@@ -52,6 +52,26 @@ def inventory(transfer):
 
 
 def main():
+    import argparse
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--storage-retry',action='store_true',help='Continue the failed normal resume through the provider storage-only operation')
+    args=parser.parse_args()
+    global RESULT
+    extra_hours=0; extra_bindings={}
+    if args.storage_retry:
+        old='results/m13_cpu_upload.json'
+        failed_cpu=json.loads((REPO/old).read_text())
+        if (failed_cpu.get('status')!='FAILED' or failed_cpu.get('pod_final_status')!='EXITED'
+            or failed_cpu.get('pod_id')!=POD or failed_cpu.get('training_started') is not False
+            or failed_cpu.get('transfer_verified') or failed_cpu.get('observed_total_price_usd_h')
+            or 'There are not enough free GPUs' not in failed_cpu.get('error','')):
+            raise RuntimeError('Not the failed normal API resume')
+        extra_hours=(failed_cpu['finished_at']-failed_cpu['started_at'])/3600
+        if not math.isfinite(extra_hours) or not 0<=extra_hours<1:raise RuntimeError('Invalid failed CPU interval')
+        for name,digest in failed_cpu['artifact_sha256'].items():
+            if budget.sha(REPO/name)!=digest:raise RuntimeError('Failed CPU evidence changed')
+        extra_bindings={old:budget.sha(REPO/old)}
+        RESULT=REPO/'results/m13_storage_upload.json'
     if RESULT.exists(): raise RuntimeError('Preserve existing upload attempt; no automatic retry')
     run(['git','diff','--quiet','HEAD'],cwd=REPO)
     head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=REPO,text=True).strip()
@@ -75,7 +95,7 @@ def main():
     if not 0 <= failed_hours < 1:raise RuntimeError('Unexpected failed restart duration')
     pods,balance=budget.live()
     if any(p['desiredStatus']!='EXITED' for p in pods):raise RuntimeError('Require all Pods stopped')
-    allowed=budget.remaining(original,attempt,pause,balance,continuation_hours=failed_hours)
+    allowed=budget.remaining(original,attempt,pause,balance,continuation_hours=failed_hours+extra_hours)
     # Preserve conservative training/finalization time within the original stage.
     hours=min(10,allowed['max_hours']-200000000/original['rate_ex_per_s']/3600-4)
     if hours <= 1:raise RuntimeError('Insufficient staging allowance')
@@ -95,6 +115,8 @@ def main():
         'code_commit':head,'started_at':time.time(),'maximum_hours':hours,'price_ceiling_usd_h':price,
         'allocation':allowed,'training_started':False,'artifact_sha256':{name:budget.sha(REPO/name)
         for name in (FAILED,ALLOC,budget.ORIGINAL,budget.ATTEMPT,budget.PAUSE,'m13/build_transfer_manifest.json')}}
+    receipt['artifact_sha256'].update(extra_bindings)
+    receipt['storage_only_operation']=args.storage_retry
     with RESULT.open('x') as f:json.dump(receipt,f)
     def save(stage=None):
         if stage:receipt['stage']=stage
@@ -108,10 +130,12 @@ def main():
     ssh=['ssh','-n','-F',str(CONFIG),ALIAS];scp=['scp','-F',str(CONFIG)]
     try:
         started=True
-        response=request('https://api.runpod.io/graphql',{'query':'mutation { podResume(input: { podId: "'+POD+'", gpuCount: 0 }) { id desiredStatus gpuCount } }'})
+        operation='podResumeZeroGpu' if args.storage_retry else 'podResume'
+        options='podId: "'+POD+'"'+('' if args.storage_retry else ', gpuCount: 0')
+        response=request('https://api.runpod.io/graphql',{'query':'mutation { '+operation+'(input: { '+options+' }) { id desiredStatus gpuCount } }'})
         if response.get('errors'):raise RuntimeError('Zero-GPU resume refused: '+json.dumps(response['errors']))
-        if response.get('data',{}).get('podResume',{}).get('id')!=POD:raise RuntimeError('Wrong resumed Pod')
-        if response['data']['podResume'].get('gpuCount') != 0:
+        if response.get('data',{}).get(operation,{}).get('id')!=POD:raise RuntimeError('Wrong resumed Pod')
+        if response['data'][operation].get('gpuCount') != 0:
             raise RuntimeError('Upload requires zero GPUs')
         ready_deadline=min(deadline-300,time.monotonic()+600)
         while time.monotonic()<ready_deadline:
@@ -126,17 +150,17 @@ def main():
         else:raise RuntimeError('Zero-GPU SSH readiness timeout')
         receipt['observed_total_price_usd_h']=live_price
         save('deploying-upload-tools')
-        bundle=REPO/'work/m13cloud-launchers/cpu-upload.bundle'
+        bundle=REPO/'work/m13cloud-launchers/storage-upload.bundle'
         run(['git','bundle','create',str(bundle),'HEAD'],cwd=REPO,timeout=120)
         run(scp+[str(bundle),ALIAS+':/tmp/m13-cpu-upload.bundle'],timeout=180)
         setup='set -eu; mountpoint -q /home/dylan; cd '+REMOTE+'; git diff --quiet HEAD; git fetch /tmp/m13-cpu-upload.bundle HEAD; git merge --ff-only FETCH_HEAD; git update-ref refs/remotes/origin/'+BRANCH+' '+head+'; test "$(git rev-parse HEAD)" = '+head+'; if ! command -v rsync >/dev/null; then apt-get update; DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends rsync; fi'
         run(ssh+['timeout --kill-after=30s 600s bash -c '+shlex.quote(setup)],timeout=640)
         save('uploading-build-inputs')
         for label,source,dest,flags in [('root','/',ALIAS+':/',[]),('tree',str(REPO)+'/',ALIAS+':'+REMOTE+'/',['--copy-links'])]:
-            listing=REPO/('work/m13cloud-launchers/cpu-upload-'+label+'.files');listing.write_text('\n'.join(groups[label])+'\n')
+            listing=REPO/('work/m13cloud-launchers/storage-upload-'+label+'.files');listing.write_text('\n'.join(groups[label])+'\n')
             run(['rsync','-a','--no-owner','--no-group','--info=progress2','--partial-dir=/home/dylan/.m13-build-partial-'+label,*flags,'--files-from='+str(listing),'-e','ssh -F '+shlex.quote(str(CONFIG)),source,dest],timeout=max(1,int(deadline-time.monotonic())-120))
         save('verifying-destination-hashes')
-        sums=REPO/'work/m13cloud-launchers/cpu-upload-sha256.txt';sums.write_text('\n'.join(h+'  '+p for p,h in expected.items())+'\n')
+        sums=REPO/'work/m13cloud-launchers/storage-upload-sha256.txt';sums.write_text('\n'.join(h+'  '+p for p,h in expected.items())+'\n')
         run(scp+[str(sums),ALIAS+':/tmp/m13-cpu-upload-sha256.txt'])
         run(ssh+['timeout --kill-after=30s 1800s sha256sum --check --status /tmp/m13-cpu-upload-sha256.txt'],timeout=min(1840,max(1,int(deadline-time.monotonic())-120)))
         receipt.update(transfer_verified=True,verified_files=len(expected),checksum_list_sha256=budget.sha(sums))

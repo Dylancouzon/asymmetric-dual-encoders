@@ -60,3 +60,15 @@ worktree-mapped),72.62GB,178.6 seconds. No input bytes or registration changed.
 CPU-only launcher reviewer final GO as well. Before a later GPU launch, its allocation must
 bind the CPU upload receipt, deduct that interval/charges, and rehash all394 destination
 files before preflight. Both reviews used named code and receipt metadata only.
+
+## Correct storage-access API
+
+The standard `podResume(gpuCount:0)` rejected the request as unavailable GPU capacity;
+`results/m13_cpu_upload.json` preserves the failed1.743-second attempt and confirmed STOP.
+This matches the provider SDK's open issue https://github.com/runpod/runpod-python/issues/371 .
+The current public console JavaScript instead uses `podResumeZeroGpu(input:{podId})` for
+zero-GPU storage access (console bundle026mioaja-76o.js defines it;0g1voboygx6xl.js calls it
+with only podId). The CLI now exposes a narrowly guarded `--storage-retry` for exactly this
+failure, writing `results/m13_storage_upload.json` and adding the failed interval and hash.
+Same inputs, cap, zero-GPU response check and STOP. Budget reviewer final GO;25 synthetic
+checks rerun and passed. No alternative Pod was created.

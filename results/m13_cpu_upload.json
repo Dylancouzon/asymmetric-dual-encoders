@@ -1,0 +1,35 @@
+{
+  "status": "FAILED",
+  "stage": "finished",
+  "pid": 8681,
+  "pod_id": "wnzk8eeqrrkw4m",
+  "code_commit": "8072d82a7bf76c8554702e9f9c0645071833b8df",
+  "started_at": 1789190791.6750686,
+  "maximum_hours": 10,
+  "price_ceiling_usd_h": 1.6636111111111112,
+  "allocation": {
+    "max_hours": 142.22027777777777,
+    "max_cost_usd": 236.59923433641973,
+    "prior_elapsed_hours": 1.3649467611312867,
+    "paid_since_original_allocation_usd": 2.9605908672999703,
+    "stage_consumed_usd": 2.9605908672999703,
+    "projected_total_usd": 709.17,
+    "remaining_headroom_usd": 290.83,
+    "account_balance_usd": 486.6199232472,
+    "spent_to_date_usd": 18.380076752799994,
+    "remaining_budget_usd": 981.6199232472
+  },
+  "training_started": false,
+  "artifact_sha256": {
+    "results/m13_cloud_build_resume.json": "13674c64f91c4af8a1cac4271f06a989cce782efd986d6abda7ec4cc2f7f9b66",
+    "results/m13_build_resume_allocation.json": "80bc4d0a8860d5b5ffdb39549879d5e55c7d2774ac7447fb0b3fb7d4b65ca790",
+    "results/m13_build_allocation.json": "b415d1d21c4b731faa4133041a508b638b629566966b0ff8bf8d6833e39acf0b",
+    "results/m13_cloud_build.json": "47715c8852ed27ed1975ba032a255abe5620a16ca61118d3ba6baeebdffefc23",
+    "results/m13_reboot_pause.json": "e71849b40f1fdb8d62047d35e389159ba7cb3262b63ef916f8299688b6545d9c",
+    "m13/build_transfer_manifest.json": "28c1695c4cd451425a7340087787b105764c8c9635ffd85571bca401a6a9fd38"
+  },
+  "error": "RuntimeError: Zero-GPU resume refused: [{\"message\": \"There are not enough free GPUs on the host machine to start this pod.\", \"path\": [\"podResume\"], \"extensions\": {\"code\": \"RUNPOD\"}}]",
+  "pod_final_status": "EXITED",
+  "finished_at": 1789190793.4182522,
+  "updated_at": 1789190793.4182534
+}
