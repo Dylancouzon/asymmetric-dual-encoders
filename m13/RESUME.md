@@ -1,3 +1,12 @@
+# Published quality progress
+
+First scheduled COV evaluation is saved in `results/m13_cov_mid1041666.json` with
+remote/local SHA256 verified. Summary and teacher comparison: `m13/QUALITY_PROGRESS.md`.
+Macro0.5199, teacher0.5567 (~93.4% retention), at approximately33.3M examples.
+This is development evidence on COV, not an unrelated or final validation suite.
+The planned CPU-only frozenM9 COV diagnostic is separate; inspect its receipt before
+assuming it ran. No training restart or round-two run has been authorized or launched.
+
 # Pending cleanup: retire the two idle Pods
 
 User requested this reminder on 2026-09-12 after discussing idle storage costs.
