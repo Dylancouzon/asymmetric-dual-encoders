@@ -53,3 +53,10 @@ Separate receipt/log/PID and monitor job preserve the failed GPU attempt unchang
 CPU-only budget reviewer final GO after exact zero-GPU response validation; all original
 runtime/paid-charge bounds remain. Synthetic upload inventory (including duplicate and
 protected-path refusals), allocation and monitoring:25 tests passed.
+
+The complete local manifest verification passed:394 pinned hashes (254 root-mapped and140
+worktree-mapped),72.62GB,178.6 seconds. No input bytes or registration changed.
+
+CPU-only launcher reviewer final GO as well. Before a later GPU launch, its allocation must
+bind the CPU upload receipt, deduct that interval/charges, and rehash all394 destination
+files before preflight. Both reviews used named code and receipt metadata only.
