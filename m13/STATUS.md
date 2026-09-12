@@ -1,6 +1,13 @@
-# M13 status — E complete; batch 32 selected (2026-09-11)
+# M13 status — paused safely for user reboot (2026-09-12)
 
-**Now:** Both registered cloud E arms completed, their full backups verified, and Runpod
+**Resume entry point:** `m13/RESUME.md`. User requested a session clear and Windows reboot.
+All three Pods are verified EXITED; the build controller exited during input upload, before
+preflight or training. Completed uploads remain on persistent storage. Preserve the intentional
+interruption record `results/m13_cloud_build.json`; `results/m13_reboot_pause.json` verifies
+the requested pause. A reviewed continuation must use new receipts and refresh remaining
+budget before renting again. Do not blindly rerun the original launchers.
+
+Both registered cloud E arms completed, their full backups verified, and Runpod
 STOP confirmed at 21:45 UTC. Both deferred DEV-6 evaluations completed locally and their
 records were pushed. E1 resolves in favor of batch32 under the unchanged registered rule:
 COV 0.503626 versus 0.493800, delta 0.009826, lower bound 0.006236. E-bs32 took 97 minutes;

@@ -1,0 +1,134 @@
+# M13 reboot handoff — 2026-09-12
+
+The user requested a safe session clear and Windows reboot. Resume **M13**, in
+`/home/dylan/asymetric-dual-encoders/work/m13cloud`, branch
+`m13-stage1-execution-prep`. M17 owns the original checkout; do not change its files or
+use its GPU without checking availability. Read this worktree's `CLAUDE.md`,
+`m13/STATUS.md`, and this file before continuing. Historical stage-table text in
+STATUS may lag the completed stages described below.
+
+## Reboot safety receipt
+
+At the pause request, local build supervisor PID **160213** was uploading inputs
+(approximately **12.4 GB** transferred). **No build preflight or training had started.**
+Verified safe pause at **2026-09-12T04:40:32.688444+00:00**:
+all three retained Pods report `EXITED`; local supervisor160213 and transfer children
+have exited. The supervisor receipt is `FAILED` solely because of the intentional
+user-requested SIGTERM; its backup completed and STOP was confirmed. No training
+or build preflight ran. No local GPU compute process was reported at the check.
+
+- Verification: `results/m13_reboot_pause.json` (`PASSED`, `safely_paused_for_user_reboot`).
+- Preserved interrupted receipt SHA256: `47715c8852ed27ed1975ba032a255abe5620a16ca61118d3ba6baeebdffefc23`.
+- The handoff and receipts are committed together; use `git log -1 -- m13/RESUME.md`
+  and compare the branch HEAD with origin to verify publication.
+- The monitor service was stopped for the intentional pause; it remains enabled.
+  It may restart with WSL, but no cloud workload restarts automatically. Its pause
+  receipt distinguishes intentional interruption from completion of training.
+
+## Completed work — do not repeat
+
+- Both registered E arms completed with verified backups; descriptive DEV-6 and E1
+  completed. E1 selects **bs32**: COV 0.503626 versus 0.493800, delta 0.009826,
+  lower bound 0.006236. Records and selection are pushed.
+- All seven registered LoTTE gate slices completed, with veto **skipped** under the
+  bs32 rule. Gate outputs and full backups passed verification; publication commit
+  **9d97291**. `m13/LOTTE_GATE.json` is the completed gate record.
+- The automatic handoff's allocation step failed because system Python lacked
+  NumPy. Running the unchanged helper with the repository virtual environment fixed
+  the environment issue; failed receipts and recovery provenance remain preserved.
+- Build allocation and recovery were pushed in **d43f32fd5d02ec424700dcfe9297577a2c4be3c3**.
+  Allocation: maximum **144 hours / $239.56** for setup, training, finalization and
+  backup; project projection **$706.20**, headroom **$293.80** under the user's
+  **$1,000** ceiling. Balance at that measurement was approximately **$489.58**.
+  These are historical measurements; reconcile new paid charges before resuming.
+
+The scientific build remains the fixed **200,000,000 examples, three cycles, bs32**,
+with no extensions or recipe changes. Training alone extrapolates **62.86 hours** at
+the measured 883.8 examples/s; conservative planning uses 441.9 examples/s
+(125.72 hours). A DEV-6 finalization exception now preserves the completed checkpoint
+as resumable `frozen_unverified`, consistent with export/parity failures. Tests and
+independent review passed; this does not relax the finalization bar.
+
+## Resume procedure
+
+1. Confirm the prior supervisor has exited and inspect its final receipt. Preserve
+   the interrupted receipt, logs, backup directory and all earlier failure records.
+   `work/m13cloud-launchers/build.py` intentionally refuses existing receipt/backup
+   evidence; **do not blindly rerun it or delete its guards/evidence**. Prepare a
+   narrowly scoped continuation with a new receipt/log and a hash link to the
+   preserved attempt. No scientific build `--resume` is appropriate unless a real
+   training receipt/checkpoint exists; none existed when this pause was requested.
+2. **Before restarting or renting any Pod**, reconcile paid charges and the unused
+   portion of the144-hour/$239.56 stage allowance; preserve the original allocation.
+   The previous attempt already consumed setup/upload time. Do not reset the full
+   allowance or ignore storage charges during this user-requested pause.
+   Prefer the same Pod **wnzk8eeqrrkw4m**. Its persistent mount is `/home/dylan`, with
+   cloud checkout `/home/dylan/asymetric-dual-encoders`. STOP preserves completed
+   uploads. `/opt/m13-runtime` is **container storage** and disappears on STOP;
+   rebuild that runtime with the reviewed pinned bootstrap before using the
+   checkout's `.venv` symlink. Refresh SSH endpoint details from the authenticated
+   provider response. Keep exact pushed code and all registered input bindings.
+3. Continue the **394-file** transfer specified by committed
+   `m13/build_transfer_manifest.json`; it contains exact source/destination paths,
+   sizes and SHA256 values. Reuse completed files. The reviewed staging needs
+   `rsync -a --no-owner --no-group --info=progress2`; use a partial directory for
+   interrupted-file continuation, and preserve the manifest's root/worktree mapping
+   and its required symlink handling. The provider volume rejects ownership changes.
+   Verify **all 394 destination hashes** after transfer; progress bytes alone do not
+   establish completion. Do not broaden the file list.
+4. Run `scripts/m13_build_preflight.py` with the cloud `.venv/bin/python` after
+   staging. This checks full uncut registered corpus assembly, exact admitted COV
+   cache integrity and all descriptive DEV-6 cache reuse with encoders disabled.
+   It may populate CPU token caches and refresh existing cache metadata. Require its
+   PASSED receipt and source/input bindings before training. Preserve legacy DEV-6
+   provenance; do not re-encode or silently upgrade its labels.
+5. Reconcile the remaining stage allocation, actual paid spend and account balance.
+   Run `work/m13cloud-launchers/build_allocation.py` using the **local M13
+   `.venv/bin/python`**, with `CUDA_VISIBLE_DEVICES=''` and small CPU thread limits;
+   system `/usr/bin/python3` cannot import its budget dependencies. Existing
+   allocation output is protected against overwrite, so preserve it and use an
+   explicitly reviewed continuation allocation. Do not silently reset spent runtime
+   or budget. The cloud build supervisor itself uses only the standard library and
+   may run under system Python.
+6. Resume the supervised build only after the gate's committed/pushed identities,
+   refreshed allocation and full preflight pass. Retain hourly verified rolling
+   backups, final full checksum verification, bounded runtime and unconditional STOP
+   handling. Add the continuation to the monitor before launch. Readiness and review
+   apply to the concrete continuation, not an automatic retry of a failed attempt.
+
+Runpod has twice lacked free GPU capacity after a stopped Pod was restarted. If this
+recurs, do not create duplicate Pods or retry creation blindly. Reconcile any
+capacity fallback against existing paid spend, retained storage and the $1,000
+ceiling, then review the minimal continuation. All existing persistent disks must
+be retained: **STOP, never TERMINATE**. Prior retained Pods are
+`k3aee2m68765em` and `exulxoxelug5um`.
+
+## Evidence, credentials and boundaries
+
+- Gate: `results/m13_cloud_gate_chain_upload.json`,
+  `results/m13_encode_benchmark_fp16.json`, `m13/LOTTE_GATE.json`;
+  gate backup manifest: `work/m13cloud-launchers/gate-chain-upload-outputs.json`.
+- Handoff/allocation: `results/m13_after_gate.json`,
+  `results/m13_after_gate_recovery.json`, `results/m13_build_allocation.json`.
+- Interrupted build: `results/m13_cloud_build.json`,
+  `logs/m13-build-controller.log`, and any `work/m13cloud-build-backup` contents.
+  An empty build-output backup is expected: no training output existed.
+  Operational source: `work/m13cloud-launchers/build.py` and
+  `work/m13cloud-launchers/build_allocation.py`.
+- Exact operational source is also pushed on branch `m13-execution-audit`, commit
+  `e37f837`, under `audit/m13/20260912T010808Z/work/m13cloud-launchers/`.
+  The manifest there verifies all archived source bytes.
+- Local credential locations only: `~/.config/runpod/api_key`,
+  `~/.config/runpod/m13_ssh`, `~/.config/runpod/m13_ssh.pub`,
+  `~/.config/runpod/m13_gate_chain_ssh_config`; earlier aliases use
+  `m13_ssh_config` and `m13_replacement_ssh_config` in the same directory.
+  Never print key values or upload the Runpod API key to a Pod.
+- After Windows/WSL restart, verify `m13-monitor.service` is active and update its
+  exact job/PID/receipt paths. Monitoring requires the host to remain awake; it does
+  not wake an assistant session. See `m13/MONITORING.md`.
+
+**No repeat of E, E1 or the LoTTE gate. No final six-set or reserved access during
+recovery.** Do not read or overwrite `results/perquery.json`,
+`results/frozen_eval/untouched-*`, reserved qrels or `work/m9reserve`; do not inspect
+LoTTE payloads to diagnose infrastructure. Final six/reserved evaluation remains a
+separate registered gate after a verified build freeze.

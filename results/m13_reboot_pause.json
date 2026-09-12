@@ -1,0 +1,33 @@
+{
+  "status": "PASSED",
+  "requested_at": 1789187984.4424372,
+  "reason": "User requested session clear and Windows reboot",
+  "pod_id": "wnzk8eeqrrkw4m",
+  "controller_pid": 160213,
+  "stage_at_request": "uploading-build-inputs",
+  "training_started": false,
+  "pre_stop_receipt_sha256": "20a998bea2f67909cafc84e4c6b633bcca7880cfaff540c06623c6915e49f51f",
+  "pre_stop_receipt": {
+    "status": "RUNNING",
+    "stage": "uploading-build-inputs",
+    "pid": 160213,
+    "pod_id": "wnzk8eeqrrkw4m",
+    "started_at": 1789183123.4280941,
+    "code_commit": "d43f32fd5d02ec424700dcfe9297577a2c4be3c3",
+    "allocation_sha256": "b415d1d21c4b731faa4133041a508b638b629566966b0ff8bf8d6833e39acf0b",
+    "rolling_backups": [],
+    "updated_at": 1789183295.6248553,
+    "runtime_bootstrap_sha256": "e4330f7aeeefa36aa6210f500c7c9a7b931da6e28844b07e32ccd10e766a963e"
+  },
+  "outcome": "safely_paused_for_user_reboot",
+  "verified_at": 1789188032.6884444,
+  "pod_statuses": {
+    "k3aee2m68765em": "EXITED",
+    "exulxoxelug5um": "EXITED",
+    "wnzk8eeqrrkw4m": "EXITED"
+  },
+  "artifact_sha256": {
+    "results/m13_cloud_build.json": "47715c8852ed27ed1975ba032a255abe5620a16ca61118d3ba6baeebdffefc23"
+  },
+  "note": "Supervisor interruption is intentional. No training checkpoint exists. Completed uploaded files remain on persistent Pod storage; an interrupted partial file may need retransmission. Storage charges continue; no Pod terminated."
+}

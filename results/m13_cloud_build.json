@@ -1,0 +1,17 @@
+{
+  "status": "FAILED",
+  "stage": "finished",
+  "pid": 160213,
+  "pod_id": "wnzk8eeqrrkw4m",
+  "started_at": 1789183123.4280941,
+  "code_commit": "d43f32fd5d02ec424700dcfe9297577a2c4be3c3",
+  "allocation_sha256": "b415d1d21c4b731faa4133041a508b638b629566966b0ff8bf8d6833e39acf0b",
+  "rolling_backups": [],
+  "updated_at": 1789187994.3025918,
+  "runtime_bootstrap_sha256": "e4330f7aeeefa36aa6210f500c7c9a7b931da6e28844b07e32ccd10e766a963e",
+  "error": "KeyboardInterrupt: Build supervisor interrupted: 15",
+  "backup_verified": true,
+  "backup_manifest_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+  "pod_final_status": "EXITED",
+  "finished_at": 1789187994.3022666
+}

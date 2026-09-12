@@ -62,7 +62,8 @@
         "logs/m13-build.log"
       ],
       "wait_for": "gate to build handoff",
-      "stale_seconds": 900
+      "stale_seconds": 900,
+      "recovery_receipt": "results/m13_reboot_pause.json"
     }
   ]
 }
