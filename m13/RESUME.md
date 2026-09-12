@@ -1,3 +1,44 @@
+# Current overnight continuation — 2026-09-12
+
+The storage upload is active on the SAME retained Pod `wnzk8eeqrrkw4m`, through the
+provider's dedicated `podResumeZeroGpu` operation. Supervisor PID11028:
+`scripts/m13_upload_only.py --storage-retry`. Captured/pushed code: `e1833a4`.
+Receipt `results/m13_storage_upload.json`; log `logs/m13-storage-upload.log`; PID file
+`work/m13cloud-launchers/storage_upload.pid`. The monitor service is active and includes
+this exact job. Observe its state before any further action; never rerun a live controller.
+
+Both attempts preceding it failed before any transfer or training and are retained:
+`results/m13_cloud_build_resume.json` (no GPU capacity, STOP confirmed) and
+`results/m13_cpu_upload.json` (normal podResume ignores gpuCount0, STOP confirmed).
+The public Runpod console uses a SEPARATE `podResumeZeroGpu(input:{podId})` operation;
+the corrected launcher verified returned count0, SSH and exact code, and resumed rsync.
+Measured compute quote$0.795/h plus conservative running storage$0.073611/h; the upload
+still charges planning time against the original$1.663611/h ceiling. No new Pods created.
+
+The exact394 source files (72.62GB,254 root/140 worktree mappings) verified locally.
+Completed remote files are reused and interrupted transfers use persistent partial dirs.
+The supervisor verifies ALL destination hashes, then STOPs. Its cap is at most10h,
+with planned training plus4h preserved within the original144h/$239.56 stage allowance.
+All failed intervals and paid storage enter that allowance. Do not treat transfer bytes
+as a passed receipt. No GPU bootstrap, preflight, training or quality read in this job.
+
+**After this upload:** require PASSED, transfer_verified,394 files and EXITED, publish the
+receipt, then read `scripts/m13_after_cpu_allocation.py`. It is prepared/reviewed code but
+cannot admit anything until the complete receipt and free GPU capacity exist. It accounts
+both failed resumes plus the entire storage-upload interval. The reviewed supervisor draft
+is `work/m13cloud-launchers/build_after_cpu.draft.py`; apply it to
+`scripts/m13_resume_build.py` only after the storage controller has finished, and recheck
+before launch. It adds explicit --after-cpu, new output paths, GPU1 resume, current capacity
+and price checks, all394 destination hashes, pinned bootstrap and full preflight before a
+fresh200M build. There is NO training checkpoint yet, so no scientific --resume.
+
+Two inexpensive independent reviewers cleared the concrete storage retry and the next-step
+code conditionally; details `research/m13-reboot-continuation-review-2026-09-12.md`.
+Current user instruction: continue overnight, no further questions. All disks are retained,
+STOP only, $1,000 project ceiling. Keep the local host awake; monitor cannot wake the assistant.
+
+The original reboot handoff below is historical context; preserve its interrupted evidence.
+
 # M13 reboot handoff — 2026-09-12
 
 The user requested a safe session clear and Windows reboot. Resume **M13**, in

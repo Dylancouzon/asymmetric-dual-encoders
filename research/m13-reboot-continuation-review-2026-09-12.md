@@ -77,3 +77,13 @@ Launcher recheck also GO with the failed CPU receipt SHA256 pinned explicitly; t
 is now present (`bfffcac4…462002b`). This prevents altered timestamps from entering the
 retry allowance. The public console operation, response validation and all prior limits
 were reviewed; neither reviewer accessed credentials or protected payloads.
+
+The dedicated storage operation succeeded; supervisor11028 verified zero GPU response,
+SSH, exact e1833a4 checkout, restored rsync and reached uploading-build-inputs. Observed
+compute$0.795/h plus conservative storage$0.073611/h, within the prior ceiling. Local source
+hashes passed again; no new Pod, preflight, training or protected quality read.
+
+After-upload allocation helper and supervisor draft received both code-readiness GOs, strictly
+conditional on a passed394-file storage receipt with STOP, exact prior receipt bindings,
+current free GPU capacity and fresh balance. Helper scratch tests cover all elapsed intervals
+and incomplete/changed receipts. Apply the supervisor draft only after upload completion.

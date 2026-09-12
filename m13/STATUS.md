@@ -1,4 +1,9 @@
-# M13 status — upload continuation ready (2026-09-12)
+# M13 status — storage upload resumed (2026-09-12)
+
+**Live:** same-Pod zero-GPU upload supervisor11028; `results/m13_storage_upload.json`,
+`logs/m13-storage-upload.log`. Exact code deployed and rsync active. No training yet.
+Both GPU restart and normal zero-count API attempts failed/STOPped; dedicated
+`podResumeZeroGpu` succeeded. Current details and next-step gates: `m13/RESUME.md`.
 
 The reboot pause remains preserved in `m13/RESUME.md` and its original receipts. The
 reviewed continuation is `scripts/m13_resume_build.py`, with separate receipt
