@@ -604,3 +604,28 @@ lazily imports `m10src/cov_screen.py`, which re-inserts m7src at the front of `s
 repair. Not fixed now: the fix touches `prepare_data.py`, whose sha the lock binds, and the finished
 build is what trains. It is a **required amendment before any future screened rebuild** — reassert
 the path order after `build()` as well, recorded as a dated `lock.amendments` entry.
+
+## 2026-09-12 — dev-suite reader wired and reviewed; two owner rulings pending before the V0 read
+
+Reader wired (`2c5321c`), Astra review (six P1 / three P2) fixed in `4824f84`, Sol review of the fix
+(seven P1 / three P2, one dropped as spurious) fixed in `ef718a1`; dispositions in `REVIEW.md`.
+`pytest m17src/test_evaluate.py` 32 passed. The V0 read is refused at preflight on two points:
+
+**Ruling 1 — trust-on-first-use teacher caches.** All four M7 stella document caches behind the
+text-backed dev components (nq-250k, hotpotqa, cqadup-programmers, cqadup-physics) carry shard
+digests adopted from their own bytes (5/5, 105/105, 1/1, 1/1 shards, plus both `combined.f16`
+stitches). `encode_cached(verify=True)` refuses them. Evidence gathered (no protocol change,
+`work/m17/scratch/teacher_spotcheck/summary.json`, seed 20260911, 400 sampled docs per cache
+re-encoded with the pinned teacher on the 3080): cosine min 0.999996 across all four, max |Δ| ≤
+3.2e-4, zero rows below 0.999, i.e. fp16 rounding only. Every cache `meta.json` pins
+`NovaSearch/stella_en_400M_v5` @ `ffeb2b7e…`, mean-l2, `2_Dense_1024`, 1024d, max_length 512, and
+each `corpus_sha256` matches the streamed `work/dev/<name>.json` texts with exact row counts. A full
+re-encode is ≈ 6.8 h GPU (hotpotqa 6.1 h) and would produce digests that are again self-derived.
+Orchestrator recommendation: accept with a dated disclosure keyed to this spot-check; reader
+accepts a TOFU cache only when such a disclosure entry exists for it.
+
+**Ruling 2 — text-component query texts unpinned.** `results/m7_dev_manifest.json` pins ids and
+qrels but no ordered (qid, text) digest for the four text-backed components; `devsuite` records no
+build provenance. The reader records the digest in the receipt and result. Pinning now would be a
+manifest amendment binding the digest to itself. Orchestrator recommendation: recorded-only,
+disclosed. Both rulings are Dylan's (protocol / evidence integrity); the night stops here.
