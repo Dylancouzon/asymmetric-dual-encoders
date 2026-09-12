@@ -15,7 +15,7 @@ The coordinator restores only containerDiskInGb30 while all Pods are stopped, ve
 persistent volume identity, and STOPs on an uncertain update before any GPU handoff.
 Monitor job covers the durable progress log. STOP only.
 The downstream allocation now includes both failed storage and successful verification.
-The updated coordinator uses separate receipt `results/m13_after_verification.json`, log
+The updated coordinator is active asPID28201 from pushed01ba410 and uses separate receipt `results/m13_after_verification.json`, log
 `logs/m13-after-verification.log`, PID `work/m13cloud-launchers/after_verification.pid`.
 It pins the previous failed coordinator and waits for verification PASS/STOP before applying
 the reviewed supervisor patch (SHA256846e93b71fca78f6b4174b9dfc0e667175db11cb0bc453046e50b8d5d49c67d7).

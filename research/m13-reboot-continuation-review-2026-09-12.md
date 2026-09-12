@@ -155,3 +155,6 @@ https://docs.runpod.io/api-reference/pods/POST/pods/podId/update . Three synthet
 exact field, active-Pod refusal and STOP on uncertain update;29 affected tests pass.
 
 Both reviewers issued final GO for concrete stopped-container restoration and coordinator.
+
+Published01ba410 and launched replacement coordinatorPID28201; confirmedWAITING receipt.
+VerifierPID27527 completed local checks and reachedRUNNING starting-zero-gpu.
