@@ -15,9 +15,12 @@ rerunning observations. Receipts: `results/m13_cloud_e.json`, `results/m13_after
 
 **Next (active launch):** the checkpoint manifest and seven-slice pin are committed and
 pushed; metadata-only gate preflight passed for bs32. Prior Pod restarts failed on host GPU
-capacity. The twice-reviewed combined launcher now retains one replacement A100 through
+capacity. The combined launcher retains one replacement A100 through
 setup, fp16 timing and the registered observational LoTTE read, then verifies backups and
-stops. Live receipt `results/m13_cloud_gate_chain.json`, log `logs/m13-gate-chain.log` and
+stops. Persistent-volume package installation failed with a stale file handle before encoding.
+A bounded takeover repairs the runtime on container-local disk with identical package pins;
+the original receipt remains preserved and its 17-hour deadline is not reset.
+Live receipt `results/m13_cloud_gate_chain_resume.json`, log `logs/m13-gate-chain-resume.log` and
 `logs/m13-lotte-gate.log`. It owns no full build or final six/reserved evaluation.
 Stage ceiling$28.29; revised conservative project allocation$669.52 under$1,000, including
 three retained disks. `results/m13_gate_chain_allocation.json` binds the prerequisites.

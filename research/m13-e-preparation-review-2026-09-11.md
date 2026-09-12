@@ -150,3 +150,22 @@ setup beyond the15h gate line. Reserved55.2h unchanged. The timing guard require
 execution time. Reviewers accessed only named code and allowed metadata, not protected
 payloads, credentials or cloud.
 Combined operational launcher sha256 `9a131f8bb59e01a567136b58f0fc08380ba0b1f227fb46763ab72e4f9e9adcc1`.
+
+The third Pod's persistent-volume package installation failed with `Stale file handle`
+(os error 116); the remote installer exited while its SSH transport remained open. No
+benchmark or LoTTE read had begun. The same-Pod takeover preserves the original RUNNING
+receipt and its hash, verifies exact local controller/SSH identities before transferring STOP
+ownership, and retains the original 17-hour start/deadline and $28.29 cap. It neither creates
+nor starts another Pod. A remote process check refuses any remaining old bootstrap writer.
+
+The temporary bootstrap changes exactly four runtime installation paths to `/opt/m13-runtime`;
+Python, uv, all package pins and CUDA/hardware checks are unchanged. Read-only disk inspection
+confirmed a 30 GB container filesystem with 142 MB used; persistent `/home/dylan` is MFS.
+The partial old environment is archived only after the new environment passes, then the repo
+venv links to the verified local runtime. Models, datasets and outputs remain persistent.
+Operational source `work/m13cloud-launchers/gate_chain_resume.py` sha256
+`1e6f82a0e63e52b4222d2c3c93574fc0448cc600e8876cc8c2e2a993fefbc944`.
+
+Both independent reviewers returned GO on the final takeover including the old-writer guard;
+syntax and diff checks passed. Reviews accessed only named code and metadata, with no cloud
+actions, credentials or protected payload reads. Five-minute monitoring targets the new receipt.

@@ -32,10 +32,10 @@
     },
     {
       "name": "fp16 and LoTTE",
-      "receipt": "results/m13_cloud_gate_chain.json",
-      "pid_file": "work/m13cloud-launchers/gate_chain.pid",
+      "receipt": "results/m13_cloud_gate_chain_resume.json",
+      "pid_file": "work/m13cloud-launchers/gate_chain_resume.pid",
       "logs": [
-        "logs/m13-gate-chain.log",
+        "logs/m13-gate-chain-resume.log",
         "logs/m13-gate-chain-upload.log",
         "logs/m13-fp16-encode.log",
         "logs/m13-lotte-gate.log"
