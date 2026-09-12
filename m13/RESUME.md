@@ -22,7 +22,8 @@ with planned training plus4h preserved within the original144h/$239.56 stage all
 All failed intervals and paid storage enter that allowance. Do not treat transfer bytes
 as a passed receipt. No GPU bootstrap, preflight, training or quality read in this job.
 
-**Automatic handoff:** `scripts/m13_after_upload.py` waits for PASSED,
+**Automatic handoff is active:** PID14853, launched from pushed commit `8c11ce6`.
+`scripts/m13_after_upload.py` waits for PASSED,
 transfer_verified,394 files and EXITED, publishes the receipt, applies the reviewed
 `m13/after_cpu_supervisor.patch` and verifies its exact SHA. It then waits read-only for
 retained-host GPU capacity (up to12h), reconciles all elapsed intervals and current paid
