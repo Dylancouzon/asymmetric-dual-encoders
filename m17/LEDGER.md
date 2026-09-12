@@ -629,3 +629,8 @@ qrels but no ordered (qid, text) digest for the four text-backed components; `de
 build provenance. The reader records the digest in the receipt and result. Pinning now would be a
 manifest amendment binding the digest to itself. Orchestrator recommendation: recorded-only,
 disclosed. Both rulings are Dylan's (protocol / evidence integrity); the night stops here.
+
+**Rulings (Dylan, 2026-09-12).** Ruling 1: accept the four trust-on-first-use stella caches with a
+dated disclosure keyed to the spot-check above; the reader accepts a TOFU cache only when its
+disclosure entry exists. Ruling 2: text-component query texts stay recorded-only, disclosed in the
+receipt and result; no manifest amendment. Both are recorded here before the V0 read.
