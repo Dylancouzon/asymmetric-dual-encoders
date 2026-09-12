@@ -1,0 +1,42 @@
+{
+  "timestamp": 1789175281.7893,
+  "jobs": [
+    {
+      "name": "cloud E",
+      "state": "passed",
+      "detail": "receipt passed",
+      "stage": "finished",
+      "updated": 1789163110.9692543
+    },
+    {
+      "name": "local DEV6 and E1",
+      "state": "recovered",
+      "detail": "recovery binds exact failed receipt",
+      "stage": "finished",
+      "updated": 1789163961.2210355
+    },
+    {
+      "name": "fp16 and LoTTE transfer continuation",
+      "state": "running",
+      "detail": "recent activity",
+      "pid_identity": "c15dff72-0a49-4602-9831-6c374eec17e3:136163:4193666",
+      "stage": "gate-read",
+      "updated": 1789175276.8511431,
+      "stale_seconds": 900
+    },
+    {
+      "name": "gate to build handoff",
+      "state": "running",
+      "detail": "recent activity",
+      "pid_identity": "c15dff72-0a49-4602-9831-6c374eec17e3:140903:4279298",
+      "stage": "waiting-for-gate",
+      "updated": 1789175277.991146,
+      "stale_seconds": 900
+    },
+    {
+      "name": "full 200M build",
+      "state": "pending",
+      "detail": "receipt absent"
+    }
+  ]
+}
