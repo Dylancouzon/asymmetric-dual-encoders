@@ -21,15 +21,19 @@ The dev-suite reader below is wired (`--surface dev-suite --allow-dev-suite --ou
 `allow_dev_suite=True` in-process). It serves the pinned M7/M8 suite EXACTLY as
 `results/m7_dev_manifest.json:_pinned.components` lists it, through the M7 loaders, and aborts on
 a missing or hash-mismatched component: the suite may never silently shrink. It needs the
-EXECUTED lock half, verifies the bundle against `lock.executed.v0_export`, binds the query pairs
-and the document-vector bytes, preflights every component before the first score, and writes a
-durable receipt beside a result it will not overwrite. The panel reader is still unwritten.
+EXECUTED lock half and an unread `v0_export`, refuses a dirty tree, verifies the bundle against
+`lock.executed.v0_export`, binds the query pairs and the document-vector bytes, preflights every
+component before the first score, writes only to the registry's canonical read path, and claims a
+durable receipt there atomically. The production entry point (`dev_suite_read`) takes no manifest,
+subset, loader or depth override: those live in the test-only `_dev_suite_read_fixture`.
+The panel reader is still unwritten.
 """
 from __future__ import annotations
 
 import argparse
 import datetime as _dt
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -274,11 +278,16 @@ def _pool_identity(man, n_docs):
     the artifact (m17/CODEMAP.md). The digest is computed once per read and shared by both
     held-out components, which address the same rows.
     """
+    import encoders
     import prepare_data
     pin = ((man.get("_pinned") or {}).get("pool")) or {}
     if not pin.get("vectors_sha256"):
         raise SystemExit(f"M17 EVAL REFUSED: {DEV_MANIFEST} pins no pool vector identity "
                          "(_pinned.pool.vectors_sha256); the held-out corpora cannot be bound.")
+    active = encoders.active()                # M7's own check (`heldout._verify_pool`)
+    if pin.get("encoder") != active.name:
+        raise SystemExit(f"M17 EVAL REFUSED: the pinned pool was built with encoder "
+                         f"{pin.get('encoder')!r} but the active encoder is {active.name!r}.")
     pool = prepare_data.PoolReader(pin["encoder"])
     for pin_key, meta_key in (("n", "n"), ("dim", "dim"), ("encoder", "encoder"),
                               ("encoder_revision", "encoder_revision"), ("stores", "stores"),
@@ -301,21 +310,39 @@ def _pool_identity(man, n_docs):
     if len(pool.vecs) != n_docs:
         raise SystemExit(f"M17 EVAL REFUSED: the pool holds {len(pool.vecs)} rows but the "
                          f"component pins {n_docs}.")
+    # The file that was HASHED must be the file that is SCORED, not a second path spelled the
+    # same way (Sol dev-reader-fix review P2).
+    scored = Path(getattr(pool.vecs, "filename", "") or "").resolve()
+    if scored != p:
+        raise SystemExit(f"M17 EVAL REFUSED: the held-out corpus actually memmapped is {scored}, "
+                         f"not the hashed {p}.")
     return pool.vecs, {"source": "frozen pool memmap", "path": str(p),
                        "vectors_sha256": _POOL_VERIFIED[key],
                        "vectors_bytes": int(pin["vectors_bytes"]),
                        "verified_against": "results/m7_dev_manifest.json:_pinned.pool"}
 
 
-def _teacher_doc_vecs(comp):
+def _teacher_doc_vecs(comp, man=None):
     """The M7 teacher encode cache for a text-backed component: a cache HIT, never an encode.
 
     The bytes are hashed and compared against the cache's own recorded identity
     (`shards.json`, surfaced as `teacher.PROVENANCE[name]`), so a cache file that changed under
     us cannot be accepted on its row count alone.
+
+    `verify=True` (Sol dev-reader-fix review P1): `encode_cached` REFUSES a shard or a stitched
+    `combined.f16` that predates hash recording (trust-on-first-use) and re-hashes every
+    pre-existing shard, so the vectors behind a registered number cannot be bytes that nothing
+    ever checked. The teacher identity is pinned too: the cache key already binds model,
+    revision, pooling, prefix and max_length, and the manifest's `_pinned.active_encoder` repo,
+    revision and dimension are compared here.
     """
     import torch
     import teacher
+    pin = (((man or {}).get("_pinned") or {}).get("active_encoder")) or {}
+    if pin and (teacher.TEACHER, teacher.TEACHER_REV) != (pin.get("repo"), pin.get("revision")):
+        raise SystemExit(f"M17 EVAL REFUSED: the teacher is {teacher.TEACHER}@"
+                         f"{teacher.TEACHER_REV}, the manifest pins {pin.get('repo')}@"
+                         f"{pin.get('revision')} (_pinned.active_encoder).")
     name, texts = f"dev-{comp['name']}-docs", comp["doc_texts"]
     key, _ = teacher.cache_key(name, "", 512, teacher.TEACHER, teacher.TEACHER_REV,
                                teacher.sha_texts(texts), torch.float16)
@@ -326,10 +353,14 @@ def _teacher_doc_vecs(comp):
         raise SystemExit(f"M17 EVAL REFUSED: the teacher encode cache {d} is missing "
                          f"{len(absent)} of {n_shards} shards for {comp['name']}. The registered "
                          "read consumes cached document vectors; it does not encode them.")
-    vecs = teacher.encode_cached(name, texts, prefix="", dtype=torch.float16, verbose=False)
+    vecs = teacher.encode_cached(name, texts, prefix="", dtype=torch.float16, verbose=False,
+                                 verify=True)
     if int(vecs.shape[0]) != len(comp["doc_ids"]):
         raise SystemExit(f"M17 EVAL REFUSED: {comp['name']} has {len(comp['doc_ids'])} documents "
                          f"but its encode cache holds {vecs.shape[0]} rows.")
+    if pin.get("dim") and int(vecs.shape[1]) != int(pin["dim"]):
+        raise SystemExit(f"M17 EVAL REFUSED: {comp['name']}'s cached document vectors are "
+                         f"{vecs.shape[1]}-dimensional, the manifest pins {pin['dim']}.")
     prov = teacher.PROVENANCE.get(name) or {}
     shards = prov.get("shard_sha256") or {}
     recorded = prov.get("combined_sha256") or (shards.get("00000") if n_shards == 1 else None)
@@ -355,12 +386,34 @@ def _dev_doc_vecs(comp, man):
     """Frozen stella document vectors plus the identity of the bytes actually scored."""
     if comp["corpus"] == "full-pool":
         return _pool_identity(man, len(comp["doc_ids"]))
-    return _teacher_doc_vecs(comp)
+    return _teacher_doc_vecs(comp, man)
 
 
 # The registered destination of the ONE V0 read, and the production surface it must use.
 V0_READ_PATH = RESULTS / "m17_v0_read.json"
 PROD_LOADER = {"variant": "int8", "mode": "resident_int8"}
+
+
+def _v0_read_path(reg):
+    """The canonical result path of the ONE V0 read: whatever the registry names, else the
+    constant. A production read may write nowhere else (Sol dev-reader-fix review P1)."""
+    named = (((reg.get("training") or {}).get("untrained_vocab_export_v0")) or {}).get("read_path")
+    if not named:
+        named = (_executed_v0_export(reg)).get("read_path")
+    if not named:
+        return V0_READ_PATH
+    p = Path(named)
+    return p if p.is_absolute() else REPO / p
+
+
+def _require_unread(reg):
+    """`lock.executed.v0_export.read` must still be `false`; the read is registered once."""
+    v0 = _executed_v0_export(reg)
+    if v0.get("read") is not False:
+        raise SystemExit(f"M17 EVAL REFUSED: lock.executed.v0_export.read is {v0.get('read')!r}, "
+                         "not false. The V0 read is registered once "
+                         "(training.untrained_vocab_export_v0.reads = 1).")
+    return v0
 
 
 def _git_sha():
@@ -371,12 +424,104 @@ def _git_sha():
         return None
 
 
+def _git_porcelain():
+    """Tracked-file changes, or a refusal if git cannot answer."""
+    try:
+        r = subprocess.run(["git", "-C", str(REPO), "status", "--porcelain",
+                            "--untracked-files=no"], capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.SubprocessError) as exc:  # pragma: no cover - no git
+        raise SystemExit(f"M17 EVAL REFUSED: git could not report the working tree ({exc}); the "
+                         "read records the code and registry it ran against.")
+    if r.returncode != 0:                                 # pragma: no cover - no git
+        raise SystemExit(f"M17 EVAL REFUSED: git status failed ({r.stderr.strip()[:200]}).")
+    return r.stdout.strip()
+
+
+def _require_clean_tree():
+    """A dirty tree makes `git_sha` a lie: uncommitted code, registry or manifest changes would
+    shape the surface while the receipt named a clean commit (Sol dev-reader-fix review P1)."""
+    dirty = _git_porcelain()
+    if dirty:
+        lines = dirty.splitlines()
+        raise SystemExit("M17 EVAL REFUSED: the working tree has uncommitted tracked changes, so "
+                         "the recorded git sha would not describe what ran: "
+                         + "; ".join(lines[:5]) + (f" (+{len(lines) - 5} more)"
+                                                   if len(lines) > 5 else "")
+                         + ". Commit or stash them and read again.")
+    return dirty
+
+
 def _utc():
     return _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _receipt_path(out):
     return out.with_name(out.stem + ".receipt.json")
+
+
+def _claim_receipt(receipt_p):
+    """Claim the one read ATOMICALLY. `O_CREAT|O_EXCL` cannot be raced the way an existence
+    test can: exactly one process creates the receipt (Sol dev-reader-fix review P1)."""
+    receipt_p.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        fd = os.open(receipt_p, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+    except FileExistsError:
+        return False
+    os.close(fd)
+    return True
+
+
+# Everything a continuation must reproduce EXACTLY. Anything else is a different read.
+IDENTITY_FIELDS = ("registry_status", "bundle", "bundle_digests", "loader", "retrieval_depth",
+                   "dev_manifest_sha256", "components", "component_identities", "git_sha",
+                   "git_porcelain", "fixture", "out")
+
+
+def _prior_receipt(receipt_p):
+    """The ONE recovery path: a receipt an interrupted attempt left in `started` or `failed`.
+
+    Anything else — a complete receipt, an empty claim, unparseable JSON — is refused. The
+    identities are compared after the preflight (`_check_resumable`), so a continuation scores
+    the remaining components of the SAME read, never a second one.
+    """
+    try:
+        prior = json.loads(receipt_p.read_text())
+    except (OSError, ValueError):
+        prior = None
+    state = (prior or {}).get("state") if isinstance(prior, dict) else None
+    if state not in ("started", "failed"):
+        raise SystemExit(f"M17 EVAL REFUSED: {receipt_p} already exists (state {state!r}). The V0 "
+                         "read is registered once (training.untrained_vocab_export_v0.reads = 1); "
+                         "it is not overwritten, and there is no --force. Only a receipt left in "
+                         "'started' or 'failed' by an interrupted attempt may be continued.")
+    return prior
+
+
+def _check_resumable(prior, receipt, receipt_p):
+    """Continue only if every recorded identity matches this preflight; else refuse by field."""
+    bad = [k for k in IDENTITY_FIELDS if prior.get(k) != receipt[k]]
+    if bad:
+        raise SystemExit(f"M17 EVAL REFUSED: {receipt_p} records an interrupted read whose "
+                         f"{bad} differ from this preflight. A continuation must be the same "
+                         "read: restore the identities it names, or the attempt is a new read "
+                         "and needs its own registration.")
+    return {k: v for k, v in (prior.get("metrics") or {}).items() if k in receipt["components"]}
+
+
+def _ndcg_and_recall(run, qrels, cut=10):
+    """nDCG@10 and Recall@10 from ONE `pytrec_eval` evaluator over ONE run.
+
+    Both metrics must resolve a tie at the rank-`cut` boundary the same way; a Python stable sort
+    beside pytrec_eval's own ordering could count a tied document for one metric and not the
+    other (Sol dev-reader-fix review P2). The qrels are passed exactly as `m7src/evalkit`
+    passes them, so this suite keeps M7's relevance threshold.
+    """
+    import pytrec_eval
+    ev = pytrec_eval.RelevanceEvaluator({q: v for q, v in qrels.items() if q in run},
+                                        {f"ndcg_cut.{cut}", f"recall.{cut}"})
+    res = ev.evaluate(run)
+    return ({q: s[f"ndcg_cut_{cut}"] for q, s in res.items()},
+            {q: s[f"recall_{cut}"] for q, s in res.items()})
 
 
 def _enforce_production_surface(reg, names, man, manifest, manifest_path, variant, mode, k):
@@ -404,9 +549,42 @@ def _enforce_production_surface(reg, names, man, manifest, manifest_path, varian
     return depth
 
 
-def dev_suite_read(bundle_dir, out=None, *, allow_dev_suite=False, reg=None, names=None,
-                   manifest=None, manifest_path=None, variant="int8", mode="resident_int8",
-                   k=None, fixture=False):
+def dev_suite_read(bundle_dir, out=None, *, allow_dev_suite=False):
+    """THE production entry point for the ONE registered V0 dev-suite read.
+
+    It takes no manifest, subset, loader, depth or fixture override: the registry is loaded from
+    disk here, the destination is the registry's own canonical path, and the surface is the
+    registered one. Everything else lives in `_dev_suite_read_fixture`, which the CLI cannot
+    reach (Sol dev-reader-fix review P1).
+    """
+    if not allow_dev_suite:
+        raise SystemExit(DEV_SUITE_REFUSAL)
+    reg = registry()
+    dest = _v0_read_path(reg)
+    if not out:
+        raise SystemExit("M17 EVAL REFUSED: a dev-suite read needs its output path (the "
+                         f"registered destination is {dest}); a read whose numbers are "
+                         "not written is a spent read with no evidence.")
+    if Path(out).expanduser().absolute().resolve() != dest.resolve():
+        raise SystemExit(f"M17 EVAL REFUSED: the registered destination of the V0 read is {dest}; "
+                         f"{out} is another path, and a fresh path is another read.")
+    _require_unread(reg)
+    _require_clean_tree()
+    return _dev_suite_read(bundle_dir, dest, reg=reg, fixture=False)
+
+
+def _dev_suite_read_fixture(bundle_dir, out=None, *, allow_dev_suite=False, reg=None, names=None,
+                            manifest=None, manifest_path=None, variant="int8",
+                            mode="resident_int8", k=None):
+    """TEST-ONLY: the same reader with the surface overridable. Never called in production."""
+    return _dev_suite_read(bundle_dir, out, allow_dev_suite=allow_dev_suite, reg=reg, names=names,
+                           manifest=manifest, manifest_path=manifest_path, variant=variant,
+                           mode=mode, k=k, fixture=True)
+
+
+def _dev_suite_read(bundle_dir, out=None, *, allow_dev_suite=True, reg=None, names=None,
+                    manifest=None, manifest_path=None, variant="int8", mode="resident_int8",
+                    k=None, fixture=False):
     """ONE registered dev-suite read of ONE exported bundle: per-component nDCG@10 and
     Recall@10 and the equal-weight component macro of each (`_pinned.macro`).
 
@@ -415,12 +593,14 @@ def dev_suite_read(bundle_dir, out=None, *, allow_dev_suite=False, reg=None, nam
     corpus, through the same M7 scorer (`evalkit`) every pinned dev number was computed with;
     both metrics come from that ONE retrieval run.
 
-    The read is single-use and provenanced. `out` is mandatory; the read refuses if `out` or its
-    receipt already exists (there is no `--force`). A receipt is written BEFORE the first score
-    and updated at the end, so a failure mid-read still records what the attempt consumed. Every
-    identity — registry status, the locked V0 digests, the per-component manifest hashes, the
-    ordered query digests and the document-vector digests — is established in a preflight over
-    all components before any scoring begins.
+    The read is single-use and provenanced. `out` is mandatory; the read refuses if `out` exists,
+    and the receipt beside it is claimed with `O_CREAT|O_EXCL` so two processes cannot both start
+    it. Every identity — registry status, the locked V0 digests, the per-component manifest
+    hashes, the ordered query digests and the document-vector digests — is established in a
+    preflight over all components before any scoring begins, and each component's per-query
+    metrics are persisted into the receipt (tmp + `os.replace`) as it completes. A receipt left
+    in `started` or `failed` by an interrupted attempt is CONTINUED — the remaining components
+    only — when every recorded identity matches this preflight, and refused otherwise.
     """
     status = _require_dev_suite(allow_dev_suite, reg)
     reg = reg or registry()
@@ -437,23 +617,31 @@ def dev_suite_read(bundle_dir, out=None, *, allow_dev_suite=False, reg=None, nam
                          "not written is a spent read with no evidence.")
     out = Path(admit_write(out))
     receipt_p = _receipt_path(out)
-    for p in (out, receipt_p):
-        if p.exists():
-            raise SystemExit(f"M17 EVAL REFUSED: {p} already exists. The V0 read is registered "
-                             "once (training.untrained_vocab_export_v0.reads = 1); it is not "
-                             "overwritten, and there is no --force.")
+    if out.exists():
+        raise SystemExit(f"M17 EVAL REFUSED: {out} already exists. The V0 read is registered "
+                         "once (training.untrained_vocab_export_v0.reads = 1); it is not "
+                         "overwritten, and there is no --force.")
+    claimed = _claim_receipt(receipt_p)
+    prior = None if claimed else _prior_receipt(receipt_p)
 
     # ---- preflight: everything that can refuse, before the first score ----
-    from evalkit import macro, per_query_ndcg, topk_ids_scores
-    from loader_np import M17QueryEncoder
-    bundle_digests = _verify_v0_bundle(bundle_dir, reg)
-    enc = M17QueryEncoder(_check_path(bundle_dir), variant=variant, mode=mode)
-    comps = []
-    for name in names:
-        c = load_dev_component(name, allow_dev_suite=True, reg=reg, manifest=man,
-                               with_doc_vecs=True, strict=not fixture)
-        c["doc_texts"] = None            # the vectors are loaded; the texts are not scored
-        comps.append(c)
+    try:
+        from evalkit import macro, topk_ids_scores
+        from loader_np import M17QueryEncoder
+        bundle_digests = _verify_v0_bundle(bundle_dir, reg)
+        enc = M17QueryEncoder(_check_path(bundle_dir), variant=variant, mode=mode)
+        comps = []
+        for name in names:
+            c = load_dev_component(name, allow_dev_suite=True, reg=reg, manifest=man,
+                                   with_doc_vecs=True, strict=not fixture)
+            c["doc_texts"] = None        # the vectors are loaded; the texts are not scored
+            comps.append(c)
+    except BaseException:
+        # An empty claim is not a spent read: release it so the refusal can be fixed and the
+        # read attempted again.
+        if claimed and receipt_p.exists() and receipt_p.stat().st_size == 0:
+            receipt_p.unlink()
+        raise
     components = {c["name"]: {"manifest_entry_sha256": sha_json(man[c["name"]]),
                               "manifest_hashes": {kk: vv for kk, vv in man[c["name"]].items()
                                                   if kk.endswith("_sha256")},
@@ -467,25 +655,35 @@ def dev_suite_read(bundle_dir, out=None, *, allow_dev_suite=False, reg=None, nam
                "loader": {"variant": variant, "mode": mode}, "retrieval_depth": depth,
                "dev_manifest_sha256": (None if fixture else sha_file(DEV_MANIFEST)),
                "component_identities": components, "fixture": bool(fixture),
-               "git_sha": _git_sha(), "started_utc": _utc(), "out": str(out),
-               "completed_components": []}
+               "git_sha": _git_sha(), "git_porcelain": ("" if fixture else _git_porcelain()),
+               "started_utc": _utc(), "out": str(out),
+               "completed_components": [], "metrics": {}}
+    if prior is not None:
+        done = _check_resumable(prior, receipt, receipt_p)
+        receipt.update(metrics=done, completed_components=[n for n in names if n in done],
+                       started_utc=prior.get("started_utc") or receipt["started_utc"],
+                       resumed_utc=_utc(), resumed_from=prior.get("state"))
     write_json(receipt_p, receipt)
 
     # ---- scoring: one retrieval run per component, both metrics from it ----
-    nd_all, rc_all = {}, {}
     try:
         for c in comps:
+            if c["name"] in receipt["metrics"]:
+                c["doc_vecs"] = None                 # already scored by the interrupted attempt
+                continue
             run = topk_ids_scores(enc.encode(c["q_texts"]), c["doc_vecs"], c["doc_ids"],
                                   k=depth, qids=c["q_ids"])
-            nd_all[c["name"]] = per_query_ndcg(run, c["qrels"], cut=10)
-            rc_all[c["name"]] = recall_at_k(run, c["qrels"], k=10)
+            nd, rc = _ndcg_and_recall(run, c["qrels"], cut=10)
             c["doc_vecs"] = None
+            receipt["metrics"][c["name"]] = {"ndcg@10": nd, "recall@10": rc}
             receipt["completed_components"].append(c["name"])
-            write_json(receipt_p, receipt)
+            write_json(receipt_p, receipt)           # persisted before the next component
     except BaseException as exc:                     # a spent attempt still leaves its receipt
         receipt.update(state="failed", failed_utc=_utc(), error=f"{type(exc).__name__}: {exc}")
         write_json(receipt_p, receipt)
         raise
+    nd_all = {n: receipt["metrics"][n]["ndcg@10"] for n in names}
+    rc_all = {n: receipt["metrics"][n]["recall@10"] for n in names}
     nd_macro, nd_means = macro(nd_all)
     rc_macro, rc_means = macro(rc_all)
     rep = {"surface": "m7/m8 pinned development suite",
@@ -496,7 +694,8 @@ def dev_suite_read(bundle_dir, out=None, *, allow_dev_suite=False, reg=None, nam
                        "n_queries": {n: len(v) for n, v in nd_all.items()}},
            "recall@10": {"macro": rc_macro, "per_component": rc_means},
            "per_query_ndcg@10": nd_all,
-           "reads": 1, "git_sha": receipt["git_sha"], "read_utc": receipt["started_utc"],
+           "reads": 1, "git_sha": receipt["git_sha"],
+           "git_porcelain": receipt["git_porcelain"], "read_utc": receipt["started_utc"],
            "dev_manifest_sha256": receipt["dev_manifest_sha256"],
            "component_identities": components, "receipt": str(receipt_p),
            "_macro": (man.get("_pinned") or {}).get("macro"),
@@ -791,7 +990,7 @@ def main(argv=None):
                              f"destination of the read (it is {V0_READ_PATH} for the V0 read). "
                              "The reader writes the result and its receipt itself and refuses to "
                              "overwrite either.")
-        rep = dev_suite_read(args.bundle, args.out, allow_dev_suite=True, reg=reg)
+        rep = dev_suite_read(args.bundle, args.out, allow_dev_suite=True)
         rep.pop("per_query_ndcg@10", None)
         rep.pop("component_identities", None)
         print(json.dumps(rep, indent=1, sort_keys=True))

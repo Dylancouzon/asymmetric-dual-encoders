@@ -432,3 +432,29 @@ reader; six P1s (all blocking the one irreversible V0 read) and three P2s. All f
 
 **Owner:** M17 executing session. **Exit:** fixes landed; `pytest m17src` = 314 passed with only
 the four pre-existing registry-status failures. The V0 read remains unspent (`read: false`).
+
+## Codex Sol — dev-suite reader fix review (2026-09-12)
+
+Brief: [m17-sol-devreader-fix-brief](../research/m17-sol-devreader-fix-brief-2026-09-12.md). Log:
+`work/m17/logs/sol_devreader_fix_review.log` (gitignored). Read-only, on the Astra fixes above.
+Six P1s, three P2s, one P3 (retain). All dispositioned below; every code change is in
+`m17src/evaluate.py` and `m17src/test_evaluate.py`.
+
+| Finding | Disposition and exit |
+|---|---|
+| P1-1 a Python caller could pass `fixture=True` and an invented `reg` | Fixed: `dev_suite_read(bundle, out, allow_dev_suite=)` is production-only — it loads the on-disk registry itself and has no manifest/subset/loader/depth/fixture parameter (asserted by signature in the tests). The overridable form is the test-only `_dev_suite_read_fixture`; the CLI cannot reach it. `m17src/evaluate.py` |
+| P1-2 the four text components' ordered (qid,text) pairs are recorded, not pinned | **RECORDED-ONLY, unchanged; owner decision required.** Fact-finding: `m7src/devsuite` builds `work/dev/<name>.json` straight from `load_dataset` and records only the five manifest hashes — no per-component build provenance and no ordered query-text digest anywhere on disk. The only other copy of those texts is the mutable, unpinned HuggingFace dataset cache (which also holds two reserved subsets), so re-deriving proves nothing a manifest pin would. Pinning needs an owner-approved, dated manifest amendment; the manifest and registry were not edited. |
+| P1-3 `verify=False` let the teacher cache be adopted trust-on-first-use | Fixed as a REFUSAL: `_teacher_doc_vecs` now calls `teacher.encode_cached(..., verify=True)`, and the manifest's `_pinned.active_encoder` repo/revision/dim is enforced against the teacher and the loaded width. Fact-finding on the real caches (metadata only): all four stella doc caches record EVERY shard `trusted_on_first_use: true` (nq-250k 5/5, hotpotqa 105/105 plus a TOFU `combined.f16`, each cqadup 1/1), so **`verify=True` refuses all four** — the V0 read is blocked on this until the owner rules (re-encode the four caches, ~5.5M documents, or accept TOFU with a dated disclosure). Model/revision/pooling/prefix/max_length/corpus are bound by the cache key and `meta.json` = `stella_en_400M_v5` @ `ffeb2b7e…`, mean-l2 + `2_Dense_1024` (1024d). `m17src/evaluate.py` |
+| P1-4 an arbitrary `out`, a non-atomic existence test and an ignored `read` flag | Fixed: production writes ONLY to `V0_READ_PATH` (or a `read_path` the registry names) and refuses any other destination; `lock.executed.v0_export.read` must still be `false`; the receipt is claimed with `os.open(O_CREAT\|O_EXCL)`, so two processes cannot both start the read. The flag is not flipped in code — the orchestrator records the read. `m17src/evaluate.py` |
+| P1-5 a crash after `started` left an unrecoverable receipt | Fixed: each component's per-query nDCG/Recall is written into the receipt (tmp + `os.replace`) as it completes; a receipt in `started`/`failed` is CONTINUED for the remaining components only when every field in `IDENTITY_FIELDS` matches the fresh preflight, and otherwise refused by field name. A complete receipt is never continued; an empty claim left by a preflight refusal is released. No other recovery path. `m17src/evaluate.py` |
+| P1-6 a dirty tree makes the recorded git sha a lie | Fixed: a production read refuses unless `git status --porcelain --untracked-files=no` is empty, and records the sha and the (empty) porcelain in the receipt and the result. Comparing an operative registry/protocol digest beyond this: not added — the executed lock half already binds it. `m17src/evaluate.py` |
+| P1-7 “the checkout is not `4824f84`” | **DROPPED.** HEAD moved only because the review brief itself was committed; the allowed files are unchanged, and the receipt records the actual execution commit of a clean tree. |
+| P2-8 pytrec_eval and a Python sort could resolve a rank-10 tie differently | Fixed: `_ndcg_and_recall` takes both metrics from ONE `pytrec_eval.RelevanceEvaluator` (`ndcg_cut.10`, `recall.10`) over the same run, with M7's qrels handling (`evalkit`). `m17src/evaluate.py` |
+| P2-9 `_pool_identity` omitted M7's active-encoder check and hashed a constructed path | Fixed: `encoders.active()` is compared to `_pinned.pool.encoder`, and the resolved `pool.vecs.filename` must equal the file that was hashed. `m17src/evaluate.py` |
+| P2-10 the end-to-end test monkeypatched `_dev_doc_vecs` | Fixed: `v0_world` now builds a TINY REAL teacher encode cache (redirected `teacher.ENC`) and the end-to-end test runs the production `_teacher_doc_vecs`; new fixture tests cover TOFU, a corrupted shard, a row-count mismatch, a pinned-dimension mismatch, another teacher, a missing shard, and `_pool_identity` (pass, wrong row count, another active encoder, same-size-different-content, truncated file). `m17src/test_evaluate.py` |
+| P3-11 keep the 12.6 GiB sequential hash | Kept, as recommended. |
+
+**Owner:** M17 executing session. **Exit:** fixes landed; `pytest m17src/test_evaluate.py` = 32
+passed, `pytest -q m17src` = 320 passed, 4 failed (the pre-existing registry-status four). The V0
+read stays unspent (`read: false`) and is now blocked on TWO owner decisions: the TOFU teacher
+caches (P1-3) and whether the four text components' query texts are pinned (P1-2).

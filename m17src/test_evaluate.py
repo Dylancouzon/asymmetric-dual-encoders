@@ -232,7 +232,10 @@ def test_dev_suite_reader_needs_its_opt_in_flag(synthetic_dev_suite):
     with pytest.raises(SystemExit, match="needs its explicit --allow-dev-suite"):
         E.load_dev_component("syn-text", manifest_path=synthetic_dev_suite["manifest_path"])
     with pytest.raises(SystemExit, match="needs its explicit --allow-dev-suite"):
-        E.dev_suite_read("some/bundle", manifest_path=synthetic_dev_suite["manifest_path"])
+        E.dev_suite_read("some/bundle")
+    with pytest.raises(SystemExit, match="needs its explicit --allow-dev-suite"):
+        E._dev_suite_read_fixture("some/bundle",
+                                  manifest_path=synthetic_dev_suite["manifest_path"])
 
 
 def test_dev_suite_reader_serves_the_pinned_components(synthetic_dev_suite):
@@ -279,13 +282,16 @@ def v0_world(tmp_path, monkeypatch, rehearsal):
     """One tiny suite read end to end: the rehearsal's REAL exported bundle through `loader_np`,
     the M7 scorer, and a two-query text component whose documents that same bundle encodes.
 
-    Nothing real is opened: `devsuite.CACHE` is redirected, the manifest is this fixture's own,
-    and `_dev_doc_vecs` is replaced so neither the teacher encode cache nor the frozen pool is
+    Nothing real is opened: `devsuite.CACHE` and `teacher.ENC` are redirected and the manifest is
+    this fixture's own, so the documents come from a TINY REAL encode cache built here — the
+    production `_teacher_doc_vecs` path, verification included — and the frozen pool is never
     touched. The corpus carries an exact duplicate pair (a tie) and one query whose id IS a
     document id (the self-hit the M7 scorer drops).
     """
     import devsuite
     import export
+    import teacher
+    import torch
     from hashing import sha
     from loader_np import M17QueryEncoder
     bundle = Path(rehearsal["root"]) / "bundle-endpoint"
@@ -311,19 +317,42 @@ def v0_world(tmp_path, monkeypatch, rehearsal):
     mp = tmp_path / "man.json"
     mp.write_text(json.dumps(man))
 
-    def synthetic_doc_vecs(c, m):
-        enc = M17QueryEncoder(bundle, variant="int8", mode="resident_int8")
-        return enc.encode(c["doc_texts"]), {"source": "synthetic fixture vectors"}
-
-    monkeypatch.setattr(E, "_dev_doc_vecs", synthetic_doc_vecs)
+    # the document vectors live in a real (tiny) teacher encode cache, hashes recorded
+    monkeypatch.setattr(teacher, "ENC", tmp_path / "enc")
+    doc_vecs = np.asarray(M17QueryEncoder(bundle, variant="int8", mode="resident_int8")
+                          .encode(comp["doc_texts"]), dtype=np.float16)
+    cache = write_teacher_cache(tmp_path / "enc", "dev-syn-a-docs", comp["doc_texts"], doc_vecs)
     return {"bundle": bundle, "reg": reg, "manifest_path": mp, "man": man, "dir": tmp_path,
-            "digests": digests}
+            "digests": digests, "cache": cache, "doc_vecs": doc_vecs, "comp": comp}
+
+
+def write_teacher_cache(enc_dir, name, texts, vecs, tofu=False, corrupt=False):
+    """A one-shard M7 teacher encode cache with its hashes recorded, as `encode_cached` writes
+    it. `tofu` marks the shard trust-on-first-use; `corrupt` changes the bytes after hashing."""
+    import teacher
+    import torch
+    key, blob = teacher.cache_key(name, "", 512, teacher.TEACHER, teacher.TEACHER_REV,
+                                  teacher.sha_texts(texts), torch.float16)
+    d = Path(enc_dir) / key
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "meta.json").write_text(blob)
+    shard = d / "shard_00000.npy"
+    np.save(shard, np.asarray(vecs, dtype=np.float16))
+    rec = {"bytes": shard.stat().st_size, "sha256": teacher.sha_file(shard), "rows": len(vecs),
+           "shard_size": teacher.SHARD, "trusted_on_first_use": bool(tofu)}
+    if corrupt:
+        flipped = np.load(shard)
+        flipped[0] = -flipped[0]
+        np.save(shard, flipped)
+    (d / "shards.json").write_text(json.dumps({"shards": {"00000": rec}}))
+    return d
 
 
 def test_dev_suite_read_scores_through_the_loader_and_the_m7_scorer(v0_world, tmp_path):
     out = tmp_path / "read.json"
-    rep = E.dev_suite_read(v0_world["bundle"], out, allow_dev_suite=True, reg=v0_world["reg"],
-                           manifest_path=v0_world["manifest_path"], fixture=True)
+    rep = E._dev_suite_read_fixture(v0_world["bundle"], out, allow_dev_suite=True,
+                                    reg=v0_world["reg"],
+                                    manifest_path=v0_world["manifest_path"])
     # "q1" retrieves its own text exactly; "d0"'s only judged document is its own self-hit,
     # which `evalkit.run_from_arrays` drops — so it is unreachable, not rank 1.
     assert rep["per_query_ndcg@10"]["syn-a"] == pytest.approx({"d0": 0.0, "q1": 1.0})
@@ -340,16 +369,18 @@ def test_dev_suite_read_scores_through_the_loader_and_the_m7_scorer(v0_world, tm
     assert rc["completed_components"] == ["syn-a"] and rc["git_sha"]
     assert rc["bundle_digests"] == rep["bundle_digests"] and rc["started_utc"].endswith("Z")
     assert rc["ndcg_at_10"]["macro"] == pytest.approx(0.5)
+    assert rc["metrics"]["syn-a"]["recall@10"] == pytest.approx({"d0": 0.0, "q1": 1.0})
     # the single-read boundary: no overwrite, no --force
     with pytest.raises(SystemExit, match="already exists"):
-        E.dev_suite_read(v0_world["bundle"], out, allow_dev_suite=True, reg=v0_world["reg"],
-                         manifest_path=v0_world["manifest_path"], fixture=True)
+        E._dev_suite_read_fixture(v0_world["bundle"], out, allow_dev_suite=True,
+                                  reg=v0_world["reg"],
+                                  manifest_path=v0_world["manifest_path"])
 
 
 def test_dev_suite_read_needs_an_output_path(v0_world):
     with pytest.raises(SystemExit, match="needs its output path"):
-        E.dev_suite_read(v0_world["bundle"], allow_dev_suite=True, reg=v0_world["reg"],
-                         manifest_path=v0_world["manifest_path"], fixture=True)
+        E._dev_suite_read_fixture(v0_world["bundle"], allow_dev_suite=True, reg=v0_world["reg"],
+                                  manifest_path=v0_world["manifest_path"])
 
 
 def test_dev_suite_read_needs_the_executed_lock_half(v0_world, tmp_path):
@@ -357,31 +388,37 @@ def test_dev_suite_read_needs_the_executed_lock_half(v0_world, tmp_path):
     pre = json.loads(json.dumps(v0_world["reg"]))
     pre["status"] = "EXECUTABLE"
     with pytest.raises(SystemExit, match="needs 'LOCKED_EXECUTABLE'"):
-        E.dev_suite_read(v0_world["bundle"], tmp_path / "a.json", allow_dev_suite=True, reg=pre,
-                         manifest_path=v0_world["manifest_path"], fixture=True)
+        E._dev_suite_read_fixture(v0_world["bundle"], tmp_path / "a.json", allow_dev_suite=True,
+                                  reg=pre, manifest_path=v0_world["manifest_path"])
     no_exec = json.loads(json.dumps(v0_world["reg"]))
     no_exec["lock"].pop("executed")
     with pytest.raises(SystemExit, match="lock.executed.v0_export is missing"):
-        E.dev_suite_read(v0_world["bundle"], tmp_path / "b.json", allow_dev_suite=True,
-                         reg=no_exec, manifest_path=v0_world["manifest_path"], fixture=True)
+        E._dev_suite_read_fixture(v0_world["bundle"], tmp_path / "b.json", allow_dev_suite=True,
+                                  reg=no_exec, manifest_path=v0_world["manifest_path"])
     assert not (tmp_path / "a.json").exists() and not (tmp_path / "b.json").exists()
 
 
 def test_dev_suite_read_refuses_a_bundle_that_is_not_the_locked_v0(v0_world, tmp_path):
     swapped = json.loads(json.dumps(v0_world["reg"]))
     swapped["lock"]["executed"]["v0_export"]["tokenizer_sha256"] = "0" * 64
+    out = tmp_path / "c.json"
     with pytest.raises(SystemExit, match="is not the locked V0 export"):
-        E.dev_suite_read(v0_world["bundle"], tmp_path / "c.json", allow_dev_suite=True,
-                         reg=swapped, manifest_path=v0_world["manifest_path"], fixture=True)
-    assert not (tmp_path / "c.json").exists()
+        E._dev_suite_read_fixture(v0_world["bundle"], out, allow_dev_suite=True,
+                                  reg=swapped, manifest_path=v0_world["manifest_path"])
+    # the empty claim is released: a preflight refusal is not a spent read
+    assert not out.exists() and not E._receipt_path(out).exists()
 
 
 def test_the_production_surface_cannot_be_redefined_by_arguments(v0_world, tmp_path):
+    import inspect
     reg, man = v0_world["reg"], v0_world["man"]
-    # an alternative manifest is fixture-only, and it refuses before the real manifest is opened
+    # the production entry point has no manifest/subset/loader/depth/fixture parameter at all,
+    # so a Python caller cannot redefine the surface (Sol dev-reader-fix review P1)
+    assert set(inspect.signature(E.dev_suite_read).parameters) == {"bundle_dir", "out",
+                                                                   "allow_dev_suite"}
     with pytest.raises(SystemExit, match="fixture-only argument"):
-        E.dev_suite_read(v0_world["bundle"], tmp_path / "d.json", allow_dev_suite=True, reg=reg,
-                         manifest=man)
+        E._enforce_production_surface(reg, ["syn-a"], man, man, None, "int8", "resident_int8",
+                                      None)
     full = ["syn-a", "syn-b"]
     man2 = dict(man, **{"syn-b": {}}, _pinned={"components": full})
     with pytest.raises(SystemExit, match="the complete pinned list"):
@@ -394,6 +431,158 @@ def test_the_production_surface_cannot_be_redefined_by_arguments(v0_world, tmp_p
         E._enforce_production_surface(reg, full, man2, None, None, "int8", "resident_int8", 10)
     assert E._enforce_production_surface(reg, full, man2, None, None, "int8", "resident_int8",
                                          None) == int(reg["serving"]["prefetch"])
+
+
+def test_the_production_read_refuses_another_destination_a_spent_read_and_a_dirty_tree(
+        monkeypatch, tmp_path):
+    """The production entry point loads the registry itself, writes only to the canonical path,
+    needs `v0_export.read: false`, and refuses a dirty tree (Sol dev-reader-fix review P1)."""
+    reg = json.loads(json.dumps(E.registry()))
+    reg["status"] = "LOCKED_EXECUTABLE"
+    reg.setdefault("lock", {}).setdefault("executed", {})["v0_export"] = {
+        "model_npz_sha256": "a" * 64, "tokenizer_sha256": "b" * 64, "config_sha256": "c" * 64,
+        "read": False}
+    monkeypatch.setattr(E, "registry", lambda *a, **k: reg)
+    with pytest.raises(SystemExit, match="needs its explicit"):
+        E.dev_suite_read("bundle", tmp_path / "x.json")
+    with pytest.raises(SystemExit, match="needs its output path"):
+        E.dev_suite_read("bundle", allow_dev_suite=True)
+    with pytest.raises(SystemExit, match="registered destination"):
+        E.dev_suite_read("bundle", tmp_path / "x.json", allow_dev_suite=True)
+    monkeypatch.setattr(E, "_git_porcelain", lambda: " M m17src/evaluate.py")
+    with pytest.raises(SystemExit, match="uncommitted tracked changes"):
+        E.dev_suite_read("bundle", E.V0_READ_PATH, allow_dev_suite=True)
+    reg["lock"]["executed"]["v0_export"]["read"] = True
+    with pytest.raises(SystemExit, match="v0_export.read is True"):
+        E.dev_suite_read("bundle", E.V0_READ_PATH, allow_dev_suite=True)
+    monkeypatch.setattr(E, "_git_porcelain", lambda: "")
+    assert E._require_clean_tree() == ""
+
+
+def test_an_interrupted_receipt_continues_only_when_every_identity_matches(v0_world, tmp_path):
+    out = tmp_path / "r.json"
+    kw = dict(allow_dev_suite=True, reg=v0_world["reg"],
+              manifest_path=v0_world["manifest_path"])
+    first = E._dev_suite_read_fixture(v0_world["bundle"], out, **kw)
+    rp = E._receipt_path(out)
+    done = json.loads(rp.read_text())
+
+    def interrupted(**over):
+        out.unlink(missing_ok=True)
+        base = dict(done, state="started", metrics={}, completed_components=[])
+        base.update(over)
+        rp.write_text(json.dumps(base))
+
+    interrupted()                                   # killed after `started`: rescore everything
+    again = E._dev_suite_read_fixture(v0_world["bundle"], out, **kw)
+    assert again["ndcg@10"] == first["ndcg@10"]
+    assert json.loads(rp.read_text())["state"] == "complete"
+    # a component already persisted is NOT rescored
+    interrupted(state="failed", completed_components=["syn-a"],
+                metrics={"syn-a": {"ndcg@10": {"d0": 1.0, "q1": 1.0},
+                                   "recall@10": {"d0": 1.0, "q1": 1.0}}})
+    assert E._dev_suite_read_fixture(v0_world["bundle"], out,
+                                     **kw)["ndcg@10"]["macro"] == pytest.approx(1.0)
+    # an identity that moved is refused by name, not continued
+    interrupted(git_sha="0" * 40)
+    with pytest.raises(SystemExit, match="git_sha"):
+        E._dev_suite_read_fixture(v0_world["bundle"], out, **kw)
+    # and a complete receipt is never a continuation
+    out.unlink(missing_ok=True)
+    rp.write_text(json.dumps(done))
+    with pytest.raises(SystemExit, match="already exists"):
+        E._dev_suite_read_fixture(v0_world["bundle"], out, **kw)
+
+
+def test_teacher_doc_vecs_serves_the_verified_cache_it_scores(v0_world):
+    comp = dict(v0_world["comp"], name="syn-a", corpus="text")
+    vecs, ident = E._teacher_doc_vecs(comp, v0_world["man"])
+    assert np.asarray(vecs).shape == v0_world["doc_vecs"].shape
+    assert Path(ident["path"]).parent == v0_world["cache"]
+    assert ident["verified_against"] == "teacher shards.json" and ident["n_rows"] == 5
+    assert ident["vectors_sha256"] == E.sha_file(ident["path"])
+
+
+def _text_comp(name, texts, doc_ids=None):
+    return {"name": name, "corpus": "text", "doc_texts": texts,
+            "doc_ids": doc_ids if doc_ids is not None else [f"d{i}" for i in range(len(texts))]}
+
+
+def test_teacher_doc_vecs_refuses_tofu_corrupted_wrong_shape_and_another_teacher(tmp_path,
+                                                                                 monkeypatch):
+    import teacher
+    enc = tmp_path / "enc"
+    monkeypatch.setattr(teacher, "ENC", enc)
+    texts = ["alpha document", "beta document"]
+    vecs = np.arange(2 * 4, dtype=np.float16).reshape(2, 4)
+    for name, kw in (("tofu", {"tofu": True}), ("bad", {"corrupt": True}), ("ok", {})):
+        write_teacher_cache(enc, f"dev-{name}-docs", texts, vecs, **kw)
+    with pytest.raises(SystemExit, match="predate hash recording"):
+        E._teacher_doc_vecs(_text_comp("tofu", texts), {})
+    with pytest.raises(SystemExit, match="does not match the hash recorded"):
+        E._teacher_doc_vecs(_text_comp("bad", texts), {})
+    with pytest.raises(SystemExit, match="but its encode cache holds 2 rows"):
+        E._teacher_doc_vecs(_text_comp("ok", texts, ["d0", "d1", "d2"]), {})
+    pinned = {"_pinned": {"active_encoder": {"repo": teacher.TEACHER,
+                                             "revision": teacher.TEACHER_REV, "dim": 1024}}}
+    with pytest.raises(SystemExit, match="dimensional, the manifest pins 1024"):
+        E._teacher_doc_vecs(_text_comp("ok", texts), pinned)
+    other = {"_pinned": {"active_encoder": {"repo": "someone/else", "revision": "x", "dim": 4}}}
+    with pytest.raises(SystemExit, match="the manifest pins someone/else"):
+        E._teacher_doc_vecs(_text_comp("ok", texts), other)
+    # a missing shard is refused rather than encoded
+    (enc / [d.name for d in enc.iterdir() if d.name.startswith("dev-ok-docs")][0]
+     / "shard_00000.npy").unlink()
+    with pytest.raises(SystemExit, match="is missing 1 of 1 shards"):
+        E._teacher_doc_vecs(_text_comp("ok", texts), {})
+
+
+@pytest.fixture
+def tiny_pool(tmp_path, monkeypatch):
+    """A 4-row stand-in for the frozen pool memmap, pinned exactly as `_pinned.pool` pins it."""
+    import prepare_data
+    monkeypatch.setattr(prepare_data, "POOL_DIR", tmp_path / "pool")
+    E._POOL_VERIFIED.clear()
+    n, dim = 4, 8
+    d = tmp_path / "pool" / "stella-400M-v5"
+    d.mkdir(parents=True)
+    (d / "vecs.f16").write_bytes(np.arange(n * dim, dtype=np.float16).tobytes())
+    meta = {"n": n, "dim": dim, "encoder": "stella-400M-v5",
+            "encoder_revision": E.registry()["teacher_revision"],
+            "spans": {"s": [0, n]}, "id_sha256": {"s": "0" * 64}}
+    (d / "meta.json").write_text(json.dumps(meta))
+    man = {"_pinned": {"pool": {"n": n, "dim": dim, "encoder": meta["encoder"],
+                                "encoder_revision": meta["encoder_revision"],
+                                "spans": meta["spans"],
+                                "store_id_sha256": meta["id_sha256"],
+                                "vectors_bytes": (d / "vecs.f16").stat().st_size,
+                                "vectors_sha256": E.sha_file(d / "vecs.f16")}}}
+    return {"dir": d, "man": man, "n": n}
+
+
+def test_pool_identity_binds_the_memmap_it_scores(tiny_pool):
+    vecs, ident = E._pool_identity(tiny_pool["man"], tiny_pool["n"])
+    assert vecs.shape == (4, 8) and Path(vecs.filename) == tiny_pool["dir"] / "vecs.f16"
+    assert ident["path"] == str(tiny_pool["dir"] / "vecs.f16")
+    assert ident["vectors_sha256"] == tiny_pool["man"]["_pinned"]["pool"]["vectors_sha256"]
+
+
+def test_pool_identity_refuses_a_changed_pool_and_another_active_encoder(tiny_pool):
+    man, n = tiny_pool["man"], tiny_pool["n"]
+    with pytest.raises(SystemExit, match="component pins 9"):
+        E._pool_identity(man, 9)
+    swapped = json.loads(json.dumps(man))
+    swapped["_pinned"]["pool"]["encoder"] = "bge-base-en-v1.5"
+    with pytest.raises(SystemExit, match="the active encoder is"):
+        E._pool_identity(swapped, n)
+    p = tiny_pool["dir"] / "vecs.f16"
+    p.write_bytes(np.full(4 * 8, 7, dtype=np.float16).tobytes())      # same size, new content
+    E._POOL_VERIFIED.clear()
+    with pytest.raises(SystemExit, match="same size, different content"):
+        E._pool_identity(man, n)
+    p.write_bytes(b"\x00" * 8)                                        # and a truncated file
+    with pytest.raises(SystemExit, match="is not 4 x 8 fp16"):
+        E._pool_identity(man, n)
 
 
 def test_a_missing_pinned_hash_field_refuses_instead_of_skipping_its_check(v0_world):
