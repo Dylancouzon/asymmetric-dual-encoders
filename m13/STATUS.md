@@ -13,28 +13,19 @@ fixed; the original failed receipt is preserved, and the existing outputs were v
 rerunning observations. Receipts: `results/m13_cloud_e.json`, `results/m13_after_e.json`,
 `results/m13_after_e_recovery.json`; decision: `results/m10_contrast_E1.json`.
 
-**Next (active launch):** the checkpoint manifest and seven-slice pin are committed and
-pushed; metadata-only gate preflight passed for bs32. Prior Pod restarts failed on host GPU
-capacity. The combined launcher retains one replacement A100 through
-setup, fp16 timing and the registered observational LoTTE read, then verifies backups and
-stops. Persistent-volume package installation failed with a stale file handle before encoding.
-A bounded takeover repairs the runtime on container-local disk with identical package pins;
-the original receipt remains preserved and its 17-hour deadline is not reset.
-Runtime repair passed all pinned package/GPU checks. Transfer then encountered MFS
-file-ownership restrictions; the continuation disables ownership preservation, with file
-content still verified by SHA. Live receipt `results/m13_cloud_gate_chain_upload.json`,
-log `logs/m13-gate-chain-upload-continuation.log` and
-`logs/m13-lotte-gate.log`. It owns no full build or final six/reserved evaluation.
-Stage ceiling$28.29; revised conservative project allocation$669.52 under$1,000, including
-three retained disks. `results/m13_gate_chain_allocation.json` binds the prerequisites.
-M17 keeps the original checkout and local GPU; M13 uses `work/m13cloud`.
+**Now (2026-09-12):** All seven LoTTE gate slices completed. Veto skipped under the
+registered bs32 branch; descriptive macro nDCG@10 0.4610 and Success@5 0.7528. Full
+backups verified, Pod STOP confirmed, and gate results pushed in9d97291. The automatic
+handoff failed after publication because system Python lacked NumPy for budget imports.
+The unchanged allocation helper passed under the repository virtual environment; the
+original failure and hash-bound recovery are preserved. No observations repeated.
 
-The reviewed success-only handoff (`results/m13_after_gate.json`) will publish the verified
-gate, reconcile funding, and launch the fixed build without another owner prompt. Build
-receipt: `results/m13_cloud_build.json`; logs: `logs/m13-build-controller.log` and
-`logs/m13-build.log`. The144-hour maximum costs$239.56 and includes setup, training,
-finalization and backup; the actual training extrapolation remains62.86 hours. Full project
-allocation refreshes to$690.78 plus paid spend, preserving all future evaluation reserves.
+Build allocation: maximum144h/$239.56 including setup, training, finalization and backup;
+project projection$706.20, remaining headroom$293.80, account balance$489.58. These are
+conservative caps; training alone extrapolates62.86h at the measured E-bs32 rate.
+Receipts: `results/m13_build_allocation.json`, `results/m13_after_gate_recovery.json`,
+then `results/m13_cloud_build.json`. Build logs: `logs/m13-build-controller.log` and
+`logs/m13-build.log`. M17 retains the original checkout/GPU; M13 uses this isolated worktree.
 
 Independent monitoring is active as `m13-monitor.service`: five-minute checks, local Windows
 alerts, and durable health/transition records. Add each next job before launch; configuration,

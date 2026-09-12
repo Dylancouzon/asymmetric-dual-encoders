@@ -231,3 +231,12 @@ Operational source `work/m13cloud-launchers/build.py` SHA256 `16e6b2f2240962e107
 Operational source `work/m13cloud-launchers/build_allocation.py` SHA256 `7e07fe1cf9a577c268e04c1f29a66fac22fc577a018e7ec85228e4493354df26`.
 
 Operational source `work/m13cloud-launchers/after_gate.py` SHA256 `607a1006b5bcb706656e1ee8b105ec3477614fad69e0e1b2d6ca837743ba8f9c`.
+
+2026-09-12: Gate completed and was pushed in9d97291. Handoff failed during allocation
+because its system Python lacked NumPy, imported transitively by build_lock. The unchanged
+helper passed under the pinned repository environment with GPU visibility disabled. Both
+recovery reviews GO; helper/build source hashes match prior reviewed versions. Original
+failure retained with hash-bound allocation recovery; no observation/training rerun.
+Allocation$706.20 projected/$293.80 headroom; maximum build$239.56, live balance$489.58.
+The local monitor detected the failure but cannot wake the assistant or repair it; detection
+is not unattended recovery. The operator resumes the already reviewed build supervisor.

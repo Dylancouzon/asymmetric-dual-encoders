@@ -50,7 +50,8 @@
         "logs/m13-after-gate.log"
       ],
       "wait_for": "fp16 and LoTTE transfer continuation",
-      "stale_seconds": 900
+      "stale_seconds": 900,
+      "recovery_receipt": "results/m13_after_gate_recovery.json"
     },
     {
       "name": "full 200M build",

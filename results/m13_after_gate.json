@@ -1,0 +1,23 @@
+{
+  "status": "FAILED",
+  "stage": "finished",
+  "pid": 140903,
+  "started_at": 1789173177.974856,
+  "initial_head": "1f0cda0520f8cdd7418a7f28ea5ec705fe3f1feb",
+  "launcher_sha256": {
+    "after_gate.py": "607a1006b5bcb706656e1ee8b105ec3477614fad69e0e1b2d6ca837743ba8f9c",
+    "build.py": "16e6b2f2240962e1073174654ebc9cd99e9e51596b9b5900d7cf8039e021e74b",
+    "build_allocation.py": "7e07fe1cf9a577c268e04c1f29a66fac22fc577a018e7ec85228e4493354df26"
+  },
+  "gate_pid": 136163,
+  "pod_id": "wnzk8eeqrrkw4m",
+  "updated_at": 1789182181.3670044,
+  "gate_artifact_sha256": {
+    "m13/LOTTE_GATE.json": "698d5473c0b8f6216a316046ba696c7b63548d273c11e3f8c7a77363f4d4634c",
+    "results/m13_encode_benchmark_fp16.json": "071366a1e16644dac1bc0860770c5044d53973b1e77b715832ba18962d981e8d",
+    "results/m13_cloud_gate_chain_upload.json": "d7eb2974cc05ab885675a6d57e7eb75eb81557ec225b28dd3b60ca8377ca16e4",
+    "results/m13_gate_chain_upload_active_pod.json": "4f3358cba80531f1a319a01bb4fd032a6c6e28ca3e2db109af2cbf66c061ddd2"
+  },
+  "gate_commit": "9d97291ee42714af66bd2318c3c9ed66f95a694d",
+  "error": "CalledProcessError: Command '['/usr/bin/python3', '/home/dylan/asymetric-dual-encoders/work/m13cloud/work/m13cloud-launchers/build_allocation.py']' returned non-zero exit status 1."
+}
