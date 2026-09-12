@@ -1,0 +1,66 @@
+{
+  "snapshot_at_utc": "2026-09-12T14:56:52.578992+00:00",
+  "scope": "Point-in-time review copy; not a terminal receipt or launch authorization",
+  "live_receipt_path": "results/m13_cloud_build_preflight_retry.json",
+  "live_receipt_sha256": "58ef7969b64dd7d84ee4070dbd9ff62afa427b70fcc47d7e998fcb430d4ede0e",
+  "live_receipt": {
+    "status": "RUNNING",
+    "stage": "training",
+    "pid": 50427,
+    "pod_id": "k3aee2m68765em",
+    "started_at": 1789222035.4772925,
+    "code_commit": "ee1bd6617c4fec7f4c97c73e7c6eed52f66ff50a",
+    "allocation_sha256": "5f3349b0c9ee2d1a450d45df67335d9115ff6ae57a60dcef7fa20a5b7ed69419",
+    "rolling_backups": [],
+    "continuation_of": {
+      "results/m13_build_allocation.json": "b415d1d21c4b731faa4133041a508b638b629566966b0ff8bf8d6833e39acf0b",
+      "results/m13_cloud_build.json": "47715c8852ed27ed1975ba032a255abe5620a16ca61118d3ba6baeebdffefc23",
+      "results/m13_reboot_pause.json": "e71849b40f1fdb8d62047d35e389159ba7cb3262b63ef916f8299688b6545d9c",
+      "results/m13_build_resume_allocation.json": "80bc4d0a8860d5b5ffdb39549879d5e55c7d2774ac7447fb0b3fb7d4b65ca790",
+      "results/m13_cloud_build_resume.json": "13674c64f91c4af8a1cac4271f06a989cce782efd986d6abda7ec4cc2f7f9b66",
+      "results/m13_cpu_upload.json": "bfffcac46eb87c62459db12f763da00b29d9a4d9f4dbb3897c5f96164462002b",
+      "results/m13_storage_upload.json": "413c7856c1d6c53473c425fdf51b4f373bbc346e4c70d09c7a312310ce4bfcdc",
+      "results/m13_storage_verification.json": "c66750826b16efa261eac55de2795685e7fa10495a0f8bff7dd6eb11f8aa05ac",
+      "results/m13_migration_ready.json": "f0b52fba9fab6fca483504261fb9ceee790304191e1424068ba183d737c356e2",
+      "results/m13_migration_after_allocation.json": "c6655f8b8d503fd15e65c9ded1837064eeeeb188012b72c36ab00cecbe6e410c",
+      "results/m13_cloud_build_migrated.json": "2089ceb3769a9779541d14c6c3b0c4820426eb4a379d795ed5d73c93c28e750a"
+    },
+    "launch_reconciliation": {
+      "max_hours": 134.88888888888889,
+      "max_cost_usd": 224.40265432098766,
+      "prior_elapsed_hours": 9.110986408431271,
+      "paid_since_original_allocation_usd": 7.500544860199966,
+      "stage_consumed_usd": 15.15713822224858,
+      "projected_total_usd": 721.36,
+      "remaining_headroom_usd": 278.64,
+      "account_balance_usd": 482.0799692543,
+      "spent_to_date_usd": 22.92003074569999,
+      "remaining_budget_usd": 977.0799692543001
+    },
+    "migration_ready_sha256": "f0b52fba9fab6fca483504261fb9ceee790304191e1424068ba183d737c356e2",
+    "updated_at": 1789222386.3929374,
+    "runtime_bootstrap_sha256": "e4330f7aeeefa36aa6210f500c7c9a7b931da6e28844b07e32ccd10e766a963e",
+    "transfer_verified": true,
+    "transfer_manifest_sha256": "95021b018a03ddb930d0de760540fe66d05df2d3a92bc707023038a837a5e4fb",
+    "preflight_sha256": "126ecb3e0767cb701c50a572c9740be78b5620f6d2672071b900f5a611503ee9",
+    "pretraining_reconciliation": {
+      "max_hours": 134.79194444444445,
+      "max_cost_usd": 224.24137646604942,
+      "prior_elapsed_hours": 9.207844929669603,
+      "paid_since_original_allocation_usd": 7.5923049925999635,
+      "stage_consumed_usd": 15.318273134386459,
+      "projected_total_usd": 721.52,
+      "remaining_headroom_usd": 278.48,
+      "account_balance_usd": 481.9882091219,
+      "spent_to_date_usd": 23.011790878099987,
+      "remaining_budget_usd": 976.9882091219
+    }
+  },
+  "latest_logged_progress": {
+    "step": 78698,
+    "total_steps": 6250000,
+    "batch": 32,
+    "examples": 2518336,
+    "reported_examples_per_second": 1059
+  }
+}

@@ -1,3 +1,28 @@
+# Review handoff — 2026-09-12T14:56:52.578992+00:00
+
+Use branch `m13-stage1-execution-prep` in this worktree:
+`/home/dylan/asymetric-dual-encoders/work/m13cloud`.
+The parent checkout is on `main` and belongs to separate work.
+
+All M13 plan/code changes and completed attempt receipts are committed. The active
+supervisor receipt is still changing; a point-in-time copy is published in
+`results/m13_review_status_snapshot.json`. Training logs and checkpoint binaries
+remain operational artifacts outside Git. The snapshot records step 78,698 of
+6,250,000 (2,518,336 examples), at 1,059 examples/second. Training is active.
+
+Suggested review order:
+1. `m13/RULINGS.md`, `m13/STAGE1_DESIGN.md`, `m13/EXECUTION.md`, and `m13/build_config.json` for the registered plan.
+2. `research/m13-reboot-continuation-review-2026-09-12.md` for recovery decisions and reviews.
+3. `scripts/m13_build_preflight_retry.py`, `scripts/m13_preflight_retry_allocation.py`, and `scripts/m13_build_preflight.py` for the actual running continuation.
+4. `results/m13_preflight_retry_allocation.json`, `results/m13_build_preflight.json`, and the review snapshot for admission and execution evidence.
+5. `m13/monitor_config.json` and `m13/MONITORING.md` for monitoring.
+
+The running remote execution is pinned to `ee1bd6617c4fec7f4c97c73e7c6eed52f66ff50a`;
+later commits document observations. Review read-only or in an isolated worktree.
+Do not alter the active supervisor, move remote HEAD, restart the Pod, or open
+protected final/reserved/LoTTE payloads. No repeat E runs or recipe extensions.
+Earlier resume sections below are chronological history, not instructions to rerun.
+
 # TRAINING ACTIVE on original E A100 — 2026-09-12
 
 Confirmed optimizer progress: step4,142/6,250,000, batch32, 132,544 examples,
