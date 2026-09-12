@@ -187,7 +187,7 @@ def chain_hours(repo=Path('/home/dylan/asymetric-dual-encoders/work/m13cloud'), 
     prior = after_cpu.chain_hours(repo)
     ready_path = Path(repo) / READY
     ready = json.loads(ready_path.read_text())
-    validate_ready(ready)
+    validate_ready(ready, now=now)
     # The handoff receipt is immutable evidence.  Validate the two inputs it
     # claims to have copied before using its elapsed time in the budget chain.
     if ready.get('source_receipt_sha256') != sha(Path(repo) / 'results/m13_storage_verification.json'):
@@ -218,7 +218,7 @@ def validate_before_state(source, target, capacity):
         raise RuntimeError('No free target GPU')
 
 
-def validate_ready(ready):
+def validate_ready(ready, now=None):
     """Require the immutable post-migration source/target handoff receipt."""
     source_id = ready.get('source_id', ready.get('source_pod_id'))
     target_id = ready.get('target_id', ready.get('target_pod_id'))
@@ -246,7 +246,8 @@ def validate_ready(ready):
             or ready.get('target_container_disk_in_gb') != 30
             or ready.get('target_volume_mount_path') != '/home/dylan'):
         raise RuntimeError('Migration handoff persistent disk changed')
-    migration_hours(ready, ready.get('target_finished_at', time.time()))
+    migration_hours(ready, ready.get('target_finished_at',
+                                     time.time() if now is None else now))
 
 
 def before_allocation(original, balance, prior_hours, source_price=SOURCE_PRICE,

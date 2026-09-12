@@ -75,9 +75,10 @@ def verify_dev_cache(teacher, name, texts, kwargs):
             "legacy_shards": legacy, "legacy_combined": combined_legacy}
 
 
-def check_dev6(teacher, evaluator):
+def check_dev6(teacher, evaluator, document_reader):
     """Exercise the actual six development document-vector readers, never query scoring."""
     original_cached, original_encode, original_load = teacher.encode_cached, teacher.encode, teacher.load_teacher
+    original_reader = document_reader.encode_cached
     checks = []
 
     def cached(name, texts, *args, **kwargs):
@@ -92,11 +93,14 @@ def check_dev6(teacher, evaluator):
         return values
 
     teacher.encode, teacher.load_teacher, teacher.encode_cached = refuse_encode, refuse_encode, cached
+    document_reader.encode_cached = cached
     try:
         components = tuple(evaluator.components("DEV6"))
         require(components == DEV6, "Unexpected DEV-6 component surface")
         rows = {}
         for component in components:
+            require((component, evaluator.INCUMBENT) not in getattr(evaluator, "_DOCS", {}),
+                    "DEV-6 reader already memoized: " + component)
             ids, qids, queries, _rels, vectors = evaluator.doc_vecs(component, evaluator.INCUMBENT)
             require(vectors.shape == (len(ids), 1024) and len(qids) == len(queries),
                     "DEV-6 vector/query alignment mismatch: " + component)
@@ -110,6 +114,7 @@ def check_dev6(teacher, evaluator):
                 "legacy_provenance": "Current bytes match recorded hashes; historical trust-on-first-use labels remain unchanged."}
     finally:
         teacher.encode_cached, teacher.encode, teacher.load_teacher = original_cached, original_encode, original_load
+        document_reader.encode_cached = original_reader
 
 
 def check_cov():
@@ -202,7 +207,8 @@ def main():
     cov = check_cov()
     gc.collect()
     print("Checking descriptive DEV-6 cache reuse", flush=True)
-    development = check_dev6(teacher, eval9)
+    import dev_eval
+    development = check_dev6(teacher, eval9, dev_eval)
     require(all(sha(REPO / path) == digest for path, digest in bound.items()),
             "Build preflight source or registration changed during checks")
     require(subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO, text=True).strip() == head,

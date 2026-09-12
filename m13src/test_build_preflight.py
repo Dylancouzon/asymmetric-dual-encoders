@@ -47,23 +47,25 @@ def fixture_cache(tmp_path):
         return np.memmap(tmp_path / name / "combined.f16", mode="r", dtype=np.float16, shape=(2, 1024))
 
     teacher.encode_cached = reader
+    document_reader = SimpleNamespace(encode_cached=reader)
 
     def doc_vecs(component, incumbent):
-        vectors = (teacher.encode_cached("dev-" + component + "-docs", ["a", "b"], dtype="fp16")
+        vectors = (document_reader.encode_cached("dev-" + component + "-docs", ["a", "b"], dtype="fp16")
                    if component in P.DEV6[:4] else np.zeros((2, 1024), dtype=np.float16))
         return ["a", "b"], ["q"], ["synthetic query"], {}, vectors
 
     evaluator = SimpleNamespace(components=lambda surface: P.DEV6,
                                 doc_vecs=doc_vecs, INCUMBENT="synthetic")
-    return teacher, evaluator
+    return teacher, evaluator, document_reader
 
 
 def test_actual_cache_reader_reused_without_upgrading_legacy_provenance(tmp_path):
-    teacher, evaluator = fixture_cache(tmp_path)
+    teacher, evaluator, document_reader = fixture_cache(tmp_path)
     prior = {name: (tmp_path / name / "shards.json").read_bytes() for name in P.TEXT_CACHES}
     original = teacher.encode_cached
-    result = P.check_dev6(teacher, evaluator)
+    result = P.check_dev6(teacher, evaluator, document_reader)
     assert teacher.reads == 4 and teacher.encode_cached is original
+    assert document_reader.encode_cached is original
     assert set(result["components"]) == set(P.DEV6)
     assert all(row["legacy_shards"] == 2 and row["legacy_combined"] for row in result["cache_checks"])
     assert all((tmp_path / name / "shards.json").read_bytes() == data for name, data in prior.items())
@@ -71,7 +73,7 @@ def test_actual_cache_reader_reused_without_upgrading_legacy_provenance(tmp_path
 
 @pytest.mark.parametrize("failure", ["missing", "corrupt_stitch", "missing_inventory"])
 def test_bad_cache_refuses_before_reader_can_repair_it(tmp_path, failure):
-    teacher, evaluator = fixture_cache(tmp_path)
+    teacher, evaluator, document_reader = fixture_cache(tmp_path)
     directory = tmp_path / "dev-nq-250k-docs"
     if failure == "missing":
         (directory / "shard_00000.npy").unlink()
@@ -86,14 +88,25 @@ def test_bad_cache_refuses_before_reader_can_repair_it(tmp_path, failure):
         path.write_text(json.dumps(manifest))
     original_reader, original_encoder = teacher.encode_cached, teacher.encode
     with pytest.raises((RuntimeError, FileNotFoundError)):
-        P.check_dev6(teacher, evaluator)
+        P.check_dev6(teacher, evaluator, document_reader)
     assert teacher.reads == 0
     assert teacher.encode_cached is original_reader and teacher.encode is original_encoder
+    assert document_reader.encode_cached is original_reader
 
 
 def test_encoder_and_model_loading_are_blocked_even_for_heldout_reader(tmp_path):
-    teacher, evaluator = fixture_cache(tmp_path)
+    teacher, evaluator, document_reader = fixture_cache(tmp_path)
     evaluator.doc_vecs = lambda *args: teacher.load_teacher()
     with pytest.raises(RuntimeError, match="refuses teacher encoding or model loading"):
-        P.check_dev6(teacher, evaluator)
+        P.check_dev6(teacher, evaluator, document_reader)
+    assert teacher.reads == 0
+
+
+def test_memoized_reader_refuses_instead_of_skipping_integrity_checks(tmp_path):
+    teacher, evaluator, document_reader = fixture_cache(tmp_path)
+    evaluator._DOCS = {(P.DEV6[0], evaluator.INCUMBENT): object()}
+    original = document_reader.encode_cached
+    with pytest.raises(RuntimeError, match="already memoized"):
+        P.check_dev6(teacher, evaluator, document_reader)
+    assert document_reader.encode_cached is original
     assert teacher.reads == 0

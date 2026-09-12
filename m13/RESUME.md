@@ -1,3 +1,19 @@
+# Preflight-only failure fixed; preparing cumulative retry
+
+PID43900 stopped target k3aee2m68765em after DEV-6 hook bookkeeping failed, before
+training or any scientific build output. Verified empty backup and EXITED receipt:
+results/m13_cloud_build_migrated.json. Full6,070,049-document token cache completed and
+is retained on the persistent volume; all COV checks and six DEV readers returned.
+The preflight mistakenly patched teacher.encode_cached but missed dev_eval's imported
+alias; the correction wraps both and restores both, with regression coverage.
+
+New scripts/m13_build_preflight_retry.py resumes the same stopped original E Pod only
+after scripts/m13_preflight_retry_allocation.py includes the failed interval and all
+prior charges. Separate receipt/log/PID and backups preserve the earlier attempt. Two
+independent reviewers must clear this concrete continuation before paid resume.
+
+Historical state follows.
+
 # Active build on original E host — 2026-09-12
 
 Build supervisor PID43900 successfully adopted k3aee2m68765em (one A100-SXM4-80GB).

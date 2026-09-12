@@ -209,3 +209,22 @@ PID43732; it published READY7b563ed and actual cumulative allocation8ed37ed, the
 off to buildPID43900. Migration supervisor confirmed the claim and exited PASSED. Runtime
 bootstrap passed on the original E A100; build input rehash394/72.62GB passed in57seconds.
 Full-build-preflight active. No training steps observed at this update.
+
+## DEV-6 imported-reader hook correction and preflight retry
+
+Full6,070,049-document tokenization completed. All COV cache checks passed and all six
+DEV readers returned, but the preflight refused its final four-text-cache inventory:
+dev_eval imports encode_cached by value, bypassing the wrapper installed on teacher.
+Corrected checker wraps/restores both bindings and refuses memoized evaluator reads.
+Six synthetic checks cover imported alias, corruption refusal, restoration, and memoized
+bypass. No scoring, training or protected-final data reads. The supervisor backed up an
+empty build manifest and confirmed targetSTOP. Completed token cache remains reusable.
+New separate retry supervisor uses same recipe/runtime/backup/STOP path and resumes only
+the exact stopped A100 target. New allocation charges this attempt through verifiedSTOP.
+
+Retry arithmetic replays immutable migration at the failed build start, then adds its
+interval through confirmedSTOP. A narrow historical replay correction passes the supplied
+time through validate_ready; the one-hour migration cap is unchanged. Actual prior chain
+replays to7.747302977812561h before the original pause interval. Failed receipt exact SHA
+2089ceb3769a9779541d14c6c3b0c4820426eb4a379d795ed5d73c93c28e750a is pinned.
+Focused22 tests passed; reviewer broader42passed. Monitor has unique retry job/receipt/PID.

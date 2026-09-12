@@ -170,6 +170,16 @@
       ],
       "wait_for": "cloud to cloud input migration",
       "stale_seconds": 300
+    },
+    {
+      "name": "200M preflight retry A100 build",
+      "receipt": "results/m13_cloud_build_preflight_retry.json",
+      "pid_file": "work/m13cloud-launchers/build_preflight_retry.pid",
+      "logs": [
+        "logs/m13-build-preflight-retry-controller.log",
+        "logs/m13-build-preflight-retry.log"
+      ],
+      "stale_seconds": 1800
     }
   ]
 }

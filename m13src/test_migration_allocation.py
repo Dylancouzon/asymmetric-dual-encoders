@@ -84,6 +84,9 @@ def test_before_state_requires_exact_stopped_disks_and_capacity():
 
 def test_ready_requires_exact_inventory_and_target_gpu():
     a.validate_ready(ready())
+    historical = ready(.25, .5)
+    historical.pop('target_finished_at')
+    a.validate_ready(historical, now=1000 + .5 * 3600)
     with pytest.raises(RuntimeError):
         a.validate_ready(dict(ready(), verified_files=393))
     with pytest.raises(RuntimeError):
