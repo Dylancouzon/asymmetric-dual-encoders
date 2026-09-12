@@ -50,14 +50,14 @@ both given; see `LEDGER.md`.)
 2. **The V0 read — DONE 2026-09-12** (`f8ba8a8`, registry read_record `c687268`). Descriptive
    only; numbers in `results/m17_v0_read.json` (nDCG@10 macro 0.615, Recall@10 macro 0.701 over
    the six pinned components). Not a bar, not a comparison. `reads: 1`; no further V0 read.
-3. **6d screen arms — RUNNING since 2026-09-11T23:17 local** (`bash work/m17/logs/run_6d.sh`,
-   code at `7292882`; screen-read entry point `screen_read` reviewed by Sol, dispositions in
-   `REVIEW.md`). Sequential C, V, L, VL, VL-A at 4,000 steps, seed 0; per-arm logs
-   `work/m17/logs/6d_<arm>.log`, launcher log `6d_launcher.log`; each arm exports its endpoint
-   and takes its one registered read into `work/m17/runs/m17-<arm>-screen-s0/screen.json`.
-   Smoke estimate ≈ 5–8 min per arm. Re-running the launcher resumes (flock-guarded; skips
-   only arms with a complete receipt). Dylan added the launcher permission rule
-   (`Bash(bash work/m17/logs/*.sh:*)`).
+3. **6d screen arms — COMPLETE 2026-09-11T23:47 local** (`bash work/m17/logs/run_6d.sh` at
+   `46b37ac`, after a first launch was refused on the held-out count; dated amendment under
+   Dylan's pre-approval, `LEDGER.md`). All five arms trained 4,000 steps at 20–23 ms/step, no
+   divergence flag, all export gates PASS, one read each:
+   `work/m17/runs/m17-<arm>-screen-s0/screen.json`. nDCG@10 macros C 0.5807, V 0.5810,
+   L 0.5936, VL 0.5938, VL-A 0.5938; the untrained V0 read was 0.6153 on the same surface.
+   Decision protocol being applied exactly as registered (`m17/screen_decision_2026-09-12.json`
+   when written); a non-quality diagnosis of the trained-below-untrained gap runs beside it.
 4. **After the screen:** apply `training.decision_protocol` (eligibility vs v1, `screen_ordering`
    walk VL-A→VL→{L,V}→C, `simple_arm_tie_band`); record the verdict in `LEDGER.md`. `no_survivor`
    is a registered STOP. Otherwise the registered full runs follow under the same launcher rule
