@@ -15,8 +15,8 @@ be attributed to any one of them.
 | Query corpus | M9 screen pool (esci, hotpotqa-train, squad-train, mrtydi-en, nqopen, triviaqa; fever-train excluded) | A4: M9 pool re-screened and deduplicated, PAQ-build, harvest, 834,463 generated queries (3,486,034 unique texts) |
 | Documents | eligible rows of the stella document pool, fever-pos store excluded | the same pool after the M10 re-screen, every eligible document once per epoch, reshuffled per epoch (R5) |
 | Mix | per `m9/registry.json:dose.mix_arm` | 75/25 query/document over a 4-step window |
-| Dose | 51,670,945 examples, 3.743B tokens, stopped by the plateau rule | 200,000,000 examples plus permitted whole-cycle extensions |
-| Batch, schedule | 128; linear warmup then cosine | bs32 or bs128 per E1 and the LoTTE veto; three linear cycles 1e-4 → 1e-5, 64,000 warmup examples |
+| Dose | 51,670,945 examples, 3.743B tokens, stopped by the plateau rule | 200,000,000 examples, three cycles, no extensions (R13) |
+| Batch, schedule | 128; linear warmup then cosine | bs32 selected by completed E1; LoTTE veto skipped under that branch; three linear cycles 1e-4 → 1e-5, 64,000 warmup examples |
 | Warm start | per `m9/registry.json:warm_start` | ridge head, 60,000 fit rows, seed 21 |
 | Hardware | RTX 3080 box | cloud A100 (or H100 per the day-one measurement) |
 | Provenance caveat | two-build-lock disclosure stays beside M9's scores (`m9/STATUS.md`) | build record `results/m13_build_record.json` |
@@ -35,4 +35,8 @@ be attributed to any one of them.
   attribution. Permitted reading: "the second build, under a different recipe, scored X relative to
   the first on the same queries."
 
-**Ratification (Dylan):** pending
+**Ratification (Dylan, 2026-09-10):** accepted under `m13/RULINGS.md` R4.
+
+Documentation reconciliation2026-09-12: the dose reflects the already-ratified R13 scope cut
+and the batch reflects the completed E1/LoTTE branch. The paired estimand, bootstrap, output
+contract and descriptive-only interpretation are unchanged; neither final row has been read.
