@@ -50,7 +50,18 @@ both given; see `LEDGER.md`.)
 2. **The V0 read — DONE 2026-09-12** (`f8ba8a8`, registry read_record `c687268`). Descriptive
    only; numbers in `results/m17_v0_read.json` (nDCG@10 macro 0.615, Recall@10 macro 0.701 over
    the six pinned components). Not a bar, not a comparison. `reads: 1`; no further V0 read.
-3. **6d screen arms** (C, V, L, VL, VL-A at 4,000 steps, seed 0) per `training.decision_protocol`.
+3. **6d screen arms — RUNNING since 2026-09-11T23:17 local** (`bash work/m17/logs/run_6d.sh`,
+   code at `7292882`; screen-read entry point `screen_read` reviewed by Sol, dispositions in
+   `REVIEW.md`). Sequential C, V, L, VL, VL-A at 4,000 steps, seed 0; per-arm logs
+   `work/m17/logs/6d_<arm>.log`, launcher log `6d_launcher.log`; each arm exports its endpoint
+   and takes its one registered read into `work/m17/runs/m17-<arm>-screen-s0/screen.json`.
+   Smoke estimate ≈ 5–8 min per arm. Re-running the launcher resumes (flock-guarded; skips
+   only arms with a complete receipt). Dylan added the launcher permission rule
+   (`Bash(bash work/m17/logs/*.sh:*)`).
+4. **After the screen:** apply `training.decision_protocol` (eligibility vs v1, `screen_ordering`
+   walk VL-A→VL→{L,V}→C, `simple_arm_tie_band`); record the verdict in `LEDGER.md`. `no_survivor`
+   is a registered STOP. Otherwise the registered full runs follow under the same launcher rule
+   unless Dylan says "stop after the screen".
 
 **Working model for every M17 session (Dylan, 2026-09-11):** Fable orchestrates; Opus subagents
 do execution; at most two subagents run concurrently; subagents never spawn subagents. Codex
