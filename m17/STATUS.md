@@ -41,9 +41,31 @@ both given; see `LEDGER.md`.)
 do execution; at most two subagents run concurrently; subagents never spawn subagents. Codex
 Astra and Sol are the reviewers and run **alternately** (review, fix, next reviewer), never in
 parallel on one brief; Codex Astra is also the registered judge for descriptive sheets (A6).
-Commit and push after every coherent batch. Do not over-engineer. Plan a context clear at each
-checkpoint: update this file first, push, then Dylan clears. This checkpoint is after the executed
-half is committed and before the screen arms start.
+Commit and push after every coherent batch. Do not over-engineer.
+
+**Next session is OVERNIGHT and unsupervised (Dylan, 2026-09-12). Fable usage is very high:**
+
+- Fable is the **orchestrator only**: it reads this file, writes briefs, dispatches, reads
+  reports, decides, commits. It does not read source, write code, run tests or read logs itself;
+  every one of those is an Opus subagent (execution) or a Codex run (review). One exception: a
+  single-line shell check whose answer is needed to pick the next dispatch.
+- Briefs name files, forbid recursive searches, carry the reserved read-exclusion and the
+  "no quality surface under `work/m17/prepared/full` or `work/m17/bundles/V0`" line, and ask for
+  a report under 20 lines. Reports, not transcripts, come back to Fable.
+- Reviews: Astra on the dev-suite reader before the V0 read (irreversible); Sol on the fix; one
+  Astra P1 re-check at most. Codex must not run while a memory-heavy build stage runs (a Codex
+  run was OOM-killed beside the cache stage on 2026-09-11).
+- **No context clear until Dylan is back**, whatever the checkpoint. Keep this file current at
+  each step instead, and push, so a crash loses nothing.
+- Decisions: registered branches proceed. Anything unregistered follows the unsupervised-window
+  rule (brief a Fable subagent adversarially, decide, record in `LEDGER.md`, push, one-line iOS
+  ping under 200 characters leading with the action). Never ping for progress. Dylan's hard lines
+  (licences, teacher, bars, cap, protocol, release policy) wait for him.
+- Long runs: `setsid nohup` through a launcher under `work/m17/logs/`, a Monitor on
+  `Traceback|Error|FAILED|OOM|Killed|REFUSED` plus stage lines, first progress line and rate
+  checked by a subagent, resume with the same command on a crash.
+- Order of work is the **Next** list above. Stop the night at the first registered STOP or the
+  first unresolved P1, with this file stating exactly where.
 
 **Pitfalls for the next session:**
 
