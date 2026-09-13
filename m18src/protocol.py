@@ -18,10 +18,28 @@ ANSWER_CUES = re.compile(
     r"(?i)\b(?:because|you should|try |use |set |configure|fixed|resolved|implemented|"
     r"solution|workaround|is supported|not supported|the (?:issue|problem|reason)|"
     r"this (?:happens|fails|is caused|was fixed)|we (?:use|fixed|support))\b")
-INFO_REQUEST = re.compile(r"(?i)\b(?:provide|share|attach|send|need|want)\b.{0,50}\b(?:logs?|"
-                          r"reproducer|reproduction|more information|details|stack trace)\b")
+INFO_REQUEST = re.compile(
+    r"(?is)(?:\b(?:could|can|would) you\b|\bplease\b|\bwe (?:need|want)\b).{0,80}"
+    r"\b(?:provide|share|attach|send|check|confirm|try|reproduce|logs?|data|versions?|"
+    r"reproducer|reproduction|more information|details|stack trace)\b|"
+    r"\b(?:provide|share|attach|send)\b.{0,60}\b(?:logs?|data|versions?|reproducer|"
+    r"reproduction|more information|details|stack trace)\b")
 RESOLUTION_CUES = re.compile(r"(?i)\b(?:fixed|resolves?|implemented|solution|workaround|"
                              r"closing|closed by|merged in|this (?:happens|fails|is caused))\b")
+STRONG_EXPLANATION = re.compile(
+    r"(?i)\b(?:because|caused by|due to|root cause|the reason|recommend|you should|should (?:use|set)|"
+    r"set |configure|is supported|not supported|solution|workaround|resolved|implemented|"
+    r"this (?:happens|fails|is caused))\b")
+CLARIFICATION = re.compile(
+    r"(?is)(?:\b(?:could|can|would) you\b|\b(?:what|which|how (?:big|many|much))\b.{0,100}\?|"
+    r"\b(?:not (?:entirely )?sure|need to check|question remains|open to .*suggestions)\b)")
+STATUS_TERMS = re.compile(
+    r"(?i)\b(?:ci|codespell|workflow|rebase|rebased|push|pushed|typo|build|tests?|compile)\b")
+STATUS_ONLY = re.compile(
+    r"(?i)\b(?:red ci|ci is green|codespell|workflow|rebase|forgot to push|typo|"
+    r"not caused by this pr|maintainer approval)\b")
+QUESTION_SHAPE = re.compile(
+    r"(?i)(?:\?|\bhow to\b|^\s*(?:why|how|what|when|where|is|are|can|could|does|do|should)\b)")
 PROJECT_LINK = re.compile(r"https?://(?:github\.com/qdrant/qdrant/(?:pull|commit|blob)/|qdrant\.tech/documentation/)")
 ERROR_CUES = re.compile(r"(?i)\b(?:error|failed?|failure|panic|crash|exception|not working|oom|out of memory|timeout|stack trace)\b")
 CONFIG_CUES = re.compile(r"(?i)\b(?:config|setting|api|grpc|rest|port|cluster|replica|shard|deploy|docker|kubernetes|yaml|collection)\b")
@@ -63,6 +81,38 @@ def _query_id(kind, source):
     return "m18q:" + kind + ":" + str(source)
 
 
+def _status_matches_query(query, answer):
+    qt = {x.lower() for x in STATUS_TERMS.findall(query)}
+    at = {x.lower() for x in STATUS_TERMS.findall(answer)}
+    return bool(qt & at)
+
+
+def _credible_issue_answer(opening, row, ev):
+    """High-precision structural label gate for issue/PR opening -> answer span."""
+    text = row["text"]
+    explicit = bool(ev["explicit_resolution"])
+    linked_explanation = bool(ev["project_link"] and STRONG_EXPLANATION.search(text))
+    event_explanation = bool(ev["closing_or_link_event"] and STRONG_EXPLANATION.search(text))
+    if not (explicit or linked_explanation or event_explanation):
+        return False
+    if INFO_REQUEST.search(text):
+        return False
+    if CLARIFICATION.search(text) and not explicit:
+        return False
+    if STATUS_ONLY.search(text) and not _status_matches_query(opening.get("title", ""), text):
+        return False
+    return True
+
+
+def _credible_audit_query(opening, text, stratum):
+    # PR work-item titles are useful training context, but are not concept/how-to audit questions
+    # unless the author actually phrased one as a question. Other strata deliberately admit
+    # errors, identifiers and short terms.
+    return not (stratum == "concept_howto"
+                and opening.get("kind") == "pull_request_opening"
+                and not QUESTION_SHAPE.search(text))
+
+
 def structural_candidates(corpus):
     by_thread = defaultdict(list)
     by_doc = {r["doc_id"]: r for r in corpus}
@@ -91,22 +141,24 @@ def structural_candidates(corpus):
                           and r.get("author_association") in MAINTAINER
                           and (r.get("timestamp") or "") > (opening.get("timestamp") or "")
                           and len(r["text"].split()) >= 16 and ANSWER_CUES.search(r["text"])
-                          and not INFO_REQUEST.search(r["text"]) and any(evidence(r).values())),
+                          and _credible_issue_answer(opening, r, evidence(r))),
                          key=lambda r: (r.get("timestamp") or "", r["doc_id"]))
         if not answers:
             continue
         target = answers[0]
         text = str(opening.get("title") or "").strip()
-        if len(text.split()) < 3 or text.lower() in target["text"].lower():
+        stratum = _stratum(text)
+        if (len(text.split()) < 3 or text.lower() in target["text"].lower()
+                or not _credible_audit_query(opening, text, stratum)):
             continue
         candidates.append({"query_id": _query_id("issue", opening["github_number"]),
                            "text": text, "family": family,
                            "near_duplicate_family": _family_shape(text),
                            "source_doc": opening["doc_id"], "target_doc": target["doc_id"],
                            "timestamp": opening.get("timestamp") or "",
-                           "stratum": _stratum(text),
+                           "stratum": stratum,
                            "relevance_reason": "distinct later maintainer answer with resolution/action evidence",
-                           "label_provenance": {"rule": "later_maintainer+strong_answer_cue-v2",
+                           "label_provenance": {"rule": "later_maintainer+substantive_resolution-v3",
                                                 "author_association": target.get("author_association"),
                                                 "resolution_evidence": evidence(target)}})
 
@@ -345,6 +397,10 @@ def build(corpus_path=None, out_root=None, registry_data=None):
                                                         for q in dev + conf) / max(1, len(dev) + len(conf)))},
                 "semantics": "held-out questions over complete pinned snapshot; not historical-as-of-question",
                 "structural_relevance": "only distinct maintainer answer/reply spans; thread siblings are not automatically relevant"}
+    manifest["development_source_kinds"] = {
+        stratum: dict(sorted(Counter(corpus_by_id[q["source_doc"]]["kind"]
+                                    for q in dev if q["stratum"] == stratum).items()))
+        for stratum in reg["strata"]}
     manifest["sha256"] = sha_json(manifest)
     write_json(out / "protocol_manifest.json", manifest)
     if out_root is None:

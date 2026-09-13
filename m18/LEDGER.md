@@ -84,3 +84,28 @@
   carry that cursor while retaining explicit page numbers and immutable receipts. The first 99
   validated pages resumed in place because their endpoint, order, page and payload identities are
   unchanged; page 100 onward records the cursor in each request receipt.
+
+## 2026-09-13 — E4 realized corpus and protocol review
+
+- The reconciled pinned snapshot contains 71,937 canonical GitHub objects. Parsing the Git tree and
+  discussion snapshot yielded 105,025 records across 11,574 artifacts: 79,269 indexable document
+  units and 25,756 non-indexable relationship events. The terminal issue-event page was full at the
+  server's 30,000-object cap; this is disclosed auxiliary metadata and never supplies a retrieval
+  document or sole qrel justification.
+- The first realized protocol contained 1,594 training views, 175 development questions and 75
+  sealed confirmation questions. It had zero measured artifact, connected-family, answer-digest or
+  development/confirmation leakage. Confirmation content remained unread.
+- Astra's deterministic 40-development-qrel audit found 24 clear answers, eight partial/diagnostic
+  targets and eight wrong targets. It also found that 174/175 query-bearing source documents contain
+  the query verbatim, making their unjudged presence a systematic evaluation confound. Corpus scale,
+  provenance, deduplication and leakage controls were accepted; scoring was not.
+- The prospective v3 qrel rule no longer admits thread closure plus generic words as an answer. It
+  requires substantive resolution, linked explanation or closing-event plus strong explanation;
+  rejects information/clarification and unrelated CI/codespell/rebase/push status; and retains the
+  cleaner explicit review-reply relation. Evaluation removes, but never marks relevant, each
+  query's own source document and records its pre-exclusion top-10 rate.
+- Task-style PR titles no longer fill the concept/how-to audit stratum. The rebuilt development
+  composition is 25 review questions and 10 issue openings there. Overall, the v3 protocol has 921
+  structural candidates, 1,043 training views, 175 development questions and 75 sealed confirmation
+  questions; all five strata remain at 35/15 and all measured leakage intersections remain zero.
+  Full Stella encoding remains paused until Astra re-audits this rebuilt development set.

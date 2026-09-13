@@ -65,6 +65,35 @@ def test_generic_log_request_is_not_an_answer():
     assert protocol.structural_candidates([opening, request]) == []
 
 
+def test_thread_closure_does_not_turn_clarification_into_answer():
+    opening = {"doc_id": "o", "kind": "issue_opening", "artifact_id": "gh:thread:1",
+               "github_number": 1, "title": "Snapshot restore panic", "text": "question",
+               "timestamp": "2025-01-01T00:00:00Z", "closed_at": "2025-01-02T00:00:00Z",
+               "state": "closed", "chunk_index": 1,
+               "normalized_text_sha256": _digest("question"), "outbound_links": []}
+    clarification = {"doc_id": "a", "kind": "issue_comment", "artifact_id": "gh:thread:1",
+                     "github_id": 2,
+                     "text": "What versions did you use, and can you share enough data for us to reproduce this problem?",
+                     "timestamp": "2025-01-01T01:00:00Z", "author_association": "MEMBER",
+                     "normalized_text_sha256": _digest("clarification"), "outbound_links": []}
+    assert protocol.structural_candidates([opening, clarification]) == []
+
+
+def test_status_only_fix_is_not_answer_to_unrelated_pr_title():
+    ev = {"explicit_resolution": True, "thread_closed_after_answer": True,
+          "project_link": False, "closing_or_link_event": True}
+    opening = {"title": "Clear joint consensus fields on first peer reinit"}
+    assert not protocol._credible_issue_answer(
+        opening, {"text": "Fixed the Codespell typo and pushed it; CI needs maintainer approval."}, ev)
+
+
+def test_imperative_pr_title_is_not_concept_howto_audit_query():
+    opening = {"kind": "pull_request_opening"}
+    assert not protocol._credible_audit_query(opening, "fix: clear joint consensus fields", "concept_howto")
+    assert protocol._credible_audit_query(opening, "Why are joint consensus fields retained?", "concept_howto")
+    assert protocol._credible_audit_query(opening, "fix: timeout 500 in API", "error_troubleshooting")
+
+
 def test_confirmation_cannot_use_general_surface_loader(tmp_path):
     with pytest.raises(SystemExit, match="run_confirmation"):
         protocol.load_surface("confirmation", tmp_path)
