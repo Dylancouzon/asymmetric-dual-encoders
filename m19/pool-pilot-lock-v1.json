@@ -1,0 +1,20 @@
+{
+  "_schema": "m19-pool-pilot-lock-v1",
+  "development_queries_sha256": "8317a85b9c5969be44330a5bd181e9df357d3657c9b3904ba8462e6b7d05f72f",
+  "pilot_query_ids": [
+    "m19-d-k8s-s1",
+    "m19-d-s3-s1",
+    "m19-d-hnsw-s1",
+    "m19-d-grpc-s1",
+    "m19-d-rocksdb-s1",
+    "m19-d-mmap-s1",
+    "m19-d-arm64-s1",
+    "m19-d-tls-s1",
+    "m19-d-cuda-s1",
+    "m19-d-simd-s1"
+  ],
+  "query_count": 10,
+  "query_seal_sha256": "09f4f6439d0519eeb9037af472ab8151c7e58fd70ebc93f415df30e3222d736a",
+  "roster_identity_sha256": "8170f9b0432d4b7460601e1dbf39536d99b1e4af026d9a3afef649a9c89ef892",
+  "selection_rule": "first development short_context in frozen roster order for the first ten roster terms"
+}
