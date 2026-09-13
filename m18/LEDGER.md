@@ -164,3 +164,19 @@
   development/confirmation overlap. Query-source documents remain excluded before evaluation
   metrics. Forty-three network-free tests pass. A fresh Astra reviewer must still spot-check the
   final development surface before full Stella encoding.
+
+## 2026-09-13 — E8 independent adjudication audit and final corrections
+
+- A fresh Astra reviewer independently sampled 40 of the 101 v5 development qrels: 39 were clear,
+  none bad, and one partial. `m18q:issue:3822` answered a later commenter's unsupported version
+  downgrade rather than the original reporter's EC2-snapshot atomic-write failure. Its decision is
+  corrected to partial, leaving 140 clear pairs: 100 development and 40 sealed confirmation.
+- The reviewer also found four long issue openings whose title appeared in a second opening chunk.
+  Protocol rows now carry every chunk ID for their exact source GitHub object. Evaluation excludes
+  those chunks only—not answer comments or the rest of the thread—and retrieves up to 120 results
+  so 100 remain after the largest 20-chunk exclusion. The 140 held-out queries bind 474 source
+  chunks in total; the four reported multi-chunk cases resolve exactly to their recorded lists.
+- The corrected decisions hash is
+  `e2257e103d893bdda1cb9b71786f6a5f75729eb9baa028e1bd113dc305e59c41` and the v6 protocol identity
+  is `0a919bdde39f7059fbc0cd27c2768929bff5754bdc7da1c2b644f8963b9a3c1a`.
+  Confirmation content remains unread. No corpus rebuild or broader evaluation machinery was added.

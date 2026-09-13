@@ -2,22 +2,22 @@
  "_schema": "m18-protocol-manifest-v1",
  "answer_digest_overlap_train_vs_heldout": 0,
  "artifact_overlap_train_vs_heldout": 0,
- "candidates": 141,
+ "candidates": 140,
  "confirmation": {
   "count": 40,
   "qrels": "confirmation_qrels.json",
-  "qrels_sha256": "865a68c69a6ecb662dc056591f081c4f830a68fae115ac1de13a4998e2bb7cd4",
+  "qrels_sha256": "8d82919c2917a5662ea5d09777f226f04728bda6ecba52b4790a8cf016f772b4",
   "queries": "confirmation_queries.jsonl",
-  "queries_sha256": "e514583946404fe52bb72ab041a3734ec45ad8cbcb4a01be75b68c6c72b09719"
+  "queries_sha256": "0553a2e780085ed24b8bce96f01d01c1bb1fac8de34eda87d7e1a57d465cbe8e"
  },
  "confirmation_sealed": true,
  "corpus_sha256": "0cede39eb47b5680ef0f560917bd93ec78d02ac0e607ae0c4209d98f4430f394",
  "development": {
-  "count": 101,
+  "count": 100,
   "qrels": "development_qrels.json",
-  "qrels_sha256": "7e9a9bef95ec5ec1490d4d4af5c8287476f9f5e1379f46fb0c9a11b33e1d8a79",
+  "qrels_sha256": "d971089faaece3a5d429a23ea03e07b7fc30b60dc54b50c49679258d8946dfd8",
   "queries": "development_queries.jsonl",
-  "queries_sha256": "ab557e49d137b9315fd31476c0661527738abee7a650f66d63189376c5668e1b"
+  "queries_sha256": "e51dba8d16c2839377df98f69d73d35f427db4d5fac2e8a967a5b24e7d98708d"
  },
  "development_confirmation_family_overlap": 0,
  "development_source_kinds": {
@@ -35,7 +35,7 @@
    "review_comment": 1
   },
   "error_troubleshooting": {
-   "issue_opening": 26,
+   "issue_opening": 25,
    "pull_request_opening": 1,
    "review_comment": 2
   },
@@ -46,22 +46,23 @@
  },
  "family_overlap_train_vs_heldout": 0,
  "qrel_adjudication": {
-  "accepted_clear": 141,
+  "accepted_clear": 140,
   "decisions_path": "results/m18_astra_adjudications.jsonl",
-  "decisions_sha256": "d98144096f17a718bb70073655fbcd4f28319c75f41d670f0a376118aa505904",
+  "decisions_sha256": "e2257e103d893bdda1cb9b71786f6a5f75729eb9baa028e1bd113dc305e59c41",
   "judge": "codex-gpt-6-astra-source-only-v1",
   "labels": {
    "bad": 62,
-   "clear": 141,
-   "partial": 141
+   "clear": 140,
+   "partial": 142
   },
   "pool": 344
  },
  "qrel_source_equals_target_count": 0,
- "qrels_version": "m18-structural-plus-astra-adjudication-v5",
+ "qrels_version": "m18-structural-plus-astra-adjudication-v6",
+ "query_source_exclusion_documents": 474,
  "query_token_overlap_with_answer": {
   "exact_query_substring_rate": 0.0,
-  "mean": 0.3633985759891871
+  "mean": 0.36510142296053844
  },
  "realized_strata": {
   "alias_jargon": {
@@ -80,9 +81,9 @@
    "development": 25
   },
   "error_troubleshooting": {
-   "available_families": 39,
+   "available_families": 38,
    "confirmation": 10,
-   "development": 29
+   "development": 28
   },
   "exact_version_numeric": {
    "available_families": 18,
@@ -91,15 +92,15 @@
   }
  },
  "semantics": "held-out questions over complete pinned snapshot; not historical-as-of-question",
- "sha256": "a58648ecdac7e8bfa5ccbe02646f6a2dac400f082d2281ecd8d02ef58b421f23",
+ "sha256": "0a919bdde39f7059fbc0cd27c2768929bff5754bdc7da1c2b644f8963b9a3c1a",
  "split_version": "m18-temporal-connected-family-v2",
  "structural_candidates_pre_adjudication": 710,
  "structural_relevance": "only distinct maintainer answer/reply spans; thread siblings are not automatically relevant",
  "training_alias_views": 482,
  "training_document_headings": 0,
- "training_queries": 779,
- "training_queries_sha256": "3de266aec625949a1248b1d458997cb5a0577b624b0b4e0ac2b025acc5f3b7be",
- "training_structural": 297,
+ "training_queries": 780,
+ "training_queries_sha256": "98ce1cbbc8be44a879349339859aa9abd592b7f468ee2a6b0907ecb79edb252b",
+ "training_structural": 298,
  "training_structural_labeled": 0,
- "training_structural_query_only": 297
+ "training_structural_query_only": 298
 }

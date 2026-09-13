@@ -175,6 +175,9 @@ def structural_candidates(corpus):
                            "text": text, "family": family,
                            "near_duplicate_family": _family_shape(text),
                            "source_doc": opening["doc_id"], "target_doc": target["doc_id"],
+                           "source_exclusion_docs": sorted(r["doc_id"] for r in rows
+                               if r["kind"] == opening["kind"]
+                               and r.get("github_id") == opening.get("github_id")),
                            "timestamp": opening.get("timestamp") or "",
                            "stratum": stratum,
                            "relevance_reason": "distinct later maintainer answer with resolution/action evidence",
@@ -209,6 +212,7 @@ def structural_candidates(corpus):
                            "text": text, "family": parent["artifact_id"],
                            "near_duplicate_family": _family_shape(text),
                            "source_doc": parent["doc_id"], "target_doc": target["doc_id"],
+                           "source_exclusion_docs": sorted(r["doc_id"] for r in parents),
                            "timestamp": parent.get("timestamp") or "", "stratum": stratum,
                            "relevance_reason": "maintainer review reply linked by in_reply_to_id",
                            "label_provenance": {"rule": "review_in_reply_to",
@@ -510,6 +514,8 @@ def build(corpus_path=None, out_root=None, registry_data=None):
                     {q["family_group"] for q in dev} & {q["family_group"] for q in conf}),
                 "qrel_source_equals_target_count": sum(q["source_doc"] == q["target_doc"]
                                                         for q in train + dev + conf),
+                "query_source_exclusion_documents": sum(
+                    len(q.get("source_exclusion_docs", [q["source_doc"]])) for q in dev + conf),
                 "query_token_overlap_with_answer": {"mean": float(sum(overlap) / max(1, len(overlap))),
                                                     "exact_query_substring_rate": float(sum(
                                                         q["text"].lower() in corpus_by_id[q["target_doc"]]["text"].lower()
