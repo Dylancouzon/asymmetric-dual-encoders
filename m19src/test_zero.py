@@ -184,3 +184,36 @@ def test_loader_refuses_incomplete_or_inheritance_wrong_bundle(tmp_path, monkeyp
     (out / "complete.json").unlink()
     with pytest.raises(SystemExit, match="incomplete"):
         zero.M19QueryEncoder.from_bundle(out, verification=verification)
+
+
+def test_loader_refuses_rehashed_added_row_and_wrong_expected_identity(tmp_path, monkeypatch):
+    payload, codes, scales, roster, teacher = _fixture()
+    verification = _verification(payload, codes, scales, roster)
+    built = zero.construct_added_rows(codes, scales, payload, roster, teacher)
+    new_codes, new_scales = zero.compact_table(codes, scales, built["T0-teacher"])
+    bundle = zero.bundle_payload("T0-teacher", new_codes, new_scales, built["tokenizer"],
+                                 _config(), _provenance(verification))
+    monkeypatch.setattr(zero, "admit_write", lambda path: Path(path))
+    monkeypatch.setattr(zero, "admit_read", lambda path: Path(path))
+    monkeypatch.setattr(zero, "load_json", lambda path: json.loads(Path(path).read_text()))
+    monkeypatch.setattr(zero, "atomic_create_bytes", lambda path, content: (
+        Path(path).parent.mkdir(parents=True, exist_ok=True), Path(path).write_bytes(content)
+    ))
+    monkeypatch.setattr(zero, "sha_file", lambda path: zero.sha_file_unchecked(path))
+    out = tmp_path / "bundle"
+    report = zero.publish_bundle(out, bundle, verification=verification)
+    with pytest.raises(SystemExit, match="expected build"):
+        zero.verify_bundle(out, verification=verification, expected_identity="7" * 64)
+
+    altered = new_codes.copy()
+    altered[-1] = -altered[-1]
+    model_bytes = zero._deterministic_npz({"rows_int8": altered, "int8_scale": new_scales})
+    (out / "model.npz").write_bytes(model_bytes)
+    complete = json.loads((out / "complete.json").read_text())
+    complete["files"]["model.npz"] = zero.sha_bytes(model_bytes)
+    body = {key: value for key, value in complete.items() if key != "identity_sha256"}
+    complete["identity_sha256"] = zero.sha_json(body)
+    (out / "complete.json").write_text(json.dumps(complete, sort_keys=True))
+    with pytest.raises(SystemExit, match="model arrays differ from provenance"):
+        zero.verify_bundle(out, verification=verification,
+                           expected_identity=complete["identity_sha256"])

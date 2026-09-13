@@ -149,9 +149,9 @@ class M19QueryEncoder:
         self.fallback_id = int(config["fallback_token_id"])
 
     @classmethod
-    def from_bundle(cls, bundle, *, verification):
+    def from_bundle(cls, bundle, *, verification, expected_identity=None):
         bundle = Path(bundle)
-        verify_bundle(bundle, verification=verification)
+        verify_bundle(bundle, verification=verification, expected_identity=expected_identity)
         config = load_json(bundle / "config.json")
         with np.load(admit_read(bundle / "model.npz")) as archive:
             codes = np.asarray(archive["rows_int8"], dtype=np.int8).copy()
@@ -362,21 +362,35 @@ def _verify_context(provenance, verification):
     return base_codes, base_scales, roster
 
 
-def verify_bundle(bundle, *, verification):
+def verify_bundle(bundle, *, verification, expected_identity=None):
     bundle = Path(bundle)
     complete_path = admit_read(bundle / "complete.json")
     if not complete_path.is_file():
         raise SystemExit("M19 BUNDLE REFUSED: bundle is incomplete")
     complete = json.loads(complete_path.read_text())
     body = {key: value for key, value in complete.items() if key != "identity_sha256"}
-    if complete.get("identity_sha256") != sha_json(body) or complete.get("state") != "complete":
+    if (set(complete) != {"_schema", "state", "variant", "files", "identity_sha256"} or
+            complete.get("_schema") != "m19-bundle-complete-v1" or
+            complete.get("identity_sha256") != sha_json(body) or
+            complete.get("state") != "complete" or
+            set(complete.get("files", {})) != {
+                "model.npz", "config.json", "tokenizer.json", "provenance.json"}):
         raise SystemExit("M19 BUNDLE REFUSED: invalid completion identity")
+    if expected_identity is not None and complete["identity_sha256"] != expected_identity:
+        raise SystemExit("M19 BUNDLE REFUSED: completion identity differs from expected build")
     for name, expected in complete["files"].items():
         if sha_file(bundle / name) != expected:
             raise SystemExit(f"M19 BUNDLE REFUSED: {name} differs from completion manifest")
     config = load_json(bundle / "config.json")
     provenance = load_json(bundle / "provenance.json")
     base_codes, base_scales, roster = _verify_context(provenance, verification)
+    if (config.get("_schema") != "m19-internal-zero-bundle-v1" or
+            config.get("internal_only") is not True or
+            config.get("variant") not in {"V0-compose", "T0-teacher"} or
+            complete["variant"] != config["variant"] or
+            provenance.get("variant") != config["variant"] or
+            provenance.get("config_identity_sha256") != sha_json(config)):
+        raise SystemExit("M19 BUNDLE REFUSED: config/provenance identity differs")
     pooling = {
         "fallback_token_id": config["fallback_token_id"],
         "learned_weights": config["learned_weights"],
@@ -396,7 +410,14 @@ def verify_bundle(bundle, *, verification):
             raise SystemExit("M19 BUNDLE REFUSED: inherited row codes changed")
         if not np.array_equal(scales[:len(base_scales)], base_scales):
             raise SystemExit("M19 BUNDLE REFUSED: inherited row scales changed")
-    tokenizer = Tokenizer.from_file(str(admit_read(bundle / "tokenizer.json")))
+        if (provenance.get("codes_sha256") != sha_array(codes) or
+                provenance.get("scales_sha256") != sha_array(scales)):
+            raise SystemExit("M19 BUNDLE REFUSED: model arrays differ from provenance")
+    tokenizer_path = admit_read(bundle / "tokenizer.json")
+    tokenizer_bytes = tokenizer_path.read_bytes()
+    if provenance.get("tokenizer_sha256") != sha_bytes(tokenizer_bytes):
+        raise SystemExit("M19 BUNDLE REFUSED: tokenizer differs from provenance")
+    tokenizer = Tokenizer.from_str(tokenizer_bytes.decode("utf-8"))
     if tokenizer.get_vocab_size(with_added_tokens=True) != config["vocab"]:
         raise SystemExit("M19 BUNDLE REFUSED: tokenizer/table size mismatch")
     base = Tokenizer.from_str(verification["base_tokenizer_payload"].decode("utf-8"))
