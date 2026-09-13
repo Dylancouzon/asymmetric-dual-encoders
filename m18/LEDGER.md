@@ -290,3 +290,24 @@
   development set contains no `k8s` query; the separate bare-term report will test that shape.
 - The report retains the unchanged BM25 and Stella ceiling results under their verified identities.
   Registry `development_read` is now true; confirmation remains unread.
+
+## 2026-09-13 — E17 small-pool trainer compatibility correction
+
+- Before the first optimizer step, the trainer's redundant `eligible < batch` refusal exposed that
+  148 eligible queries cannot satisfy the registered batch of 256 without repetition. The existing
+  sampler already defines a deterministic cross-epoch stream, and the cosine/listwise losses have
+  no in-batch-negative semantics. Astra therefore approved retaining batch 256, warmup 200 and the
+  complete fixed schedule while removing only the contradictory refusal.
+- Astra found that repeated query IDs could corrupt the alias loss: the former implementation
+  paired any two slots with the same pair ID, including two copies of one view, and dropped pair IDs
+  appearing three or more times. Alias slots now require the two distinct global query identities
+  and count each complete pair once. The trainer records per-step unique queries, repeated slots,
+  maximum multiplicity and actual alias-pair count; its version is bound into the execution lock and
+  resume identity.
+- The realized eligible pool contains 25 alias-bearing rows but zero complete eligible pairs, so
+  alias consistency is truthfully inactive and its effective loss is zero. Orphan views cannot
+  self-pair. The `k8s` row still receives cosine and listwise supervision from six contexts. Astra
+  recommended reporting this limitation rather than concentrating the full alias weight on one
+  newly manufactured pair.
+- A 4,000-step sampler-only audit over the exact prepared pool observed 140–148 unique queries per
+  256 slots (mean 147.497) and maximum multiplicity three. Forty-nine network-free tests pass.

@@ -49,6 +49,7 @@ class RunCfg:
     vocabulary_sha256: str = ""
     cache_artifact_sha256: str = ""
     prepared_data_sha256: str = ""
+    trainer_version: str = ""
 
     @classmethod
     def from_registry(cls, reg, variant="T0", seed=None, **over):
@@ -66,6 +67,7 @@ class RunCfg:
             listwise_weight=float(tr["listwise_weight"]),
             alias_weight=float(tr["alias_weight"]),
             checkpoint_steps=tuple(int(x) for x in tr["checkpoint_steps"]),
+            trainer_version=str(reg["versions"]["trainer"]),
         )
         for k, v in over.items():
             setattr(cfg, k, v)
@@ -88,7 +90,8 @@ class RunCfg:
         fields = ("variant", "seed", "schedule_steps", "batch", "warmup_steps",
                   "new_rows_lr", "temperature", "cosine_weight", "listwise_weight",
                   "alias_weight", "checkpoint_steps", "tokenizer_sha256",
-                  "preprocessing_sha256", "vocabulary_sha256", "cache_artifact_sha256")
+                  "preprocessing_sha256", "vocabulary_sha256", "cache_artifact_sha256",
+                  "trainer_version")
         fields = fields + ("prepared_data_sha256",)
         obj = {k: (list(getattr(self, k)) if k == "checkpoint_steps" else getattr(self, k))
                for k in fields}
@@ -255,12 +258,15 @@ def _pair_complete_batch(picked, pair_ids):
 
 
 def _alias_slots(batch_global, pair_ids):
+    # A batch may cross epoch boundaries and repeat a query. Pair only the two distinct global
+    # views, once each; two copies of one view must never become a self-consistency pair.
     positions = {}
     for slot, gi in enumerate(batch_global):
         pid = str(pair_ids[int(gi)])
         if pid:
-            positions.setdefault(pid, []).append(slot)
-    return [tuple(v) for _, v in sorted(positions.items()) if len(v) == 2]
+            positions.setdefault(pid, {}).setdefault(int(gi), slot)
+    return [tuple(by_query.values()) for _, by_query in sorted(positions.items())
+            if len(by_query) == 2]
 
 
 def training_data_identity(data):
@@ -355,7 +361,7 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
     require_executable(registry(), cfg.rehearsal, what=cfg.run_id, training=True)
     cfg.validate()
     required = ("tokenizer_sha256", "preprocessing_sha256", "vocabulary_sha256",
-                "cache_artifact_sha256", "prepared_data_sha256")
+                "cache_artifact_sha256", "prepared_data_sha256", "trainer_version")
     if not cfg.rehearsal and any(not getattr(cfg, key) for key in required):
         raise SystemExit(f"M18 REFUSED: real training requires nonempty identities: {required}")
     out = Path(admit_write(out_dir))
@@ -378,9 +384,6 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
     if len(eligible) != len(ids_all):
         raise SystemExit(f"M18 REFUSED: prepared pool contains {len(ids_all)-len(eligible)} "
                          "zero-gradient queries; filter by the variant's active ids first")
-    if len(eligible) < cfg.batch:
-        raise SystemExit(f"M18 REFUSED: {len(eligible)} eligible queries < batch {cfg.batch}")
-
     teacher_q = torch.as_tensor(data["teacher_q"], dtype=torch.float32, device=cfg.device)
     bank = torch.as_tensor(data["bank"], dtype=torch.float32, device=cfg.device)
     cand = torch.as_tensor(data["candidate_ids"], dtype=torch.long, device=cfg.device)
@@ -390,7 +393,10 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
 
     opt = torch.optim.Adam([model.new_rows], lr=cfg.new_rows_lr, betas=(0.9, 0.999), eps=1e-8,
                            weight_decay=0.0)
-    state = {"step": 0, "epoch": 0, "position": 0, "history": []}
+    state = {"step": 0, "epoch": 0, "position": 0, "history": [],
+             "batch_stats": {"steps": 0, "unique_min": None, "unique_max": 0,
+                             "unique_sum": 0, "repeated_slots": 0,
+                             "max_query_multiplicity": 0, "alias_pairs_sum": 0}}
     recovery = out / "recovery.pt"
     if resume and recovery.exists():
         payload = torch.load(admit_read(recovery), map_location=cfg.device, weights_only=False)
@@ -412,6 +418,18 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
         step = state["step"]
         local = _pair_complete_batch(_batch(state, len(ids_all), cfg.batch, cfg.seed), pair_ids)
         slots = _alias_slots(local, pair_ids)
+        counts = np.unique(local, return_counts=True)[1]
+        unique = int(len(counts))
+        batch_stats = state["batch_stats"]
+        batch_stats["steps"] += 1
+        batch_stats["unique_min"] = unique if batch_stats["unique_min"] is None else min(
+            batch_stats["unique_min"], unique)
+        batch_stats["unique_max"] = max(batch_stats["unique_max"], unique)
+        batch_stats["unique_sum"] += unique
+        batch_stats["repeated_slots"] += int(len(local) - unique)
+        batch_stats["max_query_multiplicity"] = max(
+            batch_stats["max_query_multiplicity"], int(counts.max()))
+        batch_stats["alias_pairs_sum"] += len(slots)
         ii = torch.as_tensor(local, dtype=torch.long, device=cfg.device)
         loss, parts = _losses(model, [ids_all[i] for i in local], teacher_q[ii], bank,
                               cand[ii], tscores[ii], cfg.temperature, cfg.cosine_weight,
@@ -428,6 +446,9 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
             row = {"step": step, "loss": float(loss.detach()), **parts,
                    "lr_factor": factor, "epoch": state["epoch"],
                    "alias_pairs_in_batch": len(slots),
+                   "unique_queries_in_batch": unique,
+                   "repeated_slots_in_batch": int(len(local) - unique),
+                   "max_query_multiplicity": int(counts.max()),
                    "inherited_rows_sha256": sha_array(model.inherited.detach().cpu().numpy())}
             if row["inherited_rows_sha256"] != inherited_sha:
                 raise SystemExit(f"M18 REFUSED: inherited rows moved at step {step}")
@@ -453,6 +474,11 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
               "inherited_rows_sha256": inherited_sha,
               "inherited_scalars_sha256": data["lineage"]["inherited_scalars_sha256"],
               "new_rows_changed": sha_array(model.new_rows.detach().cpu().numpy()) != initial_new_sha,
+              "batch_sampling": {**state["batch_stats"], "configured_batch": cfg.batch,
+                  "eligible_pool": len(eligible), "unique_mean": (
+                      state["batch_stats"]["unique_sum"] / max(1, state["batch_stats"]["steps"])),
+                  "alias_pairs_mean": (
+                      state["batch_stats"]["alias_pairs_sum"] / max(1, state["batch_stats"]["steps"]))},
               "wall_clock_seconds_this_invocation": round(time.time() - t0, 3),
               "peak_vram_bytes": peak}
     record["sha256"] = sha_json({k: v for k, v in record.items() if k != "sha256"})

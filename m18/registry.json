@@ -1,7 +1,6 @@
 {
   "_schema": "m18-registry-v1",
-  "status": "LOCKED_EXECUTABLE",
-  "execution_lock_sha256": "008e99173752dfe856395efb01b29cec424dcae7255dd8ff647b56ceb3fc8b60",
+  "status": "EXECUTABLE_PREPARATION",
   "date": "2026-09-12",
   "scope": "internal Qdrant project memory; local execution only; no publication",
   "source": {
@@ -31,6 +30,7 @@
     "split": "m18-temporal-connected-family-v2",
     "qrels": "m18-structural-plus-astra-adjudication-v6",
     "training_augmentation": "m18-cto-k8s-alias-v1",
+    "trainer": "m18-new-row-v2-duplicate-safe-alias",
     "normalizer_t1": "m18-typed-ephemeral-v1",
     "digit_mask_t2": "wordpiece-continuation-digits-v1"
   },

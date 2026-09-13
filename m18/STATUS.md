@@ -20,8 +20,10 @@ Stella headroom and is preserved. Before training, the owner approved a narrow C
 amendment: five deterministic, source-evidenced teacher-only substitutions augment one natural
 training occurrence. No qrels or held-out rows changed. Fresh preparation now selects `k8s` as the
 sixteenth exact row and yields 148 eligible T0/T2 queries; T1 remains inert. The old lock and
-preparation are archived, the revised recipe is locked, and the changed V0 baseline has been read.
-A batch/pool compatibility guard is under review before the T0 step-500 diagnostic. No optimizer
-step has run and confirmation remains unread.
+preparation are archived and the changed V0 baseline has been read. A pre-optimizer review retained
+batch 256 with the existing deterministic cross-epoch sampler and corrected duplicate alias-pair
+handling; the realized alias-consistency loss is inactive because no complete pair survives the
+trainable-query filter. The corrected trainer is being re-locked before the T0 step-500 diagnostic.
+No optimizer step has run and confirmation remains unread.
 
 Pointers: `instructions-m18.md`, `m18/registry.json`, `m18/LEDGER.md`, `m18/CODEMAP.md`.

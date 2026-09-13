@@ -38,6 +38,28 @@ def test_pair_complete_batch_adds_alias_mate():
     assert train._alias_slots(got, pair_ids) == [(0, 1)]
 
 
+def test_alias_slots_use_two_distinct_views_despite_repeated_queries():
+    pair_ids = np.asarray(["pair", "pair", ""])
+    assert train._alias_slots(np.asarray([0, 0, 1, 1, 2]), pair_ids) == [(0, 2)]
+    assert train._alias_slots(np.asarray([0, 0, 2]), pair_ids) == []
+
+
+def test_cross_epoch_batch_stream_is_deterministic_and_may_repeat():
+    first = {"epoch": 0, "position": 0}
+    got_a = train._batch(first, n=3, batch=5, seed=18001)
+    got_b = train._batch(first, n=3, batch=5, seed=18001)
+    second = {"epoch": 0, "position": 0}
+    assert np.array_equal(got_a, train._batch(second, n=3, batch=5, seed=18001))
+    assert np.array_equal(got_b, train._batch(second, n=3, batch=5, seed=18001))
+    assert first == second and len(set(got_a)) < len(got_a)
+
+
+def test_trainer_version_is_bound_into_resume_identity():
+    a = train.RunCfg(rehearsal=True, trainer_version="sampler-a")
+    b = train.RunCfg(rehearsal=True, trainer_version="sampler-b")
+    assert a.resume_identity()["sha256"] != b.resume_identity()["sha256"]
+
+
 def test_load_snapshot_rejects_rows_array_not_equal_verified_blocks(tmp_path):
     inherited = np.zeros((2, 3), np.float32)
     new = np.ones((1, 3), np.float32)
@@ -53,4 +75,3 @@ def test_load_snapshot_rejects_rows_array_not_equal_verified_blocks(tmp_path):
              inherited=z["inherited"], new_rows=z["new_rows"])
     with pytest.raises(SystemExit, match="concatenated table mismatch"):
         train.load_snapshot(root)
-
