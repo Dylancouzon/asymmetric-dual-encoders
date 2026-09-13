@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -126,12 +127,15 @@ def test_fallback_identity_keeps_endpoint_kinds_separate():
 def test_receipts_never_persist_token_bearing_headers(tmp_path):
     endpoint = _endpoint()
     reg = _registry(endpoint, per_page=10)
-    api = Pages({(endpoint["path"], 1): [[_row("A")]]})
+    def api(_path, _params, _headers):
+        if _params["page"] == 1:
+            return [_row("A")], {"Link": "<https://api.github.com/x?access_token=not-a-token>; rel=\"next\""}
+        return [], {}
     source.acquire_github(tmp_path, registry_data=reg, api_call=api, reconcile=False)
     receipt = tmp_path / "work" / "m18" / "source" / "github" / "issues" / "receipts" / "000001.json"
     text = receipt.read_text()
-    assert "Authorization" not in text and "ghp_" not in text
-    assert json.loads(text)["api_version"] == "2022-11-28"
+    assert "Authorization" not in text and "ghp_" not in text and "not-a-token" not in text
+    assert json.loads(text)["link_header"] == "[REDACTED]"
 
 
 def test_git_snapshot_clones_fetches_and_detaches_at_registered_pin(tmp_path):
@@ -172,3 +176,21 @@ def test_changed_source_identity_is_refused_on_resume(tmp_path):
     changed = _registry(endpoint, per_page=10, cutoff="2026-01-09T00:00:00Z")
     with pytest.raises(source.SourceError, match="different source identity"):
         source.acquire_github(tmp_path, registry_data=changed, api_call=lambda *_: [])
+
+
+def test_fresh_no_checkout_clone_reaches_detached_pin_with_local_git(tmp_path):
+    """A real local clone catches the deleted-worktree status from --no-checkout."""
+    origin = tmp_path / "origin"
+    subprocess.run(["git", "init", "-q", str(origin)], check=True)
+    subprocess.run(["git", "-C", str(origin), "config", "user.email", "m18@example.invalid"], check=True)
+    subprocess.run(["git", "-C", str(origin), "config", "user.name", "M18 test"], check=True)
+    (origin / "README.md").write_text("pinned fixture\n")
+    subprocess.run(["git", "-C", str(origin), "add", "README.md"], check=True)
+    subprocess.run(["git", "-C", str(origin), "commit", "-qm", "fixture"], check=True)
+    commit = subprocess.run(["git", "-C", str(origin), "rev-parse", "HEAD"], check=True,
+                            capture_output=True, text=True).stdout.strip()
+    reg = _registry(_endpoint())
+    reg["source"]["commit"] = commit
+    reg["source"]["git_remote"] = str(origin)
+    manifest = source.ensure_git_snapshot(tmp_path / "snapshot", registry_data=reg)
+    assert manifest["head"] == commit

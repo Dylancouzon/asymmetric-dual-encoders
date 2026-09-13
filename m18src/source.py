@@ -116,6 +116,8 @@ def _redact(value: Any) -> Any:
         for prefix in ("ghp_", "github_pat_", "gho_", "ghs_", "ghu_"):
             if prefix in value:
                 return "[REDACTED]"
+        if any(word + "=" in value.lower() for word in secret_words):
+            return "[REDACTED]"
     return value
 
 
@@ -523,6 +525,7 @@ def ensure_git_snapshot(root: Path | str = REPO, *, registry_data: Mapping[str, 
     remote, commit = str(source["git_remote"]), str(source["commit"])
     owned = _owned_root(root)
     checkout = owned / "repository"
+    fresh_clone = False
     def call(args: list[str]) -> str:
         result = run(args, check=False, capture_output=True, text=True)
         if result.returncode:
@@ -531,9 +534,12 @@ def ensure_git_snapshot(root: Path | str = REPO, *, registry_data: Mapping[str, 
     if not checkout.exists():
         checkout.parent.mkdir(parents=True, exist_ok=True)
         call(["git", "clone", "--no-checkout", remote, str(checkout)])
+        fresh_clone = True
     if not (checkout / ".git").exists():
         raise SourceError(f"repository destination is not a git checkout: {checkout}")
-    if call(["git", "-C", str(checkout), "status", "--porcelain"]):
+    # --no-checkout deliberately leaves a fresh clone's worktree empty (shown as deletions by
+    # status).  Only a pre-existing checkout can represent user edits that need protecting.
+    if not fresh_clone and call(["git", "-C", str(checkout), "status", "--porcelain"]):
         raise SourceError("refusing to alter a dirty pinned repository checkout")
     observed_remote = call(["git", "-C", str(checkout), "remote", "get-url", "origin"])
     if _safe_remote(observed_remote) != _safe_remote(remote):
