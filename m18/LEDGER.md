@@ -46,3 +46,29 @@
   `results/m18_rehearsal.json`. These fixture metrics are not quality observations.
 - A planning Astra review found the schedule/freeze/atomicity/protocol issues above. It reviewed
   no implementation and does not count as either pre-expensive-run implementation review.
+
+## 2026-09-13 — E2 first implementation review and remediation
+
+- The first Astra implementation review was a no-go for live acquisition/GPU work. It found that
+  title-only splitting could separate one artifact family and conceal duplicate-answer leakage;
+  broad answer cues admitted information requests; confirmation reads bypassed the one-read rule;
+  live payload edits broke byte-level REST reconciliation; and training/export did not bind every
+  realized array, tokenizer and table identity.
+- Remediation connected families across artifact IDs, exact answer digests, title/backport shapes
+  and explicit Qdrant thread links. Split reports now compute actual artifact/family/answer-digest
+  intersections. Generic log/detail requests are rejected, targets must be later answer-bearing
+  chunks, discussion objects are chunked before qrels, and verbatim documentation self-pairs were
+  removed.
+- REST reconciliation now compares the cutoff-admitted canonical identity set while recording
+  mutable payload changes and a growing post-cutoff tail; the first-pass bytes remain immutable.
+  Corpus parsing requires the combined source manifest and all page receipts in real execution,
+  and repository bytes are read from the pinned Git object rather than the worktree.
+- Confirmation can only be loaded inside a decision-locked, hash-verified, exclusive one-shot
+  transaction. Training resume binds ordered query IDs/student IDs, teacher vectors, document
+  bank, candidates, scores, aliases and initial rows. Snapshot load reconstructs and verifies the
+  concatenated table. Pair-aware batches co-locate supported alias views. Export binds variant,
+  tokenizer, preprocessing and float-table hashes and compares the actual torch training forward
+  path to serving.
+- The revised synthetic rehearsal passes 26 network-free tests. It now reports zero artifact,
+  connected-family, answer-digest and development/confirmation overlap; confirmation is exercised
+  only through the one-shot transaction. A second independent implementation review is pending.

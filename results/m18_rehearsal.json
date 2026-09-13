@@ -1,7 +1,7 @@
 {
  "_schema": "m18-rehearsal-v1",
  "bundle": "/home/dylan/asymetric-dual-encoders-m18/work/m18/rehearsal/bundle",
- "cache_artifact_sha256": "99ee658e51bddc6f1469387c8a025f7083748e3d4211b1f18cd87354f9e55e4b",
+ "cache_artifact_sha256": "84a0deb21c413b413fbace904713b1d5a37b2bab941758219cce273fdd848ebe",
  "confirmation_second_claim_refused": true,
  "corpus": {
   "_schema": "m18-corpus-manifest-v1",
@@ -11,8 +11,8 @@
    "issue_opening": 20,
    "repository_text": 2
   },
-  "commit": "b56280c3c0a663ceedb4fd3658fa319d30fbd204",
-  "corpus_sha256": "4aece022d64ac1b689646c3741ad5f55619b827d2d7694646374ec118df01d31",
+  "commit": "c590304d75f176359f6101542bfdcaf57b85dd09",
+  "corpus_sha256": "fd8d2690d9355cd7d2b64482e46dec17a5d171370988ba19fa2d0696c35f0517",
   "cutoff_utc": "2026-01-01T00:00:00Z",
   "documents": 42,
   "duplicates_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -28,7 +28,8 @@
    },
    "unique_issue_objects": 20
   },
-  "sha256": "7cca3e5a30225ea8b8d226ef99c96ec0c8886f74f8c18f758295f1afaf423b9f",
+  "sha256": "5f9d8f6cdb9ca3acc35c6c2fdb99c30f9aadefeee741f0c6d79184deae3974ba",
+  "source_manifest_sha256": "fixture",
   "versions": {
    "chunking": "m18-chunk-v1",
    "deduplication": "m18-dedup-v1",
@@ -46,28 +47,31 @@
  "paused_step": 2,
  "protocol": {
   "_schema": "m18-protocol-manifest-v1",
+  "answer_digest_overlap_train_vs_heldout": 0,
+  "artifact_overlap_train_vs_heldout": 0,
   "candidates": 20,
   "confirmation": {
    "count": 5,
    "qrels": "confirmation_qrels.json",
    "qrels_sha256": "76f5c23a5cd3e416d019e1ba7d17af933f22865e0eda801acc3e566f029d6411",
    "queries": "confirmation_queries.jsonl",
-   "queries_sha256": "6e18aca5f42141f32bded5ed27b085cb049a7f76ec4fa34732ee06b9adea9f4f"
+   "queries_sha256": "f73e9d06e2176948fc2ae1446494e6013f6341066d9758ff129b2834a29078cc"
   },
   "confirmation_sealed": true,
+  "corpus_sha256": "fd8d2690d9355cd7d2b64482e46dec17a5d171370988ba19fa2d0696c35f0517",
   "development": {
    "count": 10,
    "qrels": "development_qrels.json",
    "qrels_sha256": "27ea38121491e61bfafbfe8fb541d9f0da146a2d3d72da797fc4f312e1dd4d61",
    "queries": "development_queries.jsonl",
-   "queries_sha256": "a977a025b730053631681ce2696a577dde27609d17e86e7de6a6c9a37b806c23"
+   "queries_sha256": "67e4a3a3b601f59af07a2fec8abefe2f9cfd72b9ece771279594f46f644a418a"
   },
+  "development_confirmation_family_overlap": 0,
   "family_overlap_train_vs_heldout": 0,
-  "near_duplicate_overlap_train_vs_heldout": 0,
   "qrels_version": "m18-structural-maintainer-answer-v1",
   "query_token_overlap_with_answer": {
    "exact_query_substring_rate": 0.0,
-   "mean": 0.06796296296296296
+   "mean": 0.12153439153439154
   },
   "realized_strata": {
    "alias_jargon": {
@@ -98,13 +102,13 @@
   },
   "relevant_source_opening_self_hits": 0,
   "semantics": "held-out questions over complete pinned snapshot; not historical-as-of-question",
-  "sha256": "50e46d6c66c296db62b4c979bd5a088daf45fbbd4f083a581781c085da2fe49b",
+  "sha256": "83de03dee5a2105cd5a3f32bb5a8006fc8a2fe9483a6b60b0baccafb7d00dbc8",
   "split_version": "m18-temporal-family-v1",
   "structural_relevance": "only distinct maintainer answer/reply spans; thread siblings are not automatically relevant",
   "training_alias_views": 0,
-  "training_document_headings": 2,
-  "training_queries": 7,
-  "training_queries_sha256": "6366a79331a038e86a47af9ffd8984f670fa457616459da4ebacdf8093384ab1",
+  "training_document_headings": 0,
+  "training_queries": 5,
+  "training_queries_sha256": "3340a3396cf8ef102032973a3947425e6589511a55bb9f5865433ed5c585bfb6",
   "training_structural": 5
  },
  "resume_vs_uninterrupted_max_abs": 0.0,
@@ -112,8 +116,8 @@
  "synthetic": true,
  "uninterrupted_step": 4,
  "vocabulary_terms": [
-  "qdrant",
   "hnsw",
+  "qdrant",
   "500",
   "case",
   "v1.2",
@@ -121,5 +125,5 @@
   "number",
   "fails"
  ],
- "wall_clock_seconds": 0.887
+ "wall_clock_seconds": 0.929
 }
