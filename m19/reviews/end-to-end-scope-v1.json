@@ -1,0 +1,31 @@
+{
+  "_schema": "m19-review-scope-v1",
+  "files": {
+    "m19/inheritance-lock.json": "1244bacf28c9699560427a7f78a992bca6c195955e5202d3465e578f2e750ea5",
+    "m19/pool-pilot-lock-v1.json": "f4bc51f8c3f0ee7ded5a2c0936b58f8ba3c93cef3bc654dae66ac7823ad2845d",
+    "m19/query-split-seal-v1.json": "09f4f6439d0519eeb9037af472ab8151c7e58fd70ebc93f415df30e3222d736a",
+    "m19/registry.json": "3796b18c16215405137e9b6e5e2fa07df72e95b9d0f90362a4e3dcbe346df0fe",
+    "m19/term-roster-lock-v3.json": "916f4d3670c5b6aa3da4324c3c6e335d330ce53fa4549bfc7fcae93c2b9862cc",
+    "m19src/benchmark_serving.py": "4ccd051412c4d28891c54de6fed6fb662f4104eb81310b3d9b08552d34038107",
+    "m19src/build_candidate.py": "4c6b484435775e9da29fa7311f744153fd678d7efaadc2911de70c0dbea25795",
+    "m19src/common.py": "0f8cc7a74da31d103e59d2e0f380677180c6ec0db300b25dcb01727abc8c378b",
+    "m19src/confirmation.py": "c4c7206b6581e2025c286e22a3339213618baa28c09fe04ab9b15412f48f6caf",
+    "m19src/inherit.py": "71aacab86ca466aa91ad44e8154a288371a1c85b809bc54aa560ef851d2938a6",
+    "m19src/judgments.py": "f7a1df9827c6cbf3b02d006f0d4af53506746cf017d9bf80ab774064664a023b",
+    "m19src/metrics.py": "f10287b81a23f1efb867eed10933ee84ebe785a6d7edc47105828a21c9f3b582",
+    "m19src/pool_pilot.py": "67058a67c987ebdc457fdc2ecc01f3758423959180aa2c575a7b74113a2bf35c",
+    "m19src/queries.py": "b1b26ad45e9535c2ec39aa29deefb987d443f36a570c28fe958b3b079bc76908",
+    "m19src/rehearse.py": "2f06748ac37edbb9c3eb89abd6ea832a6511b34561eacb08bfd76f595595ee08",
+    "m19src/retrieval.py": "d70e92e3848ee444b17941ebba19bddc615094df2a56e20fb493547550b1d5b1",
+    "m19src/zero.py": "ea910af47bf22946f1e9706f295e07dafd9fbaf4030f1734a7a4bc6c736bad73",
+    "results/m19_algebra_gates.json": "79f3c96a7ed3cb0c868b7a022921d50100af9a02295019f13f457cd21860abcb",
+    "results/m19_candidate_build.json": "48c08fa0b0f6c127f4cd2cc248bab10baef9cf8aca84e826f72f12051631f584",
+    "results/m19_pool_pilot.json": "5f380b8e5f100554873d08cfb48f0b23d404dd8cdd119e1e7d709631f3553e66",
+    "results/m19_serving_receipt_t0_v2.json": "2be9bcd8ab4422f83a0400ce810ea08417e632249d6d6140b974f23f28195501"
+  },
+  "reviewed_commit": "b0faad1cea107eb81996736d5aebc054f3d6af9f",
+  "roles": [
+    "implementation",
+    "astra"
+  ]
+}
