@@ -180,7 +180,7 @@ def gh_api_all_pages(path: str, params: Mapping[str, Any], headers: Mapping[str,
                      run: Callable[..., Any] = subprocess.run) -> list[list[dict[str, Any]]]:
     """Use one gh process to follow Link cursors for the read-only reconciliation pass."""
     target = path + "?" + urlencode([(str(k), str(v)) for k, v in params.items()])
-    command = ["gh", "api", "--method", "GET", "--paginate", "--slurp", target]
+    command = ["gh", "api", "--method", "GET", "--paginate", target]
     for key, value in headers.items():
         command.extend(["-H", f"{key}: {value}"])
     completed = None
@@ -193,7 +193,15 @@ def gh_api_all_pages(path: str, params: Mapping[str, Any], headers: Mapping[str,
     if completed is None or completed.returncode:
         raise SourceError(f"gh paginated reconciliation failed for {path} after 4 attempts")
     try:
-        pages = json.loads(completed.stdout)
+        stream = completed.stdout.decode("utf-8")
+        decoder, pages, pos = json.JSONDecoder(), [], 0
+        while pos < len(stream):
+            while pos < len(stream) and stream[pos].isspace():
+                pos += 1
+            if pos >= len(stream):
+                break
+            value, pos = decoder.raw_decode(stream, pos)
+            pages.append(value)
     except (UnicodeDecodeError, json.JSONDecodeError) as e:
         raise SourceError(f"gh paginated reconciliation returned invalid JSON for {path}") from e
     if not isinstance(pages, list) or any(not isinstance(page, list) for page in pages):
