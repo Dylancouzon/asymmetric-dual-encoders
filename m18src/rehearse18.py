@@ -193,17 +193,22 @@ def build(root, seed=0, device="cpu", log=print):
                "inherited_scalars_sha256": sha_array(np.ones(base_n, np.float32))}
 
     def data():
-        return {"model": train.build_model(inherited, new_rows, fallback_id=0, device=device),
+        value = {"model": train.build_model(inherited, new_rows, fallback_id=0, device=device),
                 "lineage": lineage, "ids": ids, "teacher_q": teacher_q,
                 "bank": doc_vecs, "candidate_ids": arrays["candidate_ids"],
                 "teacher_scores": arrays["teacher_scores"],
-                "alias_pair_ids": arrays["alias_pair_ids"]}
+                "alias_pair_ids": arrays["alias_pair_ids"],
+                "query_ids": [q["query_id"] for q in train_rows]}
+        value["data_identity"] = train.training_data_identity(value)
+        return value
 
+    exemplar = data()
     cfg = train.RunCfg.from_registry(reg, "T0", seed=seed, device=device, rehearsal=True,
                                     tokenizer_sha256=tok_sha,
                                     preprocessing_sha256=preprocess.implementation_hash(),
                                     vocabulary_sha256=selection["vocabulary_sha256"],
                                     cache_artifact_sha256=sidecar["artifact_sha256"],
+                                    prepared_data_sha256=exemplar["data_identity"]["sha256"],
                                     run_id="m18-rehearsal-t0")
     paused = train.run(cfg, data(), root / "run-resumed", resume=True, log=log)
     cfg2 = copy.copy(cfg); cfg2.stop_after = reg["training"]["schedule_steps"]

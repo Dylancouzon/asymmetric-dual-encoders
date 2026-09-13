@@ -13,6 +13,7 @@ import json
 import os
 import shutil
 import time
+from collections import defaultdict
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -21,7 +22,7 @@ import torch
 import torch.nn.functional as F
 
 from common import (atomic_save_npz, admit_read, admit_write, registry, require_executable,
-                    sha_array, sha_file, sha_json, write_json)
+                    sha_array, sha_file, sha_json, sha_texts, write_json)
 
 EPS = 1e-6
 
@@ -47,6 +48,7 @@ class RunCfg:
     preprocessing_sha256: str = ""
     vocabulary_sha256: str = ""
     cache_artifact_sha256: str = ""
+    prepared_data_sha256: str = ""
 
     @classmethod
     def from_registry(cls, reg, variant="T0", seed=None, **over):
@@ -87,6 +89,7 @@ class RunCfg:
                   "new_rows_lr", "temperature", "cosine_weight", "listwise_weight",
                   "alias_weight", "checkpoint_steps", "tokenizer_sha256",
                   "preprocessing_sha256", "vocabulary_sha256", "cache_artifact_sha256")
+        fields = fields + ("prepared_data_sha256",)
         obj = {k: (list(getattr(self, k)) if k == "checkpoint_steps" else getattr(self, k))
                for k in fields}
         return {"fields": obj, "sha256": sha_json(obj)}
@@ -156,22 +159,25 @@ def load_warm_start(path=None, released_model=None, rehearsal=False):
     scalars = z["token_weights"].astype(np.float32)
     if scalars.shape != (rows.shape[0],) or not np.isfinite(scalars).all():
         raise SystemExit("M18 REFUSED: inherited scalar array is malformed")
-    effective = scalars[:, None] * rows
+    unfolded_effective = scalars[:, None] * rows
 
     release = Path(released_model or reg["models"]["zero_v1"]["source_path"]) / "model.npz"
     zr = np.load(admit_read(release))
     released = zr["rows_fp16"].astype(np.float32)
-    if effective.shape != released.shape:
+    if unfolded_effective.shape != released.shape:
         raise SystemExit("M18 REFUSED: unfolded and released v1 tables disagree on shape")
-    parity = float(np.abs(effective - released).max())
+    parity = float(np.abs(unfolded_effective - released).max())
     if parity > 5e-3:
         raise SystemExit(f"M18 REFUSED: unfolded→v1 row parity is {parity:.3e}")
     lineage = {"checkpoint": str(p), "checkpoint_sha256": got,
                "release_model_sha256": sha_file(release), "old_vocab": rows.shape[0],
                "dim": rows.shape[1], "effective_vs_release_fp16_max_abs": parity,
-               "inherited_rows_sha256": sha_array(effective),
+               "unfolded_effective_rows_sha256": sha_array(unfolded_effective),
+               # V0-Q's stronger contract: the actual frozen buffer is byte-for-byte the
+               # released fp16 row array promoted to float32, not a newly folded approximation.
+               "inherited_rows_sha256": sha_array(released),
                "inherited_scalars_sha256": sha_array(scalars)}
-    return effective, scalars, lineage
+    return released, scalars, lineage
 
 
 def build_model(inherited_effective, new_rows, fallback_id=101, device="cpu"):
@@ -224,6 +230,30 @@ def _batch(state, n, batch, seed):
     return np.asarray(picked, dtype=np.int64)
 
 
+def _pair_complete_batch(picked, pair_ids):
+    """Deterministically place the mate of every sampled alias view in the same batch."""
+    picked = list(map(int, picked))
+    by_pair = defaultdict(list)
+    for i, pid in enumerate(pair_ids):
+        if str(pid):
+            by_pair[str(pid)].append(i)
+    selected = set(picked)
+    replace = len(picked) - 1
+    for i in list(picked):
+        pid = str(pair_ids[i])
+        members = by_pair.get(pid, [])
+        if not pid or len(members) != 2 or all(m in selected for m in members):
+            continue
+        mate = members[0] if members[1] == i else members[1]
+        while replace >= 0 and (str(pair_ids[picked[replace]]) or picked[replace] == i):
+            replace -= 1
+        if replace < 0:
+            break
+        selected.discard(picked[replace]); picked[replace] = mate; selected.add(mate)
+        replace -= 1
+    return np.asarray(picked, dtype=np.int64)
+
+
 def _alias_slots(batch_global, pair_ids):
     positions = {}
     for slot, gi in enumerate(batch_global):
@@ -231,6 +261,23 @@ def _alias_slots(batch_global, pair_ids):
         if pid:
             positions.setdefault(pid, []).append(slot)
     return [tuple(v) for _, v in sorted(positions.items()) if len(v) == 2]
+
+
+def training_data_identity(data):
+    """Bind every aligned realization consumed by the optimizer, including row order."""
+    ids = [" ".join(map(str, row)) for row in data["ids"]]
+    parts = {
+        "query_ids_sha256": sha_texts([str(x) for x in data["query_ids"]]),
+        "student_ids_sha256": sha_texts(ids),
+        "teacher_q_sha256": sha_array(np.asarray(data["teacher_q"])),
+        "bank_sha256": sha_array(np.asarray(data["bank"])),
+        "candidate_ids_sha256": sha_array(np.asarray(data["candidate_ids"])),
+        "teacher_scores_sha256": sha_array(np.asarray(data["teacher_scores"])),
+        "alias_pair_ids_sha256": sha_texts([str(x) for x in data.get("alias_pair_ids", [])]),
+        "inherited_rows_sha256": sha_array(data["model"].inherited.detach().cpu().numpy()),
+        "initial_new_rows_sha256": sha_array(data["model"].new_rows.detach().cpu().numpy()),
+    }
+    return {"parts": parts, "sha256": sha_json(parts)}
 
 
 def _lr_factor(step, warmup, total):
@@ -277,6 +324,7 @@ def save_snapshot(root, model, cfg, step, lineage, initial_new_sha):
             "inherited_rows_sha256": sha_array(model.inherited.detach().cpu().numpy()),
             "inherited_scalars_sha256": lineage["inherited_scalars_sha256"],
             "new_rows_sha256": sha_array(new), "initial_new_rows_sha256": initial_new_sha,
+            "rows_sha256": sha_array(rows),
             "new_rows_changed": sha_array(new) != initial_new_sha}
     try:
         atomic_save_npz(stage / "table.npz", rows=rows,
@@ -297,15 +345,28 @@ def load_snapshot(path):
         raise SystemExit(f"M18 SNAPSHOT REFUSED: inherited rows changed in {p}")
     if sha_array(z["new_rows"]) != meta["new_rows_sha256"]:
         raise SystemExit(f"M18 SNAPSHOT REFUSED: new-row hash mismatch in {p}")
-    return z["rows"], meta
+    rows = np.concatenate([z["inherited"], z["new_rows"]], axis=0)
+    if sha_array(rows) != meta.get("rows_sha256") or not np.array_equal(rows, z["rows"]):
+        raise SystemExit(f"M18 SNAPSHOT REFUSED: concatenated table mismatch in {p}")
+    return rows, meta
 
 
 def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
     require_executable(registry(), cfg.rehearsal, what=cfg.run_id, training=True)
     cfg.validate()
+    required = ("tokenizer_sha256", "preprocessing_sha256", "vocabulary_sha256",
+                "cache_artifact_sha256", "prepared_data_sha256")
+    if not cfg.rehearsal and any(not getattr(cfg, key) for key in required):
+        raise SystemExit(f"M18 REFUSED: real training requires nonempty identities: {required}")
     out = Path(admit_write(out_dir))
     out.mkdir(parents=True, exist_ok=True)
     model: FrozenExtension = data["model"].to(cfg.device)
+    realized_data = training_data_identity(data)
+    declared_data = data.get("data_identity")
+    if not declared_data or declared_data.get("sha256") != realized_data["sha256"]:
+        raise SystemExit("M18 REFUSED: prepared training arrays do not match their identity")
+    if cfg.prepared_data_sha256 != realized_data["sha256"]:
+        raise SystemExit("M18 REFUSED: run config does not bind this prepared training data")
     start = model.trainable_start
     inherited_sha = sha_array(model.inherited.detach().cpu().numpy())
     if inherited_sha != data["lineage"]["inherited_rows_sha256"]:
@@ -349,7 +410,7 @@ def run(cfg: RunCfg, data, out_dir, resume=True, log=print):
     while state["step"] < cfg.stop_after:
         state["step"] += 1
         step = state["step"]
-        local = _batch(state, len(ids_all), cfg.batch, cfg.seed)
+        local = _pair_complete_batch(_batch(state, len(ids_all), cfg.batch, cfg.seed), pair_ids)
         slots = _alias_slots(local, pair_ids)
         ii = torch.as_tensor(local, dtype=torch.long, device=cfg.device)
         loss, parts = _losses(model, [ids_all[i] for i in local], teacher_q[ii], bank,
@@ -412,8 +473,17 @@ def main(argv=None):
     over = {"device": args.device}
     if args.stop_after is not None:
         over["stop_after"] = args.stop_after
-    cfg = RunCfg.from_registry(registry(), args.variant, seed=args.seed, **over)
     data = torch.load(admit_read(args.data), map_location="cpu", weights_only=False)
+    identity = training_data_identity(data)
+    if data.get("data_identity", {}).get("sha256") != identity["sha256"]:
+        raise SystemExit("M18 REFUSED: prepared data file failed identity verification")
+    manifest = data.get("run_identities", {})
+    over.update({"tokenizer_sha256": manifest.get("tokenizer_sha256", ""),
+                 "preprocessing_sha256": manifest.get("preprocessing_sha256", ""),
+                 "vocabulary_sha256": manifest.get("vocabulary_sha256", ""),
+                 "cache_artifact_sha256": manifest.get("cache_artifact_sha256", ""),
+                 "prepared_data_sha256": identity["sha256"]})
+    cfg = RunCfg.from_registry(registry(), args.variant, seed=args.seed, **over)
     run(cfg, data, args.out, resume=not args.no_resume)
 
 

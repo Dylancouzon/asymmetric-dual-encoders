@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 
 from common import (atomic_save_npz, admit_read, admit_write, freeze, registry, sha_array,
-                    sha_file, sha_json, write_json)
+                    sha_bytes, sha_file, sha_json, write_json)
 
 BUNDLE_FILES = ("model.npz", "config.json", "tokenizer.json", "provenance.json")
 FIXTURES = ("qdrant hnsw ef_construct", "CUDA_ERROR_OUT_OF_MEMORY", "grpc 500 port 6333",
@@ -76,6 +76,14 @@ def build_bundle(out_dir, rows, tokenizer, provenance, variant="T0",
     limits = check_table_limits(rows, reg, fixture=fixture)
     if tokenizer.get_vocab_size(with_added_tokens=True) != rows.shape[0]:
         raise SystemExit("M18 EXPORT REFUSED: tokenizer/table row count mismatch")
+    tokenizer_sha = sha_bytes(tokenizer.to_str().encode())
+    identity = dict(provenance).get("training_snapshot") or dict(provenance).get("table_identity")
+    if not fixture:
+        required = {"variant": variant, "tokenizer_sha256": tokenizer_sha,
+                    "preprocessing_sha256": preprocessing_sha256,
+                    "rows_sha256": sha_array(rows)}
+        if not isinstance(identity, dict) or any(identity.get(k) != v for k, v in required.items()):
+            raise SystemExit("M18 EXPORT REFUSED: table/tokenizer/variant/preprocessing identity mismatch")
     codes, scales = _quantize(rows)
     prep = _preprocessing_config(variant, preprocessing_sha256)
     try:
@@ -133,6 +141,13 @@ def gate_bundle(bundle, float_rows=None):
     tok = Tokenizer.from_file(str(admit_read(b / "tokenizer.json")))
     if tok.get_vocab_size(with_added_tokens=True) != cfg["vocab"]:
         raise SystemExit("M18 GATE REFUSED: tokenizer/table row mismatch")
+    identity = prov.get("training_snapshot") or prov.get("table_identity")
+    if not prov.get("fixture"):
+        expected = {"variant": cfg["variant"], "tokenizer_sha256": sha_file(b / "tokenizer.json"),
+                    "preprocessing_sha256": cfg["query_preprocessing"]["implementation_sha256"],
+                    "rows_sha256": prov.get("table_float32_sha256")}
+        if not isinstance(identity, dict) or any(identity.get(k) != v for k, v in expected.items()):
+            raise SystemExit("M18 GATE REFUSED: provenance identity does not bind bundle bytes")
     parity = loader_np.parity(b, texts=FIXTURES, float_rows=float_rows,
                               tol=float(registry()["serving"]["loader_parity_max_abs"]))
     if not parity["pass"]:
@@ -140,8 +155,31 @@ def gate_bundle(bundle, float_rows=None):
     qerr = parity.get("vs_exported_float_rows_max_abs", 0.0)
     if qerr > float(registry()["serving"]["int8_error_max_abs"]):
         raise SystemExit(f"M18 GATE REFUSED: int8 query error {qerr:.3e}")
-    return {"generated_hashes": got, "loader": parity,
+    training_parity = _training_forward_parity(b, float_rows, FIXTURES) if float_rows is not None else {}
+    if training_parity and training_parity["max_abs"] > float(registry()["serving"]["loader_parity_max_abs"]):
+        raise SystemExit("M18 GATE REFUSED: training-forward and serving float outputs differ")
+    return {"generated_hashes": got, "loader": parity, "training_forward": training_parity,
             "table": check_table_limits(z["rows_int8"], fixture=bool(prov.get("fixture")))}
+
+
+def _training_forward_parity(bundle, rows, texts):
+    """Compare the actual torch training forward rule with serving's float reference."""
+    import loader_np
+    import preprocess
+    import train
+    from tokenizers import Tokenizer
+    cfg = json.loads(admit_read(Path(bundle) / "config.json").read_text())
+    tok = Tokenizer.from_file(str(admit_read(Path(bundle) / "tokenizer.json")))
+    tok.enable_truncation(max_length=int(cfg["preproc"]["max_length"])); tok.no_padding()
+    variant = cfg["variant"]
+    ids = [preprocess.active_ids(t, tok, variant) for t in texts]
+    model = train.build_model(np.asarray(rows, np.float32), np.empty((0, rows.shape[1]), np.float32),
+                              fallback_id=int(cfg["fallback_token_id"]), device="cpu")
+    with __import__("torch").no_grad():
+        actual = model.forward_ids(ids).cpu().numpy()
+    expected = loader_np._reference_encode(np.asarray(rows, np.float32),
+                                            Path(bundle) / "tokenizer.json", cfg, texts, variant)
+    return {"max_abs": float(np.abs(actual - expected).max()), "queries": len(texts)}
 
 
 def main(argv=None):
