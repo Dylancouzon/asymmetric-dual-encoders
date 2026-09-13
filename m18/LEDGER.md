@@ -335,3 +335,12 @@
   registered early-halt condition is false and the fixed screen continues.
 - T2 changes tokenization for six of 100 development queries (6%, so it is not inert), but its
   step-0 metrics are exactly equal to T0. T1 changes zero training queries and remains skipped.
+
+## 2026-09-13 — E20 T0 first-seed screen complete
+
+- T0 resumed from step 500 to the unchanged 4,000-step schedule. Macro dense nDCG@10 deltas versus
+  v1 were +0.000779 at 250, +0.001465 at 500, +0.000923 at 1,000, +0.007488 at 2,000 and +0.007591
+  at 4,000. The dense margin is met at 2,000/4,000 without a clearly regressing stratum.
+- Fusion did not follow the dense gain. Its best macro nDCG@10 delta was +0.002953 at steps 250 and
+  500; steps 1,000/2,000/4,000 yielded +0.000245, +0.000245 and +0.000717. No T0 checkpoint meets
+  the required +0.010 fused margin, so none is eligible. T2 is the only remaining non-inert arm.
