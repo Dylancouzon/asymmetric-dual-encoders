@@ -13,6 +13,10 @@
  "natural_k8s_contexts": 1,
  "derived_k8s_contexts": 5,
  "distinct_k8s_source_documents": 6,
+ "realized_added_rows": 16,
+ "realized_k8s_selected": true,
+ "realized_eligible_queries_per_retained_arm": 148,
+ "unrelated_vocabulary_membership_changes": 0,
  "evidence_doc": "gh_opening:7967:chunk:5",
  "evidence_normalized_text_sha256": "43788910ab80cd700a7e0d8312c0a1865ffcf485d9015be3efe66cc29d263047",
  "heldout_identities_unchanged": {

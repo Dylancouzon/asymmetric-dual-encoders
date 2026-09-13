@@ -4,12 +4,12 @@
   "T0": "/home/dylan/asymetric-dual-encoders-m18/work/m18/prepared/bundles/V0-T0",
   "T2": "/home/dylan/asymetric-dual-encoders-m18/work/m18/prepared/bundles/V0-T2"
  },
- "candidate_cache_artifact_sha256": "2ed67d1b283a9f3b018d237bf42150f2fa6a5ecd53df43bd52fb0878f5bcb7b9",
+ "candidate_cache_artifact_sha256": "4296ed8773c46ae98aae499ce4873bd13b78a28468ea76b4e4ebda38b1bdea15",
  "candidate_cache_identity": {
   "parts": {
    "alias_manifest": {
-    "pair_ids_sha256": "e93a0be80d5086072b8365e07f98abfc37a9ae023aa29f59e932b71c75df1829",
-    "views_sha256": "f5ba6bdade565c1109109128afcd87feda807d0658195b498e7e095427152a98"
+    "pair_ids_sha256": "15c66305d0a2b53843184ff8ee3b14e5f532d812b0fad03fe0564ce497b80825",
+    "views_sha256": "36509359980eb6b01e3125bfd3572ccd9b3ad0b1baa8fb7018382ca004f196be"
    },
    "bank": {
     "dim": 1024,
@@ -44,14 +44,14 @@
     "rng_recipe_version": "m18-uniform-rng-v1",
     "seed": 18001
    },
-   "query_records_sha256": "f13831a7441a402949db0ea278cd7f3a24afeb071105ec048935554f99a4382a",
-   "raw_query_text_sha256": "6fd421e7f0fd9f71612d3e91e71c87ae70ce703b836108a0c1d0f31701a18d06",
+   "query_records_sha256": "22fd017dc176a85a4da68b88133c0ea7bc105f276c41d2409c3d9a0039209d2a",
+   "raw_query_text_sha256": "414ae61b9b4ab09b1bf866312efb0dc8c4e623788fc5b4a2ef616f3e43ae44f3",
    "source_split_manifest": {
     "buckets": {
-     "coverage": 142
+     "coverage": 148
     },
-    "families_sha256": "b9adbcecb52b6a7e094c8e6923e6a21bc76e3f60e4871e1839d2222e61422b5c",
-    "protocol_sha256": "483da449f81d3d016ead4415cd0bb1162c3542b9a94a32e0e96558379af7cc3d",
+    "families_sha256": "b214aac7f1810229f2be4105c8ed37fd09fe4a25e55a1c3904edb95402e5c6ad",
+    "protocol_sha256": "0f0a8942ebac663a81f07c8204351fa26065ee4c7fd29d2928fc08d016260d9c",
     "sources": [
      "qdrant-project"
     ]
@@ -78,43 +78,43 @@
     "vocab": 30522
    }
   },
-  "sha256": "5600e92f2dc0a8670ada3d2155f5cfca1f04a979919e1ea77c3b4cdad9b4bf7f"
+  "sha256": "a27a5f4451d66714ac9cbd17e84eca68f520157a100b891196c4ce12bcd6f49c"
  },
  "collision_audit_pass": true,
- "raw_training_queries": 780,
- "sha256": "f13b5a27adb1ea726449538eac4922a2281a3d035dcb21bd51d34d9e740e9ef5",
- "shared_cache_queries": 142,
+ "raw_training_queries": 785,
+ "sha256": "01d31b2ffd86a6ecd9f60560de4e855b956b40227394ae28fff038b62a99b8bf",
+ "shared_cache_queries": 148,
  "teacher_cache": {
   "_schema": "m18-stella-encode-v1",
   "combined": {
-   "bytes": 1597568,
+   "bytes": 1607808,
    "path": "vectors.f16.npy",
-   "sha256": "377bb01fd8c8e35d7f013f8ead1040b8198208042557768135add0e04bf6e1e1"
+   "sha256": "6b0c2db732ad4ae5ff7eb4206458526cc610cea752f731089f4ca59036be51ba"
   },
   "complete": true,
-  "elapsed_seconds_this_invocation": 0.016,
+  "elapsed_seconds_this_invocation": 6.299,
   "identity": {
    "dim": 1024,
    "max_length": 512,
    "model": "NovaSearch/stella_en_400M_v5",
-   "n": 780,
+   "n": 785,
    "prefix": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
    "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
    "shard_size": 1024,
    "store_dtype": "fp16",
-   "texts_sha256": "a4a9aee16d4a8a7fa47d9ad9b2cb39e7428b1a731035dce9d853480adb73677d"
+   "texts_sha256": "2802e366150e15f5f82212dfa57a5dad4c4c9b8b11570a7a63742095970d82fe"
   },
-  "identity_sha256": "3b00ea7d30035d161e6b428fb96c3663eeef550148c9aa3c5e2aee9a9ac1c6a3",
-  "peak_vram_bytes": 0,
-  "rss_high_water_kib": 521196,
+  "identity_sha256": "9a405f5a02315d1461e593637455b73b220d9d220ea87a6eb490c277895022d2",
+  "peak_vram_bytes": 1595960832,
+  "rss_high_water_kib": 3308672,
   "shards": {
    "000000": {
-    "bytes": 1597568,
-    "hi": 780,
+    "bytes": 1607808,
+    "hi": 785,
     "lo": 0,
-    "sha256": "377bb01fd8c8e35d7f013f8ead1040b8198208042557768135add0e04bf6e1e1",
+    "sha256": "6b0c2db732ad4ae5ff7eb4206458526cc610cea752f731089f4ca59036be51ba",
     "shape": [
-     780,
+     785,
      1024
     ]
    }
@@ -122,17 +122,17 @@
  },
  "variants": {
   "T0": {
-   "eligible_queries": 142,
+   "eligible_queries": 148,
    "path": "/home/dylan/asymetric-dual-encoders-m18/work/m18/prepared/prepared_T0.pt",
-   "sha256": "cab91a2453b25ca348cdd9ec519bdb63ac761b2dc75714f810ee0630ed5a1691",
-   "shared_positions_sha256": "cc6c8a2d778da1b02d6023d8072ff28c656e5c39087ef8427bc2c8a284159e73"
+   "sha256": "030bb57ea688ed90ccb6ec9ce98f7c18770b6c248553205dfed17a29d7a94ca8",
+   "shared_positions_sha256": "3ead98302bb549991fde50da31009db7485ca23b72f47bbaa1537707c39b538b"
   },
   "T2": {
-   "eligible_queries": 142,
+   "eligible_queries": 148,
    "path": "/home/dylan/asymetric-dual-encoders-m18/work/m18/prepared/prepared_T2.pt",
-   "sha256": "2244e5fa5fa4559d3e181124197c75dd350e06d9a46cc276c72685078db990cc",
-   "shared_positions_sha256": "cc6c8a2d778da1b02d6023d8072ff28c656e5c39087ef8427bc2c8a284159e73"
+   "sha256": "609c0ac985ce20d7637ace23a9f050e8ca5e67c32978b24344b3dec76ebf98be",
+   "shared_positions_sha256": "3ead98302bb549991fde50da31009db7485ca23b72f47bbaa1537707c39b538b"
   }
  },
- "vocabulary_manifest_sha256": "2b501a9225391f282ca7c244f50a2d762245c2c3aefc74090a3e08ce02e8509d"
+ "vocabulary_manifest_sha256": "3370b236f9f4f700810598dc711437e353253da03e74ccd6d22fa3e48668f36a"
 }

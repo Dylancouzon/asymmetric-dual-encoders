@@ -18,8 +18,9 @@ of each query-bearing source object is now excluded with compensating overfetch.
 The full 79,269-document Stella/BM25 index is complete. The first baseline read found measurable
 Stella headroom and is preserved. Before training, the owner approved a narrow CTO-requested `k8s`
 amendment: five deterministic, source-evidenced teacher-only substitutions augment one natural
-training occurrence. No qrels or held-out rows change. The old lock/preparation are archived; the
-revised 785-view protocol is staged and its caches, vocabulary, V0 bundles and execution lock are
-being rebuilt. No real training has started.
+training occurrence. No qrels or held-out rows changed. Fresh preparation now selects `k8s` as the
+sixteenth exact row and yields 148 eligible T0/T2 queries; T1 remains inert. The old lock and
+preparation are archived. The revised execution lock and V0 baseline are next. No real training has
+started.
 
 Pointers: `instructions-m18.md`, `m18/registry.json`, `m18/LEDGER.md`, `m18/CODEMAP.md`.

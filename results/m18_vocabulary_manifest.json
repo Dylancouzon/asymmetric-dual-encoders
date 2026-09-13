@@ -1,6 +1,6 @@
 {
  "_schema": "m18-vocabulary-manifest-v1",
- "added_rows_t0": 15,
+ "added_rows_t0": 16,
  "base_vocab": 30522,
  "compositions": [
   {
@@ -178,6 +178,19 @@
     1
    ],
    "piece_ids": [
+    1047,
+    2015,
+    2620
+   ],
+   "term": "k8s"
+  },
+  {
+   "counts": [
+    1,
+    1,
+    1
+   ],
+   "piece_ids": [
     2063,
     8370,
     23809
@@ -197,10 +210,10 @@
   "unfolded_effective_rows_sha256": "1a4dc574093158dcf17e6dec7405d77e4ae5f12b9b80348cba435f33e49d05fe"
  },
  "placeholder_rows_t1": [],
- "sha256": "2b501a9225391f282ca7c244f50a2d762245c2c3aefc74090a3e08ce02e8509d",
+ "sha256": "3370b236f9f4f700810598dc711437e353253da03e74ccd6d22fa3e48668f36a",
  "table_bytes": {
-  "T0": 31392036,
-  "T2": 31392036
+  "T0": 31393064,
+  "T2": 31393064
  },
  "terms": {
   "caps": {
@@ -1187,16 +1200,16 @@
     "1.6.0",
     "1.7.0",
     "lrs",
+    "std::slice::from_raw_parts",
     "architectures",
     "arm64/amd64",
-    "std::slice::from_raw_parts",
     "hpa",
     "cert",
     "reloading",
     "rename",
+    "mmap_threshold",
     "amd64",
     "xbuild",
-    "mmap_threshold",
     "cwe-22",
     "wait_for_consensus",
     "p2p",
@@ -1223,11 +1236,10 @@
     "pointers",
     "write-locked",
     "sled",
-    "pvc",
     "242be88",
     "b8b0918",
-    "hnsw_incremental_build",
     "recursively",
+    "hnsw_incremental_build",
     "local-shard",
     "refactoring",
     "universal-search",
@@ -1280,12 +1292,13 @@
     "specifying",
     "cwe-200",
     "refactors",
-    "3323",
-    "simplify",
     "callback",
     "read_batch",
+    "3323",
+    "simplify",
     "deb",
     "unquoted",
+    "pvc",
     "proxies",
     "point_to_doc",
     "populate",
@@ -1301,8 +1314,8 @@
     "lke",
     "gke",
     "write-amplification-factor",
-    "utils",
     "outputtoosmall",
+    "utils",
     "1000.0",
     "hnsw_config.max_indexing_threads",
     "oom",
@@ -1312,10 +1325,10 @@
     "universalreadfileops",
     "dpo",
     "propagate",
-    "traversal",
     "collection_hardware_metric_cpu",
     "duplicates",
     "telegraf",
+    "traversal",
     "msrv",
     "filtrable_hnsw_test::test_filterable_hnsw",
     "rwr",
@@ -1335,7 +1348,6 @@
     "test_triple_replication.py",
     "payload_storage_enum::tests::test_get_storage_size",
     "api_key",
-    "k8s",
     "liveness",
     "probes",
     "test_struct_payload_index",
@@ -1387,8 +1399,8 @@
     "pre-encoded",
     "f16",
     "parameterized",
-    "so_peerpidfd",
     "self-hosted",
+    "so_peerpidfd",
     "1371",
     "read_consistency",
     "diff",
@@ -1423,8 +1435,8 @@
     "arn",
     "l1",
     "balancer",
-    "in-memory",
     "duplicated",
+    "in-memory",
     "space-amplification-factor",
     "2022",
     "sc2046",
@@ -1433,8 +1445,8 @@
     "ecs",
     "efs",
     "renders",
-    "congruential",
     "cached",
+    "congruential",
     "l2",
     "reader-writer-reader",
     "filter-deleted",
@@ -1522,10 +1534,10 @@
    {
     "abbreviation": false,
     "distinct_source_documents": 30,
-    "distinct_training_contexts": 30,
+    "distinct_training_contexts": 33,
     "reason": "ranked_supported",
-    "residual": 0.2975016514460246,
-    "score": 1.0216168643788484,
+    "residual": 0.29582756035255664,
+    "score": 1.015868056984737,
     "term": "qdrant"
    },
    {
@@ -1533,8 +1545,8 @@
     "distinct_source_documents": 15,
     "distinct_training_contexts": 15,
     "reason": "ranked_supported",
-    "residual": 0.2803245981534322,
-    "score": 0.7772248194066047,
+    "residual": 0.28031712770462036,
+    "score": 0.7772041069244789,
     "term": "shard"
    },
    {
@@ -1542,8 +1554,8 @@
     "distinct_source_documents": 9,
     "distinct_training_contexts": 9,
     "reason": "ranked_supported",
-    "residual": 0.32222674952612984,
-    "score": 0.7419545100227928,
+    "residual": 0.3222188088628981,
+    "score": 0.741936225970007,
     "term": "grpc"
    },
    {
@@ -1551,8 +1563,8 @@
     "distinct_source_documents": 11,
     "distinct_training_contexts": 11,
     "reason": "ranked_supported",
-    "residual": 0.2912763032046231,
-    "score": 0.7237944227588338,
+    "residual": 0.29126309806650336,
+    "score": 0.7237616092233087,
     "term": "snapshot"
    },
    {
@@ -1560,8 +1572,8 @@
     "distinct_source_documents": 5,
     "distinct_training_contexts": 5,
     "reason": "ranked_supported",
-    "residual": 0.3924079418182373,
-    "score": 0.7031006455531184,
+    "residual": 0.392392897605896,
+    "score": 0.7030736899431987,
     "term": "deps"
    },
    {
@@ -1569,8 +1581,8 @@
     "distinct_source_documents": 5,
     "distinct_training_contexts": 5,
     "reason": "ranked_supported",
-    "residual": 0.3883848309516907,
-    "score": 0.6958921985622292,
+    "residual": 0.38837265968322754,
+    "score": 0.6958703905767077,
     "term": "json"
    },
    {
@@ -1578,8 +1590,8 @@
     "distinct_source_documents": 12,
     "distinct_training_contexts": 12,
     "reason": "ranked_supported",
-    "residual": 0.2698889225721359,
-    "score": 0.6922514185373865,
+    "residual": 0.26989853878815967,
+    "score": 0.6922760836444978,
     "term": "flaky"
    },
    {
@@ -1587,8 +1599,8 @@
     "distinct_source_documents": 10,
     "distinct_training_contexts": 10,
     "reason": "ranked_supported",
-    "residual": 0.2876927137374878,
-    "score": 0.6898569982896569,
+    "residual": 0.28768778443336485,
+    "score": 0.6898451783346022,
     "term": "docker"
    },
    {
@@ -1596,8 +1608,8 @@
     "distinct_source_documents": 5,
     "distinct_training_contexts": 5,
     "reason": "ranked_supported",
-    "residual": 0.3770970344543457,
-    "score": 0.675667182301392,
+    "residual": 0.3770955324172974,
+    "score": 0.6756644910122875,
     "term": "kubernetes"
    },
    {
@@ -1605,8 +1617,8 @@
     "distinct_source_documents": 11,
     "distinct_training_contexts": 11,
     "reason": "ranked_supported",
-    "residual": 0.2552202885801142,
-    "score": 0.6341985922535383,
+    "residual": 0.2552250081842596,
+    "score": 0.6342103200292635,
     "term": "hnsw"
    },
    {
@@ -1614,8 +1626,8 @@
     "distinct_source_documents": 7,
     "distinct_training_contexts": 7,
     "reason": "ranked_supported",
-    "residual": 0.28258706842150005,
-    "score": 0.5876232892171893,
+    "residual": 0.2825747898646763,
+    "score": 0.5875977566760582,
     "term": "config"
    },
    {
@@ -1623,8 +1635,8 @@
     "distinct_source_documents": 5,
     "distinct_training_contexts": 5,
     "reason": "ranked_supported",
-    "residual": 0.3148799419403076,
-    "score": 0.5641891176415263,
+    "residual": 0.3148446798324585,
+    "score": 0.5641259364258827,
     "term": "s3"
    },
    {
@@ -1632,8 +1644,8 @@
     "distinct_source_documents": 7,
     "distinct_training_contexts": 7,
     "reason": "ranked_supported",
-    "residual": 0.25551959446498324,
-    "score": 0.5313380594436712,
+    "residual": 0.25551999466759817,
+    "score": 0.5313388916416137,
     "term": "turboquant"
    },
    {
@@ -1641,21 +1653,30 @@
     "distinct_source_documents": 6,
     "distinct_training_contexts": 6,
     "reason": "ranked_supported",
-    "residual": 0.2720259130001068,
-    "score": 0.5293379849129455,
+    "residual": 0.27200597524642944,
+    "score": 0.5292991878357154,
     "term": "arm64"
+   },
+   {
+    "abbreviation": true,
+    "distinct_source_documents": 6,
+    "distinct_training_contexts": 6,
+    "reason": "ranked_supported",
+    "residual": 0.2526688774426778,
+    "score": 0.4916709329661198,
+    "term": "k8s"
    },
    {
     "abbreviation": false,
     "distinct_source_documents": 5,
     "distinct_training_contexts": 5,
     "reason": "ranked_supported",
-    "residual": 0.2583455443382263,
-    "score": 0.4628930754008933,
+    "residual": 0.2583546280860901,
+    "score": 0.46290935129214433,
     "term": "gridstore"
    }
   ],
-  "vocabulary_sha256": "70e08cabb3af769fb8285c45779edaf9aadcffb36a17b298f97e6575c1f579f1"
+  "vocabulary_sha256": "44eedd04c1cf8f4ff36cab7131267af113a12743fc0f997e65951a29df9845ce"
  },
  "tokenization_before_after": [
   {
@@ -1810,6 +1831,17 @@
     30536
    ],
    "before_ids": [
+    1047,
+    2620,
+    2015
+   ],
+   "term": "k8s"
+  },
+  {
+   "after_ids": [
+    30537
+   ],
+   "before_ids": [
     8370,
     23809,
     2063
@@ -1820,14 +1852,14 @@
  "tokenizers": {
   "T0": {
    "path": "/home/dylan/asymetric-dual-encoders-m18/work/m18/prepared/vocabulary/tokenizer_t0.json",
-   "sha256": "c78409c58c2348b0e19f287bf928af33c775750020bc38c3f1d71485f0e2ffaa",
-   "vocab": 30537
+   "sha256": "6919af1c2cb94479ea997d00a600d35f219e83ffd32e54a9321ef27bf48a9d43",
+   "vocab": 30538
   },
   "T2": {
    "path": "/home/dylan/asymetric-dual-encoders-m18/work/m18/prepared/vocabulary/tokenizer_t0.json",
-   "sha256": "c78409c58c2348b0e19f287bf928af33c775750020bc38c3f1d71485f0e2ffaa",
-   "vocab": 30537
+   "sha256": "6919af1c2cb94479ea997d00a600d35f219e83ffd32e54a9321ef27bf48a9d43",
+   "vocab": 30538
   }
  },
- "training_queries": 780
+ "training_queries": 785
 }

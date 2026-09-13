@@ -263,3 +263,14 @@
   confirmation query/qrel hashes are byte-identical to the original protocol, all leakage counts
   remain zero, and confirmation content remains unread. Vocabulary, caches, prepared arms, V0
   bundles and their baseline will be rebuilt under fresh identities before training.
+
+## 2026-09-13 — E14 amended preparation complete
+
+- Fresh preparation under the amended protocol encoded all 785 raw training views and rebuilt the
+  candidate cache, prepared arms and V0 bundles without reusing pre-amendment artifacts. The shared
+  eligible set grew from 142 to 148 queries.
+- `k8s` is selected as the sixteenth exact row with six distinct source documents and six contexts:
+  one natural and five source-evidenced augmented views. All original 15 terms remain selected;
+  no unrelated vocabulary row changed membership. T0 and T2 float tables are 31,393,064 bytes.
+- T1 still transforms zero of 785 training queries and remains skipped. The amended collision
+  audit passes, and all 47 network-free tests pass.
