@@ -318,3 +318,20 @@
   pre-training execution lock, SHA-256
   `3251a72c573d171cbb6544eb83ea10052beb29a744e883498e48122de52754da`. The superseded amended lock
   remains at `m18/execution-lock.pre-batch-fix.json`; no optimizer step preceded this correction.
+
+## 2026-09-13 — E19 T0 step-500 diagnostic passes
+
+- The first real optimizer run reached the registered step-500 pause in 179.236 seconds with peak
+  CUDA allocation 725,551,616 bytes. Loss fell from 0.56220 at step 1 to 0.49276 at 250 and
+  0.42261 at 500; every inherited-row hash remained unchanged. Across 500 steps, 256 slots held
+  140–148 unique queries (mean 147.496), maximum multiplicity three, and zero alias pairs as
+  expected from the prepared-pool audit.
+- All step-0/250/500 exports pass tokenizer/table integrity, NumPy loader parity (zero loader error),
+  training-forward parity (maximum absolute error `1.49e-8`) and int8 error (maximum `8.27e-4`).
+- Macro nDCG@10 progressed from 0.087336 at step 0 to 0.088115 at 250 and 0.088801 at 500 for
+  dense retrieval. DBSF progressed from 0.103431 to 0.106384 at both trained checkpoints. The
+  respective step-500 deltas versus v1 are +0.001465 dense and +0.002953 fused. They do not yet
+  meet final eligibility margins, but both trained checkpoints are above—not below—step 0, so the
+  registered early-halt condition is false and the fixed screen continues.
+- T2 changes tokenization for six of 100 development queries (6%, so it is not inert), but its
+  step-0 metrics are exactly equal to T0. T1 changes zero training queries and remains skipped.

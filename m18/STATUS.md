@@ -23,7 +23,8 @@ sixteenth exact row and yields 148 eligible T0/T2 queries; T1 remains inert. The
 preparation are archived and the changed V0 baseline has been read. A pre-optimizer review retained
 batch 256 with the existing deterministic cross-epoch sampler and corrected duplicate alias-pair
 handling; the realized alias-consistency loss is inactive because no complete pair survives the
-trainable-query filter. The corrected trainer is being re-locked before the T0 step-500 diagnostic.
-No optimizer step has run and confirmation remains unread.
+trainable-query filter. T0 passed its step-500 diagnostic with positive dense and fused movement,
+so the fixed T0/T2 checkpoint screen is proceeding. T1 is skipped as inert. Confirmation remains
+unread.
 
 Pointers: `instructions-m18.md`, `m18/registry.json`, `m18/LEDGER.md`, `m18/CODEMAP.md`.
