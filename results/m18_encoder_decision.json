@@ -1,0 +1,41 @@
+{
+ "_schema": "m18-encoder-decision-v1",
+ "outcome": "ENCODER_NO_IMPROVEMENT",
+ "selected_bundle": {
+  "name": "zero_v1",
+  "path": "/home/dylan/asymetric-dual-encoders/work/release/zero-v1",
+  "model_sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
+  "tokenizer_sha256": "997eaeff157a7d4db899b8f2278ad3db6e323e609ae956b9c5035550f581eeee",
+  "config_sha256": "fd784397925e9ec32b6f1412af85b46faea79bb618b17197dc6d3a0068669636"
+ },
+ "selection_metric": "fused_ndcg_at_10",
+ "eligibility_thresholds": {
+  "dense_delta_min": 0.005,
+  "fused_delta_min": 0.01,
+  "variant_replacement_fused_delta_min": 0.005
+ },
+ "observed_best": {
+  "dense": {"candidate": "T0-step4000", "delta": 0.007591041912759868},
+  "fused": {"candidate": "T0-step250", "tied_candidate": "T0-step500", "delta": 0.002952562372739414}
+ },
+ "second_seed": "not_applicable_no_first_seed_candidate_met_both_practical_margins",
+ "confirmation_purpose": "one-shot absolute project-memory system audit; never reconsider ineligible checkpoints",
+ "execution_lock_sha256": "3251a72c573d171cbb6544eb83ea10052beb29a744e883498e48122de52754da",
+ "index_manifest_sha256": "037a9e3f5ccf7be1264ba50f427d6f062bc6e2cdfbaeeaa2c538ef7c23a11025",
+ "protocol_manifest_sha256": "0f0a8942ebac663a81f07c8204351fa26065ee4c7fd29d2928fc08d016260d9c",
+ "evaluation_recipe_sha256": "43a7abfbcd646322f732919ece6e8e361d3eb8ec84d57b1bd18c6921a0cbf96a",
+ "development_evidence": [
+  {"path": "results/m18_development_baselines.json", "sha256": "e495b1f856b859fa40808c83a6b24e7c494ce5e2325d4711b8d9fcacbd90ca02"},
+  {"path": "results/m18_t0_screen.json", "sha256": "12a4a72f460b01360cf820f1ba4c4b46e39db32d9f054b21ad49a9d6410ff5d7"},
+  {"path": "results/m18_t2_screen.json", "sha256": "5055e3c19e2642e99a0b4c552da75090fd362a468c28a9862d8f3e2a89528730"},
+  {"path": "results/m18_step500_parity.json", "sha256": "a623d14ba7085155f54831b79825b98493462d0d0a535d508a75f0a6be55aba4"}
+ ],
+ "report_only_unselected_checkpoint": {
+  "name": "T0-step250",
+  "reason": "earliest checkpoint tied for best first-seed primary fused metric; cannot affect eligibility or deployment",
+  "path": "work/m18/runs/T0-s18001/bundles/step_000250",
+  "model_sha256": "477b8f04eed9c9c4375d82d1db32229d0b4c52de08bfd323b937d13f23437f16",
+  "tokenizer_sha256": "6919af1c2cb94479ea997d00a600d35f219e83ffd32e54a9321ef27bf48a9d43",
+  "config_sha256": "2756d44bee2a1329fe5f374afaa8fd98691cb9389b67f084082c3e24b70dfabb"
+ }
+}

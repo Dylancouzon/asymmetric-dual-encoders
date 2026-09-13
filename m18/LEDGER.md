@@ -235,9 +235,10 @@
 - The first locked baseline read completed before student training. Equal-weight stratum-macro
   nDCG@10 was 0.109231 for BM25, 0.087336 for released Zero v1 dense, 0.103431 for v1+DBSF,
   0.087336 for V0-T0 dense, 0.103431 for V0-T0+DBSF, 0.136560 for Stella dense and 0.140992 for
-  Stella+DBSF. V0-T0 was exactly equal to v1 because none of the 15 initially added rows occurred
-  in the 100 development queries. Stella exceeded v1 by 0.049224 dense and 0.037561 fused,
-  demonstrating headroom for the bounded student experiment.
+  Stella+DBSF. V0-T0's observed ranking metrics were exactly equal to v1 even though 28 of 100
+  queries contain an added token; the parity receipt separately verifies the other 72 unchanged-
+  token queries. Stella exceeded v1 by 0.049224 dense and 0.037561 fused, demonstrating headroom
+  for the bounded student experiment.
 - Query-bearing source chunks appeared in the unfiltered top ten for 99–100% of queries, confirming
   that the registered source-object exclusion is material. The report measures metrics only after
   excluding all such chunks.
@@ -354,3 +355,17 @@
   `ENCODER_NO_IMPROVEMENT`, with released v1 retained in the hybrid project-memory system. A second
   seed is not launched because there is no eligible trained form to confirm. Astra is independently
   auditing this decision before the confirmation recipe is locked.
+
+## 2026-09-13 — E22 encoder decision independently audited
+
+- Astra verified every eligibility comparison, checkpoint gate and execution identity and issued
+  GO for released v1 with `ENCODER_NO_IMPROVEMENT`. V0 has zero deltas; every trained form misses
+  the fused margin; no stratum interval is wholly below zero; and no second seed is applicable
+  because no first-seed trained form survives the practical screens.
+- T1 changes 0/100 development queries. T2 changes six at step 0 and produces different vectors
+  from T0 for 29 queries at step 4,000, but every registered per-query ranking metric is equal;
+  this is a genuine no-effect result rather than a shared-bundle error.
+- `results/m18_encoder_decision.json` selects the exact released-v1 model, tokenizer and config
+  hashes and binds the execution lock, index, protocol, evaluation recipe and development evidence.
+  The confirmation CLI now verifies that binding before it can claim the sole read. T0 step 250 is
+  predeclared only for the report-only bare-term comparison and cannot affect deployment.

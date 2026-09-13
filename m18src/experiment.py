@@ -11,7 +11,7 @@ import numpy as np
 import evaluate
 import protocol
 import system
-from common import REPO, WORK, admit_read, registry, sha_file, write_json
+from common import M18, REPO, WORK, admit_read, registry, sha_file, sha_json, write_json
 
 
 def _encoder(path):
@@ -91,6 +91,38 @@ def _bundle_args(values):
     return out
 
 
+def _verify_confirmation_decision(decision, name, bundle):
+    """Bind the one-shot read to the selected bytes and every evaluation identity."""
+    if decision.get("_schema") != "m18-encoder-decision-v1":
+        raise SystemExit("M18 CONFIRMATION REFUSED: unknown decision schema")
+    selected = decision.get("selected_bundle", {})
+    if name != selected.get("name"):
+        raise SystemExit("M18 CONFIRMATION REFUSED: CLI bundle name differs from decision")
+    root = Path(bundle).resolve()
+    if root != Path(selected.get("path", "")).resolve():
+        raise SystemExit("M18 CONFIRMATION REFUSED: CLI bundle path differs from decision")
+    for filename, key in (("model.npz", "model_sha256"),
+                          ("tokenizer.json", "tokenizer_sha256"),
+                          ("config.json", "config_sha256")):
+        if sha_file(root / filename) != selected.get(key):
+            raise SystemExit(f"M18 CONFIRMATION REFUSED: selected {filename} hash changed")
+    if sha_file(M18 / "execution-lock.json") != decision.get("execution_lock_sha256"):
+        raise SystemExit("M18 CONFIRMATION REFUSED: execution lock differs from decision")
+    if sha_file(REPO / "results/m18_index_manifest.json") != decision.get("index_manifest_sha256"):
+        raise SystemExit("M18 CONFIRMATION REFUSED: index manifest differs from decision")
+    if sha_file(REPO / "results/m18_protocol_manifest.json") != decision.get("protocol_manifest_sha256"):
+        raise SystemExit("M18 CONFIRMATION REFUSED: protocol manifest differs from decision")
+    reg = registry()
+    recipe = {"retrieval": reg["retrieval"], "evaluation": reg["evaluation"],
+              "serving": reg["serving"]}
+    if sha_json(recipe) != decision.get("evaluation_recipe_sha256"):
+        raise SystemExit("M18 CONFIRMATION REFUSED: evaluation recipe differs from decision")
+    for record in decision.get("development_evidence", []):
+        if sha_file(REPO / record["path"]) != record["sha256"]:
+            raise SystemExit("M18 CONFIRMATION REFUSED: development evidence changed")
+    return True
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest="command", required=True)
@@ -108,6 +140,7 @@ def main(argv=None):
     else:
         decision = json.loads(admit_read(args.decision).read_text())
         name, path = args.bundle.split("=", 1)
+        _verify_confirmation_decision(decision, name, path)
         bundles = _bundle_args([args.bundle])
         result = protocol.run_confirmation(decision,
             lambda rows, qrels: evaluate_rows(rows, qrels, bundles, include_stella=False,
