@@ -1,0 +1,120 @@
+{
+  "_schema": "m19-serving-benchmark-v2",
+  "gpu_peak_bytes": 333899776,
+  "host": {
+    "gpu": "NVIDIA GeForce RTX 3080",
+    "node": "Str0keWtf",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.43"
+  },
+  "inputs": {
+    "bundle_identity_sha256": "b25a5fcb019f19c3bd48ba82f6fa05b9f7a64b74ff19a8cc1d83884fe8f6ae0d",
+    "candidate_build_sha256": "48c08fa0b0f6c127f4cd2cc248bab10baef9cf8aca84e826f72f12051631f584",
+    "development_queries_sha256": "8317a85b9c5969be44330a5bd181e9df357d3657c9b3904ba8462e6b7d05f72f",
+    "index_inputs_sha256": {
+      "bm25_data": "2e1e5550edd1fbb7177a6ce94c4a1d4444f80168a9e515f9ce0b321778fb2398",
+      "bm25_indices": "2d99baa326b82c0702b9c72be8f5b64a576b727fc1852da65cb2d3540e465b2c",
+      "bm25_indptr": "e0c8e75804198f64f1c41db7ea31a9693ccfa73c3b1c341e1bac18e3041244e5",
+      "bm25_params": "3075fb8ccf7bad6f4f34094e2703d97df5221612193be6d46f72f378f9d2ad9f",
+      "bm25_vocab": "6b0c6092bef6ed07067d138d007632a2795a0b91d163899c92bcd99044ba8f21",
+      "doc_ids": "85fac5a24e5714281c0cc4046c4b2971b8a28d6c553ea8896b21c3cf80cbb939",
+      "document_vectors": "3422ddccae17df01bf85a375c3cb4815a0e86e8d3447f8be0cfe46583ef7a10e",
+      "index_corpus_jsonl": "0cede39eb47b5680ef0f560917bd93ec78d02ac0e607ae0c4209d98f4430f394"
+    },
+    "inheritance_identity_sha256": "de6d89676edd6b33e97aad08c1b28dce638c6c59c00f2e39a16f827ca84791bb",
+    "query_seal_sha256": "09f4f6439d0519eeb9037af472ab8151c7e58fd70ebc93f415df30e3222d736a",
+    "registry_sha256": "3796b18c16215405137e9b6e5e2fa07df72e95b9d0f90362a4e3dcbe346df0fe",
+    "roster_identity_sha256": "8170f9b0432d4b7460601e1dbf39536d99b1e4af026d9a3afef649a9c89ef892"
+  },
+  "loader_parity_max_abs": 0.0,
+  "no_match_ranking_parity": true,
+  "official": false,
+  "query_count": 10,
+  "query_sequence_sha256": "8d0c43fa50253924e7e4110870ed986446d1f90cdb751b7b649a01e9260b33da",
+  "ratios": {
+    "encoder_median": 0.9048822229627209,
+    "encoder_median_additive_ms": -0.014700500000000005,
+    "encoder_p95": 0.9838788647422325,
+    "encoder_p95_additive_ms": -0.003190550000000014,
+    "end_to_end_median": 0.992163985247308,
+    "end_to_end_p95": 0.9487084685514624
+  },
+  "released_loader_parity_max_abs": 2.2351741790771484e-08,
+  "repetitions": 1,
+  "route_semantics": {
+    "artifact_depth": 100,
+    "dense_dtype": "float32",
+    "exclusion_before_truncation": true,
+    "passage_depth": 500,
+    "tie_break": "descending score then ascending passage_id"
+  },
+  "rss_high_water_kib": 1699208,
+  "summary": {
+    "t0": {
+      "collapse": {
+        "median_ms": 0.6654525,
+        "p95_ms": 0.8016579999999999
+      },
+      "dense": {
+        "median_ms": 1.6105055,
+        "p95_ms": 1.8332015499999998
+      },
+      "encode": {
+        "median_ms": 0.13885,
+        "p95_ms": 0.2524809999999999
+      },
+      "encoder": {
+        "median_ms": 0.13985,
+        "p95_ms": 0.19472045
+      },
+      "fusion": {
+        "median_ms": 0.17120000000000002,
+        "p95_ms": 0.193121
+      },
+      "lexical": {
+        "median_ms": 1.910257,
+        "p95_ms": 6.443213399999992
+      },
+      "total": {
+        "median_ms": 4.3999655,
+        "p95_ms": 9.323593849999991
+      }
+    },
+    "v1": {
+      "collapse": {
+        "median_ms": 0.688403,
+        "p95_ms": 0.756338
+      },
+      "dense": {
+        "median_ms": 1.5694055,
+        "p95_ms": 2.557914099999999
+      },
+      "encode": {
+        "median_ms": 0.13774999999999998,
+        "p95_ms": 0.16414499999999999
+      },
+      "encoder": {
+        "median_ms": 0.1545505,
+        "p95_ms": 0.197911
+      },
+      "fusion": {
+        "median_ms": 0.17345,
+        "p95_ms": 0.217161
+      },
+      "lexical": {
+        "median_ms": 1.889807,
+        "p95_ms": 6.338112749999993
+      },
+      "total": {
+        "median_ms": 4.434716,
+        "p95_ms": 9.827670099999994
+      }
+    }
+  },
+  "temporary_peak_bytes": 85128,
+  "threads": {
+    "bm25": 1,
+    "torch": 1
+  },
+  "tracemalloc_current_bytes": 224,
+  "warmup": 2
+}
