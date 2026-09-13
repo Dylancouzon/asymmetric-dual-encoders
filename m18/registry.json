@@ -40,7 +40,7 @@
   "corpus": {"document_units_max": 200000, "training_query_views_max": 300000, "chunk_tokens": 384, "chunk_overlap_tokens": 48, "retain_all_artifacts": true},
   "split": {"target_total": 250, "development_per_stratum": 35, "confirmation_per_stratum": 15, "minimum_development_per_available_stratum": 25, "minimum_confirmation_per_available_stratum": 10, "family_unit": "GitHub thread or repository artifact plus near-duplicate union", "assignment": "newest credible families, alternating seeded blocks between development and confirmation; all older families train", "seed": 18001},
   "strata": ["concept_howto", "error_troubleshooting", "config_api_ops", "exact_version_numeric", "alias_jargon"],
-  "vocabulary": {"min_distinct_documents": 5, "min_training_contexts": 12, "max_added_rows": 8192, "term_pattern_version": "m18-compounds-v1", "initialization": "count-weighted composition of inherited effective rows", "disallow_near_unique": true},
+  "vocabulary": {"min_distinct_documents": 5, "min_training_contexts": 5, "max_added_rows": 8192, "term_pattern_version": "m18-compounds-v1", "initialization": "count-weighted composition of inherited effective rows", "disallow_near_unique": true},
   "variants": {
     "T0": {"preprocessing": "raw", "mask": "none"},
     "T1": {"preprocessing": "typed_ephemeral", "mask": "none", "inert_development_fraction_lt": 0.01},

@@ -29,7 +29,9 @@ PATTERNS = (
     ("hash", re.compile(r"(?<![\w-])[0-9a-f]{16,64}(?![\w-])", re.I)),
     # Kubernetes-style generated name: semantic prefix + template hash + pod suffix. Requiring
     # both suffixes avoids normalizing product names such as gpt-4o-mini or qdrant-1.15.
-    ("random_suffix", re.compile(r"\b([a-z][a-z0-9.-]{1,80})-[a-z0-9]{8,10}-[a-z0-9]{5}\b", re.I)),
+    ("random_suffix", re.compile(
+        r"\b([a-z][a-z0-9.-]{1,80})-(?=[a-z0-9]{8,10}-)(?=[a-z0-9]*\d)"
+        r"[a-z0-9]{8,10}-[a-z0-9]{5}\b", re.I)),
 )
 
 DIGIT_CONTINUATION_RE = re.compile(r"^##[0-9]+$")
@@ -66,7 +68,8 @@ def collision_audit(records, representative_max=5):
     multiple groups is ambiguous. The builder refuses ambiguous forms occurring five or more
     times; rarer ones remain disclosed rather than silently treated as safe.
     """
-    forms = defaultdict(lambda: {"raw": [], "groups": set()})
+    forms = defaultdict(lambda: {"raw": [], "raw_set": set(), "groups": set(),
+                                 "changed": False, "occurrences": 0})
     pattern_counts = defaultdict(int)
     for row in records:
         raw = str(row["text"])
@@ -75,17 +78,20 @@ def collision_audit(records, representative_max=5):
             if rx.search(raw):
                 pattern_counts[name] += 1
         ent = forms[norm]
+        ent["occurrences"] += 1
+        ent["changed"] = ent["changed"] or norm != raw
+        ent["raw_set"].add(raw)
         if len(ent["raw"]) < representative_max and raw not in ent["raw"]:
             ent["raw"].append(raw)
         ent["groups"].add(str(row.get("relevance_group", "")))
     collisions = []
     for norm, ent in sorted(forms.items()):
-        if len(ent["groups"]) > 1:
+        if len(ent["raw_set"]) > 1 and len(ent["groups"]) > 1 and ent["changed"]:
             collisions.append({"normalized": norm, "raw_examples": ent["raw"],
                                "relevance_groups": sorted(ent["groups"]),
+                               "occurrences": ent["occurrences"],
                                "ambiguous": True})
-    high_frequency = [c for c in collisions if sum(
-        1 for row in records if normalize_t1(str(row["text"])) == c["normalized"]) >= 5]
+    high_frequency = [c for c in collisions if c["occurrences"] >= 5]
     return {"_schema": "m18-t1-collision-audit-v1",
             "implementation_sha256": implementation_hash(),
             "records": len(records), "pattern_counts": dict(sorted(pattern_counts.items())),

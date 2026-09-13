@@ -16,6 +16,7 @@ def test_t1_normalizes_only_ephemeral_values():
         assert literal in got
     for placeholder in P.PLACEHOLDERS.values():
         assert placeholder in got
+    assert P.normalize_t1("Log-Structured-Merge-Database") == "Log-Structured-Merge-Database"
 
 
 def test_collision_audit_rejects_frequent_cross_group_merge():
@@ -28,9 +29,14 @@ def test_collision_audit_rejects_frequent_cross_group_merge():
     assert report["ambiguous_high_frequency"]
 
 
+def test_collision_audit_ignores_unchanged_shared_terms():
+    rows = [{"text": "MMR", "relevance_group": f"thread-{i}"} for i in range(8)]
+    report = P.collision_audit(rows)
+    assert report["pass"] and not report["collisions"]
+
+
 def test_t2_masks_only_continuation_digits():
     class Tok:
         def id_to_token(self, i):
             return {1: "##12", 2: "12", 3: "s3", 4: "##x"}[i]
     assert P.t2_mask_ids([1, 2, 3, 4], Tok()) == [2, 3, 4]
-

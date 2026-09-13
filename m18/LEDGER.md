@@ -195,3 +195,28 @@
   index binds corpus, ordered IDs, indexed text, Stella revision/vectors and BM25/DBSF recipe under
   identity `a710f91a7b19f27a2f7251e369199dc0bc9fcfd56bf080bf31c3c01124fd368e`.
   This is the reusable system deliverable and frozen candidate bank, not a new document model.
+
+## 2026-09-13 — E10 bounded vocabulary and preparation complete
+
+- The first support threshold of 12 training contexts admitted only `qdrant`, `shard` and `flaky`.
+  This was too strict for a protocol that normally contributes one natural query per source
+  document. Astra approved the smallest correction: retain the five-distinct-document floor and
+  lower only the context floor to five. No term was hand-pinned and no source data was added.
+- The final 15 exact rows are `qdrant`, `shard`, `grpc`, `snapshot`, `deps`, `json`, `flaky`,
+  `docker`, `kubernetes`, `hnsw`, `config`, `s3`, `turboquant`, `arm64` and `gridstore`. Supported
+  examples named in the instruction but not admitted—including `k8s`, `mmap`, `cuda`, `tls` and
+  `rocksdb`—remain a disclosed data-support limitation and will be included in the report-only
+  bare-term retrieval comparison.
+- The T1 random-suffix expression had treated `Log-Structured-Merge-Database` as an ephemeral pod
+  suffix. It now requires a digit in the generated-name segment. The collision audit now reports
+  only actual many-to-one transformations across relevance groups, while retaining unchanged
+  strings when checking whether a transformed value collides with a literal. All 780 training
+  views contain zero T1 transformations; T1 is therefore unsupported/inert and is skipped rather
+  than expanding its pattern set.
+- Preparation produced 142 eligible queries each for T0 and T2 from the shared 780-query Stella
+  cache. V0-T0 and V0-T2 each contain the 15 initialized rows and occupy 31,392,036 float-table
+  bytes. The collision audit passes and 45 network-free tests pass.
+- Alias evidence is useful but uneven: 241 alias-pair views exist, with 128 digit-bearing or
+  vowel-free short-form occurrences across 46 distinct short forms. Among admitted abbreviation-
+  like rows, evidence is sparse (`hnsw`: 2 pairs, `s3`: 2, `arm64`: 1, `grpc`: 0). This is a
+  limitation to report, not grounds for synthetic qrels or a larger vocabulary arm.

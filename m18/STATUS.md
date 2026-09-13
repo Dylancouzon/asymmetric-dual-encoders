@@ -1,11 +1,11 @@
 # M18 status
 
-**State: EXECUTING — preparation and baselines.** Owner execution authorization arrived
+**State: EXECUTING — execution lock and baselines.** Owner execution authorization arrived
 2026-09-12.
 
 Current outcome: the complete pinned source snapshot produced 79,269 indexable document units. The
 source-only-adjudicated v6 protocol has 780 training views, 100 development queries and 40 sealed
-confirmation queries. The synthetic end-to-end rehearsal and 43 network-free tests pass. Neither real deliverable
+confirmation queries. The synthetic end-to-end rehearsal and 45 network-free tests pass. Neither real deliverable
 has been decided; no model-quality result or confirmation content has been read.
 
 Two Astra spot-checks rejected the structural qrels even after narrow rule fixes. Astra then judged
@@ -15,7 +15,10 @@ clear pairs entered the final split; smaller realized strata are disclosed rathe
 Training uses 298 non-held-out issue/PR titles as teacher-only views without qrels plus 482 alias
 views. A fresh dev-only audit found 39/40 clear and one partial; that pair was removed. Every chunk
 of each query-bearing source object is now excluded with compensating overfetch. Full Stella
-The full 79,269-document Stella/BM25 index is complete and sealed. Shared cache, vocabulary and
-V0-Q preparation are next.
+The full 79,269-document Stella/BM25 index and the shared teacher/candidate cache are complete.
+Vocabulary preparation admits 15 source-supported exact rows and produces 142 eligible queries
+for each of T0 and T2. T1 affects zero training queries and is skipped as inert. V0-Q bundles are
+ready; the next irreversible boundary is the execution lock, followed by development baselines and
+the bounded T0 step-500 diagnostic. No real training has started and the GPU is idle.
 
 Pointers: `instructions-m18.md`, `m18/registry.json`, `m18/LEDGER.md`, `m18/CODEMAP.md`.
