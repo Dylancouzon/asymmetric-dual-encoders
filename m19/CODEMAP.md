@@ -16,6 +16,7 @@
 | `m19src/confirmation.py` | immutable, hash-bound one-shot confirmation transaction |
 | `m19src/rehearse.py` | one-command synthetic pool/judgment/metric transaction and interrupted resume |
 | `m19/term-roster-lock-v3.json`, `results/m19_term_inventory_v3.json` | final 12-term roster audit/evidence; v1/v2 are preserved and superseded |
+| `m19/query-split-seal-v1.json` | text-free identities/counts for the sealed 60/30 development/confirmation split |
 | `m19src/test_common.py`, `test_inherit.py` | synthetic path-guard and lock tests |
 | `m19/reviews/` | bounded prompts, reviewer identities, access logs, findings and dispositions |
 | `work/m19/` | gitignored raw/derived/run state owned by M19 |

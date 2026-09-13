@@ -119,3 +119,20 @@
   then equal-term aggregation, complete paired query/term differences, headroom and development/
   confirmation eligibility gates. Empty registered safety slices are refused.
 - Nine synthetic tests pass. No inherited index, query, qrel or retrieval-quality output was read.
+
+## 2026-09-13 — prospective query split sealed
+
+- Made split validation part of the sealing operation, added deterministic lexical near-duplicate
+  detection and source-exclusion binding, and made interrupted no-clobber publication resumable by
+  exact digest. The manifest is the completion marker and publishes last.
+- Authored 60 development queries (12 bare, 36 short, 12 longer) and 30 confirmation queries
+  (24 short, 6 longer) solely from the frozen roster and pinned source evidence, before retrieval.
+- Fresh Astra pre-seal review rejected the first two drafts for semantic family leakage and
+  unsupported numeric/version details. The final exact draft
+  `288d2089505aef08ba556b19ef162415c06bb417461077456a12a2a228198b66` received `GO` with no P0–P2.
+- Development and confirmation JSONL hashes are respectively
+  `8317a85b9c5969be44330a5bd181e9df357d3657c9b3904ba8462e6b7d05f72f` and
+  `bc3d57abe0d3c77ec2c2993153feaa1d3fe7fada71b2f68010e6a6b40d6ac3a8`. Seal-manifest hash:
+  `09f4f6439d0519eeb9037af472ab8151c7e58fd70ebc93f415df30e3222d736a`.
+- Removed the temporary readable draft after sealing. Confirmation content is now behind the claim
+  guard. No retrieval, quality metric or relevance judgment was run or read.
