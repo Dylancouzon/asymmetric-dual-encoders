@@ -1,0 +1,41 @@
+{
+  "_schema": "m19-serving-gates-v1",
+  "benchmark": {
+    "host": {
+      "gpu": "NVIDIA GeForce RTX 3080",
+      "node": "Str0keWtf",
+      "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.43"
+    },
+    "query_count": 10000,
+    "query_sequence_sha256": "d9a309da19202e59e45ab787a8dfc43875eb7143c2c3ea33efe3385f0f1493de",
+    "repetitions": 1,
+    "threads": {
+      "bm25": 1,
+      "torch": 1
+    },
+    "warmup": 20
+  },
+  "bundle_identity_sha256": "b25a5fcb019f19c3bd48ba82f6fa05b9f7a64b74ff19a8cc1d83884fe8f6ae0d",
+  "checks": {
+    "encoder_latency": true,
+    "end_to_end_latency": true,
+    "loader_parity": true,
+    "no_match_ranking_parity": true,
+    "pooling_identity": true,
+    "resident_memory": true,
+    "tokenizer_boundaries": true
+  },
+  "measurements": {
+    "added_row_bytes": 1028,
+    "encoder_latency_median_additive_ms": 0.0,
+    "encoder_latency_median_ratio": 0.9590238450074515,
+    "encoder_latency_p95_additive_ms": 0.0,
+    "encoder_latency_p95_ratio": 0.97633893290156,
+    "end_to_end_latency_median_ratio": 0.9943661402226728,
+    "end_to_end_latency_p95_ratio": 0.9968811135926097,
+    "loader_parity_max_abs": 0.0,
+    "rss_high_water_kib": 1285912,
+    "temporary_peak_bytes": 848448
+  },
+  "variant": "T0-teacher"
+}

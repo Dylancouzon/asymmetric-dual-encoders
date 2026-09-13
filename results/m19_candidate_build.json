@@ -1,0 +1,35 @@
+{
+  "_schema": "m19-candidate-build-v1",
+  "algebra_receipt_sha256": "79f3c96a7ed3cb0c868b7a022921d50100af9a02295019f13f457cd21860abcb",
+  "bundles": {
+    "T0-teacher": {
+      "files": {
+        "config.json": "d85f0a956314404c9f7ce055352cdacf3720b0f24bbe343bfb1712589607d00b",
+        "model.npz": "0e4053fce4c8f32e33b6505bbc083f79cbc69a0c55aacc9c0990a6516232c61e",
+        "provenance.json": "1a758265014ba7fc17c6f73bcd814f20700481442faab099b6777a0e84521327",
+        "tokenizer.json": "33858ffd23b53a11cc14f365218b99c670eafb13cebbc8f9d0fcff1e080b5aaa"
+      },
+      "identity_sha256": "b25a5fcb019f19c3bd48ba82f6fa05b9f7a64b74ff19a8cc1d83884fe8f6ae0d",
+      "resident_table_bytes": 31388952,
+      "variant": "T0-teacher"
+    },
+    "V0-compose": {
+      "files": {
+        "config.json": "73631b6ae08292acf7458bba10eafac9c894003ca3d54fa8c8f01592b25cf114",
+        "model.npz": "87383766a0b2663a1ec69603b8e9c97ceba8238ec0d2808b638403dfdfaa30bb",
+        "provenance.json": "2cd98d89c4ae3739f566470bc2a5cb1651b625a2efeac758e728a6ef174331fa",
+        "tokenizer.json": "33858ffd23b53a11cc14f365218b99c670eafb13cebbc8f9d0fcff1e080b5aaa"
+      },
+      "identity_sha256": "056b78d1184b0be8032a5493c75d033d109787e979730a5c6637e25c3785f968",
+      "resident_table_bytes": 31388952,
+      "variant": "V0-compose"
+    }
+  },
+  "inheritance_identity": "de6d89676edd6b33e97aad08c1b28dce638c6c59c00f2e39a16f827ca84791bb",
+  "roster_identity": "8170f9b0432d4b7460601e1dbf39536d99b1e4af026d9a3afef649a9c89ef892",
+  "row_receipt_sha256": "f81bc71bb98a170b05165b37c6d3d397e9a270beac22e395d412e8424cc5d776",
+  "state": "complete",
+  "teacher_receipt_sha256": "58752c10eba29be54eb337fed2a3a8820192b32d9dd7933d23edf7338f0a0074",
+  "teacher_vectors_file_sha256": "00a45770526383d8638f2cc289e34611fb484978e52c4e198857937e84cef659",
+  "teacher_vectors_identity_sha256": "7336d3097663bae26f025cd56624f3de5e0a33209b8b6a6acbe648a0c7d8d2b2"
+}

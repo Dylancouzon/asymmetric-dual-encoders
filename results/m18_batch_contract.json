@@ -1,0 +1,17 @@
+{
+ "_schema": "m18-batch-contract-v1",
+ "trainer_version": "m18-new-row-v2-duplicate-safe-alias",
+ "configured_batch": 256,
+ "eligible_pool": 148,
+ "sampling": "deterministic cross-epoch stream; repeated query slots allowed",
+ "sampler_audit_steps": 4000,
+ "unique_queries_min": 140,
+ "unique_queries_max": 148,
+ "unique_queries_mean": 147.49675,
+ "max_query_multiplicity": 3,
+ "alias_bearing_queries": 25,
+ "complete_eligible_alias_pairs": 0,
+ "effective_alias_loss": 0.0,
+ "duplicate_safety": "alias slots require two distinct global query identities; orphan repetitions never self-pair",
+ "astra_verdict": "GO; retain batch 256 and report inactive alias consistency"
+}

@@ -1,0 +1,23 @@
+{
+  "_schema": "m19-teacher-snapshot-lock-v1",
+  "files": {
+    "1_Pooling/config.json": "d58b19f64c2bd0ff30fdc4e45103ef8e5fcec974923c433db59b50ab01595ee7",
+    "2_Dense_1024/config.json": "cc74bf19ea6e14816f175a114d3101b9ec236b831ad8706c0f89c5b0517e33a0",
+    "2_Dense_1024/model.safetensors": "caed226f6fc2317d1dde81540cbc2cc40055ab27dbf8e4377facfb281ac16fdd",
+    "README.md": "9e8da1ad6f2063ce0f060a904d91338378d9a87cd6c5da3e8da091351c00aaf9",
+    "config.json": "6ef7d87b6f011a3a2ae4612fca7767a0cab58c754648931acb8f61c4f52f24ae",
+    "config_sentence_transformers.json": "9dfc0a2ca6ccc6f9da7734df0404206ae745cb08ca138d257714bfd9257355fb",
+    "configuration.py": "3411088045ffb8a9a0aa9936eae275896b39983a2ee5b08f091b44e6289e4fe4",
+    "model.safetensors": "17e549d16172a548a3115739b55575968eb6523653daad76c46b0758e9425032",
+    "modeling.py": "41ce2703d91c4bf5ba18bf6616d40f26ef350fa793d81b27a457f3526f01ef42",
+    "modules.json": "4145357aafae913f78ca56d1b398e862c5cbeb482b4d418cf9f5e1d147bf416b",
+    "sentence_bert_config.json": "d9c158879ebdc946201519a154e8f2006d66ac633a8f3fa5de95da20fdd14729",
+    "special_tokens_map.json": "5d5b662e421ea9fac075174bb0688ee0d9431699900b90662acd44b2a350503a",
+    "tokenizer.json": "cb374d6bc042c22455946f4e09a89d29882a199fdaf8fb25be00dc8b8857a448",
+    "tokenizer_config.json": "9f0bb2a01bb9555bee3a8e3711cfa85bd34370d00a7c67e9745cebc7901e1085",
+    "vocab.txt": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3"
+  },
+  "model": "NovaSearch/stella_en_400M_v5",
+  "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+  "snapshot_path": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20"
+}

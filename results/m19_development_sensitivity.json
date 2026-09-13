@@ -1,0 +1,415 @@
+{
+  "_schema": "m19-development-sensitivity-v1",
+  "bounds": {
+    "dense_ndcg": {
+      "fixed_roster_mean": {
+        "maximum": 0.09253394965338552,
+        "minimum": 0.024897562220083602
+      },
+      "metric": "ndcg_at_10",
+      "per_term_bounds": {
+        "arm64": [
+          0.08854148400390317,
+          0.08960048349803261
+        ],
+        "cuda": [
+          0.1192695560151455,
+          0.2158282566140525
+        ],
+        "gridstore": [
+          0.035050854497024275,
+          0.0856149467862447
+        ],
+        "grpc": [
+          0.1223999724928772,
+          0.15567420957583256
+        ],
+        "hnsw": [
+          -0.14772624450018967,
+          -0.018164644285871834
+        ],
+        "k8s": [
+          -0.030388449730319178,
+          -0.0033120089221439684
+        ],
+        "mmap": [
+          -0.15351018775100014,
+          0.06228974118004701
+        ],
+        "rocksdb": [
+          0.0383424949227941,
+          0.04226889343688108
+        ],
+        "s3": [
+          0.05555547631140467,
+          0.10004328758896087
+        ],
+        "simd": [
+          0.2948064489311877,
+          0.3182084352931216
+        ],
+        "tls": [
+          0.0032477113001360505,
+          0.029380467626361234
+        ],
+        "turboquant": [
+          -0.12681836985196043,
+          0.03297532744910784
+        ]
+      },
+      "queries": 36,
+      "term_outcomes": {
+        "ambiguous_terms": 2,
+        "maximum_net_wins": 8,
+        "maximum_wins": 10,
+        "minimum_net_wins": 4,
+        "minimum_wins": 8
+      },
+      "terms": 12
+    },
+    "dense_precision": {
+      "fixed_roster_mean": {
+        "maximum": 0.075,
+        "minimum": 0.016666666666666666
+      },
+      "metric": "precision_at_10",
+      "per_term_bounds": {
+        "arm64": [
+          0.1,
+          0.1
+        ],
+        "cuda": [
+          0.13333333333333333,
+          0.16666666666666666
+        ],
+        "gridstore": [
+          0.0,
+          0.03333333333333333
+        ],
+        "grpc": [
+          0.06666666666666667,
+          0.1
+        ],
+        "hnsw": [
+          -0.16666666666666666,
+          0.0
+        ],
+        "k8s": [
+          -0.03333333333333333,
+          -0.03333333333333333
+        ],
+        "mmap": [
+          -0.16666666666666666,
+          0.06666666666666667
+        ],
+        "rocksdb": [
+          0.03333333333333333,
+          0.03333333333333333
+        ],
+        "s3": [
+          0.06666666666666667,
+          0.06666666666666667
+        ],
+        "simd": [
+          0.3,
+          0.3
+        ],
+        "tls": [
+          0.0,
+          0.03333333333333333
+        ],
+        "turboquant": [
+          -0.13333333333333333,
+          0.03333333333333333
+        ]
+      },
+      "queries": 36,
+      "term_outcomes": {
+        "ambiguous_terms": 5,
+        "maximum_net_wins": 9,
+        "maximum_wins": 10,
+        "minimum_net_wins": 2,
+        "minimum_wins": 6
+      },
+      "terms": 12
+    },
+    "headroom_precision": {
+      "fixed_roster_mean": {
+        "maximum": 0.22777777777777777,
+        "minimum": 0.13333333333333333
+      },
+      "metric": "precision_at_10",
+      "per_term_bounds": {
+        "arm64": [
+          0.1,
+          0.1
+        ],
+        "cuda": [
+          0.36666666666666664,
+          0.4
+        ],
+        "gridstore": [
+          0.13333333333333333,
+          0.3
+        ],
+        "grpc": [
+          0.0,
+          0.13333333333333333
+        ],
+        "hnsw": [
+          -0.1,
+          0.06666666666666667
+        ],
+        "k8s": [
+          0.2,
+          0.2
+        ],
+        "mmap": [
+          0.0,
+          0.2
+        ],
+        "rocksdb": [
+          0.0,
+          0.1
+        ],
+        "s3": [
+          0.3333333333333333,
+          0.4
+        ],
+        "simd": [
+          0.36666666666666664,
+          0.5
+        ],
+        "tls": [
+          0.26666666666666666,
+          0.26666666666666666
+        ],
+        "turboquant": [
+          -0.06666666666666667,
+          0.06666666666666667
+        ]
+      },
+      "queries": 36,
+      "term_outcomes": {
+        "ambiguous_terms": 5,
+        "maximum_net_wins": 12,
+        "maximum_wins": 12,
+        "minimum_net_wins": 5,
+        "minimum_wins": 7
+      },
+      "terms": 12
+    },
+    "hybrid_precision": {
+      "fixed_roster_mean": {
+        "maximum": 0.04722222222222222,
+        "minimum": 0.022222222222222223
+      },
+      "metric": "precision_at_10",
+      "per_term_bounds": {
+        "arm64": [
+          0.06666666666666667,
+          0.06666666666666667
+        ],
+        "cuda": [
+          0.06666666666666667,
+          0.06666666666666667
+        ],
+        "gridstore": [
+          -0.03333333333333333,
+          0.06666666666666667
+        ],
+        "grpc": [
+          0.03333333333333333,
+          0.03333333333333333
+        ],
+        "hnsw": [
+          -0.03333333333333333,
+          -0.03333333333333333
+        ],
+        "k8s": [
+          0.03333333333333333,
+          0.03333333333333333
+        ],
+        "mmap": [
+          -0.1,
+          -0.06666666666666667
+        ],
+        "rocksdb": [
+          0.0,
+          0.03333333333333333
+        ],
+        "s3": [
+          0.06666666666666667,
+          0.1
+        ],
+        "simd": [
+          0.16666666666666666,
+          0.23333333333333334
+        ],
+        "tls": [
+          0.03333333333333333,
+          0.03333333333333333
+        ],
+        "turboquant": [
+          -0.03333333333333333,
+          0.0
+        ]
+      },
+      "queries": 36,
+      "term_outcomes": {
+        "ambiguous_terms": 3,
+        "maximum_net_wins": 7,
+        "maximum_wins": 9,
+        "minimum_net_wins": 3,
+        "minimum_wins": 7
+      },
+      "terms": 12
+    },
+    "longer_precision": {
+      "fixed_roster_mean": {
+        "maximum": 0.075,
+        "minimum": 0.0
+      },
+      "metric": "precision_at_10",
+      "per_term_bounds": {
+        "arm64": [
+          0.0,
+          0.2
+        ],
+        "cuda": [
+          0.0,
+          0.0
+        ],
+        "gridstore": [
+          0.0,
+          0.0
+        ],
+        "grpc": [
+          0.0,
+          0.1
+        ],
+        "hnsw": [
+          -0.1,
+          -0.1
+        ],
+        "k8s": [
+          0.0,
+          0.2
+        ],
+        "mmap": [
+          0.2,
+          0.4
+        ],
+        "rocksdb": [
+          0.0,
+          0.0
+        ],
+        "s3": [
+          0.0,
+          0.0
+        ],
+        "simd": [
+          0.0,
+          0.0
+        ],
+        "tls": [
+          -0.1,
+          0.0
+        ],
+        "turboquant": [
+          0.0,
+          0.1
+        ]
+      },
+      "queries": 12,
+      "term_outcomes": {
+        "ambiguous_terms": 5,
+        "maximum_net_wins": 4,
+        "maximum_wins": 5,
+        "minimum_net_wins": -1,
+        "minimum_wins": 1
+      },
+      "terms": 12
+    },
+    "numeric_version_precision": {
+      "fixed_roster_mean": {
+        "maximum": 0.04,
+        "minimum": -0.02
+      },
+      "metric": "precision_at_10",
+      "per_term_bounds": {
+        "hnsw": [
+          -0.1,
+          -0.1
+        ],
+        "k8s": [
+          0.0,
+          0.2
+        ],
+        "s3": [
+          0.0,
+          0.0
+        ],
+        "simd": [
+          0.0,
+          0.0
+        ],
+        "turboquant": [
+          0.0,
+          0.1
+        ]
+      },
+      "queries": 5,
+      "term_outcomes": {
+        "ambiguous_terms": 2,
+        "maximum_net_wins": 1,
+        "maximum_wins": 2,
+        "minimum_net_wins": -1,
+        "minimum_wins": 0
+      },
+      "terms": 5
+    }
+  },
+  "confirmation_accessed": false,
+  "enumeration": {
+    "binary_states_evaluated": 338,
+    "maximum_unknowns_per_query": 5,
+    "queries": 60,
+    "queries_with_unknowns": 40
+  },
+  "gate_status": {
+    "headroom_net_term_wins": "robust_pass",
+    "headroom_precision": "robust_pass",
+    "hybrid_preserved": "robust_pass",
+    "longer_preserved": "robust_pass",
+    "majority_terms_win": "label_sensitive",
+    "net_term_wins": "label_sensitive",
+    "numeric_version_preserved": "robust_pass",
+    "short_ndcg_positive": "robust_pass",
+    "short_precision": "label_sensitive",
+    "supporting_passages": "not_evaluated"
+  },
+  "input_sha256": {
+    "audit-packet.json": "4e12bb8b97f479f4966ae1133407b5bacded71e18b1a8da180f305027cb56db4",
+    "audit-review-labels.json": "4b655caa51b800502915fad03861eb61eac54e7a8d12ff6b18771950e88a6861",
+    "metric-runs.json": "ec06ece1e3f0b04a7b3afde25c9a5d2ecf501721a45342b666916257f2775690",
+    "pool-manifest.json": "cf666c4e5a2226cf991d96e70900b5459d2bed0041c95d67c4c81ce3fbba1aaa",
+    "primary-labels.json": "4edcc3cf2052841596fe2f67ec6fb0819d4bb1979f5e27930256670813cfb9a4",
+    "queries.json": "1fc2ac86a7921cf25005578099d91b1dce58fb13afd44fb0bfcd33e092bdd78d"
+  },
+  "interpretation": "LABEL_SENSITIVE",
+  "judgments": {
+    "audit_items": 925,
+    "audited_binary_agreement": 832,
+    "audited_binary_disagreement": 20,
+    "audited_either_unjudgeable": 73,
+    "known_items": 1283,
+    "resolved_binary_agreement": 0.9765258215962441,
+    "resolved_binary_agreement_denominator": 852,
+    "unaudited_primary_binary": 451,
+    "unknown_items": 93
+  },
+  "original_outcome_unchanged": "ENCODER_INCONCLUSIVE",
+  "qrels_created": false,
+  "status": "posthoc-development-only"
+}

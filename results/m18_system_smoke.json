@@ -1,0 +1,96 @@
+{
+ "_schema": "m18-system-smoke-v1",
+ "bundle": "/home/dylan/asymetric-dual-encoders/work/release/zero-v1",
+ "queries": [
+  {
+   "latency_ms": 264.2758840083843,
+   "query": "k8s readiness probes",
+   "results": [
+    {
+     "doc_id": "gh_opening:2401",
+     "kind": "issue_opening",
+     "path": null,
+     "score": 2.13062650950144,
+     "source_url": "https://github.com/qdrant/qdrant/issues/2401",
+     "title": "Support k8s liveness and readiness probes when using `api_key`"
+    },
+    {
+     "doc_id": "gh_opening:6431:chunk:9",
+     "kind": "issue_opening",
+     "path": null,
+     "score": 1.9954192990770498,
+     "source_url": "https://github.com/qdrant/qdrant/issues/6431",
+     "title": "Some Pods stuck in Ready = False after K8s node restart (10-pod cluster)"
+    },
+    {
+     "doc_id": "gh_opening:6431:chunk:4",
+     "kind": "issue_opening",
+     "path": null,
+     "score": 1.7907239984196086,
+     "source_url": "https://github.com/qdrant/qdrant/issues/6431",
+     "title": "Some Pods stuck in Ready = False after K8s node restart (10-pod cluster)"
+    }
+   ]
+  },
+  {
+   "latency_ms": 174.49371800466906,
+   "query": "How do I restore an S3 snapshot?",
+   "results": [
+    {
+     "doc_id": "gh_issue_comment:1875060287",
+     "kind": "issue_comment",
+     "path": null,
+     "score": 1.8876161523256656,
+     "source_url": "https://github.com/qdrant/qdrant/issues/3312#issuecomment-1875060287",
+     "title": ""
+    },
+    {
+     "doc_id": "gh_issue_comment:1878033629",
+     "kind": "issue_comment",
+     "path": null,
+     "score": 1.6735830206215425,
+     "source_url": "https://github.com/qdrant/qdrant/issues/3312#issuecomment-1878033629",
+     "title": ""
+    },
+    {
+     "doc_id": "gh_issue_comment:2014790589",
+     "kind": "issue_comment",
+     "path": null,
+     "score": 1.5625054231990063,
+     "source_url": "https://github.com/qdrant/qdrant/issues/3893#issuecomment-2014790589",
+     "title": ""
+    }
+   ]
+  },
+  {
+   "latency_ms": 173.38941399066243,
+   "query": "HNSW configuration",
+   "results": [
+    {
+     "doc_id": "gh_opening:1673:chunk:1",
+     "kind": "pull_request_opening",
+     "path": null,
+     "score": 1.96444059531541,
+     "source_url": "https://github.com/qdrant/qdrant/pull/1673",
+     "title": "Draft: add vector specific HNSW configuration"
+    },
+    {
+     "doc_id": "gh_opening:1675:chunk:1",
+     "kind": "pull_request_opening",
+     "path": null,
+     "score": 1.7970878166445075,
+     "source_url": "https://github.com/qdrant/qdrant/pull/1675",
+     "title": "Add vector specific HNSW configuration"
+    },
+    {
+     "doc_id": "gh_opening:2083:chunk:2",
+     "kind": "pull_request_opening",
+     "path": null,
+     "score": 1.59817619489547,
+     "source_url": "https://github.com/qdrant/qdrant/pull/2083",
+     "title": "Update collection: HNSW config"
+    }
+   ]
+  }
+ ]
+}

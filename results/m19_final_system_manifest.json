@@ -1,0 +1,41 @@
+{
+  "_schema": "m19-final-system-manifest-v1",
+  "confirmation": {
+    "accessed": false,
+    "claimed": false
+  },
+  "development": {
+    "audit_labels_sha256": "4b655caa51b800502915fad03861eb61eac54e7a8d12ff6b18771950e88a6861",
+    "audit_unresolved_count": 60,
+    "pool_items": 1376,
+    "primary_labels_sha256": "4edcc3cf2052841596fe2f67ec6fb0819d4bb1979f5e27930256670813cfb9a4",
+    "qrels_created": false,
+    "quality_metrics_computed": false,
+    "queries": 60,
+    "state": "protocol-incomplete"
+  },
+  "evidence": {
+    "development_incomplete_sha256": "e9b71eb0d9d205d0dbd5713330db70c107ba9788db2886e56773599564915041",
+    "development_pool_freeze_sha256": "29a9e875bec4bdaea8221f50badc39b745e6710863e9bb57700372ddcf14e23a",
+    "development_primary_judgment_sha256": "174d94a974d7070873a721cdd231966dc534b512abc0decc8cd8c32b21f8502c",
+    "inherited_m18_system_manifest_sha256": "642ded576530b9ad32caaa4c1710803a55155cb2e2c3103ecb9e385a2820443f"
+  },
+  "outcomes": {
+    "encoder": "ENCODER_INCONCLUSIVE",
+    "system": "SYSTEM_READY"
+  },
+  "query_command": "/home/dylan/asymetric-dual-encoders/.venv/bin/python m18src/system.py query \"QUERY\" --bundle /home/dylan/asymetric-dual-encoders/work/release/zero-v1 --limit 10",
+  "scope": "internal Qdrant project memory; local execution only; no publication",
+  "selected_query_encoder": {
+    "config_sha256": "fd784397925e9ec32b6f1412af85b46faea79bb618b17197dc6d3a0068669636",
+    "model_sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
+    "name": "zero_v1",
+    "path": "/home/dylan/asymetric-dual-encoders/work/release/zero-v1",
+    "tokenizer_sha256": "997eaeff157a7d4db899b8f2278ad3db6e323e609ae956b9c5035550f581eeee"
+  },
+  "unselected_candidate": {
+    "bundle_identity_sha256": "b25a5fcb019f19c3bd48ba82f6fa05b9f7a64b74ff19a8cc1d83884fe8f6ae0d",
+    "name": "T0-teacher",
+    "reason": "development binary judgment protocol incomplete before quality scoring"
+  }
+}

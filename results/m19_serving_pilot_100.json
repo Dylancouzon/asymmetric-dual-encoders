@@ -1,0 +1,93 @@
+{
+  "_schema": "m19-serving-benchmark-v1",
+  "gpu_peak_bytes": 171073024,
+  "host": {
+    "gpu": "NVIDIA GeForce RTX 3080",
+    "node": "Str0keWtf",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.43"
+  },
+  "loader_parity_max_abs": 0.0,
+  "no_match_ranking_parity": true,
+  "official": false,
+  "query_count": 100,
+  "query_sequence_sha256": "c3bc053926aec279dd8a9fc72a4aabf4e820fb57bc3ed12e92b3835ed9a2fa67",
+  "ratios": {
+    "encoder_median": 0.937433730109666,
+    "encoder_median_additive_ms": -0.00834950000000001,
+    "encoder_p95": 1.1043743775513553,
+    "encoder_p95_additive_ms": 0.01907399999999998,
+    "end_to_end_median": 1.0353881228402728,
+    "end_to_end_p95": 0.9706373722656568
+  },
+  "repetitions": 1,
+  "rss_high_water_kib": 1275792,
+  "summary": {
+    "t0": {
+      "collapse": {
+        "median_ms": 0.1607505,
+        "p95_ms": 0.21851099999999998
+      },
+      "dense": {
+        "median_ms": 0.776753,
+        "p95_ms": 1.041989
+      },
+      "encode": {
+        "median_ms": 0.082101,
+        "p95_ms": 0.14296094999999998
+      },
+      "encoder": {
+        "median_ms": 0.125101,
+        "p95_ms": 0.20181999999999997
+      },
+      "fusion": {
+        "median_ms": 0.213051,
+        "p95_ms": 0.29178099999999996
+      },
+      "lexical": {
+        "median_ms": 3.429862,
+        "p95_ms": 4.14453
+      },
+      "total": {
+        "median_ms": 4.714967,
+        "p95_ms": 5.406124999999999
+      }
+    },
+    "v1": {
+      "collapse": {
+        "median_ms": 0.157201,
+        "p95_ms": 0.226316
+      },
+      "dense": {
+        "median_ms": 0.7622530000000001,
+        "p95_ms": 0.919804
+      },
+      "encode": {
+        "median_ms": 0.0887,
+        "p95_ms": 0.14284504999999997
+      },
+      "encoder": {
+        "median_ms": 0.1334505,
+        "p95_ms": 0.182746
+      },
+      "fusion": {
+        "median_ms": 0.21310099999999998,
+        "p95_ms": 0.26354099999999997
+      },
+      "lexical": {
+        "median_ms": 3.324662,
+        "p95_ms": 4.27288595
+      },
+      "total": {
+        "median_ms": 4.553815999999999,
+        "p95_ms": 5.569665
+      }
+    }
+  },
+  "temporary_peak_bytes": 848448,
+  "threads": {
+    "bm25": 1,
+    "torch": 1
+  },
+  "tracemalloc_current_bytes": 320,
+  "warmup": 20
+}

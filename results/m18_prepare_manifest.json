@@ -1,0 +1,138 @@
+{
+ "_schema": "m18-prepare-manifest-v1",
+ "bundles": {
+  "T0": "/home/dylan/asymetric-dual-encoders-m18/work/m18/prepared/bundles/V0-T0",
+  "T2": "/home/dylan/asymetric-dual-encoders-m18/work/m18/prepared/bundles/V0-T2"
+ },
+ "candidate_cache_artifact_sha256": "4296ed8773c46ae98aae499ce4873bd13b78a28468ea76b4e4ebda38b1bdea15",
+ "candidate_cache_identity": {
+  "parts": {
+   "alias_manifest": {
+    "pair_ids_sha256": "15c66305d0a2b53843184ff8ee3b14e5f532d812b0fad03fe0564ce497b80825",
+    "views_sha256": "36509359980eb6b01e3125bfd3572ccd9b3ad0b1baa8fb7018382ca004f196be"
+   },
+   "bank": {
+    "dim": 1024,
+    "doc_ids_sha256": "60dfd768956ff80be923b1dc4dc70d5420160761fb314f5abc76080b20f70247",
+    "dtype": "float16",
+    "n_docs": 79269,
+    "sample_seed": 18001,
+    "vector_bytes_sha256": "dd35af4e9b28b19829ac3232b70f08e608483ad0096427250127e20e598850c6"
+   },
+   "candidates": {
+    "construction": {
+     "positive_choice": "first registered positive in qrel order",
+     "quota_backfill": "continue within the same ranked source",
+     "rng": "m18-uniform-rng-v1",
+     "score_ties": "descending score then ascending document id"
+    },
+    "k": 64,
+    "mix_labeled": {
+     "known_positive": 1,
+     "teacher_top": 31,
+     "uniform": 16,
+     "zero_v1_top": 16
+    },
+    "mix_query_only": {
+     "known_positive": 0,
+     "teacher_top": 32,
+     "uniform": 16,
+     "zero_v1_top": 16
+    },
+    "rng": "m18-uniform-rng-v1",
+    "rng_recipe": "numpy default_rng seeded with the first 8 bytes, big-endian, of SHA-256(decimal cache_seed as UTF-8 || 0x00 || SHA-256(raw query text as UTF-8) hex digest as UTF-8)",
+    "rng_recipe_version": "m18-uniform-rng-v1",
+    "seed": 18001
+   },
+   "query_records_sha256": "22fd017dc176a85a4da68b88133c0ea7bc105f276c41d2409c3d9a0039209d2a",
+   "raw_query_text_sha256": "414ae61b9b4ab09b1bf866312efb0dc8c4e623788fc5b4a2ef616f3e43ae44f3",
+   "source_split_manifest": {
+    "buckets": {
+     "coverage": 148
+    },
+    "families_sha256": "b214aac7f1810229f2be4105c8ed37fd09fe4a25e55a1c3904edb95402e5c6ad",
+    "protocol_sha256": "0f0a8942ebac663a81f07c8204351fa26065ee4c7fd29d2928fc08d016260d9c",
+    "sources": [
+     "qdrant-project"
+    ]
+   },
+   "teacher": {
+    "model": "NovaSearch/stella_en_400M_v5",
+    "query_preprocessing": {
+     "dim": 1024,
+     "doc_prefix": "",
+     "max_length": 512,
+     "pooling": "mean",
+     "post_dense": "2_Dense_1024",
+     "query_prefix": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
+     "repo": "NovaSearch/stella_en_400M_v5",
+     "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20"
+    },
+    "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20"
+   },
+   "v1_artifact": {
+    "config_sha256": "fd784397925e9ec32b6f1412af85b46faea79bb618b17197dc6d3a0068669636",
+    "model_sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
+    "source_path": "/home/dylan/asymetric-dual-encoders/work/release/zero-v1",
+    "tokenizer_sha256": "997eaeff157a7d4db899b8f2278ad3db6e323e609ae956b9c5035550f581eeee",
+    "vocab": 30522
+   }
+  },
+  "sha256": "a27a5f4451d66714ac9cbd17e84eca68f520157a100b891196c4ce12bcd6f49c"
+ },
+ "collision_audit_pass": true,
+ "raw_training_queries": 785,
+ "sha256": "01d31b2ffd86a6ecd9f60560de4e855b956b40227394ae28fff038b62a99b8bf",
+ "shared_cache_queries": 148,
+ "teacher_cache": {
+  "_schema": "m18-stella-encode-v1",
+  "combined": {
+   "bytes": 1607808,
+   "path": "vectors.f16.npy",
+   "sha256": "6b0c2db732ad4ae5ff7eb4206458526cc610cea752f731089f4ca59036be51ba"
+  },
+  "complete": true,
+  "elapsed_seconds_this_invocation": 6.299,
+  "identity": {
+   "dim": 1024,
+   "max_length": 512,
+   "model": "NovaSearch/stella_en_400M_v5",
+   "n": 785,
+   "prefix": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ",
+   "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+   "shard_size": 1024,
+   "store_dtype": "fp16",
+   "texts_sha256": "2802e366150e15f5f82212dfa57a5dad4c4c9b8b11570a7a63742095970d82fe"
+  },
+  "identity_sha256": "9a405f5a02315d1461e593637455b73b220d9d220ea87a6eb490c277895022d2",
+  "peak_vram_bytes": 1595960832,
+  "rss_high_water_kib": 3308672,
+  "shards": {
+   "000000": {
+    "bytes": 1607808,
+    "hi": 785,
+    "lo": 0,
+    "sha256": "6b0c2db732ad4ae5ff7eb4206458526cc610cea752f731089f4ca59036be51ba",
+    "shape": [
+     785,
+     1024
+    ]
+   }
+  }
+ },
+ "variants": {
+  "T0": {
+   "eligible_queries": 148,
+   "path": "/home/dylan/asymetric-dual-encoders-m18/work/m18/prepared/prepared_T0.pt",
+   "sha256": "030bb57ea688ed90ccb6ec9ce98f7c18770b6c248553205dfed17a29d7a94ca8",
+   "shared_positions_sha256": "3ead98302bb549991fde50da31009db7485ca23b72f47bbaa1537707c39b538b"
+  },
+  "T2": {
+   "eligible_queries": 148,
+   "path": "/home/dylan/asymetric-dual-encoders-m18/work/m18/prepared/prepared_T2.pt",
+   "sha256": "609c0ac985ce20d7637ace23a9f050e8ca5e67c32978b24344b3dec76ebf98be",
+   "shared_positions_sha256": "3ead98302bb549991fde50da31009db7485ca23b72f47bbaa1537707c39b538b"
+  }
+ },
+ "vocabulary_manifest_sha256": "3370b236f9f4f700810598dc711437e353253da03e74ccd6d22fa3e48668f36a"
+}

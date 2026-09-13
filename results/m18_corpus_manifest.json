@@ -1,0 +1,52 @@
+{
+ "_schema": "m18-corpus-manifest-v1",
+ "artifacts": 11574,
+ "by_kind": {
+  "code_comment": 8884,
+  "issue_comment": 24109,
+  "issue_event": 25756,
+  "issue_opening": 6385,
+  "pull_request_opening": 18391,
+  "repository_text": 146,
+  "review_comment": 21354
+ },
+ "commit": "5e32ea89cb5ea9a6827a68b27291d2e2251e1b1c",
+ "corpus_sha256": "0cede39eb47b5680ef0f560917bd93ec78d02ac0e607ae0c4209d98f4430f394",
+ "cutoff_utc": "2026-09-13T00:36:26Z",
+ "documents": 105025,
+ "duplicates_sha256": "ced94d29c22c3626ded44dbae5b2ec88ae0633a9620c5f41fb1685ef594072d8",
+ "exact_duplicates_removed": 4850,
+ "indexable_documents": 79269,
+ "redaction": {
+  "github": {
+   "quoted_lines_removed": 47489,
+   "redactions": {
+    "assigned_secret": 92,
+    "aws_key": 0,
+    "bearer": 0,
+    "github_token": 0,
+    "private_key": 0
+   },
+   "unique_issue_objects": 10111
+  },
+  "repository": {
+   "redactions": {
+    "assigned_secret": 81,
+    "aws_key": 0,
+    "bearer": 0,
+    "github_token": 0,
+    "private_key": 0
+   },
+   "tracked_files_considered": 2339
+  }
+ },
+ "relationship_metadata_records": 25756,
+ "sha256": "77e5a52e1bb1a46d1a98d986c892eab6c671a11dfc2ee1f70bdc1cf43bb33187",
+ "source_manifest_sha256": "bea4737ff7844bb5e052237087f62801dd20cb7d7753a68e6f70bd006f561349",
+ "versions": {
+  "chunking": "m18-chunk-v1",
+  "deduplication": "m18-dedup-v1",
+  "parser": "m18-parser-v2-indexable-events",
+  "redaction": "m18-redaction-v1"
+ }
+}

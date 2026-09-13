@@ -1,0 +1,11 @@
+{
+  "_schema": "m19-review-go-v1",
+  "access_declaration_sha256": "2300d7b056dac19d73517a982592d842daca6df812f84e0ea0729fb8eecc8e74",
+  "authorization_scope": "development pool freezing and blinded judgments only",
+  "confirmation_authorized": false,
+  "decision": "GO",
+  "reviewed_commit": "fb8832c23bb1f1cd554ceeb83848d0a5a745872b",
+  "reviewer_id": "astra-m19-development-fb8832c-20260913-independent-01",
+  "role": "astra",
+  "scope_sha256": "ac92ba45f50a7643edbc29d394fc125acbcb7dd5257d67baad1b43516660152b"
+}

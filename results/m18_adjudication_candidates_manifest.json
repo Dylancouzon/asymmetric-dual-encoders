@@ -1,0 +1,18 @@
+{
+ "_schema": "m18-adjudication-candidates-v1",
+ "candidate_count": 344,
+ "candidates_sha256": "db0c955d7baa0299fe7d0772ae38032e727ae8a6da2e6c970966ff756cd04efb",
+ "corpus_sha256": "0cede39eb47b5680ef0f560917bd93ec78d02ac0e607ae0c4209d98f4430f394",
+ "identities_sha256": "8468c957a39321548811419e3b260e5d51b30cbef73d295855d7e4fb3c604322",
+ "instruction": "Judge whether target clearly and directly answers query using only source_context and target. Partial/ambiguous pairs are excluded. Correct the stratum only when clearly mismatched. No retrieval output exists.",
+ "pool_per_stratum": 80,
+ "prospective": true,
+ "sha256": "b8ba1099903dbb57fdab54db42af39c397990dbdf834b210dd2c6c597e28e5ba",
+ "strata": {
+  "alias_jargon": 57,
+  "concept_howto": 70,
+  "config_api_ops": 71,
+  "error_troubleshooting": 66,
+  "exact_version_numeric": 80
+ }
+}

@@ -1,0 +1,664 @@
+{
+ "_schema": "m18-evaluation-v1",
+ "comparisons_vs_zero_v1": {},
+ "diagnostics": {
+  "bm25": {
+   "source_documents_excluded": 141,
+   "source_opening_top10_rate_before_exclusion": 0.975
+  },
+  "zero_v1": {
+   "source_documents_excluded": 142,
+   "source_opening_top10_rate_before_exclusion": 1.0
+  }
+ },
+ "evaluation_exclusions": {
+  "query_source_object_chunks": true,
+  "reason": "indexed source chunks contain the query verbatim; qrels assess a distinct answer span"
+ },
+ "identity": {
+  "prefetch": 100,
+  "qids_sha256": "6efa04f491773a34acbb65fad04b9f48ff53a1805d8bf3434df30df610133b41",
+  "qrels_sha256": "a1c61c805de7233d35f31f376448f2ffd67737b998b95a6e59f4338b4db805e9"
+ },
+ "index_manifest_sha256": "037a9e3f5ccf7be1264ba50f427d6f062bc6e2cdfbaeeaa2c538ef7c23a11025",
+ "resources": {
+  "zero_v1": {
+   "bundle": "/home/dylan/asymetric-dual-encoders/work/release/zero-v1",
+   "milliseconds_per_query": 0.1204503500048304,
+   "query_encode_seconds": 0.004818014000193216,
+   "resident_table_bytes": null
+  }
+ },
+ "results": {
+  "bm25": {
+   "aggregate": {
+    "mrr@10": {
+     "per_stratum": {
+      "alias_jargon": {
+       "mean": 0.04583333333333333,
+       "n": 10
+      },
+      "concept_howto": {
+       "mean": 0.0,
+       "n": 5
+      },
+      "config_api_ops": {
+       "mean": 0.06,
+       "n": 10
+      },
+      "error_troubleshooting": {
+       "mean": 0.0,
+       "n": 10
+      },
+      "exact_version_numeric": {
+       "mean": 0.3,
+       "n": 5
+      }
+     },
+     "query_mean": 0.06395833333333334,
+     "stratum_macro": 0.08116666666666666
+    },
+    "ndcg@10": {
+     "per_stratum": {
+      "alias_jargon": {
+       "mean": 0.08154648767857288,
+       "n": 10
+      },
+      "concept_howto": {
+       "mean": 0.0,
+       "n": 5
+      },
+      "config_api_ops": {
+       "mean": 0.09199945798893454,
+       "n": 10
+      },
+      "error_troubleshooting": {
+       "mean": 0.0,
+       "n": 10
+      },
+      "exact_version_numeric": {
+       "mean": 0.3722706232293572,
+       "n": 5
+      }
+     },
+     "query_mean": 0.08992031432054651,
+     "stratum_macro": 0.10916331377937291
+    },
+    "recall@10": {
+     "per_stratum": {
+      "alias_jargon": {
+       "mean": 0.2,
+       "n": 10
+      },
+      "concept_howto": {
+       "mean": 0.0,
+       "n": 5
+      },
+      "config_api_ops": {
+       "mean": 0.2,
+       "n": 10
+      },
+      "error_troubleshooting": {
+       "mean": 0.0,
+       "n": 10
+      },
+      "exact_version_numeric": {
+       "mean": 0.6,
+       "n": 5
+      }
+     },
+     "query_mean": 0.175,
+     "stratum_macro": 0.2
+    }
+   },
+   "per_query": {
+    "mrr@10": {
+     "m18q:issue:10078": 1.0,
+     "m18q:issue:10217": 0.0,
+     "m18q:issue:10317": 0.25,
+     "m18q:issue:10463": 0.0,
+     "m18q:issue:10495": 0.1,
+     "m18q:issue:2131": 0.3333333333333333,
+     "m18q:issue:2659": 0.0,
+     "m18q:issue:2798": 0.0,
+     "m18q:issue:3042": 0.125,
+     "m18q:issue:3276": 0.0,
+     "m18q:issue:3738": 0.0,
+     "m18q:issue:3744": 0.0,
+     "m18q:issue:3805": 0.0,
+     "m18q:issue:4081": 0.0,
+     "m18q:issue:4241": 0.0,
+     "m18q:issue:4862": 0.0,
+     "m18q:issue:4949": 0.0,
+     "m18q:issue:4967": 0.0,
+     "m18q:issue:5004": 0.0,
+     "m18q:issue:5747": 0.0,
+     "m18q:issue:5817": 0.0,
+     "m18q:issue:6761": 0.0,
+     "m18q:issue:6908": 0.0,
+     "m18q:issue:7000": 0.0,
+     "m18q:issue:7069": 0.0,
+     "m18q:issue:7211": 0.0,
+     "m18q:issue:7363": 0.0,
+     "m18q:issue:7559": 0.0,
+     "m18q:issue:7764": 0.0,
+     "m18q:issue:8214": 0.0,
+     "m18q:issue:8221": 0.0,
+     "m18q:issue:8651": 0.0,
+     "m18q:issue:9159": 0.25,
+     "m18q:issue:9269": 0.0,
+     "m18q:issue:9773": 0.0,
+     "m18q:issue:9814": 0.0,
+     "m18q:review:1912957135": 0.5,
+     "m18q:review:2248361511": 0.0,
+     "m18q:review:2313839155": 0.0,
+     "m18q:review:2576434637": 0.0
+    },
+    "ndcg@10": {
+     "m18q:issue:10078": 1.0,
+     "m18q:issue:10217": 0.0,
+     "m18q:issue:10317": 0.43067655807339306,
+     "m18q:issue:10463": 0.0,
+     "m18q:issue:10495": 0.2890648263178879,
+     "m18q:issue:2131": 0.5,
+     "m18q:issue:2659": 0.0,
+     "m18q:issue:2798": 0.0,
+     "m18q:issue:3042": 0.31546487678572877,
+     "m18q:issue:3276": 0.0,
+     "m18q:issue:3738": 0.0,
+     "m18q:issue:3744": 0.0,
+     "m18q:issue:3805": 0.0,
+     "m18q:issue:4081": 0.0,
+     "m18q:issue:4241": 0.0,
+     "m18q:issue:4862": 0.0,
+     "m18q:issue:4949": 0.0,
+     "m18q:issue:4967": 0.0,
+     "m18q:issue:5004": 0.0,
+     "m18q:issue:5747": 0.0,
+     "m18q:issue:5817": 0.0,
+     "m18q:issue:6761": 0.0,
+     "m18q:issue:6908": 0.0,
+     "m18q:issue:7000": 0.0,
+     "m18q:issue:7069": 0.0,
+     "m18q:issue:7211": 0.0,
+     "m18q:issue:7363": 0.0,
+     "m18q:issue:7559": 0.0,
+     "m18q:issue:7764": 0.0,
+     "m18q:issue:8214": 0.0,
+     "m18q:issue:8221": 0.0,
+     "m18q:issue:8651": 0.0,
+     "m18q:issue:9159": 0.43067655807339306,
+     "m18q:issue:9269": 0.0,
+     "m18q:issue:9773": 0.0,
+     "m18q:issue:9814": 0.0,
+     "m18q:review:1912957135": 0.6309297535714575,
+     "m18q:review:2248361511": 0.0,
+     "m18q:review:2313839155": 0.0,
+     "m18q:review:2576434637": 0.0
+    },
+    "recall@10": {
+     "m18q:issue:10078": 1.0,
+     "m18q:issue:10217": 0.0,
+     "m18q:issue:10317": 1.0,
+     "m18q:issue:10463": 0.0,
+     "m18q:issue:10495": 1.0,
+     "m18q:issue:2131": 1.0,
+     "m18q:issue:2659": 0.0,
+     "m18q:issue:2798": 0.0,
+     "m18q:issue:3042": 1.0,
+     "m18q:issue:3276": 0.0,
+     "m18q:issue:3738": 0.0,
+     "m18q:issue:3744": 0.0,
+     "m18q:issue:3805": 0.0,
+     "m18q:issue:4081": 0.0,
+     "m18q:issue:4241": 0.0,
+     "m18q:issue:4862": 0.0,
+     "m18q:issue:4949": 0.0,
+     "m18q:issue:4967": 0.0,
+     "m18q:issue:5004": 0.0,
+     "m18q:issue:5747": 0.0,
+     "m18q:issue:5817": 0.0,
+     "m18q:issue:6761": 0.0,
+     "m18q:issue:6908": 0.0,
+     "m18q:issue:7000": 0.0,
+     "m18q:issue:7069": 0.0,
+     "m18q:issue:7211": 0.0,
+     "m18q:issue:7363": 0.0,
+     "m18q:issue:7559": 0.0,
+     "m18q:issue:7764": 0.0,
+     "m18q:issue:8214": 0.0,
+     "m18q:issue:8221": 0.0,
+     "m18q:issue:8651": 0.0,
+     "m18q:issue:9159": 1.0,
+     "m18q:issue:9269": 0.0,
+     "m18q:issue:9773": 0.0,
+     "m18q:issue:9814": 0.0,
+     "m18q:review:1912957135": 1.0,
+     "m18q:review:2248361511": 0.0,
+     "m18q:review:2313839155": 0.0,
+     "m18q:review:2576434637": 0.0
+    }
+   }
+  },
+  "zero_v1": {
+   "aggregate": {
+    "mrr@10": {
+     "per_stratum": {
+      "alias_jargon": {
+       "mean": 0.2625,
+       "n": 10
+      },
+      "concept_howto": {
+       "mean": 0.03333333333333333,
+       "n": 5
+      },
+      "config_api_ops": {
+       "mean": 0.1,
+       "n": 10
+      },
+      "error_troubleshooting": {
+       "mean": 0.0,
+       "n": 10
+      },
+      "exact_version_numeric": {
+       "mean": 0.26666666666666666,
+       "n": 5
+      }
+     },
+     "query_mean": 0.128125,
+     "stratum_macro": 0.1325
+    },
+    "ndcg@10": {
+     "per_stratum": {
+      "alias_jargon": {
+       "mean": 0.29463946303571864,
+       "n": 10
+      },
+      "concept_howto": {
+       "mean": 0.07124143742160444,
+       "n": 5
+      },
+      "config_api_ops": {
+       "mean": 0.1,
+       "n": 10
+      },
+      "error_troubleshooting": {
+       "mean": 0.0,
+       "n": 10
+      },
+      "exact_version_numeric": {
+       "mean": 0.3,
+       "n": 5
+      }
+     },
+     "query_mean": 0.1450650454366302,
+     "stratum_macro": 0.1531761800914646
+    },
+    "recall@10": {
+     "per_stratum": {
+      "alias_jargon": {
+       "mean": 0.4,
+       "n": 10
+      },
+      "concept_howto": {
+       "mean": 0.2,
+       "n": 5
+      },
+      "config_api_ops": {
+       "mean": 0.1,
+       "n": 10
+      },
+      "error_troubleshooting": {
+       "mean": 0.0,
+       "n": 10
+      },
+      "exact_version_numeric": {
+       "mean": 0.4,
+       "n": 5
+      }
+     },
+     "query_mean": 0.2,
+     "stratum_macro": 0.22000000000000003
+    }
+   },
+   "per_query": {
+    "mrr@10": {
+     "m18q:issue:10078": 0.0,
+     "m18q:issue:10217": 1.0,
+     "m18q:issue:10317": 0.3333333333333333,
+     "m18q:issue:10463": 0.0,
+     "m18q:issue:10495": 0.0,
+     "m18q:issue:2131": 0.5,
+     "m18q:issue:2659": 0.0,
+     "m18q:issue:2798": 0.0,
+     "m18q:issue:3042": 0.0,
+     "m18q:issue:3276": 0.0,
+     "m18q:issue:3738": 0.0,
+     "m18q:issue:3744": 0.0,
+     "m18q:issue:3805": 0.0,
+     "m18q:issue:4081": 0.0,
+     "m18q:issue:4241": 0.0,
+     "m18q:issue:4862": 0.0,
+     "m18q:issue:4949": 0.0,
+     "m18q:issue:4967": 0.0,
+     "m18q:issue:5004": 0.0,
+     "m18q:issue:5747": 0.0,
+     "m18q:issue:5817": 0.0,
+     "m18q:issue:6761": 0.16666666666666666,
+     "m18q:issue:6908": 0.0,
+     "m18q:issue:7000": 0.125,
+     "m18q:issue:7069": 0.0,
+     "m18q:issue:7211": 0.0,
+     "m18q:issue:7363": 0.0,
+     "m18q:issue:7559": 0.0,
+     "m18q:issue:7764": 0.0,
+     "m18q:issue:8214": 0.0,
+     "m18q:issue:8221": 0.0,
+     "m18q:issue:8651": 0.0,
+     "m18q:issue:9159": 1.0,
+     "m18q:issue:9269": 0.0,
+     "m18q:issue:9773": 0.0,
+     "m18q:issue:9814": 0.0,
+     "m18q:review:1912957135": 1.0,
+     "m18q:review:2248361511": 0.0,
+     "m18q:review:2313839155": 1.0,
+     "m18q:review:2576434637": 0.0
+    },
+    "ndcg@10": {
+     "m18q:issue:10078": 0.0,
+     "m18q:issue:10217": 1.0,
+     "m18q:issue:10317": 0.5,
+     "m18q:issue:10463": 0.0,
+     "m18q:issue:10495": 0.0,
+     "m18q:issue:2131": 0.6309297535714575,
+     "m18q:issue:2659": 0.0,
+     "m18q:issue:2798": 0.0,
+     "m18q:issue:3042": 0.0,
+     "m18q:issue:3276": 0.0,
+     "m18q:issue:3738": 0.0,
+     "m18q:issue:3744": 0.0,
+     "m18q:issue:3805": 0.0,
+     "m18q:issue:4081": 0.0,
+     "m18q:issue:4241": 0.0,
+     "m18q:issue:4862": 0.0,
+     "m18q:issue:4949": 0.0,
+     "m18q:issue:4967": 0.0,
+     "m18q:issue:5004": 0.0,
+     "m18q:issue:5747": 0.0,
+     "m18q:issue:5817": 0.0,
+     "m18q:issue:6761": 0.3562071871080222,
+     "m18q:issue:6908": 0.0,
+     "m18q:issue:7000": 0.31546487678572877,
+     "m18q:issue:7069": 0.0,
+     "m18q:issue:7211": 0.0,
+     "m18q:issue:7363": 0.0,
+     "m18q:issue:7559": 0.0,
+     "m18q:issue:7764": 0.0,
+     "m18q:issue:8214": 0.0,
+     "m18q:issue:8221": 0.0,
+     "m18q:issue:8651": 0.0,
+     "m18q:issue:9159": 1.0,
+     "m18q:issue:9269": 0.0,
+     "m18q:issue:9773": 0.0,
+     "m18q:issue:9814": 0.0,
+     "m18q:review:1912957135": 1.0,
+     "m18q:review:2248361511": 0.0,
+     "m18q:review:2313839155": 1.0,
+     "m18q:review:2576434637": 0.0
+    },
+    "recall@10": {
+     "m18q:issue:10078": 0.0,
+     "m18q:issue:10217": 1.0,
+     "m18q:issue:10317": 1.0,
+     "m18q:issue:10463": 0.0,
+     "m18q:issue:10495": 0.0,
+     "m18q:issue:2131": 1.0,
+     "m18q:issue:2659": 0.0,
+     "m18q:issue:2798": 0.0,
+     "m18q:issue:3042": 0.0,
+     "m18q:issue:3276": 0.0,
+     "m18q:issue:3738": 0.0,
+     "m18q:issue:3744": 0.0,
+     "m18q:issue:3805": 0.0,
+     "m18q:issue:4081": 0.0,
+     "m18q:issue:4241": 0.0,
+     "m18q:issue:4862": 0.0,
+     "m18q:issue:4949": 0.0,
+     "m18q:issue:4967": 0.0,
+     "m18q:issue:5004": 0.0,
+     "m18q:issue:5747": 0.0,
+     "m18q:issue:5817": 0.0,
+     "m18q:issue:6761": 1.0,
+     "m18q:issue:6908": 0.0,
+     "m18q:issue:7000": 1.0,
+     "m18q:issue:7069": 0.0,
+     "m18q:issue:7211": 0.0,
+     "m18q:issue:7363": 0.0,
+     "m18q:issue:7559": 0.0,
+     "m18q:issue:7764": 0.0,
+     "m18q:issue:8214": 0.0,
+     "m18q:issue:8221": 0.0,
+     "m18q:issue:8651": 0.0,
+     "m18q:issue:9159": 1.0,
+     "m18q:issue:9269": 0.0,
+     "m18q:issue:9773": 0.0,
+     "m18q:issue:9814": 0.0,
+     "m18q:review:1912957135": 1.0,
+     "m18q:review:2248361511": 0.0,
+     "m18q:review:2313839155": 1.0,
+     "m18q:review:2576434637": 0.0
+    }
+   }
+  },
+  "zero_v1+dbsf": {
+   "aggregate": {
+    "mrr@10": {
+     "per_stratum": {
+      "alias_jargon": {
+       "mean": 0.16166666666666668,
+       "n": 10
+      },
+      "concept_howto": {
+       "mean": 0.13333333333333333,
+       "n": 5
+      },
+      "config_api_ops": {
+       "mean": 0.11111111111111112,
+       "n": 10
+      },
+      "error_troubleshooting": {
+       "mean": 0.0,
+       "n": 10
+      },
+      "exact_version_numeric": {
+       "mean": 0.11666666666666665,
+       "n": 5
+      }
+     },
+     "query_mean": 0.09944444444444445,
+     "stratum_macro": 0.10455555555555555
+    },
+    "ndcg@10": {
+     "per_stratum": {
+      "alias_jargon": {
+       "mean": 0.2435596059558872,
+       "n": 10
+      },
+      "concept_howto": {
+       "mean": 0.19742738813589594,
+       "n": 5
+      },
+      "config_api_ops": {
+       "mean": 0.13010299956639812,
+       "n": 10
+      },
+      "error_troubleshooting": {
+       "mean": 0.0,
+       "n": 10
+      },
+      "exact_version_numeric": {
+       "mean": 0.1861353116146786,
+       "n": 5
+      }
+     },
+     "query_mean": 0.14136098884939313,
+     "stratum_macro": 0.15144506105457198
+    },
+    "recall@10": {
+     "per_stratum": {
+      "alias_jargon": {
+       "mean": 0.5,
+       "n": 10
+      },
+      "concept_howto": {
+       "mean": 0.4,
+       "n": 5
+      },
+      "config_api_ops": {
+       "mean": 0.2,
+       "n": 10
+      },
+      "error_troubleshooting": {
+       "mean": 0.0,
+       "n": 10
+      },
+      "exact_version_numeric": {
+       "mean": 0.4,
+       "n": 5
+      }
+     },
+     "query_mean": 0.275,
+     "stratum_macro": 0.3
+    }
+   },
+   "per_query": {
+    "mrr@10": {
+     "m18q:issue:10078": 0.0,
+     "m18q:issue:10217": 0.5,
+     "m18q:issue:10317": 0.25,
+     "m18q:issue:10463": 0.0,
+     "m18q:issue:10495": 0.0,
+     "m18q:issue:2131": 0.5,
+     "m18q:issue:2659": 0.0,
+     "m18q:issue:2798": 0.0,
+     "m18q:issue:3042": 0.25,
+     "m18q:issue:3276": 0.0,
+     "m18q:issue:3738": 0.0,
+     "m18q:issue:3744": 0.0,
+     "m18q:issue:3805": 0.0,
+     "m18q:issue:4081": 0.0,
+     "m18q:issue:4241": 0.0,
+     "m18q:issue:4862": 0.0,
+     "m18q:issue:4949": 0.0,
+     "m18q:issue:4967": 0.0,
+     "m18q:issue:5004": 0.0,
+     "m18q:issue:5747": 0.0,
+     "m18q:issue:5817": 0.0,
+     "m18q:issue:6761": 0.5,
+     "m18q:issue:6908": 0.0,
+     "m18q:issue:7000": 0.16666666666666666,
+     "m18q:issue:7069": 0.0,
+     "m18q:issue:7211": 0.16666666666666666,
+     "m18q:issue:7363": 0.0,
+     "m18q:issue:7559": 0.0,
+     "m18q:issue:7764": 0.0,
+     "m18q:issue:8214": 0.0,
+     "m18q:issue:8221": 0.0,
+     "m18q:issue:8651": 0.0,
+     "m18q:issue:9159": 0.3333333333333333,
+     "m18q:issue:9269": 0.0,
+     "m18q:issue:9773": 0.0,
+     "m18q:issue:9814": 0.0,
+     "m18q:review:1912957135": 1.0,
+     "m18q:review:2248361511": 0.1111111111111111,
+     "m18q:review:2313839155": 0.2,
+     "m18q:review:2576434637": 0.0
+    },
+    "ndcg@10": {
+     "m18q:issue:10078": 0.0,
+     "m18q:issue:10217": 0.6309297535714575,
+     "m18q:issue:10317": 0.43067655807339306,
+     "m18q:issue:10463": 0.0,
+     "m18q:issue:10495": 0.0,
+     "m18q:issue:2131": 0.6309297535714575,
+     "m18q:issue:2659": 0.0,
+     "m18q:issue:2798": 0.0,
+     "m18q:issue:3042": 0.43067655807339306,
+     "m18q:issue:3276": 0.0,
+     "m18q:issue:3738": 0.0,
+     "m18q:issue:3744": 0.0,
+     "m18q:issue:3805": 0.0,
+     "m18q:issue:4081": 0.0,
+     "m18q:issue:4241": 0.0,
+     "m18q:issue:4862": 0.0,
+     "m18q:issue:4949": 0.0,
+     "m18q:issue:4967": 0.0,
+     "m18q:issue:5004": 0.0,
+     "m18q:issue:5747": 0.0,
+     "m18q:issue:5817": 0.0,
+     "m18q:issue:6761": 0.6309297535714575,
+     "m18q:issue:6908": 0.0,
+     "m18q:issue:7000": 0.3562071871080222,
+     "m18q:issue:7069": 0.0,
+     "m18q:issue:7211": 0.3562071871080222,
+     "m18q:issue:7363": 0.0,
+     "m18q:issue:7559": 0.0,
+     "m18q:issue:7764": 0.0,
+     "m18q:issue:8214": 0.0,
+     "m18q:issue:8221": 0.0,
+     "m18q:issue:8651": 0.0,
+     "m18q:issue:9159": 0.5,
+     "m18q:issue:9269": 0.0,
+     "m18q:issue:9773": 0.0,
+     "m18q:issue:9814": 0.0,
+     "m18q:review:1912957135": 1.0,
+     "m18q:review:2248361511": 0.3010299956639812,
+     "m18q:review:2313839155": 0.38685280723454163,
+     "m18q:review:2576434637": 0.0
+    },
+    "recall@10": {
+     "m18q:issue:10078": 0.0,
+     "m18q:issue:10217": 1.0,
+     "m18q:issue:10317": 1.0,
+     "m18q:issue:10463": 0.0,
+     "m18q:issue:10495": 0.0,
+     "m18q:issue:2131": 1.0,
+     "m18q:issue:2659": 0.0,
+     "m18q:issue:2798": 0.0,
+     "m18q:issue:3042": 1.0,
+     "m18q:issue:3276": 0.0,
+     "m18q:issue:3738": 0.0,
+     "m18q:issue:3744": 0.0,
+     "m18q:issue:3805": 0.0,
+     "m18q:issue:4081": 0.0,
+     "m18q:issue:4241": 0.0,
+     "m18q:issue:4862": 0.0,
+     "m18q:issue:4949": 0.0,
+     "m18q:issue:4967": 0.0,
+     "m18q:issue:5004": 0.0,
+     "m18q:issue:5747": 0.0,
+     "m18q:issue:5817": 0.0,
+     "m18q:issue:6761": 1.0,
+     "m18q:issue:6908": 0.0,
+     "m18q:issue:7000": 1.0,
+     "m18q:issue:7069": 0.0,
+     "m18q:issue:7211": 1.0,
+     "m18q:issue:7363": 0.0,
+     "m18q:issue:7559": 0.0,
+     "m18q:issue:7764": 0.0,
+     "m18q:issue:8214": 0.0,
+     "m18q:issue:8221": 0.0,
+     "m18q:issue:8651": 0.0,
+     "m18q:issue:9159": 1.0,
+     "m18q:issue:9269": 0.0,
+     "m18q:issue:9773": 0.0,
+     "m18q:issue:9814": 0.0,
+     "m18q:review:1912957135": 1.0,
+     "m18q:review:2248361511": 1.0,
+     "m18q:review:2313839155": 1.0,
+     "m18q:review:2576434637": 0.0
+    }
+   }
+  }
+ }
+}

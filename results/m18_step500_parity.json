@@ -1,0 +1,22 @@
+{
+ "_schema": "m18-step500-parity-v1",
+ "development_queries": 100,
+ "pass": true,
+ "queries_without_added_tokens": 72,
+ "step0": {
+  "bundle": "work/m18/runs/T0-s18001/bundles/step_000000",
+  "gates_sha256": "b256ab75a62b19784ac819a81e0b827c6e2f5c9a9b850fe6ffb5fd7d9a79daeb",
+  "int8_vs_float_max_abs": 0.0007141008973121643,
+  "loader_parity_max_abs": 0.0,
+  "training_forward_vs_serving_max_abs": 1.4901161193847656e-08
+ },
+ "trained": {
+  "bundle": "work/m18/runs/T0-s18001/bundles/step_000500",
+  "gates_sha256": "ca14ea5aee42fc975eec1b7fe93c14984615fb979238c6555661a1fc64253271",
+  "int8_vs_float_max_abs": 0.0008267443627119064,
+  "loader_parity_max_abs": 0.0,
+  "training_forward_vs_serving_max_abs": 1.4901161193847656e-08
+ },
+ "v0_vs_v1_tolerance": 0.02,
+ "v0_vs_v1_unchanged_query_max_abs": 0.0007153358310461044
+}
