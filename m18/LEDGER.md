@@ -27,3 +27,22 @@
   observed during the recorded acquisition interval. M18 does not claim GitHub reconstructs body
   versions at the exact cutoff instant; post-cutoff updates are counted in reconciliation.
 - No M18 result has been observed at this entry.
+
+## 2026-09-12 — E1 minimum fork and synthetic rehearsal
+
+- Copied from M17 at `4213920`: `common.py` (`caa1e927…`), `vocab.py` (`9ab9a30a…`),
+  `cache.py` (`4d1e0ca4…`), `train.py` (`78f7ab12…`), `export.py` (`c3a377b5…`),
+  `loader_np.py` (`140cdf1b…`) and the rehearsal structure (`7bbe396f…`). Evaluation copied only
+  the generic exact-search/metrics/bootstrap ideas; none of M17's dev/panel readers came across.
+- Semantic differences: fresh M18 paths/guards; project-only support rather than M17 domain caps
+  and pins; colon compound extraction; only appended rows are Parameters; no learned-scalar
+  optimizer; fixed 4,000-step identity plus execution-only stop; T1/T2 serving preprocessing;
+  atomic cache/snapshot/bundle publication; no checkpoint averaging or parameter cap; fresh
+  M18 structural surfaces and dense/BM25/DBSF evaluator.
+- The canonical synthetic rehearsal passed. It parsed 42 document units in 21 artifacts, created
+  10 development and 5 sealed-confirmation questions across all five strata, resumed steps 2→4
+  to bit-identical rows versus an uninterrupted run, kept inherited rows unchanged, moved a new
+  row, passed int8 loader gates, and refused a second confirmation claim. Receipt:
+  `results/m18_rehearsal.json`. These fixture metrics are not quality observations.
+- A planning Astra review found the schedule/freeze/atomicity/protocol issues above. It reviewed
+  no implementation and does not count as either pre-expensive-run implementation review.

@@ -232,17 +232,20 @@ def _deduplicate(records):
         norm = normalize_space(row["text"]).lower()
         digest = hashlib.sha256(norm.encode()).hexdigest()
         row["normalized_text_sha256"] = digest
-        if digest in canonical:
-            dup.append({"doc_id": row["doc_id"], "canonical_doc_id": canonical[digest],
+        # Preserve artifact-level coverage. Identical boilerplate in two distinct threads is a
+        # split-family signal, not permission to erase one thread's answer document.
+        key = (row["artifact_id"], digest)
+        if key in canonical:
+            dup.append({"doc_id": row["doc_id"], "canonical_doc_id": canonical[key],
                         "artifact_id": row["artifact_id"]})
             continue
-        canonical[digest] = row["doc_id"]
+        canonical[key] = row["doc_id"]
         kept.append(row)
     return kept, dup
 
 
-def build(raw_root=None, out_root=None):
-    reg = registry()
+def build(raw_root=None, out_root=None, registry_data=None):
+    reg = registry_data or registry()
     raw = Path(raw_root or WORK / "source")
     out = Path(out_root or WORK / "derived")
     out.mkdir(parents=True, exist_ok=True)
@@ -273,7 +276,8 @@ def build(raw_root=None, out_root=None):
                     "parser", "redaction", "deduplication", "chunking")}}
     manifest["sha256"] = sha_json(manifest)
     write_json(out / "corpus_manifest.json", manifest)
-    write_json(Path(__file__).resolve().parents[1] / "results/m18_corpus_manifest.json", manifest)
+    if out_root is None:
+        write_json(Path(__file__).resolve().parents[1] / "results/m18_corpus_manifest.json", manifest)
     return manifest
 
 

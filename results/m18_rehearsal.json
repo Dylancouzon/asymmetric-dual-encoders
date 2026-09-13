@@ -1,0 +1,125 @@
+{
+ "_schema": "m18-rehearsal-v1",
+ "bundle": "/home/dylan/asymetric-dual-encoders-m18/work/m18/rehearsal/bundle",
+ "cache_artifact_sha256": "99ee658e51bddc6f1469387c8a025f7083748e3d4211b1f18cd87354f9e55e4b",
+ "confirmation_second_claim_refused": true,
+ "corpus": {
+  "_schema": "m18-corpus-manifest-v1",
+  "artifacts": 21,
+  "by_kind": {
+   "issue_comment": 20,
+   "issue_opening": 20,
+   "repository_text": 2
+  },
+  "commit": "b56280c3c0a663ceedb4fd3658fa319d30fbd204",
+  "corpus_sha256": "4aece022d64ac1b689646c3741ad5f55619b827d2d7694646374ec118df01d31",
+  "cutoff_utc": "2026-01-01T00:00:00Z",
+  "documents": 42,
+  "duplicates_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "exact_duplicates_removed": 0,
+  "redaction": {
+   "quoted_lines_removed": 0,
+   "redactions": {
+    "assigned_secret": 0,
+    "aws_key": 0,
+    "bearer": 0,
+    "github_token": 0,
+    "private_key": 0
+   },
+   "unique_issue_objects": 20
+  },
+  "sha256": "7cca3e5a30225ea8b8d226ef99c96ec0c8886f74f8c18f758295f1afaf423b9f",
+  "versions": {
+   "chunking": "m18-chunk-v1",
+   "deduplication": "m18-dedup-v1",
+   "parser": "m18-parser-v1",
+   "redaction": "m18-redaction-v1"
+  }
+ },
+ "evaluation_identity": {
+  "prefetch": 100,
+  "qids_sha256": "7a254ceb8beb1a2593df3a79cab12f8fa9d595a30819b7498d0fb17321c381bb",
+  "qrels_sha256": "eb8c3a248914b7e462a26a83b4f9bbc6b63c394c32f7f6d9d655b656d23d643c"
+ },
+ "inherited_rows_unchanged": true,
+ "new_rows_changed": true,
+ "paused_step": 2,
+ "protocol": {
+  "_schema": "m18-protocol-manifest-v1",
+  "candidates": 20,
+  "confirmation": {
+   "count": 5,
+   "qrels": "confirmation_qrels.json",
+   "qrels_sha256": "76f5c23a5cd3e416d019e1ba7d17af933f22865e0eda801acc3e566f029d6411",
+   "queries": "confirmation_queries.jsonl",
+   "queries_sha256": "6e18aca5f42141f32bded5ed27b085cb049a7f76ec4fa34732ee06b9adea9f4f"
+  },
+  "confirmation_sealed": true,
+  "development": {
+   "count": 10,
+   "qrels": "development_qrels.json",
+   "qrels_sha256": "27ea38121491e61bfafbfe8fb541d9f0da146a2d3d72da797fc4f312e1dd4d61",
+   "queries": "development_queries.jsonl",
+   "queries_sha256": "a977a025b730053631681ce2696a577dde27609d17e86e7de6a6c9a37b806c23"
+  },
+  "family_overlap_train_vs_heldout": 0,
+  "near_duplicate_overlap_train_vs_heldout": 0,
+  "qrels_version": "m18-structural-maintainer-answer-v1",
+  "query_token_overlap_with_answer": {
+   "exact_query_substring_rate": 0.0,
+   "mean": 0.06796296296296296
+  },
+  "realized_strata": {
+   "alias_jargon": {
+    "available_families": 4,
+    "confirmation": 1,
+    "development": 2
+   },
+   "concept_howto": {
+    "available_families": 4,
+    "confirmation": 1,
+    "development": 2
+   },
+   "config_api_ops": {
+    "available_families": 4,
+    "confirmation": 1,
+    "development": 2
+   },
+   "error_troubleshooting": {
+    "available_families": 4,
+    "confirmation": 1,
+    "development": 2
+   },
+   "exact_version_numeric": {
+    "available_families": 4,
+    "confirmation": 1,
+    "development": 2
+   }
+  },
+  "relevant_source_opening_self_hits": 0,
+  "semantics": "held-out questions over complete pinned snapshot; not historical-as-of-question",
+  "sha256": "50e46d6c66c296db62b4c979bd5a088daf45fbbd4f083a581781c085da2fe49b",
+  "split_version": "m18-temporal-family-v1",
+  "structural_relevance": "only distinct maintainer answer/reply spans; thread siblings are not automatically relevant",
+  "training_alias_views": 0,
+  "training_document_headings": 2,
+  "training_queries": 7,
+  "training_queries_sha256": "6366a79331a038e86a47af9ffd8984f670fa457616459da4ebacdf8093384ab1",
+  "training_structural": 5
+ },
+ "resume_vs_uninterrupted_max_abs": 0.0,
+ "resumed_step": 4,
+ "synthetic": true,
+ "uninterrupted_step": 4,
+ "vocabulary_terms": [
+  "qdrant",
+  "hnsw",
+  "500",
+  "case",
+  "v1.2",
+  "v1.3",
+  "number",
+  "fails"
+ ],
+ "wall_clock_seconds": 0.887
+}

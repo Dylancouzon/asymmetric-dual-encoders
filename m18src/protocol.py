@@ -195,8 +195,8 @@ def _surface_files(root, name, queries):
             "qrels": str(rpath.name), "qrels_sha256": sha_file(rpath), "count": len(queries)}
 
 
-def build(corpus_path=None, out_root=None):
-    reg = registry()
+def build(corpus_path=None, out_root=None, registry_data=None):
+    reg = registry_data or registry()
     out = Path(out_root or WORK / "derived" / "protocol")
     out.mkdir(parents=True, exist_ok=True)
     corpus_path = Path(corpus_path or WORK / "derived" / "corpus.jsonl")
@@ -249,7 +249,8 @@ def build(corpus_path=None, out_root=None):
                 "structural_relevance": "only distinct maintainer answer/reply spans; thread siblings are not automatically relevant"}
     manifest["sha256"] = sha_json(manifest)
     write_json(out / "protocol_manifest.json", manifest)
-    write_json(Path(__file__).resolve().parents[1] / "results/m18_protocol_manifest.json", manifest)
+    if out_root is None:
+        write_json(Path(__file__).resolve().parents[1] / "results/m18_protocol_manifest.json", manifest)
     return manifest
 
 
