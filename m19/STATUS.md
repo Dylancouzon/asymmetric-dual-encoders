@@ -1,6 +1,6 @@
 # M19 status
 
-**Execution active 2026-09-13 — stage-3 implementation remediation under re-review.**
+**Execution active 2026-09-13 — stage-4 prospective query construction.**
 
 The fresh M19 boundary is active on `m18-qdrant-project-memory`. M18 remains closed and immutable.
 Only the pinned M18 source/corpus/index manifests, the released Zero-v1 bundle and the unprotected
@@ -29,12 +29,19 @@ verified complete-bundle loading, artifact collapse/DBSF, derived eligibility, b
 freezing and the authenticated one-shot transaction. The v2 one-command rehearsal rebuilds a real
 synthetic compact bundle, independently recomputes development eligibility, interrupts at the
 judgment boundary, reloads bound inputs from disk, then freezes qrels and computes metrics inside
-the transaction. After the second remediation, the 63-test M19 suite passes and the immutable v3
+the transaction. After the third remediation, the 65-test M19 suite passes and the immutable v4
 rehearsal result uses the corrected v2 schema.
 
 The first independent implementation review returned `NO-GO` with five P1 findings. Commit
 `406cde3` closed bundle, judgment and metric input trust; `502fd7c` closed decision authentication,
 transaction-owned qrel/metric creation and caller-asserted completion. The first re-review remained
 `NO-GO`; `1d698e0` then bound deterministic rows/serving gates and review-GO contents, derived query
-authors from sealed bytes, and joined all scored top-tens to the judged union. No prospective query
-text or real judgment data has been created. A second bounded implementation re-review is next.
+authors from sealed bytes, and joined all scored top-tens to the judged union. A second re-review
+remained `NO-GO`; `2c71849` separates synthetic/production trust roots, canonically anchors
+production inputs, authenticates teacher/row/strict serving/review-scope receipts, and equates metric
+roles to named frozen routes. No prospective query text or real judgment data has been created.
+
+The repeated stage-3 review loop is now closed as remediation input rather than treated as a gate
+for query authoring. Stage 4 will first make validation and sealing one hash-bound operation, then
+author and freeze the prospective split. The required implementation and fresh Astra GOs remain a
+gate before real judgments, after the actual V0/T0 bundle and serving receipts exist.
