@@ -23,12 +23,12 @@
   },
   "versions": {
     "source_adapter": "m18-source-v2-link-cursor",
-    "parser": "m18-parser-v1",
+    "parser": "m18-parser-v2-indexable-events",
     "redaction": "m18-redaction-v1",
     "deduplication": "m18-dedup-v1",
     "chunking": "m18-chunk-v1",
-    "split": "m18-temporal-family-v1",
-    "qrels": "m18-structural-maintainer-answer-v1",
+    "split": "m18-temporal-connected-family-v2",
+    "qrels": "m18-structural-resolution-answer-v2",
     "normalizer_t1": "m18-typed-ephemeral-v1",
     "digit_mask_t2": "wordpiece-continuation-digits-v1"
   },

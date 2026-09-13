@@ -55,7 +55,7 @@ def _add_placeholders(tokenizer, names):
 def _specs(rows):
     return [cache.QuerySpec(qid=q["query_id"], text=q["text"], source="qdrant-project",
                             domain=q["stratum"], bucket="coverage", family=q["family"],
-                            positive_ids=(q["target_doc"],),
+                            positive_ids=((q["target_doc"],) if q.get("target_doc") else ()),
                             alias_pair_id=q.get("alias_pair_id", ""),
                             alias_view=q.get("alias_view", "")) for q in rows]
 

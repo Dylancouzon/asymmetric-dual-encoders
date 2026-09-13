@@ -253,10 +253,10 @@ def _alias_training(corpus, excluded_artifacts, cap):
             for view, text in (("a", short), ("b", expansion)):
                 out.append({"query_id": _query_id("alias", pair + view), "text": text,
                             "family": doc["artifact_id"], "near_duplicate_family": pair,
-                            "source_doc": doc["doc_id"], "target_doc": doc["doc_id"],
+                            "source_doc": doc["doc_id"], "target_doc": None,
                             "timestamp": "", "stratum": "alias_jargon",
                             "alias_pair_id": pair, "alias_view": view,
-                            "relevance_reason": "same-source parenthetical abbreviation evidence",
+                            "relevance_reason": "same-source parenthetical evidence; consistency-only, no relevance label",
                             "label_provenance": {"rule": "expansion_parenthetical"}})
             if len(out) >= cap:
                 return out
@@ -302,10 +302,12 @@ def build(corpus_path=None, out_root=None, registry_data=None):
     # No held-out family or near-duplicate title shape can supply a gradient-bearing view.
     heldout_family = {a for q in dev + conf for a in q["family_members"]}
     heldout_group = {q["family_group"] for q in dev + conf}
-    heldout_target_hash = {corpus_by_id[q["target_doc"]]["normalized_text_sha256"] for q in dev + conf}
+    heldout_target_hash = {corpus_by_id[q["target_doc"]]["normalized_text_sha256"] for q in dev + conf
+                           if q.get("target_doc")}
     leaks = [q["query_id"] for q in train if q["family"] in heldout_family
              or q.get("family_group") in heldout_group
-             or corpus_by_id[q["target_doc"]]["normalized_text_sha256"] in heldout_target_hash]
+             or (q.get("target_doc") and
+                 corpus_by_id[q["target_doc"]]["normalized_text_sha256"] in heldout_target_hash)]
     if leaks:
         raise SystemExit(f"M18 PROTOCOL REFUSED: {len(leaks)} held-out families leak into training")
     train_path = _write_rows(out / "training_queries.jsonl", train)
@@ -330,7 +332,8 @@ def build(corpus_path=None, out_root=None, registry_data=None):
                 "artifact_overlap_train_vs_heldout": len(
                     {q["family"] for q in train} & heldout_family),
                 "answer_digest_overlap_train_vs_heldout": len(
-                    {corpus_by_id[q["target_doc"]]["normalized_text_sha256"] for q in train}
+                    {corpus_by_id[q["target_doc"]]["normalized_text_sha256"] for q in train
+                     if q.get("target_doc")}
                     & heldout_target_hash),
                 "development_confirmation_family_overlap": len(
                     {q["family_group"] for q in dev} & {q["family_group"] for q in conf}),

@@ -180,7 +180,7 @@ def build(root, seed=0, device="cpu", log=print):
     v1_q = base_q[eligible]
     specs = [cache.QuerySpec(qid=q["query_id"], text=q["text"], source="synthetic-qdrant",
                              domain=q["stratum"], bucket="coverage", family=q["family"],
-                             positive_ids=(q["target_doc"],),
+                             positive_ids=((q["target_doc"],) if q.get("target_doc") else ()),
                              alias_pair_id=q.get("alias_pair_id", ""),
                              alias_view=q.get("alias_view", "")) for q in train_rows]
     bank = cache.Bank(doc_ids, doc_vecs, [d["kind"] for d in docs], seed=seed)
