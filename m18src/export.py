@@ -76,6 +76,7 @@ def build_bundle(out_dir, rows, tokenizer, provenance, variant="T0",
     limits = check_table_limits(rows, reg, fixture=fixture)
     if tokenizer.get_vocab_size(with_added_tokens=True) != rows.shape[0]:
         raise SystemExit("M18 EXPORT REFUSED: tokenizer/table row count mismatch")
+    tokenizer.no_padding()
     tokenizer_sha = sha_bytes(tokenizer.to_str().encode())
     identity = dict(provenance).get("training_snapshot") or dict(provenance).get("table_identity")
     if not fixture:
@@ -89,8 +90,7 @@ def build_bundle(out_dir, rows, tokenizer, provenance, variant="T0",
     try:
         atomic_save_npz(stage / "model.npz", rows_fp16=rows.astype(np.float16),
                         rows_int8=codes, int8_scale=scales)
-        tokenizer.no_padding()
-        tokenizer.save(str(stage / "tokenizer.json"))
+        tokenizer.save(str(stage / "tokenizer.json"), pretty=False)
         fz = freeze()
         config = {"_schema": "m18-internal-zero-bundle-v1", "internal_only": True,
                   "variant": variant, "vocab": int(rows.shape[0]), "dim": int(rows.shape[1]),

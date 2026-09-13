@@ -34,6 +34,7 @@ def _zero_encoder():
 
 def _save_tokenizer(path, tokenizer):
     path = Path(path)
+    tokenizer.no_padding()
     payload = tokenizer.to_str().encode()
     if path.exists():
         if path.read_bytes() != payload:
@@ -95,7 +96,7 @@ def build(index_root=None, protocol_root=None, out_root=None, device="cuda"):
     inherited, inherited_scalars, lineage = train.load_warm_start()
     stats, already_single = vocab.discover(
         [{"text": q["text"], "qid": q["query_id"], "source_doc": q["source_doc"],
-          "domain": q["stratum"]} for q in train_queries], residual, base_tok)
+          "domain": "qdrant-project"} for q in train_queries], residual, base_tok)
     selection = vocab.select(stats, reg, single_token=already_single)
     terms = [x["term"] for x in selection["terms"]]
     new_rows, compositions = vocab.init_new_rows(terms, base_tok, inherited)
@@ -111,7 +112,8 @@ def build(index_root=None, protocol_root=None, out_root=None, device="cuda"):
         raise SystemExit("M18 PREPARE REFUSED: serialized T0 tokenizer hash drifted")
 
     collision = preprocess.collision_audit([
-        {"text": q["text"], "relevance_group": q.get("target_doc") or q["family_group"]}
+        {"text": q["text"], "relevance_group": (q.get("target_doc")
+                                                  or q.get("family_group") or q["family"])}
         for q in train_queries])
     write_json(out / "t1_collision_audit.json", collision)
     if out_root is None:
