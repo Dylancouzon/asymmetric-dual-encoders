@@ -196,7 +196,9 @@ def evaluate_frozen(runs, qrels, query_specs, rules, supporting_passage_checks):
             (query_id, str(artifact)) for artifact in runs["dense_candidate"][query_id][:10]
             if str(artifact) in positives
         )
-    supplied = {(str(query), str(artifact)): bool(value)
+    if any(type(value) is not bool for value in supporting_passage_checks.values()):
+        raise ValueError("supporting-passage checks must be exact JSON booleans")
+    supplied = {(str(query), str(artifact)): value
                 for (query, artifact), value in supporting_passage_checks.items()}
     support_pass = all(supplied.get(item, False) for item in required_support)
     decision = eligibility(

@@ -49,16 +49,16 @@ def test_interrupted_transaction_resumes_across_judgment_boundary(tmp_path, monk
     tx = ConfirmationTransaction(tx.decision_path, tx.receipt_dir)
     assert tx.current()["state"] == "claimed"
     specs, routes = rehearse._pool_fixture()
-    pool_value, packet_value = rehearse.judgments.build_pool(routes, specs)
+    pool_value, packet_value = rehearse.judgments.build_pool(routes, specs, cap=1500)
     pool = confirmation / "pool.json"
     packet = confirmation / "packet.json"
     runs = confirmation / "runs.json"
     _write(pool, pool_value)
     _write(packet, packet_value)
-    candidate = {spec["query_id"]: ["a1"] for spec in specs}
-    baseline = {spec["query_id"]: ["a4"] for spec in specs}
-    _write(runs, {"dense_candidate": candidate, "dense_v1": baseline,
-                  "hybrid_candidate": candidate, "hybrid_v1": baseline})
+    route_runs = {role: {spec["query_id"]: pool_value["queries"][spec["query_id"]][
+        "route_top10"][route] for spec in specs}
+        for role, route in rehearse.judgments.METRIC_ROUTE_ROLES.items()}
+    _write(runs, route_runs)
     tx.freeze_pools({"pool_manifest": pool, "evidence_packet": packet, "metric_runs": runs})
     tx.begin_judgments()
     primary = confirmation / "primary-01.json"
@@ -133,3 +133,42 @@ def test_current_refuses_mutated_decision_binding(tmp_path, monkeypatch):
     row_receipt.write_text("tampered\n")
     with pytest.raises(SystemExit, match="binding changed: row_receipt"):
         tx.current()
+
+
+def test_production_mode_rejects_synthetic_trust_roots(tmp_path, monkeypatch):
+    tx, _ = _fixture(tmp_path, monkeypatch)
+    decision = common.load_json(tx.decision_path)
+    decision["mode"] = "production"
+    decision["_schema"] = "m19-confirmation-decision-v1"
+    path = tmp_path / "work" / "m19" / "production.json"
+    _write(path, decision)
+    with pytest.raises(SystemExit, match="noncanonical"):
+        ConfirmationTransaction(path, tx.receipt_dir)
+
+
+def test_review_and_serving_receipts_are_strict(tmp_path, monkeypatch):
+    tx, _ = _fixture(tmp_path, monkeypatch)
+    decision = common.load_json(tx.decision_path)
+    review = common.load_json(tx._bound_path("implementation_review"))
+    review["reviewed_commit"] = "1" * 40
+    review_path = tmp_path / "work" / "m19" / "stale-review.json"
+    digest = _write(review_path, review)
+    decision["bindings"]["implementation_review"] = {
+        "path": str(review_path.resolve()), "sha256": digest}
+    decision["review_gos"][0]["findings_sha256"] = digest
+    bad_decision = tmp_path / "work" / "m19" / "stale-review-decision.json"
+    _write(bad_decision, decision)
+    with pytest.raises(SystemExit, match="authenticated GO"):
+        ConfirmationTransaction(bad_decision, tmp_path / "work" / "m19" / "bad-receipts")
+
+    decision = common.load_json(tx.decision_path)
+    serving = common.load_json(tx._bound_path("serving_receipt"))
+    serving["checks"]["loader_parity"] = "false"
+    serving_path = tmp_path / "work" / "m19" / "bad-serving.json"
+    digest = _write(serving_path, serving)
+    decision["bindings"]["serving_receipt"] = {
+        "path": str(serving_path.resolve()), "sha256": digest}
+    bad_decision = tmp_path / "work" / "m19" / "bad-serving-decision.json"
+    _write(bad_decision, decision)
+    with pytest.raises(SystemExit, match="serving measurements"):
+        ConfirmationTransaction(bad_decision, tmp_path / "work" / "m19" / "bad-receipts-2")

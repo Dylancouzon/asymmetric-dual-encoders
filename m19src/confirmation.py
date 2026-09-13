@@ -21,14 +21,15 @@ REQUIRED_DECISION_KEYS = {
     "pool_recipe", "evidence_recipe", "judgment_recipe", "metric_recipe",
     "numerical_gates", "inheritance_identity", "primary_judge_id", "auditor_id",
     "confirmation_query_path", "confirmation_query_sha256", "review_gos",
-    "bindings", "registry_sections",
+    "bindings", "registry_sections", "mode", "reviewed_commit",
 }
 BOUND_ROLES = {
-    "registry", "inheritance_lock", "roster", "base_model", "base_tokenizer",
+    "registry", "inheritance_lock", "roster", "base_model", "base_tokenizer", "base_config",
     "bundle_model", "bundle_config", "bundle_tokenizer", "bundle_provenance",
     "bundle_complete", "development_qrels", "development_runs", "development_queries",
     "development_support", "development_evaluation", "implementation_review", "astra_review",
-    "teacher_vectors", "row_receipt", "serving_receipt",
+    "teacher_vectors", "teacher_receipt", "row_receipt", "serving_receipt", "review_scope",
+    "development_pool_manifest",
 }
 HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 SAFE_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}\Z")
@@ -42,7 +43,9 @@ def validate_decision(decision):
     missing = REQUIRED_DECISION_KEYS - set(decision)
     if missing:
         raise ValueError(f"decision lock missing {sorted(missing)}")
-    if decision["_schema"] != "m19-confirmation-decision-v1":
+    schemas = {"production": "m19-confirmation-decision-v1",
+               "synthetic": "m19-confirmation-decision-synthetic-v1"}
+    if decision.get("mode") not in schemas or decision["_schema"] != schemas[decision["mode"]]:
         raise ValueError("wrong confirmation decision schema")
     if not SAFE_ID.fullmatch(str(decision["transaction_id"])):
         raise ValueError("unsafe transaction ID")
@@ -71,6 +74,8 @@ def validate_decision(decision):
         raise ValueError("review GO record is incomplete")
     if len({row["reviewer_id"] for row in gos}) != 2:
         raise ValueError("review GO identities are not independent")
+    if not re.fullmatch(r"[0-9a-f]{40}", str(decision["reviewed_commit"])):
+        raise ValueError("reviewed commit must be a full git object ID")
     if set(decision["bindings"]) != BOUND_ROLES:
         raise ValueError(f"decision bindings must have exact roles {sorted(BOUND_ROLES)}")
     for role, binding in decision["bindings"].items():
@@ -113,9 +118,33 @@ class ConfirmationTransaction:
             raise SystemExit("M19 CONFIRMATION STOP: decision recipes/gates differ from registry")
         inheritance = self._load_bound_json("inheritance_lock")
         roster = self._load_bound_json("roster")
+        if (common.sha_json({k: v for k, v in inheritance.items() if k != "identity_sha256"}) !=
+                inheritance.get("identity_sha256") or
+                common.sha_json({k: v for k, v in roster.items() if k != "identity_sha256"}) !=
+                roster.get("identity_sha256")):
+            raise SystemExit("M19 CONFIRMATION STOP: lock body identity is invalid")
         if (inheritance.get("identity_sha256") != self.decision["inheritance_identity"] or
                 roster.get("identity_sha256") != self.decision["term_roster_sha256"]):
             raise SystemExit("M19 CONFIRMATION STOP: roster/inheritance identity differs")
+        if self.decision["mode"] == "production":
+            canonical = {
+                "registry": common.REGISTRY_PATH.resolve(),
+                "inheritance_lock": (common.M19 / "inheritance-lock.json").resolve(),
+                "roster": (common.M19 / "term-roster-lock-v3.json").resolve(),
+                "base_model": (common.RELEASE_BUNDLE / "model.npz").resolve(),
+                "base_tokenizer": (common.RELEASE_BUNDLE / "tokenizer.json").resolve(),
+                "base_config": (common.RELEASE_BUNDLE / "config.json").resolve(),
+            }
+            if any(self._bound_path(role).resolve() != path for role, path in canonical.items()):
+                raise SystemExit("M19 CONFIRMATION STOP: production trust root is noncanonical")
+        for role, inherited_role in (("base_model", "zero_v1_model"),
+                                     ("base_tokenizer", "zero_v1_tokenizer"),
+                                     ("base_config", "zero_v1_config")):
+            inherited = inheritance["inherited_data"][inherited_role]
+            binding = self.decision["bindings"][role]
+            if (Path(inherited["path"]).resolve() != self._bound_path(role).resolve() or
+                    inherited["sha256"] != binding["sha256"]):
+                raise SystemExit("M19 CONFIRMATION STOP: released base binding differs from lock")
         base_model = common.admit_read(self._bound_path("base_model"))
         with np.load(base_model) as archive:
             base_codes = np.asarray(archive["rows_int8"], dtype=np.int8).copy()
@@ -132,8 +161,23 @@ class ConfirmationTransaction:
         })
         if bundle_report["variant"] != "T0-teacher":
             raise SystemExit("M19 CONFIRMATION STOP: selected bundle is not T0-teacher")
-        teachers = {term: np.asarray(vector, dtype=np.float32) for term, vector in
-                    self._load_bound_json("teacher_vectors").items()}
+        teacher_array = np.load(common.admit_read(self._bound_path("teacher_vectors")))
+        terms = [row["term"] for row in roster["terms"]]
+        if (teacher_array.shape[0] != len(terms) or teacher_array.dtype != np.float32 or
+                not np.isfinite(teacher_array).all() or
+                float(np.max(np.abs(np.linalg.norm(teacher_array, axis=1) - 1))) > 1e-6):
+            raise SystemExit("M19 CONFIRMATION STOP: teacher vector term count differs")
+        teachers = {term: np.asarray(teacher_array[index], dtype=np.float32)
+                    for index, term in enumerate(terms)}
+        teacher_receipt = self._load_bound_json("teacher_receipt")
+        expected_teacher = {"model": registry["inheritance"]["document_encoder"],
+                            "query_prefix": registry["candidate"]["query_prefix"],
+                            "terms": terms, "dtype": str(teacher_array.dtype),
+                            "shape": list(teacher_array.shape),
+                            "vectors_sha256": common.sha_array(teacher_array)}
+        if (teacher_receipt.get("_schema") != "m19-teacher-vectors-v1" or
+                {key: teacher_receipt.get(key) for key in expected_teacher} != expected_teacher):
+            raise SystemExit("M19 CONFIRMATION STOP: teacher provenance differs from registry")
         built = zero.construct_added_rows(base_codes, base_scales, base_tokenizer_payload,
                                           roster, teachers)
         expected_codes, expected_scales = zero.compact_table(
@@ -146,6 +190,9 @@ class ConfirmationTransaction:
         if common.admit_read(self._bound_path("bundle_tokenizer")).read_bytes() != (
                 built["tokenizer"].to_str().encode()):
             raise SystemExit("M19 CONFIRMATION STOP: bundle tokenizer is not deterministic extension")
+        base_config = self._load_bound_json("base_config")
+        algebra = zero.algebra_gates(base_codes, base_scales, built, teachers,
+                                     registry=registry, base_config=base_config)
         row_receipt = self._load_bound_json("row_receipt")
         expected_row_receipt = {
             "_schema": "m19-row-receipt-v1", "variant": "T0-teacher",
@@ -153,6 +200,7 @@ class ConfirmationTransaction:
             "scales_sha256": common.sha_array(expected_scales),
             "tokenizer_sha256": common.sha_bytes(built["tokenizer"].to_str().encode()),
             "algebra_receipts_sha256": common.sha_json(built["receipts"]),
+            "algebra_gates_sha256": common.sha_json(algebra),
         }
         if row_receipt != expected_row_receipt:
             raise SystemExit("M19 CONFIRMATION STOP: deterministic row receipt differs")
@@ -168,15 +216,31 @@ class ConfirmationTransaction:
             raise SystemExit("M19 CONFIRMATION STOP: serving gate receipt is incomplete or failed")
         measured = serving.get("measurements", {})
         gates = registry["numerical_gates"]
-        if (set(measured) != {"loader_parity_max_abs", "added_row_bytes",
-                             "encoder_latency_ratio", "encoder_latency_additive_ms",
-                             "end_to_end_latency_ratio"} or
+        measure_keys = {"loader_parity_max_abs", "added_row_bytes",
+                        "encoder_latency_median_ratio", "encoder_latency_p95_ratio",
+                        "encoder_latency_median_additive_ms", "encoder_latency_p95_additive_ms",
+                        "end_to_end_latency_median_ratio", "end_to_end_latency_p95_ratio",
+                        "temporary_peak_bytes", "rss_high_water_kib"}
+        numeric = [value for value in measured.values()
+                   if type(value) in (int, float) and not isinstance(value, bool)]
+        provenance_keys = {"query_count", "query_sequence_sha256", "host", "threads",
+                           "warmup", "repetitions"}
+        bench = serving.get("benchmark", {})
+        if (set(measured) != measure_keys or len(numeric) != len(measured) or
+                not all(np.isfinite(value) and value >= 0 for value in numeric) or
+                set(bench) != provenance_keys or bench["query_count"] != gates["latency_queries"] or
+                not _is_hash(bench["query_sequence_sha256"]) or
+                any(type(serving["checks"][key]) is not bool for key in required_checks) or
                 measured["loader_parity_max_abs"] > gates["loader_parity_max_abs"] or
                 measured["added_row_bytes"] != gates["added_row_bytes"] or
-                measured["encoder_latency_ratio"] > gates["encoder_latency_ratio_maximum"] or
-                measured["encoder_latency_additive_ms"] >
+                max(measured["encoder_latency_median_ratio"], measured["encoder_latency_p95_ratio"]) >
+                gates["encoder_latency_ratio_maximum"] or
+                max(measured["encoder_latency_median_additive_ms"],
+                    measured["encoder_latency_p95_additive_ms"]) >
                 gates["encoder_latency_additive_ms_maximum"] or
-                measured["end_to_end_latency_ratio"] > gates["end_to_end_latency_ratio_maximum"]):
+                max(measured["end_to_end_latency_median_ratio"],
+                    measured["end_to_end_latency_p95_ratio"]) >
+                gates["end_to_end_latency_ratio_maximum"]):
             raise SystemExit("M19 CONFIRMATION STOP: serving measurements fail registered gates")
         bundle_hashes = {role.removeprefix("bundle_").replace("complete", "complete.json"):
                          binding["sha256"]
@@ -190,6 +254,16 @@ class ConfirmationTransaction:
             raise SystemExit("M19 CONFIRMATION STOP: selected bundle hash set differs")
         qrels = self._load_bound_json("development_qrels")
         runs = self._load_bound_json("development_runs")
+        dev_pool = self._load_bound_json("development_pool_manifest")
+        if (dev_pool.get("_schema") != "m19-artifact-pool-v1" or
+                dev_pool.get("routes") != list(judgments.ROUTES) or
+                set(dev_pool.get("queries", {})) != set(qrels)):
+            raise SystemExit("M19 CONFIRMATION STOP: development pool manifest differs")
+        for metric_role, route in judgments.METRIC_ROUTE_ROLES.items():
+            for query_id in qrels:
+                if list(map(str, runs[metric_role][query_id][:10])) != list(map(
+                        str, dev_pool["queries"][query_id]["route_top10"][route])):
+                    raise SystemExit("M19 CONFIRMATION STOP: development run differs from route")
         query_rows = self._load_bound_json("development_queries")
         support_rows = self._load_bound_json("development_support")
         support = {(row["query_id"], row["artifact_id"]): row["pass"] for row in support_rows}
@@ -200,7 +274,7 @@ class ConfirmationTransaction:
         expected_inputs = {
             role: self.decision["bindings"][role]["sha256"] for role in (
                 "development_qrels", "development_runs", "development_queries",
-                "development_support",
+                "development_support", "development_pool_manifest",
             )
         }
         if (evaluation != {"_schema": "m19-development-evaluation-v1",
@@ -225,7 +299,9 @@ class ConfirmationTransaction:
             if (receipt.get("_schema") != "m19-review-go-v1" or
                     receipt.get("role") != role or receipt.get("decision") != "GO" or
                     receipt.get("reviewer_id") != declared["reviewer_id"] or
-                    not receipt.get("reviewed_commit") or not _is_hash(receipt.get("scope_sha256"))):
+                    receipt.get("reviewed_commit") != self.decision["reviewed_commit"] or
+                    receipt.get("scope_sha256") !=
+                    self.decision["bindings"]["review_scope"]["sha256"]):
                 raise SystemExit("M19 CONFIRMATION STOP: bound review is not an authenticated GO")
         candidate = registry["candidate"]
         expected_formula = {"formula": candidate["formula"],
@@ -376,7 +452,11 @@ class ConfirmationTransaction:
         manifest = preview_json(files["pool_manifest"])
         packet = preview_json(files["evidence_packet"])
         metric_runs = preview_json(files["metric_runs"])
-        judgments.validate_frozen_pool(manifest, packet, metric_runs)
+        rules = self.decision["registry_sections"]["judgments"]
+        judgments.validate_frozen_pool(
+            manifest, packet, metric_runs, seed=int(rules["randomization_seed"]),
+            cap=int(rules["confirmation_cap"]),
+        )
         bound = preview
         return self._transition("claimed", "pools-frozen", added_files=bound,
                                 extra={"pool_roles": {k: str(v) for k, v in sorted(files.items())}})
@@ -447,6 +527,11 @@ class ConfirmationTransaction:
         query_rows = [json.loads(line) for line in self.read_bound_bytes(
             self.decision["confirmation_query_path"]
         ).splitlines() if line]
+        query_ids = [row.get("query_id") for row in query_rows]
+        if (len(query_ids) != len(set(query_ids)) or any(
+                not isinstance(row.get("author_id"), str) or not row["author_id"]
+                for row in query_rows)):
+            raise SystemExit("M19 CONFIRMATION STOP: sealed query authors/IDs are invalid")
         query_authors = {row["query_id"]: row["author_id"] for row in query_rows}
         if set(query_authors) != set(packet["queries"] if "queries" in packet else
                                      {row["query_id"] for row in packet["items"]}):

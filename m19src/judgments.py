@@ -11,7 +11,13 @@ ROUTES = (
     "bm25", "v1_dense", "v1_dbsf", "v0_compose_dense", "t0_teacher_dense",
     "t0_teacher_dbsf", "stella_dense",
 )
-FORBIDDEN_PACKET_KEYS = {"route", "routes", "score", "rank", "first_seen_phase", "system"}
+CONCEALED = ("system_identity", "route", "score", "rank", "first_seen_phase")
+FORBIDDEN_PACKET_KEYS = set(CONCEALED)
+METRIC_ROUTE_ROLES = {"dense_candidate": "t0_teacher_dense", "dense_v1": "v1_dense",
+                      "hybrid_candidate": "t0_teacher_dbsf", "hybrid_v1": "v1_dbsf"}
+PACKET_ITEM_KEYS = {"item_id", "query_id", "query_text", "term",
+                    "source_exclusion_identity", "artifact_id", "title", "url_or_path",
+                    "kind", "passages"}
 
 
 def _row_passages(row):
@@ -88,7 +94,7 @@ def build_pool(routes, query_specs, *, seed=19019, cap=3000):
         "_schema": "m19-blinded-evidence-packet-v1",
         "seed": int(seed),
         "items": packet_items,
-        "concealed": sorted(FORBIDDEN_PACKET_KEYS),
+        "concealed": list(CONCEALED),
     }
 
 
@@ -103,23 +109,32 @@ def assert_blinded(packet):
         elif isinstance(value, list):
             for child in value:
                 visit(child)
-    visit(packet["items"])
+    if set(packet) != {"_schema", "seed", "items", "concealed"}:
+        raise ValueError("blinded packet has unexpected top-level fields")
+    visit(packet)
     for item in packet["items"]:
+        if set(item) != PACKET_ITEM_KEYS:
+            raise ValueError("packet item has unexpected fields")
         if len(item["passages"]) > 3 or any(len(row["text"]) > 1200 for row in item["passages"]):
             raise ValueError("evidence packet exceeds passage limits")
     return True
 
 
-def validate_frozen_pool(manifest, packet, metric_runs):
+def validate_frozen_pool(manifest, packet, metric_runs, *, seed=19019, cap=3000):
     """Join the blinded packet and every scored top-ten to the registered seven-route union."""
     if (manifest.get("_schema") != "m19-artifact-pool-v1" or
             packet.get("_schema") != "m19-blinded-evidence-packet-v1" or
-            manifest.get("routes") != list(ROUTES)):
+            manifest.get("routes") != list(ROUTES) or manifest.get("cap") != int(cap) or
+            packet.get("seed") != int(seed) or
+            packet.get("concealed") != list(CONCEALED)):
         raise ValueError("pool/packet schema or route registry differs")
     assert_blinded(packet)
     by_query = defaultdict(set)
     seen_items = set()
     for item in packet["items"]:
+        expected_id = sha_json({"query_id": item["query_id"], "artifact_id": item["artifact_id"]})[:24]
+        if item.get("item_id") != expected_id:
+            raise ValueError("packet item ID differs from query/artifact identity")
         key = (item["query_id"], item["artifact_id"])
         if key in seen_items:
             raise ValueError("packet repeats a query-artifact item")
@@ -137,7 +152,9 @@ def validate_frozen_pool(manifest, packet, metric_runs):
             ranked = row["route_top10"][route]
             if len(ranked) != len(set(ranked)) or not set(ranked).issubset(union):
                 raise ValueError("route top-ten is duplicate or outside pool union")
-    required_runs = {"dense_candidate", "dense_v1", "hybrid_candidate", "hybrid_v1"}
+    if manifest.get("unique_query_artifact_items") != len(packet["items"]):
+        raise ValueError("pool/packet item count differs")
+    required_runs = set(METRIC_ROUTE_ROLES)
     if set(metric_runs) != required_runs:
         raise ValueError("metric run roles differ from frozen evaluator")
     for run in metric_runs.values():
@@ -147,6 +164,11 @@ def validate_frozen_pool(manifest, packet, metric_runs):
             top = list(map(str, ranked[:10]))
             if len(top) != len(set(top)) or not set(top).issubset(by_query[query_id]):
                 raise ValueError("metric top-ten is duplicate or outside judged union")
+    for metric_role, route in METRIC_ROUTE_ROLES.items():
+        for query_id in by_query:
+            if list(map(str, metric_runs[metric_role][query_id][:10])) != list(map(
+                    str, manifest["queries"][query_id]["route_top10"][route])):
+                raise ValueError("metric run differs from its registered frozen route")
     return True
 
 
@@ -158,7 +180,7 @@ def select_audit(packet, primary_labels, *, seed=19019, fraction=0.20):
     if any(label not in valid for label in primary_labels.values()):
         raise ValueError("labels must be binary or unjudgeable")
     chosen = {item_id for item_id, label in primary_labels.items() if label in (1, "unjudgeable")}
-    negatives = [item_id for item_id, label in primary_labels.items() if label == 0]
+    negatives = sorted(item_id for item_id, label in primary_labels.items() if label == 0)
     random.Random(seed).shuffle(negatives)
     # Seed negatives to cover every query and term when a negative exists for that group.
     for field in ("query_id", "term"):

@@ -52,8 +52,13 @@ def _pool_fixture():
          "source_exclusion_identity": "synthetic-source-2"},
     ]
     routes = {}
-    for route_index, route in enumerate(judgments.ROUTES):
-        artifacts = ["a1", "a2", "a3"] if route_index % 2 == 0 else ["a2", "a4", "a5"]
+    for route in judgments.ROUTES:
+        if route in ("t0_teacher_dense", "t0_teacher_dbsf"):
+            artifacts = ["a1"]
+        elif route in ("v1_dense", "v1_dbsf"):
+            artifacts = ["a4"]
+        else:
+            artifacts = ["a2", "a3"]
         routes[route] = {
             spec["query_id"]: [_route_row(route, artifact, rank)
                                for rank, artifact in enumerate(artifacts, start=1)]
@@ -101,15 +106,33 @@ def _prepare_decision(root, query_path, query_sha256, registry):
     pooling = {"fallback_token_id": 1, "learned_weights": False,
                "preproc": {"add_special_tokens": True, "max_length": 512,
                            "pool_mode": "sqrt", "prefix": ""}, "weights_folded": True}
+    base_config = {**pooling, "document_encoder": {"dim": 4}}
+    base_config_path = root / "base-config.json"
+    _write_or_verify(base_config_path, base_config)
     inheritance_body = {"_schema": "m19-synthetic-inheritance-v1",
                         "identities": {"released_effective_table": {
-                            "pooling_sha256": common.sha_json(pooling)}}}
+                            "pooling_sha256": common.sha_json(pooling)}},
+                        "inherited_data": {
+                            "zero_v1_model": {"path": str(base_model_path.resolve()),
+                                              "sha256": common.sha_file_unchecked(base_model_path)},
+                            "zero_v1_tokenizer": {"path": str(base_tokenizer_path.resolve()),
+                                                  "sha256": common.sha_file_unchecked(base_tokenizer_path)},
+                            "zero_v1_config": {"path": str(base_config_path.resolve()),
+                                               "sha256": common.sha_file_unchecked(base_config_path)}}}
     inheritance = {**inheritance_body, "identity_sha256": common.sha_json(inheritance_body)}
     inheritance_path = root / "inheritance.json"
     _write_or_verify(inheritance_path, inheritance)
-    teacher = {"k8s": np.array([0.2, 0.7, -0.1, 0.4], dtype=np.float32)}
-    teacher_path = root / "teacher-vectors.json"
-    _write_or_verify(teacher_path, {term: vector.tolist() for term, vector in teacher.items()})
+    teacher = {"k8s": zero._normalize(np.array([0.2, 0.7, -0.1, 0.4], dtype=np.float32))}
+    teacher_array = np.stack([teacher["k8s"]])
+    teacher_path = root / "teacher-vectors.npy"
+    _write_or_verify(teacher_path, zero._npy_bytes(teacher_array))
+    teacher_receipt = {"_schema": "m19-teacher-vectors-v1",
+                       "model": registry["inheritance"]["document_encoder"],
+                       "query_prefix": registry["candidate"]["query_prefix"], "terms": ["k8s"],
+                       "dtype": str(teacher_array.dtype), "shape": list(teacher_array.shape),
+                       "vectors_sha256": common.sha_array(teacher_array)}
+    teacher_receipt_path = root / "teacher-receipt.json"
+    _write_or_verify(teacher_receipt_path, teacher_receipt)
     built = zero.construct_added_rows(base_codes, base_scales, base_tokenizer, roster, teacher)
     codes, scales = zero.compact_table(base_codes, base_scales, built["T0-teacher"])
     verification = {"base_codes": base_codes, "base_scales": base_scales,
@@ -123,15 +146,17 @@ def _prepare_decision(root, query_path, query_sha256, registry):
                   "base_tokenizer_sha256": common.sha_bytes(base_tokenizer),
                   "pooling_identity_sha256": common.sha_json(pooling),
                   "selected_added_token_audit": audit}
-    base_config = {**pooling, "document_encoder": {"dim": 4}}
     payload = zero.bundle_payload("T0-teacher", codes, scales, extended, base_config, provenance)
     bundle_dir = root / "bundle"
     bundle_report = zero.publish_bundle(bundle_dir, payload, verification=verification)
+    algebra = zero.algebra_gates(base_codes, base_scales, built, teacher,
+                                 registry=registry, base_config=base_config)
     row_receipt = {"_schema": "m19-row-receipt-v1", "variant": "T0-teacher",
                    "codes_sha256": common.sha_array(codes),
                    "scales_sha256": common.sha_array(scales),
                    "tokenizer_sha256": common.sha_bytes(extended.to_str().encode()),
-                   "algebra_receipts_sha256": common.sha_json(built["receipts"])}
+                   "algebra_receipts_sha256": common.sha_json(built["receipts"]),
+                   "algebra_gates_sha256": common.sha_json(algebra)}
     row_receipt_path = root / "row-receipt.json"
     _write_or_verify(row_receipt_path, row_receipt)
     serving_receipt = {"_schema": "m19-serving-gates-v1", "variant": "T0-teacher",
@@ -140,11 +165,17 @@ def _prepare_decision(root, query_path, query_sha256, registry):
                            "loader_parity", "tokenizer_boundaries", "no_match_ranking_parity",
                            "pooling_identity", "resident_memory", "encoder_latency",
                            "end_to_end_latency")},
-                       "measurements": {"loader_parity_max_abs": 0.0,
-                                        "added_row_bytes": 8,
-                                        "encoder_latency_ratio": 1.0,
-                                        "encoder_latency_additive_ms": 0.0,
-                                        "end_to_end_latency_ratio": 1.0}}
+                       "measurements": {"loader_parity_max_abs": 0.0, "added_row_bytes": 8,
+                                        "encoder_latency_median_ratio": 1.0,
+                                        "encoder_latency_p95_ratio": 1.0,
+                                        "encoder_latency_median_additive_ms": 0.0,
+                                        "encoder_latency_p95_additive_ms": 0.0,
+                                        "end_to_end_latency_median_ratio": 1.0,
+                                        "end_to_end_latency_p95_ratio": 1.0,
+                                        "temporary_peak_bytes": 0, "rss_high_water_kib": 0},
+                       "benchmark": {"query_count": registry["numerical_gates"]["latency_queries"],
+                                     "query_sequence_sha256": "8" * 64, "host": "synthetic",
+                                     "threads": 1, "warmup": 1, "repetitions": 1}}
     serving_receipt_path = root / "serving-receipt.json"
     _write_or_verify(serving_receipt_path, serving_receipt)
 
@@ -158,12 +189,19 @@ def _prepare_decision(root, query_path, query_sha256, registry):
     baseline = {row["query_id"]: ["bad"] for row in dev_queries}
     dev_runs = {"dense_candidate": candidate, "dense_v1": baseline,
                 "hybrid_candidate": candidate, "hybrid_v1": baseline}
+    dev_pool = {"_schema": "m19-artifact-pool-v1", "routes": list(judgments.ROUTES),
+                "queries": {row["query_id"]: {"artifact_ids": ["bad", "good"],
+                    "route_top10": {route: (candidate[row["query_id"]]
+                        if route in ("t0_teacher_dense", "t0_teacher_dbsf")
+                        else baseline[row["query_id"]]) for route in judgments.ROUTES}}
+                    for row in dev_queries}}
     dev_support = [{"query_id": "d-short", "artifact_id": "good", "pass": True}]
     computed = metrics.evaluate_frozen(
         dev_runs, dev_qrels, dev_queries, registry["development_eligibility"],
         {("d-short", "good"): True},
     )
     artifacts = {"development_qrels": dev_qrels, "development_runs": dev_runs,
+                 "development_pool_manifest": dev_pool,
                  "development_queries": dev_queries, "development_support": dev_support}
     paths = {}
     for role, value in artifacts.items():
@@ -174,19 +212,25 @@ def _prepare_decision(root, query_path, query_sha256, registry):
                                    for role, path in paths.items()}, "result": computed}
     paths["development_evaluation"] = root / "development_evaluation.json"
     _write_or_verify(paths["development_evaluation"], evaluation)
-    review_paths = {"implementation_review": root / "implementation-review.md",
-                    "astra_review": root / "astra-review.md"}
+    review_scope_path = root / "review-scope.json"
+    _write_or_verify(review_scope_path, {"_schema": "m19-review-scope-v1",
+                                        "files": {"synthetic": "7" * 64}})
+    reviewed_commit = "0" * 40
+    review_paths = {"implementation_review": root / "implementation-review.json",
+                    "astra_review": root / "astra-review.json"}
     for role, path in review_paths.items():
         short_role = role.removesuffix("_review")
         _write_or_verify(path, {"_schema": "m19-review-go-v1", "role": short_role,
                                 "reviewer_id": f"synthetic-{short_role}-reviewer",
-                                "decision": "GO", "reviewed_commit": "synthetic-commit",
-                                "scope_sha256": "9" * 64})
+                                "decision": "GO", "reviewed_commit": reviewed_commit,
+                                "scope_sha256": common.sha_file_unchecked(review_scope_path)})
 
     role_paths = {"registry": registry_path, "inheritance_lock": inheritance_path,
                   "roster": roster_path, "base_model": base_model_path,
-                  "base_tokenizer": base_tokenizer_path, "teacher_vectors": teacher_path,
+                  "base_tokenizer": base_tokenizer_path, "base_config": base_config_path,
+                  "teacher_vectors": teacher_path, "teacher_receipt": teacher_receipt_path,
                   "row_receipt": row_receipt_path, "serving_receipt": serving_receipt_path,
+                  "review_scope": review_scope_path,
                   **paths, **review_paths}
     for name in ("model.npz", "config.json", "tokenizer.json", "provenance.json", "complete.json"):
         role_paths["bundle_" + name.split(".")[0]] = bundle_dir / name
@@ -195,7 +239,8 @@ def _prepare_decision(root, query_path, query_sha256, registry):
     bundle_hashes = {Path(row["path"]).name: row["sha256"] for role, row in bindings.items()
                      if role.startswith("bundle_")}
     return {
-        "_schema": "m19-confirmation-decision-v1", "transaction_id": "synthetic-rehearsal-v1",
+        "_schema": "m19-confirmation-decision-synthetic-v1", "mode": "synthetic",
+        "reviewed_commit": reviewed_commit, "transaction_id": "synthetic-rehearsal-v1",
         "candidate_id": "T0-teacher", "eligible": True,
         "bundle_hashes": bundle_hashes,
         "development_qrels_sha256": bindings["development_qrels"]["sha256"],
@@ -230,7 +275,7 @@ def run_rehearsal(root=None):
     """Run or resume a fixed synthetic transaction, including an object reconstruction."""
     registry = common.load_json(common.REGISTRY_PATH)
     original_work, original_confirmation = common.WORK, common.CONFIRMATION_WORK
-    synthetic_root = Path(root or (original_work / "rehearsal-v3"))
+    synthetic_root = Path(root or (original_work / "rehearsal-v4"))
     common.WORK = synthetic_root
     common.CONFIRMATION_WORK = synthetic_root / "confirmation"
     try:
@@ -260,7 +305,9 @@ def run_rehearsal(root=None):
             state = "claimed"
 
         specs, routes = _pool_fixture()
-        pool, packet = judgments.build_pool(routes, specs, seed=19019, cap=3000)
+        pool, packet = judgments.build_pool(
+            routes, specs, seed=19019, cap=int(registry["judgments"]["confirmation_cap"])
+        )
         judgments.assert_blinded(packet)
         pool_path, packet_path = common.CONFIRMATION_WORK / "pool.json", (
             common.CONFIRMATION_WORK / "packet.json"
@@ -328,7 +375,7 @@ def run_rehearsal(root=None):
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output", default=str(common.RESULTS / "m19_rehearsal_v3.json"))
+    parser.add_argument("--output", default=str(common.RESULTS / "m19_rehearsal_v4.json"))
     args = parser.parse_args(argv)
     result = run_rehearsal()
     payload = _json_bytes(result)

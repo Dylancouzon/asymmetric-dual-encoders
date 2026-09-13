@@ -177,14 +177,17 @@ class M19QueryEncoder:
         return np.stack([self.encode_ids(item.ids) for item in self.tokenizer.encode_batch(texts)])
 
 
-def algebra_gates(base_codes, base_scales, built, teacher_vectors, registry=None):
+def algebra_gates(base_codes, base_scales, built, teacher_vectors, registry=None,
+                  base_config=None):
     registry = registry or load_json(REGISTRY_PATH)
     gates = registry["numerical_gates"]
     reports = {}
     for variant in ("V0-compose", "T0-teacher"):
         codes, scales = compact_table(base_codes, base_scales, built[variant])
-        cfg = load_json(RELEASE_BUNDLE / "config.json")
-        encoder = M19QueryEncoder(codes, scales, built["tokenizer"], cfg)
+        cfg = base_config or load_json(RELEASE_BUNDLE / "config.json")
+        encoder = M19QueryEncoder(
+            codes, scales, Tokenizer.from_str(built["tokenizer"].to_str()), cfg
+        )
         variant_reports = {}
         for receipt in built["receipts"]:
             term = receipt["term"]
