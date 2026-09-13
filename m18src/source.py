@@ -447,7 +447,8 @@ def _time(value: Any) -> dt.datetime | None:
         raise SourceError(f"invalid GitHub timestamp {value!r}") from e
 
 
-def _cutoff_counts(pages: Mapping[str, list[list[dict[str, Any]]]], cutoff: str) -> tuple[dict[str, Any], int]:
+def _cutoff_counts(pages: Mapping[str, list[list[dict[str, Any]]]], cutoff: str,
+                   per_page: int) -> tuple[dict[str, Any], int]:
     cutoff_time = _time(cutoff)
     if cutoff_time is None:
         raise SourceError("registry source.github_cutoff_utc is required")
@@ -469,6 +470,8 @@ def _cutoff_counts(pages: Mapping[str, list[list[dict[str, Any]]]], cutoff: str)
             "created_at_included": len(included), "created_after_cutoff": post_created,
             "updated_after_cutoff": post_updated, "canonical_unique_in_endpoint": len(endpoint_unique),
             "duplicates_in_endpoint": len(included) - len(endpoint_unique),
+            "terminal_page_full": bool(endpoint_pages and len(endpoint_pages[-1]) == per_page),
+            "possible_server_pagination_cap": bool(endpoint_pages and len(endpoint_pages[-1]) == per_page),
             "raw_pages_sha256": _sha(_json_bytes([
                 _sha(_json_bytes(page)) for page in endpoint_pages])),
         }
@@ -570,9 +573,11 @@ def _reconcile_endpoint(owned: Path, endpoint: Mapping[str, Any], source: Mappin
                           f"{name} missing={missing} added={added}")
     mutations = sum(_sha(_json_bytes(original[k])) != _sha(_json_bytes(observed[k]))
                     for k in original)
-    return {"stored_pages": len(stored), "observed_pages": len(observed_pages),
+    observed_count = sum(map(len, observed_pages))
+    return {"stored_pages": len(stored), "observed_response_arrays": len(observed_pages),
+            "observed_equivalent_pages": (observed_count + per_page - 1) // per_page,
             "admitted_identities": len(original), "mutable_payload_changes": mutations,
-            "observed_objects": sum(map(len, observed_pages)),
+            "observed_objects": observed_count,
             "observed_sha256": _sha(_json_bytes(observed_pages))}
 
 
@@ -624,7 +629,8 @@ def acquire_github(root: Path | str = REPO, *, registry_data: Mapping[str, Any] 
         for endpoint in endpoints:
             reconciliation[_endpoint_name(endpoint)] = _reconcile_endpoint(
                 owned, endpoint, source, api_call)
-    counts, cross_endpoint_duplicates = _cutoff_counts(endpoint_pages, str(source["github_cutoff_utc"]))
+    counts, cross_endpoint_duplicates = _cutoff_counts(
+        endpoint_pages, str(source["github_cutoff_utc"]), int(source["per_page"]))
     manifest = _redact({
         "schema": SOURCE_SCHEMA,
         "complete": True,
@@ -637,7 +643,8 @@ def acquire_github(root: Path | str = REPO, *, registry_data: Mapping[str, Any] 
         "cross_endpoint_duplicates_after_cutoff": cross_endpoint_duplicates,
         "reconciled_second_pass": bool(reconcile),
         "reconciliation": reconciliation,
-        "consistency_limit": "GitHub bodies may have been edited after cutoff; updated_after_cutoff records this.",
+        "consistency_limit": ("GitHub bodies may have been edited after cutoff; updated_after_cutoff records this. "
+                              "A full terminal page may indicate a server pagination cap; issue-event links are auxiliary metadata."),
     })
     _atomic_json(owned / "github-manifest.json", manifest)
     if root == REPO.resolve():

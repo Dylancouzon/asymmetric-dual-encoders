@@ -276,7 +276,7 @@ def parse_github(raw_root, cutoff, chunk_tokens=384, overlap=48):
                "text": text, "path": None, "symbol": None, "source_url": row.get("url"),
                "timestamp": row.get("created_at"), "updated_at": None,
                "author": (row.get("actor") or {}).get("login"), "author_association": None,
-               "outbound_links": sorted(set(links))}
+               "outbound_links": sorted(set(links)), "indexable": False}
     parse_github.stats = {"redactions": dict(redactions), "quoted_lines_removed": quoted,
                           "unique_issue_objects": len(issues)}
 
@@ -353,6 +353,8 @@ def build(raw_root=None, out_root=None, registry_data=None, fixture=False):
     manifest = {"_schema": "m18-corpus-manifest-v1", "commit": reg["source"]["commit"],
                 "cutoff_utc": reg["source"]["github_cutoff_utc"], "documents": len(rows),
                 "artifacts": len(artifacts), "by_kind": dict(sorted(by_kind.items())),
+                "indexable_documents": sum(r.get("indexable", True) for r in rows),
+                "relationship_metadata_records": sum(not r.get("indexable", True) for r in rows),
                 "exact_duplicates_removed": len(duplicates),
                 "redaction": {"github": getattr(parse_github, "stats", {}),
                               "repository": getattr(parse_repository, "stats", {})},

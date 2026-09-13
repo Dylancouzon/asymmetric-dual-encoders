@@ -136,7 +136,8 @@ def build_index(corpus_path=None, out_root=None, device="cuda", shard_size=4096,
     corpus_path = Path(corpus_path or WORK / "derived" / "corpus.jsonl")
     out = Path(out_root or WORK / "derived" / "index")
     out.mkdir(parents=True, exist_ok=True)
-    rows = read_corpus(corpus_path)
+    all_rows = read_corpus(corpus_path)
+    rows = [r for r in all_rows if r.get("indexable", True)]
     ids = [r["doc_id"] for r in rows]
     texts = [document_text(r) for r in rows]
     vectors, enc = encode_stella_sharded("documents", texts, out, prefix="", device=device,
