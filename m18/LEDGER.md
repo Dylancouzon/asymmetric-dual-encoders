@@ -281,3 +281,12 @@
   `m18/execution-lock.json`, SHA-256
   `008e99173752dfe856395efb01b29cec424dcae7255dd8ff647b56ceb3fc8b60`. The registry is again
   `LOCKED_EXECUTABLE`; the original pre-`k8s` lock remains archived separately.
+
+## 2026-09-13 — E16 amended V0 development baseline
+
+- Re-evaluated the changed 16-row V0-T0 bundle on the identical 100-query development set. Its
+  dense and fused metrics remain byte-for-byte equal to both released v1 and the pre-amendment V0
+  result: macro nDCG@10 0.087336 dense and 0.103431 with DBSF. This is expected because the fixed
+  development set contains no `k8s` query; the separate bare-term report will test that shape.
+- The report retains the unchanged BM25 and Stella ceiling results under their verified identities.
+  Registry `development_read` is now true; confirmation remains unread.
