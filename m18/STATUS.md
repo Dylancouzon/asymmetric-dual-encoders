@@ -1,6 +1,6 @@
 # M18 status
 
-**State: EXECUTING — final protocol verification.** Owner execution authorization arrived
+**State: EXECUTING — system index and baselines.** Owner execution authorization arrived
 2026-09-12.
 
 Current outcome: the complete pinned source snapshot produced 79,269 indexable document units. The
@@ -15,6 +15,6 @@ clear pairs entered the final split; smaller realized strata are disclosed rathe
 Training uses 298 non-held-out issue/PR titles as teacher-only views without qrels plus 482 alias
 views. A fresh dev-only audit found 39/40 clear and one partial; that pair was removed. Every chunk
 of each query-bearing source object is now excluded with compensating overfetch. Full Stella
-encoding is next after verification of these two bounded corrections.
+encoding is now approved and next.
 
 Pointers: `instructions-m18.md`, `m18/registry.json`, `m18/LEDGER.md`, `m18/CODEMAP.md`.

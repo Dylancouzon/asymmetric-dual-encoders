@@ -180,3 +180,7 @@
   `e2257e103d893bdda1cb9b71786f6a5f75729eb9baa028e1bd113dc305e59c41` and the v6 protocol identity
   is `0a919bdde39f7059fbc0cd27c2768929bff5754bdc7da1c2b644f8963b9a3c1a`.
   Confirmation content remains unread. No corpus rebuild or broader evaluation machinery was added.
+- The same independent reviewer verified the two corrections at `a685370` and issued **GO** for
+  full Stella encoding and development scoring. It judged the dataset proportionate without more
+  machinery, provided the planned report-only bare-term top-10 comparison remains in the final
+  evidence. This closes the pre-expensive-run data gate.
