@@ -93,6 +93,11 @@ executable status.
   legacy M7 only. `HARNESS.md` documents the current check commands.
 - Preserve code/artifact paths (`m10src`, `results/m10_*`, locks, freezes and spent tags).
   Renaming a milestone does not rename a frozen experiment or its access receipt.
+- Keep experimental scaffolding proportional to the decision it enables. Before adding a new
+  framework, state the decision, the smallest reproducible artifact that can answer it and a time
+  cap. Prefer existing primitives and a bounded diagnostic for an internal proof of concept; do not
+  build production transaction machinery for a one-off question. Result-bearing calculations still
+  need a frozen method and compact reproducible receipt.
 
 ## Before a long run
 
@@ -112,6 +117,13 @@ findings and re-review substantive fixes. Two independent reviewers are required
 or irreversible execution. Every brief names files, forbids recursive searches and includes the
 reserved read-exclusion above; audit its access log before accepting findings. Reviewing isolated
 decision helpers cannot certify an unwritten executor. Track findings once, with an owner and exit.
+
+The default governance budget is one implementation review round plus one focused re-review of
+P0/P1 correctness fixes. Record P2/P3 debt instead of automatically remediating it unless it can
+invalidate the result, break safety/reproducibility or the owner asks for the fix. A review does not
+authorize scope expansion. If a re-review finds new blockers or a second NO-GO occurs, pause and
+simplify the design or ask for owner direction instead of layering on more locks, schemas or review
+cycles.
 
 Before calling a bar unreachable: redo the arithmetic with the best permitted components,
 diagnose each failing component, check the literature for that failure, test capability claims
