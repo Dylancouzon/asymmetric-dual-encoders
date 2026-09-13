@@ -93,7 +93,9 @@ def benchmark(query_count, warmup):
     registry = load_json(M19 / "registry.json")
     inheritance, roster, base_config, verification, v1, t0, query_rows = _load_context()
     index = inheritance["inherited_data"]
-    documents = np.load(admit_read(index["document_vectors"]["path"]), mmap_mode="r")
+    # Copy-on-write keeps the source array immutable on disk while satisfying
+    # torch.from_numpy's writable-buffer requirement without a full host copy.
+    documents = np.load(admit_read(index["document_vectors"]["path"]), mmap_mode="c")
     passage_ids = json.loads(admit_read(index["doc_ids"]["path"]).read_text())
     positions = {passage_id: index for index, passage_id in enumerate(passage_ids)}
     artifact_ids = [None] * len(passage_ids)
