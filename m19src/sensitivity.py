@@ -3,9 +3,14 @@ from __future__ import annotations
 
 import argparse
 import itertools
+import sys
 from collections import Counter, defaultdict
 from fractions import Fraction
 from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[1]
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
 
 from m19src import metrics
 from m19src.common import RESULTS, WORK, create_json, load_json, registry, sha_file, sha_json

@@ -1,4 +1,7 @@
 from fractions import Fraction
+from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
@@ -66,3 +69,10 @@ def test_query_states_refuses_ranked_artifact_outside_pool():
     with pytest.raises(ValueError, match="outside the frozen pool"):
         query_states("q", ["inside"], {"candidate": ["outside"]},
                      known={}, unknown=set())
+
+
+def test_direct_script_entrypoint_imports_package():
+    script = Path(__file__).with_name("sensitivity.py")
+    completed = subprocess.run(
+        [sys.executable, str(script), "--help"], capture_output=True, text=True, check=False)
+    assert completed.returncode == 0, completed.stderr
