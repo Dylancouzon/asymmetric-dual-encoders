@@ -24,3 +24,7 @@ The v1 and v2 receipts remain preserved and superseded; v3's selected AddedToken
 exactly 12 rows/IDs and a final vocabulary of 30,534. Astra returned `GO` for stage-3 implementation.
 No retrieval quality or M18 protocol surface was accessed. Next: implement deterministic rows,
 artifact collapse, metrics and the synthetic confirmation state machine before authoring query text.
+
+Stage 3 progress: deterministic V0/T0 row algebra, inherited-row-preserving int8 assembly,
+resident-int8 loading and resumable immutable bundle publication are implemented with six synthetic
+tests. Artifact collapse, metrics and confirmation rehearsal remain before implementation review.

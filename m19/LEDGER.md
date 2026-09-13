@@ -96,3 +96,16 @@
   `8170f9b0432d4b7460601e1dbf39536d99b1e4af026d9a3afef649a9c89ef892`.
   Eight inventory tests pass, including driver-level consumed-input drift. Stage 3 may begin; real
   judging remains unauthorized until the required end-to-end implementation reviews.
+
+## 2026-09-13 — deterministic row/compact-loader implementation
+
+- Implemented the registered formula directly over released-v1 effective int8 rows. V0 uses the
+  original fragment contribution; T0 sets `r_t = alpha*u_t - a_t` with alpha equal to the old bare
+  sum norm. No optimizer/checkpoint/sweep path exists.
+- The compact table appends one int8 code row plus one float32 scale while copying every inherited
+  code and scale exactly. The loader dequantizes only query-referenced rows and has no full-table
+  float32 member.
+- Bundle bytes are deterministic and publish resumably with `complete.json` last; incomplete
+  bundles are unreadable and differing existing bytes are refused.
+- Six synthetic row/bundle tests pass. Real teacher rows and bundles are stage 5 work, after the
+  complete stage-3 implementation review.

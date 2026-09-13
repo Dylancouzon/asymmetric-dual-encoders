@@ -8,6 +8,7 @@
 | `m19src/common.py` | M19 paths, strict read/write admission, hashes and atomic writes |
 | `m19src/inherit.py` | verify and publish the M18/Zero-v1 inheritance lock |
 | `m19src/term_inventory.py` | consumed-byte-bound AddedToken support scan, source qualification and resumable v2 roster lock |
+| `m19src/zero.py` | deterministic V0/T0 row algebra, compact int8 table and no-eager-float loader |
 | `m19/term-roster-lock-v3.json`, `results/m19_term_inventory_v3.json` | final 12-term roster audit/evidence; v1/v2 are preserved and superseded |
 | `m19src/test_common.py`, `test_inherit.py` | synthetic path-guard and lock tests |
 | `m19/reviews/` | bounded prompts, reviewer identities, access logs, findings and dispositions |
