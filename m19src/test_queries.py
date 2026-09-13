@@ -73,6 +73,14 @@ def test_refuses_multiple_roster_terms_and_empty_safety():
     development[1]["text"] = "k8s s3"
     with pytest.raises(ValueError, match="exactly one"):
         queries.validate_splits(development, confirmation, roster, tokenizer, registry)
+
+
+def test_refuses_empty_or_non_string_query_author():
+    for invalid in ("", " author ", None):
+        development, confirmation, roster, tokenizer, registry = _fixture()
+        development[0]["author_id"] = invalid
+        with pytest.raises(ValueError, match="author ID"):
+            queries.validate_splits(development, confirmation, roster, tokenizer, registry)
     development, confirmation, roster, tokenizer, registry = _fixture()
     for row in development:
         row["tags"] = []

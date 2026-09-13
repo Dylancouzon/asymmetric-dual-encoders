@@ -199,6 +199,9 @@ class DevelopmentTransaction:
         primary = _load(primary_path)
         audit_payload = _load(audit_path)
         adjudications = _load(adjudication_path)
+        if any(not isinstance(row.get("author_id"), str) or not row["author_id"].strip() or
+               row["author_id"] != row["author_id"].strip() for row in query_specs):
+            raise SystemExit("M19 DEVELOPMENT STOP: sealed query author IDs are invalid")
         query_authors = {row["query_id"]: row["author_id"] for row in query_specs}
         frozen = judgments.freeze_binary_labels(
             packet, primary, audit_payload["sample"], audit_payload["labels"], adjudications,

@@ -262,8 +262,14 @@ def freeze_binary_labels(packet, primary_labels, audit, auditor_labels, adjudica
     items = {row["item_id"]: row for row in packet["items"]}
     if set(query_authors) != {row["query_id"] for row in packet["items"]}:
         raise SystemExit("M19 JUDGMENT STOP: query-author mapping is incomplete")
-    authors = {str(value) for value in query_authors.values()}
-    if not primary_reviewer_id or not auditor_id or primary_reviewer_id == auditor_id:
+    if any(not isinstance(value, str) or not value.strip() or value != value.strip()
+           for value in query_authors.values()):
+        raise SystemExit("M19 JUDGMENT STOP: query author IDs are invalid")
+    authors = set(query_authors.values())
+    if (not isinstance(primary_reviewer_id, str) or not primary_reviewer_id.strip() or
+            primary_reviewer_id != primary_reviewer_id.strip() or
+            not isinstance(auditor_id, str) or not auditor_id.strip() or
+            auditor_id != auditor_id.strip() or primary_reviewer_id == auditor_id):
         raise SystemExit("M19 JUDGMENT STOP: primary reviewer and auditor must be independent")
     if primary_reviewer_id in authors:
         raise SystemExit("M19 JUDGMENT STOP: primary reviewer must be independent of query authors")

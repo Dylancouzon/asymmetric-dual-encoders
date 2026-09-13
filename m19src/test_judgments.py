@@ -119,6 +119,12 @@ def test_freeze_requires_independent_judges_and_not_only_query_authors():
             packet, primary, audit, auditor, {}, primary_reviewer_id="author-a",
             auditor_id="author-b", query_authors={"q1": "author-a", "q2": "author-b"},
         )
+    for invalid in ("", " author ", None):
+        with pytest.raises(SystemExit, match="author IDs are invalid"):
+            judgments.freeze_binary_labels(
+                packet, primary, audit, auditor, {}, primary_reviewer_id="primary",
+                auditor_id="auditor", query_authors={"q1": invalid, "q2": "author"},
+            )
 
 
 def test_freeze_recomputes_audit_and_requires_fresh_complete_relabel_after_clarification():

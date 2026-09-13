@@ -33,7 +33,10 @@ def _validate_row(row, split, roster_terms, term_ids, tokenizer):
         raise ValueError(f"query {row.get('query_id')} missing {sorted(missing)}")
     if row["term"] not in roster_terms or row["primary_class"] not in PRIMARY_CLASSES:
         raise ValueError("query term/class is outside registry")
-    if "qwen" in str(row["author_id"]).casefold():
+    if (not isinstance(row["author_id"], str) or not row["author_id"].strip() or
+            row["author_id"] != row["author_id"].strip()):
+        raise ValueError("query author ID must be a nonempty normalized string")
+    if "qwen" in row["author_id"].casefold():
         raise ValueError("Qwen may not author M19 evaluation queries")
     if not row["answerable"] or not row["prospective_useful_artifact_ids"]:
         raise ValueError("unanswerable query must be removed before split freeze")
