@@ -1,6 +1,6 @@
 # M19 status
 
-**Execution active 2026-09-13 — bootstrap/inheritance lock complete.**
+**Execution active 2026-09-13 — term roster frozen.**
 
 The fresh M19 boundary is active on `m18-qdrant-project-memory`. M18 remains closed and immutable.
 Only the pinned M18 source/corpus/index manifests, the released Zero-v1 bundle and the unprotected
@@ -14,5 +14,12 @@ guard/inheritance tests and the separate real-input verification pass. Astra ret
 bounded term inventory with no P0/P1. No M19 term roster, query text, retrieval quality or judgment
 data has been read or created.
 
-Next: commit the final review hardening, then inventory fragmented terms without retrieval-quality
-reads.
+The immutable roster contains 12 demanded fragmented terms: `k8s`, `s3`, `hnsw`, `grpc`,
+`rocksdb`, `mmap`, `arm64`, `tls`, `cuda`, `simd`, `turboquant` and `gridstore`. Each has at least
+13 distinct-artifact occurrences, 2–3 released-tokenizer pieces, one recorded stable meaning and
+three prospective intent axes. Roster lock identity:
+`3ac4b8190cfd3827857346ca675dc578139fc518b0b4ccd2cea7cbf3fdc482f9`.
+
+No retrieval quality or M18 protocol surface was accessed. Next: commit/review the roster, then
+implement deterministic rows, artifact collapse, metrics and the synthetic confirmation state
+machine before authoring query text.

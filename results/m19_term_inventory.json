@@ -1,0 +1,659 @@
+{
+  "_schema": "m19-term-inventory-v1",
+  "artifacts_scanned": 11559,
+  "catalog": [
+    {
+      "artifact_support": 42,
+      "demand": "owner-requested Qdrant project-memory term in M18",
+      "example_artifact_ids": [
+        "gh:thread:1451",
+        "gh:thread:1481",
+        "gh:thread:1704",
+        "gh:thread:2166",
+        "gh:thread:2463",
+        "gh:thread:3080",
+        "gh:thread:3263",
+        "gh:thread:3636"
+      ],
+      "fragment_count": 3,
+      "intent_axes": [
+        "deployment",
+        "persistence",
+        "networking"
+      ],
+      "meaning": "Kubernetes deployment shorthand",
+      "occurrences": 79,
+      "original_ids": [
+        1047,
+        2620,
+        2015
+      ],
+      "original_tokens": [
+        "k",
+        "##8",
+        "##s"
+      ],
+      "priority": 0,
+      "support_by_kind": {
+        "issue_comment": 23,
+        "issue_opening": 41,
+        "pull_request_opening": 2,
+        "review_comment": 1
+      },
+      "term": "k8s",
+      "title_artifact_support": 3
+    },
+    {
+      "artifact_support": 490,
+      "demand": "recorded Qdrant snapshot/project-memory use case",
+      "example_artifact_ids": [
+        "repo:.github/workflows/debug-tools.yml",
+        "repo:.github/workflows/edge-py-release.yml",
+        "repo:lib/collection/src/collection_manager/segments_searcher.rs",
+        "repo:lib/collection/src/common/snapshots_manager.rs",
+        "repo:lib/collection/src/operations/snapshot_storage_ops.rs",
+        "repo:lib/common/common/src/universal_io/traits/file_ops.rs",
+        "repo:lib/common/io_bridge/src/cached/tests.rs",
+        "repo:lib/common/io_bridge/src/lib.rs"
+      ],
+      "fragment_count": 2,
+      "intent_axes": [
+        "snapshot storage",
+        "credentials",
+        "compatibility"
+      ],
+      "meaning": "Amazon-S3-compatible object storage",
+      "occurrences": 1546,
+      "original_ids": [
+        1055,
+        2509
+      ],
+      "original_tokens": [
+        "s",
+        "##3"
+      ],
+      "priority": 1,
+      "support_by_kind": {
+        "code_comment": 67,
+        "issue_comment": 428,
+        "issue_opening": 70,
+        "pull_request_opening": 141,
+        "repository_text": 11,
+        "review_comment": 66
+      },
+      "term": "s3",
+      "title_artifact_support": 39
+    },
+    {
+      "artifact_support": 925,
+      "demand": "core Qdrant index configuration and operations",
+      "example_artifact_ids": [
+        "repo:config/config.yaml",
+        "repo:lib/api/src/grpc/proto/collections.proto",
+        "repo:lib/api/src/grpc/proto/points.proto",
+        "repo:lib/api/src/grpc/qdrant.rs",
+        "repo:lib/collection/src/collection/collection_ops.rs",
+        "repo:lib/collection/src/collection/vector_name_schema.rs",
+        "repo:lib/collection/src/collection_manager/optimizers/config_mismatch_optimizer.rs",
+        "repo:lib/collection/src/collection_manager/optimizers/indexing_optimizer.rs"
+      ],
+      "fragment_count": 3,
+      "intent_axes": [
+        "construction",
+        "search tuning",
+        "persistence"
+      ],
+      "meaning": "hierarchical navigable small-world vector index",
+      "occurrences": 6042,
+      "original_ids": [
+        1044,
+        3619,
+        2860
+      ],
+      "original_tokens": [
+        "h",
+        "##ns",
+        "##w"
+      ],
+      "priority": 2,
+      "support_by_kind": {
+        "code_comment": 347,
+        "issue_comment": 619,
+        "issue_opening": 475,
+        "pull_request_opening": 485,
+        "repository_text": 5,
+        "review_comment": 333
+      },
+      "term": "hnsw",
+      "title_artifact_support": 191
+    },
+    {
+      "artifact_support": 1086,
+      "demand": "Qdrant client and server interface",
+      "example_artifact_ids": [
+        "repo:config/config.yaml",
+        "repo:lib/api/build.rs",
+        "repo:lib/api/src/grpc/conversions.rs",
+        "repo:lib/api/src/grpc/grpc.health.v1.rs",
+        "repo:lib/api/src/grpc/proto/collections.proto",
+        "repo:lib/api/src/grpc/proto/json_with_int.proto",
+        "repo:lib/api/src/grpc/proto/points.proto",
+        "repo:lib/api/src/grpc/proto/points_internal_service.proto"
+      ],
+      "fragment_count": 2,
+      "intent_axes": [
+        "connectivity",
+        "client behavior",
+        "server configuration"
+      ],
+      "meaning": "gRPC transport/API",
+      "occurrences": 5614,
+      "original_ids": [
+        24665,
+        15042
+      ],
+      "original_tokens": [
+        "gr",
+        "##pc"
+      ],
+      "priority": 3,
+      "support_by_kind": {
+        "code_comment": 349,
+        "issue_comment": 676,
+        "issue_opening": 419,
+        "pull_request_opening": 743,
+        "repository_text": 9,
+        "review_comment": 627
+      },
+      "term": "grpc",
+      "title_artifact_support": 234
+    },
+    {
+      "artifact_support": 382,
+      "demand": "Qdrant storage implementation and migration history",
+      "example_artifact_ids": [
+        "gh:thread:1461",
+        "gh:thread:1725",
+        "gh:thread:1737",
+        "gh:thread:204",
+        "gh:thread:376",
+        "gh:thread:585",
+        "gh:thread:600",
+        "repo:lib/segment/src/types.rs"
+      ],
+      "fragment_count": 2,
+      "intent_axes": [
+        "migration",
+        "failure recovery",
+        "performance"
+      ],
+      "meaning": "RocksDB storage engine",
+      "occurrences": 2772,
+      "original_ids": [
+        5749,
+        18939
+      ],
+      "original_tokens": [
+        "rocks",
+        "##db"
+      ],
+      "priority": 4,
+      "support_by_kind": {
+        "code_comment": 2,
+        "issue_comment": 374,
+        "issue_opening": 74,
+        "pull_request_opening": 293,
+        "repository_text": 1,
+        "review_comment": 129
+      },
+      "term": "rocksdb",
+      "title_artifact_support": 94
+    },
+    {
+      "artifact_support": 942,
+      "demand": "Qdrant storage configuration and diagnostics",
+      "example_artifact_ids": [
+        "repo:config/config.yaml",
+        "repo:lib/api/src/grpc/proto/collections.proto",
+        "repo:lib/api/src/grpc/qdrant.rs",
+        "repo:lib/blobstore/src/blobstore/tests.rs",
+        "repo:lib/collection/src/common/memory_reporter.rs",
+        "repo:lib/collection/src/operations/config_diff.rs",
+        "repo:lib/collection/src/optimizers_builder.rs",
+        "repo:lib/common/common/benches/mmap_hashmap.rs"
+      ],
+      "fragment_count": 2,
+      "intent_axes": [
+        "configuration",
+        "resource use",
+        "failure diagnosis"
+      ],
+      "meaning": "memory-mapped storage access",
+      "occurrences": 6051,
+      "original_ids": [
+        21021,
+        2361
+      ],
+      "original_tokens": [
+        "mma",
+        "##p"
+      ],
+      "priority": 5,
+      "support_by_kind": {
+        "code_comment": 417,
+        "issue_comment": 612,
+        "issue_opening": 88,
+        "pull_request_opening": 500,
+        "repository_text": 2,
+        "review_comment": 899
+      },
+      "term": "mmap",
+      "title_artifact_support": 141
+    },
+    {
+      "artifact_support": 59,
+      "demand": "Qdrant build and deployment platform",
+      "example_artifact_ids": [
+        "gh:thread:1514",
+        "gh:thread:1530",
+        "gh:thread:1594",
+        "gh:thread:2474",
+        "gh:thread:3056",
+        "gh:thread:3644",
+        "gh:thread:3656",
+        "gh:thread:3946"
+      ],
+      "fragment_count": 2,
+      "intent_axes": [
+        "build",
+        "deployment",
+        "compatibility"
+      ],
+      "meaning": "64-bit Arm target architecture",
+      "occurrences": 332,
+      "original_ids": [
+        2849,
+        21084
+      ],
+      "original_tokens": [
+        "arm",
+        "##64"
+      ],
+      "priority": 6,
+      "support_by_kind": {
+        "issue_comment": 38,
+        "issue_opening": 46,
+        "pull_request_opening": 57,
+        "review_comment": 21
+      },
+      "term": "arm64",
+      "title_artifact_support": 18
+    },
+    {
+      "artifact_support": 402,
+      "demand": "Qdrant network security configuration",
+      "example_artifact_ids": [
+        "repo:config/config.yaml",
+        "repo:lib/collection/src/common/memory_reporter/tests.rs",
+        "repo:lib/common/io_bridge_object_store/src/append/context/signed.rs",
+        "repo:src/actix/certificate_helpers.rs",
+        "repo:src/common/http_client.rs",
+        "repo:src/main.rs",
+        "repo:tests/e2e_tests/test_data/tls_config.yaml",
+        "repo:tests/e2e_tests/tls_cluster/tls_config.yaml"
+      ],
+      "fragment_count": 2,
+      "intent_axes": [
+        "certificates",
+        "configuration",
+        "connection failure"
+      ],
+      "meaning": "transport layer security",
+      "occurrences": 1131,
+      "original_ids": [
+        1056,
+        4877
+      ],
+      "original_tokens": [
+        "t",
+        "##ls"
+      ],
+      "priority": 7,
+      "support_by_kind": {
+        "code_comment": 11,
+        "issue_comment": 321,
+        "issue_opening": 74,
+        "pull_request_opening": 119,
+        "review_comment": 31
+      },
+      "term": "tls",
+      "title_artifact_support": 23
+    },
+    {
+      "artifact_support": 13,
+      "demand": "Qdrant GPU build and acceleration work",
+      "example_artifact_ids": [
+        "gh:thread:10210",
+        "gh:thread:10211",
+        "gh:thread:1669",
+        "gh:thread:3886",
+        "gh:thread:4474",
+        "gh:thread:5172",
+        "gh:thread:5417",
+        "gh:thread:6369"
+      ],
+      "fragment_count": 2,
+      "intent_axes": [
+        "build",
+        "device support",
+        "runtime failure"
+      ],
+      "meaning": "NVIDIA CUDA compute platform",
+      "occurrences": 42,
+      "original_ids": [
+        12731,
+        2850
+      ],
+      "original_tokens": [
+        "cu",
+        "##da"
+      ],
+      "priority": 8,
+      "support_by_kind": {
+        "issue_comment": 9,
+        "issue_opening": 10,
+        "pull_request_opening": 4
+      },
+      "term": "cuda",
+      "title_artifact_support": 1
+    },
+    {
+      "artifact_support": 158,
+      "demand": "Qdrant architecture and performance work",
+      "example_artifact_ids": [
+        "repo:lib/collection/src/model_testing/op/mod.rs",
+        "repo:lib/quantization/benches/hadamard_simd.rs",
+        "repo:lib/quantization/benches/turbo_simd.rs",
+        "repo:lib/quantization/src/p_square.rs",
+        "repo:lib/quantization/src/turboquant/encoding.rs",
+        "repo:lib/quantization/src/turboquant/mod.rs",
+        "repo:lib/quantization/src/turboquant/quantization.rs",
+        "repo:lib/quantization/src/turboquant/rotation.rs"
+      ],
+      "fragment_count": 2,
+      "intent_axes": [
+        "build features",
+        "architecture support",
+        "performance"
+      ],
+      "meaning": "single-instruction multiple-data CPU execution",
+      "occurrences": 1027,
+      "original_ids": [
+        21934,
+        2094
+      ],
+      "original_tokens": [
+        "sim",
+        "##d"
+      ],
+      "priority": 9,
+      "support_by_kind": {
+        "code_comment": 306,
+        "issue_comment": 115,
+        "issue_opening": 24,
+        "pull_request_opening": 93,
+        "repository_text": 1,
+        "review_comment": 141
+      },
+      "term": "simd",
+      "title_artifact_support": 34
+    },
+    {
+      "artifact_support": 171,
+      "demand": "named Qdrant quantization component",
+      "example_artifact_ids": [
+        "repo:lib/collection/src/config.rs",
+        "repo:lib/collection/src/model_testing/mod.rs",
+        "repo:lib/collection/src/operations/types.rs",
+        "repo:lib/collection/src/shards/forward_proxy_shard.rs",
+        "repo:lib/collection/src/tests/wal_recovery_test.rs",
+        "repo:lib/common/common/src/flags.rs",
+        "repo:lib/common/common/src/prefetch.rs",
+        "repo:lib/edge/ffi/src/config.rs"
+      ],
+      "fragment_count": 3,
+      "intent_axes": [
+        "configuration",
+        "accuracy",
+        "platform support"
+      ],
+      "meaning": "Qdrant TurboQuant quantization implementation",
+      "occurrences": 1658,
+      "original_ids": [
+        15386,
+        16211,
+        3372
+      ],
+      "original_tokens": [
+        "turbo",
+        "##qua",
+        "##nt"
+      ],
+      "priority": 10,
+      "support_by_kind": {
+        "code_comment": 484,
+        "issue_comment": 128,
+        "issue_opening": 11,
+        "pull_request_opening": 90,
+        "review_comment": 134
+      },
+      "term": "turboquant",
+      "title_artifact_support": 48
+    },
+    {
+      "artifact_support": 336,
+      "demand": "named Qdrant storage component",
+      "example_artifact_ids": [
+        "repo:.github/workflows/rust.yml",
+        "repo:lib/api/src/grpc/proto/points_internal_service.proto",
+        "repo:lib/api/src/grpc/qdrant.rs",
+        "repo:lib/blobstore/src/blobstore/gridstore/bitmask/gaps.rs",
+        "repo:lib/blobstore/src/blobstore/gridstore/bitmask/mod.rs",
+        "repo:lib/blobstore/src/blobstore/gridstore/mod.rs",
+        "repo:lib/blobstore/src/blobstore/gridstore/pages.rs",
+        "repo:lib/blobstore/src/blobstore/gridstore/reader.rs"
+      ],
+      "fragment_count": 3,
+      "intent_axes": [
+        "configuration",
+        "migration",
+        "performance"
+      ],
+      "meaning": "Qdrant Gridstore storage implementation",
+      "occurrences": 2325,
+      "original_ids": [
+        8370,
+        23809,
+        2063
+      ],
+      "original_tokens": [
+        "grid",
+        "##stor",
+        "##e"
+      ],
+      "priority": 11,
+      "support_by_kind": {
+        "code_comment": 115,
+        "issue_comment": 260,
+        "issue_opening": 41,
+        "pull_request_opening": 234,
+        "repository_text": 2,
+        "review_comment": 407
+      },
+      "term": "gridstore",
+      "title_artifact_support": 72
+    },
+    {
+      "artifact_support": 6051,
+      "demand": "the fixed project-memory domain",
+      "example_artifact_ids": [
+        "repo:.github/workflows/debug-tools.yml",
+        "repo:config/config.yaml",
+        "repo:lib/api/build.rs",
+        "repo:lib/api/src/grpc/conversions.rs",
+        "repo:lib/api/src/grpc/proto/points.proto",
+        "repo:lib/api/src/grpc/proto/qdrant_common.proto",
+        "repo:lib/api/src/grpc/proto/storage_read_service.proto",
+        "repo:lib/api/src/grpc/qdrant.rs"
+      ],
+      "fragment_count": 3,
+      "intent_axes": [
+        "installation",
+        "configuration",
+        "client compatibility"
+      ],
+      "meaning": "the Qdrant vector-search project",
+      "occurrences": 63247,
+      "original_ids": [
+        1053,
+        24914,
+        2102
+      ],
+      "original_tokens": [
+        "q",
+        "##dran",
+        "##t"
+      ],
+      "priority": 12,
+      "support_by_kind": {
+        "code_comment": 331,
+        "issue_comment": 7919,
+        "issue_opening": 2645,
+        "pull_request_opening": 2739,
+        "repository_text": 60,
+        "review_comment": 5024
+      },
+      "term": "qdrant",
+      "title_artifact_support": 334
+    },
+    {
+      "artifact_support": 701,
+      "demand": "Qdrant storage and search feature",
+      "example_artifact_ids": [
+        "repo:config/config.yaml",
+        "repo:lib/api/src/grpc/proto/collections.proto",
+        "repo:lib/api/src/grpc/proto/points.proto",
+        "repo:lib/api/src/grpc/qdrant.rs",
+        "repo:lib/collection/src/collection/collection_ops.rs",
+        "repo:lib/collection/src/collection/vector_name_schema.rs",
+        "repo:lib/collection/src/collection_manager/segments_searcher.rs",
+        "repo:lib/collection/src/model_testing/mod.rs"
+      ],
+      "fragment_count": 3,
+      "intent_axes": [
+        "configuration",
+        "accuracy",
+        "memory use"
+      ],
+      "meaning": "reduced-precision vector representation",
+      "occurrences": 5209,
+      "original_ids": [
+        24110,
+        3775,
+        9276
+      ],
+      "original_tokens": [
+        "quan",
+        "##ti",
+        "##zation"
+      ],
+      "priority": 13,
+      "support_by_kind": {
+        "code_comment": 682,
+        "issue_comment": 463,
+        "issue_opening": 247,
+        "pull_request_opening": 352,
+        "repository_text": 7,
+        "review_comment": 588
+      },
+      "term": "quantization",
+      "title_artifact_support": 145
+    },
+    {
+      "artifact_support": 7,
+      "demand": "Qdrant ecosystem integration term",
+      "example_artifact_ids": [
+        "gh:thread:2631",
+        "gh:thread:4172",
+        "gh:thread:4739",
+        "gh:thread:5318",
+        "gh:thread:5390",
+        "gh:thread:6879",
+        "gh:thread:8022"
+      ],
+      "fragment_count": 2,
+      "intent_axes": [
+        "integration",
+        "configuration",
+        "compatibility"
+      ],
+      "meaning": "vector-store integration abstraction",
+      "occurrences": 16,
+      "original_ids": [
+        19019,
+        19277
+      ],
+      "original_tokens": [
+        "vectors",
+        "##tore"
+      ],
+      "priority": 14,
+      "support_by_kind": {
+        "issue_comment": 2,
+        "issue_opening": 6
+      },
+      "term": "vectorstore",
+      "title_artifact_support": 0
+    }
+  ],
+  "corpus_sha256": "0cede39eb47b5680ef0f560917bd93ec78d02ac0e607ae0c4209d98f4430f394",
+  "indexable_documents_scanned": 79269,
+  "inheritance_identity_sha256": "de6d89676edd6b33e97aad08c1b28dce638c6c59c00f2e39a16f827ca84791bb",
+  "quality_access": false,
+  "query_authoring": false,
+  "rejected": [
+    {
+      "reasons": [
+        "roster_maximum_reached"
+      ],
+      "term": "qdrant"
+    },
+    {
+      "reasons": [
+        "roster_maximum_reached"
+      ],
+      "term": "quantization"
+    },
+    {
+      "reasons": [
+        "roster_maximum_reached"
+      ],
+      "term": "vectorstore"
+    }
+  ],
+  "selected_terms": [
+    "k8s",
+    "s3",
+    "hnsw",
+    "grpc",
+    "rocksdb",
+    "mmap",
+    "arm64",
+    "tls",
+    "cuda",
+    "simd",
+    "turboquant",
+    "gridstore"
+  ],
+  "tokenizer_sha256": "997eaeff157a7d4db899b8f2278ad3db6e323e609ae956b9c5035550f581eeee"
+}

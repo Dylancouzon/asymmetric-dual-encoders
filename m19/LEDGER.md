@@ -45,3 +45,20 @@
 - Final bootstrap lock identity:
   `de6d89676edd6b33e97aad08c1b28dce638c6c59c00f2e39a16f827ca84791bb`.
   Verification: `20 passed`; real `--verify` passed. No quality surface was accessed.
+
+## 2026-09-13 — prospective term roster frozen
+
+- Scanned only the 79,269 indexable records in the pinned redacted corpus and the released-v1
+  tokenizer. The fixed catalog/order preceded the support scan; no retrieval or qrel data entered
+  selection.
+- Selected the first 12 qualifying stable-meaning terms: `k8s`, `s3`, `hnsw`, `grpc`, `rocksdb`,
+  `mmap`, `arm64`, `tls`, `cuda`, `simd`, `turboquant`, `gridstore`.
+- The minimum support is 13 artifacts (`cuda`), above the registered five; original tokenization is
+  2–3 pieces for every term. The joint `single_word=True, normalized=True` AddedToken audit assigns
+  stable IDs 30522–30533 without changing inherited IDs.
+- `qdrant`, `quantization` and `vectorstore` also passed the mechanical gates but were excluded by
+  the predeclared 12-term cap, not a quality result.
+- Lock: `m19/term-roster-lock.json`, identity
+  `3ac4b8190cfd3827857346ca675dc578139fc518b0b4ccd2cea7cbf3fdc482f9`.
+  Evidence: `results/m19_term_inventory.json`. Verification: three inventory tests plus immutable
+  output recomputation passed.
