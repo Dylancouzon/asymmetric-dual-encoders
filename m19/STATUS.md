@@ -27,4 +27,6 @@ artifact collapse, metrics and the synthetic confirmation state machine before a
 
 Stage 3 progress: deterministic V0/T0 row algebra, inherited-row-preserving int8 assembly,
 resident-int8 loading and resumable immutable bundle publication are implemented with six synthetic
-tests. Artifact collapse, metrics and confirmation rehearsal remain before implementation review.
+tests. Exclusion-before-truncation artifact collapse, DBSF@100 explanations, binary metrics,
+fixed-roster aggregation and safety/eligibility helpers add nine passing tests. Confirmation
+transaction and the one-command synthetic rehearsal remain before implementation review.

@@ -109,3 +109,13 @@
   bundles are unreadable and differing existing bytes are refused.
 - Six synthetic row/bundle tests pass. Real teacher rows and bundles are stage 5 work, after the
   complete stage-3 implementation review.
+
+## 2026-09-13 — artifact retrieval and metric primitives
+
+- Implemented source-artifact/text-copy exclusion before the fixed 500-passage truncation,
+  deterministic best-passage collapse to 100 artifacts and unchanged sample-standard-deviation
+  DBSF on artifact scores. Fused rows retain each dense/lexical supporting passage and contribution.
+- Implemented binary P@10 with denominator ten, pooled-pool IDCG/Recall, MRR, success, within-term
+  then equal-term aggregation, complete paired query/term differences, headroom and development/
+  confirmation eligibility gates. Empty registered safety slices are refused.
+- Nine synthetic tests pass. No inherited index, query, qrel or retrieval-quality output was read.
