@@ -71,5 +71,8 @@ P0/P1 and authorized the ten-query pool-cost pilot. Stage 6 is complete: ten dis
 queries produced 224 unique query-artifact items (216 global artifacts) and a 265,914-byte blinded
 packet. Linear projection is 1,344 development items, below the fixed 3,000 cap. The conservative
 review-time projection is 761.2 minutes for all 60 queries. No labels or quality metrics were
-produced. Real judgments remain unauthorized until both end-to-end implementation reviewers return
-`GO` at the post-pilot implementation commit.
+produced. Both post-pilot end-to-end reviewers correctly returned `NO-GO`: the reviewed executable
+ends at the cost pilot and does not yet implement Stage 7's production development transaction.
+Before re-review, Stage 7 must also enrich/fail-close packet parent metadata, bind packet semantics to
+sealed queries, authenticate the complete teacher snapshot, and close the related confirmation
+judgment/headroom/seal checks. No real judgment has begun.
