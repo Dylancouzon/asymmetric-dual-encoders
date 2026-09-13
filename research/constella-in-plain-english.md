@@ -1,6 +1,6 @@
 # Constella in Plain English
 
-*Asymmetric dual encoders, the research record from 24 August to 10 September 2026, written for a reader who knows the domain but did not watch the work. The interactive version of this page is a Claude artifact; this file is the GitHub-renderable twin. Numbers are copied from the result JSONs and the milestone findings files, which remain authoritative.*
+*Asymmetric dual encoders, the research record from 24 August to 13 September 2026, written for a reader who knows the domain but did not watch the work. The interactive version of this page is a Claude artifact; this file is the GitHub-renderable twin. Numbers are copied from the result JSONs and the milestone findings files, which remain authoritative.*
 
 One document index, built once with a good 400M-parameter model. Two cheap ways to ask it questions: a lookup table that costs almost nothing per query, and a 35M-parameter transformer that costs about what a small embedding model costs. This page explains what we tested, what came out, what we are building next and why the process looks the way it does.
 
@@ -9,7 +9,8 @@ One document index, built once with a good 400M-parameter model. Two cheap ways 
 | Zero, dense only | **0.4339** | avg-6 nDCG@10, 0.024 below LightRetriever's dense table. Reported as measured; published and considered releasable. |
 | Zero fused with BM25 | **0.4911** | Statistically ties the best inference-free sparse system (0.4868), at a table lookup's query cost. |
 | Nano, first attempt | **82.2%** | of the teacher on the screen surface. 93.8% on Wikipedia questions, 50.1% on programming forum questions. Not released. |
-| Nano, real build | **Ready** | Code complete and tested. Waiting on a cloud GPU. Budget ceiling $1,000. |
+| Nano, real build | **Running** | Cloud build under way: roughly 24 hours remaining, about $100 spent against the $1,000 ceiling, 94% of the teacher so far. Provisional; the held-out reads decide. |
+| Zero's short-query gap | **Unmeasured** | Three attempts at vocabulary specialisation (M17 to M19). None produced a usable quality number. Released zero v1 remains selected. |
 
 ---
 
@@ -194,6 +195,58 @@ M13 owns everything expensive or irreversible: the batch decision, the LoTTE gat
 
 **Where it stands.** Code complete, reviewed to GO and tested, 170 M13 tests plus the older suites all green. The provider and account are Dylan's to set up.
 
+### M17 to M19, 11 to 13 September: trying to close zero's short-query gap
+
+Andrey indexed every issue and pull request in `qdrant/qdrant`, searched it with the released zero, and reported a specific failure: queries like `s3` and `k8s` come back matched to version identifiers, while the full teacher handles them. Three milestones went after it. None produced a clean measurement.
+
+**The mechanism is tokenizer plus pooling, and it is structural rather than a bug.** Zero inherits stella's WordPiece vocabulary, in which several load-bearing technical terms are not entries:
+
+| Query | Pieces |
+|---|---|
+| `s3` | `s`, `##3` |
+| `k8s` | `k`, `##8`, `##s` |
+| `hnsw` | `h`, `##ns`, `##w` |
+| `kubernetes` | `ku`, `##ber`, `##net`, `##es`, four ordinary pieces, unaffected |
+
+Stella sees the same pieces and contextualises them. Zero pools fixed rows with no interaction between them, and the digit-continuation rows take their training mass from numeric contexts, so the pooled query lands near version strings. The damage scales inversely with query length: in a sentence the ordinary word rows dominate the average, in a two-piece query there is nothing else in it. This is a short-query defect, which is precisely the CLI case that motivated zero.
+
+**M17, broad vocabulary expansion.** Up to 3,072 new whole-term rows across six domains, trained jointly with the incumbent rows under a hard-candidate listwise objective. Five arms, 4,000 steps each, one read apiece.
+
+| Arm | nDCG@10 |
+|---|---:|
+| V0, rows added, no optimizer step | **0.6153** |
+| C | 0.5807 |
+| V | 0.5810 |
+| L | 0.5936 |
+| VL | 0.5938 |
+| VL-A | 0.5938 |
+
+Every trained arm read below the untrained baseline while the training loss fell throughout. Registered `no_survivor`, STOP. M17's close-out is explicit that this is an **undiagnosed failure, not evidence against the method**: the intermediate-checkpoint reads that would separate the two were never spent. A second correction fell out of the same close-out, and it matters for any future table work: the 35M parameter cap belongs to nano and never applied to zero, so M17's row budget was constrained for no reason.
+
+**M18, specialise on the corpus that produced the complaint.** A pinned snapshot of `qdrant/qdrant`: 71,937 GitHub objects across 11,574 artifacts, parsed to 79,269 searchable passages, with a stella document index, a BM25 index and the shipped DBSF recipe. Sixteen exact rows were added for shattered terms, every inherited row was frozen so training could not damage ordinary language, and only the new rows were trained.
+
+| Route, 100 development queries | nDCG@10 | Recall@10 |
+|---|---:|---:|
+| BM25 | 0.109 | 0.218 |
+| zero v1 dense | 0.087 | 0.157 |
+| zero v1 + DBSF | 0.103 | 0.178 |
+| stella dense, the ceiling | 0.137 | 0.232 |
+| stella + DBSF, the ceiling | 0.141 | 0.256 |
+
+A 400M teacher scoring 0.137, with the labelled answer in its top ten for under a quarter of queries, is a statement about the labels rather than about any model. The queries had been derived from issue and review text and the single correct answer defined as the one maintainer comment that resolved the thread, so the task being scored was answer-span linking, not the artifact lookup a CLI performs. The confirming detail: on the error and troubleshooting stratum, BM25, dense and fusion all scored exactly **0.000**. When a lexical and a semantic route both return a clean zero, the labels are unreachable. A later exclusion-corrected read put stella's recall at about 0.524@100 and 0.782@1000, so the targets are findable at depth; the task, not the corpus, was misposed.
+
+Against that surface the trained table cleared the dense margin (+0.0076 against +0.005) and missed the fused one (+0.0030 against +0.010), and was recorded `ENCODER_NO_IMPROVEMENT`. A separate report-only probe, which by registration could not affect the decision, is the most direct evidence the project holds: for the bare query `k8s`, released v1 returned `release v0.8.0` at rank two and `v0.8.2` at rank three, and the trained table returned the Kubernetes persistence issue at rank two with both version releases gone. The system half shipped as `SYSTEM_READY` and is usable.
+
+**M19, stop training and solve for the row.** If the teacher's direction for a bare term is known and zero's pooling rule is exact, the row can be computed in closed form rather than fitted. For term `t`, with `u_t` the unit stella query vector, `a_t` the frozen rows that survive the replacement and `r_comp,t` the original fragment rows under sqrt-count pooling, set `r_t = alpha_t * u_t - a_t` with `alpha_t = ||a_t + r_comp,t||`. The bare query then points exactly along the teacher's direction, and preserving the old norm fixes the otherwise arbitrary row scale. Twelve terms: `k8s`, `s3`, `hnsw`, `grpc`, `rocksdb`, `mmap`, `arm64`, `tls`, `cuda`, `simd`, `turboquant`, `gridstore`. No optimizer, no training data, no per-domain corpus.
+
+Every technical gate passed: worst int8 bare-term cosine 0.9999541, largest coordinate error 0.0005364, released-loader parity 2.24e-8, encoder median and p95 at 0.958x and 1.037x of v1 over 10,000 queries. Two properties are worth carrying forward. The construction is **additive over frozen rows**, so a query containing no roster term is bit-identical to released v1 (`no_match_encoder_max_abs` exactly 0.0, ranking parity true across the benchmark): the blast radius is exactly the terms chosen and nothing else. And it needs no labelled domain data, which removes the largest cost of any future vertical vocabulary.
+
+M19 then stopped before producing a number. The 60-query development pool froze at 1,376 query-artifact items, a primary judge covered all of them, and an independent auditor re-checked 925 concealed repeats. Sixty of those remained undecidable after a dedicated resolution pass, because the frozen **passages** did not carry enough context for a defensible binary call. The protocol admitted no abstention label and required a clean decision on every audited item before qrels could be frozen, so the run halted: `ENCODER_INCONCLUSIVE`, no qrels, no metrics, confirmation never claimed, released v1 retained. The unit shown to the judge was the same passage unit that M19's own artifact-collapse contribution exists to replace.
+
+**What the three have in common.** M17 measured cleanly and could not explain its own result. M18 measured a different task than the one that mattered. M19 never reached a measurement. The bottleneck across all three was not the model but the absence of a cheap, defensible definition of a correct answer for a query like `s3` over an issue tracker, where several artifacts are acceptable and only a maintainer can rank them. Automatic labels are cheap and score something adjacent; judged labels score the right thing and are fragile. Three attempts sit at three points on that trade-off and none landed. The honest status of vocabulary specialisation is therefore **unmeasured, not disproven**, and the next useful milestone is an answer key rather than another table.
+
+One caveat that is easy to get wrong in the meantime: fusion repairs `s3` and `k8s` in this corpus only because Qdrant maintainers write those literals in issue titles. BM25 cannot connect `k8s` to a document that says only Kubernetes. That alias link is dense-side work, and it is exactly what the row construction is for.
+
 ## Part four: what we are building now
 
 Take bge-small, a 6-layer BERT-style encoder with 384-wide hidden states. For each query token, concatenate the hidden states from layers 12, 8 and 4 of the pinned architecture into a 1152-wide feature, apply a linear head to 1024 dimensions per token, average over the query's tokens, and normalise. Total 34,540,672 parameters, under the 35M cap. The head is applied before pooling so FastEmbed can serve the exported graph exactly.
@@ -227,7 +280,7 @@ The final evaluation is four tests in a fixed order, each a one-sided bootstrap 
 
 Success for nano is passing the release gate: better than bge-small on the clean four and on all six, at about bge-small's query cost, while serving stella's index unchanged. Passing the aim as well would make it the strongest small query encoder we know of against a frozen index. Success for the project is narrower and already partly in hand: a measured, reproducible answer to how much quality each cheap query side retains, at what cost, with the deployment path proven in Qdrant and FastEmbed.
 
-A miss is publishable. The material already includes: a teacher's retrieval quality does not predict its distilled student, and the most decomposable teacher wins; a lookup-table query side retains about three quarters of its teacher and its objective saturates almost immediately; fusion with a lexical channel is worth ten times any table-side lever; a small transformer's retention is a per-distribution quantity, 94% where the training data resembles the queries and 50% where it does not; and the depth dependence of fusion operators inverts at realistic prefetch.
+A miss is publishable. The material already includes: a teacher's retrieval quality does not predict its distilled student, and the most decomposable teacher wins; a lookup-table query side retains about three quarters of its teacher and its objective saturates almost immediately; fusion with a lexical channel is worth ten times any table-side lever; a small transformer's retention is a per-distribution quantity, 94% where the training data resembles the queries and 50% where it does not; the depth dependence of fusion operators inverts at realistic prefetch; and a static token table cannot repair a shattered term by tokenizer replacement alone, since the exact-token arm initialised by composition equalled the incumbent on observed rankings while only the row's direction moved results.
 
 ## Glossary
 
@@ -248,4 +301,4 @@ A miss is publishable. The material already includes: a teacher's retrieval qual
 | Fusion, DBSF | Combining dense and BM25 results. DBSF normalises each list's scores by their distribution and adds them; it is what Qdrant ships. |
 | Inference-free sparse | Systems where documents are expanded by a model but a query is just token counts. Zero's closest competitor class. |
 
-*Sources: `research/m1-m6-findings.md`, the `FINDINGS.md` files of M7 to M10 and M12, `m10/RESULTS.md`, `m10/M102_LOCK.md`, `m13/RULINGS.md`, `m13/EXECUTION.md`, `results/m7_learnability_report.json`, and the registries they cite.*
+*Sources: `research/m1-m6-findings.md`, the `FINDINGS.md` files of M7 to M10, M12 and M17 to M19, `m18/REVIEW.md`, `m19/REVIEW.md`, `m10/RESULTS.md`, `m10/M102_LOCK.md`, `m13/RULINGS.md`, `m13/EXECUTION.md`, `results/m7_learnability_report.json`, and the registries they cite.*
