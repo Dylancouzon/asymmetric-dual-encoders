@@ -1,0 +1,937 @@
+{
+  "_schema": "m19-term-roster-lock-v3",
+  "bindings": {
+    "consumed_corpus_sha256": "0cede39eb47b5680ef0f560917bd93ec78d02ac0e607ae0c4209d98f4430f394",
+    "consumed_tokenizer_sha256": "997eaeff157a7d4db899b8f2278ad3db6e323e609ae956b9c5035550f581eeee",
+    "inheritance_lock_sha256": "1244bacf28c9699560427a7f78a992bca6c195955e5202d3465e578f2e750ea5",
+    "inventory_implementation_sha256": "883b1c96ded5050118cd1f756d3ab872e10aae93304dd2889bc0a11183be1fb9",
+    "inventory_result_identity_sha256": "0487f3307f1149c54db4bbe6b1ee929389f97d41f64e9cabc292b5e542811a1b",
+    "registry_sha256": "3796b18c16215405137e9b6e5e2fa07df72e95b9d0f90362a4e3dcbe346df0fe"
+  },
+  "identity_sha256": "8170f9b0432d4b7460601e1dbf39536d99b1e4af026d9a3afef649a9c89ef892",
+  "selected_added_token_audit": {
+    "added": 12,
+    "base_vocab": 30522,
+    "final_vocab": 30534,
+    "inherited_ids_unchanged": true,
+    "inherited_vocab_sha256": "4d340ba6df0d188a0bc2fdae2f8f4279427ea92d4c2457be7ae8fa149027d0b4",
+    "policy": {
+      "lstrip": false,
+      "normalized": true,
+      "rstrip": false,
+      "single_word": true,
+      "special": false
+    },
+    "term_ids": {
+      "arm64": 30528,
+      "cuda": 30530,
+      "gridstore": 30533,
+      "grpc": 30525,
+      "hnsw": 30524,
+      "k8s": 30522,
+      "mmap": 30527,
+      "rocksdb": 30526,
+      "s3": 30523,
+      "simd": 30531,
+      "tls": 30529,
+      "turboquant": 30532
+    }
+  },
+  "selection_policy": {
+    "maximum_terms": 12,
+    "minimum_distinct_intent_axes": 3,
+    "minimum_distinct_non_equivalent_artifacts": 5,
+    "minimum_fragment_pieces": 2,
+    "minimum_terms": 8,
+    "order": "fixed demand/stable-meaning priority",
+    "provenance_limit": "catalog and first support result first committed together at 1736d93; runtime order fixed but no independent pre-scan receipt",
+    "quality_informed": false
+  },
+  "source_qualifications": {
+    "arm64": {
+      "intent_evidence": {
+        "build": [
+          "gh:thread:1529",
+          "gh:thread:3714"
+        ],
+        "compatibility": [
+          "gh:thread:10303",
+          "gh:thread:2474"
+        ],
+        "deployment": [
+          "gh:thread:2474",
+          "gh:thread:3056"
+        ]
+      },
+      "judgment": "source-only intended-sense and multi-intent plausibility; not relevance",
+      "notes": "",
+      "witness_artifact_ids": [
+        "gh:thread:10303",
+        "gh:thread:1529",
+        "gh:thread:2474",
+        "gh:thread:3056",
+        "gh:thread:3714"
+      ],
+      "witness_digests": [
+        "64277ce2a177e3ee1a2fb555fde617264b010cef768ff28774119c1093ec0077",
+        "697ec40a8590df48f7a91f89f107e6cbf5a890448fc6c897cb28918994c488d4",
+        "6e921d602d629a27437201e622e62c44dbaf8e9bfd785633d7b5a93a4c2b1d6b",
+        "9432d07364a3f3a423b4a95b2de8f4546849c80f49e84adffd9d59ece6b8c5f1",
+        "a6d3588d93c35eab2e9ff8834666f59bb4c3ede8d679ea7e823a9abc8ec22a6e"
+      ]
+    },
+    "cuda": {
+      "intent_evidence": {
+        "build": [
+          "gh:thread:5172"
+        ],
+        "device support": [
+          "gh:thread:1669",
+          "gh:thread:5872"
+        ],
+        "runtime failure": [
+          "gh:thread:10210",
+          "gh:thread:10211"
+        ]
+      },
+      "judgment": "source-only intended-sense and multi-intent plausibility; not relevance",
+      "notes": "CUDA itself is stable; Qdrant's GPU path is Vulkan, so coexistence distinctions remain explicit.",
+      "witness_artifact_ids": [
+        "gh:thread:1669",
+        "gh:thread:10210",
+        "gh:thread:10211",
+        "gh:thread:5172",
+        "gh:thread:5872"
+      ],
+      "witness_digests": [
+        "25c127a315a945bb12c3bdbb7b888ecc7bfc8ae9a975b3d147899052d7391255",
+        "5817510c4e867b4d415c92a3e9d695bc755225933a42c26306ad21b450faf4d5",
+        "d33bdb865734dfa3fcaf73c85dbc31d9d4ac50c55583f4f832cb6f2d6c6216a0",
+        "df8dad32925339136fb604d107e98b6daa37c320ce9d4ebb110a391541fd2a49",
+        "e2358fb9ae0bc511a422a35eb07dca674074bf8fc629a1cef374781b052840c8"
+      ]
+    },
+    "gridstore": {
+      "intent_evidence": {
+        "configuration": [
+          "gh:thread:6609",
+          "gh:thread:6722"
+        ],
+        "migration": [
+          "gh:thread:5918",
+          "gh:thread:6609"
+        ],
+        "performance": [
+          "gh:thread:6445",
+          "gh:thread:6722"
+        ]
+      },
+      "judgment": "source-only intended-sense and multi-intent plausibility; not relevance",
+      "notes": "",
+      "witness_artifact_ids": [
+        "gh:thread:10399",
+        "gh:thread:5918",
+        "gh:thread:6445",
+        "gh:thread:6609",
+        "gh:thread:6722"
+      ],
+      "witness_digests": [
+        "517dc6122ee3accb8a7d2f413f617a62b1934e67d284ec60b13b3a819bcacc02",
+        "75101b46a6bcee8d6c23cb4053724ef154afc545c3b4746f52d6df824a3b871b",
+        "b46cf75b85001d4e1ec165195064874ce82b963bddd1b2c248d2f66ec5c39d09",
+        "ba193c228c33bd84e4eebe63bece586ae10d1b4fae1985fcffd64730abb2e8b5",
+        "c3adabbb812a5211ec6b5ee7c477da88cee0dcbc4eb48c59607a839b402d2122"
+      ]
+    },
+    "grpc": {
+      "intent_evidence": {
+        "client behavior": [
+          "gh:thread:10048",
+          "gh:thread:10522"
+        ],
+        "connectivity": [
+          "gh:thread:10306"
+        ],
+        "server configuration": [
+          "gh:thread:10234",
+          "gh:thread:10306"
+        ]
+      },
+      "judgment": "source-only intended-sense and multi-intent plausibility; not relevance",
+      "notes": "",
+      "witness_artifact_ids": [
+        "gh:thread:10048",
+        "gh:thread:10106",
+        "gh:thread:10234",
+        "gh:thread:10306",
+        "gh:thread:10522"
+      ],
+      "witness_digests": [
+        "51a94e7836ba74bba4413cd564eb14620b2b0a3430a34ba7df730512d6cbc45b",
+        "8657c8dfeb5a741e7fe9f9b3c23af63c7049f4ea7a318892750f4544048911b3",
+        "8ba20a1984e6e09b22f2bfe93614f251c0c0ddcaaad41c22eda704aa4c612e13",
+        "96e4fe079d7a4d8a4bcd513cb0b4539100f01632ea41ea20e4c2a2926dda9c6d",
+        "c4c6772fdac0bc7370949a96c7ee8ec33371f1f6f5b44cabdcc16c705abcb251"
+      ]
+    },
+    "hnsw": {
+      "intent_evidence": {
+        "construction": [
+          "gh:thread:10",
+          "gh:thread:10046"
+        ],
+        "persistence": [
+          "gh:thread:10044"
+        ],
+        "search tuning": [
+          "gh:thread:10010",
+          "gh:thread:1044"
+        ]
+      },
+      "judgment": "source-only intended-sense and multi-intent plausibility; not relevance",
+      "notes": "",
+      "witness_artifact_ids": [
+        "gh:thread:10",
+        "gh:thread:10010",
+        "gh:thread:10044",
+        "gh:thread:10046",
+        "gh:thread:1044"
+      ],
+      "witness_digests": [
+        "35e2a0c08271284afab257c2960224d049dc6e82611e768530bf3cf0bf532604",
+        "7e52e32f073967e9da5293533da7c9cd306a2d9cff02e7df19b8ff14188d956e",
+        "87c237b2343242a990dc35d3ccf159f1a04ffac886abcf005706bdb6dfbf923e",
+        "f6a3fdd2a421469c2cb7001aa87b7ee4ba28d31c889e04c7aea2f89a15316e87",
+        "febbe14925ca639b8d452d350da9514694ccd2b7fc8325977088915cc8921968"
+      ]
+    },
+    "k8s": {
+      "intent_evidence": {
+        "deployment": [
+          "gh:thread:6431",
+          "gh:thread:1704"
+        ],
+        "networking": [
+          "gh:thread:2401",
+          "gh:thread:6431"
+        ],
+        "persistence": [
+          "gh:thread:1640",
+          "gh:thread:1060"
+        ]
+      },
+      "judgment": "source-only intended-sense and multi-intent plausibility; not relevance",
+      "notes": "Kubernetes shorthand only; pod lifecycle, persistent storage and peer/health networking.",
+      "witness_artifact_ids": [
+        "gh:thread:1640",
+        "gh:thread:2401",
+        "gh:thread:6431",
+        "gh:thread:1060",
+        "gh:thread:1704"
+      ],
+      "witness_digests": [
+        "1e651eec1f1bf06090368b4b8aa49c3dca21a8bc1afa8379ccb2c52ce50ff2b1",
+        "2b0d02566ed67777220d9ad2fd9af0931fdc8e07894386c80a065004f9147624",
+        "894ee88469efbe28e09ab1a7334cc7b2709e88f07c3c512a91972fee697e30c5",
+        "a28d22a79fa508bbe29cff9c648f2957992b560f80b1d062d6775d8246395af2",
+        "d83e3beff9c0872997fbd829677b570d8f51793c967d93a9fb38264e5e082f12"
+      ]
+    },
+    "mmap": {
+      "intent_evidence": {
+        "configuration": [
+          "gh:thread:1308",
+          "gh:thread:2408"
+        ],
+        "failure diagnosis": [
+          "gh:thread:10180",
+          "gh:thread:1873"
+        ],
+        "resource use": [
+          "gh:thread:1791",
+          "gh:thread:1308"
+        ]
+      },
+      "judgment": "source-only intended-sense and multi-intent plausibility; not relevance",
+      "notes": "",
+      "witness_artifact_ids": [
+        "gh:thread:10180",
+        "gh:thread:1308",
+        "gh:thread:1791",
+        "gh:thread:1873",
+        "gh:thread:2408"
+      ],
+      "witness_digests": [
+        "261e91f0972293886aaf82abe9db1624afa142eaef710ca9e7a0e18e954ed5ea",
+        "cafd85c7344872e316fb514be8d895ea612574720c77fc5ead553031a659480a",
+        "ddb3d1fec520c54f9692a64329b93ded73c68c0ebfb8880f33d306142fcbc871",
+        "e135070251ccbc70c0336cc6d19e1cf66dd93b922699ed822d76ee6eafd66c98",
+        "fa01489c52572e3291d71281f4e136e5088612156fa5ecfbc37cb47aeed96478"
+      ]
+    },
+    "rocksdb": {
+      "intent_evidence": {
+        "failure recovery": [
+          "gh:thread:1725",
+          "gh:thread:1736"
+        ],
+        "migration": [
+          "gh:thread:10561"
+        ],
+        "performance": [
+          "gh:thread:2709",
+          "gh:thread:3036"
+        ]
+      },
+      "judgment": "source-only intended-sense and multi-intent plausibility; not relevance",
+      "notes": "",
+      "witness_artifact_ids": [
+        "gh:thread:10561",
+        "gh:thread:1725",
+        "gh:thread:1736",
+        "gh:thread:2709",
+        "gh:thread:3036"
+      ],
+      "witness_digests": [
+        "04510f34aedb02e8391f090b8d69347fb765e51dd4a124cd4ec11eec59303340",
+        "7c0c6a7e3bc157fc4de19cb3f6eb95a80f09b92e59f9183afa1c6bacc0e181be",
+        "835fa3ca66340474f4b49731a14368ab11ca2ae3b39ccc89d429609420b6873b",
+        "a921379bfc0249d8d51801bf5f292e999dadf5d0e3c25d1d3ec27403025c578e",
+        "f06ad9486c238147b7fe93d418805d5c9d768ea6ea775da41ef7577ce126c7cb"
+      ]
+    },
+    "s3": {
+      "intent_evidence": {
+        "compatibility": [
+          "gh:thread:4705"
+        ],
+        "credentials": [
+          "gh:thread:4701"
+        ],
+        "snapshot storage": [
+          "gh:thread:1703",
+          "gh:thread:3430"
+        ]
+      },
+      "judgment": "source-only intended-sense and multi-intent plausibility; not relevance",
+      "notes": "Object-storage sense only; excludes local identifiers that happen to spell s3.",
+      "witness_artifact_ids": [
+        "gh:thread:10085",
+        "gh:thread:1703",
+        "gh:thread:3430",
+        "gh:thread:4701",
+        "gh:thread:4705"
+      ],
+      "witness_digests": [
+        "4320dcaf8b0881c111fe454079ee7272c270384bf266eded00279400ded8bc7a",
+        "7a9b441aa3c5fe82d86f84a24e22203fa7ccd654f4b555d08cdddb8cd168fecb",
+        "a6e36c73c8e672f3a10ccb9b30a496b870abd2080bf7b2f2b8a5141c2502f534",
+        "befbc9bcb3d7fb3ef24bd9d8c2b67294009f83bd05cf4df41fbbbbe9feb9855c",
+        "c1c4599c1c8efb4c720cf32024c5938dcbd1ed8a2b3e0bc1db82bd2b07574335"
+      ]
+    },
+    "simd": {
+      "intent_evidence": {
+        "architecture support": [
+          "gh:thread:10461",
+          "gh:thread:7238"
+        ],
+        "build features": [
+          "gh:thread:10209",
+          "gh:thread:7238"
+        ],
+        "performance": [
+          "gh:thread:10291",
+          "gh:thread:508"
+        ]
+      },
+      "judgment": "source-only intended-sense and multi-intent plausibility; not relevance",
+      "notes": "",
+      "witness_artifact_ids": [
+        "gh:thread:10209",
+        "gh:thread:10291",
+        "gh:thread:10461",
+        "gh:thread:508",
+        "gh:thread:7238"
+      ],
+      "witness_digests": [
+        "1aeda8a36ef1238d11d328656c8a00954348599aa5b8b0808e82b205ae659f65",
+        "34dec4542a1fbe5e29c888436471e8ef3be98e31598e1140f3aeaf14f6cd37df",
+        "4f9e7c5f697405ed340eb2fa98d8c6d1a9d6b7537235dd81a75df9ba705b403d",
+        "9770bc09ee34d680d79473b82333483fab93387ac8f34473cf9c7768871f0eab",
+        "dc74258d8991be160c653c281eaf6aff413cd652cd0a3679ed01456dbf82a2f0"
+      ]
+    },
+    "tls": {
+      "intent_evidence": {
+        "certificates": [
+          "gh:thread:1808",
+          "gh:thread:1948"
+        ],
+        "configuration": [
+          "gh:thread:1497",
+          "gh:thread:1641"
+        ],
+        "connection failure": [
+          "gh:thread:6273"
+        ]
+      },
+      "judgment": "source-only intended-sense and multi-intent plausibility; not relevance",
+      "notes": "Transport-security sense only; excludes thread-local-storage uses.",
+      "witness_artifact_ids": [
+        "gh:thread:1497",
+        "gh:thread:1641",
+        "gh:thread:1808",
+        "gh:thread:1948",
+        "gh:thread:6273"
+      ],
+      "witness_digests": [
+        "1a5f3ffe6af7571644048b69e54b3d5548685d0db90c802fe1abbc52fa90230c",
+        "2ff818a4a5011eb3d57f51696fcbeb7030f0fdabd09f9e5eb0b3e577770c8825",
+        "7ac2cca368122cd5c4ffaefa50d8b6594f10a633ef6838529a77ee1b85196808",
+        "92042404181822a395503851deca04c5f6e05f369e1cdfca3012db09bf880425",
+        "b9935cda233f4785d287bc30eaa0501b59a818ed0ea32c93ce84f7b6d418197e"
+      ]
+    },
+    "turboquant": {
+      "intent_evidence": {
+        "accuracy": [
+          "gh:thread:8524"
+        ],
+        "configuration": [
+          "gh:thread:10344",
+          "gh:thread:8544"
+        ],
+        "platform support": [
+          "gh:thread:10437"
+        ]
+      },
+      "judgment": "source-only intended-sense and multi-intent plausibility; not relevance",
+      "notes": "",
+      "witness_artifact_ids": [
+        "gh:thread:10165",
+        "gh:thread:10344",
+        "gh:thread:10437",
+        "gh:thread:8524",
+        "gh:thread:8544"
+      ],
+      "witness_digests": [
+        "2ca16dd6cf208bc528224bbb55c974cefc1f2696a859ce61743592c04b4870f3",
+        "57dea623aeb539457867cbabed6f9f4a1f314fd6da0a4f76a0d8e9310e381df3",
+        "8973bb632ccc871b7cecc70fc73360301ea6f9cd49ca4b4ed752ad57e22170a8",
+        "8d5ce533f4ebfc36e86452c1306e023da11e10968b64f27f97b49ee58dda912d",
+        "fec46eef92f43a5878e9be55e5b80ccb638e561cd9ffe4d218689f6b1fc70f91"
+      ]
+    }
+  },
+  "state": "locked",
+  "supersedes": {
+    "path": "m19/term-roster-lock-v2.json",
+    "reason": "separate selected 12-term AddedToken audit from 15-term catalog scanner"
+  },
+  "terms": [
+    {
+      "artifact_support": 42,
+      "demand": "owner-requested Qdrant project-memory term in M18",
+      "example_artifact_ids": [
+        "gh:thread:10472",
+        "gh:thread:1060",
+        "gh:thread:1451",
+        "gh:thread:1481",
+        "gh:thread:1640",
+        "gh:thread:1704",
+        "gh:thread:2126",
+        "gh:thread:2127"
+      ],
+      "fragment_count": 3,
+      "intent_axes": [
+        "deployment",
+        "persistence",
+        "networking"
+      ],
+      "meaning": "Kubernetes deployment shorthand",
+      "non_equivalent_witnesses": 67,
+      "original_ids": [
+        1047,
+        2620,
+        2015
+      ],
+      "original_tokens": [
+        "k",
+        "##8",
+        "##s"
+      ],
+      "priority": 0,
+      "raw_serving_match_occurrences": 79,
+      "support_by_kind": {
+        "issue_comment": 23,
+        "issue_opening": 41,
+        "pull_request_opening": 2,
+        "review_comment": 1
+      },
+      "term": "k8s",
+      "title_artifact_support": 3
+    },
+    {
+      "artifact_support": 487,
+      "demand": "recorded Qdrant snapshot/project-memory use case",
+      "example_artifact_ids": [
+        "gh:thread:10021",
+        "gh:thread:10050",
+        "gh:thread:10085",
+        "gh:thread:10088",
+        "gh:thread:10142",
+        "gh:thread:10145",
+        "gh:thread:10159",
+        "gh:thread:10194"
+      ],
+      "fragment_count": 2,
+      "intent_axes": [
+        "snapshot storage",
+        "credentials",
+        "compatibility"
+      ],
+      "meaning": "Amazon-S3-compatible object storage",
+      "non_equivalent_witnesses": 766,
+      "original_ids": [
+        1055,
+        2509
+      ],
+      "original_tokens": [
+        "s",
+        "##3"
+      ],
+      "priority": 1,
+      "raw_serving_match_occurrences": 1379,
+      "support_by_kind": {
+        "code_comment": 65,
+        "issue_comment": 426,
+        "issue_opening": 68,
+        "pull_request_opening": 139,
+        "repository_text": 10,
+        "review_comment": 58
+      },
+      "term": "s3",
+      "title_artifact_support": 38
+    },
+    {
+      "artifact_support": 622,
+      "demand": "core Qdrant index configuration and operations",
+      "example_artifact_ids": [
+        "gh:thread:10",
+        "gh:thread:10010",
+        "gh:thread:10038",
+        "gh:thread:10042",
+        "gh:thread:10044",
+        "gh:thread:10046",
+        "gh:thread:10052",
+        "gh:thread:10054"
+      ],
+      "fragment_count": 3,
+      "intent_axes": [
+        "construction",
+        "search tuning",
+        "persistence"
+      ],
+      "meaning": "hierarchical navigable small-world vector index",
+      "non_equivalent_witnesses": 1323,
+      "original_ids": [
+        1044,
+        3619,
+        2860
+      ],
+      "original_tokens": [
+        "h",
+        "##ns",
+        "##w"
+      ],
+      "priority": 2,
+      "raw_serving_match_occurrences": 2767,
+      "support_by_kind": {
+        "code_comment": 189,
+        "issue_comment": 394,
+        "issue_opening": 180,
+        "pull_request_opening": 399,
+        "repository_text": 5,
+        "review_comment": 156
+      },
+      "term": "hnsw",
+      "title_artifact_support": 112
+    },
+    {
+      "artifact_support": 1002,
+      "demand": "Qdrant client and server interface",
+      "example_artifact_ids": [
+        "gh:thread:10017",
+        "gh:thread:10020",
+        "gh:thread:10022",
+        "gh:thread:10026",
+        "gh:thread:10027",
+        "gh:thread:10032",
+        "gh:thread:10035",
+        "gh:thread:10040"
+      ],
+      "fragment_count": 2,
+      "intent_axes": [
+        "connectivity",
+        "client behavior",
+        "server configuration"
+      ],
+      "meaning": "gRPC transport/API",
+      "non_equivalent_witnesses": 2616,
+      "original_ids": [
+        24665,
+        15042
+      ],
+      "original_tokens": [
+        "gr",
+        "##pc"
+      ],
+      "priority": 3,
+      "raw_serving_match_occurrences": 4948,
+      "support_by_kind": {
+        "code_comment": 342,
+        "issue_comment": 624,
+        "issue_opening": 368,
+        "pull_request_opening": 709,
+        "repository_text": 9,
+        "review_comment": 564
+      },
+      "term": "grpc",
+      "title_artifact_support": 227
+    },
+    {
+      "artifact_support": 373,
+      "demand": "Qdrant storage implementation and migration history",
+      "example_artifact_ids": [
+        "gh:thread:10561",
+        "gh:thread:1175",
+        "gh:thread:1259",
+        "gh:thread:1261",
+        "gh:thread:13",
+        "gh:thread:1316",
+        "gh:thread:1334",
+        "gh:thread:1432"
+      ],
+      "fragment_count": 2,
+      "intent_axes": [
+        "migration",
+        "failure recovery",
+        "performance"
+      ],
+      "meaning": "RocksDB storage engine",
+      "non_equivalent_witnesses": 820,
+      "original_ids": [
+        5749,
+        18939
+      ],
+      "original_tokens": [
+        "rocks",
+        "##db"
+      ],
+      "priority": 4,
+      "raw_serving_match_occurrences": 2583,
+      "support_by_kind": {
+        "code_comment": 2,
+        "issue_comment": 352,
+        "issue_opening": 74,
+        "pull_request_opening": 277,
+        "repository_text": 1,
+        "review_comment": 114
+      },
+      "term": "rocksdb",
+      "title_artifact_support": 91
+    },
+    {
+      "artifact_support": 823,
+      "demand": "Qdrant storage configuration and diagnostics",
+      "example_artifact_ids": [
+        "gh:thread:10008",
+        "gh:thread:10010",
+        "gh:thread:10015",
+        "gh:thread:10028",
+        "gh:thread:10035",
+        "gh:thread:10044",
+        "gh:thread:10047",
+        "gh:thread:10054"
+      ],
+      "fragment_count": 2,
+      "intent_axes": [
+        "configuration",
+        "resource use",
+        "failure diagnosis"
+      ],
+      "meaning": "memory-mapped storage access",
+      "non_equivalent_witnesses": 1875,
+      "original_ids": [
+        21021,
+        2361
+      ],
+      "original_tokens": [
+        "mma",
+        "##p"
+      ],
+      "priority": 5,
+      "raw_serving_match_occurrences": 3810,
+      "support_by_kind": {
+        "code_comment": 332,
+        "issue_comment": 463,
+        "issue_opening": 73,
+        "pull_request_opening": 442,
+        "repository_text": 2,
+        "review_comment": 563
+      },
+      "term": "mmap",
+      "title_artifact_support": 119
+    },
+    {
+      "artifact_support": 58,
+      "demand": "Qdrant build and deployment platform",
+      "example_artifact_ids": [
+        "gh:thread:10166",
+        "gh:thread:10303",
+        "gh:thread:10305",
+        "gh:thread:10350",
+        "gh:thread:1452",
+        "gh:thread:1514",
+        "gh:thread:1529",
+        "gh:thread:1530"
+      ],
+      "fragment_count": 2,
+      "intent_axes": [
+        "build",
+        "deployment",
+        "compatibility"
+      ],
+      "meaning": "64-bit Arm target architecture",
+      "non_equivalent_witnesses": 157,
+      "original_ids": [
+        2849,
+        21084
+      ],
+      "original_tokens": [
+        "arm",
+        "##64"
+      ],
+      "priority": 6,
+      "raw_serving_match_occurrences": 307,
+      "support_by_kind": {
+        "issue_comment": 38,
+        "issue_opening": 46,
+        "pull_request_opening": 55,
+        "review_comment": 18
+      },
+      "term": "arm64",
+      "title_artifact_support": 18
+    },
+    {
+      "artifact_support": 372,
+      "demand": "Qdrant network security configuration",
+      "example_artifact_ids": [
+        "gh:thread:1005",
+        "gh:thread:1010",
+        "gh:thread:10306",
+        "gh:thread:10458",
+        "gh:thread:1224",
+        "gh:thread:1497",
+        "gh:thread:1550",
+        "gh:thread:1581"
+      ],
+      "fragment_count": 2,
+      "intent_axes": [
+        "certificates",
+        "configuration",
+        "connection failure"
+      ],
+      "meaning": "transport layer security",
+      "non_equivalent_witnesses": 504,
+      "original_ids": [
+        1056,
+        4877
+      ],
+      "original_tokens": [
+        "t",
+        "##ls"
+      ],
+      "priority": 7,
+      "raw_serving_match_occurrences": 931,
+      "support_by_kind": {
+        "code_comment": 8,
+        "issue_comment": 306,
+        "issue_opening": 56,
+        "pull_request_opening": 111,
+        "review_comment": 23
+      },
+      "term": "tls",
+      "title_artifact_support": 20
+    },
+    {
+      "artifact_support": 13,
+      "demand": "Qdrant GPU build and acceleration work",
+      "example_artifact_ids": [
+        "gh:thread:10210",
+        "gh:thread:10211",
+        "gh:thread:1669",
+        "gh:thread:3886",
+        "gh:thread:4474",
+        "gh:thread:5172",
+        "gh:thread:5417",
+        "gh:thread:5570"
+      ],
+      "fragment_count": 2,
+      "intent_axes": [
+        "build",
+        "device support",
+        "runtime failure"
+      ],
+      "meaning": "NVIDIA CUDA compute platform",
+      "non_equivalent_witnesses": 23,
+      "original_ids": [
+        12731,
+        2850
+      ],
+      "original_tokens": [
+        "cu",
+        "##da"
+      ],
+      "priority": 8,
+      "raw_serving_match_occurrences": 42,
+      "support_by_kind": {
+        "issue_comment": 9,
+        "issue_opening": 10,
+        "pull_request_opening": 4
+      },
+      "term": "cuda",
+      "title_artifact_support": 1
+    },
+    {
+      "artifact_support": 149,
+      "demand": "Qdrant architecture and performance work",
+      "example_artifact_ids": [
+        "gh:thread:10209",
+        "gh:thread:10275",
+        "gh:thread:10291",
+        "gh:thread:10292",
+        "gh:thread:10303",
+        "gh:thread:10305",
+        "gh:thread:10344",
+        "gh:thread:10350"
+      ],
+      "fragment_count": 2,
+      "intent_axes": [
+        "build features",
+        "architecture support",
+        "performance"
+      ],
+      "meaning": "single-instruction multiple-data CPU execution",
+      "non_equivalent_witnesses": 647,
+      "original_ids": [
+        21934,
+        2094
+      ],
+      "original_tokens": [
+        "sim",
+        "##d"
+      ],
+      "priority": 9,
+      "raw_serving_match_occurrences": 921,
+      "support_by_kind": {
+        "code_comment": 295,
+        "issue_comment": 107,
+        "issue_opening": 24,
+        "pull_request_opening": 83,
+        "repository_text": 1,
+        "review_comment": 137
+      },
+      "term": "simd",
+      "title_artifact_support": 31
+    },
+    {
+      "artifact_support": 170,
+      "demand": "named Qdrant quantization component",
+      "example_artifact_ids": [
+        "gh:thread:10005",
+        "gh:thread:10008",
+        "gh:thread:10042",
+        "gh:thread:10046",
+        "gh:thread:10066",
+        "gh:thread:10152",
+        "gh:thread:10161",
+        "gh:thread:10165"
+      ],
+      "fragment_count": 3,
+      "intent_axes": [
+        "configuration",
+        "accuracy",
+        "platform support"
+      ],
+      "meaning": "Qdrant TurboQuant quantization implementation",
+      "non_equivalent_witnesses": 840,
+      "original_ids": [
+        15386,
+        16211,
+        3372
+      ],
+      "original_tokens": [
+        "turbo",
+        "##qua",
+        "##nt"
+      ],
+      "priority": 10,
+      "raw_serving_match_occurrences": 1639,
+      "support_by_kind": {
+        "code_comment": 480,
+        "issue_comment": 127,
+        "issue_opening": 11,
+        "pull_request_opening": 90,
+        "review_comment": 132
+      },
+      "term": "turboquant",
+      "title_artifact_support": 47
+    },
+    {
+      "artifact_support": 332,
+      "demand": "named Qdrant storage component",
+      "example_artifact_ids": [
+        "gh:thread:10024",
+        "gh:thread:10033",
+        "gh:thread:10039",
+        "gh:thread:10139",
+        "gh:thread:10146",
+        "gh:thread:10147",
+        "gh:thread:10152",
+        "gh:thread:10154"
+      ],
+      "fragment_count": 3,
+      "intent_axes": [
+        "configuration",
+        "migration",
+        "performance"
+      ],
+      "meaning": "Qdrant Gridstore storage implementation",
+      "non_equivalent_witnesses": 1042,
+      "original_ids": [
+        8370,
+        23809,
+        2063
+      ],
+      "original_tokens": [
+        "grid",
+        "##stor",
+        "##e"
+      ],
+      "priority": 11,
+      "raw_serving_match_occurrences": 2232,
+      "support_by_kind": {
+        "code_comment": 113,
+        "issue_comment": 255,
+        "issue_opening": 41,
+        "pull_request_opening": 232,
+        "repository_text": 2,
+        "review_comment": 399
+      },
+      "term": "gridstore",
+      "title_artifact_support": 72
+    }
+  ]
+}

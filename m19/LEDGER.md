@@ -82,3 +82,17 @@
 - V2 roster lock identity:
   `864c4073674a5c207d680092a84e713178ad98b69cc86262409d7bfee48b5c08`.
   Seven inventory tests pass. Re-review is required before stage 3.
+
+## 2026-09-13 — roster re-review GO and v3 selected-token audit
+
+- Astra re-review returned `GO` for stage-3 implementation and verified all prior dispositions.
+- One residual P2 showed v2's final roster copied the 15-term catalog matcher audit. The selected
+  terms' IDs were unchanged, but the declared added/final vocabulary counts were wrong for bundle
+  construction.
+- Preserved v2 and issued v3. The inventory retains its 15-term diagnostic matcher; the roster has
+  a separate selected audit with exactly terms `k8s` through `gridstore`, IDs 30522–30533,
+  `added=12` and `final_vocab=30534`.
+- V3 lock identity:
+  `8170f9b0432d4b7460601e1dbf39536d99b1e4af026d9a3afef649a9c89ef892`.
+  Eight inventory tests pass, including driver-level consumed-input drift. Stage 3 may begin; real
+  judging remains unauthorized until the required end-to-end implementation reviews.

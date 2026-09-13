@@ -120,6 +120,22 @@ def test_consumed_input_mismatch_stops_mutation_during_scan():
         }, inheritance)
 
 
+def test_build_driver_rejects_scan_drift_before_selection(monkeypatch):
+    inheritance = {"identity_sha256": "inherit", "inherited_data": {
+        "corpus_jsonl": {"sha256": "corpus-a"},
+        "zero_v1_tokenizer": {"sha256": "tokenizer-a"},
+    }}
+    monkeypatch.setattr(term_inventory.inherit, "verify", lambda: inheritance)
+    monkeypatch.setattr(term_inventory, "sha_file", lambda path: "implementation")
+    monkeypatch.setattr(term_inventory, "load_json", lambda path: {"term_roster": {}})
+    monkeypatch.setattr(term_inventory, "inventory", lambda *args: ({
+        "consumed_corpus_sha256": "corpus-b",
+        "consumed_tokenizer_sha256": "tokenizer-a",
+    }, {}))
+    with pytest.raises(SystemExit, match="consumed_corpus"):
+        term_inventory.build_outputs(require_qualification=False)
+
+
 def test_pair_publication_resumes_identical_first_output(monkeypatch, tmp_path):
     first = tmp_path / "first.json"
     second = tmp_path / "second.json"

@@ -416,6 +416,14 @@ def build_outputs(*, require_qualification=True):
         report, minimum=policy["minimum"], maximum=policy["maximum"],
         minimum_support=policy["minimum_artifact_support"],
     )
+    selected_terms = [row["term"] for row in selected]
+    selected_payload, _ = _load_tokenizer_bytes(tokenizer_path)
+    if sha_bytes(selected_payload) != report["consumed_tokenizer_sha256"]:
+        raise SystemExit("M19 ROSTER REFUSED: tokenizer changed before selected-row audit")
+    _, selected_added_audit = _extend_tokenizer(selected_payload, selected_terms)
+    if (set(selected_added_audit["term_ids"]) != set(selected_terms)
+            or selected_added_audit["added"] != len(selected_terms)):
+        raise SystemExit("M19 ROSTER REFUSED: selected AddedToken audit differs from roster")
     qualifications = _qualify(selected, packets) if require_qualification else None
     # Re-verify after the scan and compare the implementation at both ends. The exact consumed
     # byte hashes above catch a mutation during parsing, not merely before/after snapshots.
@@ -423,7 +431,7 @@ def build_outputs(*, require_qualification=True):
     if inheritance_after != inheritance or sha_file(Path(__file__)) != implementation_before:
         raise SystemExit("M19 ROSTER REFUSED: inputs or implementation changed during build")
     inventory_result = {
-        "_schema": "m19-term-inventory-v2",
+        "_schema": "m19-term-inventory-v3",
         "quality_access": False,
         "query_authoring": False,
         "consumed_inputs": {
@@ -434,16 +442,16 @@ def build_outputs(*, require_qualification=True):
         "indexable_documents_scanned": report["indexable_documents_scanned"],
         "artifacts_scanned": report["artifacts_scanned"],
         "catalog": report["catalog"],
-        "selected_terms": [row["term"] for row in selected],
+        "selected_terms": selected_terms,
         "rejected": rejected,
-        "added_token_audit": report["added_token_audit"],
+        "catalog_matcher_audit": report["added_token_audit"],
     }
     body = {
-        "_schema": "m19-term-roster-lock-v2",
+        "_schema": "m19-term-roster-lock-v3",
         "state": "locked",
         "supersedes": {
-            "path": "m19/term-roster-lock.json",
-            "reason": "serving-boundary and consumed-input corrections after Astra review",
+            "path": "m19/term-roster-lock-v2.json",
+            "reason": "separate selected 12-term AddedToken audit from 15-term catalog scanner",
         },
         "selection_policy": {
             "provenance_limit": "catalog and first support result first committed together at 1736d93; runtime order fixed but no independent pre-scan receipt",
@@ -457,7 +465,7 @@ def build_outputs(*, require_qualification=True):
         },
         "terms": selected,
         "source_qualifications": qualifications,
-        "added_token_audit": report["added_token_audit"],
+        "selected_added_token_audit": selected_added_audit,
         "bindings": {
             "registry_sha256": sha_file(REGISTRY_PATH),
             "inheritance_lock_sha256": sha_file(M19 / "inheritance-lock.json"),
@@ -504,13 +512,13 @@ def main(argv=None):
                           "terms": inventory_result["selected_terms"]}, sort_keys=True))
         return
     inventory_result, roster, _ = build_outputs()
-    result_path = RESULTS / "m19_term_inventory_v2.json"
-    roster_path = M19 / "term-roster-lock-v2.json"
+    result_path = RESULTS / "m19_term_inventory_v3.json"
+    roster_path = M19 / "term-roster-lock-v3.json"
     if args.verify:
         if not result_path.exists() or not roster_path.exists():
-            raise SystemExit("M19 ROSTER REFUSED: v2 immutable outputs are incomplete")
+            raise SystemExit("M19 ROSTER REFUSED: v3 immutable outputs are incomplete")
         if load_json(result_path) != inventory_result or load_json(roster_path) != roster:
-            raise SystemExit("M19 ROSTER REFUSED: current inventory differs from frozen v2 outputs")
+            raise SystemExit("M19 ROSTER REFUSED: current inventory differs from frozen v3 outputs")
     else:
         _publish_or_verify(result_path, inventory_result)
         _publish_or_verify(roster_path, roster)

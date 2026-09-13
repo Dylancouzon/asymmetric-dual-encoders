@@ -34,3 +34,20 @@ bounded line reads, path-restricted git history/diffs, hashes and read-only Pyth
 support, tokenizer boundaries, semantics, input drift and interrupted publication. It reported no
 edits, new files, recursive searches, directory listings, network access, raw corpus-text output,
 retrieval, query authoring or prohibited evaluation reads.
+
+## Re-review of `255e5cc`
+
+Astra returned `GO` for stage-3 implementation and closed the original P1. It reproduced the v2
+inventory/roster, both consumed hashes, the real-tokenizer boundaries and counts, all 60 witness
+bindings, all 36 intent mappings, explicit-indexability/duplicate behavior, and interrupted/racing
+publication. It found one residual P2: the final 12-term roster copied the full 15-term catalog
+scanner audit.
+
+The residual is closed with an immutable v3 roster/result rather than rewriting v2. V3 keeps the
+15-term matcher audit as inventory evidence but independently extends exactly the 12 selected terms
+for the final audit. It requires the audit term set to equal the roster, `added=12`, base vocabulary
+30,522 and final vocabulary 30,534. A driver-level consumed-hash drift regression was also added.
+
+The re-review used only seven named M19 files, bounded diffs for four documentation files, and the
+exact corpus/tokenizer inputs. It reported no edit, file creation, directory listing, recursive
+search, network, retrieval, query authoring, raw corpus-text output or prohibited evaluation read.

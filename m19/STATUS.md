@@ -1,6 +1,6 @@
 # M19 status
 
-**Execution active 2026-09-13 — term roster frozen.**
+**Execution active 2026-09-13 — corrected term roster cleared for implementation.**
 
 The fresh M19 boundary is active on `m18-qdrant-project-memory`. M18 remains closed and immutable.
 Only the pinned M18 source/corpus/index manifests, the released Zero-v1 bundle and the unprotected
@@ -14,13 +14,13 @@ guard/inheritance tests and the separate real-input verification pass. Astra ret
 bounded term inventory with no P0/P1. No M19 evaluation query text, retrieval quality or judgment
 data has been read or created.
 
-The corrected immutable v2 roster contains 12 demanded fragmented terms: `k8s`, `s3`, `hnsw`, `grpc`,
+The corrected immutable v3 roster contains 12 demanded fragmented terms: `k8s`, `s3`, `hnsw`, `grpc`,
 `rocksdb`, `mmap`, `arm64`, `tls`, `cuda`, `simd`, `turboquant` and `gridstore`. Each has at least
 13 distinct non-equivalent artifact witnesses, 2–3 released-tokenizer pieces, one source-qualified
 stable meaning and three artifact-grounded intent axes. Roster lock identity:
-`864c4073674a5c207d680092a84e713178ad98b69cc86262409d7bfee48b5c08`.
+`8170f9b0432d4b7460601e1dbf39536d99b1e4af026d9a3afef649a9c89ef892`.
 
-The v1 roster at `1736d93` is preserved but superseded because its regex support boundary was not
-serving-consistent. No retrieval quality or M18 protocol surface was accessed. Next: commit and
-re-review the v2 correction, then implement deterministic rows, artifact collapse, metrics and the
-synthetic confirmation state machine before authoring query text.
+The v1 and v2 receipts remain preserved and superseded; v3's selected AddedToken audit contains
+exactly 12 rows/IDs and a final vocabulary of 30,534. Astra returned `GO` for stage-3 implementation.
+No retrieval quality or M18 protocol surface was accessed. Next: implement deterministic rows,
+artifact collapse, metrics and the synthetic confirmation state machine before authoring query text.
