@@ -7,6 +7,7 @@ import json
 import pytest
 
 import protocol
+import vocab
 
 
 def _digest(text):
@@ -68,3 +69,8 @@ def test_confirmation_cannot_use_general_surface_loader(tmp_path):
     with pytest.raises(SystemExit, match="run_confirmation"):
         protocol.load_surface("confirmation", tmp_path)
 
+
+def test_project_compounds_are_not_mistaken_for_generated_suffixes():
+    assert not vocab.is_near_unique("scalar-quantization")
+    assert not vocab.is_near_unique("collection-configuration")
+    assert vocab.is_near_unique("qdrant-7f8c9d2a")
