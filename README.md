@@ -133,6 +133,10 @@ Protocol and every registered bar: `m7/LEDGER.md`. What ships: `m7/RECIPE.md`.
 **`results/perquery.json` must never be overwritten** — frozen comparator vectors regenerated
 from caches that no longer exist.
 
+For the portable M18/M19 project-memory runtime, optional M19 candidate artifacts, exact hashes and
+the boundary around sealed/private evaluation data, see
+[M18_M19_REPRODUCIBILITY.md](M18_M19_REPRODUCIBILITY.md).
+
 ## Project status and repo map
 
 Read [ROADMAP.md](ROADMAP.md) for current scope and [PROJECT_STATUS.md](PROJECT_STATUS.md) for

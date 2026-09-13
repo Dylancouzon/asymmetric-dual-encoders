@@ -27,6 +27,7 @@
 | `results/m19_pool_pilot.json` | cost-only pilot counts, projections and hashes of the ignored blinded pool/packet |
 | `results/m19_development_pool_freeze.json`, `m19_development_primary_judgment.json`, `m19_development_judgment_incomplete.json` | full development pool/judgment receipts and the pre-metric registered stop |
 | `results/m19_final_system_manifest.json` | final selected system, exact local query command and M19 outcomes |
+| `portable-artifacts-v1.json`, `../m19src/portable_handoff.py` | explicit safe runtime/candidate transfer allowlist, hash verifier and atomic exporter |
 | `m19src/test_common.py`, `test_inherit.py` | synthetic path-guard and lock tests |
 | `m19/reviews/` | bounded prompts, reviewer identities, access logs, findings and dispositions |
 | `work/m19/` | gitignored raw/derived/run state owned by M19 |

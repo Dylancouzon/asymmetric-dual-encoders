@@ -1,0 +1,207 @@
+{
+  "_schema": "m18-m19-portable-artifacts-v1",
+  "branch": "m18-qdrant-project-memory",
+  "history_tip_before_handoff": "acb11026041a3ac0646b0d6f9c3af17b5e83b073",
+  "scope": "internal transfer only; no publication",
+  "environment": {
+    "python": "3.12.14",
+    "requirements_path": "m7/requirements.lock.txt",
+    "requirements_sha256": "975394fd55737369a5a616d9a9a106a95ea93b7b5b530dc00061f4fe56fc8cb8",
+    "reference_architecture": "x86_64"
+  },
+  "profiles": {
+    "system": {
+      "description": "Minimum bytes needed to run the released Zero-v1 plus M18 BM25/DBSF project-memory query path used by the final M19 selection.",
+      "bytes": 443837325,
+      "files": [
+        "index_corpus",
+        "index_doc_ids",
+        "index_manifest",
+        "document_vectors",
+        "bm25_data",
+        "bm25_indices",
+        "bm25_indptr",
+        "bm25_metadata",
+        "bm25_params",
+        "bm25_vocab",
+        "zero_v1_model",
+        "zero_v1_tokenizer",
+        "zero_v1_config"
+      ]
+    },
+    "m19-candidates": {
+      "description": "Optional unselected deterministic V0-compose and T0-teacher bundles plus the twelve teacher vectors used to build them.",
+      "bytes": 63769976,
+      "files": [
+        "t0_model",
+        "t0_tokenizer",
+        "t0_config",
+        "t0_provenance",
+        "t0_complete",
+        "v0_model",
+        "v0_tokenizer",
+        "v0_config",
+        "v0_provenance",
+        "v0_complete",
+        "teacher_vectors"
+      ]
+    }
+  },
+  "files": {
+    "index_corpus": {
+      "source": "repo",
+      "path": "work/m18/derived/index/corpus.jsonl",
+      "bytes": 151239474,
+      "sha256": "0cede39eb47b5680ef0f560917bd93ec78d02ac0e607ae0c4209d98f4430f394"
+    },
+    "index_doc_ids": {
+      "source": "repo",
+      "path": "work/m18/derived/index/doc_ids.json",
+      "bytes": 2792734,
+      "sha256": "85fac5a24e5714281c0cc4046c4b2971b8a28d6c553ea8896b21c3cf80cbb939"
+    },
+    "index_manifest": {
+      "source": "repo",
+      "path": "work/m18/derived/index/index_manifest.json",
+      "bytes": 5497,
+      "sha256": "037a9e3f5ccf7be1264ba50f427d6f062bc6e2cdfbaeeaa2c538ef7c23a11025"
+    },
+    "document_vectors": {
+      "source": "repo",
+      "path": "work/m18/derived/index/documents/vectors.f16.npy",
+      "bytes": 162343040,
+      "sha256": "3422ddccae17df01bf85a375c3cb4815a0e86e8d3447f8be0cfe46583ef7a10e"
+    },
+    "bm25_data": {
+      "source": "repo",
+      "path": "work/m18/derived/index/bm25/data.csc.index.npy",
+      "bytes": 13109564,
+      "sha256": "2e1e5550edd1fbb7177a6ce94c4a1d4444f80168a9e515f9ce0b321778fb2398"
+    },
+    "bm25_indices": {
+      "source": "repo",
+      "path": "work/m18/derived/index/bm25/indices.csc.index.npy",
+      "bytes": 13109564,
+      "sha256": "2d99baa326b82c0702b9c72be8f5b64a576b727fc1852da65cb2d3540e465b2c"
+    },
+    "bm25_indptr": {
+      "source": "repo",
+      "path": "work/m18/derived/index/bm25/indptr.csc.index.npy",
+      "bytes": 996912,
+      "sha256": "e0c8e75804198f64f1c41db7ea31a9693ccfa73c3b1c341e1bac18e3041244e5"
+    },
+    "bm25_metadata": {
+      "source": "repo",
+      "path": "work/m18/derived/index/bm25/m18.json",
+      "bytes": 2951378,
+      "sha256": "f7ef649d0402e00eee9ed5f2742755215b8f605d822b8ed214293f0c8388ccb0"
+    },
+    "bm25_params": {
+      "source": "repo",
+      "path": "work/m18/derived/index/bm25/params.index.json",
+      "bytes": 224,
+      "sha256": "3075fb8ccf7bad6f4f34094e2703d97df5221612193be6d46f72f378f9d2ad9f"
+    },
+    "bm25_vocab": {
+      "source": "repo",
+      "path": "work/m18/derived/index/bm25/vocab.index.json",
+      "bytes": 2780907,
+      "sha256": "6b0c6092bef6ed07067d138d007632a2795a0b91d163899c92bcd99044ba8f21"
+    },
+    "zero_v1_model": {
+      "source": "release",
+      "path": "model.npz",
+      "archive_path": "work/release/zero-v1/model.npz",
+      "bytes": 93886950,
+      "sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf"
+    },
+    "zero_v1_tokenizer": {
+      "source": "release",
+      "path": "tokenizer.json",
+      "archive_path": "work/release/zero-v1/tokenizer.json",
+      "bytes": 619472,
+      "sha256": "997eaeff157a7d4db899b8f2278ad3db6e323e609ae956b9c5035550f581eeee"
+    },
+    "zero_v1_config": {
+      "source": "release",
+      "path": "config.json",
+      "archive_path": "work/release/zero-v1/config.json",
+      "bytes": 1609,
+      "sha256": "fd784397925e9ec32b6f1412af85b46faea79bb618b17197dc6d3a0068669636"
+    },
+    "t0_model": {
+      "source": "repo",
+      "path": "work/m19/bundles/t0-teacher/model.npz",
+      "bytes": 31389436,
+      "sha256": "0e4053fce4c8f32e33b6505bbc083f79cbc69a0c55aacc9c0990a6516232c61e"
+    },
+    "t0_tokenizer": {
+      "source": "repo",
+      "path": "work/m19/bundles/t0-teacher/tokenizer.json",
+      "bytes": 467448,
+      "sha256": "33858ffd23b53a11cc14f365218b99c670eafb13cebbc8f9d0fcff1e080b5aaa"
+    },
+    "t0_config": {
+      "source": "repo",
+      "path": "work/m19/bundles/t0-teacher/config.json",
+      "bytes": 960,
+      "sha256": "d85f0a956314404c9f7ce055352cdacf3720b0f24bbe343bfb1712589607d00b"
+    },
+    "t0_provenance": {
+      "source": "repo",
+      "path": "work/m19/bundles/t0-teacher/provenance.json",
+      "bytes": 1953,
+      "sha256": "1a758265014ba7fc17c6f73bcd814f20700481442faab099b6777a0e84521327"
+    },
+    "t0_complete": {
+      "source": "repo",
+      "path": "work/m19/bundles/t0-teacher/complete.json",
+      "bytes": 551,
+      "sha256": "313a52c1f4cb1dc2f3863a364a1e9bb93132fc83d8cf8677621f26bd299cfdbb"
+    },
+    "v0_model": {
+      "source": "repo",
+      "path": "work/m19/bundles/v0-compose/model.npz",
+      "bytes": 31389436,
+      "sha256": "87383766a0b2663a1ec69603b8e9c97ceba8238ec0d2808b638403dfdfaa30bb"
+    },
+    "v0_tokenizer": {
+      "source": "repo",
+      "path": "work/m19/bundles/v0-compose/tokenizer.json",
+      "bytes": 467448,
+      "sha256": "33858ffd23b53a11cc14f365218b99c670eafb13cebbc8f9d0fcff1e080b5aaa"
+    },
+    "v0_config": {
+      "source": "repo",
+      "path": "work/m19/bundles/v0-compose/config.json",
+      "bytes": 960,
+      "sha256": "73631b6ae08292acf7458bba10eafac9c894003ca3d54fa8c8f01592b25cf114"
+    },
+    "v0_provenance": {
+      "source": "repo",
+      "path": "work/m19/bundles/v0-compose/provenance.json",
+      "bytes": 1953,
+      "sha256": "2cd98d89c4ae3739f566470bc2a5cb1651b625a2efeac758e728a6ef174331fa"
+    },
+    "v0_complete": {
+      "source": "repo",
+      "path": "work/m19/bundles/v0-compose/complete.json",
+      "bytes": 551,
+      "sha256": "eef4c19564ce6c05ca5a78671398475187895c91a792057f2fd4227c76d0c383"
+    },
+    "teacher_vectors": {
+      "source": "repo",
+      "path": "work/m19/candidate/teacher-vectors.npy",
+      "bytes": 49280,
+      "sha256": "00a45770526383d8638f2cc289e34611fb484978e52c4e198857937e84cef659"
+    }
+  },
+  "excluded": [
+    "all M18 and M19 raw query text",
+    "all qrels and judgment labels or packets",
+    "all M18 and M19 confirmation material",
+    "raw GitHub acquisition data",
+    "historical M7-M13 evaluation surfaces",
+    "Stella model snapshot (download the pinned public revision only when rebuilding M19 candidates)"
+  ]
+}
