@@ -184,3 +184,14 @@
   full Stella encoding and development scoring. It judged the dataset proportionate without more
   machinery, provided the planned report-only bare-term top-10 comparison remains in the final
   evidence. This closes the pre-expensive-run data gate.
+
+## 2026-09-13 — E9 project-memory index complete
+
+- Encoded all 79,269 indexable documents once with the pinned Stella revision into normalized
+  1,024-dimensional fp16 vectors. Twenty resumable shards and the 162,343,040-byte combined array
+  passed shape, dtype, finiteness, norm and SHA-256 checks. Wall time was 329.396 seconds, peak CUDA
+  allocation 1,729,131,008 bytes and process RSS high-water 3,849,068 KiB.
+- Built the registered local BM25 index over the identical ordered document texts. The combined
+  index binds corpus, ordered IDs, indexed text, Stella revision/vectors and BM25/DBSF recipe under
+  identity `a710f91a7b19f27a2f7251e369199dc0bc9fcfd56bf080bf31c3c01124fd368e`.
+  This is the reusable system deliverable and frozen candidate bank, not a new document model.
