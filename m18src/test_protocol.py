@@ -87,11 +87,43 @@ def test_status_only_fix_is_not_answer_to_unrelated_pr_title():
         opening, {"text": "Fixed the Codespell typo and pushed it; CI needs maintainer approval."}, ev)
 
 
+@pytest.mark.parametrize("text", [
+    "Need logs because we cannot reproduce this failure without more details from the user.",
+    "Is this actually fixed? Because I still see the same failure in my local environment.",
+    "I do not think this is fixed because the same failure still occurs in production.",
+])
+def test_review_requests_and_non_resolutions_are_not_answers(text):
+    assert not protocol._credible_review_answer({"text": text})
+
+
+@pytest.mark.parametrize("text", [
+    "Is this actually fixed? Because I still see the same failure in my local environment.",
+    "I do not think this is fixed because the same failure still occurs in production.",
+])
+def test_non_resolution_does_not_pass_closed_issue_gate(text):
+    ev = {"explicit_resolution": True, "thread_closed_after_answer": True,
+          "project_link": False, "closing_or_link_event": True}
+    assert not protocol._credible_issue_answer({"title": "Production failure"}, {"text": text}, ev)
+
+
 def test_imperative_pr_title_is_not_concept_howto_audit_query():
     opening = {"kind": "pull_request_opening"}
     assert not protocol._credible_audit_query(opening, "fix: clear joint consensus fields", "concept_howto")
     assert protocol._credible_audit_query(opening, "Why are joint consensus fields retained?", "concept_howto")
     assert protocol._credible_audit_query(opening, "fix: timeout 500 in API", "error_troubleshooting")
+
+
+def test_context_dependent_review_question_is_not_concept_candidate():
+    parent = {"doc_id": "p", "kind": "review_comment", "artifact_id": "gh:thread:1",
+              "github_id": 1, "text": "Can't we return a reference here?",
+              "timestamp": "2025-01-01T00:00:00Z", "author_association": "MEMBER",
+              "normalized_text_sha256": _digest("parent"), "outbound_links": []}
+    reply = {"doc_id": "r", "kind": "review_comment", "artifact_id": "gh:thread:1",
+             "github_id": 2, "in_reply_to_id": 1,
+             "text": "We should return an owned value because the segment lifetime is shorter than the collection lifetime.",
+             "timestamp": "2025-01-01T01:00:00Z", "author_association": "MEMBER",
+             "normalized_text_sha256": _digest("reply"), "outbound_links": []}
+    assert protocol.structural_candidates([parent, reply]) == []
 
 
 def test_confirmation_cannot_use_general_surface_loader(tmp_path):

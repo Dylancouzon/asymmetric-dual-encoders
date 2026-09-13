@@ -23,7 +23,9 @@ INFO_REQUEST = re.compile(
     r"\b(?:provide|share|attach|send|check|confirm|try|reproduce|logs?|data|versions?|"
     r"reproducer|reproduction|more information|details|stack trace)\b|"
     r"\b(?:provide|share|attach|send)\b.{0,60}\b(?:logs?|data|versions?|reproducer|"
-    r"reproduction|more information|details|stack trace)\b")
+    r"reproduction|more information|details|stack trace)\b|"
+    r"\b(?:need|want)\b.{0,60}\b(?:logs?|data|versions?|reproducer|reproduction|"
+    r"more information|details|stack trace)\b")
 RESOLUTION_CUES = re.compile(r"(?i)\b(?:fixed|resolves?|implemented|solution|workaround|"
                              r"closing|closed by|merged in|this (?:happens|fails|is caused))\b")
 STRONG_EXPLANATION = re.compile(
@@ -33,6 +35,10 @@ STRONG_EXPLANATION = re.compile(
 CLARIFICATION = re.compile(
     r"(?is)(?:\b(?:could|can|would) you\b|\b(?:what|which|how (?:big|many|much))\b.{0,100}\?|"
     r"\b(?:not (?:entirely )?sure|need to check|question remains|open to .*suggestions)\b)")
+NON_RESOLUTION = re.compile(
+    r"(?is)(?:\b(?:not|isn't|wasn't|cannot|can't|do not|don't)\b.{0,35}"
+    r"\b(?:fixed|resolved|implemented|solution|workaround)\b|"
+    r"\b(?:is|was|has|does)\b.{0,25}\b(?:fixed|resolved|implemented)\b[^.!?]{0,20}\?)")
 STATUS_TERMS = re.compile(
     r"(?i)\b(?:ci|codespell|workflow|rebase|rebased|push|pushed|typo|build|tests?|compile)\b")
 STATUS_ONLY = re.compile(
@@ -90,6 +96,8 @@ def _status_matches_query(query, answer):
 def _credible_issue_answer(opening, row, ev):
     """High-precision structural label gate for issue/PR opening -> answer span."""
     text = row["text"]
+    if NON_RESOLUTION.search(text):
+        return False
     explicit = bool(ev["explicit_resolution"])
     linked_explanation = bool(ev["project_link"] and STRONG_EXPLANATION.search(text))
     event_explanation = bool(ev["closing_or_link_event"] and STRONG_EXPLANATION.search(text))
@@ -102,6 +110,12 @@ def _credible_issue_answer(opening, row, ev):
     if STATUS_ONLY.search(text) and not _status_matches_query(opening.get("title", ""), text):
         return False
     return True
+
+
+def _credible_review_answer(row):
+    text = row["text"]
+    return bool(ANSWER_CUES.search(text) and not INFO_REQUEST.search(text)
+                and not CLARIFICATION.search(text) and not NON_RESOLUTION.search(text))
 
 
 def _credible_audit_query(opening, text, stratum):
@@ -158,7 +172,7 @@ def structural_candidates(corpus):
                            "timestamp": opening.get("timestamp") or "",
                            "stratum": stratum,
                            "relevance_reason": "distinct later maintainer answer with resolution/action evidence",
-                           "label_provenance": {"rule": "later_maintainer+substantive_resolution-v3",
+                           "label_provenance": {"rule": "later_maintainer+substantive_resolution-v4",
                                                 "author_association": target.get("author_association"),
                                                 "resolution_evidence": evidence(target)}})
 
@@ -169,22 +183,25 @@ def structural_candidates(corpus):
         if row["kind"] == "review_comment":
             review.setdefault(row.get("github_id"), []).append(row)
     for chunks in sorted(review.values(), key=lambda rs: rs[0]["doc_id"]):
-        target = next((r for r in chunks if ANSWER_CUES.search(r["text"])
-                       and not INFO_REQUEST.search(r["text"])), chunks[0])
+        target = next((r for r in chunks if _credible_review_answer(r)), chunks[0])
         parents = review.get(target.get("in_reply_to_id"))
         parent = parents[0] if parents else None
         if not parent or "?" not in parent["text"] or target.get("author_association") not in MAINTAINER:
             continue
-        if (len(target["text"].split()) < 12 or not ANSWER_CUES.search(target["text"])
-                or INFO_REQUEST.search(target["text"])
+        if (len(target["text"].split()) < 12 or not _credible_review_answer(target)
                 or (target.get("timestamp") or "") <= (parent.get("timestamp") or "")):
             continue
         text = parent["text"].strip()
+        stratum = _stratum(text)
+        # Without a project-specific error/config/identifier/jargon cue, a review question relies
+        # on unseen diff context ("this", "here", etc.) and is not a standalone concept query.
+        if stratum == "concept_howto":
+            continue
         candidates.append({"query_id": _query_id("review", parent["github_id"]),
                            "text": text, "family": parent["artifact_id"],
                            "near_duplicate_family": _family_shape(text),
                            "source_doc": parent["doc_id"], "target_doc": target["doc_id"],
-                           "timestamp": parent.get("timestamp") or "", "stratum": _stratum(text),
+                           "timestamp": parent.get("timestamp") or "", "stratum": stratum,
                            "relevance_reason": "maintainer review reply linked by in_reply_to_id",
                            "label_provenance": {"rule": "review_in_reply_to",
                                                 "author_association": target.get("author_association")}})

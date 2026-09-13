@@ -109,3 +109,18 @@
   structural candidates, 1,043 training views, 175 development questions and 75 sealed confirmation
   questions; all five strata remain at 35/15 and all measured leakage intersections remain zero.
   Full Stella encoding remains paused until Astra re-audits this rebuilt development set.
+
+## 2026-09-13 — E5 final narrow qrel hardening
+
+- A focused diff review found that bare “need/want logs” requests and interrogative or negated
+  resolution language could still pass the v3 predicates. The v4 rule rejects those forms in both
+  opening/comment and explicit review-reply candidates, with falsifying fixtures for each case.
+- Generic review questions without project-specific error, configuration, identifier or jargon
+  context were also removed from the concept/how-to audit stratum. They depended on an unseen code
+  diff even when their replies were substantively correct. That stratum now consists of 35 issue
+  openings; no synthetic replacements were made.
+- The rebuilt v4 protocol has 733 structural candidates, 901 training views, 175 development
+  questions and 75 still-sealed confirmation questions. All five strata retain their 35/15 target,
+  every measured leakage intersection remains zero, and 39 network-free tests pass. Previously
+  flagged IDs `5110`, `7632` and `9159` remain only because v4 selects later, substantive answers
+  for them; their earlier diagnostic/status targets are gone.
