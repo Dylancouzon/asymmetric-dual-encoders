@@ -7,6 +7,12 @@ snapshot, document vectors, BM25 index and tested serving primitives. This plann
 and reviews this instruction file; it does not authorize M19 execution, evaluation access, outside
 training data, publication or mutation of a closed result.
 
+**Adversarial plan review: GO, 2026-09-13.** Astra's first pass rejected the broader optimizer
+experiment as overbuilt and underidentified. Subsequent passes corrected the fixed-roster estimand,
+audit sampling, mandatory safety controls, confirmation semantics and inferential overclaim. The
+final review found no P0/P1 blocker and approved this as descriptive mechanism feasibility that may
+justify—but cannot replace—a later multi-project vertical study.
+
 M18 remains closed at `SYSTEM_READY` + `ENCODER_NO_IMPROVEMENT`. That means no M18 candidate met its
 locked eligibility rules. It does not establish equivalence with Zero v1, rule out improvement on
 bare or short jargon queries, or prove a capacity limit for static token rows. Never rewrite M18's
@@ -59,8 +65,10 @@ for the tested setting, not vocabulary extension in general.
 
 The project-memory system and encoder decision remain separate:
 
-- **System:** return a diverse top ten of useful Qdrant artifacts with supporting passages. The
-  artifact-collapsed BM25+dense DBSF path can succeed even when no new encoder qualifies.
+- **System:** M18 instantiated the already established M12 Zero-v1+BM25 DBSF@100 recipe over a
+  pinned Qdrant corpus, vectors and BM25 index; it did not invent a new fusion method. M19's bounded
+  system change is to return a diverse top ten of artifacts with supporting passages by collapsing
+  passage hits before the unchanged fusion. That can succeed even when no new encoder qualifies.
 - **Encoder:** demonstrate dense improvement across terms and fresh short intents. BM25/fusion may
   not conceal an unchanged or broken table.
 
@@ -363,10 +371,12 @@ Secondary metrics:
 - spent bare-adaptation and longer-control results, reported outside the primary estimate.
 
 A query win/loss is the sign of its candidate-minus-v1 Precision@10 difference with exact zero a
-tie. A term win/loss is the sign of its mean short-context difference. The independent unit is the
-roster term: bootstrap terms with seed `19019`, carrying all their query intents together. Report
-percentile 95% intervals. Development intervals guide a locked selection; they are not
-post-selection proof.
+tie. A term win/loss is the sign of its mean short-context difference. Report the complete
+per-query and per-term differences plus fixed-roster mean, median and range. The roster is
+purposively selected rather than sampled from a defined term population, so do not attach bootstrap
+confidence intervals, randomization p-values or population-level significance claims. Fresh
+confirmation intents test replication within these fixed terms; they do not turn M19 into proof for
+all Qdrant terminology or other verticals.
 
 Baseline/headroom systems are BM25, v1 dense, v1+DBSF, V0-compose dense, Stella dense and
 T0-teacher routes after the pool freezes. Call Stella a headroom reference, not a ceiling.
@@ -403,19 +413,18 @@ temporary peak allocations descriptively; do not confuse stored, resident and ea
 T0-teacher is eligible only if all numerical/judgment gates pass and, versus released v1:
 
 - fresh-short-context Precision@10 improves by at least `0.03` absolute;
-- the term-bootstrap 95% interval for that primary delta has a lower endpoint above zero;
 - more than half of roster terms win and winning terms outnumber losing terms by at least three;
 - fresh-short-context binary nDCG@10 delta is positive;
-- T0-teacher+DBSF Precision@10 is noninferior to v1+DBSF under a one-sided 95% term-bootstrap lower
-  bound of `-0.02`, with point delta no worse than `-0.01`;
+- T0-teacher+DBSF Precision@10 point delta is no worse than `-0.01` versus v1+DBSF;
 - neither the required numeric/version target-control slice nor the complete longer-control slice
-  has a negative point delta with an interval wholly below zero; and
+  has a point delta worse than `-0.02`; and
 - every artifact responsible for a primary win passes the supporting-passage audit.
 
 V0-compose is descriptive and cannot be selected. There is one deterministic candidate, no
-checkpoint selection, seed variance or second seed. If the primary interval or hybrid
-noninferiority claim is unresolved, retain v1 and record `ENCODER_INCONCLUSIVE`, not equivalence or
-improvement. A clear miss records `ENCODER_NO_MEASURABLE_IMPROVEMENT`.
+checkpoint selection, seed variance or second seed. A complete run that misses any effect or
+preservation gate records `ENCODER_NO_MEASURABLE_IMPROVEMENT`. Use `ENCODER_INCONCLUSIVE` only when
+the fixed protocol cannot be completed credibly—for example, failed judgment agreement or an
+unresolved pool cap—and never as equivalence.
 
 ## Resumable one-shot confirmation
 
@@ -440,12 +449,11 @@ development.
 
 Confirmation passes only when:
 
-- primary fresh-short Precision@10 delta is at least `+0.03` with a term-bootstrap 95% lower
-  endpoint above zero;
+- primary fresh-short Precision@10 delta is at least `+0.03`;
 - more than half of roster terms win and winning terms outnumber losing terms by at least two;
 - fresh-short nDCG@10 delta is positive;
-- hybrid satisfies the same point `-0.01` and one-sided lower-bound `-0.02` noninferiority margins;
-- no registered safety slice has an interval wholly below zero; and
+- hybrid point delta is no worse than `-0.01`;
+- no registered safety-slice point delta is worse than `-0.02`; and
 - the decision-locked bundle/serving identities remain unchanged and the new confirmation
   supporting-passage audit passes the same frozen rubric.
 
@@ -502,7 +510,7 @@ Create and maintain at least:
 - term/support/tokenization manifest and per-row algebra/parity receipt;
 - query/family/pool/evidence-packet manifests and blinded judgments/audits;
 - artifact-collapse parity and legacy M18 recall/diversity postmortem;
-- machine-readable baseline, headroom, per-query/per-term, interval and eligibility results;
+- machine-readable baseline, headroom, per-query/per-term and eligibility results;
 - int8 bundle hashes, loader, stored/resident/temporary bytes and latency results;
 - confirmation state/lock/result/receipt when applicable; and
 - final system manifest with the exact local query command.
@@ -514,6 +522,7 @@ Final status records:
 
 `SYSTEM_READY` requires a usable artifact-collapsed BM25+dense DBSF path over the inherited snapshot.
 `ENCODER_INTERNAL_CANDIDATE` requires every development, confirmation and serving gate. Otherwise
-released Zero v1 remains selected. Never call an unresolved interval equivalence, never promote a
+released Zero v1 remains selected. Never call this fixed-roster feasibility result vertical-wide
+proof or equivalence, never promote a
 qualitative top ten as a measured win, and never claim that this one deterministic repair exhausts
 the broader tokenizer-shattering problem.
