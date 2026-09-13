@@ -274,3 +274,10 @@
   no unrelated vocabulary row changed membership. T0 and T2 float tables are 31,393,064 bytes.
 - T1 still transforms zero of 785 training queries and remains skipped. The amended collision
   audit passes, and all 47 network-free tests pass.
+
+## 2026-09-13 — E15 amended execution recipe locked
+
+- The amended source/corpus/protocol/index/preparation identities and recipe are sealed by the new
+  `m18/execution-lock.json`, SHA-256
+  `008e99173752dfe856395efb01b29cec424dcae7255dd8ff647b56ceb3fc8b60`. The registry is again
+  `LOCKED_EXECUTABLE`; the original pre-`k8s` lock remains archived separately.

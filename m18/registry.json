@@ -1,6 +1,7 @@
 {
   "_schema": "m18-registry-v1",
-  "status": "EXECUTABLE_PREPARATION",
+  "status": "LOCKED_EXECUTABLE",
+  "execution_lock_sha256": "008e99173752dfe856395efb01b29cec424dcae7255dd8ff647b56ceb3fc8b60",
   "date": "2026-09-12",
   "scope": "internal Qdrant project memory; local execution only; no publication",
   "source": {
