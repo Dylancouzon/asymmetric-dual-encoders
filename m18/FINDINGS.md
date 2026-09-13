@@ -75,6 +75,14 @@ The full 4,000-step T0 run reduced loss from 0.56220 to 0.25998. Its best dense 
 +0.005 dense screen. Its best fused result was the earlier step 250/500 tie at only +0.002953
 (interval [0, 0.008858]), below the required +0.010.
 
+The exported specialized tables retain int8 codes plus per-row scales: the final 30,538-row bundles
+use 31,393,064 resident table bytes; their eager float32 equivalent would use 125,083,648 bytes. The
+selected released-v1 loader has different behavior: it eagerly expands its stored int8 rows into a
+125,018,112-byte float32 array and keeps a 4,096-byte fallback vector. The sealed evaluation
+artifacts left v1 `resident_table_bytes` null because that loader does not expose the M18 table-size
+property. The final manifest records the direct array measurement; no resident-size ceiling was
+registered, so this disclosure does not alter selection.
+
 T1 changed zero training and zero development queries and was skipped as registered. T2 changed six
 development tokenizations and produced genuinely different query vectors, but every per-query
 ranking metric equaled T0 at every checkpoint. It therefore failed the +0.005 replacement rule.
@@ -143,5 +151,8 @@ Run the finished system from this worktree with:
 - No complete alias pair survived the trainable-query filter, so the registered alias-consistency
   loss was inactive. Cosine/listwise supervision still trained the eligible new rows.
 - Exact dense search is intentionally simple and reproducible but not a scale-out serving design.
+- The selected v1 artifact is int8 on disk but the current standalone loader expands its rows to
+  float32 in memory; the 125 MB row allocation is a potential deployment optimization, not an M18
+  quality-gate failure.
 - The snapshot is internally useful and reproducible at its pinned identities; it is not live,
   public, or evidence that Zero v1 improved.

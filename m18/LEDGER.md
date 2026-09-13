@@ -214,8 +214,8 @@
   views contain zero T1 transformations; T1 is therefore unsupported/inert and is skipped rather
   than expanding its pattern set.
 - Preparation produced 142 eligible queries each for T0 and T2 from the shared 780-query Stella
-  cache. V0-T0 and V0-T2 each contain the 15 initialized rows and occupy 31,392,036 float-table
-  bytes. The collision audit passes and 45 network-free tests pass.
+  cache. V0-T0 and V0-T2 each contain the 15 initialized rows and occupy 31,392,036 resident int8
+  codes-plus-scales bytes. The collision audit passes and 45 network-free tests pass.
 - Alias evidence is useful but uneven: 241 alias-pair views exist, with 128 digit-bearing or
   vowel-free short-form occurrences across 46 distinct short forms. Among admitted abbreviation-
   like rows, evidence is sparse (`hnsw`: 2 pairs, `s3`: 2, `arm64`: 1, `grpc`: 0). This is a
@@ -272,7 +272,8 @@
   eligible set grew from 142 to 148 queries.
 - `k8s` is selected as the sixteenth exact row with six distinct source documents and six contexts:
   one natural and five source-evidenced augmented views. All original 15 terms remain selected;
-  no unrelated vocabulary row changed membership. T0 and T2 float tables are 31,393,064 bytes.
+  no unrelated vocabulary row changed membership. T0 and T2 resident int8 codes plus scales are
+  31,393,064 bytes; the corresponding eager float32 table would be 125,083,648 bytes.
 - T1 still transforms zero of 785 training queries and remains skipped. The amended collision
   audit passes, and all 47 network-free tests pass.
 
@@ -394,6 +395,11 @@
   the matching readiness issue first, and S3 snapshot/HNSW configuration prompts retrieve relevant
   discussions. End-to-end latency was 173–264 ms on this host; this exact-search smoke is not a
   production benchmark.
+- Final Astra audit measured the retained v1 loader's float32 row array at 125,018,112 bytes plus a
+  4,096-byte normalized fallback. The released artifact stores 31,254,528 int8 code bytes and
+  122,088 scale bytes, but its standalone loader eagerly expands them. The sealed evaluation files'
+  `resident_table_bytes: null` is a reporting-interface gap; the measurement is recorded in the
+  final system manifest without rewriting sealed evidence. No resident-size ceiling was registered.
 - Final outcomes are `SYSTEM_READY` and `ENCODER_NO_IMPROVEMENT`. Registry confirmation state is
   closed, further training is refused by status, and `results/m18_system_manifest.json` binds the
   exact system inputs, evidence and invocation.

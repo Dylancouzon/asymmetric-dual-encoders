@@ -48,7 +48,19 @@
   "model_file": "model.npz",
   "model_sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
   "tokenizer_sha256": "997eaeff157a7d4db899b8f2278ad3db6e323e609ae956b9c5035550f581eeee",
-  "config_sha256": "fd784397925e9ec32b6f1412af85b46faea79bb618b17197dc6d3a0068669636"
+  "config_sha256": "fd784397925e9ec32b6f1412af85b46faea79bb618b17197dc6d3a0068669636",
+  "stored_table": {
+   "codes_dtype": "int8",
+   "codes_bytes": 31254528,
+   "scales_dtype": "float32",
+   "scales_bytes": 122088
+  },
+  "runtime_table": {
+   "rows_dtype": "float32",
+   "rows_bytes": 125018112,
+   "fallback_vector_bytes": 4096,
+   "measurement": "numpy ndarray nbytes after ZeroQueryEncoder int8 load"
+  }
  },
  "decision": {
   "execution_lock_sha256": "3251a72c573d171cbb6544eb83ea10052beb29a744e883498e48122de52754da",
@@ -58,6 +70,11 @@
   "required_dense_delta": 0.005,
   "required_fused_delta": 0.01,
   "second_seed": "not_applicable_no_first_seed_candidate_met_both_practical_margins"
+ },
+ "unselected_m18_bundle_memory": {
+  "rows": 30538,
+  "resident_int8_codes_and_scales_bytes": 31393064,
+  "eager_float32_equivalent_bytes": 125083648
  },
  "confirmation": {
   "reads": 1,
