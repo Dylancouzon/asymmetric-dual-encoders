@@ -136,3 +136,17 @@
   `09f4f6439d0519eeb9037af472ab8151c7e58fd70ebc93f415df30e3222d736a`.
 - Removed the temporary readable draft after sealing. Confirmation content is now behind the claim
   guard. No retrieval, quality metric or relevance judgment was run or read.
+
+## 2026-09-13 — actual V0/T0 bundles built
+
+- Encoded the 12 raw roster terms once with the pinned local Stella-400M revision, registered query
+  prefix and released no-xformers configuration. The teacher array is normalized float32 with
+  identity `7336d3097663bae26f025cd56624f3de5e0a33209b8b6a6acbe648a0c7d8d2b2`.
+- Published deterministic compact V0-compose and T0-teacher bundles with completion markers. Their
+  identities are `056b78d1184b0be8032a5493c75d033d109787e979730a5c6637e25c3785f968` and
+  `b25a5fcb019f19c3bd48ba82f6fa05b9f7a64b74ff19a8cc1d83884fe8f6ae0d`.
+- T0 minimum int8 cosine is `0.9999541` and maximum coordinate error is `0.0005364`; corresponding
+  gates are `0.999` and `0.02`. V0 also passes. Both report exactly 31,388,952 resident table bytes,
+  no eager float32 table, unchanged inherited rows and exact no-match encoder parity.
+- A second builder execution reproduced and verified every immutable output byte. Latency gates
+  remain open; no retrieval quality or confirmation content was accessed.

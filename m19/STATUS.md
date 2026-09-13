@@ -54,3 +54,10 @@ The immutable split contains 60 development and 30 confirmation queries. Exact J
 removed after publication and confirmation is now accessible only through its claim transaction.
 Stage 5 builds the actual V0/T0 bundles and gate receipts. The required implementation and fresh
 Astra GOs remain a gate before real judgments.
+
+The actual local V0/T0 build is now complete and reproducible. T0 bundle identity is
+`b25a5fcb019f19c3bd48ba82f6fa05b9f7a64b74ff19a8cc1d83884fe8f6ae0d`; V0 identity is
+`056b78d1184b0be8032a5493c75d033d109787e979730a5c6637e25c3785f968`. T0's minimum int8
+bare-term cosine is `0.9999541`, maximum coordinate error is `0.0005364`, no-match parity is exact,
+and resident bytes match the registered 12-row increment. Algebra, tokenizer, export and compact
+loader gates pass. Fixed-sequence latency and end-to-end serving measurements are next.

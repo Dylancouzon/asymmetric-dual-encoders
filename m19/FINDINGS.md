@@ -8,3 +8,12 @@ minimum of eight terms/five artifacts is not the limiting factor. Catalog and fi
 entered git together, so there is no independent pre-scan catalog receipt; no retrieval quality
 informed selection. This establishes only source-qualified corpus demand and tokenizer
 fragmentation, not Stella headroom or retrieval improvement.
+
+## Deterministic row construction
+
+The direct teacher-row algebra is numerically comfortable on all 12 terms: after independent int8
+quantization, the worst T0 bare-term cosine is `0.9999541` and the largest coordinate error is
+`0.0005364`, far inside the registered `0.999`/`0.02` gates. The added resident cost is exactly
+12 × 1,028 bytes. Stella's cached custom model defaults to xformers, but the released Zero config
+already pins its supported eager PyTorch path (`use_memory_efficient_attention=false`,
+`unpad_inputs=false`); using those frozen settings produces deterministic teacher bytes locally.

@@ -1,0 +1,549 @@
+{
+  "_schema": "m19-algebra-gates-v1",
+  "construction": [
+    {
+      "added_id": 30522,
+      "alpha_old_sum_norm": 12.275701522827148,
+      "composition_row_sha256": "66459d4d2f244daaecac5f16d512e04bcaf26325f701537ad43f31f0f4bb25a2",
+      "exact_ids": [
+        101,
+        30522,
+        102
+      ],
+      "fixed_sum_sha256": "a21589e8d752684d27efaba88bb00d650ae5719a5d44f18910e5d42abc1aae37",
+      "old_sum_sha256": "ceb7deed3b3f6932a53f5512170fdf217188ae14ea2d7d3a7777bfb6975b5b00",
+      "original_ids": [
+        101,
+        1047,
+        2620,
+        2015,
+        102
+      ],
+      "prequant_bare_cosine": 1.0,
+      "remaining_ids": [
+        101,
+        102
+      ],
+      "teacher_row_sha256": "adfbc285297184eb438b90ca49fe47f598784baec6316e17793cb4c59ec8d2ca",
+      "term": "k8s"
+    },
+    {
+      "added_id": 30523,
+      "alpha_old_sum_norm": 8.80444622039795,
+      "composition_row_sha256": "48d7b7bee2d48f5d35811e0c19ee8089164fd21af0a1a8b454f243da4d774c03",
+      "exact_ids": [
+        101,
+        30523,
+        102
+      ],
+      "fixed_sum_sha256": "a21589e8d752684d27efaba88bb00d650ae5719a5d44f18910e5d42abc1aae37",
+      "old_sum_sha256": "26fdec537967bf04e3d90b21954806f8fe6bbcec78b3583345c336e21c7f6085",
+      "original_ids": [
+        101,
+        1055,
+        2509,
+        102
+      ],
+      "prequant_bare_cosine": 1.0000001192092896,
+      "remaining_ids": [
+        101,
+        102
+      ],
+      "teacher_row_sha256": "9b501f3e408ce1e0bce24720da83ecfc12887e8471a481ced161fb5f1b56ddc7",
+      "term": "s3"
+    },
+    {
+      "added_id": 30524,
+      "alpha_old_sum_norm": 12.930752754211426,
+      "composition_row_sha256": "326f95bce0f16a28c30cbf02b82e34cd452db48e42b1326cae9bbd57a5f21610",
+      "exact_ids": [
+        101,
+        30524,
+        102
+      ],
+      "fixed_sum_sha256": "a21589e8d752684d27efaba88bb00d650ae5719a5d44f18910e5d42abc1aae37",
+      "old_sum_sha256": "c4de94ce9b9c7f38fcfbb3291fced509f0d916dd68d515f4cbb77b35e14b48a6",
+      "original_ids": [
+        101,
+        1044,
+        3619,
+        2860,
+        102
+      ],
+      "prequant_bare_cosine": 1.0,
+      "remaining_ids": [
+        101,
+        102
+      ],
+      "teacher_row_sha256": "77fe04fdbbe268d2ccc0643e59a817349b86f8d24e72f3cc3500d9720ce1cc91",
+      "term": "hnsw"
+    },
+    {
+      "added_id": 30525,
+      "alpha_old_sum_norm": 13.032552719116211,
+      "composition_row_sha256": "cc114b1d80222550bb2c5bda2d131df471889432647e6a84ac54b249ee35f70a",
+      "exact_ids": [
+        101,
+        30525,
+        102
+      ],
+      "fixed_sum_sha256": "a21589e8d752684d27efaba88bb00d650ae5719a5d44f18910e5d42abc1aae37",
+      "old_sum_sha256": "a056daadf1d5381b7ab68a3027997ef7586927de4c6f7b64087996d46c5167a8",
+      "original_ids": [
+        101,
+        24665,
+        15042,
+        102
+      ],
+      "prequant_bare_cosine": 1.0,
+      "remaining_ids": [
+        101,
+        102
+      ],
+      "teacher_row_sha256": "2582f9254ae8227c9da07134cad06001722e63738364fbf317a40e53a308169d",
+      "term": "grpc"
+    },
+    {
+      "added_id": 30526,
+      "alpha_old_sum_norm": 15.778979301452637,
+      "composition_row_sha256": "9e3e2666661096f41f34bd6a5cf9e15b043729db46d8e18e51b8d00839ad853f",
+      "exact_ids": [
+        101,
+        30526,
+        102
+      ],
+      "fixed_sum_sha256": "a21589e8d752684d27efaba88bb00d650ae5719a5d44f18910e5d42abc1aae37",
+      "old_sum_sha256": "4f6b660394b2bea6702c6f9a8a84800d67d3288c1b33df13e6377da66e208adc",
+      "original_ids": [
+        101,
+        5749,
+        18939,
+        102
+      ],
+      "prequant_bare_cosine": 1.0,
+      "remaining_ids": [
+        101,
+        102
+      ],
+      "teacher_row_sha256": "240f46ed4c8e738ab3dfbc4e56f92fc96c0d120980bb3f144416cf5ca555c000",
+      "term": "rocksdb"
+    },
+    {
+      "added_id": 30527,
+      "alpha_old_sum_norm": 15.97032356262207,
+      "composition_row_sha256": "3b2f963d225f4fdf4bf05d085919d3cdb5ef13109b0e5b9aae269ad3e8da1577",
+      "exact_ids": [
+        101,
+        30527,
+        102
+      ],
+      "fixed_sum_sha256": "a21589e8d752684d27efaba88bb00d650ae5719a5d44f18910e5d42abc1aae37",
+      "old_sum_sha256": "9774d7faf7727cd0ca491f9c8a89ace3cbaeb0a5215ef573bebcaaa5b0c53f63",
+      "original_ids": [
+        101,
+        21021,
+        2361,
+        102
+      ],
+      "prequant_bare_cosine": 0.9999999403953552,
+      "remaining_ids": [
+        101,
+        102
+      ],
+      "teacher_row_sha256": "b9b4259f285e86800078fa1e5c9c3b8d13ff3081d0c199dcb01d40a184c781c7",
+      "term": "mmap"
+    },
+    {
+      "added_id": 30528,
+      "alpha_old_sum_norm": 16.473674774169922,
+      "composition_row_sha256": "58f2d85de8c9fa08c88753e286d4b01e7216d9a4c3cb753106cdaaef82626788",
+      "exact_ids": [
+        101,
+        30528,
+        102
+      ],
+      "fixed_sum_sha256": "a21589e8d752684d27efaba88bb00d650ae5719a5d44f18910e5d42abc1aae37",
+      "old_sum_sha256": "0d696cb860544a2438741a91165e46e16ce8fbf6bbef1179de52fc6cf0ba2585",
+      "original_ids": [
+        101,
+        2849,
+        21084,
+        102
+      ],
+      "prequant_bare_cosine": 1.0,
+      "remaining_ids": [
+        101,
+        102
+      ],
+      "teacher_row_sha256": "4f3c62cd9f6d8fbe44203b6b3db4418f3aa8dd8c2a4f50e10ad7bbf54bb3cbc4",
+      "term": "arm64"
+    },
+    {
+      "added_id": 30529,
+      "alpha_old_sum_norm": 11.755607604980469,
+      "composition_row_sha256": "61996936ae27d6de9fecc88463f4c8be8a16bdf761bd08129d1bba39e799a5ca",
+      "exact_ids": [
+        101,
+        30529,
+        102
+      ],
+      "fixed_sum_sha256": "a21589e8d752684d27efaba88bb00d650ae5719a5d44f18910e5d42abc1aae37",
+      "old_sum_sha256": "384420e19ed8e149eee8069283d190114d4785ff79e023ecda913592ebf30d99",
+      "original_ids": [
+        101,
+        1056,
+        4877,
+        102
+      ],
+      "prequant_bare_cosine": 1.0,
+      "remaining_ids": [
+        101,
+        102
+      ],
+      "teacher_row_sha256": "e993f6f1a69cf227aea44a50feaf57abba679c72ece5968916428449e74f8ff5",
+      "term": "tls"
+    },
+    {
+      "added_id": 30530,
+      "alpha_old_sum_norm": 12.288801193237305,
+      "composition_row_sha256": "4b6831ca113bcc6e9d0b46f1f1e3d56b40dec384b6087d22da04138802f1867e",
+      "exact_ids": [
+        101,
+        30530,
+        102
+      ],
+      "fixed_sum_sha256": "a21589e8d752684d27efaba88bb00d650ae5719a5d44f18910e5d42abc1aae37",
+      "old_sum_sha256": "0aa28eeb87376bce402ea29efb8637bdca6984636ed72f098499ebb454eff247",
+      "original_ids": [
+        101,
+        12731,
+        2850,
+        102
+      ],
+      "prequant_bare_cosine": 0.9999999403953552,
+      "remaining_ids": [
+        101,
+        102
+      ],
+      "teacher_row_sha256": "a5b525f8300b6d5e7dc311af379aa703b4abcec6eece25a8034b3168bf6447f7",
+      "term": "cuda"
+    },
+    {
+      "added_id": 30531,
+      "alpha_old_sum_norm": 12.679681777954102,
+      "composition_row_sha256": "cf941f4979835d43563a4ec9534ef17a9f9317970c60fd1c7c08dba557df55a9",
+      "exact_ids": [
+        101,
+        30531,
+        102
+      ],
+      "fixed_sum_sha256": "a21589e8d752684d27efaba88bb00d650ae5719a5d44f18910e5d42abc1aae37",
+      "old_sum_sha256": "79bf87830748466eafc7dddb7b20012d989f6a075f1eb66daf7a174059653c34",
+      "original_ids": [
+        101,
+        21934,
+        2094,
+        102
+      ],
+      "prequant_bare_cosine": 1.0,
+      "remaining_ids": [
+        101,
+        102
+      ],
+      "teacher_row_sha256": "1f3bc5af56376586877f5b0ccfefec5e8d4c1ad8fa3bdede93a4958bad4a0894",
+      "term": "simd"
+    },
+    {
+      "added_id": 30532,
+      "alpha_old_sum_norm": 17.59815788269043,
+      "composition_row_sha256": "b1813b5fbc4c2295d0f33c30091511f29f7ad7d102e2429423acb8f01eb4f82e",
+      "exact_ids": [
+        101,
+        30532,
+        102
+      ],
+      "fixed_sum_sha256": "a21589e8d752684d27efaba88bb00d650ae5719a5d44f18910e5d42abc1aae37",
+      "old_sum_sha256": "8ee1c8894c590af137f85ee0713ce4816010e7a2c7c0e829324c621cf06cfc64",
+      "original_ids": [
+        101,
+        15386,
+        16211,
+        3372,
+        102
+      ],
+      "prequant_bare_cosine": 1.0000001192092896,
+      "remaining_ids": [
+        101,
+        102
+      ],
+      "teacher_row_sha256": "037daef95a274351aa053f62d22ed3a0f78df314ee7f50f8dd384c688853d84b",
+      "term": "turboquant"
+    },
+    {
+      "added_id": 30533,
+      "alpha_old_sum_norm": 15.778299331665039,
+      "composition_row_sha256": "3ff826020824df1d11a73dfe383a18b8b8a1ff46230ae5bbb63edbb2ef2a88ee",
+      "exact_ids": [
+        101,
+        30533,
+        102
+      ],
+      "fixed_sum_sha256": "a21589e8d752684d27efaba88bb00d650ae5719a5d44f18910e5d42abc1aae37",
+      "old_sum_sha256": "71d0499cb51686d9671556449b4f1b1ba66982299e660b5b282bdeadfb84fbc0",
+      "original_ids": [
+        101,
+        8370,
+        23809,
+        2063,
+        102
+      ],
+      "prequant_bare_cosine": 1.0,
+      "remaining_ids": [
+        101,
+        102
+      ],
+      "teacher_row_sha256": "d52c7254ba87a76042d2a13267c659170a685b446e5fd97546bd7fc45c072b3a",
+      "term": "gridstore"
+    }
+  ],
+  "gates": {
+    "T0-teacher": {
+      "expected_resident_table_bytes": 31388952,
+      "no_full_float32_table": true,
+      "resident_table_bytes": 31388952,
+      "terms": {
+        "arm64": {
+          "cosine": 0.9999790191650391,
+          "max_abs": 0.0003638043999671936
+        },
+        "cuda": {
+          "cosine": 0.9999649524688721,
+          "max_abs": 0.00046274811029434204
+        },
+        "gridstore": {
+          "cosine": 0.9999728798866272,
+          "max_abs": 0.00040028057992458344
+        },
+        "grpc": {
+          "cosine": 0.9999679923057556,
+          "max_abs": 0.0004406385123729706
+        },
+        "hnsw": {
+          "cosine": 0.9999704957008362,
+          "max_abs": 0.0004073493182659149
+        },
+        "k8s": {
+          "cosine": 0.9999752044677734,
+          "max_abs": 0.00038758665323257446
+        },
+        "mmap": {
+          "cosine": 0.9999791979789734,
+          "max_abs": 0.00035806000232696533
+        },
+        "rocksdb": {
+          "cosine": 0.9999784231185913,
+          "max_abs": 0.00035496801137924194
+        },
+        "s3": {
+          "cosine": 0.9999767541885376,
+          "max_abs": 0.0003661513328552246
+        },
+        "simd": {
+          "cosine": 0.9999727010726929,
+          "max_abs": 0.00040130503475666046
+        },
+        "tls": {
+          "cosine": 0.999954104423523,
+          "max_abs": 0.0005363672971725464
+        },
+        "turboquant": {
+          "cosine": 0.9999796152114868,
+          "max_abs": 0.00035498663783073425
+        }
+      }
+    },
+    "V0-compose": {
+      "expected_resident_table_bytes": 31388952,
+      "no_full_float32_table": true,
+      "resident_table_bytes": 31388952,
+      "terms": {
+        "arm64": {
+          "cosine": 0.9999791383743286,
+          "max_abs": 0.00035485997796058655
+        },
+        "cuda": {
+          "cosine": 0.9999803304672241,
+          "max_abs": 0.0003706440329551697
+        },
+        "gridstore": {
+          "cosine": 0.999971330165863,
+          "max_abs": 0.00041681528091430664
+        },
+        "grpc": {
+          "cosine": 0.999975860118866,
+          "max_abs": 0.0004087984561920166
+        },
+        "hnsw": {
+          "cosine": 0.9999673366546631,
+          "max_abs": 0.0004409532994031906
+        },
+        "k8s": {
+          "cosine": 0.9999679923057556,
+          "max_abs": 0.00043626874685287476
+        },
+        "mmap": {
+          "cosine": 0.9999732971191406,
+          "max_abs": 0.00039880722761154175
+        },
+        "rocksdb": {
+          "cosine": 0.9999706745147705,
+          "max_abs": 0.00041672028601169586
+        },
+        "s3": {
+          "cosine": 0.9999810457229614,
+          "max_abs": 0.0003453269600868225
+        },
+        "simd": {
+          "cosine": 0.9999731183052063,
+          "max_abs": 0.0004107356071472168
+        },
+        "tls": {
+          "cosine": 0.9999717473983765,
+          "max_abs": 0.000425189733505249
+        },
+        "turboquant": {
+          "cosine": 0.999974250793457,
+          "max_abs": 0.0003915410488843918
+        }
+      }
+    }
+  },
+  "tokenizer_parity": {
+    "_schema": "m19-tokenizer-parity-v1",
+    "boundary_match_counts": {
+      "arm64": {
+        "bare": 1,
+        "case": 1,
+        "plural": 0,
+        "possessive": 1,
+        "prefix_substring": 0,
+        "punctuation": 1,
+        "suffix_substring": 0,
+        "underscore": 0
+      },
+      "cuda": {
+        "bare": 1,
+        "case": 1,
+        "plural": 0,
+        "possessive": 1,
+        "prefix_substring": 0,
+        "punctuation": 1,
+        "suffix_substring": 0,
+        "underscore": 0
+      },
+      "gridstore": {
+        "bare": 1,
+        "case": 1,
+        "plural": 0,
+        "possessive": 1,
+        "prefix_substring": 0,
+        "punctuation": 1,
+        "suffix_substring": 0,
+        "underscore": 0
+      },
+      "grpc": {
+        "bare": 1,
+        "case": 1,
+        "plural": 0,
+        "possessive": 1,
+        "prefix_substring": 0,
+        "punctuation": 1,
+        "suffix_substring": 0,
+        "underscore": 0
+      },
+      "hnsw": {
+        "bare": 1,
+        "case": 1,
+        "plural": 0,
+        "possessive": 1,
+        "prefix_substring": 0,
+        "punctuation": 1,
+        "suffix_substring": 0,
+        "underscore": 0
+      },
+      "k8s": {
+        "bare": 1,
+        "case": 1,
+        "plural": 0,
+        "possessive": 1,
+        "prefix_substring": 0,
+        "punctuation": 1,
+        "suffix_substring": 0,
+        "underscore": 0
+      },
+      "mmap": {
+        "bare": 1,
+        "case": 1,
+        "plural": 0,
+        "possessive": 1,
+        "prefix_substring": 0,
+        "punctuation": 1,
+        "suffix_substring": 0,
+        "underscore": 0
+      },
+      "rocksdb": {
+        "bare": 1,
+        "case": 1,
+        "plural": 0,
+        "possessive": 1,
+        "prefix_substring": 0,
+        "punctuation": 1,
+        "suffix_substring": 0,
+        "underscore": 0
+      },
+      "s3": {
+        "bare": 1,
+        "case": 1,
+        "plural": 0,
+        "possessive": 1,
+        "prefix_substring": 0,
+        "punctuation": 1,
+        "suffix_substring": 0,
+        "underscore": 0
+      },
+      "simd": {
+        "bare": 1,
+        "case": 1,
+        "plural": 0,
+        "possessive": 1,
+        "prefix_substring": 0,
+        "punctuation": 1,
+        "suffix_substring": 0,
+        "underscore": 0
+      },
+      "tls": {
+        "bare": 1,
+        "case": 1,
+        "plural": 0,
+        "possessive": 1,
+        "prefix_substring": 0,
+        "punctuation": 1,
+        "suffix_substring": 0,
+        "underscore": 0
+      },
+      "turboquant": {
+        "bare": 1,
+        "case": 1,
+        "plural": 0,
+        "possessive": 1,
+        "prefix_substring": 0,
+        "punctuation": 1,
+        "suffix_substring": 0,
+        "underscore": 0
+      }
+    },
+    "no_match_encoder_max_abs": 0.0,
+    "no_match_fixture_sha256": "97aeb05d2b9631145e096635cd6a5e921cb319df0a491f9f65f847b23109c68c",
+    "no_match_tokenization_equal": true
+  }
+}

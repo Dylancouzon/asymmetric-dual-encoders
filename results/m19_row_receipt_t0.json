@@ -1,0 +1,9 @@
+{
+  "_schema": "m19-row-receipt-v1",
+  "algebra_gates_sha256": "f63ef1e3ab91c471ea4c0dcaac265872a2662c4e9ea0f15d3e2ef90a0d370f77",
+  "algebra_receipts_sha256": "480da62d22a8fa92bb0c3c23b8070eb0bcd710cf919c9ad99e39b551454630ee",
+  "codes_sha256": "20bff15d12f3eaf679db6e3aa56ed5b5888d217bfff83d02adfc37492264602a",
+  "scales_sha256": "f314afc696fc2427e79f999c8bbe34ebdc0d481eaf85edce2efc5d831250b99d",
+  "tokenizer_sha256": "33858ffd23b53a11cc14f365218b99c670eafb13cebbc8f9d0fcff1e080b5aaa",
+  "variant": "T0-teacher"
+}
