@@ -122,6 +122,7 @@ def parse_repository(checkout, commit, chunk_tokens=384, overlap=48):
         raise SystemExit("M18 CORPUS REFUSED: pinned checkout has modified tracked files")
     names = subprocess.run(["git", "ls-tree", "-r", "--name-only", commit], cwd=checkout,
                            text=True, capture_output=True, check=True).stdout.splitlines()
+    redactions = Counter()
     for rel in sorted(names):
         path = Path(rel)
         suffix = path.suffix.lower()
@@ -134,7 +135,7 @@ def parse_repository(checkout, commit, chunk_tokens=384, overlap=48):
             text = blob.decode("utf-8", errors="replace")
         except (OSError, UnicodeError, subprocess.CalledProcessError):
             continue
-        text, _ = redact(text)
+        text, reds = redact(text); redactions.update(reds)
         if suffix in TEXT_EXTENSIONS:
             for i, (heading, body) in enumerate(_chunks(text, chunk_tokens, overlap), 1):
                 if len(normalize_space(body)) < 40:
@@ -151,6 +152,7 @@ def parse_repository(checkout, commit, chunk_tokens=384, overlap=48):
                        "text": body, "title": f"Comments in {rel}",
                        "source_url": f"https://github.com/qdrant/qdrant/blob/{commit}/{rel}",
                        "timestamp": None, "author_association": None, "outbound_links": []}
+    parse_repository.stats = {"redactions": dict(redactions), "tracked_files_considered": len(names)}
 
 
 def iter_api_objects(raw_root, endpoint):
@@ -242,6 +244,39 @@ def parse_github(raw_root, cutoff, chunk_tokens=384, overlap=48):
                    "author_association": row.get("author_association"),
                    "in_reply_to_id": row.get("in_reply_to_id"), "outbound_links": _links(body)}
             yield from _discussion_units(base, body, chunk_tokens, overlap)
+    for row in iter_api_objects(raw_root, "issue_events"):
+        if str(row.get("created_at") or "") > cutoff:
+            continue
+        issue = row.get("issue") or {}
+        number = issue.get("number")
+        if number is None:
+            for value in (row.get("issue_url"), issue.get("url"), issue.get("html_url")):
+                m = re.search(r"/(?:issues|pulls?)/(\d+)(?:$|[?#])", str(value or ""))
+                if m:
+                    number = int(m.group(1)); break
+        if number is None:
+            continue
+        event = str(row.get("event") or "event")
+        details = [event]
+        if row.get("label", {}).get("name"):
+            details.append("label " + str(row["label"]["name"]))
+        if row.get("rename"):
+            details.append("renamed " + str(row["rename"].get("from", "")) + " to "
+                           + str(row["rename"].get("to", "")))
+        if row.get("commit_id"):
+            details.append("commit " + str(row["commit_id"]))
+        text, reds = redact("; ".join(details)); redactions.update(reds)
+        links = []
+        for value in (row.get("commit_url"), issue.get("html_url"), row.get("url")):
+            if value:
+                links.append(str(value))
+        yield {"doc_id": stable_id("gh_event", row.get("id")), "kind": "issue_event",
+               "artifact_id": f"gh:thread:{int(number)}", "github_node_id": row.get("node_id"),
+               "github_id": row.get("id"), "github_number": int(number), "title": event,
+               "text": text, "path": None, "symbol": None, "source_url": row.get("url"),
+               "timestamp": row.get("created_at"), "updated_at": None,
+               "author": (row.get("actor") or {}).get("login"), "author_association": None,
+               "outbound_links": sorted(set(links))}
     parse_github.stats = {"redactions": dict(redactions), "quoted_lines_removed": quoted,
                           "unique_issue_objects": len(issues)}
 
@@ -319,7 +354,8 @@ def build(raw_root=None, out_root=None, registry_data=None, fixture=False):
                 "cutoff_utc": reg["source"]["github_cutoff_utc"], "documents": len(rows),
                 "artifacts": len(artifacts), "by_kind": dict(sorted(by_kind.items())),
                 "exact_duplicates_removed": len(duplicates),
-                "redaction": getattr(parse_github, "stats", {}),
+                "redaction": {"github": getattr(parse_github, "stats", {}),
+                              "repository": getattr(parse_repository, "stats", {})},
                 "corpus_sha256": sha_file(corpus_path),
                 "duplicates_sha256": sha_file(duplicate_path),
                 "source_manifest_sha256": (source_manifest or {}).get("sha256", "fixture"),
