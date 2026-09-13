@@ -195,57 +195,65 @@ M13 owns everything expensive or irreversible: the batch decision, the LoTTE gat
 
 **Where it stands.** Code complete, reviewed to GO and tested, 170 M13 tests plus the older suites all green. The provider and account are Dylan's to set up.
 
-### M17 to M19, 11 to 13 September: trying to close zero's short-query gap
+### M17, 11 to 12 September: more vocabulary
 
-Andrey indexed every issue and pull request in `qdrant/qdrant`, searched it with the released zero, and reported a specific failure: queries like `s3` and `k8s` come back matched to version identifiers, while the full teacher handles them. Three milestones went after it. None produced a clean measurement.
+Andrey indexed every issue and pull request in `qdrant/qdrant`, searched it with the released zero, and found that queries like `s3` and `k8s` come back matched to version numbers. The teacher gets them right. Three milestones went after that gap and none of them produced a usable number.
 
-**The mechanism is tokenizer plus pooling, and it is structural rather than a bug.** Zero inherits stella's WordPiece vocabulary, in which several load-bearing technical terms are not entries:
+The cause is structural, not a bug. Zero uses stella's vocabulary, and several load-bearing technical terms are not in it.
 
-| Query | Pieces |
+| Query | What zero sees |
 |---|---|
-| `s3` | `s`, `##3` |
-| `k8s` | `k`, `##8`, `##s` |
-| `hnsw` | `h`, `##ns`, `##w` |
-| `kubernetes` | `ku`, `##ber`, `##net`, `##es`, four ordinary pieces, unaffected |
+| `s3` | `s` + `##3` |
+| `k8s` | `k` + `##8` + `##s` |
+| `hnsw` | `h` + `##ns` + `##w` |
+| `kubernetes` | `ku` + `##ber` + `##net` + `##es`, ordinary pieces, works fine |
 
-Stella sees the same pieces and contextualises them. Zero pools fixed rows with no interaction between them, and the digit-continuation rows take their training mass from numeric contexts, so the pooled query lands near version strings. The damage scales inversely with query length: in a sentence the ordinary word rows dominate the average, in a two-piece query there is nothing else in it. This is a short-query defect, which is precisely the CLI case that motivated zero.
+Stella reads the same fragments in context and works out what they mean together. Zero looks up one fixed vector per fragment and averages them, and the number fragments were learned almost entirely from numeric text, so the query drifts toward version strings. In a long query the ordinary words outvote the fragments. In a two-piece query there is nothing else in the average, which is why this appears in a CLI and not on a benchmark.
 
-**M17, broad vocabulary expansion.** Up to 3,072 new whole-term rows across six domains, trained jointly with the incumbent rows under a hard-candidate listwise objective. Five arms, 4,000 steps each, one read apiece.
+M17's answer was breadth: three thousand new whole-word entries across six domains, trained alongside the existing rows. Five variants, 4,000 steps each, one scored read apiece.
 
-| Arm | nDCG@10 |
+| Variant | nDCG@10 |
 |---|---:|
-| V0, rows added, no optimizer step | **0.6153** |
+| Entries added, no training | **0.6153** |
 | C | 0.5807 |
 | V | 0.5810 |
 | L | 0.5936 |
 | VL | 0.5938 |
 | VL-A | 0.5938 |
 
-Every trained arm read below the untrained baseline while the training loss fell throughout. Registered `no_survivor`, STOP. M17's close-out is explicit that this is an **undiagnosed failure, not evidence against the method**: the intermediate-checkpoint reads that would separate the two were never spent. A second correction fell out of the same close-out, and it matters for any future table work: the 35M parameter cap belongs to nano and never applied to zero, so M17's row budget was constrained for no reason.
+Every trained variant read below the untrained baseline while the training loss fell throughout. The run was stopped and the cause was never found.
 
-**M18, specialise on the corpus that produced the complaint.** A pinned snapshot of `qdrant/qdrant`: 71,937 GitHub objects across 11,574 artifacts, parsed to 79,269 searchable passages, with a stella document index, a BM25 index and the shipped DBSF recipe. Sixteen exact rows were added for shattered terms, every inherited row was frozen so training could not damage ordinary language, and only the new rows were trained.
+**What it changed.** The close-out records this as an unexplained failure rather than a verdict on the method, because the diagnostic reads that would separate the two were never spent. It also caught a standing error: the 35M parameter cap belongs to nano and never applied to zero, so M17 had constrained its own vocabulary for no reason.
 
-| Route, 100 development queries | nDCG@10 | Recall@10 |
+### M18, 12 to 13 September: project memory for one repository
+
+Stop trying to be good everywhere and build the thing Andrey was actually using. A pinned snapshot of `qdrant/qdrant` gives 79,269 searchable passages across 11,574 issues, pull requests and files, served by a stella index, BM25 and the shipped DBSF recipe. Sixteen new entries were added for the shattered terms, every inherited row was frozen so training could only touch the new ones, and the result was measured against a fresh development set.
+
+| 100 development queries | nDCG@10 | Recall@10 |
 |---|---:|---:|
 | BM25 | 0.109 | 0.218 |
-| zero v1 dense | 0.087 | 0.157 |
-| zero v1 + DBSF | 0.103 | 0.178 |
-| stella dense, the ceiling | 0.137 | 0.232 |
-| stella + DBSF, the ceiling | 0.141 | 0.256 |
+| zero v1 | 0.087 | 0.157 |
+| zero v1 fused with BM25 | 0.103 | 0.178 |
+| stella, the ceiling | 0.137 | 0.232 |
+| stella fused, the ceiling | 0.141 | 0.256 |
 
-A 400M teacher scoring 0.137, with the labelled answer in its top ten for under a quarter of queries, is a statement about the labels rather than about any model. The queries had been derived from issue and review text and the single correct answer defined as the one maintainer comment that resolved the thread, so the task being scored was answer-span linking, not the artifact lookup a CLI performs. The confirming detail: on the error and troubleshooting stratum, BM25, dense and fusion all scored exactly **0.000**. When a lexical and a semantic route both return a clean zero, the labels are unreachable. A later exclusion-corrected read put stella's recall at about 0.524@100 and 0.782@1000, so the targets are findable at depth; the task, not the corpus, was misposed.
+**The ceiling is the finding, not the student.** A 400M model that puts the right answer in its top ten for under a quarter of queries is a statement about the labels. The queries had been built from issue text with the single correct answer defined as the comment that resolved the thread, so the test scored answer matching rather than the artifact lookup a CLI performs. On troubleshooting queries, BM25, dense and fusion all scored exactly 0.000, which is only possible when the labelled target is unreachable by any route.
 
-Against that surface the trained table cleared the dense margin (+0.0076 against +0.005) and missed the fused one (+0.0030 against +0.010), and was recorded `ENCODER_NO_IMPROVEMENT`. A separate report-only probe, which by registration could not affect the decision, is the most direct evidence the project holds: for the bare query `k8s`, released v1 returned `release v0.8.0` at rank two and `v0.8.2` at rank three, and the trained table returned the Kubernetes persistence issue at rank two with both version releases gone. The system half shipped as `SYSTEM_READY` and is usable.
+Against that surface the new table cleared its dense bar and missed its fused one, and was recorded as no improvement. A side experiment that was registered as unable to count is the clearest evidence the project holds: asked for `k8s`, released zero returned `release v0.8.0` and `v0.8.2` in its top three, and the trained table returned the Kubernetes persistence issue at rank two with both releases gone.
 
-**M19, stop training and solve for the row.** If the teacher's direction for a bare term is known and zero's pooling rule is exact, the row can be computed in closed form rather than fitted. For term `t`, with `u_t` the unit stella query vector, `a_t` the frozen rows that survive the replacement and `r_comp,t` the original fragment rows under sqrt-count pooling, set `r_t = alpha_t * u_t - a_t` with `alpha_t = ||a_t + r_comp,t||`. The bare query then points exactly along the teacher's direction, and preserving the old norm fixes the otherwise arbitrary row scale. Twelve terms: `k8s`, `s3`, `hnsw`, `grpc`, `rocksdb`, `mmap`, `arm64`, `tls`, `cuda`, `simd`, `turboquant`, `gridstore`. No optimizer, no training data, no per-domain corpus.
+**What it changed.** The search system shipped and is usable; the encoder question did not get an answer. Measuring the wrong task is now the first thing to check before reading a student's score, and the report-only probe should have been a decision input rather than an impression.
 
-Every technical gate passed: worst int8 bare-term cosine 0.9999541, largest coordinate error 0.0005364, released-loader parity 2.24e-8, encoder median and p95 at 0.958x and 1.037x of v1 over 10,000 queries. Two properties are worth carrying forward. The construction is **additive over frozen rows**, so a query containing no roster term is bit-identical to released v1 (`no_match_encoder_max_abs` exactly 0.0, ranking parity true across the benchmark): the blast radius is exactly the terms chosen and nothing else. And it needs no labelled domain data, which removes the largest cost of any future vertical vocabulary.
+### M19, 13 September: solving for the entry instead of training it
 
-M19 then stopped before producing a number. The 60-query development pool froze at 1,376 query-artifact items, a primary judge covered all of them, and an independent auditor re-checked 925 concealed repeats. Sixty of those remained undecidable after a dedicated resolution pass, because the frozen **passages** did not carry enough context for a defensible binary call. The protocol admitted no abstention label and required a clean decision on every audited item before qrels could be frozen, so the run halted: `ENCODER_INCONCLUSIVE`, no qrels, no metrics, confirmation never claimed, released v1 retained. The unit shown to the judge was the same passage unit that M19's own artifact-collapse contribution exists to replace.
+If the teacher's direction for a bare term is known, and zero's pooling rule is exact, the entry can be computed rather than fitted: choose it so that the query `k8s` lands exactly where stella puts `k8s`. Twelve terms, no optimizer, no labelled data and no domain corpus, which removes the largest cost of any future vocabulary work.
 
-**What the three have in common.** M17 measured cleanly and could not explain its own result. M18 measured a different task than the one that mattered. M19 never reached a measurement. The bottleneck across all three was not the model but the absence of a cheap, defensible definition of a correct answer for a query like `s3` over an issue tracker, where several artifacts are acceptable and only a maintainer can rank them. Automatic labels are cheap and score something adjacent; judged labels score the right thing and are fragile. Three attempts sit at three points on that trade-off and none landed. The honest status of vocabulary specialisation is therefore **unmeasured, not disproven**, and the next useful milestone is an answer key rather than another table.
+Two properties are worth carrying forward. Speed is unchanged against v1, and because the construction only adds entries on top of frozen rows, a query containing none of the twelve terms is bit-for-bit identical to released zero. The blast radius is exactly the terms chosen and nothing else.
 
-One caveat that is easy to get wrong in the meantime: fusion repairs `s3` and `k8s` in this corpus only because Qdrant maintainers write those literals in issue titles. BM25 cannot connect `k8s` to a document that says only Kubernetes. That alias link is dense-side work, and it is exactly what the row construction is for.
+The run then stopped before producing a score. Judging the 1,376 pooled results required a yes or no on each, an independent reviewer could not decide 60 of them from the passage it was shown, and the protocol had no way to record "unsure" and continue. No score, no verdict, released zero v1 retained.
+
+**What it changed.** Three attempts, three different stopping points, and not one of them was a clean reading that the method fails. M17 measured well and could not explain itself, M18 measured the wrong task, M19 never reached a measurement. The blocker is not the model. It is that nobody has a cheap, defensible way to say what a good answer looks like for `s3` over an issue tracker, where a dozen issues are reasonable and only a maintainer can rank them. Automatic labels are cheap and score something adjacent; judged labels score the right thing and are fragile. Vocabulary specialisation is unmeasured rather than disproven, and the next useful milestone is an answer key, not another table.
+
+One caveat for the meantime. Fusion repairs `s3` and `k8s` in this corpus only because maintainers write those literals in issue titles. BM25 cannot link `k8s` to a document that says only Kubernetes, and that link is dense-side work.
 
 ## Part four: what we are building now
 
@@ -280,7 +288,7 @@ The final evaluation is four tests in a fixed order, each a one-sided bootstrap 
 
 Success for nano is passing the release gate: better than bge-small on the clean four and on all six, at about bge-small's query cost, while serving stella's index unchanged. Passing the aim as well would make it the strongest small query encoder we know of against a frozen index. Success for the project is narrower and already partly in hand: a measured, reproducible answer to how much quality each cheap query side retains, at what cost, with the deployment path proven in Qdrant and FastEmbed.
 
-A miss is publishable. The material already includes: a teacher's retrieval quality does not predict its distilled student, and the most decomposable teacher wins; a lookup-table query side retains about three quarters of its teacher and its objective saturates almost immediately; fusion with a lexical channel is worth ten times any table-side lever; a small transformer's retention is a per-distribution quantity, 94% where the training data resembles the queries and 50% where it does not; the depth dependence of fusion operators inverts at realistic prefetch; and a static token table cannot repair a shattered term by tokenizer replacement alone, since the exact-token arm initialised by composition equalled the incumbent on observed rankings while only the row's direction moved results.
+A miss is publishable. The material already includes: a teacher's retrieval quality does not predict its distilled student, and the most decomposable teacher wins; a lookup-table query side retains about three quarters of its teacher and its objective saturates almost immediately; fusion with a lexical channel is worth ten times any table-side lever; a small transformer's retention is a per-distribution quantity, 94% where the training data resembles the queries and 50% where it does not; the depth dependence of fusion operators inverts at realistic prefetch; and adding a vocabulary entry does nothing on its own, since what moves results is where that entry points.
 
 ## Glossary
 
