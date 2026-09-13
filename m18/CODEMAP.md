@@ -14,6 +14,7 @@
 | `m18src/train.py` | M17 listwise/cosine/alias trainer fork; only new rows train in M18 |
 | `m18src/export.py`, `loader_np.py` | int8 bundle gates and standalone NumPy serving path |
 | `m18src/evaluate.py` | exact dense, BM25, DBSF@100 and paired bootstrap evaluation |
+| `m18src/diagnostic.py` | required step-500 training/export/V0 serving-parity receipt |
 | `m18src/rehearse18.py` | one-command synthetic end-to-end rehearsal |
 | `work/m18/raw/` | immutable raw git/API snapshot (gitignored; receipts/hashes published) |
 | `work/m18/derived/` | parsed corpus, splits, qrels and indexes (gitignored; manifests published) |
