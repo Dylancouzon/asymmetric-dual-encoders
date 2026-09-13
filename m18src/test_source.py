@@ -122,6 +122,16 @@ def test_link_header_cursor_is_carried_to_next_explicit_page(tmp_path):
     ]
 
 
+def test_full_last_page_without_next_link_is_terminal(tmp_path):
+    endpoint = _endpoint(); reg = _registry(endpoint, per_page=1)
+    calls = []
+    def api(_path, params, _headers):
+        calls.append(params["page"])
+        return [_row("A")], {"link": '<https://api.github.com/x?page=1>; rel="last"'}
+    source.acquire_github(tmp_path, registry_data=reg, api_call=api, reconcile=False)
+    assert calls == [1]
+
+
 def test_second_pass_reconciliation_accepts_body_edit_and_post_cutoff_tail(tmp_path):
     endpoint = _endpoint()
     reg = _registry(endpoint, per_page=10)

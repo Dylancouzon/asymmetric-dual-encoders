@@ -445,6 +445,10 @@ def _fetch_endpoint(owned: Path, endpoint: Mapping[str, Any], source: Mapping[st
         link = str(receipt.get("link_header", "")).lower()
         if 'rel="next"' not in link and "rel=next" not in link:
             return pages
+    if pages:
+        link = str(_load_receipt(_receipt_path(owned, name, len(pages))).get("link_header", ""))
+        if link and 'rel="next"' not in link.lower() and "rel=next" not in link.lower():
+            return pages
     page = len(pages) + 1
     after = None
     if pages:
@@ -460,7 +464,7 @@ def _fetch_endpoint(owned: Path, endpoint: Mapping[str, Any], source: Mapping[st
         pages.append(rows)
         link = str(response_headers.get("link", "")).lower()
         has_next = 'rel="next"' in link or "rel=next" in link
-        if len(rows) < per_page and not has_next:
+        if (response_headers.get("link") and not has_next) or (len(rows) < per_page and not has_next):
             return pages
         after = _next_cursor(response_headers.get("link", ""))
         page += 1
@@ -504,7 +508,7 @@ def _reconcile_endpoint(owned: Path, endpoint: Mapping[str, Any], source: Mappin
         observed_pages.append(observed)
         link = response_headers.get("link", "")
         has_next = 'rel="next"' in link.lower() or "rel=next" in link.lower()
-        if len(observed) < per_page and not has_next:
+        if (link and not has_next) or (len(observed) < per_page and not has_next):
             break
         after = _next_cursor(link)
         number += 1
