@@ -2,6 +2,14 @@
 
 **Final 2026-09-13 — `SYSTEM_READY`; `ENCODER_INCONCLUSIVE`; released Zero v1 retained.**
 
+A bounded post-hoc development sensitivity check leaves that outcome unchanged. The 925-item audit
+has 832 binary agreements, 20 binary disagreements and 73 items where at least one reviewer
+abstained, producing 93 unknown query-artifact labels. Exact enumeration gives T0-v1 short-context
+Precision@10 bounds `[+0.016667, +0.075000]` around the required `+0.03`; winning terms range from
+6 to 10 where strictly more than 6 are required. The result is `LABEL_SENSITIVE`. Headroom, positive
+dense nDCG, hybrid preservation and both safety slices pass under every assignment, but supporting
+passages remain unaudited. No qrels were created and confirmation remains sealed.
+
 M19 stopped at the registered development-judgment boundary. The complete 60-query, seven-route
 pool froze with 1,376 query-artifact items under the 3,000 cap. Primary Astra judgment covered the
 entire pool; the fresh independent audit covered 925 concealed repeats. After an evidence-only

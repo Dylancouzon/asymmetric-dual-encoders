@@ -46,3 +46,16 @@ passages did not contain enough context for a defensible binary decision. M19 th
 before agreement, qrels, headroom or candidate-quality scoring. This is `ENCODER_INCONCLUSIVE`, not
 evidence of improvement, non-improvement, equivalence or a capacity limit. Released Zero v1 remains
 selected; fresh confirmation stayed sealed.
+
+## Post-hoc uncertainty sensitivity
+
+The later owner-authorized development-only diagnostic treated every binary audit disagreement and
+every label with at least one abstention as unknown: 93 items in total. Resolved binary audit
+agreement was 832/852 (`0.9765`). Exact per-query enumeration—not the invalid shortcut of assigning
+all unknowns zero versus all one—put the T0-v1 short-context Precision@10 delta between `+0.016667`
+and `+0.075000`. The registered `+0.03` gate is therefore label-sensitive. Winning terms range from
+6 to 10 against the required strict majority of 12, and net wins range from 2 to 9 against the
+required 3. Dense nDCG stays positive and headroom, hybrid preservation, numeric/version preservation
+and longer-query preservation pass for every assignment. This narrows the uncertainty but does not
+qualify T0: the decisive gates remain assignment-sensitive and the supporting-passage audit was
+never performed. Original `ENCODER_INCONCLUSIVE` and the sealed confirmation state are unchanged.

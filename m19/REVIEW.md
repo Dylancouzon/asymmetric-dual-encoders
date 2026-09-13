@@ -114,3 +114,16 @@ Term selection, the row algebra, quantization, serving parity, the inheritance g
 reconciliation record. Those are covered in `reviews/` and this review found no reason to revisit
 them. Nothing here reopens the M19 decision, relaxes a registered gate, creates a qrel, or touches
 the sealed confirmation split; J2 requires an owner ruling before any of it is acted on.
+
+## Owner disposition — bounded sensitivity completed 2026-09-13
+
+The owner authorized a development-only continuation. The executed method strengthened J2: because
+unknown artifacts occur asymmetrically across routes, assigning all unknowns zero and then all one
+does not bound a system contrast. The committed method instead enumerated every assignment per query
+and aggregated exact extrema under the frozen term macro.
+
+The result is `LABEL_SENSITIVE`, not a recovered encoder decision. Short-context Precision@10 spans
+`+0.016667` to `+0.075000` around the `+0.03` gate; term wins span 6 to 10 around the required strict
+majority. The original `ENCODER_INCONCLUSIVE` therefore remains substantively correct. No qrels,
+enriched rejudgment or confirmation read followed. J1 and J4 remain recommendations for future
+protocols; J3 is not worth pursuing for this closed internal proof of concept.
