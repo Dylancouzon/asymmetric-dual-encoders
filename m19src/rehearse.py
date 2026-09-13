@@ -5,8 +5,12 @@ import argparse
 import json
 from pathlib import Path
 
-from m19src import common, judgments, metrics
+import numpy as np
+from tokenizers import Tokenizer, models, normalizers, pre_tokenizers, processors
+
+from m19src import common, judgments, metrics, zero
 from m19src.confirmation import ConfirmationTransaction
+from m19src.term_inventory import _extend_tokenizer
 
 
 def _json_bytes(value):
@@ -39,60 +43,179 @@ def _route_row(route, artifact, rank):
 
 
 def _pool_fixture():
-    spec = {"query_id": "synthetic-q1", "text": "k8s probes", "term": "k8s",
-            "primary_class": "short_context", "source_exclusion_identity": "synthetic-source"}
+    specs = [
+        {"query_id": "synthetic-q1", "text": "k8s probes", "term": "k8s",
+         "primary_class": "short_context", "tags": [],
+         "source_exclusion_identity": "synthetic-source"},
+        {"query_id": "synthetic-q2", "text": "k8s probes changed after version 2 upgrade",
+         "term": "k8s", "primary_class": "longer_control", "tags": ["version"],
+         "source_exclusion_identity": "synthetic-source-2"},
+    ]
     routes = {}
     for route_index, route in enumerate(judgments.ROUTES):
         artifacts = ["a1", "a2", "a3"] if route_index % 2 == 0 else ["a2", "a4", "a5"]
-        routes[route] = {spec["query_id"]: [
-            _route_row(route, artifact, rank)
-            for rank, artifact in enumerate(artifacts, start=1)
-        ]}
-    return spec, routes
+        routes[route] = {
+            spec["query_id"]: [_route_row(route, artifact, rank)
+                               for rank, artifact in enumerate(artifacts, start=1)]
+            for spec in specs
+        }
+    return specs, routes
 
 
-def _decision(query_path, query_sha256):
+def _prepare_decision(root, query_path, query_sha256, registry):
+    """Create the small real artifacts needed to exercise decision authentication."""
+    registry = json.loads(json.dumps(registry))
+    registry["development_eligibility"]["net_term_wins_minimum"] = 1
+    registry["confirmation_eligibility"]["net_term_wins_minimum"] = 1
+    registry_path = root / "registry.json"
+    _write_or_verify(registry_path, registry)
+
+    vocab = {"[UNK]": 0, "[CLS]": 1, "[SEP]": 2, "k": 3, "##8": 4, "##s": 5,
+             "other": 6}
+    tokenizer = Tokenizer(models.WordPiece(vocab, unk_token="[UNK]"))
+    tokenizer.normalizer = normalizers.BertNormalizer(lowercase=True)
+    tokenizer.pre_tokenizer = pre_tokenizers.BertPreTokenizer()
+    tokenizer.post_processor = processors.TemplateProcessing(
+        single="[CLS] $A [SEP]", special_tokens=[("[CLS]", 1), ("[SEP]", 2)]
+    )
+    base_tokenizer = tokenizer.to_str().encode()
+    base_tokenizer_path = root / "base-tokenizer.json"
+    _write_or_verify(base_tokenizer_path, base_tokenizer)
+    float_rows = np.array([
+        [0.1, 0.2, 0.3, 0.4], [0.2, 0.1, 0.0, -0.1], [-0.1, 0.1, 0.2, 0.1],
+        [0.5, -0.2, 0.1, 0.0], [0.0, 0.3, -0.1, 0.2], [0.1, 0.0, 0.4, -0.2],
+        [0.3, 0.2, 0.1, 0.0],
+    ], dtype=np.float32)
+    base_codes, base_scales = zero.quantize_rows(float_rows)
+    base_model_path = root / "base-model.npz"
+    _write_or_verify(base_model_path, zero._deterministic_npz(
+        {"rows_int8": base_codes, "int8_scale": base_scales}
+    ))
+    extended, audit = _extend_tokenizer(base_tokenizer, ["k8s"])
+    roster_body = {"_schema": "m19-synthetic-roster-v1", "terms": [{"term": "k8s"}],
+                   "selected_added_token_audit": audit}
+    roster = {**roster_body, "identity_sha256": common.sha_json(roster_body)}
+    roster_path = root / "roster.json"
+    _write_or_verify(roster_path, roster)
+    pooling = {"fallback_token_id": 1, "learned_weights": False,
+               "preproc": {"add_special_tokens": True, "max_length": 512,
+                           "pool_mode": "sqrt", "prefix": ""}, "weights_folded": True}
+    inheritance_body = {"_schema": "m19-synthetic-inheritance-v1",
+                        "inputs": {"released_effective_table": {
+                            "pooling_sha256": common.sha_json(pooling)}}}
+    inheritance = {**inheritance_body, "identity_sha256": common.sha_json(inheritance_body)}
+    inheritance_path = root / "inheritance.json"
+    _write_or_verify(inheritance_path, inheritance)
+    teacher = {"k8s": np.array([0.2, 0.7, -0.1, 0.4], dtype=np.float32)}
+    built = zero.construct_added_rows(base_codes, base_scales, base_tokenizer, roster, teacher)
+    codes, scales = zero.compact_table(base_codes, base_scales, built["T0-teacher"])
+    verification = {"base_codes": base_codes, "base_scales": base_scales,
+                    "base_tokenizer_payload": base_tokenizer, "roster": roster,
+                    "inheritance_identity": inheritance["identity_sha256"],
+                    "pooling_identity_sha256": common.sha_json(pooling)}
+    provenance = {"inheritance_identity": inheritance["identity_sha256"],
+                  "roster_identity": roster["identity_sha256"],
+                  "base_codes_sha256": common.sha_array(base_codes),
+                  "base_scales_sha256": common.sha_array(base_scales),
+                  "base_tokenizer_sha256": common.sha_bytes(base_tokenizer),
+                  "pooling_identity_sha256": common.sha_json(pooling),
+                  "selected_added_token_audit": audit}
+    base_config = {**pooling, "document_encoder": {"dim": 4}}
+    payload = zero.bundle_payload("T0-teacher", codes, scales, extended, base_config, provenance)
+    bundle_dir = root / "bundle"
+    zero.publish_bundle(bundle_dir, payload, verification=verification)
+
+    dev_queries = [
+        {"query_id": "d-short", "term": "k8s", "primary_class": "short_context", "tags": []},
+        {"query_id": "d-long", "term": "k8s", "primary_class": "longer_control",
+         "tags": ["version"]},
+    ]
+    dev_qrels = {row["query_id"]: {"good": 1, "bad": 0} for row in dev_queries}
+    candidate = {row["query_id"]: ["good"] for row in dev_queries}
+    baseline = {row["query_id"]: ["bad"] for row in dev_queries}
+    dev_runs = {"dense_candidate": candidate, "dense_v1": baseline,
+                "hybrid_candidate": candidate, "hybrid_v1": baseline}
+    dev_support = [{"query_id": "d-short", "artifact_id": "good", "pass": True}]
+    computed = metrics.evaluate_frozen(
+        dev_runs, dev_qrels, dev_queries, registry["development_eligibility"],
+        {("d-short", "good"): True},
+    )
+    artifacts = {"development_qrels": dev_qrels, "development_runs": dev_runs,
+                 "development_queries": dev_queries, "development_support": dev_support}
+    paths = {}
+    for role, value in artifacts.items():
+        paths[role] = root / f"{role}.json"
+        _write_or_verify(paths[role], value)
+    evaluation = {"_schema": "m19-development-evaluation-v1",
+                  "input_sha256": {role: common.sha_file_unchecked(path)
+                                   for role, path in paths.items()}, "result": computed}
+    paths["development_evaluation"] = root / "development_evaluation.json"
+    _write_or_verify(paths["development_evaluation"], evaluation)
+    review_paths = {"implementation_review": root / "implementation-review.md",
+                    "astra_review": root / "astra-review.md"}
+    for role, path in review_paths.items():
+        _write_or_verify(path, f"Synthetic {role}: GO\n".encode())
+
+    role_paths = {"registry": registry_path, "inheritance_lock": inheritance_path,
+                  "roster": roster_path, "base_model": base_model_path,
+                  "base_tokenizer": base_tokenizer_path, **paths, **review_paths}
+    for name in ("model.npz", "config.json", "tokenizer.json", "provenance.json", "complete.json"):
+        role_paths["bundle_" + name.split(".")[0]] = bundle_dir / name
+    bindings = {role: {"path": str(path.resolve()), "sha256": common.sha_file_unchecked(path)}
+                for role, path in role_paths.items()}
+    bundle_hashes = {Path(row["path"]).name: row["sha256"] for role, row in bindings.items()
+                     if role.startswith("bundle_")}
     return {
         "_schema": "m19-confirmation-decision-v1", "transaction_id": "synthetic-rehearsal-v1",
         "candidate_id": "T0-teacher", "eligible": True,
-        "bundle_hashes": {"model.npz": "a" * 64, "tokenizer.json": "b" * 64},
-        "development_qrels_sha256": "c" * 64,
-        "development_results_sha256": "d" * 64,
-        "development_eligibility_sha256": "e" * 64,
-        "term_roster_sha256": "f" * 64, "inheritance_identity": "1" * 64,
+        "bundle_hashes": bundle_hashes,
+        "development_qrels_sha256": bindings["development_qrels"]["sha256"],
+        "development_results_sha256": bindings["development_evaluation"]["sha256"],
+        "development_eligibility_sha256": common.sha_json(computed),
+        "term_roster_sha256": roster["identity_sha256"],
+        "inheritance_identity": inheritance["identity_sha256"],
         "row_formula": {"kind": "teacher-minus-fixed", "scale": "original-bare-norm"},
-        "pool_recipe": {"routes": list(judgments.ROUTES), "depth": 10},
-        "evidence_recipe": {"passages": 3, "characters": 1200},
-        "judgment_recipe": {"labels": [0, 1], "audit_minimum": 0.20,
-                            "agreement_minimum": 0.90},
-        "metric_recipe": {"primary": "precision_at_10", "denominator": 10},
-        "numerical_gates": {"headroom": 0.05},
+        "pool_recipe": registry["retrieval"], "evidence_recipe": registry["judgments"],
+        "judgment_recipe": registry["judgments"], "metric_recipe": registry["metrics"],
+        "numerical_gates": registry["numerical_gates"],
         "primary_judge_id": "synthetic-primary", "auditor_id": "synthetic-auditor",
         "confirmation_query_path": str(query_path.resolve()),
         "confirmation_query_sha256": query_sha256,
+        "bindings": bindings,
+        "registry_sections": {key: registry[key] for key in (
+            "retrieval", "judgments", "metrics", "numerical_gates",
+            "development_eligibility", "confirmation_eligibility", "confirmation_states",
+        )},
         "review_gos": [
             {"role": "implementation", "reviewer_id": "synthetic-reviewer-1",
-             "decision": "GO", "findings_sha256": "2" * 64},
+             "decision": "GO", "findings_sha256": bindings["implementation_review"]["sha256"]},
             {"role": "astra", "reviewer_id": "synthetic-reviewer-2",
-             "decision": "GO", "findings_sha256": "3" * 64},
+             "decision": "GO", "findings_sha256": bindings["astra_review"]["sha256"]},
         ],
     }
 
 
 def run_rehearsal(root=None):
     """Run or resume a fixed synthetic transaction, including an object reconstruction."""
+    registry = common.load_json(common.REGISTRY_PATH)
     original_work, original_confirmation = common.WORK, common.CONFIRMATION_WORK
-    synthetic_root = Path(root or (original_work / "rehearsal"))
+    synthetic_root = Path(root or (original_work / "rehearsal-v2"))
     common.WORK = synthetic_root
     common.CONFIRMATION_WORK = synthetic_root / "confirmation"
     try:
         query_path = common.CONFIRMATION_WORK / "queries.jsonl"
         query_sha = _write_or_verify(
             query_path,
-            b'{"query_id":"synthetic-q1","text":"k8s probes","term":"k8s"}\n',
+            (b'{"primary_class":"short_context","query_id":"synthetic-q1",'
+             b'"tags":[],"term":"k8s","text":"k8s probes"}\n'
+             b'{"primary_class":"longer_control","query_id":"synthetic-q2",'
+             b'"tags":["version"],"term":"k8s",'
+             b'"text":"k8s probes changed after version 2 upgrade"}\n'),
         )
         decision_path = synthetic_root / "decision-lock.json"
-        _write_or_verify(decision_path, _decision(query_path, query_sha))
+        _write_or_verify(decision_path, _prepare_decision(
+            synthetic_root, query_path, query_sha, registry
+        ))
         receipts = synthetic_root / "receipts"
         tx = ConfirmationTransaction(decision_path, receipts)
         if not (receipts / "00-locked.json").exists():
@@ -100,19 +223,26 @@ def run_rehearsal(root=None):
         state = tx.current()["state"]
         if state == "locked":
             tx.claim()
-            json.loads(tx.read_bound_bytes(query_path))
+            [json.loads(line) for line in tx.read_bound_bytes(query_path).splitlines() if line]
             state = "claimed"
 
-        spec, routes = _pool_fixture()
-        pool, packet = judgments.build_pool(routes, [spec], seed=19019, cap=3000)
+        specs, routes = _pool_fixture()
+        pool, packet = judgments.build_pool(routes, specs, seed=19019, cap=3000)
         judgments.assert_blinded(packet)
         pool_path, packet_path = common.CONFIRMATION_WORK / "pool.json", (
             common.CONFIRMATION_WORK / "packet.json"
         )
         _write_or_verify(pool_path, pool)
         _write_or_verify(packet_path, packet)
+        candidate = {spec["query_id"]: ["a1"] for spec in specs}
+        baseline = {spec["query_id"]: ["a4"] for spec in specs}
+        metric_runs = {"dense_candidate": candidate, "dense_v1": baseline,
+                       "hybrid_candidate": candidate, "hybrid_v1": baseline}
+        metric_runs_path = common.CONFIRMATION_WORK / "metric-runs.json"
+        _write_or_verify(metric_runs_path, metric_runs)
         if state == "claimed":
-            tx.freeze_pools({"pool": pool_path, "packet": packet_path})
+            tx.freeze_pools({"pool_manifest": pool_path, "evidence_packet": packet_path,
+                             "metric_runs": metric_runs_path})
             state = "pools-frozen"
         if state == "pools-frozen":
             tx.begin_judgments()
@@ -120,46 +250,37 @@ def run_rehearsal(root=None):
             tx = ConfirmationTransaction(decision_path, receipts)
             state = tx.current()["state"]
 
-        primary = {row["item_id"]: 1 for row in packet["items"]}
+        primary = {row["item_id"]: int(row["artifact_id"] == "a1")
+                   for row in packet["items"]}
         audit = judgments.select_audit(packet, primary, seed=19019, fraction=0.20)
-        auditor = {item_id: 1 for item_id in audit["item_ids"]}
+        auditor = {item_id: primary[item_id] for item_id in audit["item_ids"]}
         agreement = judgments.audit_agreement(audit, primary, auditor, minimum=0.90)
         primary_path = common.CONFIRMATION_WORK / "primary-01.json"
         audit_path = common.CONFIRMATION_WORK / "audit-01.json"
+        support_path = common.CONFIRMATION_WORK / "supporting-passages.json"
+        support = [{"query_id": spec["query_id"], "artifact_id": "a1", "pass": True}
+                   for spec in specs if spec["primary_class"] == "short_context"]
         _write_or_verify(primary_path, primary)
         _write_or_verify(audit_path, {"sample": audit, "labels": auditor, "agreement": agreement})
+        _write_or_verify(support_path, support)
         if state == "judgments-in-progress":
             tx.checkpoint_judgment_batch("primary-01", primary_path)
             tx.checkpoint_judgment_batch("audit-01", audit_path)
-            frozen = judgments.freeze_binary_labels(
-                packet, primary, audit, auditor, {}, primary_reviewer_id="synthetic-primary",
-                auditor_id="synthetic-auditor",
-                query_authors={"synthetic-q1": "synthetic-author"},
-            )
-            qrels = frozen["qrels"]
+            tx.checkpoint_judgment_batch("supporting-01", support_path)
             qrels_path = common.CONFIRMATION_WORK / "qrels.json"
-            _write_or_verify(qrels_path, qrels)
-            tx.freeze_qrels({"qrels": qrels_path}, batch_ids=["primary-01", "audit-01"])
-            state = "qrels-frozen"
-        else:
-            frozen = judgments.freeze_binary_labels(
-                packet, primary, audit, auditor, {}, primary_reviewer_id="synthetic-primary",
-                auditor_id="synthetic-auditor",
-                query_authors={"synthetic-q1": "synthetic-author"},
+            tx.freeze_qrels(
+                qrels_path, packet_path=packet_path, primary_batch_id="primary-01",
+                audit_batch_id="audit-01", supporting_batch_id="supporting-01",
+                query_authors={spec["query_id"]: "synthetic-author" for spec in specs},
             )
-            qrels = frozen["qrels"]
+            state = "qrels-frozen"
 
         if state == "qrels-frozen":
-            selected = {spec["query_id"]: [
-                row["artifact_id"] for row in routes["t0_teacher_dense"][spec["query_id"]]
-            ]}
-            result = metrics.score_run(selected, qrels)
             metrics_path = common.CONFIRMATION_WORK / "metrics.json"
-            _write_or_verify(metrics_path, result)
             tx.score(metrics_path)
             state = "scored"
         if state == "scored":
-            tx.complete(outcome="pass")
+            tx.complete()
         result = tx.reconcile()
         result.update({
             "_schema": "m19-synthetic-rehearsal-v1", "synthetic": True,
@@ -174,10 +295,15 @@ def run_rehearsal(root=None):
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output", default=str(common.RESULTS / "m19_rehearsal.json"))
+    parser.add_argument("--output", default=str(common.RESULTS / "m19_rehearsal_v2.json"))
     args = parser.parse_args(argv)
     result = run_rehearsal()
-    common.write_json(args.output, result)
+    payload = _json_bytes(result)
+    try:
+        common.atomic_create_bytes(args.output, payload)
+    except FileExistsError:
+        if common.sha_file_unchecked(args.output) != common.sha_bytes(payload):
+            raise SystemExit("M19 REHEARSAL STOP: immutable result differs")
     print(json.dumps(result, indent=2, sort_keys=True))
 
 

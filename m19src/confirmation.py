@@ -1,10 +1,13 @@
 """Immutable, resumable M19 one-shot confirmation transaction."""
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
-from m19src import common
+import numpy as np
+
+from m19src import common, judgments, metrics, zero
 
 STATES = (
     "locked", "claimed", "pools-frozen", "judgments-in-progress", "qrels-frozen",
@@ -18,6 +21,13 @@ REQUIRED_DECISION_KEYS = {
     "pool_recipe", "evidence_recipe", "judgment_recipe", "metric_recipe",
     "numerical_gates", "inheritance_identity", "primary_judge_id", "auditor_id",
     "confirmation_query_path", "confirmation_query_sha256", "review_gos",
+    "bindings", "registry_sections",
+}
+BOUND_ROLES = {
+    "registry", "inheritance_lock", "roster", "base_model", "base_tokenizer",
+    "bundle_model", "bundle_config", "bundle_tokenizer", "bundle_provenance",
+    "bundle_complete", "development_qrels", "development_runs", "development_queries",
+    "development_support", "development_evaluation", "implementation_review", "astra_review",
 }
 HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 SAFE_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}\Z")
@@ -60,6 +70,12 @@ def validate_decision(decision):
         raise ValueError("review GO record is incomplete")
     if len({row["reviewer_id"] for row in gos}) != 2:
         raise ValueError("review GO identities are not independent")
+    if set(decision["bindings"]) != BOUND_ROLES:
+        raise ValueError(f"decision bindings must have exact roles {sorted(BOUND_ROLES)}")
+    for role, binding in decision["bindings"].items():
+        if (set(binding) != {"path", "sha256"} or not Path(binding["path"]).is_absolute() or
+                not _is_hash(binding["sha256"])):
+            raise ValueError(f"malformed decision binding for {role}")
     return decision
 
 
@@ -71,6 +87,88 @@ class ConfirmationTransaction:
         self.receipt_dir = Path(receipt_dir)
         self.decision = validate_decision(common.load_json(self.decision_path))
         self.decision_sha256 = common.sha_file(self.decision_path)
+        self._authenticate_decision()
+
+    def _bound_path(self, role):
+        return Path(self.decision["bindings"][role]["path"])
+
+    def _load_bound_json(self, role):
+        return json.loads(common.admit_read(self._bound_path(role)).read_text())
+
+    def _authenticate_decision(self):
+        if common.sha_file(self.decision_path) != self.decision_sha256:
+            raise SystemExit("M19 CONFIRMATION STOP: decision lock bytes changed")
+        for role, binding in self.decision["bindings"].items():
+            if common.sha_file(binding["path"]) != binding["sha256"]:
+                raise SystemExit(f"M19 CONFIRMATION STOP: decision binding changed: {role}")
+        registry = self._load_bound_json("registry")
+        expected_sections = {
+            key: registry[key] for key in (
+                "retrieval", "judgments", "metrics", "numerical_gates",
+                "development_eligibility", "confirmation_eligibility", "confirmation_states",
+            )
+        }
+        if self.decision["registry_sections"] != expected_sections:
+            raise SystemExit("M19 CONFIRMATION STOP: decision recipes/gates differ from registry")
+        inheritance = self._load_bound_json("inheritance_lock")
+        roster = self._load_bound_json("roster")
+        if (inheritance.get("identity_sha256") != self.decision["inheritance_identity"] or
+                roster.get("identity_sha256") != self.decision["term_roster_sha256"]):
+            raise SystemExit("M19 CONFIRMATION STOP: roster/inheritance identity differs")
+        base_model = common.admit_read(self._bound_path("base_model"))
+        with np.load(base_model) as archive:
+            base_codes = np.asarray(archive["rows_int8"], dtype=np.int8).copy()
+            base_scales = np.asarray(archive["int8_scale"], dtype=np.float32).copy()
+        base_tokenizer_payload = common.admit_read(self._bound_path("base_tokenizer")).read_bytes()
+        bundle = self._bound_path("bundle_complete").parent
+        zero.verify_bundle(bundle, verification={
+            "base_codes": base_codes, "base_scales": base_scales,
+            "base_tokenizer_payload": base_tokenizer_payload, "roster": roster,
+            "inheritance_identity": inheritance["identity_sha256"],
+            "pooling_identity_sha256": inheritance["inputs"]["released_effective_table"][
+                "pooling_sha256"
+            ],
+        })
+        bundle_hashes = {role.removeprefix("bundle_").replace("complete", "complete.json"):
+                         binding["sha256"]
+                         for role, binding in self.decision["bindings"].items()
+                         if role.startswith("bundle_")}
+        bundle_hashes = {
+            (name if name == "complete.json" else name + ({"model": ".npz"}.get(name, ".json"))): value
+            for name, value in bundle_hashes.items()
+        }
+        if self.decision["bundle_hashes"] != bundle_hashes:
+            raise SystemExit("M19 CONFIRMATION STOP: selected bundle hash set differs")
+        qrels = self._load_bound_json("development_qrels")
+        runs = self._load_bound_json("development_runs")
+        query_rows = self._load_bound_json("development_queries")
+        support_rows = self._load_bound_json("development_support")
+        support = {(row["query_id"], row["artifact_id"]): row["pass"] for row in support_rows}
+        computed = metrics.evaluate_frozen(
+            runs, qrels, query_rows, registry["development_eligibility"], support
+        )
+        evaluation = self._load_bound_json("development_evaluation")
+        expected_inputs = {
+            role: self.decision["bindings"][role]["sha256"] for role in (
+                "development_qrels", "development_runs", "development_queries",
+                "development_support",
+            )
+        }
+        if (evaluation != {"_schema": "m19-development-evaluation-v1",
+                           "input_sha256": expected_inputs, "result": computed} or
+                not computed["eligibility"]["eligible"]):
+            raise SystemExit("M19 CONFIRMATION STOP: development eligibility does not recompute")
+        if (self.decision["development_qrels_sha256"] != expected_inputs["development_qrels"] or
+                self.decision["development_results_sha256"] !=
+                self.decision["bindings"]["development_evaluation"]["sha256"] or
+                self.decision["development_eligibility_sha256"] != common.sha_json(computed)):
+            raise SystemExit("M19 CONFIRMATION STOP: development identities differ")
+        review_roles = {row["role"]: row for row in self.decision["review_gos"]}
+        if (review_roles["implementation"]["findings_sha256"] !=
+                self.decision["bindings"]["implementation_review"]["sha256"] or
+                review_roles["astra"]["findings_sha256"] !=
+                self.decision["bindings"]["astra_review"]["sha256"]):
+            raise SystemExit("M19 CONFIRMATION STOP: review GO bindings differ")
 
     def _receipt_path(self, state):
         return self.receipt_dir / STATE_FILES[state]
@@ -99,6 +197,7 @@ class ConfirmationTransaction:
         return self._create_or_resume(self._receipt_path("locked"), obj)
 
     def current(self):
+        self._authenticate_decision()
         prior = None
         current = None
         seen_gap = False
@@ -196,6 +295,8 @@ class ConfirmationTransaction:
             return current
         if current["state"] != "claimed":
             raise SystemExit("M19 CONFIRMATION STOP: pools require the claimed state")
+        if set(files) != {"pool_manifest", "evidence_packet", "metric_runs"}:
+            raise SystemExit("M19 CONFIRMATION STOP: pool freeze requires exact registered roles")
         bound = dict(self._hash_confirmation_file(path) for path in files.values())
         return self._transition("claimed", "pools-frozen", added_files=bound,
                                 extra={"pool_roles": {k: str(v) for k, v in sorted(files.items())}})
@@ -233,21 +334,64 @@ class ConfirmationTransaction:
             raise SystemExit("M19 CONFIRMATION STOP: judgment batch bytes changed")
         return row
 
-    def freeze_qrels(self, files, *, batch_ids):
+    def _batch_json(self, batch_id):
+        row = self._batch_receipt(batch_id)
+        current = self.current()
+        path = common.admit_confirmation_read(
+            row["path"], state=current["state"],
+            claimed_files={**current["bound_files"], row["path"]: row["sha256"]},
+        )
+        return row, json.loads(path.read_text())
+
+    def _create_confirmation_json(self, path, value):
+        path = self._confirmation_path(path)
+        payload = self._receipt_bytes(value)
+        try:
+            common.atomic_create_bytes(path, payload)
+        except FileExistsError:
+            if common.sha_file_unchecked(path) != common.sha_bytes(payload):
+                raise SystemExit(f"M19 CONFIRMATION STOP: owned output differs: {path}")
+        return path, common.sha_bytes(payload)
+
+    def freeze_qrels(self, output_path, *, packet_path, primary_batch_id, audit_batch_id,
+                     supporting_batch_id, query_authors, adjudication_batch_id=None,
+                     clarification=None):
         current = self.current()
         if current["state"] == "qrels-frozen":
             return current
         if current["state"] != "judgments-in-progress":
             raise SystemExit("M19 CONFIRMATION STOP: qrels require judgments in progress")
-        batches = [self._batch_receipt(batch_id) for batch_id in batch_ids]
-        if len(batches) != len(set(row["batch_id"] for row in batches)) or not batches:
+        if str(self._confirmation_path(packet_path)) not in current["bound_files"]:
+            raise SystemExit("M19 CONFIRMATION STOP: qrels packet is not pool-bound")
+        packet = json.loads(self.read_bound_bytes(packet_path))
+        primary_row, primary = self._batch_json(primary_batch_id)
+        audit_row, audit_payload = self._batch_json(audit_batch_id)
+        support_row, _ = self._batch_json(supporting_batch_id)
+        batches = [primary_row, audit_row, support_row]
+        adjudications = {}
+        if adjudication_batch_id is not None:
+            adjudication_row, adjudications = self._batch_json(adjudication_batch_id)
+            batches.append(adjudication_row)
+        if len(batches) != len(set(row["batch_id"] for row in batches)):
             raise SystemExit("M19 CONFIRMATION STOP: qrels need unique checkpointed batches")
-        bound = dict(self._hash_confirmation_file(path) for path in files.values())
+        rules = self.decision["registry_sections"]["judgments"]
+        frozen = judgments.freeze_binary_labels(
+            packet, primary, audit_payload["sample"], audit_payload["labels"], adjudications,
+            primary_reviewer_id=self.decision["primary_judge_id"],
+            auditor_id=self.decision["auditor_id"], query_authors=query_authors,
+            seed=int(rules["randomization_seed"]),
+            fraction=float(rules["audit_fraction_minimum"]),
+            minimum_agreement=float(rules["audit_exact_agreement_minimum"]),
+            clarification=clarification,
+        )
+        output_path, output_hash = self._create_confirmation_json(output_path, frozen)
+        bound = {str(output_path): output_hash}
         bound.update({row["path"]: row["sha256"] for row in batches})
         return self._transition(
             "judgments-in-progress", "qrels-frozen", added_files=bound,
             extra={
-                "qrel_roles": {k: str(v) for k, v in sorted(files.items())},
+                "qrel_roles": {"frozen_judgments": str(output_path),
+                               "supporting_passages": support_row["path"]},
                 "judgment_batch_receipts": {
                     row["batch_id"]: common.sha_file(
                         self.receipt_dir / f"batch-{row['batch_id']}.json"
@@ -256,18 +400,39 @@ class ConfirmationTransaction:
             },
         )
 
-    def score(self, metrics_path):
+    def score(self, output_path):
         current = self.current()
         if current["state"] == "scored":
             return current
         if current["state"] != "qrels-frozen":
             raise SystemExit("M19 CONFIRMATION STOP: metrics cannot be exposed before qrels freeze")
-        path, digest = self._hash_confirmation_file(metrics_path)
-        return self._transition("qrels-frozen", "scored", added_files={path: digest})
+        frozen = json.loads(self.read_bound_bytes(current["qrel_roles"]["frozen_judgments"]))
+        pool_receipt = common.load_json(self._receipt_path("pools-frozen"))
+        runs_path = pool_receipt["pool_roles"]["metric_runs"]
+        runs = json.loads(self.read_bound_bytes(runs_path))
+        queries = [json.loads(line) for line in self.read_bound_bytes(
+            self.decision["confirmation_query_path"]
+        ).splitlines() if line]
+        support_rows = json.loads(self.read_bound_bytes(
+            current["qrel_roles"]["supporting_passages"]
+        ))
+        support = {(row["query_id"], row["artifact_id"]): row["pass"] for row in support_rows}
+        result = metrics.evaluate_frozen(
+            runs, frozen["qrels"], queries,
+            self.decision["registry_sections"]["confirmation_eligibility"], support,
+        )
+        output_path, digest = self._create_confirmation_json(output_path, result)
+        return self._transition("qrels-frozen", "scored",
+                                added_files={str(output_path): digest},
+                                extra={"eligible": result["eligibility"]["eligible"]})
 
-    def complete(self, *, outcome):
-        if outcome not in {"pass", "fail", "inconclusive"}:
-            raise ValueError("invalid scored confirmation outcome")
+    def complete(self):
+        current = self.current()
+        if current["state"] == "complete":
+            return current
+        if current["state"] != "scored":
+            raise SystemExit("M19 CONFIRMATION STOP: completion requires transaction scoring")
+        outcome = "pass" if current["eligible"] else "inconclusive"
         return self._transition("scored", "complete", extra={"outcome": outcome})
 
     def mark_incomplete(self, *, reason):
@@ -288,6 +453,7 @@ class ConfirmationTransaction:
         return self._create_or_resume(self._receipt_path("complete"), obj)
 
     def reconcile(self):
+        self._authenticate_decision()
         current = self.current()
         for path, expected in current["bound_files"].items():
             resolved, actual = self._hash_confirmation_file(path)
