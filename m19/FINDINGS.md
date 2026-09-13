@@ -26,3 +26,12 @@ under the registered exact route. Against the actual released V1 loader, encoder
 Released-loader numerical parity is `2.24e-8`. These are cost and parity findings only; the
 benchmark discarded rankings and did not inspect relevance. The earlier v1 measurement used a
 shortcut route and is preserved only as superseded evidence.
+
+## Pool-cost feasibility
+
+The ten-query, ten-term pilot yields 224 query-artifact judgment items and a 265,914-byte blinded
+packet. Linear projection to the complete 60-query development split is 1,344 items, well below the
+registered 3,000 cap. The evidence-volume model projects about 12.7 reviewer hours for complete
+primary labeling; that is a conservative planning estimate, not an observed judgment duration.
+This supports mechanical pool feasibility but makes reviewer throughput the dominant execution
+cost. No relevance was assessed in deriving it.

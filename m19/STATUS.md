@@ -67,5 +67,9 @@ confirmation, and the timed route uses float32 scores, exclusions before depth a
 ties against the released V1 loader. The superseding 10,000-query v2 run passes every registered
 gate: encoder median/p95 ratios are `0.9580`/`1.0370`, end-to-end ratios are `0.9956`/`0.9696`, and
 released-loader parity is `2.24e-8`. Astra's bounded closure pass returned `GO` with no remaining
-P0/P1 and authorizes the ten-query pool-cost pilot. Real judgments remain unauthorized until the
-separate implementation reviewer also returns `GO`.
+P0/P1 and authorized the ten-query pool-cost pilot. Stage 6 is complete: ten distinct-term short
+queries produced 224 unique query-artifact items (216 global artifacts) and a 265,914-byte blinded
+packet. Linear projection is 1,344 development items, below the fixed 3,000 cap. The conservative
+review-time projection is 761.2 minutes for all 60 queries. No labels or quality metrics were
+produced. Real judgments remain unauthorized until both end-to-end implementation reviewers return
+`GO` at the post-pilot implementation commit.

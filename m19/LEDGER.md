@@ -189,3 +189,16 @@
   independent full-sort tie/exclusion comparisons and exact receipt/bundle reconciliation.
 - No P0/P1 remains in the closure scope. The three documented P2 qualifications do not block the
   fixed ten-query pool-cost pilot. This GO does not authorize real judging or confirmation.
+
+## 2026-09-13 — ten-query pool-cost pilot complete
+
+- Before retrieval, froze the first development short-context query for each of the first ten roster
+  terms. This produces ten distinct-term queries without result-based selection.
+- Built all seven registered routes with the authenticated exact index/bundles and froze a blinded
+  work packet. The pilot contains 224 unique query-artifact items spanning 216 global artifacts;
+  packet size is 265,914 bytes.
+- A transparent cost model of 200 evidence words/minute plus 0.25 minute per label estimates 126.86
+  reviewer minutes for the pilot. Linear projection to 60 queries is 1,344 items, 1,595,484 bytes
+  and 761.16 reviewer minutes. The item projection is below the fixed 3,000 development cap.
+- The tracked result binds the ignored pool/packet hashes and all stage-5 inputs. No relevance label,
+  quality metric or confirmation content was read or produced.
