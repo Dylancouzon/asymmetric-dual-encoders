@@ -111,7 +111,8 @@ def build(index_root=None, protocol_root=None, out_root=None, device="cuda"):
         raise SystemExit("M18 PREPARE REFUSED: serialized T0 tokenizer hash drifted")
 
     collision = preprocess.collision_audit([
-        {"text": q["text"], "relevance_group": q["target_doc"]} for q in train_queries])
+        {"text": q["text"], "relevance_group": q.get("target_doc") or q["family_group"]}
+        for q in train_queries])
     write_json(out / "t1_collision_audit.json", collision)
     if out_root is None:
         write_json(REPO / "results/m18_t1_collision_audit.json", collision)

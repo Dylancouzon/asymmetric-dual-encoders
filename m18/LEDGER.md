@@ -144,3 +144,23 @@
   context and proposed target, before the final split exists; it sees no retrieval scores or model
   identity. Only `clear` pairs survive. This is a one-pass M18 data correction, not a reusable
   judgment framework.
+
+## 2026-09-13 — E7 prospective adjudication executed
+
+- One Astra judge reviewed all 344 content-bound prospective pairs without retrieval output, model
+  identity or a pre-existing audit split. It rated 141 clear, 141 partial and 62 bad, and corrected
+  94 plainly mismatched strata. The decision file covers the exact candidate ID set and copies each
+  source/query/target identity hash; its SHA-256 is
+  `d98144096f17a718bb70073655fbcd4f28319c75f41d670f0a376118aa505904`.
+- Only the 141 clear pairs were split: 101 development and 40 sealed confirmation. Alias, concept
+  and exact/numeric have fewer than 35 available clear families, so their smaller realized counts
+  are disclosed rather than filled with partial labels. Confirmation content remains unread.
+- The surviving clear pairs all enter held-out surfaces, leaving no adjudicated labeled structural
+  training rows. To preserve project-language support without reintroducing bad positives, 297
+  non-held-out issue/PR titles are retained through the existing teacher-only/query-only cache path;
+  review comments are excluded from this fallback. Together with 482 evidence-backed alias views,
+  the training protocol has 779 views. No rejected target is used as a relevance label.
+- The v5 manifest again reports zero artifact, connected-family, answer-digest and
+  development/confirmation overlap. Query-source documents remain excluded before evaluation
+  metrics. Forty-three network-free tests pass. A fresh Astra reviewer must still spot-check the
+  final development surface before full Stella encoding.

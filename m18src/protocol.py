@@ -410,6 +410,23 @@ def _alias_training(corpus, excluded_artifacts, cap):
     return out
 
 
+def _query_only_training(structural, labeled, heldout_groups, corpus_by_id):
+    """Keep non-held-out issue/PR titles as teacher-only views, never as inferred positives."""
+    labeled_ids = {q["query_id"] for q in labeled}
+    out = []
+    for q in structural:
+        if q["query_id"] in labeled_ids or q["family_group"] in heldout_groups:
+            continue
+        if corpus_by_id[q["source_doc"]]["kind"] not in {"issue_opening", "pull_request_opening"}:
+            continue
+        row = dict(q)
+        row["target_doc"] = None
+        row["relevance_reason"] = "natural issue/PR title; teacher-only training view without qrel"
+        row["label_provenance"] = {"rule": "source-title-query-only", "positive_label": False}
+        out.append(row)
+    return sorted(out, key=lambda q: q["query_id"])
+
+
 def _write_rows(path, rows):
     payload = b"".join((json.dumps(r, sort_keys=True, ensure_ascii=False) + "\n").encode()
                        for r in rows)
@@ -443,13 +460,15 @@ def build(corpus_path=None, out_root=None, registry_data=None):
     if short:
         raise SystemExit(f"M18 PROTOCOL REFUSED: adequately populated strata miss minima: {short}")
     excluded_artifacts = {a for q in dev + conf for a in q["family_members"]}
-    cap = int(reg["corpus"]["training_query_views_max"])
-    docs = []  # heading==target self retrieval is intentionally not admitted.
-    aliases = _alias_training(corpus, excluded_artifacts, max(0, cap - len(train_struct)))
-    train = (train_struct + aliases)[:cap]
-    # No held-out family or near-duplicate title shape can supply a gradient-bearing view.
     heldout_family = {a for q in dev + conf for a in q["family_members"]}
     heldout_group = {q["family_group"] for q in dev + conf}
+    query_only = _query_only_training(structural, train_struct, heldout_group, corpus_by_id)
+    structural_train = train_struct + query_only
+    cap = int(reg["corpus"]["training_query_views_max"])
+    docs = []  # heading==target self retrieval is intentionally not admitted.
+    aliases = _alias_training(corpus, excluded_artifacts, max(0, cap - len(structural_train)))
+    train = (structural_train + aliases)[:cap]
+    # No held-out family or near-duplicate title shape can supply a gradient-bearing view.
     heldout_target_hash = {corpus_by_id[q["target_doc"]]["normalized_text_sha256"] for q in dev + conf
                            if q.get("target_doc")}
     leaks = [q["query_id"] for q in train if q["family"] in heldout_family
@@ -471,7 +490,9 @@ def build(corpus_path=None, out_root=None, registry_data=None):
                 "qrels_version": reg["versions"]["qrels"], "candidates": len(candidates),
                 "structural_candidates_pre_adjudication": len(structural),
                 "qrel_adjudication": adjudication,
-                "training_queries": len(train), "training_structural": len(train_struct),
+                "training_queries": len(train), "training_structural": len(structural_train),
+                "training_structural_labeled": len(train_struct),
+                "training_structural_query_only": len(query_only),
                 "training_document_headings": len(docs), "training_alias_views": len(aliases),
                 "realized_strata": realized, "development": dev_files,
                 "confirmation": conf_files, "confirmation_sealed": True,

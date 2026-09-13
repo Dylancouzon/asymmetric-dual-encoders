@@ -165,6 +165,17 @@ def test_adjudication_is_exact_and_content_bound(tmp_path):
         protocol.apply_adjudications([q], reg, corpus)
 
 
+def test_unjudged_titles_are_query_only_and_heldout_families_are_excluded():
+    issue, heldout, review = _candidate(1), _candidate(2), _candidate(3)
+    corpus = {
+        "o1": {"kind": "issue_opening"}, "o2": {"kind": "pull_request_opening"},
+        "o3": {"kind": "review_comment"},
+    }
+    got = protocol._query_only_training([issue, heldout, review], [], {heldout["family_group"]}, corpus)
+    assert [q["query_id"] for q in got] == [issue["query_id"]]
+    assert got[0]["target_doc"] is None and not got[0]["label_provenance"]["positive_label"]
+
+
 def test_confirmation_cannot_use_general_surface_loader(tmp_path):
     with pytest.raises(SystemExit, match="run_confirmation"):
         protocol.load_surface("confirmation", tmp_path)
