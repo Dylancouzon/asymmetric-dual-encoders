@@ -1,3 +1,12 @@
+# Cycle 1 quality result published — 2026-09-13
+
+Training remains active under PID50427. Cycle1 COVmacro0.525525, versus
+firstmidpoint0.519857; teacherretention94.40%. Allfourfamilies improved.
+Hash-verified raw result: results/m13_cov_cycle1.json. Summary: m13/QUALITY_PROGRESS.md.
+Latest observed step2,220,112 (~71.04Mexamples,35.5%) at1015ex/s. Nineteen verified
+off-host rollingbackups completed, latesttwo retained. No controllererrors; monitoractive.
+Nextscheduled COVmidpoint100Mexamples. Historical handoffs follow.
+
 # Same-suite M9 quality diagnostic completed
 
 `results/m13_m9_cov_diagnostic.json` PASSED in130.1seconds on localCPU only; no paid

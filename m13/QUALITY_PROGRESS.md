@@ -47,3 +47,17 @@ Full diagnostic: `results/m13_m9_cov_diagnostic.json`. Plan: `m13/COV_DIAGNOSTIC
 Code: `scripts/m13_m9_cov_diagnostic.py`. The initial attempt failed before scoring
 because it looked for caches in the worktree; its log/failure receipt are preserved.
 The successful attempt used the existing shared cache directory after integrity checks.
+
+## Cycle 1 complete — approximately 66.7M examples
+
+| Family | First midpoint | Cycle 1 end | Change |
+|---|---:|---:|---:|
+| BRIGHT | 0.184328 | 0.187885 | +0.003558 |
+| consumer-health | 0.713016 | 0.717428 | +0.004412 |
+| finance | 0.325429 | 0.335703 | +0.010274 |
+| legal | 0.856656 | 0.861085 | +0.004429 |
+| **Overall** | **0.519857** | **0.525525** | **+0.005668** |
+
+Teacher retention: **94.40%**. All four family point estimates improved. Midpoint and cycle-end readings occur at different learning-rate phases; this adjacent-point change is descriptive, not a same-phase regression test. Training entered cycle2.
+
+Artifact: `results/m13_cov_cycle1.json`, remote/local SHA256 `9658bbdcc41a86982de6239b8c04db2626ebde618c1e3037a9df7dbbed8c30e2`.
