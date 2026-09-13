@@ -1,0 +1,23 @@
+{
+  "_schema": "m19-development-pool-freeze-v1",
+  "cap": 3000,
+  "evidence_packet_bytes": 2184735,
+  "pool_manifest_bytes": 191096,
+  "quality_or_judgments_read": false,
+  "query_count": 60,
+  "review_authorization": {
+    "astra_go_sha256": "90640c9477a9723294fa136cdf48ed5020804508577a09a02f16822f89c312a1",
+    "implementation_go_sha256": "92487a1521ec7272f05c5693b9d6396a7b725de1f66a70646ac41f575bf2604b",
+    "review_scope_sha256": "4665a77f7327193ac3c03205e7257ded88d4c217afe9e360d1104e4e42a012e6"
+  },
+  "state": "judgments-in-progress",
+  "state_sha256": "4699529a6c1b946d3aad703bfcf53b5b446dd03752be1fd9f4a75c83e5e6131b",
+  "unique_query_artifact_items": 1376,
+  "within_cap": true,
+  "work_bindings": {
+    "evidence_packet": "abd6b47496423de275f663d8620ab4e4b895e36af2eb5a0f234bc65641368d69",
+    "metric_runs": "ec06ece1e3f0b04a7b3afde25c9a5d2ecf501721a45342b666916257f2775690",
+    "pool_manifest": "cf666c4e5a2226cf991d96e70900b5459d2bed0041c95d67c4c81ce3fbba1aaa",
+    "queries": "1fc2ac86a7921cf25005578099d91b1dce58fb13afd44fb0bfcd33e092bdd78d"
+  }
+}
