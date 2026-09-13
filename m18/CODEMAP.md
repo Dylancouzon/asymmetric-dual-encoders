@@ -15,7 +15,10 @@
 | `m18src/export.py`, `loader_np.py` | int8 bundle gates and standalone NumPy serving path |
 | `m18src/evaluate.py` | exact dense, BM25, DBSF@100 and paired bootstrap evaluation |
 | `m18src/diagnostic.py` | required step-500 training/export/V0 serving-parity receipt |
-| `m18src/bare_probe.py` | report-only v1/selected bare-term dense and DBSF top-10 comparison |
+| `m18src/bare_probe.py` | report-only v1/unselected-candidate bare-term dense and DBSF top-10 comparison |
+| `results/m18_system_manifest.json` | final system/encoder outcomes, immutable artifact bindings and query command |
+| `results/m18_confirmation*.json` | one-shot confirmation result, pre-read decision lock and complete read receipt |
+| `results/m18_bare_term_probe.json`, `m18_system_smoke.json` | report-only term comparison and live hybrid-query evidence |
 | `m18src/rehearse18.py` | one-command synthetic end-to-end rehearsal |
 | `work/m18/raw/` | immutable raw git/API snapshot (gitignored; receipts/hashes published) |
 | `work/m18/derived/` | parsed corpus, splits, qrels and indexes (gitignored; manifests published) |

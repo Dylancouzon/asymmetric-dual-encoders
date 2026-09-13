@@ -369,3 +369,31 @@
   hashes and binds the execution lock, index, protocol, evaluation recipe and development evidence.
   The confirmation CLI now verifies that binding before it can claim the sole read. T0 step 250 is
   predeclared only for the report-only bare-term comparison and cannot affect deployment.
+
+## 2026-09-13 — E23 one-shot confirmation completed
+
+- The pre-read decision lock has SHA-256
+  `3f8ce905260f8b821f1acf1598060b3bb9864c3287eeadd0dd168cee8bacb453`. It binds released Zero v1,
+  the encoder decision, execution lock, index/protocol/evaluation identities and every development
+  evidence hash before confirmation access.
+- The confirmation transaction completed exactly once. Its receipt has SHA-256
+  `3dceb77f9003a9d9dab9a59324d3c7517e9b2f29a6bf6d62037750ce1cdb3194`, records `reads: 1`, and
+  binds result SHA-256 `855fa1cee8c7b3d9ebfb9567732150e73c6589129e336fd99d63a5fab0e9c9ef`.
+- On 40 queries, stratum-macro nDCG@10 is 0.109163 BM25, 0.153176 released-v1 dense and 0.151445
+  v1+DBSF; Recall@10 is 0.200, 0.220 and 0.300 respectively. Error/troubleshooting scores zero for
+  all three routes on its ten-query slice. Because no trained candidate was eligible, candidate
+  confirmation gates are not applicable and the read does not reopen encoder selection.
+
+## 2026-09-13 — E24 system finalized
+
+- The report-only 21-term probe compares released v1 with the predeclared, unselected T0-step250
+  checkpoint and has no qrels. All 16 admitted terms change dense and fused rank order with mean
+  top-ten overlap 8.06. `k8s` and `s3` surface plausible project-memory targets; the five unsupported
+  requested terms remain unchanged. This qualitative probe cannot affect eligibility or deployment.
+- Three live DBSF queries passed against the final v1-backed system. `k8s readiness probes` ranks
+  the matching readiness issue first, and S3 snapshot/HNSW configuration prompts retrieve relevant
+  discussions. End-to-end latency was 173–264 ms on this host; this exact-search smoke is not a
+  production benchmark.
+- Final outcomes are `SYSTEM_READY` and `ENCODER_NO_IMPROVEMENT`. Registry confirmation state is
+  closed, further training is refused by status, and `results/m18_system_manifest.json` binds the
+  exact system inputs, evidence and invocation.

@@ -1,0 +1,82 @@
+{
+ "_schema": "m18-system-manifest-v1",
+ "scope": "internal Qdrant project memory; local execution only; no publication",
+ "outcomes": {
+  "system": "SYSTEM_READY",
+  "encoder": "ENCODER_NO_IMPROVEMENT"
+ },
+ "source": {
+  "repository": "qdrant/qdrant",
+  "commit": "5e32ea89cb5ea9a6827a68b27291d2e2251e1b1c",
+  "cutoff_utc": "2026-09-13T00:36:26Z",
+  "identity_sha256": "bea4737ff7844bb5e052237087f62801dd20cb7d7753a68e6f70bd006f561349",
+  "manifest_sha256": "435b8c3a4ce301f6c662a2a7c7147ffed1e073f1dda9e49ede1b3beeccf20f25"
+ },
+ "corpus": {
+  "records": 105025,
+  "indexable_documents": 79269,
+  "artifacts": 11574,
+  "identity_sha256": "0cede39eb47b5680ef0f560917bd93ec78d02ac0e607ae0c4209d98f4430f394",
+  "manifest_sha256": "fc21a2bb54db3a34ad4a116d639a1bdbc04de5ffd74510c38f2f7831db22c804"
+ },
+ "index": {
+  "identity_sha256": "a710f91a7b19f27a2f7251e369199dc0bc9fcfd56bf080bf31c3c01124fd368e",
+  "manifest_sha256": "037a9e3f5ccf7be1264ba50f427d6f062bc6e2cdfbaeeaa2c538ef7c23a11025",
+  "document_encoder": "NovaSearch/stella_en_400M_v5@ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+  "documents": 79269,
+  "vector_shape": [79269, 1024],
+  "vector_dtype": "float16",
+  "lexical": "bm25s lucene k1=1.2 b=0.75",
+  "fusion": "DBSF@100"
+ },
+ "protocol": {
+  "identity_sha256": "6e40a662748f180ca77e514754daed3b5e8357f44a5cdb83be8f759d7db6bb56",
+  "manifest_sha256": "0f0a8942ebac663a81f07c8204351fa26065ee4c7fd29d2928fc08d016260d9c",
+  "training_queries": 785,
+  "development_queries": 100,
+  "confirmation_queries": 40,
+  "clear_adjudicated_pairs": 140,
+  "train_heldout_leakage_counts": {
+   "family": 0,
+   "artifact": 0,
+   "answer_digest": 0
+  }
+ },
+ "selected_query_encoder": {
+  "name": "zero_v1",
+  "path": "/home/dylan/asymetric-dual-encoders/work/release/zero-v1",
+  "model_file": "model.npz",
+  "model_sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
+  "tokenizer_sha256": "997eaeff157a7d4db899b8f2278ad3db6e323e609ae956b9c5035550f581eeee",
+  "config_sha256": "fd784397925e9ec32b6f1412af85b46faea79bb618b17197dc6d3a0068669636"
+ },
+ "decision": {
+  "execution_lock_sha256": "3251a72c573d171cbb6544eb83ea10052beb29a744e883498e48122de52754da",
+  "encoder_decision_sha256": "16cbdb42dd648fe22d3035e61b9860fe71d579913ba21e1a4b70372df33cbd07",
+  "best_development_dense_delta": 0.007591041912759868,
+  "best_development_fused_delta": 0.002952562372739414,
+  "required_dense_delta": 0.005,
+  "required_fused_delta": 0.01,
+  "second_seed": "not_applicable_no_first_seed_candidate_met_both_practical_margins"
+ },
+ "confirmation": {
+  "reads": 1,
+  "decision_lock_sha256": "3f8ce905260f8b821f1acf1598060b3bb9864c3287eeadd0dd168cee8bacb453",
+  "read_receipt_sha256": "3dceb77f9003a9d9dab9a59324d3c7517e9b2f29a6bf6d62037750ce1cdb3194",
+  "result_sha256": "855fa1cee8c7b3d9ebfb9567732150e73c6589129e336fd99d63a5fab0e9c9ef",
+  "stratum_macro": {
+   "bm25": {"mrr_at_10": 0.08116666666666666, "ndcg_at_10": 0.10916331377937291, "recall_at_10": 0.2},
+   "zero_v1_dense": {"mrr_at_10": 0.1325, "ndcg_at_10": 0.1531761800914646, "recall_at_10": 0.22000000000000003},
+   "zero_v1_dbsf": {"mrr_at_10": 0.10455555555555555, "ndcg_at_10": 0.15144506105457198, "recall_at_10": 0.3}
+  }
+ },
+ "evidence": {
+  "development_baselines_sha256": "e495b1f856b859fa40808c83a6b24e7c494ce5e2325d4711b8d9fcacbd90ca02",
+  "t0_screen_sha256": "12a4a72f460b01360cf820f1ba4c4b46e39db32d9f054b21ad49a9d6410ff5d7",
+  "t2_screen_sha256": "5055e3c19e2642e99a0b4c552da75090fd362a468c28a9862d8f3e2a89528730",
+  "parity_sha256": "a623d14ba7085155f54831b79825b98493462d0d0a535d508a75f0a6be55aba4",
+  "bare_term_probe_sha256": "4ff1887441e11c9d538376fb4376a4f99aab5714afb060d5f58c3923da4e8ef9",
+  "system_smoke_sha256": "2c321da59befee61980189921ee4f4b7a5a88863964e8dc654bdac18dc08bc05"
+ },
+ "query_command": "/home/dylan/asymetric-dual-encoders/.venv/bin/python m18src/system.py query \"QUERY\" --bundle /home/dylan/asymetric-dual-encoders/work/release/zero-v1 --limit 10"
+}

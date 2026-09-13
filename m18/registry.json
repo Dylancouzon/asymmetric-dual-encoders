@@ -1,6 +1,7 @@
 {
   "_schema": "m18-registry-v1",
-  "status": "LOCKED_EXECUTABLE",
+  "status": "SYSTEM_READY_ENCODER_NO_IMPROVEMENT",
+  "final_outcomes": {"system": "SYSTEM_READY", "encoder": "ENCODER_NO_IMPROVEMENT"},
   "execution_lock_sha256": "3251a72c573d171cbb6544eb83ea10052beb29a744e883498e48122de52754da",
   "date": "2026-09-12",
   "scope": "internal Qdrant project memory; local execution only; no publication",
@@ -92,5 +93,5 @@
   "serving": {"dtype": "int8_per_row_symmetric", "normalized_dim": 1024, "loader_parity_max_abs": 0.000001, "int8_error_max_abs": 0.02, "primary_mode": "BM25+dense DBSF@100"},
   "local_budget": {"host": "RTX 3080 10 GiB", "compute_hours_max": 24, "exclude_github_wait": true},
   "protected_access": {"m7_m13_spent_or_reserved_surfaces": false, "forbidden": ["results/perquery.json", "results/frozen_eval/untouched-*", "reserved qrels caches", "work/m9reserve", "LoTTE payloads"]},
-  "observations": {"development_read": true, "confirmation_read": false, "training_started": true}
+  "observations": {"development_read": true, "confirmation_read": true, "training_started": true}
 }

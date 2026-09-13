@@ -1,8 +1,10 @@
 # M18 execution plan
 
 M18 builds two independent internal artifacts: a pinned Qdrant project-memory system and a
-specialized Zero query table. The system ships with released Zero v1 if no specialized table is
-eligible. Nothing in M18 changes the public release.
+specialized Zero query table. Execution is complete: the system ships with released Zero v1 because
+no specialized table was eligible. Nothing in M18 changes the public release. Realized held-out
+counts are 100 development and 40 confirmation queries; the smaller clear-only pool is disclosed
+instead of being filled.
 
 ## Ordered execution
 
@@ -28,7 +30,8 @@ eligible. Nothing in M18 changes the public release.
    diagnostic trajectory is identical to a resumable full run.
 7. Read T0 steps 250/500. If both dense and fusion trail V0-Q, run the mandated parity report and
    stop learned arms when parity passes. Otherwise evaluate T1/T2 step 0, skip inert transforms,
-   screen the fixed arms, and confirm the chosen form with seed 1.
+   screen the fixed arms, and confirm an eligible chosen form with the second seed. No form was
+   eligible in the realized run, so the second seed was not applicable.
 8. Lock the recipe/checkpoint, read confirmation exactly once, export the best eligible internal
    int8 bundle (or retain v1), finalize the hybrid query command and record both final outcomes.
 
@@ -49,4 +52,3 @@ remain independently visible.
 All work runs on this RTX 3080 host. Preparation is sized at two sample scales before a long job.
 The maximum local-compute clock is 24 hours, excluding GitHub export wait. Atomic stage receipts,
 resumable pagination, cache identities, checkpoints, host/GPU peaks and elapsed time are required.
-
