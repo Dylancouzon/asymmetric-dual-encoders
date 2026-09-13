@@ -1,0 +1,13 @@
+{
+  "_schema": "m19-development-primary-judgment-v1",
+  "access_declaration": "Read only the frozen judgment policy and blinded evidence packet; wrote create-only primary batch checkpoints and the final label map; no pool manifest, metric runs, confirmation data, prior evaluations, source repository, web, external labels, qrels, or additional judges were accessed.",
+  "evidence_packet_sha256": "abd6b47496423de275f663d8620ab4e4b895e36af2eb5a0f234bc65641368d69",
+  "item_count": 1376,
+  "judgment_policy_sha256": "e3fe66079489d3ff524baef46abd5007c75ac11e76b2534d29de9d2bf85417c0",
+  "labels_sha256": "4edcc3cf2052841596fe2f67ec6fb0819d4bb1979f5e27930256670813cfb9a4",
+  "label_type_validation": true,
+  "packet_hash_unchanged": true,
+  "query_item_coverage_exact": true,
+  "reviewer_id": "astra-m19-development-primary-01",
+  "state": "complete"
+}
