@@ -344,3 +344,13 @@
 - Fusion did not follow the dense gain. Its best macro nDCG@10 delta was +0.002953 at steps 250 and
   500; steps 1,000/2,000/4,000 yielded +0.000245, +0.000245 and +0.000717. No T0 checkpoint meets
   the required +0.010 fused margin, so none is eligible. T2 is the only remaining non-inert arm.
+
+## 2026-09-13 — E21 T2 first-seed screen complete
+
+- T2 completed the same 4,000-step schedule. Its losses differ slightly from T0, but every dense
+  and fused per-query metric is exactly equal to T0 at all six checkpoints. It therefore has zero
+  fused replacement delta, below the required +0.005, and the simpler raw-text T0 dominates it.
+- No V0, T0 or T2 form meets both encoder eligibility margins. The provisional result is
+  `ENCODER_NO_IMPROVEMENT`, with released v1 retained in the hybrid project-memory system. A second
+  seed is not launched because there is no eligible trained form to confirm. Astra is independently
+  auditing this decision before the confirmation recipe is locked.

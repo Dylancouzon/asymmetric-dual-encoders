@@ -24,7 +24,9 @@ preparation are archived and the changed V0 baseline has been read. A pre-optimi
 batch 256 with the existing deterministic cross-epoch sampler and corrected duplicate alias-pair
 handling; the realized alias-consistency loss is inactive because no complete pair survives the
 trainable-query filter. T0 completed 4,000 steps: its best dense delta clears the dense margin, but
-its best fused delta is only +0.002953 and no checkpoint is eligible. T1 is skipped as inert. The
-single remaining T2 first-seed screen is running; confirmation remains unread.
+its best fused delta is only +0.002953 and no checkpoint is eligible. T1 is skipped as inert, and
+T2 is per-query identical to T0 at every checkpoint, so it cannot replace the simpler arm. The
+provisional encoder result is `NO_IMPROVEMENT`; Astra is auditing the decision before the one-shot
+confirmation read.
 
 Pointers: `instructions-m18.md`, `m18/registry.json`, `m18/LEDGER.md`, `m18/CODEMAP.md`.
