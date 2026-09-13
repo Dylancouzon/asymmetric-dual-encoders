@@ -21,18 +21,20 @@ stable meaning and three artifact-grounded intent axes. Roster lock identity:
 `8170f9b0432d4b7460601e1dbf39536d99b1e4af026d9a3afef649a9c89ef892`.
 
 The v1 and v2 receipts remain preserved and superseded; v3's selected AddedToken audit contains
-exactly 12 rows/IDs and a final vocabulary of 30,534. Astra returned `GO` for stage-3 implementation.
-No retrieval quality or M18 protocol surface was accessed. Next: implement deterministic rows,
-artifact collapse, metrics and the synthetic confirmation state machine before authoring query text.
+exactly 12 rows/IDs and a final vocabulary of 30,534. Astra returned `GO` for entering stage-3
+implementation. No retrieval quality or M18 protocol surface was accessed.
 
 Stage 3 now includes deterministic V0/T0 row algebra, inherited-row-preserving int8 assembly,
 verified complete-bundle loading, artifact collapse/DBSF, derived eligibility, blinded judgment
 freezing and the authenticated one-shot transaction. The v2 one-command rehearsal rebuilds a real
 synthetic compact bundle, independently recomputes development eligibility, interrupts at the
 judgment boundary, reloads bound inputs from disk, then freezes qrels and computes metrics inside
-the transaction. The 61-test M19 suite passes.
+the transaction. After the second remediation, the 63-test M19 suite passes and the immutable v3
+rehearsal result uses the corrected v2 schema.
 
 The first independent implementation review returned `NO-GO` with five P1 findings. Commit
 `406cde3` closed bundle, judgment and metric input trust; `502fd7c` closed decision authentication,
-transaction-owned qrel/metric creation and caller-asserted completion. No prospective query text or
-real judgment data has been created. A bounded implementation re-review is the next gate.
+transaction-owned qrel/metric creation and caller-asserted completion. The first re-review remained
+`NO-GO`; `1d698e0` then bound deterministic rows/serving gates and review-GO contents, derived query
+authors from sealed bytes, and joined all scored top-tens to the judged union. No prospective query
+text or real judgment data has been created. A second bounded implementation re-review is next.
