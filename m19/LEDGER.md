@@ -182,3 +182,10 @@
   `0.9956`/`0.9696`. All seven checks pass. The original v1 receipt remains preserved as superseded.
 - The full M19 suite has 71 passing tests. No rankings, judgments, quality metrics or confirmation
   content were opened or stored.
+
+## 2026-09-13 — stage-5 Astra closure GO
+
+- Astra accepted all three P1 dispositions at exact commit `9dcddb8` after 17 targeted tests, 70
+  independent full-sort tie/exclusion comparisons and exact receipt/bundle reconciliation.
+- No P0/P1 remains in the closure scope. The three documented P2 qualifications do not block the
+  fixed ten-query pool-cost pilot. This GO does not authorize real judging or confirmation.

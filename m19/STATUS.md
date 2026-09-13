@@ -66,4 +66,6 @@ payload digests are cross-checked against the build identity, benchmark inputs a
 confirmation, and the timed route uses float32 scores, exclusions before depth and exact passage-ID
 ties against the released V1 loader. The superseding 10,000-query v2 run passes every registered
 gate: encoder median/p95 ratios are `0.9580`/`1.0370`, end-to-end ratios are `0.9956`/`0.9696`, and
-released-loader parity is `2.24e-8`. Bounded re-review is next; real judgments remain unauthorized.
+released-loader parity is `2.24e-8`. Astra's bounded closure pass returned `GO` with no remaining
+P0/P1 and authorizes the ten-query pool-cost pilot. Real judgments remain unauthorized until the
+separate implementation reviewer also returns `GO`.
