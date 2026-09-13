@@ -1,3 +1,12 @@
+# Second scheduled midpoint quality published — 2026-09-13
+
+COV at100M examples: 0.523005, up+0.003147 versus the first
+midpoint. No regression strike; teacherretention93.94%.
+Rawresultresults/m13_cov_mid3124999.json; summarym13/QUALITY_PROGRESS.md.
+Latest training observationstep3,205,908 (~102.59M examples,51.3%) at1000ex/s,
+PID50427 RUNNING;28 verified backups,latesttwo retained;monitoractive,noerrors.
+Nextscheduled cycle2end~133.3M examples. Historical handoffs follow.
+
 # Latest descriptive CPU COV read — approximately79.54M examples
 
 User-requested COV CPU evaluation PASSED in131.1seconds. CurrentM130.518099

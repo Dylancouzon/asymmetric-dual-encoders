@@ -89,3 +89,17 @@ and M9/M13 training-history caveats above still apply.
 Result: `results/m13_current_cov_cpu.json`. Plan: `m13/COV_CURRENT_CPU.json`.
 Checkpoint SHA256: `f350a0a7babe8dab059876e03cbf1fc9c0c9bc09b8e194524ed4ea6481bcd2df`. Checkpoint copy is retained locally
 under `work/m13-side-eval/current_cpu_checkpoint.pt`, separate from rolling-backup pruning.
+
+## Second scheduled midpoint — approximately100M examples
+
+| Family | First midpoint | Second midpoint | Change |
+|---|---:|---:|---:|
+| BRIGHT | 0.184328 | 0.186623 | +0.002295 |
+| consumer-health | 0.713016 | 0.718283 | +0.005266 |
+| finance | 0.325429 | 0.331493 | +0.006065 |
+| legal | 0.856656 | 0.855619 | -0.001037 |
+| **Overall** | **0.519857** | **0.523005** | **+0.003147** |
+
+Teacher retention93.94%. Same-phase midpoint improved; no regression strike. Versus the previous annealed cycle end, change-0.002521; different learning-rate phases. Training continues.
+
+Raw result: `results/m13_cov_mid3124999.json`. Remote/local SHA256 `549ad9206c8eb782feca82993a7692b8eb2e9bb2d1fa9fd5c15083fc7faf478d` verified.
