@@ -29,6 +29,7 @@ def _fixture():
         "terms": [{"term": "k8s"}],
         "selected_added_token_audit": {
             "term_ids": {"k8s": 7}, "inherited_vocab_sha256": sha_json(base_vocab),
+            "base_vocab": 7, "final_vocab": 8,
         },
     }
     teacher = {"k8s": np.array([0.2, 0.7, -0.1, 0.4], dtype=np.float32)}
@@ -43,6 +44,33 @@ def _config():
         "weights_folded": True,
         "learned_weights": False,
         "document_encoder": {"dim": 4},
+    }
+
+
+def _verification(payload, codes, scales, roster):
+    pooling = {
+        "fallback_token_id": _config()["fallback_token_id"],
+        "learned_weights": _config()["learned_weights"],
+        "preproc": _config()["preproc"],
+        "weights_folded": _config()["weights_folded"],
+    }
+    roster = {**roster, "identity_sha256": "9" * 64}
+    return {
+        "base_codes": codes, "base_scales": scales, "base_tokenizer_payload": payload,
+        "roster": roster, "inheritance_identity": "8" * 64,
+        "pooling_identity_sha256": sha_json(pooling),
+    }
+
+
+def _provenance(verification):
+    return {
+        "inheritance_identity": verification["inheritance_identity"],
+        "roster_identity": verification["roster"]["identity_sha256"],
+        "base_codes_sha256": zero.sha_array(verification["base_codes"]),
+        "base_scales_sha256": zero.sha_array(verification["base_scales"]),
+        "base_tokenizer_sha256": zero.sha_bytes(verification["base_tokenizer_payload"]),
+        "pooling_identity_sha256": verification["pooling_identity_sha256"],
+        "selected_added_token_audit": verification["roster"]["selected_added_token_audit"],
     }
 
 
@@ -89,8 +117,9 @@ def test_bundle_payload_keeps_pooling_values_and_only_compact_arrays():
     payload, codes, scales, roster, teacher = _fixture()
     built = zero.construct_added_rows(codes, scales, payload, roster, teacher)
     new_codes, new_scales = zero.compact_table(codes, scales, built["T0-teacher"])
+    verification = _verification(payload, codes, scales, roster)
     bundle = zero.bundle_payload("T0-teacher", new_codes, new_scales, built["tokenizer"],
-                                 _config(), {"roster": "fixture"})
+                                 _config(), _provenance(verification))
     assert set(bundle["model"]) == {"rows_int8", "int8_scale"}
     assert bundle["config"]["preproc"] == _config()["preproc"]
     assert bundle["config"]["fallback_token_id"] == 1
@@ -100,8 +129,9 @@ def test_deterministic_bundle_bytes_and_resumable_publication(tmp_path, monkeypa
     payload, codes, scales, roster, teacher = _fixture()
     built = zero.construct_added_rows(codes, scales, payload, roster, teacher)
     new_codes, new_scales = zero.compact_table(codes, scales, built["T0-teacher"])
+    verification = _verification(payload, codes, scales, roster)
     bundle = zero.bundle_payload("T0-teacher", new_codes, new_scales, built["tokenizer"],
-                                 _config(), {"roster": "fixture"})
+                                 _config(), _provenance(verification))
     assert zero.bundle_files(bundle) == zero.bundle_files(bundle)
     monkeypatch.setattr(zero, "admit_write", lambda path: Path(path))
     monkeypatch.setattr(zero, "admit_read", lambda path: Path(path))
@@ -116,8 +146,8 @@ def test_deterministic_bundle_bytes_and_resumable_publication(tmp_path, monkeypa
     monkeypatch.setattr(zero, "atomic_create_bytes", create)
     monkeypatch.setattr(zero, "sha_file", lambda path: zero.sha_file_unchecked(path))
     out = tmp_path / "bundle"
-    first = zero.publish_bundle(out, bundle)
-    second = zero.publish_bundle(out, bundle)
+    first = zero.publish_bundle(out, bundle, verification=verification)
+    second = zero.publish_bundle(out, bundle, verification=verification)
     assert first == second
     assert first["resident_table_bytes"] == new_codes.nbytes + new_scales.nbytes
 
@@ -127,4 +157,30 @@ def test_incomplete_bundle_is_not_readable(tmp_path, monkeypatch):
     out.mkdir()
     monkeypatch.setattr(zero, "admit_read", lambda path: Path(path))
     with pytest.raises(SystemExit, match="incomplete"):
-        zero.verify_bundle(out)
+        zero.verify_bundle(out, verification={})
+
+
+def test_loader_refuses_incomplete_or_inheritance_wrong_bundle(tmp_path, monkeypatch):
+    payload, codes, scales, roster, teacher = _fixture()
+    verification = _verification(payload, codes, scales, roster)
+    built = zero.construct_added_rows(codes, scales, payload, roster, teacher)
+    new_codes, new_scales = zero.compact_table(codes, scales, built["T0-teacher"])
+    bundle = zero.bundle_payload("T0-teacher", new_codes, new_scales, built["tokenizer"],
+                                 _config(), _provenance(verification))
+    monkeypatch.setattr(zero, "admit_write", lambda path: Path(path))
+    monkeypatch.setattr(zero, "admit_read", lambda path: Path(path))
+    monkeypatch.setattr(zero, "load_json", lambda path: json.loads(Path(path).read_text()))
+    monkeypatch.setattr(zero, "atomic_create_bytes", lambda path, content: (
+        Path(path).parent.mkdir(parents=True, exist_ok=True), Path(path).write_bytes(content)
+    ))
+    monkeypatch.setattr(zero, "sha_file", lambda path: zero.sha_file_unchecked(path))
+    out = tmp_path / "bundle"
+    zero.publish_bundle(out, bundle, verification=verification)
+    loaded = zero.M19QueryEncoder.from_bundle(out, verification=verification)
+    assert loaded.codes.shape == new_codes.shape
+    wrong = {**verification, "inheritance_identity": "7" * 64}
+    with pytest.raises(SystemExit, match="provenance differs"):
+        zero.M19QueryEncoder.from_bundle(out, verification=wrong)
+    (out / "complete.json").unlink()
+    with pytest.raises(SystemExit, match="incomplete"):
+        zero.M19QueryEncoder.from_bundle(out, verification=verification)

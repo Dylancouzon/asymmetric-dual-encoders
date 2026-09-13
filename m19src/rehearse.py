@@ -131,19 +131,23 @@ def run_rehearsal(root=None):
         if state == "judgments-in-progress":
             tx.checkpoint_judgment_batch("primary-01", primary_path)
             tx.checkpoint_judgment_batch("audit-01", audit_path)
-            qrels = judgments.freeze_binary_labels(
-                packet, primary, {}, agreement, primary_reviewer_id="synthetic-primary",
-                auditor_id="synthetic-auditor", query_author_ids={"synthetic-author"},
+            frozen = judgments.freeze_binary_labels(
+                packet, primary, audit, auditor, {}, primary_reviewer_id="synthetic-primary",
+                auditor_id="synthetic-auditor",
+                query_authors={"synthetic-q1": "synthetic-author"},
             )
+            qrels = frozen["qrels"]
             qrels_path = common.CONFIRMATION_WORK / "qrels.json"
             _write_or_verify(qrels_path, qrels)
             tx.freeze_qrels({"qrels": qrels_path}, batch_ids=["primary-01", "audit-01"])
             state = "qrels-frozen"
         else:
-            qrels = judgments.freeze_binary_labels(
-                packet, primary, {}, agreement, primary_reviewer_id="synthetic-primary",
-                auditor_id="synthetic-auditor", query_author_ids={"synthetic-author"},
+            frozen = judgments.freeze_binary_labels(
+                packet, primary, audit, auditor, {}, primary_reviewer_id="synthetic-primary",
+                auditor_id="synthetic-auditor",
+                query_authors={"synthetic-q1": "synthetic-author"},
             )
+            qrels = frozen["qrels"]
 
         if state == "qrels-frozen":
             selected = {spec["query_id"]: [

@@ -149,8 +149,9 @@ class M19QueryEncoder:
         self.fallback_id = int(config["fallback_token_id"])
 
     @classmethod
-    def from_bundle(cls, bundle):
+    def from_bundle(cls, bundle, *, verification):
         bundle = Path(bundle)
+        verify_bundle(bundle, verification=verification)
         config = load_json(bundle / "config.json")
         with np.load(admit_read(bundle / "model.npz")) as archive:
             codes = np.asarray(archive["rows_int8"], dtype=np.int8).copy()
@@ -216,6 +217,13 @@ def algebra_gates(base_codes, base_scales, built, teacher_vectors, registry=None
 
 def bundle_payload(variant, codes, scales, tokenizer, base_config, provenance):
     """Return immutable bundle components; the transaction publisher owns filesystem writes."""
+    required = {
+        "inheritance_identity", "roster_identity", "base_codes_sha256",
+        "base_scales_sha256", "base_tokenizer_sha256", "pooling_identity_sha256",
+        "selected_added_token_audit",
+    }
+    if required - set(provenance):
+        raise ValueError(f"bundle provenance missing {sorted(required - set(provenance))}")
     config = {
         "_schema": "m19-internal-zero-bundle-v1",
         "internal_only": True,
@@ -311,7 +319,7 @@ def _publish_file(path, content):
             raise SystemExit(f"M19 BUNDLE REFUSED: competing file differs: {path}")
 
 
-def publish_bundle(out_dir, payload):
+def publish_bundle(out_dir, payload, *, verification):
     """Resumably publish immutable files; ``complete.json`` is always last."""
     out = Path(admit_write(out_dir))
     try:
@@ -323,10 +331,35 @@ def publish_bundle(out_dir, payload):
     for name in ("model.npz", "config.json", "tokenizer.json", "provenance.json"):
         _publish_file(out / name, files[name])
     _publish_file(out / "complete.json", files["complete.json"])
-    return verify_bundle(out)
+    return verify_bundle(out, verification=verification)
 
 
-def verify_bundle(bundle, base_codes=None, base_scales=None):
+def _verify_context(provenance, verification):
+    required = {
+        "base_codes", "base_scales", "base_tokenizer_payload", "roster",
+        "inheritance_identity", "pooling_identity_sha256",
+    }
+    if required - set(verification):
+        raise ValueError(f"bundle verification missing {sorted(required - set(verification))}")
+    base_codes = np.asarray(verification["base_codes"], dtype=np.int8)
+    base_scales = np.asarray(verification["base_scales"], dtype=np.float32)
+    roster = verification["roster"]
+    roster_identity = roster.get("identity_sha256") or sha_json(roster)
+    expected = {
+        "inheritance_identity": verification["inheritance_identity"],
+        "roster_identity": roster_identity,
+        "base_codes_sha256": sha_array(base_codes),
+        "base_scales_sha256": sha_array(base_scales),
+        "base_tokenizer_sha256": sha_bytes(verification["base_tokenizer_payload"]),
+        "pooling_identity_sha256": verification["pooling_identity_sha256"],
+        "selected_added_token_audit": roster["selected_added_token_audit"],
+    }
+    if any(provenance.get(key) != value for key, value in expected.items()):
+        raise SystemExit("M19 BUNDLE REFUSED: provenance differs from verified inheritance/roster")
+    return base_codes, base_scales, roster
+
+
+def verify_bundle(bundle, *, verification):
     bundle = Path(bundle)
     complete_path = admit_read(bundle / "complete.json")
     if not complete_path.is_file():
@@ -339,6 +372,16 @@ def verify_bundle(bundle, base_codes=None, base_scales=None):
         if sha_file(bundle / name) != expected:
             raise SystemExit(f"M19 BUNDLE REFUSED: {name} differs from completion manifest")
     config = load_json(bundle / "config.json")
+    provenance = load_json(bundle / "provenance.json")
+    base_codes, base_scales, roster = _verify_context(provenance, verification)
+    pooling = {
+        "fallback_token_id": config["fallback_token_id"],
+        "learned_weights": config["learned_weights"],
+        "preproc": config["preproc"],
+        "weights_folded": config["weights_folded"],
+    }
+    if sha_json(pooling) != verification["pooling_identity_sha256"]:
+        raise SystemExit("M19 BUNDLE REFUSED: inherited pooling identity changed")
     with np.load(admit_read(bundle / "model.npz")) as archive:
         codes = np.asarray(archive["rows_int8"], dtype=np.int8)
         scales = np.asarray(archive["int8_scale"], dtype=np.float32)
@@ -346,13 +389,23 @@ def verify_bundle(bundle, base_codes=None, base_scales=None):
             raise SystemExit("M19 BUNDLE REFUSED: unexpected/eager table array")
         if codes.shape != (config["vocab"], config["dim"]) or scales.shape != (config["vocab"],):
             raise SystemExit("M19 BUNDLE REFUSED: table/config shape mismatch")
-        if base_codes is not None and not np.array_equal(codes[:len(base_codes)], base_codes):
+        if not np.array_equal(codes[:len(base_codes)], base_codes):
             raise SystemExit("M19 BUNDLE REFUSED: inherited row codes changed")
-        if base_scales is not None and not np.array_equal(scales[:len(base_scales)], base_scales):
+        if not np.array_equal(scales[:len(base_scales)], base_scales):
             raise SystemExit("M19 BUNDLE REFUSED: inherited row scales changed")
     tokenizer = Tokenizer.from_file(str(admit_read(bundle / "tokenizer.json")))
     if tokenizer.get_vocab_size(with_added_tokens=True) != config["vocab"]:
         raise SystemExit("M19 BUNDLE REFUSED: tokenizer/table size mismatch")
+    base = Tokenizer.from_str(verification["base_tokenizer_payload"].decode("utf-8"))
+    base_vocab = base.get_vocab(with_added_tokens=True)
+    extended_vocab = tokenizer.get_vocab(with_added_tokens=True)
+    if any(extended_vocab.get(token) != token_id for token, token_id in base_vocab.items()):
+        raise SystemExit("M19 BUNDLE REFUSED: inherited tokenizer IDs changed")
+    audit = roster["selected_added_token_audit"]
+    if ({term: extended_vocab.get(term) for term in audit["term_ids"]} != audit["term_ids"] or
+            len(extended_vocab) != audit["final_vocab"] or
+            len(base_vocab) != audit["base_vocab"]):
+        raise SystemExit("M19 BUNDLE REFUSED: selected AddedToken audit changed")
     return {
         "identity_sha256": complete["identity_sha256"],
         "variant": complete["variant"],

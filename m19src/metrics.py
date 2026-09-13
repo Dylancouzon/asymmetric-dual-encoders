@@ -12,6 +12,11 @@ METRICS = ("precision_at_10", "ndcg_at_10", "pooled_recall_at_10", "mrr_at_10", 
 
 def score_query(ranked_artifact_ids, qrels, k=10):
     ranked = list(ranked_artifact_ids)[:k]
+    if len(ranked) != len(set(map(str, ranked))):
+        raise ValueError("ranked artifacts must be unique")
+    if any(type(label) is not int or label not in (0, 1) for label in qrels.values()):
+        raise ValueError("qrels must contain exact binary integer labels")
+    ranked = list(map(str, ranked))
     positive = {str(artifact) for artifact, label in qrels.items() if int(label) == 1}
     gains = [1 if artifact in positive else 0 for artifact in ranked]
     dcg = sum(gain / math.log2(rank + 2) for rank, gain in enumerate(gains))
@@ -149,3 +154,60 @@ def eligibility(*, dense_candidate, dense_v1, hybrid_delta, ndcg_delta, numeric_
         "supporting_passages": bool(supporting_passage_audit),
     }
     return {"eligible": all(checks.values()), "checks": checks, "paired_precision": paired}
+
+
+def evaluate_frozen(runs, qrels, query_specs, rules, supporting_passage_checks):
+    """Derive all registered eligibility inputs from complete frozen runs and qrels."""
+    required = {"dense_candidate", "dense_v1", "hybrid_candidate", "hybrid_v1"}
+    if set(runs) != required:
+        raise ValueError(f"evaluation requires exact run roles {sorted(required)}")
+    query_ids = {row["query_id"] for row in query_specs}
+    if set(qrels) != query_ids or any(set(run) != query_ids for run in runs.values()):
+        raise ValueError("frozen evaluation inputs have different query coverage")
+    per_system = {name: score_run(run, qrels) for name, run in sorted(runs.items())}
+    dense_paired = paired_differences(
+        per_system["dense_candidate"], per_system["dense_v1"], query_specs
+    )
+    dense_ndcg = paired_differences(
+        per_system["dense_candidate"], per_system["dense_v1"], query_specs,
+        metric="ndcg_at_10",
+    )["fixed_roster_mean"]
+    hybrid_delta = paired_differences(
+        per_system["hybrid_candidate"], per_system["hybrid_v1"], query_specs
+    )["fixed_roster_mean"]
+    numeric_delta = slice_term_macro_delta(
+        per_system["dense_candidate"], per_system["dense_v1"], query_specs,
+        lambda row: bool(set(row.get("tags") or []) & {"numeric", "version"}),
+    )
+    longer_delta = slice_term_macro_delta(
+        per_system["dense_candidate"], per_system["dense_v1"], query_specs,
+        lambda row: row["primary_class"] == "longer_control",
+    )
+    required_support = set()
+    for query_id, delta in dense_paired["per_query"].items():
+        if delta <= 0:
+            continue
+        positives = {str(a) for a, label in qrels[query_id].items() if label == 1}
+        required_support.update(
+            (query_id, str(artifact)) for artifact in runs["dense_candidate"][query_id][:10]
+            if str(artifact) in positives
+        )
+    supplied = {(str(query), str(artifact)): bool(value)
+                for (query, artifact), value in supporting_passage_checks.items()}
+    support_pass = all(supplied.get(item, False) for item in required_support)
+    decision = eligibility(
+        dense_candidate=per_system["dense_candidate"], dense_v1=per_system["dense_v1"],
+        hybrid_delta=hybrid_delta, ndcg_delta=dense_ndcg,
+        numeric_version_delta=numeric_delta, longer_delta=longer_delta,
+        supporting_passage_audit=support_pass, query_specs=query_specs, rules=rules,
+    )
+    return {
+        "_schema": "m19-frozen-evaluation-v1", "per_system": per_system,
+        "derived": {
+            "hybrid_precision_delta": hybrid_delta, "short_ndcg_delta": dense_ndcg,
+            "numeric_version_delta": numeric_delta, "longer_delta": longer_delta,
+            "required_supporting_passages": [list(item) for item in sorted(required_support)],
+            "supporting_passage_audit": support_pass,
+        },
+        "eligibility": decision,
+    }

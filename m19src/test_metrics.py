@@ -70,3 +70,35 @@ def test_score_run_refuses_missing_queries():
 def test_empty_safety_slice_is_refused():
     with pytest.raises(ValueError, match="empty"):
         metrics.slice_term_macro_delta({}, {}, _specs(), lambda row: "numeric" in row.get("tags", []))
+
+
+def test_metrics_refuse_duplicate_runs_and_nonbinary_qrels():
+    with pytest.raises(ValueError, match="unique"):
+        metrics.score_query(["a", "a"], {"a": 1})
+    with pytest.raises(ValueError, match="binary"):
+        metrics.score_query(["a"], {"a": 2})
+
+
+def test_frozen_evaluator_derives_slices_and_support_gate():
+    specs = [
+        {"query_id": "a-s", "term": "a", "primary_class": "short_context", "tags": []},
+        {"query_id": "a-l", "term": "a", "primary_class": "longer_control",
+         "tags": ["version"]},
+        {"query_id": "b-s", "term": "b", "primary_class": "short_context", "tags": []},
+        {"query_id": "b-l", "term": "b", "primary_class": "longer_control",
+         "tags": ["numeric"]},
+    ]
+    qrels = {row["query_id"]: {"good": 1, "bad": 0} for row in specs}
+    candidate = {row["query_id"]: ["good"] for row in specs}
+    baseline = {row["query_id"]: ["bad"] for row in specs}
+    runs = {"dense_candidate": candidate, "dense_v1": baseline,
+            "hybrid_candidate": candidate, "hybrid_v1": baseline}
+    rules = {"short_precision_delta_minimum": 0.03, "net_term_wins_minimum": 1,
+             "hybrid_precision_delta_minimum": -0.01,
+             "numeric_version_control_delta_minimum": -0.02,
+             "longer_control_delta_minimum": -0.02}
+    support = {("a-s", "good"): True, ("b-s", "good"): True}
+    result = metrics.evaluate_frozen(runs, qrels, specs, rules, support)
+    assert result["eligibility"]["eligible"]
+    result = metrics.evaluate_frozen(runs, qrels, specs, rules, {})
+    assert not result["eligibility"]["eligible"]

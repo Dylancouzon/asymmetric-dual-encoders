@@ -135,12 +135,14 @@ def select_audit(packet, primary_labels, *, seed=19019, fraction=0.20):
     ordered = [item_id for item_id in (row["item_id"] for row in packet["items"])
                if item_id in chosen]
     return {
+        "seed": int(seed),
         "item_ids": ordered,
         "items": [{**items[item_id], "repeat_id": sha_json({"seed": seed, "id": item_id})[:24]}
                   for item_id in ordered],
         "pool_items": len(items),
         "audit_items": len(ordered),
         "fraction": len(ordered) / max(1, len(items)),
+        "fraction_minimum": float(fraction),
         "all_primary_positive_and_unjudgeable": all(
             item_id in chosen for item_id, label in primary_labels.items()
             if label in (1, "unjudgeable")
@@ -152,6 +154,8 @@ def audit_agreement(audit, primary_labels, auditor_labels, minimum=0.90):
     expected = set(audit["item_ids"])
     if set(auditor_labels) != expected:
         raise ValueError("auditor labels do not cover exact audit sample")
+    if any(type(label) is not int or label not in (0, 1) for label in auditor_labels.values()):
+        raise ValueError("auditor labels must be exact binary integers")
     agreements = sum(primary_labels[item_id] == auditor_labels[item_id] for item_id in expected)
     disagreements = sorted(item_id for item_id in expected
                              if primary_labels[item_id] != auditor_labels[item_id])
@@ -160,28 +164,65 @@ def audit_agreement(audit, primary_labels, auditor_labels, minimum=0.90):
             "agreements": agreements, "audited": len(expected), "disagreements": disagreements}
 
 
-def freeze_binary_labels(packet, primary_labels, adjudicated_labels, audit_report, *,
-                         primary_reviewer_id, auditor_id, query_author_ids,
-                         rubric_clarifications=0):
+def freeze_binary_labels(packet, primary_labels, audit, auditor_labels, adjudicated_labels, *,
+                         primary_reviewer_id, auditor_id, query_authors,
+                         seed=19019, fraction=0.20, minimum_agreement=0.90,
+                         clarification=None):
     items = {row["item_id"]: row for row in packet["items"]}
-    authors = {str(value) for value in query_author_ids}
+    if set(query_authors) != {row["query_id"] for row in packet["items"]}:
+        raise SystemExit("M19 JUDGMENT STOP: query-author mapping is incomplete")
+    authors = {str(value) for value in query_authors.values()}
     if not primary_reviewer_id or not auditor_id or primary_reviewer_id == auditor_id:
         raise SystemExit("M19 JUDGMENT STOP: primary reviewer and auditor must be independent")
-    if primary_reviewer_id in authors and auditor_id in authors:
-        raise SystemExit("M19 JUDGMENT STOP: query authors cannot be the sole relevance judges")
+    if primary_reviewer_id in authors:
+        raise SystemExit("M19 JUDGMENT STOP: primary reviewer must be independent of query authors")
+    if set(items) != set(primary_labels) or any(
+            type(label) is not int and label != "unjudgeable" or
+            type(label) is int and label not in (0, 1)
+            for label in primary_labels.values()):
+        raise SystemExit("M19 JUDGMENT STOP: primary labels are incomplete or invalid")
+    generation = 0
+    expected_seed = int(seed)
+    if clarification is not None:
+        generation = int(clarification.get("generation", -1))
+        if (generation != 1 or clarification.get("complete_pool_relabel") is not True or
+                not isinstance(clarification.get("prior_primary_sha256"), str) or
+                len(clarification["prior_primary_sha256"]) != 64 or
+                not isinstance(clarification.get("rubric_sha256"), str) or
+                len(clarification["rubric_sha256"]) != 64):
+            raise SystemExit("M19 JUDGMENT STOP: clarification lacks complete-pool relabel proof")
+        expected_seed += 1
+    expected_audit = select_audit(packet, primary_labels, seed=expected_seed, fraction=fraction)
+    if audit != expected_audit:
+        raise SystemExit("M19 JUDGMENT STOP: audit sample differs from deterministic protocol")
+    audit_report = audit_agreement(
+        audit, primary_labels, auditor_labels, minimum=float(minimum_agreement)
+    )
     if not audit_report["pass"]:
         raise SystemExit("M19 JUDGMENT STOP: independent agreement is below the gate")
-    if int(rubric_clarifications) > 1:
-        raise SystemExit("M19 JUDGMENT STOP: more than one rubric clarification")
     labels = dict(primary_labels)
-    for item_id in audit_report["disagreements"]:
+    unresolved = set(audit_report["disagreements"]) | {
+        item_id for item_id, label in primary_labels.items() if label == "unjudgeable"
+    }
+    for item_id in unresolved:
         if item_id not in adjudicated_labels:
             raise SystemExit("M19 JUDGMENT STOP: unresolved blind disagreement")
         labels[item_id] = adjudicated_labels[item_id]
-    if set(labels) != set(items) or any(label not in (0, 1) for label in labels.values()):
+    if set(adjudicated_labels) != unresolved or any(
+            type(label) is not int or label not in (0, 1)
+            for label in adjudicated_labels.values()):
+        raise SystemExit("M19 JUDGMENT STOP: adjudications differ from exact unresolved set")
+    if set(labels) != set(items) or any(type(label) is not int or label not in (0, 1)
+                                       for label in labels.values()):
         raise SystemExit("M19 JUDGMENT STOP: qrels contain missing/non-binary labels")
     qrels = defaultdict(dict)
     for item_id, label in labels.items():
         item = items[item_id]
         qrels[item["query_id"]][item["artifact_id"]] = int(label)
-    return {query_id: dict(sorted(rows.items())) for query_id, rows in sorted(qrels.items())}
+    return {
+        "_schema": "m19-frozen-judgments-v1",
+        "qrels": {query_id: dict(sorted(rows.items())) for query_id, rows in sorted(qrels.items())},
+        "audit_report": audit_report,
+        "clarification_generation": generation,
+        "reviewers": {"primary": primary_reviewer_id, "auditor": auditor_id},
+    }

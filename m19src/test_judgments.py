@@ -61,17 +61,17 @@ def test_agreement_and_freeze_require_binary_resolved_labels():
     primary[packet["items"][0]["item_id"]] = 1
     audit = judgments.select_audit(packet, primary)
     auditor = {item_id: primary[item_id] for item_id in audit["item_ids"]}
-    report = judgments.audit_agreement(audit, primary, auditor)
     judge_args = {"primary_reviewer_id": "primary", "auditor_id": "auditor",
-                  "query_author_ids": {"author"}}
-    qrels = judgments.freeze_binary_labels(packet, primary, {}, report, **judge_args)
-    assert set(qrels) == {"q1", "q2"}
+                  "query_authors": {"q1": "author", "q2": "author"}}
+    frozen = judgments.freeze_binary_labels(packet, primary, audit, auditor, {}, **judge_args)
+    assert set(frozen["qrels"]) == {"q1", "q2"}
     primary[packet["items"][1]["item_id"]] = "unjudgeable"
     audit = judgments.select_audit(packet, primary)
     auditor = {item_id: 0 for item_id in audit["item_ids"]}
-    report = judgments.audit_agreement(audit, primary, auditor, minimum=0.0)
     with pytest.raises(SystemExit, match="unresolved"):
-        judgments.freeze_binary_labels(packet, primary, {}, report, **judge_args)
+        judgments.freeze_binary_labels(
+            packet, primary, audit, auditor, {}, minimum_agreement=0.0, **judge_args
+        )
 
 
 def test_freeze_requires_independent_judges_and_not_only_query_authors():
@@ -79,14 +79,36 @@ def test_freeze_requires_independent_judges_and_not_only_query_authors():
     primary = {row["item_id"]: 0 for row in packet["items"]}
     audit = judgments.select_audit(packet, primary)
     auditor = {item_id: 0 for item_id in audit["item_ids"]}
-    report = judgments.audit_agreement(audit, primary, auditor)
     with pytest.raises(SystemExit, match="must be independent"):
         judgments.freeze_binary_labels(
-            packet, primary, {}, report, primary_reviewer_id="same", auditor_id="same",
-            query_author_ids={"author"},
+            packet, primary, audit, auditor, {}, primary_reviewer_id="same", auditor_id="same",
+            query_authors={"q1": "author", "q2": "author"},
         )
-    with pytest.raises(SystemExit, match="sole relevance judges"):
+    with pytest.raises(SystemExit, match="independent of query authors"):
         judgments.freeze_binary_labels(
-            packet, primary, {}, report, primary_reviewer_id="author-a",
-            auditor_id="author-b", query_author_ids={"author-a", "author-b"},
+            packet, primary, audit, auditor, {}, primary_reviewer_id="author-a",
+            auditor_id="author-b", query_authors={"q1": "author-a", "q2": "author-b"},
         )
+
+
+def test_freeze_recomputes_audit_and_requires_fresh_complete_relabel_after_clarification():
+    _, packet = judgments.build_pool(*_fixture())
+    primary = {row["item_id"]: 0 for row in packet["items"]}
+    audit = judgments.select_audit(packet, primary)
+    auditor = {item_id: 0 for item_id in audit["item_ids"]}
+    authors = {"q1": "author", "q2": "author"}
+    altered = {**audit, "fraction": 1.0}
+    with pytest.raises(SystemExit, match="differs"):
+        judgments.freeze_binary_labels(
+            packet, primary, altered, auditor, {}, primary_reviewer_id="primary",
+            auditor_id="auditor", query_authors=authors,
+        )
+    fresh = judgments.select_audit(packet, primary, seed=19020)
+    fresh_labels = {item_id: 0 for item_id in fresh["item_ids"]}
+    clarification = {"generation": 1, "complete_pool_relabel": True,
+                     "prior_primary_sha256": "a" * 64, "rubric_sha256": "b" * 64}
+    frozen = judgments.freeze_binary_labels(
+        packet, primary, fresh, fresh_labels, {}, primary_reviewer_id="primary",
+        auditor_id="auditor", query_authors=authors, clarification=clarification,
+    )
+    assert frozen["clarification_generation"] == 1
