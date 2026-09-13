@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 
-from m19src import judgments, metrics
+from m19src import common, judgments, metrics
 from m19src.build_candidate import _json_bytes, _publish
 from m19src.common import M19, WORK, admit_read, load_json, sha_file, sha_json
 from m19src.pool_pilot import build_frozen_pool
@@ -14,6 +15,10 @@ ROOT = WORK / "development"
 STATE_NAMES = ("locked", "pool-frozen", "judgments-in-progress", "qrels-frozen", "scored")
 STATE_FILES = {name: ROOT / f"{index:02d}-{name}.json"
                for index, name in enumerate(STATE_NAMES)}
+REQUIRED_REVIEW_FILES = {
+    "m19src/development.py", "m19src/pool_pilot.py", "m19src/judgments.py",
+    "m19src/test_development.py",
+}
 
 
 def _load(path):
@@ -23,6 +28,30 @@ def _load(path):
 def _binding(path):
     path = Path(path).resolve()
     return {"path": str(path), "sha256": sha_file(path)}
+
+
+def validate_review_scope(path, *, reviewed_commit=None):
+    scope = _load(path)
+    files = scope.get("files")
+    if (scope.get("_schema") != "m19-review-scope-v1" or
+            scope.get("roles") != ["implementation", "astra"] or
+            not re.fullmatch(r"[0-9a-f]{40}", str(scope.get("reviewed_commit", ""))) or
+            (reviewed_commit is not None and scope["reviewed_commit"] != reviewed_commit) or
+            not isinstance(files, dict) or not files or
+            not REQUIRED_REVIEW_FILES.issubset(files)):
+        raise SystemExit("M19 DEVELOPMENT STOP: review scope is incomplete")
+    for relative, expected in files.items():
+        candidate = Path(relative)
+        if candidate.is_absolute() or ".." in candidate.parts:
+            raise SystemExit("M19 DEVELOPMENT STOP: review scope path is unsafe")
+        resolved = (common.REPO / candidate).resolve()
+        try:
+            resolved.relative_to(common.REPO.resolve())
+        except ValueError:
+            raise SystemExit("M19 DEVELOPMENT STOP: review scope path escapes repository")
+        if not re.fullmatch(r"[0-9a-f]{64}", str(expected)) or sha_file(resolved) != expected:
+            raise SystemExit(f"M19 DEVELOPMENT STOP: reviewed file changed: {relative}")
+    return scope
 
 
 class DevelopmentTransaction:
@@ -37,9 +66,19 @@ class DevelopmentTransaction:
         expected = list(STATE_NAMES[:STATE_NAMES.index(existing[-1]) + 1])
         if existing != expected:
             raise SystemExit("M19 DEVELOPMENT STOP: state chain is not contiguous")
-        state = _load(self.states[existing[-1]])
-        if state.get("state") != existing[-1]:
-            raise SystemExit("M19 DEVELOPMENT STOP: state receipt differs from filename")
+        state = None
+        previous_name = None
+        previous_bound = {}
+        for name in existing:
+            state = _load(self.states[name])
+            expected_previous = sha_file(self.states[previous_name]) if previous_name else None
+            bound = state.get("bound_files", {})
+            if (state.get("_schema") != "m19-development-state-v1" or
+                    state.get("state") != name or
+                    state.get("previous_sha256") != expected_previous or
+                    any(bound.get(role) != binding for role, binding in previous_bound.items())):
+                raise SystemExit("M19 DEVELOPMENT STOP: state receipt chain differs")
+            previous_name, previous_bound = name, bound
         for binding in state.get("bound_files", {}).values():
             if sha_file(binding["path"]) != binding["sha256"]:
                 raise SystemExit("M19 DEVELOPMENT STOP: bound file changed")
@@ -109,22 +148,43 @@ class DevelopmentTransaction:
         parsed = [_load(receipts[role]["path"]) for role in receipts]
         if ({row.get("role") for row in parsed} != {"implementation", "astra"} or
                 any(row.get("_schema") != "m19-review-go-v1" or row.get("decision") != "GO" or
-                    row.get("scope_sha256") != scope_binding["sha256"] for row in parsed) or
+                    row.get("scope_sha256") != scope_binding["sha256"] or
+                    not row.get("reviewer_id") for row in parsed) or
                 len({row.get("reviewer_id") for row in parsed}) != 2 or
                 len({row.get("reviewed_commit") for row in parsed}) != 1):
             raise SystemExit("M19 DEVELOPMENT STOP: two independent scoped review GOs required")
+        validate_review_scope(review_scope, reviewed_commit=parsed[0]["reviewed_commit"])
         return self._transition("pool-frozen", "judgments-in-progress",
                                 added={**receipts, "review_scope": scope_binding},
                                 extra={"reviewed_commit": parsed[0]["reviewed_commit"]})
 
     def freeze_qrels(self, primary_path, audit_path, adjudication_path, support_path,
-                     *, primary_reviewer_id, auditor_id):
+                     *, primary_reviewer_id, auditor_id, clarification_path=None):
         current = self.current()
         if not current or current["state"] != "judgments-in-progress":
             raise SystemExit("M19 DEVELOPMENT STOP: qrels require judgments-in-progress")
         new = {"primary_labels": _binding(primary_path), "audit_labels": _binding(audit_path),
                "adjudications": _binding(adjudication_path),
                "supporting_passages": _binding(support_path)}
+        generation = 1 if clarification_path else 0
+        clarification = None
+        if generation:
+            prior_path = self.root / "judgment-attempt-0.json"
+            if not prior_path.exists():
+                raise SystemExit("M19 DEVELOPMENT STOP: clarification requires a failed first attempt")
+            prior = _load(prior_path)
+            clarification = _load(clarification_path)
+            if clarification.get("prior_primary_sha256") != prior.get(
+                    "input_files", {}).get("primary_labels", {}).get("sha256"):
+                raise SystemExit("M19 DEVELOPMENT STOP: clarification does not bind first labels")
+            new["clarification"] = _binding(clarification_path)
+        attempt_path = self.root / f"judgment-attempt-{generation}.json"
+        attempt = {
+            "_schema": "m19-development-judgment-attempt-v1", "generation": generation,
+            "input_files": dict(sorted(new.items())),
+            "reviewers": {"primary": primary_reviewer_id, "auditor": auditor_id},
+        }
+        _publish(attempt_path, _json_bytes(attempt))
         packet = _load(current["bound_files"]["evidence_packet"]["path"])
         query_specs = _load(current["bound_files"]["queries"]["path"])
         primary = _load(primary_path)
@@ -134,15 +194,20 @@ class DevelopmentTransaction:
         frozen = judgments.freeze_binary_labels(
             packet, primary, audit_payload["sample"], audit_payload["labels"], adjudications,
             primary_reviewer_id=primary_reviewer_id, auditor_id=auditor_id,
-            query_authors=query_authors)
+            query_authors=query_authors, clarification=clarification)
         qrels_path = self.root / "qrels.json"
         judgment_path = self.root / "judgment-freeze.json"
         _publish(qrels_path, _json_bytes(frozen["qrels"]))
         freeze_receipt = {**frozen, "qrels": None,
                           "input_sha256": {role: value["sha256"] for role, value in new.items()}}
         _publish(judgment_path, _json_bytes(freeze_receipt))
+        attempt_bindings = {"judgment_attempt": _binding(attempt_path)}
+        if generation:
+            attempt_bindings["failed_judgment_attempt"] = _binding(
+                self.root / "judgment-attempt-0.json")
         return self._transition("judgments-in-progress", "qrels-frozen", added={
-            **new, "qrels": _binding(qrels_path), "judgment_freeze": _binding(judgment_path)})
+            **new, **attempt_bindings, "qrels": _binding(qrels_path),
+            "judgment_freeze": _binding(judgment_path)})
 
     def score(self):
         current = self.current()
@@ -159,16 +224,18 @@ class DevelopmentTransaction:
             cap=registry["judgments"]["development_cap"])
         support_rows = _load(current["bound_files"]["supporting_passages"]["path"])
         support = {(row["query_id"], row["artifact_id"]): row["pass"] for row in support_rows}
-        evaluation = metrics.evaluate_frozen(
-            runs, qrels, query_specs, registry["development_eligibility"], support)
         stella_run = {query_id: pool["queries"][query_id]["route_top10"]["stella_dense"]
                       for query_id in pool["queries"]}
         stella = metrics.score_run(stella_run, qrels)
         v1 = metrics.score_run(runs["dense_v1"], qrels)
         headroom = metrics.headroom_gate(stella, v1, query_specs, registry)
+        evaluation = None
+        if headroom["pass"]:
+            evaluation = metrics.evaluate_frozen(
+                runs, qrels, query_specs, registry["development_eligibility"], support)
         result = {"_schema": "m19-development-evaluation-v2", "evaluation": evaluation,
                   "headroom": headroom, "eligible": bool(
-                      evaluation["eligibility"]["eligible"] and headroom["pass"]),
+                      evaluation and evaluation["eligibility"]["eligible"]),
                   "input_sha256": {role: binding["sha256"]
                                    for role, binding in current["bound_files"].items()}}
         result_path = self.root / "evaluation.json"
@@ -191,6 +258,7 @@ def main(argv=None):
     parser.add_argument("--supporting-passages")
     parser.add_argument("--primary-reviewer-id")
     parser.add_argument("--auditor-id")
+    parser.add_argument("--clarification")
     args = parser.parse_args(argv)
     tx = DevelopmentTransaction()
     if args.action == "initialize":
@@ -204,7 +272,7 @@ def main(argv=None):
         result = tx.freeze_qrels(
             args.primary_labels, args.audit_labels, args.adjudications,
             args.supporting_passages, primary_reviewer_id=args.primary_reviewer_id,
-            auditor_id=args.auditor_id)
+            auditor_id=args.auditor_id, clarification_path=args.clarification)
     else:
         result = tx.score()
     print(json.dumps(result, indent=2, sort_keys=True))

@@ -167,9 +167,9 @@ def build_frozen_pool(query_ids, cap, expected_inputs=None):
 
 def run():
     lock = load_json(PILOT_LOCK)
+    registry = load_json(M19 / "registry.json")
     built = build_frozen_pool(
-        lock["pilot_query_ids"], cap=load_json(M19 / "registry.json")["judgments"][
-            "development_cap"],
+        lock["pilot_query_ids"], cap=registry["judgments"]["development_cap"],
         expected_inputs={
             "development_queries_sha256": lock["development_queries_sha256"],
             "query_seal_sha256": lock["query_seal_sha256"],
