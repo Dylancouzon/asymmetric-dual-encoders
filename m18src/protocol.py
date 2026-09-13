@@ -431,6 +431,66 @@ def _query_only_training(structural, labeled, heldout_groups, corpus_by_id):
     return sorted(out, key=lambda q: q["query_id"])
 
 
+def _requested_alias_training(rows, corpus_by_id, excluded_artifacts, config):
+    """Derive a bounded teacher-only alias slice from already-admitted training rows."""
+    if not config:
+        return [], {}
+    short = str(config["short"])
+    expansion = str(config["expansion"])
+    evidence_id = str(config["evidence_doc"])
+    evidence = corpus_by_id.get(evidence_id)
+    if evidence is None:
+        raise SystemExit(f"M18 PROTOCOL REFUSED: requested-alias evidence absent: {evidence_id}")
+    if evidence["artifact_id"] in excluded_artifacts:
+        raise SystemExit("M18 PROTOCOL REFUSED: requested-alias evidence belongs to held-out family")
+    if evidence.get("normalized_text_sha256") != config["evidence_normalized_text_sha256"]:
+        raise SystemExit("M18 PROTOCOL REFUSED: requested-alias evidence hash changed")
+    relation = re.compile(rf"\b{re.escape(expansion)}\s*\(\s*{re.escape(short)}\s*\)", re.I)
+    if not relation.search(evidence["text"]):
+        raise SystemExit("M18 PROTOCOL REFUSED: requested-alias evidence lacks pinned relation")
+
+    expansion_re = re.compile(rf"\b{re.escape(expansion)}\b", re.I)
+    short_re = re.compile(rf"\b{re.escape(short)}\b", re.I)
+    natural = [q for q in rows if short_re.search(q["text"])]
+    derived, seen_docs, seen_texts = [], set(), {q["text"].casefold() for q in rows}
+    for source in sorted(rows, key=lambda q: q["query_id"]):
+        if source["source_doc"] in seen_docs or short_re.search(source["text"]):
+            continue
+        if not expansion_re.search(source["text"]):
+            continue
+        text = expansion_re.sub(short, source["text"])
+        if text.casefold() in seen_texts:
+            continue
+        digest = hashlib.sha256((source["query_id"] + "\0" + short).encode()).hexdigest()[:20]
+        row = dict(source)
+        row.update({"query_id": _query_id("requested-alias", digest), "text": text,
+                    "target_doc": None, "stratum": "alias_jargon",
+                    "augmentation_source_query_id": source["query_id"],
+                    "relevance_reason": "source-evidenced alias substitution; teacher-only, no relevance label",
+                    "label_provenance": {
+                        "rule": "cto_requested_evidenced_alias_substitution-v1",
+                        "positive_label": False, "derived_from_query_id": source["query_id"],
+                        "evidence_doc": evidence_id,
+                        "evidence_normalized_text_sha256": evidence["normalized_text_sha256"]}})
+        # The source row may itself be one side of AKS/EKS/GKE/LKE consistency evidence. The
+        # k8s rewrite is a teacher-only view and must not inherit that unrelated pair identity.
+        row.pop("alias_pair_id", None)
+        row.pop("alias_view", None)
+        derived.append(row)
+        seen_docs.add(source["source_doc"])
+        seen_texts.add(text.casefold())
+        if len(derived) == int(config["max_derived_contexts"]):
+            break
+    if len(derived) != int(config["max_derived_contexts"]):
+        raise SystemExit("M18 PROTOCOL REFUSED: insufficient distinct-source requested-alias contexts")
+    report = {"short": short, "expansion": expansion, "evidence_doc": evidence_id,
+              "evidence_normalized_text_sha256": evidence["normalized_text_sha256"],
+              "natural_contexts": len(natural), "derived_contexts": len(derived),
+              "distinct_source_documents": len({q["source_doc"] for q in natural + derived}),
+              "derived_query_ids": [q["query_id"] for q in derived]}
+    return derived, report
+
+
 def _write_rows(path, rows):
     payload = b"".join((json.dumps(r, sort_keys=True, ensure_ascii=False) + "\n").encode()
                        for r in rows)
@@ -470,8 +530,13 @@ def build(corpus_path=None, out_root=None, registry_data=None):
     structural_train = train_struct + query_only
     cap = int(reg["corpus"]["training_query_views_max"])
     docs = []  # heading==target self retrieval is intentionally not admitted.
-    aliases = _alias_training(corpus, excluded_artifacts, max(0, cap - len(structural_train)))
-    train = (structural_train + aliases)[:cap]
+    alias_config = reg["vocabulary"].get("requested_alias_augmentation")
+    reserve = int(alias_config.get("max_derived_contexts", 0)) if alias_config else 0
+    aliases = _alias_training(corpus, excluded_artifacts,
+                              max(0, cap - len(structural_train) - reserve))
+    requested_aliases, requested_alias_report = _requested_alias_training(
+        structural_train + aliases, corpus_by_id, excluded_artifacts, alias_config)
+    train = (structural_train + aliases + requested_aliases)[:cap]
     # No held-out family or near-duplicate title shape can supply a gradient-bearing view.
     heldout_target_hash = {corpus_by_id[q["target_doc"]]["normalized_text_sha256"] for q in dev + conf
                            if q.get("target_doc")}
@@ -498,6 +563,8 @@ def build(corpus_path=None, out_root=None, registry_data=None):
                 "training_structural_labeled": len(train_struct),
                 "training_structural_query_only": len(query_only),
                 "training_document_headings": len(docs), "training_alias_views": len(aliases),
+                "training_requested_alias_views": len(requested_aliases),
+                "requested_alias_augmentation": requested_alias_report,
                 "realized_strata": realized, "development": dev_files,
                 "confirmation": conf_files, "confirmation_sealed": True,
                 "corpus_sha256": sha_file(corpus_path),

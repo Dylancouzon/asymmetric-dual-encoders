@@ -244,3 +244,22 @@
 - This result is retained as `results/m18_development_baselines_pre_k8s.json`. It predates the
   owner-approved, CTO-requested `k8s` training amendment and is immutable evidence rather than the
   baseline for the revised V0 identity.
+
+## 2026-09-13 — E13 pre-training CTO `k8s` amendment
+
+- After the first development baseline read but before any optimizer step, Dylan approved a lock
+  revision to cover the CTO-requested `k8s` term. This is explicitly a revised recipe, not a claim
+  about the original execution lock. The original lock is retained as
+  `m18/execution-lock.pre-k8s.json`; the original manifests and baseline are retained with
+  `_pre_k8s` suffixes and in commit `e6e20f6`.
+- Qdrant source `gh_opening:7967:chunk:5` directly states `Kubernetes (K8s)` and is outside every
+  held-out family. Its normalized source hash is pinned in the registry. Five already-admitted,
+  distinct-source training contexts containing `kubernetes` receive one deterministic `k8s`
+  substitution each. These are teacher-only views with no positive qrel; inherited AKS/EKS/GKE/LKE
+  alias-pair metadata is stripped. Together with the one natural `k8s` issue title, this gives six
+  distinct source contexts while clearly separating one natural from five augmented occurrences.
+- Astra issued GO for this narrow source-evidenced augmentation and rejected the need for Qwen or
+  a new evaluation stratum. The staged protocol contains 785 training views. Development and
+  confirmation query/qrel hashes are byte-identical to the original protocol, all leakage counts
+  remain zero, and confirmation content remains unread. Vocabulary, caches, prepared arms, V0
+  bundles and their baseline will be rebuilt under fresh identities before training.

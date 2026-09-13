@@ -1,7 +1,6 @@
 {
   "_schema": "m18-registry-v1",
-  "status": "LOCKED_EXECUTABLE",
-  "execution_lock_sha256": "8bc47902ec10424e68784b47ee61745daf1a00ff841bc3c4b42715ccc8f046eb",
+  "status": "EXECUTABLE_PREPARATION",
   "date": "2026-09-12",
   "scope": "internal Qdrant project memory; local execution only; no publication",
   "source": {
@@ -30,6 +29,7 @@
     "chunking": "m18-chunk-v1",
     "split": "m18-temporal-connected-family-v2",
     "qrels": "m18-structural-plus-astra-adjudication-v6",
+    "training_augmentation": "m18-cto-k8s-alias-v1",
     "normalizer_t1": "m18-typed-ephemeral-v1",
     "digit_mask_t2": "wordpiece-continuation-digits-v1"
   },
@@ -41,7 +41,7 @@
   "corpus": {"document_units_max": 200000, "training_query_views_max": 300000, "chunk_tokens": 384, "chunk_overlap_tokens": 48, "retain_all_artifacts": true},
   "split": {"target_total": 250, "development_per_stratum": 35, "confirmation_per_stratum": 15, "minimum_development_per_available_stratum": 25, "minimum_confirmation_per_available_stratum": 10, "family_unit": "GitHub thread or repository artifact plus near-duplicate union", "assignment": "newest credible families, alternating seeded blocks between development and confirmation; all older families train", "seed": 18001},
   "strata": ["concept_howto", "error_troubleshooting", "config_api_ops", "exact_version_numeric", "alias_jargon"],
-  "vocabulary": {"min_distinct_documents": 5, "min_training_contexts": 5, "max_added_rows": 8192, "term_pattern_version": "m18-compounds-v1", "initialization": "count-weighted composition of inherited effective rows", "disallow_near_unique": true},
+  "vocabulary": {"min_distinct_documents": 5, "min_training_contexts": 5, "max_added_rows": 8192, "term_pattern_version": "m18-compounds-v1", "initialization": "count-weighted composition of inherited effective rows", "disallow_near_unique": true, "requested_alias_augmentation": {"short": "k8s", "expansion": "kubernetes", "max_derived_contexts": 5, "evidence_doc": "gh_opening:7967:chunk:5", "evidence_normalized_text_sha256": "43788910ab80cd700a7e0d8312c0a1865ffcf485d9015be3efe66cc29d263047"}},
   "variants": {
     "T0": {"preprocessing": "raw", "mask": "none"},
     "T1": {"preprocessing": "typed_ephemeral", "mask": "none", "inert_development_fraction_lt": 0.01},

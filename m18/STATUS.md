@@ -1,6 +1,6 @@
 # M18 status
 
-**State: EXECUTING — execution lock and baselines.** Owner execution authorization arrived
+**State: EXECUTING — approved pre-training `k8s` lock amendment.** Owner execution authorization arrived
 2026-09-12.
 
 Current outcome: the complete pinned source snapshot produced 79,269 indexable document units. The
@@ -15,10 +15,11 @@ clear pairs entered the final split; smaller realized strata are disclosed rathe
 Training uses 298 non-held-out issue/PR titles as teacher-only views without qrels plus 482 alias
 views. A fresh dev-only audit found 39/40 clear and one partial; that pair was removed. Every chunk
 of each query-bearing source object is now excluded with compensating overfetch. Full Stella
-The full 79,269-document Stella/BM25 index and the shared teacher/candidate cache are complete.
-Vocabulary preparation admits 15 source-supported exact rows and produces 142 eligible queries
-for each of T0 and T2. T1 affects zero training queries and is skipped as inert. V0-Q bundles are
-ready; the next irreversible boundary is the execution lock, followed by development baselines and
-the bounded T0 step-500 diagnostic. No real training has started and the GPU is idle.
+The full 79,269-document Stella/BM25 index is complete. The first baseline read found measurable
+Stella headroom and is preserved. Before training, the owner approved a narrow CTO-requested `k8s`
+amendment: five deterministic, source-evidenced teacher-only substitutions augment one natural
+training occurrence. No qrels or held-out rows change. The old lock/preparation are archived; the
+revised 785-view protocol is staged and its caches, vocabulary, V0 bundles and execution lock are
+being rebuilt. No real training has started.
 
 Pointers: `instructions-m18.md`, `m18/registry.json`, `m18/LEDGER.md`, `m18/CODEMAP.md`.

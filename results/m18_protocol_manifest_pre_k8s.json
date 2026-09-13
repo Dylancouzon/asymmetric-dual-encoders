@@ -91,32 +91,15 @@
    "development": 13
   }
  },
- "requested_alias_augmentation": {
-  "derived_contexts": 5,
-  "derived_query_ids": [
-   "m18q:requested-alias:6e560d80901d57e903d3",
-   "m18q:requested-alias:bf241c429894978dbfc5",
-   "m18q:requested-alias:38fdf3d940c68c27fc3d",
-   "m18q:requested-alias:0dbf5d541b60ff7e29c6",
-   "m18q:requested-alias:c729d51ccfc25df4daef"
-  ],
-  "distinct_source_documents": 6,
-  "evidence_doc": "gh_opening:7967:chunk:5",
-  "evidence_normalized_text_sha256": "43788910ab80cd700a7e0d8312c0a1865ffcf485d9015be3efe66cc29d263047",
-  "expansion": "kubernetes",
-  "natural_contexts": 1,
-  "short": "k8s"
- },
  "semantics": "held-out questions over complete pinned snapshot; not historical-as-of-question",
- "sha256": "6e40a662748f180ca77e514754daed3b5e8357f44a5cdb83be8f759d7db6bb56",
+ "sha256": "0a919bdde39f7059fbc0cd27c2768929bff5754bdc7da1c2b644f8963b9a3c1a",
  "split_version": "m18-temporal-connected-family-v2",
  "structural_candidates_pre_adjudication": 710,
  "structural_relevance": "only distinct maintainer answer/reply spans; thread siblings are not automatically relevant",
  "training_alias_views": 482,
  "training_document_headings": 0,
- "training_queries": 785,
- "training_queries_sha256": "483ab5865adefc45e397cf1832f50e55019ee31d87b3c51b4e44585403d9e309",
- "training_requested_alias_views": 5,
+ "training_queries": 780,
+ "training_queries_sha256": "98ce1cbbc8be44a879349339859aa9abd592b7f468ee2a6b0907ecb79edb252b",
  "training_structural": 298,
  "training_structural_labeled": 0,
  "training_structural_query_only": 298

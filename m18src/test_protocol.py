@@ -176,6 +176,38 @@ def test_unjudged_titles_are_query_only_and_heldout_families_are_excluded():
     assert got[0]["target_doc"] is None and not got[0]["label_provenance"]["positive_label"]
 
 
+def test_requested_alias_training_is_bounded_source_attributed_and_unpaired():
+    evidence_hash = _digest("Deployment: Kubernetes (K8s)")
+    evidence = {"doc_id": "evidence", "artifact_id": "gh:thread:evidence",
+                "text": "Deployment: Kubernetes (K8s)",
+                "normalized_text_sha256": evidence_hash}
+    rows = [{"query_id": f"q{i}", "text": f"Run Kubernetes context {i}",
+             "source_doc": f"d{i}", "family": f"gh:thread:{i}", "target_doc": None,
+             "alias_pair_id": f"pair{i}", "alias_view": "b"} for i in range(6)]
+    rows.append({"query_id": "natural", "text": "Run k8s probes", "source_doc": "natural-doc",
+                 "family": "gh:thread:natural", "target_doc": None})
+    config = {"short": "k8s", "expansion": "kubernetes", "max_derived_contexts": 5,
+              "evidence_doc": "evidence", "evidence_normalized_text_sha256": evidence_hash}
+    got, report = protocol._requested_alias_training(
+        rows, {"evidence": evidence}, set(), config)
+    assert len(got) == 5 and report["natural_contexts"] == 1
+    assert report["distinct_source_documents"] == 6
+    assert len({q["source_doc"] for q in got}) == 5
+    assert all(q["target_doc"] is None and "k8s" in q["text"] for q in got)
+    assert all("alias_pair_id" not in q and "alias_view" not in q for q in got)
+    assert all(q["label_provenance"]["derived_from_query_id"] for q in got)
+
+
+def test_requested_alias_training_refuses_heldout_evidence():
+    evidence_hash = _digest("Kubernetes (K8s)")
+    evidence = {"doc_id": "e", "artifact_id": "gh:thread:heldout",
+                "text": "Kubernetes (K8s)", "normalized_text_sha256": evidence_hash}
+    config = {"short": "k8s", "expansion": "kubernetes", "max_derived_contexts": 1,
+              "evidence_doc": "e", "evidence_normalized_text_sha256": evidence_hash}
+    with pytest.raises(SystemExit, match="held-out"):
+        protocol._requested_alias_training([], {"e": evidence}, {"gh:thread:heldout"}, config)
+
+
 def test_confirmation_cannot_use_general_surface_loader(tmp_path):
     with pytest.raises(SystemExit, match="run_confirmation"):
         protocol.load_surface("confirmation", tmp_path)

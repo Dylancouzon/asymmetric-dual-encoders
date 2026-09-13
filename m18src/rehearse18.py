@@ -68,6 +68,7 @@ def rehearsal_registry(commit):
                          "minimum_confirmation_per_available_stratum": 1})
     reg["vocabulary"].update({"min_distinct_documents": 1, "min_training_contexts": 1,
                               "max_added_rows": 32})
+    reg["vocabulary"].pop("requested_alias_augmentation", None)
     reg["training"].update({"batch": 2, "schedule_steps": 4, "diagnostic_stop_after": 2,
                             "warmup_steps": 1, "checkpoint_steps": [0, 2, 4], "candidate_k": 4,
                             "candidate_mix_labeled": {"known_positive": 1, "teacher_top": 1,

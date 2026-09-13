@@ -1,0 +1,24 @@
+{
+ "_schema": "m18-pretraining-amendment-v1",
+ "reason": "CTO-requested k8s exact term; owner-approved before student training",
+ "astra_verdict": "GO for bounded source-evidenced training-only augmentation; no Qwen or new evaluation stratum",
+ "pre_amendment_commit": "e6e20f6",
+ "pre_amendment_lock_sha256": "8bc47902ec10424e68784b47ee61745daf1a00ff841bc3c4b42715ccc8f046eb",
+ "pre_amendment_protocol_manifest_file_sha256": "483da449f81d3d016ead4415cd0bb1162c3542b9a94a32e0e96558379af7cc3d",
+ "pre_amendment_protocol_identity": "0a919bdde39f7059fbc0cd27c2768929bff5754bdc7da1c2b644f8963b9a3c1a",
+ "revised_protocol_manifest_file_sha256": "0f0a8942ebac663a81f07c8204351fa26065ee4c7fd29d2928fc08d016260d9c",
+ "revised_protocol_identity": "6e40a662748f180ca77e514754daed3b5e8357f44a5cdb83be8f759d7db6bb56",
+ "training_queries_before": 780,
+ "training_queries_after": 785,
+ "natural_k8s_contexts": 1,
+ "derived_k8s_contexts": 5,
+ "distinct_k8s_source_documents": 6,
+ "evidence_doc": "gh_opening:7967:chunk:5",
+ "evidence_normalized_text_sha256": "43788910ab80cd700a7e0d8312c0a1865ffcf485d9015be3efe66cc29d263047",
+ "heldout_identities_unchanged": {
+  "development_queries_sha256": "e51dba8d16c2839377df98f69d73d35f427db4d5fac2e8a967a5b24e7d98708d",
+  "development_qrels_sha256": "d971089faaece3a5d429a23ea03e07b7fc30b60dc54b50c49679258d8946dfd8",
+  "confirmation_queries_sha256": "0553a2e780085ed24b8bce96f01d01c1bb1fac8de34eda87d7e1a57d465cbe8e",
+  "confirmation_qrels_sha256": "8d82919c2917a5662ea5d09777f226f04728bda6ecba52b4790a8cf016f772b4"
+ }
+}
