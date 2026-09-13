@@ -17,10 +17,13 @@ Keep negative results, failed approaches, provenance and limitations alongside s
 2. The active milestone's `STATUS.md` and `instructions-m*.md` — next work and exit criteria.
 3. Its `CODEMAP.md`, then only the result or registration files needed for the task.
 
-M10 closes preparation. M13 owns both pending cloud E arms, the build, final evaluation and costs.
-M11 (zero release) and M12 (fusion audit) remain closed. Nano release is M14; the paper is M15.
-Harness improvements remain ordinary maintenance.
-Do not infer execution readiness from the historical phrase “half A ready to push.”
+M10 closes preparation. M11 (Zero release), M12 (fusion audit), M13, M17 and M18 are closed
+historical evidence. M18 shipped an internal Qdrant project-memory system but no improved encoder.
+M19 is the current planning successor on branch `m18-qdrant-project-memory`; its instruction file
+controls whether a new execution session may proceed. Nano release and paper milestone references in
+older files are historical. Harness improvements remain ordinary maintenance. Do not infer
+execution readiness from the historical phrase “half A ready to push” or from a closed milestone's
+executable status.
 
 ## Evidence and protocol
 
@@ -32,6 +35,9 @@ Do not infer execution readiness from the historical phrase “half A ready to p
 - Reserved four: FEVER, DBpedia-entity, cqadup-android, cqadup-english. Do not read
   `results/frozen_eval/untouched-*`, reserved qrels caches or `work/m9reserve` during development
   or review. Preflight uses manifests; protected content belongs inside the executor.
+- M18 confirmation was consumed exactly once and is closed. Do not read its raw confirmation
+  queries/qrels again; use only its published aggregate result, decision lock and completed receipt.
+  M19 must create a fresh confirmation surface and transaction.
 - A decision's protocol changes must precede the observations it governs, be dated, and preserve
   the original registration in git. Never change a computed contrast to improve a result.
   Unrun-family amendments are not permission to re-decide completed families.

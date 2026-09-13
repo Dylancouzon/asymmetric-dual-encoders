@@ -1,477 +1,498 @@
-# M19 — short-query Qdrant Zero feasibility
+# M19 — deterministic short-query Zero feasibility
 
-**Planning only, 2026-09-13 (Dylan).** Determine whether a new Constella Zero query table can
-materially improve bare and short Qdrant-jargon retrieval without degrading the useful hybrid
-system. Stay on branch `m18-qdrant-project-memory` and reuse M18's pinned Qdrant snapshot, document
-vectors, BM25 index and tested execution primitives. This planning session creates and reviews this
-instruction file; it does not authorize M19 execution, a new evaluation read, external training
-data, publication or changes to any closed result.
+**Planning only, 2026-09-13 (Dylan).** Determine whether one deterministic exact-row extension of
+Constella Zero can materially improve bare and short Qdrant-jargon retrieval without degrading the
+useful hybrid system. Stay on branch `m18-qdrant-project-memory` and reuse M18's pinned Qdrant
+snapshot, document vectors, BM25 index and tested serving primitives. This planning session creates
+and reviews this instruction file; it does not authorize M19 execution, evaluation access, outside
+training data, publication or mutation of a closed result.
 
-M18 remains closed at `SYSTEM_READY` + `ENCODER_NO_IMPROVEMENT`. That outcome means no M18
-candidate met its locked eligibility rules. It does not establish equivalence with Zero v1, rule
-out improvement on bare or short jargon queries, or prove a capacity limit for static token rows.
-Do not rewrite M18's thresholds, results, confirmation receipt or decision after the fact.
+M18 remains closed at `SYSTEM_READY` + `ENCODER_NO_IMPROVEMENT`. That means no M18 candidate met its
+locked eligibility rules. It does not establish equivalence with Zero v1, rule out improvement on
+bare or short jargon queries, or prove a capacity limit for static token rows. Never rewrite M18's
+thresholds, results, decision, confirmation lock or one-read receipt.
 
-## Owner objective and scope
+## Next-session bootstrap and repository conventions
 
-M19 answers a narrower question than M18:
+At the beginning of the execution session, read `CLAUDE.md` completely, then this file, M18's short
+`STATUS.md`, `CODEMAP.md` and final `FINDINGS.md`. Inspect only the specific M18 manifests needed to
+bind inheritance. Do not recursively ingest historical results or protected data.
 
-> Can a frozen-inherited-row Zero extension improve dense retrieval for bare identifiers and
-> two-to-five-word Qdrant queries across multiple useful artifacts, while preserving the released
-> v1 behavior and the artifact-collapsed BM25+dense hybrid path?
+Follow the repository's established milestone structure and rules:
 
-The immediate product and model questions remain separate:
+- use `m19/` for status, planning, registry, ledger, findings, codemap, locks and review records;
+- use `m19src/` for the minimum milestone-bound implementation and synthetic tests;
+- use gitignored `work/m19/` for raw/derived caches and runs, and tracked `results/m19_*` for compact
+  machine-readable evidence without raw private query text;
+- fork the smallest tested M18 primitives and record source commit plus semantic differences;
+- keep constants in the registry, measurements in JSON, decisions in the ledger, pitfalls in the
+  codemap and durable interpretation in findings;
+- use atomic/resumable writes for every expensive or one-shot stage, protect user changes, and use
+  `apply_patch` for hand edits;
+- run affected tests before each coherent commit, commit and push often, and never force-push away
+  the M18/M19 paper trail; and
+- use `/home/dylan/asymetric-dual-encoders/.venv/bin/python` unless the worktree later receives its
+  own verified environment. Do not assume bare `python` resolves correctly.
 
-- **Project-memory system:** return a diverse top ten of useful Qdrant artifacts with a supporting
-  passage. Hybrid retrieval may solve this even if no new encoder qualifies.
-- **Zero encoder:** demonstrate that a new table improves the targeted dense route on more than a
-  handful of queries. BM25 or fusion must not conceal a broken or unchanged dense model.
+If this file and `CLAUDE.md` conflict, the newer, milestone-specific ruling here controls M19 while
+the global protected-data and evidence-preservation rules in `CLAUDE.md` remain absolute.
+
+## Objective and scope
+
+M19 asks one narrower question:
+
+> Can replacing a shattered Qdrant term with one teacher-targeted exact row improve Zero's dense
+> retrieval on previously unseen short contexts for that term, across multiple useful artifacts?
+
+The project-memory system and encoder decision remain separate:
+
+- **System:** return a diverse top ten of useful Qdrant artifacts with supporting passages. The
+  artifact-collapsed BM25+dense DBSF path can succeed even when no new encoder qualifies.
+- **Encoder:** demonstrate dense improvement across terms and fresh short intents. BM25/fusion may
+  not conceal an unchanged or broken table.
 
 Owner constraints:
 
 - Keep the pinned Stella 400M v5 document tower and normalized 1,024-dimensional document space.
-  Reuse M18's vectors; do not re-embed the corpus or change the document model.
-- Reuse the released `DylanCouzon/constella-zero` bundle as initialization and baseline. Freeze
-  every inherited row and inherited pooling parameter.
-- Keep Zero a context-independent, order-insensitive token-row lookup and pooled sum. M19 gets one
-  bounded exact-row recipe, not an architecture search or a transformer query encoder.
-- Run locally on this machine. No cloud or paid compute.
-- Qdrant remains the evaluation domain. Outside software text is not authorized for training by
-  this file; it requires a measured support failure, a commercial-use licence record and an owner
-  ruling before acquisition or use.
-- Internal evaluation only. Do not publish a model, index, corpus or Hugging Face repository from
-  M19 without a separate owner ruling after the result.
+  Reuse M18's vectors; do not re-embed the corpus or change the document encoder.
+- Initialize from released `DylanCouzon/constella-zero`. Preserve every inherited token ID, row and
+  pooling parameter byte-for-byte in the new bundle.
+- Keep Zero a context-independent, order-insensitive token-row lookup and pooled sum. M19 constructs
+  one deterministic exact-row candidate. It has no optimizer, training sweep or model architecture
+  arm.
+- Run locally on this machine. No cloud, paid compute or new source acquisition.
+- Qdrant remains the only corpus and evaluation domain. M19 needs no Qwen, outside software corpus,
+  alias loss, checkpoint schedule or second training seed.
+- Internal evaluation only. Do not publish a model, corpus, index or Hugging Face repository without
+  a separate owner ruling after the result.
 - Do not ask Andrey to repeat the dense-only verdict already supplied. Existing `s3` and `k8s`
-  examples are development diagnostics. Voluntarily supplied queries may become prospective
+  examples are spent development diagnostics. Voluntarily supplied queries may be prospective
   protocol input, not a post-result approval poll.
 
 ## What M18 established
 
-Bind these facts as prior evidence, not hypotheses to rediscover:
+Bind these observations as prior evidence:
 
-- The M18 corpus has 79,269 indexable passages from 11,574 Qdrant artifact families. Its Stella
-  document matrix and BM25 index are complete and integrity checked.
-- M18's held-out questions are issue/PR titles and review questions, not issue bodies. Their median
-  length was nine words overall and twelve in the exact/numeric stratum. They evaluate retrieval of
-  one distinct answer span, while the deployed product returns useful artifacts.
-- The base WordPiece vocabulary shatters relevant terms: examples include `s3` to `s`, `##3` and
-  `k8s` to `k`, `##8`, `##s`. Stella can contextualize fragments; Zero pools fixed rows and cannot.
-  This is a general Zero representation limitation whose impact is concentrated in short jargon,
-  not a tokenizer implementation bug or a universal retrieval failure.
-- M18 trained sixteen exact rows from only 148 gradient-eligible queries. No complete alias pair
-  survived, so alias consistency was inactive. T1 was inert and T2 changed vectors without changing
-  any registered ranking metric. Do not repeat either arm.
-- M18 T0's best dense gain was `+0.007591` nDCG@10, but its best fused gain was `+0.002953`; that
-  fused gain came from one development win and 99 ties. The candidate correctly remained ineligible.
-- The report-only `k8s` dense result improved qualitatively, and released-v1 fusion already ranks
-  plausible `s3` snapshot and `k8s` persistence artifacts first. Those examples are encouraging,
-  unjudged development evidence—not a successful model result.
-- An exclusion-corrected post-run diagnostic found development stratum-macro Stella Recall of
-  approximately `0.524@100` and `0.782@1000` (77/100 target spans found by 1,000). The M18 qrels are
-  difficult and too narrow for the new task, but they are not shown to be mostly unreachable or
-  invalid. Reproduce and persist this diagnostic in M19 before relying on it.
-- Chunk repetition is a real presentation problem but was exaggerated in the external diagnosis.
-  Released-v1 DBSF averaged 9.19 distinct artifacts in the 21-term top ten, minimum seven. Artifact
-  collapse is still the correct product unit; it cannot by itself remove all irrelevant artifacts.
+- The pinned Qdrant corpus contains 79,269 searchable passages from 11,574 artifact families. Its
+  Stella document matrix and BM25 index are complete and integrity checked.
+- M18's questions are issue/PR titles and review questions, not issue bodies. A nine-word overall
+  and twelve-word exact/numeric median was measured on the earlier 175-query v4 protocol; it was not
+  re-measured after adjudication reduced the final development set to 100. Recompute any final-set
+  length claim before using it.
+- The base WordPiece vocabulary shatters relevant terms: `s3` becomes `s`, `##3`; `k8s` becomes
+  `k`, `##8`, `##s`. Stella can contextualize fragments; Zero pools fixed rows and cannot. This is
+  a general representation limitation whose impact concentrates in short jargon, not a tokenizer
+  implementation bug or a failure on every query.
+- M18 added sixteen exact rows but only 148 queries provided gradients. No complete alias pair
+  survived, T1 was inert and T2 changed vectors without changing registered rankings. Do not repeat
+  those arms.
+- M18 T0's best dense gain was `+0.007591` nDCG@10. Its best fused gain was `+0.002953`, produced by
+  one development win and 99 ties, so the candidate correctly remained ineligible.
+- Released-v1 DBSF already ranks plausible S3 snapshot and Kubernetes persistence artifacts first.
+  M18's report-only `k8s` dense list improved qualitatively. These are encouraging, unjudged and
+  spent examples—not evidence that an M18 model qualified.
+- A local, exclusion-corrected post-run calculation found legacy M18 development stratum-macro
+  Stella Recall near `0.524@100` and `0.782@1000`, with 77/100 registered target spans found by
+  1,000. This is provisional until reproduced into an M19 result. It refutes neither the qrels nor
+  the observation that answer-span evaluation differs from useful-artifact search.
+- Released-v1 DBSF averaged 9.19 distinct artifacts in the M18 21-term top ten, minimum seven.
+  Chunk repetition is a real product defect but not the whole quality problem.
 
-M18 development queries, the 21 inspected bare terms and every M18 candidate checkpoint are spent
-development evidence. They may inform M19 design and appear in diagnostics, but cannot serve as
-fresh M19 confirmation. Never reopen or reread M18's raw confirmation queries/qrels. Its published
-aggregate result, lock and receipt remain readable provenance.
+M18 development queries, its 21 inspected bare terms and all M18 candidates are spent development
+evidence. They may inform design and appear in labeled diagnostics, but cannot provide fresh M19
+confirmation. Never read raw M18 confirmation queries or qrels again. Published M18 aggregates,
+manifests, locks and receipts remain provenance.
 
-## Hypotheses and falsifiers
+## Hypothesis and falsifiers
 
-M19 has three explicit hypotheses:
+For a bare term, an exact row is the only free semantic component after fixed special-token rows.
+It can therefore be chosen so the unquantized pooled Zero vector points exactly in the pinned
+Stella query direction. M19 tests whether that direct repair transfers from the training-exposed
+bare term to previously unseen short contexts and useful artifact rankings.
 
-1. On bare and short Qdrant-jargon queries, an exact token row can carry a useful direction that the
-   fixed fragment rows cannot express cleanly.
-2. Direct bare-term supervision plus varied short contexts can improve more queries than M18's
-   sparse natural-query extraction did, while frozen inherited rows preserve unrelated v1 behavior.
-3. Collapsing passages into artifact results improves result diversity and aligns evaluation with
-   the project-memory product, but does not substitute for relevance judgment.
+The attempt stops when any of these holds:
 
-Stop or falsify the attempt when any of the following occurs:
+- fewer than eight genuinely demanded fragmented terms can be registered;
+- fresh short contexts or credible useful-artifact judgments cannot be assembled;
+- Stella lacks material headroom over v1 on queries the new rows can affect;
+- the deterministic candidate fails algebraic, tokenizer, quantization or serving parity;
+- development cannot resolve the registered effect and preservation claims; or
+- the candidate fails any fixed development eligibility rule.
 
-- fresh pooled judgments cannot be made credible or the target query slice cannot be populated;
-- Stella lacks a meaningful dense advantage over v1 on the fresh target slice;
-- the Qdrant-only support inventory cannot provide the minimum distinct contexts and eligible views;
-- the step-500 candidate changes too few target rankings or does not improve targeted dense quality;
-- serving/tokenizer/export parity fails after one corrective attempt; or
-- the first-seed candidate misses the fixed eligibility rule.
+Do not answer a failed gate with contextual row fitting, Qwen, more terms, another teacher, a new
+fusion method or an architecture search. Such work would require a later milestone and evidence
+that this simpler test failed for the relevant reason.
 
-Do not turn a failed gate into an architecture, teacher, corpus-mixture or hyperparameter search.
+## Frozen inheritance and protected boundaries
 
-## Frozen inputs and protected boundaries
-
-At execution start, create an M19 registry and inheritance manifest that verify, at minimum:
+At execution start, create an M19 registry and inheritance lock binding at minimum:
 
 - M18 source, corpus, index and system-manifest file hashes plus their internal identities;
 - Qdrant commit `5e32ea89cb5ea9a6827a68b27291d2e2251e1b1c` and GitHub cutoff
   `2026-09-13T00:36:26Z`;
-- ordered document IDs, corpus text hash, Stella vector hash/shape/dtype and BM25 parameters;
-- released Zero-v1 model, tokenizer and config hashes;
-- M19 parser, artifact-collapse, query-set, pooling, judgment, vocabulary, training, export and
-  evaluation versions; and
-- every seed, planned read, practical margin and confirmation transaction state.
+- ordered document IDs, corpus hash, Stella vector hash/shape/dtype and BM25/DBSF recipe;
+- released-v1 model, tokenizer, config and effective-row hashes;
+- term roster, exact-token policy, deterministic row formula and scale convention;
+- query/split/pool/judgment/artifact-collapse/metric versions and seeds; and
+- all planned reads, practical margins, numerical gates and confirmation states.
 
 Reference immutable M18 artifacts rather than copying or rebuilding large arrays. M19 may create
-new manifests, query caches, training data, checkpoints and result files only under `m19/`,
-`m19src/`, `work/m19/` and `results/m19_*`.
+files only under `m19/`, `m19src/`, `work/m19/` and `results/m19_*`. Keep the M18 worktree inputs
+read-only and verify them before every quality transaction.
 
-The historical protections remain absolute. Do not read or write:
+Historical protections remain absolute. Do not read or write:
 
 - `results/perquery.json`, `results/frozen_eval/untouched-*`, reserved qrels caches,
   `work/m9reserve`, LoTTE payloads or any spent M7–M13 evaluation surface;
 - raw M18 confirmation queries or qrels, directly or through a helper;
-- a model-generated reconstruction of protected examples; or
-- any closed registry, lock, decision, receipt or published result as though it were mutable input.
+- model-generated reconstructions of protected examples; or
+- any closed registry, decision, lock, receipt or result as mutable experiment state.
 
-Implement path-level read guards and tests before data work. A reviewer prompt must repeat these
-exclusions and name the files it may inspect.
+Implement path-level guards and tests before query work. Every reviewer brief names the admitted
+files, repeats the exclusions and requires read-only operation.
 
-## Retrieval unit and serving contract
+## Deterministic artifact retrieval
 
-Documents remain M18 passages, but ranked results become artifacts. Define one deterministic
-collapse rule before any new quality read:
+Documents remain M18 passages, but M19 results are artifacts. Freeze this rule before quality data:
 
-1. Retrieve up to 500 passages per route, with the existing deterministic score/document-ID ties.
-2. Map each passage to its stable `artifact_id` (`gh:thread:<number>` for a GitHub thread and the
-   registered repository-artifact identity for repository text).
-3. Keep the highest-scoring passage per artifact for that route; tie by ascending passage ID.
-4. Retain the first 100 unique artifacts per route. Record both the artifact score and its best
-   supporting passage.
-5. Apply the existing DBSF operator to artifact scores at depth 100. For display, retain the best
-   lexical and dense supporting passage and identify which route contributed each.
-6. Return at most one row per artifact. Never silently mark every sibling passage relevant.
+1. Retrieve up to 500 passages per route with descending score/ascending passage-ID ties.
+2. Map passages to stable `artifact_id` values.
+3. For each route, retain the highest-scoring passage per artifact; tie by passage ID.
+4. Keep the first 100 unique artifacts per route. Record artifact score and supporting passage.
+5. Apply the unchanged DBSF operator to artifact scores at depth 100.
+6. Return one row per artifact. Preserve the best dense and lexical passage and their contributions
+   so the interface can explain why the artifact ranked.
 
-If 500 passages do not supply 100 unique artifacts for a route, use all available artifacts and
-report the shortage. The passage depth is a serving/retrieval constant, not a tuning parameter.
-Measure latency and memory for passage scoring, collapse and fusion separately. Preserve a
-chunk-level diagnostic only to quantify the effect; artifact-level retrieval is the M19 gate.
+If 500 passages supply fewer than 100 artifacts, use all available and report it. Passage depth 500
+is a registered serving constant, not a tuning knob. Measure passage scoring, collapse and fusion
+latency separately. Keep chunk-level results only as a diagnostic.
 
-For an evaluation query authored from one specific artifact, exclude that complete artifact before
-collapse and record the exclusion. Excluding only the opening while returning a sibling comment
-would become trivial self-artifact retrieval at the new relevance unit. A real internal query or a
-bare term discovered across multiple artifacts has no synthetic source artifact to exclude. The
-relevance judge assesses each remaining artifact and supporting evidence; relevance must never be
-inferred from a thread relationship.
+For a query authored from one specific artifact, exclude that complete artifact and text-equivalent
+copies before passage truncation. Otherwise a sibling comment becomes trivial self-artifact
+retrieval. Real internal queries and bare terms supported across artifacts have no synthetic source
+artifact. A distinct linked answer is not excluded merely for linking to the source. Each authored
+query must have at least one useful remaining artifact or be labeled unanswerable and removed before
+the split is frozen.
 
-## Fresh query protocol
+## Prospective term roster
 
-Create 60 development-selection queries and 30 sealed confirmation queries when evidence permits.
-Use fixed family/deduplication assignment and target the following composition:
+Before authoring evaluation queries or reading retrieval quality, inventory the M18 corpus and
+released tokenizer. Select 8–12 terms that:
 
-| Stratum | Development | Confirmation | Purpose |
-|---|---:|---:|---|
-| bare identifiers/project terms | 12 | 6 | directly exercise token shattering |
-| short task or intent, 2–5 words | 18 | 8 | test a term in minimal context |
-| aliases, renamed settings and old/new jargon | 10 | 5 | test project language relationships |
-| exact/numeric/version distinctions | 10 | 5 | prevent lexical and numeric regressions |
-| longer natural-language controls | 10 | 6 | show whether gains are narrow and safe |
+- split into at least two released-tokenizer pieces;
+- have one stable, project-relevant meaning;
+- occur naturally in at least five distinct Qdrant artifacts;
+- have credible demand from the recorded use case or prospective internal query input; and
+- can support at least three distinct short intents and multiple useful result artifacts.
 
-Minimum viable execution is 40 development and 20 confirmation queries, with at least eight/four
-in every available target stratum. Report shortages; do not manufacture filler to hit a table.
-Bare means one project term or identifier after punctuation-preserving lexical splitting. Short
-means two to five lexical terms. Controls are six or more terms.
+`s3` and `k8s` may be roster terms if they pass the same meaning and multi-artifact checks, but
+their already inspected bare queries remain development-only. Do not admit ordinary whole tokens,
+UUIDs, hashes, timestamps, random suffixes or one-off paths. Case-folding and AddedToken boundary
+semantics must match released serving behavior. Freeze the roster, original fragment IDs and all
+support counts before candidate construction.
+
+The roster is a demand/meaning gate, not a claim that five occurrences estimate a 1,024-dimensional
+row. The candidate receives its direction from Stella, not a fitted sample. Do not impose M18-style
+training-view counts or generate paraphrases to inflate support.
+
+## Deterministic exact-row candidate
+
+Build exactly two vocabulary-extension bundles with the same frozen inherited components:
+
+- **V0-compose:** exact AddedTokens initialized by M18's count-weighted composition of the original
+  fragment rows. It isolates tokenizer replacement without a new semantic direction and is a
+  descriptive baseline, not selectable.
+- **T0-teacher:** the sole candidate. Each exact row makes the bare-term query point in the pinned
+  Stella query direction under the actual Zero pooling rule.
+
+For roster term `t`, let:
+
+- `u_t` be the unit Stella query vector for the raw bare term using the pinned query prefix;
+- `a_t` be the weighted sum of all frozen rows that remain when the original fragment pieces are
+  replaced by one exact token—normally `[CLS]` and `[SEP]`;
+- `r_comp,t` be the weighted sum of the original fragment rows under released sqrt-count pooling;
+- `s_old,t = a_t + r_comp,t`; and
+- `alpha_t = ||s_old,t||_2`.
+
+Set the new effective row to:
+
+`r_t = alpha_t * u_t - a_t`.
+
+The final normalization cancels the pooling denominator, so the new unquantized bare query sum is
+`alpha_t * u_t`. Preserving `||s_old,t||` fixes the otherwise arbitrary row scale and limits the
+change in relative contribution when the term appears with context. Do not tune `alpha_t` from
+retrieval results. Refuse a term if actual tokenizer/pooling behavior makes this derivation false or
+non-finite.
+
+Verify for every term through the real training-time math, exported NumPy loader and int8 path:
+
+- exact bare-token match with stable inherited token IDs;
+- pre-quantization cosine to `u_t` at least `0.999999`;
+- int8 cosine to `u_t` at least `0.999` and maximum coordinate error at most `0.02`;
+- byte-identical inherited row codes/scales and pooling parameters;
+- unchanged tokenization and encoder output within `1e-6` for queries without an added-token match;
+- boundary, punctuation, case, plural/possessive and substring collision fixtures; and
+- no eager float32 expansion of the full table in the M19 loader.
+
+The baseline input files keep their original hashes; the extended bundle files necessarily have
+new hashes. Record both. Resident table bytes must equal inherited int8 codes/scales plus the exact
+per-row increment; measure temporary allocations separately.
+
+## Query protocol and split estimand
+
+The estimand is improvement for the fixed term roster. Report bare-term adaptation separately from
+generalization to unseen short contexts.
+
+For each roster term, create prospectively:
+
+- one bare development query, explicitly marked training-exposed because it defined `u_t`;
+- three development short intents of two to five lexical terms; and
+- two sealed confirmation short intents of two to five lexical terms.
+
+Add one longer control query per term to development and one control per two terms to confirmation.
+With 8–12 terms this yields 40–60 development and 20–30 confirmation queries. If fewer than eight
+terms survive, stop. Do not fill shortages with more templates for the same term.
+
+Primary query classes are mutually exclusive: `bare_adaptation`, `short_context` and
+`longer_control`. `alias`, `renamed`, `numeric` and `version` are secondary tags only. Short means
+two to five punctuation-preserving lexical terms; longer means six or more. Every target query must
+contain exactly one roster term matched as an AddedToken. Controls contain no added-token match
+unless explicitly tagged `target_control`, which is reported separately.
+
+Fresh confirmation uses previously uninspected short intents whose normalized text and
+near-duplicate intent family are absent from training, M18 diagnostics and M19 development.
+Familiar vocabulary does not make a new context spent. Bare queries used to construct teacher rows
+cannot count as unseen-query confirmation evidence and never enter confirmation.
+
+Partition source/intent families before extracting query variants. Hold query-bearing source
+artifacts out across development and confirmation and remove normalized/near-duplicate intersections
+after every transformation. The same term may appear in both splits; the intent, wording and source
+family may not. Record term-level dependence explicitly.
 
 Query sources, in preference order:
 
-1. real internal query text supplied prospectively with permission, stripped of user identity and
-   secrets;
-2. short intents independently authored from pinned Qdrant artifacts before retrieval results are
-   shown; and
-3. deterministic bare terms and identifier-plus-intent forms supported by multiple Qdrant
-   artifacts.
+1. prospective internal query text supplied with permission and stripped of identity/secrets;
+2. short intents independently authored from pinned Qdrant evidence before results are shown; and
+3. deterministic identifier-plus-intent forms supported by multiple artifacts.
 
-The two known `s3`/`k8s` complaints and all terms inspected in M18 are development-only. Do not use
-them in M19 confirmation. Do not use Qwen or another model to author evaluation questions or decide
-relevance. Store the query text separately from qrels, union near duplicates before splitting, and
-exclude source families across development and confirmation.
+Qwen may not author evaluation queries or judge relevance. Astra may perform source-grounded
+relevance judgment and independent auditing under a frozen prompt/access policy; disclose that the
+labels are model judgments. A query author may not be its sole relevance judge.
 
-## Pooled multi-relevance judgments
+## Blinded useful-artifact judgments
 
-Structural single-answer qrels are not the primary M19 evaluation. Build artifact pools and judge
-what a project-memory user could use.
+Use binary artifact relevance for this bounded feasibility run:
 
-For development, pool the top ten unique artifacts from these fixed systems:
+- `1`: the artifact is materially useful for satisfying the query, supported by the frozen evidence
+  packet; or
+- `0`: it is coincidental, misleading or not materially useful.
 
-- BM25;
-- released Zero v1 dense;
-- released Zero v1 + DBSF;
-- Stella dense and Stella + DBSF; and
-- M18 T0 step 250 as a named historical diversity contributor, never as an eligible M19 model.
+Binary labels avoid an unaudited `1` versus `2` distinction. Multiple artifacts may be relevant.
+`Unjudgeable` is not zero: resolve it under the frozen procedure or mark the protocol incomplete and
+stop before metrics.
 
-Deduplicate the union by artifact. Randomize presentation order and remove model name, score, rank
-and route. Show the query, artifact title/metadata and enough top passages to judge usefulness.
-Use graded labels:
+For both development and confirmation, pool the top ten unique artifacts from BM25, v1 dense,
+v1+DBSF, V0-compose dense, T0-teacher dense, T0-teacher+DBSF and Stella dense. Build the candidate
+before pooling; there is no checkpoint or later endpoint. Every artifact that can affect a reported
+top-ten metric is therefore judged prospectively in one union.
 
-- `2`: directly answers, resolves or is the intended artifact;
-- `1`: materially useful context for the query; and
-- `0`: not useful, coincidental term match or misleading.
+Randomize artifacts with seed `19019` and remove system identity, route, score, rank and first-seen
+phase. Mix concealed repeated audit items into later packets so their origin cannot be inferred.
+Freeze an evidence packet containing:
 
-Multiple artifacts may be relevant. A provenance record must bind query, artifact, displayed
-passage hashes, label, reviewer identity/version and rationale. `Unjudgeable` is separate from
-zero. Do not label by thread relationship, title overlap or source-system membership.
+- query ID/text and source-exclusion identity;
+- artifact ID, title, URL/path and kind;
+- the route-independent top three passages by best reciprocal rank across the blinded pool routes,
+  tie-broken by passage ID, each capped at 1,200 characters with full-text hash;
+- sufficient parent-thread or repository metadata to interpret the passages; and
+- no model identity or numeric retrieval score.
 
-Candidate-aware pool completion is predeclared and metric-blind. At the step-500 pause, union any
-unjudged top-ten artifacts from steps 250/500, blind and judge them once, then compute the diagnostic
-gate. If training continues, union unjudged top-ten artifacts from every remaining registered
-checkpoint before reading any of their retrieval metrics, blind and judge that union once, freeze
-the final development qrels, and recompute all baseline/checkpoint metrics on the same qrels. Never
-choose a checkpoint first and expand the pool only for its results.
+An artifact label is route-independent. For the selected system, independently verify that the
+displayed supporting passage itself justifies every artifact responsible for a measured win; an
+artifact-level label cannot certify a misleading snippet.
 
-Confirmation initially seals query text and family assignments, not incomplete baseline-only
-qrels. After the model/checkpoint decision is locked, a one-shot transaction retrieves the fixed
-baseline and selected-candidate pools, blinds and adjudicates their union, freezes confirmation
-qrels, scores all systems and writes a complete receipt. The transaction may be rehearsed on
-synthetic fixtures but never partially run on real confirmation. If no candidate is eligible,
-confirmation audits the selected v1-backed system without adding an M19 candidate.
+One primary reviewer judges the complete pool. A fresh independent reviewer judges a fixed seeded
+20% sample, including every positive, every unjudgeable and at least one item per query/term. Require
+at least 90% exact binary agreement, review every disagreement blind, and freeze adjudicated labels.
+If one rubric clarification is necessary, apply it to the complete pool and draw a fresh audit
+sample. A second failure stops the run.
 
-### Judgment review gate
+Pilot pool construction on ten development queries before full judgment. Report unique artifacts,
+packet bytes and reviewer minutes. Cap development at 3,000 unique query-artifact judgments and
+confirmation at 1,500; exceeding a cap stops for owner direction rather than truncating a top ten.
 
-- One primary reviewer judges the complete blinded development pool.
-- A fresh independent reviewer judges a fixed seeded 20% sample, oversampling relevance labels and
-  every `unjudgeable` item.
-- Report exact agreement for relevant (`1/2`) versus irrelevant (`0`), graded agreement and all
-  disagreements. Require at least 90% binary agreement and no unresolved material rubric defect.
-- Adjudicate disagreements without system identities. If the threshold fails after one rubric
-  clarification and fresh sample, stop before training.
-- Neither reviewer may see confirmation content before its one-shot transaction.
+Confirmation packets and labels remain inaccessible until the one-shot confirmation claim.
 
-Human review is preferred for at least the short-query sample because usefulness is a product
-judgment. Astra may perform source-grounded primary or independent review when human labels are not
-available, but its model/version, prompt, inputs and access log must be recorded. Model judgment is
-evidence, not ground truth, and must be disclosed.
+## Metrics and statistical unit
 
-## Baselines and headroom gate
+Freeze the metric implementation and practical margins before any V0 or T0 quality result. Score
+only judged top-ten artifact results.
 
-Before training, measure on the frozen artifact-level development protocol:
+Primary metric:
 
-- BM25, released Zero v1 dense and released Zero v1 + DBSF;
-- Stella dense and Stella + DBSF;
-- untrained M19 V0 and V0 + DBSF; and
-- the historical M18 T0-step250 diagnostic, clearly marked ineligible.
+- binary useful-artifact `Precision@10` on fresh `short_context` queries, averaged within term and
+  then equally across terms. A list shorter than ten has ten as its denominator.
 
-Report graded nDCG@10, binary Recall@10, MRR@10, at-least-one-grade-2 success@10, wins/ties/losses
-versus v1, per-stratum results, bootstrap intervals, query latency, distinct artifacts, stored bytes
-and runtime resident bytes. Report Recall@100 and Recall@1000 for the legacy M18 development qrels
-once as a postmortem diagnostic; it is not an M19 selection metric.
+Secondary metrics:
 
-Freeze exact practical margins after the judgment-quality report and before any candidate result or
-optimizer step. The default headroom requirement, which may only be made stricter at that point, is:
+- binary nDCG@10 with gain `g(rel)=rel` and IDCG computed from all judged positive artifacts in the
+  frozen pool, capped at ten;
+- pooled Recall@10 (named pooled because corpus-wide relevance is not exhaustive);
+- MRR@10 and at-least-one-useful-artifact success@10;
+- per-term and secondary-tag results, wins/ties/losses, supporting-passage audit, distinct artifacts,
+  latency, stored bytes and runtime resident bytes; and
+- spent bare-adaptation and longer-control results, reported outside the primary estimate.
 
-- on the combined bare/short/alias target slice, Stella dense exceeds v1 dense by at least `0.05`
-  artifact nDCG@10; and
-- Stella produces at least ten percentage points more target-query wins than losses versus v1.
+A query win/loss is the sign of its candidate-minus-v1 Precision@10 difference with exact zero a
+tie. The independent unit is the roster term: bootstrap terms with seed `19019`, carrying all their
+query intents together. Report percentile 95% intervals. Development intervals guide a locked
+selection; they are not post-selection proof.
 
-If either fails, do not train. Report that the frozen teacher does not demonstrate enough teachable
-headroom for this recipe. A strong v1 hybrid result may close the product problem, but does not by
-itself prove that dense Zero improved.
+Baseline/headroom systems are BM25, v1 dense, v1+DBSF, V0-compose dense, Stella dense and
+T0-teacher routes after the pool freezes. Call Stella a headroom reference, not a ceiling.
 
-## Vocabulary and training-support gate
+Training-free execution proceeds to candidate scoring only when:
 
-Discover vocabulary only from M19 training sources. A row is eligible when the released tokenizer
-splits a meaningful Qdrant term into multiple pieces and the term has retrieval demand in the
-prospective development distribution or a registered operational reason. Record tokenization,
-fragment rows, support, residual value and before/after text behavior. Do not add already-whole
-tokens, UUIDs, hashes, timestamps, random suffixes or one-off paths.
+- at least eight terms and two fresh development short intents per term remain judgeable;
+- Stella dense exceeds v1 dense by at least `0.05` term-macro Precision@10 on the modifiable
+  `short_context` slice; and
+- Stella wins on at least three more distinct terms than it loses versus v1.
 
-Start with Qdrant-only support and improve extraction before requesting new data:
+If not, retain v1 and close without claiming the teacher proves a capacity limit.
 
-- documentation headings and their sections;
-- issue/PR titles and concise intent-bearing sentences;
-- review questions and resolving explanations outside held-out families;
-- aliases/renames explicitly evidenced in project text; and
-- deterministic bare-term plus two-to-five-word forms tied to distinct source artifacts.
+## Numerical and serving gates
 
-A bare term may receive a direct Stella query target, but repeating it does not count as additional
-support. Context counts are by distinct artifact and normalized query text. Synthetic variants do
-not increase natural-source counts.
+Before quality scoring, require:
 
-The default training gate is:
+- loader parity maximum absolute error at most `1e-6` before quantization;
+- int8 query-vector maximum absolute error at most `0.02`;
+- pre/int8 bare-direction cosine gates stated above;
+- exact no-added-token ranking parity with released v1 on fixed fixtures;
+- candidate resident codes-plus-scales bytes no greater than v1's corresponding compact arrays plus
+  `(1024 + 4)` bytes per added row;
+- no full-table float32 runtime copy;
+- median and p95 encoder latency no worse than both `1.20x` and `+0.05 ms/query` versus v1 on one
+  fixed 10,000-query sequence after warmup; and
+- artifact-collapsed end-to-end median/p95 latency no worse than `1.20x` v1 on the same query order.
 
-- 8–64 added exact rows;
-- at least 12 distinct Qdrant artifacts and 20 natural contexts for every ordinary row;
-- separately disclosed owner-requested rows may use a minimum of six natural Qdrant artifacts only
-  when an explicit alias/expansion is source-evidenced;
-- at least 1,000 distinct gradient-eligible short query views overall;
-- median of at least 30 distinct eligible views per row; and
-- at least 50 complete evidence-backed alias pairs before enabling alias loss.
+Pin host, thread counts, warmup, repetitions and query-sequence hash. Report process RSS and
+temporary peak allocations descriptively; do not confuse stored, resident and eager-float bytes.
 
-If the total or per-row gate fails, stop before training and report the exact shortage. Only then may
-the owner authorize an affirmatively commercial-use-licensed software corpus for training support.
-Qdrant remains the evaluation corpus. Do not silently weaken support minima or count generated
-paraphrases as independent evidence.
+## Development eligibility
 
-The cached local Qwen teacher is optional only after a measured shortage in phrasing diversity, not
-source support. It may generate at most five short training queries per source artifact and no more
-than 25% of eligible training views. Each generation must be answerable from its bound Qdrant span,
-contain an admitted target term, pass deduplication and receive a blinded quality audit. Qwen text
-never defines evaluation queries, qrels, aliases or natural-support counts.
+T0-teacher is eligible only if all numerical/judgment gates pass and, versus released v1:
 
-## Single candidate recipe
+- fresh-short-context Precision@10 improves by at least `0.03` absolute;
+- the term-bootstrap 95% interval for that primary delta has a lower endpoint above zero;
+- wins occur in at least four distinct terms and winning terms outnumber losing terms by at least
+  three;
+- fresh-short-context binary nDCG@10 delta is positive;
+- T0-teacher+DBSF Precision@10 is noninferior to v1+DBSF under a one-sided 95% term-bootstrap lower
+  bound of `-0.02`, with point delta no worse than `-0.01`;
+- no numeric/version-tagged or longer-control slice has a negative point delta with an interval
+  wholly below zero; and
+- every artifact responsible for a primary win passes the supporting-passage audit.
 
-M19 has one trained form, `T0-short`:
+V0-compose is descriptive and cannot be selected. There is one deterministic candidate, no
+checkpoint selection, seed variance or second seed. If the primary interval or hybrid
+noninferiority claim is unresolved, retain v1 and record `ENCODER_INCONCLUSIVE`, not equivalence or
+improvement. A clear miss records `ENCODER_NO_MEASURABLE_IMPROVEMENT`.
 
-- released Zero v1 tokenizer plus the admitted exact AddedTokens;
-- raw text with digits preserved and no T1/T2 normalization;
-- released-v1 effective rows as initialization; inherited rows and pooling parameters frozen;
-- count-weighted fragment composition for each new row at V0;
-- direct cosine supervision on each bare term and varied short contexts;
-- the existing teacher-cosine and hard-candidate listwise objectives on source-grounded queries;
-- row-balanced deterministic sampling so a frequent term cannot dominate and a scarce row cannot
-  be amplified beyond four times its natural share;
-- alias-consistency weight `0.1` only if the support gate yields at least 50 complete eligible pairs,
-  otherwise weight `0.0` prospectively and truthfully;
-- new-row learning rate `3e-4`, batch `256`, warmup `200`, maximum `4,000` optimizer steps;
-- checkpoints at steps `0`, `250`, `500`, `1,000`, `2,000`, `4,000`; and
-- primary seed `19001`, confirmation seed `19002`, bootstrap seed `19019`.
+## Resumable one-shot confirmation
 
-Confirm inherited-row immutability algebraically and by hash. Keep the M18 duplicate-safe
-cross-epoch sampler, but require the eligible pool to exceed batch size so routine batches do not
-mostly repeat queries. Cache raw Stella targets and candidate lists once. Make every long stage
-atomic, resumable and identity-bound. Record loss components, actual alias pairs, row sampling,
-unique queries per batch, elapsed time, peak RAM/VRAM, disk and table sizes.
+Before accessing confirmation, commit and push a decision lock containing the selected candidate,
+exact bundle hashes, frozen development qrels/results, term roster, formula/scale, artifact-collapse,
+pool/evidence/judgment/metric recipes, numerical gates and all inheritance identities.
 
-Do not add an anchor, new teacher, T1/T2 arms, learned fusion, negative-mining sweep, checkpoint
-averaging, document fine-tuning or late interaction. Any such idea belongs to a later milestone
-after this feasibility result.
+One-shot means one decision-locked confirmation experiment, not one uninterrupted process. Use
+immutable states:
 
-## Step-500 diagnostic and stopping rule
+`locked -> claimed -> pools-frozen -> judgments-in-progress -> qrels-frozen -> scored -> complete`.
 
-Before the full run, evaluate V0/step 0, step 250 and step 500 on development. The real-path
-diagnostic must also verify:
+Claim before exposing query content. Each pool, packet, judgment batch and adjudication is hash-bound
+and atomically checkpointed. An interruption may resume the same state with unchanged inputs; it may
+not alter the candidate, rubric, pool recipe, thresholds or reviewer identities. Expose no quality
+metric before qrels freeze. An unrecoverable failure marks confirmation consumed/incomplete and
+retains v1. Rehearse interruption/resume across the judgment boundary on synthetic fixtures.
 
-- training-forward versus exported NumPy loader parity;
-- unchanged inherited model/tokenizer/config hashes and inherited row bytes;
-- exact added-token matching and collision behavior;
-- int8 quantization error and runtime resident representation;
-- deterministic resume from the step-250 checkpoint; and
-- artifact-collapse/fusion parity between evaluation and the documented query command.
+Name the primary confirmation judge and independent auditor in the decision lock. Apply the same
+complete-pool, 20% audit, 90% agreement, disagreement and supporting-passage rules as development.
 
-Continue beyond 500 only when all gates pass and, on the target slice, step 250 or 500:
+Confirmation passes only when:
 
-- improves dense artifact nDCG@10 over step 0 by at least `0.01`;
-- produces at least three more query wins than losses; and
-- changes the top-ten artifact order for at least 15% of target queries.
+- primary fresh-short Precision@10 delta is at least `+0.03` with a term-bootstrap 95% lower
+  endpoint above zero;
+- wins occur in at least three terms and winning terms outnumber losing terms by at least two;
+- fresh-short nDCG@10 delta is positive;
+- hybrid satisfies the same point `-0.01` and one-sided lower-bound `-0.02` noninferiority margins;
+- no registered safety slice has an interval wholly below zero; and
+- serving bytes and supporting-passage audit remain decision-identical.
 
-If not, stop the trained attempt. One parity defect may be corrected and the identical diagnostic
-rerun once; a quality miss is not permission to change the recipe.
-
-## Encoder eligibility and selection
-
-The model objective is dense short-query improvement. The final exact margins must be sealed after
-the pre-training protocol/headroom audit and before optimizer step one. Unless that prospective
-audit makes them stricter, a candidate is eligible on development only if:
-
-- target-slice dense artifact nDCG@10 exceeds released v1 by at least `0.03` absolute;
-- the paired 95% bootstrap interval for that target dense delta has a lower endpoint above zero;
-- target-query wins minus losses are at least ten percentage points, with gains occurring in at
-  least two target strata;
-- candidate + DBSF does not trail v1 + DBSF by more than `0.005` artifact nDCG@10 overall or on the
-  exact/numeric control stratum;
-- longer-control dense and hybrid deltas are not clearly negative by paired interval;
-- no adequately sized target stratum has a negative point delta with an interval wholly below zero;
-  and
-- tokenizer, export, int8, latency and resident-size gates pass.
-
-Select the earliest checkpoint within `0.005` dense nDCG@10 of the best eligible checkpoint, unless
-the later checkpoint has a clear paired advantage. This avoids selecting a late step on noise.
-V0 can qualify under the same quality and serving rules without a second seed. A trained form runs
-seed `19002` only after it is eligible on seed `19001`; require the target dense and hybrid-safety
-directions to agree. No eligible first seed means no second seed.
-
-An M19 trained candidate is not a public Zero successor. It is an internal candidate until fresh
-confirmation passes and the owner separately approves release.
-
-## One-shot confirmation
-
-Before confirmation access, commit and push a decision lock containing:
-
-- selected model/checkpoint and exact bundle hashes;
-- all query/protocol/judgment versions and development evidence hashes;
-- source/corpus/index inheritance identities;
-- artifact-collapse, retrieval, fusion and metric recipes;
-- eligibility computation, second-seed result and serving gates; and
-- the confirmation pooling/adjudication transaction code and synthetic rehearsal receipt.
-
-Then execute the confirmation transaction exactly once. For a candidate to pass:
-
-- target dense artifact nDCG@10 delta versus v1 is positive;
-- target wins exceed losses and improvement is not confined to one query;
-- hybrid overall and exact/numeric deltas are no worse than `-0.005`;
-- no adequately sized stratum has a paired interval wholly below zero; and
-- the decision-locked serving bytes and evaluation loader remain identical.
-
-Confirmation is a directional audit on a small fresh sample, not a chance to tune margins, change
-qrels, select a different checkpoint or run another candidate. A failed confirmation retains
-released v1 and closes the encoder result.
+If the bounded confirmation sample cannot resolve improvement or noninferiority, record
+`ENCODER_INCONCLUSIVE` and retain v1. Confirmation cannot change the candidate, terms, qrels policy,
+metrics or thresholds.
 
 ## Reviewer process
 
-Use adversarial review at the decisions that can invalidate downstream work:
+Use the smallest review set that protects consequential transitions:
 
-1. **Plan review:** one Astra review of this instruction file for task alignment, leakage, feasible
-   statistics and overengineering. Correct every P0/P1 or explicitly reject it with evidence.
-2. **Inheritance/implementation review:** before any new quality read, one implementation reviewer
-   and one fresh Astra reviewer inspect the real artifact-collapse, protected-read guards, pooling,
-   scoring and synthetic transaction—not isolated helpers.
-3. **Data review:** primary blinded judgment plus the independent 20% audit described above. A
-   reviewer who authored a query may not be its sole relevance judge.
-4. **Pre-training lock review:** Astra verifies the frozen query sets, judgment quality, support
-   gate, headroom, exact thresholds and executable identities before optimizer step one.
-5. **Step-500 review:** reproduce parity and stopping arithmetic before continuing the fixed run.
-6. **Selection review:** a fresh reviewer independently recomputes eligibility and bundle hashes
-   before the one-shot confirmation transaction.
-7. **Final review:** reconcile outcomes, confirmation receipt, limitations and publication status.
+1. **Plan:** Astra adversarially reviews this file for task alignment, leakage, statistics,
+   feasibility and overengineering. Resolve every P0/P1 and re-review material changes.
+2. **End-to-end implementation/protocol:** before real judgments, one implementation reviewer and
+   one fresh Astra reviewer inspect inheritance guards, actual row algebra, tokenizer/export,
+   artifact collapse, pool blinding, metrics and the synthetic confirmation-resume transaction.
+3. **Judgments:** one primary blinded judge plus the fresh independent 20% audit. A query author may
+   not be its sole judge.
+4. **Decision/confirmation:** independently recompute development eligibility and all hashes before
+   the irreversible claim. Reconcile confirmation receipt and final outcomes afterward.
 
-Only one Astra reviewer runs at a time. Give every reviewer a bounded file list, the protected-read
-exclusions and a read-only mandate. Save prompts, reviewer/model identity, findings, dispositions
-and verification evidence under `m19/reviews/` or `results/m19_review_*`. Reviewers never silently
-edit results or relax a gate. Re-review material fixes. Two independent reviewers must issue GO
-before expensive training or the irreversible confirmation read.
+Only one Astra reviewer runs at a time. Reviewer prompts name a bounded file set, forbid protected
+reads and require read-only operation. Save prompts, reviewer/model identities, access logs,
+findings, dispositions and verification under `m19/reviews/` or `results/m19_review_*`. Reviewers
+never edit results or relax gates. Two independent GOs are required before real judging and before
+confirmation. Automate final identity reconciliation rather than adding another narrative review.
 
 ## Ordered execution
 
-1. Create `m19/`, `m19src/`, `work/m19/` and fresh guards/registry; bind M18 inheritance.
-2. Implement and synthetically rehearse artifact collapse, pooled judgment import, metrics, resume,
-   export and the one-shot confirmation transaction.
-3. Reproduce the M18 Recall@100/@1000 postmortem and artifact-diversity diagnostics.
-4. Build, deduplicate and seal fresh M19 query text/families; keep confirmation inaccessible.
-5. Build and blind the development artifact pools; adjudicate and pass independent review.
-6. Read fixed baselines, measure teacher headroom and stop if the headroom gate fails.
-7. Build the Qdrant-only training inventory; stop or request owner direction if support fails.
-8. Build V0/cache/candidate data, seal the complete execution recipe and obtain two review GOs.
-9. Run the T0-short step-500 diagnostic; continue only if its fixed gate passes.
-10. Complete the one-seed screen and run the second seed only for an eligible trained form.
-11. Decision-lock the selected encoder/system without confirmation access.
-12. Run the fresh confirmation pool, adjudication and scoring transaction once.
-13. Finalize the artifact-collapsed internal query path and record both outcomes.
+1. Create `m19/`, `m19src/`, `work/m19/`, fresh guards/registry and the inheritance lock.
+2. Inventory fragmented terms and freeze the 8–12-term roster before quality retrieval.
+3. Implement row construction, int8 export/loader, artifact collapse, pooling, metrics and the
+   resumable confirmation state machine; pass synthetic end-to-end rehearsal.
+4. Build, deduplicate and seal development/confirmation query text and families. Keep confirmation
+   inaccessible.
+5. Build V0-compose and T0-teacher; pass every algebraic, tokenizer, export, memory and latency gate.
+6. Run the ten-query pool-cost pilot. Stop for owner direction if the fixed caps would be exceeded.
+7. Build and blind the complete development pool; judge, independently audit and freeze qrels.
+8. Score all development systems once, apply headroom and eligibility rules, and decision-lock the
+   selected encoder/system. Do not access confirmation if T0 is ineligible unless a separately
+   registered system-only audit needs it.
+9. For an eligible T0, run the resumable fresh confirmation transaction once.
+10. Finalize the artifact-collapsed internal query command and record both outcome axes.
 
-No stage proceeds merely because compute remains available.
+No stage proceeds merely because compute or context remains.
 
-## Required artifacts and final outcomes
+## Required artifacts and outcomes
 
 Create and maintain at least:
 
 - `m19/STATUS.md`, `PLANNING.md`, `registry.json`, `LEDGER.md`, `FINDINGS.md`, `CODEMAP.md`;
-- `m19/inheritance-lock.json` and an immutable pre-training execution lock;
-- protected-read tests and one-command synthetic rehearsal;
-- query/family manifests, pool manifests, blinded judgment records and independent-review receipts;
-- artifact-collapse parity and legacy M18 recall/diversity diagnostics;
-- vocabulary/support/collision manifests and explicit natural/generated counts;
-- machine-readable baseline, headroom, checkpoint, seed, stratum, win/tie/loss and bootstrap results;
-- int8 export gates, exact bundle hashes, runtime memory/latency and a NumPy loader;
-- a decision lock plus one-shot confirmation lock/result/receipt; and
-- a final system manifest and exact local query command.
+- inheritance/execution/decision locks and path-protection tests;
+- one-command synthetic rehearsal including interrupted confirmation resume;
+- term/support/tokenization manifest and per-row algebra/parity receipt;
+- query/family/pool/evidence-packet manifests and blinded judgments/audits;
+- artifact-collapse parity and legacy M18 recall/diversity postmortem;
+- machine-readable baseline, headroom, per-query/per-term, interval and eligibility results;
+- int8 bundle hashes, loader, stored/resident/temporary bytes and latency results;
+- confirmation state/lock/result/receipt when applicable; and
+- final system manifest with the exact local query command.
 
-Final status records both axes:
+Final status records:
 
 - `SYSTEM_READY` or `SYSTEM_BLOCKED`; and
-- `ENCODER_INTERNAL_CANDIDATE` or `ENCODER_NO_MEASURABLE_IMPROVEMENT`.
+- `ENCODER_INTERNAL_CANDIDATE`, `ENCODER_NO_MEASURABLE_IMPROVEMENT` or `ENCODER_INCONCLUSIVE`.
 
 `SYSTEM_READY` requires a usable artifact-collapsed BM25+dense DBSF path over the inherited snapshot.
-`ENCODER_INTERNAL_CANDIDATE` requires every development, second-seed, confirmation and serving gate.
-Otherwise released Zero v1 remains selected. Never call an unresolved interval equivalence, never
-promote a qualitative top ten as a measured win, and never let the historical M18 label imply that
-the broader short-query goal is impossible.
+`ENCODER_INTERNAL_CANDIDATE` requires every development, confirmation and serving gate. Otherwise
+released Zero v1 remains selected. Never call an unresolved interval equivalence, never promote a
+qualitative top ten as a measured win, and never claim that this one deterministic repair exhausts
+the broader tokenizer-shattering problem.
