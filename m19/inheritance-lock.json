@@ -1,0 +1,154 @@
+{
+  "_schema": "m19-inheritance-lock-v1",
+  "identities": {
+    "bm25_recipe": {
+      "b": 0.75,
+      "implementation": "bm25s",
+      "k1": 1.2,
+      "method": "lucene",
+      "stemmer": "english",
+      "stopwords": "en"
+    },
+    "corpus_artifacts": 11574,
+    "corpus_documents": 79269,
+    "corpus_identity_sha256": "0cede39eb47b5680ef0f560917bd93ec78d02ac0e607ae0c4209d98f4430f394",
+    "document_vector_dtype": "float16",
+    "document_vector_shape": [
+      79269,
+      1024
+    ],
+    "document_vectors_sha256": "3422ddccae17df01bf85a375c3cb4815a0e86e8d3447f8be0cfe46583ef7a10e",
+    "fusion_recipe": {
+      "candidate_depth": 100,
+      "operator": "DBSF",
+      "source": "m12src/qfusion.py"
+    },
+    "github_cutoff_utc": "2026-09-13T00:36:26Z",
+    "index_identity_sha256": "a710f91a7b19f27a2f7251e369199dc0bc9fcfd56bf080bf31c3c01124fd368e",
+    "indexed_text_sha256": "9668da8d785e90d1872722359f0988fd08738b4540c03ee562ddfa315e14eaf9",
+    "ordered_doc_ids_sha256": "60dfd768956ff80be923b1dc4dc70d5420160761fb314f5abc76080b20f70247",
+    "qdrant_commit": "5e32ea89cb5ea9a6827a68b27291d2e2251e1b1c",
+    "source_identity_sha256": "bea4737ff7844bb5e052237087f62801dd20cb7d7753a68e6f70bd006f561349",
+    "zero_v1": {
+      "config_sha256": "fd784397925e9ec32b6f1412af85b46faea79bb618b17197dc6d3a0068669636",
+      "model_file": "model.npz",
+      "model_sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
+      "name": "zero_v1",
+      "path": "/home/dylan/asymetric-dual-encoders/work/release/zero-v1",
+      "runtime_table": {
+        "fallback_vector_bytes": 4096,
+        "measurement": "numpy ndarray nbytes after ZeroQueryEncoder int8 load",
+        "rows_bytes": 125018112,
+        "rows_dtype": "float32"
+      },
+      "stored_table": {
+        "codes_bytes": 31254528,
+        "codes_dtype": "int8",
+        "scales_bytes": 122088,
+        "scales_dtype": "float32"
+      },
+      "tokenizer_sha256": "997eaeff157a7d4db899b8f2278ad3db6e323e609ae956b9c5035550f581eeee"
+    }
+  },
+  "identity_sha256": "bd0c5dc8e6904cf123cd7a78713a688f5c57d988b5545c07f302ad55daa93052",
+  "inherited_data": {
+    "bm25_data": {
+      "bytes": 13109564,
+      "path": "/home/dylan/asymetric-dual-encoders-m18/work/m18/derived/index/bm25/data.csc.index.npy",
+      "sha256": "2e1e5550edd1fbb7177a6ce94c4a1d4444f80168a9e515f9ce0b321778fb2398"
+    },
+    "bm25_indices": {
+      "bytes": 13109564,
+      "path": "/home/dylan/asymetric-dual-encoders-m18/work/m18/derived/index/bm25/indices.csc.index.npy",
+      "sha256": "2d99baa326b82c0702b9c72be8f5b64a576b727fc1852da65cb2d3540e465b2c"
+    },
+    "bm25_indptr": {
+      "bytes": 996912,
+      "path": "/home/dylan/asymetric-dual-encoders-m18/work/m18/derived/index/bm25/indptr.csc.index.npy",
+      "sha256": "e0c8e75804198f64f1c41db7ea31a9693ccfa73c3b1c341e1bac18e3041244e5"
+    },
+    "bm25_metadata": {
+      "bytes": 2951378,
+      "path": "/home/dylan/asymetric-dual-encoders-m18/work/m18/derived/index/bm25/m18.json",
+      "sha256": "f7ef649d0402e00eee9ed5f2742755215b8f605d822b8ed214293f0c8388ccb0"
+    },
+    "bm25_params": {
+      "bytes": 224,
+      "path": "/home/dylan/asymetric-dual-encoders-m18/work/m18/derived/index/bm25/params.index.json",
+      "sha256": "3075fb8ccf7bad6f4f34094e2703d97df5221612193be6d46f72f378f9d2ad9f"
+    },
+    "bm25_vocab": {
+      "bytes": 2780907,
+      "path": "/home/dylan/asymetric-dual-encoders-m18/work/m18/derived/index/bm25/vocab.index.json",
+      "sha256": "6b0c6092bef6ed07067d138d007632a2795a0b91d163899c92bcd99044ba8f21"
+    },
+    "corpus_jsonl": {
+      "bytes": 151239474,
+      "path": "/home/dylan/asymetric-dual-encoders-m18/work/m18/derived/corpus.jsonl",
+      "sha256": "0cede39eb47b5680ef0f560917bd93ec78d02ac0e607ae0c4209d98f4430f394"
+    },
+    "doc_ids": {
+      "bytes": 2792734,
+      "path": "/home/dylan/asymetric-dual-encoders-m18/work/m18/derived/index/doc_ids.json",
+      "sha256": "85fac5a24e5714281c0cc4046c4b2971b8a28d6c553ea8896b21c3cf80cbb939"
+    },
+    "document_vectors": {
+      "bytes": 162343040,
+      "path": "/home/dylan/asymetric-dual-encoders-m18/work/m18/derived/index/documents/vectors.f16.npy",
+      "sha256": "3422ddccae17df01bf85a375c3cb4815a0e86e8d3447f8be0cfe46583ef7a10e"
+    },
+    "index_corpus_jsonl": {
+      "bytes": 151239474,
+      "path": "/home/dylan/asymetric-dual-encoders-m18/work/m18/derived/index/corpus.jsonl",
+      "sha256": "0cede39eb47b5680ef0f560917bd93ec78d02ac0e607ae0c4209d98f4430f394"
+    },
+    "zero_v1_config": {
+      "bytes": 1609,
+      "path": "/home/dylan/asymetric-dual-encoders/work/release/zero-v1/config.json",
+      "sha256": "fd784397925e9ec32b6f1412af85b46faea79bb618b17197dc6d3a0068669636"
+    },
+    "zero_v1_model": {
+      "bytes": 93886950,
+      "path": "/home/dylan/asymetric-dual-encoders/work/release/zero-v1/model.npz",
+      "sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf"
+    },
+    "zero_v1_tokenizer": {
+      "bytes": 619472,
+      "path": "/home/dylan/asymetric-dual-encoders/work/release/zero-v1/tokenizer.json",
+      "sha256": "997eaeff157a7d4db899b8f2278ad3db6e323e609ae956b9c5035550f581eeee"
+    }
+  },
+  "manifest_files": {
+    "corpus_manifest": {
+      "path": "results/m18_corpus_manifest.json",
+      "sha256": "fc21a2bb54db3a34ad4a116d639a1bdbc04de5ffd74510c38f2f7831db22c804"
+    },
+    "index_manifest": {
+      "path": "results/m18_index_manifest.json",
+      "sha256": "037a9e3f5ccf7be1264ba50f427d6f062bc6e2cdfbaeeaa2c538ef7c23a11025"
+    },
+    "m18_execution_lock": {
+      "path": "m18/execution-lock.json",
+      "sha256": "3251a72c573d171cbb6544eb83ea10052beb29a744e883498e48122de52754da"
+    },
+    "m18_registry": {
+      "path": "m18/registry.json",
+      "sha256": "e3d16ce06efbd40458006d67724af89a35a6658def0767d17a58c65db61b0a31"
+    },
+    "source_manifest": {
+      "path": "results/m18_source_manifest.json",
+      "sha256": "435b8c3a4ce301f6c662a2a7c7147ffed1e073f1dda9e49ede1b3beeccf20f25"
+    },
+    "system_manifest": {
+      "path": "results/m18_system_manifest.json",
+      "sha256": "642ded576530b9ad32caaa4c1710803a55155cb2e2c3103ecb9e385a2820443f"
+    }
+  },
+  "protected_inputs": {
+    "historical_spent_or_reserved_evaluation": "forbidden",
+    "m18_closed_state_mutation": "forbidden",
+    "m18_confirmation_queries_or_qrels": "forbidden"
+  },
+  "source_commit": "bfa7257fe369a41ce048e150f861703a662a08f0",
+  "state": "locked"
+}

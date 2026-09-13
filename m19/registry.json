@@ -1,0 +1,130 @@
+{
+  "_schema": "m19-registry-v1",
+  "date": "2026-09-13",
+  "status": "EXECUTABLE_BOOTSTRAP",
+  "scope": "internal deterministic short-query Zero feasibility over the pinned Qdrant snapshot",
+  "authority": {
+    "instructions_commit": "cfd81f4a79a7683ebdf1d33606e5e7014fb90eed",
+    "m18_source_commit": "bfa7257fe369a41ce048e150f861703a662a08f0",
+    "cloud": false,
+    "publication": false,
+    "outside_training_data": false
+  },
+  "inheritance": {
+    "qdrant_commit": "5e32ea89cb5ea9a6827a68b27291d2e2251e1b1c",
+    "github_cutoff_utc": "2026-09-13T00:36:26Z",
+    "documents": 79269,
+    "artifacts": 11574,
+    "document_dim": 1024,
+    "document_dtype": "float16",
+    "document_encoder": "NovaSearch/stella_en_400M_v5@ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+    "zero_v1_vocab": 30522,
+    "zero_v1_model_sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
+    "zero_v1_tokenizer_sha256": "997eaeff157a7d4db899b8f2278ad3db6e323e609ae956b9c5035550f581eeee",
+    "zero_v1_config_sha256": "fd784397925e9ec32b6f1412af85b46faea79bb618b17197dc6d3a0068669636"
+  },
+  "versions": {
+    "term_inventory": "m19-fragmented-term-inventory-v1",
+    "exact_token": "m19-added-token-boundary-v1",
+    "row_formula": "m19-bare-direction-alpha-old-norm-v1",
+    "query_protocol": "m19-fixed-roster-short-context-v1",
+    "family_split": "m19-source-intent-family-v1",
+    "artifact_collapse": "m19-route-collapse-500-to-100-v1",
+    "pool": "m19-seven-route-top10-union-v1",
+    "evidence_packet": "m19-blinded-artifact-packet-v1",
+    "judgment": "m19-binary-useful-artifact-v1",
+    "metrics": "m19-fixed-roster-term-macro-v1",
+    "confirmation": "m19-resumable-one-shot-v1"
+  },
+  "term_roster": {
+    "minimum": 8,
+    "maximum": 12,
+    "minimum_artifact_support": 5,
+    "minimum_distinct_short_intents": 3,
+    "pieces_minimum": 2,
+    "seed": 19019,
+    "state": "unbuilt"
+  },
+  "candidate": {
+    "baseline": "V0-compose",
+    "selectable": "T0-teacher",
+    "optimizer": null,
+    "formula": "r_t = ||a_t + r_comp,t||_2 * u_t - a_t",
+    "scale_convention": "preserve unquantized released bare-query pre-normalization sum norm",
+    "query_prefix": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: "
+  },
+  "retrieval": {
+    "passage_depth_per_route": 500,
+    "artifact_depth_per_route": 100,
+    "tie_break": "descending score then ascending passage_id",
+    "collapse": "highest-scoring passage per artifact; passage_id tie break",
+    "fusion": "unchanged DBSF at artifact depth 100",
+    "quality_search": "exact"
+  },
+  "query_counts_per_term": {
+    "development_bare": 1,
+    "development_short": 3,
+    "confirmation_short": 2,
+    "development_longer": 1,
+    "confirmation_longer_per_two_terms": 1
+  },
+  "judgments": {
+    "relevance": "binary useful artifact",
+    "randomization_seed": 19019,
+    "audit_fraction_minimum": 0.20,
+    "audit_exact_agreement_minimum": 0.90,
+    "development_cap": 3000,
+    "confirmation_cap": 1500,
+    "pilot_queries": 10,
+    "query_author_cannot_be_sole_judge": true
+  },
+  "headroom_gate": {
+    "minimum_term_macro_precision_delta": 0.05,
+    "minimum_net_term_wins": 3,
+    "minimum_judgeable_terms": 8,
+    "minimum_development_short_intents_per_term": 2
+  },
+  "numerical_gates": {
+    "loader_parity_max_abs": 1e-6,
+    "int8_query_vector_max_abs": 0.02,
+    "prequant_bare_cosine_minimum": 0.999999,
+    "int8_bare_cosine_minimum": 0.999,
+    "added_row_bytes": 1028,
+    "encoder_latency_ratio_maximum": 1.20,
+    "encoder_latency_additive_ms_maximum": 0.05,
+    "end_to_end_latency_ratio_maximum": 1.20,
+    "latency_queries": 10000
+  },
+  "development_eligibility": {
+    "short_precision_delta_minimum": 0.03,
+    "term_win_fraction": "strictly_more_than_half",
+    "net_term_wins_minimum": 3,
+    "short_ndcg_delta": "positive",
+    "hybrid_precision_delta_minimum": -0.01,
+    "numeric_version_control_delta_minimum": -0.02,
+    "longer_control_delta_minimum": -0.02,
+    "supporting_passage_audit": "all_primary_win_artifacts"
+  },
+  "confirmation_eligibility": {
+    "short_precision_delta_minimum": 0.03,
+    "term_win_fraction": "strictly_more_than_half",
+    "net_term_wins_minimum": 2,
+    "short_ndcg_delta": "positive",
+    "hybrid_precision_delta_minimum": -0.01,
+    "safety_slice_delta_minimum": -0.02,
+    "supporting_passage_audit": "all_primary_win_artifacts"
+  },
+  "confirmation_states": [
+    "locked",
+    "claimed",
+    "pools-frozen",
+    "judgments-in-progress",
+    "qrels-frozen",
+    "scored",
+    "complete"
+  ],
+  "outcomes": {
+    "system": ["SYSTEM_READY", "SYSTEM_BLOCKED"],
+    "encoder": ["ENCODER_INTERNAL_CANDIDATE", "ENCODER_NO_MEASURABLE_IMPROVEMENT", "ENCODER_INCONCLUSIVE"]
+  }
+}
