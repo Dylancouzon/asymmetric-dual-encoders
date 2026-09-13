@@ -1,0 +1,27 @@
+{
+  "_schema": "m19-teacher-snapshot-verification-v1",
+  "regenerated_vectors_identity_sha256": "7336d3097663bae26f025cd56624f3de5e0a33209b8b6a6acbe648a0c7d8d2b2",
+  "runtime": {
+    "config_kwargs": {
+      "unpad_inputs": false,
+      "use_memory_efficient_attention": false
+    },
+    "device": "cuda",
+    "python": "3.12.14",
+    "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+    "sentence_transformers": "5.7.0",
+    "snapshot_files_sha256": {
+      "2_Dense_1024/model.safetensors": "caed226f6fc2317d1dde81540cbc2cc40055ab27dbf8e4377facfb281ac16fdd",
+      "config.json": "6ef7d87b6f011a3a2ae4612fca7767a0cab58c754648931acb8f61c4f52f24ae",
+      "model.safetensors": "17e549d16172a548a3115739b55575968eb6523653daad76c46b0758e9425032"
+    },
+    "snapshot_path": "/home/dylan/.cache/huggingface/hub/models--NovaSearch--stella_en_400M_v5/snapshots/ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+    "torch": "2.8.0+cu126"
+  },
+  "snapshot_files_identity_sha256": "03a717120d14a2bf4d4a778c92d8cbe9c9a437cc6cc5c1feec93e562de5a2c3f",
+  "snapshot_lock_sha256": "ca8d1b5000cb2e8f3ae1d420222cb16fe645186f76a7edd647bbc976295c2421",
+  "state": "complete",
+  "teacher_array_file_sha256": "00a45770526383d8638f2cc289e34611fb484978e52c4e198857937e84cef659",
+  "teacher_receipt_sha256": "58752c10eba29be54eb337fed2a3a8820192b32d9dd7933d23edf7338f0a0074",
+  "teacher_vectors_identity_sha256": "7336d3097663bae26f025cd56624f3de5e0a33209b8b6a6acbe648a0c7d8d2b2"
+}

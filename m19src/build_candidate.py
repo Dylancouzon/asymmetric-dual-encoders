@@ -19,6 +19,7 @@ ROW_RECEIPT = RESULTS / "m19_row_receipt_t0.json"
 ALGEBRA_RECEIPT = RESULTS / "m19_algebra_gates.json"
 BUILD_RECEIPT = RESULTS / "m19_candidate_build.json"
 BUNDLE_ROOT = WORK / "bundles"
+TEACHER_SNAPSHOT_LOCK = M19 / "teacher-snapshot-lock-v1.json"
 
 
 def _json_bytes(value):
@@ -42,12 +43,30 @@ def _npy_bytes(array):
     return stream.getvalue()
 
 
+def verify_teacher_snapshot(teacher_path):
+    teacher_path = Path(teacher_path).resolve()
+    lock = load_json(TEACHER_SNAPSHOT_LOCK)
+    if (lock.get("_schema") != "m19-teacher-snapshot-lock-v1" or
+            Path(lock.get("snapshot_path", "")).resolve() != teacher_path or
+            lock.get("revision") != teacher_path.name):
+        raise SystemExit("M19 CANDIDATE REFUSED: teacher snapshot lock differs")
+    files = {str(path.relative_to(teacher_path)): path for path in teacher_path.rglob("*")
+             if path.is_file()}
+    if set(files) != set(lock.get("files", {})):
+        raise SystemExit("M19 CANDIDATE REFUSED: teacher snapshot file set differs")
+    for name, expected in lock["files"].items():
+        if sha_file_unchecked(files[name]) != expected:
+            raise SystemExit(f"M19 CANDIDATE REFUSED: teacher snapshot file differs: {name}")
+    return lock
+
+
 def _encode_teachers(teacher_path, terms, prefix, config_kwargs, device):
     import sentence_transformers
     import torch
     from sentence_transformers import SentenceTransformer
 
     teacher_path = Path(teacher_path).resolve()
+    verify_teacher_snapshot(teacher_path)
     revision = teacher_path.name
     if not teacher_path.is_dir():
         raise SystemExit(f"M19 CANDIDATE REFUSED: teacher snapshot is missing: {teacher_path}")
@@ -61,6 +80,7 @@ def _encode_teachers(teacher_path, terms, prefix, config_kwargs, device):
         [prefix + term for term in terms], batch_size=len(terms), normalize_embeddings=True,
         convert_to_numpy=True, show_progress_bar=False,
     ).astype(np.float32)
+    verify_teacher_snapshot(teacher_path)
     norms = np.linalg.norm(values, axis=1)
     if (values.shape != (len(terms), 1024) or not np.isfinite(values).all() or
             float(np.max(np.abs(norms - 1))) > 1e-6):
