@@ -95,9 +95,18 @@ def benchmark(query_count, warmup):
     index = inheritance["inherited_data"]
     documents = np.load(admit_read(index["document_vectors"]["path"]), mmap_mode="r")
     passage_ids = json.loads(admit_read(index["doc_ids"]["path"]).read_text())
+    positions = {passage_id: index for index, passage_id in enumerate(passage_ids)}
+    artifact_ids = [None] * len(passage_ids)
     with open(admit_read(index["index_corpus_jsonl"]["path"])) as handle:
-        artifact_ids = [str(json.loads(line)["artifact_id"]) for line in handle]
-    if len(passage_ids) != len(artifact_ids) or documents.shape[0] != len(artifact_ids):
+        for line in handle:
+            row = json.loads(line)
+            position = positions.get(row["doc_id"])
+            if position is not None:
+                if artifact_ids[position] is not None:
+                    raise SystemExit("M19 SERVING REFUSED: duplicate indexed passage ID")
+                artifact_ids[position] = str(row["artifact_id"])
+    if (documents.shape[0] != len(artifact_ids) or
+            any(artifact_id is None for artifact_id in artifact_ids)):
         raise SystemExit("M19 SERVING REFUSED: inherited index rows are misaligned")
     loader_max_abs, ranking_equal = _parity(
         verification, base_config, query_rows, v1, t0, documents)
