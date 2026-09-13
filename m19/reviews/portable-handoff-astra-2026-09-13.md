@@ -1,7 +1,9 @@
 # M18/M19 portable handoff — Astra review
 
-Date: 2026-09-13  
-Reviewer: `portable_handoff_astra` (`gpt-6-astra`, high reasoning)  
+Date: 2026-09-13
+
+Reviewer: `portable_handoff_astra` (`gpt-6-astra`, high reasoning)
+
 Final disposition: **GO**
 
 ## Scope

@@ -22,4 +22,3 @@ Earlier trust-root, row/bundle, serving-schema, run/pool, review-scope, author-d
 blinding and pre-qrels boundary findings remain closed. Thirty-eight tests permitted by the narrow
 scope passed. No confirmation/query content, relevance, qrels, quality metrics, protected/spent
 surfaces, recursive work/results search, network or edits were accessed.
-

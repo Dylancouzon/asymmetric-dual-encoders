@@ -23,4 +23,3 @@ difference. Saved-result publication/resume and released-loader comparison are r
 Access was limited to the saved disposition, directly affected code/tests, v2 evidence and
 necessary unchanged metadata/build/bundle inputs. Probes were synthetic/in-memory. No query bodies,
 quality/judgment data, confirmation content, protected surfaces, network or edits were accessed.
-

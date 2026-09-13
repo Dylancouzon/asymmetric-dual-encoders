@@ -30,4 +30,3 @@ All 63 corresponding synthetic tests passed. Candidate/bundle/algebra evidence r
 the actual pilot's structural hashes/counts reconciled. The reviewer inspected structural metadata
 only, without displaying query/passages or assessing relevance. No confirmation, protected/spent
 data, network or edits were accessed.
-

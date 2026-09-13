@@ -15,4 +15,3 @@
   and spent evaluation surfaces, recursive `work/` or `results/` search, network and edits.
 - Focus: fail-closed identities/provenance, exact V0/T0 math, tokenizer/pooling/no-match parity,
   numerical/memory/latency gates, benchmark fairness and confirmation receipt compatibility.
-

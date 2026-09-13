@@ -10,4 +10,3 @@ Read only the scope files, directly corresponding tests, named actual M19 bundle
 when necessary, `CLAUDE.md` and `instructions-m19.md`. No confirmation content, protected/spent
 evaluation surfaces, recursive `work/`/`results/` search, network, edits, relevance labels or quality
 metrics. Report P0–P3, smallest fixes, exact commit/scope hash, tests and full access declaration.
-

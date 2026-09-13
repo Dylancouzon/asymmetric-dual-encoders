@@ -47,4 +47,3 @@ one offline teacher recomputation. It did not read query bodies, qrels, judgment
 protected historical surfaces or network resources, and made no repository edits. One authorized
 `m18src/vocab.py` read included lines 1–180 beyond the intended helper slice; it exposed source code
 only and was reported immediately.
-
