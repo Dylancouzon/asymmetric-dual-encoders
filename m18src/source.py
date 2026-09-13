@@ -176,6 +176,31 @@ def gh_api_page(path: str, params: Mapping[str, Any], headers: Mapping[str, str]
     return body.encode("utf-8"), response_headers
 
 
+def gh_api_all_pages(path: str, params: Mapping[str, Any], headers: Mapping[str, str],
+                     run: Callable[..., Any] = subprocess.run) -> list[list[dict[str, Any]]]:
+    """Use one gh process to follow Link cursors for the read-only reconciliation pass."""
+    target = path + "?" + urlencode([(str(k), str(v)) for k, v in params.items()])
+    command = ["gh", "api", "--method", "GET", "--paginate", "--slurp", target]
+    for key, value in headers.items():
+        command.extend(["-H", f"{key}: {value}"])
+    completed = None
+    for attempt in range(4):
+        completed = run(command, check=False, capture_output=True, text=False)
+        if not completed.returncode:
+            break
+        if attempt < 3:
+            time.sleep(2 ** attempt)
+    if completed is None or completed.returncode:
+        raise SourceError(f"gh paginated reconciliation failed for {path} after 4 attempts")
+    try:
+        pages = json.loads(completed.stdout)
+    except (UnicodeDecodeError, json.JSONDecodeError) as e:
+        raise SourceError(f"gh paginated reconciliation returned invalid JSON for {path}") from e
+    if not isinstance(pages, list) or any(not isinstance(page, list) for page in pages):
+        raise SourceError(f"gh paginated reconciliation returned an invalid page list for {path}")
+    return pages
+
+
 def _call_api(api_call: Callable[..., Any], path: str, params: Mapping[str, Any],
               headers: Mapping[str, str]) -> tuple[bytes, Mapping[str, str]]:
     """Invoke injectable fixtures accepting (path, params[, headers])."""
@@ -506,22 +531,26 @@ def _reconcile_endpoint(owned: Path, endpoint: Mapping[str, Any], source: Mappin
     per_page = int(source["per_page"])
     stored = _existing_pages(owned, endpoint, per_page, str(source["api_version"]))
     headers = {"Accept": ACCEPT, "X-GitHub-Api-Version": str(source["api_version"])}
-    observed_pages: list[list[dict[str, Any]]] = []
-    number = 1
-    after = None
-    while True:
-        params = _request_params(endpoint, number, per_page, after)
-        raw, response_headers = _call_api(api_call, str(endpoint["path"]), params, headers)
-        observed = _decode_page(raw, f"reconciliation {endpoint['name']} page {number}")
-        observed_pages.append(observed)
-        link = response_headers.get("link", "")
-        has_next = 'rel="next"' in link.lower() or "rel=next" in link.lower()
-        if (link and not has_next) or (len(observed) < per_page and not has_next):
-            break
-        after = _next_cursor(link)
-        number += 1
-        if number > max(len(stored) + 1000, 10000):
-            raise SourceError(f"unbounded reconciliation pagination for {endpoint['name']}")
+    if api_call is gh_api_page:
+        observed_pages = gh_api_all_pages(str(endpoint["path"]),
+                                          _request_params(endpoint, 1, per_page), headers)
+    else:
+        observed_pages = []
+        number = 1
+        after = None
+        while True:
+            params = _request_params(endpoint, number, per_page, after)
+            raw, response_headers = _call_api(api_call, str(endpoint["path"]), params, headers)
+            observed = _decode_page(raw, f"reconciliation {endpoint['name']} page {number}")
+            observed_pages.append(observed)
+            link = response_headers.get("link", "")
+            has_next = 'rel="next"' in link.lower() or "rel=next" in link.lower()
+            if (link and not has_next) or (len(observed) < per_page and not has_next):
+                break
+            after = _next_cursor(link)
+            number += 1
+            if number > max(len(stored) + 1000, 10000):
+                raise SourceError(f"unbounded reconciliation pagination for {endpoint['name']}")
     name = str(endpoint["name"])
     cutoff = str(source["github_cutoff_utc"])
     original = _admitted([r for p in stored for r in p], name, cutoff)
