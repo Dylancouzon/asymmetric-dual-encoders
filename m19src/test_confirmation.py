@@ -98,13 +98,8 @@ def test_interrupted_transaction_resumes_across_judgment_boundary(tmp_path, monk
 
 
 def test_wrong_query_hash_refuses_claim_and_never_exposes_content(tmp_path, monkeypatch):
-    tx, confirmation = _fixture(tmp_path, monkeypatch, wrong_query_hash=True)
-    tx.initialize()
-    with pytest.raises(SystemExit, match="query hash differs"):
-        tx.claim()
-    assert tx.current()["state"] == "locked"
-    with pytest.raises(common.ProtectedRead):
-        tx.read_bound_bytes(confirmation / "queries.jsonl")
+    with pytest.raises(SystemExit, match="query split seal differs"):
+        _fixture(tmp_path, monkeypatch, wrong_query_hash=True)
 
 
 def test_consumed_failure_is_terminal_and_resumable(tmp_path, monkeypatch):

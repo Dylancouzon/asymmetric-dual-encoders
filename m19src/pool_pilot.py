@@ -70,27 +70,21 @@ def _route(scores, passage_ids, passages, artifact_ids, exclusions):
                          passages, excluded_artifacts=exclusions)
 
 
-def run():
+def build_frozen_pool(query_ids, cap, expected_inputs=None):
     import bm25s
     import Stemmer
     import torch
 
-    lock = load_json(PILOT_LOCK)
     (inheritance, roster, base_config, verification, v1, _compact_v1, t0,
      development, benchmark_inputs) = _load_context()
-    if (lock.get("query_count") != 10 or
-            lock.get("development_queries_sha256") !=
-            benchmark_inputs["development_queries_sha256"] or
-            lock.get("query_seal_sha256") != benchmark_inputs["query_seal_sha256"] or
-            lock.get("roster_identity_sha256") != roster["identity_sha256"]):
-        raise SystemExit("M19 PILOT REFUSED: pilot lock differs from authenticated inputs")
+    if expected_inputs and any(benchmark_inputs.get(key) != value
+                               for key, value in expected_inputs.items()):
+        raise SystemExit("M19 POOL REFUSED: requested input binding differs")
     by_id = {row["query_id"]: row for row in development}
-    if set(lock["pilot_query_ids"]) - set(by_id):
-        raise SystemExit("M19 PILOT REFUSED: pilot query is absent from sealed development")
-    queries = [by_id[query_id] for query_id in lock["pilot_query_ids"]]
-    if (len({row["term"] for row in queries}) != 10 or
-            any(row["primary_class"] != "short_context" for row in queries)):
-        raise SystemExit("M19 PILOT REFUSED: pilot is not ten distinct short-context terms")
+    query_ids = list(query_ids)
+    if len(query_ids) != len(set(query_ids)) or set(query_ids) - set(by_id):
+        raise SystemExit("M19 POOL REFUSED: requested query IDs differ from sealed development")
+    queries = [by_id[query_id] for query_id in query_ids]
 
     build = load_json(BUILD_RECEIPT)
     v0_identity = build["bundles"]["V0-compose"]["identity_sha256"]
@@ -156,8 +150,36 @@ def run():
     pool, packet = judgments.build_pool(
         routes, specs, artifact_metadata,
         seed=registry["judgments"]["randomization_seed"],
-        cap=registry["judgments"]["development_cap"])
+        cap=cap)
     judgments.assert_blinded(packet)
+    metric_runs = {
+        role: {query_id: pool["queries"][query_id]["route_top10"][route]
+               for query_id in pool["queries"]}
+        for role, route in judgments.METRIC_ROUTE_ROLES.items()
+    }
+    judgments.validate_frozen_pool(
+        pool, packet, metric_runs, specs,
+        seed=registry["judgments"]["randomization_seed"], cap=cap)
+    return {"pool": pool, "packet": packet, "routes": routes, "metric_runs": metric_runs,
+            "queries": queries, "query_specs": specs, "inputs": benchmark_inputs,
+            "development": development}
+
+
+def run():
+    lock = load_json(PILOT_LOCK)
+    built = build_frozen_pool(
+        lock["pilot_query_ids"], cap=load_json(M19 / "registry.json")["judgments"][
+            "development_cap"],
+        expected_inputs={
+            "development_queries_sha256": lock["development_queries_sha256"],
+            "query_seal_sha256": lock["query_seal_sha256"],
+            "roster_identity_sha256": lock["roster_identity_sha256"],
+        })
+    queries, development = built["queries"], built["development"]
+    if (lock.get("query_count") != 10 or len({row["term"] for row in queries}) != 10 or
+            any(row["primary_class"] != "short_context" for row in queries)):
+        raise SystemExit("M19 PILOT REFUSED: pilot is not ten distinct short-context terms")
+    pool, packet, benchmark_inputs = built["pool"], built["packet"], built["inputs"]
     pool_payload, packet_payload = _json_bytes(pool), _json_bytes(packet)
     _publish(POOL_OUT, pool_payload)
     _publish(PACKET_OUT, packet_payload)

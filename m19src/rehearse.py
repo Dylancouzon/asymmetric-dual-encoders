@@ -47,9 +47,11 @@ def _pool_fixture():
     specs = [
         {"query_id": "synthetic-q1", "text": "k8s probes", "term": "k8s",
          "primary_class": "short_context", "tags": [],
+         "author_id": "synthetic-author",
          "source_exclusion_identity": empty_source},
         {"query_id": "synthetic-q2", "text": "k8s probes changed after version 2 upgrade",
          "term": "k8s", "primary_class": "longer_control", "tags": ["version"],
+         "author_id": "synthetic-author",
          "source_exclusion_identity": empty_source},
     ]
     routes = {}
@@ -180,9 +182,11 @@ def _prepare_decision(root, query_path, query_sha256, registry):
     development_split_payload = b"".join(
         (json.dumps(row, sort_keys=True) + "\n").encode() for row in dev_queries)
     _write_or_verify(development_split_path, development_split_payload)
-    query_seal = {"_schema": "m19-query-split-seal-v1", "splits": {"development": {
-        "sha256": common.sha_bytes(development_split_payload),
-        "query_ids": [row["query_id"] for row in dev_queries]}}}
+    query_seal = {"_schema": "m19-query-split-seal-v1", "splits": {
+        "development": {"sha256": common.sha_bytes(development_split_payload),
+                        "query_ids": [row["query_id"] for row in dev_queries]},
+        "confirmation": {"sha256": query_sha256,
+                         "query_ids": ["synthetic-q1", "synthetic-q2"]}}}
     query_seal_path = root / "query-seal.json"
     _write_or_verify(query_seal_path, query_seal)
     candidate_build = {

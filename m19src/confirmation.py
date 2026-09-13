@@ -140,6 +140,9 @@ class ConfirmationTransaction:
             }
             if any(self._bound_path(role).resolve() != path for role, path in canonical.items()):
                 raise SystemExit("M19 CONFIRMATION STOP: production trust root is noncanonical")
+            if Path(self.decision["confirmation_query_path"]).resolve() != (
+                    common.CONFIRMATION_WORK / "queries.jsonl").resolve():
+                raise SystemExit("M19 CONFIRMATION STOP: confirmation query path is noncanonical")
         for role, inherited_role in (("base_model", "zero_v1_model"),
                                      ("base_tokenizer", "zero_v1_tokenizer"),
                                      ("base_config", "zero_v1_config")):
@@ -244,13 +247,15 @@ class ConfirmationTransaction:
         sealed_development = [json.loads(line) for line in common.admit_read(
             self._bound_path("development_query_split")).read_text().splitlines()]
         query_rows = self._load_bound_json("development_queries")
-        if (query_seal.get("splits", {}).get("development", {}).get("sha256") !=
+        if (query_seal.get("splits", {}).get("confirmation", {}).get("sha256") !=
+                self.decision["confirmation_query_sha256"] or
+                query_seal.get("splits", {}).get("development", {}).get("sha256") !=
                 self.decision["bindings"]["development_query_split"]["sha256"] or
                 query_seal.get("splits", {}).get("development", {}).get("query_ids") !=
                 [row.get("query_id") for row in sealed_development] or
                 query_rows != sealed_development or
                 not query_rows or any(not isinstance(row.get("text"), str) for row in query_rows)):
-            raise SystemExit("M19 CONFIRMATION STOP: development query seal differs")
+            raise SystemExit("M19 CONFIRMATION STOP: query split seal differs")
         sequence = [query_rows[index % len(query_rows)]["text"]
                     for index in range(int(gates["latency_queries"]))]
         expected_inputs = {
@@ -509,6 +514,9 @@ class ConfirmationTransaction:
         metric_runs = preview_json(files["metric_runs"])
         query_rows = [json.loads(line) for line in self.read_bound_bytes(
             Path(self.decision["confirmation_query_path"])).splitlines() if line]
+        sealed_ids = self._load_bound_json("query_seal")["splits"]["confirmation"]["query_ids"]
+        if [row.get("query_id") for row in query_rows] != sealed_ids:
+            raise SystemExit("M19 CONFIRMATION STOP: claimed query IDs differ from split seal")
         query_specs = [{**row, "source_exclusion_identity": common.sha_json(sorted({
             *([str(row["source_artifact_id"])] if row.get("source_artifact_id") else []),
             *(str(value) for value in row.get("source_equivalent_artifact_ids") or []),
