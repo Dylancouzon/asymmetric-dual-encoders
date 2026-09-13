@@ -15,6 +15,7 @@ import os
 import re
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 from typing import Any, Callable, Mapping
 from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
@@ -152,10 +153,17 @@ def gh_api_page(path: str, params: Mapping[str, Any], headers: Mapping[str, str]
     command = ["gh", "api", "--method", "GET", "--include", target]
     for key, value in headers.items():
         command.extend(["-H", f"{key}: {value}"])
-    completed = run(command, check=False, capture_output=True, text=True)
-    if completed.returncode:
+    completed = None
+    for attempt in range(4):
+        completed = run(command, check=False, capture_output=True, text=True)
+        if not completed.returncode:
+            break
+        if attempt < 3:
+            time.sleep(2 ** attempt)
+    if completed is None or completed.returncode:
         # stderr can contain a URL copied from an environment/proxy.  Do not echo it.
-        raise SourceError(f"gh api failed for {path} page={params.get('page')} (exit {completed.returncode})")
+        code = None if completed is None else completed.returncode
+        raise SourceError(f"gh api failed for {path} page={params.get('page')} after 4 attempts (exit {code})")
     response_headers, body = _parse_headers(completed.stdout)
     status = response_headers.get(":status")
     if status is None:
