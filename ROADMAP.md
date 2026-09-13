@@ -42,4 +42,5 @@ merging M10. M9 close-out must wait until every recipe decision is fixed.
 
 Harness improvements are ordinary maintenance (`HARNESS.md`), not another milestone. Optional
 CURE/MS MARCO reads, new losses, doc2query aliases and teacher co-adaptation do not block the build.
-Project audit: `PROJECT_STATUS.md`. Research lessons: `m10/FINDINGS.md`.
+Project audit: `PROJECT_STATUS.md`. Research lessons: `m10/FINDINGS.md`. Cross-milestone
+post-mortem of M17–M19: `research/m17-m19-postmortem-2026-09-13.md`.
