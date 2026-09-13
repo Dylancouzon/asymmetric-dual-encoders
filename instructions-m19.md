@@ -51,6 +51,12 @@ M19 asks one narrower question:
 > Can replacing a shattered Qdrant term with one teacher-targeted exact row improve Zero's dense
 > retrieval on previously unseen short contexts for that term, across multiple useful artifacts?
 
+This is a mechanism-feasibility milestone, not a claim that one Qdrant experiment validates every
+technical vertical. A positive result would justify a later cross-project milestone for deriving
+small vertical-specific vocabularies; that later work must repeat demand/support selection and use
+fresh queries in each domain. A negative result rejects this deterministic teacher-row construction
+for the tested setting, not vocabulary extension in general.
+
 The project-memory system and encoder decision remain separate:
 
 - **System:** return a diverse top ten of useful Qdrant artifacts with supporting passages. The
@@ -256,15 +262,20 @@ For each roster term, create prospectively:
 - three development short intents of two to five lexical terms; and
 - two sealed confirmation short intents of two to five lexical terms.
 
-Add one longer control query per term to development and one control per two terms to confirmation.
-With 8–12 terms this yields 40–60 development and 20–30 confirmation queries. If fewer than eight
-terms survive, stop. Do not fill shortages with more templates for the same term.
+Add one longer target-control query per term to development and one per two terms to confirmation.
+Each contains exactly one roster term and tests whether its new row still composes in a more
+specific question. Across the roster, designate at least four development and two confirmation
+target controls covering numeric/version distinctions across at least two terms; if credible cases
+cannot be authored, stop rather than leave the safety slice empty. With 8–12 terms this yields
+40–60 development and 20–30 confirmation queries. If fewer than eight terms survive, stop. Do not
+fill shortages with more templates for the same term.
 
 Primary query classes are mutually exclusive: `bare_adaptation`, `short_context` and
 `longer_control`. `alias`, `renamed`, `numeric` and `version` are secondary tags only. Short means
-two to five punctuation-preserving lexical terms; longer means six or more. Every target query must
-contain exactly one roster term matched as an AddedToken. Controls contain no added-token match
-unless explicitly tagged `target_control`, which is reported separately.
+two to five punctuation-preserving lexical terms; longer means six or more. Every target query,
+including each longer `target_control`, must contain exactly one roster term matched as an
+AddedToken. Separate no-added-token collision fixtures belong to tokenizer/ranking parity checks,
+not the quality estimate.
 
 Fresh confirmation uses previously uninspected short intents whose normalized text and
 near-duplicate intent family are absent from training, M18 diagnostics and M19 development.
@@ -318,11 +329,12 @@ An artifact label is route-independent. For the selected system, independently v
 displayed supporting passage itself justifies every artifact responsible for a measured win; an
 artifact-level label cannot certify a misleading snippet.
 
-One primary reviewer judges the complete pool. A fresh independent reviewer judges a fixed seeded
-20% sample, including every positive, every unjudgeable and at least one item per query/term. Require
-at least 90% exact binary agreement, review every disagreement blind, and freeze adjudicated labels.
-If one rubric clarification is necessary, apply it to the complete pool and draw a fresh audit
-sample. A second failure stops the run.
+One primary reviewer judges the complete pool. A fresh independent reviewer judges every primary
+positive and unjudgeable plus seeded negatives sufficient to cover every query and term and bring
+the audit to at least 20% of the pool. Thus 20% is a floor, not an impossible fixed size. Require at
+least 90% exact binary agreement on audited items, review every disagreement blind, and freeze
+adjudicated labels. If one rubric clarification is necessary, apply it to the complete pool and
+draw a fresh audit sample. A second failure stops the run.
 
 Pilot pool construction on ten development queries before full judgment. Report unique artifacts,
 packet bytes and reviewer minutes. Cap development at 3,000 unique query-artifact judgments and
@@ -351,9 +363,10 @@ Secondary metrics:
 - spent bare-adaptation and longer-control results, reported outside the primary estimate.
 
 A query win/loss is the sign of its candidate-minus-v1 Precision@10 difference with exact zero a
-tie. The independent unit is the roster term: bootstrap terms with seed `19019`, carrying all their
-query intents together. Report percentile 95% intervals. Development intervals guide a locked
-selection; they are not post-selection proof.
+tie. A term win/loss is the sign of its mean short-context difference. The independent unit is the
+roster term: bootstrap terms with seed `19019`, carrying all their query intents together. Report
+percentile 95% intervals. Development intervals guide a locked selection; they are not
+post-selection proof.
 
 Baseline/headroom systems are BM25, v1 dense, v1+DBSF, V0-compose dense, Stella dense and
 T0-teacher routes after the pool freezes. Call Stella a headroom reference, not a ceiling.
@@ -391,13 +404,12 @@ T0-teacher is eligible only if all numerical/judgment gates pass and, versus rel
 
 - fresh-short-context Precision@10 improves by at least `0.03` absolute;
 - the term-bootstrap 95% interval for that primary delta has a lower endpoint above zero;
-- wins occur in at least four distinct terms and winning terms outnumber losing terms by at least
-  three;
+- more than half of roster terms win and winning terms outnumber losing terms by at least three;
 - fresh-short-context binary nDCG@10 delta is positive;
 - T0-teacher+DBSF Precision@10 is noninferior to v1+DBSF under a one-sided 95% term-bootstrap lower
   bound of `-0.02`, with point delta no worse than `-0.01`;
-- no numeric/version-tagged or longer-control slice has a negative point delta with an interval
-  wholly below zero; and
+- neither the required numeric/version target-control slice nor the complete longer-control slice
+  has a negative point delta with an interval wholly below zero; and
 - every artifact responsible for a primary win passes the supporting-passage audit.
 
 V0-compose is descriptive and cannot be selected. There is one deterministic candidate, no
@@ -423,17 +435,19 @@ metric before qrels freeze. An unrecoverable failure marks confirmation consumed
 retains v1. Rehearse interruption/resume across the judgment boundary on synthetic fixtures.
 
 Name the primary confirmation judge and independent auditor in the decision lock. Apply the same
-complete-pool, 20% audit, 90% agreement, disagreement and supporting-passage rules as development.
+complete-pool, at-least-20% audit, 90% agreement, disagreement and supporting-passage rules as
+development.
 
 Confirmation passes only when:
 
 - primary fresh-short Precision@10 delta is at least `+0.03` with a term-bootstrap 95% lower
   endpoint above zero;
-- wins occur in at least three terms and winning terms outnumber losing terms by at least two;
+- more than half of roster terms win and winning terms outnumber losing terms by at least two;
 - fresh-short nDCG@10 delta is positive;
 - hybrid satisfies the same point `-0.01` and one-sided lower-bound `-0.02` noninferiority margins;
 - no registered safety slice has an interval wholly below zero; and
-- serving bytes and supporting-passage audit remain decision-identical.
+- the decision-locked bundle/serving identities remain unchanged and the new confirmation
+  supporting-passage audit passes the same frozen rubric.
 
 If the bounded confirmation sample cannot resolve improvement or noninferiority, record
 `ENCODER_INCONCLUSIVE` and retain v1. Confirmation cannot change the candidate, terms, qrels policy,
@@ -448,8 +462,8 @@ Use the smallest review set that protects consequential transitions:
 2. **End-to-end implementation/protocol:** before real judgments, one implementation reviewer and
    one fresh Astra reviewer inspect inheritance guards, actual row algebra, tokenizer/export,
    artifact collapse, pool blinding, metrics and the synthetic confirmation-resume transaction.
-3. **Judgments:** one primary blinded judge plus the fresh independent 20% audit. A query author may
-   not be its sole judge.
+3. **Judgments:** one primary blinded judge plus the fresh independent audit defined above. A query
+   author may not be its sole judge.
 4. **Decision/confirmation:** independently recompute development eligibility and all hashes before
    the irreversible claim. Reconcile confirmation receipt and final outcomes afterward.
 
