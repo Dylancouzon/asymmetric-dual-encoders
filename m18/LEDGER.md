@@ -72,3 +72,15 @@
 - The revised synthetic rehearsal passes 26 network-free tests. It now reports zero artifact,
   connected-family, answer-digest and development/confirmation overlap; confirmation is exercised
   only through the one-shot transaction. A second independent implementation review is pending.
+
+## 2026-09-13 — E3 second review and live pagination correction
+
+- The second independent review approved live raw acquisition but held development reads, full
+  Stella encoding and training behind stale-cache, label, index and execution-lock fixes. Those
+  focused blockers were corrected and covered by 28 network-free tests; no broad framework was
+  introduced.
+- Live GitHub acquisition reached issue page 100 and received HTTP 422: GitHub now requires the
+  opaque `after` cursor from its Link header for large collections. The adapter was corrected to
+  carry that cursor while retaining explicit page numbers and immutable receipts. The first 99
+  validated pages resumed in place because their endpoint, order, page and payload identities are
+  unchanged; page 100 onward records the cursor in each request receipt.

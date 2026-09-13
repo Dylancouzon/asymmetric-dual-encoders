@@ -18,11 +18,11 @@
       {"name": "review_comments", "path": "/repos/qdrant/qdrant/pulls/comments", "params": {"sort": "created", "direction": "asc"}},
       {"name": "issue_events", "path": "/repos/qdrant/qdrant/issues/events", "params": {}}
     ],
-    "raw_policy": "immutable content-addressed pages with link-header/page receipts",
+    "raw_policy": "immutable content-addressed pages with link-header/page receipts; carry GitHub after cursor when supplied",
     "canonical_object_key": "GitHub node_id, falling back to endpoint kind plus numeric id"
   },
   "versions": {
-    "source_adapter": "m18-source-v1",
+    "source_adapter": "m18-source-v2-link-cursor",
     "parser": "m18-parser-v1",
     "redaction": "m18-redaction-v1",
     "deduplication": "m18-dedup-v1",
