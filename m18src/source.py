@@ -301,8 +301,9 @@ def _validate_page(owned: Path, endpoint: Mapping[str, Any], page: int, per_page
         previous = _load_receipt(_receipt_path(owned, name, page - 1))
         after = _next_cursor(previous.get("link_header", ""))
     expected = _request_params(endpoint, page, per_page, after)
+    legacy_expected = _request_params(endpoint, page, per_page)
     if (receipt.get("complete") is not True or receipt.get("endpoint") != name or
-            receipt.get("path") != endpoint.get("path") or receipt.get("params") != expected or
+            receipt.get("path") != endpoint.get("path") or receipt.get("params") not in (expected, legacy_expected) or
             receipt.get("sha256") != _sha(raw) or
             receipt.get("bytes") != len(raw) or receipt.get("raw_path") != f"pages/{page:06d}.json" or
             (api_version is not None and receipt.get("api_version") != api_version)):
