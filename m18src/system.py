@@ -71,7 +71,13 @@ def encode_stella_sharded(name, texts, out_dir, prefix="", device="cuda", shard_
         path = out / f"shard_{sid}.npy"
         rec = manifest["shards"].get(sid)
         if path.exists() and rec:
-            if path.stat().st_size != rec["bytes"] or sha_file(path) != rec["sha256"]:
+            arr = np.load(admit_read(path), mmap_mode="r")
+            valid_meta = (rec.get("lo") == lo and rec.get("hi") == hi
+                          and rec.get("shape") == [hi - lo, int(spec["dim"])]
+                          and arr.shape == (hi - lo, int(spec["dim"])) and arr.dtype == np.float16)
+            if (not valid_meta or path.stat().st_size != rec["bytes"]
+                    or sha_file(path) != rec["sha256"] or not np.isfinite(arr).all()
+                    or (len(arr) and float(np.max(np.abs(np.linalg.norm(arr.astype(np.float32), axis=1) - 1))) > 0.01)):
                 raise SystemExit(f"M18 ENCODE REFUSED: existing shard {path} failed its receipt")
             continue
         if path.exists() != bool(rec):
@@ -96,9 +102,13 @@ def encode_stella_sharded(name, texts, out_dir, prefix="", device="cuda", shard_
     combined = out / "vectors.f16.npy"
     if combined.exists():
         rec = manifest.get("combined")
+        arr = np.load(admit_read(combined), mmap_mode="r")
         if (not manifest.get("complete") or not rec or rec.get("path") != combined.name
                 or rec.get("bytes") != combined.stat().st_size
-                or rec.get("sha256") != sha_file(combined)):
+                or rec.get("sha256") != sha_file(combined)
+                or arr.shape != (len(texts), int(spec["dim"])) or arr.dtype != np.float16
+                or not np.isfinite(arr).all()
+                or (len(arr) and float(np.max(np.abs(np.linalg.norm(arr.astype(np.float32), axis=1) - 1))) > 0.01)):
             raise SystemExit(f"M18 ENCODE REFUSED: combined vectors failed receipt in {out}")
     if not combined.exists():
         tmp = out / f"vectors.f16.tmp-{os.getpid()}.npy"
@@ -186,6 +196,14 @@ class ProjectMemory:
         self.ids = json.loads(admit_read(self.root / "doc_ids.json").read_text())
         self.vectors = np.load(admit_read(self.root / "documents/vectors.f16.npy"), mmap_mode="r")
         self.bm25 = BM25Index.load(self.root / "bm25")
+        manifest = json.loads(admit_read(self.root / "index_manifest.json").read_text())
+        if (manifest.get("doc_ids_sha256") != sha_texts(self.ids)
+                or manifest.get("corpus_sha256") != sha_file(self.root / "corpus.jsonl")
+                or manifest.get("stella", {}).get("combined", {}).get("sha256")
+                   != sha_file(self.root / "documents/vectors.f16.npy")
+                or list(self.vectors.shape) != manifest.get("vector_shape")
+                or self.bm25.doc_ids != self.ids):
+            raise SystemExit("M18 PROJECT MEMORY REFUSED: index manifest integrity check failed")
         self.encoder = _query_encoder(bundle)
         corpus = read_corpus(self.root / "corpus.jsonl")
         self.metadata = {r["doc_id"]: r for r in corpus}

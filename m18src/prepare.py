@@ -158,6 +158,9 @@ def build(index_root=None, protocol_root=None, out_root=None, device="cuda"):
                           "rows_sha256": sha_array(info["rows"])}
         if dest.exists():
             export.gate_bundle(dest, float_rows=info["rows"])
+            stored = json.loads(admit_read(dest / "provenance.json").read_text()).get("table_identity")
+            if stored != table_identity:
+                raise SystemExit(f"M18 PREPARE REFUSED: stale V0-{name} bundle identity")
         else:
             export.build_bundle(dest, info["rows"], info["tokenizer"], {
                 "candidate": f"V0-{name}", "step": 0, "vocabulary_manifest": vocab_report["sha256"],
@@ -181,18 +184,24 @@ def build(index_root=None, protocol_root=None, out_root=None, device="cuda"):
     v1_q = v1_all[union]
     bank = cache.Bank(doc_ids, doc_vecs, ["qdrant"] * len(doc_ids), seed=reg["training"]["seed_primary"])
     cache_dir = out / "shared_cache"
+    cache_manifests = {"v1_artifact": reg["models"]["zero_v1"],
+                       "teacher_query_preprocessing": reg["models"]["teacher"],
+                       "source_split": {"protocol_sha256": sha_file(protocol_root / "protocol_manifest.json")}}
+    cache_inputs = {"teacher_vectors_sha256": sha_array(teacher_q),
+                    "v1_vectors_sha256": sha_array(v1_q),
+                    "document_vectors_sha256": sha_array(doc_vecs)}
     if cache_dir.exists():
         arrays, sidecar = cache.load(cache_dir)
+        expected = cache.identity(specs, bank, reg, reg["training"]["seed_primary"], cache_manifests)
+        if sidecar.get("identity") != expected or sidecar.get("artifact_inputs") != cache_inputs:
+            raise SystemExit("M18 PREPARE REFUSED: existing shared cache has stale inputs")
+        if arrays["qids"].tolist() != [q.qid for q in specs]:
+            raise SystemExit("M18 PREPARE REFUSED: existing shared cache query order changed")
     else:
         arrays, sidecar = cache.build(specs, bank, teacher_q, v1_q, reg,
                                       cache_seed=reg["training"]["seed_primary"],
-            manifests={"v1_artifact": reg["models"]["zero_v1"],
-                       "teacher_query_preprocessing": reg["models"]["teacher"],
-                       "source_split": {"protocol_sha256": sha_file(protocol_root / "protocol_manifest.json")}})
-        sidecar = cache.save(cache_dir, arrays, sidecar,
-            artifact_inputs={"teacher_vectors_sha256": sha_array(teacher_q),
-                             "v1_vectors_sha256": sha_array(v1_q),
-                             "document_vectors_sha256": sha_array(doc_vecs)})
+                                      manifests=cache_manifests)
+        sidecar = cache.save(cache_dir, arrays, sidecar, artifact_inputs=cache_inputs)
 
     prepared = {}
     union_pos = {old: new for new, old in enumerate(union)}

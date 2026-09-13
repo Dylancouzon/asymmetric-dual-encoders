@@ -74,3 +74,4 @@ def test_project_compounds_are_not_mistaken_for_generated_suffixes():
     assert not vocab.is_near_unique("scalar-quantization")
     assert not vocab.is_near_unique("collection-configuration")
     assert vocab.is_near_unique("qdrant-7f8c9d2a")
+    assert vocab.is_near_unique("qdrant-7d9f8c7b6c-abc12")

@@ -6,6 +6,8 @@ import hashlib
 import json
 import os
 import re
+import random
+from difflib import SequenceMatcher
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -18,6 +20,9 @@ ANSWER_CUES = re.compile(
     r"this (?:happens|fails|is caused|was fixed)|we (?:use|fixed|support))\b")
 INFO_REQUEST = re.compile(r"(?i)\b(?:provide|share|attach|send|need|want)\b.{0,50}\b(?:logs?|"
                           r"reproducer|reproduction|more information|details|stack trace)\b")
+RESOLUTION_CUES = re.compile(r"(?i)\b(?:fixed|resolves?|implemented|solution|workaround|"
+                             r"closing|closed by|merged in|this (?:happens|fails|is caused))\b")
+PROJECT_LINK = re.compile(r"https?://(?:github\.com/qdrant/qdrant/(?:pull|commit|blob)/|qdrant\.tech/documentation/)")
 ERROR_CUES = re.compile(r"(?i)\b(?:error|failed?|failure|panic|crash|exception|not working|oom|out of memory|timeout|stack trace)\b")
 CONFIG_CUES = re.compile(r"(?i)\b(?:config|setting|api|grpc|rest|port|cluster|replica|shard|deploy|docker|kubernetes|yaml|collection)\b")
 EXACT_CUES = re.compile(r"(?:\bv?\d+(?:\.\d+)+\b|\b(?:HTTP|gRPC)\s*\d{3}\b|"
@@ -71,11 +76,22 @@ def structural_candidates(corpus):
         if not openings:
             continue
         opening = openings[0]
+        def evidence(row):
+            closed_after = (opening.get("state") == "closed" and opening.get("closed_at")
+                            and str(opening["closed_at"]) >= str(row.get("timestamp") or ""))
+            linked = any(PROJECT_LINK.search(str(x)) for x in row.get("outbound_links", []))
+            events = any((e.get("timestamp") or "") >= (row.get("timestamp") or "")
+                         and e.get("kind") == "issue_event"
+                         and re.search(r"(?i)\b(?:closed|merged|referenced|committed)\b", e.get("text", ""))
+                         for e in rows)
+            explicit = bool(RESOLUTION_CUES.search(row["text"]))
+            return {"explicit_resolution": explicit, "thread_closed_after_answer": bool(closed_after),
+                    "project_link": linked, "closing_or_link_event": events}
         answers = sorted((r for r in rows if r["kind"] == "issue_comment"
                           and r.get("author_association") in MAINTAINER
                           and (r.get("timestamp") or "") > (opening.get("timestamp") or "")
                           and len(r["text"].split()) >= 16 and ANSWER_CUES.search(r["text"])
-                          and not INFO_REQUEST.search(r["text"])),
+                          and not INFO_REQUEST.search(r["text"]) and any(evidence(r).values())),
                          key=lambda r: (r.get("timestamp") or "", r["doc_id"]))
         if not answers:
             continue
@@ -91,7 +107,8 @@ def structural_candidates(corpus):
                            "stratum": _stratum(text),
                            "relevance_reason": "distinct later maintainer answer with resolution/action evidence",
                            "label_provenance": {"rule": "later_maintainer+strong_answer_cue-v2",
-                                                "author_association": target.get("author_association")}})
+                                                "author_association": target.get("author_association"),
+                                                "resolution_evidence": evidence(target)}})
 
     # Review question -> explicit in-reply-to response. The relation is structural, not a
     # teacher judgment, and both units remain individually searchable.
@@ -145,6 +162,20 @@ def _assign_union_families(candidates, corpus, by_doc):
                 union(q["family"], table[key])
             elif key:
                 table[key] = q["family"]
+    # Conservative fuzzy union for punctuation/reworded backport titles. Comparisons are blocked
+    # by the first two normalized tokens to avoid quadratic all-project similarity.
+    blocks = defaultdict(list)
+    for q in candidates:
+        shape = q["near_duplicate_family"]
+        toks = shape.split()
+        blocks[tuple(toks[:2])].append((q, set(toks)))
+    for rows in blocks.values():
+        for i, (a, at) in enumerate(rows):
+            for b, bt in rows[i + 1:]:
+                jaccard = len(at & bt) / max(1, len(at | bt))
+                if jaccard >= 0.82 or SequenceMatcher(None, a["near_duplicate_family"],
+                                                       b["near_duplicate_family"]).ratio() >= 0.92:
+                    union(a["family"], b["family"])
     link_re = re.compile(r"github\.com/qdrant/qdrant/(?:issues|pull)/(\d+)")
     for row in corpus:
         a = row.get("artifact_id")
@@ -191,7 +222,12 @@ def _split(candidates, reg):
         pool = rows[:total]
         # Three confirmation positions per chronological block of ten yields exactly 15/35 at
         # the target size while interleaving recency rather than putting all confirmation last.
-        conf_positions = {i for i in range(len(pool)) if i % 10 in (0, 3, 6)}
+        rng = random.Random(int(cfg.get("seed", 18001)) ^ int(hashlib.sha256(stratum.encode()).hexdigest()[:16], 16))
+        conf_positions = set()
+        for lo in range(0, len(pool), 10):
+            positions = list(range(lo, min(lo + 10, len(pool))))
+            rng.shuffle(positions)
+            conf_positions.update(positions[:min(3, len(positions))])
         conf = [q for i, q in enumerate(pool) if i in conf_positions][:conf_n]
         if len(conf) < conf_n:
             used = {q["query_id"] for q in conf}
@@ -298,7 +334,8 @@ def build(corpus_path=None, out_root=None, registry_data=None):
                     & heldout_target_hash),
                 "development_confirmation_family_overlap": len(
                     {q["family_group"] for q in dev} & {q["family_group"] for q in conf}),
-                "relevant_source_opening_self_hits": 0,
+                "qrel_source_equals_target_count": sum(q["source_doc"] == q["target_doc"]
+                                                        for q in train + dev + conf),
                 "query_token_overlap_with_answer": {"mean": float(sum(overlap) / max(1, len(overlap))),
                                                     "exact_query_substring_rate": float(sum(
                                                         q["text"].lower() in corpus_by_id[q["target_doc"]]["text"].lower()

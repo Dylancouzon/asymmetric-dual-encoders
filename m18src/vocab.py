@@ -205,6 +205,7 @@ UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{
 LONG_HEX_RE = re.compile(r"^(?:0x)?[0-9a-f]{16,}$", re.I)
 TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}(?:[tT].*)?$")
 RANDOM_SUFFIX_RE = re.compile(r".*-(?=[a-z0-9]{8,16}$)(?=[a-z0-9]*[a-z])(?=[a-z0-9]*\d)[a-z0-9]+$", re.I)
+K8S_SUFFIX_RE = re.compile(r".*-(?=[a-z0-9]{8,10}-[a-z0-9]{5}$)(?=[a-z0-9-]*\d)[a-z0-9]{8,10}-[a-z0-9]{5}$", re.I)
 
 
 def is_near_unique(term: str) -> bool:
@@ -212,7 +213,7 @@ def is_near_unique(term: str) -> bool:
     t = term.strip()
     return bool(UUID_RE.fullmatch(t) or LONG_HEX_RE.fullmatch(t)
                 or TIMESTAMP_RE.fullmatch(t) or t.count("/") >= 2
-                or RANDOM_SUFFIX_RE.fullmatch(t))
+                or RANDOM_SUFFIX_RE.fullmatch(t) or K8S_SUFFIX_RE.fullmatch(t))
 
 
 def select(stats, reg, expansions=None, abbreviations=None, single_token=(), **_ignored):

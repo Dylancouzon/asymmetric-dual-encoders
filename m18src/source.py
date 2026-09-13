@@ -12,11 +12,12 @@ import hashlib
 import inspect
 import json
 import os
+import re
 import subprocess
 import tempfile
 from pathlib import Path
 from typing import Any, Callable, Mapping
-from urllib.parse import urlencode, urlsplit, urlunsplit
+from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
 
 try:  # script execution from m18src and package-style test imports are both supported
     from common import REPO, require_executable
@@ -203,10 +204,26 @@ def _decode_page(raw: bytes, where: Path | str) -> list[dict[str, Any]]:
     return value
 
 
-def _request_params(endpoint: Mapping[str, Any], page: int, per_page: int) -> dict[str, Any]:
+def _request_params(endpoint: Mapping[str, Any], page: int, per_page: int,
+                    after: str | None = None) -> dict[str, Any]:
     params = dict(endpoint.get("params", {}))
     params.update({"page": page, "per_page": per_page})
+    if after:
+        params["after"] = after
     return params
+
+
+def _next_cursor(link: str) -> str | None:
+    for part in str(link or "").split(","):
+        if 'rel="next"' not in part and "rel=next" not in part:
+            continue
+        m = re.match(r"\s*<([^>]+)>", part)
+        if not m:
+            continue
+        values = parse_qs(urlsplit(m.group(1)).query).get("after")
+        if values:
+            return values[0]
+    return None
 
 
 def _source_identity(source: Mapping[str, Any]) -> dict[str, Any]:
@@ -279,7 +296,11 @@ def _validate_page(owned: Path, endpoint: Mapping[str, Any], page: int, per_page
     except OSError as e:
         raise SourceError(f"cannot read immutable page {raw_path}") from e
     receipt = _load_receipt(receipt_path)
-    expected = _request_params(endpoint, page, per_page)
+    after = None
+    if page > 1:
+        previous = _load_receipt(_receipt_path(owned, name, page - 1))
+        after = _next_cursor(previous.get("link_header", ""))
+    expected = _request_params(endpoint, page, per_page, after)
     if (receipt.get("complete") is not True or receipt.get("endpoint") != name or
             receipt.get("path") != endpoint.get("path") or receipt.get("params") != expected or
             receipt.get("sha256") != _sha(raw) or
@@ -319,7 +340,7 @@ def _existing_pages(owned: Path, endpoint: Mapping[str, Any], per_page: int,
 
 def _write_new_page(owned: Path, endpoint: Mapping[str, Any], page: int, per_page: int,
                     raw: bytes, headers: Mapping[str, str], api_version: str,
-                    acquired_at_utc: str) -> list[dict[str, Any]]:
+                    acquired_at_utc: str, request_params: Mapping[str, Any]) -> list[dict[str, Any]]:
     """Create a new immutable page transaction.  Existing paths are never replaced."""
     name = _endpoint_name(endpoint)
     raw_path, receipt_path = _page_path(owned, name, page), _receipt_path(owned, name, page)
@@ -351,7 +372,7 @@ def _write_new_page(owned: Path, endpoint: Mapping[str, Any], page: int, per_pag
         "complete": True,
         "endpoint": name,
         "path": endpoint["path"],
-        "params": _request_params(endpoint, page, per_page),
+        "params": dict(request_params),
         "page": page,
         "object_count": len(rows),
         "bytes": len(raw), "sha256": _sha(raw), "raw_path": f"pages/{page:06d}.json",
@@ -424,17 +445,23 @@ def _fetch_endpoint(owned: Path, endpoint: Mapping[str, Any], source: Mapping[st
         if 'rel="next"' not in link and "rel=next" not in link:
             return pages
     page = len(pages) + 1
+    after = None
+    if pages:
+        after = _next_cursor(_load_receipt(_receipt_path(owned, name, len(pages))).get("link_header", ""))
     headers = {"Accept": ACCEPT, "X-GitHub-Api-Version": str(source["api_version"])}
     while True:
+        params = _request_params(endpoint, page, per_page, after)
         raw, response_headers = _call_api(api_call, str(endpoint["path"]),
-                                           _request_params(endpoint, page, per_page), headers)
+                                           params, headers)
         rows = _write_new_page(owned, endpoint, page, per_page, raw, response_headers,
-                               str(source["api_version"]), now().astimezone(dt.timezone.utc).isoformat().replace("+00:00", "Z"))
+                               str(source["api_version"]), now().astimezone(dt.timezone.utc).isoformat().replace("+00:00", "Z"),
+                               params)
         pages.append(rows)
         link = str(response_headers.get("link", "")).lower()
         has_next = 'rel="next"' in link or "rel=next" in link
         if len(rows) < per_page and not has_next:
             return pages
+        after = _next_cursor(response_headers.get("link", ""))
         page += 1
 
 
@@ -468,12 +495,17 @@ def _reconcile_endpoint(owned: Path, endpoint: Mapping[str, Any], source: Mappin
     headers = {"Accept": ACCEPT, "X-GitHub-Api-Version": str(source["api_version"])}
     observed_pages: list[list[dict[str, Any]]] = []
     number = 1
+    after = None
     while True:
-        raw, _ = _call_api(api_call, str(endpoint["path"]), _request_params(endpoint, number, per_page), headers)
+        params = _request_params(endpoint, number, per_page, after)
+        raw, response_headers = _call_api(api_call, str(endpoint["path"]), params, headers)
         observed = _decode_page(raw, f"reconciliation {endpoint['name']} page {number}")
         observed_pages.append(observed)
-        if len(observed) < per_page:
+        link = response_headers.get("link", "")
+        has_next = 'rel="next"' in link.lower() or "rel=next" in link.lower()
+        if len(observed) < per_page and not has_next:
             break
+        after = _next_cursor(link)
         number += 1
         if number > max(len(stored) + 1000, 10000):
             raise SourceError(f"unbounded reconciliation pagination for {endpoint['name']}")

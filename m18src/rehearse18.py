@@ -92,19 +92,20 @@ def _write_fixture_source(root):
     commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True,
                             text=True, capture_output=True).stdout.strip()
     title_templates = {
-        "concept_howto": "How does vector search select neighbors {i}",
-        "error_troubleshooting": "Search request fails with timeout error {i}",
-        "config_api_ops": "How configure cluster replica setting number {i}",
-        "exact_version_numeric": "Difference between v1.2 and v1.3 status 500 case {i}",
-        "alias_jargon": "What does hnsw mean in qdrant project {i}",
+        "concept_howto": "How does {topic} behavior select neighbors {i}",
+        "error_troubleshooting": "Why does {topic} request fail with error {i}",
+        "config_api_ops": "How configure {topic} operational setting number {i}",
+        "exact_version_numeric": "Difference between {topic} v1.2 and v1.3 status {i}",
+        "alias_jargon": "What does {topic} mean in qdrant project {i}",
     }
     issues, comments = [], []
     number = 1
+    topics = ("vector", "payload", "replication", "quantization")
     for _stratum, template in title_templates.items():
         for i in range(4):
             created = f"2025-01-{number:02d}T00:00:00Z"
             issues.append({"id": 1000 + number, "node_id": f"ISSUE{number}", "number": number,
-                           "title": template.format(i=i), "body": "A distinct user question.",
+                           "title": template.format(i=i, topic=topics[i]), "body": "A distinct user question.",
                            "created_at": created, "updated_at": created,
                            "html_url": f"https://example.invalid/issues/{number}",
                            "user": {"login": "user", "type": "User"},

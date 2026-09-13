@@ -105,6 +105,23 @@ def test_node_dedupe_cutoff_and_post_cutoff_update_counts(tmp_path):
     assert manifest["endpoints"]["issues"]["updated_after_cutoff"] == 1
 
 
+def test_link_header_cursor_is_carried_to_next_explicit_page(tmp_path):
+    endpoint = _endpoint()
+    reg = _registry(endpoint, per_page=1)
+    calls = []
+    def api(path, params, headers):
+        calls.append(dict(params))
+        if params["page"] == 1:
+            return [_row("A")], {"link": '<https://api.github.com/x?page=2&after=CURSOR123>; rel="next"'}
+        assert params["after"] == "CURSOR123"
+        return [], {}
+    source.acquire_github(tmp_path, registry_data=reg, api_call=api, reconcile=False)
+    assert calls == [
+        {"state": "all", "sort": "created", "page": 1, "per_page": 1},
+        {"state": "all", "sort": "created", "page": 2, "per_page": 1, "after": "CURSOR123"},
+    ]
+
+
 def test_second_pass_reconciliation_accepts_body_edit_and_post_cutoff_tail(tmp_path):
     endpoint = _endpoint()
     reg = _registry(endpoint, per_page=10)
