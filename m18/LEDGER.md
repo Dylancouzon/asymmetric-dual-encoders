@@ -229,3 +229,18 @@
   `8bc47902ec10424e68784b47ee61745daf1a00ff841bc3c4b42715ccc8f046eb`.
 - Registry state is now `LOCKED_EXECUTABLE`. Training must refuse any changed recipe or artifact;
   confirmation remains sealed until a selected recipe/checkpoint is separately decision-locked.
+
+## 2026-09-13 — E12 first development baseline read
+
+- The first locked baseline read completed before student training. Equal-weight stratum-macro
+  nDCG@10 was 0.109231 for BM25, 0.087336 for released Zero v1 dense, 0.103431 for v1+DBSF,
+  0.087336 for V0-T0 dense, 0.103431 for V0-T0+DBSF, 0.136560 for Stella dense and 0.140992 for
+  Stella+DBSF. V0-T0 was exactly equal to v1 because none of the 15 initially added rows occurred
+  in the 100 development queries. Stella exceeded v1 by 0.049224 dense and 0.037561 fused,
+  demonstrating headroom for the bounded student experiment.
+- Query-bearing source chunks appeared in the unfiltered top ten for 99–100% of queries, confirming
+  that the registered source-object exclusion is material. The report measures metrics only after
+  excluding all such chunks.
+- This result is retained as `results/m18_development_baselines_pre_k8s.json`. It predates the
+  owner-approved, CTO-requested `k8s` training amendment and is immutable evidence rather than the
+  baseline for the revised V0 identity.
