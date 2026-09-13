@@ -406,6 +406,8 @@ def _cutoff_counts(pages: Mapping[str, list[list[dict[str, Any]]]], cutoff: str)
             "created_at_included": len(included), "created_after_cutoff": post_created,
             "updated_after_cutoff": post_updated, "canonical_unique_in_endpoint": len(endpoint_unique),
             "duplicates_in_endpoint": len(included) - len(endpoint_unique),
+            "raw_pages_sha256": _sha(_json_bytes([
+                _sha(_json_bytes(page)) for page in endpoint_pages])),
         }
     return summary, endpoint_unique_total - len(unique)
 
@@ -512,6 +514,8 @@ def acquire_github(root: Path | str = REPO, *, registry_data: Mapping[str, Any] 
         "consistency_limit": "GitHub bodies may have been edited after cutoff; updated_after_cutoff records this.",
     })
     _atomic_json(owned / "github-manifest.json", manifest)
+    if root == REPO.resolve():
+        _atomic_json(root / "results" / "m18_source_manifest.json", manifest)
     return manifest
 
 

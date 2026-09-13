@@ -61,11 +61,13 @@
     "init_anchor_weight": 0.0,
     "temperature": 0.05,
     "candidate_k": 64,
-    "candidate_mix_labeled": {"known_positive": 4, "teacher_top": 28, "zero_v1_top": 16, "uniform": 16},
+    "candidate_mix_labeled": {"known_positive": 1, "teacher_top": 31, "zero_v1_top": 16, "uniform": 16},
+    "candidate_mix_query_only": {"known_positive": 0, "teacher_top": 32, "zero_v1_top": 16, "uniform": 16},
+    "candidate_construction": {"score_ties": "descending score then ascending document id", "quota_backfill": "continue within the same ranked source", "positive_choice": "first registered positive in qrel order", "rng": "m18-uniform-rng-v1"},
     "freeze": "all inherited rows and all inherited pooling/scalar parameters; optimizer contains new rows only",
     "query_eligibility": "at least one trainable exact or placeholder row after variant preprocessing"
   },
-  "retrieval": {"dense": "exact inner product over normalized vectors", "bm25": {"k1": 1.2, "b": 0.75}, "fusion": {"operator": "DBSF", "candidate_depth": 100, "source": "m12src/qfusion.py"}},
+  "retrieval": {"dense": "exact inner product over normalized vectors", "bm25": {"implementation": "bm25s", "method": "lucene", "k1": 1.2, "b": 0.75, "stopwords": "en", "stemmer": "english"}, "fusion": {"operator": "DBSF", "candidate_depth": 100, "source": "m12src/qfusion.py"}},
   "evaluation": {
     "selection_metric": "fused_ndcg_at_10",
     "metrics": ["ndcg_at_10", "recall_at_10", "mrr_at_10"],
@@ -80,4 +82,3 @@
   "protected_access": {"m7_m13_spent_or_reserved_surfaces": false, "forbidden": ["results/perquery.json", "results/frozen_eval/untouched-*", "reserved qrels caches", "work/m9reserve", "LoTTE payloads"]},
   "observations": {"development_read": false, "confirmation_read": false, "training_started": false}
 }
-

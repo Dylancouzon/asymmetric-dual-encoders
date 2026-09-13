@@ -19,5 +19,11 @@
   mandated minima govern short strata. Split assignment happens on deduplicated artifact families.
 - The T0 diagnostic uses a 4,000-step scheduler with `stop_after=500`; a separate 500-step schedule
   would change the optimization trajectory and make the later resume incomparable.
+- The primary evaluation is held-out question retrieval over the complete pinned snapshot, not a
+  claim that only documents predating each question are searchable. Query-bearing openings remain
+  distractors and are never relevant solely because they share a thread; qrels point to distinct
+  answer spans and the self-hit rate is reported.
+- API cutoff means objects/events created no later than the cutoff, with mutable bodies captured as
+  observed during the recorded acquisition interval. M18 does not claim GitHub reconstructs body
+  versions at the exact cutoff instant; post-cutoff updates are counted in reconciliation.
 - No M18 result has been observed at this entry.
-
