@@ -19,7 +19,7 @@
 | `m19src/rehearse.py` | one-command synthetic pool/judgment/metric transaction and interrupted resume |
 | `m19/term-roster-lock-v3.json`, `results/m19_term_inventory_v3.json` | final 12-term roster audit/evidence; v1/v2 are preserved and superseded |
 | `m19/query-split-seal-v1.json` | text-free identities/counts for the sealed 60/30 development/confirmation split |
-| `results/m19_serving_benchmark_10000.json`, `results/m19_serving_receipt_t0.json` | fixed-sequence timing evidence and authenticated T0 serving gates |
+| `results/m19_serving_benchmark_10000_v2.json`, `results/m19_serving_receipt_t0_v2.json` | superseding exact-route timing evidence and authenticated T0 serving gates; unversioned v1 is preserved but superseded |
 | `m19src/test_common.py`, `test_inherit.py` | synthetic path-guard and lock tests |
 | `m19/reviews/` | bounded prompts, reviewer identities, access logs, findings and dispositions |
 | `work/m19/` | gitignored raw/derived/run state owned by M19 |

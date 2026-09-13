@@ -30,7 +30,7 @@ freezing and the authenticated one-shot transaction. The v2 one-command rehearsa
 synthetic compact bundle, independently recomputes development eligibility, interrupts at the
 judgment boundary, reloads bound inputs from disk, then freezes qrels and computes metrics inside
 the transaction. After the third remediation, the 65-test M19 suite passes and the immutable v4
-rehearsal result uses the corrected v2 schema. The current M19 suite has 68 passing tests.
+rehearsal result uses the corrected v2 schema. The current M19 suite has 71 passing tests.
 
 The first independent implementation review returned `NO-GO` with five P1 findings. Commit
 `406cde3` closed bundle, judgment and metric input trust; `502fd7c` closed decision authentication,
@@ -60,6 +60,10 @@ The actual local V0/T0 build is now complete and reproducible. T0 bundle identit
 `056b78d1184b0be8032a5493c75d033d109787e979730a5c6637e25c3785f968`. T0's minimum int8
 bare-term cosine is `0.9999541`, maximum coordinate error is `0.0005364`, no-match parity is exact,
 and resident bytes match the registered 12-row increment. Algebra, tokenizer, export and compact
-loader gates pass. The official fixed-sequence 10,000-query serving run also passes every registered
-gate: T0/V1 encoder median and p95 ratios are `0.9590` and `0.9763`, while end-to-end ratios are
-`0.9944` and `0.9969`. The next bounded checkpoint is implementation review before real judgments.
+loader gates pass. Astra's first stage-5 review reproduced the candidates exactly but found three
+P1 authentication/route issues in the original serving evidence. Those are remediated in v2: bundle
+payload digests are cross-checked against the build identity, benchmark inputs are bound through
+confirmation, and the timed route uses float32 scores, exclusions before depth and exact passage-ID
+ties against the released V1 loader. The superseding 10,000-query v2 run passes every registered
+gate: encoder median/p95 ratios are `0.9580`/`1.0370`, end-to-end ratios are `0.9956`/`0.9696`, and
+released-loader parity is `2.24e-8`. Bounded re-review is next; real judgments remain unauthorized.

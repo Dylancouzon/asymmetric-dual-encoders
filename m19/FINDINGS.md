@@ -20,7 +20,9 @@ already pins its supported eager PyTorch path (`use_memory_efficient_attention=f
 
 ## Serving cost
 
-The official 10,000-query fixed-sequence benchmark finds no measurable serving regression from the
-T0 row lookup. Encoder median and p95 are slightly lower than V1 (`0.9590x` and `0.9763x`), and the
-full inherited hybrid path is effectively unchanged (`0.9944x` median, `0.9969x` p95). These are
-cost and parity findings only; the benchmark discarded rankings and did not inspect relevance.
+The superseding official 10,000-query benchmark finds no serving regression from the T0 row lookup
+under the registered exact route. Against the actual released V1 loader, encoder median and p95 are
+`0.9580x` and `1.0370x`; the full inherited hybrid path is `0.9956x` median and `0.9696x` p95.
+Released-loader numerical parity is `2.24e-8`. These are cost and parity findings only; the
+benchmark discarded rankings and did not inspect relevance. The earlier v1 measurement used a
+shortcut route and is preserved only as superseded evidence.

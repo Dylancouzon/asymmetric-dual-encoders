@@ -164,3 +164,21 @@
   latency checks are true, and the T0 gate receipt binds bundle
   `b25a5fcb019f19c3bd48ba82f6fa05b9f7a64b74ff19a8cc1d83884fe8f6ae0d`.
 - No confirmation query, relevance judgment or retrieval-quality metric was accessed or produced.
+
+## 2026-09-13 — serving v1 superseded after Astra review
+
+- Fresh Astra independently reconstructed both bundles and regenerated all 12 Stella teacher
+  vectors byte-for-byte, but returned `NO-GO` for stage-5 sign-off. The actual candidate was sound;
+  the blockers were fail-open added-row provenance, incompletely bound benchmark inputs and a timed
+  top-k shortcut that did not implement the registered float32/exclusion/tie semantics.
+- `zero.verify_bundle` now checks the exact file set, expected build identity, variant/config links
+  and current model/tokenizer digests. A negative test rehashes an altered added row and is refused.
+- Serving v2 verifies inheritance, the query seal, candidate build and actual bundle before timing;
+  binds every registry/roster/query/build/bundle/index input; uses the released V1 loader; and selects
+  exact float32 passage top-500 results with exclusion before truncation and passage-ID tie breaks.
+  Confirmation recomputes that fixed workload and rejects stale sequence/host/warmup/input claims.
+- The superseding 10,000-query run completed in 274.14 seconds. Released-loader parity is
+  `2.24e-8`; T0/V1 encoder median/p95 ratios are `0.9580`/`1.0370` and end-to-end ratios are
+  `0.9956`/`0.9696`. All seven checks pass. The original v1 receipt remains preserved as superseded.
+- The full M19 suite has 71 passing tests. No rankings, judgments, quality metrics or confirmation
+  content were opened or stored.
