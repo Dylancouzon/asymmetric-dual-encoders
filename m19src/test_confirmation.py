@@ -21,9 +21,11 @@ def _fixture(tmp_path, monkeypatch, *, wrong_query_hash=False):
     query_path = confirmation / "queries.jsonl"
     query_hash = _write(
         query_path,
-        (b'{"primary_class":"short_context","query_id":"synthetic-q1",'
+        (b'{"author_id":"author","primary_class":"short_context",'
+         b'"query_id":"synthetic-q1",'
          b'"tags":[],"term":"k8s","text":"k8s probes"}\n'
-         b'{"primary_class":"longer_control","query_id":"synthetic-q2",'
+         b'{"author_id":"author","primary_class":"longer_control",'
+         b'"query_id":"synthetic-q2",'
          b'"tags":["version"],"term":"k8s",'
          b'"text":"k8s probes changed after version 2 upgrade"}\n'),
     )
@@ -84,7 +86,6 @@ def test_interrupted_transaction_resumes_across_judgment_boundary(tmp_path, monk
     tx.freeze_qrels(
         qrels, packet_path=packet, primary_batch_id="primary-01", audit_batch_id="audit-01",
         supporting_batch_id="support-01",
-        query_authors={spec["query_id"]: "author" for spec in specs},
     )
     metrics = confirmation / "metrics.json"
     tx.score(metrics)
@@ -123,3 +124,12 @@ def test_decision_requires_two_distinct_go_reviews(tmp_path, monkeypatch):
     _write(bad, decision)
     with pytest.raises(ValueError, match="not independent"):
         ConfirmationTransaction(bad, tx.receipt_dir)
+
+
+def test_current_refuses_mutated_decision_binding(tmp_path, monkeypatch):
+    tx, _ = _fixture(tmp_path, monkeypatch)
+    tx.initialize()
+    row_receipt = tx._bound_path("row_receipt")
+    row_receipt.write_text("tampered\n")
+    with pytest.raises(SystemExit, match="binding changed: row_receipt"):
+        tx.current()

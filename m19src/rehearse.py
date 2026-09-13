@@ -67,6 +67,7 @@ def _prepare_decision(root, query_path, query_sha256, registry):
     registry = json.loads(json.dumps(registry))
     registry["development_eligibility"]["net_term_wins_minimum"] = 1
     registry["confirmation_eligibility"]["net_term_wins_minimum"] = 1
+    registry["numerical_gates"]["added_row_bytes"] = 8
     registry_path = root / "registry.json"
     _write_or_verify(registry_path, registry)
 
@@ -101,12 +102,14 @@ def _prepare_decision(root, query_path, query_sha256, registry):
                "preproc": {"add_special_tokens": True, "max_length": 512,
                            "pool_mode": "sqrt", "prefix": ""}, "weights_folded": True}
     inheritance_body = {"_schema": "m19-synthetic-inheritance-v1",
-                        "inputs": {"released_effective_table": {
+                        "identities": {"released_effective_table": {
                             "pooling_sha256": common.sha_json(pooling)}}}
     inheritance = {**inheritance_body, "identity_sha256": common.sha_json(inheritance_body)}
     inheritance_path = root / "inheritance.json"
     _write_or_verify(inheritance_path, inheritance)
     teacher = {"k8s": np.array([0.2, 0.7, -0.1, 0.4], dtype=np.float32)}
+    teacher_path = root / "teacher-vectors.json"
+    _write_or_verify(teacher_path, {term: vector.tolist() for term, vector in teacher.items()})
     built = zero.construct_added_rows(base_codes, base_scales, base_tokenizer, roster, teacher)
     codes, scales = zero.compact_table(base_codes, base_scales, built["T0-teacher"])
     verification = {"base_codes": base_codes, "base_scales": base_scales,
@@ -123,7 +126,27 @@ def _prepare_decision(root, query_path, query_sha256, registry):
     base_config = {**pooling, "document_encoder": {"dim": 4}}
     payload = zero.bundle_payload("T0-teacher", codes, scales, extended, base_config, provenance)
     bundle_dir = root / "bundle"
-    zero.publish_bundle(bundle_dir, payload, verification=verification)
+    bundle_report = zero.publish_bundle(bundle_dir, payload, verification=verification)
+    row_receipt = {"_schema": "m19-row-receipt-v1", "variant": "T0-teacher",
+                   "codes_sha256": common.sha_array(codes),
+                   "scales_sha256": common.sha_array(scales),
+                   "tokenizer_sha256": common.sha_bytes(extended.to_str().encode()),
+                   "algebra_receipts_sha256": common.sha_json(built["receipts"])}
+    row_receipt_path = root / "row-receipt.json"
+    _write_or_verify(row_receipt_path, row_receipt)
+    serving_receipt = {"_schema": "m19-serving-gates-v1", "variant": "T0-teacher",
+                       "bundle_identity_sha256": bundle_report["identity_sha256"],
+                       "checks": {key: True for key in (
+                           "loader_parity", "tokenizer_boundaries", "no_match_ranking_parity",
+                           "pooling_identity", "resident_memory", "encoder_latency",
+                           "end_to_end_latency")},
+                       "measurements": {"loader_parity_max_abs": 0.0,
+                                        "added_row_bytes": 8,
+                                        "encoder_latency_ratio": 1.0,
+                                        "encoder_latency_additive_ms": 0.0,
+                                        "end_to_end_latency_ratio": 1.0}}
+    serving_receipt_path = root / "serving-receipt.json"
+    _write_or_verify(serving_receipt_path, serving_receipt)
 
     dev_queries = [
         {"query_id": "d-short", "term": "k8s", "primary_class": "short_context", "tags": []},
@@ -154,11 +177,17 @@ def _prepare_decision(root, query_path, query_sha256, registry):
     review_paths = {"implementation_review": root / "implementation-review.md",
                     "astra_review": root / "astra-review.md"}
     for role, path in review_paths.items():
-        _write_or_verify(path, f"Synthetic {role}: GO\n".encode())
+        short_role = role.removesuffix("_review")
+        _write_or_verify(path, {"_schema": "m19-review-go-v1", "role": short_role,
+                                "reviewer_id": f"synthetic-{short_role}-reviewer",
+                                "decision": "GO", "reviewed_commit": "synthetic-commit",
+                                "scope_sha256": "9" * 64})
 
     role_paths = {"registry": registry_path, "inheritance_lock": inheritance_path,
                   "roster": roster_path, "base_model": base_model_path,
-                  "base_tokenizer": base_tokenizer_path, **paths, **review_paths}
+                  "base_tokenizer": base_tokenizer_path, "teacher_vectors": teacher_path,
+                  "row_receipt": row_receipt_path, "serving_receipt": serving_receipt_path,
+                  **paths, **review_paths}
     for name in ("model.npz", "config.json", "tokenizer.json", "provenance.json", "complete.json"):
         role_paths["bundle_" + name.split(".")[0]] = bundle_dir / name
     bindings = {role: {"path": str(path.resolve()), "sha256": common.sha_file_unchecked(path)}
@@ -174,7 +203,9 @@ def _prepare_decision(root, query_path, query_sha256, registry):
         "development_eligibility_sha256": common.sha_json(computed),
         "term_roster_sha256": roster["identity_sha256"],
         "inheritance_identity": inheritance["identity_sha256"],
-        "row_formula": {"kind": "teacher-minus-fixed", "scale": "original-bare-norm"},
+        "row_formula": {"formula": registry["candidate"]["formula"],
+                        "scale_convention": registry["candidate"]["scale_convention"],
+                        "version": registry["versions"]["row_formula"]},
         "pool_recipe": registry["retrieval"], "evidence_recipe": registry["judgments"],
         "judgment_recipe": registry["judgments"], "metric_recipe": registry["metrics"],
         "numerical_gates": registry["numerical_gates"],
@@ -183,13 +214,13 @@ def _prepare_decision(root, query_path, query_sha256, registry):
         "confirmation_query_sha256": query_sha256,
         "bindings": bindings,
         "registry_sections": {key: registry[key] for key in (
-            "retrieval", "judgments", "metrics", "numerical_gates",
+            "versions", "candidate", "retrieval", "judgments", "metrics", "numerical_gates",
             "development_eligibility", "confirmation_eligibility", "confirmation_states",
         )},
         "review_gos": [
-            {"role": "implementation", "reviewer_id": "synthetic-reviewer-1",
+            {"role": "implementation", "reviewer_id": "synthetic-implementation-reviewer",
              "decision": "GO", "findings_sha256": bindings["implementation_review"]["sha256"]},
-            {"role": "astra", "reviewer_id": "synthetic-reviewer-2",
+            {"role": "astra", "reviewer_id": "synthetic-astra-reviewer",
              "decision": "GO", "findings_sha256": bindings["astra_review"]["sha256"]},
         ],
     }
@@ -199,16 +230,18 @@ def run_rehearsal(root=None):
     """Run or resume a fixed synthetic transaction, including an object reconstruction."""
     registry = common.load_json(common.REGISTRY_PATH)
     original_work, original_confirmation = common.WORK, common.CONFIRMATION_WORK
-    synthetic_root = Path(root or (original_work / "rehearsal-v2"))
+    synthetic_root = Path(root or (original_work / "rehearsal-v3"))
     common.WORK = synthetic_root
     common.CONFIRMATION_WORK = synthetic_root / "confirmation"
     try:
         query_path = common.CONFIRMATION_WORK / "queries.jsonl"
         query_sha = _write_or_verify(
             query_path,
-            (b'{"primary_class":"short_context","query_id":"synthetic-q1",'
+            (b'{"author_id":"synthetic-author","primary_class":"short_context",'
+             b'"query_id":"synthetic-q1",'
              b'"tags":[],"term":"k8s","text":"k8s probes"}\n'
-             b'{"primary_class":"longer_control","query_id":"synthetic-q2",'
+             b'{"author_id":"synthetic-author","primary_class":"longer_control",'
+             b'"query_id":"synthetic-q2",'
              b'"tags":["version"],"term":"k8s",'
              b'"text":"k8s probes changed after version 2 upgrade"}\n'),
         )
@@ -272,7 +305,6 @@ def run_rehearsal(root=None):
             tx.freeze_qrels(
                 qrels_path, packet_path=packet_path, primary_batch_id="primary-01",
                 audit_batch_id="audit-01", supporting_batch_id="supporting-01",
-                query_authors={spec["query_id"]: "synthetic-author" for spec in specs},
             )
             state = "qrels-frozen"
 
@@ -284,7 +316,7 @@ def run_rehearsal(root=None):
             tx.complete()
         result = tx.reconcile()
         result.update({
-            "_schema": "m19-synthetic-rehearsal-v1", "synthetic": True,
+            "_schema": "m19-synthetic-rehearsal-v2", "synthetic": True,
             "interruption_boundary": "judgments-in-progress", "pool_items": len(packet["items"]),
             "audit_fraction": audit["fraction"], "audit_agreement": agreement["agreement"],
             "metric_exposure_after_qrels_freeze": True,
@@ -296,7 +328,7 @@ def run_rehearsal(root=None):
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output", default=str(common.RESULTS / "m19_rehearsal_v2.json"))
+    parser.add_argument("--output", default=str(common.RESULTS / "m19_rehearsal_v3.json"))
     args = parser.parse_args(argv)
     result = run_rehearsal()
     payload = _json_bytes(result)

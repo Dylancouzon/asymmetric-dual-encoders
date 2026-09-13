@@ -65,6 +65,8 @@ def test_eligibility_requires_strict_majority_and_all_safety_checks():
 def test_score_run_refuses_missing_queries():
     with pytest.raises(ValueError, match="differ"):
         metrics.score_run({"q": []}, {"other": {}})
+    with pytest.raises(ValueError, match="outside frozen qrels"):
+        metrics.score_run({"q": ["unjudged"]}, {"q": {"judged": 0}})
 
 
 def test_empty_safety_slice_is_refused():

@@ -28,6 +28,7 @@ BOUND_ROLES = {
     "bundle_model", "bundle_config", "bundle_tokenizer", "bundle_provenance",
     "bundle_complete", "development_qrels", "development_runs", "development_queries",
     "development_support", "development_evaluation", "implementation_review", "astra_review",
+    "teacher_vectors", "row_receipt", "serving_receipt",
 }
 HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 SAFE_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}\Z")
@@ -104,7 +105,7 @@ class ConfirmationTransaction:
         registry = self._load_bound_json("registry")
         expected_sections = {
             key: registry[key] for key in (
-                "retrieval", "judgments", "metrics", "numerical_gates",
+                "versions", "candidate", "retrieval", "judgments", "metrics", "numerical_gates",
                 "development_eligibility", "confirmation_eligibility", "confirmation_states",
             )
         }
@@ -121,14 +122,62 @@ class ConfirmationTransaction:
             base_scales = np.asarray(archive["int8_scale"], dtype=np.float32).copy()
         base_tokenizer_payload = common.admit_read(self._bound_path("base_tokenizer")).read_bytes()
         bundle = self._bound_path("bundle_complete").parent
-        zero.verify_bundle(bundle, verification={
+        bundle_report = zero.verify_bundle(bundle, verification={
             "base_codes": base_codes, "base_scales": base_scales,
             "base_tokenizer_payload": base_tokenizer_payload, "roster": roster,
             "inheritance_identity": inheritance["identity_sha256"],
-            "pooling_identity_sha256": inheritance["inputs"]["released_effective_table"][
+            "pooling_identity_sha256": inheritance["identities"]["released_effective_table"][
                 "pooling_sha256"
             ],
         })
+        if bundle_report["variant"] != "T0-teacher":
+            raise SystemExit("M19 CONFIRMATION STOP: selected bundle is not T0-teacher")
+        teachers = {term: np.asarray(vector, dtype=np.float32) for term, vector in
+                    self._load_bound_json("teacher_vectors").items()}
+        built = zero.construct_added_rows(base_codes, base_scales, base_tokenizer_payload,
+                                          roster, teachers)
+        expected_codes, expected_scales = zero.compact_table(
+            base_codes, base_scales, built["T0-teacher"]
+        )
+        with np.load(common.admit_read(self._bound_path("bundle_model"))) as archive:
+            if (not np.array_equal(archive["rows_int8"], expected_codes) or
+                    not np.array_equal(archive["int8_scale"], expected_scales)):
+                raise SystemExit("M19 CONFIRMATION STOP: added rows differ from deterministic T0")
+        if common.admit_read(self._bound_path("bundle_tokenizer")).read_bytes() != (
+                built["tokenizer"].to_str().encode()):
+            raise SystemExit("M19 CONFIRMATION STOP: bundle tokenizer is not deterministic extension")
+        row_receipt = self._load_bound_json("row_receipt")
+        expected_row_receipt = {
+            "_schema": "m19-row-receipt-v1", "variant": "T0-teacher",
+            "codes_sha256": common.sha_array(expected_codes),
+            "scales_sha256": common.sha_array(expected_scales),
+            "tokenizer_sha256": common.sha_bytes(built["tokenizer"].to_str().encode()),
+            "algebra_receipts_sha256": common.sha_json(built["receipts"]),
+        }
+        if row_receipt != expected_row_receipt:
+            raise SystemExit("M19 CONFIRMATION STOP: deterministic row receipt differs")
+        serving = self._load_bound_json("serving_receipt")
+        required_checks = {"loader_parity", "tokenizer_boundaries", "no_match_ranking_parity",
+                           "pooling_identity", "resident_memory", "encoder_latency",
+                           "end_to_end_latency"}
+        if (serving.get("_schema") != "m19-serving-gates-v1" or
+                serving.get("variant") != "T0-teacher" or
+                serving.get("bundle_identity_sha256") != bundle_report["identity_sha256"] or
+                set(serving.get("checks", {})) != required_checks or
+                not all(serving["checks"].values())):
+            raise SystemExit("M19 CONFIRMATION STOP: serving gate receipt is incomplete or failed")
+        measured = serving.get("measurements", {})
+        gates = registry["numerical_gates"]
+        if (set(measured) != {"loader_parity_max_abs", "added_row_bytes",
+                             "encoder_latency_ratio", "encoder_latency_additive_ms",
+                             "end_to_end_latency_ratio"} or
+                measured["loader_parity_max_abs"] > gates["loader_parity_max_abs"] or
+                measured["added_row_bytes"] != gates["added_row_bytes"] or
+                measured["encoder_latency_ratio"] > gates["encoder_latency_ratio_maximum"] or
+                measured["encoder_latency_additive_ms"] >
+                gates["encoder_latency_additive_ms_maximum"] or
+                measured["end_to_end_latency_ratio"] > gates["end_to_end_latency_ratio_maximum"]):
+            raise SystemExit("M19 CONFIRMATION STOP: serving measurements fail registered gates")
         bundle_hashes = {role.removeprefix("bundle_").replace("complete", "complete.json"):
                          binding["sha256"]
                          for role, binding in self.decision["bindings"].items()
@@ -169,6 +218,26 @@ class ConfirmationTransaction:
                 review_roles["astra"]["findings_sha256"] !=
                 self.decision["bindings"]["astra_review"]["sha256"]):
             raise SystemExit("M19 CONFIRMATION STOP: review GO bindings differ")
+        for role, binding_role in (("implementation", "implementation_review"),
+                                   ("astra", "astra_review")):
+            receipt = self._load_bound_json(binding_role)
+            declared = review_roles[role]
+            if (receipt.get("_schema") != "m19-review-go-v1" or
+                    receipt.get("role") != role or receipt.get("decision") != "GO" or
+                    receipt.get("reviewer_id") != declared["reviewer_id"] or
+                    not receipt.get("reviewed_commit") or not _is_hash(receipt.get("scope_sha256"))):
+                raise SystemExit("M19 CONFIRMATION STOP: bound review is not an authenticated GO")
+        candidate = registry["candidate"]
+        expected_formula = {"formula": candidate["formula"],
+                            "scale_convention": candidate["scale_convention"],
+                            "version": registry["versions"]["row_formula"]}
+        if (self.decision["row_formula"] != expected_formula or
+                self.decision["pool_recipe"] != registry["retrieval"] or
+                self.decision["evidence_recipe"] != registry["judgments"] or
+                self.decision["judgment_recipe"] != registry["judgments"] or
+                self.decision["metric_recipe"] != registry["metrics"] or
+                self.decision["numerical_gates"] != registry["numerical_gates"]):
+            raise SystemExit("M19 CONFIRMATION STOP: top-level decision recipe differs")
 
     def _receipt_path(self, state):
         return self.receipt_dir / STATE_FILES[state]
@@ -297,7 +366,18 @@ class ConfirmationTransaction:
             raise SystemExit("M19 CONFIRMATION STOP: pools require the claimed state")
         if set(files) != {"pool_manifest", "evidence_packet", "metric_runs"}:
             raise SystemExit("M19 CONFIRMATION STOP: pool freeze requires exact registered roles")
-        bound = dict(self._hash_confirmation_file(path) for path in files.values())
+        preview = dict(self._hash_confirmation_file(path) for path in files.values())
+        def preview_json(path):
+            admitted = common.admit_confirmation_read(
+                path, state=current["state"],
+                claimed_files={**current["bound_files"], **preview},
+            )
+            return json.loads(admitted.read_text())
+        manifest = preview_json(files["pool_manifest"])
+        packet = preview_json(files["evidence_packet"])
+        metric_runs = preview_json(files["metric_runs"])
+        judgments.validate_frozen_pool(manifest, packet, metric_runs)
+        bound = preview
         return self._transition("claimed", "pools-frozen", added_files=bound,
                                 extra={"pool_roles": {k: str(v) for k, v in sorted(files.items())}})
 
@@ -354,8 +434,8 @@ class ConfirmationTransaction:
         return path, common.sha_bytes(payload)
 
     def freeze_qrels(self, output_path, *, packet_path, primary_batch_id, audit_batch_id,
-                     supporting_batch_id, query_authors, adjudication_batch_id=None,
-                     clarification=None):
+                     supporting_batch_id, adjudication_batch_id=None,
+                     clarification_batch_ids=None):
         current = self.current()
         if current["state"] == "qrels-frozen":
             return current
@@ -364,6 +444,13 @@ class ConfirmationTransaction:
         if str(self._confirmation_path(packet_path)) not in current["bound_files"]:
             raise SystemExit("M19 CONFIRMATION STOP: qrels packet is not pool-bound")
         packet = json.loads(self.read_bound_bytes(packet_path))
+        query_rows = [json.loads(line) for line in self.read_bound_bytes(
+            self.decision["confirmation_query_path"]
+        ).splitlines() if line]
+        query_authors = {row["query_id"]: row["author_id"] for row in query_rows}
+        if set(query_authors) != set(packet["queries"] if "queries" in packet else
+                                     {row["query_id"] for row in packet["items"]}):
+            raise SystemExit("M19 CONFIRMATION STOP: sealed queries and packet differ")
         primary_row, primary = self._batch_json(primary_batch_id)
         audit_row, audit_payload = self._batch_json(audit_batch_id)
         support_row, _ = self._batch_json(supporting_batch_id)
@@ -372,6 +459,16 @@ class ConfirmationTransaction:
         if adjudication_batch_id is not None:
             adjudication_row, adjudications = self._batch_json(adjudication_batch_id)
             batches.append(adjudication_row)
+        clarification = None
+        if clarification_batch_ids is not None:
+            if set(clarification_batch_ids) != {"prior_primary", "rubric"}:
+                raise SystemExit("M19 CONFIRMATION STOP: clarification batch roles differ")
+            prior_row = self._batch_receipt(clarification_batch_ids["prior_primary"])
+            rubric_row = self._batch_receipt(clarification_batch_ids["rubric"])
+            batches.extend([prior_row, rubric_row])
+            clarification = {"generation": 1, "complete_pool_relabel": True,
+                             "prior_primary_sha256": prior_row["sha256"],
+                             "rubric_sha256": rubric_row["sha256"]}
         if len(batches) != len(set(row["batch_id"] for row in batches)):
             raise SystemExit("M19 CONFIRMATION STOP: qrels need unique checkpointed batches")
         rules = self.decision["registry_sections"]["judgments"]

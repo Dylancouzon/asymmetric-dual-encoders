@@ -110,6 +110,46 @@ def assert_blinded(packet):
     return True
 
 
+def validate_frozen_pool(manifest, packet, metric_runs):
+    """Join the blinded packet and every scored top-ten to the registered seven-route union."""
+    if (manifest.get("_schema") != "m19-artifact-pool-v1" or
+            packet.get("_schema") != "m19-blinded-evidence-packet-v1" or
+            manifest.get("routes") != list(ROUTES)):
+        raise ValueError("pool/packet schema or route registry differs")
+    assert_blinded(packet)
+    by_query = defaultdict(set)
+    seen_items = set()
+    for item in packet["items"]:
+        key = (item["query_id"], item["artifact_id"])
+        if key in seen_items:
+            raise ValueError("packet repeats a query-artifact item")
+        seen_items.add(key)
+        by_query[item["query_id"]].add(item["artifact_id"])
+    if set(by_query) != set(manifest["queries"]):
+        raise ValueError("pool/packet query coverage differs")
+    for query_id, row in manifest["queries"].items():
+        union = set(row["artifact_ids"])
+        if by_query[query_id] != union:
+            raise ValueError("pool/packet artifact union differs")
+        if set(row["route_top10"]) != set(ROUTES):
+            raise ValueError("pool route provenance is incomplete")
+        for route in ROUTES:
+            ranked = row["route_top10"][route]
+            if len(ranked) != len(set(ranked)) or not set(ranked).issubset(union):
+                raise ValueError("route top-ten is duplicate or outside pool union")
+    required_runs = {"dense_candidate", "dense_v1", "hybrid_candidate", "hybrid_v1"}
+    if set(metric_runs) != required_runs:
+        raise ValueError("metric run roles differ from frozen evaluator")
+    for run in metric_runs.values():
+        if set(run) != set(by_query):
+            raise ValueError("metric run query coverage differs from packet")
+        for query_id, ranked in run.items():
+            top = list(map(str, ranked[:10]))
+            if len(top) != len(set(top)) or not set(top).issubset(by_query[query_id]):
+                raise ValueError("metric top-ten is duplicate or outside judged union")
+    return True
+
+
 def select_audit(packet, primary_labels, *, seed=19019, fraction=0.20):
     items = {row["item_id"]: row for row in packet["items"]}
     if set(items) != set(primary_labels):

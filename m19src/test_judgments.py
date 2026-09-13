@@ -43,6 +43,16 @@ def test_pool_requires_exact_routes_and_queries():
         judgments.build_pool(routes, specs)
 
 
+def test_frozen_pool_refuses_metric_artifacts_outside_union():
+    manifest, packet = judgments.build_pool(*_fixture())
+    runs = {role: {query_id: ["a"] for query_id in manifest["queries"]}
+            for role in ("dense_candidate", "dense_v1", "hybrid_candidate", "hybrid_v1")}
+    assert judgments.validate_frozen_pool(manifest, packet, runs)
+    runs["dense_candidate"]["q1"] = ["outside"]
+    with pytest.raises(ValueError, match="outside judged union"):
+        judgments.validate_frozen_pool(manifest, packet, runs)
+
+
 def test_audit_includes_positives_unjudgeable_and_negative_coverage():
     _, packet = judgments.build_pool(*_fixture())
     labels = {row["item_id"]: 0 for row in packet["items"]}

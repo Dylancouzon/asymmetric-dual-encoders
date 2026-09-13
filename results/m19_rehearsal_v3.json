@@ -1,0 +1,15 @@
+{
+  "_schema": "m19-synthetic-rehearsal-v2",
+  "audit_agreement": 1.0,
+  "audit_fraction": 0.4,
+  "bound_file_count": 9,
+  "decision_sha256": "0a50b04093712d15ff1bd89d7a425600783def53e2af96ab5cedaabb9a884db5",
+  "final_receipt_sha256": "18ba6ab2185b576078116a4dadd1e69d9254b687152dec840ba23653a1338f75",
+  "interruption_boundary": "judgments-in-progress",
+  "metric_exposure_after_qrels_freeze": true,
+  "outcome": "pass",
+  "pool_items": 10,
+  "state": "complete",
+  "synthetic": true,
+  "transaction_id": "synthetic-rehearsal-v1"
+}

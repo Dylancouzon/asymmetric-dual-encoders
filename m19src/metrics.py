@@ -37,6 +37,9 @@ def score_query(ranked_artifact_ids, qrels, k=10):
 def score_run(run, qrels):
     if set(run) != set(qrels):
         raise ValueError("run/qrels query IDs differ")
+    for query_id, ranked in run.items():
+        if not set(map(str, ranked[:10])).issubset(set(map(str, qrels[query_id]))):
+            raise ValueError("scored top-ten contains an artifact outside frozen qrels")
     return {query_id: score_query(run[query_id], qrels[query_id]) for query_id in sorted(qrels)}
 
 
@@ -177,7 +180,8 @@ def evaluate_frozen(runs, qrels, query_specs, rules, supporting_passage_checks):
     )["fixed_roster_mean"]
     numeric_delta = slice_term_macro_delta(
         per_system["dense_candidate"], per_system["dense_v1"], query_specs,
-        lambda row: bool(set(row.get("tags") or []) & {"numeric", "version"}),
+        lambda row: row["primary_class"] == "longer_control" and
+        bool(set(row.get("tags") or []) & {"numeric", "version"}),
     )
     longer_delta = slice_term_macro_delta(
         per_system["dense_candidate"], per_system["dense_v1"], query_specs,
