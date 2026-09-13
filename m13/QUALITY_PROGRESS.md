@@ -61,3 +61,31 @@ The successful attempt used the existing shared cache directory after integrity 
 Teacher retention: **94.40%**. All four family point estimates improved. Midpoint and cycle-end readings occur at different learning-rate phases; this adjacent-point change is descriptive, not a same-phase regression test. Training entered cycle2.
 
 Artifact: `results/m13_cov_cycle1.json`, remote/local SHA256 `9658bbdcc41a86982de6239b8c04db2626ebde618c1e3037a9df7dbbed8c30e2`.
+
+## User-requested CPU read at 79,539,107 examples
+
+Pinned rolling checkpoint step2,485,600; CPU fp32, four threads,
+full same COV query/candidate sets as the frozenM9 CPU baseline. Completed in
+131.1seconds with no additional Runpod charge.
+
+| Family | Frozen M9 CPU | Current M13 CPU | Difference |
+|---|---:|---:|---:|
+| BRIGHT | 0.160192 | 0.178182 | +0.017991 |
+| consumer-health | 0.606373 | 0.711345 | +0.104971 |
+| finance | 0.246139 | 0.327286 | +0.081148 |
+| legal | 0.791242 | 0.855581 | +0.064339 |
+| **Overall** | **0.450986** | **0.518099** | **+0.067112** |
+
+Teacher retention **93.06%**. All four family point estimates exceed M9.
+
+Current score is **-0.007427** versus the scheduled
+cycle1end0.525525. This dip is disclosed, not hidden: current checkpoint is
+early in cycle2 after the learning-rate reset, whereas the comparison is an annealed
+cycle-end checkpoint; current evaluation uses CPU fp32, previous used CUDA. Neither a
+same-phase comparison nor a calibrated precision comparison. No automatic stopping rule
+changed and no inference of overfitting from this one reading. Existing COV selection
+and M9/M13 training-history caveats above still apply.
+
+Result: `results/m13_current_cov_cpu.json`. Plan: `m13/COV_CURRENT_CPU.json`.
+Checkpoint SHA256: `f350a0a7babe8dab059876e03cbf1fc9c0c9bc09b8e194524ed4ea6481bcd2df`. Checkpoint copy is retained locally
+under `work/m13-side-eval/current_cpu_checkpoint.pt`, separate from rolling-backup pruning.

@@ -1,3 +1,13 @@
+# Latest descriptive CPU COV read — approximately79.54M examples
+
+User-requested COV CPU evaluation PASSED in131.1seconds. CurrentM130.518099
+versus frozenM90.450986; teacherretention93.06%.
+Allfourfamilies ahead ofM9, but score is-0.007427 versus
+annealedcycle1end. Current earlycycle2/higherlearningrate and CPU-versus-CUDA differences
+limit that comparison. No new stopping rule, paidcompute, or training modification.
+Resultresults/m13_current_cov_cpu.json; summarym13/QUALITY_PROGRESS.md.
+Historical handoffs follow; active supervisor remainsPID50427.
+
 # Cycle 1 quality result published — 2026-09-13
 
 Training remains active under PID50427. Cycle1 COVmacro0.525525, versus
