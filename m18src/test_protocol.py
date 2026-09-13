@@ -145,6 +145,26 @@ def test_duplicate_source_digest_unions_candidate_families():
     assert got[0]["family_group"] == got[1]["family_group"]
 
 
+def test_adjudication_is_exact_and_content_bound(tmp_path):
+    q = _candidate(1)
+    q["label_provenance"] = {"rule": "fixture"}
+    corpus = {
+        "o1": {"doc_id": "o1", "kind": "issue_opening", "text": "question body", "path": None},
+        "a1": {"doc_id": "a1", "kind": "issue_comment", "text": "direct answer", "path": None},
+    }
+    decision_path = tmp_path / "decisions.jsonl"
+    reg = {"strata": ["concept_howto"], "evaluation": {"qrel_adjudication": {
+        "pool_per_stratum": 2, "decisions_path": str(decision_path), "judge": "fixture"}}}
+    sha = protocol.adjudication_record(q, corpus)["candidate_sha256"]
+    decision_path.write_text(json.dumps({"query_id": "q1", "candidate_sha256": sha,
+        "label": "clear", "stratum": "concept_howto", "reason": "direct answer"}) + "\n")
+    accepted, meta = protocol.apply_adjudications([q], reg, corpus)
+    assert [x["query_id"] for x in accepted] == ["q1"] and meta["accepted_clear"] == 1
+    decision_path.write_text(decision_path.read_text().replace(sha, "0" * 64))
+    with pytest.raises(SystemExit, match="stale adjudication"):
+        protocol.apply_adjudications([q], reg, corpus)
+
+
 def test_confirmation_cannot_use_general_surface_loader(tmp_path):
     with pytest.raises(SystemExit, match="run_confirmation"):
         protocol.load_surface("confirmation", tmp_path)
