@@ -310,4 +310,11 @@
   recommended reporting this limitation rather than concentrating the full alias weight on one
   newly manufactured pair.
 - A 4,000-step sampler-only audit over the exact prepared pool observed 140–148 unique queries per
-  256 slots (mean 147.497) and maximum multiplicity three. Forty-nine network-free tests pass.
+  256 slots (mean 147.497) and maximum multiplicity three. Fifty network-free tests pass.
+
+## 2026-09-13 — E18 corrected trainer recipe locked
+
+- The duplicate-safe trainer version and unchanged batch/schedule are sealed by the third and final
+  pre-training execution lock, SHA-256
+  `3251a72c573d171cbb6544eb83ea10052beb29a744e883498e48122de52754da`. The superseded amended lock
+  remains at `m18/execution-lock.pre-batch-fix.json`; no optimizer step preceded this correction.
