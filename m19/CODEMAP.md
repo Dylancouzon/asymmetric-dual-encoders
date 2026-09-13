@@ -21,6 +21,7 @@
 | `m19/term-roster-lock-v3.json`, `results/m19_term_inventory_v3.json` | final 12-term roster audit/evidence; v1/v2 are preserved and superseded |
 | `m19/query-split-seal-v1.json` | text-free identities/counts for the sealed 60/30 development/confirmation split |
 | `m19/pool-pilot-lock-v1.json` | pre-retrieval deterministic ten-query pool-cost selection |
+| `m19/teacher-snapshot-lock-v1.json` | complete local Stella revision manifest including trusted code and tokenizer/config files |
 | `results/m19_serving_benchmark_10000_v2.json`, `results/m19_serving_receipt_t0_v2.json` | superseding exact-route timing evidence and authenticated T0 serving gates; unversioned v1 is preserved but superseded |
 | `results/m19_pool_pilot.json` | cost-only pilot counts, projections and hashes of the ignored blinded pool/packet |
 | `m19src/test_common.py`, `test_inherit.py` | synthetic path-guard and lock tests |
