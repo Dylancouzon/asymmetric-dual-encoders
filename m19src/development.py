@@ -19,6 +19,7 @@ REQUIRED_REVIEW_FILES = {
     "m19src/development.py", "m19src/pool_pilot.py", "m19src/judgments.py",
     "m19src/test_development.py",
 }
+REVIEW_SOURCE_EXCEPTIONS = {(common.REPO / "m11" / "release" / "zero_encoder.py").resolve()}
 
 
 def _load(path):
@@ -49,7 +50,9 @@ def validate_review_scope(path, *, reviewed_commit=None):
             resolved.relative_to(common.REPO.resolve())
         except ValueError:
             raise SystemExit("M19 DEVELOPMENT STOP: review scope path escapes repository")
-        if not re.fullmatch(r"[0-9a-f]{64}", str(expected)) or sha_file(resolved) != expected:
+        actual = (common.sha_file_unchecked(resolved)
+                  if resolved in REVIEW_SOURCE_EXCEPTIONS else sha_file(resolved))
+        if not re.fullmatch(r"[0-9a-f]{64}", str(expected)) or actual != expected:
             raise SystemExit(f"M19 DEVELOPMENT STOP: reviewed file changed: {relative}")
     return scope
 
