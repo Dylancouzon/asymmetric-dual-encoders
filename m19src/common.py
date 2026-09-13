@@ -86,12 +86,16 @@ def _m19_result(path: Path) -> bool:
     return path.parent == RESULTS.resolve() and path.name.startswith("m19_")
 
 
+def _refuse_permanent(path: Path):
+    low = path.as_posix().lower()
+    if any(part in low for part in FORBIDDEN_PARTS):
+        raise ProtectedRead(f"M19 READ REFUSED: {path} is protected or spent evaluation content")
+
+
 def admit_read(path):
     """Resolve symlinks, reject protected spellings, then enforce the M19 allowlist."""
     rp = _resolved(path)
-    low = rp.as_posix().lower()
-    if any(part in low for part in FORBIDDEN_PARTS):
-        raise ProtectedRead(f"M19 READ REFUSED: {rp} is protected or spent evaluation content")
+    _refuse_permanent(rp)
     if _under(rp, CONFIRMATION_WORK):
         raise ProtectedRead(
             f"M19 READ REFUSED: {rp} is sealed confirmation content; use the claimed "
@@ -118,6 +122,9 @@ def admit_confirmation_read(path, *, state, claimed_files):
     checks namespace, state, exact membership and bytes before returning the path.
     """
     rp = _resolved(path)
+    _refuse_permanent(rp)
+    if _resolved(CONFIRMATION_WORK) != _resolved(WORK / "confirmation"):
+        raise ProtectedRead("M19 CONFIRMATION READ REFUSED: confirmation root was redirected")
     if not _under(rp, CONFIRMATION_WORK):
         raise ProtectedRead(f"M19 CONFIRMATION READ REFUSED: {rp} is outside confirmation work")
     allowed_states = {
@@ -202,6 +209,33 @@ def atomic_write_bytes(path, payload: bytes):
     return path
 
 
+def atomic_create_bytes(path, payload: bytes):
+    """Publish new immutable bytes atomically without ever replacing an existing name."""
+    path = admit_write(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + f".tmp-create-{os.getpid()}")
+    try:
+        with open(tmp, "xb") as handle:
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.link(tmp, path)
+        directory_fd = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
+    return path
+
+
 def write_json(path, obj, indent=2):
     payload = (json.dumps(obj, indent=indent, sort_keys=True) + "\n").encode()
     return atomic_write_bytes(path, payload)
+
+
+def create_json(path, obj, indent=2):
+    payload = (json.dumps(obj, indent=indent, sort_keys=True) + "\n").encode()
+    return atomic_create_bytes(path, payload)

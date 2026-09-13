@@ -34,3 +34,20 @@ the named M18 source/corpus/index/system manifests. Commands were bounded `git r
 `git status`, `wc`, `nl`, `sed`, `sha256sum`, and two in-memory Python reproductions with inherited
 data access and writes mocked. It reported no recursive search, work-payload read, prohibited read,
 write or pytest execution.
+
+## Re-review of `655ee6c`
+
+The same Astra reviewer returned `GO` for bounded term inventory with no P0/P1. Its independent
+in-memory checks rejected registry/instruction mutations, changes to all thirteen inherited files,
+document/BM25 order and indexed-corpus inconsistencies, pooling inconsistencies, and invalid
+confirmation state/path/hash. It confirmed the effective-row hash was computed in chunks.
+
+Three residual P2s were reported and fixed before inventory: first publication now uses an atomic
+hard-link no-clobber operation; permanent historical exclusions also apply inside the claimed
+confirmation reader and its root cannot be redirected; and tests exercise the production registry
+and instruction dependency keys, a publication race, exact claim membership, permanent exclusion,
+document order and indexed-corpus identity.
+
+The re-review opened the original bounded set plus this review record, used only explicit status,
+diff, line-number, hash and one in-memory Python command, and reported no recursive search,
+work-payload/protected read, write or pytest execution.

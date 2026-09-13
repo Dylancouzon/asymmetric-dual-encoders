@@ -9,8 +9,8 @@ from pathlib import Path
 import numpy as np
 
 from m19src.common import (M18_WORK, M19, REGISTRY_PATH, RELEASE_BUNDLE, REPO, RESULTS,
-                           admit_read, load_json, sha_array, sha_file, sha_json, sha_texts,
-                           write_json)
+                           admit_read, create_json, load_json, sha_array, sha_file, sha_json,
+                           sha_texts)
 
 EXPECTED_CONTROL_HASHES = {
     "claude": (REPO / "CLAUDE.md", "ebab0f2c864d514fe2b41f7554c4d5fada3adf2a89d86428ff137eb8be1539ce"),
@@ -207,8 +207,16 @@ def publish(lock_path=M19 / "inheritance-lock.json"):
         if recorded != current:
             raise SystemExit("M19 INHERITANCE REFUSED: existing lock differs; replacement forbidden")
         return recorded
-    write_json(path, current)
-    return current
+    try:
+        create_json(path, current)
+        return current
+    except FileExistsError:
+        recorded = load_json(path)
+        if recorded != current:
+            raise SystemExit(
+                "M19 INHERITANCE REFUSED: concurrent lock differs; replacement forbidden"
+            )
+        return recorded
 
 
 def main(argv=None):

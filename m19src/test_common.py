@@ -40,17 +40,47 @@ def test_fresh_confirmation_requires_claimed_exact_bytes(tmp_path, monkeypatch):
     confirmation.mkdir()
     query_file = confirmation / "queries.jsonl"
     query_file.write_text('{"query_id":"sealed"}\n')
+    monkeypatch.setattr(common, "WORK", tmp_path)
     monkeypatch.setattr(common, "CONFIRMATION_WORK", confirmation)
     digest = common.sha_file_unchecked(query_file)
     with pytest.raises(common.ProtectedRead):
         common.admit_read(query_file)
     with pytest.raises(common.ProtectedRead):
         common.admit_confirmation_read(query_file, state="locked", claimed_files={str(query_file): digest})
+    with pytest.raises(common.ProtectedRead):
+        common.admit_confirmation_read(query_file, state="claimed", claimed_files={})
     assert common.admit_confirmation_read(
         query_file, state="claimed", claimed_files={str(query_file.resolve()): digest}
     ) == query_file.resolve()
     query_file.write_text('{"query_id":"changed"}\n')
     with pytest.raises(common.ProtectedRead):
+        common.admit_confirmation_read(
+            query_file, state="claimed", claimed_files={str(query_file.resolve()): digest}
+        )
+
+
+def test_claim_cannot_override_permanent_exclusion(tmp_path, monkeypatch):
+    confirmation = tmp_path / "confirmation"
+    confirmation.mkdir()
+    forbidden = confirmation / "m18_confirmation_queries.jsonl"
+    forbidden.write_text("protected spelling")
+    monkeypatch.setattr(common, "WORK", tmp_path)
+    monkeypatch.setattr(common, "CONFIRMATION_WORK", confirmation)
+    digest = common.sha_file_unchecked(forbidden)
+    with pytest.raises(common.ProtectedRead, match="protected"):
+        common.admit_confirmation_read(
+            forbidden, state="claimed", claimed_files={str(forbidden.resolve()): digest}
+        )
+
+
+def test_confirmation_root_redirection_is_refused(tmp_path, monkeypatch):
+    redirected = tmp_path / "redirected"
+    redirected.mkdir()
+    query_file = redirected / "queries.jsonl"
+    query_file.write_text("sealed")
+    monkeypatch.setattr(common, "CONFIRMATION_WORK", redirected)
+    digest = common.sha_file_unchecked(query_file)
+    with pytest.raises(common.ProtectedRead, match="redirected"):
         common.admit_confirmation_read(
             query_file, state="claimed", claimed_files={str(query_file.resolve()): digest}
         )

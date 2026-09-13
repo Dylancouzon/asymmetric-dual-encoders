@@ -35,3 +35,13 @@
   `6eff27e371dda116f6d0613d9e269aaf8afb809d2edc8842299fc2bd3fb34612`.
   Verification: `23 passed`; real `--verify` passed; a second default invocation left the lock
   byte-identical.
+
+## 2026-09-13 — bootstrap re-review GO and residual closure
+
+- Astra re-review of `655ee6c` returned `GO` for bounded term inventory; no P0/P1 remained.
+- Closed its three residual P2s before advancing: atomic no-clobber initial publication, permanent
+  exclusions/root validation in the claimed confirmation reader, and production-dependency plus
+  race/semantic regression tests.
+- Final bootstrap lock identity:
+  `de6d89676edd6b33e97aad08c1b28dce638c6c59c00f2e39a16f827ca84791bb`.
+  Verification: `20 passed`; real `--verify` passed. No quality surface was accessed.
