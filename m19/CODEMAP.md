@@ -7,7 +7,8 @@
 | `m19/STATUS.md`, `PLANNING.md`, `LEDGER.md`, `FINDINGS.md` | compact state and durable record |
 | `m19src/common.py` | M19 paths, strict read/write admission, hashes and atomic writes |
 | `m19src/inherit.py` | verify and publish the M18/Zero-v1 inheritance lock |
-| `m19src/term_inventory.py` | support-only fragmented-term scan and immutable roster lock |
+| `m19src/term_inventory.py` | consumed-byte-bound AddedToken support scan, source qualification and resumable v2 roster lock |
+| `m19/term-roster-lock-v2.json`, `results/m19_term_inventory_v2.json` | corrected immutable roster/evidence; unversioned v1 is preserved and superseded |
 | `m19src/test_common.py`, `test_inherit.py` | synthetic path-guard and lock tests |
 | `m19/reviews/` | bounded prompts, reviewer identities, access logs, findings and dispositions |
 | `work/m19/` | gitignored raw/derived/run state owned by M19 |

@@ -62,3 +62,23 @@
   `3ac4b8190cfd3827857346ca675dc578139fc518b0b4ccd2cea7cbf3fdc482f9`.
   Evidence: `results/m19_term_inventory.json`. Verification: three inventory tests plus immutable
   output recomputation passed.
+
+## 2026-09-13 — roster review NO-GO and v2 correction
+
+- Fresh Astra review found one P1 scan-time binding race, four P2 boundary/qualification/resume/
+  provenance issues and one P3 status contradiction. See
+  `m19/reviews/roster-astra-2026-09-13.md`.
+- Preserved the v1 roster/result and superseded them with versioned v2 artifacts. The v1 claim that
+  the catalog was prospectively git-frozen is narrowed: catalog and first result were committed
+  together, runtime order was fixed, and no retrieval quality informed it, but no independent
+  pre-scan receipt exists.
+- V2 matches terms with the actual joint AddedToken tokenizer, excludes explicit non-indexable rows
+  and text-equivalent cross-artifact support, and hashes the exact tokenizer/corpus bytes it
+  consumes. Corrected distinct-artifact support is 13–1,002; all terms still clear the gate.
+- Source-only qualification inspected an ignored bounded packet, not rankings or evaluation
+  queries. Each term now binds five non-equivalent intended-sense witnesses and evidence for all
+  three intent axes. `s3` excludes identifier uses, `tls` excludes thread-local storage, and CUDA's
+  distinction from Qdrant's Vulkan path is explicit.
+- V2 roster lock identity:
+  `864c4073674a5c207d680092a84e713178ad98b69cc86262409d7bfee48b5c08`.
+  Seven inventory tests pass. Re-review is required before stage 3.
