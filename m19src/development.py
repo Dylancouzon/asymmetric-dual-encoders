@@ -174,8 +174,17 @@ class DevelopmentTransaction:
                 raise SystemExit("M19 DEVELOPMENT STOP: clarification requires a failed first attempt")
             prior = _load(prior_path)
             clarification = _load(clarification_path)
-            if clarification.get("prior_primary_sha256") != prior.get(
-                    "input_files", {}).get("primary_labels", {}).get("sha256"):
+            prior_inputs = prior.get("input_files", {})
+            if (prior.get("_schema") != "m19-development-judgment-attempt-v1" or
+                    prior.get("generation") != 0 or
+                    set(prior_inputs) != {
+                        "primary_labels", "audit_labels", "adjudications",
+                        "supporting_passages"} or
+                    any(sha_file(binding["path"]) != binding["sha256"]
+                        for binding in prior_inputs.values())):
+                raise SystemExit("M19 DEVELOPMENT STOP: failed judgment input changed")
+            if clarification.get("prior_primary_sha256") != prior_inputs[
+                    "primary_labels"]["sha256"]:
                 raise SystemExit("M19 DEVELOPMENT STOP: clarification does not bind first labels")
             new["clarification"] = _binding(clarification_path)
         attempt_path = self.root / f"judgment-attempt-{generation}.json"
@@ -205,6 +214,8 @@ class DevelopmentTransaction:
         if generation:
             attempt_bindings["failed_judgment_attempt"] = _binding(
                 self.root / "judgment-attempt-0.json")
+            attempt_bindings.update({f"failed_{role}": binding
+                                     for role, binding in prior_inputs.items()})
         return self._transition("judgments-in-progress", "qrels-frozen", added={
             **new, **attempt_bindings, "qrels": _binding(qrels_path),
             "judgment_freeze": _binding(judgment_path)})

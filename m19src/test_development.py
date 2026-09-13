@@ -65,6 +65,8 @@ def test_development_transaction_orders_reviews_judgments_qrels_and_scoring(tmp_
             primary_path, failed_audit_path, adjudication_path, support_path,
             primary_reviewer_id="primary", auditor_id="auditor")
     assert (tmp_path / "development" / "judgment-attempt-0.json").exists()
+    original_failed_audit = failed_audit_path.read_bytes()
+    failed_audit_path.write_text("{}\n")
 
     clarification_path = _write(tmp_path / "clarification.json", {
         "generation": 1, "complete_pool_relabel": True,
@@ -74,6 +76,12 @@ def test_development_transaction_orders_reviews_judgments_qrels_and_scoring(tmp_
     auditor = {item_id: primary[item_id] for item_id in fresh_audit["item_ids"]}
     audit_path = _write(tmp_path / "audit-fresh.json", {
         "sample": fresh_audit, "labels": auditor})
+    with pytest.raises(SystemExit, match="failed judgment input changed"):
+        tx.freeze_qrels(
+            primary_path, audit_path, adjudication_path, support_path,
+            primary_reviewer_id="primary", auditor_id="auditor",
+            clarification_path=clarification_path)
+    failed_audit_path.write_bytes(original_failed_audit)
     tx.freeze_qrels(
         primary_path, audit_path, adjudication_path, support_path,
         primary_reviewer_id="primary", auditor_id="auditor",
