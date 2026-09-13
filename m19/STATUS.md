@@ -1,6 +1,6 @@
 # M19 status
 
-**Execution active 2026-09-13 — corrected term roster cleared for implementation.**
+**Execution active 2026-09-13 — stage-3 implementation remediation under re-review.**
 
 The fresh M19 boundary is active on `m18-qdrant-project-memory`. M18 remains closed and immutable.
 Only the pinned M18 source/corpus/index manifests, the released Zero-v1 bundle and the unprotected
@@ -25,8 +25,14 @@ exactly 12 rows/IDs and a final vocabulary of 30,534. Astra returned `GO` for st
 No retrieval quality or M18 protocol surface was accessed. Next: implement deterministic rows,
 artifact collapse, metrics and the synthetic confirmation state machine before authoring query text.
 
-Stage 3 progress: deterministic V0/T0 row algebra, inherited-row-preserving int8 assembly,
-resident-int8 loading and resumable immutable bundle publication are implemented with six synthetic
-tests. Exclusion-before-truncation artifact collapse, DBSF@100 explanations, binary metrics,
-fixed-roster aggregation and safety/eligibility helpers add nine passing tests. Confirmation
-transaction and the one-command synthetic rehearsal remain before implementation review.
+Stage 3 now includes deterministic V0/T0 row algebra, inherited-row-preserving int8 assembly,
+verified complete-bundle loading, artifact collapse/DBSF, derived eligibility, blinded judgment
+freezing and the authenticated one-shot transaction. The v2 one-command rehearsal rebuilds a real
+synthetic compact bundle, independently recomputes development eligibility, interrupts at the
+judgment boundary, reloads bound inputs from disk, then freezes qrels and computes metrics inside
+the transaction. The 61-test M19 suite passes.
+
+The first independent implementation review returned `NO-GO` with five P1 findings. Commit
+`406cde3` closed bundle, judgment and metric input trust; `502fd7c` closed decision authentication,
+transaction-owned qrel/metric creation and caller-asserted completion. No prospective query text or
+real judgment data has been created. A bounded implementation re-review is the next gate.

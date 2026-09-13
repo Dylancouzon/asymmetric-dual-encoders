@@ -249,6 +249,7 @@ def run_rehearsal(root=None):
             # Re-instantiation is the rehearsed interruption across the judgment boundary.
             tx = ConfirmationTransaction(decision_path, receipts)
             state = tx.current()["state"]
+            packet = json.loads(tx.read_bound_bytes(packet_path))
 
         primary = {row["item_id"]: int(row["artifact_id"] == "a1")
                    for row in packet["items"]}
