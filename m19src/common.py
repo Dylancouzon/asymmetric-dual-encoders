@@ -42,6 +42,7 @@ FORBIDDEN_PARTS = (
 EXACT_INHERITED_FILES = {
     (REPO / "CLAUDE.md").resolve(),
     (REPO / "instructions-m19.md").resolve(),
+    (REPO / "m11" / "release" / "zero_encoder.py").resolve(),
     (REPO / "m18" / "registry.json").resolve(),
     (REPO / "m18" / "execution-lock.json").resolve(),
     (RESULTS / "m18_source_manifest.json").resolve(),
