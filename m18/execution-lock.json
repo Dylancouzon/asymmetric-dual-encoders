@@ -1,0 +1,27 @@
+{
+ "_schema": "m18-execution-lock-v1",
+ "artifacts": {
+  "corpus": {
+   "path": "results/m18_corpus_manifest.json",
+   "sha256": "fc21a2bb54db3a34ad4a116d639a1bdbc04de5ffd74510c38f2f7831db22c804"
+  },
+  "index": {
+   "path": "results/m18_index_manifest.json",
+   "sha256": "037a9e3f5ccf7be1264ba50f427d6f062bc6e2cdfbaeeaa2c538ef7c23a11025"
+  },
+  "prepare": {
+   "path": "results/m18_prepare_manifest.json",
+   "sha256": "f520dfb5b2f79d8ddd65c42aca93bc165b3b69ebaba00e50ca3d560005d5c10e"
+  },
+  "protocol": {
+   "path": "results/m18_protocol_manifest.json",
+   "sha256": "483da449f81d3d016ead4415cd0bb1162c3542b9a94a32e0e96558379af7cc3d"
+  },
+  "source": {
+   "path": "results/m18_source_manifest.json",
+   "sha256": "435b8c3a4ce301f6c662a2a7c7147ffed1e073f1dda9e49ede1b3beeccf20f25"
+  }
+ },
+ "recipe_sha256": "46727361f9d2b37228e75efcbcaf48a1386a9b0bd2a7850d214bc6898b42c5ac",
+ "state": "locked"
+}

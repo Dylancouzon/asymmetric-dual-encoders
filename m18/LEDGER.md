@@ -220,3 +220,12 @@
   vowel-free short-form occurrences across 46 distinct short forms. Among admitted abbreviation-
   like rows, evidence is sparse (`hnsw`: 2 pairs, `s3`: 2, `arm64`: 1, `grpc`: 0). This is a
   limitation to report, not grounds for synthetic qrels or a larger vocabulary arm.
+
+## 2026-09-13 — E11 execution recipe locked
+
+- The source, corpus, protocol, index and preparation manifests plus the registered model,
+  vocabulary, variant, training, retrieval, evaluation and serving recipe are bound by immutable
+  `m18/execution-lock.json`. Its SHA-256 is
+  `8bc47902ec10424e68784b47ee61745daf1a00ff841bc3c4b42715ccc8f046eb`.
+- Registry state is now `LOCKED_EXECUTABLE`. Training must refuse any changed recipe or artifact;
+  confirmation remains sealed until a selected recipe/checkpoint is separately decision-locked.
