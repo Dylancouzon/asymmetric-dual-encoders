@@ -172,3 +172,22 @@ def test_review_and_serving_receipts_are_strict(tmp_path, monkeypatch):
     _write(bad_decision, decision)
     with pytest.raises(SystemExit, match="serving measurements"):
         ConfirmationTransaction(bad_decision, tmp_path / "work" / "m19" / "bad-receipts-2")
+
+    for suffix, mutate in (
+        ("sequence", lambda value: value["benchmark"].__setitem__(
+            "query_sequence_sha256", "9" * 64)),
+        ("host", lambda value: value["benchmark"].__setitem__("host", {})),
+        ("warmup", lambda value: value["benchmark"].__setitem__("warmup", 0)),
+    ):
+        decision = common.load_json(tx.decision_path)
+        serving = common.load_json(tx._bound_path("serving_receipt"))
+        mutate(serving)
+        serving_path = tmp_path / "work" / "m19" / f"bad-serving-{suffix}.json"
+        digest = _write(serving_path, serving)
+        decision["bindings"]["serving_receipt"] = {
+            "path": str(serving_path.resolve()), "sha256": digest}
+        decision_path = tmp_path / "work" / "m19" / f"bad-decision-{suffix}.json"
+        _write(decision_path, decision)
+        with pytest.raises(SystemExit, match="serving measurements"):
+            ConfirmationTransaction(
+                decision_path, tmp_path / "work" / "m19" / f"bad-receipts-{suffix}")

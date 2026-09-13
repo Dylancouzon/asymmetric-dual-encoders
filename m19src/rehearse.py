@@ -118,7 +118,12 @@ def _prepare_decision(root, query_path, query_sha256, registry):
                             "zero_v1_tokenizer": {"path": str(base_tokenizer_path.resolve()),
                                                   "sha256": common.sha_file_unchecked(base_tokenizer_path)},
                             "zero_v1_config": {"path": str(base_config_path.resolve()),
-                                               "sha256": common.sha_file_unchecked(base_config_path)}}}
+                                               "sha256": common.sha_file_unchecked(base_config_path)},
+                            **{role: {"sha256": str(index + 1) * 64}
+                               for index, role in enumerate((
+                                   "index_corpus_jsonl", "doc_ids", "document_vectors",
+                                   "bm25_data", "bm25_indices", "bm25_indptr", "bm25_vocab",
+                                   "bm25_params"))}}}
     inheritance = {**inheritance_body, "identity_sha256": common.sha_json(inheritance_body)}
     inheritance_path = root / "inheritance.json"
     _write_or_verify(inheritance_path, inheritance)
@@ -159,13 +164,59 @@ def _prepare_decision(root, query_path, query_sha256, registry):
                    "algebra_gates_sha256": common.sha_json(algebra)}
     row_receipt_path = root / "row-receipt.json"
     _write_or_verify(row_receipt_path, row_receipt)
-    serving_receipt = {"_schema": "m19-serving-gates-v1", "variant": "T0-teacher",
+    dev_queries = [
+        {"query_id": "d-short", "text": "k8s probes", "term": "k8s",
+         "primary_class": "short_context", "tags": []},
+        {"query_id": "d-long", "text": "k8s probes changed after version 2 upgrade",
+         "term": "k8s", "primary_class": "longer_control", "tags": ["version"]},
+    ]
+    development_split_path = root / "development.jsonl"
+    development_split_payload = b"".join(
+        (json.dumps(row, sort_keys=True) + "\n").encode() for row in dev_queries)
+    _write_or_verify(development_split_path, development_split_payload)
+    query_seal = {"_schema": "m19-query-split-seal-v1", "splits": {"development": {
+        "sha256": common.sha_bytes(development_split_payload),
+        "query_ids": [row["query_id"] for row in dev_queries]}}}
+    query_seal_path = root / "query-seal.json"
+    _write_or_verify(query_seal_path, query_seal)
+    candidate_build = {
+        "_schema": "m19-candidate-build-v1", "state": "complete",
+        "inheritance_identity": inheritance["identity_sha256"],
+        "roster_identity": roster["identity_sha256"],
+        "bundles": {"T0-teacher": {"identity_sha256": bundle_report["identity_sha256"]}},
+    }
+    candidate_build_path = root / "candidate-build.json"
+    _write_or_verify(candidate_build_path, candidate_build)
+    sequence = [dev_queries[index % len(dev_queries)]["text"]
+                for index in range(registry["numerical_gates"]["latency_queries"])]
+    serving_inputs = {
+        "registry_sha256": common.sha_file_unchecked(registry_path),
+        "inheritance_identity_sha256": inheritance["identity_sha256"],
+        "roster_identity_sha256": roster["identity_sha256"],
+        "query_seal_sha256": common.sha_file_unchecked(query_seal_path),
+        "development_queries_sha256": common.sha_file_unchecked(development_split_path),
+        "candidate_build_sha256": common.sha_file_unchecked(candidate_build_path),
+        "bundle_identity_sha256": bundle_report["identity_sha256"],
+        "index_inputs_sha256": {
+            role: inheritance["inherited_data"][role]["sha256"]
+            for role in ("index_corpus_jsonl", "doc_ids", "document_vectors", "bm25_data",
+                         "bm25_indices", "bm25_indptr", "bm25_vocab", "bm25_params")
+        },
+    }
+    route_semantics = {
+        "dense_dtype": "float32", "exclusion_before_truncation": True,
+        "passage_depth": 500, "artifact_depth": 100,
+        "tie_break": "descending score then ascending passage_id",
+    }
+    serving_receipt = {"_schema": "m19-serving-gates-v2", "variant": "T0-teacher",
                        "bundle_identity_sha256": bundle_report["identity_sha256"],
                        "checks": {key: True for key in (
                            "loader_parity", "tokenizer_boundaries", "no_match_ranking_parity",
                            "pooling_identity", "resident_memory", "encoder_latency",
                            "end_to_end_latency")},
-                       "measurements": {"loader_parity_max_abs": 0.0, "added_row_bytes": 8,
+                       "measurements": {"loader_parity_max_abs": 0.0,
+                                        "released_loader_parity_max_abs": 0.0,
+                                        "added_row_bytes": 8,
                                         "encoder_latency_median_ratio": 1.0,
                                         "encoder_latency_p95_ratio": 1.0,
                                         "encoder_latency_median_additive_ms": 0.0,
@@ -174,16 +225,15 @@ def _prepare_decision(root, query_path, query_sha256, registry):
                                         "end_to_end_latency_p95_ratio": 1.0,
                                         "temporary_peak_bytes": 0, "rss_high_water_kib": 0},
                        "benchmark": {"query_count": registry["numerical_gates"]["latency_queries"],
-                                     "query_sequence_sha256": "8" * 64, "host": "synthetic",
-                                     "threads": 1, "warmup": 1, "repetitions": 1}}
+                                     "query_sequence_sha256": common.sha_texts(sequence),
+                                     "host": {"node": "synthetic", "platform": "synthetic",
+                                              "gpu": "synthetic"},
+                                     "threads": {"torch": 1, "bm25": 1},
+                                     "warmup": 20, "repetitions": 1},
+                       "inputs": serving_inputs, "route_semantics": route_semantics}
     serving_receipt_path = root / "serving-receipt.json"
     _write_or_verify(serving_receipt_path, serving_receipt)
 
-    dev_queries = [
-        {"query_id": "d-short", "term": "k8s", "primary_class": "short_context", "tags": []},
-        {"query_id": "d-long", "term": "k8s", "primary_class": "longer_control",
-         "tags": ["version"]},
-    ]
     dev_qrels = {row["query_id"]: {"good": 1, "bad": 0} for row in dev_queries}
     candidate = {row["query_id"]: ["good"] for row in dev_queries}
     baseline = {row["query_id"]: ["bad"] for row in dev_queries}
@@ -228,6 +278,8 @@ def _prepare_decision(root, query_path, query_sha256, registry):
     role_paths = {"registry": registry_path, "inheritance_lock": inheritance_path,
                   "roster": roster_path, "base_model": base_model_path,
                   "base_tokenizer": base_tokenizer_path, "base_config": base_config_path,
+                  "candidate_build": candidate_build_path, "query_seal": query_seal_path,
+                  "development_query_split": development_split_path,
                   "teacher_vectors": teacher_path, "teacher_receipt": teacher_receipt_path,
                   "row_receipt": row_receipt_path, "serving_receipt": serving_receipt_path,
                   "review_scope": review_scope_path,
