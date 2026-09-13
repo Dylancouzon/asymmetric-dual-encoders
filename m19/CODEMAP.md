@@ -11,6 +11,7 @@
 | `m19src/zero.py` | deterministic V0/T0 row algebra, compact int8 table and no-eager-float loader |
 | `m19src/build_candidate.py` | one-shot local Stella teacher receipt and actual V0/T0 bundle build |
 | `m19src/benchmark_serving.py` | fixed-sequence v1/T0 encoder and actual-index hybrid latency gates |
+| `m19src/pool_pilot.py` | frozen ten-query seven-route pool construction and cost-only projection |
 | `m19src/retrieval.py` | exact passage scoring, exclusion-before-truncation, artifact collapse and DBSF@100 |
 | `m19src/metrics.py` | binary top-ten metrics, fixed-roster term macro and eligibility helpers |
 | `m19src/judgments.py` | seven-route pool, blinded evidence packets, audit sampling/agreement and binary qrels freeze |
