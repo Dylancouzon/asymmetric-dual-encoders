@@ -17,3 +17,10 @@ quantization, the worst T0 bare-term cosine is `0.9999541` and the largest coord
 12 × 1,028 bytes. Stella's cached custom model defaults to xformers, but the released Zero config
 already pins its supported eager PyTorch path (`use_memory_efficient_attention=false`,
 `unpad_inputs=false`); using those frozen settings produces deterministic teacher bytes locally.
+
+## Serving cost
+
+The official 10,000-query fixed-sequence benchmark finds no measurable serving regression from the
+T0 row lookup. Encoder median and p95 are slightly lower than V1 (`0.9590x` and `0.9763x`), and the
+full inherited hybrid path is effectively unchanged (`0.9944x` median, `0.9969x` p95). These are
+cost and parity findings only; the benchmark discarded rankings and did not inspect relevance.

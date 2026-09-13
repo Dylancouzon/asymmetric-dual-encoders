@@ -150,3 +150,17 @@
   no eager float32 table, unchanged inherited rows and exact no-match encoder parity.
 - A second builder execution reproduced and verified every immutable output byte. Latency gates
   remain open; no retrieval quality or confirmation content was accessed.
+
+## 2026-09-13 — official serving gates pass
+
+- A 100-query development-only pilot exercised the inherited BM25 index, exact GPU dense scoring,
+  artifact collapse and unchanged DBSF path without storing rankings or quality output. It exposed
+  one benign read-only memmap warning; the loader now uses copy-on-write mapping so the source bytes
+  remain immutable while PyTorch receives a writable view.
+- The fixed alternating V1/T0 sequence then completed 10,000 measured development queries after 20
+  warmups on the RTX 3080 in 96.78 seconds. T0/V1 encoder median and p95 ratios are `0.9590` and
+  `0.9763`; end-to-end ratios are `0.9944` and `0.9969`.
+- Loader parity is exact, no-match ranking parity passes, all algebra/tokenizer/pooling/memory and
+  latency checks are true, and the T0 gate receipt binds bundle
+  `b25a5fcb019f19c3bd48ba82f6fa05b9f7a64b74ff19a8cc1d83884fe8f6ae0d`.
+- No confirmation query, relevance judgment or retrieval-quality metric was accessed or produced.

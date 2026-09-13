@@ -1,6 +1,6 @@
 # M19 status
 
-**Execution active 2026-09-13 — stage-5 V0/T0 construction and gates.**
+**Execution active 2026-09-13 — stage-5 V0/T0 construction and serving gates complete.**
 
 The fresh M19 boundary is active on `m18-qdrant-project-memory`. M18 remains closed and immutable.
 Only the pinned M18 source/corpus/index manifests, the released Zero-v1 bundle and the unprotected
@@ -60,4 +60,6 @@ The actual local V0/T0 build is now complete and reproducible. T0 bundle identit
 `056b78d1184b0be8032a5493c75d033d109787e979730a5c6637e25c3785f968`. T0's minimum int8
 bare-term cosine is `0.9999541`, maximum coordinate error is `0.0005364`, no-match parity is exact,
 and resident bytes match the registered 12-row increment. Algebra, tokenizer, export and compact
-loader gates pass. Fixed-sequence latency and end-to-end serving measurements are next.
+loader gates pass. The official fixed-sequence 10,000-query serving run also passes every registered
+gate: T0/V1 encoder median and p95 ratios are `0.9590` and `0.9763`, while end-to-end ratios are
+`0.9944` and `0.9969`. The next bounded checkpoint is implementation review before real judgments.

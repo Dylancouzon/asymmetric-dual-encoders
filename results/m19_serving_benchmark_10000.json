@@ -1,0 +1,102 @@
+{
+  "_schema": "m19-serving-benchmark-v1",
+  "checks": {
+    "encoder_latency": true,
+    "end_to_end_latency": true,
+    "loader_parity": true,
+    "no_match_ranking_parity": true,
+    "pooling_identity": true,
+    "resident_memory": true,
+    "tokenizer_boundaries": true
+  },
+  "gpu_peak_bytes": 171073024,
+  "host": {
+    "gpu": "NVIDIA GeForce RTX 3080",
+    "node": "Str0keWtf",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.43"
+  },
+  "loader_parity_max_abs": 0.0,
+  "no_match_ranking_parity": true,
+  "official": true,
+  "query_count": 10000,
+  "query_sequence_sha256": "d9a309da19202e59e45ab787a8dfc43875eb7143c2c3ea33efe3385f0f1493de",
+  "ratios": {
+    "encoder_median": 0.9590238450074515,
+    "encoder_median_additive_ms": -0.005499000000000004,
+    "encoder_p95": 0.97633893290156,
+    "encoder_p95_additive_ms": -0.00491004999999986,
+    "end_to_end_median": 0.9943661402226728,
+    "end_to_end_p95": 0.9968811135926097
+  },
+  "repetitions": 1,
+  "rss_high_water_kib": 1285912,
+  "summary": {
+    "t0": {
+      "collapse": {
+        "median_ms": 0.170401,
+        "p95_ms": 0.24700599999999992
+      },
+      "dense": {
+        "median_ms": 0.735303,
+        "p95_ms": 1.0005529999999991
+      },
+      "encode": {
+        "median_ms": 0.083901,
+        "p95_ms": 0.1423
+      },
+      "encoder": {
+        "median_ms": 0.128701,
+        "p95_ms": 0.20260594999999992
+      },
+      "fusion": {
+        "median_ms": 0.223401,
+        "p95_ms": 0.280701
+      },
+      "lexical": {
+        "median_ms": 3.353862,
+        "p95_ms": 4.231456
+      },
+      "total": {
+        "median_ms": 4.5978665,
+        "p95_ms": 5.628620049999999
+      }
+    },
+    "v1": {
+      "collapse": {
+        "median_ms": 0.172701,
+        "p95_ms": 0.25110599999999994
+      },
+      "dense": {
+        "median_ms": 0.734703,
+        "p95_ms": 1.0008139999999999
+      },
+      "encode": {
+        "median_ms": 0.090801,
+        "p95_ms": 0.145701
+      },
+      "encoder": {
+        "median_ms": 0.1342,
+        "p95_ms": 0.20751599999999978
+      },
+      "fusion": {
+        "median_ms": 0.225601,
+        "p95_ms": 0.282801
+      },
+      "lexical": {
+        "median_ms": 3.366662,
+        "p95_ms": 4.286846
+      },
+      "total": {
+        "median_ms": 4.623917,
+        "p95_ms": 5.646229999999999
+      }
+    }
+  },
+  "temporary_peak_bytes": 848448,
+  "threads": {
+    "bm25": 1,
+    "torch": 1
+  },
+  "tracemalloc_current_bytes": 320,
+  "warmup": 20
+}
