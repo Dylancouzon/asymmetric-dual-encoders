@@ -507,9 +507,16 @@ class ConfirmationTransaction:
         manifest = preview_json(files["pool_manifest"])
         packet = preview_json(files["evidence_packet"])
         metric_runs = preview_json(files["metric_runs"])
+        query_rows = [json.loads(line) for line in self.read_bound_bytes(
+            Path(self.decision["confirmation_query_path"])).splitlines() if line]
+        query_specs = [{**row, "source_exclusion_identity": common.sha_json(sorted({
+            *([str(row["source_artifact_id"])] if row.get("source_artifact_id") else []),
+            *(str(value) for value in row.get("source_equivalent_artifact_ids") or []),
+        }))} for row in query_rows]
         rules = self.decision["registry_sections"]["judgments"]
         judgments.validate_frozen_pool(
-            manifest, packet, metric_runs, seed=int(rules["randomization_seed"]),
+            manifest, packet, metric_runs, query_specs,
+            seed=int(rules["randomization_seed"]),
             cap=int(rules["confirmation_cap"]),
         )
         bound = preview

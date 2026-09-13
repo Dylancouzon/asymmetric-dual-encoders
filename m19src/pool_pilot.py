@@ -14,9 +14,9 @@ from m19src.common import M19, RESULTS, WORK, admit_read, load_json, sha_file, s
 
 PILOT_LOCK = M19 / "pool-pilot-lock-v1.json"
 V0_BUNDLE = WORK / "bundles" / "v0-compose"
-POOL_OUT = WORK / "pilot" / "pool-manifest.json"
-PACKET_OUT = WORK / "pilot" / "evidence-packet.json"
-RESULT_OUT = RESULTS / "m19_pool_pilot.json"
+POOL_OUT = WORK / "pilot-v2" / "pool-manifest.json"
+PACKET_OUT = WORK / "pilot-v2" / "evidence-packet.json"
+RESULT_OUT = RESULTS / "m19_pool_pilot_v2.json"
 
 
 def _aligned_index(inheritance):
@@ -26,6 +26,7 @@ def _aligned_index(inheritance):
     positions = {passage_id: position for position, passage_id in enumerate(passage_ids)}
     passages = [None] * len(passage_ids)
     artifact_ids = [None] * len(passage_ids)
+    metadata_candidates = {}
     with open(admit_read(index["index_corpus_jsonl"]["path"])) as handle:
         for line in handle:
             row = json.loads(line)
@@ -35,10 +36,30 @@ def _aligned_index(inheritance):
                     raise SystemExit("M19 PILOT REFUSED: duplicate indexed passage ID")
                 passages[position] = row
                 artifact_ids[position] = str(row["artifact_id"])
+                artifact_id = str(row["artifact_id"])
+                candidate = {
+                    "title": str(row.get("title") or row.get("path") or "").strip(),
+                    "url_or_path": str(row.get("source_url") or row.get("path") or "").strip(),
+                    "kind": str(row.get("kind") or "").strip(),
+                    "path": str(row.get("path") or "").strip(),
+                }
+                score = (bool(candidate["title"]),
+                         candidate["kind"] not in {"issue_comment", "review_comment"},
+                         bool(candidate["url_or_path"]))
+                if artifact_id not in metadata_candidates or score > metadata_candidates[
+                        artifact_id][0]:
+                    metadata_candidates[artifact_id] = (score, candidate)
     if (documents.shape[0] != len(passage_ids) or any(row is None for row in passages) or
             any(value is None for value in artifact_ids)):
         raise SystemExit("M19 PILOT REFUSED: inherited index rows are misaligned")
-    return index, documents, passage_ids, passages, artifact_ids
+    artifact_metadata = {}
+    for artifact_id, (_, candidate) in metadata_candidates.items():
+        parent = {"artifact_id": artifact_id, "title": candidate["title"],
+                  "url_or_path": candidate["url_or_path"], "kind": candidate["kind"]}
+        if candidate["path"]:
+            parent["path"] = candidate["path"]
+        artifact_metadata[artifact_id] = {**candidate, "parent_metadata": parent}
+    return index, documents, passage_ids, passages, artifact_ids, artifact_metadata
 
 
 def _route(scores, passage_ids, passages, artifact_ids, exclusions):
@@ -84,7 +105,8 @@ def run():
     if runtime != teacher_receipt["runtime"]:
         raise SystemExit("M19 PILOT REFUSED: Stella runtime differs from teacher receipt")
 
-    index, documents, passage_ids, passages, artifact_ids = _aligned_index(inheritance)
+    (index, documents, passage_ids, passages, artifact_ids,
+     artifact_metadata) = _aligned_index(inheritance)
     bm25 = bm25s.BM25.load(str(Path(index["bm25_data"]["path"]).parent), load_corpus=False,
                            mmap=True, show_progress=False)
     stemmer = Stemmer.Stemmer("english")
@@ -132,7 +154,8 @@ def run():
     }))} for row in queries]
     registry = load_json(M19 / "registry.json")
     pool, packet = judgments.build_pool(
-        routes, specs, seed=registry["judgments"]["randomization_seed"],
+        routes, specs, artifact_metadata,
+        seed=registry["judgments"]["randomization_seed"],
         cap=registry["judgments"]["development_cap"])
     judgments.assert_blinded(packet)
     pool_payload, packet_payload = _json_bytes(pool), _json_bytes(packet)
@@ -145,7 +168,7 @@ def run():
     reviewer_minutes = packet_words / 200.0 + len(packet["items"]) * 0.25
     projected_items = int(np.ceil(len(packet["items"]) / len(queries) * len(development)))
     result = {
-        "_schema": "m19-pool-cost-pilot-v1",
+        "_schema": "m19-pool-cost-pilot-v2",
         "state": "complete",
         "inputs": {**benchmark_inputs, "pilot_lock_sha256": sha_file(PILOT_LOCK)},
         "query_count": len(queries),

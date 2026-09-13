@@ -21,37 +21,56 @@ def _fixture():
         for query in specs:
             artifacts = ["a", "b", "c"] if r_index % 2 == 0 else ["b", "d", "e"]
             routes[route][query["query_id"]] = [_row(a, route, rank) for rank, a in enumerate(artifacts, 1)]
-    return routes, specs
+    metadata = {artifact: {"title": f"Title {artifact}", "url_or_path": f"https://x/{artifact}",
+                           "kind": "issue", "parent_metadata": {"artifact_id": artifact}}
+                for artifact in ("a", "b", "c", "d", "e")}
+    return routes, specs, metadata
 
 
 def test_seven_route_pool_is_blinded_capped_and_deterministic():
-    routes, specs = _fixture()
-    manifest, packet = judgments.build_pool(routes, specs)
-    manifest2, packet2 = judgments.build_pool(routes, specs)
+    routes, specs, metadata = _fixture()
+    manifest, packet = judgments.build_pool(routes, specs, metadata)
+    manifest2, packet2 = judgments.build_pool(routes, specs, metadata)
     assert (manifest, packet) == (manifest2, packet2)
     assert manifest["unique_query_artifact_items"] == 10
     assert judgments.assert_blinded(packet)
     assert all(len(p["text"]) == 1200 for item in packet["items"] for p in item["passages"])
     with pytest.raises(SystemExit, match="above cap"):
-        judgments.build_pool(routes, specs, cap=9)
+        judgments.build_pool(routes, specs, metadata, cap=9)
 
 
 def test_pool_requires_exact_routes_and_queries():
-    routes, specs = _fixture()
+    routes, specs, metadata = _fixture()
     routes.pop("bm25")
     with pytest.raises(ValueError, match="registered seven"):
-        judgments.build_pool(routes, specs)
+        judgments.build_pool(routes, specs, metadata)
 
 
 def test_frozen_pool_refuses_metric_artifacts_outside_union():
-    manifest, packet = judgments.build_pool(*_fixture())
+    routes, specs, metadata = _fixture()
+    manifest, packet = judgments.build_pool(routes, specs, metadata)
     runs = {role: {query_id: manifest["queries"][query_id]["route_top10"][route]
                    for query_id in manifest["queries"]}
             for role, route in judgments.METRIC_ROUTE_ROLES.items()}
-    assert judgments.validate_frozen_pool(manifest, packet, runs)
+    assert judgments.validate_frozen_pool(manifest, packet, runs, specs)
     runs["dense_candidate"]["q1"] = ["outside"]
     with pytest.raises(ValueError, match="outside judged union"):
-        judgments.validate_frozen_pool(manifest, packet, runs)
+        judgments.validate_frozen_pool(manifest, packet, runs, specs)
+
+
+def test_frozen_pool_rejects_query_substitution_and_actual_cap_overflow():
+    routes, specs, metadata = _fixture()
+    manifest, packet = judgments.build_pool(routes, specs, metadata)
+    runs = {role: {query_id: manifest["queries"][query_id]["route_top10"][route]
+                   for query_id in manifest["queries"]}
+            for role, route in judgments.METRIC_ROUTE_ROLES.items()}
+    changed = [dict(row) for row in specs]
+    changed[0]["text"] = "substituted"
+    with pytest.raises(ValueError, match="specifications differ"):
+        judgments.validate_frozen_pool(manifest, packet, runs, changed)
+    manifest["cap"] = 9
+    with pytest.raises(ValueError, match="item count differs"):
+        judgments.validate_frozen_pool(manifest, packet, runs, specs, cap=9)
 
 
 def test_audit_includes_positives_unjudgeable_and_negative_coverage():

@@ -43,13 +43,14 @@ def _route_row(route, artifact, rank):
 
 
 def _pool_fixture():
+    empty_source = common.sha_json([])
     specs = [
         {"query_id": "synthetic-q1", "text": "k8s probes", "term": "k8s",
          "primary_class": "short_context", "tags": [],
-         "source_exclusion_identity": "synthetic-source"},
+         "source_exclusion_identity": empty_source},
         {"query_id": "synthetic-q2", "text": "k8s probes changed after version 2 upgrade",
          "term": "k8s", "primary_class": "longer_control", "tags": ["version"],
-         "source_exclusion_identity": "synthetic-source-2"},
+         "source_exclusion_identity": empty_source},
     ]
     routes = {}
     for route in judgments.ROUTES:
@@ -64,7 +65,12 @@ def _pool_fixture():
                                for rank, artifact in enumerate(artifacts, start=1)]
             for spec in specs
         }
-    return specs, routes
+    metadata = {artifact: {
+        "title": f"Synthetic {artifact}", "url_or_path": f"https://synthetic.invalid/{artifact}",
+        "kind": "issue", "parent_metadata": {"artifact_id": artifact,
+            "title": f"Synthetic {artifact}", "kind": "issue"},
+    } for artifact in ("a1", "a2", "a3", "a4")}
+    return specs, routes, metadata
 
 
 def _prepare_decision(root, query_path, query_sha256, registry):
@@ -356,9 +362,10 @@ def run_rehearsal(root=None):
             [json.loads(line) for line in tx.read_bound_bytes(query_path).splitlines() if line]
             state = "claimed"
 
-        specs, routes = _pool_fixture()
+        specs, routes, metadata = _pool_fixture()
         pool, packet = judgments.build_pool(
-            routes, specs, seed=19019, cap=int(registry["judgments"]["confirmation_cap"])
+            routes, specs, metadata, seed=19019,
+            cap=int(registry["judgments"]["confirmation_cap"])
         )
         judgments.assert_blinded(packet)
         pool_path, packet_path = common.CONFIRMATION_WORK / "pool.json", (

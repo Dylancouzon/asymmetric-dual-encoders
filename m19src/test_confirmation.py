@@ -48,8 +48,9 @@ def test_interrupted_transaction_resumes_across_judgment_boundary(tmp_path, monk
 
     tx = ConfirmationTransaction(tx.decision_path, tx.receipt_dir)
     assert tx.current()["state"] == "claimed"
-    specs, routes = rehearse._pool_fixture()
-    pool_value, packet_value = rehearse.judgments.build_pool(routes, specs, cap=1500)
+    specs, routes, metadata = rehearse._pool_fixture()
+    pool_value, packet_value = rehearse.judgments.build_pool(
+        routes, specs, metadata, cap=1500)
     pool = confirmation / "pool.json"
     packet = confirmation / "packet.json"
     runs = confirmation / "runs.json"

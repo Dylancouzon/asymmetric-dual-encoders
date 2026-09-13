@@ -27,7 +27,7 @@ def _row_passages(row):
     return [(row["passage_id"], row["passage"])]
 
 
-def build_pool(routes, query_specs, *, seed=19019, cap=3000):
+def build_pool(routes, query_specs, artifact_metadata, *, seed=19019, cap=3000):
     if set(routes) != set(ROUTES):
         raise ValueError(f"pool routes differ from registered seven: {sorted(routes)}")
     specs = {row["query_id"]: row for row in query_specs}
@@ -54,6 +54,13 @@ def build_pool(routes, query_specs, *, seed=19019, cap=3000):
                                    "artifact_ids": sorted(artifacts)}
         spec = specs[query_id]
         for artifact_id in sorted(artifacts):
+            metadata = artifact_metadata.get(artifact_id)
+            if (not isinstance(metadata, dict) or not str(metadata.get("title") or "").strip() or
+                    not str(metadata.get("url_or_path") or "").strip() or
+                    not str(metadata.get("kind") or "").strip() or
+                    not isinstance(metadata.get("parent_metadata"), dict) or
+                    not metadata["parent_metadata"]):
+                raise ValueError(f"artifact metadata is incomplete for {artifact_id}")
             ranked_passages = sorted(
                 passage_ranks[artifact_id].items(), key=lambda pair: (-1.0 / pair[1], pair[0])
             )[:3]
@@ -65,10 +72,8 @@ def build_pool(routes, query_specs, *, seed=19019, cap=3000):
                     "passage_id": passage_id,
                     "text": full_text[:1200],
                     "full_text_sha256": sha_bytes(full_text.encode("utf-8", "surrogatepass")),
-                    "parent_metadata": dict(passage.get("parent_metadata") or {}),
+                    "parent_metadata": dict(metadata["parent_metadata"]),
                 })
-            representative = artifacts[artifact_id]
-            passage = _row_passages(representative)[0][1]
             packet_items.append({
                 "item_id": sha_json({"query_id": query_id, "artifact_id": artifact_id})[:24],
                 "query_id": query_id,
@@ -76,9 +81,9 @@ def build_pool(routes, query_specs, *, seed=19019, cap=3000):
                 "term": spec["term"],
                 "source_exclusion_identity": spec.get("source_exclusion_identity"),
                 "artifact_id": artifact_id,
-                "title": str(passage.get("title") or ""),
-                "url_or_path": str(passage.get("source_url") or passage.get("path") or ""),
-                "kind": str(passage.get("kind") or ""),
+                "title": str(metadata["title"]),
+                "url_or_path": str(metadata["url_or_path"]),
+                "kind": str(metadata["kind"]),
                 "passages": evidence,
             })
     if len(packet_items) > int(cap):
@@ -90,6 +95,10 @@ def build_pool(routes, query_specs, *, seed=19019, cap=3000):
         "queries": pool_manifest,
         "unique_query_artifact_items": len(packet_items),
         "cap": int(cap),
+        "query_specs_sha256": sha_json({row["query_id"]: {
+            "text": row["text"], "term": row["term"],
+            "source_exclusion_identity": row.get("source_exclusion_identity")}
+            for row in query_specs}),
     }, {
         "_schema": "m19-blinded-evidence-packet-v1",
         "seed": int(seed),
@@ -115,12 +124,17 @@ def assert_blinded(packet):
     for item in packet["items"]:
         if set(item) != PACKET_ITEM_KEYS:
             raise ValueError("packet item has unexpected fields")
-        if len(item["passages"]) > 3 or any(len(row["text"]) > 1200 for row in item["passages"]):
-            raise ValueError("evidence packet exceeds passage limits")
+        if (not str(item["title"]).strip() or not str(item["url_or_path"]).strip() or
+                not str(item["kind"]).strip() or not item["passages"] or
+                len(item["passages"]) > 3 or any(
+                    len(row["text"]) > 1200 or
+                    not isinstance(row.get("parent_metadata"), dict) or
+                    not row["parent_metadata"] for row in item["passages"])):
+            raise ValueError("evidence packet metadata or passage limits differ")
     return True
 
 
-def validate_frozen_pool(manifest, packet, metric_runs, *, seed=19019, cap=3000):
+def validate_frozen_pool(manifest, packet, metric_runs, query_specs, *, seed=19019, cap=3000):
     """Join the blinded packet and every scored top-ten to the registered seven-route union."""
     if (manifest.get("_schema") != "m19-artifact-pool-v1" or
             packet.get("_schema") != "m19-blinded-evidence-packet-v1" or
@@ -129,9 +143,22 @@ def validate_frozen_pool(manifest, packet, metric_runs, *, seed=19019, cap=3000)
             packet.get("concealed") != list(CONCEALED)):
         raise ValueError("pool/packet schema or route registry differs")
     assert_blinded(packet)
+    specs = {row["query_id"]: row for row in query_specs}
+    expected_spec_hash = sha_json({query_id: {
+        "text": row["text"], "term": row["term"],
+        "source_exclusion_identity": row.get("source_exclusion_identity")}
+        for query_id, row in specs.items()})
+    if (set(specs) != set(manifest.get("queries", {})) or
+            manifest.get("query_specs_sha256") != expected_spec_hash):
+        raise ValueError("pool query specifications differ from authenticated queries")
     by_query = defaultdict(set)
     seen_items = set()
     for item in packet["items"]:
+        spec = specs.get(item["query_id"])
+        if (spec is None or item["query_text"] != spec["text"] or
+                item["term"] != spec["term"] or
+                item["source_exclusion_identity"] != spec.get("source_exclusion_identity")):
+            raise ValueError("packet query semantics differ from authenticated queries")
         expected_id = sha_json({"query_id": item["query_id"], "artifact_id": item["artifact_id"]})[:24]
         if item.get("item_id") != expected_id:
             raise ValueError("packet item ID differs from query/artifact identity")
@@ -150,9 +177,11 @@ def validate_frozen_pool(manifest, packet, metric_runs, *, seed=19019, cap=3000)
             raise ValueError("pool route provenance is incomplete")
         for route in ROUTES:
             ranked = row["route_top10"][route]
-            if len(ranked) != len(set(ranked)) or not set(ranked).issubset(union):
+            if (len(ranked) > 10 or len(ranked) != len(set(ranked)) or
+                    not set(ranked).issubset(union)):
                 raise ValueError("route top-ten is duplicate or outside pool union")
-    if manifest.get("unique_query_artifact_items") != len(packet["items"]):
+    if (manifest.get("unique_query_artifact_items") != len(packet["items"]) or
+            len(packet["items"]) > int(cap)):
         raise ValueError("pool/packet item count differs")
     required_runs = set(METRIC_ROUTE_ROLES)
     if set(metric_runs) != required_runs:
