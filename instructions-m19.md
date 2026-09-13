@@ -14,9 +14,16 @@ thresholds, results, decision, confirmation lock or one-read receipt.
 
 ## Next-session bootstrap and repository conventions
 
-At the beginning of the execution session, read `CLAUDE.md` completely, then this file, M18's short
-`STATUS.md`, `CODEMAP.md` and final `FINDINGS.md`. Inspect only the specific M18 manifests needed to
-bind inheritance. Do not recursively ingest historical results or protected data.
+Begin execution in a newly cleared context. The M18 closure session accidentally let one broad
+repository text search match a protected historical evaluation file; no returned content was used,
+no M19 experiment had begun and the incident is recorded in M18's ledger. A clean context is
+therefore a mandatory M19 boundary, not optional housekeeping.
+
+At the beginning of that execution session, read `CLAUDE.md` completely, then this file, M18's
+short `STATUS.md`, `CODEMAP.md` and final `FINDINGS.md`. Inspect only the specific M18 manifests
+needed to bind inheritance. Do not recursively ingest historical results or protected data. Never
+run a repo-wide content search over `results/` or `work/`; use explicit admitted paths and install
+the protected-read guards before any query/evaluation work.
 
 Follow the repository's established milestone structure and rules:
 

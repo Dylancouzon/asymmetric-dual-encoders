@@ -20,3 +20,7 @@ CTO-requested `k8s` coverage; they do not alter the encoder decision.
 
 Pointers: `instructions-m18.md`, `m18/registry.json`, `m18/LEDGER.md`, `m18/CODEMAP.md`,
 `m18/FINDINGS.md`.
+
+M18 is immutable. Its bounded result does not rule out a different experiment aimed directly at
+bare and 2–5-word fragmented jargon. That successor is planned as M19 in `instructions-m19.md` and
+must begin in a newly cleared context; it does not reopen M18 or its spent confirmation surface.

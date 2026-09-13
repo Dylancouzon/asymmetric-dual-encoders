@@ -38,6 +38,9 @@ executable status.
 - M18 confirmation was consumed exactly once and is closed. Do not read its raw confirmation
   queries/qrels again; use only its published aggregate result, decision lock and completed receipt.
   M19 must create a fresh confirmation surface and transaction.
+- Do not run repo-wide content searches across `results/` or `work/`. Search an explicit allowlist
+  of files/directories, or provide the protected-path exclusions before the command runs; filtering
+  output afterward is too late. This applies to review and documentation cleanup as well as code.
 - A decision's protocol changes must precede the observations it governs, be dated, and preserve
   the original registration in git. Never change a computed contrast to improve a result.
   Unrun-family amendments are not permission to re-decide completed families.

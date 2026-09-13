@@ -403,3 +403,24 @@
 - Final outcomes are `SYSTEM_READY` and `ENCODER_NO_IMPROVEMENT`. Registry confirmation state is
   closed, further training is refused by status, and `results/m18_system_manifest.json` binds the
   exact system inputs, evidence and invocation.
+
+## 2026-09-13 — E25 M18 interpretation closed and M19 separated
+
+- The external post-run diagnosis was dispositioned without changing any M18 result, threshold,
+  selection or confirmation record. M18's claim is explicitly scoped to the tested sixteen-row
+  recipe and title/question-to-answer-span protocol; it is not an equivalence or capacity result.
+- `m18/FINDINGS.md` now records tokenizer shattering as a fixed-row representation limitation that
+  is concentrated in short jargon rather than a universal tokenizer bug. The M19 successor is a
+  separate prospective experiment and does not reopen M18.
+
+## 2026-09-13 — E26 protected-search incident during documentation cleanup
+
+- After M18 was complete and before any M19 execution, a broad read-only repository content search
+  included JSON files and unexpectedly matched one protected historical frozen-evaluation file.
+  The returned content was not used for analysis, no result or protocol was changed, and no M19
+  query, judgment, candidate or metric existed at the time.
+- The operational cause was filtering selected M18 paths while failing to exclude every protected
+  historical result path before the search ran. Repository guidance and the M19 bootstrap now ban
+  broad content searches across `results/` or `work/` and require explicit admitted paths.
+- M19 must start only after the planning context is cleared. This preserves a clean prospective
+  boundary; the incident does not alter the already completed M18 decision.

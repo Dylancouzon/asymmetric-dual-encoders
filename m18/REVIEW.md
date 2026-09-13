@@ -237,3 +237,33 @@ look independent of the encoder question.
 Nothing in this section reopens the M18 decision, relaxes a locked margin, or revises a recorded
 result. It argues that the recorded result answers a different question than the one asked, and
 names the checks that would settle it.
+
+## Maintainer disposition of post-run diagnosis — 2026-09-13
+
+The diagnosis usefully identifies product-task mismatch, sparse effective supervision, the value
+of artifact collapse and the fact that the bare-term probe targeted the motivating defect. It is
+accepted as the rationale for one bounded successor, not as grounds to rewrite M18.
+
+- **D1 — accept the mismatch, correct the premise.** M18 queries are issue/PR titles and review
+  questions, not issue bodies. An exclusion-corrected development-only check found Stella Recall
+  near 0.524@100 and 0.782@1000, with 77/100 targets found by depth 1,000; this does not meet the
+  diagnosis's proposed “most absent” trigger. The calculation is provisional until M19 reproduces
+  it as a compact result. Sparse answer-span qrels still do not measure useful artifact search.
+- **D2 — keep the decision and narrow the claim.** Sample-order inversions do not invalidate the
+  locked paired candidate comparison. The best fused checkpoint changed one of 100 development
+  outcomes and tied on 99. That supports “no eligible measurable improvement under this protocol,”
+  not equivalence or a general capacity conclusion.
+- **D3 — accept as prospective motivation.** The `k8s` list is encouraging qualitative evidence,
+  but it has no judgments and was correctly unable to change M18 after the lock.
+- **D4 — accept sparse effective signal, reject the broad capacity inference.** Only 148 queries
+  could update rows and no complete alias pair survived. That diagnoses this extraction/training
+  recipe, not the representational capacity of a 1,024-dimensional exact row.
+- **D5 — adopt artifact-level retrieval in the successor, with new judgments.** Duplicate artifacts
+  are a real presentation defect, though released-v1 DBSF still averaged 9.19 distinct artifacts
+  in the 21-term top ten (minimum seven). Treating every sibling passage as relevant would create
+  artificial gains, so M19 must judge useful artifacts directly.
+
+M19 therefore tests one deterministic teacher-targeted row construction on fresh short intents,
+with artifact-collapsed retrieval and pooled useful-artifact judgments. It deliberately omits broad
+software ingestion, optimizer training and architecture search unless this simpler feasibility
+test produces evidence that would justify a later milestone.

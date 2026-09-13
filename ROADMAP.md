@@ -1,7 +1,8 @@
 # Project roadmap
 
-Reset 2026-09-10 on Dylan's request: **M10 is preparation; the remaining experiment is M13.**
-This changes scope and navigation, not results, registered constants or access rules.
+Reset 2026-09-10 on Dylan's request and extended by later owner-directed work. This changes scope
+and navigation, not results, registered constants or access rules. M19 is the current planning
+successor; it is not authorized to execute until a new session follows `instructions-m19.md`.
 
 | Milestone | Deliverable | State / entry point |
 |---|---|---|
@@ -12,12 +13,13 @@ This changes scope and navigation, not results, registered constants or access r
 | M10 | Data, harness preparation and box recipe screen | Closed at this scope; `m10/STATUS.md` |
 | M11 | Zero/document models and serving ports | Closed in repo record; `m11/STATUS.md` |
 | M12 | Qdrant fusion audit | Closed; `m12/FINDINGS.md` |
-| M13 | Cloud E, build, final evaluation and cost frontier | Next; `m13/STATUS.md`, `instructions-m13.md` |
+| M13 | Cloud E, build, final evaluation and cost frontier | Planned historical track, not current execution; `m13/STATUS.md`, `instructions-m13.md` |
 | M14 | Nano release and combined FastEmbed PR | After M13; `instructions-m14.md` |
 | M15 | Whitepaper and evidence package | After measurements, nano optional; `instructions-m15.md` |
 | M16 | Image-model scoping | Unscheduled; `instructions-m16.md` |
 | M17 | Zero v1.1: vocabulary and modest quality improvement | **Closed 2026-09-12, negative result** (`no_survivor`: no screen arm met eligibility vs v1; zero v1 stays shipped); `m17/STATUS.md` |
-| M18 | Internal Qdrant project-memory system and specialized Zero | **Executing locally**; `m18/STATUS.md`, `instructions-m18.md` |
+| M18 | Internal Qdrant project-memory system and specialized Zero | **Closed 2026-09-13** (`SYSTEM_READY` + `ENCODER_NO_IMPROVEMENT`); `m18/STATUS.md` |
+| M19 | Deterministic short-query Zero feasibility | **Plan reviewed; awaiting a new execution session** on the M18 branch; `instructions-m19.md` |
 
 ## Migration map
 

@@ -55,6 +55,28 @@ of `kubernetes` in distinct already-admitted training contexts augment one natur
 They are teacher-only, do not alter qrels or held-out bytes, and did not require Qwen. Astra approved
 this narrow revision. The original lock, preparation and baseline remain archived for provenance.
 
+## Tokenizer shattering and what the result means
+
+The tokenizer behavior is central to the use case. Released Zero tokenizes `s3` as `s`, `##3` and
+`k8s` as `k`, `##8`, `##s`. A contextual transformer can reinterpret those pieces together; Zero
+assigns each piece one fixed row and pools the rows without order or interaction. For a bare or
+very short jargon query, generic letter and numeric-piece meanings can therefore dominate the
+representation. This is a limitation of Zero's fixed-row representation under its inherited
+WordPiece vocabulary, not a tokenizer implementation bug.
+
+It is not equally damaging for every use case. Whole-token words are unaffected, lexical BM25 can
+carry exact literals, and longer queries provide other semantic rows that dilute a shattered term.
+The failure is most plausible for short domain jargon, abbreviations and mixed alphanumeric terms.
+M18's final evaluation mainly used issue/PR titles and review questions rather than bare terms, so
+it was not a direct test of the motivating short-query defect. The report-only `s3` and `k8s`
+examples are suggestive but unjudged.
+
+Accordingly, `ENCODER_NO_IMPROVEMENT` means only that no candidate met the locked rules under the
+tested sixteen-row recipe and title/question-to-answer-span protocol. It does not establish
+equivalence with v1, rule out improvement on bare or short jargon, or demonstrate a capacity limit
+for static token rows. A successor must test that narrower query shape prospectively rather than
+reinterpret M18 after the fact.
+
 ## Development results and encoder decision
 
 Equal-weight stratum-macro development results on 100 queries were:
