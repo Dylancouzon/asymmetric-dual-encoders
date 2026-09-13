@@ -12,6 +12,7 @@
 | `m19src/build_candidate.py` | one-shot local Stella teacher receipt and actual V0/T0 bundle build |
 | `m19src/benchmark_serving.py` | fixed-sequence v1/T0 encoder and actual-index hybrid latency gates |
 | `m19src/pool_pilot.py` | frozen ten-query seven-route pool construction and cost-only projection |
+| `m19src/development.py` | create-only full-pool, judgment, qrels and headroom-first development transaction |
 | `m19src/retrieval.py` | exact passage scoring, exclusion-before-truncation, artifact collapse and DBSF@100 |
 | `m19src/metrics.py` | binary top-ten metrics, fixed-roster term macro and eligibility helpers |
 | `m19src/judgments.py` | seven-route pool, blinded evidence packets, audit sampling/agreement and binary qrels freeze |
@@ -24,6 +25,8 @@
 | `m19/teacher-snapshot-lock-v1.json` | complete local Stella revision manifest including trusted code and tokenizer/config files |
 | `results/m19_serving_benchmark_10000_v2.json`, `results/m19_serving_receipt_t0_v2.json` | superseding exact-route timing evidence and authenticated T0 serving gates; unversioned v1 is preserved but superseded |
 | `results/m19_pool_pilot.json` | cost-only pilot counts, projections and hashes of the ignored blinded pool/packet |
+| `results/m19_development_pool_freeze.json`, `m19_development_primary_judgment.json`, `m19_development_judgment_incomplete.json` | full development pool/judgment receipts and the pre-metric registered stop |
+| `results/m19_final_system_manifest.json` | final selected system, exact local query command and M19 outcomes |
 | `m19src/test_common.py`, `test_inherit.py` | synthetic path-guard and lock tests |
 | `m19/reviews/` | bounded prompts, reviewer identities, access logs, findings and dispositions |
 | `work/m19/` | gitignored raw/derived/run state owned by M19 |

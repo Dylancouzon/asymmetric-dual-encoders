@@ -1,6 +1,13 @@
 # M19 status
 
-**Execution active 2026-09-13 — stage-5 V0/T0 construction and serving gates complete.**
+**Final 2026-09-13 — `SYSTEM_READY`; `ENCODER_INCONCLUSIVE`; released Zero v1 retained.**
+
+M19 stopped at the registered development-judgment boundary. The complete 60-query, seven-route
+pool froze with 1,376 query-artifact items under the 3,000 cap. Primary Astra judgment covered the
+entire pool; the fresh independent audit covered 925 concealed repeats. After an evidence-only
+resolution pass, 60 audit items remained genuinely unjudgeable because the frozen passages lacked
+material context. No binary qrels or quality metrics were created, and confirmation was never
+claimed or read. The inherited artifact-collapsed v1 system remains ready and selected.
 
 The fresh M19 boundary is active on `m18-qdrant-project-memory`. M18 remains closed and immutable.
 Only the pinned M18 source/corpus/index manifests, the released Zero-v1 bundle and the unprotected

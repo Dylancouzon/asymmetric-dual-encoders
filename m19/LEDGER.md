@@ -213,3 +213,15 @@
   development judgment/headroom plus confirmation-seal authentication downstream.
 - Candidate math, bundle bytes, serving gates and pilot counts remain valid. No judgment or quality
   result was opened; Stage 7 implementation and synthetic tests are next.
+
+## 2026-09-13 — development judgments stop before metrics
+
+- Two independent scoped GOs authorized the full development pool and blinded judgments.
+- The authenticated 60-query pool froze with 1,376 items, below the fixed 3,000 cap.
+- Primary Astra judgment covered every item. A fresh Astra auditor reviewed all 925 deterministic
+  concealed repeats without access to primary labels, routes or metric runs.
+- The auditor retained 60 items as unjudgeable after a deeper evidence-only resolution pass because
+  the frozen packet lacked enough context for binary decisions.
+- Per the registered rule, no agreement result, qrels, headroom, candidate metric or confirmation
+  claim was produced. Final outcome is `SYSTEM_READY` / `ENCODER_INCONCLUSIVE`; released v1 remains
+  selected.

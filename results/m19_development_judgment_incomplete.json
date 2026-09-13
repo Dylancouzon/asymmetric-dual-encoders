@@ -1,0 +1,21 @@
+{
+  "_schema": "m19-development-judgment-incomplete-v1",
+  "audit": {
+    "auditor_id": "astra-m19-development-auditor-01",
+    "labels_sha256": "4b655caa51b800502915fad03861eb61eac54e7a8d12ff6b18771950e88a6861",
+    "packet_sha256": "4e12bb8b97f479f4966ae1133407b5bacded71e18b1a8da180f305027cb56db4",
+    "reviewed_items": 925,
+    "unresolved_count": 60,
+    "unresolved_repeat_ids_sha256": "7e8c74eb0664b8cda1ef224bb6cf22f146396c7e419f1da6c5cf60cfc9b4c4af"
+  },
+  "confirmation_accessed": false,
+  "development_state": "judgments-in-progress",
+  "development_state_sha256": "4699529a6c1b946d3aad703bfcf53b5b446dd03752be1fd9f4a75c83e5e6131b",
+  "outcome": "ENCODER_INCONCLUSIVE",
+  "primary_labels_sha256": "4edcc3cf2052841596fe2f67ec6fb0819d4bb1979f5e27930256670813cfb9a4",
+  "qrels_created": false,
+  "quality_metrics_computed": false,
+  "reason": "independent auditor retained unjudgeable labels after an evidence-only resolution pass; binary qrels cannot be frozen without guessing",
+  "released_v1_retained": true,
+  "state": "protocol-incomplete"
+}

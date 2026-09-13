@@ -35,3 +35,14 @@ registered 3,000 cap. The evidence-volume model projects about 12.7 reviewer hou
 primary labeling; that is a conservative planning estimate, not an observed judgment duration.
 This supports mechanical pool feasibility but makes reviewer throughput the dominant execution
 cost. No relevance was assessed in deriving it.
+
+## Development judgment outcome
+
+The full pool contained 1,376 items, close to the pilot projection of 1,344. Primary model judgment
+completed all items, and the deterministic independent audit included 925 concealed repeats because
+all primary positives and unjudgeables must be audited in addition to seeded negatives. The auditor
+retained 60 items as unjudgeable after a dedicated evidence-only reconsideration: the displayed
+passages did not contain enough context for a defensible binary decision. M19 therefore stopped
+before agreement, qrels, headroom or candidate-quality scoring. This is `ENCODER_INCONCLUSIVE`, not
+evidence of improvement, non-improvement, equivalence or a capacity limit. Released Zero v1 remains
+selected; fresh confirmation stayed sealed.
