@@ -21,7 +21,17 @@
     "zero_v1_vocab": 30522,
     "zero_v1_model_sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf",
     "zero_v1_tokenizer_sha256": "997eaeff157a7d4db899b8f2278ad3db6e323e609ae956b9c5035550f581eeee",
-    "zero_v1_config_sha256": "fd784397925e9ec32b6f1412af85b46faea79bb618b17197dc6d3a0068669636"
+    "zero_v1_config_sha256": "fd784397925e9ec32b6f1412af85b46faea79bb618b17197dc6d3a0068669636",
+    "zero_v1_effective_int8_rows_sha256": "f0a62a358104b04d4937829898a2beb00cc57737eb4a7ee5bff22c47edf6bb1a",
+    "effective_row_hash_convention": "sha256(c-contiguous float32 dequantized rows bytes + b'float32' + b'(30522, 1024)')",
+    "pooling": {
+      "mode": "sqrt-count weighted mean then L2 normalize",
+      "prefix": "",
+      "add_special_tokens": true,
+      "max_length": 512,
+      "fallback_token_id": 101,
+      "weights_folded": true
+    }
   },
   "versions": {
     "term_inventory": "m19-fragmented-term-inventory-v1",
@@ -43,6 +53,8 @@
     "minimum_distinct_short_intents": 3,
     "pieces_minimum": 2,
     "seed": 19019,
+    "split_seed": 19019,
+    "selection_precedes_query_authoring": true,
     "state": "unbuilt"
   },
   "candidate": {
@@ -59,7 +71,9 @@
     "tie_break": "descending score then ascending passage_id",
     "collapse": "highest-scoring passage per artifact; passage_id tie break",
     "fusion": "unchanged DBSF at artifact depth 100",
-    "quality_search": "exact"
+    "quality_search": "exact",
+    "source_artifact_exclusion": "exclude complete source artifact and text-equivalent copies before passage truncation",
+    "unanswerable_policy": "remove before split freeze when no useful non-source artifact remains"
   },
   "query_counts_per_term": {
     "development_bare": 1,
@@ -67,6 +81,21 @@
     "confirmation_short": 2,
     "development_longer": 1,
     "confirmation_longer_per_two_terms": 1
+  },
+  "query_protocol": {
+    "primary_classes": ["bare_adaptation", "short_context", "longer_control"],
+    "secondary_tags": ["alias", "renamed", "numeric", "version"],
+    "short_lexical_terms_minimum": 2,
+    "short_lexical_terms_maximum": 5,
+    "longer_lexical_terms_minimum": 6,
+    "exact_roster_terms_per_target_query": 1,
+    "development_numeric_version_controls_minimum": 4,
+    "confirmation_numeric_version_controls_minimum": 2,
+    "numeric_version_terms_minimum": 2,
+    "partition_source_intent_families_before_variants": true,
+    "hold_out_query_source_artifacts_across_splits": true,
+    "remove_normalized_and_near_duplicate_intersections": true,
+    "confirmation_bare_queries": 0
   },
   "judgments": {
     "relevance": "binary useful artifact",
@@ -76,7 +105,33 @@
     "development_cap": 3000,
     "confirmation_cap": 1500,
     "pilot_queries": 10,
-    "query_author_cannot_be_sole_judge": true
+    "query_author_cannot_be_sole_judge": true,
+    "evidence_passages_per_item": 3,
+    "evidence_passage_character_cap": 1200,
+    "evidence_passage_selection": "best reciprocal rank across blinded routes then passage_id",
+    "conceal": ["system_identity", "route", "score", "rank", "first_seen_phase"],
+    "audit_includes": ["every_primary_positive", "every_primary_unjudgeable", "seeded_negatives"],
+    "audit_coverage": ["every_query", "every_term"],
+    "disagreements": "blind_review_all",
+    "rubric_clarifications_maximum": 1,
+    "clarification_action": "relabel complete pool and draw fresh audit",
+    "second_agreement_failure": "stop"
+  },
+  "metrics": {
+    "primary": "binary useful-artifact Precision@10 on fresh short_context",
+    "aggregation": "mean within term then equal mean across fixed roster terms",
+    "short_list_denominator": 10,
+    "ndcg_gain": "g(rel)=rel",
+    "ndcg_idcg": "all judged positives in frozen pool capped at ten",
+    "recall_name": "pooled Recall@10",
+    "query_win": "sign(candidate Precision@10 minus v1 Precision@10); exact zero is tie",
+    "term_win": "sign(mean within-term short_context difference)",
+    "uncertainty": "no bootstrap confidence interval, randomization p-value or population claim"
+  },
+  "planned_reads": {
+    "development": ["term_inventory", "query_source_evidence", "seven_route_pool", "blinded_evidence_packets", "primary_judgments", "audit_judgments"],
+    "confirmation": ["claim", "sealed_queries", "seven_route_pool", "blinded_evidence_packets", "primary_judgments", "audit_judgments"],
+    "quality_before_qrels_freeze": false
   },
   "headroom_gate": {
     "minimum_term_macro_precision_delta": 0.05,

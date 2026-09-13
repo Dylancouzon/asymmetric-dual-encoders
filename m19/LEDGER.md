@@ -19,3 +19,19 @@
   component, ordered document IDs, the document vector file, both corpus copies, six tracked M18
   control manifests and three released-v1 bundle files. Verification: `8 passed` for
   `m19src/test_common.py m19src/test_inherit.py`.
+
+## 2026-09-13 — bootstrap review correction
+
+- Astra returned `NO-GO`: two P1 immutable-lock defects and four P2 guard/registry/test gaps.
+  Full bounded brief, access log and dispositions are in `m19/reviews/bootstrap-astra-2026-09-13.md`.
+- Replaced the v1 lock with v2 while retaining v1 in commit history. V2 binds the prospective
+  registry, governing instruction, global guidance, guard/lock implementations, expected hashes
+  for every inherited data file, canonical ordered document IDs, indexed-corpus identity and the
+  released effective int8 rows/pooling parameters.
+- Lock publication is now exclusive: a repeated identical invocation is idempotent; a differing
+  existing lock is refused. Fresh M19 confirmation reads require a claimed-state exact-path/hash
+  boundary.
+- Corrected lock identity:
+  `6eff27e371dda116f6d0613d9e269aaf8afb809d2edc8842299fc2bd3fb34612`.
+  Verification: `23 passed`; real `--verify` passed; a second default invocation left the lock
+  byte-identical.

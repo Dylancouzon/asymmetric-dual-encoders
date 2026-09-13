@@ -7,9 +7,11 @@ Only the pinned M18 source/corpus/index manifests, the released Zero-v1 bundle a
 M18 corpus/index are admitted as inherited inputs. Raw M18 confirmation queries and qrels, all
 reserved surfaces and historical evaluation payloads are refused by the M19 path guard.
 
-The prospective registry and `m19/inheritance-lock.json` are frozen. The lock identity is
-`bd0c5dc8e6904cf123cd7a78713a688f5c57d988b5545c07f302ad55daa93052`; eight synthetic
-guard/inheritance tests pass. No M19 term roster, query text, retrieval quality or judgment data
-has been read or created.
+The corrected prospective registry and v2 `m19/inheritance-lock.json` are frozen. The lock identity
+is `6eff27e371dda116f6d0613d9e269aaf8afb809d2edc8842299fc2bd3fb34612`; 23 synthetic
+guard/inheritance tests pass and the separate real-input verification passes. The first Astra
+review's two P1 and four P2 findings are fixed; re-review is pending. No M19 term roster, query
+text, retrieval quality or judgment data has been read or created.
 
-Next: commit/review this boundary, then inventory fragmented terms without retrieval-quality reads.
+Next: commit and obtain Astra GO on the corrected boundary, then inventory fragmented terms without
+retrieval-quality reads.
