@@ -126,6 +126,25 @@ def test_context_dependent_review_question_is_not_concept_candidate():
     assert protocol.structural_candidates([parent, reply]) == []
 
 
+def test_code_question_operator_is_not_a_prose_question():
+    assert not protocol._has_prose_question("Consider this change:\n```rust\nlet x = value?;\n```")
+    assert protocol._has_prose_question("Should this propagate the error?\n```rust\nvalue?\n```")
+
+
+def test_duplicate_source_digest_unions_candidate_families():
+    rows = [_candidate(1), _candidate(2)]
+    corpus = []
+    for i in (1, 2):
+        corpus.extend([
+            {"doc_id": f"o{i}", "artifact_id": f"gh:thread:{i}", "text": "same question",
+             "normalized_text_sha256": _digest("same question"), "outbound_links": []},
+            {"doc_id": f"a{i}", "artifact_id": f"gh:thread:{i}", "text": f"answer {i}",
+             "normalized_text_sha256": _digest(f"answer {i}"), "outbound_links": []},
+        ])
+    got = protocol._assign_union_families(rows, corpus, {r["doc_id"]: r for r in corpus})
+    assert got[0]["family_group"] == got[1]["family_group"]
+
+
 def test_confirmation_cannot_use_general_surface_loader(tmp_path):
     with pytest.raises(SystemExit, match="run_confirmation"):
         protocol.load_surface("confirmation", tmp_path)

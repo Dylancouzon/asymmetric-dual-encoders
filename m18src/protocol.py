@@ -11,7 +11,7 @@ from difflib import SequenceMatcher
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from common import WORK, admit_read, atomic_write_bytes, registry, sha_file, sha_json, write_json
+from common import REPO, WORK, admit_read, atomic_write_bytes, registry, sha_file, sha_json, write_json
 
 MAINTAINER = {"OWNER", "MEMBER", "COLLABORATOR"}
 ANSWER_CUES = re.compile(
@@ -118,6 +118,12 @@ def _credible_review_answer(row):
                 and not CLARIFICATION.search(text) and not NON_RESOLUTION.search(text))
 
 
+def _has_prose_question(text):
+    prose = re.sub(r"(?s)```.*?```", " ", text)
+    prose = re.sub(r"`[^`]*`", " ", prose)
+    return "?" in prose
+
+
 def _credible_audit_query(opening, text, stratum):
     # PR work-item titles are useful training context, but are not concept/how-to audit questions
     # unless the author actually phrased one as a question. Other strata deliberately admit
@@ -186,7 +192,9 @@ def structural_candidates(corpus):
         target = next((r for r in chunks if _credible_review_answer(r)), chunks[0])
         parents = review.get(target.get("in_reply_to_id"))
         parent = parents[0] if parents else None
-        if not parent or "?" not in parent["text"] or target.get("author_association") not in MAINTAINER:
+        if (not parent or not _has_prose_question(parent["text"])
+                or str(parent.get("author", "")).endswith("[bot]")
+                or target.get("author_association") not in MAINTAINER):
             continue
         if (len(target["text"].split()) < 12 or not _credible_review_answer(target)
                 or (target.get("timestamp") or "") <= (parent.get("timestamp") or "")):
@@ -223,10 +231,11 @@ def _assign_union_families(candidates, corpus, by_doc):
             ra, rb = find(a), find(b)
             if ra != rb:
                 parent[max(ra, rb)] = min(ra, rb)
-    by_shape, by_answer = {}, {}
+    by_shape, by_answer, by_source = {}, {}, {}
     for q in candidates:
         for table, key in ((by_shape, q["near_duplicate_family"]),
-                           (by_answer, by_doc[q["target_doc"]].get("normalized_text_sha256"))):
+                           (by_answer, by_doc[q["target_doc"]].get("normalized_text_sha256")),
+                           (by_source, by_doc.get(q["source_doc"], {}).get("normalized_text_sha256"))):
             if key and key in table:
                 union(q["family"], table[key])
             elif key:
@@ -262,6 +271,75 @@ def _assign_union_families(candidates, corpus, by_doc):
         q["family_group"] = "m18fam:" + hashlib.sha256("\n".join(sorted(members[root])).encode()).hexdigest()[:20]
         q["family_members"] = sorted(members[root])
     return candidates
+
+
+def prospective_adjudication_pool(candidates, reg):
+    """Newest bounded one-query-per-family pool, formed before any audit split exists."""
+    cap = int(reg["evaluation"]["qrel_adjudication"]["pool_per_stratum"])
+    best = {}
+    for q in candidates:
+        key = q["family_group"]
+        cur = best.get(key)
+        if cur is None or (q["timestamp"], q["query_id"]) > (cur["timestamp"], cur["query_id"]):
+            best[key] = q
+    grouped = defaultdict(list)
+    for q in best.values():
+        grouped[q["stratum"]].append(q)
+    pool = []
+    for stratum in reg["strata"]:
+        rows = sorted(grouped[stratum], key=lambda q: (q["timestamp"], q["query_id"]), reverse=True)
+        pool.extend(rows[:cap])
+    return sorted(pool, key=lambda q: q["query_id"])
+
+
+def adjudication_record(q, corpus_by_id):
+    source, target = corpus_by_id[q["source_doc"]], corpus_by_id[q["target_doc"]]
+    row = {"query_id": q["query_id"], "query": q["text"],
+           "source_context": source["text"], "source_kind": source["kind"],
+           "source_path": source.get("path"), "target": target["text"],
+           "target_kind": target["kind"], "target_path": target.get("path"),
+           "proposed_stratum": q["stratum"], "structural_provenance": q["label_provenance"]}
+    row["candidate_sha256"] = sha_json(row)
+    return row
+
+
+def apply_adjudications(candidates, reg, corpus_by_id):
+    cfg = reg["evaluation"].get("qrel_adjudication")
+    if not cfg:
+        return candidates, None
+    pool = prospective_adjudication_pool(candidates, reg)
+    path = Path(cfg["decisions_path"])
+    if not path.is_absolute():
+        path = REPO / path
+    if not path.exists():
+        raise SystemExit(f"M18 PROTOCOL REFUSED: prospective adjudications absent at {path}")
+    decisions = list(_read_jsonl(path))
+    by_qid = {r["query_id"]: r for r in decisions}
+    if len(by_qid) != len(decisions) or set(by_qid) != {q["query_id"] for q in pool}:
+        raise SystemExit("M18 PROTOCOL REFUSED: adjudication decisions do not exactly cover pool")
+    allowed_labels = {"clear", "partial", "bad"}
+    accepted = []
+    for q in pool:
+        d = by_qid[q["query_id"]]
+        candidate_sha256 = adjudication_record(q, corpus_by_id)["candidate_sha256"]
+        if d.get("candidate_sha256") != candidate_sha256:
+            raise SystemExit(f"M18 PROTOCOL REFUSED: stale adjudication for {q['query_id']}")
+        if d.get("label") not in allowed_labels or d.get("stratum") not in reg["strata"]:
+            raise SystemExit(f"M18 PROTOCOL REFUSED: invalid adjudication for {q['query_id']}")
+        if not str(d.get("reason", "")).strip():
+            raise SystemExit(f"M18 PROTOCOL REFUSED: reason absent for {q['query_id']}")
+        if d["label"] == "clear":
+            kept = dict(q)
+            kept["stratum"] = d["stratum"]
+            kept["label_provenance"] = {**q["label_provenance"],
+                "adjudication": {"judge": cfg["judge"], "label": "clear",
+                                 "reason": d["reason"], "candidate_sha256": d["candidate_sha256"]}}
+            accepted.append(kept)
+    displayed_path = (str(path.relative_to(REPO)) if path.is_relative_to(REPO) else str(path))
+    meta = {"judge": cfg["judge"], "pool": len(pool), "accepted_clear": len(accepted),
+            "labels": dict(sorted(Counter(d["label"] for d in decisions).items())),
+            "decisions_path": displayed_path, "decisions_sha256": sha_file(path)}
+    return accepted, meta
 
 
 def _split(candidates, reg):
@@ -354,7 +432,8 @@ def build(corpus_path=None, out_root=None, registry_data=None):
     corpus_path = Path(corpus_path or WORK / "derived" / "corpus.jsonl")
     corpus = list(_read_jsonl(corpus_path))
     corpus_by_id = {r["doc_id"]: r for r in corpus}
-    candidates = structural_candidates(corpus)
+    structural = structural_candidates(corpus)
+    candidates, adjudication = apply_adjudications(structural, reg, corpus_by_id)
     train_struct, dev, conf, realized = _split(candidates, reg)
     min_dev = int(reg["split"]["minimum_development_per_available_stratum"])
     min_conf = int(reg["split"]["minimum_confirmation_per_available_stratum"])
@@ -390,6 +469,8 @@ def build(corpus_path=None, out_root=None, registry_data=None):
         overlap.append(len(qtoks & ttoks) / max(1, len(qtoks)))
     manifest = {"_schema": "m18-protocol-manifest-v1", "split_version": reg["versions"]["split"],
                 "qrels_version": reg["versions"]["qrels"], "candidates": len(candidates),
+                "structural_candidates_pre_adjudication": len(structural),
+                "qrel_adjudication": adjudication,
                 "training_queries": len(train), "training_structural": len(train_struct),
                 "training_document_headings": len(docs), "training_alias_views": len(aliases),
                 "realized_strata": realized, "development": dev_files,

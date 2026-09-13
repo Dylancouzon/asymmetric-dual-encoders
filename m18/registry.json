@@ -28,7 +28,7 @@
     "deduplication": "m18-dedup-v1",
     "chunking": "m18-chunk-v1",
     "split": "m18-temporal-connected-family-v2",
-    "qrels": "m18-structural-resolution-answer-v4",
+    "qrels": "m18-structural-plus-astra-adjudication-v5",
     "normalizer_t1": "m18-typed-ephemeral-v1",
     "digit_mask_t2": "wordpiece-continuation-digits-v1"
   },
@@ -76,6 +76,13 @@
     "development_reads": "baseline plus registered checkpoints/forms",
     "confirmation_reads": 1,
     "query_source_document": "exclude before ranking metrics; report pre-exclusion top-10 rate",
+    "qrel_adjudication": {
+      "judge": "codex-gpt-6-astra-source-only-v1",
+      "pool_per_stratum": 80,
+      "decisions_path": "results/m18_astra_adjudications.jsonl",
+      "retain_label": "clear only",
+      "inputs": "prospective query, source context, proposed target; no model identity or retrieval score"
+    },
     "eligibility": {"fused_ndcg_delta_min": 0.01, "dense_ndcg_delta_min": 0.005, "variant_replacement_fused_delta_min": 0.005, "require_trained_direction_both_seeds": true, "require_no_clear_stratum_regression": true}
   },
   "serving": {"dtype": "int8_per_row_symmetric", "normalized_dim": 1024, "loader_parity_max_abs": 0.000001, "int8_error_max_abs": 0.02, "primary_mode": "BM25+dense DBSF@100"},

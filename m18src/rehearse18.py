@@ -58,6 +58,7 @@ def unit(x):
 
 def rehearsal_registry(commit):
     reg = copy.deepcopy(registry())
+    reg["evaluation"].pop("qrel_adjudication", None)
     reg["source"]["commit"] = commit
     reg["source"]["github_cutoff_utc"] = "2026-01-01T00:00:00Z"
     reg["corpus"]["chunk_tokens"] = 64

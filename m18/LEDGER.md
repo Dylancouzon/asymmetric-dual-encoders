@@ -124,3 +124,23 @@
   every measured leakage intersection remains zero, and 39 network-free tests pass. Previously
   flagged IDs `5110`, `7632` and `9159` remain only because v4 selects later, substantive answers
   for them; their earlier diagnostic/status targets are gone.
+
+## 2026-09-13 — E6 use-case alignment and adjudication scope
+
+- The session-external review in `m18/REVIEW.md` correctly identified that the numeric/identifier
+  audit slice does not reproduce bare terms such as `s3` and `k8s`. Its premise that issue bodies
+  are evaluation queries is incorrect: issue/PR queries are titles, while bodies stay in the corpus
+  and provide adjudication context. Measured median title/question length is nine words overall and
+  12 in exact/numeric; only one exact/numeric development query has five or fewer words.
+- Adopt the review's smallest direct acceptance artifact after vocabulary preparation: a fixed,
+  report-only side-by-side top-10 for v1 and the selected candidate on the supported bare terms. It
+  has no manufactured qrels and does not replace the registered metrics. Do not add a sixth gated
+  stratum or wait on owner-authored questions; voluntarily supplied questions can still be added in
+  a later milestone as originally ruled.
+- Astra's v4 audit was still no-go: 27/40 clear, eight partial and five bad. More lexical exceptions
+  would not test whether an answer actually addresses a question. The prospective pool is therefore
+  capped at the newest 80 connected families per proposed stratum (344 pairs total after source-text
+  duplicate union, bot-review removal and prose-question validation). Astra sees only query, source
+  context and proposed target, before the final split exists; it sees no retrieval scores or model
+  identity. Only `clear` pairs survive. This is a one-pass M18 data correction, not a reusable
+  judgment framework.

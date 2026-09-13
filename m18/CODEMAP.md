@@ -8,6 +8,7 @@
 | `m18src/source.py` | pinned git/GitHub acquisition and immutable pagination receipts |
 | `m18src/corpus.py` | parsing, redaction, chunking, deduplication and artifact metadata |
 | `m18src/protocol.py` | family split, structural qrels, strata and one-read confirmation lock |
+| `m18src/adjudicate.py` | export the bounded prospective source-only qrel review pool |
 | `m18src/vocab.py` | M17 vocabulary logic fork plus M18 compound extraction/T0–T2 policy |
 | `m18src/cache.py` | M17 deterministic candidate cache fork |
 | `m18src/train.py` | M17 listwise/cosine/alias trainer fork; only new rows train in M18 |
@@ -22,4 +23,3 @@
 The initial fork copies `common.py`, `vocab.py`, `cache.py`, `train.py`, `export.py`,
 `loader_np.py` and the synthetic rehearsal structure from `m17src`. Semantic differences are
 tracked in the ledger and source headers; no M17 registry, lock or protected-screen state is used.
-
