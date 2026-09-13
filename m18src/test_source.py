@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -131,3 +132,43 @@ def test_receipts_never_persist_token_bearing_headers(tmp_path):
     text = receipt.read_text()
     assert "Authorization" not in text and "ghp_" not in text
     assert json.loads(text)["api_version"] == "2022-11-28"
+
+
+def test_git_snapshot_clones_fetches_and_detaches_at_registered_pin(tmp_path):
+    endpoint = _endpoint()
+    reg = _registry(endpoint)
+    commit = reg["source"]["commit"]
+    calls = []
+
+    def git(args, **_kwargs):
+        calls.append(args)
+        if args[1:3] == ["clone", "--no-checkout"]:
+            (Path(args[-1]) / ".git").mkdir(parents=True)
+            output = ""
+        elif args[-3:] == ["remote", "get-url", "origin"]:
+            output = reg["source"]["git_remote"]
+        elif args[-2:] == ["status", "--porcelain"]:
+            output = ""
+        elif args[-2:] == ["rev-parse", "HEAD"]:
+            output = commit
+        elif args[-2:] == ["rev-parse", "HEAD^{tree}"]:
+            output = "b" * 40
+        else:
+            output = ""
+        return SimpleNamespace(returncode=0, stdout=output, stderr="")
+
+    manifest = source.ensure_git_snapshot(tmp_path, registry_data=reg, run=git)
+    assert manifest["head"] == commit and manifest["tree"] == "b" * 40
+    assert ["git", "-C", str(tmp_path / "work" / "m18" / "source" / "repository"), "fetch", "--force", "origin", commit] in calls
+    checkout = next(command for command in calls if command[-3:] == ["checkout", "--detach", commit])
+    assert "--force" not in checkout
+
+
+def test_changed_source_identity_is_refused_on_resume(tmp_path):
+    endpoint = _endpoint()
+    reg = _registry(endpoint, per_page=10)
+    source.acquire_github(tmp_path, registry_data=reg,
+                          api_call=Pages({(endpoint["path"], 1): [[_row("A")]]}), reconcile=False)
+    changed = _registry(endpoint, per_page=10, cutoff="2026-01-09T00:00:00Z")
+    with pytest.raises(source.SourceError, match="different source identity"):
+        source.acquire_github(tmp_path, registry_data=changed, api_call=lambda *_: [])
