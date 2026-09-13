@@ -23,6 +23,7 @@ def _fixture():
         "query_protocol": {"development_numeric_version_controls_minimum": 2,
                            "confirmation_numeric_version_controls_minimum": 1,
                            "numeric_version_terms_minimum": 1},
+        "versions": {"query_protocol": "query-v1", "family_split": "family-v1"},
     }
 
     def row(qid, text, term, primary, split, tags=()):
@@ -79,13 +80,76 @@ def test_refuses_multiple_roster_terms_and_empty_safety():
         queries.validate_splits(development, confirmation, roster, tokenizer, registry)
 
 
-def test_split_publication_is_no_clobber_and_never_reads_existing_confirmation(tmp_path,
-                                                                               monkeypatch):
-    development, confirmation, *_ = _fixture()
-    monkeypatch.setattr(queries, "atomic_create_bytes", lambda path, payload: Path(path).write_bytes(payload)
-                        if not Path(path).exists() else (_ for _ in ()).throw(FileExistsError(path)))
+def test_refuses_lexical_near_duplicate_and_source_leakage():
+    development, confirmation, roster, tokenizer, registry = _fixture()
+    confirmation[0]["text"] = "probes k8s"
+    with pytest.raises(ValueError, match="near-duplicate"):
+        queries.validate_splits(development, confirmation, roster, tokenizer, registry)
+    development, confirmation, roster, tokenizer, registry = _fixture()
+    development[1].update({"source_type": "source_authored", "source_artifact_id": "source-1",
+                           "prospective_useful_artifact_ids": ["source-1"]})
+    with pytest.raises(ValueError, match="prospectively useful"):
+        queries.validate_splits(development, confirmation, roster, tokenizer, registry)
+
+
+def test_split_publication_validates_binds_and_resumes(tmp_path, monkeypatch):
+    fixture = _fixture()
+    development, confirmation = fixture[:2]
+    writes = []
+
+    def create(path, payload):
+        path = Path(path)
+        if path.exists():
+            raise FileExistsError(path)
+        path.write_bytes(payload)
+        writes.append(path.name)
+
+    monkeypatch.setattr(queries, "atomic_create_bytes", create)
     dev_path, conf_path = tmp_path / "dev.jsonl", tmp_path / "confirmation.jsonl"
-    first = queries.seal_splits(dev_path, conf_path, development, confirmation)
-    with pytest.raises(SystemExit, match="already exists"):
-        queries.seal_splits(dev_path, conf_path, development, confirmation)
-    assert first["confirmation_sha256"] == queries.sha_bytes(conf_path.read_bytes())
+    manifest_path = tmp_path / "manifest.json"
+    first = queries.seal_splits(dev_path, conf_path, manifest_path, *fixture)
+    assert writes[-1] == "manifest.json"
+    assert first["splits"]["confirmation"]["sha256"] == queries.sha_bytes(conf_path.read_bytes())
+    second = queries.seal_splits(dev_path, conf_path, manifest_path, *fixture)
+    assert second["publication"] == {"development": "verified", "confirmation": "verified",
+                                     "manifest": "verified"}
+
+    conf_path.write_bytes(b"changed")
+    with pytest.raises(SystemExit, match="existing sealed bytes differ"):
+        queries.seal_splits(dev_path, conf_path, manifest_path, *fixture)
+
+
+def test_invalid_split_is_not_partially_published(tmp_path, monkeypatch):
+    fixture = list(_fixture())
+    fixture[0][0]["answerable"] = False
+    writes = []
+    monkeypatch.setattr(queries, "atomic_create_bytes", lambda path, payload: writes.append(path))
+    with pytest.raises(ValueError, match="unanswerable"):
+        queries.seal_splits(tmp_path / "dev", tmp_path / "conf", tmp_path / "manifest", *fixture)
+    assert writes == []
+
+
+def test_split_publication_resumes_after_interruption(tmp_path, monkeypatch):
+    fixture = _fixture()
+    dev_path, conf_path = tmp_path / "dev.jsonl", tmp_path / "confirmation.jsonl"
+    manifest_path = tmp_path / "manifest.json"
+    interrupted = True
+
+    def create(path, payload):
+        nonlocal interrupted
+        path = Path(path)
+        if path.exists():
+            raise FileExistsError(path)
+        if path == conf_path and interrupted:
+            interrupted = False
+            raise OSError("simulated interruption")
+        path.write_bytes(payload)
+
+    monkeypatch.setattr(queries, "atomic_create_bytes", create)
+    with pytest.raises(OSError, match="simulated interruption"):
+        queries.seal_splits(dev_path, conf_path, manifest_path, *fixture)
+    assert dev_path.exists() and not conf_path.exists() and not manifest_path.exists()
+
+    result = queries.seal_splits(dev_path, conf_path, manifest_path, *fixture)
+    assert result["publication"] == {"development": "verified", "confirmation": "created",
+                                     "manifest": "created"}

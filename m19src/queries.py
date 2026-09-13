@@ -5,7 +5,7 @@ import json
 import re
 from collections import Counter
 
-from m19src.common import atomic_create_bytes, sha_bytes, sha_json
+from m19src.common import atomic_create_bytes, sha_bytes, sha_file_unchecked, sha_json
 
 LEXICAL = re.compile(r"[A-Za-z0-9][A-Za-z0-9._+#/:-]*")
 PRIMARY_CLASSES = {"bare_adaptation", "short_context", "longer_control"}
@@ -18,6 +18,11 @@ def normalize_text(text):
 
 def lexical_count(text):
     return len(LEXICAL.findall(str(text)))
+
+
+def lexical_signature(text):
+    """Catch case, punctuation and word-order variants without claiming semantic deduplication."""
+    return tuple(sorted(token.casefold() for token in LEXICAL.findall(str(text))))
 
 
 def _validate_row(row, split, roster_terms, term_ids, tokenizer):
@@ -52,6 +57,12 @@ def _validate_row(row, split, roster_terms, term_ids, tokenizer):
         raise ValueError("longer control must have at least six lexical terms")
     if row["source_type"] == "source_authored" and not row.get("source_artifact_id"):
         raise ValueError("source-authored query lacks source artifact")
+    exclusions = {str(value) for value in row.get("source_equivalent_artifact_ids") or []}
+    if row.get("source_artifact_id"):
+        exclusions.add(str(row["source_artifact_id"]))
+    useful = {str(value) for value in row["prospective_useful_artifact_ids"]}
+    if exclusions & useful:
+        raise ValueError("source artifact or equivalent is listed as prospectively useful")
 
 
 def validate_splits(development, confirmation, roster, tokenizer, registry,
@@ -67,9 +78,12 @@ def validate_splits(development, confirmation, roster, tokenizer, registry,
     for split, row in all_rows:
         _validate_row(row, split, terms, term_ids, tokenizer)
     normalized = [normalize_text(row["text"]) for _, row in all_rows]
+    lexical_signatures = [lexical_signature(row["text"]) for _, row in all_rows]
     intents = [row["intent_family"] for _, row in all_rows]
     if len(normalized) != len(set(normalized)) or len(intents) != len(set(intents)):
         raise ValueError("normalized query or intent family overlaps")
+    if len(lexical_signatures) != len(set(lexical_signatures)):
+        raise ValueError("lexical near-duplicate query overlaps")
     for field in ("source_artifact_id", "source_family"):
         dev = {str(row[field]) for row in development if row.get(field)}
         conf = {str(row[field]) for row in confirmation if row.get(field)}
@@ -110,6 +124,14 @@ def validate_splits(development, confirmation, roster, tokenizer, registry,
         "source_family_overlap": 0,
         "normalized_text_overlap": 0,
         "intent_family_overlap": 0,
+        "lexical_near_duplicate_overlap": 0,
+        "source_exclusion_sha256": sha_json({
+            row["query_id"]: sorted({
+                *([str(row["source_artifact_id"])] if row.get("source_artifact_id") else []),
+                *(str(value) for value in row.get("source_equivalent_artifact_ids") or []),
+            })
+            for _, row in all_rows
+        }),
     }
 
 
@@ -117,18 +139,52 @@ def jsonl_bytes(rows):
     return b"".join((json.dumps(row, sort_keys=True) + "\n").encode() for row in rows)
 
 
-def seal_splits(development_path, confirmation_path, development, confirmation):
-    """Publish exact split bytes once; confirmation remains behind its read guard.
+def _publish_or_verify(path, payload):
+    """Create immutable bytes, or verify the digest of a matching interrupted publication."""
+    expected = sha_bytes(payload)
+    try:
+        atomic_create_bytes(path, payload)
+        return "created"
+    except FileExistsError:
+        # Hash-only verification does not return sealed confirmation content to the caller.
+        if sha_file_unchecked(path) != expected:
+            raise SystemExit(f"M19 QUERY REFUSED: existing sealed bytes differ: {path}")
+        return "verified"
 
-    Existing destinations are never opened to reconcile a retry. In particular, doing so for the
-    confirmation destination would create a pre-claim read path. The returned hashes are computed
-    from the caller-owned payload and can be bound into the later claim.
-    """
+
+def seal_splits(development_path, confirmation_path, manifest_path, development, confirmation,
+                roster, tokenizer, registry, *, exact_counts=True):
+    """Validate, bind and resumably publish both split payloads and their final manifest."""
+    paths = [str(development_path), str(confirmation_path), str(manifest_path)]
+    if len(paths) != len(set(paths)):
+        raise ValueError("query split and manifest paths must be distinct")
+    validation = validate_splits(
+        development, confirmation, roster, tokenizer, registry, exact_counts=exact_counts)
     payloads = {"development": jsonl_bytes(development), "confirmation": jsonl_bytes(confirmation)}
-    for path, payload in ((development_path, payloads["development"]),
-                          (confirmation_path, payloads["confirmation"])):
-        try:
-            atomic_create_bytes(path, payload)
-        except FileExistsError:
-            raise SystemExit(f"M19 QUERY REFUSED: sealed split destination already exists: {path}")
-    return {name + "_sha256": sha_bytes(payload) for name, payload in payloads.items()}
+    manifest = {
+        "_schema": "m19-query-split-seal-v1",
+        "registry_sha256": sha_json(registry),
+        "roster_sha256": sha_json(roster),
+        "protocol_versions": {
+            "query": registry["versions"]["query_protocol"],
+            "family_split": registry["versions"]["family_split"],
+        },
+        "validation": validation,
+        "splits": {
+            name: {
+                "sha256": sha_bytes(payloads[name]),
+                "bytes": len(payloads[name]),
+                "query_ids": [row["query_id"] for row in rows],
+            }
+            for name, rows in (("development", development), ("confirmation", confirmation))
+        },
+    }
+    manifest_payload = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode()
+    publication = {
+        "development": _publish_or_verify(development_path, payloads["development"]),
+        "confirmation": _publish_or_verify(confirmation_path, payloads["confirmation"]),
+        # The manifest is the completion marker and is always published last.
+        "manifest": _publish_or_verify(manifest_path, manifest_payload),
+    }
+    return manifest | {"manifest_sha256": sha_bytes(manifest_payload),
+                       "publication": publication}

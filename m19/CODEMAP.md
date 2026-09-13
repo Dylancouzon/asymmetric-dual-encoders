@@ -12,7 +12,7 @@
 | `m19src/retrieval.py` | exact passage scoring, exclusion-before-truncation, artifact collapse and DBSF@100 |
 | `m19src/metrics.py` | binary top-ten metrics, fixed-roster term macro and eligibility helpers |
 | `m19src/judgments.py` | seven-route pool, blinded evidence packets, audit sampling/agreement and binary qrels freeze |
-| `m19src/queries.py` | query shape/count/family/leakage validation and no-clobber split sealing |
+| `m19src/queries.py` | query shape/count/family/leakage validation and resumable hash-bound split sealing |
 | `m19src/confirmation.py` | immutable, hash-bound one-shot confirmation transaction |
 | `m19src/rehearse.py` | one-command synthetic pool/judgment/metric transaction and interrupted resume |
 | `m19/term-roster-lock-v3.json`, `results/m19_term_inventory_v3.json` | final 12-term roster audit/evidence; v1/v2 are preserved and superseded |
