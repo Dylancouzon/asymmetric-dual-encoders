@@ -186,6 +186,9 @@ def require_executable(reg, rehearsal: bool, what="this run", training=False):
                 f"M18 REFUSED: registry status is {status!r}; real training needs "
                 f"{EXECUTABLE_STATUSES[-1]!r} (the executed lock half, m18src/lock.py). "
                 f"{status!r} admits the on-clock preparation only.")
+        if training and not rehearsal:
+            import lock
+            lock.verify(reg)
         return status
     if rehearsal:
         print(f"[m18] registry status {status!r}: {what} runs in REHEARSAL mode "
