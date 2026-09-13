@@ -1,0 +1,80 @@
+{
+ "256": {
+  "manifest": {
+   "_schema": "m18-stella-encode-v1",
+   "combined": {
+    "bytes": 524416,
+    "path": "vectors.f16.npy",
+    "sha256": "4262cf0d48af63dbb68bbd5875438938cb92e576ed71163c1792e4bb5362ac04"
+   },
+   "complete": true,
+   "elapsed_seconds_this_invocation": 0.631,
+   "identity": {
+    "dim": 1024,
+    "max_length": 512,
+    "model": "NovaSearch/stella_en_400M_v5",
+    "n": 256,
+    "prefix": "",
+    "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+    "shard_size": 256,
+    "store_dtype": "fp16",
+    "texts_sha256": "8c7b91ea137ee16a391b6add3839f3178f02afd58b5b2ca28f58abfa77851a80"
+   },
+   "identity_sha256": "44635dfc6d5d1c05b1ec2695161e31b934254e9fdadbf81fe3063fd5e6a3a6a2",
+   "peak_vram_bytes": 1241309696,
+   "rss_high_water_kib": 3661184,
+   "shards": {
+    "000000": {
+     "bytes": 524416,
+     "hi": 256,
+     "lo": 0,
+     "sha256": "4262cf0d48af63dbb68bbd5875438938cb92e576ed71163c1792e4bb5362ac04",
+     "shape": [
+      256,
+      1024
+     ]
+    }
+   }
+  },
+  "wall_seconds": 0.6332831382751465
+ },
+ "64": {
+  "manifest": {
+   "_schema": "m18-stella-encode-v1",
+   "combined": {
+    "bytes": 131200,
+    "path": "vectors.f16.npy",
+    "sha256": "b1e36d9f2fcd63f474f259968c75a72c6bbf76ad2cbd6a142e53624be5075643"
+   },
+   "complete": true,
+   "elapsed_seconds_this_invocation": 6.233,
+   "identity": {
+    "dim": 1024,
+    "max_length": 512,
+    "model": "NovaSearch/stella_en_400M_v5",
+    "n": 64,
+    "prefix": "",
+    "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+    "shard_size": 64,
+    "store_dtype": "fp16",
+    "texts_sha256": "fad78a46b9b9fc1414c90d9439bb287cc79331947f2ef8ff716a71efa09ca0ac"
+   },
+   "identity_sha256": "493d1d933b97f5a81e2eefb24bf42a6c7ec060e564c9b90fb1d9a934378aab8c",
+   "peak_vram_bytes": 1241256448,
+   "rss_high_water_kib": 3661184,
+   "shards": {
+    "000000": {
+     "bytes": 131200,
+     "hi": 64,
+     "lo": 0,
+     "sha256": "b1e36d9f2fcd63f474f259968c75a72c6bbf76ad2cbd6a142e53624be5075643",
+     "shape": [
+      64,
+      1024
+     ]
+    }
+   }
+  },
+  "wall_seconds": 6.235023498535156
+ }
+}
