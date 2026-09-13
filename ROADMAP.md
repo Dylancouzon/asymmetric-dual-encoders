@@ -17,6 +17,7 @@ This changes scope and navigation, not results, registered constants or access r
 | M15 | Whitepaper and evidence package | After measurements, nano optional; `instructions-m15.md` |
 | M16 | Image-model scoping | Unscheduled; `instructions-m16.md` |
 | M17 | Zero v1.1: vocabulary and modest quality improvement | **Closed 2026-09-12, negative result** (`no_survivor`: no screen arm met eligibility vs v1; zero v1 stays shipped); `m17/STATUS.md` |
+| M18 | Internal Qdrant project-memory system and specialized Zero | **Executing locally**; `m18/STATUS.md`, `instructions-m18.md` |
 
 ## Migration map
 

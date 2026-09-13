@@ -1,0 +1,83 @@
+{
+  "_schema": "m18-registry-v1",
+  "status": "EXECUTABLE_PREPARATION",
+  "date": "2026-09-12",
+  "scope": "internal Qdrant project memory; local execution only; no publication",
+  "source": {
+    "repository": "qdrant/qdrant",
+    "default_branch": "master",
+    "commit": "5e32ea89cb5ea9a6827a68b27291d2e2251e1b1c",
+    "commit_time_utc": "2026-09-12T18:07:53Z",
+    "github_cutoff_utc": "2026-09-13T00:36:26Z",
+    "git_remote": "https://github.com/qdrant/qdrant.git",
+    "api_version": "2022-11-28",
+    "per_page": 100,
+    "endpoints": [
+      {"name": "issues", "path": "/repos/qdrant/qdrant/issues", "params": {"state": "all", "sort": "created", "direction": "asc"}},
+      {"name": "issue_comments", "path": "/repos/qdrant/qdrant/issues/comments", "params": {"sort": "created", "direction": "asc"}},
+      {"name": "review_comments", "path": "/repos/qdrant/qdrant/pulls/comments", "params": {"sort": "created", "direction": "asc"}},
+      {"name": "issue_events", "path": "/repos/qdrant/qdrant/issues/events", "params": {}}
+    ],
+    "raw_policy": "immutable content-addressed pages with link-header/page receipts",
+    "canonical_object_key": "GitHub node_id, falling back to endpoint kind plus numeric id"
+  },
+  "versions": {
+    "source_adapter": "m18-source-v1",
+    "parser": "m18-parser-v1",
+    "redaction": "m18-redaction-v1",
+    "deduplication": "m18-dedup-v1",
+    "chunking": "m18-chunk-v1",
+    "split": "m18-temporal-family-v1",
+    "qrels": "m18-structural-maintainer-answer-v1",
+    "normalizer_t1": "m18-typed-ephemeral-v1",
+    "digit_mask_t2": "wordpiece-continuation-digits-v1"
+  },
+  "models": {
+    "teacher": {"repo": "NovaSearch/stella_en_400M_v5", "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20", "dim": 1024, "pooling": "mean", "post_dense": "2_Dense_1024", "query_prefix": "Instruct: Given a web search query, retrieve relevant passages that answer the query.\nQuery: ", "doc_prefix": "", "max_length": 512},
+    "zero_v1": {"source_path": "/home/dylan/asymetric-dual-encoders/work/release/zero-v1", "model_sha256": "a7007b1a6af120b976f093fd69ddcb5001996ec0b84b5864b4fd25d7af878abf", "tokenizer_sha256": "997eaeff157a7d4db899b8f2278ad3db6e323e609ae956b9c5035550f581eeee", "config_sha256": "fd784397925e9ec32b6f1412af85b46faea79bb618b17197dc6d3a0068669636", "vocab": 30522},
+    "unfolded_init": {"source_path": "/home/dylan/asymetric-dual-encoders/work/runs/p35w-2m-s2500.npz", "sha256": "0f544275cbce0c22763d4cacad7078fb7e6107459a7ec5453501449e0444a204", "weights_folded": false}
+  },
+  "corpus": {"document_units_max": 200000, "training_query_views_max": 300000, "chunk_tokens": 384, "chunk_overlap_tokens": 48, "retain_all_artifacts": true},
+  "split": {"target_total": 250, "development_per_stratum": 35, "confirmation_per_stratum": 15, "minimum_development_per_available_stratum": 25, "minimum_confirmation_per_available_stratum": 10, "family_unit": "GitHub thread or repository artifact plus near-duplicate union", "assignment": "newest credible families, alternating seeded blocks between development and confirmation; all older families train", "seed": 18001},
+  "strata": ["concept_howto", "error_troubleshooting", "config_api_ops", "exact_version_numeric", "alias_jargon"],
+  "vocabulary": {"min_distinct_documents": 5, "min_training_contexts": 12, "max_added_rows": 8192, "term_pattern_version": "m18-compounds-v1", "initialization": "count-weighted composition of inherited effective rows", "disallow_near_unique": true},
+  "variants": {
+    "T0": {"preprocessing": "raw", "mask": "none"},
+    "T1": {"preprocessing": "typed_ephemeral", "mask": "none", "inert_development_fraction_lt": 0.01},
+    "T2": {"preprocessing": "raw", "mask": "^##[0-9]+$", "inert_development_fraction_lt": 0.01}
+  },
+  "training": {
+    "seed_primary": 18001,
+    "seed_confirmation": 18002,
+    "batch": 256,
+    "schedule_steps": 4000,
+    "diagnostic_stop_after": 500,
+    "warmup_steps": 200,
+    "checkpoint_steps": [0, 250, 500, 1000, 2000, 4000],
+    "new_rows_lr": 0.0003,
+    "cosine_weight": 1.0,
+    "listwise_weight": 1.0,
+    "alias_weight": 0.1,
+    "init_anchor_weight": 0.0,
+    "temperature": 0.05,
+    "candidate_k": 64,
+    "candidate_mix_labeled": {"known_positive": 4, "teacher_top": 28, "zero_v1_top": 16, "uniform": 16},
+    "freeze": "all inherited rows and all inherited pooling/scalar parameters; optimizer contains new rows only",
+    "query_eligibility": "at least one trainable exact or placeholder row after variant preprocessing"
+  },
+  "retrieval": {"dense": "exact inner product over normalized vectors", "bm25": {"k1": 1.2, "b": 0.75}, "fusion": {"operator": "DBSF", "candidate_depth": 100, "source": "m12src/qfusion.py"}},
+  "evaluation": {
+    "selection_metric": "fused_ndcg_at_10",
+    "metrics": ["ndcg_at_10", "recall_at_10", "mrr_at_10"],
+    "bootstrap_replicates": 10000,
+    "bootstrap_seed": 18018,
+    "development_reads": "baseline plus registered checkpoints/forms",
+    "confirmation_reads": 1,
+    "eligibility": {"fused_ndcg_delta_min": 0.01, "dense_ndcg_delta_min": 0.005, "variant_replacement_fused_delta_min": 0.005, "require_trained_direction_both_seeds": true, "require_no_clear_stratum_regression": true}
+  },
+  "serving": {"dtype": "int8_per_row_symmetric", "normalized_dim": 1024, "loader_parity_max_abs": 0.000001, "int8_error_max_abs": 0.02, "primary_mode": "BM25+dense DBSF@100"},
+  "local_budget": {"host": "RTX 3080 10 GiB", "compute_hours_max": 24, "exclude_github_wait": true},
+  "protected_access": {"m7_m13_spent_or_reserved_surfaces": false, "forbidden": ["results/perquery.json", "results/frozen_eval/untouched-*", "reserved qrels caches", "work/m9reserve", "LoTTE payloads"]},
+  "observations": {"development_read": false, "confirmation_read": false, "training_started": false}
+}
+
