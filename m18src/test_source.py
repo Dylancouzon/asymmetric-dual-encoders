@@ -105,18 +105,31 @@ def test_node_dedupe_cutoff_and_post_cutoff_update_counts(tmp_path):
     assert manifest["endpoints"]["issues"]["updated_after_cutoff"] == 1
 
 
-def test_second_pass_reconciliation_detects_mutation(tmp_path):
+def test_second_pass_reconciliation_accepts_body_edit_and_post_cutoff_tail(tmp_path):
     endpoint = _endpoint()
     reg = _registry(endpoint, per_page=10)
+    first = _row("A")
+    first["body"] = "original"
+    edited = dict(first, body="edited")
+    tail = _row("later", created="2026-01-11T00:00:00Z", ident=2)
     api = Pages({
         (endpoint["path"], 1): [
-            [_row("A")],                 # acquisition
-            [_row("changed")],           # reconciliation of the same page
+            [first],                       # acquisition
+            [edited, tail],                # same admitted ID, mutable edit, growing tail
         ],
     })
-    with pytest.raises(source.SourceError, match="mutated during reconciliation"):
+    manifest = source.acquire_github(tmp_path, registry_data=reg, api_call=api, reconcile=True)
+    assert manifest["reconciliation"]["issues"]["mutable_payload_changes"] == 1
+    raw = tmp_path / "work/m18/source/github/issues/pages/000001.json"
+    assert json.loads(raw.read_text())[0]["body"] == "original"
+
+
+def test_second_pass_reconciliation_rejects_changed_admitted_ids(tmp_path):
+    endpoint = _endpoint()
+    reg = _registry(endpoint, per_page=10)
+    api = Pages({(endpoint["path"], 1): [[_row("A")], [_row("changed")]]})
+    with pytest.raises(source.SourceError, match="admitted identity set changed"):
         source.acquire_github(tmp_path, registry_data=reg, api_call=api, reconcile=True)
-    assert not (tmp_path / "work" / "m18" / "source" / "github-manifest.json").exists()
 
 
 def test_fallback_identity_keeps_endpoint_kinds_separate():

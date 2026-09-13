@@ -13,11 +13,16 @@ from common import WORK, admit_read, atomic_write_bytes, registry, sha_file, sha
 
 MAINTAINER = {"OWNER", "MEMBER", "COLLABORATOR"}
 ANSWER_CUES = re.compile(
-    r"(?i)\b(?:because|you (?:can|should|need)|try |use |fixed|solution|workaround|supported|"
-    r"not supported|the (?:issue|problem|reason)|this (?:is|was)|we (?:need|use|fixed|support))\b")
+    r"(?i)\b(?:because|you should|try |use |set |configure|fixed|resolved|implemented|"
+    r"solution|workaround|is supported|not supported|the (?:issue|problem|reason)|"
+    r"this (?:happens|fails|is caused|was fixed)|we (?:use|fixed|support))\b")
+INFO_REQUEST = re.compile(r"(?i)\b(?:provide|share|attach|send|need|want)\b.{0,50}\b(?:logs?|"
+                          r"reproducer|reproduction|more information|details|stack trace)\b")
 ERROR_CUES = re.compile(r"(?i)\b(?:error|failed?|failure|panic|crash|exception|not working|oom|out of memory|timeout|stack trace)\b")
 CONFIG_CUES = re.compile(r"(?i)\b(?:config|setting|api|grpc|rest|port|cluster|replica|shard|deploy|docker|kubernetes|yaml|collection)\b")
-EXACT_CUES = re.compile(r"(?:\b\d+(?:\.\d+)+\b|\b(?:HTTP|gRPC)\s*\d{3}\b|`[^`]+`|[/_.:-]|\b[A-Z][A-Z0-9_]{3,}\b)")
+EXACT_CUES = re.compile(r"(?:\bv?\d+(?:\.\d+)+\b|\b(?:HTTP|gRPC)\s*\d{3}\b|"
+                        r"`[^`]*[A-Za-z_./:-][^`]*`|\b[A-Z][A-Z0-9_]{3,}\b|"
+                        r"\b[a-z][a-z0-9]*(?:[_.:/-][a-z0-9]+)+\b)")
 JARGON_CUES = re.compile(r"(?i)\b(?:qdrant|hnsw|wal|mmap|rocksdb|quantization|payload|segment|optimizer|ef_construct|ef_search|grpc|raft|rps)\b")
 ALIAS_RE = re.compile(r"\b([A-Z][A-Za-z][A-Za-z0-9 /+_-]{3,60})\s+\(([A-Z][A-Z0-9_-]{1,12})\)")
 
@@ -61,13 +66,16 @@ def structural_candidates(corpus):
             by_thread[row["artifact_id"]].append(row)
     candidates = []
     for family, rows in sorted(by_thread.items()):
-        openings = [r for r in rows if r["kind"] == "issue_opening"]
+        openings = [r for r in rows if r["kind"] in ("issue_opening", "pull_request_opening")
+                    and int(r.get("chunk_index", 1)) == 1]
         if not openings:
             continue
         opening = openings[0]
         answers = sorted((r for r in rows if r["kind"] == "issue_comment"
                           and r.get("author_association") in MAINTAINER
-                          and len(r["text"].split()) >= 12 and ANSWER_CUES.search(r["text"])),
+                          and (r.get("timestamp") or "") > (opening.get("timestamp") or "")
+                          and len(r["text"].split()) >= 16 and ANSWER_CUES.search(r["text"])
+                          and not INFO_REQUEST.search(r["text"])),
                          key=lambda r: (r.get("timestamp") or "", r["doc_id"]))
         if not answers:
             continue
@@ -81,18 +89,26 @@ def structural_candidates(corpus):
                            "source_doc": opening["doc_id"], "target_doc": target["doc_id"],
                            "timestamp": opening.get("timestamp") or "",
                            "stratum": _stratum(text),
-                           "relevance_reason": "distinct later maintainer answer with explanatory cue",
-                           "label_provenance": {"rule": "author_association+answer_cue",
+                           "relevance_reason": "distinct later maintainer answer with resolution/action evidence",
+                           "label_provenance": {"rule": "later_maintainer+strong_answer_cue-v2",
                                                 "author_association": target.get("author_association")}})
 
     # Review question -> explicit in-reply-to response. The relation is structural, not a
     # teacher judgment, and both units remain individually searchable.
-    review = {r.get("github_id"): r for r in corpus if r["kind"] == "review_comment"}
-    for target in sorted(review.values(), key=lambda r: r["doc_id"]):
-        parent = review.get(target.get("in_reply_to_id"))
+    review = {}
+    for row in corpus:
+        if row["kind"] == "review_comment":
+            review.setdefault(row.get("github_id"), []).append(row)
+    for chunks in sorted(review.values(), key=lambda rs: rs[0]["doc_id"]):
+        target = next((r for r in chunks if ANSWER_CUES.search(r["text"])
+                       and not INFO_REQUEST.search(r["text"])), chunks[0])
+        parents = review.get(target.get("in_reply_to_id"))
+        parent = parents[0] if parents else None
         if not parent or "?" not in parent["text"] or target.get("author_association") not in MAINTAINER:
             continue
-        if len(target["text"].split()) < 8:
+        if (len(target["text"].split()) < 12 or not ANSWER_CUES.search(target["text"])
+                or INFO_REQUEST.search(target["text"])
+                or (target.get("timestamp") or "") <= (parent.get("timestamp") or "")):
             continue
         text = parent["text"].strip()
         candidates.append({"query_id": _query_id("review", parent["github_id"]),
@@ -103,18 +119,58 @@ def structural_candidates(corpus):
                            "relevance_reason": "maintainer review reply linked by in_reply_to_id",
                            "label_provenance": {"rule": "review_in_reply_to",
                                                 "author_association": target.get("author_association")}})
-    # Validate targets after construction; no artifact-level relevance fallback exists.
-    return [q for q in candidates if q["target_doc"] in by_doc]
+    # Validate targets, then form a corpus-wide connected family relation over threads,
+    # duplicate answer spans, title/backport shapes and explicit Qdrant thread links.
+    candidates = [q for q in candidates if q["target_doc"] in by_doc]
+    return _assign_union_families(candidates, corpus, by_doc)
+
+
+def _assign_union_families(candidates, corpus, by_doc):
+    artifacts = sorted({q["family"] for q in candidates})
+    parent = {x: x for x in artifacts}
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]; x = parent[x]
+        return x
+    def union(a, b):
+        if a in parent and b in parent:
+            ra, rb = find(a), find(b)
+            if ra != rb:
+                parent[max(ra, rb)] = min(ra, rb)
+    by_shape, by_answer = {}, {}
+    for q in candidates:
+        for table, key in ((by_shape, q["near_duplicate_family"]),
+                           (by_answer, by_doc[q["target_doc"]].get("normalized_text_sha256"))):
+            if key and key in table:
+                union(q["family"], table[key])
+            elif key:
+                table[key] = q["family"]
+    link_re = re.compile(r"github\.com/qdrant/qdrant/(?:issues|pull)/(\d+)")
+    for row in corpus:
+        a = row.get("artifact_id")
+        if a not in parent:
+            continue
+        for link in row.get("outbound_links", []):
+            m = link_re.search(link)
+            if m:
+                union(a, f"gh:thread:{m.group(1)}")
+    members = defaultdict(set)
+    for a in artifacts:
+        members[find(a)].add(a)
+    for q in candidates:
+        root = find(q["family"])
+        q["family_group"] = "m18fam:" + hashlib.sha256("\n".join(sorted(members[root])).encode()).hexdigest()[:20]
+        q["family_members"] = sorted(members[root])
+    return candidates
 
 
 def _split(candidates, reg):
     cfg = reg["split"]
     need_dev, need_conf = int(cfg["development_per_stratum"]), int(cfg["confirmation_per_stratum"])
-    # One near-duplicate shape owns one family. Keep the newest representative, then exclude the
-    # entire shape from training if selected for either held-out surface.
+    # One connected artifact/duplicate family supplies at most one audit query.
     best = {}
     for q in candidates:
-        key = q["near_duplicate_family"] or q["family"]
+        key = q["family_group"]
         cur = best.get(key)
         if cur is None or (q["timestamp"], q["query_id"]) > (cur["timestamp"], cur["query_id"]):
             best[key] = q
@@ -125,39 +181,30 @@ def _split(candidates, reg):
     realized = {}
     for stratum in reg["strata"]:
         rows = sorted(grouped[stratum], key=lambda q: (q["timestamp"], q["query_id"]), reverse=True)
-        pool = rows[:need_dev + need_conf]
+        total = min(len(rows), need_dev + need_conf)
+        if total >= int(cfg["minimum_development_per_available_stratum"]) + int(cfg["minimum_confirmation_per_available_stratum"]):
+            dev_n = min(need_dev, total - int(cfg["minimum_confirmation_per_available_stratum"]))
+            conf_n = min(need_conf, total - dev_n)
+        else:
+            conf_n = min(need_conf, max(0, round(total * need_conf / (need_dev + need_conf))))
+            dev_n = total - conf_n
+        pool = rows[:total]
         # Three confirmation positions per chronological block of ten yields exactly 15/35 at
         # the target size while interleaving recency rather than putting all confirmation last.
         conf_positions = {i for i in range(len(pool)) if i % 10 in (0, 3, 6)}
-        conf = [q for i, q in enumerate(pool) if i in conf_positions][:need_conf]
+        conf = [q for i, q in enumerate(pool) if i in conf_positions][:conf_n]
+        if len(conf) < conf_n:
+            used = {q["query_id"] for q in conf}
+            conf.extend(q for q in reversed(pool) if q["query_id"] not in used
+                        and len(conf) < conf_n)
         conf_ids = {q["query_id"] for q in conf}
-        dev = [q for q in pool if q["query_id"] not in conf_ids][:need_dev]
+        dev = [q for q in pool if q["query_id"] not in conf_ids][:dev_n]
         development.extend(dev); confirmation.extend(conf)
-        heldout_shapes.update(q["near_duplicate_family"] for q in dev + conf)
+        heldout_shapes.update(q["family_group"] for q in dev + conf)
         realized[stratum] = {"available_families": len(rows), "development": len(dev),
                              "confirmation": len(conf)}
-    train = [q for q in candidates if q["near_duplicate_family"] not in heldout_shapes]
+    train = [q for q in candidates if q["family_group"] not in heldout_shapes]
     return train, development, confirmation, realized
-
-
-def _documentation_training(corpus, excluded_artifacts, cap):
-    rows = []
-    for doc in corpus:
-        if doc["kind"] != "repository_text" or doc["artifact_id"] in excluded_artifacts:
-            continue
-        heading = str(doc.get("title") or "").strip()
-        if len(heading.split()) < 2 or heading.lower() in {"readme.md", "contents", "overview"}:
-            continue
-        # Deterministic query view, disclosed as a heading view rather than model-generated text.
-        rows.append({"query_id": _query_id("doc", doc["doc_id"]), "text": heading,
-                     "family": doc["artifact_id"], "near_duplicate_family": _family_shape(heading),
-                     "source_doc": doc["doc_id"], "target_doc": doc["doc_id"],
-                     "timestamp": "", "stratum": _stratum(heading),
-                     "relevance_reason": "repository heading paired with its section",
-                     "label_provenance": {"rule": "documentation_heading"}})
-        if len(rows) >= cap:
-            break
-    return rows
 
 
 def _alias_training(corpus, excluded_artifacts, cap):
@@ -201,6 +248,7 @@ def build(corpus_path=None, out_root=None, registry_data=None):
     out.mkdir(parents=True, exist_ok=True)
     corpus_path = Path(corpus_path or WORK / "derived" / "corpus.jsonl")
     corpus = list(_read_jsonl(corpus_path))
+    corpus_by_id = {r["doc_id"]: r for r in corpus}
     candidates = structural_candidates(corpus)
     train_struct, dev, conf, realized = _split(candidates, reg)
     min_dev = int(reg["split"]["minimum_development_per_available_stratum"])
@@ -210,23 +258,24 @@ def build(corpus_path=None, out_root=None, registry_data=None):
              and (v["development"] < min_dev or v["confirmation"] < min_conf)}
     if short:
         raise SystemExit(f"M18 PROTOCOL REFUSED: adequately populated strata miss minima: {short}")
-    excluded_artifacts = {q["family"] for q in dev + conf}
+    excluded_artifacts = {a for q in dev + conf for a in q["family_members"]}
     cap = int(reg["corpus"]["training_query_views_max"])
-    docs = _documentation_training(corpus, excluded_artifacts, max(0, cap - len(train_struct)))
-    aliases = _alias_training(corpus, excluded_artifacts, max(0, cap - len(train_struct) - len(docs)))
-    train = (train_struct + docs + aliases)[:cap]
+    docs = []  # heading==target self retrieval is intentionally not admitted.
+    aliases = _alias_training(corpus, excluded_artifacts, max(0, cap - len(train_struct)))
+    train = (train_struct + aliases)[:cap]
     # No held-out family or near-duplicate title shape can supply a gradient-bearing view.
-    heldout_family = {q["family"] for q in dev + conf}
-    heldout_shape = {q["near_duplicate_family"] for q in dev + conf}
+    heldout_family = {a for q in dev + conf for a in q["family_members"]}
+    heldout_group = {q["family_group"] for q in dev + conf}
+    heldout_target_hash = {corpus_by_id[q["target_doc"]]["normalized_text_sha256"] for q in dev + conf}
     leaks = [q["query_id"] for q in train if q["family"] in heldout_family
-             or q["near_duplicate_family"] in heldout_shape]
+             or q.get("family_group") in heldout_group
+             or corpus_by_id[q["target_doc"]]["normalized_text_sha256"] in heldout_target_hash]
     if leaks:
         raise SystemExit(f"M18 PROTOCOL REFUSED: {len(leaks)} held-out families leak into training")
     train_path = _write_rows(out / "training_queries.jsonl", train)
     dev_files = _surface_files(out, "development", dev)
     conf_files = _surface_files(out, "confirmation", conf)
     overlap = []
-    corpus_by_id = {r["doc_id"]: r for r in corpus}
     for q in dev + conf:
         target = corpus_by_id[q["target_doc"]]["text"].lower()
         qtoks = set(re.findall(r"\w+", q["text"].lower()))
@@ -238,8 +287,17 @@ def build(corpus_path=None, out_root=None, registry_data=None):
                 "training_document_headings": len(docs), "training_alias_views": len(aliases),
                 "realized_strata": realized, "development": dev_files,
                 "confirmation": conf_files, "confirmation_sealed": True,
+                "corpus_sha256": sha_file(corpus_path),
                 "training_queries_sha256": sha_file(train_path),
-                "family_overlap_train_vs_heldout": 0, "near_duplicate_overlap_train_vs_heldout": 0,
+                "family_overlap_train_vs_heldout": len(
+                    {q.get("family_group") for q in train} & heldout_group),
+                "artifact_overlap_train_vs_heldout": len(
+                    {q["family"] for q in train} & heldout_family),
+                "answer_digest_overlap_train_vs_heldout": len(
+                    {corpus_by_id[q["target_doc"]]["normalized_text_sha256"] for q in train}
+                    & heldout_target_hash),
+                "development_confirmation_family_overlap": len(
+                    {q["family_group"] for q in dev} & {q["family_group"] for q in conf}),
                 "relevant_source_opening_self_hits": 0,
                 "query_token_overlap_with_answer": {"mean": float(sum(overlap) / max(1, len(overlap))),
                                                     "exact_query_substring_rate": float(sum(
@@ -254,22 +312,65 @@ def build(corpus_path=None, out_root=None, registry_data=None):
     return manifest
 
 
+def _verified_surface(name, root, manifest):
+    block = manifest[name]
+    qpath, rpath = root / block["queries"], root / block["qrels"]
+    if sha_file(qpath) != block["queries_sha256"] or sha_file(rpath) != block["qrels_sha256"]:
+        raise SystemExit(f"M18 {name.upper()} REFUSED: sealed surface hash mismatch")
+    return list(_read_jsonl(qpath)), json.loads(admit_read(rpath).read_text())
+
+
 def load_surface(name, out_root=None):
-    if name not in ("development", "confirmation"):
+    if name != "development":
+        if name == "confirmation":
+            raise SystemExit("M18 CONFIRMATION REFUSED: use run_confirmation transaction")
         raise ValueError(name)
     root = Path(out_root or WORK / "derived" / "protocol")
-    queries = list(_read_jsonl(root / f"{name}_queries.jsonl"))
-    qrels = json.loads(admit_read(root / f"{name}_qrels.json").read_text())
-    return queries, qrels
+    manifest = json.loads(admit_read(root / "protocol_manifest.json").read_text())
+    return _verified_surface(name, root, manifest)
 
 
-def claim_confirmation(identity, out_root=None):
-    """Begin the one confirmation transaction; a stale/complete receipt is never overwritten."""
+def lock_confirmation(identity, out_root=None):
+    """Immutably lock the selected recipe/checkpoint and sealed-surface identities."""
     root = Path(out_root or WORK / "derived" / "protocol")
     manifest = json.loads(admit_read(root / "protocol_manifest.json").read_text())
+    if not isinstance(identity, dict) or not identity or any(v in (None, "") for v in identity.values()):
+        raise SystemExit("M18 CONFIRMATION REFUSED: decision identity must be nonempty")
+    path = root / "confirmation_decision_lock.json"
+    payload = {"_schema": "m18-confirmation-lock-v1", "state": "locked",
+               "protocol_sha256": manifest["sha256"],
+               "queries_sha256": manifest["confirmation"]["queries_sha256"],
+               "qrels_sha256": manifest["confirmation"]["qrels_sha256"],
+               "identity": dict(identity), "identity_sha256": sha_json(identity)}
+    try:
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+    except FileExistsError as e:
+        old = json.loads(admit_read(path).read_text())
+        if old != payload:
+            raise SystemExit("M18 CONFIRMATION REFUSED: another decision is already locked") from e
+        return path
+    with os.fdopen(fd, "w") as f:
+        json.dump(payload, f, sort_keys=True); f.write("\n"); f.flush(); os.fsync(f.fileno())
+    return path
+
+
+def run_confirmation(identity, evaluator, result_path, out_root=None):
+    """Atomically claim the sole read, verify the lock/surface, evaluate, and seal its result."""
+    root = Path(out_root or WORK / "derived" / "protocol")
+    manifest = json.loads(admit_read(root / "protocol_manifest.json").read_text())
+    lock_path = root / "confirmation_decision_lock.json"
+    if not lock_path.exists():
+        raise SystemExit("M18 CONFIRMATION REFUSED: decision lock is absent")
+    lock = json.loads(admit_read(lock_path).read_text())
+    expected = {"protocol_sha256": manifest["sha256"],
+                "queries_sha256": manifest["confirmation"]["queries_sha256"],
+                "qrels_sha256": manifest["confirmation"]["qrels_sha256"],
+                "identity_sha256": sha_json(identity)}
+    if lock.get("state") != "locked" or any(lock.get(k) != v for k, v in expected.items()):
+        raise SystemExit("M18 CONFIRMATION REFUSED: lock, identity, or sealed surface changed")
     receipt = root / "confirmation_read_receipt.json"
     payload = {"_schema": "m18-confirmation-read-v1", "state": "started", "reads": 1,
-               "protocol_sha256": manifest["sha256"], "identity": dict(identity)}
+               **expected, "identity": dict(identity)}
     try:
         fd = os.open(receipt, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
     except FileExistsError as e:
@@ -278,7 +379,18 @@ def claim_confirmation(identity, out_root=None):
         json.dump(payload, f, sort_keys=True)
         f.write("\n")
         f.flush(); os.fsync(f.fileno())
-    return receipt
+    queries, qrels = _verified_surface("confirmation", root, manifest)
+    result = evaluator(queries, qrels)
+    if not isinstance(result, dict):
+        raise SystemExit("M18 CONFIRMATION REFUSED: evaluator must return a result object")
+    result_path = Path(result_path)
+    write_json(result_path, result)
+    finish_confirmation(receipt, sha_file(result_path))
+    return result
+
+
+def claim_confirmation(*_args, **_kwargs):
+    raise SystemExit("M18 CONFIRMATION REFUSED: claim-only access was removed; use run_confirmation")
 
 
 def finish_confirmation(receipt, result_sha256):

@@ -438,19 +438,60 @@ def _fetch_endpoint(owned: Path, endpoint: Mapping[str, Any], source: Mapping[st
         page += 1
 
 
+def _admitted(rows: list[dict[str, Any]], endpoint_name: str, cutoff: str) -> dict[str, dict[str, Any]]:
+    cutoff_time = _time(cutoff)
+    if cutoff_time is None:
+        raise SourceError("registry source.github_cutoff_utc is required")
+    out: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        created = _time(row.get("created_at"))
+        if created is None:
+            raise SourceError(f"object has no valid created_at in endpoint {endpoint_name}")
+        if created <= cutoff_time:
+            key = canonical_key(row, endpoint_name)
+            if key in out:
+                raise SourceError(f"duplicate canonical identity in endpoint {endpoint_name}: {key}")
+            out[key] = row
+    return out
+
+
 def _reconcile_endpoint(owned: Path, endpoint: Mapping[str, Any], source: Mapping[str, Any],
-                        api_call: Callable[..., Any]) -> None:
-    """Read a second live pagination pass and fail if page identity or count has moved."""
+                        api_call: Callable[..., Any]) -> dict[str, Any]:
+    """Reconcile the cutoff-admitted identity set, tolerating mutable bodies and a growing tail.
+
+    GitHub issue/comment representations are mutable.  The first pass is the immutable payload we
+    parse; the second pass proves that the same cutoff-admitted objects were observed.  Edits are
+    recorded, not allowed to make a completed snapshot permanently unresumable.
+    """
     per_page = int(source["per_page"])
     stored = _existing_pages(owned, endpoint, per_page, str(source["api_version"]))
     headers = {"Accept": ACCEPT, "X-GitHub-Api-Version": str(source["api_version"])}
-    for number, expected in enumerate(stored, 1):
+    observed_pages: list[list[dict[str, Any]]] = []
+    number = 1
+    while True:
         raw, _ = _call_api(api_call, str(endpoint["path"]), _request_params(endpoint, number, per_page), headers)
         observed = _decode_page(raw, f"reconciliation {endpoint['name']} page {number}")
-        if _sha(raw) != _sha(_page_path(owned, str(endpoint["name"]), number).read_bytes()):
-            raise SourceError(f"GitHub response mutated during reconciliation: {endpoint['name']} page {number}")
-        if len(observed) != len(expected) or [canonical_key(x, str(endpoint["name"])) for x in observed] != [canonical_key(x, str(endpoint["name"])) for x in expected]:
-            raise SourceError(f"GitHub pagination identity changed during reconciliation: {endpoint['name']} page {number}")
+        observed_pages.append(observed)
+        if len(observed) < per_page:
+            break
+        number += 1
+        if number > max(len(stored) + 1000, 10000):
+            raise SourceError(f"unbounded reconciliation pagination for {endpoint['name']}")
+    name = str(endpoint["name"])
+    cutoff = str(source["github_cutoff_utc"])
+    original = _admitted([r for p in stored for r in p], name, cutoff)
+    observed = _admitted([r for p in observed_pages for r in p], name, cutoff)
+    if set(original) != set(observed):
+        missing = len(set(original) - set(observed))
+        added = len(set(observed) - set(original))
+        raise SourceError(f"GitHub cutoff-admitted identity set changed during reconciliation: "
+                          f"{name} missing={missing} added={added}")
+    mutations = sum(_sha(_json_bytes(original[k])) != _sha(_json_bytes(observed[k]))
+                    for k in original)
+    return {"stored_pages": len(stored), "observed_pages": len(observed_pages),
+            "admitted_identities": len(original), "mutable_payload_changes": mutations,
+            "observed_objects": sum(map(len, observed_pages)),
+            "observed_sha256": _sha(_json_bytes(observed_pages))}
 
 
 def _acquisition_interval(owned: Path, endpoint_pages: Mapping[str, list[list[dict[str, Any]]]]) -> dict[str, str | None]:
@@ -496,9 +537,11 @@ def acquire_github(root: Path | str = REPO, *, registry_data: Mapping[str, Any] 
     for endpoint in endpoints:
         name = _endpoint_name(endpoint)
         endpoint_pages[name] = _fetch_endpoint(owned, endpoint, source, api_call, now, endpoint_pages[name])
+    reconciliation = {}
     if reconcile:
         for endpoint in endpoints:
-            _reconcile_endpoint(owned, endpoint, source, api_call)
+            reconciliation[_endpoint_name(endpoint)] = _reconcile_endpoint(
+                owned, endpoint, source, api_call)
     counts, cross_endpoint_duplicates = _cutoff_counts(endpoint_pages, str(source["github_cutoff_utc"]))
     manifest = _redact({
         "schema": SOURCE_SCHEMA,
@@ -511,6 +554,7 @@ def acquire_github(root: Path | str = REPO, *, registry_data: Mapping[str, Any] 
         "canonical_unique_after_cutoff": sum(v["canonical_unique_in_endpoint"] for v in counts.values()) - cross_endpoint_duplicates,
         "cross_endpoint_duplicates_after_cutoff": cross_endpoint_duplicates,
         "reconciled_second_pass": bool(reconcile),
+        "reconciliation": reconciliation,
         "consistency_limit": "GitHub bodies may have been edited after cutoff; updated_after_cutoff records this.",
     })
     _atomic_json(owned / "github-manifest.json", manifest)
@@ -574,7 +618,14 @@ def acquire_sources(root: Path | str = REPO, *, registry_data: Mapping[str, Any]
     """Acquire both immutable API evidence and the pinned repository snapshot."""
     git = ensure_git_snapshot(root, registry_data=registry_data, run=git_run)
     github = acquire_github(root, registry_data=registry_data, api_call=api_call, reconcile=reconcile)
-    return {"git": git, "github": github}
+    combined = {"schema": "m18-combined-source-manifest-v1", "complete": True,
+                "git": git, "github": github}
+    combined["sha256"] = _sha(_json_bytes(combined))
+    root = Path(root).resolve()
+    _atomic_json(_owned_root(root) / "source-manifest.json", combined)
+    if root == REPO.resolve():
+        _atomic_json(root / "results" / "m18_source_manifest.json", combined)
+    return combined
 
 
 def main(argv: list[str] | None = None) -> int:

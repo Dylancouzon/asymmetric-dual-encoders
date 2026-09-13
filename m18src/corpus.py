@@ -116,17 +116,25 @@ def parse_repository(checkout, commit, chunk_tokens=384, overlap=48):
                          capture_output=True, check=True).stdout.strip()
     if got != commit:
         raise SystemExit(f"M18 CORPUS REFUSED: checkout is {got}, registry pins {commit}")
+    dirty = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"], cwd=checkout,
+                           text=True, capture_output=True, check=True).stdout.strip()
+    if dirty:
+        raise SystemExit("M18 CORPUS REFUSED: pinned checkout has modified tracked files")
     names = subprocess.run(["git", "ls-tree", "-r", "--name-only", commit], cwd=checkout,
                            text=True, capture_output=True, check=True).stdout.splitlines()
     for rel in sorted(names):
-        path = checkout / rel
+        path = Path(rel)
         suffix = path.suffix.lower()
-        if suffix not in TEXT_EXTENSIONS | SOURCE_EXTENSIONS or not path.is_file():
+        if suffix not in TEXT_EXTENSIONS | SOURCE_EXTENSIONS:
             continue
         try:
-            text = admit_read(path).read_text(errors="replace")
-        except (OSError, UnicodeError):
+            # Read the registered Git object, not mutable worktree bytes.
+            blob = subprocess.run(["git", "show", f"{commit}:{rel}"], cwd=checkout,
+                                  capture_output=True, check=True).stdout
+            text = blob.decode("utf-8", errors="replace")
+        except (OSError, UnicodeError, subprocess.CalledProcessError):
             continue
+        text, _ = redact(text)
         if suffix in TEXT_EXTENSIONS:
             for i, (heading, body) in enumerate(_chunks(text, chunk_tokens, overlap), 1):
                 if len(normalize_space(body)) < 40:
@@ -161,7 +169,18 @@ def _links(text):
     return sorted(set(re.findall(r"https?://[^\s)>\]]+", text or "")))
 
 
-def parse_github(raw_root, cutoff):
+def _discussion_units(base, body, chunk_tokens, overlap):
+    chunks = _chunks(body, chunk_tokens, overlap)
+    for i, (_, part) in enumerate(chunks, 1):
+        row = dict(base)
+        row["doc_id"] = stable_id(base["doc_id"], "chunk", i) if len(chunks) > 1 else base["doc_id"]
+        row["text"] = part
+        row["chunk_index"] = i
+        row["chunk_count"] = len(chunks)
+        yield row
+
+
+def parse_github(raw_root, cutoff, chunk_tokens=384, overlap=48):
     issues = {}
     redactions = Counter()
     quoted = 0
@@ -173,20 +192,24 @@ def parse_github(raw_root, cutoff):
             continue
         issues[key] = row
         number = int(row["number"])
+        title, title_reds = redact(row.get("title") or "")
         body, reds, q = clean_body(row.get("body") or "", str(row.get("user", {}).get("type")) == "Bot")
+        redactions.update(title_reds)
         redactions.update(reds); quoted += q
-        text = (str(row.get("title") or "").strip() + "\n\n" + body).strip()
+        text = (title.strip() + "\n\n" + body).strip()
         if text:
-            yield {"doc_id": stable_id("gh_opening", number),
+            base = {"doc_id": stable_id("gh_opening", number),
                    "kind": "pull_request_opening" if row.get("pull_request") else "issue_opening",
                    "artifact_id": f"gh:thread:{number}", "github_node_id": row.get("node_id"),
                    "github_id": row.get("id"), "github_number": number,
-                   "title": row.get("title") or "", "text": text, "path": None, "symbol": None,
+                   "title": title, "text": text, "path": None, "symbol": None,
                    "source_url": row.get("html_url"), "timestamp": row.get("created_at"),
                    "updated_at": row.get("updated_at"),
                    "author": (row.get("user") or {}).get("login"),
                    "author_association": row.get("author_association"),
+                   "state": row.get("state"), "closed_at": row.get("closed_at"),
                    "outbound_links": _links(text), "labels": [x.get("name") for x in row.get("labels", [])]}
+            yield from _discussion_units(base, text, chunk_tokens, overlap)
     for endpoint, prefix, kind, thread_field in (
         ("issue_comments", "gh_issue_comment", "issue_comment", "issue_url"),
         ("review_comments", "gh_review_comment", "review_comment", "pull_request_url")):
@@ -209,7 +232,7 @@ def parse_github(raw_root, cutoff):
             redactions.update(reds); quoted += q
             if len(normalize_space(body)) < 20:
                 continue
-            yield {"doc_id": stable_id(prefix, row.get("id")), "kind": kind,
+            base = {"doc_id": stable_id(prefix, row.get("id")), "kind": kind,
                    "artifact_id": f"gh:thread:{number}", "github_node_id": row.get("node_id"),
                    "github_id": row.get("id"), "github_number": number,
                    "title": "", "text": body, "path": row.get("path"), "symbol": None,
@@ -218,6 +241,7 @@ def parse_github(raw_root, cutoff):
                    "author": (row.get("user") or {}).get("login"),
                    "author_association": row.get("author_association"),
                    "in_reply_to_id": row.get("in_reply_to_id"), "outbound_links": _links(body)}
+            yield from _discussion_units(base, body, chunk_tokens, overlap)
     parse_github.stats = {"redactions": dict(redactions), "quoted_lines_removed": quoted,
                           "unique_issue_objects": len(issues)}
 
@@ -244,15 +268,41 @@ def _deduplicate(records):
     return kept, dup
 
 
-def build(raw_root=None, out_root=None, registry_data=None):
+def _verify_source(raw, reg):
+    try:
+        from source import _existing_pages
+    except ImportError:  # pragma: no cover
+        from m18src.source import _existing_pages
+    combined_path = raw / "source-manifest.json"
+    if not combined_path.exists():
+        raise SystemExit("M18 CORPUS REFUSED: completed combined source manifest is absent")
+    combined = json.loads(admit_read(combined_path).read_text())
+    if combined.get("complete") is not True or combined.get("git", {}).get("head") != reg["source"]["commit"]:
+        raise SystemExit("M18 CORPUS REFUSED: combined source manifest is incomplete or mismatched")
+    github = combined.get("github", {})
+    if github.get("complete") is not True or github.get("commit") != reg["source"]["commit"]:
+        raise SystemExit("M18 CORPUS REFUSED: GitHub source manifest is incomplete or mismatched")
+    for endpoint in reg["source"]["endpoints"]:
+        name = endpoint["name"]
+        pages = _existing_pages(raw, endpoint, int(reg["source"]["per_page"]),
+                                str(reg["source"]["api_version"]))
+        expected = github.get("endpoints", {}).get(name, {}).get("pages")
+        if expected != len(pages):
+            raise SystemExit(f"M18 CORPUS REFUSED: endpoint {name} receipt count mismatch")
+    return combined
+
+
+def build(raw_root=None, out_root=None, registry_data=None, fixture=False):
     reg = registry_data or registry()
     raw = Path(raw_root or WORK / "source")
     out = Path(out_root or WORK / "derived")
     out.mkdir(parents=True, exist_ok=True)
     c = reg["corpus"]
+    source_manifest = None if fixture else _verify_source(raw, reg)
     rows = list(parse_repository(raw / "repository", reg["source"]["commit"],
                                  c["chunk_tokens"], c["chunk_overlap_tokens"]))
-    rows.extend(parse_github(raw, reg["source"]["github_cutoff_utc"]))
+    rows.extend(parse_github(raw, reg["source"]["github_cutoff_utc"],
+                             c["chunk_tokens"], c["chunk_overlap_tokens"]))
     rows, duplicates = _deduplicate(rows)
     if len(rows) > int(c["document_units_max"]):
         raise SystemExit(f"M18 CORPUS REFUSED: {len(rows)} units exceed cap; registered adjacent "
@@ -272,6 +322,7 @@ def build(raw_root=None, out_root=None, registry_data=None):
                 "redaction": getattr(parse_github, "stats", {}),
                 "corpus_sha256": sha_file(corpus_path),
                 "duplicates_sha256": sha_file(duplicate_path),
+                "source_manifest_sha256": (source_manifest or {}).get("sha256", "fixture"),
                 "versions": {k: reg["versions"][k] for k in (
                     "parser", "redaction", "deduplication", "chunking")}}
     manifest["sha256"] = sha_json(manifest)

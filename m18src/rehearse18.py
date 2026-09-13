@@ -109,10 +109,12 @@ def _write_fixture_source(root):
                            "html_url": f"https://example.invalid/issues/{number}",
                            "user": {"login": "user", "type": "User"},
                            "author_association": "NONE", "labels": []})
+            answered = created.replace("T00:", "T01:")
             comments.append({"id": 2000 + number, "node_id": f"COMMENT{number}",
-                             "body": ("You can use the documented qdrant solution because this "
-                                      "maintainer answer explains the behavior and works for the case."),
-                             "created_at": created, "updated_at": created,
+                             "body": (f"Use the documented qdrant solution {number} because this "
+                                      "maintainer answer explains the behavior, resolves the distinct "
+                                      "case, and works with the registered project configuration."),
+                             "created_at": answered, "updated_at": answered,
                              "issue_url": f"https://api.github.invalid/repos/qdrant/qdrant/issues/{number}",
                              "html_url": f"https://example.invalid/issues/{number}#comment",
                              "user": {"login": "maintainer", "type": "User"},
@@ -143,7 +145,7 @@ def build(root, seed=0, device="cpu", log=print):
     source, commit = _write_fixture_source(root)
     reg = rehearsal_registry(commit)
     derived = root / "derived"
-    cm = corpus.build(source, derived, registry_data=reg)
+    cm = corpus.build(source, derived, registry_data=reg, fixture=True)
     pm = protocol.build(derived / "corpus.jsonl", derived / "protocol", registry_data=reg)
     docs = list(protocol._read_jsonl(derived / "corpus.jsonl"))
     doc_ids = [d["doc_id"] for d in docs]
@@ -224,10 +226,16 @@ def build(root, seed=0, device="cpu", log=print):
     bmrun = bm25.run([q["query_id"] for q in dev], [q["text"] for q in dev], 100)
     ev = evaluate.compare_models({"zero_v1": dense, "trained": dense}, bmrun, qrels, dev,
                                  prefetch=100, replicates=100, seed=seed)
-    receipt = protocol.claim_confirmation({"fixture_bundle": sha_json(meta)}, derived / "protocol")
+    confirmation_identity = {"fixture_bundle": sha_json(meta)}
+    protocol.lock_confirmation(confirmation_identity, derived / "protocol")
+    protocol.run_confirmation(confirmation_identity,
+                              lambda queries, qr: {"queries": len(queries), "qrels": len(qr)},
+                              root / "confirmation-result.json", derived / "protocol")
     refused_twice = False
     try:
-        protocol.claim_confirmation({"fixture_bundle": sha_json(meta)}, derived / "protocol")
+        protocol.run_confirmation(confirmation_identity,
+                                  lambda queries, qr: {"queries": len(queries), "qrels": len(qr)},
+                                  root / "confirmation-result-2.json", derived / "protocol")
     except SystemExit:
         refused_twice = True
     result = {"_schema": "m18-rehearsal-v1", "synthetic": True,
