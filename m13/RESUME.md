@@ -1,3 +1,21 @@
+# Training finished; dose acceptance discrepancy — 2026-09-14
+
+## Final cycle completed — 2026-09-14
+
+Final COV macro 0.528708958; teacher retention 94.9669%, up 0.000711714
+from cycle two. New best macro; BRIGHT declined, other three families improved.
+DEV-6 final macro 0.613048, teacher retention 91.18%; distinct development suite.
+Result `results/m13_cov_cycle3.json`; complete trainer record including DEV-6
+and export parity: `results/m13_build_record.json`. Both verified against the
+final backup manifest before publication. Freeze/export verified; backup verified;
+GPU pod EXITED.
+
+IMPORTANT: supervisor remains FAILED: dose_run_examples is 199,999,721 rather
+than exactly 200,000,000 (279 short), despite finishing all scheduled steps and
+trainer status complete. Do not relabel as accepted, retrain, or change historical
+receipts. Reconcile this discrepancy before advancing. COV is development evidence,
+not proof of final benchmark success.
+
 # Third scheduled midpoint published — 2026-09-14
 
 At 166.7M examples, COV 0.524459 (94.20% teacher retention), up 0.001454
