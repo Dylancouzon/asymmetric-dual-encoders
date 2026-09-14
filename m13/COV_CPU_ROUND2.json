@@ -1,0 +1,22 @@
+{
+  "checkpoint": "work/m13-side-eval/cpu_round2_checkpoint.pt",
+  "checkpoint_sha256": "9ae8c1c5705dddc1c5f0413c7fffc609b4369a9726fceb8daeddcde4b94a6d9a",
+  "checkpoint_step": 4946344,
+  "source_backup": {
+    "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789385200035649458.pt",
+    "sha256": "9ae8c1c5705dddc1c5f0413c7fffc609b4369a9726fceb8daeddcde4b94a6d9a"
+  },
+  "m9_baseline_sha256": "312c9f6c4105bb8470b95536ba70caf9099a616e84362314042efde473a5753e",
+  "scope": "User-requested local CPU COV evaluation of latest backed-up M13 checkpoint versus existing frozen M9 CPU baseline; descriptive only; no new stopping rule.",
+  "caveats": [
+    "COV informed M13 selection; not fresh validation.",
+    "M9 and M13 have different recipes, doses and decontamination histories; no causal claim.",
+    "Current checkpoint is a rolling training checkpoint, not an annealed cycle end."
+  ],
+  "recipe": {
+    "n_layers": 3,
+    "head": "linear",
+    "student_key": "bge-small"
+  },
+  "wall_seconds_cap": 1800
+}

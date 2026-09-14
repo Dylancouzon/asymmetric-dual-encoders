@@ -1,3 +1,11 @@
+# Second CPU comparison published — 2026-09-14
+
+At 158.28M examples, CPU COV 0.524361 (94.19% teacher retention), versus
+prior CPU 0.518099 and M9 0.450986. All four families improved over both CPU
+baselines. Passed in 131.4 seconds; no paid compute or stopping-rule change.
+Result `results/m13_cov_cpu_round2.json`; plan `m13/COV_CPU_ROUND2.json`;
+full comparison and caveats in `m13/QUALITY_PROGRESS.md`. Training continues.
+
 # Cycle 2 quality result published — 2026-09-14
 
 New best COVmacro0.527997, up+0.002472 versuscycle1end.

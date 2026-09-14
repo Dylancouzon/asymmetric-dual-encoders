@@ -117,3 +117,31 @@ Evaluation finished2026-09-14 03:55:02UTC (September13,11:55p.m.Eastern).
 | **Overall** | **0.525525** | **0.527997** | **+0.002472** |
 
 Teacher retention94.84%. New best scheduled macro; three families improved, legal slightly declined. No regression strike. Training entered final cycle3. Raw result `results/m13_cov_cycle2.json`, remote/local SHA256 `5732eceff2ba231c528e1c4f33bd6c0f93ad1cb2ea6c5ebd3e8bdef0b385c182` verified.
+
+## Second CPU comparison — 158.28M examples
+
+User-requested CPU evaluation passed in 131.4 seconds using the latest verified
+off-host backup, pinned separately from rolling-backup pruning. Existing M9 CPU
+baseline reused; no paid GPU work or active-training changes.
+
+| Family | M9 CPU | M13 CPU 79.54M | M13 CPU 158.28M |
+|---|---:|---:|---:|
+| BRIGHT | 0.160192 | 0.178182 | 0.186505 |
+| consumer-health | 0.606373 | 0.711345 | 0.715619 |
+| finance | 0.246139 | 0.327286 | 0.335492 |
+| legal | 0.791242 | 0.855581 | 0.859829 |
+| **Overall** | **0.450986** | **0.518099** | **0.524361** |
+
+Teacher retention 94.19%; gain versus prior CPU check
++0.006263; versus M9 +0.073375. All four families improved versus both CPU baselines.
+
+This is below the cycle-two CUDA end score 0.527997 by 0.003636. Different
+learning-rate phase and CPU/CUDA execution prevent treating that as a controlled
+regression comparison. CPU snapshots also differ in cycle position. No stopping
+rule changed. COV is selection-informed, not fresh validation; M9/M13 recipe and
+dose differences prevent causal attribution.
+
+Result: `results/m13_cov_cpu_round2.json`. Plan: `m13/COV_CPU_ROUND2.json`.
+Uses unchanged `scripts/m13_current_cov_cpu.py`, importing the module and setting
+`PLAN` and `OUTPUT` to those paths before calling `main()`, under `timeout 1800`
+with `.venv/bin/python`. Checkpoint: `work/m13-side-eval/cpu_round2_checkpoint.pt`.
