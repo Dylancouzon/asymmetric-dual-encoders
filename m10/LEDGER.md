@@ -25,3 +25,5 @@ line references refer to that copy. Earlier git commits remain the provenance au
 
 The 2026-09-10 recipe/judging split remains recorded. It did not remove the pre-build LoTTE veto
 or permit M9 close-out while an M10-derived recipe decision remains open. M13 owns enforcement.
+
+- 2026-09-14T23:48:04.125687+00:00 — **FINAL-RUN-BEGIN** freeze `3e49e0bfaa63` pid 330139 host `Str0keWtf`
