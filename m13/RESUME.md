@@ -1,3 +1,11 @@
+# Third scheduled midpoint published — 2026-09-14
+
+At 166.7M examples, COV 0.524459 (94.20% teacher retention), up 0.001454
+versus the 100M midpoint. New best midpoint; no regression strike.
+Result `results/m13_cov_mid5208332.json` hash-verified from remote;
+family comparison in `m13/QUALITY_PROGRESS.md`. Training continues toward
+200M final evaluation. Historical handoffs follow.
+
 # Second CPU comparison published — 2026-09-14
 
 At 158.28M examples, CPU COV 0.524361 (94.19% teacher retention), versus

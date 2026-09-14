@@ -145,3 +145,22 @@ Result: `results/m13_cov_cpu_round2.json`. Plan: `m13/COV_CPU_ROUND2.json`.
 Uses unchanged `scripts/m13_current_cov_cpu.py`, importing the module and setting
 `PLAN` and `OUTPUT` to those paths before calling `main()`, under `timeout 1800`
 with `.venv/bin/python`. Checkpoint: `work/m13-side-eval/cpu_round2_checkpoint.pt`.
+
+## Third scheduled midpoint — approximately 166.7M examples
+
+| Family | 100M midpoint | 166.7M midpoint | Change |
+|---|---:|---:|---:|
+| BRIGHT | 0.186623 | 0.185338 | -0.001285 |
+| consumer-health | 0.718283 | 0.719851 | +0.001568 |
+| finance | 0.331493 | 0.336687 | +0.005194 |
+| legal | 0.855619 | 0.855959 | +0.000340 |
+| **Overall** | **0.523005** | **0.524459** | **+0.001454** |
+
+Teacher retention 94.20%. New best scheduled midpoint; no regression strike.
+Three families improved versus the previous midpoint; BRIGHT declined slightly.
+Below cycle-two end 0.527997, but that is a different learning-rate phase.
+COV remains selection-informed development evidence. Final cycle continues;
+next scheduled COV is at 200M examples.
+
+Raw result: `results/m13_cov_mid5208332.json`. Remote/local SHA256 verified:
+`5c9618f2782e83ceccf1e44d53f574b6d902ab7531e484b441a298787a50054a`.
