@@ -1,3 +1,12 @@
+# Cycle 2 quality result published — 2026-09-14
+
+New best COVmacro0.527997, up+0.002472 versuscycle1end.
+Teacherretention94.84%; no regression strike. Result
+results/m13_cov_cycle2.json; summarym13/QUALITY_PROGRESS.md. Evaluationfinished
+2026-09-14 03:55:02UTC. Finalcycle3 nowactive underPID50427. Lateststep4,183,420
+(~133.87Mexamples,66.9%),984ex/s;37verifiedbackups,latesttwo retained,monitoractive,
+noerrors. Nextscheduledmidpoint~166.7Mexamples. Historical handoffs follow.
+
 # Second scheduled midpoint quality published — 2026-09-13
 
 COV at100M examples: 0.523005, up+0.003147 versus the first

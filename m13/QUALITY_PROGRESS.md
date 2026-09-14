@@ -103,3 +103,17 @@ under `work/m13-side-eval/current_cpu_checkpoint.pt`, separate from rolling-back
 Teacher retention93.94%. Same-phase midpoint improved; no regression strike. Versus the previous annealed cycle end, change-0.002521; different learning-rate phases. Training continues.
 
 Raw result: `results/m13_cov_mid3124999.json`. Remote/local SHA256 `549ad9206c8eb782feca82993a7692b8eb2e9bb2d1fa9fd5c15083fc7faf478d` verified.
+
+## Cycle 2 complete — approximately133.3M examples
+
+Evaluation finished2026-09-14 03:55:02UTC (September13,11:55p.m.Eastern).
+
+| Family | Cycle 1 end | Cycle 2 end | Change |
+|---|---:|---:|---:|
+| BRIGHT | 0.187885 | 0.192275 | +0.004389 |
+| consumer-health | 0.717428 | 0.720571 | +0.003143 |
+| finance | 0.335703 | 0.338302 | +0.002599 |
+| legal | 0.861085 | 0.860841 | -0.000244 |
+| **Overall** | **0.525525** | **0.527997** | **+0.002472** |
+
+Teacher retention94.84%. New best scheduled macro; three families improved, legal slightly declined. No regression strike. Training entered final cycle3. Raw result `results/m13_cov_cycle2.json`, remote/local SHA256 `5732eceff2ba231c528e1c4f33bd6c0f93ad1cb2ea6c5ebd3e8bdef0b385c182` verified.
