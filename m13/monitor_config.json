@@ -180,6 +180,15 @@
         "logs/m13-build-preflight-retry.log"
       ],
       "stale_seconds": 1800
+    },
+    {
+      "name": "final nano six-set CPU evaluation",
+      "receipt": "work/m13-final/execution.json",
+      "pid_file": "work/m13-final/execution.pid",
+      "logs": [
+        "logs/m13-final-six.log"
+      ],
+      "stale_seconds": 900
     }
   ]
 }

@@ -1,0 +1,35 @@
+{
+  "status": "RECONCILED_FOR_EVALUATION",
+  "created_at": "2026-09-14T23:46:58.187020+00:00",
+  "planned_examples": 200000000,
+  "actual_examples": 199999721,
+  "steps_run": 6250000,
+  "shortfall": 279,
+  "shortfall_percent": 0.0001395,
+  "document_rows": 6070049,
+  "document_batches_per_epoch": 189690,
+  "tail_size": 1,
+  "tail_visits": 9,
+  "examples_missing_per_tail": 31,
+  "tail_epoch_positions": [
+    30957,
+    44163,
+    39071,
+    155554,
+    108570,
+    179601,
+    35465,
+    109183,
+    16706
+  ],
+  "checkpoint_sha256": "3e49e0bfaa633abe276da7847d0ac44cbfb3d7d5215b9343f255706eeb5789a1",
+  "historical_supervisor_status": "FAILED",
+  "historical_supervisor_sha256": "f6f59590916537b159790e7244f8770b1d3148d7a3308c6683c316712c945ac3",
+  "decision": "Evaluate this unchanged final-cycle candidate with actual dose disclosed; no claim of exact 200M compliance, no additional updates, no retrospective lock or receipt changes.",
+  "authorization": "User instructed next steps after explicit disclosure of 279-example shortfall and failure. R6 already authorizes ratification at reviewed executor/freeze pin.",
+  "independent_reviews": [
+    "dose_review: exact metadata-only replay reconciles279; evaluate with deviation disclosed",
+    "next_gate_review: fixed candidate eligible after freeze, R6 pin, cache wiring and clean preflight"
+  ],
+  "rehearsal": "Production score13 synthetic six-dataset transaction and conditional reserved fixture passed; logs/m13-final-rehearsal-absolute.log. Initial relative-root fixture attempt failed before any scoring; corrected to absolute fresh fixture root."
+}

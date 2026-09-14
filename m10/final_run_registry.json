@@ -2,7 +2,7 @@
  "_note": "M10.4 decision constants. Lives OUTSIDE `m10/screen_registry.json` for the same reason M9's did: the screen registry is pinned by every contrast record and the F verdict, so editing it invalidates them. Same authority \u2014 the executor reads THIS file, never prose, never the screen defaults.",
  "classification": "preregistration",
  "_classification_note": "NOT an amendment, unlike M9's, which was written after its build. Every field here is fixed BEFORE any M10 six-set number exists and before the build has run. The design it encodes is itself registered upstream in `instructions-m10.md` \u00a7Final run and \u00a7Goal (amendment A3, 2026-09-04), which is where the four conjuncts and their sequence were fixed.",
- "ratified_by_owner": false,
+ "ratified_by_owner": true,
  "spec": "m10/M102_LOCK.md; design registered in instructions-m10.md \u00a7Final run",
  "status": "DRAFT until the M10.2 lock commit. `m10src/final10.py` is WRITTEN and unit-tested; the SCORING path (encode the six, bridge, score) is not. Test counts are deliberately NOT stated here \u2014 they went stale twice in one day (Codex, 2026-09-10). Run the suite.",
  "partitions": {

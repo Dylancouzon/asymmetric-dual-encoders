@@ -1,3 +1,14 @@
+# Final benchmark prepared — 2026-09-14
+
+Exact metadata-only replay explains279shortfall; evaluate unchanged candidate
+with deviation disclosed, preserving failed exact-dose receipt. See
+m13/FINAL_EXECUTION.md and results/m13_dose_reconciliation.json.
+Production synthetic rehearsal and49executor tests passed. CPU launcher
+scripts/m13_final_cpu.py writes work/m13-final/execution.json, log
+logs/m13-final-six.log; monitor configured. R6ratification and freeze pinned.
+Check execution receipt before launching: no automatic post-tag retry.
+Conditional reserved implementation and M9close-out still owed.
+
 # Training finished; dose acceptance discrepancy — 2026-09-14
 
 ## Final cycle completed — 2026-09-14
