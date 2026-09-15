@@ -33,11 +33,16 @@ length-stratified fixtures including the 511/512/513 boundary:
 | A — cast the mask to the input dtype (fp32 accumulation) | 1.0 | 1.1548399925231934e-07 |
 | B — keep float64 accumulation, cast the returned array | 0.9999999403953552 | 1.0058283805847168e-07 |
 
-Both pass every registered threshold; they differ by one float32 ULP. **Variant B was selected**:
-it is the smaller compatibility change for the 16 affected models, preserves their existing
-summation precision, and concedes the strongest objection a maintainer can raise — that float64
-accumulation over 512 tokens may be deliberate. A regression test asserts the returned dtype and
-fails against the unfixed implementation.
+Both passed every registered threshold, differing by one float32 ULP, and B was selected. Review
+then showed that **both were wrong for float16**: either way the narrowing happened before
+`normalize()`, and a fully attended 1024-d float16 vector of 10.0 squares to 102400, past
+float16's 65504 maximum, so the norm became `inf` and every component returned exactly 0.
+
+The shipped fix therefore narrows at the **post-processing boundary**, after `normalize()`, and
+leaves `mean_pooling` byte-identical to upstream. Final M14 parity is tighter than either variant:
+minimum true cosine **1.0** across Torch, direct ORT and FastEmbed, maximum absolute error
+1.1548399925231934e-07. Tests cover float32, float16 and float64 through both pooled families plus
+the overflow case directly.
 
 M14's card text documenting the float64 promotion and instructing a manual `.astype(np.float32)`
 was correct when written and is now obsolete; it has been removed rather than reworded.
@@ -73,7 +78,15 @@ build numbers, and Zero cost/size figures mixed across incompatible protocols.
   both query encoders ranking correctly against one Qdrant collection.
 - README quickstart executed end to end; Nano and Zero both queried the same Stella index.
 - Zero and document-tower publish-card gates passed after `REPO_ID` substitution.
-- FastEmbed focused changed-code tests passed. Full upstream suite results: see below.
+- FastEmbed download-free suites: **23 passed** (`test_common`, `test_preprocessor_utils`,
+  `test_custom_models`, `test_attention_embeddings`), including the new dtype coverage.
+- Pre-fix versus post-fix on two affected upstream models (`all-MiniLM-L6-v2`,
+  `paraphrase-multilingual-MiniLM-L12-v2`): dtype float64 to float32, maximum absolute difference
+  **2.384e-08**, norms unchanged. The behaviour change is dtype only.
+- The full upstream suite was **not run to completion**. It re-downloads roughly 10 GB of unrelated
+  model artifacts into a tmpfs and drove the box into memory pressure; the targeted checks above
+  cover the changed code. A complete green suite on a machine with room remains M20's to record
+  before the upstream PR.
 
 ## Review
 
