@@ -10,7 +10,7 @@ One document index, built once with a good 400M-parameter model. Two cheap ways 
 | Zero + BM25, Qdrant DBSF@100 | **0.4887 / 0.4912** | all-six / clean-4 nDCG@10. The deployed recommendation; no fitted fusion weight. |
 | Nano, exact search | **0.363080 / 0.217710 / 0.721097 / 0.787116** | NFCorpus / SCIDOCS / SciFact / TREC-COVID, the clean four. ArguAna† 0.623296; FiQA† 0.477765. |
 | Nano, registered contrasts | **+0.017648** | vs bge-small on clean-4; +0.027449 all-six and +0.016181 vs LEAF all-six also established. Clean-4 vs LEAF was −0.001063, superiority unestablished with no equivalence claim. |
-| Nano, public state | **Published** | Built, evaluated and released as a research preview at revision `6bb167dc6f60d3992602235b8e8aaa374a309168`. |
+| Nano, public state | **Published** | Built, evaluated and released as a research preview. The weights are frozen at revision `6bb167dc6f60d3992602235b8e8aaa374a309168`; the card has been revised since. |
 | Zero's short-query gap | **v1 retained** | M17 closed with no eligible arm; M18 shipped the system but not an improved encoder; M19 is planned, not executed. |
 
 † Stella discloses training/evaluation contact with ArguAna and FiQA. Comparator absolutes are not published; the evidence contains frozen per-query vectors and registered deltas, not aggregate rows.

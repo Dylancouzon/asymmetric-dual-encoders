@@ -1,8 +1,8 @@
 # Project roadmap
 
 Reset 2026-09-10 on Dylan's request and extended by later owner-directed work. This changes scope
-and navigation, not results, registered constants or access rules. M19 is the current planning
-successor; it is not authorized to execute until a new session follows `instructions-m19.md`.
+and navigation, not results, registered constants or access rules. **M20 is the next execution milestone**; it is not authorized to execute until a new session
+follows `instructions-m20.md`. M19 remains a reviewed plan awaiting its own execution session.
 
 | Milestone | Deliverable | State / entry point |
 |---|---|---|

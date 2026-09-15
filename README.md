@@ -9,7 +9,7 @@ bge-small by **+0.017648 nDCG@10** (one-sided 2.5% lower bound +0.003674).
 |---|---|---|
 | [`stella-en-400M-v5-doc-onnx`](https://huggingface.co/DylanCouzon/stella-en-400M-v5-doc-onnx) | frozen 1024-d document tower | shipped in M11 |
 | [`constella-zero`](https://huggingface.co/DylanCouzon/constella-zero) | int8 query lookup table, no transformer | shipped in M11 |
-| [`constella-nano`](https://huggingface.co/DylanCouzon/constella-nano) | 34,540,672-parameter query transformer | [research preview `6bb167dc`](https://huggingface.co/DylanCouzon/constella-nano/tree/6bb167dc6f60d3992602235b8e8aaa374a309168) |
+| [`constella-nano`](https://huggingface.co/DylanCouzon/constella-nano) | 34,540,672-parameter query transformer | research preview; weights frozen at [`6bb167dc`](https://huggingface.co/DylanCouzon/constella-nano/tree/6bb167dc6f60d3992602235b8e8aaa374a309168) |
 
 For the story, read [`research/constella-in-plain-english.md`](research/constella-in-plain-english.md).
 Canonical, source-traced numbers are in [`m21/BENCHMARKS.md`](m21/BENCHMARKS.md).

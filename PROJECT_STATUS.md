@@ -12,7 +12,7 @@ work and upstream FastEmbed PR. Current plan: `ROADMAP.md`; canonical numbers: `
 | Zero | Frozen and published in M11. Dense all-six nDCG@10 0.4339; M7 established it below LightRetriever's 0.4583 bar by −0.0243 |
 | Fusion | Deployed recommendation is Qdrant DBSF@100: 0.4887 all-six / 0.4912 clean-4. The separate M7 convex0 result is 0.4911 / 0.4866; no superiority or equivalence comparison was established |
 | First Nano (M9) | Frozen and not released. M13 completed its six-set close-out; the observed dataset dependence does not isolate coverage from capacity |
-| Nano (M13/M14) | Built from exactly 199,999,721 training examples, evaluated and published at `DylanCouzon/constella-nano` revision `6bb167dc6f60d3992602235b8e8aaa374a309168` |
+| Nano (M13/M14) | Built from exactly 199,999,721 training examples, evaluated and published at `DylanCouzon/constella-nano`. Weights are frozen at revision `6bb167dc6f60d3992602235b8e8aaa374a309168`; the card has been updated since and the model page carries the current one |
 | Nano result | Established over bge-small by +0.017648 clean-4 and +0.027449 all-six; established over LEAF by +0.016181 all-six. Clean-4 vs LEAF was −0.001063, superiority unestablished with no equivalence claim |
 | Zero v1.1 (M17) | Closed 2026-09-12, negative result: no screen arm met eligibility; released Zero v1 remains shipped |
 | Project memory (M18) | Closed 2026-09-13 as `SYSTEM_READY` + `ENCODER_NO_IMPROVEMENT`; the system is usable with released Zero v1 |

@@ -128,7 +128,10 @@ schedule was 200,000,000, but the executed dose recorded by both `dose_run_examp
 
 ## Discrepancies
 
-These items must be fixed or carried explicitly; this file does not silently choose a winner.
+This audit was taken against the public text **as it stood before M21's edits**. Items 3-11 were
+fixed in commits `d1b4063`..`124155d` and are marked RESOLVED below; they are retained as the
+record of what was wrong and how it was corrected, not as open defects. Items 1 and 12 are carried
+limitations. Dispositions: `m21/STATUS.md`.
 
 1. **The required absolute bge-small and LEAF dataset rows are absent from the allowlist.**
    `results/m10_final_run.json` contains Nano-minus-comparator deltas and identifies the frozen
@@ -145,35 +148,35 @@ These items must be fixed or carried explicitly; this file does not silently cho
    row exactly. The same values are published in `m13/STATUS.md` and `m14/MODEL_CARD.md`. The
    aggregate is the registered statistic over committed rows, not a re-derivation.
 
-3. **Two different fused results are currently both called “fused.”** README and the plain-English
+3. **RESOLVED — two different fused results were both called “fused.”** Every public fusion number now names convex0 or DBSF with its prefetch depth. README and the plain-English
    page lead with `0.4911`, the M7 convex0 all-six macro, while the deployed Qdrant recommendation
    is DBSF at `0.4887`. Their clean-4 macros also differ: convex0 `0.4866`, DBSF `0.4912`.
    These are different operators and prefetch depths, not replicate disagreement. Public text
    must name the operator whenever it gives a fusion number. Sources: `README.md`,
    `research/constella-in-plain-english.md`, `m11/release/MODEL_CARD.md`, and `m12/FINDINGS.md`.
 
-4. **The plain-English page calls unresolved results ties.** It calls M7 C3 (`+0.0043`, interval
+4. **RESOLVED — unresolved results were called ties.** The page now says superiority is unresolved and claims no equivalence. It calls M7 C3 (`+0.0043`, interval
    `[-0.0063, +0.0151]`) a “statistical tie” and calls the DBSF/convex observations a tie despite
    saying no confidence interval was computed for the latter. Those statements do not establish
    equivalence. Canonical wording is **UNESTABLISHED superiority; no equivalence claim**. Sources:
    `research/constella-in-plain-english.md`, `m7/STATUS.md`, `m12/FINDINGS.md`, and
    `instructions-m15.md`.
 
-5. **The plain-English page reports a planned 200M dose as if executed.** It says the build
+5. **RESOLVED — the planned 200M dose was presented as executed.** Plan and execution are now distinct, with 199,999,721 as the executed figure. It says the build
    controller pins exactly `200,000,000`, labels the build `200M`, and defines the glossary dose as
    exactly `200M`. The committed build record instead reports exactly `199999721` executed
    examples, rendered publicly as `199,999,721`. The plan and execution must remain distinct.
    Sources: `research/constella-in-plain-english.md`, `results/m13_build_record.json`,
    `m13/STATUS.md`, and `m14/MODEL_CARD.md`.
 
-6. **The plain-English page contains stale in-progress Nano numbers.** Its opening table says the
+6. **RESOLVED — stale in-progress Nano numbers.** The build narrative is past tense with the registered results. Its opening table says the
    real build is “Running,” with roughly `24` hours remaining, about `$100` spent, and `94%` of the
    teacher so far; later it says M13 has `170` tests green and Nano’s six-set access is unspent.
    M13 is now closed, `m13/STATUS.md` reports `267` M13 tests passed, and the six-set run is
    complete. These operational numbers are stale snapshots, not benchmark evidence. Sources:
    `research/constella-in-plain-english.md` and `m13/STATUS.md`.
 
-7. **Zero has two cost tables from different protocols.** The Zero card reports `0.38 ms`
+7. **RESOLVED — two Zero cost protocols were mixed.** Public text uses the common three-model protocol and names it. The Zero card reports `0.38 ms`
    end-to-end on one CPU core and `0.22 s` hydration, while the later common serving protocol
    reports `0.1119 ms` warm p50 on four threads and `0.2618 s` hydration. README also abbreviates
    the query time as about `0.1 ms`. These values are not interchangeable; only the common
@@ -181,7 +184,7 @@ These items must be fixed or carried explicitly; this file does not silently cho
    `m11/release/MODEL_CARD.md`, `README.md`, `results/m13_serving_costs.json`, and
    `m14/HANDOFF.md`.
 
-8. **Zero asset sizes use different definitions and units.** README describes the release as
+8. **RESOLVED — Zero asset sizes used different definitions.** Each figure now states what it measures. README describes the release as
    `94 MB`; the Zero card calls the int8 query asset `31.8 MB`; the common serving table reports
    `90.1 MiB` of measured assets. The card’s file table shows that `model.npz` is the roughly
    `94 MB` artifact while the int8 ONNX path is roughly `31 MB`; the serving JSON measures the
@@ -189,19 +192,21 @@ These items must be fixed or carried explicitly; this file does not silently cho
    labels. Sources: `README.md`, `m11/release/MODEL_CARD.md`, and
    `results/m13_serving_costs.json`.
 
-9. **The plain-English architecture sentence says bge-small is a `6`-layer encoder while also
+9. **RESOLVED — the architecture sentence was internally inconsistent.** Corrected in the plain-English page. Original finding:
+   The sentence said bge-small is a `6`-layer encoder while also
    naming feature layers `12`, `8`, and `4`.** The committed build record reports the exported
    feature-layer list `[12, 8, 4]` and total parameters `34540672`; it does not support the
    `6`-layer description. Source: `research/constella-in-plain-english.md` and
    `results/m13_build_record.json`.
 
-10. **The old Zero per-dataset rows and comparators are displayed in a card rather than in an
+10. **RESOLVED — Zero's rows are cited to their committed source.** Original finding:
+    They were displayed in a card rather than in an
     allowlisted result JSON.** `m11/release/MODEL_CARD.md` gives the Zero, BM25, Stella, and convex
     fusion rows, and `m7/STATUS.md` explicitly identifies `results/m7_final_run.json` as their
     result of record. That JSON was not in this task’s read allowlist. The rows are therefore
     traceable to a named committed result, but were not independently re-read here.
 
-11. **Nano vector-storage figures changed with the discovered float64 serving behavior.**
+11. **RESOLVED — Nano vector-storage figures assumed float64 serving.** FastEmbed now returns fp32 natively, so a 1024-d query vector is 4,096 bytes and the float64 arithmetic is removed from the cards.
     `m14/HANDOFF.md` says Nano emits fp32 and gives `4.096 GB` per million vectors. The later Nano
     card says native FastEmbed output is float64: `8,192` bytes per query and `8.192 GB` per
     million, reduced to `4,096` bytes and `4.096 GB` only after an explicit fp32 cast. The serving

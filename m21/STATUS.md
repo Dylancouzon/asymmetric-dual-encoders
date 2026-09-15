@@ -88,6 +88,20 @@ build numbers, and Zero cost/size figures mixed across incompatible protocols.
   cover the changed code. A complete green suite on a machine with room remains M20's to record
   before the upstream PR.
 
+## Closing review
+
+Sol reviewed the whole milestone at `124155d`: **DO-NOT-CLOSE**, no P0, three P1 and one P2, all
+documentation bookkeeping created by things that changed after the documents were written. It
+confirmed the substantive claim limits are intact and found no protected access, new measurement,
+renumbering, or M15/M20 work in the M21 changes. All four are fixed:
+
+| finding | fix |
+|---|---|
+| P1 — `m21/FASTEMBED.md` still recommended the superseded float16-breaking fix, called the branch unpushed at four commits, and read as conflicting with M20's registered single-PR clause | Marked the variant decision superseded with the shipped post-normalize fix beside it; updated to the pushed five-commit state; stated the dtype PR must be `a4452ac` **plus** `47a5090`, never the former alone; recorded that the registrations-only PR satisfies clause 6 and that the two bug-fix PRs are an owner-directed addition for M20's mandate to record |
+| P1 — README, PROJECT_STATUS and the plain-English page called `6bb167dc` "the published revision" without distinguishing weights from card | All three now label `6bb167dc` as the frozen **weights** revision and note the card has been revised since |
+| P1 — `m21/BENCHMARKS.md` still described fixed items in the present tense | Items 3-11 marked RESOLVED with their dispositions; the section states it audits the pre-M21 text and is retained as the record. Items 1 and 12 remain carried limitations |
+| P2 — `ROADMAP.md` preamble still called M19 the current successor | Names M20 as the next execution milestone; M19 is a reviewed plan awaiting its own session |
+
 ## Publication
 
 The three cards were published 2026-09-15 as card-only commits: `README.md` was the single file
