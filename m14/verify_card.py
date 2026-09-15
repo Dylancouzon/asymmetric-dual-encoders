@@ -18,8 +18,8 @@ NANO = REPO / "work/m14-preview/staging"
 ZERO = REPO / "work/release/zero-v1"
 DOC = REPO / "work/release/stella-doc-onnx"
 FASTEMBED_CHECKOUT = REPO / "work/m14-preview/fastembed"
-FASTEMBED_BRANCH = "m14-constella-preview"
-FASTEMBED_COMMIT = "eef5595043d62dd3bdd5f6a3be56944fbdd615db"
+FASTEMBED_BRANCH = "constella-research-preview"
+FASTEMBED_COMMIT = "eea7705df9d26ff497fe2e9f2d6e955395896c7b"
 NANO_NAME = "DylanCouzon/constella-nano"
 ZERO_NAME = "DylanCouzon/constella-zero"
 DOC_NAME = "DylanCouzon/stella-en-400M-v5-doc-onnx"
@@ -60,7 +60,7 @@ def main() -> None:
     assert 'DOC_NAME = "DylanCouzon/stella-en-400M-v5-doc-onnx"' in card
     assert "REPO_ID" not in card
     assert "add_custom_model(" not in card
-    assert "Dylancouzon/fastembed@m14-constella-preview" in card
+    assert "Dylancouzon/fastembed.git@constella-research-preview" in card
 
     for directory in (NANO, ZERO, DOC, FASTEMBED_CHECKOUT):
         if not directory.is_dir():
@@ -129,7 +129,6 @@ def main() -> None:
     query_model = namespace["query_model"]
     zero_model = namespace["zero_model"]
     doc_model = namespace["doc_model"]
-    q_native = namespace["q_native"]
     q = namespace["q"]
     documents = namespace["D"]
     docs = namespace["docs"]
@@ -141,12 +140,12 @@ def main() -> None:
     assert type(query_model.model).__name__ == "PooledNormalizedEmbedding"
     assert type(zero_model.model).__name__ == "OnnxTextEmbedding"
     assert type(doc_model.model).__name__ == "OnnxTextEmbedding"
-    assert q_native.shape == q.shape == (1024,) and documents.shape == (2, 1024)
-    assert q_native.dtype == np.dtype(np.float64)
-    assert q_native.nbytes == 8192
+    assert q.shape == (1024,) and documents.shape == (2, 1024)
+    # M21: FastEmbed's mean_pooling no longer promotes the pooled vector to float64,
+    # so the card's example needs no manual cast and the query is 4,096 bytes natively.
     assert q.dtype == np.dtype(np.float32)
     assert q.nbytes == 4096
-    assert np.isfinite(q_native).all() and np.isfinite(q).all() and np.isfinite(documents).all()
+    assert np.isfinite(q).all() and np.isfinite(documents).all()
     assert namespace["qdrant_url"] is None
     assert namespace["client"]._client.__class__.__name__ == "QdrantLocal"
     assert hits[0].payload["text"] == docs[0]
@@ -187,10 +186,6 @@ def main() -> None:
         },
         "outputs": {
             "native_query": {
-                "dtype": q_native.dtype.name,
-                "per_vector_bytes": int(q_native.nbytes),
-            },
-            "cast_query": {
                 "dtype": q.dtype.name,
                 "per_vector_bytes": int(q.nbytes),
             },

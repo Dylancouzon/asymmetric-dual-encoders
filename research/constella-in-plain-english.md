@@ -1,16 +1,19 @@
 # Constella in Plain English
 
-*Asymmetric dual encoders, the research record from 24 August to 13 September 2026, written for a reader who knows the domain but did not watch the work. The interactive version of this page is a Claude artifact; this file is the GitHub-renderable twin. Numbers are copied from the result JSONs and the milestone findings files, which remain authoritative.*
+*Asymmetric dual encoders, the research record from 24 August to 15 September 2026, written for a reader who knows the domain but did not watch the work. The interactive version of this page is a Claude artifact; this file is the GitHub-renderable twin. Numbers are copied from the result JSONs and the milestone findings files, which remain authoritative.*
 
-One document index, built once with a good 400M-parameter model. Two cheap ways to ask it questions: a lookup table that costs almost nothing per query, and a 35M-parameter transformer that costs about what a small embedding model costs. This page explains what we tested, what came out, what we are building next and why the process looks the way it does.
+One document index, built once with a good 400M-parameter model. Two cheap ways to ask it questions: a lookup table that costs almost nothing per query, and a 35M-parameter transformer that costs about what a small embedding model costs. The family is public, with Nano labelled as a research preview. This page explains what we tested, what came out and why the process looks the way it does.
 
 | Where things stand | | |
 |---|---:|---|
-| Zero, dense only | **0.4339** | avg-6 nDCG@10, 0.024 below LightRetriever's dense table. Reported as measured; published and considered releasable. |
-| Zero fused with BM25 | **0.4911** | Statistically ties the best inference-free sparse system (0.4868), at a table lookup's query cost. |
-| Nano, first attempt | **82.2%** | of the teacher on the screen surface. 93.8% on Wikipedia questions, 50.1% on programming forum questions. Not released. |
-| Nano, real build | **Running** | Cloud build under way: roughly 24 hours remaining, about $100 spent against the $1,000 ceiling, 94% of the teacher so far. Provisional; the held-out reads decide. |
-| Zero's short-query gap | **Unmeasured** | Three attempts at vocabulary specialisation (M17 to M19). None produced a usable quality number. Released zero v1 remains selected. |
+| Zero, dense only | **0.4339** | all-six nDCG@10, 0.0243 below LightRetriever's dense table. Reported as measured and shipped. |
+| Zero + BM25, Qdrant DBSF@100 | **0.4887 / 0.4912** | all-six / clean-4 nDCG@10. The deployed recommendation; no fitted fusion weight. |
+| Nano, exact search | **0.363080 / 0.217710 / 0.721097 / 0.787116** | NFCorpus / SCIDOCS / SciFact / TREC-COVID, the clean four. ArguAna† 0.623296; FiQA† 0.477765. |
+| Nano, registered contrasts | **+0.017648** | vs bge-small on clean-4; +0.027449 all-six and +0.016181 vs LEAF all-six also established. Clean-4 vs LEAF was −0.001063, superiority unestablished with no equivalence claim. |
+| Nano, public state | **Published** | Built, evaluated and released as a research preview at revision `6bb167dc6f60d3992602235b8e8aaa374a309168`. |
+| Zero's short-query gap | **v1 retained** | M17 closed with no eligible arm; M18 shipped the system but not an improved encoder; M19 is planned, not executed. |
+
+† Stella discloses training/evaluation contact with ArguAna and FiQA. Comparator absolutes are not published; the evidence contains frozen per-query vectors and registered deltas, not aggregate rows.
 
 ---
 
@@ -26,14 +29,14 @@ flowchart LR
         S["stella_en_400M_v5<br/>400M params, 1024-d<br/>run once, offline"] --> IDX["One shared index<br/>Qdrant collection, 1024-d<br/>never rebuilt"]
     end
     subgraph q["Query side, swappable"]
-        Z["Zero: token-vector lookup table<br/>no transformer, ~0.02 ms/query<br/>shipped"]
-        N["Nano: 35M transformer<br/>bge-small backbone, distilled<br/>being built"]
+        Z["Zero: token-vector lookup table<br/>no transformer<br/>shipped"]
+        N["Nano: 35M transformer<br/>bge-small backbone, distilled<br/>research preview"]
     end
     Z -- "query vectors, same space" --> IDX
     N -- "query vectors, same space" --> IDX
 ```
 
-**Zero** is the extreme version. Every token in the vocabulary gets one fixed vector, computed once by pushing that token through the teacher. A query is encoded by looking up its tokens and pooling the rows. There is no neural network at query time at all, so the query cost is a few table lookups and an addition. The catch is that a bag of token vectors cannot know word order or context, so it should lose quality. The question was how much.
+**Zero** is the extreme version. Its table was learned by regressing the pooled lookup output onto the teacher's query embeddings; each token ends up with one fixed row. A query is encoded by looking up its tokens and pooling those rows. There is no neural network at query time at all, so the query cost is a few table lookups and an addition. The catch is that a bag of token vectors cannot know word order or context, so it should lose quality. The question was how much.
 
 **Nano** is the moderate version. A small transformer, capped at 35 million parameters, reads the whole query and is trained by regression to reproduce the teacher's query vector. It costs roughly what a small symmetric embedding model like bge-small costs, so it has to earn its place on quality and on the fact that it shares stella's index instead of needing its own.
 
@@ -43,13 +46,13 @@ The whole thing is also a paper. The repository is deliberately kept as an evide
 
 The pattern is worth the trouble wherever the query side runs somewhere the document side cannot, or runs so often that its cost is the bill.
 
-- **Command-line tools and scripts.** Search a large corpus from a CLI without downloading a model or installing torch. Zero's runtime is numpy and a tokenizer, about 31 MB as an int8 graph; the first query answers in milliseconds instead of after a 1.3 second model load.
+- **Command-line tools and scripts.** Search a large corpus from a CLI without installing torch. Under the common four-thread protocol, Zero's measured assets are 90.1 MiB, hydration takes 0.2618 seconds and the first query 0.3529 milliseconds.
 - **Edge and on-device search.** Phones, kiosks, embedded boxes, Qdrant Edge. The query side is a table lookup, so no accelerator, no warm model and no thermal budget. A one-million-document index serves inside a 256 MB container once binary-quantised, at 3.4 ms for zero and 4.5 ms for nano.
 - **Frozen and long-lived collections.** Encode documents once with the strong model and never re-embed. The query side can be swapped or upgraded, from zero to nano to whatever comes next, without touching the index, because every student targets the same space.
 - **Encode at ingest in the cloud, query anywhere.** Documents pass through the 400M model where GPUs live, once, at ingest. Queries are encoded on whatever the client has: a browser, a serverless function with a tight cold start, a laptop on a train.
-- **High-QPS or cost-sensitive query paths.** At tens of thousands of queries per second the query encoder is the cost centre. A lookup costs about 0.02 ms and no GPU; a 33M transformer costs about 5 ms of CPU. Both are orders of magnitude cheaper than running the 400M model per query.
+- **High-QPS or cost-sensitive query paths.** At high volume the query encoder is the cost centre. In the same batch-one, four-thread synthetic protocol, Zero's warm 20-word p50 is 0.1119 ms and Nano's is 7.2511 ms; neither needs a GPU.
 - **Offline and private by construction.** No model server, no network call to embed a query. Search works offline against a synced index, and the query text never has to leave the device to become a vector.
-- **Hybrid out of the box.** Zero fused with BM25 through Qdrant's DBSF ties the best inference-free sparse system while the query side stays a table plus token counts. The lexical channel is part of the recipe, not an add-on.
+- **Hybrid out of the box.** Zero fused with BM25 through Qdrant DBSF@100 is the deployed recommendation while the query side stays a table plus token counts. The lexical channel is part of the recipe, not an add-on.
 - **One index, two speeds.** Because zero and nano share stella's index, a product can route simple queries to the table and harder ones to the small transformer, and move that boundary later without a reindex.
 
 ## Part two: how we measure, and why it is strict
@@ -58,14 +61,14 @@ Retrieval quality is scored with nDCG@10: for each query, how well the top ten r
 
 | Surface | Role |
 |---|---|
-| **The six** (SciFact, NFCorpus, FiQA-2018, ArguAna, SciDocs, TREC-COVID) | Confirmatory. Standard BEIR sets with published numbers for every competitor. Each system gets exactly one scored access, spent only after its recipe is frozen. Zero spent its access in M7. Nano's is unspent. |
+| **The six** (SciFact, NFCorpus, FiQA-2018, ArguAna, SciDocs, TREC-COVID) | Confirmatory. Standard BEIR sets with published numbers for every competitor. Each system gets exactly one scored access, spent only after its recipe is frozen. Zero spent its access in M7; Nano completed its run in M13. |
 | **Clean-4** (NFCorpus, SciDocs, SciFact, TREC-COVID) | The headline. stella discloses ArguAna and FiQA in its own training data, so any student may inherit an advantage there. Fixed before any nano number existed; all six reported beside it. |
-| **Reserved four** (FEVER, DBpedia-entity, CQADupStack android and english) | Descriptive. Never opened during development. Read only if nano clears its first release test, never to decide anything. |
-| **LoTTE-clean** (seven StackExchange forum slices, 14,034 queries) | The one fresh out-of-domain surface. Unread so far. Exactly two reads: one before the expensive build, one audit before the freeze. |
+| **Reserved four** (FEVER, DBpedia-entity, CQADupStack android and english) | Descriptive. Still unspent and pending under M20, alongside BEIR-18. Neither has a result. |
+| **LoTTE-clean** (seven StackExchange forum slices, 14,034 queries) | The fresh out-of-domain build gate, governed by a one-shot transaction and audit. |
 
 Development uses other surfaces. DEV-6 is six components pinned since M7, including two CQADupStack forums and slices of Natural Questions and HotpotQA. COV, the coverage surface built in M10, is four families of consumer-health, scientific, legal and finance questions chosen to look nothing like the training data. Every development read is counted: 494 in-training evaluations by the end of M8, and hundreds more since. The count is published because the alternative, saying we were careful, is not checkable.
 
-Two statistical habits run through everything. Every comparison gets a paired bootstrap confidence interval over queries, so a difference smaller than the noise is called a tie, not a win. And decisions are registered before their data is seen: the rule, the bar, the sequence and the constants are committed to git and dated, then the number is produced. Changing a rule after seeing the number is the one thing the process is built to prevent.
+Two statistical habits run through everything. Every registered comparison gets a paired bootstrap interval over queries; when superiority is not established, the result is unresolved and says nothing about equivalence. And decisions are registered before their data is seen: the rule, the bar, the sequence and the constants are committed to git and dated, then the number is produced. Changing a rule after seeing the number is the one thing the process is built to prevent.
 
 ## Part three: what we did, in order
 
@@ -75,7 +78,7 @@ Before building anything, we measured what already exists. We reproduced LightRe
 
 - Small transformers on the query side scored around 0.50 to 0.53 on the six. Zero-compute systems scored 0.43 to 0.49. Symmetric static models came decisively last at 0.32 to 0.36.
 - A tempting shortcut failed cleanly: fitting a linear map from a static model into a contextual document space, even with test-set-tuned regularisation, scored below the static model used on its own.
-- Costs are not one number. A lookup query costs about 0.02 ms; a 33M transformer about 5 ms on CPU. But the lookup table is hundreds of megabytes while the small model is 66 MB, and a 1024-d index is four times the size of a 384-d one per document.
+- Costs are not one number. Under the later common four-thread protocol, warm p50 was 0.1119 ms for Zero, 6.8400 ms for bge-small and 7.2511 ms for Nano; measured assets were 90.1, 127.6 and 132.3 MiB respectively. A 1024-d index is four times the size of a 384-d one per document.
 
 **What it changed.** The comparison set, the six datasets, the bootstrap habit and the cost framing were fixed here. An external review called the results not decision-grade and listed seven defects; every one was rerun or reworded before anything else started.
 
@@ -105,9 +108,9 @@ We also did the algebra before spending GPU time. Query-side centering, whitenin
 |---|---:|---:|---|
 | Zero int8 table vs LightRetriever dense table 0.4583 | −0.0243 | [−0.0405, −0.0086] | below, resolved |
 | Zero vs BM25 0.4174 | +0.0165 | [+0.0017, +0.0311] | not resolved under multiplicity |
-| Zero fused with BM25 vs OpenSearch 0.4868 | +0.0043 | [−0.0063, +0.0151] | statistical tie |
+| Zero + BM25, convex0, vs OpenSearch 0.4868 | +0.0043 | [−0.0063, +0.0151] | superiority unestablished; no equivalence claim |
 
-The macros: zero dense 0.4339, fused 0.4911, the teacher itself 0.5744. Zero retains 75.5% of its teacher on the six. On the development set it had looked like 91.5%, but the out-of-domain part of the development set had said 76.4%, and that was the honest forecast.
+The macros: zero dense 0.4339, convex0 fusion 0.4911, the teacher itself 0.5744. Zero retains 75.5% of its teacher on the six. On the development set it had looked like 91.5%, but the out-of-domain part of the development set had said 76.4%, and that was the honest forecast.
 
 **What it changed.** Zero's dense-only score sits below LightRetriever's dense table on the six, and we report that as measured. Fused with BM25 it is a genuinely good system, and it is a query encoder with no neural network in it at all, which is the point: it was published in M11 and we now consider it releasable as a product component. The dev-versus-final gap became a standing rule: report an out-of-domain subset next to every macro. Excluding MS MARCO for licence reasons costs about +0.006, not resolved, so the gap is architectural, not a licensing artefact.
 
@@ -132,14 +135,14 @@ Take bge-small's 33M-parameter backbone, put a linear head on it, and train it b
 | cqadup-physics, forum questions | 0.4931 | 0.3501 | 71.0% |
 | cqadup-programmers, forum questions | 0.4681 | 0.2345 | 50.1% |
 
-The macro, 82.2%, hides the finding. Where training queries resemble test queries, nano is inside LEAF's band. Where they do not, it retains half. This is a coverage failure, not a capacity failure. A second cause was found later: the 384-wide linear head was a rank bottleneck under regression.
+The macro, 82.2%, hides the finding. Where training queries resemble test queries, nano is inside LEAF's band. Where they do not, it retains half. The run establishes dataset dependence; it does not isolate coverage from capacity. A later screen also found that widening the 384-wide linear head helped under regression.
 
 - Documents as extra regression text helped more than repeating queries.
 - A closed-form warm start of the head was worth 0.027 over a random head.
 - ONNX export with no custom operators; FastEmbed can serve the model exactly if the linear head is applied per token before pooling.
 - Edge deployment needs binary quantisation: fp16 is a hundred times slower under a 256 MB limit.
 
-**What it changed.** The M9 candidate was frozen and not released. Its six-set access is unspent, held back so its close-out score can calibrate development-to-six for the next model. M10 was told to build around coverage first.
+**What it changed.** The M9 candidate was frozen and not released. Its six-set close-out was completed later in M13; M10 was told to broaden the query forms and test a wider head.
 
 ### M10, 1 to 10 September: preparing nano properly
 
@@ -171,7 +174,7 @@ Rescoped on 10 September to preparation, with execution moved to M13. What M10 d
 
 Two descriptive reads sit beside the screen: a second anchor seed moved the macro by 0.0007, and the generated forms' gain held at 20 million examples (+0.0165). Eighty-two percent of the 5M gain came from the consumer-health family, which is the honest limit of the coverage story so far.
 
-**What it changed.** The recipe is locked: bge-small backbone, the full A4 corpus, a 1152-wide linear head over three layers, 75% queries and 25% documents, squared-error loss, closed-form warm start. Only the batch size remains open, decided by two arms on the same cloud GPU.
+**What it changed.** The recipe was locked: bge-small backbone, the full A4 corpus, a 1152-wide linear head over three layers, 75% queries and 25% documents, squared-error loss, closed-form warm start. At M10's close only the cloud batch decision remained.
 
 ### M11, 3 September: shipping zero
 
@@ -179,25 +182,25 @@ Two descriptive reads sit beside the screen: a second anchor seed moved the macr
 
 ### M12, 4 to 9 September: fusion in Qdrant
 
-Zero's fused number came from a convex combination with a development-fitted weight that Qdrant does not ship. No shipped operator reproduces it at depth 1,000: weighted RRF is 0.013 behind, DBSF 0.015. But at a realistic prefetch of 10 to 50 candidates DBSF is equal or better; the convex operator's advantage exists only at deep prefetch. On the six, DBSF at prefetch 100 scores 0.4887 on all six and 0.4912 on the clean four, against convex's 0.4911 and 0.4866: inside the noise band, a tie, not a win.
+Zero's original fused number came from convex0 with a development-fitted weight, an operator Qdrant does not ship. At prefetch 100, Qdrant DBSF scores 0.4887 on all six and 0.4912 on the clean four; convex0 at prefetch 1,000 scores 0.4911 and 0.4866. No confidence interval compared the two, so the observed difference establishes neither superiority nor equivalence.
 
 **What it changed.** The public recommendation became `Fusion.DBSF` at prefetch 100: it runs in Qdrant and fits zero parameters. Recorded as an owner's product-policy override of the M7 release freeze, on deployability grounds.
 
-### M13, 10 September onward: the cloud run
+### M13, 10 to 15 September: the cloud run
 
-M13 owns everything expensive or irreversible: the batch decision, the LoTTE gate, the 200M build, the final evaluation and the cost frontier.
+M13 completed the batch decision, LoTTE gate, Nano build, final six-set evaluation, M9 close-out and common serving-cost measurement.
 
-- **The build controller** pins the dose at exactly 200,000,000 examples in three cycles, checkpoints every 30 minutes of wall-clock, and freezes with an ONNX export and a FastEmbed parity check. Kill-and-resume tested across a cycle boundary; smoked on the box GPU.
-- **The scoring transaction** for nano's six-set access: authenticated manifest before the access is spent, frozen document caches only, query texts and labels hashed on the exact objects scored, a synthetic end-to-end rehearsal with no protected data.
+- **The build.** The nominal plan was 200,000,000 examples; the frozen checkpoint actually saw exactly **199,999,721** in three cycles. It froze with an ONNX export and FastEmbed parity checks.
+- **The scoring transaction** spent Nano's six-set access after authenticating its manifest, using frozen document caches and hashing the exact query texts and labels scored.
 - **The scope cut**, ruled by Dylan after review: no extension cycles, no post-tag continuation, one more review, the LoTTE gate as a small script. Reliability by rehearsal, not by recovery machinery.
-- **The LoTTE gate** reads the seven cleaned slices once, before the build. If the cloud arms select batch 128 it compares that checkpoint against the batch-32 one on fresh out-of-domain data and can veto in favour of 32. It went through four review rounds in one day, two models alternating: 22 findings, none touching the arithmetic, all about identity and durability, all fixed. It gained an exclusive lock and receipt so a crashed read cannot silently repeat, a committed and pushed checkpoint manifest and per-slice hash pin so a swapped record or altered slice cannot pass, checkpoint bytes hashed and loaded from one buffer, and a build controller that recomputes the veto from the recorded numbers instead of trusting a label. The closing re-check returned GO.
-- **Box-side DEV-6**: the two cloud arms skip 35 GB of development caches; their development read is filled on the box from the identical checkpoint bytes, once, with provenance.
+- **The LoTTE gate** read the seven cleaned slices under its one-shot protocol before the build. Its reviews added an exclusive lock and receipt, a committed checkpoint manifest and per-slice hashes, and a controller that recomputed the decision from the recorded numbers. The closing re-check returned GO.
+- **Box-side DEV-6** filled the cloud arms' development read from identical checkpoint bytes, once, with provenance.
 
-**Where it stands.** Code complete, reviewed to GO and tested, 170 M13 tests plus the older suites all green. The provider and account are Dylan's to set up.
+**What it changed.** Nano established superiority over bge-small on clean-4 and all six, and over LEAF on all six. Its clean-4 superiority over LEAF was unestablished, with no equivalence claim. M13 closed with 267 M13 tests passed; M14 then published the research preview.
 
 ### M17, 11 to 12 September: more vocabulary
 
-Andrey indexed every issue and pull request in `qdrant/qdrant`, searched it with the released zero, and found that queries like `s3` and `k8s` come back matched to version numbers. The teacher gets them right. Three milestones went after that gap and none of them produced a usable number.
+Andrey indexed every issue and pull request in `qdrant/qdrant`, searched it with the released zero, and found that queries like `s3` and `k8s` come back matched to version numbers. The teacher gets them right. M17 tested whether broader vocabulary and training could close that gap.
 
 The cause is structural, not a bug. Zero uses stella's vocabulary, and several load-bearing technical terms are not in it.
 
@@ -223,7 +226,7 @@ M17's answer was breadth: three thousand new whole-word entries across six domai
 
 Every trained variant read below the untrained baseline while the training loss fell throughout. The run was stopped and the cause was never found.
 
-**What it changed.** The close-out records this as an unexplained failure rather than a verdict on the method, because the diagnostic reads that would separate the two were never spent. It also caught a standing error: the 35M parameter cap belongs to nano and never applied to zero, so M17 had constrained its own vocabulary for no reason.
+**What it changed.** M17 closed on 12 September with `no_survivor`: no trained arm met eligibility against v1, so released Zero v1 stayed shipped. The close-out records an unexplained negative result rather than a verdict on the method, because the diagnostic reads that would separate the causes were never spent. It also caught a standing error: the 35M parameter cap belongs to nano and never applied to zero.
 
 ### M18, 12 to 13 September: project memory for one repository
 
@@ -233,46 +236,46 @@ Stop trying to be good everywhere and build the thing Andrey was actually using.
 |---|---:|---:|
 | BM25 | 0.109 | 0.218 |
 | zero v1 | 0.087 | 0.157 |
-| zero v1 fused with BM25 | 0.103 | 0.178 |
+| zero v1 + BM25, DBSF@100 | 0.103 | 0.178 |
 | stella, the ceiling | 0.137 | 0.232 |
-| stella fused, the ceiling | 0.141 | 0.256 |
+| stella + BM25, DBSF@100, the ceiling | 0.141 | 0.256 |
 
 **The ceiling is the finding, not the student.** A 400M model that puts the right answer in its top ten for under a quarter of queries is a statement about the labels. The queries had been built from issue text with the single correct answer defined as the comment that resolved the thread, so the test scored answer matching rather than the artifact lookup a CLI performs. On troubleshooting queries, BM25, dense and fusion all scored exactly 0.000, which is only possible when the labelled target is unreachable by any route.
 
 Against that surface the new table cleared its dense bar and missed its fused one, and was recorded as no improvement. A side experiment that was registered as unable to count is the clearest evidence the project holds: asked for `k8s`, released zero returned `release v0.8.0` and `v0.8.2` in its top three, and the trained table returned the Kubernetes persistence issue at rank two with both releases gone.
 
-**What it changed.** The search system shipped and is usable; the encoder question did not get an answer. Measuring the wrong task is now the first thing to check before reading a student's score, and the report-only probe should have been a decision input rather than an impression.
+**What it changed.** M18 closed on 13 September as `SYSTEM_READY` plus `ENCODER_NO_IMPROVEMENT`: the internal search system is usable, but released Zero v1 remains its encoder. Measuring the wrong task is now the first thing to check before reading a student's score.
 
-### M19, 13 September: solving for the entry instead of training it
+### M19, planned after 13 September: solving for the entry instead of training it
 
-If the teacher's direction for a bare term is known, and zero's pooling rule is exact, the entry can be computed rather than fitted: choose it so that the query `k8s` lands exactly where stella puts `k8s`. Twelve terms, no optimizer, no labelled data and no domain corpus, which removes the largest cost of any future vocabulary work.
+The reviewed M19 plan asks whether a bare term's entry can be computed rather than fitted: if the teacher's direction and Zero's pooling rule are known, choose the row so that `k8s` lands where Stella puts `k8s`. It proposes a deterministic short-query feasibility test without an optimizer or domain training corpus.
 
-Two properties are worth carrying forward. Speed is unchanged against v1, and because the construction only adds entries on top of frozen rows, a query containing none of the twelve terms is bit-for-bit identical to released zero. The blast radius is exactly the terms chosen and nothing else.
+The proposed construction would add rows while leaving inherited entries frozen, making the intended blast radius explicit.
 
-The run then stopped before producing a score. Judging the 1,376 pooled results required a yes or no on each, an independent reviewer could not decide 60 of them from the passage it was shown, and the protocol had no way to record "unsure" and continue. No score, no verdict, released zero v1 retained.
+It has not executed. There is no score or verdict, and released Zero v1 remains selected.
 
-**What it changed.** Three attempts, three different stopping points, and not one of them was a clean reading that the method fails. M17 measured well and could not explain itself, M18 measured the wrong task, M19 never reached a measurement. The blocker is not the model. It is that nobody has a cheap, defensible way to say what a good answer looks like for `s3` over an issue tracker, where a dozen issues are reasonable and only a maintainer can rank them. Automatic labels are cheap and score something adjacent; judged labels score the right thing and are fragile. Vocabulary specialisation is unmeasured rather than disproven, and the next useful milestone is an answer key, not another table.
+**What it would answer.** M17 produced a negative screen and M18 measured a surface that did not resolve the intended short-query question. M19 is the planned bounded test of the remaining deterministic idea; until a new execution session runs it, vocabulary specialisation remains unmeasured rather than disproven.
 
 One caveat for the meantime. Fusion repairs `s3` and `k8s` in this corpus only because maintainers write those literals in issue titles. BM25 cannot link `k8s` to a document that says only Kubernetes, and that link is dense-side work.
 
-## Part four: what we are building now
+## Part four: what we built
 
-Take bge-small, a 6-layer BERT-style encoder with 384-wide hidden states. For each query token, concatenate the hidden states from layers 12, 8 and 4 of the pinned architecture into a 1152-wide feature, apply a linear head to 1024 dimensions per token, average over the query's tokens, and normalise. Total 34,540,672 parameters, under the 35M cap. The head is applied before pooling so FastEmbed can serve the exported graph exactly.
+Nano starts from the pinned bge-small BERT-style encoder with 384-wide hidden states. For each query token, it concatenates the hidden states from layers 12, 8 and 4 into a 1152-wide feature, applies a linear head to 1024 dimensions per token, averages over the query's tokens, and normalises. Total 34,540,672 parameters, under the 35M cap. The head is applied before pooling so FastEmbed can serve the exported graph exactly.
 
-Training is regression: 75% of examples are query texts and 25% are documents, in a repeating pattern of three query windows then one document window; the target for each is stella's vector for that text. Squared error against unit-norm targets, which equals cosine loss up to a constant. Three cycles, learning rate annealed from 1e-4 to 1e-5 in each, AdamW, mixed precision. Two stop rules: a kill if two consecutive evaluations fall more than 0.0056 below the best of their kind, and a plateau if the last cycle gains less than 0.003.
+Training was regression: 75% of examples were query texts and 25% documents, in a repeating pattern of three query windows then one document window; the target for each was Stella's vector for that text. Squared error against unit-norm targets, three cycles, AdamW and mixed precision. The nominal schedule was 200,000,000 examples; execution consumed exactly 199,999,721.
 
 ```mermaid
 flowchart LR
-    A["Day one<br/>measured rate, billed price, budget"] --> B["Two E arms<br/>batch 32 vs 128, 5M each, same GPU"]
-    B --> C["LoTTE gate<br/>read #1, once; may veto to 32"]
-    C --> D["200M build<br/>three cycles, ~37 A100 hours"]
-    D --> E["Freeze<br/>ONNX, parity, LoTTE read #2"]
-    E --> F["The six<br/>one access, four tests"]
+    A["Cloud arms<br/>batch decision"] --> B["LoTTE gate<br/>one-shot protocol"]
+    B --> C["199,999,721 examples<br/>three cycles"]
+    C --> D["Freeze<br/>ONNX and parity"]
+    D --> E["The six<br/>registered sequence complete"]
+    E --> F["M14<br/>research preview published"]
 ```
 
-Stops between stages: the instance is shut down, records are committed and pushed, and each stage's preconditions are checked before the next spends anything. Ceiling $1,000. Illustrative allocation at 1,500 examples/s and $1.50/h: build $56, both E arms $3, encodes and export $9, LoTTE $2, reserved batch $12, disk $25, about $108 total. Rate and price are measured on day one.
+Stops between stages made each irreversible read wait for committed identities and checked preconditions. The reserved four and BEIR-18 were not part of this run: both remain unspent and pending under M20.
 
-The final evaluation is four tests in a fixed order, each a one-sided bootstrap comparison at 2.5% with 10,000 resamples of queries within each dataset, stopping at the first that does not pass. Nano must beat bge-small on the clean four, then on all six (release gate); then LEAF on all six, then on the clean four (aim). A test never reached is reported as not tested. Then the cost frontier: zero, bge-small and nano on the same Apple M5 Pro under one serving protocol.
+The final evaluation used four tests in a fixed order, each a one-sided bootstrap comparison at 2.5% with 10,000 resamples of queries within each dataset. Nano established superiority over bge-small on clean-4 and all six, then over LEAF on all six; clean-4 superiority over LEAF was unestablished. Under the common batch-one, four-thread serving protocol, warm 20-word p50 was 0.1119 ms for Zero, 6.8400 ms for bge-small and 7.2511 ms for Nano.
 
 ## Part five: why so many rules
 
@@ -282,11 +285,11 @@ The final evaluation is four tests in a fixed order, each a one-sided bootstrap 
 - **Frozen comparators.** The competitor vectors cannot be regenerated; overwriting them would destroy the ability to compare.
 - **Licences are part of the recipe.** Every training source must permit commercial derived weights; non-commercial sources may validate but never train.
 - **Reviews are adversarial and counted.** Reviewers are briefed to break things and forbidden from opening protected surfaces. They have caught a rounded confidence bound in the single irreversible decision path, a gate that reported failure but exited successfully, and a release guard that failed open. Two independent reviews precede anything expensive or irreversible.
-- **Prefer cheaper under a tie.** Unresolved keeps the default, and the record says unresolved, not equal.
+- **Prefer cheaper when superiority is unresolved.** The record says unresolved, never equal.
 
-## Part six: what counts as success, and what a miss would mean
+## Part six: what counted as success, and what a miss means
 
-Success for nano is passing the release gate: better than bge-small on the clean four and on all six, at about bge-small's query cost, while serving stella's index unchanged. Passing the aim as well would make it the strongest small query encoder we know of against a frozen index. Success for the project is narrower and already partly in hand: a measured, reproducible answer to how much quality each cheap query side retains, at what cost, with the deployment path proven in Qdrant and FastEmbed.
+Nano passed its release gate: better than bge-small on the clean four and on all six, at about bge-small's query cost, while serving Stella's index unchanged. It also beat LEAF on all six; clean-4 superiority over LEAF was not established. M14 published it as a research preview, completing the two-speed family beside Zero and the frozen document tower.
 
 A miss is publishable. The material already includes: a teacher's retrieval quality does not predict its distilled student, and the most decomposable teacher wins; a lookup-table query side retains about three quarters of its teacher and its objective saturates almost immediately; fusion with a lexical channel is worth ten times any table-side lever; a small transformer's retention is a per-distribution quantity, 94% where the training data resembles the queries and 50% where it does not; the depth dependence of fusion operators inverts at realistic prefetch; and adding a vocabulary entry does nothing on its own, since what moves results is where that entry points.
 
@@ -305,8 +308,8 @@ A miss is publishable. The material already includes: a teacher's retrieval qual
 | The six, clean-4, reserved four | The confirmatory datasets, the headline subset without the teacher's disclosed training sets, and the never-opened descriptive sets. |
 | LoTTE | Stanford's long-tail StackExchange benchmark; seven cleaned forum slices are the one fresh out-of-domain surface before the build. |
 | Spent tag | A git tag pushed the moment a one-shot access begins. Its existence refuses every later attempt. |
-| Dose, cycle | Training examples consumed; one learning-rate ramp from 1e-4 to 1e-5. Screen arms ran 5M over three cycles; the build runs exactly 200M. |
+| Dose, cycle | Training examples consumed; one learning-rate ramp from 1e-4 to 1e-5. The nominal build schedule was 200,000,000; execution consumed exactly 199,999,721 over three cycles. |
 | Fusion, DBSF | Combining dense and BM25 results. DBSF normalises each list's scores by their distribution and adds them; it is what Qdrant ships. |
 | Inference-free sparse | Systems where documents are expanded by a model but a query is just token counts. Zero's closest competitor class. |
 
-*Sources: `research/m1-m6-findings.md`, the `FINDINGS.md` files of M7 to M10, M12 and M17 to M19, `m18/REVIEW.md`, `m19/REVIEW.md`, `m10/RESULTS.md`, `m10/M102_LOCK.md`, `m13/RULINGS.md`, `m13/EXECUTION.md`, `results/m7_learnability_report.json`, and the registries they cite.*
+*Sources: `m21/BENCHMARKS.md`, `ROADMAP.md`, `m13/STATUS.md`, `m14/STATUS.md`, `m17/STATUS.md`, `m18/STATUS.md`, `research/m1-m6-findings.md`, the `FINDINGS.md` files of M7 to M10 and M12, `m10/RESULTS.md`, `m10/M102_LOCK.md`, `m13/RULINGS.md`, `m13/EXECUTION.md`, `results/m7_learnability_report.json`, and the registries they cite.*

@@ -1,159 +1,122 @@
-# Asymmetric dual encoders
+# Constella asymmetric dual encoders
 
-**How much retrieval quality survives as query-side computation approaches zero?**
+Constella is one frozen Stella document encoder with two interchangeable query encoders. Index
+documents once; choose a lookup table (`zero`) or a 35M-parameter transformer (`nano`) per query
+without rebuilding the index. On the registered clean-4 exact-search evaluation, Nano beat
+bge-small by **+0.017648 nDCG@10** (one-sided 2.5% lower bound +0.003674).
 
-A large frozen encoder indexes documents once, in the cloud. On the edge, the query side is as
-close to free as we can make it. The deliverable is a frontier, not a leaderboard entry: two
-query paths against the *same* document index, each with its quality and its cost measured.
-
-| | query path | status |
+| model | role | public state |
 |---|---|---|
-| **`zero`** | a 30,522 × 1024 int8 lookup table. No transformer, no matmul. | **released** (below) |
-| **`nano`** | a ≤35M distilled transformer | M9 dev miss; M10 prep complete, M13 cloud work pending |
+| [`stella-en-400M-v5-doc-onnx`](https://huggingface.co/DylanCouzon/stella-en-400M-v5-doc-onnx) | frozen 1024-d document tower | shipped in M11 |
+| [`constella-zero`](https://huggingface.co/DylanCouzon/constella-zero) | int8 query lookup table, no transformer | shipped in M11 |
+| [`constella-nano`](https://huggingface.co/DylanCouzon/constella-nano) | 34,540,672-parameter query transformer | [research preview `6bb167dc`](https://huggingface.co/DylanCouzon/constella-nano/tree/6bb167dc6f60d3992602235b8e8aaa374a309168) |
 
-Document side for both: [`NovaSearch/stella_en_400M_v5`](https://huggingface.co/NovaSearch/stella_en_400M_v5),
-1024-d, frozen, revision-pinned.
+For the story, read [`research/constella-in-plain-english.md`](research/constella-in-plain-english.md).
+Canonical, source-traced numbers are in [`m21/BENCHMARKS.md`](m21/BENCHMARKS.md).
 
-New here? [`research/constella-in-plain-english.md`](research/constella-in-plain-english.md) explains
-the whole programme, M1 to M13, in plain English: what was tested, what came out, where the pair
-pays off and why the protocol is strict.
+## Quickstart
 
----
-
-## Running `zero` (M7)
-
-The model is on the Hub: **https://huggingface.co/DylanCouzon/constella-zero** (public release recorded in M11).
-MIT, 94 MB. The query side needs `numpy` and `tokenizers` — that is the entire runtime.
+The three native registrations currently live on the preview FastEmbed branch:
 
 ```bash
-pip install numpy tokenizers huggingface_hub
-pip install sentence-transformers        # document side only
+pip install "fastembed @ git+https://github.com/Dylancouzon/fastembed.git@constella-research-preview" qdrant-client
 ```
 
-```python
-from huggingface_hub import snapshot_download
-import sys, numpy as np
-
-d = snapshot_download("DylanCouzon/constella-zero")
-sys.path.insert(0, d)
-from zero_encoder import ZeroQueryEncoder
-
-enc = ZeroQueryEncoder(d, variant="int8")           # or "fp16"
-q = enc.encode(["how do mrna vaccines work?"])      # (1, 1024), L2-normalized, ~0.1 ms
-```
-
-Documents go through the frozen teacher. **Pin the revision** — the table is only valid against
-this exact document space:
+This indexes with Stella, then queries the same in-memory Qdrant collection with Nano and Zero;
+the optional path variables support already-downloaded model assets.
 
 ```python
-from sentence_transformers import SentenceTransformer
-
-doc_model = SentenceTransformer(
-    "NovaSearch/stella_en_400M_v5",
-    revision="ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
-    trust_remote_code=True,
-    config_kwargs={"use_memory_efficient_attention": False, "unpad_inputs": False},
-)
-D = doc_model.encode(docs, normalize_embeddings=True)   # no prefix on the document side
-scores = q @ D.T
-```
-
-### With Qdrant
-
-An ordinary dense collection. Both sides are L2-normalized, so `DOT` ranks identically to
-`COSINE` and is cheaper.
-
-```python
+import os
+import numpy as np
+from fastembed import TextEmbedding
 from qdrant_client import QdrantClient, models
 
+DOC = "DylanCouzon/stella-en-400M-v5-doc-onnx"
+NANO = "DylanCouzon/constella-nano"
+ZERO = "DylanCouzon/constella-zero"
+
+def load(name, path_variable):
+    path = os.environ.get(path_variable)
+    return TextEmbedding(name, specific_model_path=path) if path else TextEmbedding(name)
+
+docs = [
+    "mRNA vaccines deliver messenger RNA encoding a viral antigen.",
+    "The Treaty of Westphalia ended the Thirty Years' War in 1648.",
+]
+query = "how do mRNA vaccines work?"
+
+doc_model = load(DOC, "CONSTELLA_DOC_PATH")
+D = np.stack(list(doc_model.embed(docs))).astype(np.float32, copy=False)
+
 client = QdrantClient(":memory:")
-client.create_collection("docs", vectors_config=models.VectorParams(
-    size=1024, distance=models.Distance.DOT))
-client.upsert("docs", points=[models.PointStruct(id=i, vector=D[i].tolist(),
-                                                 payload={"text": t})
-                              for i, t in enumerate(docs)])
-hits = client.query_points("docs", query=enc.encode([query])[0].tolist(), limit=5).points
+client.create_collection(
+    "docs", vectors_config=models.VectorParams(size=1024, distance=models.Distance.COSINE)
+)
+client.upsert("docs", points=[
+    models.PointStruct(id=i, vector=vector.tolist(), payload={"text": text})
+    for i, (text, vector) in enumerate(zip(docs, D))
+])
+
+for label, name, path_variable in [
+    ("nano", NANO, "CONSTELLA_NANO_PATH"),
+    ("zero", ZERO, "CONSTELLA_ZERO_PATH"),
+]:
+    encoder = load(name, path_variable)
+    q = np.asarray(next(iter(encoder.embed([query])))).astype(np.float32, copy=False)
+    hits = client.query_points("docs", query=q.tolist(), limit=2).points
+    print(label, [(hit.payload["text"], hit.score) for hit in hits])
 ```
 
-On the edge, put the table in the store too: a second collection, one point per vocab row,
-`hnsw_config=models.HnswConfigDiff(m=0)` — retrieve-by-id only (indexing it inflated the shard
-from 466 MB to 1.82 GB for no benefit). See `m7src/edge_demo.py`.
+The explicit cast keeps query storage at fp32 across preview-branch revisions.
 
-### Two traps
+## Results
 
-- **stella asserts `please install xformers`** unless you pass the `config_kwargs` above. It is
-  also the pinned setting the table was distilled under, so it is correctness, not convenience.
-- **stella's `tokenizer.json` ships with padding-to-512 enabled.** A naive `tokenizers` load puts
-  ~500 `[PAD]` rows in every bag and cosine against the correct path drops to **0.35**.
-  `zero_encoder.py` calls `no_padding()`. The `transformers` path never sees this — padding is
-  off by default there.
+Exact-search nDCG@10 for Nano is **0.363080** NFCorpus, **0.217710** SCIDOCS, **0.721097**
+SciFact, **0.787116** TREC-COVID, **0.623296** ArguAna† and **0.477765** FiQA†. Against the frozen
+comparators, the registered deltas are:
 
-### What the numbers are
+- Nano − bge-small: **+0.017648 clean-4** and **+0.027449 all-six**, both established.
+- Nano − LEAF asym: **+0.016181 all-six**, established; **−0.001063 clean-4**, superiority
+  unestablished with no equivalence claim.
 
-nDCG@10 on six BEIR datasets, exact search, one pre-registered confirmatory run:
-**`zero` 0.4339**, fused with BM25 **0.4911**, BM25 alone 0.4174, the teacher symmetric 0.5744.
+† Stella discloses training/evaluation contact with ArguAna and FiQA; the other four datasets form
+clean-4. Comparator absolutes are unpublished: the evidence contains per-query vectors and deltas.
 
-`zero` **missed its release bar** (LightRetriever dense 0.4583) CI-resolved at −0.0243
-[−0.0405, −0.0086], and on the four datasets with no disclosed teacher overlap it is *below*
-BM25. The fused system ties OpenSearch's learned sparse retriever (0.4911 vs 0.4868, the registered
-C3 comparison, measured under convex fusion; the Qdrant-runnable DBSF configuration scores 0.4887) while its
-query side stays a table lookup. Full characterisation, caveats and cost rows: the model card,
-or `m7/STATUS.md`.
+Zero scores **0.4339 all-six** dense-only. For hybrid retrieval, use Qdrant **DBSF at prefetch 100**:
+Zero + BM25 scores **0.4887 all-six / 0.4912 clean-4**. The registered M7 convex0 operator (`w=0.8`,
+prefetch 1000) instead scores **0.4911 / 0.4866**; their observed difference establishes neither
+superiority nor equivalence. See [`m12/FINDINGS.md`](m12/FINDINGS.md).
 
-**Fuse with BM25 using Qdrant's `Fusion.DBSF` at prefetch 100** (M12). It is a stock operator with
-no fitted fusion weights, and it scores **0.4887** on the six / **0.4912** on the four sets with no
-disclosed teacher overlap — against convex fusion's 0.4911 / 0.4866. Both gaps are inside the
-~0.005 tie band with no CI computed, so this is **no measured quality difference**; the reason to
-prefer it is that it runs in the product. The originally published convex fusion
-(w=0.8, prefetch 1000) is not implemented in Qdrant and needed an unrealistic prefetch depth;
-`Fusion.RRF` is weaker even after a fair sweep. Audit: `m12/FINDINGS.md`.
+Serving cost uses one common synthetic protocol: three fresh processes per model, batch one, four
+CPU threads, five warmups and twenty samples; values are medians across three trials.
 
----
+| query encoder | hydration | first query | warm 20-word p50 | peak RSS | measured model assets |
+|---|---:|---:|---:|---:|---:|
+| constella-zero | 0.2618 s | 0.3529 ms | 0.1119 ms | 275.4 MiB | 90.1 MiB |
+| bge-small | 0.6726 s | 8.2401 ms | 6.8400 ms | 291.0 MiB | 127.6 MiB |
+| constella-nano | 0.6907 s | 7.6685 ms | 7.2511 ms | 280.9 MiB | 132.3 MiB |
 
-## Rebuilding or re-pushing the release
+These are query-encoder timings, not Qdrant or end-to-end workload latency.
 
-```bash
-.venv/bin/python m11/release/verify_bundle.py            # shipped encoder vs the frozen path
-.venv/bin/python m11/release/push.py --build             # rebuild work/release/zero-v1
-.venv/bin/python m11/release/push.py --push              # gates, then upload (private)
-```
+## Two traps
 
-Four gates run before any upload: the table bytes hash to `m7/FREEZE.json`'s `table_sha256`,
-both training-lineage run records hash to what the freeze recorded, `freeze.assert_releasable`
-(no non-commercial source anywhere in the lineage), and the conformance check. `--public` is an
-explicit opt-in.
+- Sentence Transformers' Stella implementation asserts `please install xformers` unless passed
+  `config_kwargs={"use_memory_efficient_attention": False, "unpad_inputs": False}`. Those are also
+  the settings used for distillation.
+- Stella's upstream `tokenizer.json` enables padding to 512. A direct `tokenizers` load therefore
+  adds hundreds of `[PAD]` rows unless padding is disabled. The shipped Constella/FastEmbed bundles
+  handle this; custom tokenization must call `no_padding()`.
 
-## Reproducing the evaluation
+## Repository map
 
-The training and evaluation harness lives in `m7src/` (M7), `m9src/`, `m10src/`. It needs the
-gitignored `work/` tree — encode caches, tables, checkpoints — which is machine-local and is
-re-derived, not shipped. Environment: `m7/requirements.lock.txt`, `setup-windows.md`.
-Protocol and every registered bar: `m7/LEDGER.md`. What ships: `m7/RECIPE.md`.
-
-**`results/perquery.json` must never be overwritten** — frozen comparator vectors regenerated
-from caches that no longer exist.
-
-For the portable M18/M19 project-memory runtime, optional M19 candidate artifacts, exact hashes and
-the boundary around sealed/private evaluation data, see
-[M18_M19_REPRODUCIBILITY.md](M18_M19_REPRODUCIBILITY.md).
-
-## Project status and repo map
-
-Read [ROADMAP.md](ROADMAP.md) for current scope and [PROJECT_STATUS.md](PROJECT_STATUS.md) for
-the audit. M10 closes preparation; M13 owns the remaining cloud build, evaluation and costs.
-[HARNESS.md](HARNESS.md) maps reusable components and verification commands.
-
-[M17 plans Zero v1.1](m17/PLANNING.md): broader vocabulary and a modest quality improvement on
-the same document index, with a local 72-hour budget. Planning only; Nano/M13 remains unchanged.
-
-| path | what |
+| path | contents |
 |---|---|
-| `CLAUDE.md` | standing directives, stage plan, decision log — **read this first** |
-| `m7/` … `m13/` | per-milestone status, ledger, findings, closed avenues |
-| `instructions-m*.md` | the mandate each milestone was run under |
-| `m7src/`, `m9src/`, `m10src/` | harness, training, evaluation, probes |
-| `research/` | literature, licensing, teacher shortlists, adversarial reviews |
-| `results/` | every result of record, including the frozen comparators |
+| `ROADMAP.md`, `PROJECT_STATUS.md` | current milestone and project state |
+| `m7/` … `m21/` | status, findings, registrations and review records |
+| `m7src/`, `m9src/`, `m10src/` | training and evaluation harnesses |
+| `research/` | narrative, literature, licensing and reviews |
+| `results/` | committed results and frozen evidence |
 
-Findings worth reading on their own: `m7/FINDINGS.md`, `m8/FINDINGS.md` (twelve probes, no lever
-moved the table more than 0.005), `m9/FINDINGS.md` (nano's dataset-dependent failure), `m10/FINDINGS.md` (recipe screening).
+**Never overwrite `results/perquery.json`: its frozen comparator vectors cannot be rebuilt.** Start
+with `m7/FINDINGS.md`, `m8/FINDINGS.md`, `m9/FINDINGS.md`, `m10/FINDINGS.md` and
+`m12/FINDINGS.md`; reproducibility commands and component boundaries are in [`HARNESS.md`](HARNESS.md).

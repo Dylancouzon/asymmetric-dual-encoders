@@ -15,31 +15,27 @@ pipeline_tag: feature-extraction
 
 # constella-nano
 
-The query side of an **asymmetric dual encoder**: documents are indexed once with a large frozen
-encoder; queries are encoded at serving time with a smaller encoder.
-
-Nano starts from `bge-small-en-v1.5` and uses a three-layer feature tap plus a linear head. It was
-trained to land in the 1024-dimensional document space of `stella_en_400M_v5`. The matching
-document encoder is published as
-[`stella-en-400M-v5-doc-onnx`](https://huggingface.co/DylanCouzon/stella-en-400M-v5-doc-onnx);
-the two towers are only meaningful together.
+**constella-nano** is one of two interchangeable query encoders for an asymmetric retrieval
+family. Documents are indexed once, in the cloud, with the frozen
+[`stella-en-400M-v5-doc-onnx`](https://huggingface.co/DylanCouzon/stella-en-400M-v5-doc-onnx)
+tower; Nano or the smaller [`constella-zero`](https://huggingface.co/DylanCouzon/constella-zero)
+can then query that same 1024-dimensional index without re-encoding it. Nano starts from
+`bge-small-en-v1.5` and trades Zero's near-zero query compute for substantially stronger dense
+retrieval.
 
 > **Research preview.** The registered reserved-four evaluation and broad descriptive BEIR-18
-> validation are pending. Read [Results](#results) and [Limits](#limits) first. The native model
-> entry currently lives only on the custom FastEmbed branch `m14-constella-preview`; it is **not
-> in upstream FastEmbed**. The upstream PR belongs to later M20 work.
+> validation are pending and unspent; no result is claimed for either. The three models are
+> registered on the preview branch below, not in an upstream FastEmbed release yet.
 
 ## Usage
 
-Install the preview branch and Qdrant's Python client:
-
 ```console
-pip install "fastembed @ git+https://github.com/Dylancouzon/fastembed@m14-constella-preview" qdrant-client
+pip install "fastembed @ git+https://github.com/Dylancouzon/fastembed.git@constella-research-preview"
+pip install qdrant-client
 ```
 
-The snippets in this section run in order, sharing state. They use FastEmbed's native model
-registrations and never call `add_custom_model`. The optional model-path variables are only for
-offline verification; omit them for normal Hub-backed use.
+These snippets run in order. The optional paths support offline verification; omit them for
+normal Hub-backed use. No `add_custom_model` call is needed.
 
 <!-- m14-card-usage-start -->
 
@@ -63,7 +59,7 @@ doc_kwargs = {"specific_model_path": doc_path} if doc_path else {}
 
 ### The document side
 
-Run the published Stella document tower in the indexing job, once per document:
+Run the document tower once per document in the indexing job:
 
 ```python
 doc_model = TextEmbedding(DOC_NAME, **doc_kwargs)
@@ -71,19 +67,13 @@ docs = [
     "mRNA vaccines deliver messenger RNA encoding a viral antigen.",
     "The Treaty of Westphalia ended the Thirty Years' War in 1648.",
 ]
-D = np.stack(list(doc_model.embed(docs))).astype(np.float32, copy=False)
-assert D.shape == (2, 1024)
-assert np.isfinite(D).all()
+D = np.stack(list(doc_model.embed(docs)))
+assert D.shape == (2, 1024) and D.dtype == np.float32
 ```
 
-The document model is the large, frozen side of the system. Do not use its unprompted path as a
-Stella query encoder.
+Do not use the document model's unprompted path as a Stella query encoder.
 
 ### With Qdrant
-
-This defaults to Qdrant's local, in-memory mode, so the example is runnable without a server but
-the collection disappears with the process. Set `QDRANT_URL` to use an already-running Qdrant
-deployment instead; choose a fresh collection name there.
 
 ```python
 from qdrant_client import QdrantClient, models
@@ -104,117 +94,95 @@ client.upsert(
     ],
 )
 
-# Serving time: Nano encodes each query; the document tower does not run here.
-query_model = TextEmbedding(NANO_NAME, **nano_kwargs)
 query = "how do mRNA vaccines work?"
-q_native = np.asarray(next(iter(query_model.embed([query]))))
-# FastEmbed's integer attention mask promotes Nano's masked mean to float64.
-# Cast explicitly to keep each 1024-d query at the intended 4,096-byte fp32 size.
-q = q_native.astype(np.float32, copy=False)
-assert q.shape == (1024,) and np.isfinite(q).all()
+query_model = TextEmbedding(NANO_NAME, **nano_kwargs)
+q = np.asarray(next(iter(query_model.embed([query]))))
+assert q.shape == (1024,) and q.dtype == np.float32 and np.isfinite(q).all()
 
 hits = client.query_points(COLLECTION_NAME, query=q.tolist(), limit=2).points
 print([(hit.payload["text"], hit.score) for hit in hits])
 ```
 
-The collection is 1024-dimensional cosine. Both towers emit L2-normalized vectors, so cosine and
-dot-product ranking agree for these vectors; cosine keeps the collection contract explicit.
+Both towers emit normalized vectors. Cosine and dot-product ranking therefore agree, while
+`COSINE` keeps the collection contract explicit.
 
 ### Swapping the query encoder
 
-The same Qdrant collection can be queried with
-[`constella-zero`](https://huggingface.co/DylanCouzon/constella-zero) without re-encoding its
-documents:
+The same collection can be queried with Zero:
 
 ```python
 zero_model = TextEmbedding(ZERO_NAME, **zero_kwargs)
-q_zero = np.asarray(next(iter(zero_model.embed([query])))).astype(np.float32, copy=False)
-assert q_zero.shape == (1024,) and np.isfinite(q_zero).all()
+q_zero = np.asarray(next(iter(zero_model.embed([query]))))
+assert q_zero.shape == (1024,) and q_zero.dtype == np.float32
 zero_hits = client.query_points(COLLECTION_NAME, query=q_zero.tolist(), limit=2).points
 print([(hit.payload["text"], hit.score) for hit in zero_hits])
 ```
 
 <!-- m14-card-usage-end -->
 
-Nano and Zero both emit normalized 1024-dimensional query vectors in the same Stella document
-space. One document index therefore serves either query encoder, and the choice can be made per
-deployment or per query. This compatibility is geometric, **not a retrieval-quality equivalence
-claim**: the encoders have distinct measured retrieval behavior, and no parity, equivalence or
-tie is implied. The query-cost side of the trade-off is measured under the same four-thread CPU
-protocol: Zero's warm p50 median was **0.1119 ms** and Nano's was **7.2511 ms**. These are
-**synthetic latencies, not workload estimates**. Only Zero claims near-zero query compute; Nano's
-query cost is roughly bge-small's, whose warm p50 median was 6.8400 ms under that protocol.
+Zero and Nano share a document space, not a retrieval-quality guarantee: they have different
+measured behavior, and interchangeability does not mean parity, equivalence, or a tie.
 
 ## How it works
 
 Nano starts from
-[`BAAI/bge-small-en-v1.5`](https://huggingface.co/BAAI/bge-small-en-v1.5). Its three-layer feature
-tap and linear head were trained to match frozen query and document targets in the space of
-[`NovaSearch/stella_en_400M_v5`](https://huggingface.co/NovaSearch/stella_en_400M_v5). Nano needs
-no query prefix.
-
-Inputs are right-truncated to 512 tokens. The tokenizer leaves padding unset so FastEmbed uses
-dynamic batch-longest padding. The ONNX graph emits fp32 token embeddings; FastEmbed's native
-`PooledNormalizedEmbedding` family applies attention-masked mean pooling and L2 normalization.
-That family assignment is required for correct native output.
-
-FastEmbed's integer attention mask currently promotes Nano's native masked-mean result to
-float64 even though the graph output is fp32. The usage example casts the final normalized query
-vector back to fp32 before sending it to Qdrant.
+[`BAAI/bge-small-en-v1.5`](https://huggingface.co/BAAI/bge-small-en-v1.5). A three-layer feature
+tap and linear head were trained against frozen targets from
+[`NovaSearch/stella_en_400M_v5`](https://huggingface.co/NovaSearch/stella_en_400M_v5). It needs no
+query prefix. Inputs are right-truncated to 512 tokens; dynamic batch-longest padding is used.
+The ONNX graph returns fp32 token embeddings, and FastEmbed applies attention-masked mean pooling
+and L2 normalization.
 
 ## Files
 
-The release bundle contains the ONNX graph plus its FastEmbed configuration and tokenizer files.
-The native FastEmbed registration downloads those assets by model name. The graph returns token
-embeddings; pooling and normalization are supplied by FastEmbed, not serialized into the graph.
-
-The custom branch registers Nano with `PooledNormalizedEmbedding`, and registers the published
-Stella document tower and constella-zero with their appropriate native families. It is a preview
-vehicle, not an upstream FastEmbed release.
+The release contains the ONNX graph, FastEmbed configuration, and tokenizer files. The graph
+returns token embeddings; FastEmbed supplies pooling and normalization. The preview branch
+registers Nano as `PooledNormalizedEmbedding` and registers Zero and the document tower with their
+native ONNX path.
 
 ## Results
 
-The headline is the **clean-four** partition, which excludes ArguAna and FiQA because Stella
-discloses training/evaluation contact with those two datasets. Against bge-small, Nano improved
-clean-four nDCG@10 by **+0.017648**, with one-sided lower 2.5% bound **+0.003674** and sign-flip
-**p=0.006410**.
+The headline partition is **clean-4**: NFCorpus, SCIDOCS, SciFact, and TREC-COVID. ArguAna and
+FiQA remain beside it with `†` because Stella discloses training/evaluation contact with them.
+All values are exact-search nDCG@10.
 
-Nano's exact-search nDCG@10 results are:
+| system | NFCorpus **(clean-4)** | SCIDOCS **(clean-4)** | SciFact **(clean-4)** | TREC-COVID **(clean-4)** | ArguAna† | FiQA† |
+|---|---:|---:|---:|---:|---:|---:|
+| constella-nano | 0.363080 | 0.217710 | 0.721097 | 0.787116 | 0.623296 | 0.477765 |
+| constella-zero (int8) | 0.3124 | 0.1677 | 0.6101 | 0.5490 | 0.5916 | 0.3728 |
+| BM25 | 0.3180 | 0.1565 | 0.6791 | 0.6099 | 0.4878 | 0.2532 |
+| Stella teacher, symmetric | 0.4134 | 0.2395 | 0.7796 | 0.8234 | 0.6369 | 0.5536 |
 
-| dataset | Nano | Nano − bge-small | Nano − LEAF asym |
-|---|---:|---:|---:|
-| SciFact | 0.721097 | +0.008391 | +0.022084 |
-| NFCorpus | 0.363080 | +0.020129 | +0.002301 |
-| FiQA† | 0.477765 | +0.074253 | +0.061296 |
-| ArguAna† | 0.623296 | +0.019848 | +0.040043 |
-| SCIDOCS | 0.217710 | +0.012498 | +0.014345 |
-| TREC-COVID | 0.787116 | +0.029573 | -0.042982 |
+† Stella-disclosed training/evaluation contact; excluded from clean-4.
 
-† Stella-disclosed training/evaluation contact; excluded from clean-four.
+The registered Nano contrasts were:
 
-Against LEAF asym, Nano established an all-six improvement of **+0.016181** (one-sided lower 2.5%
-bound **+0.006504**, sign-flip **p=0.000540**). The clean-four result against LEAF is
-**UNESTABLISHED**: the contrast was **-0.001063**, lower bound **-0.014456**, **p=0.559474**. This
-is not parity, equivalence or a tie. The **-0.042982** TREC-COVID difference versus LEAF is the
-principal per-dataset limitation.
+| contrast | partition | point delta | one-sided 2.5% lower bound | sign-flip p | status |
+|---|---|---:|---:|---:|---|
+| Nano − bge-small | **clean-4** | +0.017648 | +0.003674 | 0.006410 | **ESTABLISHED** |
+| Nano − bge-small | all six | +0.027449 | +0.017271 | 0.000010 | **ESTABLISHED** |
+| Nano − LEAF asym | all six | +0.016181 | +0.006504 | 0.000540 | **ESTABLISHED** |
+| Nano − LEAF asym | **clean-4** | -0.001063 | -0.014456 | 0.559474 | **UNESTABLISHED** |
+
+No absolute per-dataset score is reported for bge-small or LEAF. Clean-4 superiority over LEAF
+is **UNESTABLISHED**—not parity, equivalence, or a tie—and the principal per-dataset limitation is
+TREC-COVID at **-0.042982 versus LEAF**. Full intervals, per-dataset deltas, and source traces are
+in the [M21 benchmark ledger](https://github.com/Dylancouzon/asymmetric-dual-encoders/blob/main/m21/BENCHMARKS.md).
 
 ## Limits
 
-- **Pending registered evidence.** The reserved four remain unestablished and unspent at preview
-  time; no result is claimed for them. Broad BEIR-18 validation is also pending, so the six-set
-  table must not be read as broad domain coverage.
-- **Teacher contact.** Stella discloses training/evaluation contact with ArguAna and FiQA. They
-  are excluded from the headline clean-four partition; all-six results are secondary.
-- **LEAF comparison.** Clean-four performance against LEAF is UNESTABLISHED. No parity,
-  equivalence or tie follows, and TREC-COVID is the main observed per-dataset weakness.
-- **Length and language.** Nano is English-only and truncates beyond 512 tokens.
-- **The document side is not cheap.** The Stella document tower still runs once per document;
-  Nano changes query-side cost, not indexing cost.
+- Reserved-four and BEIR-18 evidence is pending and unspent; the six datasets do not establish
+  broad domain coverage.
+- Stella contact with ArguAna and FiQA makes all-six results secondary to clean-4.
+- Nano is English-only and truncates beyond 512 tokens.
+- The document side is not cheap: the 400M-parameter Stella tower still runs at indexing time.
 
 ## Costs
 
-The measurements below are **synthetic query latencies, not workload estimates**. They used the
-same four-thread, batch-one CPU protocol, with medians across three fresh processes.
+These are synthetic query latencies, not workload estimates. The common three-model protocol used
+three fresh processes per model, batch one, four CPU threads; hydration includes imports,
+verification, and load but excludes interpreter startup; first inference is separate; warm timing
+uses five warmups and twenty 20-word samples; the OS disk cache was not flushed.
 
 | model | hydration | first query | warm 20-word p50 | peak RSS | model assets |
 |---|---:|---:|---:|---:|---:|
@@ -222,27 +190,18 @@ same four-thread, batch-one CPU protocol, with medians across three fresh proces
 | bge-small | 0.6726 s | 8.2401 ms | 6.8400 ms | 291.0 MiB | 127.6 MiB |
 | constella-nano | 0.6907 s | 7.6685 ms | 7.2511 ms | 280.9 MiB | 132.3 MiB |
 
-A native 1024-dimensional Nano query occupies 8,192 bytes as float64; the explicit fp32 cast in
-the example reduces it to 4,096 bytes. If query vectors are stored, the corresponding raw-vector
-sizes are 8.192 GB per million for native float64 and 4.096 GB per million for cast fp32, before
-index overhead. Any 4.096 GB figure assumes the fp32 cast.
+A normalized 1024-dimensional fp32 query vector occupies 4,096 bytes.
 
 ## Training
 
-The frozen checkpoint saw exactly **199,999,721 examples**, a reconciled shortfall of **279**
-from the nominal 200,000,000-example plan. Nine one-row document tail batches each lost 31 rows;
-the original failed supervisor receipt remains part of the audit trail.
+The frozen checkpoint saw exactly **199,999,721 training examples**. Training mixed real queries
+from ESCI, HotpotQA, Mr. TyDi, NQ Open, SQuAD, and TriviaQA; a PAQ sample; licensed document
+sources; seven generated query forms; and the eligible document pool. MS MARCO was validation
+only. CC BY-SA sources and PAQ retain their source attribution.
 
-Training mixed real queries from ESCI, HotpotQA, Mr. TyDi, NQ Open, SQuAD and TriviaQA; a PAQ
-sample; harvested titles, headings and claim sentences from Wikipedia, arXiv and the licensed
-pool; seven generated query forms; and the eligible document pool. MS MARCO was excluded from
-training and used only as a validation surface. The CC BY-SA sources and PAQ retain their source
-attribution.
-
-Every training source was fingerprint-screened against the protected index containing the six
-evaluation datasets and COV components. The final assembly records 709 query removals and 79,630
-document removals, plus zero cross-role collisions. This is fingerprint-level decontamination;
-it does not erase the Stella-contact disclosure above.
+Every source was fingerprint-screened against the protected six-dataset/COV index. Final assembly
+removed 709 queries and 79,630 documents and recorded zero cross-role collisions. This is
+fingerprint-level decontamination; it does not erase the Stella-contact disclosure.
 
 ## Provenance
 
@@ -251,6 +210,6 @@ student  BAAI/bge-small-en-v1.5 @ 5c38ec7c405ec4b44b94cc5a9bb96e735b38267a
 teacher  NovaSearch/stella_en_400M_v5 @ ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20
 ```
 
-The preview weights are released under MIT. The pinned bge-small backbone and Stella
-teacher/document tower are also MIT and are attributed above. Dataset-source obligations and the
-decontamination record remain documented in the project evidence.
+The preview weights are MIT licensed. The pinned bge-small backbone and Stella teacher/document
+tower are also MIT and are attributed above; dataset obligations and the audit trail remain in the
+project evidence.

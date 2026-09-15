@@ -191,3 +191,6 @@ work/
 logs/
 
 .claude/settings.local.json
+
+# Qdrant local in-memory scratch written by the runnable card/README examples
+:memory:.ses
