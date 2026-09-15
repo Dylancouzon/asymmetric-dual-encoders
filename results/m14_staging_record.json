@@ -1,0 +1,75 @@
+{
+  "stage": "S2",
+  "source_directory": "work/m13cloud/work/m13-final/onnx",
+  "staging_directory": "work/m14-preview/staging",
+  "fresh_target_required": true,
+  "files": [
+    {
+      "path": "config.json",
+      "before_bytes": 655,
+      "before_sha256": "98fad585a266cd31954a97923401d745e971044cceb8edafde041057526980a4",
+      "after_bytes": 655,
+      "after_sha256": "98fad585a266cd31954a97923401d745e971044cceb8edafde041057526980a4",
+      "transform": "copied byte-for-byte; no transform"
+    },
+    {
+      "path": "tokenizer.json",
+      "before_bytes": 711649,
+      "before_sha256": "91f1def9b9391fdabe028cd3f3fcc4efd34e5d1f08c3bf2de513ebb5911a1854",
+      "after_bytes": 711495,
+      "after_sha256": "c8e5d69002efaed707fbbc7a56c7e9743e83ff6d04ff55b1c351eb430e3d095a",
+      "transform": "replaced the top-level padding object with JSON null; no other parsed JSON value changed"
+    },
+    {
+      "path": "vocab.txt",
+      "before_bytes": 231508,
+      "before_sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3",
+      "after_bytes": 231508,
+      "after_sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3",
+      "transform": "copied byte-for-byte; no transform"
+    },
+    {
+      "path": "special_tokens_map.json",
+      "before_bytes": 119,
+      "before_sha256": "0c995ed077668e947c7a9eeb9547d422dd1c772fe62423438ad94cba6cb8e13f",
+      "after_bytes": 119,
+      "after_sha256": "0c995ed077668e947c7a9eeb9547d422dd1c772fe62423438ad94cba6cb8e13f",
+      "transform": "copied byte-for-byte; no transform"
+    },
+    {
+      "path": "tokenizer_config.json",
+      "before_bytes": 1165,
+      "before_sha256": "f200fb1884378ce61e48f716aeb66f7cb243a5d6f58927ae45a6e18e2526f817",
+      "after_bytes": 1165,
+      "after_sha256": "f200fb1884378ce61e48f716aeb66f7cb243a5d6f58927ae45a6e18e2526f817",
+      "transform": "copied byte-for-byte; no transform"
+    },
+    {
+      "path": "model.onnx",
+      "before_bytes": 137802369,
+      "before_sha256": "9ba0acf57b71dc31bc5512c5445078a797fa51cf3e85587d6b8a506bfc55dbc2",
+      "after_bytes": 137802369,
+      "after_sha256": "9ba0acf57b71dc31bc5512c5445078a797fa51cf3e85587d6b8a506bfc55dbc2",
+      "transform": "copied byte-for-byte; no transform"
+    }
+  ],
+  "retained_settings": {
+    "tokenizer_json_truncation": {
+      "direction": "Right",
+      "max_length": 512,
+      "strategy": "LongestFirst",
+      "stride": 0
+    },
+    "tokenizer_config_json_model_max_length": 512,
+    "tokenizer_config_json_max_length": 512
+  },
+  "assertions": {
+    "padding_is_null": true,
+    "right_truncation_at_512_retained": true,
+    "model_max_length_512_retained": true,
+    "max_length_512_retained": true,
+    "only_parsed_tokenizer_json_padding_changed": true,
+    "all_other_files_byte_identical": true
+  },
+  "passed": true
+}
