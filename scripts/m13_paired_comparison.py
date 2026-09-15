@@ -43,6 +43,10 @@ def main():
     for label,cfg in [('nano',nano_cfg),('m9',m9_cfg)]:
         result = json.loads(cfg.result_path.read_text())
         man = json.loads(cfg.state_path.read_text())
+        expected_end = 'COMPLETE_SIX_ONLY' if label == 'm9' else 'INCOMPLETE_RESERVED'
+        if result.get('end_status') != expected_end:
+            raise RuntimeError(f'{label}: expected end_status {expected_end}, got '
+                               f'{result.get("end_status")!r}')
         per = S.persisted(cfg, conf['partitions']['all6'])
         if set(per) != set(conf['partitions']['all6']):
             raise RuntimeError(f'{label}: all six completed rows required')
@@ -59,11 +63,15 @@ def main():
         scores[label] = {ds:row['scores'] for ds,row in per.items()}
         inputs[label] = {'result_sha256':A.sha256_file(cfg.result_path),
             'checkpoint_sha256':man['freeze_sha256'],
+            'registry_sha256':A.sha256_file(cfg.registry_path),
+            'begin_commit':man['begin_commit'],'spent_tag':cfg.spent_tag,
             'score_sha256':{ds:A.sha256_file(cfg.score_path(ds)) for ds in per}}
     out = {'status':'PASSED','scope':'Descriptive Nano minus M9; no p-value or gate. Different recipes, doses and training histories prevent causal attribution.',
+           'git_head':A.sh(nano_cfg,'git','rev-parse','HEAD'),
+           'script_sha256':A.sha256_file(__file__),'written':A.utcnow(),
            'inputs':inputs,'B':conf['bootstrap']['B'],'seed':conf['bootstrap']['seed'],
            **summarize(scores['nano'],scores['m9'],conf)}
-    output.write_text(json.dumps(out,indent=2)+'\n')
+    A.write_atomic(output, json.dumps(out,indent=2)+'\n')
     print(json.dumps(out['partitions']))
 
 

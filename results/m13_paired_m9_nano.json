@@ -1,0 +1,102 @@
+{
+  "status": "PASSED",
+  "scope": "Descriptive Nano minus M9; no p-value or gate. Different recipes, doses and training histories prevent causal attribution.",
+  "git_head": "e038f8f88644e693db64696d87c1f21e7004253b",
+  "script_sha256": "b93374832e9a5c75b6d18d0f6386bac8bbee009f817f1b3eb418fd12d2f6552a",
+  "written": "2026-09-15T16:59:28.643660+00:00",
+  "inputs": {
+    "nano": {
+      "result_sha256": "f5b5ad8a63060fbe1184aa3e5319259855d3ca4a9e3c3de1e91eeb76ac685b23",
+      "checkpoint_sha256": "3e49e0bfaa633abe276da7847d0ac44cbfb3d7d5215b9343f255706eeb5789a1",
+      "registry_sha256": "c0e3f82a563a0851aef58be579102c9c84dd98560b14b3b1fa343511941bbb62",
+      "begin_commit": "1ee3760def23365864781df537460f30a42863d0",
+      "spent_tag": "m10-six-spent",
+      "score_sha256": {
+        "scifact": "c2e14b4ed1085c4ecac00e505f0bf1cc5b28fe9e199f190dd32215ae398d5498",
+        "nfcorpus": "85fcf641329d386347a169886aaace8187689fca92b26c11feead6fbdf2de570",
+        "fiqa": "8712d3e5a0064ab4cafb80ed652952521f3fb00bfe58bdf45f0f3ea7a2127600",
+        "arguana": "5f2dcebbd3b44c473e99117efce5e84a72f513a6d62614870eeb9ae12f61b1e1",
+        "scidocs": "de3c8d1b11bcc8fc97822ce733938699adac04d953b40dd0058458771026a908",
+        "trec-covid": "b970de8dc46999a78104a2abf86087b283a1cf67ac60001434d8280801f9e86b"
+      }
+    },
+    "m9": {
+      "result_sha256": "770344d7a7c18d0933e0f922af385fb0b4e514c98822e955e959cf139a9c936b",
+      "checkpoint_sha256": "9d631b2c64244aff72db605e94cd973eeb4b80527f14d91fbeab5bc45fec6b52",
+      "registry_sha256": "22f4c8c1c20caa9c6d820e0dc7d20291910d1ec60d91854a29ac8f27f4f35a10",
+      "begin_commit": "53a7e52ac5505e95a7124a8f6731bca28d5351ac",
+      "spent_tag": "m9-six-spent",
+      "score_sha256": {
+        "scifact": "4de088b1dd08c057e30bd552efc1e40d9a149edf76ee935e862d4b75cecd4cd0",
+        "nfcorpus": "4b991439d450c3098e6b07d06d1ef18bd3ec41ca477f138623fd50921a750e81",
+        "fiqa": "807d77611f08bc26943ae466a3a737bee44dd526967968f74df161894789b931",
+        "arguana": "1bdc00c5461a54f3151cdb56273e9a5088fbdd9ab67d55902a4aed2dc98ec201",
+        "scidocs": "1463e28b61584e1c9389a68609fba21cb334ac904ab3285ff2b1710cff02b23b",
+        "trec-covid": "f740d7e101a5b776e785f04f11896d3da716eece9713506a60dfd841f3802adf"
+      }
+    }
+  },
+  "B": 10000,
+  "seed": 900,
+  "draw_plan_sha256": "af3a8bc1a4b04f985ee50bd965470c66edd151e4fa783722c2dc4d8b4c326198",
+  "partitions": {
+    "clean4": {
+      "delta": 0.15400903370781865,
+      "ci95": [
+        0.1322154875511659,
+        0.17588667556741883
+      ]
+    },
+    "all6": {
+      "delta": 0.16000444296972993,
+      "ci95": [
+        0.14471250685301232,
+        0.17549812662355121
+      ]
+    }
+  },
+  "per_dataset": {
+    "arguana": {
+      "delta": 0.08048382712900455,
+      "n": 1406,
+      "nano_higher": 554,
+      "m9_higher": 231,
+      "ties": 621
+    },
+    "fiqa": {
+      "delta": 0.26350669585810044,
+      "n": 648,
+      "nano_higher": 399,
+      "m9_higher": 38,
+      "ties": 211
+    },
+    "nfcorpus": {
+      "delta": 0.04973512604880217,
+      "n": 323,
+      "nano_higher": 139,
+      "m9_higher": 67,
+      "ties": 117
+    },
+    "scidocs": {
+      "delta": 0.07501672494898849,
+      "n": 1000,
+      "nano_higher": 478,
+      "m9_higher": 139,
+      "ties": 383
+    },
+    "scifact": {
+      "delta": 0.08707602412607812,
+      "n": 300,
+      "nano_higher": 83,
+      "m9_higher": 26,
+      "ties": 191
+    },
+    "trec-covid": {
+      "delta": 0.4042082597074058,
+      "n": 50,
+      "nano_higher": 49,
+      "m9_higher": 1,
+      "ties": 0
+    }
+  }
+}
