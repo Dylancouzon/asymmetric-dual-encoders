@@ -1,0 +1,11 @@
+[Unit]
+Description=Check M13 evaluation and primary watchdog every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+AccuracySec=15s
+Unit=m13-backup-watchdog.service
+
+[Install]
+WantedBy=timers.target

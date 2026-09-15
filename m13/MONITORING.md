@@ -42,3 +42,15 @@ The full build now logs at most one sixth of its rolling-checkpoint step interva
 five minutes at the supplied planning rate, rather than total_steps/50 (about75 minutes
 at the measured rate). This changes only diagnostic printing. LoTTE already flushes shard
 starts and progress around each20,000 passages, so it needs no additional heartbeat.
+
+## Independent fallback — 2026-09-15
+
+User-requested m13-backup-watchdog.timer invokes scripts/m13_timer_watchdog.py
+every5minutes, separately from the persistent primary monitor. Its check includes
+the evaluation child CPU counters and log progress; it alerts on15minute stalls,
+stale supervisor heartbeat, process loss and14hour runtime. It restores a stopped
+or stale primary monitor but never restarts or kills the scoring process.
+Timer service is bounded to45seconds. State/events: timer-health.json and
+timer-alerts.jsonl under work/m13-monitor; systemd journal is an additional record.
+Actual stopped-primary recovery and synthetic alarm cases passed.
+Installed units are copies of m13/m13-backup-watchdog.{service,timer}.

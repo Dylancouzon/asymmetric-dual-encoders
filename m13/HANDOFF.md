@@ -7,7 +7,7 @@ and instructions-m14.md. Do not assume M13 is closed until a closure record says
 
 ## Current state — see results/m13_live_status.json for the latest timestamp
 
-AGENT: active, pursuing M13 close-out. NEXT AGENT: monitor or resume M13 if not
+AGENT: goal PAUSED by user; no automatic agent progression. NEXT AGENT: monitor or resume M13 if not
 closed; only start M14 publication after the M13 closure/handoff exists.
 TRAINING: STOPPED/FINISHED. All three Runpod pods EXITED at last live check.
 FINAL NANO EVALUATION: RUNNING locally on CPU. Supervisor PID330084; child330139.
@@ -89,7 +89,7 @@ with the exact eight synthetic texts recorded in the result. No original artifac
 modified. Max absolute difference1.112e-7, min cosine0.999999956.
 
 Last agent checkpoint: 2026-09-15T00:15:24.946604+00:00.
-M13 goal remains ACTIVE. Benchmark RUNNING on FiQA; no workload stopped.
+M13 goal is PAUSED by user (supersedes earlier active-goal notes). Benchmark RUNNING on FiQA; no workload stopped.
 Preparation complete for now; next dependent action waits for the existing final
 benchmark. The agent may yield between checks; the detached supervisor and monitor
 continue independently. Check live receipt/child PID rather than assuming chat activity.
@@ -99,3 +99,17 @@ Paired report command after BOTH six-set runs are complete:
 checks checkpoint/registry/bridge identities, then reuses the registered draw plan
 for descriptive all-six and clean-four intervals. Synthetic known-delta and
 mismatched-query refusal checks passed. No paired result produced yet.
+
+## Monitor setup after goal pause
+
+User paused the agent goal. Benchmark and monitors remain RUNNING independently.
+Primary: m13-monitor.service. Backup: m13-backup-watchdog.timer, every5minutes,
+with its own m13-backup-watchdog.service. Backup reads the real child process,
+CPU counters, supervisor heartbeat and log activity. Alerts after15minutes without
+CPU/log progress, stale heartbeat, missing processes or14hours total runtime.
+It restarts only the primary MONITOR when stopped/stale, never the benchmark.
+Actual stopped-monitor recovery was tested successfully.
+Read work/m13-monitor/timer-health.json and timer-alerts.jsonl, or
+`journalctl --user -u m13-backup-watchdog.service`. Unit sources are committed in
+m13/. This needs the Windows/WSL host awake; it cannot wake the paused agent/chat.
+Next action after completion requires user or remote agent to resume from this handoff.

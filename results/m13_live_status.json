@@ -1,6 +1,6 @@
 {
-  "checked_at": "2026-09-15T00:17:49.635724+00:00",
-  "agent_state": "ACTIVE_GOAL_WAITING_ON_FINAL_BENCHMARK",
+  "checked_at": "2026-09-15T00:26:15.119473+00:00",
+  "agent_state": "GOAL_PAUSED_BY_USER",
   "milestone_state": "M13_IN_PROGRESS",
   "training": "STOPPED",
   "gpu_pods": "ALL_EXITED_AT_LAST_LIVE_CHECK",
@@ -28,7 +28,7 @@
       "written": "2026-09-14T23:57:21.963715+00:00"
     }
   },
-  "next": "Nano final CPU process330139 remains live on FiQA; after termination, measure serving costs then execute reviewed M9 closeout.",
+  "next": "Detached nano evaluation continues; primary watchdog and independent five-minute backup timer are active. Resume agent explicitly after evaluation.",
   "resume_file": "m13/HANDOFF.md",
   "no_rerun": "m10-six-spent already pushed; do not launch another nano scoring process.",
   "m9_preflight": "PASSED; scoring NOT STARTED"

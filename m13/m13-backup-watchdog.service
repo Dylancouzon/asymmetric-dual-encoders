@@ -1,0 +1,9 @@
+[Unit]
+Description=M13 independent watchdog check
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/dylan/asymetric-dual-encoders/work/m13cloud
+ExecStart=/usr/bin/python3 scripts/m13_timer_watchdog.py
+TimeoutStartSec=45
+UMask=0077
