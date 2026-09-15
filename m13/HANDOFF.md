@@ -9,7 +9,8 @@ and instructions-m14.md. Do not assume M13 is closed until a closure record says
 
 AGENT: STOPPING FOR USER-REQUESTED SESSION CLEAR; goal remains PAUSED. No automatic
 agent progression or separate continuation session. NEXT AGENT: resume M13 manually
-in the morning and finish closure INCLUDING Hugging Face publication of nano.
+in the morning and finish M13 closure with a self-contained handoff for the
+different LLM completing M14. Hugging Face publication remains M14 work.
 TRAINING: STOPPED/FINISHED. All three Runpod pods EXITED at last live check.
 FINAL NANO EVALUATION: RUNNING locally on CPU. Supervisor PID330084; child330139.
 Authoritative live receipt: work/m13-final/execution.json; log: logs/m13-final-six.log.
@@ -46,24 +47,43 @@ ambitious target alone does not block release. Do not alter statistical gates.
 5. Evaluate gross-overfitting/catastrophic-failure concerns against actual evidence;
    document release recommendation, limitations, budget and artifact identities.
 6. Reconcile all retained storage and unique backups before retiring idle disks.
-7. Publish the verified nano bundle and model card to Hugging Face under the existing
-   owner namespace (expected DylanCouzon/constella-nano; verify account/repository
-   before upload). User explicitly authorized upload on 2026-09-15 UTC; do not ask
-   again merely because older milestone files assigned publication to M14. Verify
-   the uploaded commit, file hashes and a clean download/inference smoke test.
-8. Commit M13 closure and M14 handoff with exact paths, Hub revision and remaining
-   FastEmbed PR work. Do not claim closure while required evaluation is incomplete.
+7. Commit M13 closure and a self-contained M14 release handoff. Hugging Face upload
+   and the clean upstream FastEmbed PR belong to the different LLM doing M14.
+   Do not claim closure while required evaluation is incomplete.
 
-## Updated release boundary — latest user instruction, 2026-09-15 UTC
+## Release boundary and handoff requirements — latest user clarification
 
-The user explicitly included Hugging Face upload in the next session's M13 closure.
-This supersedes the earlier M13/M14 publication split: finish nano release packaging,
-model card, licensing/attribution checks, upload and published-artifact verification
-as part of this continuation. Reuse m11/CODEMAP.md and m11/release/ patterns; do not
-blindly run zero/document-tower publishers against nano. Zero/stella already shipped;
-do not republish them. M14 retains the clean upstream FastEmbed PR. Release remains
-authorized unless gross overfitting or catastrophic failure is demonstrated; missing
-superiority targets alone does not block it. Preserve all measured limitations.
+Hugging Face publication remains M14. The user corrected the temporary request to
+include upload in M13; that temporary scope is superseded. M13 delivers the fixed
+artifacts, complete measurement evidence and qualified release recommendation.
+M14 owns final release packaging/model card, Hub upload and remote verification,
+and the clean upstream FastEmbed PR. Zero/stella already shipped; do not republish.
+Release policy remains: release unless gross overfitting or catastrophic failure;
+missing superiority targets alone does not block it.
+
+Before M13 closes, create a single M14 entry document that a different LLM can use
+without this conversation. Include:
+
+- Exact branch/commit, explicit M13 closed or incomplete status, and remaining M14
+  work; distinguish completed checks from commands still to run.
+- Frozen checkpoint, ONNX, tokenizer/config, backup and environment paths plus
+  hashes. Large ignored/local artifacts need durable retrieval locations and
+  restore/verification commands: a Git path or machine-specific symlink alone
+  does not make them available to a remote agent. Verify availability before
+  storage cleanup; do not put credentials in Git.
+- Final six-set/conditional reserved decisions, M9 comparison, serving costs,
+  per-dataset results and supporting files. Include the 279-example shortfall,
+  original failed dose receipt, teacher-exposure and COV-selection caveats.
+- Runnable inference/parity examples, pooling/tokenizer limits, package versions,
+  license/source attribution inputs and the release recommendation. Reuse
+  m11/CODEMAP.md and m11/release/ patterns; do not blindly run zero publishers.
+- Expected owner namespace (DylanCouzon; verify at release), intended nano repo,
+  existing zero/document-tower revisions, authentication setup references without
+  secrets, and upload/download verification steps for M14.
+- Remaining pods/storage costs, backup evidence and STOP-only constraints, plus
+  any monitors/jobs still active and how to inspect or stop them.
+
+This is a closure requirement, not a claim that the final M14 package exists now.
 
 ## Monitoring / resumption
 

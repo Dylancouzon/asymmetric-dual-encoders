@@ -28,10 +28,10 @@
       "written": "2026-09-14T23:57:21.963715+00:00"
     }
   },
-  "next": "User resumes manually in morning from m13/HANDOFF.md; finish evaluation, costs, M9 comparison, conditional reserved if triggered, and authorized Hugging Face nano upload/verification before M13 closure.",
+  "next": "User resumes manually in morning from m13/HANDOFF.md; finish M13 evaluation, costs, M9 comparison and conditional reserved if triggered, then commit closure and self-contained artifact/evidence handoff for the different LLM completing M14.",
   "resume_file": "m13/HANDOFF.md",
   "no_rerun": "m10-six-spent already pushed; do not launch another nano scoring process.",
   "m9_preflight": "PASSED; scoring NOT STARTED",
   "wake_up_agent_installed": false,
-  "huggingface_publication": "AUTHORIZED_IN_M13_CLOSURE_UNLESS_GROSS_OVERFITTING_OR_CATASTROPHIC_FAILURE"
+  "huggingface_publication": "M14_OWNED_BY_DIFFERENT_LLM_AFTER_M13_HANDOFF"
 }

@@ -7,11 +7,11 @@ User will resume manually in the morning. Goal PAUSED; no separate agent or wake
 launcher installed. CPU nano final six-set benchmark and two local monitors remain
 running; read work/m13-final/execution.json and verify actual PIDs before acting.
 m10-six-spent is already pushed: NEVER restart nano scoring.
-Latest scope explicitly includes Hugging Face upload/verification of nano before
-M13 closure; older text assigning all publication to M14 is superseded. Release
-unless gross overfitting or catastrophic failure, with honest measured claims.
-M14 retains the clean upstream FastEmbed PR. No further permission question needed
-for the already-authorized release. Preserve prior dose failure and all audit history.
+Latest clarification: Hugging Face publication stays in M14, owned by a different
+LLM. M13 must finish its measurements and deliver a self-contained release handoff
+with durable artifacts, hashes, results and runnable validation/retrieval instructions.
+See m13/HANDOFF.md for the closure checklist. Release unless gross overfitting or
+catastrophic failure, with honest claims. Preserve dose failure and audit history.
 
 ---
 
