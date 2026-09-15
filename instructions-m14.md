@@ -26,3 +26,8 @@ Historical release mandate/rulings:
 Latest user clarification (2026-09-15 UTC): the different LLM handling M14 owns
 Hugging Face upload and release verification, as well as the FastEmbed PR. Start
 from the completed M13 closure and its release handoff; do not depend on chat history.
+
+Later user clarification (2026-09-15 UTC): M14 also owns the A100 execution of the
+already-triggered registered reserved four. Run the pushed M13 implementation and
+complete that zero-alpha report before public release, preserving M13's original
+`INCOMPLETE_RESERVED` result and the post-trigger ownership disclosure (R19).

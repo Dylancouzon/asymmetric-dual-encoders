@@ -211,6 +211,19 @@ def check(path):
     kind = classify(path)
     if kind is None:
         return None
+    # `datasets.load_dataset(..., "corpus")` first passes `check_dataset`, then opens the
+    # downloaded Arrow files through builtins.open.  The corpus-only allowlist entry therefore
+    # has to survive BOTH gates.  The original exemption covered only the loader call, which made
+    # the registered pre-encode impossible as soon as datasets touched its cache.  Keep the path
+    # exemption just as narrow: an exact reserved corpus repository, a literal `corpus` config
+    # directory, and never a `-qrels` repository.  Frozen payloads and work/dev aliases do not
+    # have this shape and remain protected.
+    entry = ALLOWLIST.get(_claim, {})
+    if entry.get("corpus_only_datasets"):
+        if _reserved_corpus_cache(path):
+            return "untouched_corpus_only"
+        if _reserved_cache_metadata(path):
+            return "reserved_cache_metadata_only"
     if _claim is None:
         raise ProtectedPathRefusal(
             f"LEDGER G2: refusing to open {path} (protected kind {kind!r}). No allowlist entry is "
@@ -222,6 +235,43 @@ def check(path):
             f"LEDGER G2: {_claim!r} may open {sorted(ALLOWLIST[_claim]['kinds'])} but not "
             f"{kind!r} ({path}). Entry's justification: {ALLOWLIST[_claim]['why']}")
     return kind
+
+
+def _reserved_corpus_cache(path):
+    """Whether `path` is inside datasets' cache for an allowlisted reserved CORPUS.
+
+    This intentionally recognizes cache layout, not arbitrary paths containing the dataset name.
+    Both current layouts place the requested config (`corpus`) directly below the encoded dataset
+    repository directory.  Qrels use either a `-qrels` repository or `default`, so cannot match.
+    """
+    try:
+        relative = Path(path).resolve().relative_to(HF.resolve())
+        parts = [str(x).lower() for x in relative.parts]
+    except (TypeError, ValueError, OSError):
+        return False
+    for i, part in enumerate(parts[:-1]):
+        exact_beir = part in {"beir___fever", "beir___dbpedia-entity"}
+        exact_cqa = part in {"mteb___cqadupstack-android", "mteb___cqadupstack-english"}
+        configured_cqa = part == "beir___cqadupstack" and i + 2 < len(parts) \
+            and parts[i + 1] in RESERVED_CQA_CONFIGS and parts[i + 2] == "corpus"
+        if (exact_beir or exact_cqa) and parts[i + 1] == "corpus":
+            return True
+        if configured_cqa:
+            return True
+    return False
+
+
+def _reserved_cache_metadata(path):
+    """Allow only the config-name metadata datasets inspects during offline cache selection."""
+    try:
+        relative = Path(path).resolve().relative_to(HF.resolve())
+    except (TypeError, ValueError, OSError):
+        return False
+    if relative.name != "dataset_info.json" or not relative.parts:
+        return False
+    repository = str(relative.parts[0]).lower()
+    exact = {value.lower() for value in RESERVED_HF_CACHE_PREFIXES}
+    return repository in exact or repository == "beir___cqadupstack"
 
 
 def check_dataset(name, config=None):

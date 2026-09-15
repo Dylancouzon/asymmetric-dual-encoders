@@ -1489,3 +1489,18 @@ own stella encode cache under `work/lotte/enc/`, never the GooAQ-licensed search
 archive; it writes the aggregate record `m13/LOTTE_GATE.json` and refuses to execute twice. Dylan's
 rulings: `m13/RULINGS.md` R8 (metric, slices, identities) and R16 (a small script, no general
 executor), 2026-09-10. No other entry, kind or rule changed.
+
+## 16 — implementation clarification 2026-09-15: corpus-cache metadata is not a payload
+
+The triggered M13 reserved pre-encode exercised `m8src.pre_encode`'s already-registered
+corpus-only route before any reserved label access. `datasets` in offline/cache mode locates the
+requested `corpus` config by reading each cached config's `dataset_info.json`; the original path
+guard allowed the loader call and corpus Arrow file but refused that config-name metadata, making
+the registered pre-encode impossible. The guard now permits only `dataset_info.json` beneath an
+exact reserved dataset cache plus an exact `corpus` Arrow path. Query Arrow files, qrel Arrow files,
+`work/dev` aliases and frozen payloads remain refused. Runtime tests cover all four allowed corpus
+layouts and refuse both query and qrel content. The alias test names and refuses the two historical
+`work/dev` paths even in a worktree where those duplicate protected payloads are intentionally not
+shipped; the guard intercepts the open before filesystem existence is consulted. This changes no
+access, dataset, system, statistic or trigger; it makes the pre-registered corpus-only contact class
+executable.
