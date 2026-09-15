@@ -1,0 +1,34 @@
+{
+  "checked_at": "2026-09-15T00:09:36.819663+00:00",
+  "agent_state": "ACTIVE",
+  "milestone_state": "M13_IN_PROGRESS",
+  "training": "STOPPED",
+  "gpu_pods": "ALL_EXITED_AT_LAST_LIVE_CHECK",
+  "final_evaluation": {
+    "status": "RUNNING",
+    "stage": "final-six",
+    "pid": 330084,
+    "started_at": 1789429678.7244878,
+    "device": "cpu",
+    "paid_compute": false,
+    "child_pid": 330139,
+    "updated_at": 1789430968.7608354
+  },
+  "completed_datasets": {
+    "nfcorpus": {
+      "queries": 323,
+      "mean": 0.36308038066321896,
+      "bridge_ok": true,
+      "written": "2026-09-15T00:03:46.915829+00:00"
+    },
+    "scifact": {
+      "queries": 300,
+      "mean": 0.7210974963001988,
+      "bridge_ok": true,
+      "written": "2026-09-14T23:57:21.963715+00:00"
+    }
+  },
+  "next": "Finish nano benchmark; M9 closeout and conditional reserved execution; serving costs; M13 closure for M14.",
+  "resume_file": "m13/HANDOFF.md",
+  "no_rerun": "m10-six-spent already pushed; do not launch another nano scoring process."
+}

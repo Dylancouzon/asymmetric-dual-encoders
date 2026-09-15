@@ -27,3 +27,6 @@ The 2026-09-10 recipe/judging split remains recorded. It did not remove the pre-
 or permit M9 close-out while an M10-derived recipe decision remains open. M13 owns enforcement.
 
 - 2026-09-14T23:48:04.125687+00:00 — **FINAL-RUN-BEGIN** freeze `3e49e0bfaa63` pid 330139 host `Str0keWtf`
+- 2026-09-14T23:48:07.992314+00:00 — **FINAL-RUN access** (six) `scifact`: 5,183 docs / 300 queries, corpus hashes verified against a fresh HF download, labels read from `results/frozen_eval/scifact.json`.
+- 2026-09-14T23:57:22.097572+00:00 — **FINAL-RUN access** (six) `nfcorpus`: 3,633 docs / 323 queries, corpus hashes verified against a fresh HF download, labels read from `results/frozen_eval/nfcorpus.json`.
+- 2026-09-15T00:03:48.386068+00:00 — **FINAL-RUN access** (six) `fiqa`: 57,638 docs / 648 queries, corpus hashes verified against a fresh HF download, labels read from `results/frozen_eval/fiqa.json`.

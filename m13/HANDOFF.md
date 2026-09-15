@@ -5,7 +5,7 @@ Branch: m13-stage1-execution-prep. Parent main checkout/GPU belongs to M17.
 Read this file, m13/RESUME.md, m13/RELEASE_DECISION.md, instructions-m13.md,
 and instructions-m14.md. Do not assume M13 is closed until a closure record says so.
 
-## Current state — 2026-09-15 00:03 UTC
+## Current state — see results/m13_live_status.json for the latest timestamp
 
 AGENT: active, pursuing M13 close-out. NEXT AGENT: monitor or resume M13 if not
 closed; only start M14 publication after the M13 closure/handoff exists.
@@ -19,8 +19,8 @@ Inspect child CPU/log/dataset output times if progress appears stalled.
 One-shot access m10-six-spent is already pushed. NEVER launch another nano scoring
 run after that tag. If a process fails, preserve its state; only decisions-only
 recovery from complete saved rows is available. The current process must finish.
-Preflight clean,49tests and production synthetic rehearsal passed. SciFact first
-row persisted with bridge passed. No full verdict exists yet.
+Preflight clean,49tests and production synthetic rehearsal passed. SciFact and NFCorpus
+rows persisted with bridge passed. No full verdict exists yet.
 
 ## Evidence and scope
 
