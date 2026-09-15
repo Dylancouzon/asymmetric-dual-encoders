@@ -1,0 +1,169 @@
+{
+  "stage": "S1",
+  "manifest": {
+    "path": "work/m13cloud/work/m13cloud-build-preflight-retry-backup/manifest.json",
+    "expected_sha256": "cb5341e8e9bcff8f07c650345b484ea5d19e6b9d9987cc1282b5fb03337c2602",
+    "actual_sha256": "cb5341e8e9bcff8f07c650345b484ea5d19e6b9d9987cc1282b5fb03337c2602",
+    "match": true
+  },
+  "source_root": "work/m13cloud/work/m13cloud-build-preflight-retry-backup",
+  "restore": {
+    "checkpoint_target": "work/m13cloud/work/m13-final/cycle3.pt",
+    "checkpoint_action": "existing target verified; not overwritten",
+    "onnx_target": "work/m13cloud/work/m13-final/onnx",
+    "onnx_action": "installed six files after requiring every destination to be absent",
+    "restored_file_count": 6
+  },
+  "files": [
+    {
+      "path": "work/m13build/BUILD-200M/receipt.json",
+      "bytes": 507,
+      "expected_sha256": "87b16009ce56a855ce580547b2ca46c7d36639111db5b49c629074c8e98429c4",
+      "actual_sha256": "87b16009ce56a855ce580547b2ca46c7d36639111db5b49c629074c8e98429c4",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/record.json",
+      "bytes": 25127,
+      "expected_sha256": "e2dbbf5b41e84f3a650d520a365d8a65612bf90fd202794b2c54066195fcd88d",
+      "actual_sha256": "e2dbbf5b41e84f3a650d520a365d8a65612bf90fd202794b2c54066195fcd88d",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/state.json",
+      "bytes": 11403,
+      "expected_sha256": "baf1239ee24432d770e1301be4e41e8dc3b3fcfd5af27574ad8be524d849caa2",
+      "actual_sha256": "baf1239ee24432d770e1301be4e41e8dc3b3fcfd5af27574ad8be524d849caa2",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/ckpt.pt",
+      "bytes": 413567359,
+      "expected_sha256": "a29f1533c67cb18d7377200ac9534229c1ff656d4611e507fd6d762559110616",
+      "actual_sha256": "a29f1533c67cb18d7377200ac9534229c1ff656d4611e507fd6d762559110616",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/cycle3.pt",
+      "bytes": 413567295,
+      "expected_sha256": "3e49e0bfaa633abe276da7847d0ac44cbfb3d7d5215b9343f255706eeb5789a1",
+      "actual_sha256": "3e49e0bfaa633abe276da7847d0ac44cbfb3d7d5215b9343f255706eeb5789a1",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/cov_cycle3.json",
+      "bytes": 368196,
+      "expected_sha256": "9ebffe14320664abd5ada22732026b206ccb69bc202141f4310620c46e2f241c",
+      "actual_sha256": "9ebffe14320664abd5ada22732026b206ccb69bc202141f4310620c46e2f241c",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/cov_mid5208332.json",
+      "bytes": 368220,
+      "expected_sha256": "5c9618f2782e83ceccf1e44d53f574b6d902ab7531e484b441a298787a50054a",
+      "actual_sha256": "5c9618f2782e83ceccf1e44d53f574b6d902ab7531e484b441a298787a50054a",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/cycle2.pt",
+      "bytes": 413566399,
+      "expected_sha256": "cb751549eabc921b1aad981219eae9831110add514f4e801eb7b6e513f320132",
+      "actual_sha256": "cb751549eabc921b1aad981219eae9831110add514f4e801eb7b6e513f320132",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/cov_cycle2.json",
+      "bytes": 368557,
+      "expected_sha256": "5732eceff2ba231c528e1c4f33bd6c0f93ad1cb2ea6c5ebd3e8bdef0b385c182",
+      "actual_sha256": "5732eceff2ba231c528e1c4f33bd6c0f93ad1cb2ea6c5ebd3e8bdef0b385c182",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/cov_mid3124999.json",
+      "bytes": 368245,
+      "expected_sha256": "549ad9206c8eb782feca82993a7692b8eb2e9bb2d1fa9fd5c15083fc7faf478d",
+      "actual_sha256": "549ad9206c8eb782feca82993a7692b8eb2e9bb2d1fa9fd5c15083fc7faf478d",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/cycle1.pt",
+      "bytes": 413565439,
+      "expected_sha256": "f1b0d88a72eb1a80fdc842cea3cf254a369cb973be5adbdc38c29ebdea4be489",
+      "actual_sha256": "f1b0d88a72eb1a80fdc842cea3cf254a369cb973be5adbdc38c29ebdea4be489",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/cov_cycle1.json",
+      "bytes": 368163,
+      "expected_sha256": "9658bbdcc41a86982de6239b8c04db2626ebde618c1e3037a9df7dbbed8c30e2",
+      "actual_sha256": "9658bbdcc41a86982de6239b8c04db2626ebde618c1e3037a9df7dbbed8c30e2",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/cov_mid1041666.json",
+      "bytes": 366795,
+      "expected_sha256": "1f8627196f45bd9cd9feadaa559c93dd1743223327c55d80288445366be9f689",
+      "actual_sha256": "1f8627196f45bd9cd9feadaa559c93dd1743223327c55d80288445366be9f689",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/losses.jsonl",
+      "bytes": 291946266,
+      "expected_sha256": "428217a87b9ce268295c3e5cd203fcdb54ed6246ae150614729600769e4a8e53",
+      "actual_sha256": "428217a87b9ce268295c3e5cd203fcdb54ed6246ae150614729600769e4a8e53",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/onnx/config.json",
+      "bytes": 655,
+      "expected_sha256": "98fad585a266cd31954a97923401d745e971044cceb8edafde041057526980a4",
+      "actual_sha256": "98fad585a266cd31954a97923401d745e971044cceb8edafde041057526980a4",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/onnx/tokenizer.json",
+      "bytes": 711649,
+      "expected_sha256": "91f1def9b9391fdabe028cd3f3fcc4efd34e5d1f08c3bf2de513ebb5911a1854",
+      "actual_sha256": "91f1def9b9391fdabe028cd3f3fcc4efd34e5d1f08c3bf2de513ebb5911a1854",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/onnx/vocab.txt",
+      "bytes": 231508,
+      "expected_sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3",
+      "actual_sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/onnx/special_tokens_map.json",
+      "bytes": 119,
+      "expected_sha256": "0c995ed077668e947c7a9eeb9547d422dd1c772fe62423438ad94cba6cb8e13f",
+      "actual_sha256": "0c995ed077668e947c7a9eeb9547d422dd1c772fe62423438ad94cba6cb8e13f",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/onnx/tokenizer_config.json",
+      "bytes": 1165,
+      "expected_sha256": "f200fb1884378ce61e48f716aeb66f7cb243a5d6f58927ae45a6e18e2526f817",
+      "actual_sha256": "f200fb1884378ce61e48f716aeb66f7cb243a5d6f58927ae45a6e18e2526f817",
+      "match": true
+    },
+    {
+      "path": "work/m13build/BUILD-200M/onnx/model.onnx",
+      "bytes": 137802369,
+      "expected_sha256": "9ba0acf57b71dc31bc5512c5445078a797fa51cf3e85587d6b8a506bfc55dbc2",
+      "actual_sha256": "9ba0acf57b71dc31bc5512c5445078a797fa51cf3e85587d6b8a506bfc55dbc2",
+      "match": true
+    },
+    {
+      "path": "results/m13_build_record.json",
+      "bytes": 25127,
+      "expected_sha256": "e2dbbf5b41e84f3a650d520a365d8a65612bf90fd202794b2c54066195fcd88d",
+      "actual_sha256": "e2dbbf5b41e84f3a650d520a365d8a65612bf90fd202794b2c54066195fcd88d",
+      "match": true
+    }
+  ],
+  "verified_file_count": 21,
+  "mismatch_count": 0,
+  "passed": true
+}
