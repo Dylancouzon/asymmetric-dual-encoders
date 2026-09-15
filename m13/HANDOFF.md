@@ -69,8 +69,9 @@ then traveling; continue autonomously and leave explicit running/stopped status.
 
 M9: m13src/m9_closeout13.py, eight synthetic tests passed and two independent
 reviews completed. Real frozen M9 adapter passed a synthetic one-query smoke.
-M9 registry R3 bridge is already dated; ratified_by_owner is still false.
-Pin the reviewed M9 run and flip its ratification before preflight; do not run it
+M9 registry R3 bridge is dated and ratified_by_owner is now true.
+The reviewed execution pin is m13/M9_CLOSEOUT.md; its metadata-only preflight
+passed clean. Recheck preflight immediately before execution; do not run it
 concurrently with nano. Do not modify bound shared code to accelerate nano.
 
 Costs: `.venv/bin/python scripts/m13_serving_costs.py --measure` AFTER the CPU

@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-09-15T00:15:24.946887+00:00",
+  "checked_at": "2026-09-15T00:17:49.635724+00:00",
   "agent_state": "ACTIVE_GOAL_WAITING_ON_FINAL_BENCHMARK",
   "milestone_state": "M13_IN_PROGRESS",
   "training": "STOPPED",
@@ -12,7 +12,7 @@
     "device": "cpu",
     "paid_compute": false,
     "child_pid": 330139,
-    "updated_at": 1789431298.7672508
+    "updated_at": 1789431448.7698443
   },
   "completed_datasets": {
     "nfcorpus": {
@@ -28,7 +28,8 @@
       "written": "2026-09-14T23:57:21.963715+00:00"
     }
   },
-  "next": "Finish active nano final benchmark. M9 close-out and serving cost tools are prepared; no workload stopped.",
+  "next": "Nano final CPU process330139 remains live on FiQA; after termination, measure serving costs then execute reviewed M9 closeout.",
   "resume_file": "m13/HANDOFF.md",
-  "no_rerun": "m10-six-spent already pushed; do not launch another nano scoring process."
+  "no_rerun": "m10-six-spent already pushed; do not launch another nano scoring process.",
+  "m9_preflight": "PASSED; scoring NOT STARTED"
 }
