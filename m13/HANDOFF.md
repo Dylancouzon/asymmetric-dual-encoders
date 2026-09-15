@@ -81,3 +81,14 @@ ONNX. Three fresh processes/model, batch1,4threads; synthetic latency lengths.
 No cost measurement started yet. No reserved implementation added before trigger.
 User steering: do not over-engineer; reuse existing components and keep scope to
 M13 closure and a useful M14 handoff.
+
+Additional serving correctness check PASSED: results/m13_serving_validation.json.
+Existing build13.fastembed_parity reused on a separate copy of the frozen export,
+with the exact eight synthetic texts recorded in the result. No original artifact
+modified. Max absolute difference1.112e-7, min cosine0.999999956.
+
+Last agent checkpoint: 2026-09-15T00:15:24.946604+00:00.
+M13 goal remains ACTIVE. Benchmark RUNNING on FiQA; no workload stopped.
+Preparation complete for now; next dependent action waits for the existing final
+benchmark. The agent may yield between checks; the detached supervisor and monitor
+continue independently. Check live receipt/child PID rather than assuming chat activity.
