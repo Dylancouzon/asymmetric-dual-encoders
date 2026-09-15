@@ -1,0 +1,15 @@
+{
+  "status": "RUNNING",
+  "stage": "waiting-for-gate",
+  "pid": 140903,
+  "started_at": 1789173177.974856,
+  "initial_head": "1f0cda0520f8cdd7418a7f28ea5ec705fe3f1feb",
+  "launcher_sha256": {
+    "after_gate.py": "607a1006b5bcb706656e1ee8b105ec3477614fad69e0e1b2d6ca837743ba8f9c",
+    "build.py": "16e6b2f2240962e1073174654ebc9cd99e9e51596b9b5900d7cf8039e021e74b",
+    "build_allocation.py": "7e07fe1cf9a577c268e04c1f29a66fac22fc577a018e7ec85228e4493354df26"
+  },
+  "gate_pid": 136163,
+  "pod_id": "wnzk8eeqrrkw4m",
+  "updated_at": 1789175277.9942834
+}
