@@ -279,12 +279,7 @@ def branch_of(cfg):
         refuse("the E1 verdict is PENDING: results/m10_screen_verdicts.json:selected.batch is not a "
                "batch size. Both E arms run first; read #1 sits after them and before the build "
                "(m10/LOTTE_LOCK.md).")
-    try:
-        b = int(sel)
-    except (TypeError, ValueError):
-        refuse(f"`selected.batch` is {sel!r}, not a batch size")
-    if b not in (32, 128):
-        refuse(f"`selected.batch` is {b}; the registered branches are bs32 and bs128")
+    b = BL.selected_batch(sel)
     return ("bs128" if b == 128 else "bs32"), b, sha256_file(Path(cfg.verdicts_path))
 
 

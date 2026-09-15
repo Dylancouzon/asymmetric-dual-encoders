@@ -135,10 +135,10 @@ the annealed cycle end carrying the best COV macro `m_k`, disclosed as **dev-sel
 
 | field | value |
 |---|---|
-| candidate checkpoint | *pending: the synthesized selected-recipe arm at 5M, A100. If E selects bs32 this is `E-bs32` and the VETO is skipped (its observational row is still read)* |
-| candidate sha256 | *pending* |
-| comparator checkpoint | the A100 screen-dose arm of the fallback recipe (`E-bs32` in the bs128 branch) |
-| comparator sha256 | *pending the second manifest commit* |
+| candidate checkpoint | `work/m10arms/E-bs32/cycle3.pt` (E-bs32, 5M, A100; veto skipped, observational row required) |
+| candidate sha256 | `36152c3a564f35ba72b1a3fb7f3e0ca272c43a833764be2102580c73ccc2266b` |
+| comparator checkpoint | none in the selected bs32 branch (identical recipe and action) |
+| comparator sha256 | not applicable (bs32 branch) |
 | slices | LoTTE-clean, 7 slices, macro at equal weight |
 | bootstrap | B = 10,000, seed 903, paired within slice, one-sided 97.5% upper bound |
 | veto margin | 0.004 |

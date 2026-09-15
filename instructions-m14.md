@@ -30,11 +30,11 @@ completed M13 closure and its release handoff; do not depend on chat history.
 ## Reserved-four inheritance and Zero comparison — owner ruling 2026-09-15
 
 M13's completed six-set decision triggered the registered descriptive reserved-four stage
-(FEVER, DBpedia Entity, CQADupStack Android and CQADupStack English), but the production
-executor stopped **before opening any reserved payload**: the required approximately 10M
-Stella passage vectors do not exist and the protected-access allowlist/executor is not yet
-implemented. The six-set verdict stands. Verify from the M13 closure/handoff that reserved
-access is still unspent; never infer this merely from an `INCOMPLETE_RESERVED` label.
+(FEVER, DBpedia Entity, CQADupStack Android and CQADupStack English). M13 closed **before opening
+any reserved payload** and delivered a tested base executor for the originally registered three
+systems; the approximately 10M Stella passage vectors still do not exist. The six-set verdict
+stands. Verify from the M13 closure/handoff that reserved access is still unspent; never infer
+this merely from an `INCOMPLETE_RESERVED` label.
 
 If the reserved access remains unspent at M14 execution time, M14 inherits this unfinished
 descriptive evaluation. Before opening any of the four datasets, make and push a dated,
@@ -57,3 +57,9 @@ not consume another protected access.
 
 If evidence shows that the reserved payload was already opened before this amendment was pushed,
 do not reopen it to add Zero. Preserve the one-access rule and document Zero's omission instead.
+
+Later user clarification (2026-09-15 UTC): M14 also owns the A100 execution of the
+already-triggered reserved four. First make the Zero amendment above, extend and test the pushed
+M13 base implementation without touching protected data, then complete the one zero-alpha report
+before public release. Preserve M13's original `INCOMPLETE_RESERVED` result and the post-trigger
+ownership disclosure (R19).

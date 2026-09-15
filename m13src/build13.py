@@ -656,7 +656,9 @@ def _run(ctx, config, *, device, resume, smoke_steps, batch, max_len, ckpt_every
                          loss_name=plan["objective"], eval_fn=base_eval, ckpt_path=base_ck,
                          ckpt_every=cadence(plan["total_steps"]),
                          resume_from=(str(base_ck) if resume and base_ck.exists() else None),
-                         seed=seed, log_every=max(plan["total_steps"] // 50, 1), device=device,
+                         # Keep progress visible between rolling checkpoints on multi-day builds.
+                         seed=seed, log_every=max(min(plan["total_steps"] // 50,
+                                                     cadence(plan["total_steps"]) // 6), 1), device=device,
                          batch_size=batch, cycle_ckpt_fmt=str(out_dir / "cycle{cycle}.pt"),
                          eval_state=ev, fingerprint=fp, loss_log=str(loss_log))
         state["base"] = {k: r[k] for k in ("steps_run", "start_step", "total_steps", "stopped",
@@ -802,7 +804,7 @@ def freeze_checkpoint(model, out_dir, final_ck, *, smoke=False, verbose=True):
     """DEV-6 once, the ONNX export, and the serving-parity reads. A smoke skips DEV-6 (~13 GB of
     reads) exactly as `run_arm`'s does, and says so in the record.
 
-    Returns `verified: False` with `unverified_why` when the export RAISED or the ORT parity did
+    Returns `verified: False` with `unverified_why` when DEV-6 or export raised, or ORT parity did
     not reach `PARITY_MIN_COS`. The version this replaces swallowed the export exception into an
     `export_error` field that nothing read, so a build whose ONNX never existed still published
     `complete: true` and a final checkpoint (Codex 2026-09-10, B8). fastembed serving parity IS part of the bar (Codex re-check 2026-09-10, B8): `pass_min_cos_1e-4` must be true, so a box without fastembed leaves the freeze unverified until it is re-run where fastembed serves it.md` pitfalls 2 and 5); the ORT parity is the one this
@@ -817,7 +819,14 @@ def freeze_checkpoint(model, out_dir, final_ck, *, smoke=False, verbose=True):
     if smoke:
         out["dev6"] = {"skipped": "a smoke never reads DEV-6 (run_arm.dev6's ~13 GB)"}
     else:
-        out["dev6"] = R.dev6(model, verbose=verbose)          # on the training device
+        try:
+            out["dev6"] = R.dev6(model, verbose=verbose)      # on the training device
+        except Exception as e:
+            # Training already completed. As with export/parity failures below,
+            # preserve the checkpoint and let --resume retry finalization only.
+            out["dev6_error"] = f"{type(e).__name__}: {e}"
+            out["unverified_why"] = f"the DEV-6 finalization raised: {out['dev6_error']}"
+            return out
     d = out_dir / "onnx"
     try:
         # Export, parity and encoding run EAGER and on CPU (`m10/HEADROOM.md` §T). `export_onnx`

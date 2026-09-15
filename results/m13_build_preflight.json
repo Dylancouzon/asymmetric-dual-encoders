@@ -1,0 +1,255 @@
+{
+  "status": "PASSED",
+  "git_head": "ee1bd6617c4fec7f4c97c73e7c6eed52f66ff50a",
+  "scope": "CPU dependency checks only; no scoring, training or teacher encoding",
+  "full_uncut_assembly_verified": true,
+  "dev6_cache_reuse_verified": true,
+  "cov_cache_integrity_verified": true,
+  "artifact_sha256": {
+    "m13/build_transfer_manifest.json": "28c1695c4cd451425a7340087787b105764c8c9635ffd85571bca401a6a9fd38",
+    "m13/build_config.json": "32b73c50d87ec66eb6373cedea80eeca5fb8248f48b56441bb0b8badd856a257",
+    "m10/screen_registry.json": "41ff54c33dd88e5adedbe0855dd97c61e4ce19f635e1326320409d97bc71c9ec",
+    "m13/LOTTE_GATE.json": "698d5473c0b8f6216a316046ba696c7b63548d273c11e3f8c7a77363f4d4634c",
+    "m13/LOTTE_GATE_MANIFEST.json": "899c6c0ef786f9e2eba6caff920875968267d58c95309d19e937220cf6d25805",
+    "results/m10_screen_verdicts.json": "6690c8af5e7288cd31870e27c7bf62d7be1aa0fb19ad0bd651f0f35f0bc4f4c5",
+    "results/m10_arm_E-bs32.json": "c90bd6515425c634c41ea41c38c29ad87aa8877f71d8e52709e636e36b8cb70e",
+    "results/m10_arm_E-bs128.json": "271e466bdcceaec7cb470b0d3df67d99bd262589f0f1b378e0e001934bff6761",
+    "scripts/m13_build_preflight.py": "1823b4d19677463777d6aab41fca8a14285331a728e469cf720550d604636586",
+    "scripts/m13_e_preflight.py": "6732c48ef695264b9d34cb2153b4d74f14091795422bc31032e4be8a98c98e39",
+    "m13src/build13.py": "b15625f5b5c30c46e52f55b979ff451fca4c3963bbd05dbd00030ed3fd38b5b5",
+    "m13src/build_lock.py": "ea0926dcb65fbd96ef3556e5888a1c812b0ddc387a1815198309dd8bec404327",
+    "m10src/run_arm.py": "0ae8d823c5dfb42988a258c00001c9e52478b93a3423ed28dce2a14ad88621a4",
+    "m10src/corpus_loader.py": "624242bd2d183f8611272a5c1c13821ce9c302ad8a6623a72eb4c7937b09520c",
+    "m10src/data10.py": "56562cb9717295ab5fb478b663f283e715533de0caaca0c9f6260d7989203dd1",
+    "m10src/rescreen10.py": "67d705df097707fb242abefabd6ae0aa161c0432de0ec1dbe1c2e6d0cbece12e",
+    "m10src/nano10.py": "c337229aa75f4005d05b2e6b469aaed8ff77cd62a01a7f3a249b180ccc2f75dd",
+    "m10src/cov_probe.py": "361215d6655a0e4186cd9830a3a90a8088681e48c49019028087db473bcee1e3",
+    "m9src/teacher9.py": "6c1b642d2908c049dd03867339b09de5ffc91bdc93de7c95de2fe50cf92f0272",
+    "m9src/eval9.py": "9b989b37c18b841420847491f4751283d10bf9c825aa6bc6d303de172738f471",
+    "m7src/teacher.py": "873a4040536c8f90e2b4aa9d7ec34c6e0dd784da5e4a6530a3310d5ad738079a",
+    "m7src/dev_eval.py": "e5f702536c8af6a7bfb64cbe8770a45f81201866b4b175d4dd129c398737caa1",
+    "m7src/heldout.py": "18df62aa0c019490a03a00aa8a58947a24991314dc660d32e886fd4519658161",
+    "m7src/devsuite.py": "3ae8141ac4b3f9bb8d64c29e026403b314a7f4295dfa9979888959e5f9050f7f"
+  },
+  "transfer_files_present": 394,
+  "transfer_hash_verification": "owned by cloud controller before this helper",
+  "assembly": {
+    "plan": {
+      "arm": "BUILD-200M",
+      "family": "build",
+      "dose_examples": 200000000,
+      "batch": 32,
+      "pattern": "75/25",
+      "pattern_source": {
+        "raw": null,
+        "resolved": "75/25",
+        "source": "anchor.mix",
+        "anchor_window_pattern": "3Q+1D"
+      },
+      "student": "bge-small",
+      "n_layers": 3,
+      "head": "linear",
+      "objective": "squared_l2",
+      "warm_start": "linear",
+      "cut_corpus": false,
+      "sources": [
+        "m9-pool",
+        "paq-build",
+        "harvest",
+        "generated"
+      ],
+      "n_docs": "all-eligible-rescreened",
+      "documents": {
+        "policy": "all_eligible_rescreened",
+        "repeat": true,
+        "reshuffle_per_epoch": true,
+        "epoch_seed": "derived from (seed, epoch) by corpus_loader.EpochShuffledStream",
+        "n": null,
+        "_why": "corpus_loader.arm_doc_count draws ceil(dose x 0.25) UNIQUE documents, i.e. 50,000,000 at 200M against a ~6.15M eligible pool. The archived lock registers 'document epochs ~ 8 over the 6.15M pool' instead: all eligible re-screened documents, repeated, reshuffled per epoch. `n` is a SMOKE-ONLY override and must be null for a registered run."
+      },
+      "total_steps": 6250000,
+      "cycle_end_steps": [
+        2083332,
+        4166665,
+        6249999
+      ],
+      "seed": 0
+    },
+    "batch_source": "results/m10_screen_verdicts.json:selected.batch",
+    "gate": {
+      "path": "m13/LOTTE_GATE.json",
+      "sha256": "698d5473c0b8f6216a316046ba696c7b63548d273c11e3f8c7a77363f4d4634c",
+      "executed": true,
+      "decision": "skipped",
+      "branch": "bs32",
+      "candidate_sha256": "36152c3a564f35ba72b1a3fb7f3e0ca272c43a833764be2102580c73ccc2266b",
+      "comparator_sha256": null,
+      "e1_verdict_sha256": "6690c8af5e7288cd31870e27c7bf62d7be1aa0fb19ad0bd651f0f35f0bc4f4c5",
+      "read_at": "2026-09-12T00:54:40+0000",
+      "code_identity": "136caa1d5f9536897a712044dea3bd72992fc2bcc36ceb934493b750b87a72ac",
+      "manifest_sha256": "899c6c0ef786f9e2eba6caff920875968267d58c95309d19e937220cf6d25805",
+      "manifest_commit": "debd49b6d541bcce9e9374a6381bac34d80ed1de",
+      "e1_batch": 32,
+      "arm_records_checked": true,
+      "manifest": {
+        "path": "m13/LOTTE_GATE_MANIFEST.json",
+        "sha256": "899c6c0ef786f9e2eba6caff920875968267d58c95309d19e937220cf6d25805",
+        "branch": "bs32",
+        "commit": "debd49b6d541bcce9e9374a6381bac34d80ed1de"
+      },
+      "commit": "9d97291ee42714af66bd2318c3c9ed66f95a694d"
+    },
+    "assembly_manifest_sha256": "a6bbf5e0a8d2f13360b3124d7d90c6022312621e115f430c8dc08fdcc4906c84",
+    "validation": {
+      "config_arm": "BUILD-200M",
+      "registry": "m10/screen_registry.json",
+      "registry_sha256": "41ff54c33dd88e5adedbe0855dd97c61e4ce19f635e1326320409d97bc71c9ec",
+      "registry_sha256_pinned": null,
+      "anchor_fields_checked": [
+        "mix",
+        "window_pattern",
+        "objective",
+        "feature_layers",
+        "feature_dim",
+        "seed",
+        "init",
+        "sources",
+        "head",
+        "head_layers",
+        "warm_start",
+        "student"
+      ],
+      "differs_from_anchor": [
+        "dose_examples",
+        "batch",
+        "documents",
+        "data_cut"
+      ],
+      "dose_examples": 200000000,
+      "document_policy": {
+        "policy": "all_eligible_rescreened",
+        "repeat": true,
+        "reshuffle_per_epoch": true,
+        "epoch_seed": "derived from (seed, epoch) by corpus_loader.EpochShuffledStream",
+        "n": null,
+        "_why": "corpus_loader.arm_doc_count draws ceil(dose x 0.25) UNIQUE documents, i.e. 50,000,000 at 200M against a ~6.15M eligible pool. The archived lock registers 'document epochs ~ 8 over the 6.15M pool' instead: all eligible re-screened documents, repeated, reshuffled per epoch. `n` is a SMOKE-ONLY override and must be null for a registered run."
+      },
+      "data_cut": "none",
+      "require_all_forms": true,
+      "extension_cycles": "none (ruling R13)",
+      "plateau_min_gain": 0.003,
+      "verdicts_sha256": "6690c8af5e7288cd31870e27c7bf62d7be1aa0fb19ad0bd651f0f35f0bc4f4c5",
+      "smoke": false
+    }
+  },
+  "cov": {
+    "units": 10,
+    "queries": 13416,
+    "caches": [
+      {
+        "path": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-MedicalQARetrieval-d-stella-400M-v5-10e9f29435bd",
+        "documents": 2048,
+        "chunks": 1,
+        "identity": "10e9f29435bd",
+        "verified": true
+      },
+      {
+        "path": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchCorporateLobbying-d-stella-400M-v5-1557641d6093",
+        "documents": 319,
+        "chunks": 1,
+        "identity": "1557641d6093",
+        "verified": true
+      },
+      {
+        "path": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LegalBenchConsumerContractsQA-d-stella-400M-v5-9eba3c192f04",
+        "documents": 154,
+        "chunks": 1,
+        "identity": "9eba3c192f04",
+        "verified": true
+      },
+      {
+        "path": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-LEDGER-d-stella-400M-v5-b4e164c82cfb",
+        "documents": 47820,
+        "chunks": 1,
+        "identity": "b4e164c82cfb",
+        "verified": true
+      },
+      {
+        "path": "/home/dylan/asymetric-dual-encoders/work/enc9/m10cov-BRIGHT-d-stella-400M-v5-09a709ba1005",
+        "documents": 404416,
+        "chunks": 9,
+        "identity": "09a709ba1005",
+        "verified": true
+      }
+    ]
+  },
+  "dev6": {
+    "components": {
+      "nq-250k": {
+        "documents": 250000,
+        "queries": 3452,
+        "dtype": "float16"
+      },
+      "hotpotqa": {
+        "documents": 5233329,
+        "queries": 7405,
+        "dtype": "float16"
+      },
+      "cqadup-programmers": {
+        "documents": 32176,
+        "queries": 876,
+        "dtype": "float16"
+      },
+      "cqadup-physics": {
+        "documents": 38316,
+        "queries": 1039,
+        "dtype": "float16"
+      },
+      "heldout-train": {
+        "documents": 6169142,
+        "queries": 7325,
+        "dtype": "float16"
+      },
+      "heldout-longq": {
+        "documents": 6169142,
+        "queries": 55,
+        "dtype": "float16"
+      }
+    },
+    "cache_checks": [
+      {
+        "name": "dev-nq-250k-docs",
+        "key": "dev-nq-250k-docs-fp16-75da16dd9f8c",
+        "rows": 250000,
+        "verified_current_bytes": true,
+        "legacy_shards": 5,
+        "legacy_combined": true
+      },
+      {
+        "name": "dev-hotpotqa-docs",
+        "key": "dev-hotpotqa-docs-fp16-88798cdf67ec",
+        "rows": 5233329,
+        "verified_current_bytes": true,
+        "legacy_shards": 105,
+        "legacy_combined": true
+      },
+      {
+        "name": "dev-cqadup-programmers-docs",
+        "key": "dev-cqadup-programmers-docs-fp16-c5ec186bbda9",
+        "rows": 32176,
+        "verified_current_bytes": true,
+        "legacy_shards": 1,
+        "legacy_combined": false
+      },
+      {
+        "name": "dev-cqadup-physics-docs",
+        "key": "dev-cqadup-physics-docs-fp16-88f29df31f25",
+        "rows": 38316,
+        "verified_current_bytes": true,
+        "legacy_shards": 1,
+        "legacy_combined": false
+      }
+    ],
+    "legacy_provenance": "Current bytes match recorded hashes; historical trust-on-first-use labels remain unchanged."
+  }
+}

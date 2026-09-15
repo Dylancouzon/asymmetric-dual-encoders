@@ -1,0 +1,19 @@
+{
+  "status": "FAILED",
+  "stage": "finished",
+  "pid": 14853,
+  "started_at": 1789192564.050583,
+  "initial_commit": "8c11ce6e83ee95a86cd04b3e72d4b378e2e21825",
+  "source_sha256": {
+    "scripts/m13_after_upload.py": "b6fb0ffd12884a0ff0c179802c309df30918e8f149ce37589b2e34cc903110ce",
+    "scripts/m13_after_cpu_allocation.py": "d39e88845537af0ee3e38052ffd171c7c74d612ba30bfaa62dd3a81890f0f356",
+    "scripts/m13_resume_allocation.py": "b5374ecac92d4b34933c337ea97faefc37f8f316e90212d903afabf8e831f5c2",
+    "scripts/m13_resume_build.py": "c02bfa49e32d4ab6d884414a22f17866ff62652f9b1834bf2b625726fb2c03b0",
+    "m13/after_cpu_supervisor.patch": "62268787a106c6ad1285be1c35d23f9863fdbad895609dd23f80af339e7be1e7",
+    "scripts/m13_upload_only.py": "679a94c36002cf5e69204dda2d245a64f6b3aa4a8852651c6ebbb01d2c678d6c",
+    "m13/monitor_config.json": "ad82d47684d7f99fdd5bedfee97069b1b4aa4283554b8199407b9a4797c06020"
+  },
+  "updated_at": 1789214705.3594582,
+  "error": "RuntimeError: Storage upload failed; preserve it",
+  "finished_at": 1789214705.3593817
+}

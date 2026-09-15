@@ -1,0 +1,23 @@
+{
+  "status": "PASSED",
+  "checkpoint_sha256": "3e49e0bfaa633abe276da7847d0ac44cbfb3d7d5215b9343f255706eeb5789a1",
+  "scope": "Additional stock-FastEmbed parity on eight synthetic queries: empty, short, mixed lengths, whitespace, Unicode and overlength input. No retrieval labels or latency measurement.",
+  "texts": [
+    "",
+    "a",
+    "What is the warranty period?",
+    "Can a bank cancel a mortgage agreement?",
+    "How do proteins bind to DNA?",
+    "  repeated   whitespace\nwith a newline  ",
+    "caf\u00e9 na\u00efve r\u00e9sum\u00e9 \u2014 \u4e2d\u6587 \u0627\u0644\u0639\u0631\u0628\u064a\u0629",
+    "long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long"
+  ],
+  "parity": {
+    "served": true,
+    "version": "0.8.0",
+    "n_texts": 8,
+    "min_cos": 0.9999999556929133,
+    "max_abs": 1.1120349788229511e-07,
+    "pass_min_cos_1e-4": true
+  }
+}

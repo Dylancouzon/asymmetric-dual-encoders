@@ -1,0 +1,31 @@
+{
+  "status": "FAILED",
+  "stage": "finished",
+  "pid": 6325,
+  "pod_id": "wnzk8eeqrrkw4m",
+  "started_at": 1789190091.0420601,
+  "code_commit": "3a649430fc0c5d5ae7130873aea4a85be514ea54",
+  "allocation_sha256": "80bc4d0a8860d5b5ffdb39549879d5e55c7d2774ac7447fb0b3fb7d4b65ca790",
+  "rolling_backups": [],
+  "continuation_of": {
+    "results/m13_build_allocation.json": "b415d1d21c4b731faa4133041a508b638b629566966b0ff8bf8d6833e39acf0b",
+    "results/m13_cloud_build.json": "47715c8852ed27ed1975ba032a255abe5620a16ca61118d3ba6baeebdffefc23",
+    "results/m13_reboot_pause.json": "e71849b40f1fdb8d62047d35e389159ba7cb3262b63ef916f8299688b6545d9c"
+  },
+  "launch_reconciliation": {
+    "max_hours": 142.26194444444445,
+    "max_cost_usd": 236.6685514660494,
+    "prior_elapsed_hours": 1.36368343061871,
+    "paid_since_original_allocation_usd": 2.891146422899965,
+    "stage_consumed_usd": 2.891146422899965,
+    "projected_total_usd": 709.1,
+    "remaining_headroom_usd": 290.9,
+    "account_balance_usd": 486.6893676916,
+    "spent_to_date_usd": 18.31063230839999,
+    "remaining_budget_usd": 981.6893676916
+  },
+  "updated_at": 1789190095.5900521,
+  "error": "HTTPError: HTTP Error 500: Internal Server Error",
+  "pod_final_status": "EXITED",
+  "finished_at": 1789190095.59005
+}

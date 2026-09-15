@@ -42,8 +42,16 @@ Anchor `bge-small-en-v1.5`, freshly scored, compared to the frozen row. Proceed 
 | check | tolerance |
 |---|---|
 | qids per dataset | zero missing, zero extra, zero reordered |
-| per-query nDCG@10 vs frozen | `max abs delta <= 3e-4` |
+| dataset mean nDCG@10 vs frozen | absolute mean delta <=0.003 on each dataset; per-query movement reported only (R3) |
 | hashes verified | qrels, preprocessing, model revisions, dtype, exact-search code, tie-breaking |
+
+**Bridge amendment (Dylan,2026-09-10, R3; prose reconciled2026-09-12):** the original
+`max abs per-query delta <=3e-4` is withdrawn, as already recorded in
+`final_run_registry.json:bridge._amended_2026_09_10`. The hard numerical gate is now each
+dataset's absolute mean delta <=0.003; qid identity remains required. Report maximum
+per-query movement and changed-query count without gating on them. The original registration
+remains in git and the registry's withdrawn field. This correction adds no new protocol or
+ratification beyond the existing R3 ruling; the overall final-lock ratification gate remains.
 
 **The freshly-scored anchor row is validation-only and is discarded.** It never enters C1, C2 or
 any reported number. Bridge failure consumes the access (step 3 already passed).

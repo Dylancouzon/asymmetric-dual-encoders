@@ -1,0 +1,53 @@
+{
+  "status": "PASSED",
+  "measured_utc": "2026-09-11T23:47:31.858775+00:00",
+  "budget_ceiling_usd": 1000,
+  "max_hours": 17,
+  "gate_max_hours": 15,
+  "max_cost_usd": 28.29,
+  "total_price_usd_per_hour": 1.6636111111111112,
+  "remaining_budget_usd": 990.8469342185,
+  "account_balance_usd": 495.8469342185,
+  "spent_to_date_usd": 9.153065781500004,
+  "model_allocation": {
+    "rate_ex_per_s": 441.9,
+    "price_usd_per_h": 1.6636111111111112,
+    "mandatory_hours": {
+      "day_one_benchmark": 1.0,
+      "cloud_encodes_export_parity_final_run": 6.0,
+      "lotte_clean_encode": 15.0,
+      "reserved_batch_allowance": 55.2,
+      "cloud_E_arms": 6.286,
+      "build": 125.72
+    },
+    "mandatory_hours_total": 209.206,
+    "mandatory_usd": 348.04,
+    "fixed_usd": 309.0,
+    "committed_usd": 657.04,
+    "headroom_usd": 342.96,
+    "budget_ceiling_usd": 1000.0,
+    "unpriced_lines_zeroed_for_smoke": [],
+    "_extensions": "none: ruling R13 fixes the build at 200,000,000 examples"
+  },
+  "setup_supplement_hours": 2,
+  "setup_supplement_usd": 3.3272222222222223,
+  "projected_total_usd": 669.52,
+  "remaining_headroom_usd": 330.48,
+  "selected_training_rate_ex_s": 883.8,
+  "training_rate_safety_factor": 0.5,
+  "allocated_training_rate_ex_s": 441.9,
+  "fp16_pre_gate_condition": "Both 1000 and10000 admitted SQuAD measurements pass on exact code/GPU; slower seconds/passage *2715201 *2 /3600 +1 <=15h. Otherwise STOP before gate. Initial budget retains conservative existing15h LoTTE allowance; measured result retained before read.",
+  "limitations": "Fixed caps and conservative allocations, not expected spend. Training-text encoding lengths differ from LoTTE. Existing E cost line intentionally remains despite completed E being in paid spend. Three-disk reserve covers30days; running storage counted hourly too.",
+  "artifact_sha256": {
+    "results/m13_encode_benchmark.json": "85571a705de4e278d68cd3b4d13108afef4c91af47cf6af701a83ea7489f9454",
+    "m13/build_config.json": "32b73c50d87ec66eb6373cedea80eeca5fb8248f48b56441bb0b8badd856a257",
+    "m13/LOTTE_GATE_MANIFEST.json": "899c6c0ef786f9e2eba6caff920875968267d58c95309d19e937220cf6d25805",
+    "results/m8_lotte_pin.json": "721408d4c39f557cacf78f0d4c51d1be118e668e831bc7a082bc132453367532",
+    "m13/LOTTE_GATE_REGISTRATION.json": "a46b66037ae92fcf7ed0d7ce99c5f3e6d17ea0c6ee86ac0c59f957a0e1f99950",
+    "results/m10_screen_verdicts.json": "6690c8af5e7288cd31870e27c7bf62d7be1aa0fb19ad0bd651f0f35f0bc4f4c5",
+    "m10/screen_registry.json": "41ff54c33dd88e5adedbe0855dd97c61e4ce19f635e1326320409d97bc71c9ec",
+    "m13/runpod_pod_config.json": "ae917ad7e5653eea3c68f0df9c91c75c32322041d34b6aa58c60084d42c83ab2",
+    "results/m10_arm_E-bs32.json": "c90bd6515425c634c41ea41c38c29ad87aa8877f71d8e52709e636e36b8cb70e",
+    "results/m10_arm_E-bs128.json": "271e466bdcceaec7cb470b0d3df67d99bd262589f0f1b378e0e001934bff6761"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "status": "FAILED",
+  "stage": "prepaid-admission",
+  "training_started": false,
+  "paid_resume_attempted": false,
+  "pid": 25534,
+  "log_sha256": "54ab20178c4d8cdee3a54a719f0a2d93a74ec941b9fb0e35da0a1a9fea50f236",
+  "error": "Retained disk changed: observed container5GB, persistent500GB mount/home/dylan unchanged",
+  "observed_pod_status": "EXITED",
+  "recorded_at": 1789215900.3572578
+}

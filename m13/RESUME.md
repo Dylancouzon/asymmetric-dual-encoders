@@ -1,0 +1,489 @@
+# Current resume entry — session clear, 2026-09-15 UTC
+
+**Start with m13/HANDOFF.md.** This file retains historical context below.
+Worktree: /home/dylan/asymetric-dual-encoders/work/m13cloud
+Branch: m13-stage1-execution-prep. Do not switch the parent M17 checkout.
+User will resume manually in the morning. Goal PAUSED; no separate agent or wake-up
+launcher installed. CPU nano final six-set benchmark and two local monitors remain
+running; read work/m13-final/execution.json and verify actual PIDs before acting.
+m10-six-spent is already pushed: NEVER restart nano scoring.
+Latest clarification: Hugging Face publication stays in M14, owned by a different
+LLM. M13 must finish its measurements and deliver a self-contained release handoff
+with durable artifacts, hashes, results and runnable validation/retrieval instructions.
+See m13/HANDOFF.md for the closure checklist. Release unless gross overfitting or
+catastrophic failure, with honest claims. Preserve dose failure and audit history.
+
+---
+
+# Final benchmark prepared — 2026-09-14
+
+Exact metadata-only replay explains279shortfall; evaluate unchanged candidate
+with deviation disclosed, preserving failed exact-dose receipt. See
+m13/FINAL_EXECUTION.md and results/m13_dose_reconciliation.json.
+Production synthetic rehearsal and49executor tests passed. CPU launcher
+scripts/m13_final_cpu.py writes work/m13-final/execution.json, log
+logs/m13-final-six.log; monitor configured. R6ratification and freeze pinned.
+Check execution receipt before launching: no automatic post-tag retry.
+Conditional reserved implementation and M9close-out still owed.
+
+# Training finished; dose acceptance discrepancy — 2026-09-14
+
+## Final cycle completed — 2026-09-14
+
+Final COV macro 0.528708958; teacher retention 94.9669%, up 0.000711714
+from cycle two. New best macro; BRIGHT declined, other three families improved.
+DEV-6 final macro 0.613048, teacher retention 91.18%; distinct development suite.
+Result `results/m13_cov_cycle3.json`; complete trainer record including DEV-6
+and export parity: `results/m13_build_record.json`. Both verified against the
+final backup manifest before publication. Freeze/export verified; backup verified;
+GPU pod EXITED.
+
+IMPORTANT: supervisor remains FAILED: dose_run_examples is 199,999,721 rather
+than exactly 200,000,000 (279 short), despite finishing all scheduled steps and
+trainer status complete. Do not relabel as accepted, retrain, or change historical
+receipts. Reconcile this discrepancy before advancing. COV is development evidence,
+not proof of final benchmark success.
+
+# Third scheduled midpoint published — 2026-09-14
+
+At 166.7M examples, COV 0.524459 (94.20% teacher retention), up 0.001454
+versus the 100M midpoint. New best midpoint; no regression strike.
+Result `results/m13_cov_mid5208332.json` hash-verified from remote;
+family comparison in `m13/QUALITY_PROGRESS.md`. Training continues toward
+200M final evaluation. Historical handoffs follow.
+
+# Second CPU comparison published — 2026-09-14
+
+At 158.28M examples, CPU COV 0.524361 (94.19% teacher retention), versus
+prior CPU 0.518099 and M9 0.450986. All four families improved over both CPU
+baselines. Passed in 131.4 seconds; no paid compute or stopping-rule change.
+Result `results/m13_cov_cpu_round2.json`; plan `m13/COV_CPU_ROUND2.json`;
+full comparison and caveats in `m13/QUALITY_PROGRESS.md`. Training continues.
+
+# Cycle 2 quality result published — 2026-09-14
+
+New best COVmacro0.527997, up+0.002472 versuscycle1end.
+Teacherretention94.84%; no regression strike. Result
+results/m13_cov_cycle2.json; summarym13/QUALITY_PROGRESS.md. Evaluationfinished
+2026-09-14 03:55:02UTC. Finalcycle3 nowactive underPID50427. Lateststep4,183,420
+(~133.87Mexamples,66.9%),984ex/s;37verifiedbackups,latesttwo retained,monitoractive,
+noerrors. Nextscheduledmidpoint~166.7Mexamples. Historical handoffs follow.
+
+# Second scheduled midpoint quality published — 2026-09-13
+
+COV at100M examples: 0.523005, up+0.003147 versus the first
+midpoint. No regression strike; teacherretention93.94%.
+Rawresultresults/m13_cov_mid3124999.json; summarym13/QUALITY_PROGRESS.md.
+Latest training observationstep3,205,908 (~102.59M examples,51.3%) at1000ex/s,
+PID50427 RUNNING;28 verified backups,latesttwo retained;monitoractive,noerrors.
+Nextscheduled cycle2end~133.3M examples. Historical handoffs follow.
+
+# Latest descriptive CPU COV read — approximately79.54M examples
+
+User-requested COV CPU evaluation PASSED in131.1seconds. CurrentM130.518099
+versus frozenM90.450986; teacherretention93.06%.
+Allfourfamilies ahead ofM9, but score is-0.007427 versus
+annealedcycle1end. Current earlycycle2/higherlearningrate and CPU-versus-CUDA differences
+limit that comparison. No new stopping rule, paidcompute, or training modification.
+Resultresults/m13_current_cov_cpu.json; summarym13/QUALITY_PROGRESS.md.
+Historical handoffs follow; active supervisor remainsPID50427.
+
+# Cycle 1 quality result published — 2026-09-13
+
+Training remains active under PID50427. Cycle1 COVmacro0.525525, versus
+firstmidpoint0.519857; teacherretention94.40%. Allfourfamilies improved.
+Hash-verified raw result: results/m13_cov_cycle1.json. Summary: m13/QUALITY_PROGRESS.md.
+Latest observed step2,220,112 (~71.04Mexamples,35.5%) at1015ex/s. Nineteen verified
+off-host rollingbackups completed, latesttwo retained. No controllererrors; monitoractive.
+Nextscheduled COVmidpoint100Mexamples. Historical handoffs follow.
+
+# Same-suite M9 quality diagnostic completed
+
+`results/m13_m9_cov_diagnostic.json` PASSED in130.1seconds on localCPU only; no paid
+compute, no new training, no active supervisor modification. FrozenM9 COVmacro0.450986
+versus currentM13 midpoint0.519857; teacher0.556730. Teacher retention81.01% versus93.38%.
+All four families improved. This is descriptive development evidence, not fresh validation
+or a new stopping rule. Summary: `m13/QUALITY_PROGRESS.md`. Budget explanation:
+`m13/BUDGET_EXPLAINED.md` (conservative ~$721 allowance versus ~$88 observed-rate
+training-only estimate). Keep the pending two-idle-Pod cleanup task below.
+
+# Published quality progress
+
+First scheduled COV evaluation is saved in `results/m13_cov_mid1041666.json` with
+remote/local SHA256 verified. Summary and teacher comparison: `m13/QUALITY_PROGRESS.md`.
+Macro0.5199, teacher0.5567 (~93.4% retention), at approximately33.3M examples.
+This is development evidence on COV, not an unrelated or final validation suite.
+The planned CPU-only frozenM9 COV diagnostic is separate; inspect its receipt before
+assuming it ran. No training restart or round-two run has been authorized or launched.
+
+# Pending cleanup: retire the two idle Pods
+
+User requested this reminder on 2026-09-12 after discussing idle storage costs.
+Carry this task forward at every handoff until resolved; revisit at the next safe
+maintenance point, no later than completion of the current training run.
+
+- [ ] Verify that unique earlier-run artifacts on stopped Pods `exulxoxelug5um`
+  (replacement) and `wnzk8eeqrrkw4m` (gate-chain/upload source) have verified backups.
+  Use artifact inventories and hashes; do not open protected evaluation payloads.
+- [ ] Update and review recovery/accounting code that assumes all three Pod IDs exist,
+  preserving historical receipts and cumulative costs. Do not modify the active run.
+- [ ] After those checks, resolve retirement of these two idle Pods and record the
+  outcome. This reminder does not itself authorize immediate destructive deletion;
+  reconcile the existing STOP-only instruction before terminating their disks.
+
+Both were confirmed stopped, each retaining a 500 GB volume. Estimated combined
+storage cost is $6.67/day at $0.20/GB/month (Runpod billing documentation checked
+2026-09-12). Current training does not use them. Keep the active original E Pod
+`k3aee2m68765em` out of this cleanup task.
+
+# Review handoff — 2026-09-12T14:56:52.578992+00:00
+
+Use branch `m13-stage1-execution-prep` in this worktree:
+`/home/dylan/asymetric-dual-encoders/work/m13cloud`.
+The parent checkout is on `main` and belongs to separate work.
+
+All M13 plan/code changes and completed attempt receipts are committed. The active
+supervisor receipt is still changing; a point-in-time copy is published in
+`results/m13_review_status_snapshot.json`. Training logs and checkpoint binaries
+remain operational artifacts outside Git. The snapshot records step 78,698 of
+6,250,000 (2,518,336 examples), at 1,059 examples/second. Training is active.
+
+Suggested review order:
+1. `m13/RULINGS.md`, `m13/STAGE1_DESIGN.md`, `m13/EXECUTION.md`, and `m13/build_config.json` for the registered plan.
+2. `research/m13-reboot-continuation-review-2026-09-12.md` for recovery decisions and reviews.
+3. `scripts/m13_build_preflight_retry.py`, `scripts/m13_preflight_retry_allocation.py`, and `scripts/m13_build_preflight.py` for the actual running continuation.
+4. `results/m13_preflight_retry_allocation.json`, `results/m13_build_preflight.json`, and the review snapshot for admission and execution evidence.
+5. `m13/monitor_config.json` and `m13/MONITORING.md` for monitoring.
+
+The running remote execution is pinned to `ee1bd6617c4fec7f4c97c73e7c6eed52f66ff50a`;
+later commits document observations. Review read-only or in an isolated worktree.
+Do not alter the active supervisor, move remote HEAD, restart the Pod, or open
+protected final/reserved/LoTTE payloads. No repeat E runs or recipe extensions.
+Earlier resume sections below are chronological history, not instructions to rerun.
+
+# TRAINING ACTIVE on original E A100 — 2026-09-12
+
+Confirmed optimizer progress: step4,142/6,250,000, batch32, 132,544 examples,
+reported1,010ex/s. Projected remaining training~55.0h excluding
+evaluations/finalization. Observationresults/m13_training_started_observation.json.
+Fullbuildpreflight PASSED, published results/m13_build_preflight.json. Executioncommit
+ee1bd6617c4fec7f4c97c73e7c6eed52f66ff50a. SupervisorPID50427 on originalEtarget k3aee2m68765em;
+other PodsSTOPPED. Mainlive receiptresults/m13_cloud_build_preflight_retry.json remains
+mutable/untracked until terminal. PIDwork/m13cloud-launchers/build_preflight_retry.pid,
+logs/m13-build-preflight-retry.log and logs/m13-build-preflight-retry-controller.log.
+Monitor user service active/enabled. Supervisor owns hourly rolling backups (latesttwo),
+final verified backup and STOP. Automatic fixedthreecycle200M run; no extensions.
+Do not restart, modify bound code, move remoteHEAD, or run final/reserved evaluation.
+Fresh pretraining allowance134.79194h/$224.24138; originalceilings unchanged.
+
+Historical state follows.
+
+# Active preflight retry on original E A100
+
+SupervisorPID50427 is RUNNING from pushedee1bd66 on k3aee2m68765em, exactoneA100.
+Receiptresults/m13_cloud_build_preflight_retry.json; controllerlog
+logs/m13-build-preflight-retry-controller.log, traininglog
+logs/m13-build-preflight-retry.log, PIDwork/m13cloud-launchers/build_preflight_retry.pid.
+Read live evidence before action; do not rerun or change bound sources. Monitor active.
+Both independent reviewers gave finalGO. Actual allocation134.8888889h/$224.4026543,
+balance482.0799693, project721.36; original ceilings unchanged. Prior attempt STOP and
+empty backup preserved. Correctedpreflight will reuse completed6.07Mdocument token cache.
+
+Historical state follows.
+
+# Preflight-only failure fixed; preparing cumulative retry
+
+PID43900 stopped target k3aee2m68765em after DEV-6 hook bookkeeping failed, before
+training or any scientific build output. Verified empty backup and EXITED receipt:
+results/m13_cloud_build_migrated.json. Full6,070,049-document token cache completed and
+is retained on the persistent volume; all COV checks and six DEV readers returned.
+The preflight mistakenly patched teacher.encode_cached but missed dev_eval's imported
+alias; the correction wraps both and restores both, with regression coverage.
+
+New scripts/m13_build_preflight_retry.py resumes the same stopped original E Pod only
+after scripts/m13_preflight_retry_allocation.py includes the failed interval and all
+prior charges. Separate receipt/log/PID and backups preserve the earlier attempt. Two
+independent reviewers must clear this concrete continuation before paid resume.
+
+Historical state follows.
+
+# Active build on original E host — 2026-09-12
+
+Build supervisor PID43900 successfully adopted k3aee2m68765em (one A100-SXM4-80GB).
+Execution commit8ed37ed. Sourcewnzk8eeqrrkw4m STOP confirmed. Migration and recovery
+handoff PASSED. Runtime bootstrap passed and final394-file rehash passed in57seconds.
+Current stage: full-build-preflight, then automatic fixed200M training. No training
+progress observed at this update. Check results/m13_cloud_build_migrated.json and
+logs/m13-build-migrated-controller.log plus logs/m13-build-migrated.log. Monitor user
+service is active. Hourly rolling backups and final backup/STOP belong to PID43900.
+Do not launch another supervisor, alter bound sources, or move the running remote HEAD.
+
+Published cumulative allocation:135.29694h/$225.0815 remaining at admission, before
+runtime/preflight deductions. Original144h/$239.56 stage allowance and$1000 ceiling
+remain unchanged. Fresh pretraining reconciliation is mandatory and automatic.
+
+Historical state follows.
+
+# Verified migration — fresh build handoff recovery
+
+All 394 destination files passed hashing; source STOP confirmed. Original E target
+k3aee2m68765em retains its A100 under migration PID38227's bounded handoff lease.
+The first coordinator PID38228 failed before dispatch because temporary extension
+preparation changed its bound source. Those edits were restored; no extension or
+migration takeover ran. The original migration completed within its reviewed cap.
+
+Fresh scripts/m13_after_migration_recovery.py changes only the coordinator's receipt
+and self-binding paths. It uses results/m13_after_migration_recovery.json, PID file
+work/m13cloud-launchers/after_migration_recovery.pid and its matching log. Read actual
+receipts before action. The allocator and build supervisor remain the reviewed versions.
+
+Historical state follows.
+
+# Active migration — source zero GPU, original E host A100 reserved
+
+MigrationPID38227 and automatic build handoffPID38228 are active from pushed8b67154.
+Both Pods resumed successfully; exactA100-SXM4-80GB/81920MiB confirmed on target.
+Direct transfer is running around19MB/s, reusing nearly all shared root caches.
+Inspect results/m13_migration.json and logs/m13-migrate-inputs.log before action.
+
+User explicitly authorized moving to the available retained original E host and starting
+training. Source `wnzk8eeqrrkw4m` has the verified394 inputs; target `k3aee2m68765em` is the
+same A100-SXM4-80GB model at quoted$1.59/h, persistent500GB, container30GB. No new Pod.
+Old capacity coordinatorPID28201 was terminated while waiting_gpu, before any build dispatch;
+its final superseded receipt is preserved at results/m13_after_verification.json.
+
+New direct cloud migration uses an ephemeral read key, exact manifest paths, destination
+hashes, sourceSTOP, and a bounded target-GPU lease through adoption by the build supervisor.
+No inputs pass back through the home upload connection. Prior E outputs and runtime are
+preserved before deployment. The unchanged200M recipe, preflight, finalization and backups
+remain mandatory. New allocation must include both Pods' concurrent charges and all prior
+elapsed intervals; original144h/$239.56 stage and$1000 ceiling remain unchanged.
+
+Operational paths: scripts/m13_migrate_inputs.py, scripts/m13_migration_allocation.py,
+scripts/m13_after_migration.py, scripts/m13_build_migrated.py. Corresponding receipts:
+results/m13_migration.json (mutable), results/m13_migration_ready.json (immutable),
+results/m13_after_migration.json, results/m13_cloud_build_migrated.json. Check them and
+PID files before action; never race a live migration or build. Independent reviews and
+checks must clear the concrete code before paid resume. Historical state follows.
+
+# Current state: upload verified, waiting for GPU — 2026-09-12
+
+Verification PASSED: all394 files,72,623,148,280bytes,259.6seconds remote hashing.
+`results/m13_storage_verification.json` is published; retained Pod STOP confirmed.
+The active coordinatorPID28201 (`results/m13_after_verification.json`) restored the
+stopped container to30GB, applied/published the reviewed supervisor in commit a15cf1e,
+and is polling GPU availability read-only. Last observed count0. No training has started.
+Do not race or rerun the coordinator. It has a12-hour capacity wait and a fresh cumulative
+budget gate before its single GPU dispatch. Independent monitor service remains active.
+
+The recovery history below preserves prior failures and their evidence.
+
+# Verification timeout recovery — 2026-09-12
+
+The full rsync transfer completed, but silent destination hashing exceeded1800s. Original
+storage receipt FAILED with verified STOP; preserved at `results/m13_storage_upload.json`
+(SHA256413c7856c1d6c53473c425fdf51b4f373bbc346e4c70d09c7a312310ce4bfcdc).
+The old handoff also failed safely; `results/m13_after_upload.json` is preserved. No training.
+
+Verification-only recovery: `scripts/m13_verify_uploaded.py`, new receipt
+`results/m13_storage_verification.json`, log `logs/m13-storage-verification-retry.log`, PID file
+`work/m13cloud-launchers/storage_verification_retry.pid`. It reuses the394 uploaded files, streams
+hashes with progress, and caps paid zero-GPU work at3h while preserving training+4h and the
+original cumulative allowance. Initial prestart refused provider-reported5GB container;
+refusal preserved. Verification-only permits5or30GB; retryPID27527 launched fromfd84d45.
+The coordinator restores only containerDiskInGb30 while all Pods are stopped, verifies
+persistent volume identity, and STOPs on an uncertain update before any GPU handoff.
+Monitor job covers the durable progress log. STOP only.
+The downstream allocation now includes both failed storage and successful verification.
+The updated coordinator is active asPID28201 from pushed01ba410 and uses separate receipt `results/m13_after_verification.json`, log
+`logs/m13-after-verification.log`, PID `work/m13cloud-launchers/after_verification.pid`.
+It pins the previous failed coordinator and waits for verification PASS/STOP before applying
+the reviewed supervisor patch (SHA256846e93b71fca78f6b4174b9dfc0e667175db11cb0bc453046e50b8d5d49c67d7).
+GPU-side verification also streams progress with a90-minute command limit, still inside the
+original stage alarm and fresh pretraining budget gate. No duplicate retry or new allowance.
+
+Earlier overnight state below is historical and superseded by this timeout recovery.
+
+# Current overnight continuation — 2026-09-12
+
+The storage upload is active on the SAME retained Pod `wnzk8eeqrrkw4m`, through the
+provider's dedicated `podResumeZeroGpu` operation. Supervisor PID11028:
+`scripts/m13_upload_only.py --storage-retry`. Captured/pushed code: `e1833a4`.
+Receipt `results/m13_storage_upload.json`; log `logs/m13-storage-upload.log`; PID file
+`work/m13cloud-launchers/storage_upload.pid`. The monitor service is active and includes
+this exact job. Observe its state before any further action; never rerun a live controller.
+
+Both attempts preceding it failed before any transfer or training and are retained:
+`results/m13_cloud_build_resume.json` (no GPU capacity, STOP confirmed) and
+`results/m13_cpu_upload.json` (normal podResume ignores gpuCount0, STOP confirmed).
+The public Runpod console uses a SEPARATE `podResumeZeroGpu(input:{podId})` operation;
+the corrected launcher verified returned count0, SSH and exact code, and resumed rsync.
+Measured compute quote$0.795/h plus conservative running storage$0.073611/h; the upload
+still charges planning time against the original$1.663611/h ceiling. No new Pods created.
+
+The exact394 source files (72.62GB,254 root/140 worktree mappings) verified locally.
+Completed remote files are reused and interrupted transfers use persistent partial dirs.
+The supervisor verifies ALL destination hashes, then STOPs. Its cap is at most10h,
+with planned training plus4h preserved within the original144h/$239.56 stage allowance.
+All failed intervals and paid storage enter that allowance. Do not treat transfer bytes
+as a passed receipt. No GPU bootstrap, preflight, training or quality read in this job.
+
+**Automatic handoff is active:** PID14853, launched from pushed commit `8c11ce6`.
+`scripts/m13_after_upload.py` waits for PASSED,
+transfer_verified,394 files and EXITED, publishes the receipt, applies the reviewed
+`m13/after_cpu_supervisor.patch` and verifies its exact SHA. It then waits read-only for
+retained-host GPU capacity (up to12h), reconciles all elapsed intervals and current paid
+charges, publishes the new allowance and starts the build once. Receipt
+`results/m13_after_upload.json`; log `logs/m13-after-upload.log`; PID file
+`work/m13cloud-launchers/after_upload.pid`. Check these before any manual action; do not
+race a live coordinator. Bound source/configuration files must remain unchanged while it waits.
+
+The next build uses explicit --after-cpu, separate receipt
+`results/m13_cloud_build_after_cpu.json`, GPU1 resume, current capacity and price checks,
+all394 destination hashes, pinned bootstrap and full preflight before a fresh200M build.
+There is NO training checkpoint yet, so no scientific --resume. Its supervisor owns backups
+and unconditional STOP. An unconfirmed child startup is terminated before the coordinator's
+STOP-only fallback, preventing a late paid start. The monitor service covers upload, handoff
+and build independently. Failed receipts are retained; no automatic repeated launch.
+
+Two inexpensive independent reviewers cleared the concrete storage retry and the next-step
+code conditionally; details `research/m13-reboot-continuation-review-2026-09-12.md`.
+Current user instruction: continue overnight, no further questions. All disks are retained,
+STOP only, $1,000 project ceiling. Keep the local host awake; monitor cannot wake the assistant.
+
+The original reboot handoff below is historical context; preserve its interrupted evidence.
+
+# M13 reboot handoff — 2026-09-12
+
+The user requested a safe session clear and Windows reboot. Resume **M13**, in
+`/home/dylan/asymetric-dual-encoders/work/m13cloud`, branch
+`m13-stage1-execution-prep`. M17 owns the original checkout; do not change its files or
+use its GPU without checking availability. Read this worktree's `CLAUDE.md`,
+`m13/STATUS.md`, and this file before continuing. Historical stage-table text in
+STATUS may lag the completed stages described below.
+
+## Reboot safety receipt
+
+At the pause request, local build supervisor PID **160213** was uploading inputs
+(approximately **12.4 GB** transferred). **No build preflight or training had started.**
+Verified safe pause at **2026-09-12T04:40:32.688444+00:00**:
+all three retained Pods report `EXITED`; local supervisor160213 and transfer children
+have exited. The supervisor receipt is `FAILED` solely because of the intentional
+user-requested SIGTERM; its backup completed and STOP was confirmed. No training
+or build preflight ran. No local GPU compute process was reported at the check.
+
+- Verification: `results/m13_reboot_pause.json` (`PASSED`, `safely_paused_for_user_reboot`).
+- Preserved interrupted receipt SHA256: `47715c8852ed27ed1975ba032a255abe5620a16ca61118d3ba6baeebdffefc23`.
+- The handoff and receipts are committed together; use `git log -1 -- m13/RESUME.md`
+  and compare the branch HEAD with origin to verify publication.
+- The monitor service was stopped for the intentional pause; it remains enabled.
+  It may restart with WSL, but no cloud workload restarts automatically. Its pause
+  receipt distinguishes intentional interruption from completion of training.
+
+## Completed work — do not repeat
+
+- Both registered E arms completed with verified backups; descriptive DEV-6 and E1
+  completed. E1 selects **bs32**: COV 0.503626 versus 0.493800, delta 0.009826,
+  lower bound 0.006236. Records and selection are pushed.
+- All seven registered LoTTE gate slices completed, with veto **skipped** under the
+  bs32 rule. Gate outputs and full backups passed verification; publication commit
+  **9d97291**. `m13/LOTTE_GATE.json` is the completed gate record.
+- The automatic handoff's allocation step failed because system Python lacked
+  NumPy. Running the unchanged helper with the repository virtual environment fixed
+  the environment issue; failed receipts and recovery provenance remain preserved.
+- Build allocation and recovery were pushed in **d43f32fd5d02ec424700dcfe9297577a2c4be3c3**.
+  Allocation: maximum **144 hours / $239.56** for setup, training, finalization and
+  backup; project projection **$706.20**, headroom **$293.80** under the user's
+  **$1,000** ceiling. Balance at that measurement was approximately **$489.58**.
+  These are historical measurements; reconcile new paid charges before resuming.
+
+The scientific build remains the fixed **200,000,000 examples, three cycles, bs32**,
+with no extensions or recipe changes. Training alone extrapolates **62.86 hours** at
+the measured 883.8 examples/s; conservative planning uses 441.9 examples/s
+(125.72 hours). A DEV-6 finalization exception now preserves the completed checkpoint
+as resumable `frozen_unverified`, consistent with export/parity failures. Tests and
+independent review passed; this does not relax the finalization bar.
+
+## Resume procedure
+
+1. Confirm the prior supervisor has exited and inspect its final receipt. Preserve
+   the interrupted receipt, logs, backup directory and all earlier failure records.
+   `work/m13cloud-launchers/build.py` intentionally refuses existing receipt/backup
+   evidence; **do not blindly rerun it or delete its guards/evidence**. Prepare a
+   narrowly scoped continuation with a new receipt/log and a hash link to the
+   preserved attempt. No scientific build `--resume` is appropriate unless a real
+   training receipt/checkpoint exists; none existed when this pause was requested.
+2. **Before restarting or renting any Pod**, reconcile paid charges and the unused
+   portion of the144-hour/$239.56 stage allowance; preserve the original allocation.
+   The previous attempt already consumed setup/upload time. Do not reset the full
+   allowance or ignore storage charges during this user-requested pause.
+   Prefer the same Pod **wnzk8eeqrrkw4m**. Its persistent mount is `/home/dylan`, with
+   cloud checkout `/home/dylan/asymetric-dual-encoders`. STOP preserves completed
+   uploads. `/opt/m13-runtime` is **container storage** and disappears on STOP;
+   rebuild that runtime with the reviewed pinned bootstrap before using the
+   checkout's `.venv` symlink. Refresh SSH endpoint details from the authenticated
+   provider response. Keep exact pushed code and all registered input bindings.
+3. Continue the **394-file** transfer specified by committed
+   `m13/build_transfer_manifest.json`; it contains exact source/destination paths,
+   sizes and SHA256 values. Reuse completed files. The reviewed staging needs
+   `rsync -a --no-owner --no-group --info=progress2`; use a partial directory for
+   interrupted-file continuation, and preserve the manifest's root/worktree mapping
+   and its required symlink handling. The provider volume rejects ownership changes.
+   Verify **all 394 destination hashes** after transfer; progress bytes alone do not
+   establish completion. Do not broaden the file list.
+4. Run `scripts/m13_build_preflight.py` with the cloud `.venv/bin/python` after
+   staging. This checks full uncut registered corpus assembly, exact admitted COV
+   cache integrity and all descriptive DEV-6 cache reuse with encoders disabled.
+   It may populate CPU token caches and refresh existing cache metadata. Require its
+   PASSED receipt and source/input bindings before training. Preserve legacy DEV-6
+   provenance; do not re-encode or silently upgrade its labels.
+5. Reconcile the remaining stage allocation, actual paid spend and account balance.
+   Run `work/m13cloud-launchers/build_allocation.py` using the **local M13
+   `.venv/bin/python`**, with `CUDA_VISIBLE_DEVICES=''` and small CPU thread limits;
+   system `/usr/bin/python3` cannot import its budget dependencies. Existing
+   allocation output is protected against overwrite, so preserve it and use an
+   explicitly reviewed continuation allocation. Do not silently reset spent runtime
+   or budget. The cloud build supervisor itself uses only the standard library and
+   may run under system Python.
+6. Resume the supervised build only after the gate's committed/pushed identities,
+   refreshed allocation and full preflight pass. Retain hourly verified rolling
+   backups, final full checksum verification, bounded runtime and unconditional STOP
+   handling. Add the continuation to the monitor before launch. Readiness and review
+   apply to the concrete continuation, not an automatic retry of a failed attempt.
+
+Runpod has twice lacked free GPU capacity after a stopped Pod was restarted. If this
+recurs, do not create duplicate Pods or retry creation blindly. Reconcile any
+capacity fallback against existing paid spend, retained storage and the $1,000
+ceiling, then review the minimal continuation. All existing persistent disks must
+be retained: **STOP, never TERMINATE**. Prior retained Pods are
+`k3aee2m68765em` and `exulxoxelug5um`.
+
+## Evidence, credentials and boundaries
+
+- Gate: `results/m13_cloud_gate_chain_upload.json`,
+  `results/m13_encode_benchmark_fp16.json`, `m13/LOTTE_GATE.json`;
+  gate backup manifest: `work/m13cloud-launchers/gate-chain-upload-outputs.json`.
+- Handoff/allocation: `results/m13_after_gate.json`,
+  `results/m13_after_gate_recovery.json`, `results/m13_build_allocation.json`.
+- Interrupted build: `results/m13_cloud_build.json`,
+  `logs/m13-build-controller.log`, and any `work/m13cloud-build-backup` contents.
+  An empty build-output backup is expected: no training output existed.
+  Operational source: `work/m13cloud-launchers/build.py` and
+  `work/m13cloud-launchers/build_allocation.py`.
+- Exact operational source is also pushed on branch `m13-execution-audit`, commit
+  `e37f837`, under `audit/m13/20260912T010808Z/work/m13cloud-launchers/`.
+  The manifest there verifies all archived source bytes.
+- Local credential locations only: `~/.config/runpod/api_key`,
+  `~/.config/runpod/m13_ssh`, `~/.config/runpod/m13_ssh.pub`,
+  `~/.config/runpod/m13_gate_chain_ssh_config`; earlier aliases use
+  `m13_ssh_config` and `m13_replacement_ssh_config` in the same directory.
+  Never print key values or upload the Runpod API key to a Pod.
+- After Windows/WSL restart, verify `m13-monitor.service` is active and update its
+  exact job/PID/receipt paths. Monitoring requires the host to remain awake; it does
+  not wake an assistant session. See `m13/MONITORING.md`.
+
+**No repeat of E, E1 or the LoTTE gate. No final six-set or reserved access during
+recovery.** Do not read or overwrite `results/perquery.json`,
+`results/frozen_eval/untouched-*`, reserved qrels or `work/m9reserve`; do not inspect
+LoTTE payloads to diagnose infrastructure. Final six/reserved evaluation remains a
+separate registered gate after a verified build freeze.

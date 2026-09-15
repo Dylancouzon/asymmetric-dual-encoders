@@ -1,0 +1,15 @@
+{
+  "checked_utc": "2026-09-11T19:12:47.800659+00:00",
+  "account": {
+    "myself": {
+      "clientBalance": 500.4930872313
+    },
+    "pod": {
+      "id": "k3aee2m68765em",
+      "desiredStatus": "EXITED",
+      "costPerHr": 1.59,
+      "runtime": null
+    }
+  },
+  "initial_credit_usd": 505
+}

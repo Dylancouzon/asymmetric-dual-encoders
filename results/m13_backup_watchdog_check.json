@@ -1,0 +1,21 @@
+{
+  "status": "PASSED",
+  "checked_at": "2026-09-15T00:26:15.119473+00:00",
+  "backup_timer": "m13-backup-watchdog.timer",
+  "interval_seconds": 300,
+  "tested": [
+    "stalled child CPU/log",
+    "active child CPU progression",
+    "stale supervisor heartbeat",
+    "14-hour runtime alert",
+    "terminal receipt",
+    "actual stopped primary monitor automatically restarted"
+  ],
+  "live_evaluation_child": {
+    "identity": "330139:24144748",
+    "cpu_ticks": 829355
+  },
+  "primary_monitor_recovery_verified": true,
+  "evaluation_restarted": false,
+  "notifications": "Windows toast helper succeeded; journal and timer-alerts.jsonl retain events. Display of toast is not guaranteed."
+}

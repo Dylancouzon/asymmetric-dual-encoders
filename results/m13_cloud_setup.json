@@ -1,0 +1,29 @@
+{
+  "created_utc": "2026-09-11T16:14:14.533416+00:00",
+  "initial_balance_usd": 505,
+  "gpu_quote": {
+    "stockStatus": "Low",
+    "uninterruptablePrice": 1.59
+  },
+  "pod": {
+    "id": "k3aee2m68765em",
+    "name": "m13-a100-benchmark",
+    "desiredStatus": "RUNNING",
+    "costPerHr": 1.59,
+    "adjustedCostPerHr": null,
+    "gpuCount": 1,
+    "gpuTypeId": null,
+    "memoryInGb": 250,
+    "vcpuCount": 16,
+    "volumeInGb": 500,
+    "containerDiskInGb": 30,
+    "volumeMountPath": "/home/dylan",
+    "publicIp": "",
+    "portMappings": null,
+    "imageName": "runpod/pytorch@sha256:cb154fcca15d1d6ce858cfa672b76505e30861ef981d28ec94bd44168767d853"
+  },
+  "budget_ceiling_usd": 1000,
+  "storage_reserve_usd": 103,
+  "stage": "provisioning",
+  "termination_policy": "STOP only; volume is destroyed by termination. Verify local backups before termination."
+}

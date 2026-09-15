@@ -956,3 +956,12 @@ unattended restart: a crash days later would not recover.
 **Rule from now until the build ends: no writes to `m9/LEDGER.md`, `m9/registry.json` or any other
 protocol-scope file.** Build-period notes go to `m9/BUILD_LOG.md`, which is in no scope, and are
 merged into the ledger after the build completes.
+
+- 2026-09-15T09:04:14.031915+00:00 — **FINAL-RUN-BEGIN** freeze `9d631b2c6424` pid 365018 host `Str0keWtf`
+- 2026-09-15T09:04:17.846676+00:00 — **FINAL-RUN access** (six) `scifact`: 5,183 docs / 300 queries, corpus hashes verified against a fresh HF download, labels read from `results/frozen_eval/scifact.json`.
+- 2026-09-15T09:13:33.339684+00:00 — **FINAL-RUN access** (six) `nfcorpus`: 3,633 docs / 323 queries, corpus hashes verified against a fresh HF download, labels read from `results/frozen_eval/nfcorpus.json`.
+- 2026-09-15T09:19:57.678233+00:00 — **FINAL-RUN access** (six) `fiqa`: 57,638 docs / 648 queries, corpus hashes verified against a fresh HF download, labels read from `results/frozen_eval/fiqa.json`.
+- 2026-09-15T11:00:03.439718+00:00 — **FINAL-RUN access** (six) `arguana`: 8,674 docs / 1,406 queries, corpus hashes verified against a fresh HF download, labels read from `results/frozen_eval/arguana.json`.
+- 2026-09-15T11:18:40.916855+00:00 — **FINAL-RUN access** (six) `scidocs`: 25,657 docs / 1,000 queries, corpus hashes verified against a fresh HF download, labels read from `results/frozen_eval/scidocs.json`.
+- 2026-09-15T12:03:09.128609+00:00 — **FINAL-RUN access** (six) `trec-covid`: 171,332 docs / 50 queries, corpus hashes verified against a fresh HF download, labels read from `results/frozen_eval/trec-covid.json`.
+- 2026-09-15T16:58:58.074463+00:00 — **FINAL-RUN-END** M9 six-only 770344d7a7c18d0933e0f922af385fb0b4e514c98822e955e959cf139a9c936b; original two-build-lock disclosure applies.

@@ -1,0 +1,133 @@
+{
+ "_what": "\u00a7Screen's registered 90-step smoke of every arm shape",
+ "steps": 90,
+ "device": "cuda",
+ "n_texts": 4096,
+ "max_len": 512,
+ "shapes_registered": [
+  "ANCHOR",
+  "F-MiniLM-L6",
+  "F-MiniLM-L12",
+  "G-384",
+  "G-1536",
+  "G-MLP",
+  "B-100/0",
+  "B-50/50",
+  "E-bs32",
+  "E-bs128",
+  "D-NORM",
+  "D-COV",
+  "C-M9init"
+ ],
+ "shapes_run": [
+  "E-bs32",
+  "E-bs128"
+ ],
+ "arms": [
+  {
+   "arm": "E-bs32",
+   "spec": {
+    "student": "bge-small",
+    "n_layers": 3,
+    "head": "linear",
+    "pattern": "75/25",
+    "batch": 32,
+    "loss": "squared_l2"
+   },
+   "covers": [],
+   "device": "cuda",
+   "max_len": 512,
+   "cloud_only": "hardware parity: runs on the A100 beside `E-bs128` so E1 is not a cross-hardware contrast (not a memory limit; bs32 fits this box)",
+   "constructed": true,
+   "d_in": 1152,
+   "params": 34540672,
+   "under_cap": true,
+   "warm_start_registered": "linear",
+   "warm_start_record": {
+    "n_fit": 256,
+    "lambda": 1.0,
+    "train_objective": 0.10409,
+    "d_in": 1152
+   },
+   "warm_start_implemented": true,
+   "cross_role": {
+    "checked": true,
+    "collisions": 0,
+    "n_query": 4096,
+    "n_document": 4096
+   },
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 2880,
+   "examples_per_s": 653.4,
+   "mix": {
+    "Q": 68,
+    "D": 22,
+    "q_share": 0.7555555555555555
+   },
+   "passed": true,
+   "seconds": 23.6
+  },
+  {
+   "arm": "E-bs128",
+   "spec": {
+    "student": "bge-small",
+    "n_layers": 3,
+    "head": "linear",
+    "pattern": "75/25",
+    "batch": 128,
+    "loss": "squared_l2"
+   },
+   "covers": [],
+   "device": "cuda",
+   "max_len": 512,
+   "cloud_only": "batch 128 above ~128 tokens: driver error on this card; runs on the A100",
+   "constructed": true,
+   "d_in": 1152,
+   "params": 34540672,
+   "under_cap": true,
+   "warm_start_registered": "linear",
+   "warm_start_record": {
+    "n_fit": 256,
+    "lambda": 1.0,
+    "train_objective": 0.10409,
+    "d_in": 1152
+   },
+   "warm_start_implemented": true,
+   "cross_role": {
+    "checked": true,
+    "collisions": 0,
+    "n_query": 4096,
+    "n_document": 4096
+   },
+   "steps_run": 90,
+   "stopped": null,
+   "examples": 11520,
+   "examples_per_s": 1926.2,
+   "mix": {
+    "Q": 68,
+    "D": 22,
+    "q_share": 0.7555555555555555
+   },
+   "passed": true,
+   "seconds": 20.5
+  }
+ ],
+ "failed": [],
+ "warm_start_not_implemented": [],
+ "cloud_only": {
+  "E-bs128": "batch 128 above ~128 tokens: driver error on this card; runs on the A100",
+  "E-bs32": "hardware parity: runs on the A100 beside `E-bs128` so E1 is not a cross-hardware contrast (not a memory limit; bs32 fits this box)"
+ },
+ "query_corpus": {
+  "corpus": "m9",
+  "sources": [
+   "harvest"
+  ],
+  "head_per_source": 0,
+  "balanced": true,
+  "arm": null
+ },
+ "all_shapes_pass": false,
+ "_partial": true
+}

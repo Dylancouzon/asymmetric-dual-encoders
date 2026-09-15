@@ -1,0 +1,18 @@
+{
+  "scope": "Post-hoc descriptive comparison of frozen M9 and current M13 on existing COV. No new unrelated dataset, DEV6, final six, reserved or LoTTE access. No paid compute.",
+  "current_cov_sha256": "1f8627196f45bd9cd9feadaa559c93dd1743223327c55d80288445366be9f689",
+  "current_cov_step": 1041666,
+  "metric": "Existing equal-family COV nDCG@10 macro; full admitted queries and document candidates",
+  "resources": {
+    "device": "cpu",
+    "threads": 4,
+    "wall_seconds_cap": 1800
+  },
+  "caveats": [
+    "COV was used for M13 recipe selection and is not fresh validation.",
+    "Frozen M9 trained before COV rescreening; overlap protection differs, so this is not a causal recipe comparison.",
+    "Current M13 is an intermediate checkpoint; M9 is final, with different doses.",
+    "One point difference is diagnostic; no automatic early-stop threshold or round-two authorization.",
+    "M9 diagnostic executes CPU fp32; current M13 COV ran on CUDA. This is not a precision-parity experiment."
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "checkpoint": "work/m13-final/cycle3.pt",
+  "checkpoint_sha256": "3e49e0bfaa633abe276da7847d0ac44cbfb3d7d5215b9343f255706eeb5789a1",
+  "student_key": "bge-small",
+  "n_layers": 3,
+  "head": "linear",
+  "out_dim": 1024,
+  "max_seq": 512,
+  "query_prefix": "",
+  "steps": 6250000,
+  "actual_examples": 199999721,
+  "planned_examples": 200000000,
+  "build_record": "results/m13_build_record.json",
+  "build_record_sha256": "e2dbbf5b41e84f3a650d520a365d8a65612bf90fd202794b2c54066195fcd88d",
+  "dose_deviation": "279 examples below nominal dose due to preserved short document batches. Historical supervisor remains FAILED; evaluation does not declare exact-dose compliance. No additional updates or checkpoint selection."
+}

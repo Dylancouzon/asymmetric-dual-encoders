@@ -1,0 +1,38 @@
+{
+  "status": "FAILED",
+  "stage": "finished",
+  "pid": 11028,
+  "pod_id": "wnzk8eeqrrkw4m",
+  "code_commit": "e1833a4a6c5c0a2a2d1ff2bd4c6138c12fec94cc",
+  "started_at": 1789191309.5000286,
+  "maximum_hours": 10,
+  "price_ceiling_usd_h": 1.6636111111111112,
+  "allocation": {
+    "max_hours": 142.1786111111111,
+    "max_cost_usd": 236.52991720679012,
+    "prior_elapsed_hours": 1.3654309788015153,
+    "paid_since_original_allocation_usd": 3.030035311699976,
+    "stage_consumed_usd": 3.030035311699976,
+    "projected_total_usd": 709.24,
+    "remaining_headroom_usd": 290.76,
+    "account_balance_usd": 486.5504788028,
+    "spent_to_date_usd": 18.4495211972,
+    "remaining_budget_usd": 981.5504788028
+  },
+  "training_started": false,
+  "artifact_sha256": {
+    "results/m13_cloud_build_resume.json": "13674c64f91c4af8a1cac4271f06a989cce782efd986d6abda7ec4cc2f7f9b66",
+    "results/m13_build_resume_allocation.json": "80bc4d0a8860d5b5ffdb39549879d5e55c7d2774ac7447fb0b3fb7d4b65ca790",
+    "results/m13_build_allocation.json": "b415d1d21c4b731faa4133041a508b638b629566966b0ff8bf8d6833e39acf0b",
+    "results/m13_cloud_build.json": "47715c8852ed27ed1975ba032a255abe5620a16ca61118d3ba6baeebdffefc23",
+    "results/m13_reboot_pause.json": "e71849b40f1fdb8d62047d35e389159ba7cb3262b63ef916f8299688b6545d9c",
+    "m13/build_transfer_manifest.json": "28c1695c4cd451425a7340087787b105764c8c9635ffd85571bca401a6a9fd38",
+    "results/m13_cpu_upload.json": "bfffcac46eb87c62459db12f763da00b29d9a4d9f4dbb3897c5f96164462002b"
+  },
+  "storage_only_operation": true,
+  "observed_total_price_usd_h": 0.8686111111111111,
+  "updated_at": 1789214690.0392196,
+  "error": "TimeoutExpired: Command '['ssh', '-n', '-F', '/home/dylan/.config/runpod/m13_gate_chain_ssh_config', 'm13-gate-chain', 'timeout --kill-after=30s 1800s sha256sum --check --status /tmp/m13-cpu-upload-sha256.txt']' timed out after 1840 seconds",
+  "pod_final_status": "EXITED",
+  "finished_at": 1789214690.0392048
+}

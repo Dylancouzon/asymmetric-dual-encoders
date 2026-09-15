@@ -1,0 +1,14 @@
+{
+  "status": "PASSED",
+  "finished_utc": "2026-09-11T21:59:21.226653+00:00",
+  "recovery": "Validated already computed E1 and selection against unchanged registry and decision helper. Corrected controller batch schema check (bs32/bs128 strings); original FAILED receipt preserved. No training, DEV6, contrast or selection rerun.",
+  "selected_batch": "bs32",
+  "artifact_sha256": {
+    "results/m13_after_e.json": "a250ff619257fb64d4aef3ba3383fcea781b210a1bd3deba8b25a94eb820c8a0",
+    "results/m13_cloud_e.json": "3776140c4a7547ed527fac07836c2292778691996d78e372f9ced55d908ee84b",
+    "results/m10_contrast_E1.json": "72cbc0d4c9f4ab0b850f0c0298089ce2f494b858b02e9f30b9180f5442a6caef",
+    "results/m10_screen_verdicts.json": "6690c8af5e7288cd31870e27c7bf62d7be1aa0fb19ad0bd651f0f35f0bc4f4c5",
+    "results/m10_arm_E-bs32.json": "c90bd6515425c634c41ea41c38c29ad87aa8877f71d8e52709e636e36b8cb70e",
+    "results/m10_arm_E-bs128.json": "271e466bdcceaec7cb470b0d3df67d99bd262589f0f1b378e0e001934bff6761"
+  }
+}

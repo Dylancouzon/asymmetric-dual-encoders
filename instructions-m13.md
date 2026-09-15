@@ -37,3 +37,14 @@ release and the paper. A negative result completes the measurement milestone too
   registration before scoring; it cannot replace a frozen release comparator after results.
 - Keep M9's two-build-lock provenance disclosure beside its scores. Register the paired recipe
   delta before either final run; it is not a causal coverage experiment.
+
+Latest user clarification (2026-09-15 UTC): Hugging Face publication stays in M14,
+owned by a different LLM. M13 closure must include a self-contained release handoff
+with durable artifact locations/hashes, results, costs, limitations and runnable
+validation instructions; see m13/HANDOFF.md.
+
+Later user clarification (2026-09-15 UTC; post-trigger): the A100 execution of the
+registered conditional reserved batch is pushed to M14. M13 closes after M9, the
+registered paired row, the tested/pushed runnable reserved package and its other
+release evidence. It preserves `INCOMPLETE_RESERVED` rather than claiming the batch
+ran. M14 must execute the reserved batch before publication; `m13/RULINGS.md` R19.

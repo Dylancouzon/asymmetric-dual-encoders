@@ -1,0 +1,8 @@
+{
+  "status": "PASSED",
+  "stage": "handed-off-target-running",
+  "migration_ready_sha256": "f0b52fba9fab6fca483504261fb9ceee790304191e1424068ba183d737c356e2",
+  "target_pod_id": "k3aee2m68765em",
+  "claim_sha256": "6ad909f430ff3ae5d0ed101a51ca3be513dcde670aba9e0df19982b34728c0d9",
+  "claimed_at": 1789220102.612251
+}

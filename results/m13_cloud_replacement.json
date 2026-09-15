@@ -1,0 +1,26 @@
+{
+  "status": "FAILED",
+  "stage": "finished",
+  "pid": 122731,
+  "started_at": 1789169459.3287132,
+  "code_commit": "a3262117e50cceda8cdfaa86e2c87300fd7f1abf",
+  "original_pod_id": "k3aee2m68765em",
+  "name": "m13-replacement-20260911",
+  "maximum_execution_seconds": 7200,
+  "owned_pod_ids": [
+    "exulxoxelug5um"
+  ],
+  "updated_at": 1789170144.8954296,
+  "quote": {
+    "stockStatus": "Low",
+    "uninterruptablePrice": 1.59
+  },
+  "pod_id": "exulxoxelug5um",
+  "gpu_price_usd_h": 1.59,
+  "error": "RuntimeError: Interrupted: 15",
+  "pod_final_statuses": {
+    "exulxoxelug5um": "EXITED"
+  },
+  "pod_final_status": "EXITED",
+  "finished_at": 1789170144.8954275
+}

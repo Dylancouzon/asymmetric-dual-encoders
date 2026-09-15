@@ -7,7 +7,7 @@
   "head": "1152-wide linear (the anchor default)",
   "mix": "75/25 (the anchor default)",
   "objective": "squared_l2",
-  "batch": "PENDING"
+  "batch": "bs32"
  },
  "why": {
   "student": "F1 RESOLVED (rules.F_tournament): the higher 20M COV macro, adopted as evidence",
@@ -15,7 +15,7 @@
   "head": "rules.multi_arm_winner over G2/G3; G1 (1152 vs 384) is RESOLVED and `arms.G-384.selectable: false`, so G1 is evidence about M9's 384-wide diagnosis and selects nothing.",
   "mix": "rules.multi_arm_winner over B1/B2. `_interpretation.B`: B is an augmentation experiment at FIXED query exposure, so limit what its result decides.",
   "objective": "rules.D_tie as amended 2026-09-09 (`decision_rules.d_selection_corrected`). REQUIRED with D2, and read `_interpretation.D1_D2_precondition` in full: D-COV's gradients are ~500x smaller on identical batches (`results/m10_dcov_gradient_audit.json`) at the same peak LR, and epsilon is not the cause. **D2's MECHANISM IS UNRESOLVED.** An earlier version of this string said D2 'is confounded with an optimizer-scale difference'; that named a cause we never measured -- the clip instrumentation landed after the last arm finished, so no registered arm recorded a clip rate. Two candidates stand: an optimizer-scale artifact by some route other than clipping, or a REAL failure of document-aware regression. Report D2 as neither a clean test nor a proven artifact.",
-  "batch": "E1 is NOT COMPUTED, not unresolved: `E-bs128` is CLOUD_ONLY and runs on the rented A100 (`outcome_to_action.E`). `rules.E_cost` selects bs128 in every case except a RESOLVED bs32 win, and an unread contrast cannot resolve -- but reading the rule that way would take E's decision from a measurement that was never made. The recipe lock carries E as PENDING."
+  "batch": "rules.E_cost; E is exempt from quality confirmation (amended 2026-09-09)"
  },
  "contrasts": {
   "F1": {
@@ -66,7 +66,12 @@
    "label": "NOT RESOLVED",
    "resolved": false
   },
-  "E1": "E-bs32 -> E-bs32 has no cycle-end COV read: the arm has not run on this machine (`E-bs128` is CLOUD_ONLY, `outcome_to_action.E`)",
+  "E1": {
+   "point": 0.009825887853322366,
+   "lower": 0.006235661050284006,
+   "label": "RESOLVED",
+   "resolved": true
+  },
   "C1": "C-M9init -> C-M9init is CUT under W8 band 1 (`rules.C_skipped`); the Bonferroni denominator is unchanged at 12",
   "D1": {
    "point": -0.0002023615927666363,
@@ -82,7 +87,6 @@
   }
  },
  "not_computed": {
-  "E1": "E-bs32 -> E-bs32 has no cycle-end COV read: the arm has not run on this machine (`E-bs128` is CLOUD_ONLY, `outcome_to_action.E`)",
   "C1": "C-M9init -> C-M9init is CUT under W8 band 1 (`rules.C_skipped`); the Bonferroni denominator is unchanged at 12"
  },
  "missing": []

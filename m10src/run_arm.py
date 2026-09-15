@@ -730,6 +730,23 @@ def code_identity():
     return h.hexdigest()
 
 
+def fingerprint_manifest(man):
+    """Keep corpus identity, excluding only the loader's observational clock fields.
+
+    Preserve the original manifest for evidence. The source hashes, counts, order and all
+    other assembly fields remain checkpoint identity; cold/warm load timings do not.
+    """
+    stable = dict(man)
+    if "query" in stable:
+        query = dict(stable["query"])
+        query.pop("generated_at", None)
+        if "sources" in query:
+            query["sources"] = [{k: v for k, v in source.items() if k != "seconds"}
+                                for source in query["sources"]]
+        stable["query"] = query
+    return stable
+
+
 def fingerprint(arm, p, man, seed, smoke_steps, device):
     """The recipe a checkpoint belongs to (finding 8): the arm, its resolved recipe, the registry,
     the assembled corpus manifest, the device/precision the step ran under, the optimizer settings
@@ -748,7 +765,7 @@ def fingerprint(arm, p, man, seed, smoke_steps, device):
                           "weight_decay_groups": {"dim_gt_1": 0.01, "dim_le_1": 0.0}},
             "registry_sha256": sha256_file(REGISTRY),
             "assemble_manifest_sha256": hashlib.sha256(
-                json.dumps(man, sort_keys=True, default=str).encode()).hexdigest(),
+                json.dumps(fingerprint_manifest(man), sort_keys=True, default=str).encode()).hexdigest(),
             "code_sha256": code_identity()}
     return hashlib.sha256(json.dumps(body, sort_keys=True, default=str).encode()).hexdigest()
 

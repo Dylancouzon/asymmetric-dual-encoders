@@ -172,3 +172,26 @@ four recommendations below.
 | R14 | **No post-tag continuation.** The registry's original wording stands: a crash after the tag consumes the access and the executor reports what was persisted. The R11 amendment is withdrawn unexecuted. `--recover` recomputes decisions from persisted scores only, with zero protected reads. Reliability comes from rehearsing the exact scoring code on open data until it is boring. |
 | R15 | **One more review, P1s only.** Finish the two fix passes, keep the fixes that survive R13/R14, one short Codex re-check of the P1 findings, then stop reviewing and rent the GPU. |
 | R16 | **LoTTE gate as a small script**, since it is registered and costs about an hour of GPU; no general executor. |
+
+## R19 — Move the triggered reserved A100 execution to M14 (post-trigger scope ruling)
+
+After Nano's six-set result had triggered the registered descriptive reserved batch, the owner
+clarified on 2026-09-15 that the A100 execution is pushed to M14. This is a milestone-ownership
+change after the trigger was observed, not a reinterpretation of the registered statistics and not
+a claim that the batch completed. M13 must leave `results/m10_final_run.json` honestly marked
+`INCOMPLETE_RESERVED`, deliver the tested runnable implementation and exact execution/cost pin,
+finish M9 plus the registered paired row, close its other evidence, and publish nothing. M14 owns
+the A100 pre-encode, `m8-reserved-spent` transaction, reserved-four report, and must complete those
+before public release unless the owner later rules otherwise. The four datasets, three systems,
+statistics, zero-alpha classification and trigger are unchanged.
+
+**Ruling (Dylan, 2026-09-15):** “The A100 execution is pushed to M14.”
+
+## R20 — Add dense Zero to M14's single reserved transaction before access
+
+The owner subsequently required M14 to add `constella-zero` as a query encoder paired with the
+same pinned Stella document tower. M14 must push a dated pre-observation registry/ledger amendment
+and extend/test M13's three-system base package before opening any reserved payload. The four
+systems then run in one transaction; Zero reuses the Stella document vectors and does not authorize
+a second corpus-scale encode. All rows remain descriptive, zero alpha, and do not alter the
+completed six-set claims. If access has already been spent, do not reopen it merely to add Zero.

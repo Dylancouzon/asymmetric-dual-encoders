@@ -56,6 +56,8 @@ def test_the_allocation_table_prices_every_mandatory_line(tmp_path):
     """Ruling R13 leaves no cap formula: the budget is a fixed table and the only judgement in it
     is whether the total fits under the recorded ceiling."""
     cfg = _config(tmp_path, reserved_hours=2.0)[0]
+    # Test arithmetic against an explicit fixture quote, independent of live provider prices.
+    cfg["budget"]["fixed_usd"] = {"persistent_disk_and_egress": 25.0}
     al = BL.allocation(cfg, 1000.0, 2.0)
     hours = al["mandatory_hours"]
     assert hours["build"] == pytest.approx(200_000_000 / 1000 / 3600, abs=1e-3)
@@ -154,9 +156,11 @@ def test_a_smoke_only_document_count_is_refused_outside_a_smoke(tmp_path):
         BL.validate(cfg, smoke=False)
 
 
-def test_a_pending_E1_batch_is_refused_outside_a_smoke(tmp_path):
+def test_a_pending_E1_batch_is_refused_outside_a_smoke(tmp_path, monkeypatch):
     """`selected.batch` is 'PENDING' until both E arms have run on the cloud GPU."""
     cfg = _config(tmp_path)[0]
+    monkeypatch.setattr(BL, "verdicts", lambda path=None: {
+        "registry_sha256": REGISTRY_SHA, "selected": {"batch": "PENDING"}})
     with pytest.raises(SystemExit, match="E1 verdict is PENDING"):
         BL.resolve_batch(cfg)
     assert BL.resolve_batch(cfg, smoke=True, override=32)[0] == 32
@@ -624,6 +628,50 @@ def test_a_failed_export_or_parity_is_not_a_verified_freeze(tmp_path, monkeypatc
     assert out["verified"] is False and out["unverified_why"]
 
 
+def test_a_dev6_exception_preserves_training_and_resume_retries_only_freeze(tmp_path, monkeypatch):
+    """Exercise the real freeze path with synthetic DEV-6 and serving dependencies."""
+    real_freeze = BD.freeze_checkpoint
+    calls = {"dev6": 0, "export": 0}
+
+    def flaky_dev6(model, verbose=True):
+        calls["dev6"] += 1
+        if calls["dev6"] == 1:
+            raise FileNotFoundError("synthetic missing DEV-6 cache")
+        return {"macro": 0.5}
+
+    def fake_export(model, directory, max_len=512):
+        calls["export"] += 1
+        directory.mkdir(parents=True, exist_ok=True)
+        (directory / "model.onnx").write_bytes(b"synthetic ONNX artifact")
+        return {"path": str(directory)}
+
+    monkeypatch.setattr(BD.R, "dev6", flaky_dev6)
+    monkeypatch.setattr(BD.N, "export_onnx", fake_export)
+    monkeypatch.setattr(BD.N, "export_parity", lambda *a: {"min_cos": 1.0})
+    monkeypatch.setattr(BD, "fastembed_parity",
+                        lambda *a: {"served": True, "pass_min_cos_1e-4": True})
+    root = tmp_path / "dev6-retry"
+    first = _tiny_build_run(root, freeze=real_freeze)
+    assert first["status"] == "frozen_unverified"
+    assert first["complete"] is False and first["terminal"] is False
+    assert first["final_checkpoint_sha256"]
+    assert first["freeze"]["dev6_error"] == "FileNotFoundError: synthetic missing DEV-6 cache"
+    assert calls == {"dev6": 1, "export": 0}
+    receipt = root / "m13build" / "BUILD-200M" / "receipt.json"
+    assert json.loads(receipt.read_text())["status"] == "running"
+
+    def unexpected_training(*a, **k):
+        pytest.fail("completed training must not run during DEV-6 finalization retry")
+
+    monkeypatch.setattr(BD.Tr, "train_arm", unexpected_training)
+    second = _tiny_build_run(root, resume=True, freeze=real_freeze)
+    assert second["status"] == "complete" and second["complete"] and second["terminal"]
+    assert second["final_checkpoint_sha256"] == first["final_checkpoint_sha256"]
+    assert second["dose_run_examples"] == first["dose_run_examples"]
+    assert second["freeze"]["dev6"] == {"macro": 0.5}
+    assert calls == {"dev6": 2, "export": 1}
+
+
 def test_an_unverified_freeze_ends_frozen_unverified_and_the_retry_does_not_retrain(tmp_path):
     """The checkpoint is retained, `complete` is false, the record is NOT terminal, and a
     --resume run retries the freeze alone."""
@@ -849,6 +897,9 @@ def test_the_pending_batch_refusal_reaches_the_controller(tmp_path):
     with pytest.MonkeyPatch.context() as mp:
         mp.setattr(BD, "WORK", root / "m13build")
         mp.setattr(BD.BL, "DOSE", TINY_DOSE)
+        mp.setattr(BL, "verdicts", lambda path=None: {
+            "registry_sha256": REGISTRY_SHA,
+            "selected": {"batch": "PENDING", "student": "bge-small"}})
         _cfg, p = _config(root, dose=TINY_DOSE, reserved_hours=1.0)
         with pytest.raises(SystemExit, match="E1 verdict is PENDING"):
             BD.run(str(p), device="cuda")

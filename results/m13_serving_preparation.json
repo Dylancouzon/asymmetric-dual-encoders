@@ -1,0 +1,10 @@
+{
+  "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+  "sha256": "b69efe2358a846b9a94dd0f2c0cf1b04d9df9a3f1b34810b31fe8bb2d7cd0b52",
+  "parity_min_cos": 0.9999999403953552,
+  "n_texts": 5,
+  "status": "PASSED",
+  "scope": "Synthetic BGE-small export parity for same-machine serving measurements; no latency measurements made while CPU final evaluation runs.",
+  "cost_script": "scripts/m13_serving_costs.py",
+  "initial_attempt": "Failed before measurement because FastEmbed required config.json; fixed by saving pinned model configuration and simple special-token map."
+}

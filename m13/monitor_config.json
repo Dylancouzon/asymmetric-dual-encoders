@@ -1,0 +1,194 @@
+{
+  "health_path": "work/m13-monitor/health.json",
+  "alerts_path": "work/m13-monitor/alerts.jsonl",
+  "notification_command": [
+    "/usr/bin/python3",
+    "scripts/m13_windows_alert.py"
+  ],
+  "jobs": [
+    {
+      "name": "cloud E",
+      "receipt": "results/m13_cloud_e.json",
+      "pid_file": "work/m13cloud-launchers/e.pid",
+      "logs": [
+        "logs/m13-e-launch.log",
+        "logs/m13-cloud-e-E-bs32.log",
+        "logs/m13-cloud-e-E-bs128.log"
+      ],
+      "stale_seconds": 900
+    },
+    {
+      "name": "local DEV6 and E1",
+      "receipt": "results/m13_after_e.json",
+      "recovery_receipt": "results/m13_after_e_recovery.json",
+      "pid_file": "work/m13cloud-launchers/after-e.pid",
+      "logs": [
+        "logs/m13-after-e-controller.log",
+        "logs/m13-after-e-E-bs32-dev6.log",
+        "logs/m13-after-e-E-bs128-dev6.log"
+      ],
+      "wait_for": "cloud E",
+      "stale_seconds": 900
+    },
+    {
+      "name": "fp16 and LoTTE transfer continuation",
+      "receipt": "results/m13_cloud_gate_chain_upload.json",
+      "pid_file": "work/m13cloud-launchers/gate_chain_upload.pid",
+      "logs": [
+        "logs/m13-gate-chain-upload-continuation.log",
+        "logs/m13-gate-chain-upload.log",
+        "logs/m13-fp16-encode.log",
+        "logs/m13-lotte-gate.log"
+      ],
+      "stale_seconds": 900
+    },
+    {
+      "name": "gate to build handoff",
+      "receipt": "results/m13_after_gate.json",
+      "pid_file": "work/m13cloud-launchers/after_gate.pid",
+      "logs": [
+        "logs/m13-after-gate.log"
+      ],
+      "wait_for": "fp16 and LoTTE transfer continuation",
+      "stale_seconds": 900,
+      "recovery_receipt": "results/m13_after_gate_recovery.json"
+    },
+    {
+      "name": "full 200M build",
+      "receipt": "results/m13_cloud_build.json",
+      "pid_file": "work/m13cloud-launchers/build.pid",
+      "logs": [
+        "logs/m13-build-controller.log",
+        "logs/m13-build.log"
+      ],
+      "wait_for": "gate to build handoff",
+      "stale_seconds": 900,
+      "recovery_receipt": "results/m13_reboot_pause.json"
+    },
+    {
+      "name": "200M build reboot continuation",
+      "receipt": "results/m13_cloud_build_resume.json",
+      "pid_file": "work/m13cloud-launchers/build_resume.pid",
+      "logs": [
+        "logs/m13-build-resume-controller.log",
+        "logs/m13-build-resume.log"
+      ],
+      "stale_seconds": 1800
+    },
+    {
+      "name": "zero GPU build input upload",
+      "receipt": "results/m13_cpu_upload.json",
+      "pid_file": "work/m13cloud-launchers/cpu_upload.pid",
+      "logs": [
+        "logs/m13-cpu-upload.log"
+      ],
+      "stale_seconds": 1800
+    },
+    {
+      "name": "storage only build input upload",
+      "receipt": "results/m13_storage_upload.json",
+      "pid_file": "work/m13cloud-launchers/storage_upload.pid",
+      "logs": [
+        "logs/m13-storage-upload.log"
+      ],
+      "stale_seconds": 1800
+    },
+    {
+      "name": "storage upload to GPU handoff",
+      "receipt": "results/m13_after_upload.json",
+      "pid_file": "work/m13cloud-launchers/after_upload.pid",
+      "logs": [
+        "logs/m13-after-upload.log"
+      ],
+      "wait_for": "storage only build input upload",
+      "stale_seconds": 900
+    },
+    {
+      "name": "200M build after verified storage upload",
+      "receipt": "results/m13_cloud_build_after_cpu.json",
+      "pid_file": "work/m13cloud-launchers/build_after_cpu.pid",
+      "logs": [
+        "logs/m13-build-after-cpu-controller.log",
+        "logs/m13-build-after-cpu.log"
+      ],
+      "stale_seconds": 1800
+    },
+    {
+      "name": "verification only upload recovery",
+      "receipt": "results/m13_storage_verification.json",
+      "pid_file": "work/m13cloud-launchers/storage_verification_retry.pid",
+      "logs": [
+        "logs/m13-storage-verification-retry.log"
+      ],
+      "stale_seconds": 300
+    },
+    {
+      "name": "verified recovery to GPU handoff",
+      "receipt": "results/m13_after_verification.json",
+      "pid_file": "work/m13cloud-launchers/after_verification.pid",
+      "logs": [
+        "logs/m13-after-verification.log"
+      ],
+      "wait_for": "verification only upload recovery",
+      "stale_seconds": 900
+    },
+    {
+      "name": "cloud to cloud input migration",
+      "receipt": "results/m13_migration.json",
+      "pid_file": "work/m13cloud-launchers/migrate_inputs.pid",
+      "logs": [
+        "logs/m13-migrate-inputs.log"
+      ],
+      "stale_seconds": 600
+    },
+    {
+      "name": "migration to build handoff",
+      "receipt": "results/m13_after_migration.json",
+      "pid_file": "work/m13cloud-launchers/after_migration.pid",
+      "logs": [
+        "logs/m13-after-migration.log"
+      ],
+      "wait_for": "cloud to cloud input migration",
+      "stale_seconds": 300
+    },
+    {
+      "name": "200M migrated A100 build",
+      "receipt": "results/m13_cloud_build_migrated.json",
+      "pid_file": "work/m13cloud-launchers/build_migrated.pid",
+      "logs": [
+        "logs/m13-build-migrated-controller.log",
+        "logs/m13-build-migrated.log"
+      ],
+      "stale_seconds": 1800
+    },
+    {
+      "name": "migration build handoff recovery",
+      "receipt": "results/m13_after_migration_recovery.json",
+      "pid_file": "work/m13cloud-launchers/after_migration_recovery.pid",
+      "logs": [
+        "logs/m13-after-migration-recovery.log"
+      ],
+      "wait_for": "cloud to cloud input migration",
+      "stale_seconds": 300
+    },
+    {
+      "name": "200M preflight retry A100 build",
+      "receipt": "results/m13_cloud_build_preflight_retry.json",
+      "pid_file": "work/m13cloud-launchers/build_preflight_retry.pid",
+      "logs": [
+        "logs/m13-build-preflight-retry-controller.log",
+        "logs/m13-build-preflight-retry.log"
+      ],
+      "stale_seconds": 1800
+    },
+    {
+      "name": "final nano six-set CPU evaluation",
+      "receipt": "work/m13-final/execution.json",
+      "pid_file": "work/m13-final/execution.pid",
+      "logs": [
+        "logs/m13-final-six.log"
+      ],
+      "stale_seconds": 900
+    }
+  ]
+}

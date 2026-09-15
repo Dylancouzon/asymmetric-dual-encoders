@@ -1,0 +1,84 @@
+{
+  "status": "PASSED",
+  "legacy_cache_note": "DEV6 is descriptive development evaluation and uses its registered verify=False cache path. Current bytes match recorded shard/stitch hashes; trust-on-first-use provenance remains unchanged and is not historical authentication. No re-encoding or scoring.",
+  "scope": "DEV6 dependency identity/integrity only; no scoring or encoding",
+  "components": {
+    "nq-250k": {
+      "documents": 250000,
+      "queries": 3452,
+      "dtype": "float16",
+      "verified": true
+    },
+    "hotpotqa": {
+      "documents": 5233329,
+      "queries": 7405,
+      "dtype": "float16",
+      "verified": true
+    },
+    "cqadup-programmers": {
+      "documents": 32176,
+      "queries": 876,
+      "dtype": "float16",
+      "verified": true
+    },
+    "cqadup-physics": {
+      "documents": 38316,
+      "queries": 1039,
+      "dtype": "float16",
+      "verified": true
+    },
+    "heldout-train": {
+      "documents": 6169142,
+      "queries": 7325,
+      "dtype": "float16",
+      "verified": true
+    },
+    "heldout-longq": {
+      "documents": 6169142,
+      "queries": 55,
+      "dtype": "float16",
+      "verified": true
+    }
+  },
+  "cache_checks": [
+    {
+      "name": "dev-nq-250k-docs",
+      "key": "dev-nq-250k-docs-fp16-75da16dd9f8c",
+      "rows": 250000,
+      "verified_current_bytes": true,
+      "legacy_shards": 5
+    },
+    {
+      "name": "dev-hotpotqa-docs",
+      "key": "dev-hotpotqa-docs-fp16-88798cdf67ec",
+      "rows": 5233329,
+      "verified_current_bytes": true,
+      "legacy_shards": 105
+    },
+    {
+      "name": "dev-cqadup-programmers-docs",
+      "key": "dev-cqadup-programmers-docs-fp16-c5ec186bbda9",
+      "rows": 32176,
+      "verified_current_bytes": true,
+      "legacy_shards": 1
+    },
+    {
+      "name": "dev-cqadup-physics-docs",
+      "key": "dev-cqadup-physics-docs-fp16-88f29df31f25",
+      "rows": 38316,
+      "verified_current_bytes": true,
+      "legacy_shards": 1
+    }
+  ],
+  "registry_sha256": "41ff54c33dd88e5adedbe0855dd97c61e4ce19f635e1326320409d97bc71c9ec",
+  "code_sha256": {
+    "m13src/dev6_from_checkpoint.py": "fc6720b595b1371536520b33ba71d5b76e090815223a97a5b4bffc5f4d308518",
+    "m10src/run_arm.py": "0ae8d823c5dfb42988a258c00001c9e52478b93a3423ed28dce2a14ad88621a4",
+    "m10src/nano10.py": "c337229aa75f4005d05b2e6b469aaed8ff77cd62a01a7f3a249b180ccc2f75dd",
+    "m9src/eval9.py": "9b989b37c18b841420847491f4751283d10bf9c825aa6bc6d303de172738f471",
+    "m7src/dev_eval.py": "e5f702536c8af6a7bfb64cbe8770a45f81201866b4b175d4dd129c398737caa1",
+    "m7src/teacher.py": "873a4040536c8f90e2b4aa9d7ec34c6e0dd784da5e4a6530a3310d5ad738079a",
+    "m7src/heldout.py": "18df62aa0c019490a03a00aa8a58947a24991314dc660d32e886fd4519658161",
+    "m7src/devsuite.py": "3ae8141ac4b3f9bb8d64c29e026403b314a7f4295dfa9979888959e5f9050f7f"
+  }
+}

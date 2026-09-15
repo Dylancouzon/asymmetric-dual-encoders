@@ -76,3 +76,23 @@ and monitor `Traceback|Error|FAILED|OOM|Killed|assert`; read the first progress 
    that is not committed and pushed, and recomputes the decision from the recorded bootstrap.
 7. Build, on the instance after `git pull`: `.venv/bin/python m13src/build13.py --config
    m13/build_config.json --device cuda --rate EX_S --price USD_H`.
+
+## Measured day-one allocation — 2026-09-11
+
+`results/m13_cloud_allocation.json` records the reviewed E-stage allocation. Slower real
+restart-smoke rate 398 ex/s, halved to 199 ex/s for planning; billed GPU $1.59/hour and
+running storage included ($1.663611/hour total), plus $103 persistent storage reserve.
+Pinned fp32 Stella measured 100.76/110.81 passages/s on 1k/10k admitted SQuAD training passages.
+The slower rate times 10M, doubled plus setup, raises reserved encoding from 8 to 55.2 hours;
+the same 2.7M-passage surrogate raises LoTTE from 1.3 to 15 hours. No protected corpus was read.
+`build13.py --plan --rate 199 --price 1.6636111111111112` gives $719.09; adding already-paid
+$4.74 and an E runtime-cap supplement gives **$740.53 total**, **$259.47 headroom** below $1,000.
+The whole 24h E stage reserves about $39.93; each arm is capped at 11.5h. Future build launch
+still requires E1, LoTTE gate, actual full-run rate/cost reconciliation and applicable reviews.
+The account's current balance covers E; Dylan already authorized refilling for later stages.
+
+Read-only E preflight loaded the exact 10-unit, 13,416-query COV surface and verified all five
+teacher document caches by identity, chunk SHA/shape/finiteness and stitched content. No quality
+scores were computed. Full warmstart remains registered at 60k/seed21. E controller:
+`scripts/m13_cloud_e.py`, receipt `results/m13_cloud_e.json`, logs `logs/m13-cloud-e-*.log`,
+full local backups `work/m13cloud-e-backup/`. No automatic reruns; preserve terminal failures.

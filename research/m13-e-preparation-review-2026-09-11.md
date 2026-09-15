@@ -1,0 +1,242 @@
+# E preparation and launch reviews — 2026-09-11
+
+The dependency preflight reads only admitted COV/training metadata, validates the live registry
+and F verdict, checks the 60k warm-start configuration, requires absent registered E output,
+and verifies exact COV cache identities, chunk hashes/shapes and stitched bytes. No score or
+encoder is invoked. The throughput benchmark times pinned stella fp32 at 512 tokens with
+32,768 padded tokens/batch on 1,000 then 10,000 admitted SQuAD training passages. It records
+length distributions and treats the 10M projection as a surrogate with twofold headroom, not
+as a protected-corpus measurement. The reserved executor remains a separate readiness item.
+
+Independent cross-reviews by encode_benchmark and e_launch_audit cleared both new scripts;
+synthetic checks covered sampling/allocation arithmetic/refusals and good/corrupted cache
+validation. Parent inspected the scripts and teacher cache/encode interfaces. No cloud or
+protected content was opened during reviews; only named source, permitted result metadata
+and scratch fixtures were accessed. No recursive searches or credential reads by reviewers.
+
+Both reviewers cleared the bounded preparation launcher after signal/ownership cleanup fixes:
+start only the existing stopped Pod at the quoted price; restore bootstrap under remote timeout;
+deploy exact committed HEAD via Git bundle; run dependency preflight and benchmark under separate
+1,200-second remote deadlines; copy successful/failure receipts before bounded STOP retries;
+raise if shutdown is unconfirmed. No registered E training is launched by preparation.
+
+## Registered E controller
+
+Both independent reviewers returned GO for `scripts/m13_cloud_e.py`, conditional on committed
+passing preflight/encode receipts and a reviewed measured allocation below $1,000. Fixed findings:
+receipt hash/PASS/registry binding; live Pod price/state; zero-exit terminal FAILED arm outcomes
+reported explicitly while both registered arms remain scheduled unchanged; partial running
+backups need no nonexistent published terminal twin; exact owned process marker parsing.
+Synthetic verification covered good/bad/stale allocations, complete/corrupt/partial backups,
+and actual rendered cleanup against owned and unowned sleeping local processes. No cloud or
+protected access in these checks. The controller is fresh-launch only, with no automatic rerun.
+It copies entire E output trees and published records, verifies remote manifest plus checkpoint
+and COV references locally, and stops compute on completion/failure. WSL must remain awake.
+
+## Launcher and measured allocation
+
+Both reviewers cleared the outer E launcher after replacing subprocess.run with retained Popen:
+interruptions send the controller SIGTERM and allow 1,800 seconds for its bounded evidence/STOP
+cleanup before forced kill and outer STOP. The startup wrapper refuses tracked prep receipts
+before archiving the two untracked originals, deploys exact HEAD, and bootstraps under timeout.
+Operational wrapper copy: `work/m13cloud-launchers/e.py` (no embedded credentials).
+
+The cloud preflight passed all ten admitted COV units and five teacher caches. The encode
+benchmark passed both sizes with no allocator retries. Parent validation: all 55 build-controller
+tests passed; build13 printed the measured allocation; E controller verified receipt/hash gates.
+The numerical review recomputed the base $719.09, E runtime topup $16.70 and $4.74 paid, yielding
+$740.53 and $259.47 ceiling headroom. Allowances use explicit conservative surrogates and do not
+authorize build or protected access. No recipe/schedule/protocol fields changed.
+
+Both e_launch_audit and encode_benchmark independently recomputed the final allocation and
+returned GO for E only. Both confirmed all six artifact bindings and three benchmark code
+hashes, the 199 ex/s safety rate, reserved55.2h/LoTTE15h allowances, $740.53 total and $259.47
+headroom. Their access audits covered only named source/receipt/config/plan metadata; no cloud,
+credentials or protected payloads.
+
+## Local E follow-on
+
+Both e_launch_audit and encode_benchmark returned GO for `scripts/m13_after_e.py`,
+conditional on the actual dependency preflight passing. It passed all six DEV-6 components
+(`results/m13_dev6_preflight.json`) without scoring or teacher encoding. The four text caches'
+current shard and combined bytes match their recorded hashes. Their historical trust-on-first-use
+labels remain intact; this is not an upgrade to authenticated provenance. An initial stricter
+check refused those legacy labels, as expected; both attempt logs are retained locally.
+
+The one-shot follow-on requires successful cloud completion, confirmed STOP, and verified
+backups bound to the cloud receipt before restoring independent local copies. It publishes
+the original records, fills descriptive DEV-6 only if the local GPU is idle, then computes
+E1 and applies the registered selection. It refuses existing evidence, source/registry drift,
+unrelated tracked edits and incomplete contrast results. Failures preserve outputs without
+automatic retries. The scope ends at E1; no build or protected evaluation is launched.
+Author synthetic checks covered success, busy GPU, prior computed E1 and an uncomputed result
+despite zero CLI exit. Parent inspected the final script and actual passing dependency receipt;
+independent reviewers inspected named source files and parsed the scripts, without cloud,
+credential or protected-content access. Operational preflight copy is retained in
+`work/m13cloud-launchers/dev6_preflight.py`.
+
+## Completed E and local handoff correction
+
+Both cloud arms and local DEV-6 completed successfully; backup hashes and STOP passed.
+E1 computed once and resolved for bs32. The follow-on then falsely refused publication because
+its batch postcondition accepted integers while the existing selector returns `bs32`/`bs128`.
+The narrow schema correction changes no decision rule. The failed receipt is retained, with a
+separate recovery receipt binding the existing outputs. Parent checked registry hashes, the
+registered decision helper, all recorded subprocess exits and both local record twins; no
+training, DEV-6 or contrast was repeated.
+Independent e_selection_check review returned GO: the selector returns batch strings; macro
+subtraction and weighted unit deltas reproduce E1, registry bindings agree, and bs32 satisfies
+the registered rule. Review accessed only the named controller, selector, decision helper and
+two decision JSONs; no protected payloads or cloud access.
+
+## Post-E gate preparation and fp16 timing
+
+Both e_selection_check and fp16_launch independently cleared the narrow shared batch parser
+fix: the selector emits bs32/bs128, now accepted by gate/build while retaining strict numeric
+legacy support and registry binding. Across the affected suites and final fixture correction,
+116 cases passed; the independent selector/parser subset passed nine cases. Tests now inject
+PENDING rather than depending on the formerly uncomputed live verdict. No decision changed.
+The checkpoint manifest was generated from the completed E records; the lock table now carries
+its candidate identity and the bs32 branch has no comparator.
+
+The operational fp16 launcher is retained at work/m13cloud-launchers/fp16.py. Both gate_next
+and e_selection_check returned GO. It starts only the existing stopped Pod at <=$1.59/hour,
+deploys exact committed HEAD, runs only the admitted SQuAD fp16 benchmark, verifies its copied
+receipt and confirms STOP. Execution cap30minutes plus bounded cleanup; remote benchmark cap
+10minutes. Synthetic archive checks passed for tracked/untracked E records and refusal of
+unrelated edits. Receipt-write failure cannot bypass STOP. All reviewer access was named
+source and allowed metadata/synthetic fixtures, without credentials/cloud/protected payloads.
+
+Runpod restart failed twice before encoding; the second response identified no free GPU on
+the original physical host. Both receipts confirm EXITED. The replacement plan retains that
+Pod and deploys one same-SKU secure A100 with prequote and post-create price checks, loading
+only benchmark/gate dependencies. Official provider guidance: stopped-Pod GPUs can be rented
+by other users; a new Pod is required to move hosts.
+https://docs.runpod.io/pods/troubleshooting/pod-migration
+
+After the pushed checkpoint manifest, exactly21 registered remediated files were independently
+copied to this worktree. The authorized freeze_lotte PIN module hashed all seven slices; pin
+was committed/pushed. Gate metadata preflight passed, without opening LoTTE paths or scoring.
+
+Replacement and LoTTE launchers received two independent GO reviews each. Replacement
+uses one creation request, repeated bounded discovery on ambiguous creation, the same secure
+A100 SKU and <=$1.59 quote/created-price checks, exact pushed HEAD, 69 minimal transferred
+files with checksum verification, fixed fp16 timing, and STOP. Its 108-minute work cap reserves
+12minutes for cleanup within a two-hour allocation. HF symlinks are preserved; all26 targets
+are included. LoTTE binds the successful benchmark to the selected Pod, limits staging to21
+registered files, requires pushed manifest/pin and reviewed stage allocation, executes once,
+and bounds checksum backup with reserved STOP time. Neither launcher was executed in review.
+Operational source `work/m13cloud-launchers/replacement.py` sha256 `84d9eb464a1baec2dcee478175943bb7cb40b953c4e331f6ca46be56e23f468b`.
+Operational source `work/m13cloud-launchers/lotte.py` sha256 `711324b9047049d18b9c7d861d947d21683a7545d24a3dce981d385bc0eb3905`.
+
+Replacement Pod exulxoxelug5um provisioned at $1.59/hour. Its pinned environment and A100
+CUDA allocation checks passed, but the bootstrap SSH transport remained open after its
+remote command exited. Operator interrupted the launcher; EXITED confirmed and failure
+receipt preserved. Continue on the same persistent Pod using a fresh noninteractive SSH
+command path; no benchmark or protected evaluation had begun.
+
+The same-Pod resume also failed to start (EXITED confirmed), so neither fp16 timing nor the
+gate had run. To avoid further between-stage capacity loss, the combined gate_chain launcher
+retains ONE new A100 through setup, timing and read. Both independent reviewers returned GO
+on the launcher and allocation:17h maximum at$28.29, 15h gate ceiling, dynamic measuredfp16
+admission before access, exact10 committed artifact bindings, single owned read, full SHA
+backup and bounded STOP. Day-of-read checks use the user's America/New_York calendar; R18
+does not specify UTC. Pin remains the same pre-observation seven-slice artifact.
+
+Independent arithmetic gives$669.52 total, $330.48 headroom, including$309 conservative
+30-day storage reserve for allthree disks, $9.1531 paid, 441.9ex/s planning rate and2h extra
+setup beyond the15h gate line. Reserved55.2h unchanged. The timing guard requires the slower
+1k/10k fp16 measurement times2,715,201 documents, doubled plus1h, to fit15h and the remaining
+execution time. Reviewers accessed only named code and allowed metadata, not protected
+payloads, credentials or cloud.
+Combined operational launcher sha256 `9a131f8bb59e01a567136b58f0fc08380ba0b1f227fb46763ab72e4f9e9adcc1`.
+
+The third Pod's persistent-volume package installation failed with `Stale file handle`
+(os error 116); the remote installer exited while its SSH transport remained open. No
+benchmark or LoTTE read had begun. The same-Pod takeover preserves the original RUNNING
+receipt and its hash, verifies exact local controller/SSH identities before transferring STOP
+ownership, and retains the original 17-hour start/deadline and $28.29 cap. It neither creates
+nor starts another Pod. A remote process check refuses any remaining old bootstrap writer.
+
+The temporary bootstrap changes exactly four runtime installation paths to `/opt/m13-runtime`;
+Python, uv, all package pins and CUDA/hardware checks are unchanged. Read-only disk inspection
+confirmed a 30 GB container filesystem with 142 MB used; persistent `/home/dylan` is MFS.
+The partial old environment is archived only after the new environment passes, then the repo
+venv links to the verified local runtime. Models, datasets and outputs remain persistent.
+Operational source `work/m13cloud-launchers/gate_chain_resume.py` sha256
+`1e6f82a0e63e52b4222d2c3c93574fc0448cc600e8876cc8c2e2a993fefbc944`.
+
+Both independent reviewers returned GO on the final takeover including the old-writer guard;
+syntax and diff checks passed. Reviews accessed only named code and metadata, with no cloud
+actions, credentials or protected payload reads. Five-minute monitoring targets the new receipt.
+
+Build readiness review found that a DEV-6 exception after training escaped the freeze guard
+and marked the completed build terminal FAILED. The narrow fix returns the existing
+FROZEN_UNVERIFIED state, preserving the checkpoint for finalization-only resume. No recipe
+or verification bar changes. All56 build tests passed; an independent reviewer ran four
+focused cases and returned GO. Parent review also GO. The new synthetic regression proves
+that resume performs no training and retains checkpoint hash and dose while retrying DEV-6.
+
+Runtime repair passed all pinned package/import/CUDA checks. Subsequent rsync failed to
+preserve local UID/GID on MFS (`chown: Operation not permitted`). The operator paused the
+verified controller before its failure cleanup could release the GPU. A second bounded
+takeover preserves that receipt/hash and the original deadline, verifies the old process
+group and rsync child (including zombie identity), kills only the owned group, checks that
+the remote receiver exited, and reuses the already verified runtime and exact cloud HEAD
+0dfd2262075b7b1a4283117352eacd107af7811f. No bootstrap or experiment is repeated.
+
+All three rsync paths add `--no-owner --no-group --info=progress2`; content hashes remain
+mandatory. A tiny transfer of the requirements file to setup-logs passed on the actual MFS
+mount with these flags. Both independent reviewers returned GO; syntax and diff checks pass.
+Original 17-hour deadline and $28.29 cap remain unchanged. Source
+`work/m13cloud-launchers/gate_chain_upload.py` sha256
+`0d891b1f7671adb105aa1215d3e385d987df179afd8732366bce3ef26f690134`.
+
+Unattended build preparation: the exact394 admitted training/COV/HF/DEV-6 files are now
+pinned by content SHA in `m13/build_transfer_manifest.json` (72,623,148,280 logical bytes).
+Only those named admitted inputs were hashed; final-six/reserved/LoTTE payloads are excluded.
+Source size, modification time and inode were checked for stability during hashing.
+
+`scripts/m13_build_preflight.py` exercises the full uncut registered CPU assembly and
+existing COV/DEV-6 caches with teacher encoding and model loading disabled. It binds HEAD,
+metadata and code, preserves legacy trust-on-first-use labels, and runs only after the
+controller verifies every transferred content hash. Five synthetic tests passed, rerun
+independently; both source reviews GO. No actual cloud preflight was run in review.
+
+The reviewed build supervisor restores container-local pinned runtime, stages394 inputs
+under a shared10-hour transfer allowance, and requires enough time for planned training
+and finalization before starting. Its maximum144 hours costs$239.56 at the fixed quote.
+The project allocation formula retains the complete existing model and309-dollar storage
+reserve, adds the prior2-hour setup supplement plus18.28 build hours, then actual paid spend:
+$690.78 plus paid spend, freshly reconciled after the gate. This is a conservative ceiling,
+not an expected duration or bill. No new Pod creation or additional training cycles.
+
+Build backups retain the latest two checksum-verified rolling copies and every final output.
+A transient optional rolling-copy failure receives a bounded retry and warning. One retry
+is allowed only for explicit frozen_unverified finalization with completed200M training;
+checkpoint, recipe and code identities remain fixed. Full backup and bounded STOP apply
+on every terminal path. Two independent build-supervisor and allocation reviews GO.
+
+The success-only coordinator waits for the exact gate controller, verifies gate/benchmark/
+backup metadata and STOP, requires unchanged initially reviewed HEAD and launcher hashes,
+commits/pushes only intended gate artifacts, runs the reviewed allocation reconciliation,
+commits/pushes it, and confirms a live build receipt before reporting PASSED/handed_off.
+Three synthetic Git checks verified precise commit/push and rejection of unrelated tracked
+or staged edits; unrelated untracked evidence stays untouched. Both coordinator reviews GO.
+The existing five-minute monitor covers gate, handoff and build. Same-Pod restart still
+depends on GPU capacity; this workflow makes no unsupported availability guarantee.
+
+Operational source `work/m13cloud-launchers/build.py` SHA256 `16e6b2f2240962e1073174654ebc9cd99e9e51596b9b5900d7cf8039e021e74b`.
+
+Operational source `work/m13cloud-launchers/build_allocation.py` SHA256 `7e07fe1cf9a577c268e04c1f29a66fac22fc577a018e7ec85228e4493354df26`.
+
+Operational source `work/m13cloud-launchers/after_gate.py` SHA256 `607a1006b5bcb706656e1ee8b105ec3477614fad69e0e1b2d6ca837743ba8f9c`.
+
+2026-09-12: Gate completed and was pushed in9d97291. Handoff failed during allocation
+because its system Python lacked NumPy, imported transitively by build_lock. The unchanged
+helper passed under the pinned repository environment with GPU visibility disabled. Both
+recovery reviews GO; helper/build source hashes match prior reviewed versions. Original
+failure retained with hash-bound allocation recovery; no observation/training rerun.
+Allocation$706.20 projected/$293.80 headroom; maximum build$239.56, live balance$489.58.
+The local monitor detected the failure but cannot wake the assistant or repair it; detection
+is not unattended recovery. The operator resumes the already reviewed build supervisor.

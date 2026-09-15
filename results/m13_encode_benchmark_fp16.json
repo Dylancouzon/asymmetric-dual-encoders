@@ -1,0 +1,81 @@
+{
+  "status": "PASSED",
+  "measurements": [
+    {
+      "passages": 1000,
+      "seconds": 2.2512782239355147,
+      "passages_per_second": 444.19209912308196,
+      "tokens_after_truncation": {
+        "mean": 152.828,
+        "p50": 142.0,
+        "p95": 267.04999999999995,
+        "max": 512
+      },
+      "peak_gpu_allocated_bytes": 2305143296,
+      "allocator_retries": 0,
+      "output_sha256": "d348e39daf8c5e1a1821ce49a0722a385c98e61280283e7251254b5f0c229e07"
+    },
+    {
+      "passages": 10000,
+      "seconds": 20.458317026961595,
+      "passages_per_second": 488.79876027051523,
+      "tokens_after_truncation": {
+        "mean": 153.2436,
+        "p50": 141.0,
+        "p95": 276.0,
+        "max": 512
+      },
+      "peak_gpu_allocated_bytes": 2572612096,
+      "allocator_retries": 0,
+      "output_sha256": "5cdd00ac1cbaf411f3c59eb368533b52d6cf5149b38eb360871ee143665071ba"
+    }
+  ],
+  "source": "work/train/stores/squad-ctx.json",
+  "encode_dtype": "fp16",
+  "protected_evaluation_access": false,
+  "started_utc": "2026-09-12T00:38:29Z",
+  "timeout_seconds": 3600,
+  "source_sha256": "1e7d7f13feeeed8ca4e4c638436eb1a89d9b70daa4748f259cb8312a525f8729",
+  "selected_texts_sha256": "2fa4c1f996609a159496ec390c25a6b6cc06ac5eb120f61d2a51e6f0e499ad0f",
+  "selection": "10000 evenly spaced store positions; every tenth then all",
+  "git_head": "0dfd2262075b7b1a4283117352eacd107af7811f",
+  "gpu": "NVIDIA A100-SXM4-80GB",
+  "gpu_memory_bytes": 85093777408,
+  "torch_version": "2.8.0+cu126",
+  "cuda_version": "12.6",
+  "cuda_matmul_allow_tf32": false,
+  "cudnn_allow_tf32": true,
+  "torch_num_threads": 4,
+  "teacher": {
+    "model": "NovaSearch/stella_en_400M_v5",
+    "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+    "pooling": "mean",
+    "post_dense": "2_Dense_1024",
+    "config_kwargs": {
+      "use_memory_efficient_attention": false,
+      "unpad_inputs": false
+    },
+    "prefix": "",
+    "dtype": "fp16",
+    "max_length": 512,
+    "batch_tokens": 32768,
+    "path": "m7src.teacher.encode (uncached, fp32 CPU output)",
+    "comparison_path": "lotte_gate13.encode_docs calls teacher.encode_cached(dtype=torch.float16), using the same encode kernel; cache IO excluded. Training passages only; no LoTTE access."
+  },
+  "code_sha256": {
+    "scripts/m13_encode_benchmark.py": "4351c5838365a4c39c499b6aaeca75aff726055aeef4f9f971e184efd0a3f34b",
+    "m7src/teacher.py": "873a4040536c8f90e2b4aa9d7ec34c6e0dd784da5e4a6530a3310d5ad738079a",
+    "m7src/encoders.py": "a9819c35b99d78dfb70c36f249810c2946c28f7ff746ed01c03ce2531eaac81e"
+  },
+  "warmup_passages": 32,
+  "allocation": {
+    "projected_passages": 10000000,
+    "slowest_seconds_per_passage": 0.002251278223935515,
+    "unadjusted_encode_hours": 6.253550622043098,
+    "safety_factor": 2.0,
+    "setup_seconds": 22.224845035001636,
+    "reserved_batch_allowance_hours": 12.6,
+    "limitation": "SQuAD training passages are a surrogate. Reserved corpus token lengths, downloads, cache serialization, hashing, search and evaluation were not measured. The factor of two is planning headroom, not a runtime guarantee; reconcile actual costs under the overall budget ceiling."
+  },
+  "wall_seconds": 48.955036983825266
+}

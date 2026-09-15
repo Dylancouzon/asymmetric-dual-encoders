@@ -1,0 +1,343 @@
+{
+ "_what": "LoTTE read #1 \u2014 the gate RECORD m13src/build13.check_gate requires, written by the executor that performed the read (m13/LOTTE_GATE_REGISTRATION.json gate_record_contract). No query text, label or per-query row is in this file.",
+ "executed": true,
+ "branch": "bs32",
+ "decision": "skipped",
+ "veto_fired": null,
+ "e1_batch": 32,
+ "e1_verdict_sha256": "6690c8af5e7288cd31870e27c7bf62d7be1aa0fb19ad0bd651f0f35f0bc4f4c5",
+ "candidate_sha256": "36152c3a564f35ba72b1a3fb7f3e0ca272c43a833764be2102580c73ccc2266b",
+ "comparator_sha256": null,
+ "candidate": {
+  "arm": "E-bs32",
+  "record": "/home/dylan/asymetric-dual-encoders/results/m10_arm_E-bs32.json",
+  "record_sha256": "c90bd6515425c634c41ea41c38c29ad87aa8877f71d8e52709e636e36b8cb70e",
+  "checkpoint": "work/m10arms/E-bs32/cycle3.pt",
+  "sha256": "36152c3a564f35ba72b1a3fb7f3e0ca272c43a833764be2102580c73ccc2266b",
+  "recipe": {
+   "student": "bge-small",
+   "n_layers": 3,
+   "head": "linear",
+   "objective": "squared_l2",
+   "pattern": "75/25",
+   "dose_examples": 5000000,
+   "batch": 32
+  },
+  "seed": 0,
+  "params": 34540672,
+  "device": "cuda",
+  "git_head": "2ec2f0a05f91a90b698e5648e6739f0715afc8ff"
+ },
+ "comparator": null,
+ "manifest_path": "/home/dylan/asymetric-dual-encoders/m13/LOTTE_GATE_MANIFEST.json",
+ "manifest_sha256": "899c6c0ef786f9e2eba6caff920875968267d58c95309d19e937220cf6d25805",
+ "manifest_commit": "debd49b6d541bcce9e9374a6381bac34d80ed1de",
+ "pin_path": "/home/dylan/asymetric-dual-encoders/results/m8_lotte_pin.json",
+ "pin_sha256": "721408d4c39f557cacf78f0d4c51d1be118e668e831bc7a082bc132453367532",
+ "pin_commit": "e464c2b2d77f850b261b0d1796142d7f956388a1",
+ "macro_ndcg10": {
+  "candidate": {
+   "per_slice": {
+    "lifestyle/test": 0.5710927071364468,
+    "recreation/test": 0.5311145033541441,
+    "recreation/dev": 0.47967144695638836,
+    "lifestyle/dev": 0.43365567523386217,
+    "writing/dev": 0.553377255286615,
+    "science/dev": 0.4324449492746267,
+    "technology/dev": 0.22584665037728097
+   },
+   "macro": 0.46102902680276625
+  }
+ },
+ "success_at_5": {
+  "candidate": {
+   "per_slice": {
+    "lifestyle/test": 0.8454591068740592,
+    "recreation/test": 0.7552763819095477,
+    "recreation/dev": 0.8094282848545636,
+    "lifestyle/dev": 0.7671166827386693,
+    "writing/dev": 0.8098591549295775,
+    "science/dev": 0.7402597402597403,
+    "technology/dev": 0.5418966382338184
+   },
+   "macro": 0.7527565699714251
+  }
+ },
+ "dependencies": {
+  "candidate": {
+   "repo": "BAAI/bge-small-en-v1.5",
+   "sha256": "8e08d63492ee912f8a8d5ff90968a0b72c3cd2c2a380ee21f42922d2187aab2d"
+  }
+ },
+ "delta_candidate_minus_comparator": null,
+ "bootstrap_upper_bound": null,
+ "veto": {
+  "margin": 0.004,
+  "bootstrap": {
+   "B": 10000,
+   "seed": 903,
+   "paired_within_slice": true,
+   "interval": "one-sided 97.5% upper bound on (selected - anchor)",
+   "quantile_method": "inverted_cdf",
+   "_quantile_method": "RULING R17 (Dylan, 2026-09-10), registered BEFORE any LoTTE read: the empirical quantile, numpy method `inverted_cdf`, i.e. order statistic 9,750 of 10,000 draws for the 97.5% upper bound. The repo's registered convention (m9src/final_stats.bootstrap, m10/final_run_registry.json). The 9,751st order statistic (`higher`) can disagree at the margin; pinning the method removes that freedom (Astra review, 2026-09-10)."
+  },
+  "fires_iff": "selected macro is worse than the comparator's by more than 0.004 AND the upper bound is below -0.004",
+  "consequence": "none: skipped and forfeited (identical recipe and action); the observational row above is a 5M-dose number and selects nothing",
+  "metric": "nDCG@10 (exact search over each slice's remediated collection), macro over slices",
+  "fired": null
+ },
+ "surface": {
+  "name": "LoTTE-clean",
+  "n_slices": 7,
+  "total_queries": 14034,
+  "macro": "equal weight over the seven slices, never pooled",
+  "slices": {
+   "lifestyle/test": {
+    "n_docs": 119458,
+    "n_queries": 1993,
+    "n_qrels_pairs": 10200,
+    "hashes": {
+     "doc_ids_sha256": "a4871ec2e69c2a20cf9b381bf793b3764df974fd0c8fcc290909b8a9415c7340",
+     "doc_texts_sha256": "e30cdb210ab378ed258750eb511af1110d6e8b64e40778c02de75bdb85e41016",
+     "query_ids_sha256": "e61cb31be32b4846c854d82500ccd6a4eae9d7a4a6c8981ee8c7fa23260debfe",
+     "query_texts_sha256": "a394ebc0fc2924443f2d5622512a97f496298c2c4a13fdff8908b9900637a743",
+     "qrels_sha256": "a0df873e12702edbadc141a56e56e1bdd27dabb64bfecf58cb1ee51e22f35268"
+    },
+    "read_relpath": "/home/dylan/asymetric-dual-encoders/work/lotte/remediated/lifestyle/test"
+   },
+   "recreation/test": {
+    "n_docs": 166975,
+    "n_queries": 1990,
+    "n_qrels_pairs": 6892,
+    "hashes": {
+     "doc_ids_sha256": "e9cbcffa8d5de1b892a3b2cfd0aa504fc9901c5023468e1523d1468ee2421559",
+     "doc_texts_sha256": "e92c9fdf11baada28717ffefd68fdfaf51baf4115d644f00924f223e183a8bfc",
+     "query_ids_sha256": "7d1602d091c5ea45ca8eeb853422a471b7cd7f093b05c00bdce0e6b2e0b61de8",
+     "query_texts_sha256": "0845d027da7f19a37b89baeefc20486955fb8c4b9b8b37baef294c4018dfebcc",
+     "qrels_sha256": "86d3bbcbb30bee299532e6050353a977b6d97a1a451efa51e982039c715f1c0b"
+    },
+    "read_relpath": "/home/dylan/asymetric-dual-encoders/work/lotte/remediated/recreation/test"
+   },
+   "recreation/dev": {
+    "n_docs": 263000,
+    "n_queries": 1994,
+    "n_qrels_pairs": 12686,
+    "hashes": {
+     "doc_ids_sha256": "8114d60b7955d4692a781f3166d7e759ccbab041634aa70e2267ca74276bf2e7",
+     "doc_texts_sha256": "25e7e6dda0c2c12fb75bc2cadd248ac335ca0148f14776f9ff27b3d853c13ae3",
+     "query_ids_sha256": "52aa8c55f0ae7eef3e611959b6e1c40ecd3bf9de02e014e92511d81a6da04906",
+     "query_texts_sha256": "de016e8e6cc3eb04224ffcde267bc062902bc7b9c845a746885ba0472725e9fd",
+     "qrels_sha256": "7b87fb8e21083e27e9af2b25876d4e7e21f91b9c26476f9ac1ed32ebccc391bb"
+    },
+    "read_relpath": "/home/dylan/asymetric-dual-encoders/work/lotte/remediated/recreation/dev"
+   },
+   "lifestyle/dev": {
+    "n_docs": 268890,
+    "n_queries": 2074,
+    "n_qrels_pairs": 12811,
+    "hashes": {
+     "doc_ids_sha256": "5d94ae0f0a12ff9284ca660ae455ee33031e9e7c2f12a0dff600aaca30b0083f",
+     "doc_texts_sha256": "576ba2a55a3916c3847119750a4a9dd235613bb3b07d9147943d166300082b72",
+     "query_ids_sha256": "a72c017e3e37d34e02a738ce98e796707932588c3b5ef6a5aba49f56a07cc58e",
+     "query_texts_sha256": "9b7abb78d97252cbed0f7fd08a8c40082f5f56471e46361dbd4de98bbe17b19d",
+     "qrels_sha256": "7895d5b83d1b0412a60847921e7680e31c6e02c73aa6fef132374d349798cfd0"
+    },
+    "read_relpath": "/home/dylan/asymetric-dual-encoders/work/lotte/remediated/lifestyle/dev"
+   },
+   "writing/dev": {
+    "n_docs": 277049,
+    "n_queries": 1988,
+    "n_qrels_pairs": 15021,
+    "hashes": {
+     "doc_ids_sha256": "fc6b32aeee738f24d41307ff6deef1aac1879c4f51150cf602fdb21102986596",
+     "doc_texts_sha256": "10295fbb2403e6a615ad9e8b15cbb5ec0359c3d430b6cefd6dd02d43f6fe9c6c",
+     "query_ids_sha256": "344dee11b505741b8f83b8d3000b71c62e47fef0afbbcbef4f0e7edbc30d9acc",
+     "query_texts_sha256": "ef119790cc8d5f114dec1798c88ac02775bfd376a4af9a027d9c2b7470172085",
+     "qrels_sha256": "80ea6e87d0114d022651a3f9ff16ebf605fb32046b26fefbddf26296b6ff7dd2"
+    },
+    "read_relpath": "/home/dylan/asymetric-dual-encoders/work/lotte/remediated/writing/dev"
+   },
+   "science/dev": {
+    "n_docs": 343634,
+    "n_queries": 2002,
+    "n_qrels_pairs": 12210,
+    "hashes": {
+     "doc_ids_sha256": "e81dd130acef30da08ff40cb13bb218c33ab5706e27014938c8db0551474b618",
+     "doc_texts_sha256": "48a832bb413fc6d6f57b47dc92ae062ab82a3b8c2bd9a901f6da5b3b0472563f",
+     "query_ids_sha256": "5e5752135b74e766d2b5bd84d2aaf8fbe1a8fc57ade693f46620e856164b58e1",
+     "query_texts_sha256": "5edc093dee2d988a192d26991f58e5ca083f204d0ae3c915ab3cc0fec03539c0",
+     "qrels_sha256": "aa514ea4ebabcc5d539dd1eeb859d7582e768c7bb7d3525be7f3bb551684c1ad"
+    },
+    "read_relpath": "/home/dylan/asymetric-dual-encoders/work/lotte/remediated/science/dev"
+   },
+   "technology/dev": {
+    "n_docs": 1276195,
+    "n_queries": 1993,
+    "n_qrels_pairs": 15648,
+    "hashes": {
+     "doc_ids_sha256": "d5435524ef1ade81d1f12c6fa9532be59657547bcecbac68d3a68e4bbb5dd7f4",
+     "doc_texts_sha256": "8eabbb89cb243f9ac44e4222dda73a8f55f6fbc08f0a75f40ef20b080a583f93",
+     "query_ids_sha256": "dc72b96dfe5df54226def7fb69854aea2f0c1af47fef39ab8070f1d947d2a68f",
+     "query_texts_sha256": "077ffb1584049b1759e9232915e27288db8e9878d69b3e4ec48eb6e81f64e4d0",
+     "qrels_sha256": "ef0b075cf85bdc55da2739e215aa7d1b3b3a492539a35c795db31d12163b31cf"
+    },
+    "read_relpath": "/home/dylan/asymetric-dual-encoders/work/lotte/remediated/technology/dev"
+   }
+  },
+  "doc_caches": {
+   "lifestyle/test": {
+    "cache_key": "lotte-lifestyle-test-docs-fp16-3e4bc623f920",
+    "n_shards": 3,
+    "n_rows": 119458,
+    "shards_written_now": 3,
+    "shards_verified": 0,
+    "shards_trusted_on_first_use": 0,
+    "verify_requested": true,
+    "combined_sha256": "4bc05d5944bb75c57e92d48fd14b37b3a19089c9de245ee2effd78acfcad367b",
+    "_note": "every shard behind these vectors was written or re-hashed by this process",
+    "name": "lotte-lifestyle-test-docs",
+    "dim": 1024,
+    "seconds": 268.4,
+    "rows_per_s": 445.0
+   },
+   "recreation/test": {
+    "cache_key": "lotte-recreation-test-docs-fp16-862b8bb8a485",
+    "n_shards": 4,
+    "n_rows": 166975,
+    "shards_written_now": 4,
+    "shards_verified": 0,
+    "shards_trusted_on_first_use": 0,
+    "verify_requested": true,
+    "combined_sha256": "1d55301b7e847e98bcc4045c19d5e77f5b44fd25b73d2e29e5f246b9edabd25a",
+    "_note": "every shard behind these vectors was written or re-hashed by this process",
+    "name": "lotte-recreation-test-docs",
+    "dim": 1024,
+    "seconds": 343.9,
+    "rows_per_s": 485.5
+   },
+   "recreation/dev": {
+    "cache_key": "lotte-recreation-dev-docs-fp16-7d8e3703a8b1",
+    "n_shards": 6,
+    "n_rows": 263000,
+    "shards_written_now": 6,
+    "shards_verified": 0,
+    "shards_trusted_on_first_use": 0,
+    "verify_requested": true,
+    "combined_sha256": "26bee442bee0b0ae7a2e4d58e789f8e51ead0ebfcc295ae5f51ff2b7e2cf8ae8",
+    "_note": "every shard behind these vectors was written or re-hashed by this process",
+    "name": "lotte-recreation-dev-docs",
+    "dim": 1024,
+    "seconds": 827.4,
+    "rows_per_s": 317.9
+   },
+   "lifestyle/dev": {
+    "cache_key": "lotte-lifestyle-dev-docs-fp16-e0087817a371",
+    "n_shards": 6,
+    "n_rows": 268890,
+    "shards_written_now": 6,
+    "shards_verified": 0,
+    "shards_trusted_on_first_use": 0,
+    "verify_requested": true,
+    "combined_sha256": "9603ecacea2a9b3dc433b90a0cf7d885367c14a7656a7d5903bd461b90ec43cc",
+    "_note": "every shard behind these vectors was written or re-hashed by this process",
+    "name": "lotte-lifestyle-dev-docs",
+    "dim": 1024,
+    "seconds": 678.4,
+    "rows_per_s": 396.3
+   },
+   "writing/dev": {
+    "cache_key": "lotte-writing-dev-docs-fp16-61a954c91600",
+    "n_shards": 6,
+    "n_rows": 277049,
+    "shards_written_now": 6,
+    "shards_verified": 0,
+    "shards_trusted_on_first_use": 0,
+    "verify_requested": true,
+    "combined_sha256": "d679ff9c98f563df2fbb35f384d24bbbfc3eb7dfcb0eda8ddf41f716c5ba58f5",
+    "_note": "every shard behind these vectors was written or re-hashed by this process",
+    "name": "lotte-writing-dev-docs",
+    "dim": 1024,
+    "seconds": 812.2,
+    "rows_per_s": 341.1
+   },
+   "science/dev": {
+    "cache_key": "lotte-science-dev-docs-fp16-c5f6e8697b40",
+    "n_shards": 7,
+    "n_rows": 343634,
+    "shards_written_now": 7,
+    "shards_verified": 0,
+    "shards_trusted_on_first_use": 0,
+    "verify_requested": true,
+    "combined_sha256": "32b63f80f51bc1e4a52407eba29f0209a61022187438b1dd09b935f2f3a6a6e3",
+    "_note": "every shard behind these vectors was written or re-hashed by this process",
+    "name": "lotte-science-dev-docs",
+    "dim": 1024,
+    "seconds": 1133.8,
+    "rows_per_s": 303.1
+   },
+   "technology/dev": {
+    "cache_key": "lotte-technology-dev-docs-fp16-85f774dce704",
+    "n_shards": 26,
+    "n_rows": 1276195,
+    "shards_written_now": 26,
+    "shards_verified": 0,
+    "shards_trusted_on_first_use": 0,
+    "verify_requested": true,
+    "combined_sha256": "237ffa9de9d1cd391f2cc21ffe858f328c4b2c5bb7cd9ca128a5eb6420fe7300",
+    "_note": "every shard behind these vectors was written or re-hashed by this process",
+    "name": "lotte-technology-dev-docs",
+    "dim": 1024,
+    "seconds": 2572.5,
+    "rows_per_s": 496.1
+   }
+  },
+  "read_order": [
+   "lifestyle/test",
+   "recreation/test",
+   "recreation/dev",
+   "lifestyle/dev",
+   "writing/dev",
+   "science/dev",
+   "technology/dev"
+  ]
+ },
+ "teacher": {
+  "model_id": "NovaSearch/stella_en_400M_v5",
+  "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+  "encode_dtype": "fp16",
+  "doc_prefix": "",
+  "max_length": 512
+ },
+ "registration_path": "/home/dylan/asymetric-dual-encoders/m13/LOTTE_GATE_REGISTRATION.json",
+ "registration_sha256": "a46b66037ae92fcf7ed0d7ce99c5f3e6d17ea0c6ee86ac0c59f957a0e1f99950",
+ "perquery": {
+  "path": "/home/dylan/asymetric-dual-encoders/work/lotte/gate13/perquery-bs32.json",
+  "sha256": "eab9f6eedb21ff042dad247cf9e119d7cf9e6123ad95adfdff657dd272058db7"
+ },
+ "receipt": {
+  "started_at": "2026-09-12T00:54:40+0000",
+  "git_head_at_start": "0dfd2262075b7b1a4283117352eacd107af7811f",
+  "recovered": false,
+  "recovered_slices": [],
+  "attempts_including_this": 1
+ },
+ "read_at": "2026-09-12T00:54:40+0000",
+ "seconds": 6667.3,
+ "environment": {
+  "host": "9376def273c5",
+  "python": "3.12.14",
+  "torch": "2.8.0+cu126",
+  "cuda": "12.6",
+  "device": "cuda",
+  "gpu": "NVIDIA A100-SXM4-80GB"
+ },
+ "code_identity": "136caa1d5f9536897a712044dea3bd72992fc2bcc36ceb934493b750b87a72ac",
+ "code_identity_files": [
+  "m13src/lotte_gate13.py",
+  "m10src/nano10.py",
+  "m7src/evalkit.py",
+  "m7src/teacher.py"
+ ],
+ "git_head": "0dfd2262075b7b1a4283117352eacd107af7811f",
+ "firewall": "LoTTE is not a selection surface, bar, tie-break or C-conjunct input; read #1's only outputs are the veto verdict and the observational row; read #2 is the pre-freeze audit; no third read."
+}

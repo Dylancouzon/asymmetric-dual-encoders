@@ -1,0 +1,11 @@
+{
+  "status": "PASSED",
+  "outcome": "allocation_step_recovered",
+  "scope": "Unchanged reviewed allocation helper executed with the repository virtual environment; no gate or training repeated. Build supervisor launch follows separately.",
+  "finished_at": 1789183111.0021017,
+  "artifact_sha256": {
+    "results/m13_after_gate.json": "cddda9397fc847b72ccb1a4d57f04f554cb6fdf99cb02e0335c290c0d0ff9c88",
+    "results/m13_build_allocation.json": "b415d1d21c4b731faa4133041a508b638b629566966b0ff8bf8d6833e39acf0b"
+  },
+  "invocation": "CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 .venv/bin/python work/m13cloud-launchers/build_allocation.py"
+}

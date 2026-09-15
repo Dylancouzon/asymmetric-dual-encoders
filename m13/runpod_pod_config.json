@@ -1,0 +1,24 @@
+{
+  "name": "m13-a100-benchmark",
+  "cloudType": "SECURE",
+  "computeType": "GPU",
+  "gpuCount": 1,
+  "gpuTypeIds": ["NVIDIA A100-SXM4-80GB"],
+  "dataCenterIds": ["US-MD-1"],
+  "interruptible": false,
+  "supportPublicIp": true,
+  "minRAMPerGPU": 100,
+  "minVCPUPerGPU": 8,
+  "containerDiskInGb": 30,
+  "volumeInGb": 500,
+  "volumeMountPath": "/home/dylan",
+  "imageName": "runpod/pytorch@sha256:cb154fcca15d1d6ce858cfa672b76505e30861ef981d28ec94bd44168767d853",
+  "ports": ["22/tcp"],
+  "env": {
+    "HF_HOME": "/home/dylan/.cache/huggingface",
+    "HF_HUB_CACHE": "/home/dylan/.cache/huggingface/hub",
+    "HF_DATASETS_CACHE": "/home/dylan/.cache/huggingface/datasets",
+    "UV_CACHE_DIR": "/home/dylan/.cache/uv",
+    "UV_PYTHON_INSTALL_DIR": "/home/dylan/.local/share/uv/python"
+  }
+}

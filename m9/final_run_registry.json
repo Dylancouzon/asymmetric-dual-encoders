@@ -1,7 +1,7 @@
 {
  "_note": "M9.4 decision constants. Lives OUTSIDE m9/registry.json because the build's warm-start adapter permits only `owner_rulings` additions to the registry after the screen, and guard9's `protocol` scope makes any registry edit block the trainer (including the watchdog's crash-restart). Same authority: the executor reads THIS file, never prose, never the M9.0 screen defaults.",
  "classification": "amendment",
- "ratified_by_owner": false,
+ "ratified_by_owner": true,
  "spec": "m9/FINAL_LOCK.md",
  "datasets": [
   "scifact",

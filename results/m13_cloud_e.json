@@ -1,0 +1,76 @@
+{
+  "status": "PASSED",
+  "started_utc": "2026-09-11T19:30:13.752969+00:00",
+  "pod_id": "k3aee2m68765em",
+  "code_commit": "2ec2f0a05f91a90b698e5648e6739f0715afc8ff",
+  "allocation_sha256": "877c26ce71bee7b8100068bee305eb9569ce1bae8139fe6c89affbfd1e5b8a02",
+  "registered_training": true,
+  "protected_evaluation": false,
+  "steps": [
+    {
+      "name": "preflight",
+      "log": "logs/m13-cloud-e-preflight.log",
+      "exit_code": 0,
+      "elapsed_seconds": 0.72
+    },
+    {
+      "name": "E-bs32",
+      "log": "logs/m13-cloud-e-E-bs32.log",
+      "exit_code": 0,
+      "elapsed_seconds": 5838.16
+    },
+    {
+      "name": "E-bs32-outcome",
+      "log": "logs/m13-cloud-e-E-bs32-outcome.log",
+      "exit_code": 0,
+      "elapsed_seconds": 0.62
+    },
+    {
+      "name": "E-bs128",
+      "log": "logs/m13-cloud-e-E-bs128.log",
+      "exit_code": 0,
+      "elapsed_seconds": 2103.91
+    },
+    {
+      "name": "E-bs128-outcome",
+      "log": "logs/m13-cloud-e-E-bs128-outcome.log",
+      "exit_code": 0,
+      "elapsed_seconds": 0.62
+    },
+    {
+      "name": "quiesce",
+      "log": "logs/m13-cloud-e-quiesce.log",
+      "exit_code": 0,
+      "elapsed_seconds": 0.62
+    },
+    {
+      "name": "manifest",
+      "log": "logs/m13-cloud-e-manifest.log",
+      "exit_code": 0,
+      "elapsed_seconds": 5.3
+    },
+    {
+      "name": "backup",
+      "log": "logs/m13-cloud-e-backup.log",
+      "exit_code": 0,
+      "elapsed_seconds": 129.44
+    },
+    {
+      "name": "backup-manifest",
+      "log": "logs/m13-cloud-e-backup-manifest.log",
+      "exit_code": 0,
+      "elapsed_seconds": 0.67
+    }
+  ],
+  "live_gpu_price_usd_h": 1.59,
+  "stage": "finished",
+  "arm_outcomes": {
+    "E-bs32": "complete",
+    "E-bs128": "complete"
+  },
+  "backup_verified": true,
+  "backup_manifest_sha256": "06fece41260e554856138a4fed7ed3e7f6caefd3cbf572154ced6b0efbdfbfea",
+  "stop_http_status": 200,
+  "pod_final_status": "EXITED",
+  "finished_utc": "2026-09-11T21:45:10.974357+00:00"
+}

@@ -109,7 +109,7 @@ N_WS_FIT = 256          # warm-start fit sample for the smoke; the real arms use
 CLOUD_ONLY = {"E-bs128": "batch 128 above ~128 tokens: driver error on this card; runs on the A100",
               "E-bs32": "hardware parity: runs on the A100 beside `E-bs128` so E1 is not a "
                         "cross-hardware contrast (not a memory limit; bs32 fits this box)"}
-# Per-arm CPU/GPU sequence-length cap for a cloud-only shape, and only where the arm needs one.
+# Per-arm small-CUDA-card sequence-length cap; CPU length is controlled by --max-len.
 # It was a single int applied to every `CLOUD_ONLY` name; `E-bs32` is cloud-only for PARITY, so
 # capping it would have silently smoked a shorter sequence than the arm runs for no reason at all.
 # Absent from this map = smoked at the requested `--max-len`.
@@ -165,7 +165,10 @@ def _write(recs, device, max_len, out=None):
 
 def smoke_one(name, spec, corp, device="cpu", max_len=512, verbose=True):
     cap = CLOUD_ONLY_MAX_LEN.get(name)
-    if cap is not None and device == "cuda" and max_len > cap:
+    # The driver-error workaround belongs to the workstation's small card. Applying
+    # it to the A100 silently validated 128 tokens when the cloud run needs 512.
+    if (cap is not None and torch.device(device).type == "cuda" and max_len > cap
+            and torch.cuda.get_device_properties(device).total_memory < 16 * 1024**3):
         max_len = cap
     import data10 as D
     import nano10 as N

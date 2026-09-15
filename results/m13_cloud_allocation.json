@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "status": "READY_FOR_E",
+  "pod_id": "k3aee2m68765em",
+  "measured_utc": "2026-09-11T19:27:04.451770+00:00",
+  "budget_ceiling_usd": 1000,
+  "projected_total_usd": 740.53,
+  "remaining_headroom_usd": 259.47,
+  "live_gpu_price_usd_per_hour": 1.59,
+  "total_price_usd_per_hour": 1.6636111111111112,
+  "account_balance_usd": 500.2631552155,
+  "spent_to_date_usd": 4.736844784500022,
+  "pod_status_at_allocation": "EXITED",
+  "observed_smoke_rates_ex_s": {
+    "E-bs32": 398.0,
+    "E-bs128": 1082.8
+  },
+  "training_rate_safety_factor": 2,
+  "allocated_training_rate_ex_s": 199.0,
+  "model_allocation": {
+    "rate_ex_per_s": 199.0,
+    "price_usd_per_h": 1.6636111111111112,
+    "mandatory_hours": {
+      "day_one_benchmark": 1.0,
+      "cloud_encodes_export_parity_final_run": 6.0,
+      "lotte_clean_encode": 15.0,
+      "reserved_batch_allowance": 55.2,
+      "cloud_E_arms": 13.959,
+      "build": 279.174
+    },
+    "mandatory_hours_total": 370.332,
+    "mandatory_usd": 616.09,
+    "fixed_usd": 103.0,
+    "committed_usd": 719.09,
+    "headroom_usd": 280.91,
+    "budget_ceiling_usd": 1000.0,
+    "unpriced_lines_zeroed_for_smoke": [],
+    "_extensions": "none: ruling R13 fixes the build at 200,000,000 examples"
+  },
+  "e_timeout_supplement_usd": 16.7,
+  "e_arms": {
+    "E-bs32": {
+      "timeout_seconds": 41400
+    },
+    "E-bs128": {
+      "timeout_seconds": 41400
+    }
+  },
+  "e_total_timeout_seconds": 86400,
+  "e_compute_reserve_hours": 24,
+  "config_sha256": "67f4ec97bfd6fc56f57af39bb2e875d0a7382dc371b7f630818bd285595bb000",
+  "registry_sha256": "41ff54c33dd88e5adedbe0855dd97c61e4ce19f635e1326320409d97bc71c9ec",
+  "stage0_sha256": "acff3da5ce12cb304174ddf730f0d664eefbb6dc2304033be21c06102bbffe08",
+  "e_preflight_sha256": "2ec27d8e76c75219a0e436ce7955351b5c783616652099a30a6ef0ae61e65bcc",
+  "benchmark_sha256": "85571a705de4e278d68cd3b4d13108afef4c91af47cf6af701a83ea7489f9454",
+  "training_smoke_sha256": "5cb1a9ded8e9d1a67db538a15105a571e86c9644b1a745852a30bf60eb239589",
+  "limits": [
+    "Allocation authorizes fresh E execution only; build still needs E1, LoTTE gate, updated actual rate/cost and final reviews.",
+    "Training estimate uses half the slowest resumed real-data smoke rate, not 90-step shape throughput; full corpus, warmstart and real COV overhead remain uncertain.",
+    "E compute is reserved for the full24h controller cap, exceeding estimated rate-derived E time; backup cleanup may exceed that window marginally and uses global headroom.",
+    "Encode measurements used admitted SQuAD passages only; reserved and LoTTE allowances are explicitly conservative surrogate estimates, not access or executor validation.",
+    "Hourly running storage plus $103 retained-storage allocation and already-paid spend intentionally overcount some storage for conservatism.",
+    "Wallet need only cover current E stage; user authorized refill if later stages require it. Total ceiling stays $1000."
+  ]
+}

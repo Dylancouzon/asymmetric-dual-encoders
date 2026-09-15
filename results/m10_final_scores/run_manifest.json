@@ -1,0 +1,35 @@
+{
+ "begin_commit": "1ee3760def23365864781df537460f30a42863d0",
+ "system": "nano-dense",
+ "freeze_sha256": "3e49e0bfaa633abe276da7847d0ac44cbfb3d7d5215b9343f255706eeb5789a1",
+ "checkpoint": "work/m13-final/cycle3.pt",
+ "registry_sha256": "c0e3f82a563a0851aef58be579102c9c84dd98560b14b3b1fa343511941bbb62",
+ "comparator_sha256": "6b18e3dd74fd308b087d4e652c0999c9d6a2e729c78edb73f000f9b7a25fda7e",
+ "code_sha256": "24539058080838cd2b3e6e8ce8d3cf6e5305f831254702da68c6868a789b0805",
+ "code_files": [
+  "m13src/score13.py",
+  "m13src/access13.py",
+  "m7src/final_run.py",
+  "m7src/teacher.py",
+  "m7src/evalkit.py",
+  "m7src/hashing.py",
+  "m10src/final10.py",
+  "m10src/nano10.py"
+ ],
+ "datasets": [
+  "scifact",
+  "nfcorpus",
+  "fiqa",
+  "arguana",
+  "scidocs",
+  "trec-covid"
+ ],
+ "teacher": {
+  "model_id": "NovaSearch/stella_en_400M_v5",
+  "revision": "ffeb2b7ee715c226d4ffe5e4619f7dbb48624c20",
+  "dtype": "fp32"
+ },
+ "spent_tag": "m10-six-spent",
+ "started": "2026-09-14T23:48:05.541410+00:00",
+ "_note": "written BEFORE the m10-six-spent tag; every per-dataset row re-presents the identity fields below and `--recover` refuses a row that differs."
+}

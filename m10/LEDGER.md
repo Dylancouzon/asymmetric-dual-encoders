@@ -25,3 +25,12 @@ line references refer to that copy. Earlier git commits remain the provenance au
 
 The 2026-09-10 recipe/judging split remains recorded. It did not remove the pre-build LoTTE veto
 or permit M9 close-out while an M10-derived recipe decision remains open. M13 owns enforcement.
+
+- 2026-09-14T23:48:04.125687+00:00 — **FINAL-RUN-BEGIN** freeze `3e49e0bfaa63` pid 330139 host `Str0keWtf`
+- 2026-09-14T23:48:07.992314+00:00 — **FINAL-RUN access** (six) `scifact`: 5,183 docs / 300 queries, corpus hashes verified against a fresh HF download, labels read from `results/frozen_eval/scifact.json`.
+- 2026-09-14T23:57:22.097572+00:00 — **FINAL-RUN access** (six) `nfcorpus`: 3,633 docs / 323 queries, corpus hashes verified against a fresh HF download, labels read from `results/frozen_eval/nfcorpus.json`.
+- 2026-09-15T00:03:48.386068+00:00 — **FINAL-RUN access** (six) `fiqa`: 57,638 docs / 648 queries, corpus hashes verified against a fresh HF download, labels read from `results/frozen_eval/fiqa.json`.
+- 2026-09-15T01:43:20.208051+00:00 — **FINAL-RUN access** (six) `arguana`: 8,674 docs / 1,406 queries, corpus hashes verified against a fresh HF download, labels read from `results/frozen_eval/arguana.json`.
+- 2026-09-15T02:02:06.080102+00:00 — **FINAL-RUN access** (six) `scidocs`: 25,657 docs / 1,000 queries, corpus hashes verified against a fresh HF download, labels read from `results/frozen_eval/scidocs.json`.
+- 2026-09-15T02:46:34.850774+00:00 — **FINAL-RUN access** (six) `trec-covid`: 171,332 docs / 50 queries, corpus hashes verified against a fresh HF download, labels read from `results/frozen_eval/trec-covid.json`.
+- 2026-09-15T07:39:09.603594+00:00 — **FINAL-RUN-END** (full, INCOMPLETE_RESERVED) result sha256 `f5b5ad8a63060fbe` outcome `REJECTED:C1b,C1a,C2a`

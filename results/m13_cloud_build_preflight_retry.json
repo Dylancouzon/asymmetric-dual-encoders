@@ -1,0 +1,397 @@
+{
+  "status": "FAILED",
+  "stage": "finished",
+  "pid": 50427,
+  "pod_id": "k3aee2m68765em",
+  "started_at": 1789222035.4772925,
+  "code_commit": "ee1bd6617c4fec7f4c97c73e7c6eed52f66ff50a",
+  "allocation_sha256": "5f3349b0c9ee2d1a450d45df67335d9115ff6ae57a60dcef7fa20a5b7ed69419",
+  "rolling_backups": [
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789225989555612203.pt",
+      "sha256": "bad1a98a65b69d8e9fbd15c944ebcd0c41589422ea51f82e205f31a08ea548af",
+      "pruned": true,
+      "pruned_at": 1789233239.5295212
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789229606188963384.pt",
+      "sha256": "769324cbe07d02992acf50b3fc9a4313c1ac5ad1720ec5ec006a4c465e0f2fa6",
+      "pruned": true,
+      "pruned_at": 1789236857.0923963
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789233224152108899.pt",
+      "sha256": "74da83cd2df762b4fc3b1c89f6cf3b1f84fa908bcb3b1ef15966648be287b284",
+      "pruned": true,
+      "pruned_at": 1789240473.1535854
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789236842514283870.pt",
+      "sha256": "e548c361eac424952ad04e43d64088524c9a2f1aa62301dfd5b5c4ca6deb64d9",
+      "pruned": true,
+      "pruned_at": 1789244091.8436668
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789240460079807401.pt",
+      "sha256": "21804469a5ca9caeb1c321a4e048f45e46bee278087d06ed53c169d66c53edb1",
+      "pruned": true,
+      "pruned_at": 1789247709.0339832
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789244076198592633.pt",
+      "sha256": "560f501749baa4445cc07ab75c0824806c71d1031d9cd868a5ddbb9a061c661f",
+      "pruned": true,
+      "pruned_at": 1789251326.6686313
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789247694865954445.pt",
+      "sha256": "44c15a5be34e93d68ce89ede8c141f8a1d3158c5580942095523a8f2d0d4ea56",
+      "pruned": true,
+      "pruned_at": 1789254944.3045297
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789251312044825947.pt",
+      "sha256": "100f19e6cc4c99dde7608505ab28f72fc7faac684779590b6c6b71d2e81598d6",
+      "pruned": true,
+      "pruned_at": 1789258561.8339486
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789254929903321626.pt",
+      "sha256": "3a8e06877b825c24143f0601259b82c3111fa6ae6b9c9944c2990754a86ad028",
+      "pruned": true,
+      "pruned_at": 1789262178.70261
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789258547214292466.pt",
+      "sha256": "45957ded6187545d81c30ea622ce399878754569583690c3faa2b989b5c8980a",
+      "pruned": true,
+      "pruned_at": 1789265798.3693974
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789262164932085713.pt",
+      "sha256": "c6c86fde201ff4c31fc2a526980e3268238b8098ea8d824807d1ce53a142ad42",
+      "pruned": true,
+      "pruned_at": 1789269416.6571455
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789265781835729226.pt",
+      "sha256": "453501002fa1f64379e8a7681a6f92ee8e04fbd37d5f9b796eeaec42b351d2c7",
+      "pruned": true,
+      "pruned_at": 1789273034.139166
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789269401630870839.pt",
+      "sha256": "6c37acfdef2175491da9824481fc16d9d3d43105128089ba484e6ef31b391e42",
+      "pruned": true,
+      "pruned_at": 1789276655.4402041
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789273019859517931.pt",
+      "sha256": "42d3c5feedc0d177e8695ab487e514101d5b3763ce45b23e0b20e968c0bba59c",
+      "pruned": true,
+      "pruned_at": 1789280274.354166
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789276637844381673.pt",
+      "sha256": "8428c8af2616fdf78d5f7feefad785cebfdc482acd2d367c70b39d1467109eb7",
+      "pruned": true,
+      "pruned_at": 1789283894.9942703
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789280259434822735.pt",
+      "sha256": "fcf32fb11163d2162f557aea82c54db82f129bda4febf87d9841b39e6a3cb8e1",
+      "pruned": true,
+      "pruned_at": 1789287513.1583104
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789283880723931184.pt",
+      "sha256": "5e47ae9fa4e9e4169ae0ad76995a0ff3120298fffc666c0a4d39a00784715407",
+      "pruned": true,
+      "pruned_at": 1789291130.238211
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789287499583716888.pt",
+      "sha256": "4c143a5f4ab6b9e399f4e592b7f828226a6e08e3b7a2f3bb787d2f67fd288a97",
+      "pruned": true,
+      "pruned_at": 1789294747.3195832
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789291116417776864.pt",
+      "sha256": "e8ed90817bdfa9b6d34a64080a3685355f266c5fcbbdd8a19005615525012a37",
+      "pruned": true,
+      "pruned_at": 1789298370.1887333
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789294734198694332.pt",
+      "sha256": "5b4682591855554a997f5978cee6dceec09f08436749af486069d143901847fc",
+      "pruned": true,
+      "pruned_at": 1789301988.6666355
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789298350380328871.pt",
+      "sha256": "9df362481d9f2fd785e0cd517c8e14d6ca3ef2e9b0a3d571d5e9e6a0bfd39e1e",
+      "pruned": true,
+      "pruned_at": 1789305606.1144147
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789301974522962163.pt",
+      "sha256": "f350a0a7babe8dab059876e03cbf1fc9c0c9bc09b8e194524ed4ea6481bcd2df",
+      "pruned": true,
+      "pruned_at": 1789309225.081781
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789305591976661841.pt",
+      "sha256": "9819ad48e08e5d4ec39e0c6afaf394d35f7e26fa225805d7cd448ce22961a24f",
+      "pruned": true,
+      "pruned_at": 1789312844.9248998
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789309210330627663.pt",
+      "sha256": "cd41f1b529d8fdc32305845ec3a9652c8b494443dcdb237e714978a1fc57411e",
+      "pruned": true,
+      "pruned_at": 1789316464.4336169
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789312829491633857.pt",
+      "sha256": "4bdd3d0ff0c29e9202414eae4fea2e54eb08933302f56d57e8a5dcdbcaef90b3",
+      "pruned": true,
+      "pruned_at": 1789320084.740715
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789316448011552664.pt",
+      "sha256": "7413868d8f6c8e5ae57781e3f7223bd7f0991db1ff86f8087cb3ca619342a952",
+      "pruned": true,
+      "pruned_at": 1789323703.7203128
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789320067819078059.pt",
+      "sha256": "e02519b7d8eca4ead84bd527ca1a684bd630caf019b4228928aaac3dcaaa4297",
+      "pruned": true,
+      "pruned_at": 1789327323.7963874
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789323688643826677.pt",
+      "sha256": "719ca50ef919725a2961ded170dbfc58f207cfed5ba4a2588a2fd9b0b180de15",
+      "pruned": true,
+      "pruned_at": 1789330943.7736375
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789327308017522710.pt",
+      "sha256": "20e7e559c33d6cefc944c531276736f38e3fc9ba9f7b73d3070fc0ba48f2bcee",
+      "pruned": true,
+      "pruned_at": 1789334561.2302291
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789330928210880406.pt",
+      "sha256": "3597e09698d94ff53a06f181a659e8cafd9a9f4c24eb2e9b77baccf2c0a9bef0",
+      "pruned": true,
+      "pruned_at": 1789338177.512733
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789334546889881564.pt",
+      "sha256": "bc8c5cb27e045643234cb574fef173886155eee085af470a6cd664b5852f8fc5",
+      "pruned": true,
+      "pruned_at": 1789341795.8897007
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789338164387935998.pt",
+      "sha256": "e355203b71763cff2176d901a3c3eff6a1d6a30492a2571dc97438ae64b5157a",
+      "pruned": true,
+      "pruned_at": 1789345413.892035
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789341780645890106.pt",
+      "sha256": "c9a77cd730947d9502d4ae0fb46e0df429b036c0666b57d7b134cce3915294a0",
+      "pruned": true,
+      "pruned_at": 1789349033.7547524
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789345398974341820.pt",
+      "sha256": "19c017c65ba997198ac719cf37ccc3042aecc2b592f897a25922c21cb5020206",
+      "pruned": true,
+      "pruned_at": 1789352652.2278426
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789349017007751857.pt",
+      "sha256": "5448c54211ee79ea9770514edf72ebf6ccbf935cc92faa2913c7ce65579b33cd",
+      "pruned": true,
+      "pruned_at": 1789356269.1136234
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789352637336272140.pt",
+      "sha256": "6b9908f3f1a5c6df411a208b7f0476731b9e25acc8c1c32f0ac4de84996b56e1",
+      "pruned": true,
+      "pruned_at": 1789359886.5776954
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789356255239195957.pt",
+      "sha256": "b3a8066a4955b42d911472b9261e249c4e2a626e8c12a046faeac6a57985d84a",
+      "pruned": true,
+      "pruned_at": 1789363514.447994
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789359872043127790.pt",
+      "sha256": "c18f509d28d27ca8bfe3c075bc755323a752e45648aaaaf0f12bf92b5d86527a",
+      "pruned": true,
+      "pruned_at": 1789367130.64616
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789363489511847063.pt",
+      "sha256": "9e0681aa4a3e8b3e9343c8d3136471ca30cd8621334ffa0c31de4612f97154c1",
+      "pruned": true,
+      "pruned_at": 1789370745.9332507
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789367117498146131.pt",
+      "sha256": "7785b131b02e0efce51b0563e8b24a9f526ef514367590c0f3ab2723d7b0ead0",
+      "pruned": true,
+      "pruned_at": 1789374362.5124633
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789370733678705707.pt",
+      "sha256": "7fcf98762bbdec7deeff28a40db03b090301cfea6f0570c3e2e066e8af7a8594",
+      "pruned": true,
+      "pruned_at": 1789377980.5048687
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789374348859707333.pt",
+      "sha256": "aef2ed7a5b244bf15fdb413464dfc34b3926bb407bcf62be3f1d9650c38b426f",
+      "pruned": true,
+      "pruned_at": 1789381597.0443597
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789377965575448891.pt",
+      "sha256": "7ae84f22c0e283f95aef43a17cb7138b4a21b229def6eaf1b50c146c6c6868d8",
+      "pruned": true,
+      "pruned_at": 1789385213.8585472
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789381583531503873.pt",
+      "sha256": "d93439feaa4cf2bc87c41cec3b3ff00fd7b8fba0fccbfacf0d2aa5d43f5bb536",
+      "pruned": true,
+      "pruned_at": 1789388830.7609034
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789385200035649458.pt",
+      "sha256": "9ae8c1c5705dddc1c5f0413c7fffc609b4369a9726fceb8daeddcde4b94a6d9a",
+      "pruned": true,
+      "pruned_at": 1789392448.319538
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789388816809982372.pt",
+      "sha256": "e33fb10aa364eec22b55e6bc32615076901440e7cc8e8bfbba8f3529b921571c",
+      "pruned": true,
+      "pruned_at": 1789396066.0365932
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789392433817820547.pt",
+      "sha256": "cfebf5bd53ea92bef660eefde5caec36e13b938198d12be476b9cfadcc6cb434",
+      "pruned": true,
+      "pruned_at": 1789399681.9547205
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789396051481592245.pt",
+      "sha256": "9c5d559535ad3e9063d228d8943d47a8af5142d4ea85945a317ec688f99a1007",
+      "pruned": true,
+      "pruned_at": 1789403298.7996752
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789399669088302120.pt",
+      "sha256": "510347818b6902becd690cd25292b1225cb1f48a89e51dbd577b104f1e6a1d96",
+      "pruned": true,
+      "pruned_at": 1789406914.8453407
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789403284937033965.pt",
+      "sha256": "4a6f9777e4efc0a70c3fd1478bae1f504657279ded798bcbbad1c4cc7ce50eeb",
+      "pruned": true,
+      "pruned_at": 1789410531.7109468
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789406901783389862.pt",
+      "sha256": "3744fe669e699b17e7687d04676c4b9794e33645c5865da8666fbf71f6c4409c",
+      "pruned": true,
+      "pruned_at": 1789414150.8167658
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789410517835918630.pt",
+      "sha256": "807b396ed41dd3dc2b2d5fa291096b4ae619461403efd176f69ec623995847c4",
+      "pruned": true,
+      "pruned_at": 1789417767.6312346
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789414134719955909.pt",
+      "sha256": "4f345b2f5f493be762260446e1a215dea0638d550f961ca4dd2580367c674aee",
+      "pruned": true,
+      "pruned_at": 1789421385.341417
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789417753970657099.pt",
+      "sha256": "f951f21dc201a4a6bc7574e0790e76a090abc01258d693853ce640bfb35be6e9",
+      "pruned": true,
+      "pruned_at": 1789425002.1960287
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789421370511621550.pt",
+      "sha256": "456083de416abe8d03e155473ee56319bbffa90ba838c48ea1f6d1355f461e2d",
+      "pruned": true,
+      "pruned_at": 1789428619.3595417
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789424988427600833.pt",
+      "sha256": "36726db1781c23a7d9ae3fbe2be0839d57fc7704525138f2202a382e34453c70"
+    },
+    {
+      "path": "work/m13cloud-build-preflight-retry-backup/rolling/1789428605135255655.pt",
+      "sha256": "e7d636f514f71b3e8eb7fc5e21974d5221b5044bd240fc8c1829011e1c417884"
+    }
+  ],
+  "continuation_of": {
+    "results/m13_build_allocation.json": "b415d1d21c4b731faa4133041a508b638b629566966b0ff8bf8d6833e39acf0b",
+    "results/m13_cloud_build.json": "47715c8852ed27ed1975ba032a255abe5620a16ca61118d3ba6baeebdffefc23",
+    "results/m13_reboot_pause.json": "e71849b40f1fdb8d62047d35e389159ba7cb3262b63ef916f8299688b6545d9c",
+    "results/m13_build_resume_allocation.json": "80bc4d0a8860d5b5ffdb39549879d5e55c7d2774ac7447fb0b3fb7d4b65ca790",
+    "results/m13_cloud_build_resume.json": "13674c64f91c4af8a1cac4271f06a989cce782efd986d6abda7ec4cc2f7f9b66",
+    "results/m13_cpu_upload.json": "bfffcac46eb87c62459db12f763da00b29d9a4d9f4dbb3897c5f96164462002b",
+    "results/m13_storage_upload.json": "413c7856c1d6c53473c425fdf51b4f373bbc346e4c70d09c7a312310ce4bfcdc",
+    "results/m13_storage_verification.json": "c66750826b16efa261eac55de2795685e7fa10495a0f8bff7dd6eb11f8aa05ac",
+    "results/m13_migration_ready.json": "f0b52fba9fab6fca483504261fb9ceee790304191e1424068ba183d737c356e2",
+    "results/m13_migration_after_allocation.json": "c6655f8b8d503fd15e65c9ded1837064eeeeb188012b72c36ab00cecbe6e410c",
+    "results/m13_cloud_build_migrated.json": "2089ceb3769a9779541d14c6c3b0c4820426eb4a379d795ed5d73c93c28e750a"
+  },
+  "launch_reconciliation": {
+    "max_hours": 134.88888888888889,
+    "max_cost_usd": 224.40265432098766,
+    "prior_elapsed_hours": 9.110986408431271,
+    "paid_since_original_allocation_usd": 7.500544860199966,
+    "stage_consumed_usd": 15.15713822224858,
+    "projected_total_usd": 721.36,
+    "remaining_headroom_usd": 278.64,
+    "account_balance_usd": 482.0799692543,
+    "spent_to_date_usd": 22.92003074569999,
+    "remaining_budget_usd": 977.0799692543001
+  },
+  "migration_ready_sha256": "f0b52fba9fab6fca483504261fb9ceee790304191e1424068ba183d737c356e2",
+  "updated_at": 1789428908.4260178,
+  "runtime_bootstrap_sha256": "e4330f7aeeefa36aa6210f500c7c9a7b931da6e28844b07e32ccd10e766a963e",
+  "transfer_verified": true,
+  "transfer_manifest_sha256": "95021b018a03ddb930d0de760540fe66d05df2d3a92bc707023038a837a5e4fb",
+  "preflight_sha256": "126ecb3e0767cb701c50a572c9740be78b5620f6d2672071b900f5a611503ee9",
+  "pretraining_reconciliation": {
+    "max_hours": 134.79194444444445,
+    "max_cost_usd": 224.24137646604942,
+    "prior_elapsed_hours": 9.207844929669603,
+    "paid_since_original_allocation_usd": 7.5923049925999635,
+    "stage_consumed_usd": 15.318273134386459,
+    "projected_total_usd": 721.52,
+    "remaining_headroom_usd": 278.48,
+    "account_balance_usd": 481.9882091219,
+    "spent_to_date_usd": 23.011790878099987,
+    "remaining_budget_usd": 976.9882091219
+  },
+  "backup_verified": true,
+  "backup_manifest_sha256": "cb5341e8e9bcff8f07c650345b484ea5d19e6b9d9987cc1282b5fb03337c2602",
+  "backup_error": "RuntimeError: Build did not complete the registered dose and freeze",
+  "pod_final_status": "EXITED",
+  "finished_at": 1789428908.4260154
+}

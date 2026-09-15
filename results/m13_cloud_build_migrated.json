@@ -1,0 +1,43 @@
+{
+  "status": "FAILED",
+  "stage": "finished",
+  "pid": 43900,
+  "pod_id": "k3aee2m68765em",
+  "started_at": 1789220085.516321,
+  "code_commit": "8ed37edd2a2dd7b9583d8511b0c581c8cfccefdf",
+  "allocation_sha256": "c6655f8b8d503fd15e65c9ded1837064eeeeb188012b72c36ab00cecbe6e410c",
+  "rolling_backups": [],
+  "continuation_of": {
+    "results/m13_build_allocation.json": "b415d1d21c4b731faa4133041a508b638b629566966b0ff8bf8d6833e39acf0b",
+    "results/m13_cloud_build.json": "47715c8852ed27ed1975ba032a255abe5620a16ca61118d3ba6baeebdffefc23",
+    "results/m13_reboot_pause.json": "e71849b40f1fdb8d62047d35e389159ba7cb3262b63ef916f8299688b6545d9c",
+    "results/m13_build_resume_allocation.json": "80bc4d0a8860d5b5ffdb39549879d5e55c7d2774ac7447fb0b3fb7d4b65ca790",
+    "results/m13_cloud_build_resume.json": "13674c64f91c4af8a1cac4271f06a989cce782efd986d6abda7ec4cc2f7f9b66",
+    "results/m13_cpu_upload.json": "bfffcac46eb87c62459db12f763da00b29d9a4d9f4dbb3897c5f96164462002b",
+    "results/m13_storage_upload.json": "413c7856c1d6c53473c425fdf51b4f373bbc346e4c70d09c7a312310ce4bfcdc",
+    "results/m13_storage_verification.json": "c66750826b16efa261eac55de2795685e7fa10495a0f8bff7dd6eb11f8aa05ac",
+    "results/m13_migration_ready.json": "f0b52fba9fab6fca483504261fb9ceee790304191e1424068ba183d737c356e2"
+  },
+  "launch_reconciliation": {
+    "max_hours": 135.29583333333332,
+    "max_cost_usd": 225.07965162037036,
+    "prior_elapsed_hours": 8.704023417869148,
+    "paid_since_original_allocation_usd": 6.666960036199953,
+    "stage_consumed_usd": 14.480110069338425,
+    "projected_total_usd": 720.69,
+    "remaining_headroom_usd": 279.31,
+    "account_balance_usd": 482.9135540783,
+    "spent_to_date_usd": 22.086445921699976,
+    "remaining_budget_usd": 977.9135540783
+  },
+  "migration_ready_sha256": "f0b52fba9fab6fca483504261fb9ceee790304191e1424068ba183d737c356e2",
+  "updated_at": 1789221552.9773257,
+  "runtime_bootstrap_sha256": "e4330f7aeeefa36aa6210f500c7c9a7b931da6e28844b07e32ccd10e766a963e",
+  "transfer_verified": true,
+  "transfer_manifest_sha256": "95021b018a03ddb930d0de760540fe66d05df2d3a92bc707023038a837a5e4fb",
+  "error": "CalledProcessError: Command '['ssh', '-n', '-F', '/home/dylan/.config/runpod/m13_ssh_config', 'm13-runpod', \"timeout --kill-after=30s 7200s bash -c 'export HF_HOME=/home/dylan/.cache/huggingface HF_HUB_CACHE=/home/dylan/.cache/huggingface/hub HF_DATASETS_CACHE=/home/dylan/.cache/huggingface/datasets XDG_CACHE_HOME=/home/dylan/.cache HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_DATASETS_OFFLINE=1 OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4; cd /home/dylan/asymetric-dual-encoders; .venv/bin/python -u scripts/m13_build_preflight.py'\"]' returned non-zero exit status 1.",
+  "backup_verified": true,
+  "backup_manifest_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+  "pod_final_status": "EXITED",
+  "finished_at": 1789221552.9773245
+}

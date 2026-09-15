@@ -109,7 +109,9 @@ def t_reserved_work_dev_alias_refused():
     copy of it happens to live."""
     for name in ("cqadup-android.json", "cqadup-english.json"):
         p = REPO / "work" / "dev" / name
-        assert p.exists(), f"fixture missing: {p} (if it was deleted, say so in the ledger)"
+        # These legacy duplicate payloads are deliberately not shipped in every worktree. The
+        # guard runs before the filesystem open either way, so asserting the refusal on the exact
+        # alias tests the security property without requiring a second protected-data copy.
         assert _refused(lambda q=p: open(q)), f"{name} -- reserved qrels -- was NOT refused"
 
 
@@ -213,6 +215,29 @@ def t_pre_encode_exemption_is_narrow():
         # and it still cannot open a reserved PAYLOAD by path
         assert _refused(lambda: open(REPO / "results" / "frozen_eval" / "untouched-fever.json")), \
             "pre_encode opened a reserved payload"
+        corpus_paths = (
+            paths_guard.HF / "BeIR___fever" / "corpus" / "0.0.0" / "corpus.arrow",
+            paths_guard.HF / "BeIR___dbpedia-entity" / "corpus" / "0.0.0" / "corpus.arrow",
+            paths_guard.HF / "mteb___cqadupstack-android" / "corpus" / "0.0.0" / "corpus.arrow",
+            paths_guard.HF / "BeIR___cqadupstack" / "english" / "corpus" / "0.0.0" / "corpus.arrow",
+        )
+        for p in corpus_paths:
+            assert pg.check(p) == "untouched_corpus_only", f"pre-encode could not open {p}"
+        metadata = paths_guard.HF / "BeIR___fever" / "queries" / "0.0.0" / \
+            "hash" / "dataset_info.json"
+        assert pg.check(metadata) == "reserved_cache_metadata_only"
+        lookalike_metadata = REPO / "work" / "BeIR___fever" / "queries" / \
+            "dataset_info.json"
+        assert _refused(lambda: open(lookalike_metadata)), \
+            "pre-encode accepted reserved-looking metadata outside the datasets cache"
+        query_arrow = metadata.parent / "queries.arrow"
+        assert _refused(lambda: open(query_arrow)), "pre-encode opened cached query content"
+        label_paths = (
+            paths_guard.HF / "BeIR___fever-qrels" / "default" / "0.0.0" / "qrels.arrow",
+            paths_guard.HF / "mteb___cqadupstack-english" / "default" / "0.0.0" / "qrels.arrow",
+        )
+        for p in label_paths:
+            assert _refused(lambda q=p: open(q)), f"pre-encode opened labels at {p}"
     finally:
         pg.__dict__["_claim"] = saved
 

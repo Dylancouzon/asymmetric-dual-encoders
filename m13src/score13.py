@@ -580,16 +580,30 @@ def build_rows(cfg, conf, scored, candidate):
 def reserved_batch(cfg, conf, rows_candidate):
     """The conditional reserved four — a clearly separated stage, per-system atomic resume.
 
-    The encode step is a STUB by design: no FEVER or DBpedia document vectors exist under
-    `work/enc` (names only; `m13/STAGE1_DESIGN.md` §4, ruling R10), so this refuses with a precise
-    message rather than pretending the batch is priced or runnable. Note also that reading the
-    reserved payloads requires an ALLOWLIST entry in `m8src/paths_guard.py` naming THIS module —
-    `claim()` verifies the caller is physically the module it claims, so `m8src.final_run`'s entry
-    cannot be borrowed. That is a LEDGER amendment, not an edit.
+    M14's production transaction uses authenticated pre-encoded document shards and validates
+    every complete per-system file before resuming past it.  The injected encoder path remains for
+    the synthetic M13 rehearsal; an ordinary six-set run still refuses when neither path exists.
     """
     res = conf["reserved"]
     out_dir = Path(cfg.scores_dir) / "reserved"
     out_dir.mkdir(parents=True, exist_ok=True)
+    if cfg.extra.get("reserved_production"):
+        import reserved_support as support
+
+        outputs = {}
+        for system in res["systems_included"]:
+            path = out_dir / f"{system}.json"
+            needs_write = not path.exists()
+            if path.exists():
+                record = json.loads(path.read_text())
+            else:
+                record = support.score_system(cfg, conf, system, rows_candidate)
+            record = support.validate_output(record, cfg, system)
+            if needs_write:
+                write_atomic(path, json.dumps(record, indent=2) + "\n")
+            outputs[system] = record
+        return support.summarize(outputs, conf)
+
     done, todo = [], []
     for system in res["systems_included"]:
         (done if (out_dir / f"{system}.json").exists() else todo).append(system)
@@ -610,6 +624,17 @@ def reserved_batch(cfg, conf, rows_candidate):
         write_atomic(out_dir / f"{system}.json", json.dumps(rec, indent=1))
         done.append(system)
     return {"status": "complete", "systems": done, "datasets": res["datasets"]}
+
+
+def reserved_only_run(cfg=None):
+    """Enter M14's separately tagged reserved transaction through this allowlisted module."""
+    import paths_guard
+
+    paths_guard.claim("m13src.score13", note="M14 execution of the triggered reserved four")
+    paths_guard.install()
+    import reserved_transaction
+
+    return reserved_transaction.run(cfg or access13.production())
 
 
 # ------------------------------------------------------------------ the transaction
@@ -890,7 +915,13 @@ def main(argv=None):
     ap.add_argument("--recover", action="store_true",
                     help="recompute decisions from persisted scores; never re-reads the six")
     ap.add_argument("--preflight-only", action="store_true")
+    ap.add_argument("--reserved-only", action="store_true",
+                    help="M14-only execution of the separately tagged reserved four")
     a = ap.parse_args(argv)
+    if a.reserved_only:
+        if a.infra_retry or a.recover or a.preflight_only:
+            ap.error("--reserved-only cannot be combined with six-set run modes")
+        return reserved_only_run()
     return run(access13.production(), infra_retry=a.infra_retry, preflight_only=a.preflight_only,
                recover=a.recover)
 

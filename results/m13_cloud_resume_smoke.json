@@ -1,0 +1,147 @@
+{
+  "status": "complete",
+  "scope": "smoke only; stub evaluations",
+  "arms": {
+    "E-bs32": {
+      "command": [
+        "/home/dylan/asymetric-dual-encoders/.venv/bin/python",
+        "-u",
+        "m10src/run_arm.py",
+        "E-bs32",
+        "--device",
+        "cuda",
+        "--smoke-steps",
+        "600",
+        "--max-len",
+        "512",
+        "--ckpt-every",
+        "100"
+      ],
+      "status": "complete",
+      "interrupted": {
+        "step": 100,
+        "sha256": "c8b0c3594df83a2cf5c65befd315439198ffcbd36a8ee4a2138d078f03195524",
+        "fingerprint": "f1ed5ba0677fc0b3a0acc27ec8038d88dc4280c01446fc883695b5e684e9c026",
+        "wall_seconds": 107.423
+      },
+      "resume": {
+        "wall_seconds": 136.9
+      },
+      "passed": true,
+      "max_len": 512,
+      "batch": 32,
+      "student": "bge-small",
+      "student_source": "PENDING: F's verdict has not been read (shape's placeholder shown)",
+      "training": {
+        "steps_run": 500,
+        "start_step": 100,
+        "total_steps": 600,
+        "stopped": null,
+        "examples": 19200,
+        "examples_this_run": 16000,
+        "seconds": 40.2,
+        "examples_per_s": 398.0,
+        "mix": {
+          "Q": 450,
+          "D": 150,
+          "q_share": 0.75
+        },
+        "evals": [
+          0.4,
+          0.41000000000000003,
+          0.42000000000000004,
+          0.43000000000000005,
+          0.44,
+          0.45
+        ],
+        "eval_kinds": [
+          "mid",
+          "end",
+          "mid",
+          "end",
+          "mid",
+          "end"
+        ],
+        "cycle_end_evals": [
+          0.41000000000000003,
+          0.43000000000000005,
+          0.45
+        ],
+        "read_evals": []
+      },
+      "final_checkpoint_sha256": "75f1099f7d55429371e5fc854903048f2ad29f5a0b2f089491f6cd858422e600",
+      "record_sha256": "5108b44626731fd87d63ba93be246a7f1068e9a3c01e500f917ebe5e0dfae482"
+    },
+    "E-bs128": {
+      "command": [
+        "/home/dylan/asymetric-dual-encoders/.venv/bin/python",
+        "-u",
+        "m10src/run_arm.py",
+        "E-bs128",
+        "--device",
+        "cuda",
+        "--smoke-steps",
+        "600",
+        "--max-len",
+        "512",
+        "--ckpt-every",
+        "100"
+      ],
+      "status": "complete",
+      "interrupted": {
+        "step": 100,
+        "sha256": "3767b68ceb583c15a74b7b17dcee998872da5362e5a0a2bd339b33f59ea92abe",
+        "fingerprint": "775881a8da819e92ed92d754b62755a274db44b7703e5e23dca15af206acd467",
+        "wall_seconds": 125.169
+      },
+      "resume": {
+        "wall_seconds": 154.853
+      },
+      "passed": true,
+      "max_len": 512,
+      "batch": 128,
+      "student": "bge-small",
+      "student_source": "PENDING: F's verdict has not been read (shape's placeholder shown)",
+      "training": {
+        "steps_run": 500,
+        "start_step": 100,
+        "total_steps": 600,
+        "stopped": null,
+        "examples": 76800,
+        "examples_this_run": 64000,
+        "seconds": 59.11,
+        "examples_per_s": 1082.8,
+        "mix": {
+          "Q": 450,
+          "D": 150,
+          "q_share": 0.75
+        },
+        "evals": [
+          0.4,
+          0.41000000000000003,
+          0.42000000000000004,
+          0.43000000000000005,
+          0.44,
+          0.45
+        ],
+        "eval_kinds": [
+          "mid",
+          "end",
+          "mid",
+          "end",
+          "mid",
+          "end"
+        ],
+        "cycle_end_evals": [
+          0.41000000000000003,
+          0.43000000000000005,
+          0.45
+        ],
+        "read_evals": []
+      },
+      "final_checkpoint_sha256": "537546c6e601d24cbb601faa8279adb217f6b48041d1fe3675e46cc91b58abfa",
+      "record_sha256": "83afcfadc37426fb5da0e6005102aea1aeecc81a4df053f50b8672e2a099a17a"
+    }
+  },
+  "wall_seconds": 527.761
+}
