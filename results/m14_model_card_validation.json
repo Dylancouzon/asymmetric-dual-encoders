@@ -1,0 +1,55 @@
+{
+  "stage": "S5",
+  "status": "PASSED",
+  "card": "m14/MODEL_CARD.md",
+  "usage_block_executed": true,
+  "repo_ids": {
+    "query": "DylanCouzon/constella-nano",
+    "document": "DylanCouzon/stella-en-400M-v5-doc-onnx"
+  },
+  "offline": {
+    "hub_access_refused": true,
+    "hub_calls": 0,
+    "nano_directory": "work/m14-preview/staging",
+    "document_directory": "work/release/stella-doc-onnx",
+    "model_sha256": {
+      "work/m14-preview/staging/model.onnx": "9ba0acf57b71dc31bc5512c5445078a797fa51cf3e85587d6b8a506bfc55dbc2",
+      "work/release/stella-doc-onnx/model.onnx": "fe31555e2b40767e17487885fb67dcdf0dcee11bef31f42478e55c1ec69a4ea9"
+    }
+  },
+  "fastembed": {
+    "branch": "m14-constella-preview",
+    "commit": "eef5595043d62dd3bdd5f6a3be56944fbdd615db",
+    "module_path": "/home/dylan/asymetric-dual-encoders/work/m14-preview/fastembed/fastembed/__init__.py",
+    "stale_import_path_refused": true,
+    "query_family": "PooledNormalizedEmbedding",
+    "document_family": "OnnxTextEmbedding",
+    "add_custom_model_refused": true
+  },
+  "outputs": {
+    "query_shape": [
+      1024
+    ],
+    "document_shape": [
+      2,
+      1024
+    ],
+    "query_norm": 0.9999999999999999,
+    "document_norms": [
+      1.0,
+      1.0
+    ],
+    "ranking": [
+      {
+        "document": "mRNA vaccines deliver messenger RNA encoding a viral antigen.",
+        "score": 0.7418202225844659
+      },
+      {
+        "document": "The Treaty of Westphalia ended the Thirty Years' War in 1648.",
+        "score": 0.1330561715496681
+      }
+    ],
+    "all_finite": true
+  },
+  "passed": true
+}
