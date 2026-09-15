@@ -189,3 +189,5 @@ cython_debug/
 # M7: local-only heavy data (encode caches, tables, checkpoints, logs)
 work/
 logs/
+
+.claude/settings.local.json

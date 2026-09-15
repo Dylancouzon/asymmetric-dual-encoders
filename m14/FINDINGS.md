@@ -10,8 +10,8 @@ the serving layer to apply attention-masked mean pooling and then L2 normalizati
 The wrong generic path produced a maximum error of `0.017370834554605485` over the five-value
 canonical prefix. Registering nano in `supported_pooled_normalized_models` instead resolved it to
 `PooledNormalizedEmbedding` and reduced the maximum prefix error to
-`2.2383970527811714e-08`. The comparison and full vectors are recorded in
-`results/m14_fastembed_branch.json`.
+`2.2383970527811714e-08`. `results/m14_fastembed_branch.json` retains the five-value canonical
+prefixes for each entry and a full-vector maximum-error statistic, not the full vectors.
 
 The failure pattern isolated the defect: the two already-published entries passed their canonical
 checks while nano failed. `constella-zero` and `stella-en-400M-v5-doc-onnx` emit already-pooled,
