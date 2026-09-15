@@ -1,0 +1,116 @@
+{
+  "stage": "S6",
+  "status": "PASSED",
+  "repo_id": "DylanCouzon/constella-nano",
+  "revision_sha": "6bb167dc6f60d3992602235b8e8aaa374a309168",
+  "urls": {
+    "repository": "https://huggingface.co/DylanCouzon/constella-nano",
+    "revision": "https://huggingface.co/DylanCouzon/constella-nano/tree/6bb167dc6f60d3992602235b8e8aaa374a309168",
+    "model_onnx": "https://huggingface.co/DylanCouzon/constella-nano/resolve/6bb167dc6f60d3992602235b8e8aaa374a309168/model.onnx"
+  },
+  "publication": {
+    "authenticated_owner": "DylanCouzon",
+    "uploaded_private_first": true,
+    "public_transition_timestamp_utc": "2026-09-15T20:19:35.792003+00:00",
+    "anonymous_lookup_after_transition": true,
+    "private_after_transition": false
+  },
+  "lfs": {
+    "path": "model.onnx",
+    "oid": "sha256:9ba0acf57b71dc31bc5512c5445078a797fa51cf3e85587d6b8a506bfc55dbc2",
+    "sha256": "9ba0acf57b71dc31bc5512c5445078a797fa51cf3e85587d6b8a506bfc55dbc2",
+    "size_bytes": 137802369,
+    "verified_from_remote_metadata": true
+  },
+  "fresh_download_verification": {
+    "download_directory": "/tmp/m14-published-OC16e3/snapshot",
+    "downloaded_revision_sha": "6bb167dc6f60d3992602235b8e8aaa374a309168",
+    "expected_release_file_count": 7,
+    "missing": [],
+    "mismatches": [],
+    "expected_hub_managed_additions": [
+      ".gitattributes"
+    ],
+    "files": [
+      {
+        "path": "README.md",
+        "bytes": 11555,
+        "sha256": "30424da3c9e8ad2535533840914600f0d4bd830ff8aa82289a3905711bb877b1",
+        "matches_staged": true
+      },
+      {
+        "path": "config.json",
+        "bytes": 655,
+        "sha256": "98fad585a266cd31954a97923401d745e971044cceb8edafde041057526980a4",
+        "matches_staged": true
+      },
+      {
+        "path": "model.onnx",
+        "bytes": 137802369,
+        "sha256": "9ba0acf57b71dc31bc5512c5445078a797fa51cf3e85587d6b8a506bfc55dbc2",
+        "matches_staged": true
+      },
+      {
+        "path": "special_tokens_map.json",
+        "bytes": 119,
+        "sha256": "0c995ed077668e947c7a9eeb9547d422dd1c772fe62423438ad94cba6cb8e13f",
+        "matches_staged": true
+      },
+      {
+        "path": "tokenizer.json",
+        "bytes": 711495,
+        "sha256": "c8e5d69002efaed707fbbc7a56c7e9743e83ff6d04ff55b1c351eb430e3d095a",
+        "matches_staged": true
+      },
+      {
+        "path": "tokenizer_config.json",
+        "bytes": 1165,
+        "sha256": "f200fb1884378ce61e48f716aeb66f7cb243a5d6f58927ae45a6e18e2526f817",
+        "matches_staged": true
+      },
+      {
+        "path": "vocab.txt",
+        "bytes": 231508,
+        "sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3",
+        "matches_staged": true
+      }
+    ],
+    "passed": true
+  },
+  "download_parity_reproduction": {
+    "fixture_count": 10,
+    "source": "already-downloaded fresh revision directory",
+    "redownloaded": false,
+    "reuploaded": false,
+    "pythonpath": "work/m14-preview/fastembed",
+    "hugging_face_cache": "/home/dylan/.cache/huggingface",
+    "comparisons": {
+      "torch_vs_direct_ort": {
+        "minimum_true_cosine": 1.0,
+        "maximum_absolute_error": 1.1548399925231934e-7
+      },
+      "torch_vs_stock_fastembed": {
+        "minimum_true_cosine": 1.0,
+        "maximum_absolute_error": 1.0058283805847168e-7
+      },
+      "direct_ort_vs_stock_fastembed": {
+        "minimum_true_cosine": 1.0,
+        "maximum_absolute_error": 1.1175870895385742e-7
+      }
+    },
+    "minimum_true_cosine": 1.0,
+    "maximum_comparison_absolute_error": 1.1548399925231934e-7,
+    "row_norms": {
+      "torch_reference_maximum_deviation_from_one": 1.1920928955078125e-7,
+      "direct_ort_maximum_deviation_from_one": 5.960464477539063e-8,
+      "stock_fastembed_maximum_deviation_from_one": 0.0
+    },
+    "maximum_row_norm_deviation_from_one": 1.1920928955078125e-7,
+    "negative_control": {
+      "true_cosine": 0.1960805058479309,
+      "maximum_absolute_difference": 0.15240468084812164
+    },
+    "passed": true
+  },
+  "passed": true
+}
