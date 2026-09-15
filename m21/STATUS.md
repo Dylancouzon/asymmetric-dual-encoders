@@ -1,8 +1,13 @@
 # M21 status — research-preview polish
 
-Opened and executed 2026-09-15 for the public research-preview introduction on 2026-09-16.
-No new measurement, no new training, no protected access. Reserved four and BEIR-18 remain
-**UNSPENT** and belong to M20.
+**Closed 2026-09-15.** Opened and executed the same day for the public research-preview
+introduction on 2026-09-16. No new measurement, no new training, no protected access. Reserved
+four and BEIR-18 remain **UNSPENT** and belong to M20.
+
+M20 inherits: the unspent reserved-four transaction, BEIR-18, the official Nano release, a
+complete upstream-suite run on storage with room, and the FastEmbed PR plan in `m21/FASTEMBED.md`
+— a registrations-only PR satisfying clause 6, plus two owner-directed bug-fix PRs that M20's
+mandate should record explicitly.
 
 ## Outcome
 

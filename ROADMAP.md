@@ -21,7 +21,7 @@ follows `instructions-m20.md`. M19 remains a reviewed plan awaiting its own exec
 | M18 | Internal Qdrant project-memory system and specialized Zero | **Closed 2026-09-13** (`SYSTEM_READY` + `ENCODER_NO_IMPROVEMENT`); `m18/STATUS.md` |
 | M19 | Deterministic short-query Zero feasibility | **Plan reviewed; awaiting a new execution session** on the M18 branch; `instructions-m19.md` |
 | M20 | Reserved four, official release, upstream FastEmbed PR, BEIR-18 | Next execution milestone; not authorized until a session follows `instructions-m20.md` |
-| M21 | Research-preview polish: cards, one benchmark table, README, plain-English page, Nano float64, FastEmbed PR-readiness | **In progress 2026-09-15**; `instructions-m21.md` |
+| M21 | Research-preview polish: cards, one benchmark table, README, plain-English page, Nano float64, FastEmbed PR-readiness | **Closed 2026-09-15**; cards published, `constella-research-preview` branch pushed; `m21/STATUS.md` |
 
 ## Migration map
 
