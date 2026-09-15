@@ -40,3 +40,8 @@ be attributed to any one of them.
 Documentation reconciliation2026-09-12: the dose reflects the already-ratified R13 scope cut
 and the batch reflects the completed E1/LoTTE branch. The paired estimand, bootstrap, output
 contract and descriptive-only interpretation are unchanged; neither final row has been read.
+
+Observed-dose disclosure2026-09-15: the Nano table above states the planned dose.
+The actual frozen candidate received199,999,721 examples,279short of200M through
+nine preserved one-row document batches, while completing all6,250,000updates.
+See results/m13_dose_reconciliation.json; no paired estimand or gate changed.

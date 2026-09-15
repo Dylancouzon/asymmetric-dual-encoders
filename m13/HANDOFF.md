@@ -93,3 +93,9 @@ M13 goal remains ACTIVE. Benchmark RUNNING on FiQA; no workload stopped.
 Preparation complete for now; next dependent action waits for the existing final
 benchmark. The agent may yield between checks; the detached supervisor and monitor
 continue independently. Check live receipt/child PID rather than assuming chat activity.
+
+Paired report command after BOTH six-set runs are complete:
+`.venv/bin/python scripts/m13_paired_comparison.py`. Reads saved scores only,
+checks checkpoint/registry/bridge identities, then reuses the registered draw plan
+for descriptive all-six and clean-four intervals. Synthetic known-delta and
+mismatched-query refusal checks passed. No paired result produced yet.
