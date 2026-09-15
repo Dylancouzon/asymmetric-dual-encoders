@@ -1,72 +1,75 @@
-# M13 status — storage upload resumed (2026-09-12)
+# M13 status — closed
 
-**Live:** same-Pod zero-GPU upload supervisor11028; `results/m13_storage_upload.json`,
-`logs/m13-storage-upload.log`. Exact code deployed and rsync active. No training yet.
-Both GPU restart and normal zero-count API attempts failed/STOPped; dedicated
-`podResumeZeroGpu` succeeded. Current details and next-step gates: `m13/RESUME.md`.
+M13 completed its build, frozen six-dataset evaluation, M9 closeout, descriptive paired
+comparison, serving measurements, and the tested execution package for M14. No Hugging Face
+publication occurred. Resolve the immutable terminal integration with
+`git rev-parse refs/tags/m13-closed^{commit}` after fetching tags.
 
-The reboot pause remains preserved in `m13/RESUME.md` and its original receipts. The
-reviewed continuation is `scripts/m13_resume_build.py`, with separate receipt
-`results/m13_cloud_build_resume.json`, controller log `logs/m13-build-resume-controller.log`,
-training log `logs/m13-build-resume.log`, and backups `work/m13cloud-build-resume-backup`.
-It restarts only the same retained Pod, resumes the exact 394-file upload, verifies every
-hash, runs full preflight, and checks live remaining funds before the first training step.
+Owner ruling R19 moved the triggered A100 reserved-four execution to M14. M13 therefore closes
+honestly with `results/m10_final_run.json.end_status = INCOMPLETE_RESERVED`; this denotes deferred
+registered work, not a failed or missing six-set result. M14 must execute that unchanged batch and
+the separate broad descriptive BEIR-18 validation before public release.
 
-Refreshed allocation: 142.2828 hours / $236.7032 remaining, project projection $709.06,
-account balance $486.7241. Source: `results/m13_build_resume_allocation.json`; later live
-checks may only reduce the allowance. Both original elapsed setup and pause storage are
-charged, with no reset of the original 144-hour/$239.56 ceiling. No training existed at
-pause, so this is upload recovery followed by a fresh registered build.
+## Terminal benchmark results
 
-Independent monitoring is active and includes the continuation. The supervisor enforces
-stage deadlines, hourly verified rolling backups, final checksums and unconditional STOP.
-Reviews: `research/m13-reboot-continuation-review-2026-09-12.md`. Validation: 28 recovery/
-preflight/monitor and 56 existing build-controller tests passed. No final evaluation access.
+All values are exact-search nDCG@10 from persisted per-query rows. ArguAna and FiQA have disclosed
+Stella training/evaluation contact; the clean-four partition excludes them.
 
-Both registered cloud E arms completed, their full backups verified, and Runpod
-STOP confirmed at 21:45 UTC. Both deferred DEV-6 evaluations completed locally and their
-records were pushed. E1 resolves in favor of batch32 under the unchanged registered rule:
-COV 0.503626 versus 0.493800, delta 0.009826, lower bound 0.006236. E-bs32 took 97 minutes;
-E-bs128 took 35 minutes. Cloud execution through backup/STOP took 2.25 hours (about $3.74
-at the quoted running rate, excluding earlier preparation and subsequent retained storage).
+| dataset | Nano | M9 | Nano − M9 |
+|---|---:|---:|---:|
+| SciFact | 0.721097 | 0.634021 | +0.087076 |
+| NFCorpus | 0.363080 | 0.313345 | +0.049735 |
+| FiQA† | 0.477765 | 0.214259 | +0.263507 |
+| ArguAna† | 0.623296 | 0.542813 | +0.080484 |
+| SCIDOCS | 0.217710 | 0.142694 | +0.075017 |
+| TREC-COVID | 0.787116 | 0.382908 | +0.404208 |
 
-The local follow-on completed evaluation and selection but stopped before publication because
-its final check expected an integer batch rather than the actual `bs32` string. The check is
-fixed; the original failed receipt is preserved, and the existing outputs were validated without
-rerunning observations. Receipts: `results/m13_cloud_e.json`, `results/m13_after_e.json`,
-`results/m13_after_e_recovery.json`; decision: `results/m10_contrast_E1.json`.
+Nano's registered results:
 
-**Now (2026-09-12):** All seven LoTTE gate slices completed. Veto skipped under the
-registered bs32 branch; descriptive macro nDCG@10 0.4610 and Success@5 0.7528. Full
-backups verified, Pod STOP confirmed, and gate results pushed in9d97291. The automatic
-handoff failed after publication because system Python lacked NumPy for budget imports.
-The unchanged allocation helper passed under the repository virtual environment; the
-original failure and hash-bound recovery are preserved. No observations repeated.
+- versus BGE-small: clean four +0.017648 (one-sided lower 2.5% bound +0.003674,
+  sign-flip p=0.006410) and all six +0.027449 (lower +0.017271, p=0.000010);
+- versus LEAF asym: all six +0.016181 (lower +0.006504, p=0.000540); clean four did not
+  establish superiority (-0.001063, lower -0.014456, p=0.559474);
+- TREC-COVID is the main per-dataset limitation against LEAF: Nano − LEAF = -0.042982.
 
-Build allocation: maximum144h/$239.56 including setup, training, finalization and backup;
-project projection$706.20, remaining headroom$293.80, account balance$489.58. These are
-conservative caps; training alone extrapolates62.86h at the measured E-bs32 rate.
-Receipts: `results/m13_build_allocation.json`, `results/m13_after_gate_recovery.json`,
-then `results/m13_cloud_build.json`. Build logs: `logs/m13-build-controller.log` and
-`logs/m13-build.log`. M17 retains the original checkout/GPU; M13 uses this isolated worktree.
+M9 ended `COMPLETE_SIX_ONLY`; neither registered superiority contrast passed and its decision is
+`measurement; no claim`. The separately registered descriptive Nano-minus-M9 comparison is
++0.154009 on clean four (95% interval [0.132215, 0.175887]) and +0.160004 on all six
+([0.144713, 0.175498]). Different recipes, doses, and training histories prevent causal
+attribution.
 
-Independent monitoring is active as `m13-monitor.service`: five-minute checks, local Windows
-alerts, and durable health/transition records. Add each next job before launch; configuration,
-operating limits and verified failure tests are documented in `m13/MONITORING.md`.
+## Build, serving, and recommendation
 
-| Stage | State / exit |
-|---|---|
-| Execution preparation | Done. Fixed 200M `build13` (53 tests, GPU smoke) and `score13`/`access13` (49 tests, rehearsal with crash and recover). Two Codex reviews plus a P1 re-check; its three residual P1s (gate/E1 consistency and registered checkpoints, fastembed in the freeze bar with a checkpoint-bound build record, teacher pin before spend) closed with tests. Reviews and triage: `research/m13-codex-*-2026-09-10.md`, `m13/REVIEW_TRIAGE.md` |
-| Cloud E comparison | Complete. Both arms and deferred local DEV-6 passed; E1 resolves for bs32. Full local backups verified and Runpod STOP confirmed |
-| Pre-build gate | Registered (`m13/LOTTE_GATE_REGISTRATION.json`, amended 2026-09-10 under R17/R18); executor `m13src/lotte_gate13.py` (R16). Reviewed to **GO** (Astra nine, Sol ten, Astra three, closing re-check GO; `m13/REVIEW_TRIAGE.md` §Stage 2). **Before the read:** both E records pushed, the committed and pushed manifest and pin (R18); the gate record is still owed |
-| Build | Actual rate/price and complete allocation under $1,000; then fixed 200M examples in three cycles (no extensions, R13), freeze/provenance |
-| Evaluation | Locked/reviewed six-set executor, M9 close-out, nano decisions and conditional reserved access |
-| Cost frontier | Comparable zero/bge-small/nano serving and index costs on the reference hardware |
+The frozen Nano checkpoint saw 199,999,721 examples, 279 (0.0001395%) below the nominal 200M.
+The discrepancy is exactly reconciled; the original failed supervisor receipt remains preserved.
+The final checkpoint, ONNX export, reference/ORT/FastEmbed parity, backup inventory, and serving
+measurements are durable. On the same four-thread CPU protocol, median warm latency was 0.1119 ms
+for constella-zero, 6.8400 ms for BGE-small, and 7.2511 ms for Nano; these are synthetic latency
+measurements, not workload-distribution estimates.
 
-Detailed execution defects and the day-one runbook have one home: `m13/EXECUTION.md`. Recipe:
-`m10/M102_LOCK.md`. Lessons: `m13/FINDINGS.md`. M13 worktree: `work/m13cloud`; M17 owns the original checkout.
-A recipe push alone triggers neither M9 close-out nor final access. M9's rows must not inform
-an open recipe decision. LoTTE handling belongs before the expensive build when its veto applies.
+M13 recommends proceeding to M14 release preparation: the evidence shows neither gross
+overfitting nor catastrophic failure, and missing one ambitious clean-four LEAF target is not a
+release veto under owner policy. Publication remains conditional on M14 completing the triggered
+reserved four, the broad descriptive BEIR-18 run, final packaging/parity checks, private upload,
+downloaded-byte verification, and the public transition.
 
-Done means a frozen candidate or documented stop, durable measurements/decisions and an evidence
-handoff. A miss is publishable. Release is M14; the paper is M15. `ROADMAP.md` maps the old numbers.
+## Durable evidence and verification
+
+- Nano final: `results/m10_final_run.json`, SHA-256
+  `f5b5ad8a63060fbe1184aa3e5319259855d3ca4a9e3c3de1e91eeb76ac685b23`.
+- M9 final: `results/m9_final_run.json`, SHA-256
+  `770344d7a7c18d0933e0f922af385fb0b4e514c98822e955e959cf139a9c936b`.
+- Paired comparison: `results/m13_paired_m9_nano.json`, SHA-256
+  `4eaf20ebef5548338314fd547abd0f76c55eae8b5334e3be2f11260d2f8071b4`.
+- Frozen checkpoint: `work/m13-final/cycle3.pt`, SHA-256
+  `3e49e0bfaa633abe276da7847d0ac44cbfb3d7d5215b9343f255706eeb5789a1`.
+- ONNX model: the verified backup path in `m14/HANDOFF.md`, SHA-256
+  `9ba0acf57b71dc31bc5512c5445078a797fa51cf3e85587d6b8a506bfc55dbc2`.
+- Serving costs: `results/m13_serving_costs.json`, SHA-256
+  `a1e8eabe412460c9e0cc95f34846179a4d0c885787b6e4da6a49353f852b578f`.
+- Final verification: 267 M13 tests passed; all 36 M8 path-guard checks passed; compilation and
+  focused reserved/controller tests passed.
+
+All retained pods were `EXITED` at the last live provider check. They and their volumes remain
+STOP-only and must not be terminated without explicit owner authorization. Exact next steps,
+artifact restoration, cost bounds, and publication checks are in `m14/HANDOFF.md`.

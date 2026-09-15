@@ -1,37 +1,61 @@
 {
-  "checked_at": "2026-09-15T00:44:37.814816+00:00",
-  "agent_state": "STOPPED_FOR_USER_SESSION_CLEAR_GOAL_PAUSED",
-  "milestone_state": "M13_IN_PROGRESS",
-  "training": "STOPPED",
-  "gpu_pods": "ALL_EXITED_AT_LAST_LIVE_CHECK",
-  "final_evaluation": {
-    "status": "RUNNING",
-    "stage": "final-six",
-    "pid": 330084,
-    "started_at": 1789429678.7244878,
-    "device": "cpu",
-    "paid_compute": false,
-    "child_pid": 330139,
-    "updated_at": 1789433068.7981396
+  "checked_at": "2026-09-15T17:05:14Z",
+  "milestone_state": "M13_CLOSED",
+  "terminal_ref": "refs/tags/m13-closed",
+  "integration_requirement": "The peeled m13-closed commit must be an ancestor of origin/main.",
+  "publication": "NOT_STARTED_M14_OWNED",
+  "training": {
+    "status": "COMPLETE_WITH_DISCLOSED_SHORTFALL",
+    "actual_examples": 199999721,
+    "planned_examples": 200000000,
+    "shortfall": 279
   },
-  "completed_datasets": {
-    "nfcorpus": {
-      "queries": 323,
-      "mean": 0.36308038066321896,
-      "bridge_ok": true,
-      "written": "2026-09-15T00:03:46.915829+00:00"
-    },
-    "scifact": {
-      "queries": 300,
-      "mean": 0.7210974963001988,
-      "bridge_ok": true,
-      "written": "2026-09-14T23:57:21.963715+00:00"
+  "nano_final_six": {
+    "status": "COMPLETE_SIX_TRIGGERED_RESERVED",
+    "result": "results/m10_final_run.json",
+    "sha256": "f5b5ad8a63060fbe1184aa3e5319259855d3ca4a9e3c3de1e91eeb76ac685b23",
+    "end_status": "INCOMPLETE_RESERVED",
+    "reserved_batch_runs": true,
+    "spent_tag": "m10-six-spent"
+  },
+  "m9_closeout": {
+    "status": "COMPLETE_SIX_ONLY",
+    "result": "results/m9_final_run.json",
+    "sha256": "770344d7a7c18d0933e0f922af385fb0b4e514c98822e955e959cf139a9c936b",
+    "spent_tag": "m9-six-spent",
+    "decision": "measurement; no claim",
+    "rows": {
+      "scifact": {"queries": 300, "mean_ndcg10": 0.6340214721741207, "bridge_ok": true},
+      "nfcorpus": {"queries": 323, "mean_ndcg10": 0.3133452546144168, "bridge_ok": true},
+      "fiqa": {"queries": 648, "mean_ndcg10": 0.2142586949539362, "bridge_ok": true},
+      "arguana": {"queries": 1406, "mean_ndcg10": 0.5428125625997, "bridge_ok": true},
+      "scidocs": {"queries": 1000, "mean_ndcg10": 0.14269360849686372, "bridge_ok": true},
+      "trec-covid": {"queries": 50, "mean_ndcg10": 0.3829075400573997, "bridge_ok": true}
     }
   },
-  "next": "User resumes manually in morning from m13/HANDOFF.md; finish M13 evaluation, costs, M9 comparison and conditional reserved if triggered, then commit closure and self-contained artifact/evidence handoff for the different LLM completing M14.",
-  "resume_file": "m13/HANDOFF.md",
-  "no_rerun": "m10-six-spent already pushed; do not launch another nano scoring process.",
-  "m9_preflight": "PASSED; scoring NOT STARTED",
-  "wake_up_agent_installed": false,
-  "huggingface_publication": "M14_OWNED_BY_DIFFERENT_LLM_AFTER_M13_HANDOFF"
+  "paired_nano_minus_m9": {
+    "status": "PASSED_DESCRIPTIVE",
+    "result": "results/m13_paired_m9_nano.json",
+    "sha256": "4eaf20ebef5548338314fd547abd0f76c55eae8b5334e3be2f11260d2f8071b4",
+    "clean4": {"delta": 0.15400903370781865, "ci95": [0.1322154875511659, 0.17588667556741883]},
+    "all6": {"delta": 0.16000444296972993, "ci95": [0.14471250685301232, 0.17549812662355121]}
+  },
+  "reserved_batch": {
+    "status": "DEFERRED_TO_M14_NOT_LAUNCHED",
+    "datasets": ["fever", "dbpedia-entity", "cqadup-android", "cqadup-english"],
+    "systems": ["nano-dense", "bge-small-en-v1.5", "leaf-ir-asym"],
+    "conservative_max_hours": 55.2,
+    "owner_ruling": "R19",
+    "m13_actions_not_taken": ["A100 resume", "m8-reserved-spent creation", "reserved query/qrel read", "reserved scoring"],
+    "m14_requirement": "Execute the unchanged zero-alpha batch before public release."
+  },
+  "beir18": "M14_SEPARATE_DESCRIPTIVE_PREPUBLICATION_REQUIREMENT",
+  "verification": {
+    "m13_pytest_passed": 267,
+    "m8_guard_checks_passed": 36,
+    "python_compilation": "PASSED"
+  },
+  "gpu_pods": "ALL_EXITED_AT_LAST_LIVE_CHECK_RETAIN_STOP_ONLY",
+  "active_benchmark_or_monitor": false,
+  "next": "M14 follows m14/HANDOFF.md; execute reserved four and descriptive BEIR-18 before release."
 }

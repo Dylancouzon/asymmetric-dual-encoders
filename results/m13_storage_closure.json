@@ -1,0 +1,123 @@
+{
+  "status": "VERIFIED_RETAINED_STOP_ONLY_M13_CLOSED",
+  "observed_utc": "2026-09-15T10:19:12Z",
+  "scope": "M13 terminal storage, backup and monitor reconciliation. R19 defers the triggered reserved run to M14. Retention is mandatory; this record does not authorize termination.",
+  "pods": [
+    {
+      "id": "k3aee2m68765em",
+      "name": "m13-a100-benchmark",
+      "desiredStatus": "EXITED",
+      "gpu_count": 1,
+      "gpu_quote_usd_per_hour_if_running": 1.59,
+      "persistent_volume_gb": 500,
+      "container_disk_gb": 30,
+      "role": "final build and reserved-batch target"
+    },
+    {
+      "id": "exulxoxelug5um",
+      "name": "m13-replacement-20260911",
+      "desiredStatus": "EXITED",
+      "gpu_count": 1,
+      "gpu_quote_usd_per_hour_if_running": 1.59,
+      "persistent_volume_gb": 500,
+      "container_disk_gb": 30,
+      "role": "replacement attempt; failed before unique scientific artifacts"
+    },
+    {
+      "id": "wnzk8eeqrrkw4m",
+      "name": "m13-gate-chain-20260911",
+      "desiredStatus": "EXITED",
+      "gpu_count": null,
+      "gpu_quote_usd_per_hour_if_running": 0.795,
+      "persistent_volume_gb": 500,
+      "container_disk_gb": 5,
+      "role": "gate-chain/upload source; exact 394-file inventory verified and migrated"
+    }
+  ],
+  "storage_accounting": {
+    "registered_rate_usd_per_gb_month": 0.1,
+    "billing_month_hours": 720,
+    "retained_gb_including_container_disks": 1565,
+    "all_stopped_storage_usd_per_hour": 0.21736111111111112,
+    "all_stopped_storage_usd_per_day": 5.216666666666667,
+    "target_running_plus_all_retained_storage_usd_per_hour": 1.8073611111111112,
+    "maximum_reserved_interval_hours": 55.2,
+    "maximum_reserved_interval_usd": 99.76633333333335,
+    "project_headroom_before_extra_retained_storage_usd": 342.96
+  },
+  "durable_artifacts": {
+    "final_checkpoint": {
+      "primary": "work/m13-final/cycle3.pt",
+      "backup": "work/m13cloud-build-preflight-retry-backup/work/m13build/BUILD-200M/cycle3.pt",
+      "bytes_each": 413567295,
+      "sha256_each": "3e49e0bfaa633abe276da7847d0ac44cbfb3d7d5215b9343f255706eeb5789a1"
+    },
+    "onnx": {
+      "path": "work/m13cloud-build-preflight-retry-backup/work/m13build/BUILD-200M/onnx/model.onnx",
+      "bytes": 137802369,
+      "sha256": "9ba0acf57b71dc31bc5512c5445078a797fa51cf3e85587d6b8a506bfc55dbc2"
+    },
+    "build_backup": {
+      "manifest": "work/m13cloud-build-preflight-retry-backup/manifest.json",
+      "manifest_sha256": "cb5341e8e9bcff8f07c650345b484ea5d19e6b9d9987cc1282b5fb03337c2602",
+      "files": 21,
+      "independent_local_rehash": "PASSED: 21/21, no missing or mismatched file"
+    }
+  },
+  "earlier_pod_evidence": {
+    "gate_chain_inventory": {
+      "receipt": "results/m13_storage_verification.json",
+      "receipt_sha256": "c66750826b16efa261fb9ce2795685e7fa10495a0f8bff7dd6eb11f8aa05ac",
+      "status": "PASSED",
+      "verified_files": 394
+    },
+    "migration": {
+      "receipt": "results/m13_migration_ready.json",
+      "receipt_sha256": "f0b52fba9fab6fca483504261fb9ceee790304191e1424068ba183d737c356e2",
+      "status": "PASSED",
+      "verified_files": 394
+    },
+    "replacement_attempts": [
+      {
+        "receipt": "results/m13_cloud_replacement.json",
+        "receipt_sha256": "1a088654f6aa2496849399c6a7ddc2c8dc78aec82fdbef4e2a3f516dfdf3d613",
+        "status": "FAILED before scientific work"
+      },
+      {
+        "receipt": "results/m13_cloud_replacement_resume.json",
+        "receipt_sha256": "4ff61b7c5ae83c95b94b05d6a834d3fc2628b7908423e74f1a48ec192b7933d5",
+        "status": "FAILED at provider resume before scientific work"
+      }
+    ],
+    "historical_final_build_receipt": {
+      "path": "results/m13_cloud_build_preflight_retry.json",
+      "sha256": "f6f59590916537b159790e7244f8770b1d3148d7a3308c6683c316712c945ac3",
+      "status": "FAILED and intentionally preserved because actual dose was 279 examples short",
+      "backup_verified": true,
+      "pod_final_status": "EXITED"
+    }
+  },
+  "local_monitors": {
+    "m13-monitor.service": {
+      "active": false,
+      "enabled": false
+    },
+    "m13-backup-watchdog.timer": {
+      "active": false,
+      "enabled": false
+    },
+    "m13-backup-watchdog.service": {
+      "active": false
+    },
+    "why_stopped": "They watched the completed Nano final transaction, reported its required reserved continuation as a terminal failure, and did not monitor the independent M9 process."
+  },
+  "termination_authorized": false,
+  "constraint": "STOP only. Do not terminate a pod or destroy a retained volume without new owner authorization.",
+  "m13_closure": {
+    "reserved_execution": "DEFERRED_TO_M14_NOT_LAUNCHED",
+    "publication": "NOT_STARTED",
+    "active_local_monitor_or_benchmark": false,
+    "terminal_ref": "refs/tags/m13-closed"
+  },
+  "m14_requirement": "After the reserved run, add the controller receipt hash and reconfirm k3aee2m68765em returned to EXITED before publication or any retirement request."
+}
