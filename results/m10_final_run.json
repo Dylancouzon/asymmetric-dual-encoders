@@ -1,0 +1,522 @@
+{
+ "mode": "full",
+ "candidate": "nano-dense",
+ "begin_commit": "1ee3760def23365864781df537460f30a42863d0",
+ "freeze_sha256": "3e49e0bfaa633abe276da7847d0ac44cbfb3d7d5215b9343f255706eeb5789a1",
+ "registry_sha256": "c0e3f82a563a0851aef58be579102c9c84dd98560b14b3b1fa343511941bbb62",
+ "datasets": [
+  "arguana",
+  "fiqa",
+  "nfcorpus",
+  "scidocs",
+  "scifact",
+  "trec-covid"
+ ],
+ "spent_tag": "m10-six-spent",
+ "bridge": {
+  "scifact": {
+   "n": 300,
+   "mean_delta": -2.8572829757026835e-08,
+   "mean_abs_delta": 5.7351162565296336e-08,
+   "max_abs_delta": 4.725104937319813e-07,
+   "changed_queries": 73,
+   "bound": 0.003,
+   "passes": true
+  },
+  "nfcorpus": {
+   "n": 323,
+   "mean_delta": 6.0807621404182914e-05,
+   "mean_abs_delta": 8.775618664331046e-05,
+   "max_abs_delta": 0.015257402040331214,
+   "changed_queries": 206,
+   "bound": 0.003,
+   "passes": true
+  },
+  "fiqa": {
+   "n": 648,
+   "mean_delta": -3.793267810968339e-05,
+   "mean_abs_delta": 5.677021270317605e-05,
+   "max_abs_delta": 0.03064581289197782,
+   "changed_queries": 329,
+   "bound": 0.003,
+   "passes": true
+  },
+  "arguana": {
+   "n": 1406,
+   "mean_delta": 4.837681146669134e-05,
+   "mean_abs_delta": 0.0001798883774199159,
+   "max_abs_delta": 0.06932300000000002,
+   "changed_queries": 550,
+   "bound": 0.003,
+   "passes": true
+  },
+  "scidocs": {
+   "n": 1000,
+   "mean_delta": -2.8427936391427682e-05,
+   "mean_abs_delta": 0.00016774649843741933,
+   "max_abs_delta": 0.0980396973005058,
+   "changed_queries": 598,
+   "bound": 0.003,
+   "passes": true
+  },
+  "trec-covid": {
+   "n": 50,
+   "mean_delta": 0.00023988271366132686,
+   "mean_abs_delta": 0.00024005539539363575,
+   "max_abs_delta": 0.006745125232602289,
+   "changed_queries": 43,
+   "bound": 0.003,
+   "passes": true
+  }
+ },
+ "rows_note": "the RAW per-query scores live beside this file, one JSON per dataset; --recover re-runs evidence_for on them",
+ "decision_record": {
+  "layer": "nano",
+  "candidate": "nano-dense",
+  "evidence": {
+   "C1b": {
+    "stat": {
+     "delta_raw": 0.017647740632012167,
+     "lower_q025_raw": 0.003673798316062068,
+     "quantile": 0.025,
+     "quantile_method": "inverted_cdf",
+     "B": 10000,
+     "k_datasets": 4,
+     "bootstrap_seed": 900,
+     "draws_sha256": "6654d7789623ec07180c7b2da76a3ce272a9c960a856f68416926bd86d4cd12c",
+     "ci95_raw_reporting_only": [
+      0.003673798316062068,
+      0.031698888096276336
+     ],
+     "per_dataset_delta_raw": {
+      "nfcorpus": 0.020129467350525457,
+      "scidocs": 0.0124979924458522,
+      "scifact": 0.008390542966865514,
+      "trec-covid": 0.029572959764805493
+     },
+     "n_by_dataset": {
+      "nfcorpus": 323,
+      "scidocs": 1000,
+      "scifact": 300,
+      "trec-covid": 50
+     },
+     "_gate_note": "lower_q025_raw is the ONLY field that decides; ci95_raw is reporting-only"
+    },
+    "conjunct": "C1b",
+    "partition": "clean4",
+    "orientation": "nano-dense minus bge-small-en-v1.5",
+    "a": "nano-dense",
+    "b": "bge-small-en-v1.5",
+    "draw_plan_sha256": "075ff34267c254261bdd89b837e122010138385335e4141f736cda2e81f0724e",
+    "qid_sha256": "aa53fbc766a52a6eface5ae162924213d67c39a6aa18f6064e9e02d0daadfec4",
+    "comparator_source_sha256": "6b18e3dd74fd308b087d4e652c0999c9d6a2e729c78edb73f000f9b7a25fda7e",
+    "registry_sha256": "c0e3f82a563a0851aef58be579102c9c84dd98560b14b3b1fa343511941bbb62",
+    "_comparator_hash_is_a_stamp": "this field is COPIED from the registry by `evidence_for`, so the guard's check of it is a tautology, not a measurement of the comparator file (Fable, 2026-09-10). The real check is `test_final_run_registry`'s hash of `results/perquery.json`.",
+    "signflip_p": 0.0064099359006409935,
+    "signflip_B": 100000,
+    "signflip_seed": 901,
+    "signflip_alternative": "greater",
+    "signflip_unit_of": "boot.unit_key",
+    "signflip_strata": [
+     {
+      "components": [
+       "nfcorpus"
+      ],
+      "n_units": 323
+     },
+     {
+      "components": [
+       "scidocs"
+      ],
+      "n_units": 1000
+     },
+     {
+      "components": [
+       "scifact"
+      ],
+      "n_units": 300
+     },
+     {
+      "components": [
+       "trec-covid"
+      ],
+      "n_units": 50
+     }
+    ],
+    "signflip_shared_units": 0,
+    "signflip_per_dataset_n": {
+     "nfcorpus": 323,
+     "scidocs": 1000,
+     "scifact": 300,
+     "trec-covid": 50
+    }
+   },
+   "C1a": {
+    "stat": {
+     "delta_raw": 0.027448720131874858,
+     "lower_q025_raw": 0.017270563193075145,
+     "quantile": 0.025,
+     "quantile_method": "inverted_cdf",
+     "B": 10000,
+     "k_datasets": 6,
+     "bootstrap_seed": 900,
+     "draws_sha256": "f2afbc4a6ef2337ca0f040077d39c35b0a6792fb1adeba9adb28e047cfde026a",
+     "ci95_raw_reporting_only": [
+      0.017270563193075145,
+      0.037594566875687525
+     ],
+     "per_dataset_delta_raw": {
+      "arguana": 0.01984832856227499,
+      "fiqa": 0.07425302970092551,
+      "nfcorpus": 0.020129467350525457,
+      "scidocs": 0.0124979924458522,
+      "scifact": 0.008390542966865514,
+      "trec-covid": 0.029572959764805493
+     },
+     "n_by_dataset": {
+      "arguana": 1406,
+      "fiqa": 648,
+      "nfcorpus": 323,
+      "scidocs": 1000,
+      "scifact": 300,
+      "trec-covid": 50
+     },
+     "_gate_note": "lower_q025_raw is the ONLY field that decides; ci95_raw is reporting-only"
+    },
+    "conjunct": "C1a",
+    "partition": "all6",
+    "orientation": "nano-dense minus bge-small-en-v1.5",
+    "a": "nano-dense",
+    "b": "bge-small-en-v1.5",
+    "draw_plan_sha256": "af3a8bc1a4b04f985ee50bd965470c66edd151e4fa783722c2dc4d8b4c326198",
+    "qid_sha256": "aa055def48b21a1cdb72df2339a9b0057707db550ec5438b2779202c65aa3886",
+    "comparator_source_sha256": "6b18e3dd74fd308b087d4e652c0999c9d6a2e729c78edb73f000f9b7a25fda7e",
+    "registry_sha256": "c0e3f82a563a0851aef58be579102c9c84dd98560b14b3b1fa343511941bbb62",
+    "_comparator_hash_is_a_stamp": "this field is COPIED from the registry by `evidence_for`, so the guard's check of it is a tautology, not a measurement of the comparator file (Fable, 2026-09-10). The real check is `test_final_run_registry`'s hash of `results/perquery.json`.",
+    "signflip_p": 9.99990000099999e-06,
+    "signflip_B": 100000,
+    "signflip_seed": 901,
+    "signflip_alternative": "greater",
+    "signflip_unit_of": "boot.unit_key",
+    "signflip_strata": [
+     {
+      "components": [
+       "arguana"
+      ],
+      "n_units": 1406
+     },
+     {
+      "components": [
+       "fiqa"
+      ],
+      "n_units": 648
+     },
+     {
+      "components": [
+       "nfcorpus"
+      ],
+      "n_units": 323
+     },
+     {
+      "components": [
+       "scidocs"
+      ],
+      "n_units": 1000
+     },
+     {
+      "components": [
+       "scifact"
+      ],
+      "n_units": 300
+     },
+     {
+      "components": [
+       "trec-covid"
+      ],
+      "n_units": 50
+     }
+    ],
+    "signflip_shared_units": 0,
+    "signflip_per_dataset_n": {
+     "arguana": 1406,
+     "fiqa": 648,
+     "nfcorpus": 323,
+     "scidocs": 1000,
+     "scifact": 300,
+     "trec-covid": 50
+    }
+   },
+   "C2a": {
+    "stat": {
+     "delta_raw": 0.016181116478486347,
+     "lower_q025_raw": 0.0065043256929021645,
+     "quantile": 0.025,
+     "quantile_method": "inverted_cdf",
+     "B": 10000,
+     "k_datasets": 6,
+     "bootstrap_seed": 900,
+     "draws_sha256": "b618d13d9f3ced7eeab5740feb3076a265dc45b232076cc594c822daa6ff2e5a",
+     "ci95_raw_reporting_only": [
+      0.0065043256929021645,
+      0.025962418134693854
+     ],
+     "per_dataset_delta_raw": {
+      "arguana": 0.040042607367395906,
+      "fiqa": 0.061296184021913155,
+      "nfcorpus": 0.0023012723040858273,
+      "scidocs": 0.0143448024458522,
+      "scifact": 0.02208421296686552,
+      "trec-covid": -0.04298238023519452
+     },
+     "n_by_dataset": {
+      "arguana": 1406,
+      "fiqa": 648,
+      "nfcorpus": 323,
+      "scidocs": 1000,
+      "scifact": 300,
+      "trec-covid": 50
+     },
+     "_gate_note": "lower_q025_raw is the ONLY field that decides; ci95_raw is reporting-only"
+    },
+    "conjunct": "C2a",
+    "partition": "all6",
+    "orientation": "nano-dense minus leaf-ir-asym",
+    "a": "nano-dense",
+    "b": "leaf-ir-asym",
+    "draw_plan_sha256": "af3a8bc1a4b04f985ee50bd965470c66edd151e4fa783722c2dc4d8b4c326198",
+    "qid_sha256": "aa055def48b21a1cdb72df2339a9b0057707db550ec5438b2779202c65aa3886",
+    "comparator_source_sha256": "6b18e3dd74fd308b087d4e652c0999c9d6a2e729c78edb73f000f9b7a25fda7e",
+    "registry_sha256": "c0e3f82a563a0851aef58be579102c9c84dd98560b14b3b1fa343511941bbb62",
+    "_comparator_hash_is_a_stamp": "this field is COPIED from the registry by `evidence_for`, so the guard's check of it is a tautology, not a measurement of the comparator file (Fable, 2026-09-10). The real check is `test_final_run_registry`'s hash of `results/perquery.json`.",
+    "signflip_p": 0.0005399946000539995,
+    "signflip_B": 100000,
+    "signflip_seed": 901,
+    "signflip_alternative": "greater",
+    "signflip_unit_of": "boot.unit_key",
+    "signflip_strata": [
+     {
+      "components": [
+       "arguana"
+      ],
+      "n_units": 1406
+     },
+     {
+      "components": [
+       "fiqa"
+      ],
+      "n_units": 648
+     },
+     {
+      "components": [
+       "nfcorpus"
+      ],
+      "n_units": 323
+     },
+     {
+      "components": [
+       "scidocs"
+      ],
+      "n_units": 1000
+     },
+     {
+      "components": [
+       "scifact"
+      ],
+      "n_units": 300
+     },
+     {
+      "components": [
+       "trec-covid"
+      ],
+      "n_units": 50
+     }
+    ],
+    "signflip_shared_units": 0,
+    "signflip_per_dataset_n": {
+     "arguana": 1406,
+     "fiqa": 648,
+     "nfcorpus": 323,
+     "scidocs": 1000,
+     "scifact": 300,
+     "trec-covid": 50
+    }
+   },
+   "C2b": {
+    "stat": {
+     "delta_raw": -0.0010630231295977424,
+     "lower_q025_raw": -0.014456023597166766,
+     "quantile": 0.025,
+     "quantile_method": "inverted_cdf",
+     "B": 10000,
+     "k_datasets": 4,
+     "bootstrap_seed": 900,
+     "draws_sha256": "690e400f51e786b6a4861884b9164c87c893830e4f633e2682339a484300470b",
+     "ci95_raw_reporting_only": [
+      -0.014456023597166766,
+      0.012369626557096195
+     ],
+     "per_dataset_delta_raw": {
+      "nfcorpus": 0.0023012723040858273,
+      "scidocs": 0.0143448024458522,
+      "scifact": 0.02208421296686552,
+      "trec-covid": -0.04298238023519452
+     },
+     "n_by_dataset": {
+      "nfcorpus": 323,
+      "scidocs": 1000,
+      "scifact": 300,
+      "trec-covid": 50
+     },
+     "_gate_note": "lower_q025_raw is the ONLY field that decides; ci95_raw is reporting-only"
+    },
+    "conjunct": "C2b",
+    "partition": "clean4",
+    "orientation": "nano-dense minus leaf-ir-asym",
+    "a": "nano-dense",
+    "b": "leaf-ir-asym",
+    "draw_plan_sha256": "075ff34267c254261bdd89b837e122010138385335e4141f736cda2e81f0724e",
+    "qid_sha256": "aa53fbc766a52a6eface5ae162924213d67c39a6aa18f6064e9e02d0daadfec4",
+    "comparator_source_sha256": "6b18e3dd74fd308b087d4e652c0999c9d6a2e729c78edb73f000f9b7a25fda7e",
+    "registry_sha256": "c0e3f82a563a0851aef58be579102c9c84dd98560b14b3b1fa343511941bbb62",
+    "_comparator_hash_is_a_stamp": "this field is COPIED from the registry by `evidence_for`, so the guard's check of it is a tautology, not a measurement of the comparator file (Fable, 2026-09-10). The real check is `test_final_run_registry`'s hash of `results/perquery.json`.",
+    "signflip_p": 0.5594744052559475,
+    "signflip_B": 100000,
+    "signflip_seed": 901,
+    "signflip_alternative": "greater",
+    "signflip_unit_of": "boot.unit_key",
+    "signflip_strata": [
+     {
+      "components": [
+       "nfcorpus"
+      ],
+      "n_units": 323
+     },
+     {
+      "components": [
+       "scidocs"
+      ],
+      "n_units": 1000
+     },
+     {
+      "components": [
+       "scifact"
+      ],
+      "n_units": 300
+     },
+     {
+      "components": [
+       "trec-covid"
+      ],
+      "n_units": 50
+     }
+    ],
+    "signflip_shared_units": 0,
+    "signflip_per_dataset_n": {
+     "nfcorpus": 323,
+     "scidocs": 1000,
+     "scifact": 300,
+     "trec-covid": 50
+    }
+   }
+  },
+  "evidence_errors": {},
+  "verdict": {
+   "order": [
+    "C1b",
+    "C1a",
+    "C2a",
+    "C2b"
+   ],
+   "alpha_per_conjunct": 0.025,
+   "procedure": "fixed-sequence gatekeeping; each conjunct at the full one-sided alpha, stopping at the first non-rejection",
+   "conjuncts": {
+    "C1b": {
+     "status": "REJECTED",
+     "lower_q025_raw": 0.003673798316062068,
+     "delta_raw": 0.017647740632012167,
+     "signflip_p": 0.0064099359006409935,
+     "alpha": 0.025,
+     "partition": "clean4",
+     "bar_comparator": "bge-small-en-v1.5",
+     "gate": "release"
+    },
+    "C1a": {
+     "status": "REJECTED",
+     "lower_q025_raw": 0.017270563193075145,
+     "delta_raw": 0.027448720131874858,
+     "signflip_p": 9.99990000099999e-06,
+     "alpha": 0.025,
+     "partition": "all6",
+     "bar_comparator": "bge-small-en-v1.5",
+     "gate": "release"
+    },
+    "C2a": {
+     "status": "REJECTED",
+     "lower_q025_raw": 0.0065043256929021645,
+     "delta_raw": 0.016181116478486347,
+     "signflip_p": 0.0005399946000539995,
+     "alpha": 0.025,
+     "partition": "all6",
+     "bar_comparator": "leaf-ir-asym",
+     "gate": "aim"
+    },
+    "C2b": {
+     "status": "NOT_REJECTED",
+     "lower_q025_raw": -0.014456023597166766,
+     "delta_raw": -0.0010630231295977424,
+     "signflip_p": 0.5594744052559475,
+     "alpha": 0.025,
+     "partition": "clean4",
+     "bar_comparator": "leaf-ir-asym",
+     "gate": "aim"
+    }
+   },
+   "rejected": [
+    "C1b",
+    "C1a",
+    "C2a"
+   ],
+   "not_tested": [],
+   "unscorable": [],
+   "reserved_batch_runs": true,
+   "_reserved_trigger": "if ANY C-conjunct rejects, then execute, unmodified",
+   "_vocabulary": "a final-run conjunct REJECTS or does not. It never 'resolves' and is never 'confirmed' \u2014 those words belong to the screen and are on `forbidden_words`. Keeping the vocabularies apart is what stops a screen verdict being read as a release claim."
+  },
+  "reserved_batch_runs": true,
+  "outcome": "REJECTED:C1b,C1a,C2a",
+  "headline": {
+   "emit": [
+    {
+     "conjunct": "C1b",
+     "sentence": "the selected-teacher-document + nano-query asymmetric system outperformed the bge-small symmetric system on the pre-registered clean-4 partition \u2014 NFCorpus, SCIDOCS, SciFact and TREC-COVID \u2014 for nDCG@10 in the frozen exact-search harness."
+    },
+    {
+     "conjunct": "C1a",
+     "sentence": "\u2026and on all six development-informed datasets, which additionally include FiQA and ArguAna, both disclosed in the teacher's training data."
+    },
+    {
+     "conjunct": "C2a",
+     "sentence": "the selected-teacher-document + nano-query asymmetric system outperformed the arctic-document + leaf-query system on the six development-informed datasets in our frozen exact-search harness."
+    }
+   ],
+   "emit_nothing_because": null,
+   "must_not": [
+    "'resolved', 'confirmed' or 'unrestricted'",
+    "any claim about general or untouched retrieval quality",
+    "any all-six superiority claim when only a clean-4 conjunct rejected, or the reverse",
+    "any aim claim when C2a/C2b were NOT_TESTED",
+    "any statement comparing nano's QUERY TOWER to LEAF's \u2014 the claim is about the SYSTEM PAIR",
+    "retention percentages as the claim; they are a lens, and retention is distribution-specific",
+    "the reserved four presented as confirmatory \u2014 they are descriptive, at zero alpha"
+   ],
+   "must_accompany": "every sentence carries, in the same paragraph, that the teacher discloses ArguAna and FiQA (2 of the six) in its training data \u2014 which is why clean-4 is the headline.",
+   "_rule": "one sentence per REJECTED conjunct, in sequence order. A conjunct that was NOT_TESTED emits nothing \u2014 it has no verdict."
+  }
+ },
+ "written": "2026-09-15T07:39:09.594684+00:00",
+ "reserved": {
+  "status": "INCOMPLETE_RESERVED",
+  "reason": "RESERVED BATCH NOT RUNNABLE: no document vectors for ['FEVER', 'dbpedia-entity', 'cqadup-android', 'cqadup-english']. The reserved four need ~10M stella passage encodes that have never been made and are not in the M13 allocation (ruling R10), and this module holds no `m8src/paths_guard` allowlist entry, so it may not open a reserved payload at all. Systems already complete: none; still owed: ['nano-dense', 'bge-small-en-v1.5', 'leaf-ir-asym']. The six-set verdict above STANDS."
+ },
+ "end_status": "INCOMPLETE_RESERVED"
+}
