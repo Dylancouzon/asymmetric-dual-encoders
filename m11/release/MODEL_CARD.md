@@ -151,12 +151,12 @@ The deployable hybrid recommendation and registered operator of record are disti
 | Qdrant DBSF | 100 | 0.4887 | 0.4912 |
 | M7 convex0 (`w=0.8`) | 1000 | 0.4911 | 0.4866 |
 
-To reproduce either row: the lexical side is `bm25s` with Lucene defaults, not Qdrant's own BM25,
-which has a fixed `avg_len` and its own tokenizer — DBSF normalises over returned scores, so a
-different lexical implementation shifts its inputs. Each query's own document is excluded *before*
-truncating to 100 (`must_not` on the point id); without that filter a plain `limit: 100` spends a
-slot on the self-match. That affects only ArguAna (1,298 of 1,406 queries) and FiQA (55), so the
-clean-4 figures are unchanged either way.
+Both rows use `bm25s` with Lucene defaults as the lexical side, not Qdrant's own BM25, which has a
+fixed `avg_len` and its own tokenizer — DBSF normalises over returned scores, so a different
+lexical implementation shifts its inputs. For the DBSF row, each query's own document is excluded
+*before* the prefetch is truncated to 100 (`must_not` on the point id); without that filter a
+plain `limit: 100` spends a slot on the self-match. That affects only ArguAna (1,298 of 1,406
+queries) and FiQA (55), so the clean-4 figures are unchanged either way.
 
 Use Qdrant DBSF at prefetch 100 in deployments. M7's convex0 is the registered operator of record,
 but Qdrant does not implement it. No confidence interval compared these observations, so neither

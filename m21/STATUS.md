@@ -92,4 +92,17 @@ access log stayed inside the brief's allowlist. Dispositions:
 | P1 — document card example needs an undeclared dependency | **Fixed.** The Sentence Transformers example now states that it needs `sentence-transformers torch`, which the FastEmbed install line does not provide |
 | P1 — Nano absolutes lack a source trace | **Resolved, not a defect.** The published values are the equal-weight means of the committed per-query rows in `results/m10_final_scores/<dataset>.json` (`system = "nano-dense"`), verified by reproduction: `scifact.json`, n=300, mean 0.721097. Recorded in `m21/BENCHMARKS.md` |
 | P1 — per-number pointers for the retained M9/M10/M17/M18 narrative figures | **Recorded as debt**, not remediated. Those figures are sourced to the `FINDINGS.md` files the page already cites. Per-number tracing of historical narrative belongs to M15's paper evidence pass, not to a one-day preview polish |
+| P1 (re-review) — fusion caveat over-applied | **Fixed.** The restored wording said "to reproduce either row" and then applied the prefetch-100 self-exclusion to the convex0 row, which uses prefetch 1000. The `bm25s` condition now covers both rows; the self-exclusion is attributed to the DBSF row only |
 | P2 — preview branch carries the padding fixes | **Accepted deviation**, owner-endorsed. The branch every card installs should not hand users a FastEmbed that crashes on `thenlper/gte-base` mixed batches. The three-PR split in `m21/FASTEMBED.md` keeps them separable for M20 |
+
+Sol re-reviewed the fixes (alternating reviewers so the model that proposed a fix does not certify
+it): the dtype change is **CONFIRMED** — `mean_pooling` is byte-identical to upstream `0dab99c`
+(both blob `60d229b`), both pooled families return the graph dtype for float16/float32/float64 and
+bfloat16, float32 narrowing stays within 0.5 float32 ULP over a random 37x29x1024 check, single-
+token and fully-masked rows behave as upstream, and both new tests fail against the intermediate
+implementation rather than being tautological. It raised one P1 on card wording, fixed above, and
+confirmed both recorded debts as non-blocking. **GO** after that fix.
+
+Independent of the reviews, pre-fix and post-fix embeddings were compared on two affected upstream
+models (`all-MiniLM-L6-v2`, `paraphrase-multilingual-MiniLM-L12-v2`): dtype changes float64 to
+float32, values differ by at most 2.384e-08, norms unchanged. The behaviour change is dtype only.
