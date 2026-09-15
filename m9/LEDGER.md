@@ -956,3 +956,5 @@ unattended restart: a crash days later would not recover.
 **Rule from now until the build ends: no writes to `m9/LEDGER.md`, `m9/registry.json` or any other
 protocol-scope file.** Build-period notes go to `m9/BUILD_LOG.md`, which is in no scope, and are
 merged into the ledger after the build completes.
+
+- 2026-09-15T09:04:14.031915+00:00 — **FINAL-RUN-BEGIN** freeze `9d631b2c6424` pid 365018 host `Str0keWtf`
