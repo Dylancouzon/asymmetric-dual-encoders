@@ -118,6 +118,14 @@ or irreversible execution. Every brief names files, forbids recursive searches a
 reserved read-exclusion above; audit its access log before accepting findings. Reviewing isolated
 decision helpers cannot certify an unwritten executor. Track findings once, with an owner and exit.
 
+**Essential-only review feedback** (Dylan, 2026-09-15). A review reports what is essential to
+achieving the milestone's stated goal: correctness that changes a result or a shipped artifact,
+evidence or access-discipline damage, safety, reproducibility, and scope deviation or
+over-engineering against the registered plan. Wording, style, formatting, preference restructuring
+and hypothetical failures the documents already guard against are out of scope, and a reviewer
+that finds nothing essential must say so plainly rather than manufacture findings. Every review
+brief states this rule and the goal the findings are measured against.
+
 The default governance budget is one implementation review round plus one focused re-review of
 P0/P1 correctness fixes. Record P2/P3 debt instead of automatically remediating it unless it can
 invalidate the result, break safety/reproducibility or the owner asks for the fix. A review does not

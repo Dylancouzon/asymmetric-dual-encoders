@@ -1,0 +1,222 @@
+#!/usr/bin/env python3
+"""Execute the M14 card usage block against local preview bytes with Hub access refused."""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import subprocess
+from pathlib import Path
+
+import numpy as np
+
+
+REPO = Path(__file__).resolve().parents[1]
+CARD = REPO / "m14/MODEL_CARD.md"
+NANO = REPO / "work/m14-preview/staging"
+ZERO = REPO / "work/release/zero-v1"
+DOC = REPO / "work/release/stella-doc-onnx"
+FASTEMBED_CHECKOUT = REPO / "work/m14-preview/fastembed"
+FASTEMBED_BRANCH = "m14-constella-preview"
+FASTEMBED_COMMIT = "eef5595043d62dd3bdd5f6a3be56944fbdd615db"
+NANO_NAME = "DylanCouzon/constella-nano"
+ZERO_NAME = "DylanCouzon/constella-zero"
+DOC_NAME = "DylanCouzon/stella-en-400M-v5-doc-onnx"
+EXPECTED_HASHES = {
+    NANO / "model.onnx": "9ba0acf57b71dc31bc5512c5445078a797fa51cf3e85587d6b8a506bfc55dbc2",
+    ZERO / "model.onnx": "6c8a9d0753330cb5291b4df005ecfaa04a27b587f6af6f0986778dc43fb9ec0a",
+    DOC / "model.onnx": "fe31555e2b40767e17487885fb67dcdf0dcee11bef31f42478e55c1ec69a4ea9",
+}
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def main() -> None:
+    card_bytes = subprocess.run(
+        ["git", "show", ":m14/MODEL_CARD.md"],
+        cwd=REPO,
+        check=True,
+        capture_output=True,
+    ).stdout
+    if CARD.read_bytes() != card_bytes:
+        raise RuntimeError("working-tree model card differs from the staged bytes")
+    card = card_bytes.decode()
+    card_blob = subprocess.run(
+        ["git", "rev-parse", ":m14/MODEL_CARD.md"],
+        cwd=REPO,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    assert 'NANO_NAME = "DylanCouzon/constella-nano"' in card
+    assert 'ZERO_NAME = "DylanCouzon/constella-zero"' in card
+    assert 'DOC_NAME = "DylanCouzon/stella-en-400M-v5-doc-onnx"' in card
+    assert "REPO_ID" not in card
+    assert "add_custom_model(" not in card
+    assert "Dylancouzon/fastembed@m14-constella-preview" in card
+
+    for directory in (NANO, ZERO, DOC, FASTEMBED_CHECKOUT):
+        if not directory.is_dir():
+            raise FileNotFoundError(f"required offline directory is missing: {directory}")
+    actual_hashes = {path: sha256_file(path) for path in EXPECTED_HASHES}
+    assert actual_hashes == EXPECTED_HASHES
+
+    commit = subprocess.run(
+        ["git", "-C", str(FASTEMBED_CHECKOUT), "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    assert commit == FASTEMBED_COMMIT
+    branch = subprocess.run(
+        ["git", "-C", str(FASTEMBED_CHECKOUT), "branch", "--show-current"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    assert branch == FASTEMBED_BRANCH
+
+    os.environ.update(
+        {
+            "HF_HUB_OFFLINE": "1",
+            "TRANSFORMERS_OFFLINE": "1",
+            "HF_DATASETS_OFFLINE": "1",
+            "TOKENIZERS_PARALLELISM": "false",
+            "CONSTELLA_NANO_PATH": str(NANO),
+            "CONSTELLA_ZERO_PATH": str(ZERO),
+            "CONSTELLA_DOC_PATH": str(DOC),
+        }
+    )
+    os.environ.pop("QDRANT_URL", None)
+
+    import fastembed
+    import fastembed.common.model_management as model_management
+    from fastembed import TextEmbedding
+
+    module_path = Path(fastembed.__file__).resolve()
+    if not module_path.is_relative_to(FASTEMBED_CHECKOUT.resolve()):
+        raise RuntimeError(f"stale FastEmbed import path: {module_path}")
+
+    hub_calls = 0
+
+    def refuse_hub(*args, **kwargs):
+        nonlocal hub_calls
+        hub_calls += 1
+        raise RuntimeError("Hub access refused during offline card verification")
+
+    model_management.snapshot_download = refuse_hub
+
+    def refuse_bridge(*args, **kwargs):
+        raise RuntimeError("add_custom_model bridge is not permitted on the native card path")
+
+    TextEmbedding.add_custom_model = refuse_bridge
+
+    start = card.index("<!-- m14-card-usage-start -->")
+    end = card.index("<!-- m14-card-usage-end -->")
+    usage = card[start:end]
+    snippets = re.findall(r"```python\n(.*?)\n```", usage, flags=re.DOTALL)
+    assert len(snippets) == 4
+    namespace: dict[str, object] = {}
+    exec(compile("\n\n".join(snippets), f"{CARD} (staged usage snippets)", "exec"), namespace)
+
+    query_model = namespace["query_model"]
+    zero_model = namespace["zero_model"]
+    doc_model = namespace["doc_model"]
+    q_native = namespace["q_native"]
+    q = namespace["q"]
+    documents = namespace["D"]
+    docs = namespace["docs"]
+    hits = namespace["hits"]
+    zero_hits = namespace["zero_hits"]
+    assert namespace["NANO_NAME"] == NANO_NAME
+    assert namespace["ZERO_NAME"] == ZERO_NAME
+    assert namespace["DOC_NAME"] == DOC_NAME
+    assert type(query_model.model).__name__ == "PooledNormalizedEmbedding"
+    assert type(zero_model.model).__name__ == "OnnxTextEmbedding"
+    assert type(doc_model.model).__name__ == "OnnxTextEmbedding"
+    assert q_native.shape == q.shape == (1024,) and documents.shape == (2, 1024)
+    assert q_native.dtype == np.dtype(np.float64)
+    assert q_native.nbytes == 8192
+    assert q.dtype == np.dtype(np.float32)
+    assert q.nbytes == 4096
+    assert np.isfinite(q_native).all() and np.isfinite(q).all() and np.isfinite(documents).all()
+    assert namespace["qdrant_url"] is None
+    assert namespace["client"]._client.__class__.__name__ == "QdrantLocal"
+    assert hits[0].payload["text"] == docs[0]
+    assert zero_hits[0].payload["text"] in docs
+    assert hub_calls == 0
+
+    receipt = {
+        "stage": "S5",
+        "status": "PASSED",
+        "card": str(CARD.relative_to(REPO)),
+        "card_source": "git index (:m14/MODEL_CARD.md)",
+        "card_git_blob": card_blob,
+        "card_sha256": hashlib.sha256(card_bytes).hexdigest(),
+        "working_tree_matches_staged": True,
+        "usage_block_executed": True,
+        "usage_python_blocks_executed": len(snippets),
+        "repo_ids": {"query": NANO_NAME, "alternate_query": ZERO_NAME, "document": DOC_NAME},
+        "offline": {
+            "hub_access_refused": True,
+            "hub_calls": hub_calls,
+            "nano_directory": str(NANO.relative_to(REPO)),
+            "zero_directory": str(ZERO.relative_to(REPO)),
+            "document_directory": str(DOC.relative_to(REPO)),
+            "model_sha256": {
+                str(path.relative_to(REPO)): digest for path, digest in actual_hashes.items()
+            },
+        },
+        "fastembed": {
+            "checkout_path": str(FASTEMBED_CHECKOUT.resolve()),
+            "branch": branch,
+            "commit": commit,
+            "module_path": str(module_path),
+            "stale_import_path_refused": True,
+            "query_family": type(query_model.model).__name__,
+            "alternate_query_family": type(zero_model.model).__name__,
+            "document_family": type(doc_model.model).__name__,
+            "add_custom_model_refused": True,
+        },
+        "outputs": {
+            "native_query": {
+                "dtype": q_native.dtype.name,
+                "per_vector_bytes": int(q_native.nbytes),
+            },
+            "cast_query": {
+                "dtype": q.dtype.name,
+                "per_vector_bytes": int(q.nbytes),
+            },
+            "query_shape": list(q.shape),
+            "document_shape": list(documents.shape),
+            "query_norm": float(np.linalg.norm(q)),
+            "document_norms": [float(x) for x in np.linalg.norm(documents, axis=1)],
+            "qdrant": {
+                "mode": "local in-memory",
+                "collection": namespace["COLLECTION_NAME"],
+                "size": 1024,
+                "distance": "Cosine",
+                "nano_ranking": [
+                    {"document": hit.payload["text"], "score": float(hit.score)} for hit in hits
+                ],
+                "zero_ranking": [
+                    {"document": hit.payload["text"], "score": float(hit.score)}
+                    for hit in zero_hits
+                ],
+            },
+            "all_finite": True,
+        },
+        "passed": True,
+    }
+    print("M14_CARD_RECEIPT=" + json.dumps(receipt, sort_keys=True))
+
+
+if __name__ == "__main__":
+    main()

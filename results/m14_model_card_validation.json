@@ -1,0 +1,89 @@
+{
+  "card": "m14/MODEL_CARD.md",
+  "card_git_blob": "f992cc0533357ff1c584906cc8bd9e9b6a57d3f7",
+  "card_sha256": "30424da3c9e8ad2535533840914600f0d4bd830ff8aa82289a3905711bb877b1",
+  "card_source": "git index (:m14/MODEL_CARD.md)",
+  "fastembed": {
+    "add_custom_model_refused": true,
+    "alternate_query_family": "OnnxTextEmbedding",
+    "branch": "m14-constella-preview",
+    "checkout_path": "/home/dylan/asymetric-dual-encoders/work/m14-preview/fastembed",
+    "commit": "eef5595043d62dd3bdd5f6a3be56944fbdd615db",
+    "document_family": "OnnxTextEmbedding",
+    "module_path": "/home/dylan/asymetric-dual-encoders/work/m14-preview/fastembed/fastembed/__init__.py",
+    "query_family": "PooledNormalizedEmbedding",
+    "stale_import_path_refused": true
+  },
+  "offline": {
+    "document_directory": "work/release/stella-doc-onnx",
+    "hub_access_refused": true,
+    "hub_calls": 0,
+    "model_sha256": {
+      "work/m14-preview/staging/model.onnx": "9ba0acf57b71dc31bc5512c5445078a797fa51cf3e85587d6b8a506bfc55dbc2",
+      "work/release/stella-doc-onnx/model.onnx": "fe31555e2b40767e17487885fb67dcdf0dcee11bef31f42478e55c1ec69a4ea9",
+      "work/release/zero-v1/model.onnx": "6c8a9d0753330cb5291b4df005ecfaa04a27b587f6af6f0986778dc43fb9ec0a"
+    },
+    "nano_directory": "work/m14-preview/staging",
+    "zero_directory": "work/release/zero-v1"
+  },
+  "outputs": {
+    "all_finite": true,
+    "cast_query": {
+      "dtype": "float32",
+      "per_vector_bytes": 4096
+    },
+    "document_norms": [
+      1.0,
+      1.0
+    ],
+    "document_shape": [
+      2,
+      1024
+    ],
+    "native_query": {
+      "dtype": "float64",
+      "per_vector_bytes": 8192
+    },
+    "qdrant": {
+      "collection": "constella_nano_demo",
+      "distance": "Cosine",
+      "mode": "local in-memory",
+      "nano_ranking": [
+        {
+          "document": "mRNA vaccines deliver messenger RNA encoding a viral antigen.",
+          "score": 0.741820222706203
+        },
+        {
+          "document": "The Treaty of Westphalia ended the Thirty Years' War in 1648.",
+          "score": 0.13305617217115254
+        }
+      ],
+      "size": 1024,
+      "zero_ranking": [
+        {
+          "document": "mRNA vaccines deliver messenger RNA encoding a viral antigen.",
+          "score": 0.6422987248444805
+        },
+        {
+          "document": "The Treaty of Westphalia ended the Thirty Years' War in 1648.",
+          "score": 0.04698319989062645
+        }
+      ]
+    },
+    "query_norm": 1.0,
+    "query_shape": [
+      1024
+    ]
+  },
+  "passed": true,
+  "repo_ids": {
+    "alternate_query": "DylanCouzon/constella-zero",
+    "document": "DylanCouzon/stella-en-400M-v5-doc-onnx",
+    "query": "DylanCouzon/constella-nano"
+  },
+  "stage": "S5",
+  "status": "PASSED",
+  "usage_block_executed": true,
+  "usage_python_blocks_executed": 4,
+  "working_tree_matches_staged": true
+}

@@ -1,0 +1,227 @@
+{
+  "comparisons": {
+    "direct_ort_vs_stock_fastembed": {
+      "maximum_absolute_error": 1.1175870895385742e-07,
+      "minimum_true_cosine": 1.0,
+      "n_rows": 10,
+      "passed": true
+    },
+    "torch_vs_direct_ort": {
+      "maximum_absolute_error": 1.1548399925231934e-07,
+      "minimum_true_cosine": 1.0,
+      "n_rows": 10,
+      "passed": true
+    },
+    "torch_vs_stock_fastembed": {
+      "maximum_absolute_error": 1.0058283805847168e-07,
+      "minimum_true_cosine": 1.0,
+      "n_rows": 10,
+      "passed": true
+    }
+  },
+  "direct_ort": {
+    "pooling": "masked mean of token_embeddings, then L2 normalization",
+    "provider": "CPUExecutionProvider"
+  },
+  "environment": {
+    "execution": "CPU, four threads, Hugging Face and Transformers offline",
+    "fastembed": "0.8.0",
+    "numpy": "2.3.5",
+    "onnx": "1.22.0",
+    "onnxruntime": "1.29.0",
+    "python": "3.12.14",
+    "torch": "2.8.0+cu126"
+  },
+  "fixtures": [
+    {
+      "characters": 165,
+      "id": "tiny_0",
+      "source_group": "tiny",
+      "source_index": 0,
+      "text_sha256": "b4abc345f0628ee40ad422943c33bbdf398c40cb68c5daf2fbd6a8a88412ebdd",
+      "tokens_served": 31,
+      "tokens_untruncated": 31,
+      "truncated": false
+    },
+    {
+      "characters": 59,
+      "id": "tiny_1",
+      "source_group": "tiny",
+      "source_index": 1,
+      "text_sha256": "48875cc35a0fbc5d3f0defd050ac50d3f4e2a0e32ee561ffd3793a1105c172d8",
+      "tokens_served": 16,
+      "tokens_untruncated": 16,
+      "truncated": false
+    },
+    {
+      "characters": 329,
+      "id": "short_0",
+      "source_group": "short",
+      "source_index": 0,
+      "text_sha256": "e2e5e3f79691ef1dfd23765c0796f9fddf09872d426507760eaad03fbd20627f",
+      "tokens_served": 72,
+      "tokens_untruncated": 72,
+      "truncated": false
+    },
+    {
+      "characters": 1602,
+      "id": "mid_0",
+      "source_group": "mid",
+      "source_index": 0,
+      "text_sha256": "36fc50aec3dc4daa7ada3dd517736bf2714efa296b909c14de0e92df2f69c0ab",
+      "tokens_served": 332,
+      "tokens_untruncated": 332,
+      "truncated": false
+    },
+    {
+      "characters": 1826,
+      "id": "near_0",
+      "source_group": "near",
+      "source_index": 0,
+      "text_sha256": "30a0ba3e92ac8e6435dae431347e05e22c8e34c1ab8735e5b0ae0a8d96445f39",
+      "tokens_served": 435,
+      "tokens_untruncated": 435,
+      "truncated": false
+    },
+    {
+      "characters": 2322,
+      "id": "boundary_511",
+      "source_group": "boundary",
+      "source_index": 0,
+      "text_sha256": "ebcba446d66f390714764badd3b11d4701fa49d38fa194e43874125d7b96e3ca",
+      "tokens_served": 511,
+      "tokens_untruncated": 511,
+      "truncated": false
+    },
+    {
+      "characters": 2191,
+      "id": "boundary_512",
+      "source_group": "boundary",
+      "source_index": 1,
+      "text_sha256": "e10529cf379ed7c3843ee452d173c20bf757aa4246d3359576888396b41041d7",
+      "tokens_served": 512,
+      "tokens_untruncated": 512,
+      "truncated": false
+    },
+    {
+      "characters": 2427,
+      "id": "boundary_513",
+      "source_group": "boundary",
+      "source_index": 8,
+      "text_sha256": "7f48490106dd64f3f9a50d0266ad992c9ba2c532f75b391a4c2e86e9e3961cce",
+      "tokens_served": 512,
+      "tokens_untruncated": 513,
+      "truncated": true
+    },
+    {
+      "characters": 2886,
+      "id": "over_0",
+      "source_group": "over",
+      "source_index": 0,
+      "text_sha256": "5179bea84754b982061baae2787ea3346924af6d21cc74f44b1c8f2090427b47",
+      "tokens_served": 512,
+      "tokens_untruncated": 574,
+      "truncated": true
+    },
+    {
+      "characters": 5677,
+      "id": "over_longest",
+      "source_group": "over",
+      "source_index": 4,
+      "text_sha256": "541d87d8e237c26b4ac9d5f6d02d7ea9135952f792d81048a0c193cfedb4a5ae",
+      "tokens_served": 512,
+      "tokens_untruncated": 1131,
+      "truncated": true
+    }
+  ],
+  "inputs": {
+    "checkpoint_path": "work/m13cloud/work/m13-final/cycle3.pt",
+    "checkpoint_sha256": "3e49e0bfaa633abe276da7847d0ac44cbfb3d7d5215b9343f255706eeb5789a1",
+    "fixture_source": "m11/release/doc_fixtures.json",
+    "fixture_source_sha256": "9572707bcf9a88fcb9f88292dcc46196fe67fbb0d71e682b828f377ab19d381d",
+    "freeze_path": "m10/FREEZE.json",
+    "freeze_sha256": "d2cbca571dbd9608eee9ce0683aaabb729d77fb130fddc0be0fdeff4635eeded",
+    "model_sha256": "9ba0acf57b71dc31bc5512c5445078a797fa51cf3e85587d6b8a506bfc55dbc2",
+    "staging_directory": "work/m14-preview/staging",
+    "tokenizer_sha256": "c8e5d69002efaed707fbbc7a56c7e9743e83ff6d04ff55b1c351eb430e3d095a"
+  },
+  "negative_control": {
+    "first_fixture": "tiny_0",
+    "kind": "distinct real passages must not behave like a matched parity row",
+    "maximum_absolute_difference": 0.15240468084812164,
+    "passed": true,
+    "second_fixture": "tiny_1",
+    "true_cosine": 0.1960805058479309
+  },
+  "onnx": {
+    "checker_passed": true,
+    "custom_domains": [],
+    "initializer_dtypes": {
+      "FLOAT": 199
+    },
+    "input_dtypes": {
+      "attention_mask": "INT64",
+      "input_ids": "INT64"
+    },
+    "node_count": 1025,
+    "node_domains": {
+      "ai.onnx": 1025
+    },
+    "opsets": [
+      {
+        "domain": "ai.onnx",
+        "version": 17
+      }
+    ],
+    "output_dtypes": {
+      "token_embeddings": "FLOAT"
+    }
+  },
+  "overlength_fixture_ids": [
+    "boundary_513",
+    "over_0",
+    "over_longest"
+  ],
+  "passed": true,
+  "reference": {
+    "class": "m13src/score13.py:Nano10Student",
+    "pooling": "masked mean of per-token head output, then L2 normalization",
+    "tokenization": "padding=True, truncation=True, max_length=512"
+  },
+  "row_norms": {
+    "direct_ort": {
+      "maximum": 1.0,
+      "maximum_deviation_from_one": 5.960464477539063e-08,
+      "minimum": 0.9999999403953552,
+      "passed": true
+    },
+    "stock_fastembed": {
+      "maximum": 1.0,
+      "maximum_deviation_from_one": 0.0,
+      "minimum": 1.0,
+      "passed": true
+    },
+    "torch_reference": {
+      "maximum": 1.0000001192092896,
+      "maximum_deviation_from_one": 1.1920928955078125e-07,
+      "minimum": 0.9999999403953552,
+      "passed": true
+    }
+  },
+  "stage": "S3",
+  "status": "PASSED",
+  "stock_fastembed": {
+    "bridge": "TextEmbedding.add_custom_model",
+    "module_path": "/home/dylan/asymetric-dual-encoders/.venv/lib/python3.12/site-packages/fastembed/__init__.py",
+    "normalization": true,
+    "pooling": "MEAN",
+    "version": "0.8.0"
+  },
+  "thresholds_fixed_before_inference": {
+    "maximum_absolute_error": 1e-05,
+    "maximum_row_norm_deviation": 1e-05,
+    "minimum_true_cosine": 0.9999,
+    "negative_control_maximum_cosine": 0.99,
+    "negative_control_minimum_max_absolute_difference": 0.001
+  }
+}
