@@ -88,6 +88,20 @@ build numbers, and Zero cost/size figures mixed across incompatible protocols.
   cover the changed code. A complete green suite on a machine with room remains M20's to record
   before the upstream PR.
 
+## Publication
+
+The three cards were published 2026-09-15 as card-only commits: `README.md` was the single file
+uploaded to each repository, so no model bytes changed and every published weight keeps its
+identity. Each upload was verified by re-downloading the card at the new revision and comparing
+SHA-256 against the local bytes; all three matched, file counts were unchanged and all three
+repositories remained public.
+
+| model | card revision | files |
+|---|---|---:|
+| `DylanCouzon/constella-nano` | `64c405c3` (weights unchanged at `6bb167dc`) | 8 |
+| `DylanCouzon/constella-zero` | `0e9cd89e` | 11 |
+| `DylanCouzon/stella-en-400M-v5-doc-onnx` | `244be9e0` | 8 |
+
 ## Review
 
 Astra reviewed the M21 plan before execution (NO-GO as written, no P0; two findings folded in:
