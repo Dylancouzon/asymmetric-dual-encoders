@@ -64,3 +64,20 @@ independent modules can be prepared without changing the in-flight code.
 No Runpod restart is currently needed. Credential paths are in RESUME, never
 copy credential values into git/logs. User available until approximately03:03UTC,
 then traveling; continue autonomously and leave explicit running/stopped status.
+
+## Prepared next commands (not started)
+
+M9: m13src/m9_closeout13.py, eight synthetic tests passed and two independent
+reviews completed. Real frozen M9 adapter passed a synthetic one-query smoke.
+M9 registry R3 bridge is already dated; ratified_by_owner is still false.
+Pin the reviewed M9 run and flip its ratification before preflight; do not run it
+concurrently with nano. Do not modify bound shared code to accelerate nano.
+
+Costs: `.venv/bin/python scripts/m13_serving_costs.py --measure` AFTER the CPU
+benchmark ends and while no other heavy workload runs. BGE export preparation
+passed stock-FastEmbed parity (min cosine0.99999994 on5synthetic inputs including
+long truncation). Uses actual final nano ONNX, published zero NumPy path and BGE
+ONNX. Three fresh processes/model, batch1,4threads; synthetic latency lengths.
+No cost measurement started yet. No reserved implementation added before trigger.
+User steering: do not over-engineer; reuse existing components and keep scope to
+M13 closure and a useful M14 handoff.
